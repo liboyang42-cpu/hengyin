@@ -130,7 +130,10 @@ class RegistrationCallbackIntentMySqlIT {
                 "migration_circle_theme_batch2_20260821.sql", "migration_20260823_game_session_runtime.sql",
                 "migration_20260823_topic_route_graph.sql", "migration_20260823_topic_route_published_snapshot.sql",
                 "migration_club_topic_display_settings_20260906.sql", "migration_topic_journey_rules_20260916.sql",
-                "migration_topic_journey_story_20260916.sql", "migration_theme_runtime_20261004.sql")) {
+                "migration_topic_journey_story_20260916.sql", "migration_theme_runtime_20261004.sql",
+                // 共享 CmsTopicMapper resultMap 已读 city_code / content_contract_json(Questo 后端合入后);两列的真实来源是下面两个迁移,
+                // 缺了会在 topic FOR UPDATE 解析阶段 BadSqlGrammar(Unknown column 'city_code'),与 FreeExploreNodeSupplyMySqlIT 同法补齐。
+                "migration_o14_cms_topic_city_code_20261022.sql", "migration_topic_location_contract_20261107.sql")) {
             String script=java.nio.file.Files.readString(P0AcceptanceSchema.repoRoot().resolve("chengyinhub-admin/sql").resolve(migration));
             List<String> alters=FreeExploreNodeSupplyMySqlIT.alterStatements(script,"cms_topic");
             assertFalse(alters.isEmpty(),migration+" must supply the original topic schema");
@@ -232,6 +235,12 @@ class RegistrationCallbackIntentMySqlIT {
         WechatVerifiedFactTestSupport.setField(registration, "cmsPointsSettingService", transactional(settings));
         // Original owner_type=1 policy defers merchant accrual until verification; this is the real service, not a success stub.
         WechatVerifiedFactTestSupport.setField(registration, "settlementEntryService", transactional(new SettlementEntryServiceImpl()));
+        // Questo 营销合入后支付成功事务里固定 enqueueAccrual(必选依赖,缺 bean 启动失败);营销应计由 M5 consumer 另行读事实,
+        // 不在本类的支付/收件箱原子性范围内,这里用与 RegistrationFundsMybatisIntegrationTest 相同的入队替身。
+        com.chengyinhub.business.service.IMarketingRevenuePostingService revenuePosting =
+                mock(com.chengyinhub.business.service.IMarketingRevenuePostingService.class);
+        when(revenuePosting.enqueueAccrual(org.mockito.ArgumentMatchers.anyLong())).thenReturn(1L);
+        WechatVerifiedFactTestSupport.setField(registration, "marketingRevenuePostingService", revenuePosting);
         StaticListableBeanFactory beans = new StaticListableBeanFactory();
         beans.addBean("gateway", WechatVerifiedFactTestSupport.getField(gateway,"gateway"));
         WechatVerifiedFactTestSupport.setField(registration, "paymentAttemptGateway", beans.getBeanProvider(WechatPaymentOperations.class));

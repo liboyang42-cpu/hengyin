@@ -8,6 +8,8 @@ import java.util.Date;
 public class ClubWaitlistEntry {
     /** 当前成员没有候补队列记录。 */
     public static final String NONE = "NONE";
+    public static final String REQUESTED = "REQUESTED";
+    public static final String REJECTED = "REJECTED";
     public static final String WAITING = "WAITING";
     public static final String OFFERED = "OFFERED";
     public static final String CLAIMED = "CLAIMED";
@@ -40,6 +42,7 @@ public class ClubWaitlistEntry {
     private String eligibilityState;
     /** 仅用于 status 响应；默认 false，未知状态不开放加入。 */
     private boolean waitlistJoinAllowed;
+    private String reservationState;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -74,4 +77,8 @@ public class ClubWaitlistEntry {
     public void setWaitlistJoinAllowed(boolean waitlistJoinAllowed) {
         this.waitlistJoinAllowed = waitlistJoinAllowed;
     }
+
+    /** 仅主持预约状态投影；钱与退款终态仍以原报名订单为准。 */
+    public String getReservationState() { return reservationState; }
+    public void setReservationState(String value) { this.reservationState = value; }
 }

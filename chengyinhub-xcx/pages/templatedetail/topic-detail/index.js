@@ -4,6 +4,7 @@
 // 能力 = 概要一行 + 按站列出这一站玩什么、玩家做什么、大概多久。数据只读 /api/template/topic-template/info。
 const art = require('../shelf/art.js');
 const cyToast = require('../../../utils/toast.js');
+const adoption = require('../utils/topic-adoption.js');
 
 const app = getApp();
 const TABS = [{ key: 'details', label: '详情' }, { key: 'capabilities', label: '能力' }];
@@ -85,7 +86,8 @@ Page({
     stops: [],
     summary: [],
     medalName: '',
-    medalImg: ''
+    medalImg: '',
+    deliveryRows: [],
   },
 
   onLoad(options) {
@@ -148,13 +150,31 @@ Page({
           stops: stops,
           summary: buildSummary(info, stops),
           medalName: info.finishMedalName || '',
-          medalImg: info.finishMedalImg || ''
+          medalImg: info.finishMedalImg || '',
+          deliveryRows: adoption.deliveryRows(info.contentDelivery)
         });
+        that._delivery = info.contentDelivery || null;
+        that._loadCredits(seq, nodeImgs);
       },
       fail(res) {
         if (seq !== that._seq) return;
         that.setData({ loading: false, loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
       }
+    });
+  },
+
+  // U02-05:节点图署名 / AI 标识 / 来源待确认,逐张只读;最多前 8 张,换页或重载后迟到回包丢弃
+  _loadCredits(seq, imgs) {
+    (imgs || []).slice(0, 8).forEach((g, i) => {
+      app.sendRequest({
+        hideLoading: true, autoErrorToast: false,
+        url: '/api/media/asset/attribution', method: 'GET', data: { reference: g.img },
+        success: res => {
+          if (seq !== this._seq || !res || String(res.code) !== '200') return;
+          const credit = adoption.creditText(res.data);
+          if (credit && this.data.gallery[i] && this.data.gallery[i].img === g.img) this.setData({ ['gallery[' + i + '].credit']: credit });
+        }
+      });
     });
   },
 
@@ -173,32 +193,48 @@ Page({
     wx.previewImage({ current: url, urls: this.data.gallery.map(function (g) { return g.img; }) });
   },
 
-  // 「应用」= 整包复制成我的草稿,进主题配置(与模板预览原来的「用这个模板」同一条链路),不再二次确认
+  // 「应用」= 整包复制成我的草稿,进主题配置。
+  // r2-create(b4-u02-02/04 业主:「不需要选择城市 就是配置的时候需要选择地址就好了」「不需要换城市」):
+  // 不再弹「沿用原地点 / 换一个城市」,一律沿用原地点采用;作者在编辑器的「地点待办」里逐个替换地址。
   useTemplate() {
     if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTemplate(), { owner: this, target: () => [this._id, this._scope] })) return; // 游客写前登录
     if (this._readonly) { cyToast('当前岗位仅可浏览模板'); return; }
-    // 后端每次调用都整包复制出新草稿,连点两下就是两份:在途时挡住
-    if (this._using) { cyToast('正在配置，请稍候'); return; }
     if (!this._id) return;
-    const that = this;
     // 第十二轮 k9(p3 N6):本页已经复制出一份草稿,从编辑器回来再点「应用」就回到那一份,不再每点一次多一份草稿
     if (this._copiedId) { this._openCopiedDraft(this._copiedId); return; }
+    const loc = this._delivery && this._delivery.locationRequirement;
+    const placed = !!(loc && loc.physicalPlaceRequired === true && adoption.sourceCityOf(this._delivery));
+    this._submitUse(placed ? 'SAME_CITY' : '');
+  },
+
+  _submitUse(intent) {
+    // 后端每次调用都整包复制出新草稿,连点两下就是两份:在途时挡住
+    if (this._using) { cyToast('正在配置，请稍候'); return; }
+    const built = adoption.usePayload({ id: this._id, scope: this._scope, intent,
+      sourceCityCode: adoption.sourceCityOf(this._delivery), revisionId: adoption.revisionIdOf(this._delivery) });
+    const that = this;
     this._using = true;
     app.sendRequest({
       url: '/api/template/topic-template/use',
       method: 'POST',
-      data: { id: this._id, scope: this._scope },
+      data: built.data,
       success(res) {
         that._using = false;
         if (that._unloaded) return; // 复制回包晚于离开本页:不再把用户拉去编辑器
-        const copiedId = res && res.code == '200' && res.data && res.data.topicId;
-        if (!copiedId) { cyToast((res && res.msg) || '使用模板失败'); return; }
+        const result = adoption.useResult(res);
+        if (!result.ok) {
+          // 服务端明确拒绝:原文提示
+          cyToast(result.message || '使用模板失败');
+          return;
+        }
+        const copiedId = result.topicId;
         that._copiedId = copiedId;
         that._openCopiedDraft(copiedId);
       },
       fail() {
         that._using = false;
         if (that._unloaded) return;
+        // 网络失败:不自动重发,由用户再点一次(与改版前一致)
         cyToast('网络错误，请重试');
       }
     });

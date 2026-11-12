@@ -8,6 +8,7 @@ import com.chengyinhub.business.mapper.PlayerBadgeMapper;
 import com.chengyinhub.business.mapper.TopicCompletionXpAwardMapper;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.common.utils.StringUtils;
+import com.chengyinhub.common.observability.GameSloEvents;
 import com.chengyinhub.common.constant.RewardPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -70,8 +71,12 @@ public class TopicCompletionAwardServiceImpl implements ITopicCompletionAwardSer
             if (rows != 1) throw new IllegalStateException("通关勋章插入异常 rows=" + rows);
             firstCompletion = true;
         } catch (DuplicateKeyException duplicate) {
-            if (playerBadgeMapper.selectOne(memberId, code, topicId) == null) throw duplicate;
-            firstCompletion = false;
+            if (playerBadgeMapper.selectOne(memberId, code, topicId) == null) {
+                // OPS-01: 唯一键冲突但读不到已存在勋章 ⇒ 本次发奖确实失败(不是正常重放)。
+                GameSloEvents.rewardIdempotentConflict();
+                throw duplicate;
+            }
+            firstCompletion = false;   // 正常重放:已有发放事实,不计失败
         }
 
         // 第二轮拍板第 4 条:勋章只管「勋章」与首次通关的事实(成长徽章/官方活动证据);
@@ -111,14 +116,22 @@ public class TopicCompletionAwardServiceImpl implements ITopicCompletionAwardSer
             Map<String, Object> budget = xpBudgetService.computeBudget(topicId);
             int xp = budget.get("remain") instanceof Number ? ((Number) budget.get("remain")).intValue() : 0;
             if (xp > 0) {
-                Long earnedExpId = growthService.addCompletionExp(memberId, xp, topicId);
-                if (earnedExpId == null || earnedExpId <= 0
-                        || xpAwardMapper.insert(memberId, topicId, xp, factTime) != 1
-                        || xpAwardMapper.linkEarnedExp(memberId, topicId, earnedExpId) != 1) {
-                    throw new IllegalStateException("通关 XP 发放事实写入异常");
+                try {
+                    Long earnedExpId = growthService.addCompletionExp(memberId, xp, topicId);
+                    if (earnedExpId == null || earnedExpId <= 0
+                            || xpAwardMapper.insert(memberId, topicId, xp, factTime) != 1
+                            || xpAwardMapper.linkEarnedExp(memberId, topicId, earnedExpId) != 1) {
+                        // OPS-01: 进入本分支前已确认没有 XP 发放事实,因此这是并发冲突/写入失败,不是重放。
+                        GameSloEvents.rewardIdempotentConflict();
+                        throw new IllegalStateException("通关 XP 发放事实写入异常");
+                    }
+                    result.setEarnedXp(xp);
+                    result.setEarnedXpAt(factTime);
+                } catch (DuplicateKeyException concurrentAward) {
+                    // 并发写同一发放事实:本次奖励没落成。只计数,原样外抛(不重试、不改契约、不改事务)。
+                    GameSloEvents.rewardIdempotentConflict();
+                    throw concurrentAward;
                 }
-                result.setEarnedXp(xp);
-                result.setEarnedXpAt(factTime);
             }
         }
         return result;

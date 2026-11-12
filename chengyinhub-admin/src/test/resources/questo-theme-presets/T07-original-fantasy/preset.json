@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "presetCode": "T07-original-fantasy",
+  "templateType": "T07",
+  "title": "原创奇幻/节日（字段映射样本）",
+  "contractSource": "施工文档.md v1.3.2 §0.1 T07；§6 T07；§2 皮肤与内容边界",
+  "contentStatus": "MAPPING_READY",
+  "contentStatusReason": "仅完成题材到既有题型/模板字段的映射与发布闸验证；未创作人物、剧情、谜题、谜底、结局，未绑定真实地点。当前状态是 MAPPING_READY，不是可发布成品，也不是竞品正文/素材的转写",
+  "mediaStatus": "SPEC_ONLY",
+  "capabilities": [
+    "qaPick",
+    "branch"
+  ],
+  "requiredThemeItems": [
+    "item_fantasy_first",
+    "item_fantasy_second"
+  ],
+  "requiredStateKeys": [
+    "clue.festival_item_a",
+    "clue.festival_item_b",
+    "counter.help_choice"
+  ],
+  "nodeIdPlaceholders": {
+    "900301": "求助与第一件物品站",
+    "900302": "第二件物品与帮助选择站",
+    "900303": "结尾确认站"
+  },
+  "nodes": [
+    "nodes/node-01.json",
+    "nodes/node-02.json",
+    "nodes/node-03.json"
+  ],
+  "bindings": [
+    "bindings/city-a.json",
+    "bindings/city-b.json"
+  ],
+  "notImplemented": [],
+  "reuse": "数字物品走既有 interactionRules.grants 与 ITEM_HELD 条件；分支选择走既有 branch（附加项，不能独立产生完成证明），判定仍由同节点的 qaPick 承担",
+  "constraints": [
+    "不要求现场节庆装置",
+    "单人版不写真人到场接走道具",
+    "不写节日开放日期以外的强制物料"
+  ],
+  "mediaSpec": [
+    {
+      "id": "character-card",
+      "kind": "CHARACTER_ART",
+      "status": "NOT_PRODUCED",
+      "path": "T07-original-fantasy/media/character-card.png",
+      "spec": "原创角色立绘；不得沿用现成商业角色形象"
+    }
+  ],
+  "notVerified": [
+    "城市照片",
+    "地点核验",
+    "现场试玩",
+    "GPS与可达性",
+    "媒体产出",
+    "在VPS实际执行本验证类"
+  ],
+  "placeholderFields": [
+    "qa.options[].label / branch.steps[].body / 结尾文案：均为待填；人物与剧情未写，不沿用任何现成商业角色"
+  ],
+  "productStatus": "MAPPING_READY_NOT_A_PRODUCT",
+  "chaptersForced": false,
+  "sourceRecords": [
+    {
+      "node": "nodes/node-01.json",
+      "templateTitle": "求助与第一件物品站（待填：发布者改写标题）",
+      "validationMethod": 3,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    },
+    {
+      "node": "nodes/node-02.json",
+      "templateTitle": "第二件物品与帮助选择站（待填：发布者改写标题）",
+      "validationMethod": 3,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    },
+    {
+      "node": "nodes/node-03.json",
+      "templateTitle": "结尾确认站（待填：发布者改写标题）",
+      "validationMethod": 3,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    }
+  ],
+  "publishBlockers": [
+    "所有『待填：』文本必须由发布者替换为真实正文、答案与反馈后才能发布",
+    "bindings/<city>.json 的 required 槽位必须全部有值且 bound=true（换城必须重绑）",
+    "mediaSpec 中 status=NOT_PRODUCED 的项必须有已授权的实际文件与来源标注",
+    "地点必须在地图确认坐标；未核验现场不得标成可上线"
+  ],
+  "dataSource": {
+    "noDiskPackageConsumed": true,
+    "playerAdoptionPath": "cms_member_template（审核真源）→ cms_template_library（货架投影）→ POST /api/template/adopt-draft",
+    "minimumSeed": "一作者真源行 + 一货架投影行；货架行只能由 submitTemplateToMarket 在个人审核通过后产生"
+  }
+}

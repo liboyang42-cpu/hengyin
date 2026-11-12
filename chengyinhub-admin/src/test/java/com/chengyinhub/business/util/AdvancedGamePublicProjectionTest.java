@@ -603,6 +603,24 @@ class AdvancedGamePublicProjectionTest {
         }
     }
 
+    /**
+     * BE-08:答案别名政策与 canonical answer 同级,都是 secret。
+     * 公共投影是白名单,{@code answerPolicy} 没被写进去 —— 这条用例钉住「没被顺带整段搬过去」。
+     * 负控:哪天有人把 root 整段 copy 进投影,这里立刻红。
+     */
+    @Test
+    void answerAliasPolicyNeverReachesPublicConfigProjection() {
+        String raw = "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\","
+                + "\"title\":\"暗号是什么\",\"answerText\":\"芝麻开门\",\"maxTries\":0},"
+                + "\"answerPolicy\":{\"version\":1,\"normalizationPolicy\":\"LEGACY_V1\","
+                + "\"acceptedAliases\":[\"芝麻\",\"开门\"]}}";
+        String safe = AdvancedGamePublicProjection.safeConfigJson(raw);
+        assertNotNull(safe);
+        assertFalse(safe.contains("answerPolicy"), safe);
+        assertFalse(safe.contains("芝麻"), safe);
+        assertFalse(safe.contains("开门"), safe);
+    }
+
     /** 七个玩法各配一份齐全配置,外加三处只有商家该看到的私货。 */
     private static String sevenGames() {
         return "{\"schemaVersion\":1,"

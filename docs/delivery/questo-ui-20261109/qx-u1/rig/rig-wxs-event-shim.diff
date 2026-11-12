@@ -1,0 +1,45 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+index e6ffacde..95108485 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -541,9 +541,39 @@ function mkEvent(el, type, detail, native, target) {
+   if (native && native.clientX !== undefined) { ev3.touches = touchList(native); ev3.changedTouches = ev3.touches; if (!detail) ev3.detail = { x: ev3.touches[0].x, y: ev3.touches[0].y }; }
+   return ev3;
+ }
++
++// ---- qx-u1 rig shim: WXS event handlers get (event, ownerInstance) and event.instance, as on device ----
++function wxsDesc(el) {
++  if (!el) return null;
++  return {
++    setStyle: function (o) {
++      if (typeof o === 'string') { el.style.cssText = o; return; }
++      for (var k in o) { if (k.indexOf('--') === 0) el.style.setProperty(k, o[k]); else el.style[k] = o[k]; }
++    },
++    addClass: function (c) { el.classList.add(c); },
++    removeClass: function (c) { el.classList.remove(c); },
++    hasClass: function (c) { return el.classList.contains(c); },
++    getDataset: function () { return el.__ds || {}; },
++    getBoundingClientRect: function () { var r = el.getBoundingClientRect(); var s = MP.scale || 1; return { left: r.left / s, top: r.top / s, width: r.width / s, height: r.height / s }; },
++    getComputedStyle: function (keys) { var cs = window.getComputedStyle(el), o = {}; (keys || []).forEach(function (k) { o[k] = cs[k]; }); return o; },
++    selectComponent: function (sel) { try { return wxsDesc(el.querySelector(sel)); } catch (e) { return null; } },
++  };
++}
++function wxsOwner(owner) {
++  if (!owner) return null;
++  if (!owner.__wxsState) owner.__wxsState = {};
++  var root = owner.__root;
++  return {
++    getState: function () { return owner.__wxsState; },
++    selectComponent: function (sel) { var n = null; try { n = root.querySelector(sel); } catch (e) {} return wxsDesc(n); },
++    callMethod: function (name, arg) { if (typeof owner[name] === 'function') return owner[name](arg); },
++    requestAnimationFrame: function (fn) { return requestAnimationFrame(fn); },
++    setStyle: function () {}, addClass: function () {}, removeClass: function () {},
++  };
++}
+ function callHandler(el, b, evt) {
+   var owner = el.__owner; var h = b.h;
+-  if (typeof h === 'function') return h.call(owner, evt);
++  if (typeof h === 'function') { evt.instance = wxsDesc(el); return h(evt, wxsOwner(owner)); }
+   if (!h || typeof h !== 'string') return;
+   var fn = owner && owner[h];
+   if (typeof fn !== 'function') { MP.log.push('no handler ' + h); return; }

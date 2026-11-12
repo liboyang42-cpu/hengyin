@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.VideoBountySubmissionMapper">
+
+  <resultMap id="BaseResultMap" type="com.chengyinhub.business.domain.VideoBountySubmission">
+    <id     column="id"                  property="id"/>
+    <result column="campaign_id"         property="campaignId"/>
+    <result column="campaign_key"        property="campaignKey"/>
+    <result column="member_id"           property="memberId"/>
+    <result column="topic_id"            property="topicId"/>
+    <result column="platform"            property="platform"/>
+    <result column="source_url"          property="sourceUrl"/>
+    <result column="canonical_video_key" property="canonicalVideoKey"/>
+    <result column="origin_group_key"    property="originGroupKey"/>
+    <result column="verified_group_key"  property="verifiedGroupKey"/>
+    <result column="verified_by"         property="verifiedBy"/>
+    <result column="verified_at"         property="verifiedAt"/>
+    <result column="verified_source_ref" property="verifiedSourceRef"/>
+    <result column="verified_group_version" property="verifiedGroupVersion"/>
+    <result column="status"              property="status"/>
+    <result column="submitted_at"        property="submittedAt"/>
+    <result column="published_at"        property="publishedAt"/>
+    <result column="window_ends_at"      property="windowEndsAt"/>
+    <result column="reviewed_by"         property="reviewedBy"/>
+    <result column="reviewed_at"         property="reviewedAt"/>
+    <result column="review_note"         property="reviewNote"/>
+    <result column="del_flag"            property="delFlag"/>
+    <result column="create_time"         property="createTime"/>
+    <result column="update_time"         property="updateTime"/>
+  </resultMap>
+
+  <select id="selectById" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_submission WHERE id = #{id} AND del_flag = '0'
+  </select>
+
+  <select id="selectByIdForUpdate" resultMap="BaseResultMap" useCache="false" flushCache="true">
+    SELECT * FROM video_bounty_submission WHERE id = #{id} AND del_flag = '0' FOR UPDATE
+  </select>
+
+  <select id="selectByCanonicalKey" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_submission
+    WHERE campaign_id = #{campaignId} AND canonical_video_key = #{canonicalVideoKey} AND del_flag = '0'
+  </select>
+
+  <!-- 跨活动去重:同一作者同一规范化视频键,任意活动命中即算重复投稿。 -->
+  <select id="selectByMemberAndCanonical" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_submission
+    WHERE member_id = #{memberId} AND canonical_video_key = #{canonicalVideoKey} AND del_flag = '0'
+    ORDER BY id LIMIT 1
+  </select>
+
+  <select id="selectByMember" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_submission
+    WHERE member_id = #{memberId} AND del_flag = '0'
+    <if test="campaignId != null">AND campaign_id = #{campaignId}</if>
+    ORDER BY id DESC
+  </select>
+
+  <!-- 封顶按"同组有效投稿"合计:撤销/取消/拒绝/申诉中的行不参与基数。 -->
+  <select id="selectActiveByGroup" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_submission
+    WHERE campaign_id = #{campaignId} AND origin_group_key = #{originGroupKey}
+      AND status IN (0, 1, 2) AND del_flag = '0'
+    ORDER BY id
+  </select>
+
+  <!--
+    封顶/应计的唯一分组来源：运营核验过的 verified_group_key。
+    只取状态有效的行（撤销/取消/拒绝不参与基数）；未核验(NULL)的行永远不进任何组。
+  -->
+  <select id="selectActiveByVerifiedGroup" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_submission
+    WHERE campaign_id = #{campaignId} AND verified_group_key = #{verifiedGroupKey}
+      AND status IN (0, 1, 2) AND del_flag = '0'
+    ORDER BY id
+  </select>
+
+  <!--
+    核验 CAS：只有 verified_group_version 命中才写。
+    同一结论重投 → 版本已推进 → 0 行 → 服务层读回后判等（幂等），不重复记审计。
+  -->
+  <update id="markGroupVerified">
+    UPDATE video_bounty_submission
+       SET verified_group_key = #{verifiedGroupKey},
+           verified_by = #{verifiedBy},
+           verified_at = #{verifiedAt},
+           verified_source_ref = #{verifiedSourceRef},
+           verified_group_version = verified_group_version + 1,
+           update_time = #{verifiedAt}
+     WHERE id = #{id} AND verified_group_version = #{expectedVersion}
+       AND del_flag = '0'
+  </update>
+
+  <select id="countApprovedByCampaignAndTopic" resultType="int">
+    SELECT COUNT(*) FROM video_bounty_submission
+    WHERE campaign_id = #{campaignId} AND topic_id = #{topicId}
+      AND status = 2 AND del_flag = '0'
+  </select>
+
+  <select id="selectAdminPage" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_submission
+    WHERE del_flag = '0'
+    <if test="campaignId != null">AND campaign_id = #{campaignId}</if>
+    <if test="status != null">AND status = #{status}</if>
+    ORDER BY id DESC
+    LIMIT #{limit} OFFSET #{offset}
+  </select>
+
+  <insert id="insertSubmission" parameterType="com.chengyinhub.business.domain.VideoBountySubmission"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO video_bounty_submission
+      (campaign_id, campaign_key, member_id, topic_id, platform, source_url, canonical_video_key,
+       origin_group_key, status, submitted_at, del_flag, create_time, update_time)
+    VALUES
+      (#{campaignId}, #{campaignKey}, #{memberId}, #{topicId}, #{platform}, #{sourceUrl}, #{canonicalVideoKey},
+       #{originGroupKey}, #{status}, #{submittedAt}, '0', NOW(), NOW())
+  </insert>
+
+  <!-- CAS 审核通过:只有 SUBMITTED/UNDER_REVIEW 可置 APPROVED,并发审核只一方生效。 -->
+  <update id="markApprovedIfPending">
+    UPDATE video_bounty_submission
+       SET status = 2,
+           published_at = #{publishedAt},
+           window_ends_at = #{windowEndsAt},
+           reviewed_by = #{reviewedBy},
+           reviewed_at = #{reviewedAt},
+           review_note = #{reviewNote},
+           update_time = NOW()
+     WHERE id = #{id} AND status IN (0, 1)
+  </update>
+
+  <update id="markRejectedIfPending">
+    UPDATE video_bounty_submission
+       SET status = 3,
+           reviewed_by = #{reviewedBy},
+           reviewed_at = #{reviewedAt},
+           review_note = #{reviewNote},
+           update_time = NOW()
+     WHERE id = #{id} AND status IN (0, 1)
+  </update>
+
+  <!-- 申诉只能由作者本人对"自己的被拒投稿"提出:member_id 进 WHERE,防越权改他人状态。 -->
+  <update id="markAppealingIfRejected">
+    UPDATE video_bounty_submission
+       SET status = 5, review_note = #{reviewNote}, update_time = NOW()
+     WHERE id = #{id} AND member_id = #{memberId} AND status = 3
+  </update>
+
+  <update id="markApprovedIfAppealing">
+    UPDATE video_bounty_submission
+       SET status = 2,
+           published_at = #{publishedAt},
+           window_ends_at = #{windowEndsAt},
+           reviewed_by = #{reviewedBy},
+           reviewed_at = #{reviewedAt},
+           review_note = #{reviewNote},
+           update_time = NOW()
+     WHERE id = #{id} AND status = 5
+  </update>
+
+  <update id="markRevokedIfApproved">
+    UPDATE video_bounty_submission
+       SET status = 4,
+           reviewed_by = #{reviewedBy},
+           reviewed_at = #{reviewedAt},
+           review_note = #{reviewNote},
+           update_time = NOW()
+     WHERE id = #{id} AND status = 2
+  </update>
+
+  <!-- 作者取消带 member_id 归属条件:不能取消别人的投稿。 -->
+  <update id="markCancelledByOwner">
+    UPDATE video_bounty_submission
+       SET status = 6, update_time = NOW()
+     WHERE id = #{id} AND member_id = #{memberId} AND status IN (0, 1, 3, 5)
+  </update>
+
+</mapper>

@@ -164,6 +164,15 @@ public class TopicTemplateDetailVO {
     @Schema(description = "访问者是否本主题原发布者；仅此身份可查看申请人并审核")
     private Boolean viewerIsPublisher;
 
+    /**
+     * BE-13 交付元数据(修订/端能力/地点/运营投入/证据/许可/语言)。
+     * 逐字段由 {@link ContentDeliveryMetadataVO} 白名单承载;缺权威事实时为 null 或 UNKNOWN,
+     * 前端按「未提供」渲染,不得把缺失当作已授权。
+     */
+    @Schema(description = "创作者交付元数据:修订号/端能力/地点与运营需求/证据等级/许可摘要/语言")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private ContentDeliveryMetadataVO contentDelivery;
+
     // ====== getters/setters ======
 
     public Long getId() { return id; }
@@ -242,4 +251,6 @@ public class TopicTemplateDetailVO {
     public void setAuthor(String author) { this.author = author; }
     public java.util.Date getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(java.util.Date updatedAt) { this.updatedAt = updatedAt; }
+    public ContentDeliveryMetadataVO getContentDelivery() { return contentDelivery; }
+    public void setContentDelivery(ContentDeliveryMetadataVO contentDelivery) { this.contentDelivery = contentDelivery; }
 }

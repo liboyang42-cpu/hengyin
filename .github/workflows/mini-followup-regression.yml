@@ -32,7 +32,7 @@ jobs:
           --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
           --health-interval=10s --health-timeout=5s --health-retries=15
     env:
-      MAVEN_OPTS: -Xmx640m
+      MAVEN_OPTS: -Xmx1536m  # 2026-11-10 qx-final:launch 波次测试源增多后 javac 在 640m 下 OOM(CI 连续两次;本地 448m 复现同样 OOM),提高编译堆
       CHENGYIN_FUNDS_MYSQL_IT: '1'
       CHENGYIN_NPC_DELETE_IT: '1'
       CHENGYIN_TEST_MYSQL_HOST: 127.0.0.1
@@ -75,7 +75,7 @@ jobs:
           import json, os, time, xml.etree.ElementTree as ET
           from pathlib import Path
           expected = {
-            'com.chengyinhub.business.service.impl.NpcChatServiceTest': 24,
+            'com.chengyinhub.business.service.impl.NpcChatServiceTest': 25,
             'com.chengyinhub.web.controller.api.ApiAiNpcChatDataTest': 2,
             'com.chengyinhub.business.it.NpcChatUserDataMyBatisIT': 3,
             'com.chengyinhub.business.service.impl.A02NpcDeleteBarrierMySqlIT': 8,
@@ -95,11 +95,11 @@ jobs:
               if observed != dict(tests=count, failures=0, errors=0, skipped=0) or len(set(methods)) != count:
                   failures.append(name + ': count/status mismatch')
           Path('mini-followup-observed.json').write_text(json.dumps(dict(
-              source_sha=os.environ['VALIDATED_SOURCE_SHA'], expected_total=41, suites=results,
+              source_sha=os.environ['VALIDATED_SOURCE_SHA'], expected_total=42, suites=results,
               failures=failures, finished_at=int(time.time()), layer='CI_SELECTED_AUTOMATED_ONLY',
               test_deployed=False), indent=2) + '\n')
           assert not failures, failures
-          assert sum(s['observed']['tests'] for s in results) == 41
+          assert sum(s['observed']['tests'] for s in results) == 42
           PY
       - uses: actions/upload-artifact@v4
         if: always()

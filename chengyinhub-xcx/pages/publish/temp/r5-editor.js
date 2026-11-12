@@ -157,15 +157,15 @@ const methods = {
   _refreshR5Editor() { const effectScopeOptions = tools.TARGETS.map(item => { const config = clone(this.data.advanced); config.interactionRules = Object.assign({}, config.interactionRules, { targetScope: item.key }); return Object.assign({}, item, { reason: matrix.validate(this._supportMatrix, Object.assign({}, this.data.formData, { advancedConfigJson: config }), this._supportContext) || (item.key !== 'OWNER' && this._supportContext?.runtime?.runtimeScope && !(this._supportContext.runtime.runtimeScope === 'TEAM' && this._supportContext.runtime.worldMode === 'WORLD_SHARED') ? '仅全场共享的组队主题可用' : '') }); }); this.setData({ effectScopeOptions, r5Editor: view(this.data.advanced, this.data.formData.validationMethod, this._supportMatrix, this._supportContext, this.data.r5Editor?.category) }); },
   pickR5Category(e) { const category = e.currentTarget.dataset.category || catalog.CATEGORIES[Number(e.detail.value)]; if (!catalog.CATEGORIES.includes(category)) return; this.setData({ 'r5Editor.category': category }); this._refreshR5Editor(); },
   pickR5Game(e) { const base = e.currentTarget.dataset.key ? catalog.BASE_GAMES.find(row => row.key === e.currentTarget.dataset.key) : this.data.r5Editor.gameItems[Number(e.detail.value)]; if (!base || base.disabled || base.reason) return; this.pickGame({ currentTarget: { dataset: { key: base.gameKey || base.forms[0].gameKey, r5: true } } }); },
-  _currentTagKey() { const key = this.data.gameKey || ''; for (const group of this.data.r5Editor.gameGroups || []) { const item = group.items.find(row => row.pickKey === key); if (item) return item.key; } return ''; },
+  _currentTagKey() { const key = catalog.pickerKey(this.data.gameKey || ''); for (const group of this.data.r5Editor.gameGroups || []) { const item = group.items.find(row => row.pickKey === key); if (item) return item.key; } return ''; },
   _gameTag(key) { for (const group of this.data.r5Editor.gameGroups || []) { const item = group.items.find(row => row.key === key); if (item) return Object.assign({}, item, { reason: item.reason || this.data.lockedGames?.[item.pickKey] || this.data.supportReasons?.[item.pickKey] || '' }); } return null; },
   openR5GameSheet() {
     const key = this._currentTagKey();
     const index = Math.max(0, (this.data.r5Editor.gameGroups || []).findIndex(group => group.items.some(item => item.key === key)));
-    this.setData({ gameSheetOpen: true, sheetGroup: index, sheetAnchor: index ? 'gsheet-g' + index : '', sheetNavAnchor: 'gnav-' + index, sheetPick: key, sheetPickItem: key ? this._gameTag(key) : null }, () => this._measureGameStrip());
+    this.setData({ gameSheetOpen: true, sheetGroup: index, sheetNavAnchor: 'gnav-' + index, sheetPick: key, sheetPickItem: key ? this._gameTag(key) : null });
   },
   closeR5GameSheet() { this.setData({ gameSheetOpen: false }); },
-  jumpR5GameGroup(e) { const index = Number(e.currentTarget.dataset.index); this.setData({ sheetGroup: index, sheetAnchor: 'gsheet-g' + index, sheetNavAnchor: 'gnav-' + index }); },
+  jumpR5GameGroup(e) { const index = Number(e.currentTarget.dataset.index); this.setData({ sheetGroup: index, sheetNavAnchor: 'gnav-' + index }); },
   pickR5GameTag(e) { const key = e.currentTarget.dataset.key; this.setData({ sheetPick: key, sheetPickItem: this._gameTag(key) }); },
   confirmR5GameSheet() {
     const item = this.data.sheetPickItem;
@@ -176,24 +176,6 @@ const methods = {
     // 新建时名字还空着就先用玩法名,作者随时可改
     if (!String(this.data.formData.title || '').trim() && this.data.gameKey) this._setFormState({ 'formData.title': (this.data.gameCurrent && this.data.gameCurrent.label) || item.label });
     if (this.data.gameSheetOpen) this.closeR5GameSheet();
-  },
-  _measureGameStrip() {
-    if (typeof this.createSelectorQuery !== 'function') return;
-    const query = this.createSelectorQuery();
-    query.select('.cg-tstrip').boundingClientRect();
-    query.selectAll('.cg-tblock').boundingClientRect();
-    query.select('.cg-tstrip__in').boundingClientRect();
-    query.exec(res => { const strip = res && res[0], blocks = res && res[1], inner = res && res[2]; if (!strip || !blocks) return; this._tstripWidth = strip.width; this._tstripInnerWidth = inner && inner.width; this._tblockLefts = blocks.map(rect => rect.left - strip.left); });
-  },
-  onGameStripScroll(e) {
-    const lefts = this._tblockLefts; if (!lefts || !lefts.length) return;
-    const x = e.detail.scrollLeft; let index = 0;
-    // 第十轮 f3 第 4 项(p3 F10):半屏还在入场缩放时量到的位置偏小,按「真实滚动宽 / 量到的内宽」换回实际坐标,
-    // 否则一滚就把高亮推到后面的分组(停在「问答」列却亮「互动」)。
-    const ratio = e.detail.scrollWidth && this._tstripInnerWidth ? e.detail.scrollWidth / this._tstripInnerWidth : 1;
-    lefts.forEach((left, i) => { if (left * ratio <= x + 40) index = i; });
-    if (e.detail.scrollWidth && x + 8 >= e.detail.scrollWidth - (this._tstripWidth || 0)) index = lefts.length - 1;
-    if (index !== this.data.sheetGroup) this.setData({ sheetGroup: index, sheetNavAnchor: 'gnav-' + index });
   },
   pickR5GameFromSheet(e) { const before = this.data.gameKey; this.pickR5Game(e); if (this.data.gameKey !== before || !before) this.setData({ gameSheetOpen: false }); },
   pickR5Form(e) { const forms = this.data.r5Editor.forms; const form = forms.find((row, i) => row.key === e.detail.value || i === Number(e.detail.value)); if (form && !form.reason) this.pickGame({ currentTarget: { dataset: { key: form.gameKey, r5: true } } }); },

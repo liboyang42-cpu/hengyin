@@ -125,7 +125,8 @@ class TopicDraftVisibilityMyBatisTest {
         st.execute("DROP TABLE IF EXISTS cms_topic");
         st.execute("CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, member_id BIGINT, club_id BIGINT,"
                 + " topic_type INT, product_type INT, circle_theme_code VARCHAR(24),"
-                + " source_template_topic_id BIGINT, complete_rule_json JSON, route_mode VARCHAR(20),"
+                + " source_template_topic_id BIGINT, city_code VARCHAR(32), content_contract_json JSON,"
+                + " complete_rule_json JSON, route_mode VARCHAR(20),"
                 + " route_graph_json JSON, config_version BIGINT, published_route_graph_json JSON,"
                 + " published_config_version BIGINT, game_module_config_json JSON,"
                 + " journey_rules_json JSON,"

@@ -78,7 +78,7 @@ function assertShotFixtureContract(fixtures, selectors = SELECTORS) {
 
   assert.deepEqual(selectors.D07.selector, '.david')
   assert.deepEqual(selectors.D22.selector, '.txjl-state')
-  assert.deepEqual(selectors.D23.selector, '.ir-summary, .ir-group, .ir-row')
+  assert.deepEqual(selectors.D23.selector, '.ir-hero, .ir-group, .ir-row')
   assert.deepEqual(selectors.D28.selector, '.id-item')
   assert.deepEqual(selectors.D29.selector, '.id-item')
   assert.deepEqual(selectors.D32.selector, '.id-tabs, .id-state-fill')

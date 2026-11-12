@@ -99,7 +99,7 @@ Page({
     /* sheet = '' | team(P2/P3/P4/被拒/已加入)| leader(P5)| mine(P6)| topic。非空时底部角控件收起。 */
     sheet: '',
     sheetIn: false,
-    current: null,
+    current: null, reportShow: false, reportTeamId: '',
     busy: false,
     applicants: [],
     leaderSub: '',
@@ -1155,4 +1155,11 @@ Page({
       } catch (e) { /* 量不到就用共用样式的位置 */ }
     }, 60);
   },
+  /* TEAM-REPORT-01:队伍卡接上既有举报(team-report-sheet → POST /api/team/report),同队伍详情页 */
+  openTeamReport() {
+    const cur = this.data.current;
+    if (!cur || !cur.teamId || cur.viewerStatus === 'LEADER') return;
+    this.setData({ reportTeamId: String(cur.teamId), reportShow: true });
+  },
+  closeTeamReport() { this.setData({ reportShow: false }); },
 });

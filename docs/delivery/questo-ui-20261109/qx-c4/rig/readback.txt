@@ -1,0 +1,7 @@
+(9004, 990016, 0, 'selfplay:84cbb984-fe67-4f6b-99b6-352ddc31e9f0', 1, 1)
+(1, 0, 'default', 0, 'selfplay:1a97e606-00f3-4c64-8a9f-a09492ed5d77')
+(2, 0, 'default', 0, 'selfplay:16cf5383-4323-43a4-9986-2658c6475827')
+(3, 0, 'default', 0, 'selfplay:84cbb984-fe67-4f6b-99b6-352ddc31e9f0')
+(76, 6, 'selfplay:84cbb984-fe67-4f6b-99b6-352ddc31e9f0')
+before {"msg": "操作成功", "code": 200, "data": {"runId": 1, "nodeId": 71, "enabled": false, "layers": [], "remainingFreeUses": null}, "_status": 200}
+legacy {"msg": "原局身份不可用，请重新进入本局", "code": 400, "_status": 200}

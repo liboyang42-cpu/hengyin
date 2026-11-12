@@ -15,6 +15,16 @@ public interface CmsTopicChapterMapper
     /** All physically retained content, including hidden rows; caller holds the topic content fence. */
     Long countContentByTopicForUpdate(@Param("topicId") Long topicId);
 
+    /**
+     * 发布前试检查的只读计数:同一行集口径,但**不加锁**。
+     *
+     * <p>为什么必须另开一个 id 而不是复用 {@link #countContentByTopicForUpdate}:后者是
+     * {@code select ... for update nowait},只在持有父行 fence 的写链里成立。试检查是只读路径,
+     * 既不该拿写锁,也不能因为拿不到锁就给作者报一条假问题。两者共享同一张表与同一 topic_id 条件,
+     * 差别只有锁语义,所以不存在第二套尺寸口径。
+     */
+    Long countContentByTopic(@Param("topicId") Long topicId);
+
     /** Parent fence first; current row read proves the locator still belongs to that parent. */
     CmsTopicChapter selectContentByIdForUpdate(@Param("id") Long id);
 

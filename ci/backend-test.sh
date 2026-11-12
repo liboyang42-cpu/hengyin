@@ -8,6 +8,20 @@ cd "$(git rev-parse --show-toplevel)" || exit 1   # 路径均为仓库根相对,
 python3 -m unittest ci/test_role_permission_contract.py
 GATE_SELFTEST=1 GATE="$PWD/ci/assert_it_ran.py" python3 -m unittest ci/test_assert_it_ran.py
 
+# 官方公开根证书/负例按 SHA 固定下载到临时目录，不入库；缺失必须失败，不能让 SDK 负例静默 skip。
+APPLE_IAP_INPUTS="$(mktemp -d)"
+trap 'rm -rf "$APPLE_IAP_INPUTS"' EXIT
+while read -r expected name url; do
+  curl --fail --silent --show-error --location --retry 3 --retry-all-errors "$url" -o "$APPLE_IAP_INPUTS/$name"
+  printf '%s  %s\n' "$expected" "$APPLE_IAP_INPUTS/$name" | sha256sum --check --status
+done <<'APPLE_INPUTS'
+63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179 AppleRootCA-G3.cer https://www.apple.com/certificateauthority/AppleRootCA-G3.cer
+53090b903cdcd661a100ebfd41617103352ede6b3bcf91a34346ccdcc925c6d8 xcode-signed-transaction https://raw.githubusercontent.com/apple/app-store-server-library-java/v5.2.0/src/test/resources/xcode/xcode-signed-transaction
+e1fc5e5795383a5d672a3f355b86407c95a0eb01eb35397dee7e6d76270ef579 testNotification https://raw.githubusercontent.com/apple/app-store-server-library-java/v5.2.0/src/test/resources/mock_signed_data/testNotification
+APPLE_INPUTS
+export APPLE_IAP_TEST_ROOT="$APPLE_IAP_INPUTS/AppleRootCA-G3.cer"
+export APPLE_IAP_TEST_FIXTURE_DIR="$APPLE_IAP_INPUTS"
+
 # 全量编译 + 跑测试。首次接入若命中历史遗留失败用例,
 # 先在此收敛或用 -pl 缩到改动模块,再逐步扩全。
 mvn -B clean test
@@ -69,6 +83,8 @@ MYBATIS_ITS=(
   CircleThemeSeedMySqlIT
   TemplatePreferenceJsonMySqlIT
   TemplateMarketLifecycleMySqlIT
+  WorkshopPurchaseMyBatisIT
+  WorkshopAppleIapMyBatisIT
   TemplateAdoptionReceiptMyBatisIT
   TemplateAdoptionRoundTripMySqlIT
   AdvancedGameRuntimeMySqlIT
@@ -123,6 +139,8 @@ MYBATIS_ITS=(
   P0CityRunChainMySqlIT
   P0FreeExploreSupplyGateMySqlIT
   P0DeregistrationMySqlIT
+  # P0-23 需补供给恢复:必选章退出停售 → 批准补位并生效 → 仅主办显式恢复;未补/过期/越权/重放均不恢复。
+  P0FreeExploreSupplyRecoveryMySqlIT
   # 2026-10-22 发布验收 P1 玩家念头(领取/步数基线/达成加运气上限仅一次)与隐私(按用途撤回、到访头像窗口、
   #   导出不跨账号且外人游标被拒、注销申请幂等与仅本人可撤)。
   JourneyThoughtProgressMySqlIT
@@ -147,6 +165,10 @@ MYBATIS_ITS=(
   # 2026-10-23 DOC2 O-06 part 1 券库存守恒:N 个并发领取打在库存 K 上恰好 K 个成功(按 id 发券 / 按来源发券且重放不占库存 /
   #   后台补录),负控=旧的无条件 +1 在同样并发下真超发。行锁串行化只有真 InnoDB 验得动。
   CouponStockConservationMySqlIT
+  # BE-14 多作用域榜单:score=完成节点数、有效报名/全额退款撤销、run 重放、城市 adcode 归因、
+  #   俱乐部只含在册成员;全部落在真 MySQL 方言上(ONLY_FULL_GROUP_BY / 派生表聚合 / 保留字),
+  #   H2 MySQL 模式挡不住这几类差异。不点名 = CI 永远跑不到这条口径。
+  ScopedLeaderboardMySqlIT
   # DOC2 FXA(#478-3):主题通关奖封顶判据读真 game_runtime_session JSON 快照 —— 任一已完成站自报/兜底 ⇒ 封顶,
   #   别人的局、别的场次不算,视觉复核改判 PASS 后解除。
   ThemeCompletionRewardCapMySqlIT
@@ -154,6 +176,9 @@ MYBATIS_ITS=(
   # Lane BF4(W48R SHOULD-FIX 1):同意记录 requestId 去重 —— 并发同号重放只落一行、不一致重放 409、
   #   RR 旧快照下必须当前读到原记录。类上门控 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1,下面 mvn 行显式打开。
   ConsentRecordIdempotencyMySqlIT
+  # BE-13 交付元数据:真 mapper XML 读 cms_topic_template_meta / 章节投入 / topic_sale_snapshot,
+  #   并证明商家节点数据层可见性闸仍把未审节点挡在公开交付摘要之外。不点名 = CI 永远跑不到这条边界。
+  TopicDeliveryMetadataMySqlIT
 )
 IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 # ⚠️ 必须带 -am:上面那句 `mvn clean test` 不 install 兄弟模块,

@@ -10,7 +10,7 @@
     <view bindtap="close" aria-role="button" aria-label="返回" hover-class="cy-pressed">返回</view>
   </view>
   <block wx:else>
-    <!-- V-02(2026-10-29 业主):与票夹背面同一版式 —— 只有标题 + 码(码心城瘾 logo)，7 天内到期才写「N 天内过期」。 -->
+    <!-- D1(2026-11-12 设计评审):入场码只在「⋯」工具菜单的入场码行打开,普通半屏里一个适中的码(400rpx ≈ 200px),不再是翻面大票卡。 -->
     <view class="voucher__card">
       <text wx:if="{{title}}" class="voucher__title ep1">{{title}}</text>
       <view class="voucher__qr">
@@ -22,9 +22,7 @@
       <text wx:if="{{expiry}}" class="voucher__exp">{{expiry}}</text>
     </view>
     <view wx:if="{{seatCount > 1}}" class="seat-choice__switch" bindtap="changeSeat" aria-role="button" aria-label="重新选择席位" hover-class="cy-pressed">重新选择席位</view>
-    <view class="voucher__acts">
-      <view class="voucher__back" bindtap="close" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
-    </view>
+    <!-- V3-17(2026-11-06 业主):左下不再有返回钮,关闭走半屏右上角的 × 与下拉 -->
   </block>
 
 </view>

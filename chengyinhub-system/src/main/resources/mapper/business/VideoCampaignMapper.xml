@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.VideoCampaignMapper">
+
+  <resultMap id="BaseResultMap" type="com.chengyinhub.business.domain.VideoCampaign">
+    <id     column="id"                  property="id"/>
+    <result column="campaign_key"        property="campaignKey"/>
+    <result column="title"               property="title"/>
+    <result column="description"         property="description"/>
+    <result column="status"              property="status"/>
+    <result column="owner_member_id"     property="ownerMemberId"/>
+    <result column="currency"            property="currency"/>
+    <result column="rate_per_thousand"   property="ratePerThousand"/>
+    <result column="per_video_cap"       property="perVideoCap"/>
+    <result column="window_days"         property="windowDays"/>
+    <result column="total_budget_cap"    property="totalBudgetCap"/>
+    <result column="cash_payout_enabled" property="cashPayoutEnabled"/>
+    <result column="rule_version"        property="ruleVersion"/>
+    <result column="config_json"         property="configJson"/>
+    <result column="del_flag"            property="delFlag"/>
+    <result column="create_time"         property="createTime"/>
+    <result column="update_time"         property="updateTime"/>
+  </resultMap>
+
+  <select id="selectById" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_campaign WHERE id = #{id} AND del_flag = '0'
+  </select>
+
+  <select id="selectByCampaignKey" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_campaign WHERE campaign_key = #{campaignKey} AND del_flag = '0'
+  </select>
+
+  <!-- 串行化"活动已应计"累加:同一活动的并发放置锁在同一行上,避免预算被超发。 -->
+  <select id="selectByCampaignKeyForUpdate" resultMap="BaseResultMap" useCache="false" flushCache="true">
+    SELECT * FROM video_bounty_campaign WHERE campaign_key = #{campaignKey} AND del_flag = '0' FOR UPDATE
+  </select>
+
+  <select id="selectList" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_campaign
+    WHERE del_flag = '0'
+    <if test="status != null">AND status = #{status}</if>
+    ORDER BY id DESC
+  </select>
+
+  <select id="selectOpen" resultMap="BaseResultMap">
+    SELECT * FROM video_bounty_campaign
+    WHERE del_flag = '0' AND status = 1
+    ORDER BY id DESC
+    LIMIT 50
+  </select>
+
+  <insert id="insertCampaign" parameterType="com.chengyinhub.business.domain.VideoCampaign"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO video_bounty_campaign
+      (campaign_key, title, description, status, owner_member_id, currency, rate_per_thousand, per_video_cap,
+       window_days, total_budget_cap, cash_payout_enabled, rule_version,
+       config_json, del_flag, create_time, update_time)
+    VALUES
+      (#{campaignKey}, #{title}, #{description}, #{status}, #{ownerMemberId}, #{currency}, #{ratePerThousand}, #{perVideoCap},
+       #{windowDays}, #{totalBudgetCap}, #{cashPayoutEnabled}, #{ruleVersion},
+       #{configJson}, '0', NOW(), NOW())
+  </insert>
+
+  <!--
+    更新配置。仅写文案/预算/启停/规则版本这类"配置面"字段;
+    rate_per_thousand / per_video_cap / window_days 一旦有应计就由服务层拒绝修改
+    (改规则必须新建活动或新 rule_version,历史应计保留旧版本)。
+  -->
+  <update id="updateCampaign" parameterType="com.chengyinhub.business.domain.VideoCampaign">
+    UPDATE video_bounty_campaign
+       SET title = #{title},
+           description = #{description},
+           owner_member_id = #{ownerMemberId},
+           total_budget_cap = #{totalBudgetCap},
+           cash_payout_enabled = #{cashPayoutEnabled},
+           rule_version = #{ruleVersion},
+           config_json = #{configJson},
+           rate_per_thousand = #{ratePerThousand},
+           per_video_cap = #{perVideoCap},
+           window_days = #{windowDays},
+           update_time = NOW()
+     WHERE id = #{id} AND del_flag = '0'
+  </update>
+
+  <!-- CAS 状态流转:并发启停只有一方成功,不靠先读后写。 -->
+  <update id="updateStatusIfCurrent">
+    UPDATE video_bounty_campaign
+       SET status = #{newStatus}, update_time = NOW()
+     WHERE id = #{id} AND status = #{expectedStatus} AND del_flag = '0'
+  </update>
+
+  <!--
+    活动已应计合计。**必须 FOR UPDATE**:
+    本方法是"已用预算 + 本次应计 ≤ 预算上限"这道闸的一半。默认隔离级别是 REPEATABLE READ,
+    普通 SELECT 读的是事务开始时的快照 —— 即便先锁了活动行,合计仍可能是旧值,
+    两笔并发重算会各自读到旧合计、双双通过检查 ⇒ 超发。
+    锁定读总是读最新已提交版本,配合服务层先拿活动行锁,才真正串行化。
+  -->
+  <select id="sumActiveAccrual" resultType="java.math.BigDecimal" useCache="false" flushCache="true">
+    SELECT COALESCE(SUM(payable_amount), 0) FROM video_bounty_accrual
+    WHERE campaign_id = #{campaignId} AND payout_state IN (0, 1, 2)
+    FOR UPDATE
+  </select>
+
+  <!-- 组外已用预算:本组旧行即将整组替换,不能计入,否则重算会被二次 clamp 成漏算。 -->
+  <select id="sumActiveAccrualExcludingGroup" resultType="java.math.BigDecimal" useCache="false" flushCache="true">
+    SELECT COALESCE(SUM(payable_amount), 0) FROM video_bounty_accrual
+    WHERE campaign_id = #{campaignId} AND payout_state IN (0, 1, 2)
+      AND (group_key IS NULL OR group_key &lt;&gt; #{groupKey})
+    FOR UPDATE
+  </select>
+
+</mapper>

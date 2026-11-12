@@ -68,6 +68,9 @@ public interface ClubEventOpsMapper {
     Long selectPromotableActivityForUpdate(@Param("activityId") Long activityId,
                                           @Param("clubId") Long clubId,
                                           @Param("now") java.util.Date now);
+
+    Long selectHostBookableActivityForUpdate(@Param("activityId") Long activityId, @Param("clubId") Long clubId,
+                                            @Param("now") java.util.Date now);
     Long selectClubOwnerForUpdate(@Param("clubId") Long clubId);
     Long selectActiveClubMemberForUpdate(@Param("clubId") Long clubId,
                                          @Param("memberId") Long memberId);
@@ -97,6 +100,13 @@ public interface ClubEventOpsMapper {
     int offerWaitingCas(@Param("id") Long id, @Param("expectedVersion") Integer expectedVersion,
                         @Param("tokenHash") String tokenHash, @Param("offeredAt") java.util.Date offeredAt,
                         @Param("expiresAt") java.util.Date expiresAt);
+
+    int offerHostRequestCas(@Param("entry") ClubWaitlistEntry entry, @Param("now") java.util.Date now);
+    int rejectHostRequestCas(@Param("entry") ClubWaitlistEntry entry);
+    boolean hostPaymentNeedsRecovery(@Param("registrationId") Long registrationId, @Param("now") java.util.Date now,
+                                    @Param("paidAt") java.util.Date paidAt);
+
+    java.util.Map<String, Object> selectHostReservationOrderState(@Param("registrationId") Long registrationId);
     ClubWaitlistEntry selectWaitlistById(@Param("id") Long id);
     ClubWaitlistEntry selectWaitlistByIdForUpdate(@Param("id") Long id);
     int claimOfferCas(@Param("id") Long id, @Param("expectedVersion") Integer expectedVersion,

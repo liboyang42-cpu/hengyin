@@ -5,35 +5,33 @@
   color: var(--cy-color-text-primary);
 }
 
-.ir-summary {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--cy-space-4);
-  padding: var(--cy-space-4);
-  border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg));
-  background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-subtle));
-}
-.ir-summary-label { display: block; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
-.ir-summary-value { display: flex; align-items: baseline; gap: var(--cy-space-1); margin-top: var(--cy-space-1); font-size: var(--cy-type-data-xl); font-weight: 750; line-height: 1; font-variant-numeric: tabular-nums; }
-.ir-summary-unit { color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); font-weight: 500; }
-.ir-summary-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--cy-space-1); }
-.ir-summary-reward { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 700; font-variant-numeric: tabular-nums; }
-.ir-sync-note { margin-top: var(--cy-space-2); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+/* r2 a7-v1-p59:Revolut 结构 —— 顶部不套卡,直接在页面底上放大数字 */
+.ir-hero { padding: var(--cy-space-2) 0 var(--cy-space-1); }
+.ir-hero-label { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
+.ir-hero-value { display: block; margin-top: var(--cy-space-2); color: var(--cy-color-text-primary); font-size: var(--cy-type-data-xl); font-weight: 750; line-height: 1; font-variant-numeric: tabular-nums; }
+.ir-hero-value--pending { color: var(--cy-color-text-secondary); font-size: var(--cy-type-card-title); }
+.ir-hero-row { display: flex; align-items: center; gap: var(--cy-space-3); margin-top: var(--cy-space-4); }
+.ir-hero-meta { color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); font-variant-numeric: tabular-nums; }
 
 .ir-group { margin-top: var(--cy-space-5); }
 .ir-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cy-space-3); margin-bottom: var(--cy-space-2); }
 .ir-group-title { color: var(--cy-color-text-primary); font-size: var(--cy-type-section-title); font-weight: 700; }
 .ir-group-total { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); font-variant-numeric: tabular-nums; }
 .ir-card { overflow: hidden; border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-subtle)); }
-.ir-row { display: flex; align-items: center; gap: var(--cy-space-3); min-height: calc(var(--cy-space-7) + var(--cy-space-4)); padding: var(--cy-space-3); box-sizing: border-box; }
-.ir-row + .ir-row { margin-top: var(--cy-space-1); }
+.ir-row { display: flex; align-items: center; gap: var(--cy-space-3); min-height: 152rpx; padding: var(--cy-space-4); box-sizing: border-box; } /* l-misc(业主「列表看起来更小」):行高、头像与字号对齐其它列表页 */
+/* 行间细分隔线从文字列起,与头像不相交(Revolut 列表) */
+.ir-row { position: relative; }
+.ir-row + .ir-row::before { content: ''; position: absolute; top: 0; right: 0; left: calc(var(--cy-space-4) + 88rpx + var(--cy-space-3)); height: 1rpx; background: var(--cy-color-border-subtle); }
 .ir-avatar { flex: none; }
 .ir-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--cy-space-1); }
-.ir-name { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 650; }
-.ir-time { color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
-.ir-status { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
-.ir-reward { flex: none; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); font-weight: 650; font-variant-numeric: tabular-nums; }
+.ir-name { color: var(--cy-color-text-primary); font-size: var(--cy-type-body); font-weight: 650; }
+/* Revolut 列表行:左列 名字 / 状态;时间放到右侧胶囊下面(绝对定位,源码顺序不变) */
+.ir-copy { padding-right: 200rpx; }
+.ir-time { position: absolute; right: var(--cy-space-4); bottom: var(--cy-space-4); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
+.ir-status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
+/* 右侧状态胶囊:一律中性灰底(奖励未到账不是成功状态,不占成功绿;原合同) */
+.ir-pill { position: absolute; right: var(--cy-space-4); top: var(--cy-space-4); padding: 6rpx var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-status-neutral-soft); color: var(--cy-color-text-secondary); }
+.ir-reward { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-label); font-weight: 650; font-variant-numeric: tabular-nums; }
 
 .ir-more,
 .ir-more-error { display: flex; align-items: center; justify-content: center; min-height: var(--cy-btn-h); margin-top: var(--cy-space-3); color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
@@ -41,7 +39,75 @@
 .ir-more-action { display: flex; align-items: center; justify-content: center; min-height: var(--cy-btn-h-sm); padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-primary); }
 .ir-more--loading { color: var(--cy-color-text-tertiary); }
 
+/* V1-P59(IqRophy):汇总卡里叠放的被邀请人头像,后一个压前一个,外圈是卡片底色 */
+.ir-stack { display: flex; align-items: center; }
+.ir-stack-i { flex: none; width: 56rpx; height: 56rpx; padding: 4rpx; border-radius: 50%; background: var(--cy-color-bg-page); }
+.ir-stack-i + .ir-stack-i { margin-left: -16rpx; }
+
+/* V1-P59 / G-11 入场(utils/page-motion.js 的 --pm-* 约定):--pm-i 为 1 时先隐着,置 2 后依次上浮;
+   只写 translate 与 filter:opacity(),不碰 transform / opacity,静止时过渡时长为 0,按压反馈照常。
+   头像从左侧依次叠进来(IqRophy),每月一张记录卡像聊天卡片一张张升起(uixsiam09)。 */
+.ir-hero, .ir-group {
+  filter: opacity(calc(1 - var(--pm-i, 0)));
+  translate: 0 calc(var(--pm-i, 0) * 40rpx);
+  transition: filter var(--pm-i-d, 0s) ease, translate var(--pm-i-d, 0s) var(--cy-ease-page-rise);
+}
+.ir-stack-i {
+  filter: opacity(calc(1 - var(--pm-i, 0)));
+  translate: calc(var(--pm-i, 0) * -24rpx) 0;
+  transition: filter var(--pm-i-d, 0s) ease, translate var(--pm-i-d, 0s) var(--cy-ease-page-rise);
+  transition-delay: calc(var(--pm-i-s, 0) * 140ms);
+}
+.ir-stack-i:nth-child(2) { transition-delay: calc(var(--pm-i-s, 0) * 200ms); }
+.ir-stack-i:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 260ms); }
+.ir-stack-i:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 320ms); }
+.ir-stack-i:nth-child(5) { transition-delay: calc(var(--pm-i-s, 0) * 380ms); }
+.ir-group { transition-delay: calc(var(--pm-i-s, 0) * 300ms); }
+.ir-group:nth-child(2) { transition-delay: calc(var(--pm-i-s, 0) * 90ms); }
+.ir-group:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 160ms); }
+.ir-group:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 230ms); }
+/* r3-visual 加载过渡(refs4/load-tab-transition-frames):骨架之后每月卡里的行再一行行错开浮上来 */
+.ir-row {
+  filter: opacity(calc(1 - var(--pm-i, 0)));
+  translate: 0 calc(var(--pm-i, 0) * 24rpx);
+  transition: filter var(--pm-i-d, 0s) ease, translate var(--pm-i-d, 0s) var(--cy-ease-page-rise);
+  transition-delay: calc(var(--pm-i-s, 0) * 360ms);
+}
+.ir-row:nth-child(2) { transition-delay: calc(var(--pm-i-s, 0) * 420ms); }
+.ir-row:nth-child(3) { transition-delay: calc(var(--pm-i-s, 0) * 480ms); }
+.ir-row:nth-child(4) { transition-delay: calc(var(--pm-i-s, 0) * 540ms); }
+.ir-row:nth-child(5), .ir-row:nth-child(6), .ir-row:nth-child(7), .ir-row:nth-child(8) { transition-delay: calc(var(--pm-i-s, 0) * 600ms); }
+@media (prefers-reduced-motion: reduce) {
+  .ir-hero, .ir-group, .ir-stack-i, .ir-row { filter: none; translate: none; transition: none; }
+}
+
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
+
+/* ===== r3-visual 分享赚积分(refs4/share-earn-credits-frames) ===== */
+.ir-hero-top { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3); }
+/* 余额胶囊:数字滚动用等宽数字,宽度不跳 */
+.ir-bal { display: flex; align-items: center; gap: var(--cy-space-2); min-height: 56rpx; padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-action-secondary-bg); }
+.ir-bal-dot { width: 20rpx; height: 20rpx; border-radius: 50%; background: var(--cy-color-medal-gold); }
+.ir-bal-n { color: var(--cy-color-text-primary); font-size: var(--cy-type-label); font-weight: 700; font-variant-numeric: tabular-nums; }
+/* 最新到账卡:s1 扫描(头像框 + 扫描线)→ s2 金额浮现 → s3 上滑到位 + 打勾。只动 transform / opacity */
+.ir-earn { position: relative; display: flex; align-items: center; gap: var(--cy-space-3); margin-top: var(--cy-space-5); padding: var(--cy-space-4); border-radius: var(--cy-scene-card-radius, var(--cy-radius-lg)); background: var(--cy-scene-card-bg, var(--cy-color-bg-surface-subtle));
+  transform: translateY(0); transition: transform 420ms cubic-bezier(.2, 1.2, .4, 1); }
+.ir-earn--s1, .ir-earn--s2 { transform: translateY(32rpx); }
+.ir-earn-scan { position: relative; flex: none; width: 88rpx; height: 88rpx; border-radius: 50%; overflow: hidden; }
+.ir-earn-beam { position: absolute; left: 0; right: 0; top: 0; height: 6rpx; background: var(--cy-color-status-success); box-shadow: 0 0 16rpx var(--cy-color-status-success); opacity: 0; transform: translateY(0); }
+.ir-earn--s1 .ir-earn-beam { opacity: 1; transform: translateY(82rpx); transition: transform 480ms ease-in-out; }
+.ir-earn-ok { position: absolute; right: 0; bottom: 0; width: 40rpx; height: 40rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-status-success); color: #FFFFFF; /* ds-ok: 勾 */
+  transform: scale(0); transition: transform 260ms cubic-bezier(.2, 1.6, .4, 1); }
+.ir-earn--s3 .ir-earn-ok { transform: scale(1); }
+.ir-earn-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: var(--cy-space-1); }
+.ir-earn-amt { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 750; font-variant-numeric: tabular-nums;
+  opacity: 1; transform: scale(1); transition: transform 360ms cubic-bezier(.2, 1.3, .4, 1), opacity 240ms linear; }
+.ir-earn--s1 .ir-earn-amt { opacity: 0; transform: scale(.6); }
+.ir-earn-sub { color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
+.ir-earn-time { position: absolute; right: var(--cy-space-4); top: var(--cy-space-4); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  .ir-earn, .ir-earn-amt, .ir-earn-ok, .ir-earn-beam { transition: none; }
+}

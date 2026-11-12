@@ -67,9 +67,24 @@ public class PlayEntryApplication {
     private PlayNodeContext playNodeContext;
     @Autowired
     private PlayNodeQueryApplication playNodeQueryApplication;
+    /** 礼品可玩资格（只读自玩域）；必需注入，避免礼品行退化成"买家可玩"。 */
+    @Autowired
+    private com.chengyinhub.business.service.IMarketingGiftPlayEligibility giftPlayEligibility;
+    /** 付费内含席位受让人事实（只读）；与礼品分开，合并点仍在 CurrentPlayRegistration。 */
+    @Autowired
+    private com.chengyinhub.business.service.IRegistrationSeatRecipientEligibility seatRecipientEligibility;
 
     /** Compatibility GET /nodes still performs original entry commands at their original points. */
     public AjaxResult nodes(Long actorMemberId, Long activityId, Long topicId) {
+        return nodes(actorMemberId, activityId, topicId, null, null, null);
+    }
+
+    /**
+     * 同一入口的可选端能力声明（已有局只读兼容结论，隐式新建局前校验，不授予权益）。
+     * 不传 = 老客户端，兼容结论为「未确认」，不当作不支持。
+     */
+    public AjaxResult nodes(Long actorMemberId, Long activityId, Long topicId,
+            String clientPlatform, String clientVersion, String capabilities) {
         Long memberId = actorMemberId;
         if (memberId <= 0) return error("请先登录");
 
@@ -109,7 +124,8 @@ public class PlayEntryApplication {
             // 已开局的本局：通行证开局时有效即可打完，节点列表照常下发。
             if (pass == null && topicRouteRuntimeService != null && topicRouteRuntimeService.hasRunningSession(memberId, tId, 0L)) {
                 try { pass = com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
-                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,null,new Date()); }
+                        currentPlayActivityMapper,cmsRegistrationMapper,memberId,1L,tId,null,new Date(),
+                        giftPlayEligibility,seatRecipientEligibility); }
                 catch (IllegalStateException denied) { pass = null; }
             }
             // C-26:没有(或过期的)自玩通行证不是「未报名」——自玩本来就没有报名这个动作。
@@ -188,10 +204,13 @@ public class PlayEntryApplication {
         if (registered && topicRouteRuntimeService != null
                 && (playMode == PlayMode.LINEAR_ORIENTEERING || hasJourneyState)) {
             try {
-                routeState = topicRouteRuntimeService.state(memberId, tId, progActId);
+                routeState = capabilities == null ? topicRouteRuntimeService.state(memberId, tId, progActId)
+                        : topicRouteRuntimeService.state(memberId, tId, progActId,
+                                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                                        .parse(clientPlatform, clientVersion, capabilities));
                 if (routeState != null && routeState.getSessionId() != null)
                     contentSnapshot = contentSnapshotForRead(memberId,tId,progActId,true,routeTopic);
-            } catch (IllegalArgumentException | IllegalStateException e) {
+            } catch (IllegalArgumentException | IllegalStateException | com.chengyinhub.common.exception.ServiceException e) {
                 return error(e.getMessage());
             }
         }
@@ -208,6 +227,8 @@ public class PlayEntryApplication {
                 hintUnlockedNodeIds, nodes, spoilerAccess, playMode, routeTopic, bargainOffered, routeState);
         read.contentSnapshot = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot)
                 ? contentSnapshot : null;
+        read.capabilityDeclaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse(clientPlatform, clientVersion, capabilities);
         AjaxResult denied = playNodeQueryApplication.prepareNodes(read);
         if (denied != null) return denied;
         boolean versionedContent = com.chengyinhub.business.service.support.NodeJourneySnapshot.hasContentSnapshots(contentSnapshot);

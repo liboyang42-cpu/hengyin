@@ -1,0 +1,63 @@
+<view class="theme-dark jn jl {{jlIn === 1 ? 'jl--pre' : ''}} {{jlTiles === 1 ? 'jl--tiles-pre' : ''}} {{jlRules === 1 ? 'jl--rules-pre' : ''}} {{jlPop === 1 ? 'jl--pop-pre' : ''}}">
+  <cy-nav-bar plain />
+  <cy-page-title align="center" title="{{headline}}" />
+  <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="onStateCta" fill size="lg" />
+  <block wx:else>
+    <!-- 同行两端：邀请人 ↔ 你，连线上的光点表示「一起」；领到席位后右侧换成席位号 -->
+    <view class="jl-duo" aria-hidden="true">
+      <view class="jl-seat jl-seat--host">
+        <view class="jl-ring {{jlRingA === 0 ? 'is-reset' : ''}}"></view>
+        <view class="jl-av">
+          <image wx:if="{{inviter && inviter.avatar}}" src="{{inviter.avatar}}" mode="aspectFill" />
+          <text wx:elif="{{inviter}}">{{inviter.initial}}</text>
+          <cy-icon wx:else name="tab-club" size="44" />
+        </view>
+      </view>
+      <view class="jl-link"><view class="jl-link__dot {{jlDot1 === 1 ? 'is-run' : jlDot1 === 2 ? 'is-out' : ''}}"></view><view class="jl-link__dot {{jlDot2 === 1 ? 'is-run' : jlDot2 === 2 ? 'is-out' : ''}}"></view><view class="jl-link__dot {{jlDot3 === 1 ? 'is-run' : jlDot3 === 2 ? 'is-out' : ''}}"></view></view>
+      <view class="jl-seat jl-seat--you {{seatNo ? 'is-on' : ''}}">
+        <view class="jl-ring {{jlRingB === 0 ? 'is-reset' : ''}}"></view>
+        <view class="jl-av jl-av--you">
+          <text wx:if="{{seatNo}}" class="jl-av__no">{{seatNo}}</text>
+          <cy-icon wx:else name="plus" size="40" />
+        </view>
+      </view>
+    </view>
+    <text class="jl-name" wx:if="{{inviter}}">{{inviter.name}}</text>
+    <text class="jn-pill jl-pill" wx:if="{{title}}">{{title}}</text>
+
+    <view class="jl-play" wx:if="{{tiles.length}}">
+      <text class="jl-play__h">怎么玩</text>
+      <view class="jl-tiles">
+        <view wx:for="{{tiles}}" wx:key="key" class="jl-tile {{item.key === activeMode ? 'is-active' : ''}} {{item.available ? '' : 'is-off'}} {{tiles.length > 1 ? '' : 'is-solo'}}"
+              style="--jl-d: {{index * 90 + 120}}ms" data-key="{{item.key}}" bindtap="onMode" hover-class="cy-pressed" hover-stay-time="80"
+              aria-role="{{tiles.length > 1 ? 'radio' : 'text'}}" aria-checked="{{item.key === activeMode}}" aria-label="{{item.name}}">
+          <view class="jl-tile__top">
+            <cy-icon name="{{item.icon}}" size="36" />
+            <view class="jl-tile__radio" wx:if="{{tiles.length > 1}}"></view>
+          </view>
+          <text class="jl-tile__name">{{item.name}}</text>
+          <text class="jl-tile__sub" wx:if="{{item.reason || item.sub}}">{{item.reason || item.sub}}</text>
+        </view>
+      </view>
+      <view class="jl-rules" wx:if="{{activeTile && activeTile.rules.length}}">
+        <view class="jl-rule" wx:for="{{activeTile.rules}}" wx:key="k" style="--jl-d: {{index * 60}}ms">
+          <view class="jl-rule__dot {{item.on ? 'is-on' : ''}}"></view>
+          <text class="jl-rule__k">{{item.k}}</text>
+          <text class="jl-rule__v">{{item.v}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="jn-sec jl-facts {{headRise ? 'cy-rise-in' : ''}}" wx:if="{{facts.length}}">
+      <view class="jn-group">
+        <view class="jn-row" wx:for="{{facts}}" wx:key="k"><view class="jn-row__t"><text class="jn-row__s">{{item.k}}</text></view><text class="jn-row__v is-strong">{{item.v}}</text></view>
+      </view>
+    </view>
+
+    <view class="jn-footer jn-footer--stack ob-footer" wx:if="{{primary || actionError}}">
+      <cy-btn class="jn-grow" wx:if="{{primary}}" variant="primary" morph loading="{{busy}}" done="{{claimDone}}" disabled="{{busy}}" bindtap="onPrimary">{{primary}}</cy-btn>
+      <cy-inline-error class="jn-err" wx:if="{{actionError}}" kind="field" title="{{actionError}}" />
+      <view class="ob-secondary" bindtap="onBrowse" aria-role="button" aria-label="先逛逛" hover-class="cy-pressed" hover-stay-time="80">先逛逛</view>
+    </view>
+  </block>
+</view>

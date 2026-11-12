@@ -21,8 +21,8 @@ const read = (file) => readResolved(file);
 // 有 medalImg 先用图片,缺图落通用勋章图(不是 emoji)。
 test('收集册入口的勋章缩略图:图片优先，缺图落通用勋章图而不渲染 emoji', () => {
   const wxml = read('pages/member/index/index.wxml');
-  assert.match(wxml, /src="\{\{medals\[0\]\.medalImg \|\| '\/subpackageMember\/images\/album\/medal\.png'\}\}"/, 'medalImg 存在时必须优先走图片');
-  assert.ok(fs.existsSync(path.join(XCX, 'subpackageMember/images/album/medal.png')), '缺图时的通用勋章图要在包里');
+  assert.match(wxml, /src="\{\{medals\[0\]\.medalImg \|\| '\/subpackageMember\/images\/album\/medal-3d\.png'\}\}"/, 'medalImg 存在时必须优先走图片');
+  assert.ok(fs.existsSync(path.join(XCX, 'subpackageMember/images/album/medal-3d.png')), '缺图时的通用勋章图要在包里');
   assert.doesNotMatch(wxml, /item\.emoji/, '正式勋章图标不得消费 emoji 字段');
   assert.doesNotMatch(wxml, /pc-achv-ico--emoji/, '正式勋章图标不得保留 emoji fallback class');
   assert.doesNotMatch(wxml, /pc-achv-list/, '城市勋章列表已并进收集册');

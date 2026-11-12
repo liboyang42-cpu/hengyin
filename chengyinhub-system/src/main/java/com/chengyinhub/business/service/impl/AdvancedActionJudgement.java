@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.service.support.AdvancedGameClock;
 import com.chengyinhub.business.service.support.AdvancedGameRandom;
+import com.chengyinhub.business.service.support.HangmanGameplay;
 import com.chengyinhub.common.utils.StringUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -59,6 +60,8 @@ public final class AdvancedActionJudgement {
         SUBMIT_CLASSIFY,
         SUBMIT_COMPARE,
         SUBMIT_TYPE_IN,
+        /** 逐字猜词:只补空白槽,由 {@code HangmanGameplay} 判定;不加次数、不加费用。 */
+        SUBMIT_HANGMAN,
         REPORT_SENSOR_FAILURE,
         SKIP_SENSOR_STATION
     }
@@ -109,6 +112,7 @@ public final class AdvancedActionJudgement {
             case SUBMIT_CLASSIFY -> addIfPresent(choices, submitClassify(config, state, payload, score));
             case SUBMIT_COMPARE -> submitCompare(config, state, payload, score);
             case SUBMIT_TYPE_IN -> submitTypeIn(config, state, payload, score);
+            case SUBMIT_HANGMAN -> submitHangman(config, state, payload);
             case REPORT_SENSOR_FAILURE -> reportSensorFailure(config, state, payload, input.memberId());
             case SKIP_SENSOR_STATION -> skipSensorStation(config, state, payload, input.memberId());
         }
@@ -185,19 +189,29 @@ public final class AdvancedActionJudgement {
         }
     }
 
+    /** 客观题组(任务/归零挑战的备选题)。逐字猜词在这里是合法一员,它的通过标志是 solved。 */
+    private static final List<String> OBJECTIVE_KITS =
+            Collections.unmodifiableList(Arrays.asList("qa", "sort", "match", "classify", "hangman"));
+
+    /** 客观题组里某一种是否已通过。逐字猜词写 {@code solved} 而不是 {@code passed},不能混用。 */
+    private static boolean objectivePassed(ObjectNode state, String kind) {
+        if ("hangman".equals(kind)) return state.path(HangmanGameplay.STATE_KEY).path("solved").asBoolean(false);
+        return state.path(kind).path("passed").asBoolean(false);
+    }
+
     static boolean challengeObjectivesPassed(JsonNode config, ObjectNode state,String selected) {
         boolean found = false;
-        for (String kind : Arrays.asList("qa", "sort", "match", "classify")) if (enabled(config.get(kind)) && (selected.isEmpty() || selected.equals(kind))) {
-            found = true; if (!state.path(kind).path("passed").asBoolean()) return false;
+        for (String kind : OBJECTIVE_KITS) if (enabled(config.get(kind)) && (selected.isEmpty() || selected.equals(kind))) {
+            found = true; if (!objectivePassed(state, kind)) return false;
         }
         return found;
     }
 
     static boolean sharedMechanicsReady(JsonNode config, ObjectNode state) {
         boolean objective=false;
-        for (String kind : Arrays.asList("qa", "sort", "match", "classify")) if (enabled(config.get(kind))) {
+        for (String kind : OBJECTIVE_KITS) if (enabled(config.get(kind))) {
             objective=true;
-            if (!state.path(kind).path("passed").asBoolean()) return false;
+            if (!objectivePassed(state, kind)) return false;
         }
         if (objective) return true;
         if (enabled(config.get("scan"))) return state.path("scan").path("scanned").asBoolean();
@@ -297,6 +311,10 @@ public final class AdvancedActionJudgement {
         // 罗盘:对准过一次就算走完 —— 与估数同口径,没有对错、可以一直转(现场感契约 §3.4)
         if (enabled(config.get("compass"))
                 && !state.path("compass").path("done").asBoolean(false)) return false;
+        /* 逐字猜词:必须真解开才算走完。少查这一条 = 只配 hangman 的模板开局即可通关
+           (打卡前置的 completeGate 恒放行),那正是这套机制反复踩过的前科。 */
+        if (enabled(config.get("hangman"))
+                && !state.path(HangmanGameplay.STATE_KEY).path("solved").asBoolean(false)) return false;
         return true;
     }
 
@@ -386,7 +404,10 @@ public final class AdvancedActionJudgement {
             case "SUBMIT_COUNTDOWN": return flag(state, "countdown", "passed");
             case "SUBMIT_STOPWATCH": return flag(state, "stopwatch", "passed");     // 次数没用完不写
             case "SUBMIT_TYPE_IN": return flag(state, "typeIn", "passed");          // 同上
-            // 罗盘只有「对准了」这一个终局(没对准直接拒收),计步只有「达标」这一个终局。
+            // 逐字猜词:只有「已解开」写 PASS;猜错不写 FAIL 事实 —— 答题机会归共用题级配置,
+            // 不能把一次猜错当成这一题失败结算。
+            case "SUBMIT_HANGMAN":
+                return state.path(HangmanGameplay.STATE_KEY).path("solved").asBoolean(false) ? Boolean.TRUE : null;
             case "SUBMIT_COMPASS": return state.path("compass").path("done").asBoolean(false) ? Boolean.TRUE : null;
             case "SUBMIT_STEPS": return state.path("steps").path("reached").asBoolean(false) ? Boolean.TRUE : null;
             // P-23:跳过记成「没过」—— 这一站走完了,但不是对准的;不扣血(不在 judgedOutcome 里)
@@ -703,7 +724,18 @@ public final class AdvancedActionJudgement {
             String input = text(payload, "input");
             if (input.isEmpty()) throw new IllegalArgumentException("请先写下你的答案");
             if (input.length() > 200) throw new IllegalArgumentException("答案不能超过 200 字");
-            correct = matchesAnswer(input, cfg.path("answerText").asText(""));
+            // BE-08:同一政策来源(模板 advancedConfigJson 根层),但不改存量判定规则 ——
+            // 没配政策仍是原来的「首尾空格 + 大小写 + 、分隔」;配了才走 LEGACY_V1 + 显式别名。
+            // answerText 里用、分隔的多写法是既有作者口径,保留;别名不覆盖 canonical,
+            // 也不做模糊/拼音/语义判定。
+            com.chengyinhub.business.service.support.AnswerPolicy policy =
+                    com.chengyinhub.business.service.support.AnswerPolicy
+                            .of(config.path(com.chengyinhub.business.service.support.AnswerPolicy.FIELD));
+            correct = policy.isEmpty()
+                    ? com.chengyinhub.business.service.support.AnswerPolicy
+                            .matchesLegacyAdvancedType(cfg.path("answerText").asText(""), input)
+                    : policy.matchesAny(com.chengyinhub.business.service.support.AnswerPolicy
+                            .legacyAnswerTextCandidates(cfg.path("answerText").asText("")), input);
             node.put("lastInput", input);
         } else if ("PICK".equals(mode)) {
             boolean judge = cfg.path("judge").asBoolean(true);
@@ -839,16 +871,6 @@ public final class AdvancedActionJudgement {
             if (option.path("correct").asBoolean(false)) return option.path("id").asText("");
         }
         return "";
-    }
-
-    /** 打字题的比对:忽略大小写与首尾空格,多个答案用、分隔,命中任一即过。 */
-    private static boolean matchesAnswer(String input, String answerText) {
-        String got = input.trim().toLowerCase();
-        if (got.isEmpty()) return false;
-        for (String one : answerText.split("[、,,]")) {
-            if (one.trim().toLowerCase().equals(got)) return true;
-        }
-        return false;
     }
 
     /* ==================== R3 三个新玩法:排序 / 连线 / 分类 ====================
@@ -1136,6 +1158,23 @@ public final class AdvancedActionJudgement {
             node.put("submitted", true);
             node.put("passed", false);
         }
+    }
+
+    /**
+     * 逐字猜词。判定与状态全部委托 {@link HangmanGameplay}:本类只负责把它接进动作/回执链。
+     *
+     * <p>只写本局状态,不动分数、不加次数、不扣余额 —— 答题机会归共用题级配置(0.4),
+     * 猜错也不写 FAIL 事实(见 passedFact)。
+     */
+    private void submitHangman(JsonNode config, ObjectNode state, Map<String, Object> payload) {
+        JsonNode cfg = config.get("hangman");
+        if (!enabled(cfg)) throw new IllegalArgumentException("该玩法未开启逐字猜词");
+        // 状态节点缺失时按新局补一份:老局首次提交也能自愈,不会因为没开局状态直接拒绝。
+        ObjectNode kit = state.path(HangmanGameplay.STATE_KEY).isObject()
+                ? state.with(HangmanGameplay.STATE_KEY)
+                : HangmanGameplay.initialState(cfg);
+        HangmanGameplay.judge(cfg, kit, payload == null ? null : objectMapper.valueToTree(payload));
+        state.set(HangmanGameplay.STATE_KEY, kit.deepCopy());
     }
 
     /* ==================== 决定类:抛硬币 / 掷骰子 ====================
@@ -1636,7 +1675,7 @@ public final class AdvancedActionJudgement {
             if (!enabled(field.getValue())) continue;
             String kind = field.getKey();
             if (Arrays.asList("timer", "leaderboard", "multiplayer", "timeWindow", "blindTaste", "silentOrder", "diyName", "musicCorner", "dailySign", "slowTask", "random", "branch").contains(kind)) continue;
-            if (!Arrays.asList("qa", "sort", "match", "classify").contains(kind)) throw new IllegalArgumentException("引导只支持客观题组");
+            if (!OBJECTIVE_KITS.contains(kind)) throw new IllegalArgumentException("引导只支持客观题组");
             JsonNode answer = answers.get(kind);
             if (answer == null || !answer.isObject() || answer.has("passed")) throw new IllegalArgumentException("请提交完整题组答案，不接受客户端通过标记");
             Map<String, Object> payload = mapper.convertValue(answer, new TypeReference<Map<String,Object>>(){});
@@ -1645,19 +1684,24 @@ public final class AdvancedActionJudgement {
                 submitQa(config, state, payload, score);
             } else if ("sort".equals(kind)) submitSort(config, state, payload, score);
             else if ("match".equals(kind)) submitMatch(config, state, payload, score);
-            else submitClassify(config, state, payload, score);
+            else if ("hangman".equals(kind)) {
+                // 逐字猜词:payload 是 {slots} / {input},判定仍在 HangmanGameplay;
+                // 这里只补状态,不接受客户端 passed,也不因为猜错就整组失败。
+                ObjectNode kit = state.withObject(HangmanGameplay.STATE_KEY);
+                HangmanGameplay.judge(config.path("hangman"), kit, answer);
+            } else submitClassify(config, state, payload, score);
             found = true;
         }
         if (answers.has("passed")) throw new IllegalArgumentException("不接受客户端通过标记");
         if (!found) throw new IllegalArgumentException("节点没有客观题组");
-        for (String kind : Arrays.asList("qa", "sort", "match", "classify")) if (enabled(config.get(kind)) && !state.path(kind).path("passed").asBoolean()) return false;
+        for (String kind : OBJECTIVE_KITS) if (enabled(config.get(kind)) && !objectivePassed(state, kind)) return false;
         return true;
     }
 
     public static List<String[]> verifiedObjectiveChoices(JsonNode config,JsonNode answers) {
         if(!verifyObjectiveAnswers(config,answers))throw new IllegalArgumentException("题组尚未通过可信判定");
         ObjectMapper mapper = new ObjectMapper();List<String[]> choices=new ArrayList<>();
-        for(String kind:Arrays.asList("qa","sort","match","classify"))if(enabled(config.get(kind))) {
+        for(String kind:OBJECTIVE_KITS)if(enabled(config.get(kind))) {
             if("qa".equals(kind)) {ObjectNode state=mapper.createObjectNode();ScoreChange score = new ScoreChange(0);
                 for(ChoiceRef ref:submitQa(config,state,mapper.convertValue(answers.path("qa"),new TypeReference<Map<String,Object>>(){}),score))if(ref!=null)choices.add(new String[]{ref.stepOrKit,ref.optionId});
             } else choices.add(new String[]{kind,null});

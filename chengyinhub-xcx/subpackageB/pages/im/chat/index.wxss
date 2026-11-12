@@ -188,11 +188,9 @@ page { background: var(--cy-bg-page); }
   justify-content: center;
   gap: var(--cy-space-1);
   box-sizing: border-box;
-  background: var(--cy-color-bg-surface-subtle);
   color: var(--cy-color-text-secondary);
 }
 .rcard-nocover-icon { width: 96rpx; height: 72rpx; flex: 0 0 auto; }
-.rcard-nocover-txt { font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }
 
 /* 加载态骨架(DS §5:禁裸文字「加载中」;shimmer 用既有 skeleton token,不与降级态共用样式)。
    cy-skeleton 组件的 card/list type 自带 padding 且按 count 复数渲染,套不进单张卡片的 16:9 图+两行文,

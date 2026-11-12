@@ -30,6 +30,14 @@ function buildPublisher(info) {
   return { name, avatar };
 }
 
+function topicSaleClosed(info, now) {
+  const d = info || {};
+  const deadline = toDate(d.saleEndAt) || toDate(d.endDate);
+  if (!deadline) return false;
+  const at = toDate(now) || new Date();
+  return at.getTime() >= deadline.getTime();
+}
+
 /* 顶部那颗主按钮与底栏同口径:已购去票夹;未开售/打烊不放(底栏讲原因);自玩卖通行证;其余报名。 */
 function buildHeroCta(info, opts) {
   const d = info || {};
@@ -38,6 +46,8 @@ function buildHeroCta(info, opts) {
   const lc = Number(d.lifecycle);
   if (lc === 1 || lc === 2 || lc === 7) return { kind: 'locked', text: lc === 7 ? '立项待审 · 未开售' : (lc === 1 ? '招募中 · 未开售' : '定价中 · 未开售') };
   if (o.merchantClosed) return { kind: '', text: '' };
+  // x-fix2 P-1:与后端 assertFreeTopicOpen 同口径(saleEndAt,缺省取 endDate),截止后只讲状态、不给买入口
+  if (topicSaleClosed(d, o.now)) return { kind: 'closed', text: '已截止' };
   // j2 F-06:从俱乐部场次卡进来的人是来报这一场的,有可报名场次就先给场次,不推自玩通行证
   if (o.preferSession && Array.isArray(d.activityList) && d.activityList.length) return { kind: 'signup', text: '立即报名' };
   if (Number(d.selfPlay) === 1) return { kind: 'selfplay', text: (o.priceText || '') + ' 随时开玩' };
@@ -160,7 +170,7 @@ function buyOptions(info) {
   const d = info || {};
   const out = [];
   const price = (v) => (v === undefined || v === null || v === '' || !Number.isFinite(Number(v)) ? null : Number(v));
-  if (Number(d.selfPlay) === 1 && price(d.selfPlayPrice) !== null) out.push({ key: 'pass', kind: 'pass', name: '自玩通行证', price: price(d.selfPlayPrice), people: 1 });
+  if (Number(d.selfPlay) === 1 && price(d.selfPlayPrice) !== null) out.push({ key: 'pass', kind: 'pass', name: '自玩门票', price: price(d.selfPlayPrice), people: 1 });
   if ((d.activityList || []).length) {
     const byName = {};
     (d.omsTicketList || []).forEach((t) => {
@@ -245,4 +255,4 @@ function buildTeams(rows, topicId) {
   return { rows: out, need };
 }
 
-module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, buildCoverImages, buildPublisher, buildHeroCta, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };
+module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };

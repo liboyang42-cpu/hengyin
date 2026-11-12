@@ -67,7 +67,9 @@ Page({
 
   onLoad(options) {
     const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
-    const route = parseReviewRouteOptions(options);
+    let merchantView = false;
+    try { merchantView = require('../../../utils/roleGuard.js').isMerchantView() === true; } catch (unavailable) { merchantView = false; }
+    const route = parseReviewRouteOptions(options, merchantView);
     const mode = route.mode;
     this._merchantRowId = route.merchantRowId;
     this._pageNum = 1;

@@ -1,15 +1,14 @@
 :host { display: block; min-height: 100%; }
 .ticket-scene { position: relative; min-height: calc(100vh - 180rpx); box-sizing: border-box; padding: var(--cy-space-3) 0 calc(var(--cy-space-5) + env(safe-area-inset-bottom)); }
 
-/* V-02(2026-10-29 业主):与票夹背面(subpackageMember/signup .wc__back)同一版式:白卡、标题、码心 logo、到期一行。 */
-.voucher__card { width: 577rpx; min-height: 640rpx; margin: var(--cy-space-4) auto 0; box-sizing: border-box; padding: 56rpx 46rpx; border-radius: 54rpx; background: #f6f6f4; display: flex; flex-direction: column; align-items: center; justify-content: center; } /* ds-ok: 与票夹入场码白卡同值 */
-.voucher__title { max-width: 100%; font-size: 40rpx; font-weight: 700; color: #111; } /* ds-ok */
-.voucher__qr { position: relative; margin-top: 48rpx; width: 400rpx; height: 400rpx; border-radius: 28rpx; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 8rpx 28rpx rgba(0,0,0,.08); } /* ds-ok */
-.voucher__qr-tip { font-size: 27rpx; color: rgba(17,17,17,.55); padding: 20rpx 30rpx; } /* ds-ok */
-.voucher__exp { margin-top: 40rpx; font-size: 23rpx; color: rgba(17,17,17,.5); } /* ds-ok */
+/* a1-v3-17(2026-11-10 业主「不需要有白色的底 正常就是弹窗 直接放上二维码」):去掉外层白卡,标题与到期行直接写在弹层上(弹层 token 色);
+   码本身仍是白底方块 —— 黑点码要白底才扫得出,这是码不是卡。 */
+.voucher__card { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: var(--cy-space-4) auto 0; }
+.voucher__title { max-width: 100%; font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-comp-sheet-player-text); }
+.voucher__qr { position: relative; margin-top: 48rpx; width: 400rpx; height: 400rpx; border-radius: 28rpx; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 8rpx 28rpx rgba(0,0,0,.08); } /* ds-ok 与票夹码块同值;码的白底(扫码需要) */
+.voucher__qr-tip { font-size: var(--cy-type-label); color: rgba(17,17,17,.55); padding: 20rpx 30rpx; } /* ds-ok 白底码块上的读取中 */
+.voucher__exp { margin-top: var(--cy-space-4); font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
 .ep1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.voucher__acts { width: calc(100% - 76rpx); margin: var(--cy-space-5) auto 0; display: flex; align-items: center; gap: 23rpx; }
-.voucher__back { flex: none; width: 88rpx; height: 88rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-glass); display: flex; align-items: center; justify-content: center; color: var(--cy-text-title); }
 .voucher__cta { flex: 1; height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-text-title); color: var(--cy-bg-page); font-size: var(--cy-font-subtitle); font-weight: 700; display: flex; align-items: center; justify-content: center; }
 
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。

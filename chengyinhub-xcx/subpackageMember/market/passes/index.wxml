@@ -1,0 +1,84 @@
+<!-- §17.1/§17.2/P6 通行证:可购买只列服务端在售商品;订单与礼品只读本人记录。结构沿积分明细页 -->
+<view class="theme-dark mk"><cy-access-gate kind="login" />
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="mk__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="通行证" safe-top="{{false}}" />
+    <view class="mk__body">
+      <!-- r2-store 积分余额卡(STRUCTURE 票夹结构):余额只读服务端,点进原积分明细;通行证(平台会员)卡在可购买分段顶部,服务端未开放时不出 -->
+      <view class="mk-balance" wx:if="{{pointBalance !== null}}" bindtap="goPoints" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="积分 {{pointBalance}}，查看积分记录">
+        <view class="mk-balance__main"><text class="mk-balance__k">积分</text><text class="mk-balance__v">{{pointBalance}}</text></view>
+        <view class="mk-balance__go"><text>积分记录</text><cy-icon name="chevron-right" size="28" /></view>
+      </view>
+      <cy-tabs variant="chip" tabs="{{tabs}}" active="{{tab}}" bind:change="onTab" />
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
+      <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />
+      <block wx:elif="{{tab === 'shop'}}">
+        <!-- l-pass 通行证(平台会员):服务端 enabled 才出;点进通行证页购买 -->
+        <view class="mk-member" wx:if="{{member}}" bindtap="goMembership" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="通行证 {{member.side}}">
+          <text class="mk-member__t">通行证</text>
+          <text class="mk-member__s" wx:if="{{member.side}}">{{member.side}}</text>
+          <cy-icon name="chevron-right" size="28" />
+        </view>
+        <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!products.length && !member}}" kind="empty" title="暂无在售通行证" />
+        <view class="mk-card" wx:for="{{products}}" wx:key="id" bindtap="openProduct" data-id="{{item.id}}"
+              hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.name}}">
+          <view class="mk-card__head">
+            <text class="mk-card__kind" wx:if="{{item.kind}}">{{item.kind}}</text>
+            <text class="mk-card__city" wx:if="{{item.city}}">{{item.city}}</text>
+          </view>
+          <text class="mk-card__name">{{item.name}}</text>
+          <text class="mk-card__meta" wx:if="{{item.validity}}">{{item.validity}}</text>
+          <view class="mk-card__foot">
+            <text class="mk-card__cover" wx:if="{{item.coverCount}}">含 {{item.coverCount || 0}} 个作品{{item.seats ? ' · ' + item.seats : ''}}</text>
+            <text class="mk-card__price" wx:if="{{item.price}}">{{item.price}}</text>
+          </view>
+        </view>
+      </block>
+      <!-- l-after(proto ps-pass「进入游戏主题库 ›」):整页主题库在分包 market/library;qx-final:主题库读通行证接口,只在服务端开放通行证(member)时出 -->
+      <block wx:if="{{tab === 'shop' && state === 'ready'}}">
+        <view class="mk-row mk-row--go" wx:if="{{member}}" bindtap="goLibrary" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="进入游戏主题库">
+          <view class="mk-row__main"><text class="mk-row__title">游戏主题库</text></view>
+          <cy-icon name="chevron-right" size="28" />
+        </view>
+      </block>
+      <block wx:elif="{{tab === 'orders'}}">
+        <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!orders.length}}" kind="empty" title="还没有通行证订单" />
+        <view class="mk-group" wx:if="{{orders.length}}">
+          <view class="mk-row" wx:for="{{orders}}" wx:key="key">
+            <view class="mk-row__main">
+              <text class="mk-row__title">{{item.name}}</text>
+              <text class="mk-row__sub">{{item.state}}</text>
+            </view>
+            <view class="mk-row__side">
+              <text class="mk-row__amt" wx:if="{{item.amount}}">{{item.amount}}</text>
+              <text class="mk-row__sub" wx:if="{{item.time}}">{{item.time}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      <block wx:else>
+        <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!giftsBought.length && !giftsReceived.length}}" kind="empty" title="还没有礼品记录" />
+        <text class="mk-group__title" wx:if="{{giftsBought.length}}">我送出的</text>
+        <view class="mk-group" wx:if="{{giftsBought.length}}">
+          <view class="mk-row" wx:for="{{giftsBought}}" wx:key="key">
+            <view class="mk-row__main">
+              <text class="mk-row__title">{{item.state}}</text>
+              <text class="mk-row__sub" wx:if="{{item.expires}}">{{item.expires}}</text>
+            </view>
+            <text class="mk-row__sub" wx:if="{{item.time}}">{{item.time}}</text>
+          </view>
+        </view>
+        <text class="mk-group__title" wx:if="{{giftsReceived.length}}">我领取的</text>
+        <view class="mk-group" wx:if="{{giftsReceived.length}}">
+          <view class="mk-row" wx:for="{{giftsReceived}}" wx:key="key">
+            <view class="mk-row__main"><text class="mk-row__title">{{item.state}}</text></view>
+            <text class="mk-row__sub" wx:if="{{item.time}}">{{item.time}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

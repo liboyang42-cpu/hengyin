@@ -92,7 +92,8 @@ test('店铺码 scene sh.<会员ID>:识别、进待处理、首页转商家主�
   assert.equal(door.captureDoorScene({ scene: 1001, query: { scene: 'sh.201' } }, null), null)
   const index = read('pages/index/index.js')
   assert.match(index, /const shopId = !activityId && \(parseShopScene\(options && options\.scene\) \|\| parseShopScene\(app\.pendingDoorScene\)\);/)
-  assert.match(index, /: '\/pages\/userinfo\/userinfo\?userId=' \+ shopId \+ '&tab=about';/)
+  // l-misc:队伍码排在店铺码之后,店铺码落点不变
+  assert.match(index, /shopId \? '\/pages\/userinfo\/userinfo\?userId=' \+ shopId \+ '&tab=about' :/)
 })
 
 test('商家主页:分享按钮开通用分享层(店铺卡 + 店铺码),好友分享落商家主页', () => {
@@ -165,7 +166,7 @@ test('点地址开地图:各页面都走 utils/open-address.js', () => {
     'pages/publish/simple/index.js',
     'pages/topic/components/cy/chapter-node-form/index.js', 'pages/play/components/playkit-dailysign/index.js',
     'subpackageMember/components/cy/scene-member-order-history/index.js', 'subpackageMember/components/cy/scene-game-coupon-wallet/index.js',
-    'subpackageRoam/components/roam-city-guide/index.js', 'subpackageRoam/nearby/index.js', 'subpackageRoam/official-route/index.js',
+    'subpackageRoam/nearby/index.js', 'subpackageRoam/official-route/index.js',
     'subpackageB/pages/im/chat/index.js', 'components/cy/merchant-card/index.js',
   ]
   files.forEach((f) => assert.match(read(f), /require\('[./]+utils\/open-address\.js'\)/, f))

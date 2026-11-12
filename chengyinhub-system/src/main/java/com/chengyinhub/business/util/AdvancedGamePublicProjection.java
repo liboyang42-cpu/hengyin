@@ -2,6 +2,9 @@ package com.chengyinhub.business.util;
 
 import com.chengyinhub.business.service.support.AdvancedGameConfigValidator;
 import com.chengyinhub.business.service.support.GameplaySupportMatrix;
+import com.chengyinhub.business.service.support.AccusationTemplateSupport;
+import com.chengyinhub.business.service.support.QaOptionMediaSupport;
+import com.chengyinhub.business.service.support.HangmanGameplay;
 import com.chengyinhub.common.utils.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,6 +12,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 /** 玩家列表页只读玩法能力摘要；绝不下发物品权重、分支跳转/得分或运行期角色分配。 */
 public final class AdvancedGamePublicProjection {
@@ -33,7 +38,7 @@ public final class AdvancedGamePublicProjection {
             return safe;
         }
         if (config.path("qa").path("enabled").asBoolean()) {
-            copyQa(safe, config.path("qa"));
+            copyQa(safe, config.path("qa"), config.get("clueTransform"));
             ((ObjectNode) safe.path("qa")).retain("mode", "multi", "title", "options");
         }
         if (config.path("sort").path("enabled").asBoolean()) {
@@ -105,7 +110,7 @@ public final class AdvancedGamePublicProjection {
             copyShout(safe, config.path("shout"));
             copyCountdown(safe, config.path("countdown"));
             copyStopwatch(safe, config.path("stopwatch"));
-            copyQa(safe, config.path("qa"));
+            copyQa(safe, config.path("qa"), config.get("clueTransform"));
             copyScan(safe, config.path("scan"));
             // R3 三个新玩法:题面下发,答案(排序顺序 / 连线对 / 分类映射)全留在服务端。
             copySort(safe, config.path("sort"));
@@ -120,6 +125,18 @@ public final class AdvancedGamePublicProjection {
             copyAlbum(safe, config.path("album"));
             copyNote(safe, config.path("note"));
             copyTypeIn(safe, config.path("typeIn"));
+            // G1 逐字猜词:只给槽位形状(长度/空槽数/大小写口径)。答案、别名、format 预填字符
+            // 是冻结配置里的秘密,一个都不下发;玩家实际看到的槽位来自会话视图的 publicProjection。
+            if (config.path("hangman").path("enabled").asBoolean(false)) {
+                safe.set("hangman", HangmanGameplay.safeConfig(config.path("hangman")));
+            }
+            // G3 谜面变换:2026-11-10 主人裁定删除(「这是什么 不能这样反转」「删掉这个翻转谜面」)。
+            // 存量配置里的 clueTransform 节保留不动,但不再下发、也不再改写题面 —— 玩家永远看原样题面。
+            // G2 指认结案:确认前只下发人物卡/引导屏/线索板/是否允许提前指认。
+            // 正确人物、correct、winScreen/loseScreen、留痕码、未获证词一律不下发。
+            if (AccusationTemplateSupport.isEnabled(config)) {
+                safe.set("accusation", AccusationTemplateSupport.publicView(config, null, null));
+            }
             // 旅程体验模组化:requires / effects 两段整段不下发(R12 裁决),check 只留
             // 非条件字段。条件键名(clue. / relation. / tag. / counter. / sys.)是剧透;
             // 客户端不做条件判定,locked / missingKeys / held / advantage 由 Encounter
@@ -339,13 +356,15 @@ public final class AdvancedGamePublicProjection {
      * <p>★ 打字题的 answerText 与选项题的 correct **一个字都不下发** ——
      * 那是这一题唯一的秘密,漏出去玩法就只剩点击。
      */
-    private static void copyQa(ObjectNode target, JsonNode source) {
+    private static void copyQa(ObjectNode target, JsonNode source, JsonNode transformSection) {
         ObjectNode value = target.putObject("qa");
         boolean on = source.path("enabled").asBoolean(false);
         value.put("enabled", on);
         if (!on) return;
         value.put("mode", source.path("mode").asText("TYPE"));
-        putIfText(value, "title", source);
+        // 谜面变换已删除(2026-11-10):transformSection 不再参与,题面原样下发。
+        String title = source.path("title").asText("");
+        if (!title.isEmpty()) value.put("title", title);
         putIfText(value, "lead", source);
         putIfText(value, "shotNote", source);
         putIfText(value, "imageUrl", source);
@@ -359,7 +378,11 @@ public final class AdvancedGamePublicProjection {
             ObjectNode safeOption = options.addObject();
             safeOption.put("id", option.path("id").asText(""));
             safeOption.put("label", option.path("label").asText(""));
-            // fb 也不下发:那句话是判完之后才该看到的,提前给等于提示答案
+            // G2 图片选项:补 img/alt(判定仍用原 optionId)。correct 与 fb 一句都不下发 ——
+            // 那句话是判完之后才该看到的,提前给等于提示答案。
+            for (Map.Entry<String, String> media : QaOptionMediaSupport.media(option).entrySet()) {
+                safeOption.put(media.getKey(), media.getValue());
+            }
         }
     }
 

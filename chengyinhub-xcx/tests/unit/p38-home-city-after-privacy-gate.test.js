@@ -38,7 +38,9 @@ test('使用同意未给时不弹城市定位', () => {
 test('隐私闸关闭且已同意时照常询问', () => {
   const p = page()
   askLatest(p)
-  assert.equal(modals.length, 1)
+  assert.equal(modals.length, 0, 'x-fix6 L2-1:不再是居中弹窗')
+  assert.equal(p.data.locationPrompt.confirmText, '同意定位')
+  assert.equal(p.data.locationPrompt.cancelText, '暂不定位')
 })
 
 const { VERSIONS } = require('../../utils/compliance/usage-consent.js')
@@ -61,7 +63,8 @@ test('隐私闸未声明定位(其他页)时同意后仍单独询问', () => {
   p.loadPageData = () => {}
   p.onPrivacyGateSettled({ detail: { event: 'agree' } })
   requests.find(x => x.url === '/api/compliance/consents/latest').success({ code: 200, data: null })
-  assert.equal(modals.length, 1)
+  assert.equal(modals.length, 0)
+  assert.ok(p.data.locationPrompt)
 })
 test('之前撤回过定位同意时,隐私闸同意也不定位', () => {
   let located = 0
@@ -81,4 +84,30 @@ test('首页的隐私闸声明 location,弹窗文字写明定位用途,同意事
   assert.match(gate, /<text class="pg__lead">我们只在你使用相关功能时处理必要信息。<text wx:if="\{\{location\}\}">同意后将使用你的精确位置确定首页城市，不用于附近排序。<\/text><\/text>/)
   const js = fs.readFileSync(path.join(__dirname, '../../components/cy/privacy-gate/index.js'), 'utf8')
   assert.match(js, /if \(this\.data\.location\) detail\.location = true;/)
+})
+
+test('x-fix6 L2-1:卡片「暂不定位」收起并记本机拒绝,不记同意、不定位', () => {
+  let located = 0; global.wx.getLocation = () => { located++ }
+  const consents = []; app.recordConsent = (b) => { consents.push(b); return Promise.resolve() }
+  const p = page(); askLatest(p)
+  p.onLocationPromptDecline()
+  assert.equal(p.data.locationPrompt, null)
+  assert.equal(consents.length, 0); assert.equal(located, 0)
+  assert.ok(p.data.city)
+})
+test('x-fix6 L2-1:卡片「同意定位」收起并记录同意', async () => {
+  const consents = []; app.recordConsent = (b) => { consents.push(b); return Promise.resolve() }
+  const p = page(); askLatest(p)
+  p.onLocationPromptAgree()
+  await new Promise((r) => setImmediate(r))
+  assert.equal(p.data.locationPrompt, null)
+  assert.equal(consents.length, 1)
+  assert.equal(consents[0].scene, 'home_city_location')
+})
+test('x-fix6 L2-1:feed 顶部卡片两颗按钮在 wxml 里', () => {
+  const wxml = require('fs').readFileSync(require('path').join(__dirname, '../../pages/index/index.wxml'), 'utf8')
+  assert.match(wxml, /class="v3-locprompt" wx:if="\{\{locationPrompt\}\}"/)
+  assert.match(wxml, /bindtap="onLocationPromptDecline"/)
+  assert.match(wxml, /bindtap="onLocationPromptAgree"/)
+  assert.ok(wxml.indexOf('v3-locprompt') < wxml.indexOf('id="sec-reco"'))
 })

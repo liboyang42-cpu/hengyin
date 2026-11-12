@@ -46,7 +46,8 @@ public final class WechatPayTestWiring {
                         (IMerchantCommerceService) configured.get("merchantCommerceService"),
                         (ICoopInviteService) configured.get("coopInviteService"),
                         (ICmsRegistrationService) configured.get("registrationService"),
-                        (IRefundService) configured.get("refundBizService")));
+                        (IRefundService) configured.get("refundBizService"),
+                        (IMarketingProductPurchaseService) configured.get("marketingProductPurchaseService")));
             }
             return;
         }

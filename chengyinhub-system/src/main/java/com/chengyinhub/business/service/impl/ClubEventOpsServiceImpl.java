@@ -238,6 +238,9 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         String requestFingerprint = seriesFingerprint(actorMemberId, request.getClubId(), request.getTopicId(),
                 recurrenceType, dates, startTime, leadMemberId, capacity,
                 Boolean.TRUE.equals(request.getWaitlistEnabled()), offerMinutes);
+        if (Boolean.TRUE.equals(request.getHostReservationRequired())) {
+            requestFingerprint = sha256(requestFingerprint + "|hostReservationRequired:true");
+        }
         if (replay != null) {
             return exactSeriesReplay(replay, requestFingerprint);
         }
@@ -253,6 +256,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         series.setDefaultLeadMemberId(leadMemberId);
         series.setDefaultCapacity(capacity);
         series.setWaitlistEnabled(Boolean.TRUE.equals(request.getWaitlistEnabled()));
+        series.setHostReservationRequired(Boolean.TRUE.equals(request.getHostReservationRequired()));
         series.setOfferMinutes(offerMinutes);
         series.setStatus(ClubEventSeries.STATUS_ACTIVE);
         series.setVersion(0);
@@ -379,6 +383,11 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
                 ? series.getOfferMinutes() : request.getOfferMinutes();
         Integer requestedCapacity = request.getCapacity() == null
                 ? series.getDefaultCapacity() : request.getCapacity();
+        if (request.getHostReservationRequired() != null
+                && Boolean.TRUE.equals(request.getHostReservationRequired())
+                    != Boolean.TRUE.equals(series.getHostReservationRequired())) {
+            throw badRequest("主持预约策略请新建系列，不能改写历史场次");
+        }
         if (!series.getDefaultLeadMemberId().equals(requestedLead)
                 || !series.getWaitlistEnabled().equals(requestedWaitlist)
                 || !series.getOfferMinutes().equals(requestedOfferMinutes)
@@ -1001,7 +1010,8 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             if (row == null || !positive(row.getId()) || !clubId.equals(row.getClubId())
                     || !activityId.equals(row.getActivityId()) || !positive(row.getTicketId())
                     || !positive(row.getMemberId()) || row.getVersion() == null || row.getVersion() < 0
-                    || !(ClubWaitlistEntry.WAITING.equals(row.getState())
+                    || !(ClubWaitlistEntry.REQUESTED.equals(row.getState())
+                    || ClubWaitlistEntry.WAITING.equals(row.getState())
                     || ClubWaitlistEntry.OFFERED.equals(row.getState())
                     || ClubWaitlistEntry.CLAIMED.equals(row.getState()))) {
                 throw conflict("候补状态不完整，请刷新后重试");
@@ -1259,6 +1269,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
         view.setDefaultLeadMemberId(series.getDefaultLeadMemberId());
         view.setDefaultCapacity(series.getDefaultCapacity());
         view.setWaitlistEnabled(series.getWaitlistEnabled());
+        view.setHostReservationRequired(series.getHostReservationRequired());
         view.setOfferMinutes(series.getOfferMinutes());
         view.setStatus(series.getStatus());
         view.setVersion(series.getVersion());

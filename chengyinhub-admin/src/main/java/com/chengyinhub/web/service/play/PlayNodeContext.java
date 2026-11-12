@@ -76,18 +76,15 @@ public class PlayNodeContext {
         return playNodeAccessService.hasCompletedNodeFact(memberId, actId, nodeScope(node));
     }
 
-    /** 文字答案归一化：去全部空白 + 全角字符→半角，降低误判(选项题不走此归一，保持精确) */
+    /**
+     * 文字答案归一化:去全部空白 + 全角字符→半角 (选项题不走此归一,保持精确)。
+     * 实现在 {@link com.chengyinhub.business.service.support.AnswerPolicy#normalize(String)}——
+     * 普通 answer 与 guided/共享判定共用同一份;配了政策的高级 qa.TYPE 也调这里,
+     * 没配政策时仍走原「首尾空格+大小写」比较。不再各留一份几乎一样的循环。
+     */
     public String normalizeAnswer(String s)
     {
-        if (s == null) return "";
-        String t = s.trim().replaceAll("\\s+", "");
-        StringBuilder sb = new StringBuilder();
-        for (char c : t.toCharArray()) {
-            if (c >= '！' && c <= '～') sb.append((char) (c - 0xFEE0)); // 全角ASCII→半角
-            else if (c == '　') sb.append(' '); // 全角空格(已被strip,兜底)
-            else sb.append(c);
-        }
-        return sb.toString();
+        return com.chengyinhub.business.service.support.AnswerPolicy.normalize(s);
     }
 
     /**

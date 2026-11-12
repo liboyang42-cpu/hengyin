@@ -224,4 +224,6 @@ Page({
   openNearbyTeam(e) { const row = this.data.openRows[Number(e.currentTarget.dataset.index)]; if (row) wx.navigateTo({ url: '/subpackageRoam/nearby/index?radius=' + RADIUS + '&teamId=' + encodeURIComponent(row.teamId) }); },
   // 地图带上本页的 3 km,两边看到的是同一片范围(地图默认 1 km)
   openMap() { wx.navigateTo({ url: '/subpackageRoam/nearby/index?radius=' + RADIUS }); },
+  // l-misc:队伍加入码(队长在队伍详情「二维码」里给的那串)→ 加入页手输
+  openJoinCode() { wx.navigateTo({ url: '/pages/team/join/index?entry=code' }); },
 });

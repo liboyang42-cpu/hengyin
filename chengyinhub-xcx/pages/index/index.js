@@ -11,7 +11,7 @@ const { decorateFeedCards } = require('../../utils/index/feed-card.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
-const { parseDoorScene, parseTopicScene, parseActivityScene, parseShopScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
+const { parseDoorScene, parseTopicScene, parseActivityScene, parseShopScene, parseTeamScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
 
 const { buildActivityShare } = require('../../utils/activity-share.js'); const { ROAM_SHARE_COVER } = require('../../utils/roam-menu-share.js');
 const { appendByIndex } = require('../../utils/list-append.js');
@@ -207,6 +207,7 @@ Page({
    * 页面的初始数据
    */
   data: {
+    locationPrompt: null,
     // 下拉刷新转圈态(scroll-view refresher)
     refreshing: false,
     privacyGateShow: false,
@@ -372,10 +373,10 @@ Page({
       return true;
     }
     const activityId = parseActivityScene(options && options.scene) || parseActivityScene(app.pendingDoorScene); // 2026-10-31 P-8:活动分享卡的码 → 官方活动详情
-    const shopId = !activityId && (parseShopScene(options && options.scene) || parseShopScene(app.pendingDoorScene)); // 第九轮 m1-9:店铺码 → 商家主页
-    if (activityId || shopId) {
+    const shopId = !activityId && (parseShopScene(options && options.scene) || parseShopScene(app.pendingDoorScene)); const teamInvite = !activityId && !shopId && (parseTeamScene(options && options.scene) || parseTeamScene(app.pendingDoorScene)); // 第九轮 m1-9:店铺码 → 商家主页;l-misc:队伍码 → 加入页(能否加入由 /api/team/info、/join 裁决)
+    if (activityId || shopId || teamInvite) {
       app.pendingDoorScene = null;
-      const path = activityId ? '/pages/activity/official-detail/index?id=' + activityId : '/pages/userinfo/userinfo?userId=' + shopId + '&tab=about';
+      const path = activityId ? '/pages/activity/official-detail/index?id=' + activityId : (shopId ? '/pages/userinfo/userinfo?userId=' + shopId + '&tab=about' : '/pages/team/join/index?code=' + encodeURIComponent(teamInvite));
       wx.redirectTo({ url: path, fail() { wx.reLaunch({ url: path }); } });
       return true;
     }
@@ -1549,18 +1550,26 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     const that = this;
     if (!isCurrentLocationRequest(this, scope) || this.data.privacyGateShow || (app.getUsageConsent && !app.getUsageConsent().granted())) return; // P-38:隐私闸未关不叠定位弹窗,同意后 onPrivacyGateSettled 会重新发起
     if (scope.gateCoversLocation) { this.recordHomeCityConsent(scope); return; } // P-38:隐私闸已一并同意定位
-    modal.show({
+    // x-fix6 L2-1:不再用居中弹窗盖住 feed,改成 feed 顶部的非阻塞卡片,文案与隐私规则不变。
+    this._locationPromptScope = scope;
+    this.setData({ locationPrompt: {
       title: '首页城市定位',
-      content: '同意使用精确位置并发送给城瘾以确定首页城市，后续自动定位且不用于附近排序吗？',
+      content: '精确位置会发送给城瘾以确定首页城市，之后自动定位，不用于附近排序。',
       confirmText: '同意定位',
-      cancelText: '暂不定位',
-      success(result) {
-        if (!isCurrentLocationRequest(that, scope)) return;
-        homeCity.saveLocationDeclined(!result.confirm);
-        if (!result.confirm) { if (!that.data.city) that.setData({ city: homeCity.DEFAULT_CITY }); return; }
-        that.recordHomeCityConsent(scope);
-      }
-    });
+      cancelText: '暂不定位'
+    } });
+  },
+
+  onLocationPromptAgree() { this.settleLocationPrompt(true); },
+  onLocationPromptDecline() { this.settleLocationPrompt(false); },
+  settleLocationPrompt(confirm) {
+    const scope = this._locationPromptScope;
+    this._locationPromptScope = null;
+    if (this.data.locationPrompt) this.setData({ locationPrompt: null });
+    if (!scope || !isCurrentLocationRequest(this, scope)) return;
+    homeCity.saveLocationDeclined(!confirm);
+    if (!confirm) { if (!this.data.city) this.setData({ city: homeCity.DEFAULT_CITY }); return; }
+    this.recordHomeCityConsent(scope);
   },
 
   recordHomeCityConsent(scope) {

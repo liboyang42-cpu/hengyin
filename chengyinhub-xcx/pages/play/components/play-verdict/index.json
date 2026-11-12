@@ -1,5 +1,7 @@
 {
   "component": true,
   "styleIsolation": "isolated",
-  "usingComponents": {}
+  "usingComponents": {
+    "cy-illus": "/pages/play/components/cy-illus/index"
+  }
 }

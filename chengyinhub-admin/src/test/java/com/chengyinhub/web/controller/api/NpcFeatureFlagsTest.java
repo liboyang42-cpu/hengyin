@@ -106,7 +106,9 @@ class NpcFeatureFlagsTest {
                         "communityPostWrite", "shopNpcChat", "shopNpcVoice",
                         "shopNpcVoiceAvailable", "merchantNpcChat", "merchantDeskProducts",
                         // R11 p1 F-7:小程序设置页「发票」与参与详情「自由探索权益」入口读这两个键
-                        "userInvoice", "freeExploreBundle")),
+                        "userInvoice", "freeExploreBundle",
+                        // P0-14:「关于」页与 AI 生成入口的算法备案号公示位(字符串,未配置为空串)
+                        "aigcFilingNo")),
                 new java.util.TreeSet<>(data.keySet()),
                 "下发键集合必须与小程序/App 的受控功能键逐项一致");
         assertFalse(data.containsKey("selfPlay"), "无人读取的假开关不得再下发(X09)");
@@ -115,6 +117,7 @@ class NpcFeatureFlagsTest {
         assertEquals(false, data.get("clubMembership"), "会员收费功能必须默认关闭");
         assertEquals(false, data.get("merchantDeskProducts"), "D2:商家工作台商品与履约必须默认关闭");
         assertEquals(true, data.get("finishNearbyRoute"), "配置明确为 true 时必须能开启完赛推荐灰度");
+        assertEquals("", data.get("aigcFilingNo"), "备案号未配置时下发空串,小程序不显示");
     }
 
     @Test
@@ -209,5 +212,15 @@ class NpcFeatureFlagsTest {
         // 合并 #1057×master 后 features() 同时下发 communityPost 两键,helper 必须一并注入。
         ReflectionTestUtils.setField(c, "communityPostFeatureGate", communityPostFeatureGate);
         return c;
+    }
+
+    @Test
+    void aigcFilingNo_trimmedFromSysConfig() {
+        ApiConfigController c = new ApiConfigController();
+        ReflectionTestUtils.setField(c, "configService", configService);
+        when(configService.selectConfigByKey("aigc.algorithm.filing-no")).thenReturn("  网信算备110000000000000000001号 ");
+        assertEquals("网信算备110000000000000000001号", c.aigcFilingNo());
+        when(configService.selectConfigByKey("aigc.algorithm.filing-no")).thenThrow(new IllegalStateException("redis down"));
+        assertEquals("", c.aigcFilingNo());
     }
 }

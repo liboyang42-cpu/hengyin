@@ -278,6 +278,18 @@ class Boot4JacksonMvcContractTest
         }
 
         @Bean
+        com.chengyinhub.business.service.IWxContentSecurityService fixtureTextSecurity()
+        {
+            return mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        }
+
+        @Bean
+        com.chengyinhub.business.service.IUmsMemberService fixtureMembers()
+        {
+            return mock(com.chengyinhub.business.service.IUmsMemberService.class);
+        }
+
+        @Bean
         AppMediaAssetService fixtureMediaAssets()
         {
             // Only registry readback and final storage signatures are fixtures; guard and MVC are real.

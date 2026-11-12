@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayHelpRunQuotaMapper">
+
+    <resultMap id="PlayHelpRunQuotaResult" type="PlayHelpRunQuota">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="activityId" column="activity_id"/>
+        <result property="playInstanceId" column="play_instance_id"/>
+        <result property="ownerMemberId" column="owner_member_id"/>
+        <result property="sharedRunId" column="shared_run_id"/>
+        <result property="quotaTotal" column="quota_total"/>
+        <result property="quotaUsed" column="quota_used"/>
+        <result property="version" column="version"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <!-- 首次写入冻结 quota_total/owner；已存在时只触碰 update_time，绝不改 total/owner。 -->
+    <insert id="insertIfAbsent">
+        insert into play_help_run_quota
+        (topic_id, activity_id, play_instance_id, owner_member_id,
+         quota_total, quota_used, version, create_time, update_time)
+        values
+        (#{topicId}, #{activityId}, #{playInstanceId}, #{ownerMemberId},
+         #{quotaTotal}, 0, 0, now(3), now(3))
+        on duplicate key update update_time = update_time
+    </insert>
+
+    <!-- shared-game:<原 gameSessionId> + team owner ID；调用方已持有共享原局写栅栏。 -->
+    <insert id="insertSharedIfAbsent">
+        insert into play_help_run_quota
+        (topic_id, activity_id, play_instance_id, owner_member_id,
+         quota_total, quota_used, version, create_time, update_time)
+        values
+        (#{topicId}, #{activityId}, #{playInstanceId}, #{ownerMemberId},
+         #{quotaTotal}, #{quotaUsed}, 0, now(3), now(3))
+        on duplicate key update update_time = update_time
+    </insert>
+
+    <!-- 只从服务端写入的 originalGameSessionId 结转旧 actor/node 消费。
+         同队旧额度缺少可验证绑定时一并返回，由 G7 保留旧口径，不能凭新键重开 N。 -->
+    <select id="selectLegacySharedQuotas" resultMap="PlayHelpRunQuotaResult" useCache="false" flushCache="true">
+        select q.*,
+               case when json_valid(s.state_json)
+                     and json_type(json_extract(s.state_json, '$.originalGameSessionId')) = 'INTEGER'
+                    then cast(json_unquote(json_extract(s.state_json, '$.originalGameSessionId')) as unsigned)
+                    else null end as shared_run_id
+          from play_help_run_quota q
+          left join game_runtime_session s on q.play_instance_id = concat('game:', s.id)
+           and q.topic_id = s.topic_id and q.activity_id = s.activity_id
+         where q.topic_id = #{topicId} and q.activity_id = #{activityId}
+           and q.play_instance_id like 'game:%'
+           and ((s.owner_type = 2 and s.owner_id = #{teamId}) or s.id is null)
+        having shared_run_id = #{gameSessionId} or shared_run_id is null
+    </select>
+
+    <select id="selectByScope" resultMap="PlayHelpRunQuotaResult" useCache="false" flushCache="true">
+        select id, topic_id, activity_id, play_instance_id, owner_member_id,
+               quota_total, quota_used, version, create_time, update_time
+          from play_help_run_quota
+         where topic_id = #{topicId}
+           and activity_id = #{activityId}
+           and play_instance_id = #{playInstanceId}
+           and owner_member_id = #{ownerMemberId}
+         limit 1
+    </select>
+
+    <update id="consumeOne">
+        update play_help_run_quota
+           set quota_used = quota_used + 1,
+               version = version + 1,
+               update_time = now(3)
+         where topic_id = #{topicId}
+           and activity_id = #{activityId}
+           and play_instance_id = #{playInstanceId}
+           and owner_member_id = #{ownerMemberId}
+           and quota_used &lt; quota_total
+    </update>
+
+</mapper>

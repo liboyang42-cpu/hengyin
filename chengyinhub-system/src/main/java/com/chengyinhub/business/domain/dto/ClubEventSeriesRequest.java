@@ -19,6 +19,7 @@ public class ClubEventSeriesRequest {
     /** 可选：仅当合作主题恰有一个票种时，覆盖该票种的未售容量。 */
     private Integer capacity;
     private Boolean waitlistEnabled;
+    private Boolean hostReservationRequired;
     private Integer offerMinutes;
     private String requestId;
 
@@ -49,6 +50,9 @@ public class ClubEventSeriesRequest {
     public void setCapacity(Integer capacity) { this.capacity = capacity; }
     public Boolean getWaitlistEnabled() { return waitlistEnabled; }
     public void setWaitlistEnabled(Boolean waitlistEnabled) { this.waitlistEnabled = waitlistEnabled; }
+
+    public Boolean getHostReservationRequired() { return hostReservationRequired; }
+    public void setHostReservationRequired(Boolean value) { this.hostReservationRequired = value; }
     public Integer getOfferMinutes() { return offerMinutes; }
     public void setOfferMinutes(Integer offerMinutes) { this.offerMinutes = offerMinutes; }
     public String getRequestId() { return requestId; }

@@ -18,6 +18,9 @@
   color: var(--cy-text-body);
 }
 
+.fabu .form .li--group { margin-top: var(--cy-space-5); }
+.fabu .form .li .item-tit--group { font-size: var(--cy-font-title); font-weight: 700; color: var(--cy-color-text-primary); margin-bottom: var(--cy-space-3); }
+.fabu .form .li--group .li:last-of-type { margin-bottom: 0; }
 .fabu .form .li .item-tit text {
   color: var(--cy-danger);
   margin-left: 4rpx; /* ds-ok: 原值 01rpx 疑似笔误,按同类必填星号间距(见 club/create .cc-req)统一为 4rpx 像素级微调 */

@@ -68,7 +68,7 @@
     "player.withdrawable": "existing migration_20260808_player_withdrawable final rule 1; supersedes historical tuple 0"
   },
   "sourceFiles": {
-    "scripts/e2e/seed_fixtures.py": "3456c1b60b5709ea7750ebfb0967a1a129be60fb5f578b8e2e950b86791afc08",
+    "scripts/e2e/seed_fixtures.py": "fa9043cd673841ced55868c0ff73d34eba5e0bd61095ec8743a35c1bd73714ee",
     "chengyinhub-admin/sql/migration_20260808_player_withdrawable.sql": "3153581f219ff4aeb72c8acb12cd6907ec77b5ab1c5e94a06e99432d636344ec",
     "chengyinhub-admin/sql/migration_p2_4_admin_ia_menu.sql": "e56f1e2ae1227af1ee56f93a48227460b0eea252a0320a2369811d9b37c91743",
     "chengyinhub-admin/sql/migration_web_admin_nine_domains_20260719.sql": "d7dfb04a890923dbe6b946393c0c5db62450e56036b67a5c18359563cb11d358",
@@ -131,7 +131,7 @@
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/SettlementController.java": "c320716860ce563a5a9a85480d4a4c9d7b44b311081bc1b2e84ffa72224de6d6",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantLeadController.java": "ed746fe8681a529f9804afa5cad5db161e0afdbd877b31e4533c9ffddf14d881",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CmsRoamAiContentController.java": "c960616831923a9a4948dee0f51bf78cce2fe35c7ead130575d66c4d410180f3",
-    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java": "555d73efbec57d1d72f55a154cd388cd74d62d180141317ce517786dc80277e2",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/AnalyticsController.java": "325384c0a68dd3fdb107c89d35717ee9a4f0ca01d86e5a577fb6ca42d9ab2426",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/RecommendationController.java": "074e57ab66df7c9ab00e564a92eda2cf6246a1a0dd1a90baccf11718baf53bc6",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MerchantPayableBatchController.java": "38a276a82ab4ce9e3c608146984c9a2c99520ed57590cda0f98a83d3a9dbac74",
     "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/CoopComplaintController.java": "73801ec1958327b9531dd0a1b62811d35343651bb6abb8381009ccfa4e7aa9dd",
@@ -842,6 +842,66 @@
       "permission": "business:sensitive:list",
       "source": "chengyinhub-admin/sql/migration_20261103_sensitive_content_library.sql",
       "controller": "SensitiveLibraryController.java"
+    },
+    {
+      "name": "视频悬赏",
+      "parentPath": "audit-center",
+      "order": 50,
+      "path": "videobounty",
+      "component": "business/videobounty/index",
+      "permission": "business:videobounty:review",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+      "controller": "VideoBountyAdminController.java"
+    },
+    {
+      "name": "落地译文审校",
+      "parentPath": "audit-center",
+      "order": 51,
+      "path": "content-landing",
+      "component": "business/contentlanding/index",
+      "permission": "business:contentlanding:review",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+      "controller": "ContentLandingMetadataAdminController.java"
+    },
+    {
+      "name": "主持小费",
+      "parentPath": "funds-aftercare",
+      "order": 60,
+      "path": "hosttip",
+      "component": "business/hosttip/index",
+      "permission": "business:hosttip:audit",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+      "controller": "HostTipAdminController.java"
+    },
+    {
+      "name": "渠道兑换码",
+      "parentPath": "funds-aftercare",
+      "order": 61,
+      "path": "channel-voucher",
+      "component": "business/channel/index",
+      "permission": "business:marketing:channel:list",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+      "controller": "ChannelVoucherAdminController.java"
+    },
+    {
+      "name": "营销分配",
+      "parentPath": "funds-aftercare",
+      "order": 62,
+      "path": "revenue",
+      "component": "business/revenue/index",
+      "permission": "business:revenue:list",
+      "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+      "controller": "MarketingRevenueController.java"
+    },
+    {
+      "name": "电商收付通",
+      "parentPath": "funds-aftercare",
+      "order": 70,
+      "path": "ecommerce-payout",
+      "component": "business/finance/ecommerce-payout/index",
+      "permission": "business:ecommercepayout:query",
+      "source": "chengyinhub-admin/sql/migration_20261110_ecommerce_payout_wiring.sql",
+      "controller": "EcommercePayoutAdminController.java"
     }
   ],
   "functionRows": [
@@ -3044,6 +3104,96 @@
         "permission": "business:sensitive:list",
         "source": "chengyinhub-admin/sql/migration_20261103_sensitive_content_library.sql",
         "controller": "SensitiveLibraryController.java"
+      }
+    },
+    {
+      "component": "business/videobounty",
+      "vue": "chengyinhub-ui/src/views/business/videobounty/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "视频悬赏",
+        "parentPath": "audit-center",
+        "order": 50,
+        "path": "videobounty",
+        "component": "business/videobounty/index",
+        "permission": "business:videobounty:review",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+        "controller": "VideoBountyAdminController.java"
+      }
+    },
+    {
+      "component": "business/contentlanding",
+      "vue": "chengyinhub-ui/src/views/business/contentlanding/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "落地译文审校",
+        "parentPath": "audit-center",
+        "order": 51,
+        "path": "content-landing",
+        "component": "business/contentlanding/index",
+        "permission": "business:contentlanding:review",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+        "controller": "ContentLandingMetadataAdminController.java"
+      }
+    },
+    {
+      "component": "business/hosttip",
+      "vue": "chengyinhub-ui/src/views/business/hosttip/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "主持小费",
+        "parentPath": "funds-aftercare",
+        "order": 60,
+        "path": "hosttip",
+        "component": "business/hosttip/index",
+        "permission": "business:hosttip:audit",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+        "controller": "HostTipAdminController.java"
+      }
+    },
+    {
+      "component": "business/channel",
+      "vue": "chengyinhub-ui/src/views/business/channel/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "渠道兑换码",
+        "parentPath": "funds-aftercare",
+        "order": 61,
+        "path": "channel-voucher",
+        "component": "business/channel/index",
+        "permission": "business:marketing:channel:list",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+        "controller": "ChannelVoucherAdminController.java"
+      }
+    },
+    {
+      "component": "business/revenue",
+      "vue": "chengyinhub-ui/src/views/business/revenue/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "营销分配",
+        "parentPath": "funds-aftercare",
+        "order": 62,
+        "path": "revenue",
+        "component": "business/revenue/index",
+        "permission": "business:revenue:list",
+        "source": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
+        "controller": "MarketingRevenueController.java"
+      }
+    },
+    {
+      "component": "business/finance/ecommerce-payout",
+      "vue": "chengyinhub-ui/src/views/business/finance/ecommerce-payout/index.vue",
+      "state": "CANONICAL_C_FORWARD_REGISTERED",
+      "proof": {
+        "name": "电商收付通",
+        "parentPath": "funds-aftercare",
+        "order": 70,
+        "path": "ecommerce-payout",
+        "component": "business/finance/ecommerce-payout/index",
+        "permission": "business:ecommercepayout:query",
+        "source": "chengyinhub-admin/sql/migration_20261110_ecommerce_payout_wiring.sql",
+        "controller": "EcommercePayoutAdminController.java"
       }
     }
   ]

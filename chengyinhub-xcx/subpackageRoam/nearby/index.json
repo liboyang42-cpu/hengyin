@@ -17,6 +17,10 @@
     "cy-proto-cam": "/components/cy/proto-cam/index",
     "cy-privacy-gate": "/components/cy/privacy-gate/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-back-guard": "/components/cy/back-guard/index"
+    "cy-back-guard": "/components/cy/back-guard/index",
+    "team-report-sheet": "/subpackageMember/components/cy/team-report-sheet/index"
+  },
+  "componentPlaceholder": {
+    "team-report-sheet": "view"
   }
 }

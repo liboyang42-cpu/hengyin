@@ -97,6 +97,7 @@
               <view class="xb-node-foot">
                 <text class="xb-node-name">{{ item.name || '节点 ' + (index + 1) }}</text>
                 <text class="xb-node-desc ep1" wx:if="{{ item.teaser }}">{{ item.teaser }}</text>
+                <text class="td-credit ep1" wx:if="{{ item.credit }}">{{ item.credit }}</text>
               </view>
             </view>
           </view>
@@ -137,9 +138,22 @@
       <view class="xb-caps" wx:else>
         <view class="xb-caprow"><text class="xb-caprow-k">—</text></view>
       </view>
+      <!-- U02-01 采用条件:只读 contentDelivery;r2-create(业主「UI需要优化一下」)只画有权威事实的行,没有事实的行不出现 -->
+      <block wx:if="{{ deliveryRows.length }}">
+        <view class="xb-block td-cond-hd">
+          <view class="xb-section-title"><text>采用条件</text></view>
+        </view>
+        <view class="xb-caps td-cond">
+          <view class="xb-caprow" wx:for="{{ deliveryRows }}" wx:key="key">
+            <text class="xb-caprow-k">{{ item.label }}</text>
+            <text class="td-cond-v">{{ item.value }}</text>
+          </view>
+        </view>
+      </block>
     </block>
 
     <view class="xb-scroll-pad"></view>
   </scroll-view>
 </view>
+
 </view>

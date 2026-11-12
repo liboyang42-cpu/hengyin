@@ -366,7 +366,8 @@ function rejectedActionText(action, result) {
   // 第十轮 f2(j2 F-07):开始活动被服务端拒(如「当前不在活动服务时段」)要说出原因,不能只剩一句笼统的未生效。
   const reason = result && typeof result.reason === 'string' ? result.reason.trim()
     : (result && typeof result.message === 'string' ? result.message.trim() : '')
-  if (action === 'START' && reason) return reason
+  // x-fix5 R3-1:开始准备被拒(GAME_TEAM_REQUIRED「共享玩法需要本场有效队伍」等)同样原话回给队长
+  if ((action === 'START' || action === 'PREPARE') && reason) return reason
   return null
 }
 

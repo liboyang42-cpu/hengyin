@@ -108,6 +108,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
         // migration_20261029_topic_cancellation_receipt.sql: CmsTopicMapper.casUserStatus advances cms_topic.cancellation_epoch.
         for (String file : List.of("migration_theme_state_key_20260916.sql", "migration_20261022_theme_state_key_attribute_def.sql",
                 "migration_20261026_theme_attribute_registry_version.sql", // ThemeStateKeyService.lockRegistry
+                "migration_preset_draft_source_20261108.sql",
                 "migration_20261029_topic_cancellation_receipt.sql")) {
             Path path = Paths.get("sql", file);
             if (!Files.exists(path)) path = Paths.get("chengyinhub-admin", "sql", file);

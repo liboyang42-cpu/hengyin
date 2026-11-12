@@ -329,7 +329,8 @@ function assertFullVariantGeometry(overrides = {}) {
   assert.doesNotMatch(wxml, /class="sh__nav"[^>]*padding-top/,
     '(b) 顶边让开以后 .sh__nav 也不再吃状态栏 padding-top,否则整行白往下掉一截')
   // 2026-10-23 业主:bottom 档也按胶囊实测封顶(高度跟内容走,长内容到胶囊底下),不再是独立的 70vh 档位
-  assert.match(wxml, /style="\{\{_dragStyle\}\}\{\{fullMaxH\}\}"/,
+  // 2026-11-10 qx-u1:拖拽位移改由视图层写在面板行内(utils/wxs/gesture.wxs),根节点不再承载 _dragStyle
+  assert.match(wxml, /style="\{\{fullMaxH\}\}"/,
     '(c) 胶囊实测上限对所有档位下发')
   assert.match(wxss, new RegExp(`\\.sh--full \\.sh__panel \\{[\\s\\S]*?\\n\\s*height:\\s*min\\(var\\(--cy-comp-sheet-full\\),\\s*var\\(${SAFE_H},\\s*var\\(${SAFE}\\)\\)`),
     `(c) wxss 必须「实测通道优先、${SAFE} 保底」,拿不到胶囊信息时仍退回安全区 token`)

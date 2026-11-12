@@ -45,6 +45,7 @@ class ApiTopicStateKeyControllerTest {
     private ThemeStateKeyService keyService;
     private TopicStateKeyRefService refService;
     private TopicPublishCheckService checkService;
+    private com.chengyinhub.business.service.impl.TopicPublicationService topicPublicationService;
     private ApiTopicStateKeyController controller;
 
     @BeforeEach
@@ -59,6 +60,8 @@ class ApiTopicStateKeyControllerTest {
         ReflectionTestUtils.setField(controller, "themeStateKeyService", keyService);
         ReflectionTestUtils.setField(controller, "topicStateKeyRefService", refService);
         ReflectionTestUtils.setField(controller, "topicPublishCheckService", checkService);
+        topicPublicationService = mock(com.chengyinhub.business.service.impl.TopicPublicationService.class);
+        ReflectionTestUtils.setField(controller, "topicPublicationService", topicPublicationService);
     }
 
     @Test
@@ -247,6 +250,66 @@ class ApiTopicStateKeyControllerTest {
 
         assertNotEquals(200, result.get(AjaxResult.CODE_TAG));
         verify(checkService, never()).check(any(CmsTopic.class));
+    }
+
+    /**
+     * 发布状态接口与 publish-check 同一道归属闸:不是自己的主题一律拒,且不许去读状态。
+     * 负控:把 publishStatus 里的 editableDenial 摘掉,本用例红。
+     */
+    @Test
+    void publishStatusRejectsOtherMembersTopic() {
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic(999L));
+
+        // 越权分支根本不该调用 owner 投影,所以这里不 stub publicationStatus。
+        AjaxResult result = controller.publishStatus(TOPIC_ID, null);
+
+        assertNotEquals(200, result.get(AjaxResult.CODE_TAG));
+        assertEquals("无权操作该主题", result.get(AjaxResult.MSG_TAG));
+        verify(topicPublicationService, never()).publicationStatus(any(CmsTopic.class));
+    }
+
+    /** 本人主题:原样返回发布域给出的五段事实,控制器不重算任何判据。 */
+    @Test
+    void publishStatusReturnsThePublicationOwnersProjection() {
+        CmsTopic owned = topic(CALLER);
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(owned);
+        com.chengyinhub.business.domain.vo.TopicPublicationStatusVO status =
+                new com.chengyinhub.business.domain.vo.TopicPublicationStatusVO(
+                        new com.chengyinhub.business.domain.vo.TopicPublicationStatusVO.Draft(true, true, null),
+                        new com.chengyinhub.business.domain.vo.TopicPublicationStatusVO.Review(
+                                com.chengyinhub.business.domain.vo.TopicPublicationStatusVO.REVIEW_DRAFT,
+                                "草稿", false, false, null, null),
+                        new com.chengyinhub.business.domain.vo.TopicPublicationStatusVO.Visibility(
+                                false, "尚未发布，玩家看不到"),
+                        new com.chengyinhub.business.domain.vo.TopicPublicationStatusVO.Sale(
+                                false, false, false, null, "lifecycle 必须为 SELLING"),
+                        new com.chengyinhub.business.domain.vo.TopicPublicationStatusVO.Playable(
+                                false, "路线尚未发布", null, false));
+
+        // 控制器不重算判据,只透传 owner 的投影:必须显式给出该 stub,否则拿到 null 是装置问题。
+        when(topicPublicationService.publicationStatus(owned)).thenReturn(status);
+        AjaxResult result = controller.publishStatus(TOPIC_ID, null);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
+        assertEquals(status, result.get("data"));
+        verify(topicPublicationService).publicationStatus(owned);
+    }
+
+    @Test
+    void publishCheckRejectsAnonymousAndUnauthorizedMerchantWithoutIssueReads() {
+        when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic(CALLER));
+        doReturn(0L).when(controller).getAppUserId();
+        AjaxResult anonymous = controller.publishCheck(TOPIC_ID, null);
+        assertEquals("请先登录", anonymous.get("msg"));
+        assertTrue(!anonymous.containsKey("data"));
+        doReturn(CALLER).when(controller).getAppUserId();
+        var merchant = mock(com.chengyinhub.business.access.merchant.IMerchantAccessService.class);
+        ReflectionTestUtils.setField(controller, "merchantAccessService", merchant);
+        when(merchant.require(eq(CALLER), any())).thenThrow(new ServiceException("无商家项目管理权限", 403));
+        AjaxResult denied = controller.publishCheck(TOPIC_ID, "MERCHANT");
+        assertEquals("无商家项目管理权限", denied.get("msg"));
+        assertTrue(!denied.containsKey("data"));
+        verify(checkService, never()).check(any());
     }
 
     private static CmsTopic topic(Long ownerMemberId) {

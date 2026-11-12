@@ -1,7 +1,7 @@
 <!-- 2026-10-30 业主定稿 P-3:集邮册是「收集册 · 邮票」:整屏浅色流动底、顶上同一行三段;邮票带齿孔白边,点一张飞到屏幕中间 -->
 <view class="theme-dark">
-<!-- 收集册整屏浅色:页根照玩家域挂 theme-dark,浅色由里面这一层 theme-light 逃生口给(与原集邮册同一做法) -->
-<view class="theme-light alb-light">
+<!-- x-fix2 L-1(2026-11-11):玩家域一律深色,收集册不再挂 theme-light 逃生口 -->
+<view class="alb-light">
   <album-aura />
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />

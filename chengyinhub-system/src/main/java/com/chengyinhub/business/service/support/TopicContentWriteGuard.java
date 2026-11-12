@@ -1,5 +1,8 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.business.exception.TopicPublicationContentException;
+import com.chengyinhub.business.domain.vo.PublicationProblem;
+
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.ChapterDTO;
 import com.chengyinhub.business.exception.ChapterFlowClientUpgradeRequiredException;
@@ -58,7 +61,24 @@ public final class TopicContentWriteGuard {
             throw new IllegalStateException("主题内容计数无法核实，拒绝发布或保存");
         }
         String violation = TopicSizeLimits.violation(Math.toIntExact(chapterCount), Math.toIntExact(nodeCount));
-        if (violation != null) throw new IllegalStateException("发布前请先调整:" + violation);
+        if (violation != null) throw new TopicPublicationContentException("发布前请先调整:" + violation,
+                java.util.List.of(PublicationProblem.at(PublicationProblem.CODE_SIZE_LIMIT_EXCEEDED, null,
+                        "chapters[].nodes[]", "发布前请先调整:" + violation)));
+    }
+
+
+    /** Read-only size preflight; unlike the write path it never locks the topic or uses FOR UPDATE counts. */
+    public void assertTopicSizeWithinLimitsPreview(Long topicId) {
+        if (topicId == null || topicId <= 0L) throw new IllegalStateException("主题不存在");
+        Long chapters = cmsTopicChapterMapper.countContentByTopic(topicId);
+        Long nodes = cmsTopicNodeMapper.countContentByTopic(topicId);
+        if (chapters == null || nodes == null || chapters < 0L || nodes < 0L) {
+            throw new IllegalStateException("主题内容计数无法核实，拒绝发布或保存");
+        }
+        String violation = TopicSizeLimits.violation(Math.toIntExact(chapters), Math.toIntExact(nodes));
+        if (violation != null) throw new TopicPublicationContentException("发布前请先调整:" + violation,
+                java.util.List.of(PublicationProblem.at(PublicationProblem.CODE_SIZE_LIMIT_EXCEEDED, null,
+                        "chapters[].nodes[]", "发布前请先调整:" + violation)));
     }
 
     /** blocks 已物化后，旧客户端不得再用 description + nodes 覆盖它。 */
@@ -149,9 +169,13 @@ public final class TopicContentWriteGuard {
     public void assertBranchGraphOnlyForOrienteering(String routeMode, Integer productType) {
         if ("BRANCH_GRAPH".equalsIgnoreCase(StringUtils.trim(routeMode))
                 && !Integer.valueOf(ProductType.ORIENTEERING).equals(productType)) {
-            throw new IllegalArgumentException("BRANCH_GRAPH 仅支持城市定向主题");
+            throw TopicPublicationContentException.invalid(PublicationProblem.CODE_ROUTE_MODE_INVALID,
+                    "routeMode", new IllegalArgumentException("BRANCH_GRAPH 仅支持城市定向主题"));
         }
     }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private WorkshopLicenseGuard workshopLicenses;
 
     /**
      * [W4] 节点只能挂**自己的、已审核的、非草稿的**模板。
@@ -178,6 +202,7 @@ public final class TopicContentWriteGuard {
         if (templateId == null || templateId <= 0L) {
             return;
         }
+        if(workshopLicenses!=null)workshopLicenses.requireCopy(templateId,memberId);
         com.chengyinhub.business.domain.CmsMemberTemplate tpl =
                 cmsMemberTemplateMapper.selectCmsMemberTemplateById(templateId);
         if (tpl == null || (tpl.getDelFlag() != null && tpl.getDelFlag() == 2)) {

@@ -24,9 +24,7 @@
   <view class="ti-stage ti-stage--state" wx:elif="{{!cards.length && cardsError}}">
     <cy-inline-error load-failure title="精选示例暂未加载" sub="{{cardsError}}" action="重试" bind:action="loadCards" />
   </view>
-  <view class="ti-stage ti-stage--state ti-stage--empty" wx:elif="{{!cards.length}}">
-    暂无精选示例
-  </view>
+  <!-- x-fix4 A-4:没有精选示例就什么都不画(不写「暂无」说明句、不留一块空态区),主张文案与按钮照常 -->
 
   <view class="ti-copy" id="tiCopy">
     <view class="ti-copy-a">把你玩过的一段路</view>
@@ -40,6 +38,7 @@
       <cy-btn variant="primary" style="width:100%" loading="{{navigating}}" disabled="{{navigating}}" bindtap="goCreate">
         开始创建
       </cy-btn>
+      <!-- r2-create(b4-21 业主「这些就是我们的玩法模板啊 就是直接从主题或玩法那点进去配置的」):§21「从预设开始」与预设页撤掉 -->
     </view>
   </view>
 </view>

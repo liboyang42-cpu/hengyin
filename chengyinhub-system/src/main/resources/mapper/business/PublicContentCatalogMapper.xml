@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PublicContentCatalogMapper">
+
+    <!--
+      M7 公开目录唯一公开闸。与 CmsTopicMapper.publicTopicListWhere 的固定条件逐条同义:
+        status=1 / user_status=1 / del_flag=0 / is_template=0 / 俱乐部未解散 / 会员专属不对外
+      并且直接 include 既有的 primaryCirclePublicGate(圈子供给复核闸),不另写一套。
+      没有「只看 status=1」的宽松闸:下架、内容安全打回(user_status=0)、软删、模板本体、
+      会员专属、圈子未复核 一律不出现,不靠前端隐藏兜底。
+      必须在 from cms_topic(不起别名)的上下文里使用:primaryCirclePublicGate 写死了 cms_topic. 前缀。
+    -->
+    <sql id="catalogPublicGate">
+        cms_topic.status = 1
+        and cms_topic.user_status = 1
+        and cms_topic.del_flag = 0
+        and cms_topic.is_template = 0
+        and coalesce(cms_topic.club_member_only, 0) = 0
+        and <include refid="com.chengyinhub.business.mapper.CmsTopicMapper.primaryCirclePublicGate"/>
+        and (cms_topic.club_id is null or cms_topic.club_id = 0 or exists (
+            select 1 from club catalog_club
+            where catalog_club.id = cms_topic.club_id and catalog_club.del_flag = 0
+        ))
+    </sql>
+
+    <!-- 只投影目录需要的窄列:不选 blocks_json / route_graph_json / journey_* / theme_runtime_config_json。 -->
+    <sql id="catalogColumns">
+        cms_topic.id as id,
+        cms_topic.city_code as cityCode,
+        cms_topic.name as name,
+        cms_topic.subtitle as subtitle,
+        left(cms_topic.description, 240) as description,
+        cms_topic.img_url as imgUrl,
+        cms_topic.product_type as productType,
+        cms_topic.total_time as totalTime,
+        cms_topic.total_mileage as totalMileage,
+        cms_topic.location_count as locationCount,
+        cms_topic.lifecycle as lifecycle,
+        cms_topic.self_play as selfPlay,
+        cms_topic.self_play_price as selfPlayPrice,
+        cms_topic.team_mode as teamMode,
+        cms_topic.sale_end_at as saleEndAt,
+        cms_topic.end_date as endDate,
+        cms_topic.club_id as clubId,
+        cms_topic.published_config_version as publishedConfigVersion,
+        case when cms_topic.published_theme_runtime_config_json is null then null else '1' end as publishedThemeRuntimeConfigJson,
+        cms_topic.update_time as updateTime,
+        clm.landing_summary as landingSummary,
+        clm.source_locale as sourceLocale,
+        clm.group_eligible as groupEligible,
+        clm.school_eligible as schoolEligible,
+        clm.group_min_people as groupMinPeople,
+        clm.group_max_people as groupMaxPeople,
+        clm.age_min as ageMin,
+        clm.age_max as ageMax,
+        clm.accessibility_note as accessibilityNote,
+        clt.title as translatedTitle,
+        clt.subtitle as translatedSubtitle,
+        clt.summary as translatedSummary
+    </sql>
+
+    <!-- 落地元信息:只在 status=1 时参与;停用等同未声明,不是「不可承接」。 -->
+    <sql id="catalogJoins">
+        left join content_landing_metadata clm
+               on clm.topic_id = cms_topic.id and clm.status = 1
+        left join content_landing_translation clt
+               on clt.topic_id = cms_topic.id
+              and clt.locale = #{locale}
+              and clt.translation_state = 'APPROVED'
+    </sql>
+
+    <sql id="catalogFilters">
+        <if test="cityCode != null and cityCode != ''">
+            and cms_topic.city_code = #{cityCode}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (cms_topic.name like concat('%', #{keyword}, '%')
+                 or cms_topic.subtitle like concat('%', #{keyword}, '%'))
+        </if>
+        <if test="productType != null">
+            and cms_topic.product_type = #{productType}
+        </if>
+        <if test="groupEligible != null and groupEligible == 1">
+            and coalesce(clm.group_eligible, 0) = 1
+        </if>
+        <if test="schoolEligible != null and schoolEligible == 1">
+            and coalesce(clm.school_eligible, 0) = 1
+        </if>
+        <!-- 年龄筛选只命中「显式声明过年龄」的作品:没声明不等于适合任意年龄。 -->
+        <if test="audienceAge != null">
+            and (clm.age_min is not null or clm.age_max is not null)
+            and (clm.age_min is null or clm.age_min &lt;= #{audienceAge})
+            and (clm.age_max is null or clm.age_max &gt;= #{audienceAge})
+        </if>
+        <if test="minMinutes != null">
+            and cms_topic.total_time is not null and cms_topic.total_time &gt;= #{minMinutes}
+        </if>
+        <if test="maxMinutes != null">
+            and cms_topic.total_time is not null and cms_topic.total_time &lt;= #{maxMinutes}
+        </if>
+        <!--
+          交付形态全部由真实配置推导,不引入新枚举表:
+            SELF_PLAY      = 主题开放自玩票(self_play=1)
+            GUIDED_SESSION = 存在未删的「有人带」票种(sub_type='guided')
+            CLUB_HOSTED    = 主题归属俱乐部(club_id>0)
+          oms_ticket 有 idx_oms_ticket_activity_source(owner_type,owner_id,...),EXISTS 走索引。
+        -->
+        <if test="deliveryMode == 'SELF_PLAY'">
+            and cms_topic.self_play = 1
+        </if>
+        <if test="deliveryMode == 'GUIDED_SESSION'">
+            and exists (select 1 from oms_ticket catalog_ticket
+                        where catalog_ticket.owner_type = 1 and catalog_ticket.owner_id = cms_topic.id
+                          and catalog_ticket.del_flag = 0 and catalog_ticket.sub_type = 'guided')
+        </if>
+        <if test="deliveryMode == 'CLUB_HOSTED'">
+            and cms_topic.club_id is not null and cms_topic.club_id &gt; 0
+        </if>
+    </sql>
+
+    <sql id="catalogOrder">
+        <choose>
+            <when test="sort == 'DURATION_ASC'">order by cms_topic.total_time is null, cms_topic.total_time asc, cms_topic.id desc</when>
+            <when test="sort == 'DURATION_DESC'">order by cms_topic.total_time is null, cms_topic.total_time desc, cms_topic.id desc</when>
+            <otherwise>order by cms_topic.update_time desc, cms_topic.id desc</otherwise>
+        </choose>
+    </sql>
+
+    <!-- PageHelper 显式 COUNT;与行查询共用同一公开闸与筛选,总数与行不会分叉。 -->
+    <select id="selectCatalogItems_COUNT" parameterType="com.chengyinhub.business.domain.dto.PublicCatalogQuery"
+            resultType="Long">
+        select count(*)
+        from cms_topic
+        <include refid="catalogJoins"/>
+        where <include refid="catalogPublicGate"/>
+        <include refid="catalogFilters"/>
+    </select>
+
+    <select id="selectCatalogItems" parameterType="com.chengyinhub.business.domain.dto.PublicCatalogQuery"
+            resultType="com.chengyinhub.business.domain.dto.PublicContentCatalogRow">
+        select <include refid="catalogColumns"/>
+        from cms_topic
+        <include refid="catalogJoins"/>
+        where <include refid="catalogPublicGate"/>
+        <include refid="catalogFilters"/>
+        <include refid="catalogOrder"/>
+    </select>
+
+    <select id="selectCatalogItemById" resultType="com.chengyinhub.business.domain.dto.PublicContentCatalogRow">
+        select <include refid="catalogColumns"/>
+        from cms_topic
+        <include refid="catalogJoins"/>
+        where cms_topic.id = #{topicId}
+          and <include refid="catalogPublicGate"/>
+    </select>
+
+    <!-- ID 批量补取:与列表/地图分开;调用方按自己的 id 顺序重排,不依赖 IN 的返回顺序。 -->
+    <select id="selectCatalogItemsByIds" resultType="com.chengyinhub.business.domain.dto.PublicContentCatalogRow">
+        select <include refid="catalogColumns"/>
+        from cms_topic
+        <include refid="catalogJoins"/>
+        where cms_topic.id in
+        <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+          and <include refid="catalogPublicGate"/>
+    </select>
+
+    <!-- 地图轻投影:落点取第一个公开(status=1)且有坐标的节点,与 selectNearbyTopics 同口径。 -->
+    <select id="selectMapPoints" resultType="com.chengyinhub.business.domain.vo.PublicContentCatalogMapPointVO">
+        select cms_topic.id as id, cms_topic.name as name, cms_topic.city_code as cityCode,
+               cms_topic.img_url as imgUrl, cms_topic.location_count as locationCount,
+               cms_topic.update_time as updatedAt,
+               cast(node.latitude as decimal(12,7)) as latitude,
+               cast(node.longitude as decimal(12,7)) as longitude
+        from cms_topic
+        join cms_topic_node node
+          on node.topic_id = cms_topic.id and node.status = 1
+         and node.latitude is not null and node.latitude &lt;&gt; ''
+         and node.longitude is not null and node.longitude &lt;&gt; ''
+         and node.id = (select probe.id from cms_topic_node probe
+                        where probe.topic_id = cms_topic.id and probe.status = 1
+                          and probe.latitude is not null and probe.latitude &lt;&gt; ''
+                          and probe.longitude is not null and probe.longitude &lt;&gt; ''
+                        order by probe.sort_id asc, probe.id asc limit 1)
+        where cms_topic.id in
+        <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+          and <include refid="catalogPublicGate"/>
+    </select>
+
+    <!-- 章节名清单:只取 name,不选 blocks_json/audio/img;按 sort_id 稳定排序。 -->
+    <select id="selectChapterNames" resultType="java.util.HashMap">
+        select chapter.name as chapterName
+        from cms_topic_chapter chapter
+        where chapter.topic_id = #{topicId}
+        order by chapter.sort_id asc, chapter.id asc
+    </select>
+    <select id="selectChapterCounts" resultType="java.util.HashMap">
+        select chapter.topic_id as topicId, count(*) as chapterCount
+        from cms_topic_chapter chapter
+        where chapter.topic_id in
+        <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+        group by chapter.topic_id
+    </select>
+
+    <select id="selectFirstChapter" resultType="java.util.HashMap">
+        select chapter.id as chapterId, chapter.name as chapterName
+        from cms_topic_chapter chapter
+        where chapter.topic_id = #{topicId}
+        order by chapter.sort_id asc, chapter.id asc
+        limit 1
+    </select>
+
+    <!--
+      预览站:只出 order/name/hookTeaser。hook_text 为空时取 description 前 40 字,
+      与 CmsTopicMapper/public 列表的 hookTeaser 口径一致。绝不选 fragment_text(剧情碎片)、
+      答案/提示(在 cms_member_template)或核销码。
+    -->
+    <select id="selectPreviewStops" resultType="java.util.HashMap">
+        select node.name as name,
+               case when node.hook_text is not null and node.hook_text &lt;&gt; '' then node.hook_text
+                    when node.description is not null then left(node.description, 40)
+                    else null end as hookTeaser
+        from cms_topic_node node
+        join cms_topic_chapter chapter
+          on chapter.id = node.chapter_id and chapter.topic_id = node.topic_id
+        where node.topic_id = #{topicId}
+          and node.status = 1
+          and chapter.id = (select first_chapter.id from cms_topic_chapter first_chapter
+                            where first_chapter.topic_id = #{topicId}
+                            order by first_chapter.sort_id asc, first_chapter.id asc limit 1)
+        order by node.sort_id asc, node.id asc
+        limit #{limit}
+    </select>
+
+    <!-- live 票种聚合:一次一条,避免逐主题查价。 -->
+    <select id="selectTicketAggregates" resultType="java.util.HashMap">
+        select ticket.owner_id as topicId,
+               min(ticket.price) as minTicketPrice,
+               sum(case when ticket.sub_type = 'guided' then 1 else 0 end) as guidedCount
+        from oms_ticket ticket
+        where ticket.owner_type = 1
+          and ticket.del_flag = 0
+          and ticket.price is not null
+          and ticket.owner_id in
+        <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+        group by ticket.owner_id
+    </select>
+
+    <!-- 已冻结售卖快照身份:只取 id 与时间,不取 canonical_json(含价格/条款明细)。 -->
+    <select id="selectSaleRevisions" resultType="java.util.HashMap">
+        select snapshot.topic_id as topicId, snapshot.id as saleSnapshotId, snapshot.frozen_at as frozenAt
+        from topic_sale_snapshot snapshot
+        where snapshot.topic_id in
+        <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+    </select>
+
+    <select id="selectApprovedLocales" resultType="java.util.HashMap">
+        select translation.topic_id as topicId, translation.locale as locale
+        from content_landing_translation translation
+        where translation.translation_state = 'APPROVED'
+          and translation.topic_id in
+        <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+        order by translation.topic_id asc, translation.locale asc
+    </select>
+
+    <!--
+      城市名只来自真实数据 club.city,且仅当同一 city_code 下唯一一致时给出。
+      冲突(同名不同字/多值)或缺失一律 null —— 不用字典、不翻译补名。
+      排序规则显式钉成 utf8mb4_general_ci,避免 club.city 与业务列 collation 不同时 1267。
+    -->
+    <select id="selectCityNames" resultType="java.util.HashMap">
+        select cms_topic.city_code as cityCode,
+               case when count(distinct nullif(trim(club.city), '')) = 1
+                    then min(nullif(trim(club.city), '')) else null end as cityName
+        from cms_topic
+        join club on club.id = cms_topic.club_id and club.del_flag = 0
+        where cms_topic.city_code in
+        <foreach collection="cityCodes" item="cityCode" open="(" separator="," close=")">#{cityCode}</foreach>
+          and club.city is not null and trim(club.city) &lt;&gt; ''
+        group by cms_topic.city_code
+    </select>
+</mapper>

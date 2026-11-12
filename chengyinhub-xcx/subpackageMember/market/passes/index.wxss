@@ -1,0 +1,33 @@
+page { background: var(--cy-color-bg-page); }
+.mk { min-height: 100vh; display: flex; flex-direction: column; color: var(--cy-color-text-primary); }
+.mk__frame { flex: 1; display: flex; flex-direction: column; }
+.mk__body { flex: 1; display: flex; flex-direction: column; gap: var(--cy-space-3); padding: 0 var(--cy-page-x, var(--cy-space-4)) calc(var(--cy-space-6) + env(safe-area-inset-bottom)); }
+.mk-card { display: flex; flex-direction: column; gap: var(--cy-space-1-5); padding: var(--cy-space-4); background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-radius-lg); }
+.mk-card__head { display: flex; gap: var(--cy-space-2); }
+.mk-card__kind, .mk-card__city { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+.mk-card__name { font-size: var(--cy-type-title, 34rpx); font-weight: 700; }
+.mk-card__meta, .mk-card__cover { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+.mk-card__foot { display: flex; justify-content: space-between; align-items: baseline; gap: var(--cy-space-3); margin-top: var(--cy-space-1); }
+.mk-card__price { font-size: var(--cy-type-body); font-weight: 700; font-variant-numeric: tabular-nums; }
+.mk-group { background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-radius-lg); overflow: hidden; }
+.mk-group__title { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-type-label); font-weight: 700; color: var(--cy-color-text-secondary); }
+.mk-row { display: flex; align-items: flex-start; gap: var(--cy-space-3); min-height: 88rpx; box-sizing: border-box; padding: var(--cy-space-3) var(--cy-space-4); border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.mk-row:last-child { border-bottom: none; }
+.mk-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.mk-row__side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4rpx; }
+.mk-row__title { font-size: var(--cy-type-body); }
+.mk-row__sub { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
+.mk-row__amt { font-size: var(--cy-type-body); font-weight: 700; font-variant-numeric: tabular-nums; }
+/* r2-store 积分余额卡 */
+.mk-balance { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3); padding: var(--cy-space-4); background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-radius-lg); }
+.mk-balance__main { display: flex; flex-direction: column; gap: 4rpx; }
+.mk-balance__k { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+.mk-balance__v { font-size: var(--cy-font-display, 56rpx); font-weight: 800; font-variant-numeric: tabular-nums; }
+.mk-balance__go { display: flex; align-items: center; gap: 4rpx; min-height: 88rpx; font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+
+/* l-after:主题库入口行(单行卡) */
+.mk-row--go { margin-top: var(--cy-space-4); border-radius: var(--cy-comp-sheet-group-radius); background: var(--cy-comp-sheet-group-bg); }
+/* l-pass 通行证入口卡:暖橙渐变与通行证页同一套(原型 .pass2) */
+.mk-member { display: flex; align-items: center; gap: var(--cy-space-3); min-height: 120rpx; margin-bottom: var(--cy-space-4); padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-lg); color: #FFF4EA; background: radial-gradient(ellipse 120% 160% at 0% 0%, #B8431A 0%, #3B1708 60%, #0B0908 100%); /* ds-ok 原型 .pass2 暖橙 */ }
+.mk-member__t { flex: 1; font-size: var(--cy-font-title, 34rpx); font-weight: 800; }
+.mk-member__s { font-size: var(--cy-font-caption, 24rpx); color: rgba(255, 244, 234, .75); /* ds-ok */ }

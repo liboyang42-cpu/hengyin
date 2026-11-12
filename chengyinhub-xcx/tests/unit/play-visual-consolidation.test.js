@@ -93,7 +93,7 @@ test('玩家与商家一级导航未选统一黑白、选中统一品牌紫(UI-0
   assert.match(tabWxml, /\{\{\(monochrome \|\| mode === 'merchant'\) \? 'monochrome' : ''\}\}/)
   assert.match(
     tabWxml,
-    /\{\{\(monochrome \|\| mode === 'merchant'\) \|\| index !== active \? item\.iconPath : item\.selectedIconPath\}\}/,
+    /\{\{index === active \? item\.selectedIconPath : item\.iconPath\}\}/,
     '选中图标也必须走同一条判定，否则商家/玩家会各走各的资源',
   )
   // 批3 那条反向守卫保留:防止有人把方向搞反的 mode !== 'merchant' 例外闸再加回来

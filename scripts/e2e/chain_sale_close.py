@@ -12,8 +12,10 @@ import sys, pathlib, json, datetime
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from chain_lib import http, q, admin_token, app_token, step, show, readback
 
-EXEC_CLUB_ID = 7002
-EXEC_CLUB_PHONE = "13900000008"
+# 2026-11 起自由探索只开放「内容所属俱乐部」的场次(ExploreSaleSnapshotGate.assertSessionClub),
+# 跨俱乐部执行场次已停售;开场次、对公收款人都落在主题所属俱乐部 7001(主理人 9003)。
+EXEC_CLUB_ID = 7001
+EXEC_CLUB_PHONE = "13900000003"
 PAYEE_LEGAL_NAME = "E2E 测试俱乐部有限公司"
 PAYEE_LICENSE_OBJECT_KEY = "e2e/fake-license.png"
 PAYEE_LICENSE_HASH = "e2e-fake-license-hash-0000000000"

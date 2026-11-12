@@ -22,7 +22,7 @@ test('眉标日期:「10月28日 周三」', () => {
 })
 
 test('版式顺序:地图在最上,然后标题、大数字、成就、城市探索,按钮固定在底部', () => {
-  const sheet = wxml.slice(wxml.indexOf('<view class="finsheet" wx:if="{{showFinish}}">'), wxml.indexOf('class="finsheet__cta"'))
+  const sheet = wxml.slice(wxml.indexOf('<view class="finsheet '), wxml.indexOf('class="finsheet__cta"'))
   const order = ['finsheet__map"', 'finsheet__head', 'finsheet__grid" wx:if="{{mode!=2}}"', '<view class="fsec__h">成就', '<view class="fsec__h">城市探索', 'finish-journal-entry']
   const at = order.map((k) => sheet.indexOf(k))
   at.forEach((i, n) => assert.ok(i > -1, order[n] + ' 不见了'))

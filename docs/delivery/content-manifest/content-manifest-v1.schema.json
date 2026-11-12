@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.chengyinhub.com/schemas/content-manifest-v1.json",
+  "title": "城瘾玩家内容清单 v1（GET /api/play/content-manifest 的 data 对象）",
+  "description": "只覆盖当前公开交付合同：修订身份、站点骨架、端能力、可缓存媒介引用。不覆盖 32 种玩法的运行时配置形状，也不是服务端运行时校验器；服务端仍以投影代码为唯一实现。禁止字段（答案/别名/提示/揭示/商家秘密/私有快照）在这里只作为「不应出现」的说明，校验靠服务端投影与回归测试。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "topicId", "onlineRequired", "sourceLocale"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["REVISION", "RUN_SNAPSHOT", "ONLINE_LEGACY"],
+      "description": "REVISION=明确已发布修订；RUN_SNAPSHOT=本局已开局按本局快照；ONLINE_LEGACY=老内容无修订清单，继续在线读取。"
+    },
+    "topicId": { "type": "integer", "minimum": 1 },
+    "activityId": { "type": ["integer", "null"], "minimum": 1, "description": "自玩局为 0 或 null。" },
+    "contentRevisionId": { "type": ["integer", "null"], "minimum": 1 },
+    "revisionNo": { "type": ["integer", "null"], "minimum": 1 },
+    "schemaVersion": { "type": ["integer", "null"], "minimum": 0, "description": "来自该修订冻结内容声明的 runtimeSnapshotVersion；历史内容为 0 或 null。" },
+    "manifestVersion": { "type": ["integer", "null"], "enum": [1, null] },
+    "contentSha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$", "description": "仅用于完整性校验，不代替访问授权。" },
+    "routeMode": { "type": ["string", "null"] },
+    "openingChapterId": { "type": ["integer", "null"], "minimum": 1 },
+    "openingChapterName": { "type": ["string", "null"] },
+    "stations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["nodeId", "scope", "scanReady"],
+        "properties": {
+          "nodeId": { "type": "integer", "minimum": 1 },
+          "nodeName": { "type": ["string", "null"] },
+          "chapterId": { "type": ["integer", "null"], "minimum": 1 },
+          "scanReady": { "type": "boolean" },
+          "scope": {
+            "type": "string",
+            "enum": ["START", "ROUTE", "OPTIONAL"],
+            "description": "来自实际章节引用：开局章=START，非必选章节=OPTIONAL，其余=ROUTE。"
+          }
+        }
+      }
+    },
+    "requiredCapabilities": {
+      "type": ["array", "null"],
+      "description": "null 表示内容未声明也无法推导；不得写成空数组冒充「无要求」。",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key"],
+        "properties": {
+          "key": { "type": "string" },
+          "minVersion": { "type": ["integer", "null"], "minimum": 1 }
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assetKey", "url", "scope", "priority", "verified"],
+        "properties": {
+          "assetKey": {
+            "type": "string",
+            "description": "稳定内容身份（章节/节点/模板 + 字段），不是 URL，不含签名参数。"
+          },
+          "url": { "type": "string" },
+          "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "bytes": { "type": ["integer", "null"], "minimum": 0 },
+          "mime": { "type": ["string", "null"] },
+          "priority": { "type": "integer", "minimum": 1, "maximum": 3, "description": "预取顺序提示，不参与授权或结算。" },
+          "scope": { "type": "string", "enum": ["START", "ROUTE", "OPTIONAL"] },
+          "textAlternative": { "type": ["string", "null"] },
+          "verified": { "type": "boolean", "description": "false 表示哈希/大小没有权威值，客户端不得显示「已校验」。", "const": false },
+          "unverifiedReason": { "type": ["string", "null"], "enum": ["HASH_AND_BYTES_UNKNOWN", null] }
+        }
+      }
+    },
+    "assetVerification": { "type": "string", "enum": ["NONE", "UNVERIFIED"] },
+    "expiresAt": { "type": ["string", "null"], "format": "date-time", "description": "当前恒为 null：清单不过期；签名 URL 刷新不改变内容身份。" },
+    "onlineRequired": { "type": "boolean" },
+    "sourceLocale": { "type": "string", "const": "zh-CN" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "REVISION" } }, "required": ["status"] },
+      "then": {
+        "required": ["contentRevisionId", "revisionNo", "contentSha256", "manifestVersion"],
+        "properties": { "onlineRequired": { "const": false } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "RUN_SNAPSHOT" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "onlineRequired": { "const": false },
+          "revisionNo": { "type": "null" },
+          "contentSha256": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "ONLINE_LEGACY" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "onlineRequired": { "const": true },
+          "contentRevisionId": { "type": "null" },
+          "manifestVersion": { "type": "null" },
+          "requiredCapabilities": { "type": "null" },
+          "assets": { "maxItems": 0 },
+          "stations": { "maxItems": 0 },
+          "assetVerification": { "const": "NONE" }
+        }
+      }
+    }
+  ]
+}

@@ -10,6 +10,9 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** 合同二闸3：售卖只认主题实际开售时刻和半开售卖窗，不再借用 ticket.startTime。 */
@@ -93,6 +96,49 @@ class SaleAvailabilityPolicyTest {
         IllegalStateException startFailure = assertThrows(IllegalStateException.class,
                 () -> SaleAvailabilityPolicy.assertSellable(topic, null, at("2026-08-11T02:00:00Z")));
         assertTrue(startFailure.getMessage().contains("sellingStartedAt"), "缺开售事实必须被 sellingStartedAt 闸拦截");
+    }
+
+    /**
+     * 「为什么还不能卖」只有一份:非抛孪生返回的每一条,必须逐字等于售卖闸抛出的那句。
+     * 作者端状态投影读孪生,下单走抛出版本;两者一旦分叉,作者看到的理由就是假的。
+     *
+     * <p>负控:把 sellableBlockReason 里任意一条文案改一个字,本用例红。
+     */
+    @Test
+    void nonThrowingReasonIsWordForWordTheGateMessage() {
+        CmsTopic nullLifecycle = sellingTopic();
+        nullLifecycle.setLifecycle(null);
+        assertSameReason(nullLifecycle, null, at("2026-08-11T02:00:00Z"));
+
+        CmsTopic notSelling = sellingTopic();
+        notSelling.setLifecycle(TopicLifecycleState.PRICING.getCode());
+        assertSameReason(notSelling, null, at("2026-08-11T02:00:00Z"));
+
+        CmsTopic missingStart = sellingTopic();
+        missingStart.setSellingStartedAt(null);
+        assertSameReason(missingStart, null, at("2026-08-11T02:00:00Z"));
+
+        CmsTopic missingEnd = sellingTopic();
+        missingEnd.setSaleEndAt(null);
+        assertSameReason(missingEnd, null, at("2026-08-11T02:00:00Z"));
+
+        CmsTopic notStartedYet = sellingTopic();
+        assertSameReason(notStartedYet, null, at("2026-08-11T00:30:00Z"));
+
+        assertSameReason(sellingTopic(), null, TOPIC_SALE_END_AT);
+        assertSameReason(sellingTopic(), ticket(TOPIC_SALE_END_AT), TOPIC_SALE_END_AT);
+
+        assertNull(SaleAvailabilityPolicy.sellableBlockReason(sellingTopic(), null, at("2026-08-11T02:00:00Z")),
+                "可售时必须返回 null,不能编一条理由");
+    }
+
+    /** 同一对入参:孪生返回的 reason 必须逐字等于 assertSellable 抛出的那句话。 */
+    private static void assertSameReason(CmsTopic topic, OmsTicket ticket, Date now) {
+        String reason = SaleAvailabilityPolicy.sellableBlockReason(topic, ticket, now);
+        assertNotNull(reason, "这一组入参应当被售卖闸拒绝");
+        IllegalStateException failure = assertThrows(IllegalStateException.class,
+                () -> SaleAvailabilityPolicy.assertSellable(topic, ticket, now));
+        assertEquals(reason, failure.getMessage());
     }
 
     private static CmsTopic sellingTopic() {

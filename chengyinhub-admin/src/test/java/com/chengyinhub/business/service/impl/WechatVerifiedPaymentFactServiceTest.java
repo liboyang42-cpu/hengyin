@@ -163,6 +163,34 @@ class WechatVerifiedPaymentFactServiceTest {
         assertEquals(2,service.findPaymentRecovery(reference).orElseThrow().state(),"verified replay cannot re-open a resolved handoff");
     }
 
+    @Test void hostPaymentDeferRetainsOneOriginalManualTicketAndRejectsWrongTargetOrOrdinarySupply() {
+        var reference = service.recordVerified(payment("TX1", "REG1", 1000));
+        var host = mock(com.chengyinhub.business.mapper.ClubEventOpsMapper.class);
+        when(host.hostPaymentNeedsRecovery(eq(1L), any(java.util.Date.class), any(java.util.Date.class))).thenReturn(true);
+        ReflectionTestUtils.setField(service, "hostReservations", host);
+        ReflectionTestUtils.setField(service, "factIntentJdbc", new org.springframework.jdbc.core.JdbcTemplate() {
+            @Override public <T> T queryForObject(String sql, Class<T> type, Object... args) {
+                assertTrue(sql.contains("id=? AND registration_no=?"));
+                return type.cast(Long.valueOf(1L).equals(args[0]) && "REG1".equals(args[1]));
+            }
+        });
+        service.deferHostReservationPayment(reference, 1L);
+        service.deferHostReservationPayment(reference, 1L);
+        var recovery = service.findPaymentRecovery(reference).orElseThrow();
+        assertEquals(4, recovery.state());
+        assertEquals(1L, recovery.businessId());
+        assertEquals("HOST_RESERVATION_FULFILLMENT_REVIEW", recovery.reason());
+        assertEquals(reference, recovery.original().reference());
+        assertEquals(1, rows.recoveries.size());
+        assertEquals(1, rows.rows.size(), "defer does not change or invent an economic payment fact");
+        assertThrows(IllegalStateException.class, () -> service.deferHostReservationPayment(reference, 2L));
+        when(host.hostPaymentNeedsRecovery(eq(1L), any(java.util.Date.class), any(java.util.Date.class))).thenReturn(false);
+        assertThrows(IllegalStateException.class, () -> service.deferHostReservationPayment(reference, 1L));
+        assertEquals(1, rows.recoveries.size());
+        assertEquals(4, service.findPaymentRecovery(reference).orElseThrow().state(),
+                "recording a handoff must never claim a refund or completed fulfillment");
+    }
+
     @Test void actualLocalStateConflictQueuesOriginalSuccessButMissingBusinessNeverInventsAnOwner() {
         var owner=(com.chengyinhub.business.service.WechatPaymentOrderOwner)ReflectionTestUtils.getField(service,"factBusinessOwner");
         when(owner.lock("REG1")).thenReturn(new com.chengyinhub.business.service.WechatPaymentOrderOwner.Snapshot(

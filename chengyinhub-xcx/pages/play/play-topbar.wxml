@@ -32,3 +32,21 @@
     <view class="tb-empty" wx:else>这个主题没有站点奖励</view>
   </view>
 </cy-sheet>
+<!-- V3-15 → l-play(业主「改成弹窗」「翻页卡」,proto pop-ext):本章延伸任务是居中弹窗里的翻页卡,一次一张(配图或序号 · 名字 · 说明 · 地点),
+     点卡或右下箭头翻到下一张(绕竖轴),「去做」打开那一站的地点卡(utils/story-kit-card.js + play-stage-pops.js) -->
+<view class="lk-popwrap" wx:if="{{storyTasks.show}}" catchtouchmove="noop" aria-role="dialog" aria-label="延伸任务">
+  <view class="lk-pop-mask" bindtap="closeStoryTasks" hover-class="none" aria-role="button" aria-label="关闭延伸任务"></view>
+  <view class="lk-pop ks">
+    <view class="ks__h"><text class="ks__t lk-title">延伸任务</text><view class="ks__x" bindtap="closeStoryTasks" aria-role="button" aria-label="关闭延伸任务" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view></view>
+    <view class="ks__b">
+      <view class="xd" aria-live="polite">
+        <view class="xd__c lk-card stq__card {{index === extDeck.idx ? (extDeck.flipping ? 'is-on is-out' : 'is-on') : (extDeck.flipping && index === extDeck.next ? 'is-in' : '')}}" wx:for="{{storyTasks.rows}}" wx:key="nodeId" bindtap="flipExtTask" aria-role="button" aria-label="{{item.name}}，第 {{index + 1}} 张，共 {{storyTasks.rows.length}} 张，轻点翻到下一张" hover-class="xd__c--press" hover-stay-time="80">
+          <view class="xd__cov"><image wx:if="{{item.img}}" class="xd__img" src="{{img.first(item.img)}}" mode="aspectFill" lazy-load="true" /><text wx:else class="xd__no stq__no">{{item.no}}</text></view>
+          <view class="xd__b"><text class="xd__k">{{index + 1}} / {{storyTasks.rows.length}}</text><text class="xd__t">{{item.name}}</text><text class="xd__p" wx:if="{{item.desc}}">{{item.desc}}</text><view class="xd__i"><view wx:if="{{item.address}}">地点<text>{{item.address}}</text></view></view></view>
+          <view class="lk-btn lk-btn--primary xd__go" catchtap="goExtTask" aria-role="button" aria-label="去做 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">去做</view>
+        </view>
+      </view>
+      <view class="xd__ctl"><view class="xd__dots"><view wx:for="{{storyTasks.rows}}" wx:key="nodeId" class="xd__dot {{index === extDeck.idx ? 'is-on' : ''}}"></view></view><view class="xd__arrow" bindtap="flipExtTask" aria-role="button" aria-label="下一张" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="chevron-right" size="28" /></view></view>
+    </view>
+  </view>
+</view>

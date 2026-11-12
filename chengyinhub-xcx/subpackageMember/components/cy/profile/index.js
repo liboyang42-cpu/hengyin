@@ -1,4 +1,4 @@
-const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../../utils/registration-seat.js');
+const { seatTarget, seatKey, captureLogin, loginCurrent, seatRecovery } = require('../../../../utils/registration-seat.js'); const { readPlayerCode } = require('../../../utils/player-code.js'); // l-after 邀请页个人码(同一行,不动 U1/U4 基线锚定的行号)
 const { readPublisherAccess } = require('../../../utils/coop-publisher-access.js'); const pageMotion = require('../../../../utils/page-motion.js');
 const { returnToCoopOrigin } = require('../../../utils/coop-invite-return.js');
 const modal = require('../../../../utils/modal.js');
@@ -423,7 +423,7 @@ Component({
     reportTargetType: '',
     reportTargetId: '',
     reportTitle: '举报',
-    correctionShow: false, shopShareShow: false, shopShareCard: null,
+    correctionShow: false, shopShareShow: false, shopShareCard: null, inviteShow: false, inviteCard: null,
     correctionMerchantId: '',
     subjectIsMerchant: false,
     subjectMerchant: null,
@@ -500,6 +500,11 @@ Component({
     projectAuthError: false,
     feedErr: false,
     feedAuthError: false,
+    // f-pages P-20/M-33:本人帖文 tab 发帖入口。canCompose 只来自服务端 communityPostWrite,不拿角色猜
+    canCompose: false,
+    composerOpen: false,
+    myAvatar: '',
+    myNickname: '',
     sceneStack: [],
     sceneCurrent: null,
     sceneConfirm: { show: false, action: null, pending: null }
@@ -613,6 +618,7 @@ Component({
     _clearSelfReadState: function (access) {
       this.setData({ selfReadAccess: access, userInfo: {}, categoryList: [], casePicsList: [], joinInfo: { id: 0 },
         merchantAccess: inactiveAccess(), merchantAccessState: 'idle', merchantTeamEntryValue: '', isMerchantView: false,
+        canCompose: false, composerOpen: false,
         isClubLeader: false, benefits: buildBenefits({}), balanceText: null,
         friendNum: 0, followNum: 0, fansNum: 0, growthLevel: 1, streakDays: 0, exploreValue: 0, profilePoint: null,
         pointsStat: { weekPoints: 0, rankPercentage: 0 }, rankDisplay: { no: 0, delta: '' },
@@ -770,6 +776,7 @@ Component({
       if (this._profileAttached === false || epoch !== this._communityProfileEpoch
           || owner !== String(app.getUserID() || '') || target !== String(this.data.userId || '')) return;
       const tabs = profileTabs(this.data.isSelf, this.data.isMerchantView);
+      this.syncComposeAccess();   // f-pages P-20:社区开关读到后(loadFeatureFlags 回来再 settle)同步发帖入口
       if (!communityReadable()) {
         this._postsRequestGeneration = (this._postsRequestGeneration || 0) + 1;
         this.setData({ memberTabs: tabs, list: [], clubPostList: [], hasMore: false, feedErr: false, feedAuthError: false,
@@ -1193,8 +1200,31 @@ Component({
     // 返回 Promise:宿主页(我的 tab)要把下拉刷新的收圈绑在真实完成上,而不是定时器。
     return Promise.all(shared.concat(selfOnly)).then(function () {
       that.buildDerivedState();
+      that.syncComposeAccess();
       if (!silent && that.data.activeTab === 'posts') that.getCreativesquareList();
     });
+  },
+
+  // f-pages P-20/M-33:发帖入口只认 app.canUseCommunity(true)(服务端 features.communityPostWrite),
+  // 和商家「发现」页同一判定;他人主页永远不出。
+  syncComposeAccess: function () {
+    var can = !!this.data.isSelf && typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
+    if (can !== this.data.canCompose) this.setData({ canCompose: can });
+    if (!can && this.data.composerOpen) this.setData({ composerOpen: false });
+  },
+  openComposer: function () {
+    if (!this.data.isSelf || !this.data.canCompose) return;
+    this.setData({
+      composerOpen: true,
+      myAvatar: (app.getAvatar && app.getAvatar()) || '',
+      myNickname: (app.getNickname && app.getNickname()) || ''
+    });
+  },
+  closeComposer: function () { this.setData({ composerOpen: false }); },
+  // 发布成功:弹窗自己清正文/图片/草稿,这里只收起并回读本人帖文流
+  onComposePublished: function () {
+    this.setData({ composerOpen: false });
+    this.reloadFeed();
   },
 
   loadBanner: function () {
@@ -2333,18 +2363,40 @@ Component({
   },
   goMyJoin: function () { wx.navigateTo({ url: '/subpackageMember/mycanyu/mycanyu' }); },
   goGrowthCenter: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/growthcenter/index/index', complete: () => { this._navigating = false; } }); },
-  goWall: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index', complete: () => { this._navigating = false; } }); },
-  goAlbum: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/stamp-album/index/index', complete: () => { this._navigating = false; } }); },
-  goObjectCards: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/object-cards/index/index', complete: () => { this._navigating = false; } }); },
+  goWall: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/badge-wall/index/index?from=profile', complete: () => { this._navigating = false; } }); },
+  goAlbum: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/stamp-album/index/index?from=profile', complete: () => { this._navigating = false; } }); },
+  goObjectCards: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageP3/pages/object-cards/index/index?from=profile', complete: () => { this._navigating = false; } }); },
   // 当前权益里可点的行(收益提现→提现页;承接原 role/center 对赚钱角色 role!==player 的提现入口,按 withdrawable 权限门控)
   onBenefitTap: function (e) {
     var ds = e.currentTarget.dataset;
     if (ds.route && ds.unlocked) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: ds.route, complete: () => { this._navigating = false; } }); }
   },
-  goInvite: function () { this.openScene('share-invite'); },
+  // l-after:邀请好友走统一的 Spotify 式邀请页(cy-share-card kind=invite),码是本人个人码(/api/user/player-code);
+  // 「发给微信好友」走宿主页 onShareAppMessage → getSharePayload(inviteShow 时带 inviter 落首页)
+  goInvite: function () {
+    var nick = (this.data.userInfo && this.data.userInfo.nickname) || '';
+    this.setData({ inviteShow: true, inviteCard: { kind: 'invite', id: '', title: '一起探索城市里的新玩法', meta: '邀请 · 城瘾', inviter: nick, qr: this._playerCode || '' } });
+    if (this._playerCode || this._playerCodeLoading) return;
+    var that = this;
+    this._playerCodeLoading = true;
+    app.sendRequest({ url: '/api/user/player-code', method: 'POST', hideLoading: true, silentError: true,
+      success: function (res) {
+        that._playerCodeLoading = false;
+        var src = readPlayerCode(res);
+        if (!src) return;
+        that._playerCode = src;
+        if (that.data.inviteShow) that.setData({ 'inviteCard.qr': src });
+      },
+      fail: function () { that._playerCodeLoading = false; } });
+  },
+  closeInvite: function () { this.setData({ inviteShow: false }); },
   goEarnings: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/earnings/index' + (this.data.isMerchantView ? '?theme=merchant' : ''), complete: () => { this._navigating = false; } }); }, // 2026-10-30 业主:商家主页进账户收益是浅色
   goMerchantTeam: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/merchant/team/index', complete: () => { this._navigating = false; } }); },
   goClubWorkbench: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/detail/index?owner=1&tab=manage', complete: () => { this._navigating = false; } }); },
+  // §17.1/P6 通行证与礼品记录(qx-b5)
+  goPasses: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/market/passes/index', complete: () => { this._navigating = false; } }); },
+  // §18 A/B 视频悬赏作者端(qx-b5)
+  goVideoBounty: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/video-bounty/index', complete: () => { this._navigating = false; } }); },
   goCoupon: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/coupon-wallet/index', complete: () => { this._navigating = false; } }); },
   // 帖文第三轮:帖文卡的点正文 / 点评论进详情,点赞走原来的 creativesquare 点赞(type=1);数据下标来自卡片事件
   onPostCardDetail: function (e) {
@@ -2427,7 +2479,8 @@ Component({
   },
 
   getSharePayload: function (res) {
-    if (res.from === 'button' && res.target && res.target.dataset && res.target.dataset.shareKind === 'invite') {
+    var ds = (res.from === 'button' && res.target && res.target.dataset) || {};
+    if (ds.shareKind === 'invite' || (ds.shareKind === 'card' && this.data.inviteShow)) {
       return {
         title: '一起探索城市里的新玩法',
         path: '/pages/index/index?inviter=' + app.getUserID()

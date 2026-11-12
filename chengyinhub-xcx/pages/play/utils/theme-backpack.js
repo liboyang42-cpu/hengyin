@@ -1,9 +1,22 @@
+// l-play:没有配图的物品按名字挑一张插图(cy-illus;认不出就用「藏品」),只是看法,不改物品数据
+function illusFor(name) {
+  const n = String(name || '');
+  if (/钥|匙|锁/.test(n)) return 'key';
+  if (/信|邮|函|票根/.test(n)) return 'envelope';
+  if (/票|证|卡/.test(n)) return 'pass';
+  if (/图|盘|针|罗/.test(n)) return 'compass';
+  if (/书|卷|账|簿|签|页/.test(n)) return 'bookmark';
+  if (/币|分|钱|金/.test(n)) return 'points';
+  if (/线索|笔记|纸/.test(n)) return 'clue';
+  return 'gem';
+}
 const sessionClient = require('../../../utils/game-session-client.js');
 const toast = require('../../../utils/toast.js');
 const gameplay = require('./theme-gameplay.js');
 const rewards = require('./theme-rewards.js');
 const trade = require('./theme-trade.js');
 const plans = require('./theme-plans.js');
+const coop = require('./coop-help.js');
 const titles = { WAIT: '休息恢复', CHALLENGE: '归零挑战', STEPS: '步行恢复', BLOCK_HP_COST: '暂停消耗任务', BLOCK_PAID: '暂停付费任务', THEME_FAIL: '本局结束' };
 
 function presentZeroHp(view) {
@@ -28,7 +41,7 @@ function present(view, nodes) {
   const claimOnly = rewards.ended(view);
   const items = contents.filter(i => i.kind === 'ITEM').map(i => Object.assign({}, i, {
     name: i.name || gameplay.valueName(i.id, view),
-    statLabel: gameplay.valueName(i.statKey || i.stat, view), initial: String(i.name || gameplay.valueName(i.id, view)).slice(0, 1),
+    statLabel: gameplay.valueName(i.statKey || i.stat, view), initial: String(i.name || gameplay.valueName(i.id, view)).slice(0, 1), illus: illusFor(i.name || gameplay.valueName(i.id, view)),
     effectText: i.stat || i.statKey ? gameplay.valueName(i.statKey || i.stat, view) + ' ' + (i.delta > 0 ? '+' : '') + i.delta : i.content || '随身物资',
     canUse: !claimOnly && !i.wear && !i.worn && !!(i.stat || i.statKey) && (view.scope !== 'TEAM' || (view.availableActions || []).includes('ITEM_USE')),
     canDiscard: !claimOnly && view.allowDiscard === true && (view.scope !== 'TEAM' || (view.availableActions || []).includes('ITEM_DISCARD')),
@@ -342,6 +355,8 @@ function methods(req) {
       const choices = {};
       for (const key of ['choiceKey', 'costOption', 'discardRewards']) if (input[key] !== undefined) choices[key] = input[key];
       if (participant.participants) choices.participants = participant.participants;
+      // §26.1:合作局答对待确认的 QUEST_RESOLVE 带原题 runtimeInstance 与 answerRevision(没有真实答对版本就不带)
+      if (team && input.operation === 'QUEST_RESOLVE') Object.assign(choices, coop.resolveFields(view.cooperation, input.contentId));
       const command = team ? { activityId: view.activityId, action: input.operation, payload: {
         [input.operation === 'FACILITY_USE' ? 'facilityKey' : 'questKey']: input.contentId, ...choices } }
         : { sessionId: view.sessionId, expectedVersion: view.version, operation: input.operation, contentId: input.contentId, ...choices };
@@ -466,6 +481,7 @@ function methods(req) {
         if (participant.participants) selections.participants = participant.participants;
       }
       if (team) Object.assign(payload, selections);
+      if (team && input.operation === 'QUEST_RESOLVE' && !this._gameplayPending) Object.assign(payload, coop.resolveFields(view.cooperation, input.contentId));
       const command = this._gameplayPending ? this._gameplayPending.command : team
         ? { activityId: view.activityId, requestId: 'pg-theme-' + Date.now() + '-' + Math.random().toString(36).slice(2), expectedRevision: input.expectedRevision === undefined ? view.revision : input.expectedRevision,
           action: input.operation, payload, authorityEpoch: input.authorityEpoch === undefined ? view.authorityEpoch : input.authorityEpoch }

@@ -49,10 +49,10 @@
                        action="重新加载" bind:action="retryDetail" />
       <block wx:elif="{{detailState === 'ready' && detail}}">
         <view class="ccl-metrics">
-          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.recipientCount != null ? detail.recipientCount : '—'}}</text><text class="ccl-metric-label">名单人数</text></view>
-          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.deliveredCount != null ? detail.deliveredCount : '—'}}</text><text class="ccl-metric-label">已送达</text></view>
-          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.noConsentCount != null ? detail.noConsentCount : '—'}}</text><text class="ccl-metric-label">未同意</text></view>
-          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.frequencySkippedCount != null ? detail.frequencySkippedCount : '—'}}</text><text class="ccl-metric-label">频控跳过</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.recipientCount != null ? detail.recipientCount : 0}}</text><text class="ccl-metric-label">名单人数</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.deliveredCount != null ? detail.deliveredCount : 0}}</text><text class="ccl-metric-label">已送达</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.noConsentCount != null ? detail.noConsentCount : 0}}</text><text class="ccl-metric-label">未同意</text></view>
+          <view class="ccl-metric"><text class="ccl-metric-num">{{detail.frequencySkippedCount != null ? detail.frequencySkippedCount : 0}}</text><text class="ccl-metric-label">频控跳过</text></view>
           <view class="ccl-metric"><text class="ccl-metric-num">{{(detail.failedCount || 0) + (detail.retryableCount || 0)}}</text><text class="ccl-metric-label">未送达</text></view>
         </view>
         <text class="ccl-note">名单不含联系方式</text>

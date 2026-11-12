@@ -163,6 +163,20 @@ public interface ICmsRegistrationService
             Integer isUsePoint
     );
 
+    /**
+     * 报价（携带促销意图与指纹的完整入口）。
+     *
+     * <p>与 6 参版本唯一的差别是它能读到 {@code offerCode}（组合包/礼品业务码）并把促销结果投影进
+     * {@code RegistrationQuoteResult}。默认实现退化为 6 参版本，保证既有调用方零改动；
+     * {@code CmsRegistrationServiceImpl} 覆写它。
+     */
+    default com.chengyinhub.business.domain.dto.RegistrationQuoteResult quoteRegistration(
+            Long memberId,
+            com.chengyinhub.business.domain.dto.RegistrationRequest request) {
+        return quoteRegistration(memberId, request.getOwnerType(), request.getOwnerId(),
+                request.getTicketId(), request.getTickets(), request.getIsUsePoint());
+    }
+
     /** 有效 OFFERED hold 的单票报价；只验凭证，不推进状态、不再次占库存。 */
     public com.chengyinhub.business.domain.dto.RegistrationQuoteResult quoteRegistrationForOffer(
             Long memberId,

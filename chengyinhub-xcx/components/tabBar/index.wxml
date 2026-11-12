@@ -6,10 +6,9 @@
     <view class="ul flex-cb">
       <view class="li {{index === active ? 'active' : ''}}" wx:for="{{list}}" wx:key="pagePath" data-index="{{index}}" bindtap="onChange" aria-role="button" aria-label="{{index === active ? '当前' + item.text : '前往' + item.text}}" hover-class="cy-pressed" hover-stay-time="80">
         <view class="icon flex-cc">
-          <!-- 黑白态一律用未选中资源,选中差异交给 wxss 的 filter 换色(2026-09-18 UI-03:
-               选中统一品牌紫,不再取 selectedIconPath 的紫色 PNG —— 滤镜对 PNG/SVG 一视同仁);
-               selectedIconPath 只有彩色态(monochrome=false)才取 -->
-          <image class="tabbar__icon" src="{{(monochrome || mode === 'merchant') || index !== active ? item.iconPath : item.selectedIconPath}}" mode="widthFix" />
+          <!-- 选中取填充版 selectedIconPath、未选取描边版 iconPath(2026-11-09 V3-25);
+               颜色仍交给 wxss 的 filter(UI-03 选中统一品牌紫,滤镜对 PNG/SVG 一视同仁)。 -->
+          <image class="tabbar__icon" src="{{index === active ? item.selectedIconPath : item.iconPath}}" mode="widthFix" />
         </view>
       </view>
     </view>

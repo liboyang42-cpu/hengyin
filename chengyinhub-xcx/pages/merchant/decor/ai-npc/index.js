@@ -11,6 +11,8 @@ const toast = require('../../../../utils/toast.js');
 const modal = require('../../../../utils/modal.js');
 const voiceJournal = require('../../../../utils/voice-enrollment-journal.js');
 const merchantTheme = require('../../../../utils/merchant-theme.js');
+const { beats } = require('../../../../utils/page-motion.js');
+const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 const pixelAvatar = require('../../../../utils/pixel-avatar.js');
 const profileReview = require('../../../../utils/profile-review.js');
 const pixelPortrait = require('../../../../utils/pixel-portrait.js');
@@ -35,6 +37,13 @@ function personalityOf(key, persona) {
   return PERSONALITIES.filter((p) => p.label === text)[0] || null;
 }
 const INTRO_SEEN_KEY = 'cy_ai_npc_intro_seen';
+// r2 a6-w2-16 每步的多段动作(原 ni-twinkle / ni-wave / ni-swing 关键帧的段落;[段号, 本段时长 ms]):
+// 星光 .4s 后在暗 / 亮之间各 .7s 一直闪;手 .2s 后挥两遍(-22° / 8° / -18° / 回正各 .24s,停 .64s);闹钟 .5s 后摆两遍(各 .3s)
+const INTRO_BEATS = {
+  0: { frames: [[1, 700], [2, 700]], opts: { delay: 400, rest: 0 } },
+  1: { frames: [[1, 240], [2, 240], [3, 240], [4, 880]], opts: { delay: 200, times: 2, rest: 0 } },
+  2: { frames: [[1, 300], [2, 300], [3, 300], [4, 300]], opts: { delay: 500, times: 2, rest: 0 } },
+};
 
 /** CU-M-81:没有坐标时的落点文案。地址只能当辅助,不能顶替「已设置点位」。 */
 const STORE_POINT_UNSET = '尚未选择地图位置';
@@ -91,6 +100,12 @@ Page({
     editing: false,
     introVisible: false,
     introStep: 0,
+    introPrev: -1, // 上一步:它的两个物件缩走
+    niBeat: 0, // 当前步多段动作的段号(ni-stage--bN)
+    niStill: false, // 应用内「减少动态效果」:直接到位
+    // r2 a6-w2-16(业主「不是之前说用上一版吗 不要用积木的这个啦」「每一个阶段是不一样的动图 要和ai店铺角色和文字匹配」):
+    // 回到 R12 定稿那一版(每步两个 3D 物件),每步一种动效,和这一步的话对上:
+    // 分身 = 店铺升起 + 星光闪 · 打招呼 = 挥手 + 气泡冒出 · 菜单 = 餐盘落下 + 闹钟摆动 · 起名选性格 = 名牌翻出 + 面具换脸
     introSteps: [
       { key: 'avatar', a: 'convenience_store', b: 'sparkles', t: '它是你的店在城瘾里的分身', s: '出现在漫游地图和店铺主页上，替你招呼路过的玩家' },
       { key: 'greet', a: 'waving_hand', b: 'speech_balloon', t: '玩家路过，它先打招呼', s: '按你写的招呼语和性格说话' },
@@ -148,15 +163,45 @@ Page({
     });
     let introSeen = false;
     try { introSeen = typeof wx.getStorageSync === 'function' && !!wx.getStorageSync(INTRO_SEEN_KEY); } catch (e) { introSeen = false; }
-    if (!introSeen) this.setData({ introVisible: true });
+    if (!introSeen) { this.setData({ introVisible: true, niStill: readReducedMotion() }); this._introBeats(0); }
     this._loadProfile();
   },
   nextIntro() {
-    if (this.data.introStep < this.data.introSteps.length - 1) { this.setData({ introStep: this.data.introStep + 1 }); return; }
+    if (this.data.introStep < this.data.introSteps.length - 1) { this._goIntro(this.data.introStep + 1); return; }
     this.dismissIntro();
   },
+  prevIntro() {
+    if (this.data.introStep > 0) this._goIntro(this.data.introStep - 1);
+  },
+  _goIntro(step) {
+    this.setData({ introPrev: this.data.introStep, introStep: step });
+    this._introBeats(step);
+  },
+  // 每步的多段动作按原关键帧逐段重放:星光闪(1.4s 一个来回,一直闪)、手挥两下、闹钟摆两下;第 4 步没有多段动作
+  _introBeats(step) {
+    if (this._niStop) this._niStop();
+    const plan = INTRO_BEATS[step];
+    this._niStop = plan ? beats(this, 'niBeat', plan.frames, plan.opts) : null;
+    if (!plan) this.setData({ niBeat: 0 });
+  },
+  // qx-u2:舞台左右滑翻页;横向位移不足 60px 或偏竖直的手势不算翻页。
+  onIntroTouchStart(e) {
+    const t = e && e.touches && e.touches[0];
+    this._introTouch = t ? { x: t.clientX, y: t.clientY } : null;
+  },
+  onIntroTouchEnd(e) {
+    const start = this._introTouch;
+    const t = e && e.changedTouches && e.changedTouches[0];
+    this._introTouch = null;
+    if (!start || !t) return;
+    const dx = t.clientX - start.x, dy = t.clientY - start.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    if (dx < 0 && this.data.introStep < this.data.introSteps.length - 1) this._goIntro(this.data.introStep + 1);
+    else if (dx > 0) this.prevIntro();
+  },
   dismissIntro() {
-    this.setData({ introVisible: false, introStep: 0 });
+    if (this._niStop) { this._niStop(); this._niStop = null; }
+    this.setData({ introVisible: false, introStep: 0, introPrev: -1, niBeat: 0 });
     try { if (typeof wx.setStorageSync === 'function') wx.setStorageSync(INTRO_SEEN_KEY, 1); } catch (e) { /* 存不下只是下次再说明一遍 */ }
   },
   toggleEditing() {
@@ -199,6 +244,8 @@ Page({
   },
   onUnload() {
     this._voiceClearEpoch = (this._voiceClearEpoch || 0) + 1;
+    this._unloaded = true;
+    if (this._niStop) this._niStop();
     this._voicePageEpoch = (this._voicePageEpoch || 0) + 1;
     // Retire only this page generation's in-memory confirmation; durable UNKNOWN identities stay intact.
     this._voiceConfirming = false;

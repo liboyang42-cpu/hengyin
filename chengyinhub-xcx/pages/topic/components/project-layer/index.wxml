@@ -2,7 +2,7 @@
      iOS 式:下面一层缩小压暗、露出顶边;左上返回回到下一层,不离开主题。底部动作放 foot 插槽。 -->
 <block wx:if="{{ show }}">
 <view class="ly-mask ly-mask--{{ depth }}" catchtouchmove="noop" bindtap="onBack" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="ly ly--{{ depth }} {{ under ? 'ly--under' : '' }}" style="--cy-layer-top:{{panelTop}}px">
+<view class="ly ly--{{ depth }} {{ (under || _under) ? 'ly--under' : '' }}" style="--cy-layer-top:{{panelTop}}px">
   <view class="ly-grab"></view>
   <view class="ly-head">
     <view class="ly-back" catchtap="onBack" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>

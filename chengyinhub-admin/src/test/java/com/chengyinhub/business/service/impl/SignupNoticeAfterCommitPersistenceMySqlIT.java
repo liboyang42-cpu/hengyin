@@ -171,6 +171,9 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
             return rows;
         });
         CmsRegistrationServiceImpl target = new CmsRegistrationServiceImpl();
+        var revenuePosting = mock(com.chengyinhub.business.service.IMarketingRevenuePostingService.class);
+        when(revenuePosting.enqueueAccrual(99L)).thenReturn(1L);
+        ReflectionTestUtils.setField(target, "marketingRevenuePostingService", revenuePosting);
         registrationTarget = target;
         ReflectionTestUtils.setField(target, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(target, "verifiedPaymentFacts", fixturePaymentFacts);
@@ -232,6 +235,9 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
     @Test
     void successfulPaymentQueuesOnlyAfterCommitAndBothIndependentWritesReallyPersist() throws Exception {
         payInsideTransaction(false);
+        var revenuePosting = (com.chengyinhub.business.service.IMarketingRevenuePostingService)
+                ReflectionTestUtils.getField(registrationTarget, "marketingRevenuePostingService");
+        verify(revenuePosting, org.mockito.Mockito.times(1)).enqueueAccrual(99L);
         assertEquals(2, queued.size(), "QR and signup IM must both be queued after commit");
         assertPaid();
         assertEquals(0, messages());
@@ -254,7 +260,8 @@ public class SignupNoticeAfterCommitPersistenceMySqlIT {
         assertEquals(88L, new ObjectMapper().readTree(db.queryForObject("select extra_json from im_message", String.class)).path("topicId").asLong());
         assertEquals("报名成功", db.queryForObject("select content from im_message", String.class));
         assertEquals("SUCCESS", registrationService.handleWechatPayCallback(callback()));
-        assertEquals(2, queued.size(), "replaying an already completed payment must not enqueue again");
+        verify(revenuePosting, org.mockito.Mockito.times(2)).enqueueAccrual(99L);
+        assertEquals(2, queued.size(), "replaying an already completed payment must not queue another notice");
         verifyNoInteractions(alarm);
     }
 

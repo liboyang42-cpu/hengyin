@@ -85,6 +85,18 @@ public final class NodeJourneySnapshot {
         }
     }
 
+    /**
+     * 读侧内容版本号：同一份冻结快照的 contentSnapshotVersion。旧快照没有该键返回 0，
+     * 供玩家端区分「旧局（章节呈现未冻结）」与「新局」—— 不拒绝旧局，也不伪造新版本。
+     */
+    public static int contentVersion(JsonNode snapshot) {
+        if (snapshot == null) return 0;
+        int version = 0;
+        for (JsonNode row : snapshot.path(NODE_ANSWERS_KEY))
+            if (row.has("contentSnapshotVersion")) version = Math.max(version, row.path("contentSnapshotVersion").asInt(0));
+        return version;
+    }
+
     /** Server-only typed view; never serialize this object as a public response. */
     public static com.chengyinhub.business.domain.CmsMemberTemplate contentTemplate(JsonNode answer) {
         if (!hasContent(answer) || !answer.hasNonNull("templateId")) return null;
@@ -114,7 +126,11 @@ public final class NodeJourneySnapshot {
         template.setMedalStyle(presentation.path("medalStyle").asText(null));
         template.setMedalImg(presentation.path("medalImg").asText(null));
         template.setCouponId(presentation.hasNonNull("couponId") ? presentation.path("couponId").asLong() : null);
-        template.setValidationMethod(answer.hasNonNull("validationMethod") ? answer.path("validationMethod").asInt() : null);
+        // 新制快照把判定方式冻进模板呈现(键在即为权威,可为 null);老快照没有该键才读答案区。
+        template.setValidationMethod(presentation.has("validationMethod")
+                ? (presentation.path("validationMethod").isIntegralNumber()
+                        ? presentation.path("validationMethod").asInt() : null)
+                : (answer.hasNonNull("validationMethod") ? answer.path("validationMethod").asInt() : null));
         template.setPhotoReview(answer.hasNonNull("photoReview") ? answer.path("photoReview").asInt() : null);
         template.setQuestionAnswer(answer.path("questionAnswer").asText(null));
         template.setCorrectAnswer(answer.path("correctAnswer").asText(null));
@@ -187,7 +203,10 @@ public final class NodeJourneySnapshot {
             // R17-INT 待办 b:排序 / 连线 / 分类(R3)与对照(R16)也必须下发。
             "sort", "match", "classify", "compare",
             // 罗盘指向(现场感契约 §5.1):漏这一行 = 到店后客户端拿不到该玩法入口,静默不存在。
-            "compass"));
+            "compass",
+            // G1 逐字猜词:同一份名单。漏登记会让冻结 playables 不含 hangman,客户端到点拿不到入口,
+            // ContentCapabilityRequirements 也推导不出 game.hangman。
+            "hangman"));
 
     /** 块配置里要冻结的旅程相关段;其余玩法段落(如 timeWindow)不冻结,仍读实时配置。 */
     private static final List<String> JOURNEY_SEGMENTS = Collections.unmodifiableList(Arrays.asList(

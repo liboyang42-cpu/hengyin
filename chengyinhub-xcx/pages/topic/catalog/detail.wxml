@@ -1,0 +1,51 @@
+<view class="theme-dark">
+<view class="cdetail">
+  <cy-nav-bar title="{{state === 'ok' ? '' : '作品'}}" overlay="{{state === 'ok'}}" pill="{{state === 'ok'}}" />
+  <view wx:if="{{state !== 'ok'}}" class="cdetail-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
+  <view wx:if="{{state === 'loading'}}" class="cdetail-pad"><cy-skeleton type="feed-card" count="1" /></view>
+  <cy-empty class="fill-slot" wx:elif="{{state === 'gone'}}" fill="{{true}}" size="lg" kind="empty" title="作品已下架或未公开" sub="" />
+  <cy-error load-failure class="fill-slot" wx:elif="{{state === 'error'}}" fill="{{true}}" size="lg" title="作品没有加载出来" sub="{{error}}" bind:retry="load" />
+  <block wx:elif="{{state === 'ok'}}">
+    <view class="cdetail-hero">
+      <image wx:if="{{view.cover}}" class="cdetail-hero__img" src="{{view.cover}}" mode="aspectFill" />
+      <view wx:else class="cdetail-hero__img cdetail-hero__fallback"><cy-icon name="route" size="64" /></view>
+      <view class="cdetail-hero__shade"></view>
+      <view class="cdetail-hero__body">
+        <view class="cdetail-hero__kind" wx:if="{{view.kind}}">{{view.kind}}</view>
+        <view class="cdetail-hero__title">{{view.title}}</view>
+        <view class="cdetail-hero__meta" wx:if="{{view.meta}}">{{view.meta}}</view>
+      </view>
+    </view>
+    <view class="cdetail-pad">
+      <view class="result-card__tags" wx:if="{{view.tags.length}}">
+        <text wx:for="{{view.tags}}" wx:key="*this" class="result-card__tag">{{item}}</text>
+      </view>
+      <view class="cdetail-summary" wx:if="{{view.summary}}">{{view.summary}}</view>
+      <view class="cdetail-sec" wx:if="{{view.deliveryModes.length}}">
+        <view class="cdetail-sec__h">游玩方式</view>
+        <view class="cdetail-row" wx:for="{{view.deliveryModes}}" wx:key="*this"><text>{{item}}</text></view>
+      </view>
+      <view class="cdetail-sec" wx:if="{{view.stops.length}}">
+        <view class="cdetail-sec__h">{{view.previewTitle || '开场'}}</view>
+        <view class="cdetail-row cdetail-row--stop" wx:for="{{view.stops}}" wx:key="key">
+          <text class="cdetail-row__no">{{item.order}}</text>
+          <view class="cdetail-row__t"><text class="cdetail-row__b">{{item.name}}</text><text class="cdetail-row__s" wx:if="{{item.hook}}">{{item.hook}}</text></view>
+        </view>
+      </view>
+      <view class="cdetail-sec" wx:if="{{view.chapters.length}}">
+        <view class="cdetail-sec__h">章节</view>
+        <view class="cdetail-row" wx:for="{{view.chapters}}" wx:key="*this"><text>{{item}}</text></view>
+      </view>
+      <view class="cdetail-sec" wx:if="{{view.accessibilityNote}}">
+        <view class="cdetail-sec__h">无障碍</view>
+        <view class="cdetail-row"><text>{{view.accessibilityNote}}</text></view>
+      </view>
+      <view class="cdetail-city" wx:if="{{view.cityCode && view.cityName}}" bindtap="openCity" aria-role="button" aria-label="{{view.cityName}}的更多作品" hover-class="cy-pressed" hover-stay-time="80">
+        <text>{{view.cityName}}的更多作品</text><cy-icon name="arrow-right" size="28" />
+      </view>
+    </view>
+    <view class="cdetail-footer-spacer"></view>
+    <view class="cdetail-footer"><cy-footer-bar primary="查看作品" highlight="{{true}}" bind:primarytap="openTopic" /></view>
+  </block>
+</view>
+</view>

@@ -75,7 +75,7 @@ def all_required_clean(directory):
         ("ClubSettlementSummaryMybatisIntegrationTest", 6),
         ("CoopComplaintCloseMybatisIntegrationTest", 8),
         ("RegistrationReadContractMybatisIntegrationTest", 6),
-        ("ClubWaitlistTokenMybatisIntegrationTest", 7),
+        ("ClubWaitlistTokenMybatisIntegrationTest", 11),
         ("CmsMemberTemplateAudioPatchMybatisIntegrationTest", 9),
         ("CmsTemplateLibraryAudioPatchMybatisIntegrationTest", 9),
         ("TemplateUseNumFirstAdoptionMybatisIntegrationTest", 3),

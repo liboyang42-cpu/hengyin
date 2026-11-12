@@ -116,6 +116,14 @@ public class WechatPaymentIntentStore {
         }
     }
 
+    /** l-payout2：该商户号下是否已为此业务单冻结过任何支付意图（用于「已开始的支付不换收款主体」）。 */
+    boolean hasAnyAttempt(String mchid, String businessOrderNo) {
+        Integer n = paymentIntentJdbc.queryForObject(
+                "SELECT COUNT(*) FROM wx_pay_order_intent WHERE mchid=? AND business_out_trade_no=?",
+                Integer.class, mchid, businessOrderNo);
+        return n != null && n > 0;
+    }
+
     String currentWechatPaymentNo(String businessOrderNo, String mchid) {
         var rows = paymentIntentJdbc.queryForList("SELECT out_trade_no FROM wx_pay_order_intent WHERE mchid=? AND business_out_trade_no=? ORDER BY attempt_no DESC LIMIT 1",
                 mchid, businessOrderNo);

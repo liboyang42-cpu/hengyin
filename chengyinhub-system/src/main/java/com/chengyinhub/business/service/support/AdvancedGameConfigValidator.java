@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.chengyinhub.common.utils.StringUtils;
+import com.chengyinhub.business.util.ClueTransformSupport;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -46,6 +48,23 @@ public class AdvancedGameConfigValidator {
     /** 价格单位是分,上限 9999.99 元 */
     private static final long MAX_PRICE_CENTS = 999999L;
     private static final int MAX_PRICE_XP_PER_HIT = 200;
+    /** BE-16 提示阶梯:六级是可配上限,不是每题强制六层。 */
+    private static final int MAX_HINT_LEVELS = 6;
+    /**
+     * 层级类型:与运行期 {@code PlayHelpUsagePolicy.verdict} / {@code PlayHelpContent.approved}
+     * 同一份清单(含 DIGIT,少一个就是保存闸把已支持的能力全局拒掉)。
+     * LOCATION 留在册里只为把它显式拒掉:位置类帮助会绕过既有到达与权限判定。
+     */
+    private static final Set<String> HINT_LEVEL_TYPES = setOf(
+            "TEXT", "IMAGE", "LETTER", "DIGIT", "ANSWER", "SKIP", "LOCATION");
+    /*
+     * 免费额度的**已定稿语义**（用户 2026-11-08 裁决）：整局共享 N 次免费 ——
+     * 首次解锁一层消耗一次，已解锁层重看始终免费；N 由作者显式给出，平台不给默认值。
+     *
+     * <p>N 住**根层标量** {@code hintFreeUsesPerRun}（与 {@code hintLadder} 同级），
+     * 由 {@link #validateHintFreeUsesPerRun} + {@link PlayHelpRunQuotaPolicy} 单一来源校验；
+     * 层内 {@code freeQuota} 只保留 0 作旧配置占位，>0 直接拒 —— 不允许两套额度语义并存。
+     */
     /** 问答三种模式。三种差的只是中间那一块,所以是一段带 mode,不是三段 */
     private static final Set<String> QA_MODES = new HashSet<>(Arrays.asList("TYPE", "PICK", "SHOT"));
     /** 扫码回什么。OVERLAY 是第四档:页内取景扫中后把图叠在镜头里(AR 契约 §2.2) */
@@ -251,9 +270,9 @@ public class AdvancedGameConfigValidator {
     private static final Set<String> PRESENT_SECTIONS = setOf(
             "qa", "branch", "predict", "pricePair", "random", "profile", "note", "check", "quietHold",
             "estimate", "diyName", "typeIn", "dailySign", "slowTask", "musicCorner", "timeWindow", "diceRoll",
+            "hangman",
             "reaction", "ballShake", "countdown", "stopwatch", "coinFlip", "hiddenObject", "scan", "steps",
             "compass", "shout", "blindTaste", "silentOrder", "sort", "match", "classify", "compare", "photoCheck", "album");
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /** 空配置代表未启用；非空配置经校验后返回紧凑、稳定的 JSON。 */
@@ -285,6 +304,14 @@ public class AdvancedGameConfigValidator {
         }
         ObjectNode root = (ObjectNode) parsed;
         GameplayOutcomeRules.validateBlock(root);
+        // BE-09/BE-15:到达策略与到达读数属于节点作者公开配置，先于资源槽分支校验，避免带 resourceSlots
+        // 的块从早退路径漏检。缺省 = 旧配置原样通过（不升 schemaVersion）；写了就必须是规范形状。
+        if (root.has(ArrivalPolicy.FIELD) && !root.get(ArrivalPolicy.FIELD).isNull()) {
+            root.set(ArrivalPolicy.FIELD, ArrivalPolicy.normalize(root.get(ArrivalPolicy.FIELD)));
+        }
+        if (root.has(ArrivalReading.FIELD) && !root.get(ArrivalReading.FIELD).isNull()) {
+            root.set(ArrivalReading.FIELD, ArrivalReading.normalize(root.get(ArrivalReading.FIELD)));
+        }
         if (root.path("interactionRules").has("resourceSlots")) {
             ObjectNode validation = TemplateResourceSlots.validationBlock(root, "模板");
             String checked = new AdvancedGameConfigValidator().validateAndNormalize(validation.toString());
@@ -334,6 +361,17 @@ public class AdvancedGameConfigValidator {
         validateCountdown(root.get("countdown"));
         validateStopwatch(root.get("stopwatch"));
         validateQa(root.get("qa"));
+        // G2 图片选项:选项媒体与可读替代文字。判定仍是原 optionId,这里只补媒体链的保存闸。
+        QaOptionMediaSupport.validate(root.get("qa"));
+        // G2 指认结案 + G3 有限谜面变换:都是可选顶层段,不配即旧行为。
+        validateAccusation(root);
+        validateClueTransform(root);
+        // BE-16 提示阶梯:文档字面 hintLadder 数组;不配即沿用原 hint1/hint2 与揭示链。
+        validateHintLadder(root.get("hintLadder"));
+        // BE-16 免费额度:整局共享 N 次,住根层,与 hintLadder 同级(不是每层各一份)。
+        validateHintFreeUsesPerRun(root);
+        // G1 逐字猜词:只补空白槽、按 format 数组重建;答案/别名/format 都是秘密,投影里不下发。
+        HangmanGameplay.validate(root.get("hangman"));
         validateScan(root.get("scan"));
         // R3 三个新玩法。它们与老玩法同一套形状:答案留在服务端,投影只下发题面。
         validateSort(root.get("sort"));
@@ -532,6 +570,9 @@ public class AdvancedGameConfigValidator {
                        (现码注释里已有两次前科,别成为第三次)。 */
                     || enabled(root.get("profile")) || enabled(root.get("photoCheck"))
                     || enabled(root.get("note")) || enabled(root.get("typeIn"))
+                    // 逐字猜词同一条前科口径:漏这一行 = 只配 hangman 的节点 hasAdvanced 仍是 false,
+                    // 玩家到点直接打卡,玩法静默不存在。
+                    || enabled(root.get("hangman"))
                     || root.path("outcomeRules").path("version").asInt()==1 && enabled(root.get("album"));
         } catch (Exception e) {
             throw new IllegalArgumentException("高级玩法配置不是合法 JSON");
@@ -1264,6 +1305,212 @@ public class AdvancedGameConfigValidator {
         int maxTries = qa.path("maxTries").asInt(0);
         if (maxTries < 0 || maxTries > 10) throw new IllegalArgumentException("问答可以答几次须为 0 至 10,0 表示不限");
         validateXp(qa, "问答");
+    }
+
+    /**
+     * 指认结案段(CT-07)。最终一题复用原 {@code qa}(PICK 单选图片),所以这里只查结案段自身形状与
+     * 与选项的对应关系,不新增判题器、不新增答案字段。
+     *
+     * <p>线索键注册表与物资键在保存期拿不到(要连库),按 {@link AccusationTemplateSupport#validate}
+     * 的空集合口径只查键名形状;发布期由该 owner 的表对账补齐。
+     *
+     * <p><b>「提前指认」不在保存期拒绝</b>:{@code earlyAccuse.allowed} 是用户已授权的玩法,
+     * {@code AccusationTemplateSupport.validate} 已保证 {@code allowed=true} 时作者写明 {@code recordAs}。
+     * 保存闸只查配置形状；运行期由既有主题节点与本局完成进度判定是否提前，
+     * 并将 {@code AccusationOutcomePolicy.judge} 的结论写入原动作回执。
+     * 进度不可判定时运行期拒绝落账，不由保存闸猜测进度。
+     */
+    private void validateAccusation(JsonNode root) {
+        AccusationTemplateSupport.validate(root);
+    }
+
+    /**
+     * 有限谜面变换段(G10)。只接受 {@code mode} 一个键:STANDARD / MIRROR / REVERSE。
+     * 密码类药物(CYPHER/FLIP)原文无经审核算法与参数,由 {@link ClueTransformSupport#mode} 直接拒。
+     *
+     * <p>非 STANDARD 时题面必须有可呈现文字。这里只查**本 JSON 能看到**的那份题面
+     * ({@code qa.title});其它题型的题面住在模板 {@code questionName},本类拿不到 ——
+     * 不在这里按「看不到 = 空题面」误拒,那个判断归发布期(发布检查持有模板行)。
+     */
+    private void validateClueTransform(JsonNode root) {
+        JsonNode section = ClueTransformSupport.sectionOf(root);
+        ClueTransformSupport.validate(section);
+        JsonNode qa = root.get("qa");
+        if (qa != null && qa.isObject() && qa.path("enabled").asBoolean(false)) {
+            ClueTransformSupport.requireApplicable(section, qa.path("title").asText(""));
+        }
+    }
+
+    /**
+     * BE-16 提示阶梯的保存/发布闸。文档字面形状:
+     * {@code hintLadder:[{level,type,payload,cost:{points},freeQuota}]}。
+     *
+     * <p>只接受已有真实账本的代价种类:本树积分账本 {@code ums_member_points_detail} 存在,
+     * 宝石/金币无任何账本,配了就拒 —— 宁可作者保存时看到错,也不能运行期做假扣款。
+     * 位置类(LOCATION)会绕过既有到达与权限判定,同样拒绝。
+     *
+     * <p>数字一律不设平台默认:代价由作者显式给出;`hint_probe.sh` 的 300/30 是
+     * 可调模型参数,不是城瘾费率。免费额度是整局共享的一份,住根层
+     * {@code hintFreeUsesPerRun}(见 {@link #validateHintFreeUsesPerRun});层内 {@code freeQuota}
+     * 只接受 0,>0 直接拒并指向根层字段。
+     */
+    private void validateHintLadder(JsonNode ladder) {
+        if (ladder == null || ladder.isNull()) return;
+        if (!ladder.isArray() || ladder.size() == 0 || ladder.size() > MAX_HINT_LEVELS) {
+            throw new IllegalArgumentException("提示阶梯须为 1 至 " + MAX_HINT_LEVELS + " 级");
+        }
+        Set<Integer> seenLevels = new HashSet<>();
+        for (JsonNode level : ladder) {
+            requireObject(level, "提示阶梯条目格式不正确");
+            int order = level.path("level").asInt(0);
+            if (order < 1 || order > MAX_HINT_LEVELS) {
+                throw new IllegalArgumentException("提示阶梯 level 须为 1 至 " + MAX_HINT_LEVELS);
+            }
+            if (!seenLevels.add(order)) {
+                throw new IllegalArgumentException("提示阶梯 level 不能重复");
+            }
+            // 与运行期 PlayHelpUsagePolicy.levels 同一条规范化(trim + 大写):作者写 text
+            // 在运行期会被识别,保存闸不能反而把它拒了。
+            String type = level.path("type").asText("").trim().toUpperCase(Locale.ROOT);
+            if (!HINT_LEVEL_TYPES.contains(type)) {
+                throw new IllegalArgumentException("提示类型只能是文字、图片、首字、数字、答案或跳过");
+            }
+            if ("LOCATION".equals(type)) {
+                throw new IllegalArgumentException("位置类帮助会绕过既有到达与权限判定,当前不可配置");
+            }
+            validateHintPayload(type, level.get("payload"));
+            validateHintCost(level.get("cost"));
+            JsonNode freeQuota = level.get("freeQuota");
+            if (freeQuota != null && !freeQuota.isNull()) {
+                if (!freeQuota.isIntegralNumber() || !freeQuota.canConvertToInt() || freeQuota.asInt() < 0) {
+                    throw new IllegalArgumentException("提示层 freeQuota 只接受 0（旧配置占位）");
+                }
+                // 免费额度是**整局共享**的一份（根层 hintFreeUsesPerRun），不是每层各一份。
+                // 两套额度语义并存必然一山二虎:一处按层判免费、一处按局判,作者看到两个数。
+                if (freeQuota.asInt() > 0) {
+                    throw new IllegalArgumentException(
+                            "提示免费次数是整局共享的一份，请填在根层 hintFreeUsesPerRun；层内 freeQuota 只能是 0");
+                }
+            }
+        }
+    }
+
+    /**
+     * 整局共享免费提示次数 {@code hintFreeUsesPerRun}(根层标量,与 {@code hintLadder} 同级)。
+     *
+     * <p>语义(用户 2026-11-08 定稿):每局共享 N 次;首次解锁一层消耗一次;已解锁层重看始终免费;
+     * 同 requestId 重试不扣额度;费用不足或事务失败不消耗额度、不解锁。缺省 = 旧行为(不补默认数字)。
+     *
+     * <p>取值范围直接委托 {@link PlayHelpRunQuotaPolicy} —— 保存闸与冻结读取只有一份上限,
+     * 免得两边各写一个数后漂移。`MAX_RUN_FREE_USES` 是防计数器溢出的护栏,不是产品费率。
+     */
+    private void validateHintFreeUsesPerRun(JsonNode root) {
+        if (root == null || !root.has(PlayHelpRunQuotaPolicy.FIELD)) return;
+        try {
+            PlayHelpRunQuotaPolicy.fromAdvancedConfig(root);
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalArgumentException("提示免费次数须为 0 至 " + PlayHelpRunQuotaPolicy.MAX_RUN_FREE_USES
+                    + " 的整数（整局共享，不是每层各一份）", invalid);
+        }
+    }
+
+    /**
+     * 每级只发获准片段。{@code payload} 是**标量**,类型随 {@code type} 定 —— 与运行期
+     * {@code PlayHelpContent.approved} 的读取口径一致:
+     * <ul>
+     *   <li>{@code TEXT} → 一句话(字符串,非空)</li>
+     *   <li>{@code IMAGE} → 图片引用(字符串,走已审的媒体语法闸:https / 站内路径 / media-asset)</li>
+     *   <li>{@code LETTER} → 要揭示第几个字符(1 起整数);缺省 = 首个字母/数字</li>
+     *   <li>{@code ANSWER} → 可选揭示文案(字符串)</li>
+     *   <li>{@code DIGIT}/{@code SKIP} → 不带 payload(数字来自冻结答案,跳过没有内容)</li>
+     * </ul>
+     *
+     * <p>不设自创的字数/位置/面额阈值:整份配置已有 64 KiB 字节预算;首字位置越界由运行期
+     * {@code PlayHelpContent} 判(越界不发内容),这里只查类型与来源格式。
+     */
+    private void validateHintPayload(String type, JsonNode payload) {
+        switch (type) {
+            case "TEXT" -> {
+                String text = payload == null || !payload.isTextual() ? "" : payload.asText().trim();
+                if (text.isEmpty()) throw new IllegalArgumentException("文字提示不能为空");
+            }
+            case "IMAGE" -> {
+                String url = payload == null || !payload.isTextual() ? "" : payload.asText().trim();
+                if (url.isEmpty()) throw new IllegalArgumentException("图片提示须给出图片地址");
+                if (!QaOptionMediaSupport.isAllowedReference(url)) {
+                    throw new IllegalArgumentException("提示图片必须是 https 链接、站内路径或已落库的 media-asset 引用");
+                }
+            }
+            case "LETTER" -> {
+                if (payload == null || payload.isNull()) return;
+                if (!payload.isIntegralNumber() || !payload.canConvertToInt() || payload.asInt() < 1) {
+                    throw new IllegalArgumentException("首字提示位置须为 1 起的整数");
+                }
+            }
+            case "ANSWER" -> {
+                if (payload == null || payload.isNull()) return;
+                if (!payload.isTextual()) {
+                    throw new IllegalArgumentException("答案级揭示文案必须是文字");
+                }
+            }
+            case "DIGIT", "SKIP" -> {
+                // 这两类没有可下发内容:数字由冻结答案首位数字现算,跳过不发任何东西。
+                // 空值/空串放行(老草稿常见的空键),但作者写了实际内容就拒 ——
+                // 静默丢掉作者写的提示等于让他以为配上了。
+                if (payload == null || payload.isNull()) return;
+                boolean blank = payload.isTextual() && payload.asText().trim().isEmpty();
+                if (!blank) {
+                    throw new IllegalArgumentException(
+                            "DIGIT 提示取自冻结答案的首位数字、SKIP 没有内容，都不能配置 payload");
+                }
+            }
+            default -> throw new IllegalArgumentException("提示类型不支持:" + type);
+        }
+    }
+
+    /** 代价只认已有真实账本的类型:本树只有积分。面额必须显式、非负。 */
+    private void validateHintCost(JsonNode cost) {
+        if (cost == null || cost.isNull()) return;
+        requireObject(cost, "提示代价格式不正确");
+        // 与运行期 PlayHelpUsagePolicy 同一口径:只有非零的宝石/金币才是"要扣",零值等价于没配。
+        if (nonZeroCost(cost.get("gems")) || nonZeroCost(cost.get("coins"))) {
+            throw new IllegalArgumentException("宝石与金币代价没有真实账本,不可配置");
+        }
+        JsonNode points = cost.get("points");
+        if (points == null || points.isNull()) return;
+        if (!points.isIntegralNumber() || !points.canConvertToLong() || points.asLong() < 0) {
+            throw new IllegalArgumentException("提示积分代价须为非负整数");
+        }
+    }
+
+    /** 非零代价判定:缺省与 0 都不算「要扣」,非数字按配置错误处理。 */
+    private static boolean nonZeroCost(JsonNode value) {
+        if (value == null || value.isNull()) return false;
+        if (!value.isNumber()) throw new IllegalArgumentException("提示代价必须是数字");
+        return value.asDouble() != 0d;
+    }
+
+    /**
+     * 根层 {@code answerPolicy} 的保存/发布闸(BE-08)。不配 = 合法(只有 canonical answer);
+     * 配了就走 {@link com.chengyinhub.business.service.support.AnswerPolicy#requireValid(JsonNode)}:
+     * 版本、归一方式、别名条数/长度/重复都必须在写库或发布前拒掉。
+     *
+     * <p>刻意**不**塞进 {@link #validateAndNormalize(String)}:那份校验也跑在运行期
+     * (每局每动作读冻结配置),坏政策如果在那里抛,玩家会被一条他改不了的数据卡死。
+     * 运行期由 {@code AnswerPolicy.of} 宽容退回无别名;作者侧在这里严格拒。
+     */
+    public void assertAnswerPolicy(String rawJson) {
+        if (StringUtils.isBlank(rawJson)) return;
+        final JsonNode root;
+        try {
+            root = objectMapper.readTree(rawJson);
+        } catch (Exception unusableConfig) {
+            // JSON 本身坏了由 validateAndNormalize 统一报错;这里只负责政策那一段。
+            return;
+        }
+        if (root == null || !root.isObject()) return;
+        com.chengyinhub.business.service.support.AnswerPolicy
+                .requireValid(root.get(com.chengyinhub.business.service.support.AnswerPolicy.FIELD));
     }
 
     /**

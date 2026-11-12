@@ -149,12 +149,22 @@ public class PlayJourneyReadServiceImpl implements IPlayJourneyReadService {
 
     // ==================== 案件册 ====================
 
+    private static Map<String, Object> emptyCasebook() {
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+        data.put("facts", new ArrayList<Object>());
+        data.put("relations", new ArrayList<Object>());
+        data.put("costs", new ArrayList<Object>());
+        data.put("log", new ArrayList<Object>());
+        return data;
+    }
+
     @Override
     public Map<String, Object> casebook(Long memberId, Long topicId, Long activityId) {
         requireScope(memberId, topicId);
         CmsTopic topic = requireTopic(topicId);
         TopicRouteSession session = TopicRouteSessionScope.findCurrent(routeMapper, memberId, topicId, activityId);
-        if (session == null) throw new ServiceException("这一局还没开始");
+        // R5-1：局还没建起来是业务合法态（主理人先进玩页、局尚未准备），回空案件册而不是 500；页面显示「还没有记下什么」。
+        if (session == null) return emptyCasebook();
         // 查询和本地校验都限定归属，禁止读取别人的局。
         if (!memberId.equals(session.getMemberId())) throw new ServiceException("无权访问这一局");
 

@@ -57,7 +57,8 @@
   backdrop-filter: blur(var(--cy-comp-sheet-blur, 24rpx));
   -webkit-backdrop-filter: blur(var(--cy-comp-sheet-blur, 24rpx));
   border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0;
-  box-shadow: var(--cy-sheet-inset-shadow);
+  /* qx-u1:第二层是拖拽越界(阻尼 / 弹簧回弹)时往下补的同色底,平时在屏幕外。page 档下面整条覆盖成 none。 */
+  box-shadow: var(--cy-sheet-inset-shadow), 0 320rpx 0 var(--cy-sheet-bg); /* ds-ok 拖拽越界补底 */
   /* 2026-10-23:进出场改 transition(见 index.js 头注释)。起点态在屏外,挂上 .ss--in 才升起;
      退场摘掉 .ss--in 落回屏外。时长读按档位重定义过的 --cy-motion-sheet-in / -out,曲线慢快慢(业主 09-06 定)。 */
   transform: translateY(100%);
@@ -155,6 +156,10 @@
   --cy-text-secondary: var(--cy-comp-sheet-merchant-text-tertiary);
   --cy-comp-sheet-bg: var(--cy-comp-sheet-merchant-bg);
 }
+/* 叠层景深(qx-u3):上面又开了一层时缩到 .94、上移 10px、压暗(behaviors/sheet-depth.js 判定)。
+   与 cy-sheet / project-drawer / project-layer 同一组数值;transform 与升起共用同一条 transition。 */
+.ss--in.ss--under .ss__panel { transform: translateY(-10px) scale(.94); transform-origin: 50% 0; filter: brightness(.7); pointer-events: none; }
+.ss--in .ss__panel { transition-property: transform, filter; }
 .ss--reduced-motion .ss__panel,
 .ss--reduced-motion .ss__mask { transition: none; }
 /* 档位定速:full 档在根节点把两条时长换成 full 档,面板与遮罩同档;half 档就是 token 默认 300 / 250 */
@@ -223,6 +228,7 @@
   box-sizing: border-box;
   padding: var(--cy-space-2) var(--cy-comp-sheet-body-pad-x) calc(var(--cy-space-2) + env(safe-area-inset-bottom));
   background: var(--cy-sheet-bg);
+  --cy-comp-btn-radius: var(--cy-comp-bottom-btn-radius); /* 2026-11-10 r2 底部按钮统一圆角 */
 }
 
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
@@ -254,3 +260,5 @@
 .ss--page { --cy-motion-sheet-in: var(--cy-motion-sheet-full-in); --cy-motion-sheet-out: var(--cy-motion-sheet-full-out); }
 .ss--page .ss__body { padding-top: var(--cy-space-2); }
 .ss--page.ss--reduced-motion .ss__panel { transition: none; }
+/* page 档面板不能带 transform(见上):被叠住时只压暗 */
+.ss--page.ss--in.ss--under .ss__panel { transform: none; filter: brightness(.7); }

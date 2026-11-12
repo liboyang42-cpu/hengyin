@@ -94,6 +94,10 @@ class E01_10Test {
         for (String table : Arrays.asList("cms_activity", "cms_registration")) createTable(base, table);
         String migration = new String(Files.readAllBytes(Paths.get("sql/migration_club_role_event_ops_20260823.sql")), StandardCharsets.UTF_8);
         for (String table : Arrays.asList("club_event_series", "club_event_occurrence", "club_event_waitlist")) createTable(migration, table);
+        try (java.sql.Connection connection = dataSource.getConnection()) {
+            com.chengyinhub.business.it.ItSchema.applyMigrations(connection,
+                    "sql/migration_club_host_reservation_20261109.sql");
+        }
         Configuration config = new Configuration(new Environment("e01-snapshot", new SpringManagedTransactionFactory(), dataSource));
         config.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         String resource = "mapper/business/ClubEventOpsMapper.xml";

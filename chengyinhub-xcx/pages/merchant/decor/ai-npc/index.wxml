@@ -114,19 +114,25 @@
     </view>
   </scroll-view>
   <!-- 走查 v2 R12:第一次进入的四步介绍。每步两个 AI 角色相关的 3D 物件(店铺分身 + 星光 → 挥手 + 对话 → 菜单 + 闹钟 → 名牌 + 性格面具),
-       翻页时旧物件缩走、新物件弹出,底下光晕换色。✕ 和「知道了」都算看过,之后不再弹。 -->
+       r2 a6-w2-16:回到这一版(不用 logo 积木),每步一种动效(ni-o--k 加步号),和这一步的话对上。✕ 和「知道了」都算看过,之后不再弹。
+       qx-s2 合并:舞台取 r2-merchant(业主 a6-w2-16 要回上一版),qx-u2 的顶栏(返回 / 分段进度 / 跳过)与左右滑保留。 -->
   <cy-sheet show="{{introVisible}}" inset bind:close="dismissIntro">
-    <view class="ni">
-      <view class="ni-stage">
+    <view class="ni {{niStill ? 'ni--still' : ''}}">
+      <!-- qx-u2 / ref 1：顶栏 = 圆形返回 · 分段进度 · 跳过；舞台左右滑动翻页。 -->
+      <view class="ni-bar">
+        <view class="ni-back {{introStep > 0 ? '' : 'is-off'}}" bindtap="prevIntro" aria-role="button" aria-label="上一步" aria-hidden="{{introStep === 0}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="36" /></view>
+        <view class="ni-dots" aria-hidden="true"><view class="ni-dot {{index === introStep ? 'ni-dot--on' : ''}}" wx:for="{{introSteps}}" wx:key="key"></view></view>
+        <view class="ni-skip {{introStep < introSteps.length - 1 ? '' : 'is-off'}}" bindtap="dismissIntro" aria-role="button" aria-label="跳过" hover-class="cy-pressed" hover-stay-time="80">跳过</view>
+      </view>
+      <view class="ni-stage ni-stage--b{{niBeat}}" aria-hidden="true" bindtouchstart="onIntroTouchStart" bindtouchend="onIntroTouchEnd">
         <view class="ni-glow ni-glow--{{introStep}}"></view>
         <block wx:for="{{introSteps}}" wx:key="key">
-          <image class="ni-o {{index === introStep ? 'ni-o--on' : ''}}" src="/pages/merchant/images/npc-intro/{{item.a}}.png" mode="aspectFit" />
-          <image class="ni-o ni-o--sm {{index === introStep ? 'ni-o--on' : ''}}" src="/pages/merchant/images/npc-intro/{{item.b}}.png" mode="aspectFit" />
+          <image class="ni-o ni-o--k{{index}} {{index === introStep ? 'ni-o--on' : index === introPrev ? 'ni-o--out' : ''}}" src="/pages/merchant/images/npc-intro/{{item.a}}.png" mode="aspectFit" />
+          <image class="ni-o ni-o--sm ni-o--k{{index}} {{index === introStep ? 'ni-o--on' : index === introPrev ? 'ni-o--out' : ''}}" src="/pages/merchant/images/npc-intro/{{item.b}}.png" mode="aspectFit" />
         </block>
       </view>
-      <text class="ni-t">{{introSteps[introStep].t}}</text>
+      <text class="ni-t">{{introSteps[introStep].t}}<text class="ni-period">.</text></text>
       <text class="ni-s">{{introSteps[introStep].s}}</text>
-      <view class="ni-dots"><view class="ni-dot {{index === introStep ? 'ni-dot--on' : ''}}" wx:for="{{introSteps}}" wx:key="key"></view></view>
       <view class="ni-btn" bindtap="nextIntro" aria-role="button" aria-label="{{introStep === introSteps.length - 1 ? '知道了' : '下一步'}}" hover-class="cy-pressed" hover-stay-time="80">{{introStep === introSteps.length - 1 ? '知道了' : '下一步'}}</view>
     </view>
   </cy-sheet>

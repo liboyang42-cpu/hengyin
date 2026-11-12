@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "presetCode": "T06-building-observation",
+  "templateType": "T06",
+  "title": "建筑观察（字段映射样本）",
+  "contractSource": "施工文档.md v1.3.2 §0.1 T06；§6 T06；参考清单 G05 图片选择",
+  "contentStatus": "MAPPING_READY",
+  "contentStatusReason": "仅完成题材到既有题型/模板字段的映射与发布闸验证；未创作人物、剧情、谜题、谜底、结局，未绑定真实地点。当前状态是 MAPPING_READY，不是可发布成品，也不是竞品正文/素材的转写",
+  "mediaStatus": "SPEC_ONLY",
+  "capabilities": [
+    "sort",
+    "classify",
+    "qaPick"
+  ],
+  "requiredThemeItems": [],
+  "requiredStateKeys": [
+    "clue.ornament_matched"
+  ],
+  "nodeIdPlaceholders": {
+    "900201": "构件观察站",
+    "900202": "纹样分类站",
+    "900203": "用途推断站"
+  },
+  "nodes": [
+    "nodes/node-01.json",
+    "nodes/node-02.json",
+    "nodes/node-03.json"
+  ],
+  "bindings": [
+    "bindings/city-a.json",
+    "bindings/city-b.json"
+  ],
+  "notImplemented": [],
+  "reuse": "图片排序用既有 sort.items[].img；分类走既有 SUBMIT_CLASSIFY；不新增图片选择专属判题器",
+  "mediaSpec": [
+    {
+      "id": "part-01",
+      "kind": "COMPONENT_PHOTO",
+      "status": "NOT_PRODUCED",
+      "path": "T06-building-observation/media/part-01.png",
+      "spec": "构件/纹样实地照片一；须发布者实拍"
+    },
+    {
+      "id": "part-02",
+      "kind": "COMPONENT_PHOTO",
+      "status": "NOT_PRODUCED",
+      "path": "T06-building-observation/media/part-02.png",
+      "spec": "构件/纹样实地照片二"
+    }
+  ],
+  "notVerified": [
+    "城市照片",
+    "地点核验",
+    "现场试玩",
+    "GPS与可达性",
+    "媒体产出",
+    "在VPS实际执行本验证类"
+  ],
+  "placeholderFields": [
+    "sort.answerOrder / classify.answer / qa.options[].label：均为待填，未断言任何真实建筑事实"
+  ],
+  "productStatus": "MAPPING_READY_NOT_A_PRODUCT",
+  "chaptersForced": false,
+  "sourceRecords": [
+    {
+      "node": "nodes/node-01.json",
+      "templateTitle": "构件观察站（待填：发布者改写标题）",
+      "validationMethod": 0,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    },
+    {
+      "node": "nodes/node-02.json",
+      "templateTitle": "纹样分类站（待填：发布者改写标题）",
+      "validationMethod": 0,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    },
+    {
+      "node": "nodes/node-03.json",
+      "templateTitle": "用途推断站（待填：发布者改写标题）",
+      "validationMethod": 3,
+      "validationMethodRule": "有 qa 段→3（选项验证）；否则→0（判定在高级玩法配置里，模板本身不做基础验证）",
+      "adoptScope": "PERSONAL_TEMPLATE",
+      "ownerPolicy": "REAL_CONTENT_OWNER_REQUIRED_NO_PLACEHOLDER_ID",
+      "publishPolicy": "PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES"
+    }
+  ],
+  "publishBlockers": [
+    "所有『待填：』文本必须由发布者替换为真实正文、答案与反馈后才能发布",
+    "bindings/<city>.json 的 required 槽位必须全部有值且 bound=true（换城必须重绑）",
+    "mediaSpec 中 status=NOT_PRODUCED 的项必须有已授权的实际文件与来源标注",
+    "地点必须在地图确认坐标；未核验现场不得标成可上线"
+  ],
+  "dataSource": {
+    "noDiskPackageConsumed": true,
+    "playerAdoptionPath": "cms_member_template（审核真源）→ cms_template_library（货架投影）→ POST /api/template/adopt-draft",
+    "minimumSeed": "一作者真源行 + 一货架投影行；货架行只能由 submitTemplateToMarket 在个人审核通过后产生"
+  }
+}

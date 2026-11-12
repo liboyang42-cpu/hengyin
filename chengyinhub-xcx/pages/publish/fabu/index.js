@@ -1,5 +1,5 @@
 const templateAdoption = require('../utils/publish/template-adoption.js'); const checkContext = require('../utils/publish/check-context.js');
-const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js'); const morph = require('../../../utils/morph-success.js');
 const modal = require('../../../utils/modal.js');
 const cyLoading = require('../../../utils/loading.js');
 const cyToast = require('../../../utils/toast.js');
@@ -35,6 +35,7 @@ const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeEx
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js');
 const { createServerDraftSaver, topicIdOf, confirmedPublication } = require('../utils/publish/server-draft.js');
 const publishIntent = require('../../../utils/publish/publish-intent.js');
+const publicationRequestId = require('../utils/publish/publication-request-id.js');
 const proEditorPolicy = require('../utils/publish/pro-editor-policy.js');
 const proEditorDraft = require('../utils/publish/pro-editor-draft.js');
 
@@ -68,6 +69,21 @@ function emptyChapterForm(name = '', opening = false) {
 
 const proEditorMaterials = require('../utils/publish/pro-editor-materials.js');
 const proEditorStory = require('../utils/publish/pro-editor-story.js');
+const storyInline = require('../utils/publish/story-inline.js');
+// 段首哨兵:非首段的 textarea 前面垫一个零宽空格。微信 textarea 在段首按退格不发任何事件,
+// 垫了它之后退格会删掉这个字符 → 收到一次 input、值里没了哨兵 → 当成「并入上一段」。
+const STORY_SENTINEL = '​';
+// 顶部「添加」栏(编辑器原型 v2):段落 / 图片 / 音频 / 玩法 / 分支 / 分割线。分割线没有现成 glyph,WXML 画一条短横。
+const STORY_ADD_ITEMS = [
+  { kind: 'text', label: '段落', icon: 'list' }, { kind: 'gallery', label: '图片', icon: 'image' }, { kind: 'audio', label: '音频', icon: 'play' },
+  { kind: 'node', label: '玩法', icon: 'tab-explore' }, { kind: 'branch', label: '分支', icon: 'turn-right' }, { kind: 'divider', label: '分割线', icon: '' },
+];
+const STORY_GALLERY_LAYOUTS = [1, 2, 3, 4].map((n) => ({ n, label: ['单图', '双图', '三图', '四图'][n - 1], cells: Array.from({ length: n }, (_, i) => i) }));
+const storyThemeLook = require('../utils/publish/theme-look.js');
+// 玩家端弹窗预览的六个阶段(编辑器原型 v2 · preview.js)
+const STORY_PV_STAGES = [['theme', '主题开始'], ['chStart', '章节开始'], ['chEnd', '章节结束'], ['gStart', '玩法开始'], ['gEnd', '玩法结束'], ['branch', '分支选择']];
+const STORY_PV_SW = { STARDUST: 'look-sw--stardust', PAPER: 'look-sw--paper', SURVIVAL: 'look-sw--survival', CYBER: 'look-sw--cyber' };
+const STORY_BRANCH_TO_BASE = [{ value: 'continue', label: '继续本章' }, { value: 'end', label: '结束本章' }];
 const { buildTopicPreview } = require('../utils/publish/topic-draft-preview.js');
 const publishStats = require('../utils/publish/publish-stats.js');
 const publishDate = require('../utils/publish/publish-datetime.js');
@@ -313,7 +329,30 @@ Page({
     // text 由各删除路径自带:故事流 ✕ 是真删,自由探索的删除是移到待编排区 ——
     // 语义不同,共用一句文案必然有一条在骗人。
     pendingUndo: { show: false, materialLocalId: '', text: '' },
-    storyEditor: { show: false, chapterIndex: -1, insertMenuAt: -1, focusBlockKey: '', selectedBlockKey: '' },
+    storyEditor: { show: false, chapterIndex: -1, insertMenuAt: -1, focusBlockKey: '', focusCursor: -1, selectedBlockKey: '', kb: 0, preview: false },
+    // 拖拽:key = 被拿起的块;geo = 长按时量好的几何(JSON,挂在列表 data-geo 上给 WXS 读);
+    // epoch 每次落下 +1,WXS 的 change:epoch 据此清掉临时 transform。逐帧位移全在渲染层(utils/wxs/story-drag.wxs)。
+    storyDrag: { key: '', geo: '', epoch: 0, split: null },
+    storyUndo: { show: false, text: '', canUndo: false },
+    storyScrollTop: 0,
+    // X Articles 式工具栏 / 封面 / 作者行(2026-11-10 r2-create)
+    zw: STORY_SENTINEL,
+    storySegs: {},
+    storyListNo: [],
+    storyCover: '',
+    // 编辑器原型 v2(l-editor):顶部添加栏;章节开始 / 结束卡的话;图片组各格;分支任务弹窗
+    storyAddItems: STORY_ADD_ITEMS,
+    storyAbc: ['A', 'B', 'C'],
+    storyCaps: { open: '', end: '', next: '' },
+    storyGalleryCells: {},
+    storyGalleryLayouts: STORY_GALLERY_LAYOUTS,
+    storyBranch: { blockKey: '', content: '', options: [] },
+    storyBranchTos: [],
+    storyBranchToLabel: {},
+    storyPreviewPop: { show: false },
+    storySheet: '',
+    storyOptions: { show: false, title: '', items: [] },
+    storyLiveKey: '',
     /* 故事变量选择器(契约 §3.1):列出这个主题里可用的 {键}。keys 在打开时现算 ——
        它跟着各节点玩法模板走,节点玩法改了它就得跟着变,存一份快照迟早对不上。 */
     storyVarSheet: { show: false, blockKey: '', keys: [] },
@@ -430,10 +469,8 @@ Page({
     attributeRegistrySnapshot: null,
     attributeRegistryError: '',
     initialStateOptions: storyInitialState.OPTIONS,
-    supportNodeChallenge: false, supportNodeSettled: false,
-    supportMatrix: null, supportMatrixLoading: false, supportMatrixLoadError: '', nodeSupportReason: '', storySupportReasons: {},
+    supportMatrix: null, supportMatrixLoading: false, supportMatrixLoadError: '', nodeSupportReason: '',
     publicSupportReasons: {}, draftSupportReasons: {}, mineSupportReasons: {},
-    storyGameOptions: ['profile', 'typeIn', 'photoCheck', 'note', 'd20'].map(key => nodeGameCatalog.findGame(key)),
     // 表单数据
     // 结局编辑器(2026-09-22 接线)。list 是 story-ending.parse 出来的界面形状,
     // 保存时由同一个 serialize 转回服务端形状 —— 校验口径与 JourneyStoryValidator 一致,不另写一套。
@@ -525,7 +562,7 @@ Page({
     submitErrorNeedsEdit: false,
     /* 动作结果面板(cy-result-sheet)。loading 不自愈,终态 2s 自收。
        duration=0 表示不自愈 —— 失败原因要留够读的时间。 */
-    resultSheet: { show: false, kind: 'success', title: '', sub: '', why: '', duration: 2000 },
+    resultSheet: { show: false, kind: 'success', title: '', sub: '', why: '', duration: 2000 }, publishDone: false,
     canUndo: false, // 撤销栈是否非空(控制撤销按钮显隐/置灰)
 
     // 统计信息
@@ -1198,10 +1235,58 @@ Page({
     this.setData(Object.assign({
       'formData.chapters': chapters,
       pendingMaterials: result.draft.pendingMaterials,
-    }, uiPatch || {}));
+    }, this._storyDerived(result.draft.chapter), uiPatch || {}));
     this.updateAllStatistics();
     return result;
   },
+
+  // 编辑器派生态:有格式的段切成小段、编号列表的序号、字数、封面。只在块变化时算一次。
+  _storyDerived(chapter, chapterIndexArg) {
+    const blocks = (chapter && chapter.blocks) || [];
+    const segs = {};
+    const galleryCells = {};
+    blocks.forEach((block) => {
+      if (block && block.type === 'text') segs[block.key] = storyInline.segments(block.content, block.marks);
+      if (block && block.type === 'gallery') {
+        const layout = proEditorStory.galleryLayoutOf(block.layout);
+        const urls = proEditorStory.normalizeGalleryImages(block.images, layout).map((img) => img.url);
+        galleryCells[block.key] = Array.from({ length: layout }, (_, i) => urls[i] || '');
+      }
+    });
+    const cover = String((chapter && chapter.imgArr) || '').split(/[,;]/)[0] || '';
+    const chapters = (this.data.formData && this.data.formData.chapters) || [];
+    const chapterIndex = Number.isInteger(chapterIndexArg) ? chapterIndexArg : Number(this.data.storyEditor.chapterIndex);
+    const nextChapter = chapters[chapterIndex + 1];
+    return {
+      storySegs: segs,
+      storyListNo: storyInline.listNumbers(blocks),
+      storyCover: cover,
+      // 章节开始 / 结束卡:开场白、结语挂在章节的 _capOpen / _capEnd 上;去向由章节顺序派生,不是一个可点的控件
+      storyCaps: { open: String((chapter && chapter._capOpen) || ''), end: String((chapter && chapter._capEnd) || ''), next: nextChapter ? ('下一章 · ' + (nextChapter.name || ('第 ' + (chapterIndex + 2) + ' 章'))) : '结束主题' },
+      storyGalleryCells: galleryCells,
+      storyBranchToLabel: this._storyBranchTos(chapters).reduce((acc, item) => { acc[item.value] = item.label; return acc; }, {}),
+    };
+  },
+
+  // 分支去向清单:继续本章 / 结束本章 / 跳到第 N 章(N 按主题里的章节数,不含当前章)
+  _storyBranchTos(chaptersArg) {
+    const chapters = chaptersArg || (this.data.formData && this.data.formData.chapters) || [];
+    const current = Number(this.data.storyEditor.chapterIndex);
+    const list = STORY_BRANCH_TO_BASE.slice();
+    chapters.forEach((ch, i) => { if (i !== current) list.push({ value: 'chapter:' + (i + 1), label: '跳到第 ' + (i + 1) + ' 章' }); });
+    return list;
+  },
+
+  _storyChapter() {
+    return (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex] || null;
+  },
+
+  _storyTextBlock(blockKey) {
+    const chapter = this._storyChapter();
+    const block = chapter && (chapter.blocks || []).find((item) => item && item.key === blockKey);
+    return block && block.type === 'text' ? block : null;
+  },
+
 
   openStoryEditor(e) {
     this.destroyPreviewAudio(); // 换一章/重开编辑器:先停掉上一章里正在播的音频块
@@ -1217,13 +1302,32 @@ Page({
       return;
     }
     this._storyTextCursor = null;
+    this._storyCaret = null;
+    this._storyPendingCaret = null;
+    this._storyFocusKey = '';
+    this._storySelection = null;
     const when = this._storyWhenPatch();
     const rolePatch = this._storyRolePatch();
+    const derived = this._storyDerived(chapters[chapterIndex], chapterIndex);
     this.setData({
       'formData.chapters': chapters,
       storyWhenOptions: when.storyWhenOptions,
       storyWhenLabelOf: when.storyWhenLabelOf,
-      storyEditor: { show: true, chapterIndex, insertMenuAt: -1, focusBlockKey: '', selectedBlockKey: '' },
+      storyEditor: { show: true, chapterIndex, insertMenuAt: -1, focusBlockKey: '', focusCursor: -1, selectedBlockKey: '', kb: 0, preview: false },
+      storyDrag: { key: '', geo: '', epoch: (this.data.storyDrag && this.data.storyDrag.epoch) || 0, split: null },
+      storyUndo: { show: false, text: '', canUndo: false },
+      storySheet: '',
+      storyBranch: { blockKey: '', content: '', options: [] },
+      storyBranchTos: [],
+      storyPreviewPop: { show: false },
+      storyLiveKey: '',
+      storyScrollTop: 0,
+      storySegs: derived.storySegs,
+      storyListNo: derived.storyListNo,
+      storyCover: derived.storyCover,
+      storyCaps: derived.storyCaps,
+      storyGalleryCells: derived.storyGalleryCells,
+      storyBranchToLabel: derived.storyBranchToLabel,
       storyNodeRoles: rolePatch.storyNodeRoles,
       storyRoleOptions: rolePatch.storyRoleOptions,
       storyVarSheet: { show: false, blockKey: '', keys: [] },
@@ -1248,9 +1352,10 @@ Page({
    */
   _reflowStoryTextareas(chapterIndex) {
     const chapter = (this.data.formData.chapters || [])[chapterIndex];
-    if (!chapter || !(chapter.blocks || []).some((b) => b && b.type === 'text')) return;
+    if (!chapter) return;
     wx.nextTick(() => {
-      this.setData({ [`formData.chapters[${chapterIndex}].blocks`]: this.data.formData.chapters[chapterIndex].blocks });
+      // 章节开始 / 结束卡上的开场白、结语也是 auto-height textarea,同一帧一起再渲染一次
+      this.setData({ [`formData.chapters[${chapterIndex}].blocks`]: this.data.formData.chapters[chapterIndex].blocks, storyCaps: this.data.storyCaps });
     });
   },
 
@@ -1262,6 +1367,10 @@ Page({
     }
     this.destroyPreviewAudio(); // 关编辑器停掉故事流预听,不留一段在后台继续响
     this._storyTextCursor = null;
+    this._storyCaret = null;
+    this._storyPendingCaret = null;
+    this._storyFocusKey = '';
+    this._storySelection = null;
     // 梦块卡上写着「一张都没有的梦不会保存,先加一张」,收编辑器就得真在本地草稿里丢掉 ——
     // 只在出 payload 那层过滤的话,回到章节卡再重进,那张 0/6 的空卡还在原地(CU-M-115)。
     const chapterIndex = Number(this.data.storyEditor.chapterIndex);
@@ -1274,8 +1383,12 @@ Page({
       this.updateAllStatistics();
     }
     this.setData({
-      storyEditor: { show: false, chapterIndex: -1, insertMenuAt: -1, focusBlockKey: '', selectedBlockKey: '' },
+      storyEditor: { show: false, chapterIndex: -1, insertMenuAt: -1, focusBlockKey: '', focusCursor: -1, selectedBlockKey: '', kb: 0, preview: false },
+      storyDrag: { key: '', geo: '', epoch: ((this.data.storyDrag && this.data.storyDrag.epoch) || 0) + 1, split: null },
+      storyUndo: { show: false, text: '', canUndo: false },
+      storyPreviewPop: { show: false },
       storyVarSheet: { show: false, blockKey: '', keys: [] },
+      storySheet: '',
       pendingInsertAt: null,
       storyPendingMaterialLocalId: '',
     });
@@ -1306,6 +1419,10 @@ Page({
       this.closeModePicker(); } else if (this.data.lookSheetShow) { this.closeLookEditor();
     } else if (this.data.topicDetailShow) {
       this.closeTopicDetail();
+    } else if (this.data.storyPreviewPop && this.data.storyPreviewPop.show) {
+      this.closeStoryPreviewPop();
+    } else if (this.data.storySheet) {
+      this.closeStorySheet();
     } else if (this.data.storyVarSheet && this.data.storyVarSheet.show) {
       // 变量列表是故事流里叠的一层,返回键先收它再收故事流
       this.closeStoryVarSheet();
@@ -1513,10 +1630,13 @@ Page({
 
   _insertStoryMedia(mediaType, index, payload) {
     const blockKey = this._genLocalId();
+    const caret = this._storyPendingCaret;
+    this._storyPendingCaret = null;
     try {
-      this._storyCommand(Object.assign({
+      const chapter = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
+      this._storyCommand(proEditorStory.caretInsertCommand(chapter, caret, Object.assign({
         type: 'insertMediaAt', mediaType, index, blockKey,
-      }, payload), {
+      }, payload), () => this._genLocalId()), {
         'storyEditor.insertMenuAt': -1,
         'storyEditor.selectedBlockKey': '',
       });
@@ -1684,29 +1804,572 @@ Page({
     const source = this._previewSource;
     if (blockKey && source && source.kind === 'story' && source.key === blockKey) this.destroyPreviewAudio();
     try {
+      this._pushUndo();
       this._storyCommand({ type: 'removeMedia', blockKey }, { 'storyEditor.selectedBlockKey': '' });
+      this._storyUndoBar('已删除');
     } catch (error) {
       cyToast(app.getRequestErrorMessage(error, '删除失败'));
     }
   },
 
+  // 非首段 textarea 的值 = 哨兵 + 正文。去掉哨兵、把光标换回正文坐标;
+  // 哨兵整个不见了且正文没变 = 段首退格(微信 textarea 在段首退格本身不发事件,见 STORY_SENTINEL)。
+  _storyUnwrapInput(e) {
+    const raw = String(e.detail && e.detail.value != null ? e.detail.value : '');
+    const rawCursor = Number(e.detail && e.detail.cursor);
+    const blockKey = e.currentTarget.dataset.blockkey;
+    const index = this._storyBlockIndex(blockKey);
+    const guarded = index > 0;
+    const at = raw.indexOf(STORY_SENTINEL);
+    let content = raw;
+    let cursor = rawCursor;
+    let backspaceAtStart = false;
+    if (guarded && at === 0) {
+      content = raw.slice(1);
+      if (Number.isInteger(rawCursor)) cursor = Math.max(0, rawCursor - 1);
+    } else if (guarded && at > 0) {
+      // 光标落在哨兵前面又打了字:把哨兵摘掉,照常收字
+      content = raw.slice(0, at) + raw.slice(at + 1);
+      if (Number.isInteger(rawCursor) && rawCursor > at) cursor = rawCursor - 1;
+    } else if (guarded && at < 0) {
+      const before = this._storyBlockText(blockKey);
+      backspaceAtStart = before != null && raw === before;
+    }
+    return { blockKey, content, cursor, backspaceAtStart };
+  },
+
   onStoryTextInput(e) {
     /* 光标只服务「插入变量」,记在实例上不进 data —— 每敲一个字都 setData 一次
        光标位置只为偶尔一次的插入,不值。 */
-    const cursor = Number(e.detail && e.detail.cursor);
+    const input = this._storyUnwrapInput(e);
+    if (input.backspaceAtStart) { this._storyMergeUp(input.blockKey); return; }
+    const cursor = input.cursor;
     this._storyTextCursor = {
-      blockKey: e.currentTarget.dataset.blockkey,
+      blockKey: input.blockKey,
       index: Number.isInteger(cursor) ? cursor : -1,
     };
+    const blockKey = input.blockKey;
+    const content = input.content;
     try {
-      this._storyCommand({
-        type: 'editText',
-        blockKey: e.currentTarget.dataset.blockkey,
-        content: e.detail.value,
+      // 文章式编辑:回车 / 粘贴多段 → 模型按行拆成相邻段落,光标跟到该落的那一段
+      const keys = proEditorStory.paragraphParts(content, cursor).parts.slice(1).map(() => this._genLocalId());
+      const result = this._storyCommand({
+        type: 'splitParagraphs', blockKey, content, cursor: Number.isInteger(cursor) ? cursor : undefined, blockKeys: keys,
       });
+      this._storyCaret = { blockKey: result.focusBlockKey, cursor: result.focusCursor, content: this._storyBlockText(result.focusBlockKey) };
+      if (result.focusBlockKey !== blockKey) {
+        this._storyTextCursor = { blockKey: result.focusBlockKey, index: result.focusCursor };
+        this._storyFocusKey = result.focusBlockKey;
+        this.setData({
+          'storyEditor.focusBlockKey': result.focusBlockKey,
+          'storyEditor.focusCursor': result.focusCursor,
+          'storyEditor.selectedBlockKey': '',
+        });
+        this._reflowStoryTextareas(this.data.storyEditor.chapterIndex);
+      }
     } catch (error) {
       cyToast(app.getRequestErrorMessage(error, '文字保存失败'));
     }
+  },
+
+  _storyMergeUp(blockKey) {
+    try {
+      const result = this._storyCommand({ type: 'mergeParagraphUp', blockKey });
+      if (result.merged) {
+        this._storyFocusKey = result.focusBlockKey;
+        this._storyCaret = { blockKey: result.focusBlockKey, cursor: result.focusCursor, content: this._storyBlockText(result.focusBlockKey) };
+        // 先清焦点再给,保证同一块也能重新拿到 focus + cursor
+        this.setData({ 'storyEditor.focusBlockKey': '' }, () => this.setData({
+          'storyEditor.focusBlockKey': result.focusBlockKey,
+          'storyEditor.focusCursor': result.focusCursor,
+          'storyEditor.selectedBlockKey': '',
+        }));
+        this._reflowStoryTextareas(this.data.storyEditor.chapterIndex);
+      } else if (result.selectBlockKey) {
+        this.setData({ 'storyEditor.focusBlockKey': '', 'storyEditor.selectedBlockKey': result.selectBlockKey });
+      } else {
+        // 什么都没变:把哨兵补回去(重设同一份 blocks 触发一次渲染)
+        this._reflowStoryTextareas(this.data.storyEditor.chapterIndex);
+      }
+    } catch (error) {
+      cyToast(app.getRequestErrorMessage(error, '合并失败'));
+    }
+  },
+
+  _storyBlockText(blockKey) {
+    const chapter = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
+    const block = chapter && (chapter.blocks || []).find((item) => item && item.key === blockKey);
+    return block && block.type === 'text' ? String(block.content == null ? '' : block.content) : null;
+  },
+
+  _storyBlockIndex(blockKey) {
+    const chapter = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
+    return chapter && blockKey ? (chapter.blocks || []).findIndex((item) => item && item.key === blockKey) : -1;
+  },
+
+  onStoryTextFocus(e) {
+    const blockKey = e.currentTarget.dataset.blockkey;
+    this._storyFocusKey = blockKey;
+    const content = this._storyBlockText(blockKey);
+    if (!this._storyCaret || this._storyCaret.blockKey !== blockKey) {
+      this._storyCaret = { blockKey, cursor: content == null ? 0 : content.length, content };
+    }
+    // 文章里正在写的那段不挂删除键(会压住正文);删整段 = 长按原地松手选中,或删空后自动收掉
+    const height = Number(e.detail && e.detail.height) || 0;
+    this.setData({ 'storyEditor.selectedBlockKey': '', 'storyEditor.kb': height > 0 ? height : this.data.storyEditor.kb });
+  },
+
+  // 有格式的段平时按格式显示(textarea 画不出局部加粗);点它换成输入框,光标放到段末
+  onStoryRichTap(e) {
+    const blockKey = e.currentTarget.dataset.blockkey;
+    const content = this._storyBlockText(blockKey);
+    if (content == null) return;
+    this._storyFocusKey = blockKey;
+    this.setData({ storyLiveKey: blockKey, 'storyEditor.focusBlockKey': blockKey, 'storyEditor.focusCursor': content.length, 'storyEditor.selectedBlockKey': '' });
+  },
+
+
+
+  // ── 玩家端弹窗预览(编辑器原型 v2 · 6):主题开始 / 章节开始 / 章节结束 / 玩法开始 / 玩法结束 / 分支选择。
+  //    按主题的画面风格(formData.look)着色;底部切阶段 / 风格 / 配色只改预览自己的状态,不写回主题设置。
+  //    内容只用作者已经写的东西(章节名、开场白、结语、模板名、分支),没有的就空着,不编数字。
+  openStoryPreviewPop(e) {
+    const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
+    const look = storyThemeLook.normalizeLook(this.data.formData && this.data.formData.look);
+    this._storyFocusKey = '';
+    this._storyPv = { stage: STORY_PV_STAGES.some((s) => s[0] === ds.stage) ? ds.stage : 'theme', fail: false, style: look.style, palette: look.palette || 'DEFAULT', blockKey: ds.blockkey || '' };
+    this.setData({ storyPreviewPop: this._storyPvView(), 'storyEditor.focusBlockKey': '', storySheet: '' });
+  },
+  closeStoryPreviewPop() { this._storyPv = null; this.setData({ storyPreviewPop: { show: false } }); },
+  onStoryPreviewStage(e) {
+    if (!this._storyPv) return;
+    const ds = e.currentTarget.dataset;
+    this._storyPv.stage = STORY_PV_STAGES.some((s) => s[0] === ds.stage) ? ds.stage : this._storyPv.stage;
+    this._storyPv.fail = !!ds.fail;
+    this.setData({ storyPreviewPop: this._storyPvView() });
+  },
+  onStoryPreviewLook(e) {
+    if (!this._storyPv) return;
+    const style = storyThemeLook.styleOf(String(e.currentTarget.dataset.style || ''));
+    if (!style) return;
+    this._storyPv.style = style.value;
+    this.setData({ storyPreviewPop: this._storyPvView() });
+  },
+  onStoryPreviewPalette(e) {
+    if (!this._storyPv) return;
+    const pal = String(e.currentTarget.dataset.pal || '');
+    if (!storyThemeLook.PALETTES.some((p) => p[0] === pal)) return;
+    this._storyPv.palette = pal;
+    this.setData({ storyPreviewPop: this._storyPvView() });
+  },
+  _storyPvView() {
+    const pv = this._storyPv;
+    const chapters = (this.data.formData && this.data.formData.chapters) || [];
+    const chapterIndex = Number(this.data.storyEditor.chapterIndex);
+    const chapter = chapters[chapterIndex] || {};
+    const blocks = chapter.blocks || [];
+    const style = storyThemeLook.styleOf(pv.style) || storyThemeLook.styleOf(storyThemeLook.DEFAULT_STYLE);
+    const palLabel = (storyThemeLook.PALETTES.find((p) => p[0] === pv.palette) || ['DEFAULT', '黑'])[1];
+    const lookClass = 'look--' + style.value.toLowerCase() + ' look-palette--' + String(pv.palette).toLowerCase();
+    const caps = this.data.storyCaps || { open: '', end: '', next: '结束主题' };
+    const byKey = (type) => blocks.find((b) => b && b.type === type && b.key === pv.blockKey) || blocks.find((b) => b && b.type === type);
+    let card = { kick: '', title: '', body: '', meta: '', cta: '', opts: [], mark: '' };
+    if (pv.stage === 'theme') {
+      card = { kick: '城瘾 · 城市剧情', title: String(this.data.formData.name || '').trim() || '未命名主题', body: String(this.data.formData.description || '').trim(), meta: chapters.length + ' 章 · ' + style.label, cta: '开始', opts: [], mark: '' };
+    } else if (pv.stage === 'chStart') {
+      card = { kick: '第 ' + (chapterIndex + 1) + ' 章', title: String(chapter.name || '').trim() || '未命名章节', body: String(caps.open || '').trim(), meta: '', cta: '进入本章', opts: [], mark: '' };
+    } else if (pv.stage === 'chEnd') {
+      card = { kick: '本章完成', title: String(chapter.name || '').trim() || '未命名章节', body: String(caps.end || '').trim(), meta: '', cta: caps.next || '下一章', opts: [], mark: '' };
+    } else if (pv.stage === 'gStart' || pv.stage === 'gEnd') {
+      const nodeBlock = byKey('node');
+      const node = nodeBlock && (chapter.nodes || []).find((n) => n && n._localId === nodeBlock.nodeKey);
+      const tpl = node && node.templateInfo && node.templateInfo.title ? String(node.templateInfo.title) : '';
+      const name = tpl || (node && node.name ? String(node.name) : '') || '未选玩法模板';
+      if (pv.stage === 'gStart') card = { kick: '玩法', title: name, body: node && node.address ? String(node.address) : '', meta: '', cta: '开始', opts: [], mark: '' };
+      else card = { kick: pv.fail ? '失败' : '成功', title: pv.fail ? '再想想' : '完成', body: name === '未选玩法模板' ? '' : name, meta: '', cta: pv.fail ? '再试一次' : '继续', opts: [], mark: pv.fail ? 'close' : 'check' };
+    } else {
+      const branch = byKey('branch');
+      const options = proEditorStory.normalizeBranchOptions(branch ? branch.options : []);
+      card = { kick: '分支任务', title: String((branch && branch.content) || '').trim() || '写一个问题', body: '', meta: '', cta: '', opts: options.map((o, i) => String(o.text || '').trim() || ('选项 ' + 'ABC'[i])), mark: '' };
+    }
+    return {
+      show: true, stage: pv.stage, fail: !!pv.fail, lookClass, styleLabel: style.label, palLabel,
+      stageLabel: (STORY_PV_STAGES.find((s) => s[0] === pv.stage) || STORY_PV_STAGES[0])[1],
+      cover: String(chapter.imgArr || '').split(/[,;]/).filter(Boolean)[0] || String(this.data.formData.imgUrl || ''),
+      card,
+      stages: STORY_PV_STAGES.map((s) => ({ key: s[0], label: s[1], on: s[0] === pv.stage })),
+      looks: storyThemeLook.STYLES.map((s) => ({ value: s.value, label: s.label, sw: STORY_PV_SW[s.value] || '', on: s.value === style.value })),
+      palettes: storyThemeLook.PALETTES.map((p) => ({ value: p[0], label: p[1], cls: 'look--' + style.value.toLowerCase() + ' look-palette--' + p[0].toLowerCase(), on: p[0] === pv.palette })),
+    };
+  },
+
+  // ⋯ 菜单与把手菜单共用一张 cy-option-sheet(全仓不用系统 ActionSheet)
+  openStoryMore() {
+    this._storyOptionsFor = { kind: 'more', items: ['章节设置', '退出编辑'] };
+    this.setData({ storyOptions: { show: true, title: '', items: this._storyOptionsFor.items } });
+  },
+
+  closeStoryOptions() {
+    this._storyOptionsFor = null;
+    this.setData({ 'storyOptions.show': false });
+  },
+
+  onStoryOptionPick(e) {
+    const ctx = this._storyOptionsFor;
+    const pick = ctx && ctx.items[Number(e && e.detail && e.detail.index)];
+    this.closeStoryOptions();
+    if (!pick) return;
+    if (ctx.kind === 'more') {
+      if (pick === '章节设置') this.openChapterSettingsFromStory({ currentTarget: { dataset: { index: this.data.storyEditor.chapterIndex } } });
+      else this.closeStoryEditor();
+      return;
+    }
+    this._storyGripAction(ctx.blockKey, pick);
+  },
+
+  closeStorySheet() { this.setData({ storySheet: '' }); },
+
+
+  // 封面(5:2):写章节 imgArr 的第一张,其余原样保留
+  pickStoryCover() {
+    const chapterIndex = Number(this.data.storyEditor.chapterIndex);
+    const chapter = this._storyChapter();
+    if (!chapter) return;
+    const chapterId = chapter._localId;
+    app.chooseImage((res) => {
+      const url = res && res[0];
+      const current = (this.data.formData.chapters || [])[chapterIndex];
+      if (!url || this._unloaded || !current || current._localId !== chapterId) return;
+      const chapters = JSON.parse(JSON.stringify(this.data.formData.chapters));
+      const rest = String(current.imgArr || '').split(/[,;]/).filter(Boolean).slice(1);
+      chapters[chapterIndex].imgArr = [url].concat(rest).join(',');
+      this.setData({ 'formData.chapters': chapters, storyCover: url });
+    }, 1);
+  },
+
+  removeStoryCover() {
+    const chapterIndex = Number(this.data.storyEditor.chapterIndex);
+    const chapter = this._storyChapter();
+    if (!chapter) return;
+    const chapters = JSON.parse(JSON.stringify(this.data.formData.chapters));
+    const rest = String(chapter.imgArr || '').split(/[,;]/).filter(Boolean).slice(1);
+    chapters[chapterIndex].imgArr = rest.join(',');
+    this.setData({ 'formData.chapters': chapters, storyCover: rest[0] || '' });
+  },
+
+  // 键盘弹起时顶部插入栏贴到键盘上沿;收起后回到标题下方(textarea 关了 adjust-position,由这里接管)
+  onStoryKeyboard(e) {
+    const height = Math.max(0, Number(e.detail && e.detail.height) || 0);
+    if (height !== this.data.storyEditor.kb) this.setData({ 'storyEditor.kb': height });
+  },
+
+  _storyInsertAnchor() {
+    const chapter = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
+    const blocks = (chapter && chapter.blocks) || [];
+    const caret = this._storyCaret;
+    if (caret) {
+      const at = this._storyBlockIndex(caret.blockKey);
+      if (at >= 0) return { caret, index: at + 1 };
+      if (Number.isInteger(caret.index)) return { caret: null, index: Math.max(0, Math.min(blocks.length, caret.index)) };
+    }
+    const selected = this._storyBlockIndex(this.data.storyEditor.selectedBlockKey);
+    return { caret: null, index: selected >= 0 ? selected + 1 : blocks.length };
+  },
+
+  // 顶部「添加」栏(编辑器原型 v2):段落 / 图片(图片组)/ 音频 / 玩法 / 分支 / 分割线,都插到光标处
+  // (光标在段中就把这段拆开),没有光标就插在选中块之后,再没有就插到文末。
+  // 「玩法」= 插一个节点块并打开已通过的节点弹窗(名称 / 地点 / 玩法模板 / 到达与引导 / 照片);开局章只能放故事玩法。
+  onStoryAdd(e) {
+    const kind = e.currentTarget.dataset.kind;
+    const anchor = this._storyInsertAnchor();
+    const dataset = { currentTarget: { dataset: { index: anchor.index } } };
+    this._storyPendingCaret = anchor.caret;
+    this._storyCaret = null;
+    if (kind === 'text') {
+      this._pushUndo();
+      this.insertStoryTextAt(dataset);
+      this._storyUndoBar('已添加段落');
+    } else if (kind === 'divider' || kind === 'audio') {
+      this._pushUndo();
+      if (this._insertStoryMedia(kind, anchor.index, kind === 'audio' ? { url: '' } : {})) this._storyUndoBar(kind === 'audio' ? '已添加音频' : '已添加分割线');
+    } else if (kind === 'gallery') {
+      this._storyAddAt = anchor.index;
+      this.setData({ storySheet: 'gallery' });
+    } else if (kind === 'branch') {
+      this._pushUndo();
+      const blocks = ((this._storyChapter() || {}).blocks) || [];
+      const before = blocks.length;
+      if (this._insertStoryMedia('branch', anchor.index, {})) {
+        const after = ((this._storyChapter() || {}).blocks) || [];
+        const inserted = after.find((b) => b && b.type === 'branch' && !blocks.some((old) => old && old.key === b.key));
+        this._storyUndoBar('已添加分支任务');
+        if (inserted && after.length === before + 1) this.openStoryBranch({ currentTarget: { dataset: { blockkey: inserted.key } } });
+      }
+    } else if (kind === 'image') {
+      this.insertStoryImageAt(dataset);
+    } else if (kind === 'node' || kind === 'game') {
+      const chapter = this._storyChapter();
+      if (kind === 'game' || (chapter && chapter.opening)) this.insertStoryGameAt(dataset); else this.insertStoryNodeAt(dataset);
+    }
+  },
+
+  // 图片组:选完版式落一组空格(光标 / 选中块之后),再逐格选图
+  onStoryGalleryLayout(e) {
+    const n = proEditorStory.galleryLayoutOf(e.currentTarget.dataset.n);
+    const index = Number.isInteger(this._storyAddAt) ? this._storyAddAt : (((this._storyChapter() || {}).blocks) || []).length;
+    this._storyAddAt = null;
+    this.setData({ storySheet: '' });
+    this._pushUndo();
+    if (this._insertStoryMedia('gallery', index, { layout: n })) this._storyUndoBar('已添加图片');
+  },
+  fillStoryGalleryCell(e) {
+    const blockKey = e.currentTarget.dataset.blockkey;
+    const index = Number(e.currentTarget.dataset.index);
+    const chapter = this._storyChapter();
+    if (!chapter) return;
+    const chapterId = chapter._localId;
+    app.chooseImage((res) => {
+      const url = res && res[0];
+      const current = this._storyChapter();
+      if (!url || this._unloaded || !current || current._localId !== chapterId) return;
+      try { this._storyCommand({ type: 'fillGalleryCell', blockKey, index, url }); }
+      catch (error) { cyToast(app.getRequestErrorMessage(error, '选图失败')); }
+    }, 1);
+  },
+  onStoryGalleryCaptionInput(e) {
+    try { this._storyCommand({ type: 'editGalleryCaption', blockKey: e.currentTarget.dataset.blockkey, altText: e.detail.value }); }
+    catch (error) { cyToast(app.getRequestErrorMessage(error, '修改说明失败')); }
+  },
+
+  // 章节开始 / 结束卡的话:开场白 / 结语
+  onStoryCapInput(e) {
+    try { this._storyCommand({ type: 'setChapterCap', cap: e.currentTarget.dataset.cap, content: e.detail.value }); }
+    catch (error) { cyToast(app.getRequestErrorMessage(error, '保存失败')); }
+  },
+
+  // 分支任务弹窗:问题 / 2 到 3 条分支 / 去向
+  openStoryBranch(e) {
+    const blockKey = e.currentTarget.dataset.blockkey;
+    const block = (((this._storyChapter() || {}).blocks) || []).find((b) => b && b.key === blockKey && b.type === 'branch');
+    if (!block) return;
+    this.setData({ storySheet: 'branch', storyBranchTos: this._storyBranchTos(), storyBranch: { blockKey, content: String(block.content || ''), options: proEditorStory.normalizeBranchOptions(block.options) } });
+  },
+  _storyBranchCommand(patch) {
+    const blockKey = this.data.storyBranch.blockKey;
+    try {
+      this._storyCommand(Object.assign({ type: 'updateBranch', blockKey }, patch));
+      const block = (((this._storyChapter() || {}).blocks) || []).find((b) => b && b.key === blockKey);
+      if (block) this.setData({ storyBranch: { blockKey, content: String(block.content || ''), options: proEditorStory.normalizeBranchOptions(block.options) } });
+    } catch (error) {
+      cyToast(app.getRequestErrorMessage(error, '修改分支失败'));
+    }
+  },
+  onStoryBranchQuestion(e) { this._storyBranchCommand({ content: e.detail.value }); },
+  onStoryBranchOptionText(e) { this._storyBranchCommand({ option: { index: Number(e.currentTarget.dataset.i), text: e.detail.value } }); },
+  onStoryBranchTo(e) { this._storyBranchCommand({ option: { index: Number(e.currentTarget.dataset.i), to: e.currentTarget.dataset.to } }); },
+  addStoryBranchOption() { this._storyBranchCommand({ addOption: true }); },
+  removeStoryBranchOption(e) { this._storyBranchCommand({ removeOption: Number(e.currentTarget.dataset.i) }); },
+
+  // 点文末空白:最后一块是段落就把光标放到它末尾,否则在文末起一段新的
+  onStoryTailTap() {
+    const chapter = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
+    const blocks = (chapter && chapter.blocks) || [];
+    const last = blocks[blocks.length - 1];
+    if (last && last.type === 'text') {
+      const len = String(last.content == null ? '' : last.content).length;
+      this.setData({ 'storyEditor.focusBlockKey': '' }, () => this.setData({
+        'storyEditor.focusBlockKey': last.key, 'storyEditor.focusCursor': len,
+      }));
+      return;
+    }
+    this.insertStoryTextAt({ currentTarget: { dataset: { index: blocks.length } } });
+  },
+
+  onStoryScroll(e) {
+    this._storyScrollNow = Number(e.detail && e.detail.scrollTop) || 0;
+  },
+
+  // ── 拖拽排序(正文段除外:l-editor2 业主「正文不能拖」,段落只作落点 / 被拆开的宿主)。长按块或右侧把手 → 这里量一次几何、拿起(震一下);
+  //    之后的跟手、让位、贴边滚动全在渲染层 utils/wxs/story-drag.wxs,不逐帧 setData;
+  //    跨过一格回调 onStoryDragSlot(轻震),松手回调 onStoryDragDrop(改顺序,再震一下)。
+  onStoryDragArm(e) {
+    const ds = e.currentTarget.dataset;
+    const blockKey = ds.blockkey;
+    const from = Number(ds.index);
+    if (!blockKey || this.data.storyDrag.key || this.data.storyEditor.preview) return;
+    // 正文段不拿起:长按留给系统选字,点一下就是改字
+    const armed = ((this._storyChapter() || {}).blocks || [])[from];
+    if (!armed || armed.key !== blockKey || armed.type === 'text') return;
+    const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || {};
+    const startY = Number(touch.clientY != null ? touch.clientY : (e.detail && e.detail.y)) || 0;
+    const startScroll = this._storyScrollNow || 0;
+    const arming = { key: blockKey, released: false };
+    this._storyArming = arming;
+    wx.createSelectorQuery()
+      .selectAll('.story-article .story-block').boundingClientRect()
+      .select('.story-editor__scroll').boundingClientRect()
+      .select('.story-editor__scroll').scrollOffset()
+      .exec((res) => {
+        if (this._storyArming !== arming) return;
+        this._storyArming = null;
+        const rects = (res && res[0]) || [];
+        const area = (res && res[1]) || { top: 0, bottom: 0, height: 0 };
+        const offset = (res && res[2]) || {};
+        if (!rects[from]) return;
+        const scrollTop = Number.isFinite(offset.scrollTop) ? offset.scrollTop : startScroll;
+        const max = Math.max(0, (Number(offset.scrollHeight) || 0) - (Number(area.height) || (area.bottom - area.top) || 0));
+        // 拖进段落拆段(l-editor):每块是不是可以从中间拆开的正文段、字数、句子边界,一并交给渲染层
+        const blocks = (this._storyChapter() || {}).blocks || [];
+        const bounds = blocks.map((b) => (b && b.type === 'text' && proEditorStory.canSplitParagraphs(b) && b.key !== blockKey)
+          ? proEditorStory.sentenceBoundaries(b.content) : []);
+        const geo = {
+          key: blockKey, from, y: startY, st: scrollTop, vt: area.top, vb: area.bottom, max,
+          top: rects.map((r) => Math.round(r.top)), h: rects.map((r) => Math.round(r.height)),
+          kind: bounds.map((list) => (list.length ? 'p' : '')),
+          len: blocks.map((b) => String((b && b.content) || '').length),
+          bounds,
+        };
+        if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
+        if (arming.released) { // 量完之前手已经松开:等于原地松手
+          this.setData({ 'storyEditor.selectedBlockKey': blockKey });
+          return;
+        }
+        this._storyDragSlotAt = 0;
+        this.setData({
+          storyDrag: { key: blockKey, geo: JSON.stringify(geo), epoch: this.data.storyDrag.epoch, split: null },
+          'storyEditor.selectedBlockKey': '',
+          'storyEditor.insertMenuAt': -1,
+        });
+      });
+  },
+
+  onStoryTouchRelease() {
+    if (this._storyArming) this._storyArming.released = true;
+  },
+
+  // 跨过一格:轻震(合并 60ms 内的连续跨格,快速甩过去不连震)
+  onStoryDragSlot() {
+    const now = Date.now();
+    if (now - (this._storyDragSlotAt || 0) < 60) return;
+    this._storyDragSlotAt = now;
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
+  },
+
+  // 拖到一段正文中间:渲染层算好「第几块 · 第几个字之后」,这里把那一段临时渲染成「上半 · 槽 · 下半」;
+  // index:-1 = 手指离开了段落中间,复原。换一次落点才来一次,不逐帧。
+  onStoryDragSplit(arg) {
+    const split = arg || {};
+    if (!this.data.storyDrag.key) return;
+    const index = Number(split.index);
+    const blocks = (this._storyChapter() || {}).blocks || [];
+    const host = blocks[index];
+    if (!(index >= 0) || !host || host.type !== 'text') {
+      if (this.data.storyDrag.split) this.setData({ 'storyDrag.split': null });
+      return;
+    }
+    const text = String(host.content == null ? '' : host.content);
+    const at = Number(split.at);
+    const current = this.data.storyDrag.split;
+    if (current && current.key === host.key && current.at === at) return;
+    this.setData({ 'storyDrag.split': { key: host.key, at, a: text.slice(0, at), b: text.slice(at), h: Math.max(0, Number(split.h) || 0) } });
+    this.onStoryDragSlot();
+  },
+
+  // 贴边自动滚屏:渲染层每两帧报一次目标 scrollTop
+  onStoryDragScroll(arg) {
+    const top = Math.max(0, Number(arg && arg.scrollTop) || 0);
+    this._storyScrollNow = top;
+    this.setData({ storyScrollTop: top });
+  },
+
+  onStoryDragDrop(arg) {
+    const drag = arg || {};
+    const key = this.data.storyDrag.key;
+    if (!key || drag.key !== key) return;
+    const reset = { key: '', geo: '', epoch: this.data.storyDrag.epoch + 1, split: null };
+    if (Number.isFinite(Number(drag.scrollTop))) this._storyScrollNow = Number(drag.scrollTop);
+    const scrollTop = this._storyScrollNow || 0;
+    if (wx.vibrateShort) wx.vibrateShort({ type: 'medium' });
+    const split = drag.split && Number.isInteger(Number(drag.split.index)) && Number(drag.split.index) >= 0 ? drag.split : null;
+    if (!split && (drag.to === drag.from || !Number.isInteger(drag.to))) {
+      // 原地松手 = 选中(显示删除键),与改版前「长按选中」一致
+      this.setData({ storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });
+      return;
+    }
+    try {
+      this._pushUndo();
+      if (split) {
+        // 拖进段落中间:在句子之间把那一段拆成两段,被拖的块落在中间
+        const blocks = (this._storyChapter() || {}).blocks || [];
+        const host = blocks[Number(split.index)];
+        if (!host) throw new Error('未找到要插入的段落');
+        const result = this._storyCommand({ type: 'moveBlockInto', blockKey: key, targetKey: host.key, at: Number(split.at), tailKey: this._genLocalId() },
+          { storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });
+        this._storyUndoBar('已插到第 ' + (result.hostIndex + 1) + ' 段中间,段落拆成两段');
+        return;
+      }
+      this._storyCommand({ type: 'moveBlock', blockKey: key, index: drag.to }, { storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });
+      this._storyUndoBar('已移到第 ' + (drag.to + 1) + ' 位');
+    } catch (error) {
+      this.setData({ storyDrag: reset, storyScrollTop: scrollTop });
+      cyToast(app.getRequestErrorMessage(error, '移动失败'));
+    }
+  },
+
+  // 把手单击:上移 / 下移 / 删除(拖不动时的替代路径,也给读屏用)
+  onStoryGripTap(e) {
+    const blockKey = e.currentTarget.dataset.blockkey;
+    const index = this._storyBlockIndex(blockKey);
+    const blocks = (this._storyChapter() || {}).blocks || [];
+    if (!blocks[index]) return;
+    const items = [];
+    if (index > 0) items.push('上移');
+    if (index < blocks.length - 1) items.push('下移');
+    items.push('删除');
+    this._storyOptionsFor = { kind: 'grip', blockKey, items };
+    this.setData({ storyOptions: { show: true, title: '', items } });
+  },
+
+  _storyGripAction(blockKey, pick) {
+    const index = this._storyBlockIndex(blockKey);
+    const block = ((this._storyChapter() || {}).blocks || [])[index];
+    if (!block) return;
+    const ev = { currentTarget: { dataset: { blockkey: blockKey } } };
+    if (pick === '删除') {
+      if (block.type === 'text') this.removeStoryText(ev);
+      else if (block.type === 'node') this.removeStoryNode(ev);
+      else this.removeStoryMedia(ev);
+      return;
+    }
+    try {
+      this._pushUndo();
+      this._storyCommand({ type: 'moveBlock', blockKey, index: pick === '上移' ? index - 1 : index + 1 });
+      if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
+    } catch (error) {
+      cyToast(app.getRequestErrorMessage(error, '移动失败'));
+    }
+  },
+
+
+  // 底部「已移到… / 撤销」条(编辑器原型 v2):每次移动、插入、删除、拆段后出现 5 秒,点撤销回到上一步。
+  // 撤销走页面共用的 _undoStack(上限 UNDO_CAP = 20 步),所以调用方先 _pushUndo 再改。
+  _storyUndoBar(text, canUndo) {
+    clearTimeout(this._storyUndoTimer);
+    this.setData({ storyUndo: { show: true, text: String(text || ''), canUndo: canUndo !== false && !!(this._undoStack && this._undoStack.length) } });
+    this._storyUndoTimer = setTimeout(() => { if (!this._unloaded) this.setData({ 'storyUndo.show': false }); }, 5000);
+  },
+  undoStoryStep() {
+    if (!this._undoStack || !this._undoStack.length) return;
+    this.undo();
+    const chapter = this._storyChapter() || {};
+    const derived = this._storyDerived(chapter);
+    this.setData({
+      storyDrag: { key: '', geo: '', epoch: ((this.data.storyDrag && this.data.storyDrag.epoch) || 0) + 1, split: null },
+      'storyEditor.focusBlockKey': '', 'storyEditor.selectedBlockKey': '',
+      storySegs: derived.storySegs, storyListNo: derived.storyListNo, storyCover: derived.storyCover,
+      storyCaps: derived.storyCaps, storyGalleryCells: derived.storyGalleryCells, storyBranchToLabel: derived.storyBranchToLabel,
+    });
+    this._storyUndoBar('已撤销', false);
   },
 
   /**
@@ -1773,14 +2436,8 @@ Page({
   // 光标连同 textarea 一起消失,人还在按退格 —— 相当于输入中途把编辑器抽走。
   // ⚠️ 也不弹二次确认:内容已经是空的,没有什么可丢的。
   // 选中态:✕ 只在选中的块上出现(用户 2026-08-10 定「选中的时候再出现」)。
-  // 触屏没有 hover,所以映射成两种最不抢主路径的手势:
-  //   文字块 = 聚焦即选中(正在写的那块就是当前块);
-  //   节点块 = 长按选中(单击仍然是"打开节点弹窗",那是主路径,不能被选中抢走)。
-  selectStoryBlock(e) {
-    const blockKey = e.currentTarget.dataset.blockkey;
-    if (this.data.storyEditor.selectedBlockKey === blockKey) return;
-    this.setData({ 'storyEditor.selectedBlockKey': blockKey });
-  },
+  // 2026-11-09 文章式编辑:长按 = 拿起拖动;长按后原地松手 = 选中(见 onStoryDragEnd)。
+  // 单击节点块仍然是"打开节点弹窗",那是主路径,不能被选中抢走。
 
   // ✕ 删文字块。内容为空时 blur 会自己删掉(见 onStoryTextBlur),这里管的是
   // 「写了字但整段不要了」—— 有内容才值得二次确认。
@@ -1792,7 +2449,9 @@ Page({
       success: (res) => {
         if (!res.confirm) return;
         try {
+          this._pushUndo();
           this._storyCommand({ type: 'removeText', blockKey }, { 'storyEditor.selectedBlockKey': '' });
+          this._storyUndoBar('已删除段落');
         } catch (error) {
           cyToast(app.getRequestErrorMessage(error, '删除失败'));
         }
@@ -1804,7 +2463,18 @@ Page({
     const blockKey = e.currentTarget.dataset.blockkey;
     const blocks = ((this.data.formData.chapters[this.data.storyEditor.chapterIndex] || {}).blocks) || [];
     const block = blocks.filter((b) => b && b.key === blockKey)[0];
+    if (this._storyFocusKey === blockKey) this._storyFocusKey = '';
+    if (this.data.storyEditor.focusBlockKey === blockKey || this.data.storyLiveKey === blockKey) this.setData({ 'storyEditor.focusBlockKey': '', storyLiveKey: '' });
     if (!block || block.type !== 'text') return;
+    // 点顶部插入栏会先让输入框失焦:这里记下光标,插入就落在它上面(块被删掉时退回它原来的位置)
+    const blurRaw = String(e.detail && e.detail.value != null ? e.detail.value : '');
+    const blurCursor = Number(e.detail && e.detail.cursor) - (blurRaw.charAt(0) === STORY_SENTINEL ? 1 : 0);
+    this._storyCaret = {
+      blockKey,
+      cursor: Number.isInteger(blurCursor) ? blurCursor : String(block.content == null ? '' : block.content).length,
+      content: String(block.content == null ? '' : block.content),
+      index: blocks.indexOf(block),
+    };
     if (String(block.content == null ? '' : block.content).trim() !== '') {
       if (this.data.storyEditor.selectedBlockKey === blockKey) {
         this.setData({ 'storyEditor.selectedBlockKey': '' });
@@ -2256,6 +2926,22 @@ Page({
       const next = current.concat(Array.isArray(res) ? res : []).slice(0, 9);
       that._commitInlineNodeAt(ci, ni, { imgUrl: next.join(',') });
     }, remain, { crop: true, cropScale: NODE_PHOTO_RATIO });
+  },
+
+  // 地点待办「替换地点」(r2-create b4-u02-03):只换这个节点的地址,沿用同一个选点器
+  onLocationTodoReplace(e) {
+    const nodeId = String((e && e.detail && e.detail.nodeId) || '');
+    const chapters = this.data.formData.chapters || [];
+    for (let c = 0; c < chapters.length; c += 1) {
+      const nodes = (chapters[c] && chapters[c].nodes) || [];
+      for (let n = 0; n < nodes.length; n += 1) {
+        if (nodes[n] && String(nodes[n].id) === nodeId) {
+          this.pickNodeLocation({ currentTarget: { dataset: { chapterindex: c, nodeindex: n } } });
+          return;
+        }
+      }
+    }
+    cyToast('没有找到这个地点对应的节点');
   },
 
   pickNodeLocation(e) {
@@ -3166,7 +3852,7 @@ Page({
   },
 
   onUnload() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
-    this._unloaded = true;
+    this._unloaded = true; morph.cancel(this);
     this._cloudAutosaveEnabled = false;
     this._cancelCloudDraftAutosave();
     this._destroyChapterDurationAudio();
@@ -4014,7 +4700,7 @@ Page({
   // 章节名称输入框变化处理
   onNameChange(e) {
     this.setData({
-      'formData.name': e.detail.value
+      'formData.name': String(e.detail.value == null ? '' : e.detail.value).replace(/[\r\n]+/g, '')   // 标题是折行显示的多行框,回车不进名字
     }, () => this.refreshPrimaryActionState());
   },
   // 章节名称输入框变化处理
@@ -4810,12 +5496,15 @@ Page({
     if (insertingStoryNode && nodesAction === 0) {
       try {
         this._pushUndo();
-        this._storyCommand({
+        const caret = this._storyPendingCaret;
+        this._storyPendingCaret = null;
+        const storyChapter = (this.data.formData.chapters || [])[this.data.storyEditor.chapterIndex];
+        this._storyCommand(proEditorStory.caretInsertCommand(storyChapter, caret, {
           type: 'insertNodeAt',
           index: this.data.pendingInsertAt,
           blockKey: this._genLocalId(),
           node,
-        }, {
+        }, () => this._genLocalId()), {
           popChapterNodes: false,
           popChapterNodesAction: 0,
           editingPendingLocalId: '',
@@ -5565,7 +6254,7 @@ Page({
           refundSupported: ticket.refundSupported !== false,
           syncWithTheme: ticket.syncWithTheme || false
         }
-      }, () => this.refreshTicketSaveState());
+      }, () => { this.refreshTicketSaveState(); this._revealTicketEditor(); });
     } else {
       this.setData({
         showTicketEditor: true,
@@ -5590,8 +6279,25 @@ Page({
           refundSupported: true,
           syncWithTheme: false
         }
-      }, () => this.refreshTicketSaveState());
+      }, () => { this.refreshTicketSaveState(); this._revealTicketEditor(); });
     }
+  },
+
+  // x-fix5 A-3:编辑器在票种列表底部展开时,「添加票种 / 收起」这一行会落在底栏(返回/预览)下面够不着。
+  // 展开后把它滚到视口上三分之一处。
+  _revealTicketEditor() {
+    if (typeof wx.pageScrollTo !== 'function' || typeof wx.createSelectorQuery !== 'function' || typeof wx.nextTick !== 'function') return;
+    wx.nextTick(() => {
+      wx.createSelectorQuery().select('.tk-editor').boundingClientRect().selectViewport().scrollOffset().exec((r) => {
+        const rect = r && r[0], view = r && r[1];
+        if (!rect || !view) return;
+        let win = { windowHeight: 667 };
+        try { win = wx.getWindowInfo(); } catch (e) { /* 取不到按默认高度 */ }
+        const limit = (win.windowHeight || 667) * 0.45;
+        if (rect.top <= limit) return;
+        wx.pageScrollTo({ scrollTop: Math.max(0, view.scrollTop + rect.top - (win.windowHeight || 667) * 0.2), duration: 220 });
+      });
+    });
   },
 
   closeTicketEditor() {
@@ -5944,16 +6650,8 @@ Page({
     this.setData({ 'formData.recruitDeadline': e.detail.value || '' }, () => this.refreshPrimaryActionState());
   },
 
-  // M2 自玩票(仅经典定向):开关 + 价格 + 票数
-  onSelfPlayToggle(e) {
-    this.setData({ 'formData.selfPlay': !!e.detail.value }, () => this.syncIdentityReady());
-  },
-  onSelfPlayPriceInput(e) {
-    this.setData({ 'formData.selfPlayPrice': e.detail.value }, () => this.syncIdentityReady());
-  },
-  onSelfPlayQuotaInput(e) {
-    this.setData({ 'formData.selfPlayQuota': e.detail.value });
-  },
+  // r2-join a5-v3-29:自玩票是平台官方玩家会员,发布者票务页不再出现自玩票开关/价格/票数,三个 handler 随之移除;
+  // 已存草稿里的 formData.selfPlay* 原样保留,不在此改写。
 
   // ===== 主题级分支路线编辑器 =====
   _routeOutcomeContract(node) {
@@ -6844,7 +7542,7 @@ Page({
     const precheckOk = !skipLabel && !issues.length;
     this._publishPrecheckOk = precheckOk;
     const passed = this._buildPublishPassed(precheckOk);
-    this.setData({
+    this.setData({ reducedMotion: readReducedMotion(), // qx-u1:侧滑返回在减动效下直接关、不播滑出
       publishCheck: {
         show: true, blocking: this._withIssueWhere(blocking), advisory, summary, passed, preview: this._buildPublishPreview(blocking),
       },
@@ -6873,7 +7571,7 @@ Page({
   _showBackendPublishIssue(issue) {
     const check = this.buildPublishCheck();
     const blocking = [issue].concat(check.blocking);
-    this.setData({ publishCheck: { show: true, blocking: this._withIssueWhere(blocking),
+    this.setData({ reducedMotion: readReducedMotion(), publishCheck: { show: true, blocking: this._withIssueWhere(blocking),
       advisory: check.advisory, summary: this._buildPublishSummary(),
       passed: this._buildPublishPassed(false), preview: this._buildPublishPreview(blocking) },
       storyPop: { show: false, anchor: '' } });
@@ -7675,9 +8373,10 @@ Page({
         ? this._normalizeDateTime(this.data.formData.recruitDeadline, '23:59:59') : null,
       publishToCreative: this.data.publishToCreative ? 1 : 0, // 1=同步到创意广场 0=否(后端 ApiTopicController.createTopic 已处理:开关开则插 dataType=2 创意广场帖)
       clubId: this.data.formData.clubId || '', // 归属俱乐部(任何 mode 传了即挂靠;经典定向未传后端自动兜底)
-      // M2 自玩票:仅「经典定向」生效(后端以 ticket mode=1 再次兜底,自由定向不开)
-      selfPlay: this.data.formData.selfPlay ? 1 : 0,
-      selfPlayPrice: this.data.formData.selfPlay ? this.data.formData.selfPlayPrice : 0,
+      // M2 自玩票:仅「经典定向」生效。f-money3:自由探索带收费自玩票后端会拒(没有结算出口),
+      // 编辑器已无自玩票栏位(a5-v3-29),草稿里残留的值只在经典定向上送,不让作者被看不见的字段卡住。
+      selfPlay: productType === 1 && this.data.formData.selfPlay ? 1 : 0,
+      selfPlayPrice: productType === 1 && this.data.formData.selfPlay ? this.data.formData.selfPlayPrice : 0,
       selfPlayQuota: this.data.formData.selfPlayQuota || 0,
       teamMode: Number(this.data.formData.teamMode) || 0,
       teamMaxMembers: Number(this.data.formData.teamMaxMembers) || 4,
@@ -7853,13 +8552,13 @@ Page({
           // 面板自愈与硬等两个时长各算各的迟早会漂。
           that._resultSheetNext = '/pages/topic/merchantinfo/merchantinfo?topicId='
             + that.data.editingTopicId + (that.data.operationScope ? '&scope=MERCHANT' : '');
-          that.setData({
-            submitting: false, submitError: '',
-            resultSheet: { show: true, kind: 'success', title: pendingReview ? '已提交审核' : '已发布',
+          morph.settle(that, 'publishDone', () => that.setData({ resultSheet: Object.assign({}, that.data.resultSheet, { show: true }) }), { with: {
+            submitting: false, submitError: '', // qx-u3 morph:结果立即写入(面板先不弹),「发布」收成勾停一拍后再弹面板
+            resultSheet: { show: false, kind: 'success', title: pendingReview ? '已提交审核' : '已发布',
               sub: localChanges ? '已发布提交时的版本；后续修改仍在本机，请继续编辑后另行保存。'
                 : pendingReview ? reviewNextStep : '这份主题的改动已经发布。',
               meta: localChanges ? '草稿仍在本机' : '', why: '', duration: RESULT_SHEET_MS }
-          });
+          } });
           return;
         }
         analytics.track('topic_publish_success', {
@@ -7869,7 +8568,7 @@ Page({
             name: data.name
           }
         });
-        that.setData({ submitting: false, submitError: '' });
+        // qx-u3 morph:submitting 收尾、结果与按钮亮勾在下方 morph.settle 里同一次写入,面板停一拍再弹
         // 发完落到项目主页(主办视图),不是玩家买票页 —— 那页是给买票的人看的,
         // 发布者要的是「谁来接、谁来带团、卖了多少」。招商家和招俱乐部两个入口都在那儿。
         const scopeSuffix = that.data.operationScope ? '&scope=MERCHANT' : '';
@@ -7888,15 +8587,15 @@ Page({
            用户这次的裁决就是不要这个分叉。 */
         const chapterCount = (data.chapters || []).length;
         that._resultSheetNext = projectUrl;
-        that.setData({
-          resultSheet: {
-            show: true, kind: 'success', title: pendingReview ? '已提交审核' : '城市路线已发布',
+        morph.settle(that, 'publishDone', () => that.setData({ resultSheet: Object.assign({}, that.data.resultSheet, { show: true }) }), { with: {
+          submitting: false, submitError: '', resultSheet: {
+            show: false, kind: 'success', title: pendingReview ? '已提交审核' : '城市路线已发布',
             sub: localChanges ? '已发布提交时的版本；后续修改仍在本机，请继续编辑后另行保存。'
               : pendingReview ? reviewNextStep : tid ? '接下来去招商家承接节点、找俱乐部带团。' : '路线已进入你的项目列表。',
             meta: localChanges ? '草稿仍在本机' : chapterCount ? (chapterCount + ' 个章节') : '',
             why: '', duration: RESULT_SHEET_MS,
           }
-        });
+        } });
       },
       onFail: (res) => {
         if (res && res.networkError) {
@@ -7972,7 +8671,12 @@ Page({
         beforePublish: (topicId) => {
           if (!current()) return false;
           this._serverDraftAttempt = null; // 保存内容与版本已经正向回读。
-          this._publishAttempt = Object.assign({ status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: String(topicId) }, publicationVersions);
+          // U03-01:发布号随发布意图一起先落盘;同一主题上一次结果未知时沿用原号,永不为未知结果另生新号。
+          const prior = this._publishAttempt;
+          const publishRequestId = prior && prior.kind === 'SERVER_DRAFT' && String(prior.topicId) === String(topicId)
+            && publicationRequestId.valid(prior.publishRequestId) ? prior.publishRequestId : publicationRequestId.create();
+          this._publishAttempt = Object.assign({ status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: String(topicId) },
+            publicationVersions, { publishRequestId });
           return this._persistDraftEnvelope();
         },
         save: (payload, cb) => {
@@ -8014,9 +8718,12 @@ Page({
         },
         publish: (topicId, cb) => {
           const handlers = reply(cb);
+          // 重放时 publicationVersions 可能已随页面重建清空:原意图里落过盘的版本号与发布号才是原请求。
+          const attempt = this._publishAttempt && String(this._publishAttempt.topicId) === String(topicId) ? this._publishAttempt : null;
           sendUiStateRequest(app, '/api/topic/publish-draft', {
             method: 'POST',
-            data: Object.assign({ id: topicId, scope: this.data.operationScope }, publicationVersions),
+            data: Object.assign({ id: topicId, scope: this.data.operationScope }, publicationVersions,
+              attempt ? publicationRequestId.wireFields(attempt) : {}),
             success: handlers.success,
             fail: handlers.fail
           });
@@ -8256,7 +8963,7 @@ Page({
     }
     const sheet = res.stage === 'publish'
       ? (res.unknown
-        ? { title: '发布结果待确认', sub: '重试只查询原主题的发布结果', meta: '本机内容已保留' }
+        ? { title: '发布结果待确认', sub: '重试沿用原发布请求，不会重复发布', meta: '本机内容已保留' }
         : res.localChanges
           ? { title: '本次发布未成功', sub: '提交后的修改仍在本机，请保存后重试', meta: '草稿仍在本机' }
           : { title: '草稿已保存，但还没有发布', sub: '草稿已保存，可重试', meta: '' })
@@ -8309,7 +9016,7 @@ Page({
         sub: rejected ? '内容仍保留，可以修改后重新提交。'
           : result.localChanges ? '上次保存的版本已发布；后续修改仍在本机，请继续编辑后另行保存。'
             : pendingReview ? reviewNextStep : '草稿已发布，接下来去招商家承接节点、找俱乐部带团。',
-        meta: keepDraft ? '草稿仍在本机' : '',
+        meta: keepDraft ? '草稿仍在本机' : publicationRequestId.revisionLabel(pub),
         why: rejectionReason, duration: RESULT_SHEET_MS }
     });
   },
@@ -8525,10 +9232,6 @@ Page({
   },
   _refreshSupportMatrix() {
     const matrix = this.data.supportMatrix, ctx = this._nodeSupportContext();
-    const options = matrix ? nodeGameCatalog.ALL.filter(item =>
-      !ctx.settled && !ctx.challenge || ['profile', 'typeIn', 'photoCheck', 'note', 'd20'].includes(item.key)
-      || matrix.types.some(row => row.key === item.key && (ctx.challenge
-        ? ['SUPPORTED', 'CHALLENGE_ONLY'].includes(row.tools.zeroChallenge) : row.completionProof || row.r5CompletionProof && !supportMatrix.choice(matrix, item.key, {}, ctx)))) : this.data.storyGameOptions;   // 第十三轮 m1:任务站也列出选中就会带上结果规则的玩法
     const reasons = list => {
       const out = {};
       (list || []).forEach(item => {
@@ -8537,12 +9240,7 @@ Page({
       });
       return out;
     };
-    const story = {};
-    (options || []).forEach(item => {
-      story[item.key] = supportMatrix.choice(matrix, item.key, {}, ctx);
-    });
-    this.setData({ supportNodeChallenge: ctx.challenge, supportNodeSettled: ctx.settled, storyGameOptions: options, storySupportReasons: story,
-      publicSupportReasons: reasons(this.data.publicTempList), draftSupportReasons: reasons(this.data.storyDraftList),
+    this.setData({ publicSupportReasons: reasons(this.data.publicTempList), draftSupportReasons: reasons(this.data.storyDraftList),
       mineSupportReasons: reasons(this.data.tempList), nodeSupportReason: this._templateSupportReason(this.data.nodesForm.templateInfo) });
   },
   _supportPublishIssues() {

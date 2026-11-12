@@ -36,6 +36,9 @@ public class CoopSettlementOriginalLedger {
     private final ObjectMapper json = new ObjectMapper();
     @org.springframework.beans.factory.annotation.Autowired
     private CoopSettlementEvidenceMapper originalCloseEvidence;
+    /** l-payout2：电商收付通接点（可选）。未装配或开关关闭时退款冲回逻辑逐字不变。 */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.payout.EcommerceSettlementGuard ecommerceSettlementGuard;
 
 
     public CoopSettlementOriginalLedger(CmsTopicMapper topics, CoopSettlementCashEvidenceMapper evidence,
@@ -305,6 +308,11 @@ public class CoopSettlementOriginalLedger {
             CoopSettlement head = lockedHeads.get(row.getSettlementId());
             if (!Objects.equals(head.getMerchantId(), row.getReceiverMemberId()) || !Objects.equals(head.getLineType(), row.getLineType())) throw conflict("ORIGINAL_RECEIVER_CHANGED");
             boolean paid = "MEMBER".equals(row.getReceiverKind()) && Integer.valueOf(1).equals(head.getStatus());
+            if (paid && ecommerceSettlementGuard != null && ecommerceSettlementGuard.active()
+                    && ecommerceSettlementGuard.isPartnerPaymentFact(row.getPaymentFactId())) {
+                // l-payout2：该分项由二级商户收款，T+14 从未记进会员余额；退款由「分账回退」从微信侧追回，不扣会员钱包。
+                paid = false;
+            }
             BigDecimal balance = paid ? members.selectBalanceForUpdate(row.getReceiverMemberId()) : ZERO;
             if (balance == null) throw conflict("ORIGINAL_RECEIVER_BALANCE_MISSING");
             if (paid) {

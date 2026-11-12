@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "judge": true,
+    "multi": false,
+    "title": "${question}",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "o1",
+        "label": "${option1}",
+        "correct": false
+      },
+      {
+        "id": "o2",
+        "label": "${option2}",
+        "correct": false
+      }
+    ]
+  },
+  "branch": {
+    "enabled": true,
+    "startStepId": "step_result",
+    "steps": [
+      {
+        "id": "step_result",
+        "title": "${branchTitle}",
+        "body": "${branchBody}",
+        "terminal": true,
+        "outcomeCode": "FESTIVAL_HELPED",
+        "outcomeLabel": "${outcomeLabel}",
+        "options": []
+      }
+    ]
+  }
+}

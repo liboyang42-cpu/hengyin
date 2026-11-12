@@ -1,4 +1,4 @@
-const toast = require('../../utils/toast.js');
+const toast = require('../../utils/toast.js'); const { isMerchantView } = require('../../utils/roleGuard.js'); const merchantTheme = require('../../utils/merchant-theme.js'); // M-35:商家从工作台进搜索是浅色
 const app = getApp();
 const { isRecordList } = require('../../utils/response-shape.js');
 const { HISTORY_MAX, normalizeSearchHistory, searchHistoryStorageKey } = require('./utils/search-history.js');
@@ -494,7 +494,12 @@ Page({
   /**
    * 生命周期函数--监听页面加载
    */
+  onShow() { if (this.data.merchantView) merchantTheme.merchantPageShow(); },
+  onHide() { if (this.data.merchantView) merchantTheme.merchantPageRestore(); },
+  onUnload() { if (this.data.merchantView) merchantTheme.merchantPageRestore(); },
+
   onLoad(options) {
+    this.setData({ merchantView: isMerchantView() });
     this.getCategoryList();
     this.loadHistory();
 

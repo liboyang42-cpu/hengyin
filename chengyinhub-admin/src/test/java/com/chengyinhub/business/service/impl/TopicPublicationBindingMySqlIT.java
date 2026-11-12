@@ -75,11 +75,12 @@ class TopicPublicationBindingMySqlIT {
         try (var f = fixture()) {
             String submitted = bundle(f).freezeForSubmission(100L, 42L).getSnapshotJson();
             f.db.update("update cms_member_template set question_answer='B' where id=701");
-            assertThrows(IllegalStateException.class, () -> f.tx.execute(tx -> {
+            var failure = assertThrows(IllegalStateException.class, () -> f.tx.execute(tx -> {
                 bundle(f).applyDecision(100L, 42L, submitted, true);
                 String frozen = compiler(f).freezePublication(f.topics.selectCmsTopicByIdForUpdate(100L), null);
                 return f.topics.publishRouteSnapshot(100L, frozen, new java.util.Date());
             }));
+            assertNull(com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(failure));
             assertEquals(0L, f.db.queryForObject("select published_config_version from cms_topic where id=100", Long.class));
             assertNull(f.topics.selectCmsTopicById(100L).getPublishedRouteGraphJson());
             assertEquals("B", f.templateMapper.selectCmsMemberTemplateById(701L).getQuestionAnswer());
@@ -236,6 +237,32 @@ class TopicPublicationBindingMySqlIT {
                     assertTrue(answer.path("templatePresentation").isEmpty());
                 }
             }
+        }
+    }
+
+    @Test
+    void samePersistedBundleErrorHasThePreviewCodeAndRollsBackTheDraftTransition() throws Exception {
+        try (var f = fixture()) {
+            f.db.update("update cms_topic set is_draft=1,publish_mode='pro' where id=100");
+            f.db.update("update cms_topic_node set latitude=null where id=11");
+            var keys = new com.chengyinhub.business.service.support.ThemeStateKeyService(
+                    f.sql.getMapper(com.chengyinhub.business.mapper.ThemeStateKeyMapper.class));
+            var checks = new com.chengyinhub.business.service.support.TopicPublishCheckService(f.nodes, f.templateMapper,
+                    keys, new com.chengyinhub.business.service.support.TopicStateKeyRefService(f.nodes, f.templateMapper, f.chapters), bundle(f));
+            var before = f.db.queryForMap("select is_draft,config_version,published_config_version,published_route_graph_json from cms_topic where id=100");
+            var preview = checks.check(f.topics.selectCmsTopicById(100L)).stream()
+                    .filter(issue -> "TOPIC_BUNDLE_INVALID".equals(issue.getCode())).findFirst().orElseThrow();
+            checks.check(f.topics.selectCmsTopicById(100L));
+            assertEquals(before, f.db.queryForMap("select is_draft,config_version,published_config_version,published_route_graph_json from cms_topic where id=100"));
+            var failure = assertThrows(IllegalArgumentException.class, () -> f.tx.execute(tx -> {
+                assertEquals(1, f.topics.clearDraftIfDraft(100L));
+                return bundle(f).freezeForSubmission(100L, 42L);
+            }));
+            var problem = com.chengyinhub.business.exception.TopicPublicationContentException.dataOf(failure).getIssues().get(0);
+            assertEquals(preview.getCode(), problem.getCode());
+            assertEquals(preview.getNodeId(), problem.getNodeId());
+            assertEquals(preview.getField(), problem.getField());
+            assertEquals(before, f.db.queryForMap("select is_draft,config_version,published_config_version,published_route_graph_json from cms_topic where id=100"));
         }
     }
 

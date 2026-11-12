@@ -94,10 +94,10 @@ class TopicRoutePublicationCurrentReadTest {
         java.util.concurrent.atomic.AtomicReference<ThemeStateKey> stored = new java.util.concurrent.atomic.AtomicReference<>();
         when(f.keys.selectByTopicIdForUpdate(10L)).thenAnswer(call -> stored.get() == null
                 ? Collections.emptyList() : Collections.singletonList(stored.get()));
-        when(f.keys.selectByTopicIdAndStateKeyForUpdate(10L, "clue.h_abcdef123456")).thenAnswer(call -> stored.get());
+        when(f.keys.selectByTopicIdAndStateKeyForUpdate(10L, "clue.h_0123456789ab")).thenAnswer(call -> stored.get());
         when(f.keys.upsertThemeStateKey(any())).thenAnswer(call -> { stored.set(call.getArgument(0)); return 1; });
         ObjectMapper json = new ObjectMapper();
-        var declaration = json.createObjectNode(); declaration.putObject("clues").put("clue.h_abcdef123456", "地图");
+        var declaration = json.createObjectNode(); declaration.putObject("clues").put("clue.h_0123456789ab", "地图");
         TransactionSynchronizationManager.setActualTransactionActive(true);
         try {
             String frozen = org.springframework.test.util.ReflectionTestUtils.invokeMethod(f.compiler, "withCurrentContent", 10L,
@@ -113,7 +113,7 @@ class TopicRoutePublicationCurrentReadTest {
             writes.verify(f.keys).lockTopicForStateKeyWrite(10L);
             writes.verify(f.keys).selectByTopicIdForUpdate(10L);
             writes.verify(f.keys).lockTopicForStateKeyWrite(10L);
-            writes.verify(f.keys).selectByTopicIdAndStateKeyForUpdate(10L, "clue.h_abcdef123456");
+            writes.verify(f.keys).selectByTopicIdAndStateKeyForUpdate(10L, "clue.h_0123456789ab");
             writes.verify(f.keys).upsertThemeStateKey(any());
         } finally {
             TransactionSynchronizationManager.setActualTransactionActive(false);
@@ -124,7 +124,7 @@ class TopicRoutePublicationCurrentReadTest {
     void purePreviewCannotRegisterAMissingAutomaticDeclaration() {
         Fixture f = new Fixture();
         var declaration = new ObjectMapper().createObjectNode();
-        declaration.putObject("clues").put("clue.h_abcdef123456", "地图");
+        declaration.putObject("clues").put("clue.h_0123456789ab", "地图");
         assertThrows(IllegalStateException.class, () -> org.springframework.test.util.ReflectionTestUtils.invokeMethod(
                 f.compiler, "registerTemplateClues", declaration, f.topic));
         verify(f.keys, never()).upsertThemeStateKey(any());

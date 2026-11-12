@@ -9,6 +9,7 @@ Component({
     closeCard() { this.triggerEvent('closecard'); },
     retryCard() { this.triggerEvent('retrycard'); },
     replay() { this.triggerEvent('replay'); },
+    report() { this.triggerEvent('report'); },
     checkReplay() { this.triggerEvent('checkreplay'); },
   },
 });

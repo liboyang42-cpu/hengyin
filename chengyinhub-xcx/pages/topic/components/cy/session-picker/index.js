@@ -213,6 +213,11 @@ Component({
           });
           const prefer = rows.filter((t) => that.data.preferName && String(t.name).trim() === that.data.preferName)[0];
           if (prefer) that.onPickTicket({ currentTarget: { dataset: { id: prefer.id } } });
+          else {
+            // x-fix5 N-2:只有一种可买票时直接选中,下一步不再灰着(窗口未开 / 已售罄的不算可买)
+            const sellable = rows.filter((t) => !ticketWindowText(t) && !(t.remainingInventory != null && Number(t.remainingInventory) === 0));
+            if (sellable.length === 1 && rows.length === 1) that.onPickTicket({ currentTarget: { dataset: { id: sellable[0].id } } });
+          }
         },
         fail(res) {
           if (that._ticketRequestId !== requestId || that.data.pickedActivityId !== activityId) return;

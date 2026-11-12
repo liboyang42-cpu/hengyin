@@ -56,7 +56,11 @@ Page({
     // 列表卡片按纯文本展示作者文字与审核反馈:服务端过滤会把 x<y 存成 x&lt;y,在这里解码一次。
     item = decodeDisplayFields(item, ['title', 'name', 'description', 'reason', 'marketReason']);
     const title = String(item && (item.title || item.name) || '玩法').trim();
+    // A-1：库里存成字面 "null"/"undefined" 的简介按没有简介处理，不在卡片上印出来。
+    const rawDesc = item && item.description != null ? String(item.description).trim() : '';
+    const description = /^(null|undefined)$/i.test(rawDesc) ? '' : rawDesc;
     return Object.assign({}, item, marketView(item), {
+      description: description,
       drop: false,
       imgUrl: gameTemplateCover(item),
       coverFailed: false,

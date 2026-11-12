@@ -1,7 +1,10 @@
+@import "./look-tokens.wxss";
+@import "./play-stage.wxss";
 @import "./theme-backpack.wxss";
 @import "./theme-player-ops.wxss";
 @import "./play-overlays.wxss";
 @import "./play-topbar.wxss";
+@import "./play-help.wxss";
 @import "/style/proto-icons.wxss";
 @import "/style/proto-sheet.wxss";
 @import "/style/proto-shopstrip.wxss";
@@ -15,7 +18,7 @@
 page { background: var(--cy-color-bg-page); }
 .play-scene-host { position:relative; z-index:130; } /* ds-ok 场景弹层须盖住故事与玩法层 */
 .play { position:relative; width:100vw; height:100vh; overflow:hidden; /* ds-ok Figma 实测(用户裁决字面值) */
-  background:var(--cy-color-play-page); color:var(--cy-color-text-primary); /* ds-ok Figma 实测(用户裁决字面值) */
+  background:var(--lk-bg, var(--cy-color-play-page)); color:var(--cy-color-text-primary); /* ds-ok Figma 实测(用户裁决字面值) x-fix6 R4-6:无地图瓦片(DevTools / 离线)时底是外观底色,不是黑洞 */
   --cy-color-bg-page:var(--cy-color-play-page); --cy-color-bg-surface:var(--cy-color-play-surface-base); --cy-color-bg-surface-subtle:var(--cy-color-play-surface-subtle); /* ds-ok Figma 实测(用户裁决字面值) */
   --cy-color-bg-elevated:var(--cy-color-play-elevated); --cy-color-bg-glass:var(--cy-color-play-surface); --cy-color-text-inverse:var(--cy-color-play-ink); /* ds-ok Figma 实测(用户裁决字面值) */
   font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif; /* ds-ok Figma 实测(用户裁决字面值) */
@@ -93,14 +96,6 @@ page { background: var(--cy-color-bg-page); }
 .play-topstack{ position:absolute; left:var(--cy-space-3-5); right:var(--cy-space-3-5); z-index:40;
   display:flex; flex-direction:column; gap:var(--cy-space-2); pointer-events:none; }
 .play-topstack > view{ pointer-events:auto; }
-
-/* 地图右侧常驻核销钮:两个模式都需要,所以不进底栏那排跟模式相关的动作挤 */
-.pscan{ position:absolute; right:var(--cy-page-x); z-index:41; /* ds-ok Figma 实测(用户裁决字面值) */
-  bottom:calc(240rpx + var(--cy-space-3) + 246rpx + var(--cy-space-2) + env(safe-area-inset-bottom)); /* ds-ok Figma 实测(用户裁决字面值) */
-  width:134rpx; height:134rpx; border-radius:var(--cy-radius-pill); /* ds-ok Figma 实测(用户裁决字面值) */
-  background:var(--cy-color-play-surface-solid); border:1rpx solid var(--cy-color-play-line); /* ds-ok Figma 实测(用户裁决字面值) */
-  display:flex; align-items:center; justify-content:center; color:var(--cy-color-text-primary); /* ds-ok Figma 实测(用户裁决字面值) */
-  box-shadow:0 4rpx 24rpx rgba(0,0,0,.5); } /* ds-ok 压地图的浮钮投影 */
 
 /* 原型 .trio 是**浮在地图上**的:position:absolute;bottom:20px;height:100px,没有底色也没有上边线。
    现码原来是一条 #0D0E12 的实心条 + 上边线(旧 Figma 稿),照原型去掉 ——
@@ -193,7 +188,7 @@ page { background: var(--cy-color-bg-page); }
 .sheet.sheet--story{z-index:109;} /* ds-ok 地点详情位于遮罩上 */
 .mask{ position:absolute; left:0; top:0; right:0; bottom:0; z-index:108;
   background:rgba(0,0,0,.62); animation:fade var(--cy-motion-sheet-full-in) var(--cy-ease-standard); } /* ds-ok 原型 .dim;2026-10-23 与面板同档同曲线(原 .25s) */
-.sheet{ position:absolute; left:0; right:0; bottom:0; z-index:109; background:#000000; /* ds-ok 原型 .sheet */
+.sheet{ position:absolute; left:0; right:0; bottom:0; z-index:109; background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); /* V3-18 纯黑 → 弹层抬升灰 */
   border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 28px */
   /* 88% 在刘海机上顶边会落进胶囊行(12% 高≈101px vs 胶囊底≈103px)——与 .psheet 同法,页面根给实测值,取两者较小 */
   /* C-12(2026-11-02 用户):站点卡内容短时整张撑到 full 档,下面空出一大块黑底。改为 half 档起步、随内容长到 full 档封顶 */
@@ -202,8 +197,8 @@ page { background: var(--cy-color-bg-page); }
 .mask.is-out{ animation:none; opacity:0; transition:opacity var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }
 .sheet.is-out{ animation:none; transform:translateY(105%); transition:transform var(--cy-motion-sheet-full-out) var(--cy-ease-standard); pointer-events:none; }
 .play--reduced-motion .mask, .play--reduced-motion .sheet{ animation:none; }
-.sheet-cover{ position:relative; height:364rpx; background: var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
-.sheet-cover--bare{ height:calc(var(--cy-space-8) + var(--cy-space-6)); } /* 没配图(故事站)只留角标那一条,不再空出一大块黑底 */
+.sheet-cover{ position:relative; height:364rpx; background:transparent; display:flex; align-items:center; justify-content:center; }
+.sheet-cover--bare{ height:calc(var(--cy-space-8) + var(--cy-space-6)); } /* 没配图(故事站)只留角标那一条,不再空出一大块黑底;V3-21 封面不再垫一块灰底 */
 .sheet-cover image{ width:100%; height:100%; position:absolute; inset:0; } /* ds-ok Figma 实测(用户裁决字面值) */
 /* 原占位字在封面底上实测 3.68:1,不达 4.5 ⇒ 收编 text-tertiary(4.72:1) */
 .cover-tip{ font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); } /* ds-ok Figma 实测(用户裁决字面值) */
@@ -220,7 +215,7 @@ page { background: var(--cy-color-bg-page); }
   animation:stamp .5s var(--cy-ease-spring) both; } /* ds-ok Figma 实测(用户裁决字面值) */
 .sheet-body{ padding:var(--cy-space-3) var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom)); } /* ds-ok 原型 .sheet padding 0 24px 22px */
 /* 原型 .grab:40×4,radius 2,白 22%,上 10px 居中 */
-.sheet-grab{ width:77rpx; height:8rpx; border-radius:4rpx; background:rgba(255,255,255,.22); /* ds-ok 原型 .grab */
+.sheet-grab{ width:77rpx; height:8rpx; border-radius:4rpx; background:var(--cy-color-sheet-handle); /* ds-ok 原型 .grab;V3-18 抓手提亮 */
   margin:19rpx auto var(--cy-space-4); }
 /* ★ 半屏正文三档逐条照原型 .h1 / .sub / .mini 抄
  * (2026-09-09 用户裁决:所有页面与 HTML 一模一样)。1px = 1.923rpx。
@@ -237,7 +232,7 @@ page { background: var(--cy-color-bg-page); }
    正文没丢:每一行点进去还是原来那件全文半屏(openStory),所以是换排版不是删内容。
    1px = 1.923rpx。 */
 .jkv{ display:flex; align-items:center; padding:23rpx 0; border-bottom:2rpx solid rgba(255,255,255,.07); } /* ds-ok 原型 .kv 12px 0 / 1px 白 7% */
-.jkv__k{ flex:none; width:123rpx; font-size:23rpx; color:#8A93A0; } /* ds-ok 原型 .dv 12px #8A93A0,.kv .k 宽 64px */
+.jkv__k{ flex:none; width:123rpx; font-size:23rpx; color:#8A93A0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok 原型 .dv 12px #8A93A0,.kv .k 宽 64px */
 .jkv__copy{ flex:1; min-width:0; display:flex; flex-direction:column; margin-left:23rpx; } /* ds-ok 原型 .dcopy + margin-left:12px */
 .jkv__t{ font-size:27rpx; color:#FFFFFF; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 原型 .dt 14px */
 .jkv__s{ margin-top:4rpx; font-size:21rpx; color:#6A7282; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 原型 .ds 11px #6A7282 / 上 2px */
@@ -321,6 +316,8 @@ page { background: var(--cy-color-bg-page); }
 /* 里程碑轴:连成一条线的档位圆点,当前档实心高亮,已过档次之,未到档最淡。
    数字来自真实累计完成主题数(见 index.js loadMilestone),接口没取到时整条不渲染。 */
 .play-loading{ position:fixed; inset:0; z-index:200; display:flex; align-items:flex-start; justify-content:center; padding:0 var(--cy-page-x); box-sizing:border-box; background:var(--cy-color-bg-page); }
+
+.play-back--load{ z-index:201; }
 
 /* 非阻断时间横幅 */
 .play-timebar{ position:fixed; left:0; right:0; top:0; z-index:120; padding:var(--cy-legacy-18) 24rpx; padding-top:calc(18rpx + env(safe-area-inset-top)); text-align:center; background: var(--cy-color-overlay); color: var(--cy-color-play-accent); font-size:26rpx; } /* ds-ok 非阻断时间横幅沿用既有字号 */
@@ -510,7 +507,7 @@ page { background: var(--cy-color-bg-page); }
   -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); /* ds-ok 遮罩只取 alpha,与颜色主题无关 */
   mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); } /* ds-ok 同上 */
 
-.chfull__pad{height:440rpx;}
+.chfull__pad{height:calc(440rpx + env(safe-area-inset-bottom));} /* x-fix4 N-1 底部留白含 Home 条安全区 */
 .chfull__cover{ display:block; width:100%; height:346rpx; border-radius:38rpx; background:#101418; } /* ds-ok 原型 图 180px / r20 / 底 #101418 */
 .chfull__para{display:block;min-height:0;padding:0;font-size:34rpx;line-height:1.95;color:var(--cy-color-text-primary);} /* ds-ok 用户指定原型正文 17px/1.95 */
 /* ★ 内嵌玩法(契约 §1.5):故事流里的这一块。三个变量把 cy-play-stage 从「四边贴死」
@@ -523,9 +520,13 @@ page { background: var(--cy-color-bg-page); }
 /* 内嵌 = 原型 card():标题在外、选项一块分组列表、按钮跟在内容后,没有台面自己的底色。
    ⚠️ 这组变量与 pages/publish/temp/index.wxss 的 .cg-pv-inline-kit 逐条一致(契约测试钉着),
       改一处必须改两处 —— 不一致就是作者预览看到的和玩家看到的不是一个东西。 */
-.chfull__kit{ width:100%; --pe-unfold:1; --pk-card-h:1000rpx; --pk-card-h-tall:1200rpx; --pk-card-radius:var(--cy-radius-lg); --pk-card-pad:56rpx 44rpx 48rpx; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; --pk-embed-bg:var(--atmo-bg, transparent); --pk-embed-ink:var(--atmo-text, var(--cy-color-text-primary)); --pk-embed-sub:var(--atmo-muted, var(--cy-color-text-tertiary)); --pk-embed-soft:var(--atmo-control, rgba(255,255,255,.08)); --pk-embed-accent:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); --pk-embed-ok:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); } /* ds-ok 44rpx = 原型 .card .ct 22px;32rpx 安静挑战内嵌成卡 */
-/* 2026-09-23 用户:内嵌玩法的题目和作答放到屏幕中间 —— 这一块撑满一屏,内容竖向居中(滚到它时锚点对准块顶) */
-.chfull__kit{ min-height:100vh; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; padding-bottom:var(--cy-space-6); }
+.chfull__kit{ width:100%; --pe-unfold:1; --pk-card-h:auto; --pk-card-h-tall:auto; --pk-card-radius:0; --pk-card-pad:var(--cy-space-5) 0 0; --pk-card-bg:transparent; --pk-stage-pos:relative; --pk-stage-height:auto; --pk-stage-body-pos:relative; --pk-stage-bg:transparent; --pk-stage-overflow:visible; --pk-back-display:none; --pk-col-pos:relative; --pk-col-pad:0; --pk-col-align:stretch; --pk-col-text:left; --pk-btn-pos:relative; --pk-btn-x:0; --pk-btn-bottom:0; --pk-btn-mt:var(--cy-space-5); --cy-play-question-size:44rpx; --pk-q-weight:600; --pk-row-justify:flex-start; --pk-qt-radius:32rpx; --pk-embed-bg:var(--atmo-bg, transparent); --pk-embed-ink:var(--atmo-text, var(--cy-color-text-primary)); --pk-embed-sub:var(--atmo-muted, var(--cy-color-text-tertiary)); --pk-embed-soft:var(--atmo-control, rgba(255,255,255,.08)); --pk-embed-accent:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); --pk-embed-ok:var(--look-a, var(--atmo-text, var(--cy-color-text-primary))); } /* ds-ok 44rpx = 原型 .card .ct 22px;32rpx 安静挑战内嵌成卡 */
+/* V3-10/53(2026-11-06 业主「现在这种不是嵌入 只是把之前的全屏缩小了」):内嵌玩法是故事流里的一块,高度跟内容走,
+   不再撑满一屏、不再竖向居中;上方剧情紧接着,往上滑就能回看。滚到它时对准的是块内的 .chfull__kit-anchor(让出顶栏与渐隐)。 */
+.chfull__kit{ position:relative; box-sizing:border-box; padding-top:var(--cy-space-6); padding-bottom:calc(var(--cy-space-6) + env(safe-area-inset-bottom) + 32rpx); } /* ds-ok x-fix5 N-1/N-13 再留 32rpx;x-fix4 N-13 内嵌玩法块的底部按钮(就标这些等)不压 Home 条 */
+.chfull__kit-anchor{ position:absolute; left:0; width:1rpx; height:1rpx; pointer-events:none; }
+/* 要整屏的玩法(摇一摇 / 相册 / 变色就点等):故事流里只留一张入口卡,点开整屏 */
+.chfull__kit .chfull__game-cue{ margin:0 auto; }
 .chfull__collapse{ position:absolute; right:13rpx; bottom:13rpx; color:#8A93A0; /* ds-ok 原型 --t2 */
   width:88rpx; height:88rpx; display:flex; align-items:center; justify-content:center; }
 .chfull__stats{ flex:none; display:flex; gap:19rpx; margin:31rpx 46rpx 0; padding:31rpx 35rpx;
@@ -533,7 +534,7 @@ page { background: var(--cy-color-bg-page); }
 .chstat{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; }
 .chstat__v{ font-size:50rpx; font-weight:800; color:#FFFFFF; line-height:1; font-variant-numeric:tabular-nums; } /* ds-ok 原型 .g3 .v 26px/800 */
 .chstat__l{ margin-top:13rpx; font-size:21rpx; color:#6A7282; } /* ds-ok 原型 .g3 .l 11px #6A7282 / 上 7px */
-.chfull__end{ padding:42rpx 46rpx 0; } /* ds-ok 原型 CTA 上 22px */
+.chfull__end{ padding:42rpx 46rpx calc(env(safe-area-inset-bottom) + 32rpx); } /* ds-ok x-fix5 N-1:各外观下继续按钮离 Home 条再留一截 */ /* ds-ok 原型 CTA 上 22px */
 /* 终章反转:整章翻成对话框。正文段 = 「我」发出去的消息(右侧气泡),反转块 = 对面的回话(左侧)。
    不做过渡:一下子「塌」成聊天记录本身就是那个反转。 */
 .chfull.is-chat .chfull__para.st-line{ margin-bottom:24rpx; opacity:1; transform:none; filter:none; }
@@ -541,6 +542,7 @@ page { background: var(--cy-color-bg-page); }
   padding:20rpx 28rpx; border-radius:36rpx 36rpx 8rpx 36rpx; background:var(--cy-color-bg-surface-strong); /* ds-ok 聊天气泡带尾角 */
   font-size:var(--cy-font-body); line-height:1.6; text-align:left; }
 .chfull__reveal{ margin:48rpx 0 0; text-align:left; }
+.chfull__divider{ height:2rpx; margin:24rpx auto; width:40%; background:var(--cy-border-line); }
 .chfull__reveal-who{ margin-bottom:16rpx; font-size:var(--cy-font-caption); color:var(--cy-color-text-tertiary); text-align:center; }
 .chfull__reveal-b{ display:table; max-width:76%; margin:0 0 16rpx; padding:20rpx 28rpx; border-radius:36rpx 36rpx 36rpx 8rpx; /* ds-ok 聊天气泡带尾角 */
   background:var(--cy-color-bg-elevated); font-size:var(--cy-font-body); line-height:1.6; color:var(--cy-color-text-primary); }
@@ -593,7 +595,7 @@ page { background: var(--cy-color-bg-page); }
  * 行本身(.drow/.dic/.dcopy/.dt/.ds/.dv/.darr/.dsw)在 style/proto-sheet.wxss 里,与漫游抽屉同一份;
  * 这儿只留抽屉面自己:黑底 + 顶部 28px 圆角、左右 24px、底 26px(原型 .sheet + .drw)。
  * ⚠️ 原型没有内层那张卡 —— 行直接排在黑面上,别再套回 #1E2028 的圆角卡。 */
-.pbar--tools{ background:#000000; border-top:none; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 .sheet 28px */
+.pbar--tools{ background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-top:none; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; /* ds-ok 原型 .sheet 28px */
   padding-bottom:calc(50rpx + env(safe-area-inset-bottom)); } /* ds-ok 原型 .drw padding-bottom 26px */
 .tools{ box-sizing:border-box; margin-top:19rpx; padding:0 46rpx; max-height:52vh; } /* ds-ok 原型 .drw padding 0 24px */
 .tools .drow:first-child{ border-top:0; } /* ds-ok 原型 .drw .grab + .drow */
@@ -617,8 +619,8 @@ page { background: var(--cy-color-bg-page); }
 .gp2mask{ position:absolute; inset:0; z-index:69; background:rgba(0,0,0,.55); } /* ds-ok Figma 实测(用户裁决字面值) */
 /* 任务=弹窗不是全屏(用户裁决):底部半屏 sheet,地图还看得见 */
 .gp2{ position:absolute; left:0; right:0; bottom:0; z-index:70; height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); max-height:min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); box-sizing:border-box;
-  background:#0A0A0A; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; display:flex; flex-direction:column; } /* ds-ok Figma 实测(用户裁决字面值) */
-.gp2__grab{ width:76rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:#4A5565; margin:23rpx auto 8rpx; flex:none; } /* ds-ok Figma 实测(用户裁决字面值) */
+  background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; display:flex; flex-direction:column; } /* V3-18 纯黑 → 弹层抬升灰 */
+.gp2__grab{ width:76rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-sheet-handle); margin:23rpx auto 8rpx; flex:none; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__head{ flex:none; display:flex; align-items:center; padding:0 31rpx 8rpx; }
 .gp2__back{ width:88rpx; height:88rpx; display:flex; align-items:center; justify-content:center; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 .gp2__back--ghost{ pointer-events:none; opacity:0; }
@@ -717,7 +719,7 @@ page { background: var(--cy-color-bg-page); }
 .gp2[class*="atmosphere--"] .gp2__ctl-b{ color:var(--atmo-muted); }
 .gp2__ctl{ margin-top:31rpx; display:flex; justify-content:space-between; }
 .gp2__ctl-a,.gp2__ctl-b{ font-size:25rpx; color:#6A7282; text-decoration:underline; } /* ds-ok Figma 实测(用户裁决字面值) */
-.gp2__ctaw{ padding:15rpx 31rpx calc(31rpx + env(safe-area-inset-bottom)); background:#0A0A0A; } /* ds-ok Figma 实测(用户裁决字面值) */
+.gp2__ctaw{ padding:15rpx 31rpx calc(31rpx + env(safe-area-inset-bottom)); background:transparent; } /* V3-18 底栏透出弹层同一张灰 */
 /* 底栏上沿渐隐:滚动区下一行字被底栏一刀切成半截,看着像被遮住(2026-10-27 实测),渐隐告诉玩家下面还有内容 */
 .gp2__ctaw{ position:relative; }
 .gp2__ctaw::before{ content:''; position:absolute; left:0; right:0; top:-64rpx; height:64rpx; pointer-events:none; background:linear-gradient(180deg, rgba(10,10,10,0), #0A0A0A); } /* ds-ok 与底栏同色 */
@@ -766,8 +768,8 @@ page { background: var(--cy-color-bg-page); }
 /* 章节选择弹窗(自由探索) */
 .chpick-mask{ position:absolute; inset:0; z-index:64; background:rgba(0,0,0,.55); } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick{ position:absolute; left:0; right:0; bottom:0; z-index:65; max-height:70vh; overflow-y:auto;
-  background:#0A0A0A; border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; padding:0 31rpx calc(31rpx + env(safe-area-inset-bottom)); } /* ds-ok Figma 实测(用户裁决字面值) */
-.chpick__grab{ width:76rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:#4A5565; margin:23rpx auto 8rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
+  background:var(--cy-comp-sheet-player-glass); backdrop-filter:blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter:blur(var(--cy-comp-sheet-blur)); border-radius:var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; padding:0 31rpx calc(31rpx + env(safe-area-inset-bottom)); } /* ds-ok Figma 实测(用户裁决字面值) */
+.chpick__grab{ width:76rpx; height:12rpx; border-radius:var(--cy-radius-pill); background:var(--cy-color-sheet-handle); margin:23rpx auto 8rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick__hd{ font-size:34rpx; font-weight:700; color:#FFFFFF; padding:8rpx 0 15rpx; } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick__row{ display:flex; align-items:center; gap:23rpx; padding:19rpx; border-radius:31rpx; margin-bottom:15rpx; /* ds-ok Figma 实测(用户裁决字面值) */
   background:#111318; } /* ds-ok Figma 实测(用户裁决字面值) */
@@ -779,6 +781,7 @@ page { background: var(--cy-color-bg-page); }
 .chpick__meta{ font-size:21rpx; color:#6A7282; } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick__title{ font-size:31rpx; font-weight:700; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } /* ds-ok Figma 实测(用户裁决字面值) */
 .chpick__sub{ font-size:23rpx; color:#6A7282; } /* ds-ok Figma 实测(用户裁决字面值) */
+.chpick__row.is-locked{ opacity:.4; } /* f-play V3-09:还没解锁的章压暗,点了不进(onPickChapter 同一判据) */
 .chpick__check{ flex:none; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
 
 /* ===== 完赛路线推荐卡(#555,finsheet 内)+ 场景栈宿主(#572)—— 样式随 master ===== */
@@ -954,6 +957,11 @@ page { background: var(--cy-color-bg-page); }
    袋身铺整幅;上下封口用同一张图,靠父级 overflow:hidden 各露出一条。
    (2026-08-12 那轮「用 CSS 画镭射」的兜底到此作废:真图一上,渐变全是多余的。) */
 .fx-pack__foil{ position:absolute; left:0; top:0; width:100%; height:100%; }
+/* x-fix7 P-6:主题名印在膜面上。膜是浅色的,字必须是黑的;位置沿用原型(主标从包高 26.5% 起)。
+   包边的半透明白毛边已在 pack-foil.png 里清掉(alpha<200 的边缘像素置空)。 */
+.fx-pack__print{ position:absolute; left:52rpx; right:40rpx; top:196rpx; }
+.fx-pack__t{ display:block; font-size:74rpx; font-weight:800; line-height:.98; letter-spacing:-2rpx; /* ds-ok 包装印刷:实物尺度,不属于页面字阶 */
+  color:#0A0A0A; word-break:break-all; } /* ds-ok 浅色镭射膜上的黑色印刷 */
 /* 封口压边:细齿纹 —— 塑料袋的辨识度大半在这两条 */
 .fx-pack__seal{ position:absolute; left:0; right:0; overflow:hidden; }
 /* 封口占比按实物定稿:上 12%、下 5%。撕口/袋口片跟着上封口走。 */
@@ -1562,7 +1570,9 @@ page { background: var(--cy-color-bg-page); }
    (btn-h + 104rpx),再垫一个 260rpx 就是**重复计一次**——实拍量到末行离按钮 168px,
    而样机(.body padding-bottom:140px,容器直落到屏底)只有 56px。
    CTA 盒顶 = btn-h + 124rpx,容器底 = btn-h + 104rpx,只有 20rpx 被压住,48rpx 足够。 */
-.fx-hero__pad{ height:48rpx; }
+.fx-hero__pad{ height:calc(var(--cy-btn-h) + 124rpx + env(safe-area-inset-bottom)); }
+/* x-fix7 P-5(业主最终验收):到店三步在首屏被底部「到店打卡」条压住。滚动内容尾部垫一个底栏高度(按钮高 + 上下 124rpx)+ 安全区,
+   滚到底时最后一行(出示入场码/三步)整条停在底栏之上;上面那段「只垫 48rpx」的推算取代为此。 */
 /* 和故事流底栏同一条:上面 88rpx 渐隐、其下纯色。
    只用一条渐变「差不多压住」时,正文会从按钮底下透出来(故事流那边实拍抓到过)。 */
 /* 只用渐隐,**不要实心黑块** —— 实心会在按钮下方糊出一整条,把正文挡掉一截。
@@ -1816,7 +1826,7 @@ page { background: var(--cy-color-bg-page); }
 .pv-ending__chip.is-on{ background:#FFFFFF; color:#000000; } /* ds-ok 反色中性 */
 
 /* 罗盘小地图(2026-09-23):盖在故事流之上、预览顶条之下;地图原生层整屏铺满,返回钮与下一站卡浮在上面。 */
-.story-map{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:108; background:#000000; } /* ds-ok 压过 .chfull(106),低于结局卡(110) */
+.story-map{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:108; background:var(--lk-bg, #000000); } /* ds-ok 压过 .chfull(106),低于结局卡(110) */
 .story-map__map{ position:absolute; left:0; right:0; top:0; bottom:0; }
 /* 第九轮 m2 第 2 项:同场队伍头像一排(原型 m-team .mz-rail),点一队地图跟随 */
 .team-rail{ position:absolute; right:var(--cy-page-x); z-index:2; display:flex; flex-direction:column; gap:var(--cy-space-3); }
@@ -1863,9 +1873,15 @@ page { background: var(--cy-color-bg-page); }
   padding:0 46rpx calc(env(safe-area-inset-bottom) + 48rpx); display:flex; flex-direction:column;
   background:var(--atmo-bg, #000000); opacity:1; transition:opacity .4s ease; } /* ds-ok 跟着所选画面风格的默认章节底色(星尘=纯黑) */
 .st-intro--out{ opacity:0; }
+/* f-play 顶部缺图:原型 gp-start 的 gm-bg —— 封面 .55 透明、轻模糊、去饱和,上下两端退到底色,标题压在上面读得清 */
+.st-intro__bg{ position:absolute; left:0; right:0; top:0; bottom:0; overflow:hidden; pointer-events:none; }
+.st-intro__im{ position:absolute; left:-4%; top:-4%; width:108%; height:108%; opacity:.55; filter:blur(4rpx) saturate(.5); } /* ds-ok 原型 gp-start 封面 opacity .55 / blur 2px / saturate .5 */
+.st-intro__bg::after{ content:""; position:absolute; left:0; right:0; top:0; bottom:0;
+  background:linear-gradient(180deg, var(--atmo-bg, #000000) 0%, transparent 30%, transparent 50%, var(--atmo-bg, #000000) 92%); } /* ds-ok 原型 gm-bg::after 同一组断点 */
+.st-intro__body, .st-intro__go{ position:relative; }
 .st-intro__body{ flex:1; display:flex; flex-direction:column; justify-content:center; }
 .st-intro__k{ font-size:21rpx; letter-spacing:4rpx; color:var(--atmo-muted, rgba(255,255,255,.6)); } /* ds-ok 同 .pv-ending__k */
-.st-intro__t{ margin-top:23rpx; font-size:80rpx; font-weight:800; line-height:1.15; color:var(--atmo-text, #FFFFFF); } /* ds-ok 原型开场大标题 */
+.st-intro__t{ margin-top:23rpx; font-size:56rpx; font-weight:800; line-height:1.2; color:var(--atmo-text, #FFFFFF); display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; text-overflow:ellipsis; word-break:break-all; } /* ds-ok D9:开场标题与其它开场页同量级(56rpx),最多两行加省略号,不再 80rpx 排成四行 */
 .st-intro__line{ margin-top:23rpx; font-size:29rpx; line-height:1.7; color:var(--atmo-muted, rgba(255,255,255,.72)); } /* ds-ok 同 .pv-ending__copy */
 .st-intro__go{ height:104rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮,同 .pv-ending__go */
   background:var(--atmo-text, #FFFFFF); color:var(--atmo-bg, #000000); font-size:31rpx; font-weight:700; } /* ds-ok 玩家主按钮=反色中性,跟画面风格 */
@@ -2080,3 +2096,60 @@ page { background: var(--cy-color-bg-page); }
 .chapter-video { position: fixed; inset: 0; z-index: var(--cy-z-modal); background: var(--cy-color-play-page); }
 .chapter-video__film, .chapter-video__poster { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
 .chapter-video__skip { position: absolute; top: calc(env(safe-area-inset-top) + 100rpx); right: 32rpx; padding: 20rpx 28rpx; color: var(--cy-color-play-accent); background: var(--cy-color-play-surface); border-radius: var(--cy-radius-pill); }
+/* a1-v3-10-53 故事流里整屏玩法的入口卡:封面 + 类型 + 名字,右侧一颗播放钮;不写「打开」。
+   横排一张卡,封面方块在左(站点配图;没有图时是玩法图标),按下微缩;颜色走玩家弹层 token。 */
+.chfull__kitcard{ display:flex; box-sizing:border-box; margin:0 var(--cy-page-x); flex-direction:row; align-items:center; gap:var(--cy-space-3);
+  padding:var(--cy-space-3); text-align:left; border-radius:var(--cy-radius-xl);
+  background:var(--cy-comp-sheet-player-surface); box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong);
+  transition:transform var(--cy-motion-fast) var(--cy-ease-standard); }
+.chfull__kitcard--press{ transform:scale(.98); }
+.chfull__kitcard-cover{ flex:none; position:relative; width:136rpx; height:136rpx; border-radius:var(--cy-radius-lg); overflow:hidden;
+  display:flex; align-items:center; justify-content:center; background:var(--cy-comp-sheet-player-elevated); color:var(--cy-comp-sheet-player-text); }
+.chfull__kitcard-img{ position:absolute; left:0; top:0; width:100%; height:100%; }
+.chfull__kitcard-copy{ flex:1; min-width:0; display:flex; flex-direction:column; gap:var(--cy-space-1); }
+.chfull__kitcard-type{ font-size:var(--cy-type-label); color:var(--cy-comp-sheet-player-text-secondary); }
+.chfull__kitcard-title{ font-weight:700;  font-size:var(--cy-type-body); color:var(--cy-comp-sheet-player-text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chfull__kitcard-play{ flex:none; width:var(--cy-btn-h); height:var(--cy-btn-h); border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--cy-comp-sheet-player-text); }
+.chfull__kitcard-tri{ width:0; height:0; margin-left:6rpx; border-top:14rpx solid transparent; border-bottom:14rpx solid transparent; border-left:22rpx solid var(--cy-comp-sheet-player-page); }
+@media (prefers-reduced-motion: reduce){ .chfull__kitcard{ transition:none; } .chfull__kitcard--press{ transform:none; } }
+/* a1-v3-21 城市定向站点 = 整屏游戏画面:顶到屏顶、无圆角、无抓手;封面放大成主视觉,没配图时是一块带站号的深色主视觉;关闭在右上角胶囊下方 */
+.sheet.sheet--game{ top:0; border-radius:0; min-height:100vh; max-height:none; display:flex; flex-direction:column; }
+.sheet--game .sheet-cover{ flex:none; height:56vh; }
+.sheet--game .sheet-cover--bare{ height:38vh; background:var(--cy-comp-sheet-player-elevated); }
+.sheet--game .cover-tag{ top:auto; bottom:var(--cy-space-5); }
+.sheet--game .cover-open{ top:auto; bottom:var(--cy-space-5); }
+.sheet--game .cover-fade{ height:240rpx; background:linear-gradient(to top,var(--cy-comp-sheet-player-glass),transparent); }
+.sheet--game .sheet-grab{ display:none; }
+.sheet--game .sheet-body{ flex:1; }
+.sheet--game .sheet-name{ font-size:var(--cy-type-page-title); margin-top:var(--cy-space-2); }
+.sheet-x{ position:absolute; right:var(--cy-page-x); z-index:3; width:var(--cy-btn-h); height:var(--cy-btn-h); border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--cy-color-bg-glass); color:var(--cy-color-text-primary); }
+/* r2-finish s0-b1-run-ending(业主「本局完成应该有庆祝 然后要有动画效果的」):真玩家结局整屏居中,白色印章弹入 + 两圈光环外扩 + 共享彩旗。
+   只用 transform/opacity;减弱动态时印章直接落位、光环不出(.pv-ending--reduced)。 */
+.pv-ending__body{ min-height:100%; display:flex; flex-direction:column; }
+.pv-ending__body--real{ justify-content:center; align-items:center; text-align:center; padding-bottom:calc(env(safe-area-inset-bottom) + 96rpx); box-sizing:border-box; }
+.pv-ending__body--real .life-arc{ align-self:stretch; }
+.pv-ending__body--real .pv-ending__go{ align-self:stretch; }
+/* l-play:结局印章 / 光环的 keyframes 已删(改为 play-stage.wxss 的过渡;theme-look 要求故事文字动效段之后不出现 animation) */
+.pv-ending__confetti{ position:absolute; inset:0; z-index:2; pointer-events:none; --cy-motion-celebrate:2200ms; --cy-color-play-accent:#FFFFFF; } /* ds-ok 结局庆祝:彩旗落得慢一点、用白色(游玩页单色契约),看得见 */
+
+/* r2-finish s0-b8-u08-01 完成页收拾:路线卡在时标题行提到最上;卡上已写距离/用时/站数,下面不再重复大数字和这两格;
+   底部按钮落在实底托盘上(原来的黑色光晕盖不住,大数字从按钮下面露出来)。圆角走按钮 token。 */
+.finsheet__top{ padding:0 0 var(--cy-space-4); display:flex; flex-direction:column; align-items:flex-start; gap:12rpx; }
+.finsheet__card + .finsheet__grid .fst--hero, .finsheet__card + .finsheet__grid .fst--dup{ display:none; }
+.finsheet__dock{ position:fixed; z-index:4; left:0; right:0; bottom:0; height:calc(200rpx + env(safe-area-inset-bottom)); background:var(--cy-color-play-story-page); }
+.finsheet__dock--two{ height:calc(323rpx + env(safe-area-inset-bottom)); }
+.finsheet .finsheet__cta{ box-shadow:none; border-radius:var(--cy-comp-btn-radius); }
+.finsheet__settle{ position:fixed; z-index:5; left:38rpx; right:38rpx; bottom:calc(188rpx + env(safe-area-inset-bottom)); height:104rpx; border-radius:var(--cy-comp-btn-radius);
+  display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; background:var(--cy-color-play-story-text); color:var(--cy-color-play-story-page); }
+.finsheet__settle + .finsheet__cta{ background:transparent; color:var(--cy-color-play-story-muted); font-weight:600; } /* D14:有「查看结算」主按钮时,「继续」退成文字按钮;保存图片 · 分享仍同一行 */
+.finsheet__pad{ height:123rpx; }
+/* x-fix6 R4-2:两颗底部按钮(查看结算 + 继续)时底座高 123rpx,路线卡按同量再收,「保存图片 / 分享」整行落在底座之上 */
+.finsheet--two .finsheet__routecv{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 1023rpx) * 3 / 4)); }
+
+/* x-fix2 P-6:卡包首屏 / 故事开场的返回钮,与 fx-story__back 同形 */
+.play-back{ position:fixed; left:var(--cy-page-x); z-index:122; width:var(--cy-btn-h); height:var(--cy-btn-h); border-radius:50%;
+  background:var(--cy-color-bg-elevated); color:var(--cy-color-text-primary); display:flex; align-items:center; justify-content:center; }
+/* x-fix2 P-7:右上角有状态角标(未到店/已体验)时,章节名整列下移到角标下面,不再钻到角标底下 */
+.fx-tile__tags--below{ top:68rpx; }

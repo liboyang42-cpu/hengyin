@@ -366,14 +366,20 @@ test('执行俱乐部接受承接后，主行动直接进入场次运营', () =>
 
 test('管理阶段失败后的 primary 会同时重拉主题、探店日期次、项目与邀约，不留死锁', () => {
   const { page, requests } = loadDetail()
-  Object.assign(page.data, { clubId: 9, club: { id: 9, isOwner: true }, ownerStage: 'error' })
+  Object.assign(page.data, { clubId: 9, club: { id: 9, isOwner: true }, ownerStage: 'error', isMerchantViewer: true })
   page.onOwnerPrimary()
   assert.deepEqual(requests.map((request) => request.url), [
     '/api/club/topics',
     '/api/club-compensation/editions',
     '/api/project/my',
+    // 有商家身份(isMerchantViewer)时照常拉邀约
     '/api/coop/list',
   ])
+  // x-fix7 N-18:没有商家身份的主理人不请求商家专用的 /api/coop/list
+  const plain = loadDetail()
+  Object.assign(plain.page.data, { clubId: 9, club: { id: 9, isOwner: true }, ownerStage: 'error', isMerchantViewer: false })
+  plain.page.onOwnerPrimary()
+  assert.ok(!plain.requests.some((request) => request.url === '/api/coop/list'))
 })
 
 test('待回应 primary 进管理 tab 后直达「我发出的邀约」', () => {

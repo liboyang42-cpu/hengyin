@@ -1,43 +1,70 @@
-/* 通用分享页(P-8):底色随色块,卡片居中偏下;渠道圆钮 64px、横向滑动 */
+/* 通用分享页(P-8;r3-share 改版,参考 refs4/share-page-cards):页面是压暗的色块底,中间一张整色卡;
+   卡 560×896rpx(导出图 750×1200 的 0.7467 倍),上半封面、下沿一道弧、徽标压在弧上、两行大标题;卡下色块圆点 + 一颗主按钮 + 一排小渠道 */
 .sc { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: calc(var(--cy-z-sheet) + 10); box-sizing: border-box; display: flex; flex-direction: column; background: var(--sc-bg); color: var(--cy-color-text-primary); transition: background .3s; }
-.sc-top { flex: none; height: 88rpx; display: flex; align-items: center; padding: 0 204rpx 0 16rpx; }
+.sc::before { content: ""; position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, .45); pointer-events: none; } /* ds-ok 页面压暗,卡片保留整色 */
+.sc-top { position: relative; flex: none; height: 88rpx; display: flex; align-items: center; padding: 0 204rpx 0 16rpx; }
 .sc-x, .sc-sp { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
 .sc-h { flex: 1; text-align: center; font-size: var(--cy-type-card-title); font-weight: 700; }
-.sc-stage { flex: 1; display: flex; align-items: flex-end; justify-content: center; padding: 48rpx 0 32rpx; }
-.sc-card { position: relative; display: flex; flex-direction: column; width: 560rpx; min-height: 820rpx; border-radius: var(--cy-radius-xl); overflow: hidden; background: rgba(0, 0, 0, .28); box-shadow: 0 24rpx 60rpx rgba(0, 0, 0, .35); } /* ds-ok P-8 卡片压在色块底上 */
-.sc-in { position: relative; flex: 1; display: flex; flex-direction: column; padding: 40rpx; box-sizing: border-box; }
-.sc-eb { font-size: var(--cy-type-label); font-weight: 600; color: rgba(255, 255, 255, .7); } /* ds-ok 卡片压字 */
-.sc-t { margin-top: 12rpx; font-size: var(--cy-type-sheet-title); font-weight: 800; line-height: 1.2; color: #FFFFFF; } /* ds-ok 卡片压字 */
-.sc-m { margin-top: 8rpx; font-size: var(--cy-type-body); color: rgba(255, 255, 255, .7); } /* ds-ok 卡片压字 */
-.sc-c { text-align: center; }
-.sc-foot { margin-top: auto; display: flex; align-items: flex-end; justify-content: space-between; padding-top: 32rpx; }
+.sc-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 16rpx 0; }
+
+.sc-card { position: relative; flex: none; width: 560rpx; height: 896rpx; border-radius: var(--cy-radius-xl); overflow: hidden; background: var(--sc-bg); box-shadow: 0 32rpx 80rpx rgba(0, 0, 0, .45), inset 0 0 0 2rpx rgba(255, 255, 255, .08); transition: background .3s, opacity .42s cubic-bezier(.2, .8, .2, 1), transform .42s cubic-bezier(.2, .8, .2, 1); } /* ds-ok P-8 整色卡投影 */
+.sc-art { position: absolute; left: 0; top: 0; width: 560rpx; height: 463rpx; background: rgba(0, 0, 0, .22); overflow: hidden; } /* ds-ok 无封面时的上半压暗 */
+.sc-cover { display: block; width: 560rpx; height: 463rpx; }
+/* 弧:椭圆上沿压住封面下沿,两边比中间低(导出图同一椭圆) */
+.sc-arc { position: absolute; left: -168rpx; top: 403rpx; width: 896rpx; height: 545rpx; border-radius: 50%; background: var(--sc-bg); transition: background .3s; }
+.sc-badge { position: absolute; left: 228rpx; top: 351rpx; width: 104rpx; height: 104rpx; border-radius: 28rpx; display: flex; align-items: center; justify-content: center; background: #FFFFFF; box-shadow: 0 12rpx 32rpx rgba(0, 0, 0, .35); transition: opacity .5s cubic-bezier(.3, 1.5, .5, 1) .18s, transform .5s cubic-bezier(.3, 1.5, .5, 1) .18s; } /* ds-ok 徽标白底 */
+.sc-badge-img { width: 76rpx; height: 76rpx; }
+.sc-in { position: absolute; left: 0; right: 0; top: 479rpx; bottom: 0; display: flex; flex-direction: column; align-items: center; padding: 0 40rpx 32rpx; box-sizing: border-box; text-align: center; transition: opacity .42s ease-out .24s, transform .42s ease-out .24s; }
+.sc-eb { max-width: 100%; box-sizing: border-box; padding: 0 20rpx; line-height: 44rpx; border-radius: var(--cy-radius-pill); background: rgba(255, 255, 255, .16); font-size: var(--cy-type-label); font-weight: 600; color: rgba(255, 255, 255, .86); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* ds-ok 卡片压字;一行,与导出图同(qx-a7) */
+.sc-big { margin-top: 24rpx; max-width: 100%; font-size: 54rpx; line-height: 66rpx; font-weight: 900; color: #FFFFFF; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: break-word; } /* ds-ok 卡片压字;两行大标题 */
+.sc-m { margin-top: 16rpx; max-width: 100%; font-size: var(--cy-type-body); line-height: 36rpx; color: rgba(255, 255, 255, .78); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* ds-ok 卡片压字 */
+.sc-foot { margin-top: auto; align-self: stretch; display: flex; align-items: flex-end; justify-content: space-between; }
 .sc-brand { font-size: var(--cy-type-card-title); font-weight: 800; color: #FFFFFF; } /* ds-ok 卡片压字 */
-.sc-qr { width: 120rpx; height: 120rpx; padding: 8rpx; border-radius: var(--cy-radius-sm); background: #FFFFFF; } /* ds-ok 小程序码白底 */
-.sc-card--act .sc-cover { display: block; width: 560rpx; height: 420rpx; }
-.sc-card--shop .sc-qr { width: 168rpx; height: 168rpx; }
-.sc-card--shop .sc-m { color: rgba(255, 255, 255, .88); text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, .6); } /* ds-ok 照片上的地址行(rig 走查:亮照片上看不清) */
-.sc-when { display: flex; flex-direction: column; margin-top: 16rpx; }
-.sc-date { font-size: var(--cy-type-data-xl); line-height: 1; font-weight: 900; font-style: italic; color: #FFFFFF; } /* ds-ok 卡片压字 */
-.sc-whenl { margin-top: 8rpx; font-size: var(--cy-type-label); color: rgba(255, 255, 255, .7); } /* ds-ok 卡片压字 */
-.sc-bgimg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
-.sc-shade { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, .55); } /* ds-ok 封面压暗 */
-.sc-big { margin-top: 12rpx; font-size: var(--cy-type-data-xl); line-height: 1.05; font-weight: 900; font-style: italic; color: #FFFFFF; } /* ds-ok 卡片压字 */
-.sc-line { margin-top: 40rpx; display: flex; flex-direction: column; }
-.sc-line-i { position: relative; display: flex; align-items: center; gap: 20rpx; min-height: 76rpx; }
-.sc-line-i + .sc-line-i::before { content: ""; position: absolute; left: 19rpx; top: -38rpx; width: 3rpx; height: 58rpx; background: rgba(255, 255, 255, .4); } /* ds-ok 路线竖线 */
-.sc-line-dot { position: relative; z-index: 1; flex: none; width: 40rpx; height: 40rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #FFFFFF; color: #121317; font-size: var(--cy-type-caption); font-weight: 800; } /* ds-ok 站点编号圆点 */
-.sc-line-t { font-size: var(--cy-type-body); font-weight: 600; color: #FFFFFF; } /* ds-ok 卡片压字 */
-.sc-medal { display: flex; align-items: center; justify-content: center; height: 420rpx; color: #E9B44C; } /* ds-ok 勋章金 */
-.sc-medal-img { width: 300rpx; height: 300rpx; }
-.sc-sw { flex: none; display: flex; justify-content: center; gap: 4rpx; padding: 0 0 16rpx; }
-.sc-swatch { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
-.sc-dot { width: 56rpx; height: 56rpx; border-radius: 50%; box-shadow: inset 0 0 0 3rpx rgba(255, 255, 255, .35); } /* ds-ok 色块描边 */
-.sc-swatch.is-on .sc-dot { box-shadow: 0 0 0 5rpx #FFFFFF; } /* ds-ok 当前色块 */
-.sc-ch { flex: none; white-space: nowrap; padding-bottom: calc(32rpx + env(safe-area-inset-bottom)); }
-.sc-ch-i { display: inline-flex; flex-direction: column; align-items: center; gap: 12rpx; width: 152rpx; vertical-align: top; font-size: var(--cy-type-label); color: #FFFFFF; } /* ds-ok 色块底上的白字 */
-.sc-ch-i:first-child { margin-left: 24rpx; }
-.sc-ch-btn { width: 152rpx !important; min-width: 0; margin: 0; padding: 0; line-height: normal; background: transparent; border-radius: 0; } /* 原生 button 默认宽度会把第一格撑宽 */
-.sc-ch-btn::after { border: 0; }
-.sc-ch-c { width: 128rpx; height: 128rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .14); } /* ds-ok P-8 渠道圆钮 64px */
+.sc-qr { width: 100rpx; height: 100rpx; padding: 6rpx; border-radius: var(--cy-radius-sm); background: #FFFFFF; } /* ds-ok 小程序码白底 */
+/* f-pages G-11(2026-11-11):码出现动效 —— 码图读好之前不占视觉(opacity 0、缩到 .6),bindload 后弹到位;只用过渡,减少动态效果下直接到终态 */
+.sc-qr { opacity: 0; transform: scale(.6); transition: opacity var(--cy-motion-standard) var(--cy-ease-out), transform var(--cy-motion-reveal, 450ms) var(--cy-ease-spring); }
+.sc-qr--ready { opacity: 1; transform: scale(1); }
+.sc-qr--static { transition: none; }
+@media (prefers-reduced-motion: reduce) { .sc-qr { opacity: 1; transform: none; transition: none; } }
+.sc-card--shop .sc-qr { width: 128rpx; height: 128rpx; }
+/* 勋章:上半是勋章本身,后面一圈暖光 */
+.sc-glow { position: absolute; left: 80rpx; top: 17rpx; width: 400rpx; height: 400rpx; border-radius: 50%; background: radial-gradient(circle, rgba(255, 214, 120, .45) 0%, rgba(255, 214, 120, 0) 70%); } /* ds-ok 勋章暖光 */
+.sc-medal { position: absolute; left: 0; right: 0; top: 0; height: 434rpx; display: flex; align-items: center; justify-content: center; color: #E9B44C; } /* ds-ok 勋章金 */
+.sc-medal-img { width: 224rpx; height: 224rpx; }
+
+/* l-after 邀请卡:封面压暗铺满(没有封面就是色块),文字左对齐,路线点竖排,邀请人一行,底部字标 + 码 */
+.sc-card--invite .sc-inv-bg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.sc-card--invite .sc-inv-shade { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, .55); } /* ds-ok 封面压暗,白字可读 */
+.sc-inv { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; padding: 40rpx; box-sizing: border-box; text-align: left; }
+.sc-inv-eb { font-size: var(--cy-type-label); font-weight: 600; color: rgba(255, 255, 255, .7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* ds-ok 卡片压字 */
+.sc-inv-big { margin: 16rpx 0 28rpx; font-size: 64rpx; line-height: 1.05; font-weight: 900; font-style: italic; color: #FFFFFF; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } /* ds-ok 卡片压字;大斜体标题 */
+.sc-inv-line { flex: 1; display: flex; flex-direction: column; }
+.sc-inv-step { position: relative; display: flex; align-items: center; gap: 20rpx; min-height: 68rpx; font-size: var(--cy-type-body); font-weight: 600; color: #FFFFFF; } /* ds-ok 卡片压字 */
+.sc-inv-step + .sc-inv-step::before { content: ''; position: absolute; left: 19rpx; top: -28rpx; height: 28rpx; border-left: 3rpx solid rgba(255, 255, 255, .4); } /* ds-ok 路线连线 */
+.sc-inv-dot { flex: none; width: 40rpx; height: 40rpx; border-radius: 50%; background: #FFFFFF; color: #121317; font-size: var(--cy-type-caption); font-weight: 800; line-height: 40rpx; text-align: center; } /* ds-ok 路线点 */
+.sc-inv-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-inv-who { display: flex; align-items: center; gap: 16rpx; margin: 8rpx 0 12rpx; font-size: var(--cy-type-label); color: rgba(255, 255, 255, .85); } /* ds-ok 卡片压字 */
+.sc-inv-art { flex: none; width: 72rpx; height: 72rpx; }
+.sc-qr--inv { width: 112rpx; height: 112rpx; }
+
+.sc-sw { position: relative; flex: none; display: flex; justify-content: center; gap: 0; }
+.sc-swatch { position: relative; width: 72rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
+/* 命中区 44px:透明 ::after 撑到 88rpx 见方,视觉尺寸不变 */
+.sc-swatch::after { content: ''; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); }
+.sc-dot { width: 32rpx; height: 32rpx; border-radius: 50%; box-shadow: inset 0 0 0 3rpx rgba(255, 255, 255, .35); transition: transform .2s; } /* ds-ok 色块描边 */
+.sc-swatch.is-on .sc-dot { transform: scale(1.25); box-shadow: 0 0 0 4rpx #FFFFFF; } /* ds-ok 当前色块 */
+
+.sc-acts { position: relative; flex: none; display: flex; flex-direction: column; gap: 24rpx; padding: 8rpx 48rpx calc(24rpx + env(safe-area-inset-bottom)); }
+.sc-primary { width: 100% !important; height: 96rpx; margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-comp-btn-radius); background: #FFFFFF; color: #121317; font-size: var(--cy-type-body); font-weight: 700; line-height: normal; } /* ds-ok 色块底上的白色主按钮 */
+.sc-primary::after { border: 0; }
+.sc-ch { display: flex; justify-content: space-between; }
+.sc-ch-i { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8rpx; font-size: var(--cy-type-caption); color: rgba(255, 255, 255, .86); } /* ds-ok 色块底上的白字 */
+.sc-ch-c { width: 88rpx; height: 88rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, .14); color: #FFFFFF; } /* ds-ok P-8 渠道圆钮 */
 .sc-cv { position: fixed; left: -9999rpx; top: 0; width: 750px; height: 1200px; }
 .cy-pressed { opacity: .88; }
+
+/* 打开即进场:enter(scIn) 先挂 sc--pre(各自起点、无过渡),34ms 后撤掉 —— 卡片上浮、徽标弹出、文字随后浮上(只用 transition,不占 keyframes) */
+.sc--pre .sc-card { opacity: 0; transform: translateY(48rpx) scale(.96); transition: none; }
+.sc--pre .sc-badge { opacity: 0; transform: scale(.4); transition: none; }
+.sc--pre .sc-in { opacity: 0; transform: translateY(24rpx); transition: none; }
+@media (prefers-reduced-motion: reduce) { .sc .sc-card, .sc .sc-badge, .sc .sc-in { opacity: 1; transform: none; } .sc, .sc .sc-card, .sc .sc-badge, .sc .sc-in, .sc-arc, .sc-dot { transition: none; } }

@@ -203,7 +203,7 @@ Page({
     glFail: false,
     badges: [],
     badgeGroups: [],
-    viewMode: 'list',
+    viewMode: 'list', iconBroken: {},
     unlockedCount: 0,
     lockedCount: 0,
     sheetOn: false, pins: {},
@@ -401,7 +401,7 @@ Page({
     const ring = ringOf(unlockedCount, list.length);
     this.setData({
       loaded: true,
-      badges: list,
+      badges: list, iconBroken: {},
       badgeGroups: badgeGroups,
       unlockedCount: unlockedCount,
       lockedCount: list.length - unlockedCount,
@@ -471,6 +471,13 @@ Page({
     if (!this.data.sheetOn) return;
     this.setData({ sheetOn: false });
     if (this.engine) this.engine.closeDetail();
+  },
+
+  /** x-fix2 M-2:单枚图片加载失败(地址签不出 / 404)只把这一枚降级,不报整页错 */
+  onIconError(e) {
+    const idx = e && e.currentTarget && e.currentTarget.dataset ? e.currentTarget.dataset.idx : undefined;
+    if (idx === undefined || idx === null || this.data.iconBroken[idx]) return;
+    this.setData({ ['iconBroken.' + idx]: true });
   },
 
   onFbTap(e) {

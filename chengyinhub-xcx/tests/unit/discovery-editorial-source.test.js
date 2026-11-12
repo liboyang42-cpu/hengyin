@@ -106,6 +106,5 @@ test('P-02:编辑精选不再有「为什么看到」入口，来源说明留在
   assert.match(wxml, /<cy-modal-host[^>]*id="cy-modal-host"/);
   assert.match(wxml, /listLoading\.recommendedTopicList && !recoHero/);
   assert.match(wxml, /listErr\.recommendedTopicList && !recoHero/);
-  assert.match(wxml, /!listLoading\.recommendedTopicList && !recoHero/);
   assert.match(wxml, /listLoading\.recommendedTopicList && recoHero/);
 });

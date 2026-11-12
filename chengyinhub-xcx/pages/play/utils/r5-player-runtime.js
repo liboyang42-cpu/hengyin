@@ -124,7 +124,7 @@ function methods() {
          先清空再设:同值 setData 不会让 scroll-view 再对准;1.2 秒后再对准一次(长距离滚动途中上方段落还在重排)。 */
       const nodeId = (this.data.journeyCheck || {}).nodeId;
       if (nodeId != null) {
-        const anchor = 'chapter-game-' + nodeId;
+        const anchor = 'chapter-kit-' + nodeId;   // V3-10/53:对准块内锚点(已让出顶栏与渐隐),块本身不再垫一屏高的上边距
         const aim = () => {
           const kit = this.data.journeyCheck || {};
           if (!kit.show || kit.present !== 'inline' || !this.data.chapterFull || String(kit.nodeId) !== String(nodeId)) return;

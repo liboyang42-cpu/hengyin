@@ -59,6 +59,11 @@ class TopicCopyCompletionRuleTest {
         when(topics.insertCmsTopic(any())).thenAnswer(i -> {
             inserted = i.getArgument(0); inserted.setId(COPY); return 1;
         });
+        // Questo 地点合同:副本整包复制后经唯一写口落合同并回读(owner 在 SQL 里再判一次)。
+        when(topics.updateTopicLocationContract(eq(COPY), any(), any(), any(), any())).thenAnswer(i -> {
+            inserted.setContentContractJson(i.getArgument(2)); return 1;
+        });
+        when(topics.selectCmsTopicById(COPY)).thenAnswer(i -> inserted);
         when(topics.updateCmsTopic(any())).thenAnswer(i -> {
             CmsTopic patch = i.getArgument(0);
             if (patch.getCompleteRuleJson() != null) rulePatch = patch;

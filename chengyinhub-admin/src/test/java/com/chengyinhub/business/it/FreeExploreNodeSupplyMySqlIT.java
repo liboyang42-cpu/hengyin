@@ -133,7 +133,10 @@ class FreeExploreNodeSupplyMySqlIT {
                 "migration_topic_journey_story_20260916.sql",
                 "migration_theme_runtime_20261004.sql",
                 "migration_audit_level_20261020.sql",
-                "migration_content_safety_hold_20261020.sql"));
+                // 共享 resultMap 已消费 city_code / content_contract_json;两列的真实来源是下面两个迁移,
+                // 缺了会在解析阶段直接 BadSqlGrammar(不是本类业务断言失败)。
+                "migration_o14_cms_topic_city_code_20261022.sql",
+                "migration_topic_location_contract_20261107.sql"));
         MIGRATIONS.put("cms_topic_chapter", List.of(
                 "migration_20260820_new_city_setup_plan.sql",
                 "migration_20260820_questo_puzzle_atmosphere.sql",
@@ -156,7 +159,8 @@ class FreeExploreNodeSupplyMySqlIT {
                 "migration_app_sensor_template_fields_20260821.sql",
                 "migration_20260822_advanced_game_runtime.sql",
                 "migration_template_merchant_guide_20260906.sql",
-                "migration_template_reward_rules_20260906.sql"));
+                "migration_template_reward_rules_20260906.sql",
+                "migration_preset_draft_source_20261108.sql"));
         MIGRATIONS.put("cms_registration_merchant", List.of("migration_registration_merchant_audit_time_20260910.sql"));
         MIGRATIONS.put("coop_invite", List.of("migration_coop_deposit_refund_state_20260913.sql"));
     }

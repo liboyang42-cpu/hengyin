@@ -5,7 +5,7 @@
   position: absolute;
   left: 0; right: 0; top: 0; bottom: 0;
   overflow: hidden;
-  background: #0a0a0b;                       /* ds-ok 场地是玩法本身,不是界面底色 */
+  background: var(--pk-embed-bg, #0a0a0b);  /* ds-ok R3-2 场地底跟外观底色;无外观时仍是黑场地 */
 }
 .bl__hud {
   position: absolute;
@@ -16,7 +16,7 @@
   top: var(--pk-top, 120rpx);
   z-index: 4;
   text-align: center;
-  color: #fff;                               /* ds-ok 场地上的白字 */
+  color: var(--pk-embed-ink, #fff);          /* ds-ok 场地上的字取外观字色 */
   pointer-events: none;
 }
 .bl__n {
@@ -36,7 +36,7 @@
 .bl__sub {
   margin-top: 4rpx;                          /* ds-ok 原型 2px */
   font-size: var(--cy-type-body);
-  color: #fff;                               /* ds-ok */
+  color: var(--pk-embed-ink, #fff);          /* ds-ok */
   opacity: .5;
 }
 
@@ -48,7 +48,7 @@
   width: 52rpx; height: 52rpx;
   margin: -26rpx 0 0 -26rpx;
   border-radius: 50%;
-  background: #fff;                          /* ds-ok 球 */
+  background: var(--pk-embed-ink, #fff);     /* ds-ok 球 */
 }
 .bl__trail {
   position: absolute;
@@ -96,8 +96,8 @@
   height: 104rpx;                         /* ds-ok 原型 52px */
   display: flex; align-items: center; justify-content: center;
   border-radius: 52rpx;                   /* ds-ok 原型 26px */
-  background: #fff;                       /* ds-ok */
-  color: #0a0a0b;                         /* ds-ok */
+  background: var(--pk-embed-accent, #fff);  /* ds-ok R3-2 */
+  color: var(--pk-embed-bg, #0a0a0b);        /* ds-ok */
   font-size: var(--cy-type-card-title);
   font-weight: 800;
 }

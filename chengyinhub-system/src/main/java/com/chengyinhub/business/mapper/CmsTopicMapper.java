@@ -85,6 +85,15 @@ public interface CmsTopicMapper
      */
     public CmsTopic selectCmsTopicByIdForUpdate(Long id);
 
+    /**
+     * BE-06:开局只需要的「当前发布修订头」窄读(无 snapshot_json / 无 public manifest)。
+     *
+     * <p>放在本 mapper 是因为会话创建方已持有它:为一次索引头读给运行期服务再加一个依赖,
+     * 会把所有手工装配的测试夹具连锁改一遍。重 payload 与历史修订仍走
+     * {@link CmsTopicContentRevisionMapper}。老主题没有修订行 → 返回 null,调用方按 legacy 处理。
+     */
+    com.chengyinhub.business.domain.vo.TopicContentRevisionView selectLatestContentRevisionHeader(@Param("topicId") Long topicId);
+
 
 
     public List<CmsTopic> selectTopicsForSettlement();
@@ -132,6 +141,19 @@ public interface CmsTopicMapper
                               @Param("expectedVersion") Long expectedVersion,
                               @Param("targetVersion") Long targetVersion,
                               @Param("updateTime") Date updateTime);
+
+    /**
+     * 地点合同唯一写口。
+     *
+     * <p>owner 在 SQL 里再判一次，调用方先读后判不作为唯一依据；返回 0 行 = 主题不存在/已删除/不是该所有者，
+     * 调用方必须报错而不是忽略。通用 {@link #updateCmsTopic} 故意不带这一列：那条是宽口，
+     * 没有所有者、编辑窗口与 bindingRevision 校验。
+     */
+    int updateTopicLocationContract(@Param("id") Long id,
+                                    @Param("ownerMemberId") Long ownerMemberId,
+                                    @Param("contentContractJson") String contentContractJson,
+                                    @Param("updateBy") String updateBy,
+                                    @Param("updateTime") Date updateTime);
 
     /** 成功发布时把已校验草稿复制为运行快照，并独立递增发布版本。 */
     int publishRouteSnapshot(@Param("id") Long id,

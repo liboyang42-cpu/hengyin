@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "sort": {
+    "enabled": true,
+    "prompt": "待填：按作者给定的观察依据排列构件照片",
+    "items": [
+      {
+        "id": "part_01",
+        "label": "待填：构件照片一",
+        "img": "/questo-theme-presets/T06-building-observation/media/part-01.png"
+      },
+      {
+        "id": "part_02",
+        "label": "待填：构件照片二",
+        "img": "/questo-theme-presets/T06-building-observation/media/part-02.png"
+      }
+    ],
+    "answerOrder": [
+      "part_01",
+      "part_02"
+    ],
+    "maxAttempts": 0,
+    "xp": 0
+  },
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "requireArrival": true,
+    "scope": "OWNER",
+    "targetScope": "OWNER"
+  }
+}

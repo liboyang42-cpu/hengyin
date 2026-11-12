@@ -79,7 +79,7 @@
            原来的 activityPrefs.indexOf(item) >= 0 恒假,选中态从来没渲染过。 -->
       <view class="cc-chip {{item.on ? 'on' : ''}}"
             wx:for="{{dirList}}" wx:key="val" bindtap="toggleDir" data-val="{{item.val}}"
-            aria-role="checkbox" aria-checked="{{!!item.on}}" aria-label="{{item.val}}" hover-class="cy-pressed" hover-stay-time="80">{{item.val}}</view>
+            aria-role="checkbox" aria-checked="{{!!item.on}}" aria-label="{{item.val}}" hover-class="cy-pressed" hover-stay-time="80"><image wx:if="{{item.icon}}" class="cc-chip-ico" src="{{item.icon}}" mode="aspectFit" aria-hidden="true" />{{item.val}}</view>
     </view>
     <view class="cc-count" aria-live="polite">已选 {{activityPrefs.length}} / 3</view>
   </view>

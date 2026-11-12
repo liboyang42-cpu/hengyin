@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "judge": false,
+    "title": "待填：这段经历要怎样保存与讲述？",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "opt_keep_archive",
+        "label": "待填：归档保存",
+        "fb": "待填：归档回应"
+      },
+      {
+        "id": "opt_tell_story",
+        "label": "待填：口述讲述",
+        "fb": "待填：讲述回应"
+      }
+    ]
+  },
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "scope": "OWNER",
+    "targetScope": "OWNER"
+  }
+}

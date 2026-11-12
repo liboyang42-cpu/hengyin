@@ -48,7 +48,7 @@ class ThemeRuntimeMySqlIT {
         try(Connection c=ds.getConnection()) {
             ItSchema.apply(c,"it-schema/cms-topic-it-schema.sql");ItSchema.apply(c,"it-schema/journey-full-flow-it-schema.sql");
             exec(c,"CREATE TABLE IF NOT EXISTS ums_member(id BIGINT PRIMARY KEY,nickname VARCHAR(255))");
-            ItSchema.applyMigrations(c,"sql/migration_20260823_topic_route_graph.sql","sql/migration_20260930_registration_first_successful_scan.sql","sql/migration_20261003_merchant_offer_withdrawal_columns.sql");
+            ItSchema.applyMigrations(c,"sql/migration_20260823_topic_route_graph.sql","sql/migration_20260930_registration_first_successful_scan.sql","sql/migration_20261003_merchant_offer_withdrawal_columns.sql","sql/migration_20261108_topic_content_revision.sql","sql/migration_preset_draft_source_20261108.sql");
             exec(c,"ALTER TABLE cms_topic DROP COLUMN theme_runtime_config_json, DROP COLUMN published_theme_runtime_config_json");
             exec(c,"ALTER TABLE player_node_progress DROP COLUMN play_instance_id, ADD UNIQUE KEY uk_progress(member_id,topic_id,node_id,activity_id), ADD UNIQUE KEY uk_member_activity_node(member_id,activity_id,node_id)");
             String advancedMigration=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_20260822_advanced_game_runtime.sql")),java.nio.charset.StandardCharsets.UTF_8);int advancedCreate=advancedMigration.indexOf("CREATE TABLE IF NOT EXISTS game_runtime_session");exec(c,ItSchema.splitStatements(advancedMigration.substring(advancedCreate)).get(0));

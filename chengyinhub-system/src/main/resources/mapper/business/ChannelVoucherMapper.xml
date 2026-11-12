@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ChannelVoucherMapper">
+
+    <resultMap id="voucherMap" type="com.chengyinhub.business.domain.ChannelVoucher">
+        <id property="id" column="id"/>
+        <result property="accountId" column="account_id"/>
+        <result property="verificationId" column="verification_id"/>
+        <result property="publicId" column="public_id"/>
+        <result property="codeHash" column="code_hash"/>
+        <result property="productId" column="product_id"/>
+        <result property="productRevision" column="product_revision"/>
+        <result property="grantSnapshotJson" column="grant_snapshot_json"/>
+        <result property="quantity" column="quantity"/>
+        <result property="seatCount" column="seat_count"/>
+        <result property="subjectMode" column="subject_mode"/>
+        <result property="boundMemberId" column="bound_member_id"/>
+        <result property="inventoryTicketId" column="inventory_ticket_id"/>
+        <result property="inventoryQuantity" column="inventory_quantity"/>
+        <result property="inventoryState" column="inventory_state"/>
+        <result property="status" column="status"/>
+        <result property="issuedAt" column="issued_at"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="revokeSource" column="revoke_source"/>
+        <result property="revokeReason" column="revoke_reason"/>
+        <result property="revokeRequestId" column="revoke_request_id"/>
+        <result property="revokeRequestedAt" column="revoke_requested_at"/>
+        <result property="issuedBy" column="issued_by"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="voucherColumns">
+        id, account_id, verification_id, public_id, code_hash, product_id, product_revision, grant_snapshot_json,
+        quantity, seat_count, subject_mode, bound_member_id, inventory_ticket_id,
+        inventory_quantity, inventory_state, status, issued_at, expires_at, revoke_source,
+        issued_by, request_id, request_fingerprint, revoke_reason, revoke_request_id, revoke_requested_at,
+        create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.ChannelVoucher"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_channel_voucher
+            (account_id, verification_id, public_id, code_hash, product_id, product_revision, grant_snapshot_json,
+             quantity, seat_count, subject_mode, bound_member_id, inventory_ticket_id,
+             inventory_quantity, inventory_state, status, issued_at, expires_at, revoke_source,
+             issued_by, request_id, request_fingerprint, revoke_reason, revoke_request_id, revoke_requested_at,
+        create_time, update_time)
+        values
+            (#{accountId}, #{verificationId}, #{publicId}, #{codeHash}, #{productId}, #{productRevision}, #{grantSnapshotJson},
+             #{quantity}, #{seatCount}, #{subjectMode}, #{boundMemberId}, #{inventoryTicketId},
+             #{inventoryQuantity}, #{inventoryState}, #{status}, #{issuedAt}, #{expiresAt}, #{revokeSource},
+             #{issuedBy}, #{requestId}, #{requestFingerprint}, #{revokeReason}, #{revokeRequestId}, #{revokeRequestedAt},
+             #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectById" resultMap="voucherMap" useCache="false">
+        select <include refid="voucherColumns"/> from marketing_channel_voucher where id = #{id}
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="voucherMap" useCache="false" flushCache="true">
+        select <include refid="voucherColumns"/> from marketing_channel_voucher
+        where id = #{id} for update
+    </select>
+
+    <select id="selectByPublicId" resultMap="voucherMap" useCache="false">
+        select <include refid="voucherColumns"/> from marketing_channel_voucher where public_id = #{publicId}
+    </select>
+
+    <select id="selectByPublicIdForUpdate" resultMap="voucherMap" useCache="false" flushCache="true">
+        select <include refid="voucherColumns"/> from marketing_channel_voucher
+        where public_id = #{publicId} for update
+    </select>
+
+    <select id="selectByVerification" resultMap="voucherMap" useCache="false">
+        select <include refid="voucherColumns"/> from marketing_channel_voucher
+        where verification_id = #{verificationId}
+    </select>
+
+    <select id="selectByVerificationForUpdate" resultMap="voucherMap" useCache="false" flushCache="true">
+        select <include refid="voucherColumns"/> from marketing_channel_voucher
+        where verification_id = #{verificationId} for update
+    </select>
+
+    <select id="selectByAccountRequest" resultMap="voucherMap" useCache="false">
+        select <include refid="voucherColumns"/> from marketing_channel_voucher
+        where account_id = #{accountId} and request_id = #{requestId}
+    </select>
+
+    <select id="selectByAccount" resultMap="voucherMap" useCache="false">
+        select <include refid="voucherColumns"/> from marketing_channel_voucher
+        where account_id = #{accountId}
+        <if test="from != null">and create_time &gt;= #{from}</if>
+        <if test="to != null">and create_time &lt; #{to}</if>
+        order by id desc limit #{limit}
+    </select>
+
+    <update id="markRedeemed">
+        update marketing_channel_voucher
+        set status = 1, update_time = #{updateTime}
+        where id = #{id} and status = 0
+          and (expires_at is null or expires_at &gt; #{updateTime})
+    </update>
+
+    <update id="markRevoked">
+        update marketing_channel_voucher
+        set status = 2, revoke_source = #{source}, update_time = #{updateTime}
+        where id = #{id} and status in (0, 1)
+    </update>
+
+    <update id="markRevocationRequested">
+        update marketing_channel_voucher
+        set revoke_reason = #{reason}, revoke_request_id = #{requestId},
+            revoke_requested_at = #{requestedAt}, update_time = #{updateTime}
+        where id = #{id} and status = 1 and revoke_requested_at is null
+    </update>
+
+    <update id="markInventoryConsumed">
+        update marketing_channel_voucher
+        set inventory_state = 2, update_time = #{updateTime}
+        where id = #{id} and inventory_state = 1
+    </update>
+
+    <update id="markInventoryReleased">
+        update marketing_channel_voucher
+        set inventory_state = 3, update_time = #{updateTime}
+        where id = #{id} and inventory_state in (1, 2)
+    </update>
+
+    <select id="selectReconciliationSummary" resultType="java.util.Map" useCache="false">
+        select
+            count(*) as voucherCount,
+            coalesce(sum(case when status = 1 then 1 else 0 end), 0) as redeemedCount,
+            coalesce(sum(case when status = 0 and (expires_at is null or expires_at &gt; now())
+                then 1 else 0 end), 0) as activeVoucherCount,
+            coalesce(sum(case when status = 2 then 1 else 0 end), 0) as revokedVoucherCount,
+            coalesce(sum(case when status = 0 then 1 else 0 end), 0) as unredeemedCount
+        from marketing_channel_voucher
+        where account_id = #{accountId}
+        <if test="from != null">and create_time &gt;= #{from}</if>
+        <if test="to != null">and create_time &lt; #{to}</if>
+    </select>
+
+    <select id="selectReconciliationIssues" resultType="java.util.Map" useCache="false">
+        select 'VERIFIED_WITHOUT_VOUCHER' as issueType,
+               v.channel_order_no as channelOrderNo,
+               null as voucherPublicId,
+               v.amount as amount,
+               v.status as status,
+               v.create_time as occurredAt
+        from marketing_channel_order_verification v
+        left join marketing_channel_voucher c on c.verification_id = v.id
+        where v.account_id = #{accountId} and v.status = 1 and c.id is null
+        <if test="from != null">and v.create_time &gt;= #{from}</if>
+        <if test="to != null">and v.create_time &lt; #{to}</if>
+        union all
+        select 'VOUCHER_UNREDEEMED' as issueType,
+               v.channel_order_no as channelOrderNo,
+               c.public_id as voucherPublicId,
+               v.amount as amount,
+               c.status as status,
+               c.create_time as occurredAt
+        from marketing_channel_voucher c
+        join marketing_channel_order_verification v on v.id = c.verification_id
+        where c.account_id = #{accountId} and c.status = 0
+          and (c.expires_at is null or c.expires_at &gt; now())
+          and not exists (select 1 from marketing_channel_redemption r where r.voucher_id = c.id)
+        <if test="from != null">and c.create_time &gt;= #{from}</if>
+        <if test="to != null">and c.create_time &lt; #{to}</if>
+        union all
+        select 'REDEMPTION_REVOKED' as issueType,
+               v.channel_order_no as channelOrderNo,
+               c.public_id as voucherPublicId,
+               v.amount as amount,
+               r.status as status,
+               r.revoked_at as occurredAt
+        from marketing_channel_redemption r
+        join marketing_channel_voucher c on c.id = r.voucher_id
+        join marketing_channel_order_verification v on v.id = c.verification_id
+        where c.account_id = #{accountId} and r.status = 1
+        <if test="from != null">and r.revoked_at &gt;= #{from}</if>
+        <if test="to != null">and r.revoked_at &lt; #{to}</if>
+        union all
+        select 'REDEEMED_WITHOUT_AUTHORITY' as issueType,
+               v.channel_order_no as channelOrderNo,
+               c.public_id as voucherPublicId,
+               v.amount as amount,
+               r.status as status,
+               r.redeemed_at as occurredAt
+        from marketing_channel_redemption r
+        join marketing_channel_voucher c on c.id = r.voucher_id
+        join marketing_channel_order_verification v on v.id = c.verification_id
+        where c.account_id = #{accountId} and r.status = 0 and r.registration_id is null
+        <if test="from != null">and r.redeemed_at &gt;= #{from}</if>
+        <if test="to != null">and r.redeemed_at &lt; #{to}</if>
+        union all
+        select 'REFUND_PENDING_MANUAL' as issueType,
+               f.channel_order_no as channelOrderNo,
+               null as voucherPublicId,
+               f.amount as amount,
+               f.status as status,
+               f.create_time as occurredAt
+        from marketing_channel_refund_verification f
+        where f.account_id = #{accountId}
+          and (f.status = 2 or (f.status = 1 and f.consumed = 0))
+        <if test="from != null">and f.create_time &gt;= #{from}</if>
+        <if test="to != null">and f.create_time &lt; #{to}</if>
+        order by occurredAt desc limit #{limit}
+    </select>
+</mapper>

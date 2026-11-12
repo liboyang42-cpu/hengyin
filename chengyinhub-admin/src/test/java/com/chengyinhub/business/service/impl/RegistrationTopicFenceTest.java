@@ -169,6 +169,8 @@ class RegistrationTopicFenceTest {
         ReflectionTestUtils.setField(payments, "cmsRegistrationMapper", registrations);
         ReflectionTestUtils.setField(payments, "cmsActivityMapper", activities);
         ReflectionTestUtils.setField(payments, "cmsTopicMapper", topics);
+        ReflectionTestUtils.setField(payments, "marketingRevenuePostingService",
+                mock(com.chengyinhub.business.service.IMarketingRevenuePostingService.class));
         when(registrations.selectByRegistrationNo("REG1")).thenReturn(original);
         CmsRegistration changed = registration(1L, 22L); changed.setOwnerType(1L); changed.setOwnerId(7L);
         when(registrations.selectCmsRegistrationByIdForUpdate(1L)).thenReturn(changed);

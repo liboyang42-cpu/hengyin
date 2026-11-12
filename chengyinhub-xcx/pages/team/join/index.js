@@ -1,4 +1,7 @@
+const teamSeats = require('../utils/team-seats.js');
+const { normalizeJoinCode } = require('../utils/team-invite-qr.js');
 const toast = require('../../../utils/toast.js');
+const { enter } = require('../../../utils/page-motion.js');
 const { exactId, reader, sameReader } = require('../../../utils/user-character.js');
 const { createRecovery } = require('../../../utils/team-event-command.js');
 const app = getApp();
@@ -15,10 +18,14 @@ Page({
     joining: false,
     joinError: '',
     ticketRequired: false,
+    inviteText: '', joinedSeats: [], openSeats: [],
+    joinHint: '',
     error: '',
     errorKind: 'network',
     errorSub: '',
-    errorAction: '重新加载'
+    errorAction: '重新加载',
+    // l-misc:从「我的队伍 · 加入码」进来(?entry=code)时先手输加入码
+    codeEntry: false, codeInput: '', codeError: ''
   },
 
   onLoad(options) {
@@ -26,6 +33,7 @@ Page({
     this._hidden = false;
     this.inviteCode = String(options.code || '');
     this.legacyTeamId = String(options.teamId || '');
+    this.codeEntry = !this.inviteCode && !this.legacyTeamId && options.entry === 'code';
     this._openRecovery();
     this.load();
   },
@@ -84,6 +92,10 @@ Page({
       this.setData({ team: null, joined: false, joining: false, joinError: '' });
     }
     this._reader = reader(app);
+    if (!this.inviteCode && this.codeEntry) {
+      this.setData({ loading: false, refreshing: false, codeEntry: true });
+      return;
+    }
     if (!this.inviteCode) {
       this.setData({
         loading: false,
@@ -118,11 +130,18 @@ Page({
         if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id)) {
           that.teamId = exactId(res.data.team.id);
           that._recovery.setTarget(that.teamId);
+          enter(that, 'seatIn', { once: true });
           that.setData({
             loading: false,
             refreshing: false,
             team: res.data.team,
             joined: !!res.data.joined,
+            // U06-01:邀请期限与入队阻塞码只作提示;末席与票仍由 /join 回包裁决
+            inviteText: teamSeats.inviteText(res.data.invite),
+            joinedSeats: teamSeats.joinedSeats(res.data.team),
+            openSeats: teamSeats.openSeats(res.data.team, res.data.seats),
+            joinHint: teamSeats.blockerText(res.data.viewer, 'join').text,
+            ticketRequired: that.data.ticketRequired || teamSeats.blockerText(res.data.viewer, 'join').code === 'TICKET_REQUIRED',
             error: '',
             errorSub: ''
           });
@@ -163,6 +182,17 @@ Page({
       wx.navigateBack({ delta: 1, fail() { wx.switchTab({ url: '/pages/talent/list/index' }); } });
       return;
     }
+    this.load();
+  },
+
+  onCodeInput(e) { this.setData({ codeInput: (e.detail && e.detail.value) || '', codeError: '' }); },
+  submitCode() {
+    const code = normalizeJoinCode(this.data.codeInput);
+    if (!code) { this.setData({ codeError: '加入码不对，检查一下再输' }); return; }
+    this.inviteCode = code;
+    this.codeEntry = false;
+    this.setData({ codeEntry: false, codeError: '' });
+    this._openRecovery();
     this.load();
   },
 

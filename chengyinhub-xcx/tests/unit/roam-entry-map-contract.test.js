@@ -60,7 +60,7 @@ test('报名按钮使用白色 token，入口弹层按内容定高并统一透�
   assert.match(WXSS, /\.entry-sheet__primary\s*\{[^}]*background:\s*var\(--cy-comp-sheet-player-text\)/s)
   assert.match(WXML, /class="psheet \{\{entrySheetIn\?'is-in':''\}\} entry-sheet"/)
   assert.match(WXML, /class="pdim \{\{entrySheetIn\?'is-in':''\}\} entry-sheet__mask"/)
-  assert.match(JS, /_showEntrySheet\(entrySheet, entryActivity\)[\s\S]*wx\.nextTick\([\s\S]*entrySheetIn:\s*true/)
+  assert.match(JS, /_showEntrySheet\(entrySheet, entryActivity, entryPlace\)[\s\S]*wx\.nextTick\([\s\S]*entrySheetIn:\s*true/)
   assert.match(WXSS, /\.entry-sheet\s*\{[^}]*background:var\(--cy-comp-sheet-player-glass\)[^}]*backdrop-filter:blur\(var\(--cy-comp-sheet-blur\)\)/s)
   assert.match(WXSS, /\.entry-sheet\s*\{[^}]*transform:translateY\(100%\)/s)
   assert.match(WXSS, /\.entry-sheet\.is-in\s*\{[^}]*translateY\(0\)/s)
@@ -103,4 +103,54 @@ test('队伍入口复用附近队伍的持票申请链，定位失败在入口�
   assert.match(NEARBY_JS, /_requestedTeamId/)
   assert.match(NEARBY_JS, /openTeam\(teamId\)/)
   assert.match(WXML, /intro-permission[^>]+wx:if="\{\{introError\}\}"/)
+})
+
+// 2026-11-09 V3-35:城市漫游目录不再是清单,已上架、带导入种子标签的平台点位直接画在入口地图上
+test('V3-35 入口地图只把目录地点(type=1 + 种子标签 + 坐标)画成图钉,点图钉回到同一地点', () => {
+  const entryMap = require('../../utils/roam-entry-map.js')
+  const seed = { id: 7, type: 1, name: '山阴路', address: '虹口区山阴路', lat: 31.27, lng: 121.48, tags: '["roam:street","roam:seed:v1:sh-shanyin-road"]' }
+  const rows = [
+    seed,
+    { id: 8, type: 1, name: '无种子', lat: 31.27, lng: 121.48, tags: '["roam:park"]' },
+    { id: 9, type: 2, name: '商家', lat: 31.27, lng: 121.48, merchantId: 3, tags: '["roam:seed:v1:x"]' },
+    { id: 10, type: 1, name: '无坐标', lat: null, lng: 121.48, tags: '["roam:seed:v1:y"]' },
+  ]
+  assert.deepEqual(rows.filter(entryMap.isCatalogPlace).map((r) => r.id), [7])
+  const view = entryMap.build([], [], { activities: true, teams: true, posts: true }, (u) => u, rows)
+  assert.equal(view.markers.length, 1)
+  assert.deepEqual(entryMap.parseMarker(view.markers[0].id), { kind: 'place', id: 7 })
+  assert.equal(view.markers[0].iconPath, '/images/roam-pushpin.png')
+  assert.equal(view.cards.length, 0, '地点不进附近活动卡')
+  const place = entryMap.placeView(seed)
+  assert.equal(place.catLabel, '宝藏街道')
+  assert.equal(place.tags, seed.tags)
+  // 关图层不影响目录地点(它不属于活动 / 队伍 / 帖文三层)
+  assert.equal(entryMap.build([], [], { activities: false, teams: false, posts: false }, (u) => u, rows).markers.length, 1)
+})
+
+test('V3-35 点地点图钉开同一个入口弹层,理由由分包理由组件回填,换卡后的迟到回填丢弃', () => {
+  assert.match(JS, /hit\.kind === 'place'[\s\S]{0,200}this\._showEntrySheet\('place', null, entryMap\.placeView\(row\)\)/)
+  assert.match(JS, /onEntryPlaceNote\(e\) \{[\s\S]{0,160}place\.tags !== d\.tags\) return;/)
+  assert.match(WXML, /wx:elif="\{\{entrySheet=='place' && entryPlace\}\}"><text class="entry-sheet__title">\{\{entryPlace\.name\}\}<\/text>/)
+})
+
+// 2026-11-09 V1-P32:活动 / 主题与招募中队伍在漫游地图上常显深色小卡(标题 + 一行服务端事实),不再只是 14px 小点
+test('V1-P32 地图上的活动与队伍都带常显卡片;没有人数时不写 0', () => {
+  const entryMap = require('../../utils/roam-entry-map.js')
+  const view = entryMap.build(
+    [{ kind: 'topic', id: 5, productType: 2, name: '探店日', latitude: 31.24, longitude: 121.48, distance: 585 }],
+    [{ teamId: 3, title: '周六小队', joinedCount: 2, maxMembers: 4, latitude: 31.23, longitude: 121.47 },
+      { teamId: 4, title: '', latitude: 31.23, longitude: 121.47 }],
+    { activities: true, teams: true, posts: true }, (u) => u, [])
+  const byKind = (kind) => view.markers.filter((m) => (entryMap.parseMarker(m.id) || {}).kind === kind)
+  const topic = byKind('topic')[0]
+  assert.equal(topic.callout.display, 'ALWAYS')
+  assert.equal(topic.callout.content, '探店日\n距你 585m')
+  assert.ok(topic.width >= 20)
+  const teams = byKind('team')
+  assert.equal(teams[0].callout.content, '周六小队\n2/4 人 · 招募中')
+  assert.equal(teams[1].callout.content, '玩家队伍\n招募中', '没有人数字段就不写 0/0')
+  assert.ok(teams.every((m) => m.callout.display === 'ALWAYS' && m.width >= 22))
+  // 图层关掉仍然整层不画
+  assert.equal(entryMap.build([], [{ teamId: 3, latitude: 31, longitude: 121 }], { activities: true, teams: false, posts: true }, (u) => u, []).markers.length, 0)
 })

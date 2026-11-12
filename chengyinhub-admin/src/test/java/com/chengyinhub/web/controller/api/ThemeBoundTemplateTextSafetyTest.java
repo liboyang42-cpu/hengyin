@@ -146,7 +146,7 @@ class ThemeBoundTemplateTextSafetyTest {
         bound.setHint2("违规提示");
         when(templates.selectCmsMemberTemplateByIds(List.of(56L))).thenReturn(List.of(bound));
 
-        AjaxResult result = controller.publishDraft("990014", null, null, null);
+        AjaxResult result = controller.publishDraft("990014", null, null, null, null, null);
 
         assertEquals(400, result.get(AjaxResult.CODE_TAG), String.valueOf(result));
         assertTrue(String.valueOf(result.get(AjaxResult.MSG_TAG)).contains("节点玩法「桥边问答」的二级提示"),

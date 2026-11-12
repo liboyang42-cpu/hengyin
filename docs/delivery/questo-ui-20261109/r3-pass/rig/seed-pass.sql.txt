@@ -1,0 +1,17 @@
+-- r3-pass rig fixture (HARNESS, rig DB cy_e2e_51 only; never production). Two on-sale passes covering topic 990013, 9004 has 2000 points.
+DELETE FROM marketing_product_item WHERE product_id IN (9301,9302); DELETE FROM marketing_product WHERE id IN (9301,9302);
+INSERT INTO marketing_product (id,product_code,product_name,product_kind,purchase_kind,explore_capacity,sale_city,parent_product_id,fulfillment_route,ticket_id,
+ cash_price,points_price,validity_kind,valid_days,fixed_valid_from,fixed_valid_to,seat_count,gift_allowed,gift_claim_days,status,sale_start_at,sale_end_at,terms_version,revision,create_time,update_time)
+VALUES (9301,'RIG-R3-CITY','上海城市通票',2,2,0,'上海',NULL,1,NULL,88.00,300,1,30,NULL,NULL,1,0,NULL,1,NULL,NULL,'v1',1,NOW(),NOW()),
+       (9302,'RIG-R3-TEAM','上海四人团体票',5,2,0,'上海',NULL,1,NULL,198.00,400,2,NULL,'2026-11-01','2027-01-09',4,0,NULL,1,NULL,NULL,'v1',1,NOW(),NOW());
+INSERT INTO marketing_product_item (product_id,topic_id,topic_title,content_revision,sort_no,create_time) VALUES
+ (9301,990013,'E2E 探店日一期',1,1,NOW()), (9302,990013,'E2E 探店日一期',1,1,NOW());
+UPDATE ums_member SET point=2000 WHERE id=9004;
+-- r3-pass: covered topic needs a real single-buy price for apportionment (same as r2-store's 990014 fixture)
+UPDATE cms_topic SET self_play_price=200 WHERE id=990013;
+-- r3-pass: pass fulfilment only collects for platform-owned topics; declare 990013's CONTENT slot as PLATFORM (rig only)
+INSERT INTO product_role (topic_id,slot,entity_type,entity_id,status) SELECT 990013,'CONTENT','PLATFORM',NULL,1 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM product_role WHERE topic_id=990013 AND slot='CONTENT' AND status=1);
+-- r3-pass: platform fee-rate snapshot (same value r2-store used on 990014)
+UPDATE cms_topic SET fee_platform_rate=0.1 WHERE id=990013;
+-- r3-pass: fulfilment window so the refund decision point exists (rig only)
+UPDATE cms_topic SET start_date='2026-11-01 00:00:00', end_date='2027-01-31 23:59:59' WHERE id=990013;

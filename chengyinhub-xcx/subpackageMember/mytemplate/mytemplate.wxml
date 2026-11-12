@@ -46,7 +46,7 @@
                     <cy-icon name="more" size="40" />
                   </view>
                 </view>
-                <view class="item-desc">{{item.description}}</view>
+                <view class="item-desc" wx:if="{{item.description}}">{{item.description}}</view>
 
                 <view class="item-dl">
                   <view class="dd dd1">

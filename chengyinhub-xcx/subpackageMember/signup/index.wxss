@@ -182,9 +182,13 @@
 .signup .ztbg.wbg { top: -77rpx; left: -77rpx; width: calc(100% + 154rpx); height: calc(100% + 154rpx); filter: blur(42rpx) saturate(1.15); transform: scale(1.1); opacity: 0; transition: opacity .8s ease; }
 .signup .ztbg.wbg.vis { opacity: 1; }
 .signup-scrim.wmask { background: linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.35) 35%, rgba(0,0,0,.82) 78%, #050505 100%); } /* ds-ok */
-.wl-nav { position: fixed; left: 0; right: 0; z-index: 95; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; pointer-events: none; }
-.wl-nav__b { font-size: 33rpx; font-weight: 600; color: #fff; } /* ds-ok */
-.deck { position: fixed; left: 50%; top: calc(50vh - 414rpx); width: 577rpx; height: 865rpx; margin-left: -288rpx; z-index: 2; }
+.wl-nav { position: fixed; left: var(--cy-page-x); right: var(--cy-page-x); z-index: 95; height: 88rpx; display: flex; align-items: center; gap: var(--cy-space-3); }
+/* r3-visual:左对齐大标题 + 右侧「+」与本人头像(refs4/ticket-holder-frames 顶栏结构) */
+.wl-nav__b { flex: 1; min-width: 0; font-size: 44rpx; font-weight: 700; letter-spacing: 1rpx; color: #fff; } /* ds-ok: 压在用户照片模糊底上,不随主题翻转 */
+.wl-nav__add { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: #fff; } /* ds-ok */
+.wl-nav__add cy-icon { width: 64rpx; height: 64rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.18); backdrop-filter: blur(20rpx); -webkit-backdrop-filter: blur(20rpx); } /* ds-ok */
+.wl-nav__me { width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; }
+.deck { position: fixed; left: 50%; top: calc(50vh - 414rpx); top: max(calc(50vh - 414rpx), 290rpx); width: 577rpx; height: 865rpx; margin-left: -288rpx; z-index: 2; }
 .wc { position: absolute; top: 0; left: 0; right: 0; bottom: 0; transform-origin: 50% 0; transition: transform .45s cubic-bezier(.2,.8,.2,1), filter .45s, opacity .3s; } /* ds-ok: v13 动效原型定值 */
 /* 2026-10-28 翻面:卡面放到正反两面上,外层 .wc 只管卡堆位置 */
 .wc__flip { position: absolute; top: 0; left: 0; right: 0; bottom: 0; transform-style: preserve-3d; transition: transform .62s cubic-bezier(.2,.9,.25,1.08); }
@@ -210,6 +214,10 @@
 .signup--go .team-entry { opacity: 0; transition: opacity .2s; }
 .signup--reduced .wc__flip, .signup--reduced .wl-burst, .signup--reduced .deck { transition: none; }
 .deck--still .wc { transition: none; }
+.signup--reduced .wc { transition: none; }
+/* r3-visual 卷页阴影:跟着 --curl(0 → .9)从卷起的那一侧压暗,像书页翻起时背光的一面 */
+.wc__curl { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none; opacity: var(--curl, 0);
+  background: linear-gradient(var(--curl-a, 90deg), rgba(0,0,0,0) 0%, rgba(0,0,0,.25) 55%, rgba(0,0,0,.65) 100%), linear-gradient(var(--curl-a, 90deg), rgba(255,255,255,0) 70%, rgba(255,255,255,.22) 92%, rgba(255,255,255,0) 100%); } /* ds-ok: 卷页明暗 */
 .wc__go { position: absolute; right: 31rpx; top: 27rpx; width: 62rpx; height: 62rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 .wc__go image { width: 27rpx; height: 27rpx; }
 .wc__t { position: absolute; left: 46rpx; right: 46rpx; top: 100rpx; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -223,3 +231,22 @@
 .signup .team-entry { width: max-content; max-width: calc(100vw - 2 * var(--cy-page-x)); box-sizing: border-box; }
 .signup .team-entry__k, .signup .team-entry__n { flex-shrink: 0; white-space: nowrap; }
 
+
+/* ===== l-after 票夹(业主批准 proto/game wl-wallet):「票夹 ▾」筛选弹出、卷页镜面高光 + 卡下倒影 ===== */
+.wl-nav__flt { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8rpx; min-height: 88rpx; color: #fff; } /* ds-ok: 压在用户照片模糊底上,不随主题翻转 */
+.wl-nav__flt .wl-nav__b { flex: none; }
+.wl-nav__chev { display: flex; transform: rotate(90deg); transition: transform var(--cy-motion-fast) var(--cy-ease-out); } /* 右箭头转 90° 当下箭头(与榜单「更多」同做法) */
+.wl-nav__chev.is-open { transform: rotate(-90deg); }
+.wl-pop { position: fixed; left: var(--cy-page-x); z-index: 96; padding: 12rpx; border-radius: var(--cy-radius-md); background: var(--cy-comp-sheet-player-glass, var(--cy-color-bg-elevated)); box-shadow: 0 24rpx 60rpx rgba(0,0,0,.4); /* ds-ok 弹出投影 */
+  opacity: 0; transform: translateY(-16rpx); pointer-events: none; transition: opacity var(--cy-motion-fast) ease, transform var(--cy-motion-fast) var(--cy-ease-out); }
+.wl-pop.is-open { opacity: 1; transform: none; pointer-events: auto; }
+.wl-pop__i { min-width: 200rpx; min-height: 88rpx; display: flex; align-items: center; padding: 0 32rpx; border-radius: var(--cy-radius-sm); font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
+.wl-pop__i.is-on { background: var(--cy-comp-sheet-group-bg); font-weight: 600; }
+.wc__spec { position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 54rpx; pointer-events: none; opacity: var(--spec, 0); mix-blend-mode: screen; /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
+  background: linear-gradient(100deg, transparent calc(var(--sx, 120%) - 18%), rgba(255,255,255,.55) var(--sx, 120%), transparent calc(var(--sx, 120%) + 10%)); } /* ds-ok: 卷页镜面高光带 */
+.wc { -webkit-box-reflect: below 12rpx linear-gradient(transparent 62%, rgba(255,255,255,.18)); } /* ds-ok: 卡下倒影(proto wal3) */
+.signup--reduced .wl-pop { transition: none; }
+/* x-fix2 P-18:无封面票卡的插画位:居中,不叠封面压暗 */
+.wc__im--illus { display: flex; align-items: center; justify-content: center; }
+.wc__im .cy-cover-fb__art { width: 120rpx; height: 90rpx; } /* D15:无图位用统一的 look 渐变兜底(cy-cover-fb),不再是大插画 */
+.wc__im--illus::after { display: none; }

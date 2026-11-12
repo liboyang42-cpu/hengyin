@@ -72,7 +72,7 @@ test('① 大编辑器与筛选弹窗固定在 full', () => {
     ['pages/publish/fabu/runtime-editor.wxml', 'runtimeEditor.show'],
     ['pages/publish/fabu/zero-hp-editor.wxml', 'runtimeZeroEditor.show'],
     ['pages/publish/fabu/runtime-structure-editor.wxml', 'structureEditor.show'],
-    ['pages/play/theme-backpack.wxml', 'themeBackpackOpen'],
+    // r2-play a1-v3-21(业主「背包…页面应该是新页面」):背包改为整屏页面层,不再是 cy-sheet,另由 qx-r2-play 测试核对
     ['pages/club/detail/index.wxml', 'settingsShow'],
     ['pages/searchmap/index.wxml', 'popVisible'],
     ['pages/search2/index.wxml', 'popVisible'],

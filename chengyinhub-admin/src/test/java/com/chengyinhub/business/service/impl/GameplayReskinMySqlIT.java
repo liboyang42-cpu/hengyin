@@ -46,11 +46,11 @@ class GameplayReskinMySqlIT {
                 }
             }
             ItSchema.applyMigrations(connection,"sql/migration_theme_state_key_20260916.sql", "sql/migration_20261022_theme_state_key_attribute_def.sql",
-                    "sql/migration_20261026_theme_attribute_registry_version.sql",
+                    "sql/migration_20261026_theme_attribute_registry_version.sql", "sql/migration_preset_draft_source_20261108.sql",
                     "sql/migration_20261003_merchant_offer_withdrawal_columns.sql",
                     "sql/migration_club_direct_merchant_receivable_20261004.sql",
                     "sql/migration_20261012_app_media_asset.sql",
-                    "sql/migration_20261012_app_media_asset_namespaces.sql",
+                    "sql/migration_20261012_app_media_asset_namespaces.sql", "sql/migration_20261109_app_media_provenance.sql",
                     "sql/migration_audit_level_20261020.sql");
         }
         Configuration configuration=new Configuration();configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
@@ -83,6 +83,13 @@ class GameplayReskinMySqlIT {
         java.util.Map<String, Object> approved = mediaAssets.stageApprovedImage(7L,
                 "upload/0123456789abcdef0123456789abcdef.png");
         assertEquals(1L, ((Number) approved.get("assetId")).longValue());
+        assertEquals("unknown", mediaMapper.select(1L).get("sourceType"));
+        // This synthetic image is owned by the fixture author; record the declaration through the real owner gate.
+        new org.springframework.transaction.support.TransactionTemplate(
+                new org.springframework.jdbc.datasource.DataSourceTransactionManager(source))
+                .execute(tx -> mediaAssets.saveProvenance(1L, 7L, java.util.Map.of(
+                        "sourceType", "original", "licenseNote", "Synthetic image owned by test fixture author")));
+        assertEquals("original", mediaMapper.select(1L).get("sourceType"));
         java.util.Map<String, Object> stored = mediaMapper.select(1L);
         assertEquals(7L, ((Number) stored.get("memberId")).longValue());
         assertEquals("APP", stored.get("ownerType"));

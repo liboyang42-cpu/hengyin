@@ -2,8 +2,8 @@
      无 WebGL 或引擎失败 → 静态网格降级(L0)。 -->
 <!-- 2026-10-30 业主定稿 P-3:勋章墙成了「收集册 · 勋章」:整屏浅色流动底、两个一排、计数换成一圈点、点一枚飞到屏幕中间 -->
 <view class="theme-dark" style="--cy-comp-sheet-max-h:calc(100vh - {{sheetTop}}px);">
-<!-- 收集册整屏浅色:页根照玩家域挂 theme-dark,浅色由里面这一层 theme-light 逃生口给(与原集邮册同一做法) -->
-<view class="theme-light alb-light">
+<!-- x-fix2 L-1(2026-11-11):玩家域一律深色,收集册不再挂 theme-light 逃生口 -->
+<view class="alb-light">
   <album-aura wx:if="{{viewMode === 'list'}}" />
   <cy-nav-bar wx:if="{{viewMode === 'list'}}" overlay />
   <cy-toast id="cy-toast" />
@@ -22,7 +22,7 @@
     <scroll-view wx:else scroll-y class="bw-fallback" style="padding-top:{{statusBarHeight + 60}}px;">
       <view class="bw-fb-grid">
         <view class="bw-fb-item" wx:for="{{badges}}" wx:key="index" bindtap="onFbTap" data-idx="{{index}}" hover-class="cy-pressed" hover-stay-time="80">
-          <image class="bw-fb-img" src="{{item.iconUrl}}" mode="aspectFit" wx:if="{{item.iconUrl}}"></image>
+          <image class="bw-fb-img" src="{{item.iconUrl}}" mode="aspectFit" wx:if="{{item.iconUrl && !iconBroken[index]}}" binderror="onIconError" data-idx="{{index}}"></image>
           <view class="bw-fb-img bw-fb-ph" wx:else aria-role="img" aria-label="默认勋章图标">
             <cy-icon name="star" size="48" />
           </view>
@@ -50,8 +50,10 @@
               aria-role="button" aria-label="{{item.name}}，{{item.locked ? '尚未点亮' : '已点亮'}}">
           <view class="bw-card bw-card--{{item.rarity || 0}} {{item.locked ? 'is-locked' : ''}} {{flyIdx === item._idx ? 'is-away' : ''}}">
           <view class="bw-medal {{item.locked ? 'is-locked' : ''}}" id="bw-medal-{{item._idx}}">
-            <image wx:if="{{item.iconUrl}}" class="bw-medal__img" src="{{item.iconUrl}}" mode="aspectFit" />
+            <!-- x-fix2 M-2:一张图到不了只让这一枚退回徽记/星标,不影响整面墙 -->
+            <image wx:if="{{item.iconUrl && !iconBroken[item._idx]}}" class="bw-medal__img" src="{{item.iconUrl}}" mode="aspectFit" binderror="onIconError" data-idx="{{item._idx}}" />
             <image wx:elif="{{pins[item.pinId]}}" class="bw-medal__pin" src="{{pins[item.pinId]}}" mode="aspectFit" aria-hidden="true" />
+            <cy-icon wx:else name="star" size="64" />
           </view>
           </view>
           <text class="bw-cell__name ep1">{{item.name}}</text>
@@ -60,6 +62,11 @@
       </view>
     </block>
   </scroll-view>
+
+  <!-- x-fix2 M-2:加载失败按全站口径只留空白遮罩,但收集册页头(标题 + 勋章/邮票/藏品)照常在,整页不再一片空 -->
+  <view class="bw-list" wx:if="{{viewMode === 'list' && (loadFail || partialFail) && !wallAuthRequired}}">
+    <album-head active="medal" />
+  </view>
 
   <!-- 列表模式首屏加载占位:数据未到前不留空白黑屏 -->
   <view class="bw-list" wx:if="{{viewMode === 'list' && !loaded && !loadFail && !partialFail}}">

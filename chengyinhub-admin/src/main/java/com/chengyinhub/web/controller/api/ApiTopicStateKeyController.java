@@ -60,6 +60,10 @@ public class ApiTopicStateKeyController extends BaseController {
     @Autowired
     private TopicPublishCheckService topicPublishCheckService;
 
+    /** 发布状态五段事实的唯一读口;实现留在发布域自己手里,不在这里重算。 */
+    @Autowired
+    private com.chengyinhub.business.service.impl.TopicPublicationService topicPublicationService;
+
     @Autowired
     private IMerchantAccessService merchantAccessService;
 
@@ -251,6 +255,27 @@ public class ApiTopicStateKeyController extends BaseController {
             return error(denial);
         }
         return success(topicPublishCheckService.check(topic));
+    }
+
+    /**
+     * 发布状态分段事实(草稿 / 审核 / 公开 / 售卖 / 可玩)。只读,归属闸与 publish-check 同一道。
+     *
+     * <p>两个接口分工明确:publish-check 回答「现在点发布会因为什么被拦」(规则清单),
+     * publish-status 回答「这篇现在到底走到哪一步」(状态事实)。规则不在这里重算,
+     * 状态也不在 publish-check 里编 —— 专业主题先公开后审,「玩家看得见」与「已过审」必须分开读。
+     */
+    @Operation(summary = "发布状态与分段事实(只读;仅创作者本人)")
+    @GetMapping("/publish-status")
+    public AjaxResult publishStatus(Long topicId, String scope) {
+        if (invalidTopicId(topicId)) {
+            return error("参数不合规");
+        }
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        String denial = editableDenial(topic, scope);
+        if (denial != null) {
+            return error(denial);
+        }
+        return success(topicPublicationService.publicationStatus(topic));
     }
 
     private static boolean invalidTopicId(Long topicId) {

@@ -43,6 +43,7 @@ class AppMediaAssetMySqlIT {
             for(int pass=0;pass<2;pass++) {
                 ScriptUtils.executeSqlScript(connection,new FileSystemResource("sql/migration_20261012_app_media_asset.sql"));
                 ScriptUtils.executeSqlScript(connection,new FileSystemResource("sql/migration_20261012_app_media_asset_namespaces.sql"));
+                ScriptUtils.executeSqlScript(connection,new FileSystemResource("sql/migration_20261109_app_media_provenance.sql"));
             }
         }
         SqlSessionFactoryBean factory=new SqlSessionFactoryBean();factory.setDataSource(source);
@@ -116,6 +117,34 @@ class AppMediaAssetMySqlIT {
         assertEquals("REJECTED",older.get(19).get("reviewState"));assertFalse(older.get(19).containsKey("objectKey"));
         assertEquals(0,service.ownedRecent(10L,21L).size());assertEquals(0,service.ownedRecent(9L,1L).size());
         assertThrows(ServiceException.class,()->service.ownedRecent(9L,0L));
+    }
+
+    @Test void provenancePersistsOnOriginalReceiptWithOwnerScopedWriteAndLegacyNullReadback() {
+        Map<String,Object> upload=new java.util.HashMap<>();upload.put("memberId",9L);
+        upload.put("objectKey","upload/"+UUID.randomUUID().toString().replace("-","")+".jpg");
+        assertEquals(1,mapper.insertApprovedImage(upload));
+        Long id=((Number)upload.get("id")).longValue();
+        assertEquals("unknown",mapper.select(id).get("sourceType"));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                ()->com.chengyinhub.business.service.support.AppMediaProvenance.requirePublication(mapper.select(id)));
+        Map<String,Object> declaration=com.chengyinhub.business.service.support.AppMediaProvenance.normalize(
+                Map.of("sourceType","licensed","licenseNote","test-only licence declaration",
+                        "attribution","Test author","createdAt","2026-11-09T00:00:00Z"));
+        declaration.put("id",id);declaration.put("memberId",10L);
+        assertEquals(0,mapper.updateProvenance(declaration));
+        declaration.put("memberId",9L);assertEquals(1,mapper.updateProvenance(declaration));
+        Map<String,Object> readback=mapper.select(id);
+        assertEquals("licensed",readback.get("sourceType"));
+        assertEquals("test-only licence declaration",readback.get("licenseNote"));
+        assertEquals("APPROVED",readback.get("reviewState"));assertEquals(0,((Number)readback.get("version")).intValue());
+        assertDoesNotThrow(()->com.chengyinhub.business.service.support.AppMediaProvenance.requirePublication(readback));
+        assertFalse(com.chengyinhub.business.service.support.AppMediaProvenance.publicView(readback).containsKey("licenseNote"));
+        assertEquals("licensed",mapper.selectOwnedRecent(9L).get(0).get("sourceType"));
+        db.update("update app_media_asset set source_type=null,license_note=null where id=?",id);
+        Map<String,Object> legacy=mapper.select(id);
+        assertEquals("unknown",com.chengyinhub.business.service.support.AppMediaProvenance.ownerView(legacy).get("sourceType"));
+        assertDoesNotThrow(()->com.chengyinhub.business.service.support.AppMediaProvenance.requirePublication(legacy));
+        assertNull(db.queryForObject("select source_type from app_media_asset where id=?",String.class,id));
     }
     @AfterAll void cleanup() {if(database!=null)admin.execute("drop database "+database);}
 }

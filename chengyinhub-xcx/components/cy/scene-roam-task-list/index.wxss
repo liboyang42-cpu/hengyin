@@ -15,7 +15,6 @@
    --cy-font-caption / --cy-leading-normal)。不设 background —— 盖在既有卡片底色上,再铺一层会顶掉它。 */
 .task-cover-error { height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cy-space-1); color: var(--cy-text-secondary); }
 .task-cover-error__icon { width: 96rpx; height: 72rpx; flex: 0 0 auto; }
-.task-cover-error__text { font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }
 .task-card__body { padding: var(--cy-space-3); }
 .task-card__title-row { display: flex; align-items: flex-start; gap: var(--cy-space-2); }
 .task-card__title { flex: 1; min-width: 0; color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 700; }

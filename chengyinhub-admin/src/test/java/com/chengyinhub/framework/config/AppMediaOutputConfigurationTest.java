@@ -214,4 +214,21 @@ class AppMediaOutputConfigurationTest {
         assertEquals("", realMapper.readTree(realMapper.writeValueAsString(Map.of("imgUrl", reference))).path("imgUrl").asText());
     }
 
+
+    /** M-1：对象存储缺配置时一张图签不出地址，只让这一项无图，同一响应里其他字段与可签的图照常输出。 */
+    @Test void oneUnsignableImageDegradesToNoImageInsteadOfFailingTheWholeResponse() throws Exception {
+        when(guard.visibleUrl(eq("media-asset:60"), isNull()))
+                .thenThrow(new IllegalStateException("对象存储配置缺失: CHENGYIN_OSS_BUCKET_NAME"));
+        com.chengyinhub.common.core.domain.AjaxResult result = com.chengyinhub.common.core.domain.AjaxResult.success();
+        result.put("data", Map.of("merchantName", "测试商家", "logo", "media-asset:1",
+                "projects", List.of(Map.of("title", "第一项", "imgUrl", "media-asset:60"),
+                        Map.of("title", "第二项", "imgUrl", "media-asset:1"))));
+        com.fasterxml.jackson.databind.JsonNode out = mapper.readTree(mapper.writeValueAsString(result));
+        assertEquals(200, out.path("code").asInt());
+        assertEquals("测试商家", out.path("data").path("merchantName").asText());
+        assertEquals("https://real/upload/approved?signature=stable", out.path("data").path("logo").asText());
+        assertEquals("第一项", out.path("data").path("projects").get(0).path("title").asText());
+        assertEquals("", out.path("data").path("projects").get(0).path("imgUrl").asText());
+        assertEquals("https://real/upload/approved?signature=stable", out.path("data").path("projects").get(1).path("imgUrl").asText());
+    }
 }

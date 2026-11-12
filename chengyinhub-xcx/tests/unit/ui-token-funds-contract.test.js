@@ -969,7 +969,7 @@ test('地图视图下压在瓦片上的 chrome 必须自带承托,不能裸压�
   // 2026-08-10:载体从独立浮层 .pd-viewswitch 收进底部导航条 .slopes-tabbar(两者位置
   // 重叠,实拍两组图标叠在一起),断言跟着搬家 —— 断言的对象没了就成了橡皮图章。
   const bar = rule(wxss, '.slopes-tabbar')
-  assert.match(bar, /background:\s*linear-gradient\([^;]*var\(--cy-[\w-]+\)/,
+  assert.match(bar, /background:\s*var\(--cy-[\w-]+\)/,
     '底部导航条没有承托底 —— 压在浅色地图瓦片上会糊成一片')
   assert.match(bar, /position:\s*fixed/, '导航条必须固定在屏幕上，跟着列表滚就切不动了')
 
@@ -991,9 +991,9 @@ test('地图视图下压在瓦片上的 chrome 必须自带承托,不能裸压�
 test('negative control: 导航条失去承托底/脱离 fixed、返回钮失去承托底时必须判红', () => {
   const wxss = read(FILES.fabu)
 
-  const noBg = wxss.replace(/(\.slopes-tabbar\s*\{[^}]*?)background:\s*linear-gradient\([^;]*;/, '$1')
+  const noBg = wxss.replace(/(\.slopes-tabbar\s*\{[^}]*?)background:\s*var\([^;]*;/, '$1')
   assert.notEqual(noBg, wxss, '负控未命中导航条承托底')
-  assert.throws(() => assert.match(rule(noBg, '.slopes-tabbar'), /background:\s*linear-gradient\([^;]*var\(--cy-[\w-]+\)/), assert.AssertionError)
+  assert.throws(() => assert.match(rule(noBg, '.slopes-tabbar'), /background:\s*var\(--cy-[\w-]+\)/), assert.AssertionError)
 
   const notFixed = wxss.replace(/(\.slopes-tabbar\s*\{[^}]*?)position:\s*fixed;/, '$1position: static;')
   assert.notEqual(notFixed, wxss, '负控未命中导航条定位')

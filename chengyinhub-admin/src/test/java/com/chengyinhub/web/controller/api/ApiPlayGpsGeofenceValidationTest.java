@@ -259,6 +259,66 @@ class ApiPlayGpsGeofenceValidationTest
         verifyNoProgressAndNoReward();
     }
 
+    private com.chengyinhub.business.domain.TopicRouteSession freezeOrdinaryArrivalReading() {
+        BasicPlayCommandFixtures.routeVersion(controller, ACTIVITY, TOPIC, 3);
+        var routes = (com.chengyinhub.business.mapper.TopicRouteSessionMapper)
+                PlayNodeAccessTestFixtures.getField(controller, "playCommandRouteMapper");
+        var session = routes.selectCurrentByOwner(ACTIVITY, TOPIC, PLAYER);
+        var snapshot = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode();
+        var station = snapshot.putArray("routeStations").addObject().put("nodeId", NODE);
+        station.putObject("arrivalReading").put("level", 2).put("log", "原局到达读数").put("answer", "secret");
+        session.setConfigSnapshotJson(snapshot.toString());
+        return session;
+    }
+
+    @Test
+    void ordinaryArrivalProjectsFrozenReadingWithoutChangingCompletion() {
+        freezeOrdinaryArrivalReading();
+        AjaxResult result = arrive(NODE_LNG, NODE_LAT);
+        var data = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(result.get("data"));
+        assertEquals(200, result.get("code"));
+        assertEquals(2, data.path("arrivalReading").path("level").asInt());
+        assertEquals("原局到达读数", data.path("arrivalReading").path("log").asText());
+        assertEquals(2, data.path("arrivalReading").size());
+        verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
+        verify(progressionService).onNodeDone(PLAYER);
+    }
+
+    @Test
+    void repeatedOrdinaryArrivalReturnsOriginalReadingAndAwardsOnce() throws Exception {
+        var session = freezeOrdinaryArrivalReading();
+        AjaxResult first = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY),
+                String.valueOf(NODE), NODE_LNG, NODE_LAT, null, "same-reading-request", 3, VALID_ACCURACY);
+        var json = new com.fasterxml.jackson.databind.ObjectMapper();
+        var originalData = json.readTree(json.writeValueAsBytes(first.get("data")));
+        assertEquals(200, first.get("code"));
+        session.setConfigSnapshotJson("{\"routeStations\":[]}");
+        AjaxResult replay = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY),
+                String.valueOf(NODE), NODE_LNG, NODE_LAT, null, "same-reading-request", 3, VALID_ACCURACY);
+        assertEquals(200, replay.get("code"));
+        assertEquals(originalData, json.readTree(json.writeValueAsBytes(replay.get("data"))));
+        verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
+        verify(progressionService).onNodeDone(PLAYER);
+    }
+
+    @Test
+    void rejectedOrdinaryArrivalDoesNotExposeReadingOrAward() {
+        freezeOrdinaryArrivalReading();
+        AjaxResult result = arrive("120.0000", "30.0000");
+        var data = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(result.get("data"));
+        assertNotEquals(200, result.get("code"));
+        org.junit.jupiter.api.Assertions.assertFalse(data.has("arrivalReading"));
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void legacyOrdinaryArrivalKeepsReadingAbsent() {
+        AjaxResult result = arrive(NODE_LNG, NODE_LAT);
+        var data = new com.fasterxml.jackson.databind.ObjectMapper().valueToTree(result.get("data"));
+        assertEquals(200, result.get("code"));
+        org.junit.jupiter.api.Assertions.assertFalse(data.has("arrivalReading"));
+    }
+
     @Test
     void legalNearCoordinatesStillAdvanceAndAward()
     {
@@ -533,7 +593,7 @@ class ApiPlayGpsGeofenceValidationTest
         var denied = org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
                 () -> PlayNodeAccessTestFixtures.invokeMethod(controller, "arriveOnce", PLAYER,
                         ACTIVITY.toString(), NODE.toString(), null, null, null, "personal-proof", 0,
-                        null, null, null, new com.chengyinhub.web.service.play.PlayOriginalRun(session, 99L, null, null)));
+                        null, null, null, null, new com.chengyinhub.web.service.play.PlayOriginalRun(session, 99L, null, null)));
         assertEquals("通用个人任务请使用任务结算，不能领取旧节点奖励", denied.getMessage());
         verify(fixture(IShopDayProofService.class, "shopDayProofService"), never()).markArrived(anyLong(), anyLong(), any());
         verify(route, never()).recordPlayerArrival(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any());
@@ -559,7 +619,7 @@ class ApiPlayGpsGeofenceValidationTest
         var denied = org.junit.jupiter.api.Assertions.assertThrows(com.chengyinhub.common.exception.ServiceException.class,
                 () -> PlayNodeAccessTestFixtures.invokeMethod(controller, "arriveOnce", PLAYER,
                         ACTIVITY.toString(), NODE.toString(), null, null, null, "shared-proof", 0,
-                        null, "game:90", 1, new com.chengyinhub.web.service.play.PlayOriginalRun(null, 90L, "game:90", 1)));
+                        null, null, "game:90", 1, new com.chengyinhub.web.service.play.PlayOriginalRun(null, 90L, "game:90", 1)));
         assertEquals("共享局任务请使用本队任务结算入口", denied.getMessage());
         verify(fixture(IShopDayProofService.class, "shopDayProofService"), never()).markArrived(anyLong(), anyLong(), any());
         verify(shared, never()).recordSharedBasicArrival(anyLong(), anyLong(), anyLong(), anyLong(), any(), any(), any(), any());

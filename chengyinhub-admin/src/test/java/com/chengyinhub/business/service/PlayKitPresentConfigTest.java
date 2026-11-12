@@ -39,6 +39,7 @@ class PlayKitPresentConfigTest {
     private static final String[] GAME_SECTIONS = {
             "qa", "branch", "predict", "pricePair", "random", "profile", "note", "check", "quietHold",
             "estimate", "diyName", "typeIn", "dailySign", "slowTask", "musicCorner", "timeWindow", "diceRoll",
+            "hangman",
             "reaction", "ballShake", "countdown", "stopwatch", "coinFlip", "hiddenObject", "scan", "steps",
             "compass", "shout", "blindTaste", "silentOrder", "sort", "match", "classify", "compare", "photoCheck", "album" };
 

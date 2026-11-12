@@ -61,6 +61,20 @@ regexes = [
   '''^\s*"utils/transport/upload\-client\.js": "942d548462b4f5db5ce9f365dac7b1b178ee3cc22cf44cc94c70a5481d8f0165",?\s*$''',
 ]
 
+[[rules.allowlists]]
+# 预设键是公开目录里的 Txx-slug 标识；仅允许该字段的固定形状。
+condition = "AND"
+paths = ['''(^|/)chengyinhub-system/src/main/resources/gameplay-presets/catalog\.json$''']
+regexTarget = "line"
+regexes = ['''^\s*"presetKey": "T[0-9]{2}-[a-z0-9-]+",?\s*$''']
+
+[[rules.allowlists]]
+# 仅为单测里的公开测试活动标识消除变量名误报，不匹配真实凭据格式。
+condition = "AND"
+paths = ['''(^|/)chengyinhub-admin/src/test/java/com/chengyinhub/business/service/VideoBountyServiceTest\.java$''']
+regexTarget = "line"
+regexes = ['''^\s*private static final String CAMPAIGN_KEY = "launch-[0-9]{4}q[0-9]";\s*$''']
+
 # One historical rig request ID, not an API credential; retain exact path and full-line matching.
 [[rules.allowlists]]
 condition = "AND"

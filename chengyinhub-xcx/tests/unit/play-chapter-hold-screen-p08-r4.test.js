@@ -76,7 +76,10 @@ test('翻转门组件不再认识 held,底部仍是「轻点跳过」', () => {
   assert.doesNotMatch(fs.readFileSync(path.join(dir, 'index.js'), 'utf8'), /held/)
   const w = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8')
   assert.doesNotMatch(w, /held|等队长放行/)
-  assert.match(w, /<view class="cf__hint" wx:if="\{\{mode === 'gate'\}\}">轻点跳过<\/view>/)
+  // r2-finish:章节完成卡在场时底部是「下一站」按钮,不再叠一行「轻点跳过」
+  // l-play 2026-11-10(业主批准 proto gp-chapter-start):开场屏底部是「读下去」按钮(点它方块炸散),不再是一行「轻点跳过」
+  assert.match(w, /<view class="cf__foot cf__foot--start \{\{cta \? 'is-on' : ''\}\}" wx:if="\{\{mode === 'gate' && start\}\}"><view class="cf__btn" catchtap="onTap"[^>]*aria-label="读下去"/)
+  assert.doesNotMatch(w, /轻点跳过/)
 })
 
 test('放行:收起等待屏、换上翻转门,门不发 continue 时按原兜底计时进正文;仍被挡时兜底不进', () => {
@@ -98,7 +101,7 @@ test('放行:收起等待屏、换上翻转门,门不发 continue 时按原兜�
     assert.equal(entered, 1)
     p.data.chapterGate = { show: true, held: true, endInfo: { number: '01' } }
     p._releaseChapterGate()
-    assert.equal(timers.at(-1).ms, 7800, '带上一章完成面时按长计时兜底')
+    assert.equal(timers.at(-1).ms, 10800, '带上一章完成面时按长计时兜底(r2-finish:完成卡停留后溶解,再翻下一章)')
   } finally { global.setTimeout = realSet; global.clearTimeout = realClear }
 
   const q = page()

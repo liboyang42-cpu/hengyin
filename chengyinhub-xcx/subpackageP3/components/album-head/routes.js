@@ -1,0 +1,10 @@
+'use strict'
+// 收集册三段 = 三个原路由(album-head 段切换与 album-intro 卡堆共用一份)
+const ALBUM_ROUTES = {
+  medal: '/subpackageP3/pages/badge-wall/index/index',
+  stamp: '/subpackageP3/pages/stamp-album/index/index',
+  object: '/subpackageP3/pages/object-cards/index/index',
+}
+// illus:卡堆上的 cy-illus 插图名(l-after,业主批准原型:勋章 / 邮戳 / 宝石)
+const ALBUM_SEGS = [{ key: 'medal', label: '勋章', illus: 'badge' }, { key: 'stamp', label: '邮票', illus: 'stamp' }, { key: 'object', label: '藏品', illus: 'gem' }]
+module.exports = { ALBUM_ROUTES, ALBUM_SEGS }

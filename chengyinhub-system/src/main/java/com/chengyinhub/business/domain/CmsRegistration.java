@@ -300,6 +300,12 @@ public class CmsRegistration extends BaseEntity
      */
     private OmsTicket omsTicket;
 
+    /**
+     * 订单详情退款/权益只读汇总（瞬态，U07-04/U07-05）。
+     * 只由既有报名/退款/权益事实派生；null = 当前读取路径未汇总，不是"零退款"。
+     */
+    private com.chengyinhub.business.domain.vo.RegistrationSettlementSummaryVO settlementSummary;
+
     /** 城市定向本人在本单之后已通关(TOPIC_FINISH 勋章,瞬态读面,P-22)。只读,不改任何事实。 */
     private Boolean topicCompleted;
 
@@ -336,6 +342,14 @@ public class CmsRegistration extends BaseEntity
 
     public void setOmsTicket(OmsTicket omsTicket) {
         this.omsTicket = omsTicket;
+    }
+
+    public com.chengyinhub.business.domain.vo.RegistrationSettlementSummaryVO getSettlementSummary() {
+        return settlementSummary;
+    }
+
+    public void setSettlementSummary(com.chengyinhub.business.domain.vo.RegistrationSettlementSummaryVO settlementSummary) {
+        this.settlementSummary = settlementSummary;
     }
 
     public java.math.BigDecimal getCancelRefundAmount() { return cancelRefundAmount; }

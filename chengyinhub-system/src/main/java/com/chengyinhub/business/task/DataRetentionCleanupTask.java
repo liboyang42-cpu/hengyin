@@ -20,6 +20,7 @@ import com.chengyinhub.business.service.IDataRetentionService;
  *    聊天原文含用户输入,取更短期),必须与线上《隐私政策》第四条实际承诺口径一致 —— 通过
  *    application.yml 覆盖:
  *      chengyin.retention.browse-days / event-days / npc-chat-days / npc-chat-request-hours /
+ *      ai-generation-days(AIGC 生成日志,默认 180 天) /
  *      batch-size / max-batches
  */
 @Component("dataRetentionCleanupTask")
@@ -38,6 +39,10 @@ public class DataRetentionCleanupTask {
 
     @Value("${chengyin.retention.npc-chat-days:90}")
     private int npcChatDays;
+
+    /** AIGC 生成日志(ai_generation_log)留存天数,默认 180 天;<=0 视为参数非法,本步跳过不删。 */
+    @Value("${chengyin.retention.ai-generation-days:180}")
+    private int aiGenerationDays = 180;
 
     /** requestId 重放窗口固定为 48 小时；不复用含原文的 npc_chat_log 留存期。 */
     @Value("${chengyin.retention.npc-chat-request-hours:48}")
@@ -64,7 +69,7 @@ public class DataRetentionCleanupTask {
         java.util.List<String> failedSteps = new java.util.ArrayList<>();
         RuntimeException firstFailure = null;
 
-        int browse = -1, event = -1, npcChat = -1, npcChatRequest = -1, roam = -1;
+        int browse = -1, event = -1, npcChat = -1, npcChatRequest = -1, roam = -1, aiGeneration = -1;
         try {
             browse = dataRetentionService.cleanBrowseRecords(new Date(now - (long) browseDays * DAY_MILLIS), batchSize, maxBatches);
         } catch (RuntimeException e) { firstFailure = record(failedSteps, "browse", e, firstFailure); }
@@ -83,6 +88,12 @@ public class DataRetentionCleanupTask {
                     new Date(now - com.chengyinhub.business.support.RoamLocationRetention.THIRTY_DAYS_MILLIS), batchSize, maxBatches);
             log.info("漫游详细位置清理完成 sessions/shares={} retentionDays=30", roam);
         } catch (RuntimeException e) { firstFailure = record(failedSteps, "roam_location", e, firstFailure); }
+
+        try {
+            aiGeneration = aiGenerationDays <= 0 ? 0 : dataRetentionService.cleanAiGenerationLogs(
+                    new Date(now - (long) aiGenerationDays * DAY_MILLIS), batchSize, maxBatches);
+            log.info("AI 生成日志清理完成 删 {} 行(保留{}天)", aiGeneration, aiGenerationDays);
+        } catch (RuntimeException e) { firstFailure = record(failedSteps, "ai_generation_log", e, firstFailure); }
 
         log.info("留存清理任务结束:浏览记录删 {} 行(保留{}天)、行为事件删 {} 行(保留{}天)、NPC追问删 {} 行(保留{}天)、Chat幂等终态删 {} 行(保留{}小时) 失败步骤={}",
                 browse, browseDays, event, eventDays, npcChat, npcChatDays,

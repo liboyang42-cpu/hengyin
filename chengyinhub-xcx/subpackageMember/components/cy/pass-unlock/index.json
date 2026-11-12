@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-pass-object": "/subpackageMember/components/cy/pass-object/index"
+  }
+}

@@ -191,11 +191,12 @@ test('不在包内的主题用接口封面，拉不动时按稳定 id 换成既�
   assert.equal(vm._topics[0].cover, 'https://cdn.example/x.jpg', '对不上 id 的迟到 error 不标错卡');
   vm.onCoverError({ currentTarget: { dataset: { id: 5 } } });
   assert.equal(vm._topics[0].cover, '');
-  assert.equal(vm.data.coverErrorSrc, '/images/no_data.svg');
+  assert.equal(vm.data.coverErrorSrc, '/images/cover-route.svg');
   const wxml = read('pages/templatedetail/shelf/index.wxml');
   ['lc__img', 'r5__pic', 'mc__pic', 'tci__pic'].forEach((cls) => {
     assert.match(wxml, new RegExp('<image wx:if="\\{\\{ item\\.cover \\}\\}" class="' + cls + '"[^>]*binderror="onCoverError"'));
-    assert.match(wxml, new RegExp('class="' + cls + ' cv-err"[\\s\\S]*?封面暂不可用'));
+    assert.match(wxml, new RegExp('class="' + cls + ' cv-err"'));
+    assert.doesNotMatch(wxml, /封面暂不可用/);
   });
 });
 

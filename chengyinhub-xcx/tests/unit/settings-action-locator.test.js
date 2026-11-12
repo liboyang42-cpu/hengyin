@@ -9,7 +9,10 @@ const wxml = fs.readFileSync(path.resolve(__dirname, '../../pages/shezhi/shezhi.
 
 test('设置页每个 cy-cell 动作都有稳定且唯一的 id 定位器', () => {
   const cells = wxml.match(/<cy-cell\b[^>]*\bbind:tap="[^"]+"[^>]*\/>/g) || [];
-  assert.equal(cells.length, 13, '设置菜单动作数量变化时必须同步定位器合同');
+  // V1-P53(2026-11-09):补回「投诉建议」,13 → 14
+  // 2026-11-10 staging 合流:qx-b3「邀请与收益」(settings-promo) 与 qx-a3「投诉建议」叠加,13 → 15
+  // 2026-11-11 f-compliance:隐私与定位下补「AI 对话记录」(settings-ai-chat-records),15 → 16
+  assert.equal(cells.length, 16, '设置菜单动作数量变化时必须同步定位器合同');
   const ids = cells.map((tag) => {
     const match = /\bid="([^"]+)"/.exec(tag);
     assert.ok(match, `缺少 id: ${tag}`);
@@ -21,6 +24,7 @@ test('设置页每个 cy-cell 动作都有稳定且唯一的 id 定位器', () =
   assert.ok(ids.includes('settings-appeals'), '我的申诉入口必须有稳定定位器');
   // X6：我的申诉用 icon_privacy，排在发票前
   assert.ok(ids.indexOf('settings-appeals') === ids.indexOf('settings-invoice') - 1);
+  assert.ok(ids.includes('settings-feedback'), '投诉建议入口必须有稳定定位器');
   assert.ok(ids.includes('settings-post-governance'), '帖子处置与申诉入口必须有稳定定位器');
 });
 

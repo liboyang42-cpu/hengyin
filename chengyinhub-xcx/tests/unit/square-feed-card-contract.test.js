@@ -123,7 +123,7 @@ function assertImmersiveCardContract(files) {
   assert.match(files.detailWxml, /name="\{\{info\.isLiked==1 \? 'heart-filled' : 'heart'\}\}"[^>]*>[\s\S]*?\{\{\s*info\.likeCount/)
   assert.match(files.detailWxml, /class="act act--comment[^>]*catchtap="focusCommentInput"[\s\S]*?name="comment"[\s\S]*?\{\{\s*info\.commentCount/)
   assert.match(files.postCardWxml, /class="post-card__share"[^>]*open-type="share"/)
-  assert.match(files.detailWxml, /class="act-share act-share--end"[^>]*open-type="share"/)
+  assert.match(files.detailWxml, /class="act-share"[^>]*open-type="share"/)
   assert.doesNotMatch(files.detailWxml, /class="act-report"/, '动作行只保留点赞、评论与分享')
   assert.doesNotMatch(files.detailWxml, />\s*赞\s*</, '动作行不得出现“赞”字')
 

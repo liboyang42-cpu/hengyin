@@ -16,6 +16,408 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class GenericRouteRuntimeServiceTest {
+
+    private PlayHelpRunQuotaMapper cooperativeQuotas;
+    private PlayHelpCostApplication cooperativeCosts;
+
+    private void enableCooperativePuzzles(int freeUses) throws Exception {
+        ReflectionTestUtils.setField(service, "clock", (AdvancedGameClock) () -> new Date(now[0]));
+        ObjectNode snapshot = (ObjectNode) json.readTree(session.getModuleConfigSnapshotJson());
+        ObjectNode game = (ObjectNode) snapshot.path("themeConfig").path("gameplayRuntime");
+        game.put("cooperationVersion", 1);
+        for (JsonNode quest : game.path("quests")) ((ObjectNode) quest).remove("choices");
+        snapshot.put("hintFreeUsesPerRun", freeUses);
+        for (String node : Arrays.asList("11", "12")) {
+            snapshot.with("nodeAnswers").putObject(node).put("validationMethod", 1).put("questionAnswer", "钟楼");
+            ArrayNode ladder = snapshot.with("nodeConfigs").putObject(node).putArray("hintLadder");
+            ladder.addObject().put("level", 1).put("type", "TEXT").put("payload", "看钟面")
+                    .putObject("cost").put("points", 5);
+            ladder.addObject().put("level", 3).put("type", "TEXT").put("payload", "看年份")
+                    .putObject("cost").put("points", 8);
+            ladder.addObject().put("level", 5).put("type", "SKIP");
+        }
+        session.setModuleConfigSnapshotJson(snapshot.toString());
+        when(mapper.selectActiveTeamIdForUpdate(eq(70L), anyLong())).thenReturn(90L);
+        when(mapper.selectStoryStateForUpdate(50L, "TEAM", 90L)).thenReturn(owner);
+        cooperativeQuotas = mock(PlayHelpRunQuotaMapper.class);
+        cooperativeCosts = mock(PlayHelpCostApplication.class);
+        ReflectionTestUtils.setField(service, "cooperativeHelpQuotas", cooperativeQuotas);
+        ReflectionTestUtils.setField(service, "cooperativeGameSessions", mock(GameRuntimeSessionMapper.class));
+        ReflectionTestUtils.setField(service, "cooperativeHelpCosts", cooperativeCosts);
+        when(cooperativeCosts.use(anyLong(), anyString(), anyInt(), anyInt(), anyInt(), anyString()))
+                .thenAnswer(call -> new PlayHelpCostApplication.Charge(true, false, call.getArgument(2),
+                        ((Integer) call.getArgument(3)) > 0 ? 0 : call.getArgument(4), 95L, "real-charge"));
+        when(cooperativeQuotas.consumeOne(anyLong(), anyLong(), anyString(), anyLong())).thenReturn(1);
+    }
+
+    private Map<String, Object> cooperativeHelp(long member, String instance, String action, Integer level, String request) {
+        return service.cooperativePuzzleHelp(member, 70L, 50L, 11L, instance, 1,
+                action, level, request, "game.teamCooperation@1");
+    }
+
+
+    private String answerCooperativeChoice(boolean capacity) throws Exception {
+        enableCooperativePuzzles(0);
+        ObjectNode frozen=(ObjectNode)json.readTree(session.getModuleConfigSnapshotJson());
+        ObjectNode quest=(ObjectNode)frozen.path("themeConfig").path("gameplayRuntime").path("quests").path(0);
+        if(capacity) {
+            ((ObjectNode)frozen.path("themeConfig")).put("capacity",3);
+            quest.putArray("grants").addObject().put("itemId","food").put("quantity",1);
+        } else {
+            ArrayNode choices=quest.putArray("choices");
+            choices.addObject().put("choiceKey","supply").putArray("grants").addObject().put("itemId","food").put("quantity",1);
+            choices.addObject().put("choiceKey","cold").putArray("grants").addObject().put("itemId","cold").put("quantity",1);
+        }
+        session.setModuleConfigSnapshotJson(frozen.toString());
+        send("start-pending","QUEST_START","q1");String original=instance(8,11);
+        cooperativeHelp(7,original,"VIEW",null,null);cooperativeHelp(8,original,"VIEW",null,null);
+        service.recordSharedBasicArrival(8L,80L,70L,11L,"pending-answer","ANSWER",original,1);
+        return original;
+    }
+
+    private Map<String,Object> cooperativeConfirmationPayload(String original,String choice) throws Exception {
+        Map<String,Object> payload=new LinkedHashMap<>();
+        payload.put("questKey","q1");payload.put("runtimeInstance",original);
+        payload.put("answerRevision",stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("answerRevision").asInt());
+        if(choice!=null)payload.put("choiceKey",choice);
+        return payload;
+    }
+
+    private GameCommandReceiptView confirmCooperative(String request,Map<String,Object> payload) {
+        GameSessionCommand command=new GameSessionCommand();command.setActivityId(70L);command.setRequestId(request);
+        command.setExpectedRevision(session.getRevision());command.setAuthorityEpoch(1);command.setAction("QUEST_RESOLVE");
+        command.setPayload(new LinkedHashMap<>(payload));
+        return service.command(GameActorContext.player(7L),command);
+    }
+
+    @Test void cooperativeCorrectAnswerWaitsForAuthorChoiceThenOriginalCallerSettlesOnce() throws Exception {
+        String original=answerCooperativeChoice(false);
+        JsonNode question=stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original);
+        assertEquals("WAITING_CONFIRMATION",question.path("confirmationStatus").asText());
+        assertTrue(question.path("answerReceiptId").asLong()>0);
+        assertFalse(question.has("puzzleScore"));assertFalse(question.has("completedAt"));
+        assertEquals(0,stored().path("completedNodeIds").size());
+        assertEquals(1,stored().path("themeRuntime").path("inventory").path("food").asInt());
+        Map<String,Object> payload=cooperativeConfirmationPayload(original,"supply");
+        int originalRevision=session.getRevision();
+        GameCommandReceiptView first=confirmCooperative("confirm-first",payload);
+        assertEquals(1,stored().path("completedNodeIds").size());
+        assertEquals(2,stored().path("themeRuntime").path("inventory").path("food").asInt());
+        assertEquals(100,stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("puzzleScore").asInt());
+        GameSessionCommand replay=new GameSessionCommand();replay.setActivityId(70L);replay.setAuthorityEpoch(1);
+        replay.setExpectedRevision(originalRevision);replay.setAction("QUEST_RESOLVE");replay.setRequestId("confirm-first");replay.setPayload(payload);
+        service.command(GameActorContext.player(7L),replay);
+        confirmCooperative("confirm-another-request",payload);
+        assertEquals(2,stored().path("themeRuntime").path("inventory").path("food").asInt());
+        Map<String,Object> changed=new LinkedHashMap<>(payload);changed.put("choiceKey","cold");
+        assertThrows(GameSessionException.class,()->confirmCooperative("different-choice",changed));
+        assertNotNull(first.getResult());
+    }
+
+    @Test void cooperativeCapacityConfirmationPreservesAnswerAndRequiresOriginalLivePreview() throws Exception {
+        String original=answerCooperativeChoice(true);
+        JsonNode question=stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original);
+        assertEquals("CAPACITY_CONFIRMATION_REQUIRED",question.path("confirmationReason").asText());
+        assertFalse(question.has("puzzleScore"));
+        Map<String,Object> payload=cooperativeConfirmationPayload(original,null);
+        ArrayNode discard=json.createArrayNode();discard.addObject().put("itemId","food").put("quantity",1);
+        payload.put("discardRewards",discard);
+        String before=owner.getVariablesJson();
+        Map<?,?> preview=(Map<?,?>)service.sharedPreview(GameActorContext.player(7L),70L,"QUEST_RESOLVE",payload).get("settlement");
+        assertEquals(before,owner.getVariablesJson());
+        assertThrows(GameSessionException.class,()->confirmCooperative("no-preview",payload));
+        payload.put("previewVersion","expired");
+        assertThrows(GameSessionException.class,()->confirmCooperative("expired-preview",payload));
+        assertTrue(stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("answerReceiptId").asLong()>0);
+        assertEquals(0,stored().path("completedNodeIds").size());
+        payload.put("previewVersion",preview.get("previewVersion"));
+        confirmCooperative("actual-discard",payload);
+        assertEquals(1,stored().path("completedNodeIds").size());
+        assertEquals(1,stored().path("themeRuntime").path("inventory").path("food").asInt());
+    }
+
+    @Test void cooperativeConfirmationRejectsChangedInventoryPreviewWithoutLosingAnswer() throws Exception {
+        String original=answerCooperativeChoice(true);
+        Map<String,Object> payload=cooperativeConfirmationPayload(original,null);
+        ArrayNode discard=json.createArrayNode();discard.addObject().put("itemId","food").put("quantity",1);
+        payload.put("discardRewards",discard);
+        Map<?,?> preview=(Map<?,?>)service.sharedPreview(GameActorContext.player(7L),70L,"QUEST_RESOLVE",payload).get("settlement");
+        payload.put("previewVersion",preview.get("previewVersion"));
+        String reservedSnapshot=owner.getVariablesJson();
+        GameSessionException reserved=assertThrows(GameSessionException.class,()->send("use-stock","ITEM_USE","food"));
+        assertEquals("GAME_RESOURCE_RESERVED",reserved.getErrorCode());
+        assertEquals(reservedSnapshot,owner.getVariablesJson());
+        long answerReceipt=stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("answerReceiptId").asLong();
+        // Fixture-only stale-preview negative; ITEM_USE cannot bypass a live task reservation.
+        TopicRouteEngine.State changed=json.readValue(owner.getVariablesJson(),TopicRouteEngine.State.class);
+        changed.getThemeRuntime().with("inventory").put("food",0);
+        owner.setVariablesJson(json.writeValueAsString(changed));
+        GameSessionException stale=assertThrows(GameSessionException.class,()->confirmCooperative("old-stock-preview",payload));
+        assertEquals("GAME_TASK_COST_UNAVAILABLE",stale.getErrorCode());
+        assertTrue(stale.getMessage().contains("预览"));
+        assertEquals(answerReceipt,stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("answerReceiptId").asLong());
+        assertFalse(stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).has("completedAt"));
+        Map<String,Object> refreshed=new LinkedHashMap<>(payload);refreshed.remove("previewVersion");
+        refreshed.put("previewVersion",((Map<?,?>)service.sharedPreview(GameActorContext.player(7L),70L,"QUEST_RESOLVE",refreshed).get("settlement")).get("previewVersion"));
+        confirmCooperative("fresh-stock-preview",refreshed);
+        assertEquals(1,stored().path("completedNodeIds").size());
+    }
+
+    @Test void cooperativeConfirmationRejectsNoProofWrongInstanceWrongAnswerVersionAndMemberDeparture() throws Exception {
+        enableCooperativePuzzles(0);send("start-no-proof","QUEST_START","q1");String noProof=instance(7,11);
+        cooperativeHelp(7,noProof,"VIEW",null,null);
+        Map<String,Object> forged=new LinkedHashMap<>();forged.put("questKey","q1");forged.put("runtimeInstance",noProof);forged.put("answerRevision",0);
+        assertThrows(GameSessionException.class,()->confirmCooperative("no-proof",forged));
+        send("cancel-no-proof","QUEST_CANCEL","q1");
+        String original=answerCooperativeChoice(false);
+        Map<String,Object> valid=cooperativeConfirmationPayload(original,"supply");
+        Map<String,Object> wrongInstance=new LinkedHashMap<>(valid);wrongInstance.put("runtimeInstance","game:51:quest:1");
+        assertThrows(GameSessionException.class,()->confirmCooperative("other-run",wrongInstance));
+        Map<String,Object> wrongVersion=new LinkedHashMap<>(valid);wrongVersion.put("answerRevision",((Integer)valid.get("answerRevision"))+1);
+        assertThrows(GameSessionException.class,()->confirmCooperative("other-version",wrongVersion));
+        when(mapper.selectActiveTeamIdForUpdate(70L,7L)).thenReturn(null);
+        assertThrows(GameSessionException.class,()->confirmCooperative("departed-captain",valid));
+        assertEquals(0,stored().path("completedNodeIds").size());
+    }
+
+    @Test void cooperativeCancelledAnswerCannotConfirmAReplacementQuestInstance() throws Exception {
+        String original=answerCooperativeChoice(false);
+        Map<String,Object> old=cooperativeConfirmationPayload(original,"supply");
+        send("cancel-correct","QUEST_CANCEL","q1");send("restart-correct","QUEST_START","q1");
+        assertNotEquals(original,instance(7,11));
+        assertThrows(GameSessionException.class,()->confirmCooperative("stale-question",old));
+        assertEquals("CANCELLED",stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("confirmationStatus").asText());
+        assertFalse(stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).has("puzzleScore"));
+    }
+
+    @Test void cooperativePendingAnswerAndConfirmationAreTheSameForAllTeamMembers() throws Exception {
+        String original=answerCooperativeChoice(false);
+        JsonNode captain=json.valueToTree(cooperativeHelp(7,original,"VIEW",null,null)).path("cooperation");
+        JsonNode member=json.valueToTree(cooperativeHelp(8,original,"VIEW",null,null)).path("cooperation");
+        assertEquals(captain,member);
+        assertEquals("QUEST_RESOLVE",captain.path("questions").path(0).path("confirmation").path("action").asText());
+        assertThrows(GameSessionException.class,()->cooperativeHelp(8,original,"USE",1,"help-after-answer"));
+        confirmCooperative("finish-shared",cooperativeConfirmationPayload(original,"cold"));
+        assertEquals(json.valueToTree(cooperativeHelp(7,original,"VIEW",null,null)).path("cooperation"),
+                json.valueToTree(cooperativeHelp(8,original,"VIEW",null,null)).path("cooperation"));
+    }
+
+
+    @Test void cooperativeFacilityAnswerWaitsForTheOriginalOperationProofBeforeAtomicQuestSettlement() throws Exception {
+        enableCooperativePuzzles(0);
+        ObjectNode frozen=(ObjectNode)json.readTree(session.getModuleConfigSnapshotJson());
+        ObjectNode game=(ObjectNode)frozen.path("themeConfig").path("gameplayRuntime");
+        ((ObjectNode)game.path("quests").path(0)).put("facilityKey","shelter");
+        ObjectNode facility=game.putArray("facilities").addObject().put("facilityKey","shelter").put("actKey","first")
+                .put("scope","OWNER").put("targetScope","OWNER").put("settlementSlot","own_shelter").put("limit",1).put("operationNodeId",12);
+        facility.putArray("resourceCosts").addObject().put("itemId","food").put("quantity",1);
+        session.setModuleConfigSnapshotJson(frozen.toString());
+        send("facility-q-start","QUEST_START","q1");String original=instance(8,11);
+        cooperativeHelp(7,original,"VIEW",null,null);cooperativeHelp(8,original,"VIEW",null,null);
+        service.recordSharedBasicArrival(8L,80L,70L,11L,"facility-q-answer","ANSWER",original,1);
+        Map<String,Object> payload=cooperativeConfirmationPayload(original,null);
+        assertEquals("WAITING_OPERATION",stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("confirmationStatus").asText());
+        assertThrows(GameSessionException.class,()->confirmCooperative("missing-operation",payload));
+        assertEquals(1,stored().path("themeRuntime").path("inventory").path("food").asInt());
+        GameSessionCommand operation=new GameSessionCommand();operation.setActivityId(70L);operation.setAuthorityEpoch(1);
+        operation.setExpectedRevision(session.getRevision());operation.setAction("OPERATION_START");operation.setRequestId("real-operation");
+        operation.getPayload().put("operationKind","FACILITY");operation.getPayload().put("operationKey","shelter");
+        service.command(GameActorContext.player(7L),operation);
+        String operationInstance=instance(8,12);
+        assertNotEquals(original,operationInstance);
+        service.recordSharedRouteResult(8L,80L,70L,12L,operationInstance,"real-operation-answer",true,Collections.emptyList(),1);
+        assertEquals(0,stored().path("completedNodeIds").size());
+        assertFalse(stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).has("puzzleScore"));
+        confirmCooperative("operation-confirm",payload);
+        assertEquals(1,stored().path("completedNodeIds").size());
+        assertEquals(0,stored().path("themeRuntime").path("inventory").path("food").asInt());
+        assertFalse(stored().path("themeRuntime").has("activeOperation"));
+        assertEquals(100,stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("puzzleScore").asInt());
+        confirmCooperative("operation-confirm-again",payload);
+        assertEquals(0,stored().path("themeRuntime").path("inventory").path("food").asInt());
+    }
+
+    @Test void cooperativeConfirmationRejectsOldAuthorityEpochEvenWithCurrentCommandRevision() throws Exception {
+        String original=answerCooperativeChoice(false);
+        Map<String,Object> payload=cooperativeConfirmationPayload(original,"supply");
+        GameStoryState run=new GameStoryState();run.setId(92L);run.setGameSessionId(50L);run.setOwnerType("RUN");run.setOwnerId(50L);
+        run.setVariablesJson(json.createObjectNode().put("authorityMode","ONLINE").put("operationStatus","RUNNING").put("authorityEpoch",2).toString());
+        when(mapper.selectStoryState(50L,"RUN",50L)).thenReturn(run);
+        service.cooperativePuzzleHelp(7L,70L,50L,11L,original,2,"VIEW",null,null,"game.teamCooperation@1");
+        verify(cooperativeQuotas,never()).consumeOne(anyLong(),anyLong(),anyString(),anyLong());
+        GameSessionCommand confirm=new GameSessionCommand();confirm.setActivityId(70L);confirm.setAuthorityEpoch(2);
+        confirm.setExpectedRevision(session.getRevision());confirm.setRequestId("old-answer-epoch");confirm.setAction("QUEST_RESOLVE");confirm.setPayload(payload);
+        assertThrows(GameSessionException.class,()->service.command(GameActorContext.player(7L),confirm));
+        assertEquals(0,stored().path("completedNodeIds").size());
+    }
+
+    @Test void cooperativeFirstValidAnswerAdvancesTeamAndScoresOnlyOnce() throws Exception {
+        enableCooperativePuzzles(0); send("coop-start", "QUEST_START", "q1"); String original = instance(8, 11);
+        cooperativeHelp(8, original, "VIEW", null, null);
+        service.recordSharedBasicArrival(8L, 80L, 70L, 11L, "answer-one", "ANSWER", original, 1);
+        JsonNode state = stored();
+        assertEquals(1, state.path("completedNodeIds").size());
+        assertEquals(100, state.path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("puzzleScore").asInt());
+        assertTrue(state.path("themeRuntime").path("gameplay").path("slots").has("q1"));
+        assertThrows(GameSessionException.class, () ->
+                service.recordSharedBasicArrival(7L, 80L, 70L, 11L, "answer-two", "ANSWER", original, 1));
+        assertEquals(1, stored().path("completedNodeIds").size());
+        assertEquals(json.valueToTree(service.view(GameActorContext.player(7L), 70L).getPlayer()).path("cooperation"),
+                json.valueToTree(service.view(GameActorContext.player(8L), 70L).getPlayer()).path("cooperation"));
+        verifyNoInteractions(cooperativeCosts);
+    }
+
+    @Test void cooperativeHelpSharesUnlockButChargesActualUserAndReplaysOriginalRequest() throws Exception {
+        enableCooperativePuzzles(0); send("coop-start", "QUEST_START", "q1"); String original = instance(7, 11);
+        Map<String, Object> first = cooperativeHelp(8, original, "USE", 3, "help-first");
+        assertEquals("看年份", first.get("content")); assertEquals(8, first.get("chargedPoints"));
+        String firstJson = json.writeValueAsString(first);
+        assertEquals(firstJson, json.writeValueAsString(cooperativeHelp(8, original, "USE", 3, "help-first")));
+        Map<String, Object> other = cooperativeHelp(7, original, "USE", 3, "help-other");
+        assertEquals(true, other.get("alreadyUnlocked")); assertEquals(0, other.get("chargedPoints"));
+        assertFalse(other.containsKey("balanceAfter"));
+        verify(cooperativeCosts).use(eq(8L), anyString(), eq(3), eq(0), eq(8), eq("help-first"));
+        verifyNoMoreInteractions(cooperativeCosts);
+        assertThrows(GameSessionException.class, () -> cooperativeHelp(8, original, "USE", 1, "help-first"));
+        service.recordSharedBasicArrival(8L, 80L, 70L, 11L, "answer", "ANSWER", original, 1);
+        assertEquals(40, stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("puzzleScore").asInt());
+        assertEquals("看年份", cooperativeHelp(7, original, "USE", 3, "read-after-completion").get("content"));
+        verifyNoMoreInteractions(cooperativeCosts);
+    }
+
+    @Test void cooperativeLastFreeUseIsSharedAcrossMembersAndNextLayerChargesItsUser() throws Exception {
+        enableCooperativePuzzles(1); send("coop-start", "QUEST_START", "q1"); String original = instance(7, 11);
+        cooperativeHelp(7, original, "USE", 1, "free-last");
+        PlayHelpRunQuota exhausted = new PlayHelpRunQuota();
+        exhausted.setQuotaTotal(1); exhausted.setQuotaUsed(1);
+        when(cooperativeQuotas.selectByScope(80L, 70L, "shared-game:50", 90L)).thenReturn(exhausted);
+        cooperativeHelp(8, original, "USE", 3, "paid-next");
+        verify(cooperativeCosts).use(eq(7L), anyString(), eq(1), eq(1), eq(5), eq("free-last"));
+        verify(cooperativeCosts).use(eq(8L), anyString(), eq(3), eq(0), eq(8), eq("paid-next"));
+        verify(cooperativeQuotas, times(1)).consumeOne(80L, 70L, "shared-game:50", 90L);
+    }
+
+    @Test void cooperativeSkipIsSharedZeroScoreWithoutTrustedPassOrNormalTaskRewards() throws Exception {
+        enableCooperativePuzzles(1); send("coop-start", "QUEST_START", "q1"); String original = instance(7, 11);
+        Map<String, Object> skipped = cooperativeHelp(8, original, "SKIP", null, "skip-one");
+        assertEquals(true, skipped.get("skipped"));
+        JsonNode state = stored();
+        assertEquals(0, state.path("variables").path("sys.passed.11").asInt(-1));
+        assertFalse(state.path("themeRuntime").path("verifiedNodes").has("11"));
+        assertEquals("SKIPPED", state.path("themeRuntime").path("gameplay").path("slots").path("q1").path("completionMode").asText());
+        assertEquals(0, state.path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("puzzleScore").asInt(-1));
+        cooperativeHelp(7, original, "SKIP", null, "skip-two");
+        assertEquals(1, stored().path("completedNodeIds").size());
+        verifyNoInteractions(cooperativeCosts);
+        verify(cooperativeQuotas, never()).consumeOne(anyLong(), anyLong(), anyString(), anyLong());
+    }
+
+    @Test void cooperativeHelpRejectsOldEpochDifferentRunNonmemberAndMissingCapabilityBeforeCharge() throws Exception {
+        enableCooperativePuzzles(1); send("coop-start", "QUEST_START", "q1"); String original = instance(7, 11);
+        assertThrows(GameSessionException.class, () -> service.cooperativePuzzleHelp(7L,70L,51L,11L,original,1,"USE",1,"x","game.teamCooperation@1"));
+        assertThrows(GameSessionException.class, () -> service.cooperativePuzzleHelp(7L,70L,50L,11L,original,2,"USE",1,"x","game.teamCooperation@1"));
+        assertThrows(GameSessionException.class, () -> service.cooperativePuzzleHelp(7L,70L,50L,11L,original,1,"USE",1,"x",null));
+        when(mapper.selectActiveTeamId(70L, 8L)).thenReturn(null);
+        assertThrows(GameSessionException.class, () -> cooperativeHelp(8, original, "USE", 1, "quit"));
+        verifyNoInteractions(cooperativeCosts);
+    }
+
+
+
+    @Test void cooperativePhysicalProofCannotBeReplacedBySkip() throws Exception {
+        enableCooperativePuzzles(0);
+        ObjectNode snapshot=(ObjectNode)json.readTree(session.getModuleConfigSnapshotJson());
+        snapshot.with("nodeConfigs").with("11").putObject("photoCheck").put("enabled",true);
+        session.setModuleConfigSnapshotJson(snapshot.toString());
+        send("coop-start","QUEST_START","q1"); String original=instance(7,11);
+        assertThrows(GameSessionException.class,()->cooperativeHelp(8,original,"SKIP",null,"no-physical-bypass"));
+        assertFalse(stored().path("themeRuntime").path("gameplay").path("slots").has("q1"));
+        verifyNoInteractions(cooperativeCosts);
+    }
+
+    @Test void cooperativeUnavailableHintContentNeverCharges() throws Exception {
+        enableCooperativePuzzles(0);
+        ObjectNode snapshot=(ObjectNode)json.readTree(session.getModuleConfigSnapshotJson());
+        ((ObjectNode)snapshot.path("nodeConfigs").path("11").path("hintLadder").path(0)).remove("payload");
+        session.setModuleConfigSnapshotJson(snapshot.toString());
+        send("coop-start","QUEST_START","q1"); String original=instance(7,11);
+        assertThrows(GameSessionException.class,()->cooperativeHelp(8,original,"USE",1,"unavailable"));
+        verifyNoInteractions(cooperativeCosts);
+    }
+
+    @Test void cooperativeSkipPersistsTheSameAdvancedTeamSessionAsAssistedZeroScore() throws Exception {
+        enableCooperativePuzzles(0); send("coop-start","QUEST_START","q1"); String original=instance(7,11);
+        GameRuntimeSessionMapper games=mock(GameRuntimeSessionMapper.class);
+        ReflectionTestUtils.setField(service,"cooperativeGameSessions",games);
+        GameRuntimeSession advanced=new GameRuntimeSession(); advanced.setId(301L); advanced.setVersion(2);
+        advanced.setStatus(GameRuntimeSession.STATUS_RUNNING); advanced.setScore(80);
+        advanced.setStateJson("{\"originalGameSessionId\":50,\"runtimeAuthorityEpoch\":1,\"cooperationVersion\":1}");
+        when(games.selectOwnerByInstance(70L,80L,11L,GameRuntimeSession.OWNER_TEAM,90L,original)).thenReturn(advanced);
+        when(games.selectByIdForUpdate(301L)).thenReturn(advanced); when(games.updateStateCas(advanced)).thenReturn(1);
+        cooperativeHelp(8,original,"SKIP",null,"skip-advanced");
+        assertEquals(GameRuntimeSession.STATUS_COMPLETED,advanced.getStatus());
+        assertEquals(0,advanced.getScore());
+        assertTrue(json.readTree(advanced.getStateJson()).path("skip").path("skipped").asBoolean());
+        verify(games,times(1)).updateStateCas(advanced);
+    }
+
+    @Test void cooperativeFailedChargeDoesNotUnlock() throws Exception {
+        enableCooperativePuzzles(0); send("coop-start", "QUEST_START", "q1"); String original = instance(7, 11);
+        when(cooperativeCosts.use(anyLong(), anyString(), anyInt(), anyInt(), anyInt(), anyString()))
+                .thenThrow(new IllegalStateException("积分不足"));
+        assertThrows(IllegalStateException.class, () -> cooperativeHelp(8, original, "USE", 1, "no-points"));
+        assertFalse(stored().path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("helpUses").has("1"));
+    }
+
+
+    @Test void cooperativeCancelRestartKeepsPaidUnlockAndOriginalRequestReadback() throws Exception {
+        enableCooperativePuzzles(0); send("start-one","QUEST_START","q1"); String first=instance(7,11);
+        String originalJson=json.writeValueAsString(cooperativeHelp(8,first,"USE",1,"purchase"));
+        send("cancel-one","QUEST_CANCEL","q1"); send("start-two","QUEST_START","q1"); String second=instance(7,11);
+        assertNotEquals(first,second);
+        assertEquals(originalJson,json.writeValueAsString(cooperativeHelp(8,first,"USE",1,"purchase")));
+        assertEquals(true,cooperativeHelp(7,second,"USE",1,"revisit").get("alreadyUnlocked"));
+        verify(cooperativeCosts,times(1)).use(anyLong(),anyString(),anyInt(),anyInt(),anyInt(),anyString());
+    }
+
+
+    @Test void cooperativeTimerExcludesStaffPauseAndResumeForEveryMember() throws Exception {
+        enableCooperativePuzzles(0);
+        GameStoryState run=new GameStoryState();run.setId(92L);run.setGameSessionId(50L);run.setOwnerType("RUN");
+        run.setOwnerId(50L);run.setRevision(0);
+        run.setVariablesJson(json.createObjectNode().put("operationStatus","RUNNING").put("authorityMode","ONLINE").put("authorityEpoch",1).toString());
+        when(mapper.selectStoryState(50L,"RUN",50L)).thenReturn(run);
+        when(mapper.selectStoryStates(50L)).thenReturn(Collections.singletonList(owner));
+        IClubAccessService access=mock(IClubAccessService.class);ReflectionTestUtils.setField(service,"clubAccessService",access);
+        when(access.require(eq(9L),eq(40L),eq(70L),anyString())).thenReturn(
+                new com.chengyinhub.business.access.club.ClubAccessContext(9L,40L,9L,70L,Collections.singleton("CLUB_OWNER")));
+        send("start-clock","QUEST_START","q1");String original=instance(7,11);
+        now[0]+=1000;runAction("pause-clock","RUN_PAUSE",Collections.emptyMap());
+        now[0]+=10000;
+        assertEquals(1000,json.valueToTree(cooperativeHelp(8,original,"VIEW",null,null)).path("cooperation").path("elapsedMillis").asLong());
+        runAction("resume-clock","RUN_RESUME",Collections.emptyMap());now[0]+=2000;
+        assertEquals(3000,json.valueToTree(cooperativeHelp(7,original,"VIEW",null,null)).path("cooperation").path("elapsedMillis").asLong());
+        assertEquals(10000,stored().path("themeRuntime").path("cooperativePuzzles").path("pausedMillis").asLong());
+    }
+
+    @Test void cooperativeFrozenClockIsSharedAndSkipCannotCreateAnArrivalOrManualResolve() throws Exception {
+        enableCooperativePuzzles(0); send("coop-start","QUEST_START","q1"); String original=instance(7,11);
+        long start=now[0]; now[0]+=9000;
+        JsonNode view=json.valueToTree(cooperativeHelp(8,original,"VIEW",null,null));
+        assertEquals(9000,view.path("cooperation").path("elapsedMillis").asLong());
+        assertEquals(start,view.path("cooperation").path("questions").path(0).path("startedAt").asLong());
+        cooperativeHelp(8,original,"SKIP",null,"skip");
+        assertFalse(stored().path("themeRuntime").path("gameplay").path("arrivalFacts").has("11"));
+        assertThrows(GameSessionException.class,()->send("manual-settle","QUEST_RESOLVE","q1"));
+    }
+
+    @Test void legacyTeamAnswerStillRequiresExplicitTaskSettlement() throws Exception {
+        send("legacy-start", "QUEST_START", "q1"); String original = instance(8, 11);
+        service.recordSharedRouteResult(8L,80L,70L,11L,original,"legacy-proof",true,Collections.emptyList(),1);
+        assertEquals(0, stored().path("completedNodeIds").size());
+        assertFalse(stored().path("themeRuntime").has("cooperativePuzzles"));
+    }
+
     @Test void endedTeamResultCardUsesOnlyTheExistingPersonalCardProjection() throws Exception {
         assertFalse(json.valueToTree(service.view(GameActorContext.player(7L),70L).getPlayer()).has("resultCard"));
         TopicRouteEngine.State state=json.readValue(owner.getVariablesJson(),TopicRouteEngine.State.class);state.setStatus("ENDED");

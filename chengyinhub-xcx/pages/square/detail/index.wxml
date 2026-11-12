@@ -1,4 +1,4 @@
-<view class="detail theme-dark">
+<view class="detail {{merchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
@@ -97,7 +97,7 @@
           </view>
         </scroll-view>
 
-        <!-- 操作:桃心+数、评论+数、分享靠右；举报收进头部溢出入口。 -->
+        <!-- 操作:桃心+数、评论+数、收藏、转发同一排靠左；举报收进头部溢出入口。 -->
         <view class="actions flex-cb">
           <view class="act-left flex-ac">
             <view class="act act--like flex-ac {{info.isLiked==1 ? 'is-on' : ''}} {{likeBurst ? 'is-bursting' : ''}}" catchtap="lickClick" data-type="1" aria-role="button" aria-label="点赞，当前 {{info.likeCount || 0}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -109,9 +109,8 @@
             <view class="act act--favorite flex-ac {{info.isBookmarked==1 ? 'is-on' : ''}} {{favoriteBurst ? 'is-bursting' : ''}}" catchtap="favoriteClick" aria-role="button" aria-label="{{info.isBookmarked==1 ? '取消收藏' : '收藏帖文'}}" aria-pressed="{{info.isBookmarked==1}}" hover-class="cy-pressed" hover-stay-time="80">
               <cy-icon class="act-ico" name="{{info.isBookmarked==1 ? 'star-filled' : 'star'}}" size="40" />
             </view>
-          </view>
-          <view class="act-right flex-ac">
-            <button class="act-share act-share--end" hover-class="cy-pressed" hover-stay-time="80" open-type="share" aria-label="转发帖文">
+            <!-- 2026-11-09 V3-23/24/32 业主「转发按钮的位置不对」:转发(分享)跟在前几个动作后面靠左,同 Threads,不再甩到最右 -->
+            <button class="act-share" hover-class="cy-pressed" hover-stay-time="80" open-type="share" aria-label="转发帖文">
               <image class="act-share-ico" src="/images/icon_share.png" mode="aspectFit" />
             </button>
           </view>
@@ -253,5 +252,5 @@
 <cy-popover show="{{avatarPopShow}}" anchor="{{avatarPopAnchor}}" items="{{avatarPopItems}}"
             bind:pick="onAvatarPopPick" bind:close="onAvatarPopClose" />
 
-<cy-option-sheet show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
+<cy-option-sheet class="{{merchantView ? 'theme-merchant' : 'theme-dark'}}" show="{{reportReasonShow}}" title="选择举报原因" items="{{reportReasonItems}}"
   confirm-text="提交举报" bind:select="onReportReasonSelect" bind:cancel="onReportReasonCancel" />

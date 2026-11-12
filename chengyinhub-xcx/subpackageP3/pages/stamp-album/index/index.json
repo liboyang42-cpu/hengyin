@@ -1,6 +1,6 @@
 {
   "navigationBarTitleText": "集邮册",
-  "backgroundColor": "#ffffff",
+  "backgroundColor": "#000000",
   "onReachBottomDistance": 120,
   "usingComponents": {
     "cy-nav-bar": "/components/cy/nav-bar/index",
@@ -16,5 +16,5 @@
     "cy-empty": "/components/cy/empty/index"
   },
   "navigationStyle": "custom",
-  "navigationBarTextStyle": "black"
+  "navigationBarTextStyle": "white"
 }

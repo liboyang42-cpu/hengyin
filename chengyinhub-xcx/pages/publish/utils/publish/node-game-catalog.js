@@ -18,6 +18,8 @@ const GROUPS = [
       { key: 'qaText', icon: 'edit', label: '文字问答', sub: '出一道题，玩家打字作答', section: 'qa', mode: 'TYPE', validationMethod: 0 },
       { key: 'qaPick', icon: 'check', label: '选项问答', sub: '2-4 个选项里选一个', section: 'qa', mode: 'PICK', validationMethod: 0 },
       { key: 'qaShot', icon: 'camera', label: '拍照打卡', sub: '给一句提示词，玩家拍一张交上来', section: 'qa', mode: 'SHOT', validationMethod: 2 },
+      /* UG-01 逐字猜词:按槽位补空白格或整词作答;答案、别名、预填格只在服务端,判定 SUBMIT_HANGMAN。 */
+      { key: 'hangman', icon: 'edit', label: '逐字猜词', sub: '按格子补出缺的字', section: 'hangman', validationMethod: 0 },
       { key: 'branch', icon: 'switch-chapter', label: '分支剧情', sub: '界面和问答一样，只是选项决定下一段', section: 'branch', validationMethod: 0 },
     ],
   },
@@ -113,8 +115,13 @@ const BASE_GAMES = [
   { key: 'bingo', label: '九宫格', category: '互动', icon: 'filter', disabled: true, reason: '在主题里配置' },
   ...['steps', 'react', 'shake', 'quiet', 'compass', 'shout', 'countdown', 'stopwatch', 'typeIn'].map(key => Object.assign({}, ALL.find(item => item.key === key), { category: '挑战', gameKey: key })),
 ];
+/* r2 b2-x-cat(主人:「不是这种啊 不是表单吗」):逐字猜词不单独占一枚标签,在文字问答的表单里切换。
+   选择器里它记在「文字问答」那一枚上;换回整词作答也在表单里。 */
+const PICKER_ALIAS = { hangman: 'qaText' };
+function pickerKey(key) { return PICKER_ALIAS[key] || key; }
 const PICKER_GROUPS = CATEGORIES.slice(1).map(title => ({ title, items: BASE_GAMES.filter(item => item.category === title) }));
-function selection(key) {
+function selection(rawKey) {
+  const key = pickerKey(rawKey);
   for (const base of BASE_GAMES) {
     const choice = (base.forms || []).find(item => item.gameKey === key);
     if (choice || base.gameKey === key) return { baseKey: base.key, formKey: choice ? choice.key : '', forms: base.forms || [] };
@@ -251,6 +258,7 @@ const DEMO = {
   dice: { kicker: '掷到几就做第几件事', faces: ['和店员说句今天的天气', '换个位置坐', '点一杯没喝过的', '拍一张门口', '把杯子摆正', '写一句留言'] },
   d20: { kicker: '观察暗门', successText: '你发现了门后的线索', failText: '暂时没有发现，沿街继续寻找' },
   scan: { reply: '欢迎来到这家店，今天的手冲是耶加雪菲。' },
+  hangman: { answer: 'ENDLESS', format: ['E', '_', '_', '_', '_', '_', 'S'] },
 };
 
 /**
@@ -300,4 +308,4 @@ function applyToConfig(advanced, key, options) {
   return next;
 }
 
-module.exports = { BASE_GAMES, CATEGORIES, selection, GROUPS, MODIFIERS, PICKER_GROUPS, ALL, GAME_SECTIONS, ENCOUNTER_SECTIONS, PLAYKIT_SECTIONS, TIMED_GAMES, supportsTimer, findGame, detectGame, applyToConfig, dropStaleTimer };
+module.exports = { BASE_GAMES, PICKER_ALIAS, pickerKey, CATEGORIES, selection, GROUPS, MODIFIERS, PICKER_GROUPS, ALL, GAME_SECTIONS, ENCOUNTER_SECTIONS, PLAYKIT_SECTIONS, TIMED_GAMES, supportsTimer, findGame, detectGame, applyToConfig, dropStaleTimer };

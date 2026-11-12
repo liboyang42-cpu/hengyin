@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.GiftEntitlementMapper">
+
+    <resultMap id="giftMap" type="com.chengyinhub.business.domain.GiftEntitlement">
+        <id property="id" column="id"/>
+        <result property="publicId" column="public_id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="sourceRegistrationId" column="source_registration_id"/>
+        <result property="buyerMemberId" column="buyer_member_id"/>
+        <result property="recipientMemberId" column="recipient_member_id"/>
+        <result property="claimTokenHash" column="claim_token_hash"/>
+        <result property="claimExpiresAt" column="claim_expires_at"/>
+        <result property="status" column="status"/>
+        <result property="claimedMemberId" column="claimed_member_id"/>
+        <result property="claimedRegistrationId" column="claimed_registration_id"/>
+        <result property="claimedAt" column="claimed_at"/>
+        <result property="claimRequestId" column="claim_request_id"/>
+        <result property="revokedReason" column="revoked_reason"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="giftColumns">
+        id, public_id, order_id, product_id, source_registration_id, buyer_member_id,
+        recipient_member_id, claim_token_hash, claim_expires_at, status,
+        claimed_member_id, claimed_registration_id, claimed_at, claim_request_id,
+        revoked_reason, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.GiftEntitlement"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into gift_entitlement
+            (public_id, order_id, product_id, source_registration_id, buyer_member_id, recipient_member_id,
+             claim_token_hash, claim_expires_at, status, claimed_member_id,
+             claimed_registration_id, claimed_at, claim_request_id, revoked_reason,
+             create_time, update_time)
+        values
+            (#{publicId}, #{orderId}, #{productId}, #{sourceRegistrationId}, #{buyerMemberId}, #{recipientMemberId},
+             #{claimTokenHash}, #{claimExpiresAt}, #{status}, #{claimedMemberId},
+             #{claimedRegistrationId}, #{claimedAt}, #{claimRequestId}, #{revokedReason},
+             #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectById" resultMap="giftMap" useCache="false">
+        select <include refid="giftColumns"/> from gift_entitlement where id = #{id}
+    </select>
+
+    <select id="selectByOrderId" resultMap="giftMap" useCache="false">
+        select <include refid="giftColumns"/> from gift_entitlement where order_id = #{orderId}
+    </select>
+
+    <select id="selectByTokenHashForUpdate" resultMap="giftMap" useCache="false" flushCache="true">
+        select <include refid="giftColumns"/> from gift_entitlement
+        where claim_token_hash = #{tokenHash} for update
+    </select>
+
+    <resultMap id="playFactMap" type="com.chengyinhub.business.domain.GiftPlayFact">
+        <result property="registrationId" column="registration_id"/>
+        <result property="status" column="status"/>
+        <result property="claimedMemberId" column="claimed_member_id"/>
+    </resultMap>
+
+    <!--
+      只取「与 actor 相关」的自玩域礼品事实：一次索引查询，不加锁、不返回第三人数据。
+      相关 = 行属本人（r.member_id，含待领取 ⇒ 遮断买家）或已领取给本人（g.claimed_member_id）。
+      多主题 pass：按礼品订单的 parent_order_no 展开到**该单产出的每一行**，不只 primary ——
+      否则多作品包只有第一个主题能被领取人玩到。
+      排序规则：cms_registration 为 utf8mb4_general_ci，marketing_product_order 建表只写 DEFAULT CHARSET=utf8mb4，
+      在 MySQL 8 落成 utf8mb4_0900_ai_ci；两列都是 IMPLICIT，直接相等会报 1267 Illegal mix of collations，
+      整条自玩准入（/api/play/theme/state 等）随之 500。显式把订单号侧按 general_ci 比较：EXPLICIT 优先，
+      无论两表实际落成哪种都能比较，且 cms_registration.parent_order_no 侧索引仍可用。
+    -->
+    <select id="selectPlayFactsByOwner" resultMap="playFactMap" useCache="false">
+        select r.id as registration_id, g.status, g.claimed_member_id
+        from gift_entitlement g
+        join marketing_product_order o on o.id = g.order_id
+        join cms_registration r on r.parent_order_no = o.order_no collate utf8mb4_general_ci
+        where r.owner_type = #{ownerType}
+          and r.owner_id = #{ownerId}
+          and g.status in (0, 1)
+          and (r.member_id = #{memberId} or g.claimed_member_id = #{memberId})
+    </select>
+
+    <update id="bindSameRegistration">
+        update gift_entitlement
+        set claimed_registration_id = #{registrationId}, update_time = #{now}
+        where id = #{id} and claimed_registration_id is null
+    </update>
+
+    <select id="selectByBuyer" resultMap="giftMap" useCache="false">
+        select <include refid="giftColumns"/> from gift_entitlement
+        where buyer_member_id = #{buyerMemberId}
+        order by id desc limit #{limit}
+    </select>
+
+    <select id="selectByClaimedMember" resultMap="giftMap" useCache="false">
+        select <include refid="giftColumns"/> from gift_entitlement
+        where claimed_member_id = #{memberId}
+        order by id desc limit #{limit}
+    </select>
+
+    <update id="claimCas">
+        update gift_entitlement
+        set status = 1, claimed_member_id = #{claimedMemberId}, claimed_at = #{now},
+            claim_request_id = #{requestId}, update_time = #{now}
+        where id = #{id} and status = 0
+          and (claim_expires_at is null or claim_expires_at &gt; #{now})
+    </update>
+
+    <update id="expire">
+        update gift_entitlement set status = 2, update_time = #{updateTime}
+        where id = #{id} and status = 0
+    </update>
+
+    <update id="revoke">
+        update gift_entitlement
+        set status = 3, revoked_reason = #{reason}, update_time = #{updateTime}
+        where id = #{id} and status in (0, 1)
+    </update>
+</mapper>

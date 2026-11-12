@@ -51,12 +51,38 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         if (request == null) {
             throw new RegistrationCheckoutException(400, "报名参数不能为空");
         }
+        // r1 F3:报价与建单同一道买家门禁(商家打烊、商家报俱乐部活动)。
         registrationOrderCreateGate.validateBuyer(memberId, request);
-        if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
-            return registrationService.quoteRegistrationForOffer(memberId, request);
+        // M2 的完整请求入口:促销意图(offerCode)与候补凭证都在同一处判定,
+        // 报价与下单用同一份入参,避免"报价不认优惠码、下单认"。
+        RegistrationQuoteResult result = registrationService.quoteRegistration(memberId, request);
+        // B7 的通道就绪投影:只报通道是否可用，不报商品是否获准在该市场销售。
+        attachPaymentChannels(result);
+        return result;
+    }
+
+    /**
+     * 只报通道是否就绪，不报商品是否获准在该市场销售。
+     * 零元单没有支付动作，返回空列表；探测异常按不可用处理，绝不伪造可用。
+     */
+    private void attachPaymentChannels(RegistrationQuoteResult result) {
+        if (result == null) {
+            return;
         }
-        return registrationService.quoteRegistration(memberId, request.getOwnerType(), request.getOwnerId(),
-                request.getTicketId(), request.getTickets(), request.getIsUsePoint());
+        List<String> channels = new ArrayList<>();
+        if (positive(result.getPayAmount())) {
+            try {
+                if (wechatPayService.isReady()) {
+                    channels.add("JSAPI");
+                }
+                if (wechatPayService.isAppReady()) {
+                    channels.add("APP");
+                }
+            } catch (RuntimeException unavailable) {
+                channels.clear();
+            }
+        }
+        result.setPaymentChannels(channels);
     }
 
     @Override

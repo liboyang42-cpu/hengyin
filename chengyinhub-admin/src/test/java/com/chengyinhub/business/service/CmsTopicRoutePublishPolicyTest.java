@@ -173,7 +173,8 @@ class CmsTopicRoutePublishPolicyTest {
         com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "quotaService", mock(IQuotaService.class));
         ReflectionTestUtils.setField(service, "cmsTopicNodeMapper", mock(CmsTopicNodeMapper.class));
         IAuditTaskService auditTaskService = mock(IAuditTaskService.class);
-        ReflectionTestUtils.setField(service, "auditTaskService", auditTaskService);
+        // 走 wiring.set:该协作方已迁到 TopicPublicationService,直接 setField 到门面不会传到 owner。
+        com.chengyinhub.business.service.support.TopicPublicationTestWiring.set(service, "auditTaskService", auditTaskService);
         com.chengyinhub.business.service.support.TopicBundleReviewService bundles =
                 mock(com.chengyinhub.business.service.support.TopicBundleReviewService.class);
         ReflectionTestUtils.setField(service, "topicBundleReviewService", bundles);

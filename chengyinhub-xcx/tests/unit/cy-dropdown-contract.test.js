@@ -218,11 +218,14 @@ test('说明档无说明时与普通行同高、贴着字段弹出；R5 编辑�
 })
 
 // 2026-10-22 主人定稿:选择玩法 = 半屏弹层 + Figma 胶囊标签,所有分类排成一条只左右滑;互动工具从底部弹出的标签里加
-test('选择玩法：半屏标签条按分类左右滑，只列玩法（不含互动工具），页头左退出右完成，底部可预览', () => {
+test('选择玩法：分类标签左右滑、玩法竖排列表(l-misc 业主 round2),只列玩法（不含互动工具），页头左退出右完成，底部可预览', () => {
   const temp = read('pages/publish/temp/index.wxml')
   const sheet = temp.slice(temp.indexOf('选择玩法 sheet(2026-10-22'), temp.indexOf('添加互动工具(底部弹出'))
   assert.match(sheet, /wx:for="\{\{ r5Editor\.gameGroups \}\}"/, '分组来自玩法分类')
-  assert.match(sheet, /<scroll-view scroll-x class="cg-tstrip"/, '标签条只左右滑')
+  assert.match(sheet, /<scroll-view scroll-x class="cg-gsheet-nav"/, '只有分类标签左右滑')
+  assert.match(sheet, /<scroll-view scroll-y class="cg-glist"/, '玩法是竖排列表')
+  assert.doesNotMatch(sheet, /cg-tstrip|cg-tag-pill/, '玩法不再排成横滑胶囊')
+  assert.match(sheet, /wx:if="\{\{ gi === sheetGroup \}\}"/, '点一类只列这一类')
   // 2026-10-23 弹层动效:退出先播落下(cgDismiss),播完再调 closeR5GameSheet
   assert.match(sheet, /cg-edit-head__exit[^>]*bindtap="cgDismiss" data-close="closeR5GameSheet"[^>]*>退出<\/view>/)
   assert.match(sheet, /cg-edit-head__done[^>]*bindtap="confirmR5GameSheet"[^>]*>完成<\/view>/)

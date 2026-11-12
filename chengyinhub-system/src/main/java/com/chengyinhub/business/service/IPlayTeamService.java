@@ -15,7 +15,21 @@ public interface IPlayTeamService {
     PlayTeam create(Long memberId, Integer ownerType, Long ownerId, String title, Integer maxMembers, Integer joinMode);
     /** 队长切换组队方式:1=邀请制(退出公开地图) 2=公开申请制。返回生效后的模式。 */
     int updateJoinMode(Long teamId, Long leaderMemberId, Integer joinMode);
+    /**
+     * 队伍详情。在原有 team/members/joined/leader 之外追加三段只读投影:
+     * seats(capacity/occupied/available/paidOccupied/paidTicketMissing/pendingApplications)、
+     * invite(mode/available/expiresAt/expired)、
+     * viewer(joined/leader/role/applicationStatus/applyExpireTime/canApply/canJoinWithCode/
+     * applyBlockers/joinBlockers)。
+     * seats.available 与 viewer.canApply/canJoinWithCode 都是现读结果:名额真源是 joined_count,
+     * 准入判断复用 apply/join 的前置条件(票、审核、拉黑、容量、重复申请),写路径仍是唯一权威。
+     */
     Map<String, Object> info(Long teamId, String inviteCode, Long viewerMemberId);
+    /**
+     * 通过邀请码加入。业务拒绝用 {@link TeamRejection#getErrorCode()}:
+     * INVITE_REVOKED(码不可解析)/INVITE_EXPIRED(队伍已不在招募窗口)/TEAM_UNDER_REVIEW/
+     * TEAM_FULL/TICKET_REQUIRED,各自独立,不再统一并成「邀请已失效」。
+     */
     PlayTeam join(String inviteCode, Long memberId);
     /** 公开申请;返回申请失效时间。 */
     Date apply(Long teamId, Long memberId, String message);
@@ -36,6 +50,14 @@ public interface IPlayTeamService {
     List<Long> selectExpiredTeamIds(Date now, int limit);
     int endExpiredTeam(Long teamId, Date now);
     int expireStaleApplications(Date now);
+
+    /**
+     * 队伍小程序码(2026-11-10 业主「可以的 需要的」):只给本队在队成员,且邀请仍在招募窗口内。
+     * 返回 teamId / inviteCode / qrState(READY 或 UNAVAILABLE)/ qrcodeUrl(仅 READY)。
+     * 微信接口不可用(签发失败、频控、存储失败)时降级为只给加入码,不算业务拒绝;
+     * 无权、邀请失效仍按业务拒绝抛出。
+     */
+    Map<String, Object> inviteQrcode(Long teamId, Long memberId);
 
     /** 带机器可读 errorCode 的业务拒绝;小程序按 errorCode 分支,不解析文案。 */
     class TeamRejection extends IllegalStateException {

@@ -1,0 +1,9 @@
+{
+  "component": true,
+  "styleIsolation": "apply-shared",
+  "usingComponents": {
+    "cy-icon": "../../../../components/cy/icon/index",
+    "cy-sheet": "../../../../components/cy/sheet/index",
+    "cy-option-sheet": "../../../../components/cy/option-sheet/index"
+  }
+}

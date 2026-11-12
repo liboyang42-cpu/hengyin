@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.exception.TopicPublicationContentException;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -573,7 +575,7 @@ public class ApiTopicController extends BaseController {
                 AjaxResult attributeError = authorAttributeError(e);
                 if (attributeError != null) return attributeError;
                 logger.warn("主题发布被业务闸拒绝: memberId={}, reason={}", memberId, e.getMessage());
-                return businessRefusal(e, UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG));
+                return publicationError(e, businessRefusal(e, UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG)));
             }
             // 建题已提交:立刻把意图键落成主题号 —— 之后的送检/同步即便抛错也不能释放它,否则重试会再建一份
             if (draftRequestKey != null) {
@@ -643,11 +645,13 @@ public class ApiTopicController extends BaseController {
             // 俱乐部带队」「在架额度已满」压成通用句 = 真人在后台点一次失败一次,只能找人翻服务器日志。
             // ⚠️ 通用兜底不动:技术异常(Jackson 解析失败 / NPE / SQL)仍只给下面那句稳定文案。
             logger.warn("主题发布被业务闸拒绝: memberId={}, topicId={}, reason={}", memberId, topicId, e.getMessage());
-            return AjaxResult.error(UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG));
+            return publicationError(e, AjaxResult.error(UserSafeMessage.of(e.getMessage(), TOPIC_CREATE_GENERIC_MSG)));
         } catch (Exception e) {
             releaseDraftRequest(draftRequestKey);
             logger.warn("主题发布失败: memberId={}, topicId={}, chapterId=未生成或未知", memberId, topicId, e);
-            return AjaxResult.error(createFailureMessage(e));
+            return e instanceof RuntimeException
+                    ? publicationError((RuntimeException) e, AjaxResult.error(createFailureMessage(e)))
+                    : AjaxResult.error(createFailureMessage(e));
         }
     }
 
@@ -815,17 +819,17 @@ public class ApiTopicController extends BaseController {
             AjaxResult attributeError = authorAttributeError(e);
             if (attributeError != null) return attributeError;
             logger.warn("主题保存被业务闸拒绝: topicId={}, reason={}", dto.getId(), e.getMessage());
-            return businessRefusal(e, e.getMessage());
+            return publicationError(e, businessRefusal(e, e.getMessage()));
         } catch (IllegalArgumentException e) {
             // 第十三轮 m1 P2:发布闸 / 配置校验拒绝(事务已回滚、什么也没写)是确定拒绝,按 400 回;
             // 原来落到下面的 500,作者端只能按「结果未知」处理,改好了也存不进去、一直停在待确认。
             logger.warn("主题保存被校验拒绝: topicId={}, reason={}", dto.getId(), e.getMessage());
-            return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
+            return publicationError(e, AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage()));
         } catch (RuntimeException e) {
             AjaxResult attributeError = authorAttributeError(e);
             if (attributeError != null) return attributeError;
             logger.warn("主题保存失败: topicId={}, chapterId=未生成或未知", dto.getId(), e);
-            return error(e.getMessage());
+            return publicationError(e, error(e.getMessage()));
         }
         boolean held = false;
         if (textVerdict.isFlagged()) {
@@ -1614,6 +1618,12 @@ public class ApiTopicController extends BaseController {
         return AjaxResult.error(code != null && code >= 400 && code < 500 ? code : HttpStatus.BAD_REQUEST, message);
     }
 
+    private AjaxResult publicationError(RuntimeException failure, AjaxResult legacy) {
+        TopicPublicationContentException.Issues data = TopicPublicationContentException.dataOf(failure);
+        if (data != null) legacy.put(AjaxResult.DATA_TAG, data);
+        return legacy;
+    }
+
     private AjaxResult authorAttributeError(RuntimeException error) {
         if (!(error instanceof ServiceException)) return null;
         ServiceException service = (ServiceException) error;
@@ -1633,14 +1643,18 @@ public class ApiTopicController extends BaseController {
     }
 
     public AjaxResult publishDraft(String id, String scope) {
-        return publishDraft(id, scope, null, null);
+        return publishDraft(id, scope, null, null, null, null);
     }
 
     @Operation(summary = "发布草稿")
     @RateLimiter(time = 60, count = 10, limitType = LimitType.MEMBER)
     @PostMapping("/publish-draft")
-    public AjaxResult publishDraft(String id, String scope, Long configVersion, String registryVersion) {
-        try { return publishDraftBound(id, scope, configVersion, registryVersion); }
+    public AjaxResult publishDraft(String id, String scope, Long configVersion, String registryVersion,
+                                   String publishRequestId, String expectedContentSha256) {
+        try { return publishDraftBound(id, scope, configVersion, registryVersion, publishRequestId, expectedContentSha256); }
+        catch (TopicPublicationContentException | TopicPublicationContentException.InvalidArgument error) {
+            return publicationError(error, AjaxResult.error(UserSafeMessage.of(error.getMessage())));
+        }
         catch (ServiceException error) {
             AjaxResult attributeError = authorAttributeError(error);
             if (attributeError != null) return attributeError;
@@ -1654,7 +1668,8 @@ public class ApiTopicController extends BaseController {
         }
     }
 
-    private AjaxResult publishDraftBound(String id, String scope, Long configVersion, String registryVersion) {
+    private AjaxResult publishDraftBound(String id, String scope, Long configVersion, String registryVersion,
+                                         String publishRequestId, String expectedContentSha256) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
             return error("参数不合规");
@@ -1679,6 +1694,22 @@ public class ApiTopicController extends BaseController {
         }
         if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) {
             return error("无权操作该主题");
+        }
+        // F1:已完成的发布意图重试先收口。发布成功后 is_draft 已被清掉,超时重发在草稿闸会假失败,
+        // 且不能再占额度/重开审核。同作者 + 同 publishRequestId + 同 payload 才命中;其余继续原流程。
+        if (publishRequestId != null && !publishRequestId.trim().isEmpty()) {
+            TopicBundleSubmitResultVO replayed;
+            try {
+                replayed = cmsTopicService.replayPublishedRevision(cid, memberId, publishRequestId, expectedContentSha256);
+            } catch (ServiceException conflict) {
+                // 同号异 payload:409,不覆盖历史,也不假装成功。
+                return businessRefusal(conflict, conflict.getMessage());
+            }
+            if (replayed != null) {
+                return isSimplePublishMode(topic.getPublishMode())
+                        ? success("已发布")            // 简易版沿用原有标量回执
+                        : AjaxResult.success("已发布", replayed);
+            }
         }
         // 门禁:必须当前确为草稿,防 rejected(审核未通过)/已上架 主题借道发布绕过审核
         Integer isDraft = cmsTopicService.selectTopicIsDraft(cid);
@@ -1718,16 +1749,19 @@ public class ApiTopicController extends BaseController {
             final Long fCid = cid;
             Boolean ok = quotaService.runWithThemeOnlineGuard(fMemberId, fCid,
                     () -> configVersion == null && registryVersion == null
-                            ? cmsTopicService.publishDraft(fCid, fMemberId)
-                            : cmsTopicService.publishDraftWithBinding(fCid, fMemberId, configVersion, registryVersion) != null);
+                            ? cmsTopicService.publishDraft(fCid, fMemberId, publishRequestId)
+                            : cmsTopicService.publishDraftWithBinding(fCid, fMemberId, configVersion, registryVersion,
+                                    publishRequestId) != null);
             boolean held = ok != null && ok && templateVerdict.isFlagged()
                     && flagForSpotCheck(cid, memberId, templateVerdict.getFlagReason(), recheckText(null, templateTexts),
                         topic.getImgUrl(), topic.getImgArr());
             return (ok != null && ok) ? success(held ? "已提交审核" : "已发布") : error("该主题不是草稿，无法发布");
         }
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO result =
-                configVersion == null && registryVersion == null ? cmsTopicService.publishDraftWithReview(cid, memberId)
-                        : cmsTopicService.publishDraftWithBinding(cid, memberId, configVersion, registryVersion);
+                configVersion == null && registryVersion == null
+                        ? cmsTopicService.publishDraftWithReview(cid, memberId, publishRequestId)
+                        : cmsTopicService.publishDraftWithBinding(cid, memberId, configVersion, registryVersion,
+                                publishRequestId);
         if (result == null) {
             return error("该主题不是草稿，无法发布");
         }

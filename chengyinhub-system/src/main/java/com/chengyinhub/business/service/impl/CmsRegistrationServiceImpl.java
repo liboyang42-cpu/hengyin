@@ -27,6 +27,7 @@ import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
 import com.chengyinhub.business.service.support.TopicSaleCanonicalCodec;
 import com.chengyinhub.business.service.support.ExploreSaleSnapshotGate;
 import com.chengyinhub.business.service.support.ExploreTicketUsePolicy;
+import com.chengyinhub.business.service.support.RegistrationQuantityPolicy;
 import com.chengyinhub.business.util.RefundPolicy;
 import com.chengyinhub.common.constant.EntitlementInvalidReason;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -56,6 +57,10 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import com.chengyinhub.business.domain.dto.RegistrationQuoteResult;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
 import com.chengyinhub.business.domain.dto.RegistrationTicketItem;
+import com.chengyinhub.business.domain.dto.MarketingPromotionQuote;
+import com.chengyinhub.business.domain.dto.MarketingPromotionRequest;
+import com.chengyinhub.business.service.IMarketingPassAccessService;
+import com.chengyinhub.business.service.IMarketingPromotionService;
 import com.chengyinhub.business.domain.vo.ExploreChapterRedemptionResult;
 import com.chengyinhub.business.domain.vo.TopicCompletionAwardVO;
 import com.chengyinhub.common.utils.sign.Md5Utils;
@@ -167,6 +172,38 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Autowired
     private OmsTicketMapper omsTicketMapper;
+
+    /**
+     * M5 收入分配可靠队列:支付成功事实提交前**同事务**入队(只插一行任务,不算钱)。
+     *
+     * <p>强依赖(不是 {@code required=false}):漏了 bean 就等于所有付费单不再产生应计任务,
+     * 而这种"静默不记账"是查不出来的 —— 所以缺 bean 必须启动失败,而不是运行期跳过。
+     */
+    @Autowired
+    private com.chengyinhub.business.service.IMarketingRevenuePostingService marketingRevenuePostingService;
+
+    /** 只读:把主题「完局奖励券」投影进报价结果(不是折扣,不参与计价)。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.ISmsCouponService smsCouponService;
+
+    /** 只读:通关券发放日志(主题+会员 uk),用于判断"这张奖励券已经领过"⇒ 不再作期望展示。 */
+    @Autowired(required = false)
+    private CmsTopicCompletionCouponRewardMapper completionCouponRewardMapper;
+
+    /**
+     * M4 促销引擎(报价 + 成交快照)。{@code required=false} 只为让旧单测手工构造的本服务仍可实例化;
+     * 生产环境该 bean 由 M4 的 {@code @Service} 提供。缺失时促销不参与,报价按票面(不假装有优惠)。
+     */
+    @Autowired(required = false)
+    private IMarketingPromotionService marketingPromotionService;
+
+    /** M3 通行证覆盖只读投影。缺失时 {@code coveredByPass} 保持 null(未知),不冒充 false。 */
+    @Autowired(required = false)
+    private IMarketingPassAccessService marketingPassAccessService;
+
+    /** 通行证（平台会员）：总开关关闭或缺失时恒不覆盖，自玩票报价/下单与原来完全一致。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.platformpass.PlatformPassService platformPassService;
 
     /** 候补 offer 已在晋级事务占过库存；报名事务只 claim/bind，绝不能再扣一次。 */
     @Autowired(required = false)
@@ -427,7 +464,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     ) {
         return createRegistrationInternal(memberId, ownerType, ownerId, ticketId, isUsePoint,
                 realName, phone, address, email, count, participateDate, parentOrderNo,
-                overridePayable, null, null, null, null);
+                overridePayable, null, null, null, null, null, null);
     }
 
     private CmsRegistration createRegistrationInternal(
@@ -447,7 +484,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             String requestId,
             Long sourceClubId,
             String sourceChannelCode,
-            ClubWaitlistClaim waitlistClaim
+            ClubWaitlistClaim waitlistClaim,
+            String offerCode,
+            String marketingSign
     ) {
         RestoreDispatchGuard.requireDispatchAllowed();
 
@@ -501,6 +540,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         assertExploreSaleSnapshotFrozen(sellerTopic);
         List<Club> lockedOwningClubs = lockActiveOwningClubs(registrationActivity, sellerTopic);
         revalidateWaitlistParticipant(waitlistClaim, memberId, lockedOwningClubs);
+        if (Integer.valueOf(2).equals(ownerType) && clubWaitlistOrderBridge != null) {
+            clubWaitlistOrderBridge.requireHostAcceptance(ownerId, waitlistClaim);
+        }
         // 3. 验证票种是否存在、属于当前活动且库存充足
         if (waitlistClaim != null && (qty != 1 || !Integer.valueOf(2).equals(ownerType)
                 || !memberId.equals(waitlistClaim.getMemberId()) || !ownerId.equals(waitlistClaim.getActivityId())
@@ -530,21 +572,45 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 4. 获取用户信息并验证
         UmsMember member = validateAndGetMember(memberId);
         Long userPoint = member.getPoint() != null ? member.getPoint() : 0; // 用户积分
+        int usePoint = isUsePoint != null && isUsePoint == 1 ? 1 : 0;
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, registrationActivity);
         if (waitlistClaim == null) assertClubReservationAvailable(clubBenefit, ticket, qty);
 
-        // 5-7. 金额/积分抵扣/支付方式：统一走 computePrice(与 quoteRegistration 共用，保证「报价=实付」分毫不差)
+        // 5-7. 金额/积分抵扣/支付方式:报价与建单共用同一套 (促销 → 积分)。
+        //
+        // 促销只在**整单行**算(parentOrderNo == null)。多票路径的每一行由整单层统一算过一次,
+        // 行内再算一遍 = 同一份优惠落两次(第二行还带 overridePayable=0),账就对不上了。
         BigDecimal ticketPrice = ticket.getPrice(); // 票价（单张）
-        PriceCalc calc = computePrice(ticketPrice, clubBenefit.effectivePrice(ticketPrice), qty, userPoint, isUsePoint);
-        BigDecimal originalAmount = calc.originalAmount;   // 本条 registration 的金额 = 单价 * 张数
-        BigDecimal discountAmount = calc.memberDiscountAmount;
-        BigDecimal totalAmount = calc.totalAmount;
+        BigDecimal listTotal = money(ticketPrice.multiply(BigDecimal.valueOf(qty)));
+        BigDecimal memberTotal = money(clubBenefit.effectivePrice(ticketPrice)
+                .multiply(BigDecimal.valueOf(qty)));
+        RegistrationOrderPrice priced = parentOrderNo == null
+                ? priceOrder(memberId, ownerType, ownerId,
+                        Collections.singletonList(
+                                new MarketingPromotionRequest.Line(ticketId, qty, ticketPrice)),
+                        offerCode, listTotal, memberTotal, userPoint,
+                        usePoint, new Date())
+                : null;
+        PriceCalc calc = priced != null
+                ? priced.calc
+                : computePrice(ticketPrice, clubBenefit.effectivePrice(ticketPrice), qty, userPoint, usePoint);
+        // original_amount = 票面(促销前);total_amount = 票面(会员价后,语义不因促销改变);
+        // discount_amount = 会员价折扣 + 促销减免。payable 才是最终应收。
+        BigDecimal originalAmount = priced != null ? priced.listAmount : calc.originalAmount;
+        BigDecimal discountAmount = priced != null
+                ? money(priced.memberDiscount).add(amountOf(priced.marketing))
+                : calc.memberDiscountAmount;
+        BigDecimal totalAmount = priced != null ? memberTotal : calc.totalAmount;
         BigDecimal pointDeductAmount = calc.pointDeductAmount;
         int pointUsed = calc.pointUsed;
         BigDecimal payableAmount = calc.payableAmount;
         int paymentType = calc.paymentType;
         BigDecimal pointPaymentAmount = calc.pointPaymentAmount;
         BigDecimal wechatPaymentAmount = calc.wechatPaymentAmount;
+        if (priced != null) {
+            // 促销指纹闸:与报价重算比对,不等即 409(在建任何行之前)。
+            assertMarketingSign(marketingSign, priced.marketing);
+        }
 
         // [#22 二清闸] 价格算完才判得了「这笔到底收不收钱」——积分全额抵扣后 payable=0 的单不进资金链,
         // 不构成二清,不能拦。必须在建单前拦:建了单再拦 = 留一堆永远付不掉的孤儿单。
@@ -633,6 +699,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
         // 9. 保存报名记录
         cmsRegistrationMapper.insertCmsRegistration(registration);
+        // 促销成交快照与订单同事务:退款/对账读它,不按现规则重算。
+        // 多票行的 priced 恒为 null(整单层已落过),不会重复写。
+        if (priced != null) {
+            commitMarketing(priced.marketing, registration.getId());
+        }
 
         if (waitlistClaim != null) {
             if (clubWaitlistOrderBridge == null) throw new IllegalStateException("候补报名桥未配置");
@@ -642,10 +713,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 10. 扣减库存（按 qty 张）
         // [P0-资损] 原子扣减(remaining >= qty 才扣),并发下两单同读旧值也不会双卖;0 行 = 库存不足
         if (waitlistClaim == null) {
-            long remainInv = ticket.getRemainingInventory() == null ? 0L : ticket.getRemainingInventory();
-            if (remainInv < qty) {
-                throw new RuntimeException("库存不足,仅剩 " + remainInv + " 张");
-            }
+            // 报价侧用同一条判定(RegistrationQuantityPolicy),文案一字不差。
+            RegistrationQuantityPolicy.assertPurchasable(ticket.getRemainingInventory(), qty);
             int inventoryUpdated = clubBenefit.shouldKeepReservation()
                     ? omsTicketMapper.deductInventoryKeepingReserved(ticket.getId(), (long) qty,
                             clubBenefit.memberReservedQuota)
@@ -743,14 +812,15 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             String realName, String phone, String address, String email,
             List<RegistrationTicketItem> tickets) {
         return createMultiTicketRegistrationsInternal(memberId, ownerType, ownerId, isUsePoint,
-                realName, phone, address, email, tickets, null, null, null);
+                realName, phone, address, email, tickets, null, null, null, null, null);
     }
 
     private List<CmsRegistration> createMultiTicketRegistrationsInternal(
             Long memberId, Integer ownerType, Long ownerId, Integer isUsePoint,
             String realName, String phone, String address, String email,
             List<RegistrationTicketItem> tickets, String requestId,
-            Long sourceClubId, String sourceChannelCode) {
+            Long sourceClubId, String sourceChannelCode,
+            String offerCode, String marketingSign) {
         RestoreDispatchGuard.requireDispatchAllowed();
         String parentOrderNo = "P" + DateUtils.parseDateToStr("yyyyMMdd", new Date())
                 + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -783,6 +853,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, orderActivity);
         BigDecimal orderTotal = BigDecimal.ZERO;
         BigDecimal memberPriceTotal = BigDecimal.ZERO;
+        List<MarketingPromotionRequest.Line> marketingLines = new ArrayList<>();
         for (RegistrationTicketItem it : tickets) {
             int qty = (it.getCount() == null || it.getCount() <= 0) ? 1 : it.getCount();
             OmsTicket t = validateAndGetTicket(it.getTicketId(), ownerType, ownerId);
@@ -794,8 +865,15 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             memberPriceTotal = memberPriceTotal.add(clubBenefit.effectivePrice(t.getPrice())
                     .multiply(BigDecimal.valueOf(qty)));
             assertClubReservationAvailable(clubBenefit, t, qty);
+            marketingLines.add(new MarketingPromotionRequest.Line(it.getTicketId(), qty, t.getPrice()));
         }
-        PriceCalc order = computePrice(orderTotal, memberPriceTotal, 1, userPoint, isUsePoint);
+        // 促销 + 积分:与报价走同一个方法、同一份行。促销只降到"促销后应付",积分仍由 computePrice 算。
+        RegistrationOrderPrice priced = priceOrder(memberId, ownerType, ownerId, marketingLines, offerCode,
+                orderTotal, memberPriceTotal, userPoint,
+                isUsePoint != null && isUsePoint == 1 ? 1 : 0, new Date());
+        PriceCalc order = priced.calc;
+        // 促销指纹闸在建任何行之前:不通过就一个字节都不写。
+        assertMarketingSign(marketingSign, priced.marketing);
 
         // [#22 二清闸] **整单层必须自己判一次,不能靠 createRegistration 的行级闸兜底。**
         // 行级闸看的是每行自己的 payable,而真正要收的钱是整单的 order.payableAmount,它要到下面
@@ -816,7 +894,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     parentOrderNo,
                     i == 0 ? null : BigDecimal.ZERO,
                     i == 0 ? requestId : null,
-                    sourceClubId, sourceChannelCode, null);
+                    sourceClubId, sourceChannelCode, null,
+                    null, null);                       // 促销在整单层算,行内不重复算
             allCreated.add(r);
         }
 
@@ -831,7 +910,12 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         first.setPointUsed(Convert.toLong(order.pointUsed));
         first.setPointDeductAmount(order.pointDeductAmount);
         first.setPointPaymentAmount(order.pointPaymentAmount);
+        // 折扣金额 = 会员价折扣 + 促销减免(M5 已确认净额起点是折后实付,不再扣一遍)。
+        // total_amount 保持"票面额"语义,不在这里被促销覆盖。
+        first.setDiscountAmount(money(priced.memberDiscount)
+                .add(amountOf(priced.marketing)));
         updateCmsRegistration(first);
+        commitMarketing(priced.marketing, first.getId());
 
         // 4) 积分扣减:整单一次,挂在首单
         deductPointsAndLog(memberId, userPoint, order.pointUsed, ownerType, first.getId());
@@ -899,6 +983,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             return reusable;
         }
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, topic.getClubId());
+        com.chengyinhub.business.platformpass.PlatformPassService.Coverage passCoverage =
+                platformPassCoverage(memberId, topic, freeTopic);
         // M2 自玩配额：待支付单也占位，过期/取消单由 orderCloseTask 置为 3 后自动释放。
         // topic 行锁保证「计数 → 插单」对同一主题串行，避免非会员并发越过会员保留名额。
         Integer quota = topic.getSelfPlayQuota();
@@ -913,7 +999,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
         }
         BigDecimal originalPrice = topic.getSelfPlayPrice();
-        BigDecimal price = clubBenefit.effectivePrice(originalPrice);
+        BigDecimal price = passCoverage != null ? BigDecimal.ZERO : clubBenefit.effectivePrice(originalPrice);
 
         // [#22 二清闸] 自玩恒收费(上面 :509 已强制 selfPlayPrice > 0)且 ② 的 CONTENT 槽恒为第三方
         // (玩家/俱乐部)⇒ 每一张自玩票都是「平台替第三方收钱」。生产实测 21 笔付费单是 ownerType=1,
@@ -949,6 +1035,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         r.setRegistrationStatus(1);
         r.setPayExpireTime(DateUtils.addMinutes(new Date(), 30));
         r.setExpiresAt(selfPlayPassExpiry(topic, new Date())); // M2 通行证有效期 90 天,不越过主题履约窗
+        if (passCoverage != null && passCoverage.validTo() != null
+                && (r.getExpiresAt() == null || passCoverage.validTo().before(r.getExpiresAt()))) {
+            // 通行证领取的 ¥0 自玩票不越过通行证本段到期
+            r.setExpiresAt(passCoverage.validTo());
+        }
         // [P0-02] 自玩通行证恒为 ②。此前「是不是自玩票」只能靠 (owner_type=1 + ticket_id 为空 + expires_at 非空)
         // 的组合约定反推,没有任何一列直说 —— 现在有了。
         r.setPurchaseKind(PurchaseKind.SELF_PLAY_PASS);
@@ -964,7 +1055,20 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         if (cmsRegistrationMapper.insertCmsRegistration(r) != 1 || r.getId() == null) {
             throw new IllegalStateException("自玩报名原订单写入失败");
         }
+        if (passCoverage != null) {
+            platformPassService.recordClaim(passCoverage, memberId, topicId, r.getId());
+        }
         return r;
+    }
+
+    /**
+     * 通行证覆盖：只对收费的官方开放自玩主题生效（免费主题本来就是 ¥0）。
+     * 退款快照仍按主题冻结；¥0 行没有可退金额。
+     */
+    private com.chengyinhub.business.platformpass.PlatformPassService.Coverage platformPassCoverage(
+            Long memberId, CmsTopic topic, boolean freeTopic) {
+        if (platformPassService == null || freeTopic || topic == null || topic.getId() == null) return null;
+        return platformPassService.coverage(memberId, topic.getId(), new Date());
     }
 
     /**
@@ -1008,7 +1112,26 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     public RegistrationQuoteResult quoteRegistration(Long memberId, Integer ownerType, Long ownerId,
             Long ticketId, List<RegistrationTicketItem> tickets, Integer isUsePoint) {
-        return quoteRegistrationInternal(memberId, ownerType, ownerId, ticketId, tickets, isUsePoint, null);
+        return quoteRegistrationInternal(memberId, ownerType, ownerId, ticketId, tickets, isUsePoint, null, null);
+    }
+
+    /**
+     * 完整报价入口:额外读取促销意图 {@code offerCode},并把促销结果投影进报价。
+     *
+     * <p>与 6 参版本的金额口径**完全一致**:促销只把"票面"降到"促销后应付",积分抵扣仍由
+     * {@link #computePrice} 处理。客户端只拿 {@code marketingSign},不回传金额。
+     */
+    @Override
+    public RegistrationQuoteResult quoteRegistration(Long memberId, RegistrationRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("报名参数不能为空");
+        }
+        if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
+            return quoteRegistrationForOffer(memberId, request);
+        }
+        return quoteRegistrationInternal(memberId, request.getOwnerType(), request.getOwnerId(),
+                request.getTicketId(), request.getTickets(), request.getIsUsePoint(), null,
+                request.getOfferCode());
     }
 
     @Override
@@ -1019,12 +1142,16 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         ClubWaitlistClaim hold = clubWaitlistOrderBridge.validateForQuote(memberId, request, new Date());
         if (hold == null) throw new IllegalStateException("候补报价凭证不存在");
         return quoteRegistrationInternal(memberId, request.getOwnerType(), request.getOwnerId(),
-                request.getTicketId(), request.getTickets(), request.getIsUsePoint(), hold);
+                request.getTicketId(), request.getTickets(), request.getIsUsePoint(), hold,
+                request.getOfferCode());
     }
 
     private RegistrationQuoteResult quoteRegistrationInternal(Long memberId, Integer ownerType, Long ownerId,
             Long ticketId, List<RegistrationTicketItem> tickets, Integer isUsePoint,
-            ClubWaitlistClaim inventoryHold) {
+            ClubWaitlistClaim inventoryHold, String offerCode) {
+        if (Integer.valueOf(2).equals(ownerType) && clubWaitlistOrderBridge != null) {
+            clubWaitlistOrderBridge.requireHostAcceptance(ownerId, inventoryHold);
+        }
         // 主题级报名已下线，仅活动层报价（与 create 一致）
         CmsActivity activity = null;
         if (ownerType != null && ownerType == 2) {
@@ -1049,23 +1176,31 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         int usePoint = (isUsePoint != null && isUsePoint == 1) ? 1 : 0;
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, activity);
 
+        BigDecimal listTotal = BigDecimal.ZERO;
+        BigDecimal memberTotal = BigDecimal.ZERO;
+        List<MarketingPromotionRequest.Line> marketingLines = new ArrayList<>();
+        StringBuilder ticketsKey = new StringBuilder();
+        // 计价结果在下方 priceOrder 处一次性赋值;这里先给初值,保证任何 fail-closed 分支都有定义
+        // (与 B7 原实现同一形态:BigDecimal.ZERO / 0)。
         BigDecimal aggregatePayable = BigDecimal.ZERO;
         int pointsUsed = 0;
         BigDecimal pointsDeduct = BigDecimal.ZERO;
         BigDecimal memberDiscountYuan = BigDecimal.ZERO;
-        StringBuilder ticketsKey = new StringBuilder();
+        // 报价交付摘要的单一票种来源:单票直接取;多票仅当全部同一票种时才有可陈述的票面条款。
+        OmsTicket quotedTicket = null;
+        OmsTicket firstQuotedTicket = null;
+        boolean mixedTickets = false;
         // 2026-11-03 通行证三档:③ 自由探索票的退款钟 = 票的开始时间(与下单快照同一锚点)。
         Date refundAnchor = activity == null ? null : activity.getStartDate();
         boolean exploreAnchorSet = false;
         // P-07/C-07(l3):报价必须读下单时会冻结的同一个点。③ 票缺开始时间时,下单冻结的是旧口径
         // (有效期截止前全额),这里记下那个截止点,报价按它说,别再按集合钟说。
         Date purchaseRefundDeadline = null;
-        // 第十二轮 k6(p1 N-1):这单若开积分最多能抵多少的基数(会员价后的票面);用来告诉结算页要不要画积分抵扣行。
-        BigDecimal pointsDeductBase = BigDecimal.ZERO;
 
         if (tickets == null || tickets.isEmpty()) {
             // 单票模式
             OmsTicket ticket = validateAndGetTicket(ticketId, ownerType, ownerId, inventoryHold != null);
+            quotedTicket = ticket;
             // P-07/C-07 + 通行证三档:与 createRegistration 同一个 snapshotOnPurchase 判定。
             RefundPolicy.Snapshot refundSnapshot = RefundPolicy.snapshotOnPurchase(
                     PurchaseKind.derive(ticketId, sellerTopic == null ? null : sellerTopic.getProductType()),
@@ -1079,14 +1214,18 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
             // F03 报价与报名同一可售口径:报价成功而下单被闸拒 = 用户走到末端才失败。
             if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
+            // 数量 vs 剩余库存:报价页就要能说「买不了」,不能等下单才失败。
+            // ⚠️ 只是预检 —— 并发下的唯一权威仍是建单侧 deductInventory 的条件 UPDATE。
+            // ⚠️ 只比张数;min_people/max_people 是成团人数、team_size 是建议组队人数,都不是购买上限。
+            // 候补 offer 已在晋级事务占过库存(inventoryHold != null),此时余票可能已被预占为 0 ——
+            // 对已占座的人再判一次余票就是把人赶走,所以只在非候补路径判。
+            if (inventoryHold == null) {
+                RegistrationQuantityPolicy.assertPurchasable(ticket.getRemainingInventory(), 1);
+            }
             if (inventoryHold == null) assertClubReservationAvailable(clubBenefit, ticket, 1);
-            PriceCalc c = computePrice(ticket.getPrice(), clubBenefit.effectivePrice(ticket.getPrice()),
-                    1, userPoint, usePoint);
-            aggregatePayable = c.payableAmount;
-            pointsUsed = c.pointUsed;
-            pointsDeduct = c.pointDeductAmount;
-            memberDiscountYuan = c.memberDiscountAmount;
-            pointsDeductBase = c.totalAmount;
+            listTotal = money(ticket.getPrice());
+            memberTotal = money(clubBenefit.effectivePrice(ticket.getPrice()));
+            marketingLines.add(new MarketingPromotionRequest.Line(ticketId, 1, ticket.getPrice()));
             ticketsKey.append(ticketId).append(':').append(1);
             if (inventoryHold != null) ticketsKey.append("@offer:").append(inventoryHold.getOfferId());
         } else {
@@ -1095,12 +1234,20 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             // 不能每票各调一次 computePrice —— 它把抵扣封顶降到「本行 totalAmount」，
             // 于是实际封顶 = min(50元, tickets[0] 那一行的金额)，导致同一个购物车排序不同优惠不同
             // （早鸟¥10 在前只抵¥10，全价¥200 在前能抵¥50）。抵扣是订单级概念，必须按整单算。
-            BigDecimal orderTotal = BigDecimal.ZERO;
-            BigDecimal memberPriceTotal = BigDecimal.ZERO;
+            // 同一票种可能被拆成多行(客户端购物车按参与日期分行):先按票种汇总张数再比剩余库存,
+            // 否则「A 票 2 张」写两行时,每行各自都能过"余票 2 张"的预检,报价却报出一个买不满的单。
+            Map<Long, Integer> requestedByTicket = new java.util.LinkedHashMap<>();
+            Map<Long, OmsTicket> ticketById = new java.util.LinkedHashMap<>();
             for (int i = 0; i < tickets.size(); i++) {
                 RegistrationTicketItem it = tickets.get(i);
-                int qty = (it.getCount() == null || it.getCount() <= 0) ? 1 : it.getCount();
+                int qty = RegistrationQuantityPolicy.normalizedQuantity(it.getCount());
                 OmsTicket ticket = validateAndGetTicket(it.getTicketId(), ownerType, ownerId);
+                if (i == 0) {
+                    firstQuotedTicket = ticket;
+                } else if (firstQuotedTicket != null
+                        && !firstQuotedTicket.getId().equals(it.getTicketId())) {
+                    mixedTickets = true;
+                }
                 // 通行证三档:整单里有 ③ 票时,报价按最早开始的那张票的钟(与各行下单快照同锚)。
                 if (sellerTopic != null && PurchaseKind.derive(it.getTicketId(), sellerTopic.getProductType()) == PurchaseKind.EXPLORE_PASS
                         && ticket.getStartTime() != null) {
@@ -1108,32 +1255,59 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     exploreAnchorSet = true;
                 }
                 if (activity != null && sellerTopic != null) assertRegistrationSellable(activity, sellerTopic, ticket, new Date());
-                orderTotal = orderTotal.add(ticket.getPrice().multiply(BigDecimal.valueOf(qty)));
-                memberPriceTotal = memberPriceTotal.add(clubBenefit.effectivePrice(ticket.getPrice())
+                ticketById.put(it.getTicketId(), ticket);
+                requestedByTicket.merge(it.getTicketId(), qty, Integer::sum);
+                listTotal = listTotal.add(ticket.getPrice().multiply(BigDecimal.valueOf(qty)));
+                memberTotal = memberTotal.add(clubBenefit.effectivePrice(ticket.getPrice())
                         .multiply(BigDecimal.valueOf(qty)));
                 assertClubReservationAvailable(clubBenefit, ticket, qty);
+                marketingLines.add(new MarketingPromotionRequest.Line(it.getTicketId(), qty, ticket.getPrice()));
                 if (i > 0) ticketsKey.append('|');
                 ticketsKey.append(it.getTicketId()).append(':').append(qty);
             }
-            // qty 传 1：orderTotal 已是整单票面，computePrice 内部再乘 qty 会重复计数
-            PriceCalc c = computePrice(orderTotal, memberPriceTotal, 1, userPoint, usePoint);
-            pointsDeductBase = c.totalAmount;
-            aggregatePayable = c.payableAmount;
-            pointsUsed = c.pointUsed;
-            pointsDeduct = c.pointDeductAmount;
-            memberDiscountYuan = c.memberDiscountAmount;
+            // B7 的多票混选口径：混选时 quotedTicket 为 null，交付摘要不回挑某一个票种条款。
+            quotedTicket = mixedTickets ? null : firstQuotedTicket;
+            // M2：库存可购断言在计价前，逐票种核剩余库存（促销/积分仍走下面同一个 priceOrder）。
+            for (Map.Entry<Long, Integer> requested : requestedByTicket.entrySet()) {
+                RegistrationQuantityPolicy.assertPurchasable(
+                        ticketById.get(requested.getKey()).getRemainingInventory(), requested.getValue());
+            }
         }
+        listTotal = money(listTotal);
+        memberTotal = money(memberTotal);
+
+        // 促销与积分：促销只把票面降到"促销后应付"，积分抵扣仍走既有 computePrice。
+        // 报价与建单必须调同一个方法、喂同一份行，否则「报价=实付」立刻失效。
+        RegistrationOrderPrice priced = priceOrder(memberId, ownerType, ownerId, marketingLines, offerCode,
+                listTotal, memberTotal, userPoint, usePoint, new Date());
+        PriceCalc c = priced.calc;
+        aggregatePayable = c.payableAmount;
+        pointsUsed = c.pointUsed;
+        pointsDeduct = c.pointDeductAmount;
+        memberDiscountYuan = priced.memberDiscount;
+        // 第十二轮 k6(p1 N-1):积分可抵基数 = 促销/会员价后的票面(与 computePrice 封顶同一基数)。
+        BigDecimal pointsDeductBase = c.totalAmount;
 
         BigDecimal couponDeductYuan = BigDecimal.ZERO; // 券为商家核销型，不抵扣报名支付
         BigDecimal payAmount = aggregatePayable.setScale(2, BigDecimal.ROUND_HALF_UP);
         assertCollectible(sellerTopic, payAmount, activity);
         BigDecimal pointsDeductYuan = pointsDeduct.setScale(2, BigDecimal.ROUND_HALF_UP);
+        // 促销规则版本也进签名:同额不同因的两份报价必须是两个签名(见 buildQuoteSign 注释)。
+        String marketingSign = priced.marketing == null ? null : trimToNull(priced.marketing.getMarketingSign());
         String quoteSign = buildQuoteSign(memberId, ownerType, ownerId, ticketsKey.toString(),
-                usePoint, payAmount, pointsUsed, couponDeductYuan);
+                usePoint, payAmount, pointsUsed, couponDeductYuan, marketingSign);
         RegistrationQuoteResult result = new RegistrationQuoteResult(payAmount, pointsUsed, pointsDeductYuan,
                 couponDeductYuan, quoteSign,
                 memberDiscountYuan.setScale(2, BigDecimal.ROUND_HALF_UP), clubBenefit.isMember,
                 clubBenefit.prioritySignupEnabled);
+        // C06 商品交付摘要（B7）:只读服务端既有票种/活动/主题事实，不参与金额与 quoteSign。
+        result.setDelivery(quoteDelivery(activity, sellerTopic, quotedTicket, quotedTicketIdOf(tickets)));
+        // 完局奖励券:只投影主题既有配置,不下发折扣、不参与计价/quoteSign。
+        // 券的可见性闸全部沿用 PublicCouponSummaryVO.from(结束/失效/停发/删除 → null)。
+        result.setCompleteRewardCoupon(projectCompleteRewardCoupon(sellerTopic, memberId));
+        // 促销投影:只读。客户端拿 marketingSign 回传,下单时服务端重算比对;金额永不回传。
+        projectMarketing(result, priced, listTotal);
+        projectPassCoverage(result, memberId, sellerTopic);
         result.setPointsUsable(pointsUsable(sellerTopic, usePoint, pointsDeduct, pointsDeductBase, userPoint));
         // 1-22 附注(拍板 2026-09-19 第6条):开场前 24h 内的 ¥ 单,下单确认弹层必须写明「本单不可退」。
         // 截止点只许从 RefundPolicy 唯一场次钟取,报价侧不参与 quoteSign(它是展示性字段,
@@ -1185,7 +1359,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         validateAndGetMember(memberId);
         ClubOperationBenefit clubBenefit = resolveClubOperationBenefit(memberId, topic.getClubId());
         BigDecimal originalPrice = topic.getSelfPlayPrice();
-        BigDecimal price = clubBenefit.effectivePrice(originalPrice);
+        com.chengyinhub.business.platformpass.PlatformPassService.Coverage passCoverage =
+                platformPassCoverage(memberId, topic, freeTopic);
+        BigDecimal price = passCoverage != null ? BigDecimal.ZERO : clubBenefit.effectivePrice(originalPrice);
         if (price.compareTo(BigDecimal.ZERO) > 0) {
             // 与下单同一对收费闸:报价放行而下单被拒 = 用户走到末端才失败
             assertCollectible(topic, price);
@@ -1206,11 +1382,19 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         int usePoint = (isUsePoint != null && isUsePoint == 1) ? 1 : 0;
         BigDecimal couponDeductYuan = BigDecimal.ZERO;
         String quoteSign = buildQuoteSign(memberId, ownerType, ownerId, ticketsKey.toString(),
-                usePoint, payAmount, 0, couponDeductYuan);
+                usePoint, payAmount, 0, couponDeductYuan, null);
         RegistrationQuoteResult result = new RegistrationQuoteResult(payAmount, 0,
                 BigDecimal.ZERO.setScale(2, BigDecimal.ROUND_HALF_UP), couponDeductYuan, quoteSign,
                 originalPrice.subtract(price).setScale(2, BigDecimal.ROUND_HALF_UP), clubBenefit.isMember,
                 clubBenefit.prioritySignupEnabled);
+        // C06 交付摘要 / 完局奖励券 / 通行证覆盖:与场次报价同一组只读投影,不参与金额与 quoteSign。
+        result.setDelivery(quoteDelivery(null, topic, null, ticketId));
+        result.setCompleteRewardCoupon(projectCompleteRewardCoupon(topic, memberId));
+        projectPassCoverage(result, memberId, topic);
+        if (passCoverage != null) {
+            result.setPlatformPassCovered(Boolean.TRUE);
+            result.setPlatformPassValidTo(passCoverage.validTo());
+        }
         if (payAmount.signum() > 0) {
             RefundPolicy.Snapshot passPolicy = RefundPolicy.snapshotSelfPlayPass(topic);
             if (passPolicy != null && passPolicy.deadline != null) {
@@ -1225,13 +1409,274 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         return result;
     }
 
+    /**
+     * C06 交付摘要的唯一装配点。只读既有票种/活动/主题事实：
+     * 没有票种 = 自玩通行证；票面条款缺失时保持 null，不用客户端默认值补齐。
+     */
+    private RegistrationQuoteResult.Delivery quoteDelivery(CmsActivity activity,
+                                                           CmsTopic sellerTopic, OmsTicket ticket,
+                                                           Long fallbackTicketId) {
+        RegistrationQuoteResult.Delivery delivery = new RegistrationQuoteResult.Delivery();
+        Long ticketId = ticket != null ? ticket.getId() : fallbackTicketId;
+        Integer productType = sellerTopic != null ? sellerTopic.getProductType() : null;
+        delivery.setPurchaseKind(PurchaseKind.derive(ticketId, productType));
+        if (ticket != null) {
+            // 多票混选时 ticket 为空：不为整单挑一个票种条款冒充全部交付。
+            delivery.setTicketName(ticket.getName());
+            delivery.setTeamSize(ticket.getTeamSize());
+            delivery.setMinPeople(ticket.getMinPeople());
+            delivery.setMaxPeople(ticket.getMaxPeople());
+            delivery.setNeedAudit(ticket.getNeedAudit());
+            delivery.setRefundRule(ticket.getRefundRule());
+        }
+        Date start = activity != null ? activity.getStartDate()
+                : (sellerTopic != null ? sellerTopic.getStartDate() : null);
+        Date end = activity != null ? activity.getEndDate()
+                : (sellerTopic != null ? sellerTopic.getEndDate() : null);
+        delivery.setServiceStartAt(start);
+        delivery.setServiceEndAt(end);
+        // 受益主体只表达种类：报价人身份已由登录态确定，不重复回显账号 id。
+        delivery.setBeneficiaryKind("PAYER_SELF");
+        delivery.setSellerMemberId(activity != null ? activity.getMemberId()
+                : (sellerTopic != null ? sellerTopic.getMemberId() : null));
+        delivery.setAmountFromServer(Boolean.TRUE);
+        return delivery;
+    }
+
+    /** 多票报价没有单一票种时，仅用第一张票判 ①/③，避免自玩票被误报成有人带票。 */
+    private Long quotedTicketIdOf(List<RegistrationTicketItem> tickets) {
+        if (tickets == null || tickets.isEmpty() || tickets.get(0) == null) {
+            return null;
+        }
+        return tickets.get(0).getTicketId();
+    }
+
     /** 无状态报价签名：仅服务端计算，客户端只回传。 */
+
+    // ------------------------------------------------------------------ 促销接线(M2-F ↔ M4)
+
+    /**
+     * 订单级定价:<b>促销 → 积分</b>。报价与建单**共用这一个方法**,保证「报价=实付」。
+     *
+     * <p>顺序不可换:促销只回答"票面降到多少"({@link MarketingPromotionQuote#getPayableAmount()},
+     * 扣积分前),积分抵扣仍由既有 {@link #computePrice} 处理 —— 两处各算一遍积分就是对不上的开始。
+     *
+     * <p><b>零应付闸(不可用 = 拒绝,不是按原价收)</b>:票面 &gt; 0 而促销把应付压到 0 时,
+     * 直接抛 {@link RegistrationRequestConflictException} 报"该优惠暂不可用"。
+     * 为什么不能改成按票面收:那等于替用户把价抬回去(用户看到的优惠变成原价成交),是资损投诉;
+     * 为什么本平台执行不了 0 元:零元单走 {@code completeZeroAmountPayment} 直接置为已付,
+     * 没有付款事实、没有资金流水 —— 要支持 100% off 必须先改那条零元单语义(产品决策)。
+     *
+     * <p><b>会员价与促销</b>:两者都改单价,而"同时生效取哪个"既无既有规则也无配置项;
+     * 现状会员价硬置 null(见 {@code resolveClubOperationBenefit}),不可达;若将来开放则 fail-closed 报冲突,
+     * 由产品定义叠加规则 —— 不在这里写死新的全局定价政策。
+     */
+    private RegistrationOrderPrice priceOrder(Long memberId, Integer ownerType, Long ownerId,
+            List<MarketingPromotionRequest.Line> lines, String offerCode,
+            BigDecimal listTotal, BigDecimal memberTotal, long userPoint, int usePoint, Date now) {
+        RegistrationOrderPrice out = new RegistrationOrderPrice();
+        out.listAmount = money(listTotal);
+        BigDecimal memberPrice = money(memberTotal);
+        // 会员价折扣与促销无关,单独算并回给报价:computePrice 收的是"促销后应付",
+        // 它内部的"原价-应付"在这种入参下已经不代表会员价。
+        out.memberDiscount = out.listAmount.subtract(memberPrice);
+        boolean memberPriceActive = memberPrice.compareTo(out.listAmount) < 0;
+
+        MarketingPromotionQuote marketing = quoteMarketing(memberId, ownerType, ownerId, lines, offerCode, now);
+        if (marketing != null) {
+            BigDecimal payable = money(marketing.getPayableAmount());
+            boolean applied = marketing.getOfferId() != null || payable.compareTo(out.listAmount) != 0;
+            if (applied && out.listAmount.signum() > 0 && payable.signum() <= 0) {
+                // ⚠️ 不支持 ≠ 可以按原价收。零元单会被 completeZeroAmountPayment 直接置为已付(无付款事实),
+                // 所以这条优惠本平台**无法执行**。报价与建单都必须如实报不可用,绝不替用户把价抬回票面。
+                throw new RegistrationRequestConflictException(
+                        "该优惠暂不可用:它会把应付降为 0,请改选其它优惠后重新报价");
+            }
+            if (applied && memberPriceActive) {
+                // 会员价与促销都改单价,而"两者同时生效取哪个"**没有既有规则、也没有配置项**。
+                // 现状会员价是硬置 null(见 resolveClubOperationBenefit 的 2026-08-12 拍板注释),
+                // 所以这里今天不可达;一旦有人恢复会员价,这里 fail-closed 报冲突,
+                // 由产品定义叠加规则 —— 不在这里写死"取低者"这种新全局定价政策。
+                throw new RegistrationRequestConflictException(
+                        "会员价与优惠不可同时使用:叠加规则尚未配置,请关闭优惠或联系运营");
+            }
+            if (applied) {
+                out.marketing = marketing;
+            }
+            // applied=false：配置了但本次没减/没加价 ⇒ 当"无促销"处理,不要求客户端回传指纹。
+        }
+        BigDecimal base = memberPriceActive ? memberPrice : out.listAmount;
+        if (out.marketing != null) {
+            base = money(out.marketing.getPayableAmount());
+        }
+        // qty 传 1：base 已是整单金额,computePrice 内部再乘 qty 会重复计数。
+        out.calc = computePrice(base, base, 1, userPoint, Integer.valueOf(usePoint));
+        return out;
+    }
+
+    /**
+     * 调用 M4 的促销引擎(不复制计算逻辑)。provider 缺失(旧单测手工构造服务)时返回 null,
+     * 报价按票面 —— 不假装有促销,也不因此拒绝整个报价。
+     *
+     * <p>⚠️ 不吞 {@code MarketingPromotionException}/{@code IllegalStateException}:
+     * 配置坏了要响,不能静默按票面收(那就是"用户看到优惠、实付没有")。
+     */
+    private MarketingPromotionQuote quoteMarketing(Long memberId, Integer ownerType, Long ownerId,
+            List<MarketingPromotionRequest.Line> lines, String offerCode, Date now) {
+        if (marketingPromotionService == null || lines == null || lines.isEmpty()) {
+            return null;
+        }
+        MarketingPromotionRequest request = new MarketingPromotionRequest();
+        request.setMemberId(memberId);
+        request.setOwnerType(ownerType);
+        request.setOwnerId(ownerId);
+        request.setLines(lines);
+        request.setOfferCode(offerCode);
+        return marketingPromotionService.quote(request, now == null ? new Date() : now);
+    }
+
+    /** 一份促销报价的减免合计(阶梯 + 组合包 + 触发式;礼品溢价时为负,由调用方按需取绝对值)。 */
+    private static BigDecimal amountOf(MarketingPromotionQuote quote) {
+        if (quote == null) return BigDecimal.ZERO;
+        return money(quote.getTierDiscountAmount())
+                .add(money(quote.getOfferDiscountAmount()))
+                .add(money(quote.getPromotionDiscountAmount()));
+    }
+
+    /**
+     * 在建单事务内落促销成交快照。无促销时不写(不留空快照)。
+     *
+     * <p>{@code orderType} 用 {@code MarketingRevenueAllocation.ORDER_REGISTRATION}(=1,复用既有常量),
+     * {@code orderId} 是报名主单 id —— 退款与对账都按 (orderType, orderId) 读这一行。
+     * M4 的 commitApplied 是 {@code @Transactional(REQUIRED)},并入本事务:快照与订单同生共死。
+     */
+    private void commitMarketing(MarketingPromotionQuote quote, Long orderId) {
+        if (quote == null || orderId == null || orderId <= 0 || marketingPromotionService == null) {
+            return;
+        }
+        marketingPromotionService.commitApplied(quote,
+                com.chengyinhub.business.domain.marketing.MarketingRevenueAllocation.ORDER_REGISTRATION,
+                orderId, new Date());
+    }
+
+    /** 报价回包:促销只读投影。金额仍是 payAmount,这里给的是"为什么是这个数"。 */
+    private void projectMarketing(RegistrationQuoteResult result, RegistrationOrderPrice priced,
+                                  BigDecimal listTotal) {
+        result.setListAmount(money(listTotal));
+        MarketingPromotionQuote applied = priced.marketing;
+        BigDecimal discount = BigDecimal.ZERO;
+        List<com.chengyinhub.business.domain.dto.MarketingExclusion> exclusions = new ArrayList<>();
+        if (applied != null) {
+            discount = money(applied.getTierDiscountAmount())
+                    .add(money(applied.getOfferDiscountAmount()))
+                    .add(money(applied.getPromotionDiscountAmount()));
+            if (applied.getExclusions() != null) exclusions.addAll(applied.getExclusions());
+            result.setMarketingSign(isBlank(applied.getMarketingSign()) ? null : applied.getMarketingSign());
+            result.setMarketingRuleVersion(applied.getRuleVersion());
+            result.setMarketingAdjustments(applied.getAdjustments());
+        }
+        result.setMarketingDiscountAmount(money(discount));
+        result.setMarketingExclusions(exclusions.isEmpty() ? null : exclusions);
+    }
+
+    /**
+     * 只读投影:M3 通行证是否已覆盖本主题。**不改价、不阻断** —— 通行证与"有人带票"可能是不同 SKU,
+     * 是否禁止重复购买属产品决策。查不到(provider 缺失/异常)回 null = 未知,不冒充 false。
+     */
+    private void projectPassCoverage(RegistrationQuoteResult result, Long memberId, CmsTopic sellerTopic) {
+        if (marketingPassAccessService == null || sellerTopic == null || sellerTopic.getId() == null
+                || memberId == null || memberId <= 0) {
+            return;
+        }
+        Long topicId = sellerTopic.getId();
+        result.setCoveredTopicId(topicId);
+        try {
+            result.setCoveredByPass(marketingPassAccessService.hasActiveAccess(memberId, topicId));
+        } catch (RuntimeException unavailable) {
+            logger.warn("通行证覆盖只读查询失败,按未知处理 memberId={} topicId={}", memberId, topicId, unavailable);
+        }
+    }
+
+    /**
+     * 下单时的促销指纹闸。报价与建单用同一份入参重算后必须逐字相等:
+     * <ul>
+     *   <li>促销生效而客户端没带指纹 → 409(用户看到的价可能不是这个);</li>
+     *   <li>指纹不等(配置/资格/窗口/版本/金额变了) → 409,让前端重新报价;</li>
+     *   <li>两边都没促销 → 通过(旧客户端与无促销配置的存量行为不变)。</li>
+     * </ul>
+     */
+    private void assertMarketingSign(String clientSign, MarketingPromotionQuote marketing) {
+        String expected = marketing == null ? null : trimToNull(marketing.getMarketingSign());
+        String actual = trimToNull(clientSign);
+        if (!java.util.Objects.equals(expected, actual)) {
+            throw new RegistrationRequestConflictException("优惠已变化或与本单不一致,请重新报价后再提交");
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private static String trimToNull(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    private static BigDecimal money(BigDecimal value) {
+        return (value == null ? BigDecimal.ZERO : value).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** 订单级定价结果:促销报价 + 积分计算 + 与促销无关的会员折扣。 */
+    private static class RegistrationOrderPrice {
+        BigDecimal listAmount = BigDecimal.ZERO;
+        BigDecimal memberDiscount = BigDecimal.ZERO;
+        MarketingPromotionQuote marketing;
+        PriceCalc calc;
+    }
+
+    /**
+     * 只读投影主题的「完局奖励券」,供报价页说明「走完能拿到什么」。
+     *
+     * <p><b>已经领过就不再投影</b>:通关券发放日志({@code cms_topic_completion_coupon_reward_log},
+     * uk 主题+会员)就是"券真发过"的事实,不去 sms_coupon_history 二次推断。重复购买同一主题的
+     * 玩家看到"走完可得"而实际不会再有,是假承诺。
+     *
+     * <p>provider 缺失(仅有旧单测手工构造服务)或券不可展示时返回 null,不影响报价本身。
+     */
+    private com.chengyinhub.business.domain.vo.PublicCouponSummaryVO projectCompleteRewardCoupon(
+            CmsTopic sellerTopic, Long memberId) {
+        if (sellerTopic == null || smsCouponService == null) {
+            return null;
+        }
+        Long couponId = sellerTopic.getCompleteRewardCouponId();
+        if (couponId == null || couponId <= 0) {
+            return null;
+        }
+        Long topicId = sellerTopic.getId();
+        if (completionCouponRewardMapper != null && topicId != null && memberId != null
+                && completionCouponRewardMapper.selectCouponId(topicId, memberId) != null) {
+            return null;
+        }
+        return com.chengyinhub.business.domain.vo.PublicCouponSummaryVO.from(
+                smsCouponService.selectSmsCouponById(couponId));
+    }
+
+    /**
+     * 无状态报价签名：仅服务端计算，客户端只回传。
+     *
+     * <p>促销规则版本/组合也进签名(由 M4 算出的 {@code marketingSign} 代表):金额相等但"凭什么减"
+     * 不同的两份报价必须得到不同签名,否则换一个同额优惠重放也能过。
+     *
+     * <p>⚠️ {@code marketingSign} 为空时**不追加**这一段:无促销的请求(含全部存量与大部旧客户端)
+     * 的签名与历史算法逐字相同 —— 升级瞬间在途报价不会被判成"价格已更新"。
+     */
     private String buildQuoteSign(Long memberId, Integer ownerType, Long ownerId, String ticketsKey,
-            int usePoint, BigDecimal payAmount, int pointsUsed, BigDecimal couponDeductYuan) {
+            int usePoint, BigDecimal payAmount, int pointsUsed, BigDecimal couponDeductYuan,
+            String marketingSign) {
         String canonical = memberId + "|" + ownerType + "|" + ownerId + "|" + ticketsKey + "|" + usePoint
                 + "|" + payAmount.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString()
                 + "|" + pointsUsed
                 + "|" + couponDeductYuan.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString()
+                + (isBlank(marketingSign) ? "" : "|mkt:" + marketingSign.trim())
                 + "|" + QUOTE_SIGN_SALT;
         return Md5Utils.hash(canonical);
     }
@@ -1761,12 +2206,14 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     request.getOwnerId(), request.getIsUsePoint(), request.getRealName(),
                     request.getPhone(), request.getAddress(), request.getEmail(),
                     request.getTickets(), normalizedRequestId,
-                    request.getSourceClubId(), request.getSourceChannelCode());
+                    request.getSourceClubId(), request.getSourceChannelCode(),
+                    request.getOfferCode(), request.getMarketingSign());
         } else {
             created.add(createRegistrationInternal(memberId, request.getOwnerType(), request.getOwnerId(),
                     request.getTicketId(), request.getIsUsePoint(), request.getRealName(), request.getPhone(),
                     request.getAddress(), request.getEmail(), 1, null, null, null, normalizedRequestId,
-                    request.getSourceClubId(), request.getSourceChannelCode(), waitlistClaim));
+                    request.getSourceClubId(), request.getSourceChannelCode(), waitlistClaim,
+                    request.getOfferCode(), request.getMarketingSign()));
         }
         bindRequestFingerprint(created, normalizedRequestId, requestFingerprint);
         return created;
@@ -2711,6 +3158,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         paidRegistrationIds.add(registration.getId());
         registration = freezeTicketSourceOnPayment(registration);
         settlementEntryService.recordOnPayment(registration);
+        // 应计只入队、不算钱:M5 的 consumer 在事实提交后自己读已验证支付事实。
+        // 不 catch:入队失败要让整笔支付成功事务回滚(宁可微信重投,也不静默漏账)。
+        marketingRevenuePostingService.enqueueAccrual(registration.getId());
 
         if (StringUtils.isNotEmpty(registration.getParentOrderNo())) {
             List<CmsRegistration> siblings = locked.rows();
@@ -2730,6 +3180,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                 }
                 sibling = freezeTicketSourceOnPayment(sibling);
                 settlementEntryService.recordOnPayment(sibling);
+                marketingRevenuePostingService.enqueueAccrual(sibling.getId());
                 paidRegistrationIds.add(sibling.getId());
             }
         }
@@ -3923,6 +4374,11 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             }
             return registrationPaymentCallbackFailure(outTradeNo,
                     "closed_registration_original_payment_recovery_required");
+        }
+        if (clubWaitlistOrderBridge != null && clubWaitlistOrderBridge.hostPaymentNeedsRecovery(
+                registration.getId(), new Date(), Date.from(verified.successAt()))) {
+            verifiedPaymentFacts.deferHostReservationPayment(consumed.reference(), registration.getId());
+            return registrationPaymentCallbackFailure(outTradeNo, "host_reservation_payment_recovery_required");
         }
         // Shared by cancellation preflight and consumption, under the original topic/activity/order locks.
         verifiedPaymentFacts.requireConsumablePayment(consumed.reference());

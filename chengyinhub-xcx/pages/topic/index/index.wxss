@@ -2083,7 +2083,7 @@ button::after {
 .topic .statbar__badge, .topic .statbar__cell { flex: 1 1 0; min-width: 0; width: auto; }
 .topic .statbar__badge { display: block; }
 .topic .statbar__label, .topic .statbar__sub { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.topic .statbar__value { max-width: 100%; white-space: normal; word-break: break-all; text-align: center; }
+.topic .statbar__value { max-width: 100%; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; text-align: center; } /* x-fix2 P-12:不再 break-all 劈数字 */
 .topic .statbar__row--dense .statbar__value { font-size: 30rpx; } /* ds-ok: V-23d 五格以上时收小一档才放得下 */
 
 /* —— v13 购买半屏:票面(照片 + 齿孔 + 镭射)/ 票种 / 小牌 / 合计 / 去结算 —— */

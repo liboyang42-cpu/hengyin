@@ -1,0 +1,99 @@
+<view class="theme-dark jn">
+  <cy-nav-bar plain />
+  <cy-page-title align="center" title="{{report && report.legacy ? '主题记录' : '本局战报'}}" />
+  <!-- r2-finish b3-p7-1-2/3(业主「居中 icon可以换一下」「居中 感觉…有点高」):状态屏在剩余高度里居中,图标按状态换 -->
+  <cy-empty wx:if="{{state === 'loading'}}" kind="loading" title="加载中" fill size="lg" />
+  <view class="jn-state" wx:elif="{{state !== 'ready'}}" aria-role="status" aria-live="polite" aria-label="{{stateTitle}}">
+    <view class="jn-state__ic" aria-hidden="true"><cy-icon name="{{stateIcon || 'info'}}" size="56" /></view>
+    <text class="jn-state__t">{{stateTitle}}</text>
+    <view class="jn-state__cta" wx:if="{{stateCta}}" bindtap="onStateCta" aria-role="button" aria-label="{{stateCta}}" hover-class="cy-pressed" hover-stay-time="80">{{stateCta}}</view>
+  </view>
+  <block wx:else>
+    <!-- qx-s2 合并:qx-u2 的叠层战报卡(P7)与 r2-finish b3-p7 的三格分组卡改的是同一块;按「后一轮业主点名的改动优先」取 r2-finish,u2 的叠卡在本页退场(见 qx-s2/RESULT 待你决定) -->
+    <view class="jn-head">
+      <text class="jn-eyebrow" wx:if="{{eyebrow}}">{{eyebrow}}</text>
+      <text class="jn-pill {{report.win ? 'is-win' : ''}}">{{report.result}}</text>
+    </view>
+    <view class="jn-grid jn-grid--card">
+      <view class="jn-stat"><text class="jn-stat__v">{{report.nodesText}}</text><text class="jn-stat__l">完成节点</text></view>
+      <view class="jn-stat"><text class="jn-stat__v {{report.elapsedText === '—' ? 'is-muted' : ''}}">{{report.elapsedText}}</text><text class="jn-stat__l">用时</text></view>
+      <view class="jn-stat"><text class="jn-stat__v {{report.scored ? '' : 'is-muted'}}">{{report.scoreText}}</text><text class="jn-stat__l">解谜分</text></view>
+    </view>
+
+    <view class="jn-sec">
+      <view class="jn-group">
+        <view class="jn-row" bindtap="openRank" aria-role="button" aria-label="查看榜单" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="jn-row__t"><text class="jn-row__b">名次</text><text class="jn-row__s" wx:if="{{report.rankSub}}">{{report.rankSub}}</text></view>
+          <text class="jn-row__v {{report.rankSub ? 'is-strong' : ''}}">{{report.rankText}}</text>
+          <cy-icon class="jn-row__arr" name="arrow-right" size="28" />
+        </view>
+        <view class="jn-row" wx:if="{{report.penaltyText}}">
+          <view class="jn-row__t"><text class="jn-row__b">提示扣减</text></view>
+          <text class="jn-row__v">{{report.penaltyText}}</text>
+        </view>
+        <view class="jn-row" wx:if="{{report.rewardsText}}">
+          <view class="jn-row__t"><text class="jn-row__b">主题背包</text></view>
+          <text class="jn-row__v">{{report.rewardsText}}</text>
+        </view>
+        <view class="jn-row" wx:if="{{!report.legacy && report.runId}}" bindtap="openMemory" aria-role="button" aria-label="本局回忆" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="jn-row__t"><text class="jn-row__b">本局回忆</text></view>
+          <cy-icon class="jn-row__arr" name="arrow-right" size="28" />
+        </view>
+        <view class="jn-row" wx:if="{{registrationId}}" bindtap="openSeats" aria-role="button" aria-label="同行席位" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="jn-row__t"><text class="jn-row__b">同行席位</text></view>
+          <cy-icon class="jn-row__arr" name="arrow-right" size="28" />
+        </view>
+      </view>
+    </view>
+
+    <view class="jn-sec" wx:if="{{report.nodes.length}}">
+      <text class="jn-sec__h">节点</text>
+      <view class="jn-group">
+        <view class="jn-row" wx:for="{{report.nodes}}" wx:key="key">
+          <view class="jn-row__t"><text class="jn-row__b">{{item.name}}</text><text class="jn-row__s" wx:if="{{item.mode}}">{{item.mode}}</text></view>
+          <text class="jn-row__v">{{item.scoreText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="jn-footer ob-footer" wx:if="{{report.finished}}">
+      <cy-btn class="jn-grow" variant="secondary" bindtap="openSettle">结算</cy-btn>
+      <button class="jn-share" open-type="share" aria-label="分享本局"><cy-btn variant="primary">分享</cy-btn></button>
+    </view>
+    <view class="jn-footer" wx:elif="{{report.inProgress}}">
+      <cy-btn class="jn-grow" variant="secondary" bindtap="reload">刷新结果</cy-btn>
+    </view>
+  </block>
+
+  <cy-sheet show="{{rankOpen}}" title="榜单" fixed="half" handle bind:close="closeRank">
+    <view class="jn-sheet">
+      <rank-board wx:if="{{rankOpen}}" topic-id="{{report.topicId}}" activity-id="{{report.activityId}}" team-id="{{teamId}}"
+        city-code="{{cityCode}}" country-code="{{countryCode}}" club-id="{{clubId}}" active="{{rankOpen}}" />
+    </view>
+  </cy-sheet>
+
+  <cy-sheet show="{{memoryOpen}}" title="本局回忆" fixed="half" handle bind:close="closeMemory">
+    <view class="jn-sheet">
+      <cy-skeleton wx:if="{{memoryState === 'loading'}}" type="list" count="3" />
+      <cy-empty wx:elif="{{memoryState === 'error'}}" kind="data" title="{{memoryError}}" cta="重试" bind:cta="loadMemory" size="sm" />
+      <cy-empty wx:elif="{{memoryState === 'empty'}}" kind="empty" title="这一局还没有回忆" size="sm" />
+      <!-- r2-finish b3-p8(业主「UI需要优化一下」):本局回忆改成一条时间线 —— 换天写日期,每站一个点,照片跟在那一站下面 -->
+      <block wx:elif="{{memoryState === 'ready'}}">
+        <text class="jn-mem-who" wx:if="{{memory.participants}}">{{memory.participants}}</text>
+        <view class="jn-tl">
+          <view class="jn-tl__item" wx:for="{{memory.moments}}" wx:key="key">
+            <text class="jn-tl__day" wx:if="{{item.showDay}}">{{item.day}}</text>
+            <view class="jn-tl__row">
+              <view class="jn-tl__dot" aria-hidden="true"></view>
+              <view class="jn-tl__body">
+                <view class="jn-tl__head"><text class="jn-tl__name">{{item.name}}</text><text class="jn-tl__time">{{item.time}}</text></view>
+                <text class="jn-tl__text" wx:if="{{item.text}}">{{item.text}}</text>
+                <image class="jn-tl__pic" wx:if="{{item.pic}}" src="{{item.pic}}" mode="aspectFill" lazy-load />
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </cy-sheet>
+</view>

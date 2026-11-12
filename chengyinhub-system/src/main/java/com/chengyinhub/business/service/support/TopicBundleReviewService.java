@@ -1,5 +1,8 @@
 package com.chengyinhub.business.service.support;
 
+import com.chengyinhub.business.exception.TopicPublicationContentException;
+import com.chengyinhub.business.domain.vo.PublicationProblem;
+
 import com.chengyinhub.business.domain.AuditTask;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTopic;
@@ -56,6 +59,8 @@ public class TopicBundleReviewService {
             .enable(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
     private final AdvancedGameConfigValidator advancedConfigValidator = new AdvancedGameConfigValidator();
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private WorkshopLicenseGuard workshopLicenses;
     public TopicBundleReviewService(CmsTopicMapper topicMapper,
                                     CmsTopicChapterMapper chapterMapper,
                                     CmsTopicNodeMapper nodeMapper,
@@ -133,7 +138,7 @@ public class TopicBundleReviewService {
             validateMerchantReferences(topic, nodes, merchantOwners);
         }
         if (chapters.isEmpty() || (nodes.isEmpty() && !awaitsMerchantGameplay(topic, chapters, nodes))) {
-            throw new IllegalArgumentException("专业主题至少需要一个章节和一个节点");
+            throw publicationInvalid(new IllegalArgumentException("专业主题至少需要一个章节和一个节点"));
         }
 
         Set<Long> referencedTemplateIds = new LinkedHashSet<Long>();
@@ -144,7 +149,7 @@ public class TopicBundleReviewService {
             }
         }
         if (referencedTemplateIds.isEmpty() && !awaitsMerchantGameplay(topic, chapters, nodes)) {
-            throw new IllegalArgumentException("专业主题至少需要一个节点玩法");
+            throw publicationInvalid(new IllegalArgumentException("专业主题至少需要一个节点玩法"));
         }
 
         List<Long> templateIds = new ArrayList<Long>(referencedTemplateIds);
@@ -239,6 +244,9 @@ public class TopicBundleReviewService {
             submittedIds.add(id);
         }
         Collections.sort(submittedIds);
+        if (approve && workshopLicenses != null) {
+            for (Long id : submittedIds) workshopLicenses.requirePublication(id, false);
+        }
 
         CmsTopic topic = topicMapper.selectCmsTopicByIdForUpdate(topicId);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())
@@ -247,6 +255,7 @@ public class TopicBundleReviewService {
                         != (topic.getConfigVersion() == null ? 0L : topic.getConfigVersion())) {
             throw stale();
         }
+        if(approve && workshopLicenses!=null)workshopLicenses.requireTheme(topic);
         List<CmsTopicChapter> chapters = new ArrayList<CmsTopicChapter>(
                 safe(chapterMapper.selectByTopicForUpdate(topicId)));
         sortChapters(chapters);
@@ -494,11 +503,16 @@ public class TopicBundleReviewService {
         if (StringUtils.isNotBlank(raw)) parseJson(raw, message);
     }
 
+    private static IllegalArgumentException publicationInvalid(IllegalArgumentException failure) {
+        return TopicPublicationContentException.invalid(PublicationProblem.CODE_TOPIC_BUNDLE_INVALID,
+                "chapters/nodes", failure);
+    }
+
     private JsonNode parseJson(String raw, String message) {
         try {
             return json.readTree(raw);
         } catch (Exception e) {
-            throw new IllegalArgumentException(message, e);
+            throw publicationInvalid(new IllegalArgumentException(message, e));
         }
     }
 
@@ -516,7 +530,7 @@ public class TopicBundleReviewService {
                         if (node.getTemplateId() == null || node.getTemplateId() <= 0L
                                 || StringUtils.isNotBlank(node.getLatitude())
                                 || StringUtils.isNotBlank(node.getLongitude())) {
-                            throw new IllegalArgumentException("故事玩法必须绑定模板且不能携带地点坐标");
+                            throw publicationInvalid(new IllegalArgumentException("故事玩法必须绑定模板且不能携带地点坐标"));
                         }
                         return;
                     }
@@ -524,15 +538,15 @@ public class TopicBundleReviewService {
             }
         }
         if (node == null || StringUtils.isBlank(node.getName()) || StringUtils.isBlank(node.getAddress())) {
-            throw new IllegalArgumentException("节点缺少真实地点名称或地址");
+            throw publicationInvalid(new IllegalArgumentException("节点缺少真实地点名称或地址"));
         }
         double latitude = coordinate(node.getLatitude(), "纬度");
         double longitude = coordinate(node.getLongitude(), "经度");
         if (latitude < 0.8293d || latitude > 55.8271d || longitude < 72.004d || longitude > 137.8347d) {
-            throw new IllegalArgumentException("节点坐标不在 GCJ-02 中国范围内:" + node.getId());
+            throw publicationInvalid(new IllegalArgumentException("节点坐标不在 GCJ-02 中国范围内:" + node.getId()));
         }
         if (isUntouchedEditorDefault(latitude, longitude)) {
-            throw new IllegalArgumentException("站点「" + node.getName().trim() + "」还在地图默认位置，请在地图上选定真实地点");
+            throw publicationInvalid(new IllegalArgumentException("站点「" + node.getName().trim() + "」还在地图默认位置，请在地图上选定真实地点"));
         }
     }
 
@@ -547,7 +561,7 @@ public class TopicBundleReviewService {
             if (!Double.isFinite(value) || value == 0d) throw new NumberFormatException();
             return value;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("节点" + label + "无效");
+            throw publicationInvalid(new IllegalArgumentException("节点" + label + "无效"));
         }
     }
 

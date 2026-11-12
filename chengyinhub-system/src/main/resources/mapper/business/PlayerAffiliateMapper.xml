@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayerAffiliateMapper">
+
+    <!--
+      本人凭据元数据。不 select token_hash —— 明文只在签发应答出现一次，
+      摘要也不该出现在玩家读面；active 由服务层用同一数据库时间口径判断。
+    -->
+    <select id="listOwnCredentials"
+            resultType="com.chengyinhub.business.domain.dto.PlayerAffiliateCredentialRow">
+        select c.campaign_key                              as campaignKey,
+               c.target_type                               as targetType,
+               c.target_id                                 as targetId,
+               case c.target_type
+                   when 1 then t.name
+                   when 2 then a.name
+                   else null
+               end                                         as targetTitle,
+               c.status                                    as status,
+               c.issued_at                                 as issuedAt,
+               c.expires_at                                as expiresAt
+        from marketing_referral_credential c
+        left join cms_topic t
+               on c.target_type = 1 and t.id = c.target_id
+        left join cms_activity a
+               on c.target_type = 2 and a.id = c.target_id
+        where c.sharer_member_id = #{memberId}
+        order by c.issued_at desc, c.id desc
+        limit #{limit}
+    </select>
+
+    <!--
+      本人 campaign 成交聚合。
+      1) 归因行必须向本人签发的凭据挂靠（credential 属主再校验一次）；
+      2) 只统计报名单 order_type=1；
+      3) paid/refunded 直接读 cms_registration.payment_status 与 payable_amount 快照；
+      4) heldOrders = 已支付但还没有收入分配行（费用依据未知或投递待处理），不是可提现。
+    -->
+    <select id="listOwnCampaigns"
+            resultType="com.chengyinhub.business.domain.dto.PlayerAffiliateCampaignRow">
+        select a.campaign_key                                   as campaignKey,
+               c.target_type                                    as targetType,
+               c.target_id                                      as targetId,
+               case c.target_type
+                   when 1 then t.name
+                   when 2 then act.name
+                   else null
+               end                                              as targetTitle,
+               count(*)                                         as attributedOrders,
+               coalesce(sum(case when r.payment_status = 2 then 1 else 0 end), 0) as paidOrders,
+               coalesce(sum(case when r.payment_status = 2 then coalesce(r.payable_amount, 0) else 0 end), 0)
+                                                                as paidAmount,
+               coalesce(sum(case when r.payment_status = 4 then 1 else 0 end), 0) as refundedOrders,
+               coalesce(sum(case when r.payment_status = 4 then coalesce(r.payable_amount, 0) else 0 end), 0)
+                                                                as refundedAmount,
+               coalesce(sum(case when r.payment_status = 2 and ra.id is null then 1 else 0 end), 0)
+                                                                as heldOrders
+        from marketing_attribution a
+        join marketing_referral_credential c
+          on c.id = a.credential_id
+         and c.sharer_member_id = #{memberId}
+        left join cms_topic t
+               on c.target_type = 1 and t.id = c.target_id
+        left join cms_activity act
+               on c.target_type = 2 and act.id = c.target_id
+        left join cms_registration r
+               on r.id = a.order_id and a.order_type = 1
+        left join marketing_revenue_allocation ra
+               on ra.order_type = a.order_type and ra.order_id = a.order_id
+        where a.sharer_member_id = #{memberId}
+        group by a.campaign_key, c.target_type, c.target_id, t.name, act.name
+        order by paidOrders desc, attributedOrders desc
+        limit #{limit}
+    </select>
+
+    <!--
+      本人作为推荐人的收入分录聚合。只取 line_role='referrer'：
+      作者收入在既有的 /api/marketing/revenue/author/mine 里，不在这里混算。
+      金额以整数分为真源；冲销方向 entry_type=2 本身为负，由服务层取绝对值单列。
+    -->
+    <select id="listReferrerBuckets"
+            resultType="com.chengyinhub.business.domain.dto.PlayerAffiliateBucketRow">
+        select a.status                 as allocationStatus,
+               a.currency               as currency,
+               l.entry_type             as entryType,
+               count(distinct a.id)     as allocationCount,
+               coalesce(sum(l.amount_fen), 0) as amountFen
+        from marketing_revenue_allocation_line l
+        join marketing_revenue_allocation a
+          on a.id = l.allocation_id
+        where l.recipient_member_id = #{memberId}
+          and l.line_role = 'referrer'
+        group by a.status, a.currency, l.entry_type
+    </select>
+</mapper>

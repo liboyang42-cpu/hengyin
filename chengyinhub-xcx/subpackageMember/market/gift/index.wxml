@@ -1,0 +1,22 @@
+<!-- §17.2 领取礼品:领取只把原权益指向本人,不新建订单;失败按原因分别说,不显示他人订单 -->
+<view class="theme-dark gf"><cy-access-gate kind="login" />
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="gf__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar title="领取礼品" plain custom-back bind:back="goBack" />
+    <!-- r2-join:领取态用礼物图标(不再用通用空态插画/警告三角),整块居中 -->
+    <view class="gf-hero {{state === 'failed' ? 'is-off' : ''}} {{state === 'claimed' ? 'is-done' : ''}} {{gfIn === 1 ? 'gf--pre' : ''}} {{gfGlow === 0 ? 'gf-glow--0' : ''}}" aria-role="status">
+      <view class="gf-hero__badge">
+        <view class="gf-hero__glow" wx:if="{{state === 'ready' || state === 'unknown'}}"></view>
+        <cy-icon name="{{state === 'claimed' ? 'check' : 'gift'}}" size="72" />
+      </view>
+      <text class="gf-hero__title">{{state === 'claimed' ? '已领取' : state === 'failed' ? reason : '好友送你一份通行证'}}</text>
+    </view>
+    <view class="gf__bar" wx:if="{{state === 'ready' || state === 'claimed' || state === 'unknown'}}">
+      <view class="gf__note" wx:if="{{state === 'unknown'}}">结果待确认，再点一次查询原结果</view>
+      <cy-btn wx:if="{{state !== 'claimed'}}" variant="primary" loading="{{claiming}}" disabled="{{claiming}}" bindtap="claim">领取</cy-btn>
+      <cy-btn wx:else variant="primary" bindtap="goOrder">查看</cy-btn>
+    </view>
+  </view>
+</view>

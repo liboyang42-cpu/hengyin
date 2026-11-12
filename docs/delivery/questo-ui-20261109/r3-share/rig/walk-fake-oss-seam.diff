@@ -1,0 +1,17 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+index 8d3c49fb..75728df2 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/walk.mjs
+@@ -29,6 +29,12 @@ export async function launch(opts = {}) {
+   page.on('response', (r) => { if (r.status() >= 400) consoleLog.push(`[error] HTTP ${r.status()} ${r.url()}`.slice(0, 400)); });
+   page.on('requestfailed', (r) => consoleLog.push(`[error] FAILED ${r.url().slice(0, 300)} ${r.failure() && r.failure().errorText}`));
+   page.on('pageerror', (e) => pageErrors.push(String(e && e.stack || e).slice(0, 2000)));
++  // [SEAM r3-share] rig-only: OSS placeholder host (oss-rig.invalid) is unreachable from Chrome; serve a generated cover SVG.
++  if (process.env.RIG_FAKE_OSS === '1') {
++    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A65A"/><stop offset="1" stop-color="#C8553D"/></linearGradient></defs><rect width="1200" height="900" fill="url(#s)"/><circle cx="880" cy="260" r="110" fill="#FFE3A3"/><path d="M0 620 L120 520 L120 380 L220 380 L220 470 L300 470 L300 300 L380 260 L460 300 L460 520 L560 520 L560 420 L660 420 L660 340 L720 300 L780 340 L780 500 L880 500 L880 400 L980 400 L980 540 L1200 540 L1200 900 L0 900 Z" fill="#3B2C35"/><path d="M0 760 C300 690 520 820 800 740 S1100 700 1200 720 L1200 900 L0 900 Z" fill="#241C24"/></svg>';
++    await page.setRequestInterception(true);
++    page.on('request', (r) => { if (/^https?:\/\/oss-rig\.invalid\//.test(r.url())) r.respond({ status: 200, contentType: 'image/svg+xml', headers: { 'Access-Control-Allow-Origin': '*' }, body: svg }); else r.continue(); });
++  }
+   const q = new URLSearchParams();
+   for (const k of ['path', 'identity', 'env', 'lat', 'lng', 'heading', 'scan', 'scene']) if (opts[k] != null && opts[k] !== '') q.set(k, String(opts[k]));
+   await page.goto(`${BASE}/?${q}`, { waitUntil: 'load', timeout: 120000 });

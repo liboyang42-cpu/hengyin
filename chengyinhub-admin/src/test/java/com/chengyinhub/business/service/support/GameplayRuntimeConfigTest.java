@@ -9,6 +9,24 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GameplayRuntimeConfigTest {
     private final ObjectMapper json=new ObjectMapper();
+
+    @Test void cooperativeVersionIsExplicitTeamOnlyAndDoesNotAutoChooseRewards() {
+        ObjectNode c = config();
+        ObjectNode game = (ObjectNode) c.path("gameplayRuntime");
+        game.put("cooperationVersion", 1);
+        ObjectNode theme = ThemeRuntimeConfig.parseDraft(c.toString());
+        ObjectNode parsedGame = GameplayRuntimeConfig.parse(c.toString());
+        assertTrue(GameplayRuntimeConfig.cooperativePuzzles(theme));
+        assertEquals("TEAM",parsedGame.path("runtimeScope").asText());
+        assertEquals(game.path("quests").path(0).path("choices"),parsedGame.path("quests").path(0).path("choices"));
+        ObjectNode snapshot = json.createObjectNode(); snapshot.set("themeConfig", c);
+        assertTrue(ContentCapabilityRequirements.required(snapshot).toString().contains("game.teamCooperation"));
+        game.put("cooperationVersion", 2);
+        assertThrows(IllegalArgumentException.class, () -> GameplayRuntimeConfig.parse(c.toString()));
+        game.put("cooperationVersion", 1).put("runtimeScope", "PLAYER"); game.remove("worldMode");
+        assertThrows(IllegalArgumentException.class, () -> GameplayRuntimeConfig.parse(c.toString()));
+    }
+
     private ObjectNode config() {
         ObjectNode c=json.createObjectNode().put("schemaVersion",1).put("capacity",14).put("hpName","保温储备");
         c.putArray("items").addObject().put("id","fuel").put("kind","ITEM").put("name","燃料").put("image","https://www.chengyinhub.com/favicon.ico").put("slotCost",2);

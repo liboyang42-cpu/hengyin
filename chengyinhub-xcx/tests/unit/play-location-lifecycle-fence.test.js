@@ -129,7 +129,8 @@ test('old start success cannot release or strand the newer same-key game owner',
 
 test('a superseded GPS callback cannot clear a newer request or restart an ended generation', () => {
   const h = harness(); h.page.requestPlayLocation(); h.confirm(); const old = h.positions[0];
-  h.page._stopTracking(); h.page.requestPlayLocation(); h.confirm();
+  // r2-play a1-v3-21:说明一局只弹一次;这里测的是回调代际,第二次请求按「新进入这一局」处理(清掉已问标记)
+  h.page._stopTracking(); h.page._locAsked = false; h.page.requestPlayLocation(); h.confirm();
   old.success({ latitude: 1, longitude: 2, accuracy: 10 });
   assert.equal(h.page._locationRequesting, true); assert.equal(h.starts.length, 0);
   h.position(); assert.equal(h.starts.length, 1); h.starts[0].success(); h.page.onUnload();

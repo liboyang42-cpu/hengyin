@@ -59,6 +59,15 @@ class ApiGameSessionControllerTest {
         }
     }
 
+    @Test void sharedControlOnNonSharedSessionIsEmptySuccessNotServerError() {
+        org.mockito.Mockito.doThrow(new GameSessionException("GAME_ACTION_UNSUPPORTED", "本局没有共享运行控制")).when(service).sharedControlView(any(), any());
+        AjaxResult result = controller.sharedControl("10");
+        assertEquals(200, result.get("code"));
+        assertFalse(result.containsKey("reasonCode"));
+        org.mockito.Mockito.doThrow(new GameSessionException("GAME_FORBIDDEN_SCOPE", "仅本场运营人员可查看控制视图")).when(service).sharedControlView(any(), any());
+        assertEquals(500, controller.sharedControl("10").get("code"));
+    }
+
     @Test void sharedStaffGuidanceAndManualSignUseAuthenticatedClubPrincipal() {
         for (String action : java.util.Arrays.asList("QUEST_GUIDE", "ARRIVAL_CONFIRM", "STAFF_MANUAL_SIGN", "RUN_PAUSE", "MANUAL_IMPORT")) {
             org.mockito.Mockito.clearInvocations(service);
@@ -302,6 +311,16 @@ class ApiGameSessionControllerTest {
         assertEquals(500, result.get("code"));
         assertEquals("游戏服务暂时不可用，请稍后重试", result.get("msg"));
         assertFalse(String.valueOf(result).contains("jdbc password leaked"));
+    }
+
+    @Test
+    void viewBeforeSessionPreparedIsBusinessStateNot500() {
+        when(service.view(any(), any())).thenThrow(new GameSessionException("GAME_SESSION_NOT_PREPARED", "本场游戏尚未准备"));
+
+        AjaxResult result = controller.view("10", "PLAYER");
+
+        assertEquals(601, result.get("code"));
+        assertEquals("GAME_SESSION_NOT_PREPARED", ((Map<?, ?>) result.get("data")).get("reasonCode"));
     }
 
     private GameCommandReceiptView receipt(Long activityId, String requestId) {

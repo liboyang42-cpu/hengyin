@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingProductOrderMapper">
+
+    <resultMap id="orderMap" type="com.chengyinhub.business.domain.MarketingProductOrder">
+        <id property="id" column="id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="memberId" column="member_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="productRevision" column="product_revision"/>
+        <result property="fulfillmentKind" column="fulfillment_kind"/>
+        <result property="giftRecipientMemberId" column="gift_recipient_member_id"/>
+        <result property="originalOrderId" column="original_order_id"/>
+        <result property="payMode" column="pay_mode"/>
+        <result property="quantity" column="quantity"/>
+        <result property="unitCashPrice" column="unit_cash_price"/>
+        <result property="unitPointsPrice" column="unit_points_price"/>
+        <result property="totalCashAmount" column="total_cash_amount"/>
+        <result property="totalPointsAmount" column="total_points_amount"/>
+        <result property="currency" column="currency"/>
+        <result property="productSnapshotJson" column="product_snapshot_json"/>
+        <result property="quoteSign" column="quote_sign"/>
+        <result property="quoteExpiresAt" column="quote_expires_at"/>
+        <result property="status" column="status"/>
+        <result property="paymentFactType" column="payment_fact_type"/>
+        <result property="paymentFactId" column="payment_fact_id"/>
+        <result property="primaryRegistrationId" column="primary_registration_id"/>
+        <result property="primaryRegistrationNo" column="primary_registration_no"/>
+        <result property="registrationIdsJson" column="registration_ids_json"/>
+        <result property="fulfillmentState" column="fulfillment_state"/>
+        <result property="paidAt" column="paid_at"/>
+        <result property="refundedAt" column="refunded_at"/>
+        <result property="revokedReason" column="revoked_reason"/>
+        <result property="requestId" column="request_id"/>
+        <result property="requestFingerprint" column="request_fingerprint"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="orderColumns">
+        id, order_no, member_id, product_id, product_revision, fulfillment_kind,
+        gift_recipient_member_id, original_order_id, pay_mode, quantity,
+        unit_cash_price, unit_points_price, total_cash_amount, total_points_amount, currency,
+        product_snapshot_json, quote_sign, quote_expires_at, status, payment_fact_type, payment_fact_id,
+        primary_registration_id, primary_registration_no, registration_ids_json, fulfillment_state,
+        paid_at, refunded_at, revoked_reason, request_id, request_fingerprint, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.MarketingProductOrder"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_product_order
+            (order_no, member_id, product_id, product_revision, fulfillment_kind,
+             gift_recipient_member_id, original_order_id, pay_mode, quantity,
+             unit_cash_price, unit_points_price, total_cash_amount, total_points_amount, currency,
+             product_snapshot_json, quote_sign, quote_expires_at, status,
+             payment_fact_type, payment_fact_id,
+             primary_registration_id, primary_registration_no, registration_ids_json, fulfillment_state,
+             paid_at, refunded_at, revoked_reason,
+             request_id, request_fingerprint, create_time, update_time)
+        values
+            (#{orderNo}, #{memberId}, #{productId}, #{productRevision}, #{fulfillmentKind},
+             #{giftRecipientMemberId}, #{originalOrderId}, #{payMode}, #{quantity},
+             #{unitCashPrice}, #{unitPointsPrice}, #{totalCashAmount}, #{totalPointsAmount}, #{currency},
+             #{productSnapshotJson}, #{quoteSign}, #{quoteExpiresAt}, #{status},
+             #{paymentFactType}, #{paymentFactId},
+             #{primaryRegistrationId}, #{primaryRegistrationNo}, #{registrationIdsJson}, #{fulfillmentState},
+             #{paidAt}, #{refundedAt}, #{revokedReason},
+             #{requestId}, #{requestFingerprint}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectById" resultMap="orderMap" useCache="false">
+        select <include refid="orderColumns"/> from marketing_product_order where id = #{id}
+    </select>
+
+    <select id="selectByOrderNo" resultMap="orderMap" useCache="false">
+        select <include refid="orderColumns"/> from marketing_product_order where order_no = #{orderNo}
+    </select>
+
+    <select id="selectByOrderNoForUpdate" resultMap="orderMap" useCache="false" flushCache="true">
+        select <include refid="orderColumns"/> from marketing_product_order
+        where order_no = #{orderNo} for update
+    </select>
+
+    <select id="selectByPrimaryRegistrationId" resultMap="orderMap" useCache="false">
+        select <include refid="orderColumns"/> from marketing_product_order
+        where primary_registration_id = #{registrationId}
+        order by id desc limit 1
+    </select>
+
+    <select id="selectByRegistrationIdInJson" resultMap="orderMap" useCache="false">
+        select <include refid="orderColumns"/> from marketing_product_order
+        where registration_ids_json is not null
+          and json_valid(registration_ids_json)
+          and json_contains(registration_ids_json, cast(#{registrationId} as json))
+        order by id desc limit 1
+    </select>
+
+
+    <resultMap id="frozenLineMap" type="com.chengyinhub.business.domain.MarketingProductOrderLine">
+        <id property="id" column="id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="listAmount" column="list_amount"/>
+        <result property="payableAmount" column="payable_amount"/>
+        <result property="validityKind" column="validity_kind"/>
+        <result property="validDays" column="valid_days"/>
+        <result property="fixedValidFrom" column="fixed_valid_from"/>
+        <result property="fixedValidTo" column="fixed_valid_to"/>
+        <result property="exploreCapacity" column="explore_capacity"/>
+        <result property="sortNo" column="sort_no"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="grantLineMap" type="com.chengyinhub.business.service.GrantLine">
+        <result property="topicId" column="topic_id"/>
+        <result property="listAmount" column="list_amount"/>
+        <result property="payableAmount" column="payable_amount"/>
+        <result property="validityKind" column="validity_kind"/>
+        <result property="validDays" column="valid_days"/>
+        <result property="fixedValidFrom" column="fixed_valid_from"/>
+        <result property="fixedValidTo" column="fixed_valid_to"/>
+        <result property="exploreCapacity" column="explore_capacity"/>
+    </resultMap>
+
+    <select id="selectFrozenLines" resultMap="frozenLineMap" useCache="false">
+        select l.* from marketing_product_order_line l
+        join marketing_product_order o on o.id = l.order_id
+        where o.order_no = #{orderNo}
+        order by l.sort_no asc, l.id asc
+    </select>
+
+    <select id="selectGrantLines" resultMap="grantLineMap" useCache="false">
+        select l.topic_id, l.list_amount, l.payable_amount, l.validity_kind, l.valid_days,
+               l.fixed_valid_from, l.fixed_valid_to, l.explore_capacity
+        from marketing_product_order_line l
+        join marketing_product_order o on o.id = l.order_id
+        where o.order_no = #{orderNo}
+        order by l.sort_no asc, l.id asc
+    </select>
+
+    <select id="selectGrantLine" resultMap="grantLineMap" useCache="false">
+        select l.topic_id, l.list_amount, l.payable_amount, l.validity_kind, l.valid_days,
+               l.fixed_valid_from, l.fixed_valid_to, l.explore_capacity
+        from marketing_product_order_line l
+        join marketing_product_order o on o.id = l.order_id
+        where o.order_no = #{orderNo} and l.topic_id = #{topicId}
+        limit 1
+    </select>
+
+    <insert id="insertFrozenLine" parameterType="com.chengyinhub.business.domain.MarketingProductOrderLine"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_product_order_line
+            (order_id, topic_id, list_amount, payable_amount, validity_kind, valid_days,
+             fixed_valid_from, fixed_valid_to, explore_capacity, sort_no, create_time)
+        values
+            (#{orderId}, #{topicId}, #{listAmount}, #{payableAmount}, #{validityKind}, #{validDays},
+             #{fixedValidFrom}, #{fixedValidTo}, #{exploreCapacity}, #{sortNo}, #{createTime})
+    </insert>
+
+    <select id="selectPendingActivation" resultMap="orderMap" useCache="false">
+        select o.* from marketing_product_order o
+        join marketing_product_item i on i.product_id = o.product_id and i.topic_id = #{topicId}
+        where o.member_id = #{memberId} and o.status = 1 and o.fulfillment_state = 2
+        order by o.id desc limit 1
+    </select>
+
+    <update id="markGrantState">
+        update marketing_product_order
+        set fulfillment_state = #{state}, update_time = #{updateTime}
+        where id = #{id} and status = 1
+    </update>
+
+    <select id="selectByMemberRequest" resultMap="orderMap" useCache="false">
+        select <include refid="orderColumns"/> from marketing_product_order
+        where member_id = #{memberId} and request_id = #{requestId}
+    </select>
+
+    <select id="selectByMember" resultMap="orderMap" useCache="false">
+        select <include refid="orderColumns"/> from marketing_product_order
+        where member_id = #{memberId}
+        order by id desc limit #{limit}
+    </select>
+
+    <!--
+      激活型多主题：激活时才建行，bindRegistrations 的 primary is null 只允许绑一次。
+      这里用**单条语句原子追加**，避免读-改-写丢更新（两个主题并发激活各追加自己的 id）：
+      不需要调用方做合并，也不覆盖既有 primary/首次绑定结果。
+    -->
+    <update id="appendRegistrationId">
+        update marketing_product_order
+        set registration_ids_json = case
+                when registration_ids_json is null or registration_ids_json = '' then json_array(#{registrationId})
+                else json_array_append(registration_ids_json, '$', #{registrationId})
+            end,
+            update_time = #{updateTime}
+        where id = #{id}
+    </update>
+
+    <update id="bindRegistrations">
+        update marketing_product_order
+        set primary_registration_id = #{primaryRegistrationId},
+            primary_registration_no = #{primaryRegistrationNo},
+            registration_ids_json = #{registrationIdsJson},
+            update_time = #{updateTime}
+        where id = #{id} and primary_registration_id is null
+    </update>
+
+    <update id="markPointsPaid">
+        update marketing_product_order
+        set status = 1, payment_fact_type = 2, payment_fact_id = #{factId},
+            paid_at = #{paidAt}, update_time = #{updateTime}
+        where id = #{id} and status = 0 and payment_fact_id is null
+    </update>
+
+    <update id="markCashPaid">
+        update marketing_product_order
+        set status = 1, payment_fact_type = 1, payment_fact_id = #{factId},
+            paid_at = #{paidAt}, update_time = #{updateTime}
+        where id = #{id} and status = 0 and payment_fact_id is null
+    </update>
+
+    <update id="markCancelled">
+        update marketing_product_order
+        set status = 2, update_time = #{updateTime}
+        where id = #{id} and status = 0
+    </update>
+
+    <update id="markRefunded">
+        update marketing_product_order
+        set status = 3, revoked_reason = #{reason}, refunded_at = #{refundedAt}, update_time = #{updateTime}
+        where id = #{id} and status = 1
+    </update>
+</mapper>

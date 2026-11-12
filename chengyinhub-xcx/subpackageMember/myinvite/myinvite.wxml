@@ -6,7 +6,7 @@
   <cy-nav-bar custom-back bind:back="onClose" />
   <cy-page-title title="邀请记录" />
   <!-- 同提现记录 / 收益明细：独立路由不再套常驻半屏，正文落到标题下方。 -->
-  <view class="myinvite-page-body">
+  <view class="myinvite-page-body" style="{{pmPage === 1 ? '--pm-p:1;' : (pmPage === 2 ? '--pm-p-d:.42s;' : '')}}">
     <cy-scene-member-invite-history id="inviteHistory" />
   </view>
 </view>

@@ -335,7 +335,9 @@ test('Figma 三个弹窗接入真实入口，并锁定玩家深色/商户浅色�
   assert.doesNotMatch(settingsWxml, /声音与触感/)
   assert.doesNotMatch(settingsWxml, /cy-scene-sound-haptics/)
   assert.equal(profileJson.usingComponents['cy-scene-share-invite'], '/subpackageMember/components/cy/scene-share-invite/index')
-  assert.match(profileJs, /goInvite: function \(\) \{ this\.openScene\('share-invite'\); \}/)
+  // 2026-11-10 qx-final:l-after 把「邀请好友」统一成 Spotify 式邀请页(cy-share-card kind=invite,业主批准 proto sh-invite);
+  // share-invite 场景仍注册,供深链与其它入口使用。
+  assert.match(profileJs, /goInvite: function \(\) \{[\s\S]{0,200}?inviteShow: true, inviteCard: \{ kind: 'invite'/)
   assert.match(profileJs, /shareKind === 'invite'/)
   assert.match(profileWxml, /<cy-scene-share-invite[^>]*theme="\{\{sceneCurrent\.theme\}\}"/)
   assert.doesNotMatch(deepLinkWxml, /sceneCurrent\.id === 'settings-sound'/)

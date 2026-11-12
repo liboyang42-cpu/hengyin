@@ -1,0 +1,57 @@
+<!-- §17.1/§17.3/§17.4/P6 通行证详情:内容、期限、受益人只读服务端;购买按钮只在报价给出可用支付方式时出现 -->
+<view class="theme-dark mp"><cy-access-gate kind="login" />
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="mp__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="2" />
+    <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="{{errorTitle}}" retry="重试" bind:retry="load" />
+    <block wx:else>
+      <cy-page-title title="{{card.name}}" safe-top="{{false}}" />
+      <view class="mp__body">
+        <!-- r3-pass:金色城市通票由碎片拼起(票面字 = 服务端城市 / 类型) -->
+        <view class="mp-hero"><cy-pass-object state="{{heroState}}" face="{{heroFace}}" reduced-motion="{{reducedMotion}}" /></view>
+        <view class="mp-group">
+          <view class="mp-row" wx:if="{{card.kind}}"><text class="mp-row__k">类型</text><text class="mp-row__v">{{card.kind}}</text></view>
+          <view class="mp-row" wx:if="{{card.city}}"><text class="mp-row__k">城市</text><text class="mp-row__v">{{card.city}}</text></view>
+          <view class="mp-row" wx:if="{{card.validity}}"><text class="mp-row__k">有效期</text><text class="mp-row__v">{{card.validity}}</text></view>
+          <view class="mp-row" wx:if="{{card.seats}}"><text class="mp-row__k">包含人数</text><text class="mp-row__v">{{card.seats}}</text></view>
+          <view class="mp-row" wx:if="{{forGift || !card.seats}}"><text class="mp-row__k">使用人</text><text class="mp-row__v">{{forGift ? '领取礼品的好友' : '你本人'}}</text></view>
+        </view>
+        <text class="mp-sec" wx:if="{{card.topics.length}}">可游玩作品</text>
+        <view class="mp-group" wx:if="{{card.topics.length}}">
+          <view class="mp-row" wx:for="{{card.topics}}" wx:key="*this"><text class="mp-row__k mp-row__k--main">{{item}}</text></view>
+        </view>
+        <cy-tabs wx:if="{{card.giftAllowed}}" class="mp-for" variant="chip" tabs="{{forTabs}}" active="{{forGift ? 'gift' : 'self'}}" bind:change="onFor" />
+        <!-- r2-join 结算摘要:只列报价里真实的支付方式;现金与积分是两种独立方式,现金关闭时该行写原因 -->
+        <text class="mp-sec" wx:if="{{checkout.length}}">结算</text>
+        <view class="mp-group mp-sum" wx:if="{{checkout.length}}">
+          <view class="mp-row {{item.off ? 'is-off' : ''}}" wx:for="{{checkout}}" wx:key="key">
+            <view class="mp-sum__k"><text class="mp-row__k">{{item.k}}</text><text class="mp-sum__note" wx:if="{{item.note}}">{{item.note}}</text></view>
+            <text class="mp-row__v mp-row__v--strong">{{item.v}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="mp-bar">
+        <cy-inline-error wx:if="{{buyError}}" kind="data" title="{{buyError}}" />
+        <view class="mp-bar__reason" wx:if="{{buy.reason && buy.state !== 'buyable'}}">{{buy.reason}}</view>
+        <view class="mp-bar__note" wx:elif="{{buy.reason && !checkout.length}}">{{buy.reason}}</view>
+        <cy-btn wx:if="{{buy.state === 'checkout'}}" variant="primary" bindtap="goCheckout">去报名</cy-btn>
+        <block wx:if="{{buy.state === 'buyable'}}">
+          <cy-btn wx:for="{{buy.payModes}}" wx:key="mode" variant="{{index === 0 ? 'primary' : 'secondary'}}"
+                  loading="{{buying && buyingMode === item.mode}}" disabled="{{buying}}"
+                  data-mode="{{item.mode}}" bindtap="onBuy">{{item.label}}</cy-btn>
+        </block>
+      </view>
+    </block>
+  </view>
+  <!-- r3-pass:自己用的订单服务端回 PAID 后才出到账分步;礼品不出(好友领取前买家也不能玩) -->
+  <cy-pass-unlock id="pass-unlock" show="{{unlock.show}}" steps="{{unlock.steps}}" face="{{heroFace}}" top="{{statusBarHeight + navBarHeight}}"
+                  reduced-motion="{{reducedMotion}}" bind:done="onUnlockDone" />
+  <!-- 礼品领取码只在购买成功回包里出现一次:发给好友后由对方领取 -->
+  <cy-sheet show="{{giftSheet}}" title="礼品已买好" footer bind:close="closeGiftSheet">
+    <view class="mp-gift">领取前你和好友都不能游玩</view>
+    <button slot="footer" class="mp-share" open-type="share" aria-label="发给好友">发给好友</button>
+  </cy-sheet>
+</view>

@@ -65,6 +65,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="interactionType"    column="interaction_type"    />
         <result property="merchantNodeEnabled"    column="merchant_node_enabled"    />
         <result property="nodeSubmitStatus"    column="node_submit_status"    />
+        <result property="presetSource"    column="preset_source"    />
         <result property="createBy"    column="create_by"    />
         <result property="createTime"    column="create_time"    />
         <result property="updateBy"    column="update_by"    />
@@ -82,7 +83,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectCmsMemberTemplateVo">
-        select id, original_template_id, member_id, category_id, title, description, img_url,players,usage_location,required_materials, duration, difficulty, is_sync, rule_instructions, merchant_guide, validation_method, sensor_type, sensor_config, question_name, question_answer, feedback_text, coupon_id, medal_img, medal_name, medal_style, reward_rules_json, story_text, story_img, story_json, hint1, hint2, answer_reveal, photo_require_desc, photo_review, audio_url, audio_duration, question_a, question_b, question_c, question_d, correct_answer, question_img, question_audio, question_option_media_json, preference_json, advanced_config_json, activity_categoryids, status, publish_status, draft_status, reason, del_flag,rating,use_num,check_status, xp_value, interaction_type, merchant_node_enabled, node_submit_status, create_by, create_time, update_by, update_time from cms_member_template
+        select id, original_template_id, member_id, category_id, title, description, img_url,players,usage_location,required_materials, duration, difficulty, is_sync, rule_instructions, merchant_guide, validation_method, sensor_type, sensor_config, question_name, question_answer, feedback_text, coupon_id, medal_img, medal_name, medal_style, reward_rules_json, story_text, story_img, story_json, hint1, hint2, answer_reveal, photo_require_desc, photo_review, audio_url, audio_duration, question_a, question_b, question_c, question_d, correct_answer, question_img, question_audio, question_option_media_json, preference_json, advanced_config_json, activity_categoryids, status, publish_status, draft_status, reason, del_flag,rating,use_num,check_status, xp_value, interaction_type, merchant_node_enabled, node_submit_status, preset_source, create_by, create_time, update_by, update_time from cms_member_template
     </sql>
 
     <select id="selectCmsMemberTemplateList" parameterType="CmsMemberTemplate" resultMap="CmsMemberTemplateResult">
@@ -182,6 +183,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             mt.create_time,
             mt.update_by,
             mt.update_time,
+            mt.preset_source,
             market.id as market_template_id,
             market.status as market_status,
             market.publish_status as market_publish_status,
@@ -189,6 +191,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             tl.publish_status as original_publish_status,
             tl.del_flag as original_del_flag,
             CASE
+                WHEN mt.preset_source IS NOT NULL AND mt.preset_source != '' THEN '预设起头'
                 WHEN mt.original_template_id = 0 THEN '自主创建'
                 WHEN mt.original_template_id > 0 AND tl.publish_status = 1 AND tl.del_flag = 0  AND tl.status=1 THEN '引用模板'
                 ELSE '引用已下架'
@@ -308,6 +311,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="interactionType != null">interaction_type,</if>
             <if test="merchantNodeEnabled != null">merchant_node_enabled,</if>
             <if test="nodeSubmitStatus != null">node_submit_status,</if>
+            <if test="presetSource != null and presetSource != ''">preset_source,</if>
 
             <if test="createBy != null">create_by,</if>
             <if test="createTime != null">create_time,</if>
@@ -375,6 +379,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="interactionType != null">#{interactionType},</if>
             <if test="merchantNodeEnabled != null">#{merchantNodeEnabled},</if>
             <if test="nodeSubmitStatus != null">#{nodeSubmitStatus},</if>
+            <if test="presetSource != null and presetSource != ''">#{presetSource},</if>
 
             <if test="createBy != null">#{createBy},</if>
             <if test="createTime != null">#{createTime},</if>
@@ -517,6 +522,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="interactionType != null">interaction_type = #{interactionType},</if>
             <if test="merchantNodeEnabled != null">merchant_node_enabled = #{merchantNodeEnabled},</if>
             <if test="nodeSubmitStatus != null">node_submit_status = #{nodeSubmitStatus},</if>
+            <if test="presetSource != null and presetSource != ''">preset_source = #{presetSource},</if>
 
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>

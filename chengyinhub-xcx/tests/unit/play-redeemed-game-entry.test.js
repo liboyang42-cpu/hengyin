@@ -134,7 +134,7 @@ test('authoritative rebuild refreshes an open hero without losing its animation 
 
 test('duplicate-redemption warning and QR visibility still use redemption done', () => {
   assert.match(wxml, /hero\.node\.done[^\n]*class="fx-shop__off">已核销/);
-  assert.match(wxml, /hero\.node\.isMerchant && !hero\.node\.done && regId/);
+  assert.doesNotMatch(wxml, /bindtap="openEntryQr"[^>]*>出示入场码/); // D1:站点详情不再有入场码按钮
 });
 
 
@@ -154,7 +154,8 @@ function bannerVisible(instance) {
 }
 
 function packVisible(instance) {
-  const expression = wxml.match(/<block wx:if="{{([^}]+)}}">\s*<!-- ===== 章节选择弹窗/)[1];
+  // 2026-11-11 f-play V3-08:选章弹窗挪到这块外面(走完后也要能弹),按块自己的守卫条件定位
+  const expression = wxml.match(/<block wx:if="{{(!screen && \(!allDone \|\| canContinueGames\)[^}]+)}}">/)[1];
   return vm.runInNewContext(expression, instance.data);
 }
 

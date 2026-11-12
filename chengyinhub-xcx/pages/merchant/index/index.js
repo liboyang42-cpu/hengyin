@@ -341,6 +341,7 @@ Page({
     else if (action === 'brand') this.goBrandManage();
     else if (action === 'aftercare') this.goAftercare();
     else if (action === 'verifyRecords') this.goVerifyRecords();
+    else if (action === 'payoutAccount') this.goPayoutAccount();
   },
 
   goManageCoupon() {
@@ -356,6 +357,11 @@ Page({
     if (!this.data.merchantAccess.canReadVerifyRecords || this._navigating) return; // 跳转中不响应连点,免得叠两层核销记录页
     this._navigating = true;
     wx.navigateTo({ url: '/pages/merchant/verify-records/index', complete: () => { this._navigating = false; } });
+  },
+  goPayoutAccount() {
+    if (!this.data.merchantAccess.canReadFinance || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/merchant/payout-account/index', complete: () => { this._navigating = false; } });
   },
   // 今日待办(待核销/扫码待确认/待处理):后端 /api/merchant/todo-summary
   loadTodo(dataEpoch = this._dataEpoch || 0) {
@@ -1448,6 +1454,12 @@ Page({
 
   // 结果面板主按钮:能核销的账号是「继续扫码」,其余只有「完成」。
   onVerificationPrimary() {
+    // 复核态:主按钮去核销记录核对这一笔,不接着扫下一位
+    if (this.data.verificationResult && this.data.verificationResult.review) {
+      this.closeScene();
+      wx.navigateTo({ url: '/pages/merchant/verify-records/index' });
+      return;
+    }
     if (this.data.merchantAccess && this.data.merchantAccess.canVerify) this.continueScan();
     else this.closeVerificationResult();
   },

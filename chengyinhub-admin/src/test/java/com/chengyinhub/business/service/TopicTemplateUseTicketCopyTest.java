@@ -64,8 +64,13 @@ class TopicTemplateUseTicketCopyTest {
         template.setCategoryIds("3,7");
         template.setDelFlag(0);
         when(topics.selectCmsTopicById(TEMPLATE)).thenReturn(template);
-        doAnswer(inv -> { ((CmsTopic) inv.getArgument(0)).setId(DRAFT); return 1; })
+        java.util.concurrent.atomic.AtomicReference<CmsTopic> draft = new java.util.concurrent.atomic.AtomicReference<>();
+        doAnswer(inv -> { CmsTopic row = inv.getArgument(0); row.setId(DRAFT); draft.set(row); return 1; })
                 .when(topics).insertCmsTopic(any(CmsTopic.class));
+        // Questo 地点合同:副本整包复制后经唯一写口落合同并回读(owner 在 SQL 里再判一次)。
+        doAnswer(inv -> { draft.get().setContentContractJson(inv.getArgument(2)); return 1; })
+                .when(topics).updateTopicLocationContract(org.mockito.ArgumentMatchers.eq(DRAFT), any(), any(), any(), any());
+        when(topics.selectCmsTopicById(DRAFT)).thenAnswer(inv -> draft.get());
 
         OmsTicket ticket = new OmsTicket();
         ticket.setId(81L);

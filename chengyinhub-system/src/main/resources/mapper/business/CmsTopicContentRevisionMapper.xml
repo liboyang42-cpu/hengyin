@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CmsTopicContentRevisionMapper">
+
+    <!-- 只追加。没有任何 update / delete 语句:恢复旧版是「复制成新草稿再发布」,不是改历史行。 -->
+    <resultMap id="RevisionResult" type="com.chengyinhub.business.domain.CmsTopicContentRevision">
+        <result property="id"                      column="id"                        />
+        <result property="topicId"                 column="topic_id"                  />
+        <result property="revisionNo"              column="revision_no"               />
+        <result property="schemaVersion"           column="schema_version"            />
+        <result property="contentSha256"           column="content_sha256"            />
+        <result property="snapshotJson"            column="snapshot_json"             />
+        <result property="publicManifestJson"      column="public_manifest_json"      />
+        <result property="sourceContentRevisionId" column="source_content_revision_id" />
+        <result property="publishRequestId"        column="publish_request_id"        />
+        <result property="requestFingerprint"      column="request_fingerprint"       />
+        <result property="origin"                  column="origin"                    />
+        <result property="createBy"                column="create_by"                 />
+        <result property="createTime"              column="create_time"               />
+    </resultMap>
+
+    <!-- 公共读面:刻意不选 snapshot_json,私有 payload 不进任何非内部结果集。 -->
+    <resultMap id="RevisionViewResult" type="com.chengyinhub.business.domain.vo.TopicContentRevisionView">
+        <result property="id"                      column="id"                        />
+        <result property="topicId"                 column="topic_id"                  />
+        <result property="revisionNo"              column="revision_no"               />
+        <result property="schemaVersion"           column="schema_version"            />
+        <result property="contentSha256"           column="content_sha256"            />
+        <result property="publicManifestJson"      column="public_manifest_json"      />
+        <result property="sourceContentRevisionId" column="source_content_revision_id" />
+        <result property="origin"                  column="origin"                    />
+        <result property="createTime"              column="create_time"               />
+    </resultMap>
+
+    <sql id="revisionColumns">
+        id, topic_id, revision_no, schema_version, content_sha256, snapshot_json, public_manifest_json,
+        source_content_revision_id, publish_request_id, request_fingerprint, origin, create_by, create_time
+    </sql>
+
+    <sql id="viewColumns">
+        id, topic_id, revision_no, schema_version, content_sha256, public_manifest_json,
+        source_content_revision_id, origin, create_time
+    </sql>
+
+    <!--
+      写入。revision_no 由调用方在同一事务、持有主题行锁时算出,唯一键 uk_topic_revision_no 兜底:
+      并发发布撞号时这里必然 duplicate key,不会静默覆盖成同号两条。
+    -->
+    <insert id="insertRevision" parameterType="com.chengyinhub.business.domain.CmsTopicContentRevision"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into cms_topic_content_revision
+            (topic_id, revision_no, schema_version, content_sha256, snapshot_json, public_manifest_json,
+             source_content_revision_id, publish_request_id, request_fingerprint, origin, create_by, create_time)
+        values
+            (#{topicId}, #{revisionNo}, #{schemaVersion}, #{contentSha256}, #{snapshotJson}, #{publicManifestJson},
+             #{sourceContentRevisionId}, #{publishRequestId}, #{requestFingerprint}, #{origin}, #{createBy}, #{createTime})
+    </insert>
+
+    <select id="selectByPublishRequestId" resultMap="RevisionResult">
+        select <include refid="revisionColumns"/>
+        from cms_topic_content_revision
+        where topic_id = #{topicId} and publish_request_id = #{publishRequestId}
+    </select>
+
+    <!--
+      当前修订号。没有任何修订返回 null,调用方按 0 处理(与 published_config_version=0 同义)。
+      必须是加锁的当前读:REPEATABLE READ 下普通 SELECT 会读事务开始时的旧快照,
+      并发第二个发布就可能算出同一个 revision_no。这里用 (topic_id, revision_no) 唯一索引
+      的降序末行 + FOR UPDATE,得到最新已提交值并对该区间加锁;唯一键仍是硬兜底。
+    -->
+    <select id="selectMaxRevisionNo" resultType="java.lang.Long" flushCache="true" useCache="false">
+        select revision_no from cms_topic_content_revision
+        where topic_id = #{topicId}
+        order by revision_no desc
+        limit 1
+        for update
+    </select>
+
+    <select id="selectByIdAndTopic" resultMap="RevisionResult">
+        select <include refid="revisionColumns"/>
+        from cms_topic_content_revision
+        where id = #{id} and topic_id = #{topicId}
+    </select>
+
+    <select id="selectLatestByTopicId" resultMap="RevisionResult">
+        select <include refid="revisionColumns"/>
+        from cms_topic_content_revision
+        where topic_id = #{topicId}
+        order by revision_no desc
+        limit 1
+    </select>
+
+    <select id="selectLatestForAdoption" resultMap="RevisionResult" useCache="false" flushCache="true">
+        select <include refid="revisionColumns"/>
+        from cms_topic_content_revision
+        where topic_id = #{topicId}
+        order by revision_no desc
+        limit 1
+        for update
+    </select>
+
+    <select id="selectViewByTopicIdAndId" resultMap="RevisionViewResult">
+        select <include refid="viewColumns"/>
+        from cms_topic_content_revision
+        where id = #{id} and topic_id = #{topicId}
+        limit 1
+    </select>
+
+    <select id="selectLatestViewByTopicId" resultMap="RevisionViewResult">
+        select <include refid="viewColumns"/>
+        from cms_topic_content_revision
+        where topic_id = #{topicId}
+        order by revision_no desc
+        limit 1
+    </select>
+
+    <select id="selectViewsByTopicId" resultMap="RevisionViewResult">
+        select <include refid="viewColumns"/>
+        from cms_topic_content_revision
+        where topic_id = #{topicId}
+        order by revision_no asc
+    </select>
+
+</mapper>

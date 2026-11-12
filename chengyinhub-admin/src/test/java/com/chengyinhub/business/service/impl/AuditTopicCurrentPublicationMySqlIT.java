@@ -31,6 +31,10 @@ class AuditTopicCurrentPublicationMySqlIT {
     void rrSpotCheckApprovalKeepsTheAuthorsAlreadyCommittedOfflineDecision() throws Exception {
         try (var f = new TopicContentGraphMySqlFixture()) {
             f.open();
+            try (var connection = f.manager.getDataSource().getConnection()) {
+                com.chengyinhub.business.it.ItSchema.applyMigrations(connection,
+                        "sql/migration_20261029_topic_cancellation_receipt.sql");
+            }
             f.tx.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
             // Only this disposable scratch needs the existing production narrow-update columns.
             f.db.execute("alter table cms_topic add column review_flag int not null default 0, "

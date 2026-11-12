@@ -39,6 +39,17 @@ public class CmsTemplatePublishRequest implements Serializable {
     public Boolean getAdoptSourceOnly() { return adoptSourceOnly; }
     public void setAdoptSourceOnly(Boolean adoptSourceOnly) { this.adoptSourceOnly = adoptSourceOnly; }
 
+    /**
+     * 固定预设来源标记 {@code presetKey@version}，只有服务端预设创建链会设。
+     *
+     * <p>与 {@link #originalTemplateId} 是两种互斥来源：前者指平台固定预设（不是某位作者已审核
+     * 上架的市场内容），后者指模板广场的货架行。预设草稿不能同时声明两者，也不能被客户端改写。
+     */
+    private String presetSource;
+
+    public String getPresetSource() { return presetSource; }
+    public void setPresetSource(String presetSource) { this.presetSource = presetSource; }
+
     @Schema(description = "模板类别ID", example = "1")
     private Long categoryId;
 

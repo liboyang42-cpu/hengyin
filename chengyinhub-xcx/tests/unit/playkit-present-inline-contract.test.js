@@ -149,7 +149,8 @@ test('★kit 段的外层仍是循环里那个唯一的 .chfull__para —— 少
   const loops = wxml.match(/<view wx:for="\{\{chapterParas\}\}"[^>]*class="chfull__para(?:\s[^"]*)?"/g) || []
   assert.equal(loops.length, 1, '.chfull__para 的外层循环只能有一个，且不带条件')
   // 内嵌 kit 的渲染分支在同一个循环体内(wx:elif),不是另起一个循环
-  assert.match(wxml, /wx:elif="\{\{item\.kind === 'kit'\}\}"[\s\S]*?cy-playkit kit="\{\{playKit\.kit\}\}" show="\{\{true\}\}"/,
+  // V3-10/53/11:要整屏的玩法在同一块里换成入口卡(wx:if playKit.card),其余仍是同一份 playKit.kit 内嵌
+  assert.match(wxml, /wx:elif="\{\{item\.kind === 'kit'\}\}"[\s\S]*?cy-playkit wx:else kit="\{\{playKit\.kit\}\}" show="\{\{true\}\}"/,
     'kit 段没有在循环里渲染，或 kit 绑的不是页面上那份 playKit.kit')
 })
 
@@ -205,9 +206,10 @@ test('★diceRoll 两套呈现都在:整屏(摇一摇)与内嵌(故事流里直�
   assert.equal(/--pk-top/.test(inlineBlock[0]), false,
     '内嵌版照搬了整屏的 --pk-top 让位假设')
   assert.match(wxss, /\.dz\s*\{[^}]*position:\s*absolute/, '整屏那套的几何被改掉了')
-  // 内嵌不靠摇手机(走在路上会误触发);整屏照旧摇
-  assert.match(js, /if \(this\.data\.inline\) this\._offShake\(\); else this\._onShake\(\);/,
-    '内嵌版没有关掉摇一摇监听，或整屏版不再监听')
+  // 2026-11-10 业主批复「掷骰子也可以摇晃的」:内嵌与整屏都听同一个识别器(play-shake-device-lifecycle 测生命周期);D20 仍不听
+  assert.match(js, /if \(this\.data\.mode === 'd20'\) \{ this\._offShake\(\); return; \}[\s\S]{0,400}?this\._onShake\(\);/,
+    '内嵌版 / 整屏版不再听摇一摇,或 D20 听了')
+  assert.doesNotMatch(js, /if \(this\.data\.inline\) this\._offShake\(\)/, '内嵌版又把摇一摇关掉了')
   // 分发器要把 inline 属性转给 diceroll(别的 kit 不需要这个属性)
   assert.match(dispatcherWxml, /cy-playkit-diceroll[\s\S]*?inline="\{\{inline\}\}"/,
     '分发器没有把 inline 转给 diceroll')

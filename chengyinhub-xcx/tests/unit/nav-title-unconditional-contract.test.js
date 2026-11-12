@@ -56,6 +56,9 @@ const ALLOWED = [
   // 反而是假信息(Figma K2-D 无权限 / K2-E 加载失败两态里也只有导航,没有大标题)。
   // 返回出口 cy-nav-bar 在条件之外无条件渲染,四态都退得出去。
   'pages/club/customer-detail/index | cy-page-title | <block wx:elif="{{state === \'ready\'}}">',
+  // 2026-11-10 qx-b5(qx-c3 登记):通行证详情的 L1 大标题就是商品名(card.name),同上一条客户详情 ——
+  // 数据没回来时写死占位标题是假信息;加载/失败两态只留返回。cy-nav-bar 在条件之外无条件渲染。
+  'subpackageMember/market/pass/index | cy-page-title | <block wx:else>',
   // intro(四步之前的开场屏)与 form 是互斥两态，各自都有标题：开场屏用自己的 .intro__title
   // 大标题（同一档字号），form 才用 cy-page-title 渲染每步问句。cy-nav-bar 在条件之外
   // 无条件渲染，两态的返回出口都不丢。2026-09-06 加开场屏时新增。

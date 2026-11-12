@@ -168,10 +168,10 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
                 result.put("code",result.get("endingId")); return result;
             }
         }
-        JourneyStory story = requireStory(topic, session);
-        JourneyStory.Ending ending = story.getEnding();
-        if (ending == null) {
-            throw new ServiceException("本主题未配置结局");
+        // 主题没配剧情 / 没配结局是合法状态(种子主题、纯路线主题),如实回空结果,客户端据此跳过结局页,不是 500。
+        JourneyStory story = findStory(topic, session);
+        if (story == null || story.getEnding() == null) {
+            return new java.util.LinkedHashMap<>();
         }
         requireSession(session, memberId);
         if (session.getStatus() == null
@@ -352,6 +352,15 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
      * 回退实时主题配置。快照里冻结空串 = 建局时没配剧情,不回退。
      */
     private JourneyStory requireStory(CmsTopic topic, TopicRouteSession session) {
+        JourneyStory story = findStory(topic, session);
+        if (story == null) {
+            throw new ServiceException("本主题未配置剧情");
+        }
+        return story;
+    }
+
+    /** 同 requireStory 的取数,但没配剧情返回 null(配置损坏仍抛错)。 */
+    private JourneyStory findStory(CmsTopic topic, TopicRouteSession session) {
         String frozen = NodeJourneySnapshot.journeyStory(
                 session == null ? null : session.getConfigSnapshotJson());
         String raw = frozen != null ? frozen : topic.getJourneyStoryJson();
@@ -360,9 +369,6 @@ public class PlayJourneyStoryServiceImpl implements IPlayJourneyStoryService {
             story = JourneyStory.parse(raw);
         } catch (RuntimeException e) {
             throw new ServiceException("本主题剧情配置不可用");
-        }
-        if (story == null) {
-            throw new ServiceException("本主题未配置剧情");
         }
         return story;
     }

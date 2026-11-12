@@ -33,8 +33,29 @@
       </view>
     </view>
 
+    <!-- U06-01 席位(r2-join):已入队成员头像 + 空位虚线圈;空位数只来自服务端(seats.available 或 max-joined),
+         读不到不画。下方小标签:持有效票 / 票已失效(红) / 待审申请 / 邀请到期 -->
+    <view class="team-card tm-seats" wx:if="{{members.length || openSeats.length || seatChips.length || inviteText}}">
+      <view class="tm-seat-strip {{seatIn === 1 ? 'is-pre' : ''}} {{seatBreath === 0 ? '' : 'is-lit'}}" wx:if="{{members.length || openSeats.length}}">
+        <view class="tm-seat-cell" wx:for="{{members}}" wx:key="memberId" style="--tm-d: {{index * 70}}ms">
+          <image class="tm-seat-av" src="{{item.memberAvatar || '/images/d_profile.png'}}" mode="aspectFill" />
+          <view class="tm-seat-crown" wx:if="{{item.role == 1}}">队长</view>
+        </view>
+        <view class="tm-seat-cell" wx:for="{{openSeats}}" wx:key="*this" style="--tm-d: {{(members.length + index) * 70}}ms">
+          <view class="tm-seat-open"><cy-icon name="plus" size="32" /></view>
+        </view>
+      </view>
+      <view class="tm-chips" wx:if="{{seatChips.length || inviteText}}">
+        <view class="tm-chip {{item.bad ? 'is-bad' : ''}}" wx:for="{{seatChips}}" wx:key="key"><text>{{item.label}}</text><text class="tm-chip__v">{{item.value}}</text></view>
+        <view class="tm-chip" wx:if="{{inviteText}}"><cy-icon name="clock" size="24" /><text>{{inviteText}}</text></view>
+      </view>
+    </view>
+
     <view class="team-actions" wx:if="{{team.status == 0}}">
-      <button class="team-action primary" open-type="share" hover-class="cy-pressed" hover-stay-time="80">邀请队友</button>
+      <!-- l-after:邀请队友走统一的 Spotify 式邀请页(cy-share-card kind=invite);「发给微信好友」仍走本页 onShareAppMessage(按邀请码落加入页) -->
+      <view class="team-action primary" bindtap="openInvite" aria-role="button" aria-label="邀请队友" hover-class="cy-pressed" hover-stay-time="80">邀请队友</view>
+      <view wx:if="{{joined}}" class="team-action secondary" bindtap="openInviteQr"
+            aria-role="button" aria-label="队伍二维码与加入码" hover-class="cy-pressed" hover-stay-time="80">二维码</view>
       <view wx:if="{{!joined}}" class="team-action secondary" bindtap="goJoin"
             aria-role="button" aria-label="加入队伍" hover-class="cy-pressed" hover-stay-time="80">加入队伍</view>
     </view>
@@ -134,6 +155,9 @@
           hover-class="cy-pressed" hover-stay-time="80">举报队伍</view>
   </block>
   </block>
+  <cy-share-card show="{{inviteShow}}" card="{{inviteCard}}" bind:close="closeInvite" />
+  <!-- qx-final:邀请卡「保存图片」走 wx.saveImageToPhotosAlbum,隐私授权在本页内弹(同 settle 页) -->
+  <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 </view>
 
 <!-- 危险动作三段式确认:文案来自 utils/danger-actions.js,页面只给 key -->
@@ -142,3 +166,16 @@
 <cy-danger-confirm id="dcReject" bind:confirm="onConfirmReject" />
 <cy-danger-confirm id="dcDisband" bind:confirm="onConfirmDisband" bind:alt="onDisbandAlt" />
 <team-report-sheet show="{{reportShow}}" team-id="{{reportTeamId}}" bind:close="closeReport" />
+<!-- l-misc 队伍小程序码:码图白底方块(扫码要白底);微信不可用时只给加入码 -->
+<cy-sheet show="{{qrSheet.show}}" title="队伍二维码" closable maskClosable bind:close="closeInviteQr">
+  <view class="tm-qr">
+    <image wx:if="{{qrSheet.state === 'ready'}}" class="tm-qr__img" src="{{qrSheet.qr}}" mode="aspectFit" show-menu-by-longpress aria-label="队伍小程序码" />
+    <text wx:elif="{{qrSheet.state === 'loading'}}" class="tm-qr__state" aria-role="status">正在加载…</text>
+    <text wx:elif="{{qrSheet.state === 'error'}}" class="tm-qr__state" aria-role="alert">{{qrSheet.message}}</text>
+    <view wx:if="{{qrSheet.code}}" class="tm-qr__code" bindtap="copyJoinCode" aria-role="button" aria-label="复制加入码 {{qrSheet.code}}" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="tm-qr__k">加入码</text>
+      <text class="tm-qr__v" user-select>{{qrSheet.code}}</text>
+      <text class="tm-qr__copy">复制</text>
+    </view>
+  </view>
+</cy-sheet>

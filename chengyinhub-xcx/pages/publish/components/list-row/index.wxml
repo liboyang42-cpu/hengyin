@@ -1,4 +1,4 @@
-<view class="lr {{hr ? 'lr--hr' : ''}} {{danger ? 'lr--danger' : ''}} {{add ? 'lr--add' : ''}} {{bad ? 'lr--bad' : ''}} {{disabled ? 'is-disabled' : ''}}" bindtap="onTap" aria-role="{{tappable ? 'button' : ''}}" aria-label="{{title}}{{value ? ' ' + strong + value : ''}}" hover-class="{{tappable && !disabled ? 'cy-pressed' : 'none'}}" hover-stay-time="80">
+<view class="lr {{hr ? 'lr--hr' : ''}} {{danger ? 'lr--danger' : ''}} {{add ? 'lr--add' : ''}} {{bad ? 'lr--bad' : ''}} {{clip ? 'lr--clip' : ''}} {{disabled ? 'is-disabled' : ''}}" bindtap="onTap" aria-role="{{tappable ? 'button' : ''}}" aria-label="{{title}}{{value ? ' ' + strong + value : ''}}" hover-class="{{tappable && !disabled ? 'cy-pressed' : 'none'}}" hover-stay-time="80">
   <slot name="lead"></slot>
   <view wx:if="{{add}}" class="lr__plus"><cy-icon name="plus" size="24" /></view>
   <view wx:if="{{ok || bad}}" class="lr__st {{bad ? 'lr__st--bad' : ''}}"></view>

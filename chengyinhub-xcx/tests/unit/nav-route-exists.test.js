@@ -191,6 +191,10 @@ const ORPHAN_EXEMPT = new Map([
   // 本页留着当历史路由壳(旧分享链接/旧扫码仍会落到它):唯一动作已改成弹平台客服微信。
   ['/pages/coop/withdraw/index', '旧提现入口路由壳，唯一动作改为弹平台客服微信'],
   ['/pages/merchant/profile/index', '旧商家主页路由壳'],
+  // 2026-11-09 qx-b5 §17.2:礼品领取页只从买家分享的领取链接进入(领取码一次性下发),站内不应有入口
+  ['/subpackageMember/market/gift/index', '礼品领取深链页，只从购买成功后分享的领取链接进入'],
+  // 2026-11-10 staging 合流(qx-b3 P5/P7):战报分享与席位邀请的落地页,只从 report/seats 页 onShareAppMessage 生成的分享链接(k=r / k=s)进入
+  ['/subpackageJourney/pages/landing/index', '分享落地深链页，只从战报分享(k=r)与席位邀请(k=s)的分享链接进入'],
   ['/pages/publish/topicadd/topicadd', '旧发布路由壳,2026-10 到期删(见 topicadd.js:19)'],
   // 2026-10-22 owner:创建节点玩法去掉「起名字」一步,引导页直接进编辑器;app.json 注册由 C00 撤(CY-HANDOFF #508)
   ['/pages/publish/templateadd/templateadd', '起名页已退役,待 C00 从 app.json 撤注册后删页'],
@@ -198,9 +202,14 @@ const ORPHAN_EXEMPT = new Map([
   // 2026-09-17 B-06 曾把 pricing/partner 整页退役(全仓零入口);2026-09-19 批复1-a=2 裁决复活并
   // 接进定价页「合作阵容」(pricing/index.js goPartner)——页有真实入口,不再需要豁免条目。
   ['/pages/play/circle/index', '退役兼容壳:圈层 2026-08-29 退役，旧分享保底,2026-12-31 到期删(见 circle/index.js 顶部排期)'],
-  // 2026-10-19 移植共享基线 366b846f:基线把「官方线路」入口放在旧漫游入口地图上,master 漫游改版后该屏已删,
-  // 入口位置待产品拍板(候选:漫游护照玩法卡);接上后从这里删掉。详情页由列表页跳转,不在豁免内。
-  ['/subpackageRoam/official-routes/index', '待拍板:官方线路列表页入口随 master 漫游改版消失，接线位置待产品决定'],
+  // 2026-10-19 移植共享基线 366b846f:基线把「官方线路」入口放在旧漫游入口地图上,master 漫游改版后该屏已删;
+  // 2026-11-11 f-pages P0-79 已接回漫游护照玩法大卡(pages/roam/index.js _loadOfficialRoutes,服务端有路线才出卡),豁免条目随之删除。
+  // 2026-11-09 V3-44 业主:「暂时先不做这个快速的ai配置了」—— 发布菜单撤掉「快速配置」入口,页面保留可路由。
+  ['/pages/publish/simple/index', '业主决定暂停快速配置(V3-44):入口撤下,页面保留,恢复时从发布菜单接回并删掉本条'],
+  // 2026-11-09 qx-b8 §20.1 / UI-P3:公开目录与城市合集落地页,外部投放与分享直达;站内入口位置待产品拍板(RESULT needs owner 1)。
+  // 详情页只由同目录列表页跳转(同目录自引用不计入口),一并豁免;接上站内入口后两条都删。
+  ['/pages/topic/catalog/index', '待拍板:公开目录/城市合集落地页,分享与外链直达,站内入口位置待产品决定'],
+  ['/pages/topic/catalog/detail', '待拍板:公开落地详情,由同目录列表页与分享直达,随 catalog/index 接线后删'],
   // 2026-09-22 Phase 0 立体藏品卡闸口页:走查用的实验室页,站内不给入口(卡好不好看还没拍板),
   // 真机录屏与截图矩阵 F89 都靠编译模式直达。Phase 1/2 把 objectCard 接进玩法后从这里删掉。
 ])

@@ -1,0 +1,10 @@
+{
+  "component": true,
+  "usingComponents": {
+    "cy-empty": "/components/cy/empty/index",
+    "cy-icon": "/components/cy/icon/index",
+    "cy-tabs": "/components/cy/tabs/index",
+    "cy-skeleton": "/components/cy/skeleton/index",
+    "cy-option-sheet": "/components/cy/option-sheet/index"
+  }
+}

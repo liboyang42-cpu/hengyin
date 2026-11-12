@@ -110,7 +110,7 @@ page { background: var(--cy-bg-page); }
   background: var(--cy-border-card);
   transition: background-color var(--cy-motion-fast) var(--cy-ease-out);
 }
-.cap.on .sw { background: var(--cy-success); }
+.cap.on .sw { background: var(--cy-comp-switch-on); } /* V3-20 开关轨道走开关绿,不借文字绿 */
 .sw__knob {
   position: absolute; top: 4rpx; left: 4rpx;
   width: 54rpx; height: 54rpx; border-radius: 50%;

@@ -37,6 +37,10 @@ public class ApiContentSecurityController
     @Autowired
     private IWxContentSecurityService wxContentSecurityService;
 
+    /** 同一个消息推送 URL 也会收到虚拟支付事件；只在识别为 xpay_* 事件时转交通行证，其余照旧。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.platformpass.PlatformPassService platformPassService;
+
     /**
      * 微信「消息推送」URL 接入验证：service 校验通过后原样返回 echostr。
      */
@@ -74,6 +78,11 @@ public class ApiContentSecurityController
                                            @RequestParam(required = false) String nonce,
                                            @RequestBody(required = false) String body)
     {
+        String xpayEvent = xpayEvent(body);
+        if (xpayEvent != null)
+        {
+            return onXpayEvent(signature, timestamp, nonce, body);
+        }
         CallbackResult result = wxContentSecurityService.processMediaCheckCallback(
                 signature, timestamp, nonce, body);
         switch (result)
@@ -94,5 +103,50 @@ public class ApiContentSecurityController
             default:
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("processing failed");
         }
+    }
+
+    /** 只认 JSON 明文里 Event 以 xpay_ 开头的推送；解析失败返回 null 交回原内容安全分支。 */
+    private static String xpayEvent(String body)
+    {
+        if (body == null || body.isEmpty() || body.indexOf("xpay_") < 0)
+        {
+            return null;
+        }
+        try
+        {
+            com.alibaba.fastjson2.JSONObject obj = com.alibaba.fastjson2.JSON.parseObject(body);
+            String event = obj == null ? null : obj.getString("Event");
+            return event != null && event.startsWith("xpay_") ? event : null;
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+
+    /**
+     * 虚拟支付推送：先用同一个消息推送 token 验签；推送内容只是「去回查」的信号，
+     * 是否开通/退款由通行证服务向微信回查后决定。按官方约定成功返回 {"ErrCode":0,"ErrMsg":"success"}。
+     */
+    private ResponseEntity<String> onXpayEvent(String signature, String timestamp, String nonce, String body)
+    {
+        CallbackResult verification = wxContentSecurityService.verifyMediaCheckCallback(signature, timestamp, nonce);
+        if (verification != CallbackResult.SUCCESS)
+        {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("forbidden");
+        }
+        boolean handled = false;
+        try
+        {
+            handled = platformPassService != null
+                    && platformPassService.handleXpayPush(com.alibaba.fastjson2.JSON.parseObject(body));
+        }
+        catch (Exception e)
+        {
+            handled = false;
+        }
+        return handled
+                ? ResponseEntity.ok("{\"ErrCode\":0,\"ErrMsg\":\"success\"}")
+                : ResponseEntity.ok("{\"ErrCode\":1,\"ErrMsg\":\"retry\"}");
     }
 }

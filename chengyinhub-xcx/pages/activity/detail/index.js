@@ -5,6 +5,7 @@ const { activityShareFromEvent, buildActivityShare } = require('../../../utils/a
 const { openScene } = require('../../../utils/scene-entry.js')
 const policy = require('../../../utils/identity/identity-policy.js')
 const merchantTheme = require('../../../utils/merchant-theme.js')
+const referral = require('../../../utils/commerce/referral.js')
 
 Page({
   data: {
@@ -16,6 +17,7 @@ Page({
   },
 
   onLoad(options) {
+    referral.capture(options) // §18 I:落地只存来源凭据,不显示推荐人、不参与报价
     this.setData({ id: String((options && options.id) || '') })
     this.syncViewerTheme()
   },
@@ -51,6 +53,10 @@ Page({
   onShareAppMessage(event) {
     const payload = activityShareFromEvent(event) || buildActivityShare({ ...this.data.shareInfo, id: this.data.id })
     if (payload && (!event || event.from !== 'button')) analytics.track('content_share', { bizType: 'activity', bizId: this.data.id })
-    return payload || { title: '精彩活动', path: '/pages/index/index' }
+    if (!payload) return { title: '精彩活动', path: '/pages/index/index' }
+    // §18 I:异步换推广来源凭据并拼进 ref;失败静默降级为普通分享
+    return Object.assign({}, payload, {
+      promise: referral.sharePathPromise(getApp(), 2, this.data.id, payload.path).then((r) => Object.assign({}, payload, r))
+    })
   },
 })

@@ -21,9 +21,6 @@
   <image class="rv-bg__img" src="{{heroImg}}" mode="aspectFill" />
   <view class="rv-bg__fade"></view>
 </view>
-<view class="rv-bg-btn" bindtap="changeHeroBg" aria-role="button" aria-label="更换背景" hover-class="cy-pressed" hover-stay-time="80">
-  <cy-icon name="image" size="30" /><text>更换背景</text>
-</view>
 <view class="rv-head">
   <!-- 第九轮 m1-9:头像走微信头像选择器(用微信头像 / 相册 / 拍照),选完照旧裁剪、上传、审核 -->
   <button class="rv-ava rv-ava--btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" aria-label="修改头像" hover-class="cy-pressed" hover-stay-time="80">
@@ -34,6 +31,10 @@
   <text class="rv-name">{{userInfo.name || '城瘾玩家'}}</text>
   <!-- 只有未通过时才提示;审核中新头像直接显示,不再写「复核中」 -->
   <text wx:if="{{avatarReviewText}}" class="rv-review" aria-role="status">{{avatarReviewText}}</text>
+  <!-- V3-33(2026-11-09 业主「这个要居中 看起来不对称」):更换背景从右侧悬浮挪到名字下方,随头像一列居中 -->
+  <view class="rv-bg-hit" bindtap="changeHeroBg" aria-role="button" aria-label="更换背景" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="rv-bg-btn"><cy-icon name="image" size="30" /><text>更换背景</text></view>
+  </view>
 </view>
 <view class="rv-group">
   <view class="rv-row" bindtap="openPop4" aria-role="button" aria-label="编辑昵称" hover-class="cy-pressed" hover-stay-time="80">
@@ -49,9 +50,9 @@
   </view>
 </view>
 <view class="rv-group">
-  <!-- P-56:已绑定也能点,走微信手机号授权换绑(同一 getPhoneNumber → /api/getwxbindphone) -->
+  <!-- P-56:已绑定也能点,走微信手机号授权换绑(同一 getPhoneNumber → /api/getwxbindphone);行尾是修改图标,不是「进入下一页」的箭头 -->
   <button class="rv-row rv-row--btn" open-type="getPhoneNumber" bindgetphonenumber="getPhoneNumber" aria-label="{{userInfo.phone ? '更换手机号' : '绑定手机号'}}" hover-class="cy-pressed" hover-stay-time="80">
-    <text class="rv-row__k">手机号</text><text class="rv-row__v {{userInfo.phone ? '' : 'is-empty'}}">{{phoneMasked || '未绑定'}}</text><cy-icon class="rv-row__cv" name="chevron-right" size="32" />
+    <text class="rv-row__k">手机号</text><text class="rv-row__v {{userInfo.phone ? '' : 'is-empty'}}">{{phoneMasked || '未绑定'}}</text><cy-icon class="rv-row__cv" name="edit" size="32" />
   </button>
 </view>
 <view class="rv-group">

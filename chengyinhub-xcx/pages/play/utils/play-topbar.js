@@ -89,8 +89,11 @@ function methods(req) {
 
     _scope() { const scope = { topicId: this.data.topicId }; if (this.data.activityId) scope.activityId = this.data.activityId; return scope; }, // GET 里 undefined 会被序列化成字符串 'undefined',主题局整条 400
     /** 进页后静默问一次:主题有案件册内容才在顶栏放这颗。 */
-    _probeCasebook() {
+    _probeCasebook(routeState) {
       if (!this.data.topicId || this.data.isPreview || this.data.isMock) return;
+      // x-fix5 R3-7:还没有这一局(路线态没有 sessionId)时后端只会回 500「这一局还没开始」,
+      // 每次进页都白打一发。局建起来(下一次读路线)再问;调用方没给路线态(旧入口)时保持原行为。
+      if (routeState !== undefined && !(routeState && routeState.sessionId)) return;
       req('/api/play/journey/casebook', 'GET', this._scope(), undefined, true)
         .then((res) => { if (ok(res)) this.setData({ hasCasebook: nonEmpty(res.data) }); })
         .catch(() => {});

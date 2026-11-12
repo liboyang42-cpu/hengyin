@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingRevenueAllocationLineMapper">
+
+    <resultMap id="RevenueAllocationLineResult" type="com.chengyinhub.business.domain.marketing.MarketingRevenueAllocationLine">
+        <id property="id" column="id"/>
+        <result property="allocationId" column="allocation_id"/>
+        <result property="entryType" column="entry_type"/>
+        <result property="lineRole" column="line_role"/>
+        <result property="recipientMemberId" column="recipient_member_id"/>
+        <result property="fundingSide" column="funding_side"/>
+        <result property="basisFen" column="basis_fen"/>
+        <result property="rate" column="rate"/>
+        <result property="amountFen" column="amount_fen"/>
+        <result property="currency" column="currency"/>
+        <result property="entryKey" column="entry_key"/>
+        <result property="eventRef" column="event_ref"/>
+        <result property="eventAmountFen" column="event_amount_fen"/>
+        <result property="eventCurrency" column="event_currency"/>
+        <result property="eventOrderType" column="event_order_type"/>
+        <result property="eventOrderId" column="event_order_id"/>
+        <result property="reversalOfLineId" column="reversal_of_line_id"/>
+        <result property="sourceFact" column="source_fact"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <sql id="LineColumns">
+        id, allocation_id, entry_type, line_role, recipient_member_id, funding_side,
+        basis_fen, rate, amount_fen, currency, entry_key, event_ref, event_amount_fen,
+        event_currency, event_order_type, event_order_id, reversal_of_line_id, source_fact,
+        create_time
+    </sql>
+
+    <insert id="batchInsert">
+        insert into marketing_revenue_allocation_line
+            (allocation_id, entry_type, line_role, recipient_member_id, funding_side,
+             basis_fen, rate, amount_fen, currency, entry_key, event_ref, event_amount_fen,
+             event_currency, event_order_type, event_order_id, reversal_of_line_id, source_fact,
+             create_time)
+        values
+        <foreach collection="lines" item="l" separator=",">
+            (#{l.allocationId}, #{l.entryType}, #{l.lineRole}, #{l.recipientMemberId}, #{l.fundingSide},
+             #{l.basisFen}, #{l.rate}, #{l.amountFen}, #{l.currency}, #{l.entryKey}, #{l.eventRef},
+             #{l.eventAmountFen}, #{l.eventCurrency}, #{l.eventOrderType}, #{l.eventOrderId},
+             #{l.reversalOfLineId}, #{l.sourceFact}, #{l.createTime})
+        </foreach>
+    </insert>
+
+    <select id="selectByAllocationId"
+            resultMap="RevenueAllocationLineResult">
+        select <include refid="LineColumns"/>
+        from marketing_revenue_allocation_line
+        where allocation_id = #{allocationId}
+        order by entry_type, id
+    </select>
+
+    <select id="selectByEvent"
+            resultMap="RevenueAllocationLineResult">
+        select <include refid="LineColumns"/>
+        from marketing_revenue_allocation_line
+        where allocation_id = #{allocationId} and event_ref = #{eventRef}
+        order by id
+    </select>
+
+    <select id="sumReversedFenByLineId" resultType="java.lang.Long">
+        select coalesce(sum(-amount_fen), 0)
+        from marketing_revenue_allocation_line
+        where reversal_of_line_id = #{reversalOfLineId} and entry_type = 2
+    </select>
+
+    <select id="selectByRecipient"
+            resultMap="RevenueAllocationLineResult">
+        select <include refid="LineColumns"/>
+        from marketing_revenue_allocation_line
+        where recipient_member_id = #{recipientMemberId}
+        order by create_time desc, id desc
+    </select>
+</mapper>

@@ -151,13 +151,13 @@ class ApiTopicSaveDraftContractTest {
         com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO receipt =
                 new com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO(
                         TOPIC_ID, 901L, "PENDING", java.util.Collections.singletonList(71L));
-        when(topicService.publishDraftWithReview(TOPIC_ID, MEMBER)).thenReturn(receipt);
+        when(topicService.publishDraftWithReview(TOPIC_ID, MEMBER, null)).thenReturn(receipt);
 
         AjaxResult result = controller.publishDraft(String.valueOf(TOPIC_ID), null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG), result.toString());
         assertEquals(receipt, result.get(AjaxResult.DATA_TAG));
-        verify(topicService).publishDraftWithReview(TOPIC_ID, MEMBER);
+        verify(topicService).publishDraftWithReview(TOPIC_ID, MEMBER, null);
         verify(topicService, never()).createTopic(any(), anyLong(), anyString());
     }
 

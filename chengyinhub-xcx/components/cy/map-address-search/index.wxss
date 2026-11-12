@@ -24,6 +24,10 @@
 .searchbar__f{ flex:none; margin-left:auto; color:#8A8A8E; } /* ds-ok 原型 .searchbar .f */
 .searchbar--entry{ height:96rpx; padding:0 31rpx; border-radius:48rpx; } /* ds-ok 入口沿用微信现有白色搜索框，只取 Figma 11:4 的 284×50 pill 几何 */
 
+/* D4 */
+.searchbar--dark{ background:var(--cy-color-play-surface-solid); color:var(--cy-color-text-primary); border:1rpx solid var(--cy-color-play-line); box-shadow:none; }
+.searchbar--dark .searchbar__ic, .searchbar--dark .searchbar__f{ color:var(--cy-color-text-secondary); }
+
 /* ── 展开态 ───────────────────────────────────────────────── */
 /* 原型 .dim 铺满整机;组件挂在 .mas 里,所以用 fixed 铺到屏幕 */
 .dim{ position:fixed; left:0; top:0; right:0; bottom:0; z-index:20;

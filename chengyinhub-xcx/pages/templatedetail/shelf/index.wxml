@@ -22,7 +22,7 @@
         <view class="sh-rail__in">
           <view class="lc" wx:for="{{ featTopics }}" wx:key="id" data-item="{{ item }}" bindtap="openTopic" aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
             <image wx:if="{{ item.cover }}" class="lc__img" src="{{ item.cover }}" data-id="{{ item.id }}" binderror="onCoverError" mode="aspectFill" />
-            <view wx:else class="lc__img cv-err" aria-role="img" aria-label="{{ item.name }} 的封面未能加载"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /><text class="cv-err__t">封面暂不可用</text></view>
+            <view wx:else class="lc__img cv-err" aria-role="img" aria-label="{{ item.name }} 暂无封面"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /></view>
             <view class="lc__cap">
               <text class="lc__type lc__type--{{ item.typeCls }}">{{ item.typeName }}</text>
               <text class="lc__name">{{ item.name }}</text>
@@ -55,7 +55,7 @@
                 <view class="col3" wx:for="{{ shelf.cols }}" wx:for-item="col" wx:for-index="ci" wx:key="ci">
                   <view class="r5" wx:for="{{ col }}" wx:key="id" data-item="{{ item }}" bindtap="openTopic" aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
                     <image wx:if="{{ item.cover }}" class="r5__pic" src="{{ item.cover }}" data-id="{{ item.id }}" binderror="onCoverError" mode="aspectFill" lazy-load />
-            <view wx:else class="r5__pic cv-err" aria-role="img" aria-label="{{ item.name }} 的封面未能加载"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /><text class="cv-err__t">封面暂不可用</text></view>
+            <view wx:else class="r5__pic cv-err" aria-role="img" aria-label="{{ item.name }} 暂无封面"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /></view>
                     <view class="r5__tx">
                       <text class="r5__name">{{ item.name }}</text>
                       <text class="r5__sub">{{ item.sub }}</text>
@@ -67,7 +67,7 @@
               <block wx:else>
                 <view class="mc" wx:for="{{ shelf.items }}" wx:key="id" data-item="{{ item }}" bindtap="openTopic" aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
                   <image wx:if="{{ item.cover }}" class="mc__pic" src="{{ item.cover }}" data-id="{{ item.id }}" binderror="onCoverError" mode="aspectFill" lazy-load />
-            <view wx:else class="mc__pic cv-err" aria-role="img" aria-label="{{ item.name }} 的封面未能加载"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /><text class="cv-err__t">封面暂不可用</text></view>
+            <view wx:else class="mc__pic cv-err" aria-role="img" aria-label="{{ item.name }} 暂无封面"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /></view>
                   <text class="mc__name">{{ item.name }}</text>
                   <text class="mc__meta">{{ item.meta }}</text>
                 </view>
@@ -81,7 +81,7 @@
         <view class="ch9"><image class="ch9__ic" src="{{ topicCat.prop }}" mode="aspectFit" /><text class="ch9__t">{{ topicCat.name }}</text></view>
         <view class="tci" wx:for="{{ topicCat.items }}" wx:key="id" data-item="{{ item }}" bindtap="openTopic" aria-role="button" aria-label="{{ item.name }}" hover-class="cy-pressed" hover-stay-time="80">
           <image wx:if="{{ item.cover }}" class="tci__pic" src="{{ item.cover }}" data-id="{{ item.id }}" binderror="onCoverError" mode="aspectFill" lazy-load />
-            <view wx:else class="tci__pic cv-err" aria-role="img" aria-label="{{ item.name }} 的封面未能加载"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /><text class="cv-err__t">封面暂不可用</text></view>
+            <view wx:else class="tci__pic cv-err" aria-role="img" aria-label="{{ item.name }} 暂无封面"><image class="cv-err__ic" src="{{ coverErrorSrc }}" mode="aspectFit" /></view>
           <view class="tci__tx">
             <text class="tci__type tci__type--{{ item.typeCls }}">{{ item.typeName }} · {{ item.meta }}</text>
             <text class="tci__name">{{ item.name }}</text>

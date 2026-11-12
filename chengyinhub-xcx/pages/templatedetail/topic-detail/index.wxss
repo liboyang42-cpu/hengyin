@@ -23,3 +23,10 @@
 .cap-stop__do { font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-text-secondary); }
 .cap-stop__dur { display: flex; align-items: center; gap: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
 .td-medal-img { width: 112rpx; height: 112rpx; flex: none; }
+
+/* U02-01 采用条件:沿用能力 tab 的 xb-caps 行,值是一句事实;待补充用三级字色 */
+.xb-block.td-cond-hd { padding-top: var(--cy-space-6); padding-bottom: 0; }
+.xb-caps.td-cond { margin-top: 0; }
+.td-cond-v { flex: 1; min-width: 0; font-size: var(--cy-font-body); line-height: 56rpx; color: var(--cy-text-title); }
+
+.td-credit { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }

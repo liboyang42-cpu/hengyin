@@ -129,7 +129,7 @@ test('SC-UI-DATE-COUNT 主题起止日期:主题卡 / 主题页 / 向导 / 统�
       topicCardTime: parseCnMonthDay(out.topicCard.timeText),
       topicCardWeek: (/周(.)/.exec(out.topicCard.timeText) || [])[1],
       manageDate: out.topicCard.manageDateText,
-      topicPageOpen: out.topicPage.openCell,
+      topicPageOpen: out.topicPage.openCell.replace(/\u200b/g, ''),  // x-fix2 P-12:连字符后带零宽空格供折行,日期本身不变
       wizardStart: out.wizard.startDateTime, wizardEnd: out.wizard.endDateTime,
       detailRange: out.topicDetail.dateRange,
       eventOpsLabel: out.eventOps.dropdownLabel,

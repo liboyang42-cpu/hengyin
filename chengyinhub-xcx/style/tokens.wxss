@@ -106,9 +106,9 @@ page {
      新值由原值**保明度、饱和度归零**算得 —— 明度决定对比度,所以 R1 当年为达标
      调出来的对比度一个都没变(97.3 / 71.8 / 56.9 / 52.4%,与调整前逐位相同)。 */
   --cy-color-text-primary:      #F8F8F8;
-  --cy-color-text-secondary:    #B7B7B7;              /* R1:原 #A6A8B0 */
-  --cy-color-text-tertiary:     #919191;              /* R1:原 #5E606A 不达标 */
-  --cy-color-text-placeholder:  #868686;              /* R1:原 #5E606A,输入框底上仅 3.6:1 */
+  --cy-color-text-secondary:    #C7C7C7;              /* 2026-11-10 r2 业主「玩家的灰色都不是很清楚」:#B7B7B7 → 提亮;R1 原 #A6A8B0 */
+  --cy-color-text-tertiary:     #A8A8A8;              /* 2026-11-10 r2 #919191 → 提亮:压在弹层内卡 #3A3A3C 上仍 4.77:1(≥4.5) */
+  --cy-color-text-placeholder:  #9E9E9E;              /* 2026-11-10 r2 #868686 → 随二三级字提亮一档 */
   --cy-color-text-disabled:     rgba(255,255,255,.40);
   --cy-color-text-inverse:      #0A0A0A;              /* 白底上的反色字（8-05 去色相，原 #09080C） */
 
@@ -141,7 +141,7 @@ page {
   /* —— 描边 —— */
   --cy-color-border-subtle:     rgba(255,255,255,.08);
   --cy-color-border-strong:     rgba(255,255,255,.16);
-  --cy-color-sheet-handle: #5A5A5A;          /* 2026-09-15 抓手实色(稿 356-5220),.16 白压在 #141416 上只有 #353535 看不清 */
+  --cy-color-sheet-handle: #8E8E93;          /* 2026-11-10 r2 弹层抬到 #2C2C2E 后再提亮一档(原 #6E6E73);2026-11-09 V3-18 随弹层抬灰提亮一档(原 #5A5A5A 在 #1C1C1E 上只有 1.6:1);#141416 那条历史见 git */
   --cy-color-result-fail-badge: #F94D5C;          /* 2026-09-15 失败徽章稿色(356-5220 实取);图形非文字,白 i 对它 3.4:1 过 3:1 */
 
   /* —— 交互态 / 遮罩(T4,2026-07-14) —— */
@@ -608,6 +608,9 @@ page {
      = 上内距 + 按钮 + 下内距 + 安全区,与 index.wxss 的盒子构成逐项对应。
      以前只在 index.js 注释里提过这个名字却没人定义 —— 页面照着写会解析成空值,
      等于没留空白、最后一条内容被动作条压住。契约里有负控盯着它与盒子构成不漂移。 */
+  /* 2026-11-10 r2 业主「底部按钮的圆角全站可以统一一下」:底部动作条、弹层底部按钮、原型半屏 .btn2
+     都读这一个圆角(胶囊)。r2-visual 所有;其余 lane 只引用,不写死。 */
+  --cy-comp-bottom-btn-radius: var(--cy-radius-pill);
   --cy-comp-footer-h: calc(var(--cy-btn-h) + var(--cy-comp-footer-pad-y) * 2 + env(safe-area-inset-bottom));
   /* 底部面板 */
   --cy-comp-sheet-bg:     var(--cy-color-bg-glass);
@@ -670,7 +673,17 @@ page {
   /* 弹窗玻璃底的深端钉死值:不能引用 --cy-color-bg-glass(theme-light/merchant 会把它覆成白玻璃,
    * 变量继承穿透组件样式隔离,白页弹窗会变白底白字) */
   /* 2026-09-03 Brand Handbook 410-121 §③ 去蓝紫(参 Revolut 纯中性灰):30 → 28 */
-  --cy-comp-sheet-player-glass: rgba(28, 28, 28, .82);
+  /* 2026-11-09 V3-18 业主:「统一修改纯黑色弹窗 改成稍微透明的灰色？看看revolut怎么做的」——
+   * Revolut 暗色弹层 = 抬升一档的中性灰(#1C1C1E)、几乎不透(≈94%)+ 背景模糊,压在暗页上仍读得出是一层面。
+   * .82 叠在 .56 遮罩后的黑页上实际只有 #171717 上下,看起来就是黑;.94 才让灰真正浮出来。
+   * 玩家域所有弹层(cy-sheet / cy-scene-sheet / 原型半屏 .psheet / 游玩页各抽屉)都读这一个值。 */
+  /* 2026-11-10 r2 业主「弹窗不能是黑色的…看不见弹窗」「这种灰色的弹窗看起来还是看不太清」:
+   * .94 的 #1C1C1E 压在黑页上仍读成黑。弹层抬到 iOS 二级抬升灰 #2C2C2E、实底,
+   * 再加顶边高光线 + 向上投影(--cy-comp-sheet-player-lift),面板和页面明显分层。 */
+  --cy-comp-sheet-player-glass: rgba(44, 44, 46, .98);
+  /* 玩家弹层的顶边高光与向上投影(r2-visual 所有;其余 lane 只引用,不写死)。 */
+  --cy-comp-sheet-player-edge: rgba(255, 255, 255, .18);
+  --cy-comp-sheet-player-lift: inset 0 1px 0 rgba(255, 255, 255, .18), 0 -12px 40px rgba(0, 0, 0, .55);
   /* 弹窗角色档(2026-08-07 用户拍板:弹窗双规范——玩家页=深玻璃,商家页=白)。
    * 基础=玩家值;.theme-light/.theme-merchant 块整组切白(就地求值快照,须整组重声明)。 */
   --cy-comp-sheet-role-glass: var(--cy-comp-sheet-player-glass);
@@ -687,22 +700,23 @@ page {
   --cy-comp-sheet-role-btn-bg: var(--cy-comp-sheet-player-text);
   --cy-comp-sheet-role-btn-fg: var(--cy-comp-sheet-player-page);
   --cy-comp-sheet-role-card-shadow: 0 0 0 0 transparent;
+  --cy-comp-sheet-role-lift: var(--cy-comp-sheet-player-lift);   /* 2026-11-10 r2:玩家弹层顶边高光 + 向上投影 */
   /* 2026-09-03 按 Brand Handbook 410-121 §③「深色阶去蓝紫」改:#020104 带一点蓝,
    * 参考 Revolut Business 的纯中性灰阶,弹窗内页底就是纯黑。 */
   --cy-comp-sheet-player-page: #000000;
-  --cy-comp-sheet-player-surface: rgba(28,28,36,.90);
+  --cy-comp-sheet-player-surface: #3A3A3C;   /* 2026-11-10 r2 面内卡要比 #2C2C2E 面板再高一档 */
   /* 同上:#303038 偏蓝紫 → 中性 #2C2C2C */
-  --cy-comp-sheet-player-elevated: #2C2C2C;
+  --cy-comp-sheet-player-elevated: #3A3A3C;
   /* 弹层内的 raised / interactive:玻璃面板上的卡要比面板高一档,控件底再高一档。
      值取全局暗端同名档,因为玩家弹层本就是暗的;单独出口是为了让
      scene-sheet 能把整条中性阶覆盖完,不留穿透缺口(2026-09-02)。 */
-  --cy-comp-sheet-player-raised: #2A2A2C;
-  --cy-comp-sheet-player-surface-strong: #3B3B3D;
-  --cy-comp-sheet-player-interactive: #4D4D4D;
+  --cy-comp-sheet-player-raised: #3A3A3C;
+  --cy-comp-sheet-player-surface-strong: #48484A;
+  --cy-comp-sheet-player-interactive: #545456;
   --cy-comp-sheet-player-text: #FFFFFF;
-  --cy-comp-sheet-player-text-secondary: rgba(255,255,255,.70);
+  --cy-comp-sheet-player-text-secondary: rgba(255,255,255,.80);   /* 2026-11-10 r2 .70 → .80:#2C2C2E 上 9.5:1 */
   /* 同上:面内卡改实色 #242424 —— 半透明白叠在不同面板上会飘,实色才压得住 */
-  --cy-comp-sheet-player-card: #242424;
+  --cy-comp-sheet-player-card: #3A3A3C;   /* 2026-11-10 r2 原 #242424 比新面板还暗 */
 
   /* T2 居中弹窗(危险确认)的面板 —— Brand Handbook 410-121 §⑥「P3 / P4 两处看不见」。
    * 它原来读 --cy-bg-card = #0A0A0B,压在 #000000 的页底上几乎等于隐形,规范样张里
@@ -713,12 +727,12 @@ page {
   --cy-comp-sheet-player-border-strong: rgba(255,255,255,.16);
   /* 遮罩只负责压低面板外的宿主；面板本身已改实底，避免宿主页标题透进正文。
      保留 .30 是为了面板外仍能辨认来处，不能再靠面板透明度制造玻璃感。 */
-  --cy-comp-sheet-player-overlay: rgba(0,0,0,.30);
+  --cy-comp-sheet-player-overlay: rgba(0,0,0,.50);   /* 2026-11-10 r2 .30 → .50:宿主再压暗,面板更跳 */
   --cy-comp-sheet-player-close-bg: rgba(255,255,255,.12);
   --cy-comp-sheet-player-close-fg: rgba(255,255,255,.70);
-  --cy-comp-sheet-player-inset-shadow: inset 0 10px 20.4px 3px rgba(0,0,0,.25);
+  --cy-comp-sheet-player-inset-shadow: var(--cy-comp-sheet-player-lift);   /* 2026-11-10 r2 原内阴影压暗顶边,改成抬升 */
   --cy-comp-sheet-player-action-secondary: rgba(255,255,255,.10);
-  --cy-comp-sheet-player-muted: rgba(255,255,255,.45);
+  --cy-comp-sheet-player-muted: rgba(255,255,255,.62);   /* 2026-11-10 r2 .45 只有 4.09:1;.62 在 #3A3A3C 卡上 5.48:1 */
   /* D3 之后与 --cy-color-status-success 同值。这里必须留字面量:scene-sheet 是
      「强制玩家皮肤」层,嵌在商家页里也要出玩家色,不能继承环境。
      ⚠️ 改绿要同时改 5 处(2026-09-01 自审数过,别再写"两处"):
@@ -1212,6 +1226,7 @@ page.theme-light,
   --cy-comp-sheet-role-btn-bg: var(--cy-comp-sheet-merchant-title);
   --cy-comp-sheet-role-btn-fg: var(--cy-comp-sheet-merchant-elevated);
   --cy-comp-sheet-role-card-shadow: 0 2rpx 8rpx rgba(15,23,43,.06);
+  --cy-comp-sheet-role-lift: none;   /* 商家白弹层不变 */
 }
 
 /* 主题创建域：浅底、白卡、彩色强调（2026-08-09 用户拍板改回设计稿配色）。
@@ -1269,6 +1284,7 @@ page.theme-topic-editor,
   /* 创建域是「白底细线」层级,不要投影(同本块上方 --cy-comp-card-shadow-day 的决定),
      所以这一条不照抄 .theme-merchant 的卡片投影。 */
   --cy-comp-sheet-role-card-shadow:      0 0 0 0 transparent;
+  --cy-comp-sheet-role-lift: none;   /* 商家白弹层不变 */
   --cy-text-title:              var(--cy-color-text-primary);
   --cy-text-secondary:          var(--cy-color-text-tertiary);
   /* 2026-08-10 与商家版取同一个灰(见上方 .theme-light/.theme-merchant 块的 #F3F4F4)。
@@ -1455,9 +1471,9 @@ page.theme-dark,
   --cy-color-bg-raised: #2A2A2C;
   --cy-color-bg-glass: rgba(28,28,30,.82);
   --cy-color-text-primary: #F8F8F8;
-  --cy-color-text-secondary: #B7B7B7;
-  --cy-color-text-tertiary: #919191;
-  --cy-color-text-placeholder: #868686;
+  --cy-color-text-secondary: #C7C7C7;
+  --cy-color-text-tertiary: #A8A8A8;
+  --cy-color-text-placeholder: #9E9E9E;
   --cy-color-text-disabled: rgba(255,255,255,.40);
   --cy-color-text-inverse: #0A0A0A;
   --cy-color-input-idle-bg: #3B3B3D;   /* 2026-09-03:同上,空亮填暗 */
@@ -1482,7 +1498,7 @@ page.theme-dark,
   --cy-comp-cell-fill-bg: var(--cy-color-bg-surface-subtle);
   --cy-text-title: var(--cy-color-text-primary);
   --cy-color-border-strong: rgba(255,255,255,.16);
-  --cy-color-sheet-handle: #5A5A5A;
+  --cy-color-sheet-handle: #8E8E93;
   --cy-color-result-fail-badge: #F94D5C;
   --cy-color-state-pressed: rgba(255,255,255,.10);
   --cy-color-overlay: rgba(0,0,0,.56);
@@ -1586,6 +1602,7 @@ page.theme-dark,
   --cy-comp-sheet-role-btn-bg: var(--cy-comp-sheet-player-text);
   --cy-comp-sheet-role-btn-fg: var(--cy-comp-sheet-player-page);
   --cy-comp-sheet-role-card-shadow: 0 0 0 0 transparent;
+  --cy-comp-sheet-role-lift: var(--cy-comp-sheet-player-lift);   /* 2026-11-10 r2:玩家弹层顶边高光 + 向上投影 */
   /* comp 别名重声明:见基础 page 规则内「导航」段注释。 */
   --cy-comp-nav-bg:     var(--cy-color-bg-page);
   --cy-comp-nav-border: transparent; /* 2026-10-23 业主:页面上的横线去掉 —— 暗色也与全站默认一致,顶栏不画分隔线 */

@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.domain.vo.TopicContentRevisionView;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.PlayerNodeProgress;
 import com.chengyinhub.business.domain.TopicRouteAction;
@@ -65,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -369,6 +371,53 @@ class JourneyPublishFreezeTest {
                 "偏好题组配置按开局快照");
     }
 
+    // ==================== 1b. 新局绑定不可变发布修订(BE-06 / BE-14) ====================
+
+    /**
+     * 新局必须绑定当前发布修订头，而不是让老局跟着 live 主题走。
+     *
+     * <p>负控：把 {@code selectLatestContentRevisionHeader} 的桩删掉，本用例立刻红（快照没有 contentRevisionId）。
+     * 同时证明地理不从当前可编辑的 {@code cms_topic.city_code} 借值 —— 该值只应来自发布的冻结 payload。
+     */
+    @Test
+    void newRunBindsThePublishedRevisionAndNeverBorrowsLiveGeography() throws Exception {
+        topic.setCityCode("310100");
+        topic.setContentContractJson("{\"placeCountryCode\":\"JP\"}");
+        when(topicMapper.selectLatestContentRevisionHeader(TOPIC)).thenReturn(revision());
+
+        startRun();
+
+        JsonNode frozen = JSON.readTree(stored[0].getConfigSnapshotJson());
+        assertEquals(8L, frozen.path("contentRevisionId").asLong(), "新局必须冻结发布修订 id");
+        assertEquals(3L, frozen.path("contentRevisionNo").asLong(), "修订号随快照落下");
+        assertEquals(1, frozen.path("contentSchemaVersion").asInt(), "内容 schema 版本随快照落下");
+        assertEquals("sha-abc", frozen.path("contentSha256").asText(), "发布字节摘要随快照落下");
+        assertFalse(stored[0].getConfigSnapshotJson().contains("310100"),
+                "地理只认发布修订/冻结图，绝不把当前 cms_topic.city_code 写进新局");
+    }
+
+    /** 存量主题没有修订行时不得伪造 id / 哈希：快照字节保持原样，老局行为不变。 */
+    @Test
+    void topicWithoutRevisionRowNeverFabricatesARevisionHeader() throws Exception {
+        startRun();
+
+        JsonNode frozen = JSON.readTree(stored[0].getConfigSnapshotJson());
+        assertFalse(frozen.has("contentRevisionId"), "没有修订行就不能有修订 id");
+        assertFalse(frozen.has("contentSha256"), "没有修订行就不能有发布摘要");
+        assertFalse(frozen.has("contentGeography"), "根层不新增第二套地理键");
+    }
+
+    private static TopicContentRevisionView revision() {
+        TopicContentRevisionView view = new TopicContentRevisionView();
+        view.setId(8L);
+        view.setTopicId(TOPIC);
+        view.setRevisionNo(3L);
+        view.setSchemaVersion(1);
+        view.setContentSha256("sha-abc");
+        view.setPublicManifestJson("{\"contentGeography\":{\"schemaVersion\":1,"
+                + "\"countryCode\":\"JP\",\"cityCode\":\"130100\"}}");
+        return view;
+    }
     // ==================== 2. 检定难度按开局快照判定 ====================
 
     @Test

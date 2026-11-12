@@ -20,11 +20,11 @@
   align-items: center;
   justify-content: center;
   gap: 48rpx;                                /* ds-ok 原型 24px */
-  padding: calc(env(safe-area-inset-top) + 180rpx) 52rpx 120rpx;
+  padding: var(--pk-card-pad, calc(env(safe-area-inset-top) + 180rpx) 52rpx 120rpx);   /* 内嵌:故事流给 --pk-card-pad,不再留整屏的顶部让位 */
   box-sizing: border-box;
   text-align: center;
-  background: #000;                          /* ds-ok 原型 .cn */
-  color: #f2f3f5;                            /* ds-ok 原型 .cn */
+  background: var(--pk-card-bg, var(--pk-embed-bg, #000));  /* ds-ok 原型 .cn;内嵌透明(V3-10/53 不要底色);R3-2 整屏跟外观底 */
+  color: var(--pk-embed-ink, #f2f3f5);       /* ds-ok 原型 .cn */
 }
 .cf__k { font-size: var(--cy-type-caption); font-weight: 800; letter-spacing: 6rpx; opacity: .5; }  /* ds-ok 硬币的金属面,逐值照原型 */
 

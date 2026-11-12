@@ -32,6 +32,7 @@ class DataRetentionCleanupTaskFailureTest {
         verify(service).cleanNpcChatLogs(any(), anyInt(), anyInt());
         verify(service).cleanNpcChatRequests(any(), anyInt(), anyInt());
         verify(service).cleanRoamLocations(any(), anyInt(), anyInt());
+        verify(service).cleanAiGenerationLogs(any(), anyInt(), anyInt());
         verify(alarm).alarmThrottled(eq("job.data_retention.failed"), anyString(), contains("browse"));
     }
 
@@ -44,5 +45,36 @@ class DataRetentionCleanupTaskFailureTest {
         ReflectionTestUtils.setField(task, "alarmService", alarm);
         assertDoesNotThrow(task::run);
         verifyNoInteractions(alarm);
+    }
+
+    @Test
+    void aiGenerationLogsUseConfiguredRetentionDaysDefault180() {
+        IDataRetentionService service = mock(IDataRetentionService.class);
+        DataRetentionCleanupTask task = new DataRetentionCleanupTask();
+        ReflectionTestUtils.setField(task, "dataRetentionService", service);
+        ReflectionTestUtils.setField(task, "batchSize", 1000);
+        ReflectionTestUtils.setField(task, "maxBatches", 500);
+        long before = System.currentTimeMillis();
+        task.run();
+        org.mockito.ArgumentCaptor<java.util.Date> cutoff = org.mockito.ArgumentCaptor.forClass(java.util.Date.class);
+        verify(service).cleanAiGenerationLogs(cutoff.capture(), eq(1000), eq(500));
+        long days = (before - cutoff.getValue().getTime() + 60_000L) / (24L * 60 * 60 * 1000);
+        assertEquals(180, days);
+
+        ReflectionTestUtils.setField(task, "aiGenerationDays", 30);
+        clearInvocations(service);
+        task.run();
+        verify(service).cleanAiGenerationLogs(cutoff.capture(), anyInt(), anyInt());
+        assertEquals(30, (System.currentTimeMillis() - cutoff.getValue().getTime() + 60_000L) / (24L * 60 * 60 * 1000));
+    }
+
+    @Test
+    void nonPositiveAiGenerationRetentionSkipsDeletion() {
+        IDataRetentionService service = mock(IDataRetentionService.class);
+        DataRetentionCleanupTask task = new DataRetentionCleanupTask();
+        ReflectionTestUtils.setField(task, "dataRetentionService", service);
+        ReflectionTestUtils.setField(task, "aiGenerationDays", 0);
+        task.run();
+        verify(service, never()).cleanAiGenerationLogs(any(), anyInt(), anyInt());
     }
 }

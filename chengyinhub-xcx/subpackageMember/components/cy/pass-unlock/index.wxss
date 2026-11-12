@@ -1,0 +1,90 @@
+/* 通行证到账分步层。黑底 + 底部暖橙渐变;只过渡 transform / opacity / box-shadow,不新增 keyframes。 */
+.pu {
+  --pu-gold: var(--cy-color-medal-gold);
+  --pu-gold-deep: var(--cy-ref-amber-700);
+  --pu-on-warm: rgba(255, 255, 255, .78); /* ds-ok 暖橙底上的次文,对比 ≥4.5 */
+  --pu-ease: cubic-bezier(.2, 1.2, .4, 1);
+  position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 960; overflow: hidden;
+  background: #000; /* ds-ok 参考帧的纯黑开场 */
+  color: var(--cy-color-text-primary); opacity: 0; transition: opacity .35s ease;
+}
+.pu.is-on { opacity: 1; }
+.pu-pressed { opacity: .8; }
+
+/* 暖橙渐变从底部升起,每往后一步再高一点 */
+.pu__warm { position: absolute; left: -10%; right: -10%; bottom: 0; height: 72%;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(110, 36, 8, .6) 42%, rgba(214, 84, 20, .92) 82%, rgba(240, 120, 40, 1) 100%); /* ds-ok 参考帧的暖橙渐变 */
+  transform: translateY(46%); transition: transform 1.1s cubic-bezier(.2, .8, .2, 1); }
+.pu.is-on .pu__warm--0 { transform: translateY(14%); }
+.pu.is-on .pu__warm--1 { transform: translateY(8%); }
+.pu.is-on .pu__warm--2 { transform: translateY(4%); }
+.pu.is-on .pu__warm--3 { transform: translateY(0); }
+
+.pu__skip { position: absolute; right: 24rpx; top: var(--pu-top); z-index: 3; min-width: 88rpx; min-height: 88rpx; padding: 0 16rpx; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); color: var(--pu-on-warm); }
+
+.pu__stage { position: absolute; left: 0; right: 0; top: calc(var(--pu-top) + 120rpx); height: 600rpx; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.pu__obj { transform: scale(1.18); }
+.pu__mini { transform: scale(.62); margin: -48rpx 0 -40rpx; }
+
+/* 覆盖主题:勾选行 + 金色 +1 */
+.pu__rows { width: 620rpx; display: flex; flex-direction: column; }
+.pu__row { display: flex; align-items: center; gap: 20rpx; min-height: 88rpx; opacity: .55; transform: translateY(16rpx); transition: opacity .4s ease, transform .5s var(--pu-ease); }
+.pu__row.is-hit { opacity: 1; transform: none; }
+.pu__box { flex: none; width: 36rpx; height: 36rpx; border-radius: 10rpx; box-shadow: inset 0 0 0 3rpx var(--pu-on-warm); position: relative; transition: background-color .25s ease, box-shadow .25s ease; } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
+.pu__row.is-hit .pu__box { background: var(--pu-gold); box-shadow: inset 0 0 0 3rpx var(--pu-gold); }
+.pu__tick { position: absolute; left: 12rpx; top: 5rpx; width: 9rpx; height: 18rpx; border-right: 4rpx solid var(--cy-color-bg-page); border-bottom: 4rpx solid var(--cy-color-bg-page); transform: rotate(45deg) scale(0); transition: transform .3s var(--pu-ease) .1s; }
+.pu__row.is-hit .pu__tick { transform: rotate(45deg) scale(1); }
+.pu__rt { flex: 1; min-width: 0; font-size: var(--cy-type-body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pu__coin { flex: none; font-size: var(--cy-type-label); font-weight: 700; color: var(--pu-gold); font-variant-numeric: tabular-nums; opacity: 0; transform: translateY(18rpx) scale(.5); transition: opacity .3s ease .12s, transform .45s var(--pu-ease) .12s; }
+.pu__row.is-hit .pu__coin { opacity: 1; transform: none; }
+
+/* 拨盘 */
+.pu__dial { position: relative; width: 360rpx; height: 360rpx; border-radius: 50%; }
+.pu__ticks { position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 50%;
+  background: repeating-conic-gradient(rgba(255, 255, 255, .42) 0deg 1.2deg, rgba(255, 255, 255, 0) 1.2deg 6deg); /* ds-ok 刻度 */
+  transition: opacity .6s ease; }
+.pu__knob { position: absolute; top: 36rpx; right: 36rpx; bottom: 36rpx; left: 36rpx; border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #4a4d55, #1b1c20 70%); /* ds-ok 金属拨盘 */
+  box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, .16), 0 10rpx 30rpx rgba(0, 0, 0, .6); /* ds-ok */
+  transition: transform 1.7s cubic-bezier(.3, .1, .2, 1); }
+.pu__notch { position: absolute; left: 50%; top: 14rpx; width: 10rpx; height: 34rpx; margin-left: -5rpx; border-radius: 5rpx; background: var(--pu-gold); } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
+.pu__core { position: absolute; top: 108rpx; right: 108rpx; bottom: 108rpx; left: 108rpx; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--pu-gold), var(--pu-gold-deep)); box-shadow: inset 0 0 0 5rpx var(--pu-gold-deep);
+  transition: transform .6s var(--pu-ease), box-shadow .6s ease; }
+.pu__core-mark { position: absolute; left: 30rpx; top: 30rpx; width: 84rpx; height: 84rpx; filter: sepia(1) saturate(2.4) brightness(.35); }
+.pu__dial.is-open .pu__ticks { opacity: .15; }
+.pu__dial.is-open .pu__core { transform: scale(1.12); box-shadow: inset 0 0 0 5rpx var(--pu-gold-deep), 0 0 60rpx var(--pu-gold); }
+
+.pu__cells { margin-top: 40rpx; display: flex; align-items: flex-end; gap: 8rpx; }
+.pu__cell { width: 60rpx; height: 72rpx; overflow: hidden; border-radius: 12rpx; background: rgba(255, 255, 255, .12); } /* ds-ok 格子底 */
+.pu__cell.is-sep { width: 20rpx; background: transparent; }
+.pu__col { display: flex; flex-direction: column; transition: transform 1.2s cubic-bezier(.2, .9, .3, 1); }
+.pu__n, .pu__sep { display: block; height: 72rpx; line-height: 72rpx; text-align: center; font-size: 44rpx; font-weight: 700; font-variant-numeric: tabular-nums; } /* ds-ok: 拨盘数字定值 */
+.pu__unit { margin-left: 8rpx; font-size: var(--cy-type-body); color: var(--pu-on-warm); line-height: 72rpx; }
+
+/* 链条 */
+.pu__chain { display: flex; align-items: center; justify-content: center; transform: scale(1.5); }
+.pu__link { width: 96rpx; height: 56rpx; margin: 0 -14rpx; border-radius: 28rpx; box-shadow: inset 0 0 0 12rpx var(--pu-gold), 0 6rpx 16rpx rgba(0, 0, 0, .4); /* ds-ok 链环阴影 */
+  opacity: 0; transform: translateX(-160rpx) rotate(-30deg); transition: opacity .3s ease, transform .55s var(--pu-ease); }
+.pu__link--b { height: 22rpx; border-radius: 11rpx; background: linear-gradient(180deg, var(--pu-gold), var(--pu-gold-deep)); box-shadow: none; z-index: 1; } /* ds-ok: 上线波次原型逐值(装饰 / 品牌色块) */
+.pu__link.is-hit { opacity: 1; transform: none; }
+
+/* 文字区 */
+.pu__text { position: absolute; left: 48rpx; right: 48rpx; bottom: calc(300rpx + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 12rpx; text-align: center; }
+.pu__eyebrow { font-size: var(--cy-type-caption); font-weight: 700; letter-spacing: 8rpx; color: var(--pu-on-warm); }
+.pu__title { font-size: 52rpx; font-weight: 700; line-height: 1.25; } /* ds-ok: 参考帧大标题 */
+.pu__line { font-size: var(--cy-type-body); color: var(--pu-on-warm); }
+
+.pu__foot { position: absolute; left: 48rpx; right: 48rpx; bottom: calc(48rpx + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: center; gap: 36rpx; }
+.pu__dots { display: flex; gap: 12rpx; }
+.pu__dot { width: 12rpx; height: 12rpx; border-radius: 6rpx; background: rgba(255, 255, 255, .4); transition: transform .3s ease, background-color .3s ease; } /* ds-ok 分页点 */
+.pu__dot.is-cur { background: var(--cy-color-text-primary); transform: scaleX(2.2); }
+.pu__btn { width: 100%; min-height: 96rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); color: var(--cy-color-bg-page);
+  display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); font-weight: 700; }
+
+/* 减少动态效果:一步一个终态,不飞、不转、不滚 */
+.pu.pu--reduced, .pu--reduced .pu__warm, .pu--reduced .pu__row, .pu--reduced .pu__box, .pu--reduced .pu__tick, .pu--reduced .pu__coin,
+.pu--reduced .pu__ticks, .pu--reduced .pu__knob, .pu--reduced .pu__core, .pu--reduced .pu__col, .pu--reduced .pu__link, .pu--reduced .pu__dot { transition: none !important; }
+.pu--reduced .pu__row, .pu--reduced .pu__link { opacity: 1; transform: none; }
+.pu--reduced .pu__coin { opacity: 1; transform: none; }

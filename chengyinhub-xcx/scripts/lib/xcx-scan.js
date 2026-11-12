@@ -557,15 +557,32 @@ function maskWxmlComments(source) {
 
 const EVENT_ATTR_RE = /((?:capture-)?(?:bind|catch)(?::)?[a-zA-Z][\w-]*)\s*=\s*"([^"]*)"/g;
 
+// 本文件里 <wxs module="x"> 声明过的模块名。
+function wxsModuleNames(source) {
+  const names = new Set();
+  for (const m of maskWxmlComments(source).matchAll(/<wxs\b[^>]*\bmodule\s*=\s*["']([A-Za-z_$][\w$]*)["']/g)) names.add(m[1]);
+  return names;
+}
+
+// 2026-11-10 r2-visual(V3-34 跟手倾斜):`bindtouchmove="{{tilt.move}}"` 是 WXS 响应事件,
+// 由视图层直接执行,不进页面 JS、不发请求、不跳页 —— 不是 JS handler 绑定。
+// 只认「本文件声明过的 wxs 模块 . 函数名」这一种形状,打上 wxs 标记交给各门禁跳过;
+// 其它 {{...}} 表达式仍按原规则处理(台账照旧 fail closed)。
+const WXS_CALL_RE = /^\{\{\s*([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)\s*\}\}$/;
+
 function findEventBindings(source) {
   const scannable = maskWxmlComments(source);
+  const modules = wxsModuleNames(source);
   const bindings = [];
   let m;
   EVENT_ATTR_RE.lastIndex = 0;
   while ((m = EVENT_ATTR_RE.exec(scannable))) {
     const attrName = m[1];
     const value = m[2].trim();
-    bindings.push({ attrName, value, offset: m.index, line: lineNumber(scannable, m.index) });
+    const binding = { attrName, value, offset: m.index, line: lineNumber(scannable, m.index) };
+    const call = WXS_CALL_RE.exec(value);
+    if (call && modules.has(call[1])) binding.wxs = { module: call[1], fn: call[2] };
+    bindings.push(binding);
   }
   return bindings;
 }
@@ -932,7 +949,22 @@ function rel(p) {
   return path.relative(ROOT, p);
 }
 
+// 2026-11-10 qx-green:视图层 WXS 经 ownerInstance.callMethod('name') 调逻辑层方法(拖拽 / 手势的落点、跨格、
+//    贴边滚屏只在这里触发)。只认这份 wxml 自己用 <wxs src> 引入的 .wxs 里的字符串字面量方法名;
+//    别的页面 / 没被引入的 wxs / 注释里的 callMethod 都不算 —— 范围与「wxml 绑定」同一口径。U3 两处实现共用。
+function wxsCallMethodNames(wxmlFile, wxmlSrc) {
+  const names = new Set();
+  for (const m of maskWxmlComments(wxmlSrc || '').matchAll(/<wxs\b[^>]*\bsrc\s*=\s*["']([^"']+\.wxs)["']/g)) {
+    let code = '';
+    try { code = fs.readFileSync(path.resolve(path.dirname(wxmlFile), m[1]), 'utf8'); } catch (e) { continue; }
+    code = code.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1');
+    for (const c of code.matchAll(/\.callMethod\(\s*['"]([A-Za-z_$][\w$]*)['"]/g)) names.add(c[1]);
+  }
+  return names;
+}
+
 module.exports = {
+  wxsCallMethodNames,
   parseJavaScript,
   ROOT,
   rel,
@@ -951,6 +983,7 @@ module.exports = {
   resolveRequireFile,
   maskWxmlComments,
   findEventBindings,
+  wxsModuleNames,
   classifyBinding,
   scanTags,
   identifiersIn,

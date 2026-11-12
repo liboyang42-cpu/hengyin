@@ -36,6 +36,7 @@ import static org.mockito.Mockito.*;
 /** 真实 MySQL + Mapper + Spring 事务：作者修改、审核、撤回不能相互覆盖。 */
 class TemplateMarketLifecycleMySqlIT {
     private static PooledDataSource source;
+    private static boolean scratchCreated;
     private static SqlSessionTemplate sql;
     private static DataSourceTransactionManager transactions;
     private JdbcTemplate jdbc;
@@ -48,7 +49,11 @@ class TemplateMarketLifecycleMySqlIT {
 
     @BeforeAll
     static void database() throws Exception {
-        source = new PooledDataSource("com.mysql.cj.jdbc.Driver", MybatisItDatabase.url("template_market"),
+        assertEquals("127.0.0.1", MybatisItDatabase.host());
+        assertTrue(MybatisItDatabase.databaseName("template_market").matches("chengyin_mybatis_template_market[A-Za-z0-9_]*"));
+        String scratchUrl = MybatisItDatabase.url("template_market");
+        scratchCreated = true;
+        source = new PooledDataSource("com.mysql.cj.jdbc.Driver", scratchUrl,
                 MybatisItDatabase.user(), MybatisItDatabase.password());
         Configuration config = new Configuration();
         for (Class<?> type : new Class<?>[]{CmsMemberTemplate.class, CmsTemplateLibrary.class,
@@ -66,6 +71,7 @@ class TemplateMarketLifecycleMySqlIT {
         try (Connection connection = source.getConnection()) {
             assertTrue(connection.getMetaData().getDatabaseProductVersion().startsWith("8.0"));
             ItSchema.apply(connection, "it-schema/journey-full-flow-it-schema.sql");
+            ItSchema.applyMigrations(connection, "sql/migration_preset_draft_source_20261108.sql");
             connection.createStatement().execute("CREATE TABLE cms_template_library LIKE cms_member_template");
             connection.createStatement().execute("ALTER TABLE cms_template_library ADD member_template_id BIGINT, ADD pack_type INT, ADD INDEX idx_member_template(member_template_id)");
             String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("../sql/ry_20250522.sql")), java.nio.charset.StandardCharsets.UTF_8);
@@ -74,7 +80,7 @@ class TemplateMarketLifecycleMySqlIT {
             connection.createStatement().execute(menu.group());
             ItSchema.applyMigrations(connection, "sql/migration_p3_platform_foundation.sql",
                     "sql/migration_audit_open_task_guard_20260721.sql", "sql/migration_business_audit_event_20260823.sql",
-                    "sql/migration_20261012_app_media_asset.sql", "sql/migration_20261012_app_media_asset_namespaces.sql");
+                    "sql/migration_20261012_app_media_asset.sql", "sql/migration_20261012_app_media_asset_namespaces.sql", "sql/migration_20261109_app_media_provenance.sql");
             String governance = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_approval_governance_20260828.sql")), java.nio.charset.StandardCharsets.UTF_8);
             java.util.regex.Matcher alter = java.util.regex.Pattern.compile("(?is)ALTER TABLE (?:audit_record|business_audit_event)\\s+.*?;").matcher(governance);
             int applied = 0;
@@ -89,7 +95,38 @@ class TemplateMarketLifecycleMySqlIT {
     }
 
     @AfterAll
-    static void close() { if (source != null) source.forceCloseAll(); }
+    static void close() throws Exception {
+        try {
+            if (source != null) source.forceCloseAll();
+        } finally {
+            if (scratchCreated) {
+                String database = MybatisItDatabase.databaseName("template_market");
+                if (!"127.0.0.1".equals(MybatisItDatabase.host())
+                        || !database.matches("chengyin_mybatis_template_market[A-Za-z0-9_]*")) {
+                    throw new IllegalStateException("Refusing cleanup outside owned loopback scratch");
+                }
+                String adminUrl = "jdbc:mysql://127.0.0.1:" + MybatisItDatabase.port()
+                        + "/?useSSL=false&allowPublicKeyRetrieval=true";
+                try (Connection admin = java.sql.DriverManager.getConnection(
+                        adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
+                     java.sql.Statement statement = admin.createStatement()) {
+                    statement.execute("DROP DATABASE `" + database + "`");
+                }
+                try (Connection readback = java.sql.DriverManager.getConnection(
+                        adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());
+                     java.sql.PreparedStatement check = readback.prepareStatement(
+                             "SELECT COUNT(*) FROM information_schema.schemata WHERE schema_name=?")) {
+                    check.setString(1, database);
+                    try (java.sql.ResultSet row = check.executeQuery()) {
+                        assertTrue(row.next());
+                        assertEquals(0, row.getInt(1), "owned scratch must be absent");
+                        assertFalse(row.next());
+                    }
+                }
+                scratchCreated = false;
+            }
+        }
+    }
 
     @BeforeEach
     void services() {

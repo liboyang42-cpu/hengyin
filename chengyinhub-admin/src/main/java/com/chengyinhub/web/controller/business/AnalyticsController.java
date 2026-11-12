@@ -3,6 +3,7 @@ package com.chengyinhub.web.controller.business;
 import com.chengyinhub.business.domain.BizFunnelDaily;
 import com.chengyinhub.business.mapper.BizFunnelDailyMapper;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.business.service.IPostGameOutcomeReportService;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,14 @@ public class AnalyticsController extends BaseController {
     static final int FUNNEL_MAX_WINDOW_DAYS = 90;
     static final int FUNNEL_DEFAULT_WINDOW_DAYS = 30;
 
+    /** 完局复报缺省观察窗（天）；与报表服务支持的 7/30/90 保持一致。 */
+    static final int REPORT_DEFAULT_WINDOW_DAYS = 30;
+
     @Autowired
     private BizFunnelDailyMapper bizFunnelDailyMapper;
+
+    @Autowired
+    private IPostGameOutcomeReportService postGameOutcomeReportService;
 
     /** 「今天」按运营所在时区取;单测替换为固定时钟。 */
     private Clock clock = Clock.system(ZoneId.of("Asia/Shanghai"));
@@ -119,5 +126,40 @@ public class AnalyticsController extends BaseController {
         data.put("metric",
                 bizFunnelDailyMapper.selectCommunityQualifiedPilotMetric(startDate, endDate));
         return success(data);
+    }
+
+    /**
+     * 完局维护与有效复报：只读，按当前源表即时计算。
+     *
+     * <p>只读语义：本端点不落库、不写修订，权限沿用读取权限 {@code business:analytics:list}，
+     * 不因为「能查看报表」而获得任何写权限。响应里带 {@code computedAt}、各来源水位和口径版本，
+     * 并明确 {@code historicalReplayable=false} —— 它<b>不是</b>可回放的历史快照。
+     *
+     * <p>失败语义：参数非法与数据源不可读都返回业务错误，<b>不返回 0</b>。
+     */
+    @PreAuthorize("@ss.hasPermi('business:analytics:list')")
+    @GetMapping("/post-game-outcome")
+    public AjaxResult postGameOutcome(String cohortDate, Integer windowDays) {
+        if (StringUtils.isBlank(cohortDate)) {
+            return error("cohortDate 不能为空");
+        }
+        final LocalDate cohort;
+        try {
+            cohort = LocalDate.parse(cohortDate);
+        } catch (DateTimeParseException e) {
+            return error("日期格式必须为 yyyy-MM-dd");
+        }
+        if (cohortDate.length() != 10 || cohort.getYear() < 1) {
+            return error("日期格式必须为 yyyy-MM-dd");
+        }
+        int window = windowDays == null ? REPORT_DEFAULT_WINDOW_DAYS : windowDays;
+        try {
+            return success(postGameOutcomeReportService.generate(cohort, window));
+        } catch (IllegalArgumentException invalid) {
+            return error(invalid.getMessage());
+        } catch (IllegalStateException unavailable) {
+            // 数据源读不到 ⇒ 明确报错；不得把未知数据当成 0 展示。
+            return error(unavailable.getMessage());
+        }
     }
 }

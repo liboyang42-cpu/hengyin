@@ -178,6 +178,8 @@ class TopicWorkspaceServiceImplTest {
         topic.setCheckStatus(1);
         topic.setUserStatus(1);
         topic.setReason("审核通过");
+        topic.setConfigVersion(7L);
+        topic.setPublishedConfigVersion(5L);
         when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(topic);
 
         CmsRegistrationMerchant pending = new CmsRegistrationMerchant();
@@ -202,6 +204,8 @@ class TopicWorkspaceServiceImplTest {
         assertEquals(1, workspace.getGovernance().getCheckStatus());
         assertEquals(1, workspace.getGovernance().getUserStatus());
         assertEquals("审核通过", workspace.getGovernance().getReason());
+        assertEquals(Long.valueOf(7L), workspace.getGovernance().getConfigVersion());
+        assertEquals(Long.valueOf(5L), workspace.getGovernance().getPublishedConfigVersion());
         assertEquals(2, workspace.getMerchantSupply().getCandidateCount());
         assertEquals(1, workspace.getMerchantSupply().getPendingReviewCount());
         assertEquals(1, workspace.getMerchantSupply().getApprovedCount());
@@ -244,6 +248,7 @@ class TopicWorkspaceServiceImplTest {
         assertEquals(TopicWorkspaceDTO.CapabilityState.AVAILABLE,
                 workspace.getCapabilities().getAudit().getState());
         assertNotNull(workspace.getGovernance());
+        assertNull(workspace.getGovernance().getPublishedConfigVersion(), "未公开发布不得补成 0");
         assertEquals(TopicWorkspaceDTO.CapabilityState.AVAILABLE,
                 workspace.getCapabilities().getStructure().getState());
         assertTrue(workspace.getChapters().isEmpty());

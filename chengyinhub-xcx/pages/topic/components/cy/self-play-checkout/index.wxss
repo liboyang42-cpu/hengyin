@@ -36,7 +36,7 @@
 .ck__sum { display: flex; flex-direction: column; }
 .ck__sum-k { font-size: 22rpx; color: var(--cy-color-text-secondary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__sum-v { font-size: 44rpx; font-weight: 800; color: var(--cy-color-text-primary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
-.ck__pay { margin-left: auto; height: var(--cy-btn-h); padding: 0 64rpx; border-radius: 999rpx; display: flex; align-items: center; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
+.ck__pay { margin-left: auto; height: var(--cy-btn-h); padding: 0 64rpx; border-radius: var(--cy-radius-pill, 999rpx); display: flex; align-items: center; /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
   background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); font-size: 30rpx; font-weight: 700; } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__pay.is-busy { opacity: .6; }
 /* v13 原型对齐:深灰卡 16px 圆角;主题信息「时间 / 地点」小字在上、值在下;合计斜体粗数字 */
@@ -60,3 +60,35 @@
 .ck__pay { height: 96rpx; padding: 0 58rpx; background: #fff; color: #000; font-size: 31rpx; font-weight: 600; } /* ds-ok */
 
 .ck__back::after { content: ""; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); } /* 透明热区撑到 44px,视觉尺寸按原型不变 */
+
+/* r2-store 2026-11-10 STRUCTURE §1:主题头 → 可选卡 → 通票行 → 明细 → 信任行;颜色全走 --cy-* 令牌 */
+.ck__head { padding-top: var(--cy-space-4, 24rpx); }
+.ck__hero { display: block; width: 100%; height: 280rpx; border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface); }
+.ck__name { display: block; margin-top: var(--cy-space-4, 24rpx); font-size: var(--cy-font-title, 40rpx); font-weight: 700; color: var(--cy-color-text-primary); line-height: 1.3; }
+.ck__pills { display: flex; flex-wrap: wrap; gap: var(--cy-space-2, 12rpx); margin-top: var(--cy-space-3, 16rpx); }
+.ck__pill { padding: 6rpx 18rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface); color: var(--cy-color-text-secondary); font-size: var(--cy-font-caption); }
+.ck__opt { position: relative; margin-top: var(--cy-space-4, 24rpx); padding: 28rpx; border-radius: var(--cy-radius-xl); background: var(--cy-bg-card); border: 3rpx solid transparent; }
+.ck__opt.is-sel { border-color: var(--cy-color-text-primary); }
+.ck__opt-top { display: flex; align-items: center; gap: var(--cy-space-3, 16rpx); min-height: 48rpx; }
+.ck__dot { flex: none; width: 36rpx; height: 36rpx; border-radius: 50%; border: 3rpx solid var(--cy-color-border-strong); box-sizing: border-box; }
+.ck__dot.is-on { border: 11rpx solid var(--cy-color-text-primary); }
+.ck__opt-t { flex: 1; min-width: 0; font-size: var(--cy-font-body, 30rpx); font-weight: 600; color: var(--cy-color-text-primary); }
+.ck__opt-p { display: flex; align-items: baseline; gap: var(--cy-space-2, 12rpx); }
+.ck__price { font-size: 36rpx; font-weight: 800; color: var(--cy-color-text-primary); } /* ds-ok: 与底栏合计同一档数字 */
+.ck__price.is-dim { opacity: .5; }
+.ck__strike { font-size: var(--cy-font-caption, 24rpx); color: var(--cy-color-text-secondary); text-decoration: line-through; }
+.ck__opt-l { display: block; margin: 10rpx 0 0 52rpx; font-size: var(--cy-font-caption, 24rpx); color: var(--cy-color-text-secondary); }
+/* 通票行做成票根:左右两个半圆缺口,颜色取页面底色 */
+.ck__ticket::before, .ck__ticket::after { content: ""; position: absolute; top: 50%; width: 28rpx; height: 28rpx; margin-top: -14rpx; border-radius: 50%; background: var(--cy-bg-page); }
+.ck__ticket::before { left: -14rpx; }
+.ck__ticket::after { right: -14rpx; }
+.ck__who { margin-top: var(--cy-space-5, 32rpx); gap: var(--cy-space-3, 16rpx); }
+.ck__who .ck__k { flex: none; }
+.ck__who-main, .ck__who-miss { flex: 1; min-width: 0; text-align: right; justify-content: flex-end; }
+.ck__rows { margin-top: var(--cy-space-4, 24rpx); }
+.ck__v.is-minus { color: var(--cy-color-status-success); }
+.ck__refused { margin-top: var(--cy-space-4, 24rpx); font-size: var(--cy-font-caption, 24rpx); color: var(--cy-color-status-danger); text-align: center; }
+.ck__trust { display: flex; justify-content: space-around; gap: var(--cy-space-2, 12rpx); margin-top: var(--cy-space-5, 32rpx); padding: 0 var(--cy-space-2, 12rpx); }
+.ck__trust-i { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10rpx; font-size: var(--cy-font-caption, 24rpx); color: var(--cy-color-text-secondary); text-align: center; }
+.ck__pay.is-off { opacity: .4; }
+.ck__member { display: flex; align-items: center; gap: 20rpx; margin: 0 0 var(--cy-space-3); padding: 24rpx 28rpx; border-radius: var(--cy-radius-lg); background: var(--cy-color-status-success-soft); color: var(--cy-color-status-success); font-size: var(--cy-font-body); font-weight: 600; }

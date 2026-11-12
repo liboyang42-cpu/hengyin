@@ -8,6 +8,7 @@ const policy = require('../../../utils/identity/identity-policy.js');
 const { isRecord, isRecordList } = require('../../../utils/response-shape.js');
 const discoverFeed = require('../../../utils/discover-feed.js');
 const discoverNav = require('../../../utils/discover-nav.js');
+const { storeCard } = require('../../../utils/discover-store-card.js');
 const community = require('../../../utils/community-post-api.js').createClient(app, wx);
 const FEED_PAGE_SIZE = 20;
 const clubPostRepost = require('../../../utils/club-post-repost.js');
@@ -51,6 +52,7 @@ Page({
     clubsLoginPending: false,
     clubsState: 'idle', // idle | loading | refreshing | ready | empty | error | stale-error
     clubsErrorText: '',
+    storeCard: null,
     isMerchantViewer: false,   // 商户视角:团体页只显示同城(附近)俱乐部,玩家不受影响
     merchantCity: '',
     merchantCityState: 'idle', // idle | loading | ready | error
@@ -113,6 +115,21 @@ Page({
         feedError: '',
       });
     }, function (res) { that._onFeedFail(ctx, res); });
+  },
+
+  // r2-store 通票入口卡:玩家视角、已登录、服务端有在售通票才出;读失败就不出,不占位。每次进页只读一次。
+  loadStoreCard() {
+    if (this.data.isMerchantViewer || !app.getUserID()) { if (this.data.storeCard) this.setData({ storeCard: null }); return; }
+    if (this._storeCardRead) return;
+    this._storeCardRead = true;
+    const that = this;
+    app.sendRequest({ url: '/api/marketing/product/list', method: 'GET', data: { limit: 50 }, hideLoading: true, autoErrorToast: false,
+      success: function (res) { if (!that._unloaded) that.setData({ storeCard: res && String(res.code) === '200' ? storeCard(res.data) : null }); },
+    });
+  },
+
+  goStore() {
+    wx.navigateTo({ url: '/subpackageMember/market/passes/index' });
   },
 
   loadMoreFeed() {
@@ -365,6 +382,7 @@ Page({
     if (this._skipInitialShow) this._skipInitialShow = false;
     else this.loadClubHome();
     this.loadImUnread();
+    this.loadStoreCard();
   },
 
   onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; merchantTheme.merchantPageRestore(); },

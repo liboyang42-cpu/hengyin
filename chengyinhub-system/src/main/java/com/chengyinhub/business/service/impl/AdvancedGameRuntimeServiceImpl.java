@@ -9,6 +9,7 @@ import com.chengyinhub.business.domain.PlayAttemptLog;
 import com.chengyinhub.business.domain.PlayNote;
 import com.chengyinhub.business.domain.PlayTeam;
 import com.chengyinhub.business.domain.PlayTeamMember;
+import com.chengyinhub.business.domain.PlayerNodeProgress;
 import com.chengyinhub.business.domain.PlayerObjectCard;
 import com.chengyinhub.business.domain.vo.PlayerObjectCardVO;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
@@ -32,7 +33,11 @@ import com.chengyinhub.business.service.IAdvancedGameRuntimeService;
 import com.chengyinhub.business.service.IPlayBingoService;
 import com.chengyinhub.business.service.support.AdvancedGameClock;
 import com.chengyinhub.business.service.support.AdvancedGameConfigValidator;
+import com.chengyinhub.business.service.support.AccusationOutcomePolicy;
+import com.chengyinhub.business.service.support.AccusationTemplateSupport;
 import com.chengyinhub.business.service.support.AdvancedGameRandom;
+import com.chengyinhub.business.service.support.HangmanGameplay;
+import com.chengyinhub.business.service.support.PlayHelpUsagePolicy;
 import com.chengyinhub.business.util.AdvancedGamePublicProjection;
 import com.chengyinhub.business.util.StoryVars;
 import com.chengyinhub.common.constant.HttpStatus;
@@ -67,10 +72,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.chengyinhub.business.service.impl.AdvancedActionJudgement.ATTEMPT_BOUND_SUBMITS;
 import static com.chengyinhub.business.service.impl.AdvancedActionJudgement.CLOCK_SLACK_MS;
@@ -96,6 +103,12 @@ import static com.chengyinhub.business.service.impl.AdvancedActionJudgement.valu
 /** 计时、随机、分支、排行与多人轮次都收口在这一深模块。 */
 @Service
 public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeService {
+    /** 礼品对可玩资格的影响（只读自玩域）；缺失即启动失败，不让礼品行退化成可玩。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.IMarketingGiftPlayEligibility giftPlayEligibility;
+    /** 付费内含席位受让人事实（只读）；与礼品分开，合并点仍在 CurrentPlayRegistration。 */
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.IRegistrationSeatRecipientEligibility seatRecipientEligibility;
 
     private static final Logger logger = LoggerFactory.getLogger(AdvancedGameRuntimeServiceImpl.class);
 
@@ -130,6 +143,12 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     private CmsTopicNodeMapper nodeMapper;
     @Autowired
     private CmsMemberTemplateMapper templateMapper;
+    /** UG07 成绩明细:高级玩法局会话视图里的 helpReceipt 与只读回执同源。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.PlayHelpReceiptReadModel playHelpReceiptReadModel;
+    /** 指认结案判定「其余节点是否已走完」用的权威进度事实(只读)。 */
+    @Autowired
+    private com.chengyinhub.business.mapper.PlayerNodeProgressMapper progressMapper;
     @Autowired
     private CmsActivityMapper activityMapper;
     @Autowired
@@ -204,8 +223,47 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        if (declaration != null && declaration.supplied()) {
+            requireStartCapabilities(memberId, activityId, topicId, nodeId, declaration);
+        }
+        return start(memberId, activityId, topicId, nodeId, teamId);
+    }
+
+    /** Only pure snapshot/mapper reads occur before an explicit unsupported declaration is rejected. */
+    private void requireStartCapabilities(Long memberId, Long activityId, Long topicId, Long nodeId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0 || nodeId == null || nodeId <= 0)
+            throw new IllegalArgumentException("参数有误");
+        CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
+        if (node == null || !topicId.equals(node.getTopicId())) throw new IllegalArgumentException("节点不属于该主题");
+        JsonNode snapshot = topicRouteRuntimeService == null ? null
+                : topicRouteRuntimeService.queryNodeContentSnapshot(memberId, topicId, activityId, nodeId);
+        JsonNode originals = queryDefaultNodeContents(memberId, activityId, topicId);
+        JsonNode original = originals == null || snapshot != null
+                && (snapshot.hasNonNull("gameSessionId") || snapshot.hasNonNull("contentRouteSessionId"))
+                ? null : originals.get(String.valueOf(nodeId));
+        JsonNode source = original != null ? original : snapshot;
+        if (original == null)
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.assertStartCompatible(snapshot, declaration);
+        JsonNode config = source == null ? null : source.path("nodeConfigs").get(String.valueOf(nodeId));
+        JsonNode content = source == null ? null : source.path("nodeAnswers").get(String.valueOf(nodeId));
+        if (config == null) {
+            if (node.getTemplateId() == null) throw new IllegalStateException("该节点没有玩法模板");
+            CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+            if (template == null) throw new IllegalStateException("玩法模板不存在");
+            config = readJson(configValidator.validateAndNormalize(template.getAdvancedConfigJson()), "高级玩法配置不可用");
+        }
+        com.chengyinhub.business.service.support.ContentCapabilityRequirements.assertStartCompatible(
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.advancedSnapshot(nodeId, config, content),
+                declaration);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId) {
-        return start(memberId, activityId, topicId, nodeId, teamId, null);
+        return start(memberId, activityId, topicId, nodeId, teamId, (GameRuntimeSession) null);
     }
 
     private Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId,
@@ -291,7 +349,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (config.has("outcomeRules")) state.put("attemptOrdinal", 1);
         if (ownerType == GameRuntimeSession.OWNER_PLAYER && input.activityId == 0L && shared == null)
             for (String sensor : AdvancedActionJudgement.SKIPPABLE_SENSOR_SECTIONS) if (enabled(config.get(sensor))) state.with(sensor).put("soloNoLead", true);
-        if (shared != null) {state.put("runtimeAuthorityEpoch", shared.path("authorityEpoch").asInt());state.put("originalGameSessionId",shared.path("gameSessionId").asLong());}
+        if (shared != null) {
+            state.put("runtimeAuthorityEpoch", shared.path("authorityEpoch").asInt());
+            state.put("originalGameSessionId", shared.path("gameSessionId").asLong());
+            if (shared.path("cooperationVersion").asInt() == 1) state.put("cooperationVersion", 1);
+        }
         else if(zeroChallenge != null || config.has("outcomeRules") && (enabled(config.path("branch")) || enabled(config.path("predict"))))state.put("originalRouteSessionId",topicRouteRuntimeService.gameplaySessionId(memberId,topicId,input.activityId));
         if (zeroChallenge != null) {state.put("zeroChallengeInstance", zeroChallenge.path("instanceId").asText()); state.set("challenge", zeroChallenge.deepCopy());}
         GameRuntimeSession session = new GameRuntimeSession();
@@ -419,7 +481,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // 已开局：自玩通行证在开局时有效即可打完本局；活动场次/探索票仍按活动结束等原规则。
         com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(activityMapper,registrationMapper,
                 memberId,session.getActivityId()!=null && session.getActivityId()>0 ? 2L : 1L,
-                session.getActivityId()!=null && session.getActivityId()>0 ? session.getActivityId() : session.getTopicId(),null,clock.now());
+                session.getActivityId()!=null && session.getActivityId()>0 ? session.getActivityId() : session.getTopicId(),null,clock.now(),giftPlayEligibility,seatRecipientEligibility);
         requireActivityWindow(session.getActivityId(), session.getTopicId());
         if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(session.getActivityId(), session.getNodeId());
         // 第十三轮 m1 P6:已结束的玩法只会回放原结果或报「已结束」,不写任何东西;这时本局可能已通关,
@@ -481,8 +543,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         CardMintRequest pendingCardMint = null;
         boolean challengeTimedOut = zeroChallengeSession && session.getDeadlineAt() != null && clock.now().after(session.getDeadlineAt());
         String challengeGame = normalizedAction.startsWith("SUBMIT_") ? challengeGame(normalizedAction) : null;
-        boolean challengeObjectiveSubmission = zeroChallengeSession && Arrays.asList("SUBMIT_QA", "SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY").contains(normalizedAction);
-        if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify")) {
+        boolean challengeObjectiveSubmission = zeroChallengeSession && Arrays.asList("SUBMIT_QA", "SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY", "SUBMIT_HANGMAN").contains(normalizedAction);
+        if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify", "hangman")) {
             JsonNode owned = state.path("zeroChallengeObjectives").path(String.valueOf(memberId)).get(kind);
             if (owned == null) state.remove(kind); else state.set(kind, owned.deepCopy());
         }
@@ -604,13 +666,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (attemptGame != null && !challengeTimedOut) consumeAttempt(state.path(attemptGame));
         if (ownTeamSlot && !challengeTimedOut) saveTeamMemberChallenge(state, attemptGame, memberId);
 
-        if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify"))
+        if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify", "hangman"))
             if (state.has(kind)) state.with("zeroChallengeObjectives").with(String.valueOf(memberId)).set(kind, state.get(kind).deepCopy());
         ObjectNode chosenDecision=zeroChallengeSession && !selectedChallenge.isEmpty()?serverGameplayDecision(normalizedAction,config,state):null;
         if (zeroChallengeSession && (challengeTimedOut || normalizedAction.startsWith("SUBMIT_") || chosenDecision!=null)) {
             Boolean judged = judgedOutcome(normalizedAction, state);
             Boolean sensor = passedFact(normalizedAction, state);
-            boolean objective = Arrays.asList("SUBMIT_QA", "SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY").contains(normalizedAction);
+            boolean objective = Arrays.asList("SUBMIT_QA", "SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY", "SUBMIT_HANGMAN").contains(normalizedAction);
             boolean passed = chosenDecision!=null?"PASS".equals(chosenDecision.path("outcome").asText()):objective ? challengeObjectivesPassed(config, state,selectedChallenge) : Boolean.TRUE.equals(sensor);
             boolean retry = challengeTimedOut || !"SUBMIT_BALL_SHAKE".equals(normalizedAction) && (chosenDecision!=null?"FAIL".equals(chosenDecision.path("outcome").asText()):(Boolean.FALSE.equals(judged) || Boolean.FALSE.equals(sensor)));
             Long hits = !challengeTimedOut && "SUBMIT_BALL_SHAKE".equals(normalizedAction) ? Long.valueOf(state.path("ballShake").path("hits").asLong()) : null;
@@ -629,6 +691,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             gameplayDecision.put("nodeId", session.getNodeId()); state.set("gameplayDecision", gameplayDecision.deepCopy());
             session.setStatus("PASS".equals(gameplayDecision.path("outcome").asText()) ? GameRuntimeSession.STATUS_COMPLETED : GameRuntimeSession.STATUS_FAILED);
         }
+        // CT-07 指认结案的结论:只在最终一题(原 qa)判完时落一次,与本次状态更新同一事务。
+        // 对错只来自服务端判定的 qa 结果;「提前」由真实进度事实派生(见 accusationGateSatisfied)。
+        // 结论不成立(拒绝)就抛异常整笔回滚,不落半状态,也不拿客户端上报的对错/提前当事实。
+        ObjectNode accusation = accusationDecision(config, state, session, memberId);
+        if (accusation != null) state.set("accusation", accusation);
         int oldVersion = session.getVersion();
         Date now = clock.now();
         if (session.getCompletedAt() == null && (Integer.valueOf(GameRuntimeSession.STATUS_COMPLETED).equals(session.getStatus())
@@ -882,7 +949,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             Map<String, Object> payload) {
         com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(activityMapper, registrationMapper,
                 memberId, session.getActivityId() != null && session.getActivityId() > 0 ? 2L : 1L,
-                session.getActivityId() != null && session.getActivityId() > 0 ? session.getActivityId() : session.getTopicId(), null, clock.now());
+                session.getActivityId() != null && session.getActivityId() > 0 ? session.getActivityId() : session.getTopicId(), null, clock.now(), giftPlayEligibility, seatRecipientEligibility);
         requireActivityWindow(session.getActivityId(), session.getTopicId());
         if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(session.getActivityId(), session.getNodeId());
         requireRouteNodeAccess(memberId, session.getActivityId(), session.getTopicId(), session.getNodeId());
@@ -1074,10 +1141,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // 已有本局或本路线已开局 = 继续打完(自玩通行证中途到期不打断)；尚未开局按新使用校验。
         if (original != null || routeStarted(memberId, actId, topicId)) {
             com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(activityMapper,registrationMapper,
-                    memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now());
+                    memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now(),giftPlayEligibility,seatRecipientEligibility);
         } else {
             com.chengyinhub.business.service.support.CurrentPlayRegistration.require(activityMapper,registrationMapper,
-                    memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now());
+                    memberId,actId>0 ? 2L : 1L,actId>0 ? actId : topicId,null,clock.now(),false,giftPlayEligibility,seatRecipientEligibility);
         }
         requireActivityWindow(actId, topicId);
         if (gameSessionRuntimeService != null) gameSessionRuntimeService.assertRoutePlayable(actId, nodeId);
@@ -1113,7 +1180,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         JsonNode snapshot = readJson(session.getConfigSnapshotJson(), "高级玩法配置不可用");
         ObjectNode state = objectState(session.getStateJson());
-        if (!mechanicsReady(snapshot, state)) throw new ServiceException("高级玩法尚未完成");
+        // 已按「跳过·辅助完成」收尾的局:允许走完,但终点码与奖励口径都由 skip 事实降级(见 terminalOutcome)。
+        if (!mechanicsReady(snapshot, state) && !isSkipped(state)) {
+            throw new ServiceException("高级玩法尚未完成");
+        }
 
         int oldVersion = session.getVersion();
         Date now = clock.now();
@@ -1125,6 +1195,107 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         session.setVersion(oldVersion + 1);
         return terminalOutcome(snapshot, state);
+    }
+    /**
+     * 跳过本题:本题记 0 分 + 辅助完成,不产生答对、到达、扫码、照片、核销或支付证明。
+     *
+     * <p>只改本局会话状态并落一条可区分事实({@code state.skip}),**不写节点进度** ——
+     * 进度由既有完成链统一写,那里按 {@link #skippedAssistedCompletion} 固定 0 分与 {@code SKIPPED}。
+     * 这样跳过既不会伪造答对,也不会越权替玩家完成需要现场凭证的节点。
+     *
+     * <p>幂等:同一 {@code requestId} 重发原样回放;已跳过的本局换号再跳也不重复结算。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> skip(Long memberId, Long activityId, Long topicId, Long nodeId, String requestId) {
+        if (memberId == null || memberId <= 0 || topicId == null || topicId <= 0 || nodeId == null || nodeId <= 0) {
+            throw new IllegalArgumentException("参数有误");
+        }
+        if (StringUtils.isBlank(requestId) || requestId.length() > 64) {
+            throw new IllegalArgumentException("请求编号不能为空且最多 64 位");
+        }
+        long actId = activityId == null ? 0L : activityId;
+        GameRuntimeSession session = existingSession(memberId, actId, topicId, nodeId);
+        if (session == null) throw new IllegalStateException("该节点尚未开局玩法，不能跳过");
+        if (objectState(session.getStateJson()).path("cooperationVersion").asInt() == 1)
+            throw new IllegalStateException("合作局请使用共享帮助与跳过入口");
+        session = expireIfNeeded(session, memberId);
+        JsonNode config = readJson(session.getConfigSnapshotJson(), "玩法配置不可用");
+        requireSkippable(config, nodeId);
+        ObjectNode state = objectState(session.getStateJson());
+        ObjectNode skip = state.path("skip").isObject() ? (ObjectNode) state.path("skip") : state.putObject("skip");
+        if (skip.path("skipped").asBoolean(false)) {
+            // 已跳过:同一请求号或换号重发都只回放,不再落一次账,也不再改口径。
+            return viewOf(session, memberId);
+        }
+        if (!Integer.valueOf(GameRuntimeSession.STATUS_RUNNING).equals(session.getStatus())) {
+            throw new IllegalStateException("本局已结束，不能跳过");
+        }
+        int oldVersion = session.getVersion();
+        Date now = clock.now();
+        skip.put("skipped", true)
+                .put("requestId", requestId.trim())
+                .put("at", now.getTime())
+                .put("completionMode", com.chengyinhub.business.util.PuzzleScorePolicy.COMPLETION_SKIPPED)
+                .put("score", com.chengyinhub.business.util.PuzzleScorePolicy.skippedScore())
+                .put("assisted", true);
+        session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
+        session.setCompletedAt(now);
+        session.setUpdateTime(now);
+        session.setStateJson(writeJson(state));
+        if (sessionMapper.updateStateCas(session) != 1) {
+            throw new IllegalStateException("状态已更新，请刷新后重试");
+        }
+        session.setVersion(oldVersion + 1);
+        return viewOf(session, memberId);
+    }
+
+    @Override
+    public boolean skippedAssistedCompletion(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        if (memberId == null || topicId == null || nodeId == null) return false;
+        GameRuntimeSession session = existingSession(memberId, activityId == null ? 0L : activityId, topicId, nodeId);
+        if (session == null) return false;
+        return objectState(session.getStateJson()).path("skip").path("skipped").asBoolean(false);
+    }
+
+    private Map<String, Object> viewOf(GameRuntimeSession session, Long memberId) {
+        Map<String, Object> view = toView(session, memberId);
+        appendJourneyWorld(view, memberId, session);
+        return view;
+    }
+
+    /**
+     * 跳过准入。三条都必须成立,少一条就拒,不做「差不多能跳」的放宽:
+     * <ol>
+     *   <li>作者在**冻结**阶梯里配了 {@code SKIP} 层 —— 没配就是没这功能;</li>
+     *   <li>该节点不是现实凭证类(扫码/拍照/计步/相册/竞猜):跳过不能替代现场证明;</li>
+     *   <li>节点模板验真方式不是扫码(4)或现场到达(5):跳过不能绕到达围栏。</li>
+     * </ol>
+     */
+    private void requireSkippable(JsonNode config, Long nodeId) {
+        boolean skipConfigured = false;
+        for (JsonNode level : config.path("hintLadder")) {
+            if ("SKIP".equals(level.path("type").asText("").trim().toUpperCase(java.util.Locale.ROOT))) {
+                skipConfigured = true;
+                break;
+            }
+        }
+        if (!skipConfigured) {
+            throw new IllegalArgumentException("该节点未配置跳过");
+        }
+        for (String section : new String[] { "scan", "photoCheck", "steps", "album", "predict" }) {
+            if (enabled(config.get(section))) {
+                throw new IllegalArgumentException("该节点依赖现场凭证，不能跳过");
+            }
+        }
+        CmsTopicNode node = nodeMapper.selectCmsTopicNodeById(nodeId);
+        if (node == null) throw new IllegalArgumentException("节点不存在");
+        if (node.getTemplateId() == null) return;
+        CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(node.getTemplateId());
+        Integer method = template == null ? null : template.getValidationMethod();
+        if (method != null && (method.intValue() == 4 || method.intValue() == 5)) {
+            throw new IllegalArgumentException("该节点要求扫码或现场到达，不能跳过");
+        }
     }
 
     /**
@@ -1142,8 +1313,15 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             reasons.add("photoCheck:FALLBACK");
         }
         if (config.path("scan").path("enabled").asBoolean(false)) reasons.add("scan:TASK_CODE_MATCH");
+        // 跳过只是辅助完成,不是任何证明:奖励同样降为探索值+徽章。
+        if (isSkipped(state)) reasons.add("skip:ASSISTED");
         if (state != null && state.path("predict").path("skipped").asBoolean(false)) reasons.add("predict:SKIPPED_CLOSED");
         return reasons;
+    }
+
+    /** 本局是否已按「跳过·辅助完成」收尾(读局状态,不查库)。 */
+    private static boolean isSkipped(JsonNode state) {
+        return state != null && state.path("skip").path("skipped").asBoolean(false);
     }
 
     /** 服务端 photoVerified:只有视觉模型当场真判 PASS 才算;降级与兜底放行都不算 */
@@ -1234,6 +1412,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
      * 这类奖励规则有东西可挂。都没有就返回 null,走无条件奖励。
      */
     private String terminalOutcome(JsonNode config, ObjectNode state) {
+        // 跳过不是任何一种通过码:先于分支/结局判定返回,避免把跳过当成答对或到达。
+        if (isSkipped(state)) return "SKIPPED";
         if(config.has("outcomeRules"))return state.path("gameplayDecision").path("outcome").asText();
         JsonNode branch = config.path("branch");
         if (enabled(branch)) {
@@ -1327,17 +1507,19 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (node == null || !topicId.equals(node.getTopicId())) throw new IllegalArgumentException("节点不属于该主题");
         long actId = activityId == null ? 0L : activityId;
         if (actId > 0) {
-            if(teamMapper.hasPaidRegistration(memberId,2,actId)<=0) throw new IllegalStateException("请先报名并完成支付");
+            if(teamMapper.hasPaidRegistration(memberId,2,actId)<=0
+                    && (seatRecipientEligibility==null || seatRecipientEligibility.playFacts(memberId,2L,actId).isEmpty()))
+                throw new IllegalStateException("请先报名并完成支付");
             if(newUse) com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
-                    activityMapper,registrationMapper,memberId,2L,actId,null,clock.now(),true);
+                    activityMapper,registrationMapper,memberId,2L,actId,null,clock.now(),true,giftPlayEligibility,seatRecipientEligibility);
             requireActivityWindow(actId, topicId);
         } else {
             // 本路线已开局：通行证开局时有效即可打完，站内玩法同样不因中途到期被拦。
             boolean started = routeStarted(memberId, 0L, topicId);
             if(newUse && started) com.chengyinhub.business.service.support.CurrentPlayRegistration.requireToContinue(
-                    activityMapper,registrationMapper,memberId,1L,topicId,null,clock.now());
+                    activityMapper,registrationMapper,memberId,1L,topicId,null,clock.now(),giftPlayEligibility,seatRecipientEligibility);
             else if(newUse) com.chengyinhub.business.service.support.CurrentPlayRegistration.require(
-                    activityMapper,registrationMapper,memberId,1L,topicId,null,clock.now());
+                    activityMapper,registrationMapper,memberId,1L,topicId,null,clock.now(),false,giftPlayEligibility,seatRecipientEligibility);
             else if(!started && !hasValidSelfPlayPass(memberId,topicId)) throw new IllegalStateException("请先购买自玩通行证");
         }
         GameRuntimeSession existing = existingSession(memberId, actId, topicId, nodeId);
@@ -1545,6 +1727,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         }
         if (enabled(config.get("pricePair"))) {
             state.set("pricePair", initialPricePair(config.path("pricePair")));
+        }
+        // 逐字猜词:开局只记「玩家补进空白槽的字符」;预填字符与分隔符由冻结配置推导,
+        // 不复制进状态,状态里就不会出现第二份答案副本。
+        if (enabled(config.get("hangman"))) {
+            state.set(HangmanGameplay.STATE_KEY, HangmanGameplay.initialState(config.path("hangman")));
         }
         return state;
     }
@@ -2740,11 +2927,14 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (enabled(config.path("qa"))) {
             JsonNode cfg = config.path("qa");
             JsonNode st = state.path("qa");
+            // 每个玩法段各自持有 value:上一段的 value 在它自己的块里,不能跨块借用。
             Map<String, Object> value = new LinkedHashMap<>();
             value.put("mode", cfg.path("mode").asText("TYPE"));
             // 多选标记只在开启时给:老单选配置的视图形状不变,客户端缺省按单选渲染
             if (cfg.path("multi").asBoolean(false)) value.put("multi", true);
-            putText(value, "title", cfg);
+            // 谜面变换已删除(2026-11-10 主人裁定):冻结配置里即使留有 clueTransform,题面也原样给玩家。
+            String prompt = cfg.path("title").asText("");
+            if (!prompt.isEmpty()) value.put("title", prompt);
             putText(value, "lead", cfg);
             // 拍照打卡的补充说明:提示词摆屏幕正中,这一句小字在它下面
             putText(value, "shotNote", cfg);
@@ -2755,6 +2945,14 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 Map<String, Object> item = new LinkedHashMap<>();
                 item.put("id", option.path("id").asText(""));
                 item.put("label", option.path("label").asText(""));
+                // 图片选项:只有 id/label/img/alt;correct、fb、effects 一个都不下发。
+                // img 投影成与其它玩法媒体同一形态的可访问地址(只认已审核通过的资产);不可见则 img/alt 都不下发。
+                Map<String, String> media = com.chengyinhub.business.service.support.QaOptionMediaSupport.media(option);
+                String shown = media.isEmpty() ? "" : playMediaUrl(media.get("img"), actorMemberId);
+                if (!shown.isEmpty()) {
+                    item.put("img", shown);
+                    if (media.containsKey("alt")) item.put("alt", media.get("alt"));
+                }
                 options.add(item);
             }
             value.put("options", options);
@@ -3134,6 +3332,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             value.put("submitted", st.path("submitted").asBoolean(false));
             kit.put("typeIn", value);
         }
+        /* 逐字猜词:槽位形状(预填字符/空槽/分隔符)就是题面,必须下发;
+           玩家已补入的字符与 solved 来自本局状态,答案与别名一个字都不在回包里。 */
+        if (enabled(config.path("hangman"))) {
+            kit.put("hangman", objectMapper.convertValue(
+                    HangmanGameplay.publicProjection(config.path("hangman"), state.path(HangmanGameplay.STATE_KEY)),
+                    new TypeReference<Map<String, Object>>() {}));
+        }
         /* 罗盘指向:目标方位**就是题面**,开局即下发 —— 玩家得先知道往哪转才谈得上对准。
            这与扫码的显形图相反(那是答案,扫中之前一个字都不许出现在回包里)。
            ⚠️ 这一段只发 xp,永远不许挂到店凭证或有金额的完成条件(现场感契约 §3.3)。 */
@@ -3322,6 +3527,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         view.put("deadlineAt", session.getDeadlineAt() == null ? null : session.getDeadlineAt().getTime());
         view.put("completedAt", session.getCompletedAt() == null ? null : session.getCompletedAt().getTime());
         view.put("config", publicRuntimeConfig(config, state, actorMemberId));
+        // CT-07:指认页的公开面(人物卡/引导屏/线索板)始终只给确认前能看的;
+        // 结尾屏与结论只在服务端判定落账后才出现,重登从 state.accusation 原样恢复。
+        if (AccusationTemplateSupport.isEnabled(config)) view.put("accusation",
+                accusationView(config, state, actorMemberId, session.getTopicId(), session.getActivityId()));
+        // UG07:高级玩法局的帮助/跳过明细。与完成回执同一份计算,重进后读到同样数值。
+        Map<String, Object> helpReceipt = advancedHelpReceipt(config, state, session, actorMemberId);
+        if (helpReceipt != null) view.put("helpReceipt", helpReceipt);
         if (state.has("zeroChallengeInstance")) view.put("challenge", state.path("challenge").deepCopy());
         // 呈现方式(施工契约 §1.5):作者显式配的或默认表推出来的最终值。客户端只读它,
         // 不自己重推默认表(默认表只在上面的 resolvePresent 一处实现)。
@@ -3631,6 +3843,213 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         Map<String, Object> section = new LinkedHashMap<>();
         section.put(key, value);
         return section;
+    }
+
+    /**
+     * 高级玩法局的帮助明细。
+     *
+     * <p>该局**没有** {@code puzzle_score} 那类权威解谜分基准（它的成绩走 {@code xp}/结局码），
+     * 所以这里传 {@code baseScore=null} → 明细是 {@code NOT_SCORED}：分数为 null，
+     * 但积分消费、层使用记录、跳过与辅助完成标记一个不少。不拿 xp 冒充分数。
+     */
+    private Map<String, Object> advancedHelpReceipt(JsonNode config, ObjectNode state,
+            GameRuntimeSession session, Long actorMemberId) {
+        if (playHelpReceiptReadModel == null || actorMemberId == null) return null;
+        JsonNode ladder = config.path("hintLadder");
+        boolean skipped = isSkipped(state);
+        boolean hasLadder = ladder.isArray() && ladder.size() > 0;
+        if (!hasLadder && !skipped) return null;
+        PlayHelpUsagePolicy.Scope scope;
+        try {
+            scope = PlayHelpUsagePolicy.Scope.advanced(session.getTopicId(), session.getActivityId(),
+                    session.getNodeId(), session.getId());
+        } catch (IllegalArgumentException unusableScope) {
+            return null;
+        }
+        return playHelpReceiptReadModel.receipt(actorMemberId, scope, ladder, null, skipped, false);
+    }
+
+    /**
+     * 指认页的公开面 + 已服务端判定的结论。确认前不含 correct / winScreen / loseScreen /
+     * 留痕码 / 未获证词(沿用 {@link AccusationTemplateSupport#publicView} 的同一口径)。
+     *
+     * <p>证词是否可见由既有条件事实判定:{@code clue.h_*} 在本局变量里 ≥1 才算已获得,
+     * 复用 {@link ITopicRouteRuntimeService#conditionPasses} 的原条件引擎,不新增一套线索表。
+     */
+    /**
+     * qx-c1 #3: runtime play media (QA option img, suspect avatar, corkboard) use the same reviewed-media resolver as
+     * other play media; registered assets must be APPROVED. Without the resolver (unit wiring) nothing is shown rather
+     * than a raw {@code media-asset:} reference.
+     */
+    String playMediaUrl(String reference, Long viewerMemberId) {
+        if (reference == null || reference.trim().isEmpty()) return "";
+        if (mediaReferences == null) return reference.trim().matches("media-asset:[1-9][0-9]{0,18}") ? "" : reference.trim();
+        try {
+            String shown = mediaReferences.publishedPlayUrl(reference.trim(), viewerMemberId);
+            return shown == null ? "" : shown.trim();
+        } catch (RuntimeException unresolvable) {
+            // 一张图解析不出可访问地址(发布地址未配置/存储事实不可用)只让这张图不显示,不让整局视图失败。
+            return "";
+        }
+    }
+
+    private Map<String, Object> accusationView(JsonNode config, ObjectNode state,
+            Long memberId, Long topicId, Long activityId) {
+        java.util.function.Predicate<String> obtained = key -> {
+            if (key == null || key.isEmpty() || topicRouteRuntimeService == null || memberId == null) return false;
+            ObjectNode condition = objectMapper.createObjectNode()
+                    .put("op", "GTE").put("var", key).put("value", 1);
+            try {
+                return topicRouteRuntimeService.conditionPasses(memberId, topicId, activityId, condition);
+            } catch (RuntimeException unusableFact) {
+                return false;
+            }
+        };
+        Map<String, Object> view = objectMapper.convertValue(
+                AccusationTemplateSupport.publicView(config, reference -> playMediaUrl(reference, memberId), obtained),
+                new TypeReference<Map<String, Object>>() {});
+        JsonNode decided = state.path("accusation");
+        if (decided.isObject()) {
+            JsonNode screen = decided.path("screen");
+            // result 只放玩家该读的判定事实:screening 用的内部键(endingScreen 选择键/refuseCode)不外泄。
+            ObjectNode result = ((ObjectNode) decided).deepCopy();
+            result.remove("screen");
+            result.remove("endingScreen");
+            result.remove("refuseCode");
+            view.put("result", result);
+            if (!screen.isMissingNode() && !screen.isNull()) view.put("screen", screen.deepCopy());
+        }
+        return view;
+    }
+
+    /**
+     * 指认结案结论(CT-07)。只在最终一题(原 qa PICK)判完时产出一份,写进本局状态。
+     *
+     * <p>口径:
+     * <ul>
+     *   <li>对错只认原 qa 的服务端判定(选项 {@code correct}),与普通问答同一真源,不新增判题器。</li>
+     *   <li>正确嫌疑人由 {@link AccusationTemplateSupport#correctSuspectId} 从 qa 选项派生 ——
+     *       作者在 accusation 里再写一份答案会被 G2 的形状闸拒,不存在第二来源。</li>
+     *   <li>「提前」由**真实进度事实**判定:{@link #accusationGateSatisfied} 数本主题已核销节点与
+     *       本局已完成节点;还有节点没走完就指认 = 提前结案(而不是失败)。不编门槛配置,
+     *       也不拿客户端自报当依据。</li>
+     *   <li>结论(对错/提前/能否继续/终局/留痕)全部由 {@link AccusationOutcomePolicy#judge} 算,
+     *       本类只把它的 {@code Verdict} 原样落进状态,不复制规则也不另造枚举。</li>
+     * </ul>
+     *
+     * <p>结论不成立(拒绝)时抛业务异常,让整笔动作回滚 —— 不留下「已判对但没有结论」的半状态。
+     */
+    private ObjectNode accusationDecision(JsonNode config, ObjectNode state,
+            GameRuntimeSession session, Long memberId) {
+        if (!AccusationTemplateSupport.isEnabled(config)) return null;
+        JsonNode qa = config.path("qa");
+        if (!qa.path("enabled").asBoolean(false) || !"PICK".equals(qa.path("mode").asText(""))) return null;
+        if (!state.path("qa").path("finished").asBoolean(false)) return null;
+        int maxTries = qa.path("maxTries").asInt(0);
+        int remaining = maxTries <= 0 ? 1
+                : Math.max(0, maxTries - state.path("qa").path("attempts").asInt(0));
+        AccusationOutcomePolicy.Verdict verdict = AccusationOutcomePolicy.judge(
+                state.path("qa").path("lastOptionId").asText(""),
+                AccusationTemplateSupport.correctSuspectId(qa),
+                AccusationOutcomePolicy.earlyAccuse(config),
+                accusationGateSatisfied(memberId, session), remaining);
+        if (AccusationOutcomePolicy.VERDICT_REFUSED.equals(verdict.verdict())) {
+            throw new IllegalArgumentException(accusationRefusal(verdict.refuseCode()));
+        }
+        // 结局段由 G6 的同一处实现选出(可继续调查时没有终局段),与判定一并落账,读回不再重判规则。
+        ObjectNode row = objectMapper.valueToTree(verdict);
+        JsonNode screen = AccusationOutcomePolicy.endingScreen(config, verdict);
+        if (screen != null && !screen.isNull()) row.set("screen", screen.deepCopy());
+        return row;
+    }
+
+    /**
+     * 指认前本局**其他节点**是否都已走完(CT-07「允许随时指认,但记提前结案」的判据)。
+     *
+     * <p>只认服务端权威进度,不新增门槛配置,也不拿本次提交的结果当输入:
+     * <ul>
+     *   <li>分母 = 本主题 {@code status=1} 的节点里,除当前指认节点之外的数量
+     *       (与 {@code PlayNodeCompletionApplication} 通关口径同源)。</li>
+     *   <li>分子 = 本会员本局 {@code player_node_progress.status=1} 且节点≠当前指认节点的行数;
+     *       按 activity 与原局身份收窄,避免把别局/别主题的完成算进来。</li>
+     *   <li>指认这一题在本次动作结束时才可能落完成行,所以**不计入分母**也在分子里排除 ——
+     *       本次指认对不对都不影响这个判断:错答但已走完其余节点仍然不是「提前」。</li>
+     * </ul>
+     *
+     * <p>★ 进度事实读不到时**不得**返回 true 或 false:那等于把 UNKNOWN 伪造为「已走完/未走完」,
+     * 会直接改写结案口径。这里抛业务异常让整笔动作回滚(不落 verdict、不落奖励、不落资源),
+     * 客户端按「结果待确认」重试。
+     *
+     * @throws IllegalStateException 进度事实不可判定(主题无节点 / 查询失败)
+     */
+    private boolean accusationGateSatisfied(Long memberId, GameRuntimeSession session) {
+        if (memberId == null || session == null || session.getTopicId() == null) {
+            throw new IllegalStateException("指认进度不可判定，结果待确认");
+        }
+        final int totalNodes;
+        final boolean currentIsActive;
+        try {
+            CmsTopicNode probe = new CmsTopicNode();
+            probe.setTopicId(session.getTopicId());
+            probe.setStatus(1L);
+            List<CmsTopicNode> nodes = nodeMapper.selectCmsTopicNodeList(probe);
+            totalNodes = nodes == null ? 0 : nodes.size();
+            boolean included = false;
+            if (nodes != null) {
+                for (CmsTopicNode node : nodes) {
+                    if (node != null && session.getNodeId() != null
+                            && session.getNodeId().equals(node.getId())) { included = true; break; }
+                }
+            }
+            currentIsActive = included;
+        } catch (RuntimeException unusableNodes) {
+            logger.warn("指认结案:主题节点事实不可用 member={} session={}",
+                    memberId, session.getId(), unusableNodes);
+            throw new IllegalStateException("指认进度不可判定，结果待确认");
+        }
+        if (!currentIsActive) {
+            // 当前节点不在本主题启用节点里:分母口径说不清,同样不猜。
+            logger.warn("指认结案:当前节点不属于本主题启用节点 member={} session={} node={}",
+                    memberId, session.getId(), session.getNodeId());
+            throw new IllegalStateException("指认进度不可判定，结果待确认");
+        }
+        int requiredOther = Math.max(0, totalNodes - 1);
+        if (requiredOther == 0) return true;   // 本主题只有这一个节点:没有「提前」可言
+        final List<PlayerNodeProgress> rows;
+        try {
+            PlayerNodeProgress doneProbe = new PlayerNodeProgress();
+            doneProbe.setMemberId(memberId);
+            doneProbe.setTopicId(session.getTopicId());
+            if (session.getActivityId() != null && session.getActivityId() > 0) {
+                doneProbe.setActivityId(session.getActivityId());
+            }
+            if (StringUtils.isNotBlank(session.getPlayInstanceId())) {
+                doneProbe.setPlayInstanceId(session.getPlayInstanceId());
+            }
+            rows = progressMapper.selectPlayerNodeProgressList(doneProbe);
+        } catch (RuntimeException unusableProgress) {
+            logger.warn("指认结案:进度事实不可用 member={} session={}",
+                    memberId, session.getId(), unusableProgress);
+            throw new IllegalStateException("指认进度不可判定，结果待确认");
+        }
+        Set<Long> doneOther = new HashSet<>();
+        if (rows != null) {
+            for (PlayerNodeProgress row : rows) {
+                if (row == null || row.getStatus() == null || row.getStatus() != 1) continue;
+                if (row.getNodeId() == null || row.getNodeId().equals(session.getNodeId())) continue;
+                doneOther.add(row.getNodeId());
+            }
+        }
+        return doneOther.size() >= requiredOther;
+    }
+
+    /** 拒绝码转玩家可读的一句;未登记的码保留原码,便于客户端与日志对齐。 */
+    private static String accusationRefusal(String code) {
+        if (AccusationOutcomePolicy.REFUSED_UNKNOWN_SUSPECT.equals(code)) return "这个嫌疑人不在本次指认名单里";
+        if (AccusationOutcomePolicy.REFUSED_MISSING_SUSPECT.equals(code)) return "请先选出你要指认的人";
+        if (AccusationOutcomePolicy.REFUSED_EARLY_NOT_ALLOWED.equals(code)) return "证据还不够，暂不能提前指认";
+        if (AccusationOutcomePolicy.REFUSED_CORRECT_UNKNOWN.equals(code)) return "本题答案来源不可用，无法判定指认";
+        return code;
     }
 
     private String statusName(Integer status) {

@@ -89,6 +89,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageA/pages/assetcenter/income-detail/income-detail` | 否 | `chengyinhub-xcx/components/cy/scene-asset-earnings/index.js:90` | KEEP |
 | `subpackageA/pages/assetcenter/earnings/index` | 否 | `chengyinhub-xcx/pages/coop/finance/index.js:16` | KEEP |
 | `subpackageA/pages/assetcenter/analysis/index` | 否 | `chengyinhub-xcx/components/cy/scene-asset-earnings/index.js:153` | KEEP |
+| `subpackageA/pages/video-bounty/index` | 否 | `chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2351` | KEEP |
 | `subpackageP3/pages/growthcenter/index/index` | 否 | `chengyinhub-xcx/pages/topic/index/index.js:458` | KEEP |
 | `subpackageP3/pages/growthcenter/leaderboard/index` | 否 | `chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js:296` | KEEP |
 | `subpackageP3/pages/stamp-camera/index/index` | 否 | `chengyinhub-xcx/components/cy/scene-deep-link/index.js:153` | KEEP |
@@ -128,6 +129,8 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/topic/merchantapply/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:328` | KEEP |
 | `pages/topic/pricing/index` | 否 | `chengyinhub-xcx/pages/topic/index/index.js:751` | KEEP |
 | `pages/topic/pricing/partner/index` | 否 | `chengyinhub-xcx/pages/topic/pricing/index.js:212` | KEEP |
+| `pages/topic/catalog/index` | 否 | 无站内导航引用（qx-b8 公开目录/城市合集落地，分享与外链直达，入口待拍板） | KEEP |
+| `pages/topic/catalog/detail` | 否 | 无站外导航引用（qx-b8 公开落地详情，由同目录列表页与分享直达） | KEEP |
 | `pages/merchant/index/index` | 否 | `chengyinhub-xcx/components/cy/access-gate/index.js:85` | KEEP |
 | `pages/merchant/apply/index` | 否 | `chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/MerchantPrerequisiteServiceImpl.java:16` | KEEP |
 | `pages/merchant/ledger/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:26` | KEEP |
@@ -153,6 +156,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/merchant/game-node/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:291` | KEEP |
 | `pages/merchant/customer/detail/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:278` | KEEP |
 | `pages/merchant/verify-records/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:315` | KEEP |
+| `pages/merchant/payout-account/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:364` | KEEP |
 | `pages/merchant/crm-campaigns/index` | 否 | `chengyinhub-xcx/pages/merchant/customer/index.js:915` | KEEP |
 | `pages/merchant/team/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:305` | KEEP |
 | `pages/coop/list/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:818` | KEEP |
@@ -205,6 +209,11 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageMember/signup/index` | 否 | `chengyinhub-xcx/pages/play/index.js:2876` | KEEP |
 | `subpackageMember/tixian/tixian` | 否 | `chengyinhub-xcx/utils/scene-registry.js:63` | KEEP |
 | `subpackageMember/tixianjilu/tixianjilu` | 否 | `chengyinhub-xcx/pages/coop/withdraw/records/index.js:7` | KEEP |
+| `subpackageMember/market/passes/index` | 否 | `chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:2349` | KEEP |
+| `subpackageMember/market/pass/index` | 否 | `chengyinhub-xcx/subpackageMember/market/passes/index.js:92` | KEEP |
+| `subpackageMember/market/gift/index` | 否 | 无直接源引用；兼容契约/外发历史待确认 | KEEP |
+| `subpackageMember/market/membership/index` | 否 | `chengyinhub-xcx/subpackageMember/market/passes/index.js:63` | KEEP |
+| `subpackageMember/market/library/index` | 否 | `chengyinhub-xcx/subpackageMember/market/membership/index.js:110` | KEEP |
 | `subpackageRoam/citynode-code/index` | 否 | `chengyinhub-xcx/utils/scene-registry.js:50` | KEEP |
 | `subpackageRoam/history/index` | 否 | `chengyinhub-xcx/utils/scene-registry.js:45` | KEEP |
 | `subpackageRoam/poi-detail/index` | 否 | `chengyinhub-xcx/pages/merchant/profile/index.js:15` | KEEP |
@@ -214,7 +223,6 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageRoam/my-teams/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:743` | KEEP |
 | `subpackageRoam/official-routes/index` | 否 | 入口待拍板(见 nav-route-exists 孤儿页豁免,2026-10-19 移植基线 366b846f) | KEEP |
 | `subpackageRoam/official-route/index` | 否 | `chengyinhub-xcx/subpackageRoam/official-routes/index.js:32` | KEEP |
-| `subpackageTools/capsule/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:721` | KEEP |
 | `subpackageTools/monthly-recap/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:739` | KEEP |
 | `subpackageTools/exploration-goals/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:720` | KEEP |
 | `subpackageTools/anniversary/index` | 否 | `chengyinhub-xcx/pages/roam/index.js:738` | KEEP |
@@ -222,8 +230,14 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/privacy/index` | 否 | `chengyinhub-xcx/app.js:349` | KEEP |
 | `pages/agreement/index` | 否 | `chengyinhub-xcx/components/cy/danger-confirm/index.wxml:5` | KEEP |
 | `pages/deregister/index` | 否 | `chengyinhub-xcx/pages/agreement/index.js:9` | KEEP |
+| `subpackageJourney/pages/report/index` | 否 | `chengyinhub-xcx/pages/play/index.js:9385` | KEEP |
+| `subpackageJourney/pages/landing/index` | 否 | 无直接源引用；兼容契约/外发历史待确认 | KEEP |
+| `subpackageJourney/pages/seats/index` | 否 | `chengyinhub-xcx/subpackageJourney/pages/report/index.js:136` | KEEP |
+| `subpackageJourney/pages/promo/index` | 否 | `chengyinhub-xcx/pages/shezhi/shezhi.js:178` | KEEP |
+| `subpackageJourney/pages/settle/index` | 否 | `chengyinhub-xcx/pages/play/index.js:9475` | KEEP |
 | `pages/team/detail/index` | 否 | `chengyinhub-xcx/pages/team/join/index.js:119` | KEEP |
 | `pages/team/join/index` | 否 | `chengyinhub-xcx/pages/team/detail/index.js:172` | KEEP |
+| `subpackagePass/reveal/index` | 否 | `chengyinhub-xcx/subpackageMember/market/passes/index.js:69` | KEEP |
 
 ## 验证与未验证
 

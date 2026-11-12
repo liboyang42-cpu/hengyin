@@ -3,6 +3,7 @@
 
 var materials = require('./pro-editor-materials.js');
 var storyEnding = require('./story-ending.js');
+var storyInline = require('./story-inline.js');
 var MAX_BLOCKS_PER_CHAPTER = 200;
 
 function clone(input) {
@@ -53,6 +54,76 @@ function isThoughtType(type) {
   return type === 'thought';
 }
 
+// ── 编辑器原型 v2(2026-11-10 l-editor,业主批准)三种块 ──
+// 图片组 gallery:点「图片」先选版式(1 单图 / 2 双图 / 3 三图 / 4 四图),再逐格选图;整组是一个块,
+// 拖动时整组一起走。编辑中允许有空格(还没选图),出 payload 时只带已选的图;一张都没有的组不落库。
+// 说明文字放 altText(与 image 块同一个字段,玩家端可读、读屏可读)。
+var GALLERY_MAX_LAYOUT = 4;
+function isGalleryType(type) { return type === 'gallery'; }
+function galleryLayoutOf(raw) {
+  var n = Number(raw);
+  return Number.isInteger(n) && n >= 1 && n <= GALLERY_MAX_LAYOUT ? n : 1;
+}
+function normalizeGalleryImages(images, layout) {
+  var out = [];
+  (Array.isArray(images) ? images : []).forEach(function (item) {
+    var url = String(item && item.url == null ? '' : item.url).trim();
+    if (url) out.push({ url: url });
+  });
+  return out.slice(0, layout);
+}
+// 分支任务 branch:一个问题 + 2 至 3 条分支,每条写去向(continue 继续本章 / end 结束本章 / chapter:N 跳到第 N 章)。
+// 与服务端 ChapterFlowCompiler 同一份上限与去向语法。
+var BRANCH_MIN_OPTIONS = 2;
+var BRANCH_MAX_OPTIONS = 3;
+var BRANCH_MAX_QUESTION = 200;
+var BRANCH_MAX_OPTION_TEXT = 40;
+var BRANCH_TO = /^(continue|end|chapter:[1-9][0-9]{0,2})$/;
+function isBranchType(type) { return type === 'branch'; }
+function normalizeBranchOptions(options) {
+  var list = (Array.isArray(options) ? options : []).map(function (item) {
+    var to = String(item && item.to == null ? 'continue' : item.to).trim();
+    return { text: String(item && item.text == null ? '' : item.text), to: BRANCH_TO.test(to) ? to : 'continue' };
+  });
+  while (list.length < BRANCH_MIN_OPTIONS) list.push({ text: '', to: 'continue' });
+  return list.slice(0, BRANCH_MAX_OPTIONS);
+}
+// 章节开始 / 结束卡 cap:开场白(open)与结语(end)。它们在编辑器里是固定在首尾、不参与拖动的两张卡,
+// 所以不放进 blocks 数组,而是挂在章节的 _capOpen / _capEnd 上;出 payload 时再还原成本章第一个 / 最后一个块。
+var CAP_MAX_LENGTH = 500;
+var CAP_KEYS = { open: 'cap-open', end: 'cap-end' };
+function isCapType(type) { return type === 'cap'; }
+function liftCapBlocks(chapter) {
+  if (!Array.isArray(chapter.blocks)) return;
+  var kept = [];
+  chapter.blocks.forEach(function (block) {
+    if (!block || !isCapType(block.type)) { kept.push(block); return; }
+    var text = String(block.content == null ? '' : block.content);
+    if (block.cap === 'open') chapter._capOpen = text;
+    else if (block.cap === 'end') chapter._capEnd = text;
+  });
+  chapter.blocks = kept;
+}
+function capPayloadBlock(kind, text) {
+  var content = String(text == null ? '' : text);
+  if (!content.trim()) return null;
+  if (content.trim().length > CAP_MAX_LENGTH) throw new Error((kind === 'open' ? '开场白' : '结语') + '不能超过 ' + CAP_MAX_LENGTH + ' 字');
+  return { key: CAP_KEYS[kind], type: 'cap', cap: kind, content: content.trim() };
+}
+// 句子边界:拖到一段正文中间时,槽只落在句末(。!?;… 或换行之后),不会把一句话劈成两半。
+var SENTENCE_END = /[。!?！？;；…]+|\n/g;
+function sentenceBoundaries(text) {
+  var out = [];
+  var src = String(text == null ? '' : text);
+  var m;
+  SENTENCE_END.lastIndex = 0;
+  while ((m = SENTENCE_END.exec(src))) {
+    var end = m.index + m[0].length;
+    if (end > 0 && end < src.length) out.push(end);
+  }
+  return out;
+}
+
 // 《预制人生》两种表现块(2026-09-23):内心声音 voice{who,content} 与越往后越不正常 odd{level}。
 // 与 mood 同一条口径:不进 description,形状由这张表统一清洗(物化 / 存盘 / 插入三处共用)。
 var VOICE_NAMES = ['规矩', '窗外', '心', '精密', '咔哒'];
@@ -83,6 +154,15 @@ function textPresentation(block) {
     var level = Number(block.level);
     if (!Number.isInteger(level) || level < 0 || level > 3) throw new Error('文字效果无效');
     result.level = level;
+  }
+  // 段落样式 / 段内 B·I·S(2026-11-10 r2-create):只挂普通正文段,叙事段与台词不挂
+  if (canSplitParagraphs(block)) {
+    if (block.style != null && block.style !== '' && block.style !== 'body') {
+      if (!storyInline.isStyle(block.style)) throw new Error('段落样式无效');
+      result.style = block.style;
+    }
+    var marks = storyInline.normalizeMarks(block.marks, String(block.content == null ? '' : block.content).length);
+    if (marks.length) result.marks = marks;
   }
   return result;
 }
@@ -276,8 +356,20 @@ function materializeChapter(source, makeKey) {
     return synchronizeChapter(chapter);
   }
 
+  liftCapBlocks(chapter);
   chapter.blocks = chapter.blocks.map(function (sourceBlock) {
     var block = sourceBlock || {};
+    if (isGalleryType(block.type)) {
+      var galleryLayout = galleryLayoutOf(block.layout);
+      var gallery = Object.assign({}, block, { key: block.key || keyFactory(), type: 'gallery', layout: galleryLayout, images: normalizeGalleryImages(block.images, galleryLayout) });
+      delete gallery.altText;
+      var galleryAlt = mediaAltTextOf(block);
+      if (galleryAlt) gallery.altText = galleryAlt;
+      return gallery;
+    }
+    if (isBranchType(block.type)) {
+      return Object.assign({}, block, { key: block.key || keyFactory(), type: 'branch', content: String(block.content == null ? '' : block.content), options: normalizeBranchOptions(block.options) });
+    }
     if (block.type === 'text') {
       return Object.assign({}, block, {
         key: block.key || keyFactory(),
@@ -345,9 +437,12 @@ function toPayloadChapter(source) {
   chapter.nodes = orderedNodes(chapter);
   var nodeIndexes = {};
   chapter.nodes.forEach(function (node, index) { nodeIndexes[node._localId] = index; });
+  liftCapBlocks(chapter);
   chapter.blocks = (chapter.blocks || []).filter(function (block) {
     // 还没选文件的空音频块只是编辑器里的占位,没有任何内容可上送 —— 不落库,也不报错。
     if (isMediaType(block.type) && !String(block.url == null ? '' : block.url).trim()) return false;
+    // 一张图都还没选的图片组同理:只是编辑器里的空格子,不落库
+    if (isGalleryType(block.type) && !normalizeGalleryImages(block.images, galleryLayoutOf(block.layout)).length) return false;
     // 一张图都还没加的梦块同理:空壳不落库
     if (isDreamType(block.type) && !normalizeDreamImages(block.images).length) {
       if (block.title != null) throw new Error('相册至少添加 1 张照片');
@@ -363,11 +458,34 @@ function toPayloadChapter(source) {
       authored.nodeIndex = nodeIndexes[block._storyNodeKey];
     }
     if (block.type === 'text') {
+      delete authored.style;
+      delete authored.marks;
       return Object.assign(authored, { key: block.key, type: 'text', content: String(block.content == null ? '' : block.content) }, textPresentation(block));
     }
     if (block.type === 'node' && Object.prototype.hasOwnProperty.call(nodeIndexes, block.nodeKey)) {
       return Object.assign(authored, { key: block.key, type: 'node', nodeIndex: nodeIndexes[block.nodeKey] },
         block.locationRequired === false ? { locationRequired: false } : {});
+    }
+    if (isGalleryType(block.type)) {
+      var payloadLayout = galleryLayoutOf(block.layout);
+      var galleryPayload = Object.assign(authored, { type: 'gallery', key: block.key, layout: payloadLayout, images: normalizeGalleryImages(block.images, payloadLayout) });
+      delete galleryPayload.altText;
+      var galleryCaption = mediaAltTextOf(block).trim();
+      if (galleryCaption.length > MEDIA_ALT_TEXT_MAX) throw new Error('图片说明不能超过 ' + MEDIA_ALT_TEXT_MAX + ' 字');
+      if (galleryCaption) galleryPayload.altText = galleryCaption;
+      return galleryPayload;
+    }
+    if (isBranchType(block.type)) {
+      var question = String(block.content == null ? '' : block.content).trim();
+      if (!question) throw new Error('分支任务要写一个问题');
+      if (question.length > BRANCH_MAX_QUESTION) throw new Error('分支问题不能超过 ' + BRANCH_MAX_QUESTION + ' 字');
+      var options = normalizeBranchOptions(block.options).map(function (item) {
+        var text = String(item.text == null ? '' : item.text).trim();
+        if (!text) throw new Error('每条分支都要写玩家看到的选项');
+        if (text.length > BRANCH_MAX_OPTION_TEXT) throw new Error('分支选项不能超过 ' + BRANCH_MAX_OPTION_TEXT + ' 字');
+        return { text: text, to: item.to };
+      });
+      return Object.assign(authored, { type: 'branch', key: block.key, content: question, options: options });
     }
     if (isDreamType(block.type)) {
       // 契约 §3.2 的块形状带 key:后端 ChapterBlockReadSupport 原样透传,
@@ -393,6 +511,11 @@ function toPayloadChapter(source) {
     }
     throw new Error('节点块引用已失效');
   });
+  // 章节开始 / 结束卡:开场白还原成第一个块,结语还原成最后一个块(服务端按位置校验)
+  var openCap = capPayloadBlock('open', chapter._capOpen);
+  var endCap = capPayloadBlock('end', chapter._capEnd);
+  if (openCap) chapter.blocks.unshift(openCap);
+  if (endCap) chapter.blocks.push(endCap);
   chapter.nodes = chapter.nodes.map(stripLocalFields);
   // 结局章(2026-09-24):界面形状 → ChapterDTO.ending({fallback:true} 或 {when:[...]});没开就不带
   var ending = storyEnding.chapterEndingPayload(chapter.ending, chapter.name);
@@ -456,6 +579,99 @@ function textCaret(blocks, key, cursor) {
   return { index: index, block: blocks[index], text: text, cursor: cursor };
 }
 
+// 文章式编辑(2026-11-09 qx-a5d):一章是一篇连续的文章,换行 = 新的一段。
+// 输入框里出现新的换行(回车或粘贴多段)时,按行拆成相邻的段落块。
+// 中间的空行丢掉(玩家端也按 /\n+/ 分段,空行本来就不显示);首段与末段即使为空也保留,
+// 末段是光标要落进去的那一段。单段仍按服务端 5000 字上限再切,不切断 emoji。
+function chunkText(content) {
+  var parts = [];
+  do {
+    var end = Math.min(5000, content.length);
+    if (end < content.length && /[\uD800-\uDBFF]/.test(content.charAt(end - 1)) && /[\uDC00-\uDFFF]/.test(content.charAt(end))) end--;
+    parts.push(content.slice(0, end));
+    content = content.slice(end);
+  } while (content.length);
+  return parts;
+}
+
+function paragraphParts(content, cursor) {
+  var text = String(content == null ? '' : content);
+  var lines = text.split('\n');
+  var at = Number.isInteger(cursor) && cursor >= 0 && cursor <= text.length ? cursor : text.length;
+  var parts = [];
+  var starts = []; // 每段在原文里的起点(段内 B/I/S 区间按它切开)
+  var focus = null;
+  var offset = 0;
+  lines.forEach(function (raw, index) {
+    var line = raw.replace(/\r$/, '');
+    var start = offset;
+    offset += raw.length + 1;
+    var keep = index === 0 || index === lines.length - 1 || line !== '';
+    if (!keep) return;
+    chunkText(line).forEach(function (chunk, chunkIndex, chunks) {
+      var chunkStart = start + chunkIndex * 5000;
+      parts.push(chunk);
+      starts.push(chunkStart);
+      if (!focus && at >= chunkStart && (at <= chunkStart + chunk.length || chunkIndex === chunks.length - 1 && at <= start + raw.length)) {
+        focus = { part: parts.length - 1, cursor: Math.min(chunk.length, at - chunkStart) };
+      }
+    });
+  });
+  if (!focus) {
+    // 光标落在被丢掉的空行上:放到下一段的开头(没有下一段就放到最后一段末尾)
+    var lastKept = 0;
+    var running = 0;
+    for (var i = 0; i < lines.length; i++) {
+      var lineStart = running;
+      running += lines[i].length + 1;
+      if (at < lineStart) break;
+      if (i === 0 || i === lines.length - 1 || lines[i].replace(/\r$/, '') !== '') lastKept++;
+    }
+    focus = lastKept < parts.length ? { part: lastKept, cursor: 0 } : { part: parts.length - 1, cursor: parts[parts.length - 1].length };
+  }
+  return { parts: parts, starts: starts, focusPart: focus.part, focusCursor: focus.cursor };
+}
+
+// 能按段拆开的只有普通正文:节点叙事段(beat)要贴着站点,带说话人(who)的段拆开后
+// 每段都会被冠上「谁：」,这两种保留段内换行,行为与改版前一致。
+function canSplitParagraphs(block) {
+  return !!block && block.type === 'text' && !hasNarrativeBeat(block) && !(block.who != null && String(block.who).trim() !== '');
+}
+
+function newlineCount(text) {
+  var m = String(text == null ? '' : text).match(/\n/g);
+  return m ? m.length : 0;
+}
+
+// 顶部插入栏用:把「插到光标处」翻译成模型命令。光标仍在原文字块里且那段文字没变 → insertAtCaret
+// (中间就拆段,段首段尾就插在前后);否则按 fallbackIndex 插。节点叙事段不能拆,插到它后面。
+function caretInsertCommand(chapter, caret, insert, makeKey) {
+  var blocks = (chapter && chapter.blocks) || [];
+  var command = clone(insert || {});
+  if (caret && caret.blockKey) {
+    var index = blocks.findIndex(function (block) { return block && block.key === caret.blockKey && block.type === 'text'; });
+    var block = blocks[index];
+    var text = block ? String(block.content == null ? '' : block.content) : '';
+    var cursor = Number(caret.cursor);
+    if (block && (caret.content == null || caret.content === text) && Number.isInteger(cursor) && cursor >= 0 && cursor <= text.length) {
+      if (hasNarrativeBeat(block) && cursor > 0 && cursor < text.length) {
+        command.index = index + 1;
+        return command;
+      }
+      return {
+        type: 'insertAtCaret',
+        blockKey: block.key,
+        cursor: cursor,
+        trailingBlockKey: cursor > 0 && cursor < text.length ? makeKey() : undefined,
+        insert: command,
+      };
+    }
+  }
+  if (!Number.isInteger(command.index)) command.index = blocks.length;
+  command.index = Math.max(0, Math.min(blocks.length, command.index));
+  return command;
+}
+
 function applyStoryCommand(input, command) {
   var draft = clone(input || {}) || {};
   draft.chapter = draft.chapter || { nodes: [], blocks: [] };
@@ -506,6 +722,42 @@ function applyStoryCommand(input, command) {
     draft.chapter.blocks.splice.apply(draft.chapter.blocks, [paste.index, 1].concat(replacements));
     synchronizeChapter(draft.chapter);
     return { draft: draft };
+  }
+
+  // 文章式编辑:正文里敲回车 / 粘贴多段 → 拆成相邻段落块,返回光标应该落到的段与位置。
+  // 只有换行数比原文多(或单段超过服务端 5000 字上限)时才拆;老段落里本来就有的换行,不因为改一个字就被重排。
+  if (command.type === 'splitParagraphs') {
+    var splitIndex = draft.chapter.blocks.findIndex(function (item) {
+      return item && item.key === command.blockKey && item.type === 'text';
+    });
+    if (splitIndex < 0) throw new Error('未找到要编辑的文字块');
+    var splitBlock = draft.chapter.blocks[splitIndex];
+    var nextContent = String(command.content == null ? '' : command.content);
+    // 段内 B/I/S 跟着文字走:先按「改了哪一截」平移,拆段时再按各段起点切开
+    var followedMarks = storyInline.remapMarks(splitBlock.marks, splitBlock.content, nextContent);
+    if (!canSplitParagraphs(splitBlock) || (newlineCount(nextContent) <= newlineCount(splitBlock.content) && nextContent.length <= 5000)) {
+      splitBlock.content = nextContent;
+      if (followedMarks.length) splitBlock.marks = followedMarks; else delete splitBlock.marks;
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, focusBlockKey: splitBlock.key, focusCursor: Number.isInteger(command.cursor) ? command.cursor : nextContent.length };
+    }
+    var plan = paragraphParts(nextContent, command.cursor);
+    if (draft.chapter.blocks.length + plan.parts.length - 1 > MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
+    var paraKeys = command.blockKeys || [];
+    if (!Array.isArray(paraKeys) || paraKeys.length < plan.parts.length - 1) throw new Error('分段缺少内容块标识');
+    var paragraphs = plan.parts.map(function (part, index) {
+      var key = index === 0 ? splitBlock.key : freshBlockKey(draft.chapter.blocks, paraKeys[index - 1]);
+      if (index > 0 && paraKeys.indexOf(key) !== index - 1) throw new Error('内容块标识无效或重复');
+      var para = Object.assign(clone(splitBlock), { key: key, content: part });
+      var partMarks = storyInline.sliceMarks(followedMarks, plan.starts[index], plan.starts[index] + part.length);
+      if (partMarks.length) para.marks = partMarks; else delete para.marks;
+      // 标题 / 副标题后回车起的是正文;引用与列表接着用同一样式(与常见编辑器一致)
+      if (index > 0 && (para.style === 'h1' || para.style === 'h2')) delete para.style;
+      return para;
+    });
+    draft.chapter.blocks.splice.apply(draft.chapter.blocks, [splitIndex, 1].concat(paragraphs));
+    synchronizeChapter(draft.chapter);
+    return { draft: draft, focusBlockKey: paragraphs[plan.focusPart].key, focusCursor: plan.focusCursor };
   }
 
   if (command.type === 'moveBlock') {
@@ -565,8 +817,22 @@ function applyStoryCommand(input, command) {
   if (command.type === 'insertMediaAt') {
     if (draft.chapter.blocks.length >= MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
     if (!isMediaType(command.mediaType) && !isDreamType(command.mediaType) && !isMoodType(command.mediaType) && !isThoughtType(command.mediaType)
+      && !isGalleryType(command.mediaType) && !isBranchType(command.mediaType)
       && !PLAIN_BLOCKS[command.mediaType]) throw new Error('不支持的媒体块类型');
     var mediaAt = insertionIndex(draft.chapter.blocks, command.index);
+    // 图片组:先按版式落一组空格,再逐格选图(与梦块同一条「先落块再配」的规矩)
+    if (isGalleryType(command.mediaType)) {
+      var newLayout = galleryLayoutOf(command.layout);
+      draft.chapter.blocks.splice(mediaAt, 0, { key: command.blockKey, type: 'gallery', layout: newLayout, images: normalizeGalleryImages(command.images, newLayout) });
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, insertedBlockKey: command.blockKey };
+    }
+    // 分支任务:落一个问题 + 两条空分支,作者在分支弹窗里填
+    if (isBranchType(command.mediaType)) {
+      draft.chapter.blocks.splice(mediaAt, 0, { key: command.blockKey, type: 'branch', content: String(command.content == null ? '' : command.content), options: normalizeBranchOptions(command.options) });
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, insertedBlockKey: command.blockKey };
+    }
     if (PLAIN_BLOCKS[command.mediaType]) {
       draft.chapter.blocks.splice(mediaAt, 0, Object.assign({ key: command.blockKey, type: command.mediaType }, PLAIN_BLOCKS[command.mediaType](command)));
       synchronizeChapter(draft.chapter);
@@ -736,7 +1002,7 @@ function applyStoryCommand(input, command) {
     var mediaIndex = draft.chapter.blocks.findIndex(function (item) {
       // 非文字 / 非节点的块都从这里删(氛围、伏笔、内心声音、异常以前漏了,点叉号只弹「未找到」)
       return item && item.key === command.blockKey && (isMediaType(item.type) || isDreamType(item.type)
-        || isMoodType(item.type) || isThoughtType(item.type) || !!PLAIN_BLOCKS[item.type]);
+        || isMoodType(item.type) || isThoughtType(item.type) || isGalleryType(item.type) || isBranchType(item.type) || !!PLAIN_BLOCKS[item.type]);
     });
     if (mediaIndex < 0) throw new Error('未找到要删除的媒体块');
     draft.chapter.blocks.splice(mediaIndex, 1);
@@ -760,9 +1026,65 @@ function applyStoryCommand(input, command) {
       return item && item.key === command.blockKey && item.type === 'text';
     });
     if (editIndex < 0) throw new Error('未找到要编辑的文字块');
-    draft.chapter.blocks[editIndex].content = String(command.content == null ? '' : command.content);
+    var edited = draft.chapter.blocks[editIndex];
+    var editedContent = String(command.content == null ? '' : command.content);
+    var editedMarks = storyInline.remapMarks(edited.marks, edited.content, editedContent);
+    edited.content = editedContent;
+    if (editedMarks.length) edited.marks = editedMarks; else delete edited.marks;
     synchronizeChapter(draft.chapter);
     return { draft: draft };
+  }
+
+  // 工具栏 B / I / S:选区整段有就去掉、没有就补满;没有选区时作用于整段
+  if (command.type === 'formatText') {
+    var fmtBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey; });
+    if (!canSplitParagraphs(fmtBlock)) throw new Error('只有正文段可以设置文字格式');
+    var fmtText = String(fmtBlock.content == null ? '' : fmtBlock.content);
+    var fmtFrom = Number(command.from);
+    var fmtTo = Number(command.to);
+    if (!(Number.isInteger(fmtFrom) && Number.isInteger(fmtTo) && fmtTo > fmtFrom)) { fmtFrom = 0; fmtTo = fmtText.length; }
+    if (!fmtText.length) throw new Error('先写几个字');
+    var toggled = storyInline.toggleMark(fmtBlock.marks, fmtFrom, fmtTo, command.mark, fmtText.length);
+    if (toggled.length) fmtBlock.marks = toggled; else delete fmtBlock.marks;
+    return { draft: draft, from: fmtFrom, to: fmtTo };
+  }
+
+  // 段落样式:正文 / 标题 / 副标题 / 引用 / 项目列表 / 编号列表(再点一次同一个回到正文)
+  if (command.type === 'setParagraphStyle') {
+    var styleBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey; });
+    if (!canSplitParagraphs(styleBlock)) throw new Error('只有正文段可以设置段落样式');
+    var nextStyle = command.style === 'body' ? '' : command.style;
+    if (nextStyle && !storyInline.isStyle(nextStyle)) throw new Error('段落样式无效');
+    if (command.toggle && styleBlock.style === nextStyle) nextStyle = '';
+    if (nextStyle) styleBlock.style = nextStyle; else delete styleBlock.style;
+    return { draft: draft, style: nextStyle };
+  }
+
+  // 段首退格:并入上一段(上一段也是正文段时);上一段是图片/卡片等时,空段直接收掉、非空段只选中上一块
+  if (command.type === 'mergeParagraphUp') {
+    var mergeIndex = draft.chapter.blocks.findIndex(function (item) { return item && item.key === command.blockKey; });
+    if (mergeIndex <= 0) return { draft: draft, merged: false };
+    var current = draft.chapter.blocks[mergeIndex];
+    var above = draft.chapter.blocks[mergeIndex - 1];
+    if (!canSplitParagraphs(current)) return { draft: draft, merged: false };
+    var currentText = String(current.content == null ? '' : current.content);
+    if (canSplitParagraphs(above)) {
+      var aboveText = String(above.content == null ? '' : above.content);
+      if (aboveText.length + currentText.length > 5000) throw new Error('合并后超过 5000 字');
+      var joined = storyInline.concatMarks(storyInline.normalizeMarks(above.marks, aboveText.length), aboveText.length,
+        storyInline.normalizeMarks(current.marks, currentText.length), currentText.length);
+      above.content = aboveText + currentText;
+      if (joined.length) above.marks = joined; else delete above.marks;
+      draft.chapter.blocks.splice(mergeIndex, 1);
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, merged: true, focusBlockKey: above.key, focusCursor: aboveText.length };
+    }
+    if (!currentText.trim()) {
+      draft.chapter.blocks.splice(mergeIndex, 1);
+      synchronizeChapter(draft.chapter);
+      return { draft: draft, merged: false, removed: true, selectBlockKey: above.key };
+    }
+    return { draft: draft, merged: false, selectBlockKey: above.key };
   }
 
   if (command.type === 'editNode') {
@@ -807,6 +1129,126 @@ function applyStoryCommand(input, command) {
     };
   }
 
+  // ── 图片组:往某一格放图 / 拿掉一格 / 改说明 ──
+  if (command.type === 'fillGalleryCell') {
+    var cellBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey && isGalleryType(item.type); });
+    if (!cellBlock) throw new Error('未找到要配图的图片组');
+    var cellUrl = String(command.url == null ? '' : command.url).trim();
+    if (!cellUrl) throw new Error('媒体块缺少地址');
+    var cellLayout = galleryLayoutOf(cellBlock.layout);
+    var cellIndex = Number(command.index);
+    var cells = normalizeGalleryImages(cellBlock.images, cellLayout);
+    if (!Number.isInteger(cellIndex) || cellIndex < 0 || cellIndex >= cellLayout) throw new Error('图片组这一格不存在');
+    if (cellIndex < cells.length) cells[cellIndex] = { url: cellUrl };
+    else cells.push({ url: cellUrl });
+    cellBlock.layout = cellLayout;
+    cellBlock.images = cells;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+  if (command.type === 'removeGalleryImage') {
+    var dropBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey && isGalleryType(item.type); });
+    if (!dropBlock) throw new Error('未找到要改的图片组');
+    var dropCells = normalizeGalleryImages(dropBlock.images, galleryLayoutOf(dropBlock.layout));
+    var dropIndex = Number(command.index);
+    if (!Number.isInteger(dropIndex) || dropIndex < 0 || dropIndex >= dropCells.length) throw new Error('图片组这一格没有图');
+    dropCells.splice(dropIndex, 1);
+    dropBlock.images = dropCells;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+  if (command.type === 'editGalleryCaption') {
+    var capBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey && isGalleryType(item.type); });
+    if (!capBlock) throw new Error('未找到要改的图片组');
+    var caption = String(command.altText == null ? '' : command.altText);
+    if (caption.trim().length > MEDIA_ALT_TEXT_MAX) throw new Error('图片说明不能超过 ' + MEDIA_ALT_TEXT_MAX + ' 字');
+    if (caption) capBlock.altText = caption; else delete capBlock.altText;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+
+  // ── 分支任务:改问题 / 改某条分支的文字或去向 / 加一条 / 删一条 ──
+  if (command.type === 'updateBranch') {
+    var branchBlock = draft.chapter.blocks.find(function (item) { return item && item.key === command.blockKey && isBranchType(item.type); });
+    if (!branchBlock) throw new Error('未找到要编辑的分支任务');
+    if (command.content != null) {
+      var nextQuestion = String(command.content);
+      if (nextQuestion.trim().length > BRANCH_MAX_QUESTION) throw new Error('分支问题不能超过 ' + BRANCH_MAX_QUESTION + ' 字');
+      branchBlock.content = nextQuestion;
+    }
+    var nextOptions = normalizeBranchOptions(branchBlock.options);
+    if (command.option) {
+      var optionIndex = Number(command.option.index);
+      if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= nextOptions.length) throw new Error('这条分支不存在');
+      if (command.option.text != null) {
+        var optionText = String(command.option.text);
+        if (optionText.trim().length > BRANCH_MAX_OPTION_TEXT) throw new Error('分支选项不能超过 ' + BRANCH_MAX_OPTION_TEXT + ' 字');
+        nextOptions[optionIndex].text = optionText;
+      }
+      if (command.option.to != null) {
+        var optionTo = String(command.option.to).trim();
+        if (!BRANCH_TO.test(optionTo)) throw new Error('分支去向无效');
+        nextOptions[optionIndex].to = optionTo;
+      }
+    }
+    if (command.addOption) {
+      if (nextOptions.length >= BRANCH_MAX_OPTIONS) throw new Error('最多 ' + BRANCH_MAX_OPTIONS + ' 条分支');
+      nextOptions.push({ text: '', to: 'continue' });
+    }
+    if (command.removeOption != null) {
+      var removeAt = Number(command.removeOption);
+      if (nextOptions.length <= BRANCH_MIN_OPTIONS) throw new Error('至少 ' + BRANCH_MIN_OPTIONS + ' 条分支');
+      if (!Number.isInteger(removeAt) || removeAt < 0 || removeAt >= nextOptions.length) throw new Error('这条分支不存在');
+      nextOptions.splice(removeAt, 1);
+    }
+    branchBlock.options = nextOptions;
+    synchronizeChapter(draft.chapter);
+    return { draft: draft };
+  }
+
+  // ── 章节开始 / 结束卡的话:只改章节上的 _capOpen / _capEnd,不碰块流 ──
+  if (command.type === 'setChapterCap') {
+    if (command.cap !== 'open' && command.cap !== 'end') throw new Error('章节卡位只能是 open / end');
+    var capText = String(command.content == null ? '' : command.content);
+    if (capText.trim().length > CAP_MAX_LENGTH) throw new Error((command.cap === 'open' ? '开场白' : '结语') + '不能超过 ' + CAP_MAX_LENGTH + ' 字');
+    if (command.cap === 'open') draft.chapter._capOpen = capText; else draft.chapter._capEnd = capText;
+    return { draft: draft };
+  }
+
+  // ── 拖到一段正文中间:在句子边界把这段拆成两段,被拖的块落在中间 ──
+  if (command.type === 'moveBlockInto') {
+    var intoFrom = draft.chapter.blocks.findIndex(function (block) { return block && block.key === command.blockKey; });
+    if (intoFrom < 0) throw new Error('未找到要移动的内容块');
+    var moving = draft.chapter.blocks[intoFrom];
+    if (hasNarrativeBeat(moving) || (moving.type === 'node' && draft.chapter.blocks.some(function (block) { return block && hasNarrativeBeat(block); }))) {
+      throw new Error('节点叙事段需保持站点前后位置，请使用节点叙事编辑');
+    }
+    var intoTarget = draft.chapter.blocks.findIndex(function (block) { return block && block.key === command.targetKey; });
+    if (intoTarget < 0 || intoTarget === intoFrom) throw new Error('未找到要插入的段落');
+    var host = draft.chapter.blocks[intoTarget];
+    if (!canSplitParagraphs(host)) throw new Error('这一段不能从中间拆开');
+    var hostText = String(host.content == null ? '' : host.content);
+    var at = Number(command.at);
+    if (sentenceBoundaries(hostText).indexOf(at) < 0) throw new Error('只能插在句子之间');
+    if (draft.chapter.blocks.length + 1 > MAX_BLOCKS_PER_CHAPTER) throw new Error('每章最多 200 个内容块');
+    var tailKey = freshBlockKey(draft.chapter.blocks, command.tailKey);
+    bindNarrativeNodes(draft.chapter);
+    var hostMarks = storyInline.normalizeMarks(host.marks, hostText.length);
+    var headMarks = storyInline.sliceMarks(hostMarks, 0, at);
+    var tailMarks = storyInline.sliceMarks(hostMarks, at, hostText.length);
+    var tailText = hostText.slice(at).replace(/^\n/, '');
+    var tail = Object.assign(clone(host), { key: tailKey, content: tailText });
+    if (tailMarks.length) tail.marks = tailMarks; else delete tail.marks;
+    if (tail.style === 'h1' || tail.style === 'h2') delete tail.style;
+    host.content = hostText.slice(0, at);
+    if (headMarks.length) host.marks = headMarks; else delete host.marks;
+    draft.chapter.blocks.splice(intoFrom, 1);
+    var hostIndex = draft.chapter.blocks.findIndex(function (block) { return block && block.key === host.key; });
+    draft.chapter.blocks.splice(hostIndex + 1, 0, moving, tail);
+    synchronizeChapter(draft.chapter);
+    return { draft: draft, hostIndex: hostIndex, tailKey: tailKey };
+  }
+
   if (command.type === 'removeText') {
     var textIndex = draft.chapter.blocks.findIndex(function (item) {
       return item && item.key === command.blockKey && item.type === 'text';
@@ -831,6 +1273,17 @@ module.exports = {
   collectStoryVars: collectStoryVars,
   insertVarAt: insertVarAt,
   varInsertIndex: varInsertIndex,
+  paragraphParts: paragraphParts,
+  STORY_STYLES: storyInline.STYLES,
+  canSplitParagraphs: canSplitParagraphs,
+  caretInsertCommand: caretInsertCommand,
+  sentenceBoundaries: sentenceBoundaries,
+  galleryLayoutOf: galleryLayoutOf,
+  normalizeGalleryImages: normalizeGalleryImages,
+  normalizeBranchOptions: normalizeBranchOptions,
+  GALLERY_MAX_LAYOUT: GALLERY_MAX_LAYOUT,
+  BRANCH_MAX_OPTIONS: BRANCH_MAX_OPTIONS,
+  CAP_MAX_LENGTH: CAP_MAX_LENGTH,
   DREAM_MAX_IMAGES: DREAM_MAX_IMAGES,
   MEDIA_ALT_TEXT_MAX: MEDIA_ALT_TEXT_MAX,
 };

@@ -100,6 +100,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuditTaskServiceImpl.class);
 
+    @Autowired
+    private com.chengyinhub.business.service.support.WorkshopLicenseGuard workshopLicenses;
+
     /** 举报来源类型(仅此来源受 submitterId 限频;auto_gate/user_publish 不限)。 */
     private static final String SOURCE_REPORT = "report";
     private static final String SOURCE_AUTO_GATE = "auto_gate";
@@ -527,8 +530,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         Long taskId = findOrCreateOpenTask(bizType, bizId, reporterId, SOURCE_REPORT, "NORMAL", snapshot);
         if (AuditTask.BIZ_HANGOUT.equals(bizType) || AuditTask.BIZ_TEAM.equals(bizType)) {
             AuditTask locked = auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
-            if (locked == null || (!AuditTask.STATUS_PENDING.equals(locked.getStatus())
-                    && !AuditTask.STATUS_ESCALATED.equals(locked.getStatus()))) {
+            if (locked == null || !com.chengyinhub.business.domain.enums.AuditTaskState.isOpenCode(locked.getStatus())) {
                 throw new ServiceException("该轮举报已处理，请重新提交举报");
             }
         }
@@ -657,8 +659,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
     private void escalateOpenRisk(Long taskId, String candidateRisk) {
         if (!riskEscalationEnabled || taskId == null) return;
         AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
-        if (task == null || !(AuditTask.STATUS_PENDING.equals(task.getStatus())
-                || AuditTask.STATUS_ESCALATED.equals(task.getStatus()))) {
+        if (task == null || !com.chengyinhub.business.domain.enums.AuditTaskState.isOpenCode(task.getStatus())) {
             return;
         }
         int reporters = auditTaskMapper.countOpenReportersByBiz(task.getBizType(), task.getBizId());
@@ -708,8 +709,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         q.setBizType(bizType);
         q.setBizId(bizId);
         for (AuditTask existing : auditTaskMapper.selectAuditTaskList(q)) {
-            if ((AuditTask.STATUS_PENDING.equals(existing.getStatus())
-                    || AuditTask.STATUS_ESCALATED.equals(existing.getStatus()))
+            if (com.chengyinhub.business.domain.enums.AuditTaskState.isOpenCode(existing.getStatus())
                     && (!split || SOURCE_REPORT.equals(existing.getSourceType()) == reportLane)) {
                 return existing.getId();
             }
@@ -792,6 +792,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         }
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.support.WorkshopVersionReview workshopVersionReview;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CriticalPath(value = CriticalPathCode.CP_AUDIT_DECISION_FAILED, op = "review")
@@ -809,6 +812,28 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         AuditTask task = auditTaskMapper.selectAuditTaskById(taskId);
         if (task == null) {
             throw new IllegalArgumentException("审核任务不存在");
+        }
+        // Paid license precedes the template/task locks, matching installation and refund ordering.
+        if (AuditTask.STATUS_APPROVED.equals(request.getStatus()) && !SOURCE_REPORT.equals(task.getSourceType())
+                && workshopLicenses != null) {
+            if (AuditTask.BIZ_TEMPLATE.equals(task.getBizType())) {
+                workshopLicenses.requirePublication(task.getBizId(), false);
+            } else if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(task.getBizType())) {
+                CmsTemplateLibrary hint = libraryMapper.selectCmsTemplateLibraryById(task.getBizId());
+                if (hint == null) throw new ServiceException("模板广场记录不存在");
+                workshopLicenses.requirePublication(hint.getMemberTemplateId(), true);
+            }
+        }
+        boolean paidVersionReview = com.chengyinhub.business.service.support.WorkshopVersionReview.BIZ_TYPE.equals(task.getBizType());
+        if(paidVersionReview) {
+            workshopVersionReview.lock(task);
+            AuditTask locked=auditTaskMapper.selectAuditTaskByIdForUpdate(taskId);
+            if(locked==null || !java.util.Objects.equals(task.getBizId(),locked.getBizId())
+                    || !java.util.Objects.equals(task.getSnapshotJson(),locked.getSnapshotJson())
+                    || !java.util.Objects.equals(task.getSubmitterId(),locked.getSubmitterId())
+                    || !java.util.Objects.equals(task.getBizType(),locked.getBizType()))
+                throw new ServiceException("PAID_REVIEW_TASK_CONFLICT",HttpStatus.CONFLICT);
+            task=locked;
         }
         boolean guardReview = isGuardType(task.getBizType());
         if (guardReview) {
@@ -859,7 +884,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         com.chengyinhub.business.domain.AuditAppeal appeal = SOURCE_APPEAL.equals(task.getSourceType())
                 ? lockAppeal(task) : null;
         boolean appealAccepted = appeal != null && AuditTask.STATUS_APPROVED.equals(request.getStatus());
-        boolean versionedReview = guardReview || templateLock != null || isTopicBundle(task) || communityReview || AuditTask.BIZ_MEDIA_ASSET.equals(task.getBizType());
+        boolean versionedReview = paidVersionReview || guardReview || templateLock != null || isTopicBundle(task) || communityReview || AuditTask.BIZ_MEDIA_ASSET.equals(task.getBizType());
         if (versionedReview && request.getExpectedVersion() == null) {
             throw new ServiceException("请刷新审核内容后重试", HttpStatus.CONFLICT);
         }
@@ -961,6 +986,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             auditProblemService.record(problems, record.getId(), owner == null ? null : owner.ownerId, now);
         }
 
+        if(paidVersionReview) workshopVersionReview.apply(task,request.getStatus());
         if (!guardReview) applyCommercialReviewLifecycle(task, request.getStatus());
 
         // 审核决定 → 内容软封/恢复(REJECT=确认违规下架,APPROVE=举报无效恢复)
@@ -1789,8 +1815,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         boolean open = false;
         if (tasks != null) {
             for (AuditTask task : tasks) {
-                if ((AuditTask.STATUS_PENDING.equals(task.getStatus())
-                        || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) && !task.isOpenReport()) open = true;
+                if (com.chengyinhub.business.domain.enums.AuditTaskState.isOpenCode(task.getStatus()) && !task.isOpenReport()) open = true;
                 AuditTask safe = applicantTask(task);
                 if (!memberId.equals(task.getSubmitterId())) safe.setSubmitterId(null);
                 List<AuditRecord> timeline = applicantTimeline(listAuditRecords(task.getId()));
@@ -2254,6 +2279,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     logger.warn("举报成立但模板广场记录已不在公开态,跳过下架 libraryId={}", bizId);
                 }
             } else if (AuditTask.BIZ_TEMPLATE.equals(bizType)) {
+                if (up && workshopLicenses != null) workshopLicenses.requirePublication(bizId, false);
                 if (up) mediaPublicationGuard.requireTemplate(task.getSubmitterId(), templateMapper.selectCmsMemberTemplateById(bizId), true);
                 // 个人玩法审核只更新个人可用状态；模板广场由独立 BIZ_TEMPLATE_LIBRARY 任务裁决。
                 com.chengyinhub.business.domain.CmsMemberTemplate template =
@@ -2267,6 +2293,11 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                     throw new ServiceException("模板审核真源更新失败");
                 }
             } else if (AuditTask.BIZ_TEMPLATE_LIBRARY.equals(bizType)) {
+                if (up && workshopLicenses != null) {
+                    CmsTemplateLibrary hint = libraryMapper.selectCmsTemplateLibraryById(bizId);
+                    if (hint == null) throw new ServiceException("模板广场记录不存在");
+                    workshopLicenses.requirePublication(hint.getMemberTemplateId(), true);
+                }
                 if (up) mediaPublicationGuard.requireTemplate(task.getSubmitterId(), libraryMapper.selectCmsTemplateLibraryById(bizId), true);
                 com.chengyinhub.business.domain.CmsTemplateLibrary projection =
                         new com.chengyinhub.business.domain.CmsTemplateLibrary();
@@ -2980,17 +3011,9 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         return "{\"status\":" + status + ",\"version\":" + version + "}";
     }
 
+    /** 裁决迁移表唯一真源在 AuditTaskState；此处只做委托。 */
     private boolean canTransition(Integer from, Integer to) {
-        if (AuditTask.STATUS_PENDING.equals(from)) {
-            return AuditTask.STATUS_APPROVED.equals(to)
-                    || AuditTask.STATUS_REJECTED.equals(to)
-                    || AuditTask.STATUS_ESCALATED.equals(to);
-        }
-        if (AuditTask.STATUS_ESCALATED.equals(from)) {
-            return AuditTask.STATUS_APPROVED.equals(to)
-                    || AuditTask.STATUS_REJECTED.equals(to);
-        }
-        return false;
+        return com.chengyinhub.business.domain.enums.AuditTaskState.canReviewTransition(from, to);
     }
 
     private String statusToAction(Integer status) {

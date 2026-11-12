@@ -27,10 +27,8 @@
                    title="评价加载失败" sub="{{errorMessage}}" action="重新加载" bind:action="retry" />
   <cy-empty wx:elif="{{pageState === 'missing'}}" kind="missing-param" fill size="lg"
             title="商家信息不完整" cta="返回" bind:cta="onNavBack" />
-  <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg"
-            title="还没有真实到店评价"
-            sub=""
-            cta="重新加载" bind:cta="retry" />
+  <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
+            title="还没有真实到店评价" />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" class="review-scroll" scroll-y enhanced
                show-scrollbar="{{false}}" lower-threshold="160" bindscrolltolower="loadMore">
@@ -43,7 +41,7 @@
             <image wx:for="{{ratingStars}}" wx:key="value" class="review-score-star"
                    src="{{item.filled ? '/pages/merchant/images/merchant/reviews/icon-star-filled.svg' : '/pages/merchant/images/merchant/reviews/icon-star-muted.svg'}}" mode="aspectFit" />
           </view>
-          <text class="review-score-copy">{{total != null ? total + ' 条' : '—'}}已核销评价<block wx:if="{{mode === 'manage'}}"> · 商家不能改用户原评</block></text>
+          <text class="review-score-copy">{{total || 0}} 条已核销评价<block wx:if="{{mode === 'manage'}}"> · 商家不能改用户原评</block></text>
         </view>
       </view>
 
@@ -69,7 +67,7 @@
           <view class="review-stat-icon review-stat-icon--rate">
             <image src="/pages/merchant/images/merchant/reviews/icon-check-blue.svg" mode="aspectFit" />
           </view>
-          <text class="review-stat-value">{{replyRatePct != null ? replyRatePct + '%' : '—'}}</text>
+          <text class="review-stat-value">{{replyRatePct || 0}}%</text>
           <text class="review-stat-label">已回复率</text>
           
         </view>

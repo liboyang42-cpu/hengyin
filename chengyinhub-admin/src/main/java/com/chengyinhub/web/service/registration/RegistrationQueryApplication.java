@@ -203,11 +203,36 @@ public class RegistrationQueryApplication {
             registration.setRefundApplication(latestRegistrationRefund(registration.getId(), memberId));
             // 订单详情展示 enrich:脱敏手机号 / 支付方式文案 / 退款截止文案 / 权益章节名
             com.chengyinhub.business.util.RegistrationDetailDisplay.enrich(registration, topicChapterService);
+            registration.setSettlementSummary(settlementSummary(registration, memberId));
             registration.setServerNow(System.currentTimeMillis());
             return AjaxResult.success(registration);
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }
+    }
+
+    /**
+     * U07-04/U07-05：订单级退款/权益只读汇总。只聚合本账号同一父订单的既有事实；
+     * 读取失败不伪造 0，直接让本次详情读回失败（调用方统一走 error）。
+     */
+    private com.chengyinhub.business.domain.vo.RegistrationSettlementSummaryVO settlementSummary(
+            CmsRegistration registration, Long memberId) {
+        List<CmsRegistration> orderRows;
+        if (StringUtils.isNotEmpty(registration.getParentOrderNo())) {
+            CmsRegistration probe = new CmsRegistration();
+            probe.setMemberId(memberId);
+            probe.setParentOrderNo(registration.getParentOrderNo());
+            orderRows = registrationService.selectCmsRegistrationList(probe);
+        } else {
+            orderRows = Collections.singletonList(registration);
+        }
+        RefundApplication query = new RefundApplication();
+        query.setSourceType("registration");
+        query.setMemberId(memberId);
+        List<RefundApplication> refunds = refundService.selectRefundList(query);
+        return com.chengyinhub.business.util.RegistrationSettlementProjection.build(
+                registration, memberId, orderRows, refunds, registration.getEntitlements(),
+                registration.getManualRefundCaseStatus());
     }
 
     public AjaxResult exploreCompletion(Long memberId, String id) {

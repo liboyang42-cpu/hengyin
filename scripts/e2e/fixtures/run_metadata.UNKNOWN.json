@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "purpose": "template",
+  "runId": "UNKNOWN",
+  "backend": {
+    "sourceSha": "UNKNOWN",
+    "jarSha256": "UNKNOWN",
+    "runtimeSourceSha": "UNKNOWN",
+    "runtimeJarSha256": "UNKNOWN",
+    "runtimeEvidence": "UNKNOWN"
+  },
+  "environment": {
+    "kind": "UNKNOWN",
+    "target": "UNKNOWN",
+    "databaseTarget": "UNKNOWN",
+    "verified": "UNKNOWN",
+    "verifiedAt": "UNKNOWN",
+    "evidence": "UNKNOWN"
+  },
+  "content": {
+    "releaseId": "UNKNOWN",
+    "bindingRevision": "UNKNOWN",
+    "contentRevisionId": "UNKNOWN",
+    "contentRevisionNo": "UNKNOWN",
+    "contentSha256": "UNKNOWN",
+    "bindingIdentity": {
+      "topicId": "UNKNOWN",
+      "cityCode": "UNKNOWN",
+      "sourceTemplateTopicId": "UNKNOWN",
+      "sourceContentRevisionId": "UNKNOWN",
+      "sourceConfigVersion": "UNKNOWN",
+      "locationBindingsSha256": "UNKNOWN"
+    },
+    "contractVersions": {
+      "C01": "UNKNOWN", "C02": "UNKNOWN", "C03": "UNKNOWN", "C04": "UNKNOWN",
+      "C05": "UNKNOWN", "C06": "UNKNOWN", "C07": "UNKNOWN", "C08": "UNKNOWN"
+    },
+    "mappingEvidence": "UNKNOWN",
+    "revisionEvidence": "UNKNOWN",
+    "bindingEvidence": "UNKNOWN"
+  },
+  "clients": {
+    "miniprogram": {
+      "build": "UNKNOWN", "actor": "UNKNOWN", "role": "UNKNOWN",
+      "device": "UNKNOWN", "os": "UNKNOWN", "session": "UNKNOWN",
+      "capturedAt": "UNKNOWN", "normalEntry": "UNKNOWN",
+      "request": "UNKNOWN", "versionEvidence": "UNKNOWN",
+      "observedVersions": {
+        "releaseId": "UNKNOWN", "bindingRevision": "UNKNOWN",
+        "contentRevisionId": "UNKNOWN", "contentRevisionNo": "UNKNOWN",
+        "contentSha256": "UNKNOWN", "bindingIdentity": "UNKNOWN", "contractVersions": "UNKNOWN"
+      },
+      "response": {"path": "UNKNOWN", "projection": "UNKNOWN", "comparisonRoot": "UNKNOWN"},
+      "screenshot": "UNKNOWN"
+    },
+    "ios": {
+      "build": "UNKNOWN", "actor": "UNKNOWN", "role": "UNKNOWN",
+      "device": "UNKNOWN", "os": "UNKNOWN", "session": "UNKNOWN",
+      "capturedAt": "UNKNOWN", "normalEntry": "UNKNOWN",
+      "request": "UNKNOWN", "versionEvidence": "UNKNOWN",
+      "observedVersions": {
+        "releaseId": "UNKNOWN", "bindingRevision": "UNKNOWN",
+        "contentRevisionId": "UNKNOWN", "contentRevisionNo": "UNKNOWN",
+        "contentSha256": "UNKNOWN", "bindingIdentity": "UNKNOWN", "contractVersions": "UNKNOWN"
+      },
+      "response": {"path": "UNKNOWN", "projection": "UNKNOWN", "comparisonRoot": "UNKNOWN"},
+      "screenshot": "UNKNOWN"
+    },
+    "admin": {
+      "build": "UNKNOWN", "actor": "UNKNOWN", "role": "UNKNOWN",
+      "device": "UNKNOWN", "os": "UNKNOWN", "session": "UNKNOWN",
+      "capturedAt": "UNKNOWN", "normalEntry": "UNKNOWN",
+      "request": "UNKNOWN", "versionEvidence": "UNKNOWN",
+      "observedVersions": {
+        "releaseId": "UNKNOWN", "bindingRevision": "UNKNOWN",
+        "contentRevisionId": "UNKNOWN", "contentRevisionNo": "UNKNOWN",
+        "contentSha256": "UNKNOWN", "bindingIdentity": "UNKNOWN", "contractVersions": "UNKNOWN"
+      },
+      "response": {"path": "UNKNOWN", "projection": "UNKNOWN", "comparisonRoot": "UNKNOWN"},
+      "screenshot": "UNKNOWN"
+    }
+  },
+  "knownDifferences": []
+}

@@ -1,241 +1,272 @@
-// cy-sheet · handle 拖拽契约(2026-09-01)
+// cy-sheet / cy-scene-sheet · 拖拽契约
 //
-// 背景:手册 Motion·Overlay choreography 的 Sheet P1 一栏一直写着「handle 可拖」,
-// 而组件里 touch 零命中 —— 一根长得像「拖我」的横条,拖了没反应。属于「声称存在、
-// 实际不生效」这一类,不是缺功能。补齐后由本契约钉住。
+// 2026-09-01:抓手从「装饰横条」补成真的可拖(当时在逻辑层 setData 跟手)。
+// 2026-11-10 qx-u1:跟手搬到视图层(utils/wxs/gesture.wxs),参数换成业主定的:
+//   速度 > 0.5 px/ms 或位移 > 面板高 30% 关;否则吸附到最近的档;越过最高档往上拽 × 0.25 并弹回;
+//   抓手和头部起拖,正文不起拖;减动效下没有阻尼、吸附直接到位。
 //
-// 钉的不是"有没有写 touch 绑定",而是**真调 onDragStart/Move/End 之后关没关**:
-//   · 阈值是「位移 > 面板高 1/3」**或**「速度 > .55 px/ms」,二选一。
-//     只看位移 ⇒ 快速小甩关不掉;只看速度 ⇒ 慢慢拖到底关不掉。两个用例各钉一条闸。
-//   · dirty 时走和点遮罩同一条闸:只发 requestclose,不发 close。
-//   · 没过阈值必须弹回(_dragStyle 清空 + 不发关闭事件)。
-//
-// 负控用改源码重载的方式做:把某一条闸的常数改掉,对应用例必须判红。
-// 断言"它能红"比断言"它是绿的"值钱 —— 恒真断言在本仓踩过不止一次。
+// 钉的不是"有没有写 touch 绑定",而是**按真实触摸序列驱动 WXS 之后面板去了哪、宿主收到了什么**:
+//   · 两条关闭闸(速度 / 位移)各一条用例,各一条负控(拆掉那条闸,用例必须判红)
+//   · maskClosable=false / dirty 时与点遮罩同一条闸:过阈值也只弹回;dirty 照样上报 requestclose
+//   · 往上拽有阻尼并以弹簧曲线弹回
+//   · 组件侧:dismiss 走和 ✕ 同一个出口;宿主不接这次关闭就把面板拉回来
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('node:vm')
 const Module = require('node:module')
 const test = require('node:test')
+const { loadWxs, makeEl, makeOwner, sheetDrag, offsetOf } = require('./helpers/gesture-wxs-harness.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const SHEET_JS = path.join(ROOT, 'components/cy/sheet/index.js')
 const SHEET_WXML = path.join(ROOT, 'components/cy/sheet/index.wxml')
+const SHEET_WXSS = path.join(ROOT, 'components/cy/sheet/index.wxss')
+const SCENE_JS = path.join(ROOT, 'components/cy/scene-sheet/index.js')
+const SCENE_WXML = path.join(ROOT, 'components/cy/scene-sheet/index.wxml')
 
-// 把 cy-sheet 的 Component 定义取出来。可传 mutate 改源码做负控。
-function loadSheet(mutate) {
-  let src = fs.readFileSync(SHEET_JS, 'utf8')
-  if (mutate) {
-    const next = mutate(src)
-    assert.notEqual(next, src, '负控没有真的改到源码 —— 注入点写错了，这条负控是恒真的')
-    src = next
-  }
+function rig(panelHeight = 600) {
+  const panel = makeEl({ height: panelHeight })
+  const root = makeEl()
+  const owner = makeOwner({ '.sh__panel': panel, '.sh': root })
+  return { panel, root, owner }
+}
+const lastStyle = (el) => el.styles[el.styles.length - 1] || {}
+const dismissed = (owner) => owner.calls.some((c) => c.name === '_onGestureRelease' && c.detail.action === 'dismiss')
+const blocked = (owner) => owner.calls.some((c) => c.name === '_onGestureRelease' && c.detail.action === 'blocked')
+
+/* ——— 视图层(WXS)——— */
+
+test('慢慢拖过面板高 30% ⇒ 关闭(位移闸),面板从松手处落到屏外', () => {
+  const gs = loadWxs(); const { panel, owner } = rig(600)
+  sheetDrag(gs, owner, { steps: Array(10).fill(20), stepMs: 100 })    // 200px,0.2 px/ms
+  assert.ok(dismissed(owner), '慢拖 200px(> 600 × 30%)必须关闭')
+  assert.equal(offsetOf(lastStyle(panel)), '100%', '关闭时面板要从当前位置落下去，不能先跳回 0')
+})
+
+test('慢慢拖但没到 30% ⇒ 不关,吸回 0 并在过渡结束后撤掉行内样式', () => {
+  const gs = loadWxs(); const { panel, owner } = rig(600)
+  sheetDrag(gs, owner, { steps: Array(8).fill(20), stepMs: 100 })     // 160px
+  assert.equal(owner.calls.length, 0, '没过阈值不该通知宿主')
+  assert.equal(offsetOf(lastStyle(panel)), 0)
+  assert.match(lastStyle(panel).transition, /cy-motion-standard/, '吸附要有过渡，不能瞬移')
+  gs.sheetSettle({ target: { dataset: { gpanel: '1' } }, instance: panel }, owner)
+  assert.deepEqual(lastStyle(panel), { transform: '', transition: '' }, '吸回 0 后要撤掉行内 transform,否则压住 morph 退场')
+})
+
+test('位移很小但甩得快 ⇒ 关闭(速度闸)', () => {
+  const gs = loadWxs(); const { owner } = rig(600)
+  sheetDrag(gs, owner, { steps: [20, 20], stepMs: 16 })              // 40px,末段 1.25 px/ms
+  assert.ok(dismissed(owner), '快甩必须关闭 —— 这条挂的是速度闸')
+})
+
+test('拖拽期间根上挂 sh--dragging,松手摘掉;跟手不带过渡', () => {
+  const gs = loadWxs(); const { panel, root, owner } = rig(600)
+  const ds = { panel: '.sh__panel', root: '.sh', dragcls: 'sh--dragging', wh: 800 }
+  let t = 0
+  gs.sheetStart({ currentTarget: { dataset: ds }, touches: [{ clientY: 100 }], timeStamp: t }, owner)
+  gs.sheetMove({ currentTarget: { dataset: ds }, touches: [{ clientY: 150 }], timeStamp: (t += 16) }, owner)
+  assert.ok(root.classes.has('sh--dragging'))
+  assert.equal(offsetOf(lastStyle(panel)), 50, '向下 1:1 跟手')
+  assert.equal(lastStyle(panel).transition, 'none')
+  gs.sheetEnd({ currentTarget: { dataset: ds }, touches: [], timeStamp: t + 300 }, owner)
+  assert.equal(root.classes.has('sh--dragging'), false)
+})
+
+test('轻点(位移 < 4px)不进入拖拽:不写样式、不通知宿主 —— 头部的 ✕ 照常能点', () => {
+  const gs = loadWxs(); const { panel, owner } = rig(600)
+  sheetDrag(gs, owner, { steps: [2, 1], stepMs: 16 })
+  assert.equal(panel.styles.length, 0)
+  assert.equal(owner.calls.length, 0)
+})
+
+test('往上拽:越过最高档只走 25%,松手用弹簧曲线弹回 0', () => {
+  const gs = loadWxs(); const { panel, owner } = rig(600)
+  const ds = { panel: '.sh__panel', wh: 800 }
+  gs.sheetStart({ currentTarget: { dataset: ds }, touches: [{ clientY: 300 }], timeStamp: 0 }, owner)
+  gs.sheetMove({ currentTarget: { dataset: ds }, touches: [{ clientY: 200 }], timeStamp: 100 }, owner)
+  assert.equal(offsetOf(lastStyle(panel)), -25, '往上 100px 只该走 25px')
+  gs.sheetEnd({ currentTarget: { dataset: ds }, touches: [], timeStamp: 200 }, owner)
+  assert.equal(offsetOf(lastStyle(panel)), 0)
+  assert.match(lastStyle(panel).transition, /cy-ease-spring/, '越界弹回要用弹簧曲线')
+  assert.equal(owner.calls.length, 0, '往上拽不该关闭')
+})
+
+test('减动效:往上拽顶住不动;吸附直接到位不带过渡', () => {
+  const gs = loadWxs(); const { panel, owner } = rig(600)
+  const ds = { panel: '.sh__panel', wh: 800, rm: true }
+  gs.sheetStart({ currentTarget: { dataset: ds }, touches: [{ clientY: 300 }], timeStamp: 0 }, owner)
+  gs.sheetMove({ currentTarget: { dataset: ds }, touches: [{ clientY: 200 }], timeStamp: 100 }, owner)
+  assert.equal(offsetOf(lastStyle(panel)), 0, '减动效下没有阻尼位移')
+  gs.sheetMove({ currentTarget: { dataset: ds }, touches: [{ clientY: 380 }], timeStamp: 1000 }, owner)
+  gs.sheetEnd({ currentTarget: { dataset: ds }, touches: [], timeStamp: 1000 }, owner)
+  assert.deepEqual(lastStyle(panel), { transform: '', transition: '' }, '减动效吸附直接到位')
+})
+
+test('量不到面板高时降级成只看速度,慢拖到底也不误关', () => {
+  const gs = loadWxs(); const { owner } = rig(0)
+  sheetDrag(gs, owner, { steps: Array(30).fill(20), stepMs: 100 })
+  assert.equal(dismissed(owner), false, 'h=0 时位移闸必须失效')
+})
+
+test('不许随手关(blocked)时,过阈值也只弹回,并告诉宿主 blocked', () => {
+  const gs = loadWxs(); const { panel, owner } = rig(600)
+  sheetDrag(gs, owner, { steps: Array(10).fill(20), stepMs: 100, ds: { blocked: true } })
+  assert.equal(dismissed(owner), false, 'blocked 却被拖关了 —— 守卫被绕过')
+  assert.ok(blocked(owner), '要告诉宿主 blocked(dirty 时由组件上报 requestclose)')
+  assert.equal(offsetOf(lastStyle(panel)), 0, '面板必须弹回，不能停在半路')
+  assert.match(lastStyle(panel).transition, /transform/, '弹回要有过渡，不能瞬移')
+})
+
+test('退场中(data-off)不接手势', () => {
+  const gs = loadWxs(); const { panel, owner } = rig(600)
+  sheetDrag(gs, owner, { steps: Array(10).fill(20), stepMs: 100, ds: { off: true } })
+  assert.equal(panel.styles.length, 0)
+  assert.equal(owner.calls.length, 0)
+})
+
+/* ——— 负控:每条闸拆一次,对应用例必须判红 ——— */
+
+test('负控:拆掉速度闸后,快甩用例必须判红', () => {
+  const gs = loadWxs((s) => s.replace('var DISMISS_VELOCITY = 0.5;', 'var DISMISS_VELOCITY = 1e9;'))
+  const { owner } = rig(600)
+  sheetDrag(gs, owner, { steps: [20, 20], stepMs: 16 })
+  assert.equal(dismissed(owner), false)
+})
+
+test('负控:拆掉位移闸后,慢拖用例必须判红', () => {
+  const gs = loadWxs((s) => s.replace('var DISMISS_RATIO = 0.3;', 'var DISMISS_RATIO = 1e9;'))
+  const { owner } = rig(600)
+  sheetDrag(gs, owner, { steps: Array(10).fill(20), stepMs: 100 })
+  assert.equal(dismissed(owner), false)
+})
+
+test('负控:不查 blocked 时,blocked 用例必须判红', () => {
+  const gs = loadWxs((s) => s.replace("if (r.action === 'dismiss' && !d.blocked) {", "if (r.action === 'dismiss') {"))
+  const { owner } = rig(600)
+  sheetDrag(gs, owner, { steps: Array(10).fill(20), stepMs: 100, ds: { blocked: true } })
+  assert.equal(dismissed(owner), true)
+})
+
+/* ——— 组件侧(逻辑层)——— */
+
+function loadComponent(file, mutate) {
+  let src = fs.readFileSync(file, 'utf8')
+  if (mutate) { const next = mutate(src); assert.notEqual(next, src, '负控注入点写错了'); src = next }
   let captured = null
-  const fn = vm.compileFunction(src, ['require', 'module', 'exports', 'Component', 'getApp', 'wx'], {
-    filename: SHEET_JS,
-  })
-  const localRequire = Module.createRequire(SHEET_JS)
-  const mod = { exports: {} }
-  // 三个 behaviors 是用小程序全局 Behavior() 定义的,Node 里没有这个全局。
-  // 只在加载期间补上,加载完立刻还原,免得污染同批跑的其它测试文件。
+  const fn = vm.compileFunction(src, ['require', 'module', 'exports', 'Component', 'getApp', 'wx'], { filename: file })
   const prevBehavior = global.Behavior
   const prevWx = global.wx
   global.Behavior = (o) => o
-  global.wx = global.wx || { getWindowInfo: () => ({ windowWidth: 375, statusBarHeight: 20 }) }
+  global.wx = global.wx || { getWindowInfo: () => ({ windowWidth: 375, windowHeight: 812, statusBarHeight: 20 }) }
   try {
-    fn(localRequire, mod, mod.exports, (o) => { captured = o }, () => ({ globalData: {} }), {
-      getWindowInfo: () => ({ windowWidth: 375, statusBarHeight: 20 }),
-    })
-  } finally {
-    global.Behavior = prevBehavior
-    global.wx = prevWx
-  }
-  assert.ok(captured && captured.methods, 'cy-sheet 必须是一个 Component 定义')
+    fn(Module.createRequire(file), { exports: {} }, {}, (o) => { captured = o }, () => ({ globalData: {} }),
+      { getWindowInfo: () => ({ windowWidth: 375, windowHeight: 812, statusBarHeight: 20 }) })
+  } finally { global.Behavior = prevBehavior; global.wx = prevWx }
   return captured
 }
 
-// 最小假实例:只提供组件真正用到的那几个宿主能力。
-function makeInstance(def, { dirty = false, panelHeight = 600 } = {}) {
+function instance(def, data) {
   const events = []
-  /* ⚠️ properties 的默认值也要铺进 data —— 小程序运行时就是这么合并的。
-     漏了这一步,组件里读 this.data.maskClosable 会拿到 undefined,任何
-     `!this.data.xxx` 形式的闸都会变成恒真,把本来该过的用例全判红
-     (2026-09-01 自审加 maskClosable 闸时实测踩到)。 */
   const propDefaults = {}
   for (const [k, v] of Object.entries(def.properties || {})) propDefaults[k] = v && v.value
   const inst = {
-    data: Object.assign({}, propDefaults, def.data, { _closing: false, dirty, handle: true, variant: 'bottom' }),
+    data: Object.assign({}, propDefaults, def.data, { _closing: false, show: true }, data),
     setData(patch) { Object.assign(this.data, patch) },
     triggerEvent(name, detail) { events.push({ name, detail }) },
-    createSelectorQuery() {
-      return {
-        select() { return this },
-        // 同步回调:真实环境是异步的,但本契约要断的是"量到高度之后怎么判",
-        // 量不到高度的降级路径由 h=0 那个用例单独覆盖。
-        boundingClientRect(cb) { this._cb = cb; return this },
-        exec() { if (this._cb) this._cb({ height: panelHeight }) },
-      }
-    },
     events,
   }
   for (const [k, v] of Object.entries(def.methods)) inst[k] = v.bind(inst)
   return inst
 }
 
-// 按给定的 (位移, 每步耗时) 序列驱动一次完整手势。
-function drag(inst, { steps, stepMs }) {
-  const realNow = Date.now
-  let t = 1_000_000
-  global.Date.now = () => t
-  try {
-    inst.onDragStart({ touches: [{ clientY: 0 }] })
-    let y = 0
-    for (const dy of steps) {
-      y += dy
-      t += stepMs
-      inst.onDragMove({ touches: [{ clientY: y }] })
-    }
-    inst.onDragEnd()
-  } finally {
-    global.Date.now = realNow
-  }
-  return inst.events
+for (const [label, file] of [['cy-sheet', SHEET_JS], ['cy-scene-sheet', SCENE_JS]]) {
+  test(`${label}:dismiss 走 ✕ 同一出口(requestclose + close)`, () => {
+    const inst = instance(loadComponent(file), {})
+    inst._onGestureRelease({ action: 'dismiss' })
+    assert.deepEqual(inst.events.map((e) => e.name), ['requestclose', 'close'])
+    assert.equal(inst.events[1].detail.reason, 'drag')
+    clearTimeout(inst._dragOutTimer)
+  })
+
+  test(`${label}:dirty 时 blocked 只上报 requestclose,不发 close`, () => {
+    const inst = instance(loadComponent(file), { dirty: true })
+    inst._onGestureRelease({ action: 'blocked' })
+    assert.deepEqual(inst.events.map((e) => e.name), ['requestclose'])
+  })
+
+  test(`${label}:不脏的 blocked(不许随手关)什么都不发`, () => {
+    const inst = instance(loadComponent(file), { dirty: false })
+    inst._onGestureRelease({ action: 'blocked' })
+    assert.deepEqual(inst.events, [])
+  })
+
+  test(`${label}:宿主不接这次关闭(show 仍为 true)⇒ 发 gcmd 把面板拉回来`, async () => {
+    const inst = instance(loadComponent(file), {})
+    const before = inst.data._gestureCmd
+    inst._onGestureRelease({ action: 'dismiss' })
+    await new Promise((r) => setTimeout(r, 450))
+    assert.equal(inst.data._gestureCmd, before + 1)
+  })
 }
 
-const closed = (events) => events.some((e) => e.name === 'close')
-const requested = (events) => events.some((e) => e.name === 'requestclose')
-
-test('慢慢拖过面板高度的 1/3 ⇒ 关闭(位移闸)', () => {
-  const inst = makeInstance(loadSheet(), { panelHeight: 600 })
-  // 每步 20px / 100ms ⇒ 速度 0.2 px/ms,远低于 .55,只可能靠位移闸关
-  const events = drag(inst, { steps: Array(15).fill(20), stepMs: 100 })
-  assert.ok(closed(events), '慢拖 300px(> 600 的 1/3)必须关闭')
+test('cy-sheet 负控:拿掉宿主不接时的回拉,上一条必须判红', async () => {
+  const def = loadComponent(SHEET_JS, (s) => s.replace('if (this.data.show && !this.data._closing) {', 'if (false) {'))
+  const inst = instance(def, {})
+  inst._onGestureRelease({ action: 'dismiss' })
+  await new Promise((r) => setTimeout(r, 450))
+  assert.equal(inst.data._gestureCmd, 0)
 })
 
-test('慢慢拖但没到 1/3 ⇒ 不关,弹回', () => {
-  const inst = makeInstance(loadSheet(), { panelHeight: 600 })
-  const events = drag(inst, { steps: Array(5).fill(20), stepMs: 100 })   // 100px < 200px
-  assert.equal(closed(events), false, '没过阈值不能关')
-  assert.equal(requested(events), false, '没过阈值也不该发 requestclose')
-  assert.equal(inst.data._dragStyle, '', '弹回时必须把行内 transform 清掉，否则面板停在半路')
-  assert.equal(inst.data._snapping, true, '没过阈值必须进吸附态')
-})
+/* ——— 接线 ——— */
 
-test('位移很小但甩得快 ⇒ 关闭(速度闸)', () => {
-  const inst = makeInstance(loadSheet(), { panelHeight: 600 })
-  // 总位移 60px(远小于 200px),但末段 30px/16ms ≈ 1.9 px/ms
-  const events = drag(inst, { steps: [30, 30], stepMs: 16 })
-  assert.ok(closed(events), '快甩必须关闭 —— 这条挂的是速度闸，不是位移闸')
-})
-
-test('dirty 时过阈值只发 requestclose,不发 close', () => {
-  const inst = makeInstance(loadSheet(), { dirty: true, panelHeight: 600 })
-  const events = drag(inst, { steps: Array(15).fill(20), stepMs: 100 })
-  assert.ok(requested(events), '脏输入时必须上报 requestclose,交给父页面决定')
-  assert.equal(closed(events), false, '脏输入时不能直接 close —— 和点遮罩同一条闸')
-})
-
-test('往上拖有阻尼且不会触发关闭', () => {
-  const inst = makeInstance(loadSheet(), { panelHeight: 600 })
-  const events = drag(inst, { steps: Array(10).fill(-20), stepMs: 100 })
-  assert.equal(closed(events), false, '向上拖不该关闭')
-  // 最后一帧 _dragStyle 已被 onDragEnd 清空,所以阻尼要在 move 阶段断:重跑到 move 为止
-  const inst2 = makeInstance(loadSheet(), { panelHeight: 600 })
-  const realNow = Date.now
-  let t = 1_000_000
-  global.Date.now = () => t
-  try {
-    inst2.onDragStart({ touches: [{ clientY: 0 }] })
-    t += 100
-    inst2.onDragMove({ touches: [{ clientY: -30 }] })
-  } finally { global.Date.now = realNow }
-  const up = /--sh-drag-y:\s*(-?[\d.]+)px/.exec(inst2.data._dragStyle)
-  assert.ok(up, '向上拖也要输出 --sh-drag-y')
-  assert.ok(Number(up[1]) > -30, `向上必须有阻尼，不能 1:1(实际 ${up[1]}px)`)
-})
-
-test('量不到面板高度时降级成只看速度,慢拖不会误关', () => {
-  const def = loadSheet()
-  const inst = makeInstance(def, { panelHeight: 0 })
-  const events = drag(inst, { steps: Array(30).fill(20), stepMs: 100 })
-  assert.equal(closed(events), false, 'h=0 时位移闸必须失效，不能拿 0 当阈值把面板一拖就关')
-})
-
-test('wxml:抓手挂了完整的四个触摸事件,且用 catch 不冒泡', () => {
+test('cy-sheet wxml:抓手与头部起拖(WXS),正文不起拖;面板收 transitionend 与 gcmd', () => {
   const wxml = fs.readFileSync(SHEET_WXML, 'utf8')
+  assert.match(wxml, /<wxs module="gs" src="\.\.\/\.\.\/\.\.\/utils\/wxs\/gesture\.wxs" \/>/)
   const grip = /<view class="sh__grip"[\s\S]*?>/.exec(wxml)
-  assert.ok(grip, '抓手必须是 .sh__grip(热区容器),不是直接把触摸挂在 8rpx 高的横条上')
+  assert.ok(grip, '抓手必须是 .sh__grip(热区容器)')
   for (const ev of ['catchtouchstart', 'catchtouchmove', 'catchtouchend', 'catchtouchcancel']) {
-    assert.match(grip[0], new RegExp(ev), `抓手缺 ${ev} —— 少 cancel 会让来电/手势打断后卡在拖拽态`)
+    assert.match(grip[0], new RegExp(ev + '="\\{\\{gs\\.sheet'), `抓手缺 ${ev} —— 少 cancel 会让来电打断后卡在拖拽态`)
   }
-  // 位移必须挂在根节点的 CSS 变量上,不能写进 .sh__panel 的行内 style ——
-  // 那个 style 表达式被 sheet-morph-contract 逐字锁着,叠上去会顶掉 morph 进出场。
-  // ⚠️ 2026-09-25 CU-M-163:根节点的 style 后来还要承载 full 变体的面板顶(fullMaxH),
-  //   所以判据从「整段等于 {{_dragStyle}}」收成「以 {{_dragStyle}} 开头」——
-  //   位移仍在根、仍第一顺位,被挪到 .sh__panel 上照样红(下面那条 panel 逐字锁负责)。
-  assert.match(wxml, /class="sh sh--\{\{variant\}\}[^"]*"[^>]*style="\{\{_dragStyle\}\}/,
-    '根节点必须承载 _dragStyle(--sh-drag-y),拖拽才跟手')
+  assert.match(grip[0], /data-blocked="\{\{!maskClosable \|\| dirty\}\}"/, '和点遮罩同一条闸')
+  assert.match(grip[0], /data-rm="\{\{reducedMotion\}\}"/)
+  const head = /<view class="sh__head [\s\S]*?>/.exec(wxml)
+  assert.match(head[0], /bindtouchstart="\{\{gs\.sheetStart\}\}"/, '头部也能起拖')
+  assert.match(head[0], /bindtouchcancel="\{\{gs\.sheetEnd\}\}"/)
+  const body = /<scroll-view class="sh__body"[^>]*>/.exec(wxml)
+  assert.doesNotMatch(body[0], /gs\.sheet/, '正文不起拖,内容照常滚动')
+  assert.match(wxml, /class="sh__panel[^"]*"[^>]*bindtransitionend="\{\{gs\.sheetSettle\}\}"[^>]*change:gcmd="\{\{gs\.sheetCmd\}\}" gcmd="\{\{_gestureCmd\}\}"/)
   assert.match(wxml, /class="sh__panel[^"]*"[^>]*style="\{\{\(_morphOpen && !_closing\) \? '' : _morphStyle\}\}"/,
-    '.sh__panel 的行内 style 必须保持 morph 契约的原样，不许被拖拽叠一层')
+    '.sh__panel 的行内 style 必须保持 morph 契约的原样')
+  assert.match(wxml, /_dragOut \? 'sh--drag-out' : ''/)
 })
 
-/* ——— 负控:两条闸各拆一次,对应用例必须判红 ——— */
-
-test('负控:拆掉速度闸后,快甩用例必须判红', () => {
-  const def = loadSheet((src) => src.replace('const DRAG_VELOCITY = 0.55;', 'const DRAG_VELOCITY = 1e9;'))
-  const inst = makeInstance(def, { panelHeight: 600 })
-  const events = drag(inst, { steps: [30, 30], stepMs: 16 })
-  assert.equal(closed(events), false, '速度闸被拆掉后快甩还能关 ⇒ 说明它根本不是靠速度闸关的，断言是假的')
+test('cy-sheet wxss:甩出去关闭时退场不再从 0 播 sh-down', () => {
+  const wxss = fs.readFileSync(SHEET_WXSS, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
+  assert.match(wxss, /\.sh\.sh--drag-out \.sh__panel \{ animation: none; \}/)
+  assert.match(wxss, /\.sh\.sh--dragging \.sh__panel \{ animation: none; transition: none; \}/)
 })
 
-test('负控:拆掉位移闸后,慢拖用例必须判红', () => {
-  const def = loadSheet((src) => src.replace('const DRAG_RATIO = 1 / 3;', 'const DRAG_RATIO = 1e9;'))
-  const inst = makeInstance(def, { panelHeight: 600 })
-  const events = drag(inst, { steps: Array(15).fill(20), stepMs: 100 })
-  assert.equal(closed(events), false, '位移闸被拆掉后慢拖还能关 ⇒ 慢拖那条断言是假的')
+test('cy-scene-sheet wxml:half / full 头部起拖,page 档没有', () => {
+  const wxml = fs.readFileSync(SCENE_WXML, 'utf8')
+  assert.match(wxml, /<wxs module="gs" src="\.\.\/\.\.\/\.\.\/utils\/wxs\/gesture\.wxs" \/>/)
+  const head = /<view class="ss__head" wx:else[\s\S]*?>/.exec(wxml)
+  assert.ok(head, '头部只在非 page 档渲染')
+  for (const ev of ['bindtouchstart', 'catchtouchmove', 'bindtouchend', 'bindtouchcancel']) assert.match(head[0], new RegExp(ev + '="\\{\\{gs\\.sheet'))
+  assert.match(head[0], /data-blocked="\{\{!closable \|\| dirty\}\}"/, '没有 ✕ 的场景不许拖关')
+  assert.match(wxml, /class="ss__panel"[^>]*bindtransitionend="\{\{gs\.sheetSettle\}\}"[^>]*gcmd="\{\{_gestureCmd\}\}"/)
 })
 
-// 2026-09-01 自审补:maskClosable=false 是调用方「不许随手关」的显式表态
-// (club/detail 的编辑动态就是这么写的)。点遮罩查了这条闸,拖拽当时没查 ——
-// 等于我给守卫开了个后门。现在两条路径同闸,并用负控钉住。
-test('maskClosable=false 时,过阈值的拖拽也不许关闭(与点遮罩同闸)', () => {
-  const inst = makeInstance(loadSheet(), { panelHeight: 600 })
-  inst.data.maskClosable = false
-  const events = drag(inst, { steps: Array(15).fill(20), stepMs: 100 })
-  assert.equal(closed(events), false, 'maskClosable=false 却被拖关了 —— 守卫被绕过')
-  assert.equal(inst.data._snapping, true, '不许关的面板必须弹回，不能停在半路')
-})
-
-test('负控:拖拽不查 maskClosable 时必须判红', () => {
-  // 注入点随 2026-09-01 重构改过:闸从内联 if 抽成了 blocked 变量,这里去掉 maskClosable 那一半
-  const def = loadSheet((src) => src.replace(
-    'const blocked = !this.data.maskClosable || this.data.dirty;',
-    'const blocked = this.data.dirty;'))
-  const inst = makeInstance(def, { panelHeight: 600 })
-  inst.data.maskClosable = false
-  const events = drag(inst, { steps: Array(15).fill(20), stepMs: 100 })
-  assert.equal(closed(events), true, '把闸拆掉后居然还是关不掉 ⇒ 上一条断言不是靠这条闸成立的')
-})
-
-/* 2026-09-01 自审补:原来「dirty 时只发 requestclose」那条只断言了事件,没断言面板去哪。
-   实测 dirty + 过阈值走的是关闭分支,_snapping 被置 false ⇒ .sh--snap 的 transform
-   规则不再命中,面板直接跳回 0(瞬移)而不是弹回。断言只查事件就会放过这类缺陷。 */
-test('dirty 时过阈值:关不掉,但面板必须弹回而不是瞬移', () => {
-  const inst = makeInstance(loadSheet(), { dirty: true, panelHeight: 600 })
-  const events = drag(inst, { steps: Array(15).fill(20), stepMs: 100 })
-  assert.ok(requested(events), '仍要上报 requestclose,让父页面决定')
-  assert.equal(closed(events), false, '脏输入不能直接关')
-  assert.equal(inst.data._snapping, true, '关不掉的面板必须进吸附态，否则是瞬移回位')
-  assert.equal(inst.data._dragStyle, '', '行内位移要清掉，否则停在半路')
-})
-
-test('负控:把 dirty 从「不许关」里拿掉时,上面那条必须判红', () => {
-  const def = loadSheet((src) =>
-    src.replace('const blocked = !this.data.maskClosable || this.data.dirty;',
-                'const blocked = !this.data.maskClosable;'))
-  const inst = makeInstance(def, { dirty: true, panelHeight: 600 })
-  drag(inst, { steps: Array(15).fill(20), stepMs: 100 })
-  assert.equal(inst.data._snapping, false,
-    'dirty 不再走吸附分支后 _snapping 仍为 true ⇒ 上面那条断言不是靠这条闸成立的')
+test('qx-green:窗口高由视图层量遮罩(data-whsel),不走 setData;量到才有中间档,量不到只回 0', () => {
+  const gs = loadWxs()
+  const panel = makeEl({ height: 600 })
+  const owner = makeOwner({ '.sh__panel': panel, '.sh': makeEl(), '.sh__mask': makeEl({ height: 800 }) })
+  sheetDrag(gs, owner, { steps: Array(6).fill(20), stepMs: 100, ds: { wh: 0, whsel: '.sh__mask', detents: 'half' } })
+  assert.equal(offsetOf(lastStyle(panel)), 120, '600 高的面板在 800 高窗口里 half 档 = 600 - 0.6 × 800')
+  const bare = makeEl({ height: 600 })
+  const noMask = makeOwner({ '.sh__panel': bare, '.sh': makeEl() })
+  sheetDrag(gs, noMask, { steps: Array(6).fill(20), stepMs: 100, ds: { wh: 0, whsel: '.sh__mask', detents: 'half' } })
+  assert.equal(offsetOf(lastStyle(bare)), 0, '量不到窗口高就只有自身一档')
+  assert.match(fs.readFileSync(SHEET_WXML, 'utf8'), /data-whsel="\.sh__mask"/)
+  assert.match(fs.readFileSync(SCENE_WXML, 'utf8'), /data-whsel="\.ss__mask"/)
 })

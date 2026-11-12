@@ -197,6 +197,12 @@ class GenericGameplayHttpE2eIT {
                         + " AND action='AUDIT_DECISION_APPROVE' AND actor_type='SYS_USER' AND actor_member_id=? AND request_id=?",
                         Integer.class, taskId, operator.getUserId(), request.getRequestId()));
                 assertEquals(1, notificationCount(database, memberId, taskId));
+                // Questo 素材来源合同：审核通过但未声明来源/授权的素材仍不能公开；由本人走 PUT /{id}/provenance 的同一服务补声明。
+                assertEquals("ASSET_LICENSE_MISSING：请补充素材来源和授权声明后再公开", assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                        () -> guard.requireMedia(memberId, reference, true)).getMessage());
+                assets.saveProvenance(id, memberId, java.util.Map.of("sourceType", "original", "licenseNote", "仅测试夹具：原创素材声明"));
+                assertEquals(1, database.queryForObject("SELECT COUNT(*) FROM app_media_asset WHERE id=? AND member_id=? AND source_type='original'"
+                        + " AND review_state='APPROVED' AND version=0", Integer.class, id, memberId));
                 assertEquals(reference, guard.requireMedia(memberId, reference, true));
                 byKey.put(key, reference);
                 String signed = assets.approvedUrl(id);
@@ -993,7 +999,10 @@ class GenericGameplayHttpE2eIT {
     }
     @Test void personalR5DirectParticipationWithoutMerchantIsRefused() throws Exception {
         Lifecycle s=lifecycle(r5("qa"),"BLOCK_HP_COST","counter.energy","PLAYER",true,0);
-        assertTrue(s.publication.path("msg").asText().contains("个人任务"),s.publication.toString());
+        // qx-green:发布闸按站点给出可执行的拒绝(TopicRoutePublicationCompiler.personalArrivalRefusal,k7 N5 / 第十三轮 m2):
+        // 直接参与(validationMethod=0)且无承接商家 → 点名这一站、要求改为定位 / 扫码或绑定商家;「个人任务…」那句只留给已选定位 / 扫码却核验不了的站。
+        assertEquals(500,s.publication.path("code").asInt(),s.publication.toString());
+        assertTrue(s.publication.path("msg").asText().contains("这一站的参与方式要选「定位到达」或「扫码」，或绑定承接商家"),s.publication.toString());
         assertNull(database.queryForObject("SELECT published_route_graph_json FROM cms_topic WHERE id=?",String.class,s.topicId));
         success(form("/api/topic/edit-detail",s.topicId,s.headers));success(form("/api/template/myinfo",s.templateId,s.headers));
     }

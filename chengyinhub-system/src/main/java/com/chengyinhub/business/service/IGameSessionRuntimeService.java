@@ -11,6 +11,10 @@ import java.util.Map;
 
 /** 活动级三身份游戏深模块公开 seam。 */
 public interface IGameSessionRuntimeService {
+
+    Map<String, Object> cooperativePuzzleHelp(Long memberId, Long activityId, Long gameSessionId,
+            Long nodeId, String instance, Integer epoch, String operation, Integer level, String requestId, String capabilities);
+
     /** Persisted projection: null only when no shared session applies; a missing shared RUN rejects without initialization/refresh. */
     com.chengyinhub.business.domain.route.TopicRouteState querySharedRouteState(Long memberId, Long topicId, Long activityId);
     /** Server-only original snapshot. No initialization, zero-HP refresh, effects or writes. */

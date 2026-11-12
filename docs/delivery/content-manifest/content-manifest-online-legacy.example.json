@@ -1,0 +1,20 @@
+{
+  "status": "ONLINE_LEGACY",
+  "topicId": 21,
+  "activityId": 77,
+  "contentRevisionId": null,
+  "revisionNo": null,
+  "schemaVersion": null,
+  "manifestVersion": null,
+  "contentSha256": null,
+  "routeMode": null,
+  "openingChapterId": null,
+  "openingChapterName": null,
+  "stations": [],
+  "requiredCapabilities": null,
+  "assets": [],
+  "assetVerification": "NONE",
+  "expiresAt": null,
+  "onlineRequired": true,
+  "sourceLocale": "zh-CN"
+}

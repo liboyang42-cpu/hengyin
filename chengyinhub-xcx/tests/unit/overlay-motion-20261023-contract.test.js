@@ -81,7 +81,8 @@ test('① cy-scene-sheet:有退场、按档位定速、不再占 keyframes', () 
   assert.match(wxml, /wx:if="\{\{_render\}\}"/, '不能再直连 show —— 那样关闭瞬间消失')
   assert.match(wxml, /\{\{_in && !_closing \? 'ss--in' : ''\}\}/)
   const js = read('components/cy/scene-sheet/index.js')
-  assert.match(js, /behaviors: \[exitMotion\(250\)\]/)
+  // 2026-11-10 qx-s2 staging:qx-u3 给 scene-sheet 叠了 sheetDepth(叠层景深)behavior,退场 behavior 仍是 exitMotion(250) 且排第一。
+  assert.match(js, /behaviors: \[exitMotion\(250\)(, sheetDepth)?\]/)
   const m = /LEVEL_EXIT_MS = \{ half: (\d+), full: (\d+) \}/.exec(js)
   assert.deepEqual(m.slice(1).map(Number), [ms('sheet-out'), ms('sheet-full-out')])
   const wxss = strip(read('components/cy/scene-sheet/index.wxss'))
@@ -239,7 +240,7 @@ test('④ 收尾:漫游主题半屏 / 附近的人 / 模板编辑器 / 游玩工
   const temp = read('pages/publish/temp/index.wxml')
   const masks = temp.match(/class="cg-mask[^"]*"[^>]*bindtap="cgDismiss"/g) || []
   // 2026-10-28 L4:多一张「添加加值 / 添加代价」半屏(checkSheet),同样走 cgDismiss
-  assert.equal(masks.length, 11, '11 个页面自绘半屏的遮罩都走 cgDismiss')
+  assert.equal(masks.length, 11, '11 个页面自绘半屏的遮罩都走 cgDismiss')  // 2026-11-10 l-misc:素材来源声明半屏退场 −1  // 2026-11-10 r2-create:素材来源声明半屏 +1
   assert.doesNotMatch(temp, /class="cg-mask[^"]*"[^>]*bindtap="close/, '遮罩不再直接一帧关闭')
   const tw = strip(read('pages/publish/temp/index.wxss'))
   assert.match(tw, /\.cg-sheet \{[^}]*animation: cy-rise var\(--cy-motion-sheet-in\) var\(--cy-ease-standard\);/)

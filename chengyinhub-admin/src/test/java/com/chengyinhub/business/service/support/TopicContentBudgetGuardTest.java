@@ -30,6 +30,27 @@ class TopicContentBudgetGuardTest {
         assertDoesNotThrow(() -> f.guard.assertTopicSizeWithinLimits(TOPIC));
     }
 
+
+    @Test
+    void previewUsesPlainCountsWithoutTakingTheWriteFence() {
+        Fixture f = new Fixture(30L, 300L);
+        assertDoesNotThrow(() -> f.guard.assertTopicSizeWithinLimitsPreview(TOPIC));
+        verify(f.chapters).countContentByTopic(TOPIC);
+        verify(f.nodes).countContentByTopic(TOPIC);
+        verify(f.topics, never()).lockTopicContentBudget(TOPIC);
+        verify(f.chapters, never()).countContentByTopicForUpdate(TOPIC);
+        verify(f.nodes, never()).countContentByTopicForUpdate(TOPIC);
+    }
+
+    @Test
+    void previewRejectsOverLimitCounts() {
+        Fixture f = new Fixture(31L, 1L);
+        assertEquals("发布前请先调整:主题最多 30 章,当前 31 章,请合并或删减章节",
+                assertThrows(IllegalStateException.class,
+                        () -> f.guard.assertTopicSizeWithinLimitsPreview(TOPIC)).getMessage());
+        verify(f.topics, never()).lockTopicContentBudget(TOPIC);
+    }
+
     @Test
     void thirtyOneChaptersRetainTheExistingLimitMessage() {
         Fixture f = new Fixture(31L, 1L);
@@ -93,6 +114,8 @@ class TopicContentBudgetGuardTest {
             when(topics.lockTopicContentBudget(TOPIC)).thenReturn(TOPIC);
             when(chapters.countContentByTopicForUpdate(TOPIC)).thenReturn(chapterCount);
             when(nodes.countContentByTopicForUpdate(TOPIC)).thenReturn(nodeCount);
+            when(chapters.countContentByTopic(TOPIC)).thenReturn(chapterCount);
+            when(nodes.countContentByTopic(TOPIC)).thenReturn(nodeCount);
         }
     }
 }

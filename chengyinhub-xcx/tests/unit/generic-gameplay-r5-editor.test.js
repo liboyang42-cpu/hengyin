@@ -43,7 +43,7 @@ test('编辑一个字段仍保留 timer/variants 和未知选项键；新增列�
 });
 
 test('目录仅基础项、形式全部映射到现有存储段，扫码/移除规则不进入 picker', () => {
-  assert.equal(catalog.BASE_GAMES.length, 23);
+  assert.equal(catalog.BASE_GAMES.length, 23); // r2 b2-x-cat:逐字猜词并入文字问答的表单,不再单列一枚(qx-b2 曾 +1 到 24)
   const expected = { choice: ['qaPick', 'pricePair', 'blindTaste', 'predict'], photo: ['qaShot', 'photoCheck', 'objectCard'], random: ['coin', 'dice', 'random'], check: ['check', 'd20'], sign: ['note', 'dailySign'] };
   for (const [key, forms] of Object.entries(expected)) {
     assert.deepEqual(catalog.BASE_GAMES.find(row => row.key === key).forms.map(row => row.gameKey), forms);

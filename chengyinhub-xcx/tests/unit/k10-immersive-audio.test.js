@@ -223,7 +223,9 @@ test('作者编辑器:还没保存的站点开「到达与引导」不再是一�
 
 test('作者编辑器:玩法草稿没有封面时也有占位卡,选中有描边可见', () => {
   const wxml = read('pages/publish/fabu/index.wxml')
-  assert.match(wxml, /<image wx:if="\{\{item\.imgUrl\}\}" lazy-load="true" src="\{\{item\.imgUrl\}\}" mode="aspectFill" class="temp-rail__pic" \/>\n\s+<view wx:else class="temp-rail__pic"><\/view>/)
+  // l-editor(2026-11-10):模板选择改成列表行,没封面的草稿行用占位格;选中行有底色 + 勾
+  assert.match(wxml, /<image wx:if="\{\{item\.imgUrl\}\}" lazy-load="true" src="\{\{item\.imgUrl\}\}" mode="aspectFill" class="pk-row__pic" \/>\n\s+<view wx:else class="pk-row__pic pk-row__pic--blank">/)
+  assert.match(read('pages/publish/fabu/index.wxss'), /\.pk-row\.is-on \{ background:/)
   const tempWxml = read('pages/publish/temp/index.wxml')
   assert.match(tempWxml, /<view class="cg-audio-name">\{\{formData\.audioFileName\|\|'导览音频'\}\}<\/view>/, '文件名本身带扩展名,不再叠一个 .mp3')
 })

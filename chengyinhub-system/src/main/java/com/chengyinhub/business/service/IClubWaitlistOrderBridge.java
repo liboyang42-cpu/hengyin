@@ -12,4 +12,7 @@ public interface IClubWaitlistOrderBridge {
     ClubWaitlistClaim claimForOrder(Long memberId, RegistrationRequest request, Date now);
     void bindRegistration(ClubWaitlistClaim claim, Long registrationId);
     void convertedByRegistration(Long registrationId);
+
+    void requireHostAcceptance(Long activityId, ClubWaitlistClaim hold);
+    boolean hostPaymentNeedsRecovery(Long registrationId, Date now, Date paidAt);
 }

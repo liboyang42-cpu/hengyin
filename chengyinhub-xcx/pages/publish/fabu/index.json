@@ -1,5 +1,6 @@
 {
   "usingComponents": {
+    "location-todos": "/pages/publish/components/location-todos/index",
     "cy-list-group": "/pages/publish/components/list-group/index",
     "cy-list-row": "/pages/publish/components/list-row/index",
     "cy-sheet-nav": "/pages/publish/components/sheet-nav/index",
@@ -33,7 +34,8 @@
     "d20-settings": "/pages/publish/components/d20-settings/index",
     "start-prep": "/pages/publish/components/start-prep/index",
     "cy-stepper": "/pages/publish/components/stepper/index",
-    "cy-look-preview": "/pages/publish/components/look-preview/index"
+    "cy-look-preview": "/pages/publish/components/look-preview/index",
+    "cy-option-sheet": "/components/cy/option-sheet/index"
   },
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",

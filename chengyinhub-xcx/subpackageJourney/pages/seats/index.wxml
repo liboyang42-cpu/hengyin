@@ -1,0 +1,73 @@
+<view class="theme-dark jn lb">
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar plain />
+  <cy-page-title title="开局大厅" />
+  <cy-empty wx:if="{{state !== 'ready'}}" kind="{{stateKind}}" title="{{stateTitle}}" cta="{{stateCta}}" bind:cta="load" fill size="lg" />
+  <block wx:else>
+    <!-- 1 主题头 + 以谁身份游玩 -->
+    <view class="lb-head" wx:if="{{head}}">
+      <image wx:if="{{head.cover}}" class="lb-head__cover" src="{{head.cover}}" mode="aspectFill" />
+      <text class="lb-head__name">{{head.name}}</text>
+    </view>
+    <view class="jn-group lb-me" wx:if="{{me && me.name}}" bindtap="onEditMe" aria-role="button" aria-label="以 {{me.name}} 身份游玩，编辑" hover-class="cy-pressed" hover-stay-time="80">
+      <view class="jn-row">
+        <view class="jn-row__t"><text class="jn-row__b">以 {{me.name}} 身份游玩</text></view>
+        <text class="jn-row__v lb-link">编辑</text>
+      </view>
+    </view>
+
+    <!-- 2 一起玩的人 N/M:头像(买家)+ 已领席位号 + 虚线空位;一人票不出 -->
+    <view class="lb-party" wx:if="{{lobby.showParty}}">
+      <view class="lb-party__top">
+        <text class="lb-party__h">一起玩的人</text>
+        <text class="lb-party__n">{{lobby.countText}}</text>
+        <text class="lb-link lb-party__inv" wx:if="{{lobby.canInvite || lobby.invited.length}}" bindtap="onOpenInvite" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">邀请</text>
+      </view>
+      <view class="lb-seats">
+        <view wx:for="{{lobby.circles}}" wx:key="key" class="lb-seat is-{{item.kind}}"
+              bindtap="onSeatTap" data-tappable="{{item.tappable}}" aria-role="{{item.tappable ? 'button' : 'text'}}"
+              aria-label="第{{item.no}}席 {{item.label}}" hover-class="{{item.tappable ? 'cy-pressed' : 'none'}}" hover-stay-time="80">
+          <view class="lb-seat__c">
+            <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" />
+            <text wx:elif="{{item.kind === 'open'}}" class="lb-seat__plus">+</text>
+            <text wx:else>{{item.initial}}</text>
+            <text class="lb-seat__badge" wx:if="{{item.kind === 'me'}}">房主</text>
+          </view>
+          <text class="lb-seat__l">{{item.label}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 3 怎么玩:服务端 choices,≥2 席才出;服务端只给一种玩法时整宽一张卡,不画单选 -->
+    <view class="lb-modes" wx:if="{{lobby.multi && tiles.length}}">
+      <text class="lb-party__h">怎么玩</text>
+      <view class="lb-tiles">
+        <view wx:for="{{tiles}}" wx:key="key" class="lb-tile {{item.available ? '' : 'is-off'}}" aria-label="{{item.name}}">
+          <cy-icon name="{{item.icon}}" size="36" />
+          <text class="lb-tile__name">{{item.name}}</text>
+          <text class="lb-tile__sub" wx:if="{{item.reason || item.sub}}">{{item.reason || item.sub}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="jn-footer jn-footer--stack" wx:if="{{playUrl}}">
+      <cy-btn class="jn-grow" variant="primary" bindtap="onGoStart">去起点</cy-btn>
+    </view>
+
+    <!-- 已邀请列表(可撤回)留在页面里;邀请本身走统一的 Spotify 式邀请页(cy-share-card kind=invite,l-after) -->
+    <view class="lb-invited" wx:if="{{lobby.showParty && (lobby.invited.length || actionError)}}">
+      <cy-inline-error class="jn-err" wx:if="{{actionError}}" kind="field" title="{{actionError}}" />
+      <view class="jn-group" wx:if="{{lobby.invited.length}}">
+        <view class="jn-row" wx:for="{{lobby.invited}}" wx:key="key">
+          <text class="jn-rank">{{item.no}}</text>
+          <view class="jn-row__t"><text class="jn-row__b">{{item.label}}</text><text class="jn-row__s" wx:if="{{item.expires}}">{{item.expires}}</text></view>
+          <text class="jn-row__v jn-danger-text" wx:if="{{item.canCancel}}" data-id="{{item.invitationId}}" bindtap="onCancel" aria-role="button" aria-label="撤回第{{item.no}}席邀请" hover-class="cy-pressed" hover-stay-time="80">撤回</text>
+        </view>
+      </view>
+    </view>
+    <!-- 邀请同行 = 统一的 Spotify 式邀请页:封面压暗卡 + 邀请人 · 剩余席位 + 码;「发给微信好友」走本页 onShareAppMessage(带席位邀请 token) -->
+    <cy-share-card show="{{inviteShow}}" card="{{inviteCard}}" bind:close="onCloseInvite" />
+    <!-- qx-final:邀请卡「保存图片」走 wx.saveImageToPhotosAlbum,隐私授权在本页内弹(同 settle 页) -->
+    <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
+  </block>
+</view>

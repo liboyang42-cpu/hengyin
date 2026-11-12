@@ -76,7 +76,8 @@ class ApiTopicTemplateControllerTest {
         AjaxResult result = c.use("42", null);
 
         assertEquals(200, result.get("code"));
-        assertEquals(Map.of("topicId", 43L), result.get("data"));
+        // Questo 采用读回只在 data 上增量加键(来源血缘/采用方式),data.topicId 原键不变。
+        assertEquals(43L, ((Map<?, ?>) result.get("data")).get("topicId"));
         verify(cmsTopicService).copyCmsTopic(42L, params);
         verifyNoInteractions(merchantAccessService);
     }

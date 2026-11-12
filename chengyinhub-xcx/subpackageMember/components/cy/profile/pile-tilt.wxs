@@ -1,0 +1,42 @@
+// 2026-11-10 r2 V3-34 业主「要加上」:收集册三叠小卡跟手倾斜。
+// WXS 在视图层直接改样式,手指每动一下不走 setData;松手回到 CSS 静止角度(带过渡)。
+// 减少动态效果(data-reduced)时不倾斜。
+var MAX = 16
+
+function clamp(v) { return v > MAX ? MAX : (v < -MAX ? -MAX : v) }
+
+function start(e, ins) {
+  var ds = e.instance.getDataset()
+  var st = e.instance.getState()
+  st.off = ds.reduced === true || ds.reduced === 'true'
+  if (st.off) return
+  var t = e.touches[0]
+  st.x = t.pageX
+  st.y = t.pageY
+  st.el = e.instance.selectComponent('.pc-pile-3d')
+  st.sheen = e.instance.selectComponent('.pc-pile-sheen')
+  if (st.el) st.el.setStyle({ transition: 'transform 80ms linear' })
+}
+
+function move(e, ins) {
+  var st = e.instance.getState()
+  if (st.off || !st.el) return
+  var t = e.touches[0]
+  var ry = clamp((t.pageX - st.x) / 2.5)
+  var rx = clamp((st.y - t.pageY) / 2.5)
+  st.el.setStyle({ transform: 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)', transition: 'transform 80ms linear' })
+  if (st.sheen) {
+    var p = 50 - ry * 2
+    st.sheen.setStyle({ '-webkit-mask-position': p + '% 0', 'mask-position': p + '% 0' })
+  }
+}
+
+function end(e, ins) {
+  var st = e.instance.getState()
+  if (st.el) st.el.setStyle({})
+  if (st.sheen) st.sheen.setStyle({})
+  st.el = null
+  st.sheen = null
+}
+
+module.exports = { start: start, move: move, end: end }

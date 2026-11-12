@@ -20,7 +20,7 @@ public class ChapterBlockDTO implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "块类型：text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider", example = "text")
+    @Schema(description = "块类型：text / node / image / audio / dream / mood / thought / voice / odd / reveal / divider / gallery / branch / cap", example = "text")
     private String type;
 
     @Schema(description = "文本块正文；仅 type=text 时有效")
@@ -86,6 +86,73 @@ public class ChapterBlockDTO implements Serializable
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    @Schema(description = "正文段样式；仅普通 text 块：h1 标题 / h2 副标题 / quote 引用 / ul 项目列表 / ol 编号列表，缺省为正文", example = "h1")
+    private String style;
+
+    @Schema(description = "正文段内格式区间；仅普通 text 块。content 仍是纯文字，区间 [from,to) 按字符下标")
+    private List<TextMarkDTO> marks;
+
+    public String getStyle() { return style; }
+    public void setStyle(String style) { this.style = style; }
+    public List<TextMarkDTO> getMarks() { return marks; }
+    public void setMarks(List<TextMarkDTO> marks) { this.marks = marks; }
+
+    /* 2026-11-10 l-editor(业主批准的编辑器原型):图片组 / 分支任务 / 章节开始·结束卡。 */
+    @Schema(description = "图片组版式；仅 type=gallery：1 单图 / 2 双图 / 3 三图 / 4 四图，images 张数不超过它", example = "2")
+    private Integer layout;
+
+    @Schema(description = "章节卡位；仅 type=cap：open 章节开始(开场白，必须是第一个块) / end 章节结束(结语，必须是最后一个块)", example = "open")
+    private String cap;
+
+    @Schema(description = "分支任务的 2 至 3 条分支；仅 type=branch，content 是问题")
+    private List<BranchOptionDTO> options;
+
+    public Integer getLayout() { return layout; }
+    public void setLayout(Integer layout) { this.layout = layout; }
+    public String getCap() { return cap; }
+    public void setCap(String cap) { this.cap = cap; }
+    public List<BranchOptionDTO> getOptions() { return options; }
+    public void setOptions(List<BranchOptionDTO> options) { this.options = options; }
+
+    /** 分支任务的一条分支:玩家看到的选项文字 + 去向(continue 继续本章 / end 结束本章 / chapter:N 跳到第 N 章)。 */
+    public static class BranchOptionDTO implements Serializable
+    {
+        private static final long serialVersionUID = 1L;
+
+        @Schema(description = "玩家看到的选项", example = "直接去邮局")
+        private String text;
+
+        @Schema(description = "去向：continue / end / chapter:N", example = "continue")
+        private String to;
+
+        public String getText() { return text; }
+        public void setText(String text) { this.text = text; }
+        public String getTo() { return to; }
+        public void setTo(String to) { this.to = to; }
+    }
+
+    /** 段内一段格式:bold / italic / strike,区间左闭右开。 */
+    public static class TextMarkDTO implements Serializable
+    {
+        private static final long serialVersionUID = 1L;
+
+        @Schema(description = "起点（含）")
+        private Integer from;
+
+        @Schema(description = "终点（不含）")
+        private Integer to;
+
+        @Schema(description = "bold / italic / strike")
+        private String type;
+
+        public Integer getFrom() { return from; }
+        public void setFrom(Integer from) { this.from = from; }
+        public Integer getTo() { return to; }
+        public void setTo(Integer to) { this.to = to; }
+        public String getType() { return type; }
+        public void setType(String type) { this.type = type; }
+    }
 
 
     /** 梦块里的一张图:url 必填,line 是配在它旁边的一句话。 */

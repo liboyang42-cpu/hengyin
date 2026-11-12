@@ -1,7 +1,7 @@
 /* 藏品册(施工文档第四版 §3.3):玩家档暗色。顶部标题 + 分类药丸 + ✦,下面整块是物品堆 canvas。 */
 
 page {
-  background: #FAFBFD; /* ds-ok: 收集册整屏浅色底,与 album-aura 同值 */
+  background: #000000; /* ds-ok: 收集册玩家深色底(x-fix2 L-1) */
 }
 
 .oc-root {
@@ -167,9 +167,9 @@ page {
 .oc-rename { padding: var(--cy-space-2) 0 var(--cy-space-4); }
 
 /* ===== 2026-10-30 收集册 · 藏品(业主定稿 P-3)===== */
-.theme-light .oc-gather::before { background-color: var(--cy-color-bg-surface); box-shadow: 0 2rpx 8rpx rgba(30, 40, 80, .08); /* ds-ok: 白钮浮在浅底上 */
-  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22%23111111%22%20stroke-width%3D%221.5%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M9%201.5%2010.3%205.7%2014.5%207%2010.3%208.3%209%2012.5%207.7%208.3%203.5%207%207.7%205.7z%22%2F%3E%3Cpath%20d%3D%22M3.5%2011.5l.6%201.4%201.4.6-1.4.6-.6%201.4-.6-1.4-1.4-.6%201.4-.6z%22%2F%3E%3C%2Fsvg%3E"); }
-.theme-light .oc-gather.is-on::before { background-color: var(--cy-btn-solid-bg);
+.alb-light .oc-gather::before { background-color: var(--cy-color-bg-surface); box-shadow: 0 2rpx 8rpx rgba(30, 40, 80, .08); /* ds-ok: 深底上的钮(x-fix2 L-1:线条改浅色) */
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22%23F2F2F4%22%20stroke-width%3D%221.5%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M9%201.5%2010.3%205.7%2014.5%207%2010.3%208.3%209%2012.5%207.7%208.3%203.5%207%207.7%205.7z%22%2F%3E%3Cpath%20d%3D%22M3.5%2011.5l.6%201.4%201.4.6-1.4.6-.6%201.4-.6-1.4-1.4-.6%201.4-.6z%22%2F%3E%3C%2Fsvg%3E"); }
+.alb-light .oc-gather.is-on::before { background-color: var(--cy-btn-solid-bg);
   background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20stroke%3D%22%23FFFFFF%22%20stroke-width%3D%221.5%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M9%201.5%2010.3%205.7%2014.5%207%2010.3%208.3%209%2012.5%207.7%208.3%203.5%207%207.7%205.7z%22%2F%3E%3Cpath%20d%3D%22M3.5%2011.5l.6%201.4%201.4.6-1.4.6-.6%201.4-.6-1.4-1.4-.6%201.4-.6z%22%2F%3E%3C%2Fsvg%3E"); }
 /* 「筛选」:显示当前分类的图标和名字;选了某一类变黑 */
 .oc-filter { height: 64rpx; padding: 0 var(--cy-space-3) 0 var(--cy-space-2); border-radius: var(--cy-radius-pill); display: flex; align-items: center; gap: var(--cy-space-1-5);

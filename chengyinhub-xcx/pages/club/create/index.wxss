@@ -114,6 +114,9 @@
 }
 /* 方向 chip 同理:选中翻白底黑字,不再靠描边表达 */
 .cc-chip.on { background: var(--cy-text-title); color: var(--cy-text-inverse); border-color: var(--cy-text-title); }
+/* G-8:标签库图标(深色线稿)。暗底未选中时反白,选中翻白底后用原色 */
+.cc-chip-ico { width: 32rpx; height: 32rpx; margin-right: var(--cy-space-1); flex-shrink: 0; filter: invert(1); }
+.cc-chip.on .cc-chip-ico { filter: none; }
 
 /* 资料:封面 + Logo */
 /* Logo 用 position:absolute; bottom:-72rpx 挂在封面下沿,会探出容器本身的盒子往下伸——

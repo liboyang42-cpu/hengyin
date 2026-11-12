@@ -1,0 +1,5 @@
+scan set
+tapSel .rv-action
+TEXT Hi， | 探店日样板面包 | 营业中 | 探 | 累计收入 | ¥0.00 | 扫码 | 客户 | 财务 | 更多 | 项目 | 全部 1 | 报名中 | E2E 探店日一期 | 第4章 面包 | 今天 22:47 · 1 人已报名 | 核销成功 | 第4章 面包 · 玩家通关 +1200 探索值已到账 | 请提供：到店赠现烤面包一只 | 完成 | 继续扫码 | 9:41 | ▮▮▮ ◔ ▭ | ··· ◉
+ERR []
+CONERR ["[error] HTTP 404 http://127.0.0.1:8097/favicon.ico","[error] Failed to load resource: the server responded with a status of 404 (Not Found)"]

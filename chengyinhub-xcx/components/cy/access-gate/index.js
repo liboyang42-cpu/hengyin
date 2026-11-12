@@ -47,7 +47,7 @@ Component({
           reason: denied || decision.state === 'login' ? decision.reason : '',
           _sheet: false,
         }, () => { if (denied) that.setData({ _sheet: true }); });
-        that.triggerEvent('state', { state: that.data.state });
+        that.triggerEvent('state', { state: that.data.state, access: decision.state === 'allow' && decision.access ? decision.access : null }); // access:允许时附上已归一的岗位权限,页面按它显隐入口,不再另拉一次
       };
       // 两条分支各自写死 /api 字面量:UI-GATE-0 的 U1 要能枚举出请求路径,变量拼的核不了。
       // 不传 silentError:request-client 的静默分支都是「没挂 fail 才弹」,本组件 fail 与

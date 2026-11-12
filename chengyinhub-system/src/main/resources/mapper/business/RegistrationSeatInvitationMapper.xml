@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.RegistrationSeatInvitationMapper">
+
+    <resultMap id="invitationMap" type="com.chengyinhub.business.domain.RegistrationSeatInvitation">
+        <id property="id" column="id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="seatNo" column="seat_no"/>
+        <result property="generation" column="generation"/>
+        <result property="ownerMemberId" column="owner_member_id"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="ownerId" column="owner_id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="status" column="status"/>
+        <result property="tokenNonce" column="token_nonce"/>
+        <result property="tokenHash" column="token_hash"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="inviteeMemberId" column="invitee_member_id"/>
+        <result property="claimedAt" column="claimed_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <sql id="invitationColumns">
+        id, registration_id, seat_no, generation, owner_member_id, owner_type, owner_id, topic_id,
+        status, token_nonce, token_hash, expires_at, invitee_member_id, claimed_at,
+        create_time, update_time, version
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.RegistrationSeatInvitation"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into cms_registration_seat_invitation
+            (registration_id, seat_no, generation, owner_member_id, owner_type, owner_id, topic_id,
+             status, token_nonce, token_hash, expires_at, invitee_member_id, claimed_at,
+             create_time, update_time, version)
+        values
+            (#{registrationId}, #{seatNo}, #{generation}, #{ownerMemberId}, #{ownerType}, #{ownerId}, #{topicId},
+             #{status}, #{tokenNonce}, #{tokenHash}, #{expiresAt}, #{inviteeMemberId}, #{claimedAt},
+             #{createTime}, #{updateTime}, #{version})
+    </insert>
+
+    <select id="selectById" resultMap="invitationMap" useCache="false">
+        select <include refid="invitationColumns"/> from cms_registration_seat_invitation where id = #{id}
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="invitationMap" useCache="false" flushCache="true">
+        select <include refid="invitationColumns"/> from cms_registration_seat_invitation
+        where id = #{id} for update
+    </select>
+
+    <select id="selectByTokenHash" resultMap="invitationMap" useCache="false">
+        select <include refid="invitationColumns"/> from cms_registration_seat_invitation
+        where token_hash = #{tokenHash}
+    </select>
+
+    <select id="selectByTokenHashForUpdate" resultMap="invitationMap" useCache="false" flushCache="true">
+        select <include refid="invitationColumns"/> from cms_registration_seat_invitation
+        where token_hash = #{tokenHash} for update
+    </select>
+
+    <select id="selectByRegistration" resultMap="invitationMap" useCache="false">
+        select <include refid="invitationColumns"/> from cms_registration_seat_invitation
+        where registration_id = #{registrationId} order by seat_no, id
+    </select>
+
+    <select id="selectActiveByRegistrationForUpdate" resultMap="invitationMap" useCache="false" flushCache="true">
+        select <include refid="invitationColumns"/> from cms_registration_seat_invitation
+        where registration_id = #{registrationId} and status in (0, 1)
+        order by seat_no, id for update
+    </select>
+
+    <update id="claim">
+        update cms_registration_seat_invitation
+        set status = 1, invitee_member_id = #{inviteeMemberId}, claimed_at = #{now},
+            update_time = #{now}, version = version + 1
+        where id = #{id} and status = 0 and invitee_member_id is null and expires_at &gt; #{now}
+    </update>
+
+    <update id="transition">
+        update cms_registration_seat_invitation
+        set status = #{toStatus}, update_time = #{now}, version = version + 1
+        where id = #{id} and status = #{fromStatus}
+    </update>
+
+    <update id="expirePending">
+        update cms_registration_seat_invitation
+        set status = 3, update_time = #{now}, version = version + 1
+        where registration_id = #{registrationId} and status = 0 and expires_at &lt;= #{now}
+    </update>
+
+    <select id="maxGeneration" resultType="java.lang.Integer" useCache="false">
+        select coalesce(max(generation), 0) from cms_registration_seat_invitation
+        where registration_id = #{registrationId} and seat_no = #{seatNo}
+    </select>
+
+
+    <select id="countClaimedByRecipient" resultType="java.lang.Integer" useCache="false">
+        select count(*) from cms_registration_seat_invitation
+        where registration_id = #{registrationId} and invitee_member_id = #{inviteeMemberId}
+          and status = 1
+    </select>
+    <select id="countActive" resultType="java.lang.Integer" useCache="false">
+        select count(*) from cms_registration_seat_invitation
+        where registration_id = #{registrationId} and status in (0, 1)
+    </select>
+
+    <!-- 不按 running/status 或最新实例过滤：已完成/失败/重开过的事实仍禁止转让。
+         团队局无法从当前成员精确回溯席位，scope 内已有团队局或共享开局则失败关闭。 -->
+    <select id="hasOriginalUseFacts" resultType="java.lang.Boolean" useCache="false" flushCache="true">
+        select (
+            exists (select 1 from topic_route_session
+                where member_id = #{memberId} and topic_id = #{topicId} and activity_id = #{activityId})
+            or exists (select 1 from player_node_progress
+                where member_id = #{memberId} and topic_id = #{topicId}
+                  and (activity_id = #{activityId} or (#{activityId} = 0 and activity_id is null)))
+            or exists (select 1 from orient_task_attempt
+                where member_id = #{memberId} and topic_id = #{topicId} and activity_id = #{activityId})
+            or exists (select 1 from orient_task_completion
+                where member_id = #{memberId} and topic_id = #{topicId} and activity_id = #{activityId})
+            or exists (select 1 from game_runtime_session
+                where topic_id = #{topicId} and activity_id = #{activityId}
+                  and ((owner_type = 1 and owner_id = #{memberId}) or owner_type = 2))
+            or exists (select 1 from game_session
+                where activity_id = #{activityId} and #{activityId} &gt; 0
+                  and (started_at is not null or coalesce(status, '') not in ('PREPARING', 'READY')))
+        )
+    </select>
+
+    <resultMap id="recipientFactMap" type="com.chengyinhub.business.domain.SeatRecipientFact">
+        <result property="invitationId" column="invitation_id"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="seatNo" column="seat_no"/>
+        <result property="inviteeMemberId" column="invitee_member_id"/>
+    </resultMap>
+
+    <!--
+      只读、按 (recipient, owner 域) 一次索引查询。原行仍须 registration_status=2 且
+      payment_status=2：退款/撤销后本事实立即消失，受让人不能继续借买家已付行游玩。
+      不返回第三人邀请，也不把待领取/已取消/已过期/已释放算成可玩。
+    -->
+    <select id="selectClaimedFactsByRecipient" resultMap="recipientFactMap" useCache="false" flushCache="true">
+        select i.id as invitation_id, i.registration_id, i.seat_no, i.invitee_member_id
+        from cms_registration_seat_invitation i
+        join cms_registration r on r.id = i.registration_id
+        where i.status = 1
+          and i.invitee_member_id = #{memberId}
+          and r.owner_type = #{ownerType}
+          and r.owner_id = #{ownerId}
+          and i.owner_type = r.owner_type and i.owner_id = r.owner_id
+          and i.owner_member_id = r.member_id
+          and i.seat_no between 2 and r.order_num
+          and r.registration_status = 2
+          and r.payment_status = 2
+    </select>
+</mapper>

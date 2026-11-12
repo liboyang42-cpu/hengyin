@@ -1,5 +1,5 @@
 <cy-modal show="{{show}}" title="{{title}}" content="{{editable ? '' : content}}" confirm-text="{{confirmText}}" cancel-text="{{cancelText}}"
-  show-cancel="{{showCancel}}" danger="{{danger}}" bind:confirm="onConfirm" bind:cancel="onCancel">
+  show-cancel="{{showCancel}}" mask-closable="{{maskClosable}}" danger="{{danger}}" bind:confirm="onConfirm" bind:cancel="onCancel">
   <view wx:if="{{editable}}" class="mh__editable">
     <text wx:if="{{content}}" class="mh__content">{{content}}</text>
     <!-- PR10 F-L3-09:长原因(如 500 字拒绝原因)用多行框;同一套底色/边框/校验,只是能看见整段 -->

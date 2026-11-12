@@ -99,4 +99,41 @@ class AppMediaAssetServiceTest {
         verify(mapper).selectOwnedBefore(9L,9007199254740994L);
         verify(mapper,never()).selectOwnedBefore(eq(0L),anyLong());
     }
+
+    @Test void provenanceWriteKeepsOwnerNamespaceAndOriginalReviewFact() {
+        Map<String,Object> row=new java.util.HashMap<>(Map.of("id",13L,"memberId",9L,"ownerType","APP","reviewState","APPROVED","version",3));
+        when(mapper.selectForUpdate(13L)).thenReturn(row);
+        when(mapper.updateProvenance(anyMap())).thenReturn(1);
+        Map<String,Object> result=service.saveProvenance(13L,9L,Map.of("sourceType","licensed","licenseNote","test-only licence declaration"));
+        assertEquals("APPROVED",result.get("reviewState"));assertEquals(3,row.get("version"));
+        assertTrue(((java.util.List<?>)result.get("issues")).isEmpty());
+        assertEquals("licensed",((Map<?,?>)result.get("mediaAsset")).get("sourceType"));
+        verify(mapper).updateProvenance(org.mockito.ArgumentMatchers.argThat(values ->
+                Long.valueOf(13L).equals(values.get("id")) && Long.valueOf(9L).equals(values.get("memberId"))));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,()->service.saveProvenance(13L,10L,Map.of("sourceType","original")));
+        row.put("ownerType","SYSTEM");
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,()->service.saveProvenance(13L,9L,Map.of("sourceType","original")));
+        verifyNoInteractions(audits);
+    }
+
+    @Test void savingUnknownWarnsAndPublicAttributionMustPassExistingTextSafety() {
+        Map<String,Object> row=new java.util.HashMap<>(Map.of("id",13L,"memberId",9L,"ownerType","APP","reviewState","APPROVED"));
+        when(mapper.selectForUpdate(13L)).thenReturn(row);when(mapper.updateProvenance(anyMap())).thenReturn(1);
+        Map<String,Object> result=service.saveProvenance(13L,9L,Map.of("sourceType","unknown"));
+        assertEquals("ASSET_LICENSE_MISSING",((Map<?,?>)((java.util.List<?>)result.get("issues")).get(0)).get("code"));
+        com.chengyinhub.business.service.IWxContentSecurityService security=mock(com.chengyinhub.business.service.IWxContentSecurityService.class);
+        com.chengyinhub.business.service.IUmsMemberService members=mock(com.chengyinhub.business.service.IUmsMemberService.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"textSecurity",security);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"members",members);
+        when(security.checkText("unsafe attribution",null)).thenReturn("内容审核未通过");
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,()->service.saveProvenance(13L,9L,
+                Map.of("sourceType","original","licenseNote","test declaration","attribution","unsafe attribution")));
+        verify(mapper,times(1)).updateProvenance(anyMap());
+    }
+
+    @Test void failedDeclarationWriteDoesNotReturnSuccess() {
+        when(mapper.selectForUpdate(13L)).thenReturn(Map.of("id",13L,"memberId",9L,"ownerType","APP"));
+        assertThrows(com.chengyinhub.common.exception.ServiceException.class,()->service.saveProvenance(13L,9L,
+                Map.of("sourceType","original","licenseNote","test declaration")));
+    }
 }

@@ -145,14 +145,14 @@ class ApiTopicMerchantOperatorLifecycleScopeTest {
     void managerCanPublishOwnerDraft() {
         when(topicService.selectCmsTopicById(TOPIC_ID)).thenReturn(ownerTopic());
         when(topicService.selectTopicIsDraft(TOPIC_ID)).thenReturn(1);
-        when(topicService.publishDraftWithReview(TOPIC_ID, OWNER)).thenReturn(
+        when(topicService.publishDraftWithReview(TOPIC_ID, OWNER, null)).thenReturn(
                 new com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO(
                         TOPIC_ID, 901L, "PENDING", java.util.Collections.singletonList(71L)));
 
         AjaxResult result = controller.publishDraft(String.valueOf(TOPIC_ID), "MERCHANT");
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
-        verify(topicService).publishDraftWithReview(TOPIC_ID, OWNER);
+        verify(topicService).publishDraftWithReview(TOPIC_ID, OWNER, null);
         verify((com.chengyinhub.business.service.impl.MemberIdentityService) ReflectionTestUtils.getField(controller, "memberIdentityService")).checkRegistered(OWNER);
     }
 

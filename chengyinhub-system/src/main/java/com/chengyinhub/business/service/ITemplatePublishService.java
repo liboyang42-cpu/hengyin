@@ -27,6 +27,11 @@ public interface ITemplatePublishService {
      */
     public Long saveOrUpdateDraft(CmsTemplatePublishRequest request, Long memberId, String username);
 
+    /** Internal verified-license caller only; copies a complete immutable server snapshot into a new private draft. */
+    Long installWorkshopSnapshot(CmsTemplatePublishRequest snapshot, Long memberId, String username);
+
+    void validateWorkshopSnapshot(CmsTemplatePublishRequest snapshot, Long memberId);
+
     /** 所有直接接收模板实体的写入口共用：校验 vm7 配置，非 vm7 清空传感器字段。 */
     public void normalizeAndValidateSensorFields(CmsMemberTemplate template);
 

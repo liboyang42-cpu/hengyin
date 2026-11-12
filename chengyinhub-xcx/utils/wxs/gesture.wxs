@@ -1,0 +1,275 @@
+/* utils/wxs/gesture.wxs —— 跟手手势(qx-u1,2026-11-10)
+ *
+ * 触摸在视图层就地处理(WXS),不经逻辑层 setData,跟手才能稳在 60fps。
+ * 两类手势:
+ *   sheet*  底部弹层:抓手 / 头部起手,下拉跟手,松手关闭或吸附到档位,越过最高档往上拽有阻尼并弹回
+ *   edge*   全屏层(页面里的整屏覆盖层,如相册、剧情预览):左缘起手横向侧滑返回,同一套阈值
+ *
+ * ⚠️ 下面「物理」一段是 utils/gesture-physics.js 的逐行镜像(WXS 不能 require JS)。
+ *    tests/unit/gesture-physics-parity.test.js 在同一组输入上逐值比对两边,改一边必须同步另一边。
+ *
+ * 只动 transform;关闭仍走宿主原来的关闭链路(callMethod),脏输入 / 不许随手关的弹层只弹回。 */
+
+/* ——— 物理(镜像 utils/gesture-physics.js) ——— */
+var DISMISS_VELOCITY = 0.5;
+var DISMISS_RATIO = 0.3;
+var RUBBER = 0.25;
+var TAP_SLOP = 4;
+var EDGE = 32;
+var LEVEL_RATIO = { peek: 0.3, half: 0.6, full: 0.8 };
+
+function resist(raw, min, reduced) {
+  if (raw >= min) return raw;
+  if (reduced) return min;
+  return min + (raw - min) * RUBBER;
+}
+
+function velocity(prev, prevT, cur, curT) {
+  if (prev === null || prev === undefined || prevT === null || prevT === undefined) return 0;
+  var dt = curT - prevT;
+  if (dt < 1) dt = 1;
+  return (cur - prev) / dt;
+}
+
+function detentOffsets(levels, panelH, winH) {
+  var out = [0];
+  if (!levels || !(panelH > 0) || !(winH > 0)) return out;
+  var list = ('' + levels).split(',');
+  for (var i = 0; i < list.length; i++) {
+    var r = LEVEL_RATIO[list[i].trim()];
+    if (!r) continue;
+    var off = Math.round(panelH - r * winH);
+    if (off > 0 && out.indexOf(off) < 0) out.push(off);
+  }
+  out.sort(function (a, b) { return a - b; });
+  return out;
+}
+
+function nearest(list, x) {
+  var best = list[0];
+  for (var i = 1; i < list.length; i++) {
+    if (Math.abs(list[i] - x) < Math.abs(best - x)) best = list[i];
+  }
+  return best;
+}
+
+function sheetRelease(offset, v, height, detents) {
+  var d = detents && detents.length ? detents : [0];
+  var lowest = d[d.length - 1];
+  var i;
+  if (v > DISMISS_VELOCITY) {
+    if (offset > lowest) return { action: 'dismiss' };
+    for (i = 0; i < d.length; i++) if (d[i] > offset) return { action: 'snap', to: d[i] };
+  }
+  if (v < -DISMISS_VELOCITY) {
+    for (i = d.length - 1; i >= 0; i--) if (d[i] < offset) return { action: 'snap', to: d[i] };
+    return { action: 'snap', to: 0 };
+  }
+  if (height > 0 && offset - lowest > (height - lowest) * DISMISS_RATIO) return { action: 'dismiss' };
+  return { action: 'snap', to: nearest(d, offset) };
+}
+
+function swipeRelease(dx, vx, width) {
+  if (vx > DISMISS_VELOCITY && dx > 0) return true;
+  return width > 0 && dx > width * DISMISS_RATIO;
+}
+
+/* ——— 视图层 ——— */
+var SNAP = 'transform var(--cy-motion-standard) var(--cy-ease-out)';
+var SPRING = 'transform var(--cy-motion-standard) var(--cy-ease-spring)';
+var OUT = 'transform var(--cy-motion-sheet-out) var(--cy-ease-standard)';
+
+function flag(v) { return v === true || v === 'true' || v === 1 || v === '1'; }
+
+/* 量尺寸:新基础库有 getBoundingClientRect,旧的退 getComputedStyle,都没有就用宿主下发的 data-* 兜底 */
+function measure(inst, key, fallback) {
+  if (inst && typeof inst.getBoundingClientRect === 'function') {
+    var r = inst.getBoundingClientRect();
+    if (r && r[key] > 0) return r[key];
+  }
+  if (inst && typeof inst.getComputedStyle === 'function') {
+    var cs = inst.getComputedStyle([key]);
+    var n = cs ? parseFloat(cs[key]) : 0;
+    if (n > 0) return n;
+  }
+  return (fallback * 1) || 0;
+}
+
+function px(n) { return Math.round(n * 10) / 10; }
+
+/* 弹层:data-panel(面板选择器)、data-root / data-dragcls(拖拽期间挂在根上的类)、data-off(退场中不接手)、
+ *       data-blocked(脏输入或不许随手关 ⇒ 过阈值也只弹回)、data-rm(减动效)、data-wh(窗口高)
+ *       或 data-whsel(铺满窗口的遮罩选择器,起拖时在视图层直接量,窗口高不必走 setData)、
+ *       data-ph(面板高兜底)、data-detents(可停靠的档,默认只有自身高度一档) */
+function sheetStart(e, ins) {
+  var ds = e.currentTarget.dataset;
+  var st = ins.getState();
+  st.sd = null;
+  if (flag(ds.off)) return;
+  var t = e.touches && e.touches[0];
+  if (!t) return;
+  st.sd = {
+    y0: t.clientY, y: t.clientY, t: e.timeStamp, py: null, pt: null, on: false,
+    base: st.sRest || 0, off: st.sRest || 0, h: 0,
+    sel: ds.panel, root: ds.root, cls: ds.dragcls,
+    rm: flag(ds.rm), blocked: flag(ds.blocked), wh: (ds.wh * 1) || 0, whsel: ds.whsel || '', ph: ds.ph, det: ds.detents || '',
+  };
+}
+
+function sheetMove(e, ins) {
+  var st = ins.getState();
+  var d = st.sd;
+  if (!d) return;
+  var t = e.touches && e.touches[0];
+  if (!t) return;
+  d.py = d.y; d.pt = d.t;
+  d.y = t.clientY; d.t = e.timeStamp;
+  var dy = d.y - d.y0;
+  var panel = ins.selectComponent(d.sel);
+  if (!panel) return;
+  if (!d.on) {
+    if (Math.abs(dy) < TAP_SLOP) return;
+    d.on = true;
+    d.h = measure(panel, 'height', d.ph);
+    if (!(d.wh > 0) && d.whsel) d.wh = measure(ins.selectComponent(d.whsel), 'height', 0);
+    st.sSettle = false;
+    if (d.root && d.cls) { var root = ins.selectComponent(d.root); if (root) root.addClass(d.cls); }
+  }
+  d.off = resist(d.base + dy, 0, d.rm);
+  panel.setStyle({ transform: 'translate3d(0,' + px(d.off) + 'px,0)', transition: 'none' });
+  return false;
+}
+
+function sheetEnd(e, ins) {
+  var st = ins.getState();
+  var d = st.sd;
+  st.sd = null;
+  if (!d || !d.on) return;
+  if (d.root && d.cls) { var root = ins.selectComponent(d.root); if (root) root.removeClass(d.cls); }
+  var panel = ins.selectComponent(d.sel);
+  if (!panel) return;
+  var v = velocity(d.py, d.pt, d.y, d.t);
+  var det = detentOffsets(d.det, d.h, d.wh);
+  var r = sheetRelease(d.off, v, d.h, det);
+  if (r.action === 'dismiss' && !d.blocked) {
+    // 从手指松开的位置一路落下去;宿主不接这次关闭时由 JS 发 gcmd 复位(见 sheetCmd)
+    st.sRest = 0;
+    panel.setStyle({ transform: 'translate3d(0,100%,0)', transition: d.rm ? 'none' : OUT });
+    ins.callMethod('_onGestureRelease', { action: 'dismiss' });
+    return;
+  }
+  var to = r.action === 'snap' ? r.to : nearest(det, d.off);
+  if (r.action === 'dismiss') ins.callMethod('_onGestureRelease', { action: 'blocked' });
+  st.sRest = to;
+  if (d.rm) {
+    panel.setStyle(to === 0 ? { transform: '', transition: '' } : { transform: 'translate3d(0,' + to + 'px,0)', transition: 'none' });
+    return;
+  }
+  st.sSettle = to === 0;
+  panel.setStyle({ transform: 'translate3d(0,' + to + 'px,0)', transition: d.off < 0 ? SPRING : SNAP });
+}
+
+/* 吸附回最高档后把行内 transform 撤掉:留着会压住 morph 退场的行内起点和退场关键帧 */
+function sheetSettle(e, ins) {
+  var st = ins.getState();
+  if (!st.sSettle || st.sd) return;
+  var tg = e.target && e.target.dataset;
+  if (!tg || !flag(tg.gpanel)) return;
+  st.sSettle = false;
+  e.instance.setStyle({ transform: '', transition: '' });
+}
+
+/* 逻辑层 → 视图层:gcmd 变了就把面板从屏外接回最高档(宿主没接关闭 / 退场途中重开),到位后 sheetSettle 撤掉行内样式 */
+function sheetCmd(nv, ov, ins, inst) {
+  if (!nv || nv === ov || !inst) return;
+  var st = ins.getState();
+  st.sRest = 0; st.sd = null; st.sSettle = true;
+  inst.setStyle({ transform: 'translate3d(0,0,0)', transition: SNAP });
+}
+
+/* 全屏层侧滑返回:手势挂在层本身上(e.instance 就是这层)。
+ *   data-close(宿主上的关闭方法名)、data-w(屏宽兜底)、data-rm(减动效)、data-glayer="1"(收 transitionend 用) */
+function edgeStart(e, ins) {
+  var st = ins.getState();
+  st.ed = null;
+  if (st.edOut) return;
+  var t = e.touches && e.touches[0];
+  if (!t || t.clientX > EDGE) return;
+  var ds = e.currentTarget.dataset;
+  st.ed = { x0: t.clientX, y0: t.clientY, x: t.clientX, t: e.timeStamp, px: null, pt: null, on: false,
+            dx: 0, w: 0, wf: ds.w, rm: flag(ds.rm), close: ds.close };
+}
+
+function edgeMove(e, ins) {
+  var st = ins.getState();
+  var d = st.ed;
+  if (!d) return;
+  var t = e.touches && e.touches[0];
+  if (!t) return;
+  d.px = d.x; d.pt = d.t;
+  d.x = t.clientX; d.t = e.timeStamp;
+  var dx = d.x - d.x0;
+  var dy = t.clientY - d.y0;
+  if (!d.on) {
+    if (Math.abs(dx) < TAP_SLOP && Math.abs(dy) < TAP_SLOP) return;
+    // 竖着走或往左 ⇒ 不是返回手势,整段放手
+    if (Math.abs(dy) > Math.abs(dx) || dx < 0) { st.ed = null; return; }
+    d.on = true;
+    d.w = measure(e.instance, 'width', d.wf);
+    st.edSettle = false;
+  }
+  d.dx = dx > 0 ? dx : 0;
+  e.instance.setStyle({ transform: 'translate3d(' + px(d.dx) + 'px,0,0)', transition: 'none' });
+  return false;
+}
+
+function edgeEnd(e, ins) {
+  var st = ins.getState();
+  var d = st.ed;
+  st.ed = null;
+  if (!d || !d.on) return;
+  var vx = velocity(d.px, d.pt, d.x, d.t);
+  if (swipeRelease(d.dx, vx, d.w)) {
+    if (d.rm) { ins.callMethod(d.close); return; }
+    st.edOut = d.close;
+    e.instance.setStyle({ transform: 'translate3d(100%,0,0)', transition: OUT });
+    return;
+  }
+  if (d.rm) { e.instance.setStyle({ transform: '', transition: '' }); return; }
+  st.edSettle = true;
+  e.instance.setStyle({ transform: 'translate3d(0,0,0)', transition: SNAP });
+}
+
+function edgeSettle(e, ins) {
+  var st = ins.getState();
+  var tg = e.target && e.target.dataset;
+  if (!tg || !flag(tg.glayer)) return;
+  if (st.edOut) {
+    // 不撤行内位移:层已经在屏外,宿主关掉时节点随 wx:if 卸载;先撤会闪回一帧
+    var m = st.edOut;
+    st.edOut = '';
+    ins.callMethod(m);
+    return;
+  }
+  if (st.edSettle) { st.edSettle = false; e.instance.setStyle({ transform: '', transition: '' }); }
+}
+
+module.exports = {
+  // 物理(供 parity 单测比对)
+  resist: resist,
+  velocity: velocity,
+  detentOffsets: detentOffsets,
+  nearest: nearest,
+  sheetRelease: sheetRelease,
+  swipeRelease: swipeRelease,
+  // 事件
+  sheetStart: sheetStart,
+  sheetMove: sheetMove,
+  sheetEnd: sheetEnd,
+  sheetSettle: sheetSettle,
+  sheetCmd: sheetCmd,
+  edgeStart: edgeStart,
+  edgeMove: edgeMove,
+  edgeEnd: edgeEnd,
+  edgeSettle: edgeSettle,
+};

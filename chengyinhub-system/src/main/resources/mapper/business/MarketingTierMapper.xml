@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingTierMapper">
+
+    <sql id="tierColumns">
+        id           as id,
+        tier_code    as tierCode,
+        owner_type   as ownerType,
+        owner_id     as ownerId,
+        ticket_id    as ticketId,
+        min_quantity as minQuantity,
+        max_quantity as maxQuantity,
+        unit_price   as unitPrice,
+        status       as status,
+        rule_version as ruleVersion,
+        valid_from   as validFrom,
+        valid_to     as validTo,
+        del_flag     as delFlag,
+        create_by    as createBy,
+        create_time  as createTime,
+        update_by    as updateBy,
+        update_time  as updateTime
+    </sql>
+
+    <select id="selectActiveByScope" resultType="com.chengyinhub.business.domain.MarketingTier">
+        select <include refid="tierColumns"/>
+        from marketing_tier
+        where owner_type = #{ownerType}
+          and owner_id = #{ownerId}
+          and status = 1
+          and del_flag = 0
+          and (valid_from is null or valid_from &lt;= #{now})
+          and (valid_to is null or valid_to &gt;= #{now})
+        order by min_quantity asc, id asc
+    </select>
+
+    <select id="selectTierList" resultType="com.chengyinhub.business.domain.MarketingTier">
+        select <include refid="tierColumns"/>
+        from marketing_tier
+        <where>
+            del_flag = 0
+            <if test="tierCode != null and tierCode != ''">and tier_code = #{tierCode}</if>
+            <if test="ownerType != null">and owner_type = #{ownerType}</if>
+            <if test="ownerId != null">and owner_id = #{ownerId}</if>
+            <if test="ticketId != null">and ticket_id = #{ticketId}</if>
+            <if test="status != null">and status = #{status}</if>
+        </where>
+        order by owner_type asc, owner_id asc, ticket_id asc, min_quantity asc
+    </select>
+
+    <select id="selectTierById" resultType="com.chengyinhub.business.domain.MarketingTier">
+        select <include refid="tierColumns"/>
+        from marketing_tier
+        where id = #{id} and del_flag = 0
+    </select>
+
+    <!-- 含已软删:uk_tier_range 不含 del_flag,软删后同业务键的行仍在库里,
+         直接 insert 会 1062。建单前先用它找出可复活的那一行。 -->
+    <select id="selectTierByNaturalKeyIncludingDeleted"
+            resultType="com.chengyinhub.business.domain.MarketingTier">
+        select <include refid="tierColumns"/>
+        from marketing_tier
+        where owner_type = #{ownerType}
+          and owner_id = #{ownerId}
+          and ticket_id = #{ticketId}
+          and min_quantity = #{minQuantity}
+        limit 1
+    </select>
+
+    <!-- 复活软删行:条件带 del_flag = 2,并发下只有一个请求能命中,另一个 0 行由调用方拒绝。
+         create_time 不覆盖(那是原配置首次创建的事实)。 -->
+    <update id="reactivateTier" parameterType="com.chengyinhub.business.domain.MarketingTier">
+        update marketing_tier
+        set tier_code    = #{tierCode},
+            owner_type   = #{ownerType},
+            owner_id     = #{ownerId},
+            ticket_id    = #{ticketId},
+            min_quantity = #{minQuantity},
+            max_quantity = #{maxQuantity},
+            unit_price   = #{unitPrice},
+            status       = #{status},
+            rule_version = #{ruleVersion},
+            valid_from   = #{validFrom},
+            valid_to     = #{validTo},
+            del_flag     = 0,
+            update_by    = #{updateBy},
+            update_time  = #{updateTime}
+        where id = #{id} and del_flag = 2
+    </update>
+
+    <insert id="insertTier" parameterType="com.chengyinhub.business.domain.MarketingTier"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_tier
+            (tier_code, owner_type, owner_id, ticket_id, min_quantity, max_quantity, unit_price,
+             status, rule_version, valid_from, valid_to, del_flag,
+             create_by, create_time, update_by, update_time)
+        values
+            (#{tierCode}, #{ownerType}, #{ownerId}, #{ticketId}, #{minQuantity}, #{maxQuantity}, #{unitPrice},
+             #{status}, #{ruleVersion}, #{validFrom}, #{validTo}, 0,
+             #{createBy}, #{createTime}, #{updateBy}, #{updateTime})
+    </insert>
+
+    <update id="updateTier" parameterType="com.chengyinhub.business.domain.MarketingTier">
+        update marketing_tier
+        set tier_code    = #{tierCode},
+            owner_type   = #{ownerType},
+            owner_id     = #{ownerId},
+            ticket_id    = #{ticketId},
+            min_quantity = #{minQuantity},
+            max_quantity = #{maxQuantity},
+            unit_price   = #{unitPrice},
+            status       = #{status},
+            rule_version = #{ruleVersion},
+            valid_from   = #{validFrom},
+            valid_to     = #{validTo},
+            update_by    = #{updateBy},
+            update_time  = #{updateTime}
+        where id = #{id} and del_flag = 0
+    </update>
+
+    <update id="deleteTierByIds">
+        update marketing_tier
+        set del_flag = 2, update_time = now()
+        where del_flag = 0 and id in
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

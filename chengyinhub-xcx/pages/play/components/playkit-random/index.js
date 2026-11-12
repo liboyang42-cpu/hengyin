@@ -12,7 +12,7 @@ const OUT_MS = 920;            // 与 wxss 里 dk-fold 的 .9s 对齐,多 20ms �
 const WIPE_MS = 930;           // 与换色椭圆的 .95s 对齐
 const SWIPE_RATIO = 0.22;      // 滑过卡宽的这个比例才算一次甩;再小就是手抖
 
-const THEMES = ['#0b6adc', '#d99a16', '#c5372f'];   /* ds-ok 卡池底色,固定轮转 */
+const THEMES = ['var(--pk-embed-bg, #0b6adc)', 'var(--lk-card, #d99a16)', 'var(--lk-pop, #c5372f)'];   /* ds-ok 卡池底色固定轮转;R3-2 主题内取外观 底 / 卡面 / 浮层色,不再饱和蓝黄红 */
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');

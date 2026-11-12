@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "presetCode": "T04-era-trace",
+  "cityInstance": "city-b",
+  "bound": false,
+  "rebindRequired": [
+    "nodeIds",
+    "locationKey",
+    "observedFact",
+    "answerValues",
+    "photoRefs",
+    "openHours"
+  ],
+  "nodeIdMap": {
+    "900101": null,
+    "900102": null,
+    "900103": null
+  },
+  "slots": [
+    {
+      "key": "location.900101",
+      "node": "900101",
+      "kind": "LOCATION",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "photo.900101",
+      "node": "900101",
+      "kind": "PHOTO",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "fact.900101",
+      "node": "900101",
+      "kind": "OBSERVED_FACT",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "answer.900101",
+      "node": "900101",
+      "kind": "ANSWER",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "location.900102",
+      "node": "900102",
+      "kind": "LOCATION",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "photo.900102",
+      "node": "900102",
+      "kind": "PHOTO",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "fact.900102",
+      "node": "900102",
+      "kind": "OBSERVED_FACT",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "answer.900102",
+      "node": "900102",
+      "kind": "ANSWER",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "location.900103",
+      "node": "900103",
+      "kind": "LOCATION",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "photo.900103",
+      "node": "900103",
+      "kind": "PHOTO",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "fact.900103",
+      "node": "900103",
+      "kind": "OBSERVED_FACT",
+      "required": true,
+      "value": null
+    },
+    {
+      "key": "answer.900103",
+      "node": "900103",
+      "kind": "ANSWER",
+      "required": true,
+      "value": null
+    }
+  ],
+  "unboundReason": "地点、现场观察事实、照片、答案与开放时段均未核验；允许存稿，发布前必须逐槽重绑",
+  "notVerified": [
+    "城市照片",
+    "地点核验",
+    "现场试玩",
+    "GPS与可达性"
+  ]
+}

@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  BE-14 多作用域榜单（只读，MySQL 8）。
+
+  分数口径 COMPLETED_NODES = 已完成节点数（player_node_progress.status=1），
+  与现 selectActivityLeaderboard / selectRouteLeaderboard 的 score 同义；本卡不改那两个榜。
+  ties 沿现实现的线性口径：score desc → 最后一次完成更早者靠前 → member_id 升序。
+
+  「有效报名」逐字沿用 PostGameOutcomeMapper 顶部口径：registration_status=2 且
+  payment_status=2 且 payment_time 非空；已退款/取消/过期不算有效，全额已确认退款
+  （refund_application status=1 且 payout_status in (1,4) 累计 ≥ 应付）同样不算。
+  未支付、取消、过期、退款的局不进榜，只计入 coverage.unverifiedRuns，不补 0。
+
+  run 身份 = (member_id, topic_id, activity_id, play_instance_id)，与
+  topic_route_session.uk_topic_route_owner 同组列，保证同一局重放只计一次。
+
+  地理归因只看**该局冻结快照**：
+  topic_route_session.config_snapshot_json → themeConfig.contentGeography.{cityCode,countryCode}。
+  没有冻结值（旧局/线性局尚无冻结位）一律 UNKNOWN：不进 city/country 榜，只进
+  coverage.unattributedRuns。绝不读 cms_topic.city_code 之类的当前可编辑值来补历史，
+  也不读节点坐标、地址或用户位置。
+-->
+<mapper namespace="com.chengyinhub.business.mapper.ScopedLeaderboardMapper">
+
+    <!-- 同一 (member,topic,activity) 只认最新一局的 play_instance，与 /my-completed、现榜同源。 -->
+    <sql id="latestRunInstance">
+        p.play_instance_id = coalesce(
+            (select r.play_instance_id
+               from topic_route_session r
+              where r.member_id = p.member_id
+                and r.topic_id = p.topic_id
+                and r.activity_id = p.activity_id
+              order by r.id desc limit 1), 'default')
+    </sql>
+
+    <!-- 有效报名：活动局按活动单，自玩局按主题通行证；退款撤销（含已确认到账的全额退款）不算有效。 -->
+    <sql id="validPaidRegistration">
+        exists (
+            select 1
+              from cms_registration reg
+             where reg.member_id = p.member_id
+               and reg.registration_status = 2
+               and reg.payment_status = 2
+               and reg.payment_time is not null
+               and ((p.activity_id &gt; 0
+                     and reg.owner_type = 2
+                     and reg.owner_id = p.activity_id)
+                 or (p.activity_id = 0
+                     and reg.owner_type = 1
+                     and reg.owner_id = p.topic_id))
+               and not (reg.payable_amount &gt; 0
+                        and coalesce((select sum(f.refund_amount)
+                                        from refund_application f
+                                       where f.source_type = 'registration'
+                                         and f.source_id = reg.id
+                                         and f.del_flag = 0
+                                         and f.status = 1
+                                         and f.payout_status in (1, 4)), 0) &gt;= reg.payable_amount)
+        )
+    </sql>
+
+    <!-- 该局自己的冻结快照（按 run 身份精确取，不取「本人最新一局」以免串局）。 -->
+    <sql id="frozenRunSession">
+        topic_route_session rs
+        where rs.member_id = p.member_id
+          and rs.topic_id = p.topic_id
+          and rs.activity_id = p.activity_id
+          and rs.play_instance_id = p.play_instance_id
+    </sql>
+
+    <sql id="frozenCityCode">
+        json_unquote(json_extract(rs.config_snapshot_json, '$.themeConfig.contentGeography.cityCode'))
+    </sql>
+
+    <sql id="frozenCountryCode">
+        json_unquote(json_extract(rs.config_snapshot_json, '$.themeConfig.contentGeography.countryCode'))
+    </sql>
+
+    <sql id="frozenCityMatchesScope">
+        exists (select 1 from <include refid="frozenRunSession"/>
+                 and <include refid="frozenCityCode"/> = #{scopeId})
+    </sql>
+
+    <sql id="frozenCountryMatchesScope">
+        exists (select 1 from <include refid="frozenRunSession"/>
+                 and <include refid="frozenCountryCode"/> = #{scopeId})
+    </sql>
+
+    <sql id="frozenCityPresent">
+        exists (select 1 from <include refid="frozenRunSession"/>
+                 and <include refid="frozenCityCode"/> is not null)
+    </sql>
+
+    <sql id="frozenCountryPresent">
+        exists (select 1 from <include refid="frozenRunSession"/>
+                 and <include refid="frozenCountryCode"/> is not null)
+    </sql>
+
+    <!-- 周榜窗口 [weekStart, weekEnd)；累计榜两个参数都为 null。历史周不被改写（只读区间）。 -->
+    <sql id="weekWindow">
+        <if test="weekStart != null">
+            and p.checkin_time &gt;= #{weekStart} and p.checkin_time &lt; #{weekEnd}
+        </if>
+    </sql>
+
+    <!-- 作用域谓词。choose 而非并列 if：任何未识别作用域必须命中 1=0，
+         绝不能漏谓词后变成「无过滤全量榜」。city/country 只认冻结快照，见文件头。 -->
+    <sql id="scopeWhere">
+        <choose>
+            <when test='"world".equals(scope)'>
+                and 1 = 1
+            </when>
+            <when test='"quest".equals(scope)'>
+                and p.topic_id = #{scopeIdLong}
+            </when>
+            <when test='"city".equals(scope)'>
+                and <include refid="frozenCityMatchesScope"/>
+            </when>
+            <when test='"country".equals(scope)'>
+                and <include refid="frozenCountryMatchesScope"/>
+            </when>
+            <when test='"club".equals(scope)'>
+                and t.club_id = #{scopeIdLong}
+                and (p.member_id in (select cm.member_id from club_member cm
+                                      where cm.club_id = #{scopeIdLong} and cm.status = 1 and cm.del_flag = 0)
+                  or p.member_id in (select c.member_id from club c
+                                      where c.id = #{scopeIdLong} and c.del_flag = 0))
+            </when>
+            <otherwise>
+                and 1 = 0
+            </otherwise>
+        </choose>
+    </sql>
+
+    <!-- 计入排名的进度行：完成事实 + 最新局 + 有效报名 + 周窗 + 作用域。 -->
+    <sql id="scoredRunWhere">
+        p.del_flag = 0 and p.status = 1
+        and <include refid="latestRunInstance"/>
+        and <include refid="validPaidRegistration"/>
+        <include refid="weekWindow"/>
+        <include refid="scopeWhere"/>
+    </sql>
+
+    <select id="selectScopedTop" resultType="com.chengyinhub.business.domain.vo.ScopedLeaderboardEntryVO">
+        select p.member_id as memberId, m.nickname as nickname, m.avatar as avatar,
+               count(*) as score,
+               max(coalesce(p.checkin_time, p.create_time)) as finishedAt
+          from player_node_progress p
+          join cms_topic t on t.id = p.topic_id and t.del_flag = 0
+          join ums_member m on m.id = p.member_id and m.del_flag = 0
+         where <include refid="scoredRunWhere"/>
+         group by p.member_id, m.nickname, m.avatar
+         order by score desc, finishedAt asc, memberId asc
+         limit #{limit}
+    </select>
+
+    <select id="selectScopedMemberRow" resultType="com.chengyinhub.business.domain.vo.ScopedLeaderboardEntryVO">
+        select p.member_id as memberId, m.nickname as nickname, m.avatar as avatar,
+               count(*) as score,
+               max(coalesce(p.checkin_time, p.create_time)) as finishedAt
+          from player_node_progress p
+          join cms_topic t on t.id = p.topic_id and t.del_flag = 0
+          join ums_member m on m.id = p.member_id and m.del_flag = 0
+         where <include refid="scoredRunWhere"/>
+           and p.member_id = #{memberId}
+         group by p.member_id, m.nickname, m.avatar
+    </select>
+
+    <!-- 榜外的严格名次：严格高于我的人数 + 1（同分时更早完成、或同一时刻 memberId 更小者排我前面）。
+         两个派生表交叉计数，不用相关子查询，MySQL 同构；本人无有效对局时返回 null，
+         由调用方「不猜名次」而不是补 1。 -->
+    <select id="selectScopedMemberRank" resultType="java.lang.Integer">
+        select case when count(mine.memberId) = 0 then null else count(peers.memberId) + 1 end as userRank
+          from (select p.member_id as memberId,
+                       count(*) as score,
+                       max(coalesce(p.checkin_time, p.create_time)) as finishedAt
+                  from player_node_progress p
+                  join cms_topic t on t.id = p.topic_id and t.del_flag = 0
+                  join ums_member m on m.id = p.member_id and m.del_flag = 0
+                 where <include refid="scoredRunWhere"/>
+                   and p.member_id = #{memberId}
+                 group by p.member_id) mine
+          left join (select p.member_id as memberId,
+                       count(*) as score,
+                       max(coalesce(p.checkin_time, p.create_time)) as finishedAt
+                  from player_node_progress p
+                  join cms_topic t on t.id = p.topic_id and t.del_flag = 0
+                  join ums_member m on m.id = p.member_id and m.del_flag = 0
+                 where <include refid="scoredRunWhere"/>
+                 group by p.member_id) peers
+            on peers.score &gt; mine.score
+            or (peers.score = mine.score
+                and (peers.finishedAt &lt; mine.finishedAt
+                     or (peers.finishedAt = mine.finishedAt
+                         and peers.memberId &lt; mine.memberId)))
+    </select>
+
+    <select id="countUnverifiedRuns" resultType="long">
+        select count(*)
+          from (select p.member_id, p.topic_id, p.activity_id, p.play_instance_id
+                  from player_node_progress p
+                  join cms_topic t on t.id = p.topic_id and t.del_flag = 0
+                 where p.del_flag = 0 and p.status = 1
+                   and <include refid="latestRunInstance"/>
+                   and not <include refid="validPaidRegistration"/>
+                   <include refid="weekWindow"/>
+                   <include refid="scopeWhere"/>
+                 group by p.member_id, p.topic_id, p.activity_id, p.play_instance_id) unverified
+    </select>
+
+    <!-- 报名有效、但该局没有请求维度的冻结地理归属（UNKNOWN）⇒ 排除在 city/country 榜外。 -->
+    <select id="countUnattributedRuns" resultType="long">
+        select count(*)
+          from (select p.member_id, p.topic_id, p.activity_id, p.play_instance_id
+                  from player_node_progress p
+                  join cms_topic t on t.id = p.topic_id and t.del_flag = 0
+                 where p.del_flag = 0 and p.status = 1
+                   and <include refid="latestRunInstance"/>
+                   and <include refid="validPaidRegistration"/>
+                   <include refid="weekWindow"/>
+                   and
+                   <choose>
+                       <when test='"city".equals(scope)'>not <include refid="frozenCityPresent"/></when>
+                       <when test='"country".equals(scope)'>not <include refid="frozenCountryPresent"/></when>
+                       <otherwise>1 = 0</otherwise>
+                   </choose>
+                 group by p.member_id, p.topic_id, p.activity_id, p.play_instance_id) unattributed
+    </select>
+
+    <select id="countRankedMembers" resultType="long">
+        select count(distinct p.member_id)
+          from player_node_progress p
+          join cms_topic t on t.id = p.topic_id and t.del_flag = 0
+          join ums_member m on m.id = p.member_id and m.del_flag = 0
+         where <include refid="scoredRunWhere"/>
+    </select>
+
+</mapper>

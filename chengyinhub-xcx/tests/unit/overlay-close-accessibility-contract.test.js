@@ -22,7 +22,8 @@ function assertContract(overrides = {}) {
   const source = (file) => overrides[file] === undefined ? read(file) : overrides[file]
   const publishWxml = source('components/cy/publish-sheet/index.wxml')
   const publishWxss = source('components/cy/publish-sheet/index.wxss')
-  assert.match(publishWxml, /ps__quick-action--return"[^>]*aria-role="button"[^>]*aria-label="返回发布类型"/)
+  // V3-44(2026-11-09):快速配置撤下后发布菜单只剩一级,「返回发布类型」那一行随二级一起退场
+  assert.doesNotMatch(publishWxml, /aria-label="返回发布类型"/)
   assert.match(publishWxml, /ps__quick-action--return"[^>]*aria-role="button"[^>]*aria-label="返回"/)
   assert.match(rule(publishWxss, '.ps__quick-action'), /min-height:\s*var\(--cy-comp-publish-trigger\)/)
 

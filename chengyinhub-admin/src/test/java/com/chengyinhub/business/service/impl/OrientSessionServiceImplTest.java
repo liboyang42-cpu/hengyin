@@ -173,6 +173,58 @@ class OrientSessionServiceImplTest {
     }
 
     @Test
+    void explicitMissingOrOldCapabilityRejectsPrepareAndStartBeforeAnyWrites() throws Exception {
+        var snapshot = new com.fasterxml.jackson.databind.ObjectMapper().readTree(
+                "{\"nodeConfigs\":{\"31\":{\"qa\":{\"enabled\":true}}},\"requiredCapabilities\":[]}");
+        when(routeRuntime.queryNodeContentSnapshot(MEMBER, TOPIC, 0L, null)).thenReturn(snapshot);
+        TopicRouteSession frozen = routeMapper.selectCurrentByOwner(0L, TOPIC, MEMBER);
+        frozen.setConfigSnapshotJson(snapshot.toString());
+        when(routeMapper.selectAccessibleById(SESSION, MEMBER)).thenReturn(frozen);
+        for (String declared : List.of("", "game.sort@1", "game.qa@0")) {
+            var declaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                    .parse("ios", "1", declared);
+            assertErr("CONTENT_CAPABILITY_UNSUPPORTED",
+                    () -> service.prepare(MEMBER, TOPIC, 0L, "prepare-capability", declaration));
+            assertErr("CONTENT_CAPABILITY_UNSUPPORTED",
+                    () -> service.start(MEMBER, SESSION, CONFIG_VERSION, "start-capability", declaration));
+        }
+        assertTrue(actions.isEmpty());
+        assertTrue(orientMapper.clocks.isEmpty());
+        assertNull(row.getPhase());
+        verify(routeRuntime, never()).state(anyLong(), anyLong(), anyLong());
+        verify(routeMapper, never()).insertAction(any());
+    }
+
+    @Test
+    void matchingCapabilityRunsOriginalAckAndServerClockFlow() throws Exception {
+        var snapshot = new com.fasterxml.jackson.databind.ObjectMapper().readTree(
+                "{\"nodeConfigs\":{\"31\":{\"qa\":{\"enabled\":true}}}}");
+        when(routeRuntime.queryNodeContentSnapshot(MEMBER, TOPIC, 0L, null)).thenReturn(snapshot);
+        TopicRouteSession frozen = routeMapper.selectCurrentByOwner(0L, TOPIC, MEMBER);
+        frozen.setConfigSnapshotJson(snapshot.toString());
+        when(routeMapper.selectAccessibleById(SESSION, MEMBER)).thenReturn(frozen);
+        var declaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse("ios", "1", "game.qa@1");
+        service.prepare(MEMBER, TOPIC, 0L, "prepare-supported", declaration);
+        assertErr("ORIENT_ACK_REQUIRED",
+                () -> service.start(MEMBER, SESSION, CONFIG_VERSION + 1, "start-wrong-ack", declaration));
+        assertTrue(orientMapper.clocks.isEmpty());
+        assertEquals("RUNNING", service.start(MEMBER, SESSION, CONFIG_VERSION, "start-supported", declaration).get("phase"));
+        assertEquals(T0, orientMapper.clocks.get(SESSION).getStartedAt().getTime());
+    }
+
+    @Test
+    void startUsesRequestedFrozenSessionRatherThanTheCurrentPublication() throws Exception {
+        TopicRouteSession frozen = routeMapper.selectCurrentByOwner(0L, TOPIC, MEMBER);
+        frozen.setConfigSnapshotJson("{\"nodeConfigs\":{\"31\":{\"qa\":{\"enabled\":true}}}}");
+        when(routeMapper.selectAccessibleById(SESSION, MEMBER)).thenReturn(frozen);
+        var declaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse("ios", "1", "game.qa@1");
+        assertEquals("RUNNING", service.start(MEMBER, SESSION, CONFIG_VERSION, "start-frozen-cap", declaration).get("phase"));
+        verify(routeRuntime, never()).queryNodeContentSnapshot(any(), any(), any(), any());
+    }
+
+    @Test
     void reentryNeverRestartsTheServerClock() {
         service.start(MEMBER, SESSION, CONFIG_VERSION, "key-start-1");
         clock.set(T0 + 60_000L);

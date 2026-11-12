@@ -147,10 +147,18 @@ public class RefundServiceImpl implements IRefundService {
     @Autowired
     private AlarmService alarmService;
     @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
+    @Autowired private com.chengyinhub.business.service.support.MarketingCashRefundOriginalSupport marketingCashRefunds;
 
     /** P1:退款回调先按 notify_hash 落 inbox 去重;状态推进仍由下方既有 CAS 负责。 */
     @Autowired
     private IWxPaymentCallbackInboxService wxPaymentCallbackInboxService;
+
+    /**
+     * 已真实到账退款的消费方(营销商品权益回冲 / 促销撤销 / 收入冲销等),各自域实现。
+     * 无实现方时为空列表 —— 本类行为与改造前完全一致。
+     */
+    @Autowired(required = false)
+    private java.util.List<com.chengyinhub.business.service.IRefundSettledConsumer> refundSettledConsumers;
 
     @Autowired
     private com.chengyinhub.business.service.ICoopSettlementClaimService coopSettlementClaimService;
@@ -469,7 +477,7 @@ public class RefundServiceImpl implements IRefundService {
                                 : matchesVerifiedRefundOriginal(verified.facts(), current, locked);
                         return sameOriginal
                                 && mayApplyRefundFailureProjection(current, refundStatus, originalFacts)
-                                && applyRefundPayoutEvent(current, refundStatus);
+                                && applyRefundPayoutEvent(current, refundStatus, verified);
                     }
                 };
         return verified != null
@@ -488,13 +496,20 @@ public class RefundServiceImpl implements IRefundService {
                 facts.get("refundId")) == null;
     }
 
-    private boolean applyRefundPayoutEvent(RefundApplication refund, String refundStatus) {
+    private boolean applyRefundPayoutEvent(RefundApplication refund, String refundStatus,
+                                           WechatVerifiedPaymentFactService.Stored verified) {
         String outRefundNo = refund.getRefundNo();
         // updatePayoutResult 的 WHERE 只允许从待派发/处理中/待人工(5/0/2)置位,
         // 不会覆盖人工已处理(3/4)的成果
         if ("SUCCESS".equalsIgnoreCase(refundStatus)) {
-            return updatePayoutTerminal(refund, RefundApplication.PAYOUT_SUCCESS,
-                    "原路退款成功(回调确认到账)");
+            if (!updatePayoutTerminal(refund, RefundApplication.PAYOUT_SUCCESS,
+                    "原路退款成功(回调确认到账)")) {
+                return false;
+            }
+            // 钱确实回到顾客账上之后才广播;与退款终态同一事务(REQUIRED),
+            // 不做 REQUIRES_NEW —— 父事务未提交,子事务读不到本单。
+            notifyRefundSettled(refund, verified);
+            return true;
         } else if ("ABNORMAL".equalsIgnoreCase(refundStatus)) {
             if (!updatePayoutTerminal(refund, RefundApplication.PAYOUT_PENDING_MANUAL,
                     "原路退款异常(原卡+零钱均注销),待人工异常退款")) {
@@ -512,6 +527,44 @@ public class RefundServiceImpl implements IRefundService {
         return true;
     }
 
+    /**
+     * 广播「退款已真实到账」给各域消费者(营销商品权益回冲 / 促销撤销 / 收入冲销…)。
+     *
+     * <p><b>只在 SUCCESS 且 CAS 成功后调用</b>;申请、审批、待人工、ABNORMAL/CLOSED/PROCESSING
+     * 一律不广播 —— 那些都不代表钱回到了顾客账上。
+     *
+     * <p><b>不吞异常</b>:消费方抛错即整笔回调回滚并由微信重投(消费方必须幂等);
+     * 用 catch 后只记日志会把"没冲销"变成静默漏账。
+     *
+     * <p>没有不可变退款事实(旧回调路径)时<b>不构造事实、不广播</b>,只留告警供对账:
+     * 宁可明确「无事实、未冲销」,也不要凭回调里的字段假装退款已到账。
+     */
+    private void notifyRefundSettled(RefundApplication refund,
+                                     WechatVerifiedPaymentFactService.Stored verified) {
+        if (refundSettledConsumers == null || refundSettledConsumers.isEmpty()) {
+            return;
+        }
+        if (verified == null || verified.facts() == null || verified.reference() == null) {
+            logger.warn("[退款到账] 缺少不可变退款事实,不广播冲销 refundId={} refundNo={}",
+                    refund.getId(), refund.getRefundNo());
+            return;
+        }
+        if (!"registration".equals(refund.getSourceType()) || refund.getSourceId() == null) {
+            logger.info("[退款到账] 非报名单来源,无营销冲销对象 refundId={} sourceType={}",
+                    refund.getId(), refund.getSourceType());
+            return;
+        }
+        WechatVerifiedPaymentFact facts = verified.facts();
+        com.chengyinhub.business.domain.dto.RefundSettledFact settled =
+                new com.chengyinhub.business.domain.dto.RefundSettledFact(
+                        refund.getSourceId(), refund.getId(), refund.getRefundNo(),
+                        facts.providerId(), facts.amountFen(), facts.totalFen(), facts.currency(),
+                        verified.reference().id(), verified.reference().hash());
+        for (com.chengyinhub.business.service.IRefundSettledConsumer consumer : refundSettledConsumers) {
+            consumer.onRefundSettled(settled);
+        }
+    }
+
     private boolean matchesRefundFacts(RefundApplication refund, Map<String, String> facts) {
         if (!"registration".equals(refund.getSourceType()) || refund.getSourceId() == null) {
             return false;
@@ -522,6 +575,21 @@ public class RefundServiceImpl implements IRefundService {
 
     private boolean matchesRefundFacts(RefundApplication refund, CmsRegistration registration,
                                        Map<String, String> facts) {
+        if (marketingCashRefunds != null && registration != null) {
+            try {
+                var original = marketingCashRefunds.find(registration.getId());
+                if (original.isPresent()) {
+                    var paid = original.get().payment().facts();
+                    return Integer.valueOf(1).equals(refund.getStatus())
+                            && paid.businessOutTradeNo().equals(facts.get("outTradeNo"))
+                            && paid.transactionId().equals(facts.get("transactionId"))
+                            && "CNY".equals(facts.get("currency"))
+                            && refund.getRefundNo().equals(facts.get("outRefundNo"))
+                            && refund.getRefundAmount().movePointRight(2).longValueExact() == Long.parseLong(facts.get("refund"))
+                            && paid.totalFen() == Long.parseLong(facts.get("total"));
+                }
+            } catch (RuntimeException invalidOriginal) { return false; }
+        }
         if (registration == null || StringUtils.isBlank(registration.getRegistrationNo())
                 || !registration.getRegistrationNo().equals(facts.get("outTradeNo"))
                 || !"CNY".equals(facts.get("currency"))) {
@@ -664,6 +732,10 @@ public class RefundServiceImpl implements IRefundService {
             return;   // 入参合同由 saveRefund 统一拒
         }
         CmsRegistration payer = lockRefundRegistration(refund.getSourceId());
+        if (marketingCashRefunds != null && marketingCashRefunds.find(refund.getSourceId()).isPresent()) {
+            // Marketing lines own frozen portions; the ordinary payer-total/same-topic adapter does not apply.
+            return;
+        }
         if (payer == null || StringUtils.isEmpty(payer.getParentOrderNo())
                 || payer.getPayableAmount() == null || payer.getPayableAmount().signum() <= 0) {
             return;
@@ -736,6 +808,10 @@ public class RefundServiceImpl implements IRefundService {
                 BigDecimal paid = firstNonNull(registration.getPayableAmount(), registration.getTotalAmount(), registration.getOriginalAmount());
                 if (paid == null || paid.signum() < 0) throw new IllegalStateException("报名实付快照缺失，请人工核实");
                 assertRemainingRefundCash(refund, paid, history, false);
+            }
+            if (marketingCashRefunds != null && registration != null) {
+                var original = marketingCashRefunds.find(registration.getId());
+                if (original.isPresent()) marketingCashRefunds.requireRefund(original.get(), refund, false);
             }
             ensureRefundable(registration);
             // FX-04:人工批准的单(含 A1-1 之前建、created_by 为空的旧后台单),建单到审批之间同单别的票
@@ -963,6 +1039,10 @@ public class RefundServiceImpl implements IRefundService {
     }
 
     private CmsRegistration lockRefundRegistration(Long registrationId) {
+        if (marketingCashRefunds != null) {
+            var original = marketingCashRefunds.find(registrationId);
+            if (original.isPresent()) return original.get().registration();
+        }
         CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
         return observed == null ? null : RegistrationTopicFence.lock(observed, cmsRegistrationMapper,
                 cmsActivityMapper, cmsTopicMapper).registration();
@@ -1000,6 +1080,13 @@ public class RefundServiceImpl implements IRefundService {
         // 多票首单的「同单还剩多少」另由 ensureWithinOrderCash(OrderRefundCash.remaining)在后台建单/批准时封顶。
         refund.setPaidAmount(firstNonNull(registration.getPayableAmount(), registration.getTotalAmount(), registration.getOriginalAmount()));
         refund.setMerchantId(resolveRegistrationMerchantId(registration));
+        if (marketingCashRefunds != null) {
+            var original = marketingCashRefunds.find(registration.getId());
+            if (original.isPresent()) {
+                refund.setPaidAmount(BigDecimal.valueOf(original.get().lineFen(), 2));
+                marketingCashRefunds.requireRefund(original.get(), refund, false);
+            }
+        }
         List<RefundApplication> history = registrationRefundHistory(registration.getId());
         BigDecimal approved = approvedRefundCash(history, null);
         BigDecimal paid = refund.getPaidAmount();
@@ -1581,6 +1668,13 @@ public class RefundServiceImpl implements IRefundService {
 
     private boolean matchesVerifiedRefundOriginal(WechatVerifiedPaymentFact fact, RefundApplication refund,
                                                   CmsRegistration registration) {
+        if (marketingCashRefunds != null && registration != null) {
+            var original = marketingCashRefunds.find(registration.getId());
+            if (original.isPresent()) {
+                marketingCashRefunds.requireRefund(original.get(), refund, true);
+                return marketingCashRefunds.matches(original.get(), refund, fact);
+            }
+        }
         if (registration == null || !fact.businessOutTradeNo().equals(registration.getRegistrationNo())
                 || !fact.transactionId().equals(registration.getTransactionId())
                 || !fact.merchantEventNo().equals(refund.getRefundNo())

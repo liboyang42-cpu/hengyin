@@ -71,6 +71,9 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
         this.npcProfileMapper = npcProfileMapper;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.support.WorkshopLicenseGuard workshopLicenses;
+
     /**
      * 媒体目前只保存裸 URL、没有资产所有权真源；临时判据为新旧 CONTENT 主体完全相同。
      * 这是防扩大使用范围的过渡闸，待媒体资产真源建立后必须改为逐资产授权校验。
@@ -117,6 +120,7 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
         remapBlocks(chapters, chapterIds, nodeIds, npcIdMap);
         remapJourneyStory(newTopic, chapterIds, npcIdMap);
 
+        if(workshopLicenses!=null)workshopLicenses.requireTheme(newTopic);
         requireOne(reopenMapper.completeReopenRequest(request.getId(), newTopic.getId()), "REOPEN 请求回填新期失败");
         return newTopic.getId();
     }
@@ -209,6 +213,7 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
             if (templateId == null || templateId <= 0L) {
                 continue;
             }
+            if(workshopLicenses!=null)workshopLicenses.requireCopy(templateId,newPayeeMemberId);
             CmsMemberTemplate template = templateMapper.selectCmsMemberTemplateById(templateId);
             if (template == null || Integer.valueOf(2).equals(template.getDelFlag())
                     || !newPayeeMemberId.equals(template.getMemberId())
@@ -406,6 +411,7 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
         if (mapped != null) {
             return mapped;
         }
+        if(workshopLicenses!=null)workshopLicenses.requireCopy(templateId,newPayeeMemberId);
         CmsMemberTemplate source = templateMapper.selectCmsMemberTemplateById(templateId);
         if (source == null) {
             // 读不到来源模板就无从判断它是否引用 NPC;按「无引用」共享会让新期节点挂一个不存在的模板。
@@ -429,6 +435,7 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
         if (copy.getId() == null) {
             throw new IllegalStateException("新期节点模板 id 重建失败: templateId=" + templateId);
         }
+        if(workshopLicenses!=null)workshopLicenses.inheritCopy(templateId,copy.getId(),newPayeeMemberId);
         editionTemplateIds.put(templateId, copy.getId());
         copiedTemplateBlocks.put(copy.getId(), source.getAdvancedConfigJson());
         return copy.getId();

@@ -12,6 +12,8 @@ Component({
     top: { type: Number, value: 96 },
     placeholder: { type: String, value: '输入地址' },
     entry: { type: Boolean, value: false },
+    // D4:玩页深色条;默认白条
+    dark: { type: Boolean, value: false },
     // 2026-10-28:当前地图中心。本地地址里没有的,用它向 /api/map/place-search 就近搜(业主:搜「海星市场」要能搜到)
     lat: { type: Number, value: 0 },
     lng: { type: Number, value: 0 },

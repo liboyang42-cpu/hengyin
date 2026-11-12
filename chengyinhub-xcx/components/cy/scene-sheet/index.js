@@ -1,12 +1,16 @@
 const app = getApp();
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const exitMotion = require('../../../behaviors/exit-motion.js');
+const sheetDepth = require('../../../behaviors/sheet-depth.js');
 const { withNativeBackGuard, onBackGuardLeave } = require('../../../utils/native-back-guard.js');
 
 /* 2026-10-23 业主定:场景弹窗也要退场动画(原来 wx:if 直连 show,关闭瞬间消失),并按档位定速、
  * 参与 exit-motion 的交接(同一时刻只有一个弹层在动)。half 档 300 / 250,full 档 340 / 280,
  * 退场计时器是 --cy-motion-sheet-*-out 的 JS 镜像。进出场走 transition(_in 开关),不占 keyframes 棘轮。 */
 const LEVEL_EXIT_MS = { half: 250, full: 280 };
+/* qx-u1(2026-11-10):half / full 头部可拖,跟手在视图层(utils/wxs/gesture.wxs,参数见 utils/gesture-physics.js)。
+ * 甩出去 = 和 ✕ 同一条关闭出口;宿主没接这次关闭时 DISMISS_FALLBACK_MS 后把面板拉回来。 */
+const DISMISS_FALLBACK_MS = 400;
 
 /* G-2(2026-10-27):物理返回 / 侧滑先落在弹层上 —— 有上一步就退一步,否则走 ✕ 同一条关闭出口。
  * closable=false 的场景没有给用户退出口,返回键只被吞掉,不替宿主关。 */
@@ -18,7 +22,7 @@ function onNativeBack(vm) {
 
 Component(withNativeBackGuard({
   options: { multipleSlots: true },
-  behaviors: [exitMotion(250)],
+  behaviors: [exitMotion(250), sheetDepth],
   properties: {
     // G-2:页面已有自己的 page-container 覆盖这个弹层时传 false 让位(一页只能有一个容器)
     backGuard: { type: Boolean, value: true },
@@ -43,13 +47,21 @@ Component(withNativeBackGuard({
     closeLabel: '关闭当前场景',
     panelTopPx: 0,
     _in: false,
+    _gestureCmd: 0, // 变一次 = 让视图层撤掉面板的行内位移
   },
   observers: {
+    // 甩出去之后又被打开:退场途中重开(节点还在)⇒ 发 gcmd 把面板接回来;已卸载后重开 ⇒ gcmd 归零
+    show(v) {
+      if (!v || !this._dragOut) return;
+      this._dragOut = false;
+      this.setData({ _gestureCmd: this.data._render ? this.data._gestureCmd + 1 : 0 });
+    },
     title(value) {
       this.setData({ closeLabel: value ? '关闭' + value : '关闭当前场景' });
     },
   },
   lifetimes: {
+    detached() { clearTimeout(this._dragOutTimer); this._dragOutTimer = null; },
     attached() {
       const globalData = (app && app.globalData) || {};
       const menuButtonInfo = globalData.menuButtonInfo;
@@ -78,6 +90,25 @@ Component(withNativeBackGuard({
       return { _in: false };
     },
     _afterEnter() { this.setData({ _in: true }); },
+    // WXS sheetEnd 回调:dismiss 走 ✕ 同一出口;blocked 时面板已弹回,脏输入照样上报
+    _onGestureRelease(detail) {
+      const action = detail && detail.action;
+      if (action === 'blocked') {
+        if (this.data.dirty) this.triggerEvent('requestclose', { reason: 'drag' });
+        return;
+      }
+      if (action !== 'dismiss' || this.data._closing) return;
+      this._dragOut = true;
+      this._requestClose('drag');
+      clearTimeout(this._dragOutTimer);
+      this._dragOutTimer = setTimeout(() => {
+        this._dragOutTimer = null;
+        if (this.data.show && !this.data._closing) {
+          this._dragOut = false;
+          this.setData({ _gestureCmd: this.data._gestureCmd + 1 });
+        }
+      }, DISMISS_FALLBACK_MS);
+    },
     noop() {},
     onBack() { this.triggerEvent('back'); },
     // page 档左上角是导航栏返回:有上一步退一步,首层等同关闭(深链壳里就是退页)

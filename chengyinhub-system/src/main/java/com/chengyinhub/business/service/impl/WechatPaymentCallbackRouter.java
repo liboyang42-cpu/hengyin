@@ -29,9 +29,26 @@ public class WechatPaymentCallbackRouter {
     private final WechatRefundCallbackOwner depositRefund;
     private final WechatRefundCallbackOwner registrationRefund;
 
+    private final WorkshopWechatPaymentOrderAdapter workshop;
+    /** 通行证（PPO / RPP 号段）。可选注入：缺失时号段仍被认领并回 FAIL，绝不落到 registration 兜底。 */
+    private com.chengyinhub.business.platformpass.PlatformPassService platformPass;
+
+    @Autowired(required = false)
+    public void setPlatformPass(com.chengyinhub.business.platformpass.PlatformPassService platformPass) {
+        this.platformPass = platformPass;
+    }
+
+    public WechatPaymentCallbackRouter(IClubMembershipService club, IMerchantCommerceService commerce,
+            ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds,
+            IMarketingProductPurchaseService marketingProducts) {
+        this(club, commerce, coop, registration, refunds, marketingProducts, null);
+    }
+
     @Autowired
     public WechatPaymentCallbackRouter(IClubMembershipService club, IMerchantCommerceService commerce,
-            ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds) {
+            ICoopInviteService coop, ICmsRegistrationService registration, IRefundService refunds,
+            IMarketingProductPurchaseService marketingProducts, WorkshopWechatPaymentOrderAdapter workshop) {
+        this.workshop = workshop;
         // Reserve CLM even when malformed/unknown: it must never fall through to registration.
         owners = List.of(
                 new Owner("club-membership", no -> no != null && no.startsWith("CLM"), facts ->
@@ -47,6 +64,19 @@ public class WechatPaymentCallbackRouter {
                                         cents(facts) == null ? null : cents(facts).longValue(), facts.get("transaction_id"),
                                         new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
                                                 Long.parseLong(facts.get("verified_fact_id")),facts.get("verified_fact_hash"))))),
+                // 营销商品现金单(MKO_)。放在 registration 之前是刻意的:MKO 号段绝不能被
+                // registration 的「按 registration_no 查得到」兜底认领;承载方内部仍会再次校验
+                // 订单存在/可支付/金额与不可变支付事实一致,不靠这里的字符串。
+                new Owner("marketing-product", no -> marketingProducts != null
+                        && no != null && no.startsWith("MKO"), facts ->
+                        ack(paid(facts) && marketingProducts != null
+                                && marketingProducts.handlePaidOrder(facts.get("out_trade_no"), paid(facts),
+                                        cents(facts), facts.get("transaction_id"),
+                                        verifiedPaymentReference(facts)))),
+                new Owner("platform-pass", no -> no != null && no.startsWith("PPO"),
+                        facts -> ack(paid(facts) && platformPass != null && platformPass.handleJsapiPaid(facts))),
+                new Owner("workshop", no -> no != null && no.startsWith("WKO"),
+                        facts -> ack(workshop != null && workshop.handlePaidOrder(facts))),
                 new Owner("registration", no -> no != null && registration != null && registration.getByRegistrationNo(no) != null, facts ->
                         registration == null ? "FAIL" : registration.handleWechatPayCallback(facts)));
         depositRefund = facts -> coop != null && coop.handleDepositRefundResult(facts);
@@ -56,6 +86,7 @@ public class WechatPaymentCallbackRouter {
     /** Explicit assembly seam for route tests; production uses the four existing owners above. */
     WechatPaymentCallbackRouter(List<WechatPaymentCallbackOwner> owners,
             WechatRefundCallbackOwner depositRefund, WechatRefundCallbackOwner registrationRefund) {
+        this.workshop = null;
         this.owners = List.copyOf(owners);
         this.depositRefund = depositRefund;
         this.registrationRefund = registrationRefund;
@@ -78,6 +109,8 @@ public class WechatPaymentCallbackRouter {
 
     public boolean refund(Map<String, String> facts) {
         String no = facts.get("outRefundNo");
+        if (no != null && no.startsWith("RWKO")) return workshop != null && workshop.handleRefund(facts);
+        if (no != null && no.startsWith("RPP")) return platformPass != null && platformPass.handleJsapiRefund(facts);
         return no != null && no.startsWith("RDEP") ? depositRefund.apply(facts) : registrationRefund.apply(facts);
     }
 

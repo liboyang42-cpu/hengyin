@@ -6,7 +6,6 @@
   <cy-modal-host id="cy-modal-host" />
   <!-- 2026-10-28 业主 p86(参考 X alexyango / ianneo_ai):浅色渐变底 + 兴趣气泡 + 灵感 chip + 圆形发送键;
        出稿后是一张草稿卡,点「打开草稿」再展开原来的逐站确认。额度只在用完时用下方提示说明。 -->
-  <view class="simple-ai__glow" aria-hidden="true"><view class="simple-ai__blob simple-ai__blob--a"></view><view class="simple-ai__blob simple-ai__blob--b"></view><view class="simple-ai__blob simple-ai__blob--c"></view></view>
   <cy-nav-bar title="快速配置" />
   <view class="simple-ai__nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
 
@@ -14,27 +13,16 @@
   <block wx:else>
   <scroll-view class="simple-ai__scroll" scroll-y="true">
     <view class="simple-ai__body">
-      <view class="simple-ai__hero" wx:if="{{!aiPlan || planOpen}}">
-        <text class="simple-ai__kicker">{{aiPlan ? (aiPlanProductType === 2 ? '自由探索 · 章节承接路线' : (aiPlanProductType === 1 ? '城市定向 · 集合式路线' : '原起草模式待确认')) : (mode === 2 ? '自由探索 · 章节承接路线' : '城市定向 · 集合式路线')}}</text>
-        <text class="simple-ai__title">{{aiPlan ? '这条路线，已经有了轮廓。' : '嗨，想做一条什么样的路线？'}}</text>
+      <!-- 2026-11-11 f-merchant(P-43 收尾):照商家套件 —— 灰底白卡;兴趣是标签库「主题」标签(带图标),
+           去掉漂浮气泡、柔光、引导问句与「选了 N 个」。 -->
+      <view class="simple-ai__tags" wx:if="{{!aiPlan}}">
+        <view class="simple-ai__tag {{item.on ? 'is-on' : ''}}" wx:for="{{interests}}" wx:key="key"
+              data-key="{{item.key}}" bindtap="toggleInterest" aria-role="checkbox" aria-checked="{{item.on}}" aria-label="{{item.label}}"
+              hover-class="cy-pressed" hover-stay-time="80">
+          <image wx:if="{{item.iconSrc}}" class="simple-ai__tag-ico" src="{{item.iconSrc}}" mode="aspectFit" aria-hidden="true" />
+          <text>{{item.label}}</text>
+        </view>
       </view>
-
-      <block wx:if="{{!aiPlan}}">
-        <!-- 第十轮 f3 第 5 项(p3 F7):「你喜欢什么」撤掉,气泡自己写上字(原来只有图标,看不出是什么)。 -->
-        <view class="simple-ai__bubbles">
-          <view class="simple-ai__bubble {{item.on ? 'is-on' : ''}}" wx:for="{{interests}}" wx:key="key"
-                style="left: {{item.x || 0}}%; top: {{item.y || 0}}rpx; --b: {{item.size || 132}}rpx; animation-delay: {{index * 60}}ms;"
-                data-key="{{item.key}}" bindtap="toggleInterest" aria-role="checkbox" aria-checked="{{item.on}}" aria-label="{{item.label}}"
-                hover-class="cy-pressed" hover-stay-time="80">
-            <cy-icon name="{{item.icon}}" size="{{item.on ? 44 : 40}}" />
-            <text class="simple-ai__bubble-t">{{item.label}}</text>
-          </view>
-        </view>
-        <view class="simple-ai__picked" wx:if="{{interestText}}">
-          <text class="simple-ai__picked-t">{{interestText}}</text>
-          <text class="simple-ai__picked-n">选了 {{interestCount || 0}} 个</text>
-        </view>
-      </block>
 
       <cy-progress-status wx:if="{{aiGenerating}}" density="compact"
                           title="正在生成主题草稿" sub="完成后仍需你确认地点"
@@ -49,10 +37,12 @@
       <cy-inline-error wx:elif="{{!aiPlan && aiQuotaLoaded && aiRemaining <= 0}}" kind="data"
                        title="今日额度已用完" sub="可改用手动创建" />
 
-      <view class="simple-ai__section-heading">
-        <text wx:if="{{aiIntentLabel}}">{{aiIntentLabel}}</text>
-        <cy-btn variant="secondary" bindtap="openAiHistory">历史起草记录</cy-btn>
-        <cy-btn variant="secondary" bindtap="openLocalAiHistory">本机保留记录</cy-btn>
+      <view class="simple-ai__section-heading" wx:if="{{aiIntentLabel}}">
+        <text>{{aiIntentLabel}}</text>
+      </view>
+      <view class="simple-ai__menu">
+        <cy-cell title="历史起草记录" arrow arrow-icon="chevron-right" bind:tap="openAiHistory" />
+        <cy-cell title="本机保留记录" arrow arrow-icon="chevron-right" hairline="{{false}}" bind:tap="openLocalAiHistory" />
       </view>
       <view wx:if="{{aiIntentIdentity}}" class="simple-ai__section-sub">{{aiIntentIdentity}}</view>
       <view wx:if="{{aiRecoveryLoading}}" class="simple-ai__section-sub">正在查找历史起草记录…</view>
@@ -67,7 +57,7 @@
           <view class="simple-ai__draft-shade"></view>
           <view class="simple-ai__draft-over">
             <text class="simple-ai__draft-t">{{aiPlan.title}}</text>
-            <text class="simple-ai__draft-m">{{aiPlanNodes.length}} 站</text>
+            <text class="simple-ai__draft-m">AI 生成 · {{aiPlanNodes.length}} 站</text>
             <view class="simple-ai__draft-btn" bindtap="openDraft" aria-role="button" aria-label="打开草稿" hover-class="cy-pressed" hover-stay-time="80">打开草稿</view>
           </view>
         </view>
@@ -82,7 +72,7 @@
       <block wx:if="{{aiPlan && planOpen}}">
         <view class="simple-ai__section-heading">
           <text>AI 为你整理的初稿</text>
-          <text class="simple-ai__section-state">{{aiPlanModeKnown ? '可编辑' : '只读 · 原模式待确认'}}</text>
+          <text class="simple-ai__section-state">{{aiPlanModeKnown ? 'AI 生成 · 可编辑' : 'AI 生成 · 只读 · 原模式待确认'}}</text>
         </view>
         <cy-card class="simple-ai__card">
           <text class="simple-ai__field-label">主题名称<text class="req" aria-hidden="true">*</text></text>
@@ -115,6 +105,7 @@
              enterAiEditor 的前两道守卫与 canEnterAiEditor 同判据,禁用时点它只会落 aiError 文案。 -->
         <cy-btn variant="primary" style="margin-top:var(--cy-space-4)" disabled="{{!canEnterAiEditor}}" bindtap="enterAiEditor" bind:disabledtap="enterAiEditor"><text>确认地点，进入编辑器</text><cy-icon name="arrow-right" size="28" /></cy-btn>
       </block>
+      <view wx:if="{{aigcFilingNo}}" class="simple-ai__filing">{{aigcFilingNo}}</view>
     </view>
   </scroll-view>
 

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ContentLandingMetadataMapper">
+
+    <resultMap id="MetadataResult" type="com.chengyinhub.business.domain.ContentLandingMetadata">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="sourceLocale" column="source_locale"/>
+        <result property="landingSummary" column="landing_summary"/>
+        <result property="groupEligible" column="group_eligible"/>
+        <result property="schoolEligible" column="school_eligible"/>
+        <result property="groupMinPeople" column="group_min_people"/>
+        <result property="groupMaxPeople" column="group_max_people"/>
+        <result property="ageMin" column="age_min"/>
+        <result property="ageMax" column="age_max"/>
+        <result property="accessibilityNote" column="accessibility_note"/>
+        <result property="status" column="status"/>
+        <result property="rowVersion" column="row_version"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="TranslationResult" type="com.chengyinhub.business.domain.ContentLandingTranslation">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="locale" column="locale"/>
+        <result property="sourceLocale" column="source_locale"/>
+        <result property="title" column="title"/>
+        <result property="subtitle" column="subtitle"/>
+        <result property="summary" column="summary"/>
+        <result property="translationState" column="translation_state"/>
+        <result property="rowVersion" column="row_version"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="metadataColumns">
+        id, topic_id, source_locale, landing_summary, group_eligible, school_eligible,
+        group_min_people, group_max_people, age_min, age_max, accessibility_note,
+        status, row_version, update_by, create_time, update_time
+    </sql>
+
+    <sql id="translationColumns">
+        id, topic_id, locale, source_locale, title, subtitle, summary,
+        translation_state, row_version, update_by, create_time, update_time
+    </sql>
+    <select id="selectByTopicId" resultMap="MetadataResult">
+        select <include refid="metadataColumns"/>
+        from content_landing_metadata
+        where topic_id = #{topicId}
+    </select>
+
+    <!-- 新建:自然键唯一索引兜底并发,重复键由服务层转 409。 -->
+    <insert id="insertMetadata" useGeneratedKeys="true" keyProperty="row.id">
+        insert into content_landing_metadata
+        (topic_id, source_locale, landing_summary, group_eligible, school_eligible,
+         group_min_people, group_max_people, age_min, age_max, accessibility_note,
+         status, row_version, update_by, create_time, update_time)
+        values
+        (#{row.topicId}, #{row.sourceLocale}, #{row.landingSummary},
+         coalesce(#{row.groupEligible}, 0), coalesce(#{row.schoolEligible}, 0),
+         #{row.groupMinPeople}, #{row.groupMaxPeople}, #{row.ageMin}, #{row.ageMax}, #{row.accessibilityNote},
+         coalesce(#{row.status}, 1), 1, #{row.updateBy}, #{row.createTime}, #{row.updateTime})
+    </insert>
+
+    <!-- 更新:CAS 命中才写;影响 0 行 = 版本过期,由服务层抛 409,不静默覆盖。 -->
+    <update id="updateMetadataVersioned">
+        update content_landing_metadata
+        set source_locale = #{row.sourceLocale},
+            landing_summary = #{row.landingSummary},
+            group_eligible = coalesce(#{row.groupEligible}, group_eligible),
+            school_eligible = coalesce(#{row.schoolEligible}, school_eligible),
+            group_min_people = #{row.groupMinPeople},
+            group_max_people = #{row.groupMaxPeople},
+            age_min = #{row.ageMin},
+            age_max = #{row.ageMax},
+            accessibility_note = #{row.accessibilityNote},
+            status = coalesce(#{row.status}, status),
+            row_version = row_version + 1,
+            update_by = #{row.updateBy},
+            update_time = #{updateTime}
+        where topic_id = #{row.topicId} and row_version = #{expectedVersion}
+    </update>
+
+    <select id="selectTranslationsByTopicId" resultMap="TranslationResult">
+        select <include refid="translationColumns"/>
+        from content_landing_translation
+        where topic_id = #{topicId}
+        order by locale asc
+    </select>
+
+    <select id="selectTranslation" resultMap="TranslationResult">
+        select <include refid="translationColumns"/>
+        from content_landing_translation
+        where topic_id = #{topicId} and locale = #{locale}
+    </select>
+
+    <insert id="insertTranslation" useGeneratedKeys="true" keyProperty="row.id">
+        insert into content_landing_translation
+        (topic_id, locale, source_locale, title, subtitle, summary,
+         translation_state, row_version, update_by, create_time, update_time)
+        values
+        (#{row.topicId}, #{row.locale}, #{row.sourceLocale}, #{row.title}, #{row.subtitle}, #{row.summary},
+         #{row.translationState}, 1, #{row.updateBy}, #{row.createTime}, #{row.updateTime})
+    </insert>
+    <update id="updateTranslationVersioned">
+        update content_landing_translation
+        set source_locale = #{row.sourceLocale},
+            title = #{row.title},
+            subtitle = #{row.subtitle},
+            summary = #{row.summary},
+            translation_state = #{row.translationState},
+            row_version = row_version + 1,
+            update_by = #{row.updateBy},
+            update_time = #{updateTime}
+        where topic_id = #{row.topicId} and locale = #{row.locale} and row_version = #{expectedVersion}
+    </update>
+
+    <!-- 后台审校只列已公开主题:未公开/模板/会员专属不进公开分发面。 -->
+    <select id="selectReviewable" resultMap="MetadataResult">
+        select metadata.id, metadata.topic_id, metadata.source_locale, metadata.landing_summary,
+               metadata.group_eligible, metadata.school_eligible, metadata.group_min_people,
+               metadata.group_max_people, metadata.age_min, metadata.age_max, metadata.accessibility_note,
+               metadata.status, metadata.row_version, metadata.update_by,
+               metadata.create_time, metadata.update_time
+        from content_landing_metadata metadata
+        join cms_topic on cms_topic.id = metadata.topic_id
+        where cms_topic.status = 1 and cms_topic.user_status = 1 and cms_topic.del_flag = 0
+          and cms_topic.is_template = 0
+        <if test="keyword != null and keyword != ''">
+            and cms_topic.name like concat('%', #{keyword}, '%')
+        </if>
+        order by metadata.update_time desc, metadata.id desc
+    </select>
+</mapper>

@@ -1,14 +1,15 @@
-<view class="sh sh--{{variant}} {{stacked ? 'sh--stacked' : ''}} {{inset ? 'sh--inset' : ''}} {{footer ? 'sh--has-footer' : ''}} {{anchorSelector ? 'sh--morph' : ''}} {{_morphOpen ? 'sh--morph-open' : ''}} {{reducedMotion ? 'sh--reduced-motion' : ''}} {{_closing ? 'sh--closing' : ''}} {{_dragging ? 'sh--dragging' : ''}} {{_snapping ? 'sh--snap' : ''}} {{fixed ? 'sh--fixed sh--fixed-' + fixed : ''}} {{_lv ? 'sh--lv-' + _lv : ''}} {{_measuring ? 'sh--measure' : ''}} {{_keepMask ? 'sh--keep-mask' : ''}} {{_handoffIn ? 'sh--handoff-in' : ''}}" wx:if="{{_render}}" catchtouchmove="noop" aria-hidden="{{!show || _closing}}" style="{{_dragStyle}}{{fullMaxH}}">
+<wxs module="gs" src="../../../utils/wxs/gesture.wxs" />
+<view class="sh sh--{{variant}} {{(stacked || _under) ? 'sh--stacked' : ''}} {{inset ? 'sh--inset' : ''}} {{footer ? 'sh--has-footer' : ''}} {{anchorSelector ? 'sh--morph' : ''}} {{_morphOpen ? 'sh--morph-open' : ''}} {{reducedMotion ? 'sh--reduced-motion' : ''}} {{_closing ? 'sh--closing' : ''}} {{_dragOut ? 'sh--drag-out' : ''}} {{fixed ? 'sh--fixed sh--fixed-' + fixed : ''}} {{_lv ? 'sh--lv-' + _lv : ''}} {{_measuring ? 'sh--measure' : ''}} {{_keepMask ? 'sh--keep-mask' : ''}} {{_handoffIn ? 'sh--handoff-in' : ''}}" wx:if="{{_render}}" catchtouchmove="noop" aria-hidden="{{!show || _closing}}" style="{{fullMaxH}}">
   <view class="sh__mask" bindtap="onMask" catchtouchmove="noop" aria-role="button" aria-label="关闭当前面板" hover-class="cy-pressed" hover-stay-time="80"></view>
-  <view class="sh__panel {{anchorSelector ? 'sh__panel--morph' : ''}}" catchtap="noop" style="{{(_morphOpen && !_closing) ? '' : _morphStyle}}">
-    <!-- bottom:拖拽抓手(full 顶部是导航栏,不用抓手)。
-         2026-09-01:抓手从「装饰横条」补成真的可拖(见 index.js 顶部那段说明)。
-         触摸挂在 .sh__grip 上而不是 .sh__handle:横条只有 8rpx 高,直接当热区没法拖;
-         grip 用 ::after 反向撑出热区,不加 padding —— 加 padding 会把面板顶部推下去,
-         这条横条的位置是 Figma 给过稿的。 -->
+  <view class="sh__panel {{anchorSelector ? 'sh__panel--morph' : ''}}" catchtap="noop" data-gpanel="1" bindtransitionend="{{gs.sheetSettle}}" change:gcmd="{{gs.sheetCmd}}" gcmd="{{_gestureCmd}}" style="{{(_morphOpen && !_closing) ? '' : _morphStyle}}">
+    <!-- bottom:拖拽抓手(full 顶部是导航栏,不用抓手)。触摸挂在 .sh__grip 上而不是 8rpx 高的 .sh__handle:
+         grip 用 ::after 反向撑出热区,不加 padding(横条位置是 Figma 给过稿的)。
+         qx-u1:跟手在视图层(utils/wxs/gesture.wxs),头部同样能起拖;正文 scroll-view 不起拖,照常滚动。 -->
     <view class="sh__grip" wx:if="{{handle && variant !== 'full'}}"
-          catchtouchstart="onDragStart" catchtouchmove="onDragMove"
-          catchtouchend="onDragEnd" catchtouchcancel="onDragEnd"
+          catchtouchstart="{{gs.sheetStart}}" catchtouchmove="{{gs.sheetMove}}"
+          catchtouchend="{{gs.sheetEnd}}" catchtouchcancel="{{gs.sheetEnd}}"
+          data-panel=".sh__panel" data-root=".sh" data-dragcls="sh--dragging" data-off="{{_closing}}"
+          data-blocked="{{!maskClosable || dirty}}" data-rm="{{reducedMotion}}" data-whsel=".sh__mask"
           aria-label="向下拖动关闭当前面板">
       <view class="sh__handle"></view>
     </view>
@@ -29,7 +30,11 @@
     </view>
 
     <!-- 普通与全高共用 title；全高只渲染导航栏，避免重复标题和关闭键。 -->
-    <view class="sh__head {{closable ? 'sh__head--closable' : ''}}" wx:if="{{title && variant !== 'full'}}">
+    <view class="sh__head {{closable ? 'sh__head--closable' : ''}}" wx:if="{{title && variant !== 'full'}}"
+          bindtouchstart="{{gs.sheetStart}}" catchtouchmove="{{gs.sheetMove}}"
+          bindtouchend="{{gs.sheetEnd}}" bindtouchcancel="{{gs.sheetEnd}}"
+          data-panel=".sh__panel" data-root=".sh" data-dragcls="sh--dragging" data-off="{{_closing}}"
+          data-blocked="{{!maskClosable || dirty}}" data-rm="{{reducedMotion}}" data-whsel=".sh__mask">
       <view class="sh__title {{closable ? 'sh__title--closable' : ''}}">{{title}}</view>
       <view class="sh__close" wx:if="{{closable}}" bindtap="onClose" data-testid="sheet-close" aria-role="button" aria-label="{{closeLabel}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{closeIcon}}" size="{{closeIconSize}}" /></view>
     </view>

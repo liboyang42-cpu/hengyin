@@ -109,9 +109,11 @@
       <view class="mt-btn mt-btn--w {{busy ? 'is-busy' : ''}}" wx:if="{{current.card.primary}}" bindtap="onCardPrimary" aria-role="button" aria-label="{{current.card.primary.text}}" hover-class="cy-pressed" hover-stay-time="80">{{current.card.primary.text}}</view>
       <view class="mt-btn mt-btn--s {{busy ? 'is-busy' : ''}}" wx:if="{{current.card.secondary}}" bindtap="onCardSecondary" aria-role="button" aria-label="{{current.card.secondary.text}}" hover-class="cy-pressed" hover-stay-time="80">{{current.card.secondary.text}}</view>
       <text class="mt-foot" wx:if="{{current.card.foot}}">{{current.card.foot}}</text>
+      <view class="mt-report" bindtap="openTeamReport" aria-role="button" aria-label="举报这支队伍" hover-class="cy-pressed" hover-stay-time="80">举报队伍</view>
     </view>
   </view>
   </block>
+  <team-report-sheet show="{{reportShow}}" team-id="{{reportTeamId}}" bind:close="closeTeamReport" />
 
   <!-- P5 队长审批(稿 594:1090) -->
   <block wx:if="{{sheet === 'leader' && current}}">

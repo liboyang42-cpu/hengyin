@@ -327,6 +327,33 @@ public interface ICmsTopicService
     boolean publishDraft(Long id, Long expectedOwnerId);
     TopicBundleSubmitResultVO publishDraftWithBinding(Long id, Long expectedOwnerId,
             Long expectedConfigVersion, String expectedRegistryVersion);
+
+    /**
+     * BE-06 可选发布意图号:同一号 + 同一 payload 重试回同一条修订,同号异 payload 冲突(409)。
+     * 不传 / 空白 = 完全沿用旧语义(每次正式发布各产生一条修订)。服务端不生成、不由内容 hash 推导。
+     */
+    default boolean publishDraft(Long id, Long expectedOwnerId, String publishRequestId) {
+        return publishDraft(id, expectedOwnerId);
+    }
+
+    default TopicBundleSubmitResultVO publishDraftWithReview(Long id, Long expectedOwnerId, String publishRequestId) {
+        return publishDraftWithReview(id, expectedOwnerId);
+    }
+
+    default TopicBundleSubmitResultVO publishDraftWithBinding(Long id, Long expectedOwnerId,
+            Long expectedConfigVersion, String expectedRegistryVersion, String publishRequestId) {
+        return publishDraftWithBinding(id, expectedOwnerId, expectedConfigVersion, expectedRegistryVersion);
+    }
+
+    /**
+     * F1:重放一次<b>已经完成</b>的发布意图(同作者 + 同 publishRequestId + 同 payload)。
+     *
+     * <p>只在主题已离开草稿、原始发布确实成功过时返回非 null;返回的是当时那条不可变修订的
+     * 只读回执,<b>不会</b>重跑额度/审核/身份/发布头写入。没有该意图的修订返回 null,
+     * 调用方继续原有草稿/额度/审核流程;{@code expectedContentSha256} 不一致抛 409。
+     */
+    TopicBundleSubmitResultVO replayPublishedRevision(Long id, Long expectedOwnerId,
+            String publishRequestId, String expectedContentSha256);
     boolean canResubmitSupplyReview(Long id, Long ownerId);
 
     /** V2 发布回执；专业版返回组合审核任务与冻结玩法 id。 */

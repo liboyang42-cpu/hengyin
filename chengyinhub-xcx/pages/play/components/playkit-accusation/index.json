@@ -1,0 +1,9 @@
+{
+  "component": true,
+  "styleIsolation": "isolated",
+  "usingComponents": {
+    "cy-play-stage": "/pages/play/components/play-stage/index",
+    "cy-icon": "/components/cy/icon/index",
+    "cy-illus": "/pages/play/components/cy-illus/index"
+  }
+}

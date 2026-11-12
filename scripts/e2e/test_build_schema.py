@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from scripts.e2e import build_schema
+from ci.test_composite_index_assertion_replacements import CompositeIndexReplacementContract, FixedIndexForwardSelection
 
 
 class BuildSchemaMigrationSelectionTest(unittest.TestCase):
@@ -735,10 +736,23 @@ class AdminRolePayeeForwardContractTest(unittest.TestCase):
         from ci.migration_ledger import build_manifest, plan_release
         root = self.ROOT
         manifest = build_manifest(root, "a" * 40)
+        # 2026-11-10 qx-final:后来的迁移(如 20261109_play_help_audit_permission)声明依赖这条 forward,
+        # 它们在真实历史里不可能先于 forward 落库;模拟历史时连同其传递依赖者一起视为待执行,
+        # 否则顺序门会正确地判 BLOCKED_DEPENDENCY_ORDER。本用例要证的仍是「旧历史不失效、forward 独自待执行」。
+        declared = json.loads((root / "ci/migration-dependencies.json").read_text())["dependencies"]
+        by_path = {row["path"]: row["migrationId"] for row in manifest["migrations"]}
+        pending = {by_path[self.NEW]}
+        grew = True
+        while grew:
+            grew = False
+            for migration_id, deps in declared.items():
+                if migration_id not in pending and pending.intersection(deps):
+                    pending.add(migration_id)
+                    grew = True
         history = [{"migrationId": row["migrationId"], "path": row["path"],
                     "checksum": row["sha256"], "targetCommit": "a" * 40,
                     "appliedAt": "2026-10-16T00:00:00Z", "status": "APPLIED"}
-                   for row in manifest["migrations"] if row["path"] != self.NEW]
+                   for row in manifest["migrations"] if row["migrationId"] not in pending]
         plan = plan_release(manifest, history, bootstrap={"status": "RECONCILED"},
                             baseline_ids={row["migrationId"] for row in history})
         states = {row["path"]: row["state"] for row in plan["migrations"]}

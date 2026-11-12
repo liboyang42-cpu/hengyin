@@ -470,6 +470,20 @@ const ACTION_VARIANTS = new Map([
       apis: ['/api/creativesquare/like'], writeApis: ['/api/creativesquare/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
       requiredRequests: [{ urlTemplate: '/api/creativesquare/like', method: 'POST', kind: 'write' }] },
   ]],
+  // 2026-11-09 qx-a6 W2-17:商家「发现」读全站俱乐部帖文流(scope=all)。
+  // 2026-11-10 r2-merchant a6-w2-17:改与玩家发现页同一套合流(俱乐部帖文 + 社区帖文),点赞按帖子来源只打其中一个接口;
+  // 关注只打 /api/user/follow/action —— 与 talent/list 同口径。
+  ['pages/merchant/relation/index.js:onLikePost', [
+    { id: 'club-post', handler: 'onLikePost', predicate: { postSource: 'club' },
+      apis: ['/api/club/post/like'], writeApis: ['/api/club/post/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
+      requiredRequests: [{ urlTemplate: '/api/club/post/like', method: 'POST', kind: 'write' }] },
+    { id: 'community-post', handler: 'onLikePost', predicate: { postSource: 'community' },
+      apis: ['/api/creativesquare/like'], writeApis: ['/api/creativesquare/like'], effectClasses: ['write', 'state'], externalCapabilities: [],
+      requiredRequests: [{ urlTemplate: '/api/creativesquare/like', method: 'POST', kind: 'write' }] },
+  ]],
+  ['pages/merchant/relation/index.js:onFollowPost', [{ id: null, handler: 'onFollowPost',
+    apis: ['/api/user/follow/action'], writeApis: ['/api/user/follow/action'], effectClasses: ['write', 'state'], externalCapabilities: [],
+    requiredRequests: [{ urlTemplate: '/api/user/follow/action', method: 'POST', kind: 'write' }] }]],
   ['pages/talent/list/index.js:onFollowPost', [{ id: null, handler: 'onFollowPost',
     apis: ['/api/user/follow/action'], writeApis: ['/api/user/follow/action'], effectClasses: ['write', 'state'], externalCapabilities: [],
     requiredRequests: [{ urlTemplate: '/api/user/follow/action', method: 'POST', kind: 'write' }] }]],
@@ -544,6 +558,31 @@ const ACTION_VARIANTS = new Map([
     effectClasses: ['write', 'state'],
   }]],
   ['subpackageMember/tixian/tixian.js:saveData', [withdrawSubmitVariant('saveData')]],
+  // l-pass 通行证开通:同一次点击串行「建单 → 拉支付参数 →(虚拟支付)服务端回查」,开通只认服务端 PAID。
+  // iOS 走 requestVirtualPayment(虚拟支付),其他走 requestPayment(JSAPI);取消不回查。
+  ['subpackageMember/market/membership/index.js:onBuy', [{
+    id: null, handler: 'onBuy',
+    apis: ['/api/platform-pass/orders', '/api/platform-pass/orders/{param}/pay', '/api/platform-pass/orders/{param}/confirm', '/api/platform-pass/orders/{param}'],
+    writeApis: ['/api/platform-pass/orders', '/api/platform-pass/orders/{param}/pay', '/api/platform-pass/orders/{param}/confirm'],
+    effectClasses: ['write', 'state'],
+    externalCapabilities: ['requestPayment', 'login'],
+    requiredRequests: [
+      { urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' },
+      { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
+    ],
+    requiredRequestsByBranch: {
+      'jsapi-paid': [
+        { urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
+      ],
+      'xpay-paid': [
+        { urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/platform-pass/orders/{param}/confirm', method: 'POST', kind: 'write' },
+      ],
+      'order-refused': [{ urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' }],
+    },
+  }]],
   ['subpackageA/pages/assetcenter/earnings/index.js:onTxSave', [withdrawSubmitVariant('onTxSave')]],
   ['pages/roam/index.js:goStart', [{
     id: null, handler: 'goStart', apis: ['/api/compliance/consents', '/api/compliance/consents/latest'],
@@ -1516,13 +1555,28 @@ function dynamicAttr(value) {
 }
 // ponytail: only literal branches under a simple data-path condition are supported.
 // Extend this grammar when a real binding needs more; unknown expressions fail closed.
-function eventHandlerNames(value) {
+// 2026-11-10 r2-create:再认两种形状 ——
+//   1. 条件里有一支是空串:`{{cond ? 'a' : ''}}` / `{{cond ? '' : 'a'}}`(空串 = 这一态不绑定);
+//   2. WXS 响应事件:`{{mod.fn}}` / `{{cond ? mod.fn : ''}}`,mod 必须是本 WXML 声明的 <wxs module>。
+//      它跑在渲染层,不是逻辑层 handler,自己不成为控件行;它经 callMethod 调回的方法由 ui-integrity U3 核对。
+function eventHandlerNames(value, wxsModules) {
   const classified = classifyBinding(value)
   if (classified.kind === 'identifier') return [classified.name]
   if (classified.kind === 'empty') return []
+  // qx-u1(2026-11-10):`{{模块.函数}}` 是 WXS 事件处理器,在视图层跑手势,自身不发请求;它经 callMethod 调到的关闭方法已由同一出口的 ✕ / 收起按钮登记。
+  // 2026-11-10 qx-s2 合并:u1 原先对任意 `{{a.b}}` 直接放行,与 r2-create「只有本 WXML 声明过的 wxs 模块才放行、未声明的显式失败」相抵;
+  // 改由下方 wxsModules 分支统一放行(u1 的 gs.* 绑定所在 WXML 都声明了 <wxs module="gs">),台账条数不变。
   const match = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])([A-Za-z_$][\w$]*)\3\s*\}\}$/.exec(value)
-  if (!match) throw new Error(`无法静态解析事件绑定: ${value}`)
-  return [...new Set([match[2], match[4]])]
+  if (match) return [...new Set([match[2], match[4]])]
+  const half = /^\{\{\s*!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*(?:(['"])([A-Za-z_$][\w$]*)\1\s*:\s*(['"])\3|(['"])\4\s*:\s*(['"])([A-Za-z_$][\w$]*)\5)\s*\}\}$/.exec(value)
+  if (half) return [half[2] || half[6]]
+  const wxs = /^\{\{\s*(?:!?[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*\s*\?\s*)?([A-Za-z_$][\w$]*)\.[A-Za-z_$][\w$]*\s*(?::\s*(['"])\2)?\s*\}\}$/.exec(value)
+  if (wxs && wxsModules && wxsModules.has(wxs[1])) return []
+  throw new Error(`无法静态解析事件绑定: ${value}`)
+}
+
+function wxsModuleNames(source) {
+  return new Set([...String(source || '').matchAll(/<wxs\b[^>]*\bmodule\s*=\s*['"]([A-Za-z_$][\w$]*)['"]/g)].map((m) => m[1]))
 }
 
 /**
@@ -2764,8 +2818,11 @@ function buildLedger() {
       const hostRoutes = [...new Set(hostComponentPaths.map((item) => item.route))].sort()
       // 未被任何 app page（含组件依赖闭包）引用的孤儿组件不属于可操作产品分母。
       if (route.startsWith('component:') && hostRoutes.length === 0) return
+      const wxsModules = wxsModuleNames(source)
       findEventBindings(source).flatMap((binding, bindingIndex) =>
-        eventHandlerNames(binding.value).map(name => ({ binding, bindingIndex, name }))
+        // WXS 响应事件({{模块.函数}},模块在本文件 <wxs> 声明)在视图层执行,不进 JS、无请求无跳转,不是台账动作
+        // qx-s2 合并:u1 的 binding.wxs 判定与 r2-create 的 wxsModules(条件式 WXS 绑定)并存
+        (binding.wxs ? [] : eventHandlerNames(binding.value, wxsModules)).map(name => ({ binding, bindingIndex, name }))
       ).forEach(({ binding, bindingIndex, name }) => {
         const tag = tags.find((candidate) => candidate.start <= binding.offset && binding.offset <= candidate.end)
         const tagSource = tag ? source.slice(tag.start, tag.end + 1) : ''

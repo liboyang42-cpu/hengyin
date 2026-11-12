@@ -1,0 +1,9 @@
+# V3-11 相册 · 修前(launch 底座 + 本线前几个提交,rig 试玩入口 ?preview=1,gen.js album)
+# 点「开始游戏」后第一次滚动,页面主线程不再应答,Chrome 渲染进程退出(staging 记过同一现象,当作 HARNESS)。
+# 在 rig 的 setData 上计数(f-play rig probe),死循环的四条 setData 各自 200 → 2000 次:
+pages/play/index playKit                                       ← onAdvancedSession
+pages/play/components/advanced-game/index state,currentStep,members ← hydrate ← start ← observer 'show,node.nodeId'
+pages/play/index nodes                                         ← onAdvancedSession(试玩分支:给节点挂新的 previewKit)
+pages/play/components/advanced-game/index remainingSeconds     ← syncTimer
+# 循环:observer → start → hydrate → emitSession → 页面 onAdvancedSession 挂 previewKit → 重新传 node → observer → start ……
+# 修后(advanced-game 同一个打开着的节点只开局一次):同一步骤跑完,无 LOOP、无崩溃,截图见 V3-11-after.jpg。

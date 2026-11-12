@@ -19,6 +19,8 @@
    *   解析,类作用域主题(.theme-light / .theme-merchant)下继承到的是**暗端已解析值**,
    *   底栏会在浅色页里黑一条。v2 真 token 每个主题块都重定义过,跟随主题零遗漏。 */
   background: var(--cy-color-bg-page);
+  /* 2026-11-10 r2:底部按钮全站统一圆角 */
+  --cy-comp-btn-radius: var(--cy-comp-bottom-btn-radius);
   padding: var(--cy-comp-footer-pad-y) var(--cy-page-x);
   padding-bottom: calc(var(--cy-comp-footer-pad-y) + env(safe-area-inset-bottom));
 }

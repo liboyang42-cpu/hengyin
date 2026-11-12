@@ -137,14 +137,26 @@ function boundHandlerNames(wxmlSource) {
     .map((binding) => binding.name))
 }
 
-function findU3Names(jsSource, wxmlSource) {
+// jsPath 可选(只在扫当前树时给):有它才能顺着本页 <wxs src> 认 callMethod、顺着 ...x.methods() 认混入模块里的 this.x() 调用,
+// 与 scripts/js-orphan-handler-lint.js 同一口径;基线侧不给,只会让基线多算孤儿、不会放过新增。
+function findU3Names(jsSource, wxmlSource, jsPath) {
   const bindings = boundHandlerNames(wxmlSource)
-  const masked = handlerLint.maskNonCode(jsSource)
+  let masked = handlerLint.maskNonCode(jsSource)
+  if (jsPath) {
+    handlerLint.wxsCallMethodNames(jsPath.slice(0, -3) + '.wxml', wxmlSource).forEach((n) => bindings.add(n))
+    const spread = [...new Set(handlerLint.resolveSpreadRequireTargets(jsSource))].map((rel) => {
+      try { return fs.readFileSync(path.resolve(path.dirname(jsPath), rel), 'utf8') } catch (e) { return '' }
+    })
+    masked = [masked].concat(spread.map(handlerLint.maskNonCode)).join('\n')
+  }
+  const wxmlRaw = handlerLint.maskWxmlComments(wxmlSource || '')
   return extractOwnHandlerNames(jsSource).filter((name) => {
     // 开工计划把 retryReco 点名为既有标本；retry* 虽不在 on/go/tap/handle 四个前缀里，
     // 语义仍是必须由 UI 触发的重试 handler，不能让示例本身落出扫描器。
     if (!/^(?:on|go|tap|handle|retry)(?:[A-Z_$]|$)/.test(name) || PAGE_LIFECYCLES.has(name)) return false
     if (bindings.has(name)) return false
+    // 动态绑定 bindtap="{{cond ? '' : 'onX'}}":方法名是字符串字面量,也算被绑上了(同 js-orphan-handler-lint)
+    if (wxmlRaw.includes(`'${name}'`) || wxmlRaw.includes(`"${name}"`)) return false
     const references = masked.match(new RegExp(`\\b${escapeRegex(name)}\\b`, 'g')) || []
     return references.length <= 1
   })
@@ -367,7 +379,7 @@ function incrementalUiIssues(jsFiles, base, analyzer, options) {
     const currentJs = fs.readFileSync(absolute, 'utf8')
     const currentWxml = readWxmlWithIncludes(absolute.slice(0, -3) + '.wxml')
     if (!currentWxml) continue
-    const current = analyzer(currentJs, currentWxml)
+    const current = analyzer(currentJs, currentWxml, absolute)
     if (!current.length) continue
     const baseJs = gitShow(base, relativeRepo, options.execFileSync, options)
     const baseWxml = gitReadWxmlWithIncludes(base, relativeRepo.slice(0, -3) + '.wxml', undefined, options)
@@ -423,6 +435,9 @@ function runSelftest() {
   const handlerJs = 'Page({ retryReco() {}, onLoad() {} })'
   assert.deepEqual(findU3Names(handlerJs, '<view></view>'), ['retryReco'])
   assert.deepEqual(findU3Names(handlerJs, '<button bindtap="retryReco">重试</button>'), [])
+  // qx-green:动态绑定的字符串字面量算绑定;只在注释里出现不算
+  assert.deepEqual(findU3Names(handlerJs, `<view bindtap="{{busy ? '' : 'retryReco'}}"></view>`), [])
+  assert.deepEqual(findU3Names(handlerJs, `<!-- bindtap="{{busy ? '' : 'retryReco'}}" --><view></view>`), ['retryReco'])
 
   const dataJs = "Page({ load() { this.setData({ reco: [], 'sheet.show': true }) } })"
   assert.deepEqual(findU4Fields(dataJs, '<view wx:if="{{sheet.show}}"></view>'), ['reco'])

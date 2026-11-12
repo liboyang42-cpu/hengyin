@@ -1,3 +1,4 @@
+@import '../../../style/merchant-light-scope.wxss';
 /* 2026-07-31:根链改 flex column + min-height:100vh,交给 cy-empty/cy-error 的 fill 变体
    在"标题下方到屏幕底部"这段剩余空间里居中,替换掉原来 .detail-state 自己猜的 min-height:48vh。 */
 page{
@@ -290,7 +291,10 @@ page{
    ============================================================ */
 /* page 元素也置黑:消除原生栏下方那条会随滚动消失的白边(frame 未铺满露出浅底) */
 page { background: var(--cy-bg-page); }
-.detail.theme-dark { background: var(--cy-bg-page); min-height: 100vh; }
+.detail.theme-dark { background: var(--cy-bg-page); min-height: 100vh;
+  /* 2026-11-09 V3-23/24/32:帖文详情与列表卡同一套字族与字号(正文/昵称 15pt、元信息 13pt),进详情不再换一套字 */
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  --pc-type-body: calc(30rpx * var(--cy-type-scale)); --pc-type-meta: calc(26rpx * var(--cy-type-scale)); }
 
 /* 暗色图标转白(点赞/踩/分享/评论;高亮态保留原色) */
 
@@ -331,10 +335,10 @@ page { background: var(--cy-bg-page); }
 .detail.theme-dark .ph-avatar > image { width: var(--cy-space-7); height: var(--cy-space-7); border-radius: 50%; display: block; }
 .detail.theme-dark .ph-mid { flex: 1; min-width: 0; }
 /* 昵称 15px Medium。30rpx 无对应 token,--cy-font-subtitle(32rpx) 是语义对位且只差 2rpx 的最近档 */
-.detail.theme-dark .ph-name { font-size: var(--cy-font-subtitle); font-weight: 500; color: var(--cy-color-text-primary); }
+.detail.theme-dark .ph-name { font-size: var(--pc-type-body); font-weight: 600; color: var(--cy-color-text-primary); }
 .detail.theme-dark .ph-name--handle { min-height: var(--cy-space-7); display: flex; align-items: center; }
 /* 昵称与时间间距 2pt=4rpx;时间 12px=24rpx 正好是 --cy-font-label */
-.detail.theme-dark .ph-time { margin-top: var(--cy-space-1); font-size: var(--cy-font-label); color: var(--cy-color-text-tertiary); }
+.detail.theme-dark .ph-time { margin-top: var(--cy-space-1); font-size: var(--pc-type-meta); color: var(--cy-color-text-tertiary); }
 /* 关注胶囊 58×28pt = 116×56rpx,圆角 14pt 正好是半高 ⇒ pill;1px 描边 + 透明底(不是实心) */
 .detail.theme-dark .post-head .gz {
   flex-shrink: 0; width: 116rpx; height: 56rpx; line-height: 52rpx;
@@ -383,7 +387,7 @@ page { background: var(--cy-bg-page); }
    · line-height 回到 master 的 1.65 —— 稿 379:2528 是 leading-[normal],没给具体值,
      我原来改 1.55 没有稿子依据,不该动既有值
    · margin-bottom 去掉 —— 正文现在在 .post-body(flex-column + gap)里,留着会叠成双倍间距 */
-.detail.theme-dark .post-text { font-size: var(--cy-font-body); line-height: 1.65; color: var(--cy-color-text-primary); overflow-wrap: anywhere; word-break: break-word; white-space: pre-wrap; } /* ds-ok */
+.detail.theme-dark .post-text { font-size: var(--pc-type-body); line-height: 1.4; color: var(--cy-color-text-primary); overflow-wrap: anywhere; word-break: break-word; white-space: pre-wrap; } /* ds-ok */
 
 /* 无关联图帖的实景图 */
 .detail.theme-dark .media { white-space: nowrap; }
@@ -400,17 +404,15 @@ page { background: var(--cy-bg-page); }
    且 square-reliability-state-contract 已把 88rpx 钉成契约)——保留 88rpx,只对齐间距与配色。 */
 .detail.theme-dark .actions { padding: var(--cy-space-1) 0 0; }
 .detail.theme-dark .actions .act-left { flex: 1; min-width: 0; }
-.detail.theme-dark .actions .act-right { flex-shrink: 0; }
 /* 未赞/评论计数都是次级色;已赞整块(图标 + 数字)转 danger,图标走 currentColor 自动跟色 */
 .detail.theme-dark .actions .act { color: var(--cy-color-text-secondary); }
 /* 图标与计数间距 6pt=12rpx;两个动作之间 18pt=36rpx */
 .detail.theme-dark .actions .act-ico { margin-right: var(--cy-space-1-5); }
 .detail.theme-dark .actions .act { min-height: 88rpx; display: flex; align-items: center; margin-right: var(--cy-space-4); }
-.detail.theme-dark .actions .act text { font-size: var(--cy-font-label); color: currentColor; }
+.detail.theme-dark .actions .act text { font-size: var(--pc-type-meta); color: currentColor; }
 .detail.theme-dark .actions .act--like.is-on { color: var(--cy-color-status-danger); }
 .detail.theme-dark .actions .act--favorite.is-on { color: var(--cy-color-text-primary); }
-.detail.theme-dark .actions .act-share { background: transparent; min-width: 88rpx; min-height: 88rpx; padding: 0; margin: 0; line-height: 1; width: auto; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); }
-.detail.theme-dark .actions .act-share--end { margin-left: auto; }
+.detail.theme-dark .actions .act-share { background: transparent; min-width: 88rpx; min-height: 88rpx; padding: 0; margin: 0; line-height: 1; width: auto; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-start; color: var(--cy-color-text-secondary); }
 .detail.theme-dark .actions .act-share::after { border: none; }
 .detail.theme-dark .actions .act-share-ico { width: 40rpx; height: 40rpx; filter: invert(1); }
 

@@ -1,0 +1,28 @@
+@charset "UTF-8";
+/* 深色玩家域;封面头图结构参照 search2 主题大卡,行与分组沿用完成页 .fsec/.frow 的层级 */
+page { display: flex; flex-direction: column; min-height: 100vh; }
+.cdetail { display: flex; flex-direction: column; flex: 1; }
+.cdetail-nav-spacer { flex: none; }
+.fill-slot { display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
+.cdetail-pad { padding: var(--cy-space-3) var(--cy-page-x) 0; }
+.cdetail-hero { position: relative; height: 640rpx; overflow: hidden; background: var(--cy-color-bg-surface-subtle); }
+.cdetail-hero__img { width: 100%; height: 100%; }
+.cdetail-hero__fallback { display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); }
+.cdetail-hero__shade { position: absolute; inset: 0; background: var(--cy-comp-cover-scrim); }
+.cdetail-hero__body { position: absolute; left: var(--cy-page-x); right: var(--cy-page-x); bottom: var(--cy-space-4); display: flex; flex-direction: column; gap: var(--cy-space-1); }
+.cdetail-hero__kind { align-self: flex-start; min-height: 48rpx; display: flex; align-items: center; padding: 0 var(--cy-space-2); border-radius: var(--cy-radius-pill); background: rgba(20,20,20,.72); color: #FFFFFF; font-size: var(--cy-type-micro); } /* ds-ok: 封面照片语境,同订单卡固定白字 */
+.cdetail-hero__title { color: #FFFFFF; /* ds-ok: 封面照片语境固定白字 */ font-size: var(--cy-type-page-title); line-height: var(--cy-leading-tight); font-weight: 800; }
+.cdetail-hero__meta { color: rgba(255,255,255,.78); /* ds-ok: 同订单卡次级白 */ font-size: var(--cy-type-caption); }
+.result-card__tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-1); }
+.result-card__tag { flex: none; padding: 2rpx var(--cy-space-2); /* ds-ok: 2rpx 同 search2 药丸标签像素微调 */ border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-secondary); font-size: var(--cy-type-micro); }
+.cdetail-summary { margin-top: var(--cy-space-3); color: var(--cy-color-text-secondary); font-size: var(--cy-type-body); line-height: 1.6; }
+.cdetail-sec { margin-top: var(--cy-space-5); }
+.cdetail-sec__h { color: var(--cy-color-text-primary); font-size: var(--cy-type-card-title); font-weight: 700; margin-bottom: var(--cy-space-2); }
+.cdetail-row { min-height: 88rpx; display: flex; align-items: center; gap: var(--cy-space-3); padding: var(--cy-space-2) 0; border-bottom: 1rpx solid var(--cy-color-border-strong); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); box-sizing: border-box; }
+.cdetail-row__no { flex: none; width: 48rpx; height: 48rpx; border-radius: var(--cy-radius-pill); display: flex; align-items: center; justify-content: center; background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-secondary); font-size: var(--cy-type-micro); }
+.cdetail-row__t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.cdetail-row__b { color: var(--cy-color-text-primary); }
+.cdetail-row__s { color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); }
+.cdetail-city { min-height: 88rpx; margin-top: var(--cy-space-4); display: flex; align-items: center; justify-content: space-between; color: var(--cy-color-text-secondary); font-size: var(--cy-type-body); }
+.cdetail-footer-spacer { height: 200rpx; }
+.cdetail-footer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--cy-color-bg-page); }

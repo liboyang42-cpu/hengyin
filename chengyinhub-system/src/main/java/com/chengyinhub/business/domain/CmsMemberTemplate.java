@@ -268,6 +268,17 @@ public class CmsMemberTemplate extends BaseEntity
     /** 玩法语义:hidden_menu/city_story_card/photo_spot/qr_checkin(正交于 validationMethod) */
     private String interactionType;
 
+    /**
+     * 固定预设来源标记 {@code presetKey@version}（可为空，历史行都没有）。
+     *
+     * <p>只记"这份草稿从哪个平台预设结构起头"，不是市场来源：市场采用继续走
+     * {@code originalTemplateId}。两者互斥，写入后客户端不能改。
+     */
+    private String presetSource;
+
+    public String getPresetSource() { return presetSource; }
+    public void setPresetSource(String presetSource) { this.presetSource = presetSource; }
+
     /** 是否作为漫游商家节点互动:0否 1是 */
     private Integer merchantNodeEnabled;
 
@@ -878,6 +889,7 @@ public class CmsMemberTemplate extends BaseEntity
             .append("delFlag", getDelFlag())
                 .append("rating", getRating())
                 .append("useNum", getUseNum())
+            .append("presetSource", getPresetSource())
             .append("createBy", getCreateBy())
             .append("createTime", getCreateTime())
             .append("updateBy", getUpdateBy())

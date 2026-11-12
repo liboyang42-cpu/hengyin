@@ -3,8 +3,8 @@ const modal = require('../../../utils/modal.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const clubPinnedNotice = require('../utils/club-pinned-notice.js');
 const clubPostRepost = require('../../../utils/club-post-repost.js');
-const { isClubLeader } = require('../../../utils/roleGuard.js');
-const { isPoolList, decoratePool, parseInviteId } = require('../../../utils/coop-invite-view.js');
+const { isClubLeader, isMerchantView } = require('../../../utils/roleGuard.js');
+const { isPoolList, decoratePool, parseInviteId, STATUS_LABEL, readCoopListResult } = require('../../../utils/coop-invite-view.js');
 const cyToast = require('../../../utils/toast.js');
 const motion = require('../../../utils/motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
@@ -42,7 +42,7 @@ const { classifyVerificationOutcome, createVerificationWorkflow } = require('../
 // AI 策划:频控超限文案(后端运行时拼 dailyLimit,数字随配置变)→ 只做包含匹配
 const AI_QUOTA_MARK = '今日AI次数已用完';
 const AI_IDEA_CHIPS = ['静安 情侣 夜间 Citywalk 90分钟', '外滩 亲子 半天 城市打卡', '苏州河 摄影 徒步 2小时'];
-const RECEIVED_STATUS_TEXT = ['待确认', '已接受', '已拒绝', '已取消', '已顶替', '已过期'];
+const RECEIVED_STATUS_TEXT = STATUS_LABEL;
 const INVITE_FEEDBACK_STATUS = [
   { text: '待回应', key: 'pending' },
   { text: '已接受', key: 'accepted' },
@@ -1394,6 +1394,13 @@ Page({
       inviteFeedbackState: keepFeedback ? 'ready' : 'loading',
       sentInvites: keepFeedback ? this.data.sentInvites : [],
     });
+    // N-18:/api/coop/list 只认商家身份;没有商家身份的主理人不请求(否则控制台 403),按「没有合作邀约」处理
+    if (!(this.data.isMerchantViewer || isMerchantView())) {
+      this._sentInviteRows = [];
+      this.setData({ messageState: 'ready', messages: [] });
+      this.applySentInviteFilter();
+      return;
+    }
     app.sendRequest({
       hideLoading: true,
       silentError: true,
@@ -1403,8 +1410,9 @@ Page({
       header: jsonHeader(),
       success(res) {
         if (String(clubId) !== String(that.data.clubId)) return;
-        const received = isSuccess(res) && res.data && Array.isArray(res.data.received) ? res.data.received : null;
-        const sent = isSuccess(res) && res.data && Array.isArray(res.data.sent) ? res.data.sent : null;
+        const list = readCoopListResult(res);
+        const received = list && list.received;
+        const sent = list && list.sent;
         if (!received || !sent) {
           that._sentInviteRows = null;
           that.setData({ messageState: 'error', messages: [], inviteFeedbackState: 'error', sentInvites: [] });
@@ -1418,8 +1426,14 @@ Page({
         that.setData({ messageState: 'ready', messages: messages });
         that.applySentInviteFilter();
       },
-      fail() {
+      fail(res, statusCode) {
         if (String(clubId) !== String(that.data.clubId)) return;
+        if (readCoopListResult(res, statusCode)) {
+          that._sentInviteRows = [];
+          that.setData({ messageState: 'ready', messages: [] });
+          that.applySentInviteFilter();
+          return;
+        }
         that._sentInviteRows = null;
         that.setData({ messageState: 'error', messages: [], inviteFeedbackState: 'error', sentInvites: [] });
         that.updateOwnerStage();

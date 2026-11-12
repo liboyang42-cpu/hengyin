@@ -33,7 +33,7 @@ const nodeGameCatalog = require('../utils/publish/node-game-catalog.js');
 const nodeOutcomeContract = require('../utils/publish/node-outcome-contract.js');
 const supportMatrix = require('../utils/publish/gameplay-support-matrix.js');
 const templateTools = require('../utils/publish/template-tools.js');
-const r5Editor = require('./r5-editor.js'); const checkSection = require('./check-section.js'); const afterSection = require('./after-section.js');
+const r5Editor = require('./r5-editor.js'); const questoAuthor = require('./questo-author.js'); const checkSection = require('./check-section.js'); const afterSection = require('./after-section.js');
 const publishIssueTarget = require('../utils/publish/publish-issue-target.js');
 const templateAuthorFields = require('../utils/publish/template-author-fields.js');
 const merchantAccessPolicy = require('../../../utils/merchant-access-policy.js');
@@ -200,7 +200,7 @@ function noPreviewTip(section) {
 }
 
 Page({
-  ...r5Editor.methods, ...checkSection.methods, ...afterSection.methods,
+  ...r5Editor.methods, ...checkSection.methods, ...afterSection.methods, ...questoAuthor.methods,
   MODULE_DEFS: MODULE_DEFS,
 
   _supportMatrix: null,
@@ -208,6 +208,7 @@ Page({
   _toolSummaries: templateTools.summaries({}),
   data: {
     creatorLoginRequired: false,
+    // 封面素材来源声明(r2-create):assetId 只来自本次上传回包;label = 已声明的来源中文名
     qaAnswerModes: QA_ANSWER_MODES, qaTriesOptions: QA_TRIES, qaRevealOptions: QA_REVEAL, qaFbImgMax: QA_FB_IMG_MAX,
     ...r5Editor.data, ...checkSection.data, ...afterSection.data,
     operationScope: '',
@@ -374,7 +375,7 @@ Page({
 
     // 通用底部选择器
     pickerSheet: { open: false, key: '', title: '', options: [] },
-    qaAnswerError: '',
+    qaAnswerError: '', qzHintTypes: questoAuthor.HINT_TYPES, ...questoAuthor.view(advancedGameConfig.defaultConfig()), // Questo 新玩法作者配置(questo-author.js)
     segmentOn: {}, segmentAddOptions: [], clueContent: {},
 
     // 校验滚动(scroll-view 内)
@@ -1540,7 +1541,7 @@ Page({
       this._refreshSupportMatrix();
       this._refreshOutcomeContract();
       this._syncCheckDerived();   // 开关玩法段 / 改次数都会改变「能放宽什么」
-      this._syncQaAnswerError();
+      this._syncQaAnswerError(); this._syncQuesto();
       this._syncSegments();
       this._syncClueContent();
       this.refreshPreviewState();
@@ -2210,9 +2211,11 @@ Page({
   uploadPic: function (e) {
     var that = this;
     app.chooseImage(function (res) {
-      that._setFormState({ 'formData.imgUrl': res[0] });
+      var picked = res && res[0];
+      var url = picked && typeof picked === 'object' ? picked.url : picked;
+      that._setFormState({ 'formData.imgUrl': url });
       if (that.data.coverMediaUnusable) that.setData({ coverMediaUnusable: false });
-    }, 1, { crop: true, cropScale: '16:9' });
+    }, 1, { crop: true, cropScale: '16:9', mapResult: function (data) { return { url: data.url, assetId: data.assetId }; } });
   },
   clearCover: function () {
     this._setFormState({ 'formData.imgUrl': '' });
@@ -2554,14 +2557,14 @@ Page({
   openGameSheet: function () {
     // 锚点要归零:不清的话第二次打开还停在上次跳到的那一组
     this._refreshSupportMatrix();
-    this.setData({ gameSheetOpen: true, sheetGroup: 0, sheetAnchor: '' });
+    this.setData({ gameSheetOpen: true, sheetGroup: 0 });
   },
 
   /** 分类快捷条:点一下滚到那一组(原型 #sheetNav 的 scrollTo)。 */
   jumpGameGroup: function (e) {
     const index = Number(e.currentTarget.dataset.index);
     if (!Number.isInteger(index)) return;
-    this.setData({ sheetGroup: index, sheetAnchor: 'gsheet-g' + index });
+    this.setData({ sheetGroup: index });
   },
 
   closeGameSheet: function () {
@@ -3160,10 +3163,10 @@ Page({
     }
 
     const advancedOpts = this._advancedValidateOpts();
-    const advancedError = advancedGameConfig.validate(this.data.advanced, advancedOpts);
+    const advancedModel = questoAuthor.beforeSave(this.data.advanced), advancedError = advancedGameConfig.validate(advancedModel, advancedOpts); // Questo 新键存盘前收口(人物与选项对齐、空可选键不写)
     formData.advancedConfigJson = advancedError
-      ? JSON.stringify(this.data.advanced)
-      : advancedGameConfig.serializeChanges(this.data.advanced, formData.advancedConfigJson, advancedOpts);
+      ? JSON.stringify(advancedModel)
+      : advancedGameConfig.serializeChanges(advancedModel, formData.advancedConfigJson, advancedOpts);
 
     const clearFields = templateAuthorFields.clearFields(this._loadedAuthorFields, formData);
     if (clearFields.length) formData.clearFields = clearFields;
@@ -3184,7 +3187,7 @@ Page({
     // 标题(草稿也校验)
     if (!f.title || !f.title.trim()) errors.title = '请填写玩法标题';
     const advancedError = advancedGameConfig.validate(this.data.advanced, this._advancedValidateOpts());
-    if (advancedError) errors.advanced = advancedError;
+    if (advancedError) errors.advanced = advancedError; else if (questoAuthor.hasErrors(this.data.advanced)) errors.advanced = questoAuthor.hasErrors(this.data.advanced);
     const outcome = this._refreshOutcomeContract();
     if (outcome.errors.length) errors.advanced = outcome.errors[0].message;
     if (draft) return errors;
@@ -3282,7 +3285,7 @@ Page({
 
   validateForm: function (formData, draft) {
     if (this.data.editorLoading || this.data.loadError) return false;
-    const errors = this._collectValidationErrors(draft);
+    const errors = this._collectValidationErrors(draft); this._qzSaveError(); // 保存后就地提示连「还没填」一起报
     this._refreshSupportMatrix();
     if (this.data.supportError) errors.advanced = this.data.supportError;
     if (this.data.supportMatrixLoading && (supportMatrix.generic(this.data.advanced) || supportMatrix.effectOnly(this.data.advanced)

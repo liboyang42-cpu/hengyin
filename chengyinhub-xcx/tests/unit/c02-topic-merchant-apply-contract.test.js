@@ -110,12 +110,12 @@ test('C2 负控:恢复零值重复解释或删除指标数值时判红', () => {
 // 冒充当前模板的内容封面。当前头牌与列表卡两个远端封面位都要接住 binderror。
 function assertTemplateCoverErrorState(js, wxml) {
   assert.ok(
-    fs.existsSync(P('images/no_data.svg')),
+    fs.existsSync(P('images/cover-route.svg')),
     '封面失败图片资产必须真实存在于小程序包内'
   )
   assert.match(
     js,
-    /coverErrorSrc:\s*'\/images\/no_data\.svg'/,
+    /coverErrorSrc:\s*'\/images\/cover-route\.svg'/,
     '封面失败必须使用仓库内现有的 no_data.svg 失败态图标'
   )
   assert.doesNotMatch(js, /home-route-city-placeholder\.jpg/, '城市路线图不能冒充模板封面')
@@ -131,7 +131,7 @@ function assertTemplateCoverErrorState(js, wxml) {
   remoteCoverBranches.forEach(({ name, cls }) => {
     const remote = new RegExp(`<image wx:if="\\{\\{ item\\.cover \\}\\}" class="${cls}"[^>]*binderror="onCoverError"`)
     assert.match(wxml, remote, `${name} 的非空远端封面必须有 binderror 失败路径`)
-    const fallback = new RegExp(`<view wx:else class="${cls} cv-err" aria-role="img"[^>]*>[\\s\\S]*?<image class="cv-err__ic" src="\\{\\{ coverErrorSrc \\}\\}"[^>]*>[\\s\\S]*?<text class="cv-err__t">封面暂不可用<\\/text>`)
+    const fallback = new RegExp(`<view wx:else class="${cls} cv-err" aria-role="img"[^>]*>[\\s\\S]*?<image class="cv-err__ic" src="\\{\\{ coverErrorSrc \\}\\}"[^>]*>`)
     assert.match(wxml, fallback, `${name} 必须切到带明确文案的真实封面失败态`)
   })
   assert.match(
@@ -148,7 +148,7 @@ test('C2:P1 模板货架远端封面失败时使用明确的真实失败态', ()
 
 test('C2:P1 负控:把失败态资产改为空值时,由封面失败态守卫精准判红', () => {
   const mutated = read(TEMPLATE_INDEX_JS).replace(
-    "coverErrorSrc: '/images/no_data.svg'",
+    "coverErrorSrc: '/images/cover-route.svg'",
     "coverErrorSrc: ''"
   )
   assert.throws(

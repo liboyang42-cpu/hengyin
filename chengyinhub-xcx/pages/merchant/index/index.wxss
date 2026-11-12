@@ -77,6 +77,12 @@ page {
   line-height: 1.4;
   color: var(--cy-text-title);
   letter-spacing: -1rpx;
+  /* D10:问候语最多两行加省略号,不再被截成一行 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-all;
 }
 
 /* 营业状态 pill 与欢迎语同一行(设计稿:状态是身份信息,不是独立一栏) */
@@ -127,7 +133,9 @@ page {
   position: relative;
   /* M-27(2026-10-27):「累计收入」上方空了一大块 —— 原 650rpx 竖向居中把数字推到半屏;
      收成 360rpx,内容贴上缘排(问候行与收入之间只留 hero-top 自带的间距)。 */
-  min-height: 360rpx; /* ds-ok: 首屏构图定位值,无对应 spacing token */
+  /* D10:收入与快捷钮之间的大空档收掉,节奏对齐店铺资料页(区块间 --cy-space-5);反馈条不再绝对定位占位 */
+  min-height: 0;
+  padding-bottom: var(--cy-space-5);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -161,11 +169,9 @@ page {
 
 .rv-revenue-feedback {
   /* 同步/报错提示贴收入区底部(按钮正上方)，不占居中留白，数字才真正居中 */
-  position: absolute;
-  left: var(--cy-page-x);
-  right: var(--cy-page-x);
-  bottom: 0;
-  min-height: 112rpx;
+  position: static;
+  margin-top: var(--cy-space-2);
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;

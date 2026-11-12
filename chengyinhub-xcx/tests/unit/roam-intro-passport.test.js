@@ -76,9 +76,8 @@ test('起始页护照:读数与档案卡都统计全部历史,不跟着任何截
   const tile = key => page.data.passport.tiles.find(item => item.key === key)
   assert.equal(tile('history').value, '13 次已完成旅程')
   assert.equal(tile('stamp').value, '13 张本机邮票')
-  assert.ok(tile('badge'), '勋章墙常驻')
-  // 2026-10-14 用户确认的漫游原型:探索目标、时光胶囊随漫游上线,接在三张档案卡之后
-  assert.deepEqual(page.data.passport.tiles.map(item => item.key), ['history', 'stamp', 'badge', 'goals', 'capsule'], '上排:记录/集邮/勋章 + 探索目标/时光胶囊')
+  // 2026-11-09 V3-27:勋章已并进收集册(集邮册页「勋章」段),护照不再单摆勋章墙;V3-42 时光胶囊入口先删
+  assert.deepEqual(page.data.passport.tiles.map(item => item.key), ['history', 'stamp', 'goals'], '上排:记录/集邮 + 探索目标')
   assert.ok(page.data.passport.tiles.filter(item => item.isNew).every(item => !/\d/.test(item.value)), '新方卡不摆未读取的数字')
 
   const plays = page.data.passport.plays.map(item => item.key)
@@ -88,8 +87,9 @@ test('起始页护照:读数与档案卡都统计全部历史,不跟着任何截
   assert.ok(!/暂未开放/.test(JSON.stringify(page.data.passport.plays)), '不写暂未开放')
   // P-29:档案三卡带真实图片字段(无图时退回空态插画),不再用大号通用图标
   assert.equal(tile('stamp').img, '12.jpg', '集邮册方卡 = 最新一张邮票')
-  // 2026-10-28 p78:无图时退回各自的线描插图(roam/tile-*.svg),不再是通用空态插画
-  assert.deepEqual(['history', 'stamp', 'badge'].map((k) => tile(k).art), ['/images/roam/tile-route.svg', '/images/roam/tile-stamp.svg', '/images/roam/tile-medal.svg'])
+  // 2026-11-09 V3-36:无图时退回分包里的实景照片(subpackageRoam/assets/photos),不再是线描插图
+  assert.deepEqual(['history', 'stamp'].map((k) => tile(k).photo), ['history', 'stamp'])
+  assert.equal(page.data.passport.plays.find((item) => item.key === 'event').photo, 'event')
 })
 
 test('negative control: 读数改回跟着旅程卡截断走必须判红', async () => {

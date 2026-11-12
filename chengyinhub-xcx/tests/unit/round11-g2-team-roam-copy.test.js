@@ -36,9 +36,8 @@ test('F9 漫游入口与城市清单的说明小字', () => {
   const roam = read('pages/roam/index.js'), wxml = read('pages/roam/index.wxml');
   assert.doesNotMatch(roam, /走到哪，雾散到哪' \}|已加入 · 申请中/);
   assert.doesNotMatch(wxml, /CITY ROAM/);
-  const guide = read('subpackageRoam/components/roam-city-guide/index.wxml');
-  assert.doesNotMatch(guide, /切换城市 ·|复制地址，在常用地图中查找/);
-  assert.match(guide, />复制地址</);
+  // 2026-11-09 V3-35:城市清单组件已删,目录地点直接画在地图上
+  assert.doesNotMatch(wxml, /cy-roam-city-guide/);
   assert.doesNotMatch(read('subpackageMember/components/cy/scene-roam-poi-detail/index.wxml'), /完成据点挑战后可以评分和评论/);
 });
 

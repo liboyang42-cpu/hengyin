@@ -8,12 +8,14 @@
  * 前端不自己判条件 —— 再判一次只会两边不一致。
  */
 const { toTimestamp } = require('./datetime');
+const { COOP_INVITE_STATUS } = require('./coop-invite-status.js');
 
 const TYPE_LABEL = ['主题发布者 → 商家', '商家 → 俱乐部', '商家 → 商家承接节点'];
 const PARTY_LABEL = { merchant: '商家', club: '俱乐部', talent: '主题发布者', official: '平台' };
-const STATUS_LABEL = ['待确认', '已接受', '已拒绝', '已取消', '已顶替', '已过期'];
+// 状态文案与徽章的唯一真源是 coop-invite-status 状态机;这里只派生旧数组导出,下标访问行为不变。
 // 稿 261:277 / 261:349 状态徽章:tone 决定底色字色,icon 走 cy-icon。取消/顶替/过期共用灰调。
-const INVITE_BADGE = ['pending:clock', 'accepted:check', 'rejected:warning', 'muted:close-sm', 'muted:close-sm', 'muted:close-sm'];
+const STATUS_LABEL = COOP_INVITE_STATUS.toArray('label');
+const INVITE_BADGE = COOP_INVITE_STATUS.toArray('badge');
 function badgeOf(spec) {
   const parts = String(spec || 'muted:close-sm').split(':');
   return { badgeTone: parts[0], badgeIcon: parts[1] };
@@ -216,7 +218,19 @@ function decorateApplies(rows, box) {
   });
 }
 
+// C-1：俱乐部主理人读 /api/coop/list 时，商家身份 403（无商家行时请求层拦截，或账号挂着失效商家行）
+// 只表示「没有合作邀约」，不是读失败；其余非成功回包仍按失败处理。返回 { received, sent } 或 null。
+function readCoopListResult(res, statusCode) {
+  const code = res && res.code !== undefined ? Number(res.code) : NaN;
+  if (Number(statusCode) === 403 || code === 403) return { received: [], sent: [] };
+  if (code !== 200 || !res.data) return null;
+  const received = Array.isArray(res.data.received) ? res.data.received : null;
+  const sent = Array.isArray(res.data.sent) ? res.data.sent : null;
+  return received && sent ? { received: received, sent: sent } : null;
+}
+
 module.exports = {
+  readCoopListResult,
   APPLY_STATUS, isApplyList, decorateApplies, badgeOf, INVITE_BADGE,
   TYPE_LABEL, STATUS_LABEL, termsOf, countdownOf, slotOf, contactOf, decorate, parseInviteId, INVITE_ID_ERROR,
   isTopicMerchantSupply, supplyStationView, supplyStationConfirmation, sameSupplyStationConfirmation,

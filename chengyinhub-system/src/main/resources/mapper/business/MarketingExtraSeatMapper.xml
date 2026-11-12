@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  加座 route3：「同一人重复加座」判定 + 「我的加座」只读投影。
+  不新增表、不写金额、不是第二权益真源；加座单本身仍在 marketing_product_order 里。
+-->
+<mapper namespace="com.chengyinhub.business.mapper.MarketingExtraSeatMapper">
+
+    <resultMap id="extraSeatRowMap" type="com.chengyinhub.business.domain.dto.MarketingExtraSeatOrderRow">
+        <result property="orderNo" column="order_no"/>
+        <result property="status" column="status"/>
+        <result property="productId" column="product_id"/>
+        <result property="productRevision" column="product_revision"/>
+        <result property="fulfillmentKind" column="fulfillment_kind"/>
+        <result property="fulfillmentState" column="fulfillment_state"/>
+        <result property="payMode" column="pay_mode"/>
+        <result property="totalCashAmount" column="total_cash_amount"/>
+        <result property="totalPointsAmount" column="total_points_amount"/>
+        <result property="paymentFactType" column="payment_fact_type"/>
+        <result property="primaryRegistrationId" column="primary_registration_id"/>
+        <result property="recipientMemberId" column="gift_recipient_member_id"/>
+        <result property="paidAt" column="paid_at"/>
+        <result property="refundedAt" column="refunded_at"/>
+        <result property="createTime" column="create_time"/>
+        <result property="originalOrderNo" column="original_order_no"/>
+        <result property="giftId" column="gift_id"/>
+        <result property="giftPublicId" column="gift_public_id"/>
+        <result property="giftStatus" column="gift_status"/>
+        <result property="giftRecipientMemberId" column="gift_recipient_member_id"/>
+        <result property="giftClaimedMemberId" column="gift_claimed_member_id"/>
+        <result property="giftClaimedRegistrationId" column="gift_claimed_registration_id"/>
+        <result property="giftClaimExpiresAt" column="gift_claim_expires_at"/>
+    </resultMap>
+
+    <select id="countPaidExtraSeatForRecipient" resultType="int" useCache="false">
+        select count(1)
+        from marketing_product_order
+        where original_order_id = #{originalOrderId}
+          and fulfillment_kind = 3
+          and status = 1
+          and gift_recipient_member_id = #{recipientMemberId}
+    </select>
+
+    <select id="selectExtraSeatsByMember" resultMap="extraSeatRowMap" useCache="false">
+        select o.order_no,
+               o.status,
+               o.product_id,
+               o.product_revision,
+               o.fulfillment_kind,
+               o.fulfillment_state,
+               o.pay_mode,
+               o.total_cash_amount,
+               o.total_points_amount,
+               o.payment_fact_type,
+               o.primary_registration_id,
+               o.gift_recipient_member_id,
+               o.paid_at,
+               o.refunded_at,
+               o.create_time,
+               origin.order_no as original_order_no,
+               g.id             as gift_id,
+               g.public_id      as gift_public_id,
+               g.status         as gift_status,
+               g.recipient_member_id as gift_recipient_member_id,
+               g.claimed_member_id   as gift_claimed_member_id,
+               g.claimed_registration_id as gift_claimed_registration_id,
+               g.claim_expires_at    as gift_claim_expires_at
+        from marketing_product_order o
+        left join marketing_product_order origin on origin.id = o.original_order_id
+        left join gift_entitlement g on g.order_id = o.id
+        where o.member_id = #{memberId}
+          and o.fulfillment_kind = 3
+        order by o.create_time desc
+        limit #{limit}
+    </select>
+</mapper>

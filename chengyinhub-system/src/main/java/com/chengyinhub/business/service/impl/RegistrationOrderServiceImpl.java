@@ -113,8 +113,30 @@ public class RegistrationOrderServiceImpl implements IRegistrationOrderService {
             if (winner != null) {
                 return winner;
             }
-            throw duplicate;
+            // 没有可重放的 winner ⇒ 这次请求撞上了已存在行。只有**促销域的一次性用事实/快照**这一类
+            // 唯一键是"客户端可恢复"的(重新报价即可),才翻译成 409。
+            // ⚠️ 其余 DuplicateKey(例如 registration_no 撞车、未来新表)一律原样冒出 ——
+            //    把所有 SQL 唯一键错误都当 409 会把真正的缺陷伪装成"重试就好"。
+            throw translateRecoverableDuplicate(duplicate);
         }
+
+    }
+    /**
+     * 促销用事实/成交快照的唯一键冲突 → 409(重新报价后再提交)。
+     *
+     * <p>为什么是这三类:资格判定(count)不是原子闸,真正的闸是这组唯一键;
+     * 并发两笔同事实建单时,第二条会撞键并把整笔建单回滚。对客户端唯一可恢复的动作是重新报价。
+     * 键名来自 {@code migration_marketing_promotion_20261108.sql}。
+     */
+    private RuntimeException translateRecoverableDuplicate(DuplicateKeyException duplicate) {
+        String detail = String.valueOf(duplicate.getMessage());
+        for (String key : new String[]{"uk_redemption_fact", "uk_redemption_order",
+                "uk_redemption_idem", "uk_adjustment_order"}) {
+            if (detail.contains(key)) {
+                return new RegistrationRequestConflictException("该优惠已被使用或与已有订单冲突，请重新报价后再提交");
+            }
+        }
+        return duplicate;
     }
 
     private String fingerprint(Long memberId, RegistrationRequest request) {
@@ -148,6 +170,17 @@ public class RegistrationOrderServiceImpl implements IRegistrationOrderService {
         append(canonical, normalize(request.getSourceChannelCode()));
         append(canonical, request.getWaitlistOfferId());
         append(canonical, normalize(request.getWaitlistOfferToken()));
+        // 促销意图与促销指纹算进幂等指纹:同一 requestId 换优惠码/换报价 = 不同内容 ⇒ 409,
+        // 否则"重放"会把用户换成另一个优惠的订单直接回给他。
+        //
+        // ⚠️ 只在**非空**时追加:两个都为空的旧客户端请求,指纹与历史方案逐字相同 ⇒
+        // 升级瞬间在途订单的重放不会被误判成"内容已变"(那些单的 30 分钟支付窗还在)。
+        // append 自带长度前缀,省略某一段不会与别的取值产生同串。
+        // ⚠️ 归因来源(sourceClubId/sourceChannelCode)在上面两段,不得移除:客户端改来源同样是内容变更。
+        String offerCode = normalize(request.getOfferCode());
+        if (offerCode != null) append(canonical, offerCode);
+        String marketingSign = normalize(request.getMarketingSign());
+        if (marketingSign != null) append(canonical, marketingSign);
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256")
                     .digest(canonical.toString().getBytes(StandardCharsets.UTF_8));
@@ -197,6 +230,11 @@ public class RegistrationOrderServiceImpl implements IRegistrationOrderService {
                                                  List<CmsRegistration> order) {
         // 旧单没有可独立证明的 offer/token 快照；禁止给候补请求补绑成“等价”重放。
         if (request.getWaitlistOfferId() != null || request.getWaitlistOfferToken() != null) {
+            return false;
+        }
+        // 旧单（fingerprint 为空的那批）不可能有促销快照/指纹:带促销意图的请求无法证明与之等价,
+        // 一律要求重新提交,不给历史单补绑一个"看起来像有优惠"的指纹。
+        if (request.getOfferCode() != null || request.getMarketingSign() != null) {
             return false;
         }
         if (order == null || order.isEmpty()) {

@@ -175,7 +175,7 @@ final class CrossDomainStorageFixture implements AutoCloseable {
         set(commerce, "orderMapper", sql.getMapper(OmsOrderMapper.class)); set(commerce, "subscriptionMapper", sql.getMapper(MerchantSubscriptionMapper.class));
         set(commerce, "paymentTransactions", transactions); set(commerce, "verifiedPaymentFacts", facts);
         set(commerce, "wechatPayService", WechatVerifiedFactTestSupport.realPaymentGuards(pool, "merchant", facts));
-        callbacks = new WechatPaymentCallbackRouter(null, commerce, null, null, null);
+        callbacks = new WechatPaymentCallbackRouter(null, commerce, null, null, null, null);
         db.update("INSERT INTO oms_order(id,order_sn,member_id,mms_merchant_id,biz_type,pay_amount,status,pay_type,entitlement_days,entitlement_max_usage) VALUES(8,?,?,34,'premium_template',19.90,0,0,30,3)", ORDER, MEMBER);
         db.update("INSERT INTO wx_pay_order_intent(mchid,out_trade_no,business_out_trade_no,biz_type,biz_id,attempt_no,appid,trade_type,currency,total_fen,request_hash,payer_openid,request_description,notify_url) VALUES('merchant',?,?,'COMMERCE',8,1,'wx-original','JSAPI','CNY',1990,?,'','','https://example.test/notify')", ORDER, ORDER, REQUEST_HASH);
         // Test-only trusted provider observation; real fact validation/persistence, not WeChat signature/HTTP acceptance.

@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "requires": [
+    {
+      "op": "NODE_COMPLETED",
+      "nodeId": 900401
+    }
+  ],
+  "qa": {
+    "enabled": true,
+    "mode": "PICK",
+    "title": "待填：第二处调查支持哪一条线索？",
+    "maxTries": 0,
+    "xp": 0,
+    "options": [
+      {
+        "id": "opt_lead_c",
+        "label": "待填：线索丙",
+        "correct": true,
+        "fb": "待填：取得线索反馈"
+      },
+      {
+        "id": "opt_lead_d",
+        "label": "待填：线索丁",
+        "correct": false,
+        "fb": "待填：未取得线索反馈"
+      }
+    ]
+  },
+  "effects": [
+    {
+      "op": "SET",
+      "var": "clue.clue_b",
+      "value": 1
+    }
+  ],
+  "interactionRules": {
+    "hpCost": 0,
+    "limit": 1,
+    "requireArrival": true,
+    "scope": "OWNER",
+    "targetScope": "OWNER"
+  }
+}

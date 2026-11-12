@@ -1,5 +1,8 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.exception.TopicPublicationContentException;
+import com.chengyinhub.business.domain.vo.PublicationProblem;
+
 import com.chengyinhub.business.util.ChapterAtmospherePreset;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -310,6 +313,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     private CoopSettlementOriginalMapper coopSettlementOriginalMapper;
     @Autowired
     private CoopSettlementOriginalProducer coopSettlementOriginalProducer;
+    /** l-payout2：电商收付通接点。未装配或开关关闭时下列新分支都不进入，结算结果逐字不变。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.payout.EcommerceSettlementGuard ecommerceSettlementGuard;
 
     @Autowired(required = false)
     private ITopicSaleCanonicalMutationService canonicalMutationService;
@@ -592,6 +598,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 Boolean settled = tx.execute(status -> settleTopic(topic, rule));
                 if (Boolean.TRUE.equals(settled)) {
                     settledCount++;
+                    if (ecommerceSettlementGuard != null) ecommerceSettlementGuard.afterTopicSettled(topic.getId());
                 }
             } catch (Exception e) {
                 logger.error("主题结算失败, topicId: " + topic.getId(), e);
@@ -1547,6 +1554,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         if (payoutAmount.signum() < 0) {
             throw new IllegalStateException("NEGATIVE_SETTLEMENT_HEAD_POLICY_REQUIRED:settlementId=" + s.getId());
         }
+        if (ecommerceSettlementGuard != null && ecommerceSettlementGuard.active()) {
+            // l-payout2：由二级商户收款的分项已在微信侧（卖家冻结资金 / 分账给接收方），不能再记进会员余额。
+            payoutAmount = payoutAmount.subtract(ecommerceSettlementGuard.partnerPortion(s.getId()));
+            if (payoutAmount.signum() < 0) {
+                throw new IllegalStateException("ECOMMERCE_PARTNER_PORTION_EXCEEDS_HEAD:settlementId=" + s.getId());
+            }
+        }
         if (payoutAmount.signum() == 0) {
             requireExactlyOne(coopSettlementMapper.markPaidIfPending(s.getId(), now), "置零元结算为已打款", s.getId());
             return null;
@@ -2156,23 +2170,50 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean publishDraft(Long id, Long expectedOwnerId) {
+        return publishDraft(id, expectedOwnerId, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean publishDraft(Long id, Long expectedOwnerId, String publishRequestId) {
         if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
-        return publishDraftInternal(id, expectedOwnerId, true) != null;
+        return publishDraftInternal(id, expectedOwnerId, true, null, null, publishRequestId) != null;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TopicBundleSubmitResultVO publishDraftWithReview(Long id, Long expectedOwnerId) {
+        return publishDraftWithReview(id, expectedOwnerId, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TopicBundleSubmitResultVO publishDraftWithReview(Long id, Long expectedOwnerId, String publishRequestId) {
         if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
-        return publishDraftInternal(id, expectedOwnerId, true);
+        return publishDraftInternal(id, expectedOwnerId, true, null, null, publishRequestId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public TopicBundleSubmitResultVO publishDraftWithBinding(Long id, Long expectedOwnerId,
             Long expectedConfigVersion, String expectedRegistryVersion) {
+        return publishDraftWithBinding(id, expectedOwnerId, expectedConfigVersion, expectedRegistryVersion, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TopicBundleSubmitResultVO publishDraftWithBinding(Long id, Long expectedOwnerId,
+            Long expectedConfigVersion, String expectedRegistryVersion, String publishRequestId) {
         if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
-        return publishDraftInternal(id, expectedOwnerId, true, expectedConfigVersion, expectedRegistryVersion);
+        return publishDraftInternal(id, expectedOwnerId, true, expectedConfigVersion, expectedRegistryVersion, publishRequestId);
+    }
+
+    @Override
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
+    public TopicBundleSubmitResultVO replayPublishedRevision(Long id, Long expectedOwnerId,
+            String publishRequestId, String expectedContentSha256) {
+        if (expectedOwnerId == null || expectedOwnerId <= 0L) throw new ServiceException("缺少主办身份，请重新登录", 403);
+        return topicPublicationService.replayPublishedRevision(id, expectedOwnerId, publishRequestId, expectedContentSha256);
     }
 
     @Override
@@ -2191,7 +2232,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             if (chapter.getBlocks() != null) for (com.chengyinhub.business.domain.dto.ChapterBlockDTO block : chapter.getBlocks()) {
                 if ("image".equals(block.getType()) || "audio".equals(block.getType()))
                     block.setUrl(mediaPublicationGuard.requireMedia(owner, block.getUrl(), publish));
-                if ("dream".equals(block.getType()) && block.getImages() != null)
+                if (("dream".equals(block.getType()) || "gallery".equals(block.getType())) && block.getImages() != null)
                     for (com.chengyinhub.business.domain.dto.ChapterBlockDTO.DreamImageDTO image : block.getImages())
                         image.setUrl(mediaPublicationGuard.requireMedia(owner, image.getUrl(), publish));
             }
@@ -2201,14 +2242,19 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
     }
 
     private TopicBundleSubmitResultVO publishDraftInternal(Long id, Long expectedOwnerId, boolean allowSupplyResubmission) {
-        return publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission, null, null);
+        return publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission, null, null, null);
     }
 
     private TopicBundleSubmitResultVO publishDraftInternal(Long id, Long expectedOwnerId, boolean allowSupplyResubmission,
-            Long expectedConfigVersion, String expectedRegistryVersion) {
+            Long expectedConfigVersion, String expectedRegistryVersion, String publishRequestId) {
         CmsTopic topic = supplyReviewService.lockTopic(id);
         if (expectedOwnerId != null && (topic == null || !expectedOwnerId.equals(topic.getMemberId())))
             throw new ServiceException("主题归属已变化，无权提交", 403);
+        // F1:已完成的发布意图重试直接回原修订。必须在 freezeAuthorAttributes 之前收口 ——
+        // 那条路径会重写属性定义,重放不得产生任何写入(也就不会重复冻结/重复计数)。
+        TopicBundleSubmitResultVO replayed = topicPublicationService.replayPublishedRevision(
+                id, expectedOwnerId, publishRequestId, null);
+        if (replayed != null) return replayed;
         if (topic != null) {
             long version = topic.getConfigVersion() == null ? 1L : topic.getConfigVersion();
             if (com.chengyinhub.business.service.support.AuthorAttributeBinding.hasBinding(topic.getJourneyRulesJson())) {
@@ -2224,7 +2270,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             long publishedVersion = (topic.getPublishedConfigVersion() == null ? 0L : topic.getPublishedConfigVersion()) + 1L;
             freezeAuthorAttributes(topic, expectedConfigVersion == null ? version : expectedConfigVersion, version, publishedVersion, false);
         }
-        return topicPublicationService.publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission);
+        return topicPublicationService.publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission, publishRequestId);
     }
 
 
@@ -2609,7 +2655,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R19-DRAFT2:名称非空是草稿也保留的最小身份(不属完整度)——「还没想好叫什么」不构成存不下草稿的理由,
         // 但「一条没有名字的主题」在作者的项目列表里连自己都认不出来。
         if (dto == null || StringUtils.isBlank(dto.getName())) {
-            throw new IllegalArgumentException("主题名称不能为空");
+            throw TopicPublicationContentException.invalid(PublicationProblem.CODE_TOPIC_NAME_REQUIRED,
+                    "name", new IllegalArgumentException("主题名称不能为空"));
         }
         assertCollaboratorIdShape(dto.getCollaboratorIds());
         // R19-DRAFT2:完整度校验按草稿/发布分流,先在这里定型,后面所有闸都用同一个判据
@@ -2688,6 +2735,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         topic.setPublishMode(dto.getPublishMode() != null && !dto.getPublishMode().trim().isEmpty()
                 ? dto.getPublishMode().trim() : "pro");
 
+        // f-money3:自由探索上的收费自玩票没有结算出口,发布 / 存草稿都拒(失败关闭),不再静默落 0。
+        com.chengyinhub.business.service.support.FreeExploreSelfPlayPricePolicy.assertAllowed(
+                productType, dto.getSelfPlay(), dto.getSelfPlayPrice());
         // M2 自玩票:仅「经典定向」(mode=1)可开;自由定向本就一人玩,无自玩票。
         if (isCityOrienteering && dto.getSelfPlay() != null && dto.getSelfPlay() == 1
                 && dto.getSelfPlayPrice() != null && dto.getSelfPlayPrice().compareTo(java.math.BigDecimal.ZERO) > 0) {
@@ -2749,8 +2799,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // 草稿可以先空着 —— 原来这条把「刚起个名字的自由探索草稿」直接堵死,存不下服务端 id。
         if (!saveDraft && ProductType.FREE_EXPLORE == (productType == null ? -1 : productType)
                 && dto.getRecruitDeadline() == null) {
-            throw new RuntimeException("自由探索主题必须设置招募截止时间:它的定价与开卖要经过招商与锁价"
-                    + "(地板价、费率快照、每必选章至少 1 家商家、计酬成本上限四道校验都在锁价环节)");
+            throw new TopicPublicationContentException.InvalidContent(
+                    "自由探索主题必须设置招募截止时间:它的定价与开卖要经过招商与锁价"
+                            + "(地板价、费率快照、每必选章至少 1 家商家、计酬成本上限四道校验都在锁价环节)",
+                    Collections.singletonList(PublicationProblem.at(PublicationProblem.CODE_RECRUIT_DEADLINE_REQUIRED,
+                            null, "recruitDeadline", "自由探索主题缺少招募截止时间")));
         }
         // 先只保存招募截止；生命周期保持 DRAFT。章节/票尚未落库前无法客观判断 H4 三条商业事实，
         // 因此绝不能在这里直接写 lifecycle=1 绕过立项审。
@@ -2930,7 +2983,8 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R19-DRAFT2:名称非空是草稿也保留的最小身份。字段缺席(null)=不改原值(mapper 的动态
         // update 会跳过该列),但显式送一个空串 = 要把名字清掉 —— 那条不许(项目列表里会认不出来)。
         if (dto.getName() != null && dto.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("主题名称不能为空");
+            throw TopicPublicationContentException.invalid(PublicationProblem.CODE_TOPIC_NAME_REQUIRED,
+                    "name", new IllegalArgumentException("主题名称不能为空"));
         }
         if (!chapterFlowV2) {
             ChapterFlowCompiler.assertNoBlockPayload(dto.getChapters(),
@@ -3162,6 +3216,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         patch.setPublishMode(dto.getPublishMode() != null && !dto.getPublishMode().trim().isEmpty()
                 ? dto.getPublishMode().trim() : "pro");
 
+        // f-money3:与 createTopicInternal 同一判据(未传 selfPlay 时沿用存量值,见 preserveOmittedAuthorConfig)。
+        com.chengyinhub.business.service.support.FreeExploreSelfPlayPricePolicy.assertAllowed(
+                productType, dto.getSelfPlay(), dto.getSelfPlayPrice());
         if (isCityOrienteering && dto.getSelfPlay() != null && dto.getSelfPlay() == 1
                 && dto.getSelfPlayPrice() != null && dto.getSelfPlayPrice().compareTo(BigDecimal.ZERO) > 0) {
             patch.setSelfPlay(1);
@@ -3187,8 +3244,11 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         // R19-DRAFT2:与 createTopicInternal 同一道闸同一分流 —— 招募截止属完整度,草稿可空。
         if (!draft && ProductType.FREE_EXPLORE == (productType == null ? -1 : productType)
                 && dto.getRecruitDeadline() == null) {
-            throw new RuntimeException("自由探索主题必须设置招募截止时间:它的定价与开卖要经过招商与锁价"
-                    + "(地板价、费率快照、每必选章至少 1 家商家、计酬成本上限四道校验都在锁价环节)");
+            throw new TopicPublicationContentException.InvalidContent(
+                    "自由探索主题必须设置招募截止时间:它的定价与开卖要经过招商与锁价"
+                            + "(地板价、费率快照、每必选章至少 1 家商家、计酬成本上限四道校验都在锁价环节)",
+                    Collections.singletonList(PublicationProblem.at(PublicationProblem.CODE_RECRUIT_DEADLINE_REQUIRED,
+                            null, "recruitDeadline", "自由探索主题缺少招募截止时间")));
         }
         if (dto.getRecruitDeadline() != null) {
             patch.setRecruitDeadline(dto.getRecruitDeadline());
@@ -4028,7 +4088,13 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 OmsTicketWriteValidator.validatePrice(ticket.getPrice());
                 OmsTicketWriteValidator.validateTotalInventory(ticket.getTotalInventory());
             } else {
-                OmsTicketWriteValidator.validateNewTicket(ticket);
+                try {
+                    OmsTicketWriteValidator.validateNewTicket(ticket);
+                } catch (ServiceException invalid) {
+                    throw TopicPublicationContentException.withIssues(invalid, Collections.singletonList(
+                            PublicationProblem.from(PublicationProblem.CODE_TICKET_INVALID,
+                                    ticketDTO.getId() == null ? "tickets[]" : "tickets[id=" + ticketDTO.getId() + "]", invalid)));
+                }
                 // 开售前定价(2026-10-31 业主 Q7):只有自由探索恒走招商→锁价,票价可留空,
                 // 由 confirmPrice 写回;其余主题发布即开卖,空价不能落库(也不能当免费)。
                 if (ticket.getPrice() == null

@@ -1,10 +1,16 @@
 package com.chengyinhub.business.service.impl;
 
+import com.chengyinhub.business.exception.TopicPublicationContentException;
+import com.chengyinhub.business.domain.vo.PublicationProblem;
+
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicChapter;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.JourneyRules;
+import com.chengyinhub.business.service.support.ArrivalPolicy;
+import com.chengyinhub.business.service.support.ArrivalReading;
+import com.chengyinhub.business.service.support.TopicLocationContract;
 import com.chengyinhub.business.service.support.FrozenAttributeDefinitions;
 import com.chengyinhub.business.domain.ThemeStateKey;
 import com.chengyinhub.business.mapper.CmsMemberTemplateMapper;
@@ -36,6 +42,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /** Publication compilation and immutable journey snapshots; no sessions, receipts, CAS or runtime callbacks.
@@ -56,6 +63,8 @@ final class TopicRoutePublicationCompiler {
     private CurrentContent currentContent;
     private boolean derivingDeclarations;
     private boolean finalDeclarations;
+    /** 只读发布预演:声明只进本次内存投影,不 upsert、不取声明写锁。 */
+    private boolean previewDeclarations;
     private final com.chengyinhub.business.mapper.CmsTopicMapper topicMapper;
     private static final class CurrentContent {
         final Long topicId;
@@ -250,7 +259,7 @@ final class TopicRoutePublicationCompiler {
                     for (CmsTopicNode node : actual) if (real!=null && real.getId().equals(node.getChapterId())) context.append(node.getId()).append(' ');
                     context.append(chapter.path("exclusiveGroups")).append(' ').append(chapter.path("extraNodes"));
                 }
-                throw new IllegalArgumentException(context.toString(),invalid);
+                throw publicationInvalid(new IllegalArgumentException(context.toString(),invalid));
             }
         }
         if(!configured && topic.getThemeRuntimeConfigJson()!=null && (topic.getThemeRuntimeConfigJson().contains("interactionRules") || topic.getThemeRuntimeConfigJson().contains("interactionTools") || topic.getThemeRuntimeConfigJson().contains("outcomeRules"))) {
@@ -266,7 +275,7 @@ final class TopicRoutePublicationCompiler {
             ObjectNode definition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
             ObjectNode resolved=GameplayTemplateRules.resolveNodeConfigs(definition,configs,nodeTemplateIds(actual));
             com.chengyinhub.business.service.support.TemplateResourceSlots.assertEffectTargets(resolved,JourneyRules.parse(topic.getJourneyRulesJson()),definition);
-            if(definition==null)throw new IllegalArgumentException("原效果资源槽需要主题绑定");
+            if(definition==null)throw publicationInvalid(new IllegalArgumentException("原效果资源槽需要主题绑定"));
             Set<Long> nodeIds=new LinkedHashSet<>();for(CmsTopicNode node:actual)if(node.getId()!=null)nodeIds.add(node.getId());
             assertCompiledReferences(definition,nodeIds,topic);return definition.toString();
         }
@@ -285,7 +294,7 @@ final class TopicRoutePublicationCompiler {
             for(CmsTopicChapter chapter:chapters)groups.put(chapter.getId(),new ArrayList<>());
             for(CmsTopicNode node:actual) {
                 if(node.getId()==null)continue;
-                if(node.getChapterId()!=null && !groups.containsKey(node.getChapterId())) throw new IllegalArgumentException("模板规则节点未绑定本主题真实章节");
+                if(node.getChapterId()!=null && !groups.containsKey(node.getChapterId())) throw publicationInvalid(new IllegalArgumentException("模板规则节点未绑定本主题真实章节"));
                 if (game.path("survival").path("zeroChallenge").path("version").asInt()==2
                         && GameplaySurvivalEngine.challengeNode(definition,node.getId())) continue;
                 groups.computeIfAbsent(node.getChapterId(), key->new ArrayList<>()).add(node);
@@ -395,7 +404,7 @@ final class TopicRoutePublicationCompiler {
         for (JsonNode settings : definition.path("chapters")) {
             if (!settings.has("completion") && !settings.has("exclusiveGroups") && !settings.has("extraNodes")) continue;
             int index = settings.path("index").asInt();
-            if (index<0 || index>=chapters.size()) throw new IllegalArgumentException("章节 index="+index+" 节点 "+settings.path("extraNodes")+"：章节不存在");
+            if (index<0 || index>=chapters.size()) throw publicationInvalid(new IllegalArgumentException("章节 index="+index+" 节点 "+settings.path("extraNodes")+"：章节不存在"));
             CmsTopicChapter chapter = chapters.get(index);
             Map<Long,ObjectNode> quests = new LinkedHashMap<>();
             Set<String> actKeys = new LinkedHashSet<>();
@@ -410,24 +419,24 @@ final class TopicRoutePublicationCompiler {
                 String groupKey = "ch"+chapter.getId()+"_g"+(++groupIndex);
                 for (JsonNode member : group) {
                     long nodeId = member.asLong();
-                    if (!quests.containsKey(nodeId)) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：节点不属于本章运行任务");
-                    if (exclusive.put(nodeId,groupKey)!=null) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：节点重复属于互斥组");
+                    if (!quests.containsKey(nodeId)) throw publicationInvalid(new IllegalArgumentException(label+" 节点 "+nodeId+"：节点不属于本章运行任务"));
+                    if (exclusive.put(nodeId,groupKey)!=null) throw publicationInvalid(new IllegalArgumentException(label+" 节点 "+nodeId+"：节点重复属于互斥组"));
                 }
             }
             for (JsonNode row : settings.path("extraNodes")) {
                 long nodeId = row.path("nodeId").asLong();
-                if (!quests.containsKey(nodeId)) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：节点不属于本章运行任务");
-                if (exclusive.containsKey(nodeId)) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：互斥节点不能同时作为额外节点");
-                if (extra.put(nodeId,row.path("slot").asText())!=null) throw new IllegalArgumentException(label+" 节点 "+nodeId+"：额外节点重复");
+                if (!quests.containsKey(nodeId)) throw publicationInvalid(new IllegalArgumentException(label+" 节点 "+nodeId+"：节点不属于本章运行任务"));
+                if (exclusive.containsKey(nodeId)) throw publicationInvalid(new IllegalArgumentException(label+" 节点 "+nodeId+"：互斥节点不能同时作为额外节点"));
+                if (extra.put(nodeId,row.path("slot").asText())!=null) throw publicationInvalid(new IllegalArgumentException(label+" 节点 "+nodeId+"：额外节点重复"));
             }
             ObjectNode act = null;
             if (actKeys.size()==1) for (JsonNode row : definition.path("gameplayRuntime").path("acts")) if (actKeys.contains(row.path("actKey").asText())) act=(ObjectNode)row;
-            if (act==null || act.path("questKeys").size()!=quests.size()) throw new IllegalArgumentException(label+" 节点 "+quests.keySet()+"：章节须完整绑定同一个真实幕");
+            if (act==null || act.path("questKeys").size()!=quests.size()) throw publicationInvalid(new IllegalArgumentException(label+" 节点 "+quests.keySet()+"：章节须完整绑定同一个真实幕"));
             JsonNode completion = settings.path("completion");
             int counted = quests.size()-extra.size();
             int capacity = counted-exclusive.size()+groupIndex;
-            if(counted==0 && !"ANY_N".equals(completion.path("type").asText()))throw new IllegalArgumentException(label+" 节点 "+quests.keySet()+"：本章没有计数任务，额外节点不能占满本章全部站点");
-            if ("ANY_N".equals(completion.path("type").asText()) && (completion.path("quantity").asInt()<1 || completion.path("quantity").asInt()>capacity)) throw new IllegalArgumentException(label+" 节点 "+quests.keySet()+"：任选数量须为1.."+capacity+"，额外节点不计数，互斥组最多选一个");
+            if(counted==0 && !"ANY_N".equals(completion.path("type").asText()))throw publicationInvalid(new IllegalArgumentException(label+" 节点 "+quests.keySet()+"：本章没有计数任务，额外节点不能占满本章全部站点"));
+            if ("ANY_N".equals(completion.path("type").asText()) && (completion.path("quantity").asInt()<1 || completion.path("quantity").asInt()>capacity)) throw publicationInvalid(new IllegalArgumentException(label+" 节点 "+quests.keySet()+"：任选数量须为1.."+capacity+"，额外节点不计数，互斥组最多选一个"));
             if (completion.isObject()) {
                 ObjectNode rule = completion.deepCopy(); rule.remove("overflowSlot");
                 act.set("completionRule",rule);
@@ -455,9 +464,15 @@ final class TopicRoutePublicationCompiler {
         }
     }
 
+    private static IllegalArgumentException publicationInvalid(IllegalArgumentException failure) {
+        if (TopicPublicationContentException.dataOf(failure) != null) return failure;
+        return TopicPublicationContentException.invalid(PublicationProblem.CODE_FREEZE_INVALID,
+                "routeGraphJson", failure);
+    }
+
     private void assertStoryEndingChapters(JsonNode config,List<CmsTopicChapter> chapters) {
         Set<Long> ids=new LinkedHashSet<>();for(CmsTopicChapter chapter:chapters)ids.add(chapter.getId());
-        for(JsonNode plan:config.path("gameplayRuntime").path("plans"))if(plan.has("storyEndingId") && !ids.contains(plan.path("endingChapterId").asLong()))throw new IllegalArgumentException("节点 "+plan.path("operationNodeId").asText()+" 方案 "+plan.path("endingKey").asText()+" 结局章不属于本主题");
+        for(JsonNode plan:config.path("gameplayRuntime").path("plans"))if(plan.has("storyEndingId") && !ids.contains(plan.path("endingChapterId").asLong()))throw publicationInvalid(new IllegalArgumentException("节点 "+plan.path("operationNodeId").asText()+" 方案 "+plan.path("endingKey").asText()+" 结局章不属于本主题"));
     }
 
     private boolean hasTemplateInteraction(JsonNode config, boolean stateRules) {
@@ -504,6 +519,18 @@ final class TopicRoutePublicationCompiler {
         boolean changed = false;
         for (Map.Entry<String, String> clue : labels.entrySet()) if (!existing.contains(clue.getKey())) {
             if (finalDeclarations) throw new IllegalStateException("最终声明投影缺少模板线索，拒绝发布");
+            if (previewDeclarations) {
+                // 只读预演:派生线索只进本次内存投影 —— 不 upsert、不取声明写锁、也不提前结束,
+                // 让 merge / assertCompiledReferences / freezeJourney / validateGameplayRuntime 照常跑完。
+                if (currentContent == null) throw new IllegalStateException("发布预演声明投影缺失");
+                ThemeStateKey derived = new ThemeStateKey();
+                derived.setTopicId(topic.getId()); derived.setStateKey(clue.getKey());
+                derived.setKeyType(ThemeStateKey.TYPE_FLAG); derived.setScope(ThemeStateKey.SCOPE_RUN);
+                derived.setLabel(clue.getValue()); derived.setInitialValue(0);
+                currentContent.declarations.add(derived);
+                existing.add(clue.getKey()); changed = true;
+                continue;
+            }
             if (!org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
                     || org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
                 throw new IllegalStateException("自动线索声明必须加入主题写事务");
@@ -525,7 +552,8 @@ final class TopicRoutePublicationCompiler {
             }
             existing.add(clue.getKey()); changed = true;
         }
-        if (changed && currentContent != null) {
+        // 只读预演已把派生线索直接写进内存投影,不再回头取声明写锁刷新。
+        if (changed && currentContent != null && !previewDeclarations) {
             List<ThemeStateKey> fresh = themeStateKeyMapper.selectByTopicIdForUpdate(topic.getId());
             com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.capture(topic.getId(), fresh);
             currentContent.declarations.clear(); currentContent.declarations.addAll(fresh);
@@ -565,16 +593,143 @@ final class TopicRoutePublicationCompiler {
         });
     }
 
+    /**
+     * 只读发布预演：用普通读建立一次性内容投影，跑完整冻结/校验链并返回将要发布的那份快照。
+     *
+     * <p>与 {@link #freezePublication(CmsTopic, String, List)} 的关键差别：
+     * <ul>
+     *   <li>不取任何行锁：读 {@code selectCmsTopicById / selectCmsTopicChapterList / selectCmsTopicNodeList /
+     *       selectCmsMemberTemplateByIds / selectByTopicId}，绝不调 {@code *ForUpdate} 或
+     *       {@code lockTopicForStateKeyWrite}；</li>
+     *   <li>不写库：模板派生线索只并入本次内存声明投影，不 upsert、不刷新锁定投影；</li>
+     *   <li>不要求写事务，也不接受在写事务里被调用（否则 {@code withCurrentContent} 会升级成取锁读）；</li>
+     *   <li>不改调用方实体：冻结仍沿用 {@code freezeCurrentPublication} 里的 {@code CmsTopic} 副本；</li>
+     *   <li>结束后在 {@code finally} 里还原上下文，同一编译器的后续操作不继承预演声明。</li>
+     * </ul>
+     *
+     * <p>线索登记不会被吞掉：预演把它视作「本次投影已声明」，随后继续跑
+     * {@code assertCompiledReferences} / {@code merge} / {@code freezeJourney} /
+     * {@code freezeContentSnapshots} / {@code freezeKeys} / {@code validateGameplayRuntime}，
+     * 后面的非法配置照样会抛错。
+     *
+     * @param projectedDeclarations 调用方打算随即提交的声明投影；与库内既有声明按 {@code stateKey} 合并，
+     *                              同名以本参数为准。{@code null} = 只用库内声明。
+     */
+    public String previewPublication(CmsTopic topic, String routeSnapshot,
+                                     List<ThemeStateKey> projectedDeclarations) {
+        if (topic == null || topic.getId() == null || topic.getId() <= 0L)
+            throw new IllegalArgumentException("发布预演主题缺失");
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()
+                && !org.springframework.transaction.support.TransactionSynchronizationManager.isCurrentTransactionReadOnly())
+            throw new IllegalStateException("发布预演不能加入主题写事务");
+        CurrentContent preview = readPreviewContent(topic, projectedDeclarations);
+        CurrentContent previousContent = currentContent;
+        boolean previousFinal = finalDeclarations;
+        boolean previousPreview = previewDeclarations;
+        // 派生模式会短路 assertCompiledReferences（正式发布只在两次派生之后才做最终校验）；
+        // 预演要的是完整校验，所以显式清掉，结束再还原。
+        boolean previousDeriving = derivingDeclarations;
+        currentContent = preview;
+        finalDeclarations = false;
+        previewDeclarations = true;
+        derivingDeclarations = false;
+        try {
+            return freezeCurrentPublication(preview.topic, routeSnapshot);
+        } finally {
+            derivingDeclarations = previousDeriving;
+            previewDeclarations = previousPreview;
+            finalDeclarations = previousFinal;
+            currentContent = previousContent;
+        }
+    }
+
+    /**
+     * 预演的当前读：只做普通查询，并一次性建好 {@link CurrentContent}。
+     * 节点/章节保留库内全量行（{@code nodes()} 与 {@code runtimeChapters()} 自行按原口径过滤），
+     * 模板只留本主题实际绑定到的那些。
+     */
+    private CurrentContent readPreviewContent(CmsTopic callerTopic, List<ThemeStateKey> projectedDeclarations) {
+        Long topicId = callerTopic.getId();
+        if (topicMapper == null || cmsTopicChapterMapper == null || nodeMapper == null)
+            throw new IllegalStateException("发布预演读取依赖缺失");
+        CmsTopic topic = topicMapper.selectCmsTopicById(topicId);
+        if (topic == null || !topicId.equals(topic.getId()))
+            throw new IllegalStateException("发布预演主题缺失");
+        CmsTopicChapter chapterQuery = new CmsTopicChapter(); chapterQuery.setTopicId(topicId);
+        List<CmsTopicChapter> chapters = cmsTopicChapterMapper.selectCmsTopicChapterList(chapterQuery);
+        if (chapters == null) throw new IllegalStateException("发布预演章节读取失败");
+        CmsTopicNode nodeQuery = new CmsTopicNode(); nodeQuery.setTopicId(topicId);
+        List<CmsTopicNode> nodes = nodeMapper.selectCmsTopicNodeList(nodeQuery);
+        if (nodes == null) throw new IllegalStateException("发布预演节点读取失败");
+        Set<Long> referencedIds = new java.util.TreeSet<Long>();
+        for (CmsTopicNode node : nodes) {
+            if (node != null && node.getTemplateId() != null && node.getTemplateId() > 0L)
+                referencedIds.add(node.getTemplateId());
+        }
+        Map<Long, CmsMemberTemplate> templates = new LinkedHashMap<Long, CmsMemberTemplate>();
+        if (!referencedIds.isEmpty()) {
+            if (templateMapper == null) throw new IllegalStateException("发布预演玩法读取依赖缺失");
+            List<CmsMemberTemplate> rows = templateMapper.selectCmsMemberTemplateByIds(new ArrayList<Long>(referencedIds));
+            if (rows == null) throw new IllegalStateException("发布预演玩法读取失败");
+            for (CmsMemberTemplate row : rows) {
+                if (row != null && row.getId() != null && referencedIds.contains(row.getId()))
+                    templates.put(row.getId(), row);
+            }
+        }
+        List<ThemeStateKey> declarations = new ArrayList<ThemeStateKey>();
+        List<ThemeStateKey> stored = themeStateKeyMapper == null ? null : themeStateKeyMapper.selectByTopicId(topicId);
+        if (stored != null) for (ThemeStateKey row : stored) if (row != null) declarations.add(row);
+        if (projectedDeclarations != null) for (ThemeStateKey row : projectedDeclarations) {
+            if (row == null || row.getStateKey() == null || row.getStateKey().trim().isEmpty())
+                throw new IllegalStateException("发布预演声明身份不一致");
+            if (row.getTopicId() != null && !topicId.equals(row.getTopicId()))
+                throw new IllegalStateException("发布预演声明归属不一致");
+            ThemeStateKey projected = projectedRow(row, topicId);
+            boolean replaced = false;
+            for (int i = 0; i < declarations.size(); i++) {
+                if (projected.getStateKey().equals(declarations.get(i).getStateKey())) {
+                    declarations.set(i, projected);
+                    replaced = true;
+                    break;
+                }
+            }
+            if (!replaced) declarations.add(projected);
+        }
+        CurrentContent content = new CurrentContent(topic, new ArrayList<CmsTopicChapter>(chapters),
+                new ArrayList<CmsTopicNode>(nodes), templates, declarations);
+        // 只校验形状（归属/键名/重复），不落库、不改调用方对象。
+        com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.capture(topicId, content.declarations);
+        return content;
+    }
+
+    /** 预演声明用副本:调用方传进来的行不参与冻结，也不被回写。 */
+    private static ThemeStateKey projectedRow(ThemeStateKey source, Long topicId) {
+        ThemeStateKey row = new ThemeStateKey();
+        row.setTopicId(topicId);
+        row.setStateKey(source.getStateKey());
+        row.setKeyType(source.getKeyType() == null ? ThemeStateKey.TYPE_FLAG : source.getKeyType());
+        row.setScope(source.getScope() == null ? ThemeStateKey.SCOPE_RUN : source.getScope());
+        row.setLabel(source.getLabel());
+        row.setInitialValue(source.getInitialValue());
+        row.setMinValue(source.getMinValue());
+        row.setMaxValue(source.getMaxValue());
+        row.setVisible(source.getVisible());
+        return row;
+    }
+
     private String freezeCurrentPublication(CmsTopic topic, String routeSnapshot) {
         List<CmsTopicNode> liveNodes = nodes(topic.getId());
         // 自由探索开放招商:站点由发布后入驻的商家建,商家节点过审时 ChapterMerchantNodeServiceImpl 再刷新发布快照。
         // 与提审前检(TopicBundleReviewService.awaitsMerchantGameplay)同一判据,其余主题仍须有节点。
         if (liveNodes.isEmpty() && !com.chengyinhub.business.service.support.TopicBundleReviewService
                 .awaitsMerchantGameplay(topic, runtimeChapters(topic.getId()), liveNodes))
-            throw new IllegalArgumentException("主题没有可运行节点");
+            throw publicationInvalid(new IllegalArgumentException("主题没有可运行节点"));
         JourneyTemplateProbe publicationProbe=new JourneyTemplateProbe(liveNodes);
         com.chengyinhub.business.service.support.AdvancedGameConfigValidator authorValidator=new com.chengyinhub.business.service.support.AdvancedGameConfigValidator();
         for(Map.Entry<Long,String> entry:publicationProbe.configs().entrySet())if(entry.getValue()!=null && validator.readTree(entry.getValue()).path("outcomeRules").path("version").asInt()==1)entry.setValue(authorValidator.validateAndNormalize(entry.getValue()));
+        // BE-08:别名政策是 secret 且改变判定,发布前再核一次形状 —— 存量行若绕过保存入口
+        // 被直接写坏,不能带着它上线;只查这一段,不改其它段的旧兼容校验。
+        for(Map.Entry<Long,String> entry:publicationProbe.configs().entrySet())authorValidator.assertAnswerPolicy(entry.getValue());
         assertCheckStationsEnabled(topic, liveNodes, publicationProbe);
         String compiled = compileTemplateRules(topic);
         ObjectNode authoredDefinition=ThemeRuntimeConfig.parseDraft(topic.getThemeRuntimeConfigJson());
@@ -597,6 +752,7 @@ final class TopicRoutePublicationCompiler {
             if(frozen.path("themeConfig").has("nodeConfigs"))definition.set("nodeConfigs",frozen.path("themeConfig").path("nodeConfigs").deepCopy());
             frozen.set("themeDefinition", definition);
         }
+        Set<Long> nodeIds=new LinkedHashSet<>();for(CmsTopicNode node:liveNodes)nodeIds.add(node.getId());
         ArrayNode stations = frozen.putArray("routeStations");
         for (CmsTopicNode node : liveNodes) {
             ObjectNode station = stations.addObject(); station.put("nodeId", node.getId());
@@ -605,8 +761,22 @@ final class TopicRoutePublicationCompiler {
             if (node.getMerchantMemberId() != null) station.put("merchantMemberId", node.getMerchantMemberId());
             station.put("scanReady",node.getMerchantMemberId()!=null && node.getMerchantMemberId()>0 || node.getCheckinCode()!=null && !node.getCheckinCode().trim().isEmpty());
             if(node.getLongitude()!=null)station.put("longitude",node.getLongitude());if(node.getLatitude()!=null)station.put("latitude",node.getLatitude());
+            // BE-09/BE-15:作者公开配置按真实节点编号冻结进站点；老发布没有这些键，运行时沿旧 50m/80m。
+            JsonNode authoredArrival = arrivalAuthorConfig(definition, node.getId());
+            if (authoredArrival != null) {
+                if (authoredArrival.has(ArrivalPolicy.FIELD) && !authoredArrival.get(ArrivalPolicy.FIELD).isNull())
+                    station.set(ArrivalPolicy.FIELD, ArrivalPolicy.normalize(authoredArrival.get(ArrivalPolicy.FIELD)));
+                if (authoredArrival.has(ArrivalReading.FIELD) && !authoredArrival.get(ArrivalReading.FIELD).isNull())
+                    station.set(ArrivalReading.FIELD, ArrivalReading.normalize(authoredArrival.get(ArrivalReading.FIELD)));
+            }
+            // 只复制地点合同里已经批准的 fallback 编号；作者声明不构成授权。
+            List<String> approvedFallbacks = TopicLocationContract.approvedFallbacksForNode(
+                    topic.getContentContractJson(), node.getId(), nodeIds);
+            if (!approvedFallbacks.isEmpty()) {
+                ArrayNode fallbacks = station.putArray("approvedFallbacks");
+                for (String fallbackNodeId : approvedFallbacks) fallbacks.add(fallbackNodeId);
+            }
         }
-        Set<Long> nodeIds=new LinkedHashSet<>();for(CmsTopicNode node:liveNodes)nodeIds.add(node.getId());
         if(frozen.path("themeConfig").isObject())assertCompiledReferences((ObjectNode)frozen.path("themeConfig"),nodeIds,topic);
         List<ThemeStateKey> declarations = declarationRows(topic.getId());
         if (declarations != null) {
@@ -614,6 +784,33 @@ final class TopicRoutePublicationCompiler {
         }
         validateGameplayRuntime(frozen);
         return write(frozen);
+    }
+
+    /**
+     * 到达策略/读数只认按真实节点编号写的节点块（{@code themeRuntimeConfigJson.scenes[].nodeConfigs}）。
+     * 从作者当前场景读取，而不是从可能滞后的冻结 themeConfig 回读；
+     * 模板级 advancedConfigJson 可能被多个站点共享，不在这里冒充某一站的读数。
+     */
+    private JsonNode arrivalAuthorConfig(JsonNode definition, Long nodeId) {
+        if (definition == null || nodeId == null) return null;
+        String selectedScene = definition.path("currentScene").asText(null);
+        for (JsonNode scene : definition.path("scenes")) {
+            if (scene == null || !scene.isObject()) continue;
+            if (selectedScene != null && !selectedScene.equals(scene.path("id").asText())) continue;
+            JsonNode byNode = scene.path("nodeConfigs").path(String.valueOf(nodeId));
+            // qx-c1 #5(b):到达设置的独立兄弟表 nodeArrivals 优先(逐字段);旧发布写在 nodeConfigs 里的照旧读取。
+            JsonNode arrival = scene.path(ThemeRuntimeConfig.NODE_ARRIVALS).path(String.valueOf(nodeId));
+            if (arrival.isObject()) {
+                com.fasterxml.jackson.databind.node.ObjectNode merged = com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode();
+                for (String field : new String[]{ArrivalPolicy.FIELD, ArrivalReading.FIELD}) {
+                    if (arrival.hasNonNull(field)) merged.set(field, arrival.get(field));
+                    else if (byNode.isObject() && byNode.hasNonNull(field)) merged.set(field, byNode.get(field));
+                }
+                return merged;
+            }
+            if (byNode.isObject()) return byNode;
+        }
+        return null;
     }
 
     public String freezePublishedJourney(CmsTopic topic) {
@@ -632,48 +829,52 @@ final class TopicRoutePublicationCompiler {
     }
 
     private void validateGameplayRuntime(JsonNode frozen) {
-        JsonNode theme=frozen.path("themeConfig"),game=theme.path("gameplayRuntime");
-        if (!game.isObject()) return;
-        GameplaySupportMatrix.validateChallenge(theme,frozen.path("nodeConfigs"));
-        for (JsonNode station : frozen.path("routeStations")) {
-            long nodeId = station.path("nodeId").asLong();
-            GameplaySupportMatrix.validateNode(theme,nodeId,station.path("nodeName").asText(null),
-                    frozen.path("nodeConfigs").path(String.valueOf(nodeId)),
-                    frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId)).path("validationMethod").asInt(-1));
-        }
-        boolean team="TEAM".equals(game.path("runtimeScope").asText());
-        boolean tasks=game.path("quests").size()>0;
-        if (!team && !tasks && game.path("acts").size()==0 && game.path("survival").size()==0 && game.path("initialGrants").size()==0) return;
-        if (!"LINEAR".equals(frozen.path("routeMode").asText())) throw new IllegalArgumentException("通用任务使用幕与任务前置推进，请选择线性路线");
-        if ((team && theme.path("replayEnabled").asBoolean()) || theme.path("rescueLimit").asInt()>0 || theme.has("actionSources")) throw new IllegalArgumentException("通用任务不能组合旧自动救援或信号行动计数，队伍局不使用个人重玩");
-        for (JsonNode grant:theme.path("grants")) if (!"ENDING".equals(grant.path("source").asText())) throw new IllegalArgumentException("通用收益须配置在任务或章节中，不能启用旧节点信号发放");
-        for (JsonNode chapter:theme.path("chapters")) if (team && chapter.path("eggs").size()>0) throw new IllegalArgumentException("组队主题的章节彩蛋尚未接通，请使用个人进行方式");
-        if (!tasks) throw new IllegalArgumentException("通用运行规则须配置实际幕和任务");
-        if (tasks) {
-            JsonNode survival=game.path("survival");
-            if (!GameplaySupportMatrix.zeroHpPolicies(true).contains(survival.path("zeroHpPolicy").asText()) || !"BLOCK_OVERFLOW".equals(survival.path("actionLimitPolicy").asText())) throw new IllegalArgumentException("通用任务须显式配置H0策略与BLOCK_OVERFLOW");
-        }
-        if (!team) for (JsonNode act:game.path("acts")) if (act.path("hostUnlock").asBoolean()) throw new IllegalArgumentException("个人自玩没有工作人员解锁通道");
-        Set<Long> questNodes=new LinkedHashSet<>();
-        for (JsonNode quest:game.path("quests")) {
-            long nodeId=quest.path("nodeId").asLong();
-            if(GameplaySurvivalEngine.challengeNode(theme,nodeId))throw new IllegalArgumentException("归零挑战节点不能作为普通任务");
-            if (!questNodes.add(nodeId)) throw new IllegalArgumentException("任务须独占节点");
-            boolean merchant=false;
-            for (JsonNode station:frozen.path("routeStations")) if (station.path("nodeId").asLong()==nodeId && station.path("merchantMemberId").asLong()>0) merchant=true;
-            if (!team && !merchant && !hasVerifiedPublicationArrival(frozen,nodeId)) throw new IllegalArgumentException(personalArrivalRefusal(frozen,nodeId));
-            if(!team && quest.has("facilityKey"))for(JsonNode facility:game.path("facilities"))if(facility.path("facilityKey").asText().equals(quest.path("facilityKey").asText()) && (!"OWNER".equals(facility.path("scope").asText()) || !"OWNER".equals(facility.path("targetScope").asText()) || facility.has("arrivalLocationKey")))throw new IllegalArgumentException("个人任务只绑定无需工作人员到达核验的OWNER设施");
-            validateGameplayNode(frozen,nodeId);
-        }
-        if(!team)for(JsonNode facility:game.path("facilities"))if(facility.has("arrivalLocationKey"))throw new IllegalArgumentException("个人设施没有工作人员到达核验通道");
-        for(JsonNode facility:game.path("facilities"))if(facility.has("operationNodeId")) {
-            validateGameplayNode(frozen,facility.path("operationNodeId").asLong());
-            if(!team) {boolean merchant=false;for(JsonNode station:frozen.path("routeStations"))if(station.path("nodeId").asLong()==facility.path("operationNodeId").asLong() && station.path("merchantMemberId").asLong()>0)merchant=true;if(!merchant && !hasVerifiedPublicationArrival(frozen,facility.path("operationNodeId").asLong()))throw new IllegalArgumentException(personalArrivalRefusal(frozen,facility.path("operationNodeId").asLong()));}
-        }
-        for (JsonNode plan:game.path("plans")) if (plan.has("operationNodeId")) validateGameplayNode(frozen,plan.path("operationNodeId").asLong());
-        for (JsonNode act:game.path("acts")) if ("ANY_N".equals(act.path("completionRule").path("type").asText())) for (JsonNode chapter:theme.path("chapters")) {
-            boolean overlaps=false;for (JsonNode q:game.path("quests")) if (q.path("actKey").asText().equals(act.path("actKey").asText()) && containsNode(chapter.path("binding").path("nodeIds"),q.path("nodeId").asLong())) overlaps=true;
-            if (overlaps && !com.chengyinhub.business.service.support.GameplayTaskEngine.chapterMatchesAct(theme,chapter,act)) throw new IllegalArgumentException("任选幕的章节绑定须完整匹配本幕任务节点");
+        try {
+            JsonNode theme=frozen.path("themeConfig"),game=theme.path("gameplayRuntime");
+            if (!game.isObject()) return;
+            GameplaySupportMatrix.validateChallenge(theme,frozen.path("nodeConfigs"));
+            for (JsonNode station : frozen.path("routeStations")) {
+                long nodeId = station.path("nodeId").asLong();
+                GameplaySupportMatrix.validateNode(theme,nodeId,station.path("nodeName").asText(null),
+                        frozen.path("nodeConfigs").path(String.valueOf(nodeId)),
+                        frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId)).path("validationMethod").asInt(-1));
+            }
+            boolean team="TEAM".equals(game.path("runtimeScope").asText());
+            boolean tasks=game.path("quests").size()>0;
+            if (!team && !tasks && game.path("acts").size()==0 && game.path("survival").size()==0 && game.path("initialGrants").size()==0) return;
+            if (!"LINEAR".equals(frozen.path("routeMode").asText())) throw new IllegalArgumentException("通用任务使用幕与任务前置推进，请选择线性路线");
+            if ((team && theme.path("replayEnabled").asBoolean()) || theme.path("rescueLimit").asInt()>0 || theme.has("actionSources")) throw new IllegalArgumentException("通用任务不能组合旧自动救援或信号行动计数，队伍局不使用个人重玩");
+            for (JsonNode grant:theme.path("grants")) if (!"ENDING".equals(grant.path("source").asText())) throw new IllegalArgumentException("通用收益须配置在任务或章节中，不能启用旧节点信号发放");
+            for (JsonNode chapter:theme.path("chapters")) if (team && chapter.path("eggs").size()>0) throw new IllegalArgumentException("组队主题的章节彩蛋尚未接通，请使用个人进行方式");
+            if (!tasks) throw new IllegalArgumentException("通用运行规则须配置实际幕和任务");
+            if (tasks) {
+                JsonNode survival=game.path("survival");
+                if (!GameplaySupportMatrix.zeroHpPolicies(true).contains(survival.path("zeroHpPolicy").asText()) || !"BLOCK_OVERFLOW".equals(survival.path("actionLimitPolicy").asText())) throw new IllegalArgumentException("通用任务须显式配置H0策略与BLOCK_OVERFLOW");
+            }
+            if (!team) for (JsonNode act:game.path("acts")) if (act.path("hostUnlock").asBoolean()) throw new IllegalArgumentException("个人自玩没有工作人员解锁通道");
+            Set<Long> questNodes=new LinkedHashSet<>();
+            for (JsonNode quest:game.path("quests")) {
+                long nodeId=quest.path("nodeId").asLong();
+                if(GameplaySurvivalEngine.challengeNode(theme,nodeId))throw new IllegalArgumentException("归零挑战节点不能作为普通任务");
+                if (!questNodes.add(nodeId)) throw new IllegalArgumentException("任务须独占节点");
+                boolean merchant=false;
+                for (JsonNode station:frozen.path("routeStations")) if (station.path("nodeId").asLong()==nodeId && station.path("merchantMemberId").asLong()>0) merchant=true;
+                if (!team && !merchant && !hasVerifiedPublicationArrival(frozen,nodeId)) throw new IllegalArgumentException(personalArrivalRefusal(frozen,nodeId));
+                if(!team && quest.has("facilityKey"))for(JsonNode facility:game.path("facilities"))if(facility.path("facilityKey").asText().equals(quest.path("facilityKey").asText()) && (!"OWNER".equals(facility.path("scope").asText()) || !"OWNER".equals(facility.path("targetScope").asText()) || facility.has("arrivalLocationKey")))throw new IllegalArgumentException("个人任务只绑定无需工作人员到达核验的OWNER设施");
+                validateGameplayNode(frozen,nodeId);
+            }
+            if(!team)for(JsonNode facility:game.path("facilities"))if(facility.has("arrivalLocationKey"))throw new IllegalArgumentException("个人设施没有工作人员到达核验通道");
+            for(JsonNode facility:game.path("facilities"))if(facility.has("operationNodeId")) {
+                validateGameplayNode(frozen,facility.path("operationNodeId").asLong());
+                if(!team) {boolean merchant=false;for(JsonNode station:frozen.path("routeStations"))if(station.path("nodeId").asLong()==facility.path("operationNodeId").asLong() && station.path("merchantMemberId").asLong()>0)merchant=true;if(!merchant && !hasVerifiedPublicationArrival(frozen,facility.path("operationNodeId").asLong()))throw new IllegalArgumentException(personalArrivalRefusal(frozen,facility.path("operationNodeId").asLong()));}
+            }
+            for (JsonNode plan:game.path("plans")) if (plan.has("operationNodeId")) validateGameplayNode(frozen,plan.path("operationNodeId").asLong());
+            for (JsonNode act:game.path("acts")) if ("ANY_N".equals(act.path("completionRule").path("type").asText())) for (JsonNode chapter:theme.path("chapters")) {
+                boolean overlaps=false;for (JsonNode q:game.path("quests")) if (q.path("actKey").asText().equals(act.path("actKey").asText()) && containsNode(chapter.path("binding").path("nodeIds"),q.path("nodeId").asLong())) overlaps=true;
+                if (overlaps && !com.chengyinhub.business.service.support.GameplayTaskEngine.chapterMatchesAct(theme,chapter,act)) throw new IllegalArgumentException("任选幕的章节绑定须完整匹配本幕任务节点");
+            }
+        } catch (IllegalArgumentException invalid) {
+            throw publicationInvalid(invalid);
         }
     }
 
@@ -722,24 +923,24 @@ final class TopicRoutePublicationCompiler {
 
     private void validateParticipationNode(JsonNode frozen, Long nodeId, String kind) {
         JsonNode station=null;for(JsonNode row:frozen.path("routeStations"))if(row.path("nodeId").asLong()==nodeId)station=row;
-        if(station==null)throw new IllegalArgumentException("基础玩法节点不属于本主题");
-        if("SCAN".equals(kind) && !station.path("scanReady").asBoolean())throw new IllegalArgumentException("扫码玩法须配置真实节点码或商户动态码入口");
-        if("ANSWER".equals(kind)) {JsonNode answer=frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId));String expected=answer.path(answer.path("validationMethod").asInt()==1?"questionAnswer":"correctAnswer").asText();if(expected.trim().isEmpty())throw new IllegalArgumentException("问答玩法须配置服务端真实答案");}
-        if("GPS".equals(kind)) {try {double lng=Double.parseDouble(station.path("longitude").asText()),lat=Double.parseDouble(station.path("latitude").asText());if(!Double.isFinite(lng)||!Double.isFinite(lat)||lng< -180||lng>180||lat< -90||lat>90)throw new NumberFormatException();}catch(NumberFormatException invalid){throw new IllegalArgumentException("GPS玩法须配置有效站点坐标");}}
+        if(station==null)throw publicationInvalid(new IllegalArgumentException("基础玩法节点不属于本主题"));
+        if("SCAN".equals(kind) && !station.path("scanReady").asBoolean())throw publicationInvalid(new IllegalArgumentException("扫码玩法须配置真实节点码或商户动态码入口"));
+        if("ANSWER".equals(kind)) {JsonNode answer=frozen.path(NodeJourneySnapshot.NODE_ANSWERS_KEY).path(String.valueOf(nodeId));String expected=answer.path(answer.path("validationMethod").asInt()==1?"questionAnswer":"correctAnswer").asText();if(expected.trim().isEmpty())throw publicationInvalid(new IllegalArgumentException("问答玩法须配置服务端真实答案"));}
+        if("GPS".equals(kind)) {try {double lng=Double.parseDouble(station.path("longitude").asText()),lat=Double.parseDouble(station.path("latitude").asText());if(!Double.isFinite(lng)||!Double.isFinite(lat)||lng< -180||lng>180||lat< -90||lat>90)throw new NumberFormatException();}catch(NumberFormatException invalid){throw publicationInvalid(new IllegalArgumentException("GPS玩法须配置有效站点坐标"));}}
     }
 
     private void validateObjectiveGroup(JsonNode config) {
-        if(config.has("outcomeRules")){if(!GameplaySupportMatrix.r5CompletionProof(config))throw new IllegalArgumentException("R5 玩法尚无服务端结果桥");return;}
+        if(config.has("outcomeRules")){if(!GameplaySupportMatrix.r5CompletionProof(config))throw publicationInvalid(new IllegalArgumentException("R5 玩法尚无服务端结果桥"));return;}
         boolean objective=false;java.util.Iterator<Map.Entry<String,JsonNode>> fields=config.fields();
         while(fields.hasNext()) {
             Map.Entry<String,JsonNode> field=fields.next();if(!field.getValue().path("enabled").asBoolean())continue;
             if(GameplaySupportMatrix.addon(field.getKey()))continue;
-            if(!Arrays.asList("qa","sort","match","classify").contains(field.getKey()))throw new IllegalArgumentException("任务只支持问答、排序、连线与分类客观题组");
-            if ("qa".equals(field.getKey()) && (!Arrays.asList("TYPE","PICK","SHOT").contains(field.getValue().path("mode").asText()) || field.getValue().path("maxTries").asInt()>0)) throw new IllegalArgumentException("问答须可免费重答；拍照须通过上传归属校验");
-            if ("sort".equals(field.getKey()) && field.getValue().path("maxAttempts").asInt()>0) throw new IllegalArgumentException("任务排序须可免费重答");
+            if(!Arrays.asList("qa","sort","match","classify").contains(field.getKey()))throw publicationInvalid(new IllegalArgumentException("任务只支持问答、排序、连线与分类客观题组"));
+            if ("qa".equals(field.getKey()) && (!Arrays.asList("TYPE","PICK","SHOT").contains(field.getValue().path("mode").asText()) || field.getValue().path("maxTries").asInt()>0)) throw publicationInvalid(new IllegalArgumentException("问答须可免费重答；拍照须通过上传归属校验"));
+            if ("sort".equals(field.getKey()) && field.getValue().path("maxAttempts").asInt()>0) throw publicationInvalid(new IllegalArgumentException("任务排序须可免费重答"));
             objective=true;
         }
-        if(!objective)throw new IllegalArgumentException("任务节点需要服务端判定题组");
+        if(!objective)throw publicationInvalid(new IllegalArgumentException("任务节点需要服务端判定题组"));
     }
 
     String freezeJourney(String snapshot, CmsTopic topic, List<CmsTopicNode> liveNodes) {
@@ -950,6 +1151,9 @@ final class TopicRoutePublicationCompiler {
                     ObjectNode ending = endingChapters.putObject(String.valueOf(chapter.getId()));
                     ending.put("id", chapter.getId());
                     ending.put("name", chapter.getName());
+                    ending.put("description", chapter.getDescription());
+                    ending.put("imgArr", chapter.getImgArr());
+                    ending.put("sortId", chapter.getSortId());
                     ending.put("atmospherePreset", chapter.getAtmospherePreset());
                     ending.put("audioUrl", chapter.getAudioUrl());
                     ending.put("videoUrl", chapter.getVideoUrl());
@@ -969,14 +1173,31 @@ final class TopicRoutePublicationCompiler {
             row.set("nodeIds", JSON.valueToTree(nodeIds));
             row.set("requiredBefore", JSON.valueToTree(requiredBefore));
             row.set("blocks", JSON.valueToTree(ChapterBlockReadSupport.resolveFromTopicNodes(chapter, nodes)));
-            if (ChapterBlockReadSupport.isRequiredChapter(chapter)) requiredBefore.addAll(nodeIds);
+            // 章节呈现随发布冻结:改章节名/简介/图/音频/里程不再改写已开局的读回内容。
+            row.put("name", chapter.getName());
+            row.put("description", chapter.getDescription());
+            row.put("imgArr", chapter.getImgArr());
+            row.put("totalMileage", chapter.getTotalMileage());
+            row.put("totalTime", chapter.getTotalTime());
+            row.put("sortId", chapter.getSortId());
+            row.put("category", chapter.getCategory());
+            row.put("atmospherePreset", chapter.getAtmospherePreset());
+            row.put("audioUrl", chapter.getAudioUrl());
+            // 必需章决定玩家端要不要下发 blocks;这一位也必须冻结,否则读侧只能回头看实时章节行。
+            boolean required = ChapterBlockReadSupport.isRequiredChapter(chapter);
+            row.put("required", required);
+            if (required) requiredBefore.addAll(nodeIds);
         }
     }
 
+    /**
+     * 模板呈现白名单。{@code validationMethod} 也在里面:键在即为权威(可为 null),
+     * 新制快照据此证明「建局时这一站有没有判定方式」,不再靠答案区有没有该键去猜。
+     */
     private static final String[] TEMPLATE_PRESENTATION_FIELDS = ("id title description imgUrl players usageLocation "
             + "requiredMaterials duration difficulty ruleInstructions merchantGuide interactionType questionName questionImg "
             + "questionAudio questionOptionMediaJson questionA questionB questionC questionD storyText storyImg feedbackText "
-            + "photoRequireDesc audioUrl audioDuration medalName medalStyle medalImg couponId").split(" ");
+            + "photoRequireDesc audioUrl audioDuration medalName medalStyle medalImg couponId validationMethod").split(" ");
     private static final String[] NODE_PRESENTATION_FIELDS = ("id topicId chapterId templateId merchantMemberId name description "
             + "address longitude latitude imgUrl hookText cardHookLong fragmentText nodeTime businessTime sortId unlockAfterNodeId").split(" ");
 
@@ -986,6 +1207,8 @@ final class TopicRoutePublicationCompiler {
         Map<Long, CmsTopicChapter> chapters = new LinkedHashMap<>();
         for (CmsTopicChapter chapter : runtimeChapters(topic.getId())) chapters.put(chapter.getId(), chapter);
         ObjectNode answers = frozen.with(NodeJourneySnapshot.NODE_ANSWERS_KEY);
+        Map<Long, JsonNode> templateViews = new LinkedHashMap<Long, JsonNode>();
+        Map<Long, String> chapterAudio = new LinkedHashMap<Long, String>();
         for (CmsTopicNode node : nodes) {
             if (node.getId() == null || node.getId() <= 0 || !topic.getId().equals(node.getTopicId()))
                 throw new IllegalStateException("冻结节点身份不一致");
@@ -1010,6 +1233,21 @@ final class TopicRoutePublicationCompiler {
             if (template != null) {
                 putAnswerText(target, "hint1", template.getHint1());
                 putAnswerText(target, "hint2", template.getHint2());
+            }
+            // 绑定 / 媒体一致性:同一模板在多个站点必须呈现同一份内容,同章节点必须挂同一段章节音频。
+            // 对不上就不再是「同一版内容的重复引用」,发布直接拒绝,读侧不需要猜。
+            if (templateId != null) {
+                JsonNode view = target.path("templatePresentation");
+                JsonNode previous = templateViews.putIfAbsent(templateId, view);
+                if (previous != null && !previous.equals(view))
+                    throw new IllegalStateException("冻结模板呈现不一致");
+            }
+            if (chapter != null) {
+                String audio = target.path("chapterAudioUrl").asText(null);
+                if (chapterAudio.containsKey(chapter.getId())) {
+                    if (!Objects.equals(chapterAudio.get(chapter.getId()), audio))
+                        throw new IllegalStateException("冻结章节音频不一致");
+                } else chapterAudio.put(chapter.getId(), audio);
             }
         }
     }
@@ -1052,6 +1290,15 @@ final class TopicRoutePublicationCompiler {
             putAnswerText(target, "preferenceJson", template.getPreferenceJson());
             putAnswerText(target, "sensorType", template.getSensorType());
             putAnswerText(target, "sensorConfig", template.getSensorConfig());
+            // BE-08:答案别名政策与 canonical answer 同一来源(模板私有 advancedConfigJson 根层),
+            // 在这里连同判定字段一起冻结。没有别名就不写键 —— 老局/未配政策的局读回后
+            // 仍走旧比较器,作者之后补写的别名不会回头改这一局。
+            com.chengyinhub.business.service.support.AnswerPolicy answerPolicy =
+                    com.chengyinhub.business.service.support.AnswerPolicy
+                            .ofAdvancedConfig(template.getAdvancedConfigJson());
+            if (!answerPolicy.isEmpty()) {
+                target.set(com.chengyinhub.business.service.support.AnswerPolicy.FIELD, answerPolicy.toJson());
+            }
         }
     }
 

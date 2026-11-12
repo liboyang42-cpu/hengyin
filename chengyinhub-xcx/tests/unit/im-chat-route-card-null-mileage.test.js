@@ -31,7 +31,8 @@ test('缺里程的主题显示 — km,不是 null km,也不是假的 0 km', () =
 
 function assertCoverFallbacks(markup) {
   // 聊天气泡明确显示「暂无封面」,选择器沿用图片兜底;两处都不能渲染空 src。
-  assert.match(markup, /<image\s+wx:if="\{\{topicCache\[item\.card\.topicId\]\.imgUrl\}\}"[^>]*class="rcard-img"[^>]*\/>\s*<view wx:else class="rcard-img rcard-img--nocover"[^>]*>[\s\S]*?<image[^>]*src="\/images\/no_data\.svg"[^>]*\/>[\s\S]*?封面暂不可用[\s\S]*?<\/view>/);
+  assert.match(markup, /<image\s+wx:if="\{\{topicCache\[item\.card\.topicId\]\.imgUrl\}\}"[^>]*class="rcard-img"[^>]*\/>\s*<view wx:else class="rcard-img rcard-img--nocover cy-cover-fb"[^>]*>[\s\S]*?<image[^>]*src="\/images\/cover-route\.svg"[^>]*\/>[\s\S]*?<\/view>/);
+  assert.doesNotMatch(markup, /封面暂不可用/);
   assert.match(markup, /<image[^>]*class="route-item-img"[^>]*src="\{\{item\.imgUrl \|\| '\/images\/route_free_cover\.png'\}\}"/);
 }
 
@@ -39,13 +40,13 @@ test('缺封面的路线卡显示明确占位,选择器回落到占位封面', (
   assertCoverFallbacks(wxml);
   assert.ok(fs.existsSync(path.resolve(__dirname, '../../images/route_free_cover.png')),
     '占位封面资源必须在主包里存在，子包引用才拿得到');
-  assert.ok(fs.existsSync(path.resolve(__dirname, '../../images/no_data.svg')));
+  assert.ok(fs.existsSync(path.resolve(__dirname, '../../images/cover-route.svg')));
 });
 
 test('负控:无图仍渲染image、删掉说明或选择器兜底都判红', () => {
   for (const [from, to] of [
     ['wx:if="{{topicCache[item.card.topicId].imgUrl}}"', 'wx:if="{{true}}"'],
-    ['封面暂不可用', ''],
+    ['cover-route.svg', 'no_data.svg'],
     ["item.imgUrl || '/images/route_free_cover.png'", 'item.imgUrl'],
   ]) {
     const mutated = wxml.replace(from, to);

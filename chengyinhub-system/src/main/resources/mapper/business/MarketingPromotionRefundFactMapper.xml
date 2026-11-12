@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.MarketingPromotionRefundFactMapper">
+
+    <!-- 幂等写入:同 idempotency_key 或同 (order, refund_application) 重投时什么都不改,不报错。
+         为什么不用 select-then-insert:并发回调会同时查到"不存在"再双双插入,唯一键才炸;
+         这里把判重交给引擎,一次往返,重投与并发都落到同一个结果。 -->
+    <insert id="upsertRefundFact" parameterType="com.chengyinhub.business.domain.MarketingPromotionRefundFact">
+        insert into marketing_promotion_refund_fact
+            (order_type, order_id, refund_registration_id, refund_application_id, out_refund_no,
+             refunded_fen, total_fen, idempotency_key, create_time)
+        values
+            (#{orderType}, #{orderId}, #{refundRegistrationId}, #{refundApplicationId}, #{outRefundNo},
+             #{refundedFen}, #{totalFen}, #{idempotencyKey}, #{createTime})
+        on duplicate key update id = id
+    </insert>
+
+    <select id="sumRefundedFen" resultType="long">
+        select coalesce(sum(refunded_fen), 0)
+        from marketing_promotion_refund_fact
+        where order_type = #{orderType} and order_id = #{orderId}
+    </select>
+
+    <select id="distinctTotalFen" resultType="long">
+        select distinct total_fen
+        from marketing_promotion_refund_fact
+        where order_type = #{orderType} and order_id = #{orderId}
+    </select>
+
+    <!-- 只认两条既有事实:同 parent_order_no 属同一订单、且同 member_id 属同一买家。
+         条件内不带任何推测规则;命中多条说明一单有多份促销快照,调用方必须拒绝而不是挑一个。 -->
+    <select id="resolvePromoOrderIds" resultType="long">
+        select a.order_id
+        from marketing_order_adjustment a
+        join cms_registration refunded on refunded.id = #{registrationId}
+        join cms_registration promo_order on promo_order.id = a.order_id
+        where a.order_type = #{orderType}
+          and a.member_id = refunded.member_id
+          and (
+                a.order_id = refunded.id
+                or (refunded.parent_order_no is not null and refunded.parent_order_no &lt;&gt; ''
+                    and promo_order.parent_order_no = refunded.parent_order_no)
+              )
+        order by (a.order_id = refunded.id) desc, a.order_id asc
+    </select>
+</mapper>

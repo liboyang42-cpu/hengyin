@@ -137,6 +137,63 @@ class AdvancedGameRuntimeServiceImplTest {
     }
 
     @Test
+    void explicitMissingOrOldCapabilityRejectsBeforeRuntimeOrRouteWrites() {
+        when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(randomOnlyConfig()));
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        for (String raw : List.of("", "game.qa@1", "game.random@0")) {
+            var declaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                    .parse("ios", "1", raw);
+            assertThrows(com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException.class,
+                    () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null, declaration));
+        }
+        verify(sessionMapper, never()).insert(any());
+        verify(sessionMapper, never()).updateStateCas(any());
+        verify(attemptMapper, never()).insertPlayAttemptLog(any());
+        verify(route, never()).requireOpeningAccess(any(), any(), any(), any());
+        verify(route, never()).state(any(), any(), any());
+    }
+
+    @Test
+    void matchingCapabilityStillRequiresEntitlementAndStartsOriginalRuntime() {
+        when(templateMapper.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(template(randomOnlyConfig()));
+        when(sessionMapper.insert(any())).thenAnswer(call -> {
+            GameRuntimeSession row = call.getArgument(0);
+            row.setId(51L);
+            return 1;
+        });
+        var declaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse("ios", "1", "game.random@1");
+        assertEquals("RUNNING",
+                service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null, declaration).get("status"));
+        when(teamMapper.hasPaidRegistration(MEMBER_ID, 2, ACTIVITY_ID)).thenReturn(0);
+        assertThrows(IllegalStateException.class,
+                () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null, declaration));
+    }
+
+    @Test
+    void existingFrozenGameRequirementsWinOverChangedLiveTemplate() {
+        GameRuntimeSession original = new GameRuntimeSession();
+        original.setId(51L);
+        original.setActivityId(ACTIVITY_ID);
+        original.setTopicId(TOPIC_ID);
+        original.setNodeId(NODE_ID);
+        original.setOwnerType(GameRuntimeSession.OWNER_PLAYER);
+        original.setOwnerId(MEMBER_ID);
+        original.setPlayInstanceId("default");
+        original.setConfigSnapshotJson(randomOnlyConfig());
+        original.setStateJson("{}");
+        when(sessionMapper.selectDefaultMemberSessionsByTopic(ACTIVITY_ID, TOPIC_ID, MEMBER_ID))
+                .thenReturn(List.of(original));
+        var declaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse("ios", "1", "game.qa@1");
+        assertThrows(com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException.class,
+                () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null, declaration));
+        verify(templateMapper, never()).selectCmsMemberTemplateById(any());
+        verify(sessionMapper, never()).insert(any());
+    }
+
+    @Test
     void runtimeVersionComesOnlyFromFrozenConfigAndIsAbsentForLegacy() throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
         GameRuntimeSession legacy = runningSession(randomOnlyConfig(), "{\"draws\":[]}");

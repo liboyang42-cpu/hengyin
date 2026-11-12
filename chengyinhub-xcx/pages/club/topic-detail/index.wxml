@@ -25,16 +25,10 @@
 
   <block wx:else>
     <!-- ① Hero + 标题区:整块按 Figma 绝对坐标排,高度固定 1044rpx(设计 522px) -->
-    <view class="ctd-head">
-      <view class="ctd-head__cover">
-        <image wx:if="{{topic.cover}}" class="ctd-head__cover-img" src="{{topic.cover}}" mode="aspectFill" lazy-load="true" />
-        <!-- CU-C-147:兜底要说得出"没图"。原来只有 128 的通用 image 线条图标,
-             读起来像资源加载失败,而不是"这场活动没有封面"。图标 + 短文案与
-             templatedetail 头部 / IM 报名卡同一口径,只是 Hero 尺寸放大。 -->
-        <view wx:else class="ctd-head__cover-fallback" aria-role="img" aria-label="{{topic.name}} 暂无封面">
-          <image class="ctd-cover-ph-icon" src="/images/no_data.svg" mode="aspectFit" />
-          <text class="ctd-cover-ph-txt">封面暂不可用</text>
-        </view>
+    <view class="ctd-head {{topic.cover ? '' : 'ctd-head--nocover'}}" style="{{topic.cover || !chromeClearTop ? '' : 'margin-top:' + chromeClearTop + 'px;'}}">
+      <!-- D12(2026-11-12 设计评审):没有封面就整块不出,标题区上提到导航下面,不再留一大块深色空地 -->
+      <view class="ctd-head__cover" wx:if="{{topic.cover}}">
+        <image class="ctd-head__cover-img" src="{{topic.cover}}" mode="aspectFill" lazy-load="true" />
         <view class="ctd-head__scrim"></view>
       </view>
 

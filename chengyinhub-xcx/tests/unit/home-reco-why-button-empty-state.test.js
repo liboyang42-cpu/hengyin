@@ -18,10 +18,13 @@ test('P-02:编辑精选区块不再有「为什么看到」按钮', () => {
   assert.doesNotMatch(js, /showRecommendationSource|为什么看到这些主题/)
 })
 
-test('空态与失败态都只在 !recoHero 时出现', () => {
-  const empty = (section.match(/<view[^>]*>\s*<cy-empty title="暂时没有精选主题"/) || [])[0]
+test('D5:精选没有内容时整段(标题也)不挂;失败态只在 !recoHero 时出现', () => {
+  assert.doesNotMatch(wxml, /暂时没有精选主题|你附近暂时没有可点亮的节点/)
+  const head = wxml.match(/<view id="sec-reco"[^>]*>/)[0]
+  assert.match(head, /wx:if="\{\{recoHero \|\| recoCards\.length \|\| listErr\.recommendedTopicList \|\| listLoading\.recommendedTopicList\}\}"/)
+  const nearby = wxml.match(/<view id="sec-nearby"[^>]*>/)[0]
+  assert.match(nearby, /wx:if="\{\{nearbyActivityList\.length \|\| listErr\.nearbyActivityList \|\| listLoading\.nearbyActivityList\}\}"/)
   const failed = (section.match(/<view[^>]*>\s*<cy-error load-failure title="编辑精选加载失败"/) || [])[0]
-  assert.ok(empty && /!recoHero/.test(empty), '空态门控应含 !recoHero')
   assert.ok(failed && /!recoHero/.test(failed), '失败态门控应含 !recoHero')
 })
 

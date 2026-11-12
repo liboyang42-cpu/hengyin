@@ -1,46 +1,46 @@
-<!-- 通用分享层(2026-10-31 业主批准 P-8):每种内容只有一张卡,卡片在页面中间偏下;四个色块换底色;
-     下面一排渠道圆钮放大、横向滑动。活动 / 主题 / 勋章走这一层,漫游的分享仍在漫游页那套(可见范围、发到广场)。 -->
-<view wx:if="{{show}}" class="sc" style="--sc-bg:{{bg}};padding-top:{{statusBarHeight}}px;" catchtouchmove="noop">
+<!-- 通用分享层(2026-10-31 业主批准 P-8;r3-share 按 refs4/share-page-cards 改版):
+     每种内容一张整色卡 —— 上面是封面(勋章是勋章本身),下沿一道弧,城瘾徽标压在弧上,下面大号两行标题;
+     卡下是色块圆点、一颗主按钮「发给微信好友」、一排小渠道。活动 / 主题 / 勋章 / 店铺走这一层。 -->
+<view wx:if="{{show}}" class="sc {{scIn === 1 ? 'sc--pre' : ''}}" style="--sc-bg:{{bg}};padding-top:{{statusBarHeight}}px;" catchtouchmove="noop">
   <view class="sc-top">
     <view class="sc-x" bindtap="close" aria-role="button" aria-label="关闭分享" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="36" /></view>
-    <text class="sc-h">分享{{label}}</text>
+    <text class="sc-h">{{heading}}</text>
     <view class="sc-sp"></view>
   </view>
 
   <view class="sc-stage">
-    <!-- 活动:封面在上,活动名、粗斜体大日期、时间地点在下 -->
-    <view class="sc-card sc-card--act" wx:if="{{kind === 'activity'}}">
-      <image class="sc-cover" wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" />
-      <view class="sc-in">
-        <text class="sc-eb">{{label}}</text>
-        <text class="sc-t">{{title}}</text>
-        <view class="sc-when" wx:if="{{date || when}}"><text class="sc-date" wx:if="{{date}}">{{date}}</text><text class="sc-whenl">{{when}}</text></view>
-        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" /></view>
-      </view>
-    </view>
-    <!-- 主题:封面铺满整张卡并压暗,大号粗斜体主题名,下面一条竖着的路线,站点编号连成线 -->
-    <!-- 第九轮 m2 补充第 4 项:店铺卡与主题卡同一版式 —— 店铺封面铺满压暗,店名、地址,右下是店铺码(不再是一块空色) -->
-    <view class="sc-card sc-card--theme {{kind === 'shop' ? 'sc-card--shop' : ''}}" wx:elif="{{kind === 'theme' || kind === 'shop'}}">
-      <image class="sc-bgimg" wx:if="{{cover}}" src="{{cover}}" mode="aspectFill" />
-      <view class="sc-shade"></view>
-      <view class="sc-in">
-        <text class="sc-eb">{{kind === 'shop' ? '店铺' : (meta ? '主题 · ' + meta : '主题')}}</text>
-        <text class="sc-big">{{title}}</text>
-        <text class="sc-m" wx:if="{{kind === 'shop' && when}}">{{when}}</text>
-        <view class="sc-line" wx:if="{{stops.length}}">
-          <view class="sc-line-i" wx:for="{{stops}}" wx:key="index"><view class="sc-line-dot">{{index + 1}}</view><text class="sc-line-t">{{item}}</text></view>
+    <!-- l-after 邀请卡(proto sh-invite):封面压暗铺满,眉题、大斜体主题名、竖向路线点、邀请人 + 剩余席位、城瘾 + 码;卡片完整可见 -->
+    <view class="sc-card sc-card--invite" wx:if="{{kind === 'invite'}}">
+      <image wx:if="{{cover}}" class="sc-inv-bg" src="{{cover}}" mode="aspectFill" aria-hidden="true" />
+      <view class="sc-inv-shade"></view>
+      <view class="sc-inv">
+        <text class="sc-inv-eb">{{eyebrow}}</text>
+        <text class="sc-inv-big">{{title}}</text>
+        <view class="sc-inv-line">
+          <view class="sc-inv-step" wx:for="{{steps}}" wx:key="*this"><text class="sc-inv-dot">{{index + 1}}</text><text class="sc-inv-name">{{item}}</text></view>
         </view>
-        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" /></view>
+        <view class="sc-inv-who" wx:if="{{inviterText}}"><image wx:if="{{art}}" class="sc-inv-art" src="{{art}}" mode="aspectFit" aria-hidden="true" /><text>{{inviterText}}</text></view>
+        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr sc-qr--inv {{qrReady || reducedMotion ? 'sc-qr--ready' : ''}}{{reducedMotion ? ' sc-qr--static' : ''}}" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" bindload="onQrLoad" binderror="onQrLoad" /></view>
       </view>
     </view>
-    <!-- 勋章:卡片中间是勋章本身 -->
-    <view class="sc-card sc-card--medal" wx:else>
+    <view class="sc-card sc-card--{{kind}}" wx:else>
+      <!-- 上半:主题 / 活动 / 店铺是封面(没有就用路线插画);勋章是勋章本身 -->
+      <view class="sc-art">
+        <block wx:if="{{kind === 'medal'}}">
+          <view class="sc-glow"></view>
+          <view class="sc-medal"><image class="sc-medal-img" wx:if="{{cover}}" src="{{cover}}" mode="aspectFit" /><cy-icon wx:else name="star-filled" size="150" /></view>
+        </block>
+        <image class="sc-cover" wx:elif="{{cover}}" src="{{cover}}" mode="aspectFill" />
+        <!-- 没有封面:我们自己的路线插画(导出图同一张) -->
+        <image class="sc-cover" wx:else src="/components/cy/share-card/route-art.png" mode="aspectFill" />
+      </view>
+      <view class="sc-arc"></view>
+      <view class="sc-badge"><image class="sc-badge-img" src="/images/cy_logo_mark.png" mode="aspectFit" /></view>
       <view class="sc-in">
-        <text class="sc-eb">勋章</text>
-        <view class="sc-medal"><image class="sc-medal-img" wx:if="{{cover}}" src="{{cover}}" mode="aspectFit" /><cy-icon wx:else name="star-filled" size="110" /></view>
-        <text class="sc-t sc-c">{{title}}</text>
-        <text class="sc-m sc-c" wx:if="{{meta}}">{{meta}}</text>
-        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" /></view>
+        <text class="sc-eb">{{eyebrow}}</text>
+        <text class="sc-big">{{title}}</text>
+        <text class="sc-m" wx:if="{{sub}}">{{sub}}</text>
+        <view class="sc-foot"><text class="sc-brand">城瘾</text><image class="sc-qr {{qrReady || reducedMotion ? 'sc-qr--ready' : ''}}{{reducedMotion ? ' sc-qr--static' : ''}}" wx:if="{{qr}}" src="{{qr}}" mode="aspectFit" bindload="onQrLoad" binderror="onQrLoad" /></view>
       </view>
     </view>
   </view>
@@ -50,11 +50,13 @@
           data-i="{{index}}" bindtap="pickColor" aria-role="button" aria-label="换第 {{index + 1}} 种底色" hover-class="cy-pressed" hover-stay-time="80"><view class="sc-dot" style="background:{{item}}"></view></view>
   </view>
 
-  <scroll-view class="sc-ch" scroll-x enhanced show-scrollbar="{{false}}">
-    <button class="sc-ch-i sc-ch-btn" open-type="share" data-share-kind="card" aria-label="发给微信好友"><view class="sc-ch-c"><cy-icon name="share" size="44" /></view><text>微信好友</text></button>
-    <view class="sc-ch-i" wx:for="{{channels}}" wx:key="key" data-key="{{item.key}}" bindtap="onChannel" aria-role="button" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
-      <view class="sc-ch-c"><cy-icon name="{{item.icon}}" size="44" /></view><text>{{item.label}}</text>
+  <view class="sc-acts">
+    <button class="sc-primary" open-type="share" data-share-kind="card" aria-label="发给微信好友" hover-class="cy-pressed" hover-stay-time="80">发给微信好友</button>
+    <view class="sc-ch">
+      <view class="sc-ch-i" wx:for="{{channels}}" wx:key="key" data-key="{{item.key}}" bindtap="onChannel" aria-role="button" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="sc-ch-c"><cy-icon name="{{item.icon}}" size="40" /></view><text>{{item.label}}</text>
+      </view>
     </view>
-  </scroll-view>
+  </view>
   <canvas type="2d" id="sccv" class="sc-cv"></canvas>
 </view>

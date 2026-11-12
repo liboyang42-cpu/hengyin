@@ -83,7 +83,7 @@
              两者都没有时如实提示待同步,不拿路线票券占位图冒充活动海报。 -->
         <view class="setbox_lb_li_top_tu">
           <image wx:if="{{img.first(activityInfo.imgUrl) || img.first(activityInfo.imgArr)}}" lazy-load="true" src="{{img.first(activityInfo.imgUrl) || img.first(activityInfo.imgArr)}}" mode="aspectFill" />
-          <view wx:else class="activity-poster-empty">暂无海报</view>
+          <view wx:else class="activity-poster-empty cy-cover-fb" aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
         </view>
         <view class="setbox_lb_li_top_con">
           <!-- 参考图的条目顺序是「标题 → 时间 → 地点」:先回答"是什么",再说何时何地。
@@ -117,6 +117,29 @@
      标准票行原来挂在「活动信息」卡底部,与下面的金额行被一条卡边界劈开 ——
      它本身就是费用项,归到这里,活动信息卡只回答「是哪场活动」。
      节标题与灰卡分离(参考 Revolut):标题在卡外,和「参与人信息」「活动信息」同一档。 -->
+<!-- §17.5 促销目录:offers/promotions/tiers 都空时整块不渲染;剩余时间按服务端 serverNow 算 -->
+<block wx:if="{{pageState === 'ready' && selectedTicket && (promoCatalog.show || mkt.rewardCoupon)}}">
+  <view class="sec-title">优惠</view>
+  <view class="setly">
+    <view wx:for="{{promoCatalog.offers}}" wx:key="key" class="setly_li">
+      <view class="setly_li_left">{{item.name}}</view>
+      <view class="setly_li_right"><text class="{{item.available ? 'promo-on' : 'promo-off'}}">{{item.available ? item.saveText : item.reason}}</text></view>
+    </view>
+    <view wx:for="{{promoCatalog.promotions}}" wx:key="key" class="setly_li">
+      <view class="setly_li_left">{{item.name}}</view>
+      <view class="setly_li_right"><text class="{{item.eligible ? 'promo-on' : 'promo-off'}}">{{item.eligible ? item.remain : item.reason}}</text></view>
+    </view>
+    <view wx:for="{{promoCatalog.tiers}}" wx:key="key" class="setly_li">
+      <view class="setly_li_left">{{item.range}}</view>
+      <view class="setly_li_right"><text>{{money.amount(item.unitPrice)}}/人</text></view>
+    </view>
+    <view wx:if="{{mkt.rewardCoupon}}" class="setly_li">
+      <view class="setly_li_left">完局奖励</view>
+      <view class="setly_li_right"><text>{{mkt.rewardCoupon.name}}</text></view>
+    </view>
+  </view>
+</block>
+
 <view wx:if="{{pageState === 'ready' && selectedTicket}}" class="sec-title">费用明细</view>
 <view wx:if="{{pageState === 'ready' && selectedTicket}}" class="setly">
   <!-- B-08:多票种时票种行可点开选择;只有一个票种时保持原来的纯展示行。 -->
@@ -142,6 +165,20 @@
       <view wx:else class="club-benefit-text">{{isClubMember ? '优先报名已生效' : '部分名额优先留给会员'}}</view>
     </view>
   </view>
+  <!-- §17.6 促销减免:标签直用服务端 label;有减免时原价划线,应付只看 payAmount -->
+  <!-- 单张票时原价就是上面票种行,不重复;多张时才出整单原价划线 -->
+  <view wx:if="{{mkt.show && mkt.listAmount != selectedTicket.price}}" class="setly_li">
+    <view class="setly_li_left">原价</view>
+    <view class="setly_li_right"><text class="price-strike">{{money.amount(mkt.listAmount)}}</text></view>
+  </view>
+  <view wx:for="{{mkt.adjustments}}" wx:key="key" class="setly_li">
+    <view class="setly_li_left">{{item.label}}</view>
+    <view class="setly_li_right"><view class="setly_li_right_span">-{{money.amount(item.amount)}}</view></view>
+  </view>
+  <view wx:if="{{mkt.coveredByPass}}" class="setly_li">
+    <view class="setly_li_left">通行证</view>
+    <view class="setly_li_right"><text>你已可直接游玩</text></view>
+  </view>
   <!-- P-32:¥0 票没有可抵扣的金额,整行不出现(不留「-¥0」) -->
   <!-- R11 p1 F-10:没有积分时整行不出现(不留一个「-¥0」和点不出东西的勾) -->
   <view class="setly_li" wx:if="{{pointsUsable !== false && selectedTicket.price > 0 && userInfo.point != 0}}">
@@ -156,6 +193,15 @@
   <view class="setly_li setly_li--total">
     <view class="setly_li_left">总计</view>
     <view class="setly_li_right"><text>{{money.amount(totalAmount)}}</text></view>
+  </view>
+</view>
+
+<!-- U07-01 交付说明:只按报价 delivery 显示;多票混选时只写「按票种分别说明」,refundRule 为空不出「可退」 -->
+<view wx:if="{{pageState === 'ready' && selectedTicket && deliveryRows.length}}" class="sec-title">包含内容</view>
+<view wx:if="{{pageState === 'ready' && selectedTicket && deliveryRows.length}}" class="setly">
+  <view wx:for="{{deliveryRows}}" wx:key="key" class="setly_li">
+    <view class="setly_li_left">{{item.label}}</view>
+    <view class="setly_li_right setly_li_right--text"><text>{{item.value}}</text></view>
   </view>
 </view>
 
@@ -177,8 +223,27 @@
   </view>
 </view>
 
+<!-- §27.6 主持预约:状态只读服务端 reservationState;需预约时由这块接管候补卡。沿用本页 sec-title + setly 明细行 -->
+<block wx:if="{{pageState === 'ready' && hostResv.show}}">
+  <view class="sec-title">主持预约</view>
+  <view class="setly">
+    <view class="setly_li">
+      <view class="setly_li_left">状态</view>
+      <view class="setly_li_right"><text class="{{hostResv.awaitingPayment ? '' : 'promo-off'}}">{{hostResv.text}}</text></view>
+    </view>
+    <view wx:if="{{hostResv.awaitingPayment && waitlistExpiresText}}" class="setly_li">
+      <view class="setly_li_left">付款截止</view>
+      <view class="setly_li_right"><text>{{waitlistExpiresText}}</text></view>
+    </view>
+    <view wx:if="{{hostResv.canCancel}}" class="setly_li" bindtap="cancelWaitlist" aria-role="button" hover-class="{{waitlistLoading ? 'none' : 'cy-pressed'}}" hover-stay-time="80">
+      <view class="setly_li_left host-danger">撤销申请</view>
+    </view>
+  </view>
+  <cy-btn wx:if="{{hostResv.canRequest}}" class="host-request" variant="secondary" loading="{{waitlistLoading}}" bindtap="requestHost">请求主持</cy-btn>
+</block>
+
 <!-- 候补是真实票库存 hold：只有服务端 OFFERED 且带短期 token 时才开放原报名付款。 -->
-<view wx:if="{{pageState === 'ready' && (ticketSoldOut || waitlistEligibility === 'ALREADY_REGISTERED' || (waitlistState && waitlistState !== 'NONE'))}}" class="waitlist-card">
+<view wx:if="{{pageState === 'ready' && !hostResv.show && (ticketSoldOut || waitlistEligibility === 'ALREADY_REGISTERED' || (waitlistState && waitlistState !== 'NONE'))}}" class="waitlist-card">
   <view class="waitlist-card__title">候补状态</view>
   <view wx:if="{{waitlistLoading || waitlistState === 'LOADING'}}" class="waitlist-card__text">正在读取候补状态…</view>
   <block wx:elif="{{waitlistState === 'OFFERED' && waitlistEligibility === 'ELIGIBLE' && waitlistJoinAllowed}}">
@@ -264,7 +329,7 @@
     <icon wx:else class="bmbottom_box_gx" type="circle" size="20" color="var(--cy-color-text-tertiary)" />
     <view class="bmbottom_box_txt">同意将姓名、手机号提供给主办方，用于报名核验</view>
   </view>
-  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : (quoteRefusal ? '暂不可报名' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? ((hostShareConsentReady || hostShareChecked) ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : '请先勾选信息共享同意') : '请选择参与人信息')))))))}}</cy-btn>
+  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : (hostResv.required && !waitlistOfferId ? '请先预约主持' : (quoteRefusal ? '暂不可报名' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? ((hostShareConsentReady || hostShareChecked) ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : '请先勾选信息共享同意') : '请选择参与人信息'))))))))}}</cy-btn>
 </view>
 
 <!-- 报名/支付结果面板。2026-09-06 用户裁决「买完直接跳」:面板不放按钮,

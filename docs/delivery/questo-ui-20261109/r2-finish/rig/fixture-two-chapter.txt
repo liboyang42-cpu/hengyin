@@ -1,0 +1,34 @@
+
+──────── 步骤 1:0 发布者实名（真实入口，同 chain_platform）
+   publisher/identity                 {"msg": "操作成功", "code": 200, "data": {"registered": true}, "_status": 200}
+
+──────── 步骤 2:1a 节点玩法模板：到站打卡（POST /api/template/publish，validationMethod=0）
+   template/publish                   {"msg": "操作成功", "code": 200, "data": 6007, "writeReceipt": {"operation": "TEMPLATE_PUBLISH", "requestId": "rig-tpl-1110080647", "state": "COMPLETED"}, "_status": 200}
+   review 4(TEMPLATE) v0              审核处理成功
+   [库回读] template                 ((6007, 9003, 1, 1, 1),)
+   template/publish (QA+hintLadder)   {"msg": "操作成功", "code": 200, "data": 6008, "writeReceipt": {"operation": "TEMPLATE_PUBLISH", "requestId": "rig-tpl-qa-1110080647", "state": "COMPLETED"}, "_status": 200}
+   review 5(TEMPLATE) v0              审核处理成功
+   [库回读] qa template              ((6008, 1, 1),)
+
+──────── 步骤 3:1-2 建期：自营城市定向（productType=1），两站有序，零价
+   POST /api/topic/v2/create          {"msg": "主题发布成功", "code": 200, "data": {"topicId": 990015, "auditTaskId": 6, "reviewState": "PENDING", "bundledTemplateIds": [6007, 6008], "published": true, "commercialAwaitingReview": false, "commercialNextStep": null, "reviewPassed": fal
+   [库回读] topic                    ((990015, 1, 0, 1, 1, 0, None),)
+
+──────── 步骤 4:3 内容审核（若有待审任务）
+   review 6(TOPIC) v0                 审核处理成功
+   [库回读] status/user_status/lifecycle ((1, 1, 0),)
+
+──────── 步骤 5:4 SQL 夹具：零价自玩通行证开关（无写口能存 ¥0 自玩）
+   [库回读] self_play                ((1, Decimal('0.00'), None),)
+
+──────── 步骤 6:5-8 玩家：同意 → 参与人 → 报价 → 领取零价通行证
+   consents                           操作成功
+   address                            {"msg": "操作成功", "code": 200, "data": {"createBy": null, "createTime": "2026-11-10 16:06:48", "updateBy": null, "updateTime": null, "remark": null, "id": 12, "me
+   quote                              {"msg": "操作成功", "code": 200, "data": {"payAmount": 0.0, "pointsUsed": 0, "pointsDeductYuan": 0.0, "couponDeductYuan": 0, "quoteSign": "bfc29ab69b48d8c7cf4b655ef96ccb76", "memberDiscountYuan": 0.0, "clubMember": false, "prioritySignupEnabled
+   create                             {"msg": "报名创建成功", "code": 200, "data": {"registrationId": 75, "registrationNo": "T202611105F6C6CA0", "payableAmount": 0.0, "expireTime": "2026-11-10T16:36:48.364+08:00", "expiresAt": "2027-01-10T00:00:00.000+08:00", "paymentType": 0, "regis
+   [库回读] pass                     ((75, 2, 2, 2, datetime.datetime(2027, 1, 10, 0, 0)),)
+
+──────── 步骤 7:9 玩家进入游玩：GET /api/play/nodes
+   play/nodes                         {"msg": "操作成功", "code": 200, "data": {"topicId": 990015, "topicDesc": "rig 免费城市定向样板", "topicName": "城市定向样板 1110080647", "topicCover": "https://oss-rig.invalid/upload/e2e-topic-cover-9003.jpg?Expires=2109658012&OSSAccessKeyId=rig&Signature=sFHdNMO%2FbYVSgUJFIiDQFmAP5fw%3D", "topicAudioUrl": null, "lo
+
+TOPIC_ID=990015

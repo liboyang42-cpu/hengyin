@@ -4,6 +4,7 @@ import java.util.*;
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.TopicLifecycleState;
 import com.chengyinhub.business.domain.vo.TopicBundleSubmitResultVO;
+import com.chengyinhub.business.domain.vo.TopicPublicationStatusVO;
 import com.chengyinhub.business.mapper.*;
 import com.chengyinhub.business.support.CircleThemePublishPolicy;
 import com.chengyinhub.business.service.ITopicCommercialReviewService;
@@ -16,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.chengyinhub.business.service.support.TopicPublicationContentGuard;
 import com.chengyinhub.business.service.support.TopicSelfHostActivityService;
+import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
+import com.chengyinhub.business.service.support.TopicContentGeography;
+import com.chengyinhub.business.util.TopicEditWindow;
 
 /** Owns publication state and review orchestration; joins the original caller transaction. */
 @Service
@@ -49,6 +53,8 @@ public class TopicPublicationService {
     @Autowired private TopicSelfHostActivityService selfHostActivityService;
     @Autowired private com.chengyinhub.business.service.ITopicRouteRuntimeService topicRouteRuntimeService;
     @Autowired private com.chengyinhub.business.service.support.ThemeStateKeyService themeStateKeyService;
+    /** BE-06:正式发布事务内把精确冻结内容落成不可变修订;发布头推进失败时随事务一起回滚。 */
+    @Autowired private com.chengyinhub.business.service.ITopicContentRevisionService contentRevisionService;
     private static <T> List<T> nullToEmpty(List<T> rows) { return rows == null ? Collections.<T>emptyList() : rows; }
 
     public boolean canResubmitSupplyReview(Long id, Long ownerId) {
@@ -57,10 +63,77 @@ public class TopicPublicationService {
                 && supplyReviewService.canResubmit(topic);
     }
 
+    /**
+     * F1 发布入口重试:同一作者 + 同一发布意图号 + 同一 payload,在原发布已经推过状态之后重放,
+     * 返回当时那条不可变修订,<b>不</b>再走额度/审核/身份/发布头写入任何一步。
+     *
+     * <p>为什么必须与「是不是草稿」解耦:发布成功后 {@code is_draft} 已被清掉,原始客户端超时重发
+     * 会被草稿闸当成「不是草稿」而失败,作者看到失败但内容其实已经上线。幂等键是
+     * {@code publishRequestId} + payload,不是内容 hash,也不是「当前是否草稿」。
+     *
+     * @param expectedContentSha256 客户端从首次响应读回的 {@code contentSha256};提供且不一致 = 409
+     * @return null = 该意图没有既有修订(按新发布继续原流程);非 null = 重放结果,调用方直接返回
+     */
+    public TopicBundleSubmitResultVO replayPublishedRevision(Long topicId, Long expectedOwnerId,
+                                                             String publishRequestId, String expectedContentSha256) {
+        // 没有发布意图号的旧调用一律在此短路:不读主题、不加锁、不与既有发布路径产生任何交互。
+        if (topicId == null || topicId <= 0L || publishRequestId == null || publishRequestId.trim().isEmpty())
+            return null;
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
+        if (topic == null) return null;
+        return replayPublishedRevision(topic, expectedOwnerId, publishRequestId, expectedContentSha256);
+    }
+
+    private TopicBundleSubmitResultVO replayPublishedRevision(CmsTopic topic, Long expectedOwnerId,
+                                                              String publishRequestId, String expectedContentSha256) {
+        if (topic == null || topic.getId() == null
+                || publishRequestId == null || publishRequestId.trim().isEmpty()) return null;
+        // 归属先于一切:重放同样只能由主题归属者发起,不能被他人的请求号探测内容。
+        if (expectedOwnerId == null || !expectedOwnerId.equals(topic.getMemberId()))
+            throw new ServiceException("主题归属已变化，无权提交", 403);
+        CmsTopicContentRevision revision = contentRevisionService.publishedByRequestId(
+                topic.getId(), publishRequestId, expectedContentSha256);
+        return revision == null ? null : publishedReplayResult(topic, revision);
+    }
+
+    /**
+     * 重放回执:只读当前公开事实 + 那一条修订的身份。
+     * {@code attachCommercialPublicationState} 填的是「当前最新修订」,这里必须用本次意图的修订覆盖 ——
+     * 两者在「A 发布 → B 发布 → 重试 A」时不同。
+     */
+    private TopicBundleSubmitResultVO publishedReplayResult(CmsTopic topic, CmsTopicContentRevision revision) {
+        AuditTask open = openTopicReviewTask(topic.getId());
+        String reviewState = open == null ? "NOT_REQUIRED"
+                : (AuditTask.STATUS_ESCALATED.equals(open.getStatus()) ? "ESCALATED" : "PENDING");
+        TopicBundleSubmitResultVO result = new TopicBundleSubmitResultVO(
+                topic.getId(), open == null ? null : open.getId(), reviewState, Collections.<Long>emptyList());
+        result.setPublished(Integer.valueOf(1).equals(topic.getStatus())
+                && Integer.valueOf(1).equals(topic.getUserStatus()));
+        attachCommercialPublicationState(result);
+        result.setContentRevisionId(revision.getId());
+        result.setContentRevisionNo(revision.getRevisionNo());
+        result.setContentSchemaVersion(revision.getSchemaVersion());
+        result.setContentSha256(revision.getContentSha256());
+        return result;
+    }
+
+    /** 旧调用:没有发布请求号,每次正式发布各产生一条新修订。 */
     public TopicBundleSubmitResultVO publishDraftInternal(Long id, Long expectedOwnerId, boolean allowSupplyResubmission) {
+        return publishDraftInternal(id, expectedOwnerId, allowSupplyResubmission, null);
+    }
+
+    /**
+     * @param publishRequestId 可选的发布意图号;同号同 payload = 重试回同一条修订,
+     *                         同号异 payload = 409。为 null 时保留原有「每次发布一条」语义。
+     */
+    public TopicBundleSubmitResultVO publishDraftInternal(Long id, Long expectedOwnerId, boolean allowSupplyResubmission,
+                                                          String publishRequestId) {
         CmsTopic topic = supplyReviewService.lockTopic(id);
         if (expectedOwnerId != null && (topic == null || !expectedOwnerId.equals(topic.getMemberId())))
             throw new ServiceException("主题归属已变化，无权提交", 403);
+        // F1:发布已完成后的同意图重试先在这里收口(上传前的草稿闸不会再挡它),且不写任何行。
+        TopicBundleSubmitResultVO replayed = replayPublishedRevision(topic, expectedOwnerId, publishRequestId, null);
+        if (replayed != null) return replayed;
         boolean supplyResubmission = allowSupplyResubmission && supplyReviewService.canResubmit(topic);
         if (topic != null) mediaPublicationGuard.requireTopicPublication(id);
         if (cmsTopicMapper.clearDraftIfDraft(id) <= 0 && !supplyResubmission) return null;
@@ -105,6 +178,8 @@ public class TopicPublicationService {
         publicationContentGuard.assertBlockNarrativeNpcReferences(topic);
         // R14:块配置条件里 sys.* 引用的 nodeId 同一道归属闸
         publicationContentGuard.assertBlockSysVarReferences(topic);
+        // B2 地点合同:必填槽未绑定 / 需重绑 / 城市不一致才拦;旧模板沿用只是提醒,不新阻断
+        publicationContentGuard.assertLocationBindingsPublishable(topic);
         String publishedRouteSnapshot = simple ? publicationContentGuard.normalizedBranchRouteForPublish(topic, declarations) : null;
         if (!StringUtils.isEmpty(topic.getCircleThemeCode())) {
             CmsTopicChapter circleQuery = new CmsTopicChapter();
@@ -145,10 +220,10 @@ public class TopicPublicationService {
         }
         // 与直接发布同源：带招募截止的草稿发布后必须进入既有立项流程，不能停在 DRAFT 关闭招商。
         submitPublishedProjectReview(id, topic.getMemberId(), topic.getRecruitDeadline());
-        TopicBundleSubmitResultVO reviewResult = simple ? null : submitTopicBundle(id, topic.getMemberId());
+        TopicBundleSubmitResultVO reviewResult = simple ? null : submitTopicBundle(id, topic.getMemberId(), publishRequestId);
         // 发布草稿后同步恢复公开帖；专业版审核任务留在后台。留置中不公开。
         if (!contentSafetyHeld) syncCreativeSquarePostVisibility(id, true);
-        if (simple && persistRouteSnapshot(id, publishedRouteSnapshot, new Date()) != 1) {
+        if (simple && persistRouteSnapshot(id, publishedRouteSnapshot, new Date(), publishRequestId) != 1) {
             throw new IllegalStateException("路线发布快照保存失败");
         }
         // R18-DRAFT:草稿期不再预建自办活动壳(草稿不得出现在公开活动列表)⇒ 自办主题在这里补建,
@@ -211,7 +286,12 @@ public class TopicPublicationService {
         return new PreparedBundle(topicBundleReviewService.freezeForSubmission(topicId, memberId, declarations), declarations);
     }
 
+    /** 旧调用:没有发布请求号。 */
     public TopicBundleSubmitResultVO submitTopicBundle(Long topicId, Long memberId) {
+        return submitTopicBundle(topicId, memberId, null);
+    }
+
+    public TopicBundleSubmitResultVO submitTopicBundle(Long topicId, Long memberId, String publishRequestId) {
         PreparedBundle prepared = prepareTopicBundle(topicId, memberId);
         com.chengyinhub.business.service.support.TopicBundleReviewService.Submission submission = prepared.submission;
         publicationContentGuard.assertTopicSizeWithinLimits(topicId);
@@ -221,7 +301,7 @@ public class TopicPublicationService {
                 && !AuditTask.STATUS_ESCALATED.equals(task.getStatus()))) {
             throw new IllegalStateException("审核任务状态读取失败");
         }
-        boolean published = publishBeforeReview(topicId, memberId, prepared.declarations);
+        boolean published = publishBeforeReview(topicId, memberId, prepared.declarations, publishRequestId);
         topicBundleReviewService.assertDeclarationsUnchanged(topicId, submission.getSnapshotJson());
         String reviewState = AuditTask.STATUS_ESCALATED.equals(task.getStatus()) ? "ESCALATED" : "PENDING";
         TopicBundleSubmitResultVO result = new TopicBundleSubmitResultVO(
@@ -264,6 +344,12 @@ public class TopicPublicationService {
     }
 
     private Long findOpenTopicTaskId(Long topicId) {
+        AuditTask task = openTopicReviewTask(topicId);
+        return task == null ? null : task.getId();
+    }
+
+    /** 未结的主题审核单(待审/升级人工);状态投影与复核上架单复用同一份挑选口径。 */
+    private AuditTask openTopicReviewTask(Long topicId) {
         AuditTask query = new AuditTask();
         query.setBizType(AuditTask.BIZ_TOPIC);
         query.setBizId(topicId);
@@ -272,30 +358,32 @@ public class TopicPublicationService {
             // AUDIT-INT-5:举报单在独立槽,不能顶替复核上架单(举报不成立会顺手解除留置)。
             if ((AuditTask.STATUS_PENDING.equals(task.getStatus())
                     || AuditTask.STATUS_ESCALATED.equals(task.getStatus())) && !task.isOpenReport()) {
-                return task.getId();
+                return task;
             }
         }
         return null;
     }
 
     public boolean publishBeforeReview(Long topicId, Long memberId) {
-        return publishBeforeReview(topicId, memberId, null);
+        return publishBeforeReview(topicId, memberId, null, null);
     }
 
-    private boolean publishBeforeReview(Long topicId, Long memberId, List<ThemeStateKey> declarations) {
+    private boolean publishBeforeReview(Long topicId, Long memberId, List<ThemeStateKey> declarations,
+                                        String publishRequestId) {
         mediaPublicationGuard.requireTopicPublication(topicId);
         // Re-publishing an existing topic does not pass through publishDraftInternal.
         publicationContentGuard.assertTopicSizeWithinLimits(topicId);
         CmsTopic current = cmsTopicMapper.selectCmsTopicById(topicId);
         if (com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(current)) {
             // 已发布过的主题照常刷新路线快照,复核通过上架时就是最新内容;未发布的由过审时统一发布。
-            if (Integer.valueOf(1).equals(current.getStatus())) publishValidatedRouteSnapshot(current, declarations);
+            if (Integer.valueOf(1).equals(current.getStatus()))
+                publishValidatedRouteSnapshot(current, declarations, publishRequestId);
             requestContentSafetyRelistReview(topicId, memberId);
             return false;
         }
         String quotaError = quotaService.lockAndCheckThemeOnline(memberId, topicId);
         if (quotaError != null) throw new ServiceException(quotaError, com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST);
-        publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId), declarations);
+        publishValidatedRouteSnapshot(cmsTopicMapper.selectCmsTopicById(topicId), declarations, publishRequestId);
         CmsTopic published = new CmsTopic();
         published.setId(topicId);
         published.setStatus(1);
@@ -317,19 +405,180 @@ public class TopicPublicationService {
                 recruitDeadline != null ? TopicLifecycleState.RECRUITING : TopicLifecycleState.PRICING);
     }
 
+    /**
+     * 作者端发布状态窄投影:draft / review / visibility / sale / playable 五段事实,彼此独立。
+     *
+     * <p>只读,不写库、不加锁、不改任何发布态。存在的理由只有一个:专业主题是「先公开后审」,
+     * {@code status=1,userStatus=1,checkStatus=0} 同时表示「玩家看得见」和「还没过审」——
+     * 压成一个 published 布尔,作者会以为已过审,运营会以为已验收。所以过审只看 review.passed。
+     *
+     * <p>这不是第二套 readiness:售卖原因直接读 {@link SaleAvailabilityPolicy#sellableBlockReason},
+     * 可玩原因用运行期同一句「路线尚未发布」,审核事实读审核单与 checkStatus —— 都是既有真源。
+     */
+    public TopicPublicationStatusVO publicationStatus(CmsTopic topic) {
+        if (topic == null || topic.getId() == null || topic.getId() <= 0L) throw new ServiceException("主题不存在");
+        Long topicId = topic.getId();
+        Integer isDraft = cmsTopicMapper.selectTopicIsDraft(topicId);
+        boolean draft = isDraft != null && isDraft.intValue() == 1;
+
+        // 可编辑档位与主题编辑接口同一份判定(TopicEditWindow),只读投影,不另判一次。
+        boolean editable = false;
+        String editBlocked = null;
+        try {
+            TopicEditWindow.Scope window = TopicEditWindow.resolve(topic, isDraft, DateUtils.getNowDate());
+            editable = window == TopicEditWindow.Scope.FULL;
+            if (window == TopicEditWindow.Scope.WHITELIST) {
+                editBlocked = "主题已上架，只能修改文案等白名单字段";
+            } else if (window == TopicEditWindow.Scope.SELLING_FROZEN) {
+                editBlocked = "主题已进入售卖/履约阶段，商业结构已冻结";
+            }
+        } catch (IllegalStateException refused) {
+            editBlocked = refused.getMessage();
+        }
+
+        AuditTask openTask = openTopicReviewTask(topicId);
+        Integer checkStatus = topic.getCheckStatus();
+        // 内容安全留置(check_status=2 但 status≠2)是「等人工复核」,不是「被驳回」——
+        // 算成驳回会让作者以为内容被否了,而实际只要换图复核通过就自动上架。
+        boolean held = com.chengyinhub.business.util.TopicContentSafetyHold.isHeld(topic);
+        boolean rejected = Integer.valueOf(2).equals(topic.getStatus());
+        // 过审的唯一判据是 checkStatus=1(机审通过/免审/人工通过);「公开」不参与判定。
+        boolean passed = !rejected && !held && Integer.valueOf(1).equals(checkStatus);
+        // 状态不猜:checkStatus=0 本身不代表存在审核单,pending 只认真正未结的那张单。
+        boolean pending = !rejected && !passed && !draft && openTask != null;
+        String reviewState;
+        String reviewLabel;
+        if (rejected) {
+            reviewState = TopicPublicationStatusVO.REVIEW_REJECTED;
+            reviewLabel = "未通过";
+        } else if (draft) {
+            reviewState = TopicPublicationStatusVO.REVIEW_DRAFT;
+            reviewLabel = "草稿";
+        } else if (held) {
+            reviewState = TopicPublicationStatusVO.REVIEW_PENDING;
+            reviewLabel = "内容安全复核中";
+        } else if (passed) {
+            reviewState = TopicPublicationStatusVO.REVIEW_PASSED;
+            reviewLabel = "已通过";
+        } else if (openTask != null && AuditTask.STATUS_ESCALATED.equals(openTask.getStatus())) {
+            reviewState = TopicPublicationStatusVO.REVIEW_ESCALATED;
+            reviewLabel = "人工复审中";
+        } else if (openTask != null) {
+            reviewState = TopicPublicationStatusVO.REVIEW_PENDING;
+            reviewLabel = "审核中";
+        } else {
+            // 后审通道:只到「后审中」,不假装有一张审核单在跑。
+            reviewState = TopicPublicationStatusVO.REVIEW_AWAITING;
+            reviewLabel = "后审中（当前无未结审核单）";
+        }
+        TopicPublicationStatusVO.Review review = new TopicPublicationStatusVO.Review(
+                reviewState, reviewLabel, passed, pending,
+                openTask == null ? null : openTask.getId(),
+                rejected ? topic.getReason() : null);
+
+        boolean listed = Integer.valueOf(1).equals(topic.getStatus());
+        boolean visible = listed && Integer.valueOf(1).equals(topic.getUserStatus()) && !held;
+        String visibleReason = visible ? null
+                : held ? "内容安全复核中，暂不公开"
+                : !listed ? (rejected ? "审核未通过，玩家看不到" : "尚未发布，玩家看不到")
+                : "已下架，玩家看不到";
+        TopicPublicationStatusVO.Visibility visibility = new TopicPublicationStatusVO.Visibility(visible, visibleReason);
+
+        Integer lifecycle = topic.getLifecycle();
+        TopicLifecycleState saleState = null;
+        try { saleState = TopicLifecycleState.fromCode(lifecycle); } catch (IllegalArgumentException unknown) { saleState = null; }
+        boolean lifecycleSaleOpen = saleState != null && saleState.isDirectSaleOpen();
+        String saleBlockReason = SaleAvailabilityPolicy.sellableBlockReason(topic, null, DateUtils.getNowDate());
+        // 「在售」= 生命周期放行 且 售卖闸放行,两者不可分开成立:
+        // 否则会出现「在售」同时「saleEndAt 已到,不可再售」的自相矛盾。
+        TopicPublicationStatusVO.Sale sale = new TopicPublicationStatusVO.Sale(
+                lifecycleSaleOpen && saleBlockReason == null,
+                lifecycleSaleOpen,
+                isCommercialAwaitingReview(lifecycle),
+                commercialNextStepOf(lifecycle),
+                saleBlockReason);
+
+        Long publishedConfigVersion = topic.getPublishedConfigVersion();
+        boolean snapshotReady = snapshotPublished(topic);
+        TopicPublicationStatusVO.Playable play = new TopicPublicationStatusVO.Playable(
+                snapshotReady,
+                snapshotReady ? null : "路线尚未发布",
+                publishedConfigVersion,
+                Integer.valueOf(1).equals(topic.getBetaFlag()));
+
+        return new TopicPublicationStatusVO(
+                new TopicPublicationStatusVO.Draft(draft, editable, editBlocked),
+                review, visibility, sale, play);
+    }
+
+    /**
+     * 开局所需的已发布内容事实 —— 判据取自运行期入口本身,不按 publishMode 猜。
+     *
+     * <p>证据链:{@code PlayEntryApplication#routeState} → {@code ITopicRouteRuntimeService#state} →
+     * {@code requireScope} → {@code currentScope},那里对<b>所有</b> routeMode 一律要求
+     * {@code publishedConfigVersion>0}(或本局行已存在),否则抛「路线尚未发布」。
+     * 所以 simple / ai_simple 没有任何豁免:
+     *
+     * <p>{@code ensureBranchSession} 额外要求 {@code publishedRouteGraphJson} 非空;
+     * {@code ensureJourneySession} 只需 {@code publishedConfigVersion>0}(无图时用 linearSnapshot 现编)。
+     * 是否建旅程局由 {@code journeyConfigured} 按<b>内容</b>判定
+     * (publishedGraph.runtimeSnapshotVersion==1 / openingChapter / publishedThemeRuntimeConfig /
+     * journeyRules.hasRuntimeState / 块需要本局状态),与 publishMode 无关;纯线性老主题不建局,
+     * 但仍要过 currentScope 的版本闸。
+     *
+     * <p>这里只答「内容侧已发布快照能否用于开局」,不含报名/权益/可玩时段 —— 那些由
+     * {@code CurrentPlayRegistration.require} 与 {@code TopicPlaySetupService.requireOpen} 在开局时判定。
+     */
+    private static boolean snapshotPublished(CmsTopic topic) {
+        Long version = topic.getPublishedConfigVersion();
+        if (version == null || version.longValue() <= 0L) return false;
+        return !"BRANCH_GRAPH".equalsIgnoreCase(topic.getRouteMode())
+                || !StringUtils.isEmpty(topic.getPublishedRouteGraphJson());
+    }
+
     private void attachCommercialPublicationState(TopicBundleSubmitResultVO result) {
         CmsTopic topic = cmsTopicMapper.selectCmsTopicById(result.getTopicId());
         if (topic == null) throw new IllegalStateException("主题发布后状态读取失败");
-        Integer lifecycle = topic.getLifecycle();
-        boolean awaiting = Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)
+        TopicPublicationStatusVO status = publicationStatus(topic);
+        result.setPublicationStatus(status);
+        result.setReviewPassed(status.getReview().isPassed());
+        result.setCheckStatus(topic.getCheckStatus());
+        result.setReviewConfigVersion(topic.getConfigVersion());
+        result.setCommercialAwaitingReview(status.getSale().isAwaitingReview());
+        result.setCommercialNextStep(status.getSale().getNextStep());
+        result.setPublicVisible(status.getVisibility().isVisible());
+        result.setPublicReason(status.getVisibility().getReason());
+        result.setSaleOpen(status.getSale().isOnSale());
+        result.setSaleBlockReason(status.getSale().getBlockReason());
+        result.setPlayable(status.getPlayable().isPlayable());
+        result.setPlayableReason(status.getPlayable().getReason());
+        // BE-06:发布响应带上本次落成的修订引用。老主题没有修订行(未导入)时为 null,不伪造。
+        com.chengyinhub.business.domain.vo.TopicContentRevisionView revision =
+                contentRevisionService.currentPublished(topic.getId());
+        if (revision != null) {
+            result.setContentRevisionId(revision.getId());
+            result.setContentRevisionNo(revision.getRevisionNo());
+            result.setContentSchemaVersion(revision.getSchemaVersion());
+            result.setContentSha256(revision.getContentSha256());
+        }
+    }
+
+    /** 立项/招募/定价三态统一口径:作者端文案与发布结果商业段共用这一份,不各写一遍。 */
+    private static boolean isCommercialAwaitingReview(Integer lifecycle) {
+        return Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)
                 || Integer.valueOf(TopicLifecycleState.RECRUITING.getCode()).equals(lifecycle)
                 || Integer.valueOf(TopicLifecycleState.PRICING.getCode()).equals(lifecycle);
-        result.setCommercialAwaitingReview(awaiting);
-        if (awaiting) result.setCommercialNextStep(Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)
-                ? "已提交立项审核，审核与定价完成前尚未开售"
-                : Integer.valueOf(TopicLifecycleState.RECRUITING.getCode()).equals(lifecycle)
-                ? "请先完成招募，招募结束后完成定价并自动提交开售审核"
-                : "请在定价工作台保存完整开售参数，保存后自动提交开售审核");
+    }
+
+    private static String commercialNextStepOf(Integer lifecycle) {
+        if (!isCommercialAwaitingReview(lifecycle)) return null;
+        if (Integer.valueOf(TopicLifecycleState.PENDING_REVIEW.getCode()).equals(lifecycle)) {
+            return "已提交立项审核，审核与定价完成前尚未开售";
+        }
+        if (Integer.valueOf(TopicLifecycleState.RECRUITING.getCode()).equals(lifecycle)) {
+            return "请先完成招募，招募结束后完成定价并自动提交开售审核";
+        }
+        return "请在定价工作台保存完整开售参数，保存后自动提交开售审核";
     }
 
     public TopicBundleSubmitResultVO noBundleReview(Long topicId, String state) {
@@ -365,11 +614,7 @@ public class TopicPublicationService {
         // Approval has already bound the declaration hash. Consume it; never derive new rows here.
         List<ThemeStateKey> declarations = com.chengyinhub.business.service.support.ThemeStateKeyDeclarationSnapshot.copy(topicId,
                 themeStateKeyService.listCurrentDeclarations(topicId));
-        publishValidatedRouteSnapshot(topic, declarations);
-    }
-
-    private void publishValidatedRouteSnapshot(CmsTopic topic) {
-        publishValidatedRouteSnapshot(topic, null);
+        publishValidatedRouteSnapshot(topic, declarations, null);
     }
 
     private String compileValidatedRouteSnapshot(CmsTopic topic, List<ThemeStateKey> declarations) {
@@ -388,12 +633,15 @@ public class TopicPublicationService {
         publicationContentGuard.assertBlockNarrativeNpcReferences(topic);
         // R14:块配置条件里 sys.* 引用的 nodeId 同一道归属闸
         publicationContentGuard.assertBlockSysVarReferences(topic);
+        // B2 地点合同与首次发布同一口径:error 级缺口才拦,LEGACY 只提醒
+        publicationContentGuard.assertLocationBindingsPublishable(topic);
         return publicationContentGuard.normalizedBranchRouteForPublish(topic, declarations);
     }
 
-    private void publishValidatedRouteSnapshot(CmsTopic topic, List<ThemeStateKey> declarations) {
+    private void publishValidatedRouteSnapshot(CmsTopic topic, List<ThemeStateKey> declarations,
+                                               String publishRequestId) {
         String snapshot = compileValidatedRouteSnapshot(topic, declarations);
-        if (persistRouteSnapshot(topic.getId(), snapshot, new Date()) != 1)
+        if (persistRouteSnapshot(topic.getId(), snapshot, new Date(), publishRequestId) != 1)
             throw new IllegalStateException("路线发布快照保存失败");
     }
 
@@ -405,8 +653,31 @@ public class TopicPublicationService {
         return persistRouteSnapshot(topicId, snapshot, new Date());
     }
 
-    /** The publication owner is the single route-publication write port; callers retain original guards and rowcount checks. */
+    /** 旧调用:没有发布请求号。 */
     public int persistRouteSnapshot(Long topicId, String snapshot, Date publishedAt) {
-        return cmsTopicMapper.publishRouteSnapshot(topicId, snapshot, publishedAt);
+        return persistRouteSnapshot(topicId, snapshot, publishedAt, null);
+    }
+
+    /**
+     * The publication owner is the single route-publication write port; callers retain original guards and rowcount checks.
+     *
+     * <p>BE-06:先把本次<b>精确冻结 payload</b>落成不可变修订,再推进发布头,两者同一事务。
+     * 发布头失败会抛出 → 修订随事务回滚,不会留下「有修订但不可见」的可下载孤立版本;
+     * 同号同 payload 的重试短路返回 1 —— 发布头已经推进过,不能再 +1 一次。
+     *
+     * <p>F1:同一份字节里补 {@code themeConfig.contentGeography}(作者本次发布的真实国家/城市),
+     * 修订与发布头必须写<b>同一个</b>字符串,否则「修订 payload == 当前发布头」就不成立。
+     * 冻结图里已有地理或没有 themeConfig 时原串不变(理由见 {@link TopicContentGeography#decoratePublication})。
+     */
+    public int persistRouteSnapshot(Long topicId, String snapshot, Date publishedAt, String publishRequestId) {
+        // 主题行已被本事务的发布入口锁住,这里只做只读取属性;没有主题时按原串继续。
+        String publishSnapshot = TopicContentGeography.decoratePublication(
+                snapshot, cmsTopicMapper.selectCmsTopicById(topicId));
+        com.chengyinhub.business.domain.dto.TopicContentRevisionWriteResult revision =
+                contentRevisionService.recordPublishedRevision(
+                        com.chengyinhub.business.domain.dto.TopicContentRevisionWrite.of(
+                                topicId, publishSnapshot, publishRequestId));
+        if (revision != null && revision.isIdempotentReplay()) return 1;
+        return cmsTopicMapper.publishRouteSnapshot(topicId, publishSnapshot, publishedAt);
     }
 }

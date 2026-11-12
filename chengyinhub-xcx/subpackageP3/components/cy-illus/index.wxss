@@ -1,0 +1,255 @@
+/* cy-illus:原型 page.css 的 .il / .il--* 改写成过渡(不新增 keyframes)。只动 transform / opacity。 */
+.il { position: relative; display: inline-block; flex: none; }
+.il__bl, .il__fg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform-origin: 50% 50%; will-change: transform, opacity; }
+
+/* 进场起点(未加 is-on) */
+.il__bl { opacity: 0; transform: scale(.3) rotate(-20deg); transition: transform 600ms cubic-bezier(.16,1,.3,1), opacity 600ms cubic-bezier(.16,1,.3,1); }
+.il__fg { opacity: 0; transform: scale(.5) rotate(-8deg); transition: transform 650ms cubic-bezier(.2,1.4,.5,1) 120ms, opacity 400ms ease 120ms; }
+.il-in--swing .il__fg { transform-origin: 33% 35%; transform: rotate(-70deg); transition: transform 900ms cubic-bezier(.16,1,.3,1) 500ms, opacity 300ms ease 500ms; }
+.il-in--press .il__fg { transform: scale(1.5); transition: transform 600ms cubic-bezier(.3,1.3,.5,1) 200ms, opacity 400ms ease 200ms; }
+.il-in--drop .il__fg { transform: translateY(-28rpx) scale(.6); transition: transform 500ms cubic-bezier(.2,1.4,.5,1) 600ms, opacity 400ms ease 600ms; }
+.il-in--burst .il__fg { transform-origin: 50% 47%; transform: scale(0) rotate(-40deg); transition: transform 700ms cubic-bezier(.2,1.4,.5,1) 300ms, opacity 400ms ease 300ms; }
+
+/* 进场终点 */
+.il.is-on .il__bl, .il.is-on .il__fg { opacity: 1; transform: none; }
+
+/* 待机往复:is-idle 在终点与偏移之间来回切,过渡时长 = 半周期 */
+.il.is-on.is-idle .il__bl { transform: scale(1.06) rotate(3deg); }
+.il.is-on .il__bl { transition: transform 2500ms ease-in-out, opacity 600ms ease; }
+.il.is-on .il__fg { transition: transform 1800ms ease-in-out, opacity 400ms ease; }
+.il-idle--float.is-on.is-idle .il__fg { transform: translateY(-6rpx); }
+.il-idle--sway.is-on .il__fg { transition: transform 4500ms linear, opacity 400ms ease; }
+.il-idle--sway.is-on.is-idle .il__fg { transform: rotate(24deg); }
+.il-idle--flip.is-on .il__fg { transition: transform 900ms ease-in-out, opacity 400ms ease; }
+.il-idle--flip.is-on.is-idle .il__fg { transform: rotate(180deg); }
+.il-idle--wobble.is-on.is-idle .il__fg { transform: rotate(-5deg) translateY(-4rpx); }
+.il-idle--swing.is-on .il__fg { transform-origin: 33% 35%; }
+.il-idle--swing.is-on.is-idle .il__fg { transform: rotate(6deg); }
+.il-idle--hang.is-on .il__fg { transform-origin: 50% 15%; }
+.il-idle--hang.is-on.is-idle .il__fg { transform: rotate(3deg); }
+.il-idle--scan.is-on.is-idle .il__fg { transform: translateX(10rpx) rotate(3deg); }
+.il-idle--drift.is-on.is-idle .il__fg { transform: translateX(6rpx); }
+
+/* 减少动态效果:直接终态 */
+.il.is-reduced .il__bl, .il.is-reduced .il__fg { transition: none; opacity: 1; transform: none; }
+
+/* ===== 风格 B v2 精致插画(l-iconsB,proto/icons icons-b.js + icons.css .ib--*)=====
+   每层是一张 120×120 画布的图,transform-origin / translate 的百分比 = 原型 px ÷ 1.2。
+   原型的关键帧动画改成阶段类上的过渡:is-on 进场终点,e1… 进场后续阶段(只加不撤),is-idle 待机底态,p1… 一圈内逐个累加(index.js / art-b.js MOTION)。
+   同一层在后面的阶段规则覆盖前面的(同权重,按书写顺序)。 */
+.ib { position: relative; display: inline-block; flex: none; }
+.ib__l { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform-origin: 50% 50%; }
+/* 原型 .ib svg>g:每个顶层组从 .2 弹出 */
+.ib__g--g { opacity: 0; transform: scale(.2); }
+.ib.is-on .ib__g--g { opacity: 1; transform: none; transition: transform 620ms cubic-bezier(.34,1.56,.64,1) 80ms, opacity 300ms ease 80ms; }
+/* 地影横向展开 */
+.ib .x-gd { transform-origin: 50% 89.17%; opacity: 0; transform: scaleX(.2); }
+.ib.is-on .x-gd { opacity: 1; transform: none; transition: transform 600ms cubic-bezier(.34,1.56,.64,1), opacity 300ms ease; }
+/* 顶层闪光星(原型 svg>path.sp):平时不出,只在「完成」那一下闪 */
+.ib .x-sp, .ib .x-found, .ib .x-found-f2, .ib .x-click, .ib .x-click-f2, .ib .x-stamped { opacity: 0; transform: scale(0); }
+
+/* 线索:放大镜左右找(主)· 纸条探头、镜面反光扫过(次)· 找到才闪 */
+.ib--clue .x-note { transform-origin: 41.67% 71.67%; }
+.ib--clue.is-on .x-note { transition: transform 500ms cubic-bezier(.34,1.56,.64,1), opacity 300ms ease; }
+.ib--clue .x-mg { transform-origin: 41.67% 41.67%; }
+.ib--clue .x-glint { opacity: 0; clip-path: inset(0 72% 0 28%); }
+.ib--clue .x-found { transform-origin: 80% 25%; }
+.ib--clue .x-found-f2 { transform-origin: 18.33% 21.67%; }
+.ib--clue.is-idle .x-mg { transition: transform 1010ms ease-in-out; }
+.ib--clue.is-idle .x-note { transition: transform 430ms ease-in-out; }
+.ib--clue.is-idle .x-glint, .ib--clue.is-idle .x-found, .ib--clue.is-idle .x-found-f2 { transition: none; }
+.ib--clue.p1 .x-mg { transform: translate(-7.5%, 3.33%) rotate(-7deg); transition: transform 790ms ease-in-out; }
+.ib--clue.p2 .x-mg { transform: translate(5.83%, -2.5%) rotate(6deg); transition: transform 1010ms ease-in-out; }
+.ib--clue.p2 .x-glint { opacity: 1; clip-path: inset(0 57% 0 28%); transition: opacity 200ms ease, clip-path 540ms ease-in-out; }
+.ib--clue.p3 .x-mg { transform: translate(-1.67%, 1.67%) rotate(-1deg); transition: transform 790ms ease-in-out; }
+.ib--clue.p3 .x-glint { opacity: 0; clip-path: inset(0 57% 0 43%); transition: opacity 400ms ease, clip-path 720ms ease-in-out; }
+.ib--clue.p4 .x-note { transform: translateY(-5%) rotate(-6deg); transition: transform 540ms ease-in-out; }
+.ib--clue.p5 .x-mg { transform: none; transition: transform 1010ms ease-in-out; }
+.ib--clue.p6 .x-note { transform: translateY(-1.67%) rotate(2deg); transition: transform 470ms ease-in-out; }
+.ib--clue.p7 .x-found, .ib--clue.p7 .x-found-f2 { opacity: 1; transform: scale(1.25) rotate(20deg); transition: transform 216ms ease-out, opacity 216ms ease-out; }
+.ib--clue.p7 .x-found-f2 { transition-delay: 160ms; }
+.ib--clue.p8 .x-note { transform: none; transition: transform 430ms ease-in-out; }
+.ib--clue.p8 .x-found, .ib--clue.p8 .x-found-f2 { opacity: 1; transform: scale(1) rotate(40deg); transition: transform 288ms ease-out; }
+.ib--clue.p9 .x-found, .ib--clue.p9 .x-found-f2 { opacity: 0; transform: scale(.6) rotate(60deg); transition: transform 288ms ease-out, opacity 288ms ease-out; }
+
+/* 勋章:落下压扁(主)· 绶带慢半拍摆(次)· 落定爆一次星 */
+.ib--badge .x-md { transform-origin: 50% 41.67%; opacity: 0; transform: translateY(-33.33%) scale(.9); }
+.ib--badge.is-on .x-md { opacity: 1; transform: none; transition: transform 800ms cubic-bezier(.34,1.56,.64,1) 60ms, opacity 300ms ease 60ms; }
+.ib--badge .x-rib { transform-origin: 50% 51.67%; }
+.ib--badge.is-on .x-rib { transition: transform 500ms cubic-bezier(.34,1.56,.64,1) 260ms, opacity 300ms ease 260ms; }
+.ib--badge .x-burst { opacity: 0; transform: scale(.6); }
+.ib--badge.is-on .x-burst { opacity: 0; transform: scale(.6); transition: none; }
+.ib--badge .x-burst-0, .ib--badge .x-burst-1, .ib--badge .x-burst-2, .ib--badge .x-burst-3 { opacity: 0; transform: scale(0); }
+.ib--badge .x-burst-0 { transform-origin: 81.67% 21.67%; }
+.ib--badge .x-burst-1 { transform-origin: 16.67% 33.33%; }
+.ib--badge .x-burst-2 { transform-origin: 85% 46.67%; }
+.ib--badge .x-burst-3 { transform-origin: 20% 58.33%; }
+.ib--badge.e1 .x-burst { opacity: 1; transform: scale(1.15); transition: transform 1200ms ease-out, opacity 240ms ease-out; }
+.ib--badge.e1 .x-burst-0, .ib--badge.e1 .x-burst-1, .ib--badge.e1 .x-burst-2, .ib--badge.e1 .x-burst-3 { opacity: 1; transform: scale(1.25) rotate(20deg); transition: transform 330ms ease-out, opacity 330ms ease-out; }
+.ib--badge.e2 .x-burst-0, .ib--badge.e2 .x-burst-1, .ib--badge.e2 .x-burst-2, .ib--badge.e2 .x-burst-3 { opacity: 1; transform: scale(1) rotate(40deg); transition: transform 440ms ease-out; }
+.ib--badge.e3 .x-burst-0, .ib--badge.e3 .x-burst-1, .ib--badge.e3 .x-burst-2, .ib--badge.e3 .x-burst-3 { opacity: 0; transform: scale(.6) rotate(60deg); transition: transform 330ms ease-out, opacity 330ms ease-out; }
+.ib--badge.is-idle .x-md { transition: transform 2600ms ease-in-out; }
+.ib--badge.is-idle .x-rib { transition: transform 780ms ease-in-out; }
+.ib--badge.p1 .x-rib { transform: rotate(-7deg); transition: transform 520ms ease-in-out; }
+.ib--badge.p1 .x-md { transform: translateY(-2.5%); transition: transform 2600ms ease-in-out; }
+.ib--badge.p2 .x-rib { transform: rotate(5deg); transition: transform 650ms ease-in-out; }
+.ib--badge.p3 .x-rib { transform: rotate(-2deg); transition: transform 650ms ease-in-out; }
+.ib--badge.p4 .x-rib { transform: none; transition: transform 780ms ease-in-out; }
+.ib--badge.p5 .x-rib { transform: rotate(-7deg); transition: transform 520ms ease-in-out; }
+.ib--badge.p5 .x-md { transform: none; transition: transform 2600ms ease-in-out; }
+.ib--badge.p6 .x-rib { transform: rotate(5deg); transition: transform 650ms ease-in-out; }
+.ib--badge.p7 .x-rib { transform: rotate(-2deg); transition: transform 650ms ease-in-out; }
+.ib--badge.p8 .x-rib { transform: none; transition: transform 780ms ease-in-out; }
+
+/* 钥匙:在锁里转四分之一圈再弹回(主)· 宝石随转动闪(次)· 转到底才有一粒绿光 */
+.ib--key .x-kb, .ib--key .x-gem { transform-origin: 33.33% 33.33%; }
+.ib--key .x-click { transform-origin: 83.33% 23.33%; }
+.ib--key .x-click-f2 { transform-origin: 18.33% 70%; }
+.ib--key.is-idle .x-kb { transition: transform 1020ms cubic-bezier(.5,0,.3,1); }
+.ib--key.is-idle .x-gem { transition: transform 1360ms ease-in-out; }
+.ib--key.is-idle .x-click, .ib--key.is-idle .x-click-f2 { transition: none; }
+.ib--key.p1 .x-kb { transform: rotate(-90deg); transition: transform 612ms cubic-bezier(.5,0,.3,1); }
+.ib--key.p2 .x-gem { transform: scale(1.18); transition: transform 340ms ease-in-out; }
+.ib--key.p3 .x-kb { transform: rotate(-82deg); transition: transform 408ms cubic-bezier(.5,0,.3,1); }
+.ib--key.p4 .x-gem { transform: none; transition: transform 1360ms ease-in-out; }
+.ib--key.p5 .x-kb { transform: none; transition: transform 1020ms cubic-bezier(.5,0,.3,1); }
+.ib--key.p6 .x-click, .ib--key.p6 .x-click-f2 { opacity: 1; transform: scale(1.25) rotate(20deg); transition: transform 204ms ease-out, opacity 204ms ease-out; }
+.ib--key.p6 .x-click-f2 { transition-delay: 150ms; }
+.ib--key.p7 .x-click, .ib--key.p7 .x-click-f2 { opacity: 1; transform: scale(1) rotate(40deg); transition: transform 272ms ease-out; }
+.ib--key.p8 .x-click, .ib--key.p8 .x-click-f2 { opacity: 0; transform: scale(.6) rotate(60deg); transition: transform 272ms ease-out, opacity 272ms ease-out; }
+
+/* 成功:方砖盖下(主)· 钩从左往右画出 · 画完三色纸屑弹出再落下(只一次) */
+.ib--success .x-tile { transform-origin: 50% 48.33%; opacity: 0; transform: scale(1.5); }
+.ib--success.is-on .x-tile { opacity: 1; transform: none; transition: transform 500ms cubic-bezier(.34,1.56,.64,1) 80ms, opacity 300ms ease 80ms; }
+.ib--success .x-ck { clip-path: inset(0 72% 0 0); }
+.ib--success.is-on .x-ck { clip-path: inset(0 27% 0 0); transition: clip-path 450ms ease-out 440ms; }
+.ib--success .x-conf { opacity: 0; transform: none; }
+.ib--success.is-on .x-conf { opacity: 0; transform: none; transition: none; }
+.ib--success .x-conf-0, .ib--success .x-conf-1, .ib--success .x-conf-2, .ib--success .x-conf-3, .ib--success .x-conf-4 { opacity: 0; transform: scale(0); }
+.ib--success .x-conf-0 { transform-origin: 85.42% 22.08%; }
+.ib--success .x-conf-1 { transform-origin: 16.67% 26.67%; }
+.ib--success .x-conf-2 { transform-origin: 86.67% 53.33%; }
+.ib--success .x-conf-3 { transform-origin: 15% 60%; }
+.ib--success .x-conf-4 { transform-origin: 80% 76.67%; }
+.ib--success.e1 .x-conf { opacity: 1; transition: opacity 100ms linear; }
+.ib--success.e1 .x-conf-0, .ib--success.e1 .x-conf-1, .ib--success.e1 .x-conf-2, .ib--success.e1 .x-conf-3, .ib--success.e1 .x-conf-4 { opacity: 1; transform: scale(1.3) translateY(-8.33%) rotate(40deg); transition: transform 240ms cubic-bezier(.2,.6,.3,1), opacity 240ms cubic-bezier(.2,.6,.3,1); }
+.ib--success.e2 .x-conf-0, .ib--success.e2 .x-conf-1, .ib--success.e2 .x-conf-2, .ib--success.e2 .x-conf-3, .ib--success.e2 .x-conf-4 { opacity: 0; transform: scale(.9) translateY(21.67%) rotate(200deg); transition: transform 1360ms cubic-bezier(.2,.6,.3,1), opacity 1360ms ease-in; }
+
+/* 失败:落地抖一下(主)再裂成两半 · 小云飘来(次)、只掉一滴 */
+.ib--fail .x-tile { transform-origin: 50% 48.33%; opacity: 0; transform: translateY(-25%); }
+.ib--fail.is-on .x-tile { opacity: 1; transform: none; transition: transform 550ms cubic-bezier(.2,.8,.2,1) 80ms, opacity 300ms ease 80ms; }
+.ib--fail.e1 .x-tile { transform: translateX(-3.33%) rotate(-2deg); transition: transform 110ms ease-in-out; }
+.ib--fail.e2 .x-tile { transform: translateX(3.33%) rotate(2deg); transition: transform 225ms ease-in-out; }
+.ib--fail.e3 .x-tile { transform: none; transition: transform 110ms ease-in-out; }
+.ib--fail .x-hl { transform-origin: 38.33% 56.67%; }
+.ib--fail .x-hr { transform-origin: 63.33% 56.67%; }
+.ib--fail.e4 .x-hl { transform: translate(-1.67%, .83%) rotate(-2deg); transition: transform 600ms cubic-bezier(.34,1.56,.64,1); }
+.ib--fail.e4 .x-hr { transform: translate(3.33%, 2.5%) rotate(4deg); transition: transform 600ms cubic-bezier(.34,1.56,.64,1); }
+.ib--fail .x-cloud { transform-origin: 80% 23.33%; opacity: 0; transform: translateX(21.67%); }
+.ib--fail.is-on .x-cloud { opacity: 1; transform: none; transition: transform 900ms cubic-bezier(.2,.8,.2,1) 1100ms, opacity 600ms ease 1100ms; }
+.ib--fail .x-drop { transform-origin: 80% 32.92%; }
+.ib--fail.is-idle .x-cloud { transition: transform 1800ms ease-in-out; }
+.ib--fail.is-idle .x-drop { opacity: 0; transform: scale(0); transition: none; }
+.ib--fail.p1 .x-cloud { transform: translateY(-2.5%); transition: transform 1800ms ease-in-out; }
+.ib--fail.p2 .x-drop { opacity: 1; transform: scale(1); transition: transform 270ms ease-in, opacity 270ms ease-in; }
+.ib--fail.p3 .x-drop { opacity: 0; transform: translateY(33.33%) scale(1); transition: transform 990ms ease-in, opacity 990ms ease-in; }
+.ib--fail.p4 .x-drop { opacity: 0; transform: scale(0); transition: none; }
+.ib--fail.p4 .x-cloud { transform: none; transition: transform 1800ms ease-in-out; }
+.ib--fail.p5 .x-drop { opacity: 1; transform: scale(1); transition: transform 270ms ease-in, opacity 270ms ease-in; }
+.ib--fail.p6 .x-drop { opacity: 0; transform: translateY(33.33%) scale(1); transition: transform 990ms ease-in, opacity 990ms ease-in; }
+
+/* 调查中:金沙一粒粒落、底堆慢慢涨(主)· 到点整只翻转带过冲 · 玻璃高光跟着晃(次) */
+.ib--wait .x-sand-t { transform-origin: 50% 31.67%; }
+.ib--wait .x-sand-b { transform-origin: 50% 76.67%; }
+.ib--wait.is-idle .x-hg { transform: none; transition: none; }
+.ib--wait.is-idle .x-sand-t { transform: none; transition: none; }
+.ib--wait.is-idle .x-sand-b { transform: scaleY(.35); transition: none; }
+.ib--wait.is-idle .x-grain, .ib--wait.is-idle .x-grain-g2, .ib--wait.is-idle .x-grain-gr3 { opacity: 1; transform: translateY(-6.67%); transition: none; }
+.ib--wait.is-idle .x-glint { transition: transform 2100ms ease-in-out; }
+.ib--wait.p1 .x-sand-t { transform: scaleY(.25); transition: transform 3108ms linear; }
+.ib--wait.p1 .x-sand-b { transform: scaleY(1); transition: transform 3108ms linear; }
+.ib--wait.p1 .x-glint { transform: translateX(2.5%); transition: transform 2100ms ease-in-out; }
+.ib--wait.p1 .x-grain, .ib--wait.p1 .x-grain-g2, .ib--wait.p1 .x-grain-gr3 { opacity: 0; transform: translateY(13.33%); transition: transform 700ms linear, opacity 700ms cubic-bezier(.7,0,1,1); }
+.ib--wait.p1 .x-grain-g2 { transition-delay: 150ms; }
+.ib--wait.p1 .x-grain-gr3 { transition-delay: 300ms; }
+.ib--wait.p2 .x-grain, .ib--wait.p2 .x-grain-g2, .ib--wait.p2 .x-grain-gr3 { opacity: 1; transform: translateY(-6.67%); transition: none; }
+.ib--wait.p3 .x-grain, .ib--wait.p3 .x-grain-g2, .ib--wait.p3 .x-grain-gr3 { opacity: 0; transform: translateY(13.33%); transition: transform 700ms linear, opacity 700ms cubic-bezier(.7,0,1,1); }
+.ib--wait.p3 .x-grain-g2 { transition-delay: 150ms; }
+.ib--wait.p3 .x-grain-gr3 { transition-delay: 300ms; }
+.ib--wait.p4 .x-grain, .ib--wait.p4 .x-grain-g2, .ib--wait.p4 .x-grain-gr3 { opacity: 1; transform: translateY(-6.67%); transition: none; }
+.ib--wait.p4 .x-glint { transform: none; transition: transform 2100ms ease-in-out; }
+.ib--wait.p5 .x-grain, .ib--wait.p5 .x-grain-g2, .ib--wait.p5 .x-grain-gr3 { opacity: 0; transform: translateY(13.33%); transition: transform 700ms linear, opacity 700ms cubic-bezier(.7,0,1,1); }
+.ib--wait.p5 .x-grain-g2 { transition-delay: 150ms; }
+.ib--wait.p5 .x-grain-gr3 { transition-delay: 300ms; }
+.ib--wait.p6 .x-hg { transform: rotate(180deg); transition: transform 756ms cubic-bezier(.5,0,.25,1.3); }
+.ib--wait.p6 .x-grain, .ib--wait.p6 .x-grain-g2, .ib--wait.p6 .x-grain-gr3 { opacity: 0; transform: translateY(-6.67%); transition: none; }
+.ib--wait.p7 .x-sand-t { transform: none; transition: none; }
+.ib--wait.p7 .x-sand-b { transform: scaleY(.35); transition: none; }
+
+/* 队伍:两侧往中间靠(主)· 中间那个蹦一下、头顶冒一颗心(次) */
+.ib--team .x-p1, .ib--team .x-p2, .ib--team .x-p3 { transform-origin: 50% 83.33%; }
+.ib--team.is-on .x-p1 { transition: transform 620ms cubic-bezier(.34,1.56,.64,1) 60ms, opacity 300ms ease 60ms; }
+.ib--team.is-on .x-p3 { transition: transform 620ms cubic-bezier(.34,1.56,.64,1) 160ms, opacity 300ms ease 160ms; }
+.ib--team.is-on .x-p2 { transition: transform 620ms cubic-bezier(.34,1.56,.64,1) 260ms, opacity 300ms ease 260ms; }
+.ib--team .x-heart { transform-origin: 50% 23.33%; opacity: 0; transform: scale(0); }
+.ib--team.is-idle .x-p1, .ib--team.is-idle .x-p3 { transition: transform 1200ms ease-in-out; }
+.ib--team.is-idle .x-p2 { transition: transform 450ms ease-in-out; }
+.ib--team.is-idle .x-heart { transition: none; }
+.ib--team.p1 .x-p1 { transform: translateX(4.17%) rotate(5deg); transition: transform 1200ms ease-in-out; }
+.ib--team.p1 .x-p3 { transform: translateX(-4.17%) rotate(-5deg); transition: transform 1200ms ease-in-out; }
+.ib--team.p2 .x-p2 { transform: translateY(-5.83%) scale(.96, 1.05); transition: transform 450ms ease-out; }
+.ib--team.p3 .x-heart { opacity: 1; transform: scale(1.2) translateY(-3.33%); transition: transform 240ms ease-out, opacity 240ms ease-out; }
+.ib--team.p4 .x-p2 { transform: scale(1.04, .96); transition: transform 300ms ease-in; }
+.ib--team.p5 .x-heart { opacity: 1; transform: scale(1) translateY(-11.67%); transition: transform 900ms ease-out; }
+.ib--team.p6 .x-p2 { transform: none; transition: transform 450ms ease-out; }
+.ib--team.p7 .x-p1, .ib--team.p7 .x-p3 { transform: none; transition: transform 1200ms ease-in-out; }
+.ib--team.p8 .x-heart { opacity: 0; transform: scale(.8) translateY(-18.33%); transition: transform 600ms ease-out, opacity 600ms ease-out; }
+
+/* 通行证:挂在绳上来回荡(主)· 挂绳慢半拍(次)· 票头「有效」小点呼吸 */
+.ib--pass .x-card { transform-origin: 50% 6.67%; }
+.ib--pass .x-lan { transform-origin: 50% 1.67%; }
+.ib--pass .x-valid { transform-origin: 66.67% 29.17%; }
+.ib--pass.is-idle .x-card { transform: rotate(-6deg); transition: transform 1600ms ease-in-out; }
+.ib--pass.is-idle .x-lan { transform: rotate(-6deg); transition: transform 1600ms ease-in-out 100ms; }
+.ib--pass.is-idle .x-valid { opacity: .7; transform: scale(.8); transition: transform 1600ms ease-in-out, opacity 1600ms ease-in-out; }
+.ib--pass.p1 .x-card { transform: rotate(6deg); transition: transform 1600ms ease-in-out; }
+.ib--pass.p1 .x-lan { transform: rotate(6deg); transition: transform 1600ms ease-in-out 100ms; }
+.ib--pass.p1 .x-valid { opacity: 1; transform: scale(1.25); transition: transform 1600ms ease-in-out, opacity 1600ms ease-in-out; }
+
+/* 积分:三枚依次落下压实(主)· 顶上那枚翻一面(次)· 叠完冒个 + */
+.ib--points .x-c1, .ib--points .x-c2, .ib--points .x-c3 { transform-origin: 50% 71.67%; opacity: 0; transform: translateY(-38.33%); }
+.ib--points.is-on .x-c1 { opacity: 1; transform: none; transition: transform 550ms cubic-bezier(.34,1.56,.64,1) 60ms, opacity 200ms ease 60ms; }
+.ib--points.is-on .x-c2 { opacity: 1; transform: none; transition: transform 550ms cubic-bezier(.34,1.56,.64,1) 260ms, opacity 200ms ease 260ms; }
+.ib--points.is-on .x-c3 { opacity: 1; transform: none; transition: transform 550ms cubic-bezier(.34,1.56,.64,1) 460ms, opacity 200ms ease 460ms; }
+.ib--points .x-plus { transform-origin: 83.33% 25%; opacity: 0; transform: scale(0); }
+.ib--points.is-on .x-plus { opacity: 0; transform: scale(0); transition: none; }
+.ib--points.is-idle .x-c3 { transition: transform 400ms ease-in-out; }
+.ib--points.p1 .x-c3 { transform: scaleX(.1); transition: transform 400ms ease-in-out; }
+.ib--points.p2 .x-plus { opacity: 1; transform: scale(1.2) translateY(-1.67%); transition: transform 240ms ease-out, opacity 240ms ease-out; }
+.ib--points.p3 .x-c3 { transform: none; transition: transform 400ms ease-in-out; }
+.ib--points.p3 .x-plus { opacity: 1; transform: scale(1) translateY(-6.67%); transition: transform 600ms ease-out; }
+.ib--points.p4 .x-plus { opacity: 0; transition: opacity 200ms ease-out; }
+
+/* 章节印:举起、落下、压实再抬起(主)· 印记压下那一刻才显出、溅两点墨(次) */
+.ib--seal .x-stp { opacity: 0; transform: translateY(-25%); }
+.ib--seal.is-on .x-stp { opacity: 1; transform: none; transition: transform 1000ms cubic-bezier(.34,1.56,.64,1) 80ms, opacity 300ms ease 80ms; }
+.ib--seal .x-imp { transform-origin: 50% 75.83%; opacity: 0; transform: scale(1.5); }
+.ib--seal.is-on .x-imp { opacity: 1; transform: none; transition: transform 400ms cubic-bezier(.34,1.56,.64,1) 560ms, opacity 200ms ease 560ms; }
+.ib--seal .x-ink { transform-origin: 81.67% 65%; opacity: 0; transform: scale(0); }
+.ib--seal .x-ink-i2 { transform-origin: 18.33% 70%; opacity: 0; transform: scale(0); }
+.ib--seal .x-stamped { transform-origin: 85% 25%; }
+.ib--seal.is-idle .x-stp { transition: transform 288ms cubic-bezier(.5,0,.2,1); }
+.ib--seal.is-idle .x-imp { transition: transform 792ms ease-out; }
+.ib--seal.is-idle .x-ink, .ib--seal.is-idle .x-ink-i2, .ib--seal.is-idle .x-stamped { transition: none; }
+.ib--seal.p1 .x-stp { transform: translateY(-8.33%); transition: transform 288ms cubic-bezier(.5,0,.2,1); }
+.ib--seal.p2 .x-stp { transform: translateY(8.33%) scale(1.02, .96); transition: transform 288ms cubic-bezier(.5,0,.2,1); }
+.ib--seal.p3 .x-imp { transform: scale(1.06, .9); transition: transform 108ms ease-out; }
+.ib--seal.p4 .x-imp { transform: none; transition: transform 792ms ease-out; }
+.ib--seal.p4 .x-ink, .ib--seal.p4 .x-ink-i2, .ib--seal.p4 .x-stamped { opacity: 1; transform: scale(1.25) rotate(20deg); transition: transform 216ms ease-out, opacity 216ms ease-out; }
+.ib--seal.p4 .x-ink-i2 { transition-delay: 100ms; }
+.ib--seal.p5 .x-stp { transform: none; transition: transform 288ms cubic-bezier(.5,0,.2,1); }
+.ib--seal.p5 .x-ink, .ib--seal.p5 .x-ink-i2, .ib--seal.p5 .x-stamped { opacity: 1; transform: scale(1) rotate(40deg); transition: transform 288ms ease-out; }
+.ib--seal.p6 .x-ink, .ib--seal.p6 .x-ink-i2, .ib--seal.p6 .x-stamped { opacity: 0; transform: scale(.6) rotate(60deg); transition: transform 288ms ease-out, opacity 288ms ease-out; }
+
+/* 减少动态效果:直接终态(原型 prefers-reduced-motion:动画全停,闪光 / 爆星 / 纸屑 / + 全部静态显示,钩画满) */
+.ib.is-reduced .ib__l { transition: none; opacity: 1; transform: none; clip-path: none; }

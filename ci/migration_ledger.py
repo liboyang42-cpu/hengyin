@@ -59,6 +59,14 @@ EXPLICIT_AUXILIARY_SQL = {
     # review proposals; canonical executable migrations remain fully checked.
     "chengyinhub-admin/src/test/resources/architecture-day-a-fixture.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/official-broadcast-delivery-it-schema.sql": "TEST_FIXTURE",
+    # B8 完局报表真库 IT 的建表资源:逐字摘录自各建表迁移,只在 IT 的临时 schema 里执行,
+    # 不进发布台账、不在生产跑。与上面几份同档。
+    "chengyinhub-admin/src/test/resources/it-schema/post-game-outcome-it-schema.sql":
+        "TEST_FIXTURE",
+    # BE-14 多作用域榜单 MySQL IT 的用例自有表:只补那 4 张 IT 脚本未覆盖的表,
+    # 仅在测试 scratch schema 里执行,不进发布台账、不在生产跑。
+    "chengyinhub-admin/src/test/resources/it-schema/scoped-leaderboard-it-schema.sql":
+        "TEST_FIXTURE",
     "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
     # 第十一轮 h2 的只读证据(存量文字预检 SELECT),不进发布台账、不在任何库上执行。
@@ -113,6 +121,11 @@ EXPLICIT_AUXILIARY_SQL = {
     "docs/delivery/release-closeout-20261022/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/release-closeout-20261028/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/release-closeout-20261029/release-migration-precheck.sql": "AUXILIARY_NOT_EXECUTED",
+    # f-release(launch/questo-20261110)发布集的每文件只读预检:全是 SELECT,由
+    # docs/delivery/questo-ui-20261109/f-release/gen_release_set.py 生成并逐句校验;runner 不执行、不进台账。
+    "docs/delivery/questo-ui-20261109/f-release/release-precheck.sql": "AUXILIARY_NOT_EXECUTED",
+    # f-rehearsal 只写进本机一次性 cy_e2e_* 演练库的合成行（rehearse.py 读取）；runner 不执行、不进台账。
+    "docs/delivery/questo-ui-20261109/f-rehearsal/seed_rows.sql": "AUXILIARY_NOT_EXECUTED",
 }
 IGNORED_DIRS = {".git", "node_modules", "target"}
 MIGRATION_ID = re.compile(r"^[a-z0-9][a-z0-9_]*$")

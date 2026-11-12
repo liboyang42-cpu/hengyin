@@ -17,8 +17,10 @@ class WechatPaymentCallbackRouterTest {
     private final ICoopInviteService deposit = mock(ICoopInviteService.class);
     private final ICmsRegistrationService registration = mock(ICmsRegistrationService.class);
     private final IRefundService refunds = mock(IRefundService.class);
+    private final IMarketingProductPurchaseService marketingProducts =
+            mock(IMarketingProductPurchaseService.class);
     private final WechatPaymentCallbackRouter router = new WechatPaymentCallbackRouter(
-            club, commerce, deposit, registration, refunds);
+            club, commerce, deposit, registration, refunds, marketingProducts);
 
     @Test
     void allFourOwnersReceiveTheOriginalVerifiedAmountAndTransactionWithoutRewritingFacts() {

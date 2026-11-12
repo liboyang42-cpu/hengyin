@@ -87,6 +87,25 @@ class ApiClubEventOpsControllerTest {
     }
 
     @Test
+    void hostRequestAndDecisionUseAuthenticatedActorAndRequireAnExplicitDecision() {
+        IClubWaitlistService waitlist = mock(IClubWaitlistService.class);
+        ApiClubEventOpsController controller = new ApiClubEventOpsController() {
+            @Override public Long getAppUserId() { return 41L; }
+        };
+        ReflectionTestUtils.setField(controller, "waitlistService", waitlist);
+        ClubWaitlistRequest request = new ClubWaitlistRequest();
+        request.setActivityId(71L);
+        request.setTicketId(81L);
+        request.setEntryId(91L);
+        assertEquals(200, controller.requestHost(request).get("code"));
+        verify(waitlist).requestHost(41L, 71L, 81L);
+        assertEquals(400, controller.decideHost(request).get("code"));
+        request.setAccept(true);
+        assertEquals(200, controller.decideHost(request).get("code"));
+        verify(waitlist).decideHost(41L, 71L, 81L, 91L, true);
+    }
+
+    @Test
     void notificationControllerScopesRetryToAuthenticatedActor() {
         IClubEventNotificationService service = mock(IClubEventNotificationService.class);
         ApiClubEventNotificationController controller = new ApiClubEventNotificationController() {

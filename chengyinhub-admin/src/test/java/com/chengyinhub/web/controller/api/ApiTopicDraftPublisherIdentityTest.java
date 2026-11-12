@@ -45,7 +45,7 @@ class ApiTopicDraftPublisherIdentityTest {
         when(topics.selectTopicIsDraft(7001L)).thenReturn(1);
         when(tickets.selectOmsTicketList(any())).thenReturn(Collections.emptyList());
         when(identity.checkRegistered(901L)).thenReturn("请先登记实名信息(姓名与身份证号),再发布");
-        when(topics.publishDraftWithReview(7001L, 901L)).thenReturn(
+        when(topics.publishDraftWithReview(7001L, 901L, null)).thenReturn(
                 new TopicBundleSubmitResultVO(7001L, 901L, "PENDING", Collections.singletonList(71L)));
     }
     private void price(BigDecimal price) {
@@ -57,7 +57,7 @@ class ApiTopicDraftPublisherIdentityTest {
         AjaxResult result = publish();
         assertEquals(500, result.get("code"));
         assertEquals("请先登记实名信息(姓名与身份证号),再发布", result.get("msg"));
-        verify(topics, never()).publishDraftWithReview(anyLong(), anyLong());
+        verify(topics, never()).publishDraftWithReview(anyLong(), anyLong(), anyString());
         verify(topics, never()).publishDraft(anyLong(), anyLong());
         verify(identity).checkRegistered(901L);
         verifyNoInteractions(quota);
@@ -82,21 +82,21 @@ class ApiTopicDraftPublisherIdentityTest {
     }
     @Test void allFreePublicationSkipsIdentity() {
         price(BigDecimal.ZERO); draft.setSelfPlay(1); draft.setSelfPlayPrice(BigDecimal.ZERO);
-        assertEquals(200, publish().get("code")); verifyNoInteractions(identity); verify(topics).publishDraftWithReview(7001L, 901L);
+        assertEquals(200, publish().get("code")); verifyNoInteractions(identity); verify(topics).publishDraftWithReview(7001L, 901L, null);
     }
     @Test void registeredPublisherStillPublishes() {
         when(identity.checkRegistered(901L)).thenReturn(null);
-        assertEquals(200, publish().get("code")); verify(identity).checkRegistered(901L); verify(topics).publishDraftWithReview(7001L, 901L);
+        assertEquals(200, publish().get("code")); verify(identity).checkRegistered(901L); verify(topics).publishDraftWithReview(7001L, 901L, null);
     }
     @Test void dateRefusalReturns400ThroughActualSimpleAndProDraftMvcEntries() throws Exception {
         price(BigDecimal.ZERO);
         draft.setRecruitDeadline(new java.util.Date(2000L));
         draft.setSaleEndAt(new java.util.Date(2000L));
-        when(topics.publishDraftWithReview(7001L, 901L)).thenAnswer(call -> {
+        when(topics.publishDraftWithReview(7001L, 901L, null)).thenAnswer(call -> {
             com.chengyinhub.business.service.support.TopicSaleTimeValidator.assertRecruitmentSaleWindow(draft);
             throw new AssertionError("无售卖窗口不得继续发布");
         });
-        when(topics.publishDraft(7001L, 901L)).thenAnswer(call -> {
+        when(topics.publishDraft(7001L, 901L, null)).thenAnswer(call -> {
             com.chengyinhub.business.service.support.TopicSaleTimeValidator.assertRecruitmentSaleWindow(draft);
             throw new AssertionError("无售卖窗口不得继续发布");
         });
@@ -115,14 +115,14 @@ class ApiTopicDraftPublisherIdentityTest {
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.msg")
                             .value("招商截止日期必须早于售票截止时间"));
         }
-        verify(topics).publishDraft(7001L, 901L);
-        verify(topics).publishDraftWithReview(7001L, 901L);
+        verify(topics).publishDraft(7001L, 901L, null);
+        verify(topics).publishDraftWithReview(7001L, 901L, null);
         verify(topics, never()).updateCmsTopic(any());
     }
 
     @Test void draftTechnicalFailureKeeps500AndSafeMessage() throws Exception {
         price(BigDecimal.ZERO);
-        when(topics.publishDraftWithReview(7001L, 901L)).thenThrow(
+        when(topics.publishDraftWithReview(7001L, 901L, null)).thenThrow(
                 new NullPointerException("java.lang.NullPointerException: private implementation"));
         var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new com.chengyinhub.framework.web.exception.GlobalExceptionHandler())
@@ -140,6 +140,6 @@ class ApiTopicDraftPublisherIdentityTest {
         draft.setMemberId(902L); assertEquals(500, publish().get("code")); verifyNoInteractions(identity, tickets);
         draft.setMemberId(901L); when(topics.selectTopicIsDraft(7001L)).thenReturn(0);
         assertEquals(500, publish().get("code")); verifyNoInteractions(identity, tickets);
-        verify(topics, never()).publishDraftWithReview(anyLong(), anyLong());
+        verify(topics, never()).publishDraftWithReview(anyLong(), anyLong(), anyString());
     }
 }

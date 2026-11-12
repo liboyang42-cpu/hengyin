@@ -214,6 +214,33 @@ class TopicRouteRuntimeServiceImplTest {
         topic.setThemeRuntimeConfigJson(GenericRouteRuntimeServiceTest.config());one.setMerchantMemberId(null);assertNotNull(runtime.freezePublication(topic,null));
     }
 
+    /**
+     * BE-08:guided / 共享路线与普通 {@code /answer} 走同一个比较器。
+     * 别名只来自本局冻结的 {@code nodeAnswers.answerPolicy};老快照没有该键 = 没有别名。
+     */
+    @Test
+    void guidedRouteAnswerUsesTheFrozenAliasPolicyAndNeverInventsOneForOldSnapshots() throws Exception {
+        ObjectNode frozen = json.createObjectNode();
+        frozen.putObject("nodeConfigs").putObject("11");
+        ObjectNode answer = frozen.putObject("nodeAnswers").putObject("11");
+        answer.put("validationMethod", 1).put("questionAnswer", "正确答案");
+        answer.set("answerPolicy", json.readTree("{\"version\":1,\"normalizationPolicy\":\"LEGACY_V1\","
+                + "\"acceptedAliases\":[\"暗号\"]}"));
+        assertTrue(runtime.verifyGuidedRouteAnswer(frozen, 11L, json.createObjectNode().put("answer", "暗号")));
+        assertTrue(runtime.verifyGuidedRouteAnswer(frozen, 11L,
+                json.createObjectNode().put("answer", " 正 确 答 案 ")), "与普通 answer 同一 LEGACY_V1 归一");
+        assertFalse(runtime.verifyGuidedRouteAnswer(frozen, 11L, json.createObjectNode().put("answer", "暗号吧")),
+                "近似错字不自动通过");
+
+        ObjectNode oldSnapshot = json.createObjectNode();
+        oldSnapshot.putObject("nodeConfigs").putObject("11");
+        ObjectNode oldAnswer = oldSnapshot.putObject("nodeAnswers").putObject("11");
+        oldAnswer.put("validationMethod", 1).put("questionAnswer", "正确答案");
+        assertFalse(runtime.verifyGuidedRouteAnswer(oldSnapshot, 11L, json.createObjectNode().put("answer", "暗号")),
+                "老快照没有 answerPolicy:别名不得回填生效");
+        assertTrue(runtime.verifyGuidedRouteAnswer(oldSnapshot, 11L, json.createObjectNode().put("answer", "正确答案")));
+    }
+
     @Test
     void personalR5ScanPublishesButScanAloneIsNotGameplayCompletion() throws Exception {
         CmsTopic topic = personalR5Topic(4, true);
@@ -838,6 +865,37 @@ class TopicRouteRuntimeServiceImplTest {
         assertEquals(TopicRouteState.BRANCH_GRAPH, resumed.getRouteMode());
         assertEquals(opened.getSessionId(), resumed.getSessionId());
         assertEquals(1L, resumed.getCurrentNodeId());
+    }
+
+    @Test
+    void implicitCreationRejectsExplicitMissingCapabilitiesBeforeSessionOrProgressWrites() {
+        var declaration = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse("ios", "1", "");
+        assertThrows(com.chengyinhub.business.service.support.ContentCapabilityRequirements.UnsupportedClientException.class,
+                () -> runtime.state(7L, 10L, 0L, declaration));
+        assertNull(stored[0]);
+        assertNull(storedAction[0]);
+        verify(routeMapper, never()).insertSession(any());
+        verify(routeMapper, never()).insertAction(any());
+        verify(routeMapper, never()).updateStateCas(any());
+    }
+
+    @Test
+    void implicitCreationAcceptsMatchingCapabilitiesAndExistingRunsIgnoreNewLiveRequirements() throws Exception {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        JsonNode published = json.readTree(runtime.freezePublication(topic, topic.getRouteGraphJson()));
+        Map<String, Integer> supported = new java.util.TreeMap<>();
+        for (JsonNode required : com.chengyinhub.business.service.support.ContentCapabilityRequirements.required(published))
+            supported.put(required.path("key").asText(), required.path("minVersion").asInt());
+        assertTrue(supported.containsKey("route.branch"));
+        var declaration = new com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration(
+                "ios", "1", supported, false);
+        TopicRouteState opened = runtime.state(7L, 10L, 0L, declaration);
+        assertEquals(99L, opened.getSessionId());
+        topic.setJourneyStoryJson("{\"openingChapterId\":999}");
+        var empty = com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                .parse("ios", "1", "");
+        assertEquals(opened.getSessionId(), runtime.state(7L, 10L, 0L, empty).getSessionId());
     }
 
     @Test
@@ -2144,6 +2202,63 @@ class TopicRouteRuntimeServiceImplTest {
         assertTrue(state.path("completedNodeIds").toString().contains("1"));
         assertEquals(2L, stored[0].getCurrentNodeId());
         assertEquals(Integer.valueOf(TopicRouteSession.STATUS_RUNNING), stored[0].getStatus());
+    }
+
+    // ---------------------------------------------------------------- qx-c4 自玩局帮助身份
+
+    @Test
+    void selfPlayRunFreezesOneHelpRunIdentityAtStartAndReentryKeepsIt() throws Exception {
+        runtime.state(7L, 10L, null);
+        TopicRouteSession run = stored[0];
+        String identity = json.readTree(run.getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText();
+
+        assertTrue(com.chengyinhub.business.service.support.FirstRunHelpIdentity.isIdentity(identity), identity);
+        // 进度/奖励实例不动：自玩局仍是本人 default 正式一局。
+        assertEquals("default", run.getPlayInstanceId());
+
+        runtime.state(7L, 10L, null);
+        runtime.state(7L, 10L, 0L);
+        assertEquals(identity, json.readTree(stored[0].getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText());
+        verify(routeMapper, times(1)).insertSession(any(TopicRouteSession.class));
+    }
+
+    @Test
+    void selfPlayLinearJourneyRunAlsoCarriesTheHelpRunIdentity() throws Exception {
+        useLinearJourneyTopic();
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());
+        topic.setPublishedRouteGraphJson(runtime.freezePublication(topic, null));
+        topic.setJourneyRulesJson(null);
+
+        runtime.state(7L, 10L, null);
+
+        assertEquals("default", stored[0].getPlayInstanceId());
+        assertNotNull(com.chengyinhub.business.service.support.FirstRunHelpIdentity.read(
+                json.readTree(stored[0].getConfigSnapshotJson())));
+    }
+
+    // ---------------------------------------------------------------- qx-c5 活动场次首局帮助身份
+
+    @Test
+    void activitySessionFirstRunFreezesOneHelpRunIdentityAndReentryKeepsIt() throws Exception {
+        useActivityScope(playableActivity());
+
+        runtime.state(7L, 10L, 44L);
+        TopicRouteSession run = stored[0];
+        String identity = json.readTree(run.getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText();
+
+        assertEquals(Long.valueOf(44L), run.getActivityId());
+        assertTrue(identity.startsWith(com.chengyinhub.business.service.support.FirstRunHelpIdentity.PREFIX), identity);
+        // 进度/奖励实例不动：活动场次首局仍是本人 default 正式一局。
+        assertEquals("default", run.getPlayInstanceId());
+
+        runtime.state(7L, 10L, 44L);
+        assertEquals(identity, json.readTree(stored[0].getConfigSnapshotJson())
+                .path(com.chengyinhub.business.service.support.FirstRunHelpIdentity.FIELD).asText());
+        verify(routeMapper, times(1)).insertSession(any(TopicRouteSession.class));
     }
 
     private void useLinearJourneyTopic() {

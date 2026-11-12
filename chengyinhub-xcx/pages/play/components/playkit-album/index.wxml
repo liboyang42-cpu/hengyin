@@ -1,4 +1,8 @@
-<view class="album" wx:if="{{show}}">
+<wxs module="gs" src="../../../../utils/wxs/gesture.wxs" />
+<!-- qx-u1:左缘侧滑返回 = 「收起相册」同一出口(close);只从左缘起手,不和相册左右翻页抢手势 -->
+<view class="album" wx:if="{{show}}"
+      bindtouchstart="{{gs.edgeStart}}" bindtouchmove="{{gs.edgeMove}}" bindtouchend="{{gs.edgeEnd}}" bindtouchcancel="{{gs.edgeEnd}}"
+      bindtransitionend="{{gs.edgeSettle}}" data-glayer="1" data-close="close" data-rm="{{reducedMotion}}">
   <text class="album__title">{{title || '相册'}}</text>
   <cy-album-glass class="album__glass" images="{{images}}" cur="{{cur}}" bind:change="onChange" />
   <text class="album__line">{{images[cur].line}}</text>

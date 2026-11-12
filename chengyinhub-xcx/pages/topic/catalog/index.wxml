@@ -1,0 +1,55 @@
+<view class="theme-dark">
+<view class="catalog">
+  <!-- r2 b8-x-p3-01 业主「上面的筛选标签栏应该就是一行 地址点击顶部可以修改这种」:城市不再单占一行胶囊,
+       顶部标题就是城市,点它弹出城市列表;下面只剩一行筛选。读不到城市时标题不可点、不画箭头。 -->
+  <cy-nav-bar title="{{cityTabs.length ? '' : title}}" />
+  <view wx:if="{{cityTabs.length}}" class="catalog-city" style="top: {{statusBarHeight}}px; height: {{navBarHeight}}px;" bindtap="openCityPicker"
+    aria-role="button" aria-label="切换城市，当前{{title}}" hover-class="cy-pressed" hover-stay-time="80">
+    <text class="catalog-city__name">{{title}}</text><cy-icon class="catalog-city__chev" name="chevron-right" size="28" />
+  </view>
+  <view class="catalog-nav-spacer" style="height: {{statusBarHeight + navBarHeight}}px;"></view>
+  <scroll-view wx:if="{{chips.length}}" class="catalog-chips" scroll-x enhanced show-scrollbar="{{false}}">
+    <view class="catalog-chips__row">
+      <view wx:for="{{chips}}" wx:key="key" class="catalog-chip" data-key="{{item.key}}" bindtap="onChip"
+        aria-role="button" aria-label="{{item.label}}" aria-selected="{{selected[item.field] === item.value}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cy-chip {{selected[item.field] === item.value ? 'cy-chip--on' : ''}}">{{item.label}}</view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <cy-sheet show="{{cityPicker}}" title="选择城市" bind:close="closeCityPicker">
+    <view wx:for="{{cityTabs}}" wx:key="key" class="catalog-city-opt {{activeCity === item.key ? 'catalog-city-opt--on' : ''}}" data-key="{{item.key}}" bindtap="pickCity"
+      aria-role="radio" aria-checked="{{activeCity === item.key}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+      <text>{{item.label}}</text><cy-icon wx:if="{{activeCity === item.key}}" name="check" size="32" />
+    </view>
+  </cy-sheet>
+
+  <view class="main">
+    <view wx:if="{{loading && !cards.length}}"><cy-skeleton type="feed-card" count="3" /></view>
+    <cy-error load-failure class="fill-slot" wx:elif="{{error && !cards.length}}" fill="{{true}}" size="lg" title="目录没有加载出来" sub="{{error}}" bind:retry="reload" />
+    <cy-empty class="fill-slot" wx:elif="{{!loading && !error && !cards.length}}" fill="{{true}}" size="lg" kind="empty" title="暂时没有公开作品" sub="" />
+    <cy-inline-error wx:if="{{error && cards.length}}" title="{{error}}" action="重试" bind:action="reload" />
+    <view class="catalog-list" wx:if="{{cards.length}}">
+      <view wx:for="{{cards}}" wx:key="id" class="topic-result-card" data-id="{{item.id}}" bindtap="openCard"
+        aria-role="button" aria-label="查看作品：{{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
+        <!-- r2 b8-x-p3-02 业主「下面卡片的设计不太好看」:照片卡 —— 封面满幅(没有封面用首页同一张路线插画,不再是灰底小图标),
+             类别胶囊左上;卡下标题、时长/站数、价格与团体等标签。 -->
+        <view class="topic-result-card__media">
+          <image class="topic-result-card__cover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
+          <view class="topic-result-card__shade"></view>
+          <view class="topic-result-card__kind" wx:if="{{item.kind}}">{{item.kind}}</view>
+        </view>
+        <view class="topic-result-card__body">
+          <view class="topic-result-card__title ep1">{{item.title}}</view>
+          <view class="topic-result-card__detail ep1" wx:if="{{item.meta}}">{{item.meta}}</view>
+          <view class="result-card__tags" wx:if="{{item.tags.length}}">
+            <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="result-card__tag">{{tag}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="catalog-more" wx:if="{{loadingMore}}">加载中…</view>
+      <view class="catalog-more catalog-more--act" wx:elif="{{moreError}}" bindtap="loadMore" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">{{moreError}} · 重试</view>
+    </view>
+  </view>
+</view>
+</view>

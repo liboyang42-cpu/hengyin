@@ -2,6 +2,7 @@ const { applyPreviewAction } = require('../../../../utils/game-preview-action.js
 const toast = require('../../../../utils/toast.js');
 const { id, integer } = require('../../../../utils/orient-score-view.js');
 const photoPending = require('../../utils/advanced-photo-pending.js');
+const clientCapabilities = require('../../utils/client-capabilities.js');
 const app = getApp();
 const { safeUserMessage } = require('../../../../utils/transport/safe-user-message.js');
 const { buildActionKey, buildUnitId } = require('../../utils/play-action-key.js');
@@ -39,8 +40,12 @@ Component({
   },
   observers: {
     'show,node.nodeId': function (show, nodeId) {
-      if (show && nodeId) this.start();
-      if (!show) { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.stopDrawAudio(); this.stopBackgroundMusic(); }
+      /* f-play V3-11:同一个打开着的节点只开局一次。父页每次 setData 重新传 node(试玩里会话视图回来就给节点挂新的 previewKit)
+         都会触发这里;不判就又 start → hydrate → 回传会话 → 父页再挂 previewKit → 再 start,相册试玩在 rig 里就此死循环、渲染进程崩掉。
+         打开(show 由假变真)或换了节点才重开;关掉清掉记号,下次打开照旧重开。 */
+      const key = show && nodeId ? String(nodeId) : '';
+      if (key && this._startedFor !== key) { this._startedFor = key; this.start(); }
+      if (!show) { this._startedFor = ''; this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.stopDrawAudio(); this.stopBackgroundMusic(); }
     }
   },
   lifetimes: { detached() { this._requestEpoch = (this._requestEpoch || 0) + 1; this.stopTimer(); this.destroyDrawAudio(); this.stopBackgroundMusic(); } },
@@ -149,11 +154,17 @@ Component({
           if (this.currentRequestContext(context, false)) this.setData({ loading: false, unknown: true, error: '照片原局暂时无法读取，请稍后核对' });
         });
       }
-      this.request('/api/play/advanced/start', 'POST', scope).then(res => {
+      // §27.2:开局 JSON 带本端真实能力声明;缺必需能力时服务端沿原错误信封拒绝,不在本地删内容或跳关。
+      this.request('/api/play/advanced/start', 'POST', Object.assign({}, scope, clientCapabilities.declaration())).then(res => {
         if (!this.currentRequestContext(context, false)) return;
         if (res.code == 200 || res.code == '200') this.hydrate(res.data || {});
         else this.setData({ error: safeUserMessage(res, '高级玩法启动失败') });
-      }).catch(() => { if (this.currentRequestContext(context, false)) this.setData({ error: '网络错误，请重试' }); })
+      }).catch((res) => {
+        if (!this.currentRequestContext(context, false)) return;
+        // 409 能力不足也走 successStatusAbnormal:是确定拒绝,给服务端原话,不说成网络错误。
+        const unsupported = clientCapabilities.unsupportedNotice(res);
+        this.setData({ error: unsupported ? safeUserMessage(res, unsupported) : '网络错误，请重试' });
+      })
         .finally(() => { if (this.currentRequestContext(context, false)) this.setData({ loading: false }); });
     },
     /** 把服务端权威视图抛给页面:v5.1 新玩法的壳是独立 sheet,套不进本面板(sheet 套 sheet),

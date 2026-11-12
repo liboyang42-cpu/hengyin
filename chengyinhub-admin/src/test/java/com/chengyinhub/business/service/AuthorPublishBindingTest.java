@@ -20,6 +20,7 @@ class AuthorPublishBindingTest {
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
         ReflectionTestUtils.setField(service,"supplyReviewService",supply);
         ReflectionTestUtils.setField(service,"themeStateKeyService",registry);
+        ReflectionTestUtils.setField(service,"topicPublicationService", mock(com.chengyinhub.business.service.impl.TopicPublicationService.class));
         assertEquals(409,assertThrows(ServiceException.class,()->service.publishDraft(7L,11L)).getCode());
         assertEquals(409,assertThrows(ServiceException.class,()->service.publishDraftWithBinding(7L,11L,2L,"2")).getCode());
         assertEquals(409,assertThrows(ServiceException.class,()->service.publishDraftWithBinding(7L,11L,3L,"3")).getCode());
@@ -38,6 +39,7 @@ class AuthorPublishBindingTest {
         CmsTopicServiceImpl service = new CmsTopicServiceImpl();
         ReflectionTestUtils.setField(service,"supplyReviewService",supply);
         ReflectionTestUtils.setField(service,"themeStateKeyService",registry);
+        ReflectionTestUtils.setField(service,"topicPublicationService", mock(com.chengyinhub.business.service.impl.TopicPublicationService.class));
         assertSame(stop,assertThrows(ServiceException.class,()->service.publishDraftWithBinding(7L,11L,3L,"2")));
         // 绑定仍按编辑版本 3 校验；冻结定义标发布后的 published_config_version 5（建局按它核对）。
         verify(registry).freezeDefinition(eq(7L),eq(5L),eq("2"),any());

@@ -462,7 +462,8 @@ test('附近读取401/403明确区分；普通500不伪装无权限', async () =
 });
 test('旧账号附近权限回包不覆盖新读取；登录在页面退出后完成不继续读', async () => {
   const page = mount(); await settle(); const pending=[];
-  app.sendRequest=o=>pending.push(o); page._loadEntryMap({lat:31,lng:121});
+  // V3-35:入口地图另读目录地点(/api/roam/pois),它不参与权限态,这里只排队附近活动与队伍两条
+  app.sendRequest=o=>{ if (o.url !== '/api/roam/pois') pending.push(o); }; page._loadEntryMap({lat:31,lng:121});
   app.getUserID=()=> '10'; page._loadEntryMap({lat:31,lng:121});
   pending[0].success({code:401});pending[1].success({code:403});await settle();
   assert.equal(page.data.entryReadAccess,'');

@@ -21,7 +21,6 @@ import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.utils.StringUtils;
 
 import org.springframework.stereotype.Service;
-import static com.chengyinhub.common.core.domain.AjaxResult.error;
 
 /** Original basic-command identity, authorization, locking and atomic terminal receipts. */
 @Service
@@ -51,21 +50,21 @@ public class PlayBasicIntentApplication {
 
     public BasicIntentScope basicIntentScope(Long memberId, String activityId, String topicId, String nodeId) {
         BasicIntentScope scope = new BasicIntentScope();
-        if (memberId == null || memberId <= 0) { scope.denied = error("请先登录"); return scope; }
+        if (memberId == null || memberId <= 0) { scope.denied = PlayCommandErrorContract.rejected("请先登录", PlayCommandErrorContract.LOGIN_REQUIRED); return scope; }
         try {
             scope.activityId = StringUtils.isBlank(activityId) ? 0L : Long.valueOf(activityId);
             scope.nodeId = Long.valueOf(nodeId);
             if (scope.activityId < 0 || scope.nodeId <= 0) throw new IllegalArgumentException();
             CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(scope.nodeId);
-            if (node == null || node.getTopicId() == null) { scope.denied = error("节点不存在"); return scope; }
+            if (node == null || node.getTopicId() == null) { scope.denied = PlayCommandErrorContract.rejected("节点不存在", PlayCommandErrorContract.NODE_NOT_FOUND); return scope; }
             scope.topicId = node.getTopicId();
             if (scope.activityId > 0) {
                 CmsActivity activity = cmsActivityService.selectCmsActivityById(scope.activityId);
-                if (activity == null || !scope.topicId.equals(activity.getTopicId())) { scope.denied = error("该节点不属于本次活动"); return scope; }
+                if (activity == null || !scope.topicId.equals(activity.getTopicId())) { scope.denied = PlayCommandErrorContract.rejected("该节点不属于本次活动", PlayCommandErrorContract.INTENT_SCOPE_DENIED); return scope; }
             } else if (!scope.topicId.equals(Long.valueOf(topicId))) {
-                scope.denied = error("该节点不属于本主题"); return scope;
+                scope.denied = PlayCommandErrorContract.rejected("该节点不属于本主题", PlayCommandErrorContract.INTENT_SCOPE_DENIED); return scope;
             }
-        } catch (IllegalArgumentException e) { scope.denied = error("参数有误"); return scope; }
+        } catch (IllegalArgumentException e) { scope.denied = PlayCommandErrorContract.rejected("参数有误", PlayCommandErrorContract.INTENT_INPUT_INVALID); return scope; }
         // 读回执仍须证明原报名归属；普通免费报名沿用现有资格，探索票才以已付为前提。
         // 时效和实体版本仅在新写时校验，不能把普通免费报名误升级为付费要求。
         CmsRegistration query = new CmsRegistration(); query.setMemberId(memberId);
@@ -78,7 +77,7 @@ public class PlayBasicIntentApplication {
                 && query.getOwnerId().equals(row.getOwnerId())
                 && (!Integer.valueOf(com.chengyinhub.common.constant.PurchaseKind.EXPLORE_PASS).equals(row.getPurchaseKind())
                     || Integer.valueOf(2).equals(row.getPaymentStatus()))
-                && Integer.valueOf(2).equals(row.getRegistrationStatus()))) scope.denied = error("无权读取本次游玩命令");
+                    && Integer.valueOf(2).equals(row.getRegistrationStatus()))) scope.denied = PlayCommandErrorContract.rejected("无权读取本次游玩命令", PlayCommandErrorContract.INTENT_SCOPE_DENIED);
         return scope;
     }
 
@@ -120,13 +119,13 @@ public class PlayBasicIntentApplication {
     @Transactional(readOnly = true)
     public AjaxResult basicActionReceipt(Long actorMemberId, String activityId, String topicId, String nodeId, String routeActionId) {
         Long memberId = actorMemberId;
-        if (routeActionId == null || !routeActionId.matches("[A-Za-z0-9:_-]{1,80}")) return error("动作标识无效");
+        if (routeActionId == null || !routeActionId.matches("[A-Za-z0-9:_-]{1,80}")) return PlayCommandErrorContract.rejected("动作标识无效", PlayCommandErrorContract.INTENT_INPUT_INVALID);
         BasicIntentScope scope = basicIntentScope(memberId, activityId, topicId, nodeId);
         if (scope.denied != null) return scope.denied;
         com.chengyinhub.business.domain.GameCommandReceipt receipt = playCommandReceiptMapper.selectReceipt(scope.activityId, memberId, basicRequestId(routeActionId));
-        if (receipt == null) return new AjaxResult(520, "原命令结果待确认，请稍后查询");
+        if (receipt == null) return PlayCommandErrorContract.unresolved("原命令结果待确认，请稍后查询");
         if (!scope.nodeId.equals(receipt.getNodeId()) || !"PLAYER".equals(receipt.getActorPerspective())
-                || receipt.getAction() == null || !receipt.getAction().startsWith("PLAY_BASIC_")) return error("无权读取该命令");
+                || receipt.getAction() == null || !receipt.getAction().startsWith("PLAY_BASIC_")) return PlayCommandErrorContract.rejected("无权读取该命令", PlayCommandErrorContract.INTENT_SCOPE_DENIED);
         return basicReplay(receipt);
     }
 
@@ -134,9 +133,9 @@ public class PlayBasicIntentApplication {
             String actionId, Integer expectedVersion, Long registrationId, Long routeSessionId,
             String runtimeInstance, Integer authorityEpoch, List<?> input, java.util.function.Function<PlayOriginalRun, AjaxResult> execute) {
         Long memberId = actorMemberId;
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return PlayCommandErrorContract.rejected("请先登录", PlayCommandErrorContract.LOGIN_REQUIRED);
         if (actionId == null || !actionId.matches("[A-Za-z0-9:_-]{1,80}") || expectedVersion == null
-                || expectedVersion < 0 || routeSessionId == null || routeSessionId < 0) return error("必须提供动作标识、期望版本和原运行时身份");
+                || expectedVersion < 0 || routeSessionId == null || routeSessionId < 0) return PlayCommandErrorContract.rejected("必须提供动作标识、期望版本和原运行时身份", PlayCommandErrorContract.INTENT_INPUT_INVALID);
         BasicIntentScope scope = basicIntentScope(memberId, activityId, topicId, nodeId);
         if (scope.denied != null) return scope.denied;
         String hash = basicHash(basicJson(java.util.Arrays.asList(kind, scope.activityId, scope.topicId,
@@ -144,6 +143,8 @@ public class PlayBasicIntentApplication {
         String requestId = basicRequestId(actionId);
         com.chengyinhub.business.domain.GameCommandReceipt prior = playCommandReceiptMapper.selectReceiptForUpdate(scope.activityId, memberId, requestId);
         // 原回执先于实体当前版本、到达距离、答案、旧实例和旧 epoch 检查。
+        // 原回执原样重放:重放体与首次逐字一致,intentTerminal 已在落库时写入;
+        // PENDING/UNKNOWN 由 basicReplay 返回待确认(520),绝不在这里标终态。
         if (prior != null) return basicReplay(prior, hash);
         // 锁住业务聚合后再次查同一身份：等待并发赢家期间，原回执可能已提交。
         playCommandReceiptMapper.selectSessionByActivityForUpdate(scope.activityId);
@@ -154,20 +155,20 @@ public class PlayBasicIntentApplication {
             if (originalSession == null || !memberId.equals(originalSession.getMemberId())
                     || !scope.activityId.equals(originalSession.getActivityId())
                     || !scope.topicId.equals(originalSession.getTopicId())) {
-                return new AjaxResult(409, "原局身份不匹配").put("intentNotExecuted", true);
+                return PlayCommandErrorContract.conflict("原局身份不匹配", PlayCommandErrorContract.INTENT_SESSION_MISMATCH);
             }
         }
         prior = playCommandReceiptMapper.selectReceiptForUpdate(scope.activityId, memberId, requestId);
         if (prior != null) return basicReplay(prior, hash);
         if (originalSession != null && !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(originalSession.getStatus())) {
-            return new AjaxResult(409, "原局已结束").put("intentNotExecuted", true);
+            return PlayCommandErrorContract.conflict("原局已结束", PlayCommandErrorContract.INTENT_SESSION_ENDED);
         }
         Map<String, Object> current = basicActionContext(memberId, scope);
         if (!java.util.Objects.equals(routeSessionId, current.get("routeSessionId"))
                 || !java.util.Objects.equals(expectedVersion, current.get("expectedRouteVersion"))
                 || !java.util.Objects.equals(runtimeInstance, current.get("runtimeInstance"))
                 || !java.util.Objects.equals(authorityEpoch, current.get("authorityEpoch"))) {
-            return new AjaxResult(409, "原动作状态已过期，确认后才能创建新意图").put("intentNotExecuted", true);
+            return PlayCommandErrorContract.refresh("原动作状态已过期，确认后才能创建新意图", PlayCommandErrorContract.INTENT_STALE_STATE);
         }
         com.chengyinhub.business.domain.GameCommandReceipt claim = new com.chengyinhub.business.domain.GameCommandReceipt();
         claim.setActivityId(scope.activityId); claim.setNodeId(scope.nodeId); claim.setActorMemberId(memberId);
@@ -179,8 +180,10 @@ public class PlayBasicIntentApplication {
             return basicReplay(prior, hash);
         }
         AjaxResult response = execute.apply(new PlayOriginalRun(originalSession, routeSessionId, runtimeInstance, authorityEpoch));
-        response.put("intentTerminal", true);
-        claim.setOutcome(Integer.valueOf(200).equals(response.get("code")) ? "APPLIED" : "FAILED");
+        // 终态回执一旦落地,该动作号即被占用:成功只标终态,失败必须让客户端换新动作号重试。
+        boolean applied = Integer.valueOf(200).equals(response.get("code"));
+        if (applied) response.put("intentTerminal", true); else PlayCommandErrorContract.terminalFailure(response);
+        claim.setOutcome(applied ? "APPLIED" : "FAILED");
         // Persist the HTTP representation so dates keep the same format and timezone on replay.
         try { claim.setResultJson(responseObjectMapper.writeValueAsString(response)); }
         catch (com.fasterxml.jackson.core.JsonProcessingException e) { throw new IllegalStateException("动作回执不可编码", e); }
@@ -191,12 +194,12 @@ public class PlayBasicIntentApplication {
 
     public AjaxResult basicReplay(com.chengyinhub.business.domain.GameCommandReceipt receipt, String hash) {
         if (!hash.equals(receipt.getRequestHash()) || !"PLAYER".equals(receipt.getActorPerspective())
-                || receipt.getAction() == null || !receipt.getAction().startsWith("PLAY_BASIC_")) return new AjaxResult(409, "动作标识已用于其他输入");
+                || receipt.getAction() == null || !receipt.getAction().startsWith("PLAY_BASIC_")) return PlayCommandErrorContract.actionReused("动作标识已用于其他输入");
         return basicReplay(receipt);
     }
 
     public AjaxResult basicReplay(com.chengyinhub.business.domain.GameCommandReceipt receipt) {
-        if (!java.util.Arrays.asList("APPLIED", "FAILED").contains(receipt.getOutcome())) return new AjaxResult(520, "原命令结果待确认，请稍后查询");
+        if (!java.util.Arrays.asList("APPLIED", "FAILED").contains(receipt.getOutcome())) return PlayCommandErrorContract.pending("原命令结果待确认，请稍后查询");
         try { return com.chengyinhub.common.utils.JsonUtils.getObjectMapper().readValue(receipt.getResultJson(), AjaxResult.class); }
         catch (java.io.IOException e) { throw new IllegalStateException("动作回执不可读", e); }
     }

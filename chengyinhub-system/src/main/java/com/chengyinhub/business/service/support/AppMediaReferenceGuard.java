@@ -117,6 +117,19 @@ public class AppMediaReferenceGuard {
         return safe;
     }
 
+    /**
+     * qx-c1 #3: play-time media from a published snapshot. A registered asset is shown only when APPROVED
+     * (no owner preview of an unapproved upload, even to its uploader); anything else follows {@link #visibleUrl}.
+     * Empty string = not shown.
+     */
+    public String publishedPlayUrl(String reference, Long viewerMemberId) {
+        if (reference == null || reference.trim().isEmpty()) return "";
+        Map<String, Object> asset = resolve(reference.trim());
+        if (registered(asset) && !"APPROVED".equals(asset.get("reviewState"))) return "";
+        String safe = visibleUrl(reference.trim(), viewerMemberId);
+        return safe == null ? "" : safe;
+    }
+
     private String resolveVisibleUrl(String reference, Long viewerMemberId) {
         if (reference == null || reference.trim().isEmpty()) return reference;
         if (AppMediaSchema.isBundledMerchantGameAudio(reference)) return reference;
@@ -206,6 +219,36 @@ public class AppMediaReferenceGuard {
     /** 引用是否落在媒体登记表里;登记过的媒体始终按审核事实与归属判定,不走任何沿用放行。 */
     public boolean isRegistered(String reference) {
         return reference != null && !reference.trim().isEmpty() && registered(resolve(reference));
+    }
+
+    /** Only content publication uses this additional declaration gate; review and ownership stay separate. */
+    public void requirePublicationDeclaration(String reference) {
+        Map<String,Object> row=reference==null?null:resolve(reference);
+        if(registered(row))AppMediaProvenance.requirePublication(row);
+    }
+
+    public com.chengyinhub.business.domain.vo.PublicationProblem publicationProblem(String reference) {
+        Map<String, Object> row = reference == null ? null : resolve(reference);
+        return registered(row) ? AppMediaProvenance.publicationProblem(row) : null;
+    }
+
+    public String missingLicenseReference(String reference) {
+        Map<String,Object> row=reference==null?null:resolve(reference);
+        return registered(row) && AppMediaProvenance.missing(row) ? "media-asset:"+row.get("id") : null;
+    }
+
+    /** Read projection also accepts the signed URL already emitted by existing content DTOs. */
+    public Map<String,Object> publicAttribution(String reference) {
+        if (reference == null || reference.isBlank() || reference.length() > 4096)
+            throw new ServiceException("媒体引用无效",422);
+        Map<String,Object> row=resolve(reference);
+        if (registered(row)) {
+            if (!"APPROVED".equals(row.get("reviewState"))) throw new ServiceException("媒体尚未审核通过",422);
+            return AppMediaProvenance.publicView(row);
+        }
+        if (systemImageKey(reference) != null || AppMediaSchema.isOfficialTemplateImage(reference.trim()))
+            return AppMediaProvenance.publicView(java.util.Collections.emptyMap());
+        throw new ServiceException("媒体来源未经审核",422);
     }
 
     private static boolean registered(Map<String, Object> asset) {

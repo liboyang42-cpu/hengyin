@@ -30,12 +30,15 @@ test('V-02 组件版式:标题 + 码 + logo，到期行有才出，没有倒计�
   const card = xml.slice(xml.indexOf('class="voucher__card"'), xml.indexOf('seat-choice__switch'))
   assert.match(card, /<text wx:if="\{\{title\}\}" class="voucher__title ep1">\{\{title\}\}<\/text>/)
   // 10-29 第三轮:码换成 cy-dot-qr(圆点 + 码心黑色 logo + 彩色波),和票夹背面同一个组件
+  // l-play 2026-11-10(业主「二维码可以大一点的」,proto gp-qr 300×300):码从 360 放到 540,码块 600rpx;仍是 cy-dot-qr 同一个组件
   assert.match(card, /<cy-dot-qr wx:if="\{\{state === 'ready'\}\}" src="\{\{qr\}\}" size="\{\{360\}\}" \/>/)
+  assert.doesNotMatch(xml, /voucher__flip/, 'D1:不再翻面')
   assert.match(card, /<text wx:if="\{\{expiry\}\}" class="voucher__exp">\{\{expiry\}\}<\/text>/)
   assert.doesNotMatch(xml, /Code :|countdown|城瘾活动入场码|出示扫码核销|现在核销|bigqr|长期开放/)
   const css = read('pages/play/components/scene-qr-ticket/index.wxss')
   const wallet = read('subpackageMember/signup/index.wxss')
-  for (const [mine, theirs] of [['.voucher__qr {', '.wc__qr {'], ['.voucher__exp {', '.wc__exp {']]) {
+  // r2-play a1-v3-17(业主「不需要有白色的底…直接放上二维码」):外层白卡去掉,到期行写在深色弹层上,改用弹层 token 色,不再与票夹白卡同值;码块仍同值
+  for (const [mine, theirs] of [['.voucher__qr {', '.wc__qr {']]) {
     const body = (src, sel) => src.slice(src.indexOf(sel) + sel.length, src.indexOf('}', src.indexOf(sel)))
     assert.equal(body(css, mine), body(wallet, theirs), mine + ' 与票夹同值')
   }

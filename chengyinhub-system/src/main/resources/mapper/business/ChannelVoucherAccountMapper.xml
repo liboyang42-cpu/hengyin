@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ChannelVoucherAccountMapper">
+
+    <resultMap id="accountMap" type="com.chengyinhub.business.domain.ChannelVoucherAccount">
+        <id property="id" column="id"/>
+        <result property="channelKey" column="channel_key"/>
+        <result property="displayName" column="display_name"/>
+        <result property="contractRef" column="contract_ref"/>
+        <result property="settlementMode" column="settlement_mode"/>
+        <result property="status" column="status"/>
+        <result property="effectiveFrom" column="effective_from"/>
+        <result property="effectiveTo" column="effective_to"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="accountColumns">
+        id, channel_key, display_name, contract_ref, settlement_mode, status,
+        effective_from, effective_to, create_by, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.ChannelVoucherAccount"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into marketing_channel_voucher_account
+            (channel_key, display_name, contract_ref, settlement_mode, status,
+             effective_from, effective_to, create_by, create_time, update_time)
+        values
+            (#{channelKey}, #{displayName}, #{contractRef}, #{settlementMode}, #{status},
+             #{effectiveFrom}, #{effectiveTo}, #{createBy}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectById" resultMap="accountMap" useCache="false">
+        select <include refid="accountColumns"/> from marketing_channel_voucher_account where id = #{id}
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="accountMap" useCache="false" flushCache="true">
+        select <include refid="accountColumns"/> from marketing_channel_voucher_account
+        where id = #{id} for update
+    </select>
+
+    <select id="selectByKey" resultMap="accountMap" useCache="false">
+        select <include refid="accountColumns"/> from marketing_channel_voucher_account
+        where channel_key = #{channelKey}
+    </select>
+
+    <select id="selectByKeyForUpdate" resultMap="accountMap" useCache="false" flushCache="true">
+        select <include refid="accountColumns"/> from marketing_channel_voucher_account
+        where channel_key = #{channelKey} for update
+    </select>
+
+    <select id="selectList" resultMap="accountMap" useCache="false">
+        select <include refid="accountColumns"/> from marketing_channel_voucher_account
+        <where>
+            <if test="status != null">and status = #{status}</if>
+        </where>
+        order by id desc limit #{limit}
+    </select>
+
+    <update id="updateStatus">
+        update marketing_channel_voucher_account
+        set status = #{status}, update_time = #{updateTime}
+        where id = #{id}
+    </update>
+</mapper>

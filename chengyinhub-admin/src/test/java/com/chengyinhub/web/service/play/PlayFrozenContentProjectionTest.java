@@ -159,4 +159,28 @@ class PlayFrozenContentProjectionTest {
         ObjectNode old = json.createObjectNode(); old.putObject("nodeAnswers").putObject("11").put("validationMethod", 1);
         assertNull(NodeJourneySnapshot.answer(old.toString(), 12L));
     }
+
+    /**
+     * 判定方式:新制快照把 validationMethod 冻进模板呈现(键在即权威,可为 null);
+     * 老快照没有该键 → 用原快照答案区的值。两条路都不读当前模板。
+     */
+    @Test void frozenPresentationValidationMethodIsAuthoritativeWithoutLiveFallback() {
+        PlayNodeContext context = new PlayNodeContext();
+        ICmsMemberTemplateService drafts = mock(ICmsMemberTemplateService.class);
+        ReflectionTestUtils.setField(context, "cmsMemberTemplateService", drafts);
+        ObjectNode content = content();
+        ObjectNode presentation = (ObjectNode) content.path("templatePresentation");
+
+        presentation.put("validationMethod", 5);
+        assertEquals(5, context.frozenTemplateView(node(), content).getValidationMethod());
+
+        presentation.putNull("validationMethod");
+        assertNull(context.frozenTemplateView(node(), content).getValidationMethod(),
+                "键在且为 null = 建局时就没有判定方式,不能回落实时模板");
+
+        presentation.remove("validationMethod");
+        assertEquals(3, context.frozenTemplateView(node(), content).getValidationMethod(),
+                "老快照缺该键时用原快照答案区");
+        verifyNoInteractions(drafts);
+    }
 }

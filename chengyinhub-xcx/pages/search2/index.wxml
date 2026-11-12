@@ -1,5 +1,5 @@
 <wxs src="../../utils/wxs/money.wxs" module="money" />
-<view class="theme-dark">
+<view class="s2-root {{merchantView ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

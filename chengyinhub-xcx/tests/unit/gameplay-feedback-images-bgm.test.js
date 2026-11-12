@@ -23,7 +23,7 @@ test('成功 / 失败反馈不进背包:背包只留结算状态,文字与配图
   assert.doesNotMatch(bag, /r5OutcomeReply\.reply|r5OutcomeReply\.images/);
   assert.match(bag, /r5OutcomeReply\.statusText/);
   const page = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8');
-  assert.match(page, /<cy-play-verdict show="\{\{r5Verdict\.show\}\}"[^>]*text="\{\{r5Verdict\.text\}\}" images="\{\{r5Verdict\.images\}\}"[^>]*bind:close="closeR5Verdict"/);
+  assert.match(page, /<cy-play-verdict class="pk-lookhost \{\{lookClass\}\}" show="\{\{r5Verdict\.show\}\}"[^>]*text="\{\{r5Verdict\.text\}\}" images="\{\{r5Verdict\.images\}\}"[^>]*bind:close="closeR5Verdict"/);
   const verdict = fs.readFileSync(path.join(ROOT, 'pages/play/components/play-verdict/index.wxml'), 'utf8');
   assert.match(verdict, /wx:for="\{\{images\}\}"/);
 });

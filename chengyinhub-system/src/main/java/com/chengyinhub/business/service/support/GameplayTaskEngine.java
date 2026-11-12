@@ -152,33 +152,7 @@ public final class GameplayTaskEngine {
             p=next.getThemeRuntime().with("gameplay");p.with("quests").put(questKey,eventId);p.remove(Arrays.asList("activeQuest","activeQuestCostOption"));
             if(q.has("exclusiveGroup"))p.with("exclusiveGroups").put(q.path("exclusiveGroup").asText(),questKey);
             if(extraTask)p.with("extraSlots").put(q.path("extraSlot").asText(),questKey);
-            long node=q.path("nodeId").asLong();next.getCompletedNodeIds().add(node);next.getNodeStates().put(node,"COMPLETED");next.getVariables().put("sys.passed."+node,1);
-            JsonNode act=actFor(theme,q);boolean complete=actComplete(theme,next,act);
-            for(JsonNode chapter:theme.path("chapters")) {
-                boolean ended=next.getThemeRuntime().path("chapters").path(String.valueOf(chapter.path("index").asInt())).path("ended").asBoolean();
-                if(ended)continue;
-                boolean ready=false;
-                for(JsonNode id:chapter.path("binding").path("nodeIds"))if(!GameplaySurvivalEngine.challengeNode(theme,id.asLong())) {
-                    if(!next.getCompletedNodeIds().contains(id.asLong())) {ready=false;break;}
-                    ready=true;
-                }
-                if(complete && chapterMatchesAct(theme,chapter,act))ready=true;
-                if(ready) {
-                    paidGuard(theme,rules,before,chapter);State chapterBefore=next.copy();inventory.chapterEnd(theme,next,rules,chapter,now);
-                    JourneyStatLinks.recordDeclines(rules,chapterBefore,next,JourneyStatLinks.Reason.CHAPTER_COST,reasons);
-                }
-            }
-            if(complete && actIndex(theme,q)==p.path("actIndex").asInt()) {
-                State rationBefore=next.copy();survival.ration(theme,rules,next,act.path("actKey").asText(),ownerKey,eventId+":ration");
-                JourneyStatLinks.recordDeclines(rules,rationBefore,next,JourneyStatLinks.Reason.CHAPTER_COST,reasons);
-                p=next.getThemeRuntime().with("gameplay");int index=p.path("actIndex").asInt()+1;p.put("actIndex",index);
-                JsonNode nextAct=theme.path("gameplayRuntime").path("acts").path(index);
-                if(nextAct.isObject())p.put("awaitingUnlock",nextAct.path("hostUnlock").asBoolean());else next.setStatus("COMPLETED");
-            }
-            refresh(theme,next);
-            State chapterStartBefore=next.copy();for(JsonNode chapter:theme.path("chapters"))if(containsNode(chapter,next.getCurrentNodeId()))inventory.chapterStart(theme,next,rules,chapter,now);
-            JourneyStatLinks.recordDeclines(rules,chapterStartBefore,next,JourneyStatLinks.Reason.TEMPLATE_EFFECT,reasons);
-            State eventBefore=next.copy();inventory.events(theme,next,rules);JourneyStatLinks.recordDeclines(rules,eventBefore,next,JourneyStatLinks.Reason.TEMPLATE_EFFECT,reasons);JourneyInitialState.clamp(rules,next);
+            advanceCompletedQuest(theme,rules,next,before,q,ownerKey,eventId,now,reasons,true);
             if(applyLinks)JourneyStatLinks.apply(rules,before,next,ownerKey,"quest:"+slot,reasons);
             if(applyLinks && "COMPLETED".equals(next.getStatus()) && !"WORLD_SHARED".equals(GameplayRuntimeConfig.getWorldMode(theme)) && !GameplaySurvivalEngine.deferCompletion(theme,next))inventory.terminal(theme,next,rules,"COMPLETED",now);
             if(ownRewards)result.set("rewards",inventory.finishRewards(next));
@@ -188,6 +162,79 @@ public final class GameplayTaskEngine {
         refresh(theme,next);next.getThemeRuntime().withArray("journal").addObject().put("action",action).put("questKey",questKey).put("eventId",eventId);
         if(next.getThemeRuntime().path("journal").size()>4096)throw new IllegalStateException("本局任务事件容量已满，请导出并复核");
         copy(next,state);return result;
+    }
+
+
+    /** Internal assisted completion; QUEST_RESOLVE continues to require the original trusted proof. */
+    public ObjectNode skipAssisted(JsonNode theme, JourneyRules rules, State state, String questKey,
+            String eventId, String ownerKey, long now) {
+        if (!GameplayRuntimeConfig.cooperativePuzzles(theme)) throw new IllegalStateException("本局未启用合作跳过");
+        JsonNode q = quest(theme, questKey);
+        JsonNode prior = state.getThemeRuntime().path("gameplay").path("slots").path(q.path("settlementSlot").asText());
+        if (prior.isObject()) return (ObjectNode) prior.deepCopy();
+        eligible(theme, state, q);
+        if (q.has("facilityKey")
+                || !questKey.equals(state.getThemeRuntime().path("gameplay").path("activeQuest").asText()))
+            throw new IllegalStateException("该任务不能直接跳过");
+        if (state.getThemeRuntime().path("journal").size() >= 4096) throw new IllegalStateException("本局任务事件容量已满");
+        State next = state.copy(), before = state.copy();
+        boolean extraTask = isExtraTask(theme, next, q);
+        ObjectNode p = next.getThemeRuntime().with("gameplay");
+        p.with("quests").put(questKey, eventId);
+        p.remove(Arrays.asList("activeQuest", "activeQuestCostOption", "activeQuestReceiptId"));
+        clearTaskProof(next, q);
+        if (q.has("exclusiveGroup")) p.with("exclusiveGroups").put(q.path("exclusiveGroup").asText(), questKey);
+        if (extraTask) p.with("extraSlots").put(q.path("extraSlot").asText(), questKey);
+        advanceCompletedQuest(theme, rules, next, before, q, ownerKey, eventId, now, new LinkedHashMap<>(), false);
+        ObjectNode result = JSON.createObjectNode().put("questKey", questKey).put("eventId", eventId)
+                .put("completionMode", "SKIPPED").put("assisted", true).put("puzzleScore", 0);
+        next.getThemeRuntime().with("gameplay").with("slots").set(q.path("settlementSlot").asText(), result.deepCopy());
+        next.getThemeRuntime().withArray("journal").addObject().put("action", "QUEST_SKIP").put("questKey", questKey).put("eventId", eventId);
+        copy(next, state);
+        return result;
+    }
+
+    private void advanceCompletedQuest(JsonNode theme, JourneyRules rules, State next, State before,
+            JsonNode q, String ownerKey, String eventId, long now,
+            Map<String,Set<JourneyStatLinks.Reason>> reasons, boolean solved) {
+        long node=q.path("nodeId").asLong();
+        next.getCompletedNodeIds().add(node); next.getNodeStates().put(node,"COMPLETED");
+        next.getVariables().put("sys.passed."+node,solved ? 1 : 0);
+        ObjectNode p=next.getThemeRuntime().with("gameplay");
+        JsonNode act=actFor(theme,q); boolean complete=actComplete(theme,next,act);
+        for(JsonNode chapter:theme.path("chapters")) {
+            if(next.getThemeRuntime().path("chapters").path(String.valueOf(chapter.path("index").asInt())).path("ended").asBoolean())continue;
+            boolean ready=false;
+            for(JsonNode id:chapter.path("binding").path("nodeIds"))if(!GameplaySurvivalEngine.challengeNode(theme,id.asLong())) {
+                if(!next.getCompletedNodeIds().contains(id.asLong())) {ready=false;break;}
+                ready=true;
+            }
+            if(complete && chapterMatchesAct(theme,chapter,act))ready=true;
+            if(ready && solved) {
+                paidGuard(theme,rules,before,chapter); State chapterBefore=next.copy();
+                inventory.chapterEnd(theme,next,rules,chapter,now);
+                JourneyStatLinks.recordDeclines(rules,chapterBefore,next,JourneyStatLinks.Reason.CHAPTER_COST,reasons);
+            }
+        }
+        if(complete && actIndex(theme,q)==p.path("actIndex").asInt()) {
+            if(solved) {
+                State rationBefore=next.copy();
+                survival.ration(theme,rules,next,act.path("actKey").asText(),ownerKey,eventId+":ration");
+                JourneyStatLinks.recordDeclines(rules,rationBefore,next,JourneyStatLinks.Reason.CHAPTER_COST,reasons);
+            }
+            p=next.getThemeRuntime().with("gameplay"); int index=p.path("actIndex").asInt()+1; p.put("actIndex",index);
+            JsonNode nextAct=theme.path("gameplayRuntime").path("acts").path(index);
+            if(nextAct.isObject())p.put("awaitingUnlock",nextAct.path("hostUnlock").asBoolean()); else next.setStatus("COMPLETED");
+        }
+        refresh(theme,next);
+        if(solved) {
+            State chapterStartBefore=next.copy();
+            for(JsonNode chapter:theme.path("chapters"))if(containsNode(chapter,next.getCurrentNodeId()))inventory.chapterStart(theme,next,rules,chapter,now);
+            JourneyStatLinks.recordDeclines(rules,chapterStartBefore,next,JourneyStatLinks.Reason.TEMPLATE_EFFECT,reasons);
+            State eventBefore=next.copy(); inventory.events(theme,next,rules);
+            JourneyStatLinks.recordDeclines(rules,eventBefore,next,JourneyStatLinks.Reason.TEMPLATE_EFFECT,reasons);
+        }
+        JourneyInitialState.clamp(rules,next);
     }
 
     public void refresh(JsonNode theme,State state) {

@@ -233,16 +233,60 @@
 .ni-stage { position: relative; width: 100%; height: 360rpx; }
 .ni-glow { position: absolute; left: 50%; top: 50%; width: 360rpx; height: 360rpx; margin: -180rpx 0 0 -180rpx; border-radius: 50%; transition: background 0.5s; }
 .ni-glow--0 { background: radial-gradient(circle, rgba(165, 166, 232, 0.5), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 光晕按定稿原型 */
+/* 每步的光晕换色(R12 定稿原型 p7) */
 .ni-glow--1 { background: radial-gradient(circle, rgba(242, 196, 107, 0.5), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 同上 */
 .ni-glow--2 { background: radial-gradient(circle, rgba(127, 209, 166, 0.5), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 同上 */
 .ni-glow--3 { background: radial-gradient(circle, rgba(240, 138, 160, 0.45), rgba(255, 255, 255, 0) 65%); } /* ds-ok: 同上 */
-.ni-o { position: absolute; left: 50%; top: 50%; width: 240rpx; height: 240rpx; margin: -120rpx 0 0 -150rpx; opacity: 0; transform: scale(0.4) rotate(-20deg); transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.45, 1), opacity 0.3s; }
+/* 翻页:旧物件缩走,新物件进场;进场后每步各自一种动效(r2 a6-w2-16)。
+ * 全部用 transition(MOTION.md 不新增 @keyframes):没轮到的物件停在本步动效的起点(透明、无过渡);
+ * 上一步的物件挂 ni-o--out 缩走;当前步挂 ni-o--on 补间到位;挥手 / 摆动 / 闪烁这类多段动作由
+ * JS beats(niBeat)按原关键帧的段落逐段换 ni-stage--bN,每段同时长同曲线。 */
+.ni-o { position: absolute; left: 50%; top: 50%; width: 240rpx; height: 240rpx; margin: -120rpx 0 0 -150rpx; opacity: 0; transform: scale(0.4) rotate(-20deg); transition: none; }
 .ni-o--sm { width: 128rpx; height: 128rpx; margin: -150rpx 0 0 40rpx; }
-.ni-o--on { opacity: 1; transform: scale(1) rotate(-6deg); }
-.ni-o--sm.ni-o--on { transform: scale(1) rotate(10deg); }
+.ni-stage .ni-o.ni-o--out { opacity: 0; transform: scale(0.4) rotate(-20deg); transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.45, 1), opacity 0.3s; }
+.ni-o--on { opacity: 1; }
+/* 1 分身:店铺从下面升起落定,星光一闪一闪 */
+.ni-o--k0 { transform: translateY(80rpx) scale(0.7) rotate(-6deg); }
+.ni-o--k0.ni-o--on { transform: translateY(0) scale(1) rotate(-6deg); transition: transform 0.7s cubic-bezier(0.3, 1.4, 0.45, 1), opacity 0.7s cubic-bezier(0.3, 1.4, 0.45, 1); }
+.ni-o--sm.ni-o--k0 { transform: scale(1) rotate(10deg); }
+.ni-o--sm.ni-o--k0.ni-o--on { transform: scale(1) rotate(10deg); transition: none; }
+.ni-stage--b1 .ni-o--sm.ni-o--k0.ni-o--on { opacity: 0.45; transform: scale(0.72) rotate(28deg); transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out; }
+.ni-stage--b2 .ni-o--sm.ni-o--k0.ni-o--on { transition: transform 0.7s ease-in-out, opacity 0.7s ease-in-out; }
+/* 2 打招呼:手绕手腕挥两下,气泡随后冒出 */
+.ni-o--k1 { transform-origin: 70% 90%; transform: rotate(-6deg); }
+.ni-o--k1.ni-o--on { transform: rotate(-6deg); transition: opacity 0.3s; }
+.ni-stage--b1 .ni-o--k1.ni-o--on { transform: rotate(-22deg); }
+.ni-stage--b2 .ni-o--k1.ni-o--on { transform: rotate(8deg); }
+.ni-stage--b3 .ni-o--k1.ni-o--on { transform: rotate(-18deg); }
+.ni-stage--b1 .ni-o--k1.ni-o--on, .ni-stage--b2 .ni-o--k1.ni-o--on, .ni-stage--b3 .ni-o--k1.ni-o--on, .ni-stage--b4 .ni-o--k1.ni-o--on { transition: transform 0.24s ease-in-out, opacity 0.3s; }
+.ni-o--sm.ni-o--k1 { transform-origin: 0% 100%; transform: scale(0.2) rotate(10deg); }
+.ni-o--sm.ni-o--k1.ni-o--on { transform: scale(1) rotate(10deg); transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.45, 1) 0.45s, opacity 0.5s cubic-bezier(0.3, 1.6, 0.45, 1) 0.45s; }
+/* 3 菜单和营业时间:餐盘从上面落到桌面,闹钟左右摆两下 */
+.ni-o--k2 { transform: translateY(-90rpx) rotate(-6deg); }
+.ni-o--k2.ni-o--on { transform: translateY(0) rotate(-6deg); transition: transform 0.65s cubic-bezier(0.3, 1.3, 0.45, 1), opacity 0.65s cubic-bezier(0.3, 1.3, 0.45, 1); }
+.ni-o--sm.ni-o--k2 { transform-origin: 50% 100%; transform: rotate(10deg); }
+.ni-o--sm.ni-o--k2.ni-o--on { transform: rotate(10deg); transition: none; }
+.ni-stage--b1 .ni-o--sm.ni-o--k2.ni-o--on { transform: rotate(-4deg); }
+.ni-stage--b2 .ni-o--sm.ni-o--k2.ni-o--on { transform: rotate(18deg); }
+.ni-stage--b3 .ni-o--sm.ni-o--k2.ni-o--on { transform: rotate(4deg); }
+.ni-stage--b1 .ni-o--sm.ni-o--k2.ni-o--on, .ni-stage--b2 .ni-o--sm.ni-o--k2.ni-o--on, .ni-stage--b3 .ni-o--sm.ni-o--k2.ni-o--on, .ni-stage--b4 .ni-o--sm.ni-o--k2.ni-o--on { transition: transform 0.3s ease-in-out; }
+/* 4 起名字、选性格:名牌翻正,面具转一圈换张脸 */
+.ni-o--k3 { transform: perspective(600rpx) rotateY(90deg) rotate(-6deg); }
+.ni-o--k3.ni-o--on { transform: perspective(600rpx) rotateY(0) rotate(-6deg); transition: transform 0.7s cubic-bezier(0.3, 1.2, 0.45, 1), opacity 0.7s cubic-bezier(0.3, 1.2, 0.45, 1); }
+.ni-o--sm.ni-o--k3 { transform: rotateY(-180deg) rotate(10deg); }
+.ni-o--sm.ni-o--k3.ni-o--on { transform: rotateY(0) rotate(10deg); transition: transform 0.9s ease-in-out 0.4s, opacity 0.9s ease-in-out 0.4s; }
+/* 减少动态效果:直接到位(系统开关走媒体查询,应用内开关不跑 beats 并挂 ni--still) */
+.ni--still .ni-stage .ni-o { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .ni-o { transition: none; } .ni-stage .ni-o { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .ni-dot, .ni-back, .ni-skip { transition: none; } }
 .ni-t { margin-top: var(--cy-space-3); font-size: var(--cy-type-sheet-title); font-weight: 700; color: var(--cy-text-title); text-align: center; }
 .ni-s { margin-top: var(--cy-space-2); font-size: var(--cy-font-label); color: var(--cy-text-secondary); text-align: center; line-height: 1.5; }
-.ni-dots { display: flex; gap: 12rpx; margin: var(--cy-space-5) 0; }
+.ni-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: var(--cy-space-2); }
+.ni-back { width: 88rpx; height: 88rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-bg-card-2); color: var(--cy-text-title); transition: opacity var(--cy-motion-standard); }
+.ni-skip { min-width: 88rpx; height: 88rpx; line-height: 88rpx; text-align: right; font-size: var(--cy-font-body); color: var(--cy-text-title); transition: opacity var(--cy-motion-standard); }
+.ni-back.is-off, .ni-skip.is-off { opacity: 0; pointer-events: none; }
+.ni-period { color: var(--cy-ref-violet-500); }
+.ni-dots { display: flex; gap: 12rpx; }
 .ni-dot { width: 36rpx; height: 12rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); transform: scaleX(0.34); transition: transform 0.3s; }
 .ni-dot--on { transform: scaleX(1); background: var(--cy-text-title); }
-.ni-btn { width: 100%; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); text-align: center; font-size: var(--cy-font-body); font-weight: 700; }
+.ni-btn { margin-top: var(--cy-space-5); width: 100%; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); text-align: center; font-size: var(--cy-font-body); font-weight: 700; }

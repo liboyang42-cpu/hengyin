@@ -16,7 +16,10 @@
 /* 淡出 */
 .lt--fade .lt__panel { opacity: 0; } .lt--fade.is-in .lt__panel { opacity: 1; } .lt--fade.is-out .lt__panel { opacity: 0; }
 /* 光圈：圆从中心铺满，再从四周收回中心 */
-.lt--iris.is-in .lt__circle { transform: scale(1); } .lt--iris.is-out .lt__circle { transform: scale(0); }
+.lt--iris.is-in .lt__circle { transform: scale(1); }
+/* s0-fixture-play-entry(2026-11-10 业主「这个看起来bug了」):揭开时圆往回缩成中心一块黑斑,深色故事页上像卡住的污点。
+   改成圆继续略放大并整体淡出 —— 画面从整屏均匀亮起,中间不留实心圆。盖上那一段不变。 */
+.lt--iris.is-out .lt__circle { transform: scale(1.15); opacity: 0; }
 /* 翻页 */
 .lt--page .lt__panel { transform-origin: 100% 50%; transform: rotateY(90deg); }
 .lt--page.is-in .lt__panel { transform: none; }

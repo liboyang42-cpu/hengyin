@@ -1,0 +1,7 @@
+checkin ch50 必须提供动作标识、期望版本和原运行时身份
+verify ch50 {"msg": "核销成功", "code": 200, "data": {"perkName": "到店赠美式一杯", "chapterId": 50, "redemptionId": 5, "chapterName": "第1章 咖啡"
+checkin ch51 必须提供动作标识、期望版本和原运行时身份
+verify ch51 {"msg": "核销成功", "code": 200, "data": {"perkName": "到店赠精选书签一枚", "chapterId": 51, "redemptionId": 6, "chapterName": "第2章 书
+checkin ch52 必须提供动作标识、期望版本和原运行时身份
+verify ch52 {"msg": "核销成功", "code": 200, "data": {"perkName": "到店赠鲜花一支", "chapterId": 52, "redemptionId": 7, "chapterName": "第3章 花店"
+((50, 1), (51, 1), (52, 1), (53, 0))

@@ -1,0 +1,37 @@
+{
+  "status": "RUN_SNAPSHOT",
+  "topicId": 21,
+  "activityId": 77,
+  "contentRevisionId": null,
+  "revisionNo": null,
+  "schemaVersion": 1,
+  "manifestVersion": 1,
+  "contentSha256": null,
+  "routeMode": "LINEAR",
+  "openingChapterId": 501,
+  "openingChapterName": "序章",
+  "stations": [
+    { "nodeId": 11, "nodeName": "第一站", "chapterId": 501, "scanReady": false, "scope": "START" }
+  ],
+  "requiredCapabilities": [
+    { "key": "station.list", "minVersion": 1 }
+  ],
+  "assets": [
+    {
+      "assetKey": "chapter:opening:audio",
+      "url": "https://cdn.example.com/audio/opening.mp3",
+      "sha256": null,
+      "bytes": null,
+      "mime": null,
+      "priority": 1,
+      "scope": "START",
+      "textAlternative": null,
+      "verified": false,
+      "unverifiedReason": "HASH_AND_BYTES_UNKNOWN"
+    }
+  ],
+  "assetVerification": "UNVERIFIED",
+  "expiresAt": null,
+  "onlineRequired": false,
+  "sourceLocale": "zh-CN"
+}

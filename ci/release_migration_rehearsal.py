@@ -80,6 +80,79 @@ SYNTHETIC_ROWS = [
     "INSERT INTO cms_registration(id, registration_no, member_id, owner_type, owner_id, topic_id, registration_status, "
     "payment_status, purchase_kind, original_amount, total_amount, payable_amount, pay_expire_time, create_time) "
     "VALUES (9501, 'rehearsal-reg-6', 9801, 1, 6, 6, 2, 2, 2, 0, 0, 0, NOW(), NOW())",
+    # 10-29 之后的数据迁移（形状取自 f-rehearsal seed_rows.sql，即 pack 中 expectedAtBaseline=NEEDED 的实测输入）。
+    # 积分规则 id 1（注册赠送 20）、id 6（被邀请人报名送分 10）：20261105_welcome_points_fifty、20261104_invitee_signup_points_off。
+    "INSERT INTO cms_points_setting(id, title, value, status) VALUES (1, '注册赠送', 20, 1), (6, '被邀请人报名送分', 10, 1)",
+    # sys_category type=1 通用种子（20261101_theme_categories 文件头：1–4、21–23、25 是生产现有行，迁移回读断言依赖它们）。
+    "INSERT INTO sys_category(id, type, parent_id, category_name, level, sort_id, status, del_flag, create_time) VALUES "
+    "(1,1,0,'运动健身',0,1,1,0,NOW()), (2,1,0,'科技数码',0,2,1,0,NOW()), (3,1,0,'美食烹饪',0,3,1,0,NOW()), "
+    "(4,1,0,'娱乐达人',0,4,1,0,NOW()), (21,1,0,'衣物洗护',0,21,1,0,NOW()), (22,1,0,'家政维修',0,22,1,0,NOW()), "
+    "(23,1,0,'出行服务',0,23,1,0,NOW()), (25,1,0,'生活美学',0,25,1,0,NOW())",
+    # settlement_rule 通用行（20261103_settlement_rule_three_percent 文件头：生产为 activity / topic 0.10/0.90/0）。
+    "INSERT INTO settlement_rule(merchant_id, biz_type, platform_commission_rate, merchant_rate, creator_rate, status, "
+    "del_flag) VALUES (0,'activity',0.1000,0.9000,0.0000,1,0), (0,'topic',0.1000,0.9000,0.0000,1,0)",
+    # 35 款平台商家玩法封面旧地址（20261030_merchant_game_covers_to_oss）。
+    "INSERT INTO cms_template_library(id, member_id, title, img_url) VALUES " + ", ".join(
+        "(%d, 100000, 'rehearsal-cover-%d', 'https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/%s.jpg')"
+        % (98000 + i, i, name) for i, name in enumerate((
+            "branch-story-relay city-sidequest-observation clothing-care-bingo coffee-flavor-personality "
+            "color-co-creation detail-observation-blitz duo-memory-relay family-safety-check-relay festival-story-puzzle "
+            "fitness-reaction-60 gift-match-guess gym-charity-sprint hidden-menu-clue-chain home-safety-mines "
+            "keepsake-treasure-clues menu-co-creation movement-bingo original-role-mystery partner-training-relay "
+            "performance-bingo repair-tool-guess rhythm-blind-guess route-badge-story seasonal-storage-challenge "
+            "self-care-bingo signature-dish-blitz song-mood-relay space-styling-challenge stain-detective "
+            "style-personality-lab table-flavor-relay table-mission-bingo team-energy-relay travel-partner-decisions "
+            "travel-safety-bingo").split())),
+    "INSERT INTO cms_member_template(id, member_id, title, img_url) VALUES (98100, 100000, 'rehearsal-member-cover', "
+    "'https://www.chengyinhub.com/prod-api/profile/merchant-game-covers/branch-story-relay.jpg')",
+    # 主题总时长按分钟误存（20261104_topic_total_time_seconds）：节点 30+60 分钟，total_time=90。
+    "INSERT INTO cms_topic(id, name, member_id, del_flag, total_time) VALUES (98400, 'rehearsal-minutes', 100000, 0, 90)",
+    "INSERT INTO cms_topic_node(id, topic_id, node_time) VALUES (98401, 98400, 30), (98402, 98400, 60)",
+    # 俱乐部场次缺集合点、票上有坐标（20261102_club_session_gather_point 及其 20261104 回读）。
+    "INSERT INTO cms_activity(id, club_id, del_flag, end_date) VALUES (98500, 9001, 0, DATE_ADD(NOW(), INTERVAL 7 DAY))",
+    "INSERT INTO oms_ticket(id, member_id, owner_type, owner_id, gather_lat, gather_lng, del_flag) "
+    "VALUES (98501, 9801, 2, 98500, 31.230000, 121.470000, 0)",
+    # 官方模板 990059 旧文案与无状态键（20261101_prefab_life_template_copy / _state_keys）。
+    "INSERT INTO cms_topic(id, name, member_id, del_flag, create_by, description) VALUES (990059, '预制人生', 100000, 0, "
+    "'seed_prefab_life_20260918', '本主题是内部试玩版,不进公开列表;持 0 元自玩通行证即可开走。')",
+    "INSERT INTO cms_member_template(id, member_id, title) VALUES (133, 100000, 'PL01-出生登记:写下你叫什么')",
+    "INSERT INTO cms_member_template(id, member_id, title, advanced_config_json) "
+    "VALUES (135, 100000, 'PL03-会议出口:hello world', '{\"target\":\"hello world\"}')",
+    "INSERT INTO cms_topic_chapter(id, topic_id, blocks) VALUES (212, 990059, '[{\"type\":\"node\",\"nodeId\":194}]'), "
+    "(213, 990059, '[{\"type\":\"text\",\"content\":\"小周点了一根烟。\"}]')",
+    # 官方模板种子规则原文（20261111_rule_seed_split_steps）。
+    "INSERT INTO cms_template_library(id, member_id, title, rule_instructions) VALUES (98200, 100000, 'rehearsal-rule-seed', "
+    "'1. 到达指定门店。2. 向店员说出今日暗号。3. 输入暗号或扫码完成任务,领取隐藏奖励。(运营提示:暗号每天可换一次;商家必须提前知道暗号和奖励,否则现场体验会断)')",
+    "INSERT INTO cms_member_template(id, member_id, title, rule_instructions) VALUES (98201, 100000, 'rehearsal-rule-seed', "
+    "'1. 到达指定门店。2. 向店员说出今日暗号。3. 输入暗号或扫码完成任务,领取隐藏奖励。(运营提示:暗号每天可换一次;商家必须提前知道暗号和奖励,否则现场体验会断)')",
+] + [
+    # 定时任务按生产编号（20261101_stagger_sys_job_seconds 按 11-01 生产只读预检写死 job_id 102–140）。
+    # 合成库的任务编号按迁移顺序自增，与生产对不上；这里把基线任务行改成生产形态的编号：
+    # 102 出发前提醒、105 分润结算、121 D12 采样是迁移文件头点名的；其余按「同一原 cron 频率组」落到该组的生产编号，
+    # 组内对应关系是合成的（迁移只按 job_id + 原表达式改秒位，不改频率）。迁移文件头之外的任务落到空闲编号。
+    "UPDATE sys_job SET job_id = job_id + 100000",
+    "UPDATE sys_job SET job_id = CASE invoke_target " + " ".join(
+        "WHEN '%s' THEN %d" % pair for pair in (
+            ("beforeStartNotifyTask.run()", 102), ("settlementTask.run()", 105), ("metricsProbeTask.run()", 121),
+            # 0 * * * * ?：125、126、127、130、135、140
+            ("merchantCrmDeliveryRecoveryTask.run()", 125), ("communityPostMaintenanceTask.run()", 126),
+            ("clubEventOpsTask.run()", 127), ("roamPresenceRevokeAuditTask.run()", 130),
+            ("storeVerifyGrowthTask.run()", 135), ("clubPostMediaReviewTask.run()", 140),
+            # 0 0/5：109、110、139（121 留在 0 秒）；0 0/10：119、106、133、124、132、107
+            ("merchantCommerceReconcileTask.reconcile()", 109), ("playTeamExpireTask.run()", 106),
+            ("roamRewardDeliveryTask.run()", 107), ("merchantAftercareTimeoutTask.run()", 119),
+            ("orderCloseTask.reconcileExpiredPaying()", 124),
+            # 0 0/15：118；0 0/30：113、129；0 0 3：131；0 0 4：117
+            ("refundReconcileTask.reconcile()", 118), ("roamHangoutExpireTask.run()", 113),
+            ("auditBacklogMonitorTask.run()", 129), ("predictVoidExpiredTask.run()", 131),
+            ("withdrawReconciliationTask.run()", 117),
+            # 迁移文件头之外的任务
+            ("imNotificationDeliveryTask.deliverPending()", 103), ("aiQuotaRecoveryTask.run()", 104),
+            ("dataRetentionCleanupTask.run()", 108), ("analyticsAggregationTask.aggregateRecentWindow()", 111),
+            ("registrationAutoVerifyTask.run()", 112), ("settlementReconciliationTask.run()", 114),
+            ("clubSessionReconciliationTask.run()", 115), ("coopSettlementPayoutTask.run()", 120))) +
+    " ELSE job_id END",
+    "ALTER TABLE sys_job AUTO_INCREMENT = 1",
 ]
 
 # 合成的已有页面形态（不代表生产状态）：四个后台角色都已配置过页面，且收款审核/打款授权按
@@ -244,12 +317,37 @@ SINGLE_APPLY = frozenset({
     "npc_voice_confirmed_attempt_20261024",
     "npc_voice_enrollment_intent_20261024",
     "photo_check_intent_20261023",
+    # 10-29 之后进入发布集（f-release「APPLIED 时必须跳过」46 项中的新增 21 项，f-rehearsal 原样重跑已证实拒绝且不改库）。
+    "20261029_activity_cancellation_receipt",
+    "20261029_topic_cancellation_receipt",
+    "20261107_template_adoption_inherited_config_hash",
+    "20261108_topic_content_revision",
+    "20261109_play_help_audit_permission",
+    "20261110_ecommerce_payout_wiring",
+    "club_host_reservation_20261109",
+    "marketing_attribution_20261108",
+    "marketing_extra_seat_20261108",
+    "marketing_product_20261108",
+    "marketing_revenue_allocation_20261108",
+    "marketing_z_channel_voucher_20261108",
+    "preset_draft_source_20261108",
+    "public_content_catalog_node_topic_index_20261108",
+    "video_bounty_group_verification_20261108",
+    "video_bounty_host_tip_20261108",
+    "x12_topic_look_20261029",
+    "z_channel_voucher_snapshot_20261109",
+    "z_marketing_revenue_channel_reverse_kind_index_shape_20261109",
+    "z_workshop_paid_review_20261109",
+    "zz_questo_collation_align_20261109",
 })
 
 # 已被替代、永不执行的迁移 -> 替代者（与 scripts/e2e/build_schema.py 的 REPLACED_UNAPPLIED 选择一致）。
 REPLACED_UNAPPLIED = {
     "20261024_c_before_start_notice_typed": "20261024_g_before_start_notice_metadata_v2",
     "20261026_official_broadcast_delivery": "20261028_official_broadcast_protocol_union",
+    # 10-29 之后：原文件断言把两列唯一索引数成 1 行，由 *_index_shape_20261109 逐字替代（f-release 不执行项）。
+    "public_content_catalog_20261108": "public_content_catalog_index_shape_20261109",
+    "z_marketing_revenue_channel_reverse_kind_20261108": "z_marketing_revenue_channel_reverse_kind_index_shape_20261109",
 }
 
 

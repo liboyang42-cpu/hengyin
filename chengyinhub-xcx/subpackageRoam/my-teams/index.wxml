@@ -8,7 +8,10 @@
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
   <!-- 地图按钮放进 cy-nav-bar 的 actions 槽:组件按微信胶囊左缘定位,不会被胶囊盖住 -->
   <cy-nav-bar plain>
-    <view slot="actions" class="mt-map" bindtap="openMap" aria-role="button" aria-label="打开地图找队伍" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="31" /><text>地图</text></view>
+    <view slot="actions" class="mt-acts">
+      <view class="mt-map" bindtap="openJoinCode" aria-role="button" aria-label="输入加入码" hover-class="cy-pressed" hover-stay-time="80"><text>加入码</text></view>
+      <view class="mt-map" bindtap="openMap" aria-role="button" aria-label="打开地图找队伍" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="31" /><text>地图</text></view>
+    </view>
   </cy-nav-bar>
   <cy-page-title title="我的队伍" />
   <include src="../utils/team-recovery-panel.wxml" />

@@ -87,7 +87,9 @@ class ProductSourceWiringTest {
     @Test
     void registrationWritesPurchaseKind() throws Exception {
         String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java");
-        assertEquals(1, countOccurrences(src, "setPurchaseKind(PurchaseKind.derive("),
+        // 只数**落库**那一处(registration.setPurchaseKind)。C06 报价投影另有
+        // delivery.setPurchaseKind(...) —— 那是只读 DTO 装配,不写库,不该被当成第二个固化点。
+        assertEquals(1, countOccurrences(src, "registration.setPurchaseKind(PurchaseKind.derive("),
                 "购票主链路必须推导并固化 purchase_kind");
         assertEquals(1, countOccurrences(src, "setPurchaseKind(PurchaseKind.SELF_PLAY_PASS)"),
                 "自玩通行证链路必须固化为 SELF_PLAY_PASS —— 它是唯一无 ticketId 的产品");
@@ -105,10 +107,10 @@ class ProductSourceWiringTest {
     @Test
     void purchaseKindDerivesFromProductTypeNotTicketMode() throws Exception {
         String src = sourceOf("chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/CmsRegistrationServiceImpl.java");
-        // 2 处:① :setPurchaseKind 落库固化;② [P0-13] ③ 限购闸的行级判据。
-        // 两处都喂 productType(主题真源)⇒ 同一表达式、同一口径,不可能分叉。
+        // 3 处:① 落库固化;② [P0-13] 限购闸行级判据;③ C06 报价投影 delivery 装配。
+        // 三处都喂 productType(主题真源)⇒ 同一表达式、同一口径,不可能分叉。
         // 数量写死是刻意的:再加一处就必须来这儿改一次,逼着人确认新调用点也喂的是真源。
-        assertEquals(2, countOccurrences(src, "PurchaseKind.derive(ticketId, productType)"),
+        assertEquals(3, countOccurrences(src, "PurchaseKind.derive(ticketId, productType)"),
                 "必须喂主题真源 productType");
         // ③ 限购闸的整单层:多票路径手上是 it.getTicketId(),主题真源经 resolveSellerTopic 解析成
         // orderProductType —— 同样是 product_type,不是票的 mode。

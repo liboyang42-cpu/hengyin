@@ -1,0 +1,4 @@
+function f(ds) {
+  return { a: 1, wh: Number(ds.wh) || 0 };
+}
+module.exports = { f: f };

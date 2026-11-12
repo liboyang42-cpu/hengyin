@@ -11,7 +11,7 @@
 const SPIN_MS = 2200;
 
 const faces = require('./faces.js');
-const { createShakeDetector } = require('../../utils/play-shake.js');
+const { createShakeDetector, holdAccelerometer } = require('../../utils/play-shake.js');
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
 
@@ -98,18 +98,19 @@ Component({
     _onShake() {
       if (this._hidden || !this.data.show) return;
       if (!this._shakeOn) {
-        this._shakeOn = true;
+        // f-play V3-04:共用传感器(play-shake holdAccelerometer),整屏盖在流上时只有最上面那份收读数
         const tick = (res) => { if (this._tick === tick && this._shakeOn && !this._hidden && this.data.show) this._shake(res); };
         this._tick = tick;
-        wx.startAccelerometer({ interval: 'game', fail() {} });
-        wx.onAccelerometerChange(this._tick);
+        this._release = holdAccelerometer(wx, tick);
+        this._shakeOn = !!this._release;
       }
     },
     _offShake() {
       if (!this._shakeOn) return;
       this._shakeOn = false;
-      wx.stopAccelerometer({ fail() {} });
-      wx.offAccelerometerChange && wx.offAccelerometerChange(this._tick);
+      const release = this._release;
+      this._release = null; this._tick = null;
+      if (release) release();
     },
     /** 抛。摇一摇和点屏幕都走这里 —— 桌面和没有加速度计的机器要有退路。 */
     onFlip() {

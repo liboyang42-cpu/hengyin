@@ -1,5 +1,6 @@
 const app = getApp();
 const merchantTheme = require('../../../../utils/merchant-theme.js');
+const { visibleGrowTips, growTipUrl } = require('../../utils/grow-tips.js');
 const { merchantHomeUrl } = require('../../../../utils/merchant-home-link.js');
 const { toTimestamp, chinaParts } = require('../../../../utils/datetime.js');
 const { failureStatus, retryLogin, recoverReadSession } = require('../../../../utils/session/login-reload.js');
@@ -73,6 +74,7 @@ Page({
     generatedAt: '',
     storeName: '', greetWord: '你好', // 页头问候「早上好，店名」(2026-10-30 D05:按时段换问候语)
     storeLogo: '',        // 页头店铺头像(商家 Logo)
+    growTips: [],         // W2-15 经营优化卡:守卫放行后按岗位权限挑(pages/merchant/utils/grow-tips.js)
     factState: 'unknown', // unknown=字段缺失 | empty=服务端明确全零 | ready=有真实事实
     valueCard: null,      // 首屏归因价值卡:城瘾为你带来 N 位玩家/M 次打卡/K 单核销 + 核销进度 + 环比
     metricCards: [],      // 核销率 / 复购率两张小卡:比率 + 说明行 + 分段胶囊进度条
@@ -99,6 +101,7 @@ Page({
 
   onLoad() {
     this._skipNextShowReload = true;
+    this._identityEpoch = identitySync.identityEpoch();
     const gd = app.globalData || {};
     const sys = wx.getSystemInfoSync();
     this.setData({
@@ -113,6 +116,9 @@ Page({
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
     merchantTheme.merchantPageShow(); this._syncGreeting();
+    // G-5:离开期间品牌中心换过店名/Logo(epoch 变了)⇒ 本页缓存的身份作废,本次回读以 /api/merchant/info 为准
+    const identityEpoch = identitySync.identityEpoch();
+    if (identityEpoch !== this._identityEpoch) { this._identityEpoch = identityEpoch; this._identityStale = true; }
     // 首次 onShow 紧跟 onLoad，不重复请求；以后每次返回都让服务端重新确认商家资格。
     const memberId = String(typeof app.getUserID === 'function' ? (app.getUserID() || '') : '');
     const scopeChanged = this._dataMemberId !== undefined && this._dataMemberId !== memberId;
@@ -244,7 +250,7 @@ Page({
           that._sweepPips();
           // M-21(2026-10-29 复查):参谋包里缺店名/Logo 时(旧后端或商家行没按会员号查到),
           // 补读首页与「我的」同一来源 /api/merchant/info,不再留空「Hi」
-          if (!that.data.storeName || !that.data.storeLogo) that._loadStoreIdentity(isCurrent);
+          if (that._identityStale || !that.data.storeName || !that.data.storeLogo) that._loadStoreIdentity(isCurrent);
         } else if (res && res.code !== '200' && res.code !== 200) {
           that._clearSensitiveState(app.getRequestErrorMessage(res, '商家资格已失效'));
         } else {
@@ -300,9 +306,14 @@ Page({
       method: 'POST',
       success(res) {
         if (!isCurrent() || !res || (res.code !== '200' && res.code !== 200) || !res.data) return;
+        // 身份变过就以回读为准整体覆盖;否则只补缺(参谋包里有的不动)
+        const stale = !!that._identityStale;
+        that._identityStale = false;
+        const name = String(res.data.name || '').trim();
+        const logo = String(res.data.logo || '').trim();
         that.setData({
-          storeName: that.data.storeName || String(res.data.name || '').trim(),
-          storeLogo: that.data.storeLogo || String(res.data.logo || '').trim(),
+          storeName: stale ? (name || that.data.storeName) : (that.data.storeName || name),
+          storeLogo: stale ? (logo || that.data.storeLogo) : (that.data.storeLogo || logo),
         });
       },
       // 补读失败只轻提示一次,问候区保持现状(经营数据照常可看)
@@ -726,6 +737,16 @@ Page({
   },
 
   goCoopCenter() { wx.navigateTo({ url: COOP_CENTER_ROUTE }); },
+
+  // W2-15:守卫(access/me)放行时附带归一后的岗位权限,经营优化卡按它显隐;其余状态一张不出
+  onGateState(e) {
+    const access = e && e.detail && e.detail.state === 'allow' ? e.detail.access : null;
+    this.setData({ growTips: visibleGrowTips(access) });
+  },
+  goGrowTip(e) {
+    const url = growTipUrl((e.currentTarget.dataset || {}).key);
+    if (url) wx.navigateTo({ url });
+  },
 
   // 2026-10-30 D05(业主:头像要同步、招呼语换一句话):问候语按北京时间时段;品牌中心刚换的 Logo / 店名先盖上,接口回读兜底。
   _syncGreeting() {

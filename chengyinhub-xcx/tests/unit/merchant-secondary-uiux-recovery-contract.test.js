@@ -198,7 +198,8 @@ test('模板货架不用首字、字符星星或 CSS 渐变冒充图形资产，
   assert.doesNotMatch(wxml, /★★★★★/)
   assert.doesNotMatch(wxml, /linear-gradient/)
   assert.doesNotMatch(wxml, /hot-divider|class="hot-/)
-  assert.match(wxml, /class="lc__img cv-err"[\s\S]*?封面暂不可用/)
+  assert.match(wxml, /class="lc__img cv-err"/)
+  assert.doesNotMatch(wxml, /封面暂不可用/)
 })
 
 test('模板货架加载、失败与重试走设计系统组件；复制失败后入口立即可再点', () => {

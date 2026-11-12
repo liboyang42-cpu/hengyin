@@ -13,4 +13,6 @@ public interface AppMediaAssetMapper {
     int bindAuditTask(@Param("id") Long id,@Param("version") Integer version,@Param("taskId") Long taskId);
     int decide(@Param("id") Long id,@Param("version") Integer version,@Param("taskId") Long taskId,@Param("state") String state,@Param("reason") String reason);
     int retry(@Param("id") Long id,@Param("memberId") Long memberId,@Param("version") Integer version);
+
+    int updateProvenance(Map<String,Object> asset);
 }

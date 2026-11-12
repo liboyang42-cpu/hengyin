@@ -1,6 +1,5 @@
 {
   "usingComponents": {
-    "cy-badge": "/components/cy/badge/index",
     "cy-danger-confirm": "/components/cy/danger-confirm/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",

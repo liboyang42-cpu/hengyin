@@ -88,9 +88,8 @@
                 <!-- CU-C-121:imgUrl 为空时 <image> 仍按 270rpx 渲染,卡面一半是死黑块。
                      没图就不是"图在加载",给一个说得清的缺图占位。 -->
                 <image wx:if="{{topicCache[item.card.topicId].imgUrl}}" class="rcard-img" src="{{topicCache[item.card.topicId].imgUrl}}" mode="aspectFill" lazy-load="true" />
-                <view wx:else class="rcard-img rcard-img--nocover" aria-role="img" aria-label="该主题暂无封面">
-                  <image class="rcard-nocover-icon" src="/images/no_data.svg" mode="aspectFit" />
-                  <text class="rcard-nocover-txt">封面暂不可用</text>
+                <view wx:else class="rcard-img rcard-img--nocover cy-cover-fb" aria-role="img" aria-label="该主题暂无封面">
+                  <image class="rcard-nocover-icon" src="/images/cover-route.svg" mode="aspectFit" />
                 </view>
                 <view class="rcard-tt">
                   <view class="rcard-title">{{topicCache[item.card.topicId].name}}</view>

@@ -99,3 +99,6 @@ page {
 .sz-attribution__link { margin-top: var(--cy-space-2); color: var(--cy-color-text-secondary); text-decoration: underline; }
 .sz-attribution__divider { height: 1rpx; margin: var(--cy-space-3) 0; background: var(--cy-color-border-subtle); }
 
+
+/* P0-14 生成式 AI 算法备案号公示(后台未配置则不渲染) */
+.about-app__filing { margin-top: 4rpx; }

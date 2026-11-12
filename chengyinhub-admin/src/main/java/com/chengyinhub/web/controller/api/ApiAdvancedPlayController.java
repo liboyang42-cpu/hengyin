@@ -10,6 +10,9 @@ import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.web.metrics.GameSloMetrics;
+import com.chengyinhub.web.metrics.GameSloResult;
+import com.chengyinhub.web.metrics.GameSloRoute;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,16 +34,44 @@ public class ApiAdvancedPlayController extends BaseController {
     @Autowired
     private IAdvancedGameRuntimeService runtimeService;
 
+    /** OPS-01：不进业务事务，观测失败不影响原返回；测试直接 new 控制器时为 null。 */
+    @Autowired(required = false)
+    private GameSloMetrics gameSlo;
+
     @Operation(summary = "启动或恢复高级玩法")
     @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
     @PostMapping("/start")
     public AjaxResult start(@RequestBody Map<String, Object> body) {
+        long startedAt = System.nanoTime();
+        AjaxResult response;
+        GameSloResult sloResult;
         try {
-            return success(CheckReceiptProjection.response(runtimeService.start(getAppUserId(),
-                    longOrZero(body.get("activityId")), longOrZero(body.get("topicId")),
-                    longOrZero(body.get("nodeId")), nullableLong(body.get("teamId")))));
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration =
+                    com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.parseValue(
+                            body.get("clientPlatform") instanceof String platform ? platform : null,
+                            body.get("clientVersion") instanceof String version ? version : null,
+                            body.get("supportedCapabilities"));
+            Long memberId = getAppUserId();
+            Map<String, Object> result = declaration.supplied()
+                    ? runtimeService.start(memberId, longOrZero(body.get("activityId")), longOrZero(body.get("topicId")),
+                            longOrZero(body.get("nodeId")), nullableLong(body.get("teamId")), declaration)
+                    : runtimeService.start(memberId, longOrZero(body.get("activityId")), longOrZero(body.get("topicId")),
+                            longOrZero(body.get("nodeId")), nullableLong(body.get("teamId")));
+            response = success(CheckReceiptProjection.response(result));
+            sloResult = GameSloResult.SUCCESS;
         } catch (RuntimeException e) {
-            return error(e.getMessage());
+            // 原行为不变：异常仍收敛成同一条 error(msg)，只是分类后记一次指标。
+            response = error(e.getMessage());
+            sloResult = GameSloMetrics.classify(e);
+        }
+        // 每条请求只记一次：成功/异常互斥，不存在重复计数。
+        recordStart(sloResult, startedAt);
+        return response;
+    }
+
+    private void recordStart(GameSloResult result, long startedAt) {
+        if (gameSlo != null) {
+            gameSlo.recordStart(GameSloRoute.ADVANCED_START, result, System.nanoTime() - startedAt);
         }
     }
 
