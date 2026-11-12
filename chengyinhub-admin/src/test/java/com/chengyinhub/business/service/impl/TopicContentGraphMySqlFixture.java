@@ -97,7 +97,7 @@ final class TopicContentGraphMySqlFixture implements AutoCloseable {
         new ResourceDatabasePopulator(new ClassPathResource("it-schema/cms-topic-it-schema.sql"),
                 new ClassPathResource("it-schema/wp10-content-graph-scratch.sql")).execute(data);
         db.execute("alter table cms_topic_chapter add column video_url varchar(512) null, "
-                + "add column video_poster_url varchar(512) null");
+                + "add column video_poster_url varchar(512) null, add column reward_text varchar(64) null");
         Path orientMigration = Paths.get("sql", "migration_orient_geo_ar_team_20261022.sql");
         if (!Files.exists(orientMigration)) orientMigration = Paths.get("chengyinhub-admin").resolve(orientMigration);
         String orientSql = Files.readString(orientMigration);

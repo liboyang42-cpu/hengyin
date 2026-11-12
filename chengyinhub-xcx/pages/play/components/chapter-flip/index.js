@@ -1,7 +1,7 @@
 // 章节翻转过场(2026-10-28 业主定稿原型 claude.ai/artifact/KKQJxLNAL3JSb5pYDF1xtb)。
 // gate(l-play 2026-11-10,按业主批准的 proto/game gp-chapter-start / gp-chapter-end):
 //   上一章做完 → 整屏「第 N 章完成」:本章照片渐入底色、星点锁成方块章节号、成功插图、三格数据滚上来、底部「下一站」;
-//   点「下一站」(或停留后)照片与文字化成细粉尘往右上吹散,方块炸回星点,下一章的整屏浮现、星点再锁成下一个章节号。
+//   点「下一站」照片与文字化成细粉尘往右上吹散,方块炸回星点,下一章的整屏浮现、星点再锁成下一个章节号。
 //   章节开始 → 星点飞拢锁成金色方块章节号,章眉 / 章名 / 数据逐字解码,底部「读下去」;点它数字炸散回星点,交回正文。
 //   l-icons 2026-11-11(业主批准 proto/icons ch-dot):章节号不再是方块,是外观主色的圆点点阵(格 11 · 点 4.6,带一道亮波);
 //   开场屏章名下面多一枚圆点章节印(外环 44 点顺转、内环 28 点逆转、中间「章」字点阵);颜色读 utils/look-colors(= --lk-a / --lk-ink)。
@@ -17,8 +17,7 @@ const NOISE = '░▒▓█▚▞■□';
 const LOGO_SRC = '/images/cy_logo_mark.png';
 const CARD_AT_MS = 3000;                  // 炸开后多久立起通关卡(标题、合计、两枚按钮)
 const CONFETTI_AFTER_CARD_MS = 2400;      // g20:卡立起来之后彩纸再撒多久
-const END_HOLD_MS = 5200;                 // r2-finish:章节完成屏停多久自己溶解(点「下一站」可提前)
-const START_AUTO_MS = 3600;               // 2026-09-24 业主:章节门不必每章都点,停一下自己进;「读下去」可提前
+// 2026-11-11 D-46 业主「点了才能进」:取代 2026-09-24「章节门停一下自己进」。章节完成屏(原 END_HOLD_MS 5.2s)与开场屏(原 START_AUTO_MS 3.6s)都不再自动前进,只在玩家点「下一站」/「读下去」(或屏上任意处)时前进。
 const DUST_MS = 1300;                     // l-play:细粉尘吹散时长(refs2/chapter-end-dissolve)
 const COVER_H = 330;                      // 完成屏顶部照片高度(390 宽稿 px,与 .cf__cover 同值)
 const STAT_ROLL_MS = 900;                 // 三格数据滚上来
@@ -161,24 +160,23 @@ Component({
     _gate() {
       const end = this.data.endInfo;
       if (end && end.number) {
-        // 上一章完成 = 整屏(照片 + 方块章节号 + 成功插图 + 三格数据 + 下一站),停一会儿(或点「下一站」)后化成粉尘,再浮现下一章开场。
+        // 上一章完成 = 整屏(照片 + 方块章节号 + 成功插图 + 三格数据 + 下一站),等玩家点「下一站」后化成粉尘,再浮现下一章开场。
         this._stage = 'end';
         this._rot = 0;
         const rows = (end.rows || []).slice(0, 3);
         this.setData({
-          endCard: { kicker: end.kicker || '', title: end.title || '', cover: end.cover || '', next: end.next || '' },
+          endCard: { kicker: end.kicker || '', title: end.title || '', cover: end.cover || '', next: end.next || '', reward: end.reward || '' },
           endStats: rows.map((r) => ({ k: r.k, v: String(r.v), shown: this.data.reducedMotion ? String(r.v) : statStart(String(r.v)) })),
         });
         this._at(() => this.setData({ endIn: true }), 40);
         if (this._ctx) this._assemble({ text: end.number, top: 96 * this._S, dots: true });
         this._at(() => this._rollStats(), 600);
-        // 停留时长不随减弱动态归零:完成屏要看得到;减弱动态只去掉溶解动画本身。
-        (this._timers = this._timers || []).push(setTimeout(() => { if (!this._gone) this._dissolve(); }, END_HOLD_MS));
+        // D-46:完成屏不再自己溶解,等玩家点「下一站」(onTap)。
       } else {
         this._toStart(false);
       }
     },
-    /** 章节开始屏:星点锁成方块章节号(序章没有数字),章眉 / 章名 / 说明 / 数据逐字解码,「读下去」亮起;停一下自己进。 */
+    /** 章节开始屏:星点锁成方块章节号(序章没有数字),章眉 / 章名 / 说明 / 数据逐字解码,「读下去」亮起;点了才进。 */
     _toStart(fromEnd) {
       if (this._stage === 'start' || this._gone) return;
       this._stage = 'start';
@@ -186,11 +184,11 @@ Component({
       if (this._ctx && info.number) this._assemble({ text: info.number, top: 150 * this._S, dots: true });
       this.setData({ start: true });
       if (info.number) ambient.start(this, { cx: this._cx, cy: this._cy });   /* 细节打磨 S2:章节号背后的光晕呼吸与星尘 */
-      if (this._ctx && info.number) this._at(() => this._placeSeal(), fromEnd ? 800 : 600);   // 文字块一落位就量它,再放章节印(门 3.6s 自己进,印要在 2.5s 前拼好)
+      if (this._ctx && info.number) this._at(() => this._placeSeal(), fromEnd ? 800 : 600);   // 文字块一落位就量它,再放章节印
       this._at(() => this.setData({ startIn: true }), 40);
       this._decode(info, fromEnd ? 500 : 300);
       this._at(() => this.setData({ cta: true }), fromEnd ? 1100 : 900);
-      this._at(() => this._continue(), fromEnd ? START_AUTO_MS + 300 : START_AUTO_MS);
+      // D-46:开场屏不再自己进正文,等玩家点「读下去」(onTap → _continue)。
     },
     /** 三格数据滚上来(只滚拿得到的真读数;mm:ss 按秒滚,a/b 只滚 a;其余直接写)。 */
     _rollStats() {

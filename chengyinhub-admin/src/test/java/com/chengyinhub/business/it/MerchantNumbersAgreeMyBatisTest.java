@@ -2,7 +2,6 @@ package com.chengyinhub.business.it;
 
 import com.chengyinhub.business.domain.SettlementRule;
 import com.chengyinhub.business.domain.UmsMember;
-import com.chengyinhub.business.domain.dto.MerchantMarketingAnalyticsFact;
 import com.chengyinhub.business.domain.vo.MerchantFinancePage;
 import com.chengyinhub.business.domain.vo.MerchantRedemptionSummary;
 import com.chengyinhub.business.domain.vo.MerchantRedemptionView;
@@ -166,10 +165,10 @@ class MerchantNumbersAgreeMyBatisTest {
         assertEquals("0.00", summary.getArrivedAmount());
         assertEquals(0, finance.redemptions(MERCHANT + 1, "all", 1, 20).getTotal(), "别家商家看不到这张票");
 
-        // 营销近 30 天:核销含今天这一笔
-        MerchantMarketingAnalyticsFact fact = sql.getMapper(MerchantMarketingAnalyticsMapper.class).selectAnalytics(
-                MERCHANT, daysFromToday(-60), daysFromToday(-29), daysFromToday(1));
-        assertEquals(1L, fact.getCurrentVerify(), "营销核销数必须含今天的活动验票");
+        // 营销近 30 天:核销含今天这一笔(D-93:营销首页与店铺参谋共用 selectVerifyEventTimes)
+        List<Date> verifyEvents = sql.getMapper(MerchantMarketingAnalyticsMapper.class).selectVerifyEventTimes(
+                MERCHANT, daysFromToday(-29), daysFromToday(1));
+        assertEquals(1, verifyEvents.size(), "营销核销数必须含今天的活动验票");
 
         // 结算落账(settleActivity 的写入):商户 eventType=3 收入、明细置已结算、活动已结算。
         db.update("insert into ums_member_balance_detail(member_id,current_balance,after_balance,change_balance,change_reason,"
@@ -210,6 +209,11 @@ class MerchantNumbersAgreeMyBatisTest {
         statements.put("com.chengyinhub.business.mapper.RedemptionMapper.selectActivityTicketScansByMerchant", scanParams);
         statements.put("com.chengyinhub.business.mapper.ActivitySettlementHoldMapper.selectUnsettledActivityFundsByMember", MERCHANT);
         statements.put("com.chengyinhub.business.mapper.MerchantMarketingAnalyticsMapper.selectAnalytics", windowParams);
+        Map<String, Object> verifyParams = new java.util.HashMap<>();
+        verifyParams.put("ownerMemberId", MERCHANT);
+        verifyParams.put("since", new Date());
+        verifyParams.put("endExclusive", new Date());
+        statements.put("com.chengyinhub.business.mapper.MerchantMarketingAnalyticsMapper.selectVerifyEventTimes", verifyParams);
         statements.forEach((id, params) -> {
             String bound = mybatis.getMappedStatement(id).getBoundSql(params).getSql();
             assertTrue(wall.check(bound).getViolations().isEmpty(), id + " 被 wall 拒:" + wall.check(bound).getViolations());

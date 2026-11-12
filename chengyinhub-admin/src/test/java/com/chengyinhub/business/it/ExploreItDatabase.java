@@ -40,6 +40,8 @@ final class ExploreItDatabase {
             "sql/migration_club_direct_merchant_receivable_20261004.sql",
             // 9307c39df 起 CmsTopicChapterMapper 读 video_url / video_poster_url(第十三轮 m6 资金闸复跑时补)。
             "sql/migration_20261105_chapter_video.sql",
+            // D-82 起 CmsTopicChapterMapper 读 reward_text。
+            "sql/migration_20261112_chapter_reward.sql",
     };
 
     private final MysqlIntegrationTestConfig config;

@@ -6,6 +6,7 @@
     "20261112_dec_c_perks": ["merchant_subscription_20260708", "20261024_clm_commerce_payment_proof"],
     "20261112_dec_c_payout": ["20261110_ecommerce_payout", "20261024_coop_original_refund_components", "20261110_ecommerce_payout_wiring"],
     "20261112_dec_c_payout_jobs": ["20261110_ecommerce_payout_wiring"],
+    "20261112_chapter_reward": [],
     "20261110_platform_pass": [],
     "20261109_play_help_audit_permission": ["20261013_admin_role_page_grants", "20261016_admin_role_payee_separation_forward"],
     "20261109_play_run_feedback": [],

@@ -86,7 +86,7 @@ function buildMerchantSettlementDetail(input) {
     title: record.topicName || (record.topicId ? `主题 #${record.topicId}` : '未命名主题'),
     perspective: '承接分润',
     amountLabel: '我的分润',
-    amount: amount || '—',
+    amount: amount || '¥0.00',
     status: status.text,
     statusVariant: status.variant,
     lines: compact([
@@ -97,7 +97,7 @@ function buildMerchantSettlementDetail(input) {
       line('shareRule', '分润方式', shareRule(record)),
       line('original', '原始应结', money(record.originalAmount)),
       line('adjustment', '已执行调整', money(record.executedAdjustmentAmount)),
-      line('income', '我的分润', amount || '—', true),
+      line('income', '我的分润', amount || '¥0.00', true),
     ]),
     timeline: buildMerchantTimeline(record, status),
   };
@@ -137,7 +137,7 @@ function buildHostSettlementDetail(input) {
     title: record.topicName || (record.topicId ? `主题 #${record.topicId}` : '未命名主题'),
     perspective: '主办分润',
     amountLabel: '我的分润',
-    amount: settledIncome || '—',
+    amount: settledIncome || '¥0.00',
     status: status.text,
     statusVariant: status.variant,
     lines: compact([
@@ -177,7 +177,7 @@ function buildClubSettlementDetail(input) {
     title: record.name || (record.topicId ? `主题 #${record.topicId}` : '未命名主题'),
     perspective: '俱乐部分润',
     amountLabel: clubAmountLabel(record),
-    amount: amount || '—',
+    amount: amount || '¥0.00',
     status: status.text,
     statusVariant: status.variant,
     lines: compact([
