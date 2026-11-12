@@ -684,3 +684,11 @@ page {
 .v2-fitem:nth-child(7) { transition-delay: calc(var(--pm-f-s, 0) * 360ms), calc(var(--pm-f-s, 0) * 360ms), 0s, 0s; }
 .v2-fitem:nth-child(8) { transition-delay: calc(var(--pm-f-s, 0) * 390ms), calc(var(--pm-f-s, 0) * 390ms), 0s, 0s; }
 .v2-fitem:nth-child(n+9) { transition-delay: calc(var(--pm-f-s, 0) * 420ms), calc(var(--pm-f-s, 0) * 420ms), 0s, 0s; }
+
+/* x-fix6 L2-1:首页城市定位同意卡(feed 顶部,非阻塞);卡面沿用 v3 区块的 surface-subtle 与圆角 */
+.v3-locprompt { margin: var(--cy-space-4) var(--cy-space-4) 0; padding: var(--cy-space-4); border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface-subtle); display: flex; flex-direction: column; gap: var(--cy-space-2); }
+.v3-locprompt__title { font-size: var(--cy-type-section-title); font-weight: 700; color: var(--cy-color-text-primary); }
+.v3-locprompt__txt { font-size: var(--cy-type-body); line-height: 1.6; color: var(--cy-color-text-secondary); }
+.v3-locprompt__acts { display: flex; gap: var(--cy-space-3); margin-top: var(--cy-space-2); }
+.v3-locprompt__btn { flex: 1; min-height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-comp-btn-radius); font-size: var(--cy-type-body); font-weight: 600; background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); }
+.v3-locprompt__btn--p { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }

@@ -207,6 +207,7 @@ Page({
    * 页面的初始数据
    */
   data: {
+    locationPrompt: null,
     // 下拉刷新转圈态(scroll-view refresher)
     refreshing: false,
     privacyGateShow: false,
@@ -1549,19 +1550,26 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     const that = this;
     if (!isCurrentLocationRequest(this, scope) || this.data.privacyGateShow || (app.getUsageConsent && !app.getUsageConsent().granted())) return; // P-38:隐私闸未关不叠定位弹窗,同意后 onPrivacyGateSettled 会重新发起
     if (scope.gateCoversLocation) { this.recordHomeCityConsent(scope); return; } // P-38:隐私闸已一并同意定位
-    modal.show({
+    // x-fix6 L2-1:不再用居中弹窗盖住 feed,改成 feed 顶部的非阻塞卡片,文案与隐私规则不变。
+    this._locationPromptScope = scope;
+    this.setData({ locationPrompt: {
       title: '首页城市定位',
       content: '精确位置会发送给城瘾以确定首页城市，之后自动定位，不用于附近排序。',
       confirmText: '同意定位',
-      cancelText: '暂不定位',
-      maskClosable: true, // x-fix4 L2-1:点空白处 = 暂不定位,干净收起,不再一直盖着 feed
-      success(result) {
-        if (!isCurrentLocationRequest(that, scope)) return;
-        homeCity.saveLocationDeclined(!result.confirm);
-        if (!result.confirm) { if (!that.data.city) that.setData({ city: homeCity.DEFAULT_CITY }); return; }
-        that.recordHomeCityConsent(scope);
-      }
-    });
+      cancelText: '暂不定位'
+    } });
+  },
+
+  onLocationPromptAgree() { this.settleLocationPrompt(true); },
+  onLocationPromptDecline() { this.settleLocationPrompt(false); },
+  settleLocationPrompt(confirm) {
+    const scope = this._locationPromptScope;
+    this._locationPromptScope = null;
+    if (this.data.locationPrompt) this.setData({ locationPrompt: null });
+    if (!scope || !isCurrentLocationRequest(this, scope)) return;
+    homeCity.saveLocationDeclined(!confirm);
+    if (!confirm) { if (!this.data.city) this.setData({ city: homeCity.DEFAULT_CITY }); return; }
+    this.recordHomeCityConsent(scope);
   },
 
   recordHomeCityConsent(scope) {

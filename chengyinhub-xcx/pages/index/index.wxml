@@ -70,6 +70,16 @@
         </view>
       </view>
 
+      <!-- x-fix6 L2-1:首页城市定位同意 —— feed 顶部非阻塞卡片(不再是居中弹窗) -->
+      <view class="v3-locprompt" wx:if="{{locationPrompt}}">
+        <text class="v3-locprompt__title">{{locationPrompt.title}}</text>
+        <text class="v3-locprompt__txt">{{locationPrompt.content}}</text>
+        <view class="v3-locprompt__acts">
+          <view class="v3-locprompt__btn" bindtap="onLocationPromptDecline" aria-role="button" aria-label="{{locationPrompt.cancelText}}" hover-class="cy-pressed" hover-stay-time="80">{{locationPrompt.cancelText}}</view>
+          <view class="v3-locprompt__btn v3-locprompt__btn--p" bindtap="onLocationPromptAgree" aria-role="button" aria-label="{{locationPrompt.confirmText}}" hover-class="cy-pressed" hover-stay-time="80">{{locationPrompt.confirmText}}</view>
+        </view>
+      </view>
+
       <!-- 编辑精选：紧跟 Banner，作为首页首个内容区块 -->
       <view id="sec-reco" class="v3-sec v3-sec-reco" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.32s;--pm-r-s:1;' : '')}}">
         <view class="v3-sec-head">
