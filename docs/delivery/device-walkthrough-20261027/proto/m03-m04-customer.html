@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>客户筛选</title>
+<style>
+:root{--ease-out:cubic-bezier(.22,.61,.36,1);--ease-std:cubic-bezier(.4,0,.2,1);--mono:"SF Mono","DIN Alternate",ui-monospace,Menlo,monospace;
+  --desk-bg:#E9EAEC;--desk-ink:#111;--desk-sub:#555;--desk-card:#fff;--desk-line:#ddd}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--desk-bg:#151516;--desk-ink:#eee;--desk-sub:#aaa;--desk-card:#202022;--desk-line:#333}}
+:root[data-theme="dark"]{--desk-bg:#151516;--desk-ink:#eee;--desk-sub:#aaa;--desk-card:#202022;--desk-line:#333}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--desk-bg);color:var(--desk-ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.stage{display:flex;gap:32px;justify-content:center;align-items:flex-start;padding:32px 16px;flex-wrap:wrap}
+.panel{width:340px;max-width:100%;background:var(--desk-card);border:1px solid var(--desk-line);border-radius:16px;padding:18px 18px 20px;font-size:13px;line-height:1.6}
+.panel h1{font-size:17px;margin:0 0 4px}
+.panel h2{font-size:13px;margin:14px 0 6px;color:var(--desk-sub);font-weight:600}
+.panel ul{margin:0;padding-left:18px}
+.panel li{margin:2px 0}
+.panel .tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:999px;background:var(--desk-line);margin-right:4px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{font:inherit;font-size:12px;border:1px solid var(--desk-line);background:transparent;color:var(--desk-ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+.seg button.on{background:var(--desk-ink);color:var(--desk-card);border-color:var(--desk-ink)}
+@media (max-width:420px){.stage{flex-direction:column;align-items:center;padding:16px}.panel{width:100%}}
+
+.phone{position:relative;width:375px;height:812px;max-width:100%;border-radius:44px;overflow:hidden;background:var(--bg-page);color:var(--t1);box-shadow:0 0 0 10px #111,0 30px 60px rgba(0,0,0,.25);flex:none;
+  --bg-page:#F3F4F4;--surface:#FFFFFF;--subtle:#EEEEEE;--t1:#000;--t2:#404040;--t3:#6B6B6B;--line:#E8E8E8;--brand:#0A0A0A;--brand-fg:#fff;--brand-soft:#EAEBEE;--ok:#15803D;--warn:#B45309;--bad:#B91C1C;--mask:rgba(0,0,0,.32)}
+@media (max-width:420px){.phone{box-shadow:0 0 0 6px #111;border-radius:36px}}
+.status{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 26px 0 32px;font-size:15px;font-weight:600}
+.status .sig{display:flex;gap:6px;align-items:center}
+.nav{height:44px;position:relative;display:flex;align-items:center;justify-content:center}
+.nav .back{position:absolute;left:4px;top:4px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:none;border:0;color:var(--t1);cursor:pointer;padding:0}
+.capsule{position:absolute;right:7px;top:6px;width:87px;height:32px;border-radius:16px;background:#fff;border:1px solid #E2E2E2;display:flex;align-items:center;color:#000}
+.capsule span{flex:1;height:100%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;letter-spacing:1px}
+.capsule i{width:1px;height:18px;background:#E2E2E2}
+svg.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.body{position:absolute;top:88px;left:0;right:0;bottom:0;display:flex;flex-direction:column}
+
+/* 还原 customer/index.wxss */
+.cu-hero{padding:22px 20px 0}
+.cu-hero-title{font-size:26px;font-weight:700;line-height:1.35}
+.cu-hero-sub{font-size:12px;color:var(--t2);margin-top:4px}
+.cu-segs{display:flex;gap:8px;padding:12px 16px}
+.cu-seg{display:inline-flex;align-items:center;gap:4px;min-height:33px;padding:0 12px;border-radius:999px;background:var(--surface);border:0;font:inherit;font-size:14px;color:var(--t2);cursor:pointer}
+.cu-seg .dot{min-width:16px;height:16px;border-radius:8px;background:var(--brand);color:#fff;font-size:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px}
+.cu-search{padding:0 12px}
+.search{display:flex;align-items:center;gap:6px;height:36px;border-radius:999px;background:var(--surface);padding:0 12px;color:var(--t3)}
+.search input{flex:1;border:0;background:transparent;font:inherit;font-size:14px;outline:none;color:var(--t1);min-width:0}
+.cu-export{margin:8px 16px 0;padding:10px 12px;border-radius:16px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--t2)}
+.cu-export button{border:0;background:var(--subtle);border-radius:12px;font:inherit;font-size:12px;padding:6px 10px;cursor:pointer;color:var(--t1)}
+.cu-scroll{flex:1;min-height:0;overflow-y:auto;margin-top:16px;scrollbar-width:none;padding-bottom:20px}
+.cu-scroll::-webkit-scrollbar{display:none}
+.cu-row{position:relative;display:flex;align-items:flex-start;gap:12px;min-height:93px;padding:12px 20px 10px;cursor:pointer}
+.cu-row:active{background:rgba(0,0,0,.03)}
+.cu-row:not(:last-child)::after{content:"";position:absolute;left:76px;right:20px;bottom:0;height:.5px;background:var(--line)}
+.cu-check{width:20px;height:20px;margin-top:12px;border-radius:50%;border:1px solid #CFCFCF;flex:none;display:flex;align-items:center;justify-content:center}
+.cu-check.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.cu-check svg{width:12px;height:12px;stroke-width:3}
+.av{width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:600}
+.cu-body{flex:1;min-width:0}
+.cu-line1{display:flex;align-items:center;gap:8px}
+.cu-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-size:11px;line-height:18px;padding:0 6px;border-radius:6px;background:var(--subtle);color:var(--t2);flex:none}
+.badge.warn{color:var(--warn)}
+.cu-action{font-size:12px;color:var(--t2);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cu-note{font-size:12px;color:var(--t2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cu-phone-row{display:flex;align-items:center;gap:2px;margin-top:3px}
+.cu-phone{font-size:11px;color:var(--t2);font-variant-numeric:tabular-nums;cursor:pointer}
+.cu-copy{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--t3);cursor:pointer}
+.cu-copy svg{width:14px;height:14px}
+.cu-arrow{align-self:center;color:var(--t2);width:14px;height:14px}
+.cu-foot{text-align:center;font-size:11px;color:var(--t3);padding:12px 16px 0}
+.empty{padding:60px 24px;text-align:center}
+.empty b{display:block;font-size:16px}
+.empty span{display:block;font-size:13px;color:var(--t3);margin:6px 0 16px}
+.pill-btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 20px;border-radius:999px;border:0;background:var(--brand);color:#fff;font:inherit;font-size:14px;cursor:pointer}
+
+/* 批量底栏 */
+.batchbar{position:absolute;left:0;right:0;bottom:0;background:var(--surface);box-shadow:0 -4px 16px rgba(0,0,0,.06);padding:10px 16px 26px;transform:translateY(110%);transition:transform .3s var(--ease-out);z-index:30}
+.batchbar.on{transform:none}
+.bb-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--t2);margin-bottom:8px}
+.bb-top button{border:0;background:none;font:inherit;font-size:13px;color:var(--t1);cursor:pointer;padding:4px 0}
+.bb-row{display:flex;gap:8px}
+.bb-row input{flex:1;min-width:0;height:44px;border-radius:12px;border:0;background:var(--subtle);padding:0 12px;font:inherit;font-size:14px;outline:none}
+.bb-row button{height:44px;padding:0 20px;border-radius:999px;border:0;background:var(--brand);color:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.bb-row button:disabled{opacity:.35}
+.quick{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.quick span{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--subtle);cursor:pointer}
+
+/* sheets */
+.mask{position:absolute;inset:0;background:var(--mask);opacity:0;pointer-events:none;transition:opacity .25s var(--ease-std);z-index:40}
+.mask.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:20px 20px 0 0;transform:translateY(105%);transition:transform .32s var(--ease-out);z-index:50;max-height:88%;display:flex;flex-direction:column}
+.sheet.on{transform:none}
+.sheet.full{height:88%}
+.handle{height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+.handle::after{content:"";width:36px;height:5px;border-radius:3px;background:#D4D4D4}
+.sh-head{display:flex;align-items:center;justify-content:center;position:relative;height:40px;flex:none}
+.sh-head b{font-size:17px}
+.sh-x{position:absolute;right:10px;top:4px;width:32px;height:32px;border-radius:50%;border:0;background:var(--subtle);color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.sh-body{overflow-y:auto;padding:4px 16px 12px;flex:1;scrollbar-width:none}
+.sh-body::-webkit-scrollbar{display:none}
+
+/* 筛选 sheet（新） */
+.fg{margin-top:18px}
+.fg:first-child{margin-top:6px}
+.fg-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.fg-h b{font-size:15px}
+.fg-h span{font-size:12px;color:var(--t3)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 14px 0 10px;border-radius:999px;background:var(--subtle);border:0;font:inherit;font-size:14px;color:var(--t1);cursor:pointer;transition:background .15s var(--ease-out),color .15s var(--ease-out)}
+.chip .ck{width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex:none;position:relative}
+.chip .ck::before{content:"";position:absolute;inset:1px;border-radius:50%;border:1.5px solid #BDBDBD;transition:opacity .15s}
+.chip.on .ck::before{opacity:0}
+.chip .ck svg{width:14px;height:14px;stroke-width:2.5;opacity:0;transform:scale(.4);transition:opacity .15s,transform .2s cubic-bezier(.2,1.4,.5,1)}
+.chip.on{background:var(--brand);color:#fff}
+.chip.on .ck svg{opacity:1;transform:none}
+.chip small{font-size:11px;opacity:.6;margin-left:2px;font-family:var(--mono)}
+.dates{display:flex;align-items:center;gap:8px;margin-top:10px}
+.dates input{flex:1;min-width:0;height:40px;border-radius:12px;border:0;background:var(--subtle);font:inherit;font-size:13px;padding:0 10px;color:var(--t1)}
+.dates span{font-size:12px;color:var(--t3)}
+.f-foot{flex:none;padding:8px 16px 26px;border-top:1px solid var(--line);background:var(--surface)}
+.save-line{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:36px;border:0;background:none;font:inherit;font-size:13px;color:var(--t2);cursor:pointer;white-space:nowrap}
+.save-line svg{width:16px;height:16px}
+.f-btns{display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-top:4px}
+.btn{height:48px;border-radius:999px;border:0;background:var(--brand);color:#fff;font:inherit;font-size:16px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn.sec{background:var(--subtle);color:var(--t1)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn .n{font-family:var(--mono);display:inline-block;min-width:1ch}
+.btn .n.bump{animation:bump .3s var(--ease-out)}
+@keyframes bump{0%{transform:translateY(4px);opacity:.2}100%{transform:none;opacity:1}}
+.field{background:var(--subtle);border-radius:12px;padding:10px 14px;margin-top:8px}
+.field label{display:block;font-size:12px;color:var(--t3);margin-bottom:2px}
+.field input{width:100%;border:0;background:transparent;font:inherit;font-size:16px;outline:none;color:var(--t1)}
+.hint{font-size:12px;color:var(--t3);margin-top:8px;line-height:1.6}
+.err{font-size:12px;color:var(--bad);min-height:18px;margin-top:4px}
+
+/* 操作列表 sheet */
+.alist{background:var(--surface)}
+.arow{display:flex;align-items:center;gap:12px;padding:14px 4px;position:relative;cursor:pointer;border-radius:12px}
+.arow:active{background:var(--subtle)}
+.arow+.arow::before{content:"";position:absolute;top:0;left:56px;right:4px;height:1px;background:var(--line)}
+.aic{width:40px;height:40px;border-radius:12px;background:var(--subtle);display:flex;align-items:center;justify-content:center;flex:none}
+.arow .main{flex:1;min-width:0}
+.arow .t1{font-size:15px;font-weight:600}
+.arow .t2{font-size:12px;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow .state{font-size:12px;color:var(--t3)}
+.chev{width:16px;height:16px;color:var(--t3)}
+.crow{padding:12px 0;border-bottom:1px solid var(--line)}
+.crow:last-child{border-bottom:0}
+.crow .t1{font-size:14px;font-weight:600}
+.crow .t2{font-size:12px;color:var(--t3);margin-top:3px}
+.toast{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%) scale(.96);background:rgba(20,20,20,.88);color:#fff;font-size:14px;padding:10px 16px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s var(--ease-out);z-index:90;max-width:80%;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone">
+    <div class="status"><span>9:41</span><span class="sig"><svg width="18" height="11" viewBox="0 0 18 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="6" rx="1"/><rect x="10" y="2.5" width="3" height="8.5" rx="1"/><rect x="15" y="0" width="3" height="11" rx="1"/></svg><svg width="25" height="12" viewBox="0 0 25 12" fill="none" stroke="currentColor"><rect x="0.5" y="0.5" width="21" height="11" rx="3" opacity=".5"/><rect x="2" y="2" width="16" height="8" rx="1.5" fill="currentColor" stroke="none"/><path d="M23.5 4v4" stroke-width="1.5" stroke-linecap="round" opacity=".5"/></svg></span></div>
+    <div class="nav">
+      <button class="back" data-act="navBack" aria-label="返回"><svg class="ic" viewBox="0 0 24 24" style="width:24px;height:24px"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="capsule"><span data-act="capsule" data-arg="more">···</span><i></i><span data-act="capsule" data-arg="close">◎</span></div>
+    </div>
+    <div class="body">
+      <div class="cu-hero"><div class="cu-hero-title">客户</div><div class="cu-hero-sub" id="heroSub"></div></div>
+      <div class="cu-segs">
+        <button class="cu-seg" data-act="openFilter">筛选<span class="dot" id="fDot" hidden>0</span></button>
+        <button class="cu-seg" data-act="openTools">管理</button>
+      </div>
+      <div class="cu-search"><div class="search"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="kw" placeholder="搜索"></div></div>
+      <div class="cu-export" id="exportBar" hidden><span id="exportText"></span><button data-act="downloadExport" id="exportBtn" hidden>下载并打开</button></div>
+      <div class="cu-scroll" id="list"></div>
+    </div>
+
+    <div class="batchbar" id="batchbar">
+      <div class="bb-top"><span id="bbCount">已选 0 / 100</span><button data-act="selectAll">全选本页</button><button data-act="exitBatch">取消批量</button></div>
+      <div class="bb-row"><input id="bbTag" maxlength="16" placeholder="输入标签名称"><button data-act="submitBatchTag" id="bbBtn">添加</button></div>
+      <div class="quick" id="bbQuick"></div>
+    </div>
+
+    <div class="mask" id="mask" data-act="maskClose"></div>
+
+    <!-- M-03 筛选客户 -->
+    <div class="sheet full" data-sheet="filter">
+      <div class="handle" data-act="closeSheet"></div>
+      <div class="sh-head"><b>筛选客户</b><button class="sh-x" data-act="closeSheet" aria-label="关闭"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="sh-body" id="filterBody"></div>
+      <div class="f-foot">
+        <button class="save-line" data-act="openSaveSeg"><svg class="ic" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>保存为分群</button>
+        <div class="f-btns"><button class="btn sec" data-act="resetFilter">重置</button><button class="btn" data-act="applyFilter" id="applyBtn">查看 <span class="n" id="applyN">0</span> 位客户</button></div>
+      </div>
+    </div>
+
+    <!-- 保存为分群：命名 -->
+    <div class="sheet" data-sheet="saveSeg">
+      <div class="handle" data-act="closeSheet"></div>
+      <div class="sh-head"><b>保存为分群</b><button class="sh-x" data-act="closeSheet" aria-label="关闭"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="sh-body">
+        <div class="field"><label>分群名称</label><input id="segName" maxlength="30" placeholder="例如：近 30 天回头客"></div>
+        <div class="hint" id="segHint"></div>
+        <div class="err" id="segErr"></div>
+        <button class="btn" style="width:100%;margin:4px 0 14px" data-act="saveSegment">保存</button>
+      </div>
+    </div>
+
+    <!-- M-04 客户管理 -->
+    <div class="sheet" data-sheet="tools">
+      <div class="handle" data-act="closeSheet"></div>
+      <div class="sh-head"><b>客户管理</b><button class="sh-x" data-act="closeSheet" aria-label="关闭"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="sh-body alist" style="padding-bottom:28px">
+        <div class="arow" data-act="toolBatch"><span class="aic"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2H2v10l9.3 9.3a1 1 0 001.4 0l8.6-8.6a1 1 0 000-1.4z"/><path d="M7 7h.01"/></svg></span><div class="main"><div class="t1" id="toolBatchT">批量标签</div><div class="t2">勾选多位客户，一次加上同一个标签</div></div><svg class="ic chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+        <div class="arow" data-act="toolExport"><span class="aic"><svg class="ic" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg></span><div class="main"><div class="t1">导出</div><div class="t2">按当前筛选生成脱敏 Excel，可继续浏览客户</div></div><span class="state" id="toolExportState"></span><svg class="ic chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+        <div class="arow" data-act="toolCampaigns"><span class="aic"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg></span><div class="main"><div class="t1">触达记录</div><div class="t2">查看发给客户的营销消息与送达情况</div></div><svg class="ic chev" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </div>
+    </div>
+
+    <!-- 触达记录 -->
+    <div class="sheet" data-sheet="campaigns">
+      <div class="handle" data-act="closeSheet"></div>
+      <div class="sh-head"><b>触达记录</b><button class="sh-x" data-act="closeSheet" aria-label="关闭"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="sh-body" id="campBody"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <aside class="panel">
+    <h1>M-03 筛选客户 · M-04 客户管理</h1>
+    <div><span class="tag">M-03</span><span class="tag">M-04</span><span class="tag">商家浅色</span></div>
+    <h2>快速打开</h2>
+    <div class="seg"><button data-act="openFilter">筛选客户</button><button data-act="openTools">客户管理</button><button data-act="toolBatch">批量标签模式</button></div>
+    <h2>相对现状改了什么</h2>
+    <ul>
+      <li>页面主体按 pages/merchant/customer 原样还原：大标题「客户」+ 人数、筛选/管理两颗胶囊、搜索、密集名单行（头像、姓名+状态徽标、最近动作、备注、脱敏电话+复制）、「已全部显示」收口。</li>
+      <li><b>M-03</b>：每组单选 chip，左侧固定留勾选图标位（16px），未选中时图标位透明，不再出现无图标的奇怪左空白；选中=黑底白字+勾。</li>
+      <li>分组来自 index.js 的真实筛选项：已保存分群（点即套用）/ 客户类型 / 客户来源 / 来源时间 / 客户标签。每个 chip 后显示该项人数。</li>
+      <li>结果数实时更新：底栏「重置」+「查看 N 位客户」；「保存为分群」收进底部，单行次要动作，点开命名弹层，不再折行。</li>
+      <li><b>M-04</b>：「客户管理」改成标准操作列表：图标 + 标题 + 一行说明。批量标签 → 名单进入多选并升起底栏；导出 → toast + 页内导出进度条（生成中 → 已就绪 → 下载）；触达记录 → 子弹层。</li>
+      <li>所有名字、标签、分群都是中性示例，不含 QA / 验收测试数据（测试数据清理见 E-3）。</li>
+      <li>弹层打开时点导航栏返回 = 先关弹层（G-2）。</li>
+    </ul>
+  </aside>
+</div>
+
+<script>
+const ic=(p,cls='',st='')=>`<svg class="ic ${cls}" viewBox="0 0 24 24" style="${st}">${p}</svg>`;
+const CHECK='<path d="M20 6L9 17l-5-5"/>';
+const NAMES=['城市漫游者','玩家 A','咖啡探店人','夜跑同好','慢行旅人','玩家 B','周末寻宝客','老街散步者','玩家 C','书店常客','亲子出游家','玩家 D','城市观察员','手冲爱好者','玩家 E','骑行小队长','街角摄影人','玩家 F','露营新手','剧本游玩家','玩家 G','甜品研究员','玩家 H','路线收藏家'];
+const ACTIONS=['核销了「夜跑咖啡路线」','购买了「老街慢行」主题','报名了「周末城市寻宝」','领取了店铺优惠券','核销了「城市漫游」门票','参加了「中秋夜游」'];
+const TAGS=[{id:1,name:'咖啡爱好者'},{id:2,name:'周末常客'},{id:3,name:'亲子'},{id:4,name:'团建'}];
+const COLORS=['#5B6B7F','#7A6A58','#5E7A6B','#6F5E7F','#7F5E5E','#4F6F7F'];
+const TIER={pending:'待核销',repeat:'复购',new:'新客',dormant:'沉睡'};
+const C=NAMES.map((n,i)=>({id:i+1,name:n,type:i%3===0?'new':'repeat',noted:i%4===1,source:i%2?'2':'1',days:(i*7)%95,tags:[TAGS[i%4].id].concat(i%5===0?[TAGS[(i+1)%4].id]:[]),tier:['pending','repeat','new','dormant'][i%4],
+  action:ACTIONS[i%ACTIONS.length],when:['今天','昨天','3 天前','1 周前','2 周前','1 个月前'][i%6],note:i%4===1?'偏好靠窗座位，周末下午到店':'',phone:i%3===2?'':`1${3+i%6}8****${String(1000+i*37).slice(-4)}`,color:COLORS[i%6],sel:false}));
+const SEG_TYPES=[['all','全部'],['repeat','回头客'],['new','新客'],['noted','有备注']];
+const SOURCES=[['','全部'],['1','主题'],['2','活动']];
+const TIMES=[['','不限'],['7','近 7 天'],['30','近 30 天'],['90','近 90 天'],['custom','自定义']];
+const S={applied:{segment:'all',source:'',time:'',tag:''},draft:null,kw:'',selecting:false,stack:[],saved:[{id:1,name:'近 30 天回头客',f:{segment:'repeat',source:'',time:'30',tag:''}},{id:2,name:'活动来源新客',f:{segment:'new',source:'2',time:'',tag:''}}],exportState:'idle'};
+S.draft={...S.applied};
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),1700)}
+function match(c,f){
+  if(f.segment==='repeat'&&c.type!=='repeat')return false;
+  if(f.segment==='new'&&c.type!=='new')return false;
+  if(f.segment==='noted'&&!c.noted)return false;
+  if(f.source&&c.source!==f.source)return false;
+  if(f.time&&f.time!=='custom'&&c.days>+f.time)return false;
+  if(f.tag&&!c.tags.includes(+f.tag))return false;
+  return true;
+}
+const countBy=(f,patch)=>C.filter(c=>match(c,{...f,...patch})).length;
+const activeCount=f=>['source','time','tag'].filter(k=>f[k]).length+(f.segment!=='all'?1:0);
+
+function renderList(){
+  const f=S.applied,kw=S.kw.trim();
+  const rows=C.filter(c=>match(c,f)&&(!kw||c.name.includes(kw)));
+  document.getElementById('heroSub').textContent=`${C.length} 位 · 本月新增 ${C.filter(c=>c.type==='new'&&c.days<=30).length}`;
+  const n=activeCount(f),dot=document.getElementById('fDot');dot.hidden=!n;dot.textContent=n;
+  const el=document.getElementById('list');
+  if(!rows.length){
+    el.innerHTML=kw&&!n?`<div class="empty"><b>没搜到这个客户</b><span>换个关键词试试</span><button class="pill-btn" data-act="clearSearch">清除搜索</button></div>`
+      :`<div class="empty"><b>这个筛选条件下没有客户</b><span>换个筛选试试</span><button class="pill-btn" data-act="clearAll">查看全部客户</button></div>`;
+    return;
+  }
+  el.innerHTML='<div>'+rows.map(c=>`<div class="cu-row" data-act="rowTap" data-arg="${c.id}">
+    ${S.selecting?`<span class="cu-check ${c.sel?'on':''}">${c.sel?ic(CHECK):''}</span>`:''}
+    <span class="av" style="background:${c.color}">${c.name.replace('玩家 ','').slice(0,1)}</span>
+    <div class="cu-body"><div class="cu-line1"><span class="cu-name">${c.name}</span><span class="badge ${c.tier==='pending'?'warn':''}">${TIER[c.tier]}</span>${c.note?'<span class="badge">备注</span>':''}</div>
+    <div class="cu-action">${c.action} · ${c.when}</div>
+    ${c.note?`<div class="cu-note">${c.note}</div>`:''}
+    ${c.phone?`<div class="cu-phone-row"><span class="cu-phone" data-act="callPhone" data-arg="${c.id}">${c.phone}</span><span class="cu-copy" data-act="copyPhone" data-arg="${c.id}">${ic('<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>')}</span></div>`:`<div class="cu-note" style="color:var(--t3);font-size:11px">客户未授权展示电话</div>`}
+    </div>${S.selecting?'':ic('<path d="M9 18l6-6-6-6"/>','cu-arrow')}</div>`).join('')+`</div><div class="cu-foot">共 ${rows.length} 位客户 · 已全部显示</div>${S.selecting?'<div style="height:140px"></div>':''}`;
+}
+function chip(group,val,label,on,count){
+  return `<button class="chip ${on?'on':''}" data-act="pick" data-arg="${group}|${val}"><span class="ck">${ic(CHECK)}</span>${label}${count!=null?`<small>${count}</small>`:''}</button>`;
+}
+function renderFilter(){
+  const d=S.draft;
+  let h='';
+  if(S.saved.length) h+=`<div class="fg"><div class="fg-h"><b>已保存分群</b><span>点一下套用</span></div><div class="chips">${S.saved.map(s=>chip('saved',s.id,s.name,JSON.stringify(s.f)===JSON.stringify(d),countBy(s.f,{}))).join('')}</div></div>`;
+  h+=`<div class="fg"><div class="fg-h"><b>客户类型</b><span>单选</span></div><div class="chips">${SEG_TYPES.map(([k,l])=>chip('segment',k,l,d.segment===k,countBy(d,{segment:k}))).join('')}</div></div>`;
+  h+=`<div class="fg"><div class="fg-h"><b>客户来源</b><span>单选</span></div><div class="chips">${SOURCES.map(([k,l])=>chip('source',k,l,d.source===k,countBy(d,{source:k}))).join('')}</div></div>`;
+  h+=`<div class="fg"><div class="fg-h"><b>来源时间</b><span>单选</span></div><div class="chips">${TIMES.map(([k,l])=>chip('time',k,l,d.time===k,k==='custom'?null:countBy(d,{time:k}))).join('')}</div>${d.time==='custom'?`<div class="dates"><input type="date" value="2026-09-01" aria-label="开始日期"><span>至</span><input type="date" value="2026-10-27" aria-label="结束日期"></div>`:''}</div>`;
+  h+=`<div class="fg"><div class="fg-h"><b>客户标签</b><span>单选</span></div><div class="chips">${chip('tag','','全部标签',d.tag==='',countBy(d,{tag:''}))}${TAGS.map(t=>chip('tag',String(t.id),t.name,d.tag===String(t.id),countBy(d,{tag:String(t.id)}))).join('')}</div></div>`;
+  document.getElementById('filterBody').innerHTML=h;
+  const n=countBy(d,{});const nEl=document.getElementById('applyN');
+  if(nEl.textContent!==String(n)){nEl.textContent=n;nEl.classList.remove('bump');void nEl.offsetWidth;nEl.classList.add('bump');}
+}
+function renderBatch(){
+  const sel=C.filter(c=>c.sel).length;
+  document.getElementById('bbCount').textContent=`已选 ${sel} / 100`;
+  document.getElementById('bbQuick').innerHTML=TAGS.map(t=>`<span data-act="quickTag" data-arg="${t.name}">${t.name}</span>`).join('');
+}
+function openSheet(id){
+  if(S.stack.includes(id))return;
+  const el=document.querySelector(`.sheet[data-sheet="${id}"]`);S.stack.push(id);el.style.zIndex=50+S.stack.length*2;
+  const m=document.getElementById('mask');m.style.zIndex=49+S.stack.length*2;m.classList.add('on');
+  requestAnimationFrame(()=>el.classList.add('on'));
+}
+function closeTop(){const id=S.stack.pop();if(!id)return false;document.querySelector(`.sheet[data-sheet="${id}"]`).classList.remove('on');
+  const m=document.getElementById('mask');if(!S.stack.length)m.classList.remove('on');else m.style.zIndex=49+S.stack.length*2;return true}
+function closeAll(){while(closeTop());}
+function setSelecting(on){S.selecting=on;C.forEach(c=>c.sel=false);document.getElementById('batchbar').classList.toggle('on',on);document.getElementById('toolBatchT').textContent=on?'取消批量':'批量标签';renderBatch();renderList();}
+function renderExport(){
+  const bar=document.getElementById('exportBar'),t=document.getElementById('exportText'),b=document.getElementById('exportBtn'),s=document.getElementById('toolExportState');
+  bar.hidden=S.exportState==='idle';
+  t.textContent=S.exportState==='RUNNING'?'正在生成脱敏 Excel，可继续浏览客户':`导出已就绪（${S.exportRows} 行）`;
+  b.hidden=S.exportState!=='SUCCESS';
+  s.textContent=S.exportState==='RUNNING'?'导出中…':(S.exportState==='SUCCESS'?'已就绪':'');
+}
+const ACT={
+  navBack(){ if(closeTop())toast('已先关闭弹层');else if(S.selecting){setSelecting(false);toast('已退出批量')}else toast('返回上一页（原型）'); },
+  capsule(el){ toast(el.dataset.arg==='more'?'微信胶囊菜单':'关闭小程序（原型）'); },
+  maskClose(){ closeTop(); },
+  closeSheet(){ closeTop(); },
+  openFilter(){ closeAll();S.draft={...S.applied};renderFilter();openSheet('filter'); },
+  pick(el){ const [g,v]=el.dataset.arg.split('|');
+    if(g==='saved'){const s=S.saved.find(x=>String(x.id)===v);if(s)S.draft={...s.f};}
+    else S.draft[g]=v;
+    renderFilter(); },
+  resetFilter(){ S.draft={segment:'all',source:'',time:'',tag:''};renderFilter();toast('已重置筛选'); },
+  applyFilter(){ S.applied={...S.draft};closeTop();renderList();toast(`显示 ${countBy(S.applied,{})} 位客户`); },
+  openSaveSeg(){ const d=S.draft;const parts=[];
+    if(d.segment!=='all')parts.push(SEG_TYPES.find(x=>x[0]===d.segment)[1]);
+    if(d.source)parts.push('来源：'+SOURCES.find(x=>x[0]===d.source)[1]);
+    if(d.time)parts.push(TIMES.find(x=>x[0]===d.time)[1]);
+    if(d.tag)parts.push('标签：'+TAGS.find(t=>String(t.id)===d.tag).name);
+    document.getElementById('segHint').textContent='当前条件：'+(parts.join(' · ')||'全部客户')+`（${countBy(d,{})} 位）。分群会随新客户自动更新。`;
+    document.getElementById('segName').value='';document.getElementById('segErr').textContent='';openSheet('saveSeg');setTimeout(()=>document.getElementById('segName').focus(),350); },
+  saveSegment(){ const n=document.getElementById('segName').value.trim();
+    if(!n){document.getElementById('segErr').textContent='请先给分群起个名字';return}
+    S.saved.push({id:Date.now(),name:n,f:{...S.draft}});closeTop();renderFilter();toast(`已保存分群「${n}」`); },
+  openTools(){ closeAll();openSheet('tools'); },
+  toolBatch(){ closeAll();setSelecting(!S.selecting);if(S.selecting)toast('勾选客户后输入标签'); },
+  toolExport(){ if(S.exportState==='RUNNING'){toast('正在导出，请稍候');return}
+    closeAll();S.exportState='RUNNING';S.exportRows=countBy(S.applied,{});renderExport();toast('已开始导出脱敏 Excel');
+    setTimeout(()=>{S.exportState='SUCCESS';renderExport();},1800); },
+  downloadExport(){ toast('下载并打开 Excel（原型）');S.exportState='idle';renderExport(); },
+  toolCampaigns(){ const list=[['国庆到店优惠券提醒','已送达 86 / 90 人','10-01 10:00'],['周末城市寻宝报名通知','已送达 42 / 42 人','09-26 18:30'],['新品手冲试饮邀请','已送达 18 / 20 人','09-12 15:00']];
+    document.getElementById('campBody').innerHTML=list.map(r=>`<div class="crow" data-act="campRow"><div class="t1">${r[0]}</div><div class="t2">${r[1]} · ${r[2]}</div></div>`).join('')+'<div class="hint" style="text-align:center;padding-bottom:20px">仅显示最近 20 条</div>';
+    openSheet('campaigns'); },
+  campRow(){ toast('查看逐人结果（原型）'); },
+  rowTap(el){ const c=C.find(x=>String(x.id)===el.dataset.arg);if(!c)return;
+    if(S.selecting){const sel=C.filter(x=>x.sel).length;if(!c.sel&&sel>=100){toast('最多选择 100 位');return}c.sel=!c.sel;renderList();renderBatch();return}
+    toast(`打开「${c.name}」客户详情（原型）`); },
+  callPhone(el,ev){ ev.stopPropagation();toast('拨打客户电话（原型）'); },
+  copyPhone(el,ev){ ev.stopPropagation();toast('电话已复制'); },
+  selectAll(){ const kw=S.kw.trim();C.filter(c=>match(c,S.applied)&&(!kw||c.name.includes(kw))).forEach(c=>c.sel=true);renderList();renderBatch(); },
+  exitBatch(){ setSelecting(false); },
+  quickTag(el){ document.getElementById('bbTag').value=el.dataset.arg; },
+  submitBatchTag(){ const sel=C.filter(c=>c.sel);const name=document.getElementById('bbTag').value.trim();
+    if(!sel.length){toast('请先选择客户');return}
+    if(!name||name.length>16){toast('请输入1至16字标签名称');return}
+    let t=TAGS.find(x=>x.name===name);if(!t){t={id:TAGS.length+1,name};TAGS.push(t)}
+    sel.forEach(c=>{if(!c.tags.includes(t.id))c.tags.push(t.id)});
+    document.getElementById('bbTag').value='';setSelecting(false);toast(`已为 ${sel.length} 位客户添加「${name}」`); },
+  clearSearch(){ S.kw='';document.getElementById('kw').value='';renderList(); },
+  clearAll(){ S.kw='';document.getElementById('kw').value='';S.applied={segment:'all',source:'',time:'',tag:''};renderList(); }
+};
+document.addEventListener('click',ev=>{const el=ev.target.closest('[data-act]');if(!el)return;const f=ACT[el.dataset.act];if(f){if(el.closest('.cu-row')&&el!==el.closest('.cu-row'))ev.stopPropagation();f(el,ev)}});
+document.getElementById('kw').addEventListener('input',e=>{S.kw=e.target.value;renderList()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeTop()});
+renderList();renderBatch();
+</script>
+</body>
+</html>
