@@ -1,4 +1,6 @@
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+const entryRhythm = require('../../../utils/entry-rhythm.js');
+const life = require('../../../utils/life.js');
 
 // 统一空态:图 + 主文案 + 副文案 + 可选 CTA。点 CTA 触发 'cta' 事件。
 //
@@ -88,6 +90,17 @@ Component({
         _loading: knownKind && kind === 'loading',
       });
     },
+  },
+  lifetimes: {
+    // 细节打磨二期 L4/L6:空态的块按文档顺序依次浮上来,主图标 / 插画缓慢呼吸;减少动态效果一概不起
+    ready() {
+      const d = this.data;
+      const hero = d._loading ? '' : (d._glyph ? '.cy-empty-glyph' : (d._art ? '.cy-empty-art' : (d._icon ? '.cy-empty-ic' : '')));
+      const list = [d._loading ? '.cy-empty-spinner' : hero, '.cy-empty-title', d._sub ? '.cy-empty-sub' : '', this.properties.cta ? '.cy-empty-cta' : ''].filter(Boolean);
+      entryRhythm.play(this, list);
+      if (hero) life.start(this, hero);
+    },
+    detached() { life.stop(this); },
   },
   methods: {
     onCta() { this.triggerEvent('cta'); },

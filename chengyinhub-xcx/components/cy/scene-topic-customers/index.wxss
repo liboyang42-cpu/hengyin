@@ -64,3 +64,8 @@
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
    不定义的话 hover-class 写了也没反应(按压契约会判红,见 tests/unit/press-feedback-resolves-contract)。 */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.tc-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.tc-count,
+.tc-session-count { font-variant-numeric: tabular-nums; }

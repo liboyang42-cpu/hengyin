@@ -8,3 +8,7 @@
 .fs-retry { color: var(--cy-text-title); font-size: var(--cy-font-label); font-weight: 600; }
 /* isolated 组件内全局 .cy-pressed 进不来,本地定义一份(同 scene-asset-earnings) */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.fs-retry { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.fs-amount { font-variant-numeric: tabular-nums; }

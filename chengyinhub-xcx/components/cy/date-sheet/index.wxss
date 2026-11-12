@@ -139,3 +139,6 @@
 /* 时间选择面板是 half 档:进 sheet-in 300 / 出 sheet-out 250,慢快慢,与 cy-sheet 同档(2026-10-23,原 350 / 220) */
 .ds--keep-mask .ds__mask { opacity: 1 !important; }
 .ds.ds--handoff-in .ds__mask { animation: none; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.ds-close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

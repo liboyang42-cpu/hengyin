@@ -56,3 +56,6 @@
 
 /* isolated 组件内全局 .cy-pressed 进不来,本地补一份(照 scene-club-edit 的既有做法) */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.ctm__row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

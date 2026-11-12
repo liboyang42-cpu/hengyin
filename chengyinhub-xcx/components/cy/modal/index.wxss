@@ -142,7 +142,7 @@
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
-.cy-pressed { opacity: .88; }
+.cy-pressed { opacity: .92; transform: scale(.97); transition-duration: var(--cy-motion-press-in); } /* 细节打磨二期 L5:与全局 cy-pressed 同口径 */
 .mo__btn--primary.cy-pressed { background: var(--cy-color-text-secondary); }
 
 /* ===== 危险确认三段式(2026-08-27)=====
@@ -250,3 +250,5 @@
    接替的这层遮罩直接是暗的、不淡入 —— 一关一开时页面不会暗 → 亮 → 暗闪一下。 */
 .mo--keep-mask .mo__mask { opacity: 1 !important; }
 .mo.mo--handoff-in .mo__mask { animation: none; }
+/* 细节打磨二期 L5:按钮松手弹回 */
+.mo__btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

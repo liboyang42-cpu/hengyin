@@ -68,3 +68,8 @@
 .sc--pre .sc-badge { opacity: 0; transform: scale(.4); transition: none; }
 .sc--pre .sc-in { opacity: 0; transform: translateY(24rpx); transition: none; }
 @media (prefers-reduced-motion: reduce) { .sc .sc-card, .sc .sc-badge, .sc .sc-in { opacity: 1; transform: none; } .sc, .sc .sc-card, .sc .sc-badge, .sc .sc-in, .sc-arc, .sc-dot { transition: none; } }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.sc-swatch { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.sc-primary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.sc-ch-i { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
