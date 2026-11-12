@@ -30,18 +30,16 @@
               <view class="node-card__ico"><cy-icon name="calendar" size="32" /></view>
               <view class="node-card__main">
                 <text class="node-card__title">开始日期<text class="g-req">*</text></text>
-                <text class="node-card__value">{{startDateTime == '开始时间' ? '选择开始日期' : startDateTime}}</text>
-              </view>
-              <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                </view>
+              <text class="node-card__rv {{(startDateTime == '开始时间' ? '未设置' : startDateTime) === '未设置' ? 'is-empty' : ''}}">{{startDateTime == '开始时间' ? '未设置' : startDateTime}}</text><cy-icon name="chevron-right" size="24" />
             </view>
             <view class="node-card__hr"></view>
             <view class="node-card__row" bindtap="showEndTimePicker" hover-class="cy-pressed" hover-stay-time="80">
               <view class="node-card__ico"><cy-icon name="calendar" size="32" /></view>
               <view class="node-card__main">
                 <text class="node-card__title">结束日期<text class="g-req">*</text></text>
-                <text class="node-card__value">{{endDateTime == '结束时间' ? '选择结束日期' : endDateTime}}</text>
-              </view>
-              <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                </view>
+              <text class="node-card__rv {{(endDateTime == '结束时间' ? '未设置' : endDateTime) === '未设置' ? 'is-empty' : ''}}">{{endDateTime == '结束时间' ? '未设置' : endDateTime}}</text><cy-icon name="chevron-right" size="24" />
             </view>
             <block wx:if="{{formData.productType === 2 || formData.openMerchantPool}}">
               <view class="node-card__hr"></view>
@@ -54,9 +52,8 @@
                          所以它留在档期块,不能挪进下面的商家招商块(那会暗示关了就不用填)。
                          副文说的是它在时间轴上卡哪一刀:招募截止 → 锁价 → 开售 → 档期。 -->
                     <text class="node-card__title">招商截止日期<text class="g-req">*</text></text>
-                    <text class="node-card__value" wx:if="{{formData.recruitDeadline}}">{{formData.recruitDeadline}}</text>
-                  </view>
-                  <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                    </view>
+                  <text class="node-card__rv {{(formData.recruitDeadline || '未设置') === '未设置' ? 'is-empty' : ''}}">{{formData.recruitDeadline || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
                 </view>
               </cy-date-field>
             </block>
@@ -204,18 +201,16 @@
                 <view class="node-card__ico"><cy-icon name="clock" size="32" /></view>
                 <view class="node-card__main">
                   <text class="node-card__title">售票开始<text class="g-req">*</text></text>
-                  <text class="node-card__value">{{editingTicket.saleStartTime || '选择日期'}}</text>
-                </view>
-                <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                  </view>
+                <text class="node-card__rv {{(editingTicket.saleStartTime || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.saleStartTime || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
               </view>
               <view class="node-card__hr"></view>
               <view class="node-card__row" bindtap="showTicketTimePicker" data-field="saleEndTime" data-mode="date" hover-class="cy-pressed" hover-stay-time="80">
                 <view class="node-card__ico"><cy-icon name="clock" size="32" /></view>
                 <view class="node-card__main">
                   <text class="node-card__title">售票结束<text class="g-req">*</text></text>
-                  <text class="node-card__value">{{editingTicket.saleEndTime || '选择日期'}}</text>
-                </view>
-                <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                  </view>
+                <text class="node-card__rv {{(editingTicket.saleEndTime || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.saleEndTime || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
               </view>
               <view class="node-card__hr"></view>
             </view>
@@ -233,17 +228,15 @@
                 <view class="node-card__row" bindtap="showTicketTimePicker" data-field="startTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
                   <view class="node-card__main">
                     <text class="node-card__title">集合时间<text class="g-req">*</text></text>
-                    <text class="node-card__value">{{editingTicket.startTime || '选择开始时间'}}</text>
-                  </view>
-                  <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                    </view>
+                  <text class="node-card__rv {{(editingTicket.startTime || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.startTime || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
                 </view>
                 <view class="node-card__hr"></view>
                 <view class="node-card__row" bindtap="showTicketTimePicker" data-field="endTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
                   <view class="node-card__main">
                     <text class="node-card__title">集合结束<text class="g-req">*</text></text>
-                    <text class="node-card__value">{{editingTicket.endTime || '选择结束时间'}}</text>
-                  </view>
-                  <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                    </view>
+                  <text class="node-card__rv {{(editingTicket.endTime || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.endTime || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
                 </view>
                 <view class="node-card__hr"></view>
                 <view class="tk-field">
@@ -254,9 +247,8 @@
                 <view class="node-card__row" bindtap="chooseTicketMeetingPoint" hover-class="cy-pressed" hover-stay-time="80">
                   <view class="node-card__main">
                     <text class="node-card__title">集合地点<text class="g-req">*</text></text>
-                    <text class="node-card__value">{{editingTicket.meetingPoint || '请选择地点'}}</text>
-                  </view>
-                  <view class="node-pill"><text>{{editingTicket.meetingPoint ? '修改节点' : '选择节点'}}</text><cy-icon name="chevron-right" size="24" /></view>
+                    </view>
+                  <text class="node-card__rv {{(editingTicket.meetingPoint || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.meetingPoint || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
                 </view>
               </block>
 
@@ -273,17 +265,15 @@
                   <view class="node-card__row" bindtap="showTicketTimePicker" data-field="startTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
                     <view class="node-card__main">
                       <text class="node-card__title">开始日期<text class="g-req">*</text></text>
-                      <text class="node-card__value">{{editingTicket.startTime || '选择开始时间'}}</text>
-                    </view>
-                    <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                      </view>
+                    <text class="node-card__rv {{(editingTicket.startTime || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.startTime || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
                   </view>
                   <view class="node-card__hr"></view>
                   <view class="node-card__row" bindtap="showTicketTimePicker" data-field="endTime" data-mode="datetime" hover-class="cy-pressed" hover-stay-time="80">
                     <view class="node-card__main">
                       <text class="node-card__title">结束日期<text class="g-req">*</text></text>
-                      <text class="node-card__value">{{editingTicket.endTime || '选择结束时间'}}</text>
-                    </view>
-                    <view class="node-pill"><text>选择</text><cy-icon name="chevron-right" size="24" /></view>
+                      </view>
+                    <text class="node-card__rv {{(editingTicket.endTime || '未设置') === '未设置' ? 'is-empty' : ''}}">{{editingTicket.endTime || '未设置'}}</text><cy-icon name="chevron-right" size="24" />
                   </view>
                 </block>
               </block>

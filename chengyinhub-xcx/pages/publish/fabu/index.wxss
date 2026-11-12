@@ -4288,6 +4288,20 @@ page { background: var(--cy-btn-solid-bg); }
   white-space: nowrap;
 }
 
+.node-card__rv {
+  flex: none;
+  max-width: 55%;
+  margin-left: auto;
+  text-align: right;
+  font-size: var(--cy-font-body);
+  color: var(--cy-color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-card__rv.is-empty { color: var(--cy-color-text-tertiary); }
+
 .node-card__foot {
   display: flex;
   align-items: center;
