@@ -81,7 +81,7 @@
       </view>
 
       <!-- 编辑精选：紧跟 Banner，作为首页首个内容区块 -->
-      <view id="sec-reco" class="v3-sec v3-sec-reco" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.32s;--pm-r-s:1;' : '')}}">
+      <view id="sec-reco" class="v3-sec v3-sec-reco" wx:if="{{recoHero || recoCards.length || listErr.recommendedTopicList || listLoading.recommendedTopicList}}" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.32s;--pm-r-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">编辑精选</text>
         </view>
@@ -91,9 +91,6 @@
         <view class="v3-sec-state" wx:elif="{{listErr.recommendedTopicList && !recoHero}}">
           <cy-error load-failure title="编辑精选加载失败"
                     retry="重试" data-list="recommendedTopicList" bind:retry="retryList" />
-        </view>
-        <view class="v3-sec-state" wx:elif="{{!listLoading.recommendedTopicList && !recoHero || listLoaded.recommendedTopicList && !recoHero}}">
-          <cy-empty title="暂时没有精选主题" />
         </view>
         <text class="v3-sec-sync cy-refresh-float cy-refresh-float--pill" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
               aria-role="status" aria-live="polite">正在更新编辑精选…</text>
@@ -133,7 +130,7 @@
       </view>
 
       <!-- 附近活动：Figma 双列竖卡 -->
-      <view id="sec-nearby" class="v3-sec" style="{{pm_nearbyActivityList === 1 ? '--pm-n:1;' : (pm_nearbyActivityList === 2 ? '--pm-n-d:.32s;--pm-n-s:1;' : '')}}">
+      <view id="sec-nearby" class="v3-sec" wx:if="{{nearbyActivityList.length || listErr.nearbyActivityList || listLoading.nearbyActivityList}}" style="{{pm_nearbyActivityList === 1 ? '--pm-n:1;' : (pm_nearbyActivityList === 2 ? '--pm-n-d:.32s;--pm-n-s:1;' : '')}}">
         <view class="v3-sec-head">
           <text class="v3-sec-title">附近活动</text>
         </view>
@@ -144,9 +141,6 @@
         <view class="v3-sec-state" wx:elif="{{listErr.nearbyActivityList && !nearbyActivityList.length}}">
           <cy-error load-failure title="附近活动加载失败"
                     retry="重试" data-list="nearbyActivityList" bind:retry="retryList" />
-        </view>
-        <view class="v3-sec-state" wx:elif="{{!listLoading.nearbyActivityList && !nearbyActivityList.length || listLoaded.nearbyActivityList && !nearbyActivityList.length}}">
-          <cy-empty title="你附近暂时没有可点亮的节点" />
         </view>
         <text class="v3-sec-sync cy-refresh-float cy-refresh-float--pill" wx:if="{{listLoading.nearbyActivityList && nearbyActivityList.length}}"
               aria-role="status" aria-live="polite">正在更新附近活动…</text>
