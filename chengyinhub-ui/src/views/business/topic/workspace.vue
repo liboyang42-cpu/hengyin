@@ -184,6 +184,7 @@
               <article><span>用户端可见</span><strong>{{ userStatusLabel }}</strong><p>可见性仍由审核链路决定。</p></article>
               <article><span>结算状态</span><strong>{{ settlementStatusOverviewLabel }}</strong><p>{{ axisCapabilityDescription('settlement') }}</p></article>
               <article><span>内容编辑边界</span><strong>{{ editPolicyLabel }}</strong><p>{{ editPolicyDescription }}</p></article>
+              <article><span>内容版本</span><strong>{{ publishedVersionLabel }}</strong><p>{{ draftVersionLabel }}</p></article>
             </div>
           </section>
           <section class="topic-workspace__operations" aria-label="主题统一待办">
@@ -550,6 +551,16 @@ export default {
     },
     auditLabel() {
       return ['待审核', '审核通过', '审核驳回', '升级处理'][this.governance.checkStatus] || '状态未知'
+    },
+    publishedVersionLabel() {
+      const v = this.governance.publishedConfigVersion
+      return v === null || v === undefined ? '尚未公开' : `公开版 v${v}`
+    },
+    draftVersionLabel() {
+      const draft = this.governance.configVersion
+      if (draft === null || draft === undefined) return '编辑版本未知'
+      const published = this.governance.publishedConfigVersion
+      return published === draft ? `编辑版 v${draft} 与公开版一致` : `编辑版 v${draft} 未公开`
     },
     userStatusLabel() {
       return ({ 0: '用户端未上架', 1: '用户端已上架' })[this.governance.userStatus] || '用户端状态未定义'

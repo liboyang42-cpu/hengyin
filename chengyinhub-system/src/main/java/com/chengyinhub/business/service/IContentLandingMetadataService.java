@@ -40,6 +40,9 @@ public interface IContentLandingMetadataService {
     /** 后台审校只读列表：只含已公开主题；调用方必须先 {@code startPage()}。 */
     List<ContentLandingMetadata> reviewList(String keyword);
 
+    /** 审校台只读详情：已公开主题的落地信息与全部译文（含状态与版本），不改任何行。 */
+    ContentLandingMetadataVO reviewDetail(Long topicId);
+
     /**
      * 审校人当时看到的译文内容摘要（含主题原文修订时刻）。
      * 审校台渲染前调用一次，提交时原样回传，服务端重算比对。

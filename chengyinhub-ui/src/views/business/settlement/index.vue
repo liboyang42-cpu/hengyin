@@ -18,16 +18,16 @@
     </el-form>
 
     <el-row :gutter="12" class="mb8" v-if="summary">
-      <el-col :span="6"><el-card shadow="never">批次数：{{ summary.batchCount || 0 }}</el-card></el-col>
-      <el-col :span="6"><el-card shadow="never">明细数：{{ summary.detailCount || 0 }}</el-card></el-col>
-      <el-col :span="6"><el-card shadow="never">总额：{{ summary.totalAmount || 0 }}</el-card></el-col>
-      <el-col :span="6"><el-card shadow="never">待结算：{{ summary.pendingAmount || 0 }}</el-card></el-col>
+      <el-col :span="6"><el-card shadow="never">批次数：{{ countText(summary.batchCount) }}</el-card></el-col>
+      <el-col :span="6"><el-card shadow="never">明细数：{{ countText(summary.detailCount) }}</el-card></el-col>
+      <el-col :span="6"><el-card shadow="never">总额：{{ moneyText(summary.totalAmount) }}</el-card></el-col>
+      <el-col :span="6"><el-card shadow="never">待结算：{{ moneyText(summary.pendingAmount) }}</el-card></el-col>
     </el-row>
 
     <el-row :gutter="12" class="mb8" v-if="reconciliation">
-      <el-col :span="8"><el-card shadow="never">已结算：{{ reconciliation.settledAmount || 0 }}</el-card></el-col>
-      <el-col :span="8"><el-card shadow="never">退款冲销：{{ reconciliation.reversalAmount || 0 }}</el-card></el-col>
-      <el-col :span="8"><el-card shadow="never">净额：{{ reconciliation.netAmount || 0 }}</el-card></el-col>
+      <el-col :span="8"><el-card shadow="never">已对账：{{ moneyText(reconciliation.settledAmount) }}</el-card></el-col>
+      <el-col :span="8"><el-card shadow="never">退款冲销：{{ moneyText(reconciliation.reversalAmount) }}</el-card></el-col>
+      <el-col :span="8"><el-card shadow="never">对账净额：{{ moneyText(reconciliation.netAmount) }}</el-card></el-col>
     </el-row>
 
     <el-table v-loading="loading" :data="batchList" @row-click="handleRowClick">
@@ -137,6 +137,7 @@
 
 <script>
 import { listSettlementBatch, listSettlementDetail, getSettlementSummary, confirmSettlement, getSettlementReconciliation, listSettlementManualCases, getSettlementManualCase } from '@/api/business/settlement'
+import { countText, moneyText } from '@/utils/questo-admin'
 
 export default {
   name: 'Settlement',
@@ -157,6 +158,8 @@ export default {
   },
   created() { this.getList(); this.getManualCases() },
   methods: {
+    countText,
+    moneyText,
     getManualCases() {
       const requestId = ++this.manualRequestId
       this.manualLoading = true

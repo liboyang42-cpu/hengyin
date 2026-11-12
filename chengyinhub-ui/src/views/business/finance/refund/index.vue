@@ -151,7 +151,7 @@
       <el-dialog title="发起售后申请" :visible.sync="open" width="560px" append-to-body>
         <el-form ref="form" :model="form" :rules="rules" label-width="100px">
           <el-form-item label="来源类型" prop="sourceType"><el-select v-model="form.sourceType"><el-option label="报名订单" value="registration" /></el-select></el-form-item>
-          <el-form-item label="来源 ID" prop="sourceId"><el-input v-model="form.sourceId" /></el-form-item>
+          <el-form-item label="交付行 ID" prop="sourceId"><el-input v-model="form.sourceId" /></el-form-item>
           <el-form-item label="用户 ID" prop="memberId"><el-input v-model="form.memberId" /></el-form-item>
           <el-form-item label="商家 ID" prop="merchantId"><el-input v-model="form.merchantId" /></el-form-item>
           <el-form-item label="支付金额" prop="paidAmount"><el-input v-model="form.paidAmount"><template slot="prepend">¥</template></el-input></el-form-item>
@@ -288,7 +288,7 @@ export default {
       reviewForm: { id: null, status: null, reviewReason: '' },
       rules: {
         sourceType: [{ required: true, message: '来源类型不能为空', trigger: 'change' }],
-        sourceId: [{ required: true, message: '来源 ID 不能为空', trigger: 'blur' }],
+        sourceId: [{ required: true, message: '交付行 ID 不能为空', trigger: 'blur' }],
         refundAmount: [{ required: true, message: '退款金额不能为空', trigger: 'blur' }]
       }
     }
