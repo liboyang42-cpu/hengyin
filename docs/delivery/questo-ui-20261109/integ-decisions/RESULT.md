@@ -34,9 +34,9 @@ master 的 #802 游玩/漫游逻辑与 #807 结局规则未被覆盖；`play-sos
 - 迁移 `migration_20261112_chapter_reward.sql` 不部署，需用户走既有流程。
 
 ## CI
-PR：#808（draft）。首轮 CI（提交 9fa3a127）：Backend tests、Funds MySQL IT、小程序单测分片 20/20、静态门禁等 29 项成功，3 项跳过；仅 1 项失败：
-- `Fast gates (CWD / API existence / silentError)` 内的 architecture gate 步骤红。原因与 #803 说明一致：D-93 改了 `MerchantMarketingAnalyticsMapper.xml#selectAnalytics` 的 SQL，`ci/architecture/baseline.json` 中该条的 sha256 需要更新；任务约束禁止修改 `ci/architecture/*`，故未处理，也不属于 “CI checkout is neither PR head nor its exact synthetic merge” 的重跑情形。需有权限者更新该基线条目后再跑。
+PR：#808（draft）。首轮（9fa3a127）仅 architecture gate 红：D-93 原实现改了 `selectAnalytics` 的 SQL 指纹，而任务约束禁止改 `ci/architecture/*`。随后分支上的后续提交把 D-93 改为保持 `selectAnalytics` 不变、由新增 `selectVerifyEventTimes` 提供核销时间，并并入既有店铺参谋服务（不新增未登记边界），同时补齐 `MerchantAggregateReadServiceTest` 的 `ReflectionTestUtils` 导入（后又去重）。
+最终头 `df28a256`：32 项成功、3 项跳过、0 失败（含 architecture gate、Backend tests、Funds MySQL IT、小程序单测分片与静态门禁）。
 
 PR: #808
 
-STATUS: PARTIAL - architecture gate 需更新 ci/architecture/baseline.json（selectAnalytics sha256），按约束未改
+STATUS: DONE
