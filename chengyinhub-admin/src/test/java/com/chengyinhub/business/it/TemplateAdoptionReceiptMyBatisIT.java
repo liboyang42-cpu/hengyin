@@ -37,7 +37,7 @@ class TemplateAdoptionReceiptMyBatisIT {
         createFixtureTable(jdbc,"CmsTemplateLibraryMapper","CmsTemplateLibraryResult","cms_template_library");
         createFixtureTable(jdbc,"CmsMemberTemplateMapper","CmsMemberTemplateResult","cms_member_template");
         jdbc.update("delete from template_adoption_receipt"); jdbc.update("delete from cms_member_template"); jdbc.update("delete from cms_template_library");
-        jdbc.update("insert into cms_template_library(id,title,question_answer,status,publish_status,del_flag) values(7,'original','answer',1,1,0)");
+        jdbc.update("insert into cms_template_library(id,title,question_answer,status,del_flag) values(7,'original','answer',1,0)");
         var factory = new SqlSessionFactoryBean(); factory.setDataSource(ds);
         factory.setTypeAliases(CmsTemplateLibrary.class, TemplateLibraryVO.class, CmsMemberTemplate.class, MemberTemplateVO.class);
         factory.setMapperLocations(new ClassPathResource("mapper/business/CmsTemplateLibraryMapper.xml"), new ClassPathResource("mapper/business/CmsMemberTemplateMapper.xml"), new ClassPathResource("mapper/business/TemplateAdoptionReceiptMapper.xml"));
@@ -60,7 +60,7 @@ class TemplateAdoptionReceiptMyBatisIT {
         assertEquals(1,jdbc.queryForObject("select count(*) from cms_member_template",Integer.class));
         assertEquals("COMPLETED",service.receipt(101L,101L,"",command.getRequestId()).get("status"));
         // Lost ACK + source removed: completion still replays, without reading/recreating source.
-        jdbc.update("update cms_template_library set publish_status=0 where id=7");
+        jdbc.update("update cms_template_library set status=3 where id=7");
         assertEquals("9007199254740993",service.adopt(101L,101L,command,"test").get("draftId"));
         var completed = service.receipt(101L,101L,"",command.getRequestId());
         assertTrue(service.matchesDraft(completed,mapper.lockDraft(9007199254740993L)));
@@ -83,7 +83,7 @@ class TemplateAdoptionReceiptMyBatisIT {
         assertThrows(ServiceException.class,()->service.receipt(101L,102L,"",command.getRequestId()));
         assertEquals("UNKNOWN",service.receipt(102L,102L,"",command.getRequestId()).get("status"));
         assertEquals("REJECTED",service.adopt(101L,101L,command("adopt_source_changed",version),"test").get("status"));
-        jdbc.update("update cms_template_library set publish_status=1 where id=7");
+        jdbc.update("update cms_template_library set status=1 where id=7");
         fail.set(true); TemplateAdoptionCommand rollback = command("adopt_rollback_001",version);
         assertThrows(IllegalStateException.class,()->service.adopt(101L,101L,rollback,"test"));
         assertEquals(1,jdbc.queryForObject("select count(*) from cms_member_template",Integer.class));

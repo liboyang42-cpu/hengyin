@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -46,7 +47,9 @@ class TemplateMedalStyleCopyAndBindingContractTest
         ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
         com.chengyinhub.business.mapper.CmsMemberTemplateMapper lockedMembers = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         ReflectionTestUtils.setField(service, "memberTemplateMapper", lockedMembers);
-        ReflectionTestUtils.setField(service, "libraryMapper", mock(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class));
+        com.chengyinhub.business.mapper.CmsTemplateLibraryMapper lockedLibraries = mock(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class);
+        when(lockedLibraries.selectByIdForUpdate(anyLong())).thenAnswer(call -> libraryService.selectCmsTemplateLibraryById(call.getArgument(0)));
+        ReflectionTestUtils.setField(service, "libraryMapper", lockedLibraries);
         ReflectionTestUtils.setField(service, "auditTaskMapper", mock(com.chengyinhub.business.mapper.AuditTaskMapper.class));
         when(lockedMembers.selectCmsMemberTemplateByIdsForUpdate(any())).thenAnswer(call -> {
             java.util.List<Long> ids = call.getArgument(0);
@@ -178,7 +181,6 @@ class TemplateMedalStyleCopyAndBindingContractTest
         source.setMemberTemplateId(601L);
         source.setDelFlag(0);
         source.setStatus(1L);
-        source.setPublishStatus(1L);
         CmsMemberTemplate canonical = new CmsMemberTemplate();
         canonical.setId(601L);
         canonical.setDelFlag(0);
@@ -212,7 +214,6 @@ class TemplateMedalStyleCopyAndBindingContractTest
         source.setId(52L);
         source.setDelFlag(0);
         source.setStatus(1L);
-        source.setPublishStatus(1L);
         when(libraryService.selectCmsTemplateLibraryById(52L)).thenReturn(source);
         CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
         request.setTitle("采用旧公共模板");

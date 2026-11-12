@@ -52,8 +52,8 @@ import static org.mockito.Mockito.when;
  * <p>ApiTemplateController.submitTemplateMediaCheck 在模板发布后对封面/勋章图 submitMediaCheck(13, memberTemplateId)。
  * 回调链：WxContentSecurityServiceImpl.handleMediaCheckResult → inbox.process →
  * WxContentCallbackMutationService.apply → lockBusinessTarget(13) → isCurrentSubmittedMedia → processMediaCheckResult。
- * 公开读路径：/api/template/list 与 /homeData(selectCmsTemplateLibraryList + del_flag=0,status=1,publish_status=1)、
- * /api/template/info(Java 侧同三条件)、/groupByCategory(selectTemplatesByCategoryIds)。
+ * 公开读路径：/api/template/list 与 /homeData(selectCmsTemplateLibraryList + del_flag=0,status=1)、
+ * /api/template/info(Java 侧同两条件)、/groupByCategory(selectTemplatesByCategoryIds)。
  * 这里用真 MyBatis XML 跑在 H2 上，回调后按这四条读路径的同一谓词复查。
  */
 class TemplateMediaCallbackVisibilityTest {
@@ -131,7 +131,7 @@ class TemplateMediaCallbackVisibilityTest {
 
         verify(inboxMapper).markDone(anyString(), anyString(), anyLong(), eq(1));
         assertEquals(List.of(), publicTitles(), "the risky template leaves every public read path");
-        assertEquals("2|0|模板图片违规已自动下架", projectionState());
+        assertEquals("2|模板图片违规已自动下架", projectionState());
         assertEquals(4, jdbc.queryForObject("select status from audit_task where id = 1", Integer.class),
                 "an open market review is cancelled so approval cannot put the image back");
         assertEquals(0, jdbc.queryForObject("select status from audit_task where id = 2", Integer.class),
@@ -139,7 +139,7 @@ class TemplateMediaCallbackVisibilityTest {
 
         // 重复回调 = 已观测到目标态,幂等成功。
         applyCallback("trace-risky-again", hashOf(COVER), true);
-        assertEquals("2|0|模板图片违规已自动下架", projectionState());
+        assertEquals("2|模板图片违规已自动下架", projectionState());
     }
 
     @Test
@@ -152,7 +152,7 @@ class TemplateMediaCallbackVisibilityTest {
         verify(inboxMapper).markIgnoredStale(anyString(), anyString(), anyLong(), eq(1));
         verify(inboxMapper, never()).markDone(anyString(), anyString(), anyLong(), anyInt());
         assertEquals(List.of("approved"), publicTitles());
-        assertEquals("1|1|", projectionState());
+        assertEquals("1|", projectionState());
         assertEquals(0, jdbc.queryForObject("select status from audit_task where id = 1", Integer.class));
     }
 
@@ -162,7 +162,7 @@ class TemplateMediaCallbackVisibilityTest {
 
         verify(inboxMapper).markDone(anyString(), anyString(), anyLong(), eq(0));
         assertEquals(List.of("approved"), publicTitles());
-        assertEquals("1|1|", projectionState());
+        assertEquals("1|", projectionState());
     }
 
     /** 真实回调链：service 交给 inbox 的 Mutation 在 mutation 服务(锁目标 → 是否当前媒体 → 落地)里执行。 */
@@ -194,21 +194,20 @@ class TemplateMediaCallbackVisibilityTest {
         CmsTemplateLibrary gallery = new CmsTemplateLibrary();
         gallery.setDelFlag(0);
         gallery.setStatus(1L);
-        gallery.setPublishStatus(1L);
         List<String> listAndHome = mapper.selectCmsTemplateLibraryList(gallery).stream()
                 .map(CmsTemplateLibrary::getTitle).collect(Collectors.toList());
         List<String> grouped = mapper.selectTemplatesByCategoryIds(List.of(1L)).stream()
                 .map(TemplateLibraryVO::getTitle).collect(Collectors.toList());
         CmsTemplateLibrary info = mapper.selectCmsTemplateLibraryById(PROJECTION_ID);
         boolean infoVisible = info != null && Integer.valueOf(0).equals(info.getDelFlag())
-                && Long.valueOf(1L).equals(info.getStatus()) && Long.valueOf(1L).equals(info.getPublishStatus());
+                && Long.valueOf(1L).equals(info.getStatus());
         assertEquals(listAndHome, grouped, "/list and /groupByCategory agree");
         assertEquals(!listAndHome.isEmpty(), infoVisible, "/list and /info agree");
         return listAndHome;
     }
 
     private String projectionState() {
-        return jdbc.queryForObject("select concat(status,'|',publish_status,'|',coalesce(reason,'')) "
+        return jdbc.queryForObject("select concat(status,'|',coalesce(reason,'')) "
                 + "from cms_template_library where id = " + PROJECTION_ID, String.class);
     }
 
@@ -242,13 +241,13 @@ class TemplateMediaCallbackVisibilityTest {
                 + "question_a text, question_b text, question_c text, question_d text, correct_answer varchar(255),"
                 + "question_img varchar(1000), question_audio varchar(1000),"
                 + "question_option_media_json text, preference_json text, advanced_config_json text,"
-                + "activity_categoryids varchar(255), status bigint, publish_status bigint, reason varchar(255),"
+                + "activity_categoryids varchar(255), status bigint, reason varchar(255),"
                 + "del_flag int, rating decimal(10,2), use_num int, pack_type tinyint,"
                 + "create_by varchar(64), create_time timestamp, update_by varchar(64), update_time timestamp)");
         jdbc.execute("create table sys_category(id bigint primary key,category_name varchar(64),icon varchar(255),del_flag int,status int)");
         jdbc.update("insert into sys_category values (1,'cat','',0,1)");
         jdbc.update("insert into cms_template_library(id,member_id,member_template_id,title,category_id,img_url,"
-                + "status,publish_status,del_flag,use_num,create_time) values (?,11,?,'approved',1,?,1,1,0,0,now())",
+                + "status,del_flag,use_num,create_time) values (?,11,?,'approved',1,?,1,0,0,now())",
                 PROJECTION_ID, MEMBER_TEMPLATE_ID, COVER);
         jdbc.execute("create table audit_task(id bigint primary key, biz_type varchar(32), biz_id bigint,"
                 + " status int, version int, update_time timestamp, source_type varchar(40))");

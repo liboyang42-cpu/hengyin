@@ -83,6 +83,7 @@ MYBATIS_ITS=(
   CircleThemeSeedMySqlIT
   TemplatePreferenceJsonMySqlIT
   TemplateMarketLifecycleMySqlIT
+  TemplateD89D90MigrationsMySqlIT
   WorkshopPurchaseMyBatisIT
   WorkshopAppleIapMyBatisIT
   TemplateAdoptionReceiptMyBatisIT
@@ -190,7 +191,7 @@ IFS=, ; IT_LIST="${MYBATIS_ITS[*]}" ; unset IFS
 #   surefire 3.x 还要 -Dsurefire.failIfNoSpecifiedTests=false(与 -DfailIfNoTests 是两个开关,
 #   少一个上游模块照样以「No tests matching pattern」失败)。
 #   「到底跑没跑」的保证**不靠这两个开关**,靠下面 assert_it_ran.py 的回读。
-CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 CHENGYIN_SELFCREATE_IT_MYSQL=1 \
+CHENGYIN_MYBATIS_IT=1 CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 CHENGYIN_SELFCREATE_IT_MYSQL=1 \
   mvn -B -pl chengyinhub-admin -am test -DfailIfNoTests=false \
   -Dsurefire.failIfNoSpecifiedTests=false -Dchengyin.npc.expiry.mysql.it=true -Dtest="$IT_LIST"
 

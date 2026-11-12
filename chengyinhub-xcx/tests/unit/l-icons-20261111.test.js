@@ -242,18 +242,21 @@ test('钥匙开场:subpackagePass 一页 + 序列帧清单里的每张图都在�
   }
 })
 
-test('通行证页 / 主题库 / 通行证列表:不做玻璃、入口先走钥匙开场、商家账号不出任何通行证入口', () => {
+test('通行证页 / 主题库 / 通行证列表:不做玻璃、通行证入口保留商家限制、公开主题库不依赖通行证', () => {
   for (const f of ['subpackageMember/market/membership/index.wxss', 'subpackageMember/market/passes/index.wxss', 'subpackageMember/market/library/index.wxss', 'subpackagePass/reveal/index.wxss']) {
     assert.doesNotMatch(read(f), /backdrop-filter/, f + ' 不做玻璃(业主「里面不需要是玻璃的 就是正常的样式」)')
   }
   assert.match(read('subpackageMember/market/membership/index.wxml'), /<view class="pp__key"><cy-frames sheets="\{\{\[\{ src: '\/subpackageMember\/images\/frames\/glass-key\.webp', n: 24 \}\]\}\}"/, 'qx-final2:ps-pass 卡里的钥匙用 l-icons 的玻璃序列帧')
   assert.doesNotMatch(read('subpackageMember/market/membership/index.wxml'), /class="ok /, '旧的 ps-success 层已退场')
   assert.match(read('subpackageMember/market/passes/index.js'), /wx\.navigateTo\(\{ url: '\/subpackagePass\/reveal\/index'/)
-  for (const f of ['subpackageMember/market/membership/index.js', 'subpackageMember/market/library/index.js', 'subpackageMember/market/passes/index.js']) {
+  for (const f of ['subpackageMember/market/membership/index.js', 'subpackageMember/market/passes/index.js']) {
     assert.match(read(f), /roleGuard\.isMerchantView\(\)/, f)
   }
   assert.match(read('subpackageMember/market/membership/index.wxml'), /state === 'merchant'[^>]*商家账号没有通行证/)
-  assert.match(read('subpackageMember/market/library/index.wxml'), /state === 'merchant'[^>]*商家账号没有通行证/)
+  const library = read('subpackageMember/market/library/index.js')
+  assert.match(library, /url: '\/api\/public-catalog\/list', method: 'POST'/)
+  assert.doesNotMatch(library, /roleGuard\.isMerchantView\(\)|state: '(?:merchant|off)'/)
+  assert.doesNotMatch(read('subpackageMember/market/library/index.wxml'), /商家账号没有通行证|通行证暂未开放/)
   // 钥匙开场页的商家空态:父级是 flex 列,cy-fill-state 才能占满剩余高度(否则插图被导航压住)
   assert.match(read('subpackagePass/reveal/index.wxml'), /class="theme-dark ky \{\{merchant \? 'ky--plain' : ''\}\}/)
   assert.match(read('subpackagePass/reveal/index.wxss'), /\.ky--plain \{ display: flex; flex-direction: column;/)

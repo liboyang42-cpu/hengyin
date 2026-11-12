@@ -106,17 +106,17 @@ class TemplateRewardOwnershipTest {
     }
     @Test void republishPreflightDoesNotAuthorizeForeignCouponEvenWithMatchingReview(){
         canonical();CmsTemplateLibrary row=new CmsTemplateLibrary();row.setId(60L);row.setMemberTemplateId(50L);row.setMemberId(OWNER);
-        row.setDelFlag(0);row.setStatus(1L);row.setPublishStatus(0L);row.setRewardRulesJson(FOREIGN);
+        row.setDelFlag(0);row.setStatus(3L);row.setRewardRulesJson(FOREIGN);
         when(libraryMapper.selectByMemberTemplateForUpdate(50L)).thenReturn(List.of(row));
         var review=com.chengyinhub.business.service.support.TemplateLibraryRepublishReview.freeze(50L,OWNER,List.of(row));
         assertThrows(IllegalArgumentException.class,()->service.updateTemplateLibraryStatus(50L,1,OWNER,review));
-        assertEquals(0L,row.getPublishStatus());noWrites();
+        assertEquals(3L,row.getStatus());noWrites();
     }
     @Test void offliningRemainsAvailableWhenAnOldRewardReferenceIsNoLongerOwned(){
         canonical().setRewardRulesJson(FOREIGN);CmsTemplateLibrary row=new CmsTemplateLibrary();row.setId(60L);row.setMemberTemplateId(50L);row.setMemberId(OWNER);
-        row.setDelFlag(0);row.setStatus(1L);row.setPublishStatus(1L);row.setRewardRulesJson(FOREIGN);
+        row.setDelFlag(0);row.setStatus(1L);row.setRewardRulesJson(FOREIGN);
         when(libraryMapper.selectByMemberTemplateForUpdate(50L)).thenReturn(List.of(row));when(libraries.updateCmsTemplateLibrary(any())).thenReturn(1);
-        assertTrue(service.updateTemplateLibraryStatus(50L,0,OWNER));assertEquals(0L,row.getPublishStatus());verifyNoInteractions(coupons);
+        assertTrue(service.updateTemplateLibraryStatus(50L,3,OWNER));assertEquals(3L,row.getStatus());verifyNoInteractions(coupons);
         verify(libraries).updateCmsTemplateLibrary(row);
     }
     @Test void omittedRulesStillMeanKeepWhileExplicitClearCanRemoveAnInvalidOldReference(){

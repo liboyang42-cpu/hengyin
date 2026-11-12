@@ -64,7 +64,6 @@ class TemplateHomeDataPublicProjectionTest {
         verify(libraryService).selectCmsTemplateLibraryList(query.capture());
         assertEquals(0, query.getValue().getDelFlag());
         assertEquals(1L, query.getValue().getStatus());
-        assertEquals(1L, query.getValue().getPublishStatus());
         assertEquals(1, home.getTotal());
 
         List<List<CmsTemplateLibrary>> shelves = Arrays.asList(

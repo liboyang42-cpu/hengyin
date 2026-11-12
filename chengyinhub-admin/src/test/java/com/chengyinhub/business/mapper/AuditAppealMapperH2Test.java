@@ -51,7 +51,7 @@ class AuditAppealMapperH2Test {
         jdbc.execute("create table cms_member_template(id bigint primary key, member_id bigint, status bigint,"
                 + " check_status int, publish_status bigint, draft_status int, del_flag int, update_time datetime)");
         jdbc.execute("create table cms_template_library(id bigint primary key, member_id bigint, member_template_id bigint,"
-                + " status bigint, publish_status bigint, del_flag int, update_time datetime)");
+                + " status bigint, del_flag int, update_time datetime)");
     }
 
     private SqlSessionFactory factory() throws Exception {
@@ -142,15 +142,15 @@ class AuditAppealMapperH2Test {
     @Test
     void templateAndLibraryReopenAreOwnerScopedStateCas() throws Exception {
         jdbc.update("insert into cms_member_template values (1, 10, 2, 2, 0, 1, 0, null)");
-        jdbc.update("insert into cms_template_library values (5, 10, 1, 1, 1, 0, null)");
+        jdbc.update("insert into cms_template_library values (5, 10, 1, 1, 0, null)");
         try (SqlSession session = factory().openSession(true)) {
             CmsMemberTemplateMapper templates = session.getMapper(CmsMemberTemplateMapper.class);
             assertEquals(0, templates.reopenAuditDecision(1L, 11L, 2L, 2, 0L), "非作者");
             assertEquals(0, templates.reopenAuditDecision(1L, 10L, 1L, 1, 1L), "方向不符");
             assertEquals(1, templates.reopenAuditDecision(1L, 10L, 2L, 2, 0L));
             CmsTemplateLibraryMapper libraries = session.getMapper(CmsTemplateLibraryMapper.class);
-            assertEquals(0, libraries.reopenAuditDecision(5L, 10L, 2L, 1L, 1L), "投影换了个人玩法");
-            assertEquals(1, libraries.reopenAuditDecision(5L, 10L, 1L, 1L, 1L));
+            assertEquals(0, libraries.reopenAuditDecision(5L, 10L, 2L, 1L), "投影换了个人玩法");
+            assertEquals(1, libraries.reopenAuditDecision(5L, 10L, 1L, 1L));
             assertEquals(0L, jdbc.queryForObject("select status from cms_template_library where id=5", Long.class));
         }
     }

@@ -431,9 +431,10 @@ class AuditAppealRevertContentTest {
         assertEquals(AuditTaskServiceImpl.ERROR_REVERT_STALE, error.getDetailMessage());
     }
 
-    @Test
-    void templateLibraryApprovalRevertReopensProjection() {
-        CmsTemplateLibrary approved = library(1L, 1L);
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(longs = {1L, 3L})
+    void templateLibraryApprovalRevertReopensProjection(long status) {
+        CmsTemplateLibrary approved = library(status);
         AuditTask task = task(REJECTED_TASK, AuditTask.STATUS_APPROVED, "template_market");
         task.setBizType(AuditTask.BIZ_TEMPLATE_LIBRARY);
         task.setSnapshotJson(TemplateAuditSnapshot.market(approved));
@@ -441,11 +442,11 @@ class AuditAppealRevertContentTest {
         when(tasks.selectAuditTaskByIdForUpdate(REJECTED_TASK)).thenReturn(task);
         when(libraries.selectCmsTemplateLibraryById(BIZ_ID)).thenReturn(approved);
         when(libraries.selectByMemberTemplateForUpdate(600L)).thenReturn(Collections.singletonList(approved));
-        when(libraries.reopenAuditDecision(BIZ_ID, AUTHOR, 600L, 1L, 1L)).thenReturn(1);
+        when(libraries.reopenAuditDecision(BIZ_ID, AUTHOR, 600L, status)).thenReturn(1);
 
         assertEquals(AuditTask.STATUS_PENDING,
                 service.revert(REJECTED_TASK, REVIEWER, false, revertRequest()).getStatus());
-        verify(libraries).reopenAuditDecision(BIZ_ID, AUTHOR, 600L, 1L, 1L);
+        verify(libraries).reopenAuditDecision(BIZ_ID, AUTHOR, 600L, status);
     }
 
     @Test
@@ -633,7 +634,7 @@ class AuditAppealRevertContentTest {
     void upheldTemplateReportRecordsPreTakedownStateBeforeTakingDown() throws Exception {
         CmsMemberTemplate listed = template(1L, 1, 1L);
         listed.setReason("");
-        CmsTemplateLibrary projection = library(1L, 1L);
+        CmsTemplateLibrary projection = library(1L);
         projection.setId(601L);
         projection.setMemberTemplateId(BIZ_ID);
         AuditTask report = task(APPEAL_TASK, AuditTask.STATUS_PENDING, "report");
@@ -664,7 +665,8 @@ class AuditAppealRevertContentTest {
         assertEquals(1, pre.path("template").path("status").asInt());
         assertEquals(1, pre.path("template").path("publishStatus").asInt());
         assertEquals(601L, pre.path("libraries").get(0).path("id").asLong());
-        assertEquals(1, pre.path("libraries").get(0).path("publishStatus").asInt());
+        assertEquals(1, pre.path("libraries").get(0).path("status").asInt());
+        assertFalse(pre.path("libraries").get(0).has("publishStatus"));
     }
 
     @Test
@@ -672,7 +674,7 @@ class AuditAppealRevertContentTest {
         acceptReportTakedownAppeal(1L);
 
         verify(templates).restoreReportTakedown(BIZ_ID, AUTHOR, 1L, 1, 1L, "");
-        verify(libraries).restoreReportTakedown(601L, 1L, 1L, "");
+        verify(libraries).restoreReportTakedown(601L, 1L, "");
         verify(templates, never()).reopenAuditDecision(any(), any(), any(), any(), any());
         verify(templates, never()).applyAuditDecision(any(), any());
         verify(appeals).finishAppeal(eq(3L), eq(AuditAppeal.STATE_ACCEPTED), eq(REVIEWER), any(Date.class));
@@ -689,7 +691,7 @@ class AuditAppealRevertContentTest {
         CmsMemberTemplate takenDown = template(2L, 2, 0L);
         String snapshot = "{\"bizType\":\"TEMPLATE\",\"bizId\":501,\"reason\":\"侵权\",\"preTakedown\":"
                 + "{\"template\":{\"status\":1,\"checkStatus\":1,\"publishStatus\":" + prePublishStatus
-                + ",\"reason\":\"\"},\"libraries\":[{\"id\":601,\"status\":1,\"publishStatus\":1,\"reason\":\"\"}]}}";
+                + ",\"reason\":\"\"},\"libraries\":[{\"id\":601,\"status\":1,\"reason\":\"\"}]}}";
         AuditTask appealTask = task(APPEAL_TASK, AuditTask.STATUS_PENDING, AuditTaskServiceImpl.SOURCE_APPEAL);
         appealTask.setBizType(AuditTask.BIZ_TEMPLATE);
         appealTask.setSnapshotJson(snapshot);
@@ -699,7 +701,7 @@ class AuditAppealRevertContentTest {
         when(templates.selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(BIZ_ID)))
                 .thenReturn(Collections.singletonList(takenDown));
         when(templates.restoreReportTakedown(any(), any(), any(), any(), any(), any())).thenReturn(1);
-        when(libraries.restoreReportTakedown(any(), any(), any(), any())).thenReturn(1);
+        when(libraries.restoreReportTakedown(any(), any(), any())).thenReturn(1);
         reviewCasSucceeds(AuditTask.STATUS_APPROVED);
         when(appeals.finishAppeal(any(), any(), any(), any())).thenReturn(1);
         AuditReviewDTO decision = decide(AuditTask.STATUS_APPROVED, null);
@@ -888,14 +890,13 @@ class AuditAppealRevertContentTest {
         return template;
     }
 
-    private static CmsTemplateLibrary library(Long status, Long publishStatus) {
+    private static CmsTemplateLibrary library(Long status) {
         CmsTemplateLibrary row = new CmsTemplateLibrary();
         row.setId(BIZ_ID);
         row.setMemberId(AUTHOR);
         row.setMemberTemplateId(600L);
         row.setTitle("寻宝");
         row.setStatus(status);
-        row.setPublishStatus(publishStatus);
         row.setDelFlag(0);
         return row;
     }

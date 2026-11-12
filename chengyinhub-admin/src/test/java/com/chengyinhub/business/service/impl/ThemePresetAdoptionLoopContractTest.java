@@ -126,7 +126,7 @@ class ThemePresetAdoptionLoopContractTest {
     // ------------------------------------------------------------ 2 未上架 = 不可采用
 
     /**
-     * 「模板可采用」的判据只有一条:货架行已审核(status=1)且已上架(publish_status=1)。
+     * 「模板可采用」的判据只有一条:货架行已审核上架(status=1)。
      * 范本声明的 {@code publishPolicy=PENDING_REVIEW_UNTIL_REAL_OWNER_PUBLISHES} 就落在这里 ——
      * 未填完/未核验的范本停在待审态,玩家侧连来源都查不到。
      */
@@ -136,7 +136,6 @@ class ThemePresetAdoptionLoopContractTest {
         // 先拿在架时的版本号,再由发布者把范本停在待审态:模拟「范本已存在但还没核验完」。
         String version = harness.sourceVersion();
         harness.source.setStatus(0L);
-        harness.source.setPublishStatus(0L);
 
         ServiceException missing = assertThrows(ServiceException.class,
                 () -> harness.adoption.source(OWNER, OWNER, String.valueOf(LIBRARY_ID)));
@@ -425,7 +424,6 @@ class ThemePresetAdoptionLoopContractTest {
             // 与范本 sourceRecords 同一推导:有 qa 段用选项验证,其余走 0(判定在高级玩法)。
             source.setValidationMethod(hasQa(nodeConfig) ? 3 : 0);
             source.setStatus(1L);
-            source.setPublishStatus(1L);
             source.setDelFlag(0);
             source.setDuration(600L);
             source.setAdvancedConfigJson(nodeConfig);
@@ -470,6 +468,7 @@ class ThemePresetAdoptionLoopContractTest {
                     });
             CmsTemplateLibraryMapper libraryMapper = mock(CmsTemplateLibraryMapper.class);
             when(libraryMapper.selectByMemberTemplateForUpdate(anyLong())).thenReturn(Collections.emptyList());
+            when(libraryMapper.selectByIdForUpdate(LIBRARY_ID)).thenReturn(source);
             IAuditTaskService auditTasks = mock(IAuditTaskService.class);
             AuditTaskMapper auditTaskMapper = mock(AuditTaskMapper.class);
 

@@ -49,7 +49,7 @@ public class TemplateAdoptionService {
     }
     private static boolean available(CmsTemplateLibrary s) {
         return s != null && Integer.valueOf(0).equals(s.getDelFlag())
-            && Long.valueOf(1).equals(s.getStatus()) && Long.valueOf(1).equals(s.getPublishStatus());
+            && Long.valueOf(1).equals(s.getStatus());
     }
     private static String hash(String value) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); }

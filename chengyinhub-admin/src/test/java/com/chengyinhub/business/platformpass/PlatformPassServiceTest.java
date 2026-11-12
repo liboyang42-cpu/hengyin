@@ -12,6 +12,10 @@ import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.context.properties.bind.BindException;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
@@ -23,9 +27,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -120,17 +126,168 @@ class PlatformPassServiceTest {
     }
 
     @Test
-    void coverageRequiresActiveMembershipAndOfficialTopic() {
+    void defaultCoverageIncludesEveryPublishedSourceButRequiresActiveMembership() {
         enableAll();
-        Date now = new Date();
-        Map<String, Object> active = new HashMap<>();
-        active.put("id", 7L); active.put("valid_to", new Date(now.getTime() + 1000));
-        when(mapper.selectActiveMembership(MEMBER, now)).thenReturn(active);
-        when(mapper.isOfficialSelfPlayTopic(5L)).thenReturn(1);
-        when(mapper.isOfficialSelfPlayTopic(6L)).thenReturn(0);
-        assertEquals(7L, service.coverage(MEMBER, 5L, now).membershipId());
-        assertNull(service.coverage(MEMBER, 6L, now), "非官方主题不覆盖");
-        assertNull(service.coverage(99L, 5L, now), "无有效段不覆盖");
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(MEMBER, now)).thenReturn(activeMembership(now));
+        // Official, player and club topics are all eligible; source is not a coverage gate.
+        for (long topicId : List.of(5L, 6L, 7L)) {
+            when(mapper.isPublishedTopic(topicId)).thenReturn(1);
+            assertTrue(props.coversTopic(topicId));
+            assertEquals(7L, service.coverage(MEMBER, topicId, now).membershipId());
+        }
+        when(mapper.isPublishedTopic(8L)).thenReturn(0);
+        assertNull(service.coverage(MEMBER, 8L, now), "Unpublished topics are not covered");
+        assertNull(service.coverage(99L, 5L, now), "An active membership is required");
+    }
+
+    @Test
+    void defaultBatchCoverageUsesPublishedTopicsAndTheSuppliedMembershipInstant() {
+        enableAll();
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(MEMBER, now)).thenReturn(activeMembership(now));
+        when(mapper.selectPublishedTopicIds(List.of(5L, 6L, 7L, 8L))).thenReturn(List.of(5L, 6L, 7L));
+
+        assertEquals(Set.of(5L, 6L, 7L), service.coveredTopics(MEMBER, List.of(5L, 6L, 7L, 8L, 6L), now));
+        verify(mapper).selectActiveMembership(MEMBER, now);
+        verify(mapper).selectPublishedTopicIds(List.of(5L, 6L, 7L, 8L));
+        verify(mapper, never()).isPublishedTopic(anyLong());
+    }
+
+    @Test
+    void configuredAllowlistIsSharedBySingleBatchCatalogAndOverviewCoverage() {
+        enableAll();
+        props.setCoverageTopicIds(Set.of(6L, 8L));
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(activeMembership(now));
+        when(mapper.isPublishedTopic(6L)).thenReturn(1);
+        when(mapper.isPublishedTopic(8L)).thenReturn(0);
+        when(mapper.selectPublishedTopicIds(List.of(6L, 8L))).thenReturn(List.of(6L));
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L), libraryTopic(8L)));
+        when(mapper.countLibrary(Set.of(6L, 8L))).thenReturn(1);
+
+        assertFalse(props.coversTopic(5L));
+        assertTrue(props.coversTopic(6L));
+        assertNull(service.coverage(MEMBER, 5L, now));
+        assertNotNull(service.coverage(MEMBER, 6L, now));
+        assertNull(service.coverage(MEMBER, 8L, now), "An allowlisted topic must still be published");
+        assertEquals(Set.of(6L), service.coveredTopics(MEMBER, List.of(5L, 6L, 8L), now));
+        Map<String, Object> catalog = service.library(MEMBER, null, 20);
+        assertEquals(List.of(false, true, false), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList());
+        assertEquals(false, catalog.get("covered"), "Partial coverage must not label the whole catalog covered");
+        assertEquals(1, service.overview(MEMBER).get("libraryCount"));
+        verify(mapper).countLibrary(Set.of(6L, 8L));
+        verify(mapper, never()).isPublishedTopic(5L);
+    }
+
+    @Test
+    void batchCoverageRejectsAnonymousDisabledNonholderAndInvalidInputs() {
+        Date now = new Date(1_800_000_000_000L);
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, List.of(5L), now));
+        enableAll();
+        assertEquals(Set.of(), service.coveredTopics(null, List.of(5L), now));
+        assertEquals(Set.of(), service.coveredTopics(0L, List.of(5L), now));
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, null, now));
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, List.of(), now));
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, java.util.Arrays.asList(null, 0L, -1L), now));
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, List.of(5L), now));
+        verify(mapper, never()).selectPublishedTopicIds(any());
+        verify(mapper).selectActiveMembership(MEMBER, now);
+    }
+
+    private static Map<String, Object> activeMembership(Date now) {
+        return Map.of("id", 7L, "valid_to", new Date(now.getTime() + 86_400_000L));
+    }
+
+    @Test
+    void nullOnlyBoundCoverageNormalizesToAllButMixedNullNeverBroadensAnAllowlist() {
+        PlatformPassProperties bound = new PlatformPassProperties();
+        bound.setCoverageTopicIds(java.util.Collections.singleton(null));
+        assertEquals(Set.of(), bound.getCoverageTopicIds());
+        assertTrue(bound.coversTopic(5L));
+        bound.setCoverageTopicIds(Set.of(6L));
+        assertThrows(NullPointerException.class, () -> bound.setCoverageTopicIds(
+                new java.util.HashSet<>(java.util.Arrays.asList(6L, null))));
+        assertEquals(Set.of(6L), bound.getCoverageTopicIds());
+        assertTrue(bound.coversTopic(6L));
+        assertFalse(bound.coversTopic(5L));
+    }
+
+    @Test
+    void publishedPolicyDoesNotBadgeUnavailableSelfPlayButAllowsUnexpiredFreeSelfPlay() {
+        enableAll();
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(activeMembership(now));
+        Map<String, Object> noSelfPlay = new HashMap<>(libraryTopic(1L));
+        noSelfPlay.put("self_play", Boolean.FALSE);
+        Map<String, Object> closed = new HashMap<>(libraryTopic(2L));
+        closed.put("lifecycle", 6);
+        Map<String, Object> notStarted = new HashMap<>(libraryTopic(3L));
+        notStarted.put("selling_started_at", new Date(4_000_000_000_000L));
+        Map<String, Object> ended = new HashMap<>(libraryTopic(4L));
+        ended.put("sale_end_at", new Date(1_600_000_000_000L));
+        Map<String, Object> free = new HashMap<>(libraryTopic(5L));
+        free.put("self_play_price", BigDecimal.ZERO);
+        free.put("lifecycle", 0);
+        free.remove("selling_started_at");
+        Map<String, Object> expiredFree = new HashMap<>(free);
+        expiredFree.put("id", 6L);
+        expiredFree.put("sale_end_at", new Date(1_600_000_000_000L));
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(noSelfPlay, closed, notStarted, ended, free, expiredFree));
+        List<Long> ids = List.of(1L, 2L, 3L, 4L, 5L, 6L);
+        when(mapper.selectPublishedTopicIds(ids)).thenReturn(ids);
+
+        assertEquals(Set.copyOf(ids), service.coveredTopics(MEMBER, ids, now), "Published policy remains source/lifecycle independent");
+        Map<String, Object> catalog = service.library(MEMBER, null, 20);
+        assertEquals(6, libraryRows(catalog).size(), "Unavailable claims do not remove public rows");
+        assertEquals(List.of(false, false, false, false, true, false),
+                libraryRows(catalog).stream().map(row -> row.get("passCovered")).toList());
+        assertEquals(false, catalog.get("covered"));
+    }
+
+    @Test
+    void absentAndBlankCoverageConfigurationBindToAllTopics() {
+        PlatformPassProperties absent = bindProperties(Map.of("platform-pass.enabled", "true"));
+        assertEquals(Set.of(), absent.getCoverageTopicIds());
+        assertTrue(absent.coversTopic(5L));
+        for (String blank : List.of("", "   ")) {
+            PlatformPassProperties bound = bindProperties(Map.of("platform-pass.coverage-topic-ids", blank));
+            assertEquals(Set.of(), bound.getCoverageTopicIds());
+            assertTrue(bound.coversTopic(5L));
+            assertTrue(bound.coversTopic(999L));
+            assertFalse(bound.coversTopic(null));
+            assertFalse(bound.coversTopic(0L));
+        }
+    }
+
+    @Test
+    void nonemptyCoverageConfigurationBindsExactIdsAndMalformedValuesFailClosed() {
+        PlatformPassProperties bound = bindProperties(Map.of("platform-pass.coverage-topic-ids", "6,8"));
+        assertEquals(Set.of(6L, 8L), bound.getCoverageTopicIds());
+        assertFalse(bound.coversTopic(5L));
+        assertTrue(bound.coversTopic(6L));
+        assertTrue(bound.coversTopic(8L));
+        for (String malformed : List.of("not-a-topic", "6,not-a-topic")) {
+            assertThrows(BindException.class,
+                    () -> bindProperties(Map.of("platform-pass.coverage-topic-ids", malformed)),
+                    "Malformed nonempty configuration must not silently become default-all");
+        }
+    }
+
+    private static PlatformPassProperties bindProperties(Map<String, String> values) {
+        return new Binder(new MapConfigurationPropertySource(values))
+                .bind("platform-pass", Bindable.of(PlatformPassProperties.class)).get();
+    }
+
+    private static Map<String, Object> libraryTopic(long id) {
+        return Map.of("id", id, "name", "主题" + id, "product_type", 1, "self_play", Boolean.TRUE, "lifecycle", 3,
+                "selling_started_at", new Date(1_600_000_000_000L), "sale_end_at", new Date(4_102_444_800_000L),
+                "self_play_price", new BigDecimal("100.00"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> libraryRows(Map<String, Object> catalog) {
+        return (List<Map<String, Object>>) catalog.get("rows");
     }
 
     // ---- D-112 通行证卡字段
@@ -418,8 +575,42 @@ class PlatformPassServiceTest {
     }
 
     @Test
-    void libraryIsEmptyWhenDisabled() {
-        assertEquals(List.of(), service.library(MEMBER, null, 20).get("rows"));
+    void disabledCatalogStillReturnsRowsWithoutZeroPriceCoverage() {
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L)));
+        Map<String, Object> catalog = service.library(MEMBER, null, 20);
+        assertEquals(false, catalog.get("enabled"));
+        assertEquals(List.of(5L, 6L), libraryRows(catalog).stream().map(r -> r.get("topicId")).toList());
+        assertEquals(List.of(false, false), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList());
+        assertEquals(false, catalog.get("covered"));
+        verify(mapper, never()).selectActiveMembership(anyLong(), any());
+        verify(mapper, never()).selectPublishedTopicIds(any());
+    }
+
+    @Test
+    void anonymousAndNonholderCatalogsStillReturnRowsWithoutCoverage() {
+        enableAll();
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L)));
+        for (Long memberId : java.util.Arrays.asList(null, MEMBER)) {
+            Map<String, Object> catalog = service.library(memberId, null, 20);
+            assertEquals(2, libraryRows(catalog).size());
+            assertEquals(List.of(false, false), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList());
+            assertEquals(false, catalog.get("covered"));
+        }
+        verify(mapper, never()).selectPublishedTopicIds(any());
+    }
+
+    @Test
+    void catalogIsCoveredOnlyWhenNonemptyAndEveryRowIsCovered() {
+        enableAll();
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(activeMembership(now));
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L)));
+        when(mapper.selectPublishedTopicIds(List.of(5L, 6L))).thenReturn(List.of(5L, 6L));
+        Map<String, Object> catalog = service.library(MEMBER, null, 20);
+        assertEquals(List.of(true, true), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList());
+        assertEquals(true, catalog.get("covered"));
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of());
+        assertEquals(false, service.library(MEMBER, null, 20).get("covered"));
     }
 
     @Test
@@ -435,7 +626,7 @@ class PlatformPassServiceTest {
         Map<String, Object> active = new HashMap<>();
         active.put("id", 7L); active.put("valid_to", java.time.LocalDateTime.now().plusDays(3));
         when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(active);
-        when(mapper.isOfficialSelfPlayTopic(5L)).thenReturn(1);
+        when(mapper.isPublishedTopic(5L)).thenReturn(1);
         assertTrue(service.coverage(MEMBER, 5L, new Date()).validTo().after(new Date()), "驱动给 LocalDateTime 时覆盖段仍可用");
     }
 }

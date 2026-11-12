@@ -325,7 +325,6 @@ class ContentSafetyImageTakedownNoticeTest {
         row.setMemberTemplateId(ID);
         row.setDelFlag(0);
         row.setStatus(1L);
-        row.setPublishStatus(1L);
         return row;
     }
 
