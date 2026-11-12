@@ -28,5 +28,6 @@
 - 主包：源码侧 `mainpkg-size-report` 合计 3233KB（×0.633 ≈ 2046 KiB，与上轮持平，本轮未动主包文件；pack-foil.png 在分包）。
 - 未改 `ci/architecture/*`、`ci.yml`；未跑 `ci/xcx-check.sh`、`ds-hardcode-gate-selftest.sh`；未标 ready、未合并。
 - Java：`mvn -q -DskipTests package` 通过；`PlayJourneyReadServiceImplTest`（20 项）、`ApiGameSessionControllerTest`（18 项）通过。
+- PR #779 CI（头 f4f1c254，run 43157611822）：其余全绿——20 个单测分片、Mini program static gates、Backend tests、Funds MySQL IT、迁移门禁；唯一红为已知的架构门禁步骤「Check architecture changes against trusted CI base」。Release migration rehearsal 写本文时仍在跑（上轮为绿）。首个头 e44e2034 上分片 3/20 红是俱乐部详情测试与另一会话同名修正合并后的断言错位，已由 f4f1c254 修正。
 
-STATUS: DONE（待 PR #779 CI 复核）
+STATUS: DONE（PR #779 CI 仅余架构门禁红；未标 ready、未合并）
