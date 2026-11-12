@@ -37,7 +37,7 @@
 
 - 全量 mini 单测 `node --test tests/unit/**/*.test.js`:17411 条,首轮 5 条失败(动作台账分母 ×2、按压反馈棘轮 ×3),均已修;修后台账测试 48/48、按压反馈 9/9、本次新增 14/14、受影响旧测试 249/249 全绿
 - `ui-integrity` **UI-GATE-0:PASS**(无新增基线条目;首轮 2 条动态 setData 已改为静态字段)
-- 动作台账重建:`ACTION-LEDGER PASS: 6030 controls`(tap 3029→3030、事件合同 2996→3000、本地 tap 2650→2651、控件 6025→6030);路由矩阵 `route-matrix PASS: 171 routes / 27 scenes`
+- 动作台账重建:`ACTION-LEDGER PASS: 6030 controls`(叠在 v2-b 之上:tap 3030、事件合同 2996、本地 tap 2651、控件 6026);路由矩阵 `route-matrix PASS: 171 routes / 27 scenes`
 - WXS / WXSS 类门禁:undefined-token、wxss-selector、component-wxss-selector(修了标签选择器)、button-reset、wxml-conditional、ui-theme-unit、cy-sheet-attr、component-attr、component-path-resolve、wxml-handler、js-orphan-handler、setdata-dead-field、a11y 两项、pulldown、sticky-bottom-bar、ds-hardcode(非自证)全部通过;WXSS 数值里无注释
 - `js-scope-lint`:PASS(957 个 JS)
 - 关键帧棘轮 `motion-property-ratchet` 9/9(上限 146,未新增 `@keyframes`)
