@@ -8,9 +8,9 @@
   <view class="sh {{running && loud ? 'sh--on' : ''}}">
     <view class="g-kicker sh__k pe pe--blur" style="--pe-d:.05s">{{kicker}}</view>
     <view class="sh__n g-figure pe pe--zoom" style="--pe-d:.15s">{{left}}</view>
-    <view class="sh__s pe pe--up" style="--pe-d:.55s">{{running ? (loud ? '过线了，保持舒适音量' : '舒适发声，等待本机阈值过线') : '本机相对 PCM 峰值持续过线 ' + seconds + ' 秒'}}</view>
+    <view class="sh__s pe pe--up" style="--pe-d:.55s">{{running ? (loud ? '过线了，保持舒适音量' : '舒适发声，等待声音过线') : '相对音量持续过线 ' + seconds + ' 秒'}}</view>
 
-    <view wx:if="{{running && hasFrame}}" class="sh__s pe pe--up" style="--pe-d:.55s">相对本机阈值 {{levelPct}}%（非分贝）</view>
+    <view wx:if="{{running && hasFrame}}" class="sh__s pe pe--up" style="--pe-d:.55s">相对音量 {{levelPct}}%（非分贝）</view>
     <view class="sh__s pe pe--up" style="--pe-d:.55s">使用舒适音量，不适请停止，勿持续大声喊叫</view>
     <view class="sh__s pe pe--up" style="--pe-d:.55s" wx:if="{{rewardNote}}">{{rewardNote}}</view>
 

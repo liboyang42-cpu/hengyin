@@ -248,7 +248,6 @@
 .signup--reduced .wl-pop { transition: none; }
 /* x-fix2 P-18:无封面票卡的插画位:居中,不叠封面压暗 */
 .wc__im--illus { display: flex; align-items: center; justify-content: center; }
-.wc__im .cy-cover-fb__art { width: 120rpx; height: 90rpx; } /* D15:无图位用统一的 look 渐变兜底(cy-cover-fb),不再是大插画 */
 .wc__im--illus::after { display: none; }
 
 /* ===== 细节打磨 2026-11-12 · S6 票卡:票根线两侧的缺口 + 顶边内高光(版式、文案、配色不动) ===== */

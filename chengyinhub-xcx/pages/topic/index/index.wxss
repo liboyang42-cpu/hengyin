@@ -2193,4 +2193,3 @@ button::after {
 .topic-story-paywall__card { box-shadow: var(--cy-depth-rest); }
 
 /* D3:无封面头图 = look 渐变 + 小路线标(同主题卡),不再铺满黑白线稿 */
-.topic .slide1 .cy-cover-fb__art, .topic .det1 .cy-cover-fb__art { width: 120rpx; height: 90rpx; }
