@@ -4172,7 +4172,10 @@ Page({
     const p = accepted.point;
     this._realAnchor = p; this._player = p;
     this._dist = (this._dist || 0) + accepted.distance;
-    this._track.push({ lat: p.lat, lng: p.lng });
+    // D-70:跳点不再丢段。里程只加封顶后的 distance,轨迹按补出来的 points 连续上图
+    // (直线段 points 就是终点,与旧行为一致;补出来的中间点只为画线/点亮连续,不重复计里程)。
+    const seg = Array.isArray(accepted.points) && accepted.points.length ? accepted.points : [{ lat: p.lat, lng: p.lng }];
+    for (let i = 0; i < seg.length; i += 1) this._track.push({ lat: seg[i].lat, lng: seg[i].lng });
     const last = this._reveals[this._reveals.length - 1];
     if (!last || distM(last, p) > 15) this._addReveal(p);
     this._applyMovePatch(p, prev);
