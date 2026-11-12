@@ -115,8 +115,38 @@ public class PlatformPassService {
         holding.put("active", active != null);
         holding.put("validTo", active == null ? null : toDate(active.get("valid_to")));
         holding.put("coverageEnd", mapper.selectCoverageEnd(memberId, now));
+        putCardFacts(holding, active, now);
         return holding;
     }
+
+    private static final long DAY_MS = 86_400_000L;
+
+    /**
+     * D-112 通行证卡字段（业主 2026-11-11「后端补字段后画」），全部由当前有效段 + 其订单冻结的套餐推出，没有就是 null：
+     * planCode/planLabel 年卡·月卡；daysTotal/daysRemaining 进度条（当前有效段，向上取整天，剩余夹在 [0, 总数]）；
+     * teammateBenefit 通行证只覆盖本人自玩（coverage 不含同行席位），恒 false，前端不据此画「同行可用」；
+     * badge 只有「即将到期」（剩余 ≤7 天）一种事实，其余 null。
+     */
+    private static void putCardFacts(Map<String, Object> holding, Map<String, Object> active, Date now) {
+        String code = active == null || blank(active.get("plan_code")) ? null : active.get("plan_code").toString();
+        holding.put("planCode", code);
+        holding.put("planLabel", code == null ? null : "YEAR".equals(code) ? "年卡" : "MONTH".equals(code) ? "月卡" : null);
+        Integer total = null, remaining = null;
+        Date from = active == null ? null : toDate(active.get("valid_from"));
+        Date to = active == null ? null : toDate(active.get("valid_to"));
+        if (from != null && to != null && to.after(from)) {
+            long t = Math.max(1L, ceilDays(to.getTime() - from.getTime()));
+            long r = Math.min(t, Math.max(0L, ceilDays(to.getTime() - now.getTime())));
+            total = (int) t;
+            remaining = (int) r;
+        }
+        holding.put("daysTotal", total);
+        holding.put("daysRemaining", remaining);
+        holding.put("teammateBenefit", false);
+        holding.put("badge", remaining != null && remaining <= 7 ? "EXPIRING" : null);
+    }
+
+    private static long ceilDays(long ms) { return (ms + DAY_MS - 1) / DAY_MS; }
 
     public Map<String, Object> channels() {
         Map<String, Object> channels = new LinkedHashMap<>();

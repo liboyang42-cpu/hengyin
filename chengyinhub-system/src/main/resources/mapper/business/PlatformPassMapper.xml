@@ -116,7 +116,7 @@
     </select>
 
     <select id="selectActiveMembership" resultMap="membershipRow">
-        select m.id, m.member_id, m.order_id, m.valid_from, m.valid_to, m.status
+        select m.id, m.member_id, m.order_id, m.valid_from, m.valid_to, m.status, o.plan_code
         from platform_pass_membership m
         join platform_pass_order o on o.id = m.order_id and o.status = 1
         where m.member_id = #{memberId} and m.status = 1 and m.valid_from &lt;= #{now} and m.valid_to &gt; #{now}

@@ -10,6 +10,13 @@
 .pp__eb { font-size: var(--cy-type-micro); font-weight: 600; letter-spacing: .2em; color: var(--cy-color-text-secondary); }
 .pp__h { margin-top: 16rpx; font-size: var(--cy-type-display); font-weight: 700; line-height: 1.1; }
 .pp__k { margin-top: 16rpx; font-size: var(--cy-type-label); font-variant-numeric: tabular-nums; color: var(--cy-color-text-secondary); }
+.pp__tags { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 20rpx; }
+.pp__tag { padding: 4rpx 16rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-primary); font-size: var(--cy-type-micro); font-weight: 600; }
+.pp__tag--warn { background: var(--cy-color-brand); color: var(--cy-color-text-on-light); }
+.pp__prog { margin-top: 28rpx; }
+.pp__bar { height: 8rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-border-subtle); overflow: hidden; }
+.pp__bar-fill { height: 100%; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); }
+.pp__prog-t { display: block; margin-top: 12rpx; font-size: var(--cy-type-label); font-variant-numeric: tabular-nums; color: var(--cy-color-text-secondary); }
 .pp__key { flex: none; margin: 0 -20rpx -20rpx 0; } /* 钥匙在锁里转四分之一圈时杆会往上扫,顶上不吃进卡片内边距 */
 .pp__list { border-radius: var(--cy-radius-xl); background: var(--cy-color-bg-surface); border: 1px solid var(--cy-color-border-subtle); overflow: hidden; }
 .pp__row { display: flex; align-items: center; gap: var(--cy-space-3); min-height: 88rpx; padding: 24rpx 28rpx; color: var(--cy-color-text-tertiary); }

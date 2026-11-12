@@ -5254,7 +5254,6 @@ page { background: var(--cy-btn-solid-bg); }
 .sx-add { flex: 0 0 auto; display: flex; align-items: stretch; padding: 0 var(--cy-space-2) var(--cy-space-2); border-bottom: 2rpx solid var(--cy-color-border-subtle); }
 .sx-add__i { flex: 1; min-width: 0; min-height: var(--cy-btn-h); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4rpx; border-radius: var(--cy-radius-sm); color: var(--cy-color-text-primary); }
 .sx-add__t { color: var(--cy-color-text-secondary); font-size: var(--cy-font-micro); line-height: 1.2; }
-.sx-add__rule { width: 36rpx; height: 4rpx; margin: 16rpx 0; border-radius: var(--cy-radius-pill); background: currentColor; }
 
 /* 页底色:卡片式块要有一层浅底才看得出是卡 */
 .story-editor__scroll { background: var(--cy-color-bg-page); }
