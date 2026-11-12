@@ -72,6 +72,7 @@ function loadDetail() {
       clubId: '9',
       club: { id: 9, isOwner: true },
       topicState: 'ready',
+      isMerchantViewer: true, // N-18:/api/coop/list 只对有商家身份的账号发
     }),
     setData(patch) { Object.assign(this.data, patch) },
   })
