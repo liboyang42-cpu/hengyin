@@ -38,7 +38,7 @@ class WorkshopPurchaseMyBatisIT {
         fixtureTable(jdbc,"CmsMemberTemplateMapper","CmsMemberTemplateResult","cms_member_template");
         fixtureNodeReferences(jdbc);
         jdbc.update("insert into cms_member_template(id,member_id,title,question_answer,status,draft_status,publish_status,del_flag,interaction_type) values(80,99,'purchased title','frozen answer',0,0,0,0,'A')");
-        jdbc.update("insert into cms_template_library(id,member_template_id,member_id,title,question_answer,status,publish_status,del_flag) values(8,800,99,'legacy free title','free answer',1,1,0)");
+        jdbc.update("insert into cms_template_library(id,member_template_id,member_id,title,question_answer,status,del_flag) values(8,800,99,'legacy free title','free answer',1,0)");
         jdbc.update("insert into cms_member_template(id,member_id,title,status,draft_status,publish_status,del_flag,update_time) values(20,7,'target',0,0,0,0,'2026-11-09 00:00:00.000')");
         var factory=new SqlSessionFactoryBean();factory.setDataSource(ds);
         factory.setTypeAliases(CmsTemplateLibrary.class,TemplateLibraryVO.class,CmsMemberTemplate.class,MemberTemplateVO.class);
@@ -78,7 +78,7 @@ class WorkshopPurchaseMyBatisIT {
         new org.springframework.transaction.support.TransactionTemplate(new DataSourceTransactionManager(ds))
                 .execute(status->{versionReview.apply(auditTask,1);return null;});
         assertEquals("APPROVED",service.offer(version).get("reviewState"));
-        assertEquals(1L,jdbc.queryForObject("select publish_status from cms_template_library where id=8",Long.class));
+        assertEquals(1L,jdbc.queryForObject("select status from cms_template_library where id=8",Long.class));
         jdbc.update("update cms_member_template set question_answer='new canonical answer',advanced_config_json=? where id=80",originalConfig.replace("old right","new canonical right"));
         var purchase=new WorkshopService.Purchase("purchase1",version,(String)offer.get("contentHash"),(String)offer.get("termsHash"),"WECHAT_APP");
         String no=(String)service.purchase(7,purchase).get("orderNo");

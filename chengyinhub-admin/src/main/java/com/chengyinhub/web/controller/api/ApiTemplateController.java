@@ -351,9 +351,9 @@ public class ApiTemplateController extends BaseController {
     @PostMapping("/updateLibraryStatus")
     @Parameters({
             @Parameter(name = "template_id", description = "模版ID", required = true),
-            @Parameter(name = "publish_status", description = "状态：0下架  1上架", required = true)
+            @Parameter(name = "status", description = "状态：1上架 2撤回待审 3下架", required = true)
     })
-    public AjaxResult updateTemplateLibraryStatus(String template_id, String publish_status, String scope) {
+    public AjaxResult updateTemplateLibraryStatus(String template_id, String status, String scope) {
 
         try {
             // 获取当前登录用户ID
@@ -364,23 +364,23 @@ public class ApiTemplateController extends BaseController {
             Long memberId = resolveTemplateOwner(principalMemberId, scope);
 
             Long memberTemplateId = Convert.toLong(template_id, 0L);
-            Integer publishStatus = Convert.toInt(publish_status, 2);
+            Integer targetStatus = Convert.toInt(status, -1);
             // 参数验证
-            if (publishStatus != 0 && publishStatus != 1) {
+            if (targetStatus != 1 && targetStatus != 2 && targetStatus != 3) {
                 return error("发布状态参数错误");
             }
 
             // 内容安全(X02):上架 = 重新对所有用户可见,必须复检一次。
             // 下架不检 —— 把违规内容撤下来的动作不该被内容安全拦住。
-            TemplateLibraryRepublishReview review = publishStatus == 1
+            TemplateLibraryRepublishReview review = targetStatus == 1
                     ? libraryRecordTextSecurity(memberTemplateId, memberId) : null;
 
             // 网络复检在锁外完成；事务内绑定完整被检内容后才允许写入。
-            boolean result = publishStatus == 1
-                    ? templatePublishService.updateTemplateLibraryStatus(memberTemplateId, publishStatus, memberId, review)
-                    : templatePublishService.updateTemplateLibraryStatus(memberTemplateId, publishStatus, memberId);
+            boolean result = targetStatus == 1
+                    ? templatePublishService.updateTemplateLibraryStatus(memberTemplateId, targetStatus, memberId, review)
+                    : templatePublishService.updateTemplateLibraryStatus(memberTemplateId, targetStatus, memberId);
 
-            String statusText = publishStatus == 1 ? "上架" : "下架";
+            String statusText = targetStatus == 1 ? "上架" : targetStatus == 2 ? "撤回" : "下架";
             if (result) {
                 return success("模板库记录" + statusText + "成功");
             } else {
@@ -607,7 +607,6 @@ public class ApiTemplateController extends BaseController {
 
         cmsTemplateLibrary.setDelFlag(0);
         cmsTemplateLibrary.setStatus(1L);
-        cmsTemplateLibrary.setPublishStatus(1L);
 
 
         List<CmsTemplateLibrary> list;
@@ -682,8 +681,7 @@ public class ApiTemplateController extends BaseController {
             return error("模板不存在");
         } else {
             if (!Integer.valueOf(0).equals(cmsTemplateLibrary.getDelFlag())
-                    || !Long.valueOf(1L).equals(cmsTemplateLibrary.getStatus())
-                    || !Long.valueOf(1L).equals(cmsTemplateLibrary.getPublishStatus())) {
+                    || !Long.valueOf(1L).equals(cmsTemplateLibrary.getStatus())) {
                 return error("模板不存在");
             } else {
                 // 名字收口在 ValidationMethod#label:这串映射原本在本文件里有两份,
@@ -749,7 +747,7 @@ public class ApiTemplateController extends BaseController {
         // 与 /info 同一公开谓词:不公开的记录对外「不存在」,也不能借举报建单。
         CmsTemplateLibrary row = templateLibraryService.selectCmsTemplateLibraryById(libraryId);
         if (row == null || !Integer.valueOf(0).equals(row.getDelFlag())
-                || !Long.valueOf(1L).equals(row.getStatus()) || !Long.valueOf(1L).equals(row.getPublishStatus())) {
+                || !Long.valueOf(1L).equals(row.getStatus())) {
             return error("模板不存在");
         }
         return submitReport(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, libraryId, reporterId, reason);

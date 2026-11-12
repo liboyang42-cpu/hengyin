@@ -126,20 +126,20 @@ public class NpcAsrIntentService {
             update.setRequestId(original.getRequestId());update.setClaimToken(original.getClaimToken());
             update.setState(state);update.setTranscript(text);
             update.setQuotaReservation(original.getQuotaReservation());
-            if ("NOT_SENT".equals(state)) intents.finishNotSent(update);
+            if ("NOT_SENT".equals(state) || "UNKNOWN".equals(state) || ("RECEIVED".equals(state) && (text==null || text.isEmpty())))
+                intents.finishNotSent(update);
             else intents.finish(update); // Deletion revokes body ownership; never return in-memory text.
             NpcAsrIntent current=intents.selectForUpdate(original.getUserId(),original.getRequestId());
             if (current==null) throw new IllegalStateException("NPC ASR result readback unavailable");
             return current;
         });
         try {
-            if ("NOT_SENT".equals(stored.getState()) && stored.isQuotaRefundPending())
+            if (stored.isQuotaRefundPending())
                 quota.refundNpcAsrNotSent(stored.getUserId(),stored.getRequestId());
             else if ("RECEIVED".equals(state))
                 quota.retainQuota(original.getUserId(),QUOTA_BIZ,original.getQuotaReservation(),"ASR_RECEIVED");
-            // UNKNOWN stays at ASR_STARTED. The original recovery owner records UNCERTAIN, never a completed debit/refund.
         } catch(RuntimeException pending) {
-            // NOT_SENT is queued in the ASR row; otherwise ASR_STARTED remains a durable do-not-refund boundary.
+            // The original ASR row keeps the failure intent for the existing recovery worker.
             log.warn("NPC ASR quota outcome pending code=QUOTA_PERSISTENCE_UNAVAILABLE");
         }
         return stored;
@@ -177,8 +177,9 @@ public class NpcAsrIntentService {
         NpcChatResp response=unavailable(row.getRequestId(),code);
         response.setAsrState(row.getState());
         response.setQuotaStatus(row.getQuotaReservation()==null?"PROCESSING"
-                :"NOT_SENT".equals(row.getState())?(row.isQuotaRefundPending()?"RELEASE_PENDING":"RELEASED")
-                :"RECEIVED".equals(row.getState())?"HELD":"PROCESSING");
+                :row.isQuotaRefundPending()?"RELEASE_PENDING"
+                :"NOT_SENT".equals(row.getState())?"RELEASED"
+                :"RECEIVED".equals(row.getState()) && !"".equals(row.getTranscript())?"HELD":"PROCESSING");
         return response;
     }
     public static NpcChatResp unavailable(String rid,String reason) {

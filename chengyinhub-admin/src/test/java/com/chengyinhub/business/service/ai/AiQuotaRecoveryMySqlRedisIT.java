@@ -188,4 +188,70 @@ class AiQuotaRecoveryMySqlRedisIT {
         restarted.runDue();assertEquals("0",raw.opsForValue().get(counter));assertEquals("REFUNDED",state());
     }
 
+    private void dialogueOriginal() throws Exception {
+        sql("update ai_quota_reservation set biz_type='npc_shop_chat' where receipt_key='"+receipt+"'");
+    }
+
+    @Test void dialogueFailureConcurrentNotificationsAndRetryRefundOnlyItsSingleDebit() throws Exception {
+        reserve();dialogueOriginal();service.stage(receipt,"MODEL_STARTED");
+        ExecutorService workers=Executors.newFixedThreadPool(2);
+        try {
+            Future<?> one=workers.submit(()->service.requireRefund(receipt,"DIALOGUE_FAILURE"));
+            Future<?> two=workers.submit(()->service.requireRefund(receipt,"DIALOGUE_FAILURE"));
+            one.get();two.get();
+        } finally { workers.shutdownNow(); }
+        service.requireRefund(receipt,"DIALOGUE_FAILURE");service.runDue();
+        assertEquals("0",raw.opsForValue().get(counter));assertEquals("0",raw.opsForValue().get(receipt));
+        assertEquals("REFUNDED",state());
+    }
+
+    @Test void dialogueFailureAfterUnknownRecoveryUsesSameOriginalAndNotCurrentDay() throws Exception {
+        reserve();dialogueOriginal();service.stage(receipt,"MODEL_STARTED");forceDue();service.runDue();
+        assertEquals("UNCERTAIN",state());
+        service.requireRefund(receipt,"DIALOGUE_FAILURE");
+        assertEquals("REFUNDED",state());assertEquals("0",raw.opsForValue().get(counter));
+    }
+
+    @Test void voiceHandoffFailureCanRefundAsrReceivedButSuccessCannotBeRefunded() throws Exception {
+        reserve();dialogueOriginal();service.stage(receipt,"ASR_STARTED");service.retain(receipt,"ASR_RECEIVED");
+        service.retain(receipt,"SUCCESS");
+        assertThrows(IllegalStateException.class,()->service.requireRefund(receipt,"DIALOGUE_FAILURE"));
+        assertEquals("RETAINED",state());assertEquals("1",raw.opsForValue().get(counter));
+    }
+
+    @Test void voiceHandoffFailureReturnsTheAlreadyRetainedAsrOriginal() throws Exception {
+        reserve();dialogueOriginal();service.stage(receipt,"ASR_STARTED");service.retain(receipt,"ASR_RECEIVED");
+        service.requireRefund(receipt,"DIALOGUE_FAILURE");service.requireRefund(receipt,"DIALOGUE_FAILURE");
+        assertEquals("REFUNDED",state());assertEquals("0",raw.opsForValue().get(counter));
+    }
+
+    @Test void dialogueFailureBeforeAnyCommittedDebitCannotDecreaseAnotherReservation() throws Exception {
+        dialogueOriginal();raw.opsForValue().set(counter,"1");raw.opsForValue().set(counter+":generation","another-original");
+        assertThrows(IllegalStateException.class,()->service.requireRefund(receipt,"DIALOGUE_FAILURE"));
+        assertEquals("1",raw.opsForValue().get(counter));assertEquals("PREPARED",state());
+        assertFalse(Boolean.TRUE.equals(raw.hasKey(receipt)));
+    }
+
+    @Test void staleRecoveryOwnerCannotOverwriteCommittedDialogueFailure() throws Exception {
+        reserve();dialogueOriginal();service.stage(receipt,"MODEL_STARTED");forceDue();
+        var original=mapper.selectByReceipt(receipt);
+        assertEquals(1,mapper.claim(original.getId(),original.getFenceVersion(),"stale-owner"));
+        var claimed=mapper.selectByReceipt(receipt);
+        service.requireRefund(receipt,"DIALOGUE_FAILURE");
+        assertEquals(0,mapper.complete(claimed.getId(),"stale-owner",claimed.getFenceVersion(),"UNCERTAIN","PROVIDER_OUTCOME_UNKNOWN"));
+        assertEquals("REFUNDED",state());assertEquals("0",raw.opsForValue().get(counter));
+    }
+
+    @Test void unrelatedCreatorFailureCannotUseDialogueRefundDecision() throws Exception {
+        reserve();service.stage(receipt,"MODEL_STARTED");
+        assertThrows(IllegalStateException.class,()->service.requireRefund(receipt,"DIALOGUE_FAILURE"));
+        assertEquals("RESERVED",state());assertEquals("1",raw.opsForValue().get(counter));
+    }
+
+    @Test void blockedDialogueCannotBeRefundedByALaterFailureNotification() throws Exception {
+        reserve();dialogueOriginal();service.retain(receipt,"INPUT_REJECTED");
+        assertThrows(IllegalStateException.class,()->service.requireRefund(receipt,"DIALOGUE_FAILURE"));
+        assertEquals("RETAINED",state());assertEquals("1",raw.opsForValue().get(counter));
+    }
+
 }

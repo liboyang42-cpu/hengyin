@@ -1,15 +1,13 @@
-<!-- 游戏主题库(proto ps-library):界面 l-after,数据 l-pass GET /api/platform-pass/library;玩家深色;一行一张俱乐部式卡;标题不写数量 -->
+<!-- 游戏主题库(proto ps-library):界面 l-after,数据公开目录;玩家深色;一行一张俱乐部式卡;标题不写数量 -->
 <view class="theme-dark lb" style="--pm-x:{{pm}};">
   <cy-nav-bar plain custom-back bind:back="goBack" />
   <cy-page-title title="游戏主题库" />
-  <view class="lb-kinds" wx:if="{{state !== 'off' && state !== 'merchant'}}" aria-role="tablist">
+  <view class="lb-kinds" aria-role="tablist">
     <view class="lb-kind {{kind === item.key ? 'is-on' : ''}}" wx:for="{{kinds}}" wx:key="key" data-key="{{item.key}}" bindtap="onKind"
           aria-role="tab" aria-selected="{{kind === item.key}}" aria-label="{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
   </view>
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
   <cy-empty wx:elif="{{state === 'error'}}" kind="data" title="{{error}}" cta="重试" bind:cta="reload" fill size="lg" />
-  <cy-empty wx:elif="{{state === 'merchant'}}" kind="empty" title="商家账号没有通行证" fill size="lg" />
-  <cy-empty wx:elif="{{state === 'off'}}" kind="empty" title="通行证暂未开放" fill size="lg" />
   <cy-empty wx:elif="{{!cards.length}}" kind="empty" title="这一类还没有主题" fill size="lg" />
   <view wx:else class="lb-list">
     <view class="photo-card lb-card" wx:for="{{cards}}" wx:key="id" style="--i:{{index < 8 ? index : 7}}" data-id="{{item.id}}" bindtap="openTopic"

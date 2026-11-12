@@ -191,13 +191,10 @@ public class CmsTemplateLibrary extends BaseEntity
     @Excel(name = "活动类别(多选)，逗号隔开")
     private String activityCategoryids;
 
-    /** 后台审核状态：0-&gt;待审核；1-&gt;审核通过；2-&gt;审核失败； */
-    @Excel(name = "后台审核状态：0-&gt;待审核；1-&gt;审核通过；2-&gt;审核失败；")
+    /** 广场状态唯一真源：0待审核、1已上架、2已驳回、3审核通过但已下架。 */
+    @Excel(name = "广场状态：0待审核、1已上架、2已驳回、3审核通过但已下架")
     private Long status;
 
-    /** 发布状态：0下架中  1已上架 */
-    @Excel(name = "发布状态：0下架中  1已上架")
-    private Long publishStatus;
 
     /** 驳回原因 */
     @Excel(name = "驳回原因")
@@ -209,7 +206,7 @@ public class CmsTemplateLibrary extends BaseEntity
     /**评分-后台输入*/
     private String rating;
 
-    /**使用人数-后台输入*/
+    /** 不同会员首次采用人数；仅由采用事务维护。 */
     private Integer useNum;
 
     /**
@@ -703,15 +700,6 @@ public class CmsTemplateLibrary extends BaseEntity
         return status;
     }
 
-    public void setPublishStatus(Long publishStatus)
-    {
-        this.publishStatus = publishStatus;
-    }
-
-    public Long getPublishStatus()
-    {
-        return publishStatus;
-    }
 
     public void setReason(String reason)
     {
@@ -814,7 +802,6 @@ public class CmsTemplateLibrary extends BaseEntity
             .append("advancedConfigJson", getAdvancedConfigJson())
             .append("activityCategoryids", getActivityCategoryids())
             .append("status", getStatus())
-            .append("publishStatus", getPublishStatus())
             .append("reason", getReason())
             .append("delFlag", getDelFlag())
                 .append("rating", getRating())

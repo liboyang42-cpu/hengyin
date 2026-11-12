@@ -136,7 +136,7 @@ class ApiTemplateMerchantOperatorScopeTest {
         });
         CmsTemplateLibrary source = new CmsTemplateLibrary();
         source.setId(16L); source.setMemberTemplateId(116L); source.setMemberId(800L);
-        source.setTitle("原公共内容"); source.setDelFlag(0); source.setStatus(1L); source.setPublishStatus(1L);
+        source.setTitle("原公共内容"); source.setDelFlag(0); source.setStatus(1L);
         source.setQuestionAnswer("原服务端答案"); source.setAdvancedConfigJson("{\"schemaVersion\":1}");
         CmsMemberTemplate canonical = draft(800L);
         canonical.setId(116L); canonical.setTitle(source.getTitle()); canonical.setDraftStatus(1);

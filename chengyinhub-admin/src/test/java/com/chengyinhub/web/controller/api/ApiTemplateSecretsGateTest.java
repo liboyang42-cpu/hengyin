@@ -215,7 +215,6 @@ class ApiTemplateSecretsGateTest {
         lib.setMemberId(OTHER_OWNER);
         lib.setDelFlag(0);
         lib.setStatus(1L);
-        lib.setPublishStatus(1L);
         lib.setValidationMethod(1);
         lib.setQuestionAnswer("答案X");
         lib.setCorrectAnswer("B");
@@ -244,7 +243,7 @@ class ApiTemplateSecretsGateTest {
         AjaxResult missingReviewState = tplController.producInfo(String.valueOf(TPL));
 
         hidden = publicLibraryTemplate();
-        hidden.setPublishStatus(2L);
+        hidden.setStatus(3L);
         when(libSvc.selectCmsTemplateLibraryById(TPL)).thenReturn(hidden);
         AjaxResult abnormalPublishState = tplController.producInfo(String.valueOf(TPL));
 
@@ -266,7 +265,6 @@ class ApiTemplateSecretsGateTest {
         lib.setMemberTemplateId(777L);
         lib.setDelFlag(0);
         lib.setStatus(1L);
-        lib.setPublishStatus(1L);
         lib.setValidationMethod(1);
         CmsMemberTemplate canonical = memberTplWithSecrets(OTHER_OWNER);
         canonical.setId(777L);
@@ -293,7 +291,6 @@ class ApiTemplateSecretsGateTest {
         lib.setMemberTemplateId(777L);
         lib.setDelFlag(0);
         lib.setStatus(1L);
-        lib.setPublishStatus(1L);
         lib.setValidationMethod(1);
         CmsMemberTemplate pending = memberTplWithSecrets(OTHER_OWNER);
         pending.setId(777L);
@@ -382,7 +379,6 @@ class ApiTemplateSecretsGateTest {
         assertEquals("4", query.getValue().getActivityCategoryids());
         assertEquals(0, query.getValue().getDelFlag());
         assertEquals(1L, query.getValue().getStatus());
-        assertEquals(1L, query.getValue().getPublishStatus());
         TableDataInfo table = (TableDataInfo) res.get("data");
         PublicTemplateListItemVO out = ((List<PublicTemplateListItemVO>) table.getRows()).get(0);
         assertEquals(TPL, out.getId());
@@ -1058,7 +1054,6 @@ class ApiTemplateSecretsGateTest {
         template.setMemberId(OTHER_OWNER);
         template.setDelFlag(0);
         template.setStatus(1L);
-        template.setPublishStatus(1L);
         template.setValidationMethod(1);
         return template;
     }

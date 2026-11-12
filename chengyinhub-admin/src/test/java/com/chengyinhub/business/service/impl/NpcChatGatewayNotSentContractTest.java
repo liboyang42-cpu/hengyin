@@ -15,15 +15,15 @@ class NpcChatGatewayNotSentContractTest
 {
     @Test void typedUnsentMapsToStoredNotRunAndSameNpcRequestDoesNotReserveOrSendAgain()
     {
-        check(new AiProviderNotSentException(), "FAILED", "NOT_RUN", "AI_UNAVAILABLE", true);
+        check(new AiProviderNotSentException(), "FAILED", "NOT_RUN", "AI_UNAVAILABLE");
     }
 
-    @Test void ordinaryProviderFailureKeepsOriginalUnknownAndNeverCompensates()
+    @Test void ordinaryProviderFailureKeepsOriginalUnknownAndRefundsDialogueQuotaOnce()
     {
-        check(new IllegalStateException("provider timeout"), "PROCESSING", "UNKNOWN", "REQUEST_OUTCOME_UNKNOWN", false);
+        check(new IllegalStateException("provider timeout"), "PROCESSING", "UNKNOWN", "REQUEST_OUTCOME_UNKNOWN");
     }
 
-    private void check(RuntimeException failure, String outcome, String safety, String code, boolean refunded)
+    private void check(RuntimeException failure, String outcome, String safety, String code)
     {
         NpcChatServiceTest original = new NpcChatServiceTest(); original.setUp();
         NpcChatService npc = (NpcChatService) ReflectionTestUtils.getField(original, "service");
@@ -44,8 +44,13 @@ class NpcChatGatewayNotSentContractTest
         assertEquals(first.getRequestId(), read.getRequestId()); assertEquals(safety, read.getSafetyDecision());
         String receipt = gateway.originalReceipt(2002L, "npc_chat", "npc");
         verify(gateway.model, times(1)).chat(anyString(), anyString());
-        if (refunded) verify(gateway.recovery).requireRefund(receipt, "SERVICE_FAILURE");
-        else verify(gateway.recovery, never()).requireRefund(anyString(), anyString());
+        verify(gateway.recovery).requireRefund(receipt, "DIALOGUE_FAILURE");
+        verify(gateway.recovery).stage(receipt, "INPUT_REVIEW_STARTED");
+        verify(gateway.recovery).stage(receipt, "MODEL_STARTED");
         verify(gateway.recovery, never()).retain(anyString(), anyString());
+        verifyNoMoreInteractions(gateway.recovery);
+        verify(gateway.redis).execute(any(org.springframework.data.redis.core.script.RedisScript.class),
+                anyList(), anyInt(), anyInt(), anyInt());
+        verifyNoMoreInteractions(gateway.redis);
     }
 }

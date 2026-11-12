@@ -48,7 +48,10 @@ public class NpcAsrTestFixture {
                         || !java.util.Set.of("IN_FLIGHT","UNKNOWN").contains(old.getState())
                         || !old.getClaimToken().equals(value.getClaimToken())
                         || !Objects.equals(old.getQuotaReservation(),value.getQuotaReservation())) return 0;
-                old.setState("NOT_SENT");old.setTranscript(null);old.setBodyExpiresAt(null);old.setQuotaRefundPending(true);return 1;
+                old.setState(value.getState());
+                old.setTranscript("RECEIVED".equals(value.getState()) && !old.isBodyErased()?"":null);
+                old.setBodyExpiresAt("RECEIVED".equals(value.getState())?new Date(System.currentTimeMillis()+172800000):null);
+                old.setQuotaRefundPending(true);return 1;
             });
             when(users.lockChatUser(anyLong())).thenAnswer(c->c.getArgument(0));
             when(rows.selectForUpdate(anyLong(),anyString())).thenAnswer(c->{

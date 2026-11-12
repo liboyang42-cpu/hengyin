@@ -71,6 +71,7 @@ class TemplateEditOwnershipTest {
             return row == null ? Collections.emptyList() : Collections.singletonList(row);
         });
         when(libraryMapper.selectByMemberTemplateForUpdate(anyLong())).thenReturn(Collections.emptyList());
+        when(libraryMapper.selectByIdForUpdate(anyLong())).thenAnswer(call -> templateLibraryService.selectCmsTemplateLibraryById(call.getArgument(0)));
         ReflectionTestUtils.setField(service, "memberTemplateService", memberTemplateService);
         ReflectionTestUtils.setField(service, "templateLibraryService", templateLibraryService);
         ReflectionTestUtils.setField(service, "auditTaskService", auditTaskService);
@@ -111,7 +112,7 @@ class TemplateEditOwnershipTest {
         when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing);
         CmsTemplateLibrary projection = new CmsTemplateLibrary(); projection.setId(171L);
         projection.setMemberTemplateId(TEMPLATE_ID); projection.setDelFlag(0);
-        projection.setStatus(1L); projection.setPublishStatus(1L);
+        projection.setStatus(1L);
         when(libraryMapper.selectByMemberTemplateForUpdate(TEMPLATE_ID)).thenReturn(Collections.singletonList(projection));
         when(templateLibraryService.updateCmsTemplateLibrary(any())).thenReturn(1);
         CmsMemberTemplate input = new CmsMemberTemplate(); input.setId(TEMPLATE_ID);
@@ -121,7 +122,6 @@ class TemplateEditOwnershipTest {
         verify(memberTemplateService).updateCmsMemberTemplate(saved.capture());
         assertEquals(0, saved.getValue().getDelFlag());
         assertEquals(1, saved.getValue().getCheckStatus());
-        assertEquals(0L, projection.getPublishStatus());
         verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE_LIBRARY", 171L);
         verify(taskMapper).cancelOpenTemplateTasks("TEMPLATE", TEMPLATE_ID);
     }
@@ -136,7 +136,7 @@ class TemplateEditOwnershipTest {
         when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(existing);
         CmsTemplateLibrary projection = new CmsTemplateLibrary(); projection.setId(171L);
         projection.setMemberTemplateId(TEMPLATE_ID); projection.setDelFlag(0);
-        projection.setStatus(1L); projection.setPublishStatus(1L);
+        projection.setStatus(1L);
         when(libraryMapper.selectByMemberTemplateForUpdate(TEMPLATE_ID)).thenReturn(Collections.singletonList(projection));
         when(templateLibraryService.updateCmsTemplateLibrary(any())).thenReturn(1);
         CmsMemberTemplate input = new CmsMemberTemplate(); input.setId(TEMPLATE_ID);
@@ -309,7 +309,7 @@ class TemplateEditOwnershipTest {
                 when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(source);
                 CmsTemplateLibrary projection = new CmsTemplateLibrary();
                 projection.setId(171L); projection.setMemberTemplateId(TEMPLATE_ID);
-                projection.setDelFlag(0); projection.setStatus(1L); projection.setPublishStatus(1L);
+                projection.setDelFlag(0); projection.setStatus(1L);
                 when(libraryMapper.selectByMemberTemplateForUpdate(TEMPLATE_ID))
                         .thenReturn(Collections.singletonList(projection));
                 when(templateLibraryService.updateCmsTemplateLibrary(any())).thenReturn(1);
@@ -317,7 +317,6 @@ class TemplateEditOwnershipTest {
                 else if ("draft".equals(action)) service.saveOrUpdateDraft(request(TEMPLATE_ID), OWNER, "作者");
                 else assertTrue(service.deleteTemplateWithSync(TEMPLATE_ID, OWNER));
 
-                assertEquals(0L, projection.getPublishStatus(), action + ": isSync=" + sync);
                 assertEquals(2L, projection.getStatus());
                 assertEquals("delete".equals(action) ? 2 : 0, projection.getDelFlag());
                 verify(templateLibraryService).updateCmsTemplateLibrary(projection);

@@ -50,7 +50,7 @@ class TemplateAndMerchantMutationGuardTest {
         ReflectionTestUtils.setField(c, "templatePublishService", service);
         CmsTemplateLibrary t = new CmsTemplateLibrary();
         t.setId(3L);
-        t.setStatus(1L); t.setPublishStatus(1L); t.setDelFlag(2);
+        t.setStatus(1L); t.setDelFlag(2);
         AjaxResult addResult = c.add(t);
         assertNotEquals(200, addResult.get(AjaxResult.CODE_TAG));
         c.edit(t);

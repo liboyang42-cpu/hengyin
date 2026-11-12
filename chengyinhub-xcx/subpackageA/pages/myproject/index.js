@@ -955,7 +955,7 @@ Page({
     } catch (error) { release(); toast('网络异常，请重试'); }
   },
 
-  // 发布到/下架节点玩法库(沿 mytemplate:publish_status 翻转)
+  // 发布到/下架节点玩法库，按广场状态发送目标状态
   tplToggle(e) {
     const current = currentRead(this);
     const ds = e.currentTarget.dataset;
@@ -971,7 +971,7 @@ Page({
       method: 'POST',
       data: {
         template_id: ds.id,
-        publish_status: ds.target != null ? Number(ds.target) : (ds.pub == 1 ? 0 : 1),
+        status: Number(ds.target),
         scope: that.data.operationScope
       },
       success(res) {
@@ -1105,7 +1105,7 @@ Page({
 
   onDeleteTemplateAlt(e) {
     const p = e.detail.params || {};
-    this.tplToggle({ currentTarget: { dataset: { id: p.id, pub: p.pub } } });
+    this.tplToggle({ currentTarget: { dataset: { id: p.id, target: 3 } } });
   }
 });
 

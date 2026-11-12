@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** 通行证（平台会员）四张表的读写。所有写都带状态/归属前置条件，返回影响行数供调用方判定。 */
 public interface PlatformPassMapper {
@@ -66,10 +67,12 @@ public interface PlatformPassMapper {
 
     int countClaimsByMembership(@Param("membershipId") long membershipId);
 
-    /** 官方（CONTENT 槽 = PLATFORM 且生效）、开放自玩、售票中/进行中、未删除的主题。 */
-    int isOfficialSelfPlayTopic(@Param("topicId") long topicId);
+    /** 已发布主题，不按官方/玩家/俱乐部来源、交付形态或售卖生命周期缩小覆盖范围。 */
+    int isPublishedTopic(@Param("topicId") long topicId);
+
+    List<Long> selectPublishedTopicIds(@Param("topicIds") List<Long> topicIds);
 
     List<Map<String, Object>> selectLibrary(@Param("productType") Integer productType, @Param("limit") int limit);
 
-    int countLibrary();
+    int countLibrary(@Param("topicIds") Set<Long> topicIds);
 }

@@ -967,8 +967,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             }
             else if (bizType == BIZ_TYPE_TEMPLATE)
             {
-                // bizId 是会员模板 id;列表/详情/首页/分类都只读模板库投影(status=1 且 publish_status=1)。
-                // 下架 = 投影 publish_status=0 + status=2:作者不能直接再上架,必须重新提交广场人审;
+                // bizId 是会员模板 id;列表/详情/首页/分类都只读模板库投影(status=1)。
+                // 下架 = 投影 status=2:作者不能直接再上架,必须重新提交广场人审;
                 // 在途的广场审核单一并撤销,免得人审通过把违规图放回去。
                 com.chengyinhub.business.domain.CmsMemberTemplate template =
                         cmsMemberTemplateMapper.selectCmsMemberTemplateById(bizId);
@@ -989,14 +989,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                             com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, row.getId(), APPEAL_CLOSED_BY_SAFETY);
                     auditTaskMapper.cancelOpenTemplateTasks(
                             com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, row.getId());
-                    if (Long.valueOf(0L).equals(row.getPublishStatus()) && Long.valueOf(2L).equals(row.getStatus()))
+                    if (Long.valueOf(2L).equals(row.getStatus()))
                     {
                         continue;
                     }
                     com.chengyinhub.business.domain.CmsTemplateLibrary t =
                             new com.chengyinhub.business.domain.CmsTemplateLibrary();
                     t.setId(row.getId());
-                    t.setPublishStatus(0L);
                     t.setStatus(2L);
                     t.setReason("模板图片违规已自动下架");
                     t.setUpdateTime(new java.util.Date());

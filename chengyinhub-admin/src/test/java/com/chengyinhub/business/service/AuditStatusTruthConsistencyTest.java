@@ -72,12 +72,12 @@ class AuditStatusTruthConsistencyTest {
         REGISTERED_WRITERS.put("cms_member_template#updateCmsMemberTemplate", "check_status,draft_status,publish_status,status");
         REGISTERED_WRITERS.put("cms_member_template#reopenAuditDecision", "check_status,publish_status,status");
         REGISTERED_WRITERS.put("cms_member_template#restoreReportTakedown", "check_status,publish_status,status");
-        REGISTERED_WRITERS.put("cms_template_library#applyAuditDecision", "publish_status,status");
-        REGISTERED_WRITERS.put("cms_template_library#takeDownReported", "publish_status,status");
-        REGISTERED_WRITERS.put("cms_template_library#takeDownReportedByMemberTemplate", "publish_status,status");
-        REGISTERED_WRITERS.put("cms_template_library#updateCmsTemplateLibrary", "publish_status,status");
-        REGISTERED_WRITERS.put("cms_template_library#reopenAuditDecision", "publish_status,status");
-        REGISTERED_WRITERS.put("cms_template_library#restoreReportTakedown", "publish_status,status");
+        REGISTERED_WRITERS.put("cms_template_library#applyAuditDecision", "status");
+        REGISTERED_WRITERS.put("cms_template_library#takeDownReported", "status");
+        REGISTERED_WRITERS.put("cms_template_library#takeDownReportedByMemberTemplate", "status");
+        REGISTERED_WRITERS.put("cms_template_library#updateCmsTemplateLibrary", "status");
+        REGISTERED_WRITERS.put("cms_template_library#reopenAuditDecision", "status");
+        REGISTERED_WRITERS.put("cms_template_library#restoreReportTakedown", "status");
         REGISTERED_WRITERS.put("cms_topic#updateCmsTopic", "beta_flag,check_status,status,user_status");
         REGISTERED_WRITERS.put("cms_topic#casUserStatus", "user_status");
         REGISTERED_WRITERS.put("cms_topic#updateReviewFlag", "review_flag");

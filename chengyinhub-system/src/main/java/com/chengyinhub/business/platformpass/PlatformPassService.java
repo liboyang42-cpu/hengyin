@@ -2,6 +2,7 @@ package com.chengyinhub.business.platformpass;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.domain.UmsMember;
+import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
@@ -10,6 +11,7 @@ import com.chengyinhub.business.service.IWeChatMiniSessionService;
 import com.chengyinhub.business.service.RefundRequestResult;
 import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService;
+import com.chengyinhub.business.service.support.SaleAvailabilityPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,8 @@ import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +40,7 @@ import java.util.Set;
  *
  * <p>资金规则：
  * <ul>
- *   <li>总开关 {@code platform-pass.enabled} 关闭时，本类对外一律「不可用」，{@link #coverage} 恒为空，
+ *   <li>总开关 {@code platform-pass.enabled} 关闭时不出售、不报 ¥0、不领取；公开主题库照常可读，
  *       既有自玩票报价与下单结果不变。</li>
  *   <li>JSAPI 渠道：只在 C07 已验证支付事实（{@link WechatVerifiedPaymentFactService}）消费成功的同一事务里开通。</li>
  *   <li>虚拟支付渠道：消息推送只当「去查」的信号；开通依据是服务端 /xpay/query_order 回查到的已支付订单，
@@ -103,7 +107,7 @@ public class PlatformPassService {
             plans.add(plan);
         }
         out.put("plans", plans);
-        out.put("libraryCount", mapper.countLibrary());
+        out.put("libraryCount", mapper.countLibrary(properties.getCoverageTopicIds()));
         out.put("channels", channels());
         if (memberId != null && memberId > 0) out.put("holding", holding(memberId, new Date()));
         return out;
@@ -155,19 +159,17 @@ public class PlatformPassService {
         return channels;
     }
 
-    /** 游戏主题库：官方、开放自玩、售票中/进行中。productType 1 城市定向 / 2 自由探索 / null 全部。 */
+    /** 游戏主题库：复用公开目录可见性，不依赖通行证开关。productType 1 城市定向 / 2 自由探索 / null 全部。 */
     public Map<String, Object> library(Long memberId, Integer productType, int limit) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("enabled", properties.isEnabled());
-        if (!properties.isEnabled()) {
-            out.put("rows", List.of());
-            out.put("unavailableReason", "PLATFORM_PASS_DISABLED");
-            return out;
-        }
         Integer type = productType != null && (productType == 1 || productType == 2) ? productType : null;
         int bounded = Math.max(1, Math.min(limit, 100));
+        List<Map<String, Object>> topics = mapper.selectLibrary(type, bounded);
+        Date now = new Date();
+        Set<Long> covered = coveredTopics(memberId, topics.stream().map(t -> num(t.get("id"))).toList(), now);
         List<Map<String, Object>> rows = new ArrayList<>();
-        for (Map<String, Object> t : mapper.selectLibrary(type, bounded)) {
+        for (Map<String, Object> t : topics) {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("topicId", num(t.get("id")));
             row.put("name", t.get("name"));
@@ -176,24 +178,49 @@ public class PlatformPassService {
             row.put("totalTime", t.get("total_time") == null ? null : num(t.get("total_time")));
             row.put("locationCount", t.get("location_count") == null ? null : num(t.get("location_count")));
             row.put("addressName", t.get("address_name"));
+            row.put("passCovered", covered.contains(num(t.get("id"))) && selfPlayAvailable(t, now));
             rows.add(row);
         }
         out.put("rows", rows);
-        out.put("covered", memberId != null && memberId > 0
-                && row(mapper.selectActiveMembership(memberId, new Date())) != null);
+        out.put("covered", !rows.isEmpty() && rows.stream().allMatch(r -> Boolean.TRUE.equals(r.get("passCovered"))));
         return out;
     }
 
     /**
-     * 自玩票报价 / 下单时调用：本人此刻持有有效通行证、且主题是官方开放自玩主题时返回覆盖段，否则 null。
+     * 自玩票报价 / 下单时调用：本人此刻持有有效通行证、且已发布主题在配置覆盖范围内时返回覆盖段。
      * 总开关关闭时恒为 null（既有结果不变）。
      */
     public Coverage coverage(Long memberId, Long topicId, Date now) {
+        if (!properties.coversTopic(topicId)) return null;
         if (!properties.isEnabled() || memberId == null || memberId <= 0 || topicId == null || topicId <= 0) return null;
         Map<String, Object> active = row(mapper.selectActiveMembership(memberId, now));
         if (active == null) return null;
-        if (mapper.isOfficialSelfPlayTopic(topicId) <= 0) return null;
+        if (mapper.isPublishedTopic(topicId) <= 0) return null;
         return new Coverage(num(active.get("id")), toDate(active.get("valid_to")));
+    }
+
+    /** 按页批量取覆盖事实；匿名/开关关闭/无有效段均不查询主题，也不影响目录可读性。 */
+    public Set<Long> coveredTopics(Long memberId, Collection<Long> topicIds, Date now) {
+        if (!properties.isEnabled() || memberId == null || memberId <= 0 || topicIds == null || topicIds.isEmpty()) return Set.of();
+        List<Long> eligible = topicIds.stream().filter(properties::coversTopic).distinct().toList();
+        if (eligible.isEmpty() || row(mapper.selectActiveMembership(memberId, now)) == null) return Set.of();
+        return new HashSet<>(mapper.selectPublishedTopicIds(eligible));
+    }
+
+    private boolean selfPlayAvailable(Map<String, Object> row, Date now) {
+        if (num(row.get("self_play")) != 1) return false;
+        BigDecimal price = row.get("self_play_price") == null ? null : new BigDecimal(row.get("self_play_price").toString());
+        if (price == null || price.signum() < 0) return false;
+        Date saleEnd = toDate(row.get("sale_end_at"));
+        if (price.signum() == 0) {
+            Date end = saleEnd == null ? toDate(row.get("end_date")) : saleEnd;
+            return end == null || now.before(end);
+        }
+        CmsTopic topic = new CmsTopic();
+        topic.setLifecycle(num(row.get("lifecycle")).intValue());
+        topic.setSellingStartedAt(toDate(row.get("selling_started_at")));
+        topic.setSaleEndAt(saleEnd);
+        return SaleAvailabilityPolicy.sellableBlockReason(topic, null, now) == null;
     }
 
     /** 与领取的 ¥0 报名行同一事务写入，用于「用过就不能退」。 */
@@ -705,6 +732,7 @@ public class PlatformPassService {
 
     static Long num(Object value) {
         if (value instanceof Number n) return n.longValue();
+        if (value instanceof Boolean bit) return bit ? 1L : 0L;
         if (value == null) return null;
         return Long.valueOf(value.toString());
     }

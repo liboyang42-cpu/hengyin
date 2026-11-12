@@ -407,7 +407,6 @@ class ThemePresetExtendedContractTest {
         source.setTitle(meta.path("title").asText());
         source.setQuestionAnswer("待填：作者答案");
         source.setStatus(1L);
-        source.setPublishStatus(1L);
         source.setDelFlag(0);
         source.setDuration(600L);
 

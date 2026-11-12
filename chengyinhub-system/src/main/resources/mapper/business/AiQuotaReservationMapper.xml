@@ -54,10 +54,18 @@
   </update>
   <update id="recordOutcome">
     update ai_quota_reservation set state=#{state},stage=case when stage='ASR_STARTED' then stage else 'RESULT_CLASSIFIED' end,decision_reason=#{reason},
-      next_attempt_at=now(3),updated_at=now(3),completed_at=case when #{state}='RETAINED' then now(3) else null end
-    where receipt_key=#{receipt} and state in ('PREPARED','RESERVED') and owner_token is null
-      and request_lease_until &gt; now(3)
-      and (#{state}&lt;&gt;'REFUND_DUE' or stage&lt;&gt;'ASR_STARTED')
+      next_attempt_at=now(3),updated_at=now(3),completed_at=case when #{state}='RETAINED' then now(3) else null end,
+      fence_version=fence_version+1,owner_token=null,claim_until=null
+    where receipt_key=#{receipt} and (
+      (state in ('PREPARED','RESERVED') and owner_token is null and request_lease_until &gt; now(3)
+        and (#{state}&lt;&gt;'REFUND_DUE' or stage&lt;&gt;'ASR_STARTED')
+        and #{reason}&lt;&gt;'DIALOGUE_FAILURE')
+      or (biz_type in ('npc_chat','npc_shop_chat','merchant_npc_chat')
+        and generation is not null and used_after_reserve &gt; 0
+        and (state in ('RESERVED','UNCERTAIN') or (state='RETAINED' and decision_reason='ASR_RECEIVED'))
+        and ((#{state}='REFUND_DUE' and #{reason}='DIALOGUE_FAILURE')
+          or (#{state}='RETAINED' and #{reason} in ('SUCCESS','INPUT_REJECTED','OUTPUT_REJECTED','OUTPUT_REVIEW_UNKNOWN'))))
+    )
   </update>
   <select id="selectDue" resultMap="Record">
     select * from ai_quota_reservation

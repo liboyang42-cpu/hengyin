@@ -172,12 +172,21 @@ class NpcAsrIntentMySqlIT {
         assertNotNull(writes.admitShop(textRequest(),"timeout",41L,"原转写").quota());
         verify(quota,times(1)).consumePlannedQuota(anyLong(),anyString(),anyString());
     }
-    @Test void unknownNeverCreatesARefundProofAndRemainsQuotaProcessing() {
+    @Test void failedAsrCreatesDurableOriginalRefundProofWithoutChangingRecoveryIdentity() {
         when(speech.transcribe(any(),anyString())).thenThrow(new com.chengyinhub.business.service.ai.AiServiceException("controlled timeout"));
-        assertEquals("UNKNOWN",recognize().getState());assertEquals(0,db.queryForObject("SELECT quota_refund_pending FROM npc_asr_intent WHERE user_id=7",Integer.class));
-        var result=service().readOutcome("shop",21L,RID,7L);assertEquals("PROCESSING",result.getQuotaStatus());
+        assertEquals("UNKNOWN",recognize().getState());assertEquals(1,db.queryForObject("SELECT quota_refund_pending FROM npc_asr_intent WHERE user_id=7",Integer.class));
+        var result=service().readOutcome("shop",21L,RID,7L);assertEquals("RELEASE_PENDING",result.getQuotaStatus());
         assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());assertTrue(result.getSafeText().contains("额度状态处理中"));
-        verify(quota,never()).refundNpcAsrNotSent(anyLong(),anyString());
+        recognize();verify(quota,times(1)).refundNpcAsrNotSent(7L,RID);
+    }
+
+    @Test void emptyAsrQueuesOriginalRefundAndCannotCreateATextHandoff() {
+        when(speech.transcribe(any(),anyString())).thenReturn("");
+        assertEquals("",recognize().getTranscript());
+        assertEquals(1,db.queryForObject("SELECT quota_refund_pending FROM npc_asr_intent WHERE user_id=7",Integer.class));
+        assertFalse(service().beginHandoff(7L,RID,21L,41L));
+        recognize();verify(speech,times(1)).transcribe(any(),anyString());
+        verify(quota,times(1)).refundNpcAsrNotSent(7L,RID);
     }
 
 }
