@@ -70,7 +70,6 @@ class PlatformPassSelfPlayCoverageTest {
             Fixture fixture = fixture();
             CmsTopic topic = fixture.topicMapper.selectCmsTopicByIdForUpdate(TOPIC_ID);
             topic.setMemberId(77L);
-            topic.setIsTemplate(0);
             when(fixture.productRoleService.isPlatformOwned(TOPIC_ID)).thenReturn(false);
             if ("CLUB".equals(source)) {
                 topic.setClubId(701L);
