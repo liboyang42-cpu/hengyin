@@ -744,7 +744,7 @@
             hover-class="cy-pressed" hover-stay-time="80">
         <view class="fx-card3d__face fx-card3d__front">
           <image class="fx-hero__im" wx:if="{{hero.node.imgUrl}}" src="{{img.first(hero.node.imgUrl)}}" mode="aspectFill" />
-          <view class="fx-hero__ph" wx:else><cy-icon name="pin" size="52" /></view>
+          <view class="fx-hero__ph cy-cover-fb" wx:else aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
         </view>
         <!-- 背面只写章节介绍:玩法归游戏、核销与权益归下面的正文 -->
         <view class="fx-card3d__face fx-card3d__back">
@@ -841,12 +841,14 @@
       </block>
 
       <!-- ④ 到店三步 -->
-      <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:5" wx:if="{{hero.node.isMerchant}}">到店三步</view>
-      <view class="fx-step3 fx-hero__in" style="--i:5" wx:if="{{hero.node.isMerchant}}">
+      <block wx:if="{{hero.node.isMerchant}}">
+      <view class="fx-hero__ey fx-hero__ey--gap fx-hero__in" style="--i:5">到店三步</view>
+      <view class="fx-step3 fx-hero__in" style="--i:5">
         <view class="fx-step {{hero.node.stepArrive ? 'is-ok' : ''}}"><text class="fx-step__n">1</text><text class="fx-step__t">扫描门店码 · 记录到店时间</text></view>
         <view class="fx-step {{hero.node.stepProof ? 'is-ok' : ''}}"><text class="fx-step__n">2</text><text class="fx-step__t">拍摄现场凭证 · 到店后显示拍摄要求</text></view>
         <view class="fx-step {{hero.node.stepRedeem ? 'is-ok' : ''}}"><text class="fx-step__n">3</text><text class="fx-step__t">商家核销 · 核销那一刻才算服务开始</text></view>
       </view>
+      </block>
 
       <view class="fx-hero__pad"></view>
     </scroll-view>
