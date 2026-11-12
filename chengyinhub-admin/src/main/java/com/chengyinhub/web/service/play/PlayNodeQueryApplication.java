@@ -650,6 +650,7 @@ public class PlayNodeQueryApplication {
         // 主题画面风格:风格 / 参数 / 转场 / 故事字体,前端 theme-look.js 读不懂就回落默认
         if (cmsTopicMapper != null) data.put("look", cmsTopicMapper.selectLookJsonById(read.tId));
         data.put("mode", read.playMode); // 1经典定向(线性) 2自由定向(全开)
+        data.put("productType", read.playMode);
         if (read.playMode == PlayMode.LINEAR_ORIENTEERING) {
             Integer personalBest = playerNodeProgressService.selectPuzzlePersonalBest(read.memberId, read.tId);
             if (personalBest != null) data.put("puzzlePersonalBest", personalBest);

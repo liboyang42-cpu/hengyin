@@ -4453,7 +4453,7 @@ Page({
         that.setData({ loading: false, emptyTip: '路线配置中', emptyKind: 'empty' });
         return;
       }
-      const mode = Number(d.mode) || that.data.mode || 1;
+      const mode = Number(d.mode) || that.data.mode || 1, skipPack = d.productType !== undefined && d.productType !== 2;
       /* 故事变量的两个来源之一(另一个是 advanced 会话视图):/api/play/nodes 回包 data.vars。
          章节文本与节点 story 大多数时候在这个点的会话之前就被读到 —— 只从会话视图取的话
          {name} 会一直原样留着,所以这条必须在首屏成功分支里落。 */
@@ -4486,7 +4486,7 @@ Page({
       // 作者配得再对,一取这个名字就被顶掉,看到的仍是写死在 JS 里的那份。
       that.setData({
         loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName, topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', topicAiGenerated: d.topicAiGenerated === true,
-        mode, serverMode: mode, playContact: playOverlays.contact(d.contact),
+        mode, serverMode: mode, playContact: playOverlays.contact(d.contact), packOpen: skipPack || that.data.packOpen, headIn: skipPack || that.data.headIn,
         modeLabel: mode == 2 ? '自由探索' : '城市定向',
         routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
@@ -4516,7 +4516,7 @@ Page({
         if (routeState.opening && !routeState.opening.complete) {
           that.setData({ screen: '' });
           that._openStory();
-        } else if (String(that.data.mode) !== '2') {
+        } else if (String(that.data.mode) !== '2' || skipPack) {
           // 城市定向:打开就是故事流(2026-09-22 裁决「按预制人生来」)。
           // 地图没有删 —— 左上角罗盘随时切回去,只是它不再是第一屏。
           /* R11 g1(j3 F5):已通关(rebuild 按服务端路线态算出的 allDone)的主题重开,回到它的结局与通关卡,
@@ -4563,7 +4563,7 @@ Page({
     this._vitalsOn = d.vitalsOn || null;
     this._previewStartRows = d.startState || [];
     if (this.data.isPreview) { this._previewChapters = d.chapters || []; this._previewChapterIndex = 0; this._previewThoughts = d.thoughts || []; this._previewEndings = d.endings || []; }
-    const mode = Number(d.mode) || 1;
+    const mode = Number(d.mode) || 1, skipPack = d.productType !== undefined && d.productType !== 2;
     const catalog = raw.map((n, i) => that.normNode(n, i, mode));
     const routeState = normalizeRouteState(d.routeState || { routeMode: d.routeMode });
     const nodes = applyRouteStateToNodes(catalog, routeState);
@@ -4575,7 +4575,7 @@ Page({
     that._passExpiresAt = d.expiresAt || '';
     this.setData({
       loading: false, emptyTip: '', emptyKind: '', topicId: d.topicId || '', topicName: d.topicName || this._entryTopicName || '', topicDesc: d.topicDesc || '', topicAudioUrl: d.topicAudioUrl || '', topicCover: d.topicCover || '', topicAiGenerated: d.topicAiGenerated === true, mode, serverMode: mode,
-      modeLabel: mode == 2 ? '自由探索' : '城市定向',
+      modeLabel: mode == 2 ? '自由探索' : '城市定向', packOpen: skipPack || that.data.packOpen, headIn: skipPack || that.data.headIn,
       routeNotice: that._routeNoticeForState(routeState),
         journeyAttributes: routeState.attributes,
       screen: d.startScreen || '',
@@ -4592,7 +4592,7 @@ Page({
       if (that.data.isPreview && d.startStory) that._openStory();
       // 城市定向打开即故事流(2026-09-22 裁决)。loadData 那条路径已经这么做了,预览/mock
       // 走的是本方法并直接 return,不补这一句的话作者试玩看到的仍是地图 —— 与玩家不是同一个首屏。
-      else if (String(that.data.mode) !== '2') that._openStory();
+      else if (String(that.data.mode) !== '2' || skipPack) that._openStory();
     });
   },
 
