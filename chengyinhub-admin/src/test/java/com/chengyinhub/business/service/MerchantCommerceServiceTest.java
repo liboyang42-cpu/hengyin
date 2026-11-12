@@ -604,8 +604,9 @@ class MerchantCommerceServiceTest {
                 "RMC8", "wx-refund-8", original.transactionId(), original.tradeType(), "CNY", 1990, refundFen,
                 java.time.Instant.parse("2026-11-12T00:00:00Z"), original.intentRequestHash(), "SUCCESS");
         var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(100L, fact.factHash());
-        when(proof.reader.requireVerified(reference)).thenReturn(
-                new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference, fact));
+        org.mockito.Mockito.doReturn(
+                new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference, fact))
+                .when(proof.reader).requireVerified(reference);
         return java.util.Map.of("outTradeNo", order.getOrderSn(), "outRefundNo", "RMC8", "status", "SUCCESS",
                 "verified_fact_id", "100", "verified_fact_hash", reference.hash());
     }
