@@ -163,12 +163,12 @@ class PlayTeamMybatisIntegrationTest {
 
     @Test void rotationRequiresTheCurrentLeaderAndDoesNotChangeExpiry() {
         PlayTeam team = team(4);
+        long storedExpiry = mapper.selectPlayTeamById(team.getId()).getExpireTime().getTime() / 1000; // 库内秒级值，避开毫秒四舍五入
         assertThrows(IllegalStateException.class, () -> service.rotateInviteCode(team.getId(), 2L));
         assertEquals(team.getInviteCode(), mapper.selectPlayTeamById(team.getId()).getInviteCode());
         String code = service.rotateInviteCode(team.getId(), 1L);
         assertTrue(code.matches("[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}"));
-        assertEquals(team.getExpireTime().getTime() / 1000,
-                mapper.selectPlayTeamById(team.getId()).getExpireTime().getTime() / 1000);
+        assertEquals(storedExpiry, mapper.selectPlayTeamById(team.getId()).getExpireTime().getTime() / 1000);
     }
 
     @Test void threePersonTeamKeepsTheLastPlaceOpen() {
