@@ -415,7 +415,7 @@ const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
 const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const playSos = require('./utils/play-sos.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
-const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js');
+const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('../../utils/menu-open.js');
 Page({
   ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(),
   ...journeyCheckRecovery.methods(req),
@@ -7445,7 +7445,7 @@ Page({
   onScanArriveFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onScanArrive()); },
   onRunToggleFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onRunToggle()); },
   openStackOrChaptersFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openStackOrChapters()); },
-  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this.setData({ sessionToolsOpen: true, toolsOut: false }); this.loadSessionStats(); this.loadPlayContact(); } },
+  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this.setData({ sessionToolsOpen: true, toolsOut: false }, () => menuOpen.open(this)); this.loadSessionStats(); this.loadPlayContact(); } },
   closeSessionTools() { this._toolsClose(); },
   /* 定位驱动的两行(自动记录足迹 / 到点提醒)在这一页翻不动:它们跟着系统定位权限走。
    * 没开就去要权限,已经开着就说清楚它由谁决定 —— 不留一枚按下去毫无反应的开关。 */
