@@ -132,7 +132,7 @@
 
 /* styleIsolation:isolated 不继承全局 style/components.wxss 的 .cy-pressed,
    这里复制一份同视觉定义(非自造按压效果),供上面 cta 的 hover-class 用 */
-.cy-pressed { opacity: .92; transform: scale(.97); transition-duration: var(--cy-motion-press-in); } /* 细节打磨二期 L5:与全局 cy-pressed 同口径,压到 .97 */
+.cy-pressed { opacity: .92; transform: scale(.97); } /* 细节打磨二期 L5:与全局 cy-pressed 同口径,压到 .97 */
 
 /* sm:卡片/列表里的区块空态(2026-09-06 裸文字空态收编)。默认档是给整段留白用的,
  * 放进评论区、成员列表这种行内位置会又高又重;这档只留一行标题 + 一行说明的体量。 */

@@ -66,7 +66,6 @@
   .cy-tabs--icon .cy-tabs__icon,
   .cy-tabs--icon .cy-tabs__item::after,
   .cy-empty-cta,
-  .cy-pressed,
   .ds-close,
   .fd__clear,
   .fd__tail,
