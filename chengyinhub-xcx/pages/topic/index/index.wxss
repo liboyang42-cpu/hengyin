@@ -2172,3 +2172,4 @@ button::after {
 .prep-cta { margin-top: var(--cy-space-4); }
 .prep-note { display: block; padding-top: var(--cy-space-3); font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-tertiary); }
 .topic-teams__ft--go { display: flex; align-items: center; gap: var(--cy-space-1); }
+.topic .statbar__value { font-variant-numeric: tabular-nums; } /* 细节打磨 G4 */

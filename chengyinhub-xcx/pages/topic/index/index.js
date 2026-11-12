@@ -1,4 +1,5 @@
 const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js'); const referral = require('../../../utils/commerce/referral.js');
+const parallax = require('../../../utils/parallax.js'); const pageMotion = require('../../../utils/page-motion.js');
 const loading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
@@ -142,7 +143,7 @@ Page({
     selfPlayConsentError: '',
     selfPlayConsentHint: '',
     info: {}, // 主题详情数据
-    statBar: [],
+    statBar: [], statK: null,
     loadError: false,
     topicLoaded: false,
     missingTopicId: false,
@@ -300,7 +301,7 @@ Page({
   onPageScroll: function(e) {
     const that = this;
     const scrollTop = e.scrollTop;
-    this._scrollTop = scrollTop;
+    this._scrollTop = scrollTop; parallax.follow(this, '.bgt-swiper', scrollTop); /* 细节打磨 S5:头图 0.5× 视差 */
 
     // 根据滚动位置判断当前所在屏幕
     const screen1Height = this.data.screen1Height;
@@ -2215,7 +2216,7 @@ Page({
             loadErrorSub: '',
           });
 
-          that._applyMotionData(res.data);
+          that._applyMotionData(res.data); if (!that._statCounted) { that._statCounted = true; pageMotion.countIn(that, 'statK'); } /* 细节打磨 G4:数据条读数第一次到达时滚上来 */
           // 数据加载完成后重新计算位置
           setTimeout(() => {
             that.getTabSectionPosition();

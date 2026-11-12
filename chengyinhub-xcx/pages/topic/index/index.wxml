@@ -1,4 +1,4 @@
-<wxs src="../../../utils/wxs/money.wxs" module="money" />
+<wxs src="../../../utils/wxs/money.wxs" module="money" /><wxs src="../../../utils/wxs/count.wxs" module="cnt" />
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -153,7 +153,7 @@
           <view class="statbar__sep" wx:if="{{index > 0}}"></view>
           <view class="statbar__cell">
             <text class="statbar__label">{{item.label}}</text>
-            <text class="statbar__value">{{item.value}}</text>
+            <text class="statbar__value">{{cnt.stat(item.value, statK)}}</text>
             <view class="statbar__stars" wx:if="{{item.starList.length}}">
               <cy-icon wx:for="{{item.starList}}" wx:for-item="s" wx:key="*this" name="star-filled" size="24" />
             </view>
