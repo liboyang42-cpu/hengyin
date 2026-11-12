@@ -1881,7 +1881,7 @@ page { background: var(--cy-color-bg-page); }
 .st-intro__body, .st-intro__go{ position:relative; }
 .st-intro__body{ flex:1; display:flex; flex-direction:column; justify-content:center; }
 .st-intro__k{ font-size:21rpx; letter-spacing:4rpx; color:var(--atmo-muted, rgba(255,255,255,.6)); } /* ds-ok 同 .pv-ending__k */
-.st-intro__t{ margin-top:23rpx; font-size:80rpx; font-weight:800; line-height:1.15; color:var(--atmo-text, #FFFFFF); } /* ds-ok 原型开场大标题 */
+.st-intro__t{ margin-top:23rpx; font-size:56rpx; font-weight:800; line-height:1.2; color:var(--atmo-text, #FFFFFF); display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; text-overflow:ellipsis; word-break:break-all; } /* ds-ok D9:开场标题与其它开场页同量级(56rpx),最多两行加省略号,不再 80rpx 排成四行 */
 .st-intro__line{ margin-top:23rpx; font-size:29rpx; line-height:1.7; color:var(--atmo-muted, rgba(255,255,255,.72)); } /* ds-ok 同 .pv-ending__copy */
 .st-intro__go{ height:104rpx; border-radius:var(--cy-radius-pill); display:flex; align-items:center; justify-content:center; /* ds-ok 胶囊按钮,同 .pv-ending__go */
   background:var(--atmo-text, #FFFFFF); color:var(--atmo-bg, #000000); font-size:31rpx; font-weight:700; } /* ds-ok 玩家主按钮=反色中性,跟画面风格 */
