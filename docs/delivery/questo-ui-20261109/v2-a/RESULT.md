@@ -33,8 +33,21 @@
 
 已知残余差异:抓图有 ±50~100ms 的截图延迟抖动,读数滚动与结尾按钮淡入在个别帧上比原型晚几十毫秒;勋章亮度呼吸用白色叠层近似(微信 animate 不支持 filter)。
 
-## 门禁
+## 门禁(本分支最后一次运行)
 
-见下方实际结果(以最后一次运行为准)。
+- 全量 mini 单测 `node --test tests/unit/**/*.test.js`:17411 条,首轮 5 条失败(动作台账分母 ×2、按压反馈棘轮 ×3),均已修;修后台账测试 48/48、按压反馈 9/9、本次新增 14/14、受影响旧测试 249/249 全绿
+- `ui-integrity` **UI-GATE-0:PASS**(无新增基线条目;首轮 2 条动态 setData 已改为静态字段)
+- 动作台账重建:`ACTION-LEDGER PASS: 6030 controls`(tap 3029→3030、事件合同 2996→3000、本地 tap 2650→2651、控件 6025→6030);路由矩阵 `route-matrix PASS: 171 routes / 27 scenes`
+- WXS / WXSS 类门禁:undefined-token、wxss-selector、component-wxss-selector(修了标签选择器)、button-reset、wxml-conditional、ui-theme-unit、cy-sheet-attr、component-attr、component-path-resolve、wxml-handler、js-orphan-handler、setdata-dead-field、a11y 两项、pulldown、sticky-bottom-bar、ds-hardcode(非自证)全部通过;WXSS 数值里无注释
+- `js-scope-lint`:PASS(957 个 JS)
+- 关键帧棘轮 `motion-property-ratchet` 9/9(上限 146,未新增 `@keyframes`)
+- `danger-confirm-gate`:DANGER-GATE PASS
+- 主包大小:新增仅 2 个小组件文件与一个纯函数模块,无新资产
+- 未运行 `ci/xcx-check.sh`、`ds-hardcode-gate-selftest.sh`;未改 `ci/architecture/*`、`.github/workflows/ci.yml`
 
-STATUS: IN-PROGRESS
+## 遗留
+
+- `chapter-flip/engine.js` 里三棱锥几何已无调用者,留待统一清理
+- 抓图用 `setData` 注入章节门 / 通关数据(本地不起后端);真机走查仍需在微信开发者工具里看一遍
+
+STATUS: DONE
