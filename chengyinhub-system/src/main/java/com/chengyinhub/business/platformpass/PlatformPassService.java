@@ -187,7 +187,7 @@ public class PlatformPassService {
             return end == null || now.before(end);
         }
         CmsTopic topic = new CmsTopic();
-        topic.setLifecycle((int) num(row.get("lifecycle")));
+        topic.setLifecycle(num(row.get("lifecycle")).intValue());
         topic.setSellingStartedAt(toDate(row.get("selling_started_at")));
         topic.setSaleEndAt(saleEnd);
         return SaleAvailabilityPolicy.sellableBlockReason(topic, null, now) == null;
