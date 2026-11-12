@@ -286,7 +286,7 @@ Page({
     mkt: { show: false, listAmount: null, adjustments: [], coveredByPass: false, rewardCoupon: null },
     promoCatalog: { show: false, offers: [], promotions: [], tiers: [] },
     orderInfo: null,
-    isPaying: false,
+    isPaying: false, glowKey: 0,
     paymentReady: false,
     paymentReadinessChecking: false,
     canPay: false,
@@ -1286,6 +1286,7 @@ Page({
      等于把入口放在了用户下一秒就会看到的地方,而不是拦在半路让他先选一次。 */
   showSignupSuccess({ title, detail }) {
     this.setData({
+      glowKey: (this.data.glowKey || 0) + 1, // 动效 v2 时刻 4:到账那一下屏幕边缘光扫一圈
       resultSheet: {
         show: true, kind: 'success', title: title, sub: detail, meta: '',
         pill: '', why: '', primaryText: '', secondaryText: '', duration: SUCCESS_HOLD_MS,

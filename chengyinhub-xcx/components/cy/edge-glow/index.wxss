@@ -1,0 +1,5 @@
+/* 屏幕边缘光:支付到账那一下,外观色沿屏边扫一圈(动效 v2 时刻 4)。旋转/渐隐由 this.animate 驱动。 */
+.eg { position: fixed; inset: 0; z-index: var(--cy-z-celebrate); pointer-events: none; opacity: 0; --lk-a: var(--cy-comp-sheet-player-success); --lk-b: var(--lk-a); }
+.eg__ring { position: absolute; inset: 0; overflow: hidden; padding: 10rpx; filter: blur(2px); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; } /* ds-ok 遮罩蒙版不是可见颜色 */
+.eg__sw { position: absolute; left: 50%; top: 50%; width: 300vmax; height: 300vmax; margin: -150vmax 0 0 -150vmax; background: conic-gradient(var(--lk-a), var(--lk-b), #fff, var(--lk-a)); } /* ds-ok 白亮点 */
+.eg__in { position: absolute; inset: 0; box-shadow: inset 0 0 120rpx 20rpx var(--lk-a); opacity: .35; }

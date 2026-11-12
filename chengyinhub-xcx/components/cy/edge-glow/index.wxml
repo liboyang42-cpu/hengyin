@@ -1,0 +1,1 @@
+<view wx:if="{{on}}" class="eg" style="{{vars}}" aria-hidden="true"><view class="eg__ring"><view class="eg__sw"></view></view><view class="eg__in"></view></view>

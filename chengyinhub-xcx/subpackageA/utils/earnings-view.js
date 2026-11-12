@@ -41,7 +41,7 @@ function monthIncome(rows, now, limit) {
 
 // M-32(2026-10-29 业主「要的」):俱乐部计酬(俱乐部直接付款,/api/club-direct-merchant/merchant)
 // 不进余额流水,并进本月收入明细作单独来源行。只取本月待结清/已结清两态(撤销、退回不是收入),
-// 行已经过 club-direct-ledger/view-model 的 ledgerView 校验;不计入余额口径的 total。
+// 行已经过 utils/club-direct-ledger-view-model 的 ledgerView 校验;不计入余额口径的 total。
 const CLUB_PAY = { label: '俱乐部计酬', icon: 'connect' };
 const CLUB_PAY_STATUS = ['OPEN', 'SETTLED'];
 function clubPayMonthItems(ledgerRows, now) {

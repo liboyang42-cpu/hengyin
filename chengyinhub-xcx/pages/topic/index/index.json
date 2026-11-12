@@ -2,6 +2,7 @@
   "usingComponents": {
     "cy-session-picker": "/pages/topic/components/cy/session-picker/index",
     "cy-icon": "/components/cy/icon/index",
+    "cy-edge-glow": "/components/cy/edge-glow/index",
     "cy-error": "/components/cy/error/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",

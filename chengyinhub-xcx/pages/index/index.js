@@ -1,4 +1,4 @@
-const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js');
+const modal = require('../../utils/modal.js'); const pageMotion = require('../../utils/page-motion.js'); const heroFly = require('../../utils/hero-fly.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js'); function openAddress() { return require('../../utils/open-address.js') }
 const { readPageStyle } = require('../../utils/font-scale.js');
@@ -993,9 +993,9 @@ Page({
   },
 
   goTopic: function (e) {
-    wx.navigateTo({
-      url: '/pages/topic/index/index?id=' + e.currentTarget.dataset.id,
-    })
+    // 动效 v2 时刻 6:封面从卡片位置长成详情头图;
+    // 量不到矩形就退回普通跳转(utils/hero-fly.js)
+    heroFly.go(this, e, '/pages/topic/index/index?id=' + e.currentTarget.dataset.id)
   },
 
   getPhoneNumber: function (e) {

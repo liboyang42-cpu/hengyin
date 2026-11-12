@@ -1,5 +1,5 @@
 const app = getApp();
-const { ledgerView } = require('./view-model.js');
+const { ledgerView } = require('../../../../../utils/club-direct-ledger-view-model.js');
 
 Component({
   properties: {

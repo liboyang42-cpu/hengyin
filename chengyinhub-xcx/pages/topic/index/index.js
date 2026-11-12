@@ -98,6 +98,9 @@ function canReportTopic(info, me) {
   return Number(info.status) === 1 && Number(info.userStatus) === 1;
 }
 
+/* 外观 → 强调色一对(同 look-tokens 黑底默认配色),给支付到账的边缘光与成功卡用 */
+const LK_ACCENT = { STARDUST: ['#E9E2D0', '#9AA0AA'], PAPER: ['#D0503C', '#E8C66A'], SURVIVAL: ['#FF8A3D', '#8A9196'], CYBER: ['#F3E600', '#24E0E8'] }; // ds-ok 外观目录
+
 Page({
   ...themeRecords.methods(recordsRequest, false),
   openThemeRecordCard(e) { return this.openThemeResultCard({ currentTarget: { dataset: e.detail } }); },
@@ -131,7 +134,7 @@ Page({
     teams: { rows: [], need: 0 },
     prep: { show: false }, prepShow: false, prepBusy: false,
     progress: { total: 0, done: 0, labels: [] },
-    selfPlayValidText: '可玩至购买后 90 天', selfPlayCheckoutShow: false, checkout: { cover: '', placeText: '', view: checkoutView({}), profileName: '', profilePhone: '' },
+    selfPlayPhase: '', hf: { show: false, img: '', style: '' }, glowKey: 0, lkVars: '', selfPlayValidText: '可玩至购买后 90 天', selfPlayCheckoutShow: false, checkout: { cover: '', placeText: '', view: checkoutView({}), profileName: '', profilePhone: '' },
     reveal: { show: false, cover: '', name: '', kindText: '', untilText: '', daysText: '', line: '' },
     id: 0,
     is_join: 0,
@@ -201,6 +204,7 @@ Page({
     const validTopicId = Number.isFinite(topicId) && Number.isInteger(topicId) && topicId > 0;
 
     that.getSystemInfo();
+    that._listenHeroRect();
     that.calculateScreenHeights(); that._viaSession = options.via === 'session'; // j2 F-06:俱乐部场次卡进来,主按钮先给场次
 
     that.setData({
@@ -607,6 +611,7 @@ Page({
   onHeroCta() {
     const kind = this.data.heroCta && this.data.heroCta.kind;
     if (kind === 'locked') return this.lockedTip(); if (kind === 'closed') return toast('主题已截止'); // x-fix2 P-1
+    if (kind === 'play') return this._goAfterReveal('play'); // 动效 v2:买完原页「开始游戏」直接开局
     if (kind === 'joined') return this.goJoinedPlay();
     if (kind === 'selfplay') return this.selfPlayBuy();
     if (kind === 'signup') return this.bmClick({ currentTarget: { dataset: {} } });
@@ -1179,9 +1184,49 @@ Page({
    * 返回上一页
    */
   goBack() {
-    wx.navigateBack({
-      delta: 1,
-      fail: () => this.goTopicList()
+    const back = () => wx.navigateBack({ delta: 1, fail: () => this.goTopicList() });
+    if (!this._heroRect || this.data.reducedMotion || this.data.currentScreen !== 0 || this._heroBack) return back();
+    this._heroBack = true; // 动效 v2 时刻 6:返回时头图缩回原卡片位置再退页
+    this._heroFly(false, back);
+  },
+
+  /* ——— 动效 v2 时刻 6:主题卡 → 详情。封面从卡片矩形长成头图(.56s),列表淡出由原生转场承担;
+     返回键反向缩回。无矩形(深链/分享进入)或减少动态:不做任何事,页面直接就位。——— */
+  _listenHeroRect() {
+    const ch = this.getOpenerEventChannel && this.getOpenerEventChannel();
+    if (!ch || !ch.on) return;
+    ch.on('heroRect', (r) => {
+      if (!r || !r.width || !r.cover || this.data.reducedMotion) return;
+      this._heroRect = r;
+      this.animate('#heroActs', [{ opacity: 0 }, { opacity: 0 }], 1, () => {}); // 头图落定前主按钮先藏着,落定后再滑上来
+      this._heroFly(true);
+    });
+  },
+
+  _heroFly(grow, done) {
+    const r = this._heroRect, win = this._windowSize();
+    const box = (x, y, w, h, rad) => 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px;border-radius:' + rad + 'px;';
+    const at = box(r.left, r.top, r.width, r.height, 24), full = box(0, 0, win.w, win.h, 0);
+    const ease = 'transition:left .56s cubic-bezier(.32,.72,0,1),top .56s cubic-bezier(.32,.72,0,1),width .56s cubic-bezier(.32,.72,0,1),height .56s cubic-bezier(.32,.72,0,1),border-radius .56s cubic-bezier(.32,.72,0,1),opacity .25s;'; // 与原型同缓动
+    const still = 'transition:none;';
+    this.setData({ hf: { show: true, img: r.cover, style: (grow ? at : full) + still } }, () => this._later(30, () => {
+      this.setData({ 'hf.style': (grow ? full : at) + ease });
+      this._later(580, () => {
+        if (!grow) { done && done(); return; }
+        this._heroLanded(0);
+      });
+    }));
+  },
+
+  /* 头图落定:等主题数据到位再撤飞层(淡出),然后报名栏/主按钮从下滑上来 */
+  _heroLanded(n) {
+    if (this._unloaded) return;
+    if (!this.data.topicLoaded && n < 40) return this._later(80, () => this._heroLanded(n + 1));
+    this.setData({ 'hf.style': 'left:0;top:0;width:100%;height:100%;border-radius:0;opacity:0;transition:opacity .25s;' });
+    this._later(260, () => {
+      this.setData({ hf: { show: false, img: '', style: '' } }, () => {
+        this.animate('#heroActs', [{ opacity: 0, transform: 'translateY(40rpx)' }, { opacity: 1, transform: 'translateY(0)' }], 500, () => {});
+      });
     });
   },
 
@@ -1678,6 +1723,7 @@ Page({
     const that = this;
     if (that._selfPlaySubmitting) return;
     that._selfPlaySubmitting = true;
+    that.setData({ selfPlayPhase: 'busy' }); // 动效 v2:支付键原地收成加载圈,仅呈现
 
     if (!that._selfPlayReqId) {
       that._selfPlayReqId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
@@ -1686,7 +1732,7 @@ Page({
       // 进页预取可能还没回来(弱网、或进页就点购买)。先现取一次再判,
       // 否则会把「资料其实全」的人误判成没填、推去补一个本来就填好的字段。
       that._loadSignupProfile(function (profile) {
-        that._selfPlaySubmitting = false;
+        that._selfPlaySubmitting = false; that.setData({ selfPlayPhase: '' });
         if (profile) { that._createSelfPlayOrder(topicId); return; }
         modal.show({
           title: '还差姓名和手机号',
@@ -1711,7 +1757,7 @@ Page({
 
     var submitted = that._workflow.submit(payload, {
       onOrderFail: function (res) {
-        that._selfPlaySubmitting = false;
+        that._selfPlaySubmitting = false; that.setData({ selfPlayPhase: '' });
         // 拍板 #21 / fix-be-0917:旧幂等键不可用(单已过期/已取消)先自动换新键重建一次;
         // 重建后仍不可用才给可见提示。
         if (res && res.msg === ORDER_REBUILD_REQUIRED) {
@@ -1736,18 +1782,18 @@ Page({
         that._onSelfPlayPaid(topicId, data);
       },
       onPayCancel: function () {
-        that._selfPlaySubmitting = false;
+        that._selfPlaySubmitting = false; that.setData({ selfPlayPhase: '' });
         toast('已取消支付');
       },
       onPayFail: function (res) {
         loading.hide();
-        that._selfPlaySubmitting = false;
+        that._selfPlaySubmitting = false; that.setData({ selfPlayPhase: '' });
         toast(res && res.errMsg || '支付失败');
         // 付款失败不清幂等键,同一意图重试复用
       },
       onPayUnknown: function () {
         loading.hide();
-        that._selfPlaySubmitting = false;
+        that._selfPlaySubmitting = false; that.setData({ selfPlayPhase: '' });
         modal.show({
           title: '支付结果待确认',
           content: '暂不要重复支付，请稍后从订单或主题页查看通行证状态。',
@@ -1757,7 +1803,7 @@ Page({
     });
 
     if (!submitted) {
-      that._selfPlaySubmitting = false;
+      that._selfPlaySubmitting = false; that.setData({ selfPlayPhase: '' });
       loading.hide();
       // unknown 是 workflow 故意留的闸(防重复建单扣款),但闸不能是哑巴:
       // 关掉「支付结果待确认」弹层后再点同一个按钮,原来什么都不说。
@@ -1819,7 +1865,40 @@ Page({
   /* 2026-10-22 业主:付完先播「通行证已到账」,再由动效里的「放进票夹 / 开始游戏」决定去向 */
   _onSelfPlayPaid(topicId, data) {
     const regId = data && (data.registrationId || data.id);
-    this._showPassReveal(topicId, Number(regId) > 0 ? regId : 0);
+    this._playPaidMotion(topicId, Number(regId) > 0 ? regId : 0);
+  },
+
+  /* 动效 v2 时刻 4:到账 → 屏幕边缘光扫一圈,底栏收成成功卡(勾描出)→ 约 1.1s 后自己收起 →
+     原页票卡原地变「已购 · 开始游戏」。业务(建单/支付/同意/营销同意)一概不动,只换呈现;
+     原整屏「通行证已到账」揭晓层不再自动弹出(组件与 onReveal* 仍在,供回归)。 */
+  _playPaidMotion(topicId, regId) {
+    const info = this.data.info || {};
+    const reduced = this.data.reducedMotion;
+    this._revealTopicId = topicId;
+    this._revealRegId = regId || 0;
+    this._pendingOffer = null;
+    if (String(info.contentPublisherType || '').toUpperCase() === 'MERCHANT') {
+      marketingConsent.loadOffer(app, info.memberId || 0, (offer) => { if (offer) this._pendingOffer = offer; });
+    }
+    let lkVars = '';
+    try { const raw = info.look; const c = LK_ACCENT[String((typeof raw === 'string' ? JSON.parse(raw) : raw || {}).style || '').toUpperCase()]; if (c) lkVars = '--lk-a:' + c[0] + ';--lk-b:' + c[1]; } catch (e) { lkVars = ''; } // 主题外观 → 边缘光/成功卡色;没配外观就是成功绿
+    this.setData({ selfPlayPhase: 'done', glowKey: (this.data.glowKey || 0) + 1, lkVars });
+    this._later(reduced ? 0 : 1600, () => { // 成功卡停留:升起 .56s + 停 1.1s,与原型 1.6s 收起一致
+      this.setData({ selfPlayCheckoutShow: false, selfPlayPhase: '' });
+      this._later(reduced ? 0 : 350, () => this._markPaid());
+    });
+  },
+
+  /* 票卡原地变「已购」:主按钮换强调色与下一步,轻弹一下(弹簧) */
+  _markPaid() {
+    const next = this._revealRegId ? { kind: 'play', text: '已购 · 开始游戏', paid: true } : { kind: 'joined', text: '已购 · 去票夹', paid: true };
+    this.setData({ is_join: 1, heroCta: next }, () => {
+      if (this.data.reducedMotion) return;
+      this.animate('.hero-cta', [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], 500, () => {});
+      if (this.data.docked) this.animate('.dock-cta', [{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], 500, () => {});
+    });
+    const hasOffer = !!this._pendingOffer; // 商家营销同意(拍板第 40 条 A)仍走原结果面板那一行
+    if (hasOffer) { this._pendingOffer = null; this._revealNext = ''; this._goSelfPlay(this._revealTopicId); }
   },
 
   _goSelfPlay(topicId) {

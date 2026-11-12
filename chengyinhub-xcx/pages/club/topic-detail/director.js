@@ -598,6 +598,7 @@ const DIRECTOR_DATA = {
     broadcastScopeOptions: BROADCAST_SCOPE_OPTIONS,
     broadcastTargetRows: [],
     broadcastAudience: [],
+    broadcastSendPhase: '', broadcastSentCount: 0, broadcastTip: '', broadcastTipGone: false,
     broadcastCountText: '',
     broadcastSendText: '发送',
     broadcastPreviewReady: false,
@@ -1293,7 +1294,26 @@ const DIRECTOR_METHODS = {
 
   closeBroadcast() {
     if (this.data.writeLocked) return
-    this.setData({ broadcastSheetVisible: false })
+    this.setData({ broadcastSheetVisible: false, broadcastSendPhase: '' })
+  },
+
+  /* 没发成(驳回/待确认/异常)就回到原来的样子:半屏收起,和改造前立刻收起一致 */
+  _broadcastEnd() {
+    if (this.data.broadcastSendPhase) this.setData({ broadcastSheetVisible: false, broadcastSendPhase: '' })
+  },
+
+  /* 打勾与「已发出」播完 700ms 后:半屏收起,回到触发它的卡,文案原地改成「已发出 N 人 · 刚刚」,稍后收走 */
+  onBroadcastSentDone(e) {
+    const reduced = !!(e && e.detail && e.detail.reduced) // 减少动态由半屏组件读开关后随事件带回
+    const n = this.data.broadcastSentCount || 0
+    this.setData({
+      broadcastSheetVisible: false, broadcastSendPhase: '',
+      customerSheetVisible: !!this._broadcastFromCustomers,
+    })
+    this._broadcastFromCustomers = false
+    clearTimeout(this._tipTimer); clearTimeout(this._tipTimer2)
+    this._tipTimer = setTimeout(() => this.setData({ broadcastTip: '已发出' + (n ? ' ' + n + ' 人' : '') + ' · 刚刚', broadcastTipGone: false }), reduced ? 0 : 400)
+    this._tipTimer2 = setTimeout(() => this.setData({ broadcastTipGone: true }), reduced ? 0 : 2000) // 先原地改字,停 1.6s 再收走
   },
 
   selectBroadcastTargetType(e) {
@@ -1356,7 +1376,8 @@ const DIRECTOR_METHODS = {
       delete payload.roleCode
       Object.assign(payload, broadcastPayloadTarget(this._broadcastPicked || [], this._broadcastRoster, draft.targetType, this._broadcastTargetOptions))
     }
-    this.setData({ broadcastSheetVisible: false })
+    // 动效 v2 时刻 5:半屏不立刻收,按钮原地变「发送中…」,服务端确认后同行人逐个打勾(业务/请求不变)
+    this.setData({ broadcastSendPhase: 'sending', broadcastSentCount: (this.data.broadcastAudience || []).filter(function (x) { return x.picked }).length })
     this.executeAction('BROADCAST', payload)
   },
 
@@ -1560,10 +1581,11 @@ const DIRECTOR_METHODS = {
     }
     this._getAdapter().submit(command).then(function (result) {
       if (!that._isDirectorContextCurrent(context, command)) return
-      if (that._handleDirectorAuthorityConflict(result)) return
+      if (that._handleDirectorAuthorityConflict(result)) { that._broadcastEnd(); return }
       if (result && (result.state === 'unknown-write' || result.state === 'business-error'
         || (command.action === 'PLAN_FALLBACK' || that._genericControl) && result.raw && result.raw.receipt && result.raw.receipt.replayed)) {
         that._unknownRequestId = requestId
+        that._broadcastEnd()
         that.setData({
           writeState: 'unknown-write',
           writeMessage: '结果待确认，确认前暂停所有操作',
@@ -1575,6 +1597,7 @@ const DIRECTOR_METHODS = {
         return
       }
       if (result && result.state === 'rejected') {
+        that._broadcastEnd()
         clearPendingWrite(context.activityId, context.owner, command.requestId)
         that._pendingCommand = null
         that._pendingReceiptIndex = null
@@ -1594,7 +1617,7 @@ const DIRECTOR_METHODS = {
       that._pendingReceiptIndex = null
       that._unknownRequestId = ''
       that.setData({ writeState: 'idle', writeMessage: '', writeLocked: false, canRetryUnknownWrite: false })
-      if (command.action === 'BROADCAST') that.setData({ broadcastDraft: Object.assign({}, that.data.broadcastDraft, { content: '' }) })
+      if (command.action === 'BROADCAST') that.setData({ broadcastSendPhase: 'sent', broadcastDraft: Object.assign({}, that.data.broadcastDraft, { content: '' }) }) // 写成功才清草稿(CL-20);半屏继续留着打勾
       if (command.action === 'PLAN_FALLBACK' && typeof that.applyPlanFallbackReceipt === 'function') that.applyPlanFallbackReceipt(result)
       that.loadProjection()
       // 写成功后主题维度的核销数/场次也变了,宿主页一起刷,别停在旧态
@@ -1602,6 +1625,7 @@ const DIRECTOR_METHODS = {
     }).catch(function () {
       if (!that._isDirectorContextCurrent(context, command)) return
       that._unknownRequestId = requestId
+      that._broadcastEnd()
       that.setData({
         writeState: 'unknown-write',
         writeMessage: '结果待确认，确认前暂停所有操作',

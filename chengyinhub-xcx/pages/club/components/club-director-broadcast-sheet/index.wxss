@@ -55,3 +55,9 @@
 .cy-pressed { opacity: .88; }
 
 .form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 动效 v2 时刻 5:发出后同行人逐个打勾(弹簧 .5s,间隔 160ms)→ 按钮原地变「已发出」。。 */
+.cdbs__tick { transition: transform .5s cubic-bezier(.34,1.56,.64,1); } /* ds-ok v2 原型弹簧 */
+.cdbs__tick--off { transform: scale(0); }
+.cdbs__primary { transition: background .45s, color .45s, opacity .2s; }
+.cdbs__primary--sent { background: var(--lk-a, var(--cy-comp-sheet-player-success)); color: #0A0D18; } /* ds-ok v2 原型 */

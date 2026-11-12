@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ledgerView } = require('../../components/cy/club-direct-ledger/view-model.js');
-const componentPath = '../../components/cy/club-direct-ledger/index.js';
+const { ledgerView } = require('../../utils/club-direct-ledger-view-model.js');
+const componentPath = '../../pages/club/components/cy/club-direct-ledger/index.js';
 const base = { id: 4, redemptionId: 32, topicId: 990077, payerClubId: 990005,
   merchantMemberId: 9002, perHeadFeeSnapshot: 0.01, status: 'OPEN', createTime: '2026-10-04 22:00:00' };
 const scope = { kind: 'club', clubId: 990005, topicId: 0 };
@@ -150,7 +150,7 @@ test('合法内部记录编号原样展示，缺失或非法编号不伪造也�
   }
   const fs = require('node:fs');
   const path = require('node:path');
-  const wxml = fs.readFileSync(path.join(__dirname, '../../components/cy/club-direct-ledger/index.wxml'), 'utf8');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/club/components/cy/club-direct-ledger/index.wxml'), 'utf8');
   // owner 选项 B：内部 SettlementClaim id 只作“记录编号”供联系客服，不称结算单/收据/平台单号。
   assert.match(wxml, /wx:if="\{\{item\.claimNo\}\}"[^>]*>记录编号 \{\{item\.claimNo\}\}/);
   assert.doesNotMatch(wxml, /结算单|收据|平台单号/);
@@ -162,7 +162,7 @@ test('负控：恢复旧强转校验，布尔 ID 会再次产出有效一元账�
   const fs = require('node:fs');
   const path = require('node:path');
   const vm = require('node:vm');
-  const source = fs.readFileSync(path.join(__dirname, '../../components/cy/club-direct-ledger/view-model.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '../../utils/club-direct-ledger-view-model.js'), 'utf8');
   const guard = "  if (typeof value !== 'number' && (typeof value !== 'string' || !/^\\d+$/.test(value))) return false;\n";
   assert.ok(source.includes(guard), '负控必须精确命中类型边界');
   const sandbox = { module: { exports: {} } };

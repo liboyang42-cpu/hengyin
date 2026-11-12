@@ -213,7 +213,7 @@
         <view class="v2-feed" wx:if="{{activeTab === '0'}}" style="{{pmFeed === 1 ? '--pm-f:1;' : (pmFeed === 2 ? '--pm-f-d:.32s;--pm-f-s:1;' : '')}}">
           <view class="v2-fitem" wx:for="{{bottomTopicList}}" wx:key="id">
             <!-- 2026-10-28 业主:主题必须有图,卡片整张用封面,名字一行压在底部渐变上 -->
-            <view class="v2-fcard" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
+            <view id="tc-{{item.id}}" class="v2-fcard" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" data-cover="{{item.cover}}" hover-class="cy-pressed" hover-stay-time="80">
               <image class="v2-fcover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" lazy-load="true" />
               <view class="v2-fcard-l">
                 <view class="v2-feyebrow ep1" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</view>

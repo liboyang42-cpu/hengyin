@@ -1906,8 +1906,8 @@ button::after {
 .topic .topbar.solid, .topic .topbar.solid .statusBar.trans, .topic .topbar.solid .titBar.trans { background: #000; box-shadow: none; } /* ds-ok */
 .topic .topbar.solid .titBar .back button { background: rgba(28,28,30,.72); color: #fff; } /* ds-ok */
 .tnav__t { margin-left: 23rpx; max-width: 380rpx; font-size: 31rpx; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* ds-ok */
-.topbar .tnav__t { opacity: 0; transition: opacity .2s; }
-.topbar.solid .tnav__t { opacity: 1; }
+.topbar .tnav__t { opacity: 0; transform: translateY(8px); transition: opacity .35s cubic-bezier(.32,.72,0,1), transform .35s cubic-bezier(.32,.72,0,1); } /* ds-ok v2 原型:标题收进导航栏 .35s */
+.topbar.solid .tnav__t { opacity: 1; transform: none; }
 .sticky-tab-wrapper, .sticky-status-bar, .sticky-nav-bar { background: #000; } /* ds-ok */
 .sticky-tab-wrapper.sticky { animation: none; }
 
@@ -2172,3 +2172,11 @@ button::after {
 .prep-cta { margin-top: var(--cy-space-4); }
 .prep-note { display: block; padding-top: var(--cy-space-3); font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-tertiary); }
 .topic-teams__ft--go { display: flex; align-items: center; gap: var(--cy-space-1); }
+
+/* 动效 v2 时刻 4:买完后主按钮原地换强调色(外观色,无外观取成功绿) */
+.topic .hero-cta { transition: background .6s, color .6s; }
+.topic .hero-cta.is-paid, .dock-cta.is-paid { background: var(--lk-a, var(--cy-comp-sheet-player-success)); color: #0A0D18; } /* ds-ok v2 原型 */
+
+/* 动效 v2 时刻 6:飞层(封面从卡片矩形长成头图)与落定前的主按钮占位;只有 transition 与 this.animate */
+.hf { position: fixed; z-index: var(--cy-z-modal); overflow: hidden; background: #000; pointer-events: none; } /* ds-ok */
+.hf__im { width: 100%; height: 100%; display: block; }

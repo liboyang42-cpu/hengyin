@@ -3,7 +3,7 @@
 // 场景只管余额那一条读(它的请求计数与换号守卫有契约锁着)。
 const earningsView = require('../../utils/earnings-view.js');
 const { buildFundsStages } = require('../../../components/cy/funds-stages/view-model.js');
-const { ledgerView } = require('../../../components/cy/club-direct-ledger/view-model.js');
+const { ledgerView } = require('../../../utils/club-direct-ledger-view-model.js');
 const app = getApp();
 
 function identityKey() {

@@ -129,7 +129,7 @@ test('M-08 / M-09:整张图在舞台内、框外压暗不裁黑;Logo 为圆;遮�
 
 test('M-32:俱乐部计酬本月待结清/已结清行并进本月收入明细,按来源标注,时间倒序;不计入余额合计', () => {
   const ev = require(path.join(ROOT, 'subpackageA/utils/earnings-view.js'));
-  const { ledgerView } = require(path.join(ROOT, 'components/cy/club-direct-ledger/view-model.js'));
+  const { ledgerView } = require(path.join(ROOT, 'utils/club-direct-ledger-view-model.js'));
   const now = new Date(2026, 9, 29, 12);
   const row = (id, status, time, fee) => ({ id, redemptionId: 100 + id, topicId: 9, payerClubId: 3, merchantMemberId: 7,
     status, perHeadFeeSnapshot: fee, createTime: time, claimId: String(id) });

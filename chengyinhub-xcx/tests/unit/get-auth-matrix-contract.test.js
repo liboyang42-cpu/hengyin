@@ -100,7 +100,7 @@ const MATRIX = [
   ['pages/club/topic-detail/plan-fallback.js', 'loadPlanFallback() {', 'required', 'club/EVENT_OPERATE', 'club-owned-activity'],
   ['pages/publish/utils/publish/gameplay-support-matrix.js', "url: '/api/play/theme/support-matrix'", 'required', 'author', 'global-authenticated-read'],
   // 俱乐部直付应收只读：商家岗位 FINANCE_READ 派生店主，俱乐部按当前主理人归属校验。
-  ['components/cy/club-direct-ledger/index.js', "url: scope.kind === 'club'", 'required', 'merchant/club', 'owned-merchant-or-club-receivable'],
+  ['pages/club/components/cy/club-direct-ledger/index.js', "url: scope.kind === 'club'", 'required', 'merchant/club', 'owned-merchant-or-club-receivable'],
   // 2026-10-29 M-32:俱乐部计酬并进账户收益「本月收入明细」,同端点同权限档(商家 FINANCE_READ 派生店主)。
   ['subpackageA/components/earnings-overview/index.js', "url: '/api/club-direct-merchant/merchant'", 'required', 'merchant', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],

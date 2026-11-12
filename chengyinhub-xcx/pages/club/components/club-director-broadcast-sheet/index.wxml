@@ -9,7 +9,7 @@
       <view class="cdbs__strip-in">
         <view class="cdbs__p {{item.picked ? 'cdbs__p--on' : ''}}" wx:for="{{audience}}" wx:key="id" bindtap="onPersonTap" data-id="{{item.id}}"
               aria-role="checkbox" aria-checked="{{item.picked}}" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="cdbs__av">{{item.initial}}<view class="cdbs__tick" wx:if="{{item.picked}}"></view></view>
+          <view class="cdbs__av">{{item.initial}}<view class="cdbs__tick {{ticking && !sentMap[item.id] ? 'cdbs__tick--off' : ''}}" wx:if="{{item.picked}}"></view></view>
           <text class="cdbs__pn">{{item.name}}</text>
           <text class="cdbs__ps" wx:if="{{item.sub}}">{{item.sub}}</text>
         </view>
@@ -45,10 +45,10 @@
     </view>
 
     <view
-      class="cdbs__primary {{confirmDisabled ? 'is-disabled' : ''}}"
+      class="cdbs__primary {{confirmDisabled && !sendPhase ? 'is-disabled' : ''}} {{sendPhase === 'sent' && sentDone ? 'cdbs__primary--sent' : ''}}"
       bindtap="onConfirmTap"
-      aria-role="button" aria-label="{{confirmText}}"
+      aria-role="button" aria-label="{{sendPhase === 'sent' && sentDone ? '已发出' : confirmText}}"
       hover-class="cy-pressed" hover-stay-time="80"
-    >{{confirmText}}</view>
+    >{{sendPhase === 'sent' && sentDone ? '已发出' : (sendPhase ? '发送中…' : confirmText)}}</view>
   </view>
 </cy-scene-sheet>

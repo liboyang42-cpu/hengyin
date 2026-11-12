@@ -158,7 +158,10 @@ test('零元通行证仍直接进入游玩，付费单仍拉起微信支付', ()
      买完先看到通行证,再由「放进票夹 / 开始游戏」决定去向;可选的商家营销同意行改在动效收尾时
      走原结果面板。被保护的事实仍不变 —— 零元单同样要走这个成功落点,不能悄悄跳过反馈。 */
   assert.deepEqual(free.toasts, [], '不再额外弹 toast,结果由到账层承担');
-  assert.ok(free.vm.data.reveal.show, '零元单照常走购买成功落点:到账层必须真的弹出来');
+  /* 2026-11-12 动效 v2 时刻 4:落点换成紧凑成功卡(selfPlayPhase=done)+ 边缘光 + 原卡「已购」;整屏揭晓层不再自动弹出 */
+  assert.equal(free.vm.data.selfPlayPhase, 'done', '零元单照常走购买成功落点:成功卡必须真的出现');
+  assert.ok(free.vm.data.glowKey > 0, '到账那一下边缘光要触发');
+  assert.equal(free.vm.data.reveal.show, false);
   assert.equal(free.vm._revealRegId, 1002, '「开始游戏」要能带着这张票直接开局');
   assert.equal(free.payments.length, 0);
   assert.equal(free.requests.length, 1, '零元单不该再去取支付参数');
@@ -181,10 +184,11 @@ test('微信回调成功仍等服务端确认，确认后才显示到账', () =>
   h.requests[0].success(createResponse({ data: paidOrder() }));
   h.payments[0].success();
   assert.equal(h.vm.data.reveal.show, false);
+  assert.notEqual(h.vm.data.selfPlayPhase, 'done', '服务端确认前不得显示到账');
   assert.deepEqual(h.navigations, []);
   const verify = h.requests.find(r => r.url === '/api/registration/info');
   verify.success({ code: 200, data: { paymentStatus: 2, registrationStatus: 2 } });
-  assert.equal(h.vm.data.reveal.show, true);
+  assert.equal(h.vm.data.selfPlayPhase, 'done');
   assert.equal(h.vm._revealRegId, 1001);
 });
 

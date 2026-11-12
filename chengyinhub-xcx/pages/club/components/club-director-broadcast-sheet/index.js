@@ -1,3 +1,4 @@
+const { readReducedMotion } = require('../../../../utils/motion-preference.js')
 /**
  * cy-club-director-broadcast-sheet · D7 定向广播(弹窗)。
  * Figma s7SEFaoJ3GQUIxJhdqcFUb 288:496。T1 底部弹窗,复用 cy-scene-sheet variant="half"。
@@ -17,8 +18,29 @@ Component({
     countText: { type: String, value: '' },
     confirmText: { type: String, value: '确认发送' },
     confirmDisabled: { type: Boolean, value: false },
+    sendPhase: { type: String, value: '' }, // '' | sending | sent:宿主在服务端确认后给 sent,本组件只管逐个打勾与按钮变色
   },
+  data: { ticking: false, sentMap: {}, sentDone: false },
+  observers: { sendPhase(p) { this._phase(p) } },
+  lifetimes: { detached() { this._clear() } },
   methods: {
+    _clear() { (this._ts || []).forEach(clearTimeout); this._ts = [] },
+    _phase(p) {
+      this._clear()
+      if (p !== 'sent') { this.setData({ ticking: false, sentMap: {}, sentDone: false }); return }
+      const reduced = readReducedMotion()
+      const ids = (this.data.audience || []).filter((x) => x.picked).map((x) => x.id)
+      const map = {}
+      const step = reduced ? 0 : 160 // 三位同行人依次打勾,间隔 160ms(超过 8 位的并入最后一拍)
+      this.setData({ ticking: true, sentMap: {}, sentDone: false })
+      ids.forEach((id, i) => {
+        const at = step * (Math.min(i, 7) + 1)
+        this._ts.push(setTimeout(() => { map[id] = true; this.setData({ sentMap: Object.assign({}, map) }) }, at))
+      })
+      const end = step * Math.min(ids.length, 8)
+      this._ts.push(setTimeout(() => this.setData({ sentDone: true }), end))
+      this._ts.push(setTimeout(() => this.triggerEvent('sentdone', { reduced }), end + (reduced ? 0 : 700))) // 700ms 后宿主收起半屏
+    },
     onClose() { this.triggerEvent('close') },
     onScopeChange(e) { this.triggerEvent('selectscope', e.detail) },
     onPersonTap(e) { this.triggerEvent('toggleperson', { id: e.currentTarget.dataset.id }) },
@@ -27,7 +49,7 @@ Component({
       this.triggerEvent('input', { value: String((e && e.detail && e.detail.value) || '') })
     },
     onConfirmTap() {
-      if (this.data.confirmDisabled) return
+      if (this.data.confirmDisabled || this.data.sendPhase) return
       this.triggerEvent('confirm')
     },
   },

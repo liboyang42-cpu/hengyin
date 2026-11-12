@@ -407,8 +407,8 @@
       scope-options="{{broadcastScopeOptions}}" scope="{{broadcastDraft.targetType}}"
       targets="{{broadcastTargetRows}}" content="{{broadcastDraft.content}}"
       audience="{{broadcastAudience}}" count-text="{{broadcastCountText || broadcastPreviewText}}" confirm-text="{{broadcastSendText}}"
-      confirm-disabled="{{writeLocked || !broadcastPreviewReady || !broadcastDraft.content}}"
-      bind:close="closeBroadcast" bind:confirm="confirmBroadcast"
+      confirm-disabled="{{writeLocked || !broadcastPreviewReady || !broadcastDraft.content}}" send-phase="{{broadcastSendPhase}}"
+      bind:close="closeBroadcast" bind:confirm="confirmBroadcast" bind:sentdone="onBroadcastSentDone"
       bind:input="onBroadcastContentInput" bind:selectscope="selectBroadcastTargetType"
       bind:selecttarget="onBroadcastTargetChange" bind:toggleperson="onBroadcastPersonToggle" />
 
@@ -582,6 +582,7 @@
     <cy-skeleton wx:if="{{customerState === 'loading'}}" type="list" count="2" />
     <cy-error load-failure wx:elif="{{customerState !== 'ready'}}" title="报名名单获取失败" sub="{{customerErrorReason}}" retry="重试" bind:retry="loadCustomers" />
     <block wx:else>
+      <view class="cli-tip {{broadcastTip && !broadcastTipGone ? 'cli-tip--on' : ''}}" aria-role="status"><text>{{broadcastTip}}</text></view>
       <view class="cli-stats">
         <text wx:for="{{customerStats}}" wx:key="key"
           class="cli-stat cli-stat--{{item.tone}}">{{item.text}}</text>
@@ -616,7 +617,6 @@
         aria-role="button" aria-label="定向广播" hover-class="cy-pressed" hover-stay-time="80">
         <view class="cli-main">
           <text class="cli-name">定向广播</text>
-          
         </view>
         <cy-icon name="slide-arrow" size="24" />
       </view>

@@ -1,4 +1,4 @@
-<view class="ck {{show ? 'is-on' : ''}}" aria-hidden="{{!show}}">
+<view class="ck {{show ? 'is-on' : ''}} {{paidOut ? 'ck--paid' : ''}}" aria-hidden="{{!show}}">
   <view class="ck__nav" style="height: {{topInset}}px;">
     <view class="ck__back" bindtap="onBack" aria-role="button" aria-label="返回" hover-class="ck-pressed" hover-stay-time="80"><view class="ck__chev"></view></view>
     <text class="ck__title">确认订单</text>
@@ -75,6 +75,12 @@
   <!-- 11 底栏:合计 + 支付,随报价实时更新 -->
   <view class="ck__bar">
     <view class="ck__sum"><text class="ck__sum-v">{{view.totalText}}</text><text class="ck__sum-k">1 人</text></view>
-    <view class="ck__pay {{loading || view.loading ? 'is-busy' : ''}} {{view.refused ? 'is-off' : ''}}" bindtap="onPay" aria-role="button" aria-disabled="{{view.refused}}" aria-label="{{view.payLabel}}" hover-class="ck-pressed" hover-stay-time="80">{{loading ? '处理中…' : view.payLabel}}</view>
+    <view id="ckpay" class="ck__pay {{loading || view.loading ? 'is-busy' : ''}} {{phase ? 'is-spin' : ''}} {{view.refused ? 'is-off' : ''}}" style="{{payW ? 'width:' + payW + 'px;' : ''}}" bindtap="onPay" aria-role="button" aria-disabled="{{view.refused}}" aria-label="{{phase ? '处理中' : view.payLabel}}" hover-class="ck-pressed" hover-stay-time="80"><text class="ck__pay-t">{{loading ? '处理中…' : view.payLabel}}</text><view class="ck__spin"></view></view>
+  </view>
+  <!-- 动效 v2 时刻 4:到账后底栏收成紧凑成功卡,勾描出来,页面自己收起 -->
+  <view class="ck__dim {{phase === 'done' ? 'is-on' : ''}}"></view>
+  <view class="ck__ok {{phase === 'done' ? 'is-on' : ''}}" style="{{lkVars}}" aria-role="status" aria-hidden="{{phase !== 'done'}}">
+    <view class="ck__okc"><view class="ck__arm ck__arm--a"></view><view class="ck__arm ck__arm--b"></view></view>
+    <text class="ck__ok-t">已购买</text><text class="ck__ok-s">票已放进票夹</text>
   </view>
 </view>

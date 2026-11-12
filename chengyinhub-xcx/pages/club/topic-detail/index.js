@@ -1090,7 +1090,7 @@ Page({
   // 定向广播的弹层是导演台那套(D7),这里只是多开一个入口。
   // 半屏叠半屏会糊在一起,所以先关掉报名参与者弹层;不可发送时入口已置灰并写明条件(CU-C-76)。
   goBroadcast() {
-    this.setData({ customerSheetVisible: false });
+    this._broadcastFromCustomers = true; this.setData({ customerSheetVisible: false, broadcastTipGone: true });
     this.openBroadcast();
   },
 

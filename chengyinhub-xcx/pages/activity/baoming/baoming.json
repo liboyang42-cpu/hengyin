@@ -14,6 +14,7 @@
     "cy-loading-mask": "/components/cy/loading-mask/index",
     "cy-modal-host": "/components/cy/modal-host/index",
     "cy-option-sheet": "/components/cy/option-sheet/index",
+    "cy-edge-glow": "/components/cy/edge-glow/index",
     "cy-result-sheet": "/components/cy/result-sheet/index"
   },
   "navigationBarTitleText": "结算",

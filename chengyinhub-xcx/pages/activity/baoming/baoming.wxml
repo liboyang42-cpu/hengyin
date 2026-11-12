@@ -329,7 +329,7 @@
     <icon wx:else class="bmbottom_box_gx" type="circle" size="20" color="var(--cy-color-text-tertiary)" />
     <view class="bmbottom_box_txt">同意将姓名、手机号提供给主办方，用于报名核验</view>
   </view>
-  <cy-btn variant="primary" style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : (hostResv.required && !waitlistOfferId ? '请先预约主持' : (quoteRefusal ? '暂不可报名' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? ((hostShareConsentReady || hostShareChecked) ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : '请先勾选信息共享同意') : '请选择参与人信息'))))))))}}</cy-btn>
+  <cy-btn variant="primary" morph style="width:686rpx;margin:0 auto;display:block" loading="{{isPaying || paymentReadinessChecking}}" bindtap="handlePayment" bind:disabledtap="handlePayment" disabled="{{!canPay}}">{{!selectedTicket ? '暂不可报名：暂无可用票' : (hostResv.required && !waitlistOfferId ? '请先预约主持' : (quoteRefusal ? '暂不可报名' : ((ticketSoldOut && waitlistState !== 'OFFERED') || waitlistEligibility === 'ALREADY_REGISTERED' ? waitlistPaymentText : (signupClosed ? '报名已截止' : (isPaying ? '提交中...' : (paymentReadinessChecking ? '检查支付服务...' : (paymentReady === false && totalAmount > 0 ? '重新检查支付服务' : (selectedAddress ? ((hostShareConsentReady || hostShareChecked) ? (totalAmount > 0 ? (!quoteReady ? '确认价格并付款' : '付款') : '确认报名') : '请先勾选信息共享同意') : '请选择参与人信息'))))))))}}</cy-btn>
 </view>
 
 <!-- 报名/支付结果面板。2026-09-06 用户裁决「买完直接跳」:面板不放按钮,
@@ -344,6 +344,7 @@
      建队入口没丢,它在落地的订单详情页(scene-member-order-detail 的「和队友一起出发」卡)。
      2026-09-17 拍板第 40 条 A:面板里多一行可选同意勾选 —— 不勾照常自愈跳转,
      勾了才停下等保存结果(仍不放按钮)。 -->
+<cy-edge-glow trigger="{{glowKey}}" />
 <cy-result-sheet show="{{resultSheet.show}}" kind="{{resultSheet.kind}}" title="{{resultSheet.title}}"
   sub="{{resultSheet.sub}}" meta="{{resultSheet.meta}}" pill="{{resultSheet.pill}}" why="{{resultSheet.why}}"
   duration="{{resultSheet.duration}}" consent-name="{{resultSheet.consentName}}"
