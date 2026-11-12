@@ -1234,7 +1234,7 @@ page.theme-light,
   --cy-comp-sheet-role-btn-bg: var(--cy-comp-sheet-merchant-title);
   --cy-comp-sheet-role-btn-fg: var(--cy-comp-sheet-merchant-elevated);
   --cy-comp-sheet-role-card-shadow: 0 2rpx 8rpx rgba(15,23,43,.06);
-  --cy-comp-sheet-role-lift: none;   /* 商家白弹层不变 */
+  --cy-comp-sheet-role-lift: var(--cy-shadow-hi-light), 0 -1px 2px rgba(0, 0, 0, .04), 0 -12px 32px rgba(0, 0, 0, .08);   /* 2026-11-12 细节打磨 G1:商家白弹层 = 顶边高光 + 向上两层柔投影(浅色档) */
 }
 
 /* 主题创建域：浅底、白卡、彩色强调（2026-08-09 用户拍板改回设计稿配色）。
@@ -1292,7 +1292,7 @@ page.theme-topic-editor,
   /* 创建域是「白底细线」层级,不要投影(同本块上方 --cy-comp-card-shadow-day 的决定),
      所以这一条不照抄 .theme-merchant 的卡片投影。 */
   --cy-comp-sheet-role-card-shadow:      0 0 0 0 transparent;
-  --cy-comp-sheet-role-lift: none;   /* 商家白弹层不变 */
+  --cy-comp-sheet-role-lift: var(--cy-shadow-hi-light), 0 -1px 2px rgba(0, 0, 0, .04), 0 -12px 32px rgba(0, 0, 0, .08);   /* 2026-11-12 细节打磨 G1:商家白弹层 = 顶边高光 + 向上两层柔投影(浅色档) */
   --cy-text-title:              var(--cy-color-text-primary);
   --cy-text-secondary:          var(--cy-color-text-tertiary);
   /* 2026-08-10 与商家版取同一个灰(见上方 .theme-light/.theme-merchant 块的 #F3F4F4)。
