@@ -184,3 +184,8 @@
 /* P-10 打字题答错:下划线变红,反馈条用同一套红;下一次输入即清。只做颜色过渡,不抖动 */
 .qa__input { transition: border-color .2s ease; }
 .qa__input--wrong { border-bottom-color: var(--cy-color-status-danger); }
+
+/* UG-02 选项图:固定 4:3 小图,选中态位移不改尺寸 */
+.qa__opt-img { flex: none; width: 128rpx; height: 96rpx; border-radius: var(--cy-radius-sm); background: var(--soft); }
+/* UG-10 镜像谜面:只翻题面这一层文字,读屏照常读原文 */
+.qa__q-mirror { transform: scaleX(-1); }
