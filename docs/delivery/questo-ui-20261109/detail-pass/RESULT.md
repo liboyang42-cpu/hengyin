@@ -44,7 +44,7 @@
 
 ## 验证与门禁
 
-- 全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`）：**17409 条，17408 过，1 红**。唯一的红是 `T03 数据条按稿,评分不回退图片星标也不被取整`，在 master（`920141d5`）上同样红（基线整跑 17403 条 7 红：这条 + `release 前重建 inventory` + 5 条 C06 页面状态测试，后几条本分支整跑里转绿，台账重建后 inventory 那条也绿；本分支新增 6 条 `detail-pass-20261112`）。本车道没碰数据条评分逻辑。
+- 全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`）：**17409 条，17408 过，1 红**。唯一的红是 `T03 数据条按稿…`（我的数据条读数改了 wxml 绑定，断言已按新写法更新，见后续提交；之前误判为 master 既有红）（基线整跑 17403 条 7 红：这条 + `release 前重建 inventory` + 5 条 C06 页面状态测试，后几条本分支整跑里转绿，台账重建后 inventory 那条也绿；本分支新增 6 条 `detail-pass-20261112`）。本车道没碰数据条评分逻辑。
 - `node chengyinhub-xcx/tests/lint/ui-integrity.js`：**UI-GATE-0:PASS**（A11Y / Legacy 全 PASS），没有新增 baseline 条目。过程中 `pages/topic/index/index.js` 因新增一行 `require` 让两处既有锚点行号位移被判红，已把 `require` 并到第 1 行（行数不变）修掉；`pages/play/index.js` 全部「同行追加」，行数不变。
 - 动作台账：`build-action-ledger.js --write` 重建（544 行只是控件行号位移，控件数不变）；`--check` PASS。`build-route-matrix.js --check`：PASS（171 routes / 27 scenes，没有路由改动）。
 - WXS 门禁：`node --expose-internals scripts/wxs-syntax-gate.js` PASS（14 个 .wxs，4 段内联 wxs，含新加的 `stat()`）。
