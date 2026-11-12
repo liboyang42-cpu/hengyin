@@ -843300,7 +843300,8 @@
           {
             "url": "/api/club/personal-receiver/status",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/club/settlement/mine",
@@ -843435,7 +843436,8 @@
           {
             "url": "/api/club/personal-receiver/status",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/club/settlement/mine",
@@ -843628,7 +843630,8 @@
           {
             "url": "/api/club/personal-receiver/status",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/club/personal-receiver/unbind",
@@ -843823,7 +843826,8 @@
           {
             "url": "/api/club/personal-receiver/status",
             "method": "GET",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/club/settlement/mine",
