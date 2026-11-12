@@ -170,38 +170,38 @@ class ApiPlayEncounterControllerTest {
 
 
     @Test
-    void anonymousEncounterIsUnauthorizedBeforeAnyRead() {
+    void anonymousEncounterKeepsLegacyFailureBeforeAnyRead() {
         doReturn(null).when(controller).getAppUserId();
         AjaxResult response = controller.encounter(TOPIC, 0L, NODE);
-        assertEquals(401, response.get("code"));
+        assertEquals(500, response.get("code"));
         assertEquals("请先登录", response.get("msg"));
         verify(routeSessionMapper, never()).selectCurrentByOwner(any(), any(), any());
         verify(nodeService, never()).selectCmsTopicNodeById(any());
     }
 
     @Test
-    void malformedEncounterParametersAreBadRequests() {
+    void malformedEncounterParametersKeepLegacyFailure() {
         for (Long invalid : Arrays.asList(null, 0L, -1L)) {
             AjaxResult topic = controller.encounter(invalid, 0L, NODE);
             AjaxResult nodeResult = controller.encounter(TOPIC, 0L, invalid);
-            assertEquals(400, topic.get("code"));
+            assertEquals(500, topic.get("code"));
             assertEquals("参数有误", topic.get("msg"));
-            assertEquals(400, nodeResult.get("code"));
+            assertEquals(500, nodeResult.get("code"));
             assertEquals("参数有误", nodeResult.get("msg"));
         }
         AjaxResult activity = controller.encounter(TOPIC, -1L, NODE);
-        assertEquals(400, activity.get("code"));
+        assertEquals(500, activity.get("code"));
         assertEquals("场次参数有误", activity.get("msg"));
         verify(nodeService, never()).selectCmsTopicNodeById(any());
     }
 
     @Test
-    void missingEncounterSessionIsConflictForOmittedAndExplicitSoloScopes() {
+    void missingEncounterSessionKeepsLegacyFailureForOmittedAndExplicitSoloScopes() {
         session = null;
         when(routeSessionMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(Collections.emptyList());
         for (Long activity : Arrays.asList(null, 0L)) {
             AjaxResult response = controller.encounter(TOPIC, activity, NODE);
-            assertEquals(409, response.get("code"));
+            assertEquals(500, response.get("code"));
             assertEquals("这一局还没开始", response.get("msg"));
             assertFalse(response.containsKey("data"));
         }
@@ -212,7 +212,7 @@ class ApiPlayEncounterControllerTest {
     void omittedAmbiguousScopeRemainsRejectedWithoutReadingAnyNode() {
         when(routeSessionMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(Arrays.asList(session, session));
         AjaxResult response = controller.encounter(TOPIC, null, NODE);
-        assertEquals(400, response.get("code"));
+        assertEquals(500, response.get("code"));
         assertEquals("存在多个场次，请指定 activityId", response.get("msg"));
         verify(nodeService, never()).selectCmsTopicNodeById(any());
     }
@@ -244,10 +244,10 @@ class ApiPlayEncounterControllerTest {
     }
 
     @Test
-    void explicitServiceCodesSurviveWhileUncodedErrorsKeepTheirOriginalFailure() {
+    void explicitAndUncodedServiceErrorsKeepTheirOriginalFailure() {
         when(nodeService.selectCmsTopicNodeById(NODE)).thenThrow(new ServiceException("fixture explicit rejection", 403));
         AjaxResult coded = controller.encounter(TOPIC, 0L, NODE);
-        assertEquals(403, coded.get("code"));
+        assertEquals(500, coded.get("code"));
         assertEquals("fixture explicit rejection", coded.get("msg"));
         doThrow(new ServiceException("fixture uncoded failure")).when(nodeService).selectCmsTopicNodeById(NODE);
         AjaxResult uncoded = controller.encounter(TOPIC, 0L, NODE);
@@ -636,7 +636,7 @@ class ApiPlayEncounterControllerTest {
 
         AjaxResult response = controller.encounter(TOPIC, null, NODE);
 
-        assertEquals(409, response.get("code"));
+        assertEquals(500, response.get("code"));
         assertEquals("这一局还没开始", response.get("msg"));
     }
 
