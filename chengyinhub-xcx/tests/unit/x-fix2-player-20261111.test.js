@@ -159,9 +159,9 @@ test('P-13/P-15/P-16/P-18/ME-4 玩家侧小项', () => {
   assert.ok(fs.existsSync(path.join(ROOT, 'pages/shezhi/images/icon_lc_megaphone.svg')))
   // P-16 选中的筛选胶囊在浅色地图上有落影
   assert.match(read('subpackageRoam/nearby/index.wxss'), /\.mt-chip\.is-on \{ background: #fff; color: #000; font-weight: 600; box-shadow: 0 4rpx 16rpx/)
-  // P-18 没封面的票卡放插画,不留空
+  // P-18 没封面的票卡不留空;x-design1 D15:改用统一的 look 渐变 + 小路线插画(cy-cover-fb)
   const sw = read('subpackageMember/signup/index.wxml')
-  assert.match(sw, /<view class="wc__im wc__im--illus" wx:else aria-hidden="true"><cy-illus /)
+  assert.match(sw, /<view class="wc__im wc__im--illus cy-cover-fb" wx:else aria-hidden="true"><image class="cy-cover-fb__art"/)
   assert.equal(JSON.parse(read('subpackageMember/signup/index.json')).usingComponents['cy-illus'], '/subpackageMember/components/cy-illus/index')
   // ME-4 底栏玻璃不透明度够,不渲染模糊时字也不透上来
   const tb = read('components/tabBar/index.wxss')

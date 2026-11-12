@@ -67,7 +67,7 @@
             <view class="wc__t"><text class="wc__b">{{item.wTitle}}</text><text class="wc__s">{{item.wSub}}</text></view>
             <view class="wc__im" wx:if="{{item.wImg}}"><image lazy-load="true" src="{{item.wImg}}" mode="aspectFill" /></view>
             <!-- x-fix2 P-18:没封面不拿假路线图充数(k8 F13),但卡身也不留一大块空:放一枚票夹插画 -->
-            <view class="wc__im wc__im--illus" wx:else aria-hidden="true"><cy-illus name="{{item.wType === '自由探索' ? 'stamp' : 'pass'}}" size="{{280}}" bare="{{true}}" /></view>
+            <view class="wc__im wc__im--illus cy-cover-fb" wx:else aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
             <view class="wc__curl" aria-hidden="true"></view>
             <!-- l-after 镜面:卷页时一道跟着手指走的高光带(--sx),静止时不出 -->
             <view class="wc__spec" aria-hidden="true"></view>

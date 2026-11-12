@@ -247,5 +247,5 @@
 .wc { -webkit-box-reflect: below 12rpx linear-gradient(transparent 62%, rgba(255,255,255,.18)); } /* ds-ok: 卡下倒影(proto wal3) */
 .signup--reduced .wl-pop { transition: none; }
 /* x-fix2 P-18:无封面票卡的插画位:居中,不叠封面压暗 */
-.wc__im--illus { display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.04); } /* ds-ok: 深色票卡上的空图位 */
+.wc__im--illus { display: flex; align-items: center; justify-content: center; } /* D15:无图位用统一的 look 渐变兜底(cy-cover-fb),不再是大插画 */
 .wc__im--illus::after { display: none; }
