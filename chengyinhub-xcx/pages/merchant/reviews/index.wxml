@@ -27,9 +27,8 @@
                    title="评价加载失败" sub="{{errorMessage}}" action="重新加载" bind:action="retry" />
   <cy-empty wx:elif="{{pageState === 'missing'}}" kind="missing-param" fill size="lg"
             title="商家信息不完整" cta="返回" bind:cta="onNavBack" />
-  <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg"
-            title="还没有真实到店评价"
-            sub="" />
+  <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty"
+            title="还没有真实到店评价" />
 
   <scroll-view wx:elif="{{pageState === 'ready'}}" class="review-scroll" scroll-y enhanced
                show-scrollbar="{{false}}" lower-threshold="160" bindscrolltolower="loadMore">
@@ -138,8 +137,7 @@
            访客只想看口碑,却被一整张后台准入规则卡把列表往下推。改成:屏上确实一条评价都没有
            才说明为什么不能写;有评价就先给评价本身。 -->
       <view wx:elif="{{mode === 'public' && !items.length}}" class="review-eligibility-note">
-        <text class="review-eligibility-title">{{eligibility.reasonCode === 'LOGIN_REQUIRED' ? '登录后查看评价资格' : eligibility.reasonCode === 'AMBIGUOUS_LEGACY_MERCHANT_SCOPE' ? '该主体有多家门店，暂不可评价' : eligibility.reasonCode === 'MERCHANT_UNAVAILABLE' ? '该门店当前不可评价' : '到店核销后可评价'}}</text>
-        <text class="review-eligibility-sub">{{eligibility.reasonCode === 'AMBIGUOUS_LEGACY_MERCHANT_SCOPE' ? '历史订单未关联门店，暂不能评价' : '到店完成核销后才能评价'}}</text>
+        <cy-empty size="lg" kind="empty" title="{{eligibility.reasonCode === 'LOGIN_REQUIRED' ? '登录后查看评价资格' : eligibility.reasonCode === 'AMBIGUOUS_LEGACY_MERCHANT_SCOPE' ? '该主体有多家门店，暂不可评价' : eligibility.reasonCode === 'MERCHANT_UNAVAILABLE' ? '该门店当前不可评价' : '到店核销后可评价'}}" />
       </view>
 
       <cy-skeleton wx:if="{{mode === 'manage' && filterLoading}}" type="card" count="2" />
