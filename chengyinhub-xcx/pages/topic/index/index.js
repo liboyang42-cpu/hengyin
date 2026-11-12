@@ -300,7 +300,7 @@ Page({
   onPageScroll: function(e) {
     const that = this;
     const scrollTop = e.scrollTop;
-    this._scrollTop = scrollTop; parallax.follow(this, '.bgt-swiper', scrollTop); /* 细节打磨 S5:头图 0.5× 视差 */
+    this._scrollTop = scrollTop; parallax.follow(this, '.bgt-swiper', scrollTop, { anchor: '#heroTop' }); /* 细节打磨 S5:头图 0.5× 视差 */
 
     // 根据滚动位置判断当前所在屏幕
     const screen1Height = this.data.screen1Height;

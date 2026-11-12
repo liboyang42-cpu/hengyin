@@ -19,7 +19,7 @@ done; fi
 # S9 ⋯ 工具菜单:点开后 120ms 抓一张(缩放展开 + 行错开中),落定再抓一张
 scn "s9-menu" STARDUST route 1 "{}" "[$INTRO,{\"wait\":4500},{\"eval\":\"($P.toggleSessionTools(),1)\"},{\"wait\":120},{\"shot\":\"@@mid\"},{\"wait\":1400},{\"shot\":\"@@main\"}]"
 # S5 主题详情:首屏 + 滚 300px(头图视差 0.5×,导航折叠不变)
-scn "s5-topic" none - 1 '{"path":"pages/topic/index/index?id=990013"}' '[{"wait":3000},{"shot":"@@main"},{"scroll":300},{"wait":700},{"shot":"@@scroll"}]'
+scn "s5-topic" none - 1 '{"path":"pages/topic/index/index?id=990014"}' '[{"wait":3000},{"shot":"@@main"},{"scroll":1000},{"wait":900},{"shot":"@@scroll"}]'
 # S6 票夹:注入两张可用票(同一段注入前后各跑一次),票根缺口 + 顶边高光
 WAL="(()=>{const p=$P;p._topic={state:'ready',list:[{id:101,registrationStatus:2,paymentStatus:2,cmsTopic:{name:'老城三封信',productType:1,imgUrl:'/pages/play/images/d_topic1.png'}},{id:102,registrationStatus:2,paymentStatus:2,cmsTopic:{name:'外滩夜行',productType:1,imgUrl:'/pages/play/images/d_topic2.png'}}]};p._activity={state:'ready',list:[]};p.rebuildTicketList();return p.data.ticketList.length})()"
 scn "s6-wallet" none - 1 '{"path":"subpackageMember/signup/index","identity":"e2e-openid-9009"}' "[{\"wait\":3000},{\"eval\":\"$WAL\"},{\"wait\":3500},{\"shot\":\"@@main\"}]"

@@ -44,6 +44,9 @@ test('S5 视差:0.5×、只在 0..limit,负值(回弹)与减少动态效果不�
   assert.equal(px.offsetFor(200), 100); assert.equal(px.offsetFor(-30), null); assert.equal(px.offsetFor(5000), 300)
   const got = []; const page = { data: {}, animate(sel, f, d) { got.push([sel, f[0].translateY, d]) } }
   assert.equal(px.follow(page, '.bgt-swiper', 100), true); assert.deepEqual(got[0], ['.bgt-swiper', 50, 1])
+  const anchored = { data: {}, _pxTop: 400, animate(sel, f) { got.push([sel, f[0].translateY]) } }
+  assert.equal(px.follow(anchored, '.x', 300, { anchor: '#heroTop' }), false, '头图还没滚到屏幕顶,不动')
+  assert.equal(px.follow(anchored, '.x', 800, { anchor: '#heroTop' }), true); assert.deepEqual(got[got.length - 1], ['.x', 200])
   const off = { data: { reducedMotion: true }, animate() { throw new Error('不该动') } }
   assert.equal(px.follow(off, '.bgt-swiper', 100), false)
 })

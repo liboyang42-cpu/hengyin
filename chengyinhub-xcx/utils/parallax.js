@@ -17,13 +17,27 @@ function offsetFor(scrollTop, options) {
   return Math.round(Math.min(t, limit) * (o.factor > 0 ? o.factor : FACTOR) * 10) / 10;
 }
 
+/* anchor:头图容器的选择器。头图在页面中间(上面还有一屏)时,视差只从头图顶边滚到屏幕顶之后才开始 ——
+ * 否则把图往下挪会在头图顶边露出一条底色。首次滚动时量一次(绝对位置 = 容器顶 + 当前滚动)。 */
 function follow(page, selector, scrollTop, options) {
   if (!page || typeof page.animate !== 'function') return false;
+  const anchor = options && options.anchor;
+  if (anchor && page._pxTop === undefined) {
+    if (page._pxMeasuring || typeof wx === 'undefined' || typeof wx.createSelectorQuery !== 'function') return false;
+    page._pxMeasuring = true;
+    wx.createSelectorQuery().in(page).select(anchor).boundingClientRect((r) => {
+      page._pxMeasuring = false;
+      page._pxTop = r ? Math.max(0, r.top + (Number(scrollTop) || 0)) : 0;
+    }).exec();
+    return false;
+  }
+  if (anchor) scrollTop = Number(scrollTop) - (page._pxTop || 0);
   if (page._pxOff === undefined) page._pxOff = readReducedMotion() || !!(page.data && page.data.reducedMotion);
   if (page._pxOff) return false;
   const now = Date.now();
   if (page._pxAt && now - page._pxAt < MIN_GAP_MS) return false;
-  const y = offsetFor(scrollTop, options);
+  let y = offsetFor(scrollTop, options);
+  if (y === null && page._pxY > 0) y = 0;   // 滚回头图上方:放回原位,不留位移
   if (y === null || y === page._pxY) return false;
   page._pxAt = now; page._pxY = y;
   page.animate(selector, [{ offset: 0, translateY: y }, { offset: 1, translateY: y }], 1, () => {});
