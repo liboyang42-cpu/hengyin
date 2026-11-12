@@ -18,3 +18,8 @@
 .lt-acts { flex: none; display: flex; gap: var(--cy-space-2); }
 .lt-act--ghost { border-color: transparent; background: var(--cy-color-bg-surface-subtle); }
 .lt-err { display: block; width: 100%; padding-top: var(--cy-space-1); font-size: var(--cy-font-label); color: var(--cy-color-status-danger-on-interactive); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.lt-entry { transition: var(--cy-tr-press); }
+.lt-act { transition: var(--cy-tr-press); }
+.lt-act--ghost { transition: var(--cy-tr-press); }

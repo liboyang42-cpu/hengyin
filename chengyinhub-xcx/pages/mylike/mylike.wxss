@@ -101,3 +101,7 @@
 }
 .favorite-card__actions image { width: var(--cy-space-4); height: var(--cy-space-4); }
 .favorite-card__action-heart { color: var(--cy-color-text-primary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.favorite-recommend-note { transition: var(--cy-tr-press); }
+.favorite-card__cover { transition: var(--cy-tr-press); }

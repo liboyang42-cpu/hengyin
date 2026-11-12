@@ -31,3 +31,8 @@ button.withdraw-btn[disabled] { background: var(--cy-color-action-secondary-bg);
 .topic-row-arrow { flex-shrink: 0; color: var(--cy-color-text-tertiary); }
 
 .footnote { display: block; margin-top: var(--cy-space-4); color: var(--cy-color-text-tertiary); font-size: var(--cy-font-micro); line-height: 1.5; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.topic-row { transition: var(--cy-tr-press); }
+.settled-amount,
+.topic-row-amount { font-variant-numeric: tabular-nums; }

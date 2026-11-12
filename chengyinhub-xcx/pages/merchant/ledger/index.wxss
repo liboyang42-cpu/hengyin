@@ -149,3 +149,6 @@ page { background: var(--cy-bg-page); }
 .fill-slot { display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
 
 @import '../style/merchant-finance.wxss';
+
+/* 细节打磨二期 L1/L5/L7 */
+.ledger-action { transition: var(--cy-tr-press); }

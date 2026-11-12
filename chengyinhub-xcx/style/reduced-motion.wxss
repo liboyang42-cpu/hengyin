@@ -1,6 +1,7 @@
 /* isolated 组件显式导入；只停止装饰运动，状态文字仍由原组件渲染。 */
 @media (prefers-reduced-motion: reduce) {
   .btn,
+  .btn--press,
   .btn__spinner,
   .btn.btn--morph,
   .cy-mm__spin,

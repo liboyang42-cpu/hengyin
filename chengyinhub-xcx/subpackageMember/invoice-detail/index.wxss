@@ -24,3 +24,8 @@ page { background: var(--cy-color-bg-page); }
 .state-notice__tag--success { color: var(--cy-color-status-success); }
 .state-notice__tag--info    { color: var(--cy-color-status-info); }
 .state-notice__s { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); line-height: var(--cy-leading-normal); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.sec-btn { transition: var(--cy-tr-press); }
+.sec-danger { transition: var(--cy-tr-press); }
+.sec-solid { transition: var(--cy-tr-press); }

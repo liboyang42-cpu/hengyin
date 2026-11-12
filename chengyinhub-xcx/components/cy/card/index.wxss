@@ -25,4 +25,4 @@
 }
 
 /* Isolated cards must define the forwarded press class locally. */
-.cy-pressed { opacity: .88; }
+.cy-pressed { opacity: .92; transform: scale(.97); }

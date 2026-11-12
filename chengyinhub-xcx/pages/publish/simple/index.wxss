@@ -202,3 +202,10 @@
 
 /* P0-14 生成式 AI 算法备案号公示(后台未配置则不渲染) */
 .simple-ai__filing { margin-top: var(--cy-space-6); text-align: center; color: var(--cy-color-ai-ink); opacity: .55; font-size: var(--cy-type-micro); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.simple-ai__tag { transition: var(--cy-tr-press); }
+.simple-ai__draft-btn { transition: var(--cy-tr-press); }
+.simple-ai__poi { transition: var(--cy-tr-press); }
+.simple-ai__chip { transition: var(--cy-tr-press); }
+.simple-ai__node-num { font-variant-numeric: tabular-nums; }

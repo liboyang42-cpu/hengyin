@@ -92,3 +92,7 @@
 .ck__trust-i { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10rpx; font-size: var(--cy-font-caption, 24rpx); color: var(--cy-color-text-secondary); text-align: center; }
 .ck__pay.is-off { opacity: .4; }
 .ck__member { display: flex; align-items: center; gap: 20rpx; margin: 0 0 var(--cy-space-3); padding: 24rpx 28rpx; border-radius: var(--cy-radius-lg); background: var(--cy-color-status-success-soft); color: var(--cy-color-status-success); font-size: var(--cy-font-body); font-weight: 600; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ck__price { font-variant-numeric: tabular-nums; }
+.ck__card { box-shadow: var(--cy-depth-rest); }

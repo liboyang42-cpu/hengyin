@@ -2172,3 +2172,24 @@ button::after {
 .prep-cta { margin-top: var(--cy-space-4); }
 .prep-note { display: block; padding-top: var(--cy-space-3); font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-tertiary); }
 .topic-teams__ft--go { display: flex; align-items: center; gap: var(--cy-space-1); }
+.topic .statbar__value { font-variant-numeric: tabular-nums; } /* 细节打磨 G4 */
+
+/* 细节打磨二期 L1/L5/L7 */
+.cv-btn { transition: var(--cy-tr-press); }
+.hero-cta { transition: var(--cy-tr-press); }
+.hero-fav { transition: var(--cy-tr-press); }
+.topic-audio { transition: var(--cy-tr-press); }
+.sess { transition: var(--cy-tr-press); }
+.det6-empty { transition: var(--cy-tr-press); }
+.det6-rule { transition: var(--cy-tr-press); }
+.topic-story-paywall__orders { transition: var(--cy-tr-press); }
+.delete-btn { transition: var(--cy-tr-press); }
+.bsheet__x { transition: var(--cy-tr-press); }
+.bseg__b { transition: var(--cy-tr-press); }
+.bsheet__go { transition: var(--cy-tr-press); }
+.topic-story-paywall__price,
+.sess__price,
+.statbar__value { font-variant-numeric: tabular-nums; }
+.topic-story-paywall__card { box-shadow: var(--cy-depth-rest); }
+
+/* D3:无封面头图 = look 渐变 + 小路线标(同主题卡),不再铺满黑白线稿 */

@@ -74,3 +74,7 @@ cy-error {
 
 /* BL-77 统计卡与券卡同间距 */
 .coupon-summary { display: block; margin-bottom: var(--cy-space-2-5); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.david_tkb_li { transition: var(--cy-tr-press); }
+.coupon-batch-stats { font-variant-numeric: tabular-nums; }

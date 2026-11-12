@@ -92,3 +92,8 @@
 .pov-empty__t{display:block;margin-bottom:36rpx;font-size:var(--cy-type-section-title);font-weight:700}
 /* 减少动态效果:进场与分段淡入全部直接到位 */
 .play--reduced-motion .pov,.play--reduced-motion .cc-in,.play--reduced-motion .cc-fig,.play--reduced-motion .sc-rank{animation:none;opacity:1;transform:none}
+
+/* 细节打磨二期 L1/L5/L7 */
+.pov__x { transition: var(--cy-tr-press); }
+.sc-dispute { transition: var(--cy-tr-press); }
+.sc-rank__n { font-variant-numeric: tabular-nums; }

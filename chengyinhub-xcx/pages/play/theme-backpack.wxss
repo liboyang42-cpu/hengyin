@@ -110,3 +110,20 @@ image.tb-avatar{background:transparent}
 .tbp__scroll{position:absolute;left:0;right:0;bottom:0;top:calc(var(--tbp-top) + var(--cy-space-3));box-sizing:border-box}
 .tbp__body{min-height:0;padding:0 var(--cy-page-x) calc(var(--cy-space-6) + env(safe-area-inset-bottom))}
 @media (prefers-reduced-motion: reduce){.tbp{animation:none}}
+
+/* 细节打磨二期 L1/L5/L7 */
+.tbp__back { transition: var(--cy-tr-press); }
+.tb-pill { transition: var(--cy-tr-press); }
+.tb-button--flex { transition: var(--cy-tr-press); }
+.tb-button--muted { transition: var(--cy-tr-press); }
+.tb-button--small { transition: var(--cy-tr-press); }
+.tb-close { transition: var(--cy-tr-press); }
+.tb-round-action { transition: var(--cy-tr-press); }
+.tb-row { transition: var(--cy-tr-press); }
+.tb-button--primary { transition: var(--cy-tr-press); }
+.ch-danger { transition: var(--cy-tr-press); }
+.tb-total,
+.tb-total-unit,
+.tb-avatar--stat,
+.tb-value,
+.tb-number { font-variant-numeric: tabular-nums; }

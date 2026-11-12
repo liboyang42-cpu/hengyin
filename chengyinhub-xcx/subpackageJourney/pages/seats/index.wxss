@@ -35,3 +35,8 @@
 
 /* l-after:已邀请列表留在页面里(邀请走统一邀请页) */
 .lb-invited { margin: var(--cy-space-4) 38rpx 0; display: flex; flex-direction: column; gap: var(--cy-space-3); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.lb-me { transition: var(--cy-tr-press); }
+.lb-link { transition: var(--cy-tr-press); }
+.lb-party__inv { transition: var(--cy-tr-press); }

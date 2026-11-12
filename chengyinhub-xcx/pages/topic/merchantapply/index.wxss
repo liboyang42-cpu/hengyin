@@ -360,3 +360,10 @@ page { background: var(--cy-bg-page); }
   font-size: var(--cy-font-caption);
   color: var(--cy-text-secondary);
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ma-shop-addr { transition: var(--cy-tr-press); }
+.ma-upload { transition: var(--cy-tr-press); }
+.ma-pgrid-del { transition: var(--cy-tr-press); }
+.ma-pgrid-cell { transition: var(--cy-tr-press); }
+.ma-count { font-variant-numeric: tabular-nums; }

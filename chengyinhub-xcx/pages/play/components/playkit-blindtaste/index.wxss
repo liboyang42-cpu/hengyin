@@ -97,3 +97,6 @@
    只在闭眼 / 偷看时显出来;整屏档眼皮本就在屏外,观感不变。 */
 .bt__lid { opacity: 0; transition: transform .55s cubic-bezier(.6, 0, .3, 1), opacity .2s; }
 .bt--closed ~ .bt__lid--top, .bt--closed ~ .bt__lid--bot, .bt--peek ~ .bt__lid--top, .bt--peek ~ .bt__lid--bot { opacity: 1; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.bt__count { font-variant-numeric: tabular-nums; }

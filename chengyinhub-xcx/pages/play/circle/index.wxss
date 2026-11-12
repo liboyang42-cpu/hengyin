@@ -63,3 +63,6 @@ page { background:var(--cy-color-bg-page); color:var(--cy-color-text-primary); }
 
 /* 状态条入场是 8rpx 位移,减少动态效果时撤掉位移(淡入保留 —— 反馈不能归零)。 */
 .cy-motion-reduced .cy-status { animation: none !important; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.choice { transition: var(--cy-tr-press); }

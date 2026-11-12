@@ -19,3 +19,6 @@ page { background: var(--cy-color-bg-page); }
 .rd-sheet__quote { font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-secondary); padding: var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-surface-subtle); white-space: pre-wrap; word-break: break-all; }
 .rd-sheet__row { display: flex; gap: var(--cy-space-3); }
 .rd-sheet__row cy-btn { flex: 1; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.rd-link { transition: var(--cy-tr-press); }

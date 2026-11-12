@@ -10,3 +10,7 @@ page { background: var(--cy-color-bg-page); }
 .rp-row__sub { font-size: var(--cy-type-label); color: var(--cy-color-text-secondary); }
 .rp-row__arrow { flex: none; color: var(--cy-color-text-tertiary); }
 .rp__more { min-height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.rp-row { transition: var(--cy-tr-press); }
+.rp__more { transition: var(--cy-tr-press); }

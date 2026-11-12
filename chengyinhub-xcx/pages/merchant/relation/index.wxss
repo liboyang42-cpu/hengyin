@@ -36,3 +36,6 @@
 .post-composer-ph { font-size: var(--cy-type-card-title); color: var(--cy-color-text-secondary); }
 .post-composer-tools { display: flex; align-items: center; gap: var(--cy-space-5); padding-top: var(--cy-space-3); }
 .post-composer-ico { flex: none; color: var(--cy-color-text-primary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.post-composer-collapsed { transition: var(--cy-tr-press); }

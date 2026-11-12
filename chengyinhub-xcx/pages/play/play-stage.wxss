@@ -133,3 +133,9 @@
 .tb-item__illus { position: absolute; left: 0; right: 0; top: 14%; display: flex; justify-content: center; }
 .tb-clue__illus { float: right; margin: 0 0 8rpx 16rpx; }
 .tb-avatar--illus { background: transparent; box-shadow: none; display: flex; align-items: center; justify-content: center; }
+
+/* ===== 细节打磨 2026-11-12 · S1 地点卡:顶边高光 + 外观色柔光 + 读数等宽(版式、文案、配色不动) ===== */
+.sheet.sheet--game .sheet-body.lk-pop { isolation: isolate; }
+.sheet.sheet--game .sheet-body.lk-pop::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 220rpx; z-index: -1; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.22), rgba(255,255,255,0)) top / 100% 2rpx no-repeat, radial-gradient(ellipse 70% 100% at 50% 0%, rgba(var(--lk-a-rgb, 255,255,255), .24), rgba(var(--lk-a-rgb, 255,255,255), 0)); } /* ds-ok G1 顶边 1px 内高光 + 外观强调色 24% 顶边柔光;::before 留给星尘玻璃的原有高光 */
+.sheet-dist__n { font-variant-numeric: tabular-nums; }
+.sheet-row .lk-btn { transition: var(--cy-tr-press); }

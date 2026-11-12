@@ -290,3 +290,8 @@
 .ni-dot { width: 36rpx; height: 12rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); transform: scaleX(0.34); transition: transform 0.3s; }
 .ni-dot--on { transform: scaleX(1); background: var(--cy-text-title); }
 .ni-btn { margin-top: var(--cy-space-5); width: 100%; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); text-align: center; font-size: var(--cy-font-body); font-weight: 700; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ni-btn { transition: var(--cy-tr-press); }
+.npc-option { transition: var(--cy-tr-press); }
+.npc-voice-hold { transition: var(--cy-tr-press); }

@@ -20,3 +20,7 @@ page { background: var(--cy-bg-page); }
 .acl-status--neutral { color: var(--cy-text-secondary); }
 .acl-activity { margin-top: var(--cy-space-1); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .acl-more { display: block; padding: var(--cy-space-4) 0; text-align: center; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.acl-search-more { transition: var(--cy-tr-press); }
+.acl-row { transition: var(--cy-tr-press); }

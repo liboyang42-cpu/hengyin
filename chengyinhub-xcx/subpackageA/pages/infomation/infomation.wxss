@@ -118,3 +118,7 @@ page { background: var(--cy-bg-page); }
 
 /* 本页底色为 page 档:导航钩子跟随同色(2026-07-29 导航统一) */
 page { --cy-comp-nav-bg: var(--cy-bg-page); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.gl-tpl { transition: var(--cy-tr-press); }
+.gl-more { transition: var(--cy-tr-press); }

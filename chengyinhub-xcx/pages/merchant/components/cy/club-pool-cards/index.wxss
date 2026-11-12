@@ -17,3 +17,8 @@
 .cp-cta { padding: 16rpx var(--cy-space-4); border-radius: var(--cy-radius-pill); background: var(--mi-ink, #1C1C1E); color: var(--mi-on-ink, #FFFFFF); font-size: var(--cy-font-caption); font-weight: 600; } /* ds-ok: 与页面「看看」同色的兜底 */
 /* isolated 组件内全局 .cy-pressed 进不来,本地一份(只减淡不位移) */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cp-link { transition: var(--cy-tr-press); }
+.cp-retry { transition: var(--cy-tr-press); }
+.cp-card { transition: var(--cy-tr-press); }

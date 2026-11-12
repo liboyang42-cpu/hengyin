@@ -1,4 +1,5 @@
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js');
+const entryRhythm = require('../../../utils/entry-rhythm.js');
 
 // 统一空态:图 + 主文案 + 副文案 + 可选 CTA。点 CTA 触发 'cta' 事件。
 //
@@ -87,6 +88,12 @@ Component({
         // loading 用转圈占插画位:此刻还不知道最终是有数据还是空,放插画会先给一个错误结论
         _loading: knownKind && kind === 'loading',
       });
+    },
+  },
+  lifetimes: {
+    ready() {
+      const d = this.data, c = '.cy-empty-';
+      entryRhythm.play(this, [d._loading ? c + 'spinner' : d._glyph ? c + 'glyph' : d._art ? c + 'art' : d._icon && c + 'ic', c + 'title', d._sub && c + 'sub', this.properties.cta && c + 'cta']);
     },
   },
   methods: {

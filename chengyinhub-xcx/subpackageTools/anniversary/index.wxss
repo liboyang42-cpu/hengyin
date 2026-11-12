@@ -8,3 +8,6 @@
 .an-t { font-size: var(--cy-type-button); font-weight: 700; }
 .an-m { font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
 .an-go { margin-top: 15rpx; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.an-go { transition: var(--cy-tr-press); }

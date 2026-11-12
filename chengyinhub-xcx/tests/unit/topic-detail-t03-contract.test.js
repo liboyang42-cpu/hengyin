@@ -99,7 +99,8 @@ test('T03 数据条按稿,评分不回退图片星标也不被取整', () => {
   const wxss = read('pages/topic/index/index.wxss')
   const bar = section(wxml, '<scroll-view scroll-x class="statbar"', '<view class="det4" id="tab-section"')
 
-  assert.match(bar, /class="statbar__value"[^>]*>\{\{item\.value\}\}/)
+  // 2026-11-12 细节打磨 G4:读数第一次到达时滚上来,值仍是 item.value,只经 cnt.stat 缩放(进度为空时原样)
+  assert.match(bar, /class="statbar__value"[^>]*>\{\{cnt\.stat\(item\.value, statK\)\}\}/)
   assert.match(bar, /class="statbar__stars"[^>]*wx:if="\{\{item\.starList\.length\}\}"/)
   assert.match(bar, /<cy-icon\b[^>]*name="star-filled"/, '星标必须是矢量图标')
   assert.doesNotMatch(bar, /<image\b/, '评分不能回退为固定图片星标')

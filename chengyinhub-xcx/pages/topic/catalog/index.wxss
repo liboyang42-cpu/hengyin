@@ -29,3 +29,10 @@ page { display: flex; flex-direction: column; min-height: 100vh; }
 .topic-result-card__body { padding: var(--cy-space-3) var(--cy-space-4) var(--cy-space-4); }
 .topic-result-card__title { color: var(--cy-color-text-primary); font-size: var(--cy-type-section-title); line-height: var(--cy-leading-tight); font-weight: 750; }
 .topic-result-card__detail { margin-top: var(--cy-space-1); color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.catalog-chip { transition: var(--cy-tr-press); }
+.catalog-city-opt { transition: var(--cy-tr-press); }
+.topic-result-card { transition: var(--cy-tr-press); }
+.catalog-more { transition: var(--cy-tr-press); }
+.catalog-more--act { transition: var(--cy-tr-press); }

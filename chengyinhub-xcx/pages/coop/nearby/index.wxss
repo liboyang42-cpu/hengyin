@@ -35,3 +35,6 @@
 
 .merchant-result { margin-bottom: var(--cy-space-3); }
 .contact-action { display: flex; justify-content: flex-end; margin-top: var(--cy-space-2); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.inline-retry { transition: var(--cy-tr-press); }

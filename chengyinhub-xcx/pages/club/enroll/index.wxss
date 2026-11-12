@@ -79,3 +79,10 @@ cy-empty { display: flex !important; flex: 1 !important; min-height: 0; }
 .money-tag { margin-left: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); }
 .money-nums { display: flex; flex-wrap: wrap; gap: 8rpx 24rpx; margin-top: 8rpx; font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
 .money-net { color: var(--cy-color-text-primary); font-weight: 600; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.reg-l { transition: var(--cy-tr-press); }
+.reg-checkin { transition: var(--cy-tr-press); }
+.ticket-num,
+.money-label,
+.money-tag { font-variant-numeric: tabular-nums; }

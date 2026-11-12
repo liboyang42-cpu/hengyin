@@ -51,3 +51,8 @@
   color: var(--cy-color-text-tertiary);
   font-size: var(--cy-font-caption);
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cdrecap__metric-value,
+.cdrecap__metric-unit,
+.cdrecap__metric-label { font-variant-numeric: tabular-nums; }

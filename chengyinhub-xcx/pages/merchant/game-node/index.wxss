@@ -228,3 +228,9 @@ page {
 }
 
 .form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.gn-check-row { transition: var(--cy-tr-press); }
+.gn-choice { transition: var(--cy-tr-press); }
+.gn-segment-item { transition: var(--cy-tr-press); }
+.gn-fact-value { font-variant-numeric: tabular-nums; }

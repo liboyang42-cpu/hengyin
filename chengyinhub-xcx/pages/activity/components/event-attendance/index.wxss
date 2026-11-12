@@ -7,3 +7,6 @@
 .ev-code__bib { font-size:var(--cy-type-body); font-weight:700; color:var(--cy-color-text-primary); }
 .ev-code__link { min-height:72rpx; display:flex; align-items:center; color:var(--cy-color-text-secondary); font-size:var(--cy-type-label); text-decoration:underline; }
 .cy-pressed { opacity:.88; } /* r2-shared:与全局 .cy-pressed 同值(isolated 组件只减淡) */
+
+/* 细节打磨二期 L1/L5/L7 */
+.ev-code__link { transition: var(--cy-tr-press); }

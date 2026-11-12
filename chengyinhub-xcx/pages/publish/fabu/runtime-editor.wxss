@@ -37,3 +37,9 @@
 .rt-bag-glyph:after{content:"";position:absolute;left:4rpx;right:4rpx;bottom:4rpx;height:9rpx;border:2rpx solid currentColor;border-radius:3rpx} /* ds-ok: 图标轮廓的小圆角 */
 
 .rt-disabled{opacity:.4}
+
+/* 细节打磨二期 L1/L5/L7 */
+.rt-delete { transition: var(--cy-tr-press); }
+.rt-image { transition: var(--cy-tr-press); }
+.rt-add { transition: var(--cy-tr-press); }
+.rt-bingo-cell { transition: var(--cy-tr-press); }

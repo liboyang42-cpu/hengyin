@@ -36,3 +36,7 @@
 
 /* 组件样式隔离,全局 .cy-pressed 进不来,本地补一份(同 cy-card) */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ch__c--add { transition: var(--cy-tr-press); }
+.ch__go { transition: var(--cy-tr-press); }

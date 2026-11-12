@@ -30,3 +30,6 @@ button.submit.submit-disabled[disabled] {
   border: 1rpx solid var(--cy-color-border-strong); opacity: 1;
 }
 button.submit.submit-disabled[disabled]::after { border: none; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.submit { transition: var(--cy-tr-press); }

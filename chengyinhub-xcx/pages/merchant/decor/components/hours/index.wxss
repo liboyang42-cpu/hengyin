@@ -84,3 +84,8 @@
 .cy-pressed {
   opacity: 0.72;
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.hours-day { transition: var(--cy-tr-press); }
+.hours-value { transition: var(--cy-tr-press); }
+.hours-option { transition: var(--cy-tr-press); }

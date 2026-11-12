@@ -49,3 +49,13 @@ page { background: var(--cy-color-bg-page); }
 
 .mt-card__pending { color: var(--cy-brand); font-weight: 700; }
 .mt-card__err { display: block; margin-top: 12rpx; color: var(--cy-danger); font-size: var(--cy-type-label); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.mt-map { transition: var(--cy-tr-press); }
+.mt-seg__i { transition: var(--cy-tr-press); }
+.mt-err { transition: var(--cy-tr-press); }
+.mt-card { transition: var(--cy-tr-press); }
+.mt-act { transition: var(--cy-tr-press); }
+.mt-btn { transition: var(--cy-tr-press); }
+.mt-stat__v,
+.mt-stat__k { font-variant-numeric: tabular-nums; }

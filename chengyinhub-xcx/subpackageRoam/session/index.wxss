@@ -29,3 +29,7 @@ page { background: var(--cy-color-bg-page); }
 .ss-share-action__label { color: inherit; line-height: var(--cy-leading-tight); }
 .ss-share-back { min-height: var(--cy-btn-h); margin-top: var(--cy-space-2); color: var(--cy-color-text-tertiary); font-size: var(--cy-type-body); line-height: var(--cy-btn-h); text-align: center; }
 .ss-share-canvas { position: fixed; left: -3000px; top: -3000px; width: 750px; height: 1000px; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ss-share-link__retry { transition: var(--cy-tr-press); }
+.ss-share-back { transition: var(--cy-tr-press); }

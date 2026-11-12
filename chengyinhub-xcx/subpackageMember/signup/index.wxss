@@ -248,5 +248,19 @@
 .signup--reduced .wl-pop { transition: none; }
 /* x-fix2 P-18:无封面票卡的插画位:居中,不叠封面压暗 */
 .wc__im--illus { display: flex; align-items: center; justify-content: center; }
-.wc__im .cy-cover-fb__art { width: 120rpx; height: 90rpx; } /* D15:无图位用统一的 look 渐变兜底(cy-cover-fb),不再是大插画 */
 .wc__im--illus::after { display: none; }
+
+/* ===== 细节打磨 2026-11-12 · S6 票卡:票根线两侧的缺口 + 顶边内高光(版式、文案、配色不动) ===== */
+.wc__front::before, .wc__front::after { content: ""; position: absolute; top: 250rpx; width: 28rpx; height: 28rpx; border-radius: 50%; background: rgba(0,0,0,.5); box-shadow: inset 0 2rpx 4rpx rgba(0,0,0,.45); pointer-events: none; z-index: 3; } /* ds-ok 票根缺口 */
+.wc__front::before { left: -14rpx; }
+.wc__front::after { right: -14rpx; }
+.wc__front { box-shadow: inset 0 1rpx 0 rgba(255,255,255,.14), inset 0 0 0 1rpx rgba(255,255,255,.1), 0 46rpx 96rpx rgba(0,0,0,.55); } /* ds-ok G1 顶边内高光,其余沿用原投影 */
+.wl-start { transition: var(--cy-tr-press); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.wl-nav__flt { transition: var(--cy-tr-press); }
+.wl-nav__add { transition: var(--cy-tr-press); }
+.wl-nav__me { transition: var(--cy-tr-press); }
+.wl-pop__i { transition: var(--cy-tr-press); }
+.wc__qr-tip { transition: var(--cy-tr-press); }
+.team-entry { transition: var(--cy-tr-press); }

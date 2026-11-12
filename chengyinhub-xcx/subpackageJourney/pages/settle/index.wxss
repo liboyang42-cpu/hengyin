@@ -100,3 +100,7 @@
   .st-rise, .st-glow { opacity: 1; transform: none; }
   .st-panel { transform: none; }
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.st-link { transition: var(--cy-tr-press); }
+.st-rank { font-variant-numeric: tabular-nums; }

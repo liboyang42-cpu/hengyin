@@ -111,3 +111,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ir-earn, .ir-earn-amt, .ir-earn-ok, .ir-earn-beam { transition: none; }
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ir-hero-value--pending,
+.ir-earn-sub { font-variant-numeric: tabular-nums; }

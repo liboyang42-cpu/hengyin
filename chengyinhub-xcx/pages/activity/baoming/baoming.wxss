@@ -463,3 +463,15 @@ cy-error, cy-empty.page-terminal { flex: 1; display: flex !important; flex-direc
 /* §27.6 主持预约:沿用明细行;撤销是唯一的危险行,红字 */
 .host-danger { color: var(--cy-color-status-danger); }
 .host-request { display: block; margin: var(--cy-space-3) var(--cy-page-x, var(--cy-space-4)) 0; }
+
+/* 细节打磨 G4:结算里所有金额等宽数字,总计里只有金额是主色、说明保持次级灰 */
+.setly_li_right text, .setly_li--total .setly_li_right text { font-variant-numeric: tabular-nums; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.bm-signed { transition: var(--cy-tr-press); }
+.set { transition: var(--cy-tr-press); }
+.address-info { transition: var(--cy-tr-press); }
+.radio { transition: var(--cy-tr-press); }
+.flex-cc { transition: var(--cy-tr-press); }
+.address-item { transition: var(--cy-tr-press); }
+.bmbottom_box { transition: var(--cy-tr-press); }

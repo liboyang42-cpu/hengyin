@@ -73,3 +73,6 @@
 
 /* 2026-11-02:有号码权限时的拨号键(≥88rpx 触控) */
 .ckd-call { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-primary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ckd-call { transition: var(--cy-tr-press); }

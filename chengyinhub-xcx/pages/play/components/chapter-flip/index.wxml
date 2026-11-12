@@ -1,4 +1,9 @@
 <view class="cf cf--{{mode}} {{out ? 'is-out' : ''}} {{reducedMotion ? 'cf--reduced' : ''}}" catchtouchmove="noop" bindtap="onTap" hover-class="cf-tap" hover-stay-time="80" aria-role="{{mode === 'gate' ? 'button' : 'dialog'}}" aria-label="{{mode === 'gate' ? (endCard ? endCard.kicker : info.title) + '，轻点继续' : info.title}}">
+  <view class="cf__amb" wx:if="{{ambient.on}}" aria-hidden="true">
+    <view class="cf__rays" wx:if="{{ambient.rays}}" style="{{ambient.haloStyle}}"></view>
+    <view class="cf__halo" style="{{ambient.haloStyle}}"></view>
+    <view wx:for="{{ambient.sparks}}" wx:key="i" class="cf__spl cf__spl-{{item.i}}" style="left:{{item.left}}%;top:{{item.top}}px;"></view>
+  </view>
   <canvas type="2d" id="cf" class="cf__fx" aria-hidden="true"></canvas>
   <!-- l-play 章节完成整屏(proto/game gp-chapter-end):本章照片渐入底色 → 星点锁成方块章节号(画布)→ 成功插图 → 第 N 章完成 · 章名 → 三格数据滚上来 → 下一站;
        点「下一站」照片与文字化成细粉尘吹散(画布),下一章开场浮现。没有卡片。 -->

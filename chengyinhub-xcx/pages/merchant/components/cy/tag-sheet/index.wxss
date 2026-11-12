@@ -123,3 +123,6 @@
 
 /* isolated 下全局 .cy-pressed 进不来,本地一份;只减淡不位移(同 cy-sheet 的做法) */
 .ts--pressed { opacity: .72; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ts__count { font-variant-numeric: tabular-nums; }

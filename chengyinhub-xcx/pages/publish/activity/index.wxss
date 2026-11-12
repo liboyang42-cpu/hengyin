@@ -481,3 +481,8 @@
   color: var(--cy-text-secondary);
   margin-bottom: var(--cy-space-2);
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.david_ty_rl_hcz_li_right { transition: var(--cy-tr-press); }
+.time-range-point { transition: var(--cy-tr-press); }
+.time-range-point__value { font-variant-numeric: tabular-nums; }

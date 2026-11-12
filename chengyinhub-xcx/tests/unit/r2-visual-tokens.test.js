@@ -48,7 +48,8 @@ test('玩家弹层面:比页面明显抬起(#2C2C2E 实底 + 顶边高光 + 向�
   // cy-sheet(读 role 档)与 scene-sheet / 原型 .psheet / 漫游入口弹层都挂上抬升
   assert.match(read('components/cy/sheet/index.wxss'), /box-shadow: var\(--cy-comp-sheet-role-lift\)/)
   assert.match(tokens, /--cy-comp-sheet-role-lift: var\(--cy-comp-sheet-player-lift\)/)
-  assert.match(tokens, /--cy-comp-sheet-role-lift: none;/, '商家白弹层不加投影')
+  // 2026-11-12 细节打磨 G1(业主):商家白弹层也分层 —— 顶边高光 + 向上两层柔投影(浅色档),不再是 none
+  assert.match(tokens, /--cy-comp-sheet-role-lift: inset 0 1px 0 rgba\(255,255,255,\.9\), 0 -1px 2px rgba\(0,0,0,\.06\), 0 -12px 32px rgba\(0,0,0,\.12\);/, '商家白弹层用浅色档两层投影')
   assert.match(read('components/cy/scene-sheet/index.wxss'), /box-shadow: var\(--cy-sheet-inset-shadow\)/)
   assert.match(read('style/proto-sheet.wxss'), /box-shadow:var\(--cy-comp-sheet-player-lift\)/)
   assert.match(read('pages/roam/index.wxss'), /\.entry-sheet\{[^}]*box-shadow:var\(--cy-comp-sheet-player-lift\)/)

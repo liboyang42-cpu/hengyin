@@ -28,3 +28,6 @@
 
 /* isolated 组件内全局 .cy-pressed 进不来,按仓库既有组件做法本地定义一份 */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cdis__primary { transition: var(--cy-tr-press); }

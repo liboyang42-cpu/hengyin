@@ -32,3 +32,7 @@
 .wallet-card__shop { margin-top: var(--cy-space-2); display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); }
 .wallet-card__addr { flex: 1; min-width: 0; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); line-height: var(--cy-leading-normal); }
 .wallet-card__nav { flex: none; min-height: var(--cy-btn-h-sm); display: inline-flex; align-items: center; gap: var(--cy-space-1); padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); font-size: var(--cy-type-caption); font-weight: 600; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.wallet-card__addr { transition: var(--cy-tr-press); }
+.wallet-card__nav { transition: var(--cy-tr-press); }

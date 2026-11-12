@@ -42,3 +42,7 @@
 }
 .cy-motion-reduced .pg-actions { animation: none !important; }
 .pg-actions .pg-note { margin-bottom: var(--cy-space-2); } /* 说明不贴底部按钮 */
+
+/* 细节打磨二期 L1/L5/L7 */
+.pg-lineup-row { transition: var(--cy-tr-press); }
+.pg-money { font-variant-numeric: tabular-nums; }

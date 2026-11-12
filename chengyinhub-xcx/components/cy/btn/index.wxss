@@ -30,7 +30,7 @@
      按下去那一程由 .btn--press 自己的 80ms 负责,不受影响。
      ⚠️ 全局 .cy-pressed 拿不到这个:它的宿主是任意元素、基态没有 transform 过渡,
         松手一律瞬时跳回。要让那些也回弹得逐个给宿主加基态过渡,不值,见施工单 §3.1②。 */
-  transition: transform var(--cy-motion-press) var(--cy-ease-spring), box-shadow var(--cy-motion-standard) var(--cy-ease), opacity var(--cy-motion-standard) var(--cy-ease);
+  transition: var(--cy-tr-press), box-shadow var(--cy-motion-standard) var(--cy-ease);
 }
 .btn--sm {
   height: auto;
@@ -88,7 +88,7 @@
 }
 
 /* 盖章式点击下沉(主题无关) */
-.btn--press { transform: translateY(2rpx) scale(0.985); opacity: 0.92; }
+.btn--press { transform: scale(0.97); opacity: 0.92; transition-duration: var(--cy-motion-press); }
 .btn--primary.btn--press { background: var(--cy-color-text-secondary); }
 
 /* loading:提交转圈,替代原生 <button loading>;spinner 用 currentColor 适配各 variant */

@@ -178,3 +178,10 @@
 .cy-pressed { opacity: .88; }
 
 .src-form__required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.src-favorite-card__cover { transition: var(--cy-tr-press); }
+.src-favorite-card__placeholder { transition: var(--cy-tr-press); }
+.src-list__item { transition: var(--cy-tr-press); }
+.src-metric__value,
+.src-list__amount { font-variant-numeric: tabular-nums; }

@@ -133,3 +133,10 @@
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ai__trigger { transition: var(--cy-tr-press); }
+.ai__collapse { transition: var(--cy-tr-press); }
+.ai__chip { transition: var(--cy-tr-press); }
+.ai__ghost { transition: var(--cy-tr-press); }
+.ai__gen { transition: var(--cy-tr-press); }

@@ -310,3 +310,15 @@ page { background: var(--cy-bg-page); }
 .cd-history-action--danger { color: var(--cy-danger); }
 
 .cd-save { margin-top: 40rpx; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cd-edit { transition: var(--cy-tr-press); }
+.cd-chip-x { transition: var(--cy-tr-press); }
+.cd-field-action { transition: var(--cy-tr-press); }
+.cd-editor-cancel { transition: var(--cy-tr-press); }
+.cd-history-action { transition: var(--cy-tr-press); }
+.cd-paid-value,
+.cd-paid-value--denied,
+.cd-metric-num,
+.cd-metric-label,
+.cd-textarea-count { font-variant-numeric: tabular-nums; }

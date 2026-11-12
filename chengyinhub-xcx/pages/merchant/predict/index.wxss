@@ -116,3 +116,10 @@ page { background: var(--cy-bg-page); }
 }
 .pdm-btn--primary { background: var(--cy-text-title); color: var(--cy-bg-card); }
 .pdm-btn--primary.is-disabled { opacity: .4; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.pdm-opt { transition: var(--cy-tr-press); }
+.pdm-btn { transition: var(--cy-tr-press); }
+.pdm-btn--ghost { transition: var(--cy-tr-press); }
+.pdm-btn--primary { transition: var(--cy-tr-press); }
+.pdm-foot { transition: var(--cy-tr-press); }

@@ -1,0 +1,13 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+index e6ffacde..7170b3f3 100644
+--- a/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
++++ b/docs/delivery/cloud-walk-20261101/rig/mpweb/src/runtime.js
+@@ -690,7 +690,7 @@ Instance.prototype.groupSetData = function (fn) { fn && fn.call(this); };
+ Instance.prototype.getPageId = function () { return 'page-1'; };
+ Instance.prototype.selectOwnerComponent = function () { return this.__ownerInst || null; };
+ Instance.prototype.setUpdatePerformanceListener = function () {};
+-Instance.prototype.animate = function (sel, frames, dur, cb) { var el = this.__root.querySelector(sel); if (el && el.animate) { var a = el.animate(frames.map(function (f) { var o = Object.assign({}, f); delete o.offset; delete o.ease; return o; }), { duration: dur, fill: 'forwards' }); a.onfinish = function () { cb && cb(); }; } else cb && cb(); };
++Instance.prototype.animate = function (sel, frames, dur, cb) { var el = this.__root.querySelector(sel); if (el && el.animate) { var mapped = frames.map(function (f) { var o = {}; var t = []; if (f.opacity !== undefined) o.opacity = f.opacity; if (f.translateX !== undefined || f.translateY !== undefined) t.push('translate(' + (f.translateX || 0) + 'px,' + (f.translateY || 0) + 'px)'); if (f.scale) t.push('scale(' + f.scale[0] + ',' + f.scale[1] + ')'); if (f.rotate !== undefined) t.push('rotate(' + f.rotate + 'deg)'); if (f.skew) t.push('skew(' + f.skew[0] + 'deg,' + f.skew[1] + 'deg)'); if (f.transform) t.push(f.transform); if (t.length) o.transform = t.join(' '); if (f.offset !== undefined) o.offset = f.offset; if (f.ease) o.easing = f.ease.indexOf('cubic') === 0 || /^(linear|ease)/.test(f.ease) ? f.ease : 'ease'; return o; }); var a = el.animate(mapped, { duration: dur, fill: 'forwards' }); a.onfinish = function () { cb && cb(); }; } else cb && cb(); };
+ Instance.prototype.clearAnimation = function (sel, opt, cb) { cb && cb(); };
+ Instance.prototype.__setProps = function (props, initial) {
+   var spec = this.__m.properties; var changed = [];

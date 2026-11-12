@@ -196,3 +196,6 @@
 .coupon-type-option--on { background: var(--cy-bg-card-2); font-weight: 600; }
 
 
+
+/* 细节打磨二期 L1/L5/L7 */
+.coupon-type-option { transition: var(--cy-tr-press); }

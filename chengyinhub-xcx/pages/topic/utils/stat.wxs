@@ -1,0 +1,8 @@
+var count = require('../../../utils/wxs/count.wxs');
+function stat(v, k) {
+  var s = '' + v;
+  if (k === null || k === undefined || k === '') return v;
+  if (s.indexOf(':') >= 0 || s.indexOf('-') >= 0 || s.indexOf('–') >= 0) return v;
+  return count.money(v, k);
+}
+module.exports = { stat: stat };

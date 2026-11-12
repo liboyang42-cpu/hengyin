@@ -19,3 +19,6 @@
   font-size: var(--cy-font-label);
   color: var(--cy-color-text-secondary);
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.pr-exit { transition: var(--cy-tr-press); }

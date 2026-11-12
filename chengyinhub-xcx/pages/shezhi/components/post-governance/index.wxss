@@ -21,3 +21,9 @@
 .pg-notice { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); }
 /* isolated 组件内全局 .cy-pressed 进不来,本地定义一份(同 privacy-sheet)。 */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.pg-action { transition: var(--cy-tr-press); }
+.pg-action--plain { transition: var(--cy-tr-press); }
+.pg-more { transition: var(--cy-tr-press); }
+.pg-count { font-variant-numeric: tabular-nums; }

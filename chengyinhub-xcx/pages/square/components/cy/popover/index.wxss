@@ -58,3 +58,6 @@
 /* isolated 组件内全局 .cy-pressed 进不来,本地补一份(灰底与灰字，松手恢复)。 */
 .pop__item.cy-pressed { background: var(--cy-color-bg-raised); color: var(--cy-color-text-secondary); }
 .pop__item.cy-pressed .pop__label { color: var(--cy-color-text-secondary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.pop__item { transition: var(--cy-tr-press); }

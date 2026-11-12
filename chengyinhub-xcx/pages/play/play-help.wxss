@@ -25,3 +25,6 @@
 .phl-pop__card{position:relative;width:calc(100% - 2 * var(--cy-page-x));max-height:80vh;box-sizing:border-box;padding:0 var(--cy-space-4);border-radius:var(--cy-radius-xl);background:var(--cy-comp-sheet-player-glass);box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong)}
 .phl-pop .tb-sheet{min-height:0;padding-bottom:var(--cy-space-4)}
 @media (prefers-reduced-motion: reduce){.phl-pop{animation:none}}
+
+/* 细节打磨二期 L1/L5/L7 */
+.phl__row { transition: var(--cy-tr-press); }

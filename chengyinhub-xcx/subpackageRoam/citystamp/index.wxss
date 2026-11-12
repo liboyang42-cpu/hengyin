@@ -155,3 +155,9 @@
   animation-duration:1ms !important;
   animation-iteration-count:1 !important;
   transition-duration:1ms !important; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.sg__navbtn { transition: var(--cy-tr-press); }
+.sgnote__shot { transition: var(--cy-tr-press); }
+.sgbtn { transition: var(--cy-tr-press); }
+.sglnk { transition: var(--cy-tr-press); }

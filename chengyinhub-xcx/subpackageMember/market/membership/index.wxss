@@ -32,3 +32,8 @@
 .pp__foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--cy-z-sticky); padding: 28rpx 40rpx calc(28rpx + env(safe-area-inset-bottom)); background: linear-gradient(180deg, transparent, var(--cy-color-bg-page) 55%); }
 .pp__pill { height: 104rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 600; }
 .pp__pill.is-off { opacity: .45; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.pp__row { transition: var(--cy-tr-press); }
+.pp__renew { transition: var(--cy-tr-press); }
+.pp__pill { transition: var(--cy-tr-press); }

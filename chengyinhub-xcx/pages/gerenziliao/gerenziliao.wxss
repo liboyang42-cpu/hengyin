@@ -230,3 +230,13 @@ button.rv-ava--btn::after { border: 0; }
 .rv-chip { padding: 4rpx var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-bg-subtle); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
 .rv-count { display: block; text-align: right; margin-top: var(--cy-space-1-5); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
 @media (prefers-reduced-motion: reduce) { .rv-ring { transition: none; } }
+
+/* 细节打磨二期 L1/L5/L7 */
+.rv-ava { transition: var(--cy-tr-press); }
+.rv-ava-edit { transition: var(--cy-tr-press); }
+.rv-bg-hit { transition: var(--cy-tr-press); }
+.rv-row { transition: var(--cy-tr-press); }
+.rv-row--stack { transition: var(--cy-tr-press); }
+.profile-name-link { transition: var(--cy-tr-press); }
+.profile-name-chip { transition: var(--cy-tr-press); }
+.rv-count { font-variant-numeric: tabular-nums; }

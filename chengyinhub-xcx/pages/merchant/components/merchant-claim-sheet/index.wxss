@@ -24,3 +24,10 @@
 /* isolated 组件内全局 .cy-pressed 进不来,本地定义一份 */
 .cy-pressed { opacity: .88; }
 .mcs__proof-dot { display: flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--cy-color-overlay); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.mcs__cand { transition: var(--cy-tr-press); }
+.mcs__link { transition: var(--cy-tr-press); }
+.mcs__proof-x { transition: var(--cy-tr-press); }
+.mcs__proof { transition: var(--cy-tr-press); }
+.mcs__proof--add { transition: var(--cy-tr-press); }

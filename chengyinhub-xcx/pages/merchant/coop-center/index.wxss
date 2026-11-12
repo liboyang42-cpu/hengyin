@@ -275,3 +275,9 @@
 .cc-bottom {
   height: var(--cy-space-5);
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cc-bell { transition: var(--cy-tr-press); }
+.cc-route { transition: var(--cy-tr-press); }
+.cc-card { transition: var(--cy-tr-press); }
+.cc-card--tap { transition: var(--cy-tr-press); }

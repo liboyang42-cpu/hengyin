@@ -1,3 +1,4 @@
+const entryRhythm = require('../../../utils/entry-rhythm.js');
 // 统一错误态:图标 + 原因 + 重试按钮。点重试触发 'retry' 事件。
 // 区分网络/接口失败由使用方传 title/sub 决定;retry 为空则不显示按钮。
 function retryLabel(title, retry) {
@@ -37,6 +38,10 @@ Component({
     attached() {
       this._attached = true;
       this._openAutoBack();
+    },
+    ready() {
+      const d = this.properties, c = '.cy-error-';
+      if (!d.loadFailure && !d.autoBack) entryRhythm.play(this, [d.icon === 'empty-state' ? c + 'art' : d.icon && c + 'ic', c + 'title', d.sub && c + 'sub', d.retry && c + 'retry', d.secondary && c + 'secondary']);
     },
   },
   observers: {

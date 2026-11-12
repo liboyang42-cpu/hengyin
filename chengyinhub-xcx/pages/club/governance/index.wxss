@@ -37,3 +37,8 @@ cy-page-title + .section { margin-top: 0; } /* 打磨第 3 轮 §4-3:20px 是区
 .picker-name { flex: 1; min-width: 0; font-size: var(--cy-font-body); }
 .picker-mark { flex: none; color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
 
+
+/* 细节打磨二期 L1/L5/L7 */
+.row { transition: var(--cy-tr-press); }
+.picker-row { transition: var(--cy-tr-press); }
+.row-value { font-variant-numeric: tabular-nums; }

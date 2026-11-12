@@ -41,3 +41,8 @@ button.privacy-agree::after { border: 0; }
 .privacy-row__more { color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
 .privacy-row__acts { display: flex; gap: var(--cy-space-2); flex-shrink: 0; }
 .privacy-media { display: flex; flex-direction: column; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.privacy-doc { transition: var(--cy-tr-press); }
+.privacy-link { transition: var(--cy-tr-press); }
+.privacy-row { transition: var(--cy-tr-press); }

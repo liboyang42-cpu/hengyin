@@ -276,3 +276,11 @@ page { background: var(--cy-bg-page); }
 .card--notice .card-tt { flex: 1; min-width: 0; padding-top: var(--cy-space-1); }
 .card--notice .card-title { font-size: var(--cy-type-card-title); font-weight: 600; }
 .card-time { flex: none; margin-left: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.hd-info-hit { transition: var(--cy-tr-press); }
+.load-more { transition: var(--cy-tr-press); }
+.card-btn { transition: var(--cy-tr-press); }
+.fail-hit { transition: var(--cy-tr-press); }
+.plus { transition: var(--cy-tr-press); }
+.send-hit { transition: var(--cy-tr-press); }

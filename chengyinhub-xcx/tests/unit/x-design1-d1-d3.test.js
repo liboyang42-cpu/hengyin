@@ -40,7 +40,7 @@ test('D3:全仓任何页面都不再把「封面暂不可用」写给用户(作�
 test('D3:兜底是 look 渐变 + 小路线插画,宿主可注入 --cover-a/--cover-b', () => {
   const css = read('style/components.wxss')
   assert.match(css, /\.cy-cover-fb \{[^}]*linear-gradient\(160deg, var\(--cover-a, .*var\(--cover-b,/)
-  assert.match(css, /\.cy-cover-fb__art \{[^}]*width: 120rpx/)
+  assert.match(css, /\.cy-cover-fb__art \{[^}]*width: 200rpx; height: 150rpx; max-width: 44%; max-height: 44%/)
   assert.ok(fs.existsSync(path.join(ROOT, 'images/cover-route.svg')))
   for (const f of ['pages/topic/merchantinfo/merchantinfo.wxml', 'pages/activity/list/index.wxml', 'subpackageB/pages/im/chat/index.wxml', 'pages/templatedetail/topic-preview/index.wxml']) {
     assert.match(read(f), /cy-cover-fb/, f)

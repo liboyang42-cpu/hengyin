@@ -730,3 +730,25 @@ page {
   background: var(--cy-color-action-primary-bg);
   color: var(--cy-color-action-primary-fg);
 }
+
+/* ===== 细节打磨 2026-11-12 · S10 商家工作台(浅色):卡片顶边高光 + 两层柔投影、行分隔线从图标后起、读数等宽;版式、文案、配色不动 ===== */
+.rv-msg-card { box-shadow: var(--cy-depth-float); }
+.rv-msg-item { position: relative; }
+.rv-msg-item + .rv-msg-item { border-top: 0; }
+.rv-msg-item + .rv-msg-item::before { content: ""; position: absolute; top: 0; right: 0; left: calc(32rpx + 72rpx + var(--cy-space-1-5)); height: 1rpx; background: var(--cy-color-border-subtle); pointer-events: none; }
+.rv-more-item { position: relative; }
+.rv-more-item + .rv-more-item { border-top: 0; }
+.rv-more-item + .rv-more-item::before { content: ""; position: absolute; top: 0; right: 0; left: calc(var(--cy-space-3) + 40rpx + var(--cy-space-3)); height: 1rpx; background: var(--cy-color-border-subtle); pointer-events: none; }
+.rv-msg-time, .rv-hero-meta, .rv-msg-sub { font-variant-numeric: tabular-nums; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.rv-biz { transition: var(--cy-tr-press); }
+.rv-hero-avatar-hit { transition: var(--cy-tr-press); }
+.rv-action { transition: var(--cy-tr-press); }
+.rv-section-more { transition: var(--cy-tr-press); }
+.rv-msg-done { transition: var(--cy-tr-press); }
+.rv-msg-x { transition: var(--cy-tr-press); }
+.rv-msg-clear { transition: var(--cy-tr-press); }
+.rv-more-item { transition: var(--cy-tr-press); }
+.chpick__item { transition: var(--cy-tr-press); }
+.rv-revenue-amount { font-variant-numeric: tabular-nums; }

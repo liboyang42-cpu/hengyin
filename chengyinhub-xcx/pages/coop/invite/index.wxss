@@ -105,3 +105,13 @@ cy-page-title + .card { margin-top: 0; }
 .iv-send.disabled { opacity: .5; }
 
 .form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.inline-retry { transition: var(--cy-tr-press); }
+.terms-option { transition: var(--cy-tr-press); }
+.target { transition: var(--cy-tr-press); }
+.nearby-row { transition: var(--cy-tr-press); }
+.iv-edit-exit { transition: var(--cy-tr-press); }
+.fee-yen,
+.fee-input,
+.iv-terms-value { font-variant-numeric: tabular-nums; }

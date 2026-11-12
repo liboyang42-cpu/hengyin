@@ -538,3 +538,13 @@
 .settle-stage--pending { color: var(--cy-color-status-warning); }
 .settle-stage--done { color: var(--cy-color-text-primary); }
 .settle-stage--muted { color: var(--cy-color-text-secondary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.orow { transition: var(--cy-tr-press); }
+.link-row { transition: var(--cy-tr-press); }
+.consent-err-act { transition: var(--cy-tr-press); }
+.revisit-btn { transition: var(--cy-tr-press); }
+.revisit-next { transition: var(--cy-tr-press); }
+.sec-pair-btn { transition: var(--cy-tr-press); }
+.primary-cta { transition: var(--cy-tr-press); }
+.award-amount { font-variant-numeric: tabular-nums; }

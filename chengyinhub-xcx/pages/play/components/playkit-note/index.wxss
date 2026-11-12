@@ -68,3 +68,6 @@
   font-size: var(--cy-type-label);
   color: var(--ok);
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.nt__count { font-variant-numeric: tabular-nums; }

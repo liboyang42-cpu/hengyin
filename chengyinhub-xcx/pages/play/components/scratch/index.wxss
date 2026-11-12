@@ -51,3 +51,6 @@
 }
 
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.scr__direct { transition: var(--cy-tr-press); }

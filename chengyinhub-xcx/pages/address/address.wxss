@@ -30,3 +30,7 @@ cy-empty{ display: flex !important; flex-direction: column !important; flex: 1 !
 
 button.fbox_but{ width: 686rpx; height: var(--cy-btn-h); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); font-weight: bold; border-radius: var(--cy-radius-lg);position: fixed; bottom: calc(60rpx + env(safe-area-inset-bottom)); left: 32rpx;}
 .is-disabled { opacity: .5; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.dz_li { transition: var(--cy-tr-press); }
+.dz_li_edit { transition: var(--cy-tr-press); }

@@ -17,6 +17,8 @@ const KIT_LABELS = {
 };
 const WALK_M_PER_MIN = 80;
 const chapterTrail = require('./chapter-trail.js');
+const countUp = require('./count-roll.js');
+const entryRhythm = require('../../../utils/entry-rhythm.js');
 
 function firstImg(v) { return v ? String(v).split(/[,;]/)[0].trim() : ''; }
 /** 这一站玩法的类型名:试玩读草稿预览 kit,真实游玩读节点配置里启用的那一段;认不出就不写(不写「玩法」凑数) */
@@ -117,6 +119,13 @@ function methods() {
       return { reward: first ? { name: first.name, img: first.img || '', count: won.length } : null };
     },
     /** 地点卡玻璃面板上的数字(见 sheetFacts) */
+    /* 细节打磨 G4:地点卡的距离 / 步行分钟从 0 滚上来(开放时段是时间段,不滚);入场节奏 G7:卡内块依次浮上 */
+    _sheetRollFacts(node) { return { dist: (node && node.distText) || '', walk: (node && node.walkText) || '' }; },
+    _sheetRollInit(node) { return countUp.init(this._sheetRollFacts(node), this.data.reducedMotion === true); },
+    _sheetRoll(node) {
+      countUp.roll(this, 'sheetShown', this._sheetRollFacts(node), { delay: 260 });
+      entryRhythm.play(this, ['.sheet-name', '.sheet-meta', '.sheet-desc', '.sheet-dist', '.sheet-row'], 120);
+    },
     _sheetFacts(node) { return sheetFacts(node, typeof this._distText === 'function' ? this._distText(node) : ''); },
     /** f-play:地点卡开着时定位每一跳都重算距离 / 步行 —— 开卡时算一次的话,走到站上还写着出发时的「1.7km · 22 分钟」。文字没变不 setData */
     _refreshSheetFacts() {

@@ -49,3 +49,7 @@
 .look-pal--cyber .atmosphere-swatch--yellow{ background:#100E04; color:#FFF6CC; } /* ds-ok 原型 v7 PAL */
 .look-pal--cyber .atmosphere-swatch--white{ background:#E6E7EA; color:#101216; } /* ds-ok 原型 v7 PAL */
 .look-row__k--chapter { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.look-style { transition: var(--cy-tr-press); }
+.look-chip { transition: var(--cy-tr-press); }

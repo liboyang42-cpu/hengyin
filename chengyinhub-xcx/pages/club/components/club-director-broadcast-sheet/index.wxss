@@ -55,3 +55,8 @@
 .cy-pressed { opacity: .88; }
 
 .form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cdbs__p { transition: var(--cy-tr-press); }
+.cdbs__row { transition: var(--cy-tr-press); }
+.cdbs__primary { transition: var(--cy-tr-press); }

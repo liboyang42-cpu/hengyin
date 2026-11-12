@@ -176,3 +176,15 @@
 .act { height: 100rpx; }
 .act--ghost { border: 0; background: var(--cy-bg-card-2); }
 .act--dead { justify-content: center; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.iv-target { transition: var(--cy-tr-press); }
+.meta-copy { transition: var(--cy-tr-press); }
+.op { transition: var(--cy-tr-press); }
+.op--disabled { transition: var(--cy-tr-press); }
+.act { transition: var(--cy-tr-press); }
+.act--solid { transition: var(--cy-tr-press); }
+.act--wide { transition: var(--cy-tr-press); }
+.pk-item { transition: var(--cy-tr-press); }
+.field-count,
+.iv-count { font-variant-numeric: tabular-nums; }

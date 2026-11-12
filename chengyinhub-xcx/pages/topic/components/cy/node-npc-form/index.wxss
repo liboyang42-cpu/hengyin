@@ -139,3 +139,6 @@
 }
 
 .nnf-required { color: var(--cy-color-status-danger); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.nnf-avatar { transition: var(--cy-tr-press); }

@@ -892,7 +892,7 @@ page { background: var(--cy-color-bg-page); }
   transform:translate(var(--tx1,0px), var(--ty1,0px)) scale(.78) rotate(calc(var(--rot,0deg) * .4));
   transition:transform .832s cubic-bezier(.18,.82,.26,1), opacity .12s ease-out; }
 .fx-tile.is-dealt{ opacity:1; transform:translate(0,0) scale(1) rotate(0deg);
-  transition:transform .768s cubic-bezier(.33,0,.2,1), opacity .12s ease-out, filter var(--cy-motion-standard) var(--cy-ease-out); }
+  transition:transform .768s cubic-bezier(.33,.1,.3,1.1), opacity .12s ease-out, filter var(--cy-motion-standard) var(--cy-ease-out); }
 .play--reduced-motion .fx-tile{ transition:none; opacity:1; transform:none; }
 /* 量尺寸的那一帧把变换整个关掉:待机态同时挂着 scale 和 rotate,
    从变换后的外框反推布局尺寸必然带误差(实测 4 家差 11px、6 家差 16px)。
@@ -2048,6 +2048,25 @@ page { background: var(--cy-color-bg-page); }
 .is-lit .cy-story-hand, .is-lit .chfull__para{ text-shadow:0 0 24rpx rgba(235,240,255,.9), 0 0 4rpx rgba(255,255,255,.9); transition:text-shadow .08s; } /* ds-ok 闪电照亮 */
 /* 自由探索的故事层同样铺章节 / 主题配色的底(只在选过风格的主题上带 atmosphere--*) */
 .fx-story[class*="atmosphere--"]{ background:var(--atmo-bg); --cy-color-text-primary:var(--atmo-text); --cy-color-text-tertiary:var(--atmo-muted); }
+/* ===== 细节打磨 2026-11-12 · S4 卡包:斜向流光(位移由 animate 驱动,这里只画光带,不占版面) ===== */
+.fx-pack__sheen{ position:absolute; left:0; top:-10%; width:120rpx; height:120%; pointer-events:none; opacity:0; background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.5), rgba(255,255,255,0)); } /* ds-ok 箔面流光 */
+
+/* ===== 细节打磨 2026-11-12 · S9 ⋯ 菜单:从右上角(按钮处)缩放展开,行逐行错开 30ms;行内容与版式不动 ===== */
+.tools--corner{ transform-origin:100% 0; box-shadow:var(--cy-depth-float); }
+.tools--corner .drow{ animation:cy-rise-in .42s cubic-bezier(.32,.72,0,1) backwards; }
+.tools--corner .drow:nth-child(1) { animation-delay: 0ms; }
+.tools--corner .drow:nth-child(2) { animation-delay: 30ms; }
+.tools--corner .drow:nth-child(3) { animation-delay: 60ms; }
+.tools--corner .drow:nth-child(4) { animation-delay: 90ms; }
+.tools--corner .drow:nth-child(5) { animation-delay: 120ms; }
+.tools--corner .drow:nth-child(6) { animation-delay: 150ms; }
+.tools--corner .drow:nth-child(7) { animation-delay: 180ms; }
+.tools--corner .drow:nth-child(8) { animation-delay: 210ms; }
+.tools--corner .drow:nth-child(9) { animation-delay: 240ms; }
+.tools--corner .drow:nth-child(10) { animation-delay: 270ms; }
+.tools--corner .drow:nth-child(11) { animation-delay: 300ms; }
+.tools--corner .drow:nth-child(12) { animation-delay: 330ms; }
+
 /* ===== 故事文字动效(2026-10-30 业主定稿原型 v3,theme-look.js TEXT_FX):一段滑进屏幕(.is-in)时播一次,滑出去复位,再滑回来重播。
    浮现 = 原有 st-line 显形,不另写;逐字类把一段拆成 .tfx__c 单字。只用过渡 + 逐字延迟,不新增关键帧。 */
 .tfx__c{ display:inline-block; white-space:pre; }
@@ -2153,3 +2172,88 @@ page { background: var(--cy-color-bg-page); }
   background:var(--cy-color-bg-elevated); color:var(--cy-color-text-primary); display:flex; align-items:center; justify-content:center; }
 /* x-fix2 P-7:右上角有状态角标(未到店/已体验)时,章节名整列下移到角标下面,不再钻到角标底下 */
 .fx-tile__tags--below{ top:68rpx; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.glass { transition: var(--cy-tr-press); }
+.leadbar { transition: var(--cy-tr-press); }
+.leadbar-retry { transition: var(--cy-tr-press); }
+.fx-story__act { transition: var(--cy-tr-press); }
+.fx-story__kitback { transition: var(--cy-tr-press); }
+.fx-story__compass { transition: var(--cy-tr-press); }
+.story-map__back { transition: var(--cy-tr-press); }
+.story-map__go { transition: var(--cy-tr-press); }
+.chfull__album { transition: var(--cy-tr-press); }
+.chfull__audio { transition: var(--cy-tr-press); }
+.chfull__thought-e { transition: var(--cy-tr-press); }
+.chfull__game-cue { transition: var(--cy-tr-press); }
+.chfull__continue { transition: var(--cy-tr-press); }
+.tools-mask { transition: var(--cy-tr-press); }
+.drow--hold { transition: var(--cy-tr-press); }
+.pv-ending__chip { transition: var(--cy-tr-press); }
+.st-intro__go { transition: var(--cy-tr-press); }
+.chpick-mask { transition: var(--cy-tr-press); }
+.chpick__row { transition: var(--cy-tr-press); }
+.navtop__x { transition: var(--cy-tr-press); }
+.fx-lhd__more { transition: var(--cy-tr-press); }
+.fx-tile { transition: var(--cy-tr-press); }
+.fx-packwrap { transition: var(--cy-tr-press); }
+.fx-card3d { transition: var(--cy-tr-press); }
+.fx-shop__top { transition: var(--cy-tr-press); }
+.fx-shop__nav { transition: var(--cy-tr-press); }
+.fx-story__back { transition: var(--cy-tr-press); }
+.fx-npc__back { transition: var(--cy-tr-press); }
+.fx-msg__op { transition: var(--cy-tr-press); }
+.fx-npc__send { transition: var(--cy-tr-press); }
+.rdrop__go { transition: var(--cy-tr-press); }
+.rdrop__next { transition: var(--cy-tr-press); }
+.banner { transition: var(--cy-tr-press); }
+.sheet-x { transition: var(--cy-tr-press); }
+.sheet-cover { transition: var(--cy-tr-press); }
+.sheet-note-action { transition: var(--cy-tr-press); }
+.sheet-nav { transition: var(--cy-tr-press); }
+.sheet-nav--verify { transition: var(--cy-tr-press); }
+.gp2mask { transition: var(--cy-tr-press); }
+.gp2__back { transition: var(--cy-tr-press); }
+.gp2__audio { transition: var(--cy-tr-press); }
+.gp2__qimg { transition: var(--cy-tr-press); }
+.gp2__qaudio { transition: var(--cy-tr-press); }
+.gp2__opt { transition: var(--cy-tr-press); }
+.gp2__opt-audio { transition: var(--cy-tr-press); }
+.pref-error { transition: var(--cy-tr-press); }
+.pref-inherit__use { transition: var(--cy-tr-press); }
+.pref-inherit__again { transition: var(--cy-tr-press); }
+.pref-option { transition: var(--cy-tr-press); }
+.gp2__photo { transition: var(--cy-tr-press); }
+.gp2__neterr-r { transition: var(--cy-tr-press); }
+.gp2__cta { transition: var(--cy-tr-press); }
+.sheet__x { transition: var(--cy-tr-press); }
+.finmask { transition: var(--cy-tr-press); }
+.finsheet__map-error { transition: var(--cy-tr-press); }
+.finsheet__retry-act { transition: var(--cy-tr-press); }
+.newos__revoke { transition: var(--cy-tr-press); }
+.finish-journal-entry { transition: var(--cy-tr-press); }
+.finish-route-recommendation { transition: var(--cy-tr-press); }
+.finsheet__cta { transition: var(--cy-tr-press); }
+.ending__close { transition: var(--cy-tr-press); }
+.play-back--load { transition: var(--cy-tr-press); }
+.voucher__back { transition: var(--cy-tr-press); }
+.voucher__cta { transition: var(--cy-tr-press); }
+.woo__coupon { transition: var(--cy-tr-press); }
+.rolecard__cta { transition: var(--cy-tr-press); }
+.rolecard__retry { transition: var(--cy-tr-press); }
+.gmod__task-capture { transition: var(--cy-tr-press); }
+.gmod__task-submit { transition: var(--cy-tr-press); }
+.gmod__choice { transition: var(--cy-tr-press); }
+.team-consent__row { transition: var(--cy-tr-press); }
+.lg-num,
+.lg-num-sub,
+.board__rank,
+.board__score,
+.board__me-rank,
+.board__me-score,
+.gmod__leaderboard-score,
+.compass__dist,
+.st-stats__k,
+.st-stats__l,
+.st-stats__v { font-variant-numeric: tabular-nums; }
+.gp2__card { box-shadow: var(--cy-depth-rest); }

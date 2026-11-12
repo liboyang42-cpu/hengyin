@@ -45,3 +45,7 @@ button.team-action::after { border: 0; }
 .tm-qr__k { flex: none; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .tm-qr__v { flex: 1; min-width: 0; color: var(--cy-text-title); font-size: var(--cy-font-body); word-break: break-all; }
 .tm-qr__copy { flex: none; color: var(--cy-brand); font-size: var(--cy-font-caption); font-weight: 600; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.team-report { transition: var(--cy-tr-press); }
+.tm-qr__code { transition: var(--cy-tr-press); }

@@ -86,3 +86,8 @@ page { display: flex; flex-direction: column; min-height: 100vh; }
 
 .content-pagination { display: flex; flex-direction: column; gap: var(--cy-space-3); padding: var(--cy-space-4) 0; color: var(--cy-color-text-secondary); }
 .content-pagination button { width: 100%; color: var(--cy-color-text-primary); background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-strong); border-radius: var(--cy-radius-md); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.topic-result-card { transition: var(--cy-tr-press); }
+.tpl-big { transition: var(--cy-tr-press); }
+.result-card { transition: var(--cy-tr-press); }

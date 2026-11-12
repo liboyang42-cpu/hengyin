@@ -249,3 +249,6 @@
   from { box-shadow: 0 0 0 0 var(--cy-comp-play-roadmap-accent-soft); }
   to { box-shadow: 0 0 0 var(--cy-space-1) var(--cy-comp-play-roadmap-accent-soft); }
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.roadmap__number { font-variant-numeric: tabular-nums; }

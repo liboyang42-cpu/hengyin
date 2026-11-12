@@ -106,3 +106,7 @@
    撤位移、保留减淡 —— 反馈不能归零。 */
 .drs--reduced-motion .cy-pressed { transform: none; }
 .drs--reduced-motion .drs__col { transition: none; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.drs__chip { transition: var(--cy-tr-press); }
+.drs__clear { transition: var(--cy-tr-press); }

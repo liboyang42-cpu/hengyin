@@ -1041,3 +1041,35 @@
 .pc-benefit-ic { flex: none; color: var(--cy-color-text-primary); }
 .pc-benefit--lock .pc-benefit-ic { color: var(--cy-color-text-tertiary); }
 .pc-benefit-lock { flex: none; color: var(--cy-color-text-tertiary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.pc-nav-btn { transition: var(--cy-tr-press); }
+.pc-npc-chat-entry { transition: var(--cy-tr-press); }
+.pc-sec-link { transition: var(--cy-tr-press); }
+.pc-ord-card { transition: var(--cy-tr-press); }
+.pc-xbox-proj { transition: var(--cy-tr-press); }
+.post-composer-collapsed { transition: var(--cy-tr-press); }
+.pc-mgimg { transition: var(--cy-tr-press); }
+.pc-mrow { transition: var(--cy-tr-press); }
+.pc-about-edit { transition: var(--cy-tr-press); }
+.pc-tag { transition: var(--cy-tr-press); }
+.pc-tag--add { transition: var(--cy-tr-press); }
+.pc-work-pic { transition: var(--cy-tr-press); }
+.pc-benefit { transition: var(--cy-tr-press); }
+.pc-coop-btn { transition: var(--cy-tr-press); }
+.chpick__item { transition: var(--cy-tr-press); }
+.pts-loading { transition: var(--cy-tr-press); }
+.pc-stat-n,
+.pc-stat-l,
+.pc-public-stat-n,
+.pc-public-stat-l,
+.pc-gs-num,
+.pc-rank-title,
+.pc-rank-no,
+.pc-rank-delta,
+.pc-rank-k,
+.pc-rank-v,
+.pc-rank-exp,
+.pts-hero__num,
+.pc-asset__value { font-variant-numeric: tabular-nums; }
+.pc-ord-card { box-shadow: var(--cy-depth-rest); }

@@ -59,3 +59,7 @@
 .om-bottom { height: var(--cy-space-8); }
 
 page { --cy-comp-nav-bg: var(--cy-bg-page); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.om-card { transition: var(--cy-tr-press); }
+.om-organizer { transition: var(--cy-tr-press); }

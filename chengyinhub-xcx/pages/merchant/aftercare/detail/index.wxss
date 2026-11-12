@@ -76,3 +76,16 @@ page { background: var(--cy-bg-page); }
 .ac-sheet-footer { display: block; }
 
 .ac-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ac-decision { transition: var(--cy-tr-press); }
+.ac-kv { transition: var(--cy-tr-press); }
+.ac-kv--tap { transition: var(--cy-tr-press); }
+.ac-evidence-link { transition: var(--cy-tr-press); }
+.ac-evidence-selected { transition: var(--cy-tr-press); }
+.ac-evidence-remove { transition: var(--cy-tr-press); }
+.ac-evidence-upload { transition: var(--cy-tr-press); }
+.ac-evidence-value,
+.ac-field-count,
+.ac-sheet-amount-title,
+.ac-sheet-amount-v--unknown { font-variant-numeric: tabular-nums; }

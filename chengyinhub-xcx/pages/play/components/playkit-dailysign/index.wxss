@@ -220,3 +220,8 @@
 .ds--embed { position: relative; left: auto; right: auto; top: auto; bottom: auto; z-index: auto;
   min-height: 1100rpx; margin: 0 var(--cy-page-x); border-radius: var(--cy-radius-lg); overflow: hidden; }
 .ds--embed .ds__stage { padding-top: var(--cy-space-6); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ds__navbtn { transition: var(--cy-tr-press); }
+.ds__addr { transition: var(--cy-tr-press); }
+.ds__alt { transition: var(--cy-tr-press); }

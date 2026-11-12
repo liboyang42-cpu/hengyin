@@ -383,3 +383,12 @@ page { background: var(--cy-bg-page); }
 .review-load-more { color: var(--cy-text-title); }
 
 .form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.review-segment { transition: var(--cy-tr-press); }
+.review-star-hit { transition: var(--cy-tr-press); }
+.review-image-add { transition: var(--cy-tr-press); }
+.review-reply-input-shell { transition: var(--cy-tr-press); }
+.review-load-more { transition: var(--cy-tr-press); }
+.review-score-copy,
+.review-stat-label { font-variant-numeric: tabular-nums; }

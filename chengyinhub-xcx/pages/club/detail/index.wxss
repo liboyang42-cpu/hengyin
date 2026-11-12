@@ -1208,3 +1208,57 @@ page { background: var(--cy-bg-page); }
 .club-post-anchor:nth-child(7) { transition-delay: calc(var(--pm-p-s, 0) * 180ms), calc(var(--pm-p-s, 0) * 180ms), 0s, 0s; }
 .club-post-anchor:nth-child(8) { transition-delay: calc(var(--pm-p-s, 0) * 210ms), calc(var(--pm-p-s, 0) * 210ms), 0s, 0s; }
 .club-post-anchor:nth-child(n+9) { transition-delay: calc(var(--pm-p-s, 0) * 240ms), calc(var(--pm-p-s, 0) * 240ms), 0s, 0s; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cover-nav-act { transition: var(--cy-tr-press); }
+.profile-quit { transition: var(--cy-tr-press); }
+.post-composer-collapsed { transition: var(--cy-tr-press); }
+.post-moderation__action { transition: var(--cy-tr-press); }
+.comment-mod { transition: var(--cy-tr-press); }
+.ev-card { transition: var(--cy-tr-press); }
+.ev-undertake { transition: var(--cy-tr-press); }
+.event-group-code { transition: var(--cy-tr-press); }
+.ev-more { transition: var(--cy-tr-press); }
+.ev-sec-link { transition: var(--cy-tr-press); }
+.ov-badge-entry { transition: var(--cy-tr-press); }
+.ov-head-link { transition: var(--cy-tr-press); }
+.ov-strip-item { transition: var(--cy-tr-press); }
+.member-info { transition: var(--cy-tr-press); }
+.member-report { transition: var(--cy-tr-press); }
+.ov-lb-row { transition: var(--cy-tr-press); }
+.governance-action { transition: var(--cy-tr-press); }
+.governance-action--warning { transition: var(--cy-tr-press); }
+.manage-now-btn { transition: var(--cy-tr-press); }
+.manage-now-btn--minor { transition: var(--cy-tr-press); }
+.manage-project { transition: var(--cy-tr-press); }
+.manage-project-director { transition: var(--cy-tr-press); }
+.manage-add-row { transition: var(--cy-tr-press); }
+.manage-fold-row { transition: var(--cy-tr-press); }
+.cset-panel-act { transition: var(--cy-tr-press); }
+.pool-card-cta { transition: var(--cy-tr-press); }
+.manage-message { transition: var(--cy-tr-press); }
+.manage-invite { transition: var(--cy-tr-press); }
+.post-ref-opt { transition: var(--cy-tr-press); }
+.cset-row { transition: var(--cy-tr-press); }
+.manage-tool { transition: var(--cy-tr-press); }
+.member-role-btn { transition: var(--cy-tr-press); }
+.member-governance-btn { transition: var(--cy-tr-press); }
+.member-remove { transition: var(--cy-tr-press); }
+.owner-picker-item { transition: var(--cy-tr-press); }
+.ai-plan-chip { transition: var(--cy-tr-press); }
+.ai-plan-ghost { transition: var(--cy-tr-press); }
+.ai-plan-gen { transition: var(--cy-tr-press); }
+.ai-plan-node-addr { transition: var(--cy-tr-press); }
+.ai-plan-copy { transition: var(--cy-tr-press); }
+.ai-plan-adopt { transition: var(--cy-tr-press); }
+.gc-item { transition: var(--cy-tr-press); }
+.join-btn { transition: var(--cy-tr-press); }
+.ev-stat-num,
+.ev-stat-label,
+.club-stat-value,
+.club-stat-label,
+.club-stats-topic-name,
+.club-stats-topic-meta,
+.ov-lb-rank,
+.cset-count,
+.ov-fact-value { font-variant-numeric: tabular-nums; }

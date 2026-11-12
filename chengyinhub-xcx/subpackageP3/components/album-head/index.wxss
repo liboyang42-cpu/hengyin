@@ -27,3 +27,6 @@
 .ah-chip.is-on { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); box-shadow: none; }
 .ah-tools { margin-left: auto; display: flex; align-items: center; gap: var(--cy-space-2); }
 .cy-pressed { opacity: .78; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ah-chip { transition: var(--cy-tr-press); }

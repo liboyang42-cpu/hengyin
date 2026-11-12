@@ -18,3 +18,7 @@
 .invite__send { display: block; width: 100%; --cy-comp-btn-radius: calc(var(--cy-radius-lg) + var(--cy-space-2-5)); }
 
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.invite__card { transition: var(--cy-tr-press); }
+.invite__hint { transition: var(--cy-tr-press); }

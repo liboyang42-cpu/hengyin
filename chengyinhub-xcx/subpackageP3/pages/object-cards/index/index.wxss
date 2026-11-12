@@ -198,3 +198,9 @@ page {
 
 /* 收集册浅色逃生口:撑满整屏 */
 .alb-light { min-height: 100vh; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.oc-filter { transition: var(--cy-tr-press); }
+.oc-fly__img { transition: var(--cy-tr-press); }
+.oc-cat { transition: var(--cy-tr-press); }
+.oc-row { transition: var(--cy-tr-press); }

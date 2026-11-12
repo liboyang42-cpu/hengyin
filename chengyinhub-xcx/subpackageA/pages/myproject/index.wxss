@@ -112,3 +112,10 @@
 .mp-bot { display: flex; align-items: center; min-height: var(--cy-btn-h); border-top: 2rpx solid var(--cy-border-card); }
 .mp-bot .mp-stat { font-size: var(--cy-font-label); color: var(--cy-text-body); }
 .mp-card .mp-ops { margin-top: 0; padding: var(--cy-space-1) 0; border-top-width: 2rpx; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.mp-op { transition: var(--cy-tr-press); }
+.mp-op-toggle { transition: var(--cy-tr-press); }
+.mp-op-del { transition: var(--cy-tr-press); }
+.mp-ops-row { transition: var(--cy-tr-press); }
+.mp-stat { font-variant-numeric: tabular-nums; }

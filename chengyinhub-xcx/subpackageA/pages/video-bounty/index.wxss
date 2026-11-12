@@ -16,3 +16,7 @@ page { background: var(--cy-color-bg-page); }
 .vb-act { min-height: 88rpx; line-height: 88rpx; padding: 0 var(--cy-space-2); font-size: var(--cy-type-body); color: var(--cy-color-text-primary); }
 .vb-act--danger { color: var(--cy-color-status-danger); }
 .vb-empty { display: block; padding: var(--cy-space-6) 0; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.vb-act { transition: var(--cy-tr-press); }
+.vb-act--danger { transition: var(--cy-tr-press); }

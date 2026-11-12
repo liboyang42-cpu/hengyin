@@ -77,3 +77,10 @@ button.primary-btn::after { border: 0; }
 .field-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
 /* 2026-11-02:有号码权限时名册行右侧的拨号键(≥88rpx 触控) */
 .member-call { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; margin-right: var(--cy-space-2); color: var(--cy-color-text-primary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.readback-btn { transition: var(--cy-tr-press); }
+.member-call { transition: var(--cy-tr-press); }
+.row { transition: var(--cy-tr-press); }
+.row--sub { transition: var(--cy-tr-press); }
+.row-value { font-variant-numeric: tabular-nums; }

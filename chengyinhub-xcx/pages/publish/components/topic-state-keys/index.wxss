@@ -22,3 +22,11 @@
 .sk-row__plus { width: 44rpx; height: 44rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
 .cy-pressed { opacity: .88; }
 @media (prefers-reduced-motion: reduce) { .sk-row__chev { transition: none; } }
+
+/* 细节打磨二期 L1/L5/L7 */
+.sk-row { transition: var(--cy-tr-press); }
+.sk-row__del { transition: var(--cy-tr-press); }
+.sk-row__act { transition: var(--cy-tr-press); }
+.sk-row--add { transition: var(--cy-tr-press); }
+.sk__note { transition: var(--cy-tr-press); }
+.sk__note--error { transition: var(--cy-tr-press); }

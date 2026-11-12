@@ -107,3 +107,8 @@
   color: var(--cy-text-title);
 }
 .sp-cta { flex: 1; min-width: 0; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.sp-day { transition: var(--cy-tr-press); }
+.sp-total-n,
+.sp-total-v { font-variant-numeric: tabular-nums; }

@@ -263,3 +263,6 @@
   font-weight: 800;
 }
 .dzi__roll--press { opacity: .86; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.d20__total { font-variant-numeric: tabular-nums; }

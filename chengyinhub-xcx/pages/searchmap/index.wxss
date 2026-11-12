@@ -290,3 +290,8 @@ swiper{ margin: 0 var(--cy-space-4) var(--cy-space-3) var(--cy-space-4); height:
   color: var(--cy-color-text-tertiary);
   font-size: var(--cy-type-caption);
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.smap-back { transition: var(--cy-tr-press); }
+.smap-merchant-picker { transition: var(--cy-tr-press); }
+.price-range-tip { font-variant-numeric: tabular-nums; }

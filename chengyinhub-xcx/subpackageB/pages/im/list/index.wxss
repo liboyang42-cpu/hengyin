@@ -180,3 +180,12 @@ page { background: var(--cy-bg-page); }
 .invite-card__btn { height: 72rpx; line-height: 72rpx; padding: 0 var(--cy-space-5); border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); color: var(--cy-text-title); font-size: var(--cy-font-label); font-weight: 600; }
 .invite-card__btn--primary { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
 .invite-card__time { display: block; margin-top: var(--cy-space-4); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.invite-card { transition: var(--cy-tr-press); }
+.invite-card__btn { transition: var(--cy-tr-press); }
+.invite-card__btn--primary { transition: var(--cy-tr-press); }
+.act { transition: var(--cy-tr-press); }
+.act-read { transition: var(--cy-tr-press); }
+.act-mute { transition: var(--cy-tr-press); }
+.act-del { transition: var(--cy-tr-press); }

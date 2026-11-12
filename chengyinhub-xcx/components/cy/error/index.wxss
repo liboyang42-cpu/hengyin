@@ -96,7 +96,7 @@
   font-size: var(--cy-font-label);
   font-weight: 600;
 }
-.cy-error-retry--press { opacity: .88; transform: scale(.98); } /* 打磨第 3 轮 §4-12:与 cy-pressed 同值 */
+.cy-error-retry--press { opacity: .92; transform: scale(.97); }
 
 .cy-error-secondary {
   margin-top: var(--cy-space-2);

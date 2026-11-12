@@ -76,3 +76,6 @@
 .ma__fb.is-ok { background: rgba(18, 160, 111, .16); color: var(--ok); }   /* ds-ok 成功色软底,与 --ok 同源 */
 .ma__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--accent); }
 .ma--reduced .ma__line, .ma--reduced .ma__dot { transition: none; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ma__card { box-shadow: var(--cy-depth-rest); }

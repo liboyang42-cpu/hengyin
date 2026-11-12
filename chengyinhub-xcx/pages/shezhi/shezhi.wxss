@@ -191,3 +191,6 @@ page { background-color: var(--cy-bg-page); }
   filter: brightness(0);
   opacity: 0.68;
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.reg-opt { transition: var(--cy-tr-press); }

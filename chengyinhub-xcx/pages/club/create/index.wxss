@@ -237,3 +237,8 @@
 
 /* 第十轮 f3 第 5 项:开场屏要点行撤掉后,标题与按钮之间留出原来要点区的呼吸 */
 .intro__title + .intro-cta { margin-top: var(--cy-space-6); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cc-cover { transition: var(--cy-tr-press); }
+.cc-logo { transition: var(--cy-tr-press); }
+.cc-count { font-variant-numeric: tabular-nums; }

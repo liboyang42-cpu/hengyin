@@ -272,3 +272,30 @@ page { background: var(--cy-comp-sheet-player-page); }
 
 /* TEAM-REPORT-01 举报入口:同队伍详情页 .team-report 的次级文字链 */
 .mt-report { min-height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); text-decoration: underline; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.mt-chip { transition: var(--cy-tr-press); }
+.mt-mode__i { transition: var(--cy-tr-press); }
+.mt-row { transition: var(--cy-tr-press); }
+.mt-row--list { transition: var(--cy-tr-press); }
+.mt-card { transition: var(--cy-tr-press); }
+.mt-card--empty { transition: var(--cy-tr-press); }
+.mt-corner { transition: var(--cy-tr-press); }
+.mt-corner--icon { transition: var(--cy-tr-press); }
+.mt-btn { transition: var(--cy-tr-press); }
+.mt-btn--w { transition: var(--cy-tr-press); }
+.mt-btn--s { transition: var(--cy-tr-press); }
+.mt-report { transition: var(--cy-tr-press); }
+.mt-sbtn { transition: var(--cy-tr-press); }
+.mt-sbtn--s { transition: var(--cy-tr-press); }
+.mt-sbtn--w { transition: var(--cy-tr-press); }
+.pb__swi { transition: var(--cy-tr-press); }
+.pb__row { transition: var(--cy-tr-press); }
+.pb__qt { transition: var(--cy-tr-press); }
+.pb__send { transition: var(--cy-tr-press); }
+.pb__photo-note { transition: var(--cy-tr-press); }
+.pb__source { transition: var(--cy-tr-press); }
+.pb__btn { transition: var(--cy-tr-press); }
+.pb__btn--s { transition: var(--cy-tr-press); }
+.pb__btn--w { transition: var(--cy-tr-press); }
+.pb__hint { transition: var(--cy-tr-press); }

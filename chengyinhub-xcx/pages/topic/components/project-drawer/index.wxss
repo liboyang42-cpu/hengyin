@@ -187,3 +187,8 @@
 .dw--customer .dw-btn { pointer-events: auto; border-radius: var(--cy-radius-pill); }
 .dw--customer .dw-scroll-pad { height: calc(var(--cy-btn-h) + var(--cy-space-7) + env(safe-area-inset-bottom)); }
 .dw-done { flex: none; padding: var(--cy-space-2) 0 var(--cy-space-2) var(--cy-space-3); font-size: var(--cy-type-button); font-weight: 600; color: var(--cy-text-title); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.dw-done { transition: var(--cy-tr-press); }
+.dw-close { transition: var(--cy-tr-press); }
+.dw-btn { transition: var(--cy-tr-press); }

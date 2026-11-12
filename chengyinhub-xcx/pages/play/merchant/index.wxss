@@ -183,3 +183,15 @@
 
 /* 状态条入场是 8rpx 位移,减少动态效果时撤掉位移(淡入保留 —— 反馈不能归零)。 */
 .cy-motion-reduced .mp-status { animation: none !important; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.mp-back { transition: var(--cy-tr-press); }
+.mp-addr { transition: var(--cy-tr-press); }
+.mp-opt__i { transition: var(--cy-tr-press); }
+.mp-sheet__err { transition: var(--cy-tr-press); }
+.mp-sheet__btn { transition: var(--cy-tr-press); }
+.mp-sheet__minor { transition: var(--cy-tr-press); }
+.mp-cta__ghost { transition: var(--cy-tr-press); }
+.mp-cta__main { transition: var(--cy-tr-press); }
+.mp-stat__n,
+.mp-stat__k { font-variant-numeric: tabular-nums; }

@@ -51,3 +51,6 @@
 .oo-bottom { height: calc(var(--cy-space-8) + env(safe-area-inset-bottom)); }
 
 page { --cy-comp-nav-bg: var(--cy-bg-page); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.oo-chip { transition: var(--cy-tr-press); }

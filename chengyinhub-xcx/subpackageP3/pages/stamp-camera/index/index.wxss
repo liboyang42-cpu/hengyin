@@ -19,3 +19,8 @@
 .sc-physical-action { min-width: 124rpx; /* ds-ok: 两颗按钮并排贴合取景卡宽度 */ box-sizing: border-box; padding: var(--cy-space-2) var(--cy-legacy-18); /* ds-ok: 与取景卡左右内边距同一档 */ border-radius: var(--cy-radius-pill); text-align: center; font-size: var(--cy-type-label); font-weight: 800; color: var(--cy-color-text-primary); background: var(--cy-color-bg-glass); border: 2rpx solid var(--cy-color-border-strong); /* ds-ok: 实体按键细边，不是布局间距 */ }
 .sc-physical-action-primary { color: var(--cy-color-action-primary-fg); background: var(--cy-color-action-primary-bg); }
 .sc-physical-action.on { opacity: .6; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.sc-x { transition: var(--cy-tr-press); }
+.sc-physical-action { transition: var(--cy-tr-press); }
+.sc-shutter { transition: var(--cy-tr-press); }

@@ -171,3 +171,7 @@
   color: var(--cy-text-title);
   font-size: var(--cy-font-body);
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.history-clear { transition: var(--cy-tr-press); }
+.price-range-tip { font-variant-numeric: tabular-nums; }

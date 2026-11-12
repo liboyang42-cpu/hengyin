@@ -55,3 +55,7 @@
 
 /* isolated 组件内全局 .cy-pressed 进不来,按仓库既有组件的做法本地补一份(灰底与灰字，松手恢复)。 */
 .pa-row.cy-pressed { background: var(--cy-color-bg-raised); color: var(--cy-color-text-secondary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.pa-row { transition: var(--cy-tr-press); }
+.pa-row--danger { transition: var(--cy-tr-press); }

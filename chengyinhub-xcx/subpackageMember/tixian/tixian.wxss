@@ -34,3 +34,7 @@ page { background: var(--cy-bg-page); color: var(--cy-text-title); }
 
 /* 单独同意勾选行:与表单卡同宽,不跟提现说明挤在一起 */
 .tx-consent { margin: var(--cy-space-3) 40rpx 0; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.tx-history-entry { transition: var(--cy-tr-press); }
+.txyr_right { transition: var(--cy-tr-press); }

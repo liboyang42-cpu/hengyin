@@ -69,3 +69,9 @@ page { background: var(--cy-bg-page); }
 .gc-badge-row:nth-child(7) { transition-delay: calc(var(--pm-g-s, 0) * 400ms), calc(var(--pm-g-s, 0) * 400ms), 0s, 0s; }
 .gc-badge-row:nth-child(8) { transition-delay: calc(var(--pm-g-s, 0) * 440ms), calc(var(--pm-g-s, 0) * 440ms), 0s, 0s; }
 .gc-badge-row:nth-child(n+9) { transition-delay: calc(var(--pm-g-s, 0) * 480ms), calc(var(--pm-g-s, 0) * 480ms), 0s, 0s; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.gc-score-unit,
+.gc-rank-label,
+.gc-score-link,
+.gc-metric-label { font-variant-numeric: tabular-nums; }

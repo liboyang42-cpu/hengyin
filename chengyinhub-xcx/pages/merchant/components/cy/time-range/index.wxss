@@ -124,3 +124,6 @@
 .ctr--reduced-motion .ctr__badge,
 .ctr--reduced-motion .ctr__step,
 .ctr--reduced-motion .ctr__hint { transition: none; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.ctr__value { font-variant-numeric: tabular-nums; }

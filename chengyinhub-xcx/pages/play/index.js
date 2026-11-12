@@ -415,7 +415,7 @@ const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
 const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const playSos = require('./utils/play-sos.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
-const chapterVideo = require('./chapter-video.js');
+const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js');
 Page({
   ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(),
   ...journeyCheckRecovery.methods(req),
@@ -568,7 +568,7 @@ Page({
     fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, routeCard: { on: false, ready: false }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, radarMap: { subkey: MAP_DARK.subkey, layerStyle: MAP_DARK.layerStyle } /* V3-13/14 左上雷达固定用漫游同一套深色底图 */, fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
     nextNode: null,
-    sheet: { show: false, node: null, continueText: '前往下一站' },
+    sheet: { show: false, node: null, continueText: '前往下一站' }, sheetShown: null, /* 细节打磨 G4:距离 / 步行分钟滚上去用的显示值 */
     advancedPlay: { show: false, node: null },
     // 节点任务
     game: {}, answerInput: '', answerSel: '',
@@ -1421,7 +1421,7 @@ Page({
     if (this.data.packOpen || this.data.packShake || this.data.packTear || this.data.tearPct > 0) return;   // 播放中再点不重入
     this._startThemeBgm();
     if (this.data.reducedMotion) { this.setData({ packOpen: true, headIn: true }); if (!this.data.isPreview) storyResume.patch(this._runSessionScope(), { packOpened: true }); return; }
-    this._packTimers = this._packTimers || [];
+    this._packTimers = this._packTimers || []; packDetail.squash(this); /* 细节打磨 S4:点按挤压 */
 
     this.setData({ packShake: true, packDim: true });
     wx.vibrateShort({ type: 'light' });
@@ -4935,7 +4935,7 @@ Page({
       'hero.node': heroNode ? Object.assign({}, seatTiles.find((tile) => String(tile.nodeId) === String(heroNode.nodeId)), this._heroView(heroNode)) : this.data.hero.node,
       remainingGameCount: nodes.filter((node) => node.hasTemplate && (mode === 2 && Number(node.merchantId) > 0
         ? node.hasGame && !node.gameDone : !node.done)).length, canContinueGames,
-      total: visibleNodes.length, merchantCount, merchantDoneCount, seatTiles, ringSegs, searchPlaces }, () => {
+      total: visibleNodes.length, merchantCount, merchantDoneCount, seatTiles, ringSegs, searchPlaces }, () => { wx.nextTick(() => packDetail.ensure(this)); /* 细节打磨 S4:卡包流光 / 悬浮 */
       if (chapterChanged) this.openChapterFull(); this._refreshNavRim();
       wx.nextTick(() => this._measureDeal());   // 布局落定后才量得到瓦片/卡包的真实矩形
       // 探店日:核销完最后一家回到本页(onShow 重拉)时自动弹结算 —— 只认 allDone 上升沿,
@@ -5916,8 +5916,8 @@ Page({
     }, this._sheetFacts(node)); /* l-play:地点卡玻璃面板的距离 / 步行 / 开放,只写拿得到的 */
     this.setData({
       'sheet.show': true, sheetOut: false, 'sheet.node': sheetNode,
-      'sheet.continueText': this.data.allDone ? '查看城市足迹卡' : '前往下一站'
-    });
+      'sheet.continueText': this.data.allDone ? '查看城市足迹卡' : '前往下一站', sheetShown: this._sheetRollInit(sheetNode)
+    }, () => this._sheetRoll(sheetNode));
     // M6:开卡时相机平移,让选中节点落到上 1/3 视野(半屏大卡遮住下半屏时仍可见);无坐标节点优雅跳过
     if (node && node.lat && node.lng) {
       const fm = this.selectComponent('#fmMap');
@@ -7445,7 +7445,7 @@ Page({
   onScanArriveFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onScanArrive()); },
   onRunToggleFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onRunToggle()); },
   openStackOrChaptersFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openStackOrChapters()); },
-  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this.setData({ sessionToolsOpen: true, toolsOut: false }); this.loadSessionStats(); this.loadPlayContact(); } },
+  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this.setData({ sessionToolsOpen: true, toolsOut: false }, () => menuOpen.open(this)); this.loadSessionStats(); this.loadPlayContact(); } },
   closeSessionTools() { this._toolsClose(); },
   /* 定位驱动的两行(自动记录足迹 / 到点提醒)在这一页翻不动:它们跟着系统定位权限走。
    * 没开就去要权限,已经开着就说清楚它由谁决定 —— 不留一枚按下去毫无反应的开关。 */

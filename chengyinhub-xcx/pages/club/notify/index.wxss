@@ -55,3 +55,8 @@ cy-page-title + .section { margin-top: 0; } /* 打磨第 3 轮 §4-3:20px 是区
 
 /* 第四轮:字段下方红字 */
 .field-err { margin-top: var(--cy-space-1); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.row-value,
+.preview-count,
+.row-count { font-variant-numeric: tabular-nums; }

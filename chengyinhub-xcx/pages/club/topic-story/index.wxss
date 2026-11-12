@@ -362,3 +362,10 @@
 
 /* P0-14 AIGC 显式标识 */
 .story-aigc { display: flex; padding: 0 var(--cy-space-4, 32rpx); margin-top: var(--cy-space-2, 16rpx); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.stop-card__addr { transition: var(--cy-tr-press); }
+.story-chip { transition: var(--cy-tr-press); }
+.story-card__more { transition: var(--cy-tr-press); }
+.play-btn { transition: var(--cy-tr-press); }
+.play-btn--solid { transition: var(--cy-tr-press); }

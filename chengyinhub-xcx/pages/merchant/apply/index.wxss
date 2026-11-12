@@ -220,3 +220,16 @@ page { background: var(--cy-color-bg-page); }
 
 /* 第十二轮 k9(j1 N11):开场只剩标题后,标题贴着「开始入驻」;与俱乐部开场同一个间距 */
 .intro__title + .intro-cta { margin-top: var(--cy-space-6); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.intro__claim { transition: var(--cy-tr-press); }
+.preview-kv { transition: var(--cy-tr-press); }
+.frow { transition: var(--cy-tr-press); }
+.frow--field { transition: var(--cy-tr-press); }
+.up-box { transition: var(--cy-tr-press); }
+.up-del { transition: var(--cy-tr-press); }
+.img-del { transition: var(--cy-tr-press); }
+.img-add { transition: var(--cy-tr-press); }
+.hp-day { transition: var(--cy-tr-press); }
+.hp-time-field { transition: var(--cy-tr-press); }
+.ta-count { font-variant-numeric: tabular-nums; }

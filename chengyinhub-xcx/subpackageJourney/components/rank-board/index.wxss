@@ -52,3 +52,7 @@
 .rb-bar__tabs.is-single { flex: none; margin-right: auto; }
 /* qx-final:isolated 组件取不到全局 .cy-pressed,按压类在组件内定义(同 components/cy/card) */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.rb-more { transition: var(--cy-tr-press); }
+.rb-stat__l { font-variant-numeric: tabular-nums; }

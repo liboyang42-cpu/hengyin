@@ -49,3 +49,7 @@
 .cn-poster-img { width: 420rpx; height: 420rpx; background: var(--cy-bg-card-2); border-radius: var(--cy-radius-md); }
 .cn-poster-name { margin-top: var(--cy-space-3); font-size: var(--cy-font-body); color: var(--cy-text-title); font-weight: 600; }
 .cn-hint { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cn-op { transition: var(--cy-tr-press); }
+.cn-node-code { transition: var(--cy-tr-press); }

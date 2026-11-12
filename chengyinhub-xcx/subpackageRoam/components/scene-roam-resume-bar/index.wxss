@@ -31,3 +31,7 @@
   color: var(--cy-color-text-secondary);
 }
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.resume-bar__main { transition: var(--cy-tr-press); }
+.resume-bar__close { transition: var(--cy-tr-press); }

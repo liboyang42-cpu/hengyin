@@ -8,7 +8,7 @@
   <view class="qt qt--{{band}}">
     <view class="g-kicker qt__k pe pe--blur" style="--pe-d:.05s">{{kicker}}</view>
     <view class="qt__n g-figure pe pe--zoom" style="--pe-d:.2s">{{left}}</view>
-    <view class="qt__s pe pe--up" style="--pe-d:.6s">仅比较本机相对 PCM 振幅与校准阈值，不是分贝读数</view>
+    <view class="qt__s pe pe--up" style="--pe-d:.6s">只看手机听到的相对音量，不是分贝读数</view>
     <view class="qt__s pe pe--up" style="--pe-d:.6s" wx:if="{{calibration === 'calibrating'}}">正在校准：先听这儿的环境音</view>
     <view class="qt__s pe pe--up" style="--pe-d:.6s" wx:if="{{calibration === 'calibrated' && thresholdText}}">已校准 · {{thresholdText}}</view>
     <view class="qt__s pe pe--up" style="--pe-d:.6s" wx:if="{{rewardNote}}">{{rewardNote}}</view>

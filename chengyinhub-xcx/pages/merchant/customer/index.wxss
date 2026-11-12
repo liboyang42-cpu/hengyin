@@ -334,3 +334,16 @@
 /* 名单页「筛选」有条件时实心 */
 .cu-seg--filtered { background: var(--cy-btn-solid-bg); }
 .cu-seg--filtered .cu-seg-lbl { color: var(--cy-btn-solid-fg); font-weight: 600; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.cu-seg { transition: var(--cy-tr-press); }
+.cu-inline-button { transition: var(--cy-tr-press); }
+.cu-inline-button--primary { transition: var(--cy-tr-press); }
+.cu-phone { transition: var(--cy-tr-press); }
+.cu-copy { transition: var(--cy-tr-press); }
+.cu-fx-hd__btn { transition: var(--cy-tr-press); }
+.cu-fx-hd__btn--r { transition: var(--cy-tr-press); }
+.cu-saved-item { transition: var(--cy-tr-press); }
+.cu-filter-chip { transition: var(--cy-tr-press); }
+.cu-fx-save { transition: var(--cy-tr-press); }
+.cu-batch-count { font-variant-numeric: tabular-nums; }

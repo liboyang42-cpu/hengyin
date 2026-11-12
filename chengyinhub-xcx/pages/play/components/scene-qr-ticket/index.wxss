@@ -1,5 +1,5 @@
 :host { display: block; min-height: 100%; }
-.ticket-scene { position: relative; min-height: calc(100vh - 180rpx); box-sizing: border-box; padding: var(--cy-space-3) 0 calc(var(--cy-space-5) + env(safe-area-inset-bottom)); }
+.ticket-scene { position: relative; isolation: isolate; background: var(--cy-comp-sheet-player-bg); min-height: calc(100vh - 180rpx); box-sizing: border-box; padding: var(--cy-space-3) 0 calc(var(--cy-space-5) + env(safe-area-inset-bottom)); }
 
 /* a1-v3-17(2026-11-10 业主「不需要有白色的底 正常就是弹窗 直接放上二维码」):去掉外层白卡,标题与到期行直接写在弹层上(弹层 token 色);
    码本身仍是白底方块 —— 黑点码要白底才扫得出,这是码不是卡。 */
@@ -20,3 +20,6 @@
 .seat-choice__title { font-size: var(--cy-font-subtitle); font-weight: 700; }
 .seat-choice__input { height: var(--cy-btn-h); padding: 0 var(--cy-space-4); background: var(--cy-color-bg-glass); border-radius: var(--cy-radius-pill); }
 .seat-choice__switch { text-align: center; padding: var(--cy-space-4); color: var(--cy-text-title); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.voucher__cta { transition: var(--cy-tr-press); }

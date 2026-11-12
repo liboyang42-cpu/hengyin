@@ -45,3 +45,7 @@ cy-error, cy-empty.page-terminal { flex: 1; display: flex !important; flex-direc
 .inv-pick__name { min-width: 0; }
 .inv-pick__amt { flex: none; }
 .inv-pick.is-dis .inv-pick__left, .inv-pick.is-dis .inv-pick__amt { opacity: .45; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.inv-all { transition: var(--cy-tr-press); }
+.address-item { transition: var(--cy-tr-press); }

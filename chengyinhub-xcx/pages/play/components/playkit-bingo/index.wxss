@@ -112,3 +112,6 @@
 /* isolated 组件里全局 .cy-pressed 进不来,本地补一份(只减淡不位移 ——
    格子本身靠 translateY 表达「按下去了」,再位移一次会打架) */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.bg__panel-x { transition: var(--cy-tr-press); }

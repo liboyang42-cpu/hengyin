@@ -102,3 +102,6 @@ page {
 
 /* P0-14 生成式 AI 算法备案号公示(后台未配置则不渲染) */
 .about-app__filing { margin-top: 4rpx; }
+
+/* 细节打磨二期 L1/L5/L7 */
+.sz-attribution__link { transition: var(--cy-tr-press); }

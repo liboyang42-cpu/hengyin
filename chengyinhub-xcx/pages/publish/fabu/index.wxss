@@ -5416,3 +5416,93 @@ page { background: var(--cy-btn-solid-bg); }
 .pk-row__mode { flex: none; padding: 4rpx 12rpx; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); color: var(--cy-color-text-secondary); font-size: var(--cy-font-micro); }
 .pk-row__ck { flex: none; width: 44rpx; height: 44rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); border: 3rpx solid var(--cy-color-border-strong); color: transparent; }
 .pk-row.is-on .pk-row__ck { background: var(--cy-color-text-primary); border-color: var(--cy-color-text-primary); color: var(--cy-color-text-inverse); }
+
+/* 细节打磨二期 L1/L5/L7 */
+.pd-modecard { transition: var(--cy-tr-press); }
+.pending-materials__continue { transition: var(--cy-tr-press); }
+.pending-material__x { transition: var(--cy-tr-press); }
+.pending-material__action { transition: var(--cy-tr-press); }
+.slopes-chapter-hd { transition: var(--cy-tr-press); }
+.slopes-node-rail { transition: var(--cy-tr-press); }
+.slopes-node-rail--handle { transition: var(--cy-tr-press); }
+.slopes-node-photo { transition: var(--cy-tr-press); }
+.slopes-node-loc { transition: var(--cy-tr-press); }
+.slopes-node-more { transition: var(--cy-tr-press); }
+.slopes-add-chapter { transition: var(--cy-tr-press); }
+.submit-error-why__toggle { transition: var(--cy-tr-press); }
+.story-editor__backdrop { transition: var(--cy-tr-press); }
+.sx-top__text { transition: var(--cy-tr-press); }
+.sx-top__pill { transition: var(--cy-tr-press); }
+.sx-top__icon { transition: var(--cy-tr-press); }
+.sx-add__i { transition: var(--cy-tr-press); }
+.ed-cap__x { transition: var(--cy-tr-press); }
+.ed-cap__pv { transition: var(--cy-tr-press); }
+.story-grip { transition: var(--cy-tr-press); }
+.story-block-x { transition: var(--cy-tr-press); }
+.story-gallery__cell { transition: var(--cy-tr-press); }
+.story-gallery__cell--img { transition: var(--cy-tr-press); }
+.story-gallery__cell--empty { transition: var(--cy-tr-press); }
+.story-branch__act { transition: var(--cy-tr-press); }
+.story-media-block__audio { transition: var(--cy-tr-press); }
+.story-media-block__audio--empty { transition: var(--cy-tr-press); }
+.story-dream-block__del { transition: var(--cy-tr-press); }
+.story-dream-block__add { transition: var(--cy-tr-press); }
+.story-mood-block__body { transition: var(--cy-tr-press); }
+.story-var-entry { transition: var(--cy-tr-press); }
+.story-node-block { transition: var(--cy-tr-press); }
+.story-tail { transition: var(--cy-tr-press); }
+.ed-cap__pv--flat { transition: var(--cy-tr-press); }
+.story-varsheet__close { transition: var(--cy-tr-press); }
+.story-varsheet__item { transition: var(--cy-tr-press); }
+.pvl__x { transition: var(--cy-tr-press); }
+.pvl__look { transition: var(--cy-tr-press); }
+.pvl__pal { transition: var(--cy-tr-press); }
+.pending-undo__action { transition: var(--cy-tr-press); }
+.sx-sheet__close { transition: var(--cy-tr-press); }
+.sx-il__opt { transition: var(--cy-tr-press); }
+.ed-chip { transition: var(--cy-tr-press); }
+.sx-br__add { transition: var(--cy-tr-press); }
+.sx-br__pv { transition: var(--cy-tr-press); }
+.slopes-tab { transition: var(--cy-tr-press); }
+.pd-round-back { transition: var(--cy-tr-press); }
+.modal-close { transition: var(--cy-tr-press); }
+.category-item { transition: var(--cy-tr-press); }
+.node-sheet__close { transition: var(--cy-tr-press); }
+.node-sheet__done { transition: var(--cy-tr-press); }
+.node-shared__row { transition: var(--cy-tr-press); }
+.node-card { transition: var(--cy-tr-press); }
+.node-card--danger { transition: var(--cy-tr-press); }
+.pk-row { transition: var(--cy-tr-press); }
+.route-mapping-row { transition: var(--cy-tr-press); }
+.cs-close { transition: var(--cy-tr-press); }
+.ch-group__del { transition: var(--cy-tr-press); }
+.node-chip { transition: var(--cy-tr-press); }
+.ch-pill-btn { transition: var(--cy-tr-press); }
+.chapter-audio__empty { transition: var(--cy-tr-press); }
+.chapter-audio__play { transition: var(--cy-tr-press); }
+.chapter-audio__del { transition: var(--cy-tr-press); }
+.chapter-atmosphere__item { transition: var(--cy-tr-press); }
+.node-card__row { transition: var(--cy-tr-press); }
+.tk-segment__item { transition: var(--cy-tr-press); }
+.chapter-settings-delete { transition: var(--cy-tr-press); }
+.sp-issue { transition: var(--cy-tr-press); }
+.sp-issue--warn { transition: var(--cy-tr-press); }
+.sp-row { transition: var(--cy-tr-press); }
+.sp-lock { transition: var(--cy-tr-press); }
+.sp-look { transition: var(--cy-tr-press); }
+.sp-chrow { transition: var(--cy-tr-press); }
+.sp-read { transition: var(--cy-tr-press); }
+.sp-x { transition: var(--cy-tr-press); }
+.sp-pop__x { transition: var(--cy-tr-press); }
+.sp-say { transition: var(--cy-tr-press); }
+.sp-card { transition: var(--cy-tr-press); }
+.pw-custom__done { transition: var(--cy-tr-press); }
+.story-initial__option { transition: var(--cy-tr-press); }
+.selected-count,
+.slopes-node-num,
+.story-dream-block__count,
+.story-node-block__num,
+.node-card__value,
+.chapter-recruit__num { font-variant-numeric: tabular-nums; }
+.sp-card,
+.sp-card__route { box-shadow: var(--cy-depth-rest); }

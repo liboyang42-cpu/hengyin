@@ -201,3 +201,9 @@
   background: var(--cy-btn-solid-bg);
   color: var(--cy-btn-solid-fg);
 }
+
+/* 细节打磨二期 L1/L5/L7 */
+.reward-selector__field { transition: var(--cy-tr-press); }
+.reward-sheet__kind { transition: var(--cy-tr-press); }
+.create-date { transition: var(--cy-tr-press); }
+.reward-selector__value { font-variant-numeric: tabular-nums; }
