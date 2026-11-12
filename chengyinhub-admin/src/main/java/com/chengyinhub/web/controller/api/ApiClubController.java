@@ -83,6 +83,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -2686,7 +2687,7 @@ public class ApiClubController extends BaseController {
         return success(personalReceiverService.unbind(getAppUserId(), request.getClubId()));
     }
 
-    @org.springframework.web.bind.annotation.GetMapping("/personal-receiver/status")
+    @GetMapping("/personal-receiver/status")
     public AjaxResult personalReceiverStatus(@org.springframework.web.bind.annotation.RequestParam Long clubId) {
         return success(personalReceiverService.ownerStatus(getAppUserId(), clubId));
     }
