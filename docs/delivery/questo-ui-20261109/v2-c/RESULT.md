@@ -31,10 +31,10 @@
 
 ## 4. 验证
 
-- 小程序全量单测(仓库 `chengyinhub-xcx` 下 `node --test "tests/unit/**/*.test.js"`):**17416 条,0 失败**(最终树,rebase 到 `ec954cd7` 之后);新增 `tests/unit/motion-v2-c-contract.test.js` 13 条(组件行为、时长、终态、失败不演、飞层矩形、减少动态)。中途按真实结果同步了 4 处合同:`self-play-order-idempotency`(到账落点由整屏揭晓层改为 `selfPlayPhase=done` + 边缘光)、`motion-property-ratchet`(布局动画上限 9 → 11,理由写在注释)、`action-ledger` 三处分母、`ui-integrity-baseline` 一条行号锚点与 u4Dynamic digest。
+- 小程序全量单测(仓库 `chengyinhub-xcx` 下 `node --test "tests/unit/**/*.test.js"`):**17413 条,0 失败**(最终树,已 rebase 到并入 v2-b 的 `0e33b949` 之后重跑);新增 `tests/unit/motion-v2-c-contract.test.js` 13 条(组件行为、时长、终态、失败不演、飞层矩形、减少动态)。中途按真实结果同步了 4 处合同:`self-play-order-idempotency`(到账落点由整屏揭晓层改为 `selfPlayPhase=done` + 边缘光)、`motion-property-ratchet`(布局动画上限在 v2-b 的 8 上 +2 → 10,理由写在注释)、`action-ledger` 三处分母(各 +1)、`ui-integrity-baseline` 一条行号锚点与 u4Dynamic digest。
 - `tests/lint/ui-integrity.js --warn-as-error`:**UI-GATE-0:PASS**(Legacy error 0 / warn 0)。
-- 动作台账 `build-action-ledger.js --write` → `--check`:PASS **6026 控件**(+1:广播半屏 `bind:sentdone` 事件合同);路由矩阵 `build-route-matrix.js --check`:PASS **171 路由 / 27 场景**。
-- WXS 语法门禁 PASS(14 个 .wxs);WXSS 注释/选择器/组件选择器门禁 PASS;未定义 token、底栏不透明、a11y 命中区/可点名称、组件属性与路径门禁 PASS;`danger-confirm-gate` PASS(53 个危险调用点,38 个不可逆有确认);`ds-hardcode-gate.sh`(暂存区)PASS。**没有**跑 `ci/xcx-check.sh` 与 `ds-hardcode-gate-selftest.sh`。
+- 动作台账 `build-action-ledger.js --write` → `--check`:PASS **6022 控件**(并入 v2-b 后;本 lane +1:广播半屏 `bind:sentdone` 事件合同);路由矩阵 `build-route-matrix.js --check`:PASS **171 路由 / 27 场景**。
+- WXS 语法门禁 PASS(14 个 .wxs);WXSS 注释/选择器/组件选择器门禁 PASS;未定义 token、底栏不透明、a11y 命中区/可点名称、组件属性与路径门禁 PASS;`danger-confirm-gate` PASS(53 个危险调用点,38 个不可逆有确认);`ds-hardcode-gate.sh`(暂存区)PASS。并入 v2-b 之后 ui-integrity / 台账 / 路由矩阵 / 全量单测均在最终树上重跑。**没有**跑 `ci/xcx-check.sh` 与 `ds-hardcode-gate-selftest.sh`。
 - keyframes 棘轮:`motion-property-ratchet`(`KEYFRAMES_CEILING` 仍 146、`transition: all` 0)与 `reduced-motion-coverage-contract` 通过,新文件没有 `@keyframes`(测试里单独钉了三个新 wxss)。
 - 主包:`mainpkg-size-report` 源码合计 **3231KB**(上一轮 x-fix7 记 3233KB,×0.633 ≈ 2046 KiB;本轮 ≈ 2045 KiB,**< 2048 KiB**,净 −2KB)。新增主包文件 `components/cy/edge-glow`(≈2.3KB)与 `utils/hero-fly.js`(≈0.8KB);为它们腾位,把只被 `pages/club/settlement` 用的 `club-direct-ledger` 组件下沉进 `pages/club`(−6.4KB,报告原本就列为「可下沉」),`view-model.js` 因分包 A 也在用而挪到 `utils/`。真实压缩后体积只有 `cli upload` 能回答,这里给的是同口径源码估算。
 - Java:`chengyinhub-admin` / `chengyinhub-system` / `ci/` / `.github/` 一行未动(`git diff --stat` 为空)。
@@ -46,4 +46,4 @@
 - 时刻 5 在真机上需要真的发一条广播(rig 里是注入 `broadcastSendPhase` 驱动的,请求链路本身未改且有单测)。
 - 时刻 6 的飞层起点来自首页主题卡;其他入口(搜索/收藏/俱乐部卡等)还是普通跳转,没有接 `heroFly.go`(同一函数,按需逐个接)。
 
-STATUS: DONE — 时刻 4/5/6 已落地并推到 launch/questo-20261110;全量单测 17416/0、UI-GATE-0:PASS、台账 6026/路由 171×27、各门禁与 keyframes/danger 通过;偏差(整屏结算层、广播触发卡、列表淡出)见第 2 节。
+STATUS: DONE — 时刻 4/5/6 已落地并推到 launch/questo-20261110;全量单测 17413/0、UI-GATE-0:PASS、台账 6022/路由 171×27、各门禁与 keyframes/danger 通过;偏差(整屏结算层、广播触发卡、列表淡出)见第 2 节。
