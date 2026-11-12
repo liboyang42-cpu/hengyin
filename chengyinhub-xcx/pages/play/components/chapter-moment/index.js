@@ -14,7 +14,7 @@ Component({
     reducedMotion: { type: Boolean, value: false },
   },
   data: {
-    view: { kick: '', words: [], digits: [], ring: [], stats: [], particles: [], tiles: [], title: '' },
+    view: { kick: '', words: [], digits: [], ring: [], stats: [], particles: [], tiles: [], title: '' }, shown: [],
     dy: 0, skip: false,
     dotHold: false, dotGone: false, ringOn: false, numOn: false, haloOn: false, raysOn: false,
     kickOn: false, wordsOn: 0, statsOn: false, ctaOn: false,
@@ -31,7 +31,7 @@ Component({
         const h = Number(win.windowHeight) || 0;
         if (h && h < 844) dy = M.rpx(Math.max(-96, (h - 844) / 2));   // 矮屏整体上提,按钮不压到读数
       } catch (e) { dy = 0; }
-      this.setData({ view, dy }, () => {
+      this.setData({ view, dy, shown: (view.stats || []).map((x) => x.shown) }, () => {
         if (this._gone) return;
         if (this.data.reducedMotion) { this._end(false); return; }
         if (start) this._playStart(); else this._playFinale();
@@ -94,13 +94,13 @@ Component({
       clearInterval(this._count);
       this._count = setInterval(() => {
         if (this._gone) { clearInterval(this._count); return; }
-        const patch = {}; let live = false;
+        const shown = []; let live = false;
         stats.forEach((s, i) => {
           const p = Math.min(1, (Date.now() - t0) / s.dur);
-          patch['view.stats[' + i + '].shown'] = M.statAt(s.spec, M.countEase(p), s.v);
+          shown[i] = M.statAt(s.spec, M.countEase(p), s.v);
           if (p < 1) live = true;
         });
-        this.setData(patch);
+        this.setData({ shown });
         if (!live) { clearInterval(this._count); this._count = 0; }
       }, 24);
     },
@@ -147,20 +147,18 @@ Component({
       this._stop();
       this._clearAnims();
       this._settled = true;
-      const v = this.data.view, patch = { skip: !!skip };
-      if (this.data.mode !== 'finale') {
-        Object.assign(patch, { dotHold: false, dotGone: true, ringOn: true, numOn: true, haloOn: true, raysOn: true, kickOn: true, wordsOn: v.words.length, statsOn: true, ctaOn: true });
-        v.stats.forEach((s, i) => { patch['view.stats[' + i + '].shown'] = s.v; });
-      } else {
-        Object.assign(patch, { orbHold: false, orbGone: true, medalOn: true, raysOn: true, kickOn: true, ttlOn: true, rowOn: true, actsOn: true });
-      }
-      this.setData(patch, () => {
+      const v = this.data.view, done = () => {
         if (this._gone) return;
         this._stopped = false;
         // 终态之后仍保留极慢的环转 / 光线转
         if (this.data.mode !== 'finale') this._loop('#ring', M.sampleFrames({ rotate: [[0, 0], [1, 360]] }, null, 2), M.START.spinDur);
         else this._loop('#frays', M.sampleFrames({ rotate: [[0, 30], [1, 390]] }, null, 2), M.FINALE.raysSpinDur);
-      });
+      };
+      if (this.data.mode !== 'finale') {
+        this.setData({ skip: !!skip, dotHold: false, dotGone: true, ringOn: true, numOn: true, haloOn: true, raysOn: true, kickOn: true, wordsOn: v.words.length, statsOn: true, ctaOn: true, shown: v.stats.map((s) => s.v) }, done);
+      } else {
+        this.setData({ skip: !!skip, orbHold: false, orbGone: true, medalOn: true, raysOn: true, kickOn: true, ttlOn: true, rowOn: true, actsOn: true }, done);
+      }
     },
     onTap() {
       if (!this._settled) { this._end(true); return; }

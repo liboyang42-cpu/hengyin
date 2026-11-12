@@ -110,7 +110,7 @@ function inst(def, props) {
   const timers = [], played = []
   const o = {
     data: JSON.parse(JSON.stringify(def.data)), events: [], timers, played, cleared: [],
-    setData(patch, cb) { for (const k of Object.keys(patch)) { const m = /^view\.stats\[(\d+)\]\.shown$/.exec(k); if (m) this.data.view.stats[+m[1]].shown = patch[k]; else this.data[k] = patch[k] } if (cb) cb() },
+    setData(patch, cb) { Object.assign(this.data, patch); if (cb) cb() },
     triggerEvent(n) { this.events.push(n) },
     animate(sel, frames, dur, cb) { played.push({ sel, dur, n: frames.length }); if (cb) cb() },
     clearAnimation(sel, opt, cb) { this.cleared.push(sel); if (cb) cb() },
@@ -133,7 +133,7 @@ test('组件序列(开始):按时间轴排好计时器,按钮最后;点任意处
   assert.equal(c.data.ctaOn, false); assert.ok(!c._settled)
   c.onTap()
   assert.equal(c._settled, true); assert.equal(c.data.ctaOn, true); assert.equal(c.data.wordsOn, 4)
-  assert.equal(c.data.view.stats[0].shown, '05:56', '跳过后读数为终值')
+  assert.equal(c.data.shown[0], '05:56', '跳过后读数为终值')
   assert.deepEqual(c.events, [])
   c.onTap()
   assert.deepEqual(c.events, ['go'])

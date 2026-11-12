@@ -12,7 +12,7 @@
       <view class="cm__col">
         <view class="cm__kick cm__fade {{kickOn ? 'is-in' : ''}}">{{view.kick}}</view>
         <view class="cm__title" aria-label="{{info.title}}"><text wx:for="{{view.words}}" wx:key="index" class="cm__w {{index < wordsOn ? 'is-in' : ''}}">{{item.t}}</text></view>
-        <view class="cm__stats cm__fade {{statsOn ? 'is-in' : ''}}"><view class="cm__stat" wx:for="{{view.stats}}" wx:key="index"><text class="cm__sv">{{item.shown}}</text><text class="cm__sk">{{item.k}}</text></view></view>
+        <view class="cm__stats cm__fade {{statsOn ? 'is-in' : ''}}"><view class="cm__stat" wx:for="{{view.stats}}" wx:key="index"><text class="cm__sv">{{shown[index]}}</text><text class="cm__sk">{{item.k}}</text></view></view>
       </view>
     </view>
     <view class="cm__cta cm__fade {{ctaOn ? 'is-in' : ''}}"><view class="cm__btn cm__btn--pri" catchtap="onGo" aria-role="button" aria-label="读下去" hover-class="cm-pressed" hover-stay-time="80">读下去</view></view>
