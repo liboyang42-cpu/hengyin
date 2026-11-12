@@ -693,18 +693,16 @@ page {
 .v3-locprompt__btn { flex: 1; min-height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-comp-btn-radius); font-size: var(--cy-type-body); font-weight: 600; background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); }
 .v3-locprompt__btn--p { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
 
-/* ===== 细节打磨 2026-11-12 · S8 首页:卡片两层投影 + 顶边 1px 高光(封面图盖住内阴影,所以高光画在 ::before 上);版式、文案、配色不动 ===== */
 .v2-fcard { box-shadow: var(--cy-shadow-float-dark); }
 .v2-fcard::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2rpx; z-index: 2; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.16), rgba(255,255,255,0)); } /* ds-ok G1 顶边高光 */
 .v3-locprompt { box-shadow: var(--cy-shadow-hi-dark), var(--cy-shadow-float-dark); }
 .v2-ftitle, .v2-status-v.price { font-variant-numeric: tabular-nums; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.v3-avatar { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.v3-locprompt__btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.v3-locprompt__btn--p { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.v3-reco-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.v2-fcard { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.v2-status { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tkbox_skip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.v3-avatar,
+.v3-locprompt__btn,
+.v3-locprompt__btn--p,
+.v3-reco-card,
+.v2-fcard,
+.v2-status,
+.tkbox_skip { transition: var(--cy-tr-press); }
 .v3-reco-card { box-shadow: var(--cy-depth-rest); }

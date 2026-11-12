@@ -121,11 +121,11 @@ page { min-height: 100vh; background: var(--cy-color-bg-page); }
 .od-loading { min-height: 100vh; display: flex; flex-direction: column; padding-top: 176rpx; background: var(--cy-color-bg-page); color: var(--cy-color-text-secondary); }
 .od-loading cy-state-shell { flex: 1; display: flex !important; flex-direction: column !important; min-height: 0; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.od-task { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.od-organizer-entry { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.od-share { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.od-cta { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.od-task { transition: var(--cy-tr-press); }
+.od-organizer-entry { transition: var(--cy-tr-press); }
+.od-share { transition: var(--cy-tr-press); }
+.od-cta { transition: var(--cy-tr-press); }
 .od-fact-value,
 .od-fact-value--compact,
 .od-progress-value,

@@ -213,6 +213,6 @@ page { background: var(--cy-color-bg-page); }
 /* 收集册内层:撑满整屏(x-fix2 L-1 起为玩家深色) */
 .alb-light { min-height: 100vh; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.bw-fb-item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.bw-fly__pin { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.bw-fb-item { transition: var(--cy-tr-press); }
+.bw-fly__pin { transition: var(--cy-tr-press); }

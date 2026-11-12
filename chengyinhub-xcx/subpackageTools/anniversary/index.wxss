@@ -9,5 +9,5 @@
 .an-m { font-size: var(--cy-type-label); color: var(--cy-comp-sheet-player-text-secondary); }
 .an-go { margin-top: 15rpx; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.an-go { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.an-go { transition: var(--cy-tr-press); }

@@ -18,7 +18,6 @@
 
 .cy-pressed{opacity:.88;transform:scale(.98);transition:transform var(--cy-motion-press) var(--cy-ease-out),opacity var(--cy-motion-press) var(--cy-ease-out)}
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.tr-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tr-button { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tr-button--muted { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.tr-row,
+.tr-button,
+.tr-button--muted { transition: var(--cy-tr-press); }

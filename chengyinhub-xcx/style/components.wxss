@@ -505,7 +505,7 @@ button.tkbox_but,
  * 用法:hover-class="cy-pressed"(整体减淡,默认选择)或 "cy-pressed-bg"(列表行换底),
  * 配 hover-stay-time="80"(=--cy-motion-press 档);组件内部 *--press 类视觉与此对齐。
  * ============================================================ */
-.cy-pressed    { opacity: .92; transform: scale(.97); transition: transform var(--cy-motion-press-in) var(--cy-ease-out), opacity var(--cy-motion-press-in) var(--cy-ease-out); } /* 2026-11-12 细节打磨 G2:按下 120ms 压到 .97、减淡到 .92;松手的回弹由元素自己的过渡接(见 --cy-motion-press-out) */
+.cy-pressed    { opacity: .92; transform: scale(.97); transition: transform var(--cy-motion-press-in) var(--cy-ease-out), opacity var(--cy-motion-press-in) var(--cy-ease-out); }
 .cy-pressed-bg { background: var(--cy-color-state-pressed); }
 /* 只减淡不位移的按压是「变暗」不是「按下去」——补一档 scale 才有物理反馈(Emil 的
    按压区间 0.95–0.98;这里取最轻的 .98,因为 .cy-pressed 也用在整行宽元素上,

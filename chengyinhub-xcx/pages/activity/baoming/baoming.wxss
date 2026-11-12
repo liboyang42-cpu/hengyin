@@ -467,11 +467,11 @@ cy-error, cy-empty.page-terminal { flex: 1; display: flex !important; flex-direc
 /* 细节打磨 G4:结算里所有金额等宽数字,总计里只有金额是主色、说明保持次级灰 */
 .setly_li_right text, .setly_li--total .setly_li_right text { font-variant-numeric: tabular-nums; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.bm-signed { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.set { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.address-info { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.radio { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.flex-cc { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.address-item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.bmbottom_box { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.bm-signed { transition: var(--cy-tr-press); }
+.set { transition: var(--cy-tr-press); }
+.address-info { transition: var(--cy-tr-press); }
+.radio { transition: var(--cy-tr-press); }
+.flex-cc { transition: var(--cy-tr-press); }
+.address-item { transition: var(--cy-tr-press); }
+.bmbottom_box { transition: var(--cy-tr-press); }

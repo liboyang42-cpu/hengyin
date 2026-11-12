@@ -110,15 +110,15 @@
 .activity-node { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (333ms + min(var(--pmi, 0), 8) * 40ms)), calc(var(--pm-a-s, 0) * (333ms + min(var(--pmi, 0), 8) * 40ms)), 0s, 0s; }
 .activity-action { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (427ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (427ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.ticket__more { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ticket__person { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.activity-form__close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.activity-rating__target { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.activity-upload__image { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.activity-upload__delete { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.activity-upload { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.activity-upload--add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.ticket__more { transition: var(--cy-tr-press); }
+.ticket__person { transition: var(--cy-tr-press); }
+.activity-form__close { transition: var(--cy-tr-press); }
+.activity-rating__target { transition: var(--cy-tr-press); }
+.activity-upload__image { transition: var(--cy-tr-press); }
+.activity-upload__delete { transition: var(--cy-tr-press); }
+.activity-upload { transition: var(--cy-tr-press); }
+.activity-upload--add { transition: var(--cy-tr-press); }
 .ticket__price,
 .activity-review-score__value,
 .activity-review-score__meta { font-variant-numeric: tabular-nums; }

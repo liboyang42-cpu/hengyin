@@ -924,31 +924,31 @@
 .bx-row-s { font-size: var(--cy-font-label); color: var(--cy-text-secondary); }
 .bx-quote { margin-top: 24rpx; padding: 28rpx; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); font-size: var(--cy-font-body); line-height: 1.5; color: var(--cy-text-title); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.gate-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sec-action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tcard { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pg-go { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.rules { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.dr-copy { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cs-pill { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cs-pill--g { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.review-retry { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.review-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.review-btn--ghost { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.dr-sub { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.dpick { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.dfil-item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pl-sel { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.bcast-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.bx-clear { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.bx-quiet-a { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.bx-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.bx-send { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.lv-seg-i { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.lv-send { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.lv-tier { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.lv-step-b { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.gate-btn { transition: var(--cy-tr-press); }
+.sec-action { transition: var(--cy-tr-press); }
+.tcard { transition: var(--cy-tr-press); }
+.pg-go { transition: var(--cy-tr-press); }
+.rules { transition: var(--cy-tr-press); }
+.dr-copy { transition: var(--cy-tr-press); }
+.cs-pill { transition: var(--cy-tr-press); }
+.cs-pill--g { transition: var(--cy-tr-press); }
+.review-retry { transition: var(--cy-tr-press); }
+.review-btn { transition: var(--cy-tr-press); }
+.review-btn--ghost { transition: var(--cy-tr-press); }
+.dr-sub { transition: var(--cy-tr-press); }
+.dpick { transition: var(--cy-tr-press); }
+.dfil-item { transition: var(--cy-tr-press); }
+.pl-sel { transition: var(--cy-tr-press); }
+.bcast-row { transition: var(--cy-tr-press); }
+.bx-clear { transition: var(--cy-tr-press); }
+.bx-quiet-a { transition: var(--cy-tr-press); }
+.bx-chip { transition: var(--cy-tr-press); }
+.bx-send { transition: var(--cy-tr-press); }
+.lv-seg-i { transition: var(--cy-tr-press); }
+.lv-send { transition: var(--cy-tr-press); }
+.lv-tier { transition: var(--cy-tr-press); }
+.lv-step-b { transition: var(--cy-tr-press); }
 .metric-n,
 .metric-l,
 .pg-stat,

@@ -50,12 +50,12 @@ page { background: var(--cy-color-bg-page); }
 .mt-card__pending { color: var(--cy-brand); font-weight: 700; }
 .mt-card__err { display: block; margin-top: 12rpx; color: var(--cy-danger); font-size: var(--cy-type-label); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.mt-map { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-seg__i { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-err { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.mt-map { transition: var(--cy-tr-press); }
+.mt-seg__i { transition: var(--cy-tr-press); }
+.mt-err { transition: var(--cy-tr-press); }
+.mt-card { transition: var(--cy-tr-press); }
+.mt-act { transition: var(--cy-tr-press); }
+.mt-btn { transition: var(--cy-tr-press); }
 .mt-stat__v,
 .mt-stat__k { font-variant-numeric: tabular-nums; }

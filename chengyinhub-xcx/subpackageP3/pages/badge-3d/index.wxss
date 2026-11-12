@@ -22,5 +22,5 @@
 .b3__glow-ring--1{ width:460rpx; height:460rpx; box-shadow:0 0 40rpx rgba(120,160,255,.25); } /* ds-ok Figma 实测(用户裁决字面值) */
 .b3__glow-ring--2{ width:600rpx; height:600rpx; border-color:rgba(140,170,255,.16); } /* ds-ok Figma 实测(用户裁决字面值) */
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.b3__back { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.b3__back { transition: var(--cy-tr-press); }

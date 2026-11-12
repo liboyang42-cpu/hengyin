@@ -35,6 +35,6 @@ page { background: var(--cy-bg-page); color: var(--cy-text-title); }
 /* 单独同意勾选行:与表单卡同宽,不跟提现说明挤在一起 */
 .tx-consent { margin: var(--cy-space-3) 40rpx 0; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.tx-history-entry { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.txyr_right { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.tx-history-entry { transition: var(--cy-tr-press); }
+.txyr_right { transition: var(--cy-tr-press); }

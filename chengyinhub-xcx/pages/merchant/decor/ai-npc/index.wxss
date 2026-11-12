@@ -291,7 +291,7 @@
 .ni-dot--on { transform: scaleX(1); background: var(--cy-text-title); }
 .ni-btn { margin-top: var(--cy-space-5); width: 100%; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); text-align: center; font-size: var(--cy-font-body); font-weight: 700; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.ni-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.npc-option { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.npc-voice-hold { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.ni-btn { transition: var(--cy-tr-press); }
+.npc-option { transition: var(--cy-tr-press); }
+.npc-voice-hold { transition: var(--cy-tr-press); }

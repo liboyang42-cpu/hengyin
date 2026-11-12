@@ -22,6 +22,6 @@
 /* 细节打磨 2026-11-12 · S10 收益:卡片顶边高光 + 两层柔投影(浅色),读数等宽 */
 .eo-card { box-shadow: var(--cy-shadow-hi-light), var(--cy-shadow-float-light); font-variant-numeric: tabular-nums; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.eo-sec__link { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.eo-none { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.eo-sec__link { transition: var(--cy-tr-press); }
+.eo-none { transition: var(--cy-tr-press); }

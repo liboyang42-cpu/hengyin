@@ -125,5 +125,5 @@
 .ctr--reduced-motion .ctr__step,
 .ctr--reduced-motion .ctr__hint { transition: none; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+/* 细节打磨二期 L1/L5/L7 */
 .ctr__value { font-variant-numeric: tabular-nums; }

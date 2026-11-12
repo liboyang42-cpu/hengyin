@@ -11,5 +11,5 @@ page { background: var(--cy-color-bg-page); }
 .rp-row__arrow { flex: none; color: var(--cy-color-text-tertiary); }
 .rp__more { min-height: 88rpx; display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-body); color: var(--cy-color-text-secondary); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.rp-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.rp-row { transition: var(--cy-tr-press); }

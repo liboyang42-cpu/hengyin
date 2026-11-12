@@ -152,8 +152,8 @@ page {
 .inv { filter: opacity(calc(1 - var(--pm-l, 0))); translate: 0 calc(var(--pm-l, 0) * 31rpx); transition: filter var(--pm-l-d, 0s) ease, translate var(--pm-l-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-l-s, 0) * min(var(--pmi, 0), 8) * 30ms), calc(var(--pm-l-s, 0) * min(var(--pmi, 0), 8) * 30ms), 0s, 0s; }
 
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.inline-retry { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.inv-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.inv-btn--secondary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.inv-btn--primary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.inline-retry { transition: var(--cy-tr-press); }
+.inv-btn { transition: var(--cy-tr-press); }
+.inv-btn--secondary { transition: var(--cy-tr-press); }
+.inv-btn--primary { transition: var(--cy-tr-press); }

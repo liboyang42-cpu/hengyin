@@ -98,6 +98,5 @@
 .ps--keep-mask .ps__mask { opacity: 1 !important; }
 .ps--quick.ps--handoff-in .ps__mask { transition: none; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.ps__mask { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ps__quick-action--return { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.ps__mask,
+.ps__quick-action--return { transition: var(--cy-tr-press); }

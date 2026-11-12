@@ -26,5 +26,5 @@
 .jn-tl__text { font-size: var(--cy-type-label); line-height: 1.6; color: var(--cy-color-text-secondary); }
 .jn-tl__pic { width: 100%; height: 320rpx; margin-top: 8rpx; border-radius: var(--cy-radius-md); background: var(--cy-color-bg-elevated); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.jn-state__cta { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.jn-state__cta { transition: var(--cy-tr-press); }

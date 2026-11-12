@@ -21,6 +21,6 @@ page { background: var(--cy-bg-page); }
 .acl-activity { margin-top: var(--cy-space-1); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .acl-more { display: block; padding: var(--cy-space-4) 0; text-align: center; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.acl-search-more { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.acl-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.acl-search-more { transition: var(--cy-tr-press); }
+.acl-row { transition: var(--cy-tr-press); }

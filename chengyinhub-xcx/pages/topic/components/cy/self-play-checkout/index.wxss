@@ -93,6 +93,6 @@
 .ck__pay.is-off { opacity: .4; }
 .ck__member { display: flex; align-items: center; gap: 20rpx; margin: 0 0 var(--cy-space-3); padding: 24rpx 28rpx; border-radius: var(--cy-radius-lg); background: var(--cy-color-status-success-soft); color: var(--cy-color-status-success); font-size: var(--cy-font-body); font-weight: 600; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+/* 细节打磨二期 L1/L5/L7 */
 .ck__price { font-variant-numeric: tabular-nums; }
 .ck__card { box-shadow: var(--cy-depth-rest); }

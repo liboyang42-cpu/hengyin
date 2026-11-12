@@ -5417,87 +5417,87 @@ page { background: var(--cy-btn-solid-bg); }
 .pk-row__ck { flex: none; width: 44rpx; height: 44rpx; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); border: 3rpx solid var(--cy-color-border-strong); color: transparent; }
 .pk-row.is-on .pk-row__ck { background: var(--cy-color-text-primary); border-color: var(--cy-color-text-primary); color: var(--cy-color-text-inverse); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.pd-modecard { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pending-materials__continue { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pending-material__x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pending-material__action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.slopes-chapter-hd { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.slopes-node-rail { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.slopes-node-rail--handle { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.slopes-node-photo { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.slopes-node-loc { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.slopes-node-more { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.slopes-add-chapter { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.submit-error-why__toggle { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-editor__backdrop { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sx-top__text { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sx-top__pill { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sx-top__icon { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sx-add__i { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ed-cap__x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ed-cap__pv { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-grip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-block-x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-gallery__cell { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-gallery__cell--img { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-gallery__cell--empty { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-branch__act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-media-block__audio { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-media-block__audio--empty { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-dream-block__del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-dream-block__add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-mood-block__body { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-var-entry { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-node-block { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-tail { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ed-cap__pv--flat { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-varsheet__close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-varsheet__item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pvl__x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pvl__look { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pvl__pal { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pending-undo__action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sx-sheet__close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sx-il__opt { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ed-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sx-br__add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sx-br__pv { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.slopes-tab { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pd-round-back { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.modal-close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.category-item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.node-sheet__close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.node-sheet__done { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.node-shared__row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.node-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.node-card--danger { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pk-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.route-mapping-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cs-close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ch-group__del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.node-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ch-pill-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.chapter-audio__empty { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.chapter-audio__play { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.chapter-audio__del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.chapter-atmosphere__item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.node-card__row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tk-segment__item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.chapter-settings-delete { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-issue { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-issue--warn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-lock { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-look { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-chrow { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-read { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-pop__x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-say { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sp-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pw-custom__done { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.story-initial__option { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.pd-modecard { transition: var(--cy-tr-press); }
+.pending-materials__continue { transition: var(--cy-tr-press); }
+.pending-material__x { transition: var(--cy-tr-press); }
+.pending-material__action { transition: var(--cy-tr-press); }
+.slopes-chapter-hd { transition: var(--cy-tr-press); }
+.slopes-node-rail { transition: var(--cy-tr-press); }
+.slopes-node-rail--handle { transition: var(--cy-tr-press); }
+.slopes-node-photo { transition: var(--cy-tr-press); }
+.slopes-node-loc { transition: var(--cy-tr-press); }
+.slopes-node-more { transition: var(--cy-tr-press); }
+.slopes-add-chapter { transition: var(--cy-tr-press); }
+.submit-error-why__toggle { transition: var(--cy-tr-press); }
+.story-editor__backdrop { transition: var(--cy-tr-press); }
+.sx-top__text { transition: var(--cy-tr-press); }
+.sx-top__pill { transition: var(--cy-tr-press); }
+.sx-top__icon { transition: var(--cy-tr-press); }
+.sx-add__i { transition: var(--cy-tr-press); }
+.ed-cap__x { transition: var(--cy-tr-press); }
+.ed-cap__pv { transition: var(--cy-tr-press); }
+.story-grip { transition: var(--cy-tr-press); }
+.story-block-x { transition: var(--cy-tr-press); }
+.story-gallery__cell { transition: var(--cy-tr-press); }
+.story-gallery__cell--img { transition: var(--cy-tr-press); }
+.story-gallery__cell--empty { transition: var(--cy-tr-press); }
+.story-branch__act { transition: var(--cy-tr-press); }
+.story-media-block__audio { transition: var(--cy-tr-press); }
+.story-media-block__audio--empty { transition: var(--cy-tr-press); }
+.story-dream-block__del { transition: var(--cy-tr-press); }
+.story-dream-block__add { transition: var(--cy-tr-press); }
+.story-mood-block__body { transition: var(--cy-tr-press); }
+.story-var-entry { transition: var(--cy-tr-press); }
+.story-node-block { transition: var(--cy-tr-press); }
+.story-tail { transition: var(--cy-tr-press); }
+.ed-cap__pv--flat { transition: var(--cy-tr-press); }
+.story-varsheet__close { transition: var(--cy-tr-press); }
+.story-varsheet__item { transition: var(--cy-tr-press); }
+.pvl__x { transition: var(--cy-tr-press); }
+.pvl__look { transition: var(--cy-tr-press); }
+.pvl__pal { transition: var(--cy-tr-press); }
+.pending-undo__action { transition: var(--cy-tr-press); }
+.sx-sheet__close { transition: var(--cy-tr-press); }
+.sx-il__opt { transition: var(--cy-tr-press); }
+.ed-chip { transition: var(--cy-tr-press); }
+.sx-br__add { transition: var(--cy-tr-press); }
+.sx-br__pv { transition: var(--cy-tr-press); }
+.slopes-tab { transition: var(--cy-tr-press); }
+.pd-round-back { transition: var(--cy-tr-press); }
+.modal-close { transition: var(--cy-tr-press); }
+.category-item { transition: var(--cy-tr-press); }
+.node-sheet__close { transition: var(--cy-tr-press); }
+.node-sheet__done { transition: var(--cy-tr-press); }
+.node-shared__row { transition: var(--cy-tr-press); }
+.node-card { transition: var(--cy-tr-press); }
+.node-card--danger { transition: var(--cy-tr-press); }
+.pk-row { transition: var(--cy-tr-press); }
+.route-mapping-row { transition: var(--cy-tr-press); }
+.cs-close { transition: var(--cy-tr-press); }
+.ch-group__del { transition: var(--cy-tr-press); }
+.node-chip { transition: var(--cy-tr-press); }
+.ch-pill-btn { transition: var(--cy-tr-press); }
+.chapter-audio__empty { transition: var(--cy-tr-press); }
+.chapter-audio__play { transition: var(--cy-tr-press); }
+.chapter-audio__del { transition: var(--cy-tr-press); }
+.chapter-atmosphere__item { transition: var(--cy-tr-press); }
+.node-card__row { transition: var(--cy-tr-press); }
+.tk-segment__item { transition: var(--cy-tr-press); }
+.chapter-settings-delete { transition: var(--cy-tr-press); }
+.sp-issue { transition: var(--cy-tr-press); }
+.sp-issue--warn { transition: var(--cy-tr-press); }
+.sp-row { transition: var(--cy-tr-press); }
+.sp-lock { transition: var(--cy-tr-press); }
+.sp-look { transition: var(--cy-tr-press); }
+.sp-chrow { transition: var(--cy-tr-press); }
+.sp-read { transition: var(--cy-tr-press); }
+.sp-x { transition: var(--cy-tr-press); }
+.sp-pop__x { transition: var(--cy-tr-press); }
+.sp-say { transition: var(--cy-tr-press); }
+.sp-card { transition: var(--cy-tr-press); }
+.pw-custom__done { transition: var(--cy-tr-press); }
+.story-initial__option { transition: var(--cy-tr-press); }
 .selected-count,
 .slopes-node-num,
 .story-dream-block__count,

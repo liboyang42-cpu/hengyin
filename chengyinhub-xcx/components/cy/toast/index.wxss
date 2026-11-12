@@ -19,7 +19,7 @@
   font-size: var(--cy-font-body);
   line-height: 1.4;
   pointer-events: none;
-  box-shadow: var(--cy-depth-float); /* 细节打磨二期 L1:浮起面 */
+  box-shadow: var(--cy-depth-float);
   opacity: 0;
   transform: translate(-50%, 16rpx);
   /* 2026-10-23 弹层动效:收起比出现快一档 —— 出现 standard(220)减速收尾,收起 toast-out(150)加速离场。

@@ -1715,54 +1715,54 @@ page {
 .cg-grow__ck { flex: none; width: 44rpx; height: 44rpx; border-radius: 50%; box-sizing: border-box; border: 3rpx solid var(--cy-color-border-strong); display: flex; align-items: center; justify-content: center; }
 .cg-grow.is-on .cg-grow__ck { border-color: var(--cy-color-action-primary-bg); background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.cg-hero-cover { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-hero-cover--picked { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-cover-del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-cover-unusable { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-pick { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-chip-x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-chip-add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-step-add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-r5-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-sec__act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-r5-pill { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-adv-del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-adv-add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-choice-li { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-adv-correct { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-ho-mark { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-seg-del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-qz-thumb__x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-qz-thumb { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-qz-thumb--add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-qmedia-x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-qz-cell { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-ios-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-try { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-choice-radio { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-opt-thumb-hit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-opt-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-opt-chip--clear { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-cfg-add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-medal-up { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-medal-clear { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-mod-del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-beat-add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-pv-choice { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-pv-usehint { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-pv-navbtn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-edit-head__exit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-edit-head__done { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-gsheet-navi { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-grow { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-tag-pill { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-audio-play { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-audio-del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-audio-empty { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-model-x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-model { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-ios-pill { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-sheet-close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cg-picker-li { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.cg-hero-cover { transition: var(--cy-tr-press); }
+.cg-hero-cover--picked { transition: var(--cy-tr-press); }
+.cg-cover-del { transition: var(--cy-tr-press); }
+.cg-cover-unusable { transition: var(--cy-tr-press); }
+.cg-pick { transition: var(--cy-tr-press); }
+.cg-chip-x { transition: var(--cy-tr-press); }
+.cg-chip-add { transition: var(--cy-tr-press); }
+.cg-step-add { transition: var(--cy-tr-press); }
+.cg-r5-row { transition: var(--cy-tr-press); }
+.cg-sec__act { transition: var(--cy-tr-press); }
+.cg-r5-pill { transition: var(--cy-tr-press); }
+.cg-adv-del { transition: var(--cy-tr-press); }
+.cg-adv-add { transition: var(--cy-tr-press); }
+.cg-choice-li { transition: var(--cy-tr-press); }
+.cg-adv-correct { transition: var(--cy-tr-press); }
+.cg-ho-mark { transition: var(--cy-tr-press); }
+.cg-seg-del { transition: var(--cy-tr-press); }
+.cg-qz-thumb__x { transition: var(--cy-tr-press); }
+.cg-qz-thumb { transition: var(--cy-tr-press); }
+.cg-qz-thumb--add { transition: var(--cy-tr-press); }
+.cg-qmedia-x { transition: var(--cy-tr-press); }
+.cg-qz-cell { transition: var(--cy-tr-press); }
+.cg-ios-row { transition: var(--cy-tr-press); }
+.cg-try { transition: var(--cy-tr-press); }
+.cg-choice-radio { transition: var(--cy-tr-press); }
+.cg-opt-thumb-hit { transition: var(--cy-tr-press); }
+.cg-opt-chip { transition: var(--cy-tr-press); }
+.cg-opt-chip--clear { transition: var(--cy-tr-press); }
+.cg-cfg-add { transition: var(--cy-tr-press); }
+.cg-medal-up { transition: var(--cy-tr-press); }
+.cg-medal-clear { transition: var(--cy-tr-press); }
+.cg-mod-del { transition: var(--cy-tr-press); }
+.cg-beat-add { transition: var(--cy-tr-press); }
+.cg-pv-choice { transition: var(--cy-tr-press); }
+.cg-pv-usehint { transition: var(--cy-tr-press); }
+.cg-pv-navbtn { transition: var(--cy-tr-press); }
+.cg-edit-head__exit { transition: var(--cy-tr-press); }
+.cg-edit-head__done { transition: var(--cy-tr-press); }
+.cg-gsheet-navi { transition: var(--cy-tr-press); }
+.cg-grow { transition: var(--cy-tr-press); }
+.cg-tag-pill { transition: var(--cy-tr-press); }
+.cg-audio-play { transition: var(--cy-tr-press); }
+.cg-audio-del { transition: var(--cy-tr-press); }
+.cg-audio-empty { transition: var(--cy-tr-press); }
+.cg-model-x { transition: var(--cy-tr-press); }
+.cg-model { transition: var(--cy-tr-press); }
+.cg-ios-pill { transition: var(--cy-tr-press); }
+.cg-sheet-close { transition: var(--cy-tr-press); }
+.cg-picker-li { transition: var(--cy-tr-press); }
 .cg-count { font-variant-numeric: tabular-nums; }

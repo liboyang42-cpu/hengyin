@@ -188,7 +188,7 @@
 .dw--customer .dw-scroll-pad { height: calc(var(--cy-btn-h) + var(--cy-space-7) + env(safe-area-inset-bottom)); }
 .dw-done { flex: none; padding: var(--cy-space-2) 0 var(--cy-space-2) var(--cy-space-3); font-size: var(--cy-type-button); font-weight: 600; color: var(--cy-text-title); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.dw-done { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.dw-close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.dw-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.dw-done { transition: var(--cy-tr-press); }
+.dw-close { transition: var(--cy-tr-press); }
+.dw-btn { transition: var(--cy-tr-press); }

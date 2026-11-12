@@ -77,5 +77,5 @@
 .ma__fb.is-no { background: var(--cy-color-status-danger-soft); color: var(--accent); }
 .ma--reduced .ma__line, .ma--reduced .ma__dot { transition: none; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+/* 细节打磨二期 L1/L5/L7 */
 .ma__card { box-shadow: var(--cy-depth-rest); }

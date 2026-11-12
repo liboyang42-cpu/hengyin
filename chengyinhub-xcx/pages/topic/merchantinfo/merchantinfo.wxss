@@ -1955,8 +1955,8 @@ image.david_stu {
 
 /* 走查 v2 R07:定向广播弹窗 */
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.guide-image { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.david_wh { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pf-all { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.guide-image { transition: var(--cy-tr-press); }
+.david_wh { transition: var(--cy-tr-press); }
+.pf-all { transition: var(--cy-tr-press); }
 .statbar__value { font-variant-numeric: tabular-nums; }

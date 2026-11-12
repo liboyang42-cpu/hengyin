@@ -42,7 +42,7 @@ button.privacy-agree::after { border: 0; }
 .privacy-row__acts { display: flex; gap: var(--cy-space-2); flex-shrink: 0; }
 .privacy-media { display: flex; flex-direction: column; gap: var(--cy-space-3); margin-top: var(--cy-space-3); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.privacy-doc { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.privacy-link { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.privacy-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.privacy-doc { transition: var(--cy-tr-press); }
+.privacy-link { transition: var(--cy-tr-press); }
+.privacy-row { transition: var(--cy-tr-press); }

@@ -30,8 +30,7 @@
    四枚控件都挂了 hover-class,必须在这儿本地定义一份,否则按下去毫无反应。 */
 .cy-pressed { opacity: .72; transform: scale(.96); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.cam__x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cam__full { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cam__flip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cam__shutter { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.cam__x,
+.cam__full,
+.cam__flip,
+.cam__shutter { transition: var(--cy-tr-press); }

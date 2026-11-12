@@ -3,7 +3,7 @@
  * 不 setData:每次滚动只给视图层下一条 animate 指令(时长 1ms 的定位帧),不跨线程拷贝页面数据。
  * 只在 0 ≤ scrollTop ≤ limit 内动,iOS 下拉回弹(负值)与滚出头图之后都不处理;减少动态效果直接不动。
  * 原有的导航栏折叠 / 吸顶逻辑完全不碰。 */
-const { readReducedMotion } = require('./motion-preference.js');
+const { readReducedMotion } = require('../../../utils/motion-preference.js');
 
 const FACTOR = 0.5;
 const MIN_GAP_MS = 16;

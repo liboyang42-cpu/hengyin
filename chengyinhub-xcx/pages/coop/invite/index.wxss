@@ -106,12 +106,12 @@ cy-page-title + .card { margin-top: 0; }
 
 .form-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.inline-retry { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.terms-option { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.target { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.nearby-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.iv-edit-exit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.inline-retry { transition: var(--cy-tr-press); }
+.terms-option { transition: var(--cy-tr-press); }
+.target { transition: var(--cy-tr-press); }
+.nearby-row { transition: var(--cy-tr-press); }
+.iv-edit-exit { transition: var(--cy-tr-press); }
 .fee-yen,
 .fee-input,
 .iv-terms-value { font-variant-numeric: tabular-nums; }

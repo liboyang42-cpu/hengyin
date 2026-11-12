@@ -34,7 +34,6 @@ function money(v, k) {
   if (from < 0) return v;
   return s.substring(0, from) + f(s.substring(from, to), k) + s.substring(to);
 }
-// 数据条读数(细节打磨 G4):「5 站」「2.5 km」「90 分钟」只滚第一段数字;带冒号 / 连字符的时间段(09:00-17:00)原样不滚。
 function stat(v, k) {
   var s = '' + v;
   if (k === null || k === undefined || k === '') return v;

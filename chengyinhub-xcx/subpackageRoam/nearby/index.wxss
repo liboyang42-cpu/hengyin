@@ -273,29 +273,29 @@ page { background: var(--cy-comp-sheet-player-page); }
 /* TEAM-REPORT-01 举报入口:同队伍详情页 .team-report 的次级文字链 */
 .mt-report { min-height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); text-decoration: underline; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.mt-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-mode__i { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-row--list { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-card--empty { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-corner { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-corner--icon { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-btn--w { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-btn--s { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-report { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-sbtn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-sbtn--s { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.mt-sbtn--w { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__swi { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__qt { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__send { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__photo-note { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__source { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__btn--s { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__btn--w { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pb__hint { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.mt-chip { transition: var(--cy-tr-press); }
+.mt-mode__i { transition: var(--cy-tr-press); }
+.mt-row { transition: var(--cy-tr-press); }
+.mt-row--list { transition: var(--cy-tr-press); }
+.mt-card { transition: var(--cy-tr-press); }
+.mt-card--empty { transition: var(--cy-tr-press); }
+.mt-corner { transition: var(--cy-tr-press); }
+.mt-corner--icon { transition: var(--cy-tr-press); }
+.mt-btn { transition: var(--cy-tr-press); }
+.mt-btn--w { transition: var(--cy-tr-press); }
+.mt-btn--s { transition: var(--cy-tr-press); }
+.mt-report { transition: var(--cy-tr-press); }
+.mt-sbtn { transition: var(--cy-tr-press); }
+.mt-sbtn--s { transition: var(--cy-tr-press); }
+.mt-sbtn--w { transition: var(--cy-tr-press); }
+.pb__swi { transition: var(--cy-tr-press); }
+.pb__row { transition: var(--cy-tr-press); }
+.pb__qt { transition: var(--cy-tr-press); }
+.pb__send { transition: var(--cy-tr-press); }
+.pb__photo-note { transition: var(--cy-tr-press); }
+.pb__source { transition: var(--cy-tr-press); }
+.pb__btn { transition: var(--cy-tr-press); }
+.pb__btn--s { transition: var(--cy-tr-press); }
+.pb__btn--w { transition: var(--cy-tr-press); }
+.pb__hint { transition: var(--cy-tr-press); }

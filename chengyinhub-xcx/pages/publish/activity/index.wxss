@@ -482,7 +482,7 @@
   margin-bottom: var(--cy-space-2);
 }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.david_ty_rl_hcz_li_right { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.time-range-point { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.david_ty_rl_hcz_li_right { transition: var(--cy-tr-press); }
+.time-range-point { transition: var(--cy-tr-press); }
 .time-range-point__value { font-variant-numeric: tabular-nums; }

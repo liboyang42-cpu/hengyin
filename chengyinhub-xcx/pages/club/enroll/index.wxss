@@ -80,9 +80,9 @@ cy-empty { display: flex !important; flex: 1 !important; min-height: 0; }
 .money-nums { display: flex; flex-wrap: wrap; gap: 8rpx 24rpx; margin-top: 8rpx; font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
 .money-net { color: var(--cy-color-text-primary); font-weight: 600; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.reg-l { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.reg-checkin { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.reg-l { transition: var(--cy-tr-press); }
+.reg-checkin { transition: var(--cy-tr-press); }
 .ticket-num,
 .money-label,
 .money-tag { font-variant-numeric: tabular-nums; }

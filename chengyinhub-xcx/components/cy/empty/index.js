@@ -92,7 +92,6 @@ Component({
     },
   },
   lifetimes: {
-    // 细节打磨二期 L4/L6:空态的块按文档顺序依次浮上来,主图标 / 插画缓慢呼吸;减少动态效果一概不起
     ready() {
       const d = this.data;
       const hero = d._loading ? '' : (d._glyph ? '.cy-empty-glyph' : (d._art ? '.cy-empty-art' : (d._icon ? '.cy-empty-ic' : '')));

@@ -60,6 +60,6 @@
 
 page { --cy-comp-nav-bg: var(--cy-bg-page); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.om-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.om-organizer { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.om-card { transition: var(--cy-tr-press); }
+.om-organizer { transition: var(--cy-tr-press); }

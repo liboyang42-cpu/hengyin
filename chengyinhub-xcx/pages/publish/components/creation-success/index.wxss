@@ -42,7 +42,7 @@
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.cs__close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cs__primary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cs__secondary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.cs__close { transition: var(--cy-tr-press); }
+.cs__primary { transition: var(--cy-tr-press); }
+.cs__secondary { transition: var(--cy-tr-press); }

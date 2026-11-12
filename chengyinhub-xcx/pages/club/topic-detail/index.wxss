@@ -294,20 +294,20 @@
 /* 2026-11-02:有号码权限时报名参与者行的拨号键(≥88rpx 触控) */
 .cli-call { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-primary); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.ctd-sec__more { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ctd-topic { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ctd-director-unknown__act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ctd-director-field__act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ctd-director-field__picker { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ctd-director-field__act--primary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ctd-director-export { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tset-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ctd-footbar__note { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cli-copy { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cli-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cli-call { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cli-entry { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.ctd-sec__more { transition: var(--cy-tr-press); }
+.ctd-topic { transition: var(--cy-tr-press); }
+.ctd-director-unknown__act { transition: var(--cy-tr-press); }
+.ctd-director-field__act { transition: var(--cy-tr-press); }
+.ctd-director-field__picker { transition: var(--cy-tr-press); }
+.ctd-director-field__act--primary { transition: var(--cy-tr-press); }
+.ctd-director-export { transition: var(--cy-tr-press); }
+.tset-row { transition: var(--cy-tr-press); }
+.ctd-footbar__note { transition: var(--cy-tr-press); }
+.cli-copy { transition: var(--cy-tr-press); }
+.cli-chip { transition: var(--cy-tr-press); }
+.cli-call { transition: var(--cy-tr-press); }
+.cli-entry { transition: var(--cy-tr-press); }
 .ctd-metric__num,
 .ctd-metric__label,
 .ctd-opstime__value,

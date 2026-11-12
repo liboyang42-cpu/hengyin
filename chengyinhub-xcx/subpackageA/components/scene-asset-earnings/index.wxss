@@ -25,5 +25,5 @@
 /* 走查 v2 R10:「更多」行直接落在白底上,发丝线分隔(定稿原型),不再套一块灰底 */
 .tm-group { background: transparent; border-radius: 0; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.ae-action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.ae-action { transition: var(--cy-tr-press); }

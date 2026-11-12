@@ -298,11 +298,11 @@
   margin-right: calc(var(--cy-page-x) * -1 + 32rpx);
 }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.cmp-cancel { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cmp-act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cmp-chip-x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cmp-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cmp-tool { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cmp-announce { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.cmp-cancel { transition: var(--cy-tr-press); }
+.cmp-act { transition: var(--cy-tr-press); }
+.cmp-chip-x { transition: var(--cy-tr-press); }
+.cmp-chip { transition: var(--cy-tr-press); }
+.cmp-tool { transition: var(--cy-tr-press); }
+.cmp-announce { transition: var(--cy-tr-press); }
 .cmp-count { font-variant-numeric: tabular-nums; }

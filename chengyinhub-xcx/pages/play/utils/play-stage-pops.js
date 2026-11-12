@@ -17,7 +17,7 @@ const KIT_LABELS = {
 };
 const WALK_M_PER_MIN = 80;
 const chapterTrail = require('./chapter-trail.js');
-const countUp = require('../../../utils/count-up.js');
+const countUp = require('./count-roll.js');
 const entryRhythm = require('../../../utils/entry-rhythm.js');
 
 function firstImg(v) { return v ? String(v).split(/[,;]/)[0].trim() : ''; }

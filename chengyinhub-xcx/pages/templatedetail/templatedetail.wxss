@@ -933,13 +933,13 @@ page {
   font-weight: 600;
 }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.xb-mosaic-cell { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.xb-link-more { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.xb-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.xb-chip--act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.xb-caprow-more { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.david_tk_sr_tgb_li { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.xb-mosaic-cell { transition: var(--cy-tr-press); }
+.xb-link-more { transition: var(--cy-tr-press); }
+.xb-chip { transition: var(--cy-tr-press); }
+.xb-chip--act { transition: var(--cy-tr-press); }
+.xb-caprow-more { transition: var(--cy-tr-press); }
+.david_tk_sr_tgb_li { transition: var(--cy-tr-press); }
 .xb-stat-value,
 .xb-stat-label,
 .xb-rating-num { font-variant-numeric: tabular-nums; }

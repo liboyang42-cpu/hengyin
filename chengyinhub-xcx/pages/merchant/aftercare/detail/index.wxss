@@ -77,14 +77,14 @@ page { background: var(--cy-bg-page); }
 
 .ac-required { color: var(--cy-color-status-danger); margin-left: var(--cy-space-1); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.ac-decision { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ac-kv { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ac-kv--tap { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ac-evidence-link { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ac-evidence-selected { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ac-evidence-remove { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ac-evidence-upload { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.ac-decision { transition: var(--cy-tr-press); }
+.ac-kv { transition: var(--cy-tr-press); }
+.ac-kv--tap { transition: var(--cy-tr-press); }
+.ac-evidence-link { transition: var(--cy-tr-press); }
+.ac-evidence-selected { transition: var(--cy-tr-press); }
+.ac-evidence-remove { transition: var(--cy-tr-press); }
+.ac-evidence-upload { transition: var(--cy-tr-press); }
 .ac-evidence-value,
 .ac-field-count,
 .ac-sheet-amount-title,

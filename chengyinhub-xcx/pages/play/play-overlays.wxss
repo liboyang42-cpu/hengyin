@@ -93,7 +93,7 @@
 /* 减少动态效果:进场与分段淡入全部直接到位 */
 .play--reduced-motion .pov,.play--reduced-motion .cc-in,.play--reduced-motion .cc-fig,.play--reduced-motion .sc-rank{animation:none;opacity:1;transform:none}
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.pov__x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sc-dispute { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.pov__x { transition: var(--cy-tr-press); }
+.sc-dispute { transition: var(--cy-tr-press); }
 .sc-rank__n { font-variant-numeric: tabular-nums; }

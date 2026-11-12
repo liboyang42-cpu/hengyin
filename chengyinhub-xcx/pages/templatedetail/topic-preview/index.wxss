@@ -58,6 +58,6 @@ page { background: #000; } /* ds-ok 预览页固定纯黑底(原型 .px) */
 .tp--light .tp-cta::before { background: linear-gradient(180deg, rgba(255, 255, 255, 0), #FFFFFF 55%); } /* ds-ok 浅底底部渐隐 */
 .tp--light .tp-cta__btn { background: #111114; color: #FFFFFF; } /* ds-ok 浅底主按钮反色 */
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.tp-state__btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tp-cta__btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.tp-state__btn { transition: var(--cy-tr-press); }
+.tp-cta__btn { transition: var(--cy-tr-press); }

@@ -23,10 +23,10 @@
 .cy-pressed { opacity: .88; }
 @media (prefers-reduced-motion: reduce) { .sk-row__chev { transition: none; } }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.sk-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sk-row__del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sk-row__act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sk-row--add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sk__note { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sk__note--error { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.sk-row { transition: var(--cy-tr-press); }
+.sk-row__del { transition: var(--cy-tr-press); }
+.sk-row__act { transition: var(--cy-tr-press); }
+.sk-row--add { transition: var(--cy-tr-press); }
+.sk__note { transition: var(--cy-tr-press); }
+.sk__note--error { transition: var(--cy-tr-press); }

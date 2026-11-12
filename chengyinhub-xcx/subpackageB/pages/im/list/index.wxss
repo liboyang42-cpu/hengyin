@@ -181,11 +181,11 @@ page { background: var(--cy-bg-page); }
 .invite-card__btn--primary { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
 .invite-card__time { display: block; margin-top: var(--cy-space-4); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.invite-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.invite-card__btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.invite-card__btn--primary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.act-read { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.act-mute { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.act-del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.invite-card { transition: var(--cy-tr-press); }
+.invite-card__btn { transition: var(--cy-tr-press); }
+.invite-card__btn--primary { transition: var(--cy-tr-press); }
+.act { transition: var(--cy-tr-press); }
+.act-read { transition: var(--cy-tr-press); }
+.act-mute { transition: var(--cy-tr-press); }
+.act-del { transition: var(--cy-tr-press); }

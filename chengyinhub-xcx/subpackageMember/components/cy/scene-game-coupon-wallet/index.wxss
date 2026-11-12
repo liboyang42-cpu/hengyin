@@ -33,6 +33,6 @@
 .wallet-card__addr { flex: 1; min-width: 0; color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); line-height: var(--cy-leading-normal); }
 .wallet-card__nav { flex: none; min-height: var(--cy-btn-h-sm); display: inline-flex; align-items: center; gap: var(--cy-space-1); padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); font-size: var(--cy-type-caption); font-weight: 600; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.wallet-card__addr { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.wallet-card__nav { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.wallet-card__addr { transition: var(--cy-tr-press); }
+.wallet-card__nav { transition: var(--cy-tr-press); }

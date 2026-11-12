@@ -202,8 +202,8 @@
   color: var(--cy-btn-solid-fg);
 }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.reward-selector__field { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.reward-sheet__kind { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.create-date { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.reward-selector__field { transition: var(--cy-tr-press); }
+.reward-sheet__kind { transition: var(--cy-tr-press); }
+.create-date { transition: var(--cy-tr-press); }
 .reward-selector__value { font-variant-numeric: tabular-nums; }

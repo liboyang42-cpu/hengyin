@@ -162,13 +162,13 @@ cy-empty, cy-error { display: flex !important; flex: 1 !important; min-height: 0
 .cd-phone-row { display: flex; align-items: center; gap: var(--cy-space-2); }
 .cd-call { flex: none; width: 88rpx; height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-primary); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.cd-call { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cd-record { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cd-section-cancel { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cd-edit-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cd-tag { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.cd-add-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.cd-call { transition: var(--cy-tr-press); }
+.cd-record { transition: var(--cy-tr-press); }
+.cd-section-cancel { transition: var(--cy-tr-press); }
+.cd-edit-btn { transition: var(--cy-tr-press); }
+.cd-tag { transition: var(--cy-tr-press); }
+.cd-add-btn { transition: var(--cy-tr-press); }
 .cd-amount-label,
 .cd-amount-value,
 .cd-amount-value--locked,

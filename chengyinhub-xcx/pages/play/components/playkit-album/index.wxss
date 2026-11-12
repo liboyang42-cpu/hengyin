@@ -25,5 +25,5 @@
 .album__cta--press { opacity:.88; }
 .album__back--ghost { background:transparent; color:var(--alb-ink, #1C1C1E); box-shadow: inset 0 0 0 2rpx var(--alb-line, rgba(28,28,30,.35)); } /* ds-ok 白底上的描边次按钮 */
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+/* 细节打磨二期 L1/L5/L7 */
 .album__count { font-variant-numeric: tabular-nums; }

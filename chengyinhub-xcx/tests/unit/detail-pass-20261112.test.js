@@ -18,7 +18,7 @@ test('G2 按压:.cy-pressed 压到 .97 / .92,按下 120ms、松手 220ms 回弹�
 })
 
 test('G4 读数滚动:init 首帧是 0,时间段不滚,减少动态效果直接终值', () => {
-  const cu = require('../../utils/count-up.js')
+  const cu = require('../../pages/play/utils/count-roll.js')
   assert.deepEqual(cu.init({ dist: '120 米', walk: '2', hours: '09:00-17:00' }), { dist: '0 米', walk: '0', hours: '09:00-17:00' })
   assert.deepEqual(cu.init({ dist: '120 米' }, true), { dist: '120 米' })
   const page = { data: {}, setData(o) { Object.assign(this.data, o) } }
@@ -40,7 +40,7 @@ test('G7 入场节奏:按文档顺序错开 40ms、12px 上浮、420ms,最多 12
 })
 
 test('S5 视差:0.5×、只在 0..limit,负值(回弹)与减少动态效果不动', () => {
-  const px = require('../../utils/parallax.js')
+  const px = require('../../pages/topic/utils/parallax.js')
   assert.equal(px.offsetFor(200), 100); assert.equal(px.offsetFor(-30), null); assert.equal(px.offsetFor(5000), 300)
   const got = []; const page = { data: {}, animate(sel, f, d) { got.push([sel, f[0].translateY, d]) } }
   assert.equal(px.follow(page, '.bgt-swiper', 100), true); assert.deepEqual(got[0], ['.bgt-swiper', 50, 1])
@@ -61,7 +61,7 @@ test('S2/S3/S4/S9 环境细节:帧计划合法,星尘不透明度 ≤10%,减少�
   const pk = require('../../pages/play/utils/pack-detail.js')
   assert.equal(pk.SHEEN_MS, 3000); assert.equal(pk.FLOAT_PX, 6)
   assert.deepEqual(pk.squashFrames().map((f) => f.scale[0]), [1, 0.96, 1.04, 1])
-  const mo = require('../../utils/menu-open.js')
+  const mo = require('../../pages/play/utils/menu-open.js')
   assert.equal(mo.DURATION, 420); assert.equal(mo.EASE, 'cubic-bezier(.32,.72,0,1)')
   assert.equal(mo.open({ data: { reducedMotion: true }, animate() { throw new Error('不该起') } }), false)
 })

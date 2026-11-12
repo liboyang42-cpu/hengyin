@@ -231,12 +231,12 @@ button.rv-ava--btn::after { border: 0; }
 .rv-count { display: block; text-align: right; margin-top: var(--cy-space-1-5); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
 @media (prefers-reduced-motion: reduce) { .rv-ring { transition: none; } }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.rv-ava { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.rv-ava-edit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.rv-bg-hit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.rv-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.rv-row--stack { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.profile-name-link { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.profile-name-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.rv-ava { transition: var(--cy-tr-press); }
+.rv-ava-edit { transition: var(--cy-tr-press); }
+.rv-bg-hit { transition: var(--cy-tr-press); }
+.rv-row { transition: var(--cy-tr-press); }
+.rv-row--stack { transition: var(--cy-tr-press); }
+.profile-name-link { transition: var(--cy-tr-press); }
+.profile-name-chip { transition: var(--cy-tr-press); }
 .rv-count { font-variant-numeric: tabular-nums; }

@@ -88,7 +88,7 @@
 }
 
 /* 盖章式点击下沉(主题无关) */
-.btn--press { transform: scale(0.97); opacity: 0.92; transition-duration: var(--cy-motion-press-in); } /* 细节打磨 G2:按下 120ms 压到 .97,松手按基态的回弹曲线弹回 */
+.btn--press { transform: scale(0.97); opacity: 0.92; transition-duration: var(--cy-motion-press-in); }
 .btn--primary.btn--press { background: var(--cy-color-text-secondary); }
 
 /* loading:提交转圈,替代原生 <button loading>;spinner 用 currentColor 适配各 variant */

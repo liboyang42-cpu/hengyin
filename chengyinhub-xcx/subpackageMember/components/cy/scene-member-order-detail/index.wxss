@@ -539,12 +539,12 @@
 .settle-stage--done { color: var(--cy-color-text-primary); }
 .settle-stage--muted { color: var(--cy-color-text-secondary); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.orow { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.link-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.consent-err-act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.revisit-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.revisit-next { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.sec-pair-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.primary-cta { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.orow { transition: var(--cy-tr-press); }
+.link-row { transition: var(--cy-tr-press); }
+.consent-err-act { transition: var(--cy-tr-press); }
+.revisit-btn { transition: var(--cy-tr-press); }
+.revisit-next { transition: var(--cy-tr-press); }
+.sec-pair-btn { transition: var(--cy-tr-press); }
+.primary-cta { transition: var(--cy-tr-press); }
 .award-amount { font-variant-numeric: tabular-nums; }

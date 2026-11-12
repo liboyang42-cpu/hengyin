@@ -111,17 +111,17 @@ image.tb-avatar{background:transparent}
 .tbp__body{min-height:0;padding:0 var(--cy-page-x) calc(var(--cy-space-6) + env(safe-area-inset-bottom))}
 @media (prefers-reduced-motion: reduce){.tbp{animation:none}}
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.tbp__back { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tb-pill { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tb-button--flex { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tb-button--muted { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tb-button--small { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tb-close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tb-round-action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tb-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.tb-button--primary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ch-danger { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.tbp__back { transition: var(--cy-tr-press); }
+.tb-pill { transition: var(--cy-tr-press); }
+.tb-button--flex { transition: var(--cy-tr-press); }
+.tb-button--muted { transition: var(--cy-tr-press); }
+.tb-button--small { transition: var(--cy-tr-press); }
+.tb-close { transition: var(--cy-tr-press); }
+.tb-round-action { transition: var(--cy-tr-press); }
+.tb-row { transition: var(--cy-tr-press); }
+.tb-button--primary { transition: var(--cy-tr-press); }
+.ch-danger { transition: var(--cy-tr-press); }
 .tb-total,
 .tb-total-unit,
 .tb-avatar--stat,

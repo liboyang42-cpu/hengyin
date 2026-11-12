@@ -53,6 +53,6 @@
 /* qx-final:isolated 组件取不到全局 .cy-pressed,按压类在组件内定义(同 components/cy/card) */
 .cy-pressed { opacity: .88; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.rb-more { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.rb-more { transition: var(--cy-tr-press); }
 .rb-stat__l { font-variant-numeric: tabular-nums; }

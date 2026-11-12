@@ -1042,23 +1042,23 @@
 .pc-benefit--lock .pc-benefit-ic { color: var(--cy-color-text-tertiary); }
 .pc-benefit-lock { flex: none; color: var(--cy-color-text-tertiary); }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.pc-nav-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-npc-chat-entry { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-sec-link { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-ord-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-xbox-proj { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.post-composer-collapsed { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-mgimg { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-mrow { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-about-edit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-tag { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-tag--add { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-work-pic { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-benefit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pc-coop-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.chpick__item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pts-loading { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.pc-nav-btn { transition: var(--cy-tr-press); }
+.pc-npc-chat-entry { transition: var(--cy-tr-press); }
+.pc-sec-link { transition: var(--cy-tr-press); }
+.pc-ord-card { transition: var(--cy-tr-press); }
+.pc-xbox-proj { transition: var(--cy-tr-press); }
+.post-composer-collapsed { transition: var(--cy-tr-press); }
+.pc-mgimg { transition: var(--cy-tr-press); }
+.pc-mrow { transition: var(--cy-tr-press); }
+.pc-about-edit { transition: var(--cy-tr-press); }
+.pc-tag { transition: var(--cy-tr-press); }
+.pc-tag--add { transition: var(--cy-tr-press); }
+.pc-work-pic { transition: var(--cy-tr-press); }
+.pc-benefit { transition: var(--cy-tr-press); }
+.pc-coop-btn { transition: var(--cy-tr-press); }
+.chpick__item { transition: var(--cy-tr-press); }
+.pts-loading { transition: var(--cy-tr-press); }
 .pc-stat-n,
 .pc-stat-l,
 .pc-public-stat-n,

@@ -33,7 +33,7 @@
 .pp__pill { height: 104rpx; border-radius: var(--cy-radius-pill); background: var(--cy-color-text-primary); color: var(--cy-color-bg-page); display: flex; align-items: center; justify-content: center; font-size: var(--cy-type-button); font-weight: 600; }
 .pp__pill.is-off { opacity: .45; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.pp__row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pp__renew { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pp__pill { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.pp__row { transition: var(--cy-tr-press); }
+.pp__renew { transition: var(--cy-tr-press); }
+.pp__pill { transition: var(--cy-tr-press); }

@@ -563,13 +563,13 @@
 .grow-s { font-size: var(--cy-font-caption); color: var(--cy-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .grow-go { flex: none; min-height: 64rpx; padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-label); font-weight: 600; display: flex; align-items: center; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.tcard { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.pcard { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.grow-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ts-close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ts-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.ts-btn--ghost { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.tcard { transition: var(--cy-tr-press); }
+.pcard { transition: var(--cy-tr-press); }
+.grow-card { transition: var(--cy-tr-press); }
+.ts-close { transition: var(--cy-tr-press); }
+.ts-btn { transition: var(--cy-tr-press); }
+.ts-btn--ghost { transition: var(--cy-tr-press); }
 .value-delta,
 .metric-name,
 .metric-sub,

@@ -291,7 +291,7 @@ swiper{ margin: 0 var(--cy-space-4) var(--cy-space-3) var(--cy-space-4); height:
   font-size: var(--cy-type-caption);
 }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.smap-back { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.smap-merchant-picker { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.smap-back { transition: var(--cy-tr-press); }
+.smap-merchant-picker { transition: var(--cy-tr-press); }
 .price-range-tip { font-variant-numeric: tabular-nums; }

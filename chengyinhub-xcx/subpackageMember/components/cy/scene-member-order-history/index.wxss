@@ -99,7 +99,7 @@
 /* 2026-10-23 页面动效(utils/page-motion.js):容器 --pm-* 置 1 时先隐着,再依次浮上来;静止时无过渡,按压反馈不受影响;减少动态效果时从不触发 */
 .orderbox_li { filter: opacity(calc(1 - var(--pm-l, 0))); translate: 0 calc(var(--pm-l, 0) * 31rpx); transition: filter var(--pm-l-d, 0s) ease, translate var(--pm-l-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-l-s, 0) * (0ms + min(var(--pmi, 0), 8) * 30ms)), calc(var(--pm-l-s, 0) * (0ms + min(var(--pmi, 0), 8) * 30ms)), 0s, 0s; }
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
-.orderbox_li_con_info_txt { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.orderbut2 { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
-.orderbut-play { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+/* 细节打磨二期 L1/L5/L7 */
+.orderbox_li_con_info_txt { transition: var(--cy-tr-press); }
+.orderbut2 { transition: var(--cy-tr-press); }
+.orderbut-play { transition: var(--cy-tr-press); }

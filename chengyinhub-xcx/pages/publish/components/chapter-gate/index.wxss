@@ -16,5 +16,5 @@
 .is-reduced,.is-reduced .gate__copy,.is-reduced .gate__bar{transition:none;}
 .gate--pressed{filter:brightness(.9);}
 
-/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+/* 细节打磨二期 L1/L5/L7 */
 .gate__number { font-variant-numeric: tabular-nums; }
