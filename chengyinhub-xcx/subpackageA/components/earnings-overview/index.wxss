@@ -18,3 +18,6 @@
 .eo-none { display: block; padding: 72rpx 0; text-align: center; font-size: var(--cy-type-label); color: var(--cy-color-text-tertiary); } /* ds-ok: 空行留白 */
 /* isolated 组件内全局 .cy-pressed 进不来,本地一份(只减淡不位移) */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨 2026-11-12 · S10 收益:卡片顶边高光 + 两层柔投影(浅色),读数等宽 */
+.eo-card { box-shadow: var(--cy-shadow-hi-light), var(--cy-shadow-float-light); font-variant-numeric: tabular-nums; }
