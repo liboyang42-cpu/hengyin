@@ -2,7 +2,7 @@
 /* 白色筒壁向中心连续收暗,用平滑明暗表现纵深,不画分层圆环。静态背景不占 Canvas 每帧预算。 */
 .album::before{ content:''; position:absolute; left:0; right:0; top:0; bottom:0; pointer-events:none;
   background:
-    radial-gradient(ellipse 58% 47% at 25% 24%, var(--alb-hi, rgba(255,255,255,.86)) 0%, var(--alb-hi2, rgba(255,255,255,.40)) 40%, var(--alb-hi0, rgba(255,255,255,0)) 78%), /* ds-ok 筒壁漫反射;主题内取外观色 */
+    radial-gradient(ellipse 58% 47% at 25% 24%, var(--alb-hi, rgba(255,255,255,.86)) 0%, var(--alb-hi2, rgba(255,255,255,.40)) 40%, var(--alb-hi0, rgba(255,255,255,0)) 78%), /* ds-ok 筒壁漫反射，主题内取外观色 */
     radial-gradient(ellipse 72% 52% at 52% 43%,
       var(--alb-c0, #667180) 0%, var(--alb-c1, #8993A0) 24%, var(--alb-c2, #B5BEC9) 42%, var(--alb-c3, #DEE3EA) 62%, var(--alb-c4, #F7F8FA) 82%, var(--alb-bg, #FFFFFF) 100%); } /* ds-ok 用户指定 abstract white tunnel 3D,白色曲面漫反射与连续纵深 */
 
