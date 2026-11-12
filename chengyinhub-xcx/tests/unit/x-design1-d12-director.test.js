@@ -8,8 +8,7 @@ const read = (p) => fs.readFileSync(path.resolve(__dirname, '../..', p), 'utf8')
 
 test('D12:无封面时 ctd-head 上提,所有绝对定位都减去 --ctd-shift', () => {
   const css = read('pages/club/topic-detail/index.wxss')
-  const tops = css.match(/top: calc\(\d+rpx - var\(--ctd-shift, 0rpx\)\)/g) || []
-  assert.equal(tops.length, 6)
+  assert.match(css, /\.ctd-head--nocover \.ctd-head__logo[^{]*\.ctd-qa \{ transform: translateY\(calc\(-1 \* var\(--ctd-shift\)\)\); \}/)
   assert.doesNotMatch(css, /ctd-head__cover-fallback|ctd-cover-ph/)
 })
 

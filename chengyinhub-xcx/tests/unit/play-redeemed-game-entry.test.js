@@ -134,7 +134,7 @@ test('authoritative rebuild refreshes an open hero without losing its animation 
 
 test('duplicate-redemption warning and QR visibility still use redemption done', () => {
   assert.match(wxml, /hero\.node\.done[^\n]*class="fx-shop__off">已核销/);
-  assert.match(wxml, /hero\.node\.isMerchant && !hero\.node\.done && regId/);
+  assert.doesNotMatch(wxml, /bindtap="openEntryQr"[^>]*>出示入场码/); // D1:站点详情不再有入场码按钮
 });
 
 

@@ -239,7 +239,7 @@ test('自由探索详情保留章节关联，纯内容不展示商家核销区�
   assert.equal(merchant.isMerchant, true)
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /class="fx-shop fx-hero__in"[^>]*wx:if="\{\{hero.node.isMerchant\}\}"/)
-  assert.match(wxml, /class="fx-step3 fx-hero__in"[^>]*wx:if="\{\{hero.node.isMerchant\}\}"/)
+  assert.match(wxml, /<block wx:if="\{\{hero.node.isMerchant\}\}">\s*<view class="fx-hero__ey[^>]*>到店三步<\/view>\s*<view class="fx-step3 fx-hero__in"/)
 })
 
 test('读到还没得到的伏笔块就认领;没授权微信运动也认领,只是不带步数密文', async () => {

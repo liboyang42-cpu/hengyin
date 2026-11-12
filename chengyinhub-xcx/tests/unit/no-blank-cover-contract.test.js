@@ -128,7 +128,7 @@ test('CU-C-147 / D12 活动详情 Hero:无封面整块不出,标题区上提(不
   assert.doesNotMatch(wxml, /ctd-head__cover-fallback|封面暂不可用|cover-route/)
   assert.match(wxml, /ctd-head--nocover/)
   assert.match(wxss, /\.ctd-head--nocover \{ --ctd-shift: 340rpx; height: calc\(var\(--ctd-head-h\) - var\(--ctd-shift\)\); \}/)
-  assert.match(wxss, /\.ctd-head__title \{[^}]*top: calc\(548rpx - var\(--ctd-shift, 0rpx\)\)/)
+  assert.match(wxss, /\.ctd-head--nocover \.ctd-head__logo[^{]*\{ transform: translateY/)
 })
 
 test('CU-C-147 活动详情:无商家 Logo / 无主题封面时两块空壳整块不出', () => {
