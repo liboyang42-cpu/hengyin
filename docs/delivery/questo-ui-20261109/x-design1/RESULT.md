@@ -42,7 +42,7 @@
 
 ## 门禁结果
 
-- 全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`）：TOTALS_PLACEHOLDER
+- 全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`）：首轮 17403 项，通过 17401，失败 2（均为 `action-ledger`：退场控件使 tap 3032→3029、总控件 6028→6025，计数断言未同步）；同轮此前暴露的 6 处合同断言（discovery-editorial、mock-image、overlay-nav、play-chapter-story、play-redeemed-game-entry 等）已在提交 5bb40acd2 修正。计数由另一会话在 696edf1e9 同步后，`action-ledger.test.js` 单独重跑 48 项全绿。合并后的最终头上没有再整仓重跑一遍，整仓 0 失败以 CI 20 个分片全绿为准（头 696edf1e9 的 run 43171540828：20/20 分片、Mini program static gates、Admin UI、迁移门禁、gitleaks 均成功）
 - 动作台账 `build-action-ledger.js --write`：PASS 6025 控件；路由矩阵 `--check`：PASS 171 路由 / 27 场景。
 - danger-confirm：自证通过；PASS（53 个调用点）。
 - ui-integrity：**UI-GATE-0:PASS**（首次跑出 1 条 U4：`workshopReason` 无人消费，已删代码而不是登记基线；无新增基线）。
@@ -50,6 +50,6 @@
 - WXS 语法门禁 `node --expose-internals scripts/wxs-syntax-gate.js`：PASS（14 个 .wxs，4 段内联）；WXSS 注释入值门禁、选择器门禁、组件选择器门禁、未定义 token 门禁、WXML 条件链门禁、页面根主题门禁均 PASS，无注释写进声明值。
 - 主包：源码侧 `mainpkg-size-report` 合计 3234KB，×0.633 ≈ 2047 KiB，< 2048 KiB（x-fix7 为 3233KB，本轮净增约 1.1 KB 源码：兜底类、`dark` 属性、`cover-route.svg` 490 字节，同时删掉了几处旧占位与文字；富余只有约 1 KiB，下一轮要先下沉再加）。新页面没有；所有改动落在已有文件。
 - 未改 `ci/architecture/*`、`.github/workflows/ci.yml`；未跑 `ci/xcx-check.sh`、`ds-hardcode-gate-selftest.sh`；未标 ready、未合并；没有碰迁移、生产或密钥。
-- PR #779 CI：CI_PLACEHOLDER
+- PR #779 CI：头 696edf1e9 的 run 43171540828：除 Fast gates 里已知的架构门禁步骤（「Check architecture changes against trusted CI base」，与 x-fix7 末状态相同的红，不能改 `ci/architecture/*`）外全绿；Backend tests 写本文时仍在跑
 
 STATUS: PARTIAL - D1–D16 代码与测试全部完成；8 项（D1/D2/D4/D8/D9/D11/D14/D16）没有前后截图，D15 卡高未缩
