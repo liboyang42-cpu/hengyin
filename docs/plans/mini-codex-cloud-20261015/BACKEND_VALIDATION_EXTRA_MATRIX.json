@@ -1,0 +1,3697 @@
+{
+  "candidate_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303",
+  "comparison_base": "1e403b135206844a34219753a36e2dee39c7dd59",
+  "status": "NOT_RUN_VPS_HANDOFF",
+  "object_acquisition": "Missing object imported via authorized anonymous exact SHA fetch, FETCH_HEAD only; branch/worktree/HEAD unchanged",
+  "execution_owner": "LOCAL_VPS_COORDINATOR/01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "count_semantics": "Lexical @Test declarations at precise SHA, not executions/iterations/passes. Adjacent referenced old suites are separate from changed/queue primary. No old231 pass reused.",
+  "queue_path": "docs/verification/mini-bug-arch-followups-20261015/EXTERNAL_COORDINATION/QUEUE.json",
+  "queue_actual_counts": {
+    "total_history": 105,
+    "source_delivered": 52,
+    "no_change_source_review": 40,
+    "blocked": 10,
+    "ready": 0,
+    "claimed": 0,
+    "actionable_or_inflight": 0
+  },
+  "queue_items": [
+    {
+      "id": "E01-01",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_01Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-01.md"
+    },
+    {
+      "id": "E01-02",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_02Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-02.md"
+    },
+    {
+      "id": "E01-03",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_03Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-03.md"
+    },
+    {
+      "id": "E01-04",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_04Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-04.md"
+    },
+    {
+      "id": "E01-05",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_05Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-05.md"
+    },
+    {
+      "id": "E01-06",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_06Test.java",
+      "declared_by_queue": 2,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-06.md"
+    },
+    {
+      "id": "E01-07",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_07Test.java",
+      "declared_by_queue": 3,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-07.md"
+    },
+    {
+      "id": "E01-08",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_08Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-08.md"
+    },
+    {
+      "id": "E01-09",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_09Test.java",
+      "declared_by_queue": 2,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-09.md"
+    },
+    {
+      "id": "E02-01",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+      "declared_by_queue": 1,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-01.md"
+    },
+    {
+      "id": "E02-02",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_02Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-02.md"
+    },
+    {
+      "id": "E02-03",
+      "state": "BLOCKED_DECISION",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_03Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-03.md"
+    },
+    {
+      "id": "E02-04",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_04Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-04.md"
+    },
+    {
+      "id": "E02-05",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_05Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-05.md"
+    },
+    {
+      "id": "E02-06",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+      "declared_by_queue": 1,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-06.md"
+    },
+    {
+      "id": "E02-07",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_07Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-07.md"
+    },
+    {
+      "id": "E02-08",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_08Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-08.md"
+    },
+    {
+      "id": "E02-09",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_09Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-09.md"
+    },
+    {
+      "id": "E03-01",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_01Test.java",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-01.md"
+    },
+    {
+      "id": "E03-02",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_02Test.java",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-02.md"
+    },
+    {
+      "id": "E03-03",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_03Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-03.md"
+    },
+    {
+      "id": "E03-04",
+      "state": "BLOCKED_DECISION",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_04Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-04.md"
+    },
+    {
+      "id": "E03-05",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_05Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-05.md"
+    },
+    {
+      "id": "E03-06",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_06Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-06.md"
+    },
+    {
+      "id": "E03-07",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_07Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-07.md"
+    },
+    {
+      "id": "E03-08",
+      "state": "DELEGATED_SOURCE_FIX",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_08Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-08.md"
+    },
+    {
+      "id": "E04-01",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_01Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-01.md"
+    },
+    {
+      "id": "E04-02",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_02Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-02.md"
+    },
+    {
+      "id": "E04-03",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_03Test.java",
+      "declared_by_queue": 5,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-03.md"
+    },
+    {
+      "id": "E04-04",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_04Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-04.md"
+    },
+    {
+      "id": "E04-05",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_05Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-05.md"
+    },
+    {
+      "id": "E04-06",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_06Test.java",
+      "declared_by_queue": 2,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-06.md"
+    },
+    {
+      "id": "E04-07",
+      "state": "BLOCKED_OWNERSHIP",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-07.md"
+    },
+    {
+      "id": "E04-08",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_08Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-08.md"
+    },
+    {
+      "id": "E05-01",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-01.test.js",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-01.md"
+    },
+    {
+      "id": "E05-02",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-02.test.js",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-02.md"
+    },
+    {
+      "id": "E05-03",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-03.test.js",
+      "declared_by_queue": 10,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-03.md"
+    },
+    {
+      "id": "E05-04",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-04.test.js",
+      "declared_by_queue": 12,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-04.md"
+    },
+    {
+      "id": "E05-05",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-05.test.js",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-05.md"
+    },
+    {
+      "id": "E05-06",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-06.test.js",
+      "declared_by_queue": 8,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-06.md"
+    },
+    {
+      "id": "E05-07",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-07.test.js",
+      "declared_by_queue": 9,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-07.md"
+    },
+    {
+      "id": "E05-08",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-08.test.js",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-08.md"
+    },
+    {
+      "id": "E06-01",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-01.test.js",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-01.md"
+    },
+    {
+      "id": "E06-02",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-02.test.js",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-02.md"
+    },
+    {
+      "id": "E06-03",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-03.test.js",
+      "declared_by_queue": 6,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-03.md"
+    },
+    {
+      "id": "E06-04",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-04.test.js",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-04.md"
+    },
+    {
+      "id": "E06-05",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-05.test.js",
+      "declared_by_queue": 7,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-05.md"
+    },
+    {
+      "id": "E06-06",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-06.test.js",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-06.md"
+    },
+    {
+      "id": "E06-07",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-07.test.js",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-07.md"
+    },
+    {
+      "id": "E06-08",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-08.test.js",
+      "declared_by_queue": 5,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-08.md"
+    },
+    {
+      "id": "E01-10",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_10Test.java",
+      "declared_by_queue": 3,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-10.md"
+    },
+    {
+      "id": "E01-11",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_11Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-11.md"
+    },
+    {
+      "id": "E02-10",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_10Test.java",
+      "declared_by_queue": 1,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-10.md"
+    },
+    {
+      "id": "E02-11",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+      "declared_by_queue": 1,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-11.md"
+    },
+    {
+      "id": "E02-12",
+      "state": "BLOCKED_DECISION",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_12Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-12.md"
+    },
+    {
+      "id": "E03-09",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/A03EndingSnapshotMySqlIT.java",
+      "declared_by_queue": 3,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-09.md"
+    },
+    {
+      "id": "E04-09",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_09Test.java",
+      "declared_by_queue": 2,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-09.md"
+    },
+    {
+      "id": "E05-09",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-09.test.js",
+      "declared_by_queue": 7,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-09.md"
+    },
+    {
+      "id": "E05-10",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-10.test.js",
+      "declared_by_queue": 12,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-10.md"
+    },
+    {
+      "id": "E06-09",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-09.test.js",
+      "declared_by_queue": 7,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-09.md"
+    },
+    {
+      "id": "E06-10",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-10.test.js",
+      "declared_by_queue": 6,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-10.md"
+    },
+    {
+      "id": "E06-11",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-11.test.js",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-11.md"
+    },
+    {
+      "id": "E01-12",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_12Test.java",
+      "declared_by_queue": 3,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-12.md"
+    },
+    {
+      "id": "E01-13",
+      "state": "BLOCKED_DECISION",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_13Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-13.md"
+    },
+    {
+      "id": "E02-13",
+      "state": "BLOCKED_DEPENDENCY",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_13Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-13.md"
+    },
+    {
+      "id": "E02-14",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_14Test.java",
+      "declared_by_queue": 1,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-14.md"
+    },
+    {
+      "id": "E04-10",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_10Test.java",
+      "declared_by_queue": 3,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-10.md"
+    },
+    {
+      "id": "E03-10",
+      "state": "RESOLVED_BY_OTHER_TEAM",
+      "regression_file": null,
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-10.md"
+    },
+    {
+      "id": "E03-11",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_11Test.java",
+      "declared_by_queue": 7,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-11.md"
+    },
+    {
+      "id": "E01-14",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_14Test.java",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-14.md"
+    },
+    {
+      "id": "E01-15",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_15Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-15.md"
+    },
+    {
+      "id": "E01-16",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_16Test.java",
+      "declared_by_queue": 3,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-16.md"
+    },
+    {
+      "id": "E01-17",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_17Test.java",
+      "declared_by_queue": 1,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-17.md"
+    },
+    {
+      "id": "E02-15",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_15Test.java",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-15.md"
+    },
+    {
+      "id": "E02-16",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_16Test.java",
+      "declared_by_queue": 3,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-16.md"
+    },
+    {
+      "id": "E02-17",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_17Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-17.md"
+    },
+    {
+      "id": "E02-18",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_18Test.java",
+      "declared_by_queue": 1,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-18.md"
+    },
+    {
+      "id": "E03-12",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_12Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-12.md"
+    },
+    {
+      "id": "E03-13",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_13Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-13.md"
+    },
+    {
+      "id": "E03-14",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_14Test.java",
+      "declared_by_queue": 2,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-14.md"
+    },
+    {
+      "id": "E04-11",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_11Test.java",
+      "declared_by_queue": 1,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-11.md"
+    },
+    {
+      "id": "E04-12",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_12Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-12.md"
+    },
+    {
+      "id": "E05-11",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-11.test.js",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-11.md"
+    },
+    {
+      "id": "E06-12",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-12.test.js",
+      "declared_by_queue": 6,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-12.md"
+    },
+    {
+      "id": "E05-12",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-12.test.js",
+      "declared_by_queue": 7,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-12.md"
+    },
+    {
+      "id": "E05-13",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e05-13.test.js",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-13.md"
+    },
+    {
+      "id": "E06-13",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-xcx/tests/unit/longrun-e06-13.test.js",
+      "declared_by_queue": 5,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-13.md"
+    },
+    {
+      "id": "E01-18",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_18Test.java",
+      "declared_by_queue": 5,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E01-18.md"
+    },
+    {
+      "id": "E02-19",
+      "state": "BLOCKED_OWNERSHIP",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_19Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-19.md"
+    },
+    {
+      "id": "E02-20",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_20Test.java",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-20.md"
+    },
+    {
+      "id": "E02-21",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_21Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-21.md"
+    },
+    {
+      "id": "E02-22",
+      "state": "BLOCKED_OWNERSHIP",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_22Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E02-22.md"
+    },
+    {
+      "id": "E03-15",
+      "state": "RESOLVED_BY_OTHER_TEAM",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_15Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-15.md"
+    },
+    {
+      "id": "E03-16",
+      "state": "BLOCKED_OWNERSHIP",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_16Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-16.md"
+    },
+    {
+      "id": "E04-13",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+      "declared_by_queue": 2,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-13.md"
+    },
+    {
+      "id": "E04-14",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_14Test.java",
+      "declared_by_queue": 2,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-14.md"
+    },
+    {
+      "id": "E04-15",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_15Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E04-15.md"
+    },
+    {
+      "id": "E05-14",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_14Test.java",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-14.md"
+    },
+    {
+      "id": "E05-15",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_15Test.java",
+      "declared_by_queue": 4,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-15.md"
+    },
+    {
+      "id": "E05-16",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_16Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-16.md"
+    },
+    {
+      "id": "E05-17",
+      "state": "BLOCKED_OWNERSHIP",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_17Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E05-17.md"
+    },
+    {
+      "id": "E06-14",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_14Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-14.md"
+    },
+    {
+      "id": "E06-15",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_15Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-15.md"
+    },
+    {
+      "id": "E06-16",
+      "state": "NO_CHANGE_SOURCE_REVIEW",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E06_16Test.java",
+      "declared_by_queue": 0,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E06-16.md"
+    },
+    {
+      "id": "E03-17",
+      "state": "SOURCE_DELIVERED_UNVERIFIED",
+      "regression_file": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_17Test.java",
+      "declared_by_queue": 3,
+      "evidence_file": "docs/verification/mini-longrun-20261015/EXTRA6/E03-17.md"
+    }
+  ],
+  "groups": {
+    "unit": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_11Test.java",
+        "class": "com.chengyinhub.business.longrun.E03_11Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E03-11"
+        ],
+        "group": "unit",
+        "source_declared_test_methods": 7,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_15Test.java",
+        "class": "com.chengyinhub.business.longrun.E05_15Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E05-15"
+        ],
+        "group": "unit",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityAtomicityContractTest.java",
+        "class": "com.chengyinhub.business.service.RegistrationEquityAtomicityContractTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostLifecyclePolicyTest.java",
+        "class": "com.chengyinhub.business.community.CommunityPostLifecyclePolicyTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 6,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/domain/JourneyStoryEndingChapterTest.java",
+        "class": "com.chengyinhub.business.domain.JourneyStoryEndingChapterTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/domain/JourneyStoryNpcRemapTest.java",
+        "class": "com.chengyinhub.business.domain.JourneyStoryNpcRemapTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubEventOpsMapperContractTest.java",
+        "class": "com.chengyinhub.business.mapper.ClubEventOpsMapperContractTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 7,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventScheduleMaterializerTest.java",
+        "class": "com.chengyinhub.business.service.ClubEventScheduleMaterializerTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistRegistrationWiringTest.java",
+        "class": "com.chengyinhub.business.service.ClubWaitlistRegistrationWiringTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/A03RuntimeEndingCompatibilityTest.java",
+        "class": "com.chengyinhub.business.service.support.A03RuntimeEndingCompatibilityTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 5,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/JourneyStoryValidatorTest.java",
+        "class": "com.chengyinhub.business.service.support.JourneyStoryValidatorTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 33,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/NodeJourneySnapshotPresentFreezeTest.java",
+        "class": "com.chengyinhub.business.service.support.NodeJourneySnapshotPresentFreezeTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "unit",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      }
+    ],
+    "mock": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostServiceImplTest.java",
+        "class": "com.chengyinhub.business.community.CommunityPostServiceImplTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 55,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 272,
+            "text": "media.put(\"derived_object_key\", \"https://cdn.example/community/image.jpg\");"
+          },
+          {
+            "line": 275,
+            "text": "Collections.singletonList(\"https://cdn.example/community/image.jpg\")))))"
+          },
+          {
+            "line": 298,
+            "text": "request.setObjectKey(\"https://cdn.example/community/new.jpg\");"
+          },
+          {
+            "line": 304,
+            "text": "existing.put(\"derived_object_key\", \"https://cdn.example/community/old.jpg\");"
+          },
+          {
+            "line": 322,
+            "text": "request.setObjectKey(\"https://cdn.example/community/photo.jpg\");"
+          },
+          {
+            "line": 1070,
+            "text": "media.put(\"object_key\", \"https://cdn.example/upload/shared.jpg\");"
+          },
+          {
+            "line": 1074,
+            "text": "when(mapper.countLiveMediaObjectRefs(\"https://cdn.example/upload/shared.jpg\", 41L)).thenReturn(1);"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_07Test.java",
+        "class": "com.chengyinhub.business.longrun.E01_07Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E01-07"
+        ],
+        "group": "mock",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_12Test.java",
+        "class": "com.chengyinhub.business.longrun.E01_12Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E01-12"
+        ],
+        "group": "mock",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_14Test.java",
+        "class": "com.chengyinhub.business.longrun.E01_14Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E01-14"
+        ],
+        "group": "mock",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_14Test.java",
+        "class": "com.chengyinhub.business.longrun.E02_14Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E02-14"
+        ],
+        "group": "mock",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_01Test.java",
+        "class": "com.chengyinhub.business.longrun.E03_01Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E03-01"
+        ],
+        "group": "mock",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_02Test.java",
+        "class": "com.chengyinhub.business.longrun.E03_02Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E03-02"
+        ],
+        "group": "mock",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_14Test.java",
+        "class": "com.chengyinhub.business.longrun.E03_14Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E03-14"
+        ],
+        "group": "mock",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_17Test.java",
+        "class": "com.chengyinhub.business.longrun.E03_17Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E03-17"
+        ],
+        "group": "mock",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_14Test.java",
+        "class": "com.chengyinhub.business.longrun.E05_14Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E05-14"
+        ],
+        "group": "mock",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistServiceImplTest.java",
+        "class": "com.chengyinhub.business.service.ClubWaitlistServiceImplTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 24,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponSourceGrantTest.java",
+        "class": "com.chengyinhub.business.service.CouponSourceGrantTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 6,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponDisabledTest.java",
+        "class": "com.chengyinhub.business.service.SmsCouponDisabledTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 8,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionAuditTest.java",
+        "class": "com.chengyinhub.business.service.SmsCouponRedemptionAuditTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 8,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionStartTimeTest.java",
+        "class": "com.chengyinhub.business.service.SmsCouponRedemptionStartTimeTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 5,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponReverseTest.java",
+        "class": "com.chengyinhub.business.service.SmsCouponReverseTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 7,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ClubEventScheduleReadbackTest.java",
+        "class": "com.chengyinhub.business.service.B04ClubEventScheduleReadbackTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 6,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubActivityCancelWrapUpTest.java",
+        "class": "com.chengyinhub.business.service.ClubActivityCancelWrapUpTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 8,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventOccurrenceListTest.java",
+        "class": "com.chengyinhub.business.service.ClubEventOccurrenceListTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 5,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventOpsServiceImplTest.java",
+        "class": "com.chengyinhub.business.service.ClubEventOpsServiceImplTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 12,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubOccurrenceCancellationServiceTest.java",
+        "class": "com.chengyinhub.business.service.ClubOccurrenceCancellationServiceTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 8,
+        "other_test_annotations": [
+          "ParameterizedTest",
+          "ParameterizedTest"
+        ],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 436,
+            "text": "row.setStatus(ClubEventCampaign.PROCESSING);"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistMaintenanceCursorTest.java",
+        "class": "com.chengyinhub.business.service.ClubWaitlistMaintenanceCursorTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PerkLedgerServiceTest.java",
+        "class": "com.chengyinhub.business.service.PerkLedgerServiceTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 57,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ChapterFlowWriteServiceTest.java",
+        "class": "com.chengyinhub.business.service.impl.ChapterFlowWriteServiceTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 41,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 844,
+            "text": "text(\"开场\"), imageBlock(\"https://cdn/x.jpg\"),"
+          },
+          {
+            "line": 852,
+            "text": "assertEquals(\"https://cdn/x.jpg\", stored.get(1).get(\"url\"));"
+          },
+          {
+            "line": 867,
+            "text": "text(\"开场\"), audioBlock(\"https://cdn/x.mp3\"), nodeBlock(0)));"
+          },
+          {
+            "line": 873,
+            "text": "assertEquals(\"https://cdn/x.mp3\", stored.get(1).get(\"url\"));"
+          },
+          {
+            "line": 882,
+            "text": "chapter.setAudioUrl(\"https://cdn/narration.mp3\");"
+          },
+          {
+            "line": 887,
+            "text": "assertEquals(\"https://cdn/narration.mp3\", insertedChapters.get(0).getAudioUrl());"
+          },
+          {
+            "line": 892,
+            "text": "* 只会在列表页出现一行 https://cdn/x.jpg —— 前端 pro-editor-story 用的是同一条口径。"
+          },
+          {
+            "line": 899,
+            "text": "text(\"第一段\"), imageBlock(\"https://cdn/x.jpg\"), text(\"第二段\"), nodeBlock(0)));"
+          },
+          {
+            "line": 918,
+            "text": "ChapterBlockDTO dirty = imageBlock(\"https://cdn/x.jpg\");"
+          },
+          {
+            "line": 945,
+            "text": "ChapterBlockDTO image = imageBlock(\"https://cdn.example/photo.jpg\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ClubSessionServiceImplTest.java",
+        "class": "com.chengyinhub.business.service.impl.ClubSessionServiceImplTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 15,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java",
+        "class": "com.chengyinhub.business.service.impl.PlayJourneyReadServiceImplTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 19,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": [],
+        "delta_at_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java",
+        "class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 25,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 610,
+            "text": "photo.setStateJson(\"{\\\"photoCheck\\\":{\\\"lastUrl\\\":\\\"https://x/a.jpg\\\"}}\");"
+          },
+          {
+            "line": 620,
+            "text": "assertEquals(\"[{url=https://x/a.jpg, title=拍下招牌}]\", String.valueOf(archive.get(\"photos\")));"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": [],
+        "delta_at_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+        "class": "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java",
+        "class": "com.chengyinhub.business.service.support.SeventhPierFixtureTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 9,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": [],
+        "delta_at_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiClubEventOpsControllerTest.java",
+        "class": "com.chengyinhub.web.controller.api.ApiClubEventOpsControllerTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java",
+        "class": "com.chengyinhub.web.controller.api.ApiPlayEncounterControllerTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 54,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 137,
+            "text": "npc.setAvatar(\"https://cdn.example.com/a.png\");"
+          },
+          {
+            "line": 180,
+            "text": "assertEquals(\"https://cdn.example.com/a.png\", npc.get(\"avatar\"));"
+          },
+          {
+            "line": 883,
+            "text": "+ \"\\\"imageUrl\\\":\\\"https://cdn.example.com/qa.png\\\",\\\"audioUrl\\\":\\\"https://cdn.example.com/qa.mp3\\\",\""
+          },
+          {
+            "line": 886,
+            "text": "+ \"\\\"items\\\":[{\\\"id\\\":\\\"i1\\\",\\\"label\\\":\\\"铜牌\\\",\\\"img\\\":\\\"https://cdn.example.com/i1.png\\\"}]},\""
+          },
+          {
+            "line": 887,
+            "text": "+ \"\\\"blindTaste\\\":{\\\"enabled\\\":true,\\\"title\\\":\\\"闭眼闻\\\",\\\"imageUrl\\\":\\\"https://cdn.example.com/blind.png\\\"},\""
+          },
+          {
+            "line": 888,
+            "text": "+ \"\\\"hiddenObject\\\":{\\\"enabled\\\":false,\\\"imageUrl\\\":\\\"https://cdn.example.com/hidden.png\\\"},\""
+          },
+          {
+            "line": 1023,
+            "text": "node.setImgUrl(\"https://cdn.example.com/node.png\");"
+          },
+          {
+            "line": 1024,
+            "text": "template.setImgUrl(\"https://cdn.example.com/tpl.png\");"
+          },
+          {
+            "line": 1025,
+            "text": "template.setAudioUrl(\"https://cdn.example.com/voice.mp3\");"
+          },
+          {
+            "line": 1029,
+            "text": "chapter.setAudioUrl(\"https://cdn.example.com/chapter.mp3\");"
+          },
+          {
+            "line": 1034,
+            "text": "assertEquals(\"https://cdn.example.com/node.png\", preload.get(0), \"封面在先\");"
+          },
+          {
+            "line": 1035,
+            "text": "assertTrue(preload.contains(\"https://cdn.example.com/tpl.png\"));"
+          },
+          {
+            "line": 1036,
+            "text": "assertTrue(preload.contains(\"https://cdn.example.com/chapter.mp3\"));"
+          },
+          {
+            "line": 1037,
+            "text": "assertTrue(preload.contains(\"https://cdn.example.com/voice.mp3\"));"
+          },
+          {
+            "line": 1038,
+            "text": "assertTrue(preload.contains(\"https://cdn.example.com/qa.png\"));"
+          },
+          {
+            "line": 1039,
+            "text": "assertTrue(preload.contains(\"https://cdn.example.com/qa.mp3\"));"
+          },
+          {
+            "line": 1040,
+            "text": "assertTrue(preload.contains(\"https://cdn.example.com/i1.png\"));"
+          },
+          {
+            "line": 1041,
+            "text": "assertTrue(preload.contains(\"https://cdn.example.com/blind.png\"));"
+          },
+          {
+            "line": 1042,
+            "text": "assertTrue(preload.contains(\"https://cdn.example.com/a.png\"), \"出场 NPC 头像\");"
+          },
+          {
+            "line": 1043,
+            "text": "assertFalse(preload.contains(\"https://cdn.example.com/hidden.png\"), \"停用段的素材不进预载\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": [],
+        "delta_at_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterRoleViewTest.java",
+        "class": "com.chengyinhub.web.controller.api.ApiPlayEncounterRoleViewTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 13,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": [],
+        "delta_at_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiRoamShareControllerTest.java",
+        "class": "com.chengyinhub.web.controller.api.ApiRoamShareControllerTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 6,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/JourneyPublishFreezeTest.java",
+        "class": "com.chengyinhub.web.controller.api.JourneyPublishFreezeTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "mock",
+        "source_declared_test_methods": 7,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_16Test.java",
+        "class": "com.chengyinhub.business.longrun.E03_16Test",
+        "scope": "primary",
+        "source_declared_test_methods": 4,
+        "group": "mock",
+        "gates": [],
+        "env": [],
+        "status": "NOT_RUN",
+        "delta_at_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_17Test.java",
+        "class": "com.chengyinhub.business.longrun.E05_17Test",
+        "scope": "primary",
+        "source_declared_test_methods": 5,
+        "group": "mock",
+        "gates": [],
+        "env": [],
+        "status": "NOT_RUN",
+        "delta_at_sha": "a37ce191756ab11896faf4e61e8a06b4279f0303"
+      }
+    ],
+    "h2": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_16Test.java",
+        "class": "com.chengyinhub.business.longrun.E01_16Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E01-16"
+        ],
+        "group": "h2",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 59,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:e01_16_\" + UUID.randomUUID().toString().replace(\"-\", \"\")"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_17Test.java",
+        "class": "com.chengyinhub.business.longrun.E01_17Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E01-17"
+        ],
+        "group": "h2",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 56,
+            "text": "source.setUrl(\"jdbc:h2:mem:e01_17_\" + UUID.randomUUID().toString().replace(\"-\", \"\")"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_03Test.java",
+        "class": "com.chengyinhub.business.longrun.E04_03Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E04-03"
+        ],
+        "group": "h2",
+        "source_declared_test_methods": 5,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 41,
+            "text": "ds.setUrl(\"jdbc:h2:mem:e04_03;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_09Test.java",
+        "class": "com.chengyinhub.business.longrun.E04_09Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E04-09"
+        ],
+        "group": "h2",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 40,
+            "text": "ds.setUrl(\"jdbc:h2:mem:e04_09;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_11Test.java",
+        "class": "com.chengyinhub.business.longrun.E04_11Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E04-11"
+        ],
+        "group": "h2",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 28,
+            "text": "source.setUrl(\"jdbc:h2:mem:e04_11_\" + UUID.randomUUID().toString().replace(\"-\", \"\")"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistPromotionMembershipRaceTransactionTest.java",
+        "class": "com.chengyinhub.business.service.ClubWaitlistPromotionMembershipRaceTransactionTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "h2",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 61,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:waitlist_promotion_member_race;MODE=MySQL;DB_CLOSE_DELAY=-1;\""
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponRedemptionTransactionBoundaryTest.java",
+        "class": "com.chengyinhub.business.service.SmsCouponRedemptionTransactionBoundaryTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "h2",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 35,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:coupon_redemption_audit_tx;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/SmsCouponReverseTransactionBoundaryTest.java",
+        "class": "com.chengyinhub.business.service.SmsCouponReverseTransactionBoundaryTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "h2",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 42,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:coupon_reverse_audit_tx;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/community/CommunityPostMapperMyBatisTest.java",
+        "class": "com.chengyinhub.business.community.CommunityPostMapperMyBatisTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "h2",
+        "source_declared_test_methods": 14,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 436,
+            "text": "ds.setUrl(\"jdbc:h2:mem:community_post_mapper_\" + UUID.randomUUID()"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ClubEventAccessDiscoveryMyBatisTest.java",
+        "class": "com.chengyinhub.business.mapper.ClubEventAccessDiscoveryMyBatisTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "h2",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 32,
+            "text": "\"jdbc:h2:mem:club_event_access_\" + System.nanoTime()"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubEventCancellationTransactionBoundaryTest.java",
+        "class": "com.chengyinhub.business.service.ClubEventCancellationTransactionBoundaryTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "h2",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 66,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:club_event_cancel_tx;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubOccurrenceCancellationTransactionBoundaryTest.java",
+        "class": "com.chengyinhub.business.service.ClubOccurrenceCancellationTransactionBoundaryTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "h2",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 55,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:club_occurrence_cancel_tx_\" + System.nanoTime()"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistClaimMembershipRaceTransactionTest.java",
+        "class": "com.chengyinhub.business.service.ClubWaitlistClaimMembershipRaceTransactionTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "h2",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 67,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:waitlist_claim_member_race;MODE=MySQL;DB_CLOSE_DELAY=-1;\""
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistMaintenanceIsolationTransactionTest.java",
+        "class": "com.chengyinhub.business.service.ClubWaitlistMaintenanceIsolationTransactionTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "h2",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 45,
+            "text": "dataSource.setUrl(\"jdbc:h2:mem:waitlist_maintenance_isolation;MODE=MySQL;DB_CLOSE_DELAY=-1;\""
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      }
+    ],
+    "real_mysql": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_06Test.java",
+        "class": "com.chengyinhub.business.longrun.E01_06Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E01-06"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 48,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 69,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\", \"CHENGYIN_TEST_MYSQL_USER\")) {"
+          },
+          {
+            "line": 70,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized test setting required: \" + key);"
+          },
+          {
+            "line": 71,
+            "text": "assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 73,
+            "text": "assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));"
+          },
+          {
+            "line": 74,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01race_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 10));"
+          },
+          {
+            "line": 76,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)));"
+          },
+          {
+            "line": 77,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 91,
+            "text": "// This suite requires PROCESS permission so blocked SQL is observed, not inferred from thread timing."
+          },
+          {
+            "line": 92,
+            "text": "independent().queryForObject(\"select count(*) from information_schema.innodb_trx\", Integer.class);"
+          },
+          {
+            "line": 111,
+            "text": "jdbc.execute(\"set session innodb_lock_wait_timeout=10\");"
+          },
+          {
+            "line": 212,
+            "text": "assertTrue(pool.awaitTermination(15, TimeUnit.SECONDS), \"Race workers must stop before scratch cleanup\");"
+          },
+          {
+            "line": 229,
+            "text": "Integer waiting = independent().queryForObject(\"select count(*) from information_schema.innodb_trx where trx_mysql_thread_id=? and trx_state='LOCK WAIT'\", Integer.class, connectionId);"
+          },
+          {
+            "line": 276,
+            "text": "admin.execute(\"DROP DATABASE `\" + mysql.databaseName() + \"`\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_09Test.java",
+        "class": "com.chengyinhub.business.longrun.E01_09Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E01-09"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 48,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 66,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\", \"CHENGYIN_TEST_MYSQL_USER\")) {"
+          },
+          {
+            "line": 67,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized test setting required: \" + key);"
+          },
+          {
+            "line": 68,
+            "text": "assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 70,
+            "text": "assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));"
+          },
+          {
+            "line": 71,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01bind_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 10));"
+          },
+          {
+            "line": 73,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)));"
+          },
+          {
+            "line": 74,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 245,
+            "text": "admin.execute(\"DROP DATABASE `\" + mysql.databaseName() + \"`\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_10Test.java",
+        "class": "com.chengyinhub.business.longrun.E01_10Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E01-10"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 58,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 75,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\", \"CHENGYIN_TEST_MYSQL_USER\")) {"
+          },
+          {
+            "line": 76,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized test setting required: \" + key);"
+          },
+          {
+            "line": 77,
+            "text": "assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 79,
+            "text": "assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));"
+          },
+          {
+            "line": 80,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01snap_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 10));"
+          },
+          {
+            "line": 82,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)));"
+          },
+          {
+            "line": 83,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 253,
+            "text": "admin.execute(\"DROP DATABASE `\" + mysql.databaseName() + \"`\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": [
+          "try (Connection connection = java.sql.DriverManager.getConnection(mysql.databaseUrl(), mysql.user(), mysql.password())) {"
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E01_18Test.java",
+        "class": "com.chengyinhub.business.longrun.E01_18Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E01-18"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 5,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 48,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 69,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\", \"CHENGYIN_TEST_MYSQL_USER\")) {"
+          },
+          {
+            "line": 70,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized test setting required: \" + key);"
+          },
+          {
+            "line": 71,
+            "text": "assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 73,
+            "text": "assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));"
+          },
+          {
+            "line": 74,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01open_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 10));"
+          },
+          {
+            "line": 76,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)));"
+          },
+          {
+            "line": 77,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 91,
+            "text": "// This suite requires PROCESS permission so blocked SQL is observed, not inferred from thread timing."
+          },
+          {
+            "line": 92,
+            "text": "independent().queryForObject(\"select count(*) from information_schema.innodb_trx\", Integer.class);"
+          },
+          {
+            "line": 112,
+            "text": "jdbc.execute(\"set session innodb_lock_wait_timeout=10\");"
+          },
+          {
+            "line": 266,
+            "text": "statement.execute(\"set session innodb_lock_wait_timeout=10\");"
+          },
+          {
+            "line": 305,
+            "text": "assertTrue(pool.awaitTermination(15, TimeUnit.SECONDS), \"Race workers must stop before scratch cleanup\");"
+          },
+          {
+            "line": 322,
+            "text": "Integer waiting = independent().queryForObject(\"select count(*) from information_schema.innodb_trx where trx_mysql_thread_id=? and trx_state='LOCK WAIT'\", Integer.class, connectionId);"
+          },
+          {
+            "line": 346,
+            "text": "admin.execute(\"DROP DATABASE `\" + mysql.databaseName() + \"`\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": [
+          "try (java.sql.Connection publisher = java.sql.DriverManager.getConnection(mysql.databaseUrl(), mysql.user(), mysql.password())) {",
+          "try (java.sql.Connection publisher = java.sql.DriverManager.getConnection(mysql.databaseUrl(), mysql.user(), mysql.password());"
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+        "class": "com.chengyinhub.business.longrun.E02_01Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E02-01"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_E02_01_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_01_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 26,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_01_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 40,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 42,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized scratch configuration required: \" + key);"
+          },
+          {
+            "line": 43,
+            "text": "if (!key.endsWith(\"PASSWORD\")) assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 45,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_01_it\");"
+          },
+          {
+            "line": 47,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer("
+          },
+          {
+            "line": 50,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 94,
+            "text": "if (created) admin().execute(\"DROP DATABASE \" + mysql.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+        "class": "com.chengyinhub.business.longrun.E02_06Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E02-06"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_E02_06_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_06_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 26,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_06_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 40,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 42,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized scratch configuration required: \" + key);"
+          },
+          {
+            "line": 43,
+            "text": "if (!key.endsWith(\"PASSWORD\")) assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 45,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_06_it\");"
+          },
+          {
+            "line": 47,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer("
+          },
+          {
+            "line": 50,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 93,
+            "text": "if (created) admin().execute(\"DROP DATABASE \" + mysql.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_10Test.java",
+        "class": "com.chengyinhub.business.longrun.E02_10Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E02-10"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_E02_10_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_10_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 26,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_10_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 40,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 42,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized scratch configuration required: \" + key);"
+          },
+          {
+            "line": 43,
+            "text": "if (!key.endsWith(\"PASSWORD\")) assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 45,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_10_it\");"
+          },
+          {
+            "line": 47,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer("
+          },
+          {
+            "line": 50,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 93,
+            "text": "if (created) admin().execute(\"DROP DATABASE \" + mysql.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+        "class": "com.chengyinhub.business.longrun.E02_11Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E02-11"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_E02_11_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_11_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 26,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_11_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 40,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 42,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized scratch configuration required: \" + key);"
+          },
+          {
+            "line": 43,
+            "text": "if (!key.endsWith(\"PASSWORD\")) assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 45,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_11_it\");"
+          },
+          {
+            "line": 47,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer("
+          },
+          {
+            "line": 50,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 94,
+            "text": "if (created) admin().execute(\"DROP DATABASE \" + mysql.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_15Test.java",
+        "class": "com.chengyinhub.business.longrun.E02_15Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E02-15"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_E02_15_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_15_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 35,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_15_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 48,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 50,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized scratch configuration required: \" + key);"
+          },
+          {
+            "line": 51,
+            "text": "if (!key.endsWith(\"PASSWORD\")) assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 53,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_15_it\");"
+          },
+          {
+            "line": 54,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer("
+          },
+          {
+            "line": 57,
+            "text": "admin().execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 120,
+            "text": "if (created) admin().execute(\"DROP DATABASE \" + mysql.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_16Test.java",
+        "class": "com.chengyinhub.business.longrun.E02_16Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E02-16"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_E02_16_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_16_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 32,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_16_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 43,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 45,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized scratch configuration required: \" + key);"
+          },
+          {
+            "line": 46,
+            "text": "if (!key.endsWith(\"PASSWORD\")) assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 48,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_16_it\");"
+          },
+          {
+            "line": 49,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer("
+          },
+          {
+            "line": 51,
+            "text": "admin().execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 87,
+            "text": "void cleanup() { if (created) admin().execute(\"DROP DATABASE \" + mysql.databaseName()); }"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_18Test.java",
+        "class": "com.chengyinhub.business.longrun.E02_18Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E02-18"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 1,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_E02_18_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_18_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 32,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_18_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 43,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 45,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized scratch configuration required: \" + key);"
+          },
+          {
+            "line": 46,
+            "text": "if (!key.endsWith(\"PASSWORD\")) assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 48,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_18_it\");"
+          },
+          {
+            "line": 49,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer("
+          },
+          {
+            "line": 51,
+            "text": "admin().execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 76,
+            "text": "void cleanup() { if (created) admin().execute(\"DROP DATABASE \" + mysql.databaseName()); }"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_20Test.java",
+        "class": "com.chengyinhub.business.longrun.E02_20Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E02-20"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_E02_20_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_20_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 29,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_20_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 44,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 46,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized scratch configuration required: \" + key);"
+          },
+          {
+            "line": 47,
+            "text": "if (!key.endsWith(\"PASSWORD\")) assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 49,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e02_20_it\");"
+          },
+          {
+            "line": 50,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer("
+          },
+          {
+            "line": 52,
+            "text": "admin().execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 102,
+            "text": "void cleanup() { if (created) admin().execute(\"DROP DATABASE \" + mysql.databaseName()); }"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_06Test.java",
+        "class": "com.chengyinhub.business.longrun.E04_06Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E04-06"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 45,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 50,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"e04_06_it\");"
+          },
+          {
+            "line": 66,
+            "text": "org.junit.jupiter.api.Assertions.assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(version.getString(1)));"
+          },
+          {
+            "line": 69,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 133,
+            "text": "s.execute(\"DROP DATABASE \" + MYSQL.databaseName());"
+          },
+          {
+            "line": 139,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\", \"CHENGYIN_TEST_MYSQL_USER\"}) {"
+          },
+          {
+            "line": 140,
+            "text": "String value = System.getenv(key);"
+          },
+          {
+            "line": 143,
+            "text": "org.junit.jupiter.api.Assertions.assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));"
+          },
+          {
+            "line": 144,
+            "text": "org.junit.jupiter.api.Assertions.assertEquals(\"e04_scratch\", System.getenv(\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\"));"
+          },
+          {
+            "line": 181,
+            "text": "statement.execute(\"SET SESSION innodb_lock_wait_timeout=1\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_10Test.java",
+        "class": "com.chengyinhub.business.longrun.E04_10Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E04-10"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 45,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 50,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"e04_10_it\");"
+          },
+          {
+            "line": 65,
+            "text": "org.junit.jupiter.api.Assertions.assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(version.getString(1)));"
+          },
+          {
+            "line": 68,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 131,
+            "text": "s.execute(\"DROP DATABASE \" + MYSQL.databaseName());"
+          },
+          {
+            "line": 137,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\", \"CHENGYIN_TEST_MYSQL_USER\"}) {"
+          },
+          {
+            "line": 138,
+            "text": "String value = System.getenv(key);"
+          },
+          {
+            "line": 141,
+            "text": "org.junit.jupiter.api.Assertions.assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));"
+          },
+          {
+            "line": 142,
+            "text": "org.junit.jupiter.api.Assertions.assertEquals(\"e04_scratch\", System.getenv(\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\"));"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+        "class": "com.chengyinhub.business.longrun.E04_13Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E04-13"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 41,
+            "text": "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+          },
+          {
+            "line": 44,
+            "text": "private static final MysqlIntegrationTestConfig MYSQL = MysqlIntegrationTestConfig.fromEnvironment(\"e04_13_it\");"
+          },
+          {
+            "line": 56,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\",\"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\",\"CHENGYIN_TEST_MYSQL_USER\"}) {"
+          },
+          {
+            "line": 57,
+            "text": "String value=System.getenv(key);"
+          },
+          {
+            "line": 60,
+            "text": "assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));"
+          },
+          {
+            "line": 61,
+            "text": "assertEquals(\"e04_scratch\",System.getenv(\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\"));"
+          },
+          {
+            "line": 63,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"SELECT VERSION()\",String.class)));"
+          },
+          {
+            "line": 65,
+            "text": "admin.execute(\"CREATE DATABASE \"+MYSQL.databaseName()+\" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 108,
+            "text": "if (databaseCreated) new JdbcTemplate(dataSource(MYSQL.adminUrl())).execute(\"DROP DATABASE \"+MYSQL.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_14Test.java",
+        "class": "com.chengyinhub.business.longrun.E04_14Test",
+        "scope": "primary",
+        "queue_ids": [
+          "E04-14"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 45,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 50,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"e04_14_it\");"
+          },
+          {
+            "line": 66,
+            "text": "org.junit.jupiter.api.Assertions.assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(version.getString(1)));"
+          },
+          {
+            "line": 69,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 132,
+            "text": "s.execute(\"DROP DATABASE \" + MYSQL.databaseName());"
+          },
+          {
+            "line": 138,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\", \"CHENGYIN_TEST_MYSQL_USER\"}) {"
+          },
+          {
+            "line": 139,
+            "text": "String value = System.getenv(key);"
+          },
+          {
+            "line": 142,
+            "text": "org.junit.jupiter.api.Assertions.assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));"
+          },
+          {
+            "line": 143,
+            "text": "org.junit.jupiter.api.Assertions.assertEquals(\"e04_scratch\", System.getenv(\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\"));"
+          },
+          {
+            "line": 179,
+            "text": "statement.execute(\"SET SESSION innodb_lock_wait_timeout=1\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/A03EndingSnapshotMySqlIT.java",
+        "class": "com.chengyinhub.business.service.A03EndingSnapshotMySqlIT",
+        "scope": "primary",
+        "queue_ids": [
+          "E03-09"
+        ],
+        "group": "real_mysql",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_ENDING_MYSQL_IT",
+          "CHENGYIN_MYBATIS_IT_DB_SUFFIX",
+          "CHENGYIN_MYBATIS_IT_HOST",
+          "CHENGYIN_MYBATIS_IT_PASSWORD",
+          "CHENGYIN_MYBATIS_IT_PORT",
+          "CHENGYIN_MYBATIS_IT_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_ENDING_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 44,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_ENDING_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 65,
+            "text": "assertEquals(\"127.0.0.1\", System.getenv(\"CHENGYIN_MYBATIS_IT_HOST\"), \"explicit loopback scratch required\");"
+          },
+          {
+            "line": 66,
+            "text": "String suffix = System.getenv(\"CHENGYIN_MYBATIS_IT_DB_SUFFIX\");"
+          },
+          {
+            "line": 67,
+            "text": "assertNotNull(suffix, \"unique scratch suffix required\");"
+          },
+          {
+            "line": 69,
+            "text": "assertNotNull(System.getenv(\"CHENGYIN_MYBATIS_IT_USER\"), \"explicit test account required\");"
+          },
+          {
+            "line": 70,
+            "text": "assertFalse(System.getenv(\"CHENGYIN_MYBATIS_IT_USER\").trim().isEmpty(), \"test account cannot inherit root fallback\");"
+          },
+          {
+            "line": 71,
+            "text": "assertNotNull(System.getenv(\"CHENGYIN_MYBATIS_IT_PORT\"), \"explicit scratch port required\");"
+          },
+          {
+            "line": 72,
+            "text": "assertNotNull(System.getenv(\"CHENGYIN_MYBATIS_IT_PASSWORD\"), \"explicit test password required (empty allowed)\");"
+          },
+          {
+            "line": 74,
+            "text": "adminUrl = \"jdbc:mysql://127.0.0.1:\" + MybatisItDatabase.port()"
+          },
+          {
+            "line": 79,
+            "text": "assertTrue(rs.getString(1).startsWith(\"8.0.\"), \"requires real MySQL 8.0, never H2\");"
+          },
+          {
+            "line": 86,
+            "text": "st.execute(\"CREATE DATABASE `\" + database + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 89,
+            "text": "String url = \"jdbc:mysql://127.0.0.1:\" + MybatisItDatabase.port() + \"/\" + database"
+          },
+          {
+            "line": 97,
+            "text": "ItSchema.applyMigrations(c, \"sql/migration_theme_state_key_20260916.sql\","
+          },
+          {
+            "line": 245,
+            "text": "st.execute(\"DROP DATABASE `\" + database + \"`\");"
+          },
+          {
+            "line": 248,
+            "text": "assertEquals(0, rs.getInt(1), \"scratch cleanup must be verified\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": [
+          "try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());",
+          "try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());",
+          "try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());"
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B03CouponLifecycleMySqlIT.java",
+        "class": "com.chengyinhub.business.service.B03CouponLifecycleMySqlIT",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 45,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 50,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"e04_coupon_it\");"
+          },
+          {
+            "line": 64,
+            "text": "org.junit.jupiter.api.Assertions.assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(version.getString(1)));"
+          },
+          {
+            "line": 67,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 137,
+            "text": "s.execute(\"DROP DATABASE \" + MYSQL.databaseName());"
+          },
+          {
+            "line": 143,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\", \"CHENGYIN_TEST_MYSQL_USER\"}) {"
+          },
+          {
+            "line": 144,
+            "text": "String value = System.getenv(key);"
+          },
+          {
+            "line": 147,
+            "text": "org.junit.jupiter.api.Assertions.assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));"
+          },
+          {
+            "line": 148,
+            "text": "org.junit.jupiter.api.Assertions.assertEquals(\"e04_scratch\", System.getenv(\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\"));"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B04ScheduleReadbackMySqlIT.java",
+        "class": "com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 5,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 48,
+            "text": "/** Opt-in authorized scratch MySQL only; no Cloud execution. Persistence and service transaction are real. */"
+          },
+          {
+            "line": 49,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 66,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 68,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized test setting required: \" + key);"
+          },
+          {
+            "line": 69,
+            "text": "assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 71,
+            "text": "assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"), \"Explicit test password required (may be empty)\");"
+          },
+          {
+            "line": 72,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e01_\" + UUID.randomUUID().toString().replace(\"-\", \"\").substring(0, 12));"
+          },
+          {
+            "line": 74,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject(\"select version()\", String.class)),"
+          },
+          {
+            "line": 77,
+            "text": "admin.execute(\"CREATE DATABASE `\" + mysql.databaseName() + \"` CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 113,
+            "text": "admin.execute(\"DROP DATABASE `\" + mysql.databaseName() + \"`\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java",
+        "class": "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_B05_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+          "CHENGYIN_TEST_MYSQL_HOST",
+          "CHENGYIN_TEST_MYSQL_PASSWORD",
+          "CHENGYIN_TEST_MYSQL_PORT",
+          "CHENGYIN_TEST_MYSQL_USER"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_B05_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 23,
+            "text": "/** Real XML/service read boundary; no HTTP, OSS, Redis, mock mapper or write-service claim. */"
+          },
+          {
+            "line": 24,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_B05_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 36,
+            "text": "\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\","
+          },
+          {
+            "line": 38,
+            "text": "assertNotNull(System.getenv(key), \"Explicit authorized scratch configuration required: \" + key);"
+          },
+          {
+            "line": 39,
+            "text": "if (!key.endsWith(\"PASSWORD\")) assertFalse(System.getenv(key).trim().isEmpty(), key);"
+          },
+          {
+            "line": 41,
+            "text": "mysql = MysqlIntegrationTestConfig.fromEnvironment(\"b05_visibility_it\");"
+          },
+          {
+            "line": 43,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer("
+          },
+          {
+            "line": 46,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 67,
+            "text": "if (created) admin().execute(\"DROP DATABASE \" + mysql.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/ClubWaitlistTokenMybatisIntegrationTest.java",
+        "class": "com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 7,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT",
+          "CHENGYIN_TEST_MYSQL_",
+          "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+          "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 48,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 63,
+            "text": "Map<String, String> env = new HashMap<>(System.getenv());"
+          },
+          {
+            "line": 64,
+            "text": "// 2026-09-16: 原来这里覆写 HOST=127.0.0.1 / PORT=3317 —— CI 注入的连接被无视,"
+          },
+          {
+            "line": 66,
+            "text": "env.put(\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\", \"waitlist_token\");"
+          },
+          {
+            "line": 67,
+            "text": "env.put(\"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\", \"_\" + UUID.randomUUID().toString().replace(\"-\", \"\"));"
+          },
+          {
+            "line": 71,
+            "text": "assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(version), \"需要 MySQL >= 8,实际 \" + version);"
+          },
+          {
+            "line": 72,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName());"
+          },
+          {
+            "line": 133,
+            "text": "codec = new ClubWaitlistTokenCodec(\"waitlist-token-scratch-secret\");"
+          },
+          {
+            "line": 152,
+            "text": "admin.execute(\"DROP DATABASE \" + mysql.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CouponLifecycleMybatisIntegrationTest.java",
+        "class": "com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest",
+        "scope": "primary",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 12,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 52,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 57,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"coupon_lifecycle_it\");"
+          },
+          {
+            "line": 67,
+            "text": "s.execute(\"DROP DATABASE IF EXISTS \" + MYSQL.databaseName());"
+          },
+          {
+            "line": 68,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 162,
+            "text": "s.execute(\"DROP DATABASE IF EXISTS \" + MYSQL.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/JourneyFullFlowMySqlIT.java",
+        "class": "com.chengyinhub.business.it.JourneyFullFlowMySqlIT",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [
+          {
+            "line": 102,
+            "text": "* <p>⚠️ 每次运行拿一类一库 scratch({@link MybatisItDatabase}),结束 DROP 后回读确认为 0。"
+          },
+          {
+            "line": 249,
+            "text": "assertEquals(\"127.0.0.1\", MybatisItDatabase.host(), \"只允许显式本机 scratch\");"
+          },
+          {
+            "line": 250,
+            "text": "adminUrl = \"jdbc:mysql://127.0.0.1:\" + MybatisItDatabase.port()"
+          },
+          {
+            "line": 255,
+            "text": "assertTrue(rs.getString(1).startsWith(\"8.0.\"), \"必须使用 MySQL 8.0,不能把 H2/别的版本当作通过\");"
+          },
+          {
+            "line": 296,
+            "text": "assertTrue(database.matches(\"chengyin_mybatis_journey_full_flow[a-z0-9_]*\"), \"只许 DROP 本套 scratch\");"
+          },
+          {
+            "line": 303,
+            "text": "assertEquals(0, rs.getInt(1), \"scratch 清理必须回读确认\");"
+          },
+          {
+            "line": 306,
+            "text": "System.out.println(\"Cleaned unique MySQL 8 scratch: \" + database);"
+          },
+          {
+            "line": 688,
+            "text": "ItSchema.applyMigrations(connection, \"sql/migration_theme_state_key_20260916.sql\","
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": [
+          "try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());",
+          "try (Connection c = DriverManager.getConnection(jdbcUrl, MybatisItDatabase.user(), MybatisItDatabase.password())) {",
+          "try (Connection c = DriverManager.getConnection(adminUrl, MybatisItDatabase.user(), MybatisItDatabase.password());",
+          "return DriverManager.getConnection(jdbcUrl, MybatisItDatabase.user(), MybatisItDatabase.password());"
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+        "class": "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 3,
+        "other_test_annotations": [],
+        "env": [],
+        "gates": [],
+        "boundary_source_lines": [],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ShareSnapshotRunSessionMybatisIntegrationTest.java",
+        "class": "com.chengyinhub.business.mapper.ShareSnapshotRunSessionMybatisIntegrationTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 4,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 31,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 40,
+            "text": "MysqlIntegrationTestConfig config = MysqlIntegrationTestConfig.fromEnvironment(\"share_run\");"
+          },
+          {
+            "line": 41,
+            "text": "assertTrue(config.adminUrl().startsWith(\"jdbc:mysql://127.0.0.1:\")"
+          },
+          {
+            "line": 42,
+            "text": "|| config.adminUrl().startsWith(\"jdbc:mysql://localhost:\"), \"localhost scratch only\");"
+          },
+          {
+            "line": 45,
+            "text": "admin.execute(\"CREATE DATABASE \" + database);"
+          },
+          {
+            "line": 70,
+            "text": "@AfterAll void cleanup() { if (database != null && admin != null) admin.execute(\"DROP DATABASE \" + database); }"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FirstReviewPointsClawbackMybatisIntegrationTest.java",
+        "class": "com.chengyinhub.business.service.FirstReviewPointsClawbackMybatisIntegrationTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 10,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 47,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 50,
+            "text": "private final MysqlIntegrationTestConfig mysql = MysqlIntegrationTestConfig.fromEnvironment(\"first_review_clawback_it\");"
+          },
+          {
+            "line": 59,
+            "text": "admin.execute(\"DROP DATABASE IF EXISTS \" + mysql.databaseName());"
+          },
+          {
+            "line": 60,
+            "text": "admin.execute(\"CREATE DATABASE \" + mysql.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 116,
+            "text": ".execute(\"DROP DATABASE IF EXISTS \" + mysql.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RegistrationEquityMybatisIntegrationTest.java",
+        "class": "com.chengyinhub.business.service.RegistrationEquityMybatisIntegrationTest",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 5,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 61,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 66,
+            "text": "MysqlIntegrationTestConfig.fromEnvironment(\"equity_core_it\");"
+          },
+          {
+            "line": 76,
+            "text": "// 原来是 CREATE DATABASE IF NOT EXISTS ⇒ 本类默默继承上一次(可能是崩在半路的那次)留下的表,"
+          },
+          {
+            "line": 81,
+            "text": "s.execute(\"DROP DATABASE IF EXISTS \" + MYSQL.databaseName());"
+          },
+          {
+            "line": 82,
+            "text": "s.execute(\"CREATE DATABASE \" + MYSQL.databaseName() + \" CHARACTER SET utf8mb4\");"
+          },
+          {
+            "line": 165,
+            "text": "s.execute(\"DROP DATABASE IF EXISTS \" + MYSQL.databaseName());"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/RoamShareSnapshotConcurrencyMySqlIT.java",
+        "class": "com.chengyinhub.web.controller.api.RoamShareSnapshotConcurrencyMySqlIT",
+        "scope": "evidence_adjacent",
+        "queue_ids": [],
+        "group": "real_mysql",
+        "source_declared_test_methods": 2,
+        "other_test_annotations": [],
+        "env": [
+          "CHENGYIN_FUNDS_MYSQL_IT"
+        ],
+        "gates": [
+          "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+        ],
+        "boundary_source_lines": [
+          {
+            "line": 43,
+            "text": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+          },
+          {
+            "line": 55,
+            "text": "MysqlIntegrationTestConfig config = MysqlIntegrationTestConfig.fromEnvironment(\"roam_share_cap\");"
+          }
+        ],
+        "real_redis_constructor": false,
+        "network_context_lines": []
+      }
+    ]
+  },
+  "counts": {
+    "primary": {
+      "unit": {
+        "classes": 3,
+        "source_declared_test_methods": 15
+      },
+      "mock": {
+        "classes": 23,
+        "source_declared_test_methods": 270
+      },
+      "h2": {
+        "classes": 8,
+        "source_declared_test_methods": 19
+      },
+      "real_mysql": {
+        "classes": 22,
+        "source_declared_test_methods": 71
+      }
+    },
+    "evidence_adjacent": {
+      "unit": {
+        "classes": 9,
+        "source_declared_test_methods": 65
+      },
+      "mock": {
+        "classes": 13,
+        "source_declared_test_methods": 175
+      },
+      "h2": {
+        "classes": 6,
+        "source_declared_test_methods": 24
+      },
+      "real_mysql": {
+        "classes": 6,
+        "source_declared_test_methods": 28
+      }
+    }
+  },
+  "environment_union": [
+    "CHENGYIN_B05_MYSQL_IT",
+    "CHENGYIN_E02_01_MYSQL_IT",
+    "CHENGYIN_E02_06_MYSQL_IT",
+    "CHENGYIN_E02_10_MYSQL_IT",
+    "CHENGYIN_E02_11_MYSQL_IT",
+    "CHENGYIN_E02_15_MYSQL_IT",
+    "CHENGYIN_E02_16_MYSQL_IT",
+    "CHENGYIN_E02_18_MYSQL_IT",
+    "CHENGYIN_E02_20_MYSQL_IT",
+    "CHENGYIN_ENDING_MYSQL_IT",
+    "CHENGYIN_FUNDS_MYSQL_IT",
+    "CHENGYIN_MYBATIS_IT_DB_SUFFIX",
+    "CHENGYIN_MYBATIS_IT_HOST",
+    "CHENGYIN_MYBATIS_IT_PASSWORD",
+    "CHENGYIN_MYBATIS_IT_PORT",
+    "CHENGYIN_MYBATIS_IT_USER",
+    "CHENGYIN_TEST_MYSQL_",
+    "CHENGYIN_TEST_MYSQL_DATABASE_BASE",
+    "CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX",
+    "CHENGYIN_TEST_MYSQL_HOST",
+    "CHENGYIN_TEST_MYSQL_PASSWORD",
+    "CHENGYIN_TEST_MYSQL_PORT",
+    "CHENGYIN_TEST_MYSQL_USER"
+  ],
+  "database_helper_sources": {
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MysqlIntegrationTestConfig.java": "package com.chengyinhub.business.service;\n\nimport java.util.Map;\nimport java.util.regex.Matcher;\nimport java.util.regex.Pattern;\n\n/**\n * 资金 MyBatis IT 共用的 MySQL 连接配置；数据库标识只允许安全字符。\n *\n * <p>2026-08-17 起改为 public：探店日联盟局两套 IT（com.chengyinhub.business.it）原本硬编码\n * 连本机 3306 的长期库，绕开了门禁的唯一临时 schema 与 8.0.45 验收档；把它们接回这份配置\n * 需要跨包可见。只有测试代码引用它。\n */\npublic final class MysqlIntegrationTestConfig {\n    static final String HOST = \"CHENGYIN_TEST_MYSQL_HOST\";\n    static final String PORT = \"CHENGYIN_TEST_MYSQL_PORT\";\n    static final String DATABASE_BASE = \"CHENGYIN_TEST_MYSQL_DATABASE_BASE\";\n    static final String DATABASE_SUFFIX = \"CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX\";\n    static final String USER = \"CHENGYIN_TEST_MYSQL_USER\";\n    static final String PASSWORD = \"CHENGYIN_TEST_MYSQL_PASSWORD\";\n\n    private final String host;\n    private final int port;\n    private final String databaseName;\n    private final String user;\n    private final String password;\n\n    private MysqlIntegrationTestConfig(String host, int port, String databaseName,\n                                       String user, String password) {\n        this.host = host;\n        this.port = port;\n        this.databaseName = databaseName;\n        this.user = user;\n        this.password = password;\n    }\n\n    public static MysqlIntegrationTestConfig fromEnvironment(String suite) {\n        return from(System.getenv(), suite);\n    }\n\n    public static MysqlIntegrationTestConfig from(Map<String, String> values, String suite) {\n        String host = value(values, HOST, \"127.0.0.1\");\n        if (!host.matches(\"[A-Za-z0-9._-]+\")) {\n            throw new IllegalArgumentException(\"MySQL host 包含非法字符\");\n        }\n        int port;\n        try {\n            port = Integer.parseInt(value(values, PORT, \"3306\"));\n        } catch (NumberFormatException invalid) {\n            throw new IllegalArgumentException(\"MySQL port 非法\", invalid);\n        }\n        if (port < 1 || port > 65535) {\n            throw new IllegalArgumentException(\"MySQL port 超出范围\");\n        }\n        String base = value(values, DATABASE_BASE, \"chengyin\");\n        String suffix = value(values, DATABASE_SUFFIX, \"\");\n        requireIdentifierPart(\"database base\", base, false);\n        requireIdentifierPart(\"suite\", suite, false);\n        requireIdentifierPart(\"database suffix\", suffix, true);\n        String databaseName = base + \"_\" + suite + suffix;\n        if (databaseName.length() > 64) {\n            throw new IllegalArgumentException(\"MySQL 测试库名长度不能超过64\");\n        }\n        String user = value(values, USER, \"root\");\n        if (user.trim().isEmpty()) {\n            throw new IllegalArgumentException(\"MySQL user 不能为空\");\n        }\n        return new MysqlIntegrationTestConfig(host, port, databaseName, user,\n                value(values, PASSWORD, \"\"));\n    }\n\n    // ⚠️ 不要写死 serverTimezone。它是「告诉驱动:服务器的时区是什么」,写死就等于**断言**\n    // 跑测试的这台 MySQL 一定在 Asia/Shanghai —— 而这个前提没有任何东西保证。\n    // 2026-08-01 实证:self-hosted runner 那台 Mac 的时区变成 America/Los_Angeles 后,\n    // 驱动仍按 Shanghai 解释服务器写下的 DATETIME,所有「DB 存的时间 ↔ JVM 当前时间」\n    // 的比较整体错位 15 小时:订单被判恒过期、派发租约被判恒陈旧。\n    // connectionTimeZone=SERVER 让驱动去问服务器实际时区,不再假设。\n    private static final String CONN_PARAMS =\n            \"useSSL=false&allowPublicKeyRetrieval=true\"\n            // connectionTimeZone=LOCAL:驱动按 **JVM 默认时区** 解释 DATETIME;\n            // 即与 MySQL 服务器跟随的 OS 时区一致(两者同机)。\n            // 不用 SERVER:服务器会回 'CDT' 这种歧义缩写,驱动直接拒连。\n            // 也不用 forceConnectionTimeZoneToSession:它要 SET time_zone='America/Los_Angeles',\n            // 而这台 MySQL 没装时区表(mysql.time_zone_name 空),只认数字偏移。\n            + \"&connectionTimeZone=LOCAL\";\n\n    /**\n     * 真库 IT 的版本前提:MySQL 主版本 ≥ 8(本机容器 8.0.45,CI runner 实跑 9.7.1)。\n     * 2026-09-16:四套暗测试写成 startsWith(\"8.\") / startsWith(\"8.0.45\"),在 CI 的 9.7.1 上全红。\n     * 解析不出主版本、或是 MariaDB(10.x 冒充 ≥8),一律判不满足。\n     */\n    public static boolean isMysql8OrNewer(String version) {\n        if (version == null || version.contains(\"MariaDB\")) {\n            return false;\n        }\n        Matcher major = Pattern.compile(\"^(\\\\d+)\\\\.\").matcher(version);\n        return major.find() && Integer.parseInt(major.group(1)) >= 8;\n    }\n\n    public String adminUrl() {\n        return \"jdbc:mysql://\" + host + \":\" + port + \"/?\" + CONN_PARAMS;\n    }\n\n    public String databaseUrl() {\n        return \"jdbc:mysql://\" + host + \":\" + port + \"/\" + databaseName + \"?\" + CONN_PARAMS;\n    }\n\n    public String databaseName() {\n        return databaseName;\n    }\n\n    public String user() {\n        return user;\n    }\n\n    public String password() {\n        return password;\n    }\n\n    private static String value(Map<String, String> values, String key, String fallback) {\n        String value = values.get(key);\n        return value == null ? fallback : value;\n    }\n\n    private static void requireIdentifierPart(String label, String value, boolean allowEmpty) {\n        if ((value == null || value.isEmpty()) && allowEmpty) {\n            return;\n        }\n        if (value == null || !value.matches(\"[A-Za-z0-9_]+\")) {\n            throw new IllegalArgumentException(label + \" 只允许字母、数字和下划线\");\n        }\n    }\n}\n",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/MybatisItDatabase.java": "package com.chengyinhub.business.it;\n\nimport java.sql.Connection;\nimport java.sql.DriverManager;\nimport java.sql.Statement;\nimport java.util.Set;\nimport java.util.concurrent.ConcurrentHashMap;\n\n/**\n * MyBatis 真库 IT 的**一类一库**:每个 IT 类拿自己的 schema,本 JVM 内首次取用时 DROP + CREATE。\n *\n * <p><b>为什么要有它。</b>在这之前,十六个 IT 类共用一个长期库 {@code chengyin_mybatis_it}。\n * 那不是\"省事\",是把两个方向的风险都留着:\n * <ul>\n *   <li>该绿却红:A 类建的表挡住 B 类的建表(2026-08-19 资金 IT 那次撞的就是这个形状,\n *       只是它撞在 merge 结果里);</li>\n *   <li>★ 该红却绿:A 类留下的**数据**让 B 类的 fail-closed 前置意外满足 —— 闸被喂饱,一声不吭。\n *       共用库里这条永远只差一个执行顺序。</li>\n * </ul>\n * 「现在是绿的」不能当作「现在是对的」。\n *\n * <p><b>为什么是 DROP + CREATE,不是 CREATE DATABASE IF NOT EXISTS。</b>\n * IF NOT EXISTS 会把**上一次崩在半路的现场**当成合法初始态接着用 —— 那正是\n * {@link ItSchema} 类注释里写过的同一个坑(它在表这一层已经这么做了,这里补上库这一层)。\n *\n * <p><b>建库需要的权限。</b>本地历史约定是 {@code ituser/itpass} + 只授 {@code chengyin_mybatis_it} 一个库,\n * 那个账号建不了新库。改成默认走 {@code root}(与 ci/funds-mysql-it-gate.sh 和 ci.yml 里\n * atomic-migration 那步一致);连接信息可用环境变量覆盖:\n * {@code CHENGYIN_MYBATIS_IT_HOST/PORT/USER/PASSWORD/DB_SUFFIX}。\n * 本机 root 默认空口令,GitHub 的 mysql service 是 root/root —— 所以 ci.yml 的 backend 步显式注入密码。\n *\n * <p>⚠️ 只管建库。表由各 IT 自己建(多数走 {@link ItSchema} 从仓库 migration 灌真实 DDL)。\n */\npublic final class MybatisItDatabase {\n\n    private static final String PARAMS =\n            \"?serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true\";\n    /** 库名前缀保持 chengyin_mybatis_,几个类里的「只许连专用 fixture 库」守卫仍然按这个前缀认。 */\n    private static final String PREFIX = \"chengyin_mybatis_\";\n\n    private static final Set<String> CREATED = ConcurrentHashMap.newKeySet();\n\n    private MybatisItDatabase() { }\n\n    private static String env(String name, String fallback) {\n        String value = System.getenv(name);\n        return value == null || value.isEmpty() ? fallback : value;\n    }\n\n    public static String host() { return env(\"CHENGYIN_MYBATIS_IT_HOST\", \"127.0.0.1\"); }\n\n    public static String port() { return env(\"CHENGYIN_MYBATIS_IT_PORT\", \"3306\"); }\n\n    public static String user() { return env(\"CHENGYIN_MYBATIS_IT_USER\", \"root\"); }\n\n    /** 口令允许显式为空(本机 root 就是空口令),所以这里用 getenv 原值,不做 isEmpty 回退。 */\n    public static String password() {\n        String value = System.getenv(\"CHENGYIN_MYBATIS_IT_PASSWORD\");\n        return value == null ? \"\" : value;\n    }\n\n    /** 一类一库的库名;后缀留给「同一台库上并行跑多份」的场景(CI 可注入 run 级唯一值)。 */\n    public static String databaseName(String suite) {\n        if (suite == null || !suite.matches(\"[a-z0-9_]+\")) {\n            throw new IllegalArgumentException(\"suite 只允许小写字母、数字和下划线:\" + suite);\n        }\n        return PREFIX + suite + env(\"CHENGYIN_MYBATIS_IT_DB_SUFFIX\", \"\");\n    }\n\n    /**\n     * 取该类专属库的 JDBC URL;本 JVM 内**首次**取用时把库 DROP 掉重建。\n     *\n     * <p>为什么只在首次:一个类在一次运行里会多次建 DataSource/取连接,每次都重建库\n     * 会把同一个测试前半段插进去的数据抹掉。库的归属是「一个类一次运行」,不是「一次调用」。\n     */\n    public static String url(String suite) {\n        String database = databaseName(suite);\n        if (CREATED.add(database)) {\n            recreate(database);\n        }\n        return \"jdbc:mysql://\" + host() + \":\" + port() + \"/\" + database + PARAMS;\n    }\n\n    /** 与 {@link #url(String)} 同样的建库语义,但只回库名 —— 给自己拼 URL(时区参数不同)的类用。 */\n    public static String databaseNameAfterCreate(String suite) {\n        String database = databaseName(suite);\n        if (CREATED.add(database)) {\n            recreate(database);\n        }\n        return database;\n    }\n\n    private static void recreate(String database) {\n        String adminUrl = \"jdbc:mysql://\" + host() + \":\" + port() + \"/\" + PARAMS;\n        try (Connection admin = DriverManager.getConnection(adminUrl, user(), password());\n             Statement st = admin.createStatement()) {\n            st.execute(\"DROP DATABASE IF EXISTS `\" + database + \"`\");\n            st.execute(\"CREATE DATABASE `\" + database + \"` CHARACTER SET utf8mb4\");\n        } catch (Exception failure) {\n            throw new IllegalStateException(\"建 IT 专属库失败(\" + database + \"):\" + failure.getMessage(), failure);\n        }\n    }\n}\n"
+  },
+  "real_redis_primary": [],
+  "execution_requirements": [
+    "Only source/text read; no Java/Maven/DB/provider executed. Use isolated exact EXTRA candidate tree, never overwrite active source writers.",
+    "Run unit/mock/H2 with DB gates unset; H2 is not MySQL-lock evidence. Explicit -Dtest selectors needed because *MySqlIT may not match Surefire defaults. Serial classes and junit.jupiter.execution.parallel.enabled=false; fixed H2 memory names must not race.",
+    "For real DB use dedicated authorized scratch MySQL only, never production host/schema/account; supply CHENGYIN_TEST_MYSQL_HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD explicitly. Empty explicit PASSWORD may be allowed; other required fields nonempty. Enable only the intended class gate listed in entries.",
+    "Fresh SQL-safe unique suffix per run/class and combined identifier <=64 chars. E04 suites declaring e04_scratch base must receive that exact value. UUID suite fragments add isolation, not permission to reuse suffix. CREATE/DROP DB/table/DML privileges needed.",
+    "E01_06 requires PROCESS/information_schema.innodb_trx to observe exact connection LOCK WAIT; lack permission is failure. Session innodb_lock_wait_timeout changes remain connection scoped.",
+    "A03EndingSnapshotMySqlIT separately requires ENDING gate and CHENGYIN_MYBATIS_IT_HOST=127.0.0.1, PORT USER PASSWORD DB_SUFFIX. Suffix _[a-z0-9_]{1,24}; schema chengyin_mybatis_a03_ending_snapshot<suffix>. Source explicitly requires MySQL 8.0, so >=9 fails unlike generic helper >=8.",
+    "Per-class boundary lines preserve CREATE/DROP/guards; old adjacent helpers may pre-DROP a fixed derived name: run only unique authorized scratch. New collision-fail suites only drop schema they created; independently record cleanup.",
+    "No live paid AI/WeChat/payment/OSS/HTTP callback required by primary suites; fixture cdn.example URLs are data. Do not start full application/jobs or enable unrelated external provider/Redis gates. Maven dependency egress is tooling only. Redis mocks/mentions are not true Redis coverage.",
+    "Gate skips are not passes. Record Surefire tests/failures/errors/skipped and cleanup; all current method totals are source declarations only."
+  ],
+  "excluded_frontend": [
+    "chengyinhub-xcx/tests/unit/longrun-e05-01.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e05-03.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e05-04.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e05-06.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e05-07.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-01.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-03.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-05.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-06.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-08.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e05-09.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e05-10.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-09.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-10.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-11.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-12.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e05-12.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e05-13.test.js",
+    "chengyinhub-xcx/tests/unit/longrun-e06-13.test.js"
+  ],
+  "source_inventory_base_sha": "25ede65815d26d1514d3b6c3b92b26d2898a3e45",
+  "delta_commits": [
+    "3e1349fff18ea9935249635170bf998c6ceb3187",
+    "a37ce191756ab11896faf4e61e8a06b4279f0303"
+  ],
+  "delta_test_sources": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_16Test.java",
+      "class": "com.chengyinhub.business.longrun.E03_16Test",
+      "source_declared_test_methods": 4,
+      "group": "mock",
+      "scope": "new regression",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E05_17Test.java",
+      "class": "com.chengyinhub.business.longrun.E05_17Test",
+      "source_declared_test_methods": 5,
+      "group": "mock",
+      "scope": "new regression",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyReadServiceImplTest.java",
+      "class": "com.chengyinhub.business.service.impl.PlayJourneyReadServiceImplTest",
+      "source_declared_test_methods": 19,
+      "group": "mock",
+      "scope": "necessary old fixture adaptation",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayJourneyStoryServiceImplTest.java",
+      "class": "com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest",
+      "source_declared_test_methods": 25,
+      "group": "mock",
+      "scope": "necessary old fixture adaptation",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/SeventhPierFixtureTest.java",
+      "class": "com.chengyinhub.business.service.support.SeventhPierFixtureTest",
+      "source_declared_test_methods": 9,
+      "group": "mock",
+      "scope": "necessary old fixture adaptation",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterControllerTest.java",
+      "class": "com.chengyinhub.web.controller.api.ApiPlayEncounterControllerTest",
+      "source_declared_test_methods": 54,
+      "group": "mock",
+      "scope": "necessary old fixture adaptation",
+      "status": "NOT_RUN"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiPlayEncounterRoleViewTest.java",
+      "class": "com.chengyinhub.web.controller.api.ApiPlayEncounterRoleViewTest",
+      "source_declared_test_methods": 13,
+      "group": "mock",
+      "scope": "necessary old fixture adaptation",
+      "status": "NOT_RUN"
+    }
+  ],
+  "command_templates": {
+    "unit": "mvn -B -ntp -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false -DargLine=-Xmx384m -Dtest=com.chengyinhub.business.longrun.E03_11Test,com.chengyinhub.business.longrun.E05_15Test,com.chengyinhub.business.service.RegistrationEquityAtomicityContractTest",
+    "mock": "mvn -B -ntp -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false -DargLine=-Xmx384m -Dtest=com.chengyinhub.business.community.CommunityPostServiceImplTest,com.chengyinhub.business.longrun.E01_07Test,com.chengyinhub.business.longrun.E01_12Test,com.chengyinhub.business.longrun.E01_14Test,com.chengyinhub.business.longrun.E02_14Test,com.chengyinhub.business.longrun.E03_01Test,com.chengyinhub.business.longrun.E03_02Test,com.chengyinhub.business.longrun.E03_14Test,com.chengyinhub.business.longrun.E03_17Test,com.chengyinhub.business.longrun.E05_14Test,com.chengyinhub.business.service.ClubWaitlistServiceImplTest,com.chengyinhub.business.service.CouponSourceGrantTest,com.chengyinhub.business.service.SmsCouponDisabledTest,com.chengyinhub.business.service.SmsCouponRedemptionAuditTest,com.chengyinhub.business.service.SmsCouponRedemptionStartTimeTest,com.chengyinhub.business.service.SmsCouponReverseTest,com.chengyinhub.business.service.impl.PlayJourneyReadServiceImplTest,com.chengyinhub.business.service.impl.PlayJourneyStoryServiceImplTest,com.chengyinhub.business.service.support.SeventhPierFixtureTest,com.chengyinhub.web.controller.api.ApiPlayEncounterControllerTest,com.chengyinhub.web.controller.api.ApiPlayEncounterRoleViewTest,com.chengyinhub.business.longrun.E03_16Test,com.chengyinhub.business.longrun.E05_17Test",
+    "h2": "mvn -B -ntp -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false -DargLine=-Xmx384m -Dtest=com.chengyinhub.business.longrun.E01_16Test,com.chengyinhub.business.longrun.E01_17Test,com.chengyinhub.business.longrun.E04_03Test,com.chengyinhub.business.longrun.E04_09Test,com.chengyinhub.business.longrun.E04_11Test,com.chengyinhub.business.service.ClubWaitlistPromotionMembershipRaceTransactionTest,com.chengyinhub.business.service.SmsCouponRedemptionTransactionBoundaryTest,com.chengyinhub.business.service.SmsCouponReverseTransactionBoundaryTest",
+    "real_mysql": "mvn -B -ntp -pl chengyinhub-admin -am test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false -Djunit.jupiter.execution.parallel.enabled=false -DargLine=-Xmx384m -Dtest=com.chengyinhub.business.longrun.E01_06Test,com.chengyinhub.business.longrun.E01_09Test,com.chengyinhub.business.longrun.E01_10Test,com.chengyinhub.business.longrun.E01_18Test,com.chengyinhub.business.longrun.E02_01Test,com.chengyinhub.business.longrun.E02_06Test,com.chengyinhub.business.longrun.E02_10Test,com.chengyinhub.business.longrun.E02_11Test,com.chengyinhub.business.longrun.E02_15Test,com.chengyinhub.business.longrun.E02_16Test,com.chengyinhub.business.longrun.E02_18Test,com.chengyinhub.business.longrun.E02_20Test,com.chengyinhub.business.longrun.E04_06Test,com.chengyinhub.business.longrun.E04_10Test,com.chengyinhub.business.longrun.E04_13Test,com.chengyinhub.business.longrun.E04_14Test,com.chengyinhub.business.service.A03EndingSnapshotMySqlIT,com.chengyinhub.business.service.B03CouponLifecycleMySqlIT,com.chengyinhub.business.service.B04ScheduleReadbackMySqlIT,com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT,com.chengyinhub.business.service.ClubWaitlistTokenMybatisIntegrationTest,com.chengyinhub.business.service.CouponLifecycleMybatisIntegrationTest"
+  },
+  "latest_known_extra_source": "E03-16 + E05-17 and five legacy fixtures; E02-22 is not part of a37 delta; shared findCurrent producer already imported, do not apply CORE full branch over EXTRA"
+}

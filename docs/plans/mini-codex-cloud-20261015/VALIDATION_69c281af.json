@@ -1,0 +1,46 @@
+{
+  "candidate": "69c281af1ecc3493db5614b74e494b91c7bb0656",
+  "source_and_tests": "c24202f659e8709a00b513b8e456d101a6b99daf",
+  "github_ci": {
+    "run": 38730430052,
+    "status": "success",
+    "backend_job": 116406720749,
+    "mini_job": 116406720663
+  },
+  "funds_ci": {
+    "run": 38730430072,
+    "status": "success",
+    "job": 116406688937
+  },
+  "backend_summary": [
+    "[INFO] Tests run: 10095, Failures: 0, Errors: 0, Skipped: 530",
+    "[INFO] Tests run: 96, Failures: 0, Errors: 0, Skipped: 0",
+    "✅ 真库 IT 观测通过:27 套均真跑、skipped=0、无错无失败。"
+  ],
+  "funds_summary": [
+    "[INFO] Tests run: 562, Failures: 0, Errors: 0, Skipped: 0"
+  ],
+  "mini_summary": [
+    "# tests 8327",
+    "# pass 8325",
+    "# fail 0",
+    "# cancelled 0",
+    "# skipped 2",
+    "# todo 0",
+    "UI-GATE-0:PASS",
+    "UI-GATE-0:PASS"
+  ],
+  "not_verified": [
+    "new B03AssetMybatisIntegrationTest opt-in suite",
+    "authorized VPS runtime and database",
+    "iOS source adaptation/device",
+    "WeChat developer tools/device",
+    "real business independent readback",
+    "merge, migration and deployment"
+  ],
+  "vps_connection_recheck": {
+    "identity": "ephemeral identity parsed successfully; no credential contents retained in evidence",
+    "ssh": "connection refused before authentication",
+    "cloud": "restricted network; no configured TCP destinations, VPN or outbound identities; user notified"
+  }
+}

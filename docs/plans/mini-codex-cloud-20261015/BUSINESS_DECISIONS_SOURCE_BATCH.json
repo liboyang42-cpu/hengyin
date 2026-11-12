@@ -1,0 +1,43 @@
+{
+  "id": "USER_DECIDED_IDENTITY_COUPON_SOURCE_BATCH",
+  "public_source_base": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+  "source_chain": [
+    {
+      "id": "E04-07-A",
+      "sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "parent": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+      "ordinary_declared": 3,
+      "packet": "E04_07_A_SOURCE_DELIVERY.json"
+    },
+    {
+      "id": "E02-23",
+      "sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+      "parent": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "ordinary_declared": 24,
+      "packet": "E02_23_SOURCE_DELIVERY.json",
+      "count_correction": "Earlier18 omitted6 parameter invocations; old annotationcount is historical"
+    },
+    {
+      "id": "E04-07-B",
+      "sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+      "parent": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+      "ordinary_declared": 11,
+      "real_mysql_declared": 8,
+      "packet": "E04_07_B_SOURCE_DELIVERY.json"
+    }
+  ],
+  "status": "SOURCE_CHAIN_DELIVERED_WITH_PARTIAL_EXACT_SHA_ORDINARY_EVIDENCE_NO_RUNTIME_DEPLOYMENT",
+  "actual_original_authors": 2,
+  "actual_source_writers_now": 0,
+  "ready_source_packages_not_delivered": 0,
+  "ack_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116",
+  "files_locked_to_original_authors": true,
+  "validation_owner": "local root 01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "actual_tests_current_round": null,
+  "execution": "NOT_RUN_UNTIL_REAL_LOCAL_REPORT",
+  "pass_transfer": false,
+  "integration": "Rolling EXTRA source chain only, not cross-team integration/merge/deployment",
+  "deployment": "NO",
+  "old_history_preserved": true,
+  "latest_runtime_evidence_index": "RECENT_EXTERNAL_EVIDENCE_ACK.json"
+}

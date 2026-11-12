@@ -1,0 +1,1304 @@
+{
+  "protocol": "CY-LONGRUN-VALIDATION-HANDOFF-20261015-v1",
+  "source_sha": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+  "source_pr": 44,
+  "base_sha": "4a943501262cb533158428d9748d8ac49aaa8950",
+  "status": "NOT_RUN_NEW_REPAIR_SHA_LOCAL_VPS_PENDING",
+  "generation": "static filename/content inventory only; no compiler/parser/test/lint/DB execution",
+  "entries": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_01Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.E03_01Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E03_11Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.E03_11Test",
+      "declared_test_annotation_count": 7,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_13Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.E04_13Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+      ],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_03Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_03Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_05Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_05Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_10Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_10Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_11Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_11Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_12Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_13Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_13Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_15Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_15Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_16Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_16Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_17Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_17Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_18Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_18Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_19Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_19Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_20Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_20Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_21Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_21Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_22Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_22Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_23Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_23Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_24Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_24Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C03_25Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C03_25Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_01Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_01Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_02Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_02Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_07Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_07Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_09Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_09Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_10Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_10Test",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_11Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_11Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_12Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_12Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_13Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_13Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_14Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_14Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_15Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_15Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_16Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_16Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_18Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_18Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_19Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_19Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_RUN_SESSION_ORDER_IT\", matches = \"1\")"
+      ],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20MySqlIT.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_20MySqlIT",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_20Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_20Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21MySqlIT.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_21MySqlIT",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_21Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_21Test",
+      "declared_test_annotation_count": 7,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C04_22Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C04_22Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_01Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_01Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_09Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_09Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_10Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_10Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_11Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_11Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_15Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_15Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_16Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_16Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_17Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_17Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_18Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_18Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_19Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_19Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_20Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_20Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_21Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_21Test",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_23Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_23Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25MySqlIT.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_25MySqlIT",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_FUNDS_MYSQL_IT\", matches = \"1\")"
+      ],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C05_25Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C05_25Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_01Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_01Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_05Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_05Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_07Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_07Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_09Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_09Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_10Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_10Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\", matches=\"1\")"
+      ],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_11Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_11Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_13Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_13Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_15Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_15Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_16Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_16Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_17Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_17Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_18Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_18Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_19Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_19Test",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_20Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_20Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_21Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_21Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_22Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_22Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_23Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_23Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_24Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_24Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_25Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_25Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_26Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_26Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_27Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_27Test",
+      "declared_test_annotation_count": 7,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_28Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_28Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_29Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_29Test",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/OWN_C06_30Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.longrun.OWN_C06_30Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named=\"CHENGYIN_FUNDS_MYSQL_IT\",matches=\"1\")"
+      ],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/BothWithdrawalLegsRejectPlayerCooldownTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.BothWithdrawalLegsRejectPlayerCooldownTest",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CashWithdrawStateMachineTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.CashWithdrawStateMachineTest",
+      "declared_test_annotation_count": 30,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/CooldownConfigWriteThroughRealConfigServiceTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.CooldownConfigWriteThroughRealConfigServiceTest",
+      "declared_test_annotation_count": 10,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FundIdempotencyConcurrencyTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.FundIdempotencyConcurrencyTest",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MerchantReferralBountyTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.MerchantReferralBountyTest",
+      "declared_test_annotation_count": 28,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/PlayerWithdrawalCooldownServiceTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.PlayerWithdrawalCooldownServiceTest",
+      "declared_test_annotation_count": 16,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/BankWithdrawalIdempotencyConcurrencyTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.BankWithdrawalIdempotencyConcurrencyTest",
+      "declared_test_annotation_count": 2,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/CashWithdrawServiceTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.CashWithdrawServiceTest",
+      "declared_test_annotation_count": 14,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/FundActionPreflightServiceImplTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.FundActionPreflightServiceImplTest",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/GameSessionRuntimeServiceImplTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImplTest",
+      "declared_test_annotation_count": 122,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/NpcChatServiceTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.NpcChatServiceTest",
+      "declared_test_annotation_count": 22,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C01_51Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.OWN_C01_51Test",
+      "declared_test_annotation_count": 5,
+      "declared_environment_annotations": [
+        "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_RUN_OWN_C01_51_MYSQL\", matches = \"true\")"
+      ],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/OWN_C02_27Test.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.OWN_C02_27Test",
+      "declared_test_annotation_count": 3,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPayoutStateMybatisTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.WithdrawalPayoutStateMybatisTest",
+      "declared_test_annotation_count": 6,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalPiiStorageTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.WithdrawalPiiStorageTest",
+      "declared_test_annotation_count": 1,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WithdrawalStateMachineServiceTest.java",
+      "status": "NOT_RUN",
+      "kind": "JAVA_TEST_SOURCE",
+      "class_name": "com.chengyinhub.business.service.impl.WithdrawalStateMachineServiceTest",
+      "declared_test_annotation_count": 4,
+      "declared_environment_annotations": [],
+      "discovery_warning": "Static annotations are not executed count; explicitly select gated ITs and check skipped/disabled tests"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-01.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-02.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-03.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-04.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-05.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-06.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-07.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-08.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-09.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-10.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-11.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-12.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-13.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-14.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-15.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-16.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-17.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-18.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-19.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-20.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-21.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-22.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-23.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-24.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-25.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-26.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-27.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-28.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-29.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-30.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-31.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-32.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-33.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-34.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-35.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-36.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-37.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-38.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-39.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-40.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-41.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-42.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-43.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-44.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-45.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-46.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-47.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-48.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-49.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c01-50.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-01.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-02.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-03.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-04.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-05.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-06.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-07.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-08.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-09.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-10.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-11.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-12.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-13.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-14.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-15.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-16.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-17.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-18.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-19.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-20.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-21.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-23.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-24.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-25.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/longrun-own-c02-26.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/pro-editor-draft.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/pro-editor-fabu-flow.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/pro-editor-story-flow.test.js",
+      "status": "NOT_RUN",
+      "kind": "NODE_TEST_SOURCE"
+    }
+  ],
+  "counts": {
+    "JAVA_TEST_SOURCE": 91,
+    "NODE_TEST_SOURCE": 78
+  },
+  "requirements": [
+    "Use exact public SHA; group source-unit, real MySQL/Redis, runtime HTTP and device acceptance separately",
+    "Select IT/environment gates explicitly; count fresh report files only, never inherit old231 results",
+    "C04 realDB3 and C05 realDB4 only source declarations; C04 does not prove full bank/provider or deployed NESTED manager, C05 mock Redis does not prove real Redis/AOP routing",
+    "No bare Docker or old VPS budget; verify current approved build/integration resource channel after user returns"
+  ],
+  "not_accepted": [
+    "merge",
+    "deployment",
+    "business migration",
+    "real-identity runtime HTTP",
+    "WeChat/iOS devices"
+  ],
+  "backend_handoff": "BACKEND_VALIDATION_VPS_HANDOFF.json",
+  "backend_core_matrix": "BACKEND_VALIDATION_CORE_MATRIX.json",
+  "backend_extra_matrix": "BACKEND_VALIDATION_EXTRA_MATRIX.json",
+  "backend_validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+  "frontend_validation": "STILL_DEFERRED_NOT_AUTHORIZED_THIS_BACKEND_ROUND",
+  "local_vps_compile_feedback": {
+    "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+    "status": "COMPILE_PASS_REPORTED_BY_LOCAL_VPS_COORDINATOR",
+    "location": "VPS",
+    "reporter_thread": "01a13eed-e4d9-77f3-b875-c72d26ea7d59",
+    "resource_entry": "budget212 guard/shared lock, reported",
+    "exit_code": 0,
+    "duration": "02:35",
+    "reactor_modules_success": 7,
+    "admin_test_source_files_compiled": 1392,
+    "business_tests_executed": 0,
+    "integration_tests_executed": 0,
+    "guard_container_cleanup": "reported auto cleaned",
+    "public_raw_evidence": "PENDING_LOCAL_PUBLICATION",
+    "evidence_level": "local verifier delegated result; C00 has not read public raw log yet",
+    "not_accepted": [
+      "business regression",
+      "real MySQL/Redis suites",
+      "runtime HTTP",
+      "device acceptance",
+      "deployment",
+      "merge",
+      "migration"
+    ]
+  },
+  "repair_round_1": "VPS_REPAIR_ROUND_1.json",
+  "historical_f7_regression": {
+    "candidate_sha": "f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c",
+    "result": "FAIL",
+    "evidence_commit": "6e7a22025192710fa5edfd8be5a10ed425edc0ee",
+    "evidence_pr": 24,
+    "summary_path": "docs/verification/mini-bug-arch-20261015/VPS_CORE_f7e0e523/summary.json",
+    "C00_read_public_evidence": true,
+    "tests": 483,
+    "passed": 470,
+    "failures": 5,
+    "errors": 8,
+    "skipped": 0,
+    "classes": 83,
+    "fresh_reports": true,
+    "exact_selected_class_set_match": true,
+    "status_scope": "ordinary offline83 selected classes only;8 gated/JDBC deferred",
+    "resource_guard": "212;1536MiB/no extra swap/1CPU/256PIDs/network none/shared lock",
+    "source_repair_candidate": "0d63043ad06775bc3dc52fb925620ef36d1081a7",
+    "new_candidate_verification": "NOT_RUN",
+    "not_business_bugs_count": "13 failing methods are not13 confirmed production bugs; source diagnosis fixture/boundary mismatches"
+  }
+}

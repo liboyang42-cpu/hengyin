@@ -1,0 +1,74 @@
+{
+  "id": "EXTRA_E02_THREE_FIXTURE_SOURCE_DELIVERY",
+  "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+  "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+  "branch": "codex/extra-six-rolling-20261015",
+  "owner": "EXTRA6/E02",
+  "writer": "original /root/external_e02",
+  "paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java"
+  ],
+  "grant_sha": "fa3f81a108610e07a562d0deb771138e32b37ead",
+  "post_grant_author_ack": "C00 directly read two completed originalE02 private child turns: fetched complete publicgrant via GitHubconnector before writing, exact3baseline hashes, only3lines added, stopped; separate B05 freeze/handoff acknowledgement",
+  "status": "SOURCE_DELIVERED_UNVERIFIED",
+  "verification_type": "STATIC_SOURCE_REVIEW_AND_LOCAL_VPS_TEST_COMPILE",
+  "static_review": [
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+      "exact_after_removing_added_line": true,
+      "methods": 1,
+      "gate": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_01_MYSQL_IT\", matches = \"1\")",
+      "cleanup_preserved": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+      "exact_after_removing_added_line": true,
+      "methods": 1,
+      "gate": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_11_MYSQL_IT\", matches = \"1\")",
+      "cleanup_preserved": true
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+      "exact_after_removing_added_line": true,
+      "methods": 1,
+      "gate": "@EnabledIfEnvironmentVariable(named = \"CHENGYIN_E02_06_MYSQL_IT\", matches = \"1\")",
+      "cleanup_preserved": true
+    }
+  ],
+  "added_lines": 3,
+  "deleted_lines": 0,
+  "public_readback": "Fullpubliccommit/parent/3patches and each completefile read; each removing exactaddedline byte-identical to control26d source",
+  "actual_source_writers": 0,
+  "original_author_stopped_lock_retained": true,
+  "compile_status": "TEST_COMPILE_PASS",
+  "actual_tests": 0,
+  "declared_methods": 3,
+  "real_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+  "production_changes": false,
+  "dependencies_gate_assertions_methods_cleanup_unchanged": true,
+  "old_ordinary_pass_inherited": false,
+  "integration": "OriginalE02 child published in existingPR30; EXTRA coordinator alone publishes rollingPR36 exactsame3hunks. No C00 edit to its source branch, no rebase/force or crossbranch acceptance. B05 is separateCORE candidate, not silently included.",
+  "resources": "Existingentryonly; each old CHENGYIN_E02_01/06/11_MYSQL_IT=1 + explicit sixscratchvars and MySQL8/ownedschema remain. No newentry/gate/config/CI/network or trueDB execution.",
+  "original_child_sha": "f74dd9be0c17a17db506ee8e0c46c60804a1a785",
+  "original_child_parent_sha": "9a27f6b0d8fe532320cbe646775464cf49ba1d10",
+  "rolling_readback": "Completepubliccommit exact3files/add3del0; eachgitblobSHA identical originalf74child, sameexactgrant; noB05change or other source change",
+  "validation_packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+  "local_validation": {
+    "evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+    "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+    "status": "TEST_COMPILE_PASS",
+    "compile_status": "TEST_COMPILE_PASS",
+    "actual_tests": 0,
+    "fresh_surefire_xml": 0,
+    "fresh_selected_classes": 3,
+    "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "declared_mysql_methods": 3,
+    "repair_slot_opened": false,
+    "packet": "E02_6C446_TEST_COMPILE_RESULT.json",
+    "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+  },
+  "preparation_failure_history_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json"
+}

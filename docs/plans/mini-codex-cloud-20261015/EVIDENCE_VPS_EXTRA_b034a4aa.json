@@ -1,0 +1,130 @@
+{
+  "source_sha": "b034a4aabdacffbf7a2ef4f400b56eb2c6eed6cf",
+  "previous_source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+  "direct_parent_sha": "54fdc951a59467cd93b6ba49cf87ae890faf2500",
+  "task": "cy-vps-extra-b034a4aa-20261016",
+  "archive_sha256": "497621755df5245ff3200a41f617a3bf35daf7cee8c7ec542d87603758937369",
+  "validation_phase": "targeted retest of original two error classes only",
+  "selectors": [
+    "com.chengyinhub.business.longrun.E02_23Test",
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest"
+  ],
+  "declared_class_counts": {
+    "com.chengyinhub.business.longrun.E02_23Test": 6,
+    "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest": 2
+  },
+  "expected_declared_tests": 8,
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "not_validated": [
+    "full35 rerun",
+    "trueMySQL/Redis/runtimeHTTP/device/business",
+    "migration/merge/deploy"
+  ],
+  "started_at": "2026-10-16T14:03:53.575927+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-extra-b034a4aa",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-extra-b034a4aa-20261016/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-extra-b034a4aa-20261016/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-extra-b034a4aa-20261016/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+    "test"
+  ],
+  "memavailable_before": "MemAvailable:    2840732 kB",
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-16T14:06:40.642804+00:00"
+  },
+  "guard_receipt": {
+    "exitCode": 0,
+    "reason": "completed",
+    "containerId": "8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8"
+  },
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.longrun.E02_23Test",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_23Test.xml",
+      "sha256": "8ffc20454781a45d2169075b3359282caee25e4a4546aff1dc2e29a9e7ef5ac3",
+      "fresh": true,
+      "testcases": 6,
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest.xml",
+      "sha256": "8a0e21e02482cac036a00cb1659aaea3e27e79ec4e3e4c4ac08e174bf7beaa25",
+      "fresh": true,
+      "testcases": 2,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 8
+  },
+  "fresh_exact_xml": true,
+  "integrity_ok": true,
+  "log_sha256": "d37b5935726b87bea9698f6c988b942f52aa834a98bdf4cce76953cdf9725b1b",
+  "build_success": true,
+  "evidence_result": "PASS",
+  "actual_tests": 8,
+  "fresh_xml_count": 2,
+  "run_sha256": "b70d9820499ebdb73a0bfe5cf281229a4fda73c97d107500571a1a9b8204ee58",
+  "guard_result_sha256": "379581d0b0508a7d90c57a7bd411c021c71b5cb3734ef5b4881b5de75eaba5bb",
+  "targeted_summary_sha256": "d165f1e46ccfff998e4ada67e0627ec4c24836e355fbdc7bc74b91833ee9d1b0",
+  "exact_context_container_filter": "chengyin-aws; exact id=8e4127dcda5d845b683e88158ef10443b7f7ee6cd29ea45c11eaf11b5624b3e8; empty result exit0",
+  "original_failure_evidence": {
+    "sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+    "commit": "3489ce72995b840af2196deab80fa8f2a88e527c",
+    "tests": 35,
+    "passed": 28,
+    "failures": 0,
+    "errors": 7,
+    "skipped": 0,
+    "preserved": true
+  },
+  "scope_review": "Exact two previously granted tests; four H2 Java method alias references changed from SQL single quote to double quote. All6+2 methods/assertions/negative controls and production XML unchanged; no production/dependency change.",
+  "repair_result": "Original E02 fixture error repaired; one author repair slot may be released after ACK.",
+  "not_inherited": "This new SHA has only8 actual targeted PASS, not35 rerun or inherited28 PASS.",
+  "retained_remote": [
+    "source",
+    "cache",
+    "incoming/source.tar.gz",
+    "selection.json",
+    "unit-run.json",
+    "unit-guard-result.json",
+    "targeted-summary.json",
+    "source/vps-targeted.log",
+    "source/chengyinhub-admin/target/surefire-reports"
+  ],
+  "evidence_commit": "254af5080abac41878357a56ef85bde86b59da1d",
+  "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/254af5080abac41878357a56ef85bde86b59da1d/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_b034a4aa/README.md",
+  "c00_read_scope": "Public README and summary actually read; no original VPS XML/log fetched/reparsed, no Cloud rerun"
+}

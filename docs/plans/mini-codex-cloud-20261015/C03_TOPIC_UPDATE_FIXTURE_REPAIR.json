@@ -1,0 +1,152 @@
+{
+  "id": "CORE_C03_TOPIC_UPDATE_FIXTURE_REPAIR",
+  "failure_candidate": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "owner": "CORE/C03",
+  "writer": "/root/topic_like_cancel_sol",
+  "model": "gpt-6.1-sol",
+  "state": "ORDINARY_TARGETED31_PASS_REPAIR_SLOT_RELEASED_SOURCE_FROZEN",
+  "repair_slots": 0,
+  "paths": [
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/TopicUpdateByOwnerTest.java",
+    "docs/verification/mini-longrun-20261015/CORE/OWN-C03-14-FIXTURE-REPAIR.md"
+  ],
+  "scope": "OldTopicUpdateByOwnerTest fixture only: supply actual successfulchapter/node/activity insert return1 plusunique positive generatedIDs in commonsetup, preservepertest customnode101+ overrides; if furtherrequiredfixture dependencies confirmed from actualpath, minimaloldfixture injection only. Preserve31@Test/allbusiness assertions/negativecontrols. No production/other test/guard/skip/DDL/CI/dependency edits.",
+  "ownership_basis": "Noexistingglobal owner entry for exacttest; currentC03writer completedadf and stoppedclean, originalCORE/C03 productionauthor frozen0d; user explicitly assigns this oldtest fixture to sameC03 repair slot after C00registration. No other writer assigned/live for exacttest.",
+  "source_root_cause_review": "InitialC00 source read: commonsetup lacks insertCmsTopicChapter/node success/ID stubs. Existingchapterguard already inparente0; adf changesonly collaborator inputshape, fullDto collaborator listomitted -> guardreturns. Needoriginalwriter actualfullpathreview before minimalfixturechange, not declareproductionbug. Originalwriter traced non-draft publish->ensureSelfHostActivityShell->generateSelfHostActivity:5882: activityinsertalso needsreturn1/generatedID. FinaljourneyRules/routevalidators alreadyreal; existinglocalmemberTemplate/distance and pertestnode101+ remain. DefaultAnswer must be safe fornull synthetic argument duringMockito re-stubbing; do notchange31 assertions.",
+  "reported_failure": {
+    "validator": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+    "classes": 4,
+    "actual_tests": 51,
+    "passed": 35,
+    "failures": 1,
+    "errors": 15,
+    "skipped": 0,
+    "fresh_exact_xml": 4,
+    "started_at": "2026-10-16T05:59:49Z",
+    "finished_at": "2026-10-16T06:02:38Z",
+    "guard_exit_code": 1,
+    "guard_reason": "child_command_failed",
+    "container_id": "4f097c74629d229d6a70a8292a3b1b4bdc37ae967091418bb6dfa58f87cfbd94",
+    "cleanup": "Local confirmed exact container absent viachengyin-aws",
+    "passing_classes": [
+      {
+        "name": "com.chengyinhub.business.longrun.OWN_C03_14Test",
+        "tests": 10
+      },
+      {
+        "name": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+        "tests": 4
+      },
+      {
+        "name": "com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest",
+        "tests": 6
+      }
+    ],
+    "failing_class": {
+      "name": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+      "tests": 31,
+      "passed": 15,
+      "failures": 1,
+      "errors": 15,
+      "skipped": 0,
+      "common_error": "章节保存失败，未生成有效章节身份",
+      "stack": "CmsTopicServiceImpl.saveChaptersAndNodes:5061 -> saveTopicChapters:5083 -> rebuildTopicContent:4501",
+      "failure_method": "publishedFreeTopic_editThatMakesItCommercial_isRejected",
+      "expected_failure_message": "免费主题不能转为商业主题,如需收费请重新发起主题",
+      "actual_failure_message": "章节保存失败，未生成有效章节身份",
+      "other_method_names_not_supplied": true
+    },
+    "vps_task": "/home/ubuntu/previews/cy-vps-core-adf59791-20261016",
+    "evidence_pr": 24,
+    "evidence_commit": "cd57aef324b03c6c5d3f3f2580bbba91d5d295b4",
+    "public_evidence_status": "C00readpublicREADMEandsummary; originalXML/logsretainedbylocal, noCloudrerun",
+    "source_failure_classification": "FIXTURE_GAP_UNDER_ORIGINAL_WRITER_REVIEW_NOT_CONFIRMED_PRODUCTION_REGRESSION",
+    "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cd57aef324b03c6c5d3f3f2580bbba91d5d295b4/docs/verification/mini-bug-arch-20261015/VPS_CORE_adf59791/README.md",
+    "source_archive_sha256": "150ea9ba58249c9a822cc47ca001500ac55a3621873a00b56550bc380441ccd4",
+    "log_sha256": "2883aa88b83c5c4ebb0b8efeed65a0d3a61ccd41e0b737d73c2e22c3e1544dca",
+    "reports": [
+      {
+        "class": "com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest.xml",
+        "sha256": "1d2dbef54bdad6c9196e17d8f4ae7eb1b26096801bdf50face6db8e6435bcc14",
+        "fresh": true,
+        "testcases": 6,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_12Test.xml",
+        "sha256": "91cd8a06bf8d4106023aa6beba4a9e98f5ffc20c9cf981bddd709448a90e5f3d",
+        "fresh": true,
+        "testcases": 4,
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.OWN_C03_14Test",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_14Test.xml",
+        "sha256": "84c71d0b252dc461716c1b1300da2d47a3adf837572bc30f1bc56bf82f5d071b",
+        "fresh": true,
+        "testcases": 10,
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+        "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.TopicUpdateByOwnerTest.xml",
+        "sha256": "1a87ec328ae4bc2afc7765c12c523621fb77f44b3ad050107b0fb140dabf65fd",
+        "fresh": true,
+        "testcases": 31,
+        "tests": 31,
+        "failures": 1,
+        "errors": 15,
+        "skipped": 0
+      }
+    ]
+  },
+  "retest": {
+    "status": "TARGETED31_ACTUAL_PASS",
+    "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+    "source_declarations": 31,
+    "full51_repeat": false,
+    "environment": "Localexisting212 offline; no DB/Redis/newdependency",
+    "command_template_local_only": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.service.TopicUpdateByOwnerTest test",
+    "candidate_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+    "actual_executed_tests": 31,
+    "passed": 31,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+    "result_packet": "C03_5752_TARGETED_VPS_RESULT.json"
+  },
+  "cloud_manual_runs": 0,
+  "other_work": "Currentfocusedbatchcomplete: EXTRA H2ordinary2PASS and F3testcompilePASS/tests0 publiclyread; no whole-team stop or second repair writer",
+  "constraints": "Keep existing212/CI/no newentry/network; businessidentityDDLquestions pending onlytheirauthorizedscope",
+  "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+  "parent_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "actual_source_writers": 0,
+  "source_root_cause_confirmed_by_static_review": "Onlyoldfixture missing3successinsertIDs; sameguardsinparent, no productionregression proven",
+  "publication_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/24#issuecomment-6209269111",
+  "c00_diff_review": "Fullpubliccompare exact2paths, testonlyimports/setUp3nullsafeIDanswers, all31testmethods/assertions andnode101/102override unchanged; no runtimevalidation byCloud",
+  "repair_slot_disposition": "RELEASED_BY_LOCAL31PASS",
+  "author_signoff": {
+    "worker": "/root/topic_like_cancel_sol",
+    "owner": "CORE/C03",
+    "state": "ACK_RECEIVED_TARGETED31_PASS_SLOT_RELEASE_FILE_LOCK_RETAINED",
+    "basis": "Originalwriter directly readsharedC00publicevidence record and replied explicitACK in collaboration; no further edits/tests/Git",
+    "old51_failure_retained": true,
+    "no_new_full51_claim": true,
+    "no_old20_inherited": true
+  },
+  "ordinary_failure_closed": true,
+  "other_layers_accepted": false,
+  "max_repair_slots_per_team": 1
+}

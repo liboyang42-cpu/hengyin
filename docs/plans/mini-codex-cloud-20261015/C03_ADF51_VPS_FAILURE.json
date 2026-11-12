@@ -1,0 +1,149 @@
+{
+  "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "previous_source_sha": "e0e3f517b8e6deb26ed3697a00d38ae14f015e76",
+  "task": "cy-vps-core-adf59791-20261016",
+  "archive_sha256": "150ea9ba58249c9a822cc47ca001500ac55a3621873a00b56550bc380441ccd4",
+  "validation_phase": "ordinary targeted tests",
+  "selectors": [
+    "com.chengyinhub.business.longrun.OWN_C03_14Test",
+    "com.chengyinhub.business.longrun.OWN_C03_12Test",
+    "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+    "com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest"
+  ],
+  "expected_declared_tests": 51,
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "not_validated": [
+    "true MySQL",
+    "true Redis",
+    "runtime HTTP",
+    "device",
+    "business acceptance",
+    "integration",
+    "merge",
+    "deployment"
+  ],
+  "started_at": "2026-10-16T05:59:49.102014+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-core-adf59791",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-core-adf59791-20261016/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-core-adf59791-20261016/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-core-adf59791-20261016/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.longrun.OWN_C03_14Test,com.chengyinhub.business.longrun.OWN_C03_12Test,com.chengyinhub.business.service.TopicUpdateByOwnerTest,com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest",
+    "test"
+  ],
+  "memavailable_before": "MemAvailable:    3766368 kB",
+  "guard": {
+    "returncode": 1,
+    "stdout": "{\"exitCode\": 1, \"reason\": \"child_command_failed\", \"containerId\": \"4f097c74629d229d6a70a8292a3b1b4bdc37ae967091418bb6dfa58f87cfbd94\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-16T06:02:38.099895+00:00"
+  },
+  "guard_receipt": {
+    "exitCode": 1,
+    "reason": "child_command_failed",
+    "containerId": "4f097c74629d229d6a70a8292a3b1b4bdc37ae967091418bb6dfa58f87cfbd94"
+  },
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.deadbuttons.TopicCreateBusinessErrorPassthroughTest.xml",
+      "sha256": "1d2dbef54bdad6c9196e17d8f4ae7eb1b26096801bdf50face6db8e6435bcc14",
+      "fresh": true,
+      "testcases": 6,
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_12Test",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_12Test.xml",
+      "sha256": "91cd8a06bf8d4106023aa6beba4a9e98f5ffc20c9cf981bddd709448a90e5f3d",
+      "fresh": true,
+      "testcases": 4,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.longrun.OWN_C03_14Test",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.OWN_C03_14Test.xml",
+      "sha256": "84c71d0b252dc461716c1b1300da2d47a3adf837572bc30f1bc56bf82f5d071b",
+      "fresh": true,
+      "testcases": 10,
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.TopicUpdateByOwnerTest.xml",
+      "sha256": "1a87ec328ae4bc2afc7765c12c523621fb77f44b3ad050107b0fb140dabf65fd",
+      "fresh": true,
+      "testcases": 31,
+      "tests": 31,
+      "failures": 1,
+      "errors": 15,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 51,
+    "failures": 1,
+    "errors": 15,
+    "skipped": 0,
+    "passed": 35
+  },
+  "fresh_exact_xml": true,
+  "integrity_ok": true,
+  "log_sha256": "2883aa88b83c5c4ebb0b8efeed65a0d3a61ccd41e0b737d73c2e22c3e1544dca",
+  "build_success": false,
+  "evidence_result": "NOT_PASS",
+  "cleanup": {
+    "observed_absent": true,
+    "endpoint": "chengyin-aws",
+    "container_id": "4f097c74629d229d6a70a8292a3b1b4bdc37ae967091418bb6dfa58f87cfbd94"
+  },
+  "failure_groups": [
+    {
+      "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+      "errors": 15,
+      "message": "章节保存失败，未生成有效章节身份"
+    },
+    {
+      "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+      "failures": 1,
+      "method": "publishedFreeTopic_editThatMakesItCommercial_isRejected",
+      "expected": "免费主题不能转为商业主题,如需收费请重新发起主题",
+      "actual": "章节保存失败，未生成有效章节身份"
+    }
+  ],
+  "evidence_commit": "cd57aef324b03c6c5d3f3f2580bbba91d5d295b4",
+  "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/cd57aef324b03c6c5d3f3f2580bbba91d5d295b4/docs/verification/mini-bug-arch-20261015/VPS_CORE_adf59791/README.md",
+  "c00_read_public_readme_summary": true,
+  "raw_vps_xml_read_by_c00": false,
+  "history_preserved": true,
+  "repair_source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+  "repair_status": "ORIGINAL_FAILED_CLASS_CLOSED_BY5752_TARGETED31_PASS",
+  "closing_evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+  "closing_result_packet": "C03_5752_TARGETED_VPS_RESULT.json"
+}

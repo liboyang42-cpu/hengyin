@@ -1,0 +1,141 @@
+{
+  "id": "E02_6C446_TEST_COMPILE_RESULT",
+  "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+  "parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+  "evidence_commit": "90b81ee7af715f0c72598a7b7a9f59e235910ea6",
+  "evidence_pr": 24,
+  "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/90b81ee7af715f0c72598a7b7a9f59e235910ea6/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_6c446369/README.md",
+  "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/90b81ee7af715f0c72598a7b7a9f59e235910ea6/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_6c446369/summary.json",
+  "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+  "environment": "VPS_EXISTING_212",
+  "c00_review": "Actually read exact public README.md and summary.json, including fresh class hashes, guard/cleanup and retained prior failure. No direct VPS query, raw artifact reanalysis, Cloud test/compile or CI trigger.",
+  "status": "TEST_COMPILE_PASS",
+  "compile_status": "TEST_COMPILE_PASS",
+  "actual_tests": 0,
+  "fresh_surefire_xml": 0,
+  "fresh_selected_classes": 3,
+  "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+  "declared_mysql_methods": 3,
+  "new_source_failure": false,
+  "repair_slot_opened": false,
+  "source_delivery": "COMPLETE_GRANTED_ACKED_FROZEN",
+  "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
+  "prior_preparation_failure_packet": "E02_6C446_PREPARATION_BLOCKED_RESULT.json",
+  "reported_summary": {
+    "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+    "direct_parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+    "task": "cy-vps-e02-6c446369-20261018",
+    "archive_sha256": "03ce9d86803106e7fc9bcebd52ba7226396727e90d740abde4d1b6b91b460478",
+    "selectors": [
+      "com.chengyinhub.business.longrun.E02_01Test",
+      "com.chengyinhub.business.longrun.E02_11Test",
+      "com.chengyinhub.business.longrun.E02_06Test"
+    ],
+    "expected_actual_tests": 0,
+    "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+    "validation_phase": "test-compile only; three gated MySQL methods NOT_RUN",
+    "source_files": 4328,
+    "excluded_public_frontend_env_templates": [
+      "chengyinhub-ui/.env.development",
+      "chengyinhub-ui/.env.production",
+      "chengyinhub-ui/.env.staging"
+    ],
+    "diff_assertion": "exact three authorized SQL strings; removing each line restores parent file byte-for-byte",
+    "archive_scope": "Root pom, AGENTS, .mvn if present, six backend modules only; frontend/docs/assets excluded.",
+    "status": "TEST_COMPILE_PASS",
+    "actual_tests": 0,
+    "fresh_surefire_xml": 0,
+    "true_mysql": "NOT_RUN",
+    "compiled_classes": [
+      {
+        "class": "com.chengyinhub.business.longrun.E02_01Test",
+        "sha256": "ce552755083bc1374d8e7fa08f2f0d00a2ca6a71f6ddac7d2c267b4d212119bf",
+        "fresh": true
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_11Test",
+        "sha256": "62aee23dd1898c2eb9d90dc7366adba740ac49242553bce9b005caccc1eefa40",
+        "fresh": true
+      },
+      {
+        "class": "com.chengyinhub.business.longrun.E02_06Test",
+        "sha256": "018d5382b60105b36f56e5612243645ded6032373174be1645644dafefb392e1",
+        "fresh": true
+      }
+    ],
+    "started_at": "2026-10-18T02:23:12.350784+00:00",
+    "finished_at": "2026-10-18T02:25:47.051161+00:00",
+    "guard": {
+      "exitCode": 0,
+      "reason": "completed",
+      "containerId": "ff759637b6f7fded13e00ab34fa41f8e61d551b98796160614863e044035bfda"
+    },
+    "guard_exit_code": 0,
+    "log_sha256": "e78276c7ef97d723c73588e6d117d66d3a195e0723d241086743860b41207773",
+    "prior_preparation_failure": {
+      "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+      "remote_receipt": "preparation-result-disk-full-020540Z.json",
+      "summary": {
+        "source_sha": "6c44636974220ca9876386ee638c99981488db42",
+        "direct_parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+        "task": "cy-vps-e02-6c446369-20261018",
+        "archive_sha256": "03ce9d86803106e7fc9bcebd52ba7226396727e90d740abde4d1b6b91b460478",
+        "selectors": [
+          "com.chengyinhub.business.longrun.E02_01Test",
+          "com.chengyinhub.business.longrun.E02_11Test",
+          "com.chengyinhub.business.longrun.E02_06Test"
+        ],
+        "expected_actual_tests": 0,
+        "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+        "validation_phase": "test-compile only; three gated MySQL methods NOT_RUN",
+        "source_files": 4328,
+        "excluded_public_frontend_env_templates": [
+          "chengyinhub-ui/.env.development",
+          "chengyinhub-ui/.env.production",
+          "chengyinhub-ui/.env.staging"
+        ],
+        "diff_assertion": "exact three authorized SQL strings; removing each line restores parent file byte-for-byte",
+        "archive_scope": "Root pom, AGENTS, .mvn if present, six backend modules only; frontend/docs/assets excluded.",
+        "status": "NOT_STARTED_PREPARATION_DISK_FULL",
+        "actual_tests": 0,
+        "compile": "NOT_RUN",
+        "true_mysql": "NOT_RUN",
+        "fresh_surefire_xml": 0,
+        "guard_invoked": false,
+        "container_id": null,
+        "reason": "Cache copy failed with ENOSPC before guard/Maven. Exact incomplete current task cache removed; source/archive retained. No other resources cleaned.",
+        "observed_at": "2026-10-18T02:05:40.324044+00:00",
+        "evidence_scope": "This exact source SHA only; earlier ordinary passes remain separate.",
+        "cleanup": {
+          "context": "chengyin-aws",
+          "exact_container_absent": true,
+          "container_id": null,
+          "observed_exit_code": 0
+        },
+        "not_accepted": [
+          "real MySQL/Redis",
+          "runtime HTTP",
+          "device/business acceptance",
+          "cross-branch integration",
+          "migration/merge/deployment"
+        ]
+      }
+    },
+    "recovery": "Read-only resource recheck observed 613863424 free bytes and MemAvailable 2754896 KiB. Existing own source/archive rehashed; no target/cache/run existed before resume. No unrelated resources removed or services changed. Existing212 used unchanged; no new entry/network/CI.",
+    "evidence_scope": "This exact source SHA only; test-compile is not database execution or inherited ordinary results.",
+    "cleanup": {
+      "context": "chengyin-aws",
+      "container_id": "ff759637b6f7fded13e00ab34fa41f8e61d551b98796160614863e044035bfda",
+      "exact_container_absent": true,
+      "observed_exit_code": 0
+    },
+    "not_accepted": [
+      "real MySQL/Redis",
+      "runtime HTTP",
+      "device/business acceptance",
+      "cross-branch integration",
+      "migration/merge/deployment"
+    ]
+  },
+  "acceptance": "Compile only for exact source; no inherited ordinary results, real MySQL/Redis, runtime HTTP, device/business, joint four-file integration, migration execution, merge or deployment."
+}

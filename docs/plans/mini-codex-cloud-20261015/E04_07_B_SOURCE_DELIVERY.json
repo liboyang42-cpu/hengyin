@@ -1,0 +1,120 @@
+{
+  "status": "SOURCE_DELIVERED_UNVERIFIED",
+  "contract_stage": "CONTRACT_FROZEN_BY_USER",
+  "source_stage": "SOURCE_READY_SOURCE_ONLY",
+  "test_deployed": false,
+  "author_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116",
+  "local_handoff": "https://github.com/liboyang42-cpu/hengyin/pull/24#issuecomment-6216061352",
+  "actual_source_writers": 0,
+  "original_authors_stopped_lock_retained": true,
+  "cloud_manual_execution": 0,
+  "new_results": "NOT_RUN; no old PASS inheritance",
+  "user_resource_rule": "保持现有入口，不新增; 212/CI/network unchanged, no new entry, no migration execution/merge/deployment",
+  "id": "E04-07-B-EXACT_RECEIPT_SOURCE",
+  "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+  "parent_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+  "owner": "EXTRA6/E04",
+  "writer": "/root/external_e04",
+  "child_sha": "ca5e69f684b8c9b6e25d5d371189518e72d0a298",
+  "child_parent": "e617b3e158cf86972c037c73e5ed4e085e008346",
+  "paths": [
+    "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+    "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
+    "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml",
+    "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md"
+  ],
+  "c00_review": "Actual public full parent and11 changed-file patches read, all5production/migration and oldfixture diffs plus full newMySqlIT and ordinary7 source read. Receipt lookup exact history_id joins member/template, temporal/MAX inference removed; locked identity checked again. Producer uses actual receipt and exact NULL-onlybind requires1, existing REQUIRED rollback. Old assertions retained, only changed receipt premises. No running SQL/transaction/compile proof.",
+  "ordinary": {
+    "source_method_counts": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+        "fqn": "com.chengyinhub.business.longrun.E04_07Test",
+        "declarations": 7,
+        "gate_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+        "fqn": "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest",
+        "declarations": 4,
+        "gate_lines": []
+      }
+    ],
+    "declared_methods": 11,
+    "actual_tests": null,
+    "status": "NOT_RUN",
+    "local_only_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07Test,com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest test",
+    "environment": "Existing212 offline and existing dependencies only; mocks exercise service boundary, do not assert actual SQL transaction success"
+  },
+  "real_database": {
+    "source_method_counts": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java",
+        "fqn": "com.chengyinhub.business.longrun.E04_07MySqlIT",
+        "declarations": 5,
+        "gate_lines": [
+          "    private final MysqlIntegrationTestConfig mysql = MysqlIntegrationTestConfig.fromEnvironment(\"e04_07_it\");",
+          "            String value=System.getenv(\"CHENGYIN_TEST_MYSQL_\"+key);",
+          "        assertNotNull(System.getenv(\"CHENGYIN_TEST_MYSQL_PASSWORD\"));",
+          "        assertEquals(\"e04_scratch\",System.getenv(\"CHENGYIN_TEST_MYSQL_DATABASE_BASE\"));"
+        ]
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+        "fqn": "com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest",
+        "declarations": 3,
+        "gate_lines": []
+      }
+    ],
+    "declared_methods": 8,
+    "actual_tests": null,
+    "status": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "local_only_selection_text_not_execution": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E04_07MySqlIT,com.chengyinhub.business.it.RedemptionRewardClawbackMyBatisTest test",
+    "prerequisites": [
+      "No network DB through offline212; no new service/entry/CI trigger",
+      "New IT is explicit *IT selection, no new env opt-in gate; selection requires six explicit CHENGYIN_TEST_MYSQL_HOST/PORT/DATABASE_BASE/DATABASE_SUFFIX/USER/PASSWORD",
+      "New IT DATABASE_BASE=e04_scratch, nonempty unique suffix; MySQL8+ nonMariaDB, scratch CREATE/DROP/DML only; fail on schema-name collision, never predrop someone else; drop only schema actually created by this run",
+      "Old RedemptionRewardClawbackMyBatisTest retains existing MyBatis integration helper/source entry behavior; no assumption fixedCI now covers either sourceSHA",
+      "Source-owned scratch ALTER is fixture preparation only, not migration-file execution acceptance"
+    ]
+  },
+  "migration": {
+    "path": "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+    "only_new_migration": true,
+    "source_only": true,
+    "executed": false,
+    "nullable_history_id": true,
+    "old_rows_remain_null": true,
+    "historical_backfill": false,
+    "new_global_unique_fk": false,
+    "deployment_dependency": "A remains independent; B cannot be deployed before separately approved/applied newcolumn. Source review permission is not deployment/migration execution permission."
+  },
+  "behavior_contract": "Unknown/null/nonpositive/dangling/wrong member/template/deleted exactidentity => audit only, no coupon/log/reopen marker mutation, other authorized reversals continue. Exact USED audit only; successful exact-original-unused CAS alone deletes reward log/reopens coupon reward. No refund/point/XP policy change.",
+  "dependencies": [
+    "Public chain a762 -> A dedb -> E02 13be -> B9231",
+    "Original E04 A then B same writer; E02 independent source inserted in rolling parent, does not change E04 files",
+    "No cross-team CORE/FORWARD/Claude branch integration or merge performed"
+  ],
+  "confirmed_new_bug_id": false,
+  "exact_source_ordinary_evidence": {
+    "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+    "classes": [
+      "com.chengyinhub.business.longrun.E04_07Test",
+      "com.chengyinhub.business.service.impl.TopicCompletionCouponRewardServiceImplTest"
+    ],
+    "tests": 11,
+    "passed": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "part_of_batch35_not_all_pass": true,
+    "packet": "EVIDENCE_VPS_EXTRA_923170ab.json",
+    "true_mysql": "NOT_RUN"
+  }
+}

@@ -1,0 +1,632 @@
+{
+  "kind": "READ_ONLY_PR_HANDOFF_INTAKE",
+  "status": "DRAFT_DEPENDENCY_AND_AUTHORIZATION_NOT_ACCEPTED",
+  "pr": 69,
+  "url": "https://github.com/liboyang42-cpu/hengyin/pull/69",
+  "title": "fix: 补齐两类账单核对、素材归属与前端状态修复",
+  "head_sha": "5773e779b323e7f945970e8e472a654c3ea359e5",
+  "expected_head_sha": "5773e779b323e7f945970e8e472a654c3ea359e5",
+  "base_sha": "cbcc44261939cb9972e05929e8f73f8cf8862d6b",
+  "head_ref": "feature/prelaunch-code-tail-20261015",
+  "base_ref": "master",
+  "github_draft": false,
+  "full_body": "本 PR 补齐上线前剩余的实际代码缺口：成长中心返回时同步已保存的昵称、头像，并防止旧排名响应覆盖；“我的项目”缺失或非法的待核销数不再显示为 0。第三方图片识别、声音克隆只允许素材上传者发起，普通公开展示与附件引用保留；空 openid 的文本或媒体审核在外呼前明确失败。Redis 告警进入本地去重后，同一窗口不再反复等待故障缓存。\n\n同时完成交易账单及 BASIC／OPERATION／FEES 三种资金账户的下载与导入。按已确认口径分别保存订单总额、申请退款金额、应结金额、优惠券、手续费和账户资金事实；校验摘要、笔数、汇总及可验证的余额连续性。原始明细、成功交易快照与批次标记在同一事务落库，重复导入核对全部事实，冲突整体回滚。未下载、生成中及依据不足时明确待核。只读核对与告警，不自动修改订单、退款或钱包余额。格式依据微信官方[交易账单说明](https://pay.wechatpay.cn/doc/v3/partner/4013080599)和[资金账单说明](https://pay.wechatpay.cn/doc/v3/partner/4013080600)。\n\n本 PR 面向 `master`，包含 #17 的既有整合、`b3d1f49` Redis 超时补丁及本批 37 文件修复。#5／#10 已合入主分支，相关修改完整保留；最终 PR 共 68 个文件，其中另有两份旧玩法测试仅修正玩家图片的上传归属。\n\n验证：\n- 本批前端相关测试 54/54 通过；与最新上游合并后，UI 门禁及自检、作用域（594 JS）、微信源码检查重新通过，最终台账测试重新通过 45/45，0 失败／0 跳过。\n- 合并后的台账仍是 4643 项全部待验（1971 tap／2315 event）。双方条目和状态完整保留；基线合并上游 10 条上下文一致的新锚点及既有首页锚点，冻结上限 11／62／128／58／29 与逐项理由未放宽，重算组合指纹。\n- 资金／迁移门禁本地检查 223 项通过；新增真实 MySQL 持久化套件纳入资金门禁，缺报告或跳过不能通过。\n- 本批 11 组相关后端测试共 134 个用例通过。首次运行发现入库语句兼容及测试夹具问题，修复后仅复测受影响的 17 个用例，全部通过且无跳过；持久化本地阶段使用 H2，真实 MySQL 另由 GitHub 资金工作流验证。\n- 首轮 GitHub 全量测试发现两组旧玩法夹具仍用系统素材代替玩家照片，已仅将两行归属修正为当前玩家的 APP 素材，保留真实权限校验、全部断言和测试。修复后两组玩法及素材权限共 49 项测试全部通过，零失败／错误／跳过；提交门禁独立回读同一暂存树的成功编译及测试回执。\n- 最终候选 `8bc9eea` 的 [完整 CI](https://github.com/liboyang42-cpu/hengyin/actions/runs/38780046587) 与[真实 MySQL 资金测试](https://github.com/liboyang42-cpu/hengyin/actions/runs/38780046593) 正在运行，结果待回读。前一版资金真库已执行 60 套／647 项，零失败／错误／跳过；最终版本仍等待新工作流结论。\n- 已完成的旧 Redis 子项实跑约 20 秒降至 10 秒、恢复后三次验证码成功，仅绑定 `b3d1f49` 及其实际原生制品；本批新增逻辑尚未重复实跑，整体容量结论仍未通过。\n- 本批 37 文件补丁及最终完整 PR 补丁的秘密扫描均通过。\n\n## 影响分类\n\n③ 数据库迁移／数据：新增 `chengyinhub-admin/sql/migration_20261015_wx_bill_ingestion.sql`，仅新建 `wx_trade_bill_detail`、`wx_fund_flow_bill_snapshot`、`wx_bill_import`；依赖 `migration_wx_trade_bill_snapshot_20260725.sql`，旧迁移未修改，依赖已登记。落库顺序：先确认原快照迁移已落库，再按共享迁移台账执行本次新迁移，成功后才部署 jar；生产落库由授权责任人按既有迁移流程执行。本轮不执行生产 DDL。\n\n真实微信／支付提供方和完整业务验收仍需后续执行。未合并、未上传微信、未部署生产。\n",
+  "comments": [],
+  "comments_source": "fetch_pr_comments independently returned empty; fetch_pr embedded comments also empty",
+  "handoff_marker": {
+    "found": false,
+    "note": "Body has no CY-HANDOFF author/team/protocol marker. Do not label original writer CLAUDE/CORE/EXTRA from branch name; retain original PR author maintenance and request C00 intake classification."
+  },
+  "exact_changed_files": [
+    "chengyinhub-admin/sql/migration_20261015_wx_bill_ingestion.sql",
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiComplianceController.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WxBillIngestionPersistenceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FourLedgerReconcileServiceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RoamLocationRevokeHidesPresenceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AccountDeregistrationCompletionPersistenceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AlarmThrottleTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ConsentRecordServiceImplTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ObjectCardMintHookTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitPhotoCheckRuntimeTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImplTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WxTradeBillServiceTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/AppMediaReferenceGuardTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/WxBillCsvParserTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/WxTradeBillDownloadTaskTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/framework/RuntimeFailureAlarmFilterTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/RateLimiterRedisFailureAlarmTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiComplianceControllerTest.java",
+    "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/RuntimeFailureAlarmFilter.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxBillImport.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxFundFlowBillSnapshot.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxTradeBillDetail.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxTradeBillSnapshot.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ConsentRecordMapper.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WxBillImportMapper.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WxFundFlowBillSnapshotMapper.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WxTradeBillDetailMapper.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IFourLedgerReconcileService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxTradeBillService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AlarmService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ConsentRecordServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FourLedgerReconcileServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamLocationConsentService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxTradeBillServiceImpl.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaReferenceGuard.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WxBillCsvParser.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WxTradeBillDownloadTask.java",
+    "chengyinhub-system/src/main/resources/mapper/business/ConsentRecordMapper.xml",
+    "chengyinhub-system/src/main/resources/mapper/business/WxBillImportMapper.xml",
+    "chengyinhub-system/src/main/resources/mapper/business/WxFundFlowBillSnapshotMapper.xml",
+    "chengyinhub-system/src/main/resources/mapper/business/WxTradeBillDetailMapper.xml",
+    "chengyinhub-xcx/app.json",
+    "chengyinhub-xcx/pages/index/index.js",
+    "chengyinhub-xcx/pages/privacy/index.js",
+    "chengyinhub-xcx/pages/privacy/index.wxml",
+    "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+    "chengyinhub-xcx/scripts/wechat-release-contract.js",
+    "chengyinhub-xcx/subpackageA/pages/myproject/index.js",
+    "chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js",
+    "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+    "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+    "chengyinhub-xcx/tests/unit/app-config.test.js",
+    "chengyinhub-xcx/tests/unit/consent-client.test.js",
+    "chengyinhub-xcx/tests/unit/growthcenter-partial-state.test.js",
+    "chengyinhub-xcx/tests/unit/home-location-scope-epoch.test.js",
+    "chengyinhub-xcx/tests/unit/index-identity-recheck-after-login.test.js",
+    "chengyinhub-xcx/tests/unit/invite-cold-start-contract.test.js",
+    "chengyinhub-xcx/tests/unit/myproject-activity-edit-sold.test.js",
+    "chengyinhub-xcx/tests/unit/privacy-gate-no-hang-contract.test.js",
+    "chengyinhub-xcx/tests/unit/privacy-submit-state-contract.test.js",
+    "chengyinhub-xcx/tests/unit/wechat-release-contract.test.js",
+    "chengyinhub-xcx/utils/compliance/consent-client.js",
+    "ci/funds-mysql-it-gate.sh",
+    "ci/funds_it_gate.py",
+    "ci/migration-dependencies.json",
+    "ci/test_funds_it_gate.py"
+  ],
+  "changed_file_count": 68,
+  "control_source": "/workspace/hengyin-coordination/docs/plans/mini-codex-cloud-20261015/LONGRUN_SOURCE_OWNERS.json",
+  "exact_lock_matches": [
+    {
+      "file": "chengyinhub-xcx/app.json",
+      "reserved": true
+    },
+    {
+      "file": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+      "reserved": true
+    },
+    {
+      "file": "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+      "reserved": true
+    },
+    {
+      "file": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+      "reserved": true
+    }
+  ],
+  "per_file_classification": [
+    {
+      "path": "chengyinhub-admin/sql/migration_20261015_wx_bill_ingestion.sql",
+      "owner": null,
+      "reserved": false,
+      "classification": "DDL_AUTHORIZATION_UNPROVEN_DRAFT"
+    },
+    {
+      "path": "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiComplianceController.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WxBillIngestionPersistenceTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/FourLedgerReconcileServiceTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/RoamLocationRevokeHidesPresenceTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AccountDeregistrationCompletionPersistenceTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/AlarmThrottleTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ConsentRecordServiceImplTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/ObjectCardMintHookTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/PlayKitPhotoCheckRuntimeTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImplTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/WxTradeBillServiceTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/AppMediaReferenceGuardTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/support/WxBillCsvParserTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/task/WxTradeBillDownloadTaskTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/framework/RuntimeFailureAlarmFilterTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/framework/aspectj/RateLimiterRedisFailureAlarmTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiComplianceControllerTest.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/RuntimeFailureAlarmFilter.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxBillImport.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxFundFlowBillSnapshot.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxTradeBillDetail.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxTradeBillSnapshot.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ConsentRecordMapper.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WxBillImportMapper.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WxFundFlowBillSnapshotMapper.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WxTradeBillDetailMapper.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IFourLedgerReconcileService.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxTradeBillService.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AlarmService.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ConsentRecordServiceImpl.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FourLedgerReconcileServiceImpl.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamLocationConsentService.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxTradeBillServiceImpl.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaReferenceGuard.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WxBillCsvParser.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WxTradeBillDownloadTask.java",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/ConsentRecordMapper.xml",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/WxBillImportMapper.xml",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/WxFundFlowBillSnapshotMapper.xml",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-system/src/main/resources/mapper/business/WxTradeBillDetailMapper.xml",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/app.json",
+      "owner": null,
+      "reserved": true,
+      "classification": "C00_SHARED_PATCH_ONLY"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/index/index.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/privacy/index.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/pages/privacy/index.wxml",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+      "owner": null,
+      "reserved": true,
+      "classification": "C00_SHARED_PATCH_ONLY"
+    },
+    {
+      "path": "chengyinhub-xcx/scripts/wechat-release-contract.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageA/pages/myproject/index.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_FRONTEND_ONLY_NOT_PLAYER_PROGRESSION_BACKEND"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+      "owner": null,
+      "reserved": true,
+      "classification": "C00_SHARED_PATCH_ONLY"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/action-ledger.test.js",
+      "owner": null,
+      "reserved": true,
+      "classification": "C00_SHARED_PATCH_ONLY"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/app-config.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/consent-client.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/growthcenter-partial-state.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_FRONTEND_ONLY_NOT_PLAYER_PROGRESSION_BACKEND"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/home-location-scope-epoch.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/index-identity-recheck-after-login.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/invite-cold-start-contract.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/myproject-activity-edit-sold.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/privacy-gate-no-hang-contract.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/privacy-submit-state-contract.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/tests/unit/wechat-release-contract.test.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "chengyinhub-xcx/utils/compliance/consent-client.js",
+      "owner": null,
+      "reserved": false,
+      "classification": "ORIGINAL_AUTHOR_SOURCE_NO_EXACT_CURRENT_LOCK_MATCH_NOT_A_TRANSFER"
+    },
+    {
+      "path": "ci/funds-mysql-it-gate.sh",
+      "owner": null,
+      "reserved": false,
+      "classification": "SHARED_GATE_CONTRACT_COORDINATOR_REVIEW"
+    },
+    {
+      "path": "ci/funds_it_gate.py",
+      "owner": null,
+      "reserved": false,
+      "classification": "SHARED_GATE_CONTRACT_COORDINATOR_REVIEW"
+    },
+    {
+      "path": "ci/migration-dependencies.json",
+      "owner": null,
+      "reserved": false,
+      "classification": "SHARED_GATE_CONTRACT_COORDINATOR_REVIEW"
+    },
+    {
+      "path": "ci/test_funds_it_gate.py",
+      "owner": null,
+      "reserved": false,
+      "classification": "SHARED_GATE_CONTRACT_COORDINATOR_REVIEW"
+    }
+  ],
+  "conflicts": [
+    {
+      "paths": [
+        "chengyinhub-xcx/app.json",
+        "chengyinhub-xcx/scripts/uiaudit/action-ledger.json",
+        "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js",
+        "chengyinhub-xcx/tests/unit/action-ledger.test.js"
+      ],
+      "severity": "BLOCKED_SHARED_OWNERSHIP",
+      "reason": "Four C00 reserved files changed in PR69. Cannot merge/replace full PR versions into active coordination tree. app.json changes location permission description; ledger count4641→4643 and test local tap1969→1971 plus total4643; ui baseline edits anchor keys/digests and u4Field129→128. Author says final caps unchanged, but this is not C00 authorization or current-tree evidence."
+    },
+    {
+      "paths": [
+        "ci/funds-mysql-it-gate.sh",
+        "ci/funds_it_gate.py",
+        "ci/migration-dependencies.json",
+        "ci/test_funds_it_gate.py"
+      ],
+      "severity": "COORDINATOR_SHARED_GATE_PROPOSAL",
+      "reason": "No exact SOURCE_OWNERS lock entry found, but these alter financial test suite contract and migration dependency registry. C00 must separately inspect and record exact patches; author-run green tests are not a gate transfer."
+    }
+  ],
+  "ddl": {
+    "path": "chengyinhub-admin/sql/migration_20261015_wx_bill_ingestion.sql",
+    "new_tables": [
+      "wx_trade_bill_detail",
+      "wx_fund_flow_bill_snapshot",
+      "wx_bill_import"
+    ],
+    "prerequisite": "migration_wx_trade_bill_snapshot_20260725.sql",
+    "registry_patch": "ci/migration-dependencies.json adds 20261015_wx_bill_ingestion -> wx_trade_bill_snapshot_20260725",
+    "claims": "Body says previously confirmed accounting semantics and authorized production owner applies migration before jar, no production DDL this round.",
+    "independent_authorization_evidence_found": false,
+    "control_search_scope": [
+      "LONGRUN_SOURCE_OWNERS.json",
+      "OWNERSHIP.md",
+      "COORDINATION.md",
+      "CLAUDE_HANDOFF_INTAKE.json",
+      "BACKEND_CHANGES.md"
+    ],
+    "decision": "DRAFT/BLOCKED_AUTHORIZATION_EVIDENCE. New table/source is not authorized for merge/deploy from body self-assertion or GitHub non-draft state. Ask C00 to locate original explicit authorization/contract; do not infer denial or invent approval.",
+    "source_diff": "@@ -0,0 +1,73 @@\n+-- New external bill ingestion facts only. No existing PAYMENT/REFUND/ledger data is changed.\n+-- Amounts are CNY yuan with exact two-decimal storage; merchant and account are explicit.\n+CREATE TABLE IF NOT EXISTS wx_trade_bill_detail (\n+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,\n+ bill_date DATE NOT NULL,\n+ merchant_id VARCHAR(64) NOT NULL,\n+ record_key VARCHAR(80) NOT NULL,\n+ trade_time DATETIME NOT NULL,\n+ transaction_id VARCHAR(64) NOT NULL,\n+ out_trade_no VARCHAR(64) NOT NULL,\n+ trade_state VARCHAR(16) NOT NULL,\n+ refund_id VARCHAR(64) NULL,\n+ out_refund_no VARCHAR(64) NULL,\n+ refund_status VARCHAR(16) NULL,\n+ order_amount DECIMAL(20,2) NOT NULL,\n+ settlement_amount DECIMAL(20,2) NOT NULL,\n+ coupon_amount DECIMAL(20,2) NOT NULL,\n+ requested_refund_amount DECIMAL(20,2) NOT NULL,\n+ settlement_refund_amount DECIMAL(20,2) NOT NULL,\n+ coupon_refund_amount DECIMAL(20,2) NOT NULL,\n+ fee DECIMAL(20,2) NOT NULL,\n+ raw_ingested_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),\n+ UNIQUE KEY uk_wx_trade_detail (merchant_id,bill_date,record_key),\n+ KEY idx_wx_trade_detail_order (merchant_id,out_trade_no),\n+ CONSTRAINT ck_wx_trade_detail_state CHECK (trade_state IN ('SUCCESS','REFUND','REVOKED')),\n+ CONSTRAINT ck_wx_trade_detail_key CHECK (record_key = CASE WHEN trade_state='SUCCESS' THEN CONCAT('PAY:',transaction_id) ELSE CONCAT('REFUND:',refund_id) END),\n+ CONSTRAINT ck_wx_trade_detail_amount CHECK (order_amount>=0 AND settlement_amount>=0 AND coupon_amount>=0 AND requested_refund_amount>=0 AND settlement_refund_amount>=0 AND coupon_refund_amount>=0)\n+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;\n+\n+CREATE TABLE IF NOT EXISTS wx_fund_flow_bill_snapshot (\n+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,\n+ bill_date DATE NOT NULL,\n+ merchant_id VARCHAR(64) NOT NULL,\n+ account_type VARCHAR(16) NOT NULL,\n+ accounting_time DATETIME NOT NULL,\n+ wx_business_no VARCHAR(128) NOT NULL,\n+ flow_no VARCHAR(128) NOT NULL,\n+ business_name VARCHAR(128) NOT NULL,\n+ business_type VARCHAR(128) NOT NULL,\n+ direction VARCHAR(8) NOT NULL,\n+ amount DECIMAL(20,2) NOT NULL,\n+ balance DECIMAL(20,2) NOT NULL,\n+ initiator TEXT NULL,\n+ remark TEXT NULL,\n+ voucher_no TEXT NULL,\n+ raw_ingested_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),\n+ UNIQUE KEY uk_wx_fund_flow (merchant_id,account_type,flow_no),\n+ KEY idx_wx_fund_flow_date (merchant_id,account_type,bill_date),\n+ CONSTRAINT ck_wx_fund_account CHECK (account_type IN ('BASIC','OPERATION','FEES')),\n+ CONSTRAINT ck_wx_fund_direction CHECK (direction IN ('收入','支出')),\n+ CONSTRAINT ck_wx_fund_amount CHECK (amount>=0)\n+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;\n+\n+CREATE TABLE IF NOT EXISTS wx_bill_import (\n+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,\n+ bill_date DATE NOT NULL,\n+ merchant_id VARCHAR(64) NOT NULL,\n+ bill_type VARCHAR(16) NOT NULL,\n+ status VARCHAR(16) NOT NULL,\n+ source_hash VARCHAR(64) NULL,\n+ row_count INT NOT NULL,\n+ income_amount DECIMAL(20,2) NULL,\n+ expense_amount DECIMAL(20,2) NULL,\n+ net_amount DECIMAL(20,2) NULL,\n+ balance_status VARCHAR(16) NOT NULL,\n+ review_reason VARCHAR(1000) NULL,\n+ UNIQUE KEY uk_wx_bill_import (merchant_id,bill_type,bill_date),\n+ CONSTRAINT ck_wx_bill_import_type CHECK (bill_type IN ('TRADE','BASIC','OPERATION','FEES')),\n+ CONSTRAINT ck_wx_bill_import_status CHECK (status IN ('SUCCESS','NO_STATEMENT','CREATING')),\n+ CONSTRAINT ck_wx_bill_import_balance CHECK (balance_status IN ('CONSISTENT','UNVERIFIED','GAP')),\n+ CONSTRAINT ck_wx_bill_import_count CHECK (row_count>=0),\n+ CONSTRAINT ck_wx_bill_import_success CHECK (status<>'SUCCESS' OR (source_hash IS NOT NULL AND source_hash<>''))\n+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;"
+  },
+  "growth_analytics_boundary": {
+    "frontend_path": "chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js",
+    "observed_patch": "onShow saved nickname/avatar synchronization, same-account override, rank epoch invalidation and buildMyRank profile selection.",
+    "player_progression_backend_changed": false,
+    "analytics_backend_changed": false,
+    "decision": "No exact source overlap with proposed PlayerProgression/Analytics backend from this file list. Do not treat growthcenter name as an interface/ownership conflict; frontend remains original PR writer."
+  },
+  "source_scope_candidates_for_original_writer": {
+    "backend": [
+      "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiComplianceController.java",
+      "chengyinhub-framework/src/main/java/com/chengyinhub/framework/web/exception/RuntimeFailureAlarmFilter.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxBillImport.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxFundFlowBillSnapshot.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxTradeBillDetail.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/domain/WxTradeBillSnapshot.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ConsentRecordMapper.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WxBillImportMapper.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WxFundFlowBillSnapshotMapper.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/WxTradeBillDetailMapper.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IFourLedgerReconcileService.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IWxTradeBillService.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AccountDeregistrationServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/AlarmService.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ConsentRecordServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/FourLedgerReconcileServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RoamLocationConsentService.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxContentSecurityServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/WxTradeBillServiceImpl.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/AppMediaReferenceGuard.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/WxBillCsvParser.java",
+      "chengyinhub-system/src/main/java/com/chengyinhub/business/task/WxTradeBillDownloadTask.java"
+    ],
+    "frontend": [
+      "chengyinhub-xcx/pages/index/index.js",
+      "chengyinhub-xcx/pages/privacy/index.js",
+      "chengyinhub-xcx/pages/privacy/index.wxml",
+      "chengyinhub-xcx/scripts/wechat-release-contract.js",
+      "chengyinhub-xcx/subpackageA/pages/myproject/index.js",
+      "chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js",
+      "chengyinhub-xcx/utils/compliance/consent-client.js"
+    ],
+    "note": "These paths have no exact active CORE/EXTRA lock match in snapshot read. This is not approval of correctness, schema/policy, integration or a transfer to this worker/new Cloud. Existing PR69 writer remains maintainer."
+  },
+  "dependencies": [
+    "New bill services/parsers/mappers require reviewed schema migration and old trade snapshot prerequisite.",
+    "New WxBillIngestionPersistenceTest is added to ci financial gate with required count6; no test executed/readback verified by intake.",
+    "Media ownership guards/content security/alarm/account deregistration/consent are changes in original author's branch, not newly assigned CORE/EXTRA tasks.",
+    "UI private-location consent and new controls require C00 shared app/ledger/baseline coordination; original author maintains source."
+  ],
+  "author_validation_claims": "Entire full-body validation section retained above as author assertions only. Body references final8bc9eea and ongoing workflow results while fetched head is5773e779...; do not bind older runs/counts to current head without C00 immutable-SHA readback.",
+  "patches_read_for_disputes": {
+    "chengyinhub-admin/sql/migration_20261015_wx_bill_ingestion.sql": "@@ -0,0 +1,73 @@\n+-- New external bill ingestion facts only. No existing PAYMENT/REFUND/ledger data is changed.\n+-- Amounts are CNY yuan with exact two-decimal storage; merchant and account are explicit.\n+CREATE TABLE IF NOT EXISTS wx_trade_bill_detail (\n+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,\n+ bill_date DATE NOT NULL,\n+ merchant_id VARCHAR(64) NOT NULL,\n+ record_key VARCHAR(80) NOT NULL,\n+ trade_time DATETIME NOT NULL,\n+ transaction_id VARCHAR(64) NOT NULL,\n+ out_trade_no VARCHAR(64) NOT NULL,\n+ trade_state VARCHAR(16) NOT NULL,\n+ refund_id VARCHAR(64) NULL,\n+ out_refund_no VARCHAR(64) NULL,\n+ refund_status VARCHAR(16) NULL,\n+ order_amount DECIMAL(20,2) NOT NULL,\n+ settlement_amount DECIMAL(20,2) NOT NULL,\n+ coupon_amount DECIMAL(20,2) NOT NULL,\n+ requested_refund_amount DECIMAL(20,2) NOT NULL,\n+ settlement_refund_amount DECIMAL(20,2) NOT NULL,\n+ coupon_refund_amount DECIMAL(20,2) NOT NULL,\n+ fee DECIMAL(20,2) NOT NULL,\n+ raw_ingested_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),\n+ UNIQUE KEY uk_wx_trade_detail (merchant_id,bill_date,record_key),\n+ KEY idx_wx_trade_detail_order (merchant_id,out_trade_no),\n+ CONSTRAINT ck_wx_trade_detail_state CHECK (trade_state IN ('SUCCESS','REFUND','REVOKED')),\n+ CONSTRAINT ck_wx_trade_detail_key CHECK (record_key = CASE WHEN trade_state='SUCCESS' THEN CONCAT('PAY:',transaction_id) ELSE CONCAT('REFUND:',refund_id) END),\n+ CONSTRAINT ck_wx_trade_detail_amount CHECK (order_amount>=0 AND settlement_amount>=0 AND coupon_amount>=0 AND requested_refund_amount>=0 AND settlement_refund_amount>=0 AND coupon_refund_amount>=0)\n+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;\n+\n+CREATE TABLE IF NOT EXISTS wx_fund_flow_bill_snapshot (\n+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,\n+ bill_date DATE NOT NULL,\n+ merchant_id VARCHAR(64) NOT NULL,\n+ account_type VARCHAR(16) NOT NULL,\n+ accounting_time DATETIME NOT NULL,\n+ wx_business_no VARCHAR(128) NOT NULL,\n+ flow_no VARCHAR(128) NOT NULL,\n+ business_name VARCHAR(128) NOT NULL,\n+ business_type VARCHAR(128) NOT NULL,\n+ direction VARCHAR(8) NOT NULL,\n+ amount DECIMAL(20,2) NOT NULL,\n+ balance DECIMAL(20,2) NOT NULL,\n+ initiator TEXT NULL,\n+ remark TEXT NULL,\n+ voucher_no TEXT NULL,\n+ raw_ingested_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),\n+ UNIQUE KEY uk_wx_fund_flow (merchant_id,account_type,flow_no),\n+ KEY idx_wx_fund_flow_date (merchant_id,account_type,bill_date),\n+ CONSTRAINT ck_wx_fund_account CHECK (account_type IN ('BASIC','OPERATION','FEES')),\n+ CONSTRAINT ck_wx_fund_direction CHECK (direction IN ('收入','支出')),\n+ CONSTRAINT ck_wx_fund_amount CHECK (amount>=0)\n+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;\n+\n+CREATE TABLE IF NOT EXISTS wx_bill_import (\n+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,\n+ bill_date DATE NOT NULL,\n+ merchant_id VARCHAR(64) NOT NULL,\n+ bill_type VARCHAR(16) NOT NULL,\n+ status VARCHAR(16) NOT NULL,\n+ source_hash VARCHAR(64) NULL,\n+ row_count INT NOT NULL,\n+ income_amount DECIMAL(20,2) NULL,\n+ expense_amount DECIMAL(20,2) NULL,\n+ net_amount DECIMAL(20,2) NULL,\n+ balance_status VARCHAR(16) NOT NULL,\n+ review_reason VARCHAR(1000) NULL,\n+ UNIQUE KEY uk_wx_bill_import (merchant_id,bill_type,bill_date),\n+ CONSTRAINT ck_wx_bill_import_type CHECK (bill_type IN ('TRADE','BASIC','OPERATION','FEES')),\n+ CONSTRAINT ck_wx_bill_import_status CHECK (status IN ('SUCCESS','NO_STATEMENT','CREATING')),\n+ CONSTRAINT ck_wx_bill_import_balance CHECK (balance_status IN ('CONSISTENT','UNVERIFIED','GAP')),\n+ CONSTRAINT ck_wx_bill_import_count CHECK (row_count>=0),\n+ CONSTRAINT ck_wx_bill_import_success CHECK (status<>'SUCCESS' OR (source_hash IS NOT NULL AND source_hash<>''))\n+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;",
+    "ci/migration-dependencies.json": "@@ -763,6 +763,9 @@\n       \"c3_beforestart_job\",\n       \"sys_job_enable_paused_20260915\",\n       \"20261012_monitor_missing_jobs\"\n+    ],\n+    \"20261015_wx_bill_ingestion\": [\n+      \"wx_trade_bill_snapshot_20260725\"\n     ]\n   }\n }",
+    "chengyinhub-xcx/app.json": "@@ -309,7 +309,7 @@\n   ],\n   \"permission\": {\n     \"scope.userLocation\": {\n-      \"desc\": \"用于附近活动推荐、到点打卡判定与漫游足迹记录\"\n+      \"desc\": \"用于确定首页城市、到点打卡判定与漫游足迹记录\"\n     }\n   },\n   \"darkmode\": true,",
+    "chengyinhub-xcx/tests/unit/action-ledger.test.js": "@@ -565,7 +565,8 @@ test('真实点击与组件事件合同分母分开，非 tap 不得伪装按钮\n   // 2026-10-06 合并弹窗/模板分支与最新主线后按最终源码重建，数值待生成台账后校准。\n   // B93 saveDraft added two real variants (+2 tap); approved growth bindings have zero net tap change.\n   // 2026-10-13 注销阻断卡「我已处理，重新检查」+1 tap,1968 → 1969(重建实测)。\n-  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1969)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /\n+  // 2026-10-15 首页自动定位设置新增开启/关闭两个实际控件，1969 → 1971。\n+  assert.equal(local.filter((item) => item.interactionMode === 'tap').length, 1971)  /* 2026-10-07 动态绑定补齐4条tap。2026-09-22 现场感三件套 S1 新增 4 颗 tap(uploadPhotoFrame / clearPhotoFrame /\n      onFrameShutter / onFrameCancel),其中 uploadPhotoFrame 与 onFrameShutter 是\n      actionClass=external(real-device-required)、不进 local 分母 ⇒ 进账的是\n      onFrameCancel(玩家端「退出取景」)+ clearPhotoFrame(商家端删图),1787 → 1789(重建实测)。 */\n@@ -1530,8 +1531,10 @@ test('合并后可达动作 variant 全部进入台账且 handler 真源可定\n     assert.equal(action.interactionMode, 'event-contract', id);\n   }\n   // 2026-10-13 注销重新检查 +1;三处玩法支持范围读取失败改 load-failure 留白,其重试不可见 -3;4632 → 4630(重建实测)。\n+  // 2026-10-15 首页自动定位设置新增开启/关闭两个实际控件，4632 → 4634。\n   // 2026-10-15 PR10 复查:七处登录引导「登录」(俱乐部/主题/活动/票夹/私信/收藏×2)、口碑缺参「返回」、modal-host 多行原因输入 +9;4632 → 4641(重建实测)。\n-  assert.equal(ledger.controlCount, 4641) // F-L5C-06 帖文详情社区未开放空态 CTA +1(与 E2 合并后实测)。 // F-W1-12 口碑管理登录失效「重新登录」+1。 // 四个章节确认合同替换原合并事件，净增三项。\n+  // 2026-10-15 合并后按完整冻结源一次重建：上游 +9 事件合同与首页 +2 tap 并存，总数 4643，local tap 1971、事件合同 2315。\n+  assert.equal(ledger.controlCount, 4643) // F-L5C-06 帖文详情社区未开放空态 CTA +1(与 E2 合并后实测)。 // F-W1-12 口碑管理登录失效「重新登录」+1。 // 四个章节确认合同替换原合并事件，净增三项。\n   // 搜索主题与其它结果拆成互斥点击 +1，合计 3268 → 3271（取动作账本重建实测）。\n   // 合作页新增会话失效/无权限两个独立 cy-empty CTA，3271 → 3273。\n   // 2026-09-02 俱乐部客户系统落地，3273 → 3295。",
+    "chengyinhub-xcx/tests/lint/ui-integrity-baseline.js": "@@ -1,4 +1,5 @@\n-// 2026-10-15 PR10 末轮(用户文字实体解码 / 支付回调地址):community-post-api 67→68(u1Variable、u5Silent)、publish/temp 1446→1451 / 1447→1452 / 1490→1495 / 2925→2930 / 3721→3726 / 3848→3853、im/list 274→276、scene-club-edit 161→163(u4Dynamic);逐条连同上下各三行与 cb8950e0 原位置逐字相同，条数与理由不变；三份 digest 待用户审批后按同一算法更新。\n+// 2026-10-15 合并首页定位与 PR10 实体解码：保留首页四锚及已退役 locationInfo 出账；上游十锚逐条核对上下三行、理由不变，仅等量迁 key，11/62/128/58/29 与冻结上限不变，组合 digest 按原算法复算。\n+// 首页四锚 +9；community-post-api 67→68(U1/U5)，temp 1446/1447/1490/2925/3721/3848 各+5、im/list 274→276、scene-club-edit 161→163(U4)；合并前两侧有效修复均保留。\n // 2026-10-15 PR10 复查修复(登录引导 / 拒绝原因多行框等):merchant/apply 342→354(u4Dynamic)、im/list 267→274(u4Dynamic)、signup 255→263(u5Silent);逐条连同上下各三行与 ec4e565 原位置逐字相同，条数与理由不变，u4Dynamic / u5Silent digest 按同一算法显式重算。\n // 2026-10-14 合并 E2：app.js 396→384、merchant/customer 502→504、merchant/apply 340→342、templatedetail 219→204 / 336→321、play 6690→6691；逐条连同上下各一行回读与合并前逐字相同，条数与理由不变，digest 按同一算法显式重算。\n // 2026-10-14 合并八路剩余修复：app.js 390→396、square/detail 1150→1163、play 1509→1518 / 6681→6690 逐行回读为同一调用点；templatedetail 219 / 336 取行号与更正后理由。条数与理由不变，u1Variable / u4Dynamic / u5Silent digest 按同一算法显式重算。\n@@ -240,7 +241,7 @@ module.exports = {\n     // 2026-09-19 批复1-a=2:pricing/partner 页按用户裁决复活(B-06 曾整页退役),其两条存量零消费\n     //   字段 toType/toId 先随页回账(149→151),随即在同批复落地时还清——index.js 三处读改回显式\n     //   this.data.toType/toId,门禁实测不再命中。两条登记出账,棘轮回 149,digest 复算。\n-    \"u4Field\": 129,\n+    \"u4Field\": 128,\n       // 2026-08-26 圈层主题接回主题货架:新增 circleTheme import,两条 _coverFail 动态 setData\n       //   等量下移(269→270 / 281→282,行号取门禁实测)。调用点与强化理由不变,显式改 digest。\n     // 2026-08-27 合并 #883:activity/list 三条 U4-DYNAMIC 登记行号 +2(129→131/151→153/231→233,\n@@ -377,7 +378,7 @@ module.exports = {\n       // 受控路由、理由及 10 条登记保持，digest 仅随行号更新。\n       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。\n       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。\n-      \"u1Variable\": \"c089c948e4e678f1ebe15e20e3d5b34208796714f10c43adb117a3eb1d367cf9\",\n+      \"u1Variable\": \"8f11f83b8ce00afea79e9cd5a7d82a2cebe2f30f990a1a1d59acdb4238d55343\",\n       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。\n       \"u3Debt\": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还\n       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。\n@@ -398,7 +399,7 @@ module.exports = {\n       // 参数留存 URL 但页面不再落 data),两条存量债直接出账,149 键集实算复挖。\n       // 2026-09-19 批复1-a=2 还清:partner#toType/toId 两条随页复活短暂回账(151 键)后当场还债出账,\n       //   key 集回到退役前那份 149,digest 按当前 key 集合实算。\n-\"u4Debt\": \"817c0c825b5afe11e9d6fc2668a0f3d6e461d28d007ecae44c9967b91bf17d28\",\n+\"u4Debt\": \"5c986eba18ccdb4ed0944bd5acff839a46013ff60bff0edc74a51e54d64df40d\",\n       // 2026-08-17 漫游 S1 施工:条数不变(65),只是 pages/roam/index.js 的两处\n       //   `...this._calcArch()` 动态 setData 行号从 3263/3305 移到 3261/3303\n       //   (删掉 _apiCheckin 与 /api/play/arrive 那段后整段上移)。\n@@ -792,7 +793,7 @@ module.exports = {\n // 2026-10-07 旧模板采用回读修复：六处既有动态字段仅移行，理由及59条棘轮不变。\n // 2026-10-07：采用请求补 JSON 头与旧后端拒绝分支，两个锚点仅后移5行；上下各7行逐字核对，理由与59项总数不变。\n // 2026-10-14 W5尾项:profile 926→941/1706→1721、templatedetail 218→219/331→336 仅行号下移，同一调用及理由，数量仍58。\n-\"ae62b0bb65aa46def639d3f3f472c4c7f6e0e84b3348ff5ca032660549443e3f\",\n+\"ebb754f423f5e8f96c73633737a46c3ea15074d171c2176b0f9a80ab1a8595b6\",\n       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点\n       //   行号从 2360 移到 2573(见下方 u5Silent 区块的逐条说明)。等量换 key,显式改 digest。\n       // 2026-08-16 uifix-play 集成:u5Silent 条数不变(12),只是 play/index.js 的\n@@ -1001,7 +1002,7 @@ module.exports = {\n     \"chengyinhub-xcx/components/cy/scene-route-content/index.js:238\": \"config 只由本文件 sceneRequest(sceneId) 的有限映射生成，所有请求 URL 均为映射内 /api 字面量，未知 sceneId 返回 null、缺必需 id 也在请求前终止；owner=小程序，复核=2026-09-15\",\n     \"chengyinhub-xcx/components/cy/scene-route-content/index.js:551\": \"request 只取自本方法内 requests[sceneId] 的七个非提现固定写接口对象，未知 sceneId 显示提交错误并返回；提现分支在此前已转交 withdrawal-preflight，不会走到本调用；owner=小程序，复核=2026-09-15\",\n     \"chengyinhub-xcx/pages/activity/official-inbox/index.js:103\": \"url 由 organizerInvite 与受控 action 组合成两组官方邀约路由，前两行字面量及动态后缀均由 U1 扫描；owner=小程序，复核=2026-09-15\",\n-    \"chengyinhub-xcx/pages/index/index.js:1019\": \"retry 只回放 _listReq 中由 getListData 首次字面量调用冻结的 topic/list 或 activity/list，外部输入不能写该缓存；owner=小程序，复核=2026-09-15\",\n+    \"chengyinhub-xcx/pages/index/index.js:1028\": \"retry 只回放 _listReq 中由 getListData 首次字面量调用冻结的 topic/list 或 activity/list，外部输入不能写该缓存；owner=小程序，复核=2026-09-15\",\n     \"chengyinhub-xcx/pages/search2/result/index.js:169\": \"request 数组只由 utils/discover-search.buildRequests 构造，其按搜索类型枚举后端字面量且当前 U1 全仓扫描覆盖；owner=小程序，复核=2026-09-15\",\n     \"chengyinhub-xcx/subpackageA/pages/myproject/index.js:461\": \"上下架 URL 只由 bizType 在 activity/update_publish_status 与 topic/update_user_status 两个字面量间选择，未知 bizType 仍落固定 topic 路由；owner=小程序，复核=2026-09-15\",\n     \"chengyinhub-xcx/subpackageMember/components/scene-member-participation-detail/index.js:177\": \"会员快捷核销只消费 verification-scan.js 的有限核销路由，非法扫码在 sendRequest 前显示 toast 并返回；owner=小程序，复核=2026-09-15\"\n@@ -1103,7 +1104,6 @@ module.exports = {\n     \"chengyinhub-xcx/pages/index/index.js#bottomTopicPageNo\": \"存量零消费债务：bottomTopicPageNo 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30\",\n     \"chengyinhub-xcx/pages/index/index.js#bottomActivityPageNo\": \"存量零消费债务：bottomActivityPageNo 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30\",\n     \"chengyinhub-xcx/pages/index/index.js#isLoading\": \"存量零消费债务：isLoading 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30\",\n-    \"chengyinhub-xcx/pages/index/index.js#locationInfo\": \"存量零消费债务：locationInfo 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30\",\n     \"chengyinhub-xcx/pages/merchant/apply/index.js#locationLat\": \"存量零消费债务：locationLat 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30\",\n     \"chengyinhub-xcx/pages/merchant/apply/index.js#locationLng\": \"存量零消费债务：locationLng 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30\",\n     \"chengyinhub-xcx/pages/merchant/decor/index.js#loadErrTitle\": \"存量零消费债务：loadErrTitle 在同页 WXML 与 this.data 读取中均未命中；owner=小程序，到期=2026-09-30\",\n@@ -1222,8 +1222,8 @@ module.exports = {\n   // 2026-10-11 模板生命周期修复：既有两处登记等量换行号 217→218 / 304→331；身份清空复用静态 applyDetailPayload，不新增动态豁免。\n   \"u4Dynamic\": {\n     \"chengyinhub-xcx/subpackageMember/components/cy/profile/index.js:1721\": \"本人帖文翻页patch只用list[oldLen+i]固定列表名与响应遍历下标，其余feedErr/feedAuthError/hasMore/nodata为字面字段；服务端仅供值不供键；owner=小程序，复核=2026-09-30\",\n-    \"chengyinhub-xcx/pages/index/index.js:1287\": \"底部主题翻页只追加bottomTopicList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30\",\n-    \"chengyinhub-xcx/pages/index/index.js:1394\": \"底部活动翻页只追加bottomActivityList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30\",\n+    \"chengyinhub-xcx/pages/index/index.js:1296\": \"底部主题翻页只追加bottomTopicList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30\",\n+    \"chengyinhub-xcx/pages/index/index.js:1403\": \"底部活动翻页只追加bottomActivityList[oldLen+i]，其余页码/状态/hasMore固定字面字段；下标来自当前列表长度和响应遍历序号；owner=小程序，复核=2026-09-30\",\n     \"chengyinhub-xcx/pages/merchant/customer/index.js:504\": \"客户翻页只追加rows[oldLen+i]，其余页面状态与分群摘要为同方法固定字面字段；hasMore仍用rowCount/total主线规则；owner=小程序，复核=2026-09-30\",\n     \"chengyinhub-xcx/pages/searchmap/index.js:316\": \"地图活动翻页只追加list[oldLen+i]，无坐标计数/页码/时间与加载状态均为固定字面字段；只处理当前query epoch响应；owner=小程序，复核=2026-09-30\",\n     \"chengyinhub-xcx/pages/searchmap/index.js:570\": \"新增活动marker只拼activityMarkers[at]路径，at从已建点数量顺序递增；marker全局activityId来自列表offset+i，不接收服务端键名；owner=小程序，复核=2026-09-30\",\n@@ -1267,7 +1267,7 @@ module.exports = {\n     \"chengyinhub-xcx/pages/activity/list/index.js:212\": \"动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30\",\n     // 2026-09-20 合并后按最终源码重钉。\n     // (本支) 2026-09-19 用户改判摘除首页搜索入口(goSearch 及其注释 -6 行),锚点 1274→1268 等量换 key,调用点与理由一字未改,digest 显式重算。\n-    \"chengyinhub-xcx/pages/index/index.js:1178\": \"动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30\",\n+    \"chengyinhub-xcx/pages/index/index.js:1187\": \"动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30\",\n     \"chengyinhub-xcx/pages/merchant/apply/index.js:354\": \"动态 setData 需精确登记：[f]: e.detail.value；owner=小程序，复核=2026-09-30\",\n     \"chengyinhub-xcx/pages/publish/fabu/index.js:729\": \"草稿恢复 patch 只含固定 formData/pendingMaterials，并按本地信封是否存在追加固定的分类与起止时间字段；信封值不会成为 setData 字段名；owner=小程序，复核=2026-09-30\",\n     \"chengyinhub-xcx/pages/publish/fabu/index.js:898\": \"_storyCommand 固定写 formData.chapters 与 pendingMaterials，uiPatch 的全部调用点都在本文件且传对象字面量/空值，只补 storyEditor、节点抽屉与撤销态等固定键；owner=小程序，复核=2026-09-30\",",
+    "ci/funds-mysql-it-gate.sh": "@@ -166,7 +166,7 @@ echo \"使用唯一临时 schema 后缀: ${CHENGYIN_TEST_MYSQL_DATABASE_SUFFIX}\"\n #   本闸不再需要 ~/.m2 里有什么;而且它自己也不再往那份共用仓库里写 jar ——\n #   否则这台 runner 上跑一次资金闸,就会把别的分支/worktree 的构建结果覆盖掉一次(方向相反的同一个坑)。\n mvn -B -pl chengyinhub-admin -am clean test -DfailIfNoTests=false -Dsurefire.failIfNoSpecifiedTests=false \\\n-  -Dtest=CoopListReadOnlyMybatisIntegrationTest,RegistrationFundsMybatisIntegrationTest,RegistrationEquityMybatisIntegrationTest,RefundPayoutMybatisIntegrationTest,ExploreAllianceMvpRealDbIT,ExploreAllianceRedeemRealDbIT,TandianriBatch0FundsMybatisIntegrationTest,ShopDayOneTicketMySqlIT,TandianriBatch3FundsMybatisIntegrationTest,ClubCorporatePayeeMybatisIntegrationTest,ClubEditionCompensationMybatisIntegrationTest,PlayerWithdrawalCooldownMybatisIntegrationTest,ClubPayableMybatisIntegrationTest,CouponLifecycleMybatisIntegrationTest,MysqlItSchemaIsolationTest,ActivityCancelFreeOrderMybatisIT,PlayTeamMybatisIntegrationTest,PlayTeamNearbyMybatisIntegrationTest,WxPaymentCallbackFencingMySqlIT,WxContentCallbackFencingMySqlIT,CoopDepositRefundMybatisIntegrationTest,GrowthMissionProofMybatisIntegrationTest,MerchantIdentityMybatisIntegrationTest,MerchantProfilePersistenceMybatisIntegrationTest,StoreVerifyGrowthDeliveryTransactionTest,RefundNotificationMybatisIntegrationTest,SessionRefundClockMybatisIntegrationTest,SettlementGenerateBatchMybatisIntegrationTest,FirstReviewPointsClawbackMybatisIntegrationTest,ClubSettlementSummaryMybatisIntegrationTest,CoopComplaintCloseMybatisIntegrationTest,RegistrationReadContractMybatisIntegrationTest,ClubWaitlistTokenMybatisIntegrationTest,CmsMemberTemplateAudioPatchMybatisIntegrationTest,CmsTemplateLibraryAudioPatchMybatisIntegrationTest,ContentInteractionMybatisIntegrationTest,CreativeSquarePublishIdempotencyMybatisIntegrationTest,FollowConcurrencyMybatisIntegrationTest,FollowEditRaceMybatisIntegrationTest,NearbyRunnerShopsMybatisIntegrationTest,PhotoReviewProgressMybatisIntegrationTest,SpoilerAccessMybatisIntegrationTest,SquareEditFollowMybatisIntegrationTest,RoamSessionWriteMybatisIntegrationTest,RoamLocationRetentionMySqlIT,ComplaintPeriodWithdrawalGateMybatisIntegrationTest,ShareSnapshotRunSessionMybatisIntegrationTest,PlayerRunSessionOrderingMybatisIntegrationTest,RoamShareSnapshotConcurrencyMySqlIT,ClubEventTransferCancellationMySqlIT,RefundRetryAndRemainderMySqlIT,SignupNoticeAfterCommitPersistenceMySqlIT,TopicLikeDesiredStateMySqlIT,MonitorMissingJobsMySqlIT,MemberPasswordWidthMySqlIT,LegacyCategoryForwardGuardMySqlIT,MissingBusinessSeedsMySqlIT,RoamPresenceRevokeDurabilityMySqlIT,RoamPresenceRevokeJobMySqlIT\n+  -Dtest=CoopListReadOnlyMybatisIntegrationTest,RegistrationFundsMybatisIntegrationTest,RegistrationEquityMybatisIntegrationTest,RefundPayoutMybatisIntegrationTest,ExploreAllianceMvpRealDbIT,ExploreAllianceRedeemRealDbIT,TandianriBatch0FundsMybatisIntegrationTest,ShopDayOneTicketMySqlIT,TandianriBatch3FundsMybatisIntegrationTest,ClubCorporatePayeeMybatisIntegrationTest,ClubEditionCompensationMybatisIntegrationTest,PlayerWithdrawalCooldownMybatisIntegrationTest,ClubPayableMybatisIntegrationTest,CouponLifecycleMybatisIntegrationTest,MysqlItSchemaIsolationTest,ActivityCancelFreeOrderMybatisIT,PlayTeamMybatisIntegrationTest,PlayTeamNearbyMybatisIntegrationTest,WxPaymentCallbackFencingMySqlIT,WxContentCallbackFencingMySqlIT,CoopDepositRefundMybatisIntegrationTest,GrowthMissionProofMybatisIntegrationTest,MerchantIdentityMybatisIntegrationTest,MerchantProfilePersistenceMybatisIntegrationTest,StoreVerifyGrowthDeliveryTransactionTest,RefundNotificationMybatisIntegrationTest,SessionRefundClockMybatisIntegrationTest,SettlementGenerateBatchMybatisIntegrationTest,FirstReviewPointsClawbackMybatisIntegrationTest,ClubSettlementSummaryMybatisIntegrationTest,CoopComplaintCloseMybatisIntegrationTest,RegistrationReadContractMybatisIntegrationTest,ClubWaitlistTokenMybatisIntegrationTest,CmsMemberTemplateAudioPatchMybatisIntegrationTest,CmsTemplateLibraryAudioPatchMybatisIntegrationTest,ContentInteractionMybatisIntegrationTest,CreativeSquarePublishIdempotencyMybatisIntegrationTest,FollowConcurrencyMybatisIntegrationTest,FollowEditRaceMybatisIntegrationTest,NearbyRunnerShopsMybatisIntegrationTest,PhotoReviewProgressMybatisIntegrationTest,SpoilerAccessMybatisIntegrationTest,SquareEditFollowMybatisIntegrationTest,RoamSessionWriteMybatisIntegrationTest,RoamLocationRetentionMySqlIT,ComplaintPeriodWithdrawalGateMybatisIntegrationTest,ShareSnapshotRunSessionMybatisIntegrationTest,PlayerRunSessionOrderingMybatisIntegrationTest,RoamShareSnapshotConcurrencyMySqlIT,ClubEventTransferCancellationMySqlIT,RefundRetryAndRemainderMySqlIT,SignupNoticeAfterCommitPersistenceMySqlIT,TopicLikeDesiredStateMySqlIT,MonitorMissingJobsMySqlIT,MemberPasswordWidthMySqlIT,LegacyCategoryForwardGuardMySqlIT,MissingBusinessSeedsMySqlIT,RoamPresenceRevokeDurabilityMySqlIT,RoamPresenceRevokeJobMySqlIT,WxBillIngestionPersistenceTest\n \n # 回读观测:surefire 绿不够,必须逐套确认真跑、skipped=0、无错无失败、用例数达标。\n python3 ci/funds_it_gate.py chengyinhub-admin/target/surefire-reports",
+    "ci/funds_it_gate.py": "@@ -254,10 +254,12 @@ def enforce_trigger_contract(workflow_text):\n     \"MissingBusinessSeedsMySqlIT\": 4,\n     \"RoamPresenceRevokeDurabilityMySqlIT\": 10,\n     \"RoamPresenceRevokeJobMySqlIT\": 4,\n+    \"WxBillIngestionPersistenceTest\": 6,\n }\n \n # class 短名 -> 该测试类所在源文件(相对仓库根),供 count_test_methods() 自测用。\n SOURCE_FILES = {\n+    \"WxBillIngestionPersistenceTest\": \"chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/WxBillIngestionPersistenceTest.java\",\n     \"MissingBusinessSeedsMySqlIT\": \"chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MissingBusinessSeedsMySqlIT.java\",\n     \"RefundRetryAndRemainderMySqlIT\": \"chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/RefundRetryAndRemainderMySqlIT.java\",\n     \"SignupNoticeAfterCommitPersistenceMySqlIT\": \"chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/SignupNoticeAfterCommitPersistenceMySqlIT.java\",",
+    "chengyinhub-xcx/subpackageP3/pages/growthcenter/index/index.js": "@@ -172,19 +172,43 @@ Page({\n   },\n \n   onLoad() {\n-    this.setData({ profile: {\n+    const profile = {\n       name: typeof app.getNickname === 'function' ? app.getNickname() || '' : '',\n       avatarUrl: typeof app.getAvatar === 'function' ? app.getAvatar() || '' : ''\n-    } })\n+    }\n+    this._growthSessionProfile = { owner: String(app.getUserID && app.getUserID() || ''), ...profile }\n+    this.setData({ profile })\n     this.loadOverview()\n     this.loadMyRank()\n   },\n \n   onShow() {\n     this._hidden = false\n-    if (this._readSessionChanged) { this._readSessionChanged = false; this.loadOverview(); this.loadMyRank(); return }\n+    const profile = {\n+      name: typeof app.getNickname === 'function' ? app.getNickname() || '' : this.data.profile.name,\n+      avatarUrl: typeof app.getAvatar === 'function' ? app.getAvatar() || '' : this.data.profile.avatarUrl\n+    }\n     const owner = String(app.getUserID && app.getUserID() || '')\n+    const previous = this._growthSessionProfile\n+    const profileChanged = !!previous && previous.owner === owner\n+      && (profile.name !== previous.name || profile.avatarUrl !== previous.avatarUrl)\n+    this._growthSessionProfile = { owner, ...profile }\n+    if (profileChanged) {\n+      this._growthProfileOverride = Object.assign({}, this._growthProfileOverride && this._growthProfileOverride.owner === owner\n+        ? this._growthProfileOverride : {}, { owner })\n+      if (profile.name !== previous.name) this._growthProfileOverride.name = profile.name\n+      if (profile.avatarUrl !== previous.avatarUrl) this._growthProfileOverride.avatarUrl = profile.avatarUrl\n+      this.setData({ profile: {\n+        name: this._growthProfileOverride.name !== undefined ? this._growthProfileOverride.name : this.data.profile.name,\n+        avatarUrl: this._growthProfileOverride.avatarUrl !== undefined ? this._growthProfileOverride.avatarUrl : this.data.profile.avatarUrl\n+      } })\n+      // 资料已保存后，旧排名回包不能再把本人昵称和头像覆盖回去。\n+      this._rankEpoch = (this._rankEpoch || 0) + 1\n+      this._rankLoading = false\n+    }\n+    if (this._readSessionChanged) { this._readSessionChanged = false; this.loadOverview(); this.loadMyRank(); return }\n     if (this._growthOwner !== undefined && owner !== this._growthOwner) { this.loadOverview(); this.loadMyRank(); }\n+    else if (profileChanged && owner && owner !== '0') this.loadMyRank()\n   },\n \n   onPullDownRefresh() {\n@@ -219,6 +243,7 @@ Page({\n     const owner = String(app.getUserID && app.getUserID() || '')\n     if (owner !== this._growthOwner) {\n       this._growthOwner = owner\n+      this._growthProfileOverride = null\n       this._rankEpoch = (this._rankEpoch || 0) + 1\n       this._overviewEpoch = (this._overviewEpoch || 0) + 1\n       this._rankLoading = false; this._overviewLoading = false; this._badgeCodes = null\n@@ -356,26 +381,24 @@ Page({\n \n   buildMyRank(data) {\n     const unit = this.data.metric === 'exp' ? 'EXP' : '积分'\n+    const owner = String(app.getUserID && app.getUserID() || '')\n+    const savedProfile = this._growthProfileOverride && this._growthProfileOverride.owner === owner ? this._growthProfileOverride : {}\n+    const profile = {\n+      name: savedProfile.name !== undefined ? savedProfile.name : data.me.nickname || this.data.profile.name || '',\n+      avatarUrl: savedProfile.avatarUrl !== undefined ? savedProfile.avatarUrl : data.me.avatar || this.data.profile.avatarUrl || ''\n+    }\n     let me = null\n     if (data.me && data.me.rank !== null && data.me.rank !== undefined) {\n-      const name = data.me.nickname || '我'\n+      const name = profile.name || '我'\n       me = {\n         rank: data.me.rank,\n         name,\n         initial: initial(name),\n         scoreText: fmt(data.me.score),\n-        avatarUrl: data.me.avatar || ''\n+        avatarUrl: profile.avatarUrl\n       }\n     }\n-    this.setData({\n-      unit,\n-      me,\n-      scoreText: fmt(data.me.score),\n-      profile: {\n-        name: data.me.nickname || this.data.profile.name || '',\n-        avatarUrl: data.me.avatar || this.data.profile.avatarUrl || ''\n-      }\n-    })\n+    this.setData({ unit, me, scoreText: fmt(data.me.score), profile })\n   },\n \n   goLeaderboard() {"
+  },
+  "ledger_patch_note": "Generated action-ledger patch retrieved and held read-only; includes privacy new consent controls, host/control indices and staticSource relocations, count +2. Full generated JSON must not overwrite current public ledger. No reconstruction run.",
+  "no_actions": [
+    "No source/test/repository/control edits",
+    "No merge/Git/index operations",
+    "No GitHub reply/message",
+    "No DDL or validation run",
+    "No implementation takeover"
+  ],
+  "verification": "NOT_RUN_READ_ONLY_INTAKE"
+}

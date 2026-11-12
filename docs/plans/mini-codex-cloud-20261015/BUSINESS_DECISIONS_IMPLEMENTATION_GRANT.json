@@ -1,0 +1,198 @@
+{
+  "id": "BUSINESS_DECISIONS_IMPLEMENTATION_GRANT_20261016",
+  "supersedes": "Only E02-23 missing-mapping behavior and E04-07 old-unknown/future-receipt policy holds; unrelated policies remain blocked",
+  "user_authorization": {
+    "source": "Explicit human choices relayed by authorized local coordinator 01a13eed-e4d9-77f3-b875-c72d26ea7d59; latest delegation in C00 chat",
+    "choices": {
+      "E02-23": "No trusted legacy-to-community mapping: explicitly reject bookmark; same numeric ID and client legacy-square-* are not proof. Read list/bookmark state must not identify unrelated new post as old post.",
+      "E04-07_legacy": "Unknown original completion coupon identity: audit only, coupon unchanged, continue other already-authorized reward reversals. Preserve USED audit-only; no time/MAX/substitute inference or refund policy change.",
+      "E04-07_future": "Prepare minimal production/regression/new migration source for exact original coupon history ID persistence; review only, no migration execution, merge/deployment or guessed historical backfill."
+    }
+  },
+  "public_source_base": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+  "application_base": "1bfa81a5a58ffa8112c10414dad9fdb1701ef188",
+  "control_editor": "C00 only",
+  "source_team": "EXTRA6",
+  "source_team_thread": "01a13f9c-e8ba-753e-9c39-03840bb4900b/durable",
+  "max_workers_per_team": 6,
+  "model": "gpt-6.1-sol",
+  "intended_source_lanes": 2,
+  "actual_author_claims": "BOTH_ORIGINAL_AUTHORS_ACK_AND_PUBLIC_SOURCE_DELIVERIES_RECEIVED_STOPPED",
+  "fourth_team_created": false,
+  "packages": [
+    {
+      "id": "E02-23-STOP_WRONG_TARGET",
+      "owner": "EXTRA6/E02",
+      "writer": "original /root/external_e02",
+      "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED_LOCK_RETAINED",
+      "source_paths": [
+        "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+        "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ViewCreativeSquareMapper.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IViewCreativeSquareService.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java"
+      ],
+      "regression_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23MapperTest.java"
+      ],
+      "delivery_path": "docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md",
+      "contract": "Use existing bookmark endpoint/error envelope; validate authentication/parameters as before. Reject unmapped legacy bookmark AND unbookmark before calling community act/unact; prevent wrong-target mutation/replay. No trusted provenance has been established in current source: do not preserve unsafe associations merely to keep favorites nonempty. Both favoriteOnly filtering and batch isBookmarked reads must fail closed for unproven legacy identities; regular legacy lists/content/publish/edit/audit/delete stay under existing contract. Exact View mapper selectMappedCommunityPostId(legacySquareId) and existing view service forwarding are authorized, all three bookmark read/write points must use identical trusted predicate. No community interface edit.",
+      "trusted_mapping_rule": "Statically proved on current public source: server migration LEGACY_MIGRATED safety label is rejected by author create/edit validation. May retain only existing migrated rows matching old row, exact migration requestId, equal preserved id, matching original author AND JSON membership of protected LEGACY_MIGRATED. None of numeric id/requestId/author or string substring alone proves identity. No row/label missing/wrong author/client spoof -> reject and no list/state association. Edited/erased marker is NOT repaired or guessed. This is static contract evidence, not proof deployed data/schema/migration exists; runtime DB remains NOT_RUN.",
+      "regression_vectors": [
+        "numeric collision cannot call new act/unact or mutate unrelated action",
+        "legacy-square-* spoof/author-ID equality not authorization",
+        "request validation/login preserved; expected safe error for both directions",
+        "favoriteOnly produces no false positive, list state never sets unrelated bookmark",
+        "normal list/feed unrelated filters/projection/order and current community endpoints unchanged"
+      ],
+      "forbidden": [
+        "No ICommunityPostService or CommunityPostServiceImpl edits: PR231 active media contract separately touches interface",
+        "No legacy producer/caller UI/service changes or new mapping/DDL",
+        "No identity/RBAC/JWT/request module/refund policy expansion"
+      ],
+      "cross_owner_transfer": "ApiCreativeSquareController/ViewCreativeSquareMapper exact paths absent global claims and no open PR touches in 212-PR full paginated scan. Reserve to original E02; all CORE/Claude/other workers read only until formal handback.",
+      "existing_fixture_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java"
+      ],
+      "fixture_scope": "Only bookmarkEndpointDelegatesToCommunityPostSourceOfTruth and favoriteFeedReturnsOnlyBookmarkedPosts trusted-mapping fixture/schema plus necessary shared fixture premises; original behavioral/security assertions retained, no skips. New regression may be in E02_23Test/MapperTest; no needless duplication.",
+      "trusted_predicate_evidence": {
+        "source_sha": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+        "migration": "chengyinhub-admin/sql/migration_community_post_platform_20260909.sql:853-884 inserts preserved source ID/author/clientRequestId and JSON_ARRAY(LEGACY_MIGRATED)",
+        "author_guard": "CommunityPostServiceImpl.java:49-50 AUTHOR_SAFETY_LABELS excludes LEGACY_MIGRATED; validateUpsert:1349-1359 rejects any unlisted label; both createDraft:145 and edit:180 call validation before mapPost/write",
+        "production_writers": "Bounded git grep of all current admin/system main source and sql: mapPost:1293 serializes validated author labels; CommunityPostMapper insertPost/updateContentCas writes them, prepareAccountPostsForErasure only replaces with empty array. Only migration produces protected marker; no runtime producer found assigning it. Do not extend allowlist/producer. Future integration that changes these paths must recheck invariant.",
+        "negative_controls": [
+          "spoof requestId alone",
+          "same id/author with unprotected labels",
+          "literal marker substring not JSON element",
+          "wrong author",
+          "no row",
+          "trusted migration JSON marker combined with all preserved mapping predicates",
+          "author edit/erasure removes marker -> deny, no self-heal"
+        ]
+      },
+      "source_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+      "actual_source_writers": 0
+    },
+    {
+      "id": "E04-07-A-UNKNOWN_AUDIT",
+      "owner": "EXTRA6/E04",
+      "writer": "original /root/external_e04",
+      "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED_LOCK_RETAINED",
+      "source_paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java"
+      ],
+      "regression_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java"
+      ],
+      "delivery_path": "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-A.md",
+      "depends_on": [],
+      "contract": "First independent schema-compatible commit: stop temporal/MAX inference for old completion logs; without exact identity emit unknown-identity audit only through existing audit detail. Do not void/delete reward log/reopen completion coupon marker; continue other already-authorized points/XP/reversal effects. Keep missing-no-grant behavior distinct. No new schema read in A, no changes to refund caller or policy. Coupon identity unknown is not whole-operation rejection.",
+      "regression_vectors": [
+        "later CRM same-template coupon remains untouched",
+        "unknown original USED/unused cannot be guessed; no history lookup/void/delete/reopen",
+        "points/XP paths and audit continue under existing outer transaction",
+        "no grant remains no-grant, not fabricated reward"
+      ],
+      "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "source_packet": "E04_07_A_SOURCE_DELIVERY.json",
+      "actual_source_writers": 0
+    },
+    {
+      "id": "E04-07-B-EXACT_RECEIPT_SOURCE",
+      "owner": "EXTRA6/E04",
+      "writer": "same original /root/external_e04 serially after A",
+      "state": "SOURCE_DELIVERED_UNVERIFIED_WRITER_STOPPED_LOCK_RETAINED",
+      "source_paths": [
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImpl.java",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/CmsTopicCompletionCouponRewardMapper.java",
+        "chengyinhub-system/src/main/resources/mapper/business/CmsTopicCompletionCouponRewardMapper.xml",
+        "chengyinhub-system/src/main/resources/mapper/business/SmsCouponHistoryMapper.xml",
+        "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/RedemptionRewardClawbackService.java"
+      ],
+      "regression_paths": [
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07Test.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07ReceiptTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/TopicCompletionCouponRewardServiceImplTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/it/RedemptionRewardClawbackMyBatisTest.java",
+        "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E04_07MySqlIT.java"
+      ],
+      "new_migration_path": "chengyinhub-admin/sql/migration_topic_completion_coupon_history_receipt_20261016.sql",
+      "delivery_path": "docs/verification/mini-longrun-20261015/EXTRA6/E04-07-B.md",
+      "depends_on": [
+        "Exact public A source SHA; no second writer for shared consumer",
+        "Future runtime requires authorized new migration to have been applied; migration NOT executed in this task"
+      ],
+      "contract": "Persist nullable exact history_id in existing completion reward receipt. Preserve unique topic/member once gate, disabled-coupon skip and atomic rollback. Reuse existing grantCouponWithReceipt(memberId,coupon) and existing read-only SmsCouponMapper template lookup; producer may inject existing mapper without editing it. Attach positive generated history ID conditionally to newly occupied receipt and require exactly one row; failures rollback grant/stock/receipt. Keep old rows NULL; no inferred backfill. Consumer uses exact receipt identity only, validates locked history member/template, preserves USED audit only and only successful original-unused CAS allows delete receipt/reopen marker. Missing/dangling/nonpositive/mismatched identity falls under unknown audit/no coupon mutation; no alternative coupon lookup. Avoid new history-service API, sourceType or shared mapper changes.",
+      "migration_contract": "One NEW root sql/migration_*.sql only: nullable BIGINT history_id on cms_topic_completion_coupon_reward_log, minimal guarded/idempotent source matching repository conventions; no updates/backfill/drop or historical migration/base-schema edits. Provide ordering and rollback/compatibility risk notes, do not execute or create deployment entry.",
+      "regression_vectors": [
+        "original41 unused + unrelated43 unused: only41 voided",
+        "original41 USED + unrelated43 unused: coupons unchanged, USED audit, no reopen",
+        "NULL/dangling/member-or-template-mismatch receipt: unknown audit/no mutation, other allowed reversal continues",
+        "new exact receipt and stock/history insert rollback together on failure",
+        "once replay cannot issue extra receipt; recompletion after successful void gets new exact ID",
+        "old method signatures/callers unchanged; existing test assertions preserved with necessary exact receipt fixtures"
+      ],
+      "fixture_scope": "Existing producer test and RedemptionRewardClawbackMyBatisTest only for direct changed receipt contract/fixture schema, preserve all business assertions/negative controls and gates. If further old fixtures need source updates, request exact paths, do not weaken or skip.",
+      "cross_owner_transfer": "Consumer/history XML stay original E04. Producer/reward mapper/new migration no current global claim and no open PR touches in scan; formally reserve to same original E04 writer. Imported Git author is not current owner. PR18 old IT author frozen1e, transfer only direct receipt fixtures to E04. CORE old C04 no active writer; no second consumer writer.",
+      "superseded_unwritten_migration_path": "sql/migration_topic_completion_coupon_receipt_20261016.sql",
+      "real_database_source_scope": "E04_07MySqlIT may use existing documented MySQL gate/scratch helper to express actual producer+receipt rollback and exact consumer constraints; source only NOT_RUN, no new test entry/service/network/CI/gate configuration. Declare exact gate/env/test methods on delivery. Existing old IT stays gate-preserving.",
+      "parent_package_source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "source_sha": "923170abd8e468d62eb8404b16b990609a4da42a",
+      "actual_source_writers": 0
+    }
+  ],
+  "source_delivery_contract": {
+    "each_push": "Public full frozen source SHA + direct parent + precise paths + package ID + producer/consumer/migration dependencies; no local-only patch",
+    "tests": "Write necessary meaningful regression source and explicit FQNs/declared method counts/local-only command; all new execution NOT_RUN, expected counts are declarations not passes",
+    "real_database": "List exact gate and scratch/env requirements from existing source. No new gate/entry/config/network/CI; uncovered true DB stays NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+    "status": "SOURCE_DELIVERED_UNVERIFIED; DRAFT before contract/source frozen. Do not call TEST_DEPLOYED or merged/runtime ready",
+    "integration": "E02 independent of E04; E04 A then B serial public commit chain same writer, no whole-team waits. Any integration across lanes by precise SHA, no automatic whole-branch transplant",
+    "failure_rule": "Local root validates via existing212; max1 original-author repair lane per team, independent work continues. Cloud no compile/tests/Node/CI/manual trigger/DB/HTTP/VPS"
+  },
+  "source_owner_evidence": {
+    "global_control_read": "34104a51b20bd361371f6fbe469428f3fd1f7db8",
+    "extra_claims_read": "a76268d5454c8a5c5e3181ae7574bfb93932f800",
+    "extra_existing_E02": "/root/external_e02 child reported idle/no active task",
+    "extra_existing_E04": "/root/external_e04 child reported idle/no active task",
+    "current_turn_observed": "EXTRA coordinator inProgress, explicitly preparing these two original packages and awaiting exact C00 grant; does not prove child source write start",
+    "scan_file": "BUSINESS_DECISIONS_PR_PATH_CHECK.json",
+    "new_packet_ack": "Original two workers received decisions and proposed scopes, verified public original coordinator receipt; actual source-writing start after supplemental grant ACK remains unconfirmed",
+    "original_author_receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6215854647",
+    "supplemental_paths_scan": "BUSINESS_DECISIONS_SUPPLEMENT_PATH_CHECK.json: all212open PR files repaginated; five new View/fixture names no hits; global ownership absent, so reserve exact paths to original E02"
+  },
+  "validation_entry_decision": "保持现有入口，不新增; no 212/CI/network changes; no new verification exception, no repeated approval request",
+  "non_granted": [
+    "UI/iOS/Flutter",
+    "legacy continuous bridge/dual-write/cutover",
+    "shared ICommunityPostService active PR231",
+    "ISmsCouponHistoryService/SmsCouponHistoryServiceImpl and SmsCouponMapper Java/XML remain read only for this packet",
+    "historical data repair/backfill, executing DDL/merging/deploying",
+    "other unresolved WAITING/AI/NPC/visibility product policies"
+  ],
+  "revision": "2 author-proposed exact scope supplement; replaces rev1 migration path, not additional migration",
+  "original_author_receipts": [
+    {
+      "lane": "E02",
+      "worker": "/root/external_e02",
+      "child_thread_id": "01a13fa2-edb5-73da-99d7-848a5391f002",
+      "branch": "codex/extra-e02-regression-20261015",
+      "base": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+      "state": "SOURCE_DELIVERED_WRITER_STOPPED_LOCK_RETAINED",
+      "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116"
+    },
+    {
+      "lane": "E04",
+      "worker": "/root/external_e04",
+      "child_thread_id": "01a13fa3-5db0-708e-82e4-07e19d54b028",
+      "branch": "codex/extra-e04-regression-20261015",
+      "base": "5cadf0cbb2fb24c8565d8d6ba6d26653e51c8788",
+      "state": "SOURCE_DELIVERED_WRITER_STOPPED_LOCK_RETAINED",
+      "source_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+      "receipt": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116"
+    }
+  ],
+  "actual_source_writers": 0,
+  "source_batch_packet": "BUSINESS_DECISIONS_SOURCE_BATCH.json"
+}

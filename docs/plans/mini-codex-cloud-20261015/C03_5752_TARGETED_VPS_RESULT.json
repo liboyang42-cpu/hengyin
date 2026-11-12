@@ -1,0 +1,109 @@
+{
+  "source_sha": "5752ee6fd302dab9e610f65cb8f3dc5b2b66201d",
+  "previous_source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+  "task": "cy-vps-core-5752ee6f-20261016",
+  "archive_sha256": "f82ec1b33dfc2a5bf6e132a2b6449827dd9e578ef83bfa1d48f90bd198718326",
+  "validation_phase": "ordinary targeted repair retest",
+  "selectors": [
+    "com.chengyinhub.business.service.TopicUpdateByOwnerTest"
+  ],
+  "expected_declared_tests": 31,
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "basis": "Only setup generated IDs/insert-success fixture and own explanation changed; original31 methods/all assertions and production unchanged. Originaladf51 failure retained.",
+  "started_at": "2026-10-16T06:12:43.017169+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-core-5752ee6f",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-core-5752ee6f-20261016/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-core-5752ee6f-20261016/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-core-5752ee6f-20261016/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+    "test"
+  ],
+  "memavailable_before": "MemAvailable:    3749884 kB",
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"02aac1ae490f5fcf3e6a3e4e64d14347b6e5795f406e926c7e9fc247c896281c\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-16T06:15:27.447507+00:00"
+  },
+  "guard_receipt": {
+    "exitCode": 0,
+    "reason": "completed",
+    "containerId": "02aac1ae490f5fcf3e6a3e4e64d14347b6e5795f406e926c7e9fc247c896281c"
+  },
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.service.TopicUpdateByOwnerTest",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.service.TopicUpdateByOwnerTest.xml",
+      "sha256": "c898ae00fb4e80b5a83d42f799d976dcd7977b94c0d01c784a3b22304475b720",
+      "fresh": true,
+      "testcases": 31,
+      "tests": 31,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 31,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 31
+  },
+  "fresh_exact_xml": true,
+  "integrity_ok": true,
+  "log_sha256": "12f7b6eea7d5d2f60b43d1fd44ecd96343705756d83e8a57fa7acb3b28bc58ba",
+  "build_success": true,
+  "evidence_result": "PASS",
+  "cleanup": {
+    "observed_absent": true,
+    "endpoint": "chengyin-aws",
+    "container_id": "02aac1ae490f5fcf3e6a3e4e64d14347b6e5795f406e926c7e9fc247c896281c"
+  },
+  "original_failure": {
+    "source_sha": "adf597917da2654b6b753141180bbbcb6db92fc5",
+    "actual_tests": 51,
+    "passed": 35,
+    "failures": 1,
+    "errors": 15,
+    "skipped": 0,
+    "evidence_commit": "cd57aef324b03c6c5d3f3f2580bbba91d5d295b4",
+    "path": "docs/verification/mini-bug-arch-20261015/VPS_CORE_adf59791"
+  },
+  "not_validated": [
+    "new full51 rerun",
+    "true MySQL",
+    "true Redis",
+    "runtime HTTP",
+    "device",
+    "business acceptance",
+    "integration",
+    "merge/deployment"
+  ],
+  "evidence_commit": "d31786327b5e9c1be346eb911a386b28e31b3da5",
+  "evidence_url": "https://github.com/liboyang42-cpu/hengyin/blob/d31786327b5e9c1be346eb911a386b28e31b3da5/docs/verification/mini-bug-arch-20261015/VPS_CORE_5752ee6f/README.md",
+  "c00_read_public_readme_summary": true,
+  "c00_read_raw_vps_xml": false,
+  "cloud_manual_runs": 0,
+  "old_other20_inherited": false,
+  "new_full51_rerun": false,
+  "repair_slot_disposition": "ORDINARY_FAILURE_CLOSED_SLOT_RELEASED_FILE_LOCK_RETAINED"
+}

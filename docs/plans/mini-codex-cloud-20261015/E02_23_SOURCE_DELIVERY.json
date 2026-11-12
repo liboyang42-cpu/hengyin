@@ -1,0 +1,86 @@
+{
+  "status": "SOURCE_DELIVERED_UNVERIFIED",
+  "contract_stage": "CONTRACT_FROZEN_BY_USER",
+  "source_stage": "SOURCE_READY_SOURCE_ONLY",
+  "test_deployed": false,
+  "author_ack": "https://github.com/liboyang42-cpu/hengyin/pull/16#issuecomment-6216061116",
+  "local_handoff": "https://github.com/liboyang42-cpu/hengyin/pull/24#issuecomment-6216061352",
+  "actual_source_writers": 0,
+  "original_authors_stopped_lock_retained": true,
+  "cloud_manual_execution": 0,
+  "new_results": "NOT_RUN; no old PASS inheritance",
+  "user_resource_rule": "保持现有入口，不新增; 212/CI/network unchanged, no new entry, no migration execution/merge/deployment",
+  "id": "E02-23-STOP_WRONG_TARGET",
+  "source_sha": "13be997646c88b9eea282cc8c8225b42820dc3b3",
+  "parent_sha": "dedb44d54a4a277273943c0cbbca9f6e7528482a",
+  "owner": "EXTRA6/E02",
+  "writer": "/root/external_e02",
+  "child_sha": "7eacc598f047a3d40fabed268059dfffbda0a590",
+  "child_parent": "9db88ac5c21c09c79abd862d5fa0d0eb0eae4fbf",
+  "paths": [
+    "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCreativeSquareController.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java",
+    "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ViewCreativeSquareMapper.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/IViewCreativeSquareService.java",
+    "chengyinhub-system/src/main/java/com/chengyinhub/business/service/impl/ViewCreativeSquareServiceImpl.java",
+    "chengyinhub-system/src/main/resources/mapper/business/ViewCreativeSquareMapper.xml",
+    "docs/verification/mini-longrun-20261015/EXTRA6/E02-23.md"
+  ],
+  "c00_review": "Actual complete public commit patches and own explanation read; exactly9 authorized paths:5production+2oldfixtures+new6methodtest+deliverydoc. Resolver/favoriteOnly/batch reuse one trusted SQL fragment, no post service/interface edit or publisher/UI/DDL. Two oldfixture setup changes preserve business assertions. Source label writer proof independent C00 read, not runtime evidence.",
+  "ordinary": {
+    "source_method_counts": [
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_23Test.java",
+        "fqn": "com.chengyinhub.business.longrun.E02_23Test",
+        "declarations": 6,
+        "gate_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/ApiCreativeSquareCommunityPolicyTest.java",
+        "fqn": "com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest",
+        "declarations": 14,
+        "gate_lines": [
+          "    void legacyCommunityWritesStayEnabledUntilControlledCutover() throws Exception {",
+          "                ApiCreativeSquareController.class.getDeclaredField(\"legacyCommunityWritesEnabled\")",
+          "                ApiCommentController.class.getDeclaredField(\"legacyCommunityWritesEnabled\")",
+          "                ApiTopicController.class.getDeclaredField(\"legacyCommunityWritesEnabled\")",
+          "        ReflectionTestUtils.setField(controller, \"legacyCommunityWritesEnabled\", true);",
+          "        ReflectionTestUtils.setField(controller, \"legacyCommunityWritesEnabled\", true);"
+        ],
+        "count_basis": "8 ordinary @Test plus6 CsvSource parameter invocations; observed14 freshXML on923170ab"
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicyMyBatisTest.java",
+        "fqn": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest",
+        "declarations": 2,
+        "gate_lines": []
+      },
+      {
+        "path": "chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/ViewCreativeSquareCommunityPolicySqlTest.java",
+        "fqn": "com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest",
+        "declarations": 2,
+        "gate_lines": []
+      }
+    ],
+    "declared_methods": 24,
+    "actual_tests": null,
+    "status": "NOT_RUN",
+    "local_only_command": "mvn -o -B -ntp -pl chengyinhub-admin -am -Dmaven.test.skip=false -DskipTests=false -Dsurefire.failIfNoSpecifiedTests=false -DforkCount=1 -Dtest=com.chengyinhub.business.longrun.E02_23Test,com.chengyinhub.web.controller.api.ApiCreativeSquareCommunityPolicyTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicyMyBatisTest,com.chengyinhub.business.mapper.ViewCreativeSquareCommunityPolicySqlTest test",
+    "environment": "Existing212 offline; existing H2/Jackson/MyBatis/JUnit/Mockito. H2 JSON aliases limited to array/exact-string semantics, not MySQL proof. No externalDB/Redis/env/new dependencies",
+    "previous_incomplete_annotation_count": 18
+  },
+  "behavior_contract": "Same URL/error envelope: unproven old mapping rejects bookmark and cancel before new act/unact, safe AjaxResult500 message. Trusted legacy row/id/originalauthor/exact migrationrequestId+JSON server-only marker only; normal legacy list preserved, favoriteOnly and isBookmarked no unrelated same-number row. Actual running HTTP not tested.",
+  "real_mysql_json_runtime": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+  "dependencies": [
+    "Includes independently delivered A dedb as parent; A has no new-schema dependency",
+    "No B migration dependency for E02 standalone source"
+  ],
+  "confirmed_new_bug_id": false,
+  "related_later_evidence": {
+    "923170ab": "SelectedE02 group24 in sixclass35 batch had17PASS/7ERROR, historicalfailure",
+    "b034a4aa": "Two affectedclasses8targetedPASS only; no newfull24 run or inherited923pass",
+    "index": "RECENT_EXTERNAL_EVIDENCE_ACK.json"
+  }
+}

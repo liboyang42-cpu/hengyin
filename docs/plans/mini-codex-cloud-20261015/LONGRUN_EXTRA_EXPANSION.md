@@ -1,0 +1,53 @@
+# EXTRA六线新增独立后端边界
+
+CY-HANDOFF: CODEX。精确文件与既有调用候选见 [授权JSON](LONGRUN_EXTRA_EXPANSION.json)，本页覆盖仅原客户端文件耗尽的等待。
+
+新组一律以公共 `7e5882addb7269373b2b95daa0a4ceeb4485fd10`（CORE PR44）源文件为基线，在独立worktree/分支修，仅精确变更cherry-pick回EXTRA候选，不以原1e全文件覆盖CORE已有修复。原source最后public commit及四方PR冲突核对已在JSON记录。此表是源码授权，不是测试/部署签收。
+
+E05独占PlayEncounterServiceImpl与RoamSharePrivacyService；E06独占ApiRoamShareController、RoamShareSnapshotService、RoamShareSnapshotMapper Java/XML。两个lane文件交集为空，不转交UI/客户端、共享会员mapper或全局控制表。各lane可在边界内独立补真实任务，保持唯一child写者；新测试/证据沿自己队列唯一新ID，旧组合fixture只读，确需改时申领精确路径。
+
+E05先处理E03-08已读完整packet：只有键缺席才live fallback；现有冻结节点对象内playables/branchOutcomes键存在但null或错类型，复用现有ServiceException("玩法配置不可用")，禁止穿透实时配置；正常{}和[]不改变，正常[]仍沿原本局图合并。此为实现原注释/既有不可用错误，不新增错误结果政策，不修改NodeJourneySnapshot生产者。
+
+CORE/C06-27将把当前private currentScopedSession逻辑提成共享findCurrent opt-in函数，原find不动；精确签名在JSON，消费者等实际公共SHA。随后E05 Encounter、E03 current-story调用点先核真实当前局合同，按producer接入，不重复复制scope逻辑。CORE C06-24场景有效story冻章已公共（具体小提交由C00回PR16）；旧adc packet不能覆盖最新7e实际源，先去重。
+
+Share模块是现有roam页面真实调用，只有既存快照存储/50上限/opaque token/精度白名单/归一化边界；匿名token读、撤销策略、留存、权限、新generation/tombstone、坐标精度政策不得猜改。既有guard成立即反证，不为补50造代码。后台cart没有证实当前小程序caller，暂不转交；run-session旧缺行clear=0和C04时间单调保留，暂不放锁。
+
+EXTRA协调者读到公共控制后回ACK及实际E05/E06 child/分支SHA/路径，更新自己的QUEUE/CLAIMS/BACKLOG，原E01–04源锁保持；无本地中转或一般再批准依赖。全部SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，不合并部署。目标50与实际数分开披露，源码/回归条目数不等于已验收bug数。
+
+
+## E01-18 / E04-14 精确追加（覆盖旧只方案状态）
+
+C00已完整读取公共 ae4113d21e8983d295c68831983de0aa8f875b74 的E01-18和 1b69abff8dec5c4e5cf547a02c3acbcc220db621 的E04-14，以及当前factory/maintenance源和旧夹具影响。新增唯一写权见SOURCE_OWNERS：
+
+- EXTRA6/E01：`chengyinhub-system/src/main/java/com/chengyinhub/business/mapper/ClubEventOpsMapper.java`。仅新增同原维护kind3谓词的新OFFERED当前活动读取声明，与本队原service/XML一起最小修复；新hold前不可用return false，不撤销旧hold/不挡取消归还/不改WAITING策略。先逐调用核锁序，无法保持原activity→club→ticket顺序则交具体阻塞，不猜。end_date NULL/等于now沿kind3严格规则，不能外扩全部报名时间政策。手写mapper/mock确需改时继续精确报路径，不给生产fail-open。
+- EXTRA6/E04：`chengyinhub-admin/src/test/java/com/chengyinhub/business/service/`下 SmsCouponRedemptionAuditTest.java、SmsCouponRedemptionStartTimeTest.java、SmsCouponRedemptionTransactionBoundaryTest.java、CouponLifecycleMybatisIntegrationTest.java。仅同步本队Service首读既有ForUpdate，原权限/时间/审计/零副作用和回滚断言保留。旧普通读后同线程独立撤销窗口已不可达，改撤销先提交→锁读，数量保持；新独立真库方法承担锁等待证据，仅写NOT_RUN。不得把H2/mock当MySQL锁证明。
+
+E04-14只固定Service锁读到提交的当前history关联，不增加token身份版本，也不宣称签发/验签到锁读前窗口已修；旧owner/scope校验谓词不改。两项均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN，无验证、部署、迁移或合并。完整公共源基线f9e2932ca4b14e541caba356d2c1b016332f199f；原EXTRA已交patch必须保留，不能全文件回灌CORE。
+
+
+## 正式ACK与第二批精确fixture/接口转交
+
+已主动读PR16 comment6195023061，EXTRA实际E05/E06 child/worktree/分支及findCurrent生产者提取42cd374d均登记JSON；可确认新增域开始源码工作。其他4个slot支援独占新证据/回归，不能称6个业务源作者同时改同一域。
+
+追加EXTRA6/E01三旧fixture：ClubWaitlistServiceImplTest、ClubWaitlistPromotionMembershipRaceTransactionTest、ClubWaitlistTokenMybatisIntegrationTest（完整路径SOURCE_OWNERS）。前两只按原正常活动前提接新查询，原会员/库存/回滚断言不放宽；H2不冒称真MySQL活动锁。Token真库套件必须seed真实合法activity、日期覆盖原now边界，保留新query真实XML委托，不硬编码恒true。未运行。
+
+追加EXTRA6/E02：CommunityPostMapper.java仅现有upsertNotificationPreferences的三个boolean→Boolean；CommunityPostServiceImplTest.java仅notificationPreferencesPatchMergesAndGovernanceCannotBeDisabled的必要fixture。原Service/XML仍本队source owner。E02-20 nullable PATCH按原合同：无预读、直接原请求nullable；INSERT COALESCE(param,1)，UPDATE COALESCE(原param,当前列)，不准VALUES(default)覆盖未给字段，治理恒开不变；同字段按DB写序，响应不承诺随后提交。保留旧mention/governance/保留字段断言，新独占真库并发回归NOT_RUN。接口表中grant不等于允许其他点赞请求身份新查询；E02-19/22须给精确公共packet/路径后另裁定兼容边界，不猜升级前已删除身份。
+
+E04原4fixture及E01 Mapper.java已在2f050fd7389f36653a07f742ec7f698687a959ac生效，无需重复等批准。以上不新增API/DDL/依赖/权限/收费政策，无编译测试、迁移、部署或合并。
+
+
+## E03-16/E05-17当前局消费者与E02-22回执合同（C00完整读packet后）
+
+已完整读 cc39c00666e99d472613e86fa37a88a586ec7860 的E03-16和3bd030c9f30ed2e79cb6350ae842fa2ef50a468c 的E05-17。E03上述3旧fixture、E05上述2旧fixture精确转交见SOURCE_OWNERS，原CORE写者停止。仅同fixture当前member/topic/activity动态定位，不可any scope成功掩盖缺局/foreign/其他活动负控，原断言保留。共享findCurrent producer已公共；原find、显式历史消费者及未决stage门槛政策不变。E03-17本局archive已由原writer交642380e，记录源码未验，不重复实现。
+
+此前使用27b8快照读取E02-19/22为404；现已按准确76bfabcb完整读取，两文件确实公开，旧错误不能继续当不可读阻塞。批准E02-22一体保留新LIKE不可变回执及升级时仍存旧LIKE身份：CommunityPostMapper.java/XML按exact comment+member新增selectCommentLikeActionForUpdate；必要的member+request回执当前读可新增selectCommandReceiptForUpdate，均关闭MyBatis缓存。原Service/XML仍原E02唯一写者，旧CommunityPostServiceImplTest除已授权preferences方法，再仅必要同步commentLikeAndUnlikeWritePostScopedOutboxEvents、concurrentCommentLikeReplayDoesNotEmitDuplicateOutbox的receipt fixture，断言不削弱；新E02_22Test可写。
+
+沿既有command receipt全member/request命名空间：正常新LIKE与成功副作用同TX存COMMENT_LIKE/commentId回执；旧仍存LIKE精确重放补回执，不重复通知。UNLIKE删除旧action前锁读真实旧request，保留其COMMENT_LIKE身份；原LIKE/UNLIKE可见性、自己动作撤销权限、r3合法重新点赞不变。不能禁止UNLIKE逃避迁移。
+
+legacy碰撞明确：旧r1若已有异command/aggregate的不可变回执，不覆盖、不伪造等价成功；保持现有回执并继续合法UNLIKE，未来LIKE r1按原公共绑定冲突409，避免复活。若迁移插入碰撞须当前读核实际赢者、按上述精确分类；不能捕所有异常成功，真实死锁/未知写失败回滚。锁序需原action→receipt一致，必要先给具体反序再调，不在另表外猜锁。升级前已删除且无receipt的旧r1不可恢复，明确留历史能力限制，不补身份、不改留存TTL/DDL。
+
+E02源码原写者可据此继续，无需Mac或general批准；跨队新公开SHA小提交+测试前提如实NOT_RUN，当前不验证/合并/部署。
+
+## 最新1修复+5开发与本地验证交接
+
+CORE `f7e0e52346d0aec248e6288f1f5ed4aaae66ac4c`、EXTRA `a37ce191756ab11896faf4e61e8a06b4279f0303`，均SOURCE_DELIVERED_UNVERIFIED/NOT_RUN。每队只占1条失败修复线，优先原文件作者；多失败串行，移交写者必须先停止和逐路径登记。其他5条做真正独立的现有bug/后端源码，完成即push，不等待测试/CI；耗尽不凑数或假称运行。实际VPS复测由本地`01a13eed-e4d9-77f3-b875-c72d26ea7d59`独占，Cloud不再新增手动编译/测试/CI触发/专门配置，不尝试VPS或Cloud替代，既有CI自然运行。CORE15测试fixture修复未复编译，不改生产/断言；EXTRA五fixture及E02合同已解除授权阻塞、实际ACK6198215180已收到，E03/E05新小提交已公共，E02后续另SHA。完整候选依赖、矩阵、门禁、预期源码声明数和原Cloud诊断路径见BACKEND_VALIDATION_VPS_HANDOFF.json/md。未获实际VPS结果不签收，旧231不继承，未合并/部署/业务迁移。

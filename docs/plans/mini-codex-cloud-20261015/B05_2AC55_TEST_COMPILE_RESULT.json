@@ -1,0 +1,78 @@
+{
+  "id": "B05_2AC55_TEST_COMPILE_RESULT",
+  "evidence_commit": "8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac",
+  "evidence_pr": 24,
+  "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac/docs/verification/mini-bug-arch-20261015/VPS_B05_2ac55d20/README.md",
+  "summary_url": "https://github.com/liboyang42-cpu/hengyin/blob/8fdb9fdb72975f7617a4ac70eb4e4eeacd27c3ac/docs/verification/mini-bug-arch-20261015/VPS_B05_2ac55d20/summary.json",
+  "validation_owner": "01a13eed-e4d9-77f3-b875-c72d26ea7d59/local",
+  "environment": "VPS_EXISTING_212",
+  "c00_review": "Read exact public README.md and summary.json; no direct VPS query, raw-log/XML reanalysis, Cloud compilation or test execution",
+  "reported_summary": {
+    "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+    "direct_parent_sha": "26d8245b458d18497eb9040a4c7d9f1509b41bb1",
+    "task": "cy-vps-b05-2ac55d20-20261018",
+    "archive_sha256": "57c57f15270f904579242e241c14dc3ddf84117877f359b9ea29e9aafb432b38",
+    "selectors": [
+      "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT"
+    ],
+    "expected_actual_tests": 0,
+    "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+    "validation_phase": "test-compile only; gated MySQL three methods NOT_RUN",
+    "source_files": 4328,
+    "excluded_public_frontend_env_templates": [
+      "chengyinhub-ui/.env.development",
+      "chengyinhub-ui/.env.production",
+      "chengyinhub-ui/.env.staging"
+    ],
+    "diff_assertion": "exact one authorized SQL string; removing line makes file byte-identical to parent",
+    "archive_scope": "Root pom, AGENTS, .mvn if present, six backend modules only; frontend/docs/assets excluded.",
+    "status": "TEST_COMPILE_PASS",
+    "actual_tests": 0,
+    "fresh_surefire_xml": 0,
+    "true_mysql": "NOT_RUN",
+    "compiled_classes": [
+      {
+        "class": "com.chengyinhub.business.service.B05CommunityVisibilityMySqlIT",
+        "sha256": "6c67b518205e98a727a0db53c0a63bd9e898765ba4eb93c605451b43ac80c079",
+        "fresh": true
+      }
+    ],
+    "started_at": "2026-10-18T02:00:00.291380+00:00",
+    "finished_at": "2026-10-18T02:02:34.874735+00:00",
+    "guard": {
+      "exitCode": 0,
+      "reason": "completed",
+      "containerId": "ecb7ac483a9d734eb691e6723f454a014f47b3339a0c0eaa7f8039d7d6cc9bb8"
+    },
+    "guard_exit_code": 0,
+    "log_sha256": "ce70d73e94e7be2b04ff55735512f12dc6690308807af15f8cf433d0cbd92c62",
+    "evidence_scope": "This exact source SHA only; earlier ordinary passes remain separate.",
+    "cleanup": {
+      "context": "chengyin-aws",
+      "exact_container_absent": true,
+      "container_id": "ecb7ac483a9d734eb691e6723f454a014f47b3339a0c0eaa7f8039d7d6cc9bb8",
+      "observed_exit_code": 0
+    },
+    "not_accepted": [
+      "real MySQL/Redis",
+      "runtime HTTP",
+      "device/business acceptance",
+      "cross-branch integration",
+      "migration/merge/deployment"
+    ]
+  },
+  "source_sha": "2ac55d20a9f4932be8d411e53191c69e5141772c",
+  "status": "TEST_COMPILE_PASS",
+  "actual_tests": 0,
+  "fresh_surefire_xml": 0,
+  "true_mysql": "NOT_RUN_EXISTING_ENTRY_COVERAGE_GAP",
+  "declared_mysql_methods": 3,
+  "source_delivery": "COMPLETE_GRANTED_ACKED_FROZEN",
+  "new_source_failure": false,
+  "repair_slot_opened": false,
+  "entry_decision": "KEEP_EXISTING_NO_NEW_ENTRY",
+  "old_failure_history_preserved": true,
+  "acceptance": "No real MySQL/Redis, runtime HTTP, device/business, joint branch integration, migration execution, merge or deployment accepted",
+  "compile_status": "TEST_COMPILE_PASS",
+  "fresh_selected_classes": 1
+}

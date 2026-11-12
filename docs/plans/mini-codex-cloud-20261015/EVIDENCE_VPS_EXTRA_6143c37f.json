@@ -1,0 +1,117 @@
+{
+  "source_sha": "6143c37f3c32753bd22208ace9c4d3c4520b9fd6",
+  "previous_source_sha": "530e72281a9bd1a443f58a21119367d55eca3623",
+  "direct_parent_sha": "ff6c15679d3249987eb74ee150c1121a2effe250",
+  "task": "cy-vps-extra-6143c37f-20261017",
+  "archive_sha256": "99654bc0bd1dc4bc0707395f1b0114c7d4d25474abe33eea1a4d04abb94009b2",
+  "selectors": [
+    "com.chengyinhub.business.longrun.E02_03Test"
+  ],
+  "declared_class_counts": {
+    "com.chengyinhub.business.longrun.E02_03Test": 4
+  },
+  "expected_declared_tests": 4,
+  "entry_sha256": "12374f742dcf1547c8eabf28c28403c94c8307fe20cba0a3a63d7f2b49764fba",
+  "not_validated": [
+    "trueMySQL/Redis/runtimeHTTP/device/business",
+    "migration/merge/deploy"
+  ],
+  "validation_phase": "new activity-reference visibility SQL: focused production XML H2 regression",
+  "started_at": "2026-10-17T12:33:34.889063+00:00",
+  "command": [
+    "/home/ubuntu/.local/bin/chengyin-build-budget-212",
+    "--name",
+    "cy-budget-212-extra-6143c37f",
+    "--source",
+    "/home/ubuntu/previews/cy-vps-extra-6143c37f-20261017/source",
+    "--cache",
+    "/home/ubuntu/previews/cy-vps-extra-6143c37f-20261017/cache",
+    "--",
+    "mvn",
+    "-o",
+    "-B",
+    "-ntp",
+    "-l",
+    "/home/ubuntu/previews/cy-vps-extra-6143c37f-20261017/source/vps-targeted.log",
+    "-pl",
+    "chengyinhub-admin",
+    "-am",
+    "-Dmaven.test.skip=false",
+    "-DskipTests=false",
+    "-Dsurefire.failIfNoSpecifiedTests=false",
+    "-DforkCount=1",
+    "-Dtest=com.chengyinhub.business.longrun.E02_03Test",
+    "test"
+  ],
+  "memavailable_before": "MemAvailable:    2743056 kB",
+  "guard": {
+    "returncode": 0,
+    "stdout": "{\"exitCode\": 0, \"reason\": \"completed\", \"containerId\": \"0d2fd779e0cc1ecedfc7c16cb42e12c0142e31c58da39c70ef424a32adeda760\"}\n",
+    "stderr": "",
+    "finished_at": "2026-10-17T12:36:18.010531+00:00"
+  },
+  "guard_receipt": {
+    "exitCode": 0,
+    "reason": "completed",
+    "containerId": "0d2fd779e0cc1ecedfc7c16cb42e12c0142e31c58da39c70ef424a32adeda760"
+  },
+  "reports": [
+    {
+      "class": "com.chengyinhub.business.longrun.E02_03Test",
+      "path": "source/chengyinhub-admin/target/surefire-reports/TEST-com.chengyinhub.business.longrun.E02_03Test.xml",
+      "sha256": "23f8808fd76ea5b3f7540386bae998d84696cbe42c8b54b411e880b33bc495ce",
+      "fresh": true,
+      "testcases": 4,
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 4
+  },
+  "fresh_exact_xml": true,
+  "integrity_ok": true,
+  "log_sha256": "2270793d741b74aeaec77144594af4a5e69046af274fdc27d19cb62d5e1daec8",
+  "build_success": true,
+  "evidence_result": "PASS",
+  "container_cleanup": {
+    "context": "chengyin-aws",
+    "exact_id": "0d2fd779e0cc1ecedfc7c16cb42e12c0142e31c58da39c70ef424a32adeda760",
+    "query_exit_code": 0,
+    "observed_remaining_containers": 0
+  },
+  "source_integrity": {
+    "archive_file_hash_match": true,
+    "files_verified": 4328,
+    "source_diff_paths": 3,
+    "dependencies_changed": false,
+    "docs_head": "c35a46357cbbadfbcc61c881db46b6e51e7cc725",
+    "docs_diff_only_original_delivery_files": true
+  },
+  "evidence_scope": "New production XML H2 regression only; not real MySQL, Redis, running HTTP, device, business or integration acceptance. No migration, merge or deployment.",
+  "old_results_inherited": false,
+  "preparation_receipt": {
+    "early_invocation": "run.py had not arrived before source transfer finished; python exit2, no guard/Maven/tests started",
+    "formal_invocation": "After SCP completion; original212 with fixed archive and one class4 tests"
+  },
+  "old_mysql_fixture_dependency_gap": {
+    "cause": "New selectReferences reads cms_activity; five pre-existing scratch schemas need that existing table prerequisite. Not five production bugs.",
+    "status": "NOT_RUN; original owners must repair only granted paths",
+    "paths": [
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_01Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_11Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_06Test.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/longrun/E02_25MySqlIT.java",
+      "chengyinhub-admin/src/test/java/com/chengyinhub/business/service/B05CommunityVisibilityMySqlIT.java"
+    ]
+  },
+  "evidence_commit": "1eb823ebad101e57e3be2e7f7b391bd7787e4988",
+  "readme_url": "https://github.com/liboyang42-cpu/hengyin/blob/1eb823ebad101e57e3be2e7f7b391bd7787e4988/docs/verification/mini-bug-arch-20261015/VPS_EXTRA_6143c37f/README.md",
+  "c00_read_scope": "Public README and summary actually read; no original VPS XML/log fetched/reparsed, no Cloud rerun"
+}

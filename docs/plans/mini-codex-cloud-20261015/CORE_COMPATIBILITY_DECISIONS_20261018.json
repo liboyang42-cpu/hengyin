@@ -1,0 +1,59 @@
+{
+  "id": "CORE_COMPATIBILITY_DECISIONS_20261018",
+  "authority": "Latest explicit human answers relayed by local coordinator; supersedes the two prior pending decisions only.",
+  "decisions": [
+    {
+      "id": "OWN-C04-01",
+      "owner": "CORE/C04",
+      "original_owner_record": "a02_sol",
+      "state": "NO_SOURCE_CHANGE",
+      "reason": "USER_CONFIRMED_EXISTING_COMPATIBILITY_CONTRACT",
+      "contract": "Same player, same NPC and same request ID replay the first result. A new question requires a new request ID; existing target/scope checks remain.",
+      "existing_regression": "NpcChatServiceTest.terminalReplayReturnsSameResultWithoutCallingGatewayAgain",
+      "excluded_changes": [
+        "content fingerprint",
+        "new column",
+        "migration",
+        "guessed legacy receipt identity"
+      ],
+      "new_bug_count": 0,
+      "new_source_changes": 0,
+      "new_tests_run": 0,
+      "new_owner_write_grant": false
+    },
+    {
+      "id": "OWN-C05-22",
+      "owner": "CORE/C05",
+      "original_owner_record": "feature_coorganizer_sol",
+      "state": "NO_SOURCE_CHANGE",
+      "reason": "USER_CONFIRMED_EXISTING_COMPATIBILITY_CONTRACT",
+      "contract": "Photo AI exceptions continue refunding the photo-pool count under its existing contract. Do not replace this with generic gateway UNKNOWN reservation semantics.",
+      "existing_regression": "PhotoCheckVisionServiceTest.负控_模型调用抛异常时降级并退还额度",
+      "excluded_changes": [
+        "degradation/admission/reward policy",
+        "new policy source",
+        "migration",
+        "paid provider invocation"
+      ],
+      "new_bug_count": 0,
+      "new_source_changes": 0,
+      "new_tests_run": 0,
+      "new_owner_write_grant": false
+    }
+  ],
+  "receipt": {
+    "packet": "CORE_COMPATIBILITY_DECISIONS_20261018.json",
+    "state": "BOTH_USER_CONFIRMED_EXISTING_CONTRACTS_NO_SOURCE_CHANGE",
+    "closed_items": [
+      "OWN-C04-01",
+      "OWN-C05-22"
+    ],
+    "remaining_CORE_decision_blocked": 0,
+    "new_source_changes": 0,
+    "new_tests_run": 0,
+    "new_bug_count": 0,
+    "ack": "C00 actually received the latest explicit human answers relayed by local coordinator and applied them to the global ledger; no new child/author ACK, rescan or execution claimed.",
+    "owner_records": "Original named owners retained; no new writer, repair slot or file transfer.",
+    "fixture_validation_unchanged": "All four fixture sources delivered; B05 test-compile PASS only/actual0/MySQL3 NOT_RUN; E02 preparation ENOSPC before guard/Maven, compile NOT_RUN/actual0/MySQL3 NOT_RUN."
+  }
+}
