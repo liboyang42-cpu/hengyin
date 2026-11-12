@@ -115,14 +115,13 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         team.setOwnerType(ownerType);
         team.setOwnerId(ownerId);
         team.setLeaderMemberId(memberId);
-        team.setInviteCode(newInviteCode());
         team.setTitle(title);
         team.setJoinMode(mode);
         team.setMaxMembers(cap);
         team.setJoinedCount(1);
         team.setStatus(PlayTeam.STATUS_RECRUITING);
         team.setExpireTime(expireTime);
-        teamMapper.insertPlayTeam(team);
+        insertWithUniqueInvite(team);
 
         PlayTeamMember leader = new PlayTeamMember();
         leader.setTeamId(team.getId());
@@ -148,7 +147,7 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
 
     @Override
     public Map<String, Object> info(Long teamId, String inviteCode, Long viewerMemberId) {
-        String normalizedCode = trimToNull(inviteCode);
+        String normalizedCode = normalizeInviteCode(inviteCode);
         PlayTeam team = normalizedCode == null ? requireTeam(teamId, false)
                 : teamMapper.selectPlayTeamByInviteCode(normalizedCode);
         if (team == null) throw new IllegalArgumentException("邀请已失效");
@@ -202,7 +201,7 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
     @Transactional(rollbackFor = Exception.class)
     public PlayTeam join(String inviteCode, Long memberId) {
         requireMember(memberId);
-        String normalizedCode = trimToNull(inviteCode);
+        String normalizedCode = normalizeInviteCode(inviteCode);
         if (normalizedCode == null) throw new IllegalArgumentException("邀请链接已升级，请让队长重新分享");
         PlayTeam observed = teamMapper.selectPlayTeamByInviteCode(normalizedCode);
         // 邀请码不可解析(撤销/换码)与队伍已过招募期必须能区分:前者要重新要链接,后者要换队。
@@ -718,13 +717,11 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
     }
 
     /**
-     * 小程序码 scene 最长 32 字符,放不下「前缀 + 32 位十六进制旧码」,所以两种码分开编码:
-     * 新码(22 位 base64url,newInviteCode)→ {@code tm.<码>};
-     * 迁移回填的旧码(32 位小写十六进制)→ {@code th.<同 16 字节的 base64url>},小程序落地页还原成十六进制。
-     * 其它形状不出码(返回 null),页面降级为加入码。
+     * 新的六位加入码使用 tm 前缀。继续识别旧的 22 位和压缩十六进制 scene，直到原邀请到期。
      */
     static String teamScene(String inviteCode) {
         if (inviteCode == null) return null;
+        if (inviteCode.matches("[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}")) return "tm." + inviteCode;
         if (inviteCode.matches("[A-Za-z0-9_-]{22}")) return "tm." + inviteCode;
         if (inviteCode.matches("[0-9a-f]{32}")) {
             byte[] bytes = new byte[16];
@@ -737,12 +734,51 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
     }
 
     private boolean inviteAvailable(PlayTeam team) {
-        return team != null && team.getStatus() != null && team.getStatus() <= PlayTeam.STATUS_LOCKED;
+        return team != null && team.getStatus() != null && team.getStatus() >= PlayTeam.STATUS_RECRUITING
+                && team.getStatus() <= PlayTeam.STATUS_LOCKED;
     }
 
-    private String newInviteCode() {
-        byte[] bytes = new byte[16];
-        INVITE_RANDOM.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    private String normalizeInviteCode(String value) {
+        String code = trimToNull(value);
+        return code != null && code.length() == 6 ? code.toUpperCase(java.util.Locale.ROOT) : code;
+    }
+
+    private void insertWithUniqueInvite(PlayTeam team) {
+        for (int attempt = 0; attempt < 16; attempt++) {
+            team.setInviteCode(newInviteCode());
+            try {
+                teamMapper.insertPlayTeam(team);
+                return;
+            } catch (DuplicateKeyException collision) {
+                if (attempt == 15) throw collision;
+            }
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String rotateInviteCode(Long teamId, Long memberId) {
+        PlayTeam team = requireLeader(teamId, memberId);
+        if (!inviteAvailable(team)) throw new TeamRejection("INVITE_EXPIRED", "邀请已失效");
+        for (int attempt = 0; attempt < 16; attempt++) {
+            String code = newInviteCode();
+            if (code.equals(team.getInviteCode())) continue;
+            try {
+                if (teamMapper.rotateInviteCode(teamId, memberId, code) != 1) {
+                    throw new IllegalStateException("邀请码更新失败，请刷新后重试");
+                }
+                return code;
+            } catch (DuplicateKeyException collision) {
+                if (attempt == 15) throw collision;
+            }
+        }
+        throw new IllegalStateException("邀请码更新失败，请重试");
+    }
+
+    String newInviteCode() {
+        String alphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+        char[] code = new char[6];
+        for (int i = 0; i < code.length; i++) code[i] = alphabet.charAt(INVITE_RANDOM.nextInt(alphabet.length()));
+        return new String(code);
     }
 }

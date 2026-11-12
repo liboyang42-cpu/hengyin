@@ -32,9 +32,10 @@ function load(app, teamId, done) {
   })
 }
 
-/** 用户手输 / 粘贴的加入码:去掉空白;只认服务端发过的两种形状(22 位 base64url 新码、32 位十六进制旧码)。 */
+/** 去掉手输空白，六位码不区分大小写；兼容仍未过期的两种旧码。 */
 function normalizeJoinCode(text) {
   const code = String(text == null ? '' : text).replace(/\s+/g, '')
+  if (/^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}$/i.test(code)) return code.toUpperCase()
   if (/^[A-Za-z0-9_-]{22}$/.test(code)) return code
   if (/^[0-9a-fA-F]{32}$/.test(code)) return code.toLowerCase()
   return ''

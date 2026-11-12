@@ -111,7 +111,8 @@
       "z_workshop_paid_review_20261109",
       "zz_questo_collation_align_20261109",
       "20261112_dec_c_perks",
-      "20261112_dec_c_safety"
+      "20261112_dec_c_safety",
+      "20261112_dec_c_team_codes"
     ],
     "2_PRE_OPTIONAL": [
       "20261018_infomation_change_audit",
@@ -2878,6 +2879,25 @@
       "idempotency": "GUARDED_INFORMATION_SCHEMA",
       "destructiveStatements": [],
       "step": 1
+    },
+    {
+      "source": "DEC-C owner-approved D-98",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "六位无歧义组队加入码；迁移旧邀请码并固定原始期限；暂停组队邀请码写入后执行",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_dec_c_team_codes",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_team_codes.sql",
+      "sha256": "383571440a9fe5ba9d029105e1a08afb7fb3f8a081826b13b2d38ccf2d81172a",
+      "order": 643,
+      "dependsOn": [
+        "20260820_play_team_core",
+        "20260822_play_team_invite_code"
+      ],
+      "idempotency": "IDEMPOTENT_STATIC",
+      "destructiveStatements": [],
+      "step": 158
     }
   ]
 }

@@ -65,6 +65,7 @@ class PlayTeamMybatisIntegrationTest {
             ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20260820_play_team_core.sql"));
             ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20260822_play_team_invite_code.sql"));
             ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20260915_play_team_public_apply.sql"));
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261112_dec_c_team_codes.sql"));
         }
         String base = new String(Files.readAllBytes(Paths.get("../sql/base_schema_20260818.sql")), StandardCharsets.UTF_8);
         int start = base.indexOf("CREATE TABLE `cms_registration` (");
@@ -110,6 +111,63 @@ class PlayTeamMybatisIntegrationTest {
         activity.setStartDate(new Date(System.currentTimeMillis() + 86400000));
         activity.setEndDate(null);
         jdbc.update("DELETE FROM play_team_member"); jdbc.update("DELETE FROM play_team"); jdbc.update("DELETE FROM cms_registration"); jdbc.update("DELETE FROM audit_task");
+    }
+
+    @Test void concurrentOwnerRotationsSerializeAndOnlyTheLastCurrentCodeRemainsUsable() throws Exception {
+        PlayTeam team = team(4);
+        ExecutorService workers = Executors.newFixedThreadPool(2);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            Callable<String> rotate = () -> {
+                assertTrue(start.await(5, TimeUnit.SECONDS));
+                return service.rotateInviteCode(team.getId(), 1L);
+            };
+            Future<String> first = workers.submit(rotate);
+            Future<String> second = workers.submit(rotate);
+            start.countDown();
+            String one = first.get(10, TimeUnit.SECONDS);
+            String two = second.get(10, TimeUnit.SECONDS);
+            assertNotEquals(one, two);
+            String current = mapper.selectPlayTeamById(team.getId()).getInviteCode();
+            assertTrue(current.equals(one) || current.equals(two));
+            assertNull(mapper.selectPlayTeamByInviteCode(current.equals(one) ? two : one));
+            assertNotNull(mapper.selectPlayTeamByInviteCode(current));
+            assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM (SELECT invite_code FROM play_team GROUP BY invite_code HAVING COUNT(*) > 1) collisions", Integer.class));
+        } finally { workers.shutdownNow(); }
+    }
+
+    @Test void migratedLegacyCodeKeepsOnlyItsOriginalExpiryAndMigrationIsRerunnable() throws Exception {
+        PlayTeam team = team(4);
+        String legacy = team.getInviteCode();
+        Date originalExpiry = team.getExpireTime();
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261112_dec_c_team_codes.sql"));
+            ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261112_dec_c_team_codes.sql"));
+        }
+        PlayTeam migrated = mapper.selectPlayTeamById(team.getId());
+        assertTrue(migrated.getInviteCode().matches("[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}"));
+        assertEquals(originalExpiry.getTime() / 1000, jdbc.queryForObject(
+                "SELECT legacy_invite_expire_time FROM play_team WHERE id = ?", Date.class, team.getId()).getTime() / 1000);
+        paid(2L, 2, 10L);
+        assertEquals(team.getId(), service.join(legacy, 2L).getId());
+        String rotated = service.rotateInviteCode(team.getId(), 1L);
+        assertNotEquals(migrated.getInviteCode(), rotated);
+        assertNull(mapper.selectPlayTeamByInviteCode(migrated.getInviteCode()));
+        assertNotNull(mapper.selectPlayTeamByInviteCode(legacy), "rotation cannot extend or replace migration compatibility");
+        jdbc.update("UPDATE play_team SET legacy_invite_expire_time = DATE_SUB(NOW(), INTERVAL 1 SECOND) WHERE id = ?", team.getId());
+        paid(3L, 2, 10L);
+        assertThrows(IPlayTeamService.TeamRejection.class, () -> service.join(legacy, 3L));
+        assertEquals(team.getId(), service.join(rotated, 3L).getId());
+    }
+
+    @Test void rotationRequiresTheCurrentLeaderAndDoesNotChangeExpiry() {
+        PlayTeam team = team(4);
+        assertThrows(IllegalStateException.class, () -> service.rotateInviteCode(team.getId(), 2L));
+        assertEquals(team.getInviteCode(), mapper.selectPlayTeamById(team.getId()).getInviteCode());
+        String code = service.rotateInviteCode(team.getId(), 1L);
+        assertTrue(code.matches("[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}"));
+        assertEquals(team.getExpireTime().getTime() / 1000,
+                mapper.selectPlayTeamById(team.getId()).getExpireTime().getTime() / 1000);
     }
 
     @Test void threePersonTeamKeepsTheLastPlaceOpen() {
