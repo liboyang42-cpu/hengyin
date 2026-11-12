@@ -41,7 +41,7 @@
     <view class="rv-hero {{ merchantAccess.canReadFinance ? '' : 'rv-hero--no-revenue' }}" wx:if="{{!consoleStatus}}">
       <view class="rv-hero-top">
         <view class="rv-hero-greet">
-          <view class="rv-hero-line ep1">
+          <view class="rv-hero-line">
             <text class="rv-hero-hi">Hi，</text><text class="rv-hero-name">{{ displayName }}</text>
           </view>
           <view class="rv-hero-meta">

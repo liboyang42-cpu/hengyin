@@ -137,7 +137,8 @@
            访客只想看口碑,却被一整张后台准入规则卡把列表往下推。改成:屏上确实一条评价都没有
            才说明为什么不能写;有评价就先给评价本身。 -->
       <view wx:elif="{{mode === 'public' && !items.length}}" class="review-eligibility-note">
-        <cy-empty size="lg" kind="empty" title="{{eligibility.reasonCode === 'LOGIN_REQUIRED' ? '登录后查看评价资格' : eligibility.reasonCode === 'AMBIGUOUS_LEGACY_MERCHANT_SCOPE' ? '该主体有多家门店，暂不可评价' : eligibility.reasonCode === 'MERCHANT_UNAVAILABLE' ? '该门店当前不可评价' : '到店核销后可评价'}}" />
+        <text class="review-eligibility-title">{{eligibility.reasonCode === 'LOGIN_REQUIRED' ? '登录后查看评价资格' : eligibility.reasonCode === 'AMBIGUOUS_LEGACY_MERCHANT_SCOPE' ? '该主体有多家门店，暂不可评价' : eligibility.reasonCode === 'MERCHANT_UNAVAILABLE' ? '该门店当前不可评价' : '到店核销后可评价'}}</text>
+        <text class="review-eligibility-sub">{{eligibility.reasonCode === 'AMBIGUOUS_LEGACY_MERCHANT_SCOPE' ? '历史订单未关联门店，暂不能评价' : '到店完成核销后才能评价'}}</text>
       </view>
 
       <cy-skeleton wx:if="{{mode === 'manage' && filterLoading}}" type="card" count="2" />

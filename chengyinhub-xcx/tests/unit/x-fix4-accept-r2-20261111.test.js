@@ -133,5 +133,5 @@ test('P-15 帖文处置与申诉不再复用聊天气泡图标', () => {
 
 test('L-5 口碑空列表不再摆「重新加载」(空不是错)', () => {
   const x = read('pages/merchant/reviews/index.wxml')
-  assert.match(x, /title="还没有真实到店评价"\s*sub="" \/>/)
+  assert.match(x, /kind="empty"\s*title="还没有真实到店评价" \/>/)
 })

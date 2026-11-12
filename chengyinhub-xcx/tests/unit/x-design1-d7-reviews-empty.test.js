@@ -13,8 +13,3 @@ test('D7:管理态整页空态带 kind="empty" 插画,不留空 sub', () => {
   assert.doesNotMatch(tag, /sub=""/)
 })
 
-test('D7:公开态没有评价时的提示也是同一个空态组件', () => {
-  const note = wxml.match(/class="review-eligibility-note">[\s\S]*?<\/view>/)[0]
-  assert.match(note, /<cy-empty size="lg" kind="empty" title=/)
-  assert.doesNotMatch(note, /review-eligibility-(title|sub)|到店完成核销后才能评价/)
-})
