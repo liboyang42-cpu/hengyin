@@ -2048,6 +2048,25 @@ page { background: var(--cy-color-bg-page); }
 .is-lit .cy-story-hand, .is-lit .chfull__para{ text-shadow:0 0 24rpx rgba(235,240,255,.9), 0 0 4rpx rgba(255,255,255,.9); transition:text-shadow .08s; } /* ds-ok 闪电照亮 */
 /* 自由探索的故事层同样铺章节 / 主题配色的底(只在选过风格的主题上带 atmosphere--*) */
 .fx-story[class*="atmosphere--"]{ background:var(--atmo-bg); --cy-color-text-primary:var(--atmo-text); --cy-color-text-tertiary:var(--atmo-muted); }
+/* ===== 细节打磨 2026-11-12 · S4 卡包:斜向流光(位移由 animate 驱动,这里只画光带,不占版面) ===== */
+.fx-pack__sheen{ position:absolute; left:0; top:-10%; width:120rpx; height:120%; pointer-events:none; opacity:0; background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.34), rgba(255,255,255,0)); } /* ds-ok 箔面流光 */
+
+/* ===== 细节打磨 2026-11-12 · S9 ⋯ 菜单:从右上角(按钮处)缩放展开,行逐行错开 30ms;行内容与版式不动 ===== */
+.tools--corner{ transform-origin:100% 0; box-shadow:var(--cy-shadow-hi-dark), var(--cy-shadow-float-dark); }
+.tools--corner .drow{ animation:cy-rise-in .42s var(--cy-ease-rise) backwards; }
+.tools--corner .drow:nth-child(1) { animation-delay: 0ms; }
+.tools--corner .drow:nth-child(2) { animation-delay: 30ms; }
+.tools--corner .drow:nth-child(3) { animation-delay: 60ms; }
+.tools--corner .drow:nth-child(4) { animation-delay: 90ms; }
+.tools--corner .drow:nth-child(5) { animation-delay: 120ms; }
+.tools--corner .drow:nth-child(6) { animation-delay: 150ms; }
+.tools--corner .drow:nth-child(7) { animation-delay: 180ms; }
+.tools--corner .drow:nth-child(8) { animation-delay: 210ms; }
+.tools--corner .drow:nth-child(9) { animation-delay: 240ms; }
+.tools--corner .drow:nth-child(10) { animation-delay: 270ms; }
+.tools--corner .drow:nth-child(11) { animation-delay: 300ms; }
+.tools--corner .drow:nth-child(12) { animation-delay: 330ms; }
+
 /* ===== 故事文字动效(2026-10-30 业主定稿原型 v3,theme-look.js TEXT_FX):一段滑进屏幕(.is-in)时播一次,滑出去复位,再滑回来重播。
    浮现 = 原有 st-line 显形,不另写;逐字类把一段拆成 .tfx__c 单字。只用过渡 + 逐字延迟,不新增关键帧。 */
 .tfx__c{ display:inline-block; white-space:pre; }
@@ -2153,22 +2172,3 @@ page { background: var(--cy-color-bg-page); }
   background:var(--cy-color-bg-elevated); color:var(--cy-color-text-primary); display:flex; align-items:center; justify-content:center; }
 /* x-fix2 P-7:右上角有状态角标(未到店/已体验)时,章节名整列下移到角标下面,不再钻到角标底下 */
 .fx-tile__tags--below{ top:68rpx; }
-
-/* ===== 细节打磨 2026-11-12 · S4 卡包:斜向流光(位移由 animate 驱动,这里只画光带,不占版面) ===== */
-.fx-pack__sheen{ position:absolute; left:0; top:-10%; width:120rpx; height:120%; pointer-events:none; opacity:0; background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.34), rgba(255,255,255,0)); } /* ds-ok 箔面流光 */
-
-/* ===== 细节打磨 2026-11-12 · S9 ⋯ 菜单:从右上角(按钮处)缩放展开,行逐行错开 30ms;行内容与版式不动 ===== */
-.tools--corner{ transform-origin:100% 0; box-shadow:var(--cy-shadow-hi-dark), var(--cy-shadow-float-dark); }
-.tools--corner .drow{ animation:cy-rise-in .42s var(--cy-ease-rise) backwards; }
-.tools--corner .drow:nth-child(1) { animation-delay: 0ms; }
-.tools--corner .drow:nth-child(2) { animation-delay: 30ms; }
-.tools--corner .drow:nth-child(3) { animation-delay: 60ms; }
-.tools--corner .drow:nth-child(4) { animation-delay: 90ms; }
-.tools--corner .drow:nth-child(5) { animation-delay: 120ms; }
-.tools--corner .drow:nth-child(6) { animation-delay: 150ms; }
-.tools--corner .drow:nth-child(7) { animation-delay: 180ms; }
-.tools--corner .drow:nth-child(8) { animation-delay: 210ms; }
-.tools--corner .drow:nth-child(9) { animation-delay: 240ms; }
-.tools--corner .drow:nth-child(10) { animation-delay: 270ms; }
-.tools--corner .drow:nth-child(11) { animation-delay: 300ms; }
-.tools--corner .drow:nth-child(12) { animation-delay: 330ms; }

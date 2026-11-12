@@ -1,5 +1,4 @@
-const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js'); const referral = require('../../../utils/commerce/referral.js');
-const parallax = require('../../../utils/parallax.js'); const pageMotion = require('../../../utils/page-motion.js');
+const modal = require('../../../utils/modal.js'); const { safeUserMessage } = require('../../../utils/transport/safe-user-message.js'); const referral = require('../../../utils/commerce/referral.js'); const parallax = require('../../../utils/parallax.js'); const pageMotion = require('../../../utils/page-motion.js');
 const loading = require('../../../utils/loading.js');
 const toast = require('../../../utils/toast.js');
 const app = getApp();
