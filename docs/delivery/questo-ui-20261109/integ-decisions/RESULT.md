@@ -34,8 +34,9 @@ master 的 #802 游玩/漫游逻辑与 #807 结局规则未被覆盖；`play-sos
 - 迁移 `migration_20261112_chapter_reward.sql` 不部署，需用户走既有流程。
 
 ## CI
-见 PR（编号与结果在下方补记）。
+PR：#808（draft）。首轮 CI（提交 9fa3a127）：Backend tests、Funds MySQL IT、小程序单测分片 20/20、静态门禁等 29 项成功，3 项跳过；仅 1 项失败：
+- `Fast gates (CWD / API existence / silentError)` 内的 architecture gate 步骤红。原因与 #803 说明一致：D-93 改了 `MerchantMarketingAnalyticsMapper.xml#selectAnalytics` 的 SQL，`ci/architecture/baseline.json` 中该条的 sha256 需要更新；任务约束禁止修改 `ci/architecture/*`，故未处理，也不属于 “CI checkout is neither PR head nor its exact synthetic merge” 的重跑情形。需有权限者更新该基线条目后再跑。
 
-PR: （待补）
+PR: #808
 
-STATUS: PARTIAL - CI 结果待补记
+STATUS: PARTIAL - architecture gate 需更新 ci/architecture/baseline.json（selectAnalytics sha256），按约束未改
