@@ -377,3 +377,8 @@
 .deck-slot:nth-child(n+2) { transition-delay: calc(var(--pm-k-s, 0) * 150ms), calc(var(--pm-k-s, 0) * 150ms), 0s, 0s; }
 .coop { filter: opacity(calc(1 - var(--pm-k, 0))); translate: 0 calc(var(--pm-k, 0) * 31rpx); transition: filter var(--pm-k-d, 0s) ease, translate var(--pm-k-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-k-s, 0) * 160ms), calc(var(--pm-k-s, 0) * 160ms), 0s, 0s; }
 .coop:nth-child(n+2) { transition-delay: calc(var(--pm-k-s, 0) * 190ms), calc(var(--pm-k-s, 0) * 190ms), 0s, 0s; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.tile { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.sec-link { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.mine-tile { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

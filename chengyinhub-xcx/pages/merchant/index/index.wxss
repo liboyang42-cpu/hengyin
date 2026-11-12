@@ -740,3 +740,15 @@ page {
 .rv-more-item + .rv-more-item { border-top: 0; }
 .rv-more-item + .rv-more-item::before { content: ""; position: absolute; top: 0; right: 0; left: calc(var(--cy-space-3) + 40rpx + var(--cy-space-3)); height: 1rpx; background: var(--cy-color-border-subtle); pointer-events: none; }
 .rv-msg-time, .rv-hero-meta, .rv-msg-sub { font-variant-numeric: tabular-nums; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.rv-biz { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.rv-hero-avatar-hit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.rv-action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.rv-section-more { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.rv-msg-done { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.rv-msg-x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.rv-msg-clear { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.rv-more-item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.chpick__item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.rv-revenue-amount { font-variant-numeric: tabular-nums; }

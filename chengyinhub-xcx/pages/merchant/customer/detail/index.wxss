@@ -310,3 +310,15 @@ page { background: var(--cy-bg-page); }
 .cd-history-action--danger { color: var(--cy-danger); }
 
 .cd-save { margin-top: 40rpx; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.cd-edit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.cd-chip-x { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.cd-field-action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.cd-editor-cancel { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.cd-history-action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.cd-paid-value,
+.cd-paid-value--denied,
+.cd-metric-num,
+.cd-metric-label,
+.cd-textarea-count { font-variant-numeric: tabular-nums; }

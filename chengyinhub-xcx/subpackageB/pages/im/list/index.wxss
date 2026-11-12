@@ -180,3 +180,12 @@ page { background: var(--cy-bg-page); }
 .invite-card__btn { height: 72rpx; line-height: 72rpx; padding: 0 var(--cy-space-5); border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); color: var(--cy-text-title); font-size: var(--cy-font-label); font-weight: 600; }
 .invite-card__btn--primary { background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); }
 .invite-card__time { display: block; margin-top: var(--cy-space-4); font-size: var(--cy-font-caption); color: var(--cy-text-secondary); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.invite-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.invite-card__btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.invite-card__btn--primary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.act { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.act-read { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.act-mute { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.act-del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

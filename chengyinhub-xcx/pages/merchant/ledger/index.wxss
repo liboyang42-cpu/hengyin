@@ -149,3 +149,6 @@ page { background: var(--cy-bg-page); }
 .fill-slot { display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
 
 @import '../style/merchant-finance.wxss';
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.ledger-action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
