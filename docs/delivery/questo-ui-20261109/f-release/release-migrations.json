@@ -109,7 +109,8 @@
       "z_workshop_apple_iap_20261109",
       "z_workshop_purchase_20261109",
       "z_workshop_paid_review_20261109",
-      "zz_questo_collation_align_20261109"
+      "zz_questo_collation_align_20261109",
+      "20261112_dec_c_perks"
     ],
     "2_PRE_OPTIONAL": [
       "20261018_infomation_change_audit",
@@ -2838,6 +2839,25 @@
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
       "step": 647
+    },
+    {
+      "source": "DEC-C owner-approved merchant paid perks",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "Order-attributed entitlement contributions and original-payment full refund settlement; does not enable checkout or configure prices",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_dec_c_perks",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_perks.sql",
+      "sha256": "f985d8068780b6fe384c76dc73d3f46a2226508a8aaf6fa398b4987c82a50898",
+      "order": 153,
+      "dependsOn": [
+        "merchant_subscription_20260708",
+        "20261024_clm_commerce_payment_proof"
+      ],
+      "idempotency": "GUARDED_INFORMATION_SCHEMA",
+      "destructiveStatements": [],
+      "step": 1
     }
   ]
 }

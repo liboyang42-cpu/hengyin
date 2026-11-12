@@ -7,6 +7,7 @@
     <resultMap type="MerchantSubscription" id="MerchantSubscriptionResult">
         <result property="id"    column="id"    />
         <result property="merchantId"    column="merchant_id"    />
+        <result property="sourceOrderId" column="source_order_id" />
         <result property="subscriptionType"    column="subscription_type"    />
         <result property="startDate"    column="start_date"    />
         <result property="endDate"    column="end_date"    />
@@ -19,7 +20,7 @@
     </resultMap>
 
     <sql id="selectVo">
-        select id, merchant_id, subscription_type, start_date, end_date, max_usage, used_count, is_active, remark, create_time, update_time from merchant_subscription
+        select id, merchant_id, source_order_id, subscription_type, start_date, end_date, max_usage, used_count, is_active, remark, create_time, update_time from merchant_subscription
     </sql>
 
     <select id="selectMerchantSubscriptionList" parameterType="MerchantSubscription" resultMap="MerchantSubscriptionResult">
@@ -61,14 +62,33 @@
 
     <insert id="grantMerchantSubscription" parameterType="MerchantSubscription">
         insert into merchant_subscription
-        (merchant_id, subscription_type, start_date, end_date, max_usage, used_count, is_active, create_time, update_time)
+        (merchant_id, source_order_id, subscription_type, start_date, end_date, max_usage, used_count, is_active, create_time, update_time)
         values
-        (#{merchantId}, #{subscriptionType}, #{startDate}, #{endDate}, #{maxUsage}, 0, 1, now(), now())
-        on duplicate key update
-          start_date = least(coalesce(start_date, values(start_date)), values(start_date)),
-          end_date = greatest(coalesce(end_date, values(end_date)), values(end_date)),
-          max_usage = coalesce(max_usage, 0) + coalesce(values(max_usage), 0),
-          is_active = 1,
-          update_time = now()
+        (#{merchantId}, #{sourceOrderId}, #{subscriptionType}, #{startDate}, #{endDate}, #{maxUsage}, 0, 1, now(), now())
     </insert>
+    <insert id="createCommerceRefund">
+        INSERT INTO merchant_commerce_refund (order_id, refund_no, create_time)
+        VALUES (#{id}, CONCAT('RMC', #{id}), NOW())
+        ON DUPLICATE KEY UPDATE order_id=order_id
+    </insert>
+    <select id="selectCommerceRefundForUpdate" resultType="map" useCache="false" flushCache="true">
+        SELECT order_id, refund_no, refund_fact_id, refund_fact_hash
+        FROM merchant_commerce_refund WHERE order_id=#{orderId} FOR UPDATE
+    </select>
+    <update id="settleCommerceRefund">
+        UPDATE merchant_commerce_refund
+        SET refund_fact_id=#{factId}, refund_fact_hash=#{factHash}, settled_time=NOW()
+        WHERE order_id=#{orderId} AND refund_fact_id IS NULL AND refund_fact_hash IS NULL
+    </update>
+    <update id="revokeCommerceSubscription">
+        UPDATE merchant_subscription SET is_active=0, update_time=NOW()
+        WHERE source_order_id=#{orderId} AND is_active=1
+    </update>
+    <update id="markCommerceRefunded">
+        UPDATE oms_order SET status=6, update_time=NOW()
+        WHERE id=#{orderId} AND status=1 AND biz_type IN ('premium_template','promotion_slot','custom_event')
+    </update>
+    <select id="selectCommerceSubscriptionForUpdate" resultMap="MerchantSubscriptionResult" useCache="false" flushCache="true">
+        <include refid="selectVo"/> WHERE source_order_id=#{orderId} FOR UPDATE
+    </select>
 </mapper>
