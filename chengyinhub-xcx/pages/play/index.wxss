@@ -2146,6 +2146,8 @@ page { background: var(--cy-color-bg-page); }
   display:flex; align-items:center; justify-content:center; font-size:var(--cy-type-body); font-weight:700; background:var(--cy-color-play-story-text); color:var(--cy-color-play-story-page); }
 .finsheet__settle + .finsheet__cta{ background:var(--cy-color-play-story-surface); color:var(--cy-color-play-story-text); }
 .finsheet__pad{ height:123rpx; }
+/* x-fix6 R4-2:两颗底部按钮(查看结算 + 继续)时底座高 123rpx,路线卡按同量再收,「保存图片 / 分享」整行落在底座之上 */
+.finsheet--two .finsheet__routecv{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 1023rpx) * 3 / 4)); }
 
 /* x-fix2 P-6:卡包首屏 / 故事开场的返回钮,与 fx-story__back 同形 */
 .play-back{ position:fixed; left:var(--cy-page-x); z-index:122; width:var(--cy-btn-h); height:var(--cy-btn-h); border-radius:50%;

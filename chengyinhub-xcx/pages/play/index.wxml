@@ -1328,7 +1328,7 @@
 
 <!-- ===================== 章节结算(半屏,用户裁决:非全屏,底部=继续) ===================== -->
 <view class="finmask" catchtouchmove="noop" wx:if="{{showFinish}}" bindtap="closeFinish" aria-role="button" aria-label="关闭完成面板" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="finsheet" wx:if="{{showFinish}}">
+<view class="finsheet {{allDone && !isPreview && !isMock && topicId ? 'finsheet--two' : ''}}" wx:if="{{showFinish}}">
   <!-- 2026-10-28 业主定稿(claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结顺序 —— 地图 → 标题 → 大数字 → 成绩行 → 分组卡 → 一颗按钮 -->
   <!-- 第九轮 m2 第 3 项:路线分享卡(原型 m-card2)。有路线时代替上面的地图盒 -->
   <view class="finsheet__shade" wx:if="{{routeCard.on && !newLifeOS.show}}" style="height:{{chrome.contentTop}}px"></view><view class="finsheet__card" wx:if="{{routeCard.on && !newLifeOS.show}}" style="padding-top:var(--cy-space-2)">
