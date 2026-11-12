@@ -46,6 +46,6 @@
 - 主包：源码侧 `mainpkg-size-report` 合计 3233KB（×0.633 估算约 2046 KiB，余量很小）；本轮净增仅少量 wxml/wxss/js（约 3KB 源码）。压缩后真实体积需 CLI 取证（`wechat-release-contract` 报 WAIT-EXTERNAL）。
 - 未跑 `ci/xcx-check.sh`、`ds-hardcode-gate-selftest.sh`；未改 `ci/architecture/*` 与 `ci.yml`。
 - 过程提示：运行期间分支上出现另一会话同名提交（同步 x-fix4/x-fix5/定位测试断言），已合并，冲突的三份测试取远端版本。
-- PR #779 CI：见下一提交的补记。
+- PR #779 CI（头 0c02e1e6，run 43142975164）：36 个 job，34 绿；仅 2 红且都是既知的架构门禁步骤——Fast gates 的「Check architecture changes against trusted CI base」、Backend tests 的「Check private Mapper compiled references」。Mini program static gates、20 个单测分片、Funds MySQL IT、Backend 构建与整包启动、迁移门禁均绿。无本轮引入的红。
 
-STATUS: DONE（PR #779 CI 待观察；未标 ready、未合并）
+STATUS: DONE（PR #779 CI 仅余两个架构门禁红；未标 ready、未合并）
