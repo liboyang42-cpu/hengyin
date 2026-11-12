@@ -39,6 +39,9 @@ Component({
       let allDone = false; let mineDone = false; let all = []; let mine = []; let failed = false
       const finish = () => {
         if (token !== this._loadToken || !allDone || !mineDone) return
+        // 「我的」同样只保留落在这份漫游局列表里的报名：已结束 / 未绑定漫游的活动不该出现在这里。
+        const roamIds = new Set(all.map((item) => String(item.id)))
+        mine = mine.filter((item) => roamIds.has(String(item.id)))
         if (failed) {
           this.setData({ state: hadSnapshot ? 'stale' : 'error', refreshing: false, staleError: '活动列表更新失败，请稍后重试' }, () => this._filter())
           return
@@ -46,8 +49,11 @@ Component({
         this._hasLoaded = true
         this.setData({ all, mine, state: 'ready', refreshing: false, staleError: '' }, () => this._filter())
       }
+      /* 业主 2026-11-11 D-73：漫游任务列表只列「报名中/进行中」且「绑定漫游」的活动。
+         这份列表的真源是 /api/official/active-for-roam（服务端已按 ST_SIGNUP/ST_LIVE + isRoamBound 过滤，
+         V1/V2 同一口径合并），不再用 /api/official/events 的全量列表再在端上筛。 */
       app.sendRequest({
-        url: '/api/official/events', method: 'GET', data: {}, hideLoading: true, silentError: true,
+        url: '/api/official/active-for-roam', method: 'GET', data: {}, hideLoading: true, silentError: true,
         success: (res) => { if (token !== this._loadToken) return; if (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data) && res.data.every(isRecord)) all = res.data.map((item) => this._decorate(item)); else failed = true; allDone = true; finish() },
         successStatusAbnormal: () => { if (token !== this._loadToken) return; failed = true; allDone = true; finish() },
         fail: () => { if (token !== this._loadToken) return; failed = true; allDone = true; finish() },

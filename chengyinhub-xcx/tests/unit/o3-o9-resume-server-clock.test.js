@@ -1,6 +1,7 @@
 'use strict'
 
 // Doc 2 · O-03 / O-09:跨设备续玩、切后台/来电、手机时钟被改。
+// D-68(2026-11-11)起:切后台不再冻结用时(墙钟口径)；跨设备的"谁新谁旧"仍按服务端 savedAt 判定。
 // 真源是服务端时钟:暂停快照的新旧由 /api/play/run-session 回传的服务端 savedAt 决定,
 // 手机时钟拨快/拨慢、切后台期间改时间,都不能改变「谁新谁旧」与已用时。
 const test = require('node:test')
@@ -155,22 +156,49 @@ test('O-09 设备时钟拨慢 + 断网暂停:本机后写的快照仍比已采�
   assert.equal(page._sessionClock.elapsedSeconds(), 420, '断网期间多走的 2 分钟不能被服务端旧快照吃掉')
 })
 
-test('O-09 切后台/来电:onHide 冻结用时,后台期间改手机时间(拨快一天)回来后用时不变、不偷跑', async () => {
+// D-68(业主 2026-11-11):切后台继续计时 —— 用时 = 墙钟 − 显式暂停;不再在 onHide 冻结。
+test('D-68 切后台不停表:onHide 后计时继续走,回来接着算', async () => {
   nowMs = 1000
   const page = runningPage()
   nowMs = 31000
   page.onHide()
   await flush()
-  assert.equal(page._sessionClock.isPaused(), true, '切后台即暂停')
+  assert.equal(page._sessionClock.isPaused(), false, '切后台不再暂停')
   assert.equal(page._sessionClock.elapsedSeconds(), 30)
+  assert.equal(storage[KEY].elapsedSeconds, 30, '落盘的是当时的用量快照')
 
-  nowMs += 24 * 3600 * 1000 // 后台期间系统时间被改
-  assert.equal(page._sessionClock.elapsedSeconds(), 30, '后台期间的时钟变化不计入用时')
-  assert.equal(storage[KEY].elapsedSeconds, 30, '落盘的是冻结时的用时')
+  nowMs += 5 * 60 * 1000                 // 后台 5 分钟
+  assert.equal(page._sessionClock.elapsedSeconds(), 330, '后台时间照常计入')
 
-  page.onPlayHudToggle() // 玩家回来点继续
+  page.onShow()
+  nowMs += 5000
+  assert.equal(page._sessionClock.elapsedSeconds(), 335, '回前台继续累加,不需要玩家再点继续')
+})
+
+test('D-68 只有显式暂停才扣除:玩家按暂停后 background 时间不计', async () => {
+  nowMs = 1000
+  const page = runningPage()
+  nowMs = 31000
+  page.onPlayHudToggle()                 // 玩家主动暂停
+  assert.equal(page._sessionClock.isPaused(), true)
+  assert.equal(page._sessionClock.elapsedSeconds(), 30)
+  nowMs += 10 * 60 * 1000
+  page.onHide(); await flush()
+  assert.equal(page._sessionClock.elapsedSeconds(), 30, '暂停期间（含后台）不计时')
+  page.onPlayHudToggle()                 // 恢复
   nowMs += 5000
   assert.equal(page._sessionClock.elapsedSeconds(), 35, '只从继续那一刻起算')
+})
+
+test('D-68 用户在别页离开(非切后台)仍然停表并落盘', async () => {
+  nowMs = 1000
+  const page = runningPage()
+  nowMs = 31000
+  global.getCurrentPages = () => [{}, { route: 'pages/play/index' }]   // 当前栈顶不是本页 = 离开
+  page.onHide()
+  await flush()
+  delete global.getCurrentPages
+  assert.equal(page._sessionClock.isPaused(), true, '真正离开游玩要停表')
 })
 
 test('O-03 设备 A 暂停后设备 B 继续:B 恢复出的用时就是服务端那份,B 再暂停写回的是续上的用时', async () => {
