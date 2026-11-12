@@ -35,6 +35,7 @@ const { cityOrientationScheduleIssues, freeExplorationSaleScheduleIssues, freeEx
 const { createPublishWorkflow } = require('../utils/publish/publish-workflow.js');
 const { createServerDraftSaver, topicIdOf, confirmedPublication } = require('../utils/publish/server-draft.js');
 const publishIntent = require('../../../utils/publish/publish-intent.js');
+const publicationRequestId = require('../utils/publish/publication-request-id.js');
 const proEditorPolicy = require('../utils/publish/pro-editor-policy.js');
 const proEditorDraft = require('../utils/publish/pro-editor-draft.js');
 
@@ -7972,7 +7973,12 @@ Page({
         beforePublish: (topicId) => {
           if (!current()) return false;
           this._serverDraftAttempt = null; // 保存内容与版本已经正向回读。
-          this._publishAttempt = Object.assign({ status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: String(topicId) }, publicationVersions);
+          // U03-01:发布号随发布意图一起先落盘;同一主题上一次结果未知时沿用原号,永不为未知结果另生新号。
+          const prior = this._publishAttempt;
+          const publishRequestId = prior && prior.kind === 'SERVER_DRAFT' && String(prior.topicId) === String(topicId)
+            && publicationRequestId.valid(prior.publishRequestId) ? prior.publishRequestId : publicationRequestId.create();
+          this._publishAttempt = Object.assign({ status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: String(topicId) },
+            publicationVersions, { publishRequestId });
           return this._persistDraftEnvelope();
         },
         save: (payload, cb) => {
@@ -8014,9 +8020,12 @@ Page({
         },
         publish: (topicId, cb) => {
           const handlers = reply(cb);
+          // 重放时 publicationVersions 可能已随页面重建清空:原意图里落过盘的版本号与发布号才是原请求。
+          const attempt = this._publishAttempt && String(this._publishAttempt.topicId) === String(topicId) ? this._publishAttempt : null;
           sendUiStateRequest(app, '/api/topic/publish-draft', {
             method: 'POST',
-            data: Object.assign({ id: topicId, scope: this.data.operationScope }, publicationVersions),
+            data: Object.assign({ id: topicId, scope: this.data.operationScope }, publicationVersions,
+              attempt ? publicationRequestId.wireFields(attempt) : {}),
             success: handlers.success,
             fail: handlers.fail
           });
@@ -8256,7 +8265,7 @@ Page({
     }
     const sheet = res.stage === 'publish'
       ? (res.unknown
-        ? { title: '发布结果待确认', sub: '重试只查询原主题的发布结果', meta: '本机内容已保留' }
+        ? { title: '发布结果待确认', sub: '重试沿用原发布请求，不会重复发布', meta: '本机内容已保留' }
         : res.localChanges
           ? { title: '本次发布未成功', sub: '提交后的修改仍在本机，请保存后重试', meta: '草稿仍在本机' }
           : { title: '草稿已保存，但还没有发布', sub: '草稿已保存，可重试', meta: '' })
@@ -8309,7 +8318,7 @@ Page({
         sub: rejected ? '内容仍保留，可以修改后重新提交。'
           : result.localChanges ? '上次保存的版本已发布；后续修改仍在本机，请继续编辑后另行保存。'
             : pendingReview ? reviewNextStep : '草稿已发布，接下来去招商家承接节点、找俱乐部带团。',
-        meta: keepDraft ? '草稿仍在本机' : '',
+        meta: keepDraft ? '草稿仍在本机' : publicationRequestId.revisionLabel(pub),
         why: rejectionReason, duration: RESULT_SHEET_MS }
     });
   },

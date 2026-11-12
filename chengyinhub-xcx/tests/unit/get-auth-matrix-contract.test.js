@@ -129,6 +129,9 @@ const MATRIX = [
   ['pages/play/index.js', "req('/api/play/nodes'", 'required', 'member', 'current-session'],
   // R29C:只读登录会员的原会话快照，服务端逐项校验会话/会员/场次/主题及历史可读性。
   ['pages/play/index.js', "req('/api/play/history'", 'required', 'member', 'current-session'],
+  // qx-b1 UG-05/07:提示阶梯层级与只读分数明细。服务端按 topic_route_session.id 解析原局并校验本人、主题与节点,不含正文。
+  ['pages/play/index.js', "req('/api/play/help', 'GET'", 'required', 'member', 'current-session'],
+  ['pages/play/index.js', "req('/api/play/help/receipt', 'GET'", 'required', 'member', 'current-session'],
   /* 2026-09-18 R14/故事变量:profile 提交成功后的补拉 —— 与首屏同端点同权限档,只是第二处调用点。
      行尾「// 补拉」让 marker 唯一,不然两条都会 resolve 到首屏那一处。 */
   ['pages/play/index.js', "req('/api/play/nodes', 'GET', params).then((res) => { // 补拉", 'required', 'member', 'current-session'],
@@ -449,7 +452,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-30 #686 故事流顶栏:案件册两处 + 各站奖励一处 req 包装 GET(本人本局,已逐条入 MATRIX),41 → 44。
   // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取一条(本人、本场、已付费),44 → 45。
   // R29C:原会话历史 GET /api/play/history 一处，按登录会员与原会话归属只读，45 → 46。
-  assert.equal(wrapperCount, 46, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // qx-b1:提示阶梯 GET /api/play/help 与 /api/play/help/receipt 两处(本人原局,已入 MATRIX),46 → 48。
+  assert.equal(wrapperCount, 48, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 

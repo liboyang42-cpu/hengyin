@@ -5,6 +5,7 @@
   <include src="theme-player-ops.wxml" />
   <include src="play-overlays.wxml" />
   <include src="play-topbar.wxml" />
+  <include src="play-help.wxml" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
 <wxs src="../../utils/wxs/img.wxs" module="img" />
@@ -203,6 +204,7 @@
              kit 直接绑页面上的 playKit.kit:作答/提交后 setData 更新它,这一块就地跟着变,
              不必重铺整章。show 传 true —— 它在流里露着,不由弹层那套控制。 -->
         <!-- 终章反转:对面回的话,左侧气泡;读到这一块整章翻成对话框(.chfull.is-chat) -->
+        <view wx:elif="{{item.kind === 'divider'}}" class="chfull__divider" aria-hidden="true"></view>
         <view wx:elif="{{item.kind === 'reveal'}}" class="chfull__reveal" aria-role="text" aria-label="{{item.who || '对面'}}回复">
           <view wx:if="{{item.who}}" class="chfull__reveal-who">{{item.who}}</view>
           <view class="chfull__reveal-b cy-story-hand" wx:for="{{lk.rows(item.lines)}}" wx:for-item="line" wx:key="key">{{line.text}}</view>
@@ -1053,7 +1055,7 @@
         <view class="sheet-note" wx:else>申诉提交结果未确认<text class="sheet-note-action" bindtap="readGuardAppeal" hover-class="cy-pressed" hover-stay-time="80"> · 刷新</text></view>
       </block>
       <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId && arrivalGuard.appealable}}">本次到达未记录<text class="sheet-note-action" bindtap="appealArrivalFromSheet" hover-class="cy-pressed" hover-stay-time="80"> · 申诉</text></view>
-      <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId}}">{{arrivalGuard.message}}<text class="sheet-note-action" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
+      <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId}}">{{arrivalGuard.message}}<text class="sheet-note-action" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text><text wx:for="{{arrivalGuard.fallbacks}}" wx:for-item="alt" wx:key="nodeId" class="sheet-note-action" data-nodeid="{{alt.nodeId}}" bindtap="openArrivalFallback" aria-role="button" aria-label="改去{{alt.name}}" hover-class="cy-pressed" hover-stay-time="80"> · 改去「{{alt.name}}」</text></view>
       <view class="sheet-note" wx:elif="{{mode!=2 && sheet.node.lat}}">{{gpsHint}}<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
       <!-- 自由探索:核销由商家扫玩家的码完成,所以这里说的是「到店后怎么办」,不是「怎么打卡」 -->
       <view class="sheet-note" wx:else>到店后出示核销码给商家扫<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
@@ -1225,8 +1227,9 @@
       <view class="gp2__reveal" wx:if="{{revealed}}">{{game.reveal}}</view>
       <view class="gp2__scorecap" wx:if="{{game.puzzleScoring}}">当前最高 {{puzzleScoreCap}} 解谜分</view>
       <view class="gp2__ctl" wx:if="{{!gRight}}">
-        <text class="gp2__ctl-a" wx:if="{{canHint}}" bindtap="useHint" hover-class="cy-pressed" hover-stay-time="80">看提示（{{hintLabel}}）</text>
-        <text class="gp2__ctl-b" wx:if="{{canReveal}}" bindtap="revealAnswer" hover-class="cy-pressed" hover-stay-time="80">实在解不出，揭示答案</text>
+        <text class="gp2__ctl-a" wx:if="{{helpPanel.enabled}}" bindtap="openHelpPanel" aria-role="button" aria-label="提示" hover-class="cy-pressed" hover-stay-time="80">提示</text>
+        <text class="gp2__ctl-a" wx:elif="{{canHint}}" bindtap="useHint" hover-class="cy-pressed" hover-stay-time="80">看提示（{{hintLabel}}）</text>
+        <text class="gp2__ctl-b" wx:if="{{canReveal && !helpPanel.enabled}}" bindtap="revealAnswer" hover-class="cy-pressed" hover-stay-time="80">实在解不出，揭示答案</text>
       </view>
     </view>
     <view style="height:200rpx"></view>

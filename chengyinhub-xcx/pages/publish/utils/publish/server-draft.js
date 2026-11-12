@@ -511,34 +511,7 @@ function createServerDraftSaver(deps) {
             return;
           }
           unconfirmedVersionInfo = expectedPublication(back.data);
-          request('publish', topicId, (pub) => {
-            if (!current()) return;
-            if (pub && pub.ok && confirmedPublication(pub.data, topicId)) {
-              if (back.data.topic.configVersion != null) {
-                const expected = expectedPublication(back.data);
-                request('readback', topicId, (confirmed) => {
-                  if (!current()) return;
-                  if (!confirmed || !confirmed.ok || !matchingTopic(confirmed.data, topicId)
-                      || confirmed.data.isDraft !== false || !publicationMatches(confirmed.data, expected)
-                      || readbackIssue(payload, confirmed.data, false)) {
-                    unconfirmedPublish = topicId;
-                    finish(handlers.onFail, { stage: 'publish', topicId, detail: back.data, unknown: true,
-                      msg: '发布已返回，原版本的发布状态尚未回读确认，请重试核对' });
-                    return;
-                  }
-                  published = true;
-                  finish(handlers.onSuccess, { topicId, detail: confirmed.data, published: Number(confirmed.data.topic.status) === 2
-                    ? { recovered: true, status: 2 } : pub.data });
-                });
-              } else {
-                published = true;
-                finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
-              }
-              return;
-            }
-            if (!pub || pub.ok || pub.networkError || /不是草稿/.test(String(pub.msg || ''))) { reconcilePublish(topicId, back.data, pub); return; }
-            finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub, { unknown: false }));
-          });
+          request('publish', topicId, (pub) => afterPublish(topicId, back, pub));
         };
         // BL-185:发布前试检查(已存的这一版)。error 不发,只有 warn 由页面提示后决定;未注入就直接发布
         if (typeof deps.publishCheck !== 'function') { publishNow(); return; }
@@ -552,6 +525,37 @@ function createServerDraftSaver(deps) {
           publishNow();
         });
       });
+    };
+
+    // 发布回包(首发与沿用原发布号的重放共用):确认 → 回读核版本;未知 → 回读真实状态。
+    const afterPublish = (topicId, back, pub, replay) => {
+        if (!current()) return;
+        if (pub && pub.ok && confirmedPublication(pub.data, topicId)) {
+          if (back.data.topic.configVersion != null) {
+            const expected = expectedPublication(back.data);
+            request('readback', topicId, (confirmed) => {
+              if (!current()) return;
+              if (!confirmed || !confirmed.ok || !matchingTopic(confirmed.data, topicId)
+                  || confirmed.data.isDraft !== false || !publicationMatches(confirmed.data, expected)
+                  || !replay && readbackIssue(payload, confirmed.data, false)) {
+                unconfirmedPublish = topicId;
+                finish(handlers.onFail, { stage: 'publish', topicId, detail: back.data, unknown: true,
+                  msg: '发布已返回，原版本的发布状态尚未回读确认，请重试核对' });
+                return;
+              }
+              published = true;
+              finish(handlers.onSuccess, { topicId, detail: confirmed.data, published: Number(confirmed.data.topic.status) === 2
+                ? { recovered: true, status: 2 } : pub.data,
+                localChanges: replay ? !!readbackIssue(payload, confirmed.data, false) : undefined });
+            });
+          } else {
+            published = true;
+            finish(handlers.onSuccess, { topicId, detail: back.data, published: pub.data || {} });
+          }
+          return;
+        }
+        if (!pub || pub.ok || pub.networkError || /不是草稿/.test(String(pub.msg || ''))) { reconcilePublish(topicId, back.data, pub); return; }
+        finish(handlers.onFail, Object.assign({ stage: 'publish', topicId, detail: back.data }, pub, { unknown: false }));
     };
 
     const start = () => request('save', draftPayload, (res) => {
@@ -578,7 +582,14 @@ function createServerDraftSaver(deps) {
           finish(handlers.onSuccess, { topicId, detail: back.data, published: { recovered: true, status: (back.data.topic || {}).status }, localChanges: !!readbackIssue(payload, back.data, false) });
           return;
         }
-        // 没有原请求的确定失败回执时保留 UNKNOWN；重试只读，不能重放写入。
+        // U03-01:原发布带了发布号且回读仍是草稿 → 沿用同一个号重放原请求(服务端同号同 payload 只回原修订,
+        // 不重复占额度/送审);没有发布号的旧记录保留 UNKNOWN,重试只读,不能重放写入。
+        const original = typeof deps.pendingPublication === 'function' ? deps.pendingPublication() : null;
+        if (original && original.publishRequestId && back && back.ok && matchingTopic(back.data, topicId)
+            && back.data.isDraft !== false) {
+          request('publish', topicId, (pub) => afterPublish(topicId, back, pub, true));
+          return;
+        }
         finish(handlers.onFail, Object.assign({ stage: 'publish', topicId }, back || {}, { unknown: true }));
       });
     } else start();

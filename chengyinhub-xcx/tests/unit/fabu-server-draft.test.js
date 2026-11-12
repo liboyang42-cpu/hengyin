@@ -514,7 +514,8 @@ test('服务端草稿发布前落盘 UNKNOWN；丢回包后重进只查原主题
   assert.equal(first.sent[2].url, '/api/topic/publish-draft');
   const drafts = require('../../pages/publish/utils/publish/pro-editor-draft.js');
   const saved = drafts.loadDraft(wx, { topicId: '501' }, { memberId: 7 });
-  assert.deepEqual(saved.envelope.publishAttempt, { status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: '501', configVersion: '3' }, '请求发出前已持久化');
+  assert.deepEqual(saved.envelope.publishAttempt, { status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: '501', configVersion: '3',
+    publishRequestId: first.sent[2].data.publishRequestId }, '请求发出前已持久化(含发布号)');
   first.sent[2].fail({}); first.sent[3].fail({});
   assert.equal(first.page.data.resultSheet.title, '发布结果待确认');
   first.page.onUnload();
@@ -941,22 +942,49 @@ test('W8：发布确定拒绝的迟到回包不覆盖保存后继续编辑的内
   assert.equal(t.page._publishAttempt, null, '确定拒绝才解除发布未知态');
 });
 
-test('W8：发布UNKNOWN回读仍草稿后重进保留原主题与本机内容，仅查询', () => {
+test('W8/U03-01：发布UNKNOWN回读仍草稿后重进保留原主题与本机内容；只用原发布号重放，不生成新号', () => {
   const t = loadPage(); t.page._publishServerDraft(payload);
   t.sent[0].success({ code: 200, data: { topicId: 501 } });
   t.sent[1].success({ code: 200, data: detail() });
+  const firstId = t.sent[2].data.publishRequestId;
+  assert.match(firstId, /^[A-Za-z0-9_-]{16,64}$/, '首发就带发布号');
   t.sent[2].fail({}); t.sent[3].success({ code: 200, data: detail() });
   assert.equal(t.page.data.themeSaveState, 'unknown');
   assert.equal(t.page._publishAttempt.status, 'UNKNOWN');
   const next = loadPage(t.stored);
   const envelope = require('../../pages/publish/utils/publish/pro-editor-draft.js')
     .loadDraft(wx, { topicId: '501' }, { memberId: 7 }).envelope;
+  assert.equal(envelope.publishAttempt.publishRequestId, firstId, '发布号随未知记录落盘');
   next.page.data.editingTopicId = '501'; next.page.data.editIsDraft = true; next.page.data.editLoaded = true;
   next.page._publishAttempt = envelope.publishAttempt;
   next.page._publishServerDraft(payload);
   assert.equal(next.sent[0].url, '/api/topic/author-saved-detail');
   next.sent[0].success({ code: 200, data: detail() });
-  assert.equal(next.sent.length, 1); assert.equal(next.page._publishAttempt.status, 'UNKNOWN');
+  assert.equal(next.sent.length, 2, '没有保存新内容,只重放原请求');
+  assert.equal(next.sent[1].url, '/api/topic/publish-draft');
+  assert.equal(next.sent[1].data.publishRequestId, firstId, '沿用原发布号');
+  next.sent[1].fail({}); next.sent[2].success({ code: 200, data: detail() });
+  assert.equal(next.page._publishAttempt.status, 'UNKNOWN');
+  assert.equal(next.page._publishAttempt.publishRequestId, firstId, '再次未知仍是原号');
+});
+
+test('U03-01：无发布号的旧未知记录仍只查询，不补号重放', () => {
+  const t = loadPage();
+  t.page.data.editingTopicId = '501'; t.page.data.editIsDraft = true; t.page.data.editLoaded = true;
+  t.page._publishAttempt = { status: 'UNKNOWN', kind: 'SERVER_DRAFT', topicId: '501' };
+  t.page._publishServerDraft(payload);
+  t.sent[0].success({ code: 200, data: detail() });
+  assert.equal(t.sent.length, 1);
+});
+
+test('U03-02：发布结果展示服务端返回的内容修订号；旧内容为空不补号', () => {
+  const rid = require('../../pages/publish/utils/publish/publication-request-id.js');
+  assert.equal(rid.revisionLabel({ contentRevisionNo: 3 }), '内容修订 #3');
+  assert.equal(rid.revisionLabel({ contentRevisionNo: null }), '');
+  assert.equal(rid.revisionLabel({}), '');
+  assert.equal(rid.revisionLabel({ contentRevisionNo: '0' }), '');
+  assert.ok(rid.valid(rid.create()));
+  assert.deepEqual(rid.wireFields({ configVersion: '3', publishRequestId: 'bad id' }), { configVersion: '3' });
 });
 
 test('W8：UNKNOWN创建冻结原请求号和输入，后续编辑与重进不改写原意图', () => {
