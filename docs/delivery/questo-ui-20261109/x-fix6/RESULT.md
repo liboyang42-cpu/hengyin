@@ -35,6 +35,17 @@
 
 ## 四、门禁结果
 
-GATES_PLACEHOLDER
+- 全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`）：**17362 项，通过 17362，失败 0**。首轮 14 项失败，均为既有断言/基线钉死了被改动的标记：台账控件计数与 external tap 计数（首页定位卡 +2 tap）、完成页版式断言起点、x-fix4/x-fix5 对底栏 0.96/通关卡 overflow/定位弹窗的钉死、三份旧定位弹窗流测试；已同步断言后整仓重跑 0 失败。
+- 动作台账 `build-action-ledger.js --write`：PASS 6028 控件（+2）；路由矩阵 `--check`：PASS 171 路由 / 27 场景。
+- danger-confirm：PASS（53 个调用点），selftest 通过。
+- ui-integrity：**UI-GATE-0:PASS**，无新增基线登记；pages/index/index.js 的 U1-VARIABLE 1 条与 U4-DYNAMIC 3 条仅行号位移（data +1 行），两个 digest 按门禁算法重算。
+- keyframes 棘轮：motion-property-ratchet 随整仓单测通过，本轮无新增 `@keyframes`。
+- WXS 语法门禁：PASS（14 个 .wxs，4 段内联；需 `node --expose-internals`）。
+- 新 WXSS 门禁：selftest 通过，全仓 0 命中；单测 2 项通过。
+- Java：`mvn -q -DskipTests package` 通过；`PlayJourneyStoryServiceImplTest`、`A03EndingSnapshotReadTest` 通过（含新增两例“无结局/无剧情回空结果”）。
+- 主包：源码侧 `mainpkg-size-report` 合计 3233KB（×0.633 估算约 2046 KiB，余量很小）；本轮净增仅少量 wxml/wxss/js（约 3KB 源码）。压缩后真实体积需 CLI 取证（`wechat-release-contract` 报 WAIT-EXTERNAL）。
+- 未跑 `ci/xcx-check.sh`、`ds-hardcode-gate-selftest.sh`；未改 `ci/architecture/*` 与 `ci.yml`。
+- 过程提示：运行期间分支上出现另一会话同名提交（同步 x-fix4/x-fix5/定位测试断言），已合并，冲突的三份测试取远端版本。
+- PR #779 CI：见下一提交的补记。
 
-STATUS: PENDING
+STATUS: DONE（PR #779 CI 待观察；未标 ready、未合并）
