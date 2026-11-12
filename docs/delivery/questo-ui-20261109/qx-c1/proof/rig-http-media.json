@@ -1,0 +1,154 @@
+[
+ {
+  "label": "#3 runtime session view",
+  "request": {
+   "method": "GET",
+   "path": "/api/play/advanced/state?sessionId=660001",
+   "form": null,
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "sessionId": 660001,
+    "activityId": 0,
+    "topicId": 990013,
+    "nodeId": 880001,
+    "ownerType": 1,
+    "ownerId": 9004,
+    "status": "RUNNING",
+    "canRetry": false,
+    "score": 0,
+    "completedUnits": 0,
+    "version": 0,
+    "startedAt": 1794235338661,
+    "deadlineAt": null,
+    "completedAt": null,
+    "config": {
+     "schemaVersion": 1,
+     "timer": {
+      "enabled": false
+     },
+     "random": {
+      "enabled": false
+     },
+     "branch": {
+      "enabled": false
+     },
+     "leaderboard": {
+      "enabled": false
+     },
+     "multiplayer": {
+      "enabled": false
+     }
+    },
+    "accusation": {
+     "enabled": true,
+     "suspects": [
+      {
+       "id": "o1",
+       "name": "张医生",
+       "avatar": "https://img.rig.test/profile/upload/2026/11/09/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png"
+      },
+      {
+       "id": "o2",
+       "name": "李师傅"
+      },
+      {
+       "id": "o3",
+       "name": "周老板"
+      }
+     ]
+    },
+    "present": "inline",
+    "playKit": {
+     "qa": {
+      "mode": "PICK",
+      "title": "谁是凶手",
+      "options": [
+       {
+        "id": "o1",
+        "label": "张医生",
+        "img": "https://img.rig.test/profile/upload/2026/11/09/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png",
+        "alt": "穿白大褂的人"
+       },
+       {
+        "id": "o2",
+        "label": "李师傅"
+       },
+       {
+        "id": "o3",
+        "label": "周老板"
+       }
+      ],
+      "maxTries": 0,
+      "xp": 0,
+      "attempts": 0,
+      "finished": false,
+      "passed": false,
+      "lastCorrect": false
+     }
+    },
+    "readyForBase": false
+   }
+  }
+ },
+ {
+  "label": "#3 read-back assets",
+  "readBack": [
+   {
+    "id": 501,
+    "review_state": "APPROVED",
+    "storage_type": "LOCAL",
+    "object_key": "/profile/upload/2026/11/09/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png"
+   },
+   {
+    "id": 502,
+    "review_state": "PENDING",
+    "storage_type": "LOCAL",
+    "object_key": "/profile/upload/2026/11/09/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.png"
+   }
+  ]
+ },
+ {
+  "label": "summary",
+  "readBack": {
+   "#3": {
+    "ok": true,
+    "options": [
+     {
+      "id": "o1",
+      "label": "张医生",
+      "img": "https://img.rig.test/profile/upload/2026/11/09/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png",
+      "alt": "穿白大褂的人"
+     },
+     {
+      "id": "o2",
+      "label": "李师傅"
+     },
+     {
+      "id": "o3",
+      "label": "周老板"
+     }
+    ],
+    "suspects": [
+     {
+      "id": "o1",
+      "name": "张医生",
+      "avatar": "https://img.rig.test/profile/upload/2026/11/09/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png"
+     },
+     {
+      "id": "o2",
+      "name": "李师傅"
+     },
+     {
+      "id": "o3",
+      "name": "周老板"
+     }
+    ]
+   }
+  }
+ }
+]

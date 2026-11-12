@@ -1,0 +1,14 @@
+diff --git a/docs/delivery/cloud-walk-20261101/rig/app.py b/docs/delivery/cloud-walk-20261101/rig/app.py
+index 6d94c96b..59ec44b4 100755
+--- a/docs/delivery/cloud-walk-20261101/rig/app.py
++++ b/docs/delivery/cloud-walk-20261101/rig/app.py
+@@ -53,6 +53,9 @@ def start(fail_path=""):
+     # WeChat endpoint (mpweb/server.mjs on 8097). Only /sns/jscode2session uses this base URL.
+     cmd += ["--spring.profiles.active=druid,local",
+             "--chengyin.test.wechat-api-base-url=http://127.0.0.1:%s" % os.environ.get("RIG_WEB_PORT", "8097")]
++    # [SEAM qx-c1] rig-only public base for APPROVED local media (no product config is changed).
++    if os.environ.get("RIG_MEDIA_PUBLIC_BASE_URL"):
++        cmd += ["--app.media.public-base-url=" + os.environ["RIG_MEDIA_PUBLIC_BASE_URL"]]
+     log = open(LOG, "ab")
+     p = subprocess.Popen(cmd, cwd=str(RIG_HOME / "work"), env=env(), stdout=log, stderr=subprocess.STDOUT,
+                          start_new_session=True)

@@ -1,0 +1,877 @@
+[
+ {
+  "label": "#1/#8 use first",
+  "request": {
+   "method": "POST",
+   "path": "/api/template/topic-template/use",
+   "form": {
+    "id": 990013,
+    "requestId": "qxc1-use-0001"
+   },
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "targetCityCode": null,
+    "topicId": 990014,
+    "bindingIntent": "LEGACY",
+    "bindingIssues": [],
+    "sourceConfigVersion": 1,
+    "cityCode": null,
+    "pendingRebindSlotKeys": [],
+    "sourceTemplateTopicId": "990013",
+    "sourceContentRevisionId": null
+   },
+   "writeReceipt": {
+    "requestId": "qxc1-use-0001",
+    "state": "COMPLETED",
+    "operation": "TOPIC_TEMPLATE_USE"
+   }
+  }
+ },
+ {
+  "label": "#8 use replay",
+  "request": {
+   "method": "POST",
+   "path": "/api/template/topic-template/use",
+   "form": {
+    "id": 990013,
+    "requestId": "qxc1-use-0001"
+   },
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "topicId": 990014,
+    "bindingIntent": "LEGACY",
+    "bindingIssues": [],
+    "sourceConfigVersion": 1,
+    "pendingRebindSlotKeys": [],
+    "sourceTemplateTopicId": "990013"
+   },
+   "writeReceipt": {
+    "requestId": "qxc1-use-0001",
+    "state": "COMPLETED",
+    "operation": "TOPIC_TEMPLATE_USE"
+   }
+  }
+ },
+ {
+  "label": "#8 use same id other payload",
+  "request": {
+   "method": "POST",
+   "path": "/api/template/topic-template/use",
+   "form": {
+    "id": 990013,
+    "requestId": "qxc1-use-0001",
+    "bindingIntent": "NEW_CITY",
+    "targetCityCode": "320100"
+   },
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "原请求号对应的内容不一致",
+   "code": 409
+  }
+ },
+ {
+  "label": "#1/#8 read-back",
+  "readBack": {
+   "topicsBefore": 0,
+   "topicsAfter": 1,
+   "copiedNodes": [],
+   "receipt": [
+    {
+     "actor_member_id": 9004,
+     "operation": "TOPIC_TEMPLATE_USE",
+     "request_id": "qxc1-use-0001",
+     "result": "{\"msg\":\"操作成功\",\"code\":200,\"data\":{\"topicId\":990014,\"bindingIntent\":\"LEGACY\",\"bind"
+    }
+   ]
+  }
+ },
+ {
+  "label": "#1 publish licensed draft (lock row read through wall)",
+  "request": {
+   "method": "POST",
+   "path": "/api/template/publish",
+   "form": null,
+   "body": {
+    "id": 7702,
+    "title": "qx-c1 已安装草稿",
+    "validationMethod": 0
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "WORKSHOP_LICENSE_DISABLED",
+   "code": 403
+  }
+ },
+ {
+  "label": "#1 publish draft without license (lock returns no row)",
+  "request": {
+   "method": "POST",
+   "path": "/api/template/publish",
+   "form": null,
+   "body": {
+    "id": 7703,
+    "title": "qx-c1 无授权草稿",
+    "validationMethod": 0
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": 7703
+  }
+ },
+ {
+  "label": "#1 read-back",
+  "readBack": {
+   "order": [
+    {
+     "order_no": "QXC1LIC0001",
+     "state": "PENDING",
+     "license_status": "UNPAID"
+    }
+   ]
+  }
+ },
+ {
+  "label": "#5a lowercase rejected",
+  "request": {
+   "method": "POST",
+   "path": "/api/template/topic-template/place-country",
+   "form": {
+    "topicId": 990014,
+    "placeCountryCode": "jp"
+   },
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "国家码须为两位大写字母（ISO 3166-1），或留空",
+   "code": 400
+  }
+ },
+ {
+  "label": "#5a stranger",
+  "request": {
+   "method": "POST",
+   "path": "/api/template/topic-template/place-country",
+   "form": {
+    "topicId": 990014,
+    "placeCountryCode": "JP"
+   },
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "无权操作该主题的地点绑定",
+   "code": 403
+  }
+ },
+ {
+  "label": "#5a owner sets JP",
+  "request": {
+   "method": "POST",
+   "path": "/api/template/topic-template/place-country",
+   "form": {
+    "topicId": 990014,
+    "placeCountryCode": "JP"
+   },
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "topicId": "990014",
+    "cityCode": null,
+    "contract": {
+     "schemaVersion": 1,
+     "locationSlots": [],
+     "locationBindings": [],
+     "adoption": {
+      "sourceTemplateTopicId": "990013",
+      "sourceConfigVersion": 1,
+      "sourceContentRevisionId": null,
+      "adoptedAt": "2026-11-10 06:41:42",
+      "bindingIntent": "LEGACY",
+      "targetCityCode": null,
+      "legacy": true
+     },
+     "placeCountryCode": "JP"
+    },
+    "bindingIssues": [],
+    "sourceTemplateTopicId": "990013",
+    "sourceConfigVersion": 1,
+    "sourceContentRevisionId": null,
+    "adoption": {
+     "sourceTemplateTopicId": "990013",
+     "sourceConfigVersion": 1,
+     "sourceContentRevisionId": null,
+     "adoptedAt": "2026-11-10 06:41:42",
+     "bindingIntent": "LEGACY",
+     "targetCityCode": null,
+     "legacy": true
+    },
+    "placeCountryCode": "JP"
+   }
+  }
+ },
+ {
+  "label": "#5a read-back",
+  "readBack": [
+   {
+    "c": "JP"
+   }
+  ]
+ },
+ {
+  "label": "#9 preset with nothing filled",
+  "request": {
+   "method": "POST",
+   "path": "/api/preset/gameplay/draft",
+   "form": null,
+   "body": {
+    "presetKey": "T08-multi-clue-investigation",
+    "fields": {}
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "预设还有必填内容没填，补齐后才能建草稿",
+   "code": 500,
+   "data": {
+    "code": "PRESET_FIELDS_REQUIRED",
+    "requiredFields": [
+     {
+      "key": "title",
+      "label": "玩法标题"
+     },
+     {
+      "key": "question",
+      "label": "指认问题"
+     },
+     {
+      "key": "suspect1",
+      "label": "嫌疑人一姓名"
+     },
+     {
+      "key": "suspect2",
+      "label": "嫌疑人二姓名"
+     },
+     {
+      "key": "suspect3",
+      "label": "嫌疑人三姓名"
+     },
+     {
+      "key": "rightAnswer",
+      "label": "正确嫌疑人"
+     },
+     {
+      "key": "timerSeconds",
+      "label": "限时秒数"
+     },
+     {
+      "key": "feedback",
+      "label": "答后反馈"
+     }
+    ]
+   }
+  }
+ },
+ {
+  "label": "#6 campaign list",
+  "request": {
+   "method": "GET",
+   "path": "/api/video-bounty/campaign/list",
+   "form": null,
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": [
+    {
+     "campaignKey": "qxc1-open",
+     "title": "活动 qxc1-open",
+     "description": "拍一条玩过的主题",
+     "windowDays": 14
+    }
+   ]
+  }
+ },
+ {
+  "label": "#6 campaign list anonymous",
+  "request": {
+   "method": "GET",
+   "path": "/api/video-bounty/campaign/list",
+   "form": null,
+   "body": null
+  },
+  "httpStatus": 401,
+  "response": {
+   "msg": "登录状态已失效，请重新登录",
+   "code": 401
+  }
+ },
+ {
+  "label": "#7 first",
+  "request": {
+   "method": "POST",
+   "path": "/api/play/feedback/submit",
+   "form": null,
+   "body": {
+    "runId": 770001,
+    "nodeId": 880001,
+    "category": "PLACE",
+    "content": "钟楼门口的二维码被撕掉了",
+    "requestId": "qxc1-fb-0001"
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "feedbackId": 1,
+    "runId": 770001,
+    "topicId": 990013,
+    "activityId": 0,
+    "configVersion": 1,
+    "contentRevisionId": null,
+    "nodeId": 880001,
+    "category": "PLACE",
+    "state": "RECEIVED",
+    "replayed": false
+   }
+  }
+ },
+ {
+  "label": "#7 replay",
+  "request": {
+   "method": "POST",
+   "path": "/api/play/feedback/submit",
+   "form": null,
+   "body": {
+    "runId": 770001,
+    "nodeId": 880001,
+    "category": "PLACE",
+    "content": "钟楼门口的二维码被撕掉了",
+    "requestId": "qxc1-fb-0001"
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "feedbackId": 1,
+    "runId": 770001,
+    "topicId": 990013,
+    "activityId": 0,
+    "configVersion": 1,
+    "contentRevisionId": null,
+    "nodeId": 880001,
+    "category": "PLACE",
+    "state": "RECEIVED",
+    "replayed": true
+   }
+  }
+ },
+ {
+  "label": "#7 same id other content",
+  "request": {
+   "method": "POST",
+   "path": "/api/play/feedback/submit",
+   "form": null,
+   "body": {
+    "runId": 770001,
+    "nodeId": 880001,
+    "category": "PLACE",
+    "content": "改了内容",
+    "requestId": "qxc1-fb-0001"
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "原请求号对应的内容不一致",
+   "code": 409
+  }
+ },
+ {
+  "label": "#7 someone else's run",
+  "request": {
+   "method": "POST",
+   "path": "/api/play/feedback/submit",
+   "form": null,
+   "body": {
+    "runId": 770001,
+    "nodeId": 880001,
+    "category": "PLACE",
+    "content": "钟楼门口的二维码被撕掉了",
+    "requestId": "qxc1-fb-0002"
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "这一局不存在",
+   "code": 404
+  }
+ },
+ {
+  "label": "#7 read-back",
+  "readBack": [
+   {
+    "id": 1,
+    "member_id": 9004,
+    "route_session_id": 770001,
+    "topic_id": 990013,
+    "config_version": 1,
+    "content_revision_id": null,
+    "node_id": 880001,
+    "category": "PLACE",
+    "content": "钟楼门口的二维码被撕掉了",
+    "request_id": "qxc1-fb-0001"
+   }
+  ]
+ },
+ {
+  "label": "#4 topic config (admin)",
+  "request": {
+   "method": "GET",
+   "path": "/business/playhelp/topic/990013/config",
+   "form": null,
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "topicId": 990013,
+    "contentRevisionId": 1,
+    "revisionNo": 1,
+    "state": "OK",
+    "freeUsesPerRun": 1,
+    "freeUsesState": "OK",
+    "nodes": [
+     {
+      "nodeId": 880001,
+      "layerCount": 2,
+      "levels": [
+       {
+        "level": 1,
+        "type": "TEXT",
+        "costPoints": 0,
+        "freeQuota": 0
+       },
+       {
+        "level": 2,
+        "type": "TEXT",
+        "costPoints": 5,
+        "freeQuota": 0
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ {
+  "label": "#4 run lines (admin)",
+  "request": {
+   "method": "GET",
+   "path": "/business/playhelp/run/770001",
+   "form": null,
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "runId": 770001,
+    "topicId": 990013,
+    "activityId": 0,
+    "memberId": 9004,
+    "playInstanceId": "qxc1-pi-1",
+    "configVersion": 1,
+    "status": 2,
+    "completedAt": null,
+    "config": {
+     "state": "OK",
+     "freeUsesPerRun": 1,
+     "freeUsesState": "OK",
+     "nodes": [
+      {
+       "nodeId": 880001,
+       "layerCount": 2,
+       "levels": [
+        {
+         "level": 1,
+         "type": "TEXT",
+         "costPoints": 0,
+         "freeQuota": 0
+        },
+        {
+         "level": 2,
+         "type": "TEXT",
+         "costPoints": 5,
+         "freeQuota": 0
+        }
+       ]
+      }
+     ]
+    },
+    "nodes": [
+     {
+      "nodeId": 880001,
+      "state": "OK",
+      "helpLines": [],
+      "receipt": {
+       "scoreState": "NOT_SCORED",
+       "baseScore": null,
+       "bonus": 0,
+       "bonusSource": "NONE",
+       "helpDeduction": 0,
+       "skipDeduction": 0,
+       "netScore": null,
+       "pointsCharged": 0,
+       "skipped": false,
+       "assisted": false,
+       "reason": "NO_BASE_SCORE",
+       "levels": []
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "label": "#4 run lines (app token)",
+  "request": {
+   "method": "GET",
+   "path": "/business/playhelp/run/770001",
+   "form": null,
+   "body": null
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "登录状态已失效，请重新登录",
+   "code": 401
+  }
+ },
+ {
+  "label": "#4 read-back grants",
+  "readBack": [
+   {
+    "n": 0
+   }
+  ]
+ },
+ {
+  "label": "#10 verify group",
+  "request": {
+   "method": "POST",
+   "path": "/business/videobounty/submission/1/verify-group",
+   "form": null,
+   "body": {
+    "verifiedGroupKey": "qxc1-group",
+    "sourceRef": "manual:qxc1",
+    "reason": "同一原视频"
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "操作成功",
+   "code": 200,
+   "data": {
+    "id": 1,
+    "campaignKey": "qxc1-open",
+    "topicId": 990013,
+    "platform": "tiktok",
+    "sourceUrl": "",
+    "originGroupKey": "qxc1-g1",
+    "status": 2,
+    "statusLabel": "APPROVED",
+    "submittedAt": "2026-11-09T22:41:43.000+08:00",
+    "publishedAt": null,
+    "windowEndsAt": null,
+    "reviewNote": null
+   }
+  }
+ },
+ {
+  "label": "#10 read-back",
+  "readBack": [
+   {
+    "domain_type": "VIDEO_BOUNTY",
+    "domain_id": 1,
+    "action": "VIDEO_BOUNTY_GROUP_VERIFY",
+    "target_type": "VIDEO_BOUNTY_SUBMISSION"
+   }
+  ]
+ },
+ {
+  "label": "#2 gift join with aligned collation",
+  "request": {
+   "method": "POST",
+   "path": "/api/play/journey/opening/complete",
+   "form": null,
+   "body": {
+    "topicId": 990013
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "请先购买自玩通行证",
+   "code": 500
+  }
+ },
+ {
+  "label": "#2 same call with order_no reverted to 0900_ai_ci (pre-migration state)",
+  "request": {
+   "method": "POST",
+   "path": "/api/play/journey/opening/complete",
+   "form": null,
+   "body": {
+    "topicId": 990013
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "系统繁忙，请稍后重试",
+   "code": 500
+  }
+ },
+ {
+  "label": "#2 migration re-applied",
+  "readBack": {
+   "rc": 0,
+   "out": "1\n1\n1\n1\n",
+   "err": ""
+  }
+ },
+ {
+  "label": "#2 same call after migration",
+  "request": {
+   "method": "POST",
+   "path": "/api/play/journey/opening/complete",
+   "form": null,
+   "body": {
+    "topicId": 990013
+   }
+  },
+  "httpStatus": 200,
+  "response": {
+   "msg": "请先购买自玩通行证",
+   "code": 500
+  }
+ },
+ {
+  "label": "#2 read-back",
+  "readBack": [
+   {
+    "collation_name": "utf8mb4_general_ci"
+   }
+  ]
+ },
+ {
+  "label": "summary",
+  "readBack": {
+   "#8 requestId replay/mismatch": {
+    "ok": true,
+    "detail": {
+     "first": 200,
+     "replayTopic": 990014,
+     "changed": [
+      409,
+      "原请求号对应的内容不一致"
+     ],
+     "newTopics": 1
+    }
+   },
+   "#1 license lock passes the Druid wall": {
+    "ok": true,
+    "detail": {
+     "licensed": [
+      403,
+      "WORKSHOP_LICENSE_DISABLED"
+     ],
+     "unlicensed": [
+      200,
+      "操作成功"
+     ],
+     "order": [
+      {
+       "order_no": "QXC1LIC0001",
+       "state": "PENDING",
+       "license_status": "UNPAID"
+      }
+     ]
+    }
+   },
+   "#5a placeCountryCode": {
+    "ok": true,
+    "detail": {
+     "owner": 200,
+     "bad": [
+      400,
+      "国家码须为两位大写字母（ISO 3166-1），或留空"
+     ],
+     "stranger": 403,
+     "db": [
+      {
+       "c": "JP"
+      }
+     ]
+    }
+   },
+   "#9 structured requiredFields": {
+    "ok": true,
+    "detail": {
+     "msg": "预设还有必填内容没填，补齐后才能建草稿",
+     "count": 8,
+     "first": [
+      {
+       "key": "title",
+       "label": "玩法标题"
+      },
+      {
+       "key": "question",
+       "label": "指认问题"
+      }
+     ]
+    }
+   },
+   "#6 only active campaigns, no money rules": {
+    "ok": true,
+    "detail": {
+     "keys": [
+      "qxc1-open"
+     ],
+     "row": {
+      "campaignKey": "qxc1-open",
+      "title": "活动 qxc1-open",
+      "description": "拍一条玩过的主题",
+      "windowDays": 14
+     },
+     "anon": 401
+    }
+   },
+   "#7 feedback owner/idempotent": {
+    "ok": true,
+    "detail": {
+     "codes": [
+      200,
+      200,
+      409,
+      404
+     ],
+     "rows": 1
+    }
+   },
+   "#4 admin read-only projection": {
+    "ok": true,
+    "detail": {
+     "topic": {
+      "topicId": 990013,
+      "contentRevisionId": 1,
+      "revisionNo": 1,
+      "state": "OK",
+      "freeUsesPerRun": 1,
+      "freeUsesState": "OK",
+      "nodes": [
+       {
+        "nodeId": 880001,
+        "layerCount": 2,
+        "levels": [
+         {
+          "level": 1,
+          "type": "TEXT",
+          "costPoints": 0,
+          "freeQuota": 0
+         },
+         {
+          "level": 2,
+          "type": "TEXT",
+          "costPoints": 5,
+          "freeQuota": 0
+         }
+        ]
+       }
+      ]
+     },
+     "run": [
+      {
+       "nodeId": 880001,
+       "state": "OK",
+       "helpLines": [],
+       "receipt": {
+        "scoreState": "NOT_SCORED",
+        "baseScore": null,
+        "bonus": 0,
+        "bonusSource": "NONE",
+        "helpDeduction": 0,
+        "skipDeduction": 0,
+        "netScore": null,
+        "pointsCharged": 0,
+        "skipped": false,
+        "assisted": false,
+        "reason": "NO_BASE_SCORE",
+        "levels": []
+       }
+      }
+     ],
+     "appToken": 401,
+     "grants": [
+      {
+       "n": 0
+      }
+     ]
+    }
+   },
+   "#10 audit row written with 16-char domain": {
+    "ok": true,
+    "detail": {
+     "code": 200,
+     "msg": "操作成功",
+     "audit": [
+      {
+       "domain_type": "VIDEO_BOUNTY",
+       "domain_id": 1,
+       "action": "VIDEO_BOUNTY_GROUP_VERIFY",
+       "target_type": "VIDEO_BOUNTY_SUBMISSION"
+      }
+     ]
+    }
+   },
+   "#2 gift entitlement join no longer fails on collation": {
+    "ok": true,
+    "detail": {
+     "before": "系统繁忙，请稍后重试",
+     "after": "请先购买自玩通行证",
+     "collation": [
+      {
+       "collation_name": "utf8mb4_general_ci"
+      }
+     ]
+    }
+   }
+  }
+ }
+]

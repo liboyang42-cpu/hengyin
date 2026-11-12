@@ -117,6 +117,19 @@ public class AppMediaReferenceGuard {
         return safe;
     }
 
+    /**
+     * qx-c1 #3: play-time media from a published snapshot. A registered asset is shown only when APPROVED
+     * (no owner preview of an unapproved upload, even to its uploader); anything else follows {@link #visibleUrl}.
+     * Empty string = not shown.
+     */
+    public String publishedPlayUrl(String reference, Long viewerMemberId) {
+        if (reference == null || reference.trim().isEmpty()) return "";
+        Map<String, Object> asset = resolve(reference.trim());
+        if (registered(asset) && !"APPROVED".equals(asset.get("reviewState"))) return "";
+        String safe = visibleUrl(reference.trim(), viewerMemberId);
+        return safe == null ? "" : safe;
+    }
+
     private String resolveVisibleUrl(String reference, Long viewerMemberId) {
         if (reference == null || reference.trim().isEmpty()) return reference;
         if (AppMediaSchema.isBundledMerchantGameAudio(reference)) return reference;

@@ -373,6 +373,7 @@ class MigrationRunnerCiContractTest(unittest.TestCase):
         "ci/test_run_migration.py",
         "ci/test_migration_runner_ci_contract.py",
         "ci/test_migration_h8_registration_columns.py",
+        "ci/test_questo_collation_alignment.py",
         "ci/test_migration_h8_rate_scope.py",
         "ci/test_migration_h8_detail_move.py",
         "ci/test_mapper_h8_column_isolation.py",

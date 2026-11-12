@@ -22,6 +22,9 @@ public interface VideoCampaignMapper
 
     List<VideoCampaign> selectList(@Param("status") Integer status);
 
+    /** qx-c1 #6: campaigns that accept submissions now (status=1, not deleted); newest first, bounded. */
+    List<VideoCampaign> selectOpen();
+
     int insertCampaign(VideoCampaign campaign);
 
     /**
