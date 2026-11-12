@@ -139,7 +139,8 @@
           "com.chengyinhub.web.controller.api.ApiTemplateController",
           "com.chengyinhub.web.controller.api.ApiAiNpcController",
           "com.chengyinhub.web.controller.api.ApiAuthorWriteReceiptController",
-          "com.chengyinhub.web.controller.api.ApiPresetController"
+          "com.chengyinhub.web.controller.api.ApiPresetController",
+          "com.chengyinhub.web.controller.api.ApiTopicTemplateController"
         ]
       },
       {
@@ -2047,6 +2048,54 @@
         "module": "chengyinhub-admin",
         "members": ["com.chengyinhub.web.controller.api.ApiWorkshopAppleIapController", "com.chengyinhub.web.controller.api.ApiWorkshopController"],
         "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiTemplateController"]
+      },
+      {
+        "id": "P_ECOM_PAYOUT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.EcomPayoutMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.payout.CreatorPayoutService", "com.chengyinhub.business.payout.EcommerceSubMerchantService", "com.chengyinhub.business.payout.EcommerceProfitShareService"]
+      },
+      {
+        "id": "P_ECOM_COMBINE_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.EcomCombineMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.payout.EcommerceCombinedSettlementService", "com.chengyinhub.business.service.impl.EcommerceCombinedPayment"]
+      },
+      {
+        "id": "P_PLAY_FEEDBACK_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.PlayRunFeedbackMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.business.service.support.PlayRunFeedbackService"]
+      },
+      {
+        "id": "P_PLAY_HELP_AUDIT_STORAGE",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.mapper.PlayHelpAuditMapper"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.business.PlayHelpAuditController"]
+      },
+      {
+        "id": "P_PLAY_FEEDBACK",
+        "module": "chengyinhub-system",
+        "members": ["com.chengyinhub.business.service.support.PlayRunFeedbackService"],
+        "forbidden_backrefs": ["com.chengyinhub.web.controller.api.ApiPlayFeedbackController"]
+      },
+      {
+        "id": "P_MERCHANT_PAYOUT_ACCOUNT_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiMerchantPayoutAccountController"],
+        "forbidden_backrefs": ["com.chengyinhub.business.mapper.EcomPayoutMapper"]
+      },
+      {
+        "id": "P_PLATFORM_PASS_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiPlatformPassController"],
+        "forbidden_backrefs": ["com.chengyinhub.business.platformpass.mapper.PlatformPassMapper"]
+      },
+      {
+        "id": "P_PLAY_FEEDBACK_API",
+        "module": "chengyinhub-admin",
+        "members": ["com.chengyinhub.web.controller.api.ApiPlayFeedbackController"],
+        "forbidden_backrefs": ["com.chengyinhub.business.mapper.PlayRunFeedbackMapper"]
       }
     ],
     "allowed_directions": [
@@ -2568,7 +2617,9 @@
       ["Q_WORKSHOP", "B_PAYMENT_FACADE"],
       ["Q_WORKSHOP", "B_VERIFIED_PAYMENT_FACT_DTO"],
       ["Q_WORKSHOP", "Q_WORKSHOP_STORAGE"],
-      ["Q_WORKSHOP_API", "Q_WORKSHOP"]
+      ["Q_WORKSHOP_API", "Q_WORKSHOP"],
+      ["P_PLAY_FEEDBACK", "P_PLAY_FEEDBACK_STORAGE"],
+      ["P_PLAY_FEEDBACK_API", "P_PLAY_FEEDBACK"]
     ],
     "exact_directions": [
       {

@@ -383,7 +383,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: liboyang42-cpu/hengyin
-          ref: c7c5e838bf37901cd8ad0c89cdee7bd42e747f0c
+          ref: 15618bc6eb6c44f28249bcf328774d9bc32bd917
           path: .architecture-gate
           fetch-depth: 0
           persist-credentials: false
@@ -650,7 +650,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: liboyang42-cpu/hengyin
-          ref: c7c5e838bf37901cd8ad0c89cdee7bd42e747f0c
+          ref: 15618bc6eb6c44f28249bcf328774d9bc32bd917
           path: chengyinhub-admin/target/f-private-port-verifier
           fetch-depth: 1
           persist-credentials: false
@@ -839,8 +839,13 @@ jobs:
       - name: Ensure ripgrep for static scanning
         run: |
           if ! command -v rg >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install --no-install-recommends -y ripgrep
+            # Ubuntu 镜像不可达时（2026-11-11 起 runner 连不上 Ubuntu 源）退回 GitHub 发布包，按 sha256 钉死。
+            if ! { sudo apt-get update && sudo apt-get install --no-install-recommends -y ripgrep; }; then
+              curl -fsSL --retry 3 --retry-all-errors -o /tmp/rg.tgz https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep-14.1.1-x86_64-unknown-linux-musl.tar.gz
+              echo "4cf9f2741e6c465ffdb7c26f38056a59e2a2544b51f7cc128ef28337eeae4d8e  /tmp/rg.tgz" | sha256sum -c -
+              tar xzf /tmp/rg.tgz -C /tmp
+              sudo install -m 0755 /tmp/ripgrep-14.1.1-x86_64-unknown-linux-musl/rg /usr/local/bin/rg
+            fi
           fi
           rg --version
       - name: Verify mini program unit discovery manifest
