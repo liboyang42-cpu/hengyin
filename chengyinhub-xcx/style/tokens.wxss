@@ -396,10 +396,10 @@ page {
   --cy-ease-release: cubic-bezier(.34,1.56,.64,1);
   --cy-tr-press: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out);
   --cy-ease-rise: cubic-bezier(.32,.72,0,1);
-  --cy-shadow-hi-dark: inset 0 1px 0 rgba(255,255,255,.06);
+  --cy-shadow-hi-dark: inset 0 1px 0 rgba(255,255,255,.10);
   --cy-shadow-hi-light: inset 0 1px 0 rgba(255,255,255,.9);
   --cy-shadow-float-dark: 0 1px 2px rgba(0,0,0,.18), 0 12px 32px rgba(0,0,0,.28);
-  --cy-shadow-float-light: 0 1px 2px rgba(0,0,0,.04), 0 12px 32px rgba(0,0,0,.08);
+  --cy-shadow-float-light: 0 1px 2px rgba(0,0,0,.06), 0 12px 32px rgba(0,0,0,.12);
   --cy-depth-rest: var(--cy-shadow-hi-dark), 0 1px 2px rgba(0,0,0,.18);
   --cy-depth-float: var(--cy-shadow-hi-dark), var(--cy-shadow-float-dark);
   --cy-motion-fast:     140ms;      /* Chip / Tab / 按钮态切换 */
@@ -1237,8 +1237,8 @@ page.theme-light,
   --cy-comp-sheet-role-btn-bg: var(--cy-comp-sheet-merchant-title);
   --cy-comp-sheet-role-btn-fg: var(--cy-comp-sheet-merchant-elevated);
   --cy-comp-sheet-role-card-shadow: 0 2rpx 8rpx rgba(15,23,43,.06);
-  --cy-comp-sheet-role-lift: var(--cy-shadow-hi-light), 0 -1px 2px rgba(0, 0, 0, .04), 0 -12px 32px rgba(0, 0, 0, .08);
-  --cy-depth-rest: var(--cy-shadow-hi-light), 0 1px 2px rgba(0,0,0,.04);
+  --cy-comp-sheet-role-lift: var(--cy-shadow-hi-light), 0 -1px 2px rgba(0, 0, 0, .06), 0 -12px 32px rgba(0, 0, 0, .12);
+  --cy-depth-rest: var(--cy-shadow-hi-light), 0 1px 2px rgba(0,0,0,.06);
   --cy-depth-float: var(--cy-shadow-hi-light), var(--cy-shadow-float-light);
 }
 
@@ -1297,8 +1297,8 @@ page.theme-topic-editor,
   /* 创建域是「白底细线」层级,不要投影(同本块上方 --cy-comp-card-shadow-day 的决定),
      所以这一条不照抄 .theme-merchant 的卡片投影。 */
   --cy-comp-sheet-role-card-shadow:      0 0 0 0 transparent;
-  --cy-comp-sheet-role-lift: var(--cy-shadow-hi-light), 0 -1px 2px rgba(0, 0, 0, .04), 0 -12px 32px rgba(0, 0, 0, .08);
-  --cy-depth-rest: var(--cy-shadow-hi-light), 0 1px 2px rgba(0,0,0,.04);
+  --cy-comp-sheet-role-lift: var(--cy-shadow-hi-light), 0 -1px 2px rgba(0, 0, 0, .06), 0 -12px 32px rgba(0, 0, 0, .12);
+  --cy-depth-rest: var(--cy-shadow-hi-light), 0 1px 2px rgba(0,0,0,.06);
   --cy-depth-float: var(--cy-shadow-hi-light), var(--cy-shadow-float-light);
   --cy-text-title:              var(--cy-color-text-primary);
   --cy-text-secondary:          var(--cy-color-text-tertiary);
