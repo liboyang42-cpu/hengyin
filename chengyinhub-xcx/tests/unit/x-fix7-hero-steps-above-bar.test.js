@@ -19,10 +19,9 @@ test('滚动内容尾垫 = 底栏高度（按钮高 + 124rpx）+ 安全区', () 
   assert.match(body('.fx-hero__cta'), /padding:\s*96rpx var\(--cy-page-x\) calc\(28rpx \+ env\(safe-area-inset-bottom\)\)/)
 })
 
-test('尾垫在三步与出示入场码之后、仍在滚动容器里', () => {
+test('尾垫在三步之后、仍在滚动容器里', () => {
   const scroll = wxml.slice(wxml.indexOf('<scroll-view class="fx-hero__body"'), wxml.indexOf('<view class="fx-hero__cta'))
   const steps = scroll.indexOf('class="fx-step3')
   const pad = scroll.indexOf('<view class="fx-hero__pad"></view>')
   assert.ok(steps > 0 && pad > steps)
-  assert.ok(pad > scroll.indexOf('openEntryQr'))
 })

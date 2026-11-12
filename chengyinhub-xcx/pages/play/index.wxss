@@ -97,14 +97,6 @@ page { background: var(--cy-color-bg-page); }
   display:flex; flex-direction:column; gap:var(--cy-space-2); pointer-events:none; }
 .play-topstack > view{ pointer-events:auto; }
 
-/* 地图右侧常驻核销钮:两个模式都需要,所以不进底栏那排跟模式相关的动作挤 */
-.pscan{ position:absolute; right:var(--cy-page-x); z-index:41; /* ds-ok Figma 实测(用户裁决字面值) */
-  bottom:calc(240rpx + var(--cy-space-3) + 246rpx + var(--cy-space-2) + env(safe-area-inset-bottom)); /* ds-ok Figma 实测(用户裁决字面值) */
-  width:134rpx; height:134rpx; border-radius:var(--cy-radius-pill); /* ds-ok Figma 实测(用户裁决字面值) */
-  background:var(--cy-color-play-surface-solid); border:1rpx solid var(--cy-color-play-line); /* ds-ok Figma 实测(用户裁决字面值) */
-  display:flex; align-items:center; justify-content:center; color:var(--cy-color-text-primary); /* ds-ok Figma 实测(用户裁决字面值) */
-  box-shadow:0 4rpx 24rpx rgba(0,0,0,.5); } /* ds-ok 压地图的浮钮投影 */
-
 /* 原型 .trio 是**浮在地图上**的:position:absolute;bottom:20px;height:100px,没有底色也没有上边线。
    现码原来是一条 #0D0E12 的实心条 + 上边线(旧 Figma 稿),照原型去掉 ——
    漫游那边上一批已经这么改过,这里补上城市定向与自由探索。 */

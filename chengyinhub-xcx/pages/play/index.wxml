@@ -847,8 +847,6 @@
         <view class="fx-step {{hero.node.stepProof ? 'is-ok' : ''}}"><text class="fx-step__n">2</text><text class="fx-step__t">拍摄现场凭证 · 到店后显示拍摄要求</text></view>
         <view class="fx-step {{hero.node.stepRedeem ? 'is-ok' : ''}}"><text class="fx-step__n">3</text><text class="fx-step__t">商家核销 · 核销那一刻才算服务开始</text></view>
       </view>
-      <cy-btn class="fx-hero__in" style="--i:5;display:block;margin-top:var(--cy-space-3)" variant="secondary" wx:if="{{hero.node.isMerchant && !hero.node.done && regId && !isPreview && !isMock}}"
-              bindtap="openEntryQr" accessibility-label="出示入场码给店员核销">出示入场码</cy-btn>
 
       <view class="fx-hero__pad"></view>
     </scroll-view>
@@ -954,8 +952,6 @@
     <page-container show="{{shopNpc.show}}" duration="{{0}}" overlay="{{false}}" bind:afterleave="onShopNpcNativeBack" />
   </view>
 
-  <view class="pscan" wx:if="{{regId && !isPreview && !isMock && !chapterFull && mode!=2}}" bindtap="openEntryQr"
-        aria-role="button" aria-label="出示入场码给商家核销" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="qr-scan" size="40" /></view>
 
 
   <!-- mode2 不要底栏:自由探索没有「一场会话」(无开始/暂停),核销码是到店那一步才用的东西,

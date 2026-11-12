@@ -20,22 +20,3 @@
 .seat-choice__title { font-size: var(--cy-font-subtitle); font-weight: 700; }
 .seat-choice__input { height: var(--cy-btn-h); padding: 0 var(--cy-space-4); background: var(--cy-color-bg-glass); border-radius: var(--cy-radius-pill); }
 .seat-choice__switch { text-align: center; padding: var(--cy-space-4); color: var(--cy-text-title); }
-
-/* l-play 入场码翻面(来源:票夹 .wc / .wc__flip,proto .qrflip):600rpx × 920rpx 的票卡,正面是主题封面 + 标题,背面是白卡 + 600rpx 码块;翻面只用 transform 过渡,减少动态效果直接切 */
-.voucher__flip { width: 600rpx; height: 920rpx; margin: var(--cy-space-3) auto 0; perspective: 2200rpx; }
-.voucher__in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .62s cubic-bezier(.2,.9,.25,1.08); } /* ds-ok 同票夹 .wc__flip */
-.voucher__flip.is-back .voucher__in { transform: rotateY(180deg); }
-.voucher__flip.is-reduced .voucher__in { transition: none; }
-.voucher__face { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 52rpx; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: inset 0 0 0 1rpx rgba(255,255,255,.1), 0 46rpx 96rpx rgba(0,0,0,.55); } /* ds-ok 同票夹票面阴影 */
-.voucher__front { background: linear-gradient(180deg, #1c1d1f, #0f1011); } /* ds-ok 同票夹正面底 */
-.voucher__cover { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: .9; }
-.voucher__front::after { content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.72)); } /* ds-ok 票面压暗 */
-.voucher__cap { position: absolute; left: 36rpx; right: 36rpx; bottom: 56rpx; z-index: 1; display: flex; flex-direction: column; gap: 10rpx; color: #fff; } /* ds-ok 票面字白 */
-.voucher__cap-k { font-size: 22rpx; letter-spacing: .2em; color: rgba(255,255,255,.75); } /* ds-ok */
-.voucher__cap-t { font-size: 48rpx; line-height: 1.2; font-weight: 600; } /* ds-ok 同票夹 .wc__b */
-.voucher__cap-s { font-size: 24rpx; letter-spacing: .1em; color: rgba(255,255,255,.7); } /* ds-ok */
-.voucher__rear { transform: rotateY(180deg); background: #f6f6f4; display: flex; align-items: center; justify-content: center; padding: 36rpx; box-sizing: border-box; } /* ds-ok 同票夹背面米白 */
-.voucher__rear .voucher__card { margin: 0; }
-.voucher__rear .voucher__title { color: #111; } /* ds-ok 米白卡上的字 */
-.voucher__rear .voucher__qr { width: 600rpx; height: 600rpx; margin-top: 28rpx; } /* 码块比上一版大一圈(proto 300×300 → 600rpx);底色仍是白 */
-.voucher__rear .voucher__exp { color: rgba(17,17,17,.55); } /* ds-ok 米白卡上的次级字 */

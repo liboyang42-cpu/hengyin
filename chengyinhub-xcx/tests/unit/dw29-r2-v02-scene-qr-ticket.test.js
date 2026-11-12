@@ -31,8 +31,8 @@ test('V-02 组件版式:标题 + 码 + logo，到期行有才出，没有倒计�
   assert.match(card, /<text wx:if="\{\{title\}\}" class="voucher__title ep1">\{\{title\}\}<\/text>/)
   // 10-29 第三轮:码换成 cy-dot-qr(圆点 + 码心黑色 logo + 彩色波),和票夹背面同一个组件
   // l-play 2026-11-10(业主「二维码可以大一点的」,proto gp-qr 300×300):码从 360 放到 540,码块 600rpx;仍是 cy-dot-qr 同一个组件
-  assert.match(card, /<cy-dot-qr wx:if="\{\{state === 'ready'\}\}" src="\{\{qr\}\}" size="\{\{540\}\}" \/>/)
-  assert.match(xml, /<view class="voucher__flip \{\{flipped \? 'is-back' : ''\}\}/, '票卡翻面:码生成好后翻到背面,点一下翻回')
+  assert.match(card, /<cy-dot-qr wx:if="\{\{state === 'ready'\}\}" src="\{\{qr\}\}" size="\{\{360\}\}" \/>/)
+  assert.doesNotMatch(xml, /voucher__flip/, 'D1:不再翻面')
   assert.match(card, /<text wx:if="\{\{expiry\}\}" class="voucher__exp">\{\{expiry\}\}<\/text>/)
   assert.doesNotMatch(xml, /Code :|countdown|城瘾活动入场码|出示扫码核销|现在核销|bigqr|长期开放/)
   const css = read('pages/play/components/scene-qr-ticket/index.wxss')

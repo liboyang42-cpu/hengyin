@@ -303,7 +303,7 @@ test('城市定向地点卡:整屏照片 + 玻璃面板(lk-pop),返回在左上,
   assert.match(wxml, /<view class="theme-gpill lk-num" wx:if="\{\{total > 0\}\}"/)
 })
 
-test('背包插图与入场码翻面', () => {
+test('背包插图与入场码适中码块', () => {
   const bag = read('pages/play/theme-backpack.wxml')
   assert.match(bag, /<view wx:else class="tb-item__illus"><cy-illus name="\{\{item\.illus \|\| 'gem'\}\}" size="150"/)
   assert.match(bag, /<view class="tb-clue__illus"><cy-illus name="clue"/)
@@ -311,12 +311,10 @@ test('背包插图与入场码翻面', () => {
   const bagJs = read('pages/play/utils/theme-backpack.js')
   assert.match(bagJs, /illus: illusFor\(i\.name \|\| gameplay\.valueName\(i\.id, view\)\)/)
   const qr = read('pages/play/components/scene-qr-ticket/index.wxml')
-  assert.match(qr, /<view class="voucher__flip \{\{flipped \? 'is-back' : ''\}\} \{\{reduced \? 'is-reduced' : ''\}\}" bindtap="toggleFlip"/)
-  assert.match(qr, /<view class="voucher__face voucher__rear"/)
-  assert.match(qr, /size="\{\{540\}\}"/)
-  assert.match(read('pages/play/index.wxml'), /<cy-scene-qr-ticket registration-id="\{\{sceneCurrent\.params\.registrationId\}\}" title="\{\{sceneCurrent\.params\.title\}\}" until="\{\{sceneCurrent\.params\.until\}\}" cover="\{\{topicCover\}\}"/)
+  // D1(2026-11-12):入场码改回普通半屏里一个适中的码,不再是翻面大票卡
+  assert.doesNotMatch(qr, /voucher__flip|voucher__rear|toggleFlip/)
+  assert.match(qr, /size="\{\{360\}\}"/)
   const qjs = read('pages/play/components/scene-qr-ticket/index.js')
-  assert.match(qjs, /state\(value\) \{ if \(value === 'ready' && !this\.data\.flipped\) this\.autoFlip\(\)/)
-  assert.match(qjs, /const FLIP_AFTER_MS = 1100/)
-  assert.match(read('pages/play/components/scene-qr-ticket/index.wxss'), /\.voucher__rear \.voucher__qr \{ width: 600rpx; height: 600rpx;/)
+  assert.doesNotMatch(qjs, /autoFlip|FLIP_AFTER_MS|flipped/)
+  assert.match(read('pages/play/components/scene-qr-ticket/index.wxss'), /\.voucher__qr \{[^}]*width: 400rpx; height: 400rpx;/)
 })

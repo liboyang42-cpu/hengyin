@@ -4,9 +4,6 @@ const app = getApp()
 const toast = require('../../../../utils/toast.js')
 const { captureLogin, loginCurrent, seatChoice, issuedSeat, seatNumber } = require('../../../../utils/registration-seat.js')
 const { passExpiryText } = require('../../../../utils/ticket-expiry.js')
-const { readReducedMotion } = require('../../../../utils/motion-preference.js')
-// l-play:票卡翻面 —— 码生成好 1.1 秒后自动翻到背面(减少动态效果直接到背面),点一下翻回
-const FLIP_AFTER_MS = 1100
 // V-02(2026-10-29 业主):与票夹背面同一版式与规则 —— 只有标题 + 码(码心城瘾 logo)，7 天内到期才写「N 天内过期」；
 // 不显示倒计时、原始码串和说明，动态码到期前 30 秒后台静默续签，续签期间旧码照常出示。
 const REFRESH_LEAD_MS = 30000
@@ -17,7 +14,7 @@ Component({
     registrationId: { type: String, value: '' },
     title: { type: String, value: '' },
     until: { type: null, value: '' },
-    cover: { type: String, value: '' },   // l-play:票卡正面的主题封面(没有就只有渐变底)
+    cover: { type: String, value: '' },   // 兼容宿主传参;D1 起入场码半屏不再用封面
   },
   data: {
     state: 'loading',
@@ -25,7 +22,6 @@ Component({
     errorText: '',
     expiry: '',
     seatNo: '', seatInput: '', seatCount: 0, seatVerified: false,
-    flipped: false, reduced: false,
   },
   observers: {
     registrationId(value) {
@@ -40,32 +36,21 @@ Component({
       if (value !== this._loadedRegistrationId) this.load()
     },
     until(value) { this.setData({ expiry: passExpiryText(value) }) },
-    state(value) { if (value === 'ready' && !this.data.flipped) this.autoFlip(); else if (value !== 'ready') { clearTimeout(this._flipT); this.setData({ flipped: false }) } },
   },
   lifetimes: {
     attached() {
       this._attached = true
-      let reduced = false
-      try { reduced = !!readReducedMotion() } catch (e) { reduced = false }
-      this.setData({ reduced })
       this.setData({ expiry: passExpiryText(this.data.until) })
       if (this.data.registrationId) this.load()
       else this.setData({ state: 'error', errorText: '缺少报名记录，无法生成入场码' })
     },
     detached() {
       this._attached = false
-      clearTimeout(this._flipT)
       this._loadToken = (this._loadToken || 0) + 1
       this.clearTimer()
     },
   },
   methods: {
-    autoFlip() {
-      clearTimeout(this._flipT)
-      if (this.data.reduced) { this.setData({ flipped: true }); return }
-      this._flipT = setTimeout(() => { if (this._attached && this.data.state === 'ready') this.setData({ flipped: true }) }, FLIP_AFTER_MS)
-    },
-    toggleFlip() { if (this.data.state === 'ready') this.setData({ flipped: !this.data.flipped }) },
     clearTimer() {
       if (this._timer) { clearInterval(this._timer); this._timer = null }
       this.stopRedeemWatch()
