@@ -9,6 +9,7 @@
 //   三棱锥不再用于章节门(业主「没有再画立方体」),只留给通关。
 // finale:文字全部隐去 → 三棱锥越转越快、停在金色面 → 炸成碎片 + 银色方块波 → 方块拼成银色城瘾标志 → 才出主题名、合计与按钮。
 const E = require('./engine');
+const ambient = require('./ambient.js');
 const LC = require('../../utils/look-colors.js');
 
 const AW = 360, AH = 378;                 // 面图分辨率(与 250×262 的面同比例)
@@ -75,7 +76,7 @@ Component({
     reducedMotion: { type: Boolean, value: false },
     look: { type: Object, value: null },            // l-icons:{ style, palette, legacy },圆点章节号 / 章节印的颜色
   },
-  data: { copy: null, quiet: false, cta: false, out: false, endCard: null, endIn: false, endOut: false, endStats: [], start: false, startIn: false },
+  data: { ambient: null, copy: null, quiet: false, cta: false, out: false, endCard: null, endIn: false, endOut: false, endStats: [], start: false, startIn: false },
   lifetimes: {
     ready() {
       this.createSelectorQuery().select('#cf').fields({ node: true, size: true }).exec((res) => {
@@ -97,7 +98,7 @@ Component({
         else this._paint(Date.now());
       });
     },
-    detached() { this._gone = true; this._clear(); },
+    detached() { this._gone = true; this._clear(); (this._ambTimers || []).forEach(clearTimeout); },
   },
   methods: {
     noop() {},
@@ -184,6 +185,7 @@ Component({
       const info = this.data.info || {};
       if (this._ctx && info.number) this._assemble({ text: info.number, top: 150 * this._S, dots: true });
       this.setData({ start: true });
+      if (info.number) ambient.start(this, { cx: this._cx, cy: this._cy });   /* 细节打磨 S2:章节号背后的光晕呼吸与星尘 */
       if (this._ctx && info.number) this._at(() => this._placeSeal(), fromEnd ? 800 : 600);   // 文字块一落位就量它,再放章节印(门 3.6s 自己进,印要在 2.5s 前拼好)
       this._at(() => this.setData({ startIn: true }), 40);
       this._decode(info, fromEnd ? 500 : 300);
@@ -233,12 +235,12 @@ Component({
       // 改成一直撒到卡出来之后 CONFETTI_AFTER_CARD_MS,卡和彩纸同屏;片子、颜色、下落都不变。
       this._confettiUntil = Date.now() + CARD_AT_MS + CONFETTI_AFTER_CARD_MS;
       this._at(() => this._assembleLogo(false), 700);
-      this._at(() => { this.setData({ quiet: false, cta: true }); this._decode(this.data.info, 0); }, CARD_AT_MS);
+      this._at(() => { this.setData({ quiet: false, cta: true }); this._decode(this.data.info, 0); ambient.start(this, { cx: this._cx, cy: this._cy, rays: true }); }, CARD_AT_MS);   /* 细节打磨 S3:通关卡背后的光芒与光晕 */
     },
     /** 「读下去」/ 点任意处:方块炸散回星点,整屏淡出,交回正文(通关过场不走这里)。 */
     _continue() {
       if (this._left || this.data.mode !== 'gate') return;
-      this._left = true;
+      this._left = true; ambient.stop(this);
       (this._timers || []).forEach(clearTimeout); this._timers = [];
       clearInterval(this._decodeTimer); this._decodeTimer = 0;
       this._scatter();
