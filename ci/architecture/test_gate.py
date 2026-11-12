@@ -1957,11 +1957,18 @@ class MergedMasterBoundaryPolicyTest(unittest.TestCase):
         self.assertEqual(144, len({m for o in q_owners for m in o["members"]}))
         self.assertTrue(all(o["forbidden_backrefs"] and "allowed_consumers" not in o for o in q_owners))
         self.assertEqual(60, len([e for e in now["allowed_directions"] if any(n.startswith("Q_") for n in e)]))
-        self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith(("M_", "Q_"))
+        # 上线候选新增边界(业主 2026-11-10/11 批准上线):8 个 P_ 职责各登记 1 个类型,只有反馈链 2 条前向边。
+        p_owners = [o for o in now["owners"] if o["id"].startswith("P_")]
+        self.assertEqual(8, len(p_owners))
+        self.assertEqual([1] * 8, [len(o["members"]) for o in p_owners])
+        self.assertTrue(all(o["forbidden_backrefs"] and "allowed_consumers" not in o for o in p_owners))
+        self.assertEqual({("P_PLAY_FEEDBACK", "P_PLAY_FEEDBACK_STORAGE"), ("P_PLAY_FEEDBACK_API", "P_PLAY_FEEDBACK")},
+                         {tuple(e) for e in now["allowed_directions"] if any(n.startswith("P_") for n in e)})
+        self.assertEqual(old["owners"], [o for o in now["owners"] if not o["id"].startswith(("M_", "Q_", "P_"))
                                          and o["id"] not in l8_owners and o["id"] not in r9_owners
                                          and o["id"] not in r28_owners])
         self.assertEqual(old["allowed_directions"], [e for e in now["allowed_directions"]
-                         if not any(n.startswith(("M_", "Q_")) for n in e) and tuple(e) not in self.original_intent_edges
+                         if not any(n.startswith(("M_", "Q_", "P_")) for n in e) and tuple(e) not in self.original_intent_edges
                          and tuple(e) not in l8_edges and not any(n in r28_owners for n in e)])
         self.assertEqual(self.original_intent_edges, {tuple(e) for e in now["allowed_directions"]
                                                     if tuple(e) in self.original_intent_edges})
