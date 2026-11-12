@@ -10,6 +10,7 @@ import com.chengyinhub.business.domain.dto.MerchantMarketingAnalyticsFact;
 import com.chengyinhub.business.domain.vo.PublicMemberVO;
 import com.chengyinhub.business.mapper.CmsTopicChapterMapper;
 import com.chengyinhub.business.mapper.MerchantMarketingAnalyticsMapper;
+import org.springframework.test.util.ReflectionTestUtils;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IClubMemberService;
