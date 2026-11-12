@@ -59,22 +59,28 @@ function flipInstance(def, props) {
   return inst
 }
 
-test('章节开场:星点锁成方块章节号 → 文字解码 → 「读下去」亮起;点它方块炸散并交回正文;停一下自己进', () => {
+test('章节开场(动效 v2 时刻 1):挂上 chapter-moment,不再拼画布数字;动画播完停一下自己进,点「读下去」提前', () => {
   const def = loadFlip()
-  const c = flipInstance(def)
-  c._gate()
-  assert.deepEqual(c.assembled, ['01'], '开场屏拼的是这一章的数字')
-  assert.equal(c.data.start, true)
-  c.flush()
-  assert.equal(c.data.cta, true, '「读下去」在解码后亮起')
-  assert.equal(c.scattered, 1, '离开时方块炸散回星点')
-  assert.deepEqual(c.events, ['continue'], '停留后自己进正文(2026-09-24 业主规则不变)')
-  const tap = flipInstance(def)
-  tap._gate(); tap.onTap(); tap.flush()
-  assert.deepEqual(tap.events, ['continue'], '点一下提前进')
-  const opening = flipInstance(def, { info: { number: '', title: '序章' } })
-  opening._gate()
-  assert.equal(opening.assembled, undefined, '序章没有方块数字')
+  const realTimeout = global.setTimeout
+  const held = []
+  global.setTimeout = (fn, ms) => { held.push({ fn, ms }); return held.length }
+  try {
+    const c = flipInstance(def)
+    c._gate()
+    assert.equal(c.assembled, undefined, '开场屏的圆点章节号由 chapter-moment 用 DOM 点阵画')
+    assert.equal(c.data.start, true)
+    assert.equal(held.at(-1).ms, 5600, '2.8s 序列后再停 2.8s 自己进(2026-09-24 业主规则不变)')
+    held.at(-1).fn()
+    assert.deepEqual(c.events, [], '先淡出,420ms 后才交回正文')
+    held.at(-1).fn()
+    assert.deepEqual(c.events, ['continue'])
+    const tap = flipInstance(def)
+    tap._gate(); tap.onMomentGo(); held.at(-1).fn()
+    assert.deepEqual(tap.events, ['continue'], '「读下去」/ 动画终态后点一下提前进')
+    const gone = flipInstance(def)
+    gone._gate(); gone.onTap()
+    assert.equal(gone.data.out, false, '开场屏的点按归 chapter-moment(第一下跳终态),外壳不抢')
+  } finally { global.setTimeout = realTimeout }
 })
 
 test('章节完成:整屏(照片 + 方块号 + 三格数据从 0 滚上来 + 下一站);点下一站 → 吹散 → 下一章开场;减弱动态直接切、数据直接写', () => {
@@ -98,7 +104,7 @@ test('章节完成:整屏(照片 + 方块号 + 三格数据从 0 滚上来 + 下
     c.flush()
     assert.equal(c.data.endCard, null)
     assert.equal(c._stage, 'start')
-    assert.deepEqual(c.assembled, ['01', '02'], '下一章的数字再锁上来')
+    assert.deepEqual(c.assembled, ['01'], '下一章开场不再拼画布数字(chapter-moment 画)')
     const r = flipInstance(def, { endInfo, info: { number: '02', title: '老书店' }, reducedMotion: true })
     r._gate()
     assert.deepEqual(r.data.endStats.map((s) => s.shown), ['12:30', '80', '1/2'], '减弱动态:数据直接写终值')
@@ -113,12 +119,13 @@ test('过场组件 WXML / WXSS:完成整屏、读下去、插图;章节门跟 --
   assert.match(w, /<image wx:if="\{\{endCard\.cover\}\}" class="cf__cover"/)
   assert.match(w, /<cy-illus name="success" size="240"/)
   assert.match(w, /class="cf__st" wx:for="\{\{endStats\}\}"/)
-  assert.match(w, /aria-label="读下去"/)
+  assert.match(w, /<cy-chapter-moment /)
+  assert.match(read('pages/play/components/chapter-moment/index.wxml'), /aria-label="读下去"/)
   assert.doesNotMatch(w, /cf__badge|cf__tick|cf__rows/, 'r2-finish 的卡片结构已退场')
   const css = read('pages/play/components/chapter-flip/index.wxss')
   assert.match(css, /\.cf--gate \{ background: var\(--lk-bg, #1F1F21\); color: var\(--lk-ink, #F5F5F2\); \}/)
   assert.equal((css.match(/@keyframes/g) || []).length, 0)
-  assert.deepEqual(JSON.parse(read('pages/play/components/chapter-flip/index.json')).usingComponents, { 'cy-illus': '/pages/play/components/cy-illus/index' })
+  assert.deepEqual(JSON.parse(read('pages/play/components/chapter-flip/index.json')).usingComponents, { 'cy-illus': '/pages/play/components/cy-illus/index', 'cy-chapter-moment': '/pages/play/components/chapter-moment/index' })
   assert.equal(JSON.parse(read('pages/play/index.json')).usingComponents['cy-illus'], '/pages/play/components/cy-illus/index')
 })
 

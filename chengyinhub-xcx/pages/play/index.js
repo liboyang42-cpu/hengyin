@@ -4225,7 +4225,7 @@ Page({
     if (held) return;   // 放行由带领轮询解开(见 loadTeamProgress),不靠计时自己进正文
     this._gateTimer = setTimeout(() => {
       if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, (boot ? 1800 : 0) + (this.data.chapterGate.endInfo ? 10800 : 4200)); // 过场自己会在播完时发 continue;这里只是兜底
+    }, (boot ? 1800 : 0) + (this.data.chapterGate.endInfo ? 13400 : 6600)); // 过场自己会在播完时发 continue;这里只是兜底
   },
   /** 开局「开机」:黑场里一条白线横向展开再收细,暖光亮起后整层淡出,露出第一道开场门。 */
   _playBoot() {
@@ -4258,7 +4258,7 @@ Page({
     clearTimeout(this._gateTimer);
     this._gateTimer = setTimeout(() => {
       if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, this.data.chapterGate.endInfo ? 10800 : 4200);
+    }, this.data.chapterGate.endInfo ? 13400 : 6600);
   },
   /** P-08:带领轮询每读到一次进度就对一次 —— 门前(或「返回地图」去了地图上)正在等的那一章放行了就接着进。 */
   _syncChapterHold() {

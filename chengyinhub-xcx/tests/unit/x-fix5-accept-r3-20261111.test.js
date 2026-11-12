@@ -81,11 +81,10 @@ test('R3-8 用时未知写「—」,不写「未知」', () => {
   assert.match(read('subpackageJourney/pages/report/index.wxml'), /report\.elapsedText === '—'/)
 })
 
-test('R3-9 通关卡文案区折行、不压按钮', () => {
-  const w = read('pages/play/components/chapter-flip/index.wxss')
-  assert.match(w, /\.cf--finale \.cf__t, \.cf--finale \.cf__d, \.cf--finale \.cf__k \{ max-width: 100%; white-space: normal; word-break: break-all; \}/)
-  assert.match(w, /\.cf--finale \.cf__stats \{ flex-wrap: wrap;/)
-  assert.match(w, /bottom: calc\(190rpx \+ env\(safe-area-inset-bottom\)\)/)
+test('R3-9 通关卡文案区:标题折行不压按钮(动效 v2:标题最多两行,按钮固定在底)', () => {
+  const m = read('pages/play/components/chapter-moment/index.wxss')
+  assert.match(m, /\.cm__ttl \{[^}]*-webkit-line-clamp: 2/)
+  assert.match(m, /\.cm__acts \{ position: absolute; left: 46\.15rpx; right: 46\.15rpx; bottom: 80\.77rpx;/)
 })
 
 test('P-9 没到过的站不写「这一页尚未书写」说明句', () => {

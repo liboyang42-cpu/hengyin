@@ -111,7 +111,7 @@ test('在地图上被放行:收起地图,照常放 cy-chapter-flip,播完(或兜
     assert.equal(mapShown(p.data), false)
     assert.equal(flipShown(p.data), true)
     assert.equal(holdShown(p.data), false)
-    assert.equal(timers.at(-1).ms, 4200)
+    assert.equal(timers.at(-1).ms, 6600)
     timers.at(-1).f()
     assert.equal(p.entered, 1)
   })

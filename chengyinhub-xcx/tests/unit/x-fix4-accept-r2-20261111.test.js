@@ -68,11 +68,13 @@ test('N-9 结算页没带 topicName 时按主题 id 补主题名,标题不落「
   assert.equal(calls.length, 1, '已有主题名不再请求')
 })
 
-test('N-11 通关卡(finale)跟主题外观:底/字/按钮读 --lk-*,文案避开标志并裁掉乱码字', () => {
+test('N-11 通关卡(finale)跟主题外观:外壳底/字读 --lk-*,按钮与读数卡读 --lk-a(动效 v2 时刻 3)', () => {
   const w = read('pages/play/components/chapter-flip/index.wxss')
   assert.match(w, /\.cf--finale \{ z-index: 320; background: var\(--lk-bg, #1F1F21\); color: var\(--lk-ink, #F5F5F2\); \}/)
-  assert.match(w, /\.cf--finale \.cf__copy \{ top: calc\(33\.3vh \+ 45vw \+ 24rpx\);[^}]*overflow: visible;/)
-  assert.match(w, /\.cf--finale \.cf__pill--p \{ background: var\(--lk-a,/)
+  const m = read('pages/play/components/chapter-moment/index.wxss')
+  assert.match(m, /--ma: var\(--lk-a,/)
+  assert.match(m, /\.cm__btn--acc \{ background: var\(--ma\)/)
+  assert.match(m, /\.cm__tile \{[^}]*rgba\(var\(--ma-rgb\), \.55\)/)
 })
 
 test('N-13 内嵌玩法块底部留 Home 条安全区', () => {

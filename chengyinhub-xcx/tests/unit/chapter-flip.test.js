@@ -83,15 +83,11 @@ test('通关:三面落在金色面,合计不造 0', () => {
   assert.deepEqual(noXp.info.stats, [{ v: '70', k: '解谜分' }], '探索值拿不到就退到解谜分;都没有的格子不出')
 })
 
-test('过场组件:通关期间不出字,按钮最后才出;盖在通关勋章页之上', () => {
-  const js = read('pages/play/components/chapter-flip/index.js')
+test('过场组件:通关由 chapter-moment 播(只有勋章一个主角),按钮最后才可点;盖在通关勋章页之上', () => {
   const wxml = read('pages/play/components/chapter-flip/index.wxml')
   const wxss = read('pages/play/components/chapter-flip/index.wxss')
-  assert.match(js, /this\.setData\(\{ quiet: true \}\)/, '触发通关后文字全部隐去')
-  assert.match(js, /setData\(\{ quiet: false, cta: true \}\)/, '标志拼好后才出主题名与按钮')
-  assert.match(js, /LOGO_SRC = '\/images\/cy_logo_mark\.png'/, '方块拼成城瘾标志')
-  assert.match(js, /silver: true, cell: 5/, '标志用银色细方块(业主:缝要看得出)')
-  assert.match(wxml, /aria-label="保存通关卡"/)
+  assert.match(wxml, /<cy-chapter-moment wx:if="\{\{mode === 'finale'/)
+  assert.match(read('pages/play/components/chapter-moment/index.wxml'), /aria-label="查看结算"/)
   assert.match(wxss, /\.cf--finale \{ z-index: 320;/)
   const page = read('pages/play/index.wxml')
   assert.match(page, /<cy-chapter-flip wx:if="\{\{showFinish && finale\.show\}\}" mode="finale"/)

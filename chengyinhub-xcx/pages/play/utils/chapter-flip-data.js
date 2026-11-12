@@ -71,8 +71,14 @@ function buildGateFlip({ cards, chapterId, nodes, topicCover, topicName, desc, e
   return { faces, endInfo, info };
 }
 
+/** 动效 v2 时刻 3 的眉标:「已通关 · 11月12日」;读不到日期就只写「已通关」。 */
+function finaleKicker(now) {
+  const d = now instanceof Date ? now : new Date(now == null ? Date.now() : now);
+  return isNaN(d.getTime()) ? '已通关' : '已通关 · ' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+}
+
 /** 通关:三面 = 倒数第二章、最后一章、金色通关面;数据只写拿得到的合计。 */
-function buildFinale({ cards, nodes, topicCover, topicName, doneCount, elapsed, score, puzzle }) {
+function buildFinale({ cards, nodes, topicCover, topicName, doneCount, elapsed, score, puzzle, now }) {
   const list = (cards || []).filter((c) => c && !c.opening);
   const last = list.length - 1;
   const a = last > 0 ? face(list[last - 1], last - 1, nodes) : face(list[0], 1, nodes);
@@ -82,7 +88,7 @@ function buildFinale({ cards, nodes, topicCover, topicName, doneCount, elapsed, 
     elapsed ? { v: elapsed, k: '用时' } : null,
     score ? { v: String(Math.round(Number(score))).replace(/\B(?=(\d{3})+(?!\d))/g, ','), k: '探索值' } : (puzzle && puzzle.count ? { v: String(puzzle.score), k: '解谜分' } : null),
   ].filter(Boolean);
-  return { faces: [a, b, goldFace(topicCover || (b && b.cover), topicName)], info: { kicker: '全部完成', title: topicName || '主题通关', desc: '', stats } };  // 拿不到主题名时与通关勋章页同口径
+  return { faces: [a, b, goldFace(topicCover || (b && b.cover), topicName)], info: { kicker: finaleKicker(now), title: topicName || '主题通关', desc: '', stats } };  // 拿不到主题名时与通关勋章页同口径
 }
 
-module.exports = { buildGateFlip, buildFinale, faceLabel };
+module.exports = { buildGateFlip, buildFinale, faceLabel, finaleKicker };

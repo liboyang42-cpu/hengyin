@@ -37,12 +37,11 @@ test('R4-4:发布页底栏为整条实底,不再渐变透出身后控件', () =>
   assert.doesNotMatch(rule, /transparent/)
 })
 
-test('R4-5:通关卡文案区不再 overflow:hidden(否则乱码字被切成边缘字影、底部标签被切半)', () => {
-  const css = fs.readFileSync(path.join(root, 'pages/play/components/chapter-flip/index.wxss'), 'utf8')
-  const rule = css.split('\n').find((l) => l.startsWith('.cf--finale .cf__copy { top:'))
+test('R4-5:通关卡文案不裁底部标签(动效 v2:读数卡是普通流式块,不设 overflow:hidden 的文案区)', () => {
+  const css = fs.readFileSync(path.join(root, 'pages/play/components/chapter-moment/index.wxss'), 'utf8')
+  const rule = css.split('\n').find((l) => l.startsWith('.cm__fcol {'))
   assert.ok(rule)
-  assert.doesNotMatch(rule.split('/*')[0], /overflow:\s*hidden/)
-  assert.match(css, /\.cf--finale \.cf__copy \{ box-sizing: border-box; width: calc\(100vw - 92rpx\);/)
+  assert.doesNotMatch(rule, /overflow:\s*hidden/)
 })
 
 test('R4-6:章节选择 / 工具菜单下的地图底取外观底色,不是纯黑', () => {

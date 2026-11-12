@@ -1,6 +1,7 @@
 {
   "component": true,
   "usingComponents": {
-    "cy-illus": "/pages/play/components/cy-illus/index"
+    "cy-illus": "/pages/play/components/cy-illus/index",
+    "cy-chapter-moment": "/pages/play/components/chapter-moment/index"
   }
 }

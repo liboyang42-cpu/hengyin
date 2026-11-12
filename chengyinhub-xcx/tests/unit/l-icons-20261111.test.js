@@ -55,24 +55,15 @@ function flipInstance(def, props) {
   return inst
 }
 
-test('章节门:开场 / 完成屏的章节号都按圆点拼(dots),开场屏在文字块下面放章节印;颜色读外观主色;通关标志仍是方块', () => {
+test('章节门:完成屏的章节号按圆点拼(画布);开场屏的圆点章节号 + 章节印改由 chapter-moment 的 DOM 点阵画;颜色读外观主色', () => {
   const def = loadFlip()
-  assert.ok(def.properties.look, '组件收 look')
-  const c = flipInstance(def)
-  c._gate()
-  assert.deepEqual(c.assembled.map((o) => [o.text, !!o.dots]), [['01', true]], '开场章节号 = 圆点')
-  c.flush()
-  const seal = c._tiles.filter((t) => t.seal)
-  assert.ok(seal.length >= 44 + 28, '章节印至少两圈点(外 44 + 内 28;「章」字点阵在没有离屏画布时可省)')
-  assert.equal(seal.filter((t) => t.ring === 1).length, 44)
-  assert.equal(seal.filter((t) => t.ring === 2).length, 28)
-  assert.ok(seal.every((t) => t.c === '#7FE6C4' || t.c === '#F3E3E0'), '末世 · 红:外环主色 / 内环与字墨色')
-  assert.ok(c._seal && c._seal.cy > 415 && c._seal.cy < 844 - 168, '章节印在文字块与「读下去」之间')
+  assert.ok(def.properties.look, '组件收 look(完成屏画布取色)')
   const end = flipInstance(def, { endInfo: { number: '01', kicker: '第 1 章完成', title: '邮局旧址', rows: [] } })
   end._gate()
-  assert.deepEqual(end.assembled.map((o) => [o.text, !!o.dots]), [['01', true]], '完成屏章节号也是圆点')
-  const src = read('pages/play/components/chapter-flip/index.js')
-  assert.match(src, /_assembleLogo\(instant\) \{[\s\S]*silver: true, cell: 5, tile: 4\.3/, '通关银色标志仍是方块,不走 dots')
+  assert.deepEqual(end.assembled.map((o) => [o.text, !!o.dots]), [['01', true]], '完成屏章节号是圆点')
+  const moment = read('pages/play/components/chapter-moment/index.wxss')
+  assert.match(moment, /\.cm__rd \{[^}]*background: var\(--ma\)/, '外环点 = 外观主色 --lk-a')
+  assert.match(moment, /\.cm__dg \{[^}]*background: var\(--mi\)/, '点阵数字 = 外观墨色 --lk-ink')
   assert.match(read('pages/play/index.wxml'), /<cy-chapter-flip[^>]*look="\{\{chapterGate\.look\}\}"/)
   assert.match(read('pages/play/index.js'), /look: this\._look \? \{ style: this\._look\.style, palette: this\._look\.palette \|\| '', legacy: !!this\._look\.legacy \} : null/)
 })

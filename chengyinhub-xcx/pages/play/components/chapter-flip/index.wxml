@@ -1,6 +1,6 @@
 <view class="cf cf--{{mode}} {{out ? 'is-out' : ''}} {{reducedMotion ? 'cf--reduced' : ''}}" catchtouchmove="noop" bindtap="onTap" hover-class="cf-tap" hover-stay-time="80" aria-role="{{mode === 'gate' ? 'button' : 'dialog'}}" aria-label="{{mode === 'gate' ? (endCard ? endCard.kicker : info.title) + '，轻点继续' : info.title}}">
-  <canvas type="2d" id="cf" class="cf__fx" aria-hidden="true"></canvas>
-  <!-- l-play 章节完成整屏(proto/game gp-chapter-end):本章照片渐入底色 → 星点锁成方块章节号(画布)→ 成功插图 → 第 N 章完成 · 章名 → 三格数据滚上来 → 下一站;
+  <canvas wx:if="{{mode === 'gate'}}" type="2d" id="cf" class="cf__fx" aria-hidden="true"></canvas>
+  <!-- l-play 章节完成整屏(proto/game gp-chapter-end):本章照片渐入底色 → 圆点章节号(画布)→ 成功插图 → 第 N 章完成 · 章名 → 三格数据滚上来 → 下一站;
        点「下一站」照片与文字化成细粉尘吹散(画布),下一章开场浮现。没有卡片。 -->
   <view class="cf__end {{endIn ? 'is-in' : ''}} {{endOut ? 'is-out' : ''}}" wx:if="{{endCard}}">
     <image wx:if="{{endCard.cover}}" class="cf__cover" src="{{endCard.cover}}" mode="aspectFill" aria-hidden="true" />
@@ -19,22 +19,6 @@
     </view>
     <view class="cf__foot"><view class="cf__btn" catchtap="onTap" aria-role="button" aria-label="{{endCard.next ? '下一站:' + endCard.next : '继续'}}" hover-class="cf-pressed" hover-stay-time="80">{{endCard.next ? '下一站：' + endCard.next : '继续'}}</view></view>
   </view>
-  <!-- 章节开始 / 通关的文字:方块章节号(开场)或三棱锥 → 城瘾标志(通关)在画布上,这里只有逐字解码的章眉 / 章名 / 说明 / 数据 -->
-  <view class="cf__copy {{startIn ? 'is-in' : ''}} {{quiet ? 'is-quiet' : ''}}" wx:if="{{copy}}" aria-hidden="true">
-    <view class="cf__k"><text wx:for="{{copy.k}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
-    <view class="cf__t"><text wx:for="{{copy.t}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
-    <view class="cf__d" wx:if="{{copy.d.length}}"><text wx:for="{{copy.d}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
-    <view class="cf__stats" wx:if="{{copy.stats.length}}">
-      <view class="cf__stat" wx:for="{{copy.stats}}" wx:key="index" wx:for-item="st">
-        <view class="cf__v"><text wx:for="{{st.v}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
-        <view class="cf__sk"><text wx:for="{{st.k}}" wx:key="index" class="cf__c {{item.n ? 'is-n' : ''}}">{{item.c}}</text></view>
-      </view>
-    </view>
-  </view>
-  <!-- 章节开场的「读下去」(proto gp-chapter-start):点它方块炸散回星点;停一下也自己进(2026-09-24 业主:章节门不必每章都点) -->
-  <view class="cf__foot cf__foot--start {{cta ? 'is-on' : ''}}" wx:if="{{mode === 'gate' && start}}"><view class="cf__btn" catchtap="onTap" aria-role="button" aria-label="读下去" hover-class="cf-pressed" hover-stay-time="80">读下去</view></view>
-  <view class="cf__btns {{cta ? 'is-on' : ''}}" wx:if="{{mode === 'finale'}}">
-    <view class="cf__pill cf__pill--s" catchtap="onClose" aria-role="button" aria-label="继续" hover-class="cf-pressed" hover-stay-time="80">继续</view>
-    <view class="cf__pill cf__pill--p" catchtap="onSave" aria-role="button" aria-label="保存通关卡" hover-class="cf-pressed" hover-stay-time="80">保存通关卡</view>
-  </view>
+  <!-- 动效 v2:章节开始(时刻 1)/ 通关(时刻 3)整屏由 chapter-moment 播,没有画布、没有标志、没有残影 -->
+  <cy-chapter-moment wx:if="{{mode === 'finale' || (mode === 'gate' && start)}}" mode="{{mode === 'finale' ? 'finale' : 'start'}}" info="{{info}}" reduced-motion="{{reducedMotion}}" bind:go="onMomentGo" bind:save="onSave" bind:continue="onClose" />
 </view>

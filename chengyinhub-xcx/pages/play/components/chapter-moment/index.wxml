@@ -1,0 +1,42 @@
+<view class="cm cm--{{mode}} {{skip ? 'is-skip' : ''}} {{reducedMotion ? 'cm--reduced' : ''}}" catchtap="onTap" catchtouchmove="noop">
+  <view class="cm__amb" aria-hidden="true"></view>
+  <block wx:if="{{mode === 'start'}}">
+    <view class="cm__stage" style="--dy:{{dy}}rpx">
+      <view class="cm__seal" aria-hidden="true">
+        <view class="cm__rays {{raysOn ? 'is-on' : ''}}" id="rays"></view>
+        <view class="cm__halo {{haloOn ? 'is-on' : ''}}" id="halo"></view>
+        <view class="cm__ring" id="ring"><view wx:for="{{view.ring}}" wx:key="index" class="cm__rd {{ringOn ? 'is-on' : ''}}" style="{{item.s}}"></view></view>
+        <view class="cm__num"><view wx:for="{{view.digits}}" wx:key="index" class="cm__dg {{numOn ? 'is-on' : ''}}" style="{{item.s}}"></view></view>
+        <view class="cm__dot {{dotHold ? 'is-hold' : ''}} {{dotGone ? 'is-gone' : ''}}" id="dot"></view>
+      </view>
+      <view class="cm__col">
+        <view class="cm__kick cm__fade {{kickOn ? 'is-in' : ''}}">{{view.kick}}</view>
+        <view class="cm__title" aria-label="{{info.title}}"><text wx:for="{{view.words}}" wx:key="index" class="cm__w {{index < wordsOn ? 'is-in' : ''}}">{{item.t}}</text></view>
+        <view class="cm__stats cm__fade {{statsOn ? 'is-in' : ''}}"><view class="cm__stat" wx:for="{{view.stats}}" wx:key="index"><text class="cm__sv">{{item.shown}}</text><text class="cm__sk">{{item.k}}</text></view></view>
+      </view>
+    </view>
+    <view class="cm__cta cm__fade {{ctaOn ? 'is-in' : ''}}"><view class="cm__btn cm__btn--pri" catchtap="onGo" aria-role="button" aria-label="读下去" hover-class="cm-pressed" hover-stay-time="80">读下去</view></view>
+  </block>
+  <block wx:else>
+    <view class="cm__stage" style="--dy:{{dy}}rpx">
+      <view class="cm__flash" id="flash" aria-hidden="true"></view>
+      <view class="cm__pts" aria-hidden="true"><view wx:for="{{view.particles}}" wx:key="index" id="p{{index}}" class="cm__pt"></view></view>
+      <view class="cm__frays {{raysOn ? 'is-on' : ''}}" id="frays" aria-hidden="true"></view>
+      <view class="cm__ringx" id="ringx" aria-hidden="true"></view>
+      <view class="cm__core" aria-hidden="true"><view class="cm__orb {{orbHold ? 'is-hold' : ''}} {{orbGone ? 'is-gone' : ''}}" id="orb"></view></view>
+      <view class="cm__medal {{medalOn ? 'is-on' : ''}}" id="medal" aria-hidden="true"><view class="cm__glow" id="glow"></view></view>
+      <view class="cm__fcol">
+        <view class="cm__fkick cm__fade {{kickOn ? 'is-in' : ''}}">{{view.kick}}</view>
+        <view class="cm__ttl cm__fade {{ttlOn ? 'is-in' : ''}}">{{view.title}}</view>
+        <view class="cm__row cm__fade {{rowOn ? 'is-in' : ''}}" style="grid-template-columns:repeat({{view.tiles.length || 1}},1fr)"><view class="cm__tile" wx:for="{{view.tiles}}" wx:key="index"><text class="cm__tv">{{item.v}}</text><text class="cm__tk">{{item.k}}</text></view></view>
+      </view>
+    </view>
+    <view class="cm__acts cm__fade {{actsOn ? 'is-in' : ''}}">
+      <view class="cm__two">
+        <view class="cm__btn cm__btn--ghost" catchtap="onSave" aria-role="button" aria-label="保存图片" hover-class="cm-pressed" hover-stay-time="80">保存图片</view>
+        <button class="cm__btn cm__btn--ghost cm__share" open-type="share" aria-label="分享" hover-class="cm-pressed" hover-stay-time="80">分享</button>
+      </view>
+      <view class="cm__btn cm__btn--acc" catchtap="onClose" aria-role="button" aria-label="查看结算" hover-class="cm-pressed" hover-stay-time="80">查看结算</view>
+    </view>
+  </block>
+</view>

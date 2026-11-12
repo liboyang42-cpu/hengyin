@@ -41,24 +41,8 @@ function instance(def, props) {
 test('翻转门播完自己进(第四轮:held 已从组件退场,等待放行改在 play 页)', () => {
   const def = load()
   const c = instance(def)
-  c._gate()
-  c.flush()
+  const real = global.setTimeout, held = []
+  global.setTimeout = (fn, ms) => { held.push({ fn, ms }); return held.length }
+  try { c._gate(); c.flush(); while (held.length) held.shift().fn() } finally { global.setTimeout = real }
   assert.deepEqual(c.events, ['continue'])
-})
-
-// g20 第三轮(业主):通关卡留着,彩纸要回来 —— 彩纸要一直撒到通关卡立起来之后。
-test('g20:通关炸开后彩纸撒到通关卡出来之后,不是卡一出来就停', () => {
-  const def = load()
-  const c = instance(def, { mode: 'finale' })
-  const at = []
-  c._at = (fn, ms) => { at.push({ fn, ms }) }
-  c._cx = 100; c._cy = 100; c._S = 1; c._scene = {}
-  c._makeShards = () => {}; c._burstConfetti = () => {}; c._assembleLogo = () => {}
-  c._waves = []; c._sparks = []
-  const t0 = Date.now()
-  def.methods._explode.call(c)
-  const cardAt = Math.max(...at.map(a => a.ms))
-  assert.ok(c._confettiUntil - t0 >= cardAt + 1500, '卡出来以后至少还撒 1.5 秒')
-  at.forEach(a => a.fn())
-  assert.equal(c.data.cta, true)
 })
