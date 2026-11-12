@@ -32,7 +32,7 @@ test('漫游入口与列表标题改名为官方活动任务', () => {
 test('my-events 的行标“来自你的报名”,公共列表的行不标;不把报名写成当前资格', () => {
   const row = { id: 7, title: 'A', status: 2 }
   const vm = loadList({
-    '/api/official/events': { code: 200, data: [row] },
+    '/api/official/active-for-roam': { code: 200, data: [row] },
     '/api/official/my-events': { code: 200, data: [row] },
   })
   vm.load()
@@ -45,4 +45,27 @@ test('my-events 的行标“来自你的报名”,公共列表的行不标;不�
   assert.match(wxml, /wx:if="\{\{item\._sourceText\}\}"[^>]*>\{\{item\._sourceText\}\}/)
   const js = read('components/cy/scene-roam-task-list/index.js')
   for (const src of [wxml, js]) assert.doesNotMatch(src, /有资格|可参与|已获得资格|符合条件/)
+})
+
+
+// D-73（业主 2026-11-11）：漫游任务列表只列「报名中/进行中」且「绑定漫游」的活动；
+// 「我的」也只保留落在这份可参与列表里的报名，已结束/未绑定漫游的不进漫游任务列表。
+test('D-73 公共列表走 active-for-roam，而不是全量 official/events', () => {
+  const js = read('components/cy/scene-roam-task-list/index.js')
+  assert.match(js, /'\/api\/official\/active-for-roam'/)
+  assert.doesNotMatch(js, /'\/api\/official\/events'/)
+})
+
+test('D-73 「我的」按可参与漫游列表取交集', () => {
+  const roam = { id: 7, title: 'A', status: 2 }
+  const ended = { id: 9, title: 'B', status: 5 }
+  const vm = loadList({
+    '/api/official/active-for-roam': { code: 200, data: [roam] },
+    '/api/official/my-events': { code: 200, data: [roam, ended] },
+  })
+  vm.load()
+  assert.deepEqual(vm.data.all.map((x) => x.id), [7])
+  assert.deepEqual(vm.data.mine.map((x) => x.id), [7], '已结束/未绑定漫游的报名不进漫游任务列表')
+  vm.selectTab({ currentTarget: { dataset: { tab: 3 } } })
+  assert.deepEqual(vm.data.events.map((x) => x.id), [7])
 })

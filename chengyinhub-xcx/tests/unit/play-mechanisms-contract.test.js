@@ -18,8 +18,8 @@ function locationHandler(source, node, questArrival = false, ready = false) {
     _noteLocAccuracy() {}, _distText: () => '', _questArrivalCandidates: () => [],
     _questAwaitsArrival: () => questArrival, haversine: () => 0,
     arrive: (...args) => arrivals.push(args), setData(patch) { Object.assign(this.data, patch); } };
-  new Function('that', 'playAccuracy', 'current', 'release', 'arrivalReading', source.slice(start, end))(page, A, () => true, () => {},
-    require('../../pages/play/utils/arrival-reading.js'));
+  new Function('that', 'playAccuracy', 'current', 'release', 'arrivalReading', 'ARRIVAL_RADIUS_METERS', source.slice(start, end))(page, A, () => true, () => {},
+    require('../../pages/play/utils/arrival-reading.js'), require('../../pages/play/utils/arrival-radius.js').ARRIVAL_RADIUS_METERS);
   return { page, arrivals };
 }
 

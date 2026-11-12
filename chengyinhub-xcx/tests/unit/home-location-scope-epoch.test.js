@@ -126,12 +126,12 @@ test('定位权限被拒只引导打开设置一次',()=>{
   locations[0].fail({errMsg:'getLocation:fail auth deny'})
   assert.equal(modals.length,1)
 })
-test('服务端要求手动输入时固定默认城市上海市而不是死胡同',()=>{
+test('D-72 服务端要求手动输入时露出城市选择，不再固定默认上海市',()=>{
   const p=page();latest(p)
   locations[0].success({latitude:31.23,longitude:121.47})
   const geo=requests.find(x=>x.url==='/api/map/reverse-geocode')
   geo.success({code:200,data:{city:'',manualInputRequired:true,reason:'MAP_UNAVAILABLE'}})
-  assert.equal(p.data.cityManual,false);assert.equal(p.data.city,'上海市')
+  assert.equal(p.data.city,'','不再拿上海当默认城市');assert.equal(p.data.cityManual,true)
 })
 test('逆地理请求失败与空城市给出不同提示',()=>{
   let p=page();latest(p,consent(),{userInitiated:true});locations[0].success({latitude:31.23,longitude:121.47})

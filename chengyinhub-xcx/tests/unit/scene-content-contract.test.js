@@ -124,7 +124,8 @@ test('任务场景复用官方活动与我的活动接口，详情打开官方�
   assert.equal(hostJson.usingComponents['cy-scene-roam-task-list'], '/components/cy/scene-roam-task-list/index')
   assert.match(hostWxml, /sceneCurrent && sceneCurrent\.id === 'roam-task-list'/)
   assert.match(hostWxml, /<cy-scene-roam-task-list[^>]*bind:open="openChildScene"[^>]*bind:close="closeScene"/)
-  assert.match(componentJs, /url: '\/api\/official\/events'/)
+  // D-73：公共列表只取「报名中/进行中 + 绑定漫游」的活动
+  assert.match(componentJs, /url: '\/api\/official\/active-for-roam'/)
   assert.match(componentJs, /url: '\/api\/official\/my-events'/)
   // 3-18:行是 official_event,不能进查 cms_activity 的 play-activity-detail
   assert.match(componentJs, /triggerEvent\('official'/)
