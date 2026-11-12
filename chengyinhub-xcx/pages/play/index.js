@@ -101,7 +101,7 @@ const { isRecord, isRecordList } = require('../../utils/response-shape.js');
 // 蓄力太短就没有「憋住」的张力,发牌间隔一小就退回「一起掉」。
 const PACK_CHARGE = 1000;   // ② 蓄力:摇 + 四周压暗
 const PACK_TEAR = 640;      // ③ 横撕:封口条向右扯走 + 撕口自左向右露出 + 爆炸
-const DEAL_STAGGER = 240;   // ④ 每张卡的发牌间隔(动效台 120ms × 0.5× 速度)
+const DEAL_STAGGER = 440;   // ④ 每张卡的发牌间隔。D16:原 240ms 时同时有六七张在半空互相叠;拉到 440ms(约单张飞行 1600ms 的 27%),同一时刻最多 4 张在飞且错开不同进度
 const DEAL_FLIGHT = 1600;   // ④ 单张飞行总时长(动效台 800ms × 0.5×;弧顶在 52%,见 index.wxss)
 const DEAL_ARC = 0.52;      // 弧顶所处的进度,WXSS 两段 transition 的分界必须与之一致
 // 弧顶态的缩放,必须与 index.wxss 的 .fx-tile.is-flying 一致:决定夹取时按多大的卡片留边。
