@@ -476,6 +476,7 @@ Component({
     followReceipt: false,
     reducedMotion: readReducedMotion(),
     isMerchantView: false,
+    viewerLight: false,
 
     identityCard: { shops: 0, themes: 0, routes: 0, km: '0', medals: 0, cities: 1 },
     rankDisplay: { no: 0, delta: '' },
@@ -597,8 +598,8 @@ Component({
         this.refreshAll(true);
         return;
       }
-      // 他人宿主:主题由**被看者**定,不随观看者角色变色
-      applyTheme(this.data.subjectIsMerchant ? 'light' : 'dark');
+      // 他人宿主:被看者是商家 或 观看者是商家(D-91)⇒ 浅色
+      this._syncViewerLight();
       if (this.data.isSelf) this.refreshAll(true);
       else this.refreshPublicProfile(true);
     },
@@ -610,7 +611,7 @@ Component({
       this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
       if (this.data.pointsSheet.loading) this.setData({ 'pointsSheet.loading': false });
       this._profileShown = true;
-      if (!this.data.hostSelf && this.data.subjectIsMerchant) applyTheme('dark');
+      if (!this.data.hostSelf && (this.data.subjectIsMerchant || this.data.viewerLight)) applyTheme('dark');
     }
   },
 
@@ -762,6 +763,15 @@ Component({
       ? this.data.merchantAccess.active
       : policy.isMerchantView({ role: app.getUserRole(), userType: app.getUserType() });
     this._viewerIsMerchant = viewerIsMerchant;
+    this._syncViewerLight();
+  },
+
+  // D-91:公开他人主页时,商家观看者看玩家主页用商家浅色(主题跟随观看者);商家被看者本就走 isMerchantView 浅色。
+  _syncViewerLight: function () {
+    var d = this.data;
+    var light = !d.hostSelf && !d.isSelf && !!this._viewerIsMerchant;
+    if (light !== !!d.viewerLight) this.setData({ viewerLight: light });
+    if (!d.hostSelf) applyTheme(light || d.subjectIsMerchant ? 'light' : 'dark');
   },
 
   _syncCommunityProfile() {
@@ -815,6 +825,7 @@ Component({
       coopInviteShow: false,
       hostSelf: hostSelf,
       isSelf: isSelf,
+      viewerLight: !hostSelf && !isSelf && !!this._viewerIsMerchant,
       selfReadAccess: '',
       merchantAccess: inactiveAccess(),
       merchantAccessState: 'idle',
@@ -922,7 +933,7 @@ Component({
     });
     this._merchantSafetyEpoch = (this._merchantSafetyEpoch || 0) + 1;
     this._merchantNodeEpoch = (this._merchantNodeEpoch || 0) + 1;
-    applyTheme('dark');
+    applyTheme(this.data.viewerLight ? 'light' : 'dark');
   },
 
   applySubjectMerchant: function (raw) {

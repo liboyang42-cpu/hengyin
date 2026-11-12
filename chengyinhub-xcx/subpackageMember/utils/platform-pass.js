@@ -81,8 +81,18 @@ function passView(o, selected, platform) {
   const active = holding.active === true
   const channel = pickChannel(platform, ov.channels)
   const count = isNum(ov.libraryCount) ? Number(ov.libraryCount) : null
+  // D-112:卡面字段全部来自 holding(后端 PlatformPassService.putCardFacts),缺一项就不画那一项
+  const total = isNum(holding.daysTotal) && Number(holding.daysTotal) > 0 ? Number(holding.daysTotal) : 0
+  const left = total && isNum(holding.daysRemaining) ? Math.min(total, Math.max(0, Number(holding.daysRemaining))) : null
+  const card = active ? {
+    planLabel: holding.planLabel === '年卡' || holding.planLabel === '月卡' ? holding.planLabel : '',
+    progress: left === null ? null : { left, total, pct: Math.round(left / total * 100), text: '剩余 ' + left + ' 天 / 共 ' + total + ' 天' },
+    badge: holding.badge === 'EXPIRING' ? '即将到期' : '',
+    teammate: holding.teammateBenefit === true ? '同行可用' : ''
+  } : { planLabel: '', progress: null, badge: '', teammate: '' }
   return {
     enabled: true,
+    card,
     count,
     plans: cards,
     selected: sel,

@@ -462,8 +462,7 @@
          没有 B/I/S 等格式工具;「玩法」只指配置好的模板(节点弹窗里选模板与地点);「图片」= 图片组(先选版式再逐格选图)。 -->
     <view class="sx-add" wx:if="{{!storyEditor.preview}}">
       <view class="sx-add__i" wx:for="{{storyAddItems}}" wx:key="kind" data-kind="{{item.kind}}" catchtap="onStoryAdd" aria-role="button" aria-label="添加{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
-        <cy-icon wx:if="{{item.icon}}" name="{{item.icon}}" size="36" />
-        <view wx:else class="sx-add__rule"></view>
+        <cy-icon name="{{item.icon}}" size="36" />
         <text class="sx-add__t">{{item.label}}</text>
       </view>
     </view>
@@ -1601,6 +1600,22 @@
             </view>
           </view>
         </view>
+        <view class="look-styles">
+          <view wx:for="{{publishCheck.preview.lookStyles}}" wx:key="value" class="look-style {{item.on ? 'is-on' : ''}}" data-value="{{item.value}}" bindtap="onPreviewLookStyle"
+                aria-role="button" aria-label="选择{{item.label}}风格" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">
+            <view class="look-sw {{item.sw}}"></view>
+            <text class="look-style__name">{{item.label}}</text>
+          </view>
+        </view>
+        <scroll-view class="chapter-atmosphere__list" scroll-x enhanced show-scrollbar="{{false}}">
+          <view class="chapter-atmosphere__track look-pal--{{publishCheck.preview.lookStyleKey}}">
+            <view class="chapter-atmosphere__item {{item.className}} {{item.on ? 'is-on' : ''}}" wx:for="{{publishCheck.preview.lookPalettes}}" wx:key="value" data-value="{{item.value}}"
+                  bindtap="onPreviewLookPalette" aria-role="button" aria-label="主题配色:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">
+              <text class="chapter-atmosphere__name">{{item.label}}</text>
+              <text class="chapter-atmosphere__note">{{item.note}}</text><cy-icon wx:if="{{item.on}}" class="chapter-atmosphere__check" name="check" size="24" />
+            </view>
+          </view>
+        </scroll-view>
 
         <block wx:if="{{publishCheck.preview.chapters.length}}">
           <view class="sp-sec">剧情</view>

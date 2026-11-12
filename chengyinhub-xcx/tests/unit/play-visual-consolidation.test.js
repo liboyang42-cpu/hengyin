@@ -120,7 +120,7 @@ test('玩家与商家一级导航未选统一黑白、选中统一品牌紫(UI-0
   // 2026-08-04 用户拍板:共用的 member 主页不算「玩家内容页」,商家态回到白色(theme-merchant)。
   // 这推翻了 #510 把它一刀切成深色的做法;8-03 拍板①「玩家内容页全深色」的射程只到俱乐部/广场
   // 这类纯玩家页,不含本页。深色仍是玩家态唯一形态,所以两侧都钉。
-  assert.match(memberWxml, /<view class="pc-page \{\{isMerchantView \? 'pc-merchant theme-merchant' : 'pc-player'\}\} \{\{isSelf \? 'pc-self' : 'pc-public'\}\} \{\{reducedMotion \? 'pc-reduced-motion' : ''\}\}">/,
+  assert.match(memberWxml, /<view class="pc-page \{\{\(isMerchantView \|\| viewerLight\) \? 'pc-merchant theme-merchant' : 'pc-player'\}\} \{\{isSelf \? 'pc-self' : 'pc-public'\}\} \{\{reducedMotion \? 'pc-reduced-motion' : ''\}\}">/,
     'member home must switch light(merchant)/dark(player) by identity, not hardcode either side')
   // 原为 monochrome="{{!isMerchantView}}" —— 商家态求值成 false,会绕过组件默认值继续拿紫色选中图,
   // 正是总控实拍在 member/index?mode=merchant 上看到的那个紫。删掉该属性改为继承默认 true,
