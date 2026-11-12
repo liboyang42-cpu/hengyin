@@ -39,6 +39,9 @@
 .cf--finale .cf__sk, .cf--finale .cf__v { max-width: 100%; white-space: normal; text-align: center; } /* x-fix4 N-11:避开银色标志下沿;解码乱码字不漏到两侧 */
 .cf--finale .cf__pill--s { background: rgba(var(--lk-ink-rgb, 245,245,242), .12); color: var(--lk-ink, #F5F5F2); } /* ds-ok 回落原型定值 */
 .cf--finale .cf__pill--p { background: var(--lk-a, #E9C47C); color: var(--lk-bg, #111111); } /* ds-ok 回落原型定值 */   /* 盖在通关勋章页(300)之上,播完关掉才露出它 */
+/* x-design1 D2:标志在上、文案在下留出明确间距;文案区铺满内容宽(与页面左右边距一致),不再比内容窄一圈;解码乱码字(is-n)在通关卡里不显示,避免标题后面叠出一层字影 */
+.cf--finale .cf__copy { top: calc(33.3vh + 45vw + 64rpx); left: var(--cy-page-x); right: var(--cy-page-x); width: auto; max-width: none; padding: 0; }
+.cf--finale .cf__c.is-n { opacity: 0; filter: none; }
 .cf-tap { opacity: .96; }
 /* ===== l-play 章节完成整屏(proto gp-chapter-end;没有卡片) =====
    顶部照片 330px 渐入底色,方块章节号在画布上压在照片上(96px 起),成功插图 + 文字 + 三格数据在 380px 起,底部「下一站」。
