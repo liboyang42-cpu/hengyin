@@ -29,6 +29,9 @@ public class JourneyStoryValidator {
     public static final int SCHEMA_VERSION = 1;
     public static final int MAX_JSON_BYTES = 32 * 1024;
 
+    /** D-66（业主 2026-11-11）：一个主题最多 6 个结局，且恰好一个默认结局。 */
+    public static final int MAX_ENDINGS = 6;
+
     private static final int MAX_TEXT = 200;
     private static final int MAX_ITEMS = 16;
     private static final int MIN_OPTIONS = 2;
@@ -126,6 +129,14 @@ public class JourneyStoryValidator {
      * 但校验口径一致(非法一条都不放过)。
      */
     public String validate(String rawJson, Context context) {
+        return validate(rawJson, context, true);
+    }
+
+    /**
+     * D-66：结局数量上限只在保存/发布这一侧执行。运行时读已发布的冻结快照（{@link com.chengyinhub.business.domain.JourneyStory#parse}）
+     * 传 {@code false}，否则老主题里已经存在的 7+ 个结局会在开局时被拒——与「已发布主题保留原结局规则、进行中的局不重算」冲突。
+     */
+    public String validate(String rawJson, Context context, boolean enforceEndingLimit) {
         if (StringUtils.isBlank(rawJson)) {
             return null;
         }
@@ -156,7 +167,7 @@ public class JourneyStoryValidator {
         }
         validateCall(parsed.get("call"), ctx);
         validateStages(parsed.get("stages"), ctx);
-        validateEnding(parsed.get("ending"), ctx);
+        validateEnding(parsed.get("ending"), ctx, enforceEndingLimit);
         return trimmed;
     }
 
@@ -257,7 +268,7 @@ public class JourneyStoryValidator {
 
     // ---------- ending ----------
 
-    private void validateEnding(JsonNode ending, Context ctx) {
+    private void validateEnding(JsonNode ending, Context ctx, boolean enforceEndingLimit) {
         if (ending == null || ending.isNull()) {
             return;
         }
@@ -271,7 +282,7 @@ public class JourneyStoryValidator {
         if (dispositionNodeId != null) {
             requireDispositionNode(dispositionNodeId, ctx);
         }
-        validateEndings(ending.get("endings"), ctx);
+        validateEndings(ending.get("endings"), ctx, enforceEndingLimit);
         // R22-A6:配了处置节点,还要求有结局真的引用它 —— 作者漏写条件时全部落到 fallback、
         // 处置结局静默不生效;形状自洽检查,与 Context 无关(试检查走 Context.none 也要拦)。
         if (dispositionNodeId != null) {
@@ -283,12 +294,17 @@ public class JourneyStoryValidator {
         validateOptionalClues(ending.get("optionalClues"));
     }
 
-    private void validateEndings(JsonNode endings, Context ctx) {
+    private void validateEndings(JsonNode endings, Context ctx, boolean enforceEndingLimit) {
         if (endings == null || endings.isNull()) {
             throw new IllegalArgumentException("结局配置 ending.endings 不能为空");
         }
         if (!endings.isArray() || endings.size() == 0) {
             throw new IllegalArgumentException("结局配置 ending.endings 不能为空");
+        }
+        // D-66：新发布/重新发布的主题最多 6 个结局（含默认结局）。已发布主题的冻结快照与
+        // 进行中的局不重算；本校验只在保存/发布这一侧生效，不做数据迁移。
+        if (enforceEndingLimit && endings.size() > MAX_ENDINGS) {
+            throw new IllegalArgumentException("结局最多 " + MAX_ENDINGS + " 个（含默认结局）");
         }
         requireSize(endings, "结局配置 ending.endings");
         int fallbacks = 0;
