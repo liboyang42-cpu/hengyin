@@ -57,8 +57,17 @@
 | N-17 通过入会申请标题过长 | 已修 | 标题只写名字，默认昵称「城瘾用户」的申请时刻进正文「申请于 …」；拒绝弹层保持原样 | pages/club/join-requests/index.js | x-fix5 N-17；club-join-request-confirm-name-contract | — |
 | N-18 `/api/coop/list` 403 | 不改 | C-1 已把 403 当「没有合作邀约」处理（`readCoopListResult`）；服务端按会员解析商家上下文，客户端没有可靠的「是否有商家行」事实，按角色门控会漏掉兼任商家的主理人，故仍请求 | — | — | — |
 
-## 四、门禁
+## 四、门禁结果
 
-见本文件末尾「门禁结果」节（全量单测、台账、路由矩阵、danger-confirm、ui-integrity、keyframes、WXS、mvn、主包体积、CI）。
+- 全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`）：**17352 项，通过 17352，失败 0**。首轮 17352 项有 8 项失败，均为既有断言钉死了被我改动的标记/文案（verdict/playKit/journey-check 宿主 class、手记 sheet-meta、`elapsedText==='未知'`、`action==='START'`）和票种编辑器在测试桩里缺 `wx.createSelectorQuery`（已加能力判断），已同步断言并重跑，8 个文件 66 项通过，整仓重跑 0 失败。
+- 动作台账 `build-action-ledger.js --write`：PASS 6026 控件（数量不变，行锚重写）；路由矩阵 `--check`：PASS 171 路由 / 27 场景。
+- danger-confirm：PASS（53 个调用点），selftest 通过。
+- ui-integrity：**UI-GATE-0:PASS**，无新增基线登记；fabu/index.js 6 条 U4-DYNAMIC 与 play/index.js 1 条 U5 仅行号位移重锚，条数与理由不变，两个 digest 按门禁算法重算。
+- keyframes 棘轮：motion-property-ratchet 通过，本轮无新增 `@keyframes`。
+- WXS 语法门禁：PASS（14 个 .wxs，4 段内联）；另 undefined-token、wxss-selector、component-wxss-selector、sticky-bottom-bar、js-scope 均通过。
+- Java：`mvn -q -DskipTests package` 通过；`ApiGameSessionControllerTest` 17/17（含新增 `sharedControlOnNonSharedSessionIsEmptySuccessNotServerError`）。
+- 主包：`verify:wechat-release` 源码侧通过；压缩后体积需 CLI 取证（WAIT-EXTERNAL），本轮只改了少量 wxml/wxss/js，无新增依赖与资源。
+- 未跑 `ci/xcx-check.sh`、`ds-hardcode-gate-selftest.sh`；未改 `ci/architecture/*` 与 `ci.yml`。
+- PR #779 CI：推送新头后观察，见下。
 
-STATUS: IN PROGRESS
+STATUS: DONE（PR #779 CI 待观察；未标 ready、未合并）
