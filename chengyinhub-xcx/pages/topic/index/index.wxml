@@ -1,4 +1,4 @@
-<wxs src="../../../utils/wxs/money.wxs" module="money" /><wxs src="../../../utils/wxs/count.wxs" module="cnt" />
+<wxs src="../../../utils/wxs/money.wxs" module="money" /><wxs src="../utils/stat.wxs" module="cnt" />
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />

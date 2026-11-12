@@ -68,7 +68,3 @@
 .sc--pre .sc-badge { opacity: 0; transform: scale(.4); transition: none; }
 .sc--pre .sc-in { opacity: 0; transform: translateY(24rpx); transition: none; }
 @media (prefers-reduced-motion: reduce) { .sc .sc-card, .sc .sc-badge, .sc .sc-in { opacity: 1; transform: none; } .sc, .sc .sc-card, .sc .sc-badge, .sc .sc-in, .sc-arc, .sc-dot { transition: none; } }
-
-.sc-swatch,
-.sc-primary,
-.sc-ch-i { transition: var(--cy-tr-press); }

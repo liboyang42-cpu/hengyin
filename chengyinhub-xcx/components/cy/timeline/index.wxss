@@ -109,5 +109,3 @@
 .cyt--horizontal .cyt__copy { padding: 0 var(--cy-space-3) 0 0; }
 .cyt--horizontal .cyt__title { font-size: var(--cy-type-label); }
 .cyt--horizontal .cyt__meta { font-size: var(--cy-type-micro); }
-
-.cyt__head { transition: var(--cy-tr-press); }

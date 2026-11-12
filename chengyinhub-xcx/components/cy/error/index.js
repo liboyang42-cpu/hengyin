@@ -1,5 +1,4 @@
 const entryRhythm = require('../../../utils/entry-rhythm.js');
-const life = require('../../../utils/life.js');
 // 统一错误态:图标 + 原因 + 重试按钮。点重试触发 'retry' 事件。
 // 区分网络/接口失败由使用方传 title/sub 决定;retry 为空则不显示按钮。
 function retryLabel(title, retry) {
@@ -41,13 +40,9 @@ Component({
       this._openAutoBack();
     },
     ready() {
-      const d = this.properties;
-      if (d.loadFailure || d.autoBack) return;
-      const hero = d.icon === 'empty-state' ? '.cy-error-art' : (d.icon ? '.cy-error-ic' : '');
-      entryRhythm.play(this, [hero, '.cy-error-title', d.sub ? '.cy-error-sub' : '', d.retry ? '.cy-error-retry' : '', d.secondary ? '.cy-error-secondary' : ''].filter(Boolean));
-      if (hero) life.start(this, hero);
+      const d = this.properties, c = '.cy-error-';
+      if (!d.loadFailure && !d.autoBack) entryRhythm.play(this, [d.icon === 'empty-state' ? c + 'art' : d.icon && c + 'ic', c + 'title', d.sub && c + 'sub', d.retry && c + 'retry', d.secondary && c + 'secondary']);
     },
-    detached() { life.stop(this); },
   },
   observers: {
     // 父组件(如 cy-state-shell)可能在挂上之后才把 autoBack 翻成 true:只在 attached 读一次会只剩空白占位

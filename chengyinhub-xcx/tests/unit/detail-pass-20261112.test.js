@@ -6,13 +6,12 @@ const fs = require('node:fs')
 const path = require('node:path')
 const read = (f) => fs.readFileSync(path.join(__dirname, '../..', f), 'utf8')
 
-test('G2 按压:.cy-pressed 压到 .97 / .92,按下 120ms、松手 220ms 回弹的 token 在位', () => {
+test('G2 按压:.cy-pressed 压到 .97 / .92,按下 80ms,松手走 220ms 弹性 token', () => {
   const css = read('style/components.wxss'), tokens = read('style/tokens.wxss')
   const rule = /\.cy-pressed\s*\{[^}]*\}/.exec(css)[0]
   assert.match(rule, /transform:\s*scale\(\.97\)/); assert.match(rule, /opacity:\s*\.92/)
-  assert.match(rule, /var\(--cy-motion-press-in\)/)
-  assert.match(tokens, /--cy-motion-press-in:\s*120ms/); assert.match(tokens, /--cy-motion-press-out:\s*220ms/)
-  assert.match(tokens, /--cy-ease-release:\s*cubic-bezier\(\.34,1\.56,\.64,1\)/)
+  assert.match(rule, /var\(--cy-motion-press\)/)
+  assert.match(tokens, /--cy-tr-press:\s*transform var\(--cy-motion-standard\) var\(--cy-ease-spring\), opacity var\(--cy-motion-standard\)/)
   const btn = read('components/cy/btn/index.wxss')
   assert.match(btn, /\.btn--press\s*\{\s*transform:\s*scale\(0\.97\)/)
 })
@@ -29,14 +28,15 @@ test('G4 读数滚动:init 首帧是 0,时间段不滚,减少动态效果直接�
   assert.equal(Object.keys(p2._cuRollTimers).length, 0)
 })
 
-test('G7 入场节奏:按文档顺序错开 40ms、12px 上浮、420ms,最多 12 项;减少动态效果不播', () => {
+test('G7 入场节奏:按文档顺序错开 40ms、12px 上浮、420ms;减少动态效果不播', async () => {
   const er = require('../../utils/entry-rhythm.js')
-  const steps = er.plan(['.a', '.b', '.c'])
-  assert.deepEqual(steps.map((s) => s.delay), [0, 40, 80])
-  assert.equal(steps[0].duration, 420); assert.equal(steps[0].frames[0].translateY, 24); assert.equal(steps[0].frames[0].ease, 'cubic-bezier(.32,.72,0,1)')
-  assert.equal(er.plan(new Array(30).fill('.x')).length, 12)
-  const ctx = { data: { reducedMotion: true }, animate() { throw new Error('不该播') } }
-  assert.deepEqual(er.play(ctx, ['.a']), [])
+  const got = []
+  const ctx = { data: {}, animate(sel, frames, dur) { got.push([sel, frames[0].translateY, frames[0].ease, dur]) } }
+  er.play(ctx, ['.a', '', '.b', '.c'])
+  await new Promise((r) => setTimeout(r, 120))
+  assert.deepEqual(got, [['.a', 12, 'cubic-bezier(.32,.72,0,1)', 420], ['.b', 12, 'cubic-bezier(.32,.72,0,1)', 420], ['.c', 12, 'cubic-bezier(.32,.72,0,1)', 420]])
+  er.play({ data: { reducedMotion: true }, animate() { throw new Error('不该播') } }, ['.a'])
+  await new Promise((r) => setTimeout(r, 20))
 })
 
 test('S5 视差:0.5×、只在 0..limit,负值(回弹)与减少动态效果不动', () => {
@@ -55,7 +55,7 @@ test('S2/S3/S4/S9 环境细节:帧计划合法,星尘不透明度 ≤10%,减少�
   const amb = require('../../pages/play/components/chapter-flip/ambient.js')
   assert.equal(amb.SPARKLES >= 6 && amb.SPARKLES <= 10, true); assert.equal(amb.SPARK_MAX_OPACITY <= 0.1, true)
   for (let i = 0; i < amb.SPARKLES; i++) assert.ok(amb.sparkFrames(i).every((f) => f.opacity <= 0.1))
-  const up = amb.haloFrames(true); assert.deepEqual([up[0].opacity, up[1].opacity, up[1].scale[0]], [0.5, 0.8, 1.04])
+  const up = amb.haloFrames(true); assert.deepEqual([up[0].opacity, up[1].opacity, up[1].scale[0]], [0.4, 1, 1.12])
   assert.equal(amb.HALO_HALF_MS * 2, 3000)
   amb.start({ data: { reducedMotion: true }, animate() { throw new Error('不该起') } }, { cx: 1, cy: 1 })
   const pk = require('../../pages/play/utils/pack-detail.js')

@@ -1,6 +1,6 @@
 'use strict';
 /* 章节门的环境细节(细节打磨 S2 / S3,2026-11-12):只加在已有画面「后面」,不改任何布局 / 文案 / 配色。
- *   · 光晕:章节号(S2)或通关卡(S3)背后一团外观强调色的柔光,3 秒一呼吸(scale 1→1.04,opacity .5→.8);
+ *   · 光晕:章节号(S2)或通关卡(S3)背后一团外观强调色的柔光,3 秒一呼吸(scale 1→1.12,opacity .4→1);
  *   · 星尘:6–10 颗外观色小点缓缓上飘,每颗 ≤10% 不透明度;
  *   · 光芒(只通关):强调色放射光,极低不透明度,缓慢转。
  * 全部走 this.animate,没有新增 @keyframes;减少动态效果 / 应用内「动态效果」关闭时一概不起。 */
@@ -9,8 +9,8 @@ const SPARKLES = 8;
 const SPARK_MAX_OPACITY = 0.1;
 
 function haloFrames(up) {
-  const a = { opacity: 0.5, scale: [1, 1], ease: 'ease-in-out' };
-  const b = { opacity: 0.8, scale: [1.04, 1.04], ease: 'ease-in-out' };
+  const a = { opacity: 0.4, scale: [1, 1], ease: 'ease-in-out' };
+  const b = { opacity: 1, scale: [1.12, 1.12], ease: 'ease-in-out' };
   return up ? [Object.assign({ offset: 0 }, a), Object.assign({ offset: 1 }, b)] : [Object.assign({ offset: 0 }, b), Object.assign({ offset: 1 }, a)];
 }
 

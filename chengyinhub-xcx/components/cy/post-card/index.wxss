@@ -335,14 +335,3 @@
 .post-card--light .post-card__comment-icon { filter: brightness(0); opacity: 0.62; }
 .post-card--light .post-card__share { color: var(--cy-color-text-primary); }
 .post-card--light .post-card__share-icon { filter: none; }
-
-.post-card,
-.post-card__avatar-img,
-.post-card__club--interactive,
-.post-card__more,
-.post-card__body,
-.post-card__expand,
-.post-card__one-img,
-.post-card__strip-pic,
-.post-card__strip-map,
-.post-card__action { transition: var(--cy-tr-press); }

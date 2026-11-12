@@ -71,7 +71,7 @@ for (const component of ['btn', 'search', 'empty', 'upload']) {
     const behavior = context.module.exports;
     let definition;
     vm.runInNewContext(read(`components/cy/${component}/index.js`), {
-      require(name) { assert.match(name, /(behaviors\/reduced-motion|utils\/(entry-rhythm|life))\.js$/); return /reduced-motion/.test(name) ? behavior : {}; },
+      require(name) { assert.match(name, /(behaviors\/reduced-motion|utils\/entry-rhythm)\.js$/); return /reduced-motion/.test(name) ? behavior : {}; },
       Component(value) { definition = value; },
     });
     assert.equal(definition.behaviors[0], behavior);

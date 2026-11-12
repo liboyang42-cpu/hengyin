@@ -100,5 +100,3 @@
 }
 
 .cell__required{color:var(--cy-color-status-danger);}
-
-.cell__value { font-variant-numeric: tabular-nums; }

@@ -153,5 +153,3 @@
 }
 
 .cy-empty--reduced-motion .cy-empty-spinner { animation: none; }
-.cy-empty-cta { transition: var(--cy-tr-press); }
-.cy-empty--reduced-motion .cy-pressed { transform: none; }

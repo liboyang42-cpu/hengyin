@@ -29,8 +29,3 @@
 /* ⚠️ 本组件 styleIsolation: isolated —— 全局 style/components.wxss 的 .cy-pressed 进不来,
    四枚控件都挂了 hover-class,必须在这儿本地定义一份,否则按下去毫无反应。 */
 .cy-pressed { opacity: .72; transform: scale(.96); }
-
-.cam__x,
-.cam__full,
-.cam__flip,
-.cam__shutter { transition: var(--cy-tr-press); }

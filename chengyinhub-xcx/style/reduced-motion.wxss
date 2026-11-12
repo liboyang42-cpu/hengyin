@@ -64,20 +64,7 @@
   .cy-tabs--shared-slab .cy-tabs__slab,
   .cy-tabs--icon .cy-tabs__item,
   .cy-tabs--icon .cy-tabs__icon,
-  .cy-tabs--icon .cy-tabs__item::after,
-  .cy-empty-cta,
-  .ds-close,
-  .fd__clear,
-  .fd__tail,
-  .qr__err-retry,
-  .qr__logo,
-  .qr__secondary,
-  .search__clear,
-  .upload__add,
-  .upload__img,
-  .upload__mask,
-  .upload__mask--error,
-  .upload__remove {
+  .cy-tabs--icon .cy-tabs__item::after {
     animation: none !important;
     transition: none !important;
   }

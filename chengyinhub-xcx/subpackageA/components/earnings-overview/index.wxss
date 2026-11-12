@@ -20,7 +20,7 @@
 .cy-pressed { opacity: .88; }
 
 /* 细节打磨 2026-11-12 · S10 收益:卡片顶边高光 + 两层柔投影(浅色),读数等宽 */
-.eo-card { box-shadow: var(--cy-shadow-hi-light), var(--cy-shadow-float-light); font-variant-numeric: tabular-nums; }
+.eo-card { box-shadow: var(--cy-depth-float); font-variant-numeric: tabular-nums; }
 
 /* 细节打磨二期 L1/L5/L7 */
 .eo-sec__link { transition: var(--cy-tr-press); }

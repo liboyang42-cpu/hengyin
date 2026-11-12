@@ -250,4 +250,3 @@
    接替的这层遮罩直接是暗的、不淡入 —— 一关一开时页面不会暗 → 亮 → 暗闪一下。 */
 .mo--keep-mask .mo__mask { opacity: 1 !important; }
 .mo.mo--handoff-in .mo__mask { animation: none; }
-.mo__btn { transition: var(--cy-tr-press); }

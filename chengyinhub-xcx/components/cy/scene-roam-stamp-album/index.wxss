@@ -41,7 +41,3 @@
 .album__press { opacity: .72; }
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。 */
 .cy-pressed { opacity: .88; }
-
-.stkcell,
-.album-empty__cta,
-.stkdetail__img { transition: var(--cy-tr-press); }

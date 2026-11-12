@@ -85,5 +85,3 @@
 .search--reduced-motion .search__spin { animation: none; }
 
 .search__status { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
-
-.search__clear { transition: var(--cy-tr-press); }

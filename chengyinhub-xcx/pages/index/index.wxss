@@ -692,17 +692,3 @@ page {
 .v3-locprompt__acts { display: flex; gap: var(--cy-space-3); margin-top: var(--cy-space-2); }
 .v3-locprompt__btn { flex: 1; min-height: 88rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-comp-btn-radius); font-size: var(--cy-type-body); font-weight: 600; background: var(--cy-color-bg-surface); color: var(--cy-color-text-primary); }
 .v3-locprompt__btn--p { background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg); }
-
-.v2-fcard { box-shadow: var(--cy-shadow-float-dark); }
-.v2-fcard::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2rpx; z-index: 2; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.16), rgba(255,255,255,0)); } /* ds-ok G1 顶边高光 */
-.v3-locprompt { box-shadow: var(--cy-shadow-hi-dark), var(--cy-shadow-float-dark); }
-.v2-ftitle, .v2-status-v.price { font-variant-numeric: tabular-nums; }
-
-.v3-avatar,
-.v3-locprompt__btn,
-.v3-locprompt__btn--p,
-.v3-reco-card,
-.v2-fcard,
-.v2-status,
-.tkbox_skip { transition: var(--cy-tr-press); }
-.v3-reco-card { box-shadow: var(--cy-depth-rest); }

@@ -8,6 +8,3 @@
 .fs-retry { color: var(--cy-text-title); font-size: var(--cy-font-label); font-weight: 600; }
 /* isolated 组件内全局 .cy-pressed 进不来,本地定义一份(同 scene-asset-earnings) */
 .cy-pressed { opacity: .88; }
-
-.fs-retry { transition: var(--cy-tr-press); }
-.fs-amount { font-variant-numeric: tabular-nums; }

@@ -60,7 +60,3 @@
 
 /* isolated 组件里全局按压类进不来,补一份 */
 .cy-pressed{ opacity:.88; }
-
-.searchbar,
-.addrbar__c,
-.addrrow__nav { transition: var(--cy-tr-press); }

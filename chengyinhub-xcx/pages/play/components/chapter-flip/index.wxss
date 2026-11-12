@@ -76,7 +76,7 @@
 
 /* ===== 细节打磨 2026-11-12 · S2 / S3 环境细节:光晕、星尘、光芒都在画布后面,不占版面 ===== */
 .cf__amb { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.cf__halo { position: absolute; width: 300px; height: 300px; border-radius: 50%; opacity: .5; background: radial-gradient(circle, rgba(var(--lk-a-rgb, 233,196,124), .22), rgba(var(--lk-a-rgb, 233,196,124), 0) 68%); } /* ds-ok 外观强调色光晕,回落金 */
+.cf__halo { position: absolute; width: 300px; height: 300px; border-radius: 50%; opacity: .4; background: radial-gradient(circle, rgba(var(--lk-a-rgb, 233,196,124), .22), rgba(var(--lk-a-rgb, 233,196,124), 0) 68%); } /* ds-ok 外观强调色光晕,回落金 */
 .cf__rays { position: absolute; width: 300px; height: 300px; border-radius: 50%; opacity: .5; background: repeating-conic-gradient(from 0deg, rgba(var(--lk-a-rgb, 233,196,124), .06) 0deg 8deg, rgba(var(--lk-a-rgb, 233,196,124), 0) 8deg 24deg); -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 70%); mask-image: radial-gradient(circle, #000 20%, transparent 70%); transform: scale(2.2); } /* ds-ok 通关光芒,低不透明度 */
 .cf__spl { position: absolute; width: 6rpx; height: 6rpx; border-radius: 50%; opacity: 0; background: rgba(var(--lk-a-rgb, 233,196,124), 1); } /* ds-ok 外观色星尘 */
 .cf__sv, .cf__v { font-variant-numeric: tabular-nums; }

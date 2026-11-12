@@ -139,5 +139,3 @@
 /* 时间选择面板是 half 档:进 sheet-in 300 / 出 sheet-out 250,慢快慢,与 cy-sheet 同档(2026-10-23,原 350 / 220) */
 .ds--keep-mask .ds__mask { opacity: 1 !important; }
 .ds.ds--handoff-in .ds__mask { animation: none; }
-
-.ds-close { transition: var(--cy-tr-press); }

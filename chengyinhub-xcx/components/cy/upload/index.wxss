@@ -118,9 +118,3 @@
 .upload--reduced-motion .upload__spin { animation: none; }
 
 .upload__status { font-size: var(--cy-type-caption); color: var(--cy-color-action-primary-fg-on-dark); }
-
-.upload__img,
-.upload__mask,
-.upload__mask--error,
-.upload__remove,
-.upload__add { transition: var(--cy-tr-press); }

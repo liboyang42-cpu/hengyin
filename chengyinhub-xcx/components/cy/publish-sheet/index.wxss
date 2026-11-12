@@ -97,6 +97,3 @@
    接替的这层遮罩直接是暗的、不淡入 —— 一关一开时页面不会暗 → 亮 → 暗闪一下。 */
 .ps--keep-mask .ps__mask { opacity: 1 !important; }
 .ps--quick.ps--handoff-in .ps__mask { transition: none; }
-
-.ps__mask,
-.ps__quick-action--return { transition: var(--cy-tr-press); }

@@ -124,7 +124,7 @@ function methods() {
     _sheetRollInit(node) { return countUp.init(this._sheetRollFacts(node), this.data.reducedMotion === true); },
     _sheetRoll(node) {
       countUp.roll(this, 'sheetShown', this._sheetRollFacts(node), { delay: 260 });
-      entryRhythm.play(this, ['.sheet-name', '.sheet-meta', '.sheet-desc', '.sheet-dist', '.sheet-row'], { delay: 120 });
+      entryRhythm.play(this, ['.sheet-name', '.sheet-meta', '.sheet-desc', '.sheet-dist', '.sheet-row'], 120);
     },
     _sheetFacts(node) { return sheetFacts(node, typeof this._distText === 'function' ? this._distText(node) : ''); },
     /** f-play:地点卡开着时定位每一跳都重算距离 / 步行 —— 开卡时算一次的话,走到站上还写着出发时的「1.7km · 22 分钟」。文字没变不 setData */

@@ -2052,8 +2052,8 @@ page { background: var(--cy-color-bg-page); }
 .fx-pack__sheen{ position:absolute; left:0; top:-10%; width:120rpx; height:120%; pointer-events:none; opacity:0; background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.5), rgba(255,255,255,0)); } /* ds-ok 箔面流光 */
 
 /* ===== 细节打磨 2026-11-12 · S9 ⋯ 菜单:从右上角(按钮处)缩放展开,行逐行错开 30ms;行内容与版式不动 ===== */
-.tools--corner{ transform-origin:100% 0; box-shadow:var(--cy-shadow-hi-dark), var(--cy-shadow-float-dark); }
-.tools--corner .drow{ animation:cy-rise-in .42s var(--cy-ease-rise) backwards; }
+.tools--corner{ transform-origin:100% 0; box-shadow:var(--cy-depth-float); }
+.tools--corner .drow{ animation:cy-rise-in .42s cubic-bezier(.32,.72,0,1) backwards; }
 .tools--corner .drow:nth-child(1) { animation-delay: 0ms; }
 .tools--corner .drow:nth-child(2) { animation-delay: 30ms; }
 .tools--corner .drow:nth-child(3) { animation-delay: 60ms; }
