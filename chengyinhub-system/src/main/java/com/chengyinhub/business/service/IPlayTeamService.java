@@ -31,6 +31,8 @@ public interface IPlayTeamService {
      * TEAM_FULL/TICKET_REQUIRED,各自独立,不再统一并成「邀请已失效」。
      */
     PlayTeam join(String inviteCode, Long memberId);
+    /** 队长换码，不延长原邀请期限；迁移保留的旧链接仍只到原期限有效。 */
+    String rotateInviteCode(Long teamId, Long memberId);
     /** 公开申请;返回申请失效时间。 */
     Date apply(Long teamId, Long memberId, String message);
     void withdraw(Long teamId, Long memberId);

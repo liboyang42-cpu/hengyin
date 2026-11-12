@@ -11,8 +11,8 @@ public class FakeEcommerceGateway implements EcommercePayGateway {
     public RefundQuery refundQuery;
     public RuntimeException refundFailure;
     ApplymentStatus applyment;
-    ShareResult share = new ShareResult("FINISHED", "W1", List.of());
-    ShareResult query = new ShareResult("FINISHED", "W1", List.of());
+    ShareResult share;
+    ShareResult query;
     public String returnResult = "SUCCESS";
     RuntimeException failNext;
     List<ProfitSharePlanner.Receiver> lastReceivers;
@@ -23,9 +23,13 @@ public class FakeEcommerceGateway implements EcommercePayGateway {
     @Override public ApplymentSubmitted submitApplyment(String no, Map<String, Object> body) { calls.add("submit:" + no); maybeFail(); return new ApplymentSubmitted(2000001L); }
     @Override public ApplymentStatus queryApplyment(String no) { calls.add("query:" + no); maybeFail(); return applyment; }
     @Override public ShareResult createProfitSharing(String sub, String tx, String no, List<ProfitSharePlanner.Receiver> r, boolean finish) {
-        calls.add("share:" + no + ":" + finish); lastReceivers = r; maybeFail(); return share;
+        calls.add("share:" + no + ":" + finish); lastReceivers = r; maybeFail(); return share == null ? successfulShare() : share;
     }
-    @Override public ShareResult queryProfitSharing(String sub, String tx, String no) { calls.add("shareQuery:" + no); maybeFail(); return query; }
+    @Override public ShareResult queryProfitSharing(String sub, String tx, String no) { calls.add("shareQuery:" + no); maybeFail(); return query == null ? successfulShare() : query; }
+    private ShareResult successfulShare() {
+        return new ShareResult("FINISHED", "W1", lastReceivers == null ? List.of() : lastReceivers.stream()
+                .map(r -> new ReceiverResult(r.type(), r.account(), r.appid(), r.amountFen(), "SUCCESS", null)).toList());
+    }
     @Override public ReturnResult createReturn(String sub, String no, String rno, String mchid, long fen, String d) {
         calls.add("return:" + mchid + ":" + fen); maybeFail(); return new ReturnResult(returnResult, "WR" + fen, "FAILED".equals(returnResult) ? "BALANCE_NOT_ENOUGH" : null);
     }

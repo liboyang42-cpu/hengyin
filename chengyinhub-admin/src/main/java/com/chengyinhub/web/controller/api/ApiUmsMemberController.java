@@ -270,6 +270,7 @@ public class ApiUmsMemberController extends BaseController {
             UmsMemberBalanceDetail balanceDetail = new UmsMemberBalanceDetail();
             balanceDetail.setMemberId(memberId);
             balanceDetail.setDelFlag(Long.valueOf(0));
+            balanceDetail.getParams().put("includeExternalClubIncome", true);
             if (com.chengyinhub.common.utils.StringUtils.isNotEmpty(eventType)) {
                 balanceDetail.setEventType(Long.valueOf(eventType));
             }

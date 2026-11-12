@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -270,6 +271,8 @@ class WxContentSecurityServiceImplTest {
                 service.processMediaCheckCallback("sig", "1700000000", "nonce", body));
         when(configService.selectConfigByKey("wx.msgpush.token")).thenReturn("test-token");
         assertEquals(IWxContentSecurityService.CallbackResult.FORBIDDEN,
+                service.processMediaCheckCallback(null, "1700000000", "nonce", body));
+        assertEquals(IWxContentSecurityService.CallbackResult.FORBIDDEN,
                 service.processMediaCheckCallback("wrong", "1700000000", "nonce", body));
         assertEquals(IWxContentSecurityService.CallbackResult.INVALID_TIMESTAMP,
                 service.processMediaCheckCallback("761c6132f0e96ffae2ef5616b73b6eae4582314e",
@@ -422,7 +425,8 @@ class WxContentSecurityServiceImplTest {
         com.chengyinhub.business.service.IImService im = mock(com.chengyinhub.business.service.IImService.class);
         org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IImService> imProvider =
                 mock(org.springframework.beans.factory.ObjectProvider.class);
-        when(imProvider.getIfAvailable()).thenReturn(im);
+        when(imProvider.getObject()).thenReturn(im);
+        when(im.enqueueSystemNotification(anyLong(), anyInt(), anyString(), anyString(), anyString())).thenReturn(1L);
         ReflectionTestUtils.setField(service, "imServiceProvider", imProvider);
         com.chengyinhub.business.service.IAuditTaskService audit = mock(com.chengyinhub.business.service.IAuditTaskService.class);
         org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IAuditTaskService> auditProvider =
@@ -440,7 +444,7 @@ class WxContentSecurityServiceImplTest {
         verify(templates).updateCmsMemberTemplate(down.capture());
         assertEquals(Long.valueOf(0L), down.getValue().getPublishStatus());
         assertEquals(Integer.valueOf(2), down.getValue().getCheckStatus());
-        verify(im).sendSystemInNestedTransaction(eq(9L), any(), any(), any());
+        verify(im).enqueueSystemNotification(eq(9L), any(), any(), any(), startsWith("content-safety:"));
         org.mockito.Mockito.verifyNoInteractions(audit);
     }
 
@@ -638,6 +642,22 @@ class WxContentSecurityServiceImplTest {
         }
         verify(inbox).register("fixture-review-trace",IWxContentSecurityService.BIZ_TYPE_SQUARE,
                 42L,"https://fixture.invalid/photo.jpg");
+    }
+
+    @Test
+    void audioUsesActualAudioScannerAndUnsupportedTypesNeverSendImageRequests() {
+        java.util.List<String> bodies = new java.util.ArrayList<>();
+        WxContentSecurityServiceImpl service = enabledTextService(new WxContentSecurityServiceImpl() {
+            @Override String sendPost(String url, String body, String contentType) {
+                bodies.add(body);
+                return "{\"errcode\":0,\"trace_id\":\"audio-trace\"}";
+            }
+        });
+        assertEquals("audio-trace",service.checkMediaAsync("https://fixture.invalid/audio.mp3","fixture-openid",1));
+        assertEquals(1,com.alibaba.fastjson2.JSON.parseObject(bodies.get(0)).getIntValue("media_type"));
+        assertNull(service.checkMediaAsync("https://fixture.invalid/model.glb","fixture-openid",3));
+        assertNull(service.checkMediaAsync("https://fixture.invalid/video.mp4","fixture-openid",4));
+        assertEquals(1,bodies.size());
     }
 
     @Test

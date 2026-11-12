@@ -88,4 +88,28 @@ public interface EcomPayoutMapper {
     /** 人工单重新计划：仅 MANUAL 且从未提交过微信（wx_order_id 为空）的单可以改写计划。 */
     int replanShareOrder(@Param("id") Long id, @Param("state") String state, @Param("sharedFen") long sharedFen,
                          @Param("planHash") String planHash, @Param("manualReason") String manualReason);
+
+    // ---- D-05/D-09/D-16 俱乐部个人分账（新增，不改既有语句） ----
+    com.chengyinhub.business.domain.ClubPayoutBeneficiary selectFrozenClubBeneficiary(@Param("scopeType") String scopeType, @Param("scopeId") Long scopeId);
+
+    com.chengyinhub.business.domain.ClubPayoutBeneficiary selectFrozenClubBeneficiaryForUpdate(@Param("scopeType") String scopeType, @Param("scopeId") Long scopeId);
+
+    int markClubBeneficiaryReady(@Param("scopeType") String scopeType, @Param("scopeId") Long scopeId);
+
+    int insertFrozenClubBeneficiary(com.chengyinhub.business.domain.ClubPayoutBeneficiary beneficiary);
+
+    com.chengyinhub.business.domain.EcomPersonalReceiver selectByMemberAndAppid(@Param("memberId") Long memberId, @Param("appid") String appid);
+
+    com.chengyinhub.business.domain.EcomPersonalReceiver selectByMemberAndAppidForUpdate(@Param("memberId") Long memberId, @Param("appid") String appid);
+
+    /** Insert only: no update/upsert can replace a verified identity. */
+    int insertVerified(com.chengyinhub.business.domain.EcomPersonalReceiver receiver);
+
+    /** Session obligations use negative activity/detail ids in the shared payout scope namespace. */
+    List<Long> selectMissingActivityIds(@Param("limit") int limit);
+
+    List<EcomOrderSeller> selectPaidTrades(@Param("activityId") Long activityId);
+
+    List<EcomLedgerComponent> selectComponents(@Param("activityId") Long activityId,
+                                               @Param("registrationId") Long registrationId);
 }

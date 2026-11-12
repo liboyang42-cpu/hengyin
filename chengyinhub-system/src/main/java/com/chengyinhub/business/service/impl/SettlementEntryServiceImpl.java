@@ -40,6 +40,9 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
     private SettlementDetailMapper settlementDetailMapper;
 
     @Autowired
+    private com.chengyinhub.business.service.support.ClubPrincipalPayee clubPrincipalPayee;
+
+    @Autowired
     private ISettlementRuleService settlementRuleService;
 
     @Autowired
@@ -150,6 +153,10 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
         if (isTopic && registration.getOwnerId() != null
                 && !coopOrderMapper.selectEffectiveOrdersByTopicId(registration.getOwnerId()).isEmpty()) {
             return 0;
+        }
+        CmsActivity beneficiaryActivity = isTopic ? null : (loadedActivity != null ? loadedActivity : resolveActivity(registration));
+        if (clubPrincipalPayee != null && clubPrincipalPayee.personalActivity(beneficiaryActivity)) {
+            merchantId = clubPrincipalPayee.forActivity(beneficiaryActivity);
         }
         String bizType = isTopic ? "topic" : "activity";
         // 系统1活动结算固定读取全局 activity 规则(ownerId=0);纯账本必须同源,不能误用商家覆盖规则。
@@ -319,6 +326,15 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
             detail.setEntryKind("ORIGIN");
             detail.setEventKey("ORIGIN");
         }
+        if (registration != null && "merchant".equals(receiverType) && clubPrincipalPayee != null
+                && clubPrincipalPayee.personalActivity(resolveActivity(registration))) {
+            com.chengyinhub.business.domain.ClubPayoutBeneficiary frozen = clubPrincipalPayee.frozenActivity(resolveActivity(registration));
+            if (frozen != null) {
+                if (!frozen.getMemberId().equals(receiverId)) throw new IllegalStateException("CLUB_BENEFICIARY_DETAIL_CONFLICT");
+                detail.setClubId(frozen.getClubId()); detail.setClubName(frozen.getClubName());
+                detail.setFailReason("PERSONAL_CLUB_EXTERNAL_PAYMENT_ROUTE_REQUIRED");
+            }
+        }
         detail.setBatchId(0L);
         detail.setMerchantId(merchantId);
         detail.setSourceType(sourceType);
@@ -349,6 +365,8 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
                 && sameNumber(expected.getMerchantId(), current.getMerchantId())
                 && sameText(expected.getReceiverType(), current.getReceiverType())
                 && sameNumber(expected.getReceiverId(), current.getReceiverId())
+                && sameNumber(expected.getClubId(), current.getClubId())
+                && sameText(expected.getClubName(), current.getClubName())
                 && sameMoney(expected.getGrossAmount(), current.getGrossAmount())
                 && sameMoney(expected.getCommissionAmount(), current.getCommissionAmount())
                 && sameMoney(expected.getSettlementAmount(), current.getSettlementAmount())

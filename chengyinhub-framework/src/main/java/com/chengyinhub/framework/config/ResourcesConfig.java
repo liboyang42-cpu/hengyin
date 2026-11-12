@@ -27,6 +27,9 @@ public class ResourcesConfig implements WebMvcConfigurer
     @Autowired
     private RepeatSubmitInterceptor repeatSubmitInterceptor;
 
+    @Autowired
+    private com.chengyinhub.framework.interceptor.AppMediaVisibilityInterceptor appMediaVisibilityInterceptor;
+
     @Value("${security.cors.allowed-origins}")
     private String allowedOrigins;
 
@@ -50,6 +53,8 @@ public class ResourcesConfig implements WebMvcConfigurer
     public void addInterceptors(InterceptorRegistry registry)
     {
         registry.addInterceptor(repeatSubmitInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(appMediaVisibilityInterceptor)
+                .addPathPatterns(Constants.RESOURCE_PREFIX + "/**", "/common/download/resource");
     }
 
     /**

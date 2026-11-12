@@ -919666,7 +919666,7 @@
             "url": "/api/creativesquare/like",
             "method": "POST",
             "auth": "authenticated",
-            "source": "server-controller"
+            "source": "conditional-url"
           }
         ],
         "writeApis": [
@@ -1235244,7 +1235244,7 @@
             "url": "/api/creativesquare/like",
             "method": "POST",
             "auth": "authenticated",
-            "source": "server-controller"
+            "source": "conditional-url"
           }
         ],
         "writeApis": [

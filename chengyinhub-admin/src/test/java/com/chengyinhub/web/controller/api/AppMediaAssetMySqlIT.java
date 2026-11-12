@@ -44,6 +44,7 @@ class AppMediaAssetMySqlIT {
                 ScriptUtils.executeSqlScript(connection,new FileSystemResource("sql/migration_20261012_app_media_asset.sql"));
                 ScriptUtils.executeSqlScript(connection,new FileSystemResource("sql/migration_20261012_app_media_asset_namespaces.sql"));
                 ScriptUtils.executeSqlScript(connection,new FileSystemResource("sql/migration_20261109_app_media_provenance.sql"));
+                ScriptUtils.executeSqlScript(connection,new FileSystemResource("sql/migration_20261112_dec_c_safety.sql"));
             }
         }
         SqlSessionFactoryBean factory=new SqlSessionFactoryBean();factory.setDataSource(source);
@@ -146,5 +147,22 @@ class AppMediaAssetMySqlIT {
         assertDoesNotThrow(()->com.chengyinhub.business.service.support.AppMediaProvenance.requirePublication(legacy));
         assertNull(db.queryForObject("select source_type from app_media_asset where id=?",String.class,id));
     }
+    @Test void machineRiskBlocksStalePassManualApprovalAndSameBytesRetry() {
+        Map<String,Object> row=new java.util.HashMap<>();row.put("memberId",9L);
+        row.put("objectKey","upload/0123456789abcdef0123456789abcdef.mp3");row.put("mediaType","AUDIO");
+        assertEquals(1,mapper.insert(row));Long id=((Number)row.get("id")).longValue();
+        assertEquals(1,mapper.bindAuditTask(id,0,101L));
+        assertEquals(1,mapper.machineDecide(id,0,"APPROVED",null,false));
+        assertEquals("APPROVED",mapper.select(id).get("reviewState"));
+        assertEquals(1,mapper.machineDecide(id,0,"REJECTED","media risk",true));
+        assertEquals(0,mapper.machineDecide(id,0,"APPROVED",null,false));
+        assertEquals(0,mapper.machineDecide(id,0,"REJECTED","media risk",true));
+        assertEquals(0,mapper.decide(id,0,101L,"APPROVED",null));
+        assertEquals(0,mapper.retry(id,9L,0));
+        assertEquals("REJECTED",mapper.select(id).get("reviewState"));
+        assertEquals(java.util.List.of(id),mapper.selectIdsByMediaHash(
+                com.chengyinhub.business.service.impl.WxContentCallbackInboxServiceImpl.sha256Hex("media-asset:"+id)));
+    }
+
     @AfterAll void cleanup() {if(database!=null)admin.execute("drop database "+database);}
 }

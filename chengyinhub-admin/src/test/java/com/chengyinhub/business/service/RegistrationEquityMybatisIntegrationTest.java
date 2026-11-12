@@ -143,7 +143,7 @@ class RegistrationEquityMybatisIntegrationTest {
                         + "unit_price DECIMAL(18,2), entitlement_max_usage INT, entitlement_days INT,"
                         + "min_settlement_amount DECIMAL(12,2), refund_deadline_hours INT, allow_refund_after_verified INT, auto_approve_refund INT,"
                         + "status INT, del_flag INT, create_time DATETIME(3), update_time DATETIME(3)) ENGINE=InnoDB",
-                "CREATE TABLE settlement_detail (id BIGINT PRIMARY KEY AUTO_INCREMENT, claim_id BIGINT NULL, entry_kind VARCHAR(24) NULL,"
+                "CREATE TABLE settlement_detail (id BIGINT PRIMARY KEY AUTO_INCREMENT, club_id BIGINT NULL, club_name VARCHAR(255) NULL, claim_id BIGINT NULL, entry_kind VARCHAR(24) NULL,"
                         + "event_key VARCHAR(128) NULL, batch_id BIGINT, merchant_id BIGINT, source_type VARCHAR(64),"
                         + "source_id BIGINT, receiver_type VARCHAR(64), receiver_id BIGINT, gross_amount DECIMAL(12,2), commission_amount DECIMAL(12,2),"
                         + "settlement_amount DECIMAL(12,2), status INT, fail_reason VARCHAR(500), idempotency_key VARCHAR(255),"

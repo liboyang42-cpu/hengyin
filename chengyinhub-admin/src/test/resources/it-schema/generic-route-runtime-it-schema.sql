@@ -227,6 +227,8 @@ CREATE TABLE play_team_member (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='玩家队伍成员';
 
 ALTER TABLE play_team ADD COLUMN invite_code VARCHAR(32) NULL;
+ALTER TABLE play_team ADD COLUMN legacy_invite_code VARCHAR(32) NULL;
+ALTER TABLE play_team ADD COLUMN legacy_invite_expire_time DATETIME NULL;
 
 CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, del_flag INT DEFAULT 0) ENGINE=InnoDB;
 

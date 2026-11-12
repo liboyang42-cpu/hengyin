@@ -115,6 +115,36 @@ class ClubPrincipalPayeeSettlementTest {
         when(ruleService.getActiveRule(0L, "activity")).thenReturn(rule);
     }
 
+    @Test
+    void personalSessionPreparesExternalPayoutWithoutClaimOrWalletOrDebtOffset() {
+        ClubPrincipalPayee personal = mock(ClubPrincipalPayee.class);
+        when(personal.personalActivity(activity)).thenReturn(true);
+        com.chengyinhub.business.domain.ClubPayoutBeneficiary frozen = new com.chengyinhub.business.domain.ClubPayoutBeneficiary();
+        frozen.setMemberId(PRINCIPAL);
+        when(personal.frozenActivity(activity)).thenReturn(frozen);
+        ReflectionTestUtils.setField(svc, "clubPrincipalPayee", personal);
+        assertEquals(0, svc.executeActivitySettlement());
+        verify(personal).markActivityReady(ACTIVITY_ID);
+        verify(cmsActivityMapper, never()).claimActivityForSettlement(ACTIVITY_ID);
+        verify(umsMemberService, never()).addBalance(anyLong(), any());
+        verify(debtLedger, never()).offsetFromSettlement(anyLong(), any(), anyLong());
+    }
+
+    @Test
+    void personalReadySessionNeverMutatesFeesOrCreditsWalletAgain() {
+        ClubPrincipalPayee personal = mock(ClubPrincipalPayee.class);
+        when(personal.personalActivity(activity)).thenReturn(true);
+        com.chengyinhub.business.domain.ClubPayoutBeneficiary frozen = new com.chengyinhub.business.domain.ClubPayoutBeneficiary();
+        frozen.setMemberId(PRINCIPAL);
+        when(personal.frozenActivity(activity)).thenReturn(frozen);
+        when(personal.activityAlreadyReady(ACTIVITY_ID)).thenReturn(true);
+        ReflectionTestUtils.setField(svc, "clubPrincipalPayee", personal);
+        assertEquals(0, svc.executeActivitySettlement());
+        verify(personal, never()).markActivityReady(ACTIVITY_ID);
+        verify(umsMemberService, never()).addBalance(anyLong(), any());
+        verify(cmsActivityMapper, never()).claimActivityForSettlement(ACTIVITY_ID);
+    }
+
     private static UmsMember usableMember() {
         UmsMember m = new UmsMember();
         m.setStatus(1L);

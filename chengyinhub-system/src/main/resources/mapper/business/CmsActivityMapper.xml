@@ -636,4 +636,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select content_safety_hold from cms_activity where id = #{id}
     </select>
 
+    <update id="completeActivityIfReceived">
+        update cms_activity a
+        join ecom_profit_share_order o on o.topic_id = -a.id and o.id = #{shareOrderId} and o.state = 'SUCCESS'
+        join club_personal_payout_beneficiary b on b.scope_type = 'ACTIVITY' and b.scope_id = a.id
+        set a.is_settlement = 1
+        where a.is_settlement = 0 and a.del_flag = 0 and b.payout_ready_at is not null
+          and exists (select 1 from cms_registration r join settlement_detail d
+                      on d.source_type = 'registration' and d.source_id = r.id
+                      where r.owner_type = 2 and r.owner_id = a.id and d.club_id = b.club_id
+                        and d.receiver_id = b.member_id and d.status = 1)
+          and not exists (select 1 from cms_registration r join settlement_detail d
+                          on d.source_type = 'registration' and d.source_id = r.id
+                          where r.owner_type = 2 and r.owner_id = a.id and d.status = 0)
+          and not exists (select 1 from cms_registration r join cms_activity_settlement_hold h
+                          on h.registration_id = r.id and h.status = 0
+                          where r.owner_type = 2 and r.owner_id = a.id)
+    </update>
 </mapper>

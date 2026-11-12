@@ -119,6 +119,9 @@ class EcomPayoutWiringMySqlIT {
             st.execute("INSERT INTO sys_menu(menu_name, parent_id, path, menu_type, perms) VALUES ('资金售后', 0, 'funds-aftercare', 'M', '')");
             ItSchema.applyMigrations(c, "sql/migration_20261110_ecommerce_payout.sql",
                     "sql/migration_20261110_ecommerce_payout_wiring.sql");
+            st.execute("CREATE TABLE settlement_detail(id BIGINT PRIMARY KEY)");
+            ItSchema.applyMigrations(c, "sql/migration_20261112_dec_c_payout.sql");
+            st.execute("ALTER TABLE sys_job ADD COLUMN update_by VARCHAR(64), ADD COLUMN update_time DATETIME");
         }
     }
 
@@ -300,5 +303,21 @@ class EcomPayoutWiringMySqlIT {
         assertEquals(1, mapper.selectShareOrdersForAdmin("MANUAL", null, 10).size());
         assertTrue(mapper.selectReturnsByState(null, 10).isEmpty());
         assertTrue(mapper.selectSubMerchantsForAdmin("FINISH", 10).isEmpty());
+    }
+    @Test
+    void activationMigrationEnablesOnlyGuardedJobsAndIsRepeatSafe() throws Exception {
+        try (Connection c = dataSource.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                ItSchema.applyMigrations(c, "sql/migration_20261112_dec_c_payout_jobs.sql",
+                        "sql/migration_20261112_dec_c_payout_jobs.sql");
+                try (Statement st = c.createStatement(); ResultSet rs = st.executeQuery(
+                        "select count(*) from sys_job where invoke_target in ('ecommercePayoutTask.shareAndRetry()',"
+                        + "'ecommercePayoutTask.syncOnboarding()') and status='0' and concurrent='1' and misfire_policy='3'")) {
+                    assertTrue(rs.next()); assertEquals(2, rs.getInt(1));
+                }
+            } finally { c.rollback(); }
+        }
+        assertEquals(2, scalar("select count(*) from sys_job where invoke_target like 'ecommercePayoutTask.%' and status='1'"));
     }
 }

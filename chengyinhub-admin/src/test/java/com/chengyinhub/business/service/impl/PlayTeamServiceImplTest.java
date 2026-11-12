@@ -344,7 +344,7 @@ class PlayTeamServiceImplTest {
         PlayTeam created = service.create(LEADER_ID, 2, 9L, null, 4);
 
         assertNotNull(created.getInviteCode());
-        assertTrue(created.getInviteCode().matches("[A-Za-z0-9_-]{22}"), created.getInviteCode());
+        assertTrue(created.getInviteCode().matches("[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6}"), created.getInviteCode());
         verify(teamMapper).insertPlayTeam(created);
     }
 
