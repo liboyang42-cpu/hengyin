@@ -26,3 +26,20 @@ S10 Merchant workbench/store/earnings (light): G1/G2/G4/G8 light variants only.
 
 ## Constraints
 WeChat animate API (this.animate/clearAnimation) or transitions only; NO new WXSS @keyframes (ratchet); no comments inside CSS values; respect reduced motion and the in-app 动态效果 switch; main package < 2048 KiB; no layout/copy changes; UI-integrity must stay PASS with no new baseline entries.
+
+## Addendum (owner, 2026-11-12): the references are a DESIGN + MOTION LANGUAGE for the whole app
+The X videos are not fixes for specific pages; they define how 城瘾 should look and move everywhere. S1–S10 are examples. Build the language into shared components/tokens and roll it across EVERY page (player, merchant, club, author, profile, messages, settings, wallet, maps, editors, sheets, empty/error states), without changing any layout, copy or colour scheme.
+
+### The language (from all references)
+L1 Depth: surfaces are layered — page < card < floating card < sheet; each layer has its own highlight + shadow (G1), sheets push the page back (G3).
+L2 Continuity: a result appears where the user acted — buttons morph into their result state (loading → done) in place, rows update in place, cards change state instead of navigating away whenever the existing flow allows.
+L3 One hero per moment: during a reward/completion/success, everything except the hero dims; the hero gets glow/rays; text arrives after the hero; the button arrives last.
+L4 Choreography: elements enter in document order with 30–40ms stagger, 12px rise, 420ms cubic-bezier(.32,.72,0,1); exits are faster (220ms); nothing pops in without motion; nothing moves without purpose.
+L5 Physicality: press = scale .97; release springs back (cubic-bezier(.34,1.56,.64,1)); toggles/checks pop with a small overshoot; drags follow the finger.
+L6 Living details: small things are subtly alive — foil/glass surfaces have a slow sheen, hero icons breathe (scale 1→1.03, 3s), progress fills animate, numbers roll.
+L7 Type & figures: big confident titles, secondary text grey, key figure in accent, tabular numbers, consistent kickers (G6).
+L8 Restraint: one accent per screen, consistent radius family (12 / 20 / 28), consistent 16/24 spacing rhythm; reduced motion and the in-app switch turn motion off cleanly.
+
+### Rollout
+Phase 1 (lane detail-pass): shared foundation + S1–S10.
+Phase 2 (lane detail-pass-2): apply L1–L8 via the shared foundation to every remaining page in app.json and all subpackages; per page group before/after compares; same "no layout/copy/colour change" rule.
