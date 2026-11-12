@@ -36,10 +36,9 @@ const PLAY_PLAYER_QUERY_APPLICATION = path.resolve(
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
   // 2026-11-10 l-pass 通行证(ApiPlatformPassController,不在 SecurityConfig 放行清单,落 anyRequest().authenticated();
-  //   requireMemberId 只取登录态):概览 = 在售套餐 + 本人有效期;主题库 = 官方开放自玩主题(无会员维度)+ 本人是否覆盖;
+  //   requireMemberId 只取登录态):概览 = 在售套餐 + 本人有效期;公开主题库已改用匿名 POST,不属于 GET 矩阵;
   //   订单详情按订单号 + 本人归属,他人订单回「订单不存在」。
   ['subpackageMember/market/membership/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
-  ['subpackageMember/market/library/index.js', "url: '/api/platform-pass/library'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/market/passes/index.js', "url: '/api/platform-pass'", 'required', 'member', 'self-account'],
   ['subpackageMember/utils/platform-pass-pay.js', "url: '/api/platform-pass/orders/' + orderNo, method: 'GET'", 'required', 'member', 'self-account'],
   // 2026-11-10 qx-b5(qx-c3 补登,按服务端实际守卫;以下路径均不在 SecurityConfig 放行清单,落 anyRequest().authenticated()):
@@ -488,7 +487,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-11 f-compliance:设置页 AI 对话记录导出一处直接 GET(同 NPC 面板接口,已入 MATRIX),127 → 128。
   // 2026-11-11 f-pages:我的收藏「据点」页签读本人收藏据点一处直接 GET(已入 MATRIX),128 → 129。
   // x-design1 D6:通行证页删掉 /api/workshop/capabilities 的无人消费请求,129 → 128。
-  assert.equal(directCount, 128, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');  
+  // D113:游戏主题库改读公开目录 POST,移除其原认证 GET,128 → 127。
+  assert.equal(directCount, 127, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

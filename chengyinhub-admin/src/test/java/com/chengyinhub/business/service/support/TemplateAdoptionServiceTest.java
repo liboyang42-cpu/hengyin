@@ -20,7 +20,7 @@ class TemplateAdoptionServiceTest {
         for(String bad:List.of("0","01","1.0","9223372036854775808","-1")) assertThrows(ServiceException.class,()->TemplateAdoptionService.id(bad));
         CmsTemplateLibrary source=new CmsTemplateLibrary();source.setId(7L);source.setTitle("title");source.setQuestionAnswer("a");
         String first=service.sourceVersion(source);source.setQuestionAnswer("b");assertNotEquals(first,service.sourceVersion(source));
-        source.setQuestionAnswer("a");source.setPublishStatus(0L);assertEquals(first,service.sourceVersion(source));
+        source.setQuestionAnswer("a");source.setStatus(3L);assertEquals(first,service.sourceVersion(source));
         assertEquals("9007199254740993",TemplateAdoptionWire.strings(Map.of("templateId",9007199254740993L),"templateId").path("templateId").asText());
     }
     @Test void inheritedHashIgnoresObjectOrderButNotMechanicChangesAndStillValidatesSchema() {
@@ -92,7 +92,7 @@ class TemplateAdoptionServiceTest {
         });
         CmsTemplateLibrary source = new CmsTemplateLibrary();
         source.setId(7L); source.setTitle("公开玩法"); source.setDelFlag(0);
-        source.setStatus(1L); source.setPublishStatus(1L); source.setMemberTemplateId(17L);
+        source.setStatus(1L); source.setMemberTemplateId(17L);
         var canonical = new com.chengyinhub.business.domain.CmsMemberTemplate();
         canonical.setId(17L); canonical.setMemberId(2L); canonical.setDelFlag(0); canonical.setStatus(1L);
         when(mapper.sourceCanonicalId(7L)).thenReturn(17L);
@@ -121,7 +121,7 @@ class TemplateAdoptionServiceTest {
         assertEquals(TemplateAdoptionService.inheritedAdvancedConfigHash(created.getAdvancedConfigJson()),
                 row.get("inheritedConfigHash"));
         assertFalse(completed.containsKey("inheritedConfigHash"), "私有配置指纹不进入恢复回执");
-        source.setPublishStatus(0L);
+        source.setStatus(3L);
         verify(mapper, times(1)).finish(eq(1L), eq(command.getRequestId()), eq("COMPLETED"),
                 eq(created.getId()), org.mockito.ArgumentMatchers.isNull(), anyString(),
                 eq(TemplateAdoptionService.inheritedAdvancedConfigHash(created.getAdvancedConfigJson())));

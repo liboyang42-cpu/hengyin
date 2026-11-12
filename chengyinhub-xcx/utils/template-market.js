@@ -12,8 +12,8 @@ function marketView(t) {
   const market = /^[1-9]\d*$/.test(String(t.marketTemplateId || ''));
   const noMarket = t.marketTemplateId == null || is(t.marketTemplateId, 0);
   const pending = market && is(t.marketStatus, 0);
-  const online = market && is(t.marketStatus, 1) && is(t.marketPublishStatus, 1);
-  const delisted = market && is(t.marketStatus, 1) && is(t.marketPublishStatus, 0);
+  const online = market && is(t.marketStatus, 1);
+  const delisted = market && is(t.marketStatus, 3);
   return {
     _statusText: draft ? '草稿' : approved ? '个人审核通过' : rejected ? '个人审核未通过'
       : reviewing ? '个人审核中' : '状态待确认',
@@ -25,7 +25,7 @@ function marketView(t) {
     _canSubmitMarket: approved && (noMarket || (market && is(t.marketStatus, 2))),
     _canToggleMarket: pending || online || (approved && delisted),
     _marketActionText: pending ? '撤回广场审核' : online ? '从广场下架' : '上架广场',
-    _marketPublishTarget: pending || online ? 0 : 1
+    _marketStatusTarget: pending ? 2 : online ? 3 : 1
   };
 }
 

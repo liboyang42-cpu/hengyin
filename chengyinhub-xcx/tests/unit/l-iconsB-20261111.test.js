@@ -200,12 +200,15 @@ test('通行证页按 proto ps-pass:实色卡 + 标准列表行 + 底部固定�
   assert.doesNotMatch(top.replace(/\/\*[\s\S]*?\*\//g, ''), /backdrop-filter|radial-gradient/)
 })
 
-test('商家看不到通行证:我的里没有入口;通行证页 / 主题库 / 通行证与礼品页按商家视角直接收住', () => {
+test('商家看不到通行证购买入口且通行证页面收住;公开主题库对所有账号开放', () => {
   assert.match(read('subpackageMember/components/cy/profile/index.wxml'), /<view class="pc-team-entry" wx:if="\{\{!isMerchantView\}\}">\s*<cy-cell title="通行证与礼品"/)
-  for (const p of ['subpackageMember/market/membership/index.js', 'subpackageMember/market/library/index.js', 'subpackageMember/market/passes/index.js']) {
+  for (const p of ['subpackageMember/market/membership/index.js', 'subpackageMember/market/passes/index.js']) {
     assert.match(read(p), /try \{ merchant = !!roleGuard\.isMerchantView\(\) \} catch \(e\) \{ merchant = false \}/, p)
   }
   assert.match(read('subpackageMember/market/membership/index.wxml'), /wx:elif="\{\{state === 'merchant'\}\}"[^>]*title="商家账号没有通行证"/)
+  const library = read('subpackageMember/market/library/index.js')
+  assert.match(library, /url: '\/api\/public-catalog\/list', method: 'POST'/)
+  assert.doesNotMatch(library, /this\._merchant|state: '(?:merchant|off)'/)
   let def
   global.Page = (d) => { def = d }
   global.getApp = () => ({ globalData: { statusBarHeight: 20, navBarHeight: 44 }, getUserRole: () => 'merchant', getUserType: () => '', sendRequest: () => assert.fail('商家不该请求通行证接口') })

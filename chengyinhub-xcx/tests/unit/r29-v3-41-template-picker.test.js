@@ -33,7 +33,7 @@ function harness(storage = {}) {
   return { page, sent, storage, notices };
 }
 const own = { id: 31, title: '本人私有已通过模板', draftStatus: 1, status: 1, publishStatus: 0, advancedConfigJson: '{}' };
-const publicRow = { id: 11, title: '公共模板', status: 1, publishStatus: 1, advancedConfigJson: '{}' };
+const publicRow = { id: 11, title: '公共模板', status: 1, advancedConfigJson: '{}' };
 const tap = (page, item, source) => page.selectTemp({ currentTarget: { dataset: { item, source } } });
 const version = 'a'.repeat(64), draftId = '9007199254740995';
 function startAdoption(h) {

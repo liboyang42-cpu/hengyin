@@ -79,7 +79,7 @@ class AuditTemplateDecisionProjectionTest {
         canonical.setQuestionAnswer("旧答案");
         projection = new CmsTemplateLibrary();
         projection.setId(191L); projection.setMemberTemplateId(91L); projection.setMemberId(7L);
-        projection.setDelFlag(0); projection.setStatus(0L); projection.setPublishStatus(0L);
+        projection.setDelFlag(0); projection.setStatus(0L);
         projection.setQuestionAnswer("旧答案");
         task.setSubmitterId(7L);
         task.setSnapshotJson(com.chengyinhub.business.service.support.TemplateAuditSnapshot.personal(canonical));
@@ -138,7 +138,6 @@ class AuditTemplateDecisionProjectionTest {
         verify(memberService, never()).updateCmsMemberTemplate(any());
         CmsTemplateLibrary library = captureLibrary();
         assertEquals(2L, library.getStatus());
-        assertEquals(0L, library.getPublishStatus());
         assertEquals("广场展示信息不完整", library.getReason());
     }
 

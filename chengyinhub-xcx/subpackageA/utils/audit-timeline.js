@@ -26,7 +26,7 @@ function templateTarget(t) {
   if (is(t.draftStatus, 1) && (is(t.status, 2) || is(t.checkStatus, 2))) return { bizType: 'TEMPLATE', bizId: String(t.id) };
   if (typeof t.marketTemplateId === 'number' && !Number.isSafeInteger(t.marketTemplateId)) return null;
   const market = /^[1-9]\d*$/.test(String(t.marketTemplateId || ''));
-  if (market && (is(t.marketStatus, 2) || (is(t.marketStatus, 1) && is(t.marketPublishStatus, 0)))) {
+  if (market && (is(t.marketStatus, 2) || is(t.marketStatus, 3))) {
     return { bizType: 'TEMPLATE_LIBRARY', bizId: String(t.marketTemplateId) };
   }
   return null;

@@ -174,7 +174,7 @@ test('个人过审不等于广场上架，isSync 不再决定提交入口', () =
   sent[0].success({ code: 200, data: { rows: [
     { id: 91, draftStatus: 1, status: 1, checkStatus: 1, publishStatus: 1, isSync: 0 },
     { id: 92, draftStatus: 1, status: 2, checkStatus: 2, reason: '题面不清楚' },
-    { id: 93, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 193, marketStatus: 0, marketPublishStatus: 0 }
+    { id: 93, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 193, marketStatus: 0 }
   ] } });
   assert.equal(page.data.tplList[0]._statusText, '个人审核通过');
   assert.equal(page.data.tplList[0]._marketText, '未提交广场');
@@ -196,4 +196,54 @@ test('提交广场走独立接口，同卡重复点击只提交一次，失败�
   sent[0].fail({});
   page.tplSubmitMarket(e);
   assert.equal(sent.length, 2);
+});
+
+for (const [marketStatus, label, target] of [
+  [0, '撤回广场审核', 2], [1, '从广场下架', 3], [3, '上架广场', 1]
+]) {
+  test('我的项目广场状态 ' + marketStatus + ' 驱动按钮与统一目标状态 ' + target, () => {
+    const page = makePage();
+    page.data.operationScope = 'MERCHANT';
+    page.loadTemplates = pageConfig.loadTemplates;
+    page.loadTemplates();
+    sent[0].success({ code: 200, data: { rows: [{ id: 93, draftStatus: 1, status: 1,
+      checkStatus: 1, publishStatus: 0, marketTemplateId: 193, marketStatus }] } });
+    const row = page.data.tplList[0];
+    assert.equal(row._canSubmitMarket, false);
+    assert.equal(row._canToggleMarket, true);
+    assert.equal(row._marketActionText, label);
+    assert.equal(row._marketStatusTarget, target);
+    const event = { currentTarget: { dataset: { id: row.id, target: row._marketStatusTarget } } };
+    page.tplToggle(event);
+    page.tplToggle(event);
+    assert.equal(sent.length, 2);
+    assert.equal(sent[1].url, '/api/template/updateLibraryStatus');
+    assert.deepEqual(sent[1].data, { template_id: 93, status: target, scope: 'MERCHANT' });
+    assert.equal(row.status, 1);
+    assert.equal(row.publishStatus, 0);
+    assert.equal(row.marketStatus, marketStatus);
+    sent[1].fail({});
+    page.tplToggle(event);
+    assert.equal(sent.length, 3);
+    assert.deepEqual(sent[2].data, { template_id: 93, status: target, scope: 'MERCHANT' });
+  });
+}
+
+test('删除玩法仅在广场已上架时提供改为下架选项', () => {
+  const page = makePage();
+  const opened = [];
+  page.selectComponent = () => ({ open: (key, params, options) => opened.push({ key, params, options }) });
+  for (const marketStatus of [0, 1, 2, 3]) {
+    page.tplDelete({ currentTarget: { dataset: { id: 93, title: '保留玩法', pub: marketStatus } } });
+    assert.equal(opened.at(-1).options.hideAlt, marketStatus !== 1);
+  }
+});
+
+test('删除确认的改为下架动作发送已审核下架状态，不发送驳回状态', () => {
+  const page = makePage();
+  page.data.operationScope = 'MERCHANT';
+  page.onDeleteTemplateAlt({ detail: { params: { id: 93, pub: 1 } } });
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].url, '/api/template/updateLibraryStatus');
+  assert.deepEqual(sent[0].data, { template_id: 93, status: 3, scope: 'MERCHANT' });
 });

@@ -126,7 +126,7 @@ Page({
         hideLoading: true,
         url: view._canSubmitMarket ? `/api/template/${item.id}/market-submit` : '/api/template/updateLibraryStatus',
         method: 'POST',
-        data: Object.assign(view._canSubmitMarket ? {} : { template_id: item.id, publish_status: view._marketPublishTarget },
+        data: Object.assign(view._canSubmitMarket ? {} : { template_id: item.id, status: view._marketStatusTarget },
           this.data.operationScope ? { scope: this.data.operationScope } : {}),
         success: (res) => {
           release();

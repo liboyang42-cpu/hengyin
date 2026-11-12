@@ -345,7 +345,7 @@ class RegistryContractTest(unittest.TestCase):
     def test_reuse_publication_and_declarations_cannot_omit_real_storage_source_cases(self):
         reg = registry()
         expected = {
-            'com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT': 7,
+            'com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT': 12,
             'com.chengyinhub.business.it.ThemeStateKeyDeclarationMySqlIT': 6,
             'com.chengyinhub.business.service.impl.TopicPublicationBindingMySqlIT': 10,
         }
@@ -493,11 +493,11 @@ class RegistryContractTest(unittest.TestCase):
         # port-prelaunch-69(W8)：退款通知 9 + 退款重试余量 10 + 漫游定位留存 21。
         # p0-acceptance-ac1(AC1)：核销 5 + 跨账号 3 + 城市跑 2 + 自由探索供给闸 2 + 注销 1 + 需补供给恢复(P0-23) 4。
         # port-*：同批 master 侧移植，类与条数同原批；port-core-funds 27；port-ai-quota 22；port-f3-growth 12；port-f3-evidence 4。
-        expected = {"core-funds": 27, "ai-quota": 24, "e04-07-coupon": 10, "community-e02": 14,
-                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 142,
+        expected = {"core-funds": 27, "ai-quota": 32, "e04-07-coupon": 10, "community-e02": 14,
+                    "b05-visibility": 3, "f3-growth": 12, "extra-storage": 147,
                     "port-e04-07-coupon": 10, "port-community-e02": 14, "port-b05-visibility": 3,
-                    "port-extra-storage": 142,
-                    "port-core-funds": 27, "port-ai-quota": 24,
+                    "port-extra-storage": 147,
+                    "port-core-funds": 27, "port-ai-quota": 32,
                     "port-f3-growth": 12, "port-f3-evidence": 4,
                     "funnel-max-date": 4, "port-prelaunch-69": 40,
                     "p0-acceptance-ac1": 17, "architecture-day-batch1": 79,
@@ -513,7 +513,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-ai-not-sent": 4,
                     "architecture-day-lead-admission": 14,
                     "architecture-day-topic-copy": 31,
-                    "architecture-day-topic-authoring": 41,  # TopicContentGraph 40 -> 41 (Questo source, qx-c3 20261110)
+                    "architecture-day-topic-authoring": 47,  # TopicContentGraph 41 + D89/D90 migration cases 6
                     "architecture-day-theme-intent": 23,
                     "architecture-day-payment-intent": 4,
                     "architecture-day-payment-inbox": 14,
@@ -532,13 +532,13 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-scheduler-two-process": 3,
                     "architecture-day-cash-recovery": 10,
                     "architecture-day-funds-closure": 293,  # RegistrationFunds +1, club self-play original producer +1
-                    "architecture-day-npc-voice-asr": 14,
+                    "architecture-day-npc-voice-asr": 15,
                     "architecture-day-clm-commerce-proof": 8,
                     "architecture-day-media-retry-budget": 8,
                     "architecture-day-before-start-notice": 12,
                     "architecture-day-commerce-generic-guard": 6,
                     "architecture-day-refund-lifecycle": 76,
-                    "architecture-day-integrated-changes": 968,  # R14 payee isolation seven; R30 adoption receipt +1, CITY copy rollback +1, template draft +2, alternative graph +8; publication binding issue codes +1; TopicContentGraph +1 (qx-c3)
+                    "architecture-day-integrated-changes": 982,  # Source counts: D89 adoption +5, AI recovery +8, ASR refund +1
                     "payment-intent-correctness": 30,
                     "marketing-db-acceptance": 236,  # ClubEventTransferCancellation 14 -> 15, PostGameOutcomeMapperMySqlIT +10 (qx-c3), PlatformPassMySqlIT +7 (l-pass)
                     "launch-l-payout": 9,  # l-payout EcomPayoutMapperMySqlIT
@@ -558,7 +558,7 @@ class RegistryContractTest(unittest.TestCase):
             "com.chengyinhub.business.service.impl.ImLegacyReadLockMySqlIT": (5, "CHENGYIN_IM_LEGACY_LOCK_MYSQL_IT"),
             "com.chengyinhub.business.it.CoopClubApplyInboxMySqlIT": (1, None),
             "com.chengyinhub.business.it.CoopServiceRealDbIT": (1, None),
-            "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": (7, None),
+            "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": (12, None),
             "com.chengyinhub.business.mapper.ActivityCancelPlayerProjectionMyBatisIT": (1, None),
             "com.chengyinhub.business.service.TemplateClearFieldsMySqlIT": (3, None),
             "com.chengyinhub.business.service.impl.GameplayReskinMySqlIT": (1, None),

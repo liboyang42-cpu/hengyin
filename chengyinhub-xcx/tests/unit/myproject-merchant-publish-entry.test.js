@@ -356,7 +356,7 @@ test('new owner template request failure clears old owner templates', () => {
 const operationCases = [
   ['topic status', 'toggleStatus', '/api/topic/update_user_status', { currentTarget: { dataset: { id: 91, biz: 'topic', online: true } } }],
   ['activity status', 'toggleStatus', '/api/activity/update_publish_status', { currentTarget: { dataset: { id: 91, biz: 'activity', online: true } } }],
-  ['template status', 'tplToggle', '/api/template/updateLibraryStatus', { currentTarget: { dataset: { id: 91, pub: 1 } } }],
+  ['template status', 'tplToggle', '/api/template/updateLibraryStatus', { currentTarget: { dataset: { id: 91, target: 3 } } }],
   ['market submit', 'tplSubmitMarket', '/api/template/91/market-submit', { currentTarget: { dataset: { id: 91 } } }],
   ['activity refund preview', 'cancelActivity', '/api/activity/cancel_preview', { currentTarget: { dataset: { id: 91 } } }],
   ['topic refund preview', 'cancelTopic', '/api/topic/cancel_preview', { currentTarget: { dataset: { id: 91 } } }],
@@ -435,7 +435,7 @@ for (const [name, method, url, event] of operationCases) {
 for (const outcome of ['success', 'fail', 'complete']) {
   test('old template status ' + outcome + ' cannot unlock a newer same-template request', () => {
     const { p } = operationPage();
-    const event = { currentTarget: { dataset: { id: 91, pub: 1 } } };
+    const event = { currentTarget: { dataset: { id: 91, target: 3 } } };
     p.tplToggle(event);
     const old = last('/api/template/updateLibraryStatus');
     p.onHide();

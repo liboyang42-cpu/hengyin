@@ -3,7 +3,7 @@ package com.chengyinhub.business.domain.vo;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 
 public class MemberTemplateVO extends CmsMemberTemplate {
-    private Integer originalPublishStatus;
+    private Integer originalStatus;
     private Integer originalDelFlag;
     private String templateSource;
     private Long marketTemplateId;
@@ -12,21 +12,18 @@ public class MemberTemplateVO extends CmsMemberTemplate {
     private Long marketStatus;
     public Long getMarketStatus() { return marketStatus; }
     public void setMarketStatus(Long marketStatus) { this.marketStatus = marketStatus; }
-    private Long marketPublishStatus;
-    public Long getMarketPublishStatus() { return marketPublishStatus; }
-    public void setMarketPublishStatus(Long marketPublishStatus) { this.marketPublishStatus = marketPublishStatus; }
     private String marketReason;
     public String getMarketReason() { return marketReason; }
     public void setMarketReason(String marketReason) { this.marketReason = marketReason; }
 
 
     // Getter和Setter方法
-    public Integer getOriginalPublishStatus() {
-        return originalPublishStatus;
+    public Integer getOriginalStatus() {
+        return originalStatus;
     }
 
-    public void setOriginalPublishStatus(Integer originalPublishStatus) {
-        this.originalPublishStatus = originalPublishStatus;
+    public void setOriginalStatus(Integer originalStatus) {
+        this.originalStatus = originalStatus;
     }
 
     public Integer getOriginalDelFlag() {

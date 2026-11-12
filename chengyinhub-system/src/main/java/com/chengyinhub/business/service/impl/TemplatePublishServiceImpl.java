@@ -109,6 +109,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         // (CmsTopicServiceImpl#copyTemplateForOwner 深拷贝过),却没有任何入口能改题面与答案。
         Long editingId = request.getId();
         boolean editing = editingId != null && editingId > 0;
+        if (!editing && request.getOriginalTemplateId() != null && request.getOriginalTemplateId() > 0) {
+            lockAdoptionSource(request.getOriginalTemplateId());
+        }
         CmsMemberTemplate existing = null;
         if (editing) {
             existing = lockTemplate(editingId);
@@ -298,7 +301,6 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             throw new ServiceException("玩法个人审核通过后才能提交模板广场", HttpStatus.BAD_REQUEST);
         }
         validatePreferenceForReview(template);
-        rejectSameTitleByAuthor(template, memberId);
         assertTemplateRewardOwnership(memberId, template, null);
         Date now = new Date();
         CmsTemplateLibrary projection = findLiveProjection(templateId);
@@ -316,16 +318,6 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 projection.getId(), memberId, marketAuditSnapshot(lockedProjection(templateId, projection.getId())));
     }
 
-    /** owner 2026-10-23 D5(U-036):同一作者不许在模板广场放两份标题(trim 后逐字)相同的未删除模板。 */
-    private void rejectSameTitleByAuthor(CmsMemberTemplate template, Long memberId) {
-        String title = template.getTitle() == null ? "" : template.getTitle().trim();
-        if (title.isEmpty()) return;
-        for (String other : libraryMapper.selectAuthorLiveTitles(memberId, template.getId())) {
-            if (other != null && title.equals(other.trim())) {
-                throw new ServiceException("你已经有同名模板了", HttpStatus.BAD_REQUEST);
-            }
-        }
-    }
 
     private String marketAuditSnapshot(CmsTemplateLibrary projection) {
         return TemplateAuditSnapshot.market(projection);
@@ -359,7 +351,6 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         projection.setMemberTemplateId(stored.getMemberTemplateId());
         projection.setMemberId(stored.getMemberId());
         projection.setStatus(0L);
-        projection.setPublishStatus(0L);
         projection.setReason("");
         projection.setDelFlag(stored.getDelFlag());
         projection.setCreateBy(stored.getCreateBy());
@@ -406,7 +397,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         if (projection == null || !Integer.valueOf(0).equals(projection.getDelFlag())) throw new ServiceException("模板库记录已删除");
         cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE_LIBRARY, projectionId);
         projection.setDelFlag(2);
-        projection.setPublishStatus(0L);
+        projection.setStatus(2L);
         projection.setUpdateBy(username);
         projection.setUpdateTime(new Date());
         return templateLibraryService.updateCmsTemplateLibrary(projection);
@@ -505,7 +496,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
     private void withdrawProjections(Long templateId, boolean deleting, String username) {
         for (CmsTemplateLibrary row : libraryMapper.selectByMemberTemplateForUpdate(templateId)) {
             if (!Integer.valueOf(0).equals(row.getDelFlag())) continue;
-            row.setPublishStatus(0L); row.setStatus(2L);
+            row.setStatus(2L);
             row.setReason("个人玩法已变更，请重新提交广场审核");
             if (deleting) row.setDelFlag(2);
             row.setUpdateBy(username); row.setUpdateTime(new Date());
@@ -546,7 +537,6 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         projection.setId(creating ? null : projectionId);
         projection.setMemberTemplateId(template.getId());
         projection.setStatus(0L);
-        projection.setPublishStatus(0L);
         projection.setReason("");
         projection.setDelFlag(creating ? 0 : projectionDelFlag);
         projection.setUpdateBy(username);
@@ -724,7 +714,26 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         return saveDraft(snapshot, memberId, username, true);
     }
 
+    /** 与采用回执相同的锁序：个人真源 → 库投影；插入副本前持有库锁，首次采用判重不会并发漏计。 */
+    private CmsTemplateLibrary lockAdoptionSource(Long libraryId) {
+        CmsTemplateLibrary hint = templateLibraryService.selectCmsTemplateLibraryById(libraryId);
+        if (hint == null) return null;
+        if (hint.getMemberTemplateId() != null) {
+            memberTemplateMapper.selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(hint.getMemberTemplateId()));
+        }
+        CmsTemplateLibrary source = libraryMapper.selectByIdForUpdate(libraryId);
+        if (source != null && !Objects.equals(hint.getMemberTemplateId(), source.getMemberTemplateId())) {
+            throw new ServiceException("采用来源关联已变化，请重查原请求", HttpStatus.CONFLICT);
+        }
+        return source;
+    }
+
     private Long saveDraft(CmsTemplatePublishRequest request, Long memberId, String username, boolean workshopSnapshot) {
+        CmsTemplateLibrary adoptionSource = null;
+        if (request != null && (request.getId() == null || request.getId() <= 0)
+                && request.getOriginalTemplateId() != null && request.getOriginalTemplateId() > 0) {
+            adoptionSource = lockAdoptionSource(request.getOriginalTemplateId());
+        }
         if (request != null && Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
             if (request.getId() != null || request.getOriginalTemplateId() == null
                     || request.getOriginalTemplateId() <= 0) {
@@ -732,10 +741,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             }
             Long sourceId = request.getOriginalTemplateId();
             String scope = request.getScope();
-            CmsTemplateLibrary source = templateLibraryService.selectCmsTemplateLibraryById(sourceId);
+            CmsTemplateLibrary source = adoptionSource;
             if (source == null || !Integer.valueOf(0).equals(source.getDelFlag())
-                    || !Long.valueOf(1L).equals(source.getStatus())
-                    || !Long.valueOf(1L).equals(source.getPublishStatus())) {
+                    || !Long.valueOf(1L).equals(source.getStatus())) {
                 throw new IllegalArgumentException("源模板不存在或已下架");
             }
             // 作者配置从服务端复制；公开详情仍不下发答案、卡池和分支内容。
@@ -830,6 +838,9 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             if (memberTemplateService.insertCmsMemberTemplate(t) != 1 || t.getId() == null) {
                 throw new ServiceException("保存草稿失败");
             }
+            if (t.getOriginalTemplateId() != null && t.getOriginalTemplateId() > 0) {
+                templateLibraryService.incrementUseNumOnFirstAdoption(t.getOriginalTemplateId(), memberId, t.getId());
+            }
             return t.getId();
         }
     }
@@ -911,8 +922,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                 request.getOriginalTemplateId());
         if (source == null || source.getMemberTemplateId() == null
                 || !Integer.valueOf(0).equals(source.getDelFlag())
-                || !Long.valueOf(1L).equals(source.getStatus())
-                || !Long.valueOf(1L).equals(source.getPublishStatus())) {
+                || !Long.valueOf(1L).equals(source.getStatus())) {
             return;
         }
         CmsMemberTemplate canonical = memberTemplateService.selectCmsMemberTemplateById(
@@ -1091,8 +1101,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             if (source == null) return;
             // 新建兼容路径仍须核对公共来源可见性，不能借来源 ID 读取私有答案。
             if (source.getDelFlag() == null || source.getDelFlag() == 2
-                    || source.getStatus() == null || source.getStatus() != 1
-                    || source.getPublishStatus() == null || source.getPublishStatus() != 1) {
+                    || source.getStatus() == null || source.getStatus() != 1) {
                 return;
             }
             sourceConfig = source.getAdvancedConfigJson();
@@ -1483,43 +1492,45 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId) {
-        return updateTemplateLibraryStatus(memberTemplateId, publishStatus, memberId, null);
+    public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer status, Long memberId) {
+        return updateTemplateLibraryStatus(memberTemplateId, status, memberId, null);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId,
+    public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer status, Long memberId,
                                                TemplateLibraryRepublishReview review) {
-        if (!Integer.valueOf(0).equals(publishStatus) && !Integer.valueOf(1).equals(publishStatus)) {
-            throw new RuntimeException("发布状态仅支持 0 或 1");
+        if (!Integer.valueOf(1).equals(status) && !Integer.valueOf(2).equals(status)
+                && !Integer.valueOf(3).equals(status)) {
+            throw new ServiceException("模板广场状态不规范", HttpStatus.BAD_REQUEST);
         }
-        if (Integer.valueOf(1).equals(publishStatus)) requireWorkshopPublication(memberTemplateId, true);
+        boolean listing = Integer.valueOf(1).equals(status);
+        if (listing) requireWorkshopPublication(memberTemplateId, true);
         CmsMemberTemplate memberTemplate = requireActiveTemplate(memberTemplateId);
         if (!memberTemplate.getMemberId().equals(memberId)) {
             throw new ServiceException("无权操作此模板", HttpStatus.FORBIDDEN);
         }
-        // 不再看 isSync:本支(专业主题组合审核闭环)起,玩法库记录由「提交到模板广场」显式生成,
-        // 有没有玩法库记录才是上架的真前提 —— 见下方 libraryTemplates 为空时的拒绝(M-06:原因透传)。
-        if (Integer.valueOf(1).equals(publishStatus)
-                && (!Long.valueOf(1L).equals(memberTemplate.getStatus())
+        if (listing && (!Long.valueOf(1L).equals(memberTemplate.getStatus())
                 || !Integer.valueOf(1).equals(memberTemplate.getCheckStatus()))) {
             throw new ServiceException("模板审核通过后才能上架到玩法库", HttpStatus.BAD_REQUEST);
         }
-
         List<CmsTemplateLibrary> libraryTemplates = libraryMapper.selectByMemberTemplateForUpdate(memberTemplateId);
         if (libraryTemplates == null || libraryTemplates.isEmpty()) {
-            // M-06:业务拒绝用 ServiceException,controller 才透传原因,不会被吞成「请稍后重试」
             throw new ServiceException("该模板还没有提交到模板广场，审核通过后才能上架", HttpStatus.BAD_REQUEST);
         }
-        // 上架必须带锁外复检快照，且与锁内投影批次完全一致；缺失或漂移一律拒绝(fail closed)。
-        if (Integer.valueOf(1).equals(publishStatus)) {
-            for (CmsTemplateLibrary projection : libraryTemplates) {
-                if (projection != null && Integer.valueOf(0).equals(projection.getDelFlag())
-                        && !Long.valueOf(1L).equals(projection.getStatus())) {
-                    throw new ServiceException("模板广场审核通过后才能上架", HttpStatus.BAD_REQUEST);
-                }
+        for (CmsTemplateLibrary projection : libraryTemplates) {
+            if (projection == null || !Integer.valueOf(0).equals(projection.getDelFlag())) continue;
+            boolean approved = Long.valueOf(1L).equals(projection.getStatus())
+                    || Long.valueOf(3L).equals(projection.getStatus());
+            if ((listing || Integer.valueOf(3).equals(status)) && !approved) {
+                throw new ServiceException("模板广场审核通过后才能上架", HttpStatus.BAD_REQUEST);
             }
+            if (Integer.valueOf(2).equals(status) && !Long.valueOf(0L).equals(projection.getStatus())
+                    && !Long.valueOf(2L).equals(projection.getStatus())) {
+                throw new ServiceException("模板广场状态已变化，请刷新后重试", HttpStatus.BAD_REQUEST);
+            }
+        }
+        if (listing) {
             if (review == null || !review.matches(memberTemplateId, memberId, libraryTemplates)) {
                 throw new ServiceException("上架复检暂不可用，请刷新后重试", HttpStatus.BAD_REQUEST);
             }
@@ -1530,31 +1541,18 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             }
         }
         boolean hasActiveProjection = false;
-        for (CmsTemplateLibrary libraryTemplate : libraryTemplates) {
-            if (Integer.valueOf(0).equals(libraryTemplate.getDelFlag())) {
-                hasActiveProjection = true;
-                if (Integer.valueOf(1).equals(publishStatus)
-                        && !Long.valueOf(1L).equals(libraryTemplate.getStatus())) {
-                    throw new ServiceException("模板广场审核通过后才能上架", HttpStatus.BAD_REQUEST);
-                }
-                if (Integer.valueOf(0).equals(publishStatus)) {
-                    cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE_LIBRARY, libraryTemplate.getId());
-                    if (!Long.valueOf(1L).equals(libraryTemplate.getStatus())) {
-                        libraryTemplate.setStatus(2L);
-                        libraryTemplate.setReason("作者已撤回，请重新提交广场审核");
-                    }
-                }
-                libraryTemplate.setPublishStatus(Convert.toLong(publishStatus));
-                libraryTemplate.setUpdateTime(new Date());
-                if (templateLibraryService.updateCmsTemplateLibrary(libraryTemplate) <= 0) {
-                    throw new ServiceException("更新模板库投影失败", HttpStatus.BAD_REQUEST);
-                }
+        for (CmsTemplateLibrary projection : libraryTemplates) {
+            if (projection == null || !Integer.valueOf(0).equals(projection.getDelFlag())) continue;
+            hasActiveProjection = true;
+            if (!listing) cancelOpenTemplateTasks(AuditTask.BIZ_TEMPLATE_LIBRARY, projection.getId());
+            if (Integer.valueOf(2).equals(status)) projection.setReason("作者已撤回，请重新提交广场审核");
+            projection.setStatus(status.longValue());
+            projection.setUpdateTime(new Date());
+            if (templateLibraryService.updateCmsTemplateLibrary(projection) <= 0) {
+                throw new ServiceException("更新模板库投影失败", HttpStatus.BAD_REQUEST);
             }
         }
-        if (!hasActiveProjection) {
-            throw new ServiceException("更新模板库状态失败", HttpStatus.BAD_REQUEST);
-        }
-
+        if (!hasActiveProjection) throw new ServiceException("更新模板库状态失败", HttpStatus.BAD_REQUEST);
         return true;
     }
 
@@ -1626,7 +1624,6 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
         CmsTemplateLibrary query = new CmsTemplateLibrary();
         query.setDelFlag(0);
         query.setStatus(1L);
-        query.setPublishStatus(1L);
         List<CmsTemplateLibrary> all = templateLibraryService.selectCmsTemplateLibraryList(query);
         if (all == null) {
             all = new ArrayList<>();

@@ -160320,24 +160320,6 @@
           ]
         },
         {
-          "route": "subpackageMember/market/library/index",
-          "segments": [
-            {
-              "selector": "cy-empty",
-              "index": 2
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/market/library/index",
-          "segments": [
-            {
-              "selector": "cy-empty",
-              "index": 3
-            }
-          ]
-        },
-        {
           "route": "subpackageMember/market/membership/index",
           "segments": [
             {
@@ -1362613,11 +1362595,11 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
-          "/api/platform-pass/library",
+          "/api/public-catalog/list",
           "/api/role/info"
         ],
         "primaryApis": [
-          "/api/platform-pass/library"
+          "/api/public-catalog/list"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1362638,8 +1362620,8 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/platform-pass/library",
-            "method": "GET",
+            "url": "/api/public-catalog/list",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1362663,11 +1362645,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:34"
+        "staticSource": "subpackageMember/market/library/index.js:27"
       }
     },
     {
-      "id": "subpackageMember/market/library/index.wxml:15:bindtap:openTopic:3",
+      "id": "subpackageMember/market/library/index.wxml:13:bindtap:openTopic:3",
       "route": "subpackageMember/market/library/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1362690,7 +1362672,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openTopic",
-        "line": 15,
+        "line": 13,
         "selectorHint": ".photo-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1362733,7 +1362715,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:62"
+        "staticSource": "subpackageMember/market/library/index.js:53"
       }
     },
     {
@@ -1362803,7 +1362785,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:68"
+        "staticSource": "subpackageMember/market/library/index.js:59"
       }
     },
     {
@@ -1362862,11 +1362844,11 @@
         "apis": [
           "/api/config/features",
           "/api/login/code",
-          "/api/platform-pass/library",
+          "/api/public-catalog/list",
           "/api/role/info"
         ],
         "primaryApis": [
-          "/api/platform-pass/library"
+          "/api/public-catalog/list"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1362887,8 +1362869,8 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/platform-pass/library",
-            "method": "GET",
+            "url": "/api/public-catalog/list",
+            "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           },
@@ -1362912,7 +1362894,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/library/index.js:56"
+        "staticSource": "subpackageMember/market/library/index.js:47"
       }
     },
     {

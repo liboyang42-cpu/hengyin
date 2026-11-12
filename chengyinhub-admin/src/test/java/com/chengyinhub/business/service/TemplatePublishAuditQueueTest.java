@@ -85,7 +85,7 @@ class TemplatePublishAuditQueueTest {
 
         assertEquals(301L, service.submitTemplateToMarket(91L, 7L, "member7"));
         verify(libraryService).insertCmsTemplateLibrary(argThat(row -> Long.valueOf(91L).equals(row.getMemberTemplateId())
-                && Long.valueOf(0L).equals(row.getStatus()) && Long.valueOf(0L).equals(row.getPublishStatus())
+                && Long.valueOf(0L).equals(row.getStatus())
                 && Integer.valueOf(0).equals(row.getDelFlag())));
         verify(auditService).submitOrRefreshTemplateLibrary(eq(191L), eq(7L),
                 argThat(json -> json.contains("BIZ_TEMPLATE_LIBRARY") || json.contains("TEMPLATE_LIBRARY")));
@@ -159,33 +159,37 @@ class TemplatePublishAuditQueueTest {
     /** owner 2026-10-23 D5(U-036):同作者广场里已有 trim 后同名的未删除模板 ⇒ 友好拒绝,零写入。 */
     @Test
     void sameAuthorSameTrimmedTitleIsRejectedBeforeAnyWrite() {
-        ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
+        com.chengyinhub.business.service.impl.CmsTemplateLibraryServiceImpl libraryService =
+                new com.chengyinhub.business.service.impl.CmsTemplateLibraryServiceImpl();
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         TemplatePublishServiceImpl service = approvedMarketCandidate("  夜游老街 ", libraryService, auditService);
-        when(libraryMapper.selectAuthorLiveTitles(7L, 91L)).thenReturn(java.util.Arrays.asList("别的玩法", "夜游老街 "));
+        ReflectionTestUtils.setField(libraryService, "cmsTemplateLibraryMapper", libraryMapper);
+        when(libraryMapper.selectAuthorLiveTitles(7L, null)).thenReturn(java.util.Arrays.asList("别的玩法", "夜游老街 "));
 
         ServiceException rejected = assertThrows(ServiceException.class,
                 () -> service.submitTemplateToMarket(91L, 7L, "member7"));
 
         assertEquals("你已经有同名模板了", rejected.getMessage());
         assertEquals(Integer.valueOf(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST), rejected.getCode());
-        verify(libraryService, org.mockito.Mockito.never()).insertCmsTemplateLibrary(any());
-        verify(libraryService, org.mockito.Mockito.never()).updateCmsTemplateLibrary(any());
+        verify(libraryMapper, org.mockito.Mockito.never()).insertCmsTemplateLibrary(any());
+        verify(libraryMapper, org.mockito.Mockito.never()).updateCmsTemplateLibrary(any());
         verify(auditService, org.mockito.Mockito.never()).submitOrRefreshTemplateLibrary(any(), any(), any());
     }
 
     @Test
     void differentTitleOrOnlyCaseDifferenceStillSubmits() {
-        ICmsTemplateLibraryService libraryService = mock(ICmsTemplateLibraryService.class);
+        com.chengyinhub.business.service.impl.CmsTemplateLibraryServiceImpl libraryService =
+                new com.chengyinhub.business.service.impl.CmsTemplateLibraryServiceImpl();
         IAuditTaskService auditService = mock(IAuditTaskService.class);
         TemplatePublishServiceImpl service = approvedMarketCandidate("Night Walk", libraryService, auditService);
+        ReflectionTestUtils.setField(libraryService, "cmsTemplateLibraryMapper", libraryMapper);
         // 逐字相等才算同名:大小写不同、子串都不拦(库排序规则 general_ci 不参与判等)
-        when(libraryMapper.selectAuthorLiveTitles(7L, 91L)).thenReturn(java.util.Arrays.asList("night walk", "Night Walk 2"));
-        when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.emptyList());
-        when(libraryService.insertCmsTemplateLibrary(any())).thenAnswer(invocation -> {
+        when(libraryMapper.selectAuthorLiveTitles(7L, null)).thenReturn(java.util.Arrays.asList("night walk", "Night Walk 2"));
+        when(libraryMapper.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.emptyList());
+        when(libraryMapper.insertCmsTemplateLibrary(any())).thenAnswer(invocation -> {
             CmsTemplateLibrary row = invocation.getArgument(0);
             row.setId(191L);
-            when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.singletonList(row));
+            when(libraryMapper.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.singletonList(row));
             return 1;
         });
         when(auditService.submitOrRefreshTemplateLibrary(eq(191L), eq(7L), any())).thenReturn(301L);
@@ -411,7 +415,7 @@ class TemplatePublishAuditQueueTest {
         assertEquals(1, service.updateTemplateFromLibraryProjection(edit, "operator"));
         verify(memberService, org.mockito.Mockito.never()).updateCmsMemberTemplate(any());
         verify(libraryService).updateCmsTemplateLibrary(argThat(row -> Long.valueOf(191L).equals(row.getId())
-                && Long.valueOf(0L).equals(row.getStatus()) && Long.valueOf(0L).equals(row.getPublishStatus())
+                && Long.valueOf(0L).equals(row.getStatus())
                 && row.getUseNum() == null));
         verify(auditService).submitOrRefreshTemplateLibrary(eq(191L), eq(7L), contains("新标题"));
     }
@@ -479,7 +483,7 @@ class TemplatePublishAuditQueueTest {
         projection.setId(191L);
         projection.setMemberTemplateId(91L);
         projection.setMemberId(7L);
-        projection.setStatus(1L);
+        projection.setStatus(3L);
         projection.setDelFlag(0);
         when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(template);
         when(libraryService.selectCmsTemplateLibraryList(any())).thenReturn(java.util.Collections.singletonList(projection));
@@ -492,8 +496,7 @@ class TemplatePublishAuditQueueTest {
         assertTrue(service.updateTemplateLibraryStatus(91L, 1, 7L,
                 TemplateLibraryRepublishReview.freeze(91L, 7L, java.util.Collections.singletonList(projection))));
         verify(memberService, org.mockito.Mockito.never()).updateCmsMemberTemplate(any());
-        verify(libraryService).updateCmsTemplateLibrary(argThat(row -> Long.valueOf(1L).equals(row.getStatus())
-                && Long.valueOf(1L).equals(row.getPublishStatus())));
+        verify(libraryService).updateCmsTemplateLibrary(argThat(row -> Long.valueOf(1L).equals(row.getStatus())));
     }
 
     @Test
@@ -519,13 +522,13 @@ class TemplatePublishAuditQueueTest {
         first.setId(191L);
         first.setMemberTemplateId(91L);
         first.setMemberId(7L);
-        first.setStatus(1L);
+        first.setStatus(3L);
         first.setDelFlag(0);
         CmsTemplateLibrary second = new CmsTemplateLibrary();
         second.setId(192L);
         second.setMemberTemplateId(91L);
         second.setMemberId(7L);
-        second.setStatus(1L);
+        second.setStatus(3L);
         second.setDelFlag(0);
         when(memberService.selectCmsMemberTemplateById(91L)).thenReturn(template);
         when(memberService.updateCmsMemberTemplate(any())).thenReturn(1);

@@ -83,6 +83,7 @@ MYBATIS_ITS=(
   CircleThemeSeedMySqlIT
   TemplatePreferenceJsonMySqlIT
   TemplateMarketLifecycleMySqlIT
+  TemplateD89D90MigrationsMySqlIT
   WorkshopPurchaseMyBatisIT
   WorkshopAppleIapMyBatisIT
   TemplateAdoptionReceiptMyBatisIT

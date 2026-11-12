@@ -415,6 +415,7 @@
       "registered_source": "dbbb2350abe95f22fcc7b6fb291fcd0f66d7a004",
       "lineage": "D six-production-file content graph extraction rebased onto reviewed4197",
       "classes": [
+        "com.chengyinhub.business.it.TemplateD89D90MigrationsMySqlIT",
         "com.chengyinhub.business.service.impl.TopicContentGraphMySqlIT"
       ],
       "note": "40 ordinary@Test with74 named scenarios: original32/62 retained plus8 alternative-configuration rebuild, rollback, ownership and feature-off compatibility cases/12 scenarios, declarations only NOT_RUN. Original source lineage and old/new receipt comparison remain unchanged. Source-bound zero-skip XML and independent CLEAN required; not full economic or HTTP acceptance."
@@ -1056,7 +1057,7 @@
       "note": "Original8 plus A7 deletion current-row/batch atomicity cases; root1dc mapper resource fixture retained. Source identity and raw XML required, no HTTP/RBAC claim."
     },
     "com.chengyinhub.business.it.NpcAsrIntentMySqlIT": {
-      "tests": 10,
+      "tests": 11,
       "storage": [
         "mysql"
       ],
@@ -1172,8 +1173,15 @@
       ],
       "gates": {}
     },
+    "com.chengyinhub.business.it.TemplateD89D90MigrationsMySqlIT": {
+      "tests": 6,
+      "storage": ["mysql"],
+      "gates": {"CHENGYIN_MYBATIS_IT": "1"},
+      "database_base": "cyit",
+      "note": "D89/D90 actual migration backfill/state cutover/generated key and duplicate-preview blocked result; Java-trim Unicode boundary coverage. Source declarations only, execution NOT_RUN."
+    },
     "com.chengyinhub.business.it.TemplateAdoptionRoundTripMySqlIT": {
-      "tests": 7,
+      "tests": 12,
       "storage": [
         "mysql"
       ],
@@ -1713,7 +1721,7 @@
       "note": "Original quota receipt/day compensation and UNKNOWN retention, compensation CAS loss, durable Photo NOT_SENT replay. Real Lua/MySQL; trusted no-network model double."
     },
     "com.chengyinhub.business.service.ai.AiQuotaRecoveryMySqlRedisIT": {
-      "tests": 9,
+      "tests": 17,
       "storage": [
         "mysql",
         "redis"

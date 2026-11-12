@@ -22,6 +22,9 @@ import org.springframework.transaction.annotation.AnnotationTransactionAttribute
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 import java.sql.Connection;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -36,6 +39,8 @@ class TemplateAdoptionRoundTripMySqlIT {
     private static TemplateAdoptionService adoption;
     private static ICapabilityGuard capabilities;
     private static IAuditTaskService audit;
+    private static TemplatePublishServiceImpl publishTarget;
+    private static CmsMemberTemplateServiceImpl memberServiceTarget;
     private final ObjectMapper json = new ObjectMapper();
 
     @BeforeAll static void start() throws Exception {
@@ -52,9 +57,14 @@ class TemplateAdoptionRoundTripMySqlIT {
         db = new JdbcTemplate(source);
         db.execute("CREATE TABLE cms_template_library LIKE cms_member_template");
         db.execute("ALTER TABLE cms_template_library ADD member_template_id BIGINT, ADD pack_type INT");
+        db.execute("CREATE TABLE audit_task (id BIGINT PRIMARY KEY, snapshot_json LONGTEXT)");
+        db.execute("CREATE TABLE sys_category (id BIGINT PRIMARY KEY, category_name VARCHAR(64), icon VARCHAR(255), status INT, del_flag INT)");
+        db.update("INSERT INTO sys_category VALUES (12,'采用热度',NULL,1,0)");
         try (Connection c = source.getConnection()) {
             ItSchema.applyMigrations(c, "sql/migration_20261027_template_adoption_receipt.sql",
-                    "sql/migration_20261107_template_adoption_inherited_config_hash.sql");
+                    "sql/migration_20261107_template_adoption_inherited_config_hash.sql",
+                    "sql/migration_20261112_template_market_status.sql",
+                    "sql/migration_20261112_template_usage_count.sql");
         }
         SqlSessionFactoryBean factory = new SqlSessionFactoryBean(); factory.setDataSource(source);
         factory.setTypeAliasesPackage("com.chengyinhub.business.domain,com.chengyinhub.business.domain.vo");
@@ -62,8 +72,10 @@ class TemplateAdoptionRoundTripMySqlIT {
         sql = new SqlSessionTemplate(factory.getObject());
         members = sql.getMapper(CmsMemberTemplateMapper.class); libraries = sql.getMapper(CmsTemplateLibraryMapper.class);
         CmsMemberTemplateServiceImpl memberService = new CmsMemberTemplateServiceImpl(); ReflectionTestUtils.setField(memberService, "cmsMemberTemplateMapper", members);
+        memberServiceTarget = memberService;
         CmsTemplateLibraryServiceImpl libraryService = new CmsTemplateLibraryServiceImpl(); ReflectionTestUtils.setField(libraryService, "cmsTemplateLibraryMapper", libraries);
         TemplatePublishServiceImpl target = new TemplatePublishServiceImpl();
+        publishTarget = target;
         ReflectionTestUtils.setField(target, "memberTemplateService", memberService); ReflectionTestUtils.setField(target, "memberTemplateMapper", members);
         ReflectionTestUtils.setField(target, "templateLibraryService", libraryService); ReflectionTestUtils.setField(target, "libraryMapper", libraries);
         audit = mock(IAuditTaskService.class);
@@ -83,7 +95,192 @@ class TemplateAdoptionRoundTripMySqlIT {
     }
 
     private static final String SCAN_QA="{\"schemaVersion\":1,\"present\":\"inline\",\"scan\":{\"enabled\":true,\"kind\":\"TEXT\",\"reply\":\"欢迎\"},\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"答案\",\"answerText\":\"yes\"}}";
-    @BeforeEach void clean() { reset(capabilities, audit); db.update("DELETE FROM template_adoption_receipt"); db.update("DELETE FROM cms_template_library"); db.update("DELETE FROM cms_member_template"); }
+    @BeforeEach void clean() { reset(capabilities, audit); ReflectionTestUtils.setField(publishTarget, "libraryMapper", libraries); ReflectionTestUtils.setField(publishTarget, "memberTemplateMapper", members); ReflectionTestUtils.setField(memberServiceTarget, "cmsMemberTemplateMapper", members); db.update("DELETE FROM template_adoption_receipt"); db.update("DELETE FROM cms_template_library"); db.update("DELETE FROM cms_member_template"); }
+
+    @Test void firstAdoptedDraftCountsBeforePublicationAndReplayOrReadoptionNeverInflates() {
+        CmsTemplateLibrary original = adoptionSource(false);
+        TemplateAdoptionCommand command = adoptionCommand(original.getId(), 7L, "d89_first_draft");
+        Map<String, Object> completed = adoption.adopt(7L, 7L, command, "adopter");
+        Long draftId = Long.valueOf((String) completed.get("draftId"));
+        CmsMemberTemplate draft = members.selectCmsMemberTemplateById(draftId);
+        assertEquals(0, draft.getDraftStatus());
+        assertEquals(0L, draft.getStatus());
+        assertEquals(0L, draft.getPublishStatus());
+        assertEquals(1, useNum(original.getId()), "采用草稿创建即计数，不等待发布");
+        CmsTemplatePublishRequest edit = new CmsTemplatePublishRequest();
+        BeanUtils.copyProperties(draft, edit, "duration");
+        edit.setTitle("我的采用副本");
+        assertEquals(draftId, publish.saveOrUpdateDraft(edit, 7L, "adopter"));
+        assertEquals(draftId, publish.publishTemplateWithTransaction(edit, 7L, "adopter"));
+        assertEquals(1, useNum(original.getId()), "编辑、发布同一副本都不重复计数");
+        db.update("UPDATE cms_template_library SET status=3 WHERE id=?", original.getId());
+        assertEquals(draftId.toString(), adoption.adopt(7L, 7L, command, "lost-ack").get("draftId"));
+        assertEquals(1, adoptionCount(original.getId(), 7L));
+        assertEquals(1, useNum(original.getId()), "来源下架后完成回执仍复用，不计数");
+        db.update("UPDATE cms_template_library SET status=1 WHERE id=?", original.getId());
+        Long anotherCopy = publish.saveOrUpdateDraft(adoptRequest(original.getId()), 7L, "adopter");
+        assertNotEquals(draftId, anotherCopy);
+        assertEquals(1, useNum(original.getId()));
+        publish.saveOrUpdateDraft(adoptRequest(original.getId()), 8L, "another-member");
+        assertEquals(2, useNum(original.getId()), "另一个会员首次采用增加一次");
+        db.update("UPDATE cms_member_template SET del_flag=2 WHERE member_id=7 AND original_template_id=?", original.getId());
+        Long readopted = publish.saveOrUpdateDraft(adoptRequest(original.getId()), 7L, "readopter");
+        assertNotEquals(draftId, readopted);
+        assertEquals(2, useNum(original.getId()), "包括已删除历史副本在内，会员只计首次");
+        assertEquals(draftId.toString(), adoption.adopt(7L, 7L, command, "replay-deleted").get("draftId"));
+        assertEquals(3, adoptionCount(original.getId(), 7L));
+        assertEquals(2, useNum(original.getId()));
+    }
+
+    @Test void concurrentSeededFirstDraftsLockSourceBeforeEitherInsertAndCountOnce() throws Exception {
+        concurrentFirstAdoptions(false, false);
+    }
+
+    @Test void concurrentCanonicalPublishAndDraftShareCanonicalThenLibraryLockAndCountOnce() throws Exception {
+        concurrentFirstAdoptions(true, true);
+    }
+
+    private void concurrentFirstAdoptions(boolean canonical, boolean publishFirst) throws Exception {
+        CmsTemplateLibrary original = adoptionSource(canonical);
+        CountDownLatch firstLocked = new CountDownLatch(1), releaseFirst = new CountDownLatch(1);
+        CountDownLatch secondTryingLock = new CountDownLatch(1);
+        AtomicBoolean first = new AtomicBoolean(true);
+        AtomicInteger inserts = new AtomicInteger();
+        CmsTemplateLibraryMapper lockingLibraries = mock(CmsTemplateLibraryMapper.class,
+                org.mockito.AdditionalAnswers.delegatesTo(libraries));
+        doAnswer(call -> {
+            if (!canonical && !first.get()) secondTryingLock.countDown();
+            CmsTemplateLibrary locked = libraries.selectByIdForUpdate(call.getArgument(0));
+            if (first.compareAndSet(true, false)) {
+                firstLocked.countDown();
+                assertTrue(releaseFirst.await(10, TimeUnit.SECONDS), "首个事务必须获准释放来源锁");
+            }
+            return locked;
+        }).when(lockingLibraries).selectByIdForUpdate(original.getId());
+        ReflectionTestUtils.setField(publishTarget, "libraryMapper", lockingLibraries);
+        CmsMemberTemplateMapper lockingMembers = mock(CmsMemberTemplateMapper.class,
+                org.mockito.AdditionalAnswers.delegatesTo(members));
+        doAnswer(call -> {
+            inserts.incrementAndGet();
+            return members.insertCmsMemberTemplate(call.getArgument(0));
+        }).when(lockingMembers).insertCmsMemberTemplate(any(CmsMemberTemplate.class));
+        ReflectionTestUtils.setField(memberServiceTarget, "cmsMemberTemplateMapper", lockingMembers);
+        if (canonical) {
+            doAnswer(call -> {
+                if (!first.get()) secondTryingLock.countDown();
+                return members.selectCmsMemberTemplateByIdsForUpdate(call.getArgument(0));
+            }).when(lockingMembers).selectCmsMemberTemplateByIdsForUpdate(Collections.singletonList(original.getMemberTemplateId()));
+            ReflectionTestUtils.setField(publishTarget, "memberTemplateMapper", lockingMembers);
+        }
+        ExecutorService workers = Executors.newFixedThreadPool(2);
+        try {
+            Future<Long> a = workers.submit(() -> {
+                CmsTemplatePublishRequest request = adoptRequest(original.getId());
+                if (!publishFirst) return publish.saveOrUpdateDraft(request, 7L, "first");
+                request.setAdoptSourceOnly(false); request.setTitle("直接提交采用副本");
+                request.setValidationMethod(0); request.setQuestionAnswer("answer");
+                return publish.publishTemplateWithTransaction(request, 7L, "first");
+            });
+            assertTrue(firstLocked.await(5, TimeUnit.SECONDS), "实际 mapper 已取得来源行锁");
+            Future<Long> b = workers.submit(() -> publish.saveOrUpdateDraft(adoptRequest(original.getId()), 7L, "second"));
+            assertTrue(secondTryingLock.await(5, TimeUnit.SECONDS), "第二个事务确已进入来源锁调用");
+            assertThrows(TimeoutException.class, () -> b.get(200, TimeUnit.MILLISECONDS));
+            assertEquals(0, inserts.get(), "实际个人 mapper 的 INSERT 不能先于来源锁");
+            assertEquals(0, adoptionCount(original.getId(), 7L), "锁必须发生在个人副本 INSERT 之前");
+            releaseFirst.countDown();
+            Long aId = a.get(10, TimeUnit.SECONDS), bId = b.get(10, TimeUnit.SECONDS);
+            assertNotEquals(aId, bId, "两个请求都创建自己的副本，不能靠吞掉一个请求伪造幂等");
+            assertEquals(2, inserts.get());
+            assertEquals(2, adoptionCount(original.getId(), 7L));
+            assertEquals(1, useNum(original.getId()));
+            publish.saveOrUpdateDraft(adoptRequest(original.getId()), 8L, "distinct-member");
+            assertEquals(2, useNum(original.getId()));
+        } finally {
+            releaseFirst.countDown();
+            workers.shutdownNow();
+            assertTrue(workers.awaitTermination(15, TimeUnit.SECONDS), "并发采用线程必须结束，不能掩盖死锁");
+        }
+    }
+
+    @Test void differentConcurrentReceiptKeysCreateTwoRealDraftsButCountSameMemberOnce() throws Exception {
+        CmsTemplateLibrary original = adoptionSource(true);
+        TemplateAdoptionCommand a = adoptionCommand(original.getId(), 7L, "d89_concurrent_receipt_a");
+        TemplateAdoptionCommand b = adoptionCommand(original.getId(), 7L, "d89_concurrent_receipt_b");
+        CountDownLatch ready = new CountDownLatch(2), start = new CountDownLatch(1);
+        ExecutorService workers = Executors.newFixedThreadPool(2);
+        try {
+            List<Future<Map<String, Object>>> results = new ArrayList<>();
+            for (TemplateAdoptionCommand command : Arrays.asList(a, b)) results.add(workers.submit(() -> {
+                ready.countDown(); assertTrue(start.await(5, TimeUnit.SECONDS));
+                return adoption.adopt(7L, 7L, command, "concurrent-receipt");
+            }));
+            assertTrue(ready.await(5, TimeUnit.SECONDS)); start.countDown();
+            Map<String, Object> first = results.get(0).get(15, TimeUnit.SECONDS);
+            Map<String, Object> second = results.get(1).get(15, TimeUnit.SECONDS);
+            assertEquals("COMPLETED", first.get("status")); assertEquals("COMPLETED", second.get("status"));
+            assertNotEquals(first.get("draftId"), second.get("draftId"));
+            assertEquals(2, adoptionCount(original.getId(), 7L));
+            assertEquals(1, useNum(original.getId()));
+            assertEquals(first.get("draftId"), adoption.adopt(7L, 7L, a, "replay-a").get("draftId"));
+            assertEquals(second.get("draftId"), adoption.adopt(7L, 7L, b, "replay-b").get("draftId"));
+            assertEquals(2, adoptionCount(original.getId(), 7L)); assertEquals(1, useNum(original.getId()));
+        } finally {
+            start.countDown(); workers.shutdownNow();
+            assertTrue(workers.awaitTermination(15, TimeUnit.SECONDS), "回执并发不能残留阻塞线程");
+        }
+    }
+
+    @Test void marketAndCategoryListsUseAdoptionPopularityThenStableDescendingIdentity() {
+        CmsTemplateLibrary older = adoptionSource(false), newer = adoptionSource(false);
+        CmsTemplateLibrary zero = adoptionSource(false), newerZero = adoptionSource(false);
+        publish.saveOrUpdateDraft(adoptRequest(older.getId()), 7L, "older-first");
+        publish.saveOrUpdateDraft(adoptRequest(older.getId()), 8L, "older-second");
+        publish.saveOrUpdateDraft(adoptRequest(newer.getId()), 7L, "newer-first");
+        assertMarketOrder(Arrays.asList(older.getId(), newer.getId(), newerZero.getId(), zero.getId()));
+        publish.saveOrUpdateDraft(adoptRequest(newer.getId()), 8L, "newer-second");
+        assertMarketOrder(Arrays.asList(newer.getId(), older.getId(), newerZero.getId(), zero.getId()));
+        db.update("UPDATE cms_template_library SET status=3 WHERE id=?", newer.getId());
+        assertMarketOrder(Arrays.asList(older.getId(), newerZero.getId(), zero.getId()));
+    }
+
+    private void assertMarketOrder(List<Long> expected) {
+        CmsTemplateLibrary query = new CmsTemplateLibrary(); query.setStatus(1L); query.setDelFlag(0);
+        assertEquals(expected, libraries.selectCmsTemplateLibraryList(query).stream().map(CmsTemplateLibrary::getId).toList());
+        assertEquals(expected, libraries.selectTemplatesByCategoryIds(Collections.singletonList(12L)).stream().map(row -> row.getId()).toList());
+    }
+
+    private CmsTemplateLibrary adoptionSource(boolean canonical) {
+        CmsTemplateLibrary row = new CmsTemplateLibrary();
+        row.setMemberId(99L); row.setTitle("采用计数来源"); row.setValidationMethod(0); row.setQuestionAnswer("answer");
+        row.setCategoryId(12L); row.setActivityCategoryids("12"); row.setStatus(1L); row.setDelFlag(0); row.setUseNum(0);
+        if (canonical) {
+            CmsMemberTemplate original = new CmsMemberTemplate();
+            original.setMemberId(99L); original.setTitle(row.getTitle()); original.setValidationMethod(0);
+            original.setQuestionAnswer("answer"); original.setStatus(1L); original.setDelFlag(0);
+            assertEquals(1, members.insertCmsMemberTemplate(original)); row.setMemberTemplateId(original.getId());
+        }
+        assertEquals(1, libraries.insertCmsTemplateLibrary(row)); return row;
+    }
+
+    private static CmsTemplatePublishRequest adoptRequest(Long sourceId) {
+        CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
+        request.setOriginalTemplateId(sourceId); request.setAdoptSourceOnly(true); return request;
+    }
+
+    private static TemplateAdoptionCommand adoptionCommand(Long sourceId, Long member, String key) {
+        TemplateAdoptionCommand command = new TemplateAdoptionCommand();
+        command.setOriginalTemplateId(sourceId.toString()); command.setScope(""); command.setRequestId(key);
+        command.setSourceVersion((String) adoption.source(member, member, sourceId.toString()).get("sourceVersion"));
+        return command;
+    }
+
+    private static int useNum(Long sourceId) {
+        return db.queryForObject("SELECT IFNULL(use_num,0) FROM cms_template_library WHERE id=?", Integer.class, sourceId);
+    }
+
+    private static int adoptionCount(Long sourceId, Long member) {
+        return db.queryForObject("SELECT COUNT(*) FROM cms_member_template WHERE original_template_id=? AND member_id=?", Integer.class, sourceId, member);
+    }
 
     @Test void seededPublicAdoptionUsesRealReceiptAndDraftServiceWithoutInventingReviewApproval() throws Exception {
         // TEST-only copies of public IDs 50/53; generated IDs below are local fixture identities.
@@ -108,7 +305,7 @@ class TemplateAdoptionRoundTripMySqlIT {
             original.setQuestionName(spec[2]); original.setQuestionA(spec[3]); original.setQuestionB(spec[4]);
             original.setQuestionC(spec[5]); original.setQuestionD(spec[6]); original.setCorrectAnswer(answer.group(1));
             original.setAdvancedConfigJson(config.group(1)); original.setCreateBy("r30_test_fixture");
-            original.setStatus(1L); original.setPublishStatus(1L); original.setDelFlag(0);
+            original.setStatus(1L); original.setDelFlag(0);
             assertEquals(1, libraries.insertCmsTemplateLibrary(original));
             TemplateAdoptionCommand command = new TemplateAdoptionCommand();
             command.setOriginalTemplateId(original.getId().toString()); command.setScope("");
@@ -122,9 +319,11 @@ class TemplateAdoptionRoundTripMySqlIT {
             int before = db.queryForObject("SELECT COUNT(*) FROM cms_member_template", Integer.class);
             assertThrows(IllegalStateException.class, () -> failedAdoption.adopt(7L, 7L, command, "r30_test_fixture"));
             assertEquals(before, db.queryForObject("SELECT COUNT(*) FROM cms_member_template", Integer.class), "Real draft insert and receipt completion must roll back together");
+            assertEquals(0, useNum(original.getId()), "Receipt completion failure rolls back the first-draft counter too");
             assertEquals("PENDING", adoption.receipt(7L, 7L, "", command.getRequestId()).get("status"));
             Map<String, Object> adopted = adoption.adopt(7L, 7L, command, "r30_test_fixture");
             assertEquals("COMPLETED", adopted.get("status"));
+            assertEquals(1, useNum(original.getId()), "Successful receipt retry counts its first draft once");
             Map<String, Object> receipt = adoption.receipt(7L, 7L, "", command.getRequestId());
             assertEquals(adopted.get("draftId"), receipt.get("draftId"));
             Long id = Long.valueOf((String) receipt.get("draftId")); assertTrue(draftIds.add(id));
@@ -150,6 +349,7 @@ class TemplateAdoptionRoundTripMySqlIT {
             assertEquals(json.readTree(original.getAdvancedConfigJson()), json.readTree(submitted.getAdvancedConfigJson()));
             assertEquals(spec[1], libraries.selectCmsTemplateLibraryById(original.getId()).getTitle());
             assertEquals(id.toString(), adoption.adopt(7L, 7L, command, "r30_test_fixture").get("draftId"));
+            assertEquals(1, useNum(original.getId()), "Receipt replay after publishing cannot recount adoption");
         }
         assertEquals(2, draftIds.size());
         assertEquals(2, db.queryForObject("SELECT COUNT(*) FROM template_adoption_receipt WHERE status='COMPLETED' AND inherited_advanced_config_hash IS NOT NULL", Integer.class));
@@ -161,7 +361,7 @@ class TemplateAdoptionRoundTripMySqlIT {
         assertEquals("inline",com.chengyinhub.business.service.support.AdvancedGameConfigValidator.resolvePresent(json.readTree(saved.getAdvancedConfigJson())));
     }
     @Test void scanParticipationAdoptionPreservesMainPresentationAndScanReply() throws Exception {
-        CmsTemplateLibrary original=new CmsTemplateLibrary();original.setMemberId(99L);original.setTitle("扫码问答");original.setValidationMethod(4);original.setAdvancedConfigJson(SCAN_QA);original.setStatus(1L);original.setPublishStatus(1L);original.setDelFlag(0);libraries.insertCmsTemplateLibrary(original);
+        CmsTemplateLibrary original=new CmsTemplateLibrary();original.setMemberId(99L);original.setTitle("扫码问答");original.setValidationMethod(4);original.setAdvancedConfigJson(SCAN_QA);original.setStatus(1L);original.setDelFlag(0);libraries.insertCmsTemplateLibrary(original);
         CmsTemplatePublishRequest request=new CmsTemplatePublishRequest();request.setOriginalTemplateId(original.getId());request.setAdoptSourceOnly(true);
         Long id=publish.saveOrUpdateDraft(request,7L,"author");CmsMemberTemplate saved=members.selectCmsMemberTemplateById(id);
         assertEquals(4,saved.getValidationMethod());assertEquals(json.readTree(SCAN_QA),json.readTree(saved.getAdvancedConfigJson()));assertEquals("欢迎",json.readTree(saved.getAdvancedConfigJson()).path("scan").path("reply").asText());
@@ -198,7 +398,7 @@ class TemplateAdoptionRoundTripMySqlIT {
         original.setRewardRulesJson("[{\"outcomeCode\":\"STEPS_PASS\",\"xp\":10}]"); original.setMerchantGuide("工作人员说明"); original.setStoryImg(reviewedImage);
         original.setQuestionAnswer("原核验答案"); original.setQuestionImg(reviewedImage);
         original.setAdvancedConfigJson("{\"schemaVersion\":1,\"timer\":{\"enabled\":true,\"durationSeconds\":300,\"timeoutResult\":\"FAILED\"}}");
-        original.setStatus(1L); original.setPublishStatus(1L); original.setDelFlag(0); assertEquals(1, libraries.insertCmsTemplateLibrary(original));
+        original.setStatus(1L); original.setDelFlag(0); assertEquals(1, libraries.insertCmsTemplateLibrary(original));
         db.update("UPDATE cms_template_library SET id=? WHERE id=?", existing.getId(), original.getId());
         CmsTemplatePublishRequest request = new CmsTemplatePublishRequest(); request.setOriginalTemplateId(existing.getId()); request.setAdoptSourceOnly(true);
         Long adoptedId = publish.saveOrUpdateDraft(request, 7L, "author"); assertNotEquals(existing.getId(), adoptedId);
@@ -253,7 +453,7 @@ class TemplateAdoptionRoundTripMySqlIT {
         assertEquals(1, members.insertCmsMemberTemplate(canonical));
         CmsTemplateLibrary original = new CmsTemplateLibrary();
         BeanUtils.copyProperties(canonical, original, "id");
-        original.setMemberTemplateId(canonical.getId()); original.setPublishStatus(1L);
+        original.setMemberTemplateId(canonical.getId()); original.setStatus(1L);
         assertEquals(1, libraries.insertCmsTemplateLibrary(original));
         CmsTemplateLibrary readProjection = libraries.selectCmsTemplateLibraryById(original.getId());
         assertEquals("hidden_menu", readProjection.getInteractionType());
@@ -282,7 +482,7 @@ class TemplateAdoptionRoundTripMySqlIT {
                     json.readTree((String) new org.springframework.beans.BeanWrapperImpl(saved).getPropertyValue(field)), field);
         }
         String captured = saved.getAdvancedConfigJson();
-        db.update("UPDATE cms_template_library SET publish_status=0,advanced_config_json=? WHERE id=?",
+        db.update("UPDATE cms_template_library SET status=3,advanced_config_json=? WHERE id=?",
                 "{\"schemaVersion\":1}", original.getId());
         db.update("UPDATE cms_member_template SET interaction_type='city_story_card',medal_name='来源新奖章' WHERE id=?",
                 canonical.getId());
@@ -296,7 +496,7 @@ class TemplateAdoptionRoundTripMySqlIT {
         assertEquals(captured, after.getAdvancedConfigJson()); assertEquals("原奖章", after.getMedalName());
         assertEquals("hidden_menu", after.getInteractionType());
         assertEquals("来源新奖章", members.selectCmsMemberTemplateById(canonical.getId()).getMedalName());
-        assertEquals(0L, libraries.selectCmsTemplateLibraryById(original.getId()).getPublishStatus());
+        assertEquals(3L, libraries.selectCmsTemplateLibraryById(original.getId()).getStatus());
         assertThrows(RuntimeException.class, () -> publish.saveOrUpdateDraft(edit, 8L, "foreign"));
         assertEquals(2, db.queryForObject("SELECT COUNT(*) FROM cms_member_template", Integer.class));
     }
@@ -313,7 +513,7 @@ class TemplateAdoptionRoundTripMySqlIT {
         CmsTemplateLibrary sourceRow = new CmsTemplateLibrary(); sourceRow.setMemberId(99L);
         sourceRow.setMemberTemplateId(canonical.getId()); sourceRow.setTitle("偏好内容");
         sourceRow.setValidationMethod(6); sourceRow.setPreferenceJson(preference);
-        sourceRow.setStatus(1L); sourceRow.setPublishStatus(1L); sourceRow.setDelFlag(0);
+        sourceRow.setStatus(1L); sourceRow.setDelFlag(0);
         assertEquals(1, libraries.insertCmsTemplateLibrary(sourceRow));
         CmsTemplatePublishRequest request = new CmsTemplatePublishRequest();
         request.setOriginalTemplateId(sourceRow.getId()); request.setAdoptSourceOnly(true);

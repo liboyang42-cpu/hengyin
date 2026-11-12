@@ -48,6 +48,9 @@ POST_DEPLOY_REASON = ("只插 sys_job 行：CanonicalJobTarget.canonical 会对�
 # 预检检查留空 = 从 SQL 自动提取表/列/索引/菜单权限/定时任务/配置键；
 # 字符串 = 直接使用该布尔表达式（1=已应用）；"READBACK" = 复用迁移文件自身最后一条只读断言 SELECT。
 NEW_META = {
+    "20261112_template_usage_count": (REQUIRED, PRE, "D89：持久化真实首次采用人数，按既有会员/来源去重回填；模板写入暂停期间执行", "READBACK"),
+    "20261112_template_market_status": (REQUIRED, PRE, "D90：广场 status 单一真源并移除 publish_status；停止旧 jar 后维护窗口执行，禁止在线滚动迁移或直接回滚旧 jar", "READBACK"),
+    "20261112_template_author_title_unique": (REQUIRED, PRE, "D90/D5：同作者未删除广场标题 trim 后逐字唯一；重复先只读预览并阻断，不自动改名，最终索引断言通过才算已应用", "READBACK"),
     "20261029_activity_cancellation_receipt": (REQUIRED, PRE, "cms_activity 新增取消回执列；新 jar 读写", None),
     "20261029_topic_cancellation_receipt": (REQUIRED, PRE, "cms_topic.cancellation_epoch + 取消回执表；新 jar 读写", None),
     "20261031_coop_invite_read_time": (REQUIRED, PRE, "coop_invite.read_time 已读回执列", None),
