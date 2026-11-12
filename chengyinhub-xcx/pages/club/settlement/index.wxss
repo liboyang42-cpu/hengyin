@@ -31,3 +31,8 @@ button.withdraw-btn[disabled] { background: var(--cy-color-action-secondary-bg);
 .topic-row-arrow { flex-shrink: 0; color: var(--cy-color-text-tertiary); }
 
 .footnote { display: block; margin-top: var(--cy-space-4); color: var(--cy-color-text-tertiary); font-size: var(--cy-font-micro); line-height: 1.5; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.topic-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.settled-amount,
+.topic-row-amount { font-variant-numeric: tabular-nums; }

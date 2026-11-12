@@ -47,3 +47,6 @@
 
 .cdrl__details { display: flex; flex-direction: column; gap: var(--cy-space-1); margin-top: var(--cy-space-1); }
 .cdrl__detail { font-size: var(--cy-type-caption); line-height: 1.4; color: var(--cy-color-text-tertiary); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.cdrl__value { font-variant-numeric: tabular-nums; }

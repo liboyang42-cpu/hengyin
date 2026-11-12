@@ -7,3 +7,7 @@
 .session-picker__item { margin: var(--cy-space-3) var(--cy-page-x) 0; padding: var(--cy-space-4) var(--cy-space-3); display: flex; justify-content: space-between; align-items: center; border-radius: var(--cy-radius-sm); background: var(--cy-bg-card-2); font-size: var(--cy-font-body); }
 .session-invalid { min-height: 100vh; box-sizing: border-box; padding-bottom: var(--cy-space-6); background: var(--cy-color-bg-page); color: var(--cy-color-text-primary); }
 .session-invalid__manage { min-height: 88rpx; margin: var(--cy-space-4) var(--cy-page-x) 0; padding: 0 var(--cy-space-4); box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; border-radius: var(--cy-radius-pill); background: var(--cy-btn-solid-bg); color: var(--cy-btn-solid-fg); font-size: var(--cy-font-body); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.session-picker__item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.session-invalid__manage { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

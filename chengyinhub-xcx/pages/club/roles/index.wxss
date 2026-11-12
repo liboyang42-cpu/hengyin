@@ -44,3 +44,8 @@ cy-page-title + .section { margin-top: 0; } /* 打磨第 3 轮 §4-3:20px 是区
 .picker-desc { color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .picker-mark { flex: none; color: var(--cy-text-secondary); font-size: var(--cy-font-label); }
 
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.picker-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.row-value { font-variant-numeric: tabular-nums; }
