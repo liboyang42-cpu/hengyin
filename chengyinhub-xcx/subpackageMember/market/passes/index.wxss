@@ -18,7 +18,6 @@ page { background: var(--cy-color-bg-page); }
 .mk-row__title { font-size: var(--cy-type-body); }
 .mk-row__sub { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); font-variant-numeric: tabular-nums; }
 .mk-row__amt { font-size: var(--cy-type-body); font-weight: 700; font-variant-numeric: tabular-nums; }
-.mk-gated { margin-top: var(--cy-space-2); }
 /* r2-store 积分余额卡 */
 .mk-balance { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-3); padding: var(--cy-space-4); background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-radius-lg); }
 .mk-balance__main { display: flex; flex-direction: column; gap: 4rpx; }

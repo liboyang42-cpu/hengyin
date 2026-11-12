@@ -38,21 +38,12 @@
         </view>
       </block>
       <!-- l-after(proto ps-pass「进入游戏主题库 ›」):整页主题库在分包 market/library;qx-final:主题库读通行证接口,只在服务端开放通行证(member)时出 -->
-      <view class="mk-row mk-row--go" wx:if="{{tab === 'shop' && state === 'ready' && member}}" bindtap="goLibrary" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="进入游戏主题库">
-        <view class="mk-row__main"><text class="mk-row__title">游戏主题库</text></view>
-        <cy-icon name="chevron-right" size="28" />
-      </view>
-      <!-- §20.2 兑换码 / U07-03 已购模板:渠道未开通,入口保留但只写不可用原因,不可点 -->
-      <view class="mk-group mk-gated" wx:if="{{tab === 'shop' && state === 'ready'}}">
-        <view class="mk-row" aria-disabled="true">
-          <view class="mk-row__main"><text class="mk-row__title">兑换码</text></view>
-          <text class="mk-row__sub">暂不可兑换</text>
+      <block wx:if="{{tab === 'shop' && state === 'ready'}}">
+        <view class="mk-row mk-row--go" wx:if="{{member}}" bindtap="goLibrary" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="进入游戏主题库">
+          <view class="mk-row__main"><text class="mk-row__title">游戏主题库</text></view>
+          <cy-icon name="chevron-right" size="28" />
         </view>
-        <view class="mk-row" wx:if="{{workshopReason}}" aria-disabled="true">
-          <view class="mk-row__main"><text class="mk-row__title">付费模板</text></view>
-          <text class="mk-row__sub">{{workshopReason}}</text>
-        </view>
-      </view>
+      </block>
       <block wx:elif="{{tab === 'orders'}}">
         <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!orders.length}}" kind="empty" title="还没有通行证订单" />
         <view class="mk-group" wx:if="{{orders.length}}">
