@@ -16,7 +16,7 @@ public interface MerchantMarketingAnalyticsMapper {
 
     /**
      * D-93:营销首页与店铺参谋共用的核销事件时间([since, endExclusive) 半开)。
-     * 只被 {@code MerchantMetricsServiceImpl} 调用,落窗与计数在 Java 侧统一完成。
+     * 只被 {@code MerchantInsightServiceImpl} 调用,落窗与计数在 Java 侧统一完成。
      */
     List<Date> selectVerifyEventTimes(
             @Param("ownerMemberId") Long ownerMemberId,

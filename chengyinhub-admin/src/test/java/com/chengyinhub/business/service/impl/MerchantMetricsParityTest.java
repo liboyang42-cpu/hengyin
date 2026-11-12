@@ -51,7 +51,7 @@ import static org.mockito.Mockito.when;
  * D-93(2026-11-11 owner:营销首页和店铺参谋指标合并成一套)。
  *
  * <p>两页的服务入口({@code marketingHome}/{@code funnel} 与 {@code insight})接同一个
- * {@link MerchantMetricsServiceImpl}、同一份核销事件,断言同一商家同一窗口吐出的核销本期/上期/环比完全一致;
+ * {@link MerchantInsightServiceImpl}、同一份核销事件,断言同一商家同一窗口吐出的核销本期/上期/环比完全一致;
  * 覆盖零数据、上海 0 点窗口边界、他店隔离。
  */
 class MerchantMetricsParityTest {
@@ -72,7 +72,9 @@ class MerchantMetricsParityTest {
     @SuppressWarnings("unchecked")
     void setUp() {
         analyticsMapper = mock(MerchantMarketingAnalyticsMapper.class);
-        MerchantMetricsServiceImpl metrics = new MerchantMetricsServiceImpl(analyticsMapper, CLOCK);
+        MerchantInsightServiceImpl metrics = new MerchantInsightServiceImpl();
+        ReflectionTestUtils.setField(metrics, "metricsAnalyticsMapper", analyticsMapper);
+        ReflectionTestUtils.setField(metrics, "metricsClock", CLOCK);
 
         marketing = new MerchantAggregateReadServiceImpl(
                 mock(IMmsMerchantService.class), mock(IClubService.class), mock(IClubMemberService.class),
@@ -97,7 +99,8 @@ class MerchantMetricsParityTest {
         ReflectionTestUtils.setField(advisor, "cmsTopicService", topics);
         ReflectionTestUtils.setField(advisor, "merchantLeadService", mock(IMerchantLeadService.class));
         ReflectionTestUtils.setField(advisor, "topicContentPublisherProjectionService", projection);
-        ReflectionTestUtils.setField(advisor, "merchantMetricsService", metrics);
+        ReflectionTestUtils.setField(advisor, "metricsAnalyticsMapper", analyticsMapper);
+        ReflectionTestUtils.setField(advisor, "metricsClock", CLOCK);
     }
 
     private void verifyEvents(long owner, Date... times) {
@@ -200,10 +203,12 @@ class MerchantMetricsParityTest {
 
     @Test
     void sharedServiceRejectsMissingOwnerAndUnsupportedWindows() {
-        MerchantMetricsServiceImpl metrics = new MerchantMetricsServiceImpl(analyticsMapper, CLOCK);
+        MerchantInsightServiceImpl metrics = new MerchantInsightServiceImpl();
+        ReflectionTestUtils.setField(metrics, "metricsAnalyticsMapper", analyticsMapper);
+        ReflectionTestUtils.setField(metrics, "metricsClock", CLOCK);
         assertThrows(IllegalArgumentException.class,
-                () -> metrics.verify(null, metrics.windows(30)), "owner 只来自服务端,缺失不得查全表");
-        assertThrows(IllegalArgumentException.class, () -> metrics.window(14));
+                () -> metrics.metricVerify(null, metrics.metricWindows(30)), "owner 只来自服务端,缺失不得查全表");
+        assertThrows(IllegalArgumentException.class, () -> metrics.metricWindow(14));
         assertThrows(IllegalArgumentException.class, () -> marketing.marketingHome(MERCHANT_A, 9L, 90),
                 "营销首页仍只开放 7/30");
     }

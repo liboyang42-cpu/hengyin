@@ -1,10 +1,12 @@
 package com.chengyinhub.business.service.impl;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,9 +33,9 @@ import com.chengyinhub.business.domain.dto.MerchantVerifyMetric;
 import com.chengyinhub.business.domain.vo.ai.AiMerchantInsightResp;
 import com.chengyinhub.business.domain.vo.ai.MerchantInsightResp;
 import com.chengyinhub.business.mapper.MerchantInsightMapper;
+import com.chengyinhub.business.mapper.MerchantMarketingAnalyticsMapper;
 import com.chengyinhub.business.service.IAiCreatorService;
 import com.chengyinhub.business.service.IMerchantInsightService;
-import com.chengyinhub.business.service.IMerchantMetricsService;
 import com.chengyinhub.business.service.ai.AiServiceException;
 import com.chengyinhub.business.service.support.MerchantMetricPeriod;
 import com.chengyinhub.common.utils.SafeRatio;
@@ -77,9 +79,11 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
     @Autowired
     private com.chengyinhub.business.mapper.MmsMerchantMapper mmsMerchantMapper;
 
-    /** D-93:与营销首页共用的时间窗与核销口径 */
+    /** D-93:与营销首页共用的核销事件来源 */
     @Autowired
-    private IMerchantMetricsService merchantMetricsService;
+    private MerchantMarketingAnalyticsMapper metricsAnalyticsMapper;
+
+    private Clock metricsClock = Clock.system(MerchantMetricPeriod.ZONE);
 
     @Autowired
     private com.chengyinhub.business.service.ICmsTopicService cmsTopicService;
@@ -125,8 +129,8 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
                 merchantInsightMapper.selectVisitorEvents(merchantMemberId);
 
         // D-93:主卡走势与归因三数按与营销首页同一窗口(Asia/Shanghai 自然日含今天)计,核销取共用指标服务
-        List<MerchantMetricPeriod> periods = merchantMetricsService.windows(TREND_WINDOWS);
-        List<MerchantVerifyMetric> verify = merchantMetricsService.verify(merchantMemberId, periods);
+        List<MerchantMetricPeriod> periods = metricWindows(TREND_WINDOWS);
+        List<MerchantVerifyMetric> verify = metricVerify(merchantMemberId, periods);
         JSONObject trends = buildTrends(events, periods, verify);
         JSONObject facts = buildFacts(visits, crowd, supply, events, since, attributionOf(trends));
         // 店铺档案进事实包(纯档案字段无 PII):AI 据此推「适合的主题/联动商铺」
@@ -531,7 +535,7 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
      * 主卡走势:每个时间窗(7/30/90 个自然日,含今天,Asia/Shanghai —— D-93 与营销首页同一 MerchantMetricPeriod)
      * 给本期/上期的 到店玩家/打卡/核销 三数、服务端环比 changeRates,外加逐日三数(daily 按日期升序,长度 = 窗口天数)。
      * 到店玩家按事件时刻去重 member,打卡按 checkinAt;核销(本期/上期/逐日)直接取共用指标服务
-     * IMerchantMetricsService#verify,与营销首页 VERIFY 阶段同一份数。逐日到店玩家是当天去重,跨天相加不等于窗口去重人数。
+     * metricVerify,与营销首页 VERIFY 阶段同一份数。逐日到店玩家是当天去重,跨天相加不等于窗口去重人数。
      */
     private JSONObject buildTrends(List<com.chengyinhub.business.domain.dto.MerchantInsightVisitorEvent> events,
                                    List<MerchantMetricPeriod> periods, List<MerchantVerifyMetric> verify)
@@ -840,5 +844,66 @@ public class MerchantInsightServiceImpl implements IMerchantInsightService
     {
         if (s == null) return "";
         return s.length() <= max ? s : s.substring(0, max);
+    }
+
+    /**
+     * D-93:营销首页与店铺参谋共用的指标定义(时间窗 + 核销),只在本服务计算。
+     * 核销口径取营销首页原定义:本商家 ACTIVE 的 redemption 行 + 本商家自有活动验票,按事件时间落窗,逐条计数。
+     * ownerMemberId 一律是服务端登录态,不收前端参数。
+     */
+    @Override
+    public MerchantMetricPeriod metricWindow(int windowDays) {
+        return metricWindows(windowDays).get(0);
+    }
+
+    @Override
+    public List<MerchantMetricPeriod> metricWindows(int... windowDays) {
+        Clock at = Clock.fixed(metricsClock.instant(), MerchantMetricPeriod.ZONE);
+        List<MerchantMetricPeriod> out = new ArrayList<>();
+        for (int days : windowDays) {
+            if (!metricWindowSupported(days)) throw new IllegalArgumentException("windowDays仅支持7、30或90");
+            out.add(MerchantMetricPeriod.resolve(days, at));
+        }
+        return out;
+    }
+
+    @Override
+    public List<MerchantVerifyMetric> metricVerify(Long ownerMemberId, List<MerchantMetricPeriod> windows) {
+        if (ownerMemberId == null || ownerMemberId < 1) throw new IllegalArgumentException("ownerMemberId缺失");
+        if (windows == null || windows.isEmpty()) return Collections.emptyList();
+        Date since = windows.get(0).getPreviousStart();
+        Date endExclusive = windows.get(0).getEndExclusive();
+        for (MerchantMetricPeriod w : windows) {
+            if (w.getPreviousStart().before(since)) since = w.getPreviousStart();
+            if (w.getEndExclusive().after(endExclusive)) endExclusive = w.getEndExclusive();
+        }
+        List<Date> events = metricsAnalyticsMapper.selectVerifyEventTimes(ownerMemberId, since, endExclusive);
+        List<MerchantVerifyMetric> out = new ArrayList<>(windows.size());
+        for (MerchantMetricPeriod w : windows) {
+            long current = 0L;
+            long previous = 0L;
+            long[] daily = new long[w.getDays()];
+            if (events != null) {
+                for (Date at : events) {
+                    int index = w.currentDayIndex(at);
+                    if (index >= 0) {
+                        current++;
+                        daily[index]++;
+                    } else if (w.inPrevious(at)) {
+                        previous++;
+                    }
+                }
+            }
+            out.add(new MerchantVerifyMetric(w.getDays(), current, previous,
+                    SafeRatio.change(current, previous, 4), daily));
+        }
+        return out;
+    }
+
+    private static final int[] METRIC_SUPPORTED = { 7, 30, 90 };
+
+    private static boolean metricWindowSupported(int days) {
+        for (int s : METRIC_SUPPORTED) if (s == days) return true;
+        return false;
     }
 }

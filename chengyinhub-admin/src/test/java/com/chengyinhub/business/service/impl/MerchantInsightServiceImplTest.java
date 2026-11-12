@@ -80,8 +80,8 @@ class MerchantInsightServiceImplTest {
         ReflectionTestUtils.setField(service, "mmsMerchantMapper", mmsMerchantMapper);
         // D-93:核销/时间窗走与营销首页共用的真实指标服务,只桩它的核销事件查询
         analyticsMapper = mock(com.chengyinhub.business.mapper.MerchantMarketingAnalyticsMapper.class);
-        ReflectionTestUtils.setField(service, "merchantMetricsService",
-                new MerchantMetricsServiceImpl(analyticsMapper, CLOCK));
+        ReflectionTestUtils.setField(service, "metricsAnalyticsMapper", analyticsMapper);
+        ReflectionTestUtils.setField(service, "metricsClock", CLOCK);
         when(mmsMerchantMapper.selectMmsMerchantByMemberId(MERCHANT_ID)).thenReturn(null);
         cmsTopicService = mock(com.chengyinhub.business.service.ICmsTopicService.class);
         merchantLeadService = mock(com.chengyinhub.business.service.IMerchantLeadService.class);

@@ -514,8 +514,7 @@ class RegistrationReadContractMybatisIntegrationTest {
         ReflectionTestUtils.setField(service, "topicContentPublisherProjectionService",
                 mock(ITopicContentPublisherProjectionService.class));
         // D-93:走势/归因的窗口与核销走营销首页同一个真实指标服务(真 mapper XML)
-        ReflectionTestUtils.setField(service, "merchantMetricsService",
-                new com.chengyinhub.business.service.impl.MerchantMetricsServiceImpl(analyticsMapper));
+        ReflectionTestUtils.setField(service, "metricsAnalyticsMapper", analyticsMapper);
         return service;
     }
 

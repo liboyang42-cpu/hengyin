@@ -133,7 +133,7 @@
     <!-- D-93(2026-11-11 营销首页与店铺参谋指标合并):两页「核销」唯一的取数。
          商家 ACTIVE 核销 + 商家自有活动验票,与「核销与退款」同源
          (check-1104 j1 F13 / p2 F-2,RedemptionMapper.selectActivityTicketScansByMerchant)。
-         只回事件时间,落窗/逐日/环比在 MerchantMetricsServiceImpl 统一算。 -->
+         只回事件时间,落窗/逐日/环比在 MerchantInsightServiceImpl 统一算。 -->
     <select id="selectVerifyEventTimes" resultType="java.util.Date">
         select rd.create_time as event_time
           from redemption rd

@@ -19,7 +19,7 @@ import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.business.mapper.CoopInviteMapper;
 import com.chengyinhub.business.service.IMerchantAggregateReadService;
-import com.chengyinhub.business.service.IMerchantMetricsService;
+import com.chengyinhub.business.service.IMerchantInsightService;
 import com.chengyinhub.business.service.IMmsMerchantService;
 import com.chengyinhub.business.service.ISmsCouponService;
 import com.chengyinhub.business.service.support.MerchantMetricPeriod;
@@ -55,7 +55,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
     private final CmsTopicChapterMapper chapterMapper;
     /** CU-M-61:把 category_id 翻成品类名,商家卡无图时按品类出图标 */
     private final ISysCategoryService categoryService;
-    private final IMerchantMetricsService metricsService;
+    private final IMerchantInsightService metricsService;
 
     public MerchantAggregateReadServiceImpl(IMmsMerchantService merchantService,
                                             IClubService clubService,
@@ -67,7 +67,7 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
                                             MerchantMarketingAnalyticsMapper marketingAnalyticsMapper,
                                             CmsTopicChapterMapper chapterMapper,
                                             ISysCategoryService categoryService,
-                                            IMerchantMetricsService metricsService) {
+                                            IMerchantInsightService metricsService) {
         this.merchantService = merchantService;
         this.clubService = clubService;
         this.clubMemberService = clubMemberService;
@@ -565,15 +565,15 @@ public class MerchantAggregateReadServiceImpl implements IMerchantAggregateReadS
         if (windowDays != 7 && windowDays != 30) {
             throw new IllegalArgumentException("windowDays仅支持7或30");
         }
-        // D-93:窗口与核销都走与店铺参谋共用的 IMerchantMetricsService,本类不再自己解析时间窗或数核销。
-        MerchantMetricPeriod period = metricsService.window(windowDays);
+        // D-93:窗口与核销都走与店铺参谋共用的既有店铺参谋服务 IMerchantInsightService,本类不再自己解析时间窗或数核销。
+        MerchantMetricPeriod period = metricsService.metricWindow(windowDays);
         Date previousStart = period.getPreviousStart();
         Date currentStart = period.getCurrentStart();
         Date endExclusive = period.getEndExclusive();
         MerchantMarketingAnalyticsFact fact = marketingAnalyticsMapper.selectAnalytics(
                 memberId, previousStart, currentStart, endExclusive);
         if (fact == null) fact = new MerchantMarketingAnalyticsFact();
-        MerchantVerifyMetric verify = metricsService.verify(memberId, Collections.singletonList(period)).get(0);
+        MerchantVerifyMetric verify = metricsService.metricVerify(memberId, Collections.singletonList(period)).get(0);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("semantics", "INDEPENDENT_EVENT_COUNTS");
