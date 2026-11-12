@@ -18,7 +18,7 @@
 page { background: var(--cy-color-bg-page); }
 .play-scene-host { position:relative; z-index:130; } /* ds-ok 场景弹层须盖住故事与玩法层 */
 .play { position:relative; width:100vw; height:100vh; overflow:hidden; /* ds-ok Figma 实测(用户裁决字面值) */
-  background:var(--cy-color-play-page); color:var(--cy-color-text-primary); /* ds-ok Figma 实测(用户裁决字面值) */
+  background:var(--lk-bg, var(--cy-color-play-page)); color:var(--cy-color-text-primary); /* ds-ok Figma 实测(用户裁决字面值) x-fix6 R4-6:无地图瓦片(DevTools / 离线)时底是外观底色,不是黑洞 */
   --cy-color-bg-page:var(--cy-color-play-page); --cy-color-bg-surface:var(--cy-color-play-surface-base); --cy-color-bg-surface-subtle:var(--cy-color-play-surface-subtle); /* ds-ok Figma 实测(用户裁决字面值) */
   --cy-color-bg-elevated:var(--cy-color-play-elevated); --cy-color-bg-glass:var(--cy-color-play-surface); --cy-color-text-inverse:var(--cy-color-play-ink); /* ds-ok Figma 实测(用户裁决字面值) */
   font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif; /* ds-ok Figma 实测(用户裁决字面值) */
@@ -1827,7 +1827,7 @@ page { background: var(--cy-color-bg-page); }
 .pv-ending__chip.is-on{ background:#FFFFFF; color:#000000; } /* ds-ok 反色中性 */
 
 /* 罗盘小地图(2026-09-23):盖在故事流之上、预览顶条之下;地图原生层整屏铺满,返回钮与下一站卡浮在上面。 */
-.story-map{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:108; background:#000000; } /* ds-ok 压过 .chfull(106),低于结局卡(110) */
+.story-map{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:108; background:var(--lk-bg, #000000); } /* ds-ok 压过 .chfull(106),低于结局卡(110) */
 .story-map__map{ position:absolute; left:0; right:0; top:0; bottom:0; }
 /* 第九轮 m2 第 2 项:同场队伍头像一排(原型 m-team .mz-rail),点一队地图跟随 */
 .team-rail{ position:absolute; right:var(--cy-page-x); z-index:2; display:flex; flex-direction:column; gap:var(--cy-space-3); }

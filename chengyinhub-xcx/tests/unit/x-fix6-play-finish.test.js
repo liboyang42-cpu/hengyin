@@ -44,3 +44,8 @@ test('R4-5:通关卡文案区不再 overflow:hidden(否则乱码字被切成边�
   assert.doesNotMatch(rule.split('/*')[0], /overflow:\s*hidden/)
   assert.match(css, /\.cf--finale \.cf__copy \{ box-sizing: border-box; width: calc\(100vw - 92rpx\);/)
 })
+
+test('R4-6:章节选择 / 工具菜单下的地图底取外观底色,不是纯黑', () => {
+  assert.match(wxss, /\.play \{ position:relative;[^]*?background:var\(--lk-bg, var\(--cy-color-play-page\)\);/)
+  assert.match(wxss, /\.story-map\{[^}]*background:var\(--lk-bg, #000000\);/)
+})
