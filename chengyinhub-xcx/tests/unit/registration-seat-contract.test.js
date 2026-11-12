@@ -32,14 +32,15 @@ function component() {
   const file = path.resolve(__dirname, '../../pages/play/components/scene-qr-ticket/index.js');
   let definition, owner = '11';
   const disk = storage(), requests = [], polls = [], events = [], intervals = [];
+  const clearedIntervals = new Set();
   // 发码请求单独记;码亮着时的核销轮询(探店完局面)另记,不打乱发码序号
   const app = { getSession: () => ({ getRevision: () => 0 }), _loginEpoch: 0, getUserID: () => owner, getAuthorization: () => 'fixture-auth-' + owner,
     sendRequest(options) { (options.url === '/api/verify/dyncode/issue' ? requests : polls).push(options); } };
   vm.runInNewContext(fs.readFileSync(file, 'utf8'), { Component(value) { definition = value; }, getApp: () => app, wx: disk,
-    require: id => require(path.resolve(path.dirname(file), id)), Date, setInterval: (fn) => { intervals.push(fn); return intervals.length; }, clearInterval() {} });
+    require: id => require(path.resolve(path.dirname(file), id)), Date, setInterval: (fn) => { intervals.push(fn); return intervals.length; }, clearInterval(id) { clearedIntervals.add(id); } });
   const page = { ...definition.methods, data: { ...definition.data, registrationId: '71' }, _attached: true,
     setData(patch) { Object.assign(this.data, patch); }, triggerEvent(name, detail) { events.push({ name, detail }); } };
-  return { page, requests, polls, events, intervals, app, disk, switchOwner(value) { owner = value; app._loginEpoch++; } };
+  return { page, requests, polls, events, intervals, clearedIntervals, app, disk, switchOwner(value) { owner = value; app._loginEpoch++; } };
 }
 const choice = { code: 200, data: { requiresSeatSelection: true, registrationId: 71, seatCount: 3 } };
 const issued = (seat = 2) => ({ code: 200, data: { registrationId: 71, seatId: 100 + seat, seatNo: seat,
@@ -156,4 +157,28 @@ test('码亮着时轮询探店完局面:局面变了才报「已核销」并通�
   try { poll(); h.polls[2].success({ code: 200, data: { redeemed: 1 } }); } finally { delete globalThis.wx; }
   assert.deepEqual(h.events.map((e) => e.name), ['redeemed']);
   assert.deepEqual(toasts, ['商家已核销']);
+});
+
+test('optional completion conflict stops only its probe and leaves the issued QR usable', () => {
+  for (const businessCode of [409, '409']) {
+    const h = component(); h.page.load();
+    const ticket = issued(); h.requests[0].success(ticket);
+    const qrTimer = h.page._timer, probeTimer = h.page._redeemPoll;
+    assert.ok(qrTimer); assert.ok(probeTimer); assert.notEqual(qrTimer, probeTimer);
+    assert.equal(h.polls[0].silentError, true);
+    h.polls[0].success({ code: businessCode, msg: '该订单没有自由探索完局面' });
+    assert.equal(h.page._redeemPoll, null);
+    assert.equal(h.clearedIntervals.has(probeTimer), true);
+    assert.equal(h.clearedIntervals.has(qrTimer), false);
+    assert.equal(h.page._timer, qrTimer);
+    assert.equal(h.page.data.state, 'ready');
+    assert.equal(h.page.data.qr, ticket.data.qrcodeUrl);
+    assert.equal(h.page.data.errorText, '');
+    h.intervals.forEach((tick, index) => { if (!h.clearedIntervals.has(index + 1)) tick(); });
+    assert.equal(h.polls.length, 1);
+    assert.equal(h.requests.length, 1);
+    assert.equal(h.events.length, 0);
+    assert.equal(h.page.data.state, 'ready');
+    assert.equal(h.page.data.qr, ticket.data.qrcodeUrl);
+  }
 });

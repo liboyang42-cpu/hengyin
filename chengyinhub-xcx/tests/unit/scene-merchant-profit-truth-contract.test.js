@@ -266,3 +266,61 @@ test('结算调整:已执行金额按稿带负号', () => {
   assert.equal(items.get('adjustExecuted').value, '−¥12.50')
   assert.equal(items.get('adjustPending'), undefined, '待处理为 0 不该占一行')
 })
+
+function financeFailureEffects(code, hasSnapshot, playerView) {
+  const h = loadScene()
+  const effects = { toasts: [], hides: 0, logins: 0, prompts: 0, retries: 0 }
+  let appDefinition
+  const safeMessage = require('../../utils/transport/safe-user-message.js')
+  vm.runInNewContext(read('app.js'), {
+    App: value => { appDefinition = value },
+    require: name => name === './utils/transport/safe-user-message.js' ? safeMessage : {},
+  }, { filename: 'app.js' })
+  const client = require('../../utils/transport/request-client.js').createRequestClient({
+    wxRequest: options => { h.requests.push(options); return { abort() {} } },
+    getBaseUrl: () => 'http://127.0.0.1', getUserID: () => h.app.getUserID(),
+    getAuthorization: () => 'fixture-session', isPlayerView: () => playerView,
+    getErrorMessage: appDefinition.getRequestErrorMessage,
+    shouldAutoToast: appDefinition.shouldAutoToastRequestError,
+    showToast: message => effects.toasts.push(message), hideToast: () => { effects.hides++ },
+    reLogin: callback => { effects.logins++; callback(false) },
+    promptLogin: () => { effects.prompts++; return Promise.resolve(false) },
+    scheduleRetry: () => { effects.retries++ },
+  })
+  h.app.sendRequest = options => client.send(options)
+  if (hasSnapshot) {
+    h.scene.load()
+    h.requests[0].success({ statusCode: 200, data: contextResponse(60) })
+  }
+  h.scene.load()
+  h.requests[h.requests.length - 1].success({ statusCode: 200, data: { code,
+    msg: '平台费率规则缺失(settlement_rule merchant_id=0, biz_type=topic),拒绝按默认费率计价' } })
+  assert.equal(h.scene.data.loaded, true)
+  assert.equal(h.scene.data.loadErr, true)
+  assert.equal(h.scene.data.authRequired, false)
+  assert.equal(h.scene.data.accessDenied, false)
+  assert.equal(h.scene.data.canWithdraw, false)
+  h.scene.goWithdraw()
+  h.scene.goSettlementDetail({ currentTarget: { dataset: { id: 7 } } })
+  assert.equal(h.navigations.length, 0)
+  assert.equal(h.popups.length, 0)
+  assert.deepEqual(effects.toasts, ['操作失败'])
+  assert.equal(effects.logins, 0)
+  assert.equal(effects.prompts, 0)
+  assert.equal(effects.retries, 0)
+  const beforeRetry = h.requests.length
+  h.scene.onRetry()
+  assert.equal(h.requests.length, beforeRetry + 1, 'only the existing explicit retry starts another read')
+  return JSON.parse(JSON.stringify({ data: h.scene.data, effects,
+    requests: h.requests.map(request => ({ url: request.url, method: request.method, data: request.data })),
+    navigations: h.navigations, popups: h.popups }))
+}
+
+for (const hasSnapshot of [false, true]) {
+  for (const playerView of [false, true]) {
+    test(`finance business500/503 preserves toast, error UI, retry and money guards: snapshot=${hasSnapshot}, player=${playerView}`, () => {
+      assert.deepEqual(financeFailureEffects(503, hasSnapshot, playerView),
+        financeFailureEffects(500, hasSnapshot, playerView))
+    })
+  }
+}

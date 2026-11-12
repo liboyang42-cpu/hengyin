@@ -24,15 +24,22 @@ class ApiComplianceF7ControllerTest {
     void invoiceEndpointsAreClosedWhileTheSwitchIsOff() {
         IUserInvoiceService service = mock(IUserInvoiceService.class);
         ComplianceFeatureSwitches switches = mock(ComplianceFeatureSwitches.class);
-        ApiUserInvoiceController controller = new ApiUserInvoiceController(service, switches);
+        ApiUserInvoiceController controller = spy(new ApiUserInvoiceController(service, switches));
 
         for (AjaxResult r : List.of(controller.titles(), controller.list(), controller.eligibleOrders(),
                 controller.apply(Map.of("requestId", "r", "titleId", 1, "orderIds", List.of(1))),
                 controller.cancel(Map.of("id", 1)), controller.detail(Map.of("id", 1)),
-                controller.saveTitle(Map.of()), controller.deleteTitle(Map.of("id", 1)))) {
+                controller.saveTitle(Map.of()), controller.deleteTitle(Map.of("id", 1)),
+                controller.saveTitleRequest(Map.of("requestId", "save", "id", "invalid")),
+                controller.titleSaveReceipt(Map.of("requestId", "save")),
+                controller.originalRequest(Map.of("requestId", "r")))) {
             assertEquals(ApiUserInvoiceController.FEATURE_OFF, r.get("errorCode"));
+            assertEquals(503, r.get(AjaxResult.CODE_TAG));
+            assertEquals("发票功能暂未开放", r.get(AjaxResult.MSG_TAG));
+            assertFalse(r.containsKey(AjaxResult.DATA_TAG));
         }
         verifyNoInteractions(service);
+        verify(controller, never()).getAppUserId();
     }
 
     @Test
@@ -49,6 +56,8 @@ class ApiComplianceF7ControllerTest {
                 "memberId", 8));
 
         assertEquals(UserInvoiceException.ORDER_ALREADY_INVOICED, r.get("errorCode"));
+        assertEquals(500, r.get(AjaxResult.CODE_TAG));
+        assertEquals("所选订单已申请过发票", r.get(AjaxResult.MSG_TAG));
         verify(service).apply(7L, "r1", 31L, List.of(1L, 2L));
         verify(service, never()).apply(eq(8L), any(), any(), any());
     }
@@ -62,6 +71,77 @@ class ApiComplianceF7ControllerTest {
         doThrow(new IllegalStateException("no login")).when(controller).getAppUserId();
 
         assertEquals(500, controller.titles().get(AjaxResult.CODE_TAG));
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    void enabledInvoiceReadsKeepCurrentMemberAndResponseData() {
+        IUserInvoiceService service = mock(IUserInvoiceService.class);
+        ComplianceFeatureSwitches switches = mock(ComplianceFeatureSwitches.class);
+        when(switches.userInvoiceOn()).thenReturn(true);
+        ApiUserInvoiceController controller = spy(new ApiUserInvoiceController(service, switches));
+        doReturn(7L).when(controller).getAppUserId();
+        List<Map<String, Object>> titles = List.of(Map.of("id", "31"));
+        List<Map<String, Object>> applications = List.of(Map.of("id", "41"));
+        when(service.listTitles(7L)).thenReturn(titles);
+        when(service.listApplications(7L)).thenReturn(applications);
+
+        AjaxResult titleResult = controller.titles();
+        AjaxResult listResult = controller.list();
+
+        assertEquals(200, titleResult.get(AjaxResult.CODE_TAG));
+        assertEquals(200, listResult.get(AjaxResult.CODE_TAG));
+        assertEquals("操作成功", titleResult.get(AjaxResult.MSG_TAG));
+        assertEquals("操作成功", listResult.get(AjaxResult.MSG_TAG));
+        assertSame(titles, titleResult.get(AjaxResult.DATA_TAG));
+        assertSame(applications, listResult.get(AjaxResult.DATA_TAG));
+        assertFalse(titleResult.containsKey("errorCode"));
+        assertFalse(listResult.containsKey("errorCode"));
+        verify(service).listTitles(7L);
+        verify(service).listApplications(7L);
+        verifyNoMoreInteractions(service);
+    }
+
+    @Test
+    void enabledInvoiceDetailAndCancelIgnoreBodyOwner() {
+        IUserInvoiceService service = mock(IUserInvoiceService.class);
+        ComplianceFeatureSwitches switches = mock(ComplianceFeatureSwitches.class);
+        when(switches.userInvoiceOn()).thenReturn(true);
+        ApiUserInvoiceController controller = spy(new ApiUserInvoiceController(service, switches));
+        doReturn(7L).when(controller).getAppUserId();
+        Map<String, Object> detail = Map.of("id", "41");
+        Map<String, Object> cancelled = Map.of("id", "41", "status", "CANCELLED");
+        when(service.applicationDetail(7L, 41L)).thenReturn(detail);
+        when(service.cancel(7L, 41L)).thenReturn(cancelled);
+        Map<String, Object> body = Map.of("id", 41, "memberId", 8);
+
+        AjaxResult detailResult = controller.detail(body);
+        AjaxResult cancelResult = controller.cancel(body);
+
+        assertEquals(200, detailResult.get(AjaxResult.CODE_TAG));
+        assertEquals(200, cancelResult.get(AjaxResult.CODE_TAG));
+        assertSame(detail, detailResult.get(AjaxResult.DATA_TAG));
+        assertSame(cancelled, cancelResult.get(AjaxResult.DATA_TAG));
+        verify(service).applicationDetail(7L, 41L);
+        verify(service).cancel(7L, 41L);
+        verifyNoMoreInteractions(service);
+    }
+
+    @Test
+    void enabledInvoiceReadsAndWritesRejectNonPositiveTokenOwners() {
+        IUserInvoiceService service = mock(IUserInvoiceService.class);
+        ComplianceFeatureSwitches switches = mock(ComplianceFeatureSwitches.class);
+        when(switches.userInvoiceOn()).thenReturn(true);
+        ApiUserInvoiceController controller = spy(new ApiUserInvoiceController(service, switches));
+        for (Long memberId : new Long[] {null, 0L, -1L}) {
+            doReturn(memberId).when(controller).getAppUserId();
+            for (AjaxResult result : List.of(controller.titles(), controller.list(),
+                    controller.cancel(Map.of("id", 41, "memberId", 8)))) {
+                assertEquals(500, result.get(AjaxResult.CODE_TAG));
+                assertEquals("请先登录", result.get(AjaxResult.MSG_TAG));
+                assertFalse(result.containsKey("errorCode"));
+            }
+        }
         verifyNoInteractions(service);
     }
 

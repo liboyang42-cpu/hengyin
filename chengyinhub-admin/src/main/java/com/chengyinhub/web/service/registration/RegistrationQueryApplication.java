@@ -241,20 +241,20 @@ public class RegistrationQueryApplication {
         }
         Long registrationId = Convert.toLong(id, 0L);
         if (registrationId <= 0) {
-            return AjaxResult.error("参数不合规");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "参数不合规");
         }
         CmsRegistration registration = registrationService.selectCmsRegistrationById(registrationId);
         if (registration == null) {
-            return AjaxResult.error("报名记录不存在");
+            return AjaxResult.error(HttpStatus.NOT_FOUND, "报名记录不存在");
         }
         if (!memberId.equals(registration.getMemberId())) {
-            return AjaxResult.error("无权查看该报名信息");
+            return AjaxResult.error(HttpStatus.FORBIDDEN, "无权查看该报名信息");
         }
         // ③ 探索票之外的单没有完局面。这里 fail-closed 返错而不是返空壳:
         // 空壳会让 ①② 的订单详情也渲染出一块「图鉴 0/0」的假读面。
         if (registration.getPurchaseKind() == null
                 || registration.getPurchaseKind() != PurchaseKind.EXPLORE_PASS) {
-            return AjaxResult.error("该订单没有自由探索完局面");
+            return AjaxResult.error(HttpStatus.CONFLICT, "该订单没有自由探索完局面");
         }
         CmsActivity activity = registration.getOwnerId() == null ? null
                 : activityService.selectCmsActivityById(registration.getOwnerId());

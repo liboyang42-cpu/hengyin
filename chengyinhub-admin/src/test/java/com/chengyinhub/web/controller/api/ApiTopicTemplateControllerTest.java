@@ -85,26 +85,24 @@ class ApiTopicTemplateControllerTest {
     // ====== /info 门禁测试 ======
 
     @Test
-    void info_requires_valid_id() {
-        AjaxResult r = controller.info(null);
-        assertEquals(500, r.get("code"));
-        assertTrue(((String) r.get("msg")).contains("缺少模板ID"));
-
-        r = controller.info("0");
-        assertEquals(500, r.get("code"));
-        assertTrue(((String) r.get("msg")).contains("缺少模板ID"));
-
-        r = controller.info("-1");
-        assertEquals(500, r.get("code"));
-        assertTrue(((String) r.get("msg")).contains("缺少模板ID"));
+    void info_requires_valid_id_without_reading_template_or_viewer() {
+        for (String id : new String[] { null, "", "0", "-1", "not-an-id" }) {
+            AjaxResult result = controller.info(id);
+            assertEquals(400, result.get("code"));
+            assertEquals("缺少模板ID", result.get("msg"));
+            assertFalse(result.containsKey("data"));
+        }
+        verifyNoInteractions(cmsTopicService, capabilityService, mmsMerchantService);
     }
 
     @Test
     void info_rejects_ineligible_public_snapshot() {
         when(cmsTopicService.buildPublicTopicTemplateDetail(42L, null, false, null)).thenReturn(null);
         AjaxResult r = controller.info("42");
-        assertEquals(500, r.get("code"));
-        assertTrue(((String) r.get("msg")).contains("模板不存在"));
+        assertEquals(404, r.get("code"));
+        assertEquals("模板不存在", r.get("msg"));
+        assertFalse(r.containsKey("data"));
+        verify(cmsTopicService).buildPublicTopicTemplateDetail(42L, null, false, null);
         verify(cmsTopicService, never()).selectTopicIsTemplate(anyLong());
         verify(cmsTopicService, never()).selectCmsTopicById(anyLong());
         verify(cmsTopicService, never()).buildTopicTemplateDetail(anyLong(), anyBoolean(), any());
@@ -114,8 +112,8 @@ class ApiTopicTemplateControllerTest {
     void info_rejects_missing_public_snapshot() {
         when(cmsTopicService.buildPublicTopicTemplateDetail(42L, null, false, null)).thenReturn(null);
         AjaxResult r = controller.info("42");
-        assertEquals(500, r.get("code"));
-        assertTrue(((String) r.get("msg")).contains("模板不存在"));
+        assertEquals(404, r.get("code"));
+        assertEquals("模板不存在", r.get("msg"));
     }
 
     @Test

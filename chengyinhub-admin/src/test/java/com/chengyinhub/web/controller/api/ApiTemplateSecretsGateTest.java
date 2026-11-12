@@ -542,8 +542,11 @@ class ApiTemplateSecretsGateTest {
 
         AjaxResult res = controller.topicInfo("702");
 
-        assertEquals(500, res.get("code"));
+        assertEquals(404, res.get("code"));
         assertEquals("主题活动不存在", res.get("msg"));
+        assertFalse(res.containsKey("data"));
+        verify(topicService).selectCmsTopicDetailById(702L, VIEWER);
+        verify(topicService, never()).selectCmsTopicById(anyLong());
     }
 
     @Test
@@ -560,6 +563,9 @@ class ApiTemplateSecretsGateTest {
         AjaxResult res = controller.topicInfo("704");
 
         assertEquals(200, res.get("code"), res.toString());
+        assertEquals(704L, ((TopicInfoVO) res.get("data")).getId());
+        verify(topicService).selectCmsTopicDetailById(704L, VIEWER);
+        verify(topicService, never()).selectCmsTopicById(anyLong());
     }
 
     @Test

@@ -128,7 +128,9 @@ class ApiTopicTemplateDeliveryMetadataTest {
 
         AjaxResult result = loggedInAs(9L).info("42");
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        assertEquals(404, result.get(AjaxResult.CODE_TAG));
+        assertEquals("模板不存在", result.get(AjaxResult.MSG_TAG));
+        assertFalse(result.containsKey(AjaxResult.DATA_TAG));
         verifyNoInteractions(projection);
     }
 

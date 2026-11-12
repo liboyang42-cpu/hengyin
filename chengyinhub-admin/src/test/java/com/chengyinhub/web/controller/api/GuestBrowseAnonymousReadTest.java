@@ -103,6 +103,42 @@ class GuestBrowseAnonymousReadTest {
     }
 
     @Test
+    void anonymousTopicInvalidIdDoesNotReadPublicOrRawTopic() {
+        ICmsTopicService topics = mock(ICmsTopicService.class);
+        ApiTopicController controller = guest(spy(new ApiTopicController()));
+        ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
+
+        for (String id : new String[] { null, "", "0", "-1", "not-an-id" }) {
+            AjaxResult result = controller.topicInfo(id);
+            assertEquals(400, result.get(AjaxResult.CODE_TAG));
+            assertEquals("参数不合规", result.get(AjaxResult.MSG_TAG));
+            assertFalse(result.containsKey(AjaxResult.DATA_TAG));
+        }
+        org.mockito.Mockito.verifyNoInteractions(topics);
+    }
+
+    @Test
+    void missingOrHiddenTopicReturnsNotFoundForGuestAndAuthenticatedViewerWithoutRawFallback() {
+        for (long viewer : new long[] { 0L, 990050L }) {
+            ICmsTopicService topics = mock(ICmsTopicService.class);
+            ApiTopicController controller = spy(new ApiTopicController());
+            if (viewer == 0L) guest(controller);
+            else org.mockito.Mockito.doReturn(viewer).when(controller).getAppUserId();
+            ReflectionTestUtils.setField(controller, "cmsTopicService", topics);
+
+            for (long topicId : new long[] { 9912627L, 9999999L }) {
+                AjaxResult result = controller.topicInfo(String.valueOf(topicId));
+                assertEquals(404, result.get(AjaxResult.CODE_TAG));
+                assertEquals("主题活动不存在", result.get(AjaxResult.MSG_TAG));
+                assertFalse(result.containsKey(AjaxResult.DATA_TAG));
+                verify(topics).selectCmsTopicDetailById(topicId, viewer);
+            }
+            verify(topics, never()).selectCmsTopicById(anyLong());
+            verify(topics, never()).canResubmitSupplyReview(anyLong(), anyLong());
+        }
+    }
+
+    @Test
     void topicWriteSiblingsStillRequireLogin() {
         ApiTopicController controller = guest(spy(new ApiTopicController()));
         assertThrows(ServiceException.class, () -> controller.topicLike(String.valueOf(TOPIC_ID), "1"));

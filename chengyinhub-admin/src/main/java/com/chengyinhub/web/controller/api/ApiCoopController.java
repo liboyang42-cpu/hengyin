@@ -22,6 +22,7 @@ import com.chengyinhub.business.domain.CoopInvite;
 import com.chengyinhub.business.domain.dto.DispatchResult;
 import com.chengyinhub.business.domain.MerchantChapterOffer;
 import com.chengyinhub.business.domain.MerchantCircleSupplyProfile;
+import com.chengyinhub.business.exception.TopicPricingRuleMissingException;
 import com.chengyinhub.business.service.IClubService;
 import com.chengyinhub.business.service.ICoopInviteService;
 import com.chengyinhub.business.service.IImService;
@@ -1165,7 +1166,11 @@ public class ApiCoopController extends BaseController {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         Map<String, Object> d = new HashMap<>();
-        d.put("topics", coopInviteService.clubFinance(memberId));
+        try {
+            d.put("topics", coopInviteService.clubFinance(memberId));
+        } catch (TopicPricingRuleMissingException e) {
+            return new AjaxResult(503, e.getMessage());
+        }
         d.put("adjustments", clawbackAdjustments(memberId));
         d.put("isOwner", isFundsOwner(memberId));
         return AjaxResult.success(d);
