@@ -38,4 +38,22 @@
 - 因此严重度、漏洞编号、包名、已装版本、修复版本及引入模块均未获取，不做猜测。
 - 处理建议：在能访问产物存储的机器上执行 `gh run download 43312466264 -R liboyang42-cpu/hengyin -n chengyin-dependency-scan-1`，或放开该域名后重跑本任务。本 PR 未改任何依赖。
 
-STATUS: PARTIAL - 除 SBOM 外检查全部通过；4 条 Critical/High 明细因产物存储域名被网络策略拦截（403）无法获取
+## 合并 master（DEC-C #809，92041991）后的冲突收口
+
+- 做法：fetch 后在分支上 `git merge origin/master`（合并提交，未强推、未碰 master）。两处冲突：
+  - `ci/migration-dependencies.json`：取并集——#804 的三条 `20261112_template_*` 加 master 的五条 `20261112_dec_c_*`，无重复键。
+  - `f-release/release-migrations.json`：生成物，不手改；取 master 版本占位后用 `gen_release_set.py --head HEAD` 重建。
+- 生成器元数据：`gen_release_set.py` 的 `NEW_META` 补登记 `20261112_dec_c_{team_codes,safety,perks,payout,payout_jobs}` 与上游已有、此前未登记的 `20261112_chapter_reward`（D-82）。
+- 发现并修正 master 手工追加条目的问题：`dec_c_payout` 依赖 `20261110_ecommerce_payout_wiring`（POST_DEPLOY），原手工标 PRE_DEPLOY 会破坏轮次依赖，生成器直接拒绝；现随 wiring 放入 POST_DEPLOY（说明里保留“新 mapper 读取前须已执行、个人开关保持关闭”）。master 版 JSON 里这几项的 step/order 也不一致（step 1、158、646、647），重建后统一。
+- 结果：发布集 165 项（含 #804 三项模板迁移与 DEC-C 五项），step 为 1..165 连续、order 单调；`gen_release_set.py --check` 通过；同步重建 `MIGRATIONS.md`、`release-precheck.sql`。
+
+## 本次验证
+
+- `python3 -m unittest ci/test_migration_gates.py ci/test_migration_ledger.py`：202 项全过。
+- 迷你程序单测全量（`chengyinhub-xcx` `npm run test:unit`）：pass 17542 / fail 0。
+- UI-GATE-0（`tests/lint/ui-integrity.js` 自证与全仓扫描，`--warn-as-error`）：PASS。未运行 `ci/xcx-check.sh` 与 `ds-hardcode-gate-selftest.sh`。
+- `ci/migration_gates.py` 只有 sql/beans/pr-declare/dep-order 子命令，需 PR 上下文，交给 CI 的迁移门执行。
+- 已知旧债（与本合并无关）：`ci/test_release_migration_rehearsal.py` 的 `test_pack_matches_head_release_set` / `test_source_provenance_is_exact_and_public` 在 master 与合并前分支上同样失败（`release-closeout-20261029` 包缺 10-29 之后的迁移，需 `qx-final6/extend_release_pack.py` 补 f-rehearsal 观测结果后才能扩）；该工作流只在改动其路径时触发，本 PR 未改，未处理。
+- 推送后 CI：除已知的 “SBOM + dependency scan”（既有依赖 CVE）外，PR #804 在提交 c3edc8cd 上 35 项检查：32 成功、2 跳过、仅 “SBOM + dependency scan” 失败（既有依赖 CVE，按约定不处理）。本记录提交只改文档。
+
+STATUS: DONE
