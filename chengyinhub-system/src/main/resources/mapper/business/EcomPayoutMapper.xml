@@ -313,4 +313,81 @@
             attempts = attempts + 1
         where id = #{id} and state = 'MANUAL' and wx_order_id is null
     </update>
+
+    <select id="selectFrozenClubBeneficiary" resultType="com.chengyinhub.business.domain.ClubPayoutBeneficiary" useCache="false" flushCache="true">
+        select scope_type, scope_id, club_id, club_name, member_id, payout_ready_at
+        from club_personal_payout_beneficiary where scope_type=#{scopeType} and scope_id=#{scopeId}
+    </select>
+    <select id="selectFrozenClubBeneficiaryForUpdate" resultType="com.chengyinhub.business.domain.ClubPayoutBeneficiary" useCache="false" flushCache="true">
+        select scope_type,scope_id,club_id,club_name,member_id,payout_ready_at from club_personal_payout_beneficiary
+        where scope_type=#{scopeType} and scope_id=#{scopeId} for update
+    </select>
+    <update id="markClubBeneficiaryReady">
+        update club_personal_payout_beneficiary set payout_ready_at=coalesce(payout_ready_at,now())
+        where scope_type=#{scopeType} and scope_id=#{scopeId}
+    </update>
+    <insert id="insertFrozenClubBeneficiary">
+        insert into club_personal_payout_beneficiary(scope_type,scope_id,club_id,club_name,member_id,frozen_at)
+        values(#{scopeType},#{scopeId},#{clubId},#{clubName},#{memberId},now())
+    </insert>
+
+    <resultMap id="PersonalReceiverResult" type="com.chengyinhub.business.domain.EcomPersonalReceiver">
+        <id property="memberId" column="member_id"/>
+        <id property="appid" column="appid"/>
+        <result property="openid" column="openid"/>
+        <result property="state" column="state"/>
+        <result property="consentedAt" column="consented_at"/>
+        <result property="verifiedAt" column="verified_at"/>
+    </resultMap>
+    <sql id="personalReceiverColumns">member_id, appid, openid, state, consented_at, verified_at</sql>
+    <select id="selectByMemberAndAppid" resultMap="PersonalReceiverResult">
+        select <include refid="personalReceiverColumns"/> from ecom_personal_receiver
+        where member_id = #{memberId} and appid = #{appid}
+    </select>
+    <select id="selectByMemberAndAppidForUpdate" resultMap="PersonalReceiverResult" useCache="false" flushCache="true">
+        select <include refid="personalReceiverColumns"/> from ecom_personal_receiver
+        where member_id = #{memberId} and appid = #{appid} for update
+    </select>
+    <insert id="insertVerified" parameterType="com.chengyinhub.business.domain.EcomPersonalReceiver">
+        insert into ecom_personal_receiver (member_id, appid, openid, state, consented_at, verified_at)
+        values (#{memberId}, #{appid}, #{openid}, 'VERIFIED', #{consentedAt}, #{verifiedAt})
+    </insert>
+
+    <!-- Negative scope/detail ids isolate sessions from topic/coop obligations without live owner joins. -->
+    <select id="selectMissingActivityIds" resultType="long" useCache="false" flushCache="true">
+        select distinct a.id
+        from cms_activity a
+        join club_personal_payout_beneficiary b on b.scope_type = 'ACTIVITY' and b.scope_id = a.id
+        join cms_registration r on r.owner_type = 2 and r.owner_id = a.id
+        join ecom_order_seller s on cast(s.out_trade_no as binary) = cast(r.registration_no as binary)
+        where b.payout_ready_at is not null and a.del_flag = 0 and s.transaction_id is not null
+          and exists (select 1 from settlement_detail d where d.source_type = 'registration' and d.source_id = r.id
+          and not exists (select 1 from cms_activity_settlement_hold h where h.registration_id = r.id and h.status = 0)
+                      and d.club_id = b.club_id and d.receiver_id = b.member_id and d.status in (0,1))
+          and not exists (select 1 from ecom_profit_share_order o where o.out_trade_no = s.out_trade_no and o.topic_id = -a.id)
+        order by a.id limit #{limit}
+    </select>
+    <select id="selectPaidTrades" resultType="com.chengyinhub.business.domain.EcomOrderSeller" useCache="false" flushCache="true">
+        select s.out_trade_no as outTradeNo, s.sub_mchid as subMchid, s.seller_type as sellerType,
+               s.seller_id as sellerId, s.total_fen as totalFen, s.transaction_id as transactionId, r.id as registrationId
+        from cms_registration r
+        join ecom_order_seller s on cast(s.out_trade_no as binary) = cast(r.registration_no as binary)
+        join club_personal_payout_beneficiary b on b.scope_type = 'ACTIVITY' and b.scope_id = r.owner_id
+        where r.owner_type = 2 and r.owner_id = #{activityId} and s.transaction_id is not null
+          and b.payout_ready_at is not null
+          and not exists (select 1 from cms_activity_settlement_hold h where h.registration_id = r.id and h.status = 0)
+        order by r.id
+    </select>
+    <select id="selectComponents" resultType="com.chengyinhub.business.domain.EcomLedgerComponent" useCache="false" flushCache="true">
+        select -d.id as settlementId, d.receiver_type as lineType,
+               case when d.receiver_type = 'platform' then 'ACCOUNTING' else 'MEMBER' end as receiverKind,
+               case when d.receiver_type = 'platform' then null else d.receiver_id end as receiverMemberId,
+               d.settlement_amount as originalAmount, d.club_id as clubId, d.club_name as clubName
+        from settlement_detail d
+        join cms_registration r on r.id = d.source_id and r.owner_type = 2 and r.owner_id = #{activityId}
+        join club_personal_payout_beneficiary b on b.scope_type = 'ACTIVITY' and b.scope_id = r.owner_id
+        where d.source_type = 'registration' and d.source_id = #{registrationId} and d.status in (0,1)
+          and b.payout_ready_at is not null
+        order by d.id
+    </select>
 </mapper>

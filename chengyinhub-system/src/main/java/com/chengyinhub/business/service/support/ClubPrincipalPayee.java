@@ -5,7 +5,7 @@ import com.chengyinhub.business.domain.ClubPayoutBeneficiary;
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.mapper.ClubMapper;
-import com.chengyinhub.business.mapper.ClubPayoutBeneficiaryMapper;
+import com.chengyinhub.business.mapper.EcomPayoutMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.payout.PayoutSwitches;
 import com.chengyinhub.common.exception.ServiceException;
@@ -18,27 +18,27 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class ClubPrincipalPayee {
     @Autowired private ClubMapper clubMapper;
     @Autowired private UmsMemberMapper members;
-    @Autowired private ClubPayoutBeneficiaryMapper beneficiaries;
+    @Autowired private EcomPayoutMapper beneficiaries;
     @Autowired private PayoutSwitches switches;
 
     public boolean activityAlreadyReady(Long activityId) {
-        ClubPayoutBeneficiary frozen = beneficiaries.selectFrozenForUpdate("ACTIVITY", activityId);
+        ClubPayoutBeneficiary frozen = beneficiaries.selectFrozenClubBeneficiaryForUpdate("ACTIVITY", activityId);
         if (frozen == null) throw new ServiceException("CLUB_BENEFICIARY_REQUIRED");
         return frozen.getPayoutReadyAt() != null;
     }
 
     public void markActivityReady(Long activityId) {
-        if (beneficiaries.markReady("ACTIVITY", activityId) != 1) throw new ServiceException("CLUB_BENEFICIARY_READY_FAILED");
+        if (beneficiaries.markClubBeneficiaryReady("ACTIVITY", activityId) != 1) throw new ServiceException("CLUB_BENEFICIARY_READY_FAILED");
     }
 
     public boolean personalActivity(CmsActivity activity) {
         return activity != null && activity.getClubId() != null && activity.getClubId() > 0
-                && (personalEnabled() || beneficiaries != null && beneficiaries.selectFrozen("ACTIVITY", activity.getId()) != null);
+                && (personalEnabled() || beneficiaries != null && beneficiaries.selectFrozenClubBeneficiary("ACTIVITY", activity.getId()) != null);
     }
 
     private boolean personalTopic(CmsTopic topic) {
         return topic != null && topic.getClubId() != null && topic.getClubId() > 0
-                && (personalEnabled() || beneficiaries != null && beneficiaries.selectFrozen("TOPIC", topic.getId()) != null);
+                && (personalEnabled() || beneficiaries != null && beneficiaries.selectFrozenClubBeneficiary("TOPIC", topic.getId()) != null);
     }
 
     public boolean personalEnabled() { return switches != null && switches.personalClubEnabled(); }
@@ -71,7 +71,7 @@ public class ClubPrincipalPayee {
         if (scopeId == null || !TransactionSynchronizationManager.isActualTransactionActive()
                 || TransactionSynchronizationManager.isCurrentTransactionReadOnly())
             throw new ServiceException("CLUB_BENEFICIARY_TRANSACTION_REQUIRED");
-        ClubPayoutBeneficiary prior = beneficiaries.selectFrozen(scope, scopeId);
+        ClubPayoutBeneficiary prior = beneficiaries.selectFrozenClubBeneficiary(scope, scopeId);
         if (prior != null) return requireScope(prior, scope, scopeId, clubId);
         Club observed = requireClub(clubMapper.selectClubById(clubId), clubId);
         // transferOwner locks member accounts (ascending) before club. Never acquire club then member.
@@ -82,14 +82,14 @@ public class ClubPrincipalPayee {
         Club current = requireClub(clubMapper.selectClubByIdForUpdate(clubId), clubId);
         if (!observed.getMemberId().equals(current.getMemberId()))
             throw new ServiceException("CLUB_BENEFICIARY_CHANGED_RETRY");
-        prior = beneficiaries.selectFrozenForUpdate(scope, scopeId);
+        prior = beneficiaries.selectFrozenClubBeneficiaryForUpdate(scope, scopeId);
         if (prior != null) return requireScope(prior, scope, scopeId, clubId);
         if (current.getName() == null || current.getName().isBlank())
             throw new ServiceException("CLUB_BENEFICIARY_NAME_REQUIRED");
         ClubPayoutBeneficiary frozen = new ClubPayoutBeneficiary();
         frozen.setScopeType(scope); frozen.setScopeId(scopeId); frozen.setClubId(clubId);
         frozen.setClubName(current.getName()); frozen.setMemberId(current.getMemberId());
-        if (beneficiaries.insertFrozen(frozen) != 1) throw new ServiceException("CLUB_BENEFICIARY_FREEZE_FAILED");
+        if (beneficiaries.insertFrozenClubBeneficiary(frozen) != 1) throw new ServiceException("CLUB_BENEFICIARY_FREEZE_FAILED");
         return frozen;
     }
 

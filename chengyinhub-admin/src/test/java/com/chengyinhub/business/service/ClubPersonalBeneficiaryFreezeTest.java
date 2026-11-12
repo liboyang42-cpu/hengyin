@@ -14,7 +14,7 @@ import static org.mockito.Mockito.*;
 class ClubPersonalBeneficiaryFreezeTest {
     final ClubMapper clubs = mock(ClubMapper.class);
     final UmsMemberMapper members = mock(UmsMemberMapper.class);
-    final ClubPayoutBeneficiaryMapper snapshots = mock(ClubPayoutBeneficiaryMapper.class);
+    final EcomPayoutMapper snapshots = mock(EcomPayoutMapper.class);
     final PayoutSwitches switches = mock(PayoutSwitches.class);
     final ClubPrincipalPayee resolver = new ClubPrincipalPayee();
     final CmsActivity activity = new CmsActivity();
@@ -26,7 +26,7 @@ class ClubPersonalBeneficiaryFreezeTest {
         when(switches.personalClubEnabled()).thenReturn(true);
         activity.setId(10L); activity.setClubId(20L); activity.setMemberId(1L);
         when(members.lockMemberById(anyLong())).thenAnswer(call->call.getArgument(0));
-        when(snapshots.insertFrozen(any())).thenReturn(1);
+        when(snapshots.insertFrozenClubBeneficiary(any())).thenReturn(1);
         TransactionSynchronizationManager.setActualTransactionActive(true);
     }
     @AfterEach void clear() { TransactionSynchronizationManager.clear(); }
@@ -39,40 +39,40 @@ class ClubPersonalBeneficiaryFreezeTest {
         var order=inOrder(members,clubs,snapshots);
         order.verify(members).lockMemberById(2L);
         order.verify(clubs).selectClubByIdForUpdate(20L);
-        order.verify(snapshots).selectFrozenForUpdate("ACTIVITY",10L);
+        order.verify(snapshots).selectFrozenClubBeneficiaryForUpdate("ACTIVITY",10L);
         ArgumentCaptor<ClubPayoutBeneficiary> captured=ArgumentCaptor.forClass(ClubPayoutBeneficiary.class);
-        verify(snapshots).insertFrozen(captured.capture());
+        verify(snapshots).insertFrozenClubBeneficiary(captured.capture());
         assertEquals("新名称",captured.getValue().getClubName());
     }
     @Test void transferAndRenameAfterFreezeNeverRewriteOwnerOrLabelEvenWhenSwitchDisabled() {
-        when(snapshots.selectFrozen("ACTIVITY",10L)).thenReturn(snapshot());
+        when(snapshots.selectFrozenClubBeneficiary("ACTIVITY",10L)).thenReturn(snapshot());
         when(switches.personalClubEnabled()).thenReturn(false);
         assertEquals(2L,resolver.forActivity(activity));
         assertEquals("原俱乐部",resolver.frozenActivity(activity).getClubName());
         verifyNoInteractions(clubs,members);
-        verify(snapshots,never()).insertFrozen(any());
+        verify(snapshots,never()).insertFrozenClubBeneficiary(any());
     }
     @Test void concurrentTransferDetectedAfterLockNeverFreezesStaleOwner() {
         when(clubs.selectClubById(20L)).thenReturn(club(1L,"旧"));
         when(clubs.selectClubByIdForUpdate(20L)).thenReturn(club(2L,"新"));
         assertThrows(RuntimeException.class,()->resolver.forActivity(activity));
-        verify(snapshots,never()).insertFrozen(any());
+        verify(snapshots,never()).insertFrozenClubBeneficiary(any());
     }
     @Test void defaultOffPreservesLegacyCurrentOwnerWithoutFreezing() {
         when(switches.personalClubEnabled()).thenReturn(false);
         when(clubs.selectClubById(20L)).thenReturn(club(3L,"当前"));
         assertEquals(3L,resolver.forActivity(activity));
-        verify(snapshots,never()).insertFrozen(any());
+        verify(snapshots,never()).insertFrozenClubBeneficiary(any());
         verifyNoInteractions(members);
     }
     @Test void frozenOwnThemeKeepsOriginalOwnerAndLabelAfterPersonalSwitchCloses() {
         CmsTopic topic = new CmsTopic(); topic.setId(11L); topic.setClubId(20L); topic.setMemberId(99L);
         ClubPayoutBeneficiary frozen = snapshot(); frozen.setScopeType("TOPIC"); frozen.setScopeId(11L);
-        when(snapshots.selectFrozen("TOPIC",11L)).thenReturn(frozen);
+        when(snapshots.selectFrozenClubBeneficiary("TOPIC",11L)).thenReturn(frozen);
         when(switches.personalClubEnabled()).thenReturn(false);
         assertEquals(2L,resolver.forTopic(topic));
         assertEquals("原俱乐部",resolver.frozenTopic(topic).getClubName());
         verifyNoInteractions(clubs,members);
-        verify(snapshots,never()).insertFrozen(any());
+        verify(snapshots,never()).insertFrozenClubBeneficiary(any());
     }
 }

@@ -166,4 +166,17 @@ public class FakeEcomPayoutMapper implements EcomPayoutMapper {
         }
         return 0;
     }
+
+    // D-05/D-09/D-16：个人分账方法默认不应被未声明场景调用，需要的测试子类覆写。
+    @Override public com.chengyinhub.business.domain.ClubPayoutBeneficiary selectFrozenClubBeneficiary(String t, Long id) { throw unexpected(); }
+    @Override public com.chengyinhub.business.domain.ClubPayoutBeneficiary selectFrozenClubBeneficiaryForUpdate(String t, Long id) { throw unexpected(); }
+    @Override public int markClubBeneficiaryReady(String t, Long id) { throw unexpected(); }
+    @Override public int insertFrozenClubBeneficiary(com.chengyinhub.business.domain.ClubPayoutBeneficiary b) { throw unexpected(); }
+    @Override public com.chengyinhub.business.domain.EcomPersonalReceiver selectByMemberAndAppid(Long m, String a) { throw unexpected(); }
+    @Override public com.chengyinhub.business.domain.EcomPersonalReceiver selectByMemberAndAppidForUpdate(Long m, String a) { throw unexpected(); }
+    @Override public int insertVerified(com.chengyinhub.business.domain.EcomPersonalReceiver r) { throw unexpected(); }
+    @Override public List<Long> selectMissingActivityIds(int limit) { throw unexpected(); }
+    @Override public List<EcomOrderSeller> selectPaidTrades(Long activityId) { throw unexpected(); }
+    @Override public List<EcomLedgerComponent> selectComponents(Long activityId, Long registrationId) { throw unexpected(); }
+    private static AssertionError unexpected() { return new AssertionError("personal payout mapper method not stubbed by this test"); }
 }

@@ -4,7 +4,7 @@ import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.EcomPersonalReceiver;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.ClubMapper;
-import com.chengyinhub.business.mapper.EcomPersonalReceiverMapper;
+import com.chengyinhub.business.mapper.EcomPayoutMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.IWeChatMiniSessionService;
 import com.chengyinhub.common.exception.ServiceException;
@@ -18,7 +18,7 @@ import java.util.Map;
 /** Personal profit-share receiver consent is not checkout seller submerchant onboarding. */
 @Service
 public class EcommercePersonalReceiverService {
-    private final EcomPersonalReceiverMapper receivers;
+    private final EcomPayoutMapper receivers;
     private final ClubMapper clubs;
     private final UmsMemberMapper members;
     private final IWeChatMiniSessionService sessions;
@@ -27,7 +27,7 @@ public class EcommercePersonalReceiverService {
     @org.springframework.beans.factory.annotation.Autowired
     private org.springframework.transaction.PlatformTransactionManager transactions;
 
-    public EcommercePersonalReceiverService(EcomPersonalReceiverMapper receivers, ClubMapper clubs,
+    public EcommercePersonalReceiverService(EcomPayoutMapper receivers, ClubMapper clubs,
             UmsMemberMapper members, IWeChatMiniSessionService sessions, EcommercePayGateway gateway,
             PayoutSwitches switches) {
         this.receivers = receivers;

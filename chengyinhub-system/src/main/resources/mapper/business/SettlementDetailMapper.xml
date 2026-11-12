@@ -455,4 +455,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         having min(f.fee) = max(f.fee)
         order by activityId, merchantMemberId
     </select>
+
+    <update id="markShareDetailsReceived">
+        update settlement_detail d
+        join ecom_profit_share_line l on l.settlement_id = -d.id
+        join ecom_profit_share_order o on o.id = l.share_order_id
+        set d.status = 1, d.fail_reason = null, d.update_time = now()
+        where o.id = #{shareOrderId} and o.topic_id &lt; 0 and o.state = 'SUCCESS' and d.status = 0
+    </update>
 </mapper>

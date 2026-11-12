@@ -85,9 +85,11 @@ class EcomPayoutMapperMySqlIT {
         try (InputStream in = EcomPayoutMapperMySqlIT.class.getClassLoader().getResourceAsStream(statementResource)) {
             new XMLMapperBuilder(in, cfg, statementResource, cfg.getSqlFragments()).parse();
         }
-        String sessionResource = "mapper/business/EcomSessionPayoutMapper.xml";
-        try (InputStream in = EcomPayoutMapperMySqlIT.class.getClassLoader().getResourceAsStream(sessionResource)) {
-            new XMLMapperBuilder(in, cfg, sessionResource, cfg.getSqlFragments()).parse();
+        cfg.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
+        for (String sessionResource : new String[]{"mapper/business/SettlementDetailMapper.xml", "mapper/business/CmsActivityMapper.xml"}) {
+            try (InputStream in = EcomPayoutMapperMySqlIT.class.getClassLoader().getResourceAsStream(sessionResource)) {
+                new XMLMapperBuilder(in, cfg, sessionResource, cfg.getSqlFragments()).parse();
+            }
         }
         factory = new SqlSessionFactoryBuilder().build(cfg);
         try (Connection c = dataSource.getConnection(); Statement st = c.createStatement()) {
@@ -445,16 +447,17 @@ class EcomPayoutMapperMySqlIT {
                 + " values('ACTIVITY',19,7,'原名称',55,now(),now())");
         exec("insert into settlement_detail(id,source_type,source_id,receiver_type,receiver_id,settlement_amount,status,club_id,club_name)"
                 + " values(11,'registration',201,'merchant',55,25,0,7,'原名称'),(12,'registration',201,'platform',0,1,0,null,null)");
-        var sessions = session.getMapper(com.chengyinhub.business.mapper.EcomSessionPayoutMapper.class);
-        assertEquals(0, sessions.completeActivityIfReceived(order.getId()), "planned is not received");
+        var details = session.getMapper(com.chengyinhub.business.mapper.SettlementDetailMapper.class);
+        var activities = session.getMapper(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        assertEquals(0, activities.completeActivityIfReceived(order.getId()), "planned is not received");
         exec("update ecom_profit_share_order set state='SUCCESS' where id=" + order.getId());
-        assertEquals(1, sessions.markShareDetailsReceived(order.getId()));
-        assertEquals(0, sessions.completeActivityIfReceived(order.getId()), "another obligation remains pending");
+        assertEquals(1, details.markShareDetailsReceived(order.getId()));
+        assertEquals(0, activities.completeActivityIfReceived(order.getId()), "another obligation remains pending");
         exec("update settlement_detail set status=1 where id=12");
         exec("insert into cms_activity_settlement_hold(registration_id,status) values(201,0)");
-        assertEquals(0, sessions.completeActivityIfReceived(order.getId()), "open complaint still holds settlement");
+        assertEquals(0, activities.completeActivityIfReceived(order.getId()), "open complaint still holds settlement");
         exec("update cms_activity_settlement_hold set status=1 where registration_id=201");
-        assertEquals(1, sessions.completeActivityIfReceived(order.getId()));
-        assertEquals(0, sessions.completeActivityIfReceived(order.getId()));
+        assertEquals(1, activities.completeActivityIfReceived(order.getId()));
+        assertEquals(0, activities.completeActivityIfReceived(order.getId()));
     }
 }

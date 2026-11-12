@@ -114,6 +114,9 @@ public class ApiClubController extends BaseController {
     private IClubService clubService;
 
     @Autowired
+    private com.chengyinhub.business.payout.EcommercePersonalReceiverService personalReceiverService;
+
+    @Autowired
     private com.chengyinhub.business.mapper.UmsMemberFollowMapper umsMemberFollowMapper;
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.ClubCrmMapper clubCrmMapper;
@@ -2671,5 +2674,27 @@ public class ApiClubController extends BaseController {
             if (row == null || badgeLong(row.get("memberId")) == null) continue;
             row.put("nickname", view.get(i++).getNickname());
         }
+    }
+    /** D-05/D-09：俱乐部主本人同意并绑定个人收款身份；归属由服务按登录人校验，不接收成员/appid/OpenID。 */
+    @PostMapping("/personal-receiver/bind")
+    public AjaxResult bindPersonalReceiver(@RequestBody PersonalReceiverBindRequest request) {
+        return success(personalReceiverService.bind(getAppUserId(), request.getClubId(), request.getJsCode(), request.getConsent()));
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/personal-receiver/status")
+    public AjaxResult personalReceiverStatus(@org.springframework.web.bind.annotation.RequestParam Long clubId) {
+        return success(personalReceiverService.ownerStatus(getAppUserId(), clubId));
+    }
+
+    public static class PersonalReceiverBindRequest {
+        private Long clubId;
+        private String jsCode;
+        private Boolean consent;
+        public Long getClubId() { return clubId; }
+        public void setClubId(Long clubId) { this.clubId = clubId; }
+        public String getJsCode() { return jsCode; }
+        public void setJsCode(String jsCode) { this.jsCode = jsCode; }
+        public Boolean getConsent() { return consent; }
+        public void setConsent(Boolean consent) { this.consent = consent; }
     }
 }

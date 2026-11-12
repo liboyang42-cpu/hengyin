@@ -6,7 +6,6 @@ import com.chengyinhub.business.domain.EcomPersonalReceiver;
 import com.chengyinhub.business.domain.EcomProfitShareLine;
 import com.chengyinhub.business.domain.EcomProfitShareOrder;
 import com.chengyinhub.business.domain.EcomProfitShareReturn;
-import com.chengyinhub.business.mapper.EcomPersonalReceiverMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.support.TransactionOperations;
 
@@ -16,12 +15,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class EcommercePersonalProfitShareServiceTest {
     private static final String ACCOUNT = "1900000001";
     private static final String APPID = "wxsp";
 
-    static class Bindings implements EcomPersonalReceiverMapper {
+    static class Bindings extends FakeEcomPayoutMapper {
         EcomPersonalReceiver binding;
         final List<Long> reads = new ArrayList<>();
         @Override public EcomPersonalReceiver selectByMemberAndAppid(Long memberId, String appid) {
@@ -355,7 +357,7 @@ class EcommercePersonalProfitShareServiceTest {
         int[] sessionReads = {0};
         int[] received = {0};
         int[] completed = {0};
-        var sessions = new com.chengyinhub.business.mapper.EcomSessionPayoutMapper() {
+        var sessions = new FakeEcomPayoutMapper() {
             @Override public List<Long> selectMissingActivityIds(int limit) { sessionReads[0]++; return List.of(42L); }
             @Override public List<EcomOrderSeller> selectPaidTrades(Long activityId) {
                 assertEquals(42L, activityId);
@@ -368,20 +370,25 @@ class EcommercePersonalProfitShareServiceTest {
                 assertEquals(77L, registrationId);
                 return frozen;
             }
-            @Override public int markShareDetailsReceived(Long shareOrderId) {
-                assertEquals("SUCCESS", f.mapper.selectShareOrderById(shareOrderId).getState());
-                assertTrue(f.gateway.calls.get(f.gateway.calls.size() - 1).startsWith("finish:CYF"));
-                received[0]++;
-                return 1;
-            }
-            @Override public int completeActivityIfReceived(Long shareOrderId) {
-                assertEquals(1, received[0]);
-                completed[0]++;
-                return 1;
-            }
         };
+        var details = mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class);
+        var activities = mock(com.chengyinhub.business.mapper.CmsActivityMapper.class);
+        when(details.markShareDetailsReceived(anyLong())).thenAnswer(i -> {
+            Long shareOrderId = i.getArgument(0);
+            assertEquals("SUCCESS", f.mapper.selectShareOrderById(shareOrderId).getState());
+            assertTrue(f.gateway.calls.get(f.gateway.calls.size() - 1).startsWith("finish:CYF"));
+            received[0]++;
+            return 1;
+        });
+        when(activities.completeActivityIfReceived(anyLong())).thenAnswer(i -> {
+            assertEquals(1, received[0]);
+            completed[0]++;
+            return 1;
+        });
+        f.service.setSessionWriteMappers(details, activities);
         f.service.setSessionPayoutMapper(sessions);
         EcommerceProfitShareService off = f.service(switches(false));
+        off.setSessionWriteMappers(details, activities);
         off.setSessionPayoutMapper(sessions);
         assertEquals(0, off.planActivity(42));
         assertEquals(0, off.planMissing(10));

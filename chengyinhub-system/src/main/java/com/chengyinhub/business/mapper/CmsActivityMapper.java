@@ -149,4 +149,6 @@ public interface CmsActivityMapper
     int clearContentSafetyHold(@Param("id") Long id);
 
     Integer selectContentSafetyHold(@Param("id") Long id);
+
+    int completeActivityIfReceived(@Param("shareOrderId") Long shareOrderId);
 }

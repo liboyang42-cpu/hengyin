@@ -59,16 +59,26 @@ public class EcommerceProfitShareService {
     private final TransactionOperations tx;
     /** l-payout3：合单 / 供应商应付表；未装配时转付行不落应付（合单开关关闭时也不会出现转付行）。 */
     private com.chengyinhub.business.mapper.EcomCombineMapper combineMapper;
-    private com.chengyinhub.business.mapper.EcomPersonalReceiverMapper personalReceiverMapper;
-    private com.chengyinhub.business.mapper.EcomSessionPayoutMapper sessionPayoutMapper;
+    private EcomPayoutMapper personalReceiverMapper;
+    private EcomPayoutMapper sessionPayoutMapper;
 
     @Autowired(required = false)
-    public void setSessionPayoutMapper(com.chengyinhub.business.mapper.EcomSessionPayoutMapper mapper) {
+    public void setSessionPayoutMapper(EcomPayoutMapper mapper) {
         this.sessionPayoutMapper = mapper;
     }
 
+    private com.chengyinhub.business.mapper.SettlementDetailMapper settlementDetailMapper;
+    private com.chengyinhub.business.mapper.CmsActivityMapper activityMapper;
+
     @Autowired(required = false)
-    public void setPersonalReceiverMapper(com.chengyinhub.business.mapper.EcomPersonalReceiverMapper mapper) {
+    public void setSessionWriteMappers(com.chengyinhub.business.mapper.SettlementDetailMapper details,
+                                       com.chengyinhub.business.mapper.CmsActivityMapper activities) {
+        this.settlementDetailMapper = details;
+        this.activityMapper = activities;
+    }
+
+    @Autowired(required = false)
+    public void setPersonalReceiverMapper(EcomPayoutMapper mapper) {
         this.personalReceiverMapper = mapper;
     }
 
@@ -330,8 +340,11 @@ public class EcommerceProfitShareService {
             tx.execute(status -> {
                 if (mapper.updateShareOrderState(shareOrderId, PROCESSING, SUCCESS, result.wxOrderId(), null) == 1) {
                     if (order.getTopicId() < 0) {
-                        sessionPayoutMapper.markShareDetailsReceived(shareOrderId);
-                        sessionPayoutMapper.completeActivityIfReceived(shareOrderId);
+                        if (settlementDetailMapper == null || activityMapper == null) {
+                            throw new IllegalStateException("SESSION_PAYOUT_WRITERS_MISSING");
+                        }
+                        settlementDetailMapper.markShareDetailsReceived(shareOrderId);
+                        activityMapper.completeActivityIfReceived(shareOrderId);
                     }
                     recordRelayPayables(shareOrderId);
                 }

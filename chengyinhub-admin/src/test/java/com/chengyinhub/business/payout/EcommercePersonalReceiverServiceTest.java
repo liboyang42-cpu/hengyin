@@ -4,7 +4,7 @@ import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.EcomPersonalReceiver;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.mapper.ClubMapper;
-import com.chengyinhub.business.mapper.EcomPersonalReceiverMapper;
+import com.chengyinhub.business.mapper.EcomPayoutMapper;
 import com.chengyinhub.business.mapper.UmsMemberMapper;
 import com.chengyinhub.business.service.IWeChatMiniSessionService;
 import com.chengyinhub.common.exception.ServiceException;
@@ -190,7 +190,7 @@ class EcommercePersonalReceiverServiceTest {
     }
 
     private static class Fixture {
-        final EcomPersonalReceiverMapper receivers = mock(EcomPersonalReceiverMapper.class);
+        final EcomPayoutMapper receivers = mock(EcomPayoutMapper.class);
         final ClubMapper clubs = mock(ClubMapper.class);
         final UmsMemberMapper members = mock(UmsMemberMapper.class);
         final IWeChatMiniSessionService sessions = mock(IWeChatMiniSessionService.class);
