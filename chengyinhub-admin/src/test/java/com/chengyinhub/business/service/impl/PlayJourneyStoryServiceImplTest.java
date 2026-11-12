@@ -549,13 +549,22 @@ class PlayJourneyStoryServiceImplTest {
     }
 
     @Test
-    void endingWithoutEndingConfigFailsWithBusinessError() {
+    void endingWithoutEndingConfigReturnsEmptyResultNotError() {
         topicMapper.selectCmsTopicById(TOPIC)
                 .setJourneyStoryJson("{\"schemaVersion\":1,\"call\":{\"npcId\":7}}");
 
-        ServiceException error = assertThrows(ServiceException.class, () -> service.ending(MEMBER, TOPIC));
+        Map<String, Object> view = service.ending(MEMBER, TOPIC);
 
-        assertTrue(error.getMessage().contains("未配置结局"), error.getMessage());
+        assertTrue(view.isEmpty(), String.valueOf(view));
+    }
+
+    @Test
+    void endingWithoutAnyStoryReturnsEmptyResultNotError() {
+        topicMapper.selectCmsTopicById(TOPIC).setJourneyStoryJson(null);
+
+        Map<String, Object> view = service.ending(MEMBER, TOPIC);
+
+        assertTrue(view.isEmpty(), String.valueOf(view));
     }
 
     @Test

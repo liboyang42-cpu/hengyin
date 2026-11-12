@@ -14,3 +14,18 @@ test('R4-2:两按钮完成面板给路线卡多收 123rpx,保存图片/分享行
   assert.match(wxss, /\.finsheet__dock--two\{ height:calc\(323rpx/)
   assert.match(wxss, /\.finsheet__dock\{[^}]*calc\(200rpx/)
 })
+
+test('R4-3:ending 回空对象(主题没配结局)→ 页面跳过结局直接进完成页', async () => {
+  const source = fs.readFileSync(path.join(root, 'pages/play/index.js'), 'utf8')
+  const begin = source.indexOf('  _loadLifeEnding(next) {')
+  const end = source.indexOf('  /** 把一章结局章', begin)
+  let reply
+  const req = () => new Promise((resolve) => { reply = resolve })
+  const method = new Function('req', 'return ({' + source.slice(begin, end) + '})._loadLifeEnding;')(req)
+  const page = { data: { topicId: 1, activityId: 0 }, _routeState: { sessionId: 2 }, _isPlayAccountCurrent: () => true }
+  let finished = 0
+  method.call(page, () => finished++)
+  reply({ code: 200, data: {} })
+  await Promise.resolve()
+  assert.equal(finished, 1)
+})
