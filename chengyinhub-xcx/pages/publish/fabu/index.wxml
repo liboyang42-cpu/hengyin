@@ -1213,6 +1213,12 @@
                  placeholder-class="chapter-name-field__ph"
                  value="{{chapterForm.name}}" bindinput="onChapterNameInputChange" data-field="name" />
         </view>
+        <!-- D-82 章节级奖励:玩家章节结束卡上的一行(序章/结局章没有结束卡) -->
+        <view class="chapter-name-field" wx:if="{{!chapterForm.opening && !chapterForm.ending}}">
+          <text class="chapter-name-field__label">章节奖励</text>
+          <input class="chapter-name-field__input" type="text" maxlength="24" placeholder="选填" placeholder-class="chapter-name-field__ph"
+                 value="{{chapterForm.rewardText}}" bindinput="onChapterRewardInput" aria-label="章节奖励" />
+        </view>
 
         <!-- 自由探索不进入 V1 块化路径，保留原章节概述；城市定向正文只在全屏故事流编辑器写。 -->
         <view class="chapter-story-field" wx:if="{{formData.productType === 2}}">

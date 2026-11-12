@@ -63,7 +63,7 @@ function emptyChapterForm(name = '', opening = false) {
     audioFileName: '',
     // 玩法边界:空 = 不限(存量语义)。承接通过时冻进 offer,之后按冻结的那份校验。
     allowedValidationMethods: '',
-    maxNodeXp: null
+    maxNodeXp: null, rewardText: '' // D-82 章节级奖励:章节结束卡的一行奖励文案,空 = 不出(同行写:下方 UI 基线按行号锚定)
   };
 }
 
@@ -10120,6 +10120,8 @@ Page({
       complete: () => { if (!awaitingDecision) unavailable(); }
     });
   },
+  // D-82 章节级奖励输入(放 Page 尾:上方 UI 基线按行号锚定,不挪既有行)
+  onChapterRewardInput(e) { this.setData({ 'chapterForm.rewardText': e.detail.value }); },
 });
 
 // 第九轮 m1-9:行内节点已选的点(放文件尾:上方 UI 基线按行号锚定,不挪既有行)

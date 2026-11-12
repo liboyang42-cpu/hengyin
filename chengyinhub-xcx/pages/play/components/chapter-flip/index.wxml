@@ -21,6 +21,7 @@
       <view class="cf__stats2" wx:if="{{endStats.length}}">
         <view class="cf__st" wx:for="{{endStats}}" wx:key="k"><text class="cf__sv">{{item.shown}}</text><text class="cf__sl">{{item.k}}</text></view>
       </view>
+      <view class="cf__stats2 cf__d" wx:if="{{endCard.reward}}">奖励 · {{endCard.reward}}</view>
     </view>
     <view class="cf__foot"><view class="cf__btn" catchtap="onTap" aria-role="button" aria-label="{{endCard.next ? '下一站:' + endCard.next : '继续'}}" hover-class="cf-pressed" hover-stay-time="80">{{endCard.next ? '下一站：' + endCard.next : '继续'}}</view></view>
   </view>

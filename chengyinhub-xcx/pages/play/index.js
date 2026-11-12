@@ -4712,7 +4712,7 @@ Page({
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
       blocks: Array.isArray(c.blocks) ? c.blocks : null,
-      audioUrl: c.audioUrl || '',
+      audioUrl: c.audioUrl || '', reward: c.rewardText || '',   // D-82 章节级奖励 → 章节结束卡
       videoUrl: secureOwnMedia(c.videoUrl), videoPosterUrl: secureOwnMedia(c.videoPosterUrl),
       atmospherePreset: normalizeAtmosphere(this._themePalette(c.atmospherePreset)),
       atmosphereClass: atmosphereClass(this._themePalette(c.atmospherePreset)) + this._chapterTime(i),
