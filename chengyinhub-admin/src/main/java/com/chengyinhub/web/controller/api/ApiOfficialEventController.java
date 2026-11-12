@@ -485,7 +485,7 @@ public class ApiOfficialEventController extends BaseController {
     @GetMapping("/my-published")
     public AjaxResult myPublished() {
         Long memberId = uid();
-        if (!canPublish(memberId)) return error("无官方发布权限");
+        if (!canPublish(memberId)) return new AjaxResult(HttpStatus.FORBIDDEN, "无官方发布权限");
         Map<String, Object> data = new java.util.LinkedHashMap<>();
         data.put("events", officialEventService.listBySender(memberId));
         data.put("broadcasts", officialBroadcastService.listBySender(memberId, memberId));

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.business.exception.TopicPricingRuleMissingException;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.business.service.support.FreeExploreSelfPlayPricePolicy;
 import com.chengyinhub.business.domain.CoopOrder;
@@ -163,7 +164,7 @@ public class PricingServiceImpl implements IPricingService {
         if (rule == null || rule.getPlatformCommissionRate() == null || rule.getGuaranteeBaseRate() == null
                 || rule.getGuaranteeStepRate() == null || rule.getGuaranteeMaxMerchant() == null) {
             logger.error(RULE_MISSING);
-            throw new IllegalStateException(RULE_MISSING);
+            throw new TopicPricingRuleMissingException(RULE_MISSING);
         }
         return rule;
     }

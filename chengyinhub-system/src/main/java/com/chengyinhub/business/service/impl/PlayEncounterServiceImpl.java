@@ -24,6 +24,7 @@ import com.chengyinhub.business.service.support.AdvancedGameConfigValidator;
 import com.chengyinhub.business.service.support.NodeJourneySnapshot;
 import com.chengyinhub.business.service.support.TopicRouteEngine;
 import com.chengyinhub.business.util.AdvancedGamePublicProjection;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -95,7 +96,7 @@ public class PlayEncounterServiceImpl implements IPlayEncounterService {
         }
         TopicRouteSession run = TopicRouteSessionScope.findCurrent(topicRouteSessionMapper, memberId, topicId, activityId);
         if (run == null) {
-            throw new ServiceException("这一局还没开始");
+            throw new ServiceException("这一局还没开始", HttpStatus.CONFLICT);
         }
         if (!memberId.equals(run.getMemberId())) {
             throw new ServiceException("无权访问这一局");

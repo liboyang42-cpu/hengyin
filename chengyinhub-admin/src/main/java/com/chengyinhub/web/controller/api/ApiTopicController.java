@@ -2163,7 +2163,7 @@ public class ApiTopicController extends BaseController {
         if (topicId > 0) {
             cmsTopic.setId(topicId);
         } else {
-            return error("参数不合规");
+            return new AjaxResult(400, "参数不合规");
         }
 
         cmsTopic = cmsTopicService.selectCmsTopicDetailById(topicId, memberId);
@@ -2467,7 +2467,7 @@ public class ApiTopicController extends BaseController {
             return success(topicInfoVO);
 
         } else {
-            return error("主题活动不存在");
+            return new AjaxResult(404, "主题活动不存在");
         }
     }
 

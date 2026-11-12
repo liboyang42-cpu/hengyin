@@ -136,7 +136,7 @@ public class ApiUserInvoiceController extends BaseController {
     }
 
     private AjaxResult run(MemberCall call) {
-        if (!switches.userInvoiceOn()) return coded("发票功能暂未开放", FEATURE_OFF);
+        if (!switches.userInvoiceOn()) return new AjaxResult(503, "发票功能暂未开放").put("errorCode", FEATURE_OFF);
         Long memberId = currentMemberId();
         if (memberId == null) return error("请先登录");
         try {

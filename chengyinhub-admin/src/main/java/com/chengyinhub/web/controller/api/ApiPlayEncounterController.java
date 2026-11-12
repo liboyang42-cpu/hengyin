@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.service.IPlayEncounterService;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
@@ -27,12 +28,14 @@ public class ApiPlayEncounterController extends BaseController {
     @GetMapping("/encounter")
     public AjaxResult encounter(Long topicId, Long activityId, Long nodeId) {
         Long memberId = currentMemberId();
-        if (memberId <= 0) return error("请先登录");
-        if (topicId == null || topicId <= 0L || nodeId == null || nodeId <= 0L) return error("参数有误");
+        if (memberId <= 0) return AjaxResult.error(HttpStatus.UNAUTHORIZED, "请先登录");
+        if (topicId == null || topicId <= 0L || nodeId == null || nodeId <= 0L) return AjaxResult.error(HttpStatus.BAD_REQUEST, "参数有误");
         try {
             return success(playEncounterService.resolve(memberId, topicId, activityId, nodeId));
-        } catch (ServiceException | IllegalArgumentException e) {
-            return error(e.getMessage());
+        } catch (ServiceException e) {
+            return e.getCode() == null ? error(e.getMessage()) : AjaxResult.error(e.getCode(), e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 

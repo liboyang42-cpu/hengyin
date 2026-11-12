@@ -78,12 +78,64 @@ class RegistrationQueryApplicationTest {
         RegistrationQueryApplication app = application(registrations);
         ReflectionTestUtils.setField(app, "activityService", activities); ReflectionTestUtils.setField(app, "exploreCompletionReadService", completion);
         AjaxResult response = app.exploreCompletion(7L, "1");
+        assertEquals(200, response.get("code"));
         assertSame(projection, response.get("data"));
         org.mockito.InOrder order = inOrder(registrations, activities, completion);
         order.verify(registrations).selectCmsRegistrationById(1L); order.verify(activities).selectCmsActivityById(20L);
         order.verify(completion).read(1L, 7L, 30L, 20L); order.verifyNoMoreInteractions();
     }
 
+
+    @Test void completionRejectsInvalidRegistrationIdsBeforeReading() {
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        RegistrationQueryApplication app = application(registrations);
+        for (String id : new String[] { null, "", "abc", "0", "-1" }) {
+            AjaxResult response = app.exploreCompletion(7L, id);
+            assertEquals(400, response.get("code"));
+            assertEquals("参数不合规", response.get("msg"));
+            assertFalse(response.containsKey("data"));
+        }
+        verifyNoInteractions(registrations);
+    }
+
+    @Test void completionDistinguishesMissingForeignAndNonApplicableRegistrationsBeforeEnrichment() {
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        RegistrationQueryApplication app = application(registrations);
+        ICmsActivityService activities = mock(ICmsActivityService.class);
+        IExploreCompletionReadService completion = mock(IExploreCompletionReadService.class);
+        ReflectionTestUtils.setField(app, "activityService", activities);
+        ReflectionTestUtils.setField(app, "exploreCompletionReadService", completion);
+        AjaxResult missing = app.exploreCompletion(7L, "1");
+        assertEquals(404, missing.get("code"));
+        assertEquals("报名记录不存在", missing.get("msg"));
+        CmsRegistration row = new CmsRegistration(); row.setId(1L); row.setMemberId(8L);
+        when(registrations.selectCmsRegistrationById(1L)).thenReturn(row);
+        AjaxResult foreign = app.exploreCompletion(7L, "1");
+        assertEquals(403, foreign.get("code"));
+        assertEquals("无权查看该报名信息", foreign.get("msg"));
+        row.setMemberId(7L);
+        for (Integer kind : new Integer[] { null, PurchaseKind.GUIDED_TICKET, PurchaseKind.SELF_PLAY_PASS, 99 }) {
+            row.setPurchaseKind(kind);
+            AjaxResult notApplicable = app.exploreCompletion(7L, "1");
+            assertEquals(409, notApplicable.get("code"));
+            assertEquals("该订单没有自由探索完局面", notApplicable.get("msg"));
+            assertFalse(notApplicable.containsKey("data"));
+        }
+        verifyNoInteractions(activities, completion);
+    }
+
+    @Test void completionReadPortUnexpectedFailureStillPropagatesForAnOwnedExplorePass() {
+        ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
+        CmsRegistration row = new CmsRegistration(); row.setId(1L); row.setMemberId(7L);
+        row.setPurchaseKind(PurchaseKind.EXPLORE_PASS);
+        when(registrations.selectCmsRegistrationById(1L)).thenReturn(row);
+        RegistrationQueryApplication app = application(registrations);
+        IExploreCompletionReadService completion = mock(IExploreCompletionReadService.class);
+        ReflectionTestUtils.setField(app, "exploreCompletionReadService", completion);
+        IllegalStateException failure = new IllegalStateException("fixture projection unavailable");
+        when(completion.read(1L, 7L, null, null)).thenThrow(failure);
+        assertSame(failure, assertThrowsExactly(IllegalStateException.class, () -> app.exploreCompletion(7L, "1")));
+    }
     @Test void originalDetailAndCompletionExceptionBoundariesRemainDifferent() {
         ICmsRegistrationService registrations = mock(ICmsRegistrationService.class);
         IllegalStateException storage = new IllegalStateException("fixture reader unavailable");

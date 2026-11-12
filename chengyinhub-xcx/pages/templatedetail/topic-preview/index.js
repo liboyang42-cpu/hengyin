@@ -100,7 +100,7 @@ Page({
   load() {
     const that = this;
     const seq = this._seq = (this._seq || 0) + 1;
-    this.setData({ loading: true, errorMsg: '', errorRefused: false });
+    if (!this._id) { this.setData({ loading: false, errorRefused: true, errorMsg: '缺少模板ID' }); return; } this.setData({ loading: true, errorMsg: '', errorRefused: false });
     app.sendRequest({
       hideLoading: true,
       silentError: true,

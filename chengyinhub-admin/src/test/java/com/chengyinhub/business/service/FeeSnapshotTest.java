@@ -2,6 +2,7 @@ package com.chengyinhub.business.service;
 
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.SettlementRule;
+import com.chengyinhub.business.exception.TopicPricingRuleMissingException;
 import com.chengyinhub.business.service.impl.PricingServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,8 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -109,23 +112,27 @@ class FeeSnapshotTest {
     @Test
     void missingRule_refuses() {
         when(ruleService.getActiveRule(anyLong(), anyString())).thenReturn(null);
-        assertThrows(IllegalStateException.class, () -> service.platformRate());
-        assertThrows(IllegalStateException.class, () -> service.initiatorGuaranteeRate(9));
+        TopicPricingRuleMissingException failure = assertThrows(TopicPricingRuleMissingException.class, service::platformRate);
+        assertEquals("平台费率规则缺失(settlement_rule merchant_id=0, biz_type=topic),拒绝按默认费率计价", failure.getMessage());
+        assertThrows(TopicPricingRuleMissingException.class, () -> service.initiatorGuaranteeRate(9));
     }
 
     /** 读库抛异常 ⇒ 同样拒绝,不按默认费率定价。 */
     @Test
     void ruleLookupThrows_refuses() {
-        when(ruleService.getActiveRule(anyLong(), anyString())).thenThrow(new RuntimeException("库炸了"));
-        assertThrows(IllegalStateException.class, () -> service.platformRate());
+        RuntimeException cause = new NullPointerException("unexpected lookup bug");
+        when(ruleService.getActiveRule(anyLong(), anyString())).thenThrow(cause);
+        IllegalStateException failure = assertThrows(IllegalStateException.class, service::platformRate);
+        assertFalse(failure instanceof TopicPricingRuleMissingException);
+        assertSame(cause, failure.getCause());
     }
 
     /** 规则行存在但字段为空 ⇒ 拒绝(生产四列 NOT NULL DEFAULT,只有脏行会走到这里)。 */
     @Test
     void ruleWithNullFields_refuses() {
         givenRule("0.0300", null, null, null);
-        assertThrows(IllegalStateException.class, () -> service.platformRate());
-        assertThrows(IllegalStateException.class, () -> service.initiatorGuaranteeRate(9));
+        assertThrows(TopicPricingRuleMissingException.class, () -> service.platformRate());
+        assertThrows(TopicPricingRuleMissingException.class, () -> service.initiatorGuaranteeRate(9));
     }
 
     // ---------------------------------------------------------- 病2:锁价快照(核心)

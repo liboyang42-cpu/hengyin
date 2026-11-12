@@ -88,7 +88,7 @@ public class ApiTopicTemplateController extends BaseController {
     public AjaxResult info(String id) {
         Long tid = Convert.toLong(id, 0L);
         if (tid < 1) {
-            return error("缺少模板ID");
+            return new AjaxResult(400, "缺少模板ID");
         }
         // 章节招募聚合对登录商家及本主题原发布者可见；商家身份判据走能力真源 member_capability
         // (不读 ums_member.role / 不直查 mms_merchant——那两处是历史遗留判据)
@@ -110,7 +110,7 @@ public class ApiTopicTemplateController extends BaseController {
                 cmsTopicService.buildPublicTopicTemplateDetail(
                         tid, memberId, viewerIsMerchant, merchantCategoryId);
         if (detail == null) {
-            return error("模板不存在");
+            return new AjaxResult(404, "模板不存在");
         }
         attachDelivery(detail, tid, Boolean.TRUE.equals(detail.getViewerIsMerchant())
                 || Boolean.TRUE.equals(detail.getViewerIsPublisher()));

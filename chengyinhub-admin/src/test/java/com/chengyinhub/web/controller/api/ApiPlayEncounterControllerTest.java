@@ -14,6 +14,7 @@ import com.chengyinhub.business.service.IShopDayProofService;
 import com.chengyinhub.business.service.impl.NpcProfileService;
 import com.chengyinhub.business.service.impl.PlayEncounterServiceImpl;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.exception.ServiceException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,9 +31,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -164,6 +168,107 @@ class ApiPlayEncounterControllerTest {
                 .thenReturn(Collections.singletonList(npc));
     }
 
+
+    @Test
+    void anonymousEncounterIsUnauthorizedBeforeAnyRead() {
+        doReturn(null).when(controller).getAppUserId();
+        AjaxResult response = controller.encounter(TOPIC, 0L, NODE);
+        assertEquals(401, response.get("code"));
+        assertEquals("请先登录", response.get("msg"));
+        verify(routeSessionMapper, never()).selectCurrentByOwner(any(), any(), any());
+        verify(nodeService, never()).selectCmsTopicNodeById(any());
+    }
+
+    @Test
+    void malformedEncounterParametersAreBadRequests() {
+        for (Long invalid : Arrays.asList(null, 0L, -1L)) {
+            AjaxResult topic = controller.encounter(invalid, 0L, NODE);
+            AjaxResult nodeResult = controller.encounter(TOPIC, 0L, invalid);
+            assertEquals(400, topic.get("code"));
+            assertEquals("参数有误", topic.get("msg"));
+            assertEquals(400, nodeResult.get("code"));
+            assertEquals("参数有误", nodeResult.get("msg"));
+        }
+        AjaxResult activity = controller.encounter(TOPIC, -1L, NODE);
+        assertEquals(400, activity.get("code"));
+        assertEquals("场次参数有误", activity.get("msg"));
+        verify(nodeService, never()).selectCmsTopicNodeById(any());
+    }
+
+    @Test
+    void missingEncounterSessionIsConflictForOmittedAndExplicitSoloScopes() {
+        session = null;
+        when(routeSessionMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(Collections.emptyList());
+        for (Long activity : Arrays.asList(null, 0L)) {
+            AjaxResult response = controller.encounter(TOPIC, activity, NODE);
+            assertEquals(409, response.get("code"));
+            assertEquals("这一局还没开始", response.get("msg"));
+            assertFalse(response.containsKey("data"));
+        }
+        verify(nodeService, never()).selectCmsTopicNodeById(any());
+    }
+
+    @Test
+    void omittedAmbiguousScopeRemainsRejectedWithoutReadingAnyNode() {
+        when(routeSessionMapper.selectMemberTopicSessions(MEMBER, TOPIC)).thenReturn(Arrays.asList(session, session));
+        AjaxResult response = controller.encounter(TOPIC, null, NODE);
+        assertEquals(400, response.get("code"));
+        assertEquals("存在多个场次，请指定 activityId", response.get("msg"));
+        verify(nodeService, never()).selectCmsTopicNodeById(any());
+    }
+
+    @Test
+    void foreignSessionMemberTopicAndActivityRemainRejected() {
+        when(routeSessionMapper.selectCurrentByOwner(0L, TOPIC, MEMBER)).thenReturn(session);
+        session.setMemberId(MEMBER + 1L);
+        assertEquals("无权访问这一局", controller.encounter(TOPIC, 0L, NODE).get("msg"));
+        session.setMemberId(MEMBER);
+        session.setTopicId(TOPIC + 1L);
+        assertEquals("无权访问这一局", controller.encounter(TOPIC, 0L, NODE).get("msg"));
+        session.setTopicId(TOPIC);
+        session.setActivityId(1L);
+        AjaxResult response = controller.encounter(TOPIC, 0L, NODE);
+        assertEquals("无权访问这一局", response.get("msg"));
+        assertFalse(response.containsKey("data"));
+        verify(nodeService, never()).selectCmsTopicNodeById(any());
+    }
+
+    @Test
+    void foreignNodeCannotBeReadThroughAnOwnedSession() {
+        node.setTopicId(TOPIC + 1L);
+        AjaxResult response = controller.encounter(TOPIC, 0L, NODE);
+        assertEquals(500, response.get("code"));
+        assertEquals("节点不存在", response.get("msg"));
+        assertFalse(response.containsKey("data"));
+        verify(templateService, never()).selectCmsMemberTemplateById(any());
+    }
+
+    @Test
+    void explicitServiceCodesSurviveWhileUncodedErrorsKeepTheirOriginalFailure() {
+        when(nodeService.selectCmsTopicNodeById(NODE)).thenThrow(new ServiceException("fixture explicit rejection", 403));
+        AjaxResult coded = controller.encounter(TOPIC, 0L, NODE);
+        assertEquals(403, coded.get("code"));
+        assertEquals("fixture explicit rejection", coded.get("msg"));
+        doThrow(new ServiceException("fixture uncoded failure")).when(nodeService).selectCmsTopicNodeById(NODE);
+        AjaxResult uncoded = controller.encounter(TOPIC, 0L, NODE);
+        assertEquals(500, uncoded.get("code"));
+        assertEquals("fixture uncoded failure", uncoded.get("msg"));
+    }
+
+    @Test
+    void unexpectedEncounterReaderFailureIsNotReclassifiedAsBusinessConflict() {
+        IllegalStateException failure = new IllegalStateException("fixture storage unavailable");
+        when(nodeService.selectCmsTopicNodeById(NODE)).thenThrow(failure);
+        assertSame(failure, assertThrows(IllegalStateException.class, () -> controller.encounter(TOPIC, 0L, NODE)));
+    }
+
+    @Test
+    void ownedExplicitSoloScopeKeepsSuccessfulEncounterProjection() {
+        Map<String, Object> response = data(controller.encounter(TOPIC, 0L, NODE));
+        assertEquals(RUN, response.get("runId"));
+        assertEquals(NODE, response.get("nodeId"));
+        verify(routeSessionMapper).selectCurrentByOwner(0L, TOPIC, MEMBER);
+    }
     /** state_json 与 TopicRouteEngine.State 同形:variables / tags / completedNodeIds。 */
     private void givenState(String variables, String tags) {
         session.setStateJson("{\"status\":\"ACTIVE\",\"variables\":" + variables
@@ -531,7 +636,7 @@ class ApiPlayEncounterControllerTest {
 
         AjaxResult response = controller.encounter(TOPIC, null, NODE);
 
-        assertEquals(500, response.get("code"));
+        assertEquals(409, response.get("code"));
         assertEquals("这一局还没开始", response.get("msg"));
     }
 
