@@ -32,6 +32,9 @@
 /* x-fix5 R3-9:不依赖 WebGL 的版面兜底 —— 标题/说明在容器内折行、数据行折行居中、不贴到卡边,文案区不压到底部按钮 */
 .cf--finale .cf__copy { box-sizing: border-box; width: calc(100vw - 92rpx); padding: 0 16rpx; bottom: calc(190rpx + env(safe-area-inset-bottom)); } /* ds-ok */
 .cf--finale .cf__t, .cf--finale .cf__d, .cf--finale .cf__k { max-width: 100%; white-space: normal; word-break: break-all; }
+/* x-fix7 R4-5/N-11:根因是每个解码字 .cf__c 自带 white-space:pre,父级的 normal/break-all 管不到字间折行,长标题一行排到卡外,两端被屏幕边缘切成「纸…」「…字」字影;finale 里字可折行,并只裁横向(不裁底部标签) */
+.cf--finale .cf__c { white-space: pre-wrap; }
+.cf--finale .cf__copy { overflow-x: clip; }
 .cf--finale .cf__stats { flex-wrap: wrap; justify-content: center; max-width: 100%; row-gap: 16rpx; }
 .cf--finale .cf__sk, .cf--finale .cf__v { max-width: 100%; white-space: normal; text-align: center; } /* x-fix4 N-11:避开银色标志下沿;解码乱码字不漏到两侧 */
 .cf--finale .cf__pill--s { background: rgba(var(--lk-ink-rgb, 245,245,242), .12); color: var(--lk-ink, #F5F5F2); } /* ds-ok 回落原型定值 */
