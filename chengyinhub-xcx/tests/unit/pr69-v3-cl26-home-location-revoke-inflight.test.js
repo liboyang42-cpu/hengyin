@@ -30,7 +30,7 @@ beforeEach(() => {
 
 function page() {
   const value = Object.assign({}, config, { data: JSON.parse(JSON.stringify(config.data)) })
-  value.setData = (patch, done) => { Object.assign(value.data, patch); if (done) done() }
+  value.setData = (patch, done) => { Object.assign(value.data, patch); if (patch && patch.locationPrompt) modals.push({ title: patch.locationPrompt.title, content: patch.locationPrompt.content, success: (r) => (r && r.confirm ? value.onLocationPromptAgree() : value.onLocationPromptDecline()) }) /* x-fix6 首页定位改为 feed 顶部卡片:locationPrompt 等同原弹窗,同意/暂不走卡片按钮处理器 */; if (done) done() }
   return value
 }
 const flush = async () => { for (let i = 0; i < 10; i++) await new Promise(resolve => setImmediate(resolve)) }
