@@ -26,7 +26,13 @@
 - rig 的 `animate` 只会把帧原样交给 Web Animations，小程序的 `rotate / scale / translateY` 数值写法不认，所以验证时在**临时目录**里给 rig 运行时补了一层转换（没有提交）；真机的 `this.animate` 行为只能由开发者工具 / 真机最终确认，这里没有这一项的证据。
 - 逐对看过全部时间点。idle、抖、下沉、彩纸、扇形位置与间隔、菜单长出与错峰、票根版式都与原型一致。以下是**仍然可见的差异**，见下节。
 - 单测：新增 `v2b-pack-menu-ticket.test.js`（8 条）；删除两个只锁旧撕包机制的测试（`play-pack-drag-tear-lock`、`play-pack-timing-lock`，机制本身已按规格删除）；改写 `x-design1-d16-pack-deal`、`play-free-explore-shop-card-g21` 里的旧断言；棘轮常量按实测收紧。
-- 其他门禁：TOTALS_PLACEHOLDER
+- 全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`，`--test-timeout=180000`）：17353 条，17352 通过、0 失败；唯一一条是 `action-ledger.test.js` 文件级的 180s 超时（它单独跑要 6m52s，不是断言失败），单独不限时重跑：48 条 0 失败。
+- 动作台账 `build-action-ledger.js --write`：PASS 6021 控件（6025 − 4 个被删的拖拽撕包 touch 事件合同；tap 仍 3029、local tap 仍 2650）；路由矩阵 `--check`：PASS 171 路由 / 27 场景。
+- ui-integrity：**UI-GATE-0:PASS**（play/index.js 两条既有锚点因删旧撕包只是行号位移 1868→1794、8909→8835，调用行逐字相同，不新增登记，两个 keyDigest 按门禁算法重算）。
+- danger-confirm：PASS（53 个调用点）。WXS 语法门禁 PASS（14 个 .wxs）；WXSS 注释入值、选择器、组件选择器、未定义 token、WXML 条件链门禁均 PASS。
+- keyframes 棘轮 146 → 137（只减不增）；布局属性动画棘轮 9 → 8。
+- 单色契约（`play-monochrome-contract`）：旧爆炸层彩色豁免整组删除，换成「包面镭射渐变 + 紧急求助红」按值豁免（只在卡包 / 菜单行），负控改锚到新值，仍判红。
+- 主包：源码侧 `mainpkg-size-report` 合计 3234KB，×0.633 ≈ 2047 KiB，< 2048 KiB（与 x-fix7 / x-design1 相同，富余仍约 1 KiB）。
 
 ## 与原型仍有的可见差异（没有做到「无差异」）
 1. **卡面内容**：原型的卡是糖果渐变的奖励卡；自由探索首屏落下来的是真实的商家卡（封面图 + 章节标签 + 名字），扇形阶段是这些卡。位置、间隔、缓动、旋转与原型一致，卡面不同是内容本身决定的。
@@ -39,3 +45,5 @@
 
 ## 其它
 - 未改 `ci/architecture/*`、`.github/workflows/ci.yml`；未跑 `ci/xcx-check.sh`、`ds-hardcode-gate-selftest.sh`；未合并、未标 ready；无生产、无密钥。
+
+STATUS: PARTIAL - 卡包与菜单 / 票根按原型做完并通过全部门禁，四个外观逐帧比对过；但与原型仍有可见差异（卡面是真实商家卡、落进真实两列格而非一排小卡、菜单多出有功能的行、「收进卡册」无目的地、集合时间无数据源），且 this.animate 只在 rig 的临时转换层验证过，真机待确认
