@@ -1,4 +1,4 @@
-<view class="cm cm--{{mode}} {{skip ? 'is-skip' : ''}} {{reducedMotion ? 'cm--reduced' : ''}}" catchtap="onTap" catchtouchmove="noop">
+<view class="cm cm--{{mode}} {{skip ? 'is-skip' : ''}} {{reducedMotion ? 'cm--reduced' : ''}}" catchtap="onTap" catchtouchmove="noop" hover-class="cm-tap" hover-stay-time="80">
   <view class="cm__amb" aria-hidden="true"></view>
   <block wx:if="{{mode === 'start'}}">
     <view class="cm__stage" style="--dy:{{dy}}rpx">

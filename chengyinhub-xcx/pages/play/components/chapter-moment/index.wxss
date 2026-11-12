@@ -72,3 +72,4 @@
 .cm__acts.cm__fade { pointer-events: none; }
 .cm__acts.is-in { pointer-events: auto; }
 @media (prefers-reduced-motion: reduce) { .cm__fade, .cm__rd, .cm__dg, .cm__w { transition: none; } }
+.cm-tap { opacity: .98; }
