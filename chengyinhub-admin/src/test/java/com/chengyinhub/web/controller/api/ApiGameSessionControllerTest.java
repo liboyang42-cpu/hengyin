@@ -313,6 +313,16 @@ class ApiGameSessionControllerTest {
         assertFalse(String.valueOf(result).contains("jdbc password leaked"));
     }
 
+    @Test
+    void viewBeforeSessionPreparedIsBusinessStateNot500() {
+        when(service.view(any(), any())).thenThrow(new GameSessionException("GAME_SESSION_NOT_PREPARED", "本场游戏尚未准备"));
+
+        AjaxResult result = controller.view("10", "PLAYER");
+
+        assertEquals(601, result.get("code"));
+        assertEquals("GAME_SESSION_NOT_PREPARED", ((Map<?, ?>) result.get("data")).get("reasonCode"));
+    }
+
     private GameCommandReceiptView receipt(Long activityId, String requestId) {
         GameCommandReceiptView receipt = new GameCommandReceiptView();
         receipt.setActivityId(activityId);

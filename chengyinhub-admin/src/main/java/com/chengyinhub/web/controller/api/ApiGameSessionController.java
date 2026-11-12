@@ -55,6 +55,12 @@ public class ApiGameSessionController extends BaseController {
         try {
             return success(runtimeService.view(actor(perspective), Convert.toLong(activityId, 0L)));
         } catch (GameSessionException e) {
+            // R5-1：局还没准备是预期业务态，回 warn（601 + reasonCode，页面显示等待态），不是 500。
+            if ("GAME_SESSION_NOT_PREPARED".equals(e.getErrorCode())) {
+                Map<String, Object> data = new LinkedHashMap<>();
+                data.put("reasonCode", e.getErrorCode());
+                return AjaxResult.warn(e.getMessage(), data);
+            }
             return gameError(e);
         } catch (RuntimeException e) {
             return internalError("view", e);

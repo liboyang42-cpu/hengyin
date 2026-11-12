@@ -395,7 +395,12 @@ class PlayJourneyReadServiceImplTest {
 
     @Test
     void casebookRejectsForeignOrMissingRun() {
-        assertThrows(ServiceException.class, () -> service.casebook(OTHER, TOPIC), "没有自己的局就不给读");
+        // R5-1：局还没开始是业务合法态，回空案件册而不是抛错（500）；读不到别人的局
+        Map<String, Object> notStarted = service.casebook(OTHER, TOPIC);
+        assertTrue(((List<?>) notStarted.get("facts")).isEmpty());
+        assertTrue(((List<?>) notStarted.get("relations")).isEmpty());
+        assertTrue(((List<?>) notStarted.get("costs")).isEmpty());
+        assertTrue(((List<?>) notStarted.get("log")).isEmpty());
 
         TopicRouteSession foreign = new TopicRouteSession();
         foreign.setId(SESSION);
