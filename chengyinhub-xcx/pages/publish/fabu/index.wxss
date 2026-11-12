@@ -1694,7 +1694,7 @@ page { background: var(--cy-btn-solid-bg); }
 /* 第三步：票务配置（深色） */
 .slopes-info-page {
   background: transparent !important;
-  padding: 0 32rpx 240rpx !important; /* ds-ok: 底部滚动净空,刻意留白非随手数值 */
+  padding: 0 32rpx calc(240rpx + env(safe-area-inset-bottom)) !important; /* ds-ok: 底部滚动净空,刻意留白非随手数值 */
   min-height: auto !important;
 }
 
@@ -3998,7 +3998,8 @@ page { background: var(--cy-btn-solid-bg); }
   box-sizing: border-box;
   padding: var(--cy-space-2) 53rpx;   /* 稿 px-28 */
   padding-bottom: calc(env(safe-area-inset-bottom) + var(--cy-space-1));
-  background: linear-gradient(to top, var(--cy-color-bg-page) 55%, transparent);
+  /* x-fix6 R4-4:渐变上半透明,身后「编辑章节」透出来成重影;改整条实底 */
+  background: var(--cy-color-bg-page);
 }
 
 .pd-edit-gate {

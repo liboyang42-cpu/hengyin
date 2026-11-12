@@ -29,3 +29,10 @@ test('R4-3:ending 回空对象(主题没配结局)→ 页面跳过结局直接�
   await Promise.resolve()
   assert.equal(finished, 1)
 })
+
+test('R4-4:发布页底栏为整条实底,不再渐变透出身后控件', () => {
+  const css = fs.readFileSync(path.join(root, 'pages/publish/fabu/index.wxss'), 'utf8')
+  const rule = css.slice(css.indexOf('\n.slopes-tabbar {'), css.indexOf('.pd-edit-gate {'))
+  assert.match(rule, /background: var\(--cy-color-bg-page\);/)
+  assert.doesNotMatch(rule, /transparent/)
+})
