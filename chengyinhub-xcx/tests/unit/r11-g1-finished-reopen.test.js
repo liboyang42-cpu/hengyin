@@ -6,7 +6,7 @@ const path = require('node:path')
 const js = fs.readFileSync(path.resolve(__dirname, '../../pages/play/index.js'), 'utf8')
 
 test('首屏分派:城市定向且 allDone ⇒ openFinish,否则故事流', () => {
-  const at = js.indexOf("} else if (String(that.data.mode) !== '2') {\n          // 城市定向:打开就是故事流")
+  const at = js.indexOf("} else if (String(that.data.mode) !== '2' || skipPack) {\n          // 城市定向:打开就是故事流")
   assert.ok(at > 0, '找不到首屏分派')
   const block = js.slice(at, at + 600)
   assert.match(block, /if \(that\.data\.allDone\) \{ that\.setData\(\{ screen: '' \}\); that\.openFinish\(\); \}\s*\n\s*else that\._openStory\(\);/)

@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.CmsTopicNode;
 import com.chengyinhub.business.domain.GiftPlayFact;
+import com.chengyinhub.business.domain.OmsTicket;
 import com.chengyinhub.business.service.ICmsActivityService;
 import com.chengyinhub.business.service.ICmsMemberTemplateService;
 import com.chengyinhub.business.service.ICmsPointsSettingService;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -59,6 +61,8 @@ class ApiPlayNodesGiftGateTest {
     private ICmsRegistrationService registrationService;
     private ICmsTopicNodeService nodeService;
     private IMarketingGiftPlayEligibility giftEligibility;
+    private CmsTopic topic;
+    private IOmsTicketService ticketService;
 
     @BeforeEach
     void setUp() {
@@ -80,7 +84,8 @@ class ApiPlayNodesGiftGateTest {
         ICmsPointsSettingService hintSettings = mock(ICmsPointsSettingService.class);
         PlayNodeAccessTestFixtures.setField(controller, "cmsMemberTemplateService",
                 mock(ICmsMemberTemplateService.class));
-        PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", mock(IOmsTicketService.class));
+        ticketService = mock(IOmsTicketService.class);
+        PlayNodeAccessTestFixtures.setField(controller, "omsTicketService", ticketService);
         PlayNodeAccessTestFixtures.setField(controller, "cmsTopicChapterService", mock(ICmsTopicChapterService.class));
         PlayNodeAccessTestFixtures.setField(controller, "puzzlePlayService", mock(IPuzzlePlayService.class));
         PlayNodeAccessTestFixtures.setField(controller, "topicOnsiteMetricsMapper",
@@ -94,7 +99,7 @@ class ApiPlayNodesGiftGateTest {
         // 真实入口必须拿到同一个受控事实；null 会退化成"礼品行可玩"。
         PlayNodeAccessTestFixtures.setField(controller, "giftPlayEligibility", giftEligibility);
 
-        CmsTopic topic = new CmsTopic();
+        topic = new CmsTopic();
         topic.setId(TOPIC);
         topic.setProductType(2);
         topic.setStartDate(new Date(System.currentTimeMillis() - 86_400_000L));
@@ -168,6 +173,41 @@ class ApiPlayNodesGiftGateTest {
 
         assertEquals(200, controller.nodes(null, TOPIC).get(AjaxResult.CODE_TAG),
                 "无礼品的旧行为必须保持");
+    }
+
+    @Test
+    void nodesProjectsFreeExploreProductTypeOverContradictoryTicketMode() {
+        assertNodesProductType(2, 1, 2);
+    }
+
+    @Test
+    void nodesProjectsCityProductTypeOverContradictoryTicketMode() {
+        assertNodesProductType(1, 2, 1);
+    }
+
+    @Test
+    void nodesProjectsLegacyFreeExploreTicketFallback() {
+        assertNodesProductType(null, 2, 2);
+    }
+
+    @Test
+    void nodesProjectsLegacyCityTicketFallback() {
+        assertNodesProductType(null, 1, 1);
+    }
+
+    private void assertNodesProductType(Integer productType, int ticketMode, int expected) {
+        topic.setProductType(productType);
+        OmsTicket ticket = new OmsTicket();
+        ticket.setMode(ticketMode);
+        when(ticketService.selectOmsTicketList(any())).thenReturn(Collections.singletonList(ticket));
+        buyerRows();
+
+        AjaxResult result = controller.nodes(null, TOPIC);
+
+        assertEquals(200, result.get(AjaxResult.CODE_TAG));
+        Map<?, ?> data = (Map<?, ?>) result.get(AjaxResult.DATA_TAG);
+        assertEquals(expected, data.get("productType"));
+        assertEquals(expected, data.get("mode"), "The existing gameplay mode must remain unchanged");
     }
 
     // ------------------------------------------------------------------ helpers
