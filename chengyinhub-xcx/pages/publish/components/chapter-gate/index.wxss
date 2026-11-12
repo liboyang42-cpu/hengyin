@@ -15,3 +15,6 @@
 .gate__skip{position:absolute;left:0;right:0;bottom:calc(60rpx + env(safe-area-inset-bottom));text-align:center;color:rgba(255,235,185,.5);font-size:24rpx;} /* ds-ok 用户指定章节开场原型的金色、字号和进度条比例 */
 .is-reduced,.is-reduced .gate__copy,.is-reduced .gate__bar{transition:none;}
 .gate--pressed{filter:brightness(.9);}
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.gate__number { font-variant-numeric: tabular-nums; }

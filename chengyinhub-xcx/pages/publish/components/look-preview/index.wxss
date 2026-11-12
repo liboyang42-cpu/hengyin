@@ -102,3 +102,7 @@
 /* 扫描:一道扫描线从上到下扫过,扫过的地方才出现 */
 .lp__story.tfx--scan{ opacity:1; transform:none; filter:none; clip-path:inset(0 0 100% 0); transition:clip-path 1s linear; }
 .lp__story.tfx--scan.is-in{ clip-path:inset(0 0 0 0); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.lp__btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.lp__btn--primary { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

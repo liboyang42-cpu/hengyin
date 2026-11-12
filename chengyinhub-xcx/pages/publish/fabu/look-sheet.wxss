@@ -49,3 +49,7 @@
 .look-pal--cyber .atmosphere-swatch--yellow{ background:#100E04; color:#FFF6CC; } /* ds-ok 原型 v7 PAL */
 .look-pal--cyber .atmosphere-swatch--white{ background:#E6E7EA; color:#101216; } /* ds-ok 原型 v7 PAL */
 .look-row__k--chapter { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.look-style { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.look-chip { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
