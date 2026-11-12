@@ -41,6 +41,15 @@ class EcommercePayoutTaskTest {
     }
 
     @Test
+    void disabledMasterWithConfiguredCredentialsDoesNotCallAnyService() {
+        EcommercePayoutTask t = task(new PayoutSwitches(false, true, true,
+                "1900000001", "wx_mini", "", 30, false, "none"));
+        t.shareAndRetry();
+        t.syncOnboarding();
+        verifyNoInteractions(sharing, subs, alarms);
+    }
+
+    @Test
     void switchOnRunsInOrderAndFailureAlarmsThenThrows() {
         PayoutSwitches on = new PayoutSwitches(true, true, true, "1900000001", "wx_mini", "", 30, false, "none");
         EcommercePayoutTask t = task(on);

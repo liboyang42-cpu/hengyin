@@ -147,7 +147,8 @@
       "20261111_ecommerce_combine",
       "marketing_task_registration_20261108",
       "o14_reco_search_jobs_20261022",
-      "zzz_committed_official_notice_job_reregister_20261111"
+      "zzz_committed_official_notice_job_reregister_20261111",
+      "20261112_dec_c_payout_jobs"
     ],
     "4_OWNER_DATA_PRE": [
       "20261027_user_invoice_processing_backfill",
@@ -2819,6 +2820,24 @@
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
       "step": 156
+    },
+    {
+      "source": "DEC-C owner-approved D-08",
+      "class": "必须",
+      "phase": "POST_DEPLOY",
+      "note": "Enable existing guarded onboarding and plan/submit/sync jobs; payout feature properties remain unchanged",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_dec_c_payout_jobs",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_payout_jobs.sql",
+      "sha256": "e343a7b3091c6ed1e6dd3e68a2b057f59af1724966d09e7eb6240e96115903d0",
+      "order": 647,
+      "dependsOn": [
+        "20261110_ecommerce_payout_wiring"
+      ],
+      "idempotency": "IDEMPOTENT_STATIC",
+      "destructiveStatements": [],
+      "step": 647
     }
   ]
 }
