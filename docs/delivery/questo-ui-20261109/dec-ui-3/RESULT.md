@@ -42,7 +42,7 @@
 
 ## 闸门
 
-- 全量小程序单测(`node --test tests/unit/*.test.js`,17,494 条):首次 2 条失败,均为 `action-ledger.test.js` 写死的计数(D-82 新增 1 个编辑器输入:事件合同 2996 → 2997、总数 6025 → 6026),已按重建实测改并注明 D-82;改后该文件重跑见下。
+- 全量小程序单测(`node --test tests/unit/*.test.js`,17,494 条):首次 2 条失败,均为 `action-ledger.test.js` 写死的计数(D-82 新增 1 个编辑器输入:事件合同 2996 → 2997、总数 6025 → 6026,另有本地事件合同 2897 → 2898),已按重建实测改并注明 D-82;改后 `action-ledger.test.js` 48/48 通过。
 - `node tests/lint/ui-integrity.js`:**UI-GATE-0:PASS**,无新增基线。
 - 动作台账 `build-action-ledger.js --write` 已重建并提交(6026 控件),`--check` 通过;路由矩阵 `build-route-matrix.js --check` 通过(171 路由,无变化)。
 - WXS 语法门禁(`--expose-internals`)通过;WXSS 选择器 / 组件选择器 / 注释入值三项通过;危险确认门禁 DANGER-GATE PASS。keyframes 棘轮、`motion-property-ratchet`、`reduced-motion-coverage-contract` 含在全量单测内,通过。
