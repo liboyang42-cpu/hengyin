@@ -36,3 +36,11 @@ test('R4-4:发布页底栏为整条实底,不再渐变透出身后控件', () =>
   assert.match(rule, /background: var\(--cy-color-bg-page\);/)
   assert.doesNotMatch(rule, /transparent/)
 })
+
+test('R4-5:通关卡文案区不再 overflow:hidden(否则乱码字被切成边缘字影、底部标签被切半)', () => {
+  const css = fs.readFileSync(path.join(root, 'pages/play/components/chapter-flip/index.wxss'), 'utf8')
+  const rule = css.split('\n').find((l) => l.startsWith('.cf--finale .cf__copy { top:'))
+  assert.ok(rule)
+  assert.doesNotMatch(rule.split('/*')[0], /overflow:\s*hidden/)
+  assert.match(css, /\.cf--finale \.cf__copy \{ box-sizing: border-box; width: calc\(100vw - 92rpx\);/)
+})

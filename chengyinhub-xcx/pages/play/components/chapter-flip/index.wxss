@@ -28,9 +28,9 @@
 .cf-pressed { opacity: .8; }
 .cf--finale { z-index: 320; background: var(--lk-bg, #1F1F21); color: var(--lk-ink, #F5F5F2); } /* ds-ok x-fix4 N-11:通关卡跟主题外观,不再是固定灰;回落原型定值 */
 .cf--finale .cf__k, .cf--finale .cf__d, .cf--finale .cf__sk { color: var(--lk-mute, rgba(245,245,242,.56)); } /* ds-ok 回落原型定值 */
-.cf--finale .cf__copy { top: calc(33.3vh + 45vw + 24rpx); max-width: calc(100vw - 92rpx); overflow: hidden; }
+.cf--finale .cf__copy { top: calc(33.3vh + 45vw + 24rpx); max-width: calc(100vw - 92rpx); overflow: visible; } /* x-fix6 R4-5:原 overflow:hidden 把模糊乱码字切成卡边「字影」、把底部 里程/用时 标签切半,改不裁切;宽度靠折行约束 */
 /* x-fix5 R3-9:不依赖 WebGL 的版面兜底 —— 标题/说明在容器内折行、数据行折行居中、不贴到卡边,文案区不压到底部按钮 */
-.cf--finale .cf__copy { box-sizing: border-box; width: calc(100vw - 92rpx); padding: 0 8rpx; bottom: calc(190rpx + env(safe-area-inset-bottom)); } /* ds-ok */
+.cf--finale .cf__copy { box-sizing: border-box; width: calc(100vw - 92rpx); padding: 0 16rpx; bottom: calc(190rpx + env(safe-area-inset-bottom)); } /* ds-ok */
 .cf--finale .cf__t, .cf--finale .cf__d, .cf--finale .cf__k { max-width: 100%; white-space: normal; word-break: break-all; }
 .cf--finale .cf__stats { flex-wrap: wrap; justify-content: center; max-width: 100%; row-gap: 16rpx; }
 .cf--finale .cf__sk, .cf--finale .cf__v { max-width: 100%; white-space: normal; text-align: center; } /* x-fix4 N-11:避开银色标志下沿;解码乱码字不漏到两侧 */
