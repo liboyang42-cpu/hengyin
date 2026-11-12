@@ -185,3 +185,9 @@
 
 /* isolated 组件内全局 .cy-pressed 进不来,按仓库既有组件的做法本地补一份(只减淡不位移)。 */
 .cy-pressed { opacity: .88; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.pd-close { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.pd-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.pd-del { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.pd-count { font-variant-numeric: tabular-nums; }

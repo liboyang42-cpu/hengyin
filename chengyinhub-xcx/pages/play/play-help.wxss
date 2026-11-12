@@ -25,3 +25,6 @@
 .phl-pop__card{position:relative;width:calc(100% - 2 * var(--cy-page-x));max-height:80vh;box-sizing:border-box;padding:0 var(--cy-space-4);border-radius:var(--cy-radius-xl);background:var(--cy-comp-sheet-player-glass);box-shadow:0 0 0 1rpx var(--cy-comp-sheet-player-border-strong)}
 .phl-pop .tb-sheet{min-height:0;padding-bottom:var(--cy-space-4)}
 @media (prefers-reduced-motion: reduce){.phl-pop{animation:none}}
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.phl__row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

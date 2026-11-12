@@ -2,3 +2,6 @@ page { background: #000; } /* ds-ok 玩家侧深色,与游玩页同底 */
 .pc-page { min-height: 100vh; }
 .pc-page__state { padding: 240rpx var(--cy-space-4) 0; }
 .pc-page__exit { margin-top: var(--cy-space-4); min-height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.pc-page__exit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

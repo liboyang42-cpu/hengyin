@@ -150,3 +150,7 @@
 }
 .jc__act--ghost { flex: none; width: 240rpx; background: var(--soft); color: var(--ink); }
 .jc__act-main { background: #FFF; color: #111114; }   /* ds-ok 与 g-btn 同一颗白胶囊 */
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.jc__total-n,
+.jc__total-s { font-variant-numeric: tabular-nums; }

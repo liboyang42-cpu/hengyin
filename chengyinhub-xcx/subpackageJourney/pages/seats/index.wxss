@@ -35,3 +35,8 @@
 
 /* l-after:已邀请列表留在页面里(邀请走统一邀请页) */
 .lb-invited { margin: var(--cy-space-4) 38rpx 0; display: flex; flex-direction: column; gap: var(--cy-space-3); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.lb-me { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.lb-link { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.lb-party__inv { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

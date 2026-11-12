@@ -29,3 +29,7 @@
 .sd__event-copy { display: flex; flex-direction: column; padding-bottom: var(--cy-space-3); }
 .sd__event-label { font-size: var(--cy-type-label); font-weight: 600; color: var(--cy-color-text-primary); }
 .sd__event-time { margin-top: var(--cy-space-1); font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.sd__amount-label,
+.sd__value--strong { font-variant-numeric: tabular-nums; }

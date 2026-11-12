@@ -103,3 +103,8 @@
 .ctp-foot { width: 100%; }
 
 .ctp-foot-note { margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-text-muted); text-align: center; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.ctp-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.ctp-tpl { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.ctp-card { box-shadow: var(--cy-depth-rest); }

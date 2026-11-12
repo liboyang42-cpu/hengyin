@@ -86,3 +86,8 @@ page { display: flex; flex-direction: column; min-height: 100vh; }
 
 .content-pagination { display: flex; flex-direction: column; gap: var(--cy-space-3); padding: var(--cy-space-4) 0; color: var(--cy-color-text-secondary); }
 .content-pagination button { width: 100%; color: var(--cy-color-text-primary); background: var(--cy-color-bg-surface); border: 1rpx solid var(--cy-color-border-strong); border-radius: var(--cy-radius-md); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.topic-result-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.tpl-big { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.result-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

@@ -45,3 +45,7 @@ button.team-action::after { border: 0; }
 .tm-qr__k { flex: none; color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
 .tm-qr__v { flex: 1; min-width: 0; color: var(--cy-text-title); font-size: var(--cy-font-body); word-break: break-all; }
 .tm-qr__copy { flex: none; color: var(--cy-brand); font-size: var(--cy-font-caption); font-weight: 600; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.team-report { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.tm-qr__code { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

@@ -220,3 +220,8 @@
 .ds--embed { position: relative; left: auto; right: auto; top: auto; bottom: auto; z-index: auto;
   min-height: 1100rpx; margin: 0 var(--cy-page-x); border-radius: var(--cy-radius-lg); overflow: hidden; }
 .ds--embed .ds__stage { padding-top: var(--cy-space-6); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.ds__navbtn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.ds__addr { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.ds__alt { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
