@@ -568,7 +568,7 @@ Page({
     fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, routeCard: { on: false, ready: false }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
     fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, radarMap: { subkey: MAP_DARK.subkey, layerStyle: MAP_DARK.layerStyle } /* V3-13/14 左上雷达固定用漫游同一套深色底图 */, fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
     nextNode: null,
-    sheet: { show: false, node: null, continueText: '前往下一站' },
+    sheet: { show: false, node: null, continueText: '前往下一站' }, sheetShown: null, /* 细节打磨 G4:距离 / 步行分钟滚上去用的显示值 */
     advancedPlay: { show: false, node: null },
     // 节点任务
     game: {}, answerInput: '', answerSel: '',
@@ -5916,8 +5916,8 @@ Page({
     }, this._sheetFacts(node)); /* l-play:地点卡玻璃面板的距离 / 步行 / 开放,只写拿得到的 */
     this.setData({
       'sheet.show': true, sheetOut: false, 'sheet.node': sheetNode,
-      'sheet.continueText': this.data.allDone ? '查看城市足迹卡' : '前往下一站'
-    });
+      'sheet.continueText': this.data.allDone ? '查看城市足迹卡' : '前往下一站', sheetShown: this._sheetRollInit(sheetNode)
+    }, () => this._sheetRoll(sheetNode));
     // M6:开卡时相机平移,让选中节点落到上 1/3 视野(半屏大卡遮住下半屏时仍可见);无坐标节点优雅跳过
     if (node && node.lat && node.lng) {
       const fm = this.selectComponent('#fmMap');

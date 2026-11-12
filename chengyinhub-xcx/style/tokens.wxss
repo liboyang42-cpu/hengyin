@@ -391,6 +391,14 @@ page {
    * 视觉调整入口:改本组 token,全站动效跟随;禁止页面/组件再写字面时长。
    * press < fast < standard < slow < celebrate,分别对应:按压回弹/微交互/局部状态/浮层出入/庆祝时刻 */
   --cy-motion-press:     80ms;      /* 按钮按压回弹(触觉级,勿加长) */
+  --cy-motion-press-in:  120ms;     /* 细节打磨 G2:按下压到 .97 */
+  --cy-motion-press-out: 220ms;     /* 细节打磨 G2:松手回弹 */
+  --cy-ease-release: cubic-bezier(.34,1.56,.64,1); /* 细节打磨 L5:松手弹回,小过冲 */
+  --cy-ease-rise: cubic-bezier(.32,.72,0,1);       /* 细节打磨 G3/G7:入场与半屏的曲线 */
+  --cy-shadow-hi-dark: inset 0 1px 0 rgba(255,255,255,.06);   /* 细节打磨 G1:顶边高光(暗) */
+  --cy-shadow-hi-light: inset 0 1px 0 rgba(255,255,255,.9);   /* 细节打磨 G1:顶边高光(亮) */
+  --cy-shadow-float-dark: 0 1px 2px rgba(0,0,0,.18), 0 12px 32px rgba(0,0,0,.28);  /* 细节打磨 G1:悬浮面(暗) */
+  --cy-shadow-float-light: 0 1px 2px rgba(0,0,0,.04), 0 12px 32px rgba(0,0,0,.08); /* 细节打磨 G1:悬浮面(亮) */
   --cy-motion-fast:     140ms;      /* Chip / Tab / 按钮态切换 */
   --cy-motion-standard: 220ms;      /* 页面局部状态 / modal 弹出 */
   --cy-motion-slow:     350ms;      /* sheet 上滑 / 浮层出入 / 页面级过场 */

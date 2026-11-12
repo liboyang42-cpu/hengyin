@@ -1046,7 +1046,7 @@
     <view class="sheet-meta">{{sheet.node.metaLine}}</view>
     <view class="sheet-desc serif" wx:if="{{sheet.node.description}}">{{sheet.node.description}}</view>
     <!-- l-play 地点卡(proto gp-place):三个数字只写拿得到的 —— 距离(有定位 / 上一站才算)、步行分钟、开放时段 -->
-    <view class="sheet-dist" wx:if="{{mode!=2 && (sheet.node.distText || sheet.node.hoursText)}}"><view wx:if="{{sheet.node.distText}}"><text class="sheet-dist__n lk-num">{{sheet.node.distText}}</text><text class="sheet-dist__k">距离</text></view><view wx:if="{{sheet.node.walkText}}"><text class="sheet-dist__n lk-num">{{sheet.node.walkText}}</text><text class="sheet-dist__k">分钟步行</text></view><view wx:if="{{sheet.node.hoursText}}"><text class="sheet-dist__n lk-num">{{sheet.node.hoursText}}</text><text class="sheet-dist__k">开放</text></view></view>
+    <view class="sheet-dist" wx:if="{{mode!=2 && (sheet.node.distText || sheet.node.hoursText)}}"><view wx:if="{{sheet.node.distText}}"><text class="sheet-dist__n lk-num">{{sheetShown ? sheetShown.dist : sheet.node.distText}}</text><text class="sheet-dist__k">距离</text></view><view wx:if="{{sheet.node.walkText}}"><text class="sheet-dist__n lk-num">{{sheetShown ? sheetShown.walk : sheet.node.walkText}}</text><text class="sheet-dist__k">分钟步行</text></view><view wx:if="{{sheet.node.hoursText}}"><text class="sheet-dist__n lk-num">{{sheet.node.hoursText}}</text><text class="sheet-dist__k">开放</text></view></view>
 
     <view class="place-hook" wx:if="{{mode==2 && sheet.node.cardHook}}">
       <text class="place-hook__npc">小瘾说</text>

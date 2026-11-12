@@ -39,4 +39,40 @@ function frame(raw, elapsed) {
 /** 这个值该不该滚。调用方据此决定要不要起计时器。 */
 function shouldCount(raw) { return parse(raw) !== null; }
 
-module.exports = { DURATION, frame, shouldCount, parse };
+/* 细节打磨 G4(2026-11-12):把一组读数一起滚上去。
+ * facts 形如 { dist: '120 米', walk: '2', hours: '09–17' };逐项走 frame(),不该滚的原样。
+ * 结果写进 page.data[key](整对象重写,与 roam._rollStat 同口径);减少动态效果 / 没有计时器直接落终值。
+ * 同一页同一 key 新一轮会掐掉上一轮的计时器。返回 init —— 调用方把它放进同一次 setData,首帧就是 0 而不是闪一下终值。 */
+function init(facts, reduced) {
+  const out = {};
+  Object.keys(facts || {}).forEach((k) => { out[k] = reduced ? String(facts[k] == null ? '' : facts[k]) : frame(facts[k], 0); });
+  return out;
+}
+
+function roll(page, key, facts, options) {
+  if (!page || typeof page.setData !== 'function') return;
+  const opts = options || {};
+  const timers = page._cuRollTimers || (page._cuRollTimers = {});
+  if (timers[key]) { clearInterval(timers[key]); timers[key] = null; }
+  const ks = Object.keys(facts || {});
+  const reduced = opts.reduced === true || (page.data && page.data.reducedMotion === true);
+  const put = (o) => { if (!page._unloaded && !page._detached) page.setData({ [key]: o }); };
+  if (reduced || typeof setInterval !== 'function' || !ks.some((k) => shouldCount(facts[k]))) { put(init(facts, true)); return; }
+  const t0 = Date.now();
+  const delay = opts.delay > 0 ? opts.delay : 0;
+  timers[key] = setInterval(() => {
+    const elapsed = Math.max(0, Date.now() - t0 - delay);
+    const o = {};
+    ks.forEach((k) => { o[k] = frame(facts[k], elapsed); });
+    put(o);
+    if (elapsed >= DURATION) { clearInterval(timers[key]); timers[key] = null; }
+  }, 40);
+}
+
+function clear(page) {
+  const timers = (page && page._cuRollTimers) || {};
+  Object.keys(timers).forEach((k) => { if (timers[k]) clearInterval(timers[k]); });
+  if (page) page._cuRollTimers = {};
+}
+
+module.exports = { DURATION, frame, shouldCount, parse, init, roll, clear };
