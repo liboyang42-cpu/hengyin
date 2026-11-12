@@ -191770,6 +191770,15 @@
           "route": "pages/publish/fabu/index",
           "segments": [
             {
+              "selector": "cy-inline-error.node-binding__error",
+              "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/fabu/index",
+          "segments": [
+            {
               "selector": "cy-inline-error",
               "index": 0
             }
@@ -1100814,7 +1100823,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9741"
+        "staticSource": "pages/publish/fabu/index.js:9764"
       }
     },
     {
@@ -1100931,7 +1100940,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9766"
+        "staticSource": "pages/publish/fabu/index.js:9789"
       }
     },
     {
@@ -1101059,7 +1101068,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9549"
+        "staticSource": "pages/publish/fabu/index.js:9572"
       }
     },
     {
@@ -1101144,7 +1101153,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9537"
+        "staticSource": "pages/publish/fabu/index.js:9560"
       }
     },
     {
@@ -1101211,7 +1101220,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9618"
+        "staticSource": "pages/publish/fabu/index.js:9641"
       }
     },
     {
@@ -1101454,7 +1101463,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6832"
+        "staticSource": "pages/publish/fabu/index.js:6834"
       }
     },
     {
@@ -1101588,7 +1101597,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5873"
+        "staticSource": "pages/publish/fabu/index.js:5875"
       }
     },
     {
@@ -1101709,7 +1101718,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5853"
+        "staticSource": "pages/publish/fabu/index.js:5855"
       }
     },
     {
@@ -1101776,7 +1101785,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5118"
+        "staticSource": "pages/publish/fabu/index.js:5120"
       }
     },
     {
@@ -1101868,7 +1101877,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5125"
+        "staticSource": "pages/publish/fabu/index.js:5127"
       }
     },
     {
@@ -1101935,7 +1101944,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9458"
+        "staticSource": "pages/publish/fabu/index.js:9481"
       }
     },
     {
@@ -1102052,7 +1102061,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9841"
+        "staticSource": "pages/publish/fabu/index.js:9864"
       }
     },
     {
@@ -1102134,7 +1102143,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9259"
+        "staticSource": "pages/publish/fabu/index.js:9282"
       }
     },
     {
@@ -1102216,7 +1102225,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9259"
+        "staticSource": "pages/publish/fabu/index.js:9282"
       }
     },
     {
@@ -1102352,7 +1102361,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9803"
+        "staticSource": "pages/publish/fabu/index.js:9826"
       }
     },
     {
@@ -1102434,7 +1102443,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9259"
+        "staticSource": "pages/publish/fabu/index.js:9282"
       }
     },
     {
@@ -1102602,7 +1102611,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9286"
+        "staticSource": "pages/publish/fabu/index.js:9309"
       }
     },
     {
@@ -1102719,7 +1102728,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5700"
+        "staticSource": "pages/publish/fabu/index.js:5702"
       }
     },
     {
@@ -1102786,7 +1102795,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6953"
+        "staticSource": "pages/publish/fabu/index.js:6955"
       }
     },
     {
@@ -1102949,7 +1102958,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6977"
+        "staticSource": "pages/publish/fabu/index.js:6979"
       }
     },
     {
@@ -1103047,7 +1103056,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6977"
+        "staticSource": "pages/publish/fabu/index.js:6979"
       }
     },
     {
@@ -1103114,7 +1103123,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6953"
+        "staticSource": "pages/publish/fabu/index.js:6955"
       }
     },
     {
@@ -1103315,7 +1103324,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6942"
+        "staticSource": "pages/publish/fabu/index.js:6944"
       }
     },
     {
@@ -1103382,7 +1103391,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6923"
+        "staticSource": "pages/publish/fabu/index.js:6925"
       }
     },
     {
@@ -1103625,7 +1103634,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4977"
+        "staticSource": "pages/publish/fabu/index.js:4979"
       }
     },
     {
@@ -1103732,7 +1103741,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4862"
+        "staticSource": "pages/publish/fabu/index.js:4864"
       }
     },
     {
@@ -1103799,7 +1103808,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4707"
+        "staticSource": "pages/publish/fabu/index.js:4709"
       }
     },
     {
@@ -1103866,7 +1103875,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4713"
+        "staticSource": "pages/publish/fabu/index.js:4715"
       }
     },
     {
@@ -1104911,7 +1104920,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5916"
+        "staticSource": "pages/publish/fabu/index.js:5918"
       }
     },
     {
@@ -1104988,7 +1104997,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5984"
+        "staticSource": "pages/publish/fabu/index.js:5986"
       }
     },
     {
@@ -1105055,7 +1105064,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5973"
+        "staticSource": "pages/publish/fabu/index.js:5975"
       }
     },
     {
@@ -1105298,7 +1105307,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4717"
+        "staticSource": "pages/publish/fabu/index.js:4719"
       }
     },
     {
@@ -1105415,7 +1105424,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8157"
+        "staticSource": "pages/publish/fabu/index.js:8180"
       }
     },
     {
@@ -1105683,11 +1105692,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8047"
+        "staticSource": "pages/publish/fabu/index.js:8067"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1378:bind:change:onChapterEndingKind:197",
+      "id": "pages/publish/fabu/index.wxml:1381:bind:change:onChapterEndingKind:197",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1105710,7 +1105719,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onChapterEndingKind",
-        "line": 1378,
+        "line": 1381,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1105750,11 +1105759,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8063"
+        "staticSource": "pages/publish/fabu/index.js:8084"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1387:bind:change:onChapterEndingPick:198",
+      "id": "pages/publish/fabu/index.wxml:1390:bind:change:onChapterEndingPick:198",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1105777,7 +1105786,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onChapterEndingPick",
-        "line": 1387,
+        "line": 1390,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": "{{chapterForm.ending.kind === 'thought'}}",
         "disabledCondition": null,
@@ -1105817,11 +1105826,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8071"
+        "staticSource": "pages/publish/fabu/index.js:8093"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1396:bind:change:onChapterEndingPick:199",
+      "id": "pages/publish/fabu/index.wxml:1399:bind:change:onChapterEndingPick:199",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1105844,7 +1105853,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onChapterEndingPick",
-        "line": 1396,
+        "line": 1399,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": "{{chapterForm.ending.kind === 'tag'}}",
         "disabledCondition": null,
@@ -1105884,11 +1105893,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8071"
+        "staticSource": "pages/publish/fabu/index.js:8093"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1405:bind:change:onChapterEndingPick:200",
+      "id": "pages/publish/fabu/index.wxml:1408:bind:change:onChapterEndingPick:200",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1105911,7 +1105920,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onChapterEndingPick",
-        "line": 1405,
+        "line": 1408,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": "{{chapterForm.ending.kind === 'node'}}",
         "disabledCondition": null,
@@ -1105951,7 +1105960,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8071"
+        "staticSource": "pages/publish/fabu/index.js:8093"
       }
     },
     {
@@ -1106018,11 +1106027,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3755"
+        "staticSource": "pages/publish/fabu/index.js:3757"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1441:bindchange:onChapterRecruitToggleChange:201",
+      "id": "pages/publish/fabu/index.wxml:1444:bindchange:onChapterRecruitToggleChange:201",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106045,7 +1106054,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onChapterRecruitToggleChange",
-        "line": 1441,
+        "line": 1444,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1106127,11 +1106136,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4727"
+        "staticSource": "pages/publish/fabu/index.js:4729"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1446:bind:change:onChapterMerchantCategoryChange:202",
+      "id": "pages/publish/fabu/index.wxml:1449:bind:change:onChapterMerchantCategoryChange:202",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106154,7 +1106163,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onChapterMerchantCategoryChange",
-        "line": 1446,
+        "line": 1449,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1106194,11 +1106203,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4738"
+        "staticSource": "pages/publish/fabu/index.js:4740"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1461:bindtap:onChapterTermsModeChange:203",
+      "id": "pages/publish/fabu/index.wxml:1464:bindtap:onChapterTermsModeChange:203",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106221,7 +1106230,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChapterTermsModeChange",
-        "line": 1461,
+        "line": 1464,
         "selectorHint": ".tk-segment__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1106261,11 +1106270,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4756"
+        "staticSource": "pages/publish/fabu/index.js:4758"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1462:bindtap:onChapterTermsModeChange:204",
+      "id": "pages/publish/fabu/index.wxml:1465:bindtap:onChapterTermsModeChange:204",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106288,7 +1106297,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChapterTermsModeChange",
-        "line": 1462,
+        "line": 1465,
         "selectorHint": ".tk-segment__item",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1106328,11 +1106337,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4756"
+        "staticSource": "pages/publish/fabu/index.js:4758"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1463:bindtap:onChapterTermsModeChange:205",
+      "id": "pages/publish/fabu/index.wxml:1466:bindtap:onChapterTermsModeChange:205",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106355,7 +1106364,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onChapterTermsModeChange",
-        "line": 1463,
+        "line": 1466,
         "selectorHint": ".tk-segment__item",
         "visibleCondition": "{{formData.productType === 2 && formData.clubId}}",
         "disabledCondition": null,
@@ -1106395,11 +1106404,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4756"
+        "staticSource": "pages/publish/fabu/index.js:4758"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1474:bindinput:onChapterPerkMinValueInput:206",
+      "id": "pages/publish/fabu/index.wxml:1477:bindinput:onChapterPerkMinValueInput:206",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106422,7 +1106431,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onChapterPerkMinValueInput",
-        "line": 1474,
+        "line": 1477,
         "selectorHint": ".chapter-recruit__num",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1106462,11 +1106471,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4800"
+        "staticSource": "pages/publish/fabu/index.js:4802"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1486:bindinput:onChapterMaxPerHeadFeeInput:207",
+      "id": "pages/publish/fabu/index.wxml:1489:bindinput:onChapterMaxPerHeadFeeInput:207",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106489,7 +1106498,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onChapterMaxPerHeadFeeInput",
-        "line": 1486,
+        "line": 1489,
         "selectorHint": ".chapter-recruit__num",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1106529,7 +1106538,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4807"
+        "staticSource": "pages/publish/fabu/index.js:4809"
       }
     },
     {
@@ -1106596,11 +1106605,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5677"
+        "staticSource": "pages/publish/fabu/index.js:5679"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1496:bindinput:onChapterMaxMerchantInput:208",
+      "id": "pages/publish/fabu/index.wxml:1499:bindinput:onChapterMaxMerchantInput:208",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106623,7 +1106632,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onChapterMaxMerchantInput",
-        "line": 1496,
+        "line": 1499,
         "selectorHint": ".chapter-recruit__num",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1106663,11 +1106672,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4747"
+        "staticSource": "pages/publish/fabu/index.js:4749"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1505:bindtap:deleteChapter:209",
+      "id": "pages/publish/fabu/index.wxml:1508:bindtap:deleteChapter:209",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106690,7 +1106699,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "deleteChapter",
-        "line": 1505,
+        "line": 1508,
         "selectorHint": ".chapter-settings-delete",
         "visibleCondition": "{{popChapterAction==1 && !chapterSettingsFromStory}}",
         "disabledCondition": null,
@@ -1106755,11 +1106764,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4490"
+        "staticSource": "pages/publish/fabu/index.js:4492"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1535:bindtap:locatePublishIssue:215",
+      "id": "pages/publish/fabu/index.wxml:1538:bindtap:locatePublishIssue:215",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106782,7 +1106791,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "locatePublishIssue",
-        "line": 1535,
+        "line": 1538,
         "selectorHint": ".sp-issue",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1106898,11 +1106907,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7799"
+        "staticSource": "pages/publish/fabu/index.js:7801"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1544:bindtap:locatePublishIssue:216",
+      "id": "pages/publish/fabu/index.wxml:1547:bindtap:locatePublishIssue:216",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1106925,7 +1106934,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "locatePublishIssue",
-        "line": 1544,
+        "line": 1547,
         "selectorHint": ".sp-issue",
         "visibleCondition": "{{item.field}}",
         "disabledCondition": null,
@@ -1107041,11 +1107050,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7799"
+        "staticSource": "pages/publish/fabu/index.js:7801"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1561:bindtap:onPreviewEdit:217",
+      "id": "pages/publish/fabu/index.wxml:1564:bindtap:onPreviewEdit:217",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107068,7 +1107077,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPreviewEdit",
-        "line": 1561,
+        "line": 1564,
         "selectorHint": ".sp-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1107190,11 +1107199,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7711"
+        "staticSource": "pages/publish/fabu/index.js:7713"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1571:bindtap:onPreviewEdit:218",
+      "id": "pages/publish/fabu/index.wxml:1574:bindtap:onPreviewEdit:218",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107217,7 +1107226,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPreviewEdit",
-        "line": 1571,
+        "line": 1574,
         "selectorHint": ".sp-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1107339,11 +1107348,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7711"
+        "staticSource": "pages/publish/fabu/index.js:7713"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1584:bindtap:onPreviewLockedTap:219",
+      "id": "pages/publish/fabu/index.wxml:1587:bindtap:onPreviewLockedTap:219",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107366,7 +1107375,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPreviewLockedTap",
-        "line": 1584,
+        "line": 1587,
         "selectorHint": ".sp-lock",
         "visibleCondition": "{{item.locked}}",
         "disabledCondition": null,
@@ -1107407,11 +1107416,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7350"
+        "staticSource": "pages/publish/fabu/index.js:7352"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1586:bindchange:onPreviewClubPool:220",
+      "id": "pages/publish/fabu/index.wxml:1589:bindchange:onPreviewClubPool:220",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107434,7 +1107443,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onPreviewClubPool",
-        "line": 1586,
+        "line": 1589,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": "{{item.key === 'club'}}",
         "disabledCondition": null,
@@ -1107489,11 +1107498,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7327"
+        "staticSource": "pages/publish/fabu/index.js:7329"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1587:bindchange:onPreviewMerchantRecruit:221",
+      "id": "pages/publish/fabu/index.wxml:1590:bindchange:onPreviewMerchantRecruit:221",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107516,7 +1107525,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onPreviewMerchantRecruit",
-        "line": 1587,
+        "line": 1590,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1107622,11 +1107631,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7333"
+        "staticSource": "pages/publish/fabu/index.js:7335"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1593:bindtap:onPreviewEdit:222",
+      "id": "pages/publish/fabu/index.wxml:1596:bindtap:onPreviewEdit:222",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107649,7 +1107658,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPreviewEdit",
-        "line": 1593,
+        "line": 1596,
         "selectorHint": ".sp-look",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1107771,11 +1107780,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7711"
+        "staticSource": "pages/publish/fabu/index.js:7713"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1606:bindtap:openStoryPop:223",
+      "id": "pages/publish/fabu/index.wxml:1609:bindtap:openStoryPop:223",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107798,7 +1107807,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openStoryPop",
-        "line": 1606,
+        "line": 1609,
         "selectorHint": ".sp-chrow",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1107838,11 +1107847,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7355"
+        "staticSource": "pages/publish/fabu/index.js:7357"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1611:bindtap:openStoryPop:224",
+      "id": "pages/publish/fabu/index.wxml:1614:bindtap:openStoryPop:224",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107865,7 +1107874,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openStoryPop",
-        "line": 1611,
+        "line": 1614,
         "selectorHint": ".sp-read",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1107905,11 +1107914,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7355"
+        "staticSource": "pages/publish/fabu/index.js:7357"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1620:bindtap:closePublishCheck:225",
+      "id": "pages/publish/fabu/index.wxml:1623:bindtap:closePublishCheck:225",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107932,7 +1107941,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePublishCheck",
-        "line": 1620,
+        "line": 1623,
         "selectorHint": ".sp-x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1107972,11 +1107981,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7784"
+        "staticSource": "pages/publish/fabu/index.js:7786"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1622:bind:disabledtap:onPublishCheckDisabledTap:226",
+      "id": "pages/publish/fabu/index.wxml:1625:bind:disabledtap:onPublishCheckDisabledTap:226",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1107999,7 +1108008,7 @@
         "tag": "cy-btn",
         "event": "bind:disabledtap",
         "handler": "onPublishCheckDisabledTap",
-        "line": 1622,
+        "line": 1625,
         "selectorHint": ".sp-done",
         "visibleCondition": null,
         "disabledCondition": "{{!!publishCheck.blocking.length}}",
@@ -1108062,11 +1108071,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7737"
+        "staticSource": "pages/publish/fabu/index.js:7739"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1622:bindtap:confirmPublishCheck:227:variant:create",
+      "id": "pages/publish/fabu/index.wxml:1625:bindtap:confirmPublishCheck:227:variant:create",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108099,7 +1108108,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirmPublishCheck",
-        "line": 1622,
+        "line": 1625,
         "selectorHint": ".sp-done",
         "visibleCondition": null,
         "disabledCondition": "{{!!publishCheck.blocking.length}}",
@@ -1108167,11 +1108176,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7622"
+        "staticSource": "pages/publish/fabu/index.js:7624"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1622:bindtap:confirmPublishCheck:227:variant:update",
+      "id": "pages/publish/fabu/index.wxml:1625:bindtap:confirmPublishCheck:227:variant:update",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108206,7 +1108215,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "confirmPublishCheck",
-        "line": 1622,
+        "line": 1625,
         "selectorHint": ".sp-done",
         "visibleCondition": null,
         "disabledCondition": "{{!!publishCheck.blocking.length}}",
@@ -1108274,74 +1108283,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7622"
-      }
-    },
-    {
-      "id": "pages/publish/fabu/index.wxml:1627:bindtap:closeStoryPop:228",
-      "route": "pages/publish/fabu/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/fabu/index.wxml",
-        "js": "pages/publish/fabu/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "closeStoryPop",
-        "line": 1627,
-        "selectorHint": ".sp-pop__mask",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": "关闭剧情",
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "tap",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7360"
+        "staticSource": "pages/publish/fabu/index.js:7624"
       }
     },
     {
@@ -1108448,11 +1108390,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2932"
+        "staticSource": "pages/publish/fabu/index.js:2934"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1631:bindtap:closeStoryPop:229",
+      "id": "pages/publish/fabu/index.wxml:1630:bindtap:closeStoryPop:228",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108475,7 +1108417,74 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeStoryPop",
-        "line": 1631,
+        "line": 1630,
+        "selectorHint": ".sp-pop__mask",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "关闭剧情",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/fabu/index.js:7362"
+      }
+    },
+    {
+      "id": "pages/publish/fabu/index.wxml:1634:bindtap:closeStoryPop:229",
+      "route": "pages/publish/fabu/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/fabu/index.wxml",
+        "js": "pages/publish/fabu/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "closeStoryPop",
+        "line": 1634,
         "selectorHint": ".sp-pop__x",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1108515,11 +1108524,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7360"
+        "staticSource": "pages/publish/fabu/index.js:7362"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1637:bindtap:onPreviewEdit:230",
+      "id": "pages/publish/fabu/index.wxml:1640:bindtap:onPreviewEdit:230",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108542,7 +1108551,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPreviewEdit",
-        "line": 1637,
+        "line": 1640,
         "selectorHint": ".sp-say",
         "visibleCondition": "{{chapter.story || chapter.flag}}",
         "disabledCondition": null,
@@ -1108664,11 +1108673,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7711"
+        "staticSource": "pages/publish/fabu/index.js:7713"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1641:bindtap:onPreviewEdit:231",
+      "id": "pages/publish/fabu/index.wxml:1644:bindtap:onPreviewEdit:231",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108691,7 +1108700,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPreviewEdit",
-        "line": 1641,
+        "line": 1644,
         "selectorHint": ".sp-say",
         "visibleCondition": "{{node.say}}",
         "disabledCondition": null,
@@ -1108813,11 +1108822,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7711"
+        "staticSource": "pages/publish/fabu/index.js:7713"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1643:bindtap:onPreviewEdit:232",
+      "id": "pages/publish/fabu/index.wxml:1646:bindtap:onPreviewEdit:232",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108840,7 +1108849,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPreviewEdit",
-        "line": 1643,
+        "line": 1646,
         "selectorHint": ".sp-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1108962,11 +1108971,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7711"
+        "staticSource": "pages/publish/fabu/index.js:7713"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1665:bind:cancel:onBusinessTimeCancel:233",
+      "id": "pages/publish/fabu/index.wxml:1668:bind:cancel:onBusinessTimeCancel:233",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1108989,7 +1108998,7 @@
         "tag": "cy-date-sheet",
         "event": "bind:cancel",
         "handler": "onBusinessTimeCancel",
-        "line": 1665,
+        "line": 1668,
         "selectorHint": "cy-date-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109029,11 +1109038,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4058"
+        "staticSource": "pages/publish/fabu/index.js:4060"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1665:bind:confirm:onBusinessTimeConfirm:234",
+      "id": "pages/publish/fabu/index.wxml:1668:bind:confirm:onBusinessTimeConfirm:234",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109056,7 +1109065,7 @@
         "tag": "cy-date-sheet",
         "event": "bind:confirm",
         "handler": "onBusinessTimeConfirm",
-        "line": 1665,
+        "line": 1668,
         "selectorHint": "cy-date-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109096,11 +1109105,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4061"
+        "staticSource": "pages/publish/fabu/index.js:4063"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1671:bindchange:onStartTimeChange:235",
+      "id": "pages/publish/fabu/index.wxml:1674:bindchange:onStartTimeChange:235",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109123,7 +1109132,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onStartTimeChange",
-        "line": 1671,
+        "line": 1674,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109163,11 +1109172,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4114"
+        "staticSource": "pages/publish/fabu/index.js:4116"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1685:bindchange:onEndTimeChange:236",
+      "id": "pages/publish/fabu/index.wxml:1688:bindchange:onEndTimeChange:236",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109190,7 +1109199,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onEndTimeChange",
-        "line": 1685,
+        "line": 1688,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109230,11 +1109239,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4124"
+        "staticSource": "pages/publish/fabu/index.js:4126"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1704:bind:close:closeResultSheet:237",
+      "id": "pages/publish/fabu/index.wxml:1707:bind:close:closeResultSheet:237",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109257,7 +1109266,7 @@
         "tag": "cy-result-sheet",
         "event": "bind:close",
         "handler": "closeResultSheet",
-        "line": 1704,
+        "line": 1707,
         "selectorHint": "cy-result-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109299,11 +1109308,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9036"
+        "staticSource": "pages/publish/fabu/index.js:9059"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1708:bind:cancel:closeStartTimePicker:238",
+      "id": "pages/publish/fabu/index.wxml:1711:bind:cancel:closeStartTimePicker:238",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109326,7 +1109335,7 @@
         "tag": "cy-date-sheet",
         "event": "bind:cancel",
         "handler": "closeStartTimePicker",
-        "line": 1708,
+        "line": 1711,
         "selectorHint": "cy-date-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109366,11 +1109375,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3938"
+        "staticSource": "pages/publish/fabu/index.js:3940"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1708:bind:confirm:confirmStartTime:239",
+      "id": "pages/publish/fabu/index.wxml:1711:bind:confirm:confirmStartTime:239",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109393,7 +1109402,7 @@
         "tag": "cy-date-sheet",
         "event": "bind:confirm",
         "handler": "confirmStartTime",
-        "line": 1708,
+        "line": 1711,
         "selectorHint": "cy-date-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109457,11 +1109466,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3945"
+        "staticSource": "pages/publish/fabu/index.js:3947"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1714:bindchange:onStartDateChange:240",
+      "id": "pages/publish/fabu/index.wxml:1717:bindchange:onStartDateChange:240",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109484,7 +1109493,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onStartDateChange",
-        "line": 1714,
+        "line": 1717,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109524,11 +1109533,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3922"
+        "staticSource": "pages/publish/fabu/index.js:3924"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1725:bindchange:onStartTimePickerChange:241",
+      "id": "pages/publish/fabu/index.wxml:1728:bindchange:onStartTimePickerChange:241",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109551,7 +1109560,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onStartTimePickerChange",
-        "line": 1725,
+        "line": 1728,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109591,11 +1109600,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3930"
+        "staticSource": "pages/publish/fabu/index.js:3932"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1740:bind:cancel:closeTicketTimePicker:242",
+      "id": "pages/publish/fabu/index.wxml:1743:bind:cancel:closeTicketTimePicker:242",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109618,7 +1109627,7 @@
         "tag": "cy-date-sheet",
         "event": "bind:cancel",
         "handler": "closeTicketTimePicker",
-        "line": 1740,
+        "line": 1743,
         "selectorHint": "cy-date-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109658,11 +1109667,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6480"
+        "staticSource": "pages/publish/fabu/index.js:6482"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1740:bind:confirm:confirmTicketTime:243",
+      "id": "pages/publish/fabu/index.wxml:1743:bind:confirm:confirmTicketTime:243",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109685,7 +1109694,7 @@
         "tag": "cy-date-sheet",
         "event": "bind:confirm",
         "handler": "confirmTicketTime",
-        "line": 1740,
+        "line": 1743,
         "selectorHint": "cy-date-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109725,11 +1109734,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6495"
+        "staticSource": "pages/publish/fabu/index.js:6497"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1746:bindchange:onTicketPickerDateChange:244",
+      "id": "pages/publish/fabu/index.wxml:1749:bindchange:onTicketPickerDateChange:244",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109752,7 +1109761,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onTicketPickerDateChange",
-        "line": 1746,
+        "line": 1749,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109792,11 +1109801,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6485"
+        "staticSource": "pages/publish/fabu/index.js:6487"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1758:bindchange:onTicketPickerTimeChange:245",
+      "id": "pages/publish/fabu/index.wxml:1761:bindchange:onTicketPickerTimeChange:245",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109819,7 +1109828,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onTicketPickerTimeChange",
-        "line": 1758,
+        "line": 1761,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109859,11 +1109868,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6490"
+        "staticSource": "pages/publish/fabu/index.js:6492"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1774:bind:cancel:closeEndTimePicker:246",
+      "id": "pages/publish/fabu/index.wxml:1777:bind:cancel:closeEndTimePicker:246",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109886,7 +1109895,7 @@
         "tag": "cy-date-sheet",
         "event": "bind:cancel",
         "handler": "closeEndTimePicker",
-        "line": 1774,
+        "line": 1777,
         "selectorHint": "cy-date-sheet[bind:cancel]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1109926,11 +1109935,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4006"
+        "staticSource": "pages/publish/fabu/index.js:4008"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1774:bind:confirm:confirmEndTime:247",
+      "id": "pages/publish/fabu/index.wxml:1777:bind:confirm:confirmEndTime:247",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1109953,7 +1109962,7 @@
         "tag": "cy-date-sheet",
         "event": "bind:confirm",
         "handler": "confirmEndTime",
-        "line": 1774,
+        "line": 1777,
         "selectorHint": "cy-date-sheet[bind:confirm]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110017,11 +1110026,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4013"
+        "staticSource": "pages/publish/fabu/index.js:4015"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1780:bindchange:onEndDateChange:248",
+      "id": "pages/publish/fabu/index.wxml:1783:bindchange:onEndDateChange:248",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110044,7 +1110053,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onEndDateChange",
-        "line": 1780,
+        "line": 1783,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110084,11 +1110093,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3990"
+        "staticSource": "pages/publish/fabu/index.js:3992"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1791:bindchange:onEndTimePickerChange:249",
+      "id": "pages/publish/fabu/index.wxml:1794:bindchange:onEndTimePickerChange:249",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110111,7 +1110120,7 @@
         "tag": "picker-view",
         "event": "bindchange",
         "handler": "onEndTimePickerChange",
-        "line": 1791,
+        "line": 1794,
         "selectorHint": ".time-picker-view",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110151,11 +1110160,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3998"
+        "staticSource": "pages/publish/fabu/index.js:4000"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1806:bind:close:onCategorySheetClose:251",
+      "id": "pages/publish/fabu/index.wxml:1809:bind:close:onCategorySheetClose:251",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110178,7 +1110187,7 @@
         "tag": "cy-category-sheet",
         "event": "bind:close",
         "handler": "onCategorySheetClose",
-        "line": 1806,
+        "line": 1809,
         "selectorHint": "cy-category-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110218,11 +1110227,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4412"
+        "staticSource": "pages/publish/fabu/index.js:4414"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1806:bind:select:onCategorySelect:250",
+      "id": "pages/publish/fabu/index.wxml:1809:bind:select:onCategorySelect:250",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110245,7 +1110254,7 @@
         "tag": "cy-category-sheet",
         "event": "bind:select",
         "handler": "onCategorySelect",
-        "line": 1806,
+        "line": 1809,
         "selectorHint": "cy-category-sheet[bind:select]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110308,11 +1110317,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4408"
+        "staticSource": "pages/publish/fabu/index.js:4410"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1812:bind:close:closeModePicker:252",
+      "id": "pages/publish/fabu/index.wxml:1815:bind:close:closeModePicker:252",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110335,7 +1110344,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeModePicker",
-        "line": 1812,
+        "line": 1815,
         "selectorHint": ".node-sheet-host",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110375,11 +1110384,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3762"
+        "staticSource": "pages/publish/fabu/index.js:3764"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1814:bindtap:closeModePicker:253",
+      "id": "pages/publish/fabu/index.wxml:1817:bindtap:closeModePicker:253",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110402,7 +1110411,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeModePicker",
-        "line": 1814,
+        "line": 1817,
         "selectorHint": ".node-sheet__close",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110442,11 +1110451,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3762"
+        "staticSource": "pages/publish/fabu/index.js:3764"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1815:bindtap:confirmModePicker:254",
+      "id": "pages/publish/fabu/index.wxml:1818:bindtap:confirmModePicker:254",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110469,7 +1110478,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmModePicker",
-        "line": 1815,
+        "line": 1818,
         "selectorHint": ".node-sheet__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110536,11 +1110545,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3769"
+        "staticSource": "pages/publish/fabu/index.js:3771"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1823:bindtap:onPickMode:255",
+      "id": "pages/publish/fabu/index.wxml:1826:bindtap:onPickMode:255",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110563,7 +1110572,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPickMode",
-        "line": 1823,
+        "line": 1826,
         "selectorHint": ".node-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110603,11 +1110612,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3765"
+        "staticSource": "pages/publish/fabu/index.js:3767"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1834:bindtap:onPickMode:256",
+      "id": "pages/publish/fabu/index.wxml:1837:bindtap:onPickMode:256",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110630,7 +1110639,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPickMode",
-        "line": 1834,
+        "line": 1837,
         "selectorHint": ".node-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110670,7 +1110679,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3765"
+        "staticSource": "pages/publish/fabu/index.js:3767"
       }
     },
     {
@@ -1110777,11 +1110786,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2612"
+        "staticSource": "pages/publish/fabu/index.js:2614"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1849:bind:change:onPlayWindowPick:257",
+      "id": "pages/publish/fabu/index.wxml:1852:bind:change:onPlayWindowPick:257",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110804,7 +1110813,7 @@
         "tag": "cy-choice-sheet",
         "event": "bind:change",
         "handler": "onPlayWindowPick",
-        "line": 1849,
+        "line": 1852,
         "selectorHint": "cy-choice-sheet[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110890,7 +1110899,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1849:bind:change:onPlayWindowTime:259",
+      "id": "pages/publish/fabu/index.wxml:1852:bind:change:onPlayWindowTime:259",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1110913,7 +1110922,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onPlayWindowTime",
-        "line": 1849,
+        "line": 1852,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1110999,7 +1111008,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1849:bind:change:onPlayWindowTime:260",
+      "id": "pages/publish/fabu/index.wxml:1852:bind:change:onPlayWindowTime:260",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111022,7 +1111031,7 @@
         "tag": "cy-dropdown",
         "event": "bind:change",
         "handler": "onPlayWindowTime",
-        "line": 1849,
+        "line": 1852,
         "selectorHint": "cy-dropdown[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1111108,7 +1111117,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1849:bind:close:closePlayWindow:258",
+      "id": "pages/publish/fabu/index.wxml:1852:bind:close:closePlayWindow:258",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111131,7 +1111140,7 @@
         "tag": "cy-choice-sheet",
         "event": "bind:close",
         "handler": "closePlayWindow",
-        "line": 1849,
+        "line": 1852,
         "selectorHint": "cy-choice-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1111175,7 +1111184,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1849:bindtap:closePlayWindow:261",
+      "id": "pages/publish/fabu/index.wxml:1852:bindtap:closePlayWindow:261",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111198,7 +1111207,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePlayWindow",
-        "line": 1849,
+        "line": 1852,
         "selectorHint": ".pw-custom__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1111242,7 +1111251,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1851:bind:close:closeValueEditor:262",
+      "id": "pages/publish/fabu/index.wxml:1854:bind:close:closeValueEditor:262",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111265,7 +1111274,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeValueEditor",
-        "line": 1851,
+        "line": 1854,
         "selectorHint": ".node-sheet-host",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1111309,7 +1111318,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1853:bindtap:closeValueEditor:263",
+      "id": "pages/publish/fabu/index.wxml:1856:bindtap:closeValueEditor:263",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111332,7 +1111341,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeValueEditor",
-        "line": 1853,
+        "line": 1856,
         "selectorHint": ".node-sheet__close",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1111376,7 +1111385,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1853:bindtap:saveValueEditor:264",
+      "id": "pages/publish/fabu/index.wxml:1856:bindtap:saveValueEditor:264",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111399,7 +1111408,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "saveValueEditor",
-        "line": 1853,
+        "line": 1856,
         "selectorHint": ".node-sheet__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1111459,7 +1111468,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1856:bindinput:onValueField:265",
+      "id": "pages/publish/fabu/index.wxml:1859:bindinput:onValueField:265",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111482,7 +1111491,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onValueField",
-        "line": 1856,
+        "line": 1859,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": "{{valueEditor.definitionReadOnly}}",
@@ -1111526,7 +1111535,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1857:bindchange:onValueField:266",
+      "id": "pages/publish/fabu/index.wxml:1860:bindchange:onValueField:266",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111549,7 +1111558,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onValueField",
-        "line": 1857,
+        "line": 1860,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": "{{valueEditor.definitionReadOnly}}",
@@ -1111593,7 +1111602,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1861:bind:change:onValueField:267",
+      "id": "pages/publish/fabu/index.wxml:1864:bind:change:onValueField:267",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111616,7 +1111625,7 @@
         "tag": "cy-stepper",
         "event": "bind:change",
         "handler": "onValueField",
-        "line": 1861,
+        "line": 1864,
         "selectorHint": "cy-stepper[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{valueEditor.definitionReadOnly}}",
@@ -1111660,7 +1111669,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1863:bind:change:onValueField:268",
+      "id": "pages/publish/fabu/index.wxml:1866:bind:change:onValueField:268",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111683,7 +1111692,7 @@
         "tag": "cy-stepper",
         "event": "bind:change",
         "handler": "onValueField",
-        "line": 1863,
+        "line": 1866,
         "selectorHint": "cy-stepper[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{valueEditor.definitionReadOnly}}",
@@ -1111727,7 +1111736,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1867:bindchange:onValueLinkSwitch:269",
+      "id": "pages/publish/fabu/index.wxml:1870:bindchange:onValueLinkSwitch:269",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111750,7 +1111759,7 @@
         "tag": "cy-switch",
         "event": "bindchange",
         "handler": "onValueLinkSwitch",
-        "line": 1867,
+        "line": 1870,
         "selectorHint": "cy-switch[bindchange]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1111794,7 +1111803,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1869:bindtap:removeValue:270",
+      "id": "pages/publish/fabu/index.wxml:1872:bindtap:removeValue:270",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111817,7 +1111826,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeValue",
-        "line": 1869,
+        "line": 1872,
         "selectorHint": ".node-card",
         "visibleCondition": "{{valueEditor.index >= 0 && !valueEditor.definitionReadOnly}}",
         "disabledCondition": null,
@@ -1111877,7 +1111886,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1879:bind:close:closeThoughts:271",
+      "id": "pages/publish/fabu/index.wxml:1882:bind:close:closeThoughts:271",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111900,7 +1111909,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeThoughts",
-        "line": 1879,
+        "line": 1882,
         "selectorHint": ".node-sheet-host",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1111940,11 +1111949,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7925"
+        "staticSource": "pages/publish/fabu/index.js:7927"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1881:bindtap:closeThoughts:272",
+      "id": "pages/publish/fabu/index.wxml:1884:bindtap:closeThoughts:272",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1111967,7 +1111976,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeThoughts",
-        "line": 1881,
+        "line": 1884,
         "selectorHint": ".node-sheet__close",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1112007,11 +1112016,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7925"
+        "staticSource": "pages/publish/fabu/index.js:7927"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1887:bindtap:removeThought:273",
+      "id": "pages/publish/fabu/index.wxml:1890:bindtap:removeThought:273",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112034,7 +1112043,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "removeThought",
-        "line": 1887,
+        "line": 1890,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1112074,11 +1112083,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7943"
+        "staticSource": "pages/publish/fabu/index.js:7945"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1889:bind:input:onThoughtInput:274",
+      "id": "pages/publish/fabu/index.wxml:1892:bind:input:onThoughtInput:274",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112101,7 +1112110,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onThoughtInput",
-        "line": 1889,
+        "line": 1892,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1112141,11 +1112150,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7934"
+        "staticSource": "pages/publish/fabu/index.js:7936"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1891:bind:input:onThoughtInput:275",
+      "id": "pages/publish/fabu/index.wxml:1894:bind:input:onThoughtInput:275",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112168,7 +1112177,7 @@
         "tag": "cy-field",
         "event": "bind:input",
         "handler": "onThoughtInput",
-        "line": 1891,
+        "line": 1894,
         "selectorHint": "cy-field[bind:input]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1112208,11 +1112217,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7934"
+        "staticSource": "pages/publish/fabu/index.js:7936"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1894:bindtap:saveThoughts:276",
+      "id": "pages/publish/fabu/index.wxml:1897:bindtap:saveThoughts:276",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112235,7 +1112244,7 @@
         "tag": "cy-btn",
         "event": "bindtap",
         "handler": "saveThoughts",
-        "line": 1894,
+        "line": 1897,
         "selectorHint": "cy-btn[bindtap]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1112275,74 +1112284,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7971"
-      }
-    },
-    {
-      "id": "pages/publish/fabu/index.wxml:1898:bind:close:closeInitialState:277",
-      "route": "pages/publish/fabu/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/publish/fabu/index.wxml",
-        "js": "pages/publish/fabu/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-sheet",
-        "event": "bind:close",
-        "handler": "closeInitialState",
-        "line": 1898,
-        "selectorHint": ".node-sheet-host",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8166"
+        "staticSource": "pages/publish/fabu/index.js:7973"
       }
     },
     {
@@ -1112414,11 +1112356,78 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:699"
+        "staticSource": "pages/publish/fabu/index.js:701"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1900:bindtap:closeInitialState:278",
+      "id": "pages/publish/fabu/index.wxml:1901:bind:close:closeInitialState:277",
+      "route": "pages/publish/fabu/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/publish/fabu/index.wxml",
+        "js": "pages/publish/fabu/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-sheet",
+        "event": "bind:close",
+        "handler": "closeInitialState",
+        "line": 1901,
+        "selectorHint": ".node-sheet-host",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/publish/fabu/index.js:8189"
+      }
+    },
+    {
+      "id": "pages/publish/fabu/index.wxml:1903:bindtap:closeInitialState:278",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112441,7 +1112450,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeInitialState",
-        "line": 1900,
+        "line": 1903,
         "selectorHint": ".node-sheet__close",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1112481,11 +1112490,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8166"
+        "staticSource": "pages/publish/fabu/index.js:8189"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1901:bindtap:saveInitialState:279",
+      "id": "pages/publish/fabu/index.wxml:1904:bindtap:saveInitialState:279",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112508,7 +1112517,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "saveInitialState",
-        "line": 1901,
+        "line": 1904,
         "selectorHint": ".node-sheet__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1112548,11 +1112557,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8199"
+        "staticSource": "pages/publish/fabu/index.js:8222"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1912:bindtap:removeCarry:280",
+      "id": "pages/publish/fabu/index.wxml:1915:bindtap:removeCarry:280",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112575,7 +1112584,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "removeCarry",
-        "line": 1912,
+        "line": 1915,
         "selectorHint": ".ic-row__remove",
         "visibleCondition": "{{editScope !== 'WHITELIST' && !initialStateEditor.rules.attributeBinding}}",
         "disabledCondition": null,
@@ -1112619,7 +1112628,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1914:bindtap:openCarryPicker:281",
+      "id": "pages/publish/fabu/index.wxml:1917:bindtap:openCarryPicker:281",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112642,7 +1112651,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openCarryPicker",
-        "line": 1914,
+        "line": 1917,
         "selectorHint": ".ic-row",
         "visibleCondition": "{{editScope !== 'WHITELIST' && !initialStateEditor.rules.attributeBinding}}",
         "disabledCondition": null,
@@ -1112686,7 +1112695,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1920:bind:confirm:onAttributeBindingConfirm:282:variant:autosave-create-draft",
+      "id": "pages/publish/fabu/index.wxml:1923:bind:confirm:onAttributeBindingConfirm:282:variant:autosave-create-draft",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112717,7 +1112726,7 @@
         "tag": "attribute-binding-editor",
         "event": "bind:confirm",
         "handler": "onAttributeBindingConfirm",
-        "line": 1920,
+        "line": 1923,
         "selectorHint": "attribute-binding-editor[bind:confirm]",
         "visibleCondition": "{{initialStateEditor.show}}",
         "disabledCondition": null,
@@ -1112778,11 +1112787,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8135"
+        "staticSource": "pages/publish/fabu/index.js:8158"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1920:bind:confirm:onAttributeBindingConfirm:282:variant:autosave-update-draft",
+      "id": "pages/publish/fabu/index.wxml:1923:bind:confirm:onAttributeBindingConfirm:282:variant:autosave-update-draft",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112815,7 +1112824,7 @@
         "tag": "attribute-binding-editor",
         "event": "bind:confirm",
         "handler": "onAttributeBindingConfirm",
-        "line": 1920,
+        "line": 1923,
         "selectorHint": "attribute-binding-editor[bind:confirm]",
         "visibleCondition": "{{initialStateEditor.show}}",
         "disabledCondition": null,
@@ -1112876,11 +1112885,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8135"
+        "staticSource": "pages/publish/fabu/index.js:8158"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1920:bind:manage:manageAttributeDefinitions:283",
+      "id": "pages/publish/fabu/index.wxml:1923:bind:manage:manageAttributeDefinitions:283",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1112903,7 +1112912,7 @@
         "tag": "attribute-binding-editor",
         "event": "bind:manage",
         "handler": "manageAttributeDefinitions",
-        "line": 1920,
+        "line": 1923,
         "selectorHint": "attribute-binding-editor[bind:manage]",
         "visibleCondition": "{{initialStateEditor.show}}",
         "disabledCondition": null,
@@ -1112993,11 +1113002,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8155"
+        "staticSource": "pages/publish/fabu/index.js:8178"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1920:bind:refresh:loadAttributeRegistry:284",
+      "id": "pages/publish/fabu/index.wxml:1923:bind:refresh:loadAttributeRegistry:284",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113020,7 +1113029,7 @@
         "tag": "attribute-binding-editor",
         "event": "bind:refresh",
         "handler": "loadAttributeRegistry",
-        "line": 1920,
+        "line": 1923,
         "selectorHint": "attribute-binding-editor[bind:refresh]",
         "visibleCondition": "{{initialStateEditor.show}}",
         "disabledCondition": null,
@@ -1113102,11 +1113111,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8105"
+        "staticSource": "pages/publish/fabu/index.js:8128"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1924:bind:change:onInitialStateField:285",
+      "id": "pages/publish/fabu/index.wxml:1927:bind:change:onInitialStateField:285",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113129,7 +1113138,7 @@
         "tag": "cy-switch",
         "event": "bind:change",
         "handler": "onInitialStateField",
-        "line": 1924,
+        "line": 1927,
         "selectorHint": "cy-switch[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{editScope === 'WHITELIST'}}",
@@ -1113169,11 +1113178,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8167"
+        "staticSource": "pages/publish/fabu/index.js:8190"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1926:bind:change:onInitialStateField:286",
+      "id": "pages/publish/fabu/index.wxml:1929:bind:change:onInitialStateField:286",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113196,7 +1113205,7 @@
         "tag": "cy-stepper",
         "event": "bind:change",
         "handler": "onInitialStateField",
-        "line": 1926,
+        "line": 1929,
         "selectorHint": "cy-stepper[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{editScope === 'WHITELIST'}}",
@@ -1113236,11 +1113245,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8167"
+        "staticSource": "pages/publish/fabu/index.js:8190"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1930:bind:change:onInitialStateField:287",
+      "id": "pages/publish/fabu/index.wxml:1933:bind:change:onInitialStateField:287",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113263,7 +1113272,7 @@
         "tag": "cy-switch",
         "event": "bind:change",
         "handler": "onInitialStateField",
-        "line": 1930,
+        "line": 1933,
         "selectorHint": "cy-switch[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{editScope === 'WHITELIST'}}",
@@ -1113303,11 +1113312,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8167"
+        "staticSource": "pages/publish/fabu/index.js:8190"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1932:bind:change:onInitialStateField:288",
+      "id": "pages/publish/fabu/index.wxml:1935:bind:change:onInitialStateField:288",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113330,7 +1113339,7 @@
         "tag": "cy-stepper",
         "event": "bind:change",
         "handler": "onInitialStateField",
-        "line": 1932,
+        "line": 1935,
         "selectorHint": "cy-stepper[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{editScope === 'WHITELIST'}}",
@@ -1113370,11 +1113379,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8167"
+        "staticSource": "pages/publish/fabu/index.js:8190"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1937:bind:change:onInitialStateField:289",
+      "id": "pages/publish/fabu/index.wxml:1940:bind:change:onInitialStateField:289",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113397,7 +1113406,7 @@
         "tag": "cy-stepper",
         "event": "bind:change",
         "handler": "onInitialStateField",
-        "line": 1937,
+        "line": 1940,
         "selectorHint": "cy-stepper[bind:change]",
         "visibleCondition": null,
         "disabledCondition": "{{editScope === 'WHITELIST' || !!initialStateEditor.rules.attributeBinding}}",
@@ -1113437,11 +1113446,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8167"
+        "staticSource": "pages/publish/fabu/index.js:8190"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1943:bindtap:addInitialState:290",
+      "id": "pages/publish/fabu/index.wxml:1946:bindtap:addInitialState:290",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113464,7 +1113473,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "addInitialState",
-        "line": 1943,
+        "line": 1946,
         "selectorHint": ".story-initial__option",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1113504,11 +1113513,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8192"
+        "staticSource": "pages/publish/fabu/index.js:8215"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1953:bind:close:closeCarryPicker:291",
+      "id": "pages/publish/fabu/index.wxml:1956:bind:close:closeCarryPicker:291",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113531,7 +1113540,7 @@
         "tag": "cy-sheet",
         "event": "bind:close",
         "handler": "closeCarryPicker",
-        "line": 1953,
+        "line": 1956,
         "selectorHint": ".node-sheet-host",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1113575,7 +1113584,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1956:bindtap:closeCarryPicker:292",
+      "id": "pages/publish/fabu/index.wxml:1959:bindtap:closeCarryPicker:292",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113598,7 +1113607,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closeCarryPicker",
-        "line": 1956,
+        "line": 1959,
         "selectorHint": ".node-sheet__close",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1113642,7 +1113651,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1958:bindtap:confirmCarryPicker:293",
+      "id": "pages/publish/fabu/index.wxml:1961:bindtap:confirmCarryPicker:293",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113665,7 +1113674,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "confirmCarryPicker",
-        "line": 1958,
+        "line": 1961,
         "selectorHint": ".node-sheet__done",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1113709,7 +1113718,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1960:bindinput:onCarryQuery:294",
+      "id": "pages/publish/fabu/index.wxml:1963:bindinput:onCarryQuery:294",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113732,7 +1113741,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onCarryQuery",
-        "line": 1960,
+        "line": 1963,
         "selectorHint": "input[bindinput]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1113776,7 +1113785,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1962:bindtap:onCarryCreateOpen:295",
+      "id": "pages/publish/fabu/index.wxml:1965:bindtap:onCarryCreateOpen:295",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113799,7 +1113808,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCarryCreateOpen",
-        "line": 1962,
+        "line": 1965,
         "selectorHint": ".ic-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1113843,7 +1113852,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1967:bindtap:onCarryKind:296",
+      "id": "pages/publish/fabu/index.wxml:1970:bindtap:onCarryKind:296",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113866,7 +1113875,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCarryKind",
-        "line": 1967,
+        "line": 1970,
         "selectorHint": ".ic-seg__opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1113910,7 +1113919,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1968:bindtap:onCarryKind:297",
+      "id": "pages/publish/fabu/index.wxml:1971:bindtap:onCarryKind:297",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1113933,7 +1113942,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCarryKind",
-        "line": 1968,
+        "line": 1971,
         "selectorHint": ".ic-seg__opt",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1113977,7 +1113986,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1972:bindconfirm:createCarryKey:299",
+      "id": "pages/publish/fabu/index.wxml:1975:bindconfirm:createCarryKey:299",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1114000,7 +1114009,7 @@
         "tag": "input",
         "event": "bindconfirm",
         "handler": "createCarryKey",
-        "line": 1972,
+        "line": 1975,
         "selectorHint": ".ic-row__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1114087,7 +1114096,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1972:bindinput:onCarryNewName:298",
+      "id": "pages/publish/fabu/index.wxml:1975:bindinput:onCarryNewName:298",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1114110,7 +1114119,7 @@
         "tag": "input",
         "event": "bindinput",
         "handler": "onCarryNewName",
-        "line": 1972,
+        "line": 1975,
         "selectorHint": ".ic-row__input",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1114154,7 +1114163,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1973:bindtap:createCarryKey:300",
+      "id": "pages/publish/fabu/index.wxml:1976:bindtap:createCarryKey:300",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1114177,7 +1114186,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "createCarryKey",
-        "line": 1973,
+        "line": 1976,
         "selectorHint": ".ic-row__act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1114264,7 +1114273,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1978:bindtap:retryCarryPicker:301",
+      "id": "pages/publish/fabu/index.wxml:1981:bindtap:retryCarryPicker:301",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1114287,7 +1114296,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "retryCarryPicker",
-        "line": 1978,
+        "line": 1981,
         "selectorHint": ".ic-note",
         "visibleCondition": "{{carryPicker.state === 'error'}}",
         "disabledCondition": null,
@@ -1114373,7 +1114382,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:1982:bindtap:onCarryToggle:302",
+      "id": "pages/publish/fabu/index.wxml:1985:bindtap:onCarryToggle:302",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1114396,7 +1114405,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onCarryToggle",
-        "line": 1982,
+        "line": 1985,
         "selectorHint": ".ic-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1114440,7 +1114449,7 @@
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:2000:bind:afterleave:onNativeBackGuard:303",
+      "id": "pages/publish/fabu/index.wxml:2003:bind:afterleave:onNativeBackGuard:303",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1114463,7 +1114472,7 @@
         "tag": "page-container",
         "event": "bind:afterleave",
         "handler": "onNativeBackGuard",
-        "line": 2000,
+        "line": 2003,
         "selectorHint": "page-container[bind:afterleave]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1114526,11 +1114535,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1398"
+        "staticSource": "pages/publish/fabu/index.js:1400"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:2008:bind:settled:onPrivacyGateSettled:304",
+      "id": "pages/publish/fabu/index.wxml:2011:bind:settled:onPrivacyGateSettled:304",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1114553,7 +1114562,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 2008,
+        "line": 2011,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1114593,11 +1114602,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3255"
+        "staticSource": "pages/publish/fabu/index.js:3257"
       }
     },
     {
-      "id": "pages/publish/fabu/index.wxml:2010:bind:continue:closeChapterPreview:305",
+      "id": "pages/publish/fabu/index.wxml:2013:bind:continue:closeChapterPreview:305",
       "route": "pages/publish/fabu/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1114620,7 +1114629,7 @@
         "tag": "cy-chapter-gate",
         "event": "bind:continue",
         "handler": "closeChapterPreview",
-        "line": 2010,
+        "line": 2013,
         "selectorHint": "cy-chapter-gate[bind:continue]",
         "visibleCondition": "{{chapterPreview.show}}",
         "disabledCondition": null,
@@ -1114660,7 +1114669,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7910"
+        "staticSource": "pages/publish/fabu/index.js:7912"
       }
     },
     {
@@ -1114767,7 +1114776,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2805"
+        "staticSource": "pages/publish/fabu/index.js:2807"
       }
     },
     {
@@ -1114859,7 +1114868,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2709"
+        "staticSource": "pages/publish/fabu/index.js:2711"
       }
     },
     {
@@ -1114927,7 +1114936,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3259"
+        "staticSource": "pages/publish/fabu/index.js:3261"
       }
     },
     {
@@ -1115010,7 +1115019,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2668"
+        "staticSource": "pages/publish/fabu/index.js:2670"
       }
     },
     {
@@ -1115143,7 +1115152,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2738"
+        "staticSource": "pages/publish/fabu/index.js:2740"
       }
     },
     {
@@ -1115251,7 +1115260,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2787"
+        "staticSource": "pages/publish/fabu/index.js:2789"
       }
     },
     {
@@ -1115318,7 +1115327,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1291"
+        "staticSource": "pages/publish/fabu/index.js:1293"
       }
     },
     {
@@ -1115385,7 +1115394,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1291"
+        "staticSource": "pages/publish/fabu/index.js:1293"
       }
     },
     {
@@ -1115502,7 +1115511,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4515"
+        "staticSource": "pages/publish/fabu/index.js:4517"
       }
     },
     {
@@ -1115570,7 +1115579,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5332"
+        "staticSource": "pages/publish/fabu/index.js:5334"
       }
     },
     {
@@ -1115660,7 +1115669,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5335"
+        "staticSource": "pages/publish/fabu/index.js:5337"
       }
     },
     {
@@ -1115727,7 +1115736,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5056"
+        "staticSource": "pages/publish/fabu/index.js:5058"
       }
     },
     {
@@ -1115794,7 +1115803,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5329"
+        "staticSource": "pages/publish/fabu/index.js:5331"
       }
     },
     {
@@ -1115931,7 +1115940,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2901"
+        "staticSource": "pages/publish/fabu/index.js:2903"
       }
     },
     {
@@ -1116080,7 +1116089,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3453"
+        "staticSource": "pages/publish/fabu/index.js:3455"
       }
     },
     {
@@ -1116187,7 +1116196,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2947"
+        "staticSource": "pages/publish/fabu/index.js:2949"
       }
     },
     {
@@ -1116320,7 +1116329,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4989"
+        "staticSource": "pages/publish/fabu/index.js:4991"
       }
     },
     {
@@ -1116437,7 +1116446,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4515"
+        "staticSource": "pages/publish/fabu/index.js:4517"
       }
     },
     {
@@ -1116554,7 +1116563,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2972"
+        "staticSource": "pages/publish/fabu/index.js:2974"
       }
     },
     {
@@ -1116661,7 +1116670,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1186"
+        "staticSource": "pages/publish/fabu/index.js:1188"
       }
     },
     {
@@ -1116768,7 +1116777,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1194"
+        "staticSource": "pages/publish/fabu/index.js:1196"
       }
     },
     {
@@ -1116902,7 +1116911,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9044"
+        "staticSource": "pages/publish/fabu/index.js:9067"
       }
     },
     {
@@ -1116996,7 +1117005,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8220"
+        "staticSource": "pages/publish/fabu/index.js:8243"
       }
     },
     {
@@ -1117092,7 +1117101,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8220"
+        "staticSource": "pages/publish/fabu/index.js:8243"
       }
     },
     {
@@ -1117159,7 +1117168,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9064"
+        "staticSource": "pages/publish/fabu/index.js:9087"
       }
     },
     {
@@ -1117227,7 +1117236,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9764"
+        "staticSource": "pages/publish/fabu/index.js:9787"
       }
     },
     {
@@ -1117317,7 +1117326,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1362"
+        "staticSource": "pages/publish/fabu/index.js:1364"
       }
     },
     {
@@ -1117385,7 +1117394,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9764"
+        "staticSource": "pages/publish/fabu/index.js:9787"
       }
     },
     {
@@ -1117452,7 +1117461,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1936"
+        "staticSource": "pages/publish/fabu/index.js:1938"
       }
     },
     {
@@ -1117542,7 +1117551,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1362"
+        "staticSource": "pages/publish/fabu/index.js:1364"
       }
     },
     {
@@ -1117609,7 +1117618,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2007"
+        "staticSource": "pages/publish/fabu/index.js:2009"
       }
     },
     {
@@ -1117778,7 +1117787,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2082"
+        "staticSource": "pages/publish/fabu/index.js:2084"
       }
     },
     {
@@ -1117846,7 +1117855,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2188"
+        "staticSource": "pages/publish/fabu/index.js:2190"
       }
     },
     {
@@ -1117967,7 +1117976,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2034"
+        "staticSource": "pages/publish/fabu/index.js:2036"
       }
     },
     {
@@ -1118034,7 +1118043,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2050"
+        "staticSource": "pages/publish/fabu/index.js:2052"
       }
     },
     {
@@ -1118101,7 +1118110,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1936"
+        "staticSource": "pages/publish/fabu/index.js:1938"
       }
     },
     {
@@ -1118168,7 +1118177,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1443"
+        "staticSource": "pages/publish/fabu/index.js:1445"
       }
     },
     {
@@ -1118258,7 +1118267,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2145"
+        "staticSource": "pages/publish/fabu/index.js:2147"
       }
     },
     {
@@ -1118335,7 +1118344,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2195"
+        "staticSource": "pages/publish/fabu/index.js:2197"
       }
     },
     {
@@ -1118402,7 +1118411,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2320"
+        "staticSource": "pages/publish/fabu/index.js:2322"
       }
     },
     {
@@ -1118469,7 +1118478,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1923"
+        "staticSource": "pages/publish/fabu/index.js:1925"
       }
     },
     {
@@ -1118559,7 +1118568,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1841"
+        "staticSource": "pages/publish/fabu/index.js:1843"
       }
     },
     {
@@ -1118626,7 +1118635,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2061"
+        "staticSource": "pages/publish/fabu/index.js:2063"
       }
     },
     {
@@ -1118693,7 +1118702,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1910"
+        "staticSource": "pages/publish/fabu/index.js:1912"
       }
     },
     {
@@ -1118783,7 +1118792,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2462"
+        "staticSource": "pages/publish/fabu/index.js:2464"
       }
     },
     {
@@ -1118875,7 +1118884,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2444"
+        "staticSource": "pages/publish/fabu/index.js:2446"
       }
     },
     {
@@ -1118966,7 +1118975,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1119103,7 +1119112,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2125"
+        "staticSource": "pages/publish/fabu/index.js:2127"
       }
     },
     {
@@ -1119240,7 +1119249,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2125"
+        "staticSource": "pages/publish/fabu/index.js:2127"
       }
     },
     {
@@ -1119330,7 +1119339,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2139"
+        "staticSource": "pages/publish/fabu/index.js:2141"
       }
     },
     {
@@ -1119421,7 +1119430,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1119488,7 +1119497,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2151"
+        "staticSource": "pages/publish/fabu/index.js:2153"
       }
     },
     {
@@ -1119555,7 +1119564,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1936"
+        "staticSource": "pages/publish/fabu/index.js:1938"
       }
     },
     {
@@ -1119646,7 +1119655,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1119769,7 +1119778,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1555"
+        "staticSource": "pages/publish/fabu/index.js:1557"
       }
     },
     {
@@ -1119846,7 +1119855,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6019"
+        "staticSource": "pages/publish/fabu/index.js:6021"
       }
     },
     {
@@ -1119979,7 +1119988,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5019"
+        "staticSource": "pages/publish/fabu/index.js:5021"
       }
     },
     {
@@ -1120070,7 +1120079,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1120160,7 +1120169,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1750"
+        "staticSource": "pages/publish/fabu/index.js:1752"
       }
     },
     {
@@ -1120250,7 +1120259,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1772"
+        "staticSource": "pages/publish/fabu/index.js:1774"
       }
     },
     {
@@ -1120341,7 +1120350,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1785"
+        "staticSource": "pages/publish/fabu/index.js:1787"
       }
     },
     {
@@ -1120478,7 +1120487,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1759"
+        "staticSource": "pages/publish/fabu/index.js:1761"
       }
     },
     {
@@ -1120569,7 +1120578,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1120659,7 +1120668,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1674"
+        "staticSource": "pages/publish/fabu/index.js:1676"
       }
     },
     {
@@ -1120750,7 +1120759,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1120840,7 +1120849,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1705"
+        "staticSource": "pages/publish/fabu/index.js:1707"
       }
     },
     {
@@ -1120930,7 +1120939,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1711"
+        "staticSource": "pages/publish/fabu/index.js:1713"
       }
     },
     {
@@ -1121020,7 +1121029,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1694"
+        "staticSource": "pages/publish/fabu/index.js:1696"
       }
     },
     {
@@ -1121111,7 +1121120,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1121201,7 +1121210,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1711"
+        "staticSource": "pages/publish/fabu/index.js:1713"
       }
     },
     {
@@ -1121291,7 +1121300,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1711"
+        "staticSource": "pages/publish/fabu/index.js:1713"
       }
     },
     {
@@ -1121382,7 +1121391,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1121472,7 +1121481,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1705"
+        "staticSource": "pages/publish/fabu/index.js:1707"
       }
     },
     {
@@ -1121563,7 +1121572,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1121653,7 +1121662,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1718"
+        "staticSource": "pages/publish/fabu/index.js:1720"
       }
     },
     {
@@ -1121744,7 +1121753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1121835,7 +1121844,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1799"
+        "staticSource": "pages/publish/fabu/index.js:1801"
       }
     },
     {
@@ -1121969,7 +1121978,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2491"
+        "staticSource": "pages/publish/fabu/index.js:2493"
       }
     },
     {
@@ -1122037,7 +1122046,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9764"
+        "staticSource": "pages/publish/fabu/index.js:9787"
       }
     },
     {
@@ -1122196,7 +1122205,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2501"
+        "staticSource": "pages/publish/fabu/index.js:2503"
       }
     },
     {
@@ -1122286,7 +1122295,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2174"
+        "staticSource": "pages/publish/fabu/index.js:2176"
       }
     },
     {
@@ -1122353,7 +1122362,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1936"
+        "staticSource": "pages/publish/fabu/index.js:1938"
       }
     },
     {
@@ -1122443,7 +1122452,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2145"
+        "staticSource": "pages/publish/fabu/index.js:2147"
       }
     },
     {
@@ -1122510,7 +1122519,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2398"
+        "staticSource": "pages/publish/fabu/index.js:2400"
       }
     },
     {
@@ -1122600,7 +1122609,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2408"
+        "staticSource": "pages/publish/fabu/index.js:2410"
       }
     },
     {
@@ -1122668,7 +1122677,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9764"
+        "staticSource": "pages/publish/fabu/index.js:9787"
       }
     },
     {
@@ -1122735,7 +1122744,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1943"
+        "staticSource": "pages/publish/fabu/index.js:1945"
       }
     },
     {
@@ -1122802,7 +1122811,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1944"
+        "staticSource": "pages/publish/fabu/index.js:1946"
       }
     },
     {
@@ -1122869,7 +1122878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1944"
+        "staticSource": "pages/publish/fabu/index.js:1946"
       }
     },
     {
@@ -1122936,7 +1122945,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1944"
+        "staticSource": "pages/publish/fabu/index.js:1946"
       }
     },
     {
@@ -1123003,7 +1123012,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1951"
+        "staticSource": "pages/publish/fabu/index.js:1953"
       }
     },
     {
@@ -1123070,7 +1123079,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1958"
+        "staticSource": "pages/publish/fabu/index.js:1960"
       }
     },
     {
@@ -1123160,7 +1123169,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2361"
+        "staticSource": "pages/publish/fabu/index.js:2363"
       }
     },
     {
@@ -1123227,7 +1123236,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2012"
+        "staticSource": "pages/publish/fabu/index.js:2014"
       }
     },
     {
@@ -1123367,7 +1123376,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2017"
+        "staticSource": "pages/publish/fabu/index.js:2019"
       }
     },
     {
@@ -1123434,7 +1123443,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2030"
+        "staticSource": "pages/publish/fabu/index.js:2032"
       }
     },
     {
@@ -1123502,7 +1123511,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9764"
+        "staticSource": "pages/publish/fabu/index.js:9787"
       }
     },
     {
@@ -1123569,7 +1123578,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2030"
+        "staticSource": "pages/publish/fabu/index.js:2032"
       }
     },
     {
@@ -1123659,7 +1123668,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2117"
+        "staticSource": "pages/publish/fabu/index.js:2119"
       }
     },
     {
@@ -1123726,7 +1123735,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2030"
+        "staticSource": "pages/publish/fabu/index.js:2032"
       }
     },
     {
@@ -1123816,7 +1123825,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2167"
+        "staticSource": "pages/publish/fabu/index.js:2169"
       }
     },
     {
@@ -1123906,7 +1123915,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2168"
+        "staticSource": "pages/publish/fabu/index.js:2170"
       }
     },
     {
@@ -1123997,7 +1124006,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2171"
+        "staticSource": "pages/publish/fabu/index.js:2173"
       }
     },
     {
@@ -1124087,7 +1124096,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2169"
+        "staticSource": "pages/publish/fabu/index.js:2171"
       }
     },
     {
@@ -1124178,7 +1124187,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2170"
+        "staticSource": "pages/publish/fabu/index.js:2172"
       }
     },
     {
@@ -1124245,7 +1124254,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1936"
+        "staticSource": "pages/publish/fabu/index.js:1938"
       }
     },
     {
@@ -1124335,7 +1124344,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5196"
+        "staticSource": "pages/publish/fabu/index.js:5198"
       }
     },
     {
@@ -1124402,7 +1124411,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5706"
+        "staticSource": "pages/publish/fabu/index.js:5708"
       }
     },
     {
@@ -1124469,7 +1124478,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5706"
+        "staticSource": "pages/publish/fabu/index.js:5708"
       }
     },
     {
@@ -1124536,7 +1124545,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5677"
+        "staticSource": "pages/publish/fabu/index.js:5679"
       }
     },
     {
@@ -1124648,7 +1124657,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7682"
+        "staticSource": "pages/publish/fabu/index.js:7684"
       }
     },
     {
@@ -1124744,7 +1124753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8746"
+        "staticSource": "pages/publish/fabu/index.js:8769"
       }
     },
     {
@@ -1124842,7 +1124851,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:8746"
+        "staticSource": "pages/publish/fabu/index.js:8769"
       }
     },
     {
@@ -1124909,7 +1124918,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5677"
+        "staticSource": "pages/publish/fabu/index.js:5679"
       }
     },
     {
@@ -1124976,7 +1124985,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3072"
+        "staticSource": "pages/publish/fabu/index.js:3074"
       }
     },
     {
@@ -1125043,7 +1125052,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3078"
+        "staticSource": "pages/publish/fabu/index.js:3080"
       }
     },
     {
@@ -1125110,7 +1125119,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3086"
+        "staticSource": "pages/publish/fabu/index.js:3088"
       }
     },
     {
@@ -1125177,7 +1125186,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9192"
+        "staticSource": "pages/publish/fabu/index.js:9215"
       }
     },
     {
@@ -1125245,7 +1125254,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9764"
+        "staticSource": "pages/publish/fabu/index.js:9787"
       }
     },
     {
@@ -1125312,7 +1125321,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9192"
+        "staticSource": "pages/publish/fabu/index.js:9215"
       }
     },
     {
@@ -1125379,7 +1125388,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9146"
+        "staticSource": "pages/publish/fabu/index.js:9169"
       }
     },
     {
@@ -1125446,7 +1125455,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9199"
+        "staticSource": "pages/publish/fabu/index.js:9222"
       }
     },
     {
@@ -1125513,7 +1125522,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5074"
+        "staticSource": "pages/publish/fabu/index.js:5076"
       }
     },
     {
@@ -1125603,7 +1125612,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4701"
+        "staticSource": "pages/publish/fabu/index.js:4703"
       }
     },
     {
@@ -1125670,7 +1125679,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9791"
+        "staticSource": "pages/publish/fabu/index.js:9814"
       }
     },
     {
@@ -1125737,7 +1125746,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5074"
+        "staticSource": "pages/publish/fabu/index.js:5076"
       }
     },
     {
@@ -1125836,7 +1125845,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5375"
+        "staticSource": "pages/publish/fabu/index.js:5377"
       }
     },
     {
@@ -1125903,7 +1125912,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:2664"
+        "staticSource": "pages/publish/fabu/index.js:2666"
       }
     },
     {
@@ -1125990,7 +1125999,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9924"
+        "staticSource": "pages/publish/fabu/index.js:9947"
       }
     },
     {
@@ -1128002,7 +1128011,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6629"
+        "staticSource": "pages/publish/fabu/index.js:6631"
       }
     },
     {
@@ -1128434,7 +1128443,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6610"
+        "staticSource": "pages/publish/fabu/index.js:6612"
       }
     },
     {
@@ -1128555,7 +1128564,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6619"
+        "staticSource": "pages/publish/fabu/index.js:6621"
       }
     },
     {
@@ -1128689,7 +1128698,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9129"
+        "staticSource": "pages/publish/fabu/index.js:9152"
       }
     },
     {
@@ -1128823,7 +1128832,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9135"
+        "staticSource": "pages/publish/fabu/index.js:9158"
       }
     },
     {
@@ -1128890,7 +1128899,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:9126"
+        "staticSource": "pages/publish/fabu/index.js:9149"
       }
     },
     {
@@ -1130683,7 +1130692,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4556"
+        "staticSource": "pages/publish/fabu/index.js:4558"
       }
     },
     {
@@ -1130750,7 +1130759,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4563"
+        "staticSource": "pages/publish/fabu/index.js:4565"
       }
     },
     {
@@ -1130817,7 +1130826,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4567"
+        "staticSource": "pages/publish/fabu/index.js:4569"
       }
     },
     {
@@ -1130884,7 +1130893,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4567"
+        "staticSource": "pages/publish/fabu/index.js:4569"
       }
     },
     {
@@ -1130951,7 +1130960,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4571"
+        "staticSource": "pages/publish/fabu/index.js:4573"
       }
     },
     {
@@ -1131018,7 +1131027,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7700"
+        "staticSource": "pages/publish/fabu/index.js:7702"
       }
     },
     {
@@ -1131085,7 +1131094,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6230"
+        "staticSource": "pages/publish/fabu/index.js:6232"
       }
     },
     {
@@ -1131152,7 +1131161,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6230"
+        "staticSource": "pages/publish/fabu/index.js:6232"
       }
     },
     {
@@ -1131219,7 +1131228,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6303"
+        "staticSource": "pages/publish/fabu/index.js:6305"
       }
     },
     {
@@ -1131286,7 +1131295,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6398"
+        "staticSource": "pages/publish/fabu/index.js:6400"
       }
     },
     {
@@ -1131353,7 +1131362,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6398"
+        "staticSource": "pages/publish/fabu/index.js:6400"
       }
     },
     {
@@ -1131420,7 +1131429,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6398"
+        "staticSource": "pages/publish/fabu/index.js:6400"
       }
     },
     {
@@ -1131487,7 +1131496,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6440"
+        "staticSource": "pages/publish/fabu/index.js:6442"
       }
     },
     {
@@ -1131554,7 +1131563,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6440"
+        "staticSource": "pages/publish/fabu/index.js:6442"
       }
     },
     {
@@ -1131621,7 +1131630,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6440"
+        "staticSource": "pages/publish/fabu/index.js:6442"
       }
     },
     {
@@ -1131688,7 +1131697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6440"
+        "staticSource": "pages/publish/fabu/index.js:6442"
       }
     },
     {
@@ -1131755,7 +1131764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7700"
+        "staticSource": "pages/publish/fabu/index.js:7702"
       }
     },
     {
@@ -1131822,7 +1131831,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6398"
+        "staticSource": "pages/publish/fabu/index.js:6400"
       }
     },
     {
@@ -1131909,7 +1131918,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6517"
+        "staticSource": "pages/publish/fabu/index.js:6519"
       }
     },
     {
@@ -1131976,7 +1131985,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6429"
+        "staticSource": "pages/publish/fabu/index.js:6431"
       }
     },
     {
@@ -1132043,7 +1132052,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6440"
+        "staticSource": "pages/publish/fabu/index.js:6442"
       }
     },
     {
@@ -1132110,7 +1132119,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6440"
+        "staticSource": "pages/publish/fabu/index.js:6442"
       }
     },
     {
@@ -1132177,7 +1132186,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3888"
+        "staticSource": "pages/publish/fabu/index.js:3890"
       }
     },
     {
@@ -1132244,7 +1132253,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6398"
+        "staticSource": "pages/publish/fabu/index.js:6400"
       }
     },
     {
@@ -1132312,7 +1132321,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6333"
+        "staticSource": "pages/publish/fabu/index.js:6335"
       }
     },
     {
@@ -1132403,7 +1132412,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6339"
+        "staticSource": "pages/publish/fabu/index.js:6341"
       }
     },
     {
@@ -1132470,7 +1132479,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7700"
+        "staticSource": "pages/publish/fabu/index.js:7702"
       }
     },
     {
@@ -1132560,7 +1132569,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7771"
+        "staticSource": "pages/publish/fabu/index.js:7773"
       }
     },
     {
@@ -1132650,7 +1132659,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7771"
+        "staticSource": "pages/publish/fabu/index.js:7773"
       }
     },
     {
@@ -1132740,7 +1132749,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7776"
+        "staticSource": "pages/publish/fabu/index.js:7778"
       }
     },
     {
@@ -1132807,7 +1132816,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:3893"
+        "staticSource": "pages/publish/fabu/index.js:3895"
       }
     },
     {
@@ -1132897,7 +1132906,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6649"
+        "staticSource": "pages/publish/fabu/index.js:6651"
       }
     },
     {
@@ -1132964,7 +1132973,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4548"
+        "staticSource": "pages/publish/fabu/index.js:4550"
       }
     },
     {
@@ -1137102,7 +1137111,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5701"
+        "staticSource": "pages/publish/fabu/index.js:5703"
       }
     },
     {
@@ -1137303,7 +1137312,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5701"
+        "staticSource": "pages/publish/fabu/index.js:5703"
       }
     },
     {
@@ -1138040,7 +1138049,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4542"
+        "staticSource": "pages/publish/fabu/index.js:4544"
       }
     },
     {
@@ -1138197,7 +1138206,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6638"
+        "staticSource": "pages/publish/fabu/index.js:6640"
       }
     },
     {
@@ -1138287,7 +1138296,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6645"
+        "staticSource": "pages/publish/fabu/index.js:6647"
       }
     },
     {
@@ -1138354,7 +1138363,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4391"
+        "staticSource": "pages/publish/fabu/index.js:4393"
       }
     },
     {
@@ -1138488,7 +1138497,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6603"
+        "staticSource": "pages/publish/fabu/index.js:6605"
       }
     },
     {
@@ -1138578,7 +1138587,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:4694"
+        "staticSource": "pages/publish/fabu/index.js:4696"
       }
     },
     {
@@ -1138784,7 +1138793,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:1146"
+        "staticSource": "pages/publish/fabu/index.js:1148"
       }
     },
     {
@@ -1139185,7 +1139194,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5909"
+        "staticSource": "pages/publish/fabu/index.js:5911"
       }
     },
     {
@@ -1139322,7 +1139331,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5902"
+        "staticSource": "pages/publish/fabu/index.js:5904"
       }
     },
     {
@@ -1139443,7 +1139452,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6078"
+        "staticSource": "pages/publish/fabu/index.js:6080"
       }
     },
     {
@@ -1139510,7 +1139519,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:6089"
+        "staticSource": "pages/publish/fabu/index.js:6091"
       }
     },
     {
@@ -1139816,7 +1139825,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5701"
+        "staticSource": "pages/publish/fabu/index.js:5703"
       }
     },
     {
@@ -1139906,7 +1139915,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:5668"
+        "staticSource": "pages/publish/fabu/index.js:5670"
       }
     },
     {
@@ -1139973,7 +1139982,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/publish/fabu/index.js:7914"
+        "staticSource": "pages/publish/fabu/index.js:7916"
       }
     },
     {
