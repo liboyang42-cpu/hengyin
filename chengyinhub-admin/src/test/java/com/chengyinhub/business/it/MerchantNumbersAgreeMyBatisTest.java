@@ -81,10 +81,6 @@ class MerchantNumbersAgreeMyBatisTest {
                 "cms_topic", "cms_topic_node", "cms_registration_merchant", "tms_browse_record", "settlement_detail",
                 "refund_application", "coop_settlement", "coop_complaint", "redemption", "merchant_payable",
                 "merchant_payable_batch");
-        // DEC-C 个人分账快照列（migration_20261112_dec_c_payout.sql），Mapper 已读写这些列。
-        db.execute("ALTER TABLE coop_settlement ADD COLUMN club_id BIGINT NULL, ADD COLUMN club_name VARCHAR(255) NULL,"
-                + " ADD COLUMN payout_hold_reason VARCHAR(128) NULL");
-        db.execute("ALTER TABLE settlement_detail ADD COLUMN club_id BIGINT NULL, ADD COLUMN club_name VARCHAR(255) NULL");
         db.execute("CREATE TABLE IF NOT EXISTS topic_sale_snapshot (topic_id BIGINT PRIMARY KEY, schema_version VARCHAR(64), canonical_json LONGTEXT)");
         P0AcceptanceSchema.migrations(source, "migration_complaint_period_funds_gate_20260917.sql");
         sql = P0AcceptanceSchema.sql(source, "RedemptionMapper", "ActivitySettlementHoldMapper", "CmsRegistrationMapper",

@@ -1088,6 +1088,10 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 return false;
             }
         }
+        catch (NoticeNotPersistedException e)
+        {
+            throw e;
+        }
         catch (Exception e)
         {
             log.error("[内容安全] 处理图片检测结果异常: mapping={}, exceptionType={}",
@@ -1131,13 +1135,33 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     private void notifyImageTakedown(Long memberId, String bizType, Long bizId, String item)
     {
         if (memberId == null || memberId <= 0) return;
-        com.chengyinhub.business.service.IImService im = imServiceProvider.getObject();
-        String card = com.chengyinhub.business.service.support.SystemNoticeCard.imageTakedown(bizType, bizId, item);
-        if (im.enqueueSystemNotification(memberId, ImMessage.MSG_CARD,
-                com.chengyinhub.business.service.support.SystemNoticeCard.IMAGE_TAKEDOWN_TITLE, card,
-                "content-safety:" + bizType + ":" + bizId + ":" + WxContentCallbackInboxServiceImpl.sha256Hex(card)) == null)
+        try
         {
-            throw new IllegalStateException("content safety author notice was not persisted");
+            com.chengyinhub.business.service.IImService im = imServiceProvider.getObject();
+            String card = com.chengyinhub.business.service.support.SystemNoticeCard.imageTakedown(bizType, bizId, item);
+            if (im.enqueueSystemNotification(memberId, ImMessage.MSG_CARD,
+                    com.chengyinhub.business.service.support.SystemNoticeCard.IMAGE_TAKEDOWN_TITLE, card,
+                    "content-safety:" + bizType + ":" + bizId + ":" + WxContentCallbackInboxServiceImpl.sha256Hex(card)) == null)
+            {
+                throw new NoticeNotPersistedException("content safety author notice was not persisted", null);
+            }
+        }
+        catch (NoticeNotPersistedException e)
+        {
+            throw e;
+        }
+        catch (RuntimeException e)
+        {
+            // 通知与下架同事务：持久化失败必须向回调事务传播以便整体重试，不能被下面的通用 catch 吞成 false。
+            throw new NoticeNotPersistedException("content safety author notice was not persisted", e);
+        }
+    }
+
+    static final class NoticeNotPersistedException extends IllegalStateException
+    {
+        NoticeNotPersistedException(String message, Throwable cause)
+        {
+            super(message, cause);
         }
     }
 

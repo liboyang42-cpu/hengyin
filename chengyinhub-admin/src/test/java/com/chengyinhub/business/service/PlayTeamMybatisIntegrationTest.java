@@ -139,7 +139,8 @@ class PlayTeamMybatisIntegrationTest {
     @Test void migratedLegacyCodeKeepsOnlyItsOriginalExpiryAndMigrationIsRerunnable() throws Exception {
         PlayTeam team = team(4);
         String legacy = team.getInviteCode();
-        Date originalExpiry = team.getExpireTime();
+        // DATETIME 秒级列会对毫秒四舍五入，必须以库内存储值为准而不是 Java 对象的毫秒值。
+        Date originalExpiry = jdbc.queryForObject("SELECT expire_time FROM play_team WHERE id = ?", Date.class, team.getId());
         try (Connection connection = dataSource.getConnection()) {
             ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261112_dec_c_team_codes.sql"));
             ScriptUtils.executeSqlScript(connection, new FileSystemResource("sql/migration_20261112_dec_c_team_codes.sql"));

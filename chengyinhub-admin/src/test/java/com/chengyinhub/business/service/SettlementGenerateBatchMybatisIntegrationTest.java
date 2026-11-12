@@ -107,7 +107,7 @@ class SettlementGenerateBatchMybatisIntegrationTest {
                         + "UNIQUE KEY uk_batch_no(batch_no), UNIQUE KEY uk_idempotency_key(idempotency_key)"
                         + ") ENGINE=InnoDB",
                 "CREATE TABLE settlement_detail ("
-                        + "id BIGINT PRIMARY KEY AUTO_INCREMENT, claim_id BIGINT NULL, entry_kind VARCHAR(24) NULL,"
+                        + "id BIGINT PRIMARY KEY AUTO_INCREMENT, club_id BIGINT NULL, club_name VARCHAR(255) NULL, claim_id BIGINT NULL, entry_kind VARCHAR(24) NULL,"
                         + "event_key VARCHAR(128) NULL, batch_id BIGINT NOT NULL, merchant_id BIGINT NOT NULL,"
                         + "source_type VARCHAR(32) NOT NULL, source_id BIGINT NOT NULL, receiver_type VARCHAR(32) NOT NULL,"
                         + "receiver_id BIGINT NOT NULL, gross_amount DECIMAL(18,2) NOT NULL DEFAULT 0.00,"
