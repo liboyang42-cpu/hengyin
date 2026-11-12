@@ -59,3 +59,11 @@
 .poi-identity { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (80ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (80ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
 .poi-node { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (80ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (80ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
 .poi-section { filter: opacity(calc(1 - var(--pm-a, 0))); translate: 0 calc(var(--pm-a, 0) * 31rpx); transition: filter var(--pm-a-d, 0s) ease, translate var(--pm-a-d, 0s) cubic-bezier(.2,.82,.2,1), transform var(--cy-motion-press) var(--cy-ease-out), opacity var(--cy-motion-press) var(--cy-ease-out); transition-delay: calc(var(--pm-a-s, 0) * (140ms + min(var(--pmi, 0), 8) * 0ms)), calc(var(--pm-a-s, 0) * (140ms + min(var(--pmi, 0), 8) * 0ms)), 0s, 0s; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.poi-full-photo { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.poi-gallery__image { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.poi-featured { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.poi-action { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.poi-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.poi-credit { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

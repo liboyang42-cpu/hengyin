@@ -11,3 +11,7 @@
 .mr-bar { width: 62rpx; min-height: 0; margin-top: 8rpx; border-radius: 8rpx 8rpx 0 0; background: rgba(255,255,255,.55); } /* ds-ok 单系列柱(非最高) */
 .mr-bar.is-max { background: var(--cy-comp-sheet-player-text); }
 .mr-lab { margin-top: 12rpx; font-size: var(--cy-type-caption); color: var(--cy-comp-sheet-player-text-secondary); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.mr-arrow { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.mr-col { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

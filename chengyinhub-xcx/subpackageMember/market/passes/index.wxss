@@ -31,3 +31,12 @@ page { background: var(--cy-color-bg-page); }
 .mk-member { display: flex; align-items: center; gap: var(--cy-space-3); min-height: 120rpx; margin-bottom: var(--cy-space-4); padding: 0 var(--cy-space-4); border-radius: var(--cy-radius-lg); color: #FFF4EA; background: radial-gradient(ellipse 120% 160% at 0% 0%, #B8431A 0%, #3B1708 60%, #0B0908 100%); /* ds-ok 原型 .pass2 暖橙 */ }
 .mk-member__t { flex: 1; font-size: var(--cy-font-title, 34rpx); font-weight: 800; }
 .mk-member__s { font-size: var(--cy-font-caption, 24rpx); color: rgba(255, 244, 234, .75); /* ds-ok */ }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.mk-balance { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.mk-member { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.mk-card { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.mk-row { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.mk-row--go { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.mk-balance__k,
+.mk-balance__go { font-variant-numeric: tabular-nums; }

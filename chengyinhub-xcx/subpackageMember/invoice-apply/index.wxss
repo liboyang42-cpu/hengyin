@@ -45,3 +45,7 @@ cy-error, cy-empty.page-terminal { flex: 1; display: flex !important; flex-direc
 .inv-pick__name { min-width: 0; }
 .inv-pick__amt { flex: none; }
 .inv-pick.is-dis .inv-pick__left, .inv-pick.is-dis .inv-pick__amt { opacity: .45; }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.inv-all { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.address-item { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

@@ -24,3 +24,8 @@ page { background: var(--cy-color-bg-page); }
 .state-notice__tag--success { color: var(--cy-color-status-success); }
 .state-notice__tag--info    { color: var(--cy-color-status-info); }
 .state-notice__s { display: block; margin-top: var(--cy-space-2); font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); line-height: var(--cy-leading-normal); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.sec-btn { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.sec-danger { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.sec-solid { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }

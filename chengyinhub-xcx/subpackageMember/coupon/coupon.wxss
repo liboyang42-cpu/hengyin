@@ -74,3 +74,7 @@ cy-error {
 
 /* BL-77 统计卡与券卡同间距 */
 .coupon-summary { display: block; margin-bottom: var(--cy-space-2-5); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.david_tkb_li { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.coupon-batch-stats { font-variant-numeric: tabular-nums; }

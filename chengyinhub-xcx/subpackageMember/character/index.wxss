@@ -12,3 +12,6 @@
 .character-stars { display: flex; flex-wrap: wrap; gap: var(--cy-space-1); margin-top: var(--cy-space-3); }
 .character-star-filled { color: var(--cy-color-text-primary); }
 .character-star-empty { color: var(--cy-color-text-disabled); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.character-value { font-variant-numeric: tabular-nums; }

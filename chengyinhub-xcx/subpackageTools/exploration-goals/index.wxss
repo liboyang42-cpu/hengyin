@@ -18,3 +18,8 @@
 .gl-row__t { font-size: var(--cy-type-button); font-weight: 700; }
 /* V3-28:空态与标准页一致,插画在「我的目标」下方的余白里居中 */
 .gl-empty { padding-top: var(--cy-space-8); }
+
+/* 细节打磨二期(2026-11-12)L1/L5/L7:卡面层次、按压松手回弹、读数等宽;只改质感,不动版式/文案/配色 */
+.gl-cancel { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.gl-seg__i { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
+.gl-step__b { transition: transform var(--cy-motion-press-out) var(--cy-ease-release), opacity var(--cy-motion-press-out) var(--cy-ease-out); }
