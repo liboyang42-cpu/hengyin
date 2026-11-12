@@ -10,7 +10,7 @@ const rule = (sel) => css.match(new RegExp('\\n' + sel.replace(/[.]/g, '\\.') + 
 
 test('D10:收入区不再有 360rpx 最小高,底部只留一档区块间距', () => {
   const r = rule('.rv-revenue-zone')
-  assert.doesNotMatch(r, /360rpx/)
+  assert.doesNotMatch(r.replace(/\/\*[\s\S]*?\*\//g, ''), /360rpx/)
   assert.match(r, /min-height: 0;/)
   assert.match(r, /padding-bottom: var\(--cy-space-5\)/)
 })

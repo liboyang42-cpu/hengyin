@@ -121,20 +121,14 @@ test('负控:报名卡退回无条件 image 时必须判红', () => {
 // 加载失败,而不是"这场活动没配图");商家 Logo 块和「主题」卡的封面块都是
 // 容器无条件渲染、只有里面 <image> 挂 wx:if ⇒ 无图时留下两个空心圆角方块,
 // 把标题和主操作整个推到首屏之外。
-test('CU-C-147 活动详情 Hero:无封面给图标 + 短文案,不是只有一枚通用图标', () => {
+test('CU-C-147 / D12 活动详情 Hero:无封面整块不出,标题区上提(不留空地,也不写占位字)', () => {
   const wxml = stripWxmlComments(read('pages/club/topic-detail/index.wxml'))
   const wxss = read('pages/club/topic-detail/index.wxss')
-  const slot = wxml.match(/<view class="ctd-head__cover">([\s\S]*?)\n      <\/view>/)
-  assert.ok(slot, 'ctd-head__cover 锚点失效')
-
-  assert.match(slot[0], /class="ctd-head__cover-fallback cy-cover-fb"[^>]*aria-role="img"/, '占位块要声明自己是图片位')
-  assert.match(slot[0], /src="\/images\/cover-route\.svg"/, 'D3:统一路线插画兜底')
-  assert.match(slot[0], /cy-cover-fb/, 'D3:look 渐变兜底')
-  assert.doesNotMatch(slot[0], /封面暂不可用|<text/, 'D3:不写文字')
-
-  const ph = wxss.match(/\.ctd-head__cover-fallback\s*\{[^}]*\}/)
-  assert.ok(ph, '.ctd-head__cover-fallback 规则缺失')
-  assert.match(ph[0], /flex-direction:\s*column/, '图标与文案要排成一列，不能只居中一个图标')
+  assert.match(wxml, /<view class="ctd-head__cover" wx:if="\{\{topic\.cover\}\}">/)
+  assert.doesNotMatch(wxml, /ctd-head__cover-fallback|封面暂不可用|cover-route/)
+  assert.match(wxml, /ctd-head--nocover/)
+  assert.match(wxss, /\.ctd-head--nocover \{ --ctd-shift: 340rpx; height: calc\(var\(--ctd-head-h\) - var\(--ctd-shift\)\); \}/)
+  assert.match(wxss, /\.ctd-head__title \{[^}]*top: calc\(548rpx - var\(--ctd-shift, 0rpx\)\)/)
 })
 
 test('CU-C-147 活动详情:无商家 Logo / 无主题封面时两块空壳整块不出', () => {
@@ -149,16 +143,6 @@ test('CU-C-147 活动详情:无商家 Logo / 无主题封面时两块空壳整�
   assert.ok(topicCover, 'ctd-topic__cover 容器锚点失效')
   assert.match(topicCover[0], /wx:if="\{\{topic\.cover\}\}"/,
     '与 Hero 同一个 topic.cover,Hero 已经说了没图，这里不许再摆第二个空方块')
-})
-
-test('负控:Hero 兜底退回一枚没有文案的通用图标必须判红', () => {
-  const wxml = stripWxmlComments(read('pages/club/topic-detail/index.wxml'))
-  const mutated = wxml.replace(
-    /<view wx:else class="ctd-head__cover-fallback cy-cover-fb"[^>]*>[\s\S]*?<\/view>/,
-    '<view wx:else class="ctd-head__cover-fallback" aria-role="img" aria-label="暂无封面"><cy-icon name="image" size="128" /></view>',
-  )
-  assert.notEqual(mutated, wxml, '变异锚点失效')
-  assert.throws(() => assert.match(mutated, /cover-route\.svg/), assert.AssertionError)
 })
 
 test('负控:把商家 Logo / 主题封面的条件退回 image 层必须判红', () => {

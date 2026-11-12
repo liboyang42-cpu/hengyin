@@ -152,7 +152,6 @@ test('cy-empty / cy-error 状态调用点不再盖 no_data.svg(空白纸)', () =
 test('D3:缺封面占位统一是 look 渐变 + cover-route.svg,不写文字', () => {
   ;[
     'subpackageB/pages/im/chat/index.wxml',
-    'pages/club/topic-detail/index.wxml',
     'pages/activity/list/index.wxml',
     'pages/topic/merchantinfo/merchantinfo.wxml',
     'components/cy/scene-roam-task-list/index.wxml',

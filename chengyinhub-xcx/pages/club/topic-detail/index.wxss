@@ -27,27 +27,18 @@
 
 /* ---------- ① Hero + 标题区 ---------- */
 .ctd-head { position: relative; height: var(--ctd-head-h); }
+/* D12:无封面时去掉封面那段高度,标题区整体上提 */
+.ctd-head--nocover { --ctd-shift: 340rpx; height: calc(var(--ctd-head-h) - var(--ctd-shift)); }
 
 .ctd-head__cover { position: absolute; left: 0; right: 0; top: 0; height: var(--ctd-cover-h); overflow: hidden; }
 .ctd-head__cover-img { width: 100%; height: 100%; }
-/* 无封面时的兜底。稿上那块紫调渐变是「实景图」的占位,不是 UI 色 —— 照抄等于把
-   设计稿的临时状态焊进代码。按 club/detail 的既有做法用中性档,真图由 cover 覆盖。 */
-.ctd-head__cover-fallback {
-  width: 100%; height: 100%;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cy-space-1-5);
-  color: var(--cy-color-text-secondary);
-}
-/* CU-C-147:兜底要自己说清"没有封面"。一枚通用 image 线条图标读起来像资源加载失败,
-   不是"这场活动没配图";图标 + 短文案与 templatedetail 头部、IM 报名卡同一口径,
-   尺寸按 480rpx 的 Hero 放大(no_data.svg 是 4:3,高宽比不能写反)。 */
-.ctd-cover-ph-icon { width: 160rpx; height: 120rpx; flex: 0 0 auto; }
 .ctd-head__scrim {
   position: absolute; inset: 0;
   background: linear-gradient(to bottom, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,.6) 100%); /* ds-ok: Figma scrim */
 }
 
 .ctd-head__logo {
-  position: absolute; left: var(--cy-space-4); top: 396rpx;   /* 设计 y247 - 封面顶 y49 = 198px */
+  position: absolute; left: var(--cy-space-4); top: calc(396rpx - var(--ctd-shift, 0rpx));   /* 设计 y247 - 封面顶 y49 = 198px */
   width: var(--ctd-logo); height: var(--ctd-logo);
   border-radius: var(--cy-radius-lg);
   background: var(--cy-color-bg-raised);
@@ -57,7 +48,7 @@
 .ctd-head__logo-img { width: 100%; height: 100%; }
 
 .ctd-head__status {
-  position: absolute; right: var(--cy-space-4); top: 396rpx;
+  position: absolute; right: var(--cy-space-4); top: calc(396rpx - var(--ctd-shift, 0rpx));
   height: 56rpx; padding: 0 20rpx;
   display: flex; align-items: center; gap: 10rpx;
   border-radius: var(--cy-radius-pill);
@@ -70,16 +61,16 @@
 .ctd-head__status-txt { font-size: var(--cy-type-label); font-weight: 500; line-height: 1.35; color: var(--cy-color-text-primary); }
 
 .ctd-head__title {
-  position: absolute; left: var(--cy-space-4); right: var(--cy-space-4); top: 548rpx;  /* 设计 y323 */
+  position: absolute; left: var(--cy-space-4); right: var(--cy-space-4); top: calc(548rpx - var(--ctd-shift, 0rpx));  /* 设计 y323 */
   font-size: var(--ctd-type-hero); font-weight: 700; line-height: 1.35;
   color: var(--cy-color-text-primary);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;  /* C-26:长标题不压日期行 */
 }
-.ctd-head__meta { position: absolute; left: var(--cy-space-4); top: 618rpx; display: flex; align-items: center; gap: var(--cy-space-3); }
+.ctd-head__meta { position: absolute; left: var(--cy-space-4); top: calc(618rpx - var(--ctd-shift, 0rpx)); display: flex; align-items: center; gap: var(--cy-space-3); }
 .ctd-head__meta-item { display: flex; align-items: center; gap: 10rpx; color: var(--cy-color-text-tertiary); }
 .ctd-head__meta-txt { font-size: var(--ctd-type-meta); line-height: 1.35; color: var(--cy-color-text-tertiary); }
 
-.ctd-head__chips { position: absolute; left: var(--cy-space-4); top: 686rpx; display: flex; gap: var(--cy-space-1); }
+.ctd-head__chips { position: absolute; left: var(--cy-space-4); top: calc(686rpx - var(--ctd-shift, 0rpx)); display: flex; gap: var(--cy-space-1); }
 .ctd-chip {
   height: 52rpx; padding: 0 var(--cy-space-3);
   display: flex; align-items: center; justify-content: center;
@@ -92,7 +83,7 @@
 /* 设计 y449 是**画板**坐标(含 49px 状态栏);本块基准是封面顶,故 (449-49)×2 = 800rpx。
    起初写成 449×2=898rpx —— 圆钮下沿越出 .ctd-head 的 1044rpx,把「核销」标题压住了。
    单测与 0 console error 都发现不了,是截图看出来的。 */
-.ctd-qa { position: absolute; left: 0; top: 800rpx; display: flex; }
+.ctd-qa { position: absolute; left: 0; top: calc(800rpx - var(--ctd-shift, 0rpx)); display: flex; }
 .ctd-qa__btn { width: 180rpx; display: flex; flex-direction: column; align-items: center; }
 .ctd-qa__btn.is-disabled { opacity: .4; }
 .ctd-qa__circle {

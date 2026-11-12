@@ -42,7 +42,7 @@ test('D3:兜底是 look 渐变 + 小路线插画,宿主可注入 --cover-a/--cov
   assert.match(css, /\.cy-cover-fb \{[^}]*linear-gradient\(160deg, var\(--cover-a, .*var\(--cover-b,/)
   assert.match(css, /\.cy-cover-fb__art \{[^}]*width: 120rpx/)
   assert.ok(fs.existsSync(path.join(ROOT, 'images/cover-route.svg')))
-  for (const f of ['pages/topic/merchantinfo/merchantinfo.wxml', 'pages/club/topic-detail/index.wxml', 'pages/activity/list/index.wxml', 'subpackageB/pages/im/chat/index.wxml', 'pages/templatedetail/topic-preview/index.wxml']) {
+  for (const f of ['pages/topic/merchantinfo/merchantinfo.wxml', 'pages/activity/list/index.wxml', 'subpackageB/pages/im/chat/index.wxml', 'pages/templatedetail/topic-preview/index.wxml']) {
     assert.match(read(f), /cy-cover-fb/, f)
   }
   assert.match(read('pages/templatedetail/shelf/index.wxss'), /\.cv-err \{[^}]*var\(--cover-a/)
