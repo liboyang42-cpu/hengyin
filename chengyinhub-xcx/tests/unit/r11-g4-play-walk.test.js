@@ -37,7 +37,7 @@ test('j4 F8:路线卡屏上预览按高度收、保持 3:4,首屏章节标题不
   assert.match(wxss, /\.finsheet__routecv\{ --rc-w:min\(calc\(100vw - 2 \* var\(--cy-page-x\)\), calc\(\(100vh - 900rpx\) \* 3 \/ 4\)\); display:block; width:var\(--rc-w\); height:calc\(var\(--rc-w\) \* 4 \/ 3\);/)
   assert.match(wxss, /\.finsheet__shade\{ position:sticky; top:0;/)
   const wxml = read('pages/play/index.wxml')
-  assert.match(wxml, /<view class="finsheet__shade" wx:if="\{\{routeCard\.on && !newLifeOS\.show\}\}" style="height:\{\{chrome\.contentTop\}\}px"><\/view><view class="finsheet__card"/)
+  assert.match(wxml, /<view class="finsheet__shade" wx:if="\{\{routeCard\.on && !newLifeOS\.show\}\}" hidden="\{\{finale\.show\}\}" style="height:\{\{chrome\.contentTop\}\}px"><\/view><view class="finsheet__card"/)
   // 导出图仍由画布像素尺寸决定(routeCard.W × H),与屏上 CSS 尺寸无关
   assert.match(read('pages/play/index.js'), /cv\.width = routeCard\.W \* dpr; cv\.height = routeCard\.H \* dpr;/)
 })
