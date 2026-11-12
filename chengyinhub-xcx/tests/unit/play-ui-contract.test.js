@@ -285,7 +285,7 @@ test('游玩工具抽屉:开关是真开关，用不了的行画成失效态，�
 
   // 动态效果是本机偏好 → 真开关,就地翻,不带箭头也不跳页。
   // 2026-09-09 照原型搬:开关换成原型自己那枚 44×26 药丸(.dsw),不再用原生 cy-switch。
-  assert.match(wxml, /<text class="dt">动态效果<\/text>[\s\S]{0,260}?class="dsw \{\{reducedMotion \? '' : 'is-on'\}\}" catchtap="toggleReducedMotion"/)
+  assert.match(wxml, /<text class="dt">声音与动效<\/text>[\s\S]{0,260}?class="dsw \{\{reducedMotion \? '' : 'is-on'\}\}" catchtap="toggleReducedMotion"/)
   assert.doesNotMatch(wxml, /<cy-switch/)
   // 2026-09-22:「设置」那一行整个删了 —— 它 bindtap=reopenIntro 切到 screen='intro',
   // 而起始页本轮下线后 wxml 里 screen=='intro' 的渲染目标是 0 个,点下去是一块空屏
@@ -302,7 +302,7 @@ test('游玩工具抽屉:开关是真开关，用不了的行画成失效态，�
   assert.doesNotMatch(wxml, /bindtap="onLocationRowTap"[\s\S]{0,400}?class="darr"/)
   // 抽屉到屏底内部滚动,行数多不会把三键顶出屏外
   // 2026-10-23 弹层动效:收起先淡出(toolsOut → is-out),再卸载
-  assert.match(wxml, /<scroll-view class="tools tools--corner \{\{toolsOut \? 'is-out' : ''\}\}" wx:if="\{\{sessionToolsOpen\}\}" scroll-y/)
+  assert.match(wxml, /<scroll-view class="tools tools--corner \{\{toolsIn \? 'is-in' : ''\}\} \{\{toolsOut \? 'is-out' : ''\}\}" wx:if="\{\{sessionToolsOpen\}\}" scroll-y/)
   assert.match(wxss, /\.tools\{[^}]*max-height/)
   // 标签和动作对不上的那一行已收口:onGoTap 与 onSheetGoTap 逐行同义,只留后者
   assert.doesNotMatch(wxml, /bindtap="onGoTap"/)

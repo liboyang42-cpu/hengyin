@@ -82,10 +82,10 @@ const PLAY_STATE_COLORS = new Set([
 //    它们是转瞬即逝的演出,落定后的六宫格、地图、HUD 仍然归单色契约管。
 //    谁要是把这几个值拿去铺常驻表面,门禁抓不到 —— 那是这条豁免的已知代价,
 //    代价换的是「别为了一次爆炸把整页排除出扫描面」。
-const HOLO_BLAST = ['#BFE8E0', '#C9D8EE', '#F5D6C8', '#F2E3B8']
-const HOLO_BLAST_RGBA = [
-  'rgba(191,232,224,0)', 'rgba(242,227,184,.72)', 'rgba(245,214,200,.40)',
-]
+// 2026-11-12 v2-b(动效 v2 时刻 2):旧「爆炸层」整套删除(撕包 / 光条 / 碎片),彩纸改用外观 --lk-a / --lk-b,JS 里不再有字面彩色。
+// 卡包包面是镭射膜(原型 .pack 的 conic 渲染层不认,取线性渐变近似)+ 菱形徽记,只画在待机的包上、点开即消失;
+// 菜单里「紧急求助」红 #ff6b5e 是原型原值,只在 .drow--sos 上。按值放行,挪到常驻表面仍判红。
+const PACK_FACE = ['#d7f2ff', '#f8d7ff', '#fff3c9', '#c9ffe9', '#d6dcff', '#c9ccff', '#8e94ff', 'rgba(80,90,255,.35)']
 const INTENTIONAL_COLORED_VALUES = new Map([
   // 2026-08-26 用户裁决按 Figma V2 10:169 落地图游戏角色：玩家青、商家金/红、NPC 紫、奶油徽章。
   // 只放行集中色板文件；颜色若被复制到地图/HUD 的普通表面，仍会被同一门禁抓住。
@@ -105,7 +105,7 @@ const INTENTIONAL_COLORED_VALUES = new Map([
   // Figma 220:1415/1437 的完赛 Canvas 与屏幕浅色叙事域同源；仅额外放行路线紫。
   // 2026-09-23 《预制人生》五个内心声音的颜色是原型 VOICES 表原值(规矩/窗外/心/精密/咔哒),
   //   只画在故事流那一行名字与发光点上。
-  ['pages/play/index.js', new Set(HOLO_BLAST.concat(['#4B46F5', '#B9A7FF', '#5CD6C8', '#FF9F80', '#7EB6FF', '#FF6B6B']))],
+  ['pages/play/index.js', new Set(['#4B46F5', '#B9A7FF', '#5CD6C8', '#FF9F80', '#7EB6FF', '#FF6B6B'])],
   // 2026-09-09 自己的定位点照原型 .selfdot 搬:18px 蓝点 + 3px 白描边 + 18% 蓝光晕。
   // 蓝是「这是我」这一条信息的唯一载体 —— 原来画成白点,地图上和别的白色点位分不开。
   // 2026-09-11 商家横滑白卡(原型 f-fun / f-discover)的状态点:营业绿 #16A34A / 未知灰 #C7C7C7。
@@ -115,7 +115,7 @@ const INTENTIONAL_COLORED_VALUES = new Map([
   // 2026-09-11 章节剧情照原型 c-chfull 重做:眉标金 #E2C489 是原型原值,
   //   只在这一屏的 .chfull__eyebrow 上,复制到别处仍由本门禁判红。
   // 2026-09-23 越往后越不正常第 2 档:图片红/青色差错位,原型 .screen.odd2 .img 的两道 box-shadow 原值。
-  ['pages/play/index.wxss', new Set(HOLO_BLAST_RGBA.concat(['#E2C489', 'rgba(255,0,60,.35)', 'rgba(0,200,255,.35)']))],
+  ['pages/play/index.wxss', new Set(PACK_FACE.concat(['#E2C489', 'rgba(255,0,60,.35)', 'rgba(0,200,255,.35)', '#ff6b5e']))],
   // 2026-08-31 漫游 GO 开场：HTML 原型弧线切场的紫/青彩带与豆子，一次性演出不是常驻地图色。
   ['pages/roam/index.wxss', new Set([
     '#825cff', '#4c2abe', '#6940dd', '#087b9e', '#25c7ee', '#128fb7',
@@ -214,11 +214,11 @@ test('章节配色只在五个固定预设 selector 内豁免，挪到普通表�
 // 豁免是「按值放行」不是「按文件放行」。少了这条,以后谁往 play 页塞任意彩色都不会红,
 // 这条豁免就从一次验收变成了把整页排除出扫描面。
 test('负控：镭射豁免只放行清单里的那几个值，同文件的新彩色仍要判红', () => {
-  const file = 'pages/play/index.js'
+  const file = 'pages/play/index.wxss'
   const source = sourceWithoutComments(file)
-  assert.ok(source.includes('#BFE8E0'), '镭射色谱锚点失效')
+  assert.ok(source.includes('#d7f2ff'), '镭射色谱锚点失效')
 
-  const mutated = source.replace('#BFE8E0', '#6E35C1')
+  const mutated = source.replace('#d7f2ff', '#6E35C1')
   assert.deepEqual(colorFailures([file], { [file]: mutated }), [`${file}: #6E35C1`])
 
   // 同时确认清单里那几个值确实是被放行的(不是因为整条扫描没跑起来)

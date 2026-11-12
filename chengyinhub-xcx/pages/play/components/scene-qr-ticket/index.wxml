@@ -12,15 +12,22 @@
   <block wx:else>
     <!-- D1(2026-11-12 设计评审):入场码只在「⋯」工具菜单的入场码行打开,普通半屏里一个适中的码(400rpx ≈ 200px),不再是翻面大票卡。 -->
     <view class="voucher__card">
-      <text wx:if="{{title}}" class="voucher__title ep1">{{title}}</text>
+    <view class="stub">
+      <view class="stub__notch stub__notch--l"></view>
+      <view class="stub__notch stub__notch--r"></view>
       <view class="voucher__qr">
         <cy-dot-qr wx:if="{{state === 'ready'}}" src="{{qr}}" size="{{360}}" />
         <text wx:else class="voucher__qr-tip">生成中…</text>
       </view>
-      <text wx:if="{{seatNo}}" class="voucher__exp">第 {{seatNo}} 席</text>
+      <view class="stub__perf"></view>
+      <text wx:if="{{title}}" class="voucher__title ep1">{{title}}</text>
+      <view class="stub__row"><text class="stub__k">使用人</text><text class="stub__v">{{seatNo ? '第 ' + seatNo + ' 席' : '本人'}}</text></view>
+      <view class="stub__row" wx:if="{{gather}}"><text class="stub__k">集合</text><text class="stub__v">{{gather}}</text></view>
       <text wx:if="{{seatVerified}}" class="voucher__exp">此席已核销，请勿重复提供权益</text>
       <text wx:if="{{expiry}}" class="voucher__exp">{{expiry}}</text>
     </view>
+    </view>
+    <view class="stub__done" bindtap="close" aria-role="button" aria-label="完成" hover-class="cy-pressed">完成</view>
     <view wx:if="{{seatCount > 1}}" class="seat-choice__switch" bindtap="changeSeat" aria-role="button" aria-label="重新选择席位" hover-class="cy-pressed">重新选择席位</view>
     <!-- V3-17(2026-11-06 业主):左下不再有返回钮,关闭走半屏右上角的 × 与下拉 -->
   </block>

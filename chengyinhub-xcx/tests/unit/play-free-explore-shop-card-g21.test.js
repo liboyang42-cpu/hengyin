@@ -22,18 +22,19 @@ test('D1:玩页主面与站点详情都没有「出示入场码」按钮/浮钮,
   assert.doesNotMatch(wxml, /<cy-btn[^>]*bindtap="openEntryQr"/)
   assert.doesNotMatch(wxml, /class="pscan"/)
   const rows = wxml.match(/bindtap="openTicketFromTools"/g) || []
-  assert.ok(rows.length >= 2, '「⋯」菜单里仍有入场码行')
+  assert.ok(rows.length >= 1, '「⋯」菜单里仍有入场码行')
+  assert.equal(rows.length, 1, 'v2-b:菜单里入场码只留一行(原来 mode2 / 城市定向各一份)')
 })
 
-test('g21 第三轮 + x-fix7 P-6:卡包只印主题名一行,没有章数副标和「轻点拆开」', () => {
-  const wrap = wxml.slice(wxml.indexOf('<view class="fx-packwrap"'), wxml.indexOf('<view class="fx-shard"'))
+test('v2-b 时刻 2:标题在包上方(主题名 + 本章 N 张),包面只有 城瘾 / 主题名 / N 张,「轻点开启」在包下', () => {
+  const head = wxml.slice(wxml.indexOf('<view class="fx-packhead'), wxml.indexOf('<view class="fx-packwrap"'))
+  assert.match(head, /<text class="fx-packhead__t">\{\{topicName \|\| chapter\.name \|\| modeLabel\}\}<\/text>/)
+  assert.match(head, /本章 \{\{seatTiles\.length\}\} 张/)
+  const wrap = wxml.slice(wxml.indexOf('<view class="fx-packwrap"'), wxml.indexOf('<text class="fx-packtap'))
   assert.ok(wrap.length > 100, '找不到卡包块')
-  const texts = wrap.match(/<text\b[^>]*>/g) || []
-  assert.deepEqual(texts, ['<text class="fx-pack__t">'], '卡包块里只许有主题名这一个文字节点')
-  assert.match(wrap, /<text class="fx-pack__t">\{\{topicName \|\| chapter\.name \|\| modeLabel\}\}<\/text>/)
-  assert.doesNotMatch(wxml, /轻点拆开|fx-pack__s\b|fx-pack-hint/)
-  assert.doesNotMatch(wxss, /\.fx-pack__s\b|\.fx-pack-hint/)
-  assert.match(wxss, /\.fx-pack__t\{[^}]*color:#0A0A0A/, '膜是浅色的,主题名必须黑字')
+  assert.deepEqual(wrap.match(/<text\b[^>]*>/g), ['<text class="fx-pack__t">', '<text class="fx-pack__sub">', '<text class="fx-pack__ct">'])
+  assert.match(wxml, /<text class="fx-packtap[^>]*>轻点开启<\/text>/)
+  assert.doesNotMatch(wxml, /轻点拆开|fx-pack-hint/)
 })
 
 function assertHeroCtaContract(markup) {

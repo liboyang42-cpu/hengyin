@@ -14,6 +14,7 @@ Component({
     registrationId: { type: String, value: '' },
     title: { type: String, value: '' },
     until: { type: null, value: '' },
+    gather: { type: String, value: '' },   // 集合时间文案;宿主没有就不画「集合」行
     cover: { type: String, value: '' },   // 兼容宿主传参;D1 起入场码半屏不再用封面
   },
   data: {

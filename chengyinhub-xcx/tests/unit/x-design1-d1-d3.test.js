@@ -29,7 +29,7 @@ test('D1:玩页主面没有常驻扫码浮钮,入场码只走「⋯」菜单行'
   assert.doesNotMatch(wxml, /class="pscan"/)
   assert.doesNotMatch(read('pages/play/index.wxss'), /\.pscan\s*\{/)
   assert.doesNotMatch(wxml, /<cy-btn[^>]*bindtap="openEntryQr"/)
-  assert.ok((wxml.match(/bindtap="openTicketFromTools"/g) || []).length >= 2)
+  assert.ok((wxml.match(/bindtap="openTicketFromTools"/g) || []).length >= 1)  // v2-b:mode2 / 城市定向两份重复行合并成一行
 })
 
 test('D3:全仓任何页面都不再把「封面暂不可用」写给用户(作者端原封面上传提示除外)', () => {

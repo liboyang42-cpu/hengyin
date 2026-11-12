@@ -97,20 +97,21 @@ const { isRecord, isRecordList } = require('../../utils/response-shape.js');
 
 // canvas(足迹卡截图)只能吃字面色,拿不到 CSS 变量 ⇒ 下面两组必须是字面值,
 // 取值与 style/tokens.wxss 及 index.wxss 的叙事层色板保持同步。
-// mode2 开卡包的四拍时长(ms)。这套数是在动效台上逐档试出来的定稿,别单独改一个:
-// 蓄力太短就没有「憋住」的张力,发牌间隔一小就退回「一起掉」。
-const PACK_CHARGE = 1000;   // ② 蓄力:摇 + 四周压暗
-const PACK_TEAR = 640;      // ③ 横撕:封口条向右扯走 + 撕口自左向右露出 + 爆炸
-const DEAL_STAGGER = 440;   // ④ 每张卡的发牌间隔。D16:原 240ms 时同时有六七张在半空互相叠;拉到 440ms(约单张飞行 1600ms 的 27%),同一时刻最多 4 张在飞且错开不同进度
-const DEAL_FLIGHT = 1600;   // ④ 单张飞行总时长(动效台 800ms × 0.5×;弧顶在 52%,见 index.wxss)
-const DEAL_ARC = 0.52;      // 弧顶所处的进度,WXSS 两段 transition 的分界必须与之一致
+// 动效 v2 · 时刻 2(proto motion-v2 m2):点开 → 抖 260ms → 包下沉 420ms + 彩纸 → 逐张弹出(间隔 90ms)→ 落格(间隔 60ms)。
+const PACK_SHAKE = 260;     // 短抖
+const PACK_DROP = 420;      // 包下沉淡出
+const DEAL_STAGGER = 90;    // 弹出间隔
+const DEAL_LAND_STAGGER = 60;   // 落格间隔
+const DEAL_FLIGHT = 1800;   // 单张最长占用:弹出 → 扇形停留 → 落格(含落格 800ms);packOpen 在最后一张落地后置
+const DEAL_ARC = 0.6111;    // 弹出到落格的分界 = 1100ms(proto 1400-300),WXSS 两段 transition 的分界必须与之一致
 // 弧顶态的缩放,必须与 index.wxss 的 .fx-tile.is-flying 一致:决定夹取时按多大的卡片留边。
 // (待机态的 scale 不需要在这里出现 —— 量尺寸时用 .is-measuring 把 transform 整个关掉,
 //  比从变换后的框反推可靠得多:那个框同时吃了 scale 和 rotate,反推必然带误差。)
-const DEAL_MID_SCALE = 0.78;
-// 扇形半跨:4 家和 6 家都用同一个角。原来 4 家 36°/6 家 54° 摊得太开,
-// 收到 ±14° 之后是「从包口窄窄地喷出来」,不是「甩出去一个扇面」。
-const DEAL_SPREAD = 14;
+const DEAL_MID_SCALE = 0.8;   // ≈ 原型卡宽 136px / 瓦片布局宽(约 170px)
+// 扇形(原型 m2):相邻两张水平间隔 62px、角度差 12°,整体在包中心上方 30px。
+const DEAL_FAN_DX = 62;
+const DEAL_FAN_STEP = 12;
+const DEAL_FAN_DY = 30;
 // ⑤ 点卡 → hero 展开(2026-09-05,参考 cibby · shelf):卡片从格子原位放大飞到屏幕上部,
 //   背景换成这家的模糊图,文字在卡片落定后依次上滑。WXSS .fx-hero__card 的 transform 过渡
 //   时长必须与此同步(play-seat-hero-contract 锁)。
@@ -118,17 +119,7 @@ const HERO_DUR = 420;
 /* 故事流「快滑」阈值:每帧位移超过它就不就地显形,一律等停下来那一刻再补。
    18px/frame 是样机定的那条线 —— 再高文字会在飞驰中一闪而过,再低慢滑也被判成快滑。 */
 const STORY_FAST_PX = 18;
-// ③′ 拖拽撕开(2026-08-20):横撕从「点一下自动播」升级为「手指跟随」。
-// tap 四拍原样保留 —— 拖拽是并行入口,不动 PACK_* 那组定稿。
-const TEAR_MAX_PX = 170;    // 撕满需要的水平拖距(px)≈ 卡包宽的 80%
-const TEAR_DONE_PCT = 60;   // 松手时撕过这个进度就算撕开,不足弹回
-const TEAR_SNAP = 180;      // 松手后补完/弹回的过渡时长(ms),与 WXSS .is-snap 同步
-// 爆炸强度(动效台 180):光条数和碎片飞行距离都按它缩放。
-const BLAST_POWER = 1.8;
-const BLAST_SHARDS = 60;
-// 爆炸的镭射色谱:碎片/光条都从这条色谱取色,不是随机彩虹 ——
-// 同一条色谱才读作「包装膜炸碎了」,随机彩虹读作「撒了彩纸」。
-const HOLO = ['#BFE8E0', '#C9D8EE', '#D8C8E8', '#F5D6C8', '#F2E3B8'];
+const CONFETTI = ['var(--lk-a)', 'var(--lk-b)', '#ffffff', 'var(--lk-a)', 'var(--lk-b)'];   // 彩纸:外观两个主色 + 白,颜色随外观走
 
 const BRAND = '#FFFFFF';                                              // = --cy-color-play-accent
 // Canvas 不能读取 WXSS 变量；逐字同步 style/tokens.wxss 的 play-story 色板。
@@ -536,7 +527,7 @@ Page({
     themeBgmOn: true,
     topicCover: '',               // 卡包首屏底图:主题长图,虚化后铺底(没有就退回 chapter.cover)
     topicDesc: '',                // 通行证首屏那段简介:同理,chapters[0].description 讲的是第一家店的事
-    seatTiles: [], packOpen: false, packShake: false, packBurst: false,
+    seatTiles: [], packOpen: false, packGo: false, packConf: [], collectShow: false, collectIn: false,
     // 点卡 hero 层:show 挂节点,open 驱动过渡(先 show 再下一帧 open,过渡才有起点)
     hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 },
     // 店铺分身对话(自由探索卡片详情 → 点店铺卡)。started 一旦为真,居中的大字问候让位给消息流。
@@ -555,13 +546,8 @@ Page({
       write: { status: 'idle', requestId: '', message: '', canRetry: false },
     },
     board: { show: false, loading: false, list: [], me: null },
-    packDim: false, packTear: false, packSink: false, headIn: false,
-    // 拖拽撕开:tearPct 是撕口进度(0-100),两个 style 串由 _applyTear 统一算,
-    // 只在拖拽路径非空 —— tap 路径全程为 '',不会跟 fxRip/fxMouth 动画打架。
-    tearPct: 0, packGrab: false, packSnap: false, packTorn: false,
-    tearSealStyle: '', tearMouthStyle: '',
-    // 爆炸的粒子/光条是数据驱动的(WXML 不能生成元素),开包那一刻才建,收场即清空。
-    blastRays: [], blastShards: [], measuring: false,
+    headIn: false,
+    measuring: false,
     tileH: 0,                     // 瓦片行高:按剩余高度等分,4 家竖版大卡 / 6 家近方卡
     nodes: [], total: 0, merchantCount: 0, merchantDoneCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0, canContinueGames: false,
@@ -604,7 +590,7 @@ Page({
     // 手记
     /* 半屏进场用的开关(原型 .sheet 的 @keyframes up 在这儿是 transition)。 */
     sceneIn: false,
-    showJournal: false, journalMulti: false, journalDot: false, journalCards: [], sessionToolsOpen: false,
+    showJournal: false, journalMulti: false, journalDot: false, journalCards: [], sessionToolsOpen: false, toolsIn: false,
     /* 自由探索有两种看法(2026-09-10 用户裁决):这一页默认是卡包,
        点「N 家商户」旁边那枚地图钮换成地图模式(原型 x-run)。同一批商户,两种排布。 */
     // 2026-09-22 地图模式已删,本字段恒 false;它还留着只因为 .fx / .pbar 的 wx:if 仍引用,
@@ -1380,140 +1366,124 @@ Page({
     this.setData({ packOpen: true });
   },
   /** 开卡包的定时器全挂在 _packTimers 上:onUnload 和 onHide 都要清干净 ——
-   *  离开页面后它们会继续 vibrateShort、继续往已经不可见的页面 setData。 */
+   *  离开页面后它们会继续 vibrateShort、继续往已经不可见的页面 setData。
+   *  动画循环(浮动 / 流光)用 _packLoopOn 守着,清定时器时一并停。 */
   _clearPackTimers() {
     if (this._packTimers) { this._packTimers.forEach(clearTimeout); this._packTimers = null; }
     if (this._heroTimer) { clearTimeout(this._heroTimer); this._heroTimer = null; }
+    this._packLoopOn = false;
+    this._sheenLoopOn = false;
+    this._tileSheenOn = false;
   },
-  /** onHide 清定时器后,四拍/拖拽会停在半路:packShake/packTear/packSnap/tearPct 这些
-   *  中间态标志恰是 openPack / onPackTouchStart 的重入 guard ⇒ 不归零,回前台后
-   *  点、拖全被自己挡死(与 tabBar「在途守卫 flag 卡死」同款,守卫必须 onShow 归零)。
+  /** onHide 清定时器后,开包会停在半路:packGo / packBusy 是 openPack 的重入 guard,
+   *  不归零,回前台后点不动(与 tabBar「在途守卫 flag 卡死」同款,守卫必须 onShow 归零)。
    *  包已开完(packOpen)是终态,六宫格不动;否则一律回到待机重来。 */
   _resetPackFx() {
     const d = this.data;
-    if (d.packOpen) return;
-    if (!(d.packShake || d.packDim || d.packTear || d.packBurst || d.packSink
-          || d.packGrab || d.packSnap || d.packTorn || d.tearPct > 0 || d.headIn)) return;
+    if (d.packOpen) { this._tileSheenStart(); return; }
+    if (!(d.packGo || d.packConf.length || d.headIn || this._packBusy)) { this._packLoopStart(); return; }
     const cleared = d.seatTiles.map((t) => {
       const rest = Object.assign({}, t);
       delete rest.fly;
       delete rest.land;
       return rest;
     });
-    this.setData({
-      packShake: false, packDim: false, packTear: false, packBurst: false,
-      packSink: false, packGrab: false, packSnap: false, packTorn: false, headIn: false,
-      tearPct: 0, tearSealStyle: '', tearMouthStyle: '',
-      blastRays: [], blastShards: [], seatTiles: cleared,
-    });
-    this._tearActive = false;
-    this._dragMoved = false;
-    this._tearRawPct = 0;
+    this._packBusy = false;
+    this.clearAnimation('.fx-pack', { opacity: true, rotate: true, scale: true, translateY: true }, () => {});
+    this.setData({ packGo: false, packConf: [], headIn: false, seatTiles: cleared }, () => this._packLoopStart());
   },
-  /** mode2 开卡包,四拍:
-   *    ② 蓄力 1000ms —— 摇 + 四周压暗(没有这层压暗,后面的闪光炸不出反差)
-   *    ③ 横撕  640ms —— 顶部封口条整条向右扯走、撕口自左向右露出,同时爆炸
-   *    ④ 发牌        —— 每张间隔 180ms 从卡包正中飞出,空袋下沉
+  /** 待机:包缓慢浮动(3.2s 一来回)+ 一道慢流光(2.6s 扫过)。两条都是 this.animate 的链式循环,
+   *  不写 @keyframes;减弱动态时不起循环,包静止。 */
+  _packLoopStart() {
+    if (this.data.reducedMotion || this.data.packOpen || this.data.mode !== 2) return;
+    if (!this._packLoopOn) {
+      this._packLoopOn = true;
+      this._animLoop('.fx-pack', [{ translateY: 0, ease: 'ease-in-out' }, { translateY: -9, ease: 'ease-in-out' }, { translateY: 0 }], 3200, () => this._packLoopOn);
+    }
+    if (!this._sheenLoopOn) {
+      this._sheenLoopOn = true;
+      this._animLoop('.fx-pack__sheen', [{ translateX: -230, opacity: 0 }, { translateX: -120, opacity: 1, offset: 0.25 }, { translateX: 230, opacity: 0 }], 2600, () => this._sheenLoopOn);
+    }
+  },
+  /** 「收进卡册」:卡片已经落进下面的格子,点一下把这颗收起来。 */
+  onCollectTap() {
+    this.setData({ collectIn: false });
+    this._packTimers = this._packTimers || [];
+    this._packTimers.push(setTimeout(() => this.setData({ collectShow: false }), 400));
+  },
+  /** 落格后每张卡一道慢流光(3.4s 扫一次);减弱动态不起。 */
+  _tileSheenStart() {
+    if (this.data.reducedMotion || this._tileSheenOn) return;
+    this._tileSheenOn = true;
+    this._animLoop('.fx-tile__sheen', [{ translateX: -120, opacity: 0 }, { translateX: 0, opacity: 1, offset: 0.2 }, { translateX: 260, opacity: 0 }], 3400, () => this._tileSheenOn && this.data.mode === 2);
+  },
+  /** this.animate 的链式循环。节点不在时 animate 会立刻回调 —— 用耗时判一下,别空转成同步递归。 */
+  _animLoop(sel, frames, dur, alive) {
+    const t0 = Date.now();
+    this.animate(sel, frames, dur, () => {
+      if (!alive() || Date.now() - t0 < dur * 0.5) return;
+      this._animLoop(sel, frames, dur, alive);
+    });
+  },
+  _packLoopStop() {
+    this._packLoopOn = false;
+    this._sheenLoopOn = false;
+  },
+  /** mode2 开卡包(动效 v2 时刻 2):
+   *    ① 点开 —— 包短抖 260ms
+   *    ② 包下沉淡出 420ms,开口处爆外观色彩纸
+   *    ③ 逐张弹出(扇形,间隔 90ms,弹簧)→ 再逐张落格(间隔 60ms)
    *  没有「开包」按钮是刻意的:一个居中的、明显是包装的东西,没人会不点。
    *  reducedMotion 直接落定不播 —— 动画永远不能是必须看完的。 */
   openPack() {
-    if (this._dragMoved) return;   // 刚做完一次拖拽,吞掉紧跟着的 tap
-    if (this.data.packOpen || this.data.packShake || this.data.packTear || this.data.tearPct > 0) return;   // 播放中再点不重入
+    if (this.data.packOpen || this._packBusy) return;   // 播放中再点不重入
     this._startThemeBgm();
     if (this.data.reducedMotion) { this.setData({ packOpen: true, headIn: true }); if (!this.data.isPreview) storyResume.patch(this._runSessionScope(), { packOpened: true }); return; }
+    this._packBusy = true;
     this._packTimers = this._packTimers || [];
-
-    this.setData({ packShake: true, packDim: true });
+    this._packLoopStop();
     wx.vibrateShort({ type: 'light' });
-
+    this.clearAnimation('.fx-pack', { translateY: true }, () => {});
+    this.animate('.fx-pack', [
+      { rotate: 0, scale: [1, 1], ease: 'ease-in-out' }, { rotate: -4, scale: [1.03, 1.03], ease: 'ease-in-out' },
+      { rotate: 4, scale: [1.05, 1.05], ease: 'ease-in-out' }, { rotate: 0, scale: [1.06, 1.06] }], PACK_SHAKE, () => {});
     this._packTimers.push(setTimeout(() => {
-      this.setData({ packShake: false, packDim: false, packTear: true });
-      this._finishTearAndDeal(PACK_TEAR);
-    }, PACK_CHARGE));
+      this.setData({ packGo: true });                                  // 标题与「轻点开启」淡出
+      this.animate('.fx-pack', [{ translateY: 0, scale: [1.06, 1.06], opacity: 1, ease: 'cubic-bezier(.32,.72,0,1)' }, { translateY: 60, scale: [0.9, 0.9], opacity: 0 }], PACK_DROP, () => {});
+      this._fireConfetti();
+      this._finishDeal();
+    }, PACK_SHAKE));
   },
-
-  /** 撕开完成后的爆炸+发牌收场,tap/拖拽两条路径共用。
-   *  delay = 从爆炸到发牌的间隔:tap 路径等横撕动画播完(PACK_TEAR),
-   *  拖拽路径撕口已被手指撕到位,只留一个短促的呼吸(90ms)。 */
-  _finishTearAndDeal(delay) {
+  /** 彩纸:36 片,外观双色 + 三枚固定亮色,从开口(包上缘)向上散开再落下;每片一次 this.animate。
+   *  片是数据驱动的节点(WXML 生成不了随机),动画结束后整表清掉。 */
+  _fireConfetti() {
+    const pieces = [];
+    for (let i = 0; i < 36; i++) pieces.push({ id: 'cf' + i, c: CONFETTI[i % CONFETTI.length] });
+    this.setData({ packConf: pieces }, () => {
+      pieces.forEach((pc, i) => {
+        const a = (-90 + (Math.random() * 160 - 80)) * Math.PI / 180, r = 160 + Math.random() * 200;
+        const dur = 1600 + Math.round(Math.random() * 600);
+        this.animate('.' + pc.id, [
+          { opacity: 1, translateX: 0, translateY: 0, rotate: 0 },
+          { opacity: 1, offset: 0.7 },
+          { opacity: 0, translateX: Math.round(Math.cos(a) * r), translateY: Math.round(Math.sin(a) * r + 260), rotate: Math.round(Math.random() * 720) }], dur, () => {});
+      });
+      this._packTimers.push(setTimeout(() => this.setData({ packConf: [] }), 2400));
+    });
+  },
+  /** 发牌收场:包落下去的同时第一张就弹出来(proto 300ms 起),通行证头跟第一张一起出来。 */
+  _finishDeal() {
     this._packTimers = this._packTimers || [];
-    this.setData({ packBurst: true });
-    wx.vibrateShort({ type: 'heavy' });
-    this._fireBlast();
-
     this._packTimers.push(setTimeout(() => {
       this._dealTiles();
-      this.setData({ headIn: true });          // 通行证头跟第一张卡一起出来
-      this.setData({ packSink: true });   // 爆完立刻自由落体坠出画面,把屏幕正中让给卡片
+      // 通行证头等第一张落格再出来,扇形展开那一段屏上只有卡(不再和头部重叠)
+      this._packTimers.push(setTimeout(() => this.setData({ headIn: true }), Math.round(DEAL_FLIGHT * DEAL_ARC)));
       // 最后一张落地之后才置 packOpen:它同时是「包已移除」和「兜底 is-dealt」,
       // 早置会把还在飞的卡强行拍到落点。
       const n = this.data.seatTiles.length || 1;
       const done = (n - 1) * DEAL_STAGGER + DEAL_FLIGHT;
-      this._packTimers.push(setTimeout(() => { this.setData({ packOpen: true }); if (!this.data.isPreview) storyResume.patch(this._runSessionScope(), { packOpened: true }); }, done + 60));
-      this._packTimers.push(setTimeout(
-        () => this.setData({ packBurst: false, blastRays: [], blastShards: [] }), done + 400));
-    }, delay));
-  },
-
-  /** ③′ 拖拽撕开:手指横拖,撕口实时跟随;过 TEAR_DONE_PCT 松手补完并接爆炸发牌,
-   *  不足弹回待机。reducedMotion 不接管 —— tap 路径的「直接落定」已经覆盖。 */
-  onPackTouchStart(e) {
-    // 拖拽路径不走 packTear,所以 torn/snap/tearPct 必须自己挡:撕开完成到 packOpen
-    // 之间有 ~2.4s 发牌窗,不挡的话第二根手指会再排一次爆炸+发牌(双开)。
-    if (this.data.packOpen || this.data.packTear || this.data.packShake
-        || this.data.packTorn || this.data.packSnap || this.data.tearPct > 0
-        || this.data.reducedMotion) return;
-    this._tearStartX = e.touches[0].clientX;
-    this._tearActive = true;
-    this._tearLastTs = 0;
-    this._tearRawPct = 0;
-  },
-  onPackTouchMove(e) {
-    if (!this._tearActive) return;
-    const dx = e.touches[0].clientX - this._tearStartX;
-    const pct = Math.max(0, Math.min(100, (dx / TEAR_MAX_PX) * 100));
-    this._tearRawPct = pct;   // 节流前先记原始值:松手判阈值用它,不然快划的最后一帧被节流吃掉会误判弹回
-    const now = Date.now();
-    if (now - this._tearLastTs < 33 && pct < 100) return;   // ~30fps 节流,撕满那帧不丢
-    this._tearLastTs = now;
-    if (pct > 4 && !this.data.packGrab) {
-      this.setData({ packGrab: true });
-      wx.vibrateShort({ type: 'light' });    // 咬住封口的那一下
-    }
-    this._applyTear(pct);
-  },
-  onPackTouchEnd(e) {
-    if (!this._tearActive) return;
-    this._tearActive = false;
-    const cancelled = !!(e && e.type === 'touchcancel');   // 系统打断(来电/弹窗)≠松手,一律弹回
-    const pct = this._tearRawPct || 0;
-    if (pct <= 0) {
-      // 没拖出撕口 ⇒ 当没发生,交回给 tap;但 4% 抓握反馈可能已经亮了,得撤
-      if (this.data.packGrab) this.setData({ packGrab: false });
-      return;
-    }
-    this._dragMoved = true;                  // 同一根手指抬起会再触发 bindtap,吞掉它
-    this._packTimers = this._packTimers || [];
-    this._packTimers.push(setTimeout(() => { this._dragMoved = false; }, 350));
-    if (!cancelled && pct >= TEAR_DONE_PCT) {
-      this.setData({ packSnap: true, packTorn: true });   // is-snap 给补完过渡,is-torn 让袋口片翻出
-      this._applyTear(100);
-      this._packTimers.push(setTimeout(() => this._finishTearAndDeal(90), TEAR_SNAP));
-    } else {
-      this.setData({ packSnap: true, packGrab: false, tearSealStyle: '', tearMouthStyle: '' });
-      this._packTimers.push(setTimeout(() => this.setData({ packSnap: false, tearPct: 0 }), TEAR_SNAP + 60));
-    }
-  },
-  /** 撕口进度 → 两个内联 style。封口条的位移/旋转终点(500rpx,-18rpx,5deg)与 fxRip 的
-   *  100% 帧一致 —— 拖到底和 tap 播到底必须停在同一个画面。 */
-  _applyTear(pct) {
-    const p = Math.round(pct * 10) / 10;
-    const fade = p < 30 ? 1 : 1 - (p - 30) / 70;   // 前 30% 只位移不褪,和 fxRip 的节奏对齐
-    this.setData({
-      tearPct: p,
-      tearMouthStyle: 'width:' + p + '%',
-      tearSealStyle: 'transform:translate(' + (p * 5) + 'rpx,' + (p * -0.18) + 'rpx) rotate(' + (p * 0.05) + 'deg);opacity:' + fade.toFixed(2),
-    });
+      this._packTimers.push(setTimeout(() => { this._packBusy = false; this.setData({ packOpen: true, collectShow: true }, () => { this._tileSheenStart(); this._packTimers.push(setTimeout(() => this.setData({ collectIn: true }), 40)); }); if (!this.data.isPreview) storyResume.patch(this._runSessionScope(), { packOpened: true }); }, done + 60));
+    }, 300 - PACK_SHAKE > 0 ? 300 - PACK_SHAKE : 0));
   },
 
   /** 逐张发牌:每张两段 —— fly(弹到扇形弧顶) → land(落格)。
@@ -1523,7 +1493,7 @@ Page({
   _dealTiles() {
     this._packTimers = this._packTimers || [];
     const arc = Math.round(DEAL_FLIGHT * DEAL_ARC);
-    const schedule = this.data.seatTiles.map((_, i) => ({ i, fly: i * DEAL_STAGGER, land: i * DEAL_STAGGER + arc }));
+    const schedule = this.data.seatTiles.map((_, i) => ({ i, fly: i * DEAL_STAGGER, land: arc + i * DEAL_LAND_STAGGER }));
     schedule.forEach(({ i, fly, land }) => {
       this._packTimers.push(setTimeout(() => this._markTile(i, 'fly'), fly));
       this._packTimers.push(setTimeout(() => {
@@ -1561,44 +1531,6 @@ Page({
     }));
   },
 
-  /** 爆炸六层里的两层需要真实元素:放射光条 + 碎片。WXML 生成不了,只能落成数据。
-   *  另外四层(压暗/白闪/彩色光晕/冲击波)是固定节点,由 packBurst 开关。 */
-  _fireBlast() {
-    const rays = [];
-    // 圆形光晕收成核心之后,「四射」全靠光条:条数和长度都得撑得住场面
-    const RAYS = Math.round(16 * BLAST_POWER);
-    for (let j = 0; j < RAYS; j++) {
-      // ⚠️ 起步长度必须大于卡包的半对角线(424×741rpx ⇒ 约 222pt),否则光条整根
-      //    埋在包后面(z-index 33 < 包 40),看不到「射出来」这件事。
-      const len = 250 + Math.random() * 280;   // 长短拉开差距,齐刷刷等长会读成一个圆
-      rays.push({
-        id: 'r' + j,
-        a: (j / RAYS * 360).toFixed(1),        // 爆心在包正中 ⇒ 全向等分,不偏上半圈
-        c: HOLO[j % HOLO.length],
-        len: Math.round(len),
-        w: (3 + Math.random() * 5).toFixed(1),
-        dur: Math.round((430 + Math.random() * 260) * 2),
-      });
-    }
-    const shards = [];
-    for (let i = 0; i < BLAST_SHARDS; i++) {
-      const ang = (-90 + (Math.random() * 230 - 115)) * Math.PI / 180;
-      const d = (90 + Math.random() * 210) * (0.6 + 0.6 * BLAST_POWER);
-      const big = Math.random() < 0.3;        // 三成大块碎膜,七成细屑 —— 尺寸一致就读成彩纸
-      shards.push({
-        id: 's' + i,
-        dx: Math.round(Math.cos(ang) * d),
-        dy: Math.round(Math.sin(ang) * d + 55),
-        rot: Math.round(Math.random() * 900 - 450),
-        w: (big ? 7 + Math.random() * 9 : 2 + Math.random() * 4).toFixed(1),
-        h: (big ? 11 + Math.random() * 18 : 4 + Math.random() * 8).toFixed(1),
-        c: HOLO[i % HOLO.length],
-        dur: Math.round((620 + Math.random() * 620) * 2),
-      });
-    }
-    this.setData({ blastRays: rays, blastShards: shards });
-  },
-
   /** 量两件事,两趟(第一趟改行高会挪动瓦片,必须落定后再量瓦片):
    *    ① 行高:瓦片按剩余高度等分 —— 写死 268rpx 时 4 家底下空一大块
    *    ② 飞行几何:每张卡从卡包正中弹出、经扇形弧顶、落格
@@ -1608,7 +1540,7 @@ Page({
     if (this.data.mode !== 2 || !this.data.seatTiles.length || this.data.packOpen) return;
     // 播放中不量:measuring 会给瓦片挂 transform:none,套在正在飞的卡上就是当场瞬移。
     // 只挡 packOpen 不够 —— 它是全程最后一步才置的。
-    if (this.data.packShake || this.data.packTear || this.data.measuring) return;
+    if (this._packBusy || this.data.packGo || this.data.measuring) return;
     const that = this;
     const n = this.data.seatTiles.length;
     let rpx = 0.5;
@@ -1638,32 +1570,26 @@ Page({
               const pk = r2 && r2[0], tiles = r2 && r2[1], box = r2 && r2[2];
               if (!pk || !box || !tiles || tiles.length !== n) { that.setData({ measuring: false }); return; }
               const px = pk.left + pk.width / 2, py = pk.top + pk.height / 2;
-              // 抛出半径对所有卡取同一个常数 —— 按各自落点距离算会让扇形左右不对称
-              const R = pk.height * 0.55;
-              const spread = DEAL_SPREAD;
+              // 动效 v2 时刻 2:扇形照原型 —— 第 i 张在包中心上方 30px,水平间隔 62px,每张多转 12°(相对中间那张)。
+              // 弧顶的卡面缩放 = 原型卡宽 136px / 瓦片布局宽,所以任何章数 / 屏宽下扇面大小一致。
               const geom = [];
               tiles.forEach((t, i) => {
                 const lw = t.width, lh = t.height;                 // measuring 态 = 真实布局框
                 const cx = t.left + t.width / 2, cy = t.top + t.height / 2;
-                const k = n === 1 ? 0 : (i / (n - 1)) * 2 - 1;
-                const ang = k * spread;
-                const rad = (ang - 90) * Math.PI / 180;
-                // 弧顶必须夹在画面内。不夹的话扇形一大、卡片一高,弧顶顶出上边框,
-                // 看到的是「卡片从画面外掉进来」。夹坐标比整体下移好 —— 下移会把
-                // 「卡片撑满屏幕、底下不留空档」又打回去。
-                // 弧顶那一刻卡片是**转着**的(rotate(--rot * .4)),旋转后的外接框比原框大 ——
-                // 按未旋转的尺寸留边,4 家会差 11px、6 家差 16px,卡角照样探出上边框。
-                const rot2 = Math.abs(ang * 0.6 * 0.4) * Math.PI / 180;
+                const k = i - (n - 1) / 2;
+                const ang = k * DEAL_FAN_STEP;
+                // 弧顶也夹在画面内(旋转后的外接框比原框大,按旋转后的算),不然卡角会探出上边框
+                const rot2 = Math.abs(ang) * Math.PI / 180;
                 const ca = Math.abs(Math.cos(rot2)), sa = Math.abs(Math.sin(rot2));
                 const w2 = lw * DEAL_MID_SCALE, h2 = lh * DEAL_MID_SCALE;
                 const hw = (w2 * ca + h2 * sa) / 2, hh = (w2 * sa + h2 * ca) / 2, PAD = 6;
-                let mx = px + Math.cos(rad) * R, my = py + Math.sin(rad) * R;
+                let mx = px + k * DEAL_FAN_DX, my = py - DEAL_FAN_DY;
                 mx = Math.min(Math.max(mx, box.left + hw + PAD), box.right - hw - PAD);
                 my = Math.min(Math.max(my, box.top + hh + PAD), box.bottom - hh - PAD);
                 geom[i] = {
                   tx0: Math.round(px - cx) + 'px', ty0: Math.round(py - cy) + 'px',
                   tx1: Math.round(mx - cx) + 'px', ty1: Math.round(my - cy) + 'px',
-                  rot: (ang * 0.6).toFixed(1) + 'deg',
+                  rot: ang.toFixed(1) + 'deg',
                 };
               });
               // 同上:整表重建,不用动态 setData 键
@@ -4937,7 +4863,7 @@ Page({
         ? node.hasGame && !node.gameDone : !node.done)).length, canContinueGames,
       total: visibleNodes.length, merchantCount, merchantDoneCount, seatTiles, ringSegs, searchPlaces }, () => {
       if (chapterChanged) this.openChapterFull(); this._refreshNavRim();
-      wx.nextTick(() => this._measureDeal());   // 布局落定后才量得到瓦片/卡包的真实矩形
+      wx.nextTick(() => { this._measureDeal(); this._packLoopStart(); if (this.data.packOpen) this._tileSheenStart(); });   // 布局落定后才量得到瓦片/卡包的真实矩形
       // 探店日:核销完最后一家回到本页(onShow 重拉)时自动弹结算 —— 只认 allDone 上升沿,
       // 重进一个早已完成的主题不重放仪式。经典定向有自己的 completed→openFinish 链,不走这里。
       if (mode === 2 && !this.data.isPreview) {
@@ -7440,12 +7366,12 @@ Page({
     wx.navigateTo({ url: '/subpackageRoam/citystamp/index?kind=sign&place=' + encodeURIComponent(place) });
   },
   blockSceneTouch() {},
-  openSessionTools() { this.setData({ sessionToolsOpen: true, toolsOut: false }); },
+  openSessionTools() { this._toolsMount(); },
   // 收进菜单的动作:先关菜单再执行,与其它 *FromTools 同一条规矩。
   onScanArriveFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onScanArrive()); },
   onRunToggleFromTools() { this.setData({ sessionToolsOpen: false }, () => this.onRunToggle()); },
   openStackOrChaptersFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openStackOrChapters()); },
-  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this.setData({ sessionToolsOpen: true, toolsOut: false }); this.loadSessionStats(); this.loadPlayContact(); } },
+  toggleSessionTools() { if (this.data.sessionToolsOpen) this._toolsClose(); else { this._toolsMount(); this.loadSessionStats(); this.loadPlayContact(); } },
   closeSessionTools() { this._toolsClose(); },
   /* 定位驱动的两行(自动记录足迹 / 到点提醒)在这一页翻不动:它们跟着系统定位权限走。
    * 没开就去要权限,已经开着就说清楚它由谁决定 —— 不留一枚按下去毫无反应的开关。 */
@@ -9449,12 +9375,24 @@ Page({
 
   // 2026-10-23 弹层动效:右上角工具菜单原来一帧收起;点遮罩 / 再点按钮先淡出(--cy-motion-fast 140ms)再卸载。
   // 菜单里点某一项去别处(扫码、打开章节…)仍是直接收起,马上接下一层,不会两层同时动。
+  /** 动效 v2 · 时刻 7:菜单从右上角按钮处长出来。先挂节点(缩在角上),下一拍再置 toolsIn,
+   *  让 WXSS 的 transition 有起点;行的 30ms 错峰由 .tools--corner.is-in .drow:nth-child 的 transition-delay 给。
+   *  减弱动态:直接是终态(WXSS 里 transition:none)。 */
+  _toolsMount() {
+    this.setData({ sessionToolsOpen: true, toolsOut: false, toolsIn: !!this.data.reducedMotion });
+    if (this.data.reducedMotion) return;
+    if (this._toolsInTimer) clearTimeout(this._toolsInTimer);
+    this._toolsInTimer = setTimeout(() => {
+      this._toolsInTimer = null;
+      if (this.data.sessionToolsOpen && !this.data.toolsOut) this.setData({ toolsIn: true });
+    }, 24);
+  },
   _toolsClose() {
     if (!this.data.sessionToolsOpen) return;
     if (this.data.reducedMotion) { this.setData({ sessionToolsOpen: false, toolsOut: false }); return; }
     if (this.data.toolsOut) return;
     this.setData({ toolsOut: true });
-    setTimeout(() => { if (this.data.toolsOut) this.setData({ sessionToolsOpen: false, toolsOut: false }); }, 140);
+    setTimeout(() => { if (this.data.toolsOut) this.setData({ sessionToolsOpen: false, toolsOut: false, toolsIn: false }); }, 140);
   },
 
   /** 2026-10-28 通关过场:整个主题走完时先放「三棱锥炸开 → 银色城瘾标志」,播完再露出通关勋章页。探店日与试玩不放。 */

@@ -886,13 +886,16 @@ page { background: var(--cy-color-bg-page); }
   box-shadow:0 20rpx 44rpx rgba(0,0,0,.30); /* ds-ok 压在深色底上的卡片投影 */
   opacity:0;
   transform:translate(var(--tx0,0px), var(--ty0,0px)) scale(.30) rotate(var(--rot,0deg)); }
+/* 卡面流光:index.js 在发牌结束后用 this.animate 循环扫过(3.4s),这里只定形 */
+.fx-tile__sheen{ position:absolute; left:0; top:0; width:50%; height:100%; opacity:0; pointer-events:none;
+  background:linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.38) 50%, rgba(255,255,255,0) 100%); } /* ds-ok 原型 .card::after 流光 */
 /* 发牌两段:一条 transition 画不出弧,所以中间必须真的落一帧在弧顶。
-   两段时长之和 = DEAL_FLIGHT(1240ms),分界 = DEAL_ARC(52%),改了要同步 index.js。 */
+   弹出(弹簧 .9s)→ 停在扇形 → 落格(弹簧 .8s);分界 = DEAL_ARC(1100ms),改了要同步 index.js。 */
 .fx-tile.is-flying{ opacity:1;
-  transform:translate(var(--tx1,0px), var(--ty1,0px)) scale(.78) rotate(calc(var(--rot,0deg) * .4));
-  transition:transform .832s cubic-bezier(.18,.82,.26,1), opacity .12s ease-out; }
+  transform:translate(var(--tx1,0px), var(--ty1,0px)) scale(.8) rotate(var(--rot,0deg));
+  transition:transform .9s cubic-bezier(.34,1.56,.64,1), opacity .3s; }
 .fx-tile.is-dealt{ opacity:1; transform:translate(0,0) scale(1) rotate(0deg);
-  transition:transform .768s cubic-bezier(.33,0,.2,1), opacity .12s ease-out, filter var(--cy-motion-standard) var(--cy-ease-out); }
+  transition:transform .8s cubic-bezier(.34,1.56,.64,1), opacity .12s ease-out, filter var(--cy-motion-standard) var(--cy-ease-out); }
 .play--reduced-motion .fx-tile{ transition:none; opacity:1; transform:none; }
 /* 量尺寸的那一帧把变换整个关掉:待机态同时挂着 scale 和 rotate,
    从变换后的外框反推布局尺寸必然带误差(实测 4 家差 11px、6 家差 16px)。
@@ -936,153 +939,45 @@ page { background: var(--cy-color-bg-page); }
 .fx-tail{ padding:var(--cy-space-5) var(--cy-page-x) var(--cy-space-6); text-align:center;
   font-size:21rpx; color:var(--cy-color-text-tertiary); } /* ds-ok 页尾说明,比 caption 小一档 */
 
-/* ── 镭射卡包:全静态叠加,没有任何循环动画 ──
-   真镭射膜的辨识度在「褶皱造成的高对比断裂」,不在均匀彩虹 ⇒ 色段宽窄刻意不均、
-   亮脊紧挨暗谷。⚠️ 上线前建议把这层离线合成一张 PNG:静态图更省、也免掉多重渐变的真机开销。 */
-.fx-packwrap{ position:absolute; left:0; right:0; top:0; bottom:0; z-index:40;
-  display:flex; align-items:center; justify-content:center; }
-/* ⚠️ position + z-index 都是必需的,别当冗余删掉:
-     ① 撕口/袋口片/顶部封口条是 .fx-pack 的直接子元素(封口条要扯出包外,不能放进
-        overflow:hidden 的 __body),它们 position:absolute 需要这里有定位祖先;
-     ② 有 transform 的元素等价于 z-index:0,不显式抬到 40 的话,爆炸的光效层
-        (31~34)会全部盖在包**表面**上 —— 那就成了「屏幕闪了一下」。 */
-.fx-pack{ position:relative; z-index:40; width:424rpx; height:741rpx;
-  transform:rotate(-3.4deg); transform-origin:50% 62%; }
-/* 高度由包装图的原始比例定(pages/play/assets/pack-foil.png 330×577):424 × 577/330 ≈ 741rpx。
-   按别的比例拉伸,膜面的褶皱会跟着变形,一眼假。换图时这三个数要一起改:
-   包高、上封口 12%、下封口 5%。 */
-.fx-pack__body{ position:relative; width:100%; height:100%; overflow:hidden;   /* 不设圆角:真图自带边形 */
-  box-shadow:0 52rpx 80rpx rgba(0,0,0,.62); } /* ds-ok 实物投影 */
-/* 膜面/封口都是**图片切片**,不是背景 —— WXSS 的 background-image 不吃本地图片。
-   袋身铺整幅;上下封口用同一张图,靠父级 overflow:hidden 各露出一条。
-   (2026-08-12 那轮「用 CSS 画镭射」的兜底到此作废:真图一上,渐变全是多余的。) */
-.fx-pack__foil{ position:absolute; left:0; top:0; width:100%; height:100%; }
-/* x-fix7 P-6:主题名印在膜面上。膜是浅色的,字必须是黑的;位置沿用原型(主标从包高 26.5% 起)。
-   包边的半透明白毛边已在 pack-foil.png 里清掉(alpha<200 的边缘像素置空)。 */
-.fx-pack__print{ position:absolute; left:52rpx; right:40rpx; top:196rpx; }
-.fx-pack__t{ display:block; font-size:74rpx; font-weight:800; line-height:.98; letter-spacing:-2rpx; /* ds-ok 包装印刷:实物尺度,不属于页面字阶 */
-  color:#0A0A0A; word-break:break-all; } /* ds-ok 浅色镭射膜上的黑色印刷 */
-/* 封口压边:细齿纹 —— 塑料袋的辨识度大半在这两条 */
-.fx-pack__seal{ position:absolute; left:0; right:0; overflow:hidden; }
-/* 封口占比按实物定稿:上 12%、下 5%。撕口/袋口片跟着上封口走。 */
-.fx-pack__seal--t{ top:0; height:89rpx; }              /* 741 × 12% */
-.fx-pack__seal--b{ bottom:0; height:37rpx; }           /* 741 × 5%  */
-/* 内层是整幅图,靠父级 overflow:hidden 只露出该露的那一条 */
-.fx-pack__sealim{ position:absolute; left:0; top:0; width:424rpx; height:741rpx; }
-.fx-pack__sealim--b{ top:-704rpx; }                    /* -(741 - 37):把底边对齐到下封口 */
-
-/* ② 蓄力 1000ms:摇 + 四周压暗。没有这层压暗,后面的闪光炸不出反差。 */
-.fx-pack.is-shake{ animation:fxShake 1s cubic-bezier(.36,.07,.19,.97) both; }
-@keyframes fxShake{
-  0%{ transform:rotate(-3.4deg) translate(0,0) scale(1); }
-  26%{ transform:rotate(-6deg) translate(10rpx,-6rpx) scale(1.02); }
-  54%{ transform:rotate(-7deg) translate(16rpx,-8rpx) scale(1.045); }
-  84%{ transform:rotate(-5deg) translate(14rpx,-6rpx) scale(1.07); }
-  100%{ transform:rotate(-1.5deg) translate(0,0) scale(1.08); }
-}
-.fx-dim{ position:absolute; left:0; right:0; top:0; bottom:0; z-index:30; pointer-events:none;
-  background:#000; opacity:0; } /* ds-ok 蓄力压暗:纯黑降透明度,不是配色层 */
-.fx-dim.is-on{ opacity:.42; transition:opacity 1s ease-in; }
-
-/* ③ 横撕 640ms:顶部封口条整条向右扯走,撕口自左向右露出。真袋子就是这么开的,
-      不是从中缝裂开。封口条在 __body 之外,否则会被 overflow:hidden 裁掉。 */
-.fx-pack.is-tear{ transform:rotate(-1.5deg) scale(1.08); }
-.fx-pack.is-tear .fx-pack__seal--t{ animation:fxRip .64s cubic-bezier(.42,.02,.30,1) forwards; }
-
-/* ③′ 拖拽撕开三态。撕口进度本体是内联 style(JS _applyTear 算),这里只管:
-   is-grab 咬住封口的抓握反馈;is-snap 松手后补完/弹回的过渡(.18s = JS TEAR_SNAP);
-   is-torn 拖到位的终态 —— transform 必须等于 fxSink 的 0% 帧,否则下坠起步会跳一下。 */
-.fx-pack.is-grab{ transform:rotate(-1deg) scale(1.03); transition:transform .2s ease-out; }
-.fx-pack.is-snap{ transition:transform .18s ease-out; }
-.fx-pack.is-snap .fx-pack__seal--t{ transition:transform .18s ease-out, opacity .18s ease-out; }
-.fx-pack.is-snap .fx-pack__mouth{ transition:width .18s ease-out; }
-.fx-pack.is-torn{ transform:rotate(-1.5deg) scale(1.08); }
-.fx-pack.is-torn .fx-pack__flap--l{ animation:fxFlapL .18s cubic-bezier(.2,.7,.3,1) forwards; }
-.fx-pack.is-torn .fx-pack__flap--r{ animation:fxFlapR .18s cubic-bezier(.2,.7,.3,1) forwards; }
-@keyframes fxRip{
-  0%{ transform:translate(0,0) rotate(0deg); opacity:1; }
-  22%{ transform:translate(20rpx,-2rpx) rotate(.6deg); opacity:1; }
-  100%{ transform:translate(500rpx,-18rpx) rotate(5deg); opacity:0; }
-}
-.fx-pack__mouth{ position:absolute; left:0; right:0; top:0; height:48rpx; z-index:3;
-  overflow:hidden; width:0; }
-.fx-pack.is-tear .fx-pack__mouth{ animation:fxMouth .64s cubic-bezier(.42,.02,.30,1) forwards; }
-@keyframes fxMouth{ 0%{ width:0; } 100%{ width:100%; } }
-/* 锯齿边:齿高不齐才像撕的。用 background 画,比 clip-path 兼容面稳。 */
-/* 撕口 = 一条**窄**的暗缝 + 不规则的齿边。两处要点:
-   ① 底色那层必须空出底部留给齿 —— 铺满的话齿画在它上面等于没生效(实拍是条直边黑方块);
-   ② 齿要用两种周期叠(23/31rpx),单一周期读起来是锯条,不是撕开的塑料。 */
-.fx-pack__teeth{ position:absolute; left:0; top:0; width:424rpx; height:100%;
-  background:
-    linear-gradient(-52deg, transparent 0 5rpx, #141920 5rpx) bottom left / 23rpx 13rpx repeat-x, /* ds-ok 撕口齿:袋内的暗,不是页面表面 */
-    linear-gradient(-38deg, transparent 0 7rpx, #10151B 7rpx) bottom left / 31rpx 10rpx repeat-x, /* ds-ok 同上,错开周期打破规律 */
-    linear-gradient(180deg, #0A0D11 0%, #161C24 100%) top left / 100% calc(100% - 13rpx) no-repeat; } /* ds-ok 袋内的暗,不是页面表面 */
-.fx-pack__flap{ position:absolute; top:89rpx; height:44rpx; width:46%; z-index:2; opacity:0;
-  background:linear-gradient(180deg, rgba(226,236,238,.92) 0%, rgba(150,172,180,.5) 100%); } /* ds-ok 袋口内侧 */
-.fx-pack__flap--l{ left:2%; transform-origin:0% 0%; }
-.fx-pack__flap--r{ right:2%; transform-origin:100% 0%; }
-.fx-pack.is-tear .fx-pack__flap--l{ animation:fxFlapL .64s cubic-bezier(.2,.7,.3,1) forwards; }
-.fx-pack.is-tear .fx-pack__flap--r{ animation:fxFlapR .64s cubic-bezier(.2,.7,.3,1) forwards; }
-@keyframes fxFlapL{ 0%{ opacity:0; transform:rotate(0); } 45%{ opacity:.9; } 100%{ opacity:.9; transform:rotate(-11deg); } }
-@keyframes fxFlapR{ 0%{ opacity:0; transform:rotate(0); } 45%{ opacity:.9; } 100%{ opacity:.9; transform:rotate(11deg); } }
-
-/* ④ 空袋自由落体:爆完就往下坠出画面,把屏幕正中让给卡片。
-      缓动必须是加速的 —— 匀速或 ease-in-out 读起来像「被谁拖走」,不像掉下去。 */
-.fx-pack.is-sink{ animation:fxSink .72s cubic-bezier(.45,0,.75,.55) forwards; }
-@keyframes fxSink{
-  0%{ transform:rotate(-1.5deg) scale(1.08) translateY(0); opacity:1; }
-  55%{ opacity:1; }
-  100%{ transform:rotate(13deg) scale(1) translateY(620rpx); opacity:0; }
-}
-
-/* ── 爆炸六层。★ 光效 z-index 全部低于卡包(40),碎片高于卡包。
-      光跑到包表面上就成了「屏幕闪了一下」,不是「从袋子里炸出来」。
-      爆心 = 卡包正中:卡包是 flex 居中的,所以这些层用 50%/50% 就与之重合。 ── */
-/* 爆炸的核心光:★ 只做「根」,不做「环」。
-   原来它从 scale(.14) 涨到 2.4,软边一路铺开就读成一圈扩散的圆环 ——
-   用户要的是四射的光,不是圆环。所以尺寸砍半、几乎不涨,亮度交给放射光条。 */
-.fx-bloom{ position:absolute; left:50%; top:50%; z-index:31; width:560rpx; height:560rpx;
-  margin:-280rpx 0 0 -280rpx; border-radius:var(--cy-radius-pill); pointer-events:none;
-  background:radial-gradient(circle, rgba(255,255,255,.92) 0%, rgba(242,227,184,.72) 22%, /* ds-ok 开包核心光 */
-    rgba(245,214,200,.40) 44%, rgba(216,200,232,.16) 66%, rgba(191,232,224,0) 84%); /* ds-ok 同上 */
-  animation:fxBloom 1.24s cubic-bezier(.1,.7,.3,1) forwards; }
-@keyframes fxBloom{ 0%{ opacity:0; transform:scale(.5); } 14%{ opacity:1; }
-  100%{ opacity:0; transform:scale(1.15); } }
-
-/* 放射光条:爆心在包正中 ⇒ 全向等分。角度/长度/颜色由 blastRays 内联给。
-   外层只吃角度(宽高为 0,原点即爆心),内层做伸长 —— 见 WXML 里的说明。 */
-.fx-ray{ position:absolute; left:50%; top:50%; z-index:33; width:0; height:0;
-  pointer-events:none; transform-origin:0 0; }
-.fx-ray__b{ position:absolute; left:0; bottom:0; opacity:0; transform-origin:50% 100%;
-  filter:blur(1rpx);   /* 圆环删掉后,四射的光是唯一的方向感来源 —— 让它更实 */
-  animation:fxRay 1s cubic-bezier(.08,.76,.28,1) forwards; }
-@keyframes fxRay{
-  0%{ opacity:0; transform:scaleY(.06) scaleX(1); }
-  16%{ opacity:.92; }
-  100%{ opacity:0; transform:scaleY(1) scaleX(.28); }
-}
-
-/* 碎片:三成大块碎膜七成细屑,尺寸一致就读成彩纸。在包**前面**飞 —— 它们是实体不是光。 */
-.fx-shard{ position:absolute; left:50%; top:50%; z-index:45; pointer-events:none;
-  border-radius:2rpx; /* ds-ok 碎屑的实物圆角,比任何 radius token 都小 */
-  animation:fxShard 2s cubic-bezier(.14,.72,.34,1) forwards; }
-@keyframes fxShard{
-  0%{ transform:translate(-50%,-50%) rotate(0deg) scale(.5); opacity:0; }
-  12%{ opacity:1; }
-  100%{ transform:translate(calc(-50% + var(--dx,0px)), calc(-50% + var(--dy,0px)))
-        rotate(var(--srot,0deg)) scale(1); opacity:0; }
-}
-
-.play--reduced-motion .fx-pack.is-shake,
-.play--reduced-motion .fx-pack.is-tear .fx-pack__seal--t,
-.play--reduced-motion .fx-pack.is-tear .fx-pack__mouth,
-.play--reduced-motion .fx-pack.is-tear .fx-pack__flap,
-.play--reduced-motion .fx-pack.is-sink{ animation:none; }
-.play--reduced-motion .fx-dim,
-.play--reduced-motion .fx-bloom,
-.play--reduced-motion .fx-ray,
-.play--reduced-motion .fx-ray__b,
-.play--reduced-motion .fx-shard{ display:none; }
+/* ── 动效 v2 · 时刻 2 卡包 ──
+   标题在包上方;包是 400×560rpx(原型 200×280)的镭射膜图,浮动与流光由 index.js 的 this.animate 循环,
+   点开后的抖 / 下沉 / 彩纸同样 this.animate;发牌是下面 .fx-tile 的 transition。不新增 @keyframes。 */
+.fx-packhead{ position:absolute; left:48rpx; right:48rpx; top:240rpx; z-index:41; text-align:center; pointer-events:none;
+  display:flex; flex-direction:column; align-items:center;
+  opacity:1; transition:opacity .3s cubic-bezier(.32,.72,0,1); } /* ds-ok 原型 .m2 .title top:120px */
+.fx-packhead.is-go{ opacity:0; }
+.fx-packhead__t{ font-size:48rpx; font-weight:700; line-height:1.5; color:var(--lk-ink, var(--cy-color-text-primary)); max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 原型 .title b 24px */
+.fx-packhead__s{ font-size:26rpx; line-height:1.5; color:var(--lk-mute, var(--cy-color-text-tertiary)); } /* ds-ok 原型 .title span 13px */
+.fx-packtap{ position:absolute; left:0; right:0; top:1020rpx; z-index:41; text-align:center; pointer-events:none;
+  font-size:24rpx; letter-spacing:.24em; color:var(--lk-mute, var(--cy-color-text-tertiary)); /* ds-ok 原型 .tap top:510px 12px */
+  opacity:1; transition:opacity .3s cubic-bezier(.32,.72,0,1); }
+.fx-packtap.is-go{ opacity:0; }
+.fx-packwrap{ position:absolute; left:0; right:0; top:380rpx; height:560rpx; z-index:40; pointer-events:none;
+  display:flex; align-items:center; justify-content:center; } /* ds-ok 原型 .pack top:330px - 140px */
+.fx-pack{ position:relative; z-index:40; width:400rpx; height:560rpx; pointer-events:auto;
+  border-radius:28rpx; box-shadow:0 60rpx 120rpx rgba(0,0,0,.5), inset 0 0 0 2rpx rgba(255,255,255,.6); } /* ds-ok 原型 .pack 14px / 投影 */
+.fx-pack__body{ position:relative; width:100%; height:100%; overflow:hidden; border-radius:28rpx;
+  background:linear-gradient(135deg,#d7f2ff 0%,#f8d7ff 24%,#fff3c9 46%,#c9ffe9 68%,#d6dcff 100%); } /* ds-ok 原型 .pack 镭射底(conic 渲染层不认,取线性近似) */
+.fx-pack__strip{ position:absolute; left:0; right:0; top:0; height:44rpx; background:repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 12rpx,transparent 12rpx 24rpx); } /* ds-ok 原型 .pack::after 封口齿纹 */
+.fx-pack__sheen{ position:absolute; left:0; top:0; width:180rpx; height:100%; opacity:0; pointer-events:none;
+  background:linear-gradient(115deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.75) 50%, rgba(255,255,255,0) 100%); } /* ds-ok 原型 .pack::before 流光 */
+.fx-pack__t{ position:absolute; left:36rpx; top:68rpx; font-size:44rpx; font-weight:800; letter-spacing:.02em; line-height:1.2; color:#141420; } /* ds-ok 原型 .lg 22px */
+.fx-pack__sub{ position:absolute; left:36rpx; top:128rpx; right:36rpx; font-size:22rpx; line-height:1.4; color:rgba(20,20,32,.6); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok 原型 .sub 11px */
+.fx-pack__em{ position:absolute; left:104rpx; top:228rpx; width:192rpx; height:192rpx; border-radius:56rpx; transform:rotate(45deg);
+  background:linear-gradient(145deg,#fff,#c9ccff 60%,#8e94ff); box-shadow:0 24rpx 60rpx rgba(80,90,255,.35); } /* ds-ok 原型 .em 96px 菱形 */
+.fx-pack__ct{ position:absolute; left:36rpx; bottom:32rpx; font-size:22rpx; line-height:1.4; color:rgba(20,20,32,.55); } /* ds-ok 原型 .ct 11px */
+/* 彩纸:片的位置 / 旋转 / 透明度全由 this.animate 给,这里只定尺寸、起点(开口处) */
+.fx-conf{ position:absolute; left:50%; top:600rpx; width:20rpx; height:20rpx; z-index:45; pointer-events:none; }
+.fx-cf{ position:absolute; left:-8rpx; top:-14rpx; width:16rpx; height:28rpx; border-radius:4rpx; opacity:0; } /* ds-ok 原型 .burst i 8×14 */
+/* 「收进卡册」:发牌结束后最后一个出现(原型 .again.fade.in:.5s / .6s --out) */
+.fx-collect{ position:absolute; left:48rpx; right:48rpx; bottom:calc(84rpx + env(safe-area-inset-bottom)); z-index:42; height:104rpx; border-radius:52rpx;
+  display:flex; align-items:center; justify-content:center; font-size:32rpx; font-weight:600; color:var(--lk-ink, var(--cy-color-text-primary));
+  background:rgba(48,48,54,.86); -webkit-backdrop-filter:blur(20px); backdrop-filter:blur(20px); opacity:0; transform:translateY(28rpx);
+  transition:opacity .5s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1); } /* ds-ok 原型 .btn.ghost 52px */
+.fx-collect.is-in{ opacity:1; transform:none; }
+.play--reduced-motion .fx-collect{ transition:none; }
+.play--reduced-motion .fx-packhead,.play--reduced-motion .fx-packtap{ transition:none; }
+.play--reduced-motion .fx-conf{ display:none; }
 
 /* 到店那一步的核销入口:比其他 sheet-nav 重一档,但仍是中性色 */
 .sheet-nav--verify{ background:rgba(255,255,255,.10); } /* ds-ok 半屏内的次级强调面 */
@@ -1775,14 +1670,31 @@ page { background: var(--cy-color-bg-page); }
 .tools-layer{ position:fixed; inset:0; z-index:107; }
 .tools-mask{ position:absolute; inset:0; z-index:40; }
 .tools--corner{ position:absolute; top:calc(var(--cy-btn-h) + var(--cy-space-6)); right:var(--cy-page-x);
-  z-index:41; width:560rpx; max-height:60vh; border-radius:var(--cy-radius-lg);
-  background:var(--cy-color-bg-elevated); box-shadow:var(--cy-shadow-card);
-  /* 2026-10-23 弹层动效:菜单原来一帧出现 / 消失。出现淡入 standard 220(全局 cy-fade-in,不新增关键帧),
-     收起淡出 fast 140(index.js 的 _toolsClose) */
-  animation:cy-fade-in var(--cy-motion-standard) var(--cy-ease-out); }
-.tools--corner.is-out{ animation:none; opacity:0; transition:opacity var(--cy-motion-fast) var(--cy-ease-standard); pointer-events:none; }
-.tools-mask.is-out{ pointer-events:none; }
-.play--reduced-motion .tools--corner{ animation:none; }
+  z-index:41; width:460rpx; max-height:60vh; box-sizing:border-box; padding:12rpx; border-radius:48rpx;
+  background:rgba(36,36,42,.92); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); /* ds-ok 动效 v2 时刻 7 菜单玻璃 */
+  box-shadow:var(--cy-shadow-card);
+  /* 动效 v2 · 时刻 7:从右上角按钮处按角点缩放长出来(origin 92% 0),.42s --ease;不新增 @keyframes */
+  transform-origin:92% 0; transform:scale(.2); opacity:0;
+  transition:transform .42s cubic-bezier(.32,.72,0,1), opacity .25s; } /* ds-ok 动效 v2 --ease */
+.tools--corner.is-in{ transform:none; opacity:1; }
+.tools--corner.is-out{ animation:none; opacity:0; transition:opacity var(--cy-motion-fast) var(--cy-ease-standard), transform var(--cy-motion-fast) cubic-bezier(.32,.72,0,1); transform:scale(.2); pointer-events:none; } /* ds-ok 动效 v2 --ease;收起 140ms 与 index.js _toolsClose 同步 */
+.tools-mask{ background:rgba(0,0,0,.4); opacity:0; transition:opacity .35s; } /* ds-ok 动效 v2 时刻 7 压暗 */
+.tools-mask.is-in{ opacity:1; }
+.tools-mask.is-out{ opacity:0; pointer-events:none; }
+.tools--corner .drow{ min-height:0; padding:24rpx 28rpx; gap:24rpx; border-top:0; border-radius:32rpx; font-size:30rpx;
+  opacity:0; transform:translateY(-12rpx); transition:opacity .3s cubic-bezier(.32,.72,0,1), transform .3s cubic-bezier(.32,.72,0,1); } /* ds-ok 动效 v2 菜单行 */
+.tools--corner.is-in .drow{ opacity:1; transform:none; }
+.tools--corner.is-in .drow:nth-child(1){ transition-delay:60ms; }
+.tools--corner.is-in .drow:nth-child(2){ transition-delay:90ms; }
+.tools--corner.is-in .drow:nth-child(3){ transition-delay:120ms; }
+.tools--corner.is-in .drow:nth-child(4){ transition-delay:150ms; }
+.tools--corner.is-in .drow:nth-child(5){ transition-delay:180ms; }
+.tools--corner.is-in .drow:nth-child(n+6){ transition-delay:210ms; }
+.tools--corner .drow .ds,.tools--corner .drow .dv,.tools--corner .drow .darr{ display:none; }
+.tools--corner .dic{ width:44rpx; height:44rpx; }
+.tools--corner .dt{ font-size:30rpx; line-height:44rpx; } /* ds-ok 原型 .mi 15px */
+.tools--corner .drow--sos .dt{ color:#ff6b5e; } /* ds-ok 动效 v2 紧急求助红 */
+.play--reduced-motion .tools--corner,.play--reduced-motion .tools--corner .drow,.play--reduced-motion .tools-mask{ transition:none; }
 
 /* 菜单里的只读行(思维阁进度):没有箭头、不可点,与可点的 .drow 区分开。 */
 .drow--static { opacity: 1; }

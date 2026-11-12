@@ -1,3 +1,4 @@
+// 2026-11-12 v2-b(卡包重做删旧撕包/爆炸约 74 行、菜单与票根重排):play/index.js 两条既有锚点仅行号位移(U4-DYNAMIC 章节显形 patch 1868→1794、U5 loadMilestone 8909→8835),调用行逐字相同、理由与条数不变、不新增登记;u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-12 x-fix6(首页定位同意改顶部卡片,pages/index/index.js data +1 行,其后 U1-VARIABLE 1104→1105、U4-DYNAMIC 1211/1320/1427→1212/1321/1428 仅行号位移,调用行逐字相同、理由与条数不变、不新增登记;两个 digest 按门禁算法重算)
 // 2026-11-11 f-money3(定价页「无人带」自由探索红字 +4 行于 loadLineupNames 之上;发布编辑器自玩票上送只限经典定向,注释 +1 行):pricing U5 补名调用点 184→188、fabu U4-DYNAMIC 地图重绘调用点 10038→10039 仅行号位移,调用行逐字相同、理由与条数不变、不新增登记;u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-11 f-pages(漫游护照官方路线大卡 +22 行、主地图横滑卡;个人主页帖文 tab 发帖入口 +6/+29 行):roam/index.js 17 条 U4-DYNAMIC / U5 与 cy/profile/index.js 3 条 U1-VARIABLE / U4-DYNAMIC 既有锚点仅行号位移(roam 831→853、1883→1906、1972→1995、2758→2781、2787→2810、4200→4223、4573→4596、4787→4810、4872→4895、4983→5006、5088→5111、5146→5169、5431→5454、6093→6116、6100→6123、6278→6315、6287→6324;profile 720→726、1296→1326、2145→2175),difflib 对 launch 底座逐行映射且调用行逐字相同,理由与条数不变、不新增登记;u1Variable / u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
@@ -988,7 +989,7 @@ module.exports = {
 // 2026-11-02 走查修复 l4-counter(M-12/M-21/M-24 在 merchantinfo.js 前段 +8 行):2 条 U4-DYNAMIC 锚点仅行号位移(2433→2441、2465→2473),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 集成 l4-counter 合 pay-gate/l1/l2/l3:两侧登记取并集,不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 在合并树重算。
 // 2026-11-03 Round5 l7-launch:club/apply 游客登录入口(+11 行),onInput 233→244、toggleBool 244→255 仅行号位移,调用行逐字相同、理由与条数不变;digest 按门禁同一算法重算。
-"6f9c77ddc914a24ac1019d52965541aeaf9303395d311038d0559f73ec4ec37d",
+"187cbe1da50a23ae12234e18ef525c0d1183c1ed8ce61676670f9462bd5e0904",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1183,7 +1184,7 @@ module.exports = {
 // 2026-11-11 f-play2 合入 f-money3,再合 launch(qx-final3 + f-pages):三侧行号位移取并集,u4Dynamic / u5Silent digest 按合并树实算。
 // 2026-11-11 f-play2 合入 f-money3:pricing/index.js:188(f-money3 侧位移)与 play/index.js:8895(f-play 侧位移)合并,key 集合按合并树实算 digest。
 // 2026-11-11 qx-final3 合入 f-pages 后合并树:f-play(play/index.js)与 f-pages(roam/index.js、cy/profile/index.js)两侧行号位移合并,条数与理由不变,digest 按同一算法重算。
-"357b3df595210a153d24740aea1239f3f25ee7e58bec24ddc55c2e6629387e62"
+"9c1ecfb35c9680d480be4dfbd35aef04bf1dc43dca1fc2e5ffc05990c679b5a6"
 
     }
   },
@@ -1409,7 +1410,7 @@ module.exports = {
     "chengyinhub-xcx/pages/searchmap/index.js:576": "新增活动marker只拼activityMarkers[at]路径，at从已建点数量顺序递增；marker全局activityId来自列表offset+i，不接收服务端键名；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/square/detail/index.js:1285": "评论翻页只追加list[oldLen+i]，其余commentState/listErr/nodata/hasMore固定字面字段；响应遍历序号只形成数组下标；owner=小程序，复核=2026-09-30",
     // 2026-11-02 walk-fix l1-play:上方净增 6 行,同一处章节正文显形 patch 1791→1797,写法与理由未改。
-    "chengyinhub-xcx/pages/play/index.js:1868": "章节正文显形局部patch只写chapterParas[i]或chapStory.lines[i]的in/dir/d三个固定字段；i来自当前冻结数组遍历，值为本地布尔/方向枚举/延迟数值，异步回包前后校验章节模式及数组身份；WXML真消费两namespace；替代旧opacity/scale/blur渲染登记，经人工审查迁移；owner=小程序，复核=2026-09-30",
+    "chengyinhub-xcx/pages/play/index.js:1794": "章节正文显形局部patch只写chapterParas[i]或chapStory.lines[i]的in/dir/d三个固定字段；i来自当前冻结数组遍历，值为本地布尔/方向枚举/延迟数值，异步回包前后校验章节模式及数组身份；WXML真消费两namespace；替代旧opacity/scale/blur渲染登记，经人工审查迁移；owner=小程序，复核=2026-09-30",
     "chengyinhub-xcx/pages/club/apply/index.js:258": "onInput 的 f 只来自同页 WXML 的 leaderName/phone/identity/coFounders/maxEventSize/avgEventSize 输入；原值由同名输入与回顾使用，新增 fieldErrors.f 只清对应栏下错误，实际错误键 leaderName/phone/experience 在 WXML 消费；不取服务端字段名；owner=小程序，复核=2026-11-05",
     "chengyinhub-xcx/pages/club/apply/index.js:269": "toggleBool 的键取自同一份 data-field 枚举，只在 0/1 之间翻转能力自评项；owner=小程序，复核=2026-10-31",
     "chengyinhub-xcx/components/cy/nav-bar/index.js:39": "动态 setData 需精确登记：setData 参数不是对象字面量；owner=小程序，复核=2026-09-30",
@@ -1587,7 +1588,7 @@ module.exports = {
       //   2026-11-02 合 master(master 侧 8072→8082):合并树同一调用行 8218。
       //   2026-11-02 round3 P-08(放行时由门自己接着进 +10 行)、P-10(文字反馈只在答对时用 +2 行):8218→8230,调用与理由未改。
       //   2026-11-03 round5D P-08(「返回地图」三个方法 + 放行对账抽成 _syncChapterHold,上方净增 29 行):8236→8265,调用与理由未改。
-      "chengyinhub-xcx/pages/play/index.js:8909": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
+      "chengyinhub-xcx/pages/play/index.js:8835": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/topic/pricing/index.js:188": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageB/utils/predict-entry.js:15": "消息页「竞猜待答」入口显隐读取(2026-10-22 业主:无待答不出入口):读失败照样显示入口(宁可多一行,不让 48 小时期限提醒消失),不是用户动作,无需弹错;owner=小程序,复核=2026-11-30",
   }

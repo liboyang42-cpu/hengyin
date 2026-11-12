@@ -123,8 +123,9 @@ test('a1-v3-17 入场码:没有外层白卡,标题与到期行用弹层 token �
   const css = read('pages/play/components/scene-qr-ticket/index.wxss')
   const card = css.match(/\.voucher__card \{[^}]*\}/)[0]
   assert.doesNotMatch(card, /background/)
-  assert.match(css, /\.voucher__title \{[^}]*color: var\(--cy-comp-sheet-player-text\)/)
-  assert.match(css, /\.voucher__exp \{[^}]*color: var\(--cy-comp-sheet-player-text-secondary\)/)
+  // v2-b:标题与到期行写在浅色票根上,用票根墨色(#111 / 黑 45%),不再是弹层 token 色
+  assert.match(css, /\.voucher__title \{[^}]*color: #111/)
+  assert.match(css, /\.voucher__exp \{[^}]*color: rgba\(0,0,0,\.45\)/)
   assert.match(css, /\.voucher__qr \{[^}]*background: #fff;/)
 })
 

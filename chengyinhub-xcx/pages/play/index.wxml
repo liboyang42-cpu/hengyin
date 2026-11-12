@@ -262,8 +262,8 @@
 <!-- 游玩工具层:P-28(2026-11-02)从故事流里提到页面层,自由探索的卡包页也能打开同一份菜单。行内容未改。 -->
 <view class="tools-layer" wx:if="{{sessionToolsOpen}}">
   <!-- 游玩工具:2026-09-22 起从底栏抽屉转移到故事流右上角(用户裁决)。行内容一行未改,只换了容器与定位。 -->
-  <view class="tools-mask {{toolsOut ? 'is-out' : ''}}" catchtouchmove="noop" wx:if="{{sessionToolsOpen}}" bindtap="toggleSessionTools" aria-role="button" aria-label="收起游玩工具" hover-class="cy-pressed" hover-stay-time="80"></view>
-    <scroll-view class="tools tools--corner {{toolsOut ? 'is-out' : ''}}" wx:if="{{sessionToolsOpen}}" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="tools-mask {{toolsIn ? 'is-in' : ''}} {{toolsOut ? 'is-out' : ''}}" catchtouchmove="noop" wx:if="{{sessionToolsOpen}}" bindtap="toggleSessionTools" aria-role="button" aria-label="收起游玩工具" hover-class="cy-pressed" hover-stay-time="80"></view>
+    <scroll-view class="tools tools--corner {{toolsIn ? 'is-in' : ''}} {{toolsOut ? 'is-out' : ''}}" wx:if="{{sessionToolsOpen}}" scroll-y enhanced show-scrollbar="{{false}}">
         <!-- f-play2(2026-11-11):队长自己的几行(扫成员票核销 / 展示整团码 / 解锁下一章节 / 放行这一站 / 整团结算)提到菜单最上面。
              原来排在第 9 行以后,菜单 52vh 正好切在「队伍位置」下沿、又不显示滚动条:队员停在「等待放行」时,队长打开菜单看不到「解锁下一章节」。
              行内容与守卫一字未改,只换位置;不是队长时这几行本来就不渲染,队员的菜单不变。 -->
@@ -295,9 +295,30 @@
           <view class="dcopy"><text class="dt">整团结算</text></view>
           <view class="darr"></view>
         </view>
+        <!-- 动效 v2 · 时刻 7:菜单前五行照原型的次序(入场码 / 切换章节 / 旅程手记 / 同行者 / 声音与动效),紧急求助压最后。行内容与守卫沿用原来的行,只换位置与名字。 -->
+        <view class="drow" wx:if="{{regId && !isPreview && !isMock}}" bindtap="openTicketFromTools" aria-role="button" aria-label="入场码" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="dic pic pic--ticket"></view>
+          <view class="dcopy"><text class="dt">入场码</text></view>
+          <view class="darr"></view>
+        </view>
+        <view class="drow" wx:if="{{mode==2 || chapterCards.length > 1}}" bindtap="openStackOrChaptersFromTools" aria-role="button" aria-label="切换章节" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="dic pic pic--route"></view>
+          <view class="dcopy"><text class="dt">切换章节</text></view>
+          <view class="darr"></view>
+        </view>
+        <view class="drow" bindtap="openJournalFromTools" aria-role="button" aria-label="旅程手记" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="dic pic pic--journal"></view>
+          <view class="dcopy"><text class="dt">旅程手记</text></view>
+          <view class="darr"></view>
+        </view>
+        <view class="drow" wx:if="{{mode!=2 && !isPreview && !isMock}}" bindtap="openBoardFromTools" aria-role="button" aria-label="同行者" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--team"></view><view class="dcopy"><text class="dt">同行者</text></view><text class="dv" wx:if="{{sessStats.rank}}">第 {{sessStats.rank}} 名</text><view class="darr"></view></view>
+        <view class="drow">
+          <view class="dic pic pic--gear"></view>
+          <view class="dcopy"><text class="dt">声音与动效</text><text class="ds">{{reducedMotion ? '已减少' : '正常播放'}}</text></view>
+          <view class="dsw {{reducedMotion ? '' : 'is-on'}}" catchtap="toggleReducedMotion" aria-role="switch" aria-checked="{{!reducedMotion}}" aria-label="声音与动效" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
+        </view>
 <!-- 文档二 L5 B6/B7/B9:联系主办 / 联系商家,菜单第一行;只给拨打,号码不上屏;没有号码整行不出 -->
         <view class="drow" wx:if="{{playContact}}" bindtap="callPlayContact" aria-role="button" aria-label="{{playContact.label}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="phone" size="36" /></view><view class="dcopy"><text class="dt">{{playContact.label}}</text></view><view class="darr"></view></view>
-        <view class="drow" wx:if="{{!isPreview}}" bindtap="openSos" aria-role="button" aria-label="紧急求助" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="warning" size="36" /></view><view class="dcopy"><text class="dt">紧急求助</text></view><view class="darr"></view></view>
 <view wx:if="{{themeBag.inventoryEnabled && themeBag.scope !== 'TEAM'}}" class="drow" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text></view>
         <include src="theme-player-ops-entry.wxml" />
         <view class="drow" wx:if="{{gameModule.enabled}}" bindtap="openGameModuleFromTools" aria-role="button" aria-label="本局线索" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">本局线索</text></view><view class="darr"></view></view>
@@ -332,7 +353,6 @@
           <view class="drow drow--static" wx:elif="{{sessStats.state === 'loading'}}" aria-role="text" aria-label="正在读取本局用时与得分"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">本局用时 · 当前得分</text></view><text class="dv">…</text></view>
           <view class="drow" wx:else bindtap="loadSessionStats" aria-role="button" aria-label="暂时没有读到，轻点重试" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--route"></view><view class="dcopy"><text class="dt">暂时没有读到</text></view><text class="dv">重试</text></view>
         </block>
-        <view class="drow" wx:if="{{mode!=2 && !isPreview && !isMock}}" bindtap="openBoardFromTools" aria-role="button" aria-label="同行者榜" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--team"></view><view class="dcopy"><text class="dt">同行者榜</text></view><text class="dv" wx:if="{{sessStats.rank}}">第 {{sessStats.rank}} 名</text><view class="darr"></view></view>
         <!-- 扫码到达:原来在底栏,底栏转移后这里是它唯一的入口(对账发现漏了才补上)。 -->
         <view class="drow" wx:if="{{mode!=2}}" bindtap="onScanArriveFromTools" aria-role="button" aria-label="扫码到达" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--scan"></view>
@@ -351,11 +371,6 @@
           <view class="darr"></view>
         </view>
         <!-- 自由探索在地图模式下的切章节:原来挂在底栏左键上,底栏没了就收到这里。f-play V3-08:城市定向多章时也在这里(走完后回看换章)。 -->
-        <view class="drow" wx:if="{{mode==2 || chapterCards.length > 1}}" bindtap="openStackOrChaptersFromTools" aria-role="button" aria-label="切换章节" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--route"></view>
-          <view class="dcopy"><text class="dt">切换章节</text></view>
-          <view class="darr"></view>
-        </view>
         <!-- 领队工具与模式无关:只要本场确有 lead 就出(F-57,与 master PR 1140 同口径);
              无 lead 的普通局什么都不多出来 —— 每行仍由 lead.exists 自己守。 -->
         <!-- 稿「分享实时位置 · 关 ›」→ 队伍位置:右侧值 + 箭头,同形 -->
@@ -372,16 +387,6 @@
         <view class="drow" bindtap="openRightsFromTools" aria-role="button" aria-label="我的权益" hover-class="cy-pressed" hover-stay-time="80">
           <view class="dic pic pic--gift"></view>
           <view class="dcopy"><text class="dt">我的权益</text><text class="ds">{{merchantCount}} 家 · 已核销 {{merchantDoneCount}} 家</text></view>
-          <view class="darr"></view>
-        </view>
-        <view class="drow" wx:if="{{regId && !isPreview && !isMock}}" bindtap="openTicketFromTools" aria-role="button" aria-label="入场码" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--ticket"></view>
-          <view class="dcopy"><text class="dt">入场码</text></view>
-          <view class="darr"></view>
-        </view>
-        <view class="drow" bindtap="openJournalFromTools" aria-role="button" aria-label="旅程手记" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--journal"></view>
-          <view class="dcopy"><text class="dt">旅程手记</text></view>
           <view class="darr"></view>
         </view>
         <view class="drow {{gpsOk ? '' : 'is-off'}}" bindtap="onLocationRowTap" aria-role="button" aria-label="自动记录足迹{{gpsOk ? '，已开启' : '，定位未开启'}}" hover-class="cy-pressed" hover-stay-time="80">
@@ -409,16 +414,6 @@
           <view class="dsw {{gpsOk ? 'is-on' : ''}}" aria-role="switch" aria-checked="{{gpsOk}}" aria-label="到点提醒"><view class="dsw-i"></view></view>
         </view>
         <!-- 稿「添加传感器 ›」→ 入场码 -->
-        <view class="drow" wx:if="{{regId && !isPreview && !isMock}}" bindtap="openTicketFromTools" aria-role="button" aria-label="入场码" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--ticket"></view>
-          <view class="dcopy"><text class="dt">入场码</text></view>
-          <view class="darr"></view>
-        </view>
-        <view class="drow" bindtap="openJournalFromTools" aria-role="button" aria-label="旅程手记" hover-class="cy-pressed" hover-stay-time="80">
-          <view class="dic pic pic--journal"></view>
-          <view class="dcopy"><text class="dt">旅程手记</text></view>
-          <view class="darr"></view>
-        </view>
         </block>
         <!-- 稿「设置 / 语音提示，自动暂停…… ›」 -->
         <!-- 2026-09-22 删「设置」行:它 bindtap=reopenIntro 切到 screen='intro',而起始页本轮已下线,
@@ -433,11 +428,7 @@
           <view class="dcopy"><text class="dt">背景音乐</text></view>
           <view class="dsw {{themeBgmOn ? 'is-on' : ''}}" catchtap="toggleThemeBgm" aria-role="switch" aria-checked="{{themeBgmOn}}" aria-label="背景音乐" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
         </view>
-        <view class="drow">
-          <view class="dic pic pic--gear"></view>
-          <view class="dcopy"><text class="dt">动态效果</text><text class="ds">{{reducedMotion ? '已减少' : '正常播放'}}</text></view>
-          <view class="dsw {{reducedMotion ? '' : 'is-on'}}" catchtap="toggleReducedMotion" aria-role="switch" aria-checked="{{!reducedMotion}}" aria-label="动态效果" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
-        </view>
+        <view class="drow drow--sos" wx:if="{{!isPreview}}" bindtap="openSos" aria-role="button" aria-label="紧急求助" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="warning" size="36" /></view><view class="dcopy"><text class="dt">紧急求助</text></view><view class="darr"></view></view>
     </scroll-view>
 </view>
 
@@ -628,6 +619,7 @@
             wx:for="{{seatTiles}}" wx:key="nodeId" data-id="{{item.nodeId}}" data-idx="{{index}}" bindtap="onSeatTap"
             style="{{tileH ? 'height:' + tileH + 'px;' : ''}}--tx0:{{item.tx0 || '0px'}};--ty0:{{item.ty0 || '0px'}};--tx1:{{item.tx1 || '0px'}};--ty1:{{item.ty1 || '0px'}};--rot:{{item.rot || '0deg'}}"
             aria-role="button" aria-label="{{item.chapterLabel ? item.chapterLabel + '，' : ''}}{{item.name}}{{item.done ? '，已体验' : ''}}" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="fx-tile__sheen" aria-hidden="true"></view>
         <image class="fx-tile__im" wx:if="{{item.imgUrl}}" src="{{img.first(item.imgUrl)}}" mode="aspectFill" />
         <!-- 无图兜底:商家没传封面时上半部会整片空,给一个可辨认的占位而不是留白 -->
         <view class="fx-tile__ph" wx:else><cy-icon name="pin" size="52" /></view>
@@ -661,51 +653,27 @@
            光跑到包表面上就成了「屏幕闪了一下」,不是「从袋子里炸出来」。 -->
     <!-- x-fix2 P-6:卡包首屏只有一个包,也要留一颗返回(预览态有自己的返回) -->
     <view class="play-back" wx:if="{{!packOpen && !isPreview}}" style="top:{{chrome.actionTop}}px" bindtap="goBackDetail" aria-role="button" aria-label="返回" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="34" /></view>
-    <view class="fx-dim {{packDim ? 'is-on' : ''}}"></view>
-    <view class="fx-packwrap" wx:if="{{!packOpen}}" bindtap="openPack"
-          bindtouchstart="onPackTouchStart" catchtouchmove="onPackTouchMove"
-          bindtouchend="onPackTouchEnd" bindtouchcancel="onPackTouchEnd" hover-class="cy-pressed" hover-stay-time="80">
-      <view class="fx-bloom" wx:if="{{packBurst}}"></view>
-      <block wx:if="{{packBurst}}">
-        <!-- 光条拆两层:外层只吃角度(内联 transform),内层才做伸长动画。
-             合成一层的话,关键帧里的 transform 会把内联的 rotate 冲掉;
-             改用 var() 塞进关键帧又在老安卓 webview 上不稳 —— 两层最省心。 -->
-        <view class="fx-ray" wx:for="{{blastRays}}" wx:key="id" style="transform:rotate({{item.a}}deg)">
-          <view class="fx-ray__b"
-                style="width:{{item.w}}px;height:{{item.len}}px;margin-left:-{{item.w / 2}}px;
-                       animation-duration:{{item.dur}}ms;
-                       background:linear-gradient(0deg,{{item.c}} 0%,rgba(255,255,255,.92) 42%,rgba(255,255,255,0) 100%)"></view>
-        </view>
-      </block>
-      <view class="fx-pack {{packShake ? 'is-shake' : ''}} {{packTear ? 'is-tear' : ''}} {{packGrab ? 'is-grab' : ''}} {{packSnap ? 'is-snap' : ''}} {{packTorn ? 'is-torn' : ''}} {{packSink ? 'is-sink' : ''}}">
+    <!-- 动效 v2 · 时刻 2:标题在包上方,包浮动 + 慢流光,下方「轻点开启」。点开 → 抖 → 包下沉 + 彩纸 → 卡片弹出再落格。
+         动画全走 index.js 的 this.animate(浮动 / 流光 / 抖 / 下沉 / 彩纸)与 WXSS 的 transition(发牌),没有 @keyframes。 -->
+    <view class="fx-packhead {{packGo ? 'is-go' : ''}}" wx:if="{{!packOpen}}">
+      <text class="fx-packhead__t">{{topicName || chapter.name || modeLabel}}</text>
+      <text class="fx-packhead__s">本章 {{seatTiles.length}} 张</text>
+    </view>
+    <view class="fx-packwrap" wx:if="{{!packOpen}}" bindtap="openPack" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="轻点开启卡包">
+      <view class="fx-pack">
         <view class="fx-pack__body">
-          <image class="fx-pack__foil" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
-          <!-- x-fix7 P-6(业主最终验收):包面印主题名(沿用原型的黑色印刷);不印章数副标和操作提示 -->
-          <view class="fx-pack__print"><text class="fx-pack__t">{{topicName || chapter.name || modeLabel}}</text></view>
-          <!-- 下封口:同一张图,把内层整幅图往上顶,只露出底部 5% 那条 -->
-          <view class="fx-pack__seal fx-pack__seal--b">
-            <image class="fx-pack__sealim fx-pack__sealim--b" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
-          </view>
-        </view>
-        <!-- 撕口:撕掉封口条后露出的锯齿边 + 袋内的暗,自左向右露出。
-             ⚠️ wx:if 不能省:齿纹是纯黑的,靠 width:0 + overflow:hidden 藏它,
-             在小程序渲染层没被裁干净 —— 待机态会在封口与袋身交界处漏出一条黑锯齿(实拍坐实)。
-             与其赌渲染器的裁剪语义,不如撕开前让这个节点压根不存在。 -->
-        <view class="fx-pack__mouth" wx:if="{{packTear || tearPct > 0}}" style="{{tearMouthStyle}}"><view class="fx-pack__teeth"></view></view>
-        <view class="fx-pack__flap fx-pack__flap--l"></view>
-        <view class="fx-pack__flap fx-pack__flap--r"></view>
-        <!-- 上封口:同一张图只露出顶部 12% 那条。它是**要被整条扯走**的那片,
-             所以必须留在 __body 之外 —— body 有 overflow:hidden,放里面扯不出去。 -->
-        <view class="fx-pack__seal fx-pack__seal--t" style="{{tearSealStyle}}">
-          <image class="fx-pack__sealim" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
+          <view class="fx-pack__strip"></view>
+          <view class="fx-pack__sheen"></view>
+          <text class="fx-pack__t">城瘾</text>
+          <text class="fx-pack__sub">{{topicName || chapter.name || modeLabel}}</text>
+          <view class="fx-pack__em"></view>
+          <text class="fx-pack__ct">{{seatTiles.length}} 张</text>
         </view>
       </view>
-      <!-- 碎片在包前面飞:它们是实体不是光 -->
-      <view class="fx-shard" wx:if="{{packBurst}}" wx:for="{{blastShards}}" wx:key="id"
-            style="width:{{item.w}}px;height:{{item.h}}px;background:{{item.c}};
-                   animation-duration:{{item.dur}}ms;
-                   --dx:{{item.dx}}px;--dy:{{item.dy}}px;--srot:{{item.rot}}deg"></view>
     </view>
+    <text class="fx-packtap {{packGo ? 'is-go' : ''}}" wx:if="{{!packOpen}}">轻点开启</text>
+    <view class="fx-collect {{collectIn ? 'is-in' : ''}}" wx:if="{{collectShow}}" bindtap="onCollectTap" aria-role="button" aria-label="收进卡册" hover-class="cy-pressed" hover-stay-time="80">收进卡册</view>
+    <view class="fx-conf" wx:if="{{packConf.length}}" aria-hidden="true"><view class="fx-cf {{item.id}}" wx:for="{{packConf}}" wx:key="id" style="background:{{item.c}}"></view></view>
   </scroll-view>
 
   <!-- ═══════ 点卡 → hero 展开层(2026-09-05,参考 cibby · shelf)═══════
