@@ -39,7 +39,7 @@ function loadPage(options = {}) {
   page.data = Object.assign(clone(page.data), {
     operationScope: '', editingTopicId: '', editLoaded: false, editIsDraft: false, submitting: false, draftSaving: false,
     draftUuid: 'u-1', draftMemberId: 7, baseRevision: '', pendingMaterials: [],
-    formData: Object.assign(clone(page.data.formData), { name: '寒冬', configVersion: 1,
+    formData: Object.assign(clone(page.data.formData), { name: '寒冬', imgUrl: 'media-asset:1', configVersion: 1,   // D-78:存草稿必须有封面
       chapters: [{ name: '第一章', nodes: [{ name: '甲', templateId: 3 }] }] }),
   });
   const deferred = [];

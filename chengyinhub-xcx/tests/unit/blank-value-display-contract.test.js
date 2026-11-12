@@ -35,16 +35,16 @@ test('全仓 wxml 不得出现裸 ¥{{...}}(空值会渲成孤零零一个 ¥)',
   assert.deepEqual(bad, [], `这些位置的 ¥ 是死字符，数值为空时只剩 ¥:\n  ${bad.join('\n  ')}`)
 })
 
-test('money.amount:空值渲 —,0 是合法金额不能被吃掉', () => {
+test('money.amount:空值渲 ¥0(D-119 业主「金额也写 0」),0 是合法金额不能被吃掉', () => {
   // wxs 不是 CommonJS,这里按同一份源码求值,保证断言的就是线上那份逻辑
   const src = fs.readFileSync(path.join(ROOT, 'utils/wxs/money.wxs'), 'utf8')
   const sandbox = { module: { exports: {} } }
   new Function('module', src)(sandbox.module)
   const { amount } = sandbox.module.exports
 
-  assert.equal(amount(undefined), '—')
-  assert.equal(amount(null), '—')
-  assert.equal(amount(''), '—')
+  assert.equal(amount(undefined), '¥0')
+  assert.equal(amount(null), '¥0')
+  assert.equal(amount(''), '¥0')
   // 0 / '0' / '0.00' 都是真实金额,必须照渲
   assert.equal(amount(0), '¥0')
   assert.equal(amount('0'), '¥0')

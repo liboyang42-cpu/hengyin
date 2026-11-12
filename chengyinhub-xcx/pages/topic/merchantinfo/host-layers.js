@@ -21,7 +21,7 @@ function money(v) { const n = Number(v); return Number.isFinite(n) && n > 0 ? (n
 function stationTermsText(row) {
   const cap = Number(row.maxMerchant) > 0 ? '最多 ' + Number(row.maxMerchant) + ' 家' : '不限家数';
   if (row.termsMode === 'TRAFFIC') return '到店打卡 · ' + cap;
-  if (row.termsMode === 'REVSHARE') return '俱乐部付 ≤ ¥' + (money(row.maxPerHeadFee) || '—') + ' / 人次 · ' + cap;
+  if (row.termsMode === 'REVSHARE') return '俱乐部付 ≤ ¥' + (money(row.maxPerHeadFee) || '0') + ' / 人次 · ' + cap;
   return (money(row.perkMinValue) ? '≥ ¥' + money(row.perkMinValue) + ' 权益' : '权益') + ' · ' + cap;
 }
 
