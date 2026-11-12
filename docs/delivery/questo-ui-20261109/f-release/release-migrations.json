@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "f-release-migration-set",
-  "candidateHead": "36efe6edcd62cf0e3dab8df212b7cf927bde91f6",
+  "candidateHead": "da0581c8324f3624c7c13649300b7bfb4f812840",
   "headMigrationCount": 644,
   "productionAppliedState": "UNKNOWN",
   "baseline": {
@@ -2292,7 +2292,7 @@
       "rerun": "幂等",
       "migrationId": "20261112_template_author_title_unique",
       "path": "chengyinhub-admin/sql/migration_20261112_template_author_title_unique.sql",
-      "sha256": "1aeea6ddf876a634a4a6d51de871dd91243939e5aaa6d7a77b123df5181fa0fa",
+      "sha256": "1d871c3f560a196fe422ec3bf607eddf5bc853b1391e9437e45f6fcde069682f",
       "order": 569,
       "dependsOn": [
         "20261112_template_market_status"
