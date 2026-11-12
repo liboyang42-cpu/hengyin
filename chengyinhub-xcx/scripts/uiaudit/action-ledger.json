@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 6021,
+  "controlCount": 6026,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -930562,7 +930562,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:249"
+        "staticSource": "pages/play/components/chapter-flip/index.js:154"
       }
     },
     {
@@ -930651,7 +930651,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:103"
+        "staticSource": "pages/play/components/chapter-flip/index.js:83"
       }
     },
     {
@@ -930739,11 +930739,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:249"
+        "staticSource": "pages/play/components/chapter-flip/index.js:154"
       }
     },
     {
-      "id": "pages/play/components/chapter-flip/index.wxml:35:catchtap:onTap:3",
+      "id": "pages/play/components/chapter-flip/index.wxml:23:bind:continue:onClose:5",
       "route": "component:pages/play/components/chapter-flip/index",
       "hostRoutes": [
         "pages/play/index"
@@ -930784,16 +930784,290 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
+        "tag": "cy-chapter-moment",
+        "event": "bind:continue",
+        "handler": "onClose",
+        "line": 23,
+        "selectorHint": "cy-chapter-moment[bind:continue]",
+        "visibleCondition": "{{mode === 'finale' || (mode === 'gate' && start)}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/chapter-flip/index.js:213"
+      }
+    },
+    {
+      "id": "pages/play/components/chapter-flip/index.wxml:23:bind:go:onMomentGo:3",
+      "route": "component:pages/play/components/chapter-flip/index",
+      "hostRoutes": [
+        "pages/play/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 1
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/chapter-flip/index.wxml",
+        "js": "pages/play/components/chapter-flip/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-chapter-moment",
+        "event": "bind:go",
+        "handler": "onMomentGo",
+        "line": 23,
+        "selectorHint": "cy-chapter-moment[bind:go]",
+        "visibleCondition": "{{mode === 'finale' || (mode === 'gate' && start)}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/chapter-flip/index.js:152"
+      }
+    },
+    {
+      "id": "pages/play/components/chapter-flip/index.wxml:23:bind:save:onSave:4",
+      "route": "component:pages/play/components/chapter-flip/index",
+      "hostRoutes": [
+        "pages/play/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 1
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/chapter-flip/index.wxml",
+        "js": "pages/play/components/chapter-flip/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-chapter-moment",
+        "event": "bind:save",
+        "handler": "onSave",
+        "line": 23,
+        "selectorHint": "cy-chapter-moment[bind:save]",
+        "visibleCondition": "{{mode === 'finale' || (mode === 'gate' && start)}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/chapter-flip/index.js:212"
+      }
+    },
+    {
+      "id": "pages/play/components/chapter-moment/index.wxml:1:catchtap:onTap:0",
+      "route": "component:pages/play/components/chapter-moment/index",
+      "hostRoutes": [
+        "pages/play/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 0
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 1
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/chapter-moment/index.wxml",
+        "js": "pages/play/components/chapter-moment/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
         "tag": "view",
         "event": "catchtap",
         "handler": "onTap",
-        "line": 35,
-        "selectorHint": ".cf__btn",
+        "line": 1,
+        "selectorHint": ".cm",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "读下去",
+        "ariaLabel": null,
         "ariaLabelExpression": null,
-        "ariaRole": "button",
+        "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -930827,12 +931101,12 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:249"
+        "staticSource": "pages/play/components/chapter-moment/index.js:163"
       }
     },
     {
-      "id": "pages/play/components/chapter-flip/index.wxml:37:catchtap:onClose:4",
-      "route": "component:pages/play/components/chapter-flip/index",
+      "id": "pages/play/components/chapter-moment/index.wxml:1:catchtouchmove:noop:1",
+      "route": "component:pages/play/components/chapter-moment/index",
       "hostRoutes": [
         "pages/play/index"
       ],
@@ -930843,6 +931117,10 @@
             {
               "selector": "cy-chapter-flip",
               "index": 0
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
             }
           ]
         },
@@ -930852,14 +931130,115 @@
             {
               "selector": "cy-chapter-flip",
               "index": 1
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
             }
           ]
         }
       ],
       "role": "inherited",
       "entry": {
-        "wxml": "pages/play/components/chapter-flip/index.wxml",
-        "js": "pages/play/components/chapter-flip/index.js"
+        "wxml": "pages/play/components/chapter-moment/index.wxml",
+        "js": "pages/play/components/chapter-moment/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtouchmove",
+        "handler": "noop",
+        "line": 1,
+        "selectorHint": ".cm",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "event-contract",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/chapter-moment/index.js:43"
+      }
+    },
+    {
+      "id": "pages/play/components/chapter-moment/index.wxml:18:catchtap:onGo:2",
+      "route": "component:pages/play/components/chapter-moment/index",
+      "hostRoutes": [
+        "pages/play/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 0
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 1
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/chapter-moment/index.wxml",
+        "js": "pages/play/components/chapter-moment/index.js"
       },
       "variant": null,
       "requiredRequests": null,
@@ -930874,12 +931253,12 @@
       "control": {
         "tag": "view",
         "event": "catchtap",
-        "handler": "onClose",
-        "line": 37,
-        "selectorHint": ".cf__pill",
+        "handler": "onGo",
+        "line": 18,
+        "selectorHint": ".cm__btn",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "继续",
+        "ariaLabel": "读下去",
         "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
@@ -930916,12 +931295,12 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:308"
+        "staticSource": "pages/play/components/chapter-moment/index.js:167"
       }
     },
     {
-      "id": "pages/play/components/chapter-flip/index.wxml:38:catchtap:onSave:5",
-      "route": "component:pages/play/components/chapter-flip/index",
+      "id": "pages/play/components/chapter-moment/index.wxml:36:catchtap:onSave:3",
+      "route": "component:pages/play/components/chapter-moment/index",
       "hostRoutes": [
         "pages/play/index"
       ],
@@ -930932,6 +931311,10 @@
             {
               "selector": "cy-chapter-flip",
               "index": 0
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
             }
           ]
         },
@@ -930941,14 +931324,18 @@
             {
               "selector": "cy-chapter-flip",
               "index": 1
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
             }
           ]
         }
       ],
       "role": "inherited",
       "entry": {
-        "wxml": "pages/play/components/chapter-flip/index.wxml",
-        "js": "pages/play/components/chapter-flip/index.js"
+        "wxml": "pages/play/components/chapter-moment/index.wxml",
+        "js": "pages/play/components/chapter-moment/index.js"
       },
       "variant": null,
       "requiredRequests": null,
@@ -930964,11 +931351,11 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onSave",
-        "line": 38,
-        "selectorHint": ".cf__pill",
+        "line": 36,
+        "selectorHint": ".cm__btn",
         "visibleCondition": null,
         "disabledCondition": null,
-        "ariaLabel": "保存通关卡",
+        "ariaLabel": "保存图片",
         "ariaLabelExpression": null,
         "ariaRole": "button",
         "ariaRoleExpression": null,
@@ -931005,7 +931392,104 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:307"
+        "staticSource": "pages/play/components/chapter-moment/index.js:168"
+      }
+    },
+    {
+      "id": "pages/play/components/chapter-moment/index.wxml:39:catchtap:onClose:4",
+      "route": "component:pages/play/components/chapter-moment/index",
+      "hostRoutes": [
+        "pages/play/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 0
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-chapter-flip",
+              "index": 1
+            },
+            {
+              "selector": "cy-chapter-moment",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "pages/play/components/chapter-moment/index.wxml",
+        "js": "pages/play/components/chapter-moment/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "catchtap",
+        "handler": "onClose",
+        "line": 39,
+        "selectorHint": ".cm__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "查看结算",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/components/chapter-moment/index.js:169"
       }
     },
     {
