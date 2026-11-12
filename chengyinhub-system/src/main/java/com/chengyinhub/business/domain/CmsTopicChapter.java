@@ -157,6 +157,9 @@ public class CmsTopicChapter extends BaseEntity
     /** 新生活装机计划需求组：1生存效率 2自我安顿 3城市归属；NULL 不参与分组完成规则。 */
     private Integer needGroup;
 
+    /** D-82 章节级奖励:章节结束卡上的一行奖励文案(只展示,不发放)。空 = 没有。 */
+    private String rewardText;
+
 
     @Schema(description = "节点列表")
     private List<CmsTopicNode> cmsTopicNodeList;
@@ -372,6 +375,16 @@ public class CmsTopicChapter extends BaseEntity
     public void setNeedGroup(Integer needGroup)
     {
         this.needGroup = needGroup;
+    }
+
+    public String getRewardText()
+    {
+        return rewardText;
+    }
+
+    public void setRewardText(String rewardText)
+    {
+        this.rewardText = rewardText;
     }
 
     public BigDecimal getMaxPerHeadFee()
