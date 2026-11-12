@@ -1,0 +1,8 @@
+[
+ {"id":"D7","path":"pages/merchant/reviews/index?mode=public&merchantId=1","data":{"mode":"public","pageState":"empty","items":[],"filteredItems":[]}},
+ {"id":"D6","path":"subpackageMember/market/passes/index","data":{"state":"ready","tab":"shop","products":[],"member":false}},
+ {"id":"D5","path":"pages/index/index","data":{"recoCards":[],"recoHero":null,"listLoaded":{"recommendedTopicList":true,"nearbyActivityList":true},"listLoading":{},"listErr":{},"nearbyActivityList":[]}},
+ {"id":"D3","path":"pages/activity/list/index","data":{"events":[{"id":1,"title":"城市夜跑 · 外滩段","_coverStyle":"","statusText":"报名中","timeText":"11月20日","placeText":"外滩"}],"loading":false}},
+ {"id":"D13","path":"pages/activity/baoming/baoming?id=1","data":{"pageState":"ready","activityInfo":{"name":"侦探社 · 探店日","formattedDateTime":"11月20日 14:00","address":"徐汇区某路 1 号","isSignUp":0}}},
+ {"id":"D12","path":"pages/club/topic-detail/index?topicId=1","data":{"loaded":true,"loadError":false,"statusText":"进行中","statusKey":"running","topic":{"name":"城市探索 · 夜游","cover":"","dateRange":"11月20日 – 11月30日","verifyModeText":"到店核销","chips":["自由探索","¥39"],"merchantLogo":""}}}
+]
