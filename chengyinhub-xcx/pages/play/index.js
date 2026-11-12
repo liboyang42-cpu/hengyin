@@ -43,6 +43,7 @@ const { createPlayTrail } = require('./utils/play-trail.js');
 const teamTrailKit = require('./utils/team-trail.js');
 const routeCard = require('./utils/route-card.js');
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
+const { ARRIVAL_RADIUS_METERS, ARRIVAL_RADIUS_TEXT } = require('./utils/arrival-radius.js'); // 到点校验半径唯一真源(50m,与后端围栏同值)
 const {
   normalizePlayerProjection,
   buildPlayerChoiceInput,
@@ -774,6 +775,9 @@ Page({
     // 回前台(锁屏回来、拍照 / 扫码 / 裁剪页回来、看完一段别处的内容):把 onHide 时正在响的那几路原样续上 ——
     // 站点配乐、主题配乐、讲到一半的旁白。原来只硬拉主题配乐:站点配乐那时不出声,主题配乐反而顶上来。
     audioSession.resumeAll();
+    /* D-68:被动进后台时并没有停表(见 onHide);只有「用户自己按过暂停」或「恢复态待确认」才保持停表。 */
+    if (this._runStarted && this._sessionClock && this._sessionClock.isPaused()
+      && !this._userPaused && !this._restoredRun) this._sessionClock.resume();
     this.restoreGuardAppeal();
     this._syncCommunityEntry();
     this._themeHidden = false; this._startThemePoll();
@@ -1135,8 +1139,14 @@ Page({
     this._clearPackTimers();
     const stack = typeof getCurrentPages === 'function' ? getCurrentPages() : [];
     const leaving = stack.length && stack[stack.length - 1] !== this;
-    if (!this._runStarted || this._playDisposed || leaving || this.data.isPreview || this.data.isMock) this.pauseAudio();
-    audioSession.releaseAwake(); this._stopShopNpcVoice(); this._stopLeadPoll(); this._pauseSessionClock(); this._persistRunSession(); },
+    /* D-68/D-77(业主 2026-11-11):切后台不暂停、不静音 —— 计时继续走墙钟,局内音频继续放。
+       只有「没开局 / 已卸载 / 真的离开本页 / 预览 / Mock」才停音频并停表;
+       回到前台由 onShow 恢复(时钟一直在走就不需要恢复)。 */
+    const keepsRunningInBackground = this._runStarted && !this._playDisposed && !leaving && !this.data.isPreview && !this.data.isMock;
+    if (!keepsRunningInBackground) { this.pauseAudio(); this._stopShopNpcVoice(); }
+    audioSession.releaseAwake(); this._stopLeadPoll();
+    if (!keepsRunningInBackground) this._pauseSessionClock();
+    this._persistRunSession(keepsRunningInBackground); },
 
   _clearTransientUiTimers() {
     ['_navBubbleTimer', '_burstTimer', '_couponTimer',
@@ -1159,6 +1169,7 @@ Page({
     if (!this._sessionClock) {
       this._sessionClock = createSessionClock();
       this._sessionClock.start();
+      this._userPaused = false;
     }
   },
   _pauseSessionClock() {
@@ -1176,10 +1187,11 @@ Page({
   },
   /** 暂停/离页时落盘。只记「已开始未结束」的行程;结束(通关/退出/服务端判结束)会 clear,
    *  所以重进读到的快照一定是可继续的暂停态,不是一个幽灵计时。 */
-  _persistRunSession() {
+  /** @param {boolean} [keepRunning] 切后台时的快照:写盘但**不停表**,回来时计时仍是墙钟连续的一整段。 */
+  _persistRunSession(keepRunning) {
     // 卸载时也要落盘(onUnload 先置 _playDisposed):这里只核账号归属,不看卸载标记。
     if (this._boundPlayOwner() !== this._playMember() || !this._runStarted || this.data.isPreview || this.data.isMock) return false;
-    if (this._sessionClock && !this._sessionClock.isPaused()) this._sessionClock.pause();
+    if (!keepRunning && this._sessionClock && !this._sessionClock.isPaused()) this._sessionClock.pause();
     const elapsed = this._sessionClock ? this._sessionClock.elapsedSeconds() : 0;
     const now = Date.now();
     const scope = this._runSessionScope();
@@ -1283,11 +1295,13 @@ Page({
     if (!this._sessionClock) return;
     if (this._sessionClock.isPaused()) {
       this._sessionClock.resume();
+      this._userPaused = false;
       // 玩家主动继续:这局不再是「服务端判结束就撤」的恢复态,归玩家自己了。
       this._restoredRun = false;
       if (!this.data.isPreview && !this.data.isMock && this.data.gpsOk) this.watchLocation();
     } else {
       this._sessionClock.pause();
+      this._userPaused = true;   // D-68:只有显式暂停才从墙钟里扣掉
       this._stopTracking();
     }
     if (this._sessionClock.isPaused()) this._persistRunSession();
@@ -5352,7 +5366,7 @@ Page({
                (2026-10-30 复核:霍山公园连线被 GPS 到达直接跳过;服务端同样以 ADVANCED_FIRST 拒)。 */
             const arrivesHere = ((node.vm === 0 || node.vm === 5) && (!node.hasAdvanced || that._advancedReadyNodeId === node.nodeId || that._questAwaitsArrival(node.nodeId)))
               || ([8, 9, 10].includes(node.vm) && that._advancedReadyNodeId === node.nodeId);
-            if (d <= 50 && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) { that.arrive(node.nodeId, 'gps'); break; }
+            if (d <= ARRIVAL_RADIUS_METERS && !node.done && arrivesHere && playAccuracy.canAutoArrive(loc.accuracy)) { that.arrive(node.nodeId, 'gps'); break; }
           }
           }
         };
@@ -6823,7 +6837,7 @@ Page({
     const gameNode = (this.data.nodes || []).find((n) => String(n.nodeId) === String(g.nodeId));
     const located = Number(this.data.mode) === 1 && gameNode && gameNode.lat && gameNode.lng;
     if (located && !this._loc) {
-      this.setData({ gWrong: false, gNetErr: '先开启定位，到这一站 50 米内再作答', gNetRetryable: false });
+      this.setData({ gWrong: false, gNetErr: '先开启定位，到这一站 ' + ARRIVAL_RADIUS_TEXT + '内再作答', gNetRetryable: false });
       this.requestPlayLocation();
       return;
     }

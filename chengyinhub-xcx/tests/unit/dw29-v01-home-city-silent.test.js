@@ -37,10 +37,11 @@ function latest(p,row=consent(),opts) {
   r.success({code:200,data:row});return r
 }
 const COLD_TOAST='暂时无法自动识别城市，请手动选择'
-test('V-01 冷启动/onShow 自动定位失败不弹城市提示，没有记住的城市就固定上海市',()=>{
+test('D-72 冷启动/onShow 自动定位失败不弹城市提示，没有记住的城市就露选择器而不是上海市',()=>{
   const p=page();latest(p);locations[0].success({latitude:31.23,longitude:121.47})
   requests.find(x=>x.url==='/api/map/reverse-geocode').success({code:200,data:{city:'',manualInputRequired:true,reason:'MAP_UNAVAILABLE'}})
-  assert.deepEqual(toasts,[]);assert.equal(p.data.city,'上海市');assert.equal(p.data.cityManual,false)
+  assert.deepEqual(toasts,[]);assert.equal(p.data.city,'','没有玩家自己的城市时不给默认城市')
+  assert.equal(p.data.cityManual,true,'没有城市时露出手动选择/开定位入口')
   assert.equal(store.home_city_last,undefined,'默认城市不冒充定位结果写入记忆')
   for(const fail of [l=>l.fail({errMsg:'x'}),l=>l.fail({errMsg:'getLocation:fail auth deny'})]){
     requests=[];locations=[];latest(p);fail(locations[0])
@@ -71,7 +72,7 @@ test('V-01 首页城市文字可点击重新定位',()=>{
   assert.match(wxml,/<block wx:if="\{\{city\}\}">\s*<view wx:if="\{\{!cityPicker\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
 })
 
-test('V-01 各类自动定位失败与未登录都默认上海市',()=>{
+test('D-72 各类自动定位失败与未登录都不再默认上海市',()=>{
   const cases=[
     p=>{latest(p);locations[0].fail({errMsg:'getLocation:fail auth deny'})},
     p=>{latest(p);locations[0].fail({errMsg:'x'})},
@@ -82,11 +83,13 @@ test('V-01 各类自动定位失败与未登录都默认上海市',()=>{
   for(const run of cases){
     store={};requests=[];locations=[];token='normal-session'
     const p=page();run(p)
-    assert.equal(p.data.city,'上海市');assert.equal(p.data.cityManual,false)
+    assert.equal(p.data.city,'','不再默认上海市')
+    assert.ok(p.data.cityManual === true || p.data.cityPicker === true, '没有城市时必须露出选择/开定位入口')
   }
   assert.deepEqual(toasts,[]);assert.equal(modals.length,0)
   const homeCity=require('../../utils/index/home-city-location.js')
-  assert.equal(homeCity.DEFAULT_CITY,'上海市');assert.ok(homeCity.CITY_OPTIONS.includes(homeCity.DEFAULT_CITY))
+  assert.equal(homeCity.DEFAULT_CITY,'','DEFAULT_CITY 不再冒充上海')
+  assert.equal(homeCity.fallbackCity(),'','没有历史城市时兜底为空')
 })
 test('V-01 未登录有记住的城市时沿用记住的城市',()=>{
   store={home_city_last:'杭州市'};token=''
@@ -101,12 +104,12 @@ test('Round5 #7 拒绝定位后不再自动询问,点城市才再问', () => {
   assert.equal(modals.length, 1, '首次自动询问')
   modals[0].success({ confirm: false, cancel: true })
   assert.equal(store.home_city_location_declined, 1)
-  assert.equal(p.data.city, '上海市')
+  assert.equal(p.data.city, '')
   // 再次启动 / onShow:不发同意查询、不弹窗
   requests = []; modals = []
   p = page(); p.getHomeCityLocation()
   assert.equal(requests.length, 0); assert.equal(modals.length, 0)
-  assert.equal(p.data.city, '上海市')
+  assert.equal(p.data.city, '')
   // 用户点城市:照常询问;同意后记忆清掉
   p.onTapHomeCity()
   requests.find(x => x.url === '/api/compliance/consents/latest').success({ code: 200, data: noConsent })
@@ -120,7 +123,7 @@ test('Round5 #8 游客首页城市用选城下拉,选中即改并记住;登录�
   token = ''
   const p = page(); p.getHomeCityLocation()
   assert.equal(p.data.cityPicker, true)
-  assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityPickerIndex, 1)
+  assert.equal(p.data.city, ''); assert.equal(p.data.cityPickerIndex, -1)
   p.onManualCityChange({ detail: { value: 4 } })
   assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityPickerIndex, 4); assert.equal(store.home_city_last, '杭州市')
   assert.equal(requests.length, 0, '游客选城不发任何请求'); assert.equal(locations.length, 0)
