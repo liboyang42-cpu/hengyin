@@ -168,3 +168,32 @@ test('章节载荷带上结局设置(后端形状);没开结局就不带这个�
   assert.equal('ending' in story.toPayloadChapter(story.materializeChapter(base)), false)
   assert.throws(() => story.toPayloadChapter(story.materializeChapter(Object.assign({}, base, { ending: { kind: 'thought', thoughtKey: '' } }))), /「窗外」要选一个伏笔/)
 })
+
+// D-66（业主 2026-11-11）：新发布/重新发布的主题最多 6 个结局（含一个默认结局）；
+// 已发布主题的冻结快照、进行中的局、结算都不重算（这里只钉作者侧与提交侧的口径）。
+test('D-66 结局上限 6：清单与结局章两条路都不能超', () => {
+  assert.equal(ending.MAX_ENDINGS, 6)
+
+  const list = []
+  for (let i = 1; i <= 5; i += 1) {
+    list.push({ code: 'e' + i, title: 'E' + i, summary: '', kind: 'thought', thoughtKey: 'k' + i })
+  }
+  list.push({ code: 'default', title: '兜底', summary: '', fallback: true })
+  const six = ending.serialize({ root: { schemaVersion: 1 }, list })
+  assert.equal(JSON.parse(six).ending.endings.length, 6, '6 个放行')
+
+  const seven = list.concat([{ code: 'e6', title: 'E6', summary: '', kind: 'thought', thoughtKey: 'k6' }])
+  assert.throws(() => ending.serialize({ root: { schemaVersion: 1 }, list: seven }), /结局最多 6 个/)
+
+  const chapters = []
+  for (let i = 1; i <= 5; i += 1) chapters.push({ ending: { kind: 'thought', thoughtKey: 'k' + i } })
+  chapters.push({ ending: { fallback: true } })
+  assert.equal(ending.endingChaptersIssue(chapters), '', '5 个条件 + 1 个兜底 = 6，放行')
+  chapters.push({ ending: { kind: 'thought', thoughtKey: 'k6' } })
+  assert.match(ending.endingChaptersIssue(chapters), /结局最多 6 个/)
+})
+
+test('D-66 缺默认结局的提示原样保留（发布被拦，红字文案不变）', () => {
+  assert.match(ending.endingChaptersIssue([{ ending: { kind: 'thought', thoughtKey: 'x' } }]), /结局章里要有一个默认结局/)
+  assert.match(ending.endingChaptersIssue([{ ending: { fallback: true } }, { ending: { fallback: true } }]), /结局章里只能有一个默认结局/)
+})

@@ -104,7 +104,8 @@ const MATRIX = [
   ['subpackageA/components/earnings-overview/index.js', "url: '/api/club-direct-merchant/merchant'", 'required', 'merchant', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status', { method: 'GET',", 'required', 'member', 'self-account'],
-  ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
+  // D-73：漫游任务列表改读 active-for-roam（服务端已按报名中/进行中 + 绑定漫游过滤），权限档不变
+  ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/active-for-roam'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   ['components/cy/scene-roam-task-list/index.js', "url: '/api/official/my-events'", 'required', 'member', 'self-registration'],
   ['pages/activity/official-inbox/index.js', "url: '/api/official/v2/party-inbox'", 'required', 'member', 'self-party'],
   ['pages/merchant/coop-center/index.js', "url: '/api/official/events'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],

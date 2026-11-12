@@ -33,7 +33,9 @@ public class JourneyStory {
 
     /** 空/缺省返回 null = 未配置;非法配置抛 {@link IllegalArgumentException}。 */
     public static JourneyStory parse(String rawJson) {
-        String checked = new JourneyStoryValidator().validate(rawJson, JourneyStoryValidator.Context.none());
+        // D-66：运行时读的是已发布冻结快照，不重算结局规则（老主题可能保留 >6 个结局）；
+        // 结局数量上限只在保存/发布侧校验。
+        String checked = new JourneyStoryValidator().validate(rawJson, JourneyStoryValidator.Context.none(), false);
         if (checked == null) {
             return null;
         }
@@ -259,6 +261,12 @@ public class JourneyStory {
     public static String withEndingChapters(String rawJson, java.util.List<EndingChapter> chapters,
                                             java.util.Map<Long, Long> nodeOldToNew) {
         if (chapters == null || chapters.isEmpty()) return rawJson;
+        // D-66：结局章同样受「最多 6 个（含默认结局）」约束。这里是服务端按章节重建
+        // ending.endings 的唯一入口，必须与 JourneyStoryValidator 的发布校验同口径，
+        // 否则作者能靠 7 个结局章绕过列表校验。
+        if (chapters.size() > JourneyStoryValidator.MAX_ENDINGS) {
+            throw new IllegalArgumentException("结局最多 " + JourneyStoryValidator.MAX_ENDINGS + " 个（含默认结局）");
+        }
         try {
             com.fasterxml.jackson.databind.node.ObjectNode root = rawJson == null || rawJson.trim().isEmpty()
                     ? MAPPER.createObjectNode().put("schemaVersion", SCHEMA_VERSION)
