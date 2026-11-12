@@ -1373,6 +1373,9 @@
             </view>
             <cy-switch checked="{{chapterForm.ending ? true : false}}" bindchange="onChapterEndingToggle" />
           </view>
+          <!-- D-66:结局区的红字复用既有 cy-inline-error(node-binding__error),不新做样式;
+               缺默认结局或超过 6 个时在这里说清楚,提交也会被同一口径拦住。 -->
+          <cy-inline-error wx:if="{{chapterEndingError}}" class="node-binding__error" kind="error" title="{{chapterEndingError}}" />
           <block wx:if="{{chapterForm.ending}}">
             <view class="node-card__hr"></view>
             <cy-dropdown range="{{chapterEndingKinds}}" range-key="label" value="{{chapterEndingKindIndex}}" bind:change="onChapterEndingKind">

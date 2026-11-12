@@ -432,6 +432,8 @@ Page({
 
     //章节数据
     chapterForm: emptyChapterForm(),
+    // D-66:结局区的红字(沿用 cy-inline-error 的既有样式)。空串 = 没意见。
+    chapterEndingError: '',
     // 与 cms_member_template.validation_method 取值域一致;后端 assertAllowedValidationMethods 只收 1-5
     validationMethodOptions: [
       { v: '1', label: '文字作答' },
@@ -4534,7 +4536,7 @@ Page({
       popChapterAction: 1,
       popChapterIndex: chapterIndex,
       assignPendingLocalId: ''
-    }, () => this._syncChapterEndingOptions(chapterForm.ending));
+    }, () => { this._syncChapterEndingOptions(chapterForm.ending); this._refreshChapterEndingError(); });
     this._refreshStructureSummary(); // structure
     if (Number(that.data.formData.productType) === 2) that.loadMerchantCategories();
   },
@@ -8020,6 +8022,24 @@ Page({
     };
   },
   /** 章节设置里的结局下拉:清单现取,下标按这一章已选的值算 */
+  /** D-66:把「当前这一章的结局设置」也算进整本书的结局检查,给结局区一行红字。
+   *  与提交前的 endingChaptersIssue 同一口径(最多 6 个、恰好一个默认结局)。 */
+  _chapterEndingIssueWithForm() {
+    const form = this.data.chapterForm || {};
+    const list = (this.data.formData.chapters || []).map((chapter, index) => {
+      if (this.data.popChapterAction == 1 && index === this.data.popChapterIndex) {
+        return Object.assign({}, chapter, { ending: form.ending || null });
+      }
+      return chapter;
+    });
+    if (this.data.popChapterAction != 1) list.push({ ending: form.ending || null });
+    return storyEnding.endingChaptersIssue(list);
+  },
+
+  _refreshChapterEndingError(done) {
+    this.setData({ chapterEndingError: this._chapterEndingIssueWithForm() }, done);
+  },
+
   _syncChapterEndingOptions(ending) {
     const patch = thoughtPatchOf(this.data.formData.journeyRules);
     const tags = storyInitialState.optionTagsOf(this.data.formData.chapters);
@@ -8058,7 +8078,8 @@ Page({
     const ending = !on ? null : (hasFallback
       ? { fallback: false, kind: 'thought', thoughtKey: '', thoughtName: '', tag: '', tagLabel: '', nodeId: null, nodeName: '' }
       : { fallback: true, kind: 'fallback' });
-    this.setData({ 'chapterForm.ending': ending }, () => this._syncChapterEndingOptions(ending));
+    this.setData({ 'chapterForm.ending': ending },
+      () => { this._syncChapterEndingOptions(ending); this._refreshChapterEndingError(); });
   },
   onChapterEndingKind(e) {
     const picked = (this.data.chapterEndingKinds || [])[Number(e.detail.value)];
@@ -8066,7 +8087,8 @@ Page({
     // 换触发方式就把另一种的选择清掉 —— 留着会让提交拿到一个对不上 kind 的值
     const ending = picked.key === 'fallback' ? { fallback: true, kind: 'fallback' }
       : { fallback: false, kind: picked.key, thoughtKey: '', thoughtName: '', tag: '', tagLabel: '', nodeId: null, nodeName: '' };
-    this.setData({ 'chapterForm.ending': ending, chapterEndingKindIndex: Number(e.detail.value), chapterEndingPickIndex: -1 });
+    this.setData({ 'chapterForm.ending': ending, chapterEndingKindIndex: Number(e.detail.value), chapterEndingPickIndex: -1 },
+      () => this._refreshChapterEndingError());
   },
   onChapterEndingPick(e) {
     const index = Number(e.detail.value);
@@ -8084,7 +8106,8 @@ Page({
       if (!n) return;
       Object.assign(ending, { nodeId: n.id, nodeName: n.name });
     } else return;
-    this.setData({ 'chapterForm.ending': ending, chapterEndingPickIndex: index });
+    this.setData({ 'chapterForm.ending': ending, chapterEndingPickIndex: index },
+      () => this._refreshChapterEndingError());
   },
 
   // 同一主题锁内读取注册版本与完整定义；读取不会自动确认差异或写回规则。
