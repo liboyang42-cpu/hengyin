@@ -58,3 +58,12 @@
 4. 没有模拟器截图(环境无微信开发者工具),图标对照图为浏览器渲染。
 
 STATUS: PARTIAL - Java 测试与 ci/architecture 基线未在本环境验证(按约定不跑 Java、不改 ci/architecture),需 CI 确认
+
+## Funds MySQL IT 午夜边界修复(2026-11-12)
+
+- 现象:`RegistrationReadContractMybatisIntegrationTest` 第 438 行「今天 00:00:05 落在今天」在 D-93 合并后红。
+- 根因:`MerchantMetricPeriod`(上海自然日,半开区间)逻辑本身正确;夹具用 JVM 默认时区造「今天」,Funds IT runner 为 UTC,UTC 16:00 之后上海已是次日,夹具的 00:00:05 落到上海昨日。合并前走 JVM 时区所以没暴露。
+- 处理:未改生产口径与 IT 断言;该 IT 类 `@BeforeAll` 把默认时区钉到 Asia/Shanghai、`@AfterAll` 还原(与生产及其余 CI 作业一致)。新增 `MerchantMetricPeriodTest`:UTC/上海/洛杉矶三种 JVM 时区下 00:00:05、23:59:59、窗首尾边界,以及 UTC 晚间时窗口今天为上海次日。
+- 本地:`MerchantMetricPeriodTest`、`MerchantMetricsParityTest`、`MerchantInsightServiceImplTest` 通过;真库 IT 无 MySQL,交 PR CI 验证。
+
+STATUS: PARTIAL - 真库 IT 待 PR CI 确认

@@ -125,8 +125,14 @@ class RegistrationReadContractMybatisIntegrationTest {
     private MmsMerchantMapper merchantMapper;
     private MerchantMarketingAnalyticsMapper analyticsMapper;
 
+    private java.util.TimeZone previousZone;
+
     @BeforeAll
     void createScratchSchema() throws Exception {
+        // 业务自然日 = Asia/Shanghai(D-93)。夹具用 JVM 默认时区造「今天」,runner 是 UTC 时 16:00 后会和
+        // 上海日错一天;把本类的默认时区钉到上海(与生产/其余 CI 作业一致),@AfterAll 还原,不影响同 JVM 其它套。
+        previousZone = java.util.TimeZone.getDefault();
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Shanghai"));
         database = "chengyin_regread_" + UUID.randomUUID().toString().replace("-", "");
         execAdmin("CREATE DATABASE `" + database + "` CHARACTER SET utf8mb4");
         createSchema();
@@ -142,6 +148,7 @@ class RegistrationReadContractMybatisIntegrationTest {
 
     @AfterAll
     void dropScratchSchemaAndReadBack() throws Exception {
+        if (previousZone != null) java.util.TimeZone.setDefault(previousZone);
         String dropped = database;
         if (dropped != null) {
             execAdmin("DROP DATABASE IF EXISTS `" + dropped + "`");
