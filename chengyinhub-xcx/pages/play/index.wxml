@@ -680,6 +680,7 @@
       <view class="fx-pack {{packShake ? 'is-shake' : ''}} {{packTear ? 'is-tear' : ''}} {{packGrab ? 'is-grab' : ''}} {{packSnap ? 'is-snap' : ''}} {{packTorn ? 'is-torn' : ''}} {{packSink ? 'is-sink' : ''}}">
         <view class="fx-pack__body">
           <image class="fx-pack__foil" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
+          <view class="fx-pack__sheen" aria-hidden="true"></view>
           <!-- x-fix7 P-6(业主最终验收):包面印主题名(沿用原型的黑色印刷);不印章数副标和操作提示 -->
           <view class="fx-pack__print"><text class="fx-pack__t">{{topicName || chapter.name || modeLabel}}</text></view>
           <!-- 下封口:同一张图,把内层整幅图往上顶,只露出底部 5% 那条 -->
