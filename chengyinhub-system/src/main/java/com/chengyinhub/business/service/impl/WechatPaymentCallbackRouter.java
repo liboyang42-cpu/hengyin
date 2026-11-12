@@ -28,6 +28,7 @@ public class WechatPaymentCallbackRouter {
     private final List<WechatPaymentCallbackOwner> owners;
     private final WechatRefundCallbackOwner depositRefund;
     private final WechatRefundCallbackOwner registrationRefund;
+    private WechatRefundCallbackOwner commerceRefund;
 
     private final WorkshopWechatPaymentOrderAdapter workshop;
     /** 通行证（PPO / RPP 号段）。可选注入：缺失时号段仍被认领并回 FAIL，绝不落到 registration 兜底。 */
@@ -81,6 +82,7 @@ public class WechatPaymentCallbackRouter {
                         registration == null ? "FAIL" : registration.handleWechatPayCallback(facts)));
         depositRefund = facts -> coop != null && coop.handleDepositRefundResult(facts);
         registrationRefund = facts -> refunds != null && refunds.handleRefundNotify(facts);
+        commerceRefund = facts -> commerce != null && commerce.handleRefund(facts);
     }
 
     /** Explicit assembly seam for route tests; production uses the four existing owners above. */
@@ -111,6 +113,7 @@ public class WechatPaymentCallbackRouter {
         String no = facts.get("outRefundNo");
         if (no != null && no.startsWith("RWKO")) return workshop != null && workshop.handleRefund(facts);
         if (no != null && no.startsWith("RPP")) return platformPass != null && platformPass.handleJsapiRefund(facts);
+        if (no != null && no.startsWith("RMC")) return commerceRefund != null && commerceRefund.apply(facts);
         return no != null && no.startsWith("RDEP") ? depositRefund.apply(facts) : registrationRefund.apply(facts);
     }
 

@@ -112,4 +112,6 @@ public interface SettlementDetailMapper {
      */
     List<com.chengyinhub.business.domain.vo.ClubSessionFeeEstimate> selectUnsettledFeeEstimates(
             @Param("merchantMemberId") Long merchantMemberId, @Param("activityIds") List<Long> activityIds);
+
+    int markShareDetailsReceived(@Param("shareOrderId") Long shareOrderId);
 }

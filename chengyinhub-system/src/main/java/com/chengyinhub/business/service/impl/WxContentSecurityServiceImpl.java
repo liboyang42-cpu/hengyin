@@ -295,7 +295,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Override
     public String checkMediaAsync(String mediaUrl, String openid)
     {
+        return checkMediaAsync(mediaUrl, openid, 2);
+    }
+
+    String checkMediaAsync(String mediaUrl, String openid, int mediaType)
+    {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        if (mediaType != 1 && mediaType != 2) return null;
         if (!isEnabled() || StringUtils.isBlank(mediaUrl) || StringUtils.isBlank(openid))
         {
             // Round5B-3:不再静默跳过。能否送检由 canSubmitMedia 在发布前判定,送不了的内容由门禁 HOLD。
@@ -315,7 +321,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
 
             JSONObject body = new JSONObject();
             body.put("media_url", mediaUrl);
-            body.put("media_type", 2); // 1 音频 2 图片
+            body.put("media_type", mediaType); // 微信仅支持 1 音频、2 图片；视频/3D 不冒充图片送检。
             body.put("version", 2);
             body.put("scene", 3);
             if (StringUtils.isNotEmpty(openid))
@@ -400,6 +406,12 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         {
             return null;
         }
+        int mediaType = 2;
+        if (bizType == BIZ_TYPE_MEDIA_ASSET)
+        {
+            mediaType = mediaAssets().machineCheckType(bizId);
+            if (mediaType == 0) return null;
+        }
         boolean localImageCheck = sensitiveLibrary != null && sensitiveLibrary.hasImageEntries();
         if (!isEnabled() && !localImageCheck)
         {
@@ -420,7 +432,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 }
             }
             // Round5D:已知违规图(SHA-256 / dHash)本地先认;命中走与微信 risky 回调同一条自动下架路径,不再送微信。
-            if (localImageCheck && knownBadImage(bizType, bizId, img))
+            if (mediaType == 2 && localImageCheck && knownBadImage(bizType, bizId, img))
             {
                 return null;
             }
@@ -428,7 +440,7 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             {
                 return null;
             }
-            String traceId = checkMediaAsync(img, openid);
+            String traceId = mediaType == 2 ? checkMediaAsync(img, openid) : checkMediaAsync(img, openid, mediaType);
             if (StringUtils.isNotEmpty(traceId))
             {
                 // MySQL inbox 是回调业务 mutation 的幂等/fencing 权威。登记失败不能只写 Redis 假装可处理。
@@ -531,6 +543,14 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         {
             return false;
         }
+        if (bizType == BIZ_TYPE_MEDIA_ASSET)
+        {
+            String identity = mediaAssets().machineIdentity(bizId);
+            if (identity == null) return false;
+            String localTrace = "local-media-risk:" + WxContentCallbackInboxServiceImpl.sha256Hex(identity);
+            return callbackInboxService.register(localTrace, bizType, bizId, identity)
+                    && handleMediaCheckResult(localTrace, true);
+        }
         return processMediaCheckResult(bizType, bizId, "sensitive-library", true);
     }
 
@@ -557,6 +577,14 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                     @Override
                     public boolean apply(WxContentCallbackInbox inbox, boolean callbackRisky)
                     {
+                        if (Integer.valueOf(BIZ_TYPE_MEDIA_ASSET).equals(inbox.getBizType()))
+                        {
+                            return mediaAssets().applyMachineResult(inbox.getBizId(), callbackRisky, traceId);
+                        }
+                        if (callbackRisky && appMediaAssets != null)
+                        {
+                            mediaAssets().revokeSubmittedMedia(inbox.getMediaHash(), traceId);
+                        }
                         if (callbackRisky && Integer.valueOf(BIZ_TYPE_MEMBER_PROFILE).equals(inbox.getBizType()))
                         {
                             // 资料图按「哪张图违规清哪个字段」处理:二维码违规不连坐作品图,反之亦然。
@@ -1060,6 +1088,10 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 return false;
             }
         }
+        catch (NoticeNotPersistedException e)
+        {
+            throw e;
+        }
         catch (Exception e)
         {
             log.error("[内容安全] 处理图片检测结果异常: mapping={}, exceptionType={}",
@@ -1091,28 +1123,45 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
         }
     }
 
+    private AppMediaAssetService mediaAssets()
+    {
+        return appMediaAssets.getObject();
+    }
+
+    @Autowired
+    @Lazy
+    private org.springframework.beans.factory.ObjectProvider<AppMediaAssetService> appMediaAssets;
+
     private void notifyImageTakedown(Long memberId, String bizType, Long bizId, String item)
     {
-        if (memberId == null || memberId <= 0 || imServiceProvider == null)
-        {
-            return;
-        }
+        if (memberId == null || memberId <= 0) return;
         try
         {
-            com.chengyinhub.business.service.IImService im = imServiceProvider.getIfAvailable();
-            if (im == null)
+            com.chengyinhub.business.service.IImService im = imServiceProvider.getObject();
+            String card = com.chengyinhub.business.service.support.SystemNoticeCard.imageTakedown(bizType, bizId, item);
+            if (im.enqueueSystemNotification(memberId, ImMessage.MSG_CARD,
+                    com.chengyinhub.business.service.support.SystemNoticeCard.IMAGE_TAKEDOWN_TITLE, card,
+                    "content-safety:" + bizType + ":" + bizId + ":" + WxContentCallbackInboxServiceImpl.sha256Hex(card)) == null)
             {
-                return;
+                throw new NoticeNotPersistedException("content safety author notice was not persisted", null);
             }
-            im.sendSystemInNestedTransaction(memberId, ImMessage.MSG_CARD,
-                    com.chengyinhub.business.service.support.SystemNoticeCard.IMAGE_TAKEDOWN_TITLE,
-                    com.chengyinhub.business.service.support.SystemNoticeCard.imageTakedown(bizType, bizId, item));
+        }
+        catch (NoticeNotPersistedException e)
+        {
+            throw e;
         }
         catch (RuntimeException e)
         {
-            com.chengyinhub.business.service.support.SavepointLockFailures.rethrowIfLockFailure(e);
-            log.error("[内容安全] 图片违规下架通知发送失败: bizType={}, bizId={}, exceptionType={}",
-                    bizType, bizId, e.getClass().getSimpleName());
+            // 通知与下架同事务：持久化失败必须向回调事务传播以便整体重试，不能被下面的通用 catch 吞成 false。
+            throw new NoticeNotPersistedException("content safety author notice was not persisted", e);
+        }
+    }
+
+    static final class NoticeNotPersistedException extends IllegalStateException
+    {
+        NoticeNotPersistedException(String message, Throwable cause)
+        {
+            super(message, cause);
         }
     }
 
@@ -1347,6 +1396,8 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 // 官方活动只送检封面(ApiOfficialEventController 发布口)。
                 com.chengyinhub.business.domain.OfficialEvent event = officialEventMapper.selectOfficialEventById(id);
                 return event != null && containsMediaHash(hash, event.getCoverImg());
+            case BIZ_TYPE_MEDIA_ASSET:
+                return containsMediaHash(hash, mediaAssets().machineIdentity(id));
             default:
                 return false;
         }

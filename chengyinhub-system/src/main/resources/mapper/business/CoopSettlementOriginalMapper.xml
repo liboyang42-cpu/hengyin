@@ -11,6 +11,8 @@
         <result property="sourceClaimId" column="source_claim_id"/>
         <result property="paymentFactId" column="payment_fact_id"/>
         <result property="paymentFactHash" column="payment_fact_hash"/>
+        <result property="clubId" column="club_id"/>
+        <result property="clubName" column="club_name"/>
         <result property="receiverKind" column="receiver_kind"/>
         <result property="receiverMemberId" column="receiver_member_id"/>
         <result property="lineType" column="line_type"/>
@@ -114,9 +116,9 @@
     <sql id="originalComponentInsertBase">
         insert into coop_settlement_original_component
             (cash_close_id,topic_id,source_registration_id,payer_registration_id,settlement_id,source_claim_id,payment_fact_id,payment_fact_hash,
-             receiver_kind,receiver_member_id,line_type,original_amount,original_order_cash,calculation_version,source_fingerprint)
+             club_id,club_name,receiver_kind,receiver_member_id,line_type,original_amount,original_order_cash,calculation_version,source_fingerprint)
         select #{cashCloseId},#{topicId},#{sourceRegistrationId},#{payerRegistrationId},#{settlementId},#{sourceClaimId},#{paymentFactId},#{paymentFactHash},
-               #{receiverKind},#{receiverMemberId},#{lineType},#{originalAmount},#{originalOrderCash},#{calculationVersion},#{sourceFingerprint}
+               #{clubId},#{clubName},#{receiverKind},#{receiverMemberId},#{lineType},#{originalAmount},#{originalOrderCash},#{calculationVersion},#{sourceFingerprint}
         from coop_settlement h join coop_settlement_cash_close c on c.id=h.cash_close_id and c.topic_id=h.topic_id
         join coop_settlement_cash_contribution r on r.cash_close_id=c.id and r.registration_id=#{sourceRegistrationId}
         join coop_settlement_cash_contribution payer on payer.cash_close_id=c.id and payer.registration_id=#{payerRegistrationId}
@@ -133,6 +135,7 @@
           and #{originalOrderCash}=cast(json_unquote(json_extract(payer.registration_snapshot,'$.wechatPaymentAmount')) as decimal(15,2))
           and cast(h.line_type as binary)=cast(#{lineType} as binary) and cast(h.cash_head_kind as binary)=cast(#{receiverKind} as binary)
           and (h.merchant_id &lt;=&gt; #{receiverMemberId})
+          and (h.club_id &lt;=&gt; #{clubId}) and (cast(h.club_name as binary) &lt;=&gt; cast(#{clubName} as binary))
           and ((h.line_type in ('MERCHANT_VERIFY','LEAD_FEE') and exists (
                 select 1 from coop_settlement_detail d join settlement_claim sc on sc.id=d.claim_id
                 where d.settlement_id=h.id and d.claim_id=#{sourceClaimId}
@@ -173,7 +176,7 @@
         select * from coop_settlement_original_component where cash_close_id=#{cashCloseId} order by settlement_id,source_registration_id for update
     </select>
     <select id="selectTopicHeadsForUpdate" resultType="com.chengyinhub.business.domain.CoopSettlement" useCache="false" flushCache="true">
-        select id,topic_id as topicId,merchant_id as merchantId,amount,status,line_type as lineType,
+        select id,club_id as clubId,club_name as clubName,topic_id as topicId,merchant_id as merchantId,amount,status,line_type as lineType,
                coop_order_id as coopOrderId,share_mode as shareMode,share_rate as shareRate,fixed_fee as fixedFee
         from coop_settlement where topic_id=#{topicId} order by id for update
     </select>

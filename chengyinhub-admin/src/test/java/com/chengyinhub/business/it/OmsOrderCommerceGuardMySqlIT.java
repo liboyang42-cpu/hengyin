@@ -70,7 +70,7 @@ class OmsOrderCommerceGuardMySqlIT {
                 "migration_club_role_membership_resume_fence_20260826.sql","migration_20260821_commerce_order_idempotency.sql",
                 "migration_business_audit_event_20260823.sql","migration_20261023_wx_pay_order_intent.sql",
                 "migration_wx_payment_callback_inbox_outbox_20260725.sql","migration_20261024_wx_verified_payment_fact.sql",
-                "migration_20261024_clm_commerce_payment_proof.sql");
+                "migration_20261024_clm_commerce_payment_proof.sql", "migration_20261112_dec_c_perks.sql");
         SqlSessionTemplate sql = P0AcceptanceSchema.sql(source,"OmsOrderMapper","MerchantSubscriptionMapper");
         orders = sql.getMapper(OmsOrderMapper.class);
         manager = new DataSourceTransactionManager(source); generic = genericOwner(orders);
@@ -106,7 +106,7 @@ class OmsOrderCommerceGuardMySqlIT {
     }
 
     @BeforeEach void cleanOwnedRows() {
-        for (String table : List.of("oms_order","merchant_subscription","wx_payment_callback_fact_link",
+        for (String table : List.of("merchant_commerce_refund","oms_order","merchant_subscription","wx_payment_callback_fact_link",
                 "wx_verified_payment_fact_rejection","wx_payment_callback_outbox","wx_payment_callback_inbox",
                 "wx_verified_payment_fact","wx_pay_order_intent","ums_member")) db.update("DELETE FROM " + table);
         db.update("INSERT INTO ums_member(id) VALUES(70),(71)");
@@ -200,6 +200,32 @@ class OmsOrderCommerceGuardMySqlIT {
         assertThrows(ServiceException.class, () -> genericOwner(fault).deleteOmsOrderById(mall.getId()));
         assertTrue(executed.get(),"fault must occur after the actual DELETE SQL");
         assertNotNull(orders.selectOmsOrderById(mall.getId()));
+    }
+
+    @Test void verifiedFullRefundRetractsOnlyItsOwnGrantAndDuplicateIsDurableNoOp() {
+        OmsOrder order = createCheckout();
+        var payment = observe(order);
+        db.update("INSERT INTO wx_payment_callback_outbox(idempotency_key,biz_type,biz_id,state,money_affecting,last_error_code,create_time,update_time) "
+                + "VALUES(?,1,?,4,0,'FIXTURE_ORIGINAL_SUCCESS',NOW(),NOW())", "VERIFIED:"+payment.id()+":"+payment.hash(), order.getId());
+        assertTrue(checkout.handlePaidOrder(order.getOrderSn(), true, 1990, "TX-original", payment));
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM merchant_subscription WHERE source_order_id=? AND is_active=1", Integer.class, order.getId()));
+        db.update("INSERT INTO merchant_subscription(merchant_id,subscription_type,max_usage,is_active) VALUES(70,'premium_template',5,1)");
+        String refundNo = "RMC" + order.getId();
+        db.update("INSERT INTO merchant_commerce_refund(order_id,refund_no,create_time) VALUES(?,?,NOW())", order.getId(), refundNo);
+        var refund = facts.recordVerified(new WechatVerifiedPaymentFact(WechatVerifiedPaymentFact.Kind.REFUND,
+                "merchant", "wx-original", order.getOrderSn(), order.getOrderSn(), refundNo,
+                "WX-REFUND-ORIGINAL", "TX-original", "JSAPI", "CNY", 1990, 1990,
+                Instant.parse("2026-11-12T00:00:00Z"), REQUEST_HASH, "SUCCESS"));
+        Map<String,String> observed = Map.of("outTradeNo", order.getOrderSn(), "outRefundNo", refundNo,
+                "status", "SUCCESS", "verified_fact_id", Long.toString(refund.id()), "verified_fact_hash", refund.hash());
+        assertTrue(checkout.handleRefund(observed));
+        assertTrue(checkout.handleRefund(observed));
+        assertEquals(0, db.queryForObject("SELECT is_active FROM merchant_subscription WHERE source_order_id=?", Integer.class, order.getId()));
+        assertEquals(5, db.queryForObject("SELECT SUM(max_usage) FROM merchant_subscription WHERE merchant_id=70 AND is_active=1", Integer.class));
+        assertEquals(6L, orders.selectOmsOrderByOrderSn(order.getOrderSn()).getStatus());
+        assertEquals(refund.id(), db.queryForObject("SELECT refund_fact_id FROM merchant_commerce_refund WHERE order_id=?", Long.class, order.getId()));
+        assertFalse(checkout.handlePaidOrder(order.getOrderSn(), true, 1990, "TX-original", payment));
+        assertEquals(2, count("merchant_subscription"));
     }
 
     private OmsOrder createCheckout() {

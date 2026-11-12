@@ -14,6 +14,9 @@ const inviteQr = require('../../pages/team/utils/team-invite-qr.js')
 
 test('队伍码 scene:新码原样、旧十六进制码还原,别的前缀不认', () => {
   assert.equal(door.parseTeamScene('tm.AbCdEfGhIjKlMnOpQr_-12'), 'AbCdEfGhIjKlMnOpQr_-12')
+  assert.equal(door.parseTeamScene('tm.AB2XYZ'), 'AB2XYZ')
+  assert.equal(door.parseTeamScene('tm.AB0XYZ'), null)
+  assert.equal(door.captureDoorScene({ scene: 1047, query: { scene: 'tm.AB2XYZ' } }, null), 'tm.AB2XYZ')
   assert.equal(door.parseTeamScene('th.AP8QoLHC0-T1BhcoOUpbbA'), '00ff10a0b1c2d3e4f5061728394a5b6c')
   assert.equal(door.parseTeamScene(encodeURIComponent('th.AP8QoLHC0-T1BhcoOUpbbA')), '00ff10a0b1c2d3e4f5061728394a5b6c')
   assert.equal(door.parseTeamScene('tp.12'), null)
@@ -53,6 +56,9 @@ test('回包投影:READY 出码 + 加入码;UNAVAILABLE 只出加入码;拒绝�
 
 test('手输加入码:去空白,只认两种服务端形状', () => {
   assert.equal(inviteQr.normalizeJoinCode(' AbCdEfGhIjKl MnOpQr_-12 '), 'AbCdEfGhIjKlMnOpQr_-12')
+  assert.equal(inviteQr.normalizeJoinCode(' ab2 xyz '), 'AB2XYZ')
+  assert.equal(inviteQr.normalizeJoinCode('AB0XYZ'), '')
+  assert.equal(inviteQr.normalizeJoinCode('AB1XYZ'), '')
   assert.equal(inviteQr.normalizeJoinCode('00FF10A0B1C2D3E4F5061728394A5B6C'), '00ff10a0b1c2d3e4f5061728394a5b6c')
   assert.equal(inviteQr.normalizeJoinCode('abc'), '')
   assert.equal(inviteQr.normalizeJoinCode(null), '')

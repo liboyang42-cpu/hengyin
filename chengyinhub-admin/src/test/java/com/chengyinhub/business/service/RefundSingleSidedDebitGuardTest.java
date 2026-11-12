@@ -180,6 +180,23 @@ class RefundSingleSidedDebitGuardTest {
                 .thenReturn(Collections.singletonList(merchant));
     }
 
+    @Test
+    void personalExternalRefundRetainsFrozenOwnerAndLabelWithoutWalletOrDebtAfterTransfer() {
+        givenPaidRegistrationOnActivity();
+        SettlementDetail original = settlementDetailMapper.selectSettledDetails("registration", REGISTRATION_ID).get(0);
+        original.setClubId(90L); original.setClubName("原俱乐部名称");
+        CmsActivity transferred = activity(1); transferred.setMemberId(999L); transferred.setClubId(90L);
+        when(cmsActivityMapper.selectCmsActivityById(ACTIVITY_ID)).thenReturn(transferred);
+        svc.reviewRefund(approve(), 42L);
+        ArgumentCaptor<SettlementDetail> captured=ArgumentCaptor.forClass(SettlementDetail.class);
+        verify(settlementDetailMapper).insertAdjustment(captured.capture());
+        assertEquals(MERCHANT_ID,captured.getValue().getReceiverId());
+        assertEquals("原俱乐部名称",captured.getValue().getClubName());
+        verify(umsMemberMapper,never()).deductBalance(anyLong(),any());
+        com.chengyinhub.business.service.support.SettlementDebtLedger debts = (com.chengyinhub.business.service.support.SettlementDebtLedger) ReflectionTestUtils.getField(svc,"settlementDebtLedger");
+        org.mockito.Mockito.verifyNoInteractions(debts);
+    }
+
     private RefundReviewDTO approve() {
         RefundReviewDTO req = new RefundReviewDTO();
         req.setId(1L);
