@@ -27,15 +27,18 @@ public class WxContentCallbackClaimService
             return WxContentCallbackClaim.of(WxContentCallbackClaim.State.MISSING, traceHash);
         }
         int verdict = risky ? 1 : 0;
-        if (Integer.valueOf(WxContentCallbackInbox.STATE_DONE).equals(row.getState())
+        boolean escalation = risky && Integer.valueOf(0).equals(row.getVerdict())
+                && (Integer.valueOf(WxContentCallbackInbox.STATE_DONE).equals(row.getState())
+                    || Integer.valueOf(WxContentCallbackInbox.STATE_RETRYABLE).equals(row.getState()));
+        if (!escalation && (Integer.valueOf(WxContentCallbackInbox.STATE_DONE).equals(row.getState())
                 || Integer.valueOf(WxContentCallbackInbox.STATE_IGNORED_STALE).equals(row.getState())
-                || Integer.valueOf(WxContentCallbackInbox.STATE_MANUAL_REVIEW).equals(row.getState()))
+                || Integer.valueOf(WxContentCallbackInbox.STATE_MANUAL_REVIEW).equals(row.getState())))
         {
             return row.getVerdict() != null && row.getVerdict().intValue() == verdict
                     ? WxContentCallbackClaim.done(traceHash)
                     : WxContentCallbackClaim.of(WxContentCallbackClaim.State.REJECTED, traceHash);
         }
-        if (row.getVerdict() != null && row.getVerdict().intValue() != verdict)
+        if (!escalation && row.getVerdict() != null && row.getVerdict().intValue() != verdict)
         {
             // 同一 trace 的微信判定应稳定；冲突结果不覆盖已有事实，更不能让 pass 复活 risky。
             return WxContentCallbackClaim.of(WxContentCallbackClaim.State.REJECTED, traceHash);

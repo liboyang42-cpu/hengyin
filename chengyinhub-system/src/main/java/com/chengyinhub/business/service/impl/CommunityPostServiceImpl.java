@@ -1434,6 +1434,7 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
         Long auditTaskId = auditTaskService.submitSafetyHold(AuditTask.BIZ_COMMUNITY_POST, postId,
                 post.getAuthorId(), "HIGH", json(snapshot));
         outbox(postId, "POST_MEDIA_RISKY_HIDDEN", payload("auditTaskId", auditTaskId), now);
+        notifyMember(post.getAuthorId(), postId, 0L, "SYSTEM_GOVERNANCE", "MEDIA_RISKY_HIDDEN", now);
         // 只在本次真正从公开态隐藏时通知；已隐藏/待审/终态的重复回调在上面早返回，不重复通知。
         notifyImageTakedown(post);
         return true;
@@ -1441,18 +1442,15 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
 
     private void notifyImageTakedown(CommunityPost post) {
         com.chengyinhub.business.service.IImService im = imServiceProvider == null ? null : imServiceProvider.getIfAvailable();
+        // The community governance outbox above remains durable even without the optional IM projection.
         if (im == null || !positive(post.getAuthorId())) return;
-        try {
-            im.sendSystemInNestedTransaction(post.getAuthorId(), com.chengyinhub.business.domain.ImMessage.MSG_CARD,
-                    com.chengyinhub.business.service.support.SystemNoticeCard.IMAGE_TAKEDOWN_TITLE,
-                    com.chengyinhub.business.service.support.SystemNoticeCard.imageTakedown(AuditTask.BIZ_COMMUNITY_POST,
-                            post.getId(), com.chengyinhub.business.service.support.SystemNoticeCard.item(
-                                    "帖文", blank(post.getTitle()) ? post.getBody() : post.getTitle())));
-        } catch (RuntimeException e) {
-            com.chengyinhub.business.service.support.SavepointLockFailures.rethrowIfLockFailure(e);
-            // 通知失败不挡下架：违规图先收起，通知缺失只告警。
-            log.error("[社区帖文] 图片违规下架通知发送失败: postId={}, exceptionType={}",
-                    post.getId(), e.getClass().getSimpleName());
+        String card = com.chengyinhub.business.service.support.SystemNoticeCard.imageTakedown(AuditTask.BIZ_COMMUNITY_POST,
+                post.getId(), com.chengyinhub.business.service.support.SystemNoticeCard.item(
+                        "帖文", blank(post.getTitle()) ? post.getBody() : post.getTitle()));
+        if (im.enqueueSystemNotification(post.getAuthorId(), com.chengyinhub.business.domain.ImMessage.MSG_CARD,
+                com.chengyinhub.business.service.support.SystemNoticeCard.IMAGE_TAKEDOWN_TITLE, card,
+                "content-safety:" + AuditTask.BIZ_COMMUNITY_POST + ":" + post.getId() + ":" + sha256(card)) == null) {
+            throw error("作者下架通知保存失败", 500);
         }
     }
 

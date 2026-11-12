@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "dependencies": {
+    "20261112_dec_c_safety": ["20261012_app_media_asset", "20261012_app_media_asset_namespaces"],
     "20261112_dec_c_perks": ["merchant_subscription_20260708", "20261024_clm_commerce_payment_proof"],
     "20261112_dec_c_payout_jobs": ["20261110_ecommerce_payout_wiring"],
     "20261110_platform_pass": [],

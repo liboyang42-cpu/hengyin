@@ -102,6 +102,7 @@ class CommunityPostMediaIdentityAcceptanceTest {
         postService = new CommunityPostServiceImpl(postMapper, new CommunityPostLifecyclePolicy(), safetyGate,
                 auditTaskService, mock(CommunityTrustService.class), mock(ICommunityMediaReceiptService.class));
         im = mock(IImService.class);
+        when(im.enqueueSystemNotification(anyLong(), any(), anyString(), anyString(), anyString())).thenReturn(1L);
         ObjectProvider<IImService> imProvider = mock(ObjectProvider.class);
         when(imProvider.getIfAvailable()).thenReturn(im);
         postService.setImServiceProvider(imProvider);
@@ -244,7 +245,7 @@ class CommunityPostMediaIdentityAcceptanceTest {
         verify(postMapper, times(1)).insertOutbox(anyString(), eq(POST_ID), eq("POST_MEDIA_RISKY_HIDDEN"),
                 anyString(), any());
         verify(auditTaskService, times(1)).submitSafetyHold(anyString(), anyLong(), anyLong(), anyString(), anyString());
-        verify(im, times(1)).sendSystemInNestedTransaction(anyLong(), any(), anyString(), anyString());
+        verify(im, times(1)).enqueueSystemNotification(anyLong(), any(), anyString(), anyString(), anyString());
     }
 
     /** 四参旧入口:身份即送检地址本身,行为与改动前一致(其它业务不受影响)。 */

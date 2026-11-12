@@ -36,6 +36,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -68,6 +69,7 @@ class ContentSafetyImageTakedownNoticeTest {
         ObjectProvider<IImService> provider = mock(ObjectProvider.class);
         when(provider.getIfAvailable()).thenReturn(im);
         when(provider.getObject()).thenReturn(im);
+        when(im.enqueueSystemNotification(anyLong(), anyInt(), anyString(), anyString(), anyString())).thenReturn(1L);
         ReflectionTestUtils.setField(service, "imServiceProvider", provider);
     }
 
@@ -78,13 +80,13 @@ class ContentSafetyImageTakedownNoticeTest {
 
     private String noticeTo(long member) {
         ArgumentCaptor<String> extra = ArgumentCaptor.forClass(String.class);
-        verify(im).sendSystemInNestedTransaction(eq(member), eq(ImMessage.MSG_CARD), eq("内容已下架"), extra.capture());
+        verify(im).enqueueSystemNotification(eq(member), eq(ImMessage.MSG_CARD), eq("内容已下架"), extra.capture(), anyString());
         assertTrue(extra.getValue().contains("图片未通过内容安全检测"), extra.getValue());
         return extra.getValue();
     }
 
     private void noNotice() {
-        verify(im, never()).sendSystemInNestedTransaction(anyLong(), anyInt(), anyString(), anyString());
+        verify(im, never()).enqueueSystemNotification(anyLong(), anyInt(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -261,7 +263,7 @@ class ContentSafetyImageTakedownNoticeTest {
     }
 
     @Test
-    void noticeFailureDoesNotBlockTheTakedown() {
+    void durableNoticeFailurePropagatesSoTheCallbackTransactionCanRetry() {
         IUmsCreativeSquareService squares = mock(IUmsCreativeSquareService.class);
         ReflectionTestUtils.setField(service, "umsCreativeSquareService", squares);
         UmsCreativeSquare live = new UmsCreativeSquare();
@@ -270,10 +272,10 @@ class ContentSafetyImageTakedownNoticeTest {
         live.setStatus(1);
         when(squares.selectUmsCreativeSquareById(ID)).thenReturn(live);
         when(squares.updateUmsCreativeSquare(any())).thenReturn(1);
-        when(im.sendSystemInNestedTransaction(anyLong(), anyInt(), anyString(), anyString()))
-                .thenThrow(new RuntimeException("im down"));
+        when(im.enqueueSystemNotification(anyLong(), anyInt(), anyString(), anyString(), anyString()))
+                .thenThrow(new RuntimeException("im outbox down"));
 
-        assertTrue(risky(IWxContentSecurityService.BIZ_TYPE_SQUARE));
+        assertThrows(RuntimeException.class, () -> risky(IWxContentSecurityService.BIZ_TYPE_SQUARE));
         verify(squares).updateUmsCreativeSquare(any());
     }
 
@@ -304,6 +306,7 @@ class ContentSafetyImageTakedownNoticeTest {
                 .thenReturn(1);
         when(mapper.selectMediaForSafety(ID)).thenReturn(Collections.emptyList());
         when(mapper.insertOutbox(anyString(), anyLong(), anyString(), anyString(), any())).thenReturn(1);
+        when(mapper.insertTypedOutbox(anyString(), anyString(), anyLong(), anyString(), anyString(), any())).thenReturn(1);
 
         assertTrue(posts.applyRiskyMediaResult(ID));
         assertTrue(posts.applyRiskyMediaResult(ID));
@@ -311,7 +314,7 @@ class ContentSafetyImageTakedownNoticeTest {
         String card = noticeTo(AUTHOR);
         assertTrue(card.contains("帖文「江边日落」"), card);
         assertTrue(card.contains("\"bizType\":\"" + AuditTask.BIZ_COMMUNITY_POST + "\""), card);
-        verify(im, times(1)).sendSystemInNestedTransaction(anyLong(), anyInt(), anyString(), anyString());
+        verify(im, times(1)).enqueueSystemNotification(anyLong(), anyInt(), anyString(), anyString(), anyString());
     }
 
     private static CmsTemplateLibrary listed(long id) {

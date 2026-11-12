@@ -110,7 +110,8 @@
       "z_workshop_purchase_20261109",
       "z_workshop_paid_review_20261109",
       "zz_questo_collation_align_20261109",
-      "20261112_dec_c_perks"
+      "20261112_dec_c_perks",
+      "20261112_dec_c_safety"
     ],
     "2_PRE_OPTIONAL": [
       "20261018_infomation_change_audit",
@@ -2854,6 +2855,25 @@
       "dependsOn": [
         "merchant_subscription_20260708",
         "20261024_clm_commerce_payment_proof"
+      ],
+      "idempotency": "GUARDED_INFORMATION_SCHEMA",
+      "destructiveStatements": [],
+      "step": 1
+    },
+    {
+      "source": "DEC-C owner-approved safety fixes",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "Immutable uploaded media sticky machine-risk fence",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_dec_c_safety",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_safety.sql",
+      "sha256": "16383da45984909590b80e653ceea2242a0ab35da2f0b80cddcb994f392f2342",
+      "order": 150,
+      "dependsOn": [
+        "20261012_app_media_asset",
+        "20261012_app_media_asset_namespaces"
       ],
       "idempotency": "GUARDED_INFORMATION_SCHEMA",
       "destructiveStatements": [],

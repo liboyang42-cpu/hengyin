@@ -21,6 +21,10 @@ public class AppMediaAssetService {
     private com.chengyinhub.business.service.IUmsMemberService members;
     private final AppMediaAssetMapper mapper;
     private final ObjectProvider<IAuditTaskService> audits;
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.beans.factory.ObjectProvider<com.chengyinhub.business.service.IImService> notices;
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
     public AppMediaAssetService(AppMediaAssetMapper mapper,ObjectProvider<IAuditTaskService> audits) {
         this.mapper=mapper; this.audits=audits;
     }
@@ -78,6 +82,29 @@ public class AppMediaAssetService {
         Long task=audits.getObject().submitSafetyHold("MEDIA_ASSET",id,((Number)row.get("memberId")).longValue(),"NORMAL",com.alibaba.fastjson2.JSON.toJSONString(snapshot));
         if(task==null || mapper.bindAuditTask(id,version,task)!=1)throw new ServiceException("媒体审核单保存失败");
         row.put("auditTaskId",task);
+        // 微信可能立即回调；必须先提交媒体和审核单绑定，回调才能锁到权威记录。
+        Runnable dispatch = () -> {
+            if (textSecurity == null || members == null || machineCheckType(id) == 0) return;
+            com.chengyinhub.business.domain.UmsMember author = members.selectUmsMemberById(((Number)row.get("memberId")).longValue());
+            if (author == null || !textSecurity.canSubmitMedia(author.getWxOpenId())) return;
+            textSecurity.submitMediaCheckOne(com.chengyinhub.business.service.IWxContentSecurityService.BIZ_TYPE_MEDIA_ASSET,
+                    id, securityCheckFetchUrl(id), machineIdentity(id), author.getWxOpenId());
+        };
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override public void afterCommit() {
+                            org.springframework.transaction.support.TransactionTemplate transaction =
+                                    new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+                            transaction.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                            try { transaction.execute(status -> { dispatch.run(); return null; }); }
+                            catch (RuntimeException failure) {
+                                org.slf4j.LoggerFactory.getLogger(AppMediaAssetService.class)
+                                        .error("媒体机审送检失败，保持待审 assetId={}", id, failure);
+                            }
+                        }
+                    });
+        } else dispatch.run();
     }
     @Transactional
     public Map<String,Object> retry(Long id,Long memberId) {
@@ -181,6 +208,42 @@ public class AppMediaAssetService {
             return base.getScheme()+"://"+base.getRawAuthority()+path;
         } catch(IllegalArgumentException e) {throw new ServiceException("图片发布地址未配置或无效，请联系管理员");}
     }
+    /** 微信 media_check_async 只有音频/图片能力；视频与 GLB 保留真实人工审核，不伪造机审通过。 */
+    public int machineCheckType(Long id) {
+        Map<String,Object> row=mapper.select(id);
+        return row==null ? 0 : "AUDIO".equals(row.get("mediaType")) ? 1 : "IMAGE".equals(row.get("mediaType")) ? 2 : 0;
+    }
+
+    public String machineIdentity(Long id) {
+        Map<String,Object> row=mapper.select(id);
+        return row==null ? null : row.get("objectKey")+"#v="+row.get("version");
+    }
+
+    public void revokeSubmittedMedia(String mediaHash,String traceId) {
+        for(Long id:mapper.selectIdsByMediaHash(mediaHash)) {
+            if(!applyMachineResult(id,true,traceId))throw new ServiceException("违规媒体撤回失败");
+        }
+    }
+
+    /** inbox mutation 事务已经锁住媒体；风险为粘性终态，旧 pass/人工审批/重试均不能复活同一文件。 */
+    public boolean applyMachineResult(Long id,boolean risky,String traceId) {
+        Map<String,Object> row=mapper.selectForUpdate(id);
+        if(row==null)return false;
+        if(!risky && ("REJECTED".equals(row.get("reviewState")) || "APPROVED".equals(row.get("reviewState"))))return true;
+        if(risky && (Boolean.TRUE.equals(row.get("safetyRejected")) || "1".equals(String.valueOf(row.get("safetyRejected")))))return true;
+        if(mapper.machineDecide(id,((Number)row.get("version")).intValue(),risky?"REJECTED":"APPROVED",
+                risky?"媒体未通过内容安全检测":null,risky)!=1)return false;
+        if(risky) {
+            Map<String,Object> card=new LinkedHashMap<>();card.put("bizType","MEDIA_ASSET");card.put("bizId",id);
+            card.put("reason","媒体未通过内容安全检测");card.put("followUp","请更换媒体后重新上传；如有异议请联系客服");
+            if(notices.getObject().enqueueSystemNotification(((Number)row.get("memberId")).longValue(),
+                    com.chengyinhub.business.domain.ImMessage.MSG_CARD,"内容已下架",com.alibaba.fastjson2.JSON.toJSONString(card),
+                    "media-safety:"+id+":"+row.get("version"))==null)
+                throw new ServiceException("媒体下架通知保存失败");
+        }
+        return true;
+    }
+
     /** Called inside the existing audit transaction; an old review cannot publish a newer version. */
     public void applyAudit(AuditTask task,boolean approved,String reason) {
         Map<String,Object> snapshot=com.alibaba.fastjson2.JSON.parseObject(task.getSnapshotJson());
