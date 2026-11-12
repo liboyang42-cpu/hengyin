@@ -1578,7 +1578,9 @@ page { background: var(--cy-color-bg-page); }
    (btn-h + 104rpx),再垫一个 260rpx 就是**重复计一次**——实拍量到末行离按钮 168px,
    而样机(.body padding-bottom:140px,容器直落到屏底)只有 56px。
    CTA 盒顶 = btn-h + 124rpx,容器底 = btn-h + 104rpx,只有 20rpx 被压住,48rpx 足够。 */
-.fx-hero__pad{ height:48rpx; }
+.fx-hero__pad{ height:calc(var(--cy-btn-h) + 124rpx + env(safe-area-inset-bottom)); }
+/* x-fix7 P-5(业主最终验收):到店三步在首屏被底部「到店打卡」条压住。滚动内容尾部垫一个底栏高度(按钮高 + 上下 124rpx)+ 安全区,
+   滚到底时最后一行(出示入场码/三步)整条停在底栏之上;上面那段「只垫 48rpx」的推算取代为此。 */
 /* 和故事流底栏同一条:上面 88rpx 渐隐、其下纯色。
    只用一条渐变「差不多压住」时,正文会从按钮底下透出来(故事流那边实拍抓到过)。 */
 /* 只用渐隐,**不要实心黑块** —— 实心会在按钮下方糊出一整条,把正文挡掉一截。
