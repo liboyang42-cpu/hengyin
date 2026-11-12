@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 6026,
+  "controlCount": 6028,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -870764,6 +870764,211 @@
       }
     },
     {
+      "id": "pages/index/index.wxml:103:bindchange:onRecoChange:14",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "swiper",
+        "event": "bindchange",
+        "handler": "onRecoChange",
+        "line": 103,
+        "selectorHint": ".v3-reco-swiper",
+        "visibleCondition": "{{recoCards.length}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:906"
+      }
+    },
+    {
+      "id": "pages/index/index.wxml:103:bindtransition:onRecoTransition:13",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "swiper",
+        "event": "bindtransition",
+        "handler": "onRecoTransition",
+        "line": 103,
+        "selectorHint": ".v3-reco-swiper",
+        "visibleCondition": "{{recoCards.length}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "event-contract",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:886"
+      }
+    },
+    {
+      "id": "pages/index/index.wxml:107:bindtap:goRecoHero:15",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goRecoHero",
+        "line": 107,
+        "selectorHint": ".v3-reco-card",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:974"
+      }
+    },
+    {
       "id": "pages/index/index.wxml:11:bindscroll:onMainScroll:0",
       "route": "pages/index/index",
       "hostRoutes": [],
@@ -870827,7 +871032,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:916"
+        "staticSource": "pages/index/index.js:917"
       }
     },
     {
@@ -870944,7 +871149,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:924"
+        "staticSource": "pages/index/index.js:925"
       }
     },
     {
@@ -871072,11 +871277,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:738"
+        "staticSource": "pages/index/index.js:739"
       }
     },
     {
-      "id": "pages/index/index.wxml:146:bindtap:goActivity:15",
+      "id": "pages/index/index.wxml:156:bindtap:goActivity:17",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -871099,7 +871304,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 146,
+        "line": 156,
         "selectorHint": ".v3-nearby-card",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -871140,75 +871345,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:989"
-      }
-    },
-    {
-      "id": "pages/index/index.wxml:183:bindtap:goActivity:17",
-      "route": "pages/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/index/index.wxml",
-        "js": "pages/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goActivity",
-        "line": 183,
-        "selectorHint": ".v3-upreview",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/index/index.js:989"
+        "staticSource": "pages/index/index.js:990"
       }
     },
     {
@@ -871275,11 +871412,151 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:880"
+        "staticSource": "pages/index/index.js:881"
       }
     },
     {
-      "id": "pages/index/index.wxml:206:bind:change:switchTab:18",
+      "id": "pages/index/index.wxml:193:bindtap:goActivity:19",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goActivity",
+        "line": 193,
+        "selectorHint": ".v3-upreview",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:990"
+      }
+    },
+    {
+      "id": "pages/index/index.wxml:21:bindtap:onHeroBannerTap:4",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "swiper-item",
+        "event": "bindtap",
+        "handler": "onHeroBannerTap",
+        "line": 21,
+        "selectorHint": ".v3-hero-action",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{item.route ? '打开' : ''}}{{item.name || '城瘾精选'}}",
+        "ariaRole": null,
+        "ariaRoleExpression": "{{item.route ? 'button' : 'img'}}",
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/activity/list/index",
+          "pages/club/apply/index",
+          "pages/merchant/apply/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:871"
+      }
+    },
+    {
+      "id": "pages/index/index.wxml:216:bind:change:switchTab:20",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -871302,7 +871579,7 @@
         "tag": "cy-tabs",
         "event": "bind:change",
         "handler": "switchTab",
-        "line": 206,
+        "line": 216,
         "selectorHint": "cy-tabs[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -871392,153 +871669,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:694"
+        "staticSource": "pages/index/index.js:695"
       }
     },
     {
-      "id": "pages/index/index.wxml:21:bindtap:onHeroBannerTap:4",
-      "route": "pages/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/index/index.wxml",
-        "js": "pages/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "swiper-item",
-        "event": "bindtap",
-        "handler": "onHeroBannerTap",
-        "line": 21,
-        "selectorHint": ".v3-hero-action",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": "{{item.route ? '打开' : ''}}{{item.name || '城瘾精选'}}",
-        "ariaRole": null,
-        "ariaRoleExpression": "{{item.route ? 'button' : 'img'}}",
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/activity/list/index",
-          "pages/club/apply/index",
-          "pages/merchant/apply/index"
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/index/index.js:870"
-      }
-    },
-    {
-      "id": "pages/index/index.wxml:212:bindtap:goTopic:19",
-      "route": "pages/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/index/index.wxml",
-        "js": "pages/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goTopic",
-        "line": 212,
-        "selectorHint": ".v2-fcard",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/topic/index/index?id="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/index/index.js:994"
-      }
-    },
-    {
-      "id": "pages/index/index.wxml:222:bindtap:goTopic:20",
+      "id": "pages/index/index.wxml:222:bindtap:goTopic:21",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -871562,6 +871697,76 @@
         "event": "bindtap",
         "handler": "goTopic",
         "line": 222,
+        "selectorHint": ".v2-fcard",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/topic/index/index?id="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:995"
+      }
+    },
+    {
+      "id": "pages/index/index.wxml:232:bindtap:goTopic:22",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goTopic",
+        "line": 232,
         "selectorHint": ".v2-status",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -871604,11 +871809,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:994"
+        "staticSource": "pages/index/index.js:995"
       }
     },
     {
-      "id": "pages/index/index.wxml:231:catchtap:onAddressTap:21",
+      "id": "pages/index/index.wxml:241:catchtap:onAddressTap:23",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -871631,7 +871836,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onAddressTap",
-        "line": 231,
+        "line": 241,
         "selectorHint": ".v2-status-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -871674,11 +871879,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1648"
+        "staticSource": "pages/index/index.js:1656"
       }
     },
     {
-      "id": "pages/index/index.wxml:249:bindtap:goActivity:23",
+      "id": "pages/index/index.wxml:259:bindtap:goActivity:25",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -871701,7 +871906,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 249,
+        "line": 259,
         "selectorHint": ".v2-fcard",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -871742,11 +871947,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:989"
+        "staticSource": "pages/index/index.js:990"
       }
     },
     {
-      "id": "pages/index/index.wxml:259:bindtap:goActivity:24",
+      "id": "pages/index/index.wxml:269:bindtap:goActivity:26",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -871769,7 +871974,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goActivity",
-        "line": 259,
+        "line": 269,
         "selectorHint": ".v2-status",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -871810,11 +872015,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:989"
+        "staticSource": "pages/index/index.js:990"
       }
     },
     {
-      "id": "pages/index/index.wxml:268:catchtap:onAddressTap:25",
+      "id": "pages/index/index.wxml:278:catchtap:onAddressTap:27",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -871837,7 +872042,7 @@
         "tag": "view",
         "event": "catchtap",
         "handler": "onAddressTap",
-        "line": 268,
+        "line": 278,
         "selectorHint": ".v2-status-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -871880,11 +872085,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1648"
+        "staticSource": "pages/index/index.js:1656"
       }
     },
     {
-      "id": "pages/index/index.wxml:289:bindtap:closePhoneModal:27",
+      "id": "pages/index/index.wxml:299:bindtap:closePhoneModal:29",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -871907,7 +872112,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePhoneModal",
-        "line": 289,
+        "line": 299,
         "selectorHint": ".tkbg",
         "visibleCondition": "{{showPhoneModal}}",
         "disabledCondition": null,
@@ -871947,11 +872152,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1043"
+        "staticSource": "pages/index/index.js:1044"
       }
     },
     {
-      "id": "pages/index/index.wxml:292:bindgetphonenumber:getPhoneNumber:28",
+      "id": "pages/index/index.wxml:302:bindgetphonenumber:getPhoneNumber:30",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -871974,7 +872179,7 @@
         "tag": "button",
         "event": "bindgetphonenumber",
         "handler": "getPhoneNumber",
-        "line": 292,
+        "line": 302,
         "selectorHint": ".tkbox_but",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -872056,11 +872261,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1000"
+        "staticSource": "pages/index/index.js:1001"
       }
     },
     {
-      "id": "pages/index/index.wxml:293:bindtap:closePhoneModal:29",
+      "id": "pages/index/index.wxml:303:bindtap:closePhoneModal:31",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -872083,7 +872288,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "closePhoneModal",
-        "line": 293,
+        "line": 303,
         "selectorHint": ".tkbox_skip",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -872123,11 +872328,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1043"
+        "staticSource": "pages/index/index.js:1044"
       }
     },
     {
-      "id": "pages/index/index.wxml:299:bind:settled:onPrivacyGateSettled:30",
+      "id": "pages/index/index.wxml:309:bind:settled:onPrivacyGateSettled:32",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -872152,7 +872357,7 @@
         "tag": "cy-privacy-gate",
         "event": "bind:settled",
         "handler": "onPrivacyGateSettled",
-        "line": 299,
+        "line": 309,
         "selectorHint": "cy-privacy-gate[bind:settled]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -872285,7 +872490,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:277"
+        "staticSource": "pages/index/index.js:278"
       }
     },
     {
@@ -872355,7 +872560,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:727"
+        "staticSource": "pages/index/index.js:728"
       }
     },
     {
@@ -872490,7 +872695,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1643"
+        "staticSource": "pages/index/index.js:1651"
       }
     },
     {
@@ -872557,7 +872762,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1636"
+        "staticSource": "pages/index/index.js:1644"
       }
     },
     {
@@ -872624,7 +872829,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1636"
+        "staticSource": "pages/index/index.js:1644"
       }
     },
     {
@@ -872691,11 +872896,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:1636"
+        "staticSource": "pages/index/index.js:1644"
       }
     },
     {
-      "id": "pages/index/index.wxml:93:bindchange:onRecoChange:12",
+      "id": "pages/index/index.wxml:78:bindtap:onLocationPromptDecline:10",
       "route": "pages/index/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -872711,154 +872916,22 @@
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "swiper",
-        "event": "bindchange",
-        "handler": "onRecoChange",
-        "line": 93,
-        "selectorHint": ".v3-reco-swiper",
-        "visibleCondition": "{{recoCards.length}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
+      "requiredCapabilityByBranch": {
+        "denied": "getLocation"
       },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/index/index.js:905"
-      }
-    },
-    {
-      "id": "pages/index/index.wxml:93:bindtransition:onRecoTransition:11",
-      "route": "pages/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/index/index.wxml",
-        "js": "pages/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "swiper",
-        "event": "bindtransition",
-        "handler": "onRecoTransition",
-        "line": 93,
-        "selectorHint": ".v3-reco-swiper",
-        "visibleCondition": "{{recoCards.length}}",
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/index/index.js:885"
-      }
-    },
-    {
-      "id": "pages/index/index.wxml:97:bindtap:goRecoHero:13",
-      "route": "pages/index/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "player",
-      "entry": {
-        "wxml": "pages/index/index.wxml",
-        "js": "pages/index/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
         "tag": "view",
         "event": "bindtap",
-        "handler": "goRecoHero",
-        "line": 97,
-        "selectorHint": ".v3-reco-card",
+        "handler": "onLocationPromptDecline",
+        "line": 78,
+        "selectorHint": ".v3-locprompt__btn",
         "visibleCondition": null,
         "disabledCondition": null,
         "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
+        "ariaLabelExpression": "{{locationPrompt.cancelText}}",
+        "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
         "ariaDisabledExpression": null,
@@ -872867,36 +872940,217 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "navigation",
+      "actionClass": "external",
       "interactionMode": "tap",
-      "baseActionClass": "navigation",
+      "baseActionClass": "read",
       "effectClasses": [
-        "navigation",
+        "read",
         "state"
       ],
       "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
+      "externalCapabilities": [
+        "getLocation"
+      ],
+      "successCapabilities": [
+        "getLocation"
+      ],
       "targets": {
         "routes": [
-          "pages/topic/index/index?id="
+          "pages/privacy/index"
         ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
+        "apis": [
+          "/api/compliance/consents",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/map/reverse-geocode",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/compliance/consents",
+          "/api/map/reverse-geocode"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/compliance/consents",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/map/reverse-geocode",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
         "writeApis": []
       },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error"
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "denied"
       ],
-      "requiredPlatforms": [],
-      "externalGate": null,
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/index/index.js:973"
+        "staticSource": "pages/index/index.js:1564"
+      }
+    },
+    {
+      "id": "pages/index/index.wxml:79:bindtap:onLocationPromptAgree:11",
+      "route": "pages/index/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/index/index.wxml",
+        "js": "pages/index/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "denied": "getLocation"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "onLocationPromptAgree",
+        "line": 79,
+        "selectorHint": ".v3-locprompt__btn",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{locationPrompt.confirmText}}",
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [
+        "getLocation"
+      ],
+      "successCapabilities": [
+        "getLocation"
+      ],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/compliance/consents",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/map/reverse-geocode",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/compliance/consents",
+          "/api/map/reverse-geocode"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/compliance/consents",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/map/reverse-geocode",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/index/index.js:1563"
       }
     },
     {
