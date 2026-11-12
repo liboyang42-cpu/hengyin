@@ -730,7 +730,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
 
     private Long saveDraft(CmsTemplatePublishRequest request, Long memberId, String username, boolean workshopSnapshot) {
         CmsTemplateLibrary adoptionSource = null;
-        if (request != null && (request.getId() == null || request.getId() <= 0)
+        if (!workshopSnapshot && request != null && (request.getId() == null || request.getId() <= 0)
                 && request.getOriginalTemplateId() != null && request.getOriginalTemplateId() > 0) {
             adoptionSource = lockAdoptionSource(request.getOriginalTemplateId());
         }
@@ -838,7 +838,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             if (memberTemplateService.insertCmsMemberTemplate(t) != 1 || t.getId() == null) {
                 throw new ServiceException("保存草稿失败");
             }
-            if (t.getOriginalTemplateId() != null && t.getOriginalTemplateId() > 0) {
+            if (!workshopSnapshot && t.getOriginalTemplateId() != null && t.getOriginalTemplateId() > 0) {
                 templateLibraryService.incrementUseNumOnFirstAdoption(t.getOriginalTemplateId(), memberId, t.getId());
             }
             return t.getId();

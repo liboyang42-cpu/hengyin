@@ -91,6 +91,7 @@ class TemplateAdoptSecretBackfillTest {
         ReflectionTestUtils.setField(service, "auditTaskMapper", mock(com.chengyinhub.business.mapper.AuditTaskMapper.class));
         when(lockedMembers.selectCmsMemberTemplateByIdsForUpdate(any())).thenAnswer(call -> {
             java.util.List<Long> ids = call.getArgument(0);
+            if (ids.isEmpty() || ids.get(0) == null || ids.get(0) <= 0) return java.util.Collections.emptyList();
             CmsMemberTemplate row = memberService.selectCmsMemberTemplateById(ids.get(0));
             return row == null ? java.util.Collections.emptyList() : java.util.Collections.singletonList(row);
         });
