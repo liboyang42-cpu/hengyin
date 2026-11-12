@@ -167,7 +167,7 @@ public class JourneyStoryValidator {
         }
         validateCall(parsed.get("call"), ctx);
         validateStages(parsed.get("stages"), ctx);
-        validateEnding(parsed.get("ending"), ctx);
+        validateEnding(parsed.get("ending"), ctx, enforceEndingLimit);
         return trimmed;
     }
 
@@ -268,7 +268,7 @@ public class JourneyStoryValidator {
 
     // ---------- ending ----------
 
-    private void validateEnding(JsonNode ending, Context ctx) {
+    private void validateEnding(JsonNode ending, Context ctx, boolean enforceEndingLimit) {
         if (ending == null || ending.isNull()) {
             return;
         }
