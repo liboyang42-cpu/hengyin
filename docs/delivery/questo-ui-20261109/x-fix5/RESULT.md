@@ -38,7 +38,7 @@
 
 | 编号 | 结论 | 说明 / 修法 | 文件 | 测试 | 证据 |
 |---|---|---|---|---|---|
-| P-5 到店三步空 | 不改（未复现） | `.fx-hero__body` 底边已抬到 CTA 之上（btn-h+104rpx+安全区），「到店三步」标题与三步在同一滚动区；DevTools 自动化滚不动内层 scroll-view 是 R3 自己记的环境限制，标题落在渐隐边缘即该现象。预览态无自由探索卡包，rig 无法打开 hero | — | 版面公式未动 | 尝试见 `shots/p5-*.jpg`（hero 未渲染，非证据） |
+| P-5 到店三步空 | 不改（未复现） | `.fx-hero__body` 底边已抬到 CTA 之上（btn-h+104rpx+安全区），「到店三步」标题与三步在同一滚动区；DevTools 自动化滚不动内层 scroll-view 是 R3 自己记的环境限制，标题落在渐隐边缘即该现象。预览态无自由探索卡包，rig 无法打开 hero | — | 版面公式未动  |
 | P-6 卡包首屏白色毛边、缺标题 | 缺标题是业主 2026-11-02 g21 第三轮裁决（开包前包面与页头不露主题名，index.wxml 注释），不改；毛边需真实自由探索主题才进得了卡包页，rig 无法复现，未盲改 | — | — | — |
 | P-9 手记未到站的说明句 | 已修 | 未到过的站不写「这一页尚未书写…」，行内只剩站名 | pages/play/index.js | x-fix5 P-9 | — |
 | A-3 / N-19 标题截断、票务底栏压行 | 已修 | 标题改自适应高度多行框折行显示全文（去回车）；票种编辑器展开后若落在视口下半，`pageScrollTo` 滚到上 20% 处，不再被底栏压住 | pages/publish/fabu/index.wxml/.js/.wxss | x-fix5 A-3 | 页面需真机/DevTools 验 |
@@ -53,7 +53,7 @@
 | N-11 通关卡 | 版面已修（见 R3-9） | 同上 | chapter-flip | x-fix5 R3-9 | — |
 | N-12 地图黑底只剩搜索条 | 环境 | DevTools 无地图渲染；同一环境漫游地图正常 | — | — | — |
 | N-13 就标这些压 Home 条 / 「右侧」 | 压 Home 条已修 | 故事流 `.chfull__kit` 与 `.chfull__end` 底内边距再加 32rpx；rig 实测 STARDUST 与 CYBER 末行按钮底到屏底距离一致（均 ≥ 34px 安全区），原 CYBER 取证应是进场动画中途。「右侧」是作者题面文案，两列在小程序里竖排，改题面不属客户端 | pages/play/index.wxss | x-fix5 N-1/N-13；x-fix4 同步 | `shots/m2-*-compare-*.jpg` |
-| N-1 继续探索压 Home 条 | 已修（各外观） | 同上 | pages/play/index.wxss | 同上 | `shots/eSTARDUST-end.jpg`、`eCYBER-end.jpg` |
+| N-1 继续探索压 Home 条 | 已修（各外观） | 同上 | pages/play/index.wxss | 同上 |
 | N-17 通过入会申请标题过长 | 已修 | 标题只写名字，默认昵称「城瘾用户」的申请时刻进正文「申请于 …」；拒绝弹层保持原样 | pages/club/join-requests/index.js | x-fix5 N-17；club-join-request-confirm-name-contract | — |
 | N-18 `/api/coop/list` 403 | 不改 | C-1 已把 403 当「没有合作邀约」处理（`readCoopListResult`）；服务端按会员解析商家上下文，客户端没有可靠的「是否有商家行」事实，按角色门控会漏掉兼任商家的主理人，故仍请求 | — | — | — |
 
