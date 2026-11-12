@@ -119,6 +119,6 @@ test('A-3 / N-19 编辑器标题改多行自适应框折行;票种编辑器展�
 
 test('ME-4 底栏实底提前到 12%', () => {
   const w = read('components/tabBar/index.wxss')
-  assert.match(w, /0\.96\) 12%, rgba\(255, 255, 255, 0\.96\) 100%\)/)
+  assert.match(w, /rgba\(255, 255, 255, 0\) 0%, #FFFFFF 6%, #FFFFFF 100%\)/)   // x-fix6 把浅色渐隐再收到 6% 且全不透明
   assert.match(w, /var\(--cy-color-bg-page\) 12%, var\(--cy-color-bg-page\) 100%\)/)
 })
