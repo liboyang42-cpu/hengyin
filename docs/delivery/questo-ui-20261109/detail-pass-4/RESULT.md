@@ -10,7 +10,7 @@
 |---|---|---|
 | master 基线 | 3,311,747 | 0 |
 | 三期收尾（修正前） | 3,320,626 | +8,879 |
-| **本期** | **3,313,744** | **+1,997**（≤ +2,000） |
+| **本期** | **3,313,743** | **+1,996**（≤ +2,000） |
 
 按负责人的决定：
 - `life.js`（活的细节）整个删除；`cy-empty` / `cy-error` 只保留入场上浮，不再有呼吸。
@@ -20,7 +20,7 @@
   - 主包内各组件新增的「松手弹性」过渡规则撤掉（按下的 scale .97 / opacity .92、景深阴影保留）。这与 `btn` 样式里早已写明的取舍一致（「全局 .cy-pressed 拿不到基态过渡，逐个给宿主加不值」）；弹性松手现在在 `btn` 与分包页面上保留。
   - 主包内新增的 `tabular-nums` 规则撤掉（分包内的保留）。`count.wxs` 的 `stat` 挪到 `pages/topic/utils/stat.wxs`（只有主题页用）。
   - 商家亮色弹层的抬升与亮色景深写进 `.theme-light/.theme-merchant` 块；`.theme-topic-editor` 保持原来的「白底细线、无投影、弹层不抬升」。
-  - 首页照片卡 `.v2-fcard::before` 的 2rpx 顶边高光（压在照片上，内阴影看不见）与 `.v3-reco-card` 的景深去掉。
+  - 为压进预算，主包内去掉：首页卡片（`.v2-fcard` 照片卡、`.v3-locprompt`、`.v3-reco-card`）与 `stat-card` 的景深阴影、`.v2-fcard::before` 顶边高光；`toast` 的悬浮景深与 `card`/`modal`/`empty` 的按压保留。亮色 / 暗色主题块照既有门禁各自声明景深 token。
 - 没动 `club-direct-ledger` 与其他既有内容。
 
 ## (2) 入场上浮单位
@@ -40,9 +40,13 @@
 
 | 门禁 | 结果 |
 |---|---|
-| 全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`） | 见末段「最终门禁」 |
+| 全量单测（仓库根 `node --test chengyinhub-xcx/tests/unit/*.test.js`） | 17409 条 / 17409 过 / 0 红 |
 | ui-integrity | UI-GATE-0:PASS，无新增 baseline 条目 |
-| 动作台账 / 路由矩阵 | `--write` 重建后 `--check` PASS |
+| 动作台账 / 路由矩阵 | `--write` 重建后 `--check` PASS（6025 控件；171 routes / 27 scenes） |
 | WXS / WXSS | WXS PASS（15 + 4 内联）；值内注释 / 选择器 / 组件选择器 PASS |
-| keyframes 棘轮 | 无新增 `@keyframes` |
+| keyframes 棘轮 | 无新增 `@keyframes`（在全量单测内） |
 | danger-confirm | PASS（53 调用点，38 不可逆有确认） |
+
+另：undefined-token 门禁 PASS（481 份 wxss）；`wxs-syntax-gate` 需 `node --expose-internals` 运行。
+
+STATUS: DONE（主包 +1,996 B ≤ +2,000 B；全量 0 红）
