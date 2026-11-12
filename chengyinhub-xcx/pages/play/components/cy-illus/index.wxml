@@ -1,9 +1,5 @@
-<view wx:if="{{b2}}" class="ib ib--{{kind}} {{on && !reduced ? 'is-on' : ''}} {{idle ? 'is-idle' : ''}} {{ec}} {{pc}} {{reduced ? 'is-reduced' : ''}}" style="width:{{size}}rpx;height:{{size}}rpx" aria-hidden="true">
+<view class="ib ib--{{kind}} {{on && !reduced ? 'is-on' : ''}} {{idle ? 'is-idle' : ''}} {{ec}} {{pc}} {{reduced ? 'is-reduced' : ''}}" style="width:{{size}}rpx;height:{{size}}rpx" aria-hidden="true">
   <view wx:for="{{layers}}" wx:key="id" wx:if="{{!bare || item.k !== 'gd'}}" class="ib__l ib__g x-{{item.k}} {{item.g ? 'ib__g--g' : ''}}">
     <image wx:for="{{item.parts}}" wx:for-item="p" wx:key="id" class="ib__l ib__p x-{{p.k}}" src="{{p.src}}" mode="aspectFit"></image>
   </view>
-</view>
-<view wx:else class="il il--{{kind}} il-in--{{enter}} il-idle--{{idleKind}} {{on ? 'is-on' : ''}} {{idle ? 'is-idle' : ''}} {{reduced ? 'is-reduced' : ''}}" style="width:{{size}}rpx;height:{{size}}rpx" aria-hidden="true">
-  <image wx:if="{{!bare}}" class="il__bl" src="{{blob}}" mode="aspectFit"></image>
-  <image class="il__fg" src="{{fg}}" mode="aspectFit"></image>
 </view>

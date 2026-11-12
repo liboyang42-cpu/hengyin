@@ -117,10 +117,11 @@ class MerchantAggregateReadServiceTest {
         Clock atShanghaiMidnight = Clock.fixed(
                 Instant.parse("2026-08-23T16:00:00Z"), ZoneOffset.UTC);
 
-        MerchantAggregateReadServiceImpl.MarketingWindow before =
-                MerchantAggregateReadServiceImpl.resolveMarketingWindow(7, beforeShanghaiMidnight);
-        MerchantAggregateReadServiceImpl.MarketingWindow after =
-                MerchantAggregateReadServiceImpl.resolveMarketingWindow(7, atShanghaiMidnight);
+        // D-93:窗口解析已收进营销首页与店铺参谋共用的 MerchantMetricPeriod
+        com.chengyinhub.business.service.support.MerchantMetricPeriod before =
+                com.chengyinhub.business.service.support.MerchantMetricPeriod.resolve(7, beforeShanghaiMidnight);
+        com.chengyinhub.business.service.support.MerchantMetricPeriod after =
+                com.chengyinhub.business.service.support.MerchantMetricPeriod.resolve(7, atShanghaiMidnight);
 
         assertEquals(Instant.parse("2026-08-23T16:00:00Z"), before.getEndExclusive().toInstant(),
                 "上海 8/23 23:59 的窗口截到 8/24 0 点:今天的核销要算进来");
@@ -271,8 +272,6 @@ class MerchantAggregateReadServiceTest {
         fact.setPreviousSignup(20L);
         fact.setCurrentPayment(18L);
         fact.setPreviousPayment(0L);
-        fact.setCurrentVerify(12L);
-        fact.setPreviousVerify(15L);
         fact.setCurrentRefundApply(2L);
         fact.setPreviousRefundApply(1L);
         fact.setCurrentTopicTouchpoint(16L);
@@ -280,11 +279,19 @@ class MerchantAggregateReadServiceTest {
         fact.setCurrentUnattributedTouchpoint(0L);
         when(analyticsMapper.selectAnalytics(eq(VIEWER), any(Date.class), any(Date.class), any(Date.class)))
                 .thenReturn(fact);
+        // D-93:核销改由共用指标服务按事件时间落窗;本期 1 条、上期 2 条
+        when(analyticsMapper.selectVerifyEventTimes(eq(VIEWER), any(Date.class), any(Date.class)))
+                .thenAnswer(call -> {
+                    long end = ((Date) call.getArgument(2)).getTime();
+                    long d = 24L * 60L * 60L * 1000L;
+                    return Arrays.asList(new Date(end - d), new Date(end - 31 * d), new Date(end - 59 * d));
+                });
 
         MerchantAggregateReadServiceImpl service = new MerchantAggregateReadServiceImpl(
                 merchants, clubs, mock(IClubMemberService.class), invites, topics, coupons,
                 activities, analyticsMapper,
-                mock(CmsTopicChapterMapper.class), mock(ISysCategoryService.class));
+                mock(CmsTopicChapterMapper.class), mock(ISysCategoryService.class),
+                new MerchantMetricsServiceImpl(analyticsMapper));
         Map<String, Object> result = service.marketingHome(VIEWER, MERCHANT, 30);
 
         assertEquals(1, castMap(result.get("recruiting")).get("count"));
@@ -304,6 +311,9 @@ class MerchantAggregateReadServiceTest {
                         stages.get(2).get("code"), stages.get(3).get("code"), stages.get(4).get("code")));
         assertEquals("0.2000", stages.get(0).get("changeRate"));
         assertEquals(null, stages.get(2).get("changeRate"), "上一期为 0 时必须保留 unknown");
+        assertEquals(1L, stages.get(3).get("currentCount"));
+        assertEquals(2L, stages.get(3).get("previousCount"));
+        assertEquals("-0.5000", stages.get(3).get("changeRate"));
         Map<String, Object> touchpoints = castMap(analytics.get("touchpoints"));
         assertEquals("PARTIAL", touchpoints.get("coverage"));
         assertEquals(false, touchpoints.get("attributed"));
@@ -356,7 +366,8 @@ class MerchantAggregateReadServiceTest {
                 mock(IMmsMerchantService.class), clubs, members, mock(CoopInviteMapper.class),
                 mock(ICmsTopicService.class), mock(ISmsCouponService.class),
                 mock(ICmsActivityService.class), mock(MerchantMarketingAnalyticsMapper.class),
-                mock(CmsTopicChapterMapper.class), mock(ISysCategoryService.class));
+                mock(CmsTopicChapterMapper.class), mock(ISysCategoryService.class),
+                mock(com.chengyinhub.business.service.IMerchantMetricsService.class));
 
         Map<String, Object> result = service.relationHome(VIEWER, null, null, null, 10);
         List<Map<String, Object>> rows = castList(castMap(result.get("discovery")).get("clubs"));
@@ -393,7 +404,8 @@ class MerchantAggregateReadServiceTest {
                 mock(IMmsMerchantService.class), mock(IClubService.class), mock(IClubMemberService.class),
                 mock(CoopInviteMapper.class),
                 mock(ICmsTopicService.class), coupons, mock(ICmsActivityService.class), analyticsMapper,
-                mock(CmsTopicChapterMapper.class), mock(ISysCategoryService.class));
+                mock(CmsTopicChapterMapper.class), mock(ISysCategoryService.class),
+                new MerchantMetricsServiceImpl(analyticsMapper));
 
         Map<String, Object> stats = castMap(service.marketingHome(VIEWER, MERCHANT, 30).get("coupons"));
 
@@ -511,7 +523,8 @@ class MerchantAggregateReadServiceTest {
                 merchants, clubs, mock(IClubMemberService.class), invites, topics,
                 mock(ISmsCouponService.class),
                 mock(ICmsActivityService.class), mock(MerchantMarketingAnalyticsMapper.class),
-                mock(CmsTopicChapterMapper.class), categories);
+                mock(CmsTopicChapterMapper.class), categories,
+                mock(com.chengyinhub.business.service.IMerchantMetricsService.class));
     }
 
     private static MmsMerchant merchant(long memberId, String name, String phone, String wechat) {
@@ -591,7 +604,8 @@ class MerchantAggregateReadServiceTest {
         MerchantAggregateReadServiceImpl service = new MerchantAggregateReadServiceImpl(
                 mock(IMmsMerchantService.class), mock(IClubService.class), mock(IClubMemberService.class), mock(CoopInviteMapper.class),
                 topics, mock(ISmsCouponService.class), mock(ICmsActivityService.class),
-                mock(MerchantMarketingAnalyticsMapper.class), mock(CmsTopicChapterMapper.class), mock(ISysCategoryService.class));
+                mock(MerchantMarketingAnalyticsMapper.class), mock(CmsTopicChapterMapper.class), mock(ISysCategoryService.class),
+                new MerchantMetricsServiceImpl(mock(MerchantMarketingAnalyticsMapper.class)));
 
         Map<String, Object> recruiting = castMap(service.marketingHome(VIEWER, MERCHANT, 30).get("recruiting"));
 

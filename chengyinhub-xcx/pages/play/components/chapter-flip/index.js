@@ -165,7 +165,7 @@ Component({
         this._rot = 0;
         const rows = (end.rows || []).slice(0, 3);
         this.setData({
-          endCard: { kicker: end.kicker || '', title: end.title || '', cover: end.cover || '', next: end.next || '' },
+          endCard: { kicker: end.kicker || '', title: end.title || '', cover: end.cover || '', next: end.next || '', reward: end.reward || '' },
           endStats: rows.map((r) => ({ k: r.k, v: String(r.v), shown: this.data.reducedMotion ? String(r.v) : statStart(String(r.v)) })),
         });
         this._at(() => this.setData({ endIn: true }), 40);

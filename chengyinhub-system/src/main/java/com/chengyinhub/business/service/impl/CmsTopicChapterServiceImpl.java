@@ -31,6 +31,7 @@ import com.chengyinhub.business.service.ITopicOperationsScopeAuthorizer;
 import com.chengyinhub.business.service.ITopicSaleCanonicalMutationService;
 import com.chengyinhub.business.support.ChapterRecruitmentRules;
 import com.chengyinhub.business.util.ChapterAtmospherePreset;
+import com.chengyinhub.business.util.ChapterRewardText;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.constant.TermsMode;
 import com.chengyinhub.system.domain.SysCategory;
@@ -161,6 +162,7 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
         boolean conversionProtected = conversionProtectedFor(topicId);
         cmsTopicChapter.setAtmospherePreset(
                 ChapterAtmospherePreset.requireValid(cmsTopicChapter.getAtmospherePreset()));
+        cmsTopicChapter.setRewardText(ChapterRewardText.requireValidOrNull(cmsTopicChapter.getRewardText()));   // D-82
         cmsTopicChapter.setCreateTime(DateUtils.getNowDate());
         int rows = cmsTopicChapterMapper.insertCmsTopicChapter(cmsTopicChapter);
         if (rows > 0) {
@@ -285,6 +287,8 @@ public class CmsTopicChapterServiceImpl implements ICmsTopicChapterService
             cmsTopicChapter.setAtmospherePreset(
                     ChapterAtmospherePreset.requireValid(cmsTopicChapter.getAtmospherePreset()));
         }
+        // D-82:null = 没送(动态 update 跳过);空白 = 清空奖励(写成 '')
+        cmsTopicChapter.setRewardText(ChapterRewardText.requireValid(cmsTopicChapter.getRewardText()));
         cmsTopicChapter.setUpdateTime(DateUtils.getNowDate());
         int rows = cmsTopicChapterMapper.updateCmsTopicChapter(cmsTopicChapter);
         if (rows > 0) {

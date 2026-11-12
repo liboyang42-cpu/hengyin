@@ -563,6 +563,63 @@ class TopicUpdateByOwnerTest {
         verify(nodeMapper, never()).deleteCmsTopicNodeById(any());
     }
 
+    // ---------- D-82 章节级奖励:只有主题创建者能设;值域挡在写之前 ----------
+
+    private TopicUpdateDTO dtoWithChapterReward(String reward) {
+        TopicUpdateDTO dto = fullDto();
+        dto.getChapters().get(0).setRewardText(reward);
+        return dto;
+    }
+
+    @Test
+    void draftOwner_setsChapterRewardText_trimmedOntoTheChapterRow() {
+        stubExisting(topic(0, daysFromNow(3)), 1);
+
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc)
+                .updateTopicByOwner(dtoWithChapterReward("  隐藏线索 ×1 "), ME, "me");
+
+        ArgumentCaptor<CmsTopicChapter> cap = ArgumentCaptor.forClass(CmsTopicChapter.class);
+        verify(chapterMapper).insertCmsTopicChapter(cap.capture());
+        assertEquals("隐藏线索 ×1", cap.getValue().getRewardText());
+    }
+
+    @Test
+    void draftOwner_blankChapterReward_isStoredAsNoReward() {
+        stubExisting(topic(0, daysFromNow(3)), 1);
+
+        com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc)
+                .updateTopicByOwner(dtoWithChapterReward("   "), ME, "me");
+
+        ArgumentCaptor<CmsTopicChapter> cap = ArgumentCaptor.forClass(CmsTopicChapter.class);
+        verify(chapterMapper).insertCmsTopicChapter(cap.capture());
+        assertNull(cap.getValue().getRewardText());
+    }
+
+    @Test
+    void otherMember_cannotSetChapterReward() {
+        stubExisting(topic(0, daysFromNow(3)), 1);
+
+        RuntimeException e = assertThrows(RuntimeException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc)
+                        .updateTopicByOwner(dtoWithChapterReward("隐藏线索 ×1"), 999L, "attacker"));
+
+        assertTrue(e.getMessage().contains("无权编辑"), e.getMessage());
+        verify(chapterMapper, never()).insertCmsTopicChapter(any());
+        verify(topicMapper, never()).updateCmsTopic(any());
+    }
+
+    @Test
+    void draftOwner_overlongOrMultiLineChapterReward_rejectedBeforeChapterWrite() {
+        for (String bad : new String[]{"奖".repeat(25), "第一行\n第二行"}) {
+            stubExisting(topic(0, daysFromNow(3)), 1);
+            IllegalStateException e = assertThrows(IllegalStateException.class,
+                    () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc)
+                            .updateTopicByOwner(dtoWithChapterReward(bad), ME, "me"));
+            assertTrue(e.getMessage().contains("章节奖励"), e.getMessage());
+        }
+        verify(chapterMapper, never()).insertCmsTopicChapter(any());
+    }
+
     /**
      * 模板「使用此模板」那条入口的存活测试。
      *

@@ -83,7 +83,7 @@ class MerchantDiscoveryMemberIdProjectionTest {
                 mock(ICmsTopicService.class),
                 mock(ISmsCouponService.class), mock(ICmsActivityService.class),
                 mock(MerchantMarketingAnalyticsMapper.class), mock(CmsTopicChapterMapper.class),
-                categories);
+                categories, mock(com.chengyinhub.business.service.IMerchantMetricsService.class));
 
         Map<String, Object> result = service.relationHome(10L, null, null, null, 10);
         Map<String, Object> discovery = (Map<String, Object>) result.get("discovery");

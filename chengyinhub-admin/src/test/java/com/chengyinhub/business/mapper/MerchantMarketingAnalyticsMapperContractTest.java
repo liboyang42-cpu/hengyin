@@ -26,14 +26,14 @@ class MerchantMarketingAnalyticsMapperContractTest {
         assertTrue(sql.contains("b.browse_time as event_time"), sql);
         assertTrue(sql.contains("r.create_time as event_time"), sql);
         assertTrue(sql.contains("r.payment_time as event_time"), sql);
-        assertTrue(sql.contains("rd.create_time as event_time"), sql);
         assertTrue(sql.contains("f.create_time as event_time"), sql);
-        assertTrue(occurrences(sql, "event_time >= ? and event_time < ?") == 13,
-                "十个阶段窗口与三个触点窗口都必须使用 [start,end) 半开边界:" + sql);
+        // D-93:核销移出 selectAnalytics,由 selectVerifyEventTimes 供营销首页与店铺参谋共用
+        assertFalse(sql.contains("'verify'"), "核销不得在 selectAnalytics 里再数一遍:" + sql);
+        assertTrue(occurrences(sql, "event_time >= ? and event_time < ?") == 11,
+                "八个阶段窗口与三个触点窗口都必须使用 [start,end) 半开边界:" + sql);
         assertTrue(sql.contains("b.browse_time >= ? and b.browse_time < ?"), sql);
         assertTrue(sql.contains("r.create_time >= ? and r.create_time < ?"), sql);
         assertTrue(sql.contains("r.payment_time >= ? and r.payment_time < ?"), sql);
-        assertTrue(sql.contains("rd.create_time >= ? and rd.create_time < ?"), sql);
         assertTrue(sql.contains("f.create_time >= ? and f.create_time < ?"), sql);
         assertFalse(sql.contains("event_time <= ?"), "时间上界不得闭区间:" + sql);
         assertFalse(sql.contains("event_time > ?"), "时间下界不得排除恰好 00:00 的事件:" + sql);
@@ -48,8 +48,6 @@ class MerchantMarketingAnalyticsMapperContractTest {
         assertTrue(sql.contains("crm.member_id = ?") && sql.contains("crm.audit_status = 1"),
                 "中标主题必须按服务端 owner 和中标态:" + sql);
         assertTrue(sql.contains("a.member_id = ?"), "自有活动必须按 ownerMemberId:" + sql);
-        assertTrue(sql.contains("rd.merchant_id = ?"), "核销按商家主体 ownerMemberId:" + sql);
-        assertTrue(sql.contains("rd.status = 'active'"), "冲正核销不得算事件:" + sql);
         assertTrue(sql.contains("f.merchant_id = ?") && sql.contains("f.del_flag = 0"),
                 "退款申请按商家主体 ownerMemberId:" + sql);
 
@@ -74,6 +72,29 @@ class MerchantMarketingAnalyticsMapperContractTest {
         assertFalse(sql.contains("registration_entitlement"), sql);
     }
 
+    /**
+     * D-93(2026-11-11 营销首页与店铺参谋指标合并):两页「核销」唯一取数。
+     * 商家 ACTIVE 核销 + 自有活动验票,owner 只来自服务端,半开窗口。
+     */
+    @Test
+    void sharedVerifyEventsAreOwnerScopedHalfOpenAndIncludeActivityTicketScans() throws Exception {
+        Configuration configuration = parsed();
+        Map<String, Object> params = new HashMap<>();
+        params.put("ownerMemberId", 99L);
+        params.put("since", new Date(1_000L));
+        params.put("endExclusive", new Date(3_000L));
+        String sql = normalized(configuration.getMappedStatement(NS + "selectVerifyEventTimes")
+                .getBoundSql(params).getSql());
+        assertTrue(sql.contains("rd.merchant_id = ?"), "核销按商家主体 ownerMemberId:" + sql);
+        assertTrue(sql.contains("rd.status = 'active'"), "冲正核销不得算事件:" + sql);
+        assertTrue(sql.contains("rd.create_time >= ? and rd.create_time < ?"), sql);
+        assertTrue(sql.contains("a.member_id = ?") && sql.contains("r.verification_status = 1"),
+                "商家自有活动验票同样是核销(与核销台账同源):" + sql);
+        assertTrue(sql.contains("r.verification_time >= ? and r.verification_time < ?"), sql);
+        assertFalse(sql.contains("<= ?"), "时间上界不得闭区间:" + sql);
+        assertFalse(sql.contains("merchant_chapter_offer"), "不得回到店铺参谋旧的权益 cohort 口径:" + sql);
+    }
+
     @Test
     void signupAndPaymentFactsMustNotFilterMissingCmsRegistrationDelFlag() throws Exception {
         String sql = boundSql();
@@ -84,11 +105,16 @@ class MerchantMarketingAnalyticsMapperContractTest {
         assertTrue(sql.contains("from cms_registration r"), "报名/支付事实仍须来自 cms_registration:" + sql);
     }
 
-    private String boundSql() throws Exception {
+    private Configuration parsed() throws Exception {
         Configuration configuration = new Configuration();
         try (InputStream in = Resources.getResourceAsStream(XML)) {
             new XMLMapperBuilder(in, configuration, XML, configuration.getSqlFragments()).parse();
         }
+        return configuration;
+    }
+
+    private String boundSql() throws Exception {
+        Configuration configuration = parsed();
         Map<String, Object> params = new HashMap<>();
         params.put("ownerMemberId", 99L);
         params.put("previousStart", new Date(1_000L));
