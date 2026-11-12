@@ -24,4 +24,4 @@ CREATE TABLE IF NOT EXISTS merchant_commerce_refund (
  PRIMARY KEY(order_id),
  UNIQUE KEY uk_commerce_refund_no(refund_no),
  UNIQUE KEY uk_commerce_refund_fact(refund_fact_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Original full paid-perk refund intent and verified settlement';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Original full paid-perk refund intent and verified settlement';

@@ -33,6 +33,7 @@ public class AppMediaVisibilityInterceptor implements HandlerInterceptor {
         // A resource handler resolves dot segments before reading bytes; use that same canonical key.
         key = java.nio.file.Paths.get(key).normalize().toString().replace('\\', '/');
         Map<String, Object> asset = mapper.selectByObjectKey(key);
+        if (asset != null && asset.isEmpty()) asset = null; // empty row = unregistered file
         if (asset != null && !"APPROVED".equals(asset.get("reviewState"))) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.setHeader("Cache-Control", "no-store");

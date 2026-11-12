@@ -181,7 +181,7 @@ class CommunityPostMediaIdentityAcceptanceTest {
         assertEquals(WxContentCallbackInbox.STATE_IGNORED_STALE,
                 inbox.get(WxContentCallbackInboxServiceImpl.sha256Hex("trace-1")).getState());
         assertEquals(0, visibilityChanges.get());
-        verify(im, never()).sendSystemInNestedTransaction(anyLong(), any(), anyString(), anyString());
+        verify(im, never()).enqueueSystemNotification(anyLong(), any(), anyString(), anyString(), anyString());
         verify(auditTaskService, never()).submitSafetyHold(anyString(), anyLong(), anyLong(), anyString(), anyString());
     }
 
@@ -210,8 +210,8 @@ class CommunityPostMediaIdentityAcceptanceTest {
 
         assertEquals(CommunityPost.LIFECYCLE_PUBLISHED, posts.get(POST_ID).getLifecycle());
         assertEquals(1, visibilityChanges.get());
-        verify(im, times(1)).sendSystemInNestedTransaction(eq(OTHER_AUTHOR_ID), any(), anyString(), anyString());
-        verify(im, never()).sendSystemInNestedTransaction(eq(AUTHOR_ID), any(), anyString(), anyString());
+        verify(im, times(1)).enqueueSystemNotification(eq(OTHER_AUTHOR_ID), any(), anyString(), anyString(), anyString());
+        verify(im, never()).enqueueSystemNotification(eq(AUTHOR_ID), any(), anyString(), anyString(), anyString());
     }
 
     /** 同一帖子两张图都违规:可见性只变一次、复核单只建一次、作者只收到一次通知。 */
@@ -228,7 +228,7 @@ class CommunityPostMediaIdentityAcceptanceTest {
         assertEquals(1, visibilityChanges.get());
         verify(auditTaskService, times(1)).submitSafetyHold(eq(AuditTask.BIZ_COMMUNITY_POST), eq(POST_ID),
                 eq(AUTHOR_ID), eq("HIGH"), anyString());
-        verify(im, times(1)).sendSystemInNestedTransaction(eq(AUTHOR_ID), any(), anyString(), anyString());
+        verify(im, times(1)).enqueueSystemNotification(eq(AUTHOR_ID), any(), anyString(), anyString(), anyString());
     }
 
     /** 微信重复推送同一 trace:第二次在 claim 处即判 DONE,不再进入业务 mutation。 */

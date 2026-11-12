@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS ecom_personal_receiver (
  consented_at DATETIME(3) NOT NULL,
  verified_at DATETIME(3) NOT NULL,
  PRIMARY KEY(member_id, appid)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 CREATE TABLE IF NOT EXISTS club_personal_payout_beneficiary (
  scope_type VARCHAR(16) NOT NULL,
  scope_id BIGINT NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS club_personal_payout_beneficiary (
  frozen_at DATETIME NOT NULL,
  payout_ready_at DATETIME(3) NULL,
  PRIMARY KEY(scope_type, scope_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 SET @dec_payout_ddl = IF((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='club_personal_payout_beneficiary' AND column_name='payout_ready_at')=0, 'ALTER TABLE club_personal_payout_beneficiary ADD COLUMN payout_ready_at DATETIME(3) NULL', 'SELECT 1');
 PREPARE dec_payout_stmt FROM @dec_payout_ddl;

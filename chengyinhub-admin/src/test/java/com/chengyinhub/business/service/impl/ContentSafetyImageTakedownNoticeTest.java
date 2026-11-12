@@ -207,7 +207,7 @@ class ContentSafetyImageTakedownNoticeTest {
                 () -> service.takeDownForSafety(IWxContentSecurityService.BIZ_TYPE_CLUB_POST, ID)));
 
         ArgumentCaptor<String> extra = ArgumentCaptor.forClass(String.class);
-        verify(im).sendSystemInNestedTransaction(eq(AUTHOR), eq(ImMessage.MSG_CARD), eq("内容已下架"), extra.capture());
+        verify(im).enqueueSystemNotification(eq(AUTHOR), eq(ImMessage.MSG_CARD), eq("内容已下架"), extra.capture(), anyString());
         assertTrue(extra.getValue().contains("原因：文字未通过内容安全检测"), extra.getValue());
         assertTrue(extra.getValue().contains("TEXT_RISK"), extra.getValue());
         assertTrue(!extra.getValue().contains("图片"), extra.getValue());
@@ -255,6 +255,8 @@ class ContentSafetyImageTakedownNoticeTest {
         @SuppressWarnings("unchecked")
         ObjectProvider<IImService> provider = mock(ObjectProvider.class);
         when(provider.getIfAvailable()).thenReturn(im);
+        when(provider.getObject()).thenReturn(im);
+        when(im.enqueueSystemNotification(anyLong(), anyInt(), anyString(), anyString(), anyString())).thenReturn(1L);
         ReflectionTestUtils.setField(service, "imServiceProvider", provider);
         when(events.selectOfficialEventById(ID)).thenReturn(officialEvent(null));
 
