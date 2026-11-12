@@ -42,7 +42,6 @@ public class EcommercePersonalReceiverService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public Map<String, Object> bind(Long memberId, Long clubId, String jsCode, Boolean consent) {
         requireMember(memberId);
-        if (!switches.personalClubEnabled()) throw new ServiceException("PERSONAL_RECEIVER_SWITCH_OFF");
         if (!Boolean.TRUE.equals(consent)) throw new ServiceException("PERSONAL_RECEIVER_CONSENT_REQUIRED");
         if (jsCode == null || jsCode.isBlank()) throw new ServiceException("WECHAT_FRESH_CODE_REQUIRED");
         String appid = switches.spAppid();
@@ -60,25 +59,62 @@ public class EcommercePersonalReceiverService {
         }
         if (session == null || !before.openid().equals(session.getOpenId()))
             throw new ServiceException("PERSONAL_RECEIVER_IDENTITY_MISMATCH");
-        if (before.receiver() != null) return verifiedView(before.receiver(), session.getOpenId());
+        boolean live = switches.personalClubEnabled();
+        EcomPersonalReceiver earlier = before.receiver();
+        if (earlier != null && !(live && "CONSENTED".equals(earlier.getState())))
+            return verifiedView(earlier, session.getOpenId());
         Date consentedAt = new Date();
-        try {
-            gateway.addPersonalReceiver(session.getOpenId(), appid);
-        } catch (RuntimeException e) {
-            throw new ServiceException("PERSONAL_RECEIVER_PROVIDER_NOT_CONFIRMED");
+        if (live) {
+            try {
+                gateway.addPersonalReceiver(session.getOpenId(), appid);
+            } catch (RuntimeException e) {
+                throw new ServiceException("PERSONAL_RECEIVER_PROVIDER_NOT_CONFIRMED");
+            }
         }
         return transaction.execute(status -> {
             BindingScope current = bindingScope(memberId, clubId, appid);
             if (!session.getOpenId().equals(current.openid()))
                 throw new ServiceException("PERSONAL_RECEIVER_IDENTITY_MISMATCH");
-            if (current.receiver() != null) return verifiedView(current.receiver(), session.getOpenId());
+            EcomPersonalReceiver existing = current.receiver();
+            if (existing != null && !(live && "CONSENTED".equals(existing.getState())))
+                return verifiedView(existing, session.getOpenId());
             EcomPersonalReceiver receiver = new EcomPersonalReceiver();
             receiver.setMemberId(memberId); receiver.setAppid(appid); receiver.setOpenid(session.getOpenId());
-            receiver.setState("VERIFIED"); receiver.setConsentedAt(consentedAt); receiver.setVerifiedAt(new Date());
-            if (receivers.insertVerified(receiver) != 1) throw new ServiceException("PERSONAL_RECEIVER_NOT_SAVED");
-            return view(receiver);
+            receiver.setConsentedAt(consentedAt); receiver.setVerifiedAt(new Date());
+            if (existing != null) {
+                if (!session.getOpenId().equals(existing.getOpenid()))
+                    throw new ServiceException("PERSONAL_RECEIVER_IDENTITY_IMMUTABLE");
+                receiver.setConsentedAt(existing.getConsentedAt());
+                receiver.setState("VERIFIED");
+                if (receivers.promoteConsentedToVerified(receiver) != 1) throw new ServiceException("PERSONAL_RECEIVER_NOT_SAVED");
+            } else if (live) {
+                receiver.setState("VERIFIED");
+                if (receivers.insertVerified(receiver) != 1) throw new ServiceException("PERSONAL_RECEIVER_NOT_SAVED");
+            } else {
+                receiver.setState("CONSENTED");
+                receiver.setVerifiedAt(receiver.getConsentedAt());
+                if (receivers.insertConsented(receiver) != 1) throw new ServiceException("PERSONAL_RECEIVER_NOT_SAVED");
+            }
+            return view(receiver, live, 0);
         });
     }
+
+    /** 解除个人收款绑定：只认登录人且须为俱乐部主；有处理中的个人分账时拒绝。 */
+    @Transactional
+    public Map<String, Object> unbind(Long memberId, Long clubId) {
+        requireMember(memberId);
+        String appid = switches.spAppid();
+        if (appid == null || appid.isBlank()) throw new ServiceException("PERSONAL_RECEIVER_APPID_MISMATCH");
+        if (!memberId.equals(members.lockActiveMemberById(memberId))) throw new ServiceException("MEMBER_UNAVAILABLE");
+        requireOwner(memberId, clubId, true);
+        EcomPersonalReceiver current = receivers.selectByMemberAndAppidForUpdate(memberId, appid);
+        if (current == null) return view(null, switches.personalClubEnabled(), 0);
+        if (receivers.deleteReceiverIfIdle(memberId, appid) != 1)
+            throw new ServiceException(IN_FLIGHT_MESSAGE);
+        return view(null, switches.personalClubEnabled(), 0);
+    }
+
+    static final String IN_FLIGHT_MESSAGE = "还有收款正在处理，处理完成后才能解除绑定";
 
     private record BindingScope(String openid, EcomPersonalReceiver receiver) { }
 
@@ -93,16 +129,18 @@ public class EcommercePersonalReceiverService {
 
     private Map<String, Object> verifiedView(EcomPersonalReceiver receiver, String openid) {
         if (!openid.equals(receiver.getOpenid())) throw new ServiceException("PERSONAL_RECEIVER_IDENTITY_IMMUTABLE");
-        if (!"VERIFIED".equals(receiver.getState())) throw new ServiceException("PERSONAL_RECEIVER_NOT_VERIFIED");
-        return view(receiver);
+        if (!"VERIFIED".equals(receiver.getState()) && !"CONSENTED".equals(receiver.getState()))
+            throw new ServiceException("PERSONAL_RECEIVER_NOT_VERIFIED");
+        return view(receiver, switches.personalClubEnabled(), 0);
     }
 
     public Map<String, Object> ownerStatus(Long memberId, Long clubId) {
         requireMember(memberId);
-        if (!switches.personalClubEnabled())
-            return Map.of("available", false, "receiverState", "SWITCH_OFF");
         requireOwner(memberId, clubId, false);
-        return view(receivers.selectByMemberAndAppid(memberId, switches.spAppid()));
+        String appid = switches.spAppid();
+        if (appid == null || appid.isBlank()) return view(null, switches.personalClubEnabled(), 0);
+        return view(receivers.selectByMemberAndAppid(memberId, appid), switches.personalClubEnabled(),
+                receivers.countPersonalPayoutsInFlight(memberId));
     }
 
     private void requireOwner(Long memberId, Long clubId, boolean lock) {
@@ -115,11 +153,17 @@ public class EcommercePersonalReceiverService {
         if (memberId == null || memberId <= 0) throw new ServiceException("请先登录");
     }
 
-    private static Map<String, Object> view(EcomPersonalReceiver receiver) {
+    /** payoutEnabled=平台开关；paused=开关已开但绑定尚未经微信确认，该笔分账会暂停。 */
+    private static Map<String, Object> view(EcomPersonalReceiver receiver, boolean payoutEnabled, int inFlight) {
         Map<String, Object> result = new LinkedHashMap<>();
+        boolean verified = receiver != null && "VERIFIED".equals(receiver.getState());
         result.put("available", true);
         result.put("receiverType", "PERSONAL_OPENID");
         result.put("receiverState", receiver == null ? "UNBOUND" : receiver.getState());
+        result.put("payoutEnabled", payoutEnabled);
+        result.put("paused", payoutEnabled && !verified);
+        result.put("pauseReason", payoutEnabled && !verified ? "PERSONAL_BINDING_REQUIRED" : null);
+        result.put("canUnbind", receiver != null && inFlight == 0);
         if (receiver != null) {
             result.put("consentedAt", receiver.getConsentedAt());
             result.put("verifiedAt", receiver.getVerifiedAt());

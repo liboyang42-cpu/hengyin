@@ -2681,6 +2681,11 @@ public class ApiClubController extends BaseController {
         return success(personalReceiverService.bind(getAppUserId(), request.getClubId(), request.getJsCode(), request.getConsent()));
     }
 
+    @PostMapping("/personal-receiver/unbind")
+    public AjaxResult unbindPersonalReceiver(@RequestBody PersonalReceiverBindRequest request) {
+        return success(personalReceiverService.unbind(getAppUserId(), request.getClubId()));
+    }
+
     @org.springframework.web.bind.annotation.GetMapping("/personal-receiver/status")
     public AjaxResult personalReceiverStatus(@org.springframework.web.bind.annotation.RequestParam Long clubId) {
         return success(personalReceiverService.ownerStatus(getAppUserId(), clubId));

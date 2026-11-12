@@ -21,6 +21,11 @@
     </view>
   </view>
   <block wx:elif="{{state === 'ready'}}">
+    <view class="section" wx:if="{{summary.isOwner && clubId}}">
+      <view class="topic-row" bindtap="openPayoutReceiver" aria-role="button" aria-label="个人收款" hover-class="cy-pressed" hover-stay-time="80">
+        <text class="topic-row-name">个人收款</text><cy-icon name="arrow-right" size="24" />
+      </view>
+    </view>
     <view class="section">
       <view class="settled-card" wx:if="{{summary.topics.length}}">
         <text class="settled-label">已入账分润</text>

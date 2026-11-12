@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 6027,
+  "controlCount": 6035,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -3160,6 +3160,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -16710,6 +16711,280 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 3
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 4
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-btn",
+              "index": 5
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn.rs__act",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-btn",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -93876,6 +94151,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -96920,6 +97196,61 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-consent-check",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -111811,6 +112142,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -112348,6 +112680,28 @@
               "selector": "#cy-modal-host",
               "index": 0
             },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
             {
               "selector": "#dc",
               "index": 0
@@ -114493,6 +114847,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -115030,6 +115385,28 @@
               "selector": "#cy-modal-host",
               "index": 0
             },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
             {
               "selector": "#dc",
               "index": 0
@@ -117174,6 +117551,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -117711,6 +118089,28 @@
               "selector": "#cy-modal-host",
               "index": 0
             },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
             {
               "selector": "#dc",
               "index": 0
@@ -119855,6 +120255,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -120392,6 +120793,28 @@
               "selector": "#cy-modal-host",
               "index": 0
             },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
             {
               "selector": "#dc",
               "index": 0
@@ -122536,6 +122959,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -123073,6 +123497,28 @@
               "selector": "#cy-modal-host",
               "index": 0
             },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
             {
               "selector": "#dc",
               "index": 0
@@ -125217,6 +125663,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -125754,6 +126201,28 @@
               "selector": "#cy-modal-host",
               "index": 0
             },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
             {
               "selector": "#dc",
               "index": 0
@@ -154138,6 +154607,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -155254,6 +155724,15 @@
               "selector": "cy-access-gate",
               "index": 0
             },
+            {
+              "selector": "cy-empty",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
             {
               "selector": "cy-empty",
               "index": 0
@@ -161880,6 +162359,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -163150,6 +163630,15 @@
             {
               "selector": "cy-error",
               "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             }
           ]
         },
@@ -169159,6 +169648,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -170429,6 +170919,15 @@
             {
               "selector": "cy-error",
               "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             }
           ]
         },
@@ -176438,6 +176937,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -177708,6 +178208,15 @@
             {
               "selector": "cy-error",
               "index": 2
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             }
           ]
         },
@@ -188907,6 +189416,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -189782,6 +190292,19 @@
           "segments": [
             {
               "selector": "cy-inline-error",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-inline-error.mh__error",
               "index": 0
             }
           ]
@@ -197508,6 +198031,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -197850,6 +198374,15 @@
         },
         {
           "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -199137,6 +199670,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -199479,6 +200013,15 @@
         },
         {
           "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -200766,6 +201309,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -201108,6 +201652,15 @@
         },
         {
           "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -202394,6 +202947,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -202736,6 +203290,15 @@
         },
         {
           "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -204022,6 +204585,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -204364,6 +204928,15 @@
         },
         {
           "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -205650,6 +206223,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -205992,6 +206566,15 @@
         },
         {
           "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
           "segments": [
             {
               "selector": "#cy-modal-host",
@@ -207278,6 +207861,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -209155,6 +209739,92 @@
           "segments": [
             {
               "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -218211,6 +218881,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -220088,6 +220759,92 @@
           "segments": [
             {
               "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -229144,6 +229901,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -231021,6 +231779,92 @@
           "segments": [
             {
               "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -240077,6 +240921,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -241954,6 +242799,92 @@
           "segments": [
             {
               "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -251010,6 +251941,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -252887,6 +253819,92 @@
           "segments": [
             {
               "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -261943,6 +262961,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -263820,6 +264839,92 @@
           "segments": [
             {
               "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -272876,6 +273981,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -274753,6 +275859,92 @@
           "segments": [
             {
               "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 1
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-modal",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
               "index": 0
             },
             {
@@ -283809,6 +285001,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -284983,6 +286176,15 @@
         },
         {
           "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -297551,6 +298753,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -299005,6 +300208,19 @@
         },
         {
           "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "cy-nav-bar",
+              "index": 0
+            },
+            {
+              "selector": "cy-offline-banner",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
           "segments": [
             {
               "selector": "cy-nav-bar",
@@ -326811,6 +328027,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -329238,6 +330455,49 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -341014,6 +342274,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -343441,6 +344702,49 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -355217,6 +356521,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -357644,6 +358949,49 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -369420,6 +370768,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -371847,6 +373196,49 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -383623,6 +385015,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -386050,6 +387443,49 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -442693,6 +444129,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -449277,6 +450714,116 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -484578,6 +486125,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -491162,6 +492710,116 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -526463,6 +528121,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -533047,6 +534706,116 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -568348,6 +570117,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -574932,6 +576702,116 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -610233,6 +612113,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -616817,6 +618698,116 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -652118,6 +654109,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -658702,6 +660694,116 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -694003,6 +696105,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -700587,6 +702690,116 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -735888,6 +738101,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -742472,6 +744686,116 @@
             {
               "selector": "cy-error",
               "index": 2
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#cy-modal-host",
+              "index": 0
+            },
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "#dc",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
+            },
+            {
+              "selector": "cy-result-sheet",
+              "index": 0
+            },
+            {
+              "selector": "cy-sheet.rs-shell",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
+          "segments": [
+            {
+              "selector": "cy-error",
+              "index": 0
             },
             {
               "selector": "cy-result-sheet",
@@ -787488,6 +789812,7 @@
         "pages/club/group-code/index",
         "pages/club/join-requests/index",
         "pages/club/notify/index",
+        "pages/club/payout-receiver/index",
         "pages/club/roles/index",
         "pages/club/settlement/index",
         "pages/club/topic-detail/index",
@@ -787831,6 +790156,15 @@
         },
         {
           "route": "pages/club/notify/index",
+          "segments": [
+            {
+              "selector": "#cy-toast",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/payout-receiver/index",
           "segments": [
             {
               "selector": "#cy-toast",
@@ -840882,6 +843216,657 @@
       }
     },
     {
+      "id": "pages/club/payout-receiver/index.wxml:29:bindtap:onBind:2",
+      "route": "pages/club/payout-receiver/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/payout-receiver/index.wxml",
+        "js": "pages/club/payout-receiver/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "wx.showModal",
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "onBind",
+        "line": 29,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "login"
+      ],
+      "successCapabilities": [
+        "login"
+      ],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/personal-receiver/bind",
+          "/api/club/personal-receiver/status",
+          "/api/club/settlement/mine",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/personal-receiver/bind",
+          "/api/club/personal-receiver/status",
+          "/api/club/settlement/mine"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/personal-receiver/bind",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/personal-receiver/status",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/club/settlement/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/club/personal-receiver/bind"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "modal-cancelled"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/payout-receiver/index.js:88"
+      }
+    },
+    {
+      "id": "pages/club/payout-receiver/index.wxml:32:bindtap:onBind:3",
+      "route": "pages/club/payout-receiver/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/payout-receiver/index.wxml",
+        "js": "pages/club/payout-receiver/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": "wx.showModal",
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "onBind",
+        "line": 32,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "login"
+      ],
+      "successCapabilities": [
+        "login"
+      ],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/personal-receiver/bind",
+          "/api/club/personal-receiver/status",
+          "/api/club/settlement/mine",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/personal-receiver/bind",
+          "/api/club/personal-receiver/status",
+          "/api/club/settlement/mine"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/personal-receiver/bind",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/personal-receiver/status",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/club/settlement/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/club/personal-receiver/bind"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "modal-cancelled"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/payout-receiver/index.js:88"
+      }
+    },
+    {
+      "id": "pages/club/payout-receiver/index.wxml:35:bindtap:onUnbind:4",
+      "route": "pages/club/payout-receiver/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/payout-receiver/index.wxml",
+        "js": "pages/club/payout-receiver/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-btn",
+        "event": "bindtap",
+        "handler": "onUnbind",
+        "line": 35,
+        "selectorHint": "cy-btn[bindtap]",
+        "visibleCondition": null,
+        "disabledCondition": "{{busy}}",
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/payout-receiver/index.js:121"
+      }
+    },
+    {
+      "id": "pages/club/payout-receiver/index.wxml:39:bind:confirm:onConfirmUnbind:5",
+      "route": "pages/club/payout-receiver/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/payout-receiver/index.wxml",
+        "js": "pages/club/payout-receiver/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-danger-confirm",
+        "event": "bind:confirm",
+        "handler": "onConfirmUnbind",
+        "line": 39,
+        "selectorHint": "#dc",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "write",
+      "interactionMode": "event-contract",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/personal-receiver/status",
+          "/api/club/personal-receiver/unbind",
+          "/api/club/settlement/mine",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/personal-receiver/status",
+          "/api/club/personal-receiver/unbind",
+          "/api/club/settlement/mine"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/personal-receiver/status",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/club/personal-receiver/unbind",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/club/settlement/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/club/personal-receiver/unbind"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/payout-receiver/index.js:127"
+      }
+    },
+    {
+      "id": "pages/club/payout-receiver/index.wxml:5:bind:back:goBack:0",
+      "route": "pages/club/payout-receiver/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/payout-receiver/index.wxml",
+        "js": "pages/club/payout-receiver/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-nav-bar",
+        "event": "bind:back",
+        "handler": "goBack",
+        "line": 5,
+        "selectorHint": "cy-nav-bar[bind:back]",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "event-contract",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/index/index"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/payout-receiver/index.js:33"
+      }
+    },
+    {
+      "id": "pages/club/payout-receiver/index.wxml:9:bind:retry:load:1",
+      "route": "pages/club/payout-receiver/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/payout-receiver/index.wxml",
+        "js": "pages/club/payout-receiver/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "cy-error",
+        "event": "bind:retry",
+        "handler": "load",
+        "line": 9,
+        "selectorHint": "cy-error[bind:retry]",
+        "visibleCondition": "{{state === 'error'}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "read",
+      "interactionMode": "event-contract",
+      "baseActionClass": "read",
+      "effectClasses": [
+        "read",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/club/personal-receiver/status",
+          "/api/club/settlement/mine",
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [
+          "/api/club/personal-receiver/status",
+          "/api/club/settlement/mine"
+        ],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/club/personal-receiver/status",
+            "method": "GET",
+            "auth": "authenticated"
+          },
+          {
+            "url": "/api/club/settlement/mine",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "记录实际 URL + method + auth，回读 page.data 的 loading/error/empty/ready 与响应映射；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/payout-receiver/index.js:40"
+      }
+    },
+    {
       "id": "pages/club/roles/index.wxml:11:bind:cta:goBack:1",
       "route": "pages/club/roles/index",
       "hostRoutes": [],
@@ -841863,7 +844848,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/settlement/index.js:251"
+        "staticSource": "pages/club/settlement/index.js:256"
       }
     },
     {
@@ -841937,7 +844922,77 @@
       }
     },
     {
-      "id": "pages/club/settlement/index.wxml:36:bindtap:goWithdraw:5",
+      "id": "pages/club/settlement/index.wxml:25:bindtap:openPayoutReceiver:5",
+      "route": "pages/club/settlement/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/settlement/index.wxml",
+        "js": "pages/club/settlement/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openPayoutReceiver",
+        "line": 25,
+        "selectorHint": ".topic-row",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "个人收款",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/club/payout-receiver/index?clubId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/settlement/index.js:235"
+      }
+    },
+    {
+      "id": "pages/club/settlement/index.wxml:41:bindtap:goWithdraw:6",
       "route": "pages/club/settlement/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -841960,7 +845015,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "goWithdraw",
-        "line": 36,
+        "line": 41,
         "selectorHint": ".withdraw-btn",
         "visibleCondition": null,
         "disabledCondition": "{{withdrawing || withdrawState !== 'positive'}}",
@@ -842010,78 +845065,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/club/settlement/index.js:260"
-      }
-    },
-    {
-      "id": "pages/club/settlement/index.wxml:69:bindtap:goTopicSettlement:6",
-      "route": "pages/club/settlement/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/settlement/index.wxml",
-        "js": "pages/club/settlement/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "goTopicSettlement",
-        "line": 69,
-        "selectorHint": ".topic-row",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation",
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/coop/settlement-detail/index?source=club&topicId="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/settlement/index.js:235"
+        "staticSource": "pages/club/settlement/index.js:265"
       }
     },
     {
@@ -842152,6 +845136,77 @@
       "evidence": {
         "status": "pending",
         "staticSource": "pages/club/settlement/index.js:142"
+      }
+    },
+    {
+      "id": "pages/club/settlement/index.wxml:74:bindtap:goTopicSettlement:7",
+      "route": "pages/club/settlement/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/settlement/index.wxml",
+        "js": "pages/club/settlement/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "goTopicSettlement",
+        "line": 74,
+        "selectorHint": ".topic-row",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/coop/settlement-detail/index?source=club&topicId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/settlement/index.js:240"
       }
     },
     {
@@ -1280015,7 +1283070,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:167"
+        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:168"
       }
     },
     {
@@ -1280126,7 +1283181,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:165"
+        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:166"
       }
     },
     {
@@ -1280455,7 +1283510,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:180"
+        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:181"
       }
     },
     {
@@ -1280566,7 +1283621,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:165"
+        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:166"
       }
     },
     {
@@ -1280784,11 +1283839,122 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
+        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:147"
+      }
+    },
+    {
+      "id": "subpackageA/components/scene-asset-earnings/index.wxml:34:bindtap:openPayoutReceiver:9",
+      "route": "component:subpackageA/components/scene-asset-earnings/index",
+      "hostRoutes": [
+        "subpackageA/pages/assetcenter/earnings/index",
+        "subpackageMember/coupon-wallet/index",
+        "subpackageRoam/poi-detail/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "subpackageA/pages/assetcenter/earnings/index",
+          "segments": [
+            {
+              "selector": "#assetEarnings",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/coupon-wallet/index",
+          "segments": [
+            {
+              "selector": "cy-scene-deep-link",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-asset-earnings",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/poi-detail/index",
+          "segments": [
+            {
+              "selector": "#roamDeepLink",
+              "index": 0
+            },
+            {
+              "selector": "cy-scene-asset-earnings",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "subpackageA/components/scene-asset-earnings/index.wxml",
+        "js": "subpackageA/components/scene-asset-earnings/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openPayoutReceiver",
+        "line": 34,
+        "selectorHint": ".tm-row",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "个人收款",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/club/payout-receiver/index?mine=1"
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
         "staticSource": "subpackageA/components/scene-asset-earnings/index.js:146"
       }
     },
     {
-      "id": "subpackageA/components/scene-asset-earnings/index.wxml:34:bindtap:openWithdrawHistory:9",
+      "id": "subpackageA/components/scene-asset-earnings/index.wxml:35:bindtap:openWithdrawHistory:10",
       "route": "component:subpackageA/components/scene-asset-earnings/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -1280851,7 +1284017,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openWithdrawHistory",
-        "line": 34,
+        "line": 35,
         "selectorHint": ".tm-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1280892,11 +1284058,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:166"
+        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:167"
       }
     },
     {
-      "id": "subpackageA/components/scene-asset-earnings/index.wxml:35:bindtap:openInvite:10",
+      "id": "subpackageA/components/scene-asset-earnings/index.wxml:36:bindtap:openInvite:11",
       "route": "component:subpackageA/components/scene-asset-earnings/index",
       "hostRoutes": [
         "subpackageA/pages/assetcenter/earnings/index",
@@ -1280959,7 +1284125,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openInvite",
-        "line": 35,
+        "line": 36,
         "selectorHint": ".tm-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1281000,7 +1284166,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:179"
+        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:180"
       }
     },
     {
@@ -1281150,7 +1284316,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:152"
+        "staticSource": "subpackageA/components/scene-asset-earnings/index.js:153"
       }
     },
     {

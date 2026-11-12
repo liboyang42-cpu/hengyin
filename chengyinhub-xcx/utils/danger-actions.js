@@ -53,6 +53,16 @@ const DANGER_ACTIONS = {
     alt: { text: '只关掉群聊提醒', hint: '留在俱乐部,但不再收到群消息推送' },
     done: { title: '已退出俱乐部', text: '想回来的话，{rejoinHint}。' },
   },
+  'club.personal-receiver.unbind': {
+    irreversible: false,
+    title: '解除个人收款?',
+    consequences: [
+      { icon: 'warning', text: '解除后新的俱乐部收入会暂停，重新绑定后继续' },
+    ],
+    confirmText: '解除绑定',
+    alt: null,
+    done: { title: '已解除绑定', text: '' },
+  },
   'club.post.delete': {
     irreversible: true,
     // CU-C-107:「删除这条动态?」没有宾语 —— 列表里多条动态时,最后这一步核对不了目标。

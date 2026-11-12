@@ -352,6 +352,29 @@
         insert into ecom_personal_receiver (member_id, appid, openid, state, consented_at, verified_at)
         values (#{memberId}, #{appid}, #{openid}, 'VERIFIED', #{consentedAt}, #{verifiedAt})
     </insert>
+    <!-- 个人收款绑定页：平台开关未开时只记同意（CONSENTED），开关开启后再经微信确认升级为 VERIFIED。 -->
+    <insert id="insertConsented" parameterType="com.chengyinhub.business.domain.EcomPersonalReceiver">
+        insert into ecom_personal_receiver (member_id, appid, openid, state, consented_at, verified_at)
+        values (#{memberId}, #{appid}, #{openid}, 'CONSENTED', #{consentedAt}, #{consentedAt})
+    </insert>
+    <update id="promoteConsentedToVerified" parameterType="com.chengyinhub.business.domain.EcomPersonalReceiver">
+        update ecom_personal_receiver set state = 'VERIFIED', verified_at = #{verifiedAt}
+        where member_id = #{memberId} and appid = #{appid} and openid = #{openid} and state = 'CONSENTED'
+    </update>
+    <select id="countPersonalPayoutsInFlight" resultType="int" useCache="false" flushCache="true">
+        select count(*) from ecom_profit_share_line l
+        join ecom_profit_share_order o on o.id = l.share_order_id
+        where l.receiver_type = 'PERSONAL_OPENID' and l.receiver_member_id = #{memberId}
+          and o.state in ('PLANNED', 'PROCESSING')
+    </select>
+    <delete id="deleteReceiverIfIdle" flushCache="true">
+        delete from ecom_personal_receiver
+        where member_id = #{memberId} and appid = #{appid}
+          and not exists (select 1 from ecom_profit_share_line l
+                          join ecom_profit_share_order o on o.id = l.share_order_id
+                          where l.receiver_type = 'PERSONAL_OPENID' and l.receiver_member_id = #{memberId}
+                            and o.state in ('PLANNED', 'PROCESSING'))
+    </delete>
 
     <!-- Negative scope/detail ids isolate sessions from topic/coop obligations without live owner joins. -->
     <select id="selectMissingActivityIds" resultType="long" useCache="false" flushCache="true">

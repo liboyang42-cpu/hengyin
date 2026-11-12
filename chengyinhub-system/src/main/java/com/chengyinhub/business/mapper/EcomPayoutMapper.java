@@ -105,6 +105,15 @@ public interface EcomPayoutMapper {
     /** Insert only: no update/upsert can replace a verified identity. */
     int insertVerified(com.chengyinhub.business.domain.EcomPersonalReceiver receiver);
 
+    int insertConsented(com.chengyinhub.business.domain.EcomPersonalReceiver receiver);
+
+    int promoteConsentedToVerified(com.chengyinhub.business.domain.EcomPersonalReceiver receiver);
+
+    int countPersonalPayoutsInFlight(@Param("memberId") Long memberId);
+
+    /** 仅在没有处理中的个人分账行时删除；返回 0 表示不存在或仍有在途收款。 */
+    int deleteReceiverIfIdle(@Param("memberId") Long memberId, @Param("appid") String appid);
+
     /** Session obligations use negative activity/detail ids in the shared payout scope namespace. */
     List<Long> selectMissingActivityIds(@Param("limit") int limit);
 
