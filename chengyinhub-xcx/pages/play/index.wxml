@@ -680,7 +680,8 @@
       <view class="fx-pack {{packShake ? 'is-shake' : ''}} {{packTear ? 'is-tear' : ''}} {{packGrab ? 'is-grab' : ''}} {{packSnap ? 'is-snap' : ''}} {{packTorn ? 'is-torn' : ''}} {{packSink ? 'is-sink' : ''}}">
         <view class="fx-pack__body">
           <image class="fx-pack__foil" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />
-          <!-- g21 第三轮(2026-11-02 业主):未拆和拆包中只出卡包本身,包面不印主题名和章数 -->
+          <!-- x-fix7 P-6(业主最终验收):包面印主题名(沿用原型的黑色印刷);不印章数副标和操作提示 -->
+          <view class="fx-pack__print"><text class="fx-pack__t">{{topicName || chapter.name || modeLabel}}</text></view>
           <!-- 下封口:同一张图,把内层整幅图往上顶,只露出底部 5% 那条 -->
           <view class="fx-pack__seal fx-pack__seal--b">
             <image class="fx-pack__sealim fx-pack__sealim--b" src="/pages/play/assets/pack-foil.png" mode="scaleToFill" />

@@ -24,12 +24,15 @@ test('到店三步下有「出示入场码」,只给有票、未核销的商家�
   for (const cond of ['hero.node.isMerchant', '!hero.node.done', 'regId', '!isPreview', '!isMock']) assert.ok(m[1].includes(cond), cond)
 })
 
-test('g21 第三轮:未拆/拆包中只出卡包,没有包面标题、章数和「轻点拆开」', () => {
+test('g21 第三轮 + x-fix7 P-6:卡包只印主题名一行,没有章数副标和「轻点拆开」', () => {
   const wrap = wxml.slice(wxml.indexOf('<view class="fx-packwrap"'), wxml.indexOf('<view class="fx-shard"'))
   assert.ok(wrap.length > 100, '找不到卡包块')
-  assert.doesNotMatch(wrap, /<text\b/, '卡包块里不许有文字节点')
-  assert.doesNotMatch(wxml, /轻点拆开|fx-pack__print|fx-pack-hint/)
-  assert.doesNotMatch(wxss, /\.fx-pack__print|\.fx-pack__t\b|\.fx-pack__s\b|\.fx-pack-hint/)
+  const texts = wrap.match(/<text\b[^>]*>/g) || []
+  assert.deepEqual(texts, ['<text class="fx-pack__t">'], '卡包块里只许有主题名这一个文字节点')
+  assert.match(wrap, /<text class="fx-pack__t">\{\{topicName \|\| chapter\.name \|\| modeLabel\}\}<\/text>/)
+  assert.doesNotMatch(wxml, /轻点拆开|fx-pack__s\b|fx-pack-hint/)
+  assert.doesNotMatch(wxss, /\.fx-pack__s\b|\.fx-pack-hint/)
+  assert.match(wxss, /\.fx-pack__t\{[^}]*color:#0A0A0A/, '膜是浅色的,主题名必须黑字')
 })
 
 function assertHeroCtaContract(markup) {

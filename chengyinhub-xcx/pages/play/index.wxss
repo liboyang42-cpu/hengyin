@@ -965,6 +965,11 @@ page { background: var(--cy-color-bg-page); }
    袋身铺整幅;上下封口用同一张图,靠父级 overflow:hidden 各露出一条。
    (2026-08-12 那轮「用 CSS 画镭射」的兜底到此作废:真图一上,渐变全是多余的。) */
 .fx-pack__foil{ position:absolute; left:0; top:0; width:100%; height:100%; }
+/* x-fix7 P-6:主题名印在膜面上。膜是浅色的,字必须是黑的;位置沿用原型(主标从包高 26.5% 起)。
+   包边的半透明白毛边已在 pack-foil.png 里清掉(alpha<200 的边缘像素置空)。 */
+.fx-pack__print{ position:absolute; left:52rpx; right:40rpx; top:196rpx; }
+.fx-pack__t{ display:block; font-size:74rpx; font-weight:800; line-height:.98; letter-spacing:-2rpx; /* ds-ok 包装印刷:实物尺度,不属于页面字阶 */
+  color:#0A0A0A; word-break:break-all; } /* ds-ok 浅色镭射膜上的黑色印刷 */
 /* 封口压边:细齿纹 —— 塑料袋的辨识度大半在这两条 */
 .fx-pack__seal{ position:absolute; left:0; right:0; overflow:hidden; }
 /* 封口占比按实物定稿:上 12%、下 5%。撕口/袋口片跟着上封口走。 */
