@@ -24,8 +24,8 @@ test('帖文 tab 的发帖入口在状态块之前(空态上方也有),只在 is
   assert.ok(entry > 0 && empty > 0 && entry < empty, '入口要在空态之前');
   assert.match(tab, /class="post-composer-collapsed" wx:if="\{\{isSelf && canCompose\}\}" bindtap="openComposer"/);
   assert.match(wxml, /<cy-post-compose wx:if="\{\{isSelf\}\}" show="\{\{composerOpen\}\}" bind:close="closeComposer" bind:published="onComposePublished" \/>/);
-  // 商家日间页要包 theme-merchant 才取得到日间 token
-  assert.match(wxml, /<view class="\{\{isMerchantView \? 'theme-merchant' : ''\}\}"><cy-post-compose/);
+  // D-91(业主 2026-11-11):观看者是商家时同样走日间(viewerLight)。商家日间页要包 theme-merchant 才取得到日间 token
+  assert.match(wxml, /<view class="\{\{\(isMerchantView \|\| viewerLight\) \? 'theme-merchant' : ''\}\}"><cy-post-compose/);
   // 无副标题/说明文案
   assert.doesNotMatch(tab.slice(0, empty), /发布一次|在这里分享|说明/);
 });

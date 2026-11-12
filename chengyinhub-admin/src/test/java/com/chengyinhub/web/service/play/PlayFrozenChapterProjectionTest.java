@@ -139,6 +139,47 @@ class PlayFrozenChapterProjectionTest {
         verify(chapters).selectCmsTopicChapterList(any());
     }
 
+    /** D-82 章节级奖励:新局读冻结那一份,作者开局后改奖励不改写进行中的局。 */
+    @Test
+    void frozenChapterRewardTextFeedsTheEndCardAndIgnoresLiveEdits() {
+        ICmsTopicChapterService chapters = mock(ICmsTopicChapterService.class);
+        CmsTopicChapter live = liveChapter("章");
+        live.setRewardText("作者开局后改的奖励");
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(List.of(live));
+        ObjectNode snapshot = snapshot("章");
+        ((ObjectNode) snapshot.path("thoughtChapters").get(0)).put("rewardText", "隐藏线索 ×1");
+        PlayNodeQueryApplication.NodeProjection read = read(snapshot, List.of(node(11L, 20L, 31L)));
+        ObjectNode presented = json.createObjectNode().put("contentSnapshotVersion", 1);
+        presented.putObject("nodePresentation").put("id", 11L).put("topicId", 21L).put("chapterId", 20L);
+        presented.put("chapterAudioUrl", "chapter-audio");
+        read.presentedContents.put(11L, presented);
+
+        Map<?, ?> chapter = (Map<?, ?>) ((List<?>) query(chapters).finishNodes(read).get("chapters")).get(0);
+
+        assertEquals("隐藏线索 ×1", chapter.get("rewardText"));
+    }
+
+    /** D-82:冻结前发布的老局没有 rewardText 键 ⇒ 读实时章节行;实时也没设 ⇒ null(结束卡不出那一行)。 */
+    @Test
+    void legacyRunReadsLiveChapterRewardTextAndAbsentStaysNull() {
+        ICmsTopicChapterService chapters = mock(ICmsTopicChapterService.class);
+        CmsTopicChapter live = liveChapter("老局章");
+        live.setRewardText("通关贴纸");
+        when(chapters.selectCmsTopicChapterList(any())).thenReturn(List.of(live));
+        ObjectNode snapshot = snapshot("ignored");
+        ObjectNode legacy = (ObjectNode) snapshot.path("thoughtChapters").get(0);
+        for (String field : new String[]{"name", "description", "audioUrl", "required"}) legacy.remove(field);
+
+        Map<?, ?> chapter = (Map<?, ?>) ((List<?>) query(chapters)
+                .finishNodes(read(snapshot, List.of(node(11L, 20L, 31L)))).get("chapters")).get(0);
+        assertEquals("通关贴纸", chapter.get("rewardText"));
+
+        live.setRewardText(null);
+        Map<?, ?> none = (Map<?, ?>) ((List<?>) query(chapters)
+                .finishNodes(read(snapshot, List.of(node(11L, 20L, 31L)))).get("chapters")).get(0);
+        assertNull(none.get("rewardText"));
+    }
+
     @Test
     void identityIsTheExistingVersionPairAndAbsentUnlessTheRunHasFrozenContent() {
         ICmsTopicChapterService chapters = mock(ICmsTopicChapterService.class);

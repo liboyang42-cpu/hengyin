@@ -370,6 +370,18 @@
       "packages": [
         "subpackageActivity"
       ]
+    },
+    "subpackageMember/market/membership/index": {
+      "network": "all",
+      "packages": [
+        "subpackagePass"
+      ]
+    },
+    "subpackageMember/market/passes/index": {
+      "network": "all",
+      "packages": [
+        "subpackagePass"
+      ]
     }
   },
   "__usePrivacyCheck__": true,

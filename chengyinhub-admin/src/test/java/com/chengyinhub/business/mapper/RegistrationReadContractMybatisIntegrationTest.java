@@ -123,9 +123,16 @@ class RegistrationReadContractMybatisIntegrationTest {
     private TopicOnsiteMetricsMapper onsiteMapper;
     private ShopDayMerchantRosterMapper rosterMapper;
     private MmsMerchantMapper merchantMapper;
+    private MerchantMarketingAnalyticsMapper analyticsMapper;
+
+    private java.util.TimeZone previousZone;
 
     @BeforeAll
     void createScratchSchema() throws Exception {
+        // 业务自然日 = Asia/Shanghai(D-93)。夹具用 JVM 默认时区造「今天」,runner 是 UTC 时 16:00 后会和
+        // 上海日错一天;把本类的默认时区钉到上海(与生产/其余 CI 作业一致),@AfterAll 还原,不影响同 JVM 其它套。
+        previousZone = java.util.TimeZone.getDefault();
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Shanghai"));
         database = "chengyin_regread_" + UUID.randomUUID().toString().replace("-", "");
         execAdmin("CREATE DATABASE `" + database + "` CHARACTER SET utf8mb4");
         createSchema();
@@ -141,6 +148,7 @@ class RegistrationReadContractMybatisIntegrationTest {
 
     @AfterAll
     void dropScratchSchemaAndReadBack() throws Exception {
+        if (previousZone != null) java.util.TimeZone.setDefault(previousZone);
         String dropped = database;
         if (dropped != null) {
             execAdmin("DROP DATABASE IF EXISTS `" + dropped + "`");
@@ -374,12 +382,25 @@ class RegistrationReadContractMybatisIntegrationTest {
 
         JSONArray windows = first.getTrends().getJSONArray("windows");
         assertEquals(3, windows.size());
+        // D-93:窗口 = Asia/Shanghai 自然日含今天(与营销首页同一 MerchantMetricPeriod);
+        // 核销 = 本商家全部 ACTIVE 核销(营销首页/核销台账口径),退款票上的核销照样算 —— 不再只数有效权益。
+        java.time.ZoneId sh = java.time.ZoneId.of("Asia/Shanghai");
+        java.util.function.Function<LocalDateTime, LocalDate> shDay =
+                t -> t.atZone(java.time.ZoneId.systemDefault()).withZoneSameInstant(sh).toLocalDate();
+        LocalDate todaySh = LocalDate.now(sh);
+        List<LocalDate> ledgerRedeems = new ArrayList<>();
+        try (Connection c = connectDatabase(); Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery("select create_time from redemption where merchant_id=888 and status='ACTIVE'")) {
+            while (rs.next()) ledgerRedeems.add(shDay.apply(rs.getTimestamp(1).toLocalDateTime()));
+        }
+        assertEquals(valid.stream().filter(e -> e[2] != null).count() + 1, ledgerRedeems.size(),
+                "台账口径比有效权益多一条:退款票 6004 上的核销");
         int[] spans = {7, 30, 90};
         DateTimeFormatter label = DateTimeFormatter.ofPattern("MM-dd");
         for (int w = 0; w < 3; w++) {
             JSONObject win = windows.getJSONObject(w);
             int days = spans[w];
-            LocalDate start = today.minusDays(days - 1L), prevStart = start.minusDays(days);
+            LocalDate start = todaySh.minusDays(days - 1L), prevStart = start.minusDays(days);
             assertEquals(days, win.getIntValue("days"));
             Set<Long> cur = new HashSet<>(), prev = new HashSet<>();
             int curC = 0, prevC = 0, curR = 0, prevR = 0;
@@ -389,19 +410,19 @@ class RegistrationReadContractMybatisIntegrationTest {
             for (Object[] e : valid) {
                 long member = (Long) e[0];
                 LocalDateTime checkin = (LocalDateTime) e[1], redeemed = (LocalDateTime) e[2];
-                LocalDate at = (checkin != null ? checkin : redeemed).toLocalDate();
+                LocalDate at = shDay.apply(checkin != null ? checkin : redeemed);
                 if (!at.isBefore(start)) { cur.add(member); dayMembers.get((int) (at.toEpochDay() - start.toEpochDay())).add(member); }
                 else if (!at.isBefore(prevStart)) prev.add(member);
                 if (checkin != null) {
-                    LocalDate d = checkin.toLocalDate();
+                    LocalDate d = shDay.apply(checkin);
                     if (!d.isBefore(start)) { curC++; dayC[(int) (d.toEpochDay() - start.toEpochDay())]++; }
                     else if (!d.isBefore(prevStart)) prevC++;
                 }
-                if (redeemed != null) {
-                    LocalDate d = redeemed.toLocalDate();
-                    if (!d.isBefore(start)) { curR++; dayR[(int) (d.toEpochDay() - start.toEpochDay())]++; }
-                    else if (!d.isBefore(prevStart)) prevR++;
-                }
+            }
+            for (LocalDate d : ledgerRedeems) {
+                if (d.isAfter(todaySh)) continue;
+                if (!d.isBefore(start)) { curR++; dayR[(int) (d.toEpochDay() - start.toEpochDay())]++; }
+                else if (!d.isBefore(prevStart)) prevR++;
             }
             String at = days + " 天窗";
             assertEquals(cur.size(), win.getIntValue("visitors"), at + " 到店玩家");
@@ -430,17 +451,17 @@ class RegistrationReadContractMybatisIntegrationTest {
         JsonNode body = new ObjectMapper().readTree(new ObjectMapper().writeValueAsString(AjaxResult.success(first)));
         assertEquals("城南小馆", body.path("data").path("profile").path("storeName").asText());
         assertEquals(30, body.path("data").path("trends").path("windows").path(1).path("daily").size());
-        assertEquals(today.format(label),
+        assertEquals(todaySh.format(label),
                 body.path("data").path("trends").path("windows").path(0).path("daily").path(6).path("date").asText());
 
-        // AI 恢复:写 v3 缓存;同日再取走缓存,trends 原样回来,店名仍实时读
+        // AI 恢复:写 v4 缓存(D-93 走势形状变了,键升版);同日再取走缓存,trends 原样回来,店名仍实时读
         AiMerchantInsightResp ok = new AiMerchantInsightResp();
         IAiCreatorService ai2 = mock(IAiCreatorService.class);
         when(ai2.merchantInsight(anyString(), anyLong())).thenReturn(ok);
         service = insightService(ai2, redis);
         MerchantInsightResp fresh = service.insight(888L);
-        String key = "ai:merchant:insight:v3:888:" + today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        assertEquals(Collections.singleton(key), redis.keySet(), "缓存键是 v3");
+        String key = "ai:merchant:insight:v4:888:" + today.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        assertEquals(Collections.singleton(key), redis.keySet(), "缓存键是 v4");
         exec("UPDATE mms_merchant SET name='城南小馆·新' WHERE member_id=888");
         MerchantInsightResp cached = service.insight(888L);
         verify(ai2, times(1)).merchantInsight(anyString(), anyLong());
@@ -492,6 +513,8 @@ class RegistrationReadContractMybatisIntegrationTest {
         ReflectionTestUtils.setField(service, "merchantLeadService", mock(IMerchantLeadService.class));
         ReflectionTestUtils.setField(service, "topicContentPublisherProjectionService",
                 mock(ITopicContentPublisherProjectionService.class));
+        // D-93:走势/归因的窗口与核销走营销首页同一个真实指标服务(真 mapper XML)
+        ReflectionTestUtils.setField(service, "metricsAnalyticsMapper", analyticsMapper);
         return service;
     }
 
@@ -712,7 +735,7 @@ class RegistrationReadContractMybatisIntegrationTest {
                 new SpringManagedTransactionFactory(), source));
         for (String mapper : new String[]{"CmsTopicMapper", "MerchantInsightMapper",
                 "GameSessionRuntimeMapper", "TopicOnsiteMetricsMapper", "ShopDayMerchantRosterMapper",
-                "MmsMerchantMapper"}) {
+                "MmsMerchantMapper", "MerchantMarketingAnalyticsMapper"}) {
             String path = ROOT + "/chengyinhub-system/src/main/resources/mapper/business/" + mapper + ".xml";
             try (InputStream in = new FileInputStream(path)) {
                 new XMLMapperBuilder(in, configuration, path, configuration.getSqlFragments()).parse();
@@ -725,6 +748,7 @@ class RegistrationReadContractMybatisIntegrationTest {
         onsiteMapper = sql.getMapper(TopicOnsiteMetricsMapper.class);
         rosterMapper = sql.getMapper(ShopDayMerchantRosterMapper.class);
         merchantMapper = sql.getMapper(MmsMerchantMapper.class);
+        analyticsMapper = sql.getMapper(MerchantMarketingAnalyticsMapper.class);
     }
 
     private static List<Long> ids(List<CmsTopic> topics) {

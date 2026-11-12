@@ -337,7 +337,7 @@ test('CU-C-41:俱乐部视角视图模型透传已格式化金额,未知不伪�
   assert.deepStrictEqual(ready.lines.map((item) => item.value), ['¥ 130.00', '¥ -2.00', '¥ 128.00'])
 
   const unverified = buildClubSettlementDetail(clubRow({ status: 'settled', amountStatus: 'unverified', amountText: null }))
-  assert.equal(unverified.amount, '—', '未核验不伪造成 0，也不算半个数')
+  assert.equal(unverified.amount, '¥0.00', 'D-119(2026-11-11 业主「金额也写 0」):未核验金额写 0,不算半个数')
   assert.equal(unverified.status, '待核验')
 
   const voided = buildClubSettlementDetail(clubRow({ status: 'void' }))
@@ -370,7 +370,7 @@ test('视图模型不得把 boolean、array 与空白字符串格式化成零金
       shareRate: value,
       amount: value,
     }))
-    assert.equal(merchant.amount, '—', JSON.stringify(value))
+    assert.equal(merchant.amount, '¥0.00', JSON.stringify(value))   // D-119
     assert.equal(merchant.lines.some((item) => item.key === 'verifiedHeads'), false, JSON.stringify(value))
     assert.equal(merchant.lines.some((item) => item.key === 'verifiedSales'), false, JSON.stringify(value))
     assert.equal(merchant.lines.find((item) => item.key === 'shareRule').value, '分成', JSON.stringify(value))
@@ -383,7 +383,7 @@ test('视图模型不得把 boolean、array 与空白字符串格式化成零金
       merchantTotal: value,
       myIncome: value,
     }))
-    assert.equal(host.amount, '—', JSON.stringify(value))
+    assert.equal(host.amount, '¥0.00', JSON.stringify(value))   // D-119
     assert.equal(host.status, '金额待确认', JSON.stringify(value))
     assert.equal(host.lines.some((item) => item.value === '¥0.00'), false, JSON.stringify(value))
   }
@@ -583,7 +583,7 @@ test('商家合作详情保留原额，只显示已执行调整后的净额', ()
   assert.equal(detail.lines.find(row => row.key === 'adjustment').value, '−¥10.00')
   assert.equal(detail.lines.find(row => row.key === 'income').value, '¥30.00')
   assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: 40 })).amount, '¥40.00')
-  assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: null })).amount, '—')
+  assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: null })).amount, '¥0.00')   // D-119
   assert.equal(buildMerchantSettlementDetail(merchantRow({ amount: 40, netAmount: -2 })).amount, '−¥2.00')
 })
 

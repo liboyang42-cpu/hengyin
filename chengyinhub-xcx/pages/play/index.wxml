@@ -297,7 +297,6 @@
         </view>
 <!-- 文档二 L5 B6/B7/B9:联系主办 / 联系商家,菜单第一行;只给拨打,号码不上屏;没有号码整行不出 -->
         <view class="drow" wx:if="{{playContact}}" bindtap="callPlayContact" aria-role="button" aria-label="{{playContact.label}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="phone" size="36" /></view><view class="dcopy"><text class="dt">{{playContact.label}}</text></view><view class="darr"></view></view>
-        <view class="drow" wx:if="{{!isPreview}}" bindtap="openSos" aria-role="button" aria-label="紧急求助" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="warning" size="36" /></view><view class="dcopy"><text class="dt">紧急求助</text></view><view class="darr"></view></view>
 <view wx:if="{{themeBag.inventoryEnabled && themeBag.scope !== 'TEAM'}}" class="drow" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text></view>
         <include src="theme-player-ops-entry.wxml" />
         <view class="drow" wx:if="{{gameModule.enabled}}" bindtap="openGameModuleFromTools" aria-role="button" aria-label="本局线索" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">本局线索</text></view><view class="darr"></view></view>
@@ -1630,7 +1629,6 @@
                     reduced="{{reducedMotion}}" bind:confirm="closeMedal" />
 </view>
 <cy-celebrate event-key="{{celebrationEvent}}" reduced-motion="{{reducedMotion}}" />
-<cy-option-sheet wx:if="{{sosOpen}}" show="{{sosOpen}}" title="紧急求助" items="{{sosItems}}" immediate bind:select="onSosSelect" bind:cancel="closeSos" />
 </view>
 
 <!-- G01-G12:游玩宿主内的二级内容统一进入 sceneStack；内容组件与漫游宿主同源，避免两套状态/空壳。 -->

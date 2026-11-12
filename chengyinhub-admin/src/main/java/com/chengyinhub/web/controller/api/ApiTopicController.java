@@ -533,9 +533,10 @@ public class ApiTopicController extends BaseController {
             if (textVerdict.isBlocked()) {
                 return AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage());
             }
-            // P-17(owner 2026-11-02「封面应该是必须的 不能有没有封面的活动」):发布必须带封面,存草稿不拦。
+            // P-17(owner 2026-11-02「封面应该是必须的 不能有没有封面的活动」):发布必须带封面。
+            // D-78(owner 2026-11-11「没有封面不能保存」):存草稿同样必须带封面。
             // 只看作者提交的封面地址是否为空;封面已上传、仍在内容安全复核中的照常放行(读侧会先隐藏它)。
-            if (!saveDraft && StringUtils.isBlank(dto.getImgUrl())) {
+            if (StringUtils.isBlank(dto.getImgUrl())) {
                 return error("请上传主题封面");
             }
 
@@ -787,6 +788,14 @@ public class ApiTopicController extends BaseController {
                 secText, storyTexts);
         if (textVerdict.isBlocked()) {
             return AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage());
+        }
+        // D-78(owner 2026-11-11「没有封面不能保存」):编辑保存同样要有封面。本次没传封面(null)按「不改」处理,
+        // 看已存的封面;只对本人主题判定,归属校验仍由 service 负责。
+        if (ownPrevious) {
+            String effectiveCover = dto.getImgUrl() != null ? dto.getImgUrl() : previousTopic.getImgUrl();
+            if (StringUtils.isBlank(effectiveCover)) {
+                return error("请上传主题封面");
+            }
         }
         // 稿 E2:编辑同样要拦 —— 否则建的时候不填勋章、回头编辑再填就绕过去了。
         String previousRuntime=ownPrevious?previousTopic.getThemeRuntimeConfigJson():null;

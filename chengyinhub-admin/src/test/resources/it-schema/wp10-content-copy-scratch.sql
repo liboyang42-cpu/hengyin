@@ -33,6 +33,7 @@ CREATE TABLE `cms_topic_chapter` (
   `allowed_validation_methods` mediumtext DEFAULT NULL,
   `max_node_xp` int DEFAULT NULL,
   `need_group` int DEFAULT NULL,
+  `reward_text` varchar(64) DEFAULT NULL,
   `create_by` mediumtext DEFAULT NULL,
   `create_time` datetime DEFAULT NULL,
   `update_by` mediumtext DEFAULT NULL,
