@@ -78,6 +78,9 @@ const NAV_WITHOUT_L1_TITLE = new Set([
   'pages/publish/template-intro/index.wxml',
   'subpackageRoam/citynode-code/index.wxml',
   'pages/search2/result/index.wxml',
+  // 2026-11-09 qx-b8:公开目录照抄 search2/result,城市名/「城市目录」在 cy-nav-bar 居中;落地详情是封面头 + 作品名承担标题。
+  'pages/topic/catalog/index.wxml',
+  'pages/topic/catalog/detail.wxml',
   'pages/square/detail/index.wxml',
   'pages/templatedetail/templatedetail.wxml',
   'pages/templatedetail/topic-preview/index.wxml', // 2026-10-28 卡堆预览：封面卡堆 + 主题名承担标题，导航只留返回

@@ -69,6 +69,7 @@ const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { resolveOpenState } = require('./utils/play-open-state.js');
 const { pushScene, popScene, currentScene, exitDecision } = require('../../utils/scene-stack.js');
 const finishRouteRecommendation = require('./finish-route-recommendation.js');
+const finishResult = require('./utils/finish-result.js');
 const { buildPlayRecap } = require('./recap.js'); const { buildFinishMedals } = require('./utils/finish-medals.js'); // 2026-10-22 完成页勋章堆
 const { summarizePuzzleScores } = require('./utils/play-puzzle-summary.js'); const chapterFlip = require('./utils/chapter-flip-data.js'); // 2026-10-28 章节翻转过场
 const { normalizeAtmosphere, atmosphereClass, PRESETS: CHAPTER_ATMOSPHERES } = require('../../utils/chapter-atmosphere.js');
@@ -599,10 +600,11 @@ Page({
     // M2 夜间提示(自玩 22:00–06:00):后端回执带 nightWarning 时在完成结果时刻出一句
     nightHint: false,
     // 通关
-    showFinish: false, finishChapterDone: false, celebrationEvent: '', finishScore: 0, finishPuzzleScore: 0, finishPuzzleCount: 0, finishPuzzleBest: 0,
+    showFinish: false, celebrationEvent: '', finishScore: 0, finishPuzzleScore: 0, finishPuzzleCount: 0, finishPuzzleBest: 0,
     finishMedals: 0, finishMedalList: [], finishAchievements: [], finishDateLabel: '', medalScreen: { show: false, items: [], title: '', sub: '', stats: [], record: null }, finishSnap: '', finishSnapError: false, finishPhotos: [], canReplayJournal: false,
     branchPath: [],
     finishRouteRecommendation: null,
+    finishResult: null,
     voucher: { show: false },
     ticket: { show: false, url: '', code: '', loading: false, expiresAt: 0 },
     // B 通关轨迹回顾层(2D):只连已完成节点、按真实走法排序,渐进描线 + 成就气泡。
@@ -8496,9 +8498,10 @@ Page({
     const finishChapterNodes = finishChapterId == null ? []
       : (this.data.nodes || []).filter((n) => n && n.chapterId != null && String(n.chapterId) === String(finishChapterId));
     const finishChapterDone = finishChapterNodes.length > 0 && finishChapterNodes.every((n) => n.done);
+    const finishResultLocal = { topicCompleted: !!this.data.topicCompleted, allDone: !!this.data.allDone, chapterDone: finishChapterDone };
     this.setData({
       showFinish: true,
-      finishChapterDone,
+      finishResult: finishResult.resolveFinishResult(null, finishResultLocal, 'pending'),
       finishScore: earnedXp,
       finishPuzzleScore: puzzleSummary.score,
       finishPuzzleCount: puzzleSummary.count,
@@ -8520,6 +8523,23 @@ Page({
     this.loadMilestone(); this.loadStageEnd(); // BL-186 本章结算与里程碑并列读,不挡完成页
     if (!this.data.allDone) { this.loadSessionStats(); this.loadHudCharacter(); } // 文档二 L5:章节结算的本局成绩名次与 RPG 小结
     this.loadFinishRouteRecommendation();
+    this.loadFinishResult(finishResultLocal);
+  },
+  // U08-01:结果词以服务端本局战报为准;迟到响应(换局/换账号/关面板)丢弃
+  loadFinishResult(local) {
+    const query = !this.data.isPreview && !this.data.isMock
+      ? finishResult.reportQuery(this.data.activityId, this.data.topicId, (this._routeState || {}).sessionId) : null;
+    if (!query) return Promise.resolve(null);
+    const finishView = this._finishViewContext();
+    const settle = (report, state) => {
+      if (!this._isFinishViewCurrent(finishView) || !this.data.showFinish) return;
+      this.setData({ finishResult: finishResult.resolveFinishResult(report, local, state) });
+    };
+    return req('/api/play/player-journey/report', 'GET', query, undefined, true).then((response) => {
+      const report = finishResult.readReport(response);
+      settle(report, report ? 'ok' : 'failed');
+      return report;
+    }, () => { settle(null, 'failed'); return null; });
   },
   closeFinish() {
     this._hideFinish(() => {
@@ -8757,6 +8777,7 @@ Page({
     const sessionKey = this._sessionKey();
     const activityId = this.data.activityId, topicId = this.data.topicId, mode = this.data.mode;
     const loadEpoch = this._playLoadEpoch;
+    const runSessionId = (this._routeState || {}).sessionId;
     const isCurrent = () => this._isPlayAccountCurrent() && this.data.showFinish
       && requestEpoch === this._finishRecommendationEpoch && loadEpoch === this._playLoadEpoch
       && sessionKey === this._sessionKey()
@@ -8776,14 +8797,15 @@ Page({
     }).then((response) => {
       if (!isCurrent()) return null;
       const rows = response && response.code == 200 && response.data && response.data.rows;
-      const card = finishRouteRecommendation.pickCandidate(
+      const picked = finishRouteRecommendation.pickCandidate(
         Array.isArray(rows) ? rows : [], activityId, topicId
       );
+      const card = picked && Object.assign(picked, { source: finishRouteRecommendation.impressionSource({ activityId, topicId, runId: runSessionId }) });
       this.setData({ finishRouteRecommendation: card }, () => {
         if (!card || !isCurrent()) return;
         analytics.track('finish_route_recommendation_shown', {
           bizType: 'activity', bizId: card.id,
-          properties: { mode, placement: 'play_finish' }
+          properties: finishRouteRecommendation.trackProperties(card, mode)
         });
       });
       return card;

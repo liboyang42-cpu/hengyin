@@ -99,6 +99,8 @@ const EXPECTED_NAV_ROUTES = [
   'pages/team/detail/index', 'pages/team/join/index',
   // 2026-09-19 +1:批复1-a=2 partner 页复活(cy-nav-bar 出标题,无 cy-page-title)。
   'pages/topic/pricing/partner/index',
+  'pages/topic/catalog/detail',
+  'pages/topic/catalog/index',
   'pages/topic/pricing/index',
   'pages/play/circle/index',
   'pages/merchant/apply/index', 'pages/merchant/ledger/index', 'pages/merchant/ledger/order-detail/index', 'pages/merchant/ledger/batch-detail/index', 'pages/merchant/profile/index',
@@ -330,8 +332,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-10-30 V-24 +1:主题模板详情 topic-detail(custom 导航 + overlay cy-nav-bar,不挂 cy-page-title)⇒ 158;custom 157。
   // 2026-10-29 −1:「动态」二级页 pages/square/list 删除(custom 导航)⇒ 157 → 156;custom 156 → 155。
   // 2026-10-31 dw29 发布集成:两边叠加(topic-detail +1、square/list −1)⇒ 157;custom 156。
-  assert.equal(rows.length, 157, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 156)
+  // 2026-11-09 qx-b8 +2:公开目录 catalog/index 与落地详情 catalog/detail(custom 导航 + cy-nav-bar 标题,不挂 cy-page-title)⇒ 159;custom 158。
+  assert.equal(rows.length, 159, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  assert.equal(rows.filter((row) => row.custom).length, 158)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)

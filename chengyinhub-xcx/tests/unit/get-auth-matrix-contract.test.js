@@ -280,6 +280,9 @@ const MATRIX = [
   ['pages/play/utils/play-topbar.js', "req('/api/play/journey/backpack'", 'required', 'member', 'current-session'],
   // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取。只认登录本人,服务端再核这一场已付费、作者没关(ApiPlayTeamController /trail/state)。
   ['pages/play/index.js', "req('/api/team/trail/state', 'GET'", 'required', 'member', 'current-session'],
+  // 2026-11-09 qx-b8 U08-01:完成页结果词读本局战报。ApiPlayerJourneyController /report 只取登录会员,
+  //   PlayerRunReportApplication 按本人报名/路线会话校验 runId 归属(非本人局 403「无权查看该局」),只读不建局不发奖。
+  ['pages/play/index.js', "req('/api/play/player-journey/report', 'GET'", 'required', 'member', 'current-session'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -449,7 +452,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-10-30 #686 故事流顶栏:案件册两处 + 各站奖励一处 req 包装 GET(本人本局,已逐条入 MATRIX),41 → 44。
   // 2026-11-04 第九轮 m2 第 2 项:同场路线表态读取一条(本人、本场、已付费),44 → 45。
   // R29C:原会话历史 GET /api/play/history 一处，按登录会员与原会话归属只读，45 → 46。
-  assert.equal(wrapperCount, 46, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-09 qx-b8 U08-01:完成页本局战报 GET /api/play/player-journey/report 一处(本人本局,已入 MATRIX),46 → 47。
+  assert.equal(wrapperCount, 47, 'req 包装 GET 数量变化时必须逐条复核权限并更新矩阵');
   assert.equal(ownMediaWrapperCount, 5, '作者媒体实际GET调用点变化需显式复核');
   assert.equal(MATRIX.length, directCount + wrapperCount + ownMediaWrapperCount);
 
