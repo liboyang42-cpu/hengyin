@@ -6,19 +6,19 @@
 -- runner's final scalar assertion remains false, so this migration cannot be marked APPLIED.
 SELECT library.id, library.member_id, library.title
 FROM cms_template_library library JOIN (
- SELECT member_id, CAST(REGEXP_REPLACE(title,
-  CONVERT(0x5c415b5c7830302d5c7832305d2b7c5b5c7830302d5c7832305d2b5c7a USING utf8mb4),'',1,0,'c') AS BINARY) AS normalized_title
+ SELECT member_id, CAST(REGEXP_REPLACE(CONVERT(title USING utf8mb4) COLLATE utf8mb4_bin,
+  CONVERT(0x5c415b5c7830302d5c7832305d2b7c5b5c7830302d5c7832305d2b5c7a USING utf8mb4) COLLATE utf8mb4_bin,'',1,0,'c') AS BINARY) AS normalized_title
  FROM cms_template_library WHERE del_flag=0 AND member_id IS NOT NULL AND title IS NOT NULL
  GROUP BY member_id, normalized_title
  HAVING OCTET_LENGTH(normalized_title)>0 AND COUNT(*)>1
 ) duplicates ON duplicates.member_id=library.member_id
- AND duplicates.normalized_title=CAST(REGEXP_REPLACE(library.title,
-  CONVERT(0x5c415b5c7830302d5c7832305d2b7c5b5c7830302d5c7832305d2b5c7a USING utf8mb4),'',1,0,'c') AS BINARY)
+ AND duplicates.normalized_title=CAST(REGEXP_REPLACE(CONVERT(library.title USING utf8mb4) COLLATE utf8mb4_bin,
+  CONVERT(0x5c415b5c7830302d5c7832305d2b7c5b5c7830302d5c7832305d2b5c7a USING utf8mb4) COLLATE utf8mb4_bin,'',1,0,'c') AS BINARY)
 WHERE library.del_flag=0 ORDER BY library.member_id, library.id;
 
 SET @template_title_clean = (SELECT COUNT(*)=0 FROM (
- SELECT member_id, CAST(REGEXP_REPLACE(title,
-  CONVERT(0x5c415b5c7830302d5c7832305d2b7c5b5c7830302d5c7832305d2b5c7a USING utf8mb4),'',1,0,'c') AS BINARY) AS normalized_title
+ SELECT member_id, CAST(REGEXP_REPLACE(CONVERT(title USING utf8mb4) COLLATE utf8mb4_bin,
+  CONVERT(0x5c415b5c7830302d5c7832305d2b7c5b5c7830302d5c7832305d2b5c7a USING utf8mb4) COLLATE utf8mb4_bin,'',1,0,'c') AS BINARY) AS normalized_title
  FROM cms_template_library WHERE del_flag=0 AND member_id IS NOT NULL AND title IS NOT NULL
  GROUP BY member_id, normalized_title
  HAVING OCTET_LENGTH(normalized_title)>0 AND COUNT(*)>1
@@ -27,8 +27,8 @@ SET @template_title_column_exists = (SELECT COUNT(*) FROM information_schema.col
  WHERE table_schema=DATABASE() AND table_name='cms_template_library' AND column_name='active_title_key');
 SET @template_title_ddl = IF(@template_title_clean AND @template_title_column_exists=0,
  'ALTER TABLE cms_template_library ADD COLUMN active_title_key VARBINARY(1024) GENERATED ALWAYS AS
-  (CASE WHEN del_flag=0 THEN NULLIF(CAST(REGEXP_REPLACE(title,
-   CONVERT(0x5c415b5c7830302d5c7832305d2b7c5b5c7830302d5c7832305d2b5c7a USING utf8mb4),'''',1,0,''c'') AS BINARY),'''') ELSE NULL END) STORED',
+  (CASE WHEN del_flag=0 THEN NULLIF(CAST(REGEXP_REPLACE(CONVERT(title USING utf8mb4) COLLATE utf8mb4_bin,
+   CONVERT(0x5c415b5c7830302d5c7832305d2b7c5b5c7830302d5c7832305d2b5c7a USING utf8mb4) COLLATE utf8mb4_bin,'''',1,0,''c'') AS BINARY),'''') ELSE NULL END) STORED',
  'SELECT ''Template title key skipped; inspect duplicate preview before retrying''');
 PREPARE template_title_stmt FROM @template_title_ddl;
 EXECUTE template_title_stmt;

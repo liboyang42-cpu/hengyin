@@ -772,7 +772,7 @@
   },
   "classes": {
     "com.chengyinhub.business.it.PlatformPassMySqlIT": {
-      "tests": 7,
+      "tests": 9,
       "storage": [
         "mysql"
       ],

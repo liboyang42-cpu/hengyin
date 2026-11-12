@@ -47,13 +47,16 @@ class TemplateD89D90MigrationsMySqlIT {
         assertTrue(MysqlIntegrationTestConfig.isMysql8OrNewer(admin.queryForObject("select version()", String.class)));
         schema = config.databaseName();
         // No IF NOT EXISTS: a collision must fail rather than reuse or drop someone else's schema.
-        admin.execute("create database `" + schema + "` character set utf8mb4 collate utf8mb4_unicode_ci");
+        admin.execute("create database `" + schema + "` character set utf8mb4 collate utf8mb4_0900_ai_ci");
         schemaCreated = true;
-        source = new DriverManagerDataSource(config.databaseUrl(), config.user(), config.password());
+        source = new DriverManagerDataSource(config.databaseUrl() + "&connectionCollation=utf8mb4_0900_ai_ci", config.user(), config.password());
         db = new JdbcTemplate(source);
+        assertEquals("utf8mb4_0900_ai_ci", db.queryForObject("select @@collation_connection", String.class));
         db.execute("create table cms_template_library (id bigint primary key, member_id bigint, "
-                + "title varchar(255), status bigint default 0, publish_status int default 0, "
+                + "title varchar(255) character set utf8mb4 collate utf8mb4_general_ci, status bigint default 0, publish_status int default 0, "
                 + "del_flag int not null default 0) engine=InnoDB");
+        assertEquals("utf8mb4_general_ci", db.queryForObject("select collation_name from information_schema.columns "
+                + "where table_schema=database() and table_name='cms_template_library' and column_name='title'", String.class));
         db.execute("create table cms_member_template (id bigint primary key, member_id bigint, "
                 + "original_template_id bigint, status bigint, del_flag int default 0) engine=InnoDB");
         db.execute("create table audit_task (id bigint primary key, snapshot_json json) engine=InnoDB");

@@ -540,7 +540,7 @@ class RegistryContractTest(unittest.TestCase):
                     "architecture-day-refund-lifecycle": 76,
                     "architecture-day-integrated-changes": 982,  # Source counts: D89 adoption +5, AI recovery +8, ASR refund +1
                     "payment-intent-correctness": 30,
-                    "marketing-db-acceptance": 236,  # ClubEventTransferCancellation 14 -> 15, PostGameOutcomeMapperMySqlIT +10 (qx-c3), PlatformPassMySqlIT +7 (l-pass)
+                    "marketing-db-acceptance": 238,  # ClubEventTransferCancellation 14 -> 15, PostGameOutcomeMapperMySqlIT +10 (qx-c3), PlatformPassMySqlIT +9 (D108/D113)
                     "launch-l-payout": 9,  # l-payout EcomPayoutMapperMySqlIT
                     "launch-l-payout2": 6,  # l-payout2 EcomPayoutWiringMySqlIT
                     "launch-l-payout3": 9,  # l-payout3 EcomCombineMapperMySqlIT
