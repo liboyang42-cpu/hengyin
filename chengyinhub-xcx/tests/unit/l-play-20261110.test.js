@@ -229,7 +229,7 @@ test('岔路:分支剧情在流里是入口卡(钥匙插图),点开是居中弹�
   assert.equal(kitCard.playKitState({}, { type: 'branch' }, false, false).pop, false, '整屏来的分支不走弹窗')
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /\(playKit\.show && !playKit\.pop\)/, '故事流只在非弹窗整屏时隐去')
-  assert.match(wxml, /<cy-playkit id="playKit" kit="\{\{playKit\.kit\}\}" show="\{\{playKit\.show && !playKit\.pop\}\}"/)
+  assert.match(wxml, /<cy-playkit id="playKit" class="pk-lookhost \{\{lookClass\}\}" kit="\{\{playKit\.kit\}\}" show="\{\{playKit\.show && !playKit\.pop\}\}"/)
   assert.match(wxml, /class="chfull__kitcard" data-origin="card" bindtap="openKitStart"/)
   assert.match(wxml, /<cy-illus name="\{\{playKit\.cardIllus \|\| 'clue'\}\}" size="110"/)
   const stage = read('pages/play/play-stage.wxml')

@@ -382,7 +382,7 @@ test('内嵌检定有真实 play-stage 壳和同一动作回执，独立全屏�
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8')
   const shell = fs.readFileSync(path.join(ROOT, 'pages/play/components/playkit-journey-check/index.wxml'), 'utf8')
   assert.match(wxml, /item\.kind === 'journeyCheck'[\s\S]*?class="chfull__kit"[\s\S]*?cy-playkit-journey-check[\s\S]*?bind:action="onJourneyCheckAction"/)
-  assert.match(wxml, /cy-playkit-journey-check show="\{\{journeyCheck\.show && journeyCheck\.present !== 'inline'\}\}"/)
+  assert.match(wxml, /cy-playkit-journey-check class="pk-lookhost \{\{lookClass\}\}" show="\{\{journeyCheck\.show && journeyCheck\.present !== 'inline'\}\}"/)
   assert.match(shell, /<cy-play-stage/)
   assert.equal(shell.includes('<cy-sheet'), false)
 })

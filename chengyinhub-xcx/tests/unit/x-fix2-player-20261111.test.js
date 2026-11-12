@@ -129,7 +129,7 @@ test('M-2 勋章墙加载失败:按全站口径留空白遮罩,但收集册页�
 test('P-9 旅程手记:不再有说明句,左格不塞节点名;P-10 里程碑文案不再「距 1 个还差 1 个」', () => {
   const wxml = read('pages/play/index.wxml')
   assert.doesNotMatch(wxml, /这一趟自动记下来的|nextChapterText/)
-  assert.match(wxml, /<view class="sheet-meta">\{\{chapter\.name\}\}<\/view>/)
+  assert.match(wxml, /<view class="sheet-meta" wx:if="\{\{!journalMulti\}\}">\{\{chapter\.name\}\}<\/view>/)
   const js = read('pages/play/index.js')
   assert.doesNotMatch(js, /走完本章坐标|nextChapterText/)
   assert.match(js, /seg\.kvK = parts\.length > 1 \? parts\[0\] : \(seg\.label === n\.name \? '未到' : parts\[0\] \|\| ''\);/)

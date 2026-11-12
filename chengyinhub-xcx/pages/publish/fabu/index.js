@@ -6286,7 +6286,7 @@ Page({
   // x-fix5 A-3:编辑器在票种列表底部展开时,「添加票种 / 收起」这一行会落在底栏(返回/预览)下面够不着。
   // 展开后把它滚到视口上三分之一处。
   _revealTicketEditor() {
-    if (typeof wx.pageScrollTo !== 'function') return;
+    if (typeof wx.pageScrollTo !== 'function' || typeof wx.createSelectorQuery !== 'function' || typeof wx.nextTick !== 'function') return;
     wx.nextTick(() => {
       wx.createSelectorQuery().select('.tk-editor').boundingClientRect().selectViewport().scrollOffset().exec((r) => {
         const rect = r && r[0], view = r && r[1];

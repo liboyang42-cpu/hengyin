@@ -72,7 +72,7 @@ test('P7 战报:叠层卡;只有计分时出 NRC 粗斜体大数字,不计分/�
   // jn-grid--card;u2 叠卡在本页退场。保留本条的业务断言:不计分 / 用时未知弱化显示,不画成 0;分享仍是 ob-footer 白色胶囊。
   assert.match(view, /<view class="jn-grid jn-grid--card">/);
   assert.match(view, /jn-stat__v \{\{report\.scored \? '' : 'is-muted'\}\}">\{\{report\.scoreText\}\}/);
-  assert.match(view, /jn-stat__v \{\{report\.elapsedText === '未知' \? 'is-muted' : ''\}\}/);
+  assert.match(view, /jn-stat__v \{\{report\.elapsedText === '—' \? 'is-muted' : ''\}\}/);
   assert.match(view, /<view class="jn-footer ob-footer" wx:if="\{\{report\.finished\}\}">[\s\S]*open-type="share"/);
   const css = read('subpackageJourney/style/journey.wxss');
   assert.match(css, /\.rp-score__n \{[^}]*font-weight: 900; font-style: italic;/);
