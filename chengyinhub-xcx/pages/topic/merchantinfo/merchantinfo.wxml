@@ -160,9 +160,8 @@
            现在按加载是否结束分两态:结束了就给和列表/模板详情同一口径的缺图占位,
            没结束才留骨架(与上面 slide1 的 cover-fb-tip 同一个约定)。 -->
       <view class="detail-cover-fallback" wx:else>
-        <view class="detail-cover-ph" wx:if="{{ info.name }}" aria-role="img" aria-label="{{ info.name }} 暂无封面">
-          <image class="detail-cover-ph-icon" src="/images/no_data.svg" mode="aspectFit" />
-          <text class="detail-cover-ph-txt">封面暂不可用</text>
+        <view class="detail-cover-ph cy-cover-fb" wx:if="{{ info.name }}" aria-role="img" aria-label="{{ info.name }} 暂无封面">
+          <image class="detail-cover-ph-icon" src="/images/cover-route.svg" mode="aspectFit" />
         </view>
         <view class="detail-cover-skeleton" wx:else aria-hidden="true">
           <view class="detail-cover-shape detail-cover-shape--large"></view>

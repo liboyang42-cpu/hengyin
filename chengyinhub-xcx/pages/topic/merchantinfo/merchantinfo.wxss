@@ -392,7 +392,6 @@ page {
 }
 /* no_data.svg 原图 4:3,按此比例给宽,不拉扁 */
 .topic .det1 .detail-cover-ph-icon { width: 160rpx; height: 120rpx; flex: 0 0 auto; }
-.topic .det1 .detail-cover-ph-txt { font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }
 
 .topic .det1 .detail-cover-shape {
   width: 56%;

@@ -19,7 +19,7 @@
         <view class="kin">
           <view class="fc">
             <image wx:if="{{ cover }}" class="fc__img" src="{{ cover }}" mode="aspectFill" style="{{ item.imgStyle }}" binderror="onCoverError" />
-            <view wx:else class="fc__err" aria-role="img" aria-label="{{ name }} 的封面未能加载"><image class="fc__err-ic" src="/images/no_data.svg" mode="aspectFit" /><text>封面暂不可用</text></view>
+            <view wx:else class="fc__err cy-cover-fb" aria-role="img" aria-label="{{ name }} 暂无封面"><image class="fc__err-ic" src="/images/cover-route.svg" mode="aspectFit" /></view>
           </view>
           <view class="bk">
             <text class="bk__t">{{ item.title }}</text>

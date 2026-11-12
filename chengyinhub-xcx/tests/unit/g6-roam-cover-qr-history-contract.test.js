@@ -86,7 +86,8 @@ test('CU-C-59 官方活动缺封面:样式为空走占位块,有封面才拼 url
   const wxml = read('components/cy/scene-roam-task-list/index.wxml')
   assert.match(wxml, /style="\{\{item\._coverStyle\}\}"/)
   assert.doesNotMatch(wxml, /item\.coverImg/, 'wxml 不许再直插 coverImg —— null 会变成字面量 null')
-  assert.match(wxml, /封面暂不可用/)
+  assert.doesNotMatch(wxml, /封面暂不可用/, 'D3:不写文字')
+  assert.match(wxml, /task-cover-error cy-cover-fb/)
 })
 
 // ───────────────── CU-M-53 缺二维码图的据点核销码 ─────────────────

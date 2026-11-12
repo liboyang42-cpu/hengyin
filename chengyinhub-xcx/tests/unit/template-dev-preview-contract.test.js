@@ -41,7 +41,7 @@ test('开发数据包含已新增的 12 个商家/俱乐部交互模板', () => 
 function assertUnknownTemplateFallbackUsesDsIcon(markup) {
   // 2026-08-26:列表统一成 .cml-pic 之后,「没有专属资源」的兜底不再是 cy-icon 图标位,
   // 而是明确失败态(no_data + 「封面暂不可用」)。守的不变量没变:不许伪造资产。
-  assert.match(markup, /class="cml-pic cover-error"[\s\S]*?<text class="cover-error-text">封面暂不可用<\/text>/,
+  assert.match(markup, /class="cml-pic cover-error"/,
     '没有专属资源的模板必须落到明确失败态，不能留空白');
   assert.doesNotMatch(markup, /\{\{\s*item\._initial\s*\}\}/,
     '未知模板不得用首字冒充图形资产');

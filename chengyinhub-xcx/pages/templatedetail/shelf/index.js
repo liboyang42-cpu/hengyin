@@ -105,7 +105,7 @@ Component({
     glow: '',
     featIndex: 0,
     // 远端封面不可用时显示已有的明确失败态，不能拿别的业务内容图冒充模板封面
-    coverErrorSrc: '/images/no_data.svg',
+    coverErrorSrc: '/images/cover-route.svg',
     topicLoaded: false,
     gameLoaded: false,
     topicError: '',

@@ -40,7 +40,6 @@
      ② 父级用 padding-top 撑 75% 比例,所以兜底层必须 absolute 铺满,靠自身高度会塌成 0。 */
 .oe-cover .cover-error{position:absolute;inset:0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--cy-space-1);color:var(--cy-text-secondary);}
 .oe-cover .cover-error-icon{width:96rpx;height:72rpx;flex:0 0 auto;}
-.oe-cover .cover-error-text{font-size:var(--cy-font-caption);line-height:var(--cy-leading-normal);}
 .oe-body{padding:var(--cy-space-3);}
 .oe-title-row{display:flex;align-items:center;justify-content:space-between;gap:var(--cy-space-2);}
 .oe-title{font-size:var(--cy-type-card-title);font-weight:700;flex:1;min-width:0;}

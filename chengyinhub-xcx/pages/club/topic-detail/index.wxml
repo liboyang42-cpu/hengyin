@@ -31,9 +31,8 @@
         <!-- CU-C-147:兜底要说得出"没图"。原来只有 128 的通用 image 线条图标,
              读起来像资源加载失败,而不是"这场活动没有封面"。图标 + 短文案与
              templatedetail 头部 / IM 报名卡同一口径,只是 Hero 尺寸放大。 -->
-        <view wx:else class="ctd-head__cover-fallback" aria-role="img" aria-label="{{topic.name}} 暂无封面">
-          <image class="ctd-cover-ph-icon" src="/images/no_data.svg" mode="aspectFit" />
-          <text class="ctd-cover-ph-txt">封面暂不可用</text>
+        <view wx:else class="ctd-head__cover-fallback cy-cover-fb" aria-role="img" aria-label="{{topic.name}} 暂无封面">
+          <image class="ctd-cover-ph-icon" src="/images/cover-route.svg" mode="aspectFit" />
         </view>
         <view class="ctd-head__scrim"></view>
       </view>

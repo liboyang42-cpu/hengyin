@@ -17,15 +17,16 @@ const WXSS = 'pages/activity/list/index.wxss'
  * 而模板页/发布广场早有「封面暂不可用」范式。这条门禁锁住两页一致。
  */
 
-test('无封面时渲染「封面暂不可用」兜底,而不是一片空白', () => {
+test('无封面时渲染兜底(look 渐变 + 路线插画,不写文字),而不是一片空白', () => {
   const wxml = read(WXML)
   const cover = wxml.match(/<view class="oe-cover"[\s\S]*?<\/view>\s*<\/view>/)
   assert.ok(cover, 'oe-cover 结构未找到，保底断言的锚点失效')
   const block = cover[0]
 
   assert.match(block, /wx:if="\{\{!item\._coverStyle\}\}"/, '保底必须挂在「没有封面样式」这个条件上')
-  assert.match(block, /class="cover-error"/, '必须复用既有 .cover-error 范式，不另造一套')
-  assert.match(block, /封面暂不可用/, '保底文案必须与模板页/发布广场一致')
+  assert.match(block, /class="cover-error cy-cover-fb"/, '必须复用既有 .cover-error 范式，不另造一套')
+  assert.match(block, /cy-cover-fb/, 'D3:用统一的 look 渐变兜底底')
+  assert.doesNotMatch(block, /<text|封面暂不可用/, 'D3:不向用户写「封面暂不可用」')
   assert.match(block, /aria-label=/, '保底块要有无障碍标签')
 })
 
@@ -57,9 +58,8 @@ test('负控:兜底层丢掉 absolute 铺满时必须判红(高度会塌成 0)',
   )
 })
 
-test('文案与既有范式同源:模板页仍是「封面暂不可用」', () => {
-  // 若哪天有人改了模板页的措辞,这条会提醒两处一起改,别让两页各说各话
-  assert.match(read('pages/templatedetail/shelf/index.wxml'), /封面暂不可用/)  // 2026-10-28 货架移进分包组件
+test('D3 与模板货架同源:都不写「封面暂不可用」', () => {
+  assert.doesNotMatch(read('pages/templatedetail/shelf/index.wxml'), /封面暂不可用/)  // 2026-10-28 货架移进分包组件
 })
 
 // ── 生产者侧 ──────────────────────────────────────────────

@@ -46,10 +46,9 @@
            「封面暂不可用」兜底不一致 ⇒ 复用同一范式。
            注:这里封面走 background-image,检测不到「URL 有但加载失败」,只兜「没有 URL」。 -->
       <view class="oe-cover" style="{{item._coverStyle}}">
-        <view wx:if="{{!item._coverStyle}}" class="cover-error" aria-role="img"
+        <view wx:if="{{!item._coverStyle}}" class="cover-error cy-cover-fb" aria-role="img"
               aria-label="{{item.title}} 暂无封面">
-          <image class="cover-error-icon" src="/images/no_data.svg" mode="aspectFit" />
-          <text class="cover-error-text">封面暂不可用</text>
+          <image class="cover-error-icon" src="/images/cover-route.svg" mode="aspectFit" />
         </view>
       </view>
       <view class="oe-body">

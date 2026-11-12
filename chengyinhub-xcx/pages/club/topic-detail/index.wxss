@@ -35,14 +35,12 @@
 .ctd-head__cover-fallback {
   width: 100%; height: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cy-space-1-5);
-  background: var(--cy-color-bg-surface-subtle);
   color: var(--cy-color-text-secondary);
 }
 /* CU-C-147:兜底要自己说清"没有封面"。一枚通用 image 线条图标读起来像资源加载失败,
    不是"这场活动没配图";图标 + 短文案与 templatedetail 头部、IM 报名卡同一口径,
    尺寸按 480rpx 的 Hero 放大(no_data.svg 是 4:3,高宽比不能写反)。 */
 .ctd-cover-ph-icon { width: 160rpx; height: 120rpx; flex: 0 0 auto; }
-.ctd-cover-ph-txt { font-size: var(--cy-font-caption); line-height: var(--cy-leading-normal); }
 .ctd-head__scrim {
   position: absolute; inset: 0;
   background: linear-gradient(to bottom, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,.6) 100%); /* ds-ok: Figma scrim */

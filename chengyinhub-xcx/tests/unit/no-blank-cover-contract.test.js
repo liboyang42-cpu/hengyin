@@ -95,7 +95,7 @@ test('CU-C-121 消息流报名卡:imgUrl 为空时给缺图占位,不留半张�
   const wxss = read('subpackageB/pages/im/chat/index.wxss')
   assert.match(wxml, /<image wx:if="\{\{topicCache\[item\.card\.topicId\]\.imgUrl\}\}" class="rcard-img"/,
     '真图必须挂上有封面的条件')
-  assert.match(wxml, /class="rcard-img rcard-img--nocover"/, '没封面走单独一档占位')
+  assert.match(wxml, /class="rcard-img rcard-img--nocover cy-cover-fb"/, '没封面走单独一档占位')
   assert.match(wxml, /aria-label="该主题暂无封面"/)
 
   const nocover = wxss.match(/\.rcard-img--nocover\s*\{[^}]*\}/)
@@ -127,9 +127,10 @@ test('CU-C-147 活动详情 Hero:无封面给图标 + 短文案,不是只有一�
   const slot = wxml.match(/<view class="ctd-head__cover">([\s\S]*?)\n      <\/view>/)
   assert.ok(slot, 'ctd-head__cover 锚点失效')
 
-  assert.match(slot[0], /class="ctd-head__cover-fallback"[^>]*aria-role="img"/, '占位块要声明自己是图片位')
-  assert.match(slot[0], /src="\/images\/no_data\.svg"/, '必须用全站缺图图标，不另造一套')
-  assert.match(slot[0], /封面暂不可用/, '与模板详情头图 / IM 报名卡同一口径')
+  assert.match(slot[0], /class="ctd-head__cover-fallback cy-cover-fb"[^>]*aria-role="img"/, '占位块要声明自己是图片位')
+  assert.match(slot[0], /src="\/images\/cover-route\.svg"/, 'D3:统一路线插画兜底')
+  assert.match(slot[0], /cy-cover-fb/, 'D3:look 渐变兜底')
+  assert.doesNotMatch(slot[0], /封面暂不可用|<text/, 'D3:不写文字')
 
   const ph = wxss.match(/\.ctd-head__cover-fallback\s*\{[^}]*\}/)
   assert.ok(ph, '.ctd-head__cover-fallback 规则缺失')
@@ -153,11 +154,11 @@ test('CU-C-147 活动详情:无商家 Logo / 无主题封面时两块空壳整�
 test('负控:Hero 兜底退回一枚没有文案的通用图标必须判红', () => {
   const wxml = stripWxmlComments(read('pages/club/topic-detail/index.wxml'))
   const mutated = wxml.replace(
-    /<view wx:else class="ctd-head__cover-fallback"[^>]*>[\s\S]*?<\/view>/,
+    /<view wx:else class="ctd-head__cover-fallback cy-cover-fb"[^>]*>[\s\S]*?<\/view>/,
     '<view wx:else class="ctd-head__cover-fallback" aria-role="img" aria-label="暂无封面"><cy-icon name="image" size="128" /></view>',
   )
   assert.notEqual(mutated, wxml, '变异锚点失效')
-  assert.throws(() => assert.match(mutated, /封面暂不可用/), assert.AssertionError)
+  assert.throws(() => assert.match(mutated, /cover-route\.svg/), assert.AssertionError)
 })
 
 test('负控:把商家 Logo / 主题封面的条件退回 image 层必须判红', () => {
@@ -258,10 +259,11 @@ test('CU-M-156 商家详情第二屏:加载结束后无封面必须说话,骨架
   const slot = wxml.match(/<view class="detail-cover-fallback"[\s\S]*?(?=\n\s*<view class="cont">)/)
   assert.ok(slot, 'detail-cover-fallback 锚点失效')
 
-  assert.match(slot[0], /class="detail-cover-ph"[^>]*wx:if="\{\{ info\.name \}\}"/,
+  assert.match(slot[0], /class="detail-cover-ph cy-cover-fb"[^>]*wx:if="\{\{ info\.name \}\}"/,
     '缺图档必须吃"加载已结束"这个条件 —— info: {} 时它不许说话，说了就是撒谎')
-  assert.match(slot[0], /src="\/images\/no_data\.svg"/, '必须用全站缺图图标，不另造一套')
-  assert.match(slot[0], /封面暂不可用/, '与其他三处缺图占位同一口径')
+  assert.match(slot[0], /src="\/images\/cover-route\.svg"/, 'D3:统一路线插画兜底')
+  assert.match(slot[0], /cy-cover-fb/, 'D3:look 渐变兜底')
+  assert.doesNotMatch(slot[0], /封面暂不可用|<text/, 'D3:不写文字')
   assert.match(slot[0], /aria-role="img"/, '占位块要声明自己是图片位')
   assert.match(slot[0], /aria-label="\{\{ info\.name \}\} 暂无封面"/, '读屏要知道是哪条主题没图')
   assert.doesNotMatch(slot[0], /<view class="detail-cover-fallback"[^>]*aria-hidden/,
@@ -291,7 +293,7 @@ test('负控:第二屏退回只有装饰灰条的降级块时必须判红', () =
   )
   assert.notEqual(mutated, wxml, '变异锚点失效')
   const slot = mutated.match(/<view class="detail-cover-fallback"[\s\S]*?(?=\n\s*<view class="cont">)/)
-  assert.throws(() => assert.match(slot[0], /封面暂不可用/), assert.AssertionError)
+  assert.throws(() => assert.match(slot[0], /cover-route\.svg/), assert.AssertionError)
   assert.throws(() => assert.doesNotMatch(slot[0], /<view class="detail-cover-fallback"[^>]*aria-hidden/),
     assert.AssertionError)
 })
