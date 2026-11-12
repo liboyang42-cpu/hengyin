@@ -372,7 +372,7 @@ test('管理阶段失败后的 primary 会同时重拉主题、探店日期次�
     '/api/club/topics',
     '/api/club-compensation/editions',
     '/api/project/my',
-    '/api/coop/list',
+    // x-fix7 N-18:无商家身份的俱乐部主理人不再请求商家专用 /api/coop/list
   ])
 })
 
