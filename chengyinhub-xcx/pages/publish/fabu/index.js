@@ -5903,7 +5903,7 @@ Page({
     const current = this._coverUploadGuard('imgUrl');
     app.chooseImage((res) => {
       if (!current() || !Array.isArray(res) || typeof res[0] !== 'string' || !res[0].trim()) return;
-      this.setData({ 'formData.imgUrl': res[0] }, () => this.refreshPrimaryActionState());
+      this.setData({ 'formData.imgUrl': res[0], 'errors.imgUrl': '' }, () => this.refreshPrimaryActionState());
     }, 1, { crop: true, cropScale: '3:4' });
   },
   removeBanner() {
@@ -8757,7 +8757,7 @@ Page({
       if (!automatic) cyToast('先给主题起个名字，再保存草稿');
       return;
     }
-    if (automatic && this._cloudAutosaveBlocked()) return;
+    if (draftCoverMissing(this, automatic) || (automatic && this._cloudAutosaveBlocked())) return;
     this._cancelCloudDraftAutosave();
     if (!automatic) this._cloudAutosavePaused = false; // 用户明确保存 = 重新放行自动保存
     const apiData = this._buildSubmitPayload(automatic ? { draft: true, quiet: true } : { draft: true });
@@ -10148,4 +10148,16 @@ function reconcileClubPick(page) {
   } else if (page.data.clubIndex !== -1) {
     page.setData({ clubIndex: -1 });
   }
+}
+
+// D-78(2026-11-11 业主「没有封面不能保存」):没有封面的主题不能存云端草稿。手动保存:封面字段下红字 + 打开详情弹窗 + 提示;
+// 自动保存静默跳过(本机自动保存不受影响)。后端 /create、/update 同样拒绝。
+function draftCoverMissing(page, automatic) {
+  if (String(page.data.formData.imgUrl || '').trim()) return false;
+  if (!automatic) {
+    page.setData({ 'errors.imgUrl': '请上传主题封面' });
+    page.openTopicDetail();
+    cyToast('请上传主题封面');
+  }
+  return true;
 }

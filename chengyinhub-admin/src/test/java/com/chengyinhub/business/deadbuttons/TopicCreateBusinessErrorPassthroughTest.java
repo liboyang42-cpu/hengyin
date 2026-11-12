@@ -71,11 +71,21 @@ class TopicCreateBusinessErrorPassthroughTest {
         return dto;
     }
 
-    /** P-17:发布必须带封面;存草稿不拦。 */
+    /** P-17:发布必须带封面;D-78(2026-11-11):存草稿同样必须带封面。 */
     @Test
     void publishWithoutCover_isRefusedBeforeCreate() {
         TopicCreateDTO dto = freeExploreDto();
         dto.setImgUrl("  ");
+
+        assertEquals("请上传主题封面", msgOf(controller.createTopic(dto)));
+        org.mockito.Mockito.verify(topicService, org.mockito.Mockito.never()).createTopic(any(), anyLong(), anyString());
+    }
+
+    @Test
+    void saveDraftWithoutCover_isRefusedBeforeCreate() {
+        TopicCreateDTO dto = freeExploreDto();
+        dto.setImgUrl("");
+        dto.setSaveDraft(1);
 
         assertEquals("请上传主题封面", msgOf(controller.createTopic(dto)));
         org.mockito.Mockito.verify(topicService, org.mockito.Mockito.never()).createTopic(any(), anyLong(), anyString());
