@@ -314,7 +314,9 @@ test('主题详情只接受具备可渲染名称的数据', () => {
 
 test('主题缺封面使用现有占位，路线无章节显示专属节点空态', () => {
   const wxml = source('pages/topic/index/index.wxml');
-  assert.match(wxml, /src="\{\{\s*info\.imgUrl\s*\|\|\s*'\/pages\/topic\/images\/icon_line\.jpg'\s*\}\}"/);
+  // 2026-11-12 D3:无封面不再铺 icon_line 线稿,统一 look 渐变 + 小路线标
+  assert.doesNotMatch(wxml, /info\.imgUrl[^\n]*icon_line\.jpg/);
+  assert.match(wxml, /cy-cover-fb[^>]*>\s*<image class="cy-cover-fb__art" src="\/images\/cover-route\.svg"/);
   assert.match(wxml, /activeTab\s*==\s*'2'\s*&&\s*!info\.chaptersList\.length/);
   assert.match(wxml, /activeTab\s*==\s*'1'\s*&&\s*!info\.chaptersList\.length/,
     '路线节点 tab 不能在合法空数组时白屏');

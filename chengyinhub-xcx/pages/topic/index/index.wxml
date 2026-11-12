@@ -66,7 +66,8 @@
     <view class="kb" wx:if="{{coverImages.length}}">
       <image wx:for="{{coverImages}}" wx:key="index" class="kb__im {{index === kbIdx ? 'is-on' : ''}} {{index % 2 ? 'kb__im--b' : 'kb__im--a'}}" src="{{item}}" mode="aspectFill" />
     </view>
-    <image wx:else lazy-load="true" src="{{ info.imgUrl || '/pages/topic/images/icon_line.jpg' }}" mode="aspectFill" />
+    <image wx:elif="{{ info.imgUrl }}" lazy-load="true" src="{{ info.imgUrl }}" mode="aspectFill" />
+    <view wx:else class="cy-cover-fb" aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
     <!-- CU-M-191:没有封面时这一屏原本只有那张放大的黑白路线画 + 一枚白色下滑箭头,
          整屏一个字都没有,玩家从工作台打开预览会当成页面没加载出来。商家版
          (merchantinfo,2026-09-08 稿 181:576)同一屏早就留了「类型 / 主题名 / 一句话」
@@ -94,7 +95,8 @@
     <view class="det1 dt" id="heroTop">
       <swiper class="bgt-swiper dt__trk" circular="{{true}}" bindchange="onHeroSwipe">
         <swiper-item wx:if="{{!img.list(info.imgArr).length}}">
-          <image src="{{img.first(info.imgUrl) || '/pages/topic/images/icon_line.jpg'}}" mode="aspectFill" class="bgt" />
+          <image wx:if="{{img.first(info.imgUrl)}}" src="{{img.first(info.imgUrl)}}" mode="aspectFill" class="bgt" />
+          <view wx:else class="bgt cy-cover-fb" aria-hidden="true"><image class="cy-cover-fb__art" src="/images/cover-route.svg" mode="aspectFit" /></view>
         </swiper-item>
         <swiper-item wx:for="{{img.list(info.imgArr)}}" wx:key="index">
           <image src="{{item}}" mode="aspectFill" class="bgt" />
