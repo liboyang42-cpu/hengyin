@@ -549,10 +549,10 @@ class MerchantCommerceServiceTest {
         when(subscriptionMapper.settleCommerceRefund(eq(8L), any(), anyString())).thenAnswer(call -> {
             refund.put("refund_fact_id", call.getArgument(1)); refund.put("refund_fact_hash", call.getArgument(2)); return 1;
         });
-        when(subscriptionMapper.markCommerceRefunded(8L)).thenAnswer(call -> { order.setStatus(6L); return 1; });
+        when(orderMapper.markCommerceRefunded(8L)).thenAnswer(call -> { order.setStatus(6L); return 1; });
         assertTrue(service.handleRefund(observed)); assertTrue(service.handleRefund(observed));
         verify(subscriptionMapper).revokeCommerceSubscription(8L);
-        verify(subscriptionMapper).markCommerceRefunded(8L);
+        verify(orderMapper).markCommerceRefunded(8L);
         verify(subscriptionMapper, never()).grantMerchantSubscription(any());
         assertEquals("success", service.refundOrder(12L, 34L, order.getOrderSn()).get("refundStatus"));
         org.mockito.Mockito.verifyNoInteractions(wechatPayService);

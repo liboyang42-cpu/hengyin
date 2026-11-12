@@ -21,6 +21,5 @@ public interface MerchantSubscriptionMapper {
             @org.apache.ibatis.annotations.Param("factId") Long factId,
             @org.apache.ibatis.annotations.Param("factHash") String factHash);
     int revokeCommerceSubscription(@org.apache.ibatis.annotations.Param("orderId") Long orderId);
-    int markCommerceRefunded(@org.apache.ibatis.annotations.Param("orderId") Long orderId);
     MerchantSubscription selectCommerceSubscriptionForUpdate(@org.apache.ibatis.annotations.Param("orderId") Long orderId);
 }

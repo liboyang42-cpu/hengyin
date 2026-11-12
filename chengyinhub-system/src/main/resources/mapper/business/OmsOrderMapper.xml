@@ -339,4 +339,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectOmsOrderVo"/>
         WHERE id=#{id} FOR UPDATE
     </select>
+
+    <update id="markCommerceRefunded">
+        UPDATE oms_order SET status=6, update_time=NOW()
+        WHERE id=#{orderId} AND status=1 AND biz_type IN ('premium_template','promotion_slot','custom_event')
+    </update>
 </mapper>

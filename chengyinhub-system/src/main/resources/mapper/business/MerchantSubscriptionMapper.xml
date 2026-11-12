@@ -84,10 +84,6 @@
         UPDATE merchant_subscription SET is_active=0, update_time=NOW()
         WHERE source_order_id=#{orderId} AND is_active=1
     </update>
-    <update id="markCommerceRefunded">
-        UPDATE oms_order SET status=6, update_time=NOW()
-        WHERE id=#{orderId} AND status=1 AND biz_type IN ('premium_template','promotion_slot','custom_event')
-    </update>
     <select id="selectCommerceSubscriptionForUpdate" resultMap="MerchantSubscriptionResult" useCache="false" flushCache="true">
         <include refid="selectVo"/> WHERE source_order_id=#{orderId} FOR UPDATE
     </select>

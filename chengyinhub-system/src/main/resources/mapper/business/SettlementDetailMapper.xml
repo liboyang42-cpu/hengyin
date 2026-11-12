@@ -109,7 +109,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
          #{idempotencyKey}, now())
     </insert>
 
-    <select id="selectByIdempotencyKeyForUpdate" resultMap="SettlementDetailResult">
+    <select id="selectByIdempotencyKeyForUpdate" resultMap="SettlementDetailResult" useCache="false" flushCache="true">
         select club_id, club_name, id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
                gross_amount, commission_amount, settlement_amount, status, fail_reason,
                idempotency_key, create_time, update_time

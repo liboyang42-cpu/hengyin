@@ -290,7 +290,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
             requireDelivery(order);
             if (subscriptionMapper.revokeCommerceSubscription(order.getId()) != 1
                     || subscriptionMapper.settleCommerceRefund(order.getId(), reference.id(), reference.hash()) != 1
-                    || subscriptionMapper.markCommerceRefunded(order.getId()) != 1) {
+                    || orderMapper.markCommerceRefunded(order.getId()) != 1) {
                 throw new IllegalStateException("权益退款回收失败");
             }
             return true;

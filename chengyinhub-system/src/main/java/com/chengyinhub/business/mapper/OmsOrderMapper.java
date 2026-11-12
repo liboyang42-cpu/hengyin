@@ -107,4 +107,6 @@ public interface OmsOrderMapper
     OmsOrder selectCommerceOrderForUpdate(@Param("orderSn") String orderSn);
     int bindCommercePaymentProof(@Param("order") OmsOrder order, @Param("transactionId") String transactionId,
             @Param("factId") Long factId, @Param("factHash") String factHash);
+
+    int markCommerceRefunded(@org.apache.ibatis.annotations.Param("orderId") Long orderId);
 }
