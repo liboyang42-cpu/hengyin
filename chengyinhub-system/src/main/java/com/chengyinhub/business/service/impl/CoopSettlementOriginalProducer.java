@@ -201,6 +201,7 @@ public class CoopSettlementOriginalProducer {
             Map<Long,BigDecimal> cash,Map<Long,WechatVerifiedPaymentFact.Reference> payments) {
         CoopSettlementOriginalComponent c=new CoopSettlementOriginalComponent();c.setSourceRegistrationId(source);c.setPayerRegistrationId(payer);c.setSettlementId(head.getId());
         c.setReceiverKind("PLATFORM".equals(head.getLineType())?"ACCOUNTING":"MEMBER");c.setReceiverMemberId(head.getMerchantId());c.setLineType(head.getLineType());
+        c.setClubId(head.getClubId()); c.setClubName(head.getClubName());
         c.setOriginalAmount(amount);c.setOriginalOrderCash(cash.get(payer));c.setSourceClaimId(claim);c.setCalculationVersion(VERSION);
         c.setPaymentFactId(payments.get(payer).id());c.setPaymentFactHash(payments.get(payer).hash());return c;
     }

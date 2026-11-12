@@ -10,6 +10,12 @@ import java.math.BigDecimal;
 public class SettlementDetail extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
+    private Long clubId;
+    private String clubName;
+    public Long getClubId() { return clubId; }
+    public void setClubId(Long value) { clubId = value; }
+    public String getClubName() { return clubName; }
+    public void setClubName(String value) { clubName = value; }
     private Long id;
     private Long claimId;
     private String entryKind;

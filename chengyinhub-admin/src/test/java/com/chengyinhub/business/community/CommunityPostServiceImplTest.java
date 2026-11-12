@@ -1273,6 +1273,47 @@ class CommunityPostServiceImplTest {
         verify(communityTrustService).submitReport(9L, request);
     }
 
+    @Test
+    void authorCannotReportTheirOwnPostIntoModeration() {
+        CommunityPost post = draft(7L, 9L, 1);
+        post.setLifecycle("PUBLISHED");
+        when(mapper.selectById(7L, 9L)).thenReturn(post);
+        CommunityReportSubmitRequest request = new CommunityReportSubmitRequest();
+        request.setTargetType("CONTENT");
+        request.setTargetId(7L);
+        request.setRequestId("own-post-report");
+
+        ServiceException error = assertThrows(ServiceException.class, () -> service.report(9L, request));
+
+        assertEquals(Integer.valueOf(400), error.getCode());
+        verify(communityTrustService, never()).submitReport(anyLong(), any());
+    }
+
+    @Test
+    void visibleLimitedPostStillUsesRealModerationButInvisiblePostDoesNot() {
+        CommunityPost post = draft(7L, 11L, 1);
+        post.setLifecycle("LIMITED");
+        when(mapper.selectById(7L, 9L)).thenReturn(null);
+        when(mapper.selectLimitedById(7L, 9L)).thenReturn(post);
+        when(mapper.selectLimitedById(8L, 9L)).thenReturn(null);
+        CommunityReportSubmitRequest visible = new CommunityReportSubmitRequest();
+        visible.setTargetType("CONTENT");
+        visible.setTargetId(7L);
+        visible.setRequestId("limited-post-report");
+        when(communityTrustService.submitReport(9L, visible)).thenReturn(submittedReport("CONTENT", 7L));
+
+        assertReporterProjection(service.report(9L, visible), "CONTENT", 7L);
+        verify(communityTrustService).submitReport(9L, visible);
+
+        CommunityReportSubmitRequest invisible = new CommunityReportSubmitRequest();
+        invisible.setTargetType("CONTENT");
+        invisible.setTargetId(8L);
+        invisible.setRequestId("invisible-post-report");
+        assertEquals(Integer.valueOf(404), assertThrows(ServiceException.class,
+                () -> service.report(9L, invisible)).getCode());
+        verify(communityTrustService, never()).submitReport(9L, invisible);
+    }
+
     private CommunityReportCase submittedReport(String targetType, Long targetId) {
         CommunityReportCase row = new CommunityReportCase();
         row.setId(23L);

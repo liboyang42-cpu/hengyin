@@ -18,7 +18,13 @@ public interface EcommercePayGateway {
     /** 分账请求/查询结果。state：PROCESSING/FINISHED/CLOSED 或 SDK 的 PENDING/SUCCESS/CLOSED。 */
     record ShareResult(String state, String wxOrderId, List<ReceiverResult> receivers) { }
 
-    record ReceiverResult(String receiverMchid, long amountFen, String result, String failReason) { }
+    record ReceiverResult(String receiverType, String account, String appid, long amountFen,
+                          String result, String failReason) {
+        public ReceiverResult(String receiverMchid, long amountFen, String result, String failReason) {
+            this("MERCHANT_ID", receiverMchid, null, amountFen, result, failReason);
+        }
+        public String receiverMchid() { return account; }
+    }
 
     /** 分账回退结果：result PROCESSING/SUCCESS/FAILED。 */
     record ReturnResult(String result, String wxReturnNo, String failReason) { }
@@ -33,6 +39,11 @@ public interface EcommercePayGateway {
 
     ApplymentStatus queryApplyment(String outRequestNo);
 
+    /** Only server-resolved, authenticated identity may be passed; success requires verified provider acceptance. */
+    default void addPersonalReceiver(String openid, String appid) {
+        throw new UnsupportedOperationException("PERSONAL_RECEIVER_NOT_SUPPORTED");
+    }
+
     ShareResult createProfitSharing(String subMchid, String transactionId, String outOrderNo,
                                     List<ProfitSharePlanner.Receiver> receivers, boolean finish);
 
@@ -41,7 +52,21 @@ public interface EcommercePayGateway {
     ReturnResult createReturn(String subMchid, String outOrderNo, String outReturnNo, String returnMchid,
                               long amountFen, String description);
 
+    default ReturnResult createReturn(String subMchid, String outOrderNo, String outReturnNo,
+                                      ProfitSharePlanner.Receiver receiver, long amountFen, String description) {
+        if (!"MERCHANT_ID".equals(receiver.type()))
+            throw new UnsupportedOperationException("PERSONAL_PROFITSHARING_RETURN_UNSUPPORTED");
+        return createReturn(subMchid, outOrderNo, outReturnNo, receiver.account(), amountFen, description);
+    }
+
     ReturnResult queryReturn(String subMchid, String outOrderNo, String outReturnNo);
+
+    default ReturnResult queryReturn(String subMchid, String outOrderNo, String outReturnNo,
+                                     ProfitSharePlanner.Receiver receiver) {
+        if (!"MERCHANT_ID".equals(receiver.type()))
+            throw new UnsupportedOperationException("PERSONAL_PROFITSHARING_RETURN_UNSUPPORTED");
+        return queryReturn(subMchid, outOrderNo, outReturnNo);
+    }
 
     void finishProfitSharing(String subMchid, String transactionId, String outOrderNo, String description);
 

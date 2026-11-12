@@ -27,4 +27,17 @@ public class EcomProfitShareLine {
     public void setReceiverMemberId(Long receiverMemberId) { this.receiverMemberId = receiverMemberId; }
     public Long getAmountFen() { return amountFen; }
     public void setAmountFen(Long amountFen) { this.amountFen = amountFen; }
+    private String receiverType = "MERCHANT_ID";
+    public String getReceiverType() { return receiverType; }
+    public void setReceiverType(String receiverType) { this.receiverType = receiverType; }
+    private String receiverAppid = "";
+    public String getReceiverAppid() { return receiverAppid; }
+    public void setReceiverAppid(String receiverAppid) { this.receiverAppid = receiverAppid; }
+    private Long clubId;
+    public Long getClubId() { return clubId; }
+    public void setClubId(Long clubId) { this.clubId = clubId; }
+    private String clubName;
+    public String getClubName() { return clubName; }
+    public void setClubName(String clubName) { this.clubName = clubName; }
+    public String getSourceLabel() { return clubId == null ? null : "来自俱乐部 " + clubName; }
 }

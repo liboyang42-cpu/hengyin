@@ -74,6 +74,17 @@ class CoopSettlementOriginalProducerTest {
                 .reduce(new BigDecimal("0.00"),BigDecimal::add));
         assertTrue(components.getValue().stream().noneMatch(c->"INITIATOR_GUARANTEE".equals(c.getLineType())));
     }
+    @Test void clubPersonalComponentsRetainFrozenLabelAndBeneficiaryWithoutCurrentClubRead() {
+        topic.setClubId(42L); topic.setName("renamed topic");
+        heads.remove(1); CoopSettlement principal=heads.get(1); principal.setAmount(new BigDecimal("18.00"));
+        principal.setClubId(42L); principal.setClubName("原俱乐部名称"); principal.setMerchantId(99L);
+        producer.freezeClubSelfPlayOriginals(topic,basis(),new Date(5000));
+        ArgumentCaptor<List<CoopSettlementOriginalComponent>> captured=ArgumentCaptor.forClass(List.class);
+        verify(ledger).freezeOriginals(any(),anyList(),captured.capture());
+        var personal=captured.getValue().stream().filter(c->"INITIATOR_MARGIN".equals(c.getLineType())).toList();
+        assertTrue(personal.stream().allMatch(c->c.getReceiverMemberId().equals(99L) && c.getClubId().equals(42L) && "原俱乐部名称".equals(c.getClubName())));
+        assertTrue(captured.getValue().stream().filter(c->"PLATFORM".equals(c.getLineType())).allMatch(c->c.getClubId()==null));
+    }
     @Test void missingGuaranteeInClassicRouteAndForeignSelfPlayScopeStillRefuse() {
         heads.remove(1);heads.get(1).setAmount(new BigDecimal("18.00"));
         assertTrue(assertThrows(IllegalStateException.class,()->producer.freezeOriginals(topic,basis(),new Date(5000)))

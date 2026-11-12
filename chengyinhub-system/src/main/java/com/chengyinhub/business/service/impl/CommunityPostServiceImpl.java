@@ -973,9 +973,9 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             request.setTargetType("COMMENT");
         } else {
             // S532-1:看得到的 LIMITED 帖也必须能举报,口径与 detail 一致(互动/评论/分享仍按既有 selectById,待 owner 定)。
-            if (!"CONTENT".equals(targetType) || readableById(request.getTargetId(), memberId) == null) {
-                throw error("帖文不存在或不可见", 404);
-            }
+            CommunityPost post = "CONTENT".equals(targetType) ? readableById(request.getTargetId(), memberId) : null;
+            if (post == null) throw error("帖文不存在或不可见", 404);
+            if (memberId.equals(post.getAuthorId())) throw error("不能举报自己的帖文", 400);
             request.setTargetType("CONTENT");
         }
         return CommunityReportVO.from(communityTrustService.submitReport(memberId, request));

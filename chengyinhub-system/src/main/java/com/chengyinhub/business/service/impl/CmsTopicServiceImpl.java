@@ -847,6 +847,12 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 payable, now, basis.getVerifiedHeads(), basis.getVerifiedSales(), regIds);
         CoopSettlement principalLine = newSettlementLine(topic, principal, principalAmount, "INITIATOR_MARGIN", "initiator", 0,
                 payable, now, basis.getVerifiedHeads(), basis.getVerifiedSales(), regIds);
+        com.chengyinhub.business.domain.ClubPayoutBeneficiary beneficiary = clubPrincipalPayee.frozenTopic(topic);
+        if (beneficiary != null) {
+            principalLine.setClubId(beneficiary.getClubId());
+            principalLine.setClubName(beneficiary.getClubName());
+            principalLine.setPayoutHoldReason("PERSONAL_CLUB_EXTERNAL_PAYMENT_ROUTE_REQUIRED");
+        }
         for (CoopSettlement line : List.of(platformLine, principalLine)) {
             if (coopSettlementMapper.insertCoopSettlement(line) != 1) {
                 throw new IllegalStateException("自玩结算应付写入失败 topicId=" + topic.getId()
@@ -1560,6 +1566,9 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             if (payoutAmount.signum() < 0) {
                 throw new IllegalStateException("ECOMMERCE_PARTNER_PORTION_EXCEEDS_HEAD:settlementId=" + s.getId());
             }
+        }
+        if (s.getClubId() != null && payoutAmount.signum() > 0) {
+            throw new IllegalStateException("PERSONAL_CLUB_EXTERNAL_PAYMENT_ROUTE_REQUIRED:settlementId=" + s.getId());
         }
         if (payoutAmount.signum() == 0) {
             requireExactlyOne(coopSettlementMapper.markPaidIfPending(s.getId(), now), "置零元结算为已打款", s.getId());

@@ -47,7 +47,9 @@ public class EcommerceProfitShareService {
     /** 只有这些「计划阶段」转人工的原因可以在补齐条件后重新计划；微信侧已关闭 / 已退款的单不能。 */
     static final Set<String> REPLANNABLE = Set.of("RECEIVER_NOT_ONBOARDED", "SHARE_RATIO_EXCEEDED",
             "PLATFORM_RECEIVER_MISSING", "NO_LEDGER_COMPONENTS", "LEDGER_CONSERVATION",
-            ProfitSharePlanner.SUB_TO_SUB_UNSUPPORTED);
+            ProfitSharePlanner.SUB_TO_SUB_UNSUPPORTED, "PERSONAL_BINDING_REQUIRED", "PERSONAL_BINDING_APPID_INVALID");
+
+    private static final String PERSONAL_RETURN_UNSUPPORTED = "PERSONAL_PROFITSHARING_RETURN_UNSUPPORTED";
 
     public enum ReturnOutcome { NOT_APPLICABLE, ALL_RETURNED, PENDING, FAILED, SWITCH_OFF }
 
@@ -57,6 +59,18 @@ public class EcommerceProfitShareService {
     private final TransactionOperations tx;
     /** l-payout3：合单 / 供应商应付表；未装配时转付行不落应付（合单开关关闭时也不会出现转付行）。 */
     private com.chengyinhub.business.mapper.EcomCombineMapper combineMapper;
+    private com.chengyinhub.business.mapper.EcomPersonalReceiverMapper personalReceiverMapper;
+    private com.chengyinhub.business.mapper.EcomSessionPayoutMapper sessionPayoutMapper;
+
+    @Autowired(required = false)
+    public void setSessionPayoutMapper(com.chengyinhub.business.mapper.EcomSessionPayoutMapper mapper) {
+        this.sessionPayoutMapper = mapper;
+    }
+
+    @Autowired(required = false)
+    public void setPersonalReceiverMapper(com.chengyinhub.business.mapper.EcomPersonalReceiverMapper mapper) {
+        this.personalReceiverMapper = mapper;
+    }
 
     @Autowired(required = false)
     public void setCombineMapper(com.chengyinhub.business.mapper.EcomCombineMapper combineMapper) {
@@ -85,11 +99,49 @@ public class EcommerceProfitShareService {
         return "CYPR" + sha(shareOrderId + "|" + outRefundNo + "|" + mchid).substring(0, 28);
     }
 
+    static String outReturnNo(long shareOrderId, String outRefundNo, ProfitSharePlanner.Receiver receiver) {
+        return outReturnNo(shareOrderId, outRefundNo,
+                "MERCHANT_ID".equals(receiver.type()) ? receiver.account() : receiver.identityKey());
+    }
+
+    private ProfitSharePlanner.Component component(EcomLedgerComponent c) {
+        String openid = null;
+        String appid = null;
+        if (switches.personalClubEnabled() && c.getClubId() != null && c.getReceiverMemberId() != null
+                && "MEMBER".equals(c.getReceiverKind()) && personalReceiverMapper != null) {
+            var binding = personalReceiverMapper.selectByMemberAndAppid(c.getReceiverMemberId(), switches.spAppid());
+            if (binding != null && "VERIFIED".equals(binding.getState())
+                    && c.getReceiverMemberId().equals(binding.getMemberId())) {
+                openid = binding.getOpenid();
+                appid = binding.getAppid();
+            }
+        }
+        return new ProfitSharePlanner.Component(c.getSettlementId(), c.getLineType(), c.getReceiverKind(),
+                c.getReceiverMemberId(), c.getOriginalAmount(), c.getClubId(), c.getClubName(), openid, appid);
+    }
+
+    private void insertLine(long shareOrderId, ProfitSharePlanner.Line l) {
+        EcomProfitShareLine line = new EcomProfitShareLine();
+        line.setShareOrderId(shareOrderId);
+        line.setSettlementId(l.settlementId());
+        line.setLineType(l.lineType());
+        line.setReceiverKind(l.kind().name());
+        line.setReceiverMchid(l.receiverMchid());
+        line.setReceiverType(l.receiverType());
+        line.setReceiverAppid(l.receiverAppid());
+        line.setReceiverMemberId(l.receiverMemberId());
+        line.setClubId(l.clubId());
+        line.setClubName(l.clubName());
+        line.setAmountFen(l.amountFen());
+        mapper.insertShareLine(line);
+    }
+
     /** 为主题下以二级商户为卖家的已付单落分账计划。返回新建计划数。 */
     public int planTopic(long topicId) {
         if (!switches.profitSharingEnabled()) return 0;
+        if (topicId < 0 && (!switches.personalClubEnabled() || sessionPayoutMapper == null)) return 0;
         int created = 0;
-        for (EcomOrderSeller trade : mapper.selectPaidSubMerchantTradesForTopic(topicId)) {
+        for (EcomOrderSeller trade : paidTrades(topicId)) {
             if (mapper.selectShareOrder(trade.getOutTradeNo(), topicId) != null) continue;
             if (!mapper.selectRefundsByTrade(trade.getOutTradeNo()).isEmpty()) {
                 // l-payout2：结算前已发生退款：微信侧冻结资金已不等于账本份额之和，不能按原份额分账，转人工。
@@ -100,19 +152,35 @@ public class EcommerceProfitShareService {
                 continue;
             }
             List<ProfitSharePlanner.Component> components = new ArrayList<>();
-            for (EcomLedgerComponent c : mapper.selectLedgerComponents(topicId, trade.getRegistrationId())) {
-                components.add(new ProfitSharePlanner.Component(c.getSettlementId(), c.getLineType(), c.getReceiverKind(),
-                        c.getReceiverMemberId(), c.getOriginalAmount()));
+            for (EcomLedgerComponent c : ledgerComponents(topicId, trade.getRegistrationId())) {
+                components.add(component(c));
             }
             Long sellerMember = mapper.selectSellerMemberId(trade.getSellerType(), trade.getSellerId());
             ProfitSharePlanner.Order order = new ProfitSharePlanner.Order(trade.getOutTradeNo(), trade.getTransactionId(),
                     trade.getSubMchid(), trade.getTotalFen(), sellerMember == null ? Set.of() : Set.of(sellerMember));
             ProfitSharePlanner.Plan plan = ProfitSharePlanner.plan(order, components, switches.platformReceiverMchid(),
-                    switches.maxSharePercent(), this::memberSubMchid, switches.combinedEnabled());
+                    switches.maxSharePercent(), this::memberSubMchid, switches.combinedEnabled(),
+                    switches.personalClubEnabled(), switches.spAppid());
             Boolean inserted = tx.execute(status -> persist(topicId, trade, plan));
             if (Boolean.TRUE.equals(inserted)) created++;
         }
         return created;
+    }
+
+    /** Session ids and their settlement-detail ids occupy the negative namespace in shared payout tables. */
+    public int planActivity(long activityId) {
+        if (activityId <= 0 || !switches.personalClubEnabled() || sessionPayoutMapper == null) return 0;
+        return planTopic(-activityId);
+    }
+
+    private List<EcomOrderSeller> paidTrades(long sourceId) {
+        return sourceId < 0 ? sessionPayoutMapper.selectPaidTrades(-sourceId)
+                : mapper.selectPaidSubMerchantTradesForTopic(sourceId);
+    }
+
+    private List<EcomLedgerComponent> ledgerComponents(long sourceId, Long registrationId) {
+        return sourceId < 0 ? sessionPayoutMapper.selectComponents(-sourceId, registrationId)
+                : mapper.selectLedgerComponents(sourceId, registrationId);
     }
 
     private Optional<String> memberSubMchid(Long memberId) {
@@ -139,15 +207,7 @@ public class EcommerceProfitShareService {
             return false;
         }
         for (ProfitSharePlanner.Line l : plan.lines()) {
-            EcomProfitShareLine line = new EcomProfitShareLine();
-            line.setShareOrderId(row.getId());
-            line.setSettlementId(l.settlementId());
-            line.setLineType(l.lineType());
-            line.setReceiverKind(l.kind().name());
-            line.setReceiverMchid(l.receiverMchid());
-            line.setReceiverMemberId(l.receiverMemberId());
-            line.setAmountFen(l.amountFen());
-            mapper.insertShareLine(line);
+            insertLine(row.getId(), l);
         }
         return true;
     }
@@ -160,6 +220,8 @@ public class EcommerceProfitShareService {
         if (!switches.profitSharingEnabled()) return 0;
         int submitted = 0;
         for (EcomProfitShareOrder order : mapper.selectDuePlannedShareOrders(new java.util.Date(), clamp(limit))) {
+            if (order.getTopicId() < 0 && sessionPayoutMapper == null) continue;
+            if (!switches.personalClubEnabled() && hasPersonalReceiver(order.getId())) continue;
             if (!switches.combinedEnabled() && hasSubMerchantReceiver(order.getId())) {
                 // f-money 待决定 2：本次改动前落下的计划可能含二级商户接收方。合单关时提交前失败关闭：整单转人工，不调微信。
                 mapper.updateShareOrderState(order.getId(), PLANNED, MANUAL, null, ProfitSharePlanner.SUB_TO_SUB_UNSUPPORTED);
@@ -175,7 +237,7 @@ public class EcommerceProfitShareService {
                     result = new EcommercePayGateway.ShareResult("FINISHED", null, List.of());
                 } else {
                     result = gateway.createProfitSharing(order.getSubMchid(), order.getTransactionId(), order.getOutOrderNo(),
-                            receivers(order.getId()), true);
+                            receivers(order.getId()), !hasPersonalReceiver(order.getId()));
                 }
                 applyResult(order.getId(), result);
             } catch (RuntimeException uncertain) {
@@ -207,29 +269,74 @@ public class EcommerceProfitShareService {
     }
 
     private List<ProfitSharePlanner.Receiver> receivers(long shareOrderId) {
-        Map<String, Long> merged = new LinkedHashMap<>();
+        Map<String, ProfitSharePlanner.Receiver> merged = new LinkedHashMap<>();
         for (EcomProfitShareLine l : mapper.selectShareLines(shareOrderId)) {
             if (ProfitSharePlanner.ReceiverKind.RETAINED.name().equals(l.getReceiverKind())) continue;
-            merged.merge(l.getReceiverMchid(), l.getAmountFen(), Long::sum);
+            ProfitSharePlanner.Receiver receiver = new ProfitSharePlanner.Receiver(l.getReceiverType(),
+                    l.getReceiverMchid(), normalizedAppid(l.getReceiverAppid()), l.getAmountFen());
+            merged.merge(receiver.identityKey(), receiver,
+                    (a, b) -> new ProfitSharePlanner.Receiver(a.type(), a.account(), a.appid(), a.amountFen() + b.amountFen()));
         }
-        List<ProfitSharePlanner.Receiver> out = new ArrayList<>();
-        merged.entrySet().stream().sorted(Map.Entry.comparingByKey())
-                .forEach(e -> out.add(new ProfitSharePlanner.Receiver(e.getKey(), e.getValue())));
-        return out;
+        return merged.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue).toList();
+    }
+
+    private boolean hasPersonalReceiver(long shareOrderId) {
+        return mapper.selectShareLines(shareOrderId).stream()
+                .anyMatch(l -> "PERSONAL_OPENID".equals(l.getReceiverType()));
+    }
+
+    private static String normalizedAppid(String appid) { return appid == null ? "" : appid; }
+
+    private boolean matchesReceivers(long shareOrderId, List<EcommercePayGateway.ReceiverResult> actual) {
+        List<ProfitSharePlanner.Receiver> planned = receivers(shareOrderId);
+        if (actual == null) return planned.isEmpty();
+        if (actual.size() != planned.size()) return false;
+        Map<String, Long> expected = new LinkedHashMap<>();
+        for (ProfitSharePlanner.Receiver r : planned) expected.put(r.identityKey(), r.amountFen());
+        for (EcommercePayGateway.ReceiverResult r : actual) {
+            if (r == null) return false;
+            String key = new ProfitSharePlanner.Receiver(r.receiverType(), r.account(), normalizedAppid(r.appid()), 0).identityKey();
+            Long amount = expected.remove(key);
+            if (amount == null || amount != r.amountFen()) return false;
+        }
+        return expected.isEmpty();
     }
 
     void applyResult(long shareOrderId, EcommercePayGateway.ShareResult result) {
         if (result == null || result.state() == null) return;
         String s = result.state();
         boolean anyFailed = result.receivers() != null && result.receivers().stream()
-                .anyMatch(r -> "CLOSED".equals(r.result()) || "FAILED".equals(r.result()));
+                .anyMatch(r -> r != null && ("CLOSED".equals(r.result()) || "FAILED".equals(r.result())));
         if (anyFailed || "CLOSED".equals(s)) {
             mapper.updateShareOrderState(shareOrderId, PROCESSING, MANUAL, result.wxOrderId(), "WECHAT_SHARE_CLOSED");
         } else if ("FINISHED".equals(s) || "SUCCESS".equals(s)) {
+            if (!matchesReceivers(shareOrderId, result.receivers())) {
+                mapper.updateShareOrderState(shareOrderId, PROCESSING, MANUAL, result.wxOrderId(), "WECHAT_SHARE_RECEIVERS_MISMATCH");
+                return;
+            }
             boolean allDone = result.receivers() == null || result.receivers().stream()
-                    .allMatch(r -> r.result() == null || "SUCCESS".equals(r.result()));
-            if (allDone && mapper.updateShareOrderState(shareOrderId, PROCESSING, SUCCESS, result.wxOrderId(), null) == 1)
-                recordRelayPayables(shareOrderId);
+                    .allMatch(r -> "SUCCESS".equals(r.result()));
+            if (!allDone) return;
+            EcomProfitShareOrder order = mapper.selectShareOrderById(shareOrderId);
+            if (order == null || !PROCESSING.equals(order.getState())) return;
+            if (order.getTopicId() < 0 && sessionPayoutMapper == null)
+                throw new IllegalStateException("SESSION_PAYOUT_MAPPER_REQUIRED");
+            if (hasPersonalReceiver(shareOrderId)) {
+                // Personal sharing cannot finish in the create request. Retry this distinct finish idempotently
+                // after querying the original share until the remainder release is acknowledged.
+                gateway.finishProfitSharing(order.getSubMchid(), order.getTransactionId(),
+                        "CYF" + sha(order.getOutOrderNo()).substring(0, 29), "城瘾结算完结");
+            }
+            tx.execute(status -> {
+                if (mapper.updateShareOrderState(shareOrderId, PROCESSING, SUCCESS, result.wxOrderId(), null) == 1) {
+                    if (order.getTopicId() < 0) {
+                        sessionPayoutMapper.markShareDetailsReceived(shareOrderId);
+                        sessionPayoutMapper.completeActivityIfReceived(shareOrderId);
+                    }
+                    recordRelayPayables(shareOrderId);
+                }
+                return null;
+            });
         }
         // PROCESSING / PENDING：保持，等下一次 sync。
     }
@@ -280,26 +387,29 @@ public class EcommerceProfitShareService {
                 continue;
             }
             if (MANUAL.equals(order.getState())) {
+                if (order.getWxOrderId() != null || "WECHAT_SHARE_RECEIVERS_MISMATCH".equals(order.getManualReason())
+                        || "WECHAT_SHARE_CLOSED".equals(order.getManualReason())) { pending = true; continue; }
                 // l-payout2：从未提交微信的人工单发生退款后不能再按原账本重新计划。
                 if (order.getWxOrderId() == null && !REFUNDED_BEFORE_SHARE.equals(order.getManualReason()))
                     mapper.updateShareOrderState(order.getId(), MANUAL, MANUAL, null, REFUNDED_BEFORE_SHARE);
                 continue;
             }
             if (PROCESSING.equals(order.getState())) { pending = true; continue; }
+            Map<String, ProfitSharePlanner.Receiver> identities = new LinkedHashMap<>();
             Map<String, long[]> shared = new LinkedHashMap<>();
-            for (EcomProfitShareLine l : mapper.selectShareLines(order.getId())) {
-                if (ProfitSharePlanner.ReceiverKind.RETAINED.name().equals(l.getReceiverKind())) continue;
-                shared.computeIfAbsent(l.getReceiverMchid(), k -> new long[2])[0] += l.getAmountFen();
+            for (ProfitSharePlanner.Receiver receiver : receivers(order.getId())) {
+                identities.put(receiver.identityKey(), receiver);
+                shared.put(receiver.identityKey(), new long[] {receiver.amountFen(), 0});
             }
             List<EcomProfitShareReturn> existing = mapper.selectReturnsByShareOrder(order.getId());
             for (EcomProfitShareReturn r : existing) {
                 if (outRefundNo.equals(r.getOutRefundNo()) || "FAILED".equals(r.getState())) continue;
-                long[] v = shared.get(r.getReturnMchid());
+                long[] v = shared.get(returnReceiver(r).identityKey());
                 if (v != null) v[1] += r.getAmountFen();
             }
             Map<String, Long> due = ProfitSharePlanner.returnsForRefund(shared, order.getTotalFen(), refundFen, refundedBeforeFen);
             for (Map.Entry<String, Long> e : due.entrySet()) {
-                ReturnOutcome one = returnOne(order, outRefundNo, e.getKey(), e.getValue());
+                ReturnOutcome one = returnOne(order, outRefundNo, identities.get(e.getKey()), e.getValue());
                 if (one == ReturnOutcome.PENDING) pending = true;
                 if (one == ReturnOutcome.FAILED) failed = true;
             }
@@ -308,15 +418,17 @@ public class EcommerceProfitShareService {
         return pending ? ReturnOutcome.PENDING : ReturnOutcome.ALL_RETURNED;
     }
 
-    private ReturnOutcome returnOne(EcomProfitShareOrder order, String outRefundNo, String mchid, long amountFen) {
-        String no = outReturnNo(order.getId(), outRefundNo, mchid);
+    private ReturnOutcome returnOne(EcomProfitShareOrder order, String outRefundNo, ProfitSharePlanner.Receiver receiver, long amountFen) {
+        String no = outReturnNo(order.getId(), outRefundNo, receiver);
         EcomProfitShareReturn row = mapper.selectReturn(no);
         if (row == null) {
             row = new EcomProfitShareReturn();
             row.setOutReturnNo(no);
             row.setShareOrderId(order.getId());
             row.setOutRefundNo(outRefundNo);
-            row.setReturnMchid(mchid);
+            row.setReturnMchid(receiver.account());
+            row.setReturnType(receiver.type());
+            row.setReturnAppid(normalizedAppid(receiver.appid()));
             row.setAmountFen(amountFen);
             try {
                 mapper.insertReturn(row);
@@ -326,11 +438,16 @@ public class EcommerceProfitShareService {
             row = mapper.selectReturn(no);
         }
         if (row.getAmountFen() != amountFen) return ReturnOutcome.FAILED; // 同号不同额：账本被改过，转人工
+        if (!returnReceiver(row).identityKey().equals(receiver.identityKey())) return ReturnOutcome.FAILED;
         if ("SUCCESS".equals(row.getState())) return ReturnOutcome.ALL_RETURNED;
         if ("FAILED".equals(row.getState())) return ReturnOutcome.FAILED;
+        if ("PERSONAL_OPENID".equals(row.getReturnType())) {
+            mapper.updateReturnState(row.getId(), PROCESSING, "FAILED", null, PERSONAL_RETURN_UNSUPPORTED);
+            return ReturnOutcome.FAILED;
+        }
         try {
             EcommercePayGateway.ReturnResult result = gateway.createReturn(order.getSubMchid(), order.getOutOrderNo(), no,
-                    mchid, amountFen, "城瘾退款回退分账");
+                    returnReceiver(row), row.getAmountFen(), "城瘾退款回退分账");
             String r = result == null ? null : result.result();
             if ("SUCCESS".equals(r)) {
                 mapper.updateReturnState(row.getId(), "PROCESSING", "SUCCESS", result.wxReturnNo(), null);
@@ -347,6 +464,11 @@ public class EcommerceProfitShareService {
         }
     }
 
+    private static ProfitSharePlanner.Receiver returnReceiver(EcomProfitShareReturn row) {
+        return new ProfitSharePlanner.Receiver(row.getReturnType(), row.getReturnMchid(),
+                normalizedAppid(row.getReturnAppid()), row.getAmountFen());
+    }
+
     // ---- l-payout2：定时任务与运营端 ----
 
     /** 补齐：已结算主题里有二级商户已付单却还没有分账计划的（结算后落计划失败时由此兜底）。 */
@@ -360,6 +482,15 @@ public class EcommerceProfitShareService {
                 log.warn("ecom profit share plan missing failed topicId={} type={}", topicId, e.getClass().getSimpleName());
             }
         }
+        if (switches.personalClubEnabled() && sessionPayoutMapper != null) {
+            for (Long activityId : sessionPayoutMapper.selectMissingActivityIds(clamp(limit))) {
+                try {
+                    created += planActivity(activityId);
+                } catch (RuntimeException e) {
+                    log.warn("ecom session share plan missing failed activityId={} type={}", activityId, e.getClass().getSimpleName());
+                }
+            }
+        }
         return created;
     }
 
@@ -370,8 +501,13 @@ public class EcommerceProfitShareService {
         for (EcomProfitShareReturn r : mapper.selectReturnsByState(PROCESSING, clamp(limit))) {
             EcomProfitShareOrder order = mapper.selectShareOrderById(r.getShareOrderId());
             if (order == null) continue;
+            if ("PERSONAL_OPENID".equals(r.getReturnType())) {
+                n += mapper.updateReturnState(r.getId(), PROCESSING, "FAILED", null, PERSONAL_RETURN_UNSUPPORTED);
+                continue;
+            }
             try {
-                EcommercePayGateway.ReturnResult result = gateway.queryReturn(order.getSubMchid(), order.getOutOrderNo(), r.getOutReturnNo());
+                EcommercePayGateway.ReturnResult result = gateway.queryReturn(order.getSubMchid(), order.getOutOrderNo(),
+                        r.getOutReturnNo(), returnReceiver(r));
                 String state = result == null ? null : result.result();
                 if ("SUCCESS".equals(state)) {
                     n += mapper.updateReturnState(r.getId(), PROCESSING, SUCCESS, result.wxReturnNo(), null);
@@ -392,8 +528,12 @@ public class EcommerceProfitShareService {
         if (r == null || !"FAILED".equals(r.getState())) return ReturnOutcome.NOT_APPLICABLE;
         EcomProfitShareOrder order = mapper.selectShareOrderById(r.getShareOrderId());
         if (order == null) return ReturnOutcome.NOT_APPLICABLE;
+        if ("PERSONAL_OPENID".equals(r.getReturnType())) {
+            mapper.updateReturnState(r.getId(), "FAILED", "FAILED", null, PERSONAL_RETURN_UNSUPPORTED);
+            return ReturnOutcome.FAILED;
+        }
         if (mapper.updateReturnState(r.getId(), "FAILED", PROCESSING, null, null) != 1) return ReturnOutcome.PENDING;
-        return returnOne(order, r.getOutRefundNo(), r.getReturnMchid(), r.getAmountFen());
+        return returnOne(order, r.getOutRefundNo(), returnReceiver(r), r.getAmountFen());
     }
 
     /**
@@ -405,22 +545,25 @@ public class EcommerceProfitShareService {
         EcomProfitShareOrder order = mapper.selectShareOrderById(shareOrderId);
         if (order == null || !MANUAL.equals(order.getState()) || order.getWxOrderId() != null
                 || !REPLANNABLE.contains(order.getManualReason())) return "NOT_REPLANNABLE";
+        if (!switches.personalClubEnabled() && (order.getManualReason().startsWith("PERSONAL_BINDING_")
+                || hasPersonalReceiver(order.getId()))) return "SWITCH_OFF";
+        if (order.getTopicId() < 0 && (!switches.personalClubEnabled() || sessionPayoutMapper == null)) return "SWITCH_OFF";
         if (!mapper.selectRefundsByTrade(order.getOutTradeNo()).isEmpty()) return "REFUNDED";
         EcomOrderSeller trade = null;
-        for (EcomOrderSeller t : mapper.selectPaidSubMerchantTradesForTopic(order.getTopicId())) {
+        for (EcomOrderSeller t : paidTrades(order.getTopicId())) {
             if (t.getOutTradeNo().equals(order.getOutTradeNo())) { trade = t; break; }
         }
         if (trade == null || !order.getTransactionId().equals(trade.getTransactionId())) return "TRADE_NOT_FOUND";
         List<ProfitSharePlanner.Component> components = new ArrayList<>();
-        for (EcomLedgerComponent c : mapper.selectLedgerComponents(order.getTopicId(), trade.getRegistrationId())) {
-            components.add(new ProfitSharePlanner.Component(c.getSettlementId(), c.getLineType(), c.getReceiverKind(),
-                    c.getReceiverMemberId(), c.getOriginalAmount()));
+        for (EcomLedgerComponent c : ledgerComponents(order.getTopicId(), trade.getRegistrationId())) {
+            components.add(component(c));
         }
         Long sellerMember = mapper.selectSellerMemberId(trade.getSellerType(), trade.getSellerId());
         ProfitSharePlanner.Order o = new ProfitSharePlanner.Order(trade.getOutTradeNo(), trade.getTransactionId(),
                 trade.getSubMchid(), trade.getTotalFen(), sellerMember == null ? Set.of() : Set.of(sellerMember));
         ProfitSharePlanner.Plan plan = ProfitSharePlanner.plan(o, components, switches.platformReceiverMchid(),
-                switches.maxSharePercent(), this::memberSubMchid, switches.combinedEnabled());
+                switches.maxSharePercent(), this::memberSubMchid, switches.combinedEnabled(),
+                switches.personalClubEnabled(), switches.spAppid());
         String result = tx.execute(status -> {
             boolean manual = "MANUAL".equals(plan.state());
             String hash = plan.planHash() == null ? sha("MANUAL|" + plan.manualReason() + "|" + order.getOutTradeNo()) : plan.planHash();
@@ -428,15 +571,7 @@ public class EcommerceProfitShareService {
                 return "CONCURRENT";
             mapper.deleteShareLines(order.getId());
             for (ProfitSharePlanner.Line l : plan.lines()) {
-                EcomProfitShareLine line = new EcomProfitShareLine();
-                line.setShareOrderId(order.getId());
-                line.setSettlementId(l.settlementId());
-                line.setLineType(l.lineType());
-                line.setReceiverKind(l.kind().name());
-                line.setReceiverMchid(l.receiverMchid());
-                line.setReceiverMemberId(l.receiverMemberId());
-                line.setAmountFen(l.amountFen());
-                mapper.insertShareLine(line);
+                insertLine(order.getId(), l);
             }
             return manual ? "MANUAL:" + plan.manualReason() : PLANNED;
         });

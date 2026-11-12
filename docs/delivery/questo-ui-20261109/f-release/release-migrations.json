@@ -12,6 +12,9 @@
   },
   "rounds": {
     "1_PRE_REQUIRED": [
+      "20261112_dec_c_perks",
+      "20261112_dec_c_safety",
+      "20261112_dec_c_team_codes",
       "20261022_f7_user_invoice",
       "20261023_creative_square_like_unique",
       "20261023_wx_pay_order_intent",
@@ -110,9 +113,7 @@
       "z_workshop_purchase_20261109",
       "z_workshop_paid_review_20261109",
       "zz_questo_collation_align_20261109",
-      "20261112_dec_c_perks",
-      "20261112_dec_c_safety",
-      "20261112_dec_c_team_codes"
+      "20261112_dec_c_payout"
     ],
     "2_PRE_OPTIONAL": [
       "20261018_infomation_change_audit",
@@ -179,6 +180,63 @@
     ]
   },
   "migrations": [
+    {
+      "source": "DEC-C owner-approved D-98",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "六位无歧义组队加入码；迁移旧邀请码并固定原始期限；暂停组队邀请码写入后执行",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_dec_c_team_codes",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_team_codes.sql",
+      "sha256": "383571440a9fe5ba9d029105e1a08afb7fb3f8a081826b13b2d38ccf2d81172a",
+      "order": 643,
+      "dependsOn": [
+        "20260820_play_team_core",
+        "20260822_play_team_invite_code"
+      ],
+      "idempotency": "IDEMPOTENT_STATIC",
+      "destructiveStatements": [],
+      "step": 158
+    },
+    {
+      "source": "DEC-C owner-approved merchant paid perks",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "Order-attributed entitlement contributions and original-payment full refund settlement; does not enable checkout or configure prices",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_dec_c_perks",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_perks.sql",
+      "sha256": "f985d8068780b6fe384c76dc73d3f46a2226508a8aaf6fa398b4987c82a50898",
+      "order": 153,
+      "dependsOn": [
+        "merchant_subscription_20260708",
+        "20261024_clm_commerce_payment_proof"
+      ],
+      "idempotency": "GUARDED_INFORMATION_SCHEMA",
+      "destructiveStatements": [],
+      "step": 1
+    },
+    {
+      "source": "DEC-C owner-approved safety fixes",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "Immutable uploaded media sticky machine-risk fence",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_dec_c_safety",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_safety.sql",
+      "sha256": "16383da45984909590b80e653ceea2242a0ab35da2f0b80cddcb994f392f2342",
+      "order": 150,
+      "dependsOn": [
+        "20261012_app_media_asset",
+        "20261012_app_media_asset_namespaces"
+      ],
+      "idempotency": "GUARDED_INFORMATION_SCHEMA",
+      "destructiveStatements": [],
+      "step": 1
+    },
     {
       "source": "10-29 发布包（未确认执行）",
       "class": "可选",
@@ -2825,6 +2883,30 @@
       "step": 156
     },
     {
+      "source": "DEC-C owner-approved D-05/D-09/D-16",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "Personal club receiver and immutable beneficiary snapshots; apply before new mapper reads; personal switch remains OFF; no job or feature activation",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_dec_c_payout",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_payout.sql",
+      "sha256": "8d5131abd744eedb8f0ee5c0391a2d7d181f285a2eb88e6625a605671d962be0",
+      "order": 646,
+      "dependsOn": [
+        "20261110_ecommerce_payout",
+        "20261024_coop_original_refund_components",
+        "20261110_ecommerce_payout_wiring"
+      ],
+      "idempotency": "NEEDS_REVIEW",
+      "destructiveStatements": [
+        "ALTER TABLE ecom_profit_share_line MODIFY receiver_mchid VARCHAR(128) (widen only)",
+        "ALTER TABLE ecom_profit_share_return MODIFY return_mchid VARCHAR(128) (widen only)",
+        "Replace merchant-only refund unique index with typed identity unique index"
+      ],
+      "step": 646
+    },
+    {
       "source": "DEC-C owner-approved D-08",
       "class": "必须",
       "phase": "POST_DEPLOY",
@@ -2841,63 +2923,6 @@
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
       "step": 647
-    },
-    {
-      "source": "DEC-C owner-approved merchant paid perks",
-      "class": "必须",
-      "phase": "PRE_DEPLOY",
-      "note": "Order-attributed entitlement contributions and original-payment full refund settlement; does not enable checkout or configure prices",
-      "packPhase": null,
-      "rerun": "幂等",
-      "migrationId": "20261112_dec_c_perks",
-      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_perks.sql",
-      "sha256": "f985d8068780b6fe384c76dc73d3f46a2226508a8aaf6fa398b4987c82a50898",
-      "order": 153,
-      "dependsOn": [
-        "merchant_subscription_20260708",
-        "20261024_clm_commerce_payment_proof"
-      ],
-      "idempotency": "GUARDED_INFORMATION_SCHEMA",
-      "destructiveStatements": [],
-      "step": 1
-    },
-    {
-      "source": "DEC-C owner-approved safety fixes",
-      "class": "必须",
-      "phase": "PRE_DEPLOY",
-      "note": "Immutable uploaded media sticky machine-risk fence",
-      "packPhase": null,
-      "rerun": "幂等",
-      "migrationId": "20261112_dec_c_safety",
-      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_safety.sql",
-      "sha256": "16383da45984909590b80e653ceea2242a0ab35da2f0b80cddcb994f392f2342",
-      "order": 150,
-      "dependsOn": [
-        "20261012_app_media_asset",
-        "20261012_app_media_asset_namespaces"
-      ],
-      "idempotency": "GUARDED_INFORMATION_SCHEMA",
-      "destructiveStatements": [],
-      "step": 1
-    },
-    {
-      "source": "DEC-C owner-approved D-98",
-      "class": "必须",
-      "phase": "PRE_DEPLOY",
-      "note": "六位无歧义组队加入码；迁移旧邀请码并固定原始期限；暂停组队邀请码写入后执行",
-      "packPhase": null,
-      "rerun": "幂等",
-      "migrationId": "20261112_dec_c_team_codes",
-      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_team_codes.sql",
-      "sha256": "383571440a9fe5ba9d029105e1a08afb7fb3f8a081826b13b2d38ccf2d81172a",
-      "order": 643,
-      "dependsOn": [
-        "20260820_play_team_core",
-        "20260822_play_team_invite_code"
-      ],
-      "idempotency": "IDEMPOTENT_STATIC",
-      "destructiveStatements": [],
-      "step": 158
     }
   ]
 }

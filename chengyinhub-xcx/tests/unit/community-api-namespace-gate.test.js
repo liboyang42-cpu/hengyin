@@ -84,9 +84,10 @@ test('actual private call literals match verbs, and reviewed dynamic suffix inve
  const wrong=source.replace("call('/capabilities', 'GET'", "call('/capabilities', 'DELETE'");
  assert.equal(directCalls(wrong).some(m=>!accepts(m[2],m[1])),true);
  const suffixes=src=>[...new Set(gate.scanJsStringLiterals(src).map(x=>x.value).filter(x=>x.startsWith('/')&&!x.startsWith('/api/')))].sort();
- const reviewed=['/','/LIKE','/actions','/bookmark','/capabilities','/comments','/comments/','/drafts','/feeds/LATEST','/guidelines/ack','/guidelines/active','/me/bookmarks','/me/posts','/media/register','/posts','/posts/','/publish','/reports'];
+ const reviewed=['/','/LIKE','/actions','/bookmark','/capabilities','/comments','/comments/','/drafts','/feeds/','/guidelines/ack','/guidelines/active','/me/bookmarks','/me/posts','/media/register','/posts','/posts/','/publish','/reports'];
  assert.deepEqual(suffixes(source),reviewed);
  assert.notDeepEqual(suffixes(source+";const unknown='/unreviewed';"),reviewed);
+ assert.match(adapter,/!\['LATEST', 'FOLLOWING'\]\.includes\(mode\)/);
 });
 
 test('canonical U5 retains visible fail feedback; arbitrary request, removed feedback and success-only feedback are RED', () => {
