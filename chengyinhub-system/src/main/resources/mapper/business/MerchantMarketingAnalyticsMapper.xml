@@ -8,6 +8,8 @@
         <result property="previousSignup" column="previous_signup"/>
         <result property="currentPayment" column="current_payment"/>
         <result property="previousPayment" column="previous_payment"/>
+        <result property="currentVerify" column="current_verify"/>
+        <result property="previousVerify" column="previous_verify"/>
         <result property="currentRefundApply" column="current_refund_apply"/>
         <result property="previousRefundApply" column="previous_refund_apply"/>
         <result property="currentTopicTouchpoint" column="current_topic_touchpoint"/>
@@ -52,6 +54,12 @@
           coalesce(sum(case when event_code = 'PAYMENT'
                              and event_time &gt;= #{previousStart} and event_time &lt; #{currentStart}
                             then 1 else 0 end), 0) as previous_payment,
+          coalesce(sum(case when event_code = 'VERIFY'
+                             and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
+                            then 1 else 0 end), 0) as current_verify,
+          coalesce(sum(case when event_code = 'VERIFY'
+                             and event_time &gt;= #{previousStart} and event_time &lt; #{currentStart}
+                            then 1 else 0 end), 0) as previous_verify,
           coalesce(sum(case when event_code = 'REFUND_APPLY'
                              and event_time &gt;= #{currentStart} and event_time &lt; #{endExclusive}
                             then 1 else 0 end), 0) as current_refund_apply,
@@ -101,7 +109,20 @@
              and r.payment_time &gt;= #{previousStart} and r.payment_time &lt; #{endExclusive}
            <include refid="ownedRegistrationScope"/>
           union all
-          <!-- D-93:核销(VERIFY)不在这里数 —— 营销首页与店铺参谋共用 selectVerifyEventTimes。 -->
+          select 'VERIFY' as event_code, rd.create_time as event_time, null as touchpoint_code
+            from redemption rd
+           where rd.merchant_id = #{ownerMemberId} and rd.status = 'ACTIVE'
+             and rd.create_time &gt;= #{previousStart} and rd.create_time &lt; #{endExclusive}
+          union all
+          <!-- check-1104 j1 F13 / p2 F-2:商家自有活动的验票同样是核销,与「核销与退款」同源
+               (RedemptionMapper.selectActivityTicketScansByMerchant)。 -->
+          select 'VERIFY' as event_code, r.verification_time as event_time, null as touchpoint_code
+            from cms_registration r
+            join cms_activity a on a.id = r.owner_id
+           where r.owner_type = 2 and a.member_id = #{ownerMemberId}
+             and r.verification_status = 1
+             and r.verification_time &gt;= #{previousStart} and r.verification_time &lt; #{endExclusive}
+          union all
           select 'REFUND_APPLY' as event_code, f.create_time as event_time, null as touchpoint_code
             from refund_application f
            where f.merchant_id = #{ownerMemberId} and f.del_flag = 0

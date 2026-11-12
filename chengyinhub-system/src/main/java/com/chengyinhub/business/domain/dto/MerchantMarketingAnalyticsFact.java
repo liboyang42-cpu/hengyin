@@ -2,7 +2,7 @@ package com.chengyinhub.business.domain.dto;
 
 /**
  * 商家营销分析的两段等长窗口事实。每个字段都是独立事件数，不表达相邻转化。
- * 核销不在此(D-93):由 IMerchantMetricsService 统一计算,与店铺参谋同一份数。
+ * 核销字段仍由 selectAnalytics 回填但页面不再读取(D-93):两页核销统一由 IMerchantMetricsService 计算。
  */
 public class MerchantMarketingAnalyticsFact {
     private long currentBrowse;
@@ -11,6 +11,8 @@ public class MerchantMarketingAnalyticsFact {
     private long previousSignup;
     private long currentPayment;
     private long previousPayment;
+    private long currentVerify;
+    private long previousVerify;
     private long currentRefundApply;
     private long previousRefundApply;
     private long currentTopicTouchpoint;
@@ -29,6 +31,10 @@ public class MerchantMarketingAnalyticsFact {
     public void setCurrentPayment(long currentPayment) { this.currentPayment = currentPayment; }
     public long getPreviousPayment() { return previousPayment; }
     public void setPreviousPayment(long previousPayment) { this.previousPayment = previousPayment; }
+    public long getCurrentVerify() { return currentVerify; }
+    public void setCurrentVerify(long currentVerify) { this.currentVerify = currentVerify; }
+    public long getPreviousVerify() { return previousVerify; }
+    public void setPreviousVerify(long previousVerify) { this.previousVerify = previousVerify; }
     public long getCurrentRefundApply() { return currentRefundApply; }
     public void setCurrentRefundApply(long currentRefundApply) { this.currentRefundApply = currentRefundApply; }
     public long getPreviousRefundApply() { return previousRefundApply; }
