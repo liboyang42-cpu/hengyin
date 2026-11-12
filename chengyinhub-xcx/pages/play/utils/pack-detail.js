@@ -10,7 +10,7 @@ const FLOAT_HALF_MS = 1500;
 const FLOAT_PX = 6;
 
 function sheenFrames() {
-  return [{ offset: 0, translateX: -260, skew: [-18, 0], opacity: 0.9 }, { offset: 1, translateX: 560, skew: [-18, 0], opacity: 0.9, ease: 'ease-in-out' }];
+  return [{ offset: 0, translateX: -80, skew: [-18, 0], opacity: 0.9 }, { offset: 1, translateX: 260, skew: [-18, 0], opacity: 0.9, ease: 'ease-in-out' }];
 }
 function floatFrames(up) {
   const a = { translateY: FLOAT_PX, ease: 'ease-in-out' }, b = { translateY: -FLOAT_PX, ease: 'ease-in-out' };

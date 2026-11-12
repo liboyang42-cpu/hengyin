@@ -2049,7 +2049,7 @@ page { background: var(--cy-color-bg-page); }
 /* 自由探索的故事层同样铺章节 / 主题配色的底(只在选过风格的主题上带 atmosphere--*) */
 .fx-story[class*="atmosphere--"]{ background:var(--atmo-bg); --cy-color-text-primary:var(--atmo-text); --cy-color-text-tertiary:var(--atmo-muted); }
 /* ===== 细节打磨 2026-11-12 · S4 卡包:斜向流光(位移由 animate 驱动,这里只画光带,不占版面) ===== */
-.fx-pack__sheen{ position:absolute; left:0; top:-10%; width:120rpx; height:120%; pointer-events:none; opacity:0; background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.34), rgba(255,255,255,0)); } /* ds-ok 箔面流光 */
+.fx-pack__sheen{ position:absolute; left:0; top:-10%; width:120rpx; height:120%; pointer-events:none; opacity:0; background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.5), rgba(255,255,255,0)); } /* ds-ok 箔面流光 */
 
 /* ===== 细节打磨 2026-11-12 · S9 ⋯ 菜单:从右上角(按钮处)缩放展开,行逐行错开 30ms;行内容与版式不动 ===== */
 .tools--corner{ transform-origin:100% 0; box-shadow:var(--cy-shadow-hi-dark), var(--cy-shadow-float-dark); }
