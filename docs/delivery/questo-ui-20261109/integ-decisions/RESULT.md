@@ -39,4 +39,12 @@ PR：#808（draft）。首轮（9fa3a127）仅 architecture gate 红：D-93 原�
 
 PR: #808
 
-STATUS: DONE
+## 架构闸收口：指标合并并入既有店铺参谋服务（PR #808）
+
+- 问题：D-93 新增的 `IMerchantMetricsService` / `MerchantMetricsServiceImpl` 触发两条 NEW_UNOWNED_BOUNDARY，闸为 BLOCKED。
+- 处理：删除这两个类型；共用的时间窗与核销计算并入既有 `IMerchantInsightService` / `MerchantInsightServiceImpl`（`metricWindow` / `metricWindows` / `metricVerify`），营销首页（`MerchantAggregateReadServiceImpl`）改调用它。`business.service` 下未新增任何类；未改 `ci/architecture/*`、`.github/workflows/*`。
+- 保持不变：D-93 单一指标口径、`selectVerifyEventTimes`、`selectAnalytics` 及其结果 map、Asia/Shanghai 自然日边界及其测试（测试已改为装配真实的店铺参谋服务，仅桩核销事件查询）。
+- 验证：按仓库规则未在本地跑 Java/Maven，以 CI 为准。最终提交 `df28a256` 的 GitHub CI、Backend tests、Funds MySQL IT 等均成功，Fast gates 作业成功（此前为失败）；日志中无 NEW_UNOWNED。中途一次失败为测试缺少 `ReflectionTestUtils` 导入，已修，未削弱任何测试。
+- 说明：`gh pr checks` 因 GraphQL 被禁用，改用 REST 查看；architecture-findings 制品所在的 blob 域名被代理拦截无法下载，故以 Fast gates 作业成功及日志无 NEW_UNOWNED 作为证据，未能亲眼核对 artifact 内 verdict 字段。
+
+STATUS: PARTIAL - 未能下载 architecture-findings 制品核对 verdict 字段（域名被拦截），其余已通过 CI 确认
