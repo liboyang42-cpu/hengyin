@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "kind": "f-release-migration-set",
-  "candidateHead": "8dd648bd6acb5d3fce1c5a8ae14ec03050499bea",
-  "headMigrationCount": 641,
+  "candidateHead": "65db36513fceaf56536a6e0d60f0664c59afdc25",
+  "headMigrationCount": 644,
   "productionAppliedState": "UNKNOWN",
   "baseline": {
     "pack": "docs/delivery/release-closeout-20261029/release-migration-pack.json",
@@ -89,6 +89,9 @@
       "20261022_theme_character",
       "20261028_d20_attribute_registry",
       "topic_location_contract_20261107",
+      "20261112_template_usage_count",
+      "20261112_template_market_status",
+      "20261112_template_author_title_unique",
       "video_bounty_host_tip_20261108",
       "video_bounty_group_verification_20261108",
       "20261025_coop_order_station_fulfillment",
@@ -2235,6 +2238,70 @@
       "step": 127
     },
     {
+      "source": "launch 波次（master 2bb81143 之后）",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "D89：持久化真实首次采用人数，按既有会员/来源去重回填；模板写入暂停期间执行",
+      "packPhase": null,
+      "rerun": "APPLIED 时必须跳过",
+      "migrationId": "20261112_template_usage_count",
+      "path": "chengyinhub-admin/sql/migration_20261112_template_usage_count.sql",
+      "sha256": "8ec1f0bb0184793028653a58abce5c6bb54c145d062728f81a025e29bb780172",
+      "order": 567,
+      "dependsOn": [
+        "seed_celebrate_games_20260821",
+        "seed_life_backup_games_20260820",
+        "seed_merchant_game_a8_20260823",
+        "seed_merchant_game_b27_20260823",
+        "seed_merchant_game_v51_20260827",
+        "seed_template_library_12packs_20260820"
+      ],
+      "idempotency": "NEEDS_REVIEW",
+      "destructiveStatements": [
+        "#7 ALTER TABLE 含 DROP/RENAME/MODIFY/CHANGE: ALTER TABLE cms_template_library MODIFY COLUMN use_num INT NOT NULL DEFAULT 0 COMMENT 'D89 distinct first adopters'"
+      ],
+      "step": 128
+    },
+    {
+      "source": "launch 波次（master 2bb81143 之后）",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "D90：广场 status 单一真源并移除 publish_status；停止旧 jar 后维护窗口执行，禁止在线滚动迁移或直接回滚旧 jar",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_template_market_status",
+      "path": "chengyinhub-admin/sql/migration_20261112_template_market_status.sql",
+      "sha256": "e9f1d2824bda50d70661549056fabbb91fc72ff4866d75f0f6a1a9ceb839dbda",
+      "order": 568,
+      "dependsOn": [
+        "20261112_template_usage_count",
+        "p3_platform_foundation"
+      ],
+      "idempotency": "GUARDED_INFORMATION_SCHEMA",
+      "destructiveStatements": [
+        "#9 动态 SQL 含 DROP/TRUNCATE: SET @template_state_sql = IF(@template_states_valid AND @template_publish_exists=1, 'ALTER TABLE cms_template_library DR"
+      ],
+      "step": 129
+    },
+    {
+      "source": "launch 波次（master 2bb81143 之后）",
+      "class": "必须",
+      "phase": "PRE_DEPLOY",
+      "note": "D90/D5：同作者未删除广场标题 trim 后逐字唯一；重复先只读预览并阻断，不自动改名，最终索引断言通过才算已应用",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261112_template_author_title_unique",
+      "path": "chengyinhub-admin/sql/migration_20261112_template_author_title_unique.sql",
+      "sha256": "1aeea6ddf876a634a4a6d51de871dd91243939e5aaa6d7a77b123df5181fa0fa",
+      "order": 569,
+      "dependsOn": [
+        "20261112_template_market_status"
+      ],
+      "idempotency": "GUARDED_INFORMATION_SCHEMA",
+      "destructiveStatements": [],
+      "step": 130
+    },
+    {
       "source": "10-29 发布包（未确认执行）",
       "class": "可选",
       "phase": "PRE_DEPLOY",
@@ -2244,9 +2311,9 @@
       "migrationId": "verification_review_evidence_20261022",
       "path": "chengyinhub-admin/sql/migration_verification_review_evidence_20261022.sql",
       "sha256": "9b13f58da4455c4af67429bbe604086cf28cd451f19ad71f0bf09b489d42d889",
-      "order": 574,
+      "order": 577,
       "dependsOn": [],
-      "step": 128
+      "step": 131
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2258,11 +2325,11 @@
       "migrationId": "video_bounty_host_tip_20261108",
       "path": "chengyinhub-admin/sql/migration_video_bounty_host_tip_20261108.sql",
       "sha256": "773a0119578cf773f43450c7a25e7c32c3afac0ced70e0f140b52438f2c72e0e",
-      "order": 575,
+      "order": 578,
       "dependsOn": [],
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
-      "step": 129
+      "step": 132
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2274,13 +2341,13 @@
       "migrationId": "video_bounty_group_verification_20261108",
       "path": "chengyinhub-admin/sql/migration_video_bounty_group_verification_20261108.sql",
       "sha256": "7a993c92402a0f203cd8151544d460d296b935f66576718f72555dcb22533079",
-      "order": 576,
+      "order": 579,
       "dependsOn": [
         "video_bounty_host_tip_20261108"
       ],
       "idempotency": "NEEDS_REVIEW",
       "destructiveStatements": [],
-      "step": 130
+      "step": 133
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2292,13 +2359,13 @@
       "migrationId": "20261025_coop_order_station_fulfillment",
       "path": "chengyinhub-admin/sql/migration_20261025_coop_order_station_fulfillment.sql",
       "sha256": "73f6586a2f6c0616e3e0283abc0be8bc626d5923b0a776a6a3f01e4ebeec3ba3",
-      "order": 579,
+      "order": 582,
       "dependsOn": [
         "20261023_g_cash_evidence_expand",
         "business_audit_event_20260823",
         "w2_terms_axes_20260811"
       ],
-      "step": 131
+      "step": 134
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2310,11 +2377,11 @@
       "migrationId": "w8_refund_fulfillment_recovery_20261026",
       "path": "chengyinhub-admin/sql/migration_w8_refund_fulfillment_recovery_20261026.sql",
       "sha256": "28b65fad53c1aa768b7d7d56886e4b4a1998cecb8faad59bcc8d9c996bf432f1",
-      "order": 580,
+      "order": 583,
       "dependsOn": [
         "p3_phase_c_web_rules_refund"
       ],
-      "step": 132
+      "step": 135
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2326,13 +2393,13 @@
       "migrationId": "20261026_user_invoice_menu",
       "path": "chengyinhub-admin/sql/migration_20261026_user_invoice_menu.sql",
       "sha256": "078d59279328a462bf73a948382904129ef2abce8acb9864b3731a9bd9614c61",
-      "order": 585,
+      "order": 588,
       "dependsOn": [
         "20261012_missing_business_menu",
         "20261026_user_invoice_processing",
         "20261026_user_invoice_title_receipt"
       ],
-      "step": 133
+      "step": 136
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2344,14 +2411,14 @@
       "migrationId": "20261013_admin_role_page_grants",
       "path": "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
       "sha256": "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e",
-      "order": 600,
+      "order": 603,
       "dependsOn": [
         "20261012_media_review_menu",
         "20261012_missing_business_menu",
         "role2_analytics_perm_20260918",
         "web_admin_roles_20260719"
       ],
-      "step": 134
+      "step": 137
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2363,14 +2430,14 @@
       "migrationId": "20261016_admin_role_payee_separation_forward",
       "path": "chengyinhub-admin/sql/migration_20261016_admin_role_payee_separation_forward.sql",
       "sha256": "4eeef3936f72f05e69b3440aa818c2c39d53e046aaabd82cfdef10c868cca34e",
-      "order": 601,
+      "order": 604,
       "dependsOn": [
         "20260816_tandianri_batch3_funds_club_compensation",
         "20260816_tandianri_batch3_funds_club_payee",
         "20260817_tandianri_batch3_funds_club_hours_correction",
         "20261013_admin_role_page_grants"
       ],
-      "step": 135
+      "step": 138
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2382,13 +2449,13 @@
       "migrationId": "20261027_orient_scoring_menu_grants",
       "path": "chengyinhub-admin/sql/migration_20261027_orient_scoring_menu_grants.sql",
       "sha256": "6af4376c7606e5bce733fe97f97f56213930d02cc0d4c2a1e9a39313505606cc",
-      "order": 602,
+      "order": 605,
       "dependsOn": [
         "20261012_missing_business_menu",
         "topic_source_menu_20260722",
         "web_admin_roles_20260719"
       ],
-      "step": 136
+      "step": 139
     },
     {
       "source": "10-29 之后的 master",
@@ -2400,7 +2467,7 @@
       "migrationId": "20261104_review_wording_seeded_text",
       "path": "chengyinhub-admin/sql/migration_20261104_review_wording_seeded_text.sql",
       "sha256": "4f7b17900ea8f10e841248a7fe2b6898550f0616a63bf8be0487db58928af9b5",
-      "order": 603,
+      "order": 606,
       "dependsOn": [
         "20260815_tandianri_roam_revisit_report_permission",
         "20260816_tandianri_batch3_funds_club_compensation",
@@ -2415,7 +2482,7 @@
       ],
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
-      "step": 137
+      "step": 140
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2427,14 +2494,14 @@
       "migrationId": "20261109_play_help_audit_permission",
       "path": "chengyinhub-admin/sql/migration_20261109_play_help_audit_permission.sql",
       "sha256": "ed68753d75a0dd26ac52d3bdb02d660d37fbef723b825801f4905164af26c95a",
-      "order": 604,
+      "order": 607,
       "dependsOn": [
         "20261013_admin_role_page_grants",
         "20261016_admin_role_payee_separation_forward"
       ],
       "idempotency": "NEEDS_REVIEW",
       "destructiveStatements": [],
-      "step": 138
+      "step": 141
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2446,7 +2513,7 @@
       "migrationId": "20261109_questo_admin_menus",
       "path": "chengyinhub-admin/sql/migration_20261109_questo_admin_menus.sql",
       "sha256": "0b7db47b797478e61bd512036367f876fcf80e9d16564bb94637c468397a03b8",
-      "order": 605,
+      "order": 608,
       "dependsOn": [
         "20261012_missing_business_menu",
         "approval_governance_20260828",
@@ -2464,7 +2531,7 @@
       ],
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
-      "step": 139
+      "step": 142
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2476,7 +2543,7 @@
       "migrationId": "20261023_g_wp08_delivery_jobs_paused",
       "path": "chengyinhub-admin/sql/migration_20261023_g_wp08_delivery_jobs_paused.sql",
       "sha256": "9d5b05113ddbf878735ae391313814540a855bd41f21aeaa61b63578e76ee7ab",
-      "order": 612,
+      "order": 615,
       "dependsOn": [
         "20261012_im_media_visibility",
         "20261013_b_im_notification_intent",
@@ -2484,7 +2551,7 @@
         "20261013_roam_reward_delivery",
         "member_exp_earned_20261011"
       ],
-      "step": 140
+      "step": 143
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2496,11 +2563,11 @@
       "migrationId": "club_post_media_review_budget_20261024",
       "path": "chengyinhub-admin/sql/migration_club_post_media_review_budget_20261024.sql",
       "sha256": "5d4f02c02dcd1b67c45ce6d05e575fd9a3045bfea30cb4094fce2063d492669e",
-      "order": 614,
+      "order": 617,
       "dependsOn": [
         "club_role_media_review_outbox_20260824"
       ],
-      "step": 141
+      "step": 144
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2512,11 +2579,11 @@
       "migrationId": "20261024_wx_verified_payment_fact",
       "path": "chengyinhub-admin/sql/migration_20261024_wx_verified_payment_fact.sql",
       "sha256": "1bc8ed6c9fdfefbb63890802f663961a27adb5636770394a0671123504d060e9",
-      "order": 618,
+      "order": 621,
       "dependsOn": [
         "wx_payment_callback_inbox_outbox_20260725"
       ],
-      "step": 142
+      "step": 145
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2528,13 +2595,13 @@
       "migrationId": "20261024_clm_commerce_payment_proof",
       "path": "chengyinhub-admin/sql/migration_20261024_clm_commerce_payment_proof.sql",
       "sha256": "039c786834993b88734742b25ee96e6f42773a755ed5f935b8cf6950679d15f5",
-      "order": 619,
+      "order": 622,
       "dependsOn": [
         "20261024_wx_verified_payment_fact",
         "club_role_membership_20260823",
         "commerce_order_fields_and_verification_review_20260805"
       ],
-      "step": 143
+      "step": 146
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2546,12 +2613,12 @@
       "migrationId": "20261024_coop_original_refund_components",
       "path": "chengyinhub-admin/sql/migration_20261024_coop_original_refund_components.sql",
       "sha256": "ccde7e23229557657541c972bc55820bb8ed6e078165ed94a9c2c4df778fd6fe",
-      "order": 620,
+      "order": 623,
       "dependsOn": [
         "20261023_g_cash_evidence_expand",
         "20261024_wx_verified_payment_fact"
       ],
-      "step": 144
+      "step": 147
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2563,11 +2630,11 @@
       "migrationId": "20261024_coop_negative_margin_manual",
       "path": "chengyinhub-admin/sql/migration_20261024_coop_negative_margin_manual.sql",
       "sha256": "8c1d57fdce3717f39a3b6b671c5671e10f9f7e9035a4cf6c81495b84f27cb5f5",
-      "order": 621,
+      "order": 624,
       "dependsOn": [
         "20261024_coop_original_refund_components"
       ],
-      "step": 145
+      "step": 148
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2579,11 +2646,11 @@
       "migrationId": "20261024_registration_payment_fact",
       "path": "chengyinhub-admin/sql/migration_20261024_registration_payment_fact.sql",
       "sha256": "fdc733febedd2a1781bf0976d0ebf2d9b5b411b0d3f5787c72d00c328a5017eb",
-      "order": 622,
+      "order": 625,
       "dependsOn": [
         "20261024_wx_verified_payment_fact"
       ],
-      "step": 146
+      "step": 149
     },
     {
       "source": "10-29 发布包（未确认执行）",
@@ -2595,11 +2662,11 @@
       "migrationId": "20261024_wx_success_fact_business_index",
       "path": "chengyinhub-admin/sql/migration_20261024_wx_success_fact_business_index.sql",
       "sha256": "0937ea8846f8ab661d272016b2cf9aa655c18c062f38266ae1e6caecbce7a12c",
-      "order": 623,
+      "order": 626,
       "dependsOn": [
         "20261024_wx_verified_payment_fact"
       ],
-      "step": 147
+      "step": 150
     },
     {
       "source": "10-29 之后的 master",
@@ -2611,13 +2678,13 @@
       "migrationId": "x12_topic_look_20261029",
       "path": "chengyinhub-admin/sql/migration_x12_topic_look_20261029.sql",
       "sha256": "20d82f0530da9c3173df283710644868a15a88143037f5827a7a281cada5e8eb",
-      "order": 630,
+      "order": 633,
       "dependsOn": [
         "theme_runtime_20261004"
       ],
       "idempotency": "NEEDS_REVIEW",
       "destructiveStatements": [],
-      "step": 148
+      "step": 151
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2629,13 +2696,13 @@
       "migrationId": "z_channel_voucher_snapshot_20261109",
       "path": "chengyinhub-admin/sql/migration_z_channel_voucher_snapshot_20261109.sql",
       "sha256": "e87238f1aace1d694c0bd7a515893d44577e633cbb3adc76f751db7670d47123",
-      "order": 631,
+      "order": 634,
       "dependsOn": [
         "marketing_z_channel_voucher_20261108"
       ],
       "idempotency": "NEEDS_REVIEW",
       "destructiveStatements": [],
-      "step": 149
+      "step": 152
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2647,7 +2714,7 @@
       "migrationId": "z_marketing_revenue_channel_reverse_kind_20261108",
       "path": "chengyinhub-admin/sql/migration_z_marketing_revenue_channel_reverse_kind_20261108.sql",
       "sha256": "99dab1cc3390cfc2f9139fbd901631570abb616df67776409ab31adec0a5930f",
-      "order": 632,
+      "order": 635,
       "dependsOn": [
         "marketing_revenue_allocation_20261108"
       ],
@@ -2656,7 +2723,7 @@
         "#4 ALTER TABLE 含 DROP/RENAME/MODIFY/CHANGE: ALTER TABLE marketing_revenue_posting_task MODIFY COLUMN task_kind TINYINT NOT NULL COMMENT '1=ACCRUE(按报名单) 2=REVERSE(微信",
         "#5 ALTER TABLE 含 DROP/RENAME/MODIFY/CHANGE: ALTER TABLE marketing_revenue_posting_task MODIFY COLUMN ref_id BIGINT NOT NULL COMMENT 'ACCRUE→registrationId；REVERSE→r"
       ],
-      "step": 150
+      "step": 153
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2668,7 +2735,7 @@
       "migrationId": "z_marketing_revenue_channel_reverse_kind_index_shape_20261109",
       "path": "chengyinhub-admin/sql/migration_z_marketing_revenue_channel_reverse_kind_index_shape_20261109.sql",
       "sha256": "51a6741ef64cf2645c93fb6f5b08cbb3f9ca8a2fafd748f350de19453d00fe07",
-      "order": 633,
+      "order": 636,
       "dependsOn": [
         "z_marketing_revenue_channel_reverse_kind_20261108"
       ],
@@ -2677,7 +2744,7 @@
         "#4 ALTER TABLE 含 DROP/RENAME/MODIFY/CHANGE: ALTER TABLE marketing_revenue_posting_task MODIFY COLUMN task_kind TINYINT NOT NULL COMMENT '1=ACCRUE(按报名单) 2=REVERSE(微信",
         "#5 ALTER TABLE 含 DROP/RENAME/MODIFY/CHANGE: ALTER TABLE marketing_revenue_posting_task MODIFY COLUMN ref_id BIGINT NOT NULL COMMENT 'ACCRUE→registrationId；REVERSE→r"
       ],
-      "step": 151
+      "step": 154
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2689,11 +2756,11 @@
       "migrationId": "z_workshop_apple_iap_20261109",
       "path": "chengyinhub-admin/sql/migration_z_workshop_apple_iap_20261109.sql",
       "sha256": "d392e0dda6b503426f16e9692afa8d3142b4d55880b676094c8870c7c8c3981a",
-      "order": 634,
+      "order": 637,
       "dependsOn": [],
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
-      "step": 152
+      "step": 155
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2705,11 +2772,11 @@
       "migrationId": "z_workshop_purchase_20261109",
       "path": "chengyinhub-admin/sql/migration_z_workshop_purchase_20261109.sql",
       "sha256": "a494fee635143207ba71725b18c421d30d1eb67086df143ee0dcae315522eb7f",
-      "order": 635,
+      "order": 638,
       "dependsOn": [],
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
-      "step": 153
+      "step": 156
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2721,7 +2788,7 @@
       "migrationId": "z_workshop_paid_review_20261109",
       "path": "chengyinhub-admin/sql/migration_z_workshop_paid_review_20261109.sql",
       "sha256": "2b108b10824e873d845734a23a2e24b1547954dc41e3de90fc8ce3978ed0e2c8",
-      "order": 636,
+      "order": 639,
       "dependsOn": [
         "z_workshop_purchase_20261109"
       ],
@@ -2729,7 +2796,7 @@
       "destructiveStatements": [
         "#2 ALTER TABLE 含 DROP/RENAME/MODIFY/CHANGE: ALTER TABLE workshop_order MODIFY COLUMN amount_fen bigint NULL, ADD COLUMN version_review_hash char(64) CHARACTER SET a"
       ],
-      "step": 154
+      "step": 157
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2741,7 +2808,7 @@
       "migrationId": "zz_questo_collation_align_20261109",
       "path": "chengyinhub-admin/sql/migration_zz_questo_collation_align_20261109.sql",
       "sha256": "ddd4db6880b891c23ce546bbf96dd017d18bd0a4436fb2af7f82b54b33c03d87",
-      "order": 638,
+      "order": 641,
       "dependsOn": [
         "20261108_play_help_run_quota",
         "20261108_registration_seat_invitation",
@@ -2800,7 +2867,7 @@
         "#42 ALTER TABLE 含 DROP/RENAME/MODIFY/CHANGE: ALTER TABLE `video_bounty_submission` DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci, MODIFY COLUMN `campaign_ke",
         "#43 ALTER TABLE 含 DROP/RENAME/MODIFY/CHANGE: ALTER TABLE `workshop_apple_notification` DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci, MODIFY COLUMN `signed_"
       ],
-      "step": 155
+      "step": 158
     },
     {
       "source": "launch 波次（master 2bb81143 之后）",
@@ -2812,13 +2879,13 @@
       "migrationId": "zzz_committed_official_notice_job_reregister_20261111",
       "path": "chengyinhub-admin/sql/migration_zzz_committed_official_notice_job_reregister_20261111.sql",
       "sha256": "e8a58381bb89409bd4f1cb8f90e32b9bb9ea5d28e3adab5c5985fff74a624576",
-      "order": 639,
+      "order": 642,
       "dependsOn": [
         "20261024_d_committed_official_notice_wx"
       ],
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
-      "step": 156
+      "step": 159
     }
   ]
 }
