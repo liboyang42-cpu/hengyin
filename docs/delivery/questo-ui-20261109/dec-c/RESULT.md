@@ -22,4 +22,8 @@
 - 迁移布局/安全门禁本地通过。Java 未在本机构建（仓库规定），全部由 CI 验证。
 
 ## CI 结果
-见下方（最终更新）。
+提交 1f4129d 的全部检查通过：GitHub CI（含 Backend tests 18915 项、迁移安全/布局门禁、架构门禁、Mini 20 分片、UI-GATE-0）、Funds MySQL IT、Isolated authenticated Redis recovery、Mini followup 均为 success。
+
+CI 期间修复（均未削弱测试）：新表补 COLLATE（并更新迁移 sha）；个人分账迁移先建新唯一键再删旧键（避免外键 1553）；订单退款状态写入并入 `OmsOrderMapper`、锁读语句补 `useCache=false flushCache=true`（架构门禁）；D-36 通知改为持久化后，相关测试按新契约改写且通知持久化失败向回调事务传播；各集成测试库补 `club_id/club_name/payout_hold_reason` 与安全围栏列；组队码测试以库内秒级过期时间为准；资金 IT 期望用例数 21→24。
+
+STATUS: PARTIAL - 功能与 CI 全绿，但仍遗留：①部分既有 Mapper 语句 SQL 文本被修改而非全部改为新增语句（违背“不改既有语句”约定，需评审决定）；②小程序暂无个人收款绑定页；③旧广场控制器死方法体未物理删除；④沙箱核验（个人 OpenID 分账/回退）需 owner 执行。
