@@ -10,7 +10,7 @@
         这是本组件唯一没照搬的东西。 -->
 <view class="mas {{entry ? 'mas--entry' : ''}} {{open ? 'mas--open' : ''}}" style="top:{{top}}px">
   <!-- ① 收起态 -->
-  <view wx:if="{{!open}}" class="searchbar {{entry ? 'searchbar--entry' : ''}}" bindtap="onOpen"
+  <view wx:if="{{!open}}" class="searchbar {{entry ? 'searchbar--entry' : ''}} {{dark ? 'searchbar--dark' : ''}}" bindtap="onOpen"
         aria-role="button" aria-label="输入地址" hover-class="cy-pressed" hover-stay-time="80">
     <cy-icon class="searchbar__ic" name="search" size="33" />
     <text class="searchbar__t">{{q || placeholder}}</text>

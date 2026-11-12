@@ -45,7 +45,7 @@
 <!-- 顶部输入地址(§6.1):白框是唯一入口,铺在每一张地图上,四个模式共用同一件。
      自由探索首屏(卡包 → 六宫格,下面 .fx 那张整屏 scroll-view)不是地图,不挂它(9-24 用户:卡包上面不能有搜索框)。
      它占住胶囊底下那条位置带,所以下面的提示栈整体让到 .play-topstack 的 searchTop 之后。 -->
-<cy-map-address-search wx:if="{{!screen && !showJournal && !showFinish && !chapterFull && !(mode==2 && !freeMap)}}"
+<cy-map-address-search wx:if="{{!screen && !showJournal && !showFinish && !chapterFull && !allDone && !topicCompleted && !(mode==2 && !freeMap)}}" dark="{{true}}"
                        top="{{chrome.contentTop}}" places="{{searchPlaces}}" placeholder="输入地址"
                        bind:pick="onSearchPick" />
 
