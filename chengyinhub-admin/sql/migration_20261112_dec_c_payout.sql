@@ -95,13 +95,14 @@ DEALLOCATE PREPARE dec_payout_stmt;
 ALTER TABLE ecom_profit_share_line MODIFY COLUMN receiver_mchid VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NULL;
 ALTER TABLE ecom_profit_share_return MODIFY COLUMN return_mchid VARCHAR(128) CHARACTER SET ascii COLLATE ascii_bin NOT NULL;
 -- Replace merchant-only uniqueness with full typed identity; supports repeat-safe migration.
-SET @dec_payout_ddl = IF((SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='ecom_profit_share_return' AND index_name='uk_ecom_share_return_refund')>0,
- 'ALTER TABLE ecom_profit_share_return DROP INDEX uk_ecom_share_return_refund', 'SELECT 1');
+-- FK fk_ecom_share_return_order 依赖旧唯一键的最左列：必须先建新键，再删旧键（否则 1553）。
+SET @dec_payout_ddl = IF((SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='ecom_profit_share_return' AND index_name='uk_ecom_share_return_identity')=0,
+ 'ALTER TABLE ecom_profit_share_return ADD UNIQUE KEY uk_ecom_share_return_identity (share_order_id,out_refund_no,return_type,return_appid,return_mchid)', 'SELECT 1');
 PREPARE dec_payout_stmt FROM @dec_payout_ddl;
 EXECUTE dec_payout_stmt;
 DEALLOCATE PREPARE dec_payout_stmt;
-SET @dec_payout_ddl = IF((SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='ecom_profit_share_return' AND index_name='uk_ecom_share_return_identity')=0,
- 'ALTER TABLE ecom_profit_share_return ADD UNIQUE KEY uk_ecom_share_return_identity (share_order_id,out_refund_no,return_type,return_appid,return_mchid)', 'SELECT 1');
+SET @dec_payout_ddl = IF((SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='ecom_profit_share_return' AND index_name='uk_ecom_share_return_refund')>0,
+ 'ALTER TABLE ecom_profit_share_return DROP INDEX uk_ecom_share_return_refund', 'SELECT 1');
 PREPARE dec_payout_stmt FROM @dec_payout_ddl;
 EXECUTE dec_payout_stmt;
 DEALLOCATE PREPARE dec_payout_stmt;

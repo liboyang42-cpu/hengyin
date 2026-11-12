@@ -2891,7 +2891,7 @@
       "rerun": "幂等",
       "migrationId": "20261112_dec_c_payout",
       "path": "chengyinhub-admin/sql/migration_20261112_dec_c_payout.sql",
-      "sha256": "bfa7591c3d5b36e7796bd0d11846db6b62c54a6f8cad28eb7a9b379bbcff153a",
+      "sha256": "e0f634ea8496a9ecb3629a4793130dc7f2fabebd31225b9ae8ced98a045f27f0",
       "order": 646,
       "dependsOn": [
         "20261110_ecommerce_payout",
