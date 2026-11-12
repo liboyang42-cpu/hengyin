@@ -30,4 +30,10 @@ public class EcomProfitShareReturn {
     public void setWxReturnNo(String wxReturnNo) { this.wxReturnNo = wxReturnNo; }
     public String getFailReason() { return failReason; }
     public void setFailReason(String failReason) { this.failReason = failReason; }
+    private String returnType = "MERCHANT_ID";
+    public String getReturnType() { return returnType; }
+    public void setReturnType(String returnType) { this.returnType = returnType; }
+    private String returnAppid = "";
+    public String getReturnAppid() { return returnAppid; }
+    public void setReturnAppid(String returnAppid) { this.returnAppid = returnAppid; }
 }

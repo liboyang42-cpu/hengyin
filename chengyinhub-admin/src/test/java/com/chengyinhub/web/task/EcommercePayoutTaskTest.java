@@ -50,6 +50,14 @@ class EcommercePayoutTaskTest {
     }
 
     @Test
+    void personalOptInCannotActivateJobsWithoutPayoutMasterSwitch() {
+        EcommercePayoutTask t = task(PayoutSwitches.allOff().withPersonalClubEnabled(true));
+        t.shareAndRetry();
+        t.syncOnboarding();
+        verifyNoInteractions(sharing, subs, alarms);
+    }
+
+    @Test
     void switchOnRunsInOrderAndFailureAlarmsThenThrows() {
         PayoutSwitches on = new PayoutSwitches(true, true, true, "1900000001", "wx_mini", "", 30, false, "none");
         EcommercePayoutTask t = task(on);

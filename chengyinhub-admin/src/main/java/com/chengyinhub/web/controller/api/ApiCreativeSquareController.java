@@ -85,6 +85,24 @@ public class ApiCreativeSquareController extends BaseController {
     private AjaxResult legacyWriteDisabled() {
         return AjaxResult.error(HttpStatus.UPGRADE_REQUIRED, "广场发布已升级，请更新客户端后重试");
     }
+
+    /** Canonical clients use /api/v1/community; old IDs must never read a stale second truth. */
+    @PostMapping({"/list", "/info"})
+    @Anonymous
+    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.GONE)
+    public AjaxResult retiredPostReads() {
+        return retiredPostResponse();
+    }
+
+    @PostMapping({"/action", "/bookmark", "/delete", "/report", "/like"})
+    @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.GONE)
+    public AjaxResult retiredPostWrites() {
+        return retiredPostResponse();
+    }
+
+    private AjaxResult retiredPostResponse() {
+        return AjaxResult.error(410, "旧版广场接口已停用，请更新客户端后使用社区帖文");
+    }
     private final TopicCompletionRulePolicy topicCompletionRulePolicy = new TopicCompletionRulePolicy();
     @Autowired
     private IUmsCreativeSquareService umsCreativeSquareService;
@@ -539,7 +557,6 @@ public class ApiCreativeSquareController extends BaseController {
     }
 
     @Operation(summary = "添加/编辑创意广场文章")
-    @PostMapping("/action")
     @Parameters({
             @Parameter(name = "id", description = "创意ID，填写了ID是编辑，不填写是新增"),
             @Parameter(name = "contents", description = "发布内容"),
@@ -948,7 +965,6 @@ public class ApiCreativeSquareController extends BaseController {
     }
 
     @Operation(summary = "创意广场列表")
-    @PostMapping("/list")
     @Parameters({
             @Parameter(name = "is_my", description = "0所有 1我的"),
             @Parameter(name = "keyword", description = "搜索关键词"),
@@ -1018,7 +1034,6 @@ public class ApiCreativeSquareController extends BaseController {
 
 
     @Operation(summary = "广场详情")
-    @PostMapping("/info")
     @Parameters({
             @Parameter(name = "id", description = "广场id")
     })
@@ -1078,7 +1093,6 @@ public class ApiCreativeSquareController extends BaseController {
     }
 
     @Operation(summary = "收藏/取消收藏帖文")
-    @PostMapping("/bookmark")
     @Parameters({
             @Parameter(name = "id", description = "帖文ID"),
             @Parameter(name = "bookmark", description = "1收藏 0取消收藏"),
@@ -1111,7 +1125,6 @@ public class ApiCreativeSquareController extends BaseController {
     }
 
     @Operation(summary = "创意广场删除")
-    @PostMapping("/delete")
     @Parameters({
             @Parameter(name = "id", description = "创意广场id")
     })
@@ -1144,7 +1157,6 @@ public class ApiCreativeSquareController extends BaseController {
     }
 
     @Operation(summary = "创意广场举报")
-    @PostMapping("/report")
     @Parameters({
             @Parameter(name = "id", description = "创意广场id"),
             @Parameter(name = "reason", description = "结构化举报原因")
@@ -1272,7 +1284,6 @@ public class ApiCreativeSquareController extends BaseController {
     }
 
     @Operation(summary = "创意广场点赞/踩")
-    @PostMapping("/like")
     @Parameters({
             @Parameter(name = "id", description = "创意广场"),
             @Parameter(name = "type", description = "类型 1点赞  2踩")

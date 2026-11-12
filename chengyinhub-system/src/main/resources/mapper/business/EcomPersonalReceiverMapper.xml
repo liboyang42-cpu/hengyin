@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.EcomPersonalReceiverMapper">
+    <resultMap id="PersonalReceiverResult" type="com.chengyinhub.business.domain.EcomPersonalReceiver">
+        <id property="memberId" column="member_id"/>
+        <id property="appid" column="appid"/>
+        <result property="openid" column="openid"/>
+        <result property="state" column="state"/>
+        <result property="consentedAt" column="consented_at"/>
+        <result property="verifiedAt" column="verified_at"/>
+    </resultMap>
+    <sql id="receiverColumns">member_id, appid, openid, state, consented_at, verified_at</sql>
+    <select id="selectByMemberAndAppid" resultMap="PersonalReceiverResult">
+        select <include refid="receiverColumns"/> from ecom_personal_receiver
+        where member_id = #{memberId} and appid = #{appid}
+    </select>
+    <select id="selectByMemberAndAppidForUpdate" resultMap="PersonalReceiverResult" useCache="false" flushCache="true">
+        select <include refid="receiverColumns"/> from ecom_personal_receiver
+        where member_id = #{memberId} and appid = #{appid} for update
+    </select>
+    <insert id="insertVerified" parameterType="com.chengyinhub.business.domain.EcomPersonalReceiver">
+        insert into ecom_personal_receiver (member_id, appid, openid, state, consented_at, verified_at)
+        values (#{memberId}, #{appid}, #{openid}, 'VERIFIED', #{consentedAt}, #{verifiedAt})
+    </insert>
+</mapper>

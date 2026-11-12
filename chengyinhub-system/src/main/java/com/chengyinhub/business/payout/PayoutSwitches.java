@@ -32,6 +32,8 @@ public class PayoutSwitches {
     private final String creatorProvider;
     private final boolean combinedEnabled;
     private final String platformSellerSubMchid;
+    @Value("${payout.ecommerce.personal-club-enabled:false}")
+    private boolean personalClubEnabled;
 
     /** l-payout / l-payout2 的原构造（不含 l-payout3 合单开关，合单视为关闭）。 */
     public PayoutSwitches(boolean ecommerceEnabled, boolean sellerRoutingEnabled, boolean profitSharingEnabled,
@@ -76,6 +78,9 @@ public class PayoutSwitches {
     public boolean sellerRoutingEnabled() { return ecommerceEnabled() && sellerRoutingEnabled && !spAppid.isEmpty(); }
     public boolean profitSharingEnabled() { return ecommerceEnabled() && profitSharingEnabled; }
     public String spMchid() { return spMchid; }
+    public boolean personalClubEnabled() { return profitSharingEnabled() && personalClubEnabled && !spAppid.isEmpty(); }
+    /** Explicit opt-in for isolated wiring tests; production uses the default-OFF property. */
+    public PayoutSwitches withPersonalClubEnabled(boolean enabled) { this.personalClubEnabled = enabled; return this; }
     public String spAppid() { return spAppid; }
     /** 平台佣金的分账接收方；未配置时回落到 sp_mchid（电商平台自身）。 */
     public String platformReceiverMchid() { return platformReceiverMchid.isEmpty() ? spMchid : platformReceiverMchid; }

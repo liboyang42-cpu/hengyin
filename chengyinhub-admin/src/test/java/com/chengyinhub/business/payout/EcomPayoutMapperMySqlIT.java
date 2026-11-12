@@ -80,6 +80,15 @@ class EcomPayoutMapperMySqlIT {
             if (in == null) throw new IllegalStateException("mapper XML 不在 classpath:" + resource);
             new XMLMapperBuilder(in, cfg, resource, cfg.getSqlFragments()).parse();
         }
+        cfg.getTypeAliasRegistry().registerAlias("UmsMemberBalanceDetail", com.chengyinhub.business.domain.UmsMemberBalanceDetail.class);
+        String statementResource = "mapper/business/UmsMemberBalanceDetailMapper.xml";
+        try (InputStream in = EcomPayoutMapperMySqlIT.class.getClassLoader().getResourceAsStream(statementResource)) {
+            new XMLMapperBuilder(in, cfg, statementResource, cfg.getSqlFragments()).parse();
+        }
+        String sessionResource = "mapper/business/EcomSessionPayoutMapper.xml";
+        try (InputStream in = EcomPayoutMapperMySqlIT.class.getClassLoader().getResourceAsStream(sessionResource)) {
+            new XMLMapperBuilder(in, cfg, sessionResource, cfg.getSqlFragments()).parse();
+        }
         factory = new SqlSessionFactoryBuilder().build(cfg);
         try (Connection c = dataSource.getConnection(); Statement st = c.createStatement()) {
             st.execute("CREATE TABLE cms_registration (id bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,"
@@ -115,6 +124,16 @@ class EcomPayoutMapperMySqlIT {
             st.execute("INSERT INTO sys_menu(menu_name, parent_id, path, menu_type, perms) VALUES ('资金售后', 0, 'funds-aftercare', 'M', '')");
             ItSchema.applyMigrations(c, "sql/migration_20261110_ecommerce_payout.sql",
                     "sql/migration_20261110_ecommerce_payout_wiring.sql");
+            st.execute("CREATE TABLE settlement_detail(id BIGINT PRIMARY KEY,source_type VARCHAR(32),source_id BIGINT,"
+                    + "receiver_type VARCHAR(32),receiver_id BIGINT,settlement_amount DECIMAL(18,2),status INT,fail_reason VARCHAR(255),update_time DATETIME)");
+            ItSchema.applyMigrations(c, "sql/migration_20261112_dec_c_payout.sql",
+                    "sql/migration_20261112_dec_c_payout.sql");
+            st.execute("CREATE TABLE ums_member_balance_detail(id BIGINT PRIMARY KEY,member_id BIGINT,"
+                    + "current_balance DECIMAL(18,2),after_balance DECIMAL(18,2),change_balance DECIMAL(18,2),"
+                    + "change_reason VARCHAR(255),event_type BIGINT,event_id BIGINT,change_type BIGINT,del_flag BIGINT,"
+                    + "create_by VARCHAR(64),create_time DATETIME,update_by VARCHAR(64),update_time DATETIME)");
+            st.execute("CREATE TABLE cms_activity(id BIGINT PRIMARY KEY,del_flag INT,is_settlement INT)");
+            st.execute("CREATE TABLE cms_activity_settlement_hold(registration_id BIGINT PRIMARY KEY,status INT)");
         }
     }
 
@@ -138,7 +157,9 @@ class EcomPayoutMapperMySqlIT {
         session = factory.openSession(true);
         mapper = session.getMapper(EcomPayoutMapper.class);
         try (Statement st = session.getConnection().createStatement()) {
-            for (String t : List.of("ecom_refund", "coop_settlement", "coop_complaint", "ecom_profit_share_return", "ecom_profit_share_line", "ecom_profit_share_order",
+            for (String t : List.of("cms_activity_settlement_hold", "settlement_detail", "cms_activity", "club_personal_payout_beneficiary"))
+                st.execute("delete from " + t);
+            for (String t : List.of("ums_member_balance_detail", "ecom_refund", "coop_settlement", "coop_complaint", "ecom_profit_share_return", "ecom_profit_share_line", "ecom_profit_share_order",
                     "ecom_order_seller", "ecom_sub_merchant", "creator_payout_request", "cms_registration",
                     "mms_merchant", "club", "coop_settlement_original_component")) st.execute("delete from " + t);
         }
@@ -377,5 +398,63 @@ class EcomPayoutMapperMySqlIT {
         Map<String, Long> byMchid = new java.util.TreeMap<>();
         mapper.selectReturnsByShareOrder(order.getId()).forEach(r -> byMchid.merge(r.getReturnMchid(), r.getAmountFen(), Long::sum));
         assertEquals(Map.of("1900000001", 1500L), byMchid);
+    }
+    @Test
+    void personalClubStatementUsesReceivedSnapshotAndNeverCreditsTheWallet() throws Exception {
+        EcomProfitShareOrder order = shareOrder("PERSONAL-STATEMENT", -19);
+        EcomProfitShareLine line = new EcomProfitShareLine();
+        line.setShareOrderId(order.getId()); line.setSettlementId(-11L); line.setLineType("merchant");
+        line.setReceiverKind("PERSONAL"); line.setReceiverType("PERSONAL_OPENID");
+        line.setReceiverAppid("wx-platform"); line.setReceiverMchid("original-openid");
+        line.setReceiverMemberId(55L); line.setClubId(7L); line.setClubName("原名称"); line.setAmountFen(2500L);
+        mapper.insertShareLine(line);
+        var statement = session.getMapper(com.chengyinhub.business.mapper.UmsMemberBalanceDetailMapper.class);
+        var query = new com.chengyinhub.business.domain.UmsMemberBalanceDetail();
+        query.setMemberId(55L); query.getParams().put("includeExternalClubIncome", true);
+        assertTrue(statement.selectUmsMemberBalanceDetailList(query).isEmpty(), "planned is not received income");
+        exec("update ecom_profit_share_order set state='SUCCESS' where id=" + order.getId());
+        session.clearCache();
+        var received = statement.selectUmsMemberBalanceDetailList(query);
+        assertEquals(1, received.size());
+        assertEquals("来自俱乐部 原名称", received.getFirst().getChangeReason());
+        assertEquals(0, new BigDecimal("25.00").compareTo(received.getFirst().getChangeBalance()));
+        assertEquals(2L, received.getFirst().getEventType());
+        assertTrue(received.getFirst().getId() < 0);
+        assertNull(received.getFirst().getAfterBalance());
+        query.setMemberId(99L); assertTrue(statement.selectUmsMemberBalanceDetailList(query).isEmpty());
+        query.setMemberId(55L); query.setEventType(1L);
+        assertTrue(statement.selectUmsMemberBalanceDetailList(query).isEmpty());
+        query.setEventType(null); query.getParams().remove("includeExternalClubIncome");
+        assertTrue(statement.selectUmsMemberBalanceDetailList(query).isEmpty(), "wallet query stays wallet-only");
+        try (Statement st = session.getConnection().createStatement(); ResultSet rs = st.executeQuery("select count(*) from ums_member_balance_detail")) {
+            assertTrue(rs.next()); assertEquals(0, rs.getInt(1));
+        }
+    }
+    @Test
+    void sessionTerminalFlagWaitsForAllReceiptsAndUnresolvedHolds() throws Exception {
+        EcomProfitShareOrder order = shareOrder("SESSION-COMPLETE", -19);
+        EcomProfitShareLine line = new EcomProfitShareLine();
+        line.setShareOrderId(order.getId()); line.setSettlementId(-11L); line.setLineType("merchant");
+        line.setReceiverKind("PERSONAL"); line.setReceiverType("PERSONAL_OPENID");
+        line.setReceiverAppid("wx-platform"); line.setReceiverMchid("original-openid");
+        line.setReceiverMemberId(55L); line.setClubId(7L); line.setClubName("原名称"); line.setAmountFen(2500L);
+        mapper.insertShareLine(line);
+        exec("insert into cms_activity(id,del_flag,is_settlement) values(19,0,0)");
+        exec("insert into cms_registration(id,registration_no,owner_type,owner_id) values(201,'SESSION-REG',2,19)");
+        exec("insert into club_personal_payout_beneficiary(scope_type,scope_id,club_id,club_name,member_id,frozen_at,payout_ready_at)"
+                + " values('ACTIVITY',19,7,'原名称',55,now(),now())");
+        exec("insert into settlement_detail(id,source_type,source_id,receiver_type,receiver_id,settlement_amount,status,club_id,club_name)"
+                + " values(11,'registration',201,'merchant',55,25,0,7,'原名称'),(12,'registration',201,'platform',0,1,0,null,null)");
+        var sessions = session.getMapper(com.chengyinhub.business.mapper.EcomSessionPayoutMapper.class);
+        assertEquals(0, sessions.completeActivityIfReceived(order.getId()), "planned is not received");
+        exec("update ecom_profit_share_order set state='SUCCESS' where id=" + order.getId());
+        assertEquals(1, sessions.markShareDetailsReceived(order.getId()));
+        assertEquals(0, sessions.completeActivityIfReceived(order.getId()), "another obligation remains pending");
+        exec("update settlement_detail set status=1 where id=12");
+        exec("insert into cms_activity_settlement_hold(registration_id,status) values(201,0)");
+        assertEquals(0, sessions.completeActivityIfReceived(order.getId()), "open complaint still holds settlement");
+        exec("update cms_activity_settlement_hold set status=1 where registration_id=201");
+        assertEquals(1, sessions.completeActivityIfReceived(order.getId()));
+        assertEquals(0, sessions.completeActivityIfReceived(order.getId()));
     }
 }

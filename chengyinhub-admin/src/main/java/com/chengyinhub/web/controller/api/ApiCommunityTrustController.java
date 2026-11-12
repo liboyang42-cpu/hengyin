@@ -13,6 +13,7 @@ import com.chengyinhub.business.domain.vo.CommunityReportAppealReceiptVO;
 import com.chengyinhub.business.domain.vo.MerchantContributionVO;
 import com.chengyinhub.business.domain.vo.MerchantSafetyRatingReceiptVO;
 import com.chengyinhub.business.service.CommunityTrustService;
+import com.chengyinhub.business.service.ICommunityPostService;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/community-trust")
 public class ApiCommunityTrustController extends BaseController {
     @Autowired private CommunityTrustService communityTrustService;
+    @Autowired private ICommunityPostService communityPostService;
 
     @PostMapping("/reports/submit")
     public AjaxResult submitReport(@RequestBody(required = false) CommunityReportSubmitRequest request) {
@@ -39,6 +41,10 @@ public class ApiCommunityTrustController extends BaseController {
         if (principal == null) return unauthorized();
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少举报参数");
         try {
+            String targetType = String.valueOf(request.getTargetType()).trim();
+            if ("CONTENT".equalsIgnoreCase(targetType) || "COMMENT".equalsIgnoreCase(targetType)) {
+                return success(communityPostService.report(principal, request));
+            }
             CommunityReportCase row = communityTrustService.submitReport(principal, request);
             return success(CommunityReportVO.from(row));
         } catch (ServiceException e) {

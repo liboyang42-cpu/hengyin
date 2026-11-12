@@ -166,6 +166,29 @@ class CommunityPostAuditLevelTest {
     }
 
     @Test
+    void riskCallbackPersistsAuthorNoticeWithoutImAndDoesNotDuplicateAfterHiding() {
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(post("PUBLISHED", 4), post("HIDDEN", 5));
+
+        assertTrue(service.applyRiskyMediaResult(7L));
+        assertTrue(service.applyRiskyMediaResult(7L));
+
+        verify(mapper).insertTypedOutbox(anyString(), eq("COMMUNITY_NOTIFICATION"), eq(9L),
+                eq("NOTIFICATION_REQUESTED"), org.mockito.ArgumentMatchers.argThat(payload ->
+                        payload.contains("SYSTEM_GOVERNANCE") && payload.contains("MEDIA_RISKY_HIDDEN")), any());
+        verify(auditTaskService).submitSafetyHold(eq(AuditTask.BIZ_COMMUNITY_POST), eq(7L), eq(9L), eq("HIGH"), anyString());
+    }
+
+    @Test
+    void failedDurableAuthorNoticePropagatesSoCallbackTransactionCanRetry() {
+        when(mapper.selectByIdForUpdate(7L)).thenReturn(post("PUBLISHED", 4));
+        when(mapper.insertTypedOutbox(anyString(), eq("COMMUNITY_NOTIFICATION"), eq(9L),
+                eq("NOTIFICATION_REQUESTED"), anyString(), any())).thenReturn(0);
+
+        assertEquals(Integer.valueOf(500), assertThrows(ServiceException.class,
+                () -> service.applyRiskyMediaResult(7L)).getCode());
+    }
+
+    @Test
     void riskyImageHidesLimitedPostToo() {
         when(mapper.selectByIdForUpdate(7L)).thenReturn(post("LIMITED", 6));
 

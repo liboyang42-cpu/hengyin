@@ -87,7 +87,8 @@
     </select>
 
     <select id="selectLedgerComponents" resultType="com.chengyinhub.business.domain.EcomLedgerComponent" useCache="false" flushCache="true">
-        select settlement_id as settlementId, line_type as lineType, receiver_kind as receiverKind, receiver_member_id as receiverMemberId, original_amount as originalAmount
+        select settlement_id as settlementId, line_type as lineType, receiver_kind as receiverKind, receiver_member_id as receiverMemberId, original_amount as originalAmount,
+            club_id as clubId, club_name as clubName
         from coop_settlement_original_component
         where topic_id = #{topicId} and payer_registration_id = #{payerRegistrationId}
         order by settlement_id, id
@@ -126,27 +127,29 @@
 
     <insert id="insertShareLine" useGeneratedKeys="true" keyProperty="id">
         insert into ecom_profit_share_line (share_order_id, settlement_id, line_type, receiver_kind,
-            receiver_mchid, receiver_member_id, amount_fen)
-        values (#{shareOrderId}, #{settlementId}, #{lineType}, #{receiverKind}, #{receiverMchid}, #{receiverMemberId}, #{amountFen})
+            receiver_mchid, receiver_member_id, amount_fen, receiver_type, receiver_appid, club_id, club_name)
+        values (#{shareOrderId}, #{settlementId}, #{lineType}, #{receiverKind}, #{receiverMchid}, #{receiverMemberId}, #{amountFen},
+            #{receiverType}, #{receiverAppid}, #{clubId}, #{clubName})
     </insert>
 
     <select id="selectShareLines" resultType="com.chengyinhub.business.domain.EcomProfitShareLine" useCache="false" flushCache="true">
-        select id, share_order_id as shareOrderId, settlement_id as settlementId, line_type as lineType, receiver_kind as receiverKind, receiver_mchid as receiverMchid, receiver_member_id as receiverMemberId, amount_fen as amountFen
+        select id, share_order_id as shareOrderId, settlement_id as settlementId, line_type as lineType, receiver_kind as receiverKind, receiver_mchid as receiverMchid, receiver_member_id as receiverMemberId, amount_fen as amountFen,
+            receiver_type as receiverType, receiver_appid as receiverAppid, club_id as clubId, club_name as clubName
         from ecom_profit_share_line where share_order_id = #{shareOrderId} order by id
     </select>
 
     <insert id="insertReturn" useGeneratedKeys="true" keyProperty="id">
-        insert into ecom_profit_share_return (out_return_no, share_order_id, out_refund_no, return_mchid, amount_fen, state)
-        values (#{outReturnNo}, #{shareOrderId}, #{outRefundNo}, #{returnMchid}, #{amountFen}, 'PROCESSING')
+        insert into ecom_profit_share_return (out_return_no, share_order_id, out_refund_no, return_mchid, amount_fen, state, return_type, return_appid)
+        values (#{outReturnNo}, #{shareOrderId}, #{outRefundNo}, #{returnMchid}, #{amountFen}, 'PROCESSING', #{returnType}, #{returnAppid})
     </insert>
 
     <select id="selectReturn" resultType="com.chengyinhub.business.domain.EcomProfitShareReturn" useCache="false" flushCache="true">
-        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason
+        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason, return_type as returnType, return_appid as returnAppid
         from ecom_profit_share_return where out_return_no = #{outReturnNo}
     </select>
 
     <select id="selectReturnsByShareOrder" resultType="com.chengyinhub.business.domain.EcomProfitShareReturn" useCache="false" flushCache="true">
-        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason
+        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason, return_type as returnType, return_appid as returnAppid
         from ecom_profit_share_return where share_order_id = #{shareOrderId} order by id
     </select>
 
@@ -211,6 +214,23 @@
                 and (s.del_flag != 0 or s.payable_time is null or s.payable_time &gt; #{now}))
           and not exists (
               select 1 from coop_complaint c where c.del_flag = 0 and c.topic_id = o.topic_id and c.status &lt; 3)
+          and (o.topic_id &gt; 0 or exists (
+              select 1 from cms_activity a
+              join club_personal_payout_beneficiary b on b.scope_type = 'ACTIVITY' and b.scope_id = a.id
+              join cms_registration r on r.owner_type = 2 and r.owner_id = a.id
+                   and cast(r.registration_no as binary) = cast(o.out_trade_no as binary)
+              where a.id = -o.topic_id and a.del_flag = 0 and b.payout_ready_at is not null
+                and a.end_date is not null
+                and a.end_date &lt;= date_sub(#{now}, interval ${@com.chengyinhub.business.support.FundsHoldPolicy@WITHDRAWABLE_AFTER_END_DAYS} day)
+                and r.payment_status = 2 and r.registration_status = 2
+                and not exists (select 1 from coop_complaint c
+                                where c.registration_id = r.id and c.del_flag = 0 and c.status &lt; 3)
+                and not exists (select 1 from cms_activity_settlement_hold h
+                                where h.registration_id = r.id and h.status = 0)
+                and not exists (select 1 from ecom_refund f where f.out_trade_no = o.out_trade_no)
+                and not exists (select 1 from ecom_profit_share_line l
+                                left join settlement_detail d on d.id = -l.settlement_id
+                                where l.share_order_id = o.id and (l.settlement_id &gt;= 0 or d.id is null or d.status != 0))))
         order by o.id limit #{limit}
     </select>
 
@@ -268,7 +288,7 @@
     </select>
 
     <select id="selectReturnsByState" resultType="com.chengyinhub.business.domain.EcomProfitShareReturn" useCache="false" flushCache="true">
-        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason
+        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason, return_type as returnType, return_appid as returnAppid
         from ecom_profit_share_return
         <where><if test="state != null and state != ''">state = #{state}</if></where>
         order by id desc limit #{limit}
@@ -279,7 +299,7 @@
     </select>
 
     <select id="selectReturnById" resultType="com.chengyinhub.business.domain.EcomProfitShareReturn" useCache="false" flushCache="true">
-        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason
+        select id, out_return_no as outReturnNo, share_order_id as shareOrderId, out_refund_no as outRefundNo, return_mchid as returnMchid, amount_fen as amountFen, state, wx_return_no as wxReturnNo, fail_reason as failReason, return_type as returnType, return_appid as returnAppid
         from ecom_profit_share_return where id = #{id}
     </select>
 

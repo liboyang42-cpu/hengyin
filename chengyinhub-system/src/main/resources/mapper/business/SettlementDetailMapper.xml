@@ -6,6 +6,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <resultMap id="SettlementDetailResult" type="com.chengyinhub.business.domain.SettlementDetail">
         <result property="id" column="id"/>
+        <result property="clubId" column="club_id"/>
+        <result property="clubName" column="club_name"/>
         <result property="claimId" column="claim_id"/>
         <result property="entryKind" column="entry_kind"/>
         <result property="eventKey" column="event_key"/>
@@ -26,7 +28,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <select id="selectDetailList" parameterType="com.chengyinhub.business.domain.SettlementDetail" resultMap="SettlementDetailResult">
-        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+        select club_id, club_name, id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
                gross_amount, commission_amount, settlement_amount, status, fail_reason,
                idempotency_key, create_time, update_time
         from settlement_detail
@@ -41,12 +43,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <insert id="batchInsert">
         insert into settlement_detail
-        (claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+        (club_id, club_name, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
          gross_amount, commission_amount, settlement_amount, status, fail_reason,
          idempotency_key, create_time)
         values
         <foreach collection="list" item="item" separator=",">
-            (#{item.claimId}, #{item.entryKind}, #{item.eventKey}, #{item.batchId}, #{item.merchantId}, #{item.sourceType}, #{item.sourceId},
+            (#{item.clubId}, #{item.clubName}, #{item.claimId}, #{item.entryKind}, #{item.eventKey}, #{item.batchId}, #{item.merchantId}, #{item.sourceType}, #{item.sourceId},
              #{item.receiverType}, #{item.receiverId}, #{item.grossAmount},
              #{item.commissionAmount}, #{item.settlementAmount}, #{item.status},
              #{item.failReason}, #{item.idempotencyKey}, now())
@@ -54,7 +56,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </insert>
 
     <select id="selectSettledDetail" resultMap="SettlementDetailResult">
-        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+        select club_id, club_name, id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
                gross_amount, commission_amount, settlement_amount, status, fail_reason,
                idempotency_key, create_time, update_time
         from settlement_detail
@@ -71,7 +73,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       是否真扣余额由 RefundServiceImpl 再问父级真实打款态,status=0 且未打款只作废。
     -->
     <select id="selectSettledDetails" resultMap="SettlementDetailResult">
-        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+        select club_id, club_name, id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
                gross_amount, commission_amount, settlement_amount, status, fail_reason,
                idempotency_key, create_time, update_time
         from settlement_detail
@@ -98,17 +100,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <insert id="insertAdjustment" parameterType="com.chengyinhub.business.domain.SettlementDetail" useGeneratedKeys="true" keyProperty="id">
         insert ignore into settlement_detail
-        (claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+        (club_id, club_name, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
          gross_amount, commission_amount, settlement_amount, status, fail_reason,
          idempotency_key, create_time)
         values
-        (#{claimId}, #{entryKind}, #{eventKey}, #{batchId}, #{merchantId}, #{sourceType}, #{sourceId}, #{receiverType}, #{receiverId},
+        (#{clubId}, #{clubName}, #{claimId}, #{entryKind}, #{eventKey}, #{batchId}, #{merchantId}, #{sourceType}, #{sourceId}, #{receiverType}, #{receiverId},
          #{grossAmount}, #{commissionAmount}, #{settlementAmount}, #{status}, #{failReason},
          #{idempotencyKey}, now())
     </insert>
 
     <select id="selectByIdempotencyKeyForUpdate" resultMap="SettlementDetailResult">
-        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+        select club_id, club_name, id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
                gross_amount, commission_amount, settlement_amount, status, fail_reason,
                idempotency_key, create_time, update_time
         from settlement_detail
@@ -131,12 +133,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </sql>
 
     <select id="selectPendingByMerchant" resultMap="SettlementDetailResult">
-        select id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
+        select club_id, club_name, id, claim_id, entry_kind, event_key, batch_id, merchant_id, source_type, source_id, receiver_type, receiver_id,
                gross_amount, commission_amount, settlement_amount, status, fail_reason,
                idempotency_key, create_time, update_time
         from settlement_detail
         where merchant_id = #{merchantId}
           and batch_id = 0
+          and club_id is null
           and status = 0
           <include refid="topicTicketNotYetSettleable"/>
         order by id asc
@@ -147,6 +150,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         set batch_id = #{batchId}, update_time = now()
         where merchant_id = #{merchantId}
           and batch_id = 0
+          and club_id is null
           and status = 0
           <include refid="topicTicketNotYetSettleable"/>
     </update>
@@ -192,6 +196,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where source_type = #{sourceType}
           and source_id = #{sourceId}
           and batch_id = 0
+          and club_id is null
           and status = 0
     </update>
 
@@ -202,6 +207,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where source_type = 'coupon'
           and source_id = #{sourceId}
           and batch_id = 0
+          and club_id is null
           and status = 0
     </delete>
 
