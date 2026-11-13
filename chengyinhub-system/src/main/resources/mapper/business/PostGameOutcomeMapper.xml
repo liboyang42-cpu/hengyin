@@ -185,6 +185,57 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <!--
+      U08-04 创作者口径（App 可调用）：只是在同一口径上加主题范围，不改上面任何平台查询。
+      报名的主题 = owner_type 1 的 owner_id；owner_type 2 的 cms_activity.topic_id；自玩通行证回落 cms_registration.topic_id。
+    -->
+    <sql id="registrationTopicExpr">
+        coalesce(case when r.owner_type = 1 then r.owner_id end, a.topic_id, r.topic_id)
+    </sql>
+
+    <select id="selectCohortMemberIdsForTopics" resultType="java.lang.Long">
+        select distinct r.member_id
+        from cms_registration r
+        left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        where r.member_id is not null
+          and r.payment_time is not null
+          and r.payment_time &gt;= #{from}
+          and r.payment_time &lt; #{toExclusive}
+          and <include refid="registrationTopicExpr"/> in
+          <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+        order by r.member_id asc
+    </select>
+
+    <resultMap id="registrationTopicMap" type="java.util.HashMap">
+        <result column="registrationId" property="registrationId" javaType="java.lang.Long"/>
+        <result column="topicId" property="topicId" javaType="java.lang.Long"/>
+    </resultMap>
+    <select id="selectRegistrationTopics" resultMap="registrationTopicMap">
+        select r.id as registrationId, <include refid="registrationTopicExpr"/> as topicId
+        from cms_registration r
+        left join cms_activity a on r.owner_type = 2 and a.id = r.owner_id
+        where r.id in
+        <foreach collection="registrationIds" item="registrationId" open="(" separator="," close=")">#{registrationId}</foreach>
+    </select>
+
+    <select id="selectTopicCompletionFacts" resultType="com.chengyinhub.business.domain.dto.OutcomeFactRow">
+        select raw.member_id as memberId, raw.stat_date as statDate, raw.source_kind as sourceKind,
+               min(raw.occurred_at) as firstOccurredAt, max(raw.occurred_at) as lastOccurredAt,
+               count(distinct raw.fact_key) as factCount
+        from (
+            select t.member_id as member_id, date(t.completed_at) as stat_date, t.completed_at as occurred_at,
+                   'TOPIC_ROUTE_SESSION_COMPLETED' as source_kind, concat('route:', t.id) as fact_key
+              from topic_route_session t
+             where t.status = 1
+               and t.completed_at is not null
+               and t.member_id is not null
+               and t.completed_at &gt;= #{from} and t.completed_at &lt; #{toExclusive}
+               and t.topic_id in
+               <foreach collection="topicIds" item="topicId" open="(" separator="," close=")">#{topicId}</foreach>
+        ) raw
+        group by raw.member_id, raw.stat_date, raw.source_kind
+    </select>
+
+    <!--
       各真实来源水位：报表随响应返回，便于判断数据到底新到什么时刻。
       退款水位必须限定到本报表真正读的那部分（registration 来源、del_flag=0），
       因为退款会在支付之后回溯改变 cohort 排除口径 —— 一个宽口径水位会让人误以为排除已刷新。
