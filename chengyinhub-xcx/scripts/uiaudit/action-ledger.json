@@ -1365567,7 +1365567,8 @@
           {
             "url": "/api/platform-pass/orders/{param}/refund-apply",
             "method": "POST",
-            "auth": "authenticated"
+            "auth": "authenticated",
+            "source": "server-controller"
           },
           {
             "url": "/api/role/info",
