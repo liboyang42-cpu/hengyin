@@ -3,10 +3,10 @@
   "kind": "release-migration-pack",
   "releaseCloseout": "release-closeout-20261029",
   "generatedFor": {
-    "masterCommit": "66b97c58e81d8e90860adda544d6e639148db4bd",
-    "sourceTree": "8b6175486411ca24fd7b8622934459f7b57f38c1",
-    "migrationTree": "b1b4d2e4a1d356c35177c0901db6a7d49182d2f2",
-    "dependencySha256": "927e27df01d4d30ce1489bb9ea14856463ea17415d915fafe1cd1a063c725419",
+    "masterCommit": "98bb65b1bec73df922c4d9d8d7dfc1ea26471ee5",
+    "sourceTree": "a4e02e8092a5c7098c8bd896befc334d6da70e49",
+    "migrationTree": "5cf03d953ec9a910b9335d8c74dcbb5b1a86aabb",
+    "dependencySha256": "9e825df6181e6b3a4d96eac825a6afb5debd4224ef7173b3ae708fc8a4d293c0",
     "date": "2026-10-29"
   },
   "baseline": {
@@ -17,7 +17,7 @@
   "ordering": {
     "strategy": "explicit-dependencies-then-path-bytewise",
     "source": "ci/migration-dependencies.json via ci/migration_ledger.py",
-    "orderField": "order = 该迁移在源提交全量 650 个迁移拓扑序中的位置；发布集内按 step 顺序执行"
+    "orderField": "order = 该迁移在源提交全量 651 个迁移拓扑序中的位置；发布集内按 step 顺序执行"
   },
   "phases": {
     "PRE_DEPLOY_REQUIRED": "新 jar 直接读写该表/列，必须先于新 jar 落库",
@@ -3922,6 +3922,31 @@
         "SELECT ((IFNULL((SELECT COUNT(*) > 0 FROM sys_job WHERE invoke_target = 'committedOfficialNoticeTask.deliverPending()'), 0))) = 1 AS applied; -- 期望 1"
       ],
       "step": 165
+    },
+    {
+      "migrationId": "20261113_stagger_payout_jobs",
+      "path": "chengyinhub-admin/sql/migration_20261113_stagger_payout_jobs.sql",
+      "sha256": "ba5fffc38a8b558984fb992fb8c88344b41453726ab9dd6ab925fb89e12fe86f",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 649,
+      "dependsOn": [
+        "20261101_stagger_sys_job_seconds",
+        "20261112_dec_c_payout_jobs",
+        "zzz_committed_official_notice_job_reregister_20261111"
+      ],
+      "phase": "POST_DEPLOY",
+      "changes": "收付通与官方通知任务的 cron 错峰（只改仍为原表达式的 sys_job 行，频率不变）；修复 dec_c_payout_jobs 启用任务后违反 20261101_stagger_sys_job_seconds 末态断言的冲突；放在二者之后",
+      "idempotencyGuard": "静态幂等（IF NOT EXISTS / INSERT…WHERE NOT EXISTS / 写绝对值）；f-rehearsal 两遍执行零报错",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "UPDATE sys_job：按键/条件写少量行（按语句归纳）",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT (SELECT COUNT(*) FROM sys_job WHERE invoke_target IN ('ecommercePayoutTask.shareAndRetry()', 'ecommercePayoutTask.syncOnboarding()', 'committedOfficialNoticeTask.deliverPending()') AND cron_expression IN ('0 0/10 * * * ?', '0 15/30 * * * ?', '0 0/1 * * * ?')) = 0 AND (SELECT COUNT(*) FROM sys_job WHERE status = '0' AND cron_expression IN ('0 * * * * ?', '0 0/2 * * * ?', '0 0/10 * * * ?', '0 0/15 * * * ?', '0 0/30 * * * ?')) = 0 AS payout_jobs_staggered), 0))) = 1 AS applied; -- 期望 1"
+      ],
+      "step": 166
     }
   ],
   "previousPack": "docs/delivery/release-closeout-20261028/release-migration-pack.json",

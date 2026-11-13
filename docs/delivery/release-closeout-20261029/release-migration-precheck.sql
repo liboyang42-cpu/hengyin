@@ -1550,6 +1550,13 @@ SELECT 648 AS exec_order, 'zzz_committed_official_notice_job_reregister_20261111
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT('定时任务 committedOfficialNoticeTask.deliverPending()', ' (', present, '/', expected, ')') AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) > 0 FROM sys_job WHERE invoke_target = 'committedOfficialNoticeTask.deliverPending()'), 0)) AS present, 1 AS expected) x
+UNION ALL
+SELECT 649 AS exec_order, '20261113_stagger_payout_jobs' AS migration_id,
+  CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
+  CONCAT('迁移自身只读断言', ' (', present, '/', expected, ')') AS detail
+FROM (SELECT (IFNULL((SELECT (SELECT COUNT(*) FROM sys_job WHERE invoke_target IN ('ecommercePayoutTask.shareAndRetry()', 'ecommercePayoutTask.syncOnboarding()', 'committedOfficialNoticeTask.deliverPending()')
+          AND cron_expression IN ('0 0/10 * * * ?', '0 15/30 * * * ?', '0 0/1 * * * ?')) = 0
+   AND (SELECT COUNT(*) FROM sys_job WHERE status = '0' AND cron_expression IN ('0 * * * * ?', '0 0/2 * * * ?', '0 0/10 * * * ?', '0 0/15 * * * ?', '0 0/30 * * * ?')) = 0 AS payout_jobs_staggered), 0)) AS present, 1 AS expected) x
 ORDER BY exec_order;
 
 -- [3/7] D-PAYEE（20261016）前置数据与当前授权矩阵
