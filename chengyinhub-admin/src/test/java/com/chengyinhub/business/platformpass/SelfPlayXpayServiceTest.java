@@ -106,6 +106,7 @@ class SelfPlayXpayServiceTest {
         m.put("registration_no", REG_NO);
         m.put("member_id", MEMBER);
         m.put("product_id", "goods_3990");
+        m.put("offer_id", "offer-1");
         m.put("xpay_env", 1);
         m.put("price_fen", 3990L);
         m.put("state", state);
@@ -179,7 +180,7 @@ class SelfPlayXpayServiceTest {
         sessionOk();
         when(mapper.selectByRegistrationId(REG_ID)).thenReturn(null, row(0, 0));
         Map<String, Object> out = service.prepare(MEMBER, registration(), "code-1");
-        verify(mapper).insertFrozen(REG_ID, REG_NO, MEMBER, "goods_3990", 1, 3990L);
+        verify(mapper).insertFrozen(REG_ID, REG_NO, MEMBER, "goods_3990", "offer-1", 1, 3990L);
         assertEquals("XPAY", out.get("payChannel"));
         @SuppressWarnings("unchecked")
         Map<String, Object> vp = (Map<String, Object>) out.get("virtualPayment");
@@ -196,7 +197,7 @@ class SelfPlayXpayServiceTest {
         props.setGoods("3990=other_goods");
         when(mapper.selectByRegistrationId(REG_ID)).thenReturn(row(0, 0));
         Map<String, Object> out = service.prepare(MEMBER, registration(), "code-1");
-        verify(mapper, never()).insertFrozen(anyLong(), anyString(), anyLong(), anyString(), anyInt(), anyLong());
+        verify(mapper, never()).insertFrozen(anyLong(), anyString(), anyLong(), anyString(), anyString(), anyInt(), anyLong());
         @SuppressWarnings("unchecked")
         Map<String, Object> vp = (Map<String, Object>) out.get("virtualPayment");
         assertEquals("goods_3990", JSONObject.parseObject((String) vp.get("signData")).getString("productId"));
@@ -208,7 +209,7 @@ class SelfPlayXpayServiceTest {
         SelfPlayXpayException e = assertThrows(SelfPlayXpayException.class,
                 () -> service.prepare(MEMBER, registration(), " "));
         assertEquals("JS_CODE_REQUIRED", e.getCode());
-        verify(mapper, never()).insertFrozen(anyLong(), anyString(), anyLong(), anyString(), anyInt(), anyLong());
+        verify(mapper, never()).insertFrozen(anyLong(), anyString(), anyLong(), anyString(), anyString(), anyInt(), anyLong());
     }
 
     @Test

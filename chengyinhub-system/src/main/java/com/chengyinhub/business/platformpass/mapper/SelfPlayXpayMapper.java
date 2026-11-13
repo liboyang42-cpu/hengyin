@@ -11,7 +11,7 @@ import java.util.Map;
 
 /** 自玩票虚拟支付冻结行（cms_registration_xpay）。所有写带状态前置条件，返回影响行数。 */
 public interface SelfPlayXpayMapper {
-    String COLS = "id, registration_id, registration_no, member_id, product_id, xpay_env, price_fen, state, "
+    String COLS = "id, registration_id, registration_no, member_id, product_id, offer_id, xpay_env, price_fen, state, "
             + "wx_order_id, paid_time, delivery_confirmed, refund_no, refunded_time, create_time, update_time";
 
     @Select("select " + COLS + " from cms_registration_xpay where registration_id = #{registrationId}")
@@ -25,11 +25,11 @@ public interface SelfPlayXpayMapper {
 
     /** 首次签发冻结；已有行时不覆盖（冻结值永不被后续配置变化改写）。 */
     @Insert("insert ignore into cms_registration_xpay (registration_id, registration_no, member_id, product_id, "
-            + "xpay_env, price_fen, state) values (#{registrationId}, #{registrationNo}, #{memberId}, "
-            + "#{productId}, #{env}, #{priceFen}, 0)")
+            + "offer_id, xpay_env, price_fen, state) values (#{registrationId}, #{registrationNo}, #{memberId}, "
+            + "#{productId}, #{offerId}, #{env}, #{priceFen}, 0)")
     int insertFrozen(@Param("registrationId") long registrationId, @Param("registrationNo") String registrationNo,
                      @Param("memberId") long memberId, @Param("productId") String productId,
-                     @Param("env") int env, @Param("priceFen") long priceFen);
+                     @Param("offerId") String offerId, @Param("env") int env, @Param("priceFen") long priceFen);
 
     /** 已付并开通；仅从 0（待付）或 4 以外迁移，重复调用 0 行。 */
     @Update("update cms_registration_xpay set state = 1, wx_order_id = #{wxOrderId}, paid_time = #{paidTime}, "

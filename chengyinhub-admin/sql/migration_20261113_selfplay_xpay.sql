@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS cms_registration_xpay (
   registration_no varchar(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   member_id bigint NOT NULL,
   product_id varchar(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '首次签发时冻结的虚拟支付道具 ID',
+  offer_id varchar(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT '首次签发时冻结的 OfferID（非密钥）',
   xpay_env tinyint NOT NULL COMMENT '首次签发时冻结：0 正式 / 1 沙箱',
   price_fen bigint NOT NULL COMMENT '首次签发时冻结的应付分',
   state tinyint NOT NULL DEFAULT 0 COMMENT '0 已签发待付 / 1 已付并开通 / 2 退款中 / 3 已退款 / 4 已付但订单已关闭（待自动退款） / 5 确认未付已放行关单',

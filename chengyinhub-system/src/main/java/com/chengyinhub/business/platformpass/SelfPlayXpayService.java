@@ -131,7 +131,7 @@ public class SelfPlayXpayService {
             if (!eligibleForNew(reg)) throw new SelfPlayXpayException("XPAY_NOT_ELIGIBLE", "支付暂不可用");
             Long fen = fen(reg);
             mapper.insertFrozen(reg.getId(), reg.getRegistrationNo(), memberId, props.goodsIdFor(fen),
-                    passProps.getXpay().getEnv(), fen);
+                    passProps.getXpay().getOfferId(), passProps.getXpay().getEnv(), fen);
             row = mapper.selectByRegistrationId(reg.getId());
         }
         if (row == null || num(row.get("state")) != SIGNED) {
@@ -152,6 +152,7 @@ public class SelfPlayXpayService {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("payChannel", "XPAY");
         out.put("virtualPayment", PlatformPassService.xpayClientParams(passProps.getXpay(),
+                (String) row.get("offer_id"), num(row.get("xpay_env")).intValue(),
                 (String) row.get("product_id"), num(row.get("price_fen")), reg.getRegistrationNo(),
                 session.getSessionKey()));
         return out;
