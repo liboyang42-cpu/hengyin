@@ -311,6 +311,20 @@ public class TopicPublicationService {
         return result;
     }
 
+    /**
+     * App 已批准主题发行送审口（/api/approved-topic-release/v1/review/submit）：与 submitTopicBundle 同一份 BIZ_TOPIC
+     * 组合审核冻结包与送审（开放单 refresh 版本 +1，否则新单版本 0），但不触发 publishBeforeReview 公开。
+     * 在调用方事务内执行；调用方负责归属、捕获比对与回执不变量。
+     */
+    public Long submitReviewBundle(Long topicId, Long memberId) {
+        PreparedBundle prepared = prepareTopicBundle(topicId, memberId);
+        String snapshotJson = prepared.submission.getSnapshotJson();
+        publicationContentGuard.assertTopicSizeWithinLimits(topicId);
+        Long taskId = auditTaskService.submitOrRefreshTopicBundle(topicId, memberId, snapshotJson);
+        topicBundleReviewService.assertDeclarationsUnchanged(topicId, snapshotJson);
+        return taskId;
+    }
+
     public Long requestContentSafetyRelistReview(Long topicId, Long submitterId) {
         if (topicId == null || topicId <= 0L) throw new IllegalArgumentException("主题ID不能为空");
         Long open = findOpenTopicTaskId(topicId);
