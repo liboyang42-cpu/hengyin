@@ -706,9 +706,10 @@ public class PlayBasicCommandApplication {
                 && advancedGameRuntimeService.solvedForArrival(memberId, actId, ctx.topicId, node.getId());
         // 业主 2026-11-13:定位只在开局(本局第一次到达)校验一次,须在首站 300 米内;
         // 开局闸不看首站玩法是否已解开:解开玩法不等于人在起点(2026-11-13 走查:千里之外解开站1也被接受)。
+        // 唯一豁免:实体免费收集的店内扫码/拍照已核验凭证(进店本身就是现场证明,不走线路开局闸)。
         // 本局已有进度 = 开局校验已过,之后各站到点不再要求定位。没开局又不带定位的到达一律拒绝。
         boolean runStarted = shopDayProofService.runStarted(memberId, actId);
-        if (hasNodeCoord && !runStarted) {
+        if (hasNodeCoord && !(freeCollectStore && stationGameProof) && !runStarted) {
             if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return arriveRejected(PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING), frozenStation);
             // R10-10:Double.parseDouble 接受 "NaN"/"Infinity",而 NaN 与任何数比较恒 false,
             // 旧写法让无效坐标绕过围栏直接落入 advanceProgress 拿进度和奖励。玩家输入与站点配置
