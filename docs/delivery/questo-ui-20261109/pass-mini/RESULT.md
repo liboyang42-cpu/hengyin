@@ -23,3 +23,13 @@
 - 单测：`tests/unit/l-pass-platform-pass.test.js` 30 项通过；同步更新路由数 / 标题盘点 / 页面清理清单 / 按压反馈等计数类单测。
 
 STATUS: PARTIAL - 退款入口依赖未合并的后端 PR #818（API 存在性闸在其合并前为红）；概览 terms 文案字段待后端补；真机/模拟器截图未做
+
+## Shepherd 1113
+
+- 2026-11-13 把 master（含 #818 通行证后端）合入 `fix/pass-mini-20261113`，无冲突、无历史改写。
+- 与 #818 实际接口对齐核对：`POST /api/platform-pass/orders/{orderNo}/refund-apply`、订单 `refund.reviewStatus`、`libraryCount`、`validDays`、`channels.xpay.available/reason` 均与小程序读法一致；概览没有 `terms`，小程序本就按可选字段读取、缺则不画，无需改代码（退款规则正文仍待业主定稿后由后端加法式补）。
+- 合入后唯一失败来源：动作台账漂移（`refund-apply` 现有服务端 Controller 来源），按文档工具 `build-action-ledger.js --write` 重新生成（6043 项）；未改 ci/architecture/*、workflows、闸脚本，未跑 xcx-check 自检。
+- 本地复核：CWD 无关性、API 存在性（A=0）、silentError、ui-integrity、route-matrix --check、`l-pass-platform-pass` 单测 30 项均通过。
+- CI（head `b9e99a402`，run 2399）：Fast gates、Mini program static gates、20 个单测分片、Secret scan 全部 success。该分支随后已由 lead 合入 master（#820）。
+
+STATUS: DONE
