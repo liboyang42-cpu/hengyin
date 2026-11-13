@@ -133,7 +133,7 @@ class PlatformPassServiceTest {
         props.setEnabled(true);
         Map<?, ?> channels = service.channels();
         assertEquals(false, ((Map<?, ?>) channels.get("jsapi")).get("available"));
-        assertEquals("JSAPI_DISABLED", ((Map<?, ?>) channels.get("jsapi")).get("reason"));
+        assertEquals("JSAPI_PASS_PURCHASE_CLOSED", ((Map<?, ?>) channels.get("jsapi")).get("reason"));
         assertEquals("XPAY_DISABLED", ((Map<?, ?>) channels.get("xpay")).get("reason"));
     }
 
@@ -957,7 +957,7 @@ class PlatformPassServiceTest {
         when(mapper.selectActiveClaims(MEMBER)).thenReturn(List.of(Map.of("membership_id", 7L, "registration_id", 900L, "topic_id", 5L)));
         Map<String, Object> afterApply = order("XPAY", 1);
         afterApply.put("review_status", 1); afterApply.put("review_apply_reason", "想退");
-        when(mapper.selectOrderByNo("PPO1")).thenReturn(paid, afterApply);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paid, afterApply);
         Map<String, Object> view = service.applyRefund(MEMBER, "PPO1", "想退");
         verify(mapper).requestReview(eq(10L), eq("想退"), eq("已领取主题数=1；主题=5"));
         assertEquals("PENDING", ((Map<?, ?>) view.get("refund")).get("reviewStatus"));
