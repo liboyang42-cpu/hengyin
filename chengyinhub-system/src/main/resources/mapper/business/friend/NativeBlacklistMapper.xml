@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.friend.NativeBlacklistMapper">
+
+    <select id="selectPage" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT b.id AS block_id, b.blocked_member_id AS peer_id,
+               COALESCE(NULLIF(m.nickname, ''), NULLIF(m.name, ''), CONCAT('用户', b.blocked_member_id)) AS nickname
+          FROM im_block b
+          LEFT JOIN ums_member m ON m.id = b.blocked_member_id
+         WHERE b.member_id = #{viewer} AND b.blocked_member_id &lt;&gt; #{viewer}
+           <if test="cursor > 0">AND b.id &lt; #{cursor}</if>
+         ORDER BY b.id DESC
+         LIMIT #{limit}
+    </select>
+
+    <select id="selectBlockId" resultType="java.lang.Long" useCache="false">
+        SELECT id FROM im_block WHERE member_id = #{viewer} AND blocked_member_id = #{peer}
+    </select>
+
+    <select id="lockBlockId" resultType="java.lang.Long" useCache="false" flushCache="true">
+        SELECT id FROM im_block WHERE member_id = #{viewer} AND blocked_member_id = #{peer} FOR UPDATE
+    </select>
+
+    <delete id="deleteBlock">
+        DELETE FROM im_block WHERE id = #{id} AND member_id = #{viewer} AND blocked_member_id = #{peer}
+    </delete>
+</mapper>

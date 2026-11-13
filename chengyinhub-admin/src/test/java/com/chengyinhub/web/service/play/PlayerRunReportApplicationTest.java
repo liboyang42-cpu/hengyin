@@ -455,4 +455,32 @@ class PlayerRunReportApplicationTest {
         row.setCheckinTime(new Date(1_700_000_000_000L + nodeId * 1000L));
         return row;
     }
+
+    @Test
+    void reportCarriesTheViewersRunTeamOnlyWhenOneExists() {
+        PlayerNodeProgress current = progress(1L, 100, "SOLVED");
+        current.setPlayInstanceId("run-a");
+        when(progressService.selectPlayerNodeProgressList(any())).thenReturn(List.of(current));
+        TopicRouteSession session = new TopicRouteSession();
+        session.setStatus(TopicRouteSession.STATUS_COMPLETED);
+        session.setPlayInstanceId("run-a");
+        session.setConfigSnapshotJson("{\"legacyRun\":true}");
+        when(routeMapper.selectCurrentByOwner(0L, TOPIC, VIEWER)).thenReturn(session);
+        com.chengyinhub.business.service.team.pool.TeamResourcePoolService teams =
+                mock(com.chengyinhub.business.service.team.pool.TeamResourcePoolService.class);
+        ReflectionTestUtils.setField(application, "teamPool", teams);
+
+        when(teams.viewerRunTeam(VIEWER, 0L, TOPIC)).thenReturn(55L);
+        PlayerRunReportVO vo = (PlayerRunReportVO) application.report(VIEWER, null, TOPIC).get(AjaxResult.DATA_TAG);
+        assertEquals(55L, vo.getTeamId(), "self-play run reports the owner_type 1 team");
+
+        when(teams.viewerRunTeam(VIEWER, 0L, TOPIC)).thenReturn(null);
+        vo = (PlayerRunReportVO) application.report(VIEWER, null, TOPIC).get(AjaxResult.DATA_TAG);
+        assertNull(vo.getTeamId(), "no team: no team id, never a guess");
+
+        when(teams.viewerRunTeam(VIEWER, 0L, TOPIC)).thenThrow(new IllegalStateException("db down"));
+        AjaxResult degraded = application.report(VIEWER, null, TOPIC);
+        assertTrue(degraded.isSuccess(), "a failed team read never fails the report");
+        assertNull(((PlayerRunReportVO) degraded.get(AjaxResult.DATA_TAG)).getTeamId());
+    }
 }

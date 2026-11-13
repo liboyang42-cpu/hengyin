@@ -48,6 +48,18 @@ public class TeamResourcePoolService
     /** 冻结额度；null = 本主题未配置共享池。 */
     record Limits(int hints, int skips, int timerSec) { }
 
+    /**
+     * 查看者在这一局的队伍 id（/api/play/nodes 与战报的 teamId）：场次局只认 owner_type 2 = 该场次，
+     * 主题自玩只认 owner_type 1 = 该主题；必须是在岗成员（status=1）且队伍未结束/未解散。没有队伍返回 null。
+     */
+    public Long viewerRunTeam(long viewer, long activityId, long topicId)
+    {
+        if (viewer <= 0) return null;
+        if (activityId > 0) return mapper.selectViewerRunTeam(viewer, 2, activityId);
+        if (topicId > 0) return mapper.selectViewerRunTeam(viewer, 1, topicId);
+        return null;
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> pool(long viewer, long teamId)
     {

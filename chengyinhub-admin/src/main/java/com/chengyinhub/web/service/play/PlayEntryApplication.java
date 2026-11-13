@@ -67,6 +67,9 @@ public class PlayEntryApplication {
     private PlayNodeContext playNodeContext;
     @Autowired
     private PlayNodeQueryApplication playNodeQueryApplication;
+    /** /nodes 的 teamId；测试直接 new 时为 null。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.team.pool.TeamResourcePoolService teamPool;
     /** 礼品可玩资格（只读自玩域）；必需注入，避免礼品行退化成"买家可玩"。 */
     @Autowired
     private com.chengyinhub.business.service.IMarketingGiftPlayEligibility giftPlayEligibility;
@@ -268,6 +271,9 @@ public class PlayEntryApplication {
         }
         if (versionedContent || hasNodeGames) read.nodeList = presentedNodes;
         Map<String, Object> data = playNodeQueryApplication.finishNodes(read);
+        // 队伍局：查看者本局在岗队伍的 id（场次局 owner_type 2，自玩 owner_type 1）；没有就不下发该键。
+        Long runTeamId = PlayRunTeam.of(teamPool, memberId, progActId, tId);
+        if (runTeamId != null) data.put("teamId", runTeamId);
         // 升级2:俱乐部局自动分配角色(已报名才发;自玩/公域局不发)。best-effort,不拖垮 /nodes
         if (!selfPlay && clubId != null && registered
                 && (gameSessionRuntimeService == null || gameSessionRuntimeService.routeSessionStatus(progActId) == null)) {

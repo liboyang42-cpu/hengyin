@@ -44,6 +44,8 @@ public class PlayerRunReportVO {
     private String runState;
     private String scopeKind;
     private Long runId;
+    /** 查看者在这一局的队伍（play_team.id）；不是队伍局或已不在队为 null。只用于打开队内榜/共享池。 */
+    private Long teamId;
     private String playInstanceId;
     private String progressScope;
     private String runKind;
@@ -66,6 +68,8 @@ public class PlayerRunReportVO {
     public void setActivityId(Long activityId) { this.activityId = activityId; }
     public String getScopeKind() { return scopeKind; }
     public void setScopeKind(String scopeKind) { this.scopeKind = scopeKind; }
+    public Long getTeamId() { return teamId; }
+    public void setTeamId(Long teamId) { this.teamId = teamId; }
     public Long getRunId() { return runId; }
     public void setRunId(Long runId) { this.runId = runId; }
     public String getRunKind() { return runKind; }

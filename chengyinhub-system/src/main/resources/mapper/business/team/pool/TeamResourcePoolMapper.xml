@@ -10,6 +10,12 @@
     <select id="selectActivityTopic" resultType="java.lang.Long" useCache="false">
         select topic_id from cms_activity where id = #{activityId}
     </select>
+    <select id="selectViewerRunTeam" resultType="java.lang.Long" useCache="false">
+        select t.id from play_team t
+          join play_team_member m on m.team_id = t.id and m.member_id = #{memberId} and m.status = 1
+         where t.owner_type = #{ownerType} and t.owner_id = #{ownerId} and t.status in (0, 1, 2)
+         order by t.id desc limit 1
+    </select>
     <select id="selectPublishedTheme" resultType="java.lang.String" useCache="false">
         select published_theme_runtime_config_json from cms_topic where id = #{topicId} and del_flag = 0
     </select>

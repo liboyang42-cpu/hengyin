@@ -158,4 +158,17 @@ class TeamResourcePoolServiceTest
         assertNull(TeamResourcePoolService.limits("{\"gameplayRuntime\":{\"teamPool\":{\"hints\":\"x\"}}}"));
         assertEquals(new TeamResourcePoolService.Limits(2, 1, 600), TeamResourcePoolService.limits(CONFIG));
     }
+
+    @Test void viewerRunTeamUsesTheRunsOwnerType()
+    {
+        TeamResourcePoolMapper m = mock(TeamResourcePoolMapper.class);
+        TeamResourcePoolService teams = new TeamResourcePoolService(m);
+        when(m.selectViewerRunTeam(7, 2, 500)).thenReturn(41L);
+        when(m.selectViewerRunTeam(7, 1, 30)).thenReturn(42L);
+        assertEquals(41L, teams.viewerRunTeam(7, 500, 30), "an activity run only matches an activity-owned team");
+        assertEquals(42L, teams.viewerRunTeam(7, 0, 30), "self-play only matches a topic-owned team");
+        assertNull(teams.viewerRunTeam(7, 0, 0));
+        assertNull(teams.viewerRunTeam(0, 500, 30));
+        verify(m, never()).selectViewerRunTeam(7, 1, 500);
+    }
 }
