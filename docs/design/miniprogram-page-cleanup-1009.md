@@ -119,6 +119,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/club/group-code/index` | 否 | `chengyinhub-xcx/pages/club/topic-detail/index.js:896` | KEEP |
 | `pages/club/join-requests/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:2275` | KEEP |
 | `pages/club/notify/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:953` | KEEP |
+| `pages/club/payout-receiver/index` | 否 | `chengyinhub-xcx/pages/club/settlement/index.js:237` | KEEP |
 | `pages/club/roles/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:1032` | KEEP |
 | `pages/club/settlement/index` | 否 | `chengyinhub-xcx/components/cy/scene-club-edit/index.js:421` | KEEP |
 | `pages/club/topic-detail/index` | 否 | `chengyinhub-xcx/pages/club/detail/index.js:2535` | KEEP |
