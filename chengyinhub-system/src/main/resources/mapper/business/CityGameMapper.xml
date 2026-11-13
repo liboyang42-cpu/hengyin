@@ -249,4 +249,38 @@
               WHERE board_id = #{boardId} AND domain = 'game' AND action = 'START_CHALLENGE' AND decision = 'APPLIED'
                 AND create_time &lt;= #{asOf}) AS challenges
     </select>
+
+    <!-- gaps A pass 2 -->
+    <update id="freezeBoard">
+        UPDATE city_game_board SET lifecycle = 'FROZEN', board_version = board_version + 1, event_sequence = event_sequence + 1
+        WHERE board_id = #{boardId} AND lifecycle = 'OPEN'
+    </update>
+    <select id="countTeamsStillPlaying" resultType="int">
+        SELECT COUNT(*) FROM city_game_team t WHERE t.board_id = #{boardId} AND t.state = 'LOCKED'
+          AND (NOT EXISTS (SELECT 1 FROM city_game_round r WHERE r.board_id = t.board_id AND r.team_id = t.team_id)
+               OR EXISTS (SELECT 1 FROM city_game_round r WHERE r.board_id = t.board_id AND r.team_id = t.team_id AND r.status = 'OPEN'))
+    </select>
+    <update id="bumpPointSlot">
+        UPDATE city_game_point SET slot_version = slot_version + 1 WHERE board_id = #{boardId} AND point_id = #{pointId}
+    </update>
+    <insert id="insertPointEvent">
+        INSERT INTO city_point_event(board_id, point_id, component, aggregate_version, availability, merchant_version, platform_version, holder_team_id)
+        SELECT board_id, point_id, #{component},
+               CASE #{component} WHEN 'SLOT' THEN slot_version WHEN 'MERCHANT' THEN merchant_version ELSE platform_version END,
+               availability, merchant_version, platform_version, #{holderTeamId}
+        FROM city_game_point WHERE board_id = #{boardId} AND point_id = #{pointId}
+    </insert>
+    <insert id="insertBudgetRoll">
+        INSERT INTO city_game_roll(board_id, team_id, round_seq, member_id, request_id, purpose, dice_id, face, face_index, result_json)
+        VALUES (#{boardId}, #{teamId}, #{roundSeq}, #{memberId}, #{requestId}, 'BUDGET', #{diceId}, #{face}, #{faceIndex}, #{resultJson})
+    </insert>
+    <select id="selectRoundRolls" resultType="java.util.LinkedHashMap">
+        SELECT id, purpose, request_id AS requestId, face, face_index AS faceIndex, result_json AS resultJson, create_time AS createTime
+        FROM city_game_roll WHERE board_id = #{boardId} AND team_id = #{teamId} AND round_seq = #{roundSeq} AND purpose IN ('MOVE', 'BUDGET')
+        ORDER BY id
+    </select>
+    <select id="selectRoundForUpdate" resultType="java.util.LinkedHashMap">
+        SELECT round_seq AS roundSeq, actions_total AS actionsTotal, actions_remaining AS actionsRemaining, status
+        FROM city_game_round WHERE board_id = #{boardId} AND team_id = #{teamId} AND round_seq = #{roundSeq} FOR UPDATE
+    </select>
 </mapper>

@@ -81,16 +81,21 @@ public final class CityGameRules {
          * Weighted roll. {@code bound} returns a uniform value in [0, n); production passes
          * {@code SecureRandom::nextInt}, tests pass a fixed sequence.
          */
-        public int roll(IntUnaryOperator bound) {
+        public int roll(IntUnaryOperator bound) { return faces[rollIndex(bound)]; }
+
+        /** Weighted roll returning the index into the published faces (faces may repeat). */
+        public int rollIndex(IntUnaryOperator bound) {
             int ticket = bound.applyAsInt(total);
             if (ticket < 0 || ticket >= total) throw new IllegalStateException("random out of range");
             long cursor = 0;
             for (int i = 0; i < faces.length; i++) {
                 cursor += weights[i];
-                if (ticket < cursor) return faces[i];
+                if (ticket < cursor) return i;
             }
             throw new IllegalStateException("unreachable");
         }
+
+        public int face(int index) { return faces[index]; }
     }
 
     /** Next track position after a move; the track is the board's properties ordered by track_index. */

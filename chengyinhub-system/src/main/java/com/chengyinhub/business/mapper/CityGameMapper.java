@@ -75,4 +75,16 @@ public interface CityGameMapper {
                      @Param("day") Date day, @Param("t0") Date t0, @Param("pointsSpent") long pointsSpent, @Param("zeroPointBlocks") int zeroPointBlocks);
     List<Map<String, Object>> selectOutings(@Param("boardId") String boardId, @Param("asOf") Date asOf, @Param("limit") int limit);
     Map<String, Object> selectBoardFacts(@Param("boardId") String boardId, @Param("asOf") Date asOf);
+
+    // ---- gaps A pass 2: lifecycle, ordered-map point log, budget rolls ----
+    int freezeBoard(@Param("boardId") String boardId);
+    int countTeamsStillPlaying(@Param("boardId") String boardId);
+    int bumpPointSlot(@Param("boardId") String boardId, @Param("pointId") String pointId);
+    int insertPointEvent(@Param("boardId") String boardId, @Param("pointId") String pointId, @Param("component") String component,
+                         @Param("holderTeamId") String holderTeamId);
+    int insertBudgetRoll(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq, @Param("memberId") long memberId,
+                         @Param("requestId") String requestId, @Param("diceId") String diceId, @Param("face") int face, @Param("faceIndex") int faceIndex,
+                         @Param("resultJson") String resultJson);
+    List<Map<String, Object>> selectRoundRolls(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq);
+    Map<String, Object> selectRoundForUpdate(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq);
 }

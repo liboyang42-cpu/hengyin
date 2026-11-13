@@ -159,6 +159,8 @@ public class SecurityConfig
                         .requestMatchers(legacyMatchers("/api/merchant/public-home", "/api/user/public-info")).permitAll()
                         // 足迹分享落地页(第二轮拍板 17):只凭随机令牌读已裁剪快照,方法内不取登录态。精确 GET 一条。
                         .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/roam/share/snapshot")).permitAll()
+                        // 注销申请会撤销全部会话;结果回读只认申请回执里的一次性 resultToken(只存哈希,只读本人状态)
+                        .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/user/deregister/result")).permitAll()
                         // 第九轮地图天气氛围:只回 rain/snow/fog/clear 与强度,方法内不取登录态,按 IP 限流。精确 GET 一条。
                         .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/map/weather")).permitAll()
                         // 发现商家公开列表(脱敏同 public-detail,方法内不取登录态,强制 status=1):仅精确 POST /list。

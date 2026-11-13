@@ -104,14 +104,13 @@ class CityGameMysqlIntegrationTest {
                 "DROP TABLE IF EXISTS city_game_service", "DROP TABLE IF EXISTS city_game_team", "DROP TABLE IF EXISTS city_game_participation",
                 "DROP TABLE IF EXISTS city_game_round", "DROP TABLE IF EXISTS city_game_roll", "DROP TABLE IF EXISTS city_game_task_attempt",
                 "DROP TABLE IF EXISTS city_game_quote", "DROP TABLE IF EXISTS city_game_request", "DROP TABLE IF EXISTS city_game_event",
-                "DROP TABLE IF EXISTS city_game_outing", "DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_points_detail");
+                "DROP TABLE IF EXISTS city_game_outing", "DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_points_detail",
+                "DROP TABLE IF EXISTS city_point_event", "DROP TABLE IF EXISTS city_map_stream", "DROP TABLE IF EXISTS city_r491_request");
         String baseline = Files.readString(Paths.get("../sql/base_schema_20260818.sql"));
         execute(table(baseline, "ums_member"), table(baseline, "ums_member_points_detail"));
-        // The real, unmodified migration file.
-        for (String statement : Files.readString(Paths.get("sql/migration_20261113_gaps_a_city_game.sql")).split(";\\s*\\n")) {
-            String sql = statement.replaceAll("(?m)^--.*$", "").trim();
-            if (!sql.isEmpty()) execute(sql);
-        }
+        // The real, unmodified migration files, each on one connection (session variables in guarded ALTERs).
+        migrate("sql/migration_20261113_gaps_a_city_game.sql");
+        migrate("sql/migration_20261114_gaps_a_city_r491.sql");
         execute("INSERT INTO ums_member(id, role, status, del_flag, point) VALUES (7001,'player',1,0,100),(7002,'player',1,0,0),"
                 + "(7101,'player',1,0,50),(7999,'player',1,0,10)");
         execute("INSERT INTO city_game_board(board_id, game_id, region_id, season_id, rules_release_id, release_id, rules_hash, rule_version,"
@@ -437,6 +436,17 @@ class CityGameMysqlIntegrationTest {
         sq.put("limit", "2");
         assertEquals("CITY_VIEWPORT_TOO_DENSE", assertThrows(CityGameException.class, () -> reads.stateSnapshot(A1, sq)).getErrorCode());
     }
+
+    static void migrate(DataSource dataSource, String path) throws Exception {
+        try (Connection c = dataSource.getConnection(); Statement s = c.createStatement()) {
+            for (String statement : Files.readString(Paths.get(path)).split(";\\s*\\n")) {
+                String sql = statement.replaceAll("(?m)^--.*$", "").trim();
+                if (!sql.isEmpty()) s.execute(sql);
+            }
+        }
+    }
+
+    private void migrate(String path) throws Exception { migrate(dataSource, path); }
 
     private void execute(String... sql) throws Exception {
         try (Connection c = dataSource.getConnection(); Statement s = c.createStatement()) {

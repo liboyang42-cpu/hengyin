@@ -2,64 +2,91 @@
 
 Source list: app branch `ui/capgraph` (c2202dbe3), `docs/release/capability-graph.md` section (2)
 APP-NOT-IN-BACKEND, areas city game, rewards, play runtime, roam, profile, topics/routes.
-Base: `integration/backend-app-20261112` (c96d345ff). Branch: `feature/app-gaps-a`.
+Base: `integration/backend-app-20261112` (c96d345ff). Branch: `feature/app-gaps-a` (pass 1 + pass 2).
 
-Each row says **served** (new route on this branch), **mapped** (the backend already has an
-equivalent route under another path, so the app should call that path; nothing duplicated), or
-**deferred** (not built; reason given).
+Each row says **served** (route on this branch), **mapped** (an equivalent route already exists under
+another path or on another branch, so the app should call that; nothing duplicated), or **N/A-v1**
+(deliberately not offered in v1 by owner decision; the reason is given).
 
 ## Summary (89 graph paths)
 
-| Area | Paths | Served | Mapped | Deferred |
+| Area | Paths | Served | Mapped | N/A-v1 |
 |---|---:|---:|---:|---:|
-| city game | 26 | 8 (+7 game-loop and fairness routes not in the graph) | 0 | 18 |
-| rewards | 18 | 0 | 0 | 18 |
-| play runtime | 13 | 3 | 4 | 6 |
-| roam | 10 | 0 | 2 | 8 |
-| profile | 8 | 1 | 3 | 4 |
-| topics/routes | 14 | 0 | 3 | 11 |
-| **total** | **89** | **12** | **12** | **65** |
+| city game | 26 | 26 (+7 game-loop and fairness routes not in the graph) | 0 | 0 |
+| rewards | 18 | 0 | 0 | 18 (moves money) |
+| play runtime | 13 | 6 | 7 | 0 |
+| roam | 10 | 8 | 2 | 0 (2 of the 8 serve reads only; their money writes refuse) |
+| profile | 8 | 2 | 6 | 0 |
+| topics/routes | 14 | 14 | 0 | 0 |
+| **total** | **89** | **56** | **15** | **18** |
 
-Verification (VPS `work`, MySQL 8.0.45 `be-int-mysql`):
-- Unit: `CityGameRulesTest` (9), `AdvancedTimeWindowTest` (3); the existing `AdvancedGameRuntimeServiceImplTest` (231) is still green.
-- Real MySQL IT (registered as batch `app-gaps-a` in `ci/real-storage-it-registry.json`):
-  `CityGameMysqlIntegrationTest` (3, gate `CHENGYIN_CITY_GAME_MYSQL_IT=1`) and
-  `PlayerGapsMysqlIntegrationTest` (3, gate `CHENGYIN_GAPS_A_MYSQL_IT=1`), each in its own scratch schema.
-- Migration `20261113_gaps_a_city_game` passes `ci/migration_ledger.py audit` and was applied to `cy_gaps_a`
-  (a copy of `cy_e2e_beint`; the shared schema was not touched).
-- HTTP smoke: the packaged jar on port 8131 against `cy_gaps_a` (Redis db 11), fixture
-  `scripts/e2e/seed_app_gaps_a.py`, 33/33 checks (team formation and receipts, server roll, task, quote,
-  occupy with points 100 → 70, deltas, fairness, follow list, route-action ownership, egg collect, 401).
-- TEST environment gap found: `cy_e2e_beint` (built by `scripts/e2e/build_schema.py`) has no `npc_route_egg`
-  table although the production baseline does; it was added to `cy_gaps_a` from the baseline DDL for the smoke.
+Owner decisions applied in pass 2 (20261113, via the coordinator): rewards/pledge stays off in v1 because it
+moves money; everything else deferred in pass 1 is built; bundle commerce serves reads and refuses every money
+write; one CITY board lifecycle for every route; the missing `npc_route_egg` table comes back by migration.
+
+## Board lifecycle (CITY, every route)
+
+One rule, enforced by the server and documented here for the app:
+
+| Lifecycle | Meaning | Reads (current, points, participation, state/snapshot, player-rules, budget/arrival/task/acquisition state, history, value) | Actions and commands (team-participation, game/action, game/quote, action-budget, arrival-evidence, onsite/neutral tasks, acquisition, value visit begin) |
+|---|---|---|---|
+| `OPEN` | published and running | served | accepted |
+| `FROZEN` | settled, read-only | served | refused (`BOARD_NOT_OPEN` / `CITY_BOARD_NOT_OPEN`) |
+| anything else | not published | `404`/`409` as before | refused |
+
+A board becomes `FROZEN` by itself: when the last locked team settles its last round (`max_rounds`), or on the
+first read or write after `valid_until`. Each freeze appends a `BOARD_FROZEN` board event.
+
+**App changes this needs** (the backend no longer serves "FROZEN only" reads): `CityCurrentSnapshot.validate`,
+`CityPlayerRulesClient`, `CityPlayerRulesContracts`, `CityValueBoundedMapReading`, `CityValueBoundedMapScopedTransport`
+and `CityPlayerValueMapPage`/`CityPlayerValueServiceReference` must accept `lifecycle in [OPEN, FROZEN]`; actions stay
+gated on `OPEN` exactly as `CityActionContract` and `CityGameCoordinator` already do. The strings
+`releasePolicy: CURRENT_FROZEN_RELEASE_ONLY` (acquisition) mean "the rules release published for this board is
+immutable"; they do not refer to the board lifecycle.
+
+## Verification
+
+All on VPS `work`, MySQL 8.0.45 `be-int-mysql`, never production, never the shared `cy_e2e_beint`:
+- Unit: `CityGameRulesTest` (9), `AdvancedTimeWindowTest` (3), `AppGapsPass2RulesTest` (6),
+  `CityOrientationAnswerServiceTest` (1).
+- Real MySQL IT (batch `app-gaps-a` in `ci/real-storage-it-registry.json`, each in its own scratch schema):
+  `CityGameMysqlIntegrationTest` (3), `CityR491MysqlIntegrationTest` (3), `PlayerGapsMysqlIntegrationTest` (3),
+  `AppGapsPass2MysqlIntegrationTest` (4).
+- Migrations `20261114_gaps_a_city_r491`, `20261114_gaps_a_player`, `doc2_f3_bundle_extras_20261114`,
+  `20261114_gaps_a_npc_route_egg` pass `ci/migration_ledger.py audit`; dependencies are declared in
+  `ci/migration-dependencies.json`; all were applied to `cy_gaps_a`.
+- HTTP smoke on the packaged jar (port 8131, `cy_gaps_a`, Redis db 11): pass 1 `scripts/e2e/smoke_app_gaps_a.py`
+  and pass 2 `scripts/e2e/smoke_app_gaps_a_pass2.py` after `seed_app_gaps_a.py` + `seed_app_gaps_a_pass2.py`
+  (results in the pass 2 commit message and the coordinator report).
 
 ## City game (26 paths in the graph)
 
-All new routes live in `ApiCityGameController` (`/api/city-game/**`) on one server-authoritative
-engine (`com.chengyinhub.business.citygame`, migration `migration_20261113_gaps_a_city_game.sql`).
-The server rolls the die from the weighted table published on the board, prices every
-point-spending action, charges only the confirming member, and stores one receipt per
-(member, requestId). A retry with the same body replays that receipt; a reused requestId with a
-different body is `409 CITY_REQUEST_REUSED`.
+All routes run on one server-authoritative engine (`com.chengyinhub.business.citygame`, migrations
+`20261113_gaps_a_city_game` + `20261114_gaps_a_city_r491`). Commands store one receipt per
+(member, domain, requestId) in the same transaction as their effect; the POST reply and the
+`/request/{id}` read are the same stored body with the same HTTP status (`code == status`, `errorCode` on
+refusal). A reused requestId with another body is `409 CITY_REQUEST_REUSED`.
 
 | App path (graph) | App file | Status | Backend |
 |---|---|---|---|
-| `/api/city-game` GET (`current`, `participation`, `points`) | Core/CityPlayerReading.swift | served | `GET /api/city-game/{current,participation,points}` (`CITY_PLAYER_READ_V1`; stale board tuple → `409 CITY_SNAPSHOT_CHANGED`) |
-| `/api/city-game/state/snapshot` | Core/CityCurrentSnapshotReading.swift | served | `CITY_CURRENT_SNAPSHOT_V1`, board must be `FROZEN`; too many points in the viewport → `422 CITY_VIEWPORT_TOO_DENSE` |
-| `/api/city-game/player-rules` | Core/CityPlayerRulesClient.swift | served | `CITY_PLAYER_RULES_V1`, 14 sections incl. published dice faces/weights; not FROZEN → 404, changed tuple → 409 |
-| `/api/city-game/team-participation/state` | Core/CityParticipationStateReading.swift | served | `CITY_TEAM_PARTICIPATION_V1` |
-| `/api/city-game/team-participation/command` POST | Core/CityParticipationCommandRecovery.swift | served | CREATE / JOIN / LOCK / CONFIRM / EXIT / RESUME; HTTP 200/400/409 with `requestStatus: COMPLETE` |
-| `/api/city-game/{}/request/{}` GET | Core/CityOriginalReceiptReading.swift | served for `team-participation` | `action-budget` and `acquisition` domains answer 404 (no such commands here, see below) |
-| `/api/city-game/team-participation` (prefix) | Core/CityParticipationScopedTransport.swift | served | prefix of the two rows above |
-| `/api/city-game/team-participation/invite` | Core/CityParticipationInvitationReading.swift | served | `?regionId=&code=` → `{binding, teamId, version, memberCount}`; unknown or locked team → 404 `CITY_INVITE_INVALID` |
-| `/api/city-game/state/deltas` | Core/CityOrderedMapScopedTransport.swift | deferred | the snapshot declares `deltaStatus: DELTAS_UNAVAILABLE`; the ordered game event stream is served as `GET /api/city-game/game/deltas` (below) |
-| `/api/city-game/action-budget`, `/command`, `/request/{}`, `/state` | Core/CityActionBudget*.swift | deferred (budget served elsewhere) | the team action budget is part of the game snapshot (`rules.actionsRemaining` / `actionsPerRound`) and is spent by `POST /api/city-game/game/action`; the separate r491 budget command contract was not built |
-| `/api/city-game/acquisition` | Core/CityAcquisitionService.swift | deferred (occupy served elsewhere) | occupying a property is `ACQUIRE_PROPERTY` via `game/quote` + `game/action`; the separate r491 acquisition contract was not built |
-| `/api/city-game/arrival-evidence` | Core/CityArrivalEvidenceService.swift | deferred | needs a GPS/merchant-attested evidence pipeline; `SUBMIT_EVIDENCE` answers `REJECTED UNSUPPORTED_ACTION` |
-| `/api/city-game/merchant/operations` (+ availability, intent, request) | Core/CityMerchantOperationsService.swift | deferred | merchant-side operations (pause, service catalogue) are outside the player scope of this task |
-| `/api/city-game/neutral-tasks`, `/onsite-tasks`, `/task-history` | Core/CityNeutralTaskService.swift, CityOnsiteTaskService.swift, CityTaskHistoryService.swift | deferred | their own task-catalogue contracts; tasks in the game loop are `ACCEPT_TASK` on a property (`taskAttemptKept` in the snapshot) |
-| `/api/city-value/visits` (+ feedback, services) | Core/CityPlayerValueService.swift | deferred | city-value visit programme is a separate merchant-value product |
-| `/api/city/walking/target` | Core/CityWalkingAuthorityReader.swift | deferred | walking navigation authority; snapshot points carry `grantsNavigation: false` |
+| `/api/city-game` GET (`current`, `participation`, `points`) | Core/CityPlayerReading.swift, CityValueBoundedMapReading.swift | served | `CITY_PLAYER_READ_V1`; `current` now carries `mapRead` (`CITY_BOUNDED_MAP_V1`); `points` with a viewport answers one bounded page (50 points, 4 pages, content `watermark`, `nextCursor`; stale cursor `409 CITY_MAP_CURSOR_STALE`) |
+| `/api/city-game/state/snapshot` | Core/CityCurrentSnapshotReading.swift | served | `CITY_CURRENT_SNAPSHOT_V1`, readable while OPEN or FROZEN |
+| `/api/city-game/state/deltas` | Core/CityOrderedMapScopedTransport.swift | served | `CITY_TRANSACTIONAL_MAP_V1`: `state/snapshot?...&sync=TRANSACTIONAL_EVENTS_V1` opens a stream (snapshot + per-point `SLOT`/`MERCHANT`/`PLATFORM` versions); `state/deltas?...&cursor=<stream>.<seq>` replays committed `POINT_REPLACED` events in the viewport, contiguous; stale stream, other viewport, revision or team change → `409 CITY_ORDERED_RESET_REQUIRED` |
+| `/api/city-game/player-rules` | Core/CityPlayerRulesClient.swift | served | `CITY_PLAYER_RULES_V1`, 14 sections, readable while OPEN or FROZEN |
+| `/api/city-game/team-participation/state`, `/command`, `/invite`, prefix | Core/CityParticipation*.swift | served | `CITY_TEAM_PARTICIPATION_V1`; commands need OPEN |
+| `/api/city-game/{}/request/{}` GET | Core/CityOriginalReceiptReading.swift | served | `team-participation`, `action-budget`, `acquisition` (and the other r491 domains under their own paths) |
+| `/api/city-game/action-budget`, `/state`, `/command`, `/request/{}` | Core/CityActionBudget*.swift | served | `CITY_ACTION_BUDGET_V2` on the team round of the engine: `version = rolls + acquisitions`, `usedUnits = rolls×rollCost + acquisitions×acquisitionCost`; `ROLL` is server-rolled from the published weighted die, **recorded only** (no movement, ownership or points effect); a board that prices tasks, services or challenges answers `NOT_CONFIGURED` |
+| `/api/city-game/acquisition` | Core/CityAcquisitionService.swift | served | `CITY_ACQUISITION_V1`: `state`, `titles`, `quote/{id}`, `command` (`QUOTE` no effect / `CONFIRM` charges the payer's member points and the team's acquisition units, makes the team the holder of the point's property on the engine, records a title; replay charges once), `request/{id}`; needs a PASSED onsite task with unexpired store evidence; titles never transfer, no service fees |
+| `/api/city-game/arrival-evidence` | Core/CityArrivalEvidenceService.swift | served | `CITY_ARRIVAL_EVIDENCE_V1`: member `ISSUE` (server challenge, display code shown once in the receipt) → `SUBMIT` on site → store staff (`MERCHANT_OWNER/MANAGER/CHECKIN` of the point's merchant, never the member) `CONFIRM` with the same code or `REJECT` with a reason → one evidence record (`MERCHANT_ATTESTED`, 2 h); `state`, `merchant`, `request/{id}`, `evidence/{id}`; no GPS, no automatic effect |
+| `/api/city-game/merchant/operations` (+ `availability`, `intent`, `request/{}`) | Core/CityMerchantOperationsService.swift | served | store asks to `PAUSE_MERCHANT` / `RESTORE`; goes to platform review (`IN_REVIEW`), `runtimeApplied` is always false; bound to the published relation by `approvalHash` |
+| `/api/city-game/neutral-tasks` | Core/CityNeutralTaskService.swift | served | `CITY_NEUTRAL_TASK_V1`, team-scoped QA pick, graded by the server, zero effect |
+| `/api/city-game/onsite-tasks` | Core/CityOnsiteTaskService.swift | served | `CITY_ONSITE_TASK_V1`, member-scoped, consumes one store evidence (single use) valid on accept and every answer; `result/{id}` |
+| `/api/city-game/task-history` | Core/CityTaskHistoryService.swift | served | `CITY_PERSONAL_TASK_HISTORY_V1`, own onsite instances only, 20 per page, detail + per-request receipt |
+| `/api/city-value/visits` (+ `feedback`, `services`) | Core/CityPlayerValueService.swift | served | services = available public POI points of the exact bounded page the app captured; a visit observes only (`publicGoal`, `cooperativeGoal`, `netPoints`, `budget` are `UNAVAILABLE`) |
+| `/api/city/walking/target` | Core/CityWalkingAuthorityReader.swift | served | bare JSON (no envelope): reviewed `roam_poi`, GCJ-02 converted once to WGS84 on the server, `authorityRevision city:<id>:<hash>`, valid 120 s |
+
+TEST data contract for r491 boards: points carry `merchant_id` (mms_merchant) and `place_id` (roam_poi);
+zero-effect tasks are rows in `city_task_definition`; `task_cost = service_cost = challenge_cost = 0`.
 
 ### Game loop routes for `CityGameServing` (app has no transport yet)
 
@@ -97,11 +124,9 @@ Membership: `JOINED` means present and confirmed in a locked team. `participatio
 team session id and `membershipVersion` is the team version (the r491 rule
 `CityPlayerRulesEligibility` checks). Round 1 opens when every member has confirmed.
 
-**Lifecycle conflict in the app, flagged for the app side.** `CityActionContract` accepts actions
-only on an `OPEN` board, while the r491 reads (`CityCurrentSnapshot`, `CityPlayerRulesSnapshot`)
-require `FROZEN`. The backend follows each contract as written: actions need `OPEN`; the bounded
-snapshot and player rules need `FROZEN`. A single board cannot satisfy both at once, so the app
-must pick one meaning of FROZEN before the two surfaces ship together.
+**Lifecycle (pass 2 decision, applies to every CITY route).** See "Board lifecycle" above: actions need
+`OPEN`; reads accept `OPEN` and `FROZEN`; the board freezes itself after the last settlement or at
+`valid_until`.
 
 ### Fairness
 
@@ -117,55 +142,84 @@ returned, so the app's `showsRatio` holds. Facts the platform does not record ye
 rejections, safety tickets, merchant verifications, challenge compensation exits) are `null` and
 listed in `coverageGaps`.
 
+
 ## Play runtime (13 paths)
 
 | App path (graph) | App file | Status | Backend |
 |---|---|---|---|
-| `/api/play` GET/POST | Core/PlayExperienceService.swift | mapped | prefix of the existing `/api/play/*` routes the service builds (`answer`, `checkin`, `arrive`, `photo`, `sensor-result`, `run-session/*`, `nodes`, `route-state`, `action-receipt`, ...); all exist |
-| `/api/game/session` | Core/PlayExperienceService.swift | mapped | `GET /api/game/session/view`, `GET /api/game/session/receipt`, `POST /api/game/session/command` (existing) |
-| `/api/play/check` | Core/JourneyContentService.swift | mapped | `/api/play/check/{roll,reroll,settle,bargain,momentum,rest}` POST and `/api/play/check/receipt` GET (existing) |
-| `/api/play/theme` GET | Core/PlayThemeBackpackActions.swift | mapped | `/api/play/theme/{action,card,state,history,replay,gameplay-action,gameplay-preview,support-matrix}` (existing) |
-| `/api/play/route-action` GET | App/PlayRouteMapView.swift | served | `?sessionId=&memberId=&actionId=` → `{sessionId, memberId, actionId, responseJson}` from `topic_route_action`; memberId must be the caller (403), unknown → 404; never inserts |
-| `/api/play/egg/collect` | Core/JourneyContentService.swift | served | form `eggId`, `topicId` (client `content` is ignored): stores the reviewed `npc_route_egg.text` into `member_collectible` (type 2); idempotent; unreviewed egg → 404, wrong topic → 400 |
-| `/api/play/advanced/time-window` | Core/NativePlatformService.swift | served | `GET ?activityId=&topicId=&nodeId=` → `NativeTimeWindow` fields (`enabled`, `notificationProvider: LOCAL_ONLY`, `timeZone: Asia/Shanghai`, `serverNow`, `openNow`, `nextOpenAt`, `nextCloseAt`, `windowVersion`, plus `openFrom`/`openTo`); same eligibility as resuming a node; not configured / malformed → 409 with `data.reasonCode` |
-| `/api/play/city-orientation`, `/answer`, `/receipt` | Core/CityOrientationTask*.swift | deferred | separate orientation-answer receipt contract (`payloadHash`, `configVersion`); the existing orient session routes (`/api/play/orient/session/*`) are not the same wire shape and were not wrapped |
-| `/api/progress/meter`, `/api/progress/requests`, `/api/progress/requests/{}` | Core/NativeChannelProgress*.swift | deferred | built on the channel platform (`/api/channel/{id}/board`, `/progress/overview`), which the backend does not have; belongs with the messaging/channel area |
+| `/api/play` GET/POST | Core/PlayExperienceService.swift | mapped | existing `/api/play/*` routes |
+| `/api/game/session` | Core/PlayExperienceService.swift | mapped | `GET /api/game/session/view`, `/receipt`, `POST /command` |
+| `/api/play/check` | Core/JourneyContentService.swift | mapped | `/api/play/check/{roll,reroll,settle,bargain,momentum,rest}`, `/receipt` |
+| `/api/play/theme` GET | Core/PlayThemeBackpackActions.swift | mapped | `/api/play/theme/*` |
+| `/api/play/route-action` GET | App/PlayRouteMapView.swift | served | own `topic_route_action` receipt |
+| `/api/play/egg/collect` | Core/JourneyContentService.swift | served | reviewed `npc_route_egg` → `member_collectible`; table restored by `20261114_gaps_a_npc_route_egg` (see Data notes) |
+| `/api/play/advanced/time-window` | Core/NativePlatformService.swift | served | `NativeTimeWindow` |
+| `/api/play/city-orientation`, `/answer`, `/receipt` | Core/CityOrientationTask*.swift | served | `CITY_ORIENTATION_ANSWER_V1`: `POST answer {sessionId,nodeId,requestId,expectedVersion,answer}` runs the existing answer path for the caller's own run session (requestId is also the route action id) and stores `{payloadHash, configVersion, revision, outcome APPLIED/FAILED, response}` in the same transaction; `GET receipt?sessionId&nodeId&requestId` returns it or `outcome: PENDING` |
+| `/api/progress/meter`, `/api/progress/requests`, `/api/progress/requests/{}` | Core/NativeChannelProgress*.swift | mapped | served on `feature/im-channels` (channel platform, e01d7f6e5); not duplicated here |
 
 ## Profile (8 paths)
 
 | App path (graph) | App file | Status | Backend |
 |---|---|---|---|
-| `/api/user/address` | Core/ProfileParticipantTransport.swift | mapped | `/api/user/address/{list,info,action,delete}` POST (existing) |
-| `/api/user/deregister` | Core/AccountDeregistrationOriginal.swift | mapped | `/api/user/deregister/{precheck,apply,cancel}` POST, `/status` GET (existing) |
-| `/api/user/sms/send` POST | App/RegionalEndpointAllowlistSectionView.swift | mapped | `POST /api/sms/send` (existing). The app file is the endpoint audit list, not a live caller |
-| `/api/user/follow-list` | Core/ProfileFollowListService.swift | served | `GET ?kind=following\|followers&cursor=&limit=` (limit ≤ 50) → `{owner_id, kind, rows[{id,nickname,avatar,isFollow}], has_more, next_cursor}`; keyset by member id; the caller's own lists only; deleted members and legacy duplicate follow rows are dropped |
-| `/api/user/deregister/result` | Core/DeregistrationStatusRules.swift | deferred | `apply` revokes every session of the account, so no authenticated read can follow it; the app's default `derivedFromStatus` receipt (from `/status`) stays the supported path |
-| `/api/onboarding/get`, `/api/onboarding/submit` | Core/NativeChannelOnboarding.swift | deferred | guild/channel onboarding (`guild_kind`, `channel_ids`, `role_ids`, receipts under `/api/channel-platform/admission/requests/`); the channel platform does not exist in the backend — belongs with messaging/channels |
-| `/api/welcome-screen/get` | Core/NativeChannelWelcome.swift | deferred | same channel-platform dependency |
+| `/api/user/address` | Core/ProfileParticipantTransport.swift | mapped | `/api/user/address/{list,info,action,delete}` |
+| `/api/user/deregister` | Core/AccountDeregistrationOriginal.swift | mapped | `/api/user/deregister/{precheck,apply,cancel,status}` |
+| `/api/user/sms/send` POST | App/RegionalEndpointAllowlistSectionView.swift | mapped | `POST /api/sms/send` |
+| `/api/user/follow-list` | Core/ProfileFollowListService.swift | served | own following/followers keyset |
+| `/api/user/deregister/result` | Core/DeregistrationStatusRules.swift | served | `apply` revokes every session, so its PENDING reply now carries a one-time `resultToken` (only the SHA-256 is stored, 45 days); `GET /result?resultToken=` works without a session and reads only that member's `{status, executeAfter, final, verifiedBy}`; a caller still logged in may omit the token; unknown/expired/foreign token → `404 DEREGISTER_RESULT_NOT_FOUND` |
+| `/api/onboarding/get`, `/api/onboarding/submit` | Core/NativeChannelOnboarding.swift | mapped | served on `feature/im-channels` |
+| `/api/welcome-screen/get` | Core/NativeChannelWelcome.swift | mapped | served on `feature/im-channels` |
 
 ## Roam (10 paths)
 
+Bundle routes keep the Phase 1 envelope (`{code:200,data}`, refusal `{code:409,msg,businessCode}`,
+`LOGIN_REQUIRED`), are holder-keyed, and answer `BUNDLE_NOT_FOUND` alike for not-found and not-yours.
+
 | App path (graph) | App file | Status | Backend |
 |---|---|---|---|
-| `/api/free-explore/bundle` GET/POST | App/BundleCommerceReadTransport.swift | mapped | prefix of the existing `/api/free-explore/bundle/*` routes (`catalog`, `order`, `order/receipt`, `order/refund-quote`, `reservation`, `reservation/receipt`, `reservation/{}/cancel(-quote)`, `exit-options`, `exit-decision`) |
-| `/api/roam/passport` | Core/RoamPassportHistoryReading.swift | mapped | `/api/roam/passport/{history,record,summary}` GET (existing) |
-| `/api/free-explore/bundle/order/refund` | App/BundleRefundTransport.swift | deferred | money movement (original-route refund); only `order/refund-quote` exists. Needs the payments owner's refund state machine, not a new parallel path |
-| `/api/free-explore/bundle/transfer`, `/voucher`, `/voucher/appeal`, `/review`, `/shelf`, `/renewal-intent` | App/BundleCommerceMount.swift, BundleTransfer*/BundleAppeal* | deferred | bundle commerce extensions (gifting a paid bundle, vouchers, appeals, shelf, renewal) change paid entitlements; they need product and payments decisions first |
-| `/api/location-share/personal` | Core/PersonalLocationShareHTTPService.swift | deferred | live personal location sharing needs a privacy and retention decision (who sees it, how long it is kept) before any storage is built |
+| `/api/free-explore/bundle` GET/POST | App/BundleCommerceReadTransport.swift | mapped | Phase 1 routes: `catalog`, `order`, `order/receipt`, `order/refund-quote` (refund QUOTE read), `reservation*`, `exit-*` |
+| `/api/roam/passport` | Core/RoamPassportHistoryReading.swift | mapped | `/api/roam/passport/{history,record,summary}` |
+| `/api/free-explore/bundle/shelf` | Core/BundleShelfClient.swift | served | catalog of on-sale free-explore topics (keyset, ≤ 50); `fromPrice` is null (price is decided per ticket at checkout) |
+| `/api/free-explore/bundle/voucher` (+ `/voucher/version`, `/redemption/result`, `/wallet`, `/waiver`) | Core/BundleVoucherClient.swift | served | my bundles (`wallet`, with `activation`), voucher (main code = the registration's existing verification code the chapter scanner accepts; per-unit sub codes), 16-hex `voucherVersion` that changes only on unit transitions, redemption result (`SUCCESS`/`NONE`; `REVIEW`/`REJECTED` reserved), monthly waiver read |
+| `/api/free-explore/bundle/voucher/appeal` (+ `/receipt`, list) | Core/BundleAppealClient.swift | served | record only: `OPEN`, `applyState NOT_APPLIED`; approval never consumes the unit in v1 (settlement owner decision) |
+| `/api/free-explore/bundle/review` (+ `/review/mine`, `/review/list`) | Core/BundleReviewClient.swift | served | one review per order and holder, needs a redeemed unit, `PENDING` until moderated, list shows `APPROVED` only |
+| `/api/free-explore/bundle/renewal-intent` | Core/BundleRenewalClient.swift | served | intent only (no price lock, no order), latest wins, history kept |
+| `/api/free-explore/bundle/order/refund` | App/BundleRefundTransport.swift | served (read) / write N/A-v1 | `GET ?registrationId=` → `{state: NONE}`; `POST` always `409 BUNDLE_MONEY_WRITE_DISABLED` |
+| `/api/free-explore/bundle/transfer` | App/BundleTransfer*.swift | served (read) / write N/A-v1 | `GET /transfer`, `/transfer/preview` (`eligible: false`), `/transfer/receipt` (`NOT_FOUND`); `POST /transfer`, `/transfer/claim`, `/transfer/{id}/revoke` always `409 BUNDLE_MONEY_WRITE_DISABLED` (gifting a paid entitlement) |
+| `/api/location-share/personal` | Core/PersonalLocationShareHTTPService.swift | served | see "Personal location share" below |
+
+### Personal location share (v1 rules)
+
+`/api/location-share/personal/{context, grants, requests/{key}, requests/{key}/revoke, owned, received,
+received/events, grants/{id}/observations}`. Privacy and retention, as built:
+- owner = the logged-in member; exactly one recipient per grant; only between members who **follow each other**;
+- one published policy (`location_share_policy`, operations-owned; none published → `POLICY_NOT_PUBLISHED`);
+  the client must acknowledge all six disclosures and name the policy digest it was shown;
+- foreground only; `COARSE` grants store the snapped grid cell, never the exact fix;
+- only the **latest** observation of an ACTIVE grant is stored; it is **deleted** when the grant is revoked,
+  expires, or the follow relationship ends; the recipient's change feed says `INVALIDATED`.
 
 ## Topics / routes (14 paths)
 
 | App path (graph) | App file | Status | Backend |
 |---|---|---|---|
-| `/api/topic/attribute-author` GET/POST/DELETE, `/references`, `/validate` | Core/NativeAttributeAuthor*.swift | mapped (wire shape differs) | existing `ApiTopicAttributeController`: `GET/POST/PUT/DELETE /api/topic/attributes`, `PUT /api/topic/attributes/order`, `GET /api/topic/state-keys/usage` (references), `POST /api/topic/state-keys/validate` (validate). The app already keeps a legacy branch for `/api/topic/state-keys`; the versioned `expectedConfigVersion` envelope is not on the backend |
-| `/api/topic/attribute-author/request` | Core/NativeAttributeAuthorExtendedContract.swift | deferred | original-request receipt for the versioned author contract above; no equivalent |
-| `/api/topic/module-preflight` | Core/NativeAttributeAuthorHostTransport.swift | deferred | the closest existing read is `GET /api/topic/publish-status`; a module preflight was not built |
-| `/api/topic/cover`, `/selection`, `/selection/current`, `/selection/status`, `/upload`, `/{}/content` | Core/OwnedTopicCover*.swift, ApprovedTopicSelectedCover.swift | deferred | author-only cover pipeline: private object storage, moderation, author-only content serving and topic config/slot versions; needs the media owner's private-storage path |
-| `/api/topic/edit-requests/submit`, `/read`, `/resume-post-processing` | Core/ProjectEditRequestContract.swift | deferred | durable request wrapper around `api/topic/{create,update,v2/create,v2/update}`; touching the publishing core needs the topic owner |
+| `/api/topic/attribute-author` GET/POST/DELETE, `/references`, `/validate` | Core/NativeAttributeAuthor*.swift | served | versioned contract on the existing state-key registry: `configVersion` = `theme_attribute_registry_version`, at the envelope root with `topicId`; reads and writes name the version they are based on (`409 CONFIG_VERSION_CHANGED`); a write advances it by exactly one; `validate` returns the complete merged catalog without writing; a referenced key is never deleted (`deleted: false` + positions) |
+| `/api/topic/attribute-author/request` | Core/NativeAttributeAuthorExtendedContract.swift | served | mutations carry `X-Attribute-Request-{Protocol,Id,SHA256}` + `X-Attribute-Session-Epoch`; the server checks the app's payload digest, stores the reply with `requestReceipt` in the same transaction; `GET /request` replays it or answers `state: NOT_FOUND` |
+| `/api/topic/module-preflight` | Core/NativeAttributeAuthorHostTransport.swift | served | `{topicId, configVersion, ready, issues[level, code, nodeId, message, field]}` from the existing publish checks; `ready` = no `error` issue |
+| `/api/topic/cover`, `/selection`, `/selection/current`, `/selection/status`, `/upload`, `/{}/content` | Core/OwnedTopicCover*.swift | served | author-only: upload is decoded and re-encoded as plain JPEG (metadata dropped) into a private directory outside the public `/profile` mapping (`chengyin.topic-cover.private-dir`; unset → `503 COVER_STORAGE_UNAVAILABLE`); content is served only to its owner, pinned by `sourceVersion` + `contentHash`; selection is a CAS on topic config version, selection version and content slot, advances the topic config version by one, is refused while sale-frozen, and replays by requestId |
+| `/api/topic/edit-requests/submit`, `/read`, `/resume-post-processing` | Core/ProjectEditRequestContract.swift | served | `original-project-edit-request-v1`: decodes the exact hashed payload, runs the original writer (same validation and author checks) and stores the receipt in the same transaction (`COMMITTED` with `originalResult`) or records the refusal (`REJECTED`); same requestId replays; `postProcessing: UNAVAILABLE` (nothing tracked) |
 
 ## Rewards (18 paths)
 
 | App path (graph) | App file | Status | Reason |
 |---|---|---|---|
-| `/api/reward-pledge` (+ `/awards`, `/drafts`, `/fulfilment/{awards,expire,preview,redeem,resolve}`, `/ops`, `/pledges`, `/review`, `/versions`) | Core/RewardPledge.swift | deferred | a complete merchant/creator pledge product: draft → submit → confirm → freeze → platform review → versions/holds/withdraw → award pool → fulfilment (preview/redeem/expire/resolve) → service cases. No part of it exists; building it needs product rules for review, holds and expiry |
-| `/api/rewards/noncash` (+ `/cases`, `/claims`, `/claims/recover`, `/subjects`, `/versions`) | Core/NonCashRewardService.swift, RewardPledge.swift | deferred | the player-side list and claims read awards that only the pledge fulfilment above produces; a list with no producer would always be empty. Coupon rewards stay on `api/coupon/myrecvlist` |
+| `/api/reward-pledge` (+ `/awards`, `/drafts`, `/fulfilment/{awards,expire,preview,redeem,resolve}`, `/ops`, `/pledges`, `/review`, `/versions`) | Core/RewardPledge.swift | N/A-v1 | owner decision: the pledge product moves money (holds, awards, fulfilment); off in v1 |
+| `/api/rewards/noncash` (+ `/cases`, `/claims`, `/claims/recover`, `/subjects`, `/versions`) | Core/NonCashRewardService.swift, RewardPledge.swift | N/A-v1 | reads awards only the pledge fulfilment produces; off with it. Coupon rewards stay on `api/coupon/myrecvlist` |
+
+## Data notes
+
+- **`npc_route_egg`** (conflict flagged): `migration_x11_decommission_route_eggs_20260907.sql` dropped this table by
+  an earlier owner decision (take route eggs offline). The 20261113 owner decision asks for it back, so
+  `migration_20261114_gaps_a_npc_route_egg.sql` recreates the **empty** table, ordered after x11. It restores no rows
+  and no producer; until reviewed rows exist, `POST /api/play/egg/collect` answers 404.
+- New config: `chengyin.topic-cover.private-dir` (private cover bytes; must not be under `ruoyi.profile`).
+- New anonymous route: `GET /api/user/deregister/result` (token-only, see Profile).
