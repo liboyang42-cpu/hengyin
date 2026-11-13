@@ -41,6 +41,8 @@ public class ApiAccountDeregistrationController extends BaseController {
     private IConsentRecordService consentRecordService;
     @Autowired
     private ComplianceProperties complianceProperties;
+    @Autowired
+    private com.chengyinhub.business.appgaps.DeregistrationResultService deregistrationResultService;
 
     @Operation(summary = "注销前置条件检查")
     @PostMapping("/precheck")
@@ -71,6 +73,7 @@ public class ApiAccountDeregistrationController extends BaseController {
         // 不再要求重新验证(只返回本人状态,不产生新的写入)。
         DeregistrationStatusVO existing = deregistrationService.status(memberId);
         if (existing != null && "PENDING".equals(existing.getStatus())) {
+            existing.setResultToken(deregistrationResultService.issue(memberId, requestId));
             return success(existing);
         }
         String trustedIp = TrustedProxyIpResolver.resolve(request);
@@ -80,7 +83,12 @@ public class ApiAccountDeregistrationController extends BaseController {
         } else if (!wechatReconfirmationService.verify(memberId, member.getWxOpenId(), wxcode, trustedIp)) {
             return error("微信身份确认失败，请重新确认本人");
         }
-        return success(deregistrationService.apply(memberId));
+        DeregistrationStatusVO applied = deregistrationService.apply(memberId);
+        if (applied != null && "PENDING".equals(applied.getStatus())) {
+            // Apply revokes every session; the token is the only way to read the result afterwards.
+            applied.setResultToken(deregistrationResultService.issue(memberId, requestId));
+        }
+        return success(applied);
     }
 
     /** Existing Java callers use the SMS-only signature; only the four-argument method is HTTP mapped. */
@@ -97,6 +105,18 @@ public class ApiAccountDeregistrationController extends BaseController {
             return success(deregistrationService.cancel(memberId));
         } catch (IllegalStateException e) {
             return error(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "注销申请后的结果回读(会话已被撤销时凭申请回执里的 resultToken)")
+    @GetMapping("/result")
+    public org.springframework.http.ResponseEntity<AjaxResult> result(String resultToken) {
+        try {
+            return org.springframework.http.ResponseEntity.ok(success(deregistrationResultService.result(currentMemberId(), resultToken)));
+        } catch (com.chengyinhub.business.appgaps.AppGapException e) {
+            AjaxResult body = new AjaxResult(e.getStatus(), e.getMessage());
+            body.put("errorCode", e.getErrorCode());
+            return org.springframework.http.ResponseEntity.status(e.getStatus()).body(body);
         }
     }
 

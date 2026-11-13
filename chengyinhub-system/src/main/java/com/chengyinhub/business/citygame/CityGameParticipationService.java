@@ -66,8 +66,9 @@ public class CityGameParticipationService {
         if (board == null || !regionId.equals(board.get("regionId")) || !contentHash.equals(board.get("rulesHash"))) {
             return finish(memberId, requestId, hash, kind, board, 409, "CITY_RELEASE_CHANGED", null, 0);
         }
+        // Lifecycle rule: team commands are actions and need an OPEN board; a FROZEN board is settled and read-only.
         String lifecycle = (String) board.get("lifecycle");
-        if (!"OPEN".equals(lifecycle) && !"FROZEN".equals(lifecycle)) {
+        if (!"OPEN".equals(lifecycle)) {
             return finish(memberId, requestId, hash, kind, board, 409, "CITY_BOARD_NOT_OPEN", null, 0);
         }
         String boardId = (String) board.get("boardId");

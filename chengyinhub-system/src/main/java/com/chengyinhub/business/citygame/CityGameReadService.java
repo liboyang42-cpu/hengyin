@@ -56,6 +56,135 @@ public class CityGameReadService {
         out.put("board", wireBoard(board));
         out.put("participationStatus", membership.wireStatus());
         out.put("pointsStatus", "AVAILABLE");
+        out.put("mapRead", mapRead(board));
+        return out;
+    }
+
+    /** The bounded-map descriptor every viewport read of this board follows. */
+    static Map<String, Object> mapRead(Map<String, Object> board) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("contract", "CITY_BOUNDED_MAP_V1");
+        map.put("datum", board.get("mapDatum"));
+        map.put("initialViewport", bounds(board.get("mapSouth"), board.get("mapWest"), board.get("mapNorth"), board.get("mapEast")));
+        map.put("initialZoom", ((Number) board.get("mapZoom")).intValue());
+        map.put("maxViewportSpanDegrees", MAX_SPAN);
+        map.put("minZoom", ((Number) board.get("mapMinZoom")).intValue());
+        map.put("maxZoom", ((Number) board.get("mapMaxZoom")).intValue());
+        map.put("pageSize", 50);
+        map.put("maxPages", 4);
+        return map;
+    }
+
+    /** GET /points with a viewport: one bounded page (50 points, at most 4 pages) pinned by a content watermark. */
+    public Map<String, Object> pointsQuery(Long memberId, Map<String, String> q) {
+        if (q.get("south") == null) {
+            return points(memberId, q.get("regionId"), q.get("boardId"), q.get("seasonId"), q.get("rulesReleaseId"), q.get("revision"));
+        }
+        Map<String, Object> board = boundBoard(memberId, q.get("regionId"), q.get("boardId"), q.get("seasonId"), q.get("rulesReleaseId"), q.get("revision"));
+        if (!readable(board)) throw new CityGameException(409, "CITY_SNAPSHOT_CHANGED", "城市棋盘未发布");
+        Map<String, Object> page = boundedPoints(board, q, membership(mapper, (String) board.get("boardId"), memberId));
+        Map<String, Object> out = available(board);
+        out.putAll(page);
+        return out;
+    }
+
+    Map<String, Object> boundedPoints(Map<String, Object> board, Map<String, String> q) {
+        return boundedPoints(board, q, new Membership(null, null));
+    }
+
+    private Map<String, Object> boundedPoints(Map<String, Object> board, Map<String, String> q, Membership membership) {
+        BigDecimal south = coordinate(q.get("south"), "south"), west = coordinate(q.get("west"), "west");
+        BigDecimal north = coordinate(q.get("north"), "north"), east = coordinate(q.get("east"), "east");
+        if (!bounded(south, west, north, east)) throw new CityGameException(400, "viewport", "viewport invalid");
+        String datum = q.get("datum");
+        if (!datum.equals(board.get("mapDatum"))) throw new CityGameException(422, "CITY_DATUM_UNAVAILABLE", "坐标系不可用");
+        int zoom = smallInt(q.get("zoom"), 0, 22, "zoom");
+        if (zoom < ((Number) board.get("mapMinZoom")).intValue() || zoom > ((Number) board.get("mapMaxZoom")).intValue()) {
+            throw new CityGameException(400, "zoom", "zoom out of range");
+        }
+        String rawLayers = q.get("layers");
+        List<String> layers = rawLayers == null ? List.of() : Arrays.asList(rawLayers.split(",", -1));
+        if (layers.isEmpty() || !layers.stream().allMatch(l -> l.equals("MERCHANT") || l.equals("POI") || l.equals("PLATFORM_VIRTUAL"))
+                || layers.stream().distinct().count() != layers.size() || !layers.equals(layers.stream().sorted().collect(java.util.stream.Collectors.toList()))) {
+            throw new CityGameException(400, "layers", "layers invalid");
+        }
+        Map<String, String> ownership = ownership((String) board.get("boardId"), membership);
+        long now = clock.getAsLong();
+        List<Map<String, Object>> all = new ArrayList<>();
+        StringBuilder state = new StringBuilder(board.get("boardId") + "|" + board.get("revision") + "|" + datum + "|" + south.toPlainString() + ","
+                + west.toPlainString() + "," + north.toPlainString() + "," + east.toPlainString() + "|" + rawLayers);
+        for (Map<String, Object> row : mapper.selectPoints((String) board.get("boardId"))) {
+            BigDecimal lat = (BigDecimal) row.get("latitude"), lng = (BigDecimal) row.get("longitude");
+            if (!layers.contains((String) row.get("domain")) || lat.compareTo(south) < 0 || lat.compareTo(north) > 0
+                    || lng.compareTo(west) < 0 || lng.compareTo(east) > 0 || millis(row.get("collectedAt")) > now) continue;
+            String owner = membership.joined() ? ownership.getOrDefault((String) row.get("pointId"), "NOT_EVALUATED") : "NOT_EVALUATED";
+            Map<String, Object> point = new LinkedHashMap<>();
+            point.put("pointId", row.get("pointId"));
+            point.put("title", row.get("title"));
+            point.put("latitude", lat.doubleValue());
+            point.put("longitude", lng.doubleValue());
+            point.put("mine", "OUR_TEAM".equals(owner));
+            point.put("datum", datum);
+            point.put("domain", row.get("domain"));
+            point.put("collectedAt", iso(row.get("collectedAt")));
+            point.put("coordinateAssurance", "PLATFORM_REVIEWED_METADATA");
+            point.put("availability", row.get("availability"));
+            point.put("ownership", owner);
+            point.put("grantsNavigation", false);
+            point.put("grantsAction", false);
+            point.put("merchantVersion", ((Number) row.get("merchantVersion")).longValue());
+            point.put("platformVersion", ((Number) row.get("platformVersion")).longValue());
+            all.add(point);
+            state.append('|').append(row.get("pointId")).append(':').append(row.get("availability")).append(':')
+                    .append(row.get("merchantVersion")).append(':').append(row.get("platformVersion"));
+        }
+        String watermark = CityGameRules.sha256(state.toString());
+        int page = 1;
+        String after = null;
+        String cursor = q.get("cursor");
+        if (cursor != null) {
+            String decoded;
+            try {
+                decoded = new String(java.util.Base64.getUrlDecoder().decode(cursor), java.nio.charset.StandardCharsets.UTF_8);
+            } catch (IllegalArgumentException e) {
+                throw new CityGameException(400, "cursor", "cursor invalid");
+            }
+            String[] parts = decoded.split(":", 3);
+            if (parts.length != 3 || !parts[0].matches("[1-3]") || !CityGameRules.id(parts[1])) throw new CityGameException(400, "cursor", "cursor invalid");
+            if (!parts[2].equals(watermark)) throw new CityGameException(409, "CITY_MAP_CURSOR_STALE", "地图已变化，请重新读取");
+            page = Integer.parseInt(parts[0]) + 1;
+            after = parts[1];
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        int index = 0;
+        boolean more = false;
+        for (Map<String, Object> point : all) {
+            if (after != null && ((String) point.get("pointId")).compareTo(after) <= 0) continue;
+            if (rows.size() == 50) { more = true; break; }
+            rows.add(point);
+            index++;
+        }
+        boolean complete = !more;
+        boolean limited = more && page == 4;
+        String next = more && page < 4 ? java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(
+                (page + ":" + rows.get(rows.size() - 1).get("pointId") + ":" + watermark).getBytes(java.nio.charset.StandardCharsets.UTF_8)) : null;
+        Map<String, Object> viewport = new LinkedHashMap<>();
+        viewport.put("south", south.doubleValue());
+        viewport.put("west", west.doubleValue());
+        viewport.put("north", north.doubleValue());
+        viewport.put("east", east.doubleValue());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("points", rows);
+        out.put("complete", complete);
+        out.put("mapContract", "CITY_BOUNDED_MAP_V1");
+        out.put("watermark", watermark);
+        out.put("datum", datum);
+        out.put("nextCursor", next);
+        out.put("viewport", viewport);
+        out.put("page", page);
+        out.put("pageLimitReached", limited);
+        out.put("grantsNavigation", false);
+        out.put("grantsAction", false);
         return out;
     }
 
@@ -99,6 +228,11 @@ public class CityGameReadService {
         Map<String, Object> board = mapper.selectCurrentBoard(regionId);
         requireSameBoard(board, boardId, seasonId, rulesReleaseId, rev);
         return board;
+    }
+
+    /** One lifecycle for every CITY route: OPEN = published and accepting actions; FROZEN = settled, read-only. */
+    static boolean readable(Map<String, Object> board) {
+        return board != null && ("OPEN".equals(board.get("lifecycle")) || "FROZEN".equals(board.get("lifecycle")));
     }
 
     private Map<String, Object> envelope() {
@@ -153,7 +287,8 @@ public class CityGameReadService {
 
         Map<String, Object> board = mapper.selectCurrentBoard(regionId);
         requireSameBoard(board, boardId, seasonId, rulesReleaseId, revision);
-        if (!"FROZEN".equals(board.get("lifecycle"))) throw new CityGameException(409, "CITY_SNAPSHOT_CHANGED", "城市棋盘未处于冻结发布");
+        // Lifecycle rule: the published board is readable while OPEN (actions accepted) and once FROZEN (settled).
+        if (!readable(board)) throw new CityGameException(409, "CITY_SNAPSHOT_CHANGED", "城市棋盘未发布");
         if (!datum.equals(board.get("mapDatum"))) throw new CityGameException(422, "CITY_DATUM_UNAVAILABLE", "坐标系不可用");
         int minZoom = ((Number) board.get("mapMinZoom")).intValue(), maxZoom = ((Number) board.get("mapMaxZoom")).intValue();
         if (zoom < minZoom || zoom > maxZoom) throw new CityGameException(400, "zoom", "zoom out of range");
@@ -260,7 +395,7 @@ public class CityGameReadService {
         if (!board.get("gameId").equals(q.get("gameId")) || !board.get("rulesHash").equals(q.get("rulesHash"))) {
             throw new CityGameException(409, "CITY_SNAPSHOT_CHANGED", "城市棋盘已更新");
         }
-        if (!"FROZEN".equals(board.get("lifecycle"))) throw new CityGameException(404, "CITY_RULES_NOT_PUBLISHED", "规则未发布");
+        if (!readable(board)) throw new CityGameException(404, "CITY_RULES_NOT_PUBLISHED", "规则未发布");
         Membership membership = membership(mapper, (String) board.get("boardId"), memberId);
         String claimed = q.get("membership");
         if (claimed == null || !claimed.equals(membership.wireStatus())) throw new CityGameException(409, "CITY_SNAPSHOT_CHANGED", "参与状态已变化");
@@ -350,7 +485,7 @@ public class CityGameReadService {
     }
 
     /** The frozen release a team binds to (shared by team state and invite preview). */
-    private static Map<String, Object> binding(Map<String, Object> board) {
+    static Map<String, Object> binding(Map<String, Object> board) {
         Map<String, Object> rules = new LinkedHashMap<>();
         rules.put("mode", "CITY_TEAM");
         rules.put("minMembers", board.get("minMembers"));
@@ -406,7 +541,7 @@ public class CityGameReadService {
         out.put("contract", "CITY_TEAM_PARTICIPATION_V1");
         out.put("scope", "CITY");
         out.put("binding", binding);
-        out.put("writeApproved", "OPEN".equals(board.get("lifecycle")) || "FROZEN".equals(board.get("lifecycle")));
+        out.put("writeApproved", "OPEN".equals(board.get("lifecycle")));
         // This surface reports membership only; points, tasks and budget are read from the game snapshot.
         out.put("pointsStatus", "UNAVAILABLE");
         out.put("taskExecutionStatus", "UNAVAILABLE");

@@ -62,7 +62,7 @@ public class CityGameActionService {
     public Map<String, Object> snapshot(Long memberId, String boardId) {
         requireMember(memberId);
         requireId(boardId, "boardId");
-        Map<String, Object> board = mapper.selectBoard(boardId);
+        Map<String, Object> board = freezeIfDue(mapper.selectBoard(boardId));
         if (board == null) throw new CityGameException(404, "CITY_BOARD_NOT_FOUND", "城市棋盘不存在");
         long now = clock.getAsLong();
         Membership m = membership(mapper, boardId, memberId);
@@ -234,7 +234,7 @@ public class CityGameActionService {
         String hash = CityGameRules.requestHash(body);
         // The board row lock serialises every effect on the board; the receipt is looked up under it so a
         // concurrent duplicate waits and then replays instead of rolling again.
-        Map<String, Object> board = mapper.selectBoardForUpdate(boardId);
+        Map<String, Object> board = freezeIfDue(mapper.selectBoardForUpdate(boardId));
         if (board == null) throw new CityGameException(404, "CITY_BOARD_NOT_FOUND", "城市棋盘不存在");
         Map<String, Object> previous = mapper.selectRequest(memberId, DOMAIN, requestId);
         if (previous != null) {
@@ -398,12 +398,109 @@ public class CityGameActionService {
     }
 
     /** Property rows are read FOR UPDATE under the board lock, so this compare-and-set cannot lose. */
-    private void write(String boardId, Map<String, Object> property, String propertyId, String status, String holder, Date heldSince,
-                       Date protectedUntil, String challenge) {
+    void write(String boardId, Map<String, Object> property, String propertyId, String status, String holder, Date heldSince,
+               Date protectedUntil, String challenge) {
         long version = ((Number) property.get("stateVersion")).longValue();
         if (mapper.updateProperty(boardId, propertyId, version, status, holder, heldSince, protectedUntil, challenge) != 1) {
             throw new IllegalStateException("property changed under board lock");
         }
+        if (!java.util.Objects.equals(property.get("holderTeamId"), holder)) {
+            // Ownership changed: the point's SLOT version advances and the ordered map logs the new state.
+            String pointId = (String) property.get("pointId");
+            mapper.bumpPointSlot(boardId, pointId);
+            mapper.insertPointEvent(boardId, pointId, "SLOT", holder);
+        }
+    }
+
+    // ---- shared effects (game loop and the r491 surfaces) ----
+
+    /** Advances the board version and appends one ordered board event. Caller holds the board lock. */
+    long recordEvent(Map<String, Object> board, String kind, String propertyId, String teamId) {
+        String boardId = (String) board.get("boardId");
+        mapper.advanceBoard(boardId);
+        Map<String, Object> fresh = mapper.selectBoard(boardId);
+        long version = ((Number) fresh.get("boardVersion")).longValue();
+        mapper.insertEvent(boardId, ((Number) fresh.get("eventSequence")).longValue(), kind, propertyId, teamId, version);
+        return version;
+    }
+
+    /**
+     * Settles a team round whose budget is spent and opens the next one until max_rounds. When the last team
+     * finishes its last round the board becomes FROZEN: the season is settled and read-only (lifecycle rule).
+     */
+    void settleRound(Map<String, Object> board, String teamId, long seq) {
+        String boardId = (String) board.get("boardId");
+        long score = CityGameRules.settlementScore(mapper.countHeld(boardId, teamId), ((Number) board.get("holdingYield")).intValue());
+        mapper.settleRound(boardId, teamId, seq, score);
+        mapper.addTeamScore(teamId, score);
+        if (seq < ((Number) board.get("maxRounds")).intValue()) {
+            mapper.insertRound(boardId, teamId, seq + 1, ((Number) board.get("actionsPerRound")).intValue());
+        }
+        recordEvent(board, "ROUND_SETTLED", null, teamId);
+        if (seq >= ((Number) board.get("maxRounds")).intValue() && mapper.countTeamsStillPlaying(boardId) == 0) {
+            if (mapper.freezeBoard(boardId) == 1) {
+                Map<String, Object> fresh = mapper.selectBoard(boardId);
+                mapper.insertEvent(boardId, ((Number) fresh.get("eventSequence")).longValue(), "BOARD_FROZEN", null, null,
+                        ((Number) fresh.get("boardVersion")).longValue());
+            }
+        }
+    }
+
+    /** Spends action units of an open round under the team lock; settles the round when it reaches zero. */
+    void spend(Map<String, Object> board, String teamId, long roundSeq, int units) {
+        String boardId = (String) board.get("boardId");
+        if (mapper.spendActions(boardId, teamId, roundSeq, units) != 1) throw new IllegalStateException("budget changed under team lock");
+        Map<String, Object> round = mapper.selectOpenRound(boardId, teamId);
+        if (round != null && ((Number) round.get("roundSeq")).longValue() == roundSeq && ((Number) round.get("actionsRemaining")).intValue() == 0) {
+            settleRound(board, teamId, roundSeq);
+        }
+    }
+
+    /** A board past valid_until stops accepting actions: OPEN becomes FROZEN (lazy, on the next read or write). */
+    public Map<String, Object> freezeIfDue(Map<String, Object> board) {
+        if (board == null || !"OPEN".equals(board.get("lifecycle")) || board.get("validUntil") == null
+                || millis(board.get("validUntil")) > clock.getAsLong()) {
+            return board;
+        }
+        if (mapper.freezeBoard((String) board.get("boardId")) == 1) {
+            Map<String, Object> fresh = mapper.selectBoard((String) board.get("boardId"));
+            mapper.insertEvent((String) fresh.get("boardId"), ((Number) fresh.get("eventSequence")).longValue(), "BOARD_FROZEN", null, null,
+                    ((Number) fresh.get("boardVersion")).longValue());
+        }
+        return mapper.selectBoard((String) board.get("boardId"));
+    }
+
+    /** Result of one r491 budget roll: recorded only, the team token does not move. */
+    public static final class BudgetRoll {
+        public final int faceIndex, face, before, after;
+
+        BudgetRoll(int faceIndex, int face, int before, int after) {
+            this.faceIndex = faceIndex;
+            this.face = face;
+            this.before = before;
+            this.after = after;
+        }
+    }
+
+    /**
+     * r491 action-budget ROLL: the server rolls the published weighted die, records the result and spends roll_cost
+     * units of the team round. It has no movement, ownership or points effect (contract CITY_ACTION_BUDGET_V2).
+     * Caller holds the board lock (selectBoardForUpdate) and the team lock.
+     */
+    BudgetRoll budgetRoll(Map<String, Object> board, String teamId, long roundSeq, long memberId, String requestId,
+                          java.util.function.Function<int[], String> resultJson) {
+        String boardId = (String) board.get("boardId");
+        Map<String, Object> round = mapper.selectRoundForUpdate(boardId, teamId, roundSeq);
+        int cost = ((Number) board.get("rollCost")).intValue();
+        int before = ((Number) round.get("actionsRemaining")).intValue();
+        CityGameRules.Dice dice = CityGameRules.dice((String) board.get("diceFaces"), (String) board.get("diceWeights"));
+        int index = dice.rollIndex(random);
+        int face = dice.face(index);
+        mapper.insertBudgetRoll(boardId, teamId, roundSeq, memberId, requestId, (String) board.get("diceId"), face, index,
+                resultJson.apply(new int[]{index, face, before, before - cost}));
+        recordEvent(board, "BUDGET_ROLLED", null, teamId);
+        spend(board, teamId, roundSeq, cost);
+        return new BudgetRoll(index, face, before, before - cost);
     }
 
     /** Stored PROTECTED becomes HELD once the window passes; the stored row is not rewritten by reads. */
@@ -461,33 +558,16 @@ public class CityGameActionService {
 
         Map<String, Object> apply(int units, String eventKind, String propertyId) {
             String boardId = (String) board.get("boardId");
-            if (mapper.spendActions(boardId, teamId, roundSeq, units) != 1) throw new IllegalStateException("budget changed under team lock");
             long version = event(eventKind, propertyId);
             currentVersion = propertyId == null ? version : currentVersion + 1;
             outing(pointsCharged, 0);
-            Map<String, Object> round = mapper.selectOpenRound(boardId, teamId);
-            if (round != null && ((Number) round.get("actionsRemaining")).intValue() == 0) settle(boardId, roundSeq);
+            spend(board, teamId, roundSeq, units);
             return store("APPLIED", null);
         }
 
-        private long event(String kind, String propertyId) {
-            String boardId = (String) board.get("boardId");
-            mapper.advanceBoard(boardId);
-            Map<String, Object> fresh = mapper.selectBoard(boardId);
-            long version = ((Number) fresh.get("boardVersion")).longValue();
-            mapper.insertEvent(boardId, ((Number) fresh.get("eventSequence")).longValue(), kind, propertyId, teamId, version);
-            return version;
-        }
+        private long event(String kind, String propertyId) { return recordEvent(board, kind, propertyId, teamId); }
 
-        private void settle(String boardId, long seq) {
-            long score = CityGameRules.settlementScore(mapper.countHeld(boardId, teamId), ((Number) board.get("holdingYield")).intValue());
-            mapper.settleRound(boardId, teamId, seq, score);
-            mapper.addTeamScore(teamId, score);
-            if (seq < ((Number) board.get("maxRounds")).intValue()) {
-                mapper.insertRound(boardId, teamId, seq + 1, ((Number) board.get("actionsPerRound")).intValue());
-            }
-            event("ROUND_SETTLED", null);
-        }
+        private void settle(String boardId, long seq) { settleRound(board, teamId, seq); }
 
         private void outing(long spent, int zeroBlocks) {
             long now = clock.getAsLong();

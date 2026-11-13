@@ -26,9 +26,12 @@ public class ApiCityGameController extends BaseController {
     private final CityGameParticipationService participation;
     private final CityGameActionService actions;
     private final CityFairnessService fairness;
+    private final com.chengyinhub.business.citygame.CityOrderedMapService orderedMap;
 
     public ApiCityGameController(CityGameReadService reads, CityGameParticipationService participation,
-                                 CityGameActionService actions, CityFairnessService fairness) {
+                                 CityGameActionService actions, CityFairnessService fairness,
+                                 com.chengyinhub.business.citygame.CityOrderedMapService orderedMap) {
+        this.orderedMap = orderedMap;
         this.reads = reads;
         this.participation = participation;
         this.actions = actions;
@@ -54,14 +57,21 @@ public class ApiCityGameController extends BaseController {
         return success(reads.participation(member(), regionId, boardId, seasonId, rulesReleaseId, revision));
     }
 
+    /** Whole-board points, or one bounded viewport page when the query carries south/west/north/east. */
     @GetMapping("/points")
-    public AjaxResult points(@RequestParam String regionId, @RequestParam String boardId, @RequestParam String seasonId,
-                             @RequestParam String rulesReleaseId, @RequestParam String revision) {
-        return success(reads.points(member(), regionId, boardId, seasonId, rulesReleaseId, revision));
+    public AjaxResult points(@RequestParam Map<String, String> query) {
+        return success(reads.pointsQuery(member(), query));
     }
 
+    /** Bounded snapshot; with sync=TRANSACTIONAL_EVENTS_V1 it also opens an ordered-map stream (deltas below). */
     @GetMapping("/state/snapshot")
-    public AjaxResult stateSnapshot(@RequestParam Map<String, String> query) { return success(reads.stateSnapshot(member(), query)); }
+    public AjaxResult stateSnapshot(@RequestParam Map<String, String> query) {
+        if (query.containsKey("sync")) return success(orderedMap.snapshot(member(), query));
+        return success(reads.stateSnapshot(member(), query));
+    }
+
+    @GetMapping("/state/deltas")
+    public AjaxResult stateDeltas(@RequestParam Map<String, String> query) { return success(orderedMap.deltas(member(), query)); }
 
     @GetMapping("/player-rules")
     public AjaxResult playerRules(@RequestParam Map<String, String> query) { return success(reads.playerRules(member(), query)); }
