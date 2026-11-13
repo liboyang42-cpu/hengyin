@@ -85,6 +85,21 @@ public class ApiMerchantCommerceController extends BaseController {
         }
     }
 
+    @Operation(summary = "申请商业化权益订单原路退款")
+    @PostMapping("/order/refund")
+    public AjaxResult refundOrder(@RequestBody Map<String, Object> body) {
+        Long memberId = currentMemberId();
+        if (memberId == null) return error("请先登录");
+        MerchantAccessContext access = merchantAccessService.require(memberId, MerchantPermission.PROFILE_WRITE);
+        if (!memberId.equals(access.getOwnerMemberId())) return error("仅商家店主可申请权益退款");
+        try {
+            String orderSn = body == null || body.get("orderSn") == null ? null : String.valueOf(body.get("orderSn"));
+            return success(commerceService.refundOrder(access.getOwnerMemberId(), access.getMerchantId(), orderSn));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return error(e.getMessage());
+        }
+    }
+
     private Long currentMemberId() {
         try {
             Long id = getAppUserId();

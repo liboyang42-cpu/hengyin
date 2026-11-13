@@ -57,7 +57,8 @@ test('玩家页引入外观变量;底座不新增 keyframes、不用 color-mix',
     assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ""), /color-mix\(/)
     assert.doesNotMatch(css, /transition:\s*all/)
   }
-  assert.match(illusCss, /\.il\.is-reduced \.il__bl, \.il\.is-reduced \.il__fg \{ transition: none; opacity: 1; transform: none; \}/)
+  // D-118:旧 .il 画法删除,减少动态效果规则只剩风格 B 的 .ib
+  assert.match(illusCss, /\.ib\.is-reduced \.ib__l \{ transition: none; opacity: 1; transform: none; clip-path: none; \}/)
 })
 
 test('cy-illus 插图集与原型同为 25 张,未知名回落线索,章节印数字转义', () => {
@@ -114,21 +115,17 @@ test('cy-illus 组件:进场后加 is-on,减少动态效果直接终态且不起
   assert.equal(r.data.reduced, true)
   assert.equal(r.data.on, true)
   assert.equal(r._idleT, undefined)
-  assert.equal(r.data.enter, 'b2', 'l-iconsB:成功换成风格 B v2,进场 / 待机走 art-b.js 的时间表')
   def.lifetimes.detached.call(r)
 
   const m = make({ reducedMotion: false, name: 'key' })
   def.lifetimes.attached.call(m)
   assert.equal(m.data.on, false)
-  assert.equal(m.data.b2, true)
-  assert.equal(m.data.idleKind, 'b2')
+  assert.ok(m.data.layers.length > 0)
   def.lifetimes.detached.call(m)
 
-  // v2 没有重画的旧画法照旧
+  // D-118:15 枚补画的图没有 MOTION,只做通用弹出,不起待机计时
   const o = make({ reducedMotion: false, name: 'sparkles' })
   def.lifetimes.attached.call(o)
-  assert.equal(o.data.b2, false)
-  assert.equal(o.data.enter, 'burst')
-  assert.equal(o.data.idleKind, 'sway')
+  assert.ok(o.data.layers.length > 0)
   def.lifetimes.detached.call(o)
 })

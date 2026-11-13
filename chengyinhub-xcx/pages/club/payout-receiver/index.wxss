@@ -1,0 +1,11 @@
+page { background: var(--cy-bg-page); }
+.pr-page { min-height: 100vh; box-sizing: border-box; background: var(--cy-bg-page); color: var(--cy-color-text-primary); display: flex; flex-direction: column; }
+.pr-shell { flex: 1; box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-8); }
+.pr-card { border-radius: var(--cy-radius-md); background: var(--cy-bg-elevated); overflow: hidden; }
+.pr-row { min-height: var(--cy-btn-h); box-sizing: border-box; padding: 0 var(--cy-space-4); display: flex; align-items: center; justify-content: space-between; }
+.pr-label { color: var(--cy-color-text-secondary); font-size: var(--cy-font-body); }
+.pr-value { color: var(--cy-color-text-primary); font-size: var(--cy-font-body); font-weight: 700; }
+.pr-value--success { color: var(--cy-color-status-success); }
+.pr-value--warning { color: var(--cy-color-status-warning); }
+.pr-value--neutral { color: var(--cy-color-text-primary); }
+.pr-action { margin-top: var(--cy-space-4); }

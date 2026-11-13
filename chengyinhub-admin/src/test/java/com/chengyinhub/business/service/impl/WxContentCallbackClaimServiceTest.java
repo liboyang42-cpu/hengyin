@@ -73,6 +73,23 @@ class WxContentCallbackClaimServiceTest
                 org.mockito.ArgumentMatchers.anyInt());
     }
 
+    @Test
+    void completedPassCanEscalateButCompletedRiskCannotBeRepublished()
+    {
+        WxContentCallbackInboxMapper mapper = mock(WxContentCallbackInboxMapper.class);
+        AtomicReference<String> owner = new AtomicReference<String>();
+        when(mapper.selectForUpdate("hash")).thenReturn(row(WxContentCallbackInbox.STATE_DONE, null, 4L, 0))
+                .thenAnswer(i -> row(WxContentCallbackInbox.STATE_PROCESSING, owner.get(), 5L, 1));
+        when(mapper.claim(org.mockito.ArgumentMatchers.eq("hash"), anyString(), org.mockito.ArgumentMatchers.eq(1)))
+                .thenAnswer(i -> { owner.set(i.getArgument(1, String.class)); return 1; });
+        WxContentCallbackClaimService service = new WxContentCallbackClaimService();
+        ReflectionTestUtils.setField(service, "mapper", mapper);
+        assertEquals(WxContentCallbackClaim.State.ACQUIRED, service.claim("hash", true).getState());
+        when(mapper.selectForUpdate("hash")).thenReturn(row(WxContentCallbackInbox.STATE_DONE, null, 5L, 1));
+        assertEquals(WxContentCallbackClaim.State.DONE, service.claim("hash", true).getState());
+        assertEquals(WxContentCallbackClaim.State.REJECTED, service.claim("hash", false).getState());
+    }
+
     private WxContentCallbackInbox row(int state, String owner, long fence, Integer verdict)
     {
         WxContentCallbackInbox row = new WxContentCallbackInbox();

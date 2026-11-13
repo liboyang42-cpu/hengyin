@@ -29,10 +29,10 @@
       </view>
       <view class="ac__intro" wx:for="{{intro}}" wx:key="index" wx:if="{{item.kind === 'text'}}">{{item.text}}</view>
 
-      <!-- 嫌疑人翻页卡:一次一张;点卡片 / 右下箭头 / 「再想想」翻到下一张 -->
+      <!-- 嫌疑人翻页卡:一次一张;点卡片 / 右下箭头 / 「再想想」翻到下一张;D-56 左右滑也翻 -->
       <view class="ac__err {{wrongAttempt ? 'is-show' : ''}}" aria-live="polite">{{wrongAttempt ? (retryNote || '还不是这个人，继续调查') : ''}}</view>
 
-      <view class="ac__deck" wx:if="{{suspects.length}}">
+      <view class="ac__deck" wx:if="{{suspects.length}}" bindtouchstart="onDeckTouchStart" bindtouchend="onDeckTouchEnd">
         <view wx:for="{{suspects}}" wx:key="id"
               class="ac__fcard {{index === cur ? 'is-on' : ''}} {{index === outIdx ? 'is-out' : ''}} {{index === inIdx ? 'is-in' : ''}}"
               data-i="{{index}}" bindtap="onFlipNext" aria-role="button" aria-hidden="{{index !== cur}}"

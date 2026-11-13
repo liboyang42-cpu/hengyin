@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 171,
+    "routes": 172,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -675,6 +675,20 @@
       "hasWxml": true
     },
     {
+      "pagePath": "pages/club/payout-receiver/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "pages/club/roles/index",
       "pkg": "pages/club",
       "tabBar": false,
@@ -1254,7 +1268,7 @@
       "pkg": "pages/coop",
       "tabBar": false,
       "role": "merchant",
-      "needsLogin": false,
+      "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
       "hasJs": true,

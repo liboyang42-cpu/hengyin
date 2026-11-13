@@ -12,6 +12,10 @@ import com.chengyinhub.business.service.WechatPaymentOperations;
 import com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.context.properties.bind.BindException;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
@@ -23,9 +27,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,6 +40,8 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -49,6 +57,8 @@ class PlatformPassServiceTest {
     private WechatVerifiedPaymentFactService facts;
     private XpayGateway xpay;
     private IWeChatMiniSessionService sessions;
+    private com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper;
+    private final Set<Long> published = new java.util.HashSet<>();
 
     @BeforeEach
     void setUp() {
@@ -71,6 +81,11 @@ class PlatformPassServiceTest {
         ReflectionTestUtils.setField(service, "xpay", xpay);
         ReflectionTestUtils.setField(service, "miniSessions", sessions);
         ReflectionTestUtils.setField(service, "memberMapper", members);
+        registrationMapper = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        ReflectionTestUtils.setField(service, "registrationMapper", registrationMapper);
+        // 覆盖 / 报价 / 下单 / 主题库共用的唯一规则：只返回「已发布」的主题行，是否可领由服务按行判定
+        when(mapper.selectCoverageTopics(any())).thenAnswer(i -> ((List<Long>) i.getArgument(0)).stream()
+                .filter(published::contains).map(PlatformPassServiceTest::libraryTopic).toList());
     }
 
     private void enableAll() {
@@ -95,6 +110,9 @@ class PlatformPassServiceTest {
         o.put("id", 10L); o.put("order_no", "PPO20261110000000000000000000001"); o.put("member_id", MEMBER);
         o.put("plan_code", "YEAR"); o.put("price_fen", 29900); o.put("valid_days", 365); o.put("channel", channel);
         o.put("status", status); o.put("request_fingerprint", "x");
+        if ("XPAY".equals(channel)) {
+            o.put("xpay_product_id", "prod_year"); o.put("xpay_offer_id", "OFFER1"); o.put("xpay_env", 1);
+        }
         return o;
     }
 
@@ -115,22 +133,219 @@ class PlatformPassServiceTest {
         props.setEnabled(true);
         Map<?, ?> channels = service.channels();
         assertEquals(false, ((Map<?, ?>) channels.get("jsapi")).get("available"));
-        assertEquals("JSAPI_DISABLED", ((Map<?, ?>) channels.get("jsapi")).get("reason"));
+        assertEquals("JSAPI_PASS_PURCHASE_CLOSED", ((Map<?, ?>) channels.get("jsapi")).get("reason"));
         assertEquals("XPAY_DISABLED", ((Map<?, ?>) channels.get("xpay")).get("reason"));
     }
 
     @Test
-    void coverageRequiresActiveMembershipAndOfficialTopic() {
+    void defaultCoverageIncludesEveryPublishedSourceButRequiresActiveMembership() {
+        enableAll();
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(MEMBER, now)).thenReturn(activeMembership(now));
+        // Official, player and club topics are all eligible; source is not a coverage gate.
+        for (long topicId : List.of(5L, 6L, 7L)) {
+            published.add(topicId);
+            assertTrue(props.coversTopic(topicId));
+            assertEquals(7L, service.coverage(MEMBER, topicId, now).membershipId());
+        }
+        assertNull(service.coverage(MEMBER, 8L, now), "Unpublished topics are not covered");
+        assertNull(service.coverage(99L, 5L, now), "An active membership is required");
+    }
+
+    @Test
+    void defaultBatchCoverageUsesPublishedTopicsAndTheSuppliedMembershipInstant() {
+        enableAll();
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(MEMBER, now)).thenReturn(activeMembership(now));
+        published.addAll(List.of(5L, 6L, 7L));
+
+        assertEquals(Set.of(5L, 6L, 7L), service.coveredTopics(MEMBER, List.of(5L, 6L, 7L, 8L, 6L), now));
+        verify(mapper).selectActiveMembership(MEMBER, now);
+        verify(mapper).selectCoverageTopics(List.of(5L, 6L, 7L, 8L));
+    }
+
+    @Test
+    void configuredAllowlistIsSharedBySingleBatchCatalogAndOverviewCoverage() {
+        enableAll();
+        props.setCoverageTopicIds(Set.of(6L, 8L));
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(activeMembership(now));
+        published.add(6L);
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L), libraryTopic(8L)));
+        when(mapper.selectLibrary(null, 500)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L), libraryTopic(8L)));
+
+        assertFalse(props.coversTopic(5L));
+        assertTrue(props.coversTopic(6L));
+        assertNull(service.coverage(MEMBER, 5L, now));
+        assertNotNull(service.coverage(MEMBER, 6L, now));
+        assertNull(service.coverage(MEMBER, 8L, now), "An allowlisted topic must still be published");
+        assertEquals(Set.of(6L), service.coveredTopics(MEMBER, List.of(5L, 6L, 8L), now));
+        Map<String, Object> catalog = service.library(MEMBER, null, 20);
+        assertEquals(List.of(false, true, false), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList());
+        assertEquals(false, catalog.get("covered"), "Partial coverage must not label the whole catalog covered");
+        assertEquals(2, service.overview(MEMBER).get("libraryCount"), "通行证含 = 范围内且自玩可领的公开主题");
+    }
+
+    @Test
+    void batchCoverageRejectsAnonymousDisabledNonholderAndInvalidInputs() {
+        Date now = new Date(1_800_000_000_000L);
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, List.of(5L), now));
+        enableAll();
+        assertEquals(Set.of(), service.coveredTopics(null, List.of(5L), now));
+        assertEquals(Set.of(), service.coveredTopics(0L, List.of(5L), now));
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, null, now));
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, List.of(), now));
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, java.util.Arrays.asList(null, 0L, -1L), now));
+        assertEquals(Set.of(), service.coveredTopics(MEMBER, List.of(5L), now));
+        verify(mapper, never()).selectCoverageTopics(any());
+        verify(mapper).selectActiveMembership(MEMBER, now);
+    }
+
+    private static Map<String, Object> activeMembership(Date now) {
+        return Map.of("id", 7L, "valid_to", new Date(now.getTime() + 86_400_000L));
+    }
+
+    @Test
+    void nullOnlyBoundCoverageNormalizesToAllButMixedNullNeverBroadensAnAllowlist() {
+        PlatformPassProperties bound = new PlatformPassProperties();
+        bound.setCoverageTopicIds(java.util.Collections.singleton(null));
+        assertEquals(Set.of(), bound.getCoverageTopicIds());
+        assertTrue(bound.coversTopic(5L));
+        bound.setCoverageTopicIds(Set.of(6L));
+        assertThrows(NullPointerException.class, () -> bound.setCoverageTopicIds(
+                new java.util.HashSet<>(java.util.Arrays.asList(6L, null))));
+        assertEquals(Set.of(6L), bound.getCoverageTopicIds());
+        assertTrue(bound.coversTopic(6L));
+        assertFalse(bound.coversTopic(5L));
+    }
+
+    @Test
+    void publishedPolicyDoesNotBadgeUnavailableSelfPlayButAllowsUnexpiredFreeSelfPlay() {
+        enableAll();
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(activeMembership(now));
+        Map<String, Object> noSelfPlay = new HashMap<>(libraryTopic(1L));
+        noSelfPlay.put("self_play", Boolean.FALSE);
+        Map<String, Object> closed = new HashMap<>(libraryTopic(2L));
+        closed.put("lifecycle", 6);
+        Map<String, Object> notStarted = new HashMap<>(libraryTopic(3L));
+        notStarted.put("selling_started_at", new Date(4_000_000_000_000L));
+        Map<String, Object> ended = new HashMap<>(libraryTopic(4L));
+        ended.put("sale_end_at", new Date(1_600_000_000_000L));
+        Map<String, Object> free = new HashMap<>(libraryTopic(5L));
+        free.put("self_play_price", BigDecimal.ZERO);
+        free.put("lifecycle", 0);
+        free.remove("selling_started_at");
+        Map<String, Object> expiredFree = new HashMap<>(free);
+        expiredFree.put("id", 6L);
+        expiredFree.put("sale_end_at", new Date(1_600_000_000_000L));
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(noSelfPlay, closed, notStarted, ended, free, expiredFree));
+        List<Long> ids = List.of(1L, 2L, 3L, 4L, 5L, 6L);
+        when(mapper.selectCoverageTopics(ids)).thenReturn(List.of(noSelfPlay, closed, notStarted, ended, free, expiredFree));
+
+        assertEquals(Set.of(5L), service.coveredTopics(MEMBER, ids, now), "覆盖与领取同一口径：停售 / 过期 / 非自玩都不算");
+        Map<String, Object> catalog = service.library(MEMBER, null, 20);
+        assertEquals(6, libraryRows(catalog).size(), "Unavailable claims do not remove public rows");
+        assertEquals(List.of(false, false, false, false, true, false),
+                libraryRows(catalog).stream().map(row -> row.get("passCovered")).toList());
+        assertEquals(false, catalog.get("covered"));
+    }
+
+    @Test
+    void absentAndBlankCoverageConfigurationBindToAllTopics() {
+        PlatformPassProperties absent = bindProperties(Map.of("platform-pass.enabled", "true"));
+        assertEquals(Set.of(), absent.getCoverageTopicIds());
+        assertTrue(absent.coversTopic(5L));
+        for (String blank : List.of("", "   ")) {
+            PlatformPassProperties bound = bindProperties(Map.of("platform-pass.coverage-topic-ids", blank));
+            assertEquals(Set.of(), bound.getCoverageTopicIds());
+            assertTrue(bound.coversTopic(5L));
+            assertTrue(bound.coversTopic(999L));
+            assertFalse(bound.coversTopic(null));
+            assertFalse(bound.coversTopic(0L));
+        }
+    }
+
+    @Test
+    void nonemptyCoverageConfigurationBindsExactIdsAndMalformedValuesFailClosed() {
+        PlatformPassProperties bound = bindProperties(Map.of("platform-pass.coverage-topic-ids", "6,8"));
+        assertEquals(Set.of(6L, 8L), bound.getCoverageTopicIds());
+        assertFalse(bound.coversTopic(5L));
+        assertTrue(bound.coversTopic(6L));
+        assertTrue(bound.coversTopic(8L));
+        for (String malformed : List.of("not-a-topic", "6,not-a-topic")) {
+            assertThrows(BindException.class,
+                    () -> bindProperties(Map.of("platform-pass.coverage-topic-ids", malformed)),
+                    "Malformed nonempty configuration must not silently become default-all");
+        }
+    }
+
+    private static PlatformPassProperties bindProperties(Map<String, String> values) {
+        return new Binder(new MapConfigurationPropertySource(values))
+                .bind("platform-pass", Bindable.of(PlatformPassProperties.class)).get();
+    }
+
+    private static Map<String, Object> libraryTopic(long id) {
+        return Map.of("id", id, "name", "主题" + id, "product_type", 1, "self_play", Boolean.TRUE, "lifecycle", 3,
+                "selling_started_at", new Date(1_600_000_000_000L), "sale_end_at", new Date(4_102_444_800_000L),
+                "self_play_price", new BigDecimal("100.00"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> libraryRows(Map<String, Object> catalog) {
+        return (List<Map<String, Object>>) catalog.get("rows");
+    }
+
+    // ---- D-112 通行证卡字段
+
+    private Map<String, Object> activeSegment(String planCode, Date from, Date to) {
+        Map<String, Object> active = new HashMap<>();
+        active.put("id", 7L); active.put("plan_code", planCode);
+        active.put("valid_from", from); active.put("valid_to", to);
+        return active;
+    }
+
+    @Test
+    void holdingCarriesPlanLabelAndProgressDays() {
         enableAll();
         Date now = new Date();
-        Map<String, Object> active = new HashMap<>();
-        active.put("id", 7L); active.put("valid_to", new Date(now.getTime() + 1000));
-        when(mapper.selectActiveMembership(MEMBER, now)).thenReturn(active);
-        when(mapper.isOfficialSelfPlayTopic(5L)).thenReturn(1);
-        when(mapper.isOfficialSelfPlayTopic(6L)).thenReturn(0);
-        assertEquals(7L, service.coverage(MEMBER, 5L, now).membershipId());
-        assertNull(service.coverage(MEMBER, 6L, now), "非官方主题不覆盖");
-        assertNull(service.coverage(99L, 5L, now), "无有效段不覆盖");
+        long day = 86_400_000L;
+        when(mapper.selectActiveMembership(MEMBER, now))
+                .thenReturn(activeSegment("YEAR", new Date(now.getTime() - 65 * day), new Date(now.getTime() + 300 * day)));
+        Map<String, Object> holding = service.holding(MEMBER, now);
+        assertEquals("YEAR", holding.get("planCode"));
+        assertEquals("年卡", holding.get("planLabel"));
+        assertEquals(365, holding.get("daysTotal"));
+        assertEquals(300, holding.get("daysRemaining"));
+        assertEquals(false, holding.get("teammateBenefit"), "通行证只覆盖本人自玩");
+        assertNull(holding.get("badge"));
+    }
+
+    @Test
+    void holdingFlagsExpiringBadgeAndMonthLabelAndClampsRemaining() {
+        enableAll();
+        Date now = new Date();
+        long day = 86_400_000L;
+        when(mapper.selectActiveMembership(MEMBER, now))
+                .thenReturn(activeSegment("MONTH", new Date(now.getTime() - 26 * day), new Date(now.getTime() + 4 * day - 1000)));
+        Map<String, Object> holding = service.holding(MEMBER, now);
+        assertEquals("月卡", holding.get("planLabel"));
+        assertEquals(30, holding.get("daysTotal"));
+        assertEquals(4, holding.get("daysRemaining"), "向上取整天");
+        assertEquals("EXPIRING", holding.get("badge"));
+    }
+
+    @Test
+    void holdingWithoutActiveSegmentHasNullCardFacts() {
+        enableAll();
+        Map<String, Object> holding = service.holding(99L, new Date());
+        assertEquals(false, holding.get("active"));
+        assertNull(holding.get("planCode"));
+        assertNull(holding.get("planLabel"));
+        assertNull(holding.get("daysTotal"));
+        assertNull(holding.get("daysRemaining"));
+        assertNull(holding.get("badge"));
+        assertEquals(false, holding.get("teammateBenefit"));
     }
 
     // ---- 下单
@@ -140,20 +355,60 @@ class PlatformPassServiceTest {
         enableAll();
         when(mapper.selectPlanByCode("YEAR")).thenReturn(plan("YEAR", 1, "prod_year"));
         when(mapper.insertOrder(any())).thenReturn(1);
-        when(mapper.selectOrderByNo(anyString())).thenAnswer(i -> order("JSAPI", 0));
-        Map<String, Object> view = service.createOrder(MEMBER, "year", "jsapi", "req-00000001");
+        when(mapper.selectOrderByNo(anyString())).thenAnswer(i -> order("XPAY", 0));
+        Map<String, Object> view = service.createOrder(MEMBER, "year", "xpay", "req-00000001");
         assertEquals("PENDING", view.get("status"));
         assertEquals(29900L, view.get("priceFen"));
 
-        Map<String, Object> stored = order("JSAPI", 0);
-        stored.put("request_fingerprint", PlatformPassService.sha256("YEAR|JSAPI|29900|365"));
+        Map<String, Object> stored = order("XPAY", 0);
+        stored.put("request_fingerprint", PlatformPassService.sha256("YEAR|XPAY|29900|365"));
         when(mapper.selectOrderByMemberRequest(MEMBER, "req-00000001")).thenReturn(stored);
-        service.createOrder(MEMBER, "YEAR", "JSAPI", "req-00000001");
+        service.createOrder(MEMBER, "YEAR", "XPAY", "req-00000001");
         verify(mapper, org.mockito.Mockito.times(1)).insertOrder(any());
 
+        when(mapper.selectPlanByCode("MONTH")).thenReturn(plan("MONTH", 1, "prod_month"));
         PlatformPassException conflict = assertThrows(PlatformPassException.class,
-                () -> service.createOrder(MEMBER, "YEAR", "XPAY", "req-00000001"));
+                () -> service.createOrder(MEMBER, "MONTH", "XPAY", "req-00000001"));
         assertEquals("REQUEST_CONFLICT", conflict.getReasonCode());
+    }
+
+    @Test
+    void newPassPurchaseNeverTrustsClientChannelAndRejectsJsapi() {
+        enableAll();
+        when(mapper.selectPlanByCode("YEAR")).thenReturn(plan("YEAR", 1, "prod_year"));
+        assertEquals("JSAPI_PASS_PURCHASE_CLOSED", assertThrows(PlatformPassException.class,
+                () -> service.createOrder(MEMBER, "YEAR", "JSAPI", "req-00000009")).getReasonCode());
+        verify(mapper, never()).insertOrder(any());
+        assertEquals("JSAPI_PASS_PURCHASE_CLOSED",
+                ((Map<?, ?>) ((Map<?, ?>) service.channels()).get("jsapi")).get("reason"));
+    }
+
+    @Test
+    void pendingJsapiOrderCanNoLongerBePaidButStaysQueryable() {
+        enableAll();
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(order("JSAPI", 0));
+        assertEquals("JSAPI_PASS_PURCHASE_CLOSED", assertThrows(PlatformPassException.class,
+                () -> service.preparePayment(MEMBER, "PPO1", null)).getReasonCode());
+        verify(wechat, never()).createGenericOrder(anyString(), any(), anyString(), anyString());
+        assertEquals("PENDING", service.order(MEMBER, "PPO1").get("status"));
+    }
+
+    @Test
+    void createOrderFreezesChannelIdentityCoverageAndRefundTermsOnTheOrder() {
+        enableAll();
+        props.setCoverageTopicIds(Set.of(7L, 3L));
+        when(mapper.selectPlanByCode("YEAR")).thenReturn(plan("YEAR", 1, "prod_year"));
+        when(mapper.insertOrder(any())).thenReturn(1);
+        when(mapper.selectOrderByNo(anyString())).thenAnswer(i -> order("XPAY", 0));
+        service.createOrder(MEMBER, "YEAR", "XPAY", "req-00000010");
+        org.mockito.ArgumentCaptor<Map<String, Object>> row = org.mockito.ArgumentCaptor.forClass(Map.class);
+        verify(mapper).insertOrder(row.capture());
+        assertEquals("prod_year", row.getValue().get("xpay_product_id"));
+        assertEquals("OFFER1", row.getValue().get("xpay_offer_id"));
+        assertEquals(1, row.getValue().get("xpay_env"));
+        assertEquals("IDS:3,7", row.getValue().get("coverage_snapshot"));
+        assertEquals(PlatformPassService.REFUND_TERMS_REF, row.getValue().get("refund_terms_ref"));
+        assertFalse(row.getValue().toString().contains("app-key"), "密钥不进订单");
     }
 
     @Test
@@ -161,10 +416,20 @@ class PlatformPassServiceTest {
         enableAll();
         when(mapper.selectPlanByCode("MONTH")).thenReturn(plan("MONTH", 0, "p"));
         assertEquals("PLAN_NOT_ON_SALE", assertThrows(PlatformPassException.class,
-                () -> service.createOrder(MEMBER, "MONTH", "JSAPI", "req-00000002")).getReasonCode());
+                () -> service.createOrder(MEMBER, "MONTH", "XPAY", "req-00000002")).getReasonCode());
         when(mapper.selectPlanByCode("YEAR")).thenReturn(plan("YEAR", 1, null));
         assertEquals("XPAY_PRODUCT_NOT_CONFIGURED", assertThrows(PlatformPassException.class,
                 () -> service.createOrder(MEMBER, "YEAR", "XPAY", "req-00000003")).getReasonCode());
+    }
+
+    @Test
+    void stoppedPlanBlocksSigningAnOldPendingOrder() {
+        enableAll();
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(order("XPAY", 0));
+        when(mapper.selectPlanByCode("YEAR")).thenReturn(plan("YEAR", 0, "prod_year"));
+        assertEquals("PLAN_NOT_ON_SALE", assertThrows(PlatformPassException.class,
+                () -> service.preparePayment(MEMBER, "PPO1", "code-1")).getReasonCode());
+        verify(sessions, never()).exchange(anyString());
     }
 
     @Test
@@ -180,15 +445,45 @@ class PlatformPassServiceTest {
     }
 
     @Test
-    void jsapiPrepayUsesGenericOrderWithFrozenAmount() {
+    void signingUsesTheFrozenProductEvenAfterThePlanProductChanged() {
         enableAll();
-        when(mapper.selectOrderByNo("PPO1")).thenReturn(order("JSAPI", 0));
-        when(wechat.createGenericOrder(eq("PPO20261110000000000000000000001"), any(), anyString(), eq("openid-42")))
-                .thenReturn(Map.of("package", "prepay_id=x"));
-        Map<String, Object> out = service.preparePayment(MEMBER, "PPO1", null);
-        assertTrue(out.containsKey("payParams"));
-        verify(wechat).createGenericOrder("PPO20261110000000000000000000001", new BigDecimal("299.00"),
-                "城瘾通行证", "openid-42");
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(order("XPAY", 0));
+        when(mapper.selectPlanByCode("YEAR")).thenReturn(plan("YEAR", 1, "prod_year_v2"));
+        when(sessions.exchange("code-1")).thenReturn(new IWeChatMiniSessionService.WeChatMiniSession("openid-42", "sk"));
+        @SuppressWarnings("unchecked") Map<String, Object> vp =
+                (Map<String, Object>) service.preparePayment(MEMBER, "PPO1", "code-1").get("virtualPayment");
+        assertEquals("prod_year", JSON.parseObject((String) vp.get("signData")).getString("productId"));
+        verify(mapper, never()).freezeXpayIntent(anyLong(), anyString(), anyString(), anyInt());
+    }
+
+    @Test
+    void signingRefusesAnOrderFrozenForAnotherEnvironmentOrOffer() {
+        enableAll();
+        Map<String, Object> frozenProd = order("XPAY", 0);
+        frozenProd.put("xpay_env", 0);
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(frozenProd);
+        when(mapper.selectPlanByCode("YEAR")).thenReturn(plan("YEAR", 1, "prod_year"));
+        assertEquals("XPAY_INTENT_CHANGED", assertThrows(PlatformPassException.class,
+                () -> service.preparePayment(MEMBER, "PPO1", "code-1")).getReasonCode());
+        Map<String, Object> otherOffer = order("XPAY", 0);
+        otherOffer.put("xpay_offer_id", "OLD_OFFER");
+        when(mapper.selectOrderByNo("PPO2")).thenReturn(otherOffer);
+        assertEquals("XPAY_INTENT_CHANGED", assertThrows(PlatformPassException.class,
+                () -> service.preparePayment(MEMBER, "PPO2", "code-1")).getReasonCode());
+        verify(sessions, never()).exchange(anyString());
+    }
+
+    @Test
+    void legacyUnfrozenOrderIsFrozenBeforeFirstSigning() {
+        enableAll();
+        Map<String, Object> legacy = order("XPAY", 0);
+        legacy.remove("xpay_product_id"); legacy.remove("xpay_offer_id"); legacy.remove("xpay_env");
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(legacy);
+        when(mapper.selectPlanByCode("YEAR")).thenReturn(plan("YEAR", 1, "prod_year"));
+        when(mapper.freezeXpayIntent(10L, "prod_year", "OFFER1", 1)).thenReturn(1);
+        when(sessions.exchange("code-1")).thenReturn(new IWeChatMiniSessionService.WeChatMiniSession("openid-42", "sk"));
+        service.preparePayment(MEMBER, "PPO1", "code-1");
+        verify(mapper).freezeXpayIntent(10L, "prod_year", "OFFER1", 1);
     }
 
     @Test
@@ -282,56 +577,405 @@ class PlatformPassServiceTest {
         return r;
     }
 
+    private static final String NO = "PPO20261110000000000000000000001";
+
+    private static JSONObject remoteWith(int status, long paid, long refund, String wxOrderId) {
+        JSONObject r = remote(status, paid, NO);
+        r.getJSONObject("order").put("refund_fee", refund);
+        r.getJSONObject("order").put("wx_order_id", wxOrderId);
+        return r;
+    }
+
+    private static JSONObject push(String event) {
+        JSONObject push = new JSONObject();
+        push.put("Event", event);
+        push.put("OutTradeNo", NO);
+        return push;
+    }
+
+    private static Map<String, Object> paidXpayOrder(int status) {
+        Map<String, Object> o = order("XPAY", status);
+        o.put("transaction_id", "WXO1");
+        o.put("delivery_status", 1);
+        return o;
+    }
+
     @Test
     void xpayConfirmActivatesOnlyOnPaidRemoteWithMatchingAmount() {
         enableAll();
         Map<String, Object> pending = order("XPAY", 0);
         when(mapper.selectOrderByNo(anyString())).thenReturn(pending);
         when(mapper.selectOrderByNoForUpdate(anyString())).thenReturn(pending);
-        when(xpay.queryOrder("openid-42", "PPO20261110000000000000000000001", 1)).thenReturn(remote(1, 29900, "PPO20261110000000000000000000001"));
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remote(1, 29900, NO));
         service.confirmXpay(MEMBER, "PPO1");
-        verify(mapper, never()).markXpayPaid(anyLong(), anyString(), anyInt(), any());
+        verify(mapper, never()).markXpayPaid(anyLong(), anyString(), anyInt(), any(), anyInt());
 
-        when(xpay.queryOrder("openid-42", "PPO20261110000000000000000000001", 1)).thenReturn(remote(2, 100, "PPO20261110000000000000000000001"));
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remote(2, 100, NO));
         assertThrows(PlatformPassException.class, () -> service.confirmXpay(MEMBER, "PPO1"));
-        verify(mapper, never()).markXpayPaid(anyLong(), anyString(), anyInt(), any());
+        verify(mapper, never()).markXpayPaid(anyLong(), anyString(), anyInt(), any(), anyInt());
 
-        when(xpay.queryOrder("openid-42", "PPO20261110000000000000000000001", 1)).thenReturn(remote(2, 29900, "PPO20261110000000000000000000001"));
-        when(mapper.markXpayPaid(10L, "WXO1", 1, null)).thenReturn(1);
-        when(mapper.markXpayPaid(eq(10L), eq("WXO1"), eq(1), any())).thenReturn(1);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remote(2, 29900, NO));
+        when(mapper.markXpayPaid(eq(10L), eq("WXO1"), eq(1), any(), eq(1))).thenReturn(1);
         when(mapper.insertMembership(any())).thenReturn(1);
         service.confirmXpay(MEMBER, "PPO1");
         verify(mapper).insertMembership(any());
-        verify(xpay).notifyProvideGoods("PPO20261110000000000000000000001", 1);
+        verify(xpay).notifyProvideGoods(NO, 1);
+    }
+
+    @Test
+    void remoteEnvironmentOrOrderMismatchIsRejectedWithoutActivation() {
+        enableAll();
+        when(mapper.selectOrderByNo(anyString())).thenReturn(order("XPAY", 0));
+        JSONObject wrongEnv = remote(2, 29900, NO);
+        wrongEnv.getJSONObject("order").put("env", 0);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(wrongEnv);
+        assertEquals("PAYMENT_FACT_CONFLICT", assertThrows(PlatformPassException.class,
+                () -> service.confirmXpay(MEMBER, "PPO1")).getReasonCode());
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remote(2, 29900, "PPO-OTHER"));
+        assertEquals("PAYMENT_FACT_CONFLICT", assertThrows(PlatformPassException.class,
+                () -> service.confirmXpay(MEMBER, "PPO1")).getReasonCode());
+        verify(mapper, never()).markXpayPaid(anyLong(), anyString(), anyInt(), any(), anyInt());
     }
 
     @Test
     void xpayPushIsOnlyASignalAndUnknownEventsAreRefused() {
         enableAll();
-        JSONObject push = new JSONObject();
-        push.put("Event", "xpay_goods_deliver_notify");
-        push.put("OutTradeNo", "PPO20261110000000000000000000001");
         Map<String, Object> pending = order("XPAY", 0);
         when(mapper.selectOrderByNo(anyString())).thenReturn(pending);
-        when(xpay.queryOrder(anyString(), anyString(), anyInt())).thenReturn(remote(1, 29900, "PPO20261110000000000000000000001"));
-        assertFalse(service.handleXpayPush(push), "回查未付不开通");
-        push.put("Event", "something_else");
-        assertFalse(service.handleXpayPush(push));
+        when(xpay.queryOrder(anyString(), anyString(), anyInt())).thenReturn(remote(1, 29900, NO));
+        assertFalse(service.handleXpayPush(push("xpay_goods_deliver_notify")), "回查未付不开通");
+        assertFalse(service.handleXpayPush(push("something_else")));
     }
 
-    // ---- 退款
+    // ---- T03 渠道发货确认补偿
 
     @Test
-    void refundRefusedOnceAnyThemeWasClaimed() {
+    void failedDeliveryConfirmationKeepsEntitlementAndLeavesARetryTodo() {
+        enableAll();
+        Map<String, Object> pending = order("XPAY", 0);
+        Map<String, Object> paid = paidXpayOrder(1);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(pending, paid);
+        when(mapper.selectOrderByNoForUpdate(anyString())).thenReturn(pending);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remote(2, 29900, NO));
+        when(mapper.markXpayPaid(eq(10L), eq("WXO1"), eq(1), any(), eq(1))).thenReturn(1);
+        when(mapper.insertMembership(any())).thenReturn(1);
+        when(xpay.notifyProvideGoods(NO, 1)).thenThrow(new IllegalStateException("net"));
+
+        Map<String, Object> view = service.confirmXpay(MEMBER, "PPO1");
+        assertEquals("PAID", view.get("status"), "发货确认失败不把已付显示成未付");
+        assertEquals("PENDING", view.get("channelDelivery"));
+        verify(mapper).markXpayPaid(eq(10L), eq("WXO1"), eq(1), any(), eq(1));
+        verify(mapper).markDeliveryRetry(eq(10L), any());
+        verify(mapper, never()).markDeliveryConfirmed(anyLong());
+        verify(mapper, org.mockito.Mockito.times(1)).insertMembership(any());
+    }
+
+    @Test
+    void pushOnlyConfirmationActivatesOnceAndReportsDelivery() {
+        enableAll();
+        Map<String, Object> pending = order("XPAY", 0);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(pending);
+        when(mapper.selectOrderByNoForUpdate(anyString())).thenReturn(pending);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remote(2, 29900, NO));
+        when(mapper.markXpayPaid(eq(10L), eq("WXO1"), eq(1), any(), eq(1))).thenReturn(1);
+        when(mapper.insertMembership(any())).thenReturn(1);
+        when(xpay.notifyProvideGoods(NO, 1)).thenReturn(JSONObject.of("errcode", 0));
+        assertTrue(service.handleXpayPush(push("xpay_goods_deliver_notify")));
+        verify(xpay).notifyProvideGoods(NO, 1);
+        verify(mapper).markDeliveryConfirmed(10L);
+        verify(mapper, org.mockito.Mockito.times(1)).insertMembership(any());
+    }
+
+    @Test
+    void duplicatePushOnPaidOrderRetriesPendingDeliveryWithoutASecondSegment() {
+        enableAll();
+        Map<String, Object> paid = paidXpayOrder(1);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paid);
+        when(xpay.notifyProvideGoods(NO, 1)).thenReturn(JSONObject.of("errcode", 0));
+        assertTrue(service.handleXpayPush(push("xpay_goods_deliver_notify")));
+        verify(mapper).markDeliveryConfirmed(10L);
+        verify(mapper, never()).insertMembership(any());
+        verify(mapper, never()).markXpayPaid(anyLong(), anyString(), anyInt(), any(), anyInt());
+    }
+
+    @Test
+    void channelAlreadyMarkedDeliveredCountsAsConfirmedWhateverTheErrorCode() {
+        enableAll();
+        when(xpay.notifyProvideGoods(NO, 1)).thenReturn(JSONObject.of("errcode", 268490004));
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remote(4, 29900, NO));
+        service.confirmDelivery(paidXpayOrder(1));
+        verify(mapper).markDeliveryConfirmed(10L);
+        verify(mapper, never()).markDeliveryRetry(anyLong(), any());
+    }
+
+    @Test
+    void compensationJobDrivesPendingDeliveriesAndIsIdempotent() {
+        enableAll();
+        when(mapper.selectOrdersPendingDelivery(any(), eq(20))).thenReturn(List.of(paidXpayOrder(1)));
+        when(xpay.notifyProvideGoods(NO, 1)).thenReturn(JSONObject.of("errcode", 0));
+        assertEquals(1, service.retryPendingDeliveries(20));
+        verify(mapper).markDeliveryConfirmed(10L);
+        verify(mapper, never()).insertMembership(any());
+        when(mapper.selectOrdersPendingDelivery(any(), eq(20))).thenReturn(List.of());
+        assertEquals(0, service.retryPendingDeliveries(20));
+    }
+
+    // ---- T04 渠道发起的退款
+
+    @Test
+    void channelInitiatedFullRefundClosesPaidOrderAndRevokesAndShiftsSegments() {
+        enableAll();
+        Map<String, Object> paid = paidXpayOrder(1);
+        paid.put("delivery_status", 2);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paid);
+        when(mapper.selectOrderByNoForUpdate(anyString())).thenReturn(paid);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remoteWith(5, 29900, 29900, "WXO1"));
+        when(mapper.markRefundedFromChannel(eq(10L), isNull(), isNull(), any(), eq(29900L), eq("CHANNEL"))).thenReturn(1);
+        Date now = new Date();
+        Map<String, Object> membership = new HashMap<>();
+        membership.put("id", 7L); membership.put("status", 1);
+        membership.put("valid_from", new Date(now.getTime() - 86_400_000L));
+        membership.put("valid_to", new Date(now.getTime() + 10L * 86_400_000L));
+        when(mapper.selectMembershipByOrder(10L)).thenReturn(membership);
+
+        assertTrue(service.handleXpayPush(push("xpay_refund_notify")));
+        verify(mapper).revokeMembership(10L);
+        verify(mapper).shiftLaterMemberships(eq(MEMBER), any(), anyLong());
+        verify(mapper).insertMemberLock(MEMBER);
+    }
+
+    @Test
+    void duplicateRefundNoticeOnRefundedOrderChangesNothing() {
+        enableAll();
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paidXpayOrder(3));
+        assertTrue(service.handleXpayPush(push("xpay_refund_notify")));
+        verify(xpay, never()).queryOrder(anyString(), anyString(), anyInt());
+        verify(mapper, never()).markRefundedFromChannel(anyLong(), any(), any(), any(), anyLong(), anyString());
+        verify(mapper, never()).revokeMembership(anyLong());
+    }
+
+    @Test
+    void forgedRefundNoticeCannotRevokeWhenChannelShowsNoRefund() {
+        enableAll();
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paidXpayOrder(1));
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remote(4, 29900, NO));
+        assertFalse(service.handleXpayPush(push("xpay_refund_notify")));
+        verify(mapper, never()).markRefundedFromChannel(anyLong(), any(), any(), any(), anyLong(), anyString());
+        verify(mapper, never()).revokeMembership(anyLong());
+    }
+
+    @Test
+    void channelRefundFactMustMatchOrderTransactionAndAmount() {
+        enableAll();
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paidXpayOrder(1));
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remoteWith(5, 29900, 29900, "SOMEONE-ELSES"));
+        assertEquals("REFUND_FACT_CONFLICT", assertThrows(PlatformPassException.class,
+                () -> service.handleXpayPush(push("xpay_refund_notify"))).getReasonCode());
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remoteWith(5, 29900, 99999, "WXO1"));
+        assertEquals("REFUND_FACT_CONFLICT", assertThrows(PlatformPassException.class,
+                () -> service.handleXpayPush(push("xpay_refund_notify"))).getReasonCode());
+        verify(mapper, never()).markRefundedFromChannel(anyLong(), any(), any(), any(), anyLong(), anyString());
+    }
+
+    @Test
+    void refundBeforeLatePaymentNeverOpensTheEntitlement() {
+        enableAll();
+        Map<String, Object> pending = order("XPAY", 0);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(pending);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remoteWith(5, 29900, 29900, "WXO1"));
+        assertFalse(service.handleXpayPush(push("xpay_refund_notify")));
+        assertFalse(service.handleXpayPush(push("xpay_goods_deliver_notify")), "已退款的渠道单不再开通");
+        verify(mapper, never()).markXpayPaid(anyLong(), anyString(), anyInt(), any(), anyInt());
+        verify(mapper, never()).insertMembership(any());
+    }
+
+    @Test
+    void channelPartialRefundIsRecordedWithRealAmountAndKeepsTheEntitlement() {
+        enableAll();
+        Map<String, Object> paid = paidXpayOrder(1);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paid);
+        when(mapper.selectOrderByNoForUpdate(anyString())).thenReturn(paid);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remoteWith(5, 29900, 1000, "WXO1"));
+        assertTrue(service.handleXpayPush(push("xpay_refund_notify")));
+        verify(mapper).recordPartialChannelRefund(eq(10L), eq(1000L), anyString());
+        verify(mapper, never()).revokeMembership(anyLong());
+        verify(mapper, never()).markRefundedFromChannel(anyLong(), any(), any(), any(), anyLong(), anyString());
+    }
+
+    // ---- T05 退款后的派生票
+
+    @Test
+    void refundStopsDerivedTicketsOfTheRevokedSegmentAndClampsTheLaterOnes() {
+        enableAll();
+        Map<String, Object> paid = paidXpayOrder(1);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paid);
+        when(mapper.selectOrderByNoForUpdate(anyString())).thenReturn(paid);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remoteWith(5, 29900, 29900, "WXO1"));
+        when(mapper.markRefundedFromChannel(anyLong(), any(), any(), any(), anyLong(), anyString())).thenReturn(1);
+        Date now = new Date();
+        Map<String, Object> membership = new HashMap<>();
+        membership.put("id", 7L); membership.put("status", 1);
+        membership.put("valid_from", new Date(now.getTime() - 86_400_000L));
+        membership.put("valid_to", new Date(now.getTime() + 86_400_000L));
+        when(mapper.selectMembershipByOrder(10L)).thenReturn(membership);
+        Date laterEnd = new Date(now.getTime() + 20L * 86_400_000L);
+        Map<String, Object> later = new HashMap<>();
+        later.put("id", 8L); later.put("valid_from", new Date(now.getTime() - 1000L)); later.put("valid_to", laterEnd);
+        when(mapper.selectActiveSegments(MEMBER)).thenReturn(List.of(later));
+        when(mapper.selectActiveClaims(MEMBER)).thenReturn(List.of(
+                Map.of("membership_id", 7L, "registration_id", 900L, "topic_id", 5L),
+                Map.of("membership_id", 8L, "registration_id", 901L, "topic_id", 6L)));
+
+        assertTrue(service.handleXpayPush(push("xpay_refund_notify")));
+        verify(registrationMapper).clampPassDerivedTicket(eq(900L), any());
+        verify(registrationMapper).clampPassDerivedTicket(901L, laterEnd);
+        verify(mapper).markClaimsStopped(eq(7L), any());
+    }
+
+    @Test
+    void renewalExtendsTicketsCutAtThePreviousSegmentEndWithoutNewClaims() {
+        enableAll();
+        Date now = new Date();
+        Date firstEnd = new Date(now.getTime() + 5L * 86_400_000L);
+        Date secondEnd = new Date(firstEnd.getTime() + 30L * 86_400_000L);
+        when(mapper.selectLatestValidToForUpdate(eq(MEMBER), any())).thenReturn(firstEnd);
+        when(mapper.insertMembership(any())).thenReturn(1);
+        when(mapper.selectActiveSegments(MEMBER)).thenReturn(List.of(
+                Map.of("id", 7L, "valid_from", now, "valid_to", firstEnd),
+                Map.of("id", 8L, "valid_from", firstEnd, "valid_to", secondEnd)));
+        when(mapper.selectActiveClaims(MEMBER)).thenReturn(List.of(Map.of("membership_id", 7L, "registration_id", 900L, "topic_id", 5L)));
+        Map<String, Object> o = order("XPAY", 0);
+        o.put("valid_days", 30);
+        service.activate(o, now, null);
+        verify(registrationMapper).extendPassDerivedTicket(eq(900L), eq(new Date(firstEnd.getTime() - 1000)),
+                eq(new Date(firstEnd.getTime() + 1000)), eq(secondEnd));
+        verify(mapper, never()).insertClaim(any());
+    }
+
+    @Test
+    void recordClaimRefusesASegmentThatRefundAlreadyRevoked() {
+        boolean active = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
+        try {
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+            when(mapper.selectMembershipById(7L)).thenReturn(Map.of("id", 7L, "order_id", 10L));
+            when(mapper.selectOrderByIdForUpdate(10L)).thenReturn(order("XPAY", PlatformPassService.REFUNDED));
+            when(mapper.selectMembershipByIdForUpdate(7L)).thenReturn(Map.of("id", 7L, "member_id", MEMBER, "status", 3,
+                    "valid_from", new Date(0), "valid_to", new Date(Long.MAX_VALUE / 4)));
+            assertEquals("PASS_COVERAGE_LOST", assertThrows(PlatformPassException.class, () -> service.recordClaim(
+                    new PlatformPassService.Coverage(7L, new Date()), MEMBER, 5L, 9L)).getReasonCode());
+            verify(mapper, never()).insertClaim(any());
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(active);
+        }
+    }
+
+    @Test
+    void recordClaimLocksOrderThenMemberThenSegmentLikeRefund() {
+        boolean active = org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive();
+        try {
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);
+            when(mapper.selectMembershipById(7L)).thenReturn(Map.of("id", 7L, "order_id", 10L));
+            when(mapper.selectOrderByIdForUpdate(10L)).thenReturn(order("XPAY", PlatformPassService.PAID));
+            when(mapper.selectMembershipByIdForUpdate(7L)).thenReturn(Map.of("id", 7L, "member_id", MEMBER, "status", 1,
+                    "valid_from", new Date(0), "valid_to", new Date(Long.MAX_VALUE / 4)));
+            when(mapper.insertClaim(any())).thenReturn(1);
+            service.recordClaim(new PlatformPassService.Coverage(7L, new Date()), MEMBER, 5L, 9L);
+            org.mockito.InOrder order = org.mockito.Mockito.inOrder(mapper);
+            order.verify(mapper).selectOrderByIdForUpdate(10L);
+            order.verify(mapper).lockMember(MEMBER);
+            order.verify(mapper).selectMembershipByIdForUpdate(7L);
+            order.verify(mapper).insertClaim(any());
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(active);
+        }
+    }
+
+    // ---- T06 退款：整单、人工复核、玩家申请与进度
+
+    @Test
+    void usedPassRefundIsRefusedUntilManualReviewApproves() {
         enableAll();
         when(mapper.selectOrderByNoForUpdate("PPO1")).thenReturn(order("JSAPI", 1));
         Map<String, Object> membership = new HashMap<>();
         membership.put("id", 7L);
         when(mapper.selectMembershipByOrder(10L)).thenReturn(membership);
         when(mapper.countClaimsByMembership(7L)).thenReturn(1);
-        assertEquals("PASS_ALREADY_USED", assertThrows(PlatformPassException.class,
+        assertEquals("MANUAL_REVIEW_REQUIRED", assertThrows(PlatformPassException.class,
                 () -> service.requestRefund("PPO1", "admin", null)).getReasonCode());
         verify(wechat, never()).submitRefund(any(), anyString(), anyString(), any(), any(), anyString());
+    }
+
+    @Test
+    void approvedReviewRunsTheWholeOrderRefundAndRecordsTheChannelReceipt() {
+        enableAll();
+        Map<String, Object> paid = order("XPAY", 1);
+        paid.put("review_status", 2); paid.put("review_apply_reason", "不想要了");
+        when(mapper.selectOrderByNoForUpdate(NO)).thenReturn(paid);
+        when(mapper.selectOrderByNo(NO)).thenReturn(paid);
+        Map<String, Object> membership = new HashMap<>();
+        membership.put("id", 7L);
+        when(mapper.selectMembershipByOrder(10L)).thenReturn(membership);
+        when(mapper.countClaimsByMembership(7L)).thenReturn(2);
+        when(mapper.decideReview(eq(10L), eq(2), eq("ops"), anyString(), any())).thenReturn(1);
+        when(mapper.markRefundRequested(eq(10L), anyString(), anyString(), eq("ops"), any())).thenReturn(1);
+        paid.put("xpay_env", 1);
+        when(xpay.refundOrder(anyString(), eq(NO), anyString(), eq(29900L), eq(29900L), anyString(), eq(1)))
+                .thenReturn(JSONObject.of("errcode", 0));
+        service.reviewRefund(NO, "ops", true, "已核实使用情况");
+        verify(mapper).markReviewReceipt(eq(10L), startsWith("RPP"));
+        verify(xpay).refundOrder(anyString(), eq(NO), anyString(), eq(29900L), eq(29900L), anyString(), eq(1));
+    }
+
+    @Test
+    void rejectedReviewRecordsTheDecisionAndNeverRefunds() {
+        enableAll();
+        Map<String, Object> paid = order("XPAY", 1);
+        when(mapper.selectOrderByNoForUpdate("PPO1")).thenReturn(paid);
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(paid);
+        when(mapper.decideReview(eq(10L), eq(3), eq("ops"), eq("已多次游玩"), any())).thenReturn(1);
+        service.reviewRefund("PPO1", "ops", false, "已多次游玩");
+        verify(mapper).decideReview(eq(10L), eq(3), eq("ops"), eq("已多次游玩"), any());
+        verify(xpay, never()).refundOrder(anyString(), anyString(), anyString(), anyLong(), anyLong(), anyString(), anyInt());
+        verify(mapper, never()).markRefundRequested(anyLong(), anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    void reviewCanOnlyDecideAPendingApplication() {
+        enableAll();
+        when(mapper.selectOrderByNoForUpdate("PPO1")).thenReturn(order("XPAY", 1));
+        assertEquals("REVIEW_NOT_PENDING", assertThrows(PlatformPassException.class,
+                () -> service.reviewRefund("PPO1", "ops", true, "")).getReasonCode());
+    }
+
+    @Test
+    void playerRefundApplicationRecordsUsageFactsAndShowsProgress() {
+        enableAll();
+        Map<String, Object> paid = order("XPAY", 1);
+        Map<String, Object> membership = new HashMap<>();
+        membership.put("id", 7L);
+        when(mapper.selectMembershipByOrder(10L)).thenReturn(membership);
+        when(mapper.selectActiveClaims(MEMBER)).thenReturn(List.of(Map.of("membership_id", 7L, "registration_id", 900L, "topic_id", 5L)));
+        Map<String, Object> afterApply = order("XPAY", 1);
+        afterApply.put("review_status", 1); afterApply.put("review_apply_reason", "想退");
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paid, afterApply);
+        Map<String, Object> view = service.applyRefund(MEMBER, "PPO1", "想退");
+        verify(mapper).requestReview(eq(10L), eq("想退"), eq("已领取主题数=1；主题=5"));
+        assertEquals("PENDING", ((Map<?, ?>) view.get("refund")).get("reviewStatus"));
+        assertEquals("想退", ((Map<?, ?>) view.get("refund")).get("applyReason"));
+    }
+
+    @Test
+    void playerCannotApplyForAnotherMembersOrderOrAnUnpaidOne() {
+        enableAll();
+        Map<String, Object> other = order("XPAY", 1);
+        other.put("member_id", 999L);
+        when(mapper.selectOrderByNo("PPO1")).thenReturn(other);
+        assertEquals("ORDER_NOT_FOUND", assertThrows(PlatformPassException.class,
+                () -> service.applyRefund(MEMBER, "PPO1", "x")).getReasonCode());
+        when(mapper.selectOrderByNo("PPO2")).thenReturn(order("XPAY", 0));
+        assertEquals("ORDER_NOT_REFUNDABLE", assertThrows(PlatformPassException.class,
+                () -> service.applyRefund(MEMBER, "PPO2", "x")).getReasonCode());
+        verify(mapper, never()).requestReview(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -347,6 +991,117 @@ class PlatformPassServiceTest {
         assertEquals("REFUND_REJECTED", assertThrows(PlatformPassException.class,
                 () -> service.requestRefund("PPO1", "admin", "测试")).getReasonCode());
         verify(mapper).markRefundRolledBack(eq(10L), anyString());
+    }
+
+    // ---- T07 停售与既有订单
+
+    @Test
+    void callbacksAndRefundsKeepWorkingWhenTheSalesSwitchesAreOff() {
+        props.setEnabled(false);
+        props.getXpay().setEnabled(false);
+        props.getXpay().setOfferId("OFFER1");
+        props.getXpay().setAppKey("app-key");
+        props.getXpay().setEnv(1);
+        Map<String, Object> paid = paidXpayOrder(1);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(paid);
+        when(mapper.selectOrderByNoForUpdate(anyString())).thenReturn(paid);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(remoteWith(5, 29900, 29900, "WXO1"));
+        when(mapper.markRefundedFromChannel(anyLong(), any(), any(), any(), anyLong(), anyString())).thenReturn(1);
+        assertTrue(service.handleXpayPush(push("xpay_refund_notify")), "停售不影响既有订单的渠道退款回调");
+        assertEquals("PAID", service.order(MEMBER, "PPO1").get("status"), "本人订单查询不依赖开关");
+        PlatformPassException newSale = assertThrows(PlatformPassException.class,
+                () -> service.createOrder(MEMBER, "YEAR", "XPAY", "req-00000011"));
+        assertEquals("PLATFORM_PASS_DISABLED", newSale.getReasonCode());
+    }
+
+    // ---- T07 旧 JSAPI 单仍可迟到回调
+
+    @Test
+    void lateJsapiCallbackForAnOldOrderStillActivatesWhateverTheSalesSwitch() {
+        props.setEnabled(false);
+        when(mapper.selectOrderByNoForUpdate(anyString())).thenReturn(order("JSAPI", 0));
+        when(facts.requireConsumablePayment(any())).thenReturn(
+                new WechatVerifiedPaymentFactService.Stored(new WechatVerifiedPaymentFact.Reference(501, "a".repeat(64)), fact(29900, "JSAPI")));
+        when(mapper.markJsapiPaid(eq(10L), eq(501L), anyString(), eq("TX1"), any())).thenReturn(1);
+        when(mapper.insertMembership(any())).thenReturn(1);
+        assertTrue(service.handleJsapiPaid(paidFacts()));
+        verify(mapper).insertMembership(any());
+    }
+
+    // ---- T08 主题库：通行证含 vs 对我生效
+
+    @Test
+    void libraryDistinguishesIncludedInPassFromCoveredForMe() {
+        enableAll();
+        Map<String, Object> closed = new HashMap<>(libraryTopic(2L));
+        closed.put("lifecycle", 6);
+        Map<String, Object> noSelfPlay = new HashMap<>(libraryTopic(3L));
+        noSelfPlay.put("self_play", Boolean.FALSE);
+        List<Map<String, Object>> rows = List.of(libraryTopic(1L), closed, noSelfPlay);
+        when(mapper.selectLibrary(null, 20)).thenReturn(rows);
+        when(mapper.selectLibrary(null, 500)).thenReturn(rows);
+        Map<String, Object> catalog = service.library(MEMBER, null, 20);
+        assertEquals(List.of(true, false, false), libraryRows(catalog).stream().map(r -> r.get("passIncluded")).toList());
+        assertEquals(List.of(false, false, false), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList(),
+                "没有有效通行证时，含不等于对我生效");
+        assertEquals(1, service.overview(MEMBER).get("libraryCount"), "数量不含停售 / 非自玩主题");
+    }
+
+    // ---- T10 起点与并发
+
+    @Test
+    void segmentStartsAtTheVerifiableChannelPaymentTimeAndLocksThePerMember() {
+        enableAll();
+        Date paidAt = new Date(System.currentTimeMillis() - 3_600_000L);
+        JSONObject paidRemote = remote(4, 29900, NO);
+        paidRemote.getJSONObject("order").put("paid_time", paidAt.getTime() / 1000L);
+        Map<String, Object> pending = order("XPAY", 0);
+        when(mapper.selectOrderByNo(anyString())).thenReturn(pending);
+        when(mapper.selectOrderByNoForUpdate(anyString())).thenReturn(pending);
+        when(xpay.queryOrder("openid-42", NO, 1)).thenReturn(paidRemote);
+        when(mapper.markXpayPaid(eq(10L), eq("WXO1"), eq(1), any(), eq(2))).thenReturn(1);
+        when(mapper.insertMembership(any())).thenReturn(1);
+        service.confirmXpay(MEMBER, "PPO1");
+        org.mockito.ArgumentCaptor<Map<String, Object>> row = org.mockito.ArgumentCaptor.forClass(Map.class);
+        verify(mapper).insertMembership(row.capture());
+        assertEquals(paidAt.getTime() / 1000L, ((Date) row.getValue().get("valid_from")).getTime() / 1000L);
+        assertEquals(((Date) row.getValue().get("valid_from")).getTime() + 365L * 86_400_000L,
+                ((Date) row.getValue().get("valid_to")).getTime());
+        org.mockito.InOrder lock = org.mockito.Mockito.inOrder(mapper);
+        lock.verify(mapper).insertMemberLock(MEMBER);
+        lock.verify(mapper).lockMember(MEMBER);
+        lock.verify(mapper).selectLatestValidToForUpdate(eq(MEMBER), any());
+    }
+
+    @Test
+    void implausibleChannelPaymentTimeFallsBackToTheCurrentBehaviour() {
+        JSONObject future = new JSONObject();
+        future.put("paid_time", System.currentTimeMillis() / 1000L + 86_400L);
+        assertNull(PlatformPassService.channelPaidAt(future, order("XPAY", 0)));
+        assertNull(PlatformPassService.channelPaidAt(new JSONObject(), order("XPAY", 0)));
+        JSONObject beforeOrder = new JSONObject();
+        beforeOrder.put("paid_time", 1_000L);
+        Map<String, Object> o = order("XPAY", 0);
+        o.put("create_time", new Date());
+        assertNull(PlatformPassService.channelPaidAt(beforeOrder, o), "早于下单时间的支付时间不可信");
+    }
+
+    @Test
+    void instantsAreStoredAndDisplayedInBeijingTime() {
+        assertEquals("1970-01-01 08:00:00", PlatformPassService.beijing(new Date(0)));
+        assertNull(PlatformPassService.beijing(null));
+    }
+
+    @Test
+    void consecutiveSegmentsFormOneCoverageChainButAGapBreaksIt() {
+        Date t0 = new Date(0), t1 = new Date(86_400_000L), t2 = new Date(2 * 86_400_000L), t4 = new Date(4 * 86_400_000L);
+        Map<Long, Date> ends = PlatformPassService.chainEnds(List.of(
+                Map.of("id", 1L, "valid_from", t0, "valid_to", t1),
+                Map.of("id", 2L, "valid_from", t1, "valid_to", t2),
+                Map.of("id", 3L, "valid_from", t4, "valid_to", new Date(5 * 86_400_000L))));
+        assertEquals(t2, ends.get(1L));
+        assertEquals(t2, ends.get(2L));
+        assertEquals(new Date(5 * 86_400_000L), ends.get(3L));
     }
 
     @Test
@@ -366,8 +1121,42 @@ class PlatformPassServiceTest {
     }
 
     @Test
-    void libraryIsEmptyWhenDisabled() {
-        assertEquals(List.of(), service.library(MEMBER, null, 20).get("rows"));
+    void disabledCatalogStillReturnsRowsWithoutZeroPriceCoverage() {
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L)));
+        Map<String, Object> catalog = service.library(MEMBER, null, 20);
+        assertEquals(false, catalog.get("enabled"));
+        assertEquals(List.of(5L, 6L), libraryRows(catalog).stream().map(r -> r.get("topicId")).toList());
+        assertEquals(List.of(false, false), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList());
+        assertEquals(false, catalog.get("covered"));
+        verify(mapper, never()).selectActiveMembership(anyLong(), any());
+        verify(mapper, never()).selectCoverageTopics(any());
+    }
+
+    @Test
+    void anonymousAndNonholderCatalogsStillReturnRowsWithoutCoverage() {
+        enableAll();
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L)));
+        for (Long memberId : java.util.Arrays.asList(null, MEMBER)) {
+            Map<String, Object> catalog = service.library(memberId, null, 20);
+            assertEquals(2, libraryRows(catalog).size());
+            assertEquals(List.of(false, false), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList());
+            assertEquals(false, catalog.get("covered"));
+        }
+        verify(mapper, never()).selectCoverageTopics(any());
+    }
+
+    @Test
+    void catalogIsCoveredOnlyWhenNonemptyAndEveryRowIsCovered() {
+        enableAll();
+        Date now = new Date(1_800_000_000_000L);
+        when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(activeMembership(now));
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of(libraryTopic(5L), libraryTopic(6L)));
+        published.addAll(List.of(5L, 6L));
+        Map<String, Object> catalog = service.library(MEMBER, null, 20);
+        assertEquals(List.of(true, true), libraryRows(catalog).stream().map(r -> r.get("passCovered")).toList());
+        assertEquals(true, catalog.get("covered"));
+        when(mapper.selectLibrary(null, 20)).thenReturn(List.of());
+        assertEquals(false, service.library(MEMBER, null, 20).get("covered"));
     }
 
     @Test
@@ -383,7 +1172,7 @@ class PlatformPassServiceTest {
         Map<String, Object> active = new HashMap<>();
         active.put("id", 7L); active.put("valid_to", java.time.LocalDateTime.now().plusDays(3));
         when(mapper.selectActiveMembership(eq(MEMBER), any())).thenReturn(active);
-        when(mapper.isOfficialSelfPlayTopic(5L)).thenReturn(1);
+        published.add(5L);
         assertTrue(service.coverage(MEMBER, 5L, new Date()).validTo().after(new Date()), "驱动给 LocalDateTime 时覆盖段仍可用");
     }
 }

@@ -70,14 +70,14 @@ public interface ITemplatePublishService {
     /**
      * 上下架模板库记录（仅限用户自己发布的模板）
      * @param memberTemplateId 用户模板ID
-     * @param publishStatus 发布状态：0下架 1上架
+     * @param status 广场状态：1上架 2撤回待审 3下架
      * @param memberId 用户ID（用于权限验证）
      * @return 操作结果
      */
-    public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId);
+    public boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer status, Long memberId);
 
     /** 上架必须绑定锁外复检的完整不可变快照；下架无需复检。 */
-    boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer publishStatus, Long memberId,
+    boolean updateTemplateLibraryStatus(Long memberTemplateId, Integer status, Long memberId,
                                         TemplateLibraryRepublishReview review);
 
 

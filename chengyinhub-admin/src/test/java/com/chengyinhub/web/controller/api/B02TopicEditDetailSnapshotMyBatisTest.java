@@ -315,7 +315,7 @@ class B02TopicEditDetailSnapshotMyBatisTest {
                 + " ADD city_code VARCHAR(32), ADD content_contract_json JSON");
         jdbc.execute("ALTER TABLE cms_topic_chapter ADD video_url VARCHAR(512), ADD video_poster_url VARCHAR(512), ADD atmosphere_preset VARCHAR(32), ADD audio_url VARCHAR(500),"
                 + " ADD finish_time DATETIME, ADD circle_candidate_code VARCHAR(24), ADD circle_role VARCHAR(24),"
-                + " ADD circle_policy VARCHAR(24), ADD circle_enabled TINYINT, ADD need_group TINYINT");
+                + " ADD circle_policy VARCHAR(24), ADD circle_enabled TINYINT, ADD need_group TINYINT, ADD reward_text VARCHAR(64)");
         jdbc.execute("ALTER TABLE cms_topic_node ADD unlock_after_node_id BIGINT");
         jdbc.execute("ALTER TABLE merchant_chapter_offer ADD withdraw_reason VARCHAR(500)");
         jdbc.execute("ALTER TABLE oms_ticket ADD source_ticket_id BIGINT, ADD sale_start_time DATETIME,"

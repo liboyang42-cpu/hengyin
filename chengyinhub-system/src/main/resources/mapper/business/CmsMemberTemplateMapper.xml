@@ -73,12 +73,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     </resultMap>
     <resultMap type="MemberTemplateVO" id="MemberTemplateVOResult" extends="CmsMemberTemplateResult">
-        <result property="originalPublishStatus" column="original_publish_status"/>
+        <result property="originalStatus" column="original_status"/>
         <result property="originalDelFlag" column="original_del_flag"/>
         <result property="templateSource" column="template_source"/>
         <result property="marketTemplateId" column="market_template_id"/>
         <result property="marketStatus" column="market_status"/>
-        <result property="marketPublishStatus" column="market_publish_status"/>
         <result property="marketReason" column="market_reason"/>
     </resultMap>
 
@@ -126,7 +125,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!--
     1、自主创建模板 (original_template_id = 0)：始终显示
-    2、引用模板 (original_template_id > 0)：只有原始模板未下架(publish_status = 1)且未删除(del_flag = 0)时才显示
+    2、引用模板 (original_template_id > 0)：只有原始模板上架(status = 1)且未删除(del_flag = 0)时才显示
     3、已下架引用模板：自动过滤，不显示在列表中-->
     <select id="selectMemberTemplateList" parameterType="MemberTemplateVO" resultMap="MemberTemplateVOResult">
         SELECT
@@ -186,14 +185,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             mt.preset_source,
             market.id as market_template_id,
             market.status as market_status,
-            market.publish_status as market_publish_status,
             market.reason as market_reason,
-            tl.publish_status as original_publish_status,
+            tl.status as original_status,
             tl.del_flag as original_del_flag,
             CASE
                 WHEN mt.preset_source IS NOT NULL AND mt.preset_source != '' THEN '预设起头'
                 WHEN mt.original_template_id = 0 THEN '自主创建'
-                WHEN mt.original_template_id > 0 AND tl.publish_status = 1 AND tl.del_flag = 0  AND tl.status=1 THEN '引用模板'
+                WHEN mt.original_template_id > 0 AND tl.del_flag = 0  AND tl.status=1 THEN '引用模板'
                 ELSE '引用已下架'
                 END as template_source
         FROM
@@ -208,7 +206,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             mt.del_flag = 0
           AND (
                     mt.original_template_id = 0
-                OR (mt.original_template_id > 0 AND tl.publish_status = 1 AND tl.del_flag = 0 AND tl.status=1)
+                OR (mt.original_template_id > 0 AND tl.del_flag = 0 AND tl.status=1)
             )
             <if test="memberId != null "> and mt.member_id = #{memberId}</if>
             <if test="status != null "> and mt.status = #{status}</if>

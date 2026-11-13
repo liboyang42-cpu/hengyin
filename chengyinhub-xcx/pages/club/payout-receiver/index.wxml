@@ -1,0 +1,40 @@
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="pr-page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar custom-back bind:back="goBack" />
+    <cy-page-title title="个人收款" safe-top="{{false}}" />
+
+    <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="2" />
+    <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="个人收款加载失败" sub="{{errorText}}" retry="重新加载" bind:retry="load" />
+    <cy-empty wx:elif="{{state === 'no-club'}}" fill size="lg" kind="empty" title="还没有自己的俱乐部" />
+
+    <view wx:else class="pr-shell">
+      <view class="pr-card">
+        <view class="pr-row" aria-label="状态，{{view.stateText}}">
+          <text class="pr-label">状态</text>
+          <text class="pr-value pr-value--{{view.stateTone}}">{{view.stateText}}</text>
+        </view>
+        <view class="pr-row" wx:if="{{view.pauseText}}" aria-label="原因，{{view.pauseText}}">
+          <text class="pr-label">原因</text>
+          <text class="pr-value">{{view.pauseText}}</text>
+        </view>
+        <view class="pr-row" wx:if="{{view.payoutText}}" aria-label="收款，{{view.payoutText}}">
+          <text class="pr-label">收款</text>
+          <text class="pr-value">{{view.payoutText}}</text>
+        </view>
+      </view>
+
+      <view class="pr-action" wx:if="{{view.pageState === 'unbound'}}">
+        <cy-btn variant="primary" loading="{{busy}}" bindtap="onBind">同意并绑定</cy-btn>
+      </view>
+      <view class="pr-action" wx:elif="{{view.pageState === 'paused'}}">
+        <cy-btn variant="primary" loading="{{busy}}" bindtap="onBind">重新绑定</cy-btn>
+      </view>
+      <view class="pr-action" wx:if="{{view.pageState !== 'unbound' && view.canUnbind}}">
+        <cy-btn variant="secondary" disabled="{{busy}}" bindtap="onUnbind">解除绑定</cy-btn>
+      </view>
+    </view>
+  </view>
+  <cy-danger-confirm id="dc" bind:confirm="onConfirmUnbind" />
+</view>

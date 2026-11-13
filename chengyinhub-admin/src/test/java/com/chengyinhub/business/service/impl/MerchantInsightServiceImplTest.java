@@ -57,6 +57,10 @@ class MerchantInsightServiceImplTest {
             topicContentPublisherProjectionService;
 
     private static final Long MERCHANT_ID = 9001L;
+    /** D-93:共用指标服务的时钟(Asia/Shanghai),走势用例按它定「今天」 */
+    private static final java.time.Clock CLOCK = java.time.Clock.fixed(
+            java.time.Instant.now(), com.chengyinhub.business.service.support.MerchantMetricPeriod.ZONE);
+    private com.chengyinhub.business.mapper.MerchantMarketingAnalyticsMapper analyticsMapper;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -74,6 +78,10 @@ class MerchantInsightServiceImplTest {
         ReflectionTestUtils.setField(service, "aiCreatorService", aiCreatorService);
         ReflectionTestUtils.setField(service, "redisTemplate", redisTemplate);
         ReflectionTestUtils.setField(service, "mmsMerchantMapper", mmsMerchantMapper);
+        // D-93:核销/时间窗走与营销首页共用的真实指标服务,只桩它的核销事件查询
+        analyticsMapper = mock(com.chengyinhub.business.mapper.MerchantMarketingAnalyticsMapper.class);
+        ReflectionTestUtils.setField(service, "metricsAnalyticsMapper", analyticsMapper);
+        ReflectionTestUtils.setField(service, "metricsClock", CLOCK);
         when(mmsMerchantMapper.selectMmsMerchantByMemberId(MERCHANT_ID)).thenReturn(null);
         cmsTopicService = mock(com.chengyinhub.business.service.ICmsTopicService.class);
         merchantLeadService = mock(com.chengyinhub.business.service.IMerchantLeadService.class);
@@ -110,6 +118,17 @@ class MerchantInsightServiceImplTest {
         c.set(Calendar.SECOND, 0);
         c.set(Calendar.MILLISECOND, 0);
         return c.getTime();
+    }
+
+    /** Asia/Shanghai 下相对 CLOCK「今天」的时刻(走势按上海自然日分桶,不随 JVM 时区漂) */
+    private static Date sh(int dayOffset, int hour, int minute) {
+        return Date.from(java.time.LocalDate.now(CLOCK).plusDays(dayOffset).atTime(hour, minute)
+                .atZone(com.chengyinhub.business.service.support.MerchantMetricPeriod.ZONE).toInstant());
+    }
+
+    private void verifyEvents(Date... times) {
+        when(analyticsMapper.selectVerifyEventTimes(eq(MERCHANT_ID), any(Date.class), any(Date.class)))
+                .thenReturn(Arrays.asList(times));
     }
 
     private static MerchantInsightVisitFact visit(long regId, long memberId, Date checkin, Date redeemed) {
@@ -177,6 +196,8 @@ class MerchantInsightServiceImplTest {
                 event(1L, "小王", "秋日探店", at(-2, 14, 40), at(-2, 15, 0)),
                 event(2L, "小李", "咖啡地图", at(-3, 10, 10), null),
                 event(1L, "小王", "旧主题", at(-45, 12, 0), at(-45, 12, 30))));
+        // D-93:核销三数取共用指标服务(营销首页同源),这里给同样的核销时刻
+        verifyEvents(at(-1, 14, 25), at(-2, 15, 0), at(-45, 12, 30));
 
         MerchantInsightResp resp = service.insight(MERCHANT_ID);
         JSONObject facts = resp.getFacts();
@@ -527,12 +548,14 @@ class MerchantInsightServiceImplTest {
     @Test
     void trendsWorkedExample() {
         when(mapper.selectVisitorEvents(MERCHANT_ID)).thenReturn(Arrays.asList(
-                event(1L, "n1", "T", at(0, 10, 0), at(0, 10, 20)),    // 今天:到店+打卡+核销
-                event(1L, "n1", "T", at(-2, 15, 0), null),            // 同一人前天再打卡
-                event(2L, "n2", "T", at(-6, 9, 0), at(-5, 9, 0)),     // 7 天窗首日打卡,次日核销
-                event(3L, "n3", "T", at(-7, 12, 0), null),            // 7 天窗的上期 / 30 天窗本期
-                event(4L, "n4", "T", null, at(-40, 12, 0)),           // 只核销:30 天窗上期 / 90 天窗本期
-                event(2L, "n2", "T", at(-100, 12, 0), null)));        // 90 天窗上期
+                event(1L, "n1", "T", sh(0, 10, 0), sh(0, 10, 20)),    // 今天:到店+打卡+核销
+                event(1L, "n1", "T", sh(-2, 15, 0), null),            // 同一人前天再打卡
+                event(2L, "n2", "T", sh(-6, 9, 0), sh(-5, 9, 0)),     // 7 天窗首日打卡,次日核销
+                event(3L, "n3", "T", sh(-7, 12, 0), null),            // 7 天窗的上期 / 30 天窗本期
+                event(4L, "n4", "T", null, sh(-40, 12, 0)),           // 只核销:30 天窗上期 / 90 天窗本期
+                event(2L, "n2", "T", sh(-100, 12, 0), null)));        // 90 天窗上期
+        // D-93:核销计数来自共用指标服务(与营销首页 VERIFY 同源)
+        verifyEvents(sh(0, 10, 20), sh(-5, 9, 0), sh(-40, 12, 0));
 
         MerchantInsightResp resp = service.insight(MERCHANT_ID);
 
@@ -551,8 +574,11 @@ class MerchantInsightServiceImplTest {
         assertEquals(1, d7.getJSONObject(1).getIntValue("redeems"));
         assertEquals(1, d7.getJSONObject(4).getIntValue("checkins"));   // -2 天
         assertEquals(1, d7.getJSONObject(6).getIntValue("redeems"));    // 今天
-        assertEquals(new java.text.SimpleDateFormat("MM-dd").format(new Date()),
+        assertEquals(java.time.LocalDate.now(CLOCK).format(java.time.format.DateTimeFormatter.ofPattern("MM-dd")),
                 d7.getJSONObject(6).getString("date"));
+        // D-93:环比由服务端给(SafeRatio 四位小数),上期 0 → null
+        assertEquals("1.0000", w7.getJSONObject("changeRates").getString("visitors"));
+        assertNull(w7.getJSONObject("changeRates").get("redeems"));
 
         JSONObject w30 = trendWindow(resp, 30);
         assertEquals(3, w30.getIntValue("visitors"));

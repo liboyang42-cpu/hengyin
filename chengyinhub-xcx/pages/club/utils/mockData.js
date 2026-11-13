@@ -18,7 +18,7 @@ const templates = [
     ruleInstructions: '商家只需填写一句暗号和对应礼遇；玩家到店说出暗号并在页面提交。',
     requiredMaterials: '手机、当日暗号', usageLocation: '咖啡馆、酒吧、餐饮店、零售店',
     validationMethod: 1, validationMethodStr: '文字问答', feedbackMethodStr: '文字反馈',
-    publisher: '城瘾官方', sysCategoryList: [categories[1]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[1]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -29,7 +29,7 @@ const templates = [
     ruleInstructions: '商家填写一道能从菜单、陈列或空间中找到答案的选择题。',
     requiredMaterials: '手机、店铺故事', usageLocation: '餐饮店、咖啡馆、书店、生活方式店',
     validationMethod: 3, validationMethodStr: '选择题', feedbackMethodStr: '文字反馈',
-    publisher: '城瘾官方', sysCategoryList: [categories[1], categories[2]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[1], categories[2]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -40,7 +40,7 @@ const templates = [
     ruleInstructions: '商家选择一个自然存在的取景点并填写拍摄提示；玩家拍摄后提交。',
     requiredMaterials: '手机、可拍摄场景', usageLocation: '咖啡馆、服装店、展览、市集',
     validationMethod: 2, validationMethodStr: '拍照', feedbackMethodStr: '图片反馈',
-    publisher: '城瘾官方', sysCategoryList: [categories[0], categories[2]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[0], categories[2]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -51,7 +51,7 @@ const templates = [
     ruleInstructions: '商家选择可稳定提供的产品或体验；玩家完成后扫码或由商家确认。',
     requiredMaterials: '手机、店内二维码', usageLocation: '餐厅、烘焙店、咖啡馆、酒吧',
     validationMethod: 4, validationMethodStr: '扫码', feedbackMethodStr: '完成反馈',
-    publisher: '城瘾官方', sysCategoryList: [categories[0]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[0]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -62,7 +62,7 @@ const templates = [
     ruleInstructions: '商家提供一项可试吃或试用内容并设置选项；玩家体验后选择答案。',
     requiredMaterials: '手机、试吃或试用品', usageLocation: '餐饮店、饮品店、美妆店、生活方式店',
     validationMethod: 3, validationMethodStr: '选择题', feedbackMethodStr: '偏好反馈',
-    publisher: '城瘾官方', sysCategoryList: [categories[1]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[1]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -73,7 +73,7 @@ const templates = [
     ruleInstructions: '商家给出一个搭配主题；玩家使用店内可体验内容完成搭配并拍照。',
     requiredMaterials: '手机、可体验商品', usageLocation: '服装店、眼镜店、花店、家居店',
     validationMethod: 2, validationMethodStr: '拍照', feedbackMethodStr: '图片反馈',
-    publisher: '城瘾官方', sysCategoryList: [categories[2]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[2]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -84,7 +84,7 @@ const templates = [
     ruleInstructions: '俱乐部放置一个集合二维码；成员到场扫码后进入同一队伍。',
     requiredMaterials: '手机、集合二维码', usageLocation: '跑团集合点、球馆、营地、活动场馆',
     validationMethod: 4, validationMethodStr: '扫码', feedbackMethodStr: '队伍进度',
-    publisher: '城瘾官方', sysCategoryList: [categories[3]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[3]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -95,7 +95,7 @@ const templates = [
     ruleInstructions: '俱乐部选择节点与完成顺序；队员到点提交后累计小队进度。',
     requiredMaterials: '手机、队伍名单', usageLocation: '商圈、公园、园区、运动场馆',
     validationMethod: 5, validationMethodStr: '位置验证', feedbackMethodStr: '排行榜',
-    publisher: '城瘾官方', sysCategoryList: [categories[0], categories[3]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[0], categories[3]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -106,7 +106,7 @@ const templates = [
     ruleInstructions: '俱乐部填写现场可见答案与提示；玩家观察后提交文字答案。',
     requiredMaterials: '手机、现场线索', usageLocation: '历史街区、商圈、文创园、公园',
     validationMethod: 1, validationMethodStr: '文字问答', feedbackMethodStr: '文字反馈',
-    publisher: '城瘾官方', sysCategoryList: [categories[0], categories[1]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[0], categories[1]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -117,7 +117,7 @@ const templates = [
     ruleInstructions: '俱乐部填写取景关键词和允许拍摄的公共位置；玩家按提示拍照。',
     requiredMaterials: '手机、取景提示', usageLocation: '街区、公园、滨水空间、建筑园区',
     validationMethod: 2, validationMethodStr: '拍照', feedbackMethodStr: '图片反馈',
-    publisher: '城瘾官方', sysCategoryList: [categories[0], categories[2]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[0], categories[2]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -128,7 +128,7 @@ const templates = [
     ruleInstructions: '俱乐部设置统一接力暗号；小队完成节点后把暗号交给下一队。',
     requiredMaterials: '手机、接力暗号', usageLocation: '城市定向、社群活动、团建路线',
     validationMethod: 1, validationMethodStr: '文字问答', feedbackMethodStr: '队伍反馈',
-    publisher: '城瘾官方', sysCategoryList: [categories[1], categories[3]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[1], categories[3]], status: 1,
     createTime: '2026-08-20'
   },
   {
@@ -139,7 +139,7 @@ const templates = [
     ruleInstructions: '俱乐部选择角色和共同目标；成员按角色完成一项拍照或记录任务。',
     requiredMaterials: '手机、角色说明', usageLocation: '社群聚会、城市探索、团建、亲子活动',
     validationMethod: 2, validationMethodStr: '拍照', feedbackMethodStr: '小队合照',
-    publisher: '城瘾官方', sysCategoryList: [categories[3]], publishStatus: '1', status: 1,
+    publisher: '城瘾官方', sysCategoryList: [categories[3]], status: 1,
     createTime: '2026-08-20'
   }
 ];
@@ -207,7 +207,7 @@ function getTemplateById(id) {
 }
 
 function getHomeData() {
-  const pool = clone(templates).filter(item => String(item.publishStatus) === '1');
+  const pool = clone(templates).filter(item => String(item.status) === '1');
   const byUse = [...pool].sort((a, b) => (b.useNum || 0) - (a.useNum || 0));
   const byNew = [...pool].sort((a, b) => String(b.createTime).localeCompare(String(a.createTime)));
   return {

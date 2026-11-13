@@ -153,7 +153,7 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
                         + "cancel_time DATETIME, cancel_reason VARCHAR(255), reason VARCHAR(255), del_flag INT, start_date DATETIME, end_date DATETIME, template_id BIGINT,"
                         + "topic_id BIGINT, club_id BIGINT, check_status INT, is_settlement INT, create_by VARCHAR(64), create_time DATETIME, update_by VARCHAR(64), update_time DATETIME) ENGINE=InnoDB",
                 "CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, product_type INT, team_mode TINYINT NOT NULL DEFAULT 0,"
-                        + " team_max_members INT NOT NULL DEFAULT 4, club_id BIGINT,"
+                        + " team_max_members INT NOT NULL DEFAULT 4, club_id BIGINT, member_id BIGINT,"
                         + " selling_started_at DATETIME(3), sale_end_at DATETIME(3)) ENGINE=InnoDB",
                 "CREATE TABLE cms_registration ("
                         + "id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_no VARCHAR(32) NOT NULL, parent_order_no VARCHAR(64), request_id VARCHAR(64), request_fingerprint CHAR(64),"
@@ -178,7 +178,7 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
                         + "id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT, current_balance DECIMAL(12,2), after_balance DECIMAL(12,2),"
                         + "change_balance DECIMAL(12,2), change_reason VARCHAR(500), event_type BIGINT, event_id BIGINT, change_type BIGINT, del_flag BIGINT,"
                         + "create_by VARCHAR(64), create_time DATETIME, update_by VARCHAR(64), update_time DATETIME) ENGINE=InnoDB",
-                "CREATE TABLE settlement_detail (id BIGINT PRIMARY KEY AUTO_INCREMENT, claim_id BIGINT NULL, entry_kind VARCHAR(24) NULL,"
+                "CREATE TABLE settlement_detail (id BIGINT PRIMARY KEY AUTO_INCREMENT, club_id BIGINT NULL, club_name VARCHAR(255) NULL, claim_id BIGINT NULL, entry_kind VARCHAR(24) NULL,"
                         + "event_key VARCHAR(128) NULL, batch_id BIGINT, merchant_id BIGINT, source_type VARCHAR(64),"
                         + "source_id BIGINT, receiver_type VARCHAR(64), receiver_id BIGINT, gross_amount DECIMAL(12,2), commission_amount DECIMAL(12,2),"
                         + "settlement_amount DECIMAL(12,2), status INT, fail_reason VARCHAR(500), idempotency_key VARCHAR(255),"

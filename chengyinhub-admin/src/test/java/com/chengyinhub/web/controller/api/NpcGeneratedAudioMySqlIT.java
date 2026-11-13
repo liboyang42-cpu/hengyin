@@ -39,7 +39,7 @@ class NpcGeneratedAudioMySqlIT {
         try(java.sql.Connection connection=source.getConnection()) {
             for(int pass=0;pass<2;pass++) {
                 for(String file:java.util.List.of("migration_npc_chat_request_20260722.sql","migration_20261012_npc_chat_media_asset.sql",
-                        "migration_20261012_app_media_asset.sql","migration_20261012_app_media_asset_namespaces.sql","migration_20261109_app_media_provenance.sql"))
+                        "migration_20261012_app_media_asset.sql","migration_20261012_app_media_asset_namespaces.sql","migration_20261109_app_media_provenance.sql","migration_20261112_dec_c_safety.sql"))
                     ScriptUtils.executeSqlScript(connection,new FileSystemResource("sql/"+file));
             }
         }

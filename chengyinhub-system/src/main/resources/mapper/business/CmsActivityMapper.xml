@@ -521,6 +521,38 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         ]]>
     </select>
 
+    <!-- 2026-11-13 业主:商家发布(topic.club_id 为空)的自由探索,由承办俱乐部开的场次同走场次结算,
+         票款给发布商家(topic.member_id)。时点与退款闸逐字同 selectActivitiesForSettlement;四店专用合同仍不在此列。 -->
+    <select id="selectMerchantPublishedFreeExploreActivitiesForSettlement" resultMap="CmsActivityResult">
+        <![CDATA[
+        SELECT activity.* FROM cms_activity activity
+        JOIN cms_topic topic ON topic.id = activity.topic_id AND topic.product_type = 2
+        WHERE activity.del_flag = 0
+          AND activity.status = 1
+          AND activity.is_settlement = 0
+          AND COALESCE(topic.club_id, 0) = 0
+          AND COALESCE(topic.member_id, 0) > 0
+          AND COALESCE(activity.club_id, 0) > 0
+          AND activity.end_date <= DATE_SUB(NOW(), INTERVAL ${@com.chengyinhub.business.support.FundsHoldPolicy@WITHDRAWABLE_AFTER_END_DAYS} DAY)
+          AND NOT EXISTS (
+              SELECT 1 FROM cms_registration r
+              WHERE r.owner_type = 2 AND r.owner_id = activity.id
+                AND r.payment_status = 2 AND r.registration_status = 2
+                AND (r.verification_status IS NULL OR r.verification_status <> 1)
+                AND COALESCE(r.refund_deadline, DATE_SUB(activity.start_date, INTERVAL 24 HOUR)) > NOW()
+          )
+          AND EXISTS (
+              SELECT 1 FROM topic_sale_snapshot ss WHERE ss.topic_id = topic.id
+                AND ss.schema_version = 'CANONICAL_15_V1'
+                AND CASE WHEN JSON_VALID(ss.canonical_json) THEN
+                    JSON_UNQUOTE(JSON_EXTRACT(ss.canonical_json, '$.completionPolicy.evidenceRule'))
+                    ELSE NULL END <> 'FOUR_STORE_REDEEM'
+          )
+          AND NOT EXISTS (SELECT 1 FROM topic_edition_finalization f WHERE f.topic_id = topic.id)
+        ORDER BY activity.id
+        ]]>
+    </select>
+
     <!-- 第十三轮 m6(2026-11-05):自由探索场次到了与 selectActivitiesForSettlement 同一个结算时点,
          却不属于场次结算能付的那一种(四店探店日 FOUR_STORE_REDEEM 且期级 FINAL 还没做 / 场次俱乐部不是主题俱乐部 /
          缺冻结开售合同)。这里只把它们找出来,由结算任务按实收金额告警并让任务记 FAIL,不动钱、不置已结算。
@@ -636,4 +668,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select content_safety_hold from cms_activity where id = #{id}
     </select>
 
+    <update id="completeActivityIfReceived">
+        update cms_activity a
+        join ecom_profit_share_order o on o.topic_id = -a.id and o.id = #{shareOrderId} and o.state = 'SUCCESS'
+        join club_personal_payout_beneficiary b on b.scope_type = 'ACTIVITY' and b.scope_id = a.id
+        set a.is_settlement = 1
+        where a.is_settlement = 0 and a.del_flag = 0 and b.payout_ready_at is not null
+          and exists (select 1 from cms_registration r join settlement_detail d
+                      on d.source_type = 'registration' and d.source_id = r.id
+                      where r.owner_type = 2 and r.owner_id = a.id and d.club_id = b.club_id
+                        and d.receiver_id = b.member_id and d.status = 1)
+          and not exists (select 1 from cms_registration r join settlement_detail d
+                          on d.source_type = 'registration' and d.source_id = r.id
+                          where r.owner_type = 2 and r.owner_id = a.id and d.status = 0)
+          and not exists (select 1 from cms_registration r join cms_activity_settlement_hold h
+                          on h.registration_id = r.id and h.status = 0
+                          where r.owner_type = 2 and r.owner_id = a.id)
+    </update>
 </mapper>

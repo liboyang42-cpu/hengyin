@@ -369,4 +369,10 @@ public interface CmsRegistrationMapper
                                        @Param("email") String email,
                                        @Param("address") String address);
 
+    /** 通行证派生的 ¥0 票到期收口（只缩短，不动已核销）。调用方限定为通行证 claim 关联的报名行。 */
+    int clampPassDerivedTicket(@Param("registrationId") long registrationId, @Param("end") java.util.Date end);
+
+    /** 续买后把被上一段结束时刻截断的派生票顺延（不新增票）。 */
+    int extendPassDerivedTicket(@Param("registrationId") long registrationId, @Param("lo") java.util.Date lo,
+                                @Param("hi") java.util.Date hi, @Param("newEnd") java.util.Date newEnd);
 }

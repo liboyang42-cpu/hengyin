@@ -188,6 +188,13 @@ public class PublicContentCatalogItemVO {
 
     public void setFreeSelfPlay(Boolean freeSelfPlay) { this.freeSelfPlay = freeSelfPlay; }
 
+    /** 当前登录玩家对此主题有有效通行证覆盖；匿名或未覆盖为 false。 */
+    private boolean passCovered;
+
+    public boolean isPassCovered() { return passCovered; }
+
+    public void setPassCovered(boolean passCovered) { this.passCovered = passCovered; }
+
     public Boolean getGroupEligible() { return groupEligible; }
 
     public void setGroupEligible(Boolean groupEligible) { this.groupEligible = groupEligible; }

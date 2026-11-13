@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** 通行证（平台会员）四张表的读写。所有写都带状态/归属前置条件，返回影响行数供调用方判定。 */
 public interface PlatformPassMapper {
@@ -30,7 +31,53 @@ public interface PlatformPassMapper {
                       @Param("transactionId") String transactionId, @Param("paidTime") Date paidTime);
 
     int markXpayPaid(@Param("id") long id, @Param("wxOrderId") String wxOrderId, @Param("env") int env,
-                     @Param("paidTime") Date paidTime);
+                     @Param("paidTime") Date paidTime, @Param("deliveryStatus") int deliveryStatus);
+
+    int freezeXpayIntent(@Param("id") long id, @Param("productId") String productId,
+                         @Param("offerId") String offerId, @Param("env") int env);
+
+    int markDeliveryConfirmed(@Param("id") long id);
+
+    int markDeliveryRetry(@Param("id") long id, @Param("nextTime") Date nextTime);
+
+    List<Map<String, Object>> selectOrdersPendingDelivery(@Param("now") Date now, @Param("limit") int limit);
+
+    Map<String, Object> selectOrderByIdForUpdate(@Param("id") long id);
+
+    /** T10:同会员串行锁。先 insert ignore 保证锁行存在，再 for update。锁序固定：订单行 → 会员锁 → 段。 */
+    int insertMemberLock(@Param("memberId") long memberId);
+
+    Long lockMember(@Param("memberId") long memberId);
+
+    int markRefundedFromChannel(@Param("id") long id, @Param("factId") Long factId, @Param("factHash") String factHash,
+                                @Param("refundedTime") Date refundedTime, @Param("amount") long amount,
+                                @Param("source") String source);
+
+    int recordPartialChannelRefund(@Param("id") long id, @Param("amount") long amount, @Param("facts") String facts);
+
+    int requestReview(@Param("id") long id, @Param("reason") String reason, @Param("facts") String facts);
+
+    int decideReview(@Param("id") long id, @Param("decision") int decision, @Param("handler") String handler,
+                     @Param("note") String note, @Param("time") Date time);
+
+    int markReviewReceipt(@Param("id") long id, @Param("receipt") String receipt);
+
+    List<Map<String, Object>> selectOrdersForAdmin(@Param("status") Integer status,
+                                                   @Param("reviewStatus") Integer reviewStatus,
+                                                   @Param("limit") int limit);
+
+    Map<String, Object> selectMembershipById(@Param("id") long id);
+
+    Map<String, Object> selectMembershipByIdForUpdate(@Param("id") long id);
+
+    List<Map<String, Object>> selectActiveSegments(@Param("memberId") long memberId);
+
+    List<Map<String, Object>> selectActiveClaims(@Param("memberId") long memberId);
+
+    int markClaimsStopped(@Param("membershipId") long membershipId, @Param("now") Date now);
+
+/** 覆盖与可领取同一口径用：已发布主题的自玩/价格/生命周期列。 */
+    List<Map<String, Object>> selectCoverageTopics(@Param("topicIds") List<Long> topicIds);
 
     int markCancelled(@Param("id") long id, @Param("memberId") long memberId, @Param("cancelTime") Date cancelTime);
 
@@ -39,9 +86,6 @@ public interface PlatformPassMapper {
                             @Param("requestedTime") Date requestedTime);
 
     int markRefundRolledBack(@Param("id") long id, @Param("refundNo") String refundNo);
-
-    int markRefunded(@Param("id") long id, @Param("factId") Long factId, @Param("factHash") String factHash,
-                     @Param("refundedTime") Date refundedTime);
 
     /** 本会员最后一段仍有效（未撤销且未到期）的 valid_to；用于续买顺延。加锁串行同会员的并发开通。 */
     Date selectLatestValidToForUpdate(@Param("memberId") long memberId, @Param("now") Date now);
@@ -66,10 +110,12 @@ public interface PlatformPassMapper {
 
     int countClaimsByMembership(@Param("membershipId") long membershipId);
 
-    /** 官方（CONTENT 槽 = PLATFORM 且生效）、开放自玩、售票中/进行中、未删除的主题。 */
-    int isOfficialSelfPlayTopic(@Param("topicId") long topicId);
+    /** 已发布主题，不按官方/玩家/俱乐部来源、交付形态或售卖生命周期缩小覆盖范围。 */
+    int isPublishedTopic(@Param("topicId") long topicId);
+
+    List<Long> selectPublishedTopicIds(@Param("topicIds") List<Long> topicIds);
 
     List<Map<String, Object>> selectLibrary(@Param("productType") Integer productType, @Param("limit") int limit);
 
-    int countLibrary();
+    int countLibrary(@Param("topicIds") Set<Long> topicIds);
 }

@@ -215,7 +215,6 @@ class ApiTemplateSecretsGateTest {
         lib.setMemberId(OTHER_OWNER);
         lib.setDelFlag(0);
         lib.setStatus(1L);
-        lib.setPublishStatus(1L);
         lib.setValidationMethod(1);
         lib.setQuestionAnswer("答案X");
         lib.setCorrectAnswer("B");
@@ -244,7 +243,7 @@ class ApiTemplateSecretsGateTest {
         AjaxResult missingReviewState = tplController.producInfo(String.valueOf(TPL));
 
         hidden = publicLibraryTemplate();
-        hidden.setPublishStatus(2L);
+        hidden.setStatus(3L);
         when(libSvc.selectCmsTemplateLibraryById(TPL)).thenReturn(hidden);
         AjaxResult abnormalPublishState = tplController.producInfo(String.valueOf(TPL));
 
@@ -266,7 +265,6 @@ class ApiTemplateSecretsGateTest {
         lib.setMemberTemplateId(777L);
         lib.setDelFlag(0);
         lib.setStatus(1L);
-        lib.setPublishStatus(1L);
         lib.setValidationMethod(1);
         CmsMemberTemplate canonical = memberTplWithSecrets(OTHER_OWNER);
         canonical.setId(777L);
@@ -293,7 +291,6 @@ class ApiTemplateSecretsGateTest {
         lib.setMemberTemplateId(777L);
         lib.setDelFlag(0);
         lib.setStatus(1L);
-        lib.setPublishStatus(1L);
         lib.setValidationMethod(1);
         CmsMemberTemplate pending = memberTplWithSecrets(OTHER_OWNER);
         pending.setId(777L);
@@ -382,7 +379,6 @@ class ApiTemplateSecretsGateTest {
         assertEquals("4", query.getValue().getActivityCategoryids());
         assertEquals(0, query.getValue().getDelFlag());
         assertEquals(1L, query.getValue().getStatus());
-        assertEquals(1L, query.getValue().getPublishStatus());
         TableDataInfo table = (TableDataInfo) res.get("data");
         PublicTemplateListItemVO out = ((List<PublicTemplateListItemVO>) table.getRows()).get(0);
         assertEquals(TPL, out.getId());
@@ -673,13 +669,28 @@ class ApiTemplateSecretsGateTest {
         assertEquals(200, res.get("code"), res.toString());
         TopicInfoVO detail = (TopicInfoVO) res.get("data");
         assertEquals(8L, detail.getLocationCount(), "Full-route count survives restricted/empty chapter projection");
-        assertEquals(1, detail.getChaptersList().size(), "未购票响应只能下发第一章");
+        assertEquals(2, detail.getChaptersList().size(), "未购票响应下发全部章节,后续章节仅为预告");
         assertEquals(2, detail.getTotalChapterCount());
         assertEquals(1, detail.getUnlockedChapterCount());
         assertTrue(detail.getStoryLocked());
-        assertFalse(detail.getChaptersList().stream()
-                .anyMatch(chapter -> LOCKED_CHAPTER_DESCRIPTION.equals(chapter.getDescription())),
-                "未购票响应不得包含第二章剧情正文");
+        assertFalse(Boolean.TRUE.equals(detail.getChaptersList().get(0).getLocked()));
+        TopicChapterVO locked = detail.getChaptersList().get(1);
+        assertTrue(locked.getLocked());
+        assertEquals(LOCKED_CHAPTER_DESCRIPTION, locked.getDescription(), "预告保留章节介绍");
+        assertTrue(locked.getBlocks() == null || locked.getBlocks().isEmpty(), "锁定章节不得带剧情块");
+        assertNull(locked.getBlocksJson());
+        assertNull(locked.getAudioUrl());
+        assertNull(locked.getRouteGeometry());
+        assertFalse(locked.getNodes().isEmpty(), "锁定章节仍列出站点供路线/地图展示");
+        for (TopicNodeVO n : locked.getNodes()) {
+            assertNull(n.getCmsMemberTemplate(), "锁定章节节点不得带模板");
+            assertNull(n.getRegistrationMerchantList(), "锁定章节节点不得带商家");
+            assertNull(n.getTemplateId());
+            assertNull(n.getDescription());
+            assertNull(n.getHookText());
+            assertNull(n.getCardHookLong());
+            assertNull(n.getFragmentText());
+        }
     }
 
     @Test
@@ -1058,7 +1069,6 @@ class ApiTemplateSecretsGateTest {
         template.setMemberId(OTHER_OWNER);
         template.setDelFlag(0);
         template.setStatus(1L);
-        template.setPublishStatus(1L);
         template.setValidationMethod(1);
         return template;
     }

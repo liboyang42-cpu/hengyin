@@ -298,6 +298,7 @@ class AdvancedGameRuntimeMySqlIT {
                         "sql/migration_20260820_play_team_core.sql");
                 execute(connection, "ALTER TABLE game_runtime_session ADD play_instance_id VARCHAR(64) NOT NULL DEFAULT 'default'");
                 execute(connection, "ALTER TABLE play_team ADD invite_code VARCHAR(64)");
+                execute(connection, "ALTER TABLE play_team ADD legacy_invite_code VARCHAR(32), ADD legacy_invite_expire_time DATETIME");
                 execute(connection, "ALTER TABLE play_team_member ADD apply_expire_time DATETIME");
                 execute(connection, "CREATE TABLE cms_activity (id BIGINT PRIMARY KEY, topic_id BIGINT, del_flag INT) ENGINE=InnoDB");
                 execute(connection, "INSERT INTO cms_activity VALUES (9,19,0)");

@@ -13,6 +13,15 @@ import com.chengyinhub.common.core.domain.BaseEntity;
 public class CoopSettlement extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
+    private String payoutHoldReason;
+    public String getPayoutHoldReason() { return payoutHoldReason; }
+    public void setPayoutHoldReason(String value) { payoutHoldReason = value; }
+    private Long clubId;
+    private String clubName;
+    public Long getClubId() { return clubId; }
+    public void setClubId(Long value) { clubId = value; }
+    public String getClubName() { return clubName; }
+    public void setClubName(String value) { clubName = value; }
     private Long id;
     private String cashHeadKind;
 

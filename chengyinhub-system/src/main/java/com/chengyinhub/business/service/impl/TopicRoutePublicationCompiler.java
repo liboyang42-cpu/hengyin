@@ -1183,6 +1183,7 @@ final class TopicRoutePublicationCompiler {
             row.put("category", chapter.getCategory());
             row.put("atmospherePreset", chapter.getAtmospherePreset());
             row.put("audioUrl", chapter.getAudioUrl());
+            row.put("rewardText", chapter.getRewardText());   // D-82 章节结束卡的奖励行随发布冻结
             // 必需章决定玩家端要不要下发 blocks;这一位也必须冻结,否则读侧只能回头看实时章节行。
             boolean required = ChapterBlockReadSupport.isRequiredChapter(chapter);
             row.put("required", required);

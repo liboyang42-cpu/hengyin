@@ -23,6 +23,7 @@ import com.chengyinhub.business.service.ai.LlmClient;
 import com.chengyinhub.common.config.AiModelConfig;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -897,19 +898,26 @@ class AiGatewayServiceImplTest {
         assertNotNull(result);assertEquals("01234567890123456789012345678901",result.getTraceId());
         assertTrue(reserved.isEmpty());assertTrue(refunded.isEmpty());verify(recovery).requireNpcAsrHandoff(original);
         verify(mockLlm).chat("你是店主","原转写");
+        verify(recovery).retain("ai:gen:reservation:"+original.reservation().replace('|',':'),"SUCCESS");
         org.mockito.Mockito.verifyNoMoreInteractions(recovery);
     }
-    @Test void npcTextNotSentCannotRefundTheAsrAlreadyAttemptedReservation() {
+    @Test void npcTextNotSentRefundsOnlyTheSharedOriginalAsrReservation() {
         var recovery=mock(com.chengyinhub.business.service.ai.AiQuotaRecoveryService.class);
         ReflectionTestUtils.setField(service,"quotaRecovery",recovery);
         when(mockLlm.chat(anyString(),anyString())).thenThrow(new com.chengyinhub.business.service.ai.AiProviderNotSentException());
         var original=new com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff(MEMBER_ID,
                 "e2596106-82d9-4a4f-9ff2-058414599f90",21L,42L,
                 "ai:gen:limit:gen:"+MEMBER_ID+":20261013|01234567890123456789012345678901");
-        assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
+        var error=assertThrows(com.chengyinhub.business.service.ai.AiServiceException.class,
                 ()->service.generateNpcAsrHandoff(original,"你是店主","原转写"));
+        assertEquals(com.chengyinhub.business.service.ai.AiServiceException.class,error.getClass());
+        assertEquals(com.chengyinhub.business.service.ai.AiServiceException.Reason.UPSTREAM_UNAVAILABLE,error.getReason());
+        assertInstanceOf(com.chengyinhub.business.service.ai.AiProviderNotSentException.class,error.getCause());
         assertTrue(reserved.isEmpty());assertTrue(refunded.isEmpty());
-        verify(recovery).requireNpcAsrHandoff(original);org.mockito.Mockito.verifyNoMoreInteractions(recovery);
+        verify(mockLlm).chat("你是店主","原转写");
+        verify(recovery).requireNpcAsrHandoff(original);
+        verify(recovery).requireRefund("ai:gen:reservation:"+original.reservation().replace('|',':'),"DIALOGUE_FAILURE");
+        org.mockito.Mockito.verifyNoMoreInteractions(recovery);
     }
     @Test void unprovenNpcAsrReservationStopsBeforeReviewOrModel() {
         var recovery=mock(com.chengyinhub.business.service.ai.AiQuotaRecoveryService.class);

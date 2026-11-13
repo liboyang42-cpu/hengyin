@@ -533,9 +533,10 @@ public class ApiTopicController extends BaseController {
             if (textVerdict.isBlocked()) {
                 return AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage());
             }
-            // P-17(owner 2026-11-02「封面应该是必须的 不能有没有封面的活动」):发布必须带封面,存草稿不拦。
+            // P-17(owner 2026-11-02「封面应该是必须的 不能有没有封面的活动」):发布必须带封面。
+            // D-78(owner 2026-11-11「没有封面不能保存」):存草稿同样必须带封面。
             // 只看作者提交的封面地址是否为空;封面已上传、仍在内容安全复核中的照常放行(读侧会先隐藏它)。
-            if (!saveDraft && StringUtils.isBlank(dto.getImgUrl())) {
+            if (StringUtils.isBlank(dto.getImgUrl())) {
                 return error("请上传主题封面");
             }
 
@@ -787,6 +788,14 @@ public class ApiTopicController extends BaseController {
                 secText, storyTexts);
         if (textVerdict.isBlocked()) {
             return AjaxResult.error(HttpStatus.BAD_REQUEST, textVerdict.getBlockMessage());
+        }
+        // D-78(owner 2026-11-11「没有封面不能保存」):编辑保存同样要有封面。本次没传封面(null)按「不改」处理,
+        // 看已存的封面;只对本人主题判定,归属校验仍由 service 负责。
+        if (ownPrevious) {
+            String effectiveCover = dto.getImgUrl() != null ? dto.getImgUrl() : previousTopic.getImgUrl();
+            if (StringUtils.isBlank(effectiveCover)) {
+                return error("请上传主题封面");
+            }
         }
         // 稿 E2:编辑同样要拦 —— 否则建的时候不填勋章、回头编辑再填就绕过去了。
         String previousRuntime=ownPrevious?previousTopic.getThemeRuntimeConfigJson():null;
@@ -2211,8 +2220,14 @@ public class ApiTopicController extends BaseController {
             topicInfoVO.setUnlockedChapterCount(unlockedChapterCount);
             topicInfoVO.setStoryLocked(unlockedChapterCount < totalChapterCount);
             List<TopicChapterVO> chapterVOList = new ArrayList<>();
-            for (int chapterIndex = 0; chapterIndex < unlockedChapterCount; chapterIndex++) {
+            for (int chapterIndex = 0; chapterIndex < totalChapterCount; chapterIndex++) {
                 CmsTopicChapter chapter = listCmsTopicChapter.get(chapterIndex);
+                if (chapterIndex >= unlockedChapterCount) {
+                    // 未解锁章节只下发「介绍」(名称/简介/时长/里程/封面 + 站点名与坐标),
+                    // 剧情块、模板、打卡码、商家、答案一律不给。分支图主题仍然一个节点都不给。
+                    chapterVOList.add(buildLockedChapterTeaser(chapter, branchGraphTeaser));
+                    continue;
+                }
                 TopicChapterVO chapterVO = new TopicChapterVO();
                 BeanUtils.copyBeanProp(chapterVO, chapter);
 
@@ -3180,5 +3195,47 @@ public class ApiTopicController extends BaseController {
             return error("主题活动不存在");
         }
 
+    }
+
+    /**
+     * 未解锁章节的预告 VO：只含非剧透字段，locked=true。
+     * 节点只给 id/name/address/经纬度/imgUrl/sortId/businessTime；分支图主题不给任何节点。
+     */
+    private TopicChapterVO buildLockedChapterTeaser(CmsTopicChapter chapter, boolean branchGraphTeaser) {
+        TopicChapterVO vo = new TopicChapterVO();
+        vo.setId(chapter.getId());
+        vo.setTopicId(chapter.getTopicId());
+        vo.setName(chapter.getName());
+        vo.setDescription(chapter.getDescription());
+        vo.setSortId(chapter.getSortId());
+        vo.setTotalTime(chapter.getTotalTime());
+        vo.setTotalMileage(chapter.getTotalMileage());
+        vo.setImgArr(chapter.getImgArr());
+        vo.setLocked(true);
+        vo.setBlocks(Collections.emptyList());
+        vo.setBlocksJson(null);
+        List<TopicNodeVO> teaserNodes = new ArrayList<>();
+        if (!branchGraphTeaser) {
+            CmsTopicNode query = new CmsTopicNode();
+            query.setChapterId(chapter.getId());
+            query.setStatus(1L);
+            List<CmsTopicNode> nodes = cmsTopicNodeService.selectCmsTopicNodeList(query);
+            if (nodes != null) {
+                for (CmsTopicNode node : nodes) {
+                    TopicNodeVO nodeVO = new TopicNodeVO();
+                    nodeVO.setId(node.getId());
+                    nodeVO.setName(node.getName());
+                    nodeVO.setAddress(node.getAddress());
+                    nodeVO.setLatitude(node.getLatitude());
+                    nodeVO.setLongitude(node.getLongitude());
+                    nodeVO.setImgUrl(node.getImgUrl());
+                    nodeVO.setSortId(node.getSortId());
+                    nodeVO.setBusinessTime(node.getBusinessTime());
+                    teaserNodes.add(nodeVO);
+                }
+            }
+        }
+        vo.setNodes(teaserNodes);
+        return vo;
     }
 }

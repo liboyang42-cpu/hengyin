@@ -99,6 +99,30 @@ class ApiMerchantCommerceControllerTest {
         verifyNoInteractions(commerce, members);
     }
 
+    @Test
+    void profileWriterWhoIsNotOwnerCannotRefundMerchantPurchases() {
+        MerchantCommerceService commerce = mock(MerchantCommerceService.class);
+        AjaxResult result = controller(access(MerchantRoleCode.MERCHANT_MANAGER), commerce,
+                mock(IUmsMemberService.class)).refundOrder(payload("orderSn", "TPLTM_8"));
+        assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
+        verifyNoInteractions(commerce);
+    }
+
+    @Test
+    void ownerRefundUsesResolvedScopeNeverBodyMerchantOrAmount() {
+        MerchantCommerceService commerce = mock(MerchantCommerceService.class);
+        IMerchantAccessService access = mock(IMerchantAccessService.class);
+        when(access.require(OWNER, MerchantPermission.PROFILE_WRITE)).thenReturn(
+                new MerchantAccessContext(OWNER, MERCHANT_ROW, OWNER, MerchantRoleCode.MERCHANT_OWNER));
+        ApiMerchantCommerceController controller = new LoggedInController(OWNER);
+        ReflectionTestUtils.setField(controller, "merchantAccessService", access);
+        ReflectionTestUtils.setField(controller, "commerceService", commerce);
+        when(commerce.refundOrder(OWNER, MERCHANT_ROW, "TPLTM_8")).thenReturn(Map.of("refundStatus", "processing"));
+        AjaxResult result = controller.refundOrder(Map.of("orderSn", "TPLTM_8", "merchantId", 999L, "amount", "0.01"));
+        assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
+        verify(commerce).refundOrder(OWNER, MERCHANT_ROW, "TPLTM_8");
+    }
+
     private ApiMerchantCommerceController controller(IMerchantAccessService access,
                                                      MerchantCommerceService commerce,
                                                      IUmsMemberService members) {

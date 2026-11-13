@@ -168,7 +168,7 @@ class CoopSettlementPayoutTransactionTest {
         jdbc.execute("CREATE TABLE cms_topic (id BIGINT PRIMARY KEY)");
         jdbc.update("INSERT INTO cms_topic(id) VALUES (?)", TOPIC_ID);
         jdbc.execute("CREATE TABLE coop_settlement ("
-                + "id BIGINT PRIMARY KEY, settlement_route VARCHAR(32), source_contract_type VARCHAR(48),"
+                + "id BIGINT PRIMARY KEY, club_id BIGINT, club_name VARCHAR(255), payout_hold_reason VARCHAR(128), settlement_route VARCHAR(32), source_contract_type VARCHAR(48),"
                 + "source_contract_id BIGINT, commercial_context_type VARCHAR(32), commercial_context_id BIGINT,"
                 + "beneficiary_role VARCHAR(32), beneficiary_id BIGINT, service_unit VARCHAR(48),"
                 + "topic_id BIGINT, merchant_id BIGINT, amount DECIMAL(12,2),"

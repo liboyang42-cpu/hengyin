@@ -289,7 +289,7 @@ const RAW = [
   ['B38', 'B38-infodetail-loading.png', '/subpackageA/pages/infomationdetail/infomationdetail?id=1', 'player', 'loading', { loading: true }, undefined, SKEL, 'setData', 'P1', '', 'bbb'],
   ['B39', 'B39-infodetail-badparam.png', '/subpackageA/pages/infomationdetail/infomationdetail', 'player', 'missing-param', null, undefined, EMPTY, 'real-data', 'P1', '', '⚠️ 字段名按页面实况:activeTopTab/activeClubTab/nearbyClubs。早先写成 activeTab/clubs,两态都落到空态、md5 相同'],
   ['B43', 'B43-myproject-topic.png', '/subpackageA/pages/myproject/index', 'player', 'normal', { typeTab: 'topic', projectState: 'ready', loading: false, loaded: true, ownerChips: [], stateIndex: 0, pendingSummary: { total: 0, rejected: 0, draft: 0, pending: 0 }, capped: false, list: [{ id: 1, title: '城市线索路线', cover: IMG, bizType: 'topic', projectTypeText: '主题', _stateVariant: 'active', stateText: '进行中', ownerType: 'merchant', signupCount: 3, viewCount: 28 }] }, undefined, TABS3, 'setData', 'P0', '', 'Tab 统一；项目卡重设计'],
-  ['B44', 'B44-myproject-template.png', '/subpackageA/pages/myproject/index', 'player', 'normal', { typeTab: 'template', loading: false, loaded: true, projectState: 'ready', projectErrorMsg: '', tplList: [{ id: 11, title: '老建筑年份线索', imgUrl: IMG, _stateVariant: 'success', _statusText: '个人审核通过', _statusShort: '通过', marketPublishStatus: 1, _marketText: '广场已上架', _canToggleMarket: true, _marketActionText: '从广场下架', _marketPublishTarget: 0, _canSubmitMarket: false, useNum: 8, duration: 30 }], tplLoaded: true, tplLoading: false, tplErrorMsg: '' }, undefined, { selector: '.mp-card', min: 1 }, 'setData', 'P1', '', '模板 Tab 使用页面真实 typeTab/tplList/tplLoaded 状态，不再注入已删除的 activeTab'],
+  ['B44', 'B44-myproject-template.png', '/subpackageA/pages/myproject/index', 'player', 'normal', { typeTab: 'template', loading: false, loaded: true, projectState: 'ready', projectErrorMsg: '', tplList: [{ id: 11, title: '老建筑年份线索', imgUrl: IMG, _stateVariant: 'success', _statusText: '个人审核通过', _statusShort: '通过', marketStatus: 1, _marketText: '广场已上架', _canToggleMarket: true, _marketActionText: '从广场下架', _marketStatusTarget: 3, _canSubmitMarket: false, useNum: 8, duration: 30 }], tplLoaded: true, tplLoading: false, tplErrorMsg: '' }, undefined, { selector: '.mp-card', min: 1 }, 'setData', 'P1', '', '模板 Tab 使用页面真实 typeTab/tplList/tplLoaded 状态，不再注入已删除的 activeTab'],
   ['B45', 'B45-template-intro.png', '/pages/publish/template-intro/index', 'player', 'normal', { cards: [{ title: '经典定向', catName: '定向', imgUrl: IMG, accent: '#E8590C' }] }, undefined, TITLE, 'setData', 'P0', '', '品类语义色已批准保留彩色'],
   ['B47', 'B47-topicadd-init.png', '/pages/publish/topicadd/topicadd', 'player', 'form', null, undefined, TITLE, 'real-data', 'P0', '被验对象已退役:PR #685 把 topicadd 降级成纯重定向壳(wxml 只剩一行注释),没有可拍的界面。它现在唯一该被验的是「转得对不对」,已由 tests/unit/topicadd-shell-redirect-contract.test.js 接管(4 条:必须 redirectTo 不能 navigateTo、三参数原样透传、无参转裸 fabu、onLoad 不传参不炸,负控双向验过)。截图证明不了跳转,单测能。', '已退役,见 blocked 原因'],
   ['B48', 'B48-fabu-step1.png', '/pages/publish/fabu/index', 'player', 'form', null, undefined, TITLE, 'real-data', 'P0', '', '★.rs-num--accent 仍消费紫 token --cy-route'],
@@ -639,6 +639,8 @@ const RAW = [
   ['F313', 'F313-journey-settle-missing-param.png', '/subpackageJourney/pages/settle/index', 'player', 'missing-param', null, undefined, { selector: 'cy-empty', min: 1 }, 'real-data', 'P1', '', '结算四步:缺参数时的状态(真数据走战报)'],
   // 2026-11-11 qx-final2:l-icons 新增的通行证钥匙开场页补矩阵行(真实运行时,首次进入播完整版,之后待机循环)
   ['F314', 'F314-pass-reveal-normal.png', '/subpackagePass/reveal/index', 'player', 'normal', null, undefined, { selector: '.ky__stage', min: 1 }, 'real-data', 'P1', '', '通行证钥匙开场:序列帧 + 文案 + 开始按钮'],
+  // 2026-11-12 club-payout-binding:俱乐部主个人收款页(无俱乐部参数时落到错误态,真数据需主理人身份)
+  ['F315', 'F315-club-payout-receiver-missing-param.png', '/pages/club/payout-receiver/index', 'player', 'missing-param', null, undefined, { selector: 'cy-page-title', min: 1 }, 'real-data', 'P1', '', '个人收款:缺俱乐部信息时给出可重试的错误态'],
 ];
 /* eslint-enable max-len */
 
@@ -685,11 +687,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-29 走查 l2-roam V-08 第二轮删除「动态」二级页 pages/square/list:A05–A09 五行退场,total 353→348、P0 140→139、P1 203→199、actionable 329→324(P0 131→130、P1 196→192)、A 53→48、setData 186→183、identity+setData 116→115、real-data 44→43;blocked 与已验 fixture 不变。
 // 2026-10-31 dw29 发布集成:master(F202 等,354)叠加 l2-roam 删「动态」二级页 A05–A09(−5)与 V-24 主题模板详情(+1),按实列复算 total 350、P0 139、P1 201、actionable 326(P0 130、P1 194)、A 48、B 72、setData 184、identity+setData 115、real-data 44。
 // 2026-11-09 qx-a4 V3-42:时光胶囊页先删,F97 退场:total 350→349、P1 201→200、actionable 326→325(P1 194→193)、F 96→95、setData 184→183;blocked 与已验 fixture 不变。
+// 2026-11-12 club-payout-binding:新增 F315 个人收款页(missing-param 一行),total 366→367、P1 217→218、actionable P1 210→211 / total 342→343、F 112→113、real-data 59→60。
 const STATS = {
-  "total": 366,
+  "total": 367,
   "byPriority": {
     "P0": 139,
-    "P1": 217,
+    "P1": 218,
     "P2": 10
   },
   "blockedByPriority": {
@@ -699,9 +702,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 210,
+    "P1": 211,
     "P2": 2,
-    "total": 342
+    "total": 343
   },
   "blocked": 24,
   "domains": {
@@ -710,12 +713,12 @@ const STATS = {
     "C": 56,
     "D": 52,
     "E": 26,
-    "F": 112
+    "F": 113
   },
   "control": {
     "setData": 185,
     "identity+setData": 115,
-    "real-data": 59,
+    "real-data": 60,
     "real-device": 7
   },
   "fixtureVerified": 16

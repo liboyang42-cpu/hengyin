@@ -193,8 +193,9 @@ test('FOLLOWUP-A-2 玩法卡:个人审核未通过 → TEMPLATE;广场驳回 / �
   const at = require(path.join(ROOT, 'subpackageA/utils/audit-timeline.js'));
   assert.deepEqual(at.templateTarget({ id: 4, draftStatus: 1, status: 2 }), { bizType: 'TEMPLATE', bizId: '4' });
   assert.deepEqual(at.templateTarget({ id: 4, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 70, marketStatus: 2 }), { bizType: 'TEMPLATE_LIBRARY', bizId: '70' });
-  assert.deepEqual(at.templateTarget({ id: 4, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 70, marketStatus: 1, marketPublishStatus: 0 }), { bizType: 'TEMPLATE_LIBRARY', bizId: '70' });
-  assert.equal(at.templateTarget({ id: 4, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 70, marketStatus: 1, marketPublishStatus: 1 }), null);
+  assert.deepEqual(at.templateTarget({ id: 4, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 70, marketStatus: 3 }), { bizType: 'TEMPLATE_LIBRARY', bizId: '70' });
+  assert.equal(at.templateTarget({ id: 4, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 70, marketStatus: 1 }), null);
+  assert.equal(at.templateTarget({ id: 4, draftStatus: 1, status: 1, checkStatus: 1, marketTemplateId: 70, marketStatus: 0 }), null);
   assert.equal(at.templateTarget({ id: 4, draftStatus: 0 }), null);
   assert.equal(at.projectTarget({ id: 1, bizType: 'topic', state: 'running' }), null);
 

@@ -98,18 +98,21 @@ public class AiQuotaRecoveryService {
         });
     }
 
-    /** Read the durable same-claim NOT_SENT proof. A normal text failure cannot enter this compensation path. */
+    /** Read only the durable same-claim failed/empty ASR proof; never infer failure from lease expiry. */
     public void refundNpcAsrNotSent(Long userId,String requestId) {
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         AiQuotaReservationRecord quota=transaction.execute(status -> {
             NpcAsrIntent original=asrIntents.selectQuotaRefundProof(userId,requestId);
             if (original==null || !original.isQuotaRefundPending()) return null;
-            if (!java.util.Objects.equals(userId,original.getUserId()) || !"NOT_SENT".equals(original.getState())
+            if (!java.util.Objects.equals(userId,original.getUserId()) || !java.util.Set.of("NOT_SENT","UNKNOWN","RECEIVED").contains(original.getState())
                     || original.isHandoffStarted() || original.isTextAdmitted()) throw unavailable();
             AiQuotaReservationRecord row=originalAsrQuota(original,true);
             if (refunded(row)) { asrIntents.completeQuotaRefund(userId,requestId,original.getQuotaReservation()); return null; }
             if (!"REFUND_DUE".equals(row.getState())) {
-                if (mapper.requestAsrNotSentRefund(row.getReceiptKey(),row.getFenceVersion())!=1) throw unavailable();
+                int changed = "NOT_SENT".equals(original.getState())
+                        ? mapper.requestAsrNotSentRefund(row.getReceiptKey(),row.getFenceVersion())
+                        : mapper.recordOutcome(row.getReceiptKey(),"REFUND_DUE","DIALOGUE_FAILURE");
+                if (changed!=1) throw unavailable();
                 row=mapper.selectByReceipt(row.getReceiptKey());
             }
             return row;

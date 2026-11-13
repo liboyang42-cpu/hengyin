@@ -31,6 +31,18 @@ class ArrivalPolicyTest {
         return station;
     }
 
+    /** 业主 2026-11-13:开局一次 300 米校验;精度先于距离、互不抵扣。 */
+    @Test
+    void startCheckAllowsUpToThreeHundredMetres() {
+        assertEquals(300d, ArrivalPolicy.START_RADIUS_METERS, 0d);
+        assertEquals(ArrivalPolicy.Fence.PASS, ArrivalPolicy.startViolation(0d, 10d));
+        assertEquals(ArrivalPolicy.Fence.PASS, ArrivalPolicy.startViolation(300d, 80d));
+        assertEquals(ArrivalPolicy.Fence.TOO_FAR, ArrivalPolicy.startViolation(301d, 10d));
+        assertEquals(ArrivalPolicy.Fence.ACCURACY_LOW, ArrivalPolicy.startViolation(10d, 80.01d));
+        assertEquals(ArrivalPolicy.Fence.INVALID, ArrivalPolicy.startViolation(Double.NaN, 10d));
+        assertEquals(ArrivalPolicy.Fence.INVALID, ArrivalPolicy.startViolation(10d, -1d));
+    }
+
     @Test
     void missingPolicyKeepsLegacyFence() throws Exception {
         ArrivalPolicy policy = ArrivalPolicy.fromStation(station(null));

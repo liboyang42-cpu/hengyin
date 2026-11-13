@@ -1,15 +1,15 @@
 // 金额展示的空值口径(方案 §3.4 / §11.2-1):
-// 绑定值为空(undefined / null / '')时渲 '—',绝不渲出一个裸的 ¥ 或空白。
+// 绑定值为空(undefined / null / '')时渲 0(D-119 2026-11-11 业主「金额也写 0」,取代原先的 '—'),绝不渲出一个裸的 ¥ 或空白。
 // 0 是合法金额,必须照常渲成 ¥0 —— 不能被当成空值吃掉。
 // 只管「空不空」,不改各页既有的小数位口径(那属于各自的业务格式,不在本规则内)。
 function amount(v) {
-  if (v === undefined || v === null || v === '') return '—';
+  if (v === undefined || v === null || v === '') return '¥0';
   return '¥' + v;
 }
 
 // 两位小数口径(商家工作台收入 hero,稿 3910:580 为 ¥0.00);空值同 amount,非数值原样透出
 function amount2(v) {
-  if (v === undefined || v === null || v === '') return '—';
+  if (v === undefined || v === null || v === '') return '¥0.00';
   // WXS 不是 JS:Number() 不能当函数调用(编译期直接 Unexpected token),isNaN 也没有。
   // 转数用 *1,判 NaN 用 n !== n —— 这两条是 WXS 里唯一稳的写法。
   var n = v * 1;

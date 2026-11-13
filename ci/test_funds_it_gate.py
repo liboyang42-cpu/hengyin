@@ -55,7 +55,7 @@ def all_required_clean(directory):
     write_report(directory, "MysqlItSchemaIsolationTest", 3)
     # 2026-09-15 起登记:R9-16 免费单主办取消真库复现 IT(8 条)。
     write_report(directory, "ActivityCancelFreeOrderMybatisIT", 8)
-    write_report(directory, "PlayTeamMybatisIntegrationTest", 21)
+    write_report(directory, "PlayTeamMybatisIntegrationTest", 24)
     write_report(directory, "PlayTeamNearbyMybatisIntegrationTest", 4)
     # 2026-09-16:支付回调 fencing IT 入闸(5 条);fixture 必须跟着 EXPECTED 走。
     write_report(directory, "WxPaymentCallbackFencingMySqlIT", 6)

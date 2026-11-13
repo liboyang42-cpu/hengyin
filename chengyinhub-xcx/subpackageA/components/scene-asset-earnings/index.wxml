@@ -31,6 +31,7 @@
     <view class="tm">
       <view class="tm-group">
         <view class="tm-row" bindtap="openClubSettlement" aria-role="button" aria-label="本人俱乐部结算" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">本人俱乐部结算</text><cy-icon class="tm-ico" name="list" size="40" /></view>
+        <view class="tm-row" bindtap="openPayoutReceiver" aria-role="button" aria-label="个人收款" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">个人收款</text><cy-icon class="tm-ico" name="coupon" size="40" /></view>
         <view class="tm-row" bindtap="openWithdrawHistory" aria-role="button" aria-label="打开提现记录弹窗" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">提现记录</text><cy-icon class="tm-ico" name="clock" size="40" /></view>
         <view class="tm-row" bindtap="openInvite" aria-role="button" aria-label="邀请记录" hover-class="cy-pressed" hover-stay-time="80"><text class="tm-label">邀请记录</text><cy-icon class="tm-ico" name="gift" size="40" /></view>
       </view>

@@ -107,9 +107,9 @@
         </view>
         <view class="mp-ops">
           <view wx:if="{{item._canSubmitMarket}}" class="mp-op mp-op-toggle" catchtap="tplSubmitMarket" data-id="{{item.id}}" aria-role="button" aria-label="提交广场审核" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">提交广场</view>
-          <view wx:if="{{item._canToggleMarket}}" class="mp-op mp-op-toggle" catchtap="tplToggle" data-id="{{item.id}}" data-target="{{item._marketPublishTarget}}" aria-role="button" aria-label="{{item._marketActionText}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">{{item._marketActionText}}</view>
+          <view wx:if="{{item._canToggleMarket}}" class="mp-op mp-op-toggle" catchtap="tplToggle" data-id="{{item.id}}" data-target="{{item._marketStatusTarget}}" aria-role="button" aria-label="{{item._marketActionText}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">{{item._marketActionText}}</view>
           <view wx:if="{{item._audit}}" class="mp-op mp-op-toggle" catchtap="tplAudit" data-biz="{{item._audit.bizType}}" data-bizid="{{item._audit.bizId}}" data-title="{{item.title}}" aria-role="button" aria-label="查看{{item.title}}的审核记录" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">审核记录</view>
-          <view class="mp-op mp-op-del" catchtap="tplDelete" data-id="{{item.id}}" data-title="{{item.title}}" data-pub="{{item.marketPublishStatus}}" aria-role="button" aria-label="删除{{item.title}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">删除</view>
+          <view class="mp-op mp-op-del" catchtap="tplDelete" data-id="{{item.id}}" data-title="{{item.title}}" data-pub="{{item.marketStatus}}" aria-role="button" aria-label="删除{{item.title}}" hover-class="cy-pressed" hover-stay-time="80" hover-stop-propagation="true">删除</view>
         </view>
       </view>
     </view>

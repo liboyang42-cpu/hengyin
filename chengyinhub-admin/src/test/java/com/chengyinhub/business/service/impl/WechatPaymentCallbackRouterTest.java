@@ -23,6 +23,16 @@ class WechatPaymentCallbackRouterTest {
             club, commerce, deposit, registration, refunds, marketingProducts);
 
     @Test
+    void commerceRefundNeverFallsThroughToRegistrationEvenWhenRejected() {
+        Map<String, String> facts = Map.of("outRefundNo", "RMC8", "outTradeNo", "TPLTM_8", "status", "SUCCESS");
+        when(commerce.handleRefund(facts)).thenReturn(false, true);
+        assertFalse(router.refund(facts));
+        assertTrue(router.refund(facts));
+        verify(commerce, times(2)).handleRefund(facts);
+        verifyNoInteractions(refunds, deposit);
+    }
+
+    @Test
     void allFourOwnersReceiveTheOriginalVerifiedAmountAndTransactionWithoutRewritingFacts() {
         when(club.supportsOutTradeNo("CLM1")).thenReturn(true);
         when(club.handlePaidInvoice("CLM1", true, 123, "TX-original", reference("CLM1"))).thenReturn(true);

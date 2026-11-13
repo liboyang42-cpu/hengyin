@@ -10,6 +10,8 @@
         <result column="refunded_time" property="refunded_time" javaType="java.util.Date"/>
         <result column="cancel_time" property="cancel_time" javaType="java.util.Date"/>
         <result column="create_time" property="create_time" javaType="java.util.Date"/>
+        <result column="delivery_next_time" property="delivery_next_time" javaType="java.util.Date"/>
+        <result column="review_time" property="review_time" javaType="java.util.Date"/>
     </resultMap>
     <resultMap id="membershipRow" type="java.util.LinkedHashMap" autoMapping="true">
         <result column="valid_from" property="valid_from" javaType="java.util.Date"/>
@@ -20,7 +22,10 @@
         id, order_no, member_id, request_id, request_fingerprint, plan_id, plan_code, price_fen, valid_days,
         channel, status, payment_fact_id, payment_fact_hash, transaction_id, xpay_env, paid_time,
         refund_no, refund_reason, refund_requested_time, refund_fact_id, refund_fact_hash, refunded_time,
-        cancel_time, create_time
+        cancel_time, create_time, xpay_product_id, xpay_offer_id, delivery_status, delivery_attempts,
+        delivery_next_time, coverage_snapshot, refund_terms_ref, refund_amount_fen, refund_source,
+        review_status, review_apply_reason, review_usage_facts, review_handler, review_decision, review_time,
+        review_channel_receipt
     </sql>
 
     <select id="selectOnSalePlans" resultType="java.util.LinkedHashMap">
@@ -35,9 +40,11 @@
 
     <insert id="insertOrder" parameterType="java.util.Map" useGeneratedKeys="true" keyProperty="id">
         insert into platform_pass_order (order_no, member_id, request_id, request_fingerprint, plan_id, plan_code,
-            price_fen, valid_days, channel, status)
+            price_fen, valid_days, channel, status, xpay_product_id, xpay_offer_id, xpay_env,
+            coverage_snapshot, refund_terms_ref)
         values (#{order_no}, #{member_id}, #{request_id}, #{request_fingerprint}, #{plan_id}, #{plan_code},
-            #{price_fen}, #{valid_days}, #{channel}, 0)
+            #{price_fen}, #{valid_days}, #{channel}, 0, #{xpay_product_id}, #{xpay_offer_id}, #{xpay_env},
+            #{coverage_snapshot}, #{refund_terms_ref})
     </insert>
 
     <select id="selectOrderByNo" resultMap="orderRow">
@@ -71,9 +78,46 @@
 
     <update id="markXpayPaid">
         update platform_pass_order
-        set status = 1, transaction_id = #{wxOrderId}, xpay_env = #{env}, paid_time = #{paidTime}
+        set status = 1, transaction_id = #{wxOrderId}, xpay_env = #{env}, paid_time = #{paidTime},
+            delivery_status = #{deliveryStatus}, delivery_next_time = null
         where id = #{id} and status in (0, 2) and channel = 'XPAY'
     </update>
+
+    <!-- T02:旧单(迁移前建的)首次签名前补冻结;已冻结的绝不改写 -->
+    <update id="freezeXpayIntent">
+        update platform_pass_order
+        set xpay_product_id = #{productId}, xpay_offer_id = #{offerId}, xpay_env = #{env}
+        where id = #{id} and status = 0 and channel = 'XPAY' and xpay_product_id is null
+    </update>
+
+    <update id="markDeliveryConfirmed">
+        update platform_pass_order set delivery_status = 2, delivery_next_time = null
+        where id = #{id} and delivery_status = 1
+    </update>
+
+    <update id="markDeliveryRetry">
+        update platform_pass_order set delivery_attempts = delivery_attempts + 1, delivery_next_time = #{nextTime}
+        where id = #{id} and delivery_status = 1
+    </update>
+
+    <select id="selectOrdersPendingDelivery" resultMap="orderRow">
+        select <include refid="orderColumns"/> from platform_pass_order
+        where channel = 'XPAY' and delivery_status = 1 and status in (1, 4)
+          and (delivery_next_time is null or delivery_next_time &lt;= #{now})
+        order by id limit #{limit}
+    </select>
+
+    <select id="selectOrderByIdForUpdate" resultMap="orderRow" useCache="false" flushCache="true">
+        select <include refid="orderColumns"/> from platform_pass_order where id = #{id} for update
+    </select>
+
+    <insert id="insertMemberLock">
+        insert ignore into platform_pass_member_lock (member_id) values (#{memberId})
+    </insert>
+
+    <select id="lockMember" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select member_id from platform_pass_member_lock where member_id = #{memberId} for update
+    </select>
 
     <update id="markCancelled">
         update platform_pass_order set status = 2, cancel_time = #{cancelTime}
@@ -93,11 +137,47 @@
         where id = #{id} and status = 4 and refund_no = #{refundNo}
     </update>
 
-    <update id="markRefunded">
+    <!-- T04:渠道已核实的退款事实可直接关闭已付单(无本地退款号);已退不会被再次关闭 -->
+    <update id="markRefundedFromChannel">
         update platform_pass_order
-        set status = 3, refund_fact_id = #{factId}, refund_fact_hash = #{factHash}, refunded_time = #{refundedTime}
-        where id = #{id} and status = 4 and refund_no is not null
+        set status = 3, refund_fact_id = #{factId}, refund_fact_hash = #{factHash}, refunded_time = #{refundedTime},
+            refund_amount_fen = #{amount}, refund_source = #{source}
+        where id = #{id} and status in (1, 4)
     </update>
+
+    <update id="recordPartialChannelRefund">
+        update platform_pass_order
+        set refund_amount_fen = #{amount}, refund_source = 'CHANNEL', review_status = 1,
+            review_apply_reason = '渠道部分退款', review_usage_facts = #{facts}
+        where id = #{id} and status = 1 and (refund_amount_fen is null or refund_amount_fen &lt;&gt; #{amount})
+    </update>
+
+    <update id="requestReview">
+        update platform_pass_order
+        set review_status = 1, review_apply_reason = #{reason}, review_usage_facts = #{facts},
+            review_handler = null, review_decision = null, review_time = null, review_channel_receipt = null
+        where id = #{id} and status = 1 and review_status in (0, 3)
+    </update>
+
+    <update id="decideReview">
+        update platform_pass_order
+        set review_status = #{decision}, review_handler = #{handler}, review_decision = #{note}, review_time = #{time}
+        where id = #{id} and review_status = 1 and status in (1, 4)
+    </update>
+
+    <update id="markReviewReceipt">
+        update platform_pass_order set review_channel_receipt = #{receipt}
+        where id = #{id} and review_status = 2
+    </update>
+
+    <select id="selectOrdersForAdmin" resultMap="orderRow">
+        select <include refid="orderColumns"/> from platform_pass_order
+        <where>
+            <if test="status != null">status = #{status}</if>
+            <if test="reviewStatus != null">and review_status = #{reviewStatus}</if>
+        </where>
+        order by id desc limit #{limit}
+    </select>
 
     <select id="selectLatestValidToForUpdate" resultType="java.util.Date" useCache="false" flushCache="true">
         select max(valid_to) from platform_pass_membership
@@ -115,8 +195,22 @@
         from platform_pass_membership where order_id = #{orderId}
     </select>
 
+    <select id="selectMembershipById" resultMap="membershipRow">
+        select id, member_id, order_id, valid_from, valid_to, status from platform_pass_membership where id = #{id}
+    </select>
+
+    <select id="selectMembershipByIdForUpdate" resultMap="membershipRow" useCache="false" flushCache="true">
+        select id, member_id, order_id, valid_from, valid_to, status from platform_pass_membership
+        where id = #{id} for update
+    </select>
+
+    <select id="selectActiveSegments" resultMap="membershipRow">
+        select id, member_id, order_id, valid_from, valid_to, status from platform_pass_membership
+        where member_id = #{memberId} and status = 1 order by valid_from, id
+    </select>
+
     <select id="selectActiveMembership" resultMap="membershipRow">
-        select m.id, m.member_id, m.order_id, m.valid_from, m.valid_to, m.status
+        select m.id, m.member_id, m.order_id, m.valid_from, m.valid_to, m.status, o.plan_code
         from platform_pass_membership m
         join platform_pass_order o on o.id = m.order_id and o.status = 1
         where m.member_id = #{memberId} and m.status = 1 and m.valid_from &lt;= #{now} and m.valid_to &gt; #{now}
@@ -145,33 +239,60 @@
         values (#{membership_id}, #{member_id}, #{topic_id}, #{registration_id})
     </insert>
 
+    <select id="selectActiveClaims" resultType="java.util.LinkedHashMap">
+        select membership_id, registration_id, topic_id from platform_pass_claim where member_id = #{memberId} and status = 1
+    </select>
+
+    <update id="markClaimsStopped">
+        update platform_pass_claim set status = 2, stopped_time = #{now}
+        where membership_id = #{membershipId} and status = 1
+    </update>
+
     <select id="countClaimsByMembership" resultType="int">
         select count(*) from platform_pass_claim where membership_id = #{membershipId}
     </select>
 
-    <sql id="officialSelfPlayTopic">
-        t.del_flag = 0 and t.self_play = 1 and t.lifecycle in (3, 4)
-        and exists (
-            select 1 from product_role content_role
-            where content_role.topic_id = t.id and content_role.slot = 'CONTENT'
-              and content_role.status = 1 and content_role.entity_type = 'PLATFORM'
-        )
+    <sql id="publishedTopic">
+        cms_topic.status = 1 and cms_topic.user_status = 1
+        and cms_topic.del_flag = 0 and cms_topic.is_template = 0
     </sql>
 
-    <select id="isOfficialSelfPlayTopic" resultType="int">
-        select count(*) from cms_topic t where t.id = #{topicId} and <include refid="officialSelfPlayTopic"/>
+    <select id="isPublishedTopic" resultType="int">
+        select count(*) from cms_topic where cms_topic.id = #{topicId} and <include refid="publishedTopic"/>
+    </select>
+
+    <select id="selectPublishedTopicIds" resultType="java.lang.Long">
+        select cms_topic.id from cms_topic where <include refid="publishedTopic"/>
+        and cms_topic.id in
+        <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="selectCoverageTopics" resultType="java.util.LinkedHashMap">
+        select cms_topic.id, cms_topic.self_play, cms_topic.self_play_price, cms_topic.lifecycle,
+               cms_topic.selling_started_at, cms_topic.sale_end_at, cms_topic.end_date
+        from cms_topic where <include refid="publishedTopic"/>
+        and cms_topic.id in
+        <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </select>
 
     <select id="selectLibrary" resultType="java.util.LinkedHashMap">
-        select t.id, t.name, t.img_url, t.product_type, t.total_time, t.location_count, t.address_name
-        from cms_topic t
-        where <include refid="officialSelfPlayTopic"/>
-        <if test="productType != null">and t.product_type = #{productType}</if>
-        order by t.id desc
+        select cms_topic.id, cms_topic.name, cms_topic.img_url, cms_topic.product_type,
+               cms_topic.total_time, cms_topic.location_count, cms_topic.address_name,
+               cms_topic.self_play, cms_topic.self_play_price, cms_topic.lifecycle,
+               cms_topic.selling_started_at, cms_topic.sale_end_at, cms_topic.end_date
+        from cms_topic
+        where <include refid="com.chengyinhub.business.mapper.PublicContentCatalogMapper.catalogPublicGate"/>
+        <if test="productType != null">and cms_topic.product_type = #{productType}</if>
+        order by cms_topic.id desc
         limit #{limit}
     </select>
 
     <select id="countLibrary" resultType="int">
-        select count(*) from cms_topic t where <include refid="officialSelfPlayTopic"/>
+        select count(*) from cms_topic
+        where <include refid="com.chengyinhub.business.mapper.PublicContentCatalogMapper.catalogPublicGate"/>
+        <if test="topicIds != null and !topicIds.isEmpty()">
+            and cms_topic.id in
+            <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        </if>
     </select>
 </mapper>

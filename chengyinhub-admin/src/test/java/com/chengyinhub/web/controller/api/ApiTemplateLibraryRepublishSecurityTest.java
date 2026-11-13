@@ -132,9 +132,11 @@ class ApiTemplateLibraryRepublishSecurityTest {
         rejected(enable());
     }
     @Test void withdrawalRemainsAvailableWithoutReviewReads() {
-        when(publish.updateTemplateLibraryStatus(71L, 0, 900L)).thenReturn(true);
-        assertEquals(200, controller.updateTemplateLibraryStatus("71", "0", null).get(AjaxResult.CODE_TAG));
-        verifyNoInteractions(library, security);
-        verify(publish).updateTemplateLibraryStatus(71L, 0, 900L);
+        for (int status : new int[] {2, 3}) {
+            when(publish.updateTemplateLibraryStatus(71L, status, 900L)).thenReturn(true);
+            assertEquals(200, controller.updateTemplateLibraryStatus("71", String.valueOf(status), null).get(AjaxResult.CODE_TAG));
+            verifyNoInteractions(library, security);
+            verify(publish).updateTemplateLibraryStatus(71L, status, 900L);
+        }
     }
 }

@@ -322,17 +322,19 @@ public class AiGatewayServiceImpl implements AiGatewayService
         } catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) {
             throw paused;
         } catch (RuntimeException unavailable) {
+            if (asrHandoff) refundDialogueFailure(memberId, bizType, reservation);
             if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "内容审核暂时不可用，请稍后重试", unavailable);
         }
         if (secIn != null) {
             if (IWxContentSecurityService.isDetectionUnavailable(secIn)) {
+                if (asrHandoff) refundDialogueFailure(memberId, bizType, reservation);
                 if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
                 saveGenerationLog(prepared, traceId, memberId, role, bizType, null, userPrompt, secIn, 0, 0, 0, 0);
                 throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, secIn);
             }
-            if (!asrHandoff) retainQuota(memberId,bizType,reservation,"INPUT_REJECTED");
+            retainQuota(memberId,bizType,reservation,"INPUT_REJECTED");
             saveGenerationLog(prepared, traceId, memberId, role, bizType, null, userPrompt, secIn,
                     AiGenerationLog.SAFETY_INPUT_BLOCKED, 0, 0, 0);
             // 与 master #322 统一：微信审核拒绝（含人工复核/未知拒绝）一律按入参被拦截返回，小程序给出同一条“请修改内容”提示。
@@ -358,6 +360,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             // 「无可用的 AI 模型」= 配置错,纯我们的锅,用户没拿到任何东西 → 退额度。
             // ⚠️ catch RuntimeException 而非 AiServiceException:选模型/场景路由里的
             //    NPE、IllegalStateException 同样是我们的锅,窄 catch 会让它们带着已扣的额度跑掉。
+            if (asrHandoff) refundDialogueFailure(memberId, bizType, reservation);
             if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "AI 服务配置缺失,请联系管理员(traceId=" + traceId + ")", e);
@@ -393,23 +396,22 @@ public class AiGatewayServiceImpl implements AiGatewayService
         catch (com.chengyinhub.common.config.RestoreDispatchGuard.Blocked paused) { throw paused; }
         catch (com.chengyinhub.business.service.ai.AiProviderNotSentException notSent)
         {
-            // Only the dedicated transport proof can compensate after MODEL_STARTED.
-            // The player's separate draft reservation remains owned by Creator.
-            if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
+            // Dialogue failure returns its original allowance, including a shared voice receipt.
+            if (isDialogue(bizType)) refundDialogueFailure(memberId, bizType, reservation);
+            else if (!playerThemeDraft && !asrHandoff) refundQuota(memberId, bizType, reservation);
             throw new AiServiceException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "AI 服务暂时不可用，请稍后重试", notSent);
         }
         catch (RuntimeException e)
         {
+            if (isDialogue(bizType)) refundDialogueFailure(memberId, bizType, reservation);
             if (prepared) log.error("[AiGateway] prepared-model-error traceId={} provider={} code=PROVIDER_OUTCOME_UNKNOWN",
                     traceId, modelName);
             else log.error("[AiGateway] model-error memberId={} provider={}", memberId, modelName, e);
             int tokenIn = estimateSingle(systemPrompt) + estimateSingle(userPrompt);
             saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, prepared ? "PROVIDER_OUTCOME_UNKNOWN" : "ERROR:" + truncate(e.getMessage(), 100),
                     0, (int) (System.currentTimeMillis() - t0), tokenIn, null);
-            // MODEL_STARTED preserves the original receipt for the existing recovery worker.
-            // A timeout/empty or malformed response may already have incurred provider usage.
-            // Never refund or resend merely because no answer reached this service.
+            // Preserve provider/API uncertainty; dialogue allowance is independently compensated.
             throw new com.chengyinhub.business.service.ai.AiProviderOutcomeUnknownException(
                 "AI 请求结果待确认，请保留原请求(traceId=" + traceId + ")", e);
         }
@@ -423,7 +425,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         String secOut;
         try { secOut = checkTextFully(modelText, openid); }
         catch(RuntimeException unknownOutput) {
-            if (!asrHandoff) retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+            retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
             throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(AiServiceException.Reason.UPSTREAM_UNAVAILABLE,
                     "内容审核暂时不可用，请稍后重试", unknownOutput);
         }
@@ -431,7 +433,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         {
             if (IWxContentSecurityService.isDetectionUnavailable(secOut))
             {
-                if (!asrHandoff) retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
+                retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REVIEW_UNKNOWN");
                 saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, secOut,
                         0, latencyMs, tokenIn, tokenOut);
                 throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
@@ -440,7 +442,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
             log.info("[AiGateway] output-blocked memberId={} bizType={}", memberId, bizType);
             saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, modelText,
                     AiGenerationLog.SAFETY_OUTPUT_BLOCKED, latencyMs, tokenIn, tokenOut);
-            if (!asrHandoff) retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REJECTED");
+            retainQuotaAfterResult(memberId,bizType,reservation,"OUTPUT_REJECTED");
             throw new com.chengyinhub.business.service.ai.AiProviderResultReceivedException(
                     AiServiceException.Reason.OUTPUT_BLOCKED, "生成内容未通过安全检测,请调整后重试");
         }
@@ -448,7 +450,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
         // 5. 落日志
         saveGenerationLog(prepared, traceId, memberId, role, bizType, modelName, userPrompt, modelText, 0, latencyMs, tokenIn, tokenOut);
 
-        if (!asrHandoff) retainQuotaAfterResult(memberId,bizType,reservation,"SUCCESS");
+        retainQuotaAfterResult(memberId,bizType,reservation,"SUCCESS");
         AiGatewayResult generated = new AiGatewayResult(traceId, modelText, modelName, 0);
         generated.setTokenIn(tokenIn);
         generated.setTokenOut(tokenOut);
@@ -634,6 +636,21 @@ public class AiGatewayServiceImpl implements AiGatewayService
         if(!key.startsWith(prefix) || !key.substring(prefix.length()).matches("[0-9]{8}")
                 || !nonce.matches("[a-fA-F0-9]{32}")) return null;
         return "ai:gen:reservation:"+key+":"+nonce;
+    }
+
+    private static boolean isDialogue(String bizType) {
+        return "npc_chat".equals(bizType) || "npc_shop_chat".equals(bizType) || "merchant_npc_chat".equals(bizType);
+    }
+
+    private void refundDialogueFailure(Long memberId, String bizType, String reservation) {
+        String receipt = receiptOf(memberId, bizType, reservation);
+        if (receipt == null) return;
+        try {
+            if (quotaRecovery != null) quotaRecovery.requireRefund(receipt, "DIALOGUE_FAILURE");
+            else refundQuota(memberId, bizType, reservation);
+        } catch (RuntimeException unavailable) {
+            log.warn("[AiGateway] dialogue compensation pending traceId={}", traceIdOf(reservation));
+        }
     }
 
     private void cancelQuota(String key, String receipt)

@@ -462,6 +462,7 @@ Page({
 
   _applyMotionData(data) {
     const merchantCards = motion.buildMerchantCards(data.chaptersList);
+    const sketchPoints = [].concat(...(data.chaptersList || []).map((c) => (c && c.nodes) || [])).map(routePoint).filter(Boolean).map((p) => ({ lat: p.latitude, lng: p.longitude }));
     const price = data.selfPlayPrice;
     const priceText = (price === undefined || price === null || price === '') ? '' : '¥' + price;
     this.setData({
@@ -472,8 +473,8 @@ Page({
       storyCards: motion.buildStoryCards(data, merchantCards),
       storyMeta: motion.storyMeta(data),
       'topicTabs[2].label': Number(data.productType) === 2 ? '地点' : '路线',
-      routeNote: motion.routeNote(data, merchantCards.length), heroIdx: 0, routeReal: false,
-      sketchPoints: [].concat(...(data.chaptersList || []).map((c) => (c && c.nodes) || [])).map(routePoint).filter(Boolean).map((p) => ({ lat: p.latitude, lng: p.longitude })),
+      routeNote: motion.routeNote(data, merchantCards.length), heroIdx: 0, routeReal: sketchPoints.length > 0, // 有坐标默认就是真地图,示意图只在没有任何有效坐标时兜底
+      sketchPoints,
     });
     this._progressLoaded = false;
     this._startKenBurns();
@@ -768,6 +769,9 @@ Page({
 
   onChapterCard(e) {
     const i = Number(e.currentTarget.dataset.i);
+    // 未解锁章节只是预告:点击走购票入口,绝不展开成可玩内容
+    const card = (this.data.storyCards || [])[i];
+    if (card && card.locked) return this.selfPlayBuy();
     this.setData({ openChapter: this.data.openChapter === i ? -1 : i });
   },
 
@@ -777,7 +781,7 @@ Page({
     this._progressLoaded = true;
     const info = this.data.info || {};
     const nodes = [];
-    (info.chaptersList || []).forEach((c) => (c.nodes || []).forEach((n) => nodes.push(n)));
+    (info.chaptersList || []).forEach((c) => { if (c && c.locked === true) return; (c.nodes || []).forEach((n) => nodes.push(n)); }); // 锁定章节只是预告,不计入可玩进度
     const labels = (n) => Array.from({ length: n }, (_, i) => (Number(info.productType) === 2 ? '第 ' + (i + 1) + ' 家' : '第' + (i + 1) + '站')); // v13:自由探索按「家」数
     const fallback = () => { if (!this._unloaded) this.setData({ progress: { total: nodes.length, done: 0, labels: labels(nodes.length) } }); };
     if (Number(this.data.is_join) !== 1 || !this._loggedIn()) return fallback();
@@ -2184,7 +2188,7 @@ Page({
           const unlockedChapterCount = Number(
             res.data.unlockedChapterCount != null
               ? res.data.unlockedChapterCount
-              : res.data.chaptersList.length
+              : res.data.chaptersList.filter((c) => !(c && c.locked === true)).length
           )
           res.data['lockedChapterCount'] = Math.max(0, totalChapterCount - unlockedChapterCount)
           res.data['showStartDate'] = that.formatDate(res.data['startDate'])
@@ -2367,7 +2371,7 @@ Page({
       chaptersList[j].metaPlace = nodeCount > 0 ? nodeCount + ' 个节点' : '';
       chaptersList[j].metaPlay = Number(chapter.templateCount) > 0 ? chapter.templateCount + ' 个玩法' : '';
       chaptersList[j].hasMeta = !!(chaptersList[j].metaTime || chaptersList[j].metaPlace || chaptersList[j].metaPlay);
-      chaptersList[j].chapLabel = motion.chapterLabel(j, chaptersList.length) + (chapter.name ? ' · ' + chapter.name : '');
+      chaptersList[j].chapLabel = motion.chapterHeading(j, chaptersList.length, chapter.name);
       // 站间只写坐标直线距离；第一站没有上一站，不跨章计算。
       const ns = chapter.nodes || [];
       for (let n = 0; n < ns.length; n++) {

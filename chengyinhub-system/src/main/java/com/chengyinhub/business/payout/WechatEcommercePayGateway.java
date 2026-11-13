@@ -10,6 +10,8 @@ import com.wechat.pay.java.core.http.HttpMethod;
 import com.wechat.pay.java.core.http.HttpRequest;
 import com.wechat.pay.java.core.http.JsonRequestBody;
 import com.wechat.pay.java.service.ecommerceprofitsharing.EcommerceProfitSharingService;
+import com.wechat.pay.java.service.ecommerceprofitsharing.model.AddReceiverRequest;
+import com.wechat.pay.java.service.ecommerceprofitsharing.model.AddReceiverResponse;
 import com.wechat.pay.java.service.ecommerceprofitsharing.model.CreateOrderReceiver;
 import com.wechat.pay.java.service.ecommerceprofitsharing.model.CreateOrderRequest;
 import com.wechat.pay.java.service.ecommerceprofitsharing.model.CreateOrderResponse;
@@ -107,7 +109,7 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
             HttpClient http = new DefaultHttpClientBuilder().config(config).build();
             clients = new Clients(config, http,
                     new JsapiServiceExtension.Builder().config(config).build(),
-                    new EcommerceProfitSharingService.Builder().httpClient(http).build(),
+                    new EcommerceProfitSharingService.Builder().httpClient(http).encryptor(config.createEncryptor()).build(),
                     new EcommerceRefundService.Builder().httpClient(http).build(),
                     new com.wechat.pay.java.service.partnerpayments.jsapi.JsapiService.Builder().httpClient(http).build(),
                     new com.wechat.pay.java.core.notification.NotificationParser(config));
@@ -195,6 +197,27 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
     }
 
     @Override
+    public void addPersonalReceiver(String openid, String appid) {
+        requirePersonalIdentity(openid, appid);
+        AddReceiverRequest request = new AddReceiverRequest();
+        request.setAppid(switches.spAppid());
+        request.setType("PERSONAL_OPENID");
+        request.setAccount(openid);
+        request.setRelationType("OTHERS");
+        AddReceiverResponse response = clients().sharing().addReceiver(request);
+        if (response == null || !"PERSONAL_OPENID".equals(response.getType())
+                || !openid.equals(response.getAccount()))
+            throw new IllegalStateException("PERSONAL_RECEIVER_ACCEPTANCE_MISMATCH");
+    }
+
+    private void requirePersonalIdentity(String openid, String appid) {
+        if (!switches.personalClubEnabled()) throw new IllegalStateException("PERSONAL_CLUB_SWITCH_OFF");
+        if (blank(openid)) throw new IllegalArgumentException("PERSONAL_OPENID_REQUIRED");
+        if (blank(appid) || !appid.equals(switches.spAppid()))
+            throw new IllegalArgumentException("PERSONAL_APPID_MISMATCH");
+    }
+
+    @Override
     public ShareResult createProfitSharing(String subMchid, String transactionId, String outOrderNo,
                                            List<ProfitSharePlanner.Receiver> receivers, boolean finish) {
         CreateOrderRequest request = new CreateOrderRequest();
@@ -206,8 +229,15 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
         List<CreateOrderReceiver> list = new ArrayList<>();
         for (ProfitSharePlanner.Receiver r : receivers) {
             CreateOrderReceiver item = new CreateOrderReceiver();
-            item.setType("MERCHANT_ID");
-            item.setReceiverAccount(r.mchid());
+            if ("PERSONAL_OPENID".equals(r.type())) {
+                requirePersonalIdentity(r.account(), r.appid());
+                // finish=true only permits the platform merchant; personal shares require a separate finish-order.
+                if (finish) throw new IllegalArgumentException("PERSONAL_PROFITSHARING_FINISH_UNSUPPORTED");
+            }
+            else if (!"MERCHANT_ID".equals(r.type()))
+                throw new IllegalArgumentException("PROFITSHARING_RECEIVER_TYPE_UNSUPPORTED");
+            item.setType(r.type());
+            item.setReceiverAccount(r.account());
             item.setAmount(r.amountFen());
             item.setDescription("城瘾结算分账");
             list.add(item);
@@ -227,11 +257,20 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
         return new ShareResult(r.getStatus(), r.getOrderId(), receivers(r.getReceivers()));
     }
 
-    private static List<ReceiverResult> receivers(List<OrderReceiverDetail> details) {
+    private List<ReceiverResult> receivers(List<OrderReceiverDetail> details) {
         List<ReceiverResult> out = new ArrayList<>();
         if (details == null) return out;
         for (OrderReceiverDetail d : details) {
-            out.add(new ReceiverResult(d.getReceiverMchid() != null ? d.getReceiverMchid() : d.getReceiverAccount(),
+            String type = d.getType();
+            if (blank(type) && !blank(d.getReceiverMchid())) type = "MERCHANT_ID";
+            String account = d.getReceiverAccount();
+            if ("MERCHANT_ID".equals(type) && blank(account)) account = d.getReceiverMchid();
+            if ((!"MERCHANT_ID".equals(type) && !"PERSONAL_OPENID".equals(type)) || blank(account))
+                throw new IllegalStateException("PROFITSHARING_RECEIVER_IDENTITY_INVALID");
+            // PERSONAL_OPENID is scoped to the service-provider appid; APIv3 has no per-receiver appid field.
+            if ("PERSONAL_OPENID".equals(type) && blank(switches.spAppid()))
+                throw new IllegalStateException("PERSONAL_APPID_MISSING");
+            out.add(new ReceiverResult(type, account, "PERSONAL_OPENID".equals(type) ? switches.spAppid() : null,
                     d.getAmount() == null ? 0 : d.getAmount(), d.getResult(), d.getFailReason()));
         }
         return out;
@@ -249,6 +288,30 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
         request.setDescription(description);
         CreateReturnOrderResponse r = clients().sharing().createReturnOrder(request);
         return new ReturnResult(r.getResult(), r.getReturnNo(), r.getFailReason());
+    }
+
+    /** APIv3 ecommerce returnorders supports return_mchid only, never an OpenID substituted for a merchant. */
+    @Override
+    public ReturnResult createReturn(String subMchid, String outOrderNo, String outReturnNo,
+                                     ProfitSharePlanner.Receiver receiver, long amountFen, String description) {
+        if (!"MERCHANT_ID".equals(receiver.type()))
+            throw new UnsupportedOperationException("PERSONAL_PROFITSHARING_RETURN_UNSUPPORTED");
+        return createReturn(subMchid, outOrderNo, outReturnNo, receiver.account(), amountFen, description);
+    }
+
+    @Override
+    public ReturnResult queryReturn(String subMchid, String outOrderNo, String outReturnNo,
+                                    ProfitSharePlanner.Receiver receiver) {
+        if (!"MERCHANT_ID".equals(receiver.type()))
+            throw new UnsupportedOperationException("PERSONAL_PROFITSHARING_RETURN_UNSUPPORTED");
+        QueryReturnOrderRequest request = new QueryReturnOrderRequest();
+        request.setSubMchid(subMchid);
+        request.setOutOrderNo(outOrderNo);
+        request.setOutReturnNo(outReturnNo);
+        QueryReturnOrderResponse response = clients().sharing().queryReturnOrder(request);
+        if (response == null || !receiver.account().equals(response.getReturnMchid()))
+            throw new IllegalStateException("PROFITSHARING_RETURN_IDENTITY_MISMATCH");
+        return new ReturnResult(response.getResult(), response.getReturnNo(), response.getFailReason());
     }
 
     @Override

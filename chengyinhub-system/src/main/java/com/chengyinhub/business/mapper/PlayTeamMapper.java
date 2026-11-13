@@ -11,6 +11,8 @@ import java.util.Map;
 public interface PlayTeamMapper {
     PlayTeam selectPlayTeamById(Long id);
     PlayTeam selectPlayTeamByInviteCode(String inviteCode);
+    int rotateInviteCode(@Param("teamId") Long teamId, @Param("leaderMemberId") Long leaderMemberId,
+                         @Param("inviteCode") String inviteCode);
     PlayTeam selectPlayTeamByIdForUpdate(Long id);
     int insertPlayTeam(PlayTeam team);
     int updateJoinMode(@Param("teamId") Long teamId, @Param("leaderMemberId") Long leaderMemberId,

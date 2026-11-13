@@ -216,7 +216,7 @@ test('模板货架加载、失败与重试走设计系统组件；复制失败�
 test('模板上下架重复点击只发一次', () => {
   // 2026-10-28:整包复制挪到主题预览页(topic-preview),失败放行见上一条。
   const project = loadPage('subpackageA/pages/myproject/index.js')
-  const event = { currentTarget: { dataset: { id: 9, pub: 0 } } }
+  const event = { currentTarget: { dataset: { id: 9, target: 1 } } }
   project.tplToggle(event)
   project.tplToggle(event)
   assert.equal(requests.length, 1)

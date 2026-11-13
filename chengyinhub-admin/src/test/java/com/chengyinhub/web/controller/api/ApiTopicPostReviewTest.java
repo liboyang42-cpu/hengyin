@@ -172,6 +172,7 @@ class ApiTopicPostReviewTest {
         topic.setId(TOPIC);
         topic.setMemberId(MEMBER);
         topic.setName("正常主题名");
+        topic.setImgUrl("media-asset:1"); // D-78:编辑保存也必须有封面
         topic.setDescription("正常简介");
         topic.setJourneyStoryJson("{\"schemaVersion\":1,\"call\":{\"npcId\":1,\"opener\":\"原开场白\"}}");
         return topic;

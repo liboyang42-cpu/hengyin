@@ -104,37 +104,12 @@ test('AI 对话记录:空记录不复制,失败给原因', () => {
   assert.equal(h.clipboard.length, 0);
 });
 
-test('紧急求助:菜单行 → 动作菜单;只拨 110/120;位置复制为文字', () => {
-  const sos = require('../../pages/play/utils/play-sos.js');
-  assert.deepEqual(sos.SOS_ITEMS, ['拨打 110', '拨打 120', '复制我的位置']);
-  const calls = []; const copied = []; const toasts = []; let located = null;
-  const wxApi = { makePhoneCall: (o) => calls.push(o.phoneNumber), setClipboardData: (o) => copied.push(o.data),
-    getLocation: (o) => { located = o; } };
-  const page = Object.assign({ data: { sessionToolsOpen: true }, toggled: 0,
-    toggleSessionTools() { this.toggled++; this.data.sessionToolsOpen = false; },
-    setData(p) { Object.assign(this.data, p); } }, sos.methods(wxApi, (t) => toasts.push(t)));
-  page.openSos();
-  assert.equal(page.toggled, 1);
-  assert.equal(page.data.sosOpen, true);
-  page.onSosSelect({ detail: { index: 0 } });
-  page.onSosSelect({ detail: { index: 1 } });
-  page.sosCall('10086');
-  assert.deepEqual(calls, ['110', '120']);
-  assert.equal(page.data.sosOpen, false);
-  page._loc = { latitude: 31.2304, longitude: 121.4737 };
-  page.onSosSelect({ detail: { index: 2 } });
-  assert.match(copied[0], /纬度 31\.2304，经度 121\.4737/);
-  assert.match(copied[0], /position=121\.4737,31\.2304/);
-  page._loc = null;
-  page.sosShareLocation();
-  assert.equal(located.type, 'gcj02');
-  located.fail();
-  assert.deepEqual(toasts, ['没有取到位置']);
-  assert.equal(sos.locationText({ latitude: 0, longitude: 0 }), '');
+test('紧急求助:D-38 业主决定「不要紧急求助」,游玩页入口与代码已移除', () => {
+  // 2026-11-11 D-38:业主「不要紧急求助」;后端接口不动。
   const wxml = read('pages/play/index.wxml');
-  assert.match(wxml, /bindtap="openSos"[^>]*aria-label="紧急求助"/);
-  assert.match(wxml, /<cy-option-sheet wx:if="\{\{sosOpen\}\}"[^>]*items="\{\{sosItems\}\}" immediate bind:select="onSosSelect"/);
-  assert.doesNotMatch(read('pages/play/utils/play-sos.js'), /showActionSheet\(/);
+  assert.doesNotMatch(wxml, /openSos|sosOpen|紧急求助/);
+  assert.doesNotMatch(read('pages/play/index.js'), /play-sos|playSos/);
+  assert.equal(require('fs').existsSync(require('path').join(__dirname, '../../pages/play/utils/play-sos.js')), false);
 });
 
 test('附近队伍卡:接上既有举报 sheet(分包异步化),队长卡不出举报', () => {

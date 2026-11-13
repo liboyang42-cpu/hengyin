@@ -989,15 +989,16 @@ public class RefundServiceImpl implements IRefundService {
             for (SettlementDetail d : settledList) {
                 totalGross = totalGross.add(defaultZero(d.getGrossAmount()));
             }
+            boolean externalClub = settledList.stream().anyMatch(row -> row.getClubId() != null);
             // 父级打款态只解析一次,再按收款方逐条套用(见 resolveSystem1PaidCheck)
-            Predicate<SettlementDetail> paidBySystem1 = resolveSystem1PaidCheck(registration, settledList);
+            Predicate<SettlementDetail> paidBySystem1 = externalClub ? row -> false : resolveSystem1PaidCheck(registration, settledList);
             List<SettlementDetail> toAdjust = new ArrayList<>();
             List<Boolean> paidFlags = new ArrayList<>();
             for (SettlementDetail settled : settledList) {
-                boolean system1Paid = paidBySystem1.test(settled);
+                boolean system1Paid = !externalClub && paidBySystem1.test(settled);
                 // 历史活路径:系统1已真打款,但支付时落的明细仍停在 status=0。
                 // 这时仍须冲销并扣回;反之,未真打款的 status=0 只作废,不能凭空造一笔已结算冲销。
-                if (Integer.valueOf(1).equals(settled.getStatus()) || system1Paid) {
+                if (externalClub || Integer.valueOf(1).equals(settled.getStatus()) || system1Paid) {
                     toAdjust.add(settled);
                     paidFlags.add(system1Paid);
                 }
@@ -1430,6 +1431,7 @@ public class RefundServiceImpl implements IRefundService {
         SettlementDetail adjustment = new SettlementDetail();
         adjustment.setBatchId(0L);
         adjustment.setMerchantId(settled.getMerchantId());
+        adjustment.setClubId(settled.getClubId()); adjustment.setClubName(settled.getClubName());
         adjustment.setSourceType("refund");
         adjustment.setSourceId(refund.getId());
         adjustment.setReceiverType(settled.getReceiverType());
@@ -1473,6 +1475,8 @@ public class RefundServiceImpl implements IRefundService {
                 && sameNumber(expected.getSourceId(), current.getSourceId())
                 && sameText(expected.getReceiverType(), current.getReceiverType())
                 && sameNumber(expected.getReceiverId(), current.getReceiverId())
+                && sameNumber(expected.getClubId(), current.getClubId())
+                && sameText(expected.getClubName(), current.getClubName())
                 && sameMoney(expected.getGrossAmount(), current.getGrossAmount())
                 && sameMoney(expected.getCommissionAmount(), current.getCommissionAmount())
                 && sameMoney(expected.getSettlementAmount(), current.getSettlementAmount())

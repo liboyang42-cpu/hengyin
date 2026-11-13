@@ -53,7 +53,7 @@ function views(n) {
 function accrualRow(a) {
   if (!a || a.id === undefined || a.id === null) return null;
   const amount = a.payableAmount !== null && a.payableAmount !== undefined && Number.isFinite(Number(a.payableAmount))
-    ? ((a.currency && a.currency !== 'CNY' ? a.currency + ' ' : '¥') + Number(a.payableAmount).toFixed(2)) : '—';
+    ? ((a.currency && a.currency !== 'CNY' ? a.currency + ' ' : '¥') + Number(a.payableAmount).toFixed(2)) : '¥0.00';
   return {
     key: String(a.id),
     views: views(a.basisViews),

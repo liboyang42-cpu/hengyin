@@ -59,7 +59,7 @@ function flipInstance(def, props) {
   return inst
 }
 
-test('章节开场:星点锁成方块章节号 → 文字解码 → 「读下去」亮起;点它方块炸散并交回正文;停一下自己进', () => {
+test('章节开场:星点锁成方块章节号 → 文字解码 → 「读下去」亮起;点它方块炸散并交回正文;D-46 不再自己进', () => {
   const def = loadFlip()
   const c = flipInstance(def)
   c._gate()
@@ -67,8 +67,8 @@ test('章节开场:星点锁成方块章节号 → 文字解码 → 「读下去
   assert.equal(c.data.start, true)
   c.flush()
   assert.equal(c.data.cta, true, '「读下去」在解码后亮起')
-  assert.equal(c.scattered, 1, '离开时方块炸散回星点')
-  assert.deepEqual(c.events, ['continue'], '停留后自己进正文(2026-09-24 业主规则不变)')
+  assert.ok(!c.scattered, 'D-46(业主「点了才能进」):不点不自己进,也没有自动离场')
+  assert.deepEqual(c.events, [], 'D-46:不再有 3.6s 自动进正文')
   const tap = flipInstance(def)
   tap._gate(); tap.onTap(); tap.flush()
   assert.deepEqual(tap.events, ['continue'], '点一下提前进')
@@ -90,7 +90,7 @@ test('章节完成:整屏(照片 + 方块号 + 三格数据从 0 滚上来 + 下
     assert.equal(c.data.endCard.next, '老书店')
     assert.deepEqual(c.data.endStats.map((s) => s.shown), ['00:00', '0', '0/2'], '三格从 0 起滚,a/b 只滚 a')
     assert.deepEqual(c.assembled, ['01'])
-    assert.equal(held.at(-1).ms, 5200, '停 5.2 秒自己吹散(r2-finish 口径不变)')
+    assert.ok(!held.some((h) => h.ms === 5200), 'D-46:完成屏不再有 5.2 秒自动吹散')
     c.onTap()            // 点「下一站」:吹散
     assert.equal(c._stage, 'dissolve')
     assert.equal(c.data.endOut, true)

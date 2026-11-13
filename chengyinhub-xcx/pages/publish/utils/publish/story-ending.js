@@ -16,7 +16,9 @@
  *   ending 的 epilogues·exhibits·badges·optionalClues·dispositionNodeId)原样保留。
  */
 
-const MAX_ENDINGS = 12;
+// D-66（业主 2026-11-11）：新发布/重新发布的主题最多 6 个结局（含恰好一个默认结局）。
+// 已发布主题的冻结快照不受影响：这里只在新发布/重发布这一侧拦，不做数据迁移。
+const MAX_ENDINGS = 6;
 const THOUGHT_TAG = /^thought\.([a-z][a-z0-9_]{0,47})\.done$/;
 const OPTION_TAG = /^tag\.[a-z][a-z0-9_]{0,47}$/;
 const CODE = /^[a-z][a-z0-9_]{0,31}$/;
@@ -146,10 +148,11 @@ function chapterEndingIssue(chapter) {
   return '';
 }
 
-/** 整本书的结局章检查:有结局章就必须恰好一章兜底 */
+/** 整本书的结局章检查:最多 MAX_ENDINGS 个,且恰好一章兜底(D-66) */
 function endingChaptersIssue(chapters) {
   const endings = (chapters || []).filter(c => c && c.ending);
   if (!endings.length) return '';
+  if (endings.length > MAX_ENDINGS) return '结局最多 ' + MAX_ENDINGS + ' 个（含默认结局）';
   const fallbacks = endings.filter(c => c.ending.fallback === true).length;
   return fallbacks === 1 ? '' : (fallbacks ? '结局章里只能有一个默认结局' : '结局章里要有一个默认结局');
 }

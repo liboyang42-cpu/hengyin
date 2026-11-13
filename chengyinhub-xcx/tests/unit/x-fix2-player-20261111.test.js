@@ -149,8 +149,9 @@ test('P-11 首页城市定位确认是一句陈述,不再是长问句(合规要�
 })
 
 test('P-13/P-15/P-16/P-18/ME-4 玩家侧小项', () => {
-  // P-13 通行证未开放 / 商家:不摆筛选条
-  assert.match(read('subpackageMember/market/library/index.wxml'), /<view class="lb-kinds" wx:if="\{\{state !== 'off' && state !== 'merchant'\}\}"/)
+  // D113:P-13 公开主题库不依赖通行证开关或账号视角,筛选条始终可用。
+  assert.match(read('subpackageMember/market/library/index.wxml'), /<view class="lb-kinds" aria-role="tablist">/)
+  assert.doesNotMatch(read('subpackageMember/market/library/index.wxml'), /state === '(?:off|merchant)'/)
   // P-15 投诉建议有自己的图标,不再和 AI 对话记录重复
   const sz = read('pages/shezhi/shezhi.wxml')
   const icon = (id) => (sz.match(new RegExp('id="' + id + '"[^>]*icon="([^"]+)"')) || [])[1]

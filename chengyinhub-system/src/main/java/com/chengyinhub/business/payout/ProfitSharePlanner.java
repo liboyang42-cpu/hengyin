@@ -24,7 +24,7 @@ public final class ProfitSharePlanner {
      * SUPPLIER_RELAY（l-payout3）：其他商家 / 俱乐部 / 个人的份额。电商收付通不支持在多个二级商户之间直接分账，
      * 所以合单开关打开时这类份额分给平台，再由平台按供应商结算付给对方（落 ecom_supplier_payable），不记会员余额。
      */
-    public enum ReceiverKind { PLATFORM, SUB_MERCHANT, RETAINED, SUPPLIER_RELAY }
+    public enum ReceiverKind { PLATFORM, SUB_MERCHANT, RETAINED, SUPPLIER_RELAY, PERSONAL }
 
     /**
      * f-money 待决定 2（业主 2026-11-11 确认）：电商收付通不支持从卖家二级商户直接分账给另一个二级商户。
@@ -33,15 +33,30 @@ public final class ProfitSharePlanner {
     public static final String SUB_TO_SUB_UNSUPPORTED = "SUB_MERCHANT_SHARE_UNSUPPORTED";
 
     /** 账本里一笔付款在一条结算行上的份额（元，最多两位小数）。receiverKind=ACCOUNTING 表示平台。 */
-    public record Component(long settlementId, String lineType, String receiverKind, Long receiverMemberId, BigDecimal amountYuan) { }
+    public record Component(long settlementId, String lineType, String receiverKind, Long receiverMemberId,
+                            BigDecimal amountYuan, Long clubId, String clubName, String personalOpenid, String personalAppid) {
+        public Component(long settlementId, String lineType, String receiverKind, Long receiverMemberId, BigDecimal amountYuan) {
+            this(settlementId, lineType, receiverKind, receiverMemberId, amountYuan, null, null, null, null);
+        }
+    }
 
     /** 以二级商户为卖家的支付单。sellerMemberIds：代表卖家本身的会员（商家主账号/俱乐部主理人），其份额留在卖家。 */
     public record Order(String outTradeNo, String transactionId, String subMchid, long totalFen, Set<Long> sellerMemberIds) { }
 
-    public record Line(long settlementId, String lineType, ReceiverKind kind, String receiverMchid, Long receiverMemberId, long amountFen) { }
+    public record Line(long settlementId, String lineType, ReceiverKind kind, String receiverMchid,
+                       Long receiverMemberId, long amountFen, String receiverType, String receiverAppid,
+                       Long clubId, String clubName) {
+        public Line(long settlementId, String lineType, ReceiverKind kind, String receiverMchid, Long receiverMemberId, long amountFen) {
+            this(settlementId, lineType, kind, receiverMchid, receiverMemberId, amountFen, "MERCHANT_ID", "", null, null);
+        }
+    }
 
-    /** 发给微信的接收方（同一商户号合并）。 */
-    public record Receiver(String mchid, long amountFen) { }
+    /** Typed receiver identity: merchant ids and personal OpenIDs must never share a grouping key. */
+    public record Receiver(String type, String account, String appid, long amountFen) {
+        public Receiver(String mchid, long amountFen) { this("MERCHANT_ID", mchid, "", amountFen); }
+        public String mchid() { return account; }
+        public String identityKey() { return type + "|" + (appid == null ? "" : appid) + "|" + account; }
+    }
 
     public record Plan(String state, String manualReason, List<Line> lines, List<Receiver> receivers, long sharedFen, String planHash) {
         public boolean ready() { return "READY".equals(state); }
@@ -65,6 +80,12 @@ public final class ProfitSharePlanner {
      */
     public static Plan plan(Order order, Collection<Component> components, String platformMchid, int maxSharePercent,
                             Function<Long, Optional<String>> memberSubMchid, boolean relayViaPlatform) {
+        return plan(order, components, platformMchid, maxSharePercent, memberSubMchid, relayViaPlatform, false, "");
+    }
+
+    public static Plan plan(Order order, Collection<Component> components, String platformMchid, int maxSharePercent,
+                            Function<Long, Optional<String>> memberSubMchid, boolean relayViaPlatform,
+                            boolean personalClubEnabled, String platformAppid) {
         if (order == null || order.totalFen() <= 0 || order.subMchid() == null || order.subMchid().isBlank()
                 || order.transactionId() == null || order.transactionId().isBlank())
             return manual("ORDER_FACTS_MISSING", List.of());
@@ -89,6 +110,15 @@ public final class ProfitSharePlanner {
             }
             if (!"MEMBER".equals(c.receiverKind()) || c.receiverMemberId() == null)
                 return manual("LEDGER_RECEIVER_UNKNOWN", lines);
+            if (personalClubEnabled && c.clubId() != null) {
+                if (c.personalOpenid() == null || c.personalOpenid().isBlank())
+                    return manual("PERSONAL_BINDING_REQUIRED", lines);
+                if (platformAppid == null || platformAppid.isBlank() || !platformAppid.equals(c.personalAppid()))
+                    return manual("PERSONAL_BINDING_APPID_INVALID", lines);
+                lines.add(new Line(c.settlementId(), c.lineType(), ReceiverKind.PERSONAL, c.personalOpenid(),
+                        c.receiverMemberId(), fen, "PERSONAL_OPENID", platformAppid, c.clubId(), c.clubName()));
+                continue;
+            }
             if (order.sellerMemberIds() != null && order.sellerMemberIds().contains(c.receiverMemberId())) {
                 lines.add(new Line(c.settlementId(), c.lineType(), ReceiverKind.RETAINED, order.subMchid(), c.receiverMemberId(), fen));
                 continue;
@@ -110,18 +140,20 @@ public final class ProfitSharePlanner {
         }
         // 账本对这笔付款的份额之和必须正好等于实付；对不上说明账本不完整或已调整，不能按局部分账。
         if (sum != order.totalFen()) return manual("LEDGER_CONSERVATION", lines);
-        Map<String, Long> merged = new LinkedHashMap<>();
+        Map<String, Receiver> merged = new LinkedHashMap<>();
         long shared = 0;
         for (Line l : lines) {
             if (l.kind() == ReceiverKind.RETAINED) continue;
-            merged.merge(l.receiverMchid(), l.amountFen(), Long::sum);
+            Receiver receiver = new Receiver(l.receiverType(), l.receiverMchid(), l.receiverAppid(), l.amountFen());
+            merged.merge(receiver.identityKey(), receiver,
+                    (a, b) -> new Receiver(a.type(), a.account(), a.appid(), a.amountFen() + b.amountFen()));
             shared += l.amountFen();
         }
         // 微信电商收付通分账比例上限（开通时约定，默认 30%）。超过时不能请求，转人工。
         if (shared * 100 > (long) maxSharePercent * order.totalFen()) return manual("SHARE_RATIO_EXCEEDED", lines);
         List<Receiver> receivers = new ArrayList<>();
         merged.entrySet().stream().sorted(Map.Entry.comparingByKey())
-                .forEach(e -> receivers.add(new Receiver(e.getKey(), e.getValue())));
+                .forEach(e -> receivers.add(e.getValue()));
         lines.sort(Comparator.comparingLong(Line::settlementId).thenComparing(l -> l.kind().name()));
         String hash = hash(order, lines);
         return new Plan(shared == 0 ? "NOTHING" : "READY", null, List.copyOf(lines), List.copyOf(receivers), shared, hash);
@@ -186,7 +218,9 @@ public final class ProfitSharePlanner {
         StringBuilder sb = new StringBuilder(order.outTradeNo()).append('|').append(order.transactionId()).append('|')
                 .append(order.subMchid()).append('|').append(order.totalFen());
         for (Line l : lines) sb.append('|').append(l.settlementId()).append(':').append(l.kind()).append(':')
-                .append(l.receiverMchid()).append(':').append(l.amountFen());
+                .append(l.receiverType()).append(':').append(l.receiverAppid()).append(':')
+                .append(l.receiverMchid()).append(':').append(l.receiverMemberId()).append(':')
+                .append(l.clubId()).append(':').append(l.clubName()).append(':').append(l.amountFen());
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(sb.toString().getBytes(StandardCharsets.UTF_8)));
         } catch (java.security.NoSuchAlgorithmException e) {
