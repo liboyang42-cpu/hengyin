@@ -102,6 +102,9 @@ class MerchantPublishedFreeExploreSettlementTest {
                 new com.chengyinhub.business.service.support.ClubSessionMerchantFee();
         ReflectionTestUtils.setField(merchantFee, "settlementDetailMapper",
                 mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class));
+        // 无团码订单:mock 默认返回空列表 ⇒ 商家核销费计划为空
+        ReflectionTestUtils.setField(merchantFee, "coopOrderMapper",
+                mock(com.chengyinhub.business.mapper.CoopOrderMapper.class));
         ReflectionTestUtils.setField(svc, "clubSessionMerchantFee", merchantFee);
 
         activity = new CmsActivity();
