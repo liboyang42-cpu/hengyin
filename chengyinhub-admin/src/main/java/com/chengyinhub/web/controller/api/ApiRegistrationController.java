@@ -172,6 +172,11 @@ public class ApiRegistrationController extends BaseController {
         }
     }
 
+    /** 兼容单参调用(既有调用方/测试);HTTP 入口是下面带 jsCode 的映射。 */
+    public AjaxResult pay(String id) {
+        return pay(id, null);
+    }
+
     @Operation(summary = "重新支付")
     @PostMapping("/pay")
     @Parameters({
