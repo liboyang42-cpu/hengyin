@@ -222,7 +222,7 @@ class ThemeRuntimeMySqlIT {
         config("{\"schemaVersion\":1,\"capacity\":0,\"items\":[]}");
         try(Connection c=ds.getConnection()) {
             exec(c,"UPDATE cms_topic_node SET template_id=101,merchant_member_id=30,node_audit_status=1 WHERE topic_id=10");
-            try(PreparedStatement st=c.prepareStatement("INSERT INTO cms_member_template(id,advanced_config_json) VALUES(101,?)")){st.setString(1,"{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"题目\",\"answerText\":\"正确\"},\"outcomeRules\":{\"version\":1,\"pass\":{\"costs\":[{\"statKey\":\"sys.hp\",\"amount\":1}]},\"fail\":{\"costs\":[{\"statKey\":\"sys.hp\",\"amount\":3}]}}}");st.executeUpdate();}
+            try(PreparedStatement st=c.prepareStatement("INSERT INTO cms_member_template(id,advanced_config_json) VALUES(101,?)")){st.setString(1,"{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"题目\",\"answerText\":\"正确\",\"maxTries\":1},\"outcomeRules\":{\"version\":1,\"pass\":{\"costs\":[{\"statKey\":\"sys.hp\",\"amount\":1}]},\"fail\":{\"costs\":[{\"statKey\":\"sys.hp\",\"amount\":3}]}}}");st.executeUpdate();}
             CmsTopic topic=sql.getMapper(CmsTopicMapper.class).selectCmsTopicById(10L);assertEquals(2,JSON.readTree(runtime.compileTemplateRules(topic)).path("gameplayRuntime").path("quests").size());
             try(PreparedStatement st=c.prepareStatement("UPDATE cms_topic SET published_route_graph_json=? WHERE id=10")){st.setString(1,runtime.freezePublication(topic,null));st.executeUpdate();}
         }

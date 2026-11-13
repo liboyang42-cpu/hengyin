@@ -2086,7 +2086,7 @@ class AdvancedGameRuntimeServiceImplTest {
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(strings={"PASS","FAIL"})
     void r5TerminalActionPreservesOriginalCompletionTime(String outcome) throws Exception {
-        String config = "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"Answer\",\"answerText\":\"correct\",\"maxTries\":0},\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{}}}";
+        String config = "{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"title\":\"Answer\",\"answerText\":\"correct\",\"maxTries\":1},\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{}}}";
         GameRuntimeSession session = runningSession(config, "{\"attemptOrdinal\":1}");
         Date original = new Date(NOW - 1_000);
         session.setCompletedAt(original);
