@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.appgaps.mapper.ClubSeriesOriginalResultMapper">
+ <insert id="insert">
+  insert into club_event_series_original_result(series_id,club_id,topic_id,actor_member_id,request_id,wire_json,result_json,receipt_hash,create_time)
+  values(#{seriesId},#{clubId},#{topicId},#{actor},#{requestId},#{wireJson},#{resultJson},#{receiptHash},now(3))
+ </insert>
+ <select id="selectByRequest" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select series_id as seriesId,topic_id as topicId,wire_json as wireJson,result_json as resultJson,receipt_hash as receiptHash
+  from club_event_series_original_result
+  where club_id=#{clubId} and actor_member_id=#{actor} and request_id=#{requestId}
+ </select>
+</mapper>

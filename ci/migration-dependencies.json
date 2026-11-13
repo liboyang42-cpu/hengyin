@@ -3,6 +3,7 @@
   "dependencies": {
     "20261113_appgaps_original_request": [],
     "20261113_appgaps_support_ticket": [],
+    "20261113_appgaps_series_original_result": [],
     "20261112_template_usage_count": ["seed_template_library_12packs_20260820", "seed_celebrate_games_20260821", "seed_life_backup_games_20260820", "seed_merchant_game_a8_20260823", "seed_merchant_game_b27_20260823", "seed_merchant_game_v51_20260827"],
     "20261112_template_market_status": ["20261112_template_usage_count", "p3_platform_foundation"],
     "20261112_template_author_title_unique": ["20261112_template_market_status"],
