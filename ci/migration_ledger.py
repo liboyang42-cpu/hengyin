@@ -80,6 +80,7 @@ EXPLICIT_AUXILIARY_SQL = {
     "chengyinhub-admin/sql/_四账映射与守恒规则_20260725.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/sql/seed_official_content_template.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/src/test/resources/it-schema/cms-topic-it-schema.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/it-schema/channels-platform-it-schema.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/wp10-content-copy-scratch.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/wp10-content-graph-scratch.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/fixtures/im-club-conversation-batch.sql": "TEST_FIXTURE",

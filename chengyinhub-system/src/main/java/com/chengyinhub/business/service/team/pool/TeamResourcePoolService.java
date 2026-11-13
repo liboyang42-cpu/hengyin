@@ -71,6 +71,10 @@ public class TeamResourcePoolService
             if (expired(pool)) throw new TeamPoolRejection(409, "TEAM_POOL_TIMER_EXPIRED", "全队计时已结束");
             if (mapper.countListedNode(run.topicId(), nodeId) == 0) throw new TeamPoolRejection(404, "NODE_NOT_FOUND", "节点不存在");
             Map<String, Object> existing = mapper.selectUse(teamId, kind, nodeId);
+            // 先证明提示正文拿得出来，再扣全队额度；拿不出来既不扣也不记。
+            Map<String, Object> hint = HINT.equals(kind) ? sharedHint(run, nodeId, viewer) : null;
+            if (HINT.equals(kind) && hint == null)
+                throw new TeamPoolRejection(409, "TEAM_POOL_HINT_UNAVAILABLE", "该节点没有可用的提示内容，未扣除额度");
             boolean consumed = false;
             long by;
             if (existing != null)
@@ -100,6 +104,7 @@ public class TeamResourcePoolService
             r.put("nodeId", nodeId);
             r.put("consumed", consumed);
             r.put("byMemberId", by);
+            if (hint != null) r.put("hint", hint);
             r.put("pool", view(run, mapper.selectPool(teamId)));
             return r;
         });
@@ -302,5 +307,62 @@ public class TeamResourcePoolService
             if (raw instanceof String text && text.matches("[1-9][0-9]{0,18}")) return Long.parseLong(text);
             throw new TeamPoolRejection(400, "INVALID_FIELD", key + " 不合法");
         }
+    }
+
+    /**
+     * 全队共享提示正文：与单人提示阶梯同一冻结来源（本局路线会话快照的 nodeAnswers / nodeConfigs.hintLadder，
+     * 见 PlayHelpApplication.frozenResolved），取最低一级可下发的非跳过、非揭答层；没有阶梯时回落冻结的 hint1。
+     * 共享提示不收积分（额度即全队代价）；返回 {level, type, content}，推不出时 null。
+     */
+    Map<String, Object> sharedHint(Run run, long nodeId, long viewer)
+    {
+        String snapshot = mapper.selectTeamRunSnapshot(run.teamId(), run.topicId(), run.activityId(), viewer);
+        if (snapshot == null) return null;
+        com.fasterxml.jackson.databind.JsonNode answer;
+        try { answer = com.chengyinhub.business.service.support.NodeJourneySnapshot.answer(snapshot, nodeId); }
+        catch (RuntimeException unusableSnapshot) { return null; }
+        com.fasterxml.jackson.databind.JsonNode ladder = null;
+        if (answer != null && answer.path("hintLadder").isArray()) ladder = answer.path("hintLadder");
+        else
+        {
+            try
+            {
+                com.fasterxml.jackson.databind.JsonNode root = JSON.readTree(snapshot);
+                com.fasterxml.jackson.databind.JsonNode configured = root.path("nodeConfigs").path(String.valueOf(nodeId)).path("hintLadder");
+                if (configured.isArray()) ladder = configured;
+            }
+            catch (Exception unreadable) { ladder = null; }
+        }
+        java.util.List<com.chengyinhub.business.service.support.PlayHelpUsagePolicy.LevelSpec> specs;
+        try { specs = com.chengyinhub.business.service.support.PlayHelpUsagePolicy.levels(ladder); }
+        catch (IllegalArgumentException invalidLadder) { specs = java.util.List.of(); }
+        java.util.List<com.chengyinhub.business.service.support.PlayHelpUsagePolicy.LevelSpec> ordered = new java.util.ArrayList<>(specs);
+        ordered.sort(java.util.Comparator.comparingInt(com.chengyinhub.business.service.support.PlayHelpUsagePolicy.LevelSpec::level));
+        for (com.chengyinhub.business.service.support.PlayHelpUsagePolicy.LevelSpec spec : ordered)
+        {
+            String type = spec.type();
+            if (!spec.usable() || com.chengyinhub.business.service.support.PlayHelpContent.TYPE_SKIP.equals(type)
+                    || com.chengyinhub.business.service.support.PlayHelpContent.TYPE_ANSWER.equals(type)) continue;
+            com.fasterxml.jackson.databind.JsonNode entry = null;
+            for (com.fasterxml.jackson.databind.JsonNode e : ladder) if (e.path("level").asInt() == spec.level()) entry = e;
+            String content = com.chengyinhub.business.service.support.PlayHelpContent.approved(spec.level(), type, entry, answer);
+            if (content != null) return hintView(spec.level(), type, content);
+        }
+        if (ordered.isEmpty())
+        {
+            String legacy = com.chengyinhub.business.service.support.PlayHelpContent.approved(1,
+                    com.chengyinhub.business.service.support.PlayHelpContent.TYPE_TEXT, null, answer);
+            if (legacy != null && !legacy.isBlank()) return hintView(1, com.chengyinhub.business.service.support.PlayHelpContent.TYPE_TEXT, legacy);
+        }
+        return null;
+    }
+
+    private static Map<String, Object> hintView(int level, String type, String content)
+    {
+        Map<String, Object> hint = new LinkedHashMap<>();
+        hint.put("level", level);
+        hint.put("type", type);
+        hint.put("content", content);
+        return hint;
     }
 }

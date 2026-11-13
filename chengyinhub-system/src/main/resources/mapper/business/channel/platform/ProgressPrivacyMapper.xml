@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ProgressPrivacyMapper">
+    <sql id="memberCols">
+        aggregate_scope AS aggregateScope, detail_scope AS detailScope, photo_scope AS photoScope, leaderboard_scope AS leaderboardScope,
+        revision, DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s.%f') AS updatedAt
+    </sql>
+    <select id="selectMember" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="memberCols"/> FROM member_progress_privacy WHERE member_id = #{memberId}
+    </select>
+    <select id="lockMember" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="memberCols"/> FROM member_progress_privacy WHERE member_id = #{memberId} FOR UPDATE
+    </select>
+    <insert id="upsertMember" parameterType="java.util.HashMap">
+        INSERT INTO member_progress_privacy(member_id, aggregate_scope, detail_scope, photo_scope, leaderboard_scope, revision, updated_at)
+        VALUES (#{memberId}, #{aggregateScope}, #{detailScope}, #{photoScope}, #{leaderboardScope}, 1, CURRENT_TIMESTAMP(6))
+        ON DUPLICATE KEY UPDATE aggregate_scope = VALUES(aggregate_scope), detail_scope = VALUES(detail_scope), photo_scope = VALUES(photo_scope),
+            leaderboard_scope = VALUES(leaderboard_scope), revision = revision + 1,
+            updated_at = GREATEST(CURRENT_TIMESTAMP(6), DATE_ADD(updated_at, INTERVAL 1 MICROSECOND))
+    </insert>
+    <sql id="channelCols">
+        aggregate_scope AS aggregateScope, detail_scope AS detailScope, board_enabled AS boardEnabled, revision,
+        DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s.%f') AS updatedAt
+    </sql>
+    <select id="selectChannel" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="channelCols"/> FROM im_channel_progress_privacy WHERE channel_id = #{channelId}
+    </select>
+    <select id="lockChannel" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="channelCols"/> FROM im_channel_progress_privacy WHERE channel_id = #{channelId} FOR UPDATE
+    </select>
+    <insert id="upsertChannel">
+        INSERT INTO im_channel_progress_privacy(channel_id, aggregate_scope, detail_scope, board_enabled, revision, updated_at, update_by)
+        VALUES (#{channelId}, #{aggregateScope}, 'SELF', 1, 1, CURRENT_TIMESTAMP(6), #{operator})
+        ON DUPLICATE KEY UPDATE aggregate_scope = VALUES(aggregate_scope), revision = revision + 1,
+            updated_at = GREATEST(CURRENT_TIMESTAMP(6), DATE_ADD(updated_at, INTERVAL 1 MICROSECOND)), update_by = VALUES(update_by)
+    </insert>
+</mapper>

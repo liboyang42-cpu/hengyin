@@ -66,14 +66,16 @@ class ChannelsPlatformMySqlIT
         url = MybatisItDatabase.url("im_channels_platform");
         try (Connection c = connection(); Statement s = c.createStatement())
         {
-            for (String t : new String[] { "play_team_pool_receipt", "play_team_resource_use", "play_team_resource_pool",
-                    "im_channel_progress_board", "im_message_mention", "im_message_pin", "im_message_mutation", "im_message_revision",
-                    "im_channel_permission_overwrite", "im_guild_role_member", "im_guild_role", "im_channel_request_receipt",
-                    "im_channel_lifecycle_receipt", "im_channel_op_log", "im_channel" })
-                s.execute("DROP TABLE IF EXISTS `" + t + "`");
+            s.execute("SET FOREIGN_KEY_CHECKS=0");
+            for (String t : ChannelsSecondPassMySqlIT.TABLES) s.execute("DROP TABLE IF EXISTS `" + t + "`");
+            for (String t : new String[] { "im_notify_pref", "im_join_request", "im_space_admission" }) s.execute("DROP TABLE IF EXISTS `" + t + "`");
+            s.execute("SET FOREIGN_KEY_CHECKS=1");
             ItSchema.apply(c, "it-schema/channels-platform-it-schema.sql");
             ItSchema.applyMigrations(c, root.resolve("chengyinhub-admin/sql/migration_20261105_l8_channel_lifecycle.sql").toString(),
-                    root.resolve("chengyinhub-admin/sql/migration_20261112_im_channels_platform.sql").toString());
+                    root.resolve("chengyinhub-admin/sql/migration_20261112_im_channels_platform.sql").toString(),
+                    root.resolve("chengyinhub-admin/sql/migration_20261105_l9_friend_foundation.sql").toString(),
+                    root.resolve("chengyinhub-admin/sql/migration_20261105_l8_chain_storage.sql").toString(),
+                    root.resolve("chengyinhub-admin/sql/migration_20261113_im_channels_second_pass.sql").toString());
         }
         UnpooledDataSource source = new UnpooledDataSource("com.mysql.cj.jdbc.Driver", url,
                 MybatisItDatabase.user(), MybatisItDatabase.password());
@@ -100,7 +102,8 @@ class ChannelsPlatformMySqlIT
                     "im_channel_progress_board", "im_message_mention", "im_message_pin", "im_message_mutation", "im_message_revision",
                     "im_channel_permission_overwrite", "im_channel_request_receipt", "im_channel_op_log", "im_channel",
                     "im_message", "im_conversation_member", "im_conversation", "club_role_assignment", "club_member", "club",
-                    "play_team_member", "play_team", "ums_member", "cms_topic", "cms_topic_node", "player_node_progress" })
+                    "play_team_member", "play_team", "ums_member", "cms_topic", "cms_topic_node", "player_node_progress",
+                    "topic_route_session" })
                 s.executeUpdate("DELETE FROM " + t);
             s.executeUpdate("INSERT INTO ums_member(id,nickname) VALUES (1,'owner'),(2,'member'),(3,'stranger')");
             s.executeUpdate("INSERT INTO club(id,member_id,name,status,del_flag) VALUES (10,1,'club',1,0)");
@@ -112,6 +115,10 @@ class ChannelsPlatformMySqlIT
             s.executeUpdate("INSERT INTO play_team_member(team_id,member_id,status) VALUES (20,1,1),(20,2,1)");
             s.executeUpdate("INSERT INTO player_node_progress(member_id,activity_id,topic_id,node_id,status,checkin_time) VALUES "
                     + "(2,0,30,301,1,NOW()),(2,0,30,303,1,NOW()),(1,0,30,302,1,NOW())");
+            // 本局冻结快照：302 走旧 hint1，301 走提示阶梯（与单人提示同源）。
+            s.executeUpdate("INSERT INTO topic_route_session(activity_id,topic_id,member_id,config_snapshot_json) VALUES (0,30,2,"
+                    + "'{\"nodeAnswers\":{\"302\":{\"hint1\":\"看钟楼\"},\"301\":{\"hintLadder\":[{\"level\":2,\"type\":\"ANSWER\",\"payload\":\"x\"},"
+                    + "{\"level\":1,\"type\":\"TEXT\",\"payload\":\"北门\"}]}}}')");
         }
         session = sessions.openSession(true);
         ChannelPlatformMapper channelMapper = session.getMapper(ChannelPlatformMapper.class);
@@ -256,6 +263,8 @@ class ChannelsPlatformMySqlIT
         Map<String, Object> second = pool.consume(OWNER, "HINT", body("teamId", TEAM, "nodeId", 302, "requestId", "it-team-hint-00002"));
         assertEquals(true, first.get("consumed"));
         assertEquals(false, second.get("consumed"));
+        assertEquals("看钟楼", ((Map<?, ?>) first.get("hint")).get("content"), "shared hint returns the frozen hint text");
+        assertEquals("看钟楼", ((Map<?, ?>) second.get("hint")).get("content"));
         assertEquals(1, scalar("SELECT hints_used FROM play_team_resource_pool WHERE team_id=20"));
         assertEquals("TEAM_POOL_EXHAUSTED", assertThrows(ChannelRejection.class, () -> pool.consume(OWNER, "HINT",
                 body("teamId", TEAM, "nodeId", 301, "requestId", "it-team-hint-00003"))).getErrorCode());

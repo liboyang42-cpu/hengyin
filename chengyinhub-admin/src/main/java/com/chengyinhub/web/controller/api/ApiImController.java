@@ -30,6 +30,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/im")
 public class ApiImController extends BaseController
 {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.channel.platform.ChannelNotifyService channelNotify;
+
     @Autowired
     private IImService imService;
 
@@ -141,15 +144,29 @@ public class ApiImController extends BaseController
         return read(conversation_id, null);
     }
 
+    public AjaxResult read(String conversation_id, String read_to)
+    {
+        return read(conversation_id, read_to, null);
+    }
+
     @Operation(summary = "标记已读")
     @PostMapping("/read")
-    public AjaxResult read(String conversation_id, String read_to)
+    public AjaxResult read(String conversation_id, String read_to, String request_id)
     {
         try
         {
+            if (request_id != null && read_to != null)
+                return AjaxResult.success(channelNotify.ordinaryRead(getAppUserId(), Convert.toLong(conversation_id, 0L),
+                        Convert.toLong(read_to, -1L), request_id));
             if (read_to == null) imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L));
             else imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L), Convert.toLong(read_to, -1L));
             return AjaxResult.success();
+        }
+        catch (com.chengyinhub.business.service.channel.platform.ChannelRejection e)
+        {
+            AjaxResult r = new AjaxResult(e.getStatus(), e.getMessage());
+            r.put("errorCode", e.getErrorCode());
+            return r;
         }
         catch (ServiceException e)
         {
@@ -182,15 +199,28 @@ public class ApiImController extends BaseController
         }
     }
 
+    public AjaxResult mute(String conversation_id, String muted)
+    {
+        return mute(conversation_id, muted, null);
+    }
+
     @Operation(summary = "设置会话免打扰")
     @PostMapping("/mute")
-    public AjaxResult mute(String conversation_id, String muted)
+    public AjaxResult mute(String conversation_id, String muted, String request_id)
     {
         try
         {
             Long cid = Convert.toLong(conversation_id, 0L);
+            if (request_id != null)
+                return AjaxResult.success(channelNotify.ordinaryMute(getAppUserId(), cid, Convert.toInt(muted, 0) == 1, request_id));
             imService.setMuted(getAppUserId(), cid, Convert.toInt(muted, 0) == 1);
             return AjaxResult.success();
+        }
+        catch (com.chengyinhub.business.service.channel.platform.ChannelRejection e)
+        {
+            AjaxResult r = new AjaxResult(e.getStatus(), e.getMessage());
+            r.put("errorCode", e.getErrorCode());
+            return r;
         }
         catch (Exception e)
         {

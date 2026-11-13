@@ -34,6 +34,9 @@ class TeamResourcePoolServiceTest
         when(mapper.countActiveMember(eq(TEAM), anyLong())).thenAnswer(i -> (long) i.getArgument(1) == OUTSIDER ? 0 : 1);
         when(mapper.selectPublishedTheme(TOPIC)).thenReturn(CONFIG);
         when(mapper.countListedNode(TOPIC, NODE)).thenReturn(1);
+        when(mapper.selectTeamRunSnapshot(eq(TEAM), eq(TOPIC), eq(0L), anyLong())).thenReturn(
+                "{\"nodeAnswers\":{\"" + NODE + "\":{\"hintLadder\":[{\"level\":1,\"type\":\"SKIP\"},"
+                + "{\"level\":2,\"type\":\"TEXT\",\"payload\":\"看路牌\"},{\"level\":3,\"type\":\"ANSWER\",\"payload\":\"秘密\"}]}}}");
         when(mapper.selectSolvedNodes(TEAM, TOPIC, 0L)).thenReturn(List.of(4001L, 4002L));
         when(mapper.insertPool(anyMap())).thenAnswer(i -> {
             Map<String, Object> row = i.getArgument(0);
@@ -113,6 +116,24 @@ class TeamResourcePoolServiceTest
         assertEquals(false, second.get("consumed"));
         assertEquals(((Number) first.get("byMemberId")).longValue(), ((Number) second.get("byMemberId")).longValue());
         assertEquals(1, ((Number) pool.get("hintsUsed")).intValue());
+        assertEquals(Map.of("level", 2, "type", "TEXT", "content", "看路牌"), first.get("hint"), "lowest deliverable non-skip, non-answer level");
+        assertEquals(first.get("hint"), second.get("hint"));
+    }
+
+    @Test void hintWithoutFrozenTextIsRefusedBeforeSpending()
+    {
+        when(mapper.selectTeamRunSnapshot(eq(TEAM), eq(TOPIC), eq(0L), anyLong())).thenReturn("{\"nodeAnswers\":{}}");
+        assertEquals("TEAM_POOL_HINT_UNAVAILABLE", code(() -> service.consume(A, "HINT",
+                body("teamId", TEAM, "nodeId", NODE, "requestId", "pool-request-000009"))));
+        assertEquals(0, ((Number) pool.get("hintsUsed")).intValue());
+    }
+
+    @Test void legacyHintOneIsTheFallbackWithoutALadder()
+    {
+        when(mapper.selectTeamRunSnapshot(eq(TEAM), eq(TOPIC), eq(0L), anyLong()))
+                .thenReturn("{\"nodeAnswers\":{\"" + NODE + "\":{\"hint1\":\"旧提示\"}}}");
+        Map<String, Object> used = service.consume(A, "HINT", body("teamId", TEAM, "nodeId", NODE, "requestId", "pool-request-000010"));
+        assertEquals("旧提示", ((Map<?, ?>) used.get("hint")).get("content"));
     }
 
     @Test void exhaustedSkipAndReplayAndConflict()

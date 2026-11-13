@@ -19,6 +19,7 @@ CREATE TABLE club_role_assignment (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE play_team (
   id BIGINT NOT NULL AUTO_INCREMENT, owner_type TINYINT NOT NULL, owner_id BIGINT NOT NULL, leader_member_id BIGINT NOT NULL,
+  title varchar(64) DEFAULT NULL, invite_code varchar(16) DEFAULT NULL, join_mode TINYINT DEFAULT 1,
   status TINYINT NOT NULL DEFAULT 0, PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE play_team_member (
@@ -45,7 +46,7 @@ CREATE TABLE im_message (
   PRIMARY KEY (id), KEY idx_conv (conversation_id, id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE cms_topic (
-  id bigint NOT NULL AUTO_INCREMENT, del_flag int DEFAULT 0, published_theme_runtime_config_json longtext,
+  id bigint NOT NULL AUTO_INCREMENT, name varchar(255) DEFAULT NULL, del_flag int DEFAULT 0, published_theme_runtime_config_json longtext,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE cms_topic_node (
@@ -58,4 +59,12 @@ CREATE TABLE player_node_progress (
   id bigint NOT NULL AUTO_INCREMENT, member_id bigint NOT NULL, activity_id bigint NOT NULL, topic_id bigint DEFAULT NULL,
   node_id bigint NOT NULL, status tinyint DEFAULT 1, checkin_time datetime DEFAULT NULL, del_flag int DEFAULT 0,
   PRIMARY KEY (id), UNIQUE KEY uk_member_activity_node (member_id, activity_id, node_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE topic_route_session (
+  id bigint NOT NULL AUTO_INCREMENT, activity_id bigint NOT NULL DEFAULT 0, topic_id bigint NOT NULL, member_id bigint NOT NULL,
+  config_snapshot_json longtext, PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE im_block (
+  id bigint NOT NULL AUTO_INCREMENT, member_id bigint NOT NULL, blocked_member_id bigint NOT NULL, create_time datetime DEFAULT NULL,
+  PRIMARY KEY (id), UNIQUE KEY uk_block (member_id, blocked_member_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

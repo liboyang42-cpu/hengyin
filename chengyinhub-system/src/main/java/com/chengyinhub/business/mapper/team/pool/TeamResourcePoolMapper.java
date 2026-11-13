@@ -31,4 +31,7 @@ public interface TeamResourcePoolMapper
     Map<String, Object> lockReceipt(@Param("memberId") long memberId, @Param("requestId") String requestId);
     Map<String, Object> selectReceipt(@Param("memberId") long memberId, @Param("requestId") String requestId);
     int finishReceipt(@Param("memberId") long memberId, @Param("requestId") String requestId, @Param("response") String response);
+
+    String selectTeamRunSnapshot(@Param("teamId") long teamId, @Param("topicId") long topicId, @Param("activityId") long activityId,
+            @Param("preferMemberId") long preferMemberId);
 }

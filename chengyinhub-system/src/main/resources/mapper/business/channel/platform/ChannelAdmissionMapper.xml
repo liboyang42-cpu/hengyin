@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelAdmissionMapper">
+    <insert id="insertRequest" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_join_request(guild_kind, guild_id, member_id, invite_id, message, status)
+        VALUES (#{guildKind}, #{guildId}, #{memberId}, #{inviteId}, #{message}, #{status})
+    </insert>
+    <select id="lockRequest" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT id, guild_kind AS guildKind, guild_id AS guildId, member_id AS memberId, status FROM im_join_request WHERE id = #{id} FOR UPDATE
+    </select>
+    <update id="setStatus">
+        UPDATE im_join_request SET status = #{status}, reviewer_id = #{reviewerId}, reject_reason_code = #{reasonCode}, note = #{note}
+         WHERE id = #{id} AND status = 0
+    </update>
+    <select id="selectSetting" resultType="java.util.HashMap" useCache="false">
+        SELECT join_paused AS joinPaused, paused_until AS pausedUntil,
+               (join_paused = 1 AND (paused_until IS NULL OR paused_until &gt; CURRENT_TIMESTAMP(3))) AS effective
+          FROM im_space_admission WHERE guild_kind = #{guildKind} AND guild_id = #{guildId}
+    </select>
+    <insert id="upsertSetting">
+        INSERT INTO im_space_admission(guild_kind, guild_id, join_paused, paused_until, reason, update_by)
+        VALUES (#{guildKind}, #{guildId}, #{paused}, #{until}, #{reason}, #{operator})
+        ON DUPLICATE KEY UPDATE join_paused = VALUES(join_paused), paused_until = VALUES(paused_until), reason = VALUES(reason), update_by = VALUES(update_by)
+    </insert>
+</mapper>

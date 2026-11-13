@@ -39,6 +39,10 @@ public class ChannelPlatformService
     private ChannelPlatformMapper mapper;
     @Autowired
     private ChannelGuildAccess access;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.channel.platform.ChannelGovernanceMapper governance;
+    @Autowired(required = false)
+    private ChannelGovernanceService.MuteBridge muteBridge;
 
     public ChannelPlatformService() { }
 
@@ -156,6 +160,7 @@ public class ChannelPlatformService
         container.put("id", String.valueOf(row.getId()));
         container.put("type", ChannelDefinition.REQUIRED_CONVERSATION_TYPE);
         view.put("message_container", container);
+        if (governance != null) view.put("my_state", ChannelGovernanceService.myState(governance, muteBridge, viewer, channelId));
         return view;
     }
 
@@ -244,6 +249,8 @@ public class ChannelPlatformService
                 Map<String, Object> v = new LinkedHashMap<>();
                 v.put("member_id", String.valueOf(memberId));
                 v.put("nickname", m.get("nickname") == null ? String.valueOf(memberId) : m.get("nickname"));
+                if (governance != null)
+                    v.put("role_ids", governance.selectMemberRoleIds(row.getGuildKind(), row.getGuildId(), memberId).stream().map(String::valueOf).toList());
                 list.add(v);
             }
             if (more || page.size() < 100) break;
@@ -264,15 +271,7 @@ public class ChannelPlatformService
         List<Map<String, Object>> list = new ArrayList<>();
         for (Map<String, Object> r : mapper.selectGuildRoles(guildKind, guildId, includeDisabled))
         {
-            Map<String, Object> v = new LinkedHashMap<>();
-            v.put("id", String.valueOf(toLong(r.get("id"))));
-            v.put("guild_kind", guildKind);
-            v.put("guild_id", String.valueOf(guildId));
-            v.put("name", r.get("name"));
-            v.put("position", (int) toLong(r.get("position")));
-            v.put("permissions", hex(toLong(r.get("permissions"))));
-            v.put("mentionable", (int) toLong(r.get("mentionable")));
-            v.put("status", (int) toLong(r.get("status")));
+            Map<String, Object> v = ChannelGovernanceService.roleView(r);
             v.put("is_system", toLong(r.get("isSystem")) == 1);
             v.put("is_everyone", false);
             list.add(v);
@@ -295,13 +294,15 @@ public class ChannelPlatformService
         {
             data.put("state", "NOT_FOUND");
             data.put("outcome_known", false);
+            data.put("retry_with_original_request", true);
             return data;
         }
         data.put("state", "APPLIED");
         data.put("outcome_known", true);
         long channelId = toLong(stored.get("channelId"));
         boolean visible;
-        try
+        if (channelId == 0) visible = true; // 空间级治理写（角色）：本人原回执本人可读
+        else try
         {
             ChannelRow row = mapper.selectChannel(channelId);
             visible = row != null && access.standing(row.getGuildKind(), row.getGuildId(), viewer) != GuildStanding.NONE;

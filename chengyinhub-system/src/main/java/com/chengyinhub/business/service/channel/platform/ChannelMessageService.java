@@ -50,6 +50,8 @@ public class ChannelMessageService implements IChannelConversationGate
     private IWxContentSecurityService contentSecurity;
     @Autowired(required = false)
     private IUmsMemberService members;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.channel.platform.ChannelGovernanceMapper restrictions;
 
     public ChannelMessageService() { }
 
@@ -107,6 +109,9 @@ public class ChannelMessageService implements IChannelConversationGate
         if (!has(bits, VIEW_CHANNEL)) throw ChannelRejection.notFound();
         if (write && row.getStatus() == 1) throw new ChannelRejection(409, "CHANNEL_READ_ONLY", "频道已归档，只读");
         if ((bits & needed) != needed) throw new ChannelRejection(403, "MESSAGE_FORBIDDEN", "没有该频道的消息权限");
+        if (write && restrictions != null
+                && restrictions.countActiveRestriction(row.getGuildKind(), row.getGuildId(), row.getId(), memberId) > 0)
+            throw new ChannelRejection(403, "MEMBER_TIMED_OUT", "你在该频道被禁言，暂时不能发言");
         channels.ensureConversationMember(row.getId(), memberId);
         return new ChannelAccess(row, bits);
     }

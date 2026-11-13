@@ -22,6 +22,13 @@
         skips_total as skipsTotal, skips_used as skipsUsed, timer_limit_sec as timerLimitSec, timer_started_at as timerStartedAt,
         version, frozen_at as frozenAt
     </sql>
+    <!-- 共享提示正文的冻结来源：在岗成员本局（主题/场次）最近一份路线会话快照，与单人提示阶梯同源。 -->
+    <select id="selectTeamRunSnapshot" resultType="java.lang.String" useCache="false">
+        select s.config_snapshot_json from topic_route_session s
+          join play_team_member m on m.member_id = s.member_id and m.team_id = #{teamId} and m.status = 1
+         where s.topic_id = #{topicId} and s.activity_id = #{activityId} and s.config_snapshot_json is not null
+         order by (s.member_id = #{preferMemberId}) desc, s.id desc limit 1
+    </select>
     <select id="selectPool" resultType="java.util.HashMap" useCache="false">
         select <include refid="poolColumns"/> from play_team_resource_pool where team_id = #{teamId}
     </select>

@@ -9,11 +9,11 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /** 用 Mockito 模拟 im_channel_request_receipt 的占位/加锁/完成，按 (operator,family,request) 存内存。 */
-final class ReceiptFake
+public final class ReceiptFake
 {
     final Map<String, Map<String, Object>> rows = new HashMap<>();
 
-    static ReceiptFake install(ChannelPlatformMapper mapper)
+    public static ReceiptFake install(ChannelPlatformMapper mapper)
     {
         ReceiptFake fake = new ReceiptFake();
         when(mapper.reserveReceipt(anyLong(), anyString(), anyString(), anyString(), anyString(), anyLong())).thenAnswer(i -> {

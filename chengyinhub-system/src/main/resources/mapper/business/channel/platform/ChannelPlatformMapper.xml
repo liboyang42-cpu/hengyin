@@ -144,7 +144,8 @@
          where channel_id = #{channelId} and target_type = #{targetType} and target_id = #{targetId}
     </delete>
     <select id="selectGuildRoles" resultType="java.util.HashMap" useCache="false">
-        select id, guild_kind as guildKind, guild_id as guildId, name, position, permissions, mentionable, status, is_system as isSystem
+        select id, guild_kind as guildKind, guild_id as guildId, name, position, permissions, mentionable, status, is_system as isSystem,
+               version, color, hoist, display_level as displayLevel
           from im_guild_role
          where guild_kind = #{guildKind} and guild_id = #{guildId}
          <if test="!includeDisabled">and status = 1</if>
@@ -155,6 +156,7 @@
         select r.id, r.permissions, r.position
           from im_guild_role r join im_guild_role_member m on m.role_id = r.id
          where r.guild_kind = #{guildKind} and r.guild_id = #{guildId} and r.status = 1 and m.member_id = #{memberId}
+           and (m.expires_at is null or m.expires_at &gt; current_timestamp(3))
     </select>
     <select id="countGuildRole" resultType="int" useCache="false">
         select count(1) from im_guild_role where id = #{roleId} and guild_kind = #{guildKind} and guild_id = #{guildId}
