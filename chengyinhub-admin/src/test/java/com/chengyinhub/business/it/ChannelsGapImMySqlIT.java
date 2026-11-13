@@ -54,7 +54,7 @@ class ChannelsGapImMySqlIT
             "migration_20261113_im_channels_second_pass.sql", "migration_20261012_app_media_asset.sql",
             "migration_20261012_app_media_asset_namespaces.sql", "migration_20261109_app_media_provenance.sql",
             "migration_20261114_im_channels_third_pass.sql", "migration_20261115_im_channels_fourth_pass.sql",
-            "migration_20261116_im_gap_audit_webhook.sql" };
+            "migration_20261116_im_gap_audit_webhook.sql", "migration_20261117_im_webhook_dispatch.sql" };
 
     private static String url;
     private static SqlSessionFactory sessions;
@@ -118,6 +118,8 @@ class ChannelsGapImMySqlIT
         ReflectionTestUtils.setField(webhooks, "hooks", session.getMapper(ChannelWebhookMapper.class));
         ReflectionTestUtils.setField(webhooks, "channels", session.getMapper(ChannelPlatformMapper.class));
         ReflectionTestUtils.setField(webhooks, "access", access);
+        ReflectionTestUtils.setField(webhooks, "crypto",
+                new com.chengyinhub.business.security.PiiCryptoService(java.util.Base64.getEncoder().encodeToString(new byte[32]), ""));
     }
 
     @AfterEach void close() { if (session != null) session.close(); }
@@ -244,8 +246,12 @@ class ChannelsGapImMySqlIT
         assertEquals(1, ((List<?>) webhooks.listEndpoints(OWNER, "CLUB", CLUB, CHANNEL, null, 20).get("list")).size());
         Map<String, Object> logs = webhooks.endpointLogs(OWNER, 4, "REJECTED", null, 20);
         assertEquals(1, ((List<?>) logs.get("list")).size());
-        assertEquals("WEBHOOK_INBOUND_UNAVAILABLE",
-                assertThrows(ChannelRejection.class, () -> webhooks.mutateEndpoint(OWNER, 4, body("request_id", "e1"))).getErrorCode());
+        Map<String, Object> change = body("request_id", "e1", "owner_type", "CLUB", "owner_id", CLUB, "channel_id", CHANNEL, "name", "入站改名",
+                "allowed_ips", List.of(), "rate_limit_per_min", 60, "revision", 1);
+        Map<String, Object> updated = webhooks.updateEndpoint(OWNER, 4, change);
+        assertEquals(2, updated.get("revision"));
+        assertEquals(60, updated.get("rate_limit_per_min"));
+        assertEquals("[]", scalarText("SELECT allowed_ips_json FROM im_webhook_endpoint WHERE id=4"));
     }
 
     @Test void latestChainOfAConversation() throws Exception

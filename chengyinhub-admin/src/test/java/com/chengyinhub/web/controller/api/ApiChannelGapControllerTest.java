@@ -14,6 +14,7 @@ import com.chengyinhub.business.service.channel.platform.ChannelAuditLogService;
 import com.chengyinhub.business.service.channel.platform.ChannelInteractionService;
 import com.chengyinhub.business.service.channel.platform.ChannelPlatformService;
 import com.chengyinhub.business.service.channel.platform.ChannelRejection;
+import com.chengyinhub.business.service.channel.platform.ChannelWebhookInboundService;
 import com.chengyinhub.business.service.channel.platform.ChannelWebhookService;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -29,6 +30,7 @@ class ApiChannelGapControllerTest
     ChannelPlatformService channels;
     ChannelAuditLogService audit;
     ChannelWebhookService webhooks;
+    ChannelWebhookInboundService inbound;
     ChannelInteractionService interaction;
     MockMvc mvc;
 
@@ -37,12 +39,14 @@ class ApiChannelGapControllerTest
         channels = mock(ChannelPlatformService.class);
         audit = mock(ChannelAuditLogService.class);
         webhooks = mock(ChannelWebhookService.class);
+        inbound = mock(ChannelWebhookInboundService.class);
         interaction = mock(ChannelInteractionService.class);
         ApiChannelGapController controller = spy(new ApiChannelGapController());
         doReturn(7L).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "channels", channels);
         ReflectionTestUtils.setField(controller, "audit", audit);
         ReflectionTestUtils.setField(controller, "webhooks", webhooks);
+        ReflectionTestUtils.setField(controller, "inbound", inbound);
         ApiChannelInteractionController chain = spy(new ApiChannelInteractionController());
         doReturn(7L).when(chain).getAppUserId();
         ReflectionTestUtils.setField(chain, "interaction", interaction);
@@ -128,18 +132,47 @@ class ApiChannelGapControllerTest
         when(webhooks.listEndpoints(anyLong(), anyString(), anyLong(), anyLong(), any(), anyInt())).thenReturn(Map.of());
         when(webhooks.endpoint(anyLong(), anyLong())).thenReturn(Map.of());
         when(webhooks.endpointLogs(anyLong(), anyLong(), any(), any(), anyInt())).thenReturn(Map.of());
-        when(webhooks.createEndpoint(anyLong(), anyMap())).thenThrow(new ChannelRejection(409, "WEBHOOK_INBOUND_UNAVAILABLE", "x"));
-        when(webhooks.mutateEndpoint(anyLong(), anyLong(), anyMap())).thenThrow(new ChannelRejection(409, "WEBHOOK_INBOUND_UNAVAILABLE", "x"));
+        when(webhooks.createEndpoint(anyLong(), anyMap())).thenReturn(Map.of());
+        when(webhooks.updateEndpoint(anyLong(), anyLong(), anyMap())).thenReturn(Map.of());
+        when(webhooks.deleteEndpoint(anyLong(), anyLong(), anyMap())).thenReturn(Map.of());
+        when(webhooks.rotateEndpointToken(anyLong(), anyLong(), anyMap()))
+                .thenThrow(new ChannelRejection(409, "WEBHOOK_INBOUND_UNAVAILABLE", "x"));
         ok(get("/api/im/webhook/endpoints").param("owner_type", "CLUB").param("owner_id", "10").param("channel_id", "100"));
         verify(webhooks).listEndpoints(7L, "CLUB", 10L, 100L, null, 20);
         ok(get("/api/im/webhook/endpoints/4"));
         verify(webhooks).endpoint(7L, 4L);
         ok(get("/api/im/webhook/endpoints/4/logs").param("result", "REJECTED"));
         verify(webhooks).endpointLogs(7L, 4L, "REJECTED", null, 20);
-        for (MockHttpServletRequestBuilder r : new MockHttpServletRequestBuilder[] { post("/api/im/webhook/endpoints"),
-                put("/api/im/webhook/endpoints/4"), delete("/api/im/webhook/endpoints/4"), post("/api/im/webhook/endpoints/4/rotate-token") })
-            mvc.perform(r.contentType(MediaType.APPLICATION_JSON).content(BODY)).andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.err").value("WEBHOOK_INBOUND_UNAVAILABLE"));
-        verify(webhooks, times(3)).mutateEndpoint(eq(7L), eq(4L), anyMap());
+        ok(post("/api/im/webhook/endpoints").content(BODY));
+        verify(webhooks).createEndpoint(eq(7L), anyMap());
+        ok(put("/api/im/webhook/endpoints/4").content(BODY));
+        verify(webhooks).updateEndpoint(eq(7L), eq(4L), anyMap());
+        ok(delete("/api/im/webhook/endpoints/4").content(BODY));
+        verify(webhooks).deleteEndpoint(eq(7L), eq(4L), anyMap());
+        mvc.perform(post("/api/im/webhook/endpoints/4/rotate-token").contentType(MediaType.APPLICATION_JSON).content(BODY))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.err").value("WEBHOOK_INBOUND_UNAVAILABLE"));
+        verify(webhooks).rotateEndpointToken(eq(7L), eq(4L), anyMap());
+    }
+
+    @Test void inboundPassesHeadersAndRawBodyAndMapsTheResult() throws Exception
+    {
+        byte[] body = "{\"content\":\"hi\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        when(inbound.ingest(eq(4L), eq("1700000000"), eq("nonce-0123456789ab"), eq("v1=abc"), eq(body), anyString()))
+                .thenReturn(new ChannelWebhookInboundService.Result(202, null, "已接收，待审核", Map.of("result", "PENDING_REVIEW")));
+        mvc.perform(post("/api/im/webhook/inbound/4").contentType(MediaType.APPLICATION_JSON).content(body)
+                        .header("X-Chengyin-Timestamp", "1700000000").header("X-Chengyin-Nonce", "nonce-0123456789ab")
+                        .header("X-Chengyin-Signature", "v1=abc"))
+                .andExpect(status().isAccepted()).andExpect(jsonPath("$.code").value(202))
+                .andExpect(jsonPath("$.data.result").value("PENDING_REVIEW"));
+        when(inbound.ingest(eq(5L), any(), any(), any(), any(), anyString()))
+                .thenReturn(new ChannelWebhookInboundService.Result(401, "WEBHOOK_SIGNATURE_INVALID", "REJECTED", Map.of("result", "REJECTED")));
+        mvc.perform(post("/api/im/webhook/inbound/5").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.err").value("WEBHOOK_SIGNATURE_INVALID"))
+                .andExpect(jsonPath("$.data.result").value("REJECTED"));
+        mvc.perform(post("/api/im/webhook/inbound/x").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.err").value("WEBHOOK_NOT_FOUND"));
+        mvc.perform(post("/api/im/webhook/inbound/4").contentType(MediaType.APPLICATION_JSON).content(new byte[16 * 1024 + 1]))
+                .andExpect(status().isPayloadTooLarge());
+        verify(inbound, times(2)).ingest(anyLong(), any(), any(), any(), any(), anyString());
     }
 }

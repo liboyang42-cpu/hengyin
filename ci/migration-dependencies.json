@@ -93,6 +93,7 @@
     "20261114_club_notify_default": ["20261113_im_channels_second_pass"],
     "20261115_im_channels_fourth_pass": ["20261114_im_channels_third_pass"],
     "20261116_im_gap_audit_webhook": ["20261115_im_channels_fourth_pass", "20261113_im_channels_second_pass", "20261105_l8_channel_lifecycle"],
+    "20261117_im_webhook_dispatch": ["20261116_im_gap_audit_webhook"],
     "20261115_chain_entry_request_nonunique": ["20261105_l8_chain_storage"],
     "20261115_creator_maintenance": ["20261109_play_run_feedback"],
     "20261101_author_write_receipt": [],

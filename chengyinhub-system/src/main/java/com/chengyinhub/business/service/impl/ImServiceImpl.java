@@ -103,6 +103,9 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     /** 语音/视频/文件消息(10/11/12)的上传挂接闸；未装配时这三类按不支持处理。 */
     @Autowired(required = false)
     private IImMediaAttachGate mediaGate;
+    /** 频道出站 Webhook 发件箱（message.created）；未装配时不扇出。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChannelWebhookService webhookOutbox;
 
     private String singleBizKey(Long a, Long b)
     {
@@ -1077,8 +1080,25 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         {
             memberMapper.addUnread(convId, receiverId, 1);
         }
+        if (isGroup && webhookOutbox != null && checkStatus == 1 && mediaUploadId == null)
+        {
+            // 频道出站 Webhook 发件箱：同一事务落 PENDING 投递（只对频道会话），回滚即不发。
+            webhookOutbox.enqueueForConversation(convId, "message.created", "msg-" + msg.getId(), messageCreatedEvent(msg));
+        }
         memberMapper.markRead(convId, memberId, msg.getId());
         return projectRouteMessage(msg, memberId);
+    }
+
+    /** message.created 事件数据：只给消息本身（id、会话、发送者会员 id、类型、文本正文、时间），不带资料或手机号。 */
+    private static java.util.Map<String, Object> messageCreatedEvent(ImMessage msg)
+    {
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("message_id", String.valueOf(msg.getId()));
+        data.put("conversation_id", String.valueOf(msg.getConversationId()));
+        data.put("sender_member_id", String.valueOf(msg.getSenderId()));
+        data.put("msg_type", msg.getMsgType());
+        data.put("content", msg.getContent());
+        return data;
     }
 
     private Long clubIdOf(ImConversation conversation)

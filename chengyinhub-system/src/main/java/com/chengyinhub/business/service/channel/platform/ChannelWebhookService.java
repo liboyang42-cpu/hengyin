@@ -24,11 +24,13 @@ import java.util.TimeZone;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.chengyinhub.business.mapper.channel.platform.ChannelPlatformMapper;
 import com.chengyinhub.business.mapper.channel.platform.ChannelWebhookMapper;
+import com.chengyinhub.business.security.PiiCryptoService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,9 +38,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * 频道 Webhook 管理（App NativeWebhookHTTPService / NativeWebhookManagementContextSource，e74 线格式）。
  * <ul>
  * <li>授权：频道属于 owner_id 俱乐部（guild_kind 1）、未封禁/删除，且调用者在该频道有 MANAGE_WEBHOOKS（或 ADMINISTRATOR）。</li>
- * <li>出站订阅：建/改/删/轮换密钥都以 request_id 落原回执（族 HOOK）；修订号 CAS。签名密钥只存 SHA-256，明文只在首次响应出现，
- *     重放不再给出。本批没有出站投递器：测试与重试只落 PENDING 投递，不声称已发出。</li>
- * <li>入站端点：读路由就位；创建返回 409 WEBHOOK_INBOUND_UNAVAILABLE（本批不开放入站写入）。</li>
+ * <li>出站订阅：建/改/删/轮换密钥都以 request_id 落原回执（族 HOOK）；修订号 CAS。签名密钥存 SHA-256 + 前缀，另存
+ *     PiiCryptoService 密文（投递器签名要用，从不进响应）；明文只在首次响应出现，重放不再给出。测试/重试/事件只落 PENDING 投递，
+ *     由 ChannelWebhookDispatcher 签名发出；投递器关闭时测试投递带 DISPATCH_NOT_CONFIGURED。</li>
+ * <li>入站端点：建/改/删/轮换令牌同样走回执与修订号；签名密钥（signing_secret）与完整接收地址（url）只在首次响应出现，
+ *     密钥以密文存放供 ChannelWebhookInboundService 验签。未配加密密钥或接收地址时，写入返回 409 WEBHOOK_INBOUND_UNAVAILABLE。</li>
  * </ul>
  */
 @Service
@@ -65,7 +69,10 @@ public class ChannelWebhookService
     static final Set<String> CHANGE_KEYS = Set.of("request_id", "owner_type", "owner_id", "channel_id", "name", "url", "avatar_url", "events",
             "allowed_ips", "rate_limit_per_min", "status", "revision");
     static final Set<String> ACTION_KEYS = Set.of("request_id", "revision", "event_type");
+    /** 自动投递的最大尝试次数；第 5 次仍失败即进死信（DEAD）。 */
     static final int MAX_RETRY_ATTEMPT = 5;
+    static final int MAX_ALLOWED_IPS = 20;
+    public static final String INBOUND_PATH = "/api/im/webhook/inbound/";
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -76,6 +83,13 @@ public class ChannelWebhookService
     private ChannelPlatformMapper channels;
     @Autowired
     private ChannelGuildAccess access;
+    @Autowired
+    private PiiCryptoService crypto;
+    @Value("${chengyin.im.webhook.dispatch.enabled:false}")
+    private boolean dispatchEnabled;
+    /** 入站接收地址的公网 https 根（如 https://api.example.com）；为空则不开放入站端点写入。 */
+    @Value("${chengyin.im.webhook.inbound-base-url:}")
+    private String inboundBaseUrl;
 
     /** 授权结果：频道与有效权限位。 */
     record Scope(ChannelRow channel, long bits) { }
@@ -148,6 +162,7 @@ public class ChannelWebhookService
         int status = status(b.get("status"), 1);
         rejectEndpointFields(b);
         manage(viewer, ownerId, channelId);
+        requireCrypto();
         String fp = ChannelReceipts.fingerprint("WEBHOOK_SUB_CREATE", ownerId + ":" + channelId, withoutRequestId(b));
         String[] secret = new String[1];
         Map<String, Object> out = once(viewer, requestId, fp, "WEBHOOK_SUB_CREATE", channelId, () ->
@@ -163,6 +178,7 @@ public class ChannelWebhookService
             row.put("status", status);
             row.put("secretSha256", sha256(secret[0]));
             row.put("secretPrefix", secret[0].substring(0, 12));
+            row.put("secretCipher", seal(secret[0]));
             row.put("createdBy", viewer);
             if (hooks.insertSubscription(row) != 1) throw new IllegalStateException("Webhook insert failed");
             Map<String, Object> view = subscriptionView(hooks.selectSubscription(ChannelGuildAccess.toLong(row.get("id"))));
@@ -231,6 +247,7 @@ public class ChannelWebhookService
         int revision = revision(b.get("revision"));
         if (b.get("event_type") != null) throw ChannelRejection.badField("event_type");
         Map<String, Object> current = owned(viewer, id);
+        requireCrypto();
         String fp = ChannelReceipts.fingerprint("WEBHOOK_SUB_ROTATE", id, withoutRequestId(b));
         String[] secret = new String[1];
         Map<String, Object> out = once(viewer, requestId, fp, "WEBHOOK_SUB_ROTATE", ChannelGuildAccess.toLong(current.get("channelId")), () ->
@@ -238,7 +255,7 @@ public class ChannelWebhookService
             Map<String, Object> row = lockOwned(id, ChannelGuildAccess.toLong(current.get("ownerId")), ChannelGuildAccess.toLong(current.get("channelId")));
             requireRevision(row, revision);
             secret[0] = newSecret("whsec_");
-            if (hooks.rotateSubscriptionSecret(id, revision, sha256(secret[0]), secret[0].substring(0, 12)) != 1)
+            if (hooks.rotateSubscriptionSecret(id, revision, sha256(secret[0]), secret[0].substring(0, 12), seal(secret[0])) != 1)
                 throw new ChannelRejection(409, "REVISION_CONFLICT", "订阅已被修改");
             Map<String, Object> view = subscriptionView(hooks.selectSubscription(id));
             view.put("secret_shown_once", true);
@@ -262,7 +279,7 @@ public class ChannelWebhookService
         return page(list, more);
     }
 
-    /** 测试投递：只落一条 PENDING（DISPATCH_NOT_CONFIGURED），不声称已发出。 */
+    /** 测试投递：只落一条 PENDING，由投递器发出（投递器关闭时带 DISPATCH_NOT_CONFIGURED），不声称已发出。 */
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> test(long viewer, long id, Map<String, Object> body)
     {
@@ -289,14 +306,14 @@ public class ChannelWebhookService
             delivery.put("subscriptionId", id);
             delivery.put("eventId", "test-" + sha256(viewer + "|" + requestId).substring(0, 32));
             delivery.put("eventType", eventType);
-            delivery.put("reason", DISPATCH_REASON);
+            delivery.put("reason", dispatchEnabled ? null : DISPATCH_REASON);
             delivery.put("payloadJson", encode(payload));
             if (hooks.insertDelivery(delivery) != 1) throw new IllegalStateException("Webhook delivery insert failed");
             return deliveryView(hooks.selectDelivery(ChannelGuildAccess.toLong(delivery.get("id"))), false);
         });
     }
 
-    /** 显式重试：只接受 FAILED/UNKNOWN 且尝试次数 &lt; 5 的投递，重新排队为 PENDING。 */
+    /** 显式重试：FAILED/UNKNOWN 且尝试次数 &lt; 5 的投递重新排队为 PENDING；死信（DEAD）重新投递时尝试次数归零。 */
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> retry(long viewer, long id, long deliveryId, Map<String, Object> body)
     {
@@ -315,11 +332,47 @@ public class ChannelWebhookService
             if (delivery == null) throw new ChannelRejection(404, "DELIVERY_NOT_FOUND", "投递不存在");
             String state = String.valueOf(delivery.get("state"));
             int attempt = (int) ChannelGuildAccess.toLong(delivery.get("attempt"));
-            if (!("FAILED".equals(state) || "UNKNOWN".equals(state)) || attempt >= MAX_RETRY_ATTEMPT)
+            boolean dead = "DEAD".equals(state);
+            if (!dead && (!("FAILED".equals(state) || "UNKNOWN".equals(state)) || attempt >= MAX_RETRY_ATTEMPT))
                 throw new ChannelRejection(409, "DELIVERY_NOT_RETRYABLE", "该投递不可重试");
-            if (hooks.requeueDelivery(deliveryId, state, attempt) != 1) throw new ChannelRejection(409, "DELIVERY_NOT_RETRYABLE", "该投递已变化");
+            if (hooks.requeueDelivery(deliveryId, state, attempt, dead) != 1) throw new ChannelRejection(409, "DELIVERY_NOT_RETRYABLE", "该投递已变化");
             return deliveryView(hooks.selectDelivery(deliveryId), false);
         });
+    }
+
+    /**
+     * 事件扇出（发件箱）：在调用方事务内，若该会话就是频道会话（同 id 的 type 5 频道会话，或旧会话桥 legacy_conversation_id），
+     * 给频道上订阅了该事件的每个启用订阅落一条 PENDING 投递；同一 (订阅, event_id) 只落一次。普通群同 id 也不会命中。返回落下的条数。
+     */
+    public int enqueueForConversation(long conversationId, String eventType, String eventId, Map<String, Object> data)
+    {
+        if (!EVENTS.containsKey(eventType)) throw new IllegalArgumentException("Unknown webhook event " + eventType);
+        int queued = 0;
+        for (Map<String, Object> sub : hooks.listActiveConversationSubscriptions(conversationId))
+        {
+            if (!decodeList(sub.get("eventsJson")).contains(eventType)) continue;
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("event_type", eventType);
+            payload.put("owner_type", "CLUB");
+            payload.put("owner_id", String.valueOf(ChannelGuildAccess.toLong(sub.get("ownerId"))));
+            payload.put("channel_id", String.valueOf(ChannelGuildAccess.toLong(sub.get("channelId"))));
+            payload.put("data", data);
+            Map<String, Object> delivery = new LinkedHashMap<>();
+            delivery.put("subscriptionId", ChannelGuildAccess.toLong(sub.get("id")));
+            delivery.put("eventId", eventId);
+            delivery.put("eventType", eventType);
+            delivery.put("reason", dispatchEnabled ? null : DISPATCH_REASON);
+            delivery.put("payloadJson", encode(payload));
+            try
+            {
+                queued += hooks.insertDelivery(delivery);
+            }
+            catch (RuntimeException e)
+            {
+                if (!ChannelRejection.isDuplicateKey(e)) throw e;
+            }
+        }
+        return queued;
     }
 
     // ================================================================ endpoints (inbound)
@@ -353,29 +406,194 @@ public class ChannelWebhookService
         return page(list, more);
     }
 
-    /** 入站写入本批不开放：先做同样的授权与校验，再给确定性拒绝（不落回执、不建行）。 */
+    /** 新建入站端点：签名密钥与完整接收地址只在首次响应出现（signing_secret / url，*_shown_once）。 */
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> createEndpoint(long viewer, Map<String, Object> body)
     {
         Map<String, Object> b = body(body, CHANGE_KEYS);
-        requestId(b.get("request_id"));
+        String requestId = requestId(b.get("request_id"));
         requireClub(b.get("owner_type"));
-        manage(viewer, ChannelGovernanceService.positive(b.get("owner_id"), "owner_id"),
-                ChannelGovernanceService.positive(b.get("channel_id"), "channel_id"));
-        throw inboundUnavailable();
+        long ownerId = ChannelGovernanceService.positive(b.get("owner_id"), "owner_id");
+        long channelId = ChannelGovernanceService.positive(b.get("channel_id"), "channel_id");
+        if (b.get("revision") != null) throw new ChannelRejection(409, "REVISION_CONFLICT", "新建不带修订号");
+        EndpointChange change = endpointChange(b, 1);
+        manage(viewer, ownerId, channelId);
+        String base = inboundBase();
+        String fp = ChannelReceipts.fingerprint("WEBHOOK_EP_CREATE", ownerId + ":" + channelId, withoutRequestId(b));
+        String[] secret = new String[2];
+        Map<String, Object> out = once(viewer, requestId, fp, "WEBHOOK_EP_CREATE", channelId, () ->
+        {
+            secret[0] = newSecret("whin_");
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("ownerId", ownerId);
+            row.put("channelId", channelId);
+            row.put("name", change.name());
+            row.put("avatarUrl", change.avatarUrl());
+            row.put("status", change.status());
+            row.put("rateLimitPerMin", change.rateLimit());
+            row.put("allowedIpsJson", encode(change.allowedIps()));
+            row.put("tokenSha256", sha256(secret[0]));
+            row.put("tokenPrefix", secret[0].substring(0, 12));
+            row.put("secretCipher", seal(secret[0]));
+            row.put("createdBy", viewer);
+            if (hooks.insertEndpoint(row) != 1) throw new IllegalStateException("Webhook endpoint insert failed");
+            long id = ChannelGuildAccess.toLong(row.get("id"));
+            secret[1] = base + INBOUND_PATH + id;
+            Map<String, Object> view = endpointView(hooks.selectEndpoint(id));
+            view.put("secret_shown_once", true);
+            view.put("url_shown_once", true);
+            return view;
+        });
+        return withCredential(out, secret);
     }
 
-    /** 改/删/轮换令牌：端点必须存在且归属可管；本批不存在可写端点，存在时同样拒绝。 */
-    public Map<String, Object> mutateEndpoint(long viewer, long id, Map<String, Object> body)
+    /** 修改入站端点（修订号 CAS）：名称、头像、IP 白名单、限流、启停。 */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> updateEndpoint(long viewer, long id, Map<String, Object> body)
     {
         Map<String, Object> b = body(body, CHANGE_KEYS);
-        requestId(b.get("request_id"));
-        ownedEndpoint(viewer, id);
-        throw inboundUnavailable();
+        String requestId = requestId(b.get("request_id"));
+        requireClub(b.get("owner_type"));
+        long ownerId = ChannelGovernanceService.positive(b.get("owner_id"), "owner_id");
+        long channelId = ChannelGovernanceService.positive(b.get("channel_id"), "channel_id");
+        int revision = revision(b.get("revision"));
+        endpointChange(b, 1);
+        manage(viewer, ownerId, channelId);
+        String fp = ChannelReceipts.fingerprint("WEBHOOK_EP_UPDATE", id, withoutRequestId(b));
+        return once(viewer, requestId, fp, "WEBHOOK_EP_UPDATE", channelId, () ->
+        {
+            Map<String, Object> row = lockOwnedEndpoint(id, ownerId, channelId);
+            requireRevision(row, revision);
+            EndpointChange change = endpointChange(b, (int) ChannelGuildAccess.toLong(row.get("status")));
+            Map<String, Object> update = new LinkedHashMap<>();
+            update.put("id", id);
+            update.put("revision", revision);
+            update.put("name", change.name());
+            update.put("avatarUrl", change.avatarUrl());
+            update.put("status", change.status());
+            update.put("rateLimitPerMin", change.rateLimit());
+            update.put("allowedIpsJson", encode(change.allowedIps()));
+            if (hooks.updateEndpoint(update) != 1) throw new ChannelRejection(409, "REVISION_CONFLICT", "端点已被修改");
+            return endpointView(hooks.selectEndpoint(id));
+        });
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> deleteEndpoint(long viewer, long id, Map<String, Object> body)
+    {
+        Map<String, Object> b = body(body, ACTION_KEYS);
+        String requestId = requestId(b.get("request_id"));
+        int revision = revision(b.get("revision"));
+        if (b.get("event_type") != null) throw ChannelRejection.badField("event_type");
+        Map<String, Object> current = ownedEndpoint(viewer, id);
+        long ownerId = ChannelGuildAccess.toLong(current.get("ownerId")), channelId = ChannelGuildAccess.toLong(current.get("channelId"));
+        String fp = ChannelReceipts.fingerprint("WEBHOOK_EP_DELETE", id, withoutRequestId(b));
+        return once(viewer, requestId, fp, "WEBHOOK_EP_DELETE", channelId, () ->
+        {
+            requireRevision(lockOwnedEndpoint(id, ownerId, channelId), revision);
+            if (hooks.deleteEndpoint(id, revision) != 1) throw new ChannelRejection(409, "REVISION_CONFLICT", "端点已被修改");
+            return endpointView(hooks.selectEndpoint(id));
+        });
+    }
+
+    /** 轮换入站签名密钥：旧密钥立即失效（old_token_invalid_after = 轮换时刻），新密钥与接收地址只显示一次。 */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> rotateEndpointToken(long viewer, long id, Map<String, Object> body)
+    {
+        Map<String, Object> b = body(body, ACTION_KEYS);
+        String requestId = requestId(b.get("request_id"));
+        int revision = revision(b.get("revision"));
+        if (b.get("event_type") != null) throw ChannelRejection.badField("event_type");
+        Map<String, Object> current = ownedEndpoint(viewer, id);
+        long ownerId = ChannelGuildAccess.toLong(current.get("ownerId")), channelId = ChannelGuildAccess.toLong(current.get("channelId"));
+        String base = inboundBase();
+        String fp = ChannelReceipts.fingerprint("WEBHOOK_EP_ROTATE", id, withoutRequestId(b));
+        String[] secret = new String[2];
+        Map<String, Object> out = once(viewer, requestId, fp, "WEBHOOK_EP_ROTATE", channelId, () ->
+        {
+            requireRevision(lockOwnedEndpoint(id, ownerId, channelId), revision);
+            secret[0] = newSecret("whin_");
+            secret[1] = base + INBOUND_PATH + id;
+            if (hooks.rotateEndpointSecret(id, revision, sha256(secret[0]), secret[0].substring(0, 12), seal(secret[0])) != 1)
+                throw new ChannelRejection(409, "REVISION_CONFLICT", "端点已被修改");
+            Map<String, Object> view = endpointView(hooks.selectEndpoint(id));
+            view.put("secret_shown_once", true);
+            view.put("url_shown_once", true);
+            view.put("old_token_invalid_after", view.get("updated_at"));
+            return view;
+        });
+        return withCredential(out, secret);
+    }
+
+    private static Map<String, Object> withCredential(Map<String, Object> out, String[] secret)
+    {
+        if (secret[0] != null)
+        {
+            out.put("signing_secret", secret[0]);
+            out.put("url", secret[1]);
+        }
+        return out;
+    }
+
+    record EndpointChange(String name, String avatarUrl, List<String> allowedIps, int rateLimit, int status) { }
+
+    static EndpointChange endpointChange(Map<String, Object> b, int statusFallback)
+    {
+        if (b.get("url") != null) throw ChannelRejection.badField("url");
+        if (b.get("events") != null) throw ChannelRejection.badField("events");
+        return new EndpointChange(name(b.get("name")), avatarUrl(b.get("avatar_url")), allowedIps(b.get("allowed_ips")),
+                rateLimit(b.get("rate_limit_per_min")), status(b.get("status"), statusFallback));
+    }
+
+    static String avatarUrl(Object raw)
+    {
+        if (raw == null) return null;
+        try { return url(raw, true); }
+        catch (ChannelRejection e) { throw ChannelRejection.badField("avatar_url"); }
+    }
+
+    /** IPv4 地址或 IPv4/CIDR；原样回显（App 比对请求与回执）。空表表示不限来源。 */
+    static List<String> allowedIps(Object raw)
+    {
+        if (raw == null) return List.of();
+        if (!(raw instanceof List<?> list) || list.size() > MAX_ALLOWED_IPS) throw ChannelRejection.badField("allowed_ips");
+        List<String> out = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (Object o : list)
+        {
+            if (!(o instanceof String ip) || ChannelWebhookInboundService.cidr(ip) == null || !seen.add(ip)) throw ChannelRejection.badField("allowed_ips");
+            out.add(ip);
+        }
+        return out;
+    }
+
+    static int rateLimit(Object raw)
+    {
+        if (raw == null) return 30;
+        if (!(raw instanceof Integer i) || i < 1 || i > 300) throw ChannelRejection.badField("rate_limit_per_min");
+        return i;
+    }
+
+    private String inboundBase()
+    {
+        String base = inboundBaseUrl == null ? "" : inboundBaseUrl.strip();
+        while (base.endsWith("/")) base = base.substring(0, base.length() - 1);
+        if (!base.startsWith("https://") || base.length() <= "https://".length() || crypto == null || !crypto.isEnabled())
+            throw inboundUnavailable();
+        return base;
+    }
+
+    private Map<String, Object> lockOwnedEndpoint(long id, long ownerId, long channelId)
+    {
+        Map<String, Object> row = hooks.lockEndpoint(id);
+        if (row == null || ChannelGuildAccess.toLong(row.get("ownerId")) != ownerId || ChannelGuildAccess.toLong(row.get("channelId")) != channelId)
+            throw notFound();
+        return row;
     }
 
     static ChannelRejection inboundUnavailable()
     {
-        return new ChannelRejection(409, "WEBHOOK_INBOUND_UNAVAILABLE", "入站 Webhook 暂未开放");
+        return new ChannelRejection(409, "WEBHOOK_INBOUND_UNAVAILABLE", "入站 Webhook 未配置（接收地址或加密密钥）");
     }
 
     // ================================================================ authorization
@@ -432,7 +650,7 @@ public class ChannelWebhookService
 
     // ================================================================ receipts
 
-    /** 原回执（族 HOOK）：存的是去掉一次性明文后的响应；重放标 replayed=true 且不再带明文。 */
+    /** 原回执（族 HOOK）：存的是去掉一次性明文（secret / signing_secret / url）后的响应；重放标 replayed=true 且不再带明文。 */
     private Map<String, Object> once(long viewer, String requestId, String fingerprint, String operation, long channelId,
             Supplier<Map<String, Object>> work)
     {
@@ -447,10 +665,13 @@ public class ChannelWebhookService
             Map<String, Object> replay = ChannelReceipts.decode(stored.toString());
             replay.put("replayed", Boolean.TRUE);
             replay.remove("secret_shown_once");
+            replay.remove("url_shown_once");
             return replay;
         }
         Map<String, Object> response = work.get();
         response.remove("secret");
+        response.remove("signing_secret");
+        response.remove("url");
         String encoded = ChannelReceipts.encode(response);
         if (channels.finishReceipt(viewer, FAMILY, requestId, encoded) != 1) throw new IllegalStateException("Receipt finish failed");
         Map<String, Object> out = ChannelReceipts.decode(encoded);
@@ -671,6 +892,18 @@ public class ChannelWebhookService
     }
 
     // ================================================================ codec
+
+    /** 签名密钥的可恢复存储：PiiCryptoService（AES-256-GCM）密文；未配密钥则拒绝建/轮换（不留无法签名的订阅）。 */
+    private String seal(String secret)
+    {
+        requireCrypto();
+        return crypto.encrypt(secret);
+    }
+
+    private void requireCrypto()
+    {
+        if (crypto == null || !crypto.isEnabled()) throw new ChannelRejection(409, "WEBHOOK_CRYPTO_UNAVAILABLE", "签名密钥加密未配置");
+    }
 
     static String newSecret(String prefix)
     {
