@@ -26,6 +26,6 @@
 - 小程序：D-69 契约测试重写为开局 300 米规则，同步 P-26、play-ui-contract、小地图契约；UI-GATE-0 仅有 U5 行号位移（8923→8926，条数不变，无新增登记，digest 重算），动作台账与路由矩阵已重建。
 
 ## 门禁
-见 PR 检查；未改 `ci/architecture/*`、`.github/workflows/*`，未跑 `ci/xcx-check.sh`。
+PR #814 在提交 be7657e 上 35 项检查全绿（后端 18962 项测试、小程序 20 分片与静态门禁、迁移门禁、gitleaks）。后端首轮曾有一项无关的俱乐部通知测试（ClubEventNotificationTransactionBoundaryTest）失败，重跑通过，未改动该测试。未改 `ci/architecture/*`、`.github/workflows/*`，未跑 `ci/xcx-check.sh`。
 
-STATUS: PARTIAL - 待 CI 全绿后确认（Java 测试仅能在 CI 执行）
+STATUS: DONE
