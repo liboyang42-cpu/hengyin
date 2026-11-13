@@ -844838,77 +844838,7 @@
       }
     },
     {
-      "id": "pages/club/settlement/index.wxml:19:bindtap:openClubSettlement:4",
-      "route": "pages/club/settlement/index",
-      "hostRoutes": [],
-      "hostComponentPaths": [],
-      "role": "club",
-      "entry": {
-        "wxml": "pages/club/settlement/index.wxml",
-        "js": "pages/club/settlement/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "view",
-        "event": "bindtap",
-        "handler": "openClubSettlement",
-        "line": 19,
-        "selectorHint": ".topic-row",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": "button",
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "navigation",
-      "interactionMode": "tap",
-      "baseActionClass": "navigation",
-      "effectClasses": [
-        "navigation"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/club/settlement/index?clubId="
-        ],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "pages/club/settlement/index.js:228"
-      }
-    },
-    {
-      "id": "pages/club/settlement/index.wxml:25:bindtap:openPayoutReceiver:5",
+      "id": "pages/club/settlement/index.wxml:14:bindtap:openPayoutReceiver:2",
       "route": "pages/club/settlement/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -844931,7 +844861,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "openPayoutReceiver",
-        "line": 25,
+        "line": 14,
         "selectorHint": ".topic-row",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -844978,7 +844908,77 @@
       }
     },
     {
-      "id": "pages/club/settlement/index.wxml:41:bindtap:goWithdraw:6",
+      "id": "pages/club/settlement/index.wxml:25:bindtap:openClubSettlement:5",
+      "route": "pages/club/settlement/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "club",
+      "entry": {
+        "wxml": "pages/club/settlement/index.wxml",
+        "js": "pages/club/settlement/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "openClubSettlement",
+        "line": 25,
+        "selectorHint": ".topic-row",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "navigation",
+      "interactionMode": "tap",
+      "baseActionClass": "navigation",
+      "effectClasses": [
+        "navigation"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/club/settlement/index?clubId="
+        ],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/club/settlement/index.js:228"
+      }
+    },
+    {
+      "id": "pages/club/settlement/index.wxml:42:bindtap:goWithdraw:6",
       "route": "pages/club/settlement/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -845001,7 +845001,7 @@
         "tag": "button",
         "event": "bindtap",
         "handler": "goWithdraw",
-        "line": 41,
+        "line": 42,
         "selectorHint": ".withdraw-btn",
         "visibleCondition": null,
         "disabledCondition": "{{withdrawing || withdrawState !== 'positive'}}",
@@ -845125,7 +845125,7 @@
       }
     },
     {
-      "id": "pages/club/settlement/index.wxml:74:bindtap:goTopicSettlement:7",
+      "id": "pages/club/settlement/index.wxml:75:bindtap:goTopicSettlement:7",
       "route": "pages/club/settlement/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -845148,7 +845148,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goTopicSettlement",
-        "line": 74,
+        "line": 75,
         "selectorHint": ".topic-row",
         "visibleCondition": null,
         "disabledCondition": null,
