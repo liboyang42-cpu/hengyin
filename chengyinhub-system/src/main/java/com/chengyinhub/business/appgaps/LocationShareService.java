@@ -42,6 +42,7 @@ public class LocationShareService {
     private final TransactionTemplate tx;
     private final LongSupplier clock;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public LocationShareService(JdbcTemplate jdbc, PlatformTransactionManager transactions) {
         this(jdbc, transactions, System::currentTimeMillis);
     }

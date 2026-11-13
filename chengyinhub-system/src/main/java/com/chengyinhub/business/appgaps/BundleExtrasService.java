@@ -37,6 +37,7 @@ public class BundleExtrasService {
     private final FreeExploreBundleSwitches switches;
     private final LongSupplier clock;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public BundleExtrasService(JdbcTemplate jdbc, FreeExploreBundleSwitches switches) {
         this(jdbc, switches, System::currentTimeMillis);
     }
