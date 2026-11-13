@@ -75,3 +75,24 @@ owner 决定：商家发布的自由探索（`topic.club_id` 空，场次由承�
 - PR：https://github.com/liboyang42-cpu/hengyin/pull/816 （CI 与 Funds MySQL IT 结果以该 PR 的检查为准；本地仅跑了 node 门禁：动作台账 --write/--check 6025 控件、ui-integrity 通过、相关 xcx 单测通过）。
 
 STATUS: PARTIAL - 后端结算与三处文案已落地，Java 单测/Funds MySQL IT 待 PR CI 验证；主办方收益页「线下结算」一行因缺主题类型数据未做。
+
+## Rebase 1113
+
+PR #816 与 master 冲突，已把 origin/master 合并进分支（未改历史、未强推），解决后 CI 全绿。
+
+- 冲突：仅 `CmsActivityServiceImpl.java` 暂扣补结段。保留本 PR 的冻结主题读取与 `requireSessionSettlementContract`，同时保留 master 的个人主体（`clubPrincipalPayee`）分支；未改动其它资金逻辑。
+- `action-ledger.json`：取 master 版本后用 `build-action-ledger.js --write` 重生成，`--check` 通过（6034 controls）；未手改摘要。
+- `route-matrix.json`：提现页新增登录接口请求，`pages/coop/withdraw/index` 的 `needsLogin` 变为 true；用 `build-route-matrix.js --json` 重生成，`--check` 通过（master 上同检查为 PASS，故由本 PR 引入）。
+- 测试夹具（均为本 PR 新增查询／路径引起，非 master 既有失败）：
+  - `ComplaintPeriodWithdrawalGateMybatisIntegrationTest` 的 `cms_topic` 补 `member_id` 列（新选单按发布商家过滤）。
+  - `MerchantPublishedFreeExploreSettlementTest` 补 `ClubSessionMerchantFee` 的 `coopOrderMapper`、`topicSaleSnapshotMapper`，并让 `selectExploreSessionTopicId` 返回 null（Mockito 对 Long 默认 0 会误入探索场次分支）。
+- 未改 `ci/architecture/*`、工作流；未运行 `xcx-check.sh` selftest；本地未跑 Java。
+
+检查结果（head `e45d6aba`，35 项：成功 29，按设计 skipped 3，其余为同一汇总）：
+- Backend tests、Funds MySQL IT (50/9/30)、Funds IT gate self-test：success
+- Mini program unit shard 1–20/20、static gates、static checks、Fast gates：success
+- Migration layout / safety gate、Secret scan (gitleaks)、Detect changed areas：success
+- Followup 39 selected backend cases、isolated-authenticated-redis-recovery：success
+- SBOM、Admin UI build / E2E gate：skipped（未触及 UI 管理端，工作流自身判定）
+
+STATUS: DONE
