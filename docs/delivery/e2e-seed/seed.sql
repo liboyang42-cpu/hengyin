@@ -7,7 +7,11 @@
 -- Apply: docker exec -i be-int-mysql mysql -uroot --default-character-set=utf8mb4 cy_e2e_beint < seed.sql
 -- Depends on scripts/e2e/seed_fixtures.py (members 9001-9009, club 7001 led by 9003).
 SET NAMES utf8mb4;
-SELECT IF(DATABASE()='cy_e2e_beint','ok',(SELECT 'wrong database' FROM information_schema.tables)) AS guard;
+SELECT IF(DATABASE() IN ('cy_e2e_beint','cy_e2e_r2'),'ok',(SELECT 'wrong database' FROM information_schema.tables)) AS guard;
+
+-- Fixture players need a WeChat openid, otherwise ContentSafetyGateImpl holds every text check as IDENTITY_REVIEW
+-- (topic publish and square posts stay author-only). cy_e2e_beint had these values set by hand.
+UPDATE ums_member SET wx_open_id = CONCAT('e2e-openid-', id) WHERE id BETWEEN 9001 AND 9009 AND phone LIKE '13900000%' AND (wx_open_id IS NULL OR wx_open_id = '');
 START TRANSACTION;
 
 -- ---------- kit templates (advanced_config_json passed AdvancedGameConfigValidator on fix/userinfo-role) ----------

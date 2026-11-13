@@ -17,6 +17,9 @@ instabox TEST host. Login codes are read from TEST Redis (be-int-redis db 9), as
 import json, os, subprocess, sys, urllib.error, urllib.parse, urllib.request
 
 BASE = os.environ.get("E2E_BASE_URL", "http://127.0.0.1:8120")
+DB = os.environ.get("E2E_DB", "cy_e2e_beint")
+if DB not in ("cy_e2e_beint", "cy_e2e_r2"):
+    sys.exit("refusing non-TEST database: %s" % DB)
 if not (BASE.startswith("http://127.0.0.1:8120") or ".instabox.tech" in BASE):
     sys.exit("refusing non-TEST base url: %s" % BASE)
 REDIS = ["docker", "exec", "be-int-redis", "redis-cli", "-n", "9"]
@@ -131,7 +134,7 @@ def seed_signup(t9):
 
 
 def sql(query):
-    return subprocess.run(["docker", "exec", "-i", "be-int-mysql", "mysql", "-uroot", "-N", "cy_e2e_beint", "-e", query],
+    return subprocess.run(["docker", "exec", "-i", "be-int-mysql", "mysql", "-uroot", "-N", DB, "-e", query],
                           capture_output=True, text=True, check=True).stdout.strip()
 
 
