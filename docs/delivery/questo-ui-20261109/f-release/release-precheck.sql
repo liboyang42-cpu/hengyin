@@ -1,5 +1,5 @@
 -- =====================================================================================
--- f-release 只读预检（候选 66b97c58e81d8e90860adda544d6e639148db4bd）
+-- f-release 只读预检（候选 92fca378eec32082a786aa685ba24b0a6223d6f2）
 -- 每个发布迁移一条 SELECT，返回 step / migration_id / release_class / phase / status。
 -- 只读：全部是 SELECT（information_schema 与业务表），生成器逐句校验，无写入、无 SET、无 PREPARE。
 -- 不含任何主机、端口、账号；由业主用只读账号执行（建议先 SET SESSION TRANSACTION READ ONLY，不在本文件里）。
@@ -1697,4 +1697,12 @@ SELECT 165 AS step, 'zzz_committed_official_notice_job_reregister_20261111' AS m
   CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
   CONCAT(present, '/', expected) AS objects_present, '定时任务 committedOfficialNoticeTask.deliverPending()' AS detail
 FROM (SELECT (IFNULL((SELECT COUNT(*) > 0 FROM sys_job WHERE invoke_target = 'committedOfficialNoticeTask.deliverPending()'), 0)) AS present, 1 AS expected) x;
+
+-- [166] migration_20261113_stagger_payout_jobs.sql · 必须 · POST_DEPLOY
+SELECT 166 AS step, '20261113_stagger_payout_jobs' AS migration_id, '必须' AS release_class, 'POST_DEPLOY' AS phase,
+  CASE WHEN present = expected THEN 'APPLIED' WHEN present = 0 THEN 'NEEDED' ELSE 'PARTIAL' END AS status,
+  CONCAT(present, '/', expected) AS objects_present, '迁移自身只读断言' AS detail
+FROM (SELECT (IFNULL((SELECT (SELECT COUNT(*) FROM sys_job WHERE invoke_target IN ('ecommercePayoutTask.shareAndRetry()', 'ecommercePayoutTask.syncOnboarding()', 'committedOfficialNoticeTask.deliverPending()')
+          AND cron_expression IN ('0 0/10 * * * ?', '0 15/30 * * * ?', '0 0/1 * * * ?')) = 0
+   AND (SELECT COUNT(*) FROM sys_job WHERE status = '0' AND cron_expression IN ('0 * * * * ?', '0 0/2 * * * ?', '0 0/10 * * * ?', '0 0/15 * * * ?', '0 0/30 * * * ?')) = 0 AS payout_jobs_staggered), 0)) AS present, 1 AS expected) x;
 
