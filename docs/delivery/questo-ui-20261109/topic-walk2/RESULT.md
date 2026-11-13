@@ -15,3 +15,16 @@
 CI 结果见 PR。
 
 STATUS: PARTIAL - 待 CI 结果
+
+## Rebase 1113
+
+#822 已 squash 合入 master(1ca6d321),本分支合并 origin/master(无历史改写、无 force push);7 项走查修复均保留。
+
+- `topic-motion.js` 冲突:保留 #822 的导读/进度,叠加本分支的题面标记前截断与结局类章名不加序号。`topic-chapter-guide/RESULT.md` 取 master 版。
+- 生成物:`build-action-ledger.js --write` 后 `--check` 通过(6043 项);`build-route-matrix.js --check` 通过(173 路由)。
+- `ui-integrity-baseline.js` 取 master 侧,仅 buildRouteMap 的 U4-DYNAMIC 锚点 2123→2134(本 PR 自身给该调用加了 `_fitRouteMap` 回调),u4Dynamic keyDigest 取门禁 `baselineKeyDigest()` 实算值,附一行带日期注释;条数与 ratchet 未改,无新增登记,未改门禁。
+- 首轮 CI(e0bf093a)红两项,均为真实问题:模板预览 `intro.js` 跨分包 require `topic-motion.js`、`topic-preview/index.wxss` 硬编码 `29rpx`。324dc055 已改为分包内同口径副本(测试钉住一致)与 `var(--cy-font-body)`。
+- 合并后头 3b848b9a:GitHub CI(含小程序静态门禁与全部单测分片)与 Funds MySQL IT 全绿,master 上无同类失败。
+- 未跑 selftests,未改 ci/architecture 与 workflows。
+
+STATUS: DONE
