@@ -827,8 +827,8 @@ class PlatformPassServiceTest {
                 Map.of("membership_id", 8L, "registration_id", 901L, "topic_id", 6L)));
 
         assertTrue(service.handleXpayPush(push("xpay_refund_notify")));
-        verify(mapper).clampClaimTicket(eq(900L), any());
-        verify(mapper).clampClaimTicket(901L, laterEnd);
+        verify(registrationMapper).clampPassDerivedTicket(eq(900L), any());
+        verify(registrationMapper).clampPassDerivedTicket(901L, laterEnd);
         verify(mapper).markClaimsStopped(eq(7L), any());
     }
 
@@ -847,7 +847,7 @@ class PlatformPassServiceTest {
         Map<String, Object> o = order("XPAY", 0);
         o.put("valid_days", 30);
         service.activate(o, now, null);
-        verify(mapper).extendClaimTicket(eq(900L), eq(new Date(firstEnd.getTime() - 1000)),
+        verify(registrationMapper).extendPassDerivedTicket(eq(900L), eq(new Date(firstEnd.getTime() - 1000)),
                 eq(new Date(firstEnd.getTime() + 1000)), eq(secondEnd));
         verify(mapper, never()).insertClaim(any());
     }
