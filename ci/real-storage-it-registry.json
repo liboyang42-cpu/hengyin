@@ -812,7 +812,7 @@
       "note": "Reviewed current source registration for focused Questo backend repairs; execution NOT_RUN; storage proof only, no provider or product acceptance."
     },
     "com.chengyinhub.web.controller.api.AppMediaAssetMySqlIT": {
-      "tests": 5,
+      "tests": 6,
       "storage": [
         "mysql"
       ],

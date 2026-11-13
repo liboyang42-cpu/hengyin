@@ -164,10 +164,11 @@
         <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </select>
 
+    <!-- lifecycle 是 tinyint(1)：生产 JDBC 未设 tinyInt1isBit=false 时驱动给 Boolean（3 读成 1），+0 取回整数 -->
     <select id="selectLibrary" resultType="java.util.LinkedHashMap">
         select cms_topic.id, cms_topic.name, cms_topic.img_url, cms_topic.product_type,
                cms_topic.total_time, cms_topic.location_count, cms_topic.address_name,
-               cms_topic.self_play, cms_topic.self_play_price, cms_topic.lifecycle,
+               cms_topic.self_play, cms_topic.self_play_price, cms_topic.lifecycle + 0 as lifecycle,
                cms_topic.selling_started_at, cms_topic.sale_end_at, cms_topic.end_date
         from cms_topic
         where <include refid="com.chengyinhub.business.mapper.PublicContentCatalogMapper.catalogPublicGate"/>
