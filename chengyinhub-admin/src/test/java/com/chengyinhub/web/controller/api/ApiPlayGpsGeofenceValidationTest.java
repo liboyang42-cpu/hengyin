@@ -583,6 +583,10 @@ class ApiPlayGpsGeofenceValidationTest
         assertEquals("该站需完成对应任务后才能打卡", arrive(null, null).get("msg"));
         verifyNoProgressAndNoReward();
         when(advanced.hasStationGameProof(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        // 2026-11-13:开局闸不看玩法凭证——本局还没开局时,照片玩法已核验也必须带起点 300 米内定位。
+        assertEquals("ARRIVE_LOCATION_MISSING", arrive(null, null).get("errorCode"));
+        verifyNoProgressAndNoReward();
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(PLAYER, ACTIVITY)).thenReturn(true);
         assertEquals(200, arrive(null, null).get("code"));
         verify(progressionService).onNodeDone(PLAYER);
     }
