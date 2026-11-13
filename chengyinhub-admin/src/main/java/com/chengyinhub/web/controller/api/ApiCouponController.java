@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
+import com.chengyinhub.business.appgaps.CouponCommandReceipts;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantOperationScope;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -39,6 +40,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.validation.annotation.Validated;
@@ -99,6 +101,9 @@ public class ApiCouponController extends BaseController {
     @Autowired
     private IAuditTaskService auditTaskService;
 
+    @Autowired(required = false)
+    private CouponCommandReceipts couponCommandReceipts;
+
     @PostMapping("/mypublishlist")
     @Operation(summary = "我发布的优惠券列表")
     @Parameters({
@@ -153,25 +158,63 @@ public class ApiCouponController extends BaseController {
     @Operation(summary = "发布优惠券")
     @Log(title = "发布优惠券", businessType = BusinessType.INSERT)
     @PostMapping("/publish")
-    public AjaxResult publish(@Validated @RequestBody CouponPublisDTO request) {
+    public AjaxResult publish(@Validated @RequestBody CouponPublisDTO request,
+                              @RequestHeader(value = "X-Coupon-Command-Id", required = false) String commandId,
+                              @RequestHeader(value = "X-Coupon-Merchant-Id", required = false) String commandMerchantId) {
+        if (commandId == null && commandMerchantId == null) {
+            return publish(request);
+        }
+        Long member_id = currentAppMember();
+        if (member_id == null) {
+            return error("请先登录");
+        }
+        if (couponCommandReceipts == null) {
+            return AjaxResult.error(503, "优惠券命令回执未开放");
+        }
+        if (!MerchantOperationScope.isMerchant(request.getScope())) {
+            return AjaxResult.error(400, "命令回执只支持商家作用域");
+        }
+        CouponOperationContext operation = resolveCouponOperation(
+                member_id, MerchantPermission.COUPON_MANAGE, request.getScope());
+        if (operation.merchantId == null || !String.valueOf(operation.merchantId).equals(commandMerchantId)) {
+            return AjaxResult.error(403, "商家身份与命令不符");
+        }
+        String payloadHash = CouponCommandReceipts.publishHash(operation.merchantId, operation.ownerMemberId,
+                request.getName(), request.getDescription(), request.getCouponType(), request.getPublishCount(),
+                request.getStartTime().getTime(), request.getEndTime().getTime());
+        return couponCommandReceipts.execute(member_id, commandId, CouponCommandReceipts.PUBLISH,
+                operation.merchantId, operation.ownerMemberId, payloadHash,
+                () -> publishOutcome(member_id, request, operation, true));
+    }
+
+    /** 旧线格式（无命令回执头）：结论与文案与原实现逐字一致。 */
+    public AjaxResult publish(CouponPublisDTO request) {
         // 添加调试日志
         logger.info("接收到请求参数: {}", request);
-        Long member_id = 0L;
-        try {
-            member_id = getAppUserId();
-        } catch (Exception e) {
-
-        }
-        if (member_id == 0L) {
+        Long member_id = currentAppMember();
+        if (member_id == null) {
             return error("请先登录");
         }
         CouponOperationContext operation = resolveCouponOperation(
                 member_id, MerchantPermission.COUPON_MANAGE, request.getScope());
+        CouponCommandReceipts.Outcome outcome = publishOutcome(member_id, request, operation, false);
+        // C-31:回传新券 id,发布流里「新建即选中」要靠它挂到节点奖励上(缺 id 会静默挂成 0)。
+        return outcome.ok()
+                ? AjaxResult.success("发布成功", java.util.Collections.singletonMap("id", outcome.couponId()))
+                : error(outcome.message());
+    }
+
+    /**
+     * 发布的唯一实现。command=true 时在命令台账事务内运行：配额按「锁会员 → 持锁复查 → 插入」在同一事务完成
+     * （不经会抛异常把外层事务标成只回滚的 runWithCreateGuard），所有业务拒绝都以原因码返回、写进回执。
+     */
+    private CouponCommandReceipts.Outcome publishOutcome(Long member_id, CouponPublisDTO request,
+                                                         CouponOperationContext operation, boolean command) {
         Long ownerMemberId = operation.ownerMemberId;
         // 分级审核资质闸:商家券只允许入驻审核已通过的在营商家(require 已校验 status=1/account_status=1),
         // 这里兜底拒掉拿不到 merchantId 的非俱乐部身份。
         if (!operation.legacyClub && operation.merchantId == null) {
-            return error("商家未通过入驻审核，暂不能发布优惠券");
+            return CouponCommandReceipts.Outcome.rejected("WRITE_NOT_APPLIED", null, null, "商家未通过入驻审核，暂不能发布优惠券");
         }
         // 2026-10-20 分级审核:优惠券先发后审。名称/描述过统一门禁(POST_REVIEW),明确违规直接拒;
         // Round5B-3:审不了(HOLD)的券以 status=5(待审核)保存,发券 SQL 排除 5 即不可领,进审核台,人工通过才转进行中。
@@ -183,12 +226,12 @@ public class ApiCouponController extends BaseController {
         safety.setReviewMode(PublishSafetyRequest.ReviewMode.POST_REVIEW.name());
         SafetyDecision decision = contentSafetyGate.decide(safety);
         if (decision == null || decision.isBlock()) {
-            return error("优惠券内容包含违规信息，请修改后重试");
+            return CouponCommandReceipts.Outcome.rejected("SAFETY_REJECTED", null, null, "优惠券内容包含违规信息，请修改后重试");
         }
         // RBAC R3：按角色配额校验优惠券「同时存在」数量
         String quotaErr = quotaService.checkCreate(ownerMemberId, com.chengyinhub.business.service.IQuotaService.TYPE_COUPON);
         if (quotaErr != null) {
-            return error(quotaErr);
+            return CouponCommandReceipts.Outcome.rejected("QUOTA_REJECTED", null, null, quotaErr);
         }
         // M0-4 发券防重：Redis SETNX 业务锁(商家+类型+分钟粒度)，连点/重放同一分钟内只放行 1 次；
         // DB 唯一约束(migration_coupon_dedup.sql)为兜底。
@@ -196,7 +239,7 @@ public class ApiCouponController extends BaseController {
         String lockKey = "coupon:publish:" + ownerMemberId + ":" + request.getCouponType() + ":" + minute;
         Boolean locked = redisCache.setIfAbsent(lockKey, "1", 60, java.util.concurrent.TimeUnit.SECONDS);
         if (Boolean.FALSE.equals(locked)) {
-            return error("发券太频繁，请稍后再试");
+            return CouponCommandReceipts.Outcome.rejected("PUBLISH_RATE_LIMITED", null, null, "发券太频繁，请稍后再试");
         }
         SmsCoupon smsCoupon = new SmsCoupon();
         smsCoupon.setMemberId(ownerMemberId);
@@ -227,32 +270,70 @@ public class ApiCouponController extends BaseController {
         //(上方 checkCreate 为提前快速拦截 + 保持 Redis 分钟锁顺序;此处 guard 做权威原子校验。)
         // 超限时 guard 抛 ServiceException,由全局异常处理转 error 文案。
         final Long fMemberId = ownerMemberId;
-        Integer rows = quotaService.runWithCreateGuard(fMemberId,
-                com.chengyinhub.business.service.IQuotaService.TYPE_COUPON,
-                () -> smsCouponService.insertSmsCoupon(smsCoupon));
+        Integer rows;
+        if (command) {
+            umsMemberService.lockMemberById(fMemberId);
+            String lockedQuotaErr = quotaService.checkCreate(fMemberId, com.chengyinhub.business.service.IQuotaService.TYPE_COUPON);
+            if (lockedQuotaErr != null) {
+                return CouponCommandReceipts.Outcome.rejected("QUOTA_REJECTED", null, null, lockedQuotaErr);
+            }
+            rows = smsCouponService.insertSmsCoupon(smsCoupon);
+        } else {
+            rows = quotaService.runWithCreateGuard(fMemberId,
+                    com.chengyinhub.business.service.IQuotaService.TYPE_COUPON,
+                    () -> smsCouponService.insertSmsCoupon(smsCoupon));
+        }
         if (rows != null && rows > 0 && decision.isHold()) {
             holdForReview(smsCoupon.getId(), ownerMemberId, decision.getReasonCode(), request.getName(), safety);
         } else if (rows != null && rows > 0 && decision.isFlagged()) {
             flagForSpotCheck(smsCoupon.getId(), ownerMemberId, decision.getFlagReason(), request.getName());
         }
-        // C-31:回传新券 id,发布流里「新建即选中」要靠它挂到节点奖励上(缺 id 会静默挂成 0)。
-        return (rows != null && rows > 0)
-                ? AjaxResult.success("发布成功", java.util.Collections.singletonMap("id", smsCoupon.getId()))
-                : error("发布失败");
-
+        if (rows == null || rows <= 0 || (command && smsCoupon.getId() == null)) {
+            return CouponCommandReceipts.Outcome.rejected("WRITE_NOT_APPLIED", null, null, "发布失败");
+        }
+        return new CouponCommandReceipts.Outcome(true, "PUBLISHED", smsCoupon.getId(), smsCoupon.getStatus(), "发布成功");
     }
 
     @Operation(summary = "停发自己的优惠券(商家):停止新增发放/领取,已领的照常可用可核销")
     @Log(title = "停发优惠券", businessType = BusinessType.UPDATE)
     @PostMapping("/stop")
     @Parameters({@Parameter(name = "couponId", description = "优惠券ID")})
-    public AjaxResult stopIssuing(Long couponId, String scope) {
-        Long member_id = 0L;
-        try {
-            member_id = getAppUserId();
-        } catch (Exception e) {
+    public AjaxResult stopIssuing(Long couponId, String scope,
+                                  @RequestHeader(value = "X-Coupon-Command-Id", required = false) String commandId,
+                                  @RequestHeader(value = "X-Coupon-Merchant-Id", required = false) String commandMerchantId) {
+        if (commandId == null && commandMerchantId == null) {
+            return stopIssuing(couponId, scope);
         }
-        if (member_id == null || member_id == 0L) {
+        Long member_id = currentAppMember();
+        if (member_id == null) {
+            return error("请先登录");
+        }
+        if (couponCommandReceipts == null) {
+            return AjaxResult.error(503, "优惠券命令回执未开放");
+        }
+        if (couponId == null || couponId <= 0 || !MerchantOperationScope.isMerchant(scope)) {
+            return AjaxResult.error(400, "参数缺失");
+        }
+        CouponOperationContext operation = resolveCouponOperation(
+                member_id, MerchantPermission.COUPON_MANAGE, scope);
+        if (operation.merchantId == null || !String.valueOf(operation.merchantId).equals(commandMerchantId)) {
+            return AjaxResult.error(403, "商家身份与命令不符");
+        }
+        String payloadHash = CouponCommandReceipts.stopHash(operation.merchantId, operation.ownerMemberId, couponId);
+        return couponCommandReceipts.execute(member_id, commandId, CouponCommandReceipts.STOP,
+                operation.merchantId, operation.ownerMemberId, payloadHash, () -> {
+                    CouponCommandReceipts.Outcome outcome = stopOutcome(member_id, couponId, operation);
+                    // 命令回执不区分「不存在」与「不归本商家」，不泄露他人券的存在性。
+                    return "NOT_OWNER".equals(outcome.reasonCode())
+                            ? CouponCommandReceipts.Outcome.rejected("COUPON_NOT_FOUND", couponId, null, "优惠券不存在")
+                            : outcome;
+                });
+    }
+
+    /** 旧线格式（无命令回执头）：结论与文案与原实现逐字一致。 */
+    public AjaxResult stopIssuing(Long couponId, String scope) {
+        Long member_id = currentAppMember();
+        if (member_id == null) {
             return error("请先登录");
         }
         if (couponId == null || couponId <= 0) {
@@ -260,40 +341,76 @@ public class ApiCouponController extends BaseController {
         }
         CouponOperationContext operation = resolveCouponOperation(
                 member_id, MerchantPermission.COUPON_MANAGE, scope);
+        CouponCommandReceipts.Outcome outcome = stopOutcome(member_id, couponId, operation);
+        return outcome.ok() ? success(outcome.message()) : error(outcome.message());
+    }
+
+    private CouponCommandReceipts.Outcome stopOutcome(Long member_id, Long couponId, CouponOperationContext operation) {
         SmsCoupon coupon = smsCouponService.selectSmsCouponById(couponId);
         if (coupon == null || (coupon.getDelFlag() != null && coupon.getDelFlag() != 0)) {
-            return error("优惠券不存在");
+            return CouponCommandReceipts.Outcome.rejected("COUPON_NOT_FOUND", couponId, null, "优惠券不存在");
         }
         // 归属校验:只能停发自己的券。商家身份必须落在同一 merchant_id;俱乐部/个人按 owner member_id。
         if (OwnershipUtils.notOwner(coupon.getMemberId(), operation.ownerMemberId)) {
-            return error("无权停发该优惠券");
+            return CouponCommandReceipts.Outcome.rejected("NOT_OWNER", couponId, null, "无权停发该优惠券");
         }
         if (operation.merchantId != null) {
             if (!Integer.valueOf(1).equals(coupon.getScopeType())
                     || !operation.merchantId.equals(coupon.getMerchantId())) {
-                return error("无权停发该优惠券");
+                return CouponCommandReceipts.Outcome.rejected("NOT_OWNER", couponId, null, "无权停发该优惠券");
             }
         } else if (Integer.valueOf(1).equals(coupon.getScopeType())) {
-            return error("无权停发该优惠券");
+            return CouponCommandReceipts.Outcome.rejected("NOT_OWNER", couponId, null, "无权停发该优惠券");
         }
         if (Integer.valueOf(3).equals(coupon.getStatus())) {
-            return error("该优惠券已被平台手动失效");
+            return CouponCommandReceipts.Outcome.rejected("COUPON_MANUALLY_INVALIDATED", couponId, 3, "该优惠券已被平台手动失效");
         }
         if (Integer.valueOf(4).equals(coupon.getStatus())) {
-            return error("该优惠券已停发,无需重复操作");
+            return CouponCommandReceipts.Outcome.rejected("COUPON_ALREADY_STOPPED", couponId, 4, "该优惠券已停发,无需重复操作");
         }
         if (!Integer.valueOf(0).equals(coupon.getStatus()) && !Integer.valueOf(1).equals(coupon.getStatus())) {
-            return error("已结束的优惠券无法停发");
+            return CouponCommandReceipts.Outcome.rejected("COUPON_ENDED", couponId, coupon.getStatus(), "已结束的优惠券无法停发");
         }
         // CAS(WHERE status in (0,1)):并发下状态已被改走时拿 0 行,回读给出准确原因。
         if (smsCouponService.stopIssuingCoupon(couponId, operation.ownerMemberId) != 1) {
             SmsCoupon current = smsCouponService.selectSmsCouponById(couponId);
-            return error(current != null && Integer.valueOf(4).equals(current.getStatus())
-                    ? "该优惠券已停发,无需重复操作" : "停发失败,请刷新后重试");
+            return CouponCommandReceipts.Outcome.rejected("STOP_CAS_NOT_APPLIED", couponId,
+                    current == null ? null : current.getStatus(),
+                    current != null && Integer.valueOf(4).equals(current.getStatus())
+                            ? "该优惠券已停发,无需重复操作" : "停发失败,请刷新后重试");
         }
         logger.info("商家停发优惠券 couponId={} ownerMemberId={} actor={}",
                 couponId, operation.ownerMemberId, member_id);
-        return success("已停发");
+        return new CouponCommandReceipts.Outcome(true, "STOPPED", couponId, 4, "已停发");
+    }
+
+    @Operation(summary = "商家优惠券命令回执 v1:按原 requestId 读回发布/停发的不可变执行结论")
+    @PostMapping("/command-receipt")
+    public AjaxResult commandReceipt(Long merchantId, String requestId, String scope) {
+        Long member_id = currentAppMember();
+        if (member_id == null) {
+            return error("请先登录");
+        }
+        if (couponCommandReceipts == null) {
+            return AjaxResult.error(503, "优惠券命令回执未开放");
+        }
+        if (merchantId == null || merchantId <= 0 || !MerchantOperationScope.isMerchant(scope)) {
+            return AjaxResult.error(400, "参数缺失");
+        }
+        CouponOperationContext operation = resolveCouponOperation(member_id, MerchantPermission.COUPON_MANAGE, scope);
+        if (!merchantId.equals(operation.merchantId)) {
+            return AjaxResult.error(403, "无权读取该商家的命令回执");
+        }
+        return couponCommandReceipts.read(member_id, merchantId, requestId);
+    }
+
+    private Long currentAppMember() {
+        Long member_id = 0L;
+        try {
+            member_id = getAppUserId();
+        } catch (Exception e) {
+        }
+        return member_id == null || member_id == 0L ? null : member_id;
     }
 
     @PostMapping("/myrecvlist")

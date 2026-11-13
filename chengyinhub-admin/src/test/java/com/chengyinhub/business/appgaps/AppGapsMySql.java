@@ -49,6 +49,8 @@ public final class AppGapsMySql {
         factory.setDataSource(source);
         Configuration configuration = new Configuration();
         configuration.setMapUnderscoreToCamelCase(true);
+        // 既有业务 mapper XML 用短别名（parameterType="SmsCoupon" 等），与应用 typeAliasesPackage 一致。
+        configuration.getTypeAliasRegistry().registerAliases("com.chengyinhub.business.domain");
         factory.setConfiguration(configuration);
         Resource[] resources = new Resource[xml.length];
         for (int i = 0; i < xml.length; i++) resources[i] = new ClassPathResource(xml[i]);
