@@ -132,12 +132,7 @@ def main(topic_id):
     admin = admin_token()
 
     step("开售冻结夹具:四店固定补偿已停售,补上已售合同形态的条款/收款人快照(见 seed_legacy_sale_freeze)")
-    try:
-        seed_legacy_sale_freeze(topic_id)
-    except Exception as exc:  # DEBUGCODE
-        print("   ✗ 夹具失败: %r" % (exc,))
-        errno = exc.args[0] if exc.args and isinstance(exc.args[0], int) else 0
-        return 100 + (errno % 100) if errno else (90 if isinstance(exc, RuntimeError) else 91)
+    seed_legacy_sale_freeze(topic_id)
     readback("冻结条款/收款人快照", "SELECT (SELECT COUNT(*) FROM club_edition_compensation_terms WHERE topic_id=%s),"
              "(SELECT COUNT(*) FROM topic_sale_payee_snapshot WHERE topic_id=%s),"
              "(SELECT COUNT(*) FROM club_quality_decision WHERE topic_id=%s AND decision_status='PENDING')",
