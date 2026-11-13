@@ -1,7 +1,7 @@
 # 通行证收费落地 · 后端 lane 结果（2026-11-13）
 
 分支 `fix/pass-backend-20261113`，PR #818。**未做**：生产部署、账号配置（OfferID/AppKey/商品）、上架、开售开关——全部仍归业主。
-`platform-pass.enabled` 与各渠道开关默认仍关闭，套餐仍 `status=0`。本 lane 按仓库规则没有在本地跑 Java 构建/测试，验证全部以 PR 的 CI 为准。
+`platform-pass.enabled` 与各渠道开关默认仍关闭，套餐仍 `status=0`。本 lane 按仓库规则没有在本地跑 Java 构建/测试，验证以 PR #818 的 CI 为准：head `315b3f2` 上全部检查通过（Backend tests、Funds MySQL IT、架构门、迁移安全门、后台 UI 构建/合同、Redis 恢复、小程序 20 分片等）。
 
 文件：`S` = `chengyinhub-system/.../platformpass/PlatformPassService.java`，`T` = `chengyinhub-admin/src/test/java/com/chengyinhub/business/platformpass/PlatformPassServiceTest.java`。
 
@@ -28,4 +28,4 @@
 6. 续买顺延派生票时未重算主题自身销售窗（仅受购后 90 天与新覆盖链限制）。
 7. 旧 JSAPI 待支付单现在不可再支付（按 T01）；若线上有此类单，会显示待支付直至取消。
 
-STATUS: PARTIAL - 代码与单测已全部写齐，但本 lane 按仓库规则未在本地编译/运行，CI 结果待确认；渠道字段待账号实测，其余为业主项
+STATUS: PARTIAL - 代码、单测与 CI 全部完成并通过；渠道字段(paid_time/env/refund_fee)未能对真实账号回包核实，且账号配置/开售/条款文案为业主项
