@@ -31,7 +31,58 @@ public interface PlatformPassMapper {
                       @Param("transactionId") String transactionId, @Param("paidTime") Date paidTime);
 
     int markXpayPaid(@Param("id") long id, @Param("wxOrderId") String wxOrderId, @Param("env") int env,
-                     @Param("paidTime") Date paidTime);
+                     @Param("paidTime") Date paidTime, @Param("deliveryStatus") int deliveryStatus);
+
+    int freezeXpayIntent(@Param("id") long id, @Param("productId") String productId,
+                         @Param("offerId") String offerId, @Param("env") int env);
+
+    int markDeliveryConfirmed(@Param("id") long id);
+
+    int markDeliveryRetry(@Param("id") long id, @Param("nextTime") Date nextTime);
+
+    List<Map<String, Object>> selectOrdersPendingDelivery(@Param("now") Date now, @Param("limit") int limit);
+
+    Map<String, Object> selectOrderByIdForUpdate(@Param("id") long id);
+
+    /** T10:同会员串行锁。先 insert ignore 保证锁行存在，再 for update。锁序固定：订单行 → 会员锁 → 段。 */
+    int insertMemberLock(@Param("memberId") long memberId);
+
+    Long lockMember(@Param("memberId") long memberId);
+
+    int markRefundedFromChannel(@Param("id") long id, @Param("factId") Long factId, @Param("factHash") String factHash,
+                                @Param("refundedTime") Date refundedTime, @Param("amount") long amount,
+                                @Param("source") String source);
+
+    int recordPartialChannelRefund(@Param("id") long id, @Param("amount") long amount, @Param("facts") String facts);
+
+    int requestReview(@Param("id") long id, @Param("reason") String reason, @Param("facts") String facts);
+
+    int decideReview(@Param("id") long id, @Param("decision") int decision, @Param("handler") String handler,
+                     @Param("note") String note, @Param("time") Date time);
+
+    int markReviewReceipt(@Param("id") long id, @Param("receipt") String receipt);
+
+    List<Map<String, Object>> selectOrdersForAdmin(@Param("status") Integer status,
+                                                   @Param("reviewStatus") Integer reviewStatus,
+                                                   @Param("limit") int limit);
+
+    Map<String, Object> selectMembershipById(@Param("id") long id);
+
+    Map<String, Object> selectMembershipByIdForUpdate(@Param("id") long id);
+
+    List<Map<String, Object>> selectActiveSegments(@Param("memberId") long memberId);
+
+    List<Map<String, Object>> selectActiveClaims(@Param("memberId") long memberId);
+
+    int markClaimsStopped(@Param("membershipId") long membershipId, @Param("now") Date now);
+
+    int clampClaimTicket(@Param("registrationId") long registrationId, @Param("end") Date end);
+
+    int extendClaimTicket(@Param("registrationId") long registrationId, @Param("lo") Date lo,
+                          @Param("hi") Date hi, @Param("newEnd") Date newEnd);
+
+    /** 覆盖与可领取同一口径用：已发布主题的自玩/价格/生命周期列。 */
+    List<Map<String, Object>> selectCoverageTopics(@Param("topicIds") List<Long> topicIds);
 
     int markCancelled(@Param("id") long id, @Param("memberId") long memberId, @Param("cancelTime") Date cancelTime);
 
@@ -40,9 +91,6 @@ public interface PlatformPassMapper {
                             @Param("requestedTime") Date requestedTime);
 
     int markRefundRolledBack(@Param("id") long id, @Param("refundNo") String refundNo);
-
-    int markRefunded(@Param("id") long id, @Param("factId") Long factId, @Param("factHash") String factHash,
-                     @Param("refundedTime") Date refundedTime);
 
     /** 本会员最后一段仍有效（未撤销且未到期）的 valid_to；用于续买顺延。加锁串行同会员的并发开通。 */
     Date selectLatestValidToForUpdate(@Param("memberId") long memberId, @Param("now") Date now);
