@@ -79,6 +79,9 @@ class SelfPlayXpayServiceTest {
         ReflectionTestUtils.setField(service, "refunds", refunds);
         when(roles.isPlatformOwned(500L)).thenReturn(true);
         when(registrations.selectCmsRegistrationById(REG_ID)).thenReturn(registration());
+        // MyBatis 对查无结果返回 null；Mockito 对 Map 返回类型默认给空 Map，必须显式对齐。
+        when(mapper.selectByRegistrationId(anyLong())).thenReturn(null);
+        when(mapper.selectByRegistrationNo(anyString())).thenReturn(null);
     }
 
     private static CmsRegistration registration() {
@@ -276,7 +279,7 @@ class SelfPlayXpayServiceTest {
         // 对账：已付未确认发货 → 再补报
         JSONObject ok = new JSONObject();
         ok.put("errcode", 0);
-        when(xpay.notifyProvideGoods(REG_NO, 1)).thenReturn(ok);
+        org.mockito.Mockito.doReturn(ok).when(xpay).notifyProvideGoods(REG_NO, 1);
         service.reconcileOne(row(1, 0));
         verify(mapper).markDelivered(7L);
     }
