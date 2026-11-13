@@ -12,6 +12,9 @@ public interface IAdvancedGameRuntimeService {
 
     Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId);
 
+    /** Opening calendar of the node's daily time window (server zone); read only. */
+    Map<String, Object> timeWindow(Long memberId, Long activityId, Long topicId, Long nodeId);
+
     Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId,
             com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration);
 

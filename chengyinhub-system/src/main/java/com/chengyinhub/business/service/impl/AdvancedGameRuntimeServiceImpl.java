@@ -260,6 +260,30 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 declaration);
     }
 
+    /**
+     * Read-only opening calendar of a node's timeWindow, under the same eligibility as resuming
+     * (no new-use admission, no write). Not configured or malformed fails closed.
+     */
+    @Override
+    public Map<String, Object> timeWindow(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        GameInput input = requireInput(memberId, activityId, topicId, nodeId, false);
+        requireRouteNodeAccess(memberId, activityId, topicId, nodeId);
+        JsonNode config = readJson(input.configJson, "高级玩法配置不可用");
+        JsonNode window = config.get("timeWindow");
+        if (!enabled(window)) throw new IllegalStateException("TIME_WINDOW_NOT_CONFIGURED");
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("activityId", input.activityId);
+        out.put("topicId", topicId);
+        out.put("nodeId", nodeId);
+        try {
+            out.putAll(com.chengyinhub.business.service.support.AdvancedTimeWindow.compute(
+                    window.path("openFrom").asText(""), window.path("openTo").asText(""), clock.now().getTime()));
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalStateException("TIME_WINDOW_INVALID");
+        }
+        return out;
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId) {

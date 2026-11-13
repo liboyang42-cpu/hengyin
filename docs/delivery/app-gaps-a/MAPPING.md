@@ -91,3 +91,56 @@ members whose second outing came within `fairness_delta_seconds`. Only the calle
 returned, so the app's `showsRatio` holds. Facts the platform does not record yet (GPS false
 rejections, safety tickets, merchant verifications, challenge compensation exits) are `null` and
 listed in `coverageGaps`.
+
+## Play runtime (13 paths)
+
+| App path (graph) | App file | Status | Backend |
+|---|---|---|---|
+| `/api/play` GET/POST | Core/PlayExperienceService.swift | mapped | prefix of the existing `/api/play/*` routes the service builds (`answer`, `checkin`, `arrive`, `photo`, `sensor-result`, `run-session/*`, `nodes`, `route-state`, `action-receipt`, ...); all exist |
+| `/api/game/session` | Core/PlayExperienceService.swift | mapped | `GET /api/game/session/view`, `GET /api/game/session/receipt`, `POST /api/game/session/command` (existing) |
+| `/api/play/check` | Core/JourneyContentService.swift | mapped | `/api/play/check/{roll,reroll,settle,bargain,momentum,rest}` POST and `/api/play/check/receipt` GET (existing) |
+| `/api/play/theme` GET | Core/PlayThemeBackpackActions.swift | mapped | `/api/play/theme/{action,card,state,history,replay,gameplay-action,gameplay-preview,support-matrix}` (existing) |
+| `/api/play/route-action` GET | App/PlayRouteMapView.swift | served | `?sessionId=&memberId=&actionId=` → `{sessionId, memberId, actionId, responseJson}` from `topic_route_action`; memberId must be the caller (403), unknown → 404; never inserts |
+| `/api/play/egg/collect` | Core/JourneyContentService.swift | served | form `eggId`, `topicId` (client `content` is ignored): stores the reviewed `npc_route_egg.text` into `member_collectible` (type 2); idempotent; unreviewed egg → 404, wrong topic → 400 |
+| `/api/play/advanced/time-window` | Core/NativePlatformService.swift | served | `GET ?activityId=&topicId=&nodeId=` → `NativeTimeWindow` fields (`enabled`, `notificationProvider: LOCAL_ONLY`, `timeZone: Asia/Shanghai`, `serverNow`, `openNow`, `nextOpenAt`, `nextCloseAt`, `windowVersion`, plus `openFrom`/`openTo`); same eligibility as resuming a node; not configured / malformed → 409 with `data.reasonCode` |
+| `/api/play/city-orientation`, `/answer`, `/receipt` | Core/CityOrientationTask*.swift | deferred | separate orientation-answer receipt contract (`payloadHash`, `configVersion`); the existing orient session routes (`/api/play/orient/session/*`) are not the same wire shape and were not wrapped |
+| `/api/progress/meter`, `/api/progress/requests`, `/api/progress/requests/{}` | Core/NativeChannelProgress*.swift | deferred | built on the channel platform (`/api/channel/{id}/board`, `/progress/overview`), which the backend does not have; belongs with the messaging/channel area |
+
+## Profile (8 paths)
+
+| App path (graph) | App file | Status | Backend |
+|---|---|---|---|
+| `/api/user/address` | Core/ProfileParticipantTransport.swift | mapped | `/api/user/address/{list,info,action,delete}` POST (existing) |
+| `/api/user/deregister` | Core/AccountDeregistrationOriginal.swift | mapped | `/api/user/deregister/{precheck,apply,cancel}` POST, `/status` GET (existing) |
+| `/api/user/sms/send` POST | App/RegionalEndpointAllowlistSectionView.swift | mapped | `POST /api/sms/send` (existing). The app file is the endpoint audit list, not a live caller |
+| `/api/user/follow-list` | Core/ProfileFollowListService.swift | served | `GET ?kind=following\|followers&cursor=&limit=` (limit ≤ 50) → `{owner_id, kind, rows[{id,nickname,avatar,isFollow}], has_more, next_cursor}`; keyset by member id; the caller's own lists only; deleted members and legacy duplicate follow rows are dropped |
+| `/api/user/deregister/result` | Core/DeregistrationStatusRules.swift | deferred | `apply` revokes every session of the account, so no authenticated read can follow it; the app's default `derivedFromStatus` receipt (from `/status`) stays the supported path |
+| `/api/onboarding/get`, `/api/onboarding/submit` | Core/NativeChannelOnboarding.swift | deferred | guild/channel onboarding (`guild_kind`, `channel_ids`, `role_ids`, receipts under `/api/channel-platform/admission/requests/`); the channel platform does not exist in the backend — belongs with messaging/channels |
+| `/api/welcome-screen/get` | Core/NativeChannelWelcome.swift | deferred | same channel-platform dependency |
+
+## Roam (10 paths)
+
+| App path (graph) | App file | Status | Backend |
+|---|---|---|---|
+| `/api/free-explore/bundle` GET/POST | App/BundleCommerceReadTransport.swift | mapped | prefix of the existing `/api/free-explore/bundle/*` routes (`catalog`, `order`, `order/receipt`, `order/refund-quote`, `reservation`, `reservation/receipt`, `reservation/{}/cancel(-quote)`, `exit-options`, `exit-decision`) |
+| `/api/roam/passport` | Core/RoamPassportHistoryReading.swift | mapped | `/api/roam/passport/{history,record,summary}` GET (existing) |
+| `/api/free-explore/bundle/order/refund` | App/BundleRefundTransport.swift | deferred | money movement (original-route refund); only `order/refund-quote` exists. Needs the payments owner's refund state machine, not a new parallel path |
+| `/api/free-explore/bundle/transfer`, `/voucher`, `/voucher/appeal`, `/review`, `/shelf`, `/renewal-intent` | App/BundleCommerceMount.swift, BundleTransfer*/BundleAppeal* | deferred | bundle commerce extensions (gifting a paid bundle, vouchers, appeals, shelf, renewal) change paid entitlements; they need product and payments decisions first |
+| `/api/location-share/personal` | Core/PersonalLocationShareHTTPService.swift | deferred | live personal location sharing needs a privacy and retention decision (who sees it, how long it is kept) before any storage is built |
+
+## Topics / routes (14 paths)
+
+| App path (graph) | App file | Status | Backend |
+|---|---|---|---|
+| `/api/topic/attribute-author` GET/POST/DELETE, `/references`, `/validate` | Core/NativeAttributeAuthor*.swift | mapped (wire shape differs) | existing `ApiTopicAttributeController`: `GET/POST/PUT/DELETE /api/topic/attributes`, `PUT /api/topic/attributes/order`, `GET /api/topic/state-keys/usage` (references), `POST /api/topic/state-keys/validate` (validate). The app already keeps a legacy branch for `/api/topic/state-keys`; the versioned `expectedConfigVersion` envelope is not on the backend |
+| `/api/topic/attribute-author/request` | Core/NativeAttributeAuthorExtendedContract.swift | deferred | original-request receipt for the versioned author contract above; no equivalent |
+| `/api/topic/module-preflight` | Core/NativeAttributeAuthorHostTransport.swift | deferred | the closest existing read is `GET /api/topic/publish-status`; a module preflight was not built |
+| `/api/topic/cover`, `/selection`, `/selection/current`, `/selection/status`, `/upload`, `/{}/content` | Core/OwnedTopicCover*.swift, ApprovedTopicSelectedCover.swift | deferred | author-only cover pipeline: private object storage, moderation, author-only content serving and topic config/slot versions; needs the media owner's private-storage path |
+| `/api/topic/edit-requests/submit`, `/read`, `/resume-post-processing` | Core/ProjectEditRequestContract.swift | deferred | durable request wrapper around `api/topic/{create,update,v2/create,v2/update}`; touching the publishing core needs the topic owner |
+
+## Rewards (18 paths)
+
+| App path (graph) | App file | Status | Reason |
+|---|---|---|---|
+| `/api/reward-pledge` (+ `/awards`, `/drafts`, `/fulfilment/{awards,expire,preview,redeem,resolve}`, `/ops`, `/pledges`, `/review`, `/versions`) | Core/RewardPledge.swift | deferred | a complete merchant/creator pledge product: draft → submit → confirm → freeze → platform review → versions/holds/withdraw → award pool → fulfilment (preview/redeem/expire/resolve) → service cases. No part of it exists; building it needs product rules for review, holds and expiry |
+| `/api/rewards/noncash` (+ `/cases`, `/claims`, `/claims/recover`, `/subjects`, `/versions`) | Core/NonCashRewardService.swift, RewardPledge.swift | deferred | the player-side list and claims read awards that only the pledge fulfilment above produces; a list with no producer would always be empty. Coupon rewards stay on `api/coupon/myrecvlist` |
