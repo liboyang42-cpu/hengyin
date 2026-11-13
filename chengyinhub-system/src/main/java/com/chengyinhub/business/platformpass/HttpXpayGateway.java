@@ -61,7 +61,7 @@ public class HttpXpayGateway implements XpayGateway {
     private JSONObject post(String uri, JSONObject payload) {
         RestoreDispatchGuard.requireDispatchAllowed();
         PlatformPassProperties.Xpay xpay = properties.getXpay();
-        if (!xpay.isReady()) throw new IllegalStateException("虚拟支付未配置");
+        if (!xpay.hasCredentials()) throw new IllegalStateException("虚拟支付未配置");
         String token = tokens.getAccessToken();
         if (token == null || token.isEmpty()) throw new IllegalStateException("access_token 不可用");
         String body = JSON.toJSONString(payload);

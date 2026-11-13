@@ -2193,3 +2193,8 @@ button::after {
 .topic-story-paywall__card { box-shadow: var(--cy-depth-rest); }
 
 /* D3:无封面头图 = look 渐变 + 小路线标(同主题卡),不再铺满黑白线稿 */
+
+/* 路线站点无图且主题也无封面:深色中性块,不再铺白底线稿 */
+.topic .davidxfxi .item-pic--blank { background: var(--cy-color-play-surface-solid); }
+/* 未解锁章节预告:介绍可读,封面压暗,右上锁标 */
+.topic .story-cc.is-locked .story-cc__img { filter: brightness(.72); }

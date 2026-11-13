@@ -1268,7 +1268,7 @@
       "pkg": "pages/coop",
       "tabBar": false,
       "role": "merchant",
-      "needsLogin": false,
+      "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
       "hasJs": true,

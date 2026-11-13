@@ -31,3 +31,41 @@ test('主题响应只计算锁定数量，不伪造隐藏章节', () => {
   assert.match(js, /Math\.max\(0, totalChapterCount - unlockedChapterCount\)/)
   assert.match(js, /goMyOrders[\s\S]*\/subpackageMember\/order\/order/)
 })
+
+test('未解锁章节以锁定预告卡下发：介绍可见、点按走购票、不计入可玩进度', () => {
+  const motion = require(path.join(root, 'pages/topic/utils/topic-motion.js'))
+  const cards = motion.buildStoryCards({ productType: 1, chaptersList: [
+    { name: '序', description: '开场', nodes: [] },
+    { name: '终', description: '未解锁的介绍', locked: true, imgArr: 'a.jpg;b.jpg', nodes: [{ id: 9, name: '站', imgUrl: '' }] },
+  ] }, [])
+  assert.equal(cards.length, 2)
+  assert.equal(cards[0].locked, false)
+  assert.equal(cards[1].locked, true)
+  assert.equal(cards[1].excerpt, '未解锁的介绍')
+  assert.equal(cards[1].img, 'a.jpg', '无站点图时取章节封面')
+
+  const js = read('pages/topic/index/index.js')
+  assert.match(js, /card && card\.locked\) return this\.selfPlayBuy\(\)/)
+  assert.match(js, /c && c\.locked === true\) return; \(c\.nodes/)
+  const wxml = read('pages/topic/index/index.wxml')
+  assert.match(wxml, /item\.locked \? ' is-locked'/)
+  assert.match(wxml, /item\.locked \? 'lock' : 'chevron-right'/)
+})
+
+test('章节标题已自带序号时不重复加前缀', () => {
+  const motion = require(path.join(root, 'pages/topic/utils/topic-motion.js'))
+  assert.equal(motion.chapterHeading(0, 2, '雨夜'), '第一章 · 雨夜')
+  assert.equal(motion.chapterHeading(0, 2, '第一章 · 雨夜'), '第一章 · 雨夜')
+  assert.equal(motion.chapterHeading(1, 2, '第二章：归途'), '第二章：归途')
+  assert.equal(motion.chapterHeading(2, 3, '终章 尾声'), '终章 尾声')
+  assert.equal(motion.chapterHeading(0, 2, ''), '第一章')
+})
+
+test('路线：有坐标默认真地图，无坐标才用示意图；站点无图回退主题封面而非白线稿', () => {
+  const wxml = read('pages/topic/index/index.wxml')
+  const js = read('pages/topic/index/index.js')
+  assert.match(wxml, /<cy-route-sketch wx:if="\{\{!routeReal && !sketchPoints\.length\}\}"/)
+  assert.match(js, /routeReal: sketchPoints\.length > 0/)
+  assert.doesNotMatch(wxml, /icon_line\.jpg/)
+  assert.match(wxml, /img\.first\(node\.imgUrl\) \|\| img\.first\(info\.imgUrl\)/)
+})

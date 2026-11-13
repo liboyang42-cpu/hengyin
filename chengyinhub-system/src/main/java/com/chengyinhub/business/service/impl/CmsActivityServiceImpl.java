@@ -135,7 +135,19 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      */
     @Override
     public List<CmsActivity> selectActivitiesForSettlement() {
-        return cmsActivityMapper.selectActivitiesForSettlement();
+        List<CmsActivity> due = cmsActivityMapper.selectActivitiesForSettlement();
+        // 2026-11-13 业主:商家发布的自由探索,承办俱乐部开的场次同走场次结算,票款给发布商家。
+        List<CmsActivity> merchantPublished = cmsActivityMapper.selectMerchantPublishedFreeExploreActivitiesForSettlement();
+        if (merchantPublished == null || merchantPublished.isEmpty()) {
+            return due;
+        }
+        List<CmsActivity> all = new java.util.ArrayList<>(due == null ? java.util.Collections.<CmsActivity>emptyList() : due);
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        for (CmsActivity a : all) seen.add(a.getId());
+        for (CmsActivity a : merchantPublished) {
+            if (seen.add(a.getId())) all.add(a);
+        }
+        return all;
     }
 
     /**
@@ -271,6 +283,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             BigDecimal money = (paid == null ? BigDecimal.ZERO : paid).add(retained == null ? BigDecimal.ZERO : retained);
             if (money.signum() <= 0) continue;
             String reason = strandedReason(activity);
+            if (reason == null) continue; // 商家发布主题的承办场次已有结算路径,不再告警
             logger.error("【结算告警】自由探索实收没有结算路径,未入账 activityId={}, topicId={}, 实收={}, 原因={}",
                     activity.getId(), activity.getTopicId(), money, reason);
             stranded.add("activityId=" + activity.getId() + ": FREE_EXPLORE_SALE_HAS_NO_SETTLEMENT_PATH topicId="
@@ -292,6 +305,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             return "开售合同无法读取";
         }
         if (fourStore) return "四店探店日(FOUR_STORE_REDEEM)待期级 FINAL,分钱规则待业主拍板";
+        if (isMerchantPublishedSession(activity, topic)) return null;
         return "场次俱乐部 " + activity.getClubId() + " 不是主题俱乐部 " + topic.getClubId() + ",分钱规则待业主拍板";
     }
 
@@ -359,8 +373,8 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 2. 计算各项佣金（含主题设计者，无主题来源时其份额并入商户）
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, totalSales, rule);
 
-        // 3. 分配商户分润（活动收款人:俱乐部场次给当前主理人,其余给创建人,见 ClubPrincipalPayee）
-        Long payee = activityPayee(activity);
+        // 3. 分配商户分润（活动收款人:俱乐部场次给当前主理人,商家发布主题的承办场次给发布商家,其余给创建人,见 ClubPrincipalPayee）
+        Long payee = activityPayee(activity, topic);
         // 第十二轮 k5(2026-11-05 业主):俱乐部场次上按核销付费的商家,按参加人数从主理人份额里拿冻结单价。
         com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan feePlan =
                 merchantFeePlan(activity, payee, null);
@@ -447,8 +461,9 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (activity == null) {
             throw new ServiceException("暂扣补结的活动不存在 holdId=" + hold.getId());
         }
-        requireSessionSettlementContract(activity, activity.getTopicId() == null
-                ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId()));
+        CmsTopic heldTopic = activity.getTopicId() == null
+                ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
+        requireSessionSettlementContract(activity, heldTopic);
         if (clubPrincipalPayee != null && clubPrincipalPayee.personalActivity(activity)) {
             Long payee = clubPrincipalPayee.frozenActivity(activity).getMemberId();
             com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan fees = merchantFeePlan(activity, payee, registration.getId());
@@ -460,7 +475,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         }
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, sales, rule);
-        Long payee = activityPayee(activity);
+        Long payee = activityPayee(activity, heldTopic);
         com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan feePlan =
                 merchantFeePlan(activity, payee, registration.getId());
         if (!feePlan.isEmpty()) {
@@ -519,6 +534,25 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * 活动现金收款人(2026-11-02 业主口径:钱给人,不给俱乐部实体)。俱乐部场次 = 俱乐部当前主理人,
      * 转让后新主理人收;非俱乐部场次仍是 cms_activity.member_id。退款冲回按实际入账人扣,见 RefundServiceImpl。
      */
+    private Long activityPayee(CmsActivity activity, CmsTopic topic) {
+        if (isMerchantPublishedSession(activity, topic)) {
+            return topic.getMemberId();
+        }
+        return activityPayee(activity);
+    }
+
+    /**
+     * 商家发布的自由探索(topic.club_id 为空、发布者 topic.member_id),由承办俱乐部开的场次(activity.club_id>0)。
+     * 2026-11-13 业主:票款归发布商家;承办俱乐部、合作店铺与商家线下结算。平台费与核销费口径不变。
+     */
+    private static boolean isMerchantPublishedSession(CmsActivity activity, CmsTopic topic) {
+        return activity != null && topic != null
+                && Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())
+                && (topic.getClubId() == null || topic.getClubId() <= 0)
+                && topic.getMemberId() != null && topic.getMemberId() > 0
+                && activity.getClubId() != null && activity.getClubId() > 0;
+    }
+
     private Long activityPayee(CmsActivity activity) {
         if (activity.getClubId() == null || activity.getClubId() <= 0) {
             return activity.getMemberId();
@@ -539,7 +573,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             throw new ServiceException("FREE_EXPLORE_SESSION_LEDGER_UNWIRED: 自由探索场次分账组件未装配,拒绝结算 activityId="
                     + activity.getId());
         }
-        Long payee = activityPayee(activity);
+        Long payee = activityPayee(activity, topic);
         List<Long> ids = cmsRegistrationMapper.selectPaidUnrefundedIdsByActivityId(activity.getId());
         if (ids == null) return;
         for (Long id : ids) {
@@ -554,7 +588,9 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
     private void requireSessionSettlementContract(CmsActivity activity, CmsTopic topic) {
         if (topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) return;
-        if (topic.getClubId() == null || topic.getClubId() <= 0 || !topic.getClubId().equals(activity.getClubId())) {
+        boolean clubOwned = topic.getClubId() != null && topic.getClubId() > 0
+                && topic.getClubId().equals(activity.getClubId());
+        if (!clubOwned && !isMerchantPublishedSession(activity, topic)) {
             throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: activityId=" + activity.getId());
         }
         TopicSaleSnapshot snapshot = topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());

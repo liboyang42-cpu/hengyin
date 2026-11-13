@@ -18,6 +18,13 @@ public class TopicChapterVO extends CmsTopicChapter {
     private Boolean routeGeometryAvailable;
     private String routeGeometryErrorCode;
 
+    @Schema(description = "未解锁章节的预告:true 时只含介绍与站点名/坐标,无剧情块/模板")
+    private Boolean locked;
+
+    public Boolean getLocked() { return locked; }
+
+    public void setLocked(Boolean locked) { this.locked = locked; }
+
     public List<TopicNodeVO> getNodes() {
         return nodes;
     }

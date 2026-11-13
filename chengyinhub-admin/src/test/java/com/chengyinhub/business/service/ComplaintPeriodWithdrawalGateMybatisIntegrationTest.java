@@ -153,7 +153,7 @@ class ComplaintPeriodWithdrawalGateMybatisIntegrationTest {
                         + "cancel_time DATETIME, cancel_reason VARCHAR(255), reason VARCHAR(255), del_flag INT, start_date DATETIME, end_date DATETIME, template_id BIGINT,"
                         + "topic_id BIGINT, club_id BIGINT, check_status INT, is_settlement INT, create_by VARCHAR(64), create_time DATETIME, update_by VARCHAR(64), update_time DATETIME) ENGINE=InnoDB",
                 "CREATE TABLE cms_topic (id BIGINT PRIMARY KEY, product_type INT, team_mode TINYINT NOT NULL DEFAULT 0,"
-                        + " team_max_members INT NOT NULL DEFAULT 4, club_id BIGINT,"
+                        + " team_max_members INT NOT NULL DEFAULT 4, club_id BIGINT, member_id BIGINT,"
                         + " selling_started_at DATETIME(3), sale_end_at DATETIME(3)) ENGINE=InnoDB",
                 "CREATE TABLE cms_registration ("
                         + "id BIGINT PRIMARY KEY AUTO_INCREMENT, registration_no VARCHAR(32) NOT NULL, parent_order_no VARCHAR(64), request_id VARCHAR(64), request_fingerprint CHAR(64),"
