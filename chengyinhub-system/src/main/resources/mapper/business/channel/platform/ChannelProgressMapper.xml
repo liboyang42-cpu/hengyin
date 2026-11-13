@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelProgressMapper">
+    <sql id="listedNode">
+        exists (select 1 from cms_topic_node n where n.id = p.node_id and n.topic_id = #{topicId}
+                 and (n.status is null or n.status = 1))
+    </sql>
+    <select id="selectBoards" resultType="java.util.HashMap" useCache="false">
+        select id, board_key as boardKey, title, topic_id as topicId, activity_id as activityId, row_limit as rowLimit, revision
+          from im_channel_progress_board where channel_id = #{channelId} and status = 1 order by id limit 10
+    </select>
+    <select id="selectBoard" resultType="java.util.HashMap" useCache="false">
+        select id, board_key as boardKey, title, topic_id as topicId, activity_id as activityId, row_limit as rowLimit, revision
+          from im_channel_progress_board where channel_id = #{channelId} and board_key = #{boardKey} and status = 1
+    </select>
+    <insert id="insertBoard" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into im_channel_progress_board(channel_id, board_key, title, topic_id, activity_id, row_limit, create_by, create_time)
+        values (#{channelId}, #{boardKey}, #{title}, #{topicId}, #{activityId}, #{rowLimit}, #{createBy}, current_timestamp(3))
+    </insert>
+    <select id="countListedNodes" resultType="int" useCache="false">
+        select count(1) from cms_topic_node where topic_id = #{topicId} and (status is null or status = 1)
+    </select>
+    <select id="countTopic" resultType="int" useCache="false">
+        select count(1) from cms_topic where id = #{topicId} and del_flag = 0
+    </select>
+    <select id="selectMemberProgress" resultType="java.util.HashMap" useCache="false">
+        select p.member_id as memberId, count(distinct p.node_id) as done, max(p.checkin_time) as lastTime
+          from player_node_progress p
+         where p.topic_id = #{topicId} and p.activity_id = #{activityId} and p.status = 1 and coalesce(p.del_flag, 0) = 0
+           and <include refid="listedNode"/>
+           and p.member_id in <foreach collection="memberIds" item="m" open="(" separator="," close=")">#{m}</foreach>
+         group by p.member_id
+    </select>
+    <select id="selectMemberNodes" resultType="java.lang.Long" useCache="false">
+        select distinct p.node_id from player_node_progress p
+         where p.topic_id = #{topicId} and p.activity_id = #{activityId} and p.member_id = #{memberId}
+           and p.status = 1 and coalesce(p.del_flag, 0) = 0 and <include refid="listedNode"/>
+         order by p.node_id
+    </select>
+    <select id="maxProgressId" resultType="java.lang.Long" useCache="false">
+        select max(id) from player_node_progress where topic_id = #{topicId} and activity_id = #{activityId}
+    </select>
+</mapper>

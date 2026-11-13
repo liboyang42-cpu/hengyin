@@ -1,0 +1,26 @@
+package com.chengyinhub.business.mapper.channel.platform;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Param;
+
+/** 通知偏好（im_notify_pref）与读状态投影的读写原语。 */
+public interface ChannelNotifyMapper
+{
+    Map<String, Object> selectPref(@Param("memberId") long memberId, @Param("scopeType") int scopeType, @Param("scopeId") long scopeId);
+
+    Map<String, Object> lockPref(@Param("memberId") long memberId, @Param("scopeType") int scopeType, @Param("scopeId") long scopeId);
+
+    List<Map<String, Object>> listPrefs(@Param("memberId") long memberId);
+
+    int upsertPref(Map<String, Object> row);
+
+    Integer conversationType(@Param("id") long id);
+
+    Map<String, Object> membership(@Param("conversationId") long conversationId, @Param("memberId") long memberId);
+
+    Long latestVisible(@Param("conversationId") long conversationId);
+
+    List<Map<String, Object>> unreadRows(@Param("memberId") long memberId);
+}

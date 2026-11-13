@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.friend.FriendInviteMapper">
+    <sql id="inviteCols">
+        id, inviter_id AS inviterId, peer_id AS peerId, channel_id AS channelId, guild_kind AS guildKind, guild_id AS guildId,
+        request_id AS requestId, state
+    </sql>
+    <insert id="insertChannelInvite">
+        INSERT IGNORE INTO friend_channel_invite(inviter_id, peer_id, channel_id, guild_kind, guild_id, request_id)
+        VALUES (#{inviterId}, #{peerId}, #{channelId}, #{guildKind}, #{guildId}, #{requestId})
+    </insert>
+    <select id="selectChannelInvite" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="inviteCols"/> FROM friend_channel_invite WHERE id = #{id}
+    </select>
+    <select id="lockChannelInvite" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="inviteCols"/> FROM friend_channel_invite WHERE id = #{id} FOR UPDATE
+    </select>
+    <select id="listBatch" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="inviteCols"/> FROM friend_channel_invite WHERE inviter_id = #{inviterId} AND request_id = #{requestId} ORDER BY id
+    </select>
+    <update id="setChannelInviteState">
+        UPDATE friend_channel_invite SET state = #{state} WHERE id = #{id}
+    </update>
+    <select id="listMyChannelInvites" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="inviteCols"/> FROM friend_channel_invite
+         WHERE inviter_id = #{inviterId} <if test="before &gt; 0">AND id &lt; #{before}</if> ORDER BY id DESC LIMIT 50
+    </select>
+    <select id="countClubPending" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM club_member WHERE club_id = #{clubId} AND member_id = #{memberId} AND status = 0 AND del_flag = 0
+    </select>
+
+    <sql id="offerCols">
+        seq, offer_id AS offerId, team_id AS teamId, inviter_id AS inviterId, recipient_id AS recipientId, join_mode AS joinMode, state
+    </sql>
+    <insert id="insertOffer">
+        INSERT INTO friend_team_offer(offer_id, team_id, inviter_id, recipient_id, join_mode, request_id)
+        VALUES (#{offerId}, #{teamId}, #{inviterId}, #{recipientId}, #{joinMode}, #{requestId})
+    </insert>
+    <select id="selectOffer" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="offerCols"/> FROM friend_team_offer WHERE offer_id = #{offerId}
+    </select>
+    <select id="lockOffer" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="offerCols"/> FROM friend_team_offer WHERE offer_id = #{offerId} FOR UPDATE
+    </select>
+    <update id="setOfferState">
+        UPDATE friend_team_offer SET state = #{state} WHERE offer_id = #{offerId}
+    </update>
+    <select id="listMyOffers" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="offerCols"/> FROM friend_team_offer
+         WHERE (inviter_id = #{memberId} OR recipient_id = #{memberId}) <if test="before &gt; 0">AND seq &lt; #{before}</if>
+         ORDER BY seq DESC LIMIT 50
+    </select>
+    <select id="selectTeam" resultType="java.util.HashMap" useCache="false">
+        SELECT id, title, invite_code AS inviteCode, join_mode AS joinMode, leader_member_id AS leaderId, status FROM play_team WHERE id = #{teamId}
+    </select>
+    <select id="countTeamMember" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM play_team_member WHERE team_id = #{teamId} AND member_id = #{memberId} AND status = 1
+    </select>
+    <select id="selectClubName" resultType="java.lang.String" useCache="false">
+        SELECT name FROM club WHERE id = #{clubId}
+    </select>
+</mapper>

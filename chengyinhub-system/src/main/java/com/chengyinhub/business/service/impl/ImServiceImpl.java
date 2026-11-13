@@ -46,6 +46,8 @@ import com.chengyinhub.business.mapper.ImPollMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.mapper.RoamHangoutMapper;
 import com.chengyinhub.business.service.IAuditTaskService;
+import com.chengyinhub.business.service.IChannelConversationGate;
+import com.chengyinhub.business.service.IImMediaAttachGate;
 import com.chengyinhub.business.service.IClubParticipationGuard;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.ISystemNotificationIntentService;
@@ -95,6 +97,12 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     private PlayTeamMapper playTeamMapper;
     @Autowired
     private RoamHangoutMapper roamHangoutMapper;
+    /** 频道会话(type=5)授权闸；未装配时频道会话按普通会话成员行处理。 */
+    @Autowired(required = false)
+    private IChannelConversationGate channelGate;
+    /** 语音/视频/文件消息(10/11/12)的上传挂接闸；未装配时这三类按不支持处理。 */
+    @Autowired(required = false)
+    private IImMediaAttachGate mediaGate;
 
     private String singleBizKey(Long a, Long b)
     {
@@ -389,6 +397,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         {
             throw new ServiceException("该组局已结束，聊天已关闭", 409).setDetailMessage("HANGOUT_CLOSED");
         }
+        if (channelGate != null && channelGate.isChannel(conversationId)) channelGate.requireRead(memberId, conversationId);
         requireConversationMembership(conversationId, memberId, "无权查看该会话");
         if (!hasActiveGroupAccess(conversation, memberId, false))
         {
@@ -457,6 +466,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     {
         if (clientMessageId == null || clientMessageId.trim().isEmpty() || clientMessageId.length() > 100)
             throw new ServiceException("原消息请求无效", 400);
+        if (channelGate != null && channelGate.isChannel(conversationId)) channelGate.requireRead(memberId, conversationId);
         if (lockReadMember(conversationMapper.selectImConversationByIdForUpdate(conversationId), memberId, conversationId) == null)
             throw new ServiceException("无权查看该会话", 403);
         return projectRouteMessage(messageMapper.selectByClientMessageIdForUpdate(
@@ -814,6 +824,23 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     /** 路线当前不能发送时的统一提示,不暗示下架/私密等具体原因。 */
     static final String ROUTE_CARD_UNAVAILABLE = "该路线暂不可用";
 
+    @Override
+    public Map<String, Object> routeShareSource(Long memberId, Long topicId)
+    {
+        if (memberId == null || memberId <= 0) throw new ServiceException("请先登录", 401);
+        if (topicId == null || topicId <= 0) throw new ServiceException(ROUTE_CARD_UNAVAILABLE, 404).setDetailMessage("ROUTE_UNAVAILABLE");
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicDetailById(topicId, null);
+        if (!isPublicRouteTopic(topic) || topic.getName() == null || topic.getName().trim().isEmpty())
+            throw new ServiceException(ROUTE_CARD_UNAVAILABLE, 404).setDetailMessage("ROUTE_UNAVAILABLE");
+        String name = topic.getName().trim();
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("source", "original-route-share-v1");
+        out.put("topic_id", String.valueOf(topicId));
+        out.put("name", name.length() > 1000 ? name.substring(0, 1000) : name);
+        out.put("publicly_shareable", true);
+        return out;
+    }
+
     private static boolean isPublicRouteTopic(CmsTopic topic)
     {
         return topic != null && Integer.valueOf(1).equals(topic.getStatus())
@@ -877,6 +904,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
                         ? "已退出俱乐部，不能继续发送群消息" : "已退出队伍，不能继续发送群消息", 403);
             }
         }
+        if (channelGate != null && channelGate.isChannel(convId)) channelGate.requireSend(memberId, convId);
         requireConversationMembership(convId, memberId, "无权在该会话发送");
 
         // 与 closeClubGroup 共用会话行锁：关闭一旦提交，旧发送请求不能再在其后插入消息/复活未读。
@@ -890,7 +918,9 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         {
             throw new ServiceException("无权在该会话发送", 403);
         }
-        boolean isGroup = conv != null && conv.getType() != null && conv.getType() == ImConversation.TYPE_GROUP;
+        // 频道会话与群聊同样按成员扇出未读、不设单一接收者。
+        boolean isGroup = conv != null && conv.getType() != null && (conv.getType() == ImConversation.TYPE_GROUP
+                || conv.getType() == IChannelConversationGate.CONVERSATION_TYPE_CHANNEL);
         if (isGroup && !Integer.valueOf(0).equals(conv.getStatus()))
         {
             throw closedConversationError();
@@ -936,6 +966,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         String openid = openidOf(memberId);
         int checkStatus = 1;
         String traceId = null;
+        Long mediaUploadId = null;
         if (type == ImMessage.MSG_TEXT)
         {
             String secMsg = wxContentSecurityService.checkText(content, openid);
@@ -987,6 +1018,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             extraJson = safe.toJSONString();
             content = "[投票] " + poll.getQuestion();
         }
+        else if (mediaGate != null && mediaGate.handles(type))
+        {
+            mediaUploadId = mediaGate.prepare(memberId, convId, type, content, extraJson);
+        }
         else
         {
             throw new ServiceException("不支持的消息类型");
@@ -1005,6 +1040,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         msg.setClientMessageId(clientMessageId);
         msg.setRequestHash(requestHash);
         messageMapper.insertImMessage(msg);
+        if (mediaUploadId != null) mediaGate.bind(mediaUploadId, msg.getId());
         if (type == ImMessage.MSG_IMAGE && traceId != null
                 && !wxContentCallbackInboxService.register(traceId,
                         IWxContentSecurityService.BIZ_TYPE_IM_MESSAGE, msg.getId(), content))
@@ -1015,7 +1051,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
 
         String summary = type == ImMessage.MSG_TEXT ? content
                 : (type == ImMessage.MSG_IMAGE ? "[图片]"
-                : ((type == ImMessage.MSG_CARD || type == ImMessage.MSG_POLL) ? content : "[消息]"));
+                : ((type == ImMessage.MSG_CARD || type == ImMessage.MSG_POLL) ? content
+                : (mediaUploadId != null ? mediaGate.summary(type) : "[消息]")));
         if (summary != null && summary.length() > 200)
         {
             summary = summary.substring(0, 200);
@@ -1216,6 +1253,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     {
         if (readTo == null) { markRead(memberId, conversationId); return; }
         if (readTo < 0) throw new ServiceException("已读位置无效", 400);
+        if (channelGate != null && channelGate.isChannel(conversationId)) channelGate.requireRead(memberId, conversationId);
         ImConversation conversation = conversationMapper.selectImConversationByIdForShare(conversationId);
         // 已读位沿用可见序游标：截止点取 min(readTo, 当前最新可见)，且不回退到已存已读位之前；
         // readTo 对当前读者不可见(待审图片/已屏蔽/伪造)时不前进。锁序同 markRead(会话S→消息S→成员X)。

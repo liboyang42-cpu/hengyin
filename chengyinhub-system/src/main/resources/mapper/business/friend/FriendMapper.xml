@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.friend.FriendMapper">
+
+    <sql id="peer">IF(f.low_member_id = #{viewer}, f.high_member_id, f.low_member_id)</sql>
+    <sql id="notBlocked">
+        NOT EXISTS (SELECT 1 FROM im_block b
+                     WHERE (b.member_id = f.low_member_id AND b.blocked_member_id = f.high_member_id)
+                        OR (b.member_id = f.high_member_id AND b.blocked_member_id = f.low_member_id))
+    </sql>
+
+    <select id="lockPair" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT id, low_member_id AS lowId, high_member_id AS highId, requester_id AS requesterId, status, version,
+               request_msg AS msg, expire_time AS expireTime, (expire_time &lt;= CURRENT_TIMESTAMP) AS expired
+          FROM member_friend WHERE low_member_id = #{low} AND high_member_id = #{high} FOR UPDATE
+    </select>
+    <select id="selectPair" resultType="java.util.HashMap" useCache="false">
+        SELECT id, low_member_id AS lowId, high_member_id AS highId, requester_id AS requesterId, status, version,
+               request_msg AS msg, expire_time AS expireTime, (expire_time &lt;= CURRENT_TIMESTAMP) AS expired
+          FROM member_friend WHERE low_member_id = #{low} AND high_member_id = #{high}
+    </select>
+    <insert id="insertPending">
+        INSERT INTO member_friend(low_member_id, high_member_id, status, requester_id, request_msg, source_type, source_id,
+                                  expire_time, version)
+        VALUES (#{low}, #{high}, 0, #{requester}, #{msg}, #{sourceType}, #{sourceId}, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY), 1)
+    </insert>
+    <!-- 单一 CAS 迁移：status 0 重新计时；1 记 friend_since；版本 +1。 -->
+    <update id="transition">
+        UPDATE member_friend
+           SET status = #{status}, requester_id = #{requester}, version = version + 1, acted_time = CURRENT_TIMESTAMP,
+               request_msg = IF(#{status} = 0, #{msg}, request_msg),
+               source_type = IF(#{status} = 0, #{sourceType}, source_type),
+               source_id = IF(#{status} = 0, #{sourceId}, source_id),
+               expire_time = IF(#{status} = 0, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY), expire_time),
+               friend_since = IF(#{status} = 1, CURRENT_TIMESTAMP, friend_since),
+               reject_reason = IF(#{status} = 2, 1, NULL)
+         WHERE id = #{id} AND version = #{expectedVersion}
+    </update>
+    <select id="countBlock" resultType="int">
+        SELECT COUNT(1) FROM im_block WHERE (member_id = #{a} AND blocked_member_id = #{b}) OR (member_id = #{b} AND blocked_member_id = #{a})
+    </select>
+    <select id="nickname" resultType="java.lang.String">
+        SELECT COALESCE(NULLIF(nickname, ''), NULLIF(name, ''), CONCAT('用户', id)) FROM ums_member WHERE id = #{id} AND COALESCE(del_flag, 0) = 0
+    </select>
+
+    <select id="listFriends" resultType="java.util.HashMap" useCache="false">
+        SELECT f.id AS pairId, <include refid="peer"/> AS peerId, f.version, m.nickname AS nickname,
+               mt.remark AS remark, mt.group_id AS groupId, COALESCE(mt.starred, 0) AS starred
+          FROM member_friend f
+          LEFT JOIN ums_member m ON m.id = <include refid="peer"/>
+          LEFT JOIN member_friend_meta mt ON mt.member_id = #{viewer} AND mt.friend_member_id = <include refid="peer"/>
+         WHERE (f.low_member_id = #{viewer} OR f.high_member_id = #{viewer}) AND f.status = 1 AND f.id &gt; #{cursor}
+           AND <include refid="notBlocked"/>
+         ORDER BY f.id LIMIT #{limit}
+    </select>
+    <select id="listPending" resultType="java.util.HashMap" useCache="false">
+        SELECT f.id AS pairId, <include refid="peer"/> AS peerId, f.version, f.requester_id AS requesterId, f.request_msg AS msg,
+               f.expire_time AS expireTime, m.nickname AS nickname
+          FROM member_friend f
+          LEFT JOIN ums_member m ON m.id = <include refid="peer"/>
+         WHERE (f.low_member_id = #{viewer} OR f.high_member_id = #{viewer}) AND f.status = 0
+           AND f.expire_time &gt; CURRENT_TIMESTAMP AND f.id &gt; #{cursor}
+           AND <include refid="notBlocked"/>
+         ORDER BY f.id LIMIT #{limit}
+    </select>
+
+    <sql id="directoryWhere">
+        (f.low_member_id = #{viewer} OR f.high_member_id = #{viewer}) AND f.status = 1 AND <include refid="notBlocked"/>
+        <if test="section == 'recent'">
+            AND EXISTS (SELECT 1 FROM im_conversation c WHERE c.type = 1
+                         AND c.biz_key = CONCAT(f.low_member_id, '_', f.high_member_id)
+                         AND c.last_msg_at &gt;= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY))
+        </if>
+        <if test="section == 'together'">
+            AND (EXISTS (SELECT 1 FROM club c
+                          WHERE c.status = 1 AND c.del_flag = 0
+                            AND (c.member_id = #{viewer} OR EXISTS (SELECT 1 FROM club_member a WHERE a.club_id = c.id
+                                     AND a.member_id = #{viewer} AND a.status = 1 AND a.del_flag = 0))
+                            AND (c.member_id = <include refid="peer"/> OR EXISTS (SELECT 1 FROM club_member b WHERE b.club_id = c.id
+                                     AND b.member_id = <include refid="peer"/> AND b.status = 1 AND b.del_flag = 0)))
+              OR EXISTS (SELECT 1 FROM play_team_member a JOIN play_team_member b ON a.team_id = b.team_id
+                          WHERE a.member_id = #{viewer} AND b.member_id = <include refid="peer"/>
+                            AND a.status = 1 AND b.status = 1))
+        </if>
+    </sql>
+    <sql id="directoryFilter">
+        <if test="groupId != null and groupId == 0">AND mt.group_id IS NULL</if>
+        <if test="groupId != null and groupId &gt; 0">AND mt.group_id = #{groupId}</if>
+        <if test="starred">AND mt.starred = 1</if>
+    </sql>
+    <select id="countDirectory" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM member_friend f
+          LEFT JOIN member_friend_meta mt ON mt.member_id = #{viewer} AND mt.friend_member_id = <include refid="peer"/>
+         WHERE <include refid="directoryWhere"/> <include refid="directoryFilter"/>
+    </select>
+    <select id="listDirectory" resultType="java.util.HashMap" useCache="false">
+        SELECT f.id AS pairId, <include refid="peer"/> AS peerId, f.version, m.nickname AS nickname,
+               mt.remark AS remark, mt.group_id AS groupId, COALESCE(mt.starred, 0) AS starred
+          FROM member_friend f
+          LEFT JOIN ums_member m ON m.id = <include refid="peer"/>
+          LEFT JOIN member_friend_meta mt ON mt.member_id = #{viewer} AND mt.friend_member_id = <include refid="peer"/>
+         WHERE <include refid="directoryWhere"/> <include refid="directoryFilter"/> AND f.id &gt; #{cursor}
+         ORDER BY f.id LIMIT #{limit}
+    </select>
+
+    <select id="selectSingleConversation" resultType="java.lang.Long" useCache="false">
+        SELECT id FROM im_conversation WHERE type = 1 AND biz_key = #{bizKey}
+    </select>
+    <insert id="insertSingleConversation">
+        INSERT IGNORE INTO im_conversation(type, biz_key, status, create_time, update_time)
+        VALUES (1, #{bizKey}, 0, NOW(), NOW())
+    </insert>
+    <insert id="ensureConversationMember">
+        INSERT INTO im_conversation_member(conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time)
+        VALUES (#{conversationId}, #{memberId}, 0, 0, 0, 0, 0, NOW())
+        ON DUPLICATE KEY UPDATE deleted = 0
+    </insert>
+
+    <!-- 元数据：只读写 actor 自己这一侧。 -->
+    <select id="lockMeta" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT remark, group_id AS groupId, starred, progress_scope AS progressScope, version
+          FROM member_friend_meta WHERE member_id = #{owner} AND friend_member_id = #{peer} FOR UPDATE
+    </select>
+    <select id="selectMeta" resultType="java.util.HashMap" useCache="false">
+        SELECT remark, group_id AS groupId, starred, progress_scope AS progressScope, version
+          FROM member_friend_meta WHERE member_id = #{owner} AND friend_member_id = #{peer}
+    </select>
+    <insert id="upsertMeta">
+        INSERT INTO member_friend_meta(member_id, friend_member_id, remark, group_id, starred, progress_scope, version)
+        VALUES (#{owner}, #{peer}, #{remark}, #{groupId}, #{starred}, #{progressScope}, 1)
+        ON DUPLICATE KEY UPDATE remark = VALUES(remark), group_id = VALUES(group_id), starred = VALUES(starred),
+                                progress_scope = VALUES(progress_scope), version = version + 1
+    </insert>
+    <delete id="clearPairMeta">
+        DELETE FROM member_friend_meta WHERE (member_id = #{a} AND friend_member_id = #{b}) OR (member_id = #{b} AND friend_member_id = #{a})
+    </delete>
+
+    <select id="listGroups" resultType="java.util.HashMap" useCache="false">
+        SELECT g.id, g.name, g.position, g.version,
+               (SELECT COUNT(1) FROM member_friend_meta mt JOIN member_friend f
+                    ON f.low_member_id = LEAST(mt.member_id, mt.friend_member_id) AND f.high_member_id = GREATEST(mt.member_id, mt.friend_member_id)
+                 WHERE mt.member_id = g.member_id AND mt.group_id = g.id AND f.status = 1) AS friendCount
+          FROM member_friend_group g WHERE g.member_id = #{owner} AND g.is_default = 0 ORDER BY g.position, g.id
+    </select>
+    <select id="lockGroup" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT id, name, position, version FROM member_friend_group WHERE member_id = #{owner} AND id = #{id} AND is_default = 0 FOR UPDATE
+    </select>
+    <select id="lockGroupOwner" resultType="java.lang.Long" useCache="false" flushCache="true">
+        SELECT id FROM ums_member WHERE id = #{owner} FOR UPDATE
+    </select>
+    <select id="countGroupName" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM member_friend_group WHERE member_id = #{owner} AND name = #{name} AND id != #{exceptId}
+    </select>
+    <select id="countGroups" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM member_friend_group WHERE member_id = #{owner} AND is_default = 0
+    </select>
+    <insert id="insertGroup">
+        INSERT INTO member_friend_group(member_id, name, position, is_default, version) VALUES (#{owner}, #{name}, #{position}, 0, 1)
+    </insert>
+    <update id="updateGroup">
+        UPDATE member_friend_group SET name = #{name}, position = #{position}, version = version + 1
+         WHERE member_id = #{owner} AND id = #{id} AND version = #{expectedVersion}
+    </update>
+    <update id="moveGroupMembers">
+        UPDATE member_friend_meta SET group_id = #{toGroup}, version = version + 1 WHERE member_id = #{owner} AND group_id = #{fromGroup}
+    </update>
+    <delete id="deleteGroup">
+        DELETE FROM member_friend_group WHERE member_id = #{owner} AND id = #{id} AND version = #{expectedVersion}
+    </delete>
+
+    <!-- 好友进度：只读 peer 的完成事实聚合，不出节点明细。 -->
+    <select id="listPeerProgress" resultType="java.util.HashMap" useCache="false">
+        SELECT p.topic_id AS topicId, p.activity_id AS activityId, COUNT(DISTINCT p.node_id) AS done, MAX(p.checkin_time) AS asOf,
+               t.name AS title,
+               (SELECT COUNT(1) FROM cms_topic_node n WHERE n.topic_id = p.topic_id AND (n.status IS NULL OR n.status = 1)) AS required
+          FROM player_node_progress p JOIN cms_topic t ON t.id = p.topic_id AND COALESCE(t.del_flag, 0) = 0
+         WHERE p.member_id = #{peer} AND p.status = 1 AND COALESCE(p.del_flag, 0) = 0 AND p.topic_id IS NOT NULL
+         GROUP BY p.topic_id, p.activity_id, t.name
+         ORDER BY MAX(p.checkin_time) DESC LIMIT 50
+    </select>
+</mapper>

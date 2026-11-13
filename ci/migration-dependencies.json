@@ -80,6 +80,12 @@
       "topic_source_menu_20260722_02_content_slot_permission"
     ],
     "20261105_l4_invoice_command_receipt": [],
+    "20261105_l8_channel_lifecycle": [],
+    "20261105_l8_chain_storage": [],
+    "20261112_im_channels_platform": ["20261105_l8_channel_lifecycle", "im_send_idempotency_20260913", "20261012_im_media_visibility", "club_role_assignment_20260823", "20260820_play_team_core"],
+    "20261105_l9_friend_foundation": [],
+    "20261113_im_channels_second_pass": ["20261112_im_channels_platform", "20261105_l9_friend_foundation", "20261105_l8_chain_storage"],
+    "20261114_im_channels_third_pass": ["20261113_im_channels_second_pass", "20261012_app_media_asset", "20261012_app_media_asset_namespaces"],
     "20261101_author_write_receipt": [],
     "20261101_theme_categories": [],
     "20261101_prefab_life_template_copy": ["seed_prefab_life_20260918"],

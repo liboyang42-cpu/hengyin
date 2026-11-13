@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelMessageMapper">
+
+    <!-- 频道读者可见：正常、审核通过；待审媒体(check_status=0)不出现。 -->
+    <sql id="visible">
+        m.status = 0 and m.check_status = 1
+    </sql>
+
+    <select id="lockMessage" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select id, conversation_id as conversationId, sender_id as senderId, msg_type as msgType, content,
+               status, check_status as checkStatus, version
+          from im_message where id = #{id} for update
+    </select>
+    <select id="selectMessages" resultType="java.util.HashMap" useCache="false">
+        select m.id, m.conversation_id as conversationId, m.sender_id as senderId, m.msg_type as msgType, m.content,
+               m.extra_json as extraJson, m.status, m.check_status as checkStatus, m.version, m.edited_at as editedAt,
+               m.create_time as createTime, coalesce(u.nickname, u.name) as senderName, u.avatar as senderAvatar
+          from im_message m left join ums_member u on u.id = m.sender_id and m.sender_id &gt; 0
+         where m.id in <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </select>
+    <update id="updateContent">
+        update im_message set content = #{content}, version = version + 1, edited_at = current_timestamp(3)
+         where id = #{id} and version = #{expected} and status = 0
+    </update>
+    <update id="recall">
+        update im_message set status = 1, version = version + 1 where id = #{id} and version = #{expected} and status = 0
+    </update>
+    <insert id="insertRevision">
+        insert into im_message_revision(message_id, revision_no, content, check_status, editor_id, create_time)
+        values (#{messageId}, #{revisionNo}, #{content}, #{checkStatus}, #{editorId}, current_timestamp(3))
+    </insert>
+    <select id="selectRevisions" resultType="java.util.HashMap" useCache="false">
+        select message_id as messageId, revision_no as revisionNo, check_status as checkStatus, content
+          from im_message_revision
+         where message_id = #{messageId}
+         <if test="before != null">and revision_no &lt; #{before}</if>
+         order by revision_no desc limit #{limit}
+    </select>
+    <insert id="insertMutation" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into im_message_mutation(conversation_id, message_id, version, kind, create_time)
+        values (#{conversationId}, #{messageId}, #{version}, #{kind}, current_timestamp(3))
+    </insert>
+    <select id="selectMutations" resultType="java.util.HashMap" useCache="false">
+        select id, message_id as messageId, version, kind from im_message_mutation
+         where conversation_id = #{conversationId} and id &gt; #{after} order by id asc limit #{limit}
+    </select>
+    <select id="maxMutation" resultType="java.lang.Long" useCache="false">
+        select max(id) from im_message_mutation where conversation_id = #{conversationId}
+    </select>
+
+    <select id="selectPins" resultType="java.util.HashMap" useCache="false">
+        select p.id, p.message_id as messageId, p.conversation_id as conversationId, p.sort_no as sortNo,
+               left(coalesce(m.content, ''), 120) as summary
+          from im_message_pin p join im_message m on m.id = p.message_id
+         where p.conversation_id = #{conversationId} and m.status = 0
+         order by p.sort_no desc, p.id desc limit 20
+    </select>
+    <select id="lockPins" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select id, message_id as messageId, sort_no as sortNo from im_message_pin
+         where conversation_id = #{conversationId} order by sort_no desc, id desc for update
+    </select>
+    <insert id="insertPin" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into im_message_pin(conversation_id, message_id, sort_no, pinned_by, create_time)
+        values (#{conversationId}, #{messageId}, #{sortNo}, #{pinnedBy}, current_timestamp(3))
+    </insert>
+    <delete id="deletePin">
+        delete from im_message_pin where conversation_id = #{conversationId} and message_id = #{messageId}
+    </delete>
+    <update id="updatePinSort">
+        update im_message_pin set sort_no = #{sortNo} where id = #{id}
+    </update>
+    <select id="selectPinnedIds" resultType="java.lang.Long" useCache="false">
+        select message_id from im_message_pin
+         where conversation_id = #{conversationId}
+           and message_id in <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </select>
+
+    <delete id="deleteMentions">delete from im_message_mention where message_id = #{messageId}</delete>
+    <insert id="insertMention">
+        insert ignore into im_message_mention(message_id, mention_type, target_id) values (#{messageId}, #{type}, #{targetId})
+    </insert>
+    <select id="selectMentions" resultType="java.util.HashMap" useCache="false">
+        select message_id as messageId, mention_type as mentionType, target_id as targetId from im_message_mention
+         where message_id in <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </select>
+
+    <select id="search" resultType="java.lang.Long" useCache="false">
+        select m.id from im_message m
+         where m.conversation_id = #{conversationId} and <include refid="visible"/> and m.msg_type = 1
+           and m.content like concat('%', #{keyword}, '%') escape '!'
+           <if test="from != null">and m.create_time &gt;= #{from}</if>
+           <if test="to != null">and m.create_time &lt; #{to}</if>
+           <if test="authorId != null">and m.sender_id = #{authorId}</if>
+           <if test="before != null">and m.id &lt; #{before}</if>
+         order by m.id desc limit #{limit}
+    </select>
+    <select id="oldestMessageTime" resultType="java.util.Date" useCache="false">
+        select min(create_time) from im_message where conversation_id = #{conversationId}
+    </select>
+    <select id="contextOlder" resultType="java.lang.Long" useCache="false">
+        select m.id from im_message m where m.conversation_id = #{conversationId} and <include refid="visible"/>
+           and m.id &lt; #{anchor} order by m.id desc limit #{limit}
+    </select>
+    <select id="contextNewer" resultType="java.lang.Long" useCache="false">
+        select m.id from im_message m where m.conversation_id = #{conversationId} and <include refid="visible"/>
+           and m.id &gt; #{anchor} order by m.id asc limit #{limit}
+    </select>
+    <select id="lastSentAt" resultType="java.util.Date" useCache="false">
+        select max(create_time) from im_message where conversation_id = #{conversationId} and sender_id = #{senderId}
+    </select>
+</mapper>

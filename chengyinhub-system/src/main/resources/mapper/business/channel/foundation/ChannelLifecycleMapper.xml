@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.foundation.ChannelLifecycleMapper">
+    <resultMap id="Snapshot" type="com.chengyinhub.business.service.channel.foundation.ChannelLifecycleSnapshot">
+        <constructor>
+            <idArg column="id" javaType="_long"/>
+            <arg column="guild_kind" javaType="_int"/>
+            <arg column="guild_id" javaType="_long"/>
+            <arg column="status" javaType="_int"/>
+            <arg column="del_flag" javaType="_boolean"/>
+            <arg column="archive_reason" javaType="java.lang.String"/>
+            <arg column="archived_at" javaType="java.time.LocalDateTime"/>
+            <arg column="perm_version" javaType="_int"/>
+        </constructor>
+    </resultMap>
+    <resultMap id="Receipt" type="java.util.HashMap">
+        <result property="fingerprint" column="payload_fingerprint" javaType="java.lang.String"/>
+        <result property="response" column="response_json" javaType="java.lang.String"/>
+    </resultMap>
+    <select id="lockChannel" resultMap="Snapshot" useCache="false" flushCache="true">
+        select id,guild_kind,guild_id,status,del_flag,archive_reason,archived_at,perm_version
+        from im_channel where id=#{id} and guild_kind=#{guildKind} and guild_id=#{guildId} for update
+    </select>
+    <insert id="reserveReceipt">
+        insert into im_channel_lifecycle_receipt(operator_id,request_id,payload_fingerprint,create_time)
+        values(#{actor},#{requestId},#{fingerprint},current_timestamp(3))
+        on duplicate key update operator_id=operator_id
+    </insert>
+    <select id="lockReceipt" resultMap="Receipt" useCache="false" flushCache="true">
+        select payload_fingerprint,response_json from im_channel_lifecycle_receipt
+        where operator_id=#{actor} and request_id=#{requestId} for update
+    </select>
+    <update id="finishReceipt">
+        update im_channel_lifecycle_receipt set response_json=#{response}
+        where operator_id=#{actor} and request_id=#{requestId} and response_json is null
+    </update>
+    <update id="archiveCas">
+        update im_channel set status=1,archive_reason=#{reason},archived_at=#{now},opt_in_default=0,
+            perm_version=perm_version+1,update_time=#{now}
+        where id=#{row.id} and guild_kind=#{row.guildKind} and guild_id=#{row.guildId}
+          and status=0 and del_flag=0 and perm_version=#{row.permissionVersion} and perm_version &lt; 2147483647
+    </update>
+    <update id="unarchiveCas">
+        update im_channel set status=0,archive_reason=null,archived_at=null,
+            perm_version=perm_version+1,update_time=#{now}
+        where id=#{row.id} and guild_kind=#{row.guildKind} and guild_id=#{row.guildId}
+          and status=1 and archive_reason='manual' and del_flag=0
+          and perm_version=#{row.permissionVersion} and perm_version &lt; 2147483647
+    </update>
+    <insert id="appendAudit">
+        insert into im_channel_op_log(channel_id,action,from_status,to_status,reason,operator_id,request_id,create_time)
+        values(#{row.id},#{action},#{row.status},#{toStatus},#{reason},#{actor},#{requestId},#{now})
+    </insert>
+</mapper>

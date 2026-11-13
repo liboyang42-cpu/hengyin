@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelGovernanceMapper">
+
+    <sql id="actionCols">
+        id, guild_kind AS guildKind, guild_id AS guildId, target_member_id AS targetMemberId, action_type AS actionType,
+        CASE WHEN status = 'ACTIVE' AND expires_at IS NOT NULL AND expires_at &lt;= CURRENT_TIMESTAMP(3) THEN 'EXPIRED' ELSE status END AS status,
+        version, scope_type AS scopeType, scope_id AS scopeId, reason_code AS reasonCode, reason_text AS reasonText,
+        duration_sec AS durationSec, delete_message_sec AS deleteMessageSec, starts_at AS startsAt, expires_at AS expiresAt,
+        operator_id AS operatorId, request_id AS requestId, revoked_at AS revokedAt
+    </sql>
+
+    <insert id="insertAction" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_moderation_action(guild_kind, guild_id, target_member_id, action_type, status, version, scope_type, scope_id,
+            reason_code, reason_text, duration_sec, delete_message_sec, starts_at, expires_at, operator_id, request_id)
+        VALUES (#{guildKind}, #{guildId}, #{targetMemberId}, #{actionType}, #{status}, 1, #{scopeType}, #{scopeId},
+            #{reasonCode}, #{reasonText}, #{durationSec}, #{deleteMessageSec}, CURRENT_TIMESTAMP(3),
+            IF(#{durationSec} &gt; 0, DATE_ADD(CURRENT_TIMESTAMP(3), INTERVAL #{durationSec} SECOND), NULL), #{operatorId}, #{requestId})
+    </insert>
+    <select id="selectAction" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="actionCols"/> FROM im_moderation_action WHERE id = #{id}
+    </select>
+    <select id="lockAction" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="actionCols"/> FROM im_moderation_action WHERE id = #{id} FOR UPDATE
+    </select>
+    <update id="revokeAction">
+        UPDATE im_moderation_action SET status = 'REVOKED', version = version + 1, revoked_by = #{operatorId},
+               revoke_reason = #{reason}, revoked_at = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND version = #{expectedVersion} AND status = 'ACTIVE'
+           AND (expires_at IS NULL OR expires_at &gt; CURRENT_TIMESTAMP(3))
+    </update>
+    <select id="listActions" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="actionCols"/> FROM im_moderation_action
+         WHERE guild_kind = #{guildKind} AND guild_id = #{guildId}
+           <if test="targetMemberId != null">AND target_member_id = #{targetMemberId}</if>
+           <if test="beforeId != null">AND id &lt; #{beforeId}</if>
+         ORDER BY id DESC LIMIT #{limit}
+    </select>
+    <!-- 发送闸：频道内有效禁言，或空间内有效封禁。 -->
+    <select id="countActiveRestriction" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM im_moderation_action
+         WHERE guild_kind = #{guildKind} AND guild_id = #{guildId} AND target_member_id = #{memberId} AND status = 'ACTIVE'
+           AND (expires_at IS NULL OR expires_at &gt; CURRENT_TIMESTAMP(3))
+           AND ((action_type = 'TIMEOUT' AND scope_type = 'CHANNEL' AND scope_id = #{channelId}) OR action_type = 'BAN')
+    </select>
+    <select id="countActiveBan" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM im_moderation_action
+         WHERE guild_kind = #{guildKind} AND guild_id = #{guildId} AND target_member_id = #{memberId} AND status = 'ACTIVE'
+           AND action_type = 'BAN' AND (expires_at IS NULL OR expires_at &gt; CURRENT_TIMESTAMP(3))
+    </select>
+    <!-- 封禁附带的历史删除：把窗口内该成员在本空间频道的可见消息撤回，并写变更流让客户端同步。 -->
+    <insert id="insertRecallMutations">
+        INSERT INTO im_message_mutation(conversation_id, message_id, version, kind, create_time)
+        SELECT m.conversation_id, m.id, m.version + 1, 'RECALL', CURRENT_TIMESTAMP(3)
+          FROM im_message m JOIN im_channel c ON c.id = m.conversation_id
+         WHERE c.guild_kind = #{guildKind} AND c.guild_id = #{guildId} AND m.sender_id = #{memberId} AND m.status = 0
+           AND m.create_time &gt;= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL #{seconds} SECOND)
+    </insert>
+    <update id="recallWindow">
+        UPDATE im_message m JOIN im_channel c ON c.id = m.conversation_id
+           SET m.status = 1, m.version = m.version + 1
+         WHERE c.guild_kind = #{guildKind} AND c.guild_id = #{guildId} AND m.sender_id = #{memberId} AND m.status = 0
+           AND m.create_time &gt;= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL #{seconds} SECOND)
+    </update>
+    <update id="endTeamMembership">
+        UPDATE play_team_member SET status = 2 WHERE team_id = #{teamId} AND member_id = #{memberId} AND status = 1
+    </update>
+
+    <!-- 申诉 -->
+    <sql id="appealCols">
+        id, action_id AS actionId, appellant_member_id AS appellantMemberId, guild_kind AS guildKind, guild_id AS guildId,
+        status, reason_code AS reasonCode, reason_text AS reasonText, evidence_json AS evidenceJson,
+        decision_reason AS decisionReason, create_time AS createTime, update_time AS updateTime
+    </sql>
+    <insert id="insertAppeal" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_moderation_appeal(action_id, appellant_member_id, guild_kind, guild_id, status, reason_code, reason_text, evidence_json)
+        VALUES (#{actionId}, #{appellantMemberId}, #{guildKind}, #{guildId}, 'PENDING', #{reasonCode}, #{reasonText}, JSON_ARRAY())
+    </insert>
+    <select id="selectAppeal" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="appealCols"/> FROM im_moderation_appeal WHERE id = #{id}
+    </select>
+    <select id="lockAppeal" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="appealCols"/> FROM im_moderation_appeal WHERE id = #{id} FOR UPDATE
+    </select>
+    <select id="selectAppealByAction" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="appealCols"/> FROM im_moderation_appeal WHERE action_id = #{actionId} AND appellant_member_id = #{memberId}
+    </select>
+    <select id="listAppeals" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="appealCols"/> FROM im_moderation_appeal
+         WHERE guild_kind = #{guildKind} AND guild_id = #{guildId}
+           <if test="memberId != null">AND appellant_member_id = #{memberId}</if>
+         ORDER BY id DESC LIMIT 50
+    </select>
+    <update id="appendEvidence">
+        UPDATE im_moderation_appeal SET evidence_json = JSON_ARRAY_APPEND(COALESCE(evidence_json, JSON_ARRAY()), '$', CAST(#{evidence} AS JSON))
+         WHERE id = #{id} AND status IN ('PENDING','REVIEWING')
+    </update>
+    <update id="withdrawAppeal">
+        UPDATE im_moderation_appeal SET status = 'WITHDRAWN', decision_reason = #{reason}
+         WHERE id = #{id} AND status IN ('PENDING','REVIEWING')
+    </update>
+
+    <!-- 举报 -->
+    <insert id="insertReport" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_channel_report(reporter_member_id, target_type, target_id, channel_id, reason_code, reason_text, body_digest,
+            audit_task_id, status, request_id)
+        VALUES (#{reporterMemberId}, #{targetType}, #{targetId}, #{channelId}, #{reasonCode}, #{reasonText}, #{bodyDigest},
+            #{auditTaskId}, 'PENDING', #{requestId})
+    </insert>
+    <select id="selectMessageForReport" resultType="java.util.HashMap" useCache="false">
+        SELECT id, conversation_id AS conversationId, sender_id AS senderId, status FROM im_message WHERE id = #{id}
+    </select>
+
+    <!-- 个人状态 -->
+    <select id="selectMemberState" resultType="java.util.HashMap" useCache="false">
+        SELECT pinned, hidden, muted FROM im_channel_member_state WHERE channel_id = #{channelId} AND member_id = #{memberId}
+    </select>
+    <insert id="upsertMemberState">
+        INSERT INTO im_channel_member_state(channel_id, member_id, ${field}) VALUES (#{channelId}, #{memberId}, #{value})
+        ON DUPLICATE KEY UPDATE ${field} = VALUES(${field})
+    </insert>
+
+    <!-- 角色写 -->
+    <select id="selectRoleRow" resultType="java.util.HashMap" useCache="false">
+        SELECT id, guild_kind AS guildKind, guild_id AS guildId, name, position, permissions, mentionable, status,
+               is_system AS isSystem, version, color, hoist, display_level AS displayLevel
+          FROM im_guild_role WHERE id = #{id}
+    </select>
+    <select id="lockRole" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT id, guild_kind AS guildKind, guild_id AS guildId, name, position, permissions, mentionable, status,
+               is_system AS isSystem, version, color, hoist, display_level AS displayLevel
+          FROM im_guild_role WHERE id = #{id} FOR UPDATE
+    </select>
+    <select id="countRoleName" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM im_guild_role WHERE guild_kind = #{guildKind} AND guild_id = #{guildId} AND name = #{name} AND id != #{exceptId}
+    </select>
+    <select id="countRoles" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM im_guild_role WHERE guild_kind = #{guildKind} AND guild_id = #{guildId}
+    </select>
+    <insert id="insertRole" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_guild_role(guild_kind, guild_id, name, position, permissions, mentionable, status, is_system, version, color, hoist, display_level)
+        VALUES (#{guildKind}, #{guildId}, #{name}, #{position}, #{permissions}, #{mentionable}, 1, 0, 1, #{color}, #{hoist}, #{displayLevel})
+    </insert>
+    <update id="updateRole" parameterType="java.util.HashMap">
+        UPDATE im_guild_role SET name = #{name}, position = #{position}, permissions = #{permissions}, mentionable = #{mentionable},
+               status = #{status}, color = #{color}, hoist = #{hoist}, version = version + 1
+         WHERE id = #{id} AND version = #{expectedVersion}
+    </update>
+    <delete id="deleteRole">
+        DELETE FROM im_guild_role WHERE id = #{id} AND version = #{expectedVersion}
+    </delete>
+    <delete id="deleteRoleGrants">
+        DELETE FROM im_guild_role_member WHERE role_id = #{roleId}
+    </delete>
+    <select id="selectMemberRoleIds" resultType="java.lang.Long" useCache="false">
+        SELECT m.role_id FROM im_guild_role_member m JOIN im_guild_role r ON r.id = m.role_id
+         WHERE r.guild_kind = #{guildKind} AND r.guild_id = #{guildId} AND m.member_id = #{memberId}
+         ORDER BY m.role_id
+    </select>
+    <select id="selectRoleMemberIds" resultType="java.lang.Long" useCache="false">
+        SELECT member_id FROM im_guild_role_member WHERE role_id = #{roleId} ORDER BY member_id
+    </select>
+    <insert id="grantRole">
+        INSERT INTO im_guild_role_member(role_id, member_id, scope_type, scope_id, expires_at, grant_reason, granted_by, create_time)
+        VALUES (#{roleId}, #{memberId}, #{scopeType}, #{scopeId}, #{expiresAt}, #{reason}, #{grantedBy}, CURRENT_TIMESTAMP(3))
+        ON DUPLICATE KEY UPDATE scope_type = VALUES(scope_type), scope_id = VALUES(scope_id), expires_at = VALUES(expires_at),
+                                grant_reason = VALUES(grant_reason), granted_by = VALUES(granted_by)
+    </insert>
+    <delete id="revokeRole">
+        DELETE FROM im_guild_role_member WHERE role_id = #{roleId} AND member_id = #{memberId}
+    </delete>
+
+    <!-- 附件描述 / 欢迎屏 -->
+    <select id="selectMessageForAttachment" resultType="java.util.HashMap" useCache="false">
+        SELECT id, conversation_id AS conversationId, msg_type + 0 AS msgType, content, status + 0 AS status, check_status + 0 AS checkStatus, version
+          FROM im_message WHERE id = #{id}
+    </select>
+    <select id="countConversationMember" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM im_conversation_member WHERE conversation_id = #{conversationId} AND member_id = #{memberId} AND deleted = 0
+    </select>
+    <select id="selectClubWelcome" resultType="java.util.HashMap" useCache="false">
+        SELECT name, welcome_note AS welcomeNote, UNIX_TIMESTAMP(COALESCE(update_time, create_time)) AS version FROM club WHERE id = #{clubId} AND del_flag = 0
+    </select>
+</mapper>

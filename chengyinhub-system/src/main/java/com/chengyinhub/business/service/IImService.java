@@ -94,6 +94,12 @@ public interface IImService
     /** 用户可控文本在进入系统消息通道前，按真实发送者身份执行内容安全检查。 */
     void checkUserGeneratedText(Long senderMemberId, String content);
 
+    /** 路线分享卡的公开来源投影（与发送路线卡同一公开谓词）；不可公开分享时 404 ROUTE_UNAVAILABLE。 */
+    default Map<String, Object> routeShareSource(Long memberId, Long topicId)
+    {
+        throw new UnsupportedOperationException("routeShareSource");
+    }
+
     /** 拉黑 / 取消拉黑 */
     void block(Long memberId, Long targetMemberId);
     void unblock(Long memberId, Long targetMemberId);

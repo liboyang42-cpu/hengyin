@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelPlatformMapper">
+
+    <sql id="channelColumns">
+        id, guild_kind as guildKind, guild_id as guildId, parent_id as parentId, kind, name, topic, position,
+        is_default as isDefault, status, archive_reason as archiveReason, purge_at as purgeAt, visibility,
+        slowmode_sec as slowmodeSec, perm_version as permVersion, meta_version as metaVersion, del_flag as delFlag
+    </sql>
+
+    <!-- 俱乐部：主理人 = club.member_id；在册 = club_member.status=1；管理员 = 生效的联合主理/运营角色且仍在册。 -->
+    <select id="selectClubGuild" resultType="java.util.HashMap" useCache="false">
+        select id, member_id as ownerId, status, del_flag as delFlag from club where id = #{clubId}
+    </select>
+    <select id="countClubMember" resultType="int" useCache="false">
+        select count(1) from club_member where club_id = #{clubId} and member_id = #{memberId} and status = 1 and del_flag = 0
+    </select>
+    <select id="countClubAdmin" resultType="int" useCache="false">
+        select count(1) from club_role_assignment a
+         where a.club_id = #{clubId} and a.target_member_id = #{memberId} and a.scope_type = 'CLUB'
+           and a.scope_id = #{clubId} and a.status = 'ACTIVE'
+           and a.role_code in ('CLUB_CO_OWNER', 'CLUB_OPERATOR')
+           and (a.expires_at is null or a.expires_at &gt; now())
+    </select>
+    <select id="selectTeamGuild" resultType="java.util.HashMap" useCache="false">
+        select id, leader_member_id as ownerId, status from play_team where id = #{teamId}
+    </select>
+    <select id="countTeamMember" resultType="int" useCache="false">
+        select count(1) from play_team_member where team_id = #{teamId} and member_id = #{memberId} and status = 1
+    </select>
+    <select id="selectGuildMembers" resultType="java.util.HashMap" useCache="false">
+        select g.member_id as memberId, coalesce(u.nickname, u.name) as nickname
+          from (
+            <choose>
+                <when test="guildKind == 1">
+                    select c.member_id from club c where c.id = #{guildId} and c.del_flag = 0
+                    union
+                    select cm.member_id from club_member cm
+                     where cm.club_id = #{guildId} and cm.status = 1 and cm.del_flag = 0
+                </when>
+                <otherwise>
+                    select tm.member_id from play_team_member tm where tm.team_id = #{guildId} and tm.status = 1
+                </otherwise>
+            </choose>
+          ) g
+          left join ums_member u on u.id = g.member_id
+         where g.member_id &gt; #{afterMemberId}
+         order by g.member_id asc
+         limit #{limit}
+    </select>
+    <select id="countGuildMembers" resultType="int" useCache="false">
+        select count(1) from (
+            <choose>
+                <when test="guildKind == 1">
+                    select c.member_id from club c where c.id = #{guildId} and c.del_flag = 0
+                    union
+                    select cm.member_id from club_member cm
+                     where cm.club_id = #{guildId} and cm.status = 1 and cm.del_flag = 0
+                </when>
+                <otherwise>
+                    select tm.member_id from play_team_member tm where tm.team_id = #{guildId} and tm.status = 1
+                </otherwise>
+            </choose>
+        ) g
+    </select>
+
+    <select id="selectChannel" resultType="com.chengyinhub.business.service.channel.platform.ChannelRow" useCache="false">
+        select <include refid="channelColumns"/> from im_channel where id = #{id} and del_flag = 0
+    </select>
+    <select id="lockChannel" resultType="com.chengyinhub.business.service.channel.platform.ChannelRow" useCache="false" flushCache="true">
+        select <include refid="channelColumns"/> from im_channel where id = #{id} and del_flag = 0 for update
+    </select>
+    <select id="selectGuildChannels" resultType="com.chengyinhub.business.service.channel.platform.ChannelRow" useCache="false">
+        select <include refid="channelColumns"/> from im_channel
+         where guild_kind = #{guildKind} and guild_id = #{guildId} and del_flag = 0
+         <choose>
+             <when test="includeDeleted">and status in (0, 1, 3)</when>
+             <otherwise>and status in (0, 1)</otherwise>
+         </choose>
+         order by parent_id, position, id
+         limit 2500
+    </select>
+    <select id="countLiveChildren" resultType="int" useCache="false">
+        select count(1) from im_channel where parent_id = #{parentId} and del_flag = 0 and status in (0, 1)
+    </select>
+    <select id="nextPosition" resultType="int" useCache="false">
+        select coalesce(max(position), -1) + 1 from im_channel
+         where guild_kind = #{guildKind} and guild_id = #{guildId} and parent_id = #{parentId} and del_flag = 0
+    </select>
+    <insert id="insertConversation" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into im_conversation(type, biz_key, status, create_time) values (5, #{bizKey}, 0, now())
+    </insert>
+    <insert id="insertChannel" parameterType="com.chengyinhub.business.service.channel.platform.ChannelRow">
+        insert into im_channel(id, guild_kind, guild_id, parent_id, kind, name, topic, position, is_default, status,
+                               visibility, slowmode_sec, perm_version, meta_version, create_time)
+        values (#{id}, #{guildKind}, #{guildId}, #{parentId}, #{kind}, #{name}, #{topic}, #{position}, #{isDefault}, 0,
+                #{visibility}, #{slowmodeSec}, 0, 0, current_timestamp(3))
+    </insert>
+    <update id="updateMetadata">
+        update im_channel
+           set meta_version = meta_version + 1, update_time = current_timestamp(3)
+               <if test="name != null">, name = #{name}</if>
+               <if test="setTopic">, topic = #{topic}</if>
+               <if test="visibility != null">, visibility = #{visibility}</if>
+               <if test="slowmodeSec != null">, slowmode_sec = #{slowmodeSec}</if>
+         where id = #{id} and meta_version = #{expected} and status = 0 and del_flag = 0
+    </update>
+    <update id="updateLifecycle">
+        update im_channel
+           set status = #{toStatus}, meta_version = meta_version + 1, perm_version = perm_version + 1,
+               archive_reason = #{archiveReason},
+               archived_at = <choose><when test="toStatus == 1">current_timestamp(3)</when><otherwise>archived_at</otherwise></choose>,
+               purge_at = #{purgeAt}, delete_reason = #{deleteReason}, update_time = current_timestamp(3)
+         where id = #{id} and meta_version = #{expected} and status = #{fromStatus} and del_flag = 0
+    </update>
+    <update id="bumpPermissionVersion">
+        update im_channel set meta_version = meta_version + 1, perm_version = perm_version + 1, update_time = current_timestamp(3)
+         where id = #{id} and meta_version = #{expected} and perm_version = #{expectedPerm} and del_flag = 0
+    </update>
+    <update id="setConversationStatus">
+        update im_conversation set status = #{status}, update_time = now() where id = #{id} and type = 5
+    </update>
+
+    <select id="selectOverwrites" resultType="java.util.HashMap" useCache="false">
+        select channel_id as channelId, target_type as targetType, target_id as targetId,
+               allow_bits as allowBits, deny_bits as denyBits, note
+          from im_channel_permission_overwrite where channel_id = #{channelId}
+         order by target_type, target_id
+    </select>
+    <select id="selectOverwritesOf" resultType="java.util.HashMap" useCache="false">
+        select channel_id as channelId, target_type as targetType, target_id as targetId,
+               allow_bits as allowBits, deny_bits as denyBits, note
+          from im_channel_permission_overwrite
+         where channel_id in <foreach collection="channelIds" item="c" open="(" separator="," close=")">#{c}</foreach>
+    </select>
+    <insert id="upsertOverwrite">
+        insert into im_channel_permission_overwrite(channel_id, target_type, target_id, allow_bits, deny_bits, note, update_by, update_time)
+        values (#{channelId}, #{targetType}, #{targetId}, #{allow}, #{deny}, #{note}, #{operatorId}, current_timestamp(3))
+        on duplicate key update allow_bits = values(allow_bits), deny_bits = values(deny_bits), note = values(note),
+                                update_by = values(update_by), update_time = values(update_time)
+    </insert>
+    <delete id="deleteOverwrite">
+        delete from im_channel_permission_overwrite
+         where channel_id = #{channelId} and target_type = #{targetType} and target_id = #{targetId}
+    </delete>
+    <select id="selectGuildRoles" resultType="java.util.HashMap" useCache="false">
+        select id, guild_kind as guildKind, guild_id as guildId, name, position, permissions, mentionable, status, is_system as isSystem,
+               version, color, hoist, display_level as displayLevel
+          from im_guild_role
+         where guild_kind = #{guildKind} and guild_id = #{guildId}
+         <if test="!includeDisabled">and status = 1</if>
+         order by position desc, id asc
+         limit 500
+    </select>
+    <select id="selectMemberRoles" resultType="java.util.HashMap" useCache="false">
+        select r.id, r.permissions, r.position
+          from im_guild_role r join im_guild_role_member m on m.role_id = r.id
+         where r.guild_kind = #{guildKind} and r.guild_id = #{guildId} and r.status = 1 and m.member_id = #{memberId}
+           and (m.expires_at is null or m.expires_at &gt; current_timestamp(3))
+    </select>
+    <select id="countGuildRole" resultType="int" useCache="false">
+        select count(1) from im_guild_role where id = #{roleId} and guild_kind = #{guildKind} and guild_id = #{guildId}
+    </select>
+
+    <insert id="reserveReceipt">
+        insert into im_channel_request_receipt(operator_id, family, request_id, payload_fingerprint, operation, channel_id, create_time)
+        values (#{operatorId}, #{family}, #{requestId}, #{fingerprint}, #{operation}, #{channelId}, current_timestamp(3))
+        on duplicate key update operator_id = operator_id
+    </insert>
+    <select id="lockReceipt" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select payload_fingerprint as fingerprint, operation, channel_id as channelId, response_json as response
+          from im_channel_request_receipt
+         where operator_id = #{operatorId} and family = #{family} and request_id = #{requestId} for update
+    </select>
+    <select id="selectReceipt" resultType="java.util.HashMap" useCache="false">
+        select payload_fingerprint as fingerprint, operation, channel_id as channelId, response_json as response
+          from im_channel_request_receipt
+         where operator_id = #{operatorId} and family = #{family} and request_id = #{requestId}
+    </select>
+    <update id="finishReceipt">
+        update im_channel_request_receipt set response_json = #{response}
+         where operator_id = #{operatorId} and family = #{family} and request_id = #{requestId} and response_json is null
+    </update>
+    <insert id="insertOpLog" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        insert into im_channel_op_log(channel_id, action, from_status, to_status, reason, operator_id, request_id, create_time)
+        values (#{channelId}, #{action}, #{fromStatus}, #{toStatus}, #{reason}, #{operatorId}, #{requestId}, current_timestamp(3))
+    </insert>
+    <select id="selectOpLog" resultType="java.util.HashMap" useCache="false">
+        select id, channel_id as channelId, action, from_status as fromStatus, to_status as toStatus, reason,
+               operator_id as operatorId, create_time as createTime
+          from im_channel_op_log
+         where channel_id = #{channelId}
+         <if test="beforeId != null">and id &lt; #{beforeId}</if>
+         order by id desc
+         limit #{limit}
+    </select>
+
+    <insert id="ensureConversationMember">
+        insert into im_conversation_member(conversation_id, member_id, role, unread_count, last_read_msg_id, muted, deleted, create_time)
+        values (#{conversationId}, #{memberId}, 0, 0, 0, 0, 0, now())
+        on duplicate key update deleted = 0
+    </insert>
+    <select id="selectUnread" resultType="java.util.HashMap" useCache="false">
+        select conversation_id as conversationId, unread_count as unread
+          from im_conversation_member
+         where member_id = #{memberId} and deleted = 0
+           and conversation_id in <foreach collection="conversationIds" item="c" open="(" separator="," close=")">#{c}</foreach>
+    </select>
+    <select id="selectReadState" resultType="java.util.HashMap" useCache="false">
+        select unread_count as unread, last_read_msg_id as lastRead from im_conversation_member
+         where member_id = #{memberId} and conversation_id = #{conversationId}
+    </select>
+    <select id="selectConversationType" resultType="java.lang.Integer" useCache="false">
+        select type from im_conversation where id = #{id}
+    </select>
+</mapper>
