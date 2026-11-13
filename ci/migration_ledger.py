@@ -70,6 +70,8 @@ EXPLICIT_AUXILIARY_SQL = {
     # 仅在测试 scratch schema 里执行,不进发布台账、不在生产跑。
     "chengyinhub-admin/src/test/resources/it-schema/scoped-leaderboard-it-schema.sql":
         "TEST_FIXTURE",
+    # TEST-only e2e seed for the be-int TEST database (fix/userinfo-role); never applied to production.
+    "docs/delivery/e2e-seed/seed.sql": "TEST_FIXTURE",
     "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
     # 第十一轮 h2 的只读证据(存量文字预检 SELECT),不进发布台账、不在任何库上执行。
