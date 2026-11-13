@@ -35,7 +35,10 @@ Component({
       this._clear(); this._played = false;
       const n = Math.max(0, Number(this.data.total) || 0);
       const marks = [];
-      for (let i = 1; i < n; i++) marks.push({ left: (i / n * 100).toFixed(2), label: (this.data.labels || [])[i - 1] || ('第 ' + i + ' 段') });
+      const cur = Math.max(0, Math.min(n, Number(this.data.done) || 0));
+      // 站点多于 7 个时标签挤在一起:只留首、尾和当前站(离首尾至少隔一格),圆点照旧
+      const fits = (i) => n <= 7 || i === 1 || i === n - 1 || (i === cur && i >= 3 && i <= n - 3);
+      for (let i = 1; i < n; i++) marks.push({ left: (i / n * 100).toFixed(2), label: (this.data.labels || [])[i - 1] || ('第 ' + i + ' 段'), show: fits(i) });
       this.setData({ marks, fill: 0, lit: 0, win: false, running: false, plus: '',
         msg: this.data.tone === 'free' ? '没有固定顺序，去一家亮一格' : '按顺序到站，一章一章点亮' });
     },
