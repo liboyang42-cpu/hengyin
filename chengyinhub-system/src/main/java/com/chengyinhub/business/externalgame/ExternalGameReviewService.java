@@ -307,7 +307,7 @@ public class ExternalGameReviewService {
         int size = pageSize == null ? 20 : Math.max(1, Math.min(100, pageSize));
         int pageNo = pageNum == null ? 1 : Math.max(1, pageNum);
         List<Object> args = new ArrayList<>();
-        StringBuilder where = new StringBuilder(" WHERE 1 = 1");
+        StringBuilder where = new StringBuilder(" WHERE id > 0");
         if (gameId != null && !gameId.isEmpty()) { where.append(" AND game_id = ?"); args.add(gameId); }
         if (status != null && !status.isEmpty()) {
             if (!status.equals("OPEN") && !status.equals("RESOLVED")) throw AppGapException.badRequest("status");
@@ -331,7 +331,7 @@ public class ExternalGameReviewService {
         int size = limit(limit);
         List<Object> args = new ArrayList<>();
         StringBuilder sql = new StringBuilder("SELECT " + SUBMISSION_COLUMNS + " FROM external_game g JOIN external_game_submission s"
-                + " ON s.id = g.approved_submission_id AND s.status = 'APPROVED' WHERE 1 = 1");
+                + " ON s.id = g.approved_submission_id WHERE s.status = 'APPROVED'");
         if (before > 0) { sql.append(" AND s.id < ?"); args.add(before); }
         sql.append(" ORDER BY s.id DESC LIMIT ?");
         args.add(size + 1);
