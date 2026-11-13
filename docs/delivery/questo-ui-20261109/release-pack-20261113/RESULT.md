@@ -47,4 +47,21 @@ PR：#811（草稿，已按要求含「## 影响分类」）。
 1. 在 `dec_c_payout_jobs` 里把两条任务的 cron 一并错峰（如 `7 3/10 * * * ?`），或新增一条错峰迁移；
 2. 或由负责人决定把 stagger 断言收窄。
 
-STATUS: PARTIAL - 演练因 dec_c_payout_jobs 与 stagger_sys_job_seconds 的断言冲突仍失败，需要业主/迁移作者决定修法
+## 冲突修复（负责人决定：新增错峰迁移）
+不改任何已有迁移、不放宽 stagger 断言。
+
+1. 新增 `chengyinhub-admin/sql/migration_20261113_stagger_payout_jobs.sql`：沿用 `20261101_stagger_sys_job_seconds` 约定（只改秒位与分钟偏移、频率不变，`WHERE invoke_target=… AND cron_expression=原值`，可重复执行），并带 `runner: assert=scalar-true` 断言。
+   - `ecommercePayoutTask.shareAndRetry()`：`0 0/10 * * * ?` → `9 5/10 * * * ?`
+   - `ecommercePayoutTask.syncOnboarding()`：`0 15/30 * * * ?` → `57 18/30 * * * ?`
+   - `committedOfficialNoticeTask.deliverPending()`（11-11 迁移写入的 `0 0/1 * * * ?`）→ `27 0/1 * * * ?`
+   - 秒位 9/57/27 与 11-01 已占用的秒位不冲突。
+2. `ci/migration-dependencies.json`：依赖 `20261112_dec_c_payout_jobs`、`20261101_stagger_sys_job_seconds`、`zzz_committed_official_notice_job_reregister_20261111`。
+3. 发布集：`gen_release_set.py` 登记（必须 / POST_DEPLOY，紧随 dec_c_payout_jobs），重生成后 166 项；`extend_release_pack.py` 刷新 pack。
+4. 第一次演练（run 43338591328）越过原冲突，但第二遍失败：`dec_c_payout_jobs` 重跑会刷新 `sys_job.update_time`。按既有机制（同 sys_category / settlement_rule）在 pack 为该项声明 `rerunKnownDelta`（仅忽略 `update_time`，其余列与行集合仍逐字节比对）；并让演练失败时打印 drift 明细（仅诊断）。
+
+## 验证
+- `ci/test_release_migration_rehearsal.py` 13 项、`ci/test_migration_gates.py` 146 项、`ci/test_migration_ledger.py` 56 项、`ci/test_release_manifest.py` 16 项均 OK；`migration_gates.py sql / beans / dep-order` 通过。
+- 演练 run 43338591328：failure（第二遍非零变更，已按上修复）。
+- **最终演练 run 43341298076（workflow_dispatch）：success**；同提交的 pull_request 演练 run 43341304270：success；PR 其余检查全部 success。
+
+STATUS: DONE
