@@ -97,7 +97,16 @@ PREPARE pp_stmt_17 FROM @pp_ddl_17;
 EXECUTE pp_stmt_17;
 DEALLOCATE PREPARE pp_stmt_17;
 
+INSERT INTO sys_job(job_name,job_group,invoke_target,cron_expression,misfire_policy,concurrent,status,create_by,create_time,remark)
+SELECT '通行证发货确认补偿','DEFAULT','platformPassDeliveryTask.run()','23 0/5 * * * ?','3','1','1','system',NOW(),
+ '默认暂停；触发时机:每5分钟重试虚拟支付已开通但渠道发货确认未完成的通行证订单；负责人:渠道与资金负责人；到期日:2026-12-13；虚拟支付上线前由业主核验后再启用'
+WHERE NOT EXISTS (SELECT 1 FROM sys_job WHERE CAST(invoke_target AS BINARY)=CAST('platformPassDeliveryTask.run()' AS BINARY));
+
 -- runner: assert=scalar-true
 SELECT (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE()
           AND ((table_name = 'platform_pass_order' AND column_name IN ('xpay_product_id','xpay_offer_id','delivery_status','delivery_attempts','delivery_next_time','coverage_snapshot','refund_terms_ref','refund_amount_fen','refund_source','review_status','review_apply_reason','review_usage_facts','review_handler','review_decision','review_time','review_channel_receipt'))
             OR (table_name = 'platform_pass_claim' AND column_name IN ('status','stopped_time')))) = 18;
+
+-- runner: assert=scalar-true
+SELECT COUNT(*)=1 AND MAX(status='1' AND concurrent='1')=1 FROM sys_job
+WHERE CAST(invoke_target AS BINARY)=CAST('platformPassDeliveryTask.run()' AS BINARY);
