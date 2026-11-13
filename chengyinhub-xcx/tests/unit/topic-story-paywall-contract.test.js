@@ -32,7 +32,7 @@ test('主题响应只计算锁定数量，不伪造隐藏章节', () => {
   assert.match(js, /goMyOrders[\s\S]*\/subpackageMember\/order\/order/)
 })
 
-test('未解锁章节以锁定预告卡下发：介绍可见、点按走购票、不计入可玩进度', () => {
+test('未解锁章节以锁定预告卡下发：介绍可见、点按走购票、进度含预告章站点', () => {
   const motion = require(path.join(root, 'pages/topic/utils/topic-motion.js'))
   const cards = motion.buildStoryCards({ productType: 1, chaptersList: [
     { name: '序', description: '开场', nodes: [] },
@@ -46,7 +46,7 @@ test('未解锁章节以锁定预告卡下发：介绍可见、点按走购票�
 
   const js = read('pages/topic/index/index.js')
   assert.match(js, /card && card\.locked\) return this\.selfPlayBuy\(\)/)
-  assert.match(js, /c && c\.locked === true\) return; \(c\.nodes/)
+  assert.match(js, /motion\.progressFallback\(info\)/) // 进度总数含预告章,完成数只来自真实进度
   const wxml = read('pages/topic/index/index.wxml')
   assert.match(wxml, /item\.locked \? ' is-locked'/)
   assert.match(wxml, /item\.locked \? 'lock' : 'chevron-right'/)
