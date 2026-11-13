@@ -1245238,7 +1245238,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:98"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:100"
       }
     },
     {
@@ -1245348,7 +1245348,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:100"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:102"
       }
     },
     {
@@ -1245415,7 +1245415,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:194"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:197"
       }
     },
     {
@@ -1245483,7 +1245483,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:188"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:191"
       }
     },
     {
@@ -1245550,7 +1245550,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:204"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:207"
       }
     },
     {
@@ -1245617,11 +1245617,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:177"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:180"
       }
     },
     {
-      "id": "pages/templatedetail/topic-preview/index.wxml:49:bindtap:goDetail:6",
+      "id": "pages/templatedetail/topic-preview/index.wxml:56:bindtap:goDetail:6",
       "route": "pages/templatedetail/topic-preview/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1245644,7 +1245644,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "goDetail",
-        "line": 49,
+        "line": 56,
         "selectorHint": ".tp-cta__btn",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1245687,7 +1245687,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-preview/index.js:213"
+        "staticSource": "pages/templatedetail/topic-preview/index.js:216"
       }
     },
     {
@@ -1265108,7 +1265108,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1183"
+        "staticSource": "pages/topic/index/index.js:1194"
       }
     },
     {
@@ -1265180,7 +1265180,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:608"
+        "staticSource": "pages/topic/index/index.js:619"
       }
     },
     {
@@ -1265291,7 +1265291,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:645"
+        "staticSource": "pages/topic/index/index.js:656"
       }
     },
     {
@@ -1265358,7 +1265358,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:633"
+        "staticSource": "pages/topic/index/index.js:644"
       }
     },
     {
@@ -1265468,7 +1265468,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1329"
+        "staticSource": "pages/topic/index/index.js:1340"
       }
     },
     {
@@ -1265581,7 +1265581,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1301"
+        "staticSource": "pages/topic/index/index.js:1312"
       }
     },
     {
@@ -1265651,7 +1265651,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1183"
+        "staticSource": "pages/topic/index/index.js:1194"
       }
     },
     {
@@ -1265760,7 +1265760,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:398"
+        "staticSource": "pages/topic/index/index.js:400"
       }
     },
     {
@@ -1265831,7 +1265831,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:762"
+        "staticSource": "pages/topic/index/index.js:773"
       }
     },
     {
@@ -1265940,7 +1265940,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:714"
+        "staticSource": "pages/topic/index/index.js:725"
       }
     },
     {
@@ -1266010,7 +1266010,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:918"
+        "staticSource": "pages/topic/index/index.js:929"
       }
     },
     {
@@ -1266081,7 +1266081,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1257"
+        "staticSource": "pages/topic/index/index.js:1268"
       }
     },
     {
@@ -1266152,7 +1266152,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1053"
+        "staticSource": "pages/topic/index/index.js:1064"
       }
     },
     {
@@ -1266222,7 +1266222,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1190"
+        "staticSource": "pages/topic/index/index.js:1201"
       }
     },
     {
@@ -1266292,7 +1266292,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:753"
+        "staticSource": "pages/topic/index/index.js:764"
       }
     },
     {
@@ -1266359,7 +1266359,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1909"
+        "staticSource": "pages/topic/index/index.js:1920"
       }
     },
     {
@@ -1266500,7 +1266500,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2265"
+        "staticSource": "pages/topic/index/index.js:2276"
       }
     },
     {
@@ -1266567,7 +1266567,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1909"
+        "staticSource": "pages/topic/index/index.js:1920"
       }
     },
     {
@@ -1266637,7 +1266637,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1183"
+        "staticSource": "pages/topic/index/index.js:1194"
       }
     },
     {
@@ -1266707,7 +1266707,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:948"
+        "staticSource": "pages/topic/index/index.js:959"
       }
     },
     {
@@ -1266778,7 +1266778,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1257"
+        "staticSource": "pages/topic/index/index.js:1268"
       }
     },
     {
@@ -1266845,7 +1266845,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:767"
+        "staticSource": "pages/topic/index/index.js:778"
       }
     },
     {
@@ -1266916,7 +1266916,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:769"
+        "staticSource": "pages/topic/index/index.js:780"
       }
     },
     {
@@ -1266986,7 +1266986,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1190"
+        "staticSource": "pages/topic/index/index.js:1201"
       }
     },
     {
@@ -1267057,7 +1267057,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1516"
+        "staticSource": "pages/topic/index/index.js:1527"
       }
     },
     {
@@ -1267127,7 +1267127,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1593"
+        "staticSource": "pages/topic/index/index.js:1604"
       }
     },
     {
@@ -1267194,7 +1267194,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:571"
+        "staticSource": "pages/topic/index/index.js:582"
       }
     },
     {
@@ -1267262,7 +1267262,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2129"
+        "staticSource": "pages/topic/index/index.js:2140"
       }
     },
     {
@@ -1267333,7 +1267333,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:762"
+        "staticSource": "pages/topic/index/index.js:773"
       }
     },
     {
@@ -1267403,7 +1267403,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1190"
+        "staticSource": "pages/topic/index/index.js:1201"
       }
     },
     {
@@ -1267480,7 +1267480,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:925"
+        "staticSource": "pages/topic/index/index.js:936"
       }
     },
     {
@@ -1267547,7 +1267547,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:720"
+        "staticSource": "pages/topic/index/index.js:731"
       }
     },
     {
@@ -1267614,7 +1267614,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:721"
+        "staticSource": "pages/topic/index/index.js:732"
       }
     },
     {
@@ -1267725,7 +1267725,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:726"
+        "staticSource": "pages/topic/index/index.js:737"
       }
     },
     {
@@ -1267792,7 +1267792,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1916"
+        "staticSource": "pages/topic/index/index.js:1927"
       }
     },
     {
@@ -1267859,7 +1267859,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1960"
+        "staticSource": "pages/topic/index/index.js:1971"
       }
     },
     {
@@ -1267926,7 +1267926,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2109"
+        "staticSource": "pages/topic/index/index.js:2120"
       }
     },
     {
@@ -1268003,7 +1268003,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1951"
+        "staticSource": "pages/topic/index/index.js:1962"
       }
     },
     {
@@ -1268070,7 +1268070,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1941"
+        "staticSource": "pages/topic/index/index.js:1952"
       }
     },
     {
@@ -1268191,7 +1268191,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1927"
+        "staticSource": "pages/topic/index/index.js:1938"
       }
     },
     {
@@ -1268261,7 +1268261,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1183"
+        "staticSource": "pages/topic/index/index.js:1194"
       }
     },
     {
@@ -1268411,7 +1268411,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1195"
+        "staticSource": "pages/topic/index/index.js:1206"
       }
     },
     {
@@ -1268478,7 +1268478,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1547"
+        "staticSource": "pages/topic/index/index.js:1558"
       }
     },
     {
@@ -1268546,7 +1268546,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:570"
+        "staticSource": "pages/topic/index/index.js:572"
       }
     },
     {
@@ -1268613,7 +1268613,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1547"
+        "staticSource": "pages/topic/index/index.js:1558"
       }
     },
     {
@@ -1268680,7 +1268680,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:572"
+        "staticSource": "pages/topic/index/index.js:583"
       }
     },
     {
@@ -1268799,7 +1268799,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:574"
+        "staticSource": "pages/topic/index/index.js:585"
       }
     },
     {
@@ -1268866,7 +1268866,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:853"
+        "staticSource": "pages/topic/index/index.js:864"
       }
     },
     {
@@ -1268933,7 +1268933,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1541"
+        "staticSource": "pages/topic/index/index.js:1552"
       }
     },
     {
@@ -1269003,7 +1269003,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:846"
+        "staticSource": "pages/topic/index/index.js:857"
       }
     },
     {
@@ -1269148,7 +1269148,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1556"
+        "staticSource": "pages/topic/index/index.js:1567"
       }
     },
     {
@@ -1269219,7 +1269219,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:858"
+        "staticSource": "pages/topic/index/index.js:869"
       }
     },
     {
@@ -1269305,7 +1269305,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:892"
+        "staticSource": "pages/topic/index/index.js:903"
       }
     },
     {
@@ -1269391,7 +1269391,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:891"
+        "staticSource": "pages/topic/index/index.js:902"
       }
     },
     {
@@ -1269463,7 +1269463,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:608"
+        "staticSource": "pages/topic/index/index.js:619"
       }
     },
     {
@@ -1269574,7 +1269574,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:645"
+        "staticSource": "pages/topic/index/index.js:656"
       }
     },
     {
@@ -1269641,7 +1269641,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1355"
+        "staticSource": "pages/topic/index/index.js:1366"
       }
     },
     {
@@ -1269755,7 +1269755,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1357"
+        "staticSource": "pages/topic/index/index.js:1368"
       }
     },
     {
@@ -1269823,7 +1269823,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2402"
+        "staticSource": "pages/topic/index/index.js:2413"
       }
     },
     {
@@ -1269891,7 +1269891,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:2401"
+        "staticSource": "pages/topic/index/index.js:2412"
       }
     },
     {
@@ -1269958,7 +1269958,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1285"
+        "staticSource": "pages/topic/index/index.js:1296"
       }
     },
     {
@@ -1270030,7 +1270030,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1288"
+        "staticSource": "pages/topic/index/index.js:1299"
       }
     },
     {
@@ -1270118,7 +1270118,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1861"
+        "staticSource": "pages/topic/index/index.js:1872"
       }
     },
     {
@@ -1270206,7 +1270206,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1874"
+        "staticSource": "pages/topic/index/index.js:1885"
       }
     },
     {
@@ -1270279,7 +1270279,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1896"
+        "staticSource": "pages/topic/index/index.js:1907"
       }
     },
     {
@@ -1270669,7 +1270669,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:103"
+        "staticSource": "pages/topic/index/index.js:105"
       }
     },
     {
@@ -1271123,7 +1271123,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:641"
+        "staticSource": "pages/topic/index/index.js:652"
       }
     },
     {
@@ -1271232,7 +1271232,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:398"
+        "staticSource": "pages/topic/index/index.js:400"
       }
     },
     {
@@ -1271299,7 +1271299,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:643"
+        "staticSource": "pages/topic/index/index.js:654"
       }
     },
     {
@@ -1271366,7 +1271366,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1075"
+        "staticSource": "pages/topic/index/index.js:1086"
       }
     },
     {
@@ -1271434,7 +1271434,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:1068"
+        "staticSource": "pages/topic/index/index.js:1079"
       }
     },
     {
@@ -1271501,7 +1271501,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:957"
+        "staticSource": "pages/topic/index/index.js:968"
       }
     },
     {
@@ -1271568,7 +1271568,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:410"
+        "staticSource": "pages/topic/index/index.js:412"
       }
     },
     {
@@ -1271635,7 +1271635,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/topic/index/index.js:569"
+        "staticSource": "pages/topic/index/index.js:571"
       }
     },
     {

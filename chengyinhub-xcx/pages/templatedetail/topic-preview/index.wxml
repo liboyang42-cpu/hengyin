@@ -41,6 +41,13 @@
           <image class="tp-ck__ic" src="/pages/templatedetail/art/tab/check.svg" mode="aspectFit" /><text>{{ item }}</text>
         </view>
       </view>
+      <view class="tp-intro" wx:if="{{ intro.desc || intro.chapters.length }}">
+        <text class="tp-intro__d" wx:if="{{ intro.desc }}">{{ intro.desc }}</text>
+        <view class="tp-intro__ch" wx:for="{{ intro.chapters }}" wx:key="key">
+          <text class="tp-intro__t">{{ item.name }}</text>
+          <text class="tp-intro__g" wx:if="{{ item.guide }}">{{ item.guide }}</text>
+        </view>
+      </view>
     </view>
 
     <view class="tp-cta">
