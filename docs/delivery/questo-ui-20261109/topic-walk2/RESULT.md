@@ -12,9 +12,9 @@
 
 测试：`tests/unit/topic-detail-walk2.test.js`（新增）；`dw29-v22-v23-topic-detail`、`topic-preview-input-contract` 随逻辑对齐。`tests/unit/*.test.js` 全量仅剩 master 上已存在的 2 项失败（action-ledger inventory 重建、五处路线动态投影）。未跑 selftests，未改 ci/architecture 与 workflows。
 
-CI 结果见 PR。
+补充：第二次提交把模板预览的章名/导读逻辑改为分包内同口径副本（分包互引资源门禁），标题字号改走 token（DS 门禁）。PR #823 CI 全绿（静态门、20 个单测分片、gitleaks 等）。
 
-STATUS: PARTIAL - 待 CI 结果
+STATUS: DONE
 
 ## Rebase 1113
 
