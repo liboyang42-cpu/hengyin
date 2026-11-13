@@ -8,7 +8,7 @@
 >
 > **积分与金额：** 宝石就是现有可兑换积分，与解谜局内分分开；不新增币种或钱包。价格、折扣、应计、退款及权限由服务端决定，UI不本地计算，不把已记录、已批准、应计或待结算显示成到账或可提现。
 
-版本 4.5 · 2026-11-09 UTC · 小程序 / iOS / 管理后台唯一 UI 交付文件；第一批修复已提交 `4eee5c943`，第二批后端源码提交 `c979a233c`，定向回归已通过；存储/CI按统一推送候选执行，未部署。
+版本 4.6 · 2026-11-10 UTC · 小程序 / iOS / 管理后台唯一 UI 交付文件；§28 记录 2026-11-09 实施波次；第一批修复已提交 `4eee5c943`，第二批后端源码提交 `c979a233c`，定向回归已通过；存储/CI按统一推送候选执行，未部署。
 本文件是全部前端改动的唯一入口；原[iOS优化交接](iOS优化交接.md)按旧稿只作历史，不再承载新任务，也不在交包中重复带入。
 
 ## 0 版本增量与证据口径
@@ -174,7 +174,7 @@
 ### U03-04 管理后台审核与模板状态
 
 - **证据状态：** SOURCE（页面在）／NOT_VERIFIED。
-- **落点：** `chengyinhub-ui/src/views/business/topic/{index,detail,workspace}.vue`、`audit/index.vue`、`membertemplate/*`。
+- **落点：** `chengyinhub-ui/src/views/business/topic/{index,detail,workspace}.vue`、`views/business/audit/index.vue`、`membertemplate/*`。
 - **补齐：** 当前公开版、被审版、原检查证据及差异；核对 `status/checkStatus/userStatus/lifecycle` 实际含义后统一显示。保留原审核任务版本冲突控制。
 - **验收：** 同对象跨页状态一致；两人同时审核能读回最终结果；恢复内容生成新修订，不覆盖历史证据。
 
@@ -191,7 +191,7 @@
 ### U04-02 选择 证物与结局兑现
 
 - **证据状态：** SOURCE（背包/角色卡/结局区在）／NOT_VERIFIED。
-- **落点：** 游玩页、背包（`pages/play/theme-backpack.*`）、角色卡及结局区。
+- **落点：** 游玩页、背包（模板 `pages/play/theme-backpack.{wxml,wxss}`，逻辑 `pages/play/utils/theme-backpack.js`）、角色卡及结局区。
 - **补齐：** 选择后的已确认后果、证物取得和使用状态、锁定原因与当前可操作项。表达性选择与客观判题分别呈现。
 - **验收：** 选 A 与选 B 得到各自可见后果；资源不足不显示成功；同一回执不重复领奖。
 
@@ -311,8 +311,8 @@
 
 ### U07-05 财务和创作者收入准确显示
 
-- **证据状态：** SOURCE（`finance/order`、`finance/refund`、`business/settlement/index.vue`、`finance/ledger.vue` 在）／PROPOSED（B8 收益字段）。
-- **落点：** 后台 `finance/order/*`、`finance/refund/*`、`business/settlement/index.vue`、`finance/ledger.vue` 及主题资金界面；两端收益明细。
+- **证据状态：** SOURCE（`chengyinhub-ui/src/views/business/finance/order`、`views/business/finance/refund`、`views/business/settlement/index.vue`、`views/business/finance/ledger.vue` 在）／PROPOSED（B8 收益字段）。
+- **落点：** 后台 `chengyinhub-ui/src/views/business/finance/order/*`、`views/business/finance/refund/*`、`views/business/settlement/index.vue`、`views/business/finance/ledger.vue` 及主题资金界面；两端收益明细。
 - **补齐：** 成交、履约、退款冲销、待结算、已对账和已支付分开；父单、子票及账本引用可钻取。
 - **验收：** 确认对账不写成打款；人工凭证复核不写成用户到账；快速切主体不串数据，读取失败不填 0 元。
 - **与 §19 的关系：** 本条的 B8 `CreatorRevenueLedgerVO` 是**内容成交的应计投影**；§19 的 M5 `/api/marketing/revenue/*` 是**营销分配/冲销投影**。两者是不同数据链，**不得相加、不得互相替代**；用户界面按各自入口显示并标口径。
@@ -476,7 +476,7 @@
 
 ### UG-01 逐字猜词：按真实 format 补槽与整词输入
 
-- **证据状态（分层）：** 后端 **已接线（G-PACK）/ NOT_RUN**：`HangmanGameplay` 的保存校验、安全投影、开局状态、`SUBMIT_HANGMAN` 动作路由、完成闸、矩阵 PROOF 行均已接；**未编译、未跑测试**。客户端 **待实现**（`node-game-catalog.js` 与 `gameplay-support-matrix.json` 仍无 hangman 行，作者端编辑器/玩家渲染器未同步——这是客户端目录缺口，不是后端 fail-closed）。App **待验**。
+- **证据状态（分层）：** 后端 **已接线（G-PACK）/ NOT_RUN**：`HangmanGameplay` 的保存校验、安全投影、开局状态、`SUBMIT_HANGMAN` 动作路由、完成闸、矩阵 PROOF 行均已接；**未编译、未跑测试**。客户端 **待实现**（`pages/publish/utils/publish/node-game-catalog.js` 与 `pages/publish/utils/publish/gameplay-support-matrix.js` 仍无 hangman 行，作者端编辑器/玩家渲染器未同步——这是客户端目录缺口，不是后端 fail-closed）。App **待验**。
 - **现有入口（已核，均不等价）：** `pages/play/components/playkit-typein/index.wxml` 自述「目标文本是明牌 —— 这玩法考的是手速不是猜谜」，属性只有 `title/target/seconds/r5/deadlineAt/caseSensitive/tries/attempts/passed`；`playkit-qa` 是整词输入；后端 `playerHint` 只给两级文字提示。三者都不能顶替逐字补槽。
 - **改前：** 玩家要么看到完整目标文本照着打，要么在 qa 输入整词；没有「按槽位补空白位」的状态。
 - **改后：** 节点内的内嵌玩法块显示槽位行：已给字符**按原样**显示，分隔符原样显示，待补位显示 `_`；玩家**只填空白位**，也可以一次性输入整词（服务端忽略空格比较，自行重建）。解开后显示完整答案。
@@ -666,7 +666,7 @@
 ### UG-12 管理后台：审核、额度与明细只读
 
 - **证据状态：** PROPOSED。
-- **落点：** `chengyinhub-ui/src/views/business/topic/detail.vue`、`workspace.vue`、`audit/index.vue`；`business/analytics/index.vue`（复报，见 U08-04）。
+- **落点：** `chengyinhub-ui/src/views/business/topic/detail.vue`、`workspace.vue`、`views/business/audit/index.vue`；`business/analytics/index.vue`（复报，见 U08-04）。
 - **补齐：** ① 该题/该结局的玩法配置摘要（层、额度、代价、跳过策略）② 审核时的答案与秘密字段隔离（审核可见，运营只读不可导出）③ 对局明细展开（提示/跳过/净分逐笔）④ 申诉核对所需的回执号与原动作。
 - **禁止：** 后台不得改写原对局事实、不得代玩家使用提示、不得绕过 owner/scope 校验。
 - **验收：** 审核看到的是被审版本；运营只读不可导出答案；明细与玩家侧一致；两人同时操作有版本冲突提示。
@@ -1431,7 +1431,41 @@ OPS-01仅增加已有权限保护的内部指标读取，不新增本轮UI页面
 
 ### 25.2 并入原卡的端侧细节
 
+六张主卡的端侧实现都并入原 UI 任务，没有另开页面卡。2026-11-09 波次的落点（详见 §28）：
+
+| 主卡 | 原卡 | 实施工位 | 端侧细节 |
+|---|---|---|---|
+| MP-15 邀请落地 | UI-P1、UI-P5 | qx-b3 | 推荐、礼物、同行三种落地分别读各自凭据；席位领取只在服务端报告可写时显示 |
+| MP-16 推广中心 | UI-P2 | qx-b3 | 只读归因与应计，不出现提现 |
+| MP-17 主题专题 | UI-P3 | qx-b8 | 只用公开目录投影；没有可信剩余数和评分就不显示；不画到货提醒成功 |
+| MP-18 模式选择 | UI-P4 | qx-b3 | 只列服务端下发的模式，暂时只放在落地页，详情页未放 |
+| MP-19 战报 | UI-P7、UI-P8、UI-P9 | qx-b3 | 一个战报容器加榜单和回忆弹层，复用分享卡；进度查看和正式完局分开 |
+| MP-20 城市通票 | UI-P6 | qx-b5 | 覆盖与退款规则取成交快照，不写死“已用不退” |
+
+同时并入的端侧合同同步（小程序合同分片）：
+
+- **默认内嵌名单补 `hangman`**（UG-01）：客户端 `pages/publish/utils/publish/advanced-game-config.js` 的默认内嵌玩法段名单缺少服务端 `PRESENT_SECTIONS` 已有的 `hangman`，分片 20/20 的“默认呈现和内嵌限制与实际服务端真源一致”判红。已在 `a0824a43c` 补齐。
+- **根层 `hintLadder` 不按玩法段核对**（UG-05、UG-11）：`hintLadder` 是根层提示阶梯，不是玩法段。分片 14/20 的“后端 Validator 段名单与本地 SECTIONS 一一对上”把它当成缺段。已在 `a0824a43c` 的名册测试里注明并排除。
+- **玩法 GET 守卫见证对齐礼品与受让席位**（UI-P1、UI-P5）：见 §25.3。
+- **提示 GET 入权限矩阵**（UG-05..07）：`GET /api/play/help`、`GET /api/play/help/receipt` 两条登记在 qx-b1（`151a544d5`）上，随该 PR 合入。
+
 ### 25.3 当前 CI 指出的客户端合同同步（run `42553085609`，SHA `47cb972e773307aa93c55589adea8e871b55a362`）
+
+该次 CI 的小程序部分有两个分片判红，`Mini program static checks` 只是汇总这两个结果：
+
+| 分片 | 失败用例 | 原因 | 修复 |
+|---|---|---|---|
+| 20/20 | #447 偏好题组与新生活 OS GET 绑定当前会员及其游玩/完成事实；#448 排行榜 GET 绑定当前会员及本场报名支付或自玩通行证；#449 玩法 GET 真实身份和 owner 守卫被改动时合同必须判红 | 后端把玩法准入入口改成带礼品和席位受让人事实的新调用形状（`CurrentPlayRegistration.require/requireToContinue`、`PlayNodeAccessService.resolveCtx`、`PlayCompletionFacts.isRegistered → hasSeatRecipientFact`），合同测试的见证还是旧形状 | C00 鉴权合同改动 `24f5021ab`（业主 2026-11-09 批准，只改 C00 保留文件 `get-auth-matrix-contract.test.js`） |
+| 20/20 | #643 默认呈现和内嵌限制与实际服务端真源一致 | 客户端默认内嵌名单缺 `hangman` | `a0824a43c` |
+| 14/20 | #3 后端 Validator 的段名单与本地 SECTIONS 一一对上 | 根层 `hintLadder` 被当成玩法段 | `a0824a43c` |
+
+C00 鉴权合同改动的内容：
+
+- 值校验改在 `passesValueRules` 中断言，入口改为新调用形状。
+- 新增正向合同：礼品事实 SQL 绑定当前会员（买家或领取人）和同一主题，只取待领取或已领取；席位事实 SQL 绑定受让人、同一活动或主题、已领取、原单已报名已支付；锁内复核比对邀请行的受让人、原单和归属；两类事实查询都只读。
+- 新增负控：去掉会员绑定、去掉场次绑定、放入撤销/取消/过期状态、去掉只读、入口不传席位事实，合同都必须判红。
+
+复验：CI `42717309700`（候选 `24f5021a`，合并检出 `025e4cba`）20 个小程序分片和小程序静态检查全部通过。该次 CI 仍然红，原因不在客户端：`Backend tests` 的测试本身 0 失败，最终被架构门禁 `EXACT_STORAGE_PORT_CONSUMER`（`ApiPresetController → AuthorWriteReceiptService` 未登记为允许的 consumer）拦住；`Fast gates` 是同一架构门禁。登记见草稿 [#748](https://github.com/liboyang42-cpu/hengyin/pull/748)。
 
 
 ## 26 用户 1A/2A/3A 后端增量交接
@@ -1808,3 +1842,215 @@ POST /v2/purchase/create沿原JSON合同，provider=APPLE_IAP时新增必需revi
 - 既有 `GET /api/marketing/revenue/author/mine` 与 `/order` 的 `lines` 按服务端登录身份，仅返回 `recipientMemberId` 等于本人的非平台分项；同一人同时为作者和推荐人时保留两项，不由客户端合并去重。
 - `reversedAmount` 等父订单上下文字段不等于个人收入，不据此显示个人到账、扣回或可提现。创作者中心原合作账本与该订单分佣账本不直接相加。
 - 原非参与者拒绝保留；无分项、读取失败、待结算与已到账分别显示。b0f9581定向9例通过，未据此宣称HTTP/App验收。
+
+## 28 2026-11-09 实施波次
+
+业主要求把剩余代码缺口和 UI 改动一次做完，先以 HTML 评审页给业主看，看完再合并。本节按各工位分支上的 `docs/delivery/questo-ui-20261109/qx-*/RESULT.md` 汇总，状态照抄 RESULT，不另行升级。所有 PR 都是草稿，未合并；证据路径在对应工位分支上（`claude/qx-<工位>-20261109`）。截图（`shots/`）只代表 rig 里的真实页面，真机、真实支付、渠道和现场均未验。
+
+### 28.1 工位总览
+
+| 工位 | 范围 | PR | RESULT 结论 |
+|---|---|---|---|
+| qx-b1 | 游玩核心：发布号重放、能力声明、到达原因与读数、提示阶梯 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | PARTIAL：代码、测试和门禁齐，rig 到不了可玩局和可发布草稿，缺截图 |
+| qx-b2 | 新玩法：逐字猜词、图片选项、指认结案、谜面变换、作者提示 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | PARTIAL：§23.1 国家码和到达设置当时没有写口（qx-c1 已补后端） |
+| qx-b3 | 玩家闭环 P1–P9 与多作用域榜 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | PARTIAL：完局和支付事实用 SQL fixture；P4 未放进详情页；队伍之间榜未接 |
+| qx-b4 | 模板换城、预设、席位、合作帮助 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | PARTIAL：§26.1 没截到图；U02-05 作者侧来源声明编辑未做；采用流程曾被 `FOR UPDATE OF` 阻塞（qx-c1 #1 已修） |
+| qx-b5 | 商业营销 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | PARTIAL：通票购买成功、主持接受到付款、真实应计未截图；悬赏活动列表等后端（qx-c1 #6 已补） |
+| qx-b6 | 管理后台 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | PARTIAL：UG-12、U08-03、U08-05 缺后端读面；§20.2 发码成功和 §19 有数据两种状态未截到 |
+| qx-b7 | iOS（`liboyang42-cpu/chengyin-ios`） | chengyin-ios #144 | PARTIAL：代码未经类型检查，未挂进游玩流程，无设备截图 |
+| qx-b8 | 完局结果、推荐、公开目录、城市合集 | [#742](https://github.com/liboyang42-cpu/hengyin/pull/742) | PARTIAL：U08-01/02 rig 无真实完局，仅单测；问题反馈等后端写接口（qx-c1 #7 已补） |
+| qx-c1 | 后端十项缺口 | [#747](https://github.com/liboyang42-cpu/hengyin/pull/747) | PARTIAL：5b 冻结进发布快照只有单测证明，其余九项真实 HTTP 加 MySQL 回读 |
+| qx-c2 | 文档、部署清单、真库复验 | 见 qx-c2 RESULT | 见 `docs/delivery/questo-ui-20261109/qx-c2/RESULT.md` |
+| qx-a1 … qx-a7、qx-a5d | 走查（vision 3） | 见 28.3 | 见 28.3 |
+
+### 28.2 Questo UI 任务（B 工位）
+
+| 任务 | 工位 | PR | 状态 | 证据 |
+|---|---|---|---|---|
+| U03-01 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| U03-02 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| U03-03 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| U04-01 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| U04-02 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| U04-03 / §27.2 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| U04-04 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| U05-01 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| U05-02 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| U05-03 / §27.3 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| UG-05 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| UG-06 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| UG-07 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| UG-08 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| UG-09 | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| Shards | qx-b1 | [#746](https://github.com/liboyang42-cpu/hengyin/pull/746) | fixed | `docs/delivery/questo-ui-20261109/qx-b1/` |
+| UG-01 player | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | fixed | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| UG-01 author | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | fixed | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| UG-02 | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | fixed | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| UG-03 | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | fixed | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| UG-04 / §27.9 | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | fixed | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| UG-10 | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | fixed | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| UG-11 | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | fixed | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| Catalog / matrix | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | fixed | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| §23.1 answer aliases | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | fixed | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| §23.1 placeCountryCode | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | needs owner | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| §23.1 arrivalPolicy / arrivalReading | qx-b2 | [#740](https://github.com/liboyang42-cpu/hengyin/pull/740) | needs owner | `docs/delivery/questo-ui-20261109/qx-b2/` |
+| 首链 P7→P1→P4→P5 | qx-b3 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | fixed（链路部分为 fixture） | `docs/delivery/questo-ui-20261109/qx-b3/` |
+| P7 本局战报 | qx-b3 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | fixed | `docs/delivery/questo-ui-20261109/qx-b3/` |
+| P9 单关与队内榜 | qx-b3 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | fixed | `docs/delivery/questo-ui-20261109/qx-b3/` |
+| §23.4 多作用域榜 | qx-b3 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | fixed | `docs/delivery/questo-ui-20261109/qx-b3/` |
+| P8 同行回忆 | qx-b3 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | fixed | `docs/delivery/questo-ui-20261109/qx-b3/` |
+| P1 推荐/礼物/同行落地 | qx-b3 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | fixed | `docs/delivery/questo-ui-20261109/qx-b3/` |
+| P4 玩法模式 | qx-b3 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | partial（只放在落地页） | `docs/delivery/questo-ui-20261109/qx-b3/` |
+| P5 票内席位 | qx-b3 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | fixed | `docs/delivery/questo-ui-20261109/qx-b3/` |
+| P2 推广中心 | qx-b3 | [#741](https://github.com/liboyang42-cpu/hengyin/pull/741) | fixed | `docs/delivery/questo-ui-20261109/qx-b3/` |
+| U02-01 采用条件 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U02-02 沿用 / 换城采用 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U02-02 后端阻塞 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed（后端阻塞已交 qx-c1） | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U02-03 地点待办 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U02-04 来源版本 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U02-05 / §27.5 素材署名 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | partial | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| §21 预设列表与草稿 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U06-01 席位与邀请 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U06-02 角色与私密线索 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U06-03 队长掉线、退队、接管 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U06-04 组织者与共同成果 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| §26.1 合作玩法 | qx-b4 | [#744](https://github.com/liboyang42-cpu/hengyin/pull/744) | fixed（未截图） | `docs/delivery/questo-ui-20261109/qx-b4/` |
+| U07-01 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| U07-02 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| U07-04 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §17.5 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §17.6 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §17.1 / P6 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §17.2 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §17.3 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed（只显示不可用原因） | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §17.4 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §19 / §27.10 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §27.6 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §18 A | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §18 B | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §18 I | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §18 C | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed（只显示不可用原因） | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §18 D | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | needs owner | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| §20.2 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed（只显示不可用原因） | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| U07-03 | qx-b5 | [#745](https://github.com/liboyang42-cpu/hengyin/pull/745) | fixed（只显示不可用原因） | `docs/delivery/questo-ui-20261109/qx-b5/` |
+| U03-04 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| UG-12 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | needs owner | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| U07-05 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | partial | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| §19（U07-05 关联） | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| U08-03 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | needs owner | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| U08-04 + §27.4 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| U08-05 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | needs owner | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| §27.7 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| §18 E | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| §18 F | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| §20.1 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| §20.2 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| 菜单与权限 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| 共用 | qx-b6 | [#743](https://github.com/liboyang42-cpu/hengyin/pull/743) | fixed | `docs/delivery/questo-ui-20261109/qx-b6/` |
+| U08-01 正式结果 | qx-b8 | [#742](https://github.com/liboyang42-cpu/hengyin/pull/742) | fixed | `docs/delivery/questo-ui-20261109/qx-b8/` |
+| U08-02 下一场推荐 | qx-b8 | [#742](https://github.com/liboyang42-cpu/hengyin/pull/742) | fixed | `docs/delivery/questo-ui-20261109/qx-b8/` |
+| U08-02 问题反馈 | qx-b8 | [#742](https://github.com/liboyang42-cpu/hengyin/pull/742) | needs owner | `docs/delivery/questo-ui-20261109/qx-b8/` |
+| §20.1 公开目录 | qx-b8 | [#742](https://github.com/liboyang42-cpu/hengyin/pull/742) | fixed | `docs/delivery/questo-ui-20261109/qx-b8/` |
+| §20.1 落地详情 | qx-b8 | [#742](https://github.com/liboyang42-cpu/hengyin/pull/742) | fixed | `docs/delivery/questo-ui-20261109/qx-b8/` |
+| UI-P3 主题合集落地 | qx-b8 | [#742](https://github.com/liboyang42-cpu/hengyin/pull/742) | fixed | `docs/delivery/questo-ui-20261109/qx-b8/` |
+| U08-05 榜单与公开内容治理（小程序部分） | qx-b8 | [#742](https://github.com/liboyang42-cpu/hengyin/pull/742) | fixed | `docs/delivery/questo-ui-20261109/qx-b8/` |
+| U08-05 榜单范围、异常标记 | qx-b8 | [#742](https://github.com/liboyang42-cpu/hengyin/pull/742) | fixed（此前已修／他道） | `docs/delivery/questo-ui-20261109/qx-b8/` |
+
+qx-b7（iOS，chengyin-ios #144）：U07-03/§26.2 工坊 v1 返回 409 时显示“需要更新”为 fixed；UG-01、UG-02、UG-03/04、UG-05、UG-07、UG-08、UG-09、UG-10 为 fixed（默认关闭，未挂进游玩流程）；U05-01 为 fixed（部分接线）；UG-06 和 U04-03/§27.2 为 needs owner；挂进游玩流程和 §26.4 Apple IAP 为 not done。
+
+后端缺口回补（qx-c1 #747，均为 fixed）：
+
+| qx-c1 项 | 解决的前端阻塞 |
+|---|---|
+| 1 `lockLicenseForDraft` 改为不用 `FOR UPDATE OF` | qx-b4 采用流程在真库被 Druid wall 拒绝 |
+| 2 Questo 表排序规则对齐（新迁移） | qx-b3 礼品领取 join 报 1267 |
+| 3 选项图与嫌疑人头像投影为可访问地址 | qx-b2 UG-02/UG-03 图片显示 |
+| 4 UG-12 后台只读投影与 `business:playhelp:query` | qx-b6 UG-12 needs owner |
+| 5a `placeCountryCode` 写口 | qx-b2 §23.1 needs owner |
+| 5b 到达设置存 `scenes[].nodeArrivals` 兄弟表 | qx-b2 §23.1 needs owner（不再与模板覆盖语义冲突） |
+| 6 作者侧进行中视频悬赏活动列表 | qx-b5 §18 A |
+| 7 完局问题反馈写接口 | qx-b8 U08-02 问题反馈 |
+| 8 `/use` 的 `requestId` 幂等 | qx-b4 采用重试 |
+| 9 预设缺必填项返回结构化 `requiredFields` | qx-b4 §21 |
+| 10 审计 `domain_type` 长度收敛 | qx-b6 视频悬赏审计 |
+
+qx-c1 补上的后端，前端工位还没有接线（qx-b2 的国家码与到达设置、qx-b5 的悬赏列表、qx-b6 的 UG-12、qx-b8 的问题反馈），接线前这些入口保持不显示。
+
+### 28.3 Vision 3 走查状态（A 工位，PR 进 master）
+
+编号沿用业主 2026-11-06 真机走查，不等于旧测试里的内部 V3-xx（例如测试 `r29-v3-41` 是这里的 V3-47）。
+
+| 编号 | 工位 | PR | 状态 | 证据 |
+|---|---|---|---|---|
+| V3-06 | qx-a1 | [#736](https://github.com/liboyang42-cpu/hengyin/pull/736) | fixed | `docs/delivery/questo-ui-20261109/qx-a1/` |
+| V3-10/53 | qx-a1 | [#736](https://github.com/liboyang42-cpu/hengyin/pull/736) | fixed | `docs/delivery/questo-ui-20261109/qx-a1/` |
+| V3-11 | qx-a1 | [#736](https://github.com/liboyang42-cpu/hengyin/pull/736) | fixed（无 rig 截图，需真机） | `docs/delivery/questo-ui-20261109/qx-a1/` |
+| V3-13/14 | qx-a1 | [#736](https://github.com/liboyang42-cpu/hengyin/pull/736) | fixed | `docs/delivery/questo-ui-20261109/qx-a1/` |
+| V3-15 | qx-a1 | [#736](https://github.com/liboyang42-cpu/hengyin/pull/736) | fixed | `docs/delivery/questo-ui-20261109/qx-a1/` |
+| V3-16 | qx-a1 | [#736](https://github.com/liboyang42-cpu/hengyin/pull/736) | fixed | `docs/delivery/questo-ui-20261109/qx-a1/` |
+| V3-17 | qx-a1 | [#736](https://github.com/liboyang42-cpu/hengyin/pull/736) | fixed | `docs/delivery/questo-ui-20261109/qx-a1/` |
+| V3-21 | qx-a1 | [#736](https://github.com/liboyang42-cpu/hengyin/pull/736) | fixed | `docs/delivery/questo-ui-20261109/qx-a1/` |
+| V3-18 | qx-a2 | [#732](https://github.com/liboyang42-cpu/hengyin/pull/732) | fixed | `docs/delivery/questo-ui-20261109/qx-a2/` |
+| V3-19 | qx-a2 | [#732](https://github.com/liboyang42-cpu/hengyin/pull/732) | fixed | `docs/delivery/questo-ui-20261109/qx-a2/` |
+| V3-20 | qx-a2 | [#732](https://github.com/liboyang42-cpu/hengyin/pull/732) | fixed | `docs/delivery/questo-ui-20261109/qx-a2/` |
+| V3-25 | qx-a2 | [#732](https://github.com/liboyang42-cpu/hengyin/pull/732) | fixed | `docs/delivery/questo-ui-20261109/qx-a2/` |
+| V3-30 | qx-a2 | [#732](https://github.com/liboyang42-cpu/hengyin/pull/732) | fixed | `docs/delivery/questo-ui-20261109/qx-a2/` |
+| V3-23/24/32 | qx-a2 | [#732](https://github.com/liboyang42-cpu/hengyin/pull/732) | fixed | `docs/delivery/questo-ui-20261109/qx-a2/` |
+| V3-02 | qx-a3 | [#734](https://github.com/liboyang42-cpu/hengyin/pull/734) | fixed | `docs/delivery/questo-ui-20261109/qx-a3/` |
+| V3-03 | qx-a3 | [#734](https://github.com/liboyang42-cpu/hengyin/pull/734) | fixed | `docs/delivery/questo-ui-20261109/qx-a3/` |
+| V3-22 | qx-a3 | [#734](https://github.com/liboyang42-cpu/hengyin/pull/734) | fixed | `docs/delivery/questo-ui-20261109/qx-a3/` |
+| V3-33 | qx-a3 | [#734](https://github.com/liboyang42-cpu/hengyin/pull/734) | fixed | `docs/delivery/questo-ui-20261109/qx-a3/` |
+| V3-37 | qx-a3 | [#734](https://github.com/liboyang42-cpu/hengyin/pull/734) | fixed | `docs/delivery/questo-ui-20261109/qx-a3/` |
+| V1-P53 | qx-a3 | [#734](https://github.com/liboyang42-cpu/hengyin/pull/734) | fixed | `docs/delivery/questo-ui-20261109/qx-a3/` |
+| V3-38 | qx-a3 | [#734](https://github.com/liboyang42-cpu/hengyin/pull/734) | fixed | `docs/delivery/questo-ui-20261109/qx-a3/` |
+| V3-39 | qx-a3 | [#734](https://github.com/liboyang42-cpu/hengyin/pull/734) | fixed | `docs/delivery/questo-ui-20261109/qx-a3/` |
+| V3-28 | qx-a3 | [#734](https://github.com/liboyang42-cpu/hengyin/pull/734) | fixed | `docs/delivery/questo-ui-20261109/qx-a3/` |
+| V3-26 | qx-a4 | [#739](https://github.com/liboyang42-cpu/hengyin/pull/739) | fixed | `docs/delivery/questo-ui-20261109/qx-a4/` |
+| V3-35 | qx-a4 | [#739](https://github.com/liboyang42-cpu/hengyin/pull/739) | fixed | `docs/delivery/questo-ui-20261109/qx-a4/` |
+| V3-27 | qx-a4 | [#739](https://github.com/liboyang42-cpu/hengyin/pull/739) | fixed（勋章段此前已修） | `docs/delivery/questo-ui-20261109/qx-a4/` |
+| V3-34 | qx-a4 | [#739](https://github.com/liboyang42-cpu/hengyin/pull/739) | fixed | `docs/delivery/questo-ui-20261109/qx-a4/` |
+| V3-36 | qx-a4 | [#739](https://github.com/liboyang42-cpu/hengyin/pull/739) | fixed | `docs/delivery/questo-ui-20261109/qx-a4/` |
+| V3-40, V1-P37 | qx-a4 | [#739](https://github.com/liboyang42-cpu/hengyin/pull/739) | fixed | `docs/delivery/questo-ui-20261109/qx-a4/` |
+| V3-42 | qx-a4 | [#739](https://github.com/liboyang42-cpu/hengyin/pull/739) | fixed | `docs/delivery/questo-ui-20261109/qx-a4/` |
+| V1-P32 | qx-a4 | [#739](https://github.com/liboyang42-cpu/hengyin/pull/739) | fixed | `docs/delivery/questo-ui-20261109/qx-a4/` |
+| V3-29 | qx-a5 | [#737](https://github.com/liboyang42-cpu/hengyin/pull/737) | fixed | `docs/delivery/questo-ui-20261109/qx-a5/` |
+| V3-31 | qx-a5 | [#737](https://github.com/liboyang42-cpu/hengyin/pull/737) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-a5/` |
+| V3-43 | qx-a5 | [#737](https://github.com/liboyang42-cpu/hengyin/pull/737) | fixed | `docs/delivery/questo-ui-20261109/qx-a5/` |
+| V3-44 | qx-a5 | [#737](https://github.com/liboyang42-cpu/hengyin/pull/737) | fixed | `docs/delivery/questo-ui-20261109/qx-a5/` |
+| V3-45 | qx-a5 | [#737](https://github.com/liboyang42-cpu/hengyin/pull/737) | fixed | `docs/delivery/questo-ui-20261109/qx-a5/` |
+| V3-46 | qx-a5 | [#737](https://github.com/liboyang42-cpu/hengyin/pull/737) | fixed | `docs/delivery/questo-ui-20261109/qx-a5/` |
+| V3-47 | qx-a5 | [#737](https://github.com/liboyang42-cpu/hengyin/pull/737) | fixed | `docs/delivery/questo-ui-20261109/qx-a5/` |
+| V3-48 | qx-a5 | [#737](https://github.com/liboyang42-cpu/hengyin/pull/737) | fixed | `docs/delivery/questo-ui-20261109/qx-a5/` |
+| V3-50 | qx-a5 | [#737](https://github.com/liboyang42-cpu/hengyin/pull/737) | fixed | `docs/delivery/questo-ui-20261109/qx-a5/` |
+| A5D-1 One continuous article | qx-a5d | [#735](https://github.com/liboyang42-cpu/hengyin/pull/735) | fixed | `docs/delivery/questo-ui-20261109/qx-a5d/` |
+| A5D-2 Fixed top insert bar | qx-a5d | [#735](https://github.com/liboyang42-cpu/hengyin/pull/735) | fixed | `docs/delivery/questo-ui-20261109/qx-a5d/` |
+| A5D-3 Long-press drag for every block | qx-a5d | [#735](https://github.com/liboyang42-cpu/hengyin/pull/735) | fixed | `docs/delivery/questo-ui-20261109/qx-a5d/` |
+| A5D-4 Divider block | qx-a5d | [#735](https://github.com/liboyang42-cpu/hengyin/pull/735) | fixed | `docs/delivery/questo-ui-20261109/qx-a5d/` |
+| A5D-5 Saving | qx-a5d | [#735](https://github.com/liboyang42-cpu/hengyin/pull/735) | fixed | `docs/delivery/questo-ui-20261109/qx-a5d/` |
+| W2-01 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| W2-07 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| W2-11 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed（结算明细）／needs owner（收款账户） | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| W2-15 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| W2-16 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| W2-17 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| W2-03 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| W2-04 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed（收口） | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| W2-05 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| W2-19 | qx-a6 | [#738](https://github.com/liboyang42-cpu/hengyin/pull/738) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-a6/` |
+| V1-P36 通用分享页 | qx-a7 | [#733](https://github.com/liboyang42-cpu/hengyin/pull/733) | fixed | `docs/delivery/questo-ui-20261109/qx-a7/` |
+| V1-P36 勋章卡带码 | qx-a7 | [#733](https://github.com/liboyang42-cpu/hengyin/pull/733) | fixed（此前已修） | `docs/delivery/questo-ui-20261109/qx-a7/` |
+| V1-P59 邀请好友动效（IqRophy） | qx-a7 | [#733](https://github.com/liboyang42-cpu/hengyin/pull/733) | fixed | `docs/delivery/questo-ui-20261109/qx-a7/` |
+| G-11 页面动效（uixsiam09） | qx-a7 | [#733](https://github.com/liboyang42-cpu/hengyin/pull/733) | fixed | `docs/delivery/questo-ui-20261109/qx-a7/` |
+
+A 工位的 RESULT 除 qx-a1 外都是 `STATUS: COMPLETE`。qx-a1 为 PARTIAL：V3-11 相册在无头渲染器里崩溃（master 和本分支都一样），没有 rig 截图，内嵌卡片逻辑只有单测，需要真机确认。W2-11 的“收款账户”待业主：后端没有商家可读写的收款账户接口。
+
+### 28.4 本波次仍待业主决定
+
+| 事项 | 来源 | 当前默认 |
+|---|---|---|
+| UG-06 iOS 是否显示“本局剩余免费 N 次” | qx-b7 | 不显示；小程序已读 `remainingFreeUses` |
+| U04-03/§27.2 iOS 能力声明 | qx-b7 | 只解码，不声明 |
+| U08-03 维护链、U08-05 新玩法分数入榜与后台榜单治理 | qx-b6 | 不画入口，不加空榜 |
+| §18 D 玩家主持小费 | qx-b5 | 渠道返回 501 时不显示任何入口 |
+| W2-11 收款账户 | qx-a6 | 不加 |
+| UG-12、U08-02、§23.1、§18 A 前端接线 | qx-c1 已补后端 | 接线前不显示 |
