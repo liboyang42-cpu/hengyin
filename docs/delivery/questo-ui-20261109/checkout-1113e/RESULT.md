@@ -23,3 +23,6 @@
 - 没有改 `ci/architecture/*`、工作流、`ui-integrity-baseline.js`;没有跑 `ci/xcx-check.sh` 和会写 fixture 的自检。
 
 - `tests/lint/ui-integrity.js` 直接运行通过(UI-GATE-0:PASS),基线文件未改。
+- PR #827 的 CI 全部通过(未跑的后端门禁为按改动范围跳过)。
+
+STATUS: DONE
