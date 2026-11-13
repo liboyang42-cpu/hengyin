@@ -1252496,7 +1252496,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:66:bind:change:onConsent:3",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:68:bind:change:onConsent:3",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1252531,7 +1252531,7 @@
         "tag": "cy-consent-check",
         "event": "bind:change",
         "handler": "onConsent",
-        "line": 66,
+        "line": 68,
         "selectorHint": "cy-consent-check[bind:change]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1252576,7 +1252576,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:70:bindtap:onPay:4",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:72:bindtap:onPay:4",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1252611,7 +1252611,7 @@
         "tag": "text",
         "event": "bindtap",
         "handler": "onPay",
-        "line": 70,
+        "line": 72,
         "selectorHint": ".ck__err-act",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -1252656,7 +1252656,7 @@
       }
     },
     {
-      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:78:bindtap:onPay:5",
+      "id": "pages/topic/components/cy/self-play-checkout/index.wxml:77:bindtap:onPay:5",
       "route": "component:pages/topic/components/cy/self-play-checkout/index",
       "hostRoutes": [
         "pages/topic/index/index"
@@ -1252691,7 +1252691,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onPay",
-        "line": 78,
+        "line": 77,
         "selectorHint": ".ck__pay",
         "visibleCondition": null,
         "disabledCondition": null,

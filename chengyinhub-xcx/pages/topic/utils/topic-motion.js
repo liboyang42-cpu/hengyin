@@ -153,22 +153,8 @@ function buildStoryCards(info, merchantCards) {
   })).filter((c) => c.title);
 }
 
-/* 结局章:章名以「结局」开头(和 chapterHeading 判自带序号的口径一致) */
-const ENDING_NAME = /^结局/;
-function isEndingChapter(c) { return ENDING_NAME.test(text(c && c.name)); }
-
-/* 「4 章 · 3 个结局」:totalChapterCount 把结局也算进去了,只数故事章;
-   结局数只能从已下发的 chaptersList 里认,认不出就不写。 */
-function chapterCountText(info) {
-  const d = info || {};
-  const list = d.chaptersList || [];
-  const total = Number(d.totalChapterCount) > 0 ? Number(d.totalChapterCount) : list.length;
-  const endings = Math.min(list.filter(isEndingChapter).length, total);
-  const story = total - endings;
-  if (story <= 0 && !endings) return '';
-  if (story <= 0) return endings + ' 个结局';
-  return story + ' 章' + (endings ? ' · ' + endings + ' 个结局' : '');
-}
+/* 章数口径(结局不算章)在 utils/chapter-count.js,详情页和结账页共用。 */
+const { isEndingChapter, chapterCountText } = require('../../../utils/chapter-count.js');
 
 function storyMeta(info) {
   const d = info || {};
