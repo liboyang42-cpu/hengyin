@@ -107,8 +107,7 @@ check("fairness scope → 403 scope-rejected", st == 403 and fx["data"]["errorCo
 # other areas
 st, fl = call(t1, "GET", "/api/user/follow-list?kind=following&cursor=0&limit=50"); check("follow-list", st == 200 and fl["data"]["owner_id"] > 0, fl)
 st, ra = call(t1, "GET", "/api/play/route-action?sessionId=1&memberId=1&actionId=x"); check("route-action not mine → 403", ra.get("code") == 403, ra)
-st, eg = call(t1, "POST", "/api/play/egg/collect", form="eggId=999999999"); check("egg unknown → 404", eg.get("code") == 404, eg)
-st, eg = call(t1, "POST", "/api/play/egg/collect", form="eggId=990001&topicId=1"); check("egg reviewed → collected", eg.get("code") == 200, eg)
+st, eg = call(t1, "POST", "/api/play/egg/collect", form="eggId=990001&topicId=1"); check("egg route closed → 410 ROUTE_EGG_OFFLINE", eg.get("code") == 410 and eg.get("errorCode") == "ROUTE_EGG_OFFLINE", eg)
 st, tw = call(t1, "GET", "/api/play/advanced/time-window?activityId=0&topicId=1&nodeId=1"); check("time-window answers (no such node → 400)", tw.get("code") in (400, 409), tw)
 st, un = call("bad-token", "GET", f"/api/city-game/game/snapshot?boardId={BOARD}"); check("no token → 401", st == 401 or un.get("code") == 401, un)
 print(f"{sum(ok for _, ok in results)}/{len(results)} passed")

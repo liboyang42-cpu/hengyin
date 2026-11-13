@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Player-side reads and one idempotent write the app calls on existing tables: the caller's own
- * follow lists, the original receipt of the caller's route action, and collecting a reviewed route egg.
+ * Player-side reads the app calls on existing tables: the caller's own
+ * follow lists, and the original receipt of the caller's route action (route eggs are decommissioned).
  * Every call acts as the logged-in member; ids from the client never select another member.
  */
 @Service
@@ -68,19 +68,5 @@ public class PlayerGapsService {
         out.put("actionId", row.get("actionId"));
         out.put("responseJson", row.get("responseJson"));
         return out;
-    }
-
-    /**
-     * POST /api/play/egg/collect: stores a reviewed egg in the caller's collection. The stored text is
-     * the reviewed server text, never the client's; repeating the call is a no-op success.
-     */
-    public void collectEgg(Long member, Long eggId, Long topicId) {
-        requireMember(member);
-        if (eggId == null || eggId <= 0 || (topicId != null && topicId < 0)) throw new ServiceException("参数有误", 400);
-        Map<String, Object> egg = mapper.selectApprovedEgg(eggId);
-        if (egg == null) throw new ServiceException("彩蛋不存在或未审核", 404);
-        Long eggTopic = egg.get("topicId") == null ? null : ((Number) egg.get("topicId")).longValue();
-        if (topicId != null && topicId > 0 && !topicId.equals(eggTopic)) throw new ServiceException("彩蛋不属于该主题", 400);
-        mapper.insertEggCollectible(member, eggTopic, eggId, (String) egg.get("text"));
     }
 }

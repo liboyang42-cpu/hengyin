@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,7 @@ import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Follow lists, route-action receipt and route-egg collection on real MySQL 8 with baseline DDL. */
+/** Follow lists and route-action receipt on real MySQL 8 with baseline DDL (route eggs are decommissioned). */
 @EnabledIfEnvironmentVariable(named = "CHENGYIN_GAPS_A_MYSQL_IT", matches = "1")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlayerGapsMysqlIntegrationTest {
@@ -57,10 +56,9 @@ class PlayerGapsMysqlIntegrationTest {
 
     @BeforeEach
     void reset() throws Exception {
-        execute("DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_follow", "DROP TABLE IF EXISTS member_collectible",
-                "DROP TABLE IF EXISTS npc_route_egg", "DROP TABLE IF EXISTS topic_route_action");
+        execute("DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_follow", "DROP TABLE IF EXISTS topic_route_action");
         String baseline = Files.readString(Paths.get("../sql/base_schema_20260818.sql"));
-        execute(table(baseline, "ums_member"), table(baseline, "ums_member_follow"), table(baseline, "member_collectible"), table(baseline, "npc_route_egg"));
+        execute(table(baseline, "ums_member"), table(baseline, "ums_member_follow"));
         String route = Files.readString(Paths.get("sql/migration_20260823_topic_route_graph.sql"));
         Matcher m = Pattern.compile("CREATE TABLE IF NOT EXISTS topic_route_action \\([\\s\\S]*?\\) ENGINE=InnoDB[^;]*;").matcher(route);
         assertTrue(m.find());
@@ -69,7 +67,6 @@ class PlayerGapsMysqlIntegrationTest {
                         + "(3,'阿三','a3','player',1,0),(4,'注销','a4','player',1,2),(5,'阿五','a5','player',1,0)",
                 // 1 follows 2, 3 (twice: legacy duplicate), 4 (deleted); 2 and 5 follow 1.
                 "INSERT INTO ums_member_follow(member_id, follow_member_id) VALUES (1,2),(1,3),(1,3),(1,4),(2,1),(5,1)",
-                "INSERT INTO npc_route_egg(id, topic_id, seq, text, status) VALUES (11, 900, 1, '审核过的彩蛋', 1), (12, 900, 2, '待审', 0)",
                 "INSERT INTO topic_route_action(session_id, member_id, node_id, action_id, receipt_id, outcome_code, response_json, create_time)"
                         + " VALUES (77, 1, 5, 'act-1', 'r1', 'APPLIED', '{\"routeVersion\":3}', NOW(3))");
     }
@@ -108,27 +105,10 @@ class PlayerGapsMysqlIntegrationTest {
         assertEquals(404, assertThrows(ServiceException.class, () -> service.routeAction(1L, 77L, 1L, "act-2")).getCode());
     }
 
-    @Test
-    void eggCollectionStoresReviewedTextOnceAndRefusesUnreviewed() throws Exception {
-        service.collectEgg(1L, 11L, 900L);
-        service.collectEgg(1L, 11L, 900L);
-        assertEquals(1, count("SELECT COUNT(*) FROM member_collectible WHERE member_id = 1 AND coll_type = 2 AND ref_id = 11"));
-        assertEquals(1, count("SELECT COUNT(*) FROM member_collectible WHERE content = '审核过的彩蛋'"));
-        assertEquals(404, assertThrows(ServiceException.class, () -> service.collectEgg(1L, 12L, 900L)).getCode());
-        assertEquals(400, assertThrows(ServiceException.class, () -> service.collectEgg(1L, 11L, 901L)).getCode());
-    }
-
     private static String table(String baseline, String name) {
         Matcher m = Pattern.compile("CREATE TABLE `" + name + "` \\([\\s\\S]*?\\) ENGINE=InnoDB[^;]*;").matcher(baseline);
         assertTrue(m.find(), name);
         return m.group();
-    }
-
-    private long count(String sql) throws Exception {
-        try (Connection c = dataSource.getConnection(); Statement s = c.createStatement(); ResultSet rs = s.executeQuery(sql)) {
-            rs.next();
-            return rs.getLong(1);
-        }
     }
 
     private void execute(String... sql) throws Exception {

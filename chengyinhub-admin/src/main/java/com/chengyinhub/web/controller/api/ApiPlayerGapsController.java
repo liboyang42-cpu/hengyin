@@ -9,7 +9,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** App player routes on existing tables: own follow lists, own route-action receipt, route egg collection. */
+/**
+ * App player routes on existing tables: own follow lists and own route-action receipt.
+ * Route eggs were decommissioned on 2026-09-07 (migration_x11_decommission_route_eggs_20260907); the app still
+ * builds {@code POST /api/play/egg/collect}, so it gets the same closed-feature answer as other offline features:
+ * 410 + errorCode, before login and parameter checks, without touching any table.
+ */
 @RestController
 public class ApiPlayerGapsController extends BaseController {
     private final PlayerGapsService service;
@@ -34,9 +39,12 @@ public class ApiPlayerGapsController extends BaseController {
         return success(service.routeAction(member(), sessionId, memberId, actionId));
     }
 
+    static final String EGG_OFFLINE = "ROUTE_EGG_OFFLINE";
+
     @PostMapping("/api/play/egg/collect")
-    public AjaxResult collectEgg(Long eggId, Long topicId) {
-        service.collectEgg(member(), eggId, topicId);
-        return success();
+    public AjaxResult collectEgg() {
+        AjaxResult offline = new AjaxResult(410, "途中彩蛋已下线");
+        offline.put("errorCode", EGG_OFFLINE);
+        return offline;
     }
 }

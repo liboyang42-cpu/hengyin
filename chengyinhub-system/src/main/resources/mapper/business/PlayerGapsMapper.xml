@@ -26,14 +26,4 @@
         FROM topic_route_action
         WHERE session_id = #{sessionId} AND member_id = #{memberId} AND action_id = #{actionId}
     </select>
-
-    <select id="selectApprovedEgg" resultType="java.util.LinkedHashMap">
-        SELECT id, topic_id AS topicId, text FROM npc_route_egg WHERE id = #{eggId} AND status = 1
-    </select>
-
-    <!-- Idempotent: uk_member_type_ref keeps one egg per member. -->
-    <insert id="insertEggCollectible">
-        INSERT IGNORE INTO member_collectible(member_id, coll_type, topic_id, ref_id, content, create_time)
-        VALUES (#{memberId}, 2, #{topicId}, #{eggId}, #{content}, NOW())
-    </insert>
 </mapper>

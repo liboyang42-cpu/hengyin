@@ -22,7 +22,7 @@ another path or on another branch, so the app should call that; nothing duplicat
 
 Owner decisions applied in pass 2 (20261113, via the coordinator): rewards/pledge stays off in v1 because it
 moves money; everything else deferred in pass 1 is built; bundle commerce serves reads and refuses every money
-write; one CITY board lifecycle for every route; the missing `npc_route_egg` table comes back by migration.
+write; one CITY board lifecycle for every route. (`npc_route_egg` is **not** restored: the 2026-09-07 decommission stands, see Data notes.)
 
 ## Board lifecycle (CITY, every route)
 
@@ -50,10 +50,10 @@ All on VPS `work`, MySQL 8.0.45 `be-int-mysql`, never production, never the shar
 - Unit: `CityGameRulesTest` (9), `AdvancedTimeWindowTest` (3), `AppGapsPass2RulesTest` (6),
   `CityOrientationAnswerServiceTest` (1).
 - Real MySQL IT (batch `app-gaps-a` in `ci/real-storage-it-registry.json`, each in its own scratch schema):
-  `CityGameMysqlIntegrationTest` (3), `CityR491MysqlIntegrationTest` (3), `PlayerGapsMysqlIntegrationTest` (3),
+  `CityGameMysqlIntegrationTest` (3), `CityR491MysqlIntegrationTest` (3), `PlayerGapsMysqlIntegrationTest` (2),
   `AppGapsPass2MysqlIntegrationTest` (4).
-- Migrations `20261114_gaps_a_city_r491`, `20261114_gaps_a_player`, `doc2_f3_bundle_extras_20261114`,
-  `20261114_gaps_a_npc_route_egg` pass `ci/migration_ledger.py audit`; dependencies are declared in
+- Migrations `20261114_gaps_a_city_r491`, `20261114_gaps_a_player`, `doc2_f3_bundle_extras_20261114`
+  pass `ci/migration_ledger.py audit` (`20261114_gaps_a_npc_route_egg` was removed in integration/backend-app-r2); dependencies are declared in
   `ci/migration-dependencies.json`; all were applied to `cy_gaps_a`.
 - HTTP smoke on the packaged jar (port 8131, `cy_gaps_a`, Redis db 11): pass 1 `scripts/e2e/smoke_app_gaps_a.py`
   and pass 2 `scripts/e2e/smoke_app_gaps_a_pass2.py` after `seed_app_gaps_a.py` + `seed_app_gaps_a_pass2.py`
@@ -152,7 +152,7 @@ listed in `coverageGaps`.
 | `/api/play/check` | Core/JourneyContentService.swift | mapped | `/api/play/check/{roll,reroll,settle,bargain,momentum,rest}`, `/receipt` |
 | `/api/play/theme` GET | Core/PlayThemeBackpackActions.swift | mapped | `/api/play/theme/*` |
 | `/api/play/route-action` GET | App/PlayRouteMapView.swift | served | own `topic_route_action` receipt |
-| `/api/play/egg/collect` | Core/JourneyContentService.swift | served | reviewed `npc_route_egg` → `member_collectible`; table restored by `20261114_gaps_a_npc_route_egg` (see Data notes) |
+| `/api/play/egg/collect` | Core/JourneyContentService.swift | closed | 410 `ROUTE_EGG_OFFLINE` before login/params; no table read (route eggs decommissioned 2026-09-07, see Data notes) |
 | `/api/play/advanced/time-window` | Core/NativePlatformService.swift | served | `NativeTimeWindow` |
 | `/api/play/city-orientation`, `/answer`, `/receipt` | Core/CityOrientationTask*.swift | served | `CITY_ORIENTATION_ANSWER_V1`: `POST answer {sessionId,nodeId,requestId,expectedVersion,answer}` runs the existing answer path for the caller's own run session (requestId is also the route action id) and stores `{payloadHash, configVersion, revision, outcome APPLIED/FAILED, response}` in the same transaction; `GET receipt?sessionId&nodeId&requestId` returns it or `outcome: PENDING` |
 | `/api/progress/meter`, `/api/progress/requests`, `/api/progress/requests/{}` | Core/NativeChannelProgress*.swift | mapped | served on `feature/im-channels` (channel platform, e01d7f6e5); not duplicated here |
@@ -217,9 +217,9 @@ received/events, grants/{id}/observations}`. Privacy and retention, as built:
 
 ## Data notes
 
-- **`npc_route_egg`** (conflict flagged): `migration_x11_decommission_route_eggs_20260907.sql` dropped this table by
-  an earlier owner decision (take route eggs offline). The 20261113 owner decision asks for it back, so
-  `migration_20261114_gaps_a_npc_route_egg.sql` recreates the **empty** table, ordered after x11. It restores no rows
-  and no producer; until reviewed rows exist, `POST /api/play/egg/collect` answers 404.
+- **`npc_route_egg`**: `migration_x11_decommission_route_eggs_20260907.sql` dropped this table by owner decision
+  (route eggs offline), and that decision stands (coordinator, 20261113, superseding the earlier restore request).
+  The restore migration was removed in integration/backend-app-r2, and `POST /api/play/egg/collect` is closed:
+  410 with `errorCode=ROUTE_EGG_OFFLINE`, answered before login and parameter checks, with no table access.
 - New config: `chengyin.topic-cover.private-dir` (private cover bytes; must not be under `ruoyi.profile`).
 - New anonymous route: `GET /api/user/deregister/result` (token-only, see Profile).

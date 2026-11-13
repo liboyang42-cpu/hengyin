@@ -772,7 +772,7 @@
     "app-gaps-a": {
       "lineage": "app gaps A 20261113 (feature/app-gaps-a): player routes the app builds that the backend lacked",
       "registered_source": "f351b113eb0173451737720c01e0690271cf6373",
-      "note": "Pass 1: CityGameMysqlIntegrationTest (3), PlayerGapsMysqlIntegrationTest (3). Pass 2: CityR491MysqlIntegrationTest (3), AppGapsPass2MysqlIntegrationTest (4). Verified on VPS TEST MySQL 8.0.45 (be-int-mysql) with scratch schemas cy_gaps_a_*.",
+      "note": "Pass 1: CityGameMysqlIntegrationTest (3), PlayerGapsMysqlIntegrationTest (2; egg test removed in r2). Pass 2: CityR491MysqlIntegrationTest (3), AppGapsPass2MysqlIntegrationTest (4). Verified on VPS TEST MySQL 8.0.45 (be-int-mysql) with scratch schemas cy_gaps_a_*.",
       "classes": [
         "com.chengyinhub.business.citygame.CityGameMysqlIntegrationTest",
         "com.chengyinhub.business.citygame.CityR491MysqlIntegrationTest",
@@ -2217,14 +2217,14 @@
       "note": "app gaps A CITY game: real migration 20261113_gaps_a_city_game + MyBatis XML; team formation, server dice, occupy/toll/challenge with member points, round settlement, concurrent duplicate request, player rules, bounded snapshot, fairness. Task-owned scratch schema per suite."
     },
     "com.chengyinhub.business.service.support.PlayerGapsMysqlIntegrationTest": {
-      "tests": 3,
+      "tests": 2,
       "storage": [
         "mysql"
       ],
       "gates": {
         "CHENGYIN_GAPS_A_MYSQL_IT": "1"
       },
-      "note": "app gaps A player reads on baseline DDL: follow-list keyset, own topic_route_action receipt, reviewed npc_route_egg collection (idempotent). Task-owned scratch schema per suite."
+      "note": "app gaps A player reads on baseline DDL: follow-list keyset, own topic_route_action receipt (route-egg collection removed: eggs decommissioned 2026-09-07, route answers 410). Task-owned scratch schema per suite."
     },
     "com.chengyinhub.business.citygame.CityR491MysqlIntegrationTest": {
       "tests": 3,
