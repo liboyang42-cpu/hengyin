@@ -616,6 +616,8 @@ def main():
         report.update(extra)
         write_report()
         print("FAIL: " + message)
+        if extra.get("unexpected"):
+            print("  unexpected: " + json.dumps(extra["unexpected"], ensure_ascii=False, sort_keys=True))
         return 1
 
     def write_report():
