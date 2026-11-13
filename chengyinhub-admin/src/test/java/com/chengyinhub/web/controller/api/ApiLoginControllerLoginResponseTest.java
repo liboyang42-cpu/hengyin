@@ -121,6 +121,22 @@ class ApiLoginControllerLoginResponseTest {
     }
 
     @Test
+    void userInfoNickNameFallsBackToMemberNickname() throws Exception {
+        UmsMember member = new UmsMember();
+        member.setId(42L);
+        member.setRole("club");
+        member.setNickname("会员昵称");
+        when(memberService.selectUmsMemberById(42L)).thenReturn(member);
+        JSONObject appUser = JSON.parseObject(mockMvc.perform(post("/api/userInfo"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString())
+                .getJSONObject("appUser");
+        assertEquals("club", appUser.getString("role"));
+        String expected = loginAppUser.getAppUser().getNickName() == null
+                ? "会员昵称" : loginAppUser.getAppUser().getNickName();
+        assertEquals(expected, appUser.getString("nickName"));
+    }
+
+    @Test
     void userInfoRoleDefaultsToPlayerWhenMemberRoleMissing() throws Exception {
         UmsMember bare = new UmsMember();
         bare.setId(42L);

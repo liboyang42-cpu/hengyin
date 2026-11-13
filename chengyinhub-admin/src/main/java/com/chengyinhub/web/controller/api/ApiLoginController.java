@@ -267,14 +267,19 @@ public class ApiLoginController extends BaseController {
     public AjaxResult userInfo() {
         AjaxResult ajax = AjaxResult.success();
         AppUser appUser = getLoginAppUser().getAppUser();
-        ajax.put("appUser", userInfoView(appUser, resolveMemberRole(appUser)));
+        UmsMember member = appUser == null || appUser.getUserId() == null
+                ? null : umsMemberService.selectUmsMemberById(appUser.getUserId());
+        java.util.Map<String, Object> view = userInfoView(appUser, resolveMemberRole(member));
+        // 手机号登录的会话对象不带昵称；与 /api/user/info 同源回落到会员昵称。
+        if (member != null && view.get("nickName") == null && StringUtils.isNotBlank(member.getNickname())) {
+            view.put("nickName", member.getNickname());
+        }
+        ajax.put("appUser", view);
         return ajax;
     }
 
     /** role 属于 ums_member（登录响应 data.role / /api/user/info 同源），AppUser 会话对象不带；缺省按注册默认玩家。 */
-    private String resolveMemberRole(AppUser appUser) {
-        UmsMember member = appUser == null || appUser.getUserId() == null
-                ? null : umsMemberService.selectUmsMemberById(appUser.getUserId());
+    private static String resolveMemberRole(UmsMember member) {
         return member != null && StringUtils.isNotBlank(member.getRole())
                 ? member.getRole() : com.chengyinhub.business.service.IRoleService.ROLE_PLAYER;
     }
