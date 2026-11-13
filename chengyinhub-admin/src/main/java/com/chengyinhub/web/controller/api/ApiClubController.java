@@ -81,6 +81,7 @@ import com.chengyinhub.common.utils.StringUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -234,6 +235,13 @@ public class ApiClubController extends BaseController {
 
     @Autowired
     private com.chengyinhub.business.service.ICapabilityService capabilityService;
+
+    @Autowired
+    private com.chengyinhub.business.appgaps.ClubAdmissionOriginal clubAdmissionOriginal;
+    @Autowired
+    private com.chengyinhub.business.appgaps.ClubBadgeOriginal clubBadgeOriginal;
+    @Autowired
+    private com.chengyinhub.business.appgaps.ClubWelcomeNoteOriginal clubWelcomeNoteOriginal;
 
     private Long currentMemberId() {
         return getAppUserId();
@@ -930,7 +938,20 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "申请加入俱乐部(公开直进/主理人审批)")
     @PostMapping("/join")
-    public AjaxResult join(@RequestBody Club body) {
+    public AjaxResult join(@RequestBody Club body,
+                           @RequestHeader(value = "X-Club-Admission-Request-Id", required = false) String admissionRequestId,
+                           @RequestHeader(value = "X-Club-Admission-Action", required = false) String admissionAction,
+                           @RequestHeader(value = "X-Club-Admission-Payload-SHA256", required = false) String admissionSha) {
+        if (admissionRequestId != null || admissionAction != null || admissionSha != null) {
+            Long actor;
+            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            return clubAdmissionOriginal.write(actor, body == null ? null : body.getId(), false, admissionRequestId,
+                    admissionAction, admissionSha, body == null ? null : body.getJoinMessage(), () -> join(body));
+        }
+        return join(body);
+    }
+
+    public AjaxResult join(Club body) {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body.getId() == null) return error("缺少俱乐部ID");
@@ -987,7 +1008,27 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "开放设置:入会欢迎语")
     @PostMapping("/open-settings/welcome-note")
-    public AjaxResult updateWelcomeNote(@RequestBody Club body) {
+    public AjaxResult updateWelcomeNote(@RequestBody Club body,
+                                        @RequestHeader(value = "X-Club-Welcome-Request-Id", required = false) String welcomeRequestId,
+                                        @RequestHeader(value = "X-Club-Welcome-Source-SHA256", required = false) String welcomeSource) {
+        if (welcomeRequestId != null || welcomeSource != null) {
+            Long actor;
+            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            return clubWelcomeNoteOriginal.write(actor, body == null ? null : body.getId(),
+                    body == null ? null : body.getWelcomeNote(), welcomeRequestId, welcomeSource, () -> updateWelcomeNote(body));
+        }
+        return updateWelcomeNote(body);
+    }
+
+    /** App 欢迎语原始回执读回。 */
+    @PostMapping("/open-settings/welcome-note-receipt")
+    public AjaxResult welcomeNoteReceipt(@RequestBody Map<String, Object> body) {
+        Long actor;
+        try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        return clubWelcomeNoteOriginal.receipt(actor, body);
+    }
+
+    public AjaxResult updateWelcomeNote(Club body) {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body == null || body.getId() == null) return error("缺少俱乐部ID");
@@ -1255,7 +1296,28 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "退出俱乐部")
     @PostMapping("/quit")
-    public AjaxResult quit(@RequestBody Club body) {
+    public AjaxResult quit(@RequestBody Club body,
+                           @RequestHeader(value = "X-Club-Admission-Request-Id", required = false) String admissionRequestId,
+                           @RequestHeader(value = "X-Club-Admission-Action", required = false) String admissionAction,
+                           @RequestHeader(value = "X-Club-Admission-Payload-SHA256", required = false) String admissionSha) {
+        if (admissionRequestId != null || admissionAction != null || admissionSha != null) {
+            Long actor;
+            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            return clubAdmissionOriginal.write(actor, body == null ? null : body.getId(), true, admissionRequestId,
+                    admissionAction, admissionSha, body == null ? null : body.getJoinMessage(), () -> quit(body));
+        }
+        return quit(body);
+    }
+
+    /** App 入会/退会原始回执读回；只读台账，不观察当前成员关系。 */
+    @PostMapping("/admission/receipt")
+    public AjaxResult admissionReceipt(@RequestBody java.util.Map<String, Object> body) {
+        Long actor;
+        try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        return clubAdmissionOriginal.receipt(actor, body);
+    }
+
+    public AjaxResult quit(Club body) {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         if (body.getId() == null) return error("缺少俱乐部ID");
@@ -1437,7 +1499,31 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部自建勋章(主理人上传名+图)")
     @PostMapping("/badge/create")
-    public AjaxResult badgeCreate(@RequestBody Map<String, Object> body) {
+    public AjaxResult badgeCreate(@RequestBody Map<String, Object> body,
+                                  @RequestHeader(value = "X-Club-Badge-Request-Id", required = false) String badgeRequestId,
+                                  @RequestHeader(value = "X-Club-Badge-Source-SHA256", required = false) String badgeSource) {
+        if (badgeRequestId != null || badgeSource != null) {
+            Long actor;
+            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            return clubBadgeOriginal.write(actor, "CREATE", badgeRequestId, badgeSource, body, this::badgeIdByCode, () -> badgeCreate(body));
+        }
+        return badgeCreate(body);
+    }
+
+    /** App 勋章原始回执读回。 */
+    @PostMapping("/badge/original-receipt")
+    public AjaxResult badgeOriginalReceipt(@RequestBody Map<String, Object> body) {
+        Long actor;
+        try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        return clubBadgeOriginal.receipt(actor, body);
+    }
+
+    private Long badgeIdByCode(String code) {
+        GrowthBadge badge = growthBadgeMapper.selectByCode(code);
+        return badge == null ? null : badge.getId();
+    }
+
+    public AjaxResult badgeCreate(Map<String, Object> body) {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         Long clubId = badgeLong(body.get("clubId"));
@@ -1479,7 +1565,18 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "颁发勋章给俱乐部成员")
     @PostMapping("/badge/grant")
-    public AjaxResult badgeGrant(@RequestBody Map<String, Object> body) {
+    public AjaxResult badgeGrant(@RequestBody Map<String, Object> body,
+                                 @RequestHeader(value = "X-Club-Badge-Request-Id", required = false) String badgeRequestId,
+                                 @RequestHeader(value = "X-Club-Badge-Source-SHA256", required = false) String badgeSource) {
+        if (badgeRequestId != null || badgeSource != null) {
+            Long actor;
+            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            return clubBadgeOriginal.write(actor, "GRANT", badgeRequestId, badgeSource, body, this::badgeIdByCode, () -> badgeGrant(body));
+        }
+        return badgeGrant(body);
+    }
+
+    public AjaxResult badgeGrant(Map<String, Object> body) {
         Long memberId;
         try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         Long clubId = badgeLong(body.get("clubId"));
@@ -2447,7 +2544,11 @@ public class ApiClubController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
-        return AjaxResult.success("已发布");
+        // App 原始操作回执需要新帖身份；旧调用方只读 code/msg，多带 data 不影响。
+        Map<String, Object> created = new HashMap<>();
+        created.put("id", post.getId());
+        created.put("version", post.getVersion() == null ? 0 : post.getVersion());
+        return AjaxResult.success("已发布", created);
     }
 
     @Operation(summary = "编辑动态并保留公开历史")
@@ -2470,6 +2571,36 @@ public class ApiClubController extends BaseController {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
+
+    /** App 原始操作 club-post-v1：发帖/编辑/评论只执行一次，按原 requestId 读回。 */
+    @PostMapping({"/post/operation/create", "/post/operation/update", "/post/operation/receipt",
+            "/post/operation/comment/create", "/post/operation/comment/receipt"})
+    public AjaxResult postOperation(@RequestBody Map<String, Object> body, jakarta.servlet.http.HttpServletRequest request) {
+        Long actor;
+        try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        String uri = request.getRequestURI();
+        String suffix = uri.endsWith("/comment/create") ? "comment-create" : uri.endsWith("/comment/receipt") ? "comment-receipt"
+                : uri.substring(uri.lastIndexOf('/') + 1);
+        if (suffix.endsWith("receipt")) return clubPostOriginal.receipt(actor, suffix, body);
+        return clubPostOriginal.write(actor, suffix, body, new com.chengyinhub.business.appgaps.ClubPostOriginal.Writers() {
+            public AjaxResult create(long clubId, String content, String images) {
+                ClubPost post = new ClubPost(); post.setClubId(clubId); post.setContent(content); post.setImages(images);
+                return postCreate(post);
+            }
+            public AjaxResult update(long postId, String content, String images, int version, String requestId) {
+                ClubPostMutationRequest update = new ClubPostMutationRequest(); update.setId(postId); update.setContent(content);
+                update.setImages(images); update.setVersion(version); update.setRequestId(requestId);
+                return postUpdate(update);
+            }
+            public AjaxResult comment(long postId, String content) {
+                ClubPostComment comment = new ClubPostComment(); comment.setPostId(postId); comment.setContent(content);
+                return commentCreate(comment);
+            }
+        });
+    }
+
+    @Autowired
+    private com.chengyinhub.business.appgaps.ClubPostOriginal clubPostOriginal;
 
     @Operation(summary = "置顶或取消置顶公告")
     @PostMapping("/post/pin")
@@ -2547,7 +2678,9 @@ public class ApiClubController extends BaseController {
         c.setContent(body.getContent());
         clubPostCommentService.insertClubPostComment(c);
         clubPostService.incrementCommentCount(body.getPostId(), 1);
-        return AjaxResult.success("已评论");
+        Map<String, Object> commented = new HashMap<>();
+        commented.put("id", c.getId());
+        return AjaxResult.success("已评论", commented);
     }
 
     @Operation(summary = "删除动态(作者/群主/管理员)")

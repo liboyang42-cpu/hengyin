@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.appgaps.mapper.ClubOriginalReceiptMapper">
+ <select id="selectAudit" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select id,actor_member_id as actorMemberId,target_id as targetId,relation_id as relationId,reason,request_id as requestId,
+   create_time as createTime
+  from business_audit_event
+  where domain_type='CLUB' and domain_id=#{clubId} and action=#{action} and request_id=#{requestId}
+  order by id limit 1
+ </select>
+ <select id="selectAssignment" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select id,club_id as clubId,target_member_id as targetMemberId,role_code as roleCode,scope_type as scopeType,
+   scope_id as scopeId,assigned_by_member_id as assignedByMemberId,expires_at as expiresAt
+  from club_role_assignment where id=#{id}
+ </select>
+</mapper>

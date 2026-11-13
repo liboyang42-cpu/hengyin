@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.appgaps.mapper.AppOriginalRequestMapper">
+ <sql id="cols">id,protocol,actor_member_id as actorMemberId,request_id as requestId,scope_key as scopeKey,
+  payload_sha256 as payloadSha256,state,result_json as resultJson,error_code as errorCode,error_message as errorMessage,
+  create_time as createTime,update_time as updateTime</sql>
+ <insert id="insertIgnore" useGeneratedKeys="true" keyProperty="id">
+  insert ignore into app_original_request(protocol,actor_member_id,request_id,scope_key,payload_sha256,state,result_json,
+   error_code,error_message,create_time,update_time)
+  values(#{protocol},#{actor},#{requestId},#{scope},#{sha},#{state},#{resultJson},#{errorCode},#{errorMessage},now(3),now(3))
+ </insert>
+ <select id="select" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select <include refid="cols"/> from app_original_request
+  where protocol=#{protocol} and actor_member_id=#{actor} and request_id=#{requestId}
+ </select>
+ <update id="finish">
+  update app_original_request set state=#{state},result_json=#{resultJson},error_code=#{errorCode},
+   error_message=#{errorMessage},update_time=now(3)
+  where id=#{id} and state='RUNNING'
+ </update>
+ <select id="selectRecent" resultType="java.util.HashMap" useCache="false">
+  select <include refid="cols"/> from app_original_request
+  where protocol=#{protocol} and actor_member_id=#{actor} and scope_key=#{scope}
+  order by id desc limit #{limit}
+ </select>
+</mapper>
