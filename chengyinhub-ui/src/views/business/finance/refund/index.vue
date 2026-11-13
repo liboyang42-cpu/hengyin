@@ -179,7 +179,6 @@ import { listRefund, addRefund, reviewRefund } from '@/api/business/refund'
 import auth from '@/plugins/auth'
 import ActivityCancelRefundCases from './ActivityCancelRefundCases'
 import ManualPayoutQueue from './ManualPayoutQueue'
-import PlatformPassRefundQueue from './PlatformPassRefundQueue'
 import CyDataTable from '@/components/CyDataTable'
 import CyEntityHeader from '@/components/CyEntityHeader'
 import CyEntityLink from '@/components/CyEntityLink'
@@ -262,7 +261,7 @@ function enumLookup(map, value, fallback, numeric) {
 
 export default {
   name: 'FinanceRefund',
-  components: { ActivityCancelRefundCases, ManualPayoutQueue, PlatformPassRefundQueue, CyDataTable, CyEntityHeader, CyEntityLink, CyFilterBar, CyPageHeader, CyStatusTag },
+  components: { ActivityCancelRefundCases, ManualPayoutQueue, PlatformPassRefundQueue: () => import('./PlatformPassRefundQueue'), CyDataTable, CyEntityHeader, CyEntityLink, CyFilterBar, CyPageHeader, CyStatusTag },
   data() {
     return {
       isManualQueue: false,
