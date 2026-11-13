@@ -49,8 +49,12 @@
         </view>
       </view>
       <view wx:if="{{view.active && view.plans.length}}" class="pp__renew {{view.buyOff || buying ? 'is-off' : ''}}" bindtap="onBuy" aria-role="button" aria-disabled="{{view.buyOff}}" aria-label="{{view.buyLabel}}" hover-class="cy-pressed" hover-stay-time="80">{{buying ? '处理中…' : view.buyLabel}}</view>
-      <text class="pp__terms" wx:if="{{view.terms}}">{{view.terms}}</text>
-      <cy-inline-error class="pp__err" wx:if="{{buyError}}" kind="field" title="{{buyError}}" />
+      <view class="pp__list" wx:if="{{view.facts.length}}">
+        <view class="pp__row" wx:for="{{view.facts}}" wx:key="k">
+          <view class="pp__row-m"><text class="pp__row-s">{{item.k}}</text><text class="pp__row-t">{{item.v}}</text></view>
+        </view>
+      </view>
+      <view wx:if="{{buyError}}" bindtap="goOrder" aria-role="button" aria-label="{{buyError}}" hover-class="cy-pressed" hover-stay-time="80"><cy-inline-error class="pp__err" kind="field" title="{{buyError}}" /></view>
       <view class="pp__pad"></view>
     </view>
   </view>

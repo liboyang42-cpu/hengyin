@@ -9,6 +9,7 @@
 
 测试：`tests/unit/topic-detail-chapter-guide.test.js`（新增，覆盖进度、导读、配图）；`topic-story-paywall-contract.test.js` 里旧的「锁定章节不计入进度」断言改为新口径。
 
-CI 结果见 PR。
+CI：PR #822 最新提交上全部检查通过（含 20 个小程序单测分片、静态门禁、gitleaks）。台账与 ui-integrity 基线仅因行号位移重算（action-ledger 用其 --write 工具，U4-DYNAMIC 锚点 2125→2123）。
 
-STATUS: PARTIAL - 待 CI 结果
+
+STATUS: DONE

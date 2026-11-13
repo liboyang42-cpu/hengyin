@@ -1,3 +1,5 @@
+// 2026-11-13 topic-walk2 并 master(#822 后):buildRouteMap U4-DYNAMIC 锚点 2123→2134 仅因 #823 自身编辑(导读截断/地图适配,该调用补一个 _fitRouteMap 回调参数)位移,八个路线视图字段与理由不变、条数不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
+// 2026-11-13 topic-chapter-guide(topic/index/index.js 进度兜底改调 motion.progressFallback,-2 行):buildRouteMap U4-DYNAMIC 锚点 2125→2123 仅行号位移,调用行与理由逐字未改,条数不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-13 D-46(章节门去计时兜底,pages/play/index.js -8 行):loadMilestone 的 U5 静默登记点 8923→8915 仅行号位移,调用行与理由逐字未改,条数不变、不新增登记;u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-13 arrival-start-300m 合 master(D-46 -8 行 + 开局 300 米 +3 行):U5 loadMilestone 调用点 8915→8918 仅行号位移,调用行与理由逐字不变、条数不变、不新增登记;u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-12 dec-b3(D-66 结局上限 6＋缺默认结局红字):publish/fabu/index.js 新增结局区红字与刷新助手(+28 行),11 条既有 U4-DYNAMIC 锚点仅行号位移(1235→1237、3598→3600、4688→4690、5070→5072、6157→6159、6436→6438、7136→7138、7148→7150、7215→7217、7773→7775、10056→10079),调用行逐字相同、理由与条数不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
@@ -994,7 +996,7 @@ module.exports = {
 // 2026-11-02 走查修复 l4-counter(M-12/M-21/M-24 在 merchantinfo.js 前段 +8 行):2 条 U4-DYNAMIC 锚点仅行号位移(2433→2441、2465→2473),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 集成 l4-counter 合 pay-gate/l1/l2/l3:两侧登记取并集,不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 在合并树重算。
 // 2026-11-03 Round5 l7-launch:club/apply 游客登录入口(+11 行),onInput 233→244、toggleBool 244→255 仅行号位移,调用行逐字相同、理由与条数不变;digest 按门禁同一算法重算。
-"5d917cc7f1f2229cf0f13a34c38da4a5a6950afe96c18462ce7a2cc85b0b76c4",
+"b9583c4126bd80d60c34e06239144181c16d842868fb13f7792ea0dce5492d77",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1397,7 +1399,7 @@ module.exports = {
     "chengyinhub-xcx/pages/square/components/route-map/index.js:60": "同一loadRoute业务拒绝清图，routePreview.build([])只返回固定路线视图字段并触发empty；共享topic-route-preview实现与WXML逐字段核对，不从响应提供键。owner=小程序；复核=2026-10-24",
     "chengyinhub-xcx/pages/square/components/route-map/index.js:66": "同一loadRoute网络失败清图，current()先校验session revision/read epoch，固定投影routePreview.build([])与empty事件给宿主可见空态；不回写其他页面。owner=小程序；复核=2026-10-24",
     "chengyinhub-xcx/pages/square/components/route-map/index.js:75": "buildRouteMap的局部view只由utils/topic-route-preview.build(chaptersList)产生；固定路线视图八字段，routeReady决定ready/empty，节点只供值、不能供setData键；地图与提示消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
-    "chengyinhub-xcx/pages/topic/index/index.js:2125": "buildRouteMap只提交utils/topic-route-preview.build(chaptersList)固定八个路线视图字段；每章道路独立校验，缺损退节点虚线，不展开章节任意键；路线地图/提示与JS选择消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
+    "chengyinhub-xcx/pages/topic/index/index.js:2134": "buildRouteMap只提交utils/topic-route-preview.build(chaptersList)固定八个路线视图字段；每章道路独立校验，缺损退节点虚线，不展开章节任意键；路线地图/提示与JS选择消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
 
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 6 处动态 setData 逐项登记(棘轮/digest 待审批后同步)。
     "chengyinhub-xcx/pages/activity/official-mine/index.js:158": "BL-80 通知复盘按卡片位置拼 broadcasts[i]._statsLoading/_statsText 路径写入「正在读取复盘」;字段在本页 wxml 该卡触达行消费;owner=小程序,复核=2026-12-31",
