@@ -8,25 +8,36 @@ registration/quote 9009            OK  http=200 code=200 pay=0.0
 registration/create (free) 9009    OK  http=200 code=200 regId=74 pay=0.0 
 im/send text 9004->9009            OK  http=200 code=200 conv=2 checkStatus=1 
 common/upload image                PROVIDER-BLOCKED http=503 code=503 安全检查服务异常，请稍后重试
-im/send image (msg_type 2)         OK  http=200 code=200 msgId=9 checkStatus=0 
+im/send image (msg_type 2)         OK  http=200 code=200 msgId=11 checkStatus=0 
 im/message/{id}/attachment (sender) OK  http=200 code=200 kind=IMAGE state=PENDING source=LEGACY_SINGLE_IMAGE 
 im/message (sender)                OK  http=200 code=200 source=original-im-message-v1 
 im/message (recipient)             http=404 code=404 errorCode=MESSAGE_NOT_FOUND (another member's not-yet-approved image is 404 by contract)
                                    (OSS absent on TEST: CHENGYIN_OSS_ENDPOINT)
 im/file/upload (media pipeline)    ERR http=500 code=500 state=None review=None {"msg": "结果待确认，请稍后查询原请求", "code": 500, "errorCode": "OUTCOME_UNKNOWN", "outcome_known": false}
 im/file/receipt                    OK  http=200 code=200 state=NOT_FOUND 
-channels list club 7001            OK  http=200 code=200 channels=groups=1 ungrouped=1 
-channels create club 7001          OK  http=200 code=200 result={"request_id": "02a39723-20df-49dd-a23d-974c3c3ec1e1", "state": "APPLIED", "id": "8", "guild_kind": 1, "guild_id": "7001 
-notify-level GET 9009 (member)     OK  http=200 code=200 level=0 version=1 configured=True 
-notify-level POST 9003 (owner)     OK  http=200 code=200 status=APPLIED result={'version': 2, 'level': 1, 'updated_at': '2026-11-13T21:37:52.701+08:00'} 
+channels list club 7001            OK  http=200 code=200 channels=groups=1 ungrouped=2 
+channels create club 7001          OK  http=200 code=200 result={"request_id": "206ce997-cbae-4fd9-95dc-853dfd50b722", "state": "APPLIED", "id": "10", "guild_kind": 1, "guild_id": "700 
+notify-level GET 9009 (member)     OK  http=200 code=200 level=1 version=2 configured=True 
+notify-level POST 9003 (owner)     OK  http=200 code=200 status=APPLIED result={'version': 3, 'level': 0, 'updated_at': '2026-11-13T22:50:55.187+08:00'} 
 notify-level stale version         OK  http=200 status=REJECTED code=CLUB_DEFAULT_VERSION_CONFLICT
 notification-requests/{id} (REJECTED) OK  http=200 code=200 status=REJECTED op=CLUB_DEFAULT 
 notify-level POST 9009 (member)    OK  http=403 errorCode=CLUB_DEFAULT_FORBIDDEN
+egg/collect (closed)               OK  http=200 code=410 errorCode=ROUTE_EGG_OFFLINE
+mod-commerce signed out            OK  http=401 code=401
+mod-commerce signed in (OFF)       OK  http=200 code=503 errorCode=WORKSHOP_COMMERCE_DISABLED
+play/feedback/submit (9009)        OK  http=200 code=200 feedbackId=2 
+U08-03 creator/feedback (9003)     OK  http=200 code=200 items=2 reporterHidden=True 
+U08-03 creator/feedback (9009)     OK  http=404 errorCode=TOPIC_NOT_FOUND
+U08-03 open ticket                 OK  http=200 code=200 ticketId=2 stage=REPORTED baseline=1 
+U08-03 close FIXED w/o new version OK  http=409 errorCode=FIX_NOT_PUBLISHED
+U08-03 close NO_CHANGE             OK  http=200 code=200 status=CLOSED 
+U08-04 creator post-game-outcome   OK  http=200 code=200 topics=[990013, 992001] mature=False eligible=0 metrics=['OFFICIAL_COMPLETION', 'SECOND_VALID_REGISTRATION'] 
+U08-04 non-creator                 OK  http=404 errorCode=CREATOR_TOPICS_NOT_FOUND
 friend/request 9004->9003          OK  http=200 code=200 outcome=APPLIED 
 friend/requests 9003               OK  http=200 code=200 incoming=1 
 club/home 9009                     OK  http=200 code=200 joined=[7001, 7002] 
 city-game/current gaps-a-test      OK  http=200 code=200 {"contract": "CITY_PLAYER_READ_V1", "scope": "CITY", "status": "AVAILABLE", "regionId": "gaps-a-test", "board": {"gameId 
 city-game/game/snapshot            OK  http=200 code=200 keys=['boardId', 'boardVersion', 'contract', 'lifecycle', 'memberPoints', 'neutralTasksAvailable', 'properties', 'roundSeq'] 
-team/create 9009                   OK  http=200 code=200 teamId=2 
+team/create 9009                   OK  http=200 code=200 teamId=3 
 team/pool                          OK  http=200 code=200 enabled=False reason=TEAM_POOL_NOT_CONFIGURED 
 rank/list scope=team               OK  http=200 code=200 scope=team entries=0 

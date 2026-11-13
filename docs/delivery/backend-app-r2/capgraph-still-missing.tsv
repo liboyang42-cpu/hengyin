@@ -1,3 +1,4 @@
+path	area
 /api/asset/withdraw	wallet/funds
 /api/channel-platform/admission/requests	channels (native, no backend)
 /api/channel-platform/governance/moderation/requests	channels (native, no backend)

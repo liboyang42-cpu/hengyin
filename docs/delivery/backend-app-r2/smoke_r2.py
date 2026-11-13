@@ -147,6 +147,46 @@ show("notification-requests/{id} (REJECTED)", st, d, "status=%s op=%s" % ((d.get
 st, d = call("POST", "/api/club/settings/notify-level", t9, js={"request_id": "r2smoke-clubdef-" + uuid.uuid4().hex[:16], "clubId": "7001", "level": 0, "version": 0})
 print("%-34s %s http=%s errorCode=%s" % ("notify-level POST 9009 (member)", "OK " if st == 403 else "ERR", st, d.get("errorCode")))
 
+# R2 follow-up: closed egg route, mod-commerce OFF stub, U08-03/U08-04 creator reads, U06 turn block
+st, d = call("POST", "/api/play/egg/collect", t9, form={"eggId": 1, "topicId": 992001})
+print("%-34s %s http=%s code=%s errorCode=%s" % ("egg/collect (closed)", "OK " if d.get("code") == 410 and d.get("errorCode") == "ROUTE_EGG_OFFLINE" else "ERR", st, d.get("code"), d.get("errorCode")))
+st, d = call("POST", "/api/mod-commerce/orders", None, js={})
+print("%-34s %s http=%s code=%s" % ("mod-commerce signed out", "OK " if d.get("code") == 401 else "ERR", st, d.get("code")))
+st, d = call("POST", "/api/mod-commerce/orders", t9, js={})
+print("%-34s %s http=%s code=%s errorCode=%s" % ("mod-commerce signed in (OFF)", "OK " if d.get("code") == 503 and d.get("errorCode") == "WORKSHOP_COMMERCE_DISABLED" else "ERR", st, d.get("code"), d.get("errorCode")))
+fb_rid = "r2smoke-fb-" + uuid.uuid4().hex[:12]
+runs = subprocess.run(["docker", "exec", "be-int-mysql", "mysql", "-uroot", "-N", "cy_e2e_r2", "-e",
+                       "SELECT id FROM topic_route_session WHERE member_id=9009 AND topic_id=992001 ORDER BY id DESC LIMIT 1"],
+                      capture_output=True, text=True).stdout.strip()
+if runs:
+    st, d = call("POST", "/api/play/feedback/submit", t9, js={"runId": int(runs), "category": "PLACE", "content": "r2 smoke：入口标识不清楚", "requestId": fb_rid})
+    show("play/feedback/submit (9009)", st, d, "feedbackId=%s" % (d.get("data") or {}).get("feedbackId"))
+st, d = call("GET", "/api/creator/feedback", t3, q={"topicId": 992001})
+items = (d.get("data") or {}).get("items") or []
+show("U08-03 creator/feedback (9003)", st, d, "items=%s reporterHidden=%s" % (len(items), all("memberId" not in i for i in items)))
+st, d = call("GET", "/api/creator/feedback", t9, q={"topicId": 992001})
+print("%-34s %s http=%s errorCode=%s" % ("U08-03 creator/feedback (9009)", "OK " if st == 404 else "ERR", st, d.get("errorCode")))
+open_ids = [i["feedbackId"] for i in items if i.get("ticketId") is None][:1]
+if open_ids:
+    st, d = call("POST", "/api/creator/maintenance/tickets", t3, js={"requestId": "r2smoke-tk-" + uuid.uuid4().hex[:12], "topicId": 992001,
+                                                                       "title": "入口标识", "feedbackIds": open_ids})
+    tk = d.get("data") or {}
+    show("U08-03 open ticket", st, d, "ticketId=%s stage=%s baseline=%s" % (tk.get("ticketId"), tk.get("stage"), (tk.get("baseline") or {}).get("configVersion")))
+    if tk.get("ticketId"):
+        st, d = call("POST", "/api/creator/maintenance/tickets/%s/close" % tk["ticketId"], t3,
+                     js={"requestId": "r2smoke-cl-" + uuid.uuid4().hex[:12], "expectedVersion": tk.get("version"), "resolution": "FIXED"})
+        print("%-34s %s http=%s errorCode=%s" % ("U08-03 close FIXED w/o new version", "OK " if d.get("errorCode") == "FIX_NOT_PUBLISHED" else "ERR", st, d.get("errorCode")))
+        st, d = call("POST", "/api/creator/maintenance/tickets/%s/close" % tk["ticketId"], t3,
+                     js={"requestId": "r2smoke-cl-" + uuid.uuid4().hex[:12], "expectedVersion": tk.get("version"), "resolution": "NO_CHANGE", "reason": "r2 冒烟：已人工核实"})
+        show("U08-03 close NO_CHANGE", st, d, "status=%s" % (d.get("data") or {}).get("status"))
+st, d = call("GET", "/api/creator/analytics/post-game-outcome", t3, q={"cohortDate": "2026-11-13", "windowDays": 30})
+x = d.get("data") or {}
+rep = x.get("report") or {}
+show("U08-04 creator post-game-outcome", st, d, "topics=%s mature=%s eligible=%s metrics=%s" % (
+    (x.get("scope") or {}).get("topicIds"), rep.get("mature"), (rep.get("cohort") or {}).get("eligibleMembers"), sorted((rep.get("metrics") or {}).keys())))
+st, d = call("GET", "/api/creator/analytics/post-game-outcome", t9, q={"cohortDate": "2026-11-13"})
+print("%-34s %s http=%s errorCode=%s" % ("U08-04 non-creator", "OK " if st == 404 else "ERR", st, d.get("errorCode")))
+
 # Friends
 st, d = call("POST", "/api/friend/request", t4, js={"peer_id": 9003, "request_id": str(uuid.uuid4()), "msg": "r2 smoke"})
 show("friend/request 9004->9003", st, d, "outcome=%s" % (d.get("data") or {}).get("outcome"))

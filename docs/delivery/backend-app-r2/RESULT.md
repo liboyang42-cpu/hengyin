@@ -3,7 +3,30 @@
 One integrated backend with everything built so far, deployed as the **TEST** backend on VPS `work` (be-int).
 Production was not touched. hengyin `master` was not pushed. The only branch pushed is `integration/backend-app-r2`.
 
-Tested SHA: **`01229ec46`** (the commit that adds this file follows it and only changes `docs/`).
+Tested SHA: **`955175611`** after the R2 follow-up (§0). The first round was tested on `01229ec46` (§1–§5). The commit that updates
+this file follows `955175611` and only changes `docs/`.
+
+## 0. R2 follow-up (2026-11-13, coordinator msg_3856dec207cf)
+
+| # | Item | Commit | What changed |
+|---|---|---|---|
+| 1 | `/api/play/egg/collect` | `c496d370d` | The route answers **410 `ROUTE_EGG_OFFLINE`** before login and parameter checks (same convention as `HANGOUT_OFFLINE`), instead of 500. The service and mapper code that read the dropped `npc_route_egg` is removed. `PlayerGapsMysqlIntegrationTest` drops its egg case (registry 3 → 2), and app-gaps-a `MAPPING.md` and `smoke_app_gaps_a.py` are updated. |
+| 2 | `ChainPersistenceMySqlIT` | `180abaf0f` | **The unique key was the wrong side.** `im_chain_entry.request_id` is only the latest-command pointer (see the L8 migration comment). Idempotent replay for the same member and payload, and rejection for a different one, are enforced by `im_chain_command_receipt.uk_chain_command (chain_id, request_id)`, which is what the test checks. `ChannelInteractionService` scopes request ids per operator, so the entry-level `uk_chain_entry_request` turned a second member reusing the same request text into a raw duplicate-key 500. New migration `20261115_chain_entry_request_nonunique` (rerunnable) replaces it with the plain index `idx_chain_entry_request`. The IT applies it twice and asserts the index shape: 9/9. |
+| 3a | 2 capgraph verb mismatches | — | **False positives, no backend change.** The app's own transports send `GET /api/friend/relationship` (`NativeFriendService` / `NativeFriendRemovalService`: `body == nil` → GET with query `peer_id`) and `POST /api/topic/attribute-author/validate` (`NativeAttributeAuthorHostTransport`: `(.post, …/validate)`). The backend maps exactly these. The capgraph's static verb guess misreads both. The mini-program does not call either route. |
+| 3b | `/api/mod-commerce` OFF stub | `54ed1867c` | The app (`Core/WorkshopCommerceService`) only reads `code`: 401 means re-login, anything else non-200 means unavailable. The stub now answers **401 when signed out**, otherwise **503 + `errorCode WORKSHOP_COMMERCE_DISABLED`**. Every method is still refused without reading the body or touching payment. |
+| 4a | U06 turn order | `758bcf9d1` | Every member's advanced-session read (`publicMultiplayer`, used by state/act/start) gets a `turn` block: `index, position, size, round, completedTurns, requiredTurns, finished, myTurn, turnsUntilMine`. It contains no other member's role (U06-02; the app's `PlayAdvancedTeamProjection`: "other members' roles are leader-only data"). The **leader** also gets `turn.currentRoleId` and the ordered `turnOrder` list `[{position, roleId, roleLabel}]`, with the same visibility as `roleAssignments`. It is additive, and the app's decoder ignores unknown keys. |
+| 4b | U08-03 creator maintenance | `a1974a9a2` | `GET /api/creator/feedback` (U08-02 `play_run_feedback` on the caller's own topics; the reporter's member id and run id are never returned). Maintenance tickets: `POST /api/creator/maintenance/tickets`, `GET …/tickets[/{id}]`, `POST …/tickets/{id}/close`, and `GET /api/creator/maintenance/requests/{requestId}` (recovery). The stage is derived from facts: REPORTED → FIX_DRAFTED (draft version > baseline) → FIX_PUBLISHED → RETESTED (the author's own completed run on a newer version) → CLOSED. Closing FIXED needs the published version past the baseline (`FIX_NOT_PUBLISHED` otherwise); NO_CHANGE needs a reason. Version CAS and idempotent request ids throughout. Author = `cms_topic.member_id`; others get 404. No money. Migration `20261115_creator_maintenance`. |
+| 4c | U08-04 creator re-registration board | `955175611` | `GET /api/creator/analytics/post-game-outcome?cohortDate&windowDays&topicId` is the B8 report scoped to the caller's own topics, with the same maturity, refund, seat-dedup, watermark and basis semantics (`mature=false` is not 0%). The cohort is members whose full-history first valid registration was on those topics. `SECOND_VALID_REGISTRATION` keeps the B8 definition, and `OFFICIAL_COMPLETION` counts completed route sessions on those topics. Reward, photo, share, click, client-observed and roam revisit cannot be attributed to a topic, so they are **omitted and listed in `scope.omittedMetrics`** instead of being shown with platform numbers. A creator without topics gets 404 `CREATOR_TOPICS_NOT_FOUND`, and an unreadable source gets 503 (never 0). The platform report is unchanged. |
+
+**Tests on `955175611`:** build OK. Unit tests (`-pl framework,system,admin -am`, surefire `-Xmx1536m`): **19,309 run, 0 failures**. The 34 errors are the same 14 DB-needing `*MyBatisTest` classes as before, and they pass **39/39** against be-int-mysql. Real-MySQL ITs: **78/79** (new `CreatorMaintenanceMysqlIntegrationTest` 3/3, `ChainPersistenceMySqlIT` 9/9, `PlayerGapsMysqlIntegrationTest` 2/2, all channels/gaps ITs green). The one red is `MapPublicLayersMySqlIT` under a UTC JVM, and it passes **1/1 with `-Duser.timezone=Asia/Shanghai`**, as before. **MDB-F2: 25/25 classes, 239/239 tests PASS, cleanup CLEAN.** Targeted unit tests: `AdvancedGameRuntimeServiceImplTest` 232/232 (U06), `PostGameOutcomeReportServiceImplTest` 37/37 (+2 scoped), `CreatorAnalyticsServiceTest` 3/3, `ApiPlayerGapsControllerEggTest` 1/1, `ApiAppGapsWorkshopControllerTest` 1/1. Migration gates (ledger audit/manifest, layout, safety 5/5) all pass. Curl smoke: 39 OK lines, identical on loopback and the public URL. The only failures are the known OSS-less media upload and the WeChat-less image upload. Logs: VPS `/data/workspace/be-int/r2/` (current run), with the earlier runs under `run1-*`, `run2-*`, `run3-*`.
+
+**Redeploy (same `cy_e2e_r2`, then re-seeded):** the new jar started after only the two new migrations were applied, but 9009's sign-up then failed to decrypt
+(`PII 解密失败`). `start.sh` generated a **random PII key on every start**, so any restart that keeps the DB loses all stored sign-up PII. This was
+latent and never showed before, because every earlier deploy rebuilt the DB. Fix on TEST: `start.sh` now reads a stable TEST-only key from
+`app/.test-pii-key` (generated once, `chmod 600`, never printed). Rows already encrypted under the lost key cannot be recovered, so `cy_e2e_r2` was rebuilt from the ledger
+(670 migrations, 373 after the snapshot, 0 problems, 609 tables) and re-seeded with the same steps (`seed_api` 14 OK). A follow-up **restart** then
+proved the fix: `play/nodes` and the sign-up replay for 9009 return 200, with 0 PII errors. TEST-only data added for the U08 smoke: one completed route session of topic 992001 for 9009
+(`play_instance_id r2-smoke-run-9009`). Rollback for this deploy: `app/*.prev-01229ec` (the previous r2 jar, properties and `start.sh`).
 
 ## 1. Merged heads (in order, from `origin/integration/backend-app-20261112` = `c96d345ff`)
 
@@ -78,10 +101,10 @@ Earlier runs on superseded SHAs are kept in `run1-0211ae471/` and `run2-847b9860
 ## 3. TEST deployment
 
 * **URL:** https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech (reachable only while the VPS runs). Loopback is `127.0.0.1:8120`.
-* Jar from `01229ec46` at `/data/workspace/be-int/app/app.jar`, profile `druid,e2e-test` + `chengyin.e2e.test-providers=true` (unchanged `start.sh`).
+* Jar from **`955175611`** at `/data/workspace/be-int/app/app.jar`, profile `druid,e2e-test` + `chengyin.e2e.test-providers=true`. `start.sh` is unchanged except for the stable TEST PII key (§0).
   Overlay `application-beint.properties` now points at **`cy_e2e_r2`**. Redis is still `be-int-redis` db 9.
-* **Rollback** (the previous TEST deployment, `fix/userinfo-role` 9ac1393ad on `cy_e2e_beint`, which is untouched):
-  `app.jar.prev-9ac1393`, `application-beint.properties.prev-9ac1393`, `start.sh.prev-9ac1393`. The older `*.prev-c96d345` files are still there.
+* **Rollback:** `app/*.prev-01229ec` is the previous r2 deploy on `cy_e2e_r2`, and `app/*.prev-9ac1393` is the pre-r2 TEST, `fix/userinfo-role` on
+  `cy_e2e_beint`, which is untouched. The older `*.prev-c96d345` set was deleted to save disk.
 * Re-seed order on `cy_e2e_r2`: `build_schema.py` → `seed_fixtures.py` → `docs/delivery/e2e-seed/seed.sql` → `scripts/e2e/seed_app_gaps_a.py`
   (board `gapsa-board-1`, region `gaps-a-test`) → start the app → `E2E_DB=cy_e2e_r2 seed_api.py` (14 OK) → `verify.sh` (all 200).
 * Startup log: same expected warnings as round 1 (no WeChat Pay merchant certificate, no alarm webhook, paused monitor job).
@@ -104,21 +127,30 @@ Earlier runs on superseded SHAs are kept in `run1-0211ae471/` and `run2-847b9860
 | `/api/city-game/current?regionId=gaps-a-test`, `/game/snapshot?boardId=gapsa-board-1` | 200 `CITY_PLAYER_READ_V1` AVAILABLE; snapshot 200 |
 | `/api/team/create` → `/api/team/pool` | 200 team; pool 200 `enabled=false TEAM_POOL_NOT_CONFIGURED` (the seeded topic has no `gameplayRuntime.teamPool`; correct per contract) |
 | `/api/rank/list?scope=team` | 200 `scope=team`, 0 entries |
+| `/api/play/egg/collect` (follow-up 1) | 410 `ROUTE_EGG_OFFLINE` |
+| `/api/mod-commerce/orders` (follow-up 3b) | signed out 401; signed in 503 `WORKSHOP_COMMERCE_DISABLED` |
+| `/api/play/feedback/submit` → `/api/creator/feedback` (U08-03) | 9009 files feedback on its run; 9003 (author) reads it with the reporter hidden; 9009 reading 992001 as an author gets 404 `TOPIC_NOT_FOUND` |
+| `/api/creator/maintenance/tickets` open → close (U08-03) | open 200 `stage=REPORTED baseline=1`; close FIXED without a new version 409 `FIX_NOT_PUBLISHED`; close NO_CHANGE with a reason 200 `CLOSED` |
+| `/api/creator/analytics/post-game-outcome` (U08-04) | 9003: 200, scope `[990013, 992001]`, `mature=false` for cohort 2026-11-13, metrics `OFFICIAL_COMPLETION` + `SECOND_VALID_REGISTRATION`; 9009 (no topics) 404 `CREATOR_TOPICS_NOT_FOUND` |
+| U06 `turn` block | not exercisable on TEST (no multiplayer session is seeded); covered by `AdvancedGameRuntimeServiceImplTest` (232/232, including 2 turn cases) |
 
 TEST-only data note: the smoke script sets `cms_topic.team_mode = 2` on topic 992001 in `cy_e2e_r2`, so a team can be created.
 
 ## 4. Capability graph: APP-NOT-IN-BACKEND now served
 
 `tools/capgraph` from app branch `ui/capgraph` (`c2202dbe3`). The backend / mini-program / hengyin-docs extraction ran on the VPS against this
-branch (`01229ec46`); the app scan and the join ran as in `run.sh`. Baseline is the 339 APP-NOT-IN-BACKEND paths in `docs/release/capability-graph.csv` on `ui/capgraph`.
+branch (rerun on **`955175611`** after the follow-up); the app scan and the join ran as in `run.sh`. Baseline is the 339 APP-NOT-IN-BACKEND paths in
+`docs/release/capability-graph.csv` on `ui/capgraph`.
 
-**177 of the 339 paths are now served by a backend controller. 162 are still missing.**
+**177 of the 339 paths are mapped by a backend controller; 175 of them are functionally served** (2 deliberately closed: egg 410 and the
+mod-commerce OFF stub). **162 are still missing.** The six new U08 creator routes are not among the 339, because no app client calls them yet.
+The capgraph lists them as BACKEND-UNUSED (299 → 305) until the app adds clients.
 
 * By area (served): messaging 46, social/friends 23, city game 17, club 14, topics/routes 13, creator/publishing 11, channels (native) 9, play runtime 8,
   roam 7, native-only 6 (the blacklist routes), profile 5, workshop/mods 4, activities 3, channels 3, templates 2, others 1 each.
-* Caveats: `/api/mod-commerce` is mapped only to an explicit OFF handler (closed by owner decision). Two have a verb mismatch:
-  `/api/friend/relationship` (app POST, backend GET) and `/api/topic/attribute-author/validate` (app GET, backend POST).
-  `/api/play/egg/collect` is mapped but fails on TEST (see `8cb262d27`).
+* Status per row is in the `status` column of `capgraph-served.tsv`: `/api/play/egg/collect` is CLOSED (410 `ROUTE_EGG_OFFLINE`), and `/api/mod-commerce` is OFF
+  (401 / 503 `WORKSHOP_COMMERCE_DISABLED`). The two MISMATCH rows (`/api/friend/relationship`, `/api/topic/attribute-author/validate`) are
+  false positives of the tool's static verb guess (§0 3a). The app sends the same verb the backend maps, so they are SERVED.
 * Still missing by area: merchant 30, messaging 23, club 21, rewards 18, workshop/mods 16, city game 9, channels (native) 6, native-only 6, play runtime 5, and others.
 * Full lists: `capgraph-served.tsv` (path, verb, controller, area) and `capgraph-still-missing.tsv` in this folder.
 
@@ -135,9 +167,13 @@ branch (`01229ec46`); the app scan and the join ran as in `run.sh`. Baseline is 
 
 ## 6. Open items / known issues
 
-1. `ChainPersistenceMySqlIT.sameRequestCannotBeReboundToAnotherMemberOrPayload` fails on `feature/im-channels` itself (unique key vs test expectation). This needs the channels owner.
+1. ~~`ChainPersistenceMySqlIT` red~~: fixed in the follow-up (`180abaf0f`, unique key moved to the receipt side).
 2. Media upload cannot be verified on TEST (no OSS, no WeChat image check). See the image row in §3.
-3. `/api/play/egg/collect` returns 500 because `npc_route_egg` was dropped by owner decision. gaps-a should close the route explicitly (for example 410/404) and update its MAPPING.
+3. ~~`/api/play/egg/collect` 500~~: closed with 410 `ROUTE_EGG_OFFLINE` in the follow-up (`c496d370d`), and app-gaps-a MAPPING updated.
 4. 14 `*MyBatisTest` classes are not gated and need MySQL on 3306. They pass against be-int-mysql. `MapPublicLayersMySqlIT` depends on the JVM timezone.
 5. Pre-existing and not new here: `CommunityPostServiceImpl.runMaintenance` throws `NumberFormatException: "false"` when an erasure job row exists
    (`legal_hold` read as Boolean). It was already in the previous TEST deployment's log (`fix/userinfo-role` on `cy_e2e_beint`).
+6. TEST `start.sh` used to randomize the PII key on every start (§0). It now reads the stable TEST-only key file. Any other TEST deploy script that
+   keeps a DB across restarts needs the same treatment.
+7. The U08-03/U08-04 routes and the U06 `turn` block have no app client yet (owner doc rows are PROPOSED). The wire shapes are documented in §0 and
+   in the controller/service Javadoc for the app side to adopt.
