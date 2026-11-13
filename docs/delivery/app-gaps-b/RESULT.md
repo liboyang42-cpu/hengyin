@@ -85,3 +85,11 @@
 - 真库 IT（`APPGAPS_MYSQL_IT=1`，`AppGapsMySql` 只允许 `cy_gaps_b*`）：台账、俱乐部回执、原始请求信封、地图图层 SQL、同意留痕、客服工单。
   这些 IT 依赖 TEST 副本里的既有表（business_audit_event、mms_merchant 等），不在 ci/real-storage-it-registry 的空库容器批次里登记。
 - 迁移台账：`python3 ci/migration_ledger.py audit` problems=[]。
+- 启动冒烟：本分支打包后以独立端口 8131 连 cy_gaps_b（Redis db 11、每次随机密钥）启动成功（微信支付证书缺失按预期降级），
+  用夹具玩家 13900000001 真实登录后逐条调用本分支新路由：全部 code=200（项目 context 对不存在项目 404、mod-commerce 503），
+  未登录 401。冒烟后已停止该进程。
+
+## 剩余（交接）
+- DEFERRED 项按上表原因；最值得接着做的是 `/api/coupon/command-receipt`（生产者规格在 App `Core/CouponCommandReceipts.swift`）与
+  `/api/club/event-ops/series/original-result`（需改 createSeries 落原始结果）。
+- 客服工单目前只有只读面；后台建单/回复写入与工单号生成需客服后台工作线补。
