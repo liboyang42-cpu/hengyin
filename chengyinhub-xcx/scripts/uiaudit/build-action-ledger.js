@@ -583,6 +583,23 @@ const ACTION_VARIANTS = new Map([
       'order-refused': [{ urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' }],
     },
   }]],
+  // 自玩票虚拟支付:订单列表「继续支付」一次点击只发起一笔支付写(/pay);虚拟支付成功后的 /xpay/confirm 只是让服务端回查开通,
+  // 不是第二次业务写入。JSAPI 单只有 /pay;已付状态只认服务端回读。
+  ['subpackageMember/components/cy/scene-member-order-history/index.js:payOrder', [{
+    id: null, handler: 'payOrder',
+    apis: ['/api/registration/pay', '/api/registration/xpay/confirm', '/api/registration/info'],
+    writeApis: ['/api/registration/pay', '/api/registration/xpay/confirm'],
+    effectClasses: ['write', 'navigation', 'state'],
+    externalCapabilities: ['requestPayment'],
+    requiredRequests: [{ urlTemplate: '/api/registration/pay', method: 'POST', kind: 'write' }],
+    requiredRequestsByBranch: {
+      'jsapi-paid': [{ urlTemplate: '/api/registration/pay', method: 'POST', kind: 'write' }],
+      'xpay-paid': [
+        { urlTemplate: '/api/registration/pay', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/registration/xpay/confirm', method: 'POST', kind: 'write' },
+      ],
+    },
+  }]],
   ['subpackageA/pages/assetcenter/earnings/index.js:onTxSave', [withdrawSubmitVariant('onTxSave')]],
   ['pages/roam/index.js:goStart', [{
     id: null, handler: 'goStart', apis: ['/api/compliance/consents', '/api/compliance/consents/latest'],

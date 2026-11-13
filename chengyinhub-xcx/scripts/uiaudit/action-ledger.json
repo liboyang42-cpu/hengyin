@@ -1330666,8 +1330666,34 @@
         "js": "subpackageMember/components/cy/scene-member-order-history/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/registration/pay",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "jsapi-paid": [
+          {
+            "urlTemplate": "/api/registration/pay",
+            "method": "POST",
+            "kind": "write"
+          }
+        ],
+        "xpay-paid": [
+          {
+            "urlTemplate": "/api/registration/pay",
+            "method": "POST",
+            "kind": "write"
+          },
+          {
+            "urlTemplate": "/api/registration/xpay/confirm",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
       "requiredRequestOutcomes": null,
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
@@ -1330717,42 +1330743,17 @@
           "subpackageMember/signup/index?focusId="
         ],
         "apis": [
-          "/api/config/features",
-          "/api/login/code",
           "/api/registration/info",
           "/api/registration/pay",
-          "/api/registration/xpay/confirm",
-          "/api/role/info"
+          "/api/registration/xpay/confirm"
         ],
         "primaryApis": [
           "/api/registration/info",
           "/api/registration/pay",
           "/api/registration/xpay/confirm"
         ],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
+        "auxiliaryApis": [],
         "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/registration/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
           {
             "url": "/api/registration/pay",
             "method": "POST",
@@ -1330766,7 +1330767,7 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/role/info",
+            "url": "/api/registration/info",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
