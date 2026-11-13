@@ -28,6 +28,9 @@
     <select id="selectChain" resultType="java.util.HashMap" useCache="false">
         SELECT <include refid="chainCols"/> FROM im_chain WHERE id = #{id} AND conversation_id = #{conversationId}
     </select>
+    <select id="selectLatestChainId" resultType="java.lang.Long" useCache="false" flushCache="true">
+        SELECT MAX(id) FROM im_chain WHERE conversation_id = #{conversationId}
+    </select>
     <select id="lockChain" resultType="java.util.HashMap" useCache="false" flushCache="true">
         SELECT <include refid="chainCols"/> FROM im_chain WHERE id = #{id} AND conversation_id = #{conversationId} FOR UPDATE
     </select>

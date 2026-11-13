@@ -20,6 +20,8 @@ public interface ChannelInteractionMapper
 
     Map<String, Object> selectChain(@Param("id") long id, @Param("conversationId") long conversationId);
 
+    Long selectLatestChainId(@Param("conversationId") long conversationId);
+
     Map<String, Object> lockChain(@Param("id") long id, @Param("conversationId") long conversationId);
 
     int updateChain(@Param("id") long id, @Param("expectedVersion") long expectedVersion, @Param("activeCount") int activeCount,
