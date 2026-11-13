@@ -100,8 +100,11 @@ class MerchantPublishedFreeExploreSettlementTest {
         // 第十二轮 k5:俱乐部场次要装配商家核销费组件;本类场次没有团码记录 ⇒ 不付商家费。
         com.chengyinhub.business.service.support.ClubSessionMerchantFee merchantFee =
                 new com.chengyinhub.business.service.support.ClubSessionMerchantFee();
-        ReflectionTestUtils.setField(merchantFee, "settlementDetailMapper",
-                mock(com.chengyinhub.business.mapper.SettlementDetailMapper.class));
+        // mock 的 Long 默认返回 0 会被当成探索场次;本类按普通场次(无团码)走,显式返回 null。
+        SettlementDetailMapper feeDetails = mock(SettlementDetailMapper.class);
+        when(feeDetails.selectExploreSessionTopicId(any())).thenReturn(null);
+        ReflectionTestUtils.setField(merchantFee, "settlementDetailMapper", feeDetails);
+        ReflectionTestUtils.setField(merchantFee, "topicSaleSnapshotMapper", snapshots);
         // 无团码订单:mock 默认返回空列表 ⇒ 商家核销费计划为空
         ReflectionTestUtils.setField(merchantFee, "coopOrderMapper",
                 mock(com.chengyinhub.business.mapper.CoopOrderMapper.class));
