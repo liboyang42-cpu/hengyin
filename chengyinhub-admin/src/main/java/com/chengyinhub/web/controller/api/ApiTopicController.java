@@ -2211,8 +2211,14 @@ public class ApiTopicController extends BaseController {
             topicInfoVO.setUnlockedChapterCount(unlockedChapterCount);
             topicInfoVO.setStoryLocked(unlockedChapterCount < totalChapterCount);
             List<TopicChapterVO> chapterVOList = new ArrayList<>();
-            for (int chapterIndex = 0; chapterIndex < unlockedChapterCount; chapterIndex++) {
+            for (int chapterIndex = 0; chapterIndex < totalChapterCount; chapterIndex++) {
                 CmsTopicChapter chapter = listCmsTopicChapter.get(chapterIndex);
+                if (chapterIndex >= unlockedChapterCount) {
+                    // 未解锁章节只下发「介绍」(名称/简介/时长/里程/封面 + 站点名与坐标),
+                    // 剧情块、模板、打卡码、商家、答案一律不给。分支图主题仍然一个节点都不给。
+                    chapterVOList.add(buildLockedChapterTeaser(chapter, branchGraphTeaser));
+                    continue;
+                }
                 TopicChapterVO chapterVO = new TopicChapterVO();
                 BeanUtils.copyBeanProp(chapterVO, chapter);
 
@@ -3180,5 +3186,47 @@ public class ApiTopicController extends BaseController {
             return error("主题活动不存在");
         }
 
+    }
+
+    /**
+     * 未解锁章节的预告 VO：只含非剧透字段，locked=true。
+     * 节点只给 id/name/address/经纬度/imgUrl/sortId/businessTime；分支图主题不给任何节点。
+     */
+    private TopicChapterVO buildLockedChapterTeaser(CmsTopicChapter chapter, boolean branchGraphTeaser) {
+        TopicChapterVO vo = new TopicChapterVO();
+        vo.setId(chapter.getId());
+        vo.setTopicId(chapter.getTopicId());
+        vo.setName(chapter.getName());
+        vo.setDescription(chapter.getDescription());
+        vo.setSortId(chapter.getSortId());
+        vo.setTotalTime(chapter.getTotalTime());
+        vo.setTotalMileage(chapter.getTotalMileage());
+        vo.setImgArr(chapter.getImgArr());
+        vo.setLocked(true);
+        vo.setBlocks(Collections.emptyList());
+        vo.setBlocksJson(null);
+        List<TopicNodeVO> teaserNodes = new ArrayList<>();
+        if (!branchGraphTeaser) {
+            CmsTopicNode query = new CmsTopicNode();
+            query.setChapterId(chapter.getId());
+            query.setStatus(1L);
+            List<CmsTopicNode> nodes = cmsTopicNodeService.selectCmsTopicNodeList(query);
+            if (nodes != null) {
+                for (CmsTopicNode node : nodes) {
+                    TopicNodeVO nodeVO = new TopicNodeVO();
+                    nodeVO.setId(node.getId());
+                    nodeVO.setName(node.getName());
+                    nodeVO.setAddress(node.getAddress());
+                    nodeVO.setLatitude(node.getLatitude());
+                    nodeVO.setLongitude(node.getLongitude());
+                    nodeVO.setImgUrl(node.getImgUrl());
+                    nodeVO.setSortId(node.getSortId());
+                    nodeVO.setBusinessTime(node.getBusinessTime());
+                    teaserNodes.add(nodeVO);
+                }
+            }
+        }
+        vo.setNodes(teaserNodes);
+        return vo;
     }
 }

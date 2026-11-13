@@ -63,13 +63,22 @@ function firstNodeImage(chapter) {
     const shop = (n && n.registrationMerchantList) || [];
     if (shop[0] && csv(shop[0].picUrl)[0]) return csv(shop[0].picUrl)[0];
   }
-  return '';
+  return csv(chapter && chapter.imgArr)[0] || '';
 }
 
 const CN = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
 function chapterLabel(i, n) {
   if (i === n - 1 && n > 2) return '终章';
   return '第' + (CN[i] || String(i + 1)) + '章';
+}
+
+/* 章节标题:内容里名字已自带「第X章」「终章」序号时不再加前缀,避免「第一章 · 第一章 …」 */
+function chapterHeading(i, n, name) {
+  const t = text(name);
+  const lead = chapterLabel(i, n);
+  if (!t) return lead;
+  if (/^(第\s*[0-9一二三四五六七八九十百零两]+\s*章|终章|序章|尾声)/.test(t)) return t;
+  return lead + ' · ' + t;
 }
 
 /* 故事卡:每章一张。自由探索没有章节顺序,用商家当「护照页」。 */
@@ -86,6 +95,7 @@ function buildStoryCards(info, merchantCards) {
     label: chapterLabel(i, chapters.length),
     title: text(c && c.name),
     excerpt: text(c && c.description),
+    locked: !!(c && c.locked === true),
     meta: [text(c && c.metaTime), text(c && c.metaPlace)].filter(Boolean).join(' · '),
   })).filter((c) => c.title);
 }
@@ -255,4 +265,4 @@ function buildTeams(rows, topicId) {
   return { rows: out, need };
 }
 
-module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };
+module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, chapterHeading, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };

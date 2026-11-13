@@ -372,12 +372,12 @@
         <view class="story-lead" wx:if="{{storyCards.length && info.subtitle}}">{{info.subtitle}}</view>
         <view class="det-type story-sec" wx:if="{{storyCards.length}}">{{isExplore ? '护照' : '章节'}}</view>
         <view class="story-cards" wx:if="{{storyCards.length}}">
-          <view class="story-cc {{openChapter === index ? 'is-open' : ''}}" style="{{tabRun ? 'transition-delay: 0s, ' + (300 + index * 80) + 'ms, ' + (300 + index * 80) + 'ms;' : ''}}" wx:for="{{storyCards}}" wx:key="index" data-i="{{index}}" bindtap="onChapterCard"
-                aria-role="button" aria-label="{{item.label}} {{item.title}}，{{openChapter === index ? '收起' : '展开'}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="story-cc {{openChapter === index || item.locked ? 'is-open' : ''}}{{item.locked ? ' is-locked' : ''}}" style="{{tabRun ? 'transition-delay: 0s, ' + (300 + index * 80) + 'ms, ' + (300 + index * 80) + 'ms;' : ''}}" wx:for="{{storyCards}}" wx:key="index" data-i="{{index}}" bindtap="onChapterCard"
+                aria-role="button" aria-label="{{item.label}} {{item.title}}，{{item.locked ? '未解锁，点按解锁' : (openChapter === index ? '收起' : '展开')}}" hover-class="cy-pressed" hover-stay-time="80">
             <image wx:if="{{item.img}}" class="story-cc__img" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
             <view class="story-cc__blur"></view><view class="story-cc__sh"></view>
             <view class="story-cc__hd"><text class="story-cc__k">{{item.label}}</text><text class="story-cc__t">{{item.title}}</text></view>
-            <view class="story-cc__chev"><cy-icon name="chevron-right" size="28" /></view>
+            <view class="story-cc__chev"><cy-icon name="{{item.locked ? 'lock' : 'chevron-right'}}" size="28" /></view>
             <view class="story-cc__in"><text class="story-cc__x">{{item.excerpt}}</text><view class="story-cc__meta" wx:if="{{item.meta}}"><text>{{item.meta}}</text></view></view>
           </view>
         </view>
@@ -408,7 +408,7 @@
         <view class="wp route-top">
           <cy-route-progress total="{{progress.total}}" done="{{progress.done}}" labels="{{progress.labels}}" tone="{{isExplore ? 'free' : 'city'}}" reduced-motion="{{reducedMotion}}" />
           <view class="route-map-wrap rmap" wx:if="{{routeReady}}">
-            <cy-route-sketch wx:if="{{!routeReal}}" points="{{sketchPoints}}" tone="{{isExplore ? 'free' : 'city'}}" reduced-motion="{{reducedMotion}}" bind:open="onRouteReal" />
+            <cy-route-sketch wx:if="{{!routeReal && !sketchPoints.length}}" points="{{sketchPoints}}" tone="{{isExplore ? 'free' : 'city'}}" reduced-motion="{{reducedMotion}}" bind:open="onRouteReal" />
             <map wx:else
               id="routeMap"
               subkey="{{mapSubkey}}" layer-style="{{mapLayerStyle}}"
@@ -442,8 +442,9 @@
                 data-latitude="{{ node.latitude }}" data-longitude="{{ node.longitude }}" hover-class="cy-pressed" hover-stay-time="80">
                 <view class="xh">{{ node.seq || nodeIndex+1 }}</view>
                 <image class="item-pic" lazy-load="true"
-                  src="{{ node.registrationMerchantList && node.registrationMerchantList.length > 0 ? img.first(node.registrationMerchantList[0].picUrl) : (img.first(node.imgUrl) || '/pages/topic/images/icon_line.jpg') }}"
-                  mode="aspectFill" />
+                  src="{{ node.registrationMerchantList && node.registrationMerchantList.length > 0 ? img.first(node.registrationMerchantList[0].picUrl) : (img.first(node.imgUrl) || img.first(info.imgUrl)) }}"
+                  mode="aspectFill" wx:if="{{ (node.registrationMerchantList && node.registrationMerchantList.length > 0) || img.first(node.imgUrl) || img.first(info.imgUrl) }}" />
+                <view class="item-pic item-pic--blank" wx:else></view>
                 <view class="node-card-foot">
                   <view class="david_hp_con_txt"><text class="node-card-name" wx:if="{{node.registrationMerchantList[0].mmsMerchant.name}}">{{node.registrationMerchantList[0].mmsMerchant.name}}</text><text class="node-card-name" wx:elif="{{node.name}}">{{node.name}}</text></view>
                   <view class="dz" wx:if="{{ node.address }}">{{ node.address }}</view>

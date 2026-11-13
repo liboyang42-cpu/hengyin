@@ -673,13 +673,28 @@ class ApiTemplateSecretsGateTest {
         assertEquals(200, res.get("code"), res.toString());
         TopicInfoVO detail = (TopicInfoVO) res.get("data");
         assertEquals(8L, detail.getLocationCount(), "Full-route count survives restricted/empty chapter projection");
-        assertEquals(1, detail.getChaptersList().size(), "未购票响应只能下发第一章");
+        assertEquals(2, detail.getChaptersList().size(), "未购票响应下发全部章节,后续章节仅为预告");
         assertEquals(2, detail.getTotalChapterCount());
         assertEquals(1, detail.getUnlockedChapterCount());
         assertTrue(detail.getStoryLocked());
-        assertFalse(detail.getChaptersList().stream()
-                .anyMatch(chapter -> LOCKED_CHAPTER_DESCRIPTION.equals(chapter.getDescription())),
-                "未购票响应不得包含第二章剧情正文");
+        assertFalse(Boolean.TRUE.equals(detail.getChaptersList().get(0).getLocked()));
+        TopicChapterVO locked = detail.getChaptersList().get(1);
+        assertTrue(locked.getLocked());
+        assertEquals(LOCKED_CHAPTER_DESCRIPTION, locked.getDescription(), "预告保留章节介绍");
+        assertTrue(locked.getBlocks() == null || locked.getBlocks().isEmpty(), "锁定章节不得带剧情块");
+        assertNull(locked.getBlocksJson());
+        assertNull(locked.getAudioUrl());
+        assertNull(locked.getRouteGeometry());
+        assertFalse(locked.getNodes().isEmpty(), "锁定章节仍列出站点供路线/地图展示");
+        for (TopicNodeVO n : locked.getNodes()) {
+            assertNull(n.getCmsMemberTemplate(), "锁定章节节点不得带模板");
+            assertNull(n.getRegistrationMerchantList(), "锁定章节节点不得带商家");
+            assertNull(n.getTemplateId());
+            assertNull(n.getDescription());
+            assertNull(n.getHookText());
+            assertNull(n.getCardHookLong());
+            assertNull(n.getFragmentText());
+        }
     }
 
     @Test
