@@ -19,4 +19,6 @@
 - `js-scope-lint`、`js-orphan-handler-lint`、`setdata-dead-field-lint` 通过。
 - 未运行 `ci/xcx-check.sh` 与会写夹具的 selftest；未做模拟器截图（本环境无微信开发者工具）。
 
-STATUS: PARTIAL - 未经微信开发者工具真机/模拟器走查；ledger 单测复跑结果见 PR
+业主 2026-11-13 在 PR #817 评论：自由探索卡包页（卡包 → 逐张卡片 → 店铺与本店权益 → 到店三步）是已确认设计，不改；三处改动不合入，PR 已关闭，分支保留备查。
+
+STATUS: PARTIAL - 业主否决，PR #817 已关闭未合并；分支仅供备查
