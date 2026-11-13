@@ -20,6 +20,7 @@ const { summarizeOrderState, canRequestOrderRefund, formatRefundDeadline, isSelf
 const { resolveActualPaidAmount, isFreeOrder } = require('../../../../utils/order-actual-pay.js')
 const refundAmount = require('../../../utils/order-refund-amount.js')
 const { createCheckoutWorkflow, hasCompletePaymentParams, isCompletedZeroAmountOrder } = require('../../../../utils/checkout/checkout-workflow.js')
+const xpayPay = require('../../../../utils/checkout/selfplay-xpay-pay.js')
 const { createRegistrationPaymentVerifier } = require('../../../../utils/checkout/registration-payment-verifier.js')
 
 // 6-12:退款确认弹窗的截止话术只读后端返回的 refundInfo(可退状态与截止点都由后端 RefundPolicy 判)。
@@ -435,6 +436,16 @@ Component({
             method: 'POST',
             data: { id: payload.id },
             success(res) {
+              if (res && res.code == '200' && xpayPay.needsSigning(res.data)) {
+                // 服务端决定走虚拟支付:wx.login 后带 jsCode 重取参数
+                xpayPay.signIntent(app, wx, payload.id, function (r) {
+                  cyLoading.hide()
+                  if (r.ok) { cb({ ok: true, data: r.data }); return }
+                  that.setData({ isPaying: false })
+                  cb({ ok: false, msg: r.msg })
+                })
+                return
+              }
               cyLoading.hide()
               if (res && res.code == '200' && (hasCompletePaymentParams(res.data) || isCompletedZeroAmountOrder(res.data, payload.id))) {
                 cb({ ok: true, data: res.data })
@@ -454,6 +465,7 @@ Component({
           })
         },
         requestPayment(orderData, cb) {
+          if (xpayPay.isIntent(orderData)) { xpayPay.pay(app, wx, orderData, cb); return }
           const p = orderData.payParams
           wx.requestPayment({
             timeStamp: p.timeStamp,
@@ -470,9 +482,10 @@ Component({
         verifyPayment(data, cb) {
           const regId = data.registrationId || data.id
           if (!regId) { cb({ ok: false, errMsg: '缺少订单编号' }); return }
+          if (xpayPay.isIntent(data)) return xpayPay.verify(app, verifyRegistrationPayment, data, cb)
           return verifyRegistrationPayment({ registrationId: regId }, cb)
         },
-        isPayable(d) { return d && d.payParams && d.payParams.package },
+        isPayable(d) { return d && ((d.payParams && d.payParams.package) || xpayPay.hasVirtualPayment(d)) },
       })
     },
 

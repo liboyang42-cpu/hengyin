@@ -2333,6 +2333,30 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public CmsRegistration requirePayableForXpay(Long registrationId, Long memberId) {
+        RestoreDispatchGuard.requireDispatchAllowed();
+        CmsRegistration observed = cmsRegistrationMapper.selectCmsRegistrationById(registrationId);
+        if (observed == null || observed.getMemberId() == null || !observed.getMemberId().equals(memberId)) {
+            throw new RuntimeException("报名不存在或无权操作");
+        }
+        RegistrationTopicFence.LockedOrder locked = RegistrationTopicFence.lock(observed,
+                cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        for (CmsRegistration original : locked.rows()) {
+            if (verifiedPaymentFacts.hasConfirmedExternalSuccess(original.getRegistrationNo())) {
+                throw new IllegalStateException("原支付成功事实已保存，请恢复原业务结果，不能重新发起支付");
+            }
+        }
+        CmsRegistration registration = requirePayableRegistration(locked.registration(), memberId);
+        if (cmsRegistrationMapper.countNewerPaidSiblingOrders(registration) > 0) {
+            throw new com.chengyinhub.business.service.RegistrationPendingOrderException(
+                    com.chengyinhub.business.service.RegistrationPendingOrderException.ORDER_SUPERSEDED,
+                    registration.getId(), "这一场你已有一笔付款成功的订单，这一笔不能再支付");
+        }
+        return registration;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public void releasePaymentAttempt(Long registrationId) {
         RestoreDispatchGuard.requireDispatchAllowed();
         if (hasVerifiedSuccessBeforeRelease(registrationId))
@@ -3017,6 +3041,55 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         }
 
         return "SUCCESS";
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String completeXpayPayment(String registrationNo, String wxOrderId, long paidFeeFen) {
+        RestoreDispatchGuard.requireDispatchAllowed();
+        if (StringUtils.isBlank(registrationNo) || StringUtils.isBlank(wxOrderId)) return "FAIL";
+        CmsRegistration registration = getByRegistrationNo(registrationNo);
+        if (registration == null) return "FAIL";
+        if (!Long.valueOf(1L).equals(registration.getOwnerType())
+                || registration.getPurchaseKind() == null
+                || registration.getPurchaseKind() != PurchaseKind.SELF_PLAY_PASS
+                || !matchesFrozenWechatAmount(registration, Long.toString(paidFeeFen))) {
+            return registrationPaymentCallbackFailure(registrationNo, "xpay_amount_or_kind_mismatch");
+        }
+        RegistrationTopicFence.LockedOrder lockedOrder = RegistrationTopicFence.lock(registration,
+                cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        registration = lockedOrder.registration();
+        if (isSameCompletedPayment(registration, wxOrderId)) return "SUCCESS";
+        boolean payable = Integer.valueOf(1).equals(registration.getRegistrationStatus())
+                && (Integer.valueOf(0).equals(registration.getPaymentStatus())
+                    || Integer.valueOf(1).equals(registration.getPaymentStatus()));
+        if (!payable) return "CLOSED";
+        return "SUCCESS".equals(completePaymentSuccess(lockedOrder, wxOrderId))
+                ? "SUCCESS" : registrationPaymentCallbackFailure(registrationNo, "xpay_payment_state_conflict");
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean applyXpayChannelRefund(String registrationNo) {
+        RestoreDispatchGuard.requireDispatchAllowed();
+        CmsRegistration registration = StringUtils.isBlank(registrationNo) ? null : getByRegistrationNo(registrationNo);
+        if (registration == null) return false;
+        RegistrationTopicFence.LockedOrder lockedOrder = RegistrationTopicFence.lock(registration,
+                cmsRegistrationMapper, cmsActivityMapper, cmsTopicMapper);
+        registration = lockedOrder.registration();
+        if (Integer.valueOf(4).equals(registration.getPaymentStatus())
+                && Integer.valueOf(3).equals(registration.getRegistrationStatus())) return true;
+        if (cmsRegistrationMapper.claimRegistrationRefundedByGateway(
+                registration.getId(), "xpay-channel-refund", new Date()) == 0) {
+            return false;
+        }
+        perkLedgerService.releaseOnRefund(registration.getId(), EntitlementInvalidReason.REFUND);
+        merchantReferralBountyService.onRefund(registration.getVerifierId());
+        firstReviewPointsClawback.onRegistrationRefunded(registration);
+        // 渠道已把钱退给用户：结算冲回由财务按告警核对（不在此臆造冲销）。
+        alarmService.alarmThrottled("xpay.channel.refund", "自玩票渠道退款已关闭报名",
+                "registration=" + registration.getId() + " 请核对分成/结算冲回");
+        return true;
     }
 
     private String registrationPaymentCallbackFailure(String outTradeNo, String reason) {

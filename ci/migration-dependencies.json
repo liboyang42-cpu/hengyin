@@ -12,6 +12,7 @@
     "20261112_dec_c_payout_jobs": ["20261110_ecommerce_payout_wiring"],
     "20261112_chapter_reward": [],
     "20261110_platform_pass": [],
+    "20261113_selfplay_xpay": [],
     "20261113_platform_pass_hardening": ["20261110_platform_pass"],
     "20261109_play_help_audit_permission": ["20261013_admin_role_page_grants", "20261016_admin_role_payee_separation_forward"],
     "20261109_play_run_feedback": [],

@@ -45,6 +45,9 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     /** r1 F3:报价与建单同一道买家门禁(商家打烊、商家报俱乐部活动)。 */
     @Autowired
     private com.chengyinhub.business.service.IRegistrationOrderCreateGate registrationOrderCreateGate;
+    /** 自玩票虚拟支付(默认关闭):由服务端决定走 XPAY 还是原 JSAPI,客户端不能指定。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.platformpass.SelfPlayXpayService selfPlayXpay;
 
     @Override
     public RegistrationQuoteResult quote(Long memberId, RegistrationRequest request) {
@@ -119,6 +122,13 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
     @Override
     @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId, boolean appChannel) {
+        return retryPayment(memberId, registrationId, appChannel, null);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+    public RegistrationCheckoutResult retryPayment(Long memberId, Long registrationId, boolean appChannel,
+                                                   String jsCode) {
         RestoreDispatchGuard.requireDispatchAllowed();
         requireNoActiveTransaction();
         CmsRegistration observed = registrationService.selectCmsRegistrationById(registrationId);
@@ -140,6 +150,9 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
             data.put("paymentStatus", original.getPaymentStatus());
             data.put("registrationStatus", original.getRegistrationStatus());
             return new RegistrationCheckoutResult("报名完成确认成功", data);
+        }
+        if (usesXpay(observed)) {
+            return xpayIntent(memberId, observed, appChannel, jsCode);
         }
         if (!wechatPayService.isReady()) {
             throw new RegistrationCheckoutException(503, "支付服务暂不可用，请稍后再试");
@@ -189,6 +202,10 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         }
         if (memberId == null || !memberId.equals(observed.getMemberId())) {
             throw new RegistrationCheckoutException(403, "无权取消他人报名");
+        }
+        if (selfPlayXpay != null && !selfPlayXpay.readyToClose(observed.getId())) {
+            // 虚拟支付单可能正在付或已付:不凭本地状态直接取消。
+            throw new RegistrationCheckoutException(409, "订单正在支付或已支付，如需取消请在订单详情申请", "XPAY_PAYMENT_IN_PROGRESS");
         }
         CmsRegistration paying = isPaying(observed) ? observed : payingPrimaryOf(observed);
         if (paying == null) {
@@ -294,7 +311,10 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         List<CmsRegistration> registrations = order.getRegistrations();
         Map<String, Object> data = mapOrder(primary, registrations);
         if (positive(primary.getPayableAmount())) {
-            if (!order.isReplayed()) {
+            if (usesXpay(primary)) {
+                // 虚拟支付单建单只返回渠道标记;签名需要 jsCode,在 /pay 首次签发时冻结商品/环境/金额。
+                data.put("payChannel", "XPAY");
+            } else if (!order.isReplayed()) {
                 Integer paymentStatus = primary.getPaymentStatus();
                 if (paymentStatus == null || paymentStatus == 0 || paymentStatus == 1) {
                     if (!wechatPayService.isReady()) {
@@ -313,6 +333,40 @@ public class RegistrationCheckoutServiceImpl implements IRegistrationCheckoutSer
         String message = Integer.valueOf(1).equals(primary.getOwnerType())
                 ? "自玩通行证创建成功" : "报名创建成功";
         return new RegistrationCheckoutResult(message, data);
+    }
+
+    private boolean usesXpay(CmsRegistration registration) {
+        return selfPlayXpay != null
+                && selfPlayXpay.routeFor(registration) == com.chengyinhub.business.platformpass.SelfPlayXpayService.Route.XPAY;
+    }
+
+    /** 虚拟支付意图:准入校验与 JSAPI 同源(requirePayableForXpay),签发时冻结,返回 virtualPayment 参数。 */
+    private RegistrationCheckoutResult xpayIntent(Long memberId, CmsRegistration observed, boolean appChannel,
+                                                  String jsCode) {
+        if (appChannel) {
+            throw new RegistrationCheckoutException(409, "该订单需在小程序内支付", "XPAY_CHANNEL_ONLY");
+        }
+        CmsRegistration registration;
+        try {
+            registration = registrationService.requirePayableForXpay(observed.getId(), memberId);
+        } catch (com.chengyinhub.business.service.RegistrationPendingOrderException superseded) {
+            throw new RegistrationCheckoutException(409, superseded.getMessage(), superseded.getErrorCode(),
+                    superseded.getRegistrationId());
+        }
+        try {
+            Map<String, Object> data = mapOrder(registration, singleton(registration));
+            if (StringUtils.isBlank(jsCode)) {
+                // 未带 jsCode:只告知渠道,不签名、不冻结;客户端 wx.login 后带 jsCode 再调 /pay。
+                data.put("payChannel", "XPAY");
+                data.put("jsCodeRequired", true);
+                return new RegistrationCheckoutResult("需要虚拟支付签名", data);
+            }
+            data.putAll(selfPlayXpay.prepare(memberId, registration, jsCode));
+            return new RegistrationCheckoutResult("支付参数获取成功", data);
+        } catch (com.chengyinhub.business.platformpass.SelfPlayXpayException e) {
+            boolean unavailable = e.getCode().startsWith("XPAY_") || "OPENID_MISSING".equals(e.getCode());
+            throw new RegistrationCheckoutException(unavailable ? 503 : 409, e.getMessage(), e.getCode());
+        }
     }
 
     /**

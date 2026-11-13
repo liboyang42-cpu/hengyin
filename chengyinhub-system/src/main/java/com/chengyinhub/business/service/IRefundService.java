@@ -72,4 +72,10 @@ public interface IRefundService {
      * SUCCESS→原路成功(1);ABNORMAL/CLOSED→待人工(2);PROCESSING→保持。返回 true=已受理(可回 ACK)。
      */
     boolean handleRefundNotify(Map<String, String> facts);
+
+    /**
+     * 渠道（虚拟支付）确认原路退款已到账：把该报名处于「处理中」的已批准退款单置为成功（幂等，返回本次置位条数）。
+     * 与 JSAPI 退款回调的终态同一语义（含结算冲回与到账通知），但事实来源是服务端回查而非微信退款回调。
+     */
+    int settleChannelRefundSuccess(Long registrationId);
 }

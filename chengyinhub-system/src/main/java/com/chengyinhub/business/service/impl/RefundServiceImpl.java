@@ -606,6 +606,22 @@ public class RefundServiceImpl implements IRefundService {
         }
     }
 
+    @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public int settleChannelRefundSuccess(Long registrationId) {
+        if (registrationId == null) return 0;
+        CmsRegistration locked = lockRefundRegistration(registrationId);
+        int settled = 0;
+        for (RefundApplication row : registrationRefundHistory(locked.getId())) {
+            if (Integer.valueOf(1).equals(row.getStatus())
+                    && Integer.valueOf(RefundApplication.PAYOUT_PROCESSING).equals(row.getPayoutStatus())
+                    && updatePayoutTerminal(row, RefundApplication.PAYOUT_SUCCESS, "虚拟支付原路退款成功(渠道回查确认)")) {
+                settled++;
+            }
+        }
+        return settled;
+    }
+
     private boolean updatePayoutTerminal(RefundApplication refund, int expectedStatus, String message) {
         RestoreDispatchGuard.requireDispatchAllowed();
         if (refundApplicationMapper.updatePayoutResult(refund.getId(), expectedStatus, message) == 1) {
