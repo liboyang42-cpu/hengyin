@@ -542,6 +542,26 @@ class ClubSessionServiceImplTest {
         verify(activityService, org.mockito.Mockito.never()).insertCmsActivity(org.mockito.ArgumentMatchers.any());
     }
 
+    @Test
+    void freeExploreCannotOpenCrossClubEvenWithAnEffectiveCooperationOrder() {
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        topic.setClubId(999L);
+        IllegalStateException refused = assertThrows(IllegalStateException.class,
+                () -> service.open(request(), OWNER_ID, "主理人"));
+        assertEquals("自由探索只开放内容所属俱乐部的场次，不能跨俱乐部售票", refused.getMessage());
+        verify(activityService, never()).insertCmsActivity(any());
+        verify(ticketService, never()).copyTopicTicketsToActivity(any(), any(), any());
+    }
+
+    @Test
+    void ordinaryFreeExploreStillOpensItsOwningClubSessionWithoutInventingAnOrder() {
+        topic.setProductType(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE);
+        topic.setClubId(CLUB_ID);
+        when(orderMapper.selectEffectiveOrdersByTopicId(TOPIC_ID)).thenReturn(Collections.emptyList());
+        assertEquals(Long.valueOf(51L), service.open(request(), OWNER_ID, "主理人"));
+        verify(activityService).insertCmsActivity(any());
+    }
+
     private ClubSessionOpenRequest request() {
         ClubSessionOpenRequest request = new ClubSessionOpenRequest();
         request.setClubId(CLUB_ID);
