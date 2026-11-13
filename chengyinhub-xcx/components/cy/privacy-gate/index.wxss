@@ -1,19 +1,16 @@
 :host { display: block; }
 .pg { padding: var(--cy-space-2) 0 calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }
 .pg__lead { display: block; color: var(--cy-color-text-secondary); font-size: var(--cy-type-body); line-height: var(--cy-leading-loose); }
-.pg-check { display: block; margin-top: var(--cy-space-3); }
 /* 勾选行只占一行:字号收到 caption,两个书名号入口不折行 */
-.pg-check-row { display: flex; align-items: center; white-space: nowrap; font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); }
-.pg-checkbox { transform: scale(.8); margin-right: var(--cy-space-1); }
 .pg-doc { color: var(--cy-text-title); text-decoration: underline; }
 /* 两颗并排:不同意在左、同意在右(与 pages/privacy 同一裁决,同意是主动作给 flex:1.4)。
    原生 button 必须保留:open-type 只在原生 button 上生效 */
-.pg__actions { display: flex; align-items: center; gap: var(--cy-space-2-5); margin-top: var(--cy-space-4); }
-.pg__action { flex: 1; }
-.pg__agree { flex: 1.4; margin: 0; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-btn-solid-fg); background: var(--cy-btn-solid-bg); }
+.pg__agree { display: block; width: 100%; margin: var(--cy-space-4) 0 0; height: var(--cy-btn-h); line-height: var(--cy-btn-h); border-radius: var(--cy-radius-pill); font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-btn-solid-fg); background: var(--cy-btn-solid-bg); }
 .pg__agree::after { border: 0; }
 
 /* isolated 组件内全局 .cy-pressed 进不来,必须本地定义一份。
    只减淡不位移:位移要配 .cy-motion-reduced 兜底,而那个类挂在组件外的祖先上,
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
+.pg-terms { display: flex; flex-wrap: wrap; align-items: center; margin-top: var(--cy-space-3); font-size: var(--cy-font-caption); color: var(--cy-color-text-secondary); }
+.pg__decline { margin-top: var(--cy-space-3); text-align: center; font-size: var(--cy-font-caption); color: var(--cy-color-text-tertiary); padding: var(--cy-space-2) 0; }
