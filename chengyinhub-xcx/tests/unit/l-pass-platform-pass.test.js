@@ -12,7 +12,7 @@ const ov = {
   enabled: true,
   plans: [{ planCode: 'YEAR', title: '年卡', priceFen: 29900, validDays: 365 }, { planCode: 'MONTH', title: '月卡', priceFen: 3900, validDays: 30 }],
   libraryCount: 12,
-  channels: { jsapi: { available: true }, xpay: { available: true } },
+  channels: { xpay: { available: true } },
   holding: { active: false, validTo: null, coverageEnd: null }
 };
 
@@ -21,14 +21,23 @@ test('关闭时整页不出售', () => {
   assert.deepEqual(pp.passView(null), { enabled: false });
 });
 
-test('套餐卡:年卡默认选中、按天最便宜挂最划算、价格来自服务端分', () => {
-  const v = pp.passView(ov, '', 'android');
-  assert.equal(v.selected, 'YEAR');
-  assert.deepEqual(v.plans.map((p) => [p.code, p.price, p.best]), [['YEAR', '¥299', true], ['MONTH', '¥39', false]]);
-  assert.equal(v.plans[0].line, '年卡 · 每月不到 ¥25');
+test('套餐卡:第一版只卖月卡并默认选中,标签写 30天·不自动续费,价格来自服务端分', () => {
+  const v = pp.passView(ov, '', 'android', true);
+  assert.equal(v.selected, 'MONTH');
+  assert.deepEqual(v.plans.map((p) => [p.code, p.price, p.line, p.best]), [['MONTH', '¥39', '30天·不自动续费', false]]);
   assert.equal(v.count, 12);
-  assert.equal(v.buyLabel, '开通通行证');
-  assert.equal(v.terms, '开通后期间内可玩主题价格为 ¥0 · 不自动续费');
+});
+
+test('按钮写服务端金额:未持有「开通 ¥39」,持有「续期 ¥39」', () => {
+  assert.equal(pp.passView(ov, '', 'ios', true).buyLabel, '开通 ¥39');
+  const held = pp.passView(Object.assign({}, ov, { holding: { active: true } }), '', 'ios', true);
+  assert.equal(held.buyLabel, '续期 ¥39');
+});
+
+test('购买前须知:可玩主题 / 有效期取服务端,适用范围与退款规则取 terms,缺项不出', () => {
+  const v = pp.passView(Object.assign({}, ov, { terms: { seat: '仅限本人席位', refund: '开通后 7 天内可申请退款' } }), '', 'ios', true);
+  assert.deepEqual(v.facts.map((f) => [f.k, f.v]), [['可玩主题', '12 个主题'], ['适用范围', '仅限本人席位'], ['有效期', '30 天'], ['退款规则', '开通后 7 天内可申请退款']]);
+  assert.deepEqual(pp.passView(Object.assign({}, ov, { libraryCount: null }), '', 'ios', true).facts.map((f) => f.k), ['有效期']);
 });
 
 test('数量未知不写 0;没有在售套餐按钮不可点', () => {
@@ -36,23 +45,39 @@ test('数量未知不写 0;没有在售套餐按钮不可点', () => {
   assert.equal(v.count, null);
   assert.equal(v.buyOff, true);
   assert.equal(v.buyLabel, '暂未开售');
-  assert.equal(v.terms, '');
+  assert.deepEqual(v.facts, []);
 });
 
-test('渠道:iOS 只走虚拟支付,其他走 JSAPI;服务端不可用就不出可点按钮', () => {
-  assert.equal(pp.pickChannel('ios', ov.channels), 'XPAY');
-  assert.equal(pp.pickChannel('android', ov.channels), 'JSAPI');
-  assert.equal(pp.pickChannel('devtools', ov.channels), 'JSAPI');
-  assert.equal(pp.pickChannel('ios', { jsapi: { available: true }, xpay: { available: false } }), null, 'iOS 不能退回 JSAPI 卖虚拟商品');
-  const v = pp.passView(Object.assign({}, ov, { channels: { jsapi: { available: true }, xpay: { available: false } } }), '', 'ios');
+test('渠道:iOS 和安卓设备支持且服务端可用都走虚拟支付', () => {
+  assert.equal(pp.pickChannel('ios', ov.channels, true), 'XPAY');
+  assert.equal(pp.pickChannel('android', ov.channels, true), 'XPAY');
+});
+
+test('渠道:设备不支持虚拟支付 → 不出购买并给原因,不退回 JSAPI', () => {
+  assert.equal(pp.pickChannel('android', { jsapi: { available: true }, xpay: { available: true } }, false), null);
+  const v = pp.passView(ov, '', 'android', false);
   assert.equal(v.buyOff, true);
+  assert.equal(v.buyLabel, '当前微信版本暂不支持开通，请升级后再试');
+});
+
+test('渠道:服务端虚拟支付不可用 → 暂未开放,JSAPI 可用也不退回', () => {
+  const v = pp.passView(Object.assign({}, ov, { channels: { jsapi: { available: true }, xpay: { available: false } } }), '', 'ios', true);
+  assert.equal(v.buyOff, true);
+  assert.equal(v.buyLabel, '暂未开放开通');
+});
+
+test('渠道:Windows / 鸿蒙 / 开发者工具等未验证端不出购买', () => {
+  for (const pf of ['windows', 'mac', 'ohos', 'devtools', 'unknown']) {
+    assert.equal(pp.pickChannel(pf, ov.channels, true), null, pf);
+  }
+  assert.equal(pp.passView(ov, '', 'windows', true).buyLabel, '当前设备暂不支持开通');
 });
 
 test('持有中:按钮写续期,有效期取服务端 coverageEnd', () => {
-  const v = pp.passView(Object.assign({}, ov, { holding: { active: true, validTo: '2027-11-10 12:00:00', coverageEnd: '2027-12-10 12:00:00' } }), '', 'android');
+  const v = pp.passView(Object.assign({}, ov, { holding: { active: true, validTo: '2027-11-10 12:00:00', coverageEnd: '2027-12-10 12:00:00' } }), '', 'android', true);
   assert.equal(v.active, true);
   assert.equal(v.untilText, '2027.12.10');
-  assert.equal(v.buyLabel, '续期通行证');
+  assert.equal(v.buyLabel, '续期 ¥39');
 });
 
 test('主题库行:无 id / 名称不出,时长按分钟取整,不编城市', () => {
@@ -67,63 +92,120 @@ function fakeDeps(script) {
   return { calls, deps: { request, wx: script.wx, pollTimes: 2, wait: () => Promise.resolve() } };
 }
 
-test('JSAPI:SDK 成功后必须等服务端 PAID 才算开通', async () => {
-  let polls = 0;
+function xpayScript(extra) {
+  const state = { confirmPaid: false, polls: 0 };
   const script = (o) => {
-    if (o.url === '/api/platform-pass/orders') return { code: 200, data: { orderNo: 'PPO1', status: 'PENDING' } };
-    if (/\/pay$/.test(o.url)) return { code: 200, data: { orderNo: 'PPO1', payParams: { package: 'p' } } };
-    polls++;
-    return { code: 200, data: { orderNo: 'PPO1', status: polls >= 2 ? 'PAID' : 'PENDING', validTo: '2027-11-10 00:00:00' } };
+    if (extra && extra(o)) return extra(o);
+    if (o.url === '/api/platform-pass/orders') return { code: 200, data: { orderNo: 'PPO2', status: 'PENDING', channel: 'XPAY' } };
+    if (/\/pay$/.test(o.url)) { return { code: 200, data: { virtualPayment: { mode: 'short_series_goods', signData: '{}', paySig: 'a', signature: 'b' } } }; }
+    if (/\/confirm$/.test(o.url)) return { code: 200, data: { orderNo: 'PPO2', status: state.confirmPaid ? 'PAID' : 'PENDING' } };
+    state.polls++;
+    return { code: 200, data: { orderNo: 'PPO2', status: 'PENDING' } };
   };
-  script.wx = { requestPayment: (p) => p.success() };
-  const { deps, calls } = fakeDeps(script);
-  const r = await pp.purchase(deps, 'YEAR', 'JSAPI');
-  assert.equal(r.state, 'paid');
-  assert.equal(polls, 2);
-  assert.equal(calls[0].data.planCode, 'YEAR');
-  assert.match(calls[0].data.requestId, /^pp[a-z0-9]{8,}/);
-});
-
-test('JSAPI:SDK 成功但服务端一直未付 → 确认中,不冒充已开通', async () => {
-  const script = (o) => {
-    if (o.url === '/api/platform-pass/orders') return { code: 200, data: { orderNo: 'PPO1' } };
-    if (/\/pay$/.test(o.url)) return { code: 200, data: { payParams: { package: 'p' } } };
-    return { code: 200, data: { status: 'PENDING' } };
-  };
-  script.wx = { requestPayment: (p) => p.success() };
-  const r = await pp.purchase(fakeDeps(script).deps, 'YEAR', 'JSAPI');
-  assert.equal(r.state, 'pending');
-});
+  script.state = state;
+  script.wx = { login: (p) => p.success({ code: 'code-x' }), requestVirtualPayment: (p) => p.success() };
+  return script;
+}
 
 test('虚拟支付:先 wx.login 拿新 code,拉起 requestVirtualPayment,再服务端回查确认', async () => {
   let vp = null;
-  const script = (o) => {
-    if (o.url === '/api/platform-pass/orders') return { code: 200, data: { orderNo: 'PPO2' } };
-    if (/\/pay$/.test(o.url)) { assert.equal(o.data.jsCode, 'code-x'); return { code: 200, data: { virtualPayment: { mode: 'short_series_goods', signData: '{}', paySig: 'a', signature: 'b' } } }; }
-    if (/\/confirm$/.test(o.url)) return { code: 200, data: { orderNo: 'PPO2', status: 'PAID' } };
-    throw new Error('unexpected ' + o.url);
-  };
-  script.wx = { login: (p) => p.success({ code: 'code-x' }), requestVirtualPayment: (p) => { vp = p; p.success(); } };
+  const script = xpayScript();
+  script.state.confirmPaid = true;
+  script.wx.requestVirtualPayment = (p) => { vp = p; p.success(); };
   const r = await pp.purchase(fakeDeps(script).deps, 'MONTH', 'XPAY');
   assert.equal(r.state, 'paid');
   assert.equal(vp.mode, 'short_series_goods');
   assert.equal(vp.paySig, 'a');
 });
 
-test('用户取消:不回查不报错', async () => {
-  const script = (o) => {
-    if (o.url === '/api/platform-pass/orders') return { code: 200, data: { orderNo: 'PPO3' } };
-    if (/\/pay$/.test(o.url)) return { code: 200, data: { payParams: {} } };
-    throw new Error('should not poll');
-  };
-  script.wx = { requestPayment: (p) => p.fail({ errMsg: 'requestPayment:fail cancel' }) };
-  assert.equal((await pp.purchase(fakeDeps(script).deps, 'YEAR', 'JSAPI')).state, 'cancelled');
+test('虚拟支付:SDK 成功但服务端一直未付 → 确认中并带回订单号,不冒充已开通', async () => {
+  const r = await pp.purchase(fakeDeps(xpayScript()).deps, 'MONTH', 'XPAY');
+  assert.equal(r.state, 'pending');
+  assert.equal(r.orderNo, 'PPO2');
+});
+
+test('同一次购买意图重试沿用同一个 requestId', async () => {
+  const script = xpayScript();
+  const { deps, calls } = fakeDeps(script);
+  await pp.purchase(deps, 'MONTH', 'XPAY', { requestId: 'ppfixed12345' });
+  await pp.purchase(deps, 'MONTH', 'XPAY', { requestId: 'ppfixed12345' });
+  const ids = calls.filter((c) => c.url === '/api/platform-pass/orders').map((c) => c.data.requestId);
+  assert.deepEqual(ids, ['ppfixed12345', 'ppfixed12345']);
+  assert.match(calls[0].data.requestId, /^pp/);
+});
+
+test('不传 requestId 时每次生成新的', async () => {
+  const { deps, calls } = fakeDeps(xpayScript());
+  await pp.purchase(deps, 'MONTH', 'XPAY');
+  assert.match(calls[0].data.requestId, /^pp[a-z0-9]{8,}/);
+});
+
+test('非 XPAY 渠道一律拒绝,不发任何请求', async () => {
+  const { deps, calls } = fakeDeps(xpayScript());
+  const r = await pp.purchase(deps, 'MONTH', 'JSAPI');
+  assert.equal(r.state, 'failed');
+  assert.equal(calls.length, 0);
+});
+
+test('用户取消:不回查不报错,订单号带回', async () => {
+  const script = xpayScript();
+  script.wx.requestVirtualPayment = (p) => p.fail({ errCode: -2, errMsg: 'cancel' });
+  const r = await pp.purchase(fakeDeps(script).deps, 'MONTH', 'XPAY');
+  assert.deepEqual(r, { state: 'cancelled', orderNo: 'PPO2' });
+});
+
+test('回到订单:已付直接返回已开通,不再支付', async () => {
+  const { deps, calls } = fakeDeps(() => ({ code: 200, data: { orderNo: 'PPO2', status: 'PAID' } }));
+  const r = await pp.resume(deps, 'PPO2', true);
+  assert.equal(r.state, 'paid');
+  assert.equal(calls.length, 1);
+});
+
+test('回到订单:待支付且设备可付 → 继续拉起支付并回查', async () => {
+  const script = xpayScript((o) => (o.method === 'GET' && o.url.endsWith('PPO2') && !script.state.polls ? { code: 200, data: { orderNo: 'PPO2', status: 'PENDING', channel: 'XPAY' } } : null));
+  script.state.confirmPaid = true;
+  const r = await pp.resume(fakeDeps(script).deps, 'PPO2', true);
+  assert.equal(r.state, 'paid');
+});
+
+test('回到订单:设备不能付或历史非 XPAY 订单 → 只回查保持确认中,不支付', async () => {
+  const { deps, calls } = fakeDeps(() => ({ code: 200, data: { orderNo: 'PPO9', status: 'PENDING', channel: 'JSAPI' } }));
+  assert.equal((await pp.resume(deps, 'PPO9', true)).state, 'pending');
+  assert.equal((await pp.resume(deps, 'PPO9', false)).state, 'pending');
+  assert.ok(calls.every((c) => c.method === 'GET'));
+});
+
+test('回到订单:已取消 / 已退款订单不再支付', async () => {
+  const { deps } = fakeDeps(() => ({ code: 200, data: { orderNo: 'PPO9', status: 'CANCELLED' } }));
+  assert.equal((await pp.resume(deps, 'PPO9', true)).state, 'closed');
+});
+
+test('订单状态与退款进度只来自服务端字段,读不到的状态不编', () => {
+  const base = { orderNo: 'PPO1', priceFen: 3900, validDays: 30, paidTime: '2026-11-13 10:00:00', validTo: '2026-12-13 10:00:00' };
+  const st = (status, refund) => pp.orderRow(Object.assign({}, base, { status, refund }));
+  assert.equal(st('PENDING').state, '待支付');
+  assert.equal(st('PAID').state, '已开通');
+  assert.equal(st('CANCELLED').state, '已取消');
+  assert.equal(st('REFUNDING').state, '退款中');
+  assert.equal(st('REFUNDED').state, '已退款');
+  assert.equal(st('WHAT').state, '状态确认中');
+  assert.equal(st('PAID', { status: 'REQUESTED' }).refund, '退款申请已提交');
+  assert.equal(st('PAID', { status: 'REJECTED' }).refund, '退款申请未通过');
+  assert.equal(pp.orderRow(base).amount, '¥39');
+});
+
+test('订单可操作性:待支付可继续、已开通且无退款记录才可申请退款', () => {
+  const base = { orderNo: 'PPO1', priceFen: 3900, validDays: 30 };
+  assert.equal(pp.orderRow(Object.assign({ status: 'PENDING' }, base)).canResume, true);
+  assert.equal(pp.orderRow(Object.assign({ status: 'PAID' }, base)).canRefund, true);
+  assert.equal(pp.orderRow(Object.assign({ status: 'PAID', refund: { status: 'REQUESTED' } }, base)).canRefund, false);
+  assert.equal(pp.orderRow(Object.assign({ status: 'REFUNDED' }, base)).canRefund, false);
 });
 
 test('下单被拒:原话带回', async () => {
   const script = () => ({ code: 503, msg: '支付暂不可用' });
   script.wx = {};
-  const r = await pp.purchase(fakeDeps(script).deps, 'YEAR', 'JSAPI');
+  const r = await pp.purchase(fakeDeps(script).deps, 'MONTH', 'XPAY');
   assert.deepEqual(r, { state: 'failed', message: '支付暂不可用' });
 });
 
@@ -161,7 +243,7 @@ test('页面:新页在分包、插图用分包副本、新样式不加 keyframes
   const passes = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/passes/index.wxml'), 'utf8');
   assert.match(passes, /wx:if="\{\{member\}\}"/);
   const ok = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.js'), 'utf8');
-  assert.match(ok, /r\.state === 'paid'\) \{ this\._celebrate/);
+  assert.match(ok, /r\.state === 'paid'\) \{[^}]*this\._celebrate/);
   // 2026-11-11 l-icons:开通成功的 ps-success 层换成 subpackagePass/reveal 钥匙开场(完整版),成功动效仍只在 PAID 后出现
   assert.match(ok, /_celebrate\(order\) \{[\s\S]*wx\.redirectTo\(\{ url: REVEAL \+ '\?' \+ q\.join/);
   assert.doesNotMatch(fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.wxss'), 'utf8'), /\.ok\.is-reduced/);
@@ -179,4 +261,21 @@ test('cy-illus 每张图层都是合法 XML:同一标签无重复属性(data URI
       }
     }
   }
+});
+
+test('页面:订单详情页已登记、我的订单接入通行证订单、退款走服务端接口', () => {
+  const app = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8'));
+  const member = (app.subpackages || app.subPackages).find((s) => s.root === 'subpackageMember');
+  assert.ok(member.pages.includes('market/pass-order/index'));
+  const passes = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/passes/index.js'), 'utf8');
+  assert.match(passes, /\/api\/platform-pass\/orders/);
+  const order = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/pass-order/index.js'), 'utf8');
+  assert.match(order, /\/refund/);
+  assert.doesNotMatch(order, /requestPayment\(/);
+});
+
+test('页面:购买页不再引用普通 JSAPI 支付,确认中回到同一订单', () => {
+  const js = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.js'), 'utf8');
+  assert.doesNotMatch(js, /JSAPI|requestPayment\(/);
+  assert.match(js, /buyError: '确认中', confirmOrderNo/);
 });

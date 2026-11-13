@@ -1,0 +1,29 @@
+<!-- 通行证订单详情:状态与退款进度只读服务端订单;沿用我的订单的分组行样式 -->
+<view class="theme-dark mk"><cy-access-gate kind="login" />
+  <cy-toast id="cy-toast" />
+  <view class="mk__frame" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="通行证订单" safe-top="{{false}}" />
+    <view class="mk__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
+      <cy-error wx:elif="{{state === 'error'}}" title="加载失败" retry="重试" bind:retry="load" />
+      <block wx:else>
+        <view class="mk-group">
+          <view class="mk-row"><view class="mk-row__main"><text class="mk-row__title">{{row.name}}</text><text class="mk-row__sub">{{row.key}}</text></view><text class="mk-row__amt">{{row.amount}}</text></view>
+          <view class="mk-row"><text class="mk-row__title">订单状态</text><text class="mk-row__sub">{{row.state}}</text></view>
+          <view class="mk-row" wx:if="{{row.refund}}"><text class="mk-row__title">退款进度</text><text class="mk-row__sub">{{row.refund}}</text></view>
+          <view class="mk-row" wx:if="{{row.validTo}}"><text class="mk-row__title">有效期至</text><text class="mk-row__sub">{{row.validTo}}</text></view>
+          <view class="mk-row" wx:if="{{row.time}}"><text class="mk-row__title">支付时间</text><text class="mk-row__sub">{{row.time}}</text></view>
+        </view>
+        <cy-field wx:if="{{refunding}}" variant="textarea" label="退款原因" placeholder="请填写退款原因" value="{{reason}}" maxlength="200" show-count bind:input="onReason" />
+        <cy-inline-error wx:if="{{notice}}" kind="field" title="{{notice}}" />
+        <view class="mk-btn {{busy ? 'is-off' : ''}}" wx:if="{{row.canResume}}" bindtap="onResume" aria-role="button" aria-label="继续支付" hover-class="cy-pressed" hover-stay-time="80">{{busy ? '处理中…' : '继续支付'}}</view>
+        <view class="mk-btn" wx:if="{{row.canRefund && !refunding}}" bindtap="onRefund" aria-role="button" aria-label="申请退款" hover-class="cy-pressed" hover-stay-time="80">申请退款</view>
+        <block wx:if="{{refunding}}">
+          <view class="mk-btn {{busy ? 'is-off' : ''}}" bindtap="onRefundSubmit" aria-role="button" aria-label="提交申请" hover-class="cy-pressed" hover-stay-time="80">{{busy ? '提交中…' : '提交申请'}}</view>
+          <view class="mk-btn mk-btn--ghost" bindtap="onRefundCancel" aria-role="button" aria-label="取消" hover-class="cy-pressed" hover-stay-time="80">取消</view>
+        </block>
+      </block>
+    </view>
+  </view>
+</view>

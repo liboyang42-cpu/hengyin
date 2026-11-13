@@ -45,7 +45,19 @@
         </view>
       </block>
       <block wx:elif="{{tab === 'orders'}}">
-        <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!orders.length}}" kind="empty" title="还没有通行证订单" />
+        <cy-empty fill class="cy-fill-state" size="lg" wx:if="{{!orders.length && !passOrders.length}}" kind="empty" title="还没有通行证订单" />
+        <view class="mk-group" wx:if="{{passOrders.length}}">
+          <view class="mk-row" wx:for="{{passOrders}}" wx:key="key" data-no="{{item.key}}" bindtap="openPassOrder" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="{{item.name}} {{item.state}}">
+            <view class="mk-row__main">
+              <text class="mk-row__title">{{item.name}}</text>
+              <text class="mk-row__sub">{{item.refund || item.state}}</text>
+            </view>
+            <view class="mk-row__side">
+              <text class="mk-row__amt" wx:if="{{item.amount}}">{{item.amount}}</text>
+              <text class="mk-row__sub" wx:if="{{item.time}}">{{item.time}}</text>
+            </view>
+          </view>
+        </view>
         <view class="mk-group" wx:if="{{orders.length}}">
           <view class="mk-row" wx:for="{{orders}}" wx:key="key">
             <view class="mk-row__main">
