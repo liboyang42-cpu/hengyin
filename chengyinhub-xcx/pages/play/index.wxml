@@ -477,7 +477,10 @@
       <text class="life-arc__quote">“{{item.text}}”</text>
       <text class="life-arc__cap">{{item.title}}</text>
     </view>
-    <text class="life-arc__walk" wx:if="{{previewEnding.archive.stations.length}}">走过 · {{previewEnding.archive.walkText}}</text>
+    <view class="life-arc__walk" wx:if="{{previewEnding.archive.stations.length}}">
+      <text class="life-arc__h">走过</text>
+      <view class="life-arc__row" wx:for="{{previewEnding.archive.stations}}" wx:key="*this"><text class="life-arc__v">{{item}}</text></view>
+    </view>
   </view>
   <view class="pv-ending__go" wx:if="{{previewEnding.real}}" bindtap="continueLifeEnding" aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>
   </view>
