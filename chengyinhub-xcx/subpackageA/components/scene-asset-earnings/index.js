@@ -143,6 +143,7 @@ Component({
     openAnalysis() { if (!this._hasCurrentBalance()) return; wx.navigateTo({ url: '/subpackageA/pages/assetcenter/analysis/index' + (this.data.theme === 'merchant' ? '?theme=merchant' : '') }) },
     openMore() { if (this._hasCurrentBalance()) this.setData({ moreShow: true }) },
     closeMore() { this.setData({ moreShow: false }) },
+    openPayoutReceiver() { if (!this._hasCurrentBalance()) return; this.setData({ moreShow: false }); wx.navigateTo({ url: '/pages/club/payout-receiver/index?mine=1' }) },
     openClubSettlement() { if (!this._hasCurrentBalance()) return; this.setData({ moreShow: false }); wx.navigateTo({ url: '/pages/club/settlement/index?mine=1' }) },
     openSettlement() { if (!this._hasCurrentBalance()) return; this.setData({ moreShow: false }); wx.navigateTo({ url: '/pages/merchant/ledger/index?view=settlement' }) },
     _readFailureState(res, statusCode) {

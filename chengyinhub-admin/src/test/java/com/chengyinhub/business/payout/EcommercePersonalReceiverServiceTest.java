@@ -24,13 +24,83 @@ class EcommercePersonalReceiverServiceTest {
     private static final String OPENID = "fresh-mini-owner";
 
     @Test
-    void switchOffRejectsBeforeDatabaseOrWechatEvenWithValidConsent() {
+    void switchOffBindRecordsConsentWithoutProviderCallAndStatusReportsPayoutsNotStarted() {
         Fixture f = new Fixture();
         when(f.switches.personalClubEnabled()).thenReturn(false);
-        assertEquals("PERSONAL_RECEIVER_SWITCH_OFF", assertThrows(ServiceException.class,
-                () -> f.bind()).getMessage());
-        assertEquals(Map.of("available", false, "receiverState", "SWITCH_OFF"), f.service.ownerStatus(MEMBER, CLUB));
-        verifyNoInteractions(f.clubs, f.members, f.sessions, f.gateway, f.receivers);
+        when(f.receivers.insertConsented(any())).thenReturn(1);
+        Map<String, Object> result = f.bind();
+        ArgumentCaptor<EcomPersonalReceiver> saved = ArgumentCaptor.forClass(EcomPersonalReceiver.class);
+        verify(f.receivers).insertConsented(saved.capture());
+        assertEquals(OPENID, saved.getValue().getOpenid());
+        assertEquals("CONSENTED", saved.getValue().getState());
+        verifyNoInteractions(f.gateway);
+        verify(f.receivers, never()).insertVerified(any());
+        assertEquals("CONSENTED", result.get("receiverState"));
+        assertEquals(false, result.get("payoutEnabled"));
+        assertEquals(false, result.get("paused"));
+        assertFalse(result.containsKey("openid"));
+    }
+
+    @Test
+    void consentedRowIsUpgradedThroughProviderOnceSwitchIsOn() {
+        Fixture f = new Fixture();
+        EcomPersonalReceiver row = f.verified(OPENID);
+        row.setState("CONSENTED");
+        row.setConsentedAt(new java.util.Date(1000));
+        when(f.receivers.selectByMemberAndAppidForUpdate(MEMBER, APPID)).thenReturn(row);
+        when(f.receivers.promoteConsentedToVerified(any())).thenReturn(1);
+        Map<String, Object> result = f.bind();
+        verify(f.gateway).addPersonalReceiver(OPENID, APPID);
+        verify(f.receivers).promoteConsentedToVerified(any());
+        verify(f.receivers, never()).insertVerified(any());
+        assertEquals("VERIFIED", result.get("receiverState"));
+        assertEquals(false, result.get("paused"));
+    }
+
+    @Test
+    void statusShowsPausedWhenSwitchOnButBindingNotConfirmed() {
+        Fixture f = new Fixture();
+        EcomPersonalReceiver row = f.verified(OPENID);
+        row.setState("CONSENTED");
+        when(f.receivers.selectByMemberAndAppid(MEMBER, APPID)).thenReturn(row);
+        Map<String, Object> status = f.service.ownerStatus(MEMBER, CLUB);
+        assertEquals(true, status.get("paused"));
+        assertEquals("PERSONAL_BINDING_REQUIRED", status.get("pauseReason"));
+        when(f.receivers.selectByMemberAndAppid(MEMBER, APPID)).thenReturn(null);
+        assertEquals("UNBOUND", f.service.ownerStatus(MEMBER, CLUB).get("receiverState"));
+    }
+
+    @Test
+    void statusWorksWithSwitchOffAndReportsPayoutDisabled() {
+        Fixture f = new Fixture();
+        when(f.switches.personalClubEnabled()).thenReturn(false);
+        when(f.receivers.selectByMemberAndAppid(MEMBER, APPID)).thenReturn(f.verified(OPENID));
+        Map<String, Object> status = f.service.ownerStatus(MEMBER, CLUB);
+        assertEquals(true, status.get("available"));
+        assertEquals(false, status.get("payoutEnabled"));
+        assertEquals(false, status.get("paused"));
+    }
+
+    @Test
+    void unbindDeletesOnlyWhenNoPayoutIsInFlightAndOnlyForOwner() {
+        Fixture f = new Fixture();
+        when(f.receivers.selectByMemberAndAppidForUpdate(MEMBER, APPID)).thenReturn(f.verified(OPENID));
+        when(f.receivers.deleteReceiverIfIdle(MEMBER, APPID)).thenReturn(0);
+        assertEquals(EcommercePersonalReceiverService.IN_FLIGHT_MESSAGE,
+                assertThrows(ServiceException.class, () -> f.service.unbind(MEMBER, CLUB)).getMessage());
+        when(f.receivers.deleteReceiverIfIdle(MEMBER, APPID)).thenReturn(1);
+        assertEquals("UNBOUND", f.service.unbind(MEMBER, CLUB).get("receiverState"));
+        f.club.setMemberId(99L);
+        assertThrows(ServiceException.class, () -> f.service.unbind(MEMBER, CLUB));
+        assertThrows(ServiceException.class, () -> f.service.unbind(null, CLUB));
+        verify(f.receivers, times(2)).deleteReceiverIfIdle(MEMBER, APPID);
+    }
+
+    @Test
+    void unbindWithoutBindingIsANoop() {
+        Fixture f = new Fixture();
+        assertEquals("UNBOUND", f.service.unbind(MEMBER, CLUB).get("receiverState"));
+        verify(f.receivers, never()).deleteReceiverIfIdle(any(), any());
     }
 
     @Test

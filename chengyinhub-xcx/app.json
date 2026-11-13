@@ -91,6 +91,7 @@
         "group-code/index",
         "join-requests/index",
         "notify/index",
+        "payout-receiver/index",
         "roles/index",
         "settlement/index",
         "topic-detail/index",

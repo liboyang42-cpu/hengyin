@@ -34,6 +34,17 @@ class ApiClubPersonalReceiverRoutesTest {
         verify(service).ownerStatus(55L, 9L);
     }
 
+    @Test
+    void unbindUsesAuthenticatedSubjectOnly() {
+        EcommercePersonalReceiverService service = mock(EcommercePersonalReceiverService.class);
+        ApiClubController.PersonalReceiverBindRequest request = new ApiClubController.PersonalReceiverBindRequest();
+        request.setClubId(9L);
+        Map<String, Object> status = Map.of("receiverState", "UNBOUND");
+        when(service.unbind(55L, 9L)).thenReturn(status);
+        assertEquals(status, authenticated(service).unbindPersonalReceiver(request).get("data"));
+        verify(service).unbind(55L, 9L);
+    }
+
     private static ApiClubController authenticated(EcommercePersonalReceiverService service) {
         ApiClubController controller = new ApiClubController() {
             @Override

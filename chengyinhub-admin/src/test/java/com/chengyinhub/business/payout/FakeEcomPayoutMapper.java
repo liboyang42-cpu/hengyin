@@ -175,6 +175,10 @@ public class FakeEcomPayoutMapper implements EcomPayoutMapper {
     @Override public com.chengyinhub.business.domain.EcomPersonalReceiver selectByMemberAndAppid(Long m, String a) { throw unexpected(); }
     @Override public com.chengyinhub.business.domain.EcomPersonalReceiver selectByMemberAndAppidForUpdate(Long m, String a) { throw unexpected(); }
     @Override public int insertVerified(com.chengyinhub.business.domain.EcomPersonalReceiver r) { throw unexpected(); }
+    @Override public int insertConsented(com.chengyinhub.business.domain.EcomPersonalReceiver r) { throw unexpected(); }
+    @Override public int promoteConsentedToVerified(com.chengyinhub.business.domain.EcomPersonalReceiver r) { throw unexpected(); }
+    @Override public int countPersonalPayoutsInFlight(Long memberId) { throw unexpected(); }
+    @Override public int deleteReceiverIfIdle(Long memberId, String appid) { throw unexpected(); }
     @Override public List<Long> selectMissingActivityIds(int limit) { throw unexpected(); }
     @Override public List<EcomOrderSeller> selectPaidTrades(Long activityId) { throw unexpected(); }
     @Override public List<EcomLedgerComponent> selectComponents(Long activityId, Long registrationId) { throw unexpected(); }
