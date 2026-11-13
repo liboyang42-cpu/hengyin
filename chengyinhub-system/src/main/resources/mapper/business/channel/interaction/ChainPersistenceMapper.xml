@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.interaction.ChainPersistenceMapper">
+    <resultMap id="receipt" type="com.chengyinhub.business.service.channel.interaction.ChainReceiptRecord">
+        <id property="receiptId" column="receipt_id"/>
+        <result property="chainId" column="chain_id"/>
+        <result property="conversationId" column="conversation_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="requestId" column="request_id"/>
+        <result property="action" column="action"/>
+        <result property="content" column="content"/>
+        <result property="expectedChainVersion" column="expected_chain_version"/>
+        <result property="expectedEntryVersion" column="expected_entry_version"/>
+        <result property="expectedActiveCount" column="expected_active_count"/>
+        <result property="nextActiveCount" column="next_active_count"/>
+        <result property="effect" column="effect"/>
+    </resultMap>
+    <select id="lockChain" resultType="java.util.LinkedHashMap">
+        SELECT id,conversation_id,message_id,max_slots,active_count,status,deadline_at,version
+        FROM im_chain WHERE id=#{chainId} AND conversation_id=#{conversationId} FOR UPDATE
+    </select>
+    <select id="lockEntry" resultType="java.util.LinkedHashMap">
+        SELECT id,chain_id,member_id,content,position,status,request_id,version
+        FROM im_chain_entry WHERE chain_id=#{chainId} AND member_id=#{memberId} FOR UPDATE
+    </select>
+    <select id="findOriginal" resultMap="receipt">
+        SELECT receipt_id,chain_id,conversation_id,member_id,request_id,action,content,
+               expected_chain_version,expected_entry_version,expected_active_count,next_active_count,effect
+        FROM im_chain_command_receipt WHERE chain_id=#{chainId} AND request_id=#{requestId} FOR UPDATE
+    </select>
+    <update id="updateCount">
+        UPDATE im_chain SET active_count=#{proposal.nextActiveCount}, version=version+1
+        WHERE id=#{proposal.chainId} AND conversation_id=#{proposal.conversationId}
+          AND version=#{proposal.expectedChainVersion} AND version &lt; 9223372036854775807
+          AND active_count=#{proposal.expectedActiveCount}
+          AND #{proposal.nextActiveCount} BETWEEN 0 AND max_slots
+          AND ((#{proposal.effect} IN ('INSERT_RELATION','REACTIVATE_RELATION')
+                  AND #{proposal.nextActiveCount}=active_count+1 AND status='OPEN'
+                  AND UTC_TIMESTAMP(3) &lt; deadline_at)
+            OR (#{proposal.effect}='WITHDRAW_RELATION' AND #{proposal.nextActiveCount}=active_count-1))
+    </update>
+    <insert id="insertEntry">
+        INSERT INTO im_chain_entry(chain_id,member_id,content,position,status,request_id,version)
+        SELECT #{command.chainId},#{command.memberId},#{command.content},#{position},'ACTIVE',#{command.requestId},1
+        WHERE #{command.action}='JOIN' AND #{position} &gt; 0
+    </insert>
+    <update id="updateEntry">
+        UPDATE im_chain_entry SET
+        <choose>
+            <when test="proposal.effect.name() == 'REACTIVATE_RELATION'">status='ACTIVE', content=#{command.content},</when>
+            <otherwise>status='WITHDRAWN',</otherwise>
+        </choose>
+        request_id=#{command.requestId}, version=version+1
+        WHERE chain_id=#{proposal.chainId} AND member_id=#{proposal.memberId}
+          AND chain_id=#{command.chainId} AND member_id=#{command.memberId}
+          AND #{proposal.conversationId}=#{command.conversationId}
+          AND version=#{proposal.expectedEntryVersion} AND version &lt; 9223372036854775807
+        <choose>
+            <when test="proposal.effect.name() == 'REACTIVATE_RELATION'">AND status='WITHDRAWN' AND #{command.action}='JOIN'</when>
+            <when test="proposal.effect.name() == 'WITHDRAW_RELATION'">AND status='ACTIVE' AND #{command.action}='WITHDRAW'</when>
+            <otherwise>AND 1=0</otherwise>
+        </choose>
+    </update>
+    <insert id="insertReceipt">
+        INSERT INTO im_chain_command_receipt(receipt_id,chain_id,conversation_id,member_id,
+            request_id,action,content,expected_chain_version,expected_entry_version,
+            expected_active_count,next_active_count,effect)
+        VALUES(#{receiptId},#{chainId},#{conversationId},#{memberId},#{requestId},#{action},#{content},
+            #{expectedChainVersion},#{expectedEntryVersion},#{expectedActiveCount},#{nextActiveCount},#{effect})
+    </insert>
+    <insert id="insertEvent">
+        INSERT INTO im_chain_entry_event(chain_id,receipt_id,effect)
+        SELECT chain_id,receipt_id,effect FROM im_chain_command_receipt
+        WHERE chain_id=#{chainId} AND receipt_id=#{receiptId}
+    </insert>
+</mapper>
