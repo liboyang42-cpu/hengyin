@@ -26,6 +26,12 @@
 - 测试：`r5WrongAnswerUsesOneImmutableServerOutcomeInsteadOfLegacyCompletion` 参数化 maxTries 0/1：0 时连错两次仍 RUNNING 且不写结果，答对完成；1 时一次错即 FAILED。
 
 ## 检查结果
-- 本地（不跑 Java，仓库约束要求在 VPS/CI）：`node --test` 新增/改动的 JS 用例通过。Java 用例与 UI-GATE-0 等由 PR 检查执行，见下方 PR 状态。
-- 未改 `ci/architecture/*`、workflows、`ui-integrity-baseline.js`；未新增 migration。
+- PR #825 在 79997033 上全部检查通过（32 success、1 skipped，无失败）：Backend tests、Mini program unit shard 1–20、Mini program static gates / checks、Fast gates、Migration layout / safety gate、Secret scan、Followup 39、Funds IT 等。
+- CI 过程中暴露并已修复的真实问题（均为同一改动的联动，没有压制任何检查）：
+  - 台账计数随新增的 `bind:continue` +1（事件合同 3003、本地事件合同 2904、控件 6044），台账已用生成器重建；`ui-integrity-baseline.js`、`ci/architecture/*`、workflows 均未改动。
+  - 依赖“一次答错即终局”的单测/集成夹具改用 `maxTries 1`（`ThemeRuntimeMySqlIT`、`GenericGameplayHttpE2eIT`、`AdvancedGameRuntimeServiceImplTest`）。
+  - 实体免费收集的店内已核验凭证仍豁免开局闸（仅此一项）；LINEAR 路线上的照片/扫码玩法凭证与“玩法已解开”不再豁免，相应用例同步。
+  - master 前进（#824）导致 `Fast gates` 的合成合并检出不一致，已合并 master 后重跑通过。
+- 本地仅跑了 JS 单测；Java 与 UI-GATE-0 等由 CI 执行。未新增 migration，未跑 `ci/xcx-check.sh`。
 
+STATUS: DONE
