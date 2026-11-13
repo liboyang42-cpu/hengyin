@@ -4,10 +4,10 @@
     <view class="sf__e {{entering ? 'is-pre' : ''}}" style="transition-delay: {{index * 70}}ms;"><view class="sf__in {{focus === index ? 'is-flip' : ''}}">
       <view class="sf__f">
         <image wx:if="{{item.img}}" class="sf__img" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
-        <text class="sf__lb">{{item.label}}</text>
+        <text class="sf__lb">{{item.label || item.title}}</text>
       </view>
       <view class="sf__b">
-        <text class="sf__bk">{{item.label}}</text>
+        <text class="sf__bk" wx:if="{{item.label}}">{{item.label}}</text>
         <text class="sf__bt">{{item.title}}</text>
         <text class="sf__bp">{{item.excerpt}}</text>
       </view>

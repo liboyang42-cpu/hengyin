@@ -20,6 +20,7 @@ function loadPage() {
     Page(value) { definition = value },
     require(request) {
       if (request === '../shelf/art.js') return { topicArt: () => null }
+      if (request === './intro.js') return require('../../pages/templatedetail/topic-preview/intro.js')
       if (request === '../../../utils/motion-preference.js') return { readReducedMotion: () => true }
       throw new Error('Unexpected dependency: ' + request)
     },

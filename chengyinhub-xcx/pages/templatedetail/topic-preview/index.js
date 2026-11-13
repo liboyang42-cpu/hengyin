@@ -2,6 +2,7 @@
 // 点最前面那张翻面(放大 1.25,两侧邻卡仍露出);下方只有标题、✓ 清单和「用这个模板」。
 // 主题模板没有场地：只讲玩法与故事，不展示里程、站点或位置信息。
 const art = require('../shelf/art.js');
+const { buildIntro } = require('./intro.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 
 const app = getApp();
@@ -62,6 +63,7 @@ Page({
     glow: 'hsla(270,45%,34%,.85)',
     cards: [],
     checks: [],
+    intro: { desc: '', chapters: [] },
     sel: 0,
     flip: false,
     entered: false,
@@ -122,6 +124,7 @@ Page({
           cover: a ? a.cover : (info.imgUrl || ''),
           glow: a ? a.glow : that.data.glow,
           checks: buildChecks(info, cards.length - 1),
+          intro: buildIntro(info),
           sel: 0,
           flip: false,
           entered: false

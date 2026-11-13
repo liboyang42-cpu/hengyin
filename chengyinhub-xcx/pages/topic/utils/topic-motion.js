@@ -82,13 +82,21 @@ function pickChapterImages(chapters, cover) {
 }
 
 /* 章节导读:取章节简介,没有就取第一段文本块的开头;只给导读,整章剧情留给游玩 */
+/* 题面/观察位置/密码表属于游玩内容,导读里一律不出(解锁与未解锁同口径):遇到标记就在标记前截断 */
+const PUZZLE_MARK = /【\s*(题目|观察位置|谜题|提示|线索|密码表?|密文|答案)[^】]*】|(?:^|\s)(?:题目|观察位置)[:：]|密码表|对照表|[A-Z]\s*=\s*\d/;
+function stripPuzzle(src) {
+  const m = PUZZLE_MARK.exec(src);
+  return m ? src.slice(0, m.index).trim() : src;
+}
+
 function chapterGuide(chapter) {
   const MAX = 60;
-  let src = text(chapter && chapter.description);
+  let src = stripPuzzle(text(chapter && chapter.description));
   if (!src) {
     const blocks = (chapter && chapter.blocks) || [];
     for (const b of Array.isArray(blocks) ? blocks : []) {
-      if (b && b.type === 'text' && text(b.content)) { src = text(b.content); break; }
+      const t = b && b.type === 'text' ? stripPuzzle(text(b.content)) : '';
+      if (t) { src = t; break; }
     }
   }
   src = src.replace(/\s+/g, ' ');
@@ -109,18 +117,20 @@ function progressFallback(info) {
 }
 
 const CN = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
-function chapterLabel(i, n) {
+/* 章名自带位置语义(结局/终章/尾声/序章)或「第X章」时,不再加序号前缀 */
+const SELF_ORDINAL = /^(第\s*[0-9一二三四五六七八九十百零两]+\s*章|结局|终章|序章|尾声)/;
+function chapterLabel(i, n, name) {
+  if (name !== undefined && SELF_ORDINAL.test(text(name))) return '';
   if (i === n - 1 && n > 2) return '终章';
   return '第' + (CN[i] || String(i + 1)) + '章';
 }
 
-/* 章节标题:内容里名字已自带「第X章」「终章」序号时不再加前缀,避免「第一章 · 第一章 …」 */
+/* 章节标题:内容里名字已自带「第X章」「终章」「结局」序号时不再加前缀,避免「第一章 · 第一章 …」「第四章 · 结局 · …」 */
 function chapterHeading(i, n, name) {
   const t = text(name);
-  const lead = chapterLabel(i, n);
-  if (!t) return lead;
-  if (/^(第\s*[0-9一二三四五六七八九十百零两]+\s*章|终章|序章|尾声)/.test(t)) return t;
-  return lead + ' · ' + t;
+  if (!t) return chapterLabel(i, n);
+  if (SELF_ORDINAL.test(t)) return t;
+  return chapterLabel(i, n) + ' · ' + t;
 }
 
 /* 故事卡:每章一张。自由探索没有章节顺序,用商家当「护照页」。 */
@@ -135,7 +145,7 @@ function buildStoryCards(info, merchantCards) {
   const imgs = pickChapterImages(chapters, d.imgUrl);
   return chapters.map((c, i) => ({
     img: imgs[i],
-    label: chapterLabel(i, chapters.length),
+    label: chapterLabel(i, chapters.length, c && c.name),
     title: text(c && c.name),
     excerpt: chapterGuide(c),
     locked: !!(c && c.locked === true),
