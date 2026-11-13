@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from chain_lib import admin_token, db, http, q, readback, show, step
 
-CLUB_ID = 7002
+CLUB_ID = 7001  # 与 chain_sale_close.EXEC_CLUB_ID 同一个执行俱乐部(内容所属俱乐部,P-01 起为 7001)
 QUALITY_DIMENSIONS = ("DELIVERY_SAFETY", "PLAYER_EXPERIENCE", "CONTENT_REPORT")
 
 
