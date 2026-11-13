@@ -2482,6 +2482,11 @@ Page({
       && (this.data.nodes || []).some((node) => Number(node.merchantId) > 0
         && node.arrived && node.hasGame && node.hasTemplate && !node.gameDone);
   },
+  /** 自由探索里没配玩法的合作店:只有本店权益,没有游戏面板可进。 */
+  _isPerkOnlyNode(node) {
+    return !!node && Number(this.data.mode) === 2 && Number(node.merchantId) > 0
+      && !node.hasGame && !node.hasTemplate && !node.hasAdvanced;
+  },
   _heroEntryDisabled(node) {
     // 自由探索核销是服务开始，已到店的未完成玩法仍走原游戏入口。
     return !!node.done && !(Number(this.data.mode) === 2 && Number(node.merchantId) > 0
@@ -2505,6 +2510,7 @@ Page({
       chapterId: node.chapterId, isMerchant: Number(node.merchantId) > 0,
       name: node.name, imgUrl: String(node.imgUrl || '').split(',')[0], done: !!node.done,
       entryDisabled: this._heroEntryDisabled(node),
+      perkOnly: this._isPerkOnlyNode(node),
       // ① 章节
       chapMeta: chap ? ('本章 · ' + (chap.meta || '')) : '',
       chapNo: chap ? (chap.meta || '') : '',      // 卡面眉标用的是不带「本章」前缀的那一版
@@ -2592,6 +2598,8 @@ Page({
     this.setData({ hero: { show: false, open: false, node: null, style: '', bodyTop: 0, ry: 0, spun: false, turned: false, sx: 0, ss: '1', faded: false, collapsed: false, scrollTop: 0 } });
     // 「开始互动 获得奖励!」直接进玩法面板,不再经商家页中转 ——
     // 中间那一页除了再点一次「开始」之外没有别的事可做(用户 2026-09-08 定)。
+    // 自由探索里没配玩法的店:不进玩法面板,去商家页办本店权益核销
+    if (node && this._isPerkOnlyNode(node)) { wx.navigateTo({ url: '/pages/play/merchant/index?nodeId=' + id }); return; }
     if (node) { this.startGame(node); return; }
     wx.navigateTo({ url: '/pages/play/merchant/index?nodeId=' + id });   // 拿不到节点时的兜底
   },
@@ -7512,7 +7520,18 @@ Page({
   openJournalFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openJournal()); },
   /* 自由探索抽屉两行(原型 x-tools):我的权益 = 这趟已领到的券;
      这个主题是什么 = 主题正文那一屏(mode2 没有章节,openChapterFull 铺的就是主题介绍)。 */
-  openRightsFromTools() { this.setData({ sessionToolsOpen: false }, () => this.goCouponWallet()); },
+  openRightsFromTools() {
+    // 自由探索且有报名单:展示本单每家店的权益(待使用/已使用,取自页内已载入的节点核销态);其余仍去券包
+    if (Number(this.data.mode) !== 2 || !this.data.regId || this.data.isPreview || this.data.isMock) {
+      this.setData({ sessionToolsOpen: false }, () => this.goCouponWallet());
+      return;
+    }
+    const rows = (this.data.nodes || []).filter((n) => Number(n.merchantId) > 0).map((n) => ({
+      nodeId: n.nodeId, name: n.name || '', reward: (n.perk && n.perk.name) || '本店权益',
+      state: n.done ? '已使用' : '待使用',
+    }));
+    this.setData({ sessionToolsOpen: false, journeyRewards: { show: true, loading: false, error: '', rows } });
+  },
   openThemeFromTools() { this.setData({ sessionToolsOpen: false }, () => this.openChapterFull()); },
 
   /* 自由探索的地图模式(原型 x-run):把卡包让开,露出本页本来就有的地图台、读数卡与底栏 ——

@@ -114,6 +114,7 @@
            回读若一直核对不上,那句话会永远停在那儿。(2026-08-25 截图实证) -->
       <view wx:if="{{receipt === 'unknown'}}" class="mp-cta__main" bindtap="retryProofReadback"
         aria-role="button" aria-label="结果待确认，点这里再确认一次" hover-class="cy-pressed" hover-stay-time="80">结果待确认 · 点这里确认</view>
+      <view wx:elif="{{perkOnly && !node.done}}" class="mp-cta__main {{consentBusy ? 'is-disabled' : ''}}" bindtap="openVerifyCode" aria-role="button" aria-label="出示核销码" aria-disabled="{{consentBusy}}" hover-class="cy-pressed" hover-stay-time="80">{{consentBusy ? '确认授权中…' : '出示核销码'}}</view>
       <view wx:elif="{{!node.arrived}}" class="mp-cta__main {{busy ? 'is-disabled' : ''}}" bindtap="scanArrival" aria-role="button" aria-label="扫描门店码" aria-disabled="{{busy}}" hover-class="cy-pressed" hover-stay-time="80">{{busy ? '记录中…' : '扫描门店码'}}</view>
       <view wx:elif="{{!node.selfReported}}" class="mp-cta__main {{busy ? 'is-disabled' : ''}}" bindtap="uploadProof" aria-role="button" aria-label="拍摄到店凭证" aria-disabled="{{busy}}" hover-class="cy-pressed" hover-stay-time="80">{{busy ? '上传中…' : '拍摄到店凭证'}}</view>
       <view wx:elif="{{!node.done}}" class="mp-cta__main {{consentBusy ? 'is-disabled' : ''}}" bindtap="openVerifyCode" aria-role="button" aria-label="出示核销码" aria-disabled="{{consentBusy}}" hover-class="cy-pressed" hover-stay-time="80">{{consentBusy ? '确认授权中…' : '出示核销码'}}</view>

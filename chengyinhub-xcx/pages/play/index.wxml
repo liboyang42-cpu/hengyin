@@ -854,7 +854,7 @@
     </scroll-view>
     <view class="fx-hero__cta fx-hero__in" style="--i:3">
       <cy-btn variant="{{hero.node.entryDisabled ? 'disabled' : 'primary'}}" style="width:100%" bindtap="heroEnter"
-              accessibility-label="{{hero.node.entryDisabled ? '这一家已核销' : (hero.node.done ? '继续本店未完成玩法' : '到店打卡，进入本店玩法')}}">{{hero.node.entryDisabled ? '已核销' : (hero.node.done ? '继续互动' : '到店打卡')}}</cy-btn>
+              accessibility-label="{{hero.node.entryDisabled ? '这一家已核销' : (hero.node.perkOnly ? '使用本店权益' : (hero.node.done ? '继续本店未完成玩法' : '到店打卡，进入本店玩法'))}}">{{hero.node.entryDisabled ? '已核销' : (hero.node.perkOnly ? '使用本店权益' : (hero.node.done ? '继续互动' : '到店打卡'))}}</cy-btn>
     </view>
   </view>
 
@@ -891,7 +891,7 @@
     </view>
     <view class="fx-story__cta {{chapStory.barAway ? 'is-away' : ''}}">
       <cy-btn variant="secondary" style="flex:1" bindtap="closeChapStory">回到卡片</cy-btn>
-      <cy-btn variant="primary" style="flex:1" bindtap="heroEnter">{{hero.node.playName ? '开始 · ' + hero.node.playName : '到店打卡'}}</cy-btn>
+      <cy-btn variant="primary" style="flex:1" bindtap="heroEnter">{{hero.node.perkOnly ? '使用本店权益' : (hero.node.playName ? '开始 · ' + hero.node.playName : '到店打卡')}}</cy-btn>
     </view>
     <page-container show="{{chapStory.show}}" duration="{{0}}" overlay="{{false}}" bind:afterleave="onStoryNativeBack" />
   </view>

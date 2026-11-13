@@ -40,7 +40,7 @@ function requestPhoto(data) {
 
 Page({
   data: {
-    node: null, notFound: false, statusBarHeight: 20, regId: 0,
+    node: null, notFound: false, statusBarHeight: 20, regId: 0, perkOnly: false,
     safetyRatingShow: false,
     // sheetTop 兜底 69px(常规机胶囊底+5):.mp-sheet 的 max-height 用它,不能让 calc 引用空值
     chrome: { actionTop: 28, actionRight: 12, contentTop: 76, sheetTop: 69 },
@@ -89,6 +89,9 @@ Page({
       statusBarHeight: info.statusBarHeight || 20,
       node: Object.assign({}, node, { openText: resolveOpenState(node).openText }),
       regId: (this._prev && this._prev.data && this._prev.data.regId) || 0,
+      // 自由探索里既无玩法也无拍照要求的店:只办本店权益,主按钮直接出示核销码(后端按章核销不要求到店照片)
+      perkOnly: !!(this._prev && this._prev.data && Number(this._prev.data.mode) === 2 && Number(node.merchantId) > 0
+        && !node.hasGame && !node.hasTemplate && !node.hasAdvanced && !node.photoDesc),
       heroImg: String(node.imgUrl || '').split(',')[0],
       degradedMessage: node.quantityUnavailable ? '现场人数暂时取不到，请以店员安排为准' : '',
     }, () => {
