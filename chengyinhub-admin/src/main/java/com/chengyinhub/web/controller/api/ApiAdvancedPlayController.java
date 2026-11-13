@@ -111,6 +111,20 @@ public class ApiAdvancedPlayController extends BaseController {
         }
     }
 
+    /** Server opening calendar for a time-window node; the app schedules only a local reminder. */
+    @GetMapping("/time-window")
+    public AjaxResult timeWindow(Long activityId, Long topicId, Long nodeId) {
+        try {
+            return success(runtimeService.timeWindow(getAppUserId(), activityId == null ? 0L : activityId, topicId, nodeId));
+        } catch (IllegalStateException e) {
+            String reason = e.getMessage();
+            if (!"TIME_WINDOW_NOT_CONFIGURED".equals(reason) && !"TIME_WINDOW_INVALID".equals(reason)) return AjaxResult.error(409, reason);
+            return AjaxResult.error(409, "本站没有可用的开放时段").put("data", Map.of("reasonCode", reason));
+        } catch (IllegalArgumentException e) {
+            return AjaxResult.error(400, e.getMessage());
+        }
+    }
+
     @Autowired
     private com.chengyinhub.business.service.support.AdvancedActionReceiptReader receipts;
 
