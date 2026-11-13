@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.team.pool.TeamResourcePoolMapper">
+    <select id="selectTeam" resultType="java.util.HashMap" useCache="false">
+        select id, owner_type as ownerType, owner_id as ownerId, leader_member_id as leaderId, status from play_team where id = #{teamId}
+    </select>
+    <select id="countActiveMember" resultType="int" useCache="false">
+        select count(1) from play_team_member where team_id = #{teamId} and member_id = #{memberId} and status = 1
+    </select>
+    <select id="selectActivityTopic" resultType="java.lang.Long" useCache="false">
+        select topic_id from cms_activity where id = #{activityId}
+    </select>
+    <select id="selectPublishedTheme" resultType="java.lang.String" useCache="false">
+        select published_theme_runtime_config_json from cms_topic where id = #{topicId} and del_flag = 0
+    </select>
+    <select id="countListedNode" resultType="int" useCache="false">
+        select count(1) from cms_topic_node where id = #{nodeId} and topic_id = #{topicId} and (status is null or status = 1)
+    </select>
+
+    <sql id="poolColumns">
+        team_id as teamId, topic_id as topicId, activity_id as activityId, hints_total as hintsTotal, hints_used as hintsUsed,
+        skips_total as skipsTotal, skips_used as skipsUsed, timer_limit_sec as timerLimitSec, timer_started_at as timerStartedAt,
+        version, frozen_at as frozenAt
+    </sql>
+    <select id="selectPool" resultType="java.util.HashMap" useCache="false">
+        select <include refid="poolColumns"/> from play_team_resource_pool where team_id = #{teamId}
+    </select>
+    <select id="lockPool" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select <include refid="poolColumns"/> from play_team_resource_pool where team_id = #{teamId} for update
+    </select>
+    <insert id="insertPool" parameterType="java.util.HashMap">
+        insert ignore into play_team_resource_pool(team_id, topic_id, activity_id, hints_total, skips_total, timer_limit_sec, frozen_at)
+        values (#{teamId}, #{topicId}, #{activityId}, #{hintsTotal}, #{skipsTotal}, #{timerLimitSec}, current_timestamp(3))
+    </insert>
+    <update id="consume">
+        update play_team_resource_pool
+           set version = version + 1,
+               <choose>
+                   <when test='"HINT".equals(kind)'>hints_used = hints_used + 1 where team_id = #{teamId} and hints_used &lt; hints_total</when>
+                   <otherwise>skips_used = skips_used + 1 where team_id = #{teamId} and skips_used &lt; skips_total</otherwise>
+               </choose>
+    </update>
+    <update id="startTimer">
+        update play_team_resource_pool set timer_started_at = current_timestamp(3), version = version + 1
+         where team_id = #{teamId} and timer_started_at is null and timer_limit_sec &gt; 0
+    </update>
+
+    <select id="selectUse" resultType="java.util.HashMap" useCache="false">
+        select member_id as memberId, request_id as requestId from play_team_resource_use
+         where team_id = #{teamId} and kind = #{kind} and node_id = #{nodeId}
+    </select>
+    <insert id="insertUse">
+        insert into play_team_resource_use(team_id, kind, node_id, member_id, request_id, create_time)
+        values (#{teamId}, #{kind}, #{nodeId}, #{memberId}, #{requestId}, current_timestamp(3))
+    </insert>
+    <!-- 第一个答对，全队推进：任一在岗成员完成的玩家可见节点都计入全队分。 -->
+    <select id="selectSolvedNodes" resultType="java.lang.Long" useCache="false">
+        select distinct p.node_id from player_node_progress p
+          join play_team_member tm on tm.member_id = p.member_id and tm.team_id = #{teamId} and tm.status = 1
+          join cms_topic_node n on n.id = p.node_id and n.topic_id = #{topicId} and (n.status is null or n.status = 1)
+         where p.topic_id = #{topicId} and p.activity_id = #{activityId} and p.status = 1 and coalesce(p.del_flag, 0) = 0
+         order by p.node_id
+    </select>
+
+    <insert id="reserveReceipt">
+        insert into play_team_pool_receipt(member_id, request_id, team_id, payload_fingerprint, create_time)
+        values (#{memberId}, #{requestId}, #{teamId}, #{fingerprint}, current_timestamp(3))
+        on duplicate key update member_id = member_id
+    </insert>
+    <select id="lockReceipt" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select team_id as teamId, payload_fingerprint as fingerprint, response_json as response
+          from play_team_pool_receipt where member_id = #{memberId} and request_id = #{requestId} for update
+    </select>
+    <select id="selectReceipt" resultType="java.util.HashMap" useCache="false">
+        select team_id as teamId, payload_fingerprint as fingerprint, response_json as response
+          from play_team_pool_receipt where member_id = #{memberId} and request_id = #{requestId}
+    </select>
+    <update id="finishReceipt">
+        update play_team_pool_receipt set response_json = #{response}
+         where member_id = #{memberId} and request_id = #{requestId} and response_json is null
+    </update>
+</mapper>

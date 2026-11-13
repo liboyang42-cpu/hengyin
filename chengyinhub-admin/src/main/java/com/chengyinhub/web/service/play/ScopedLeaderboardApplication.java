@@ -6,6 +6,7 @@ import com.chengyinhub.business.domain.dto.ScopedLeaderboardQueryDTO;
 import com.chengyinhub.business.domain.vo.ScopedLeaderboardCoverageVO;
 import com.chengyinhub.business.domain.vo.ScopedLeaderboardEntryVO;
 import com.chengyinhub.business.domain.vo.ScopedLeaderboardVO;
+import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.mapper.ScopedLeaderboardMapper;
 import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.IClubParticipationGuard;
@@ -44,6 +45,8 @@ import static com.chengyinhub.common.core.domain.AjaxResult.error;
  *       也不从用户位置推断国家。{@code coverage.attributionBasis=FROZEN_RUN_SNAPSHOT} 明示这一点。</li>
  *   <li>俱乐部：先校验请求者权限（主理人 / 在册成员 / 公开可浏览且未被封禁），
  *       榜单行本身也只含该俱乐部在册成员/主理人在其归属主题上的对局。</li>
+ *   <li>队伍（UI-P9 队内榜）：只有该队在岗成员能看；榜单行只含在岗成员在该队自身内容（主题/场次）上的对局，
+ *       分数口径、有效报名与周窗与其它作用域相同；不做好友榜，不新增公会。</li>
  *   <li>响应只含 memberId/nickname/avatar/score/rank：不含手机号、邮箱、真实姓名、精确位置。</li>
  * </ul>
  */
@@ -55,6 +58,7 @@ public class ScopedLeaderboardApplication {
     static final String SCOPE_CITY = "city";
     static final String SCOPE_QUEST = "quest";
     static final String SCOPE_CLUB = "club";
+    static final String SCOPE_TEAM = "team";
 
     /** 当前唯一分数口径；将来新增口径必须另有权威事实，不得改这一个的含义。 */
     static final String SCORE_BASIS_COMPLETED_NODES = "COMPLETED_NODES";
@@ -77,6 +81,8 @@ public class ScopedLeaderboardApplication {
     private IClubMemberService clubMemberService;
     @Autowired(required = false)
     private IClubParticipationGuard clubParticipationGuard;
+    @Autowired
+    private PlayTeamMapper playTeamMapper;
 
     /** 入口：校验作用域与权限后返回只读投影。 */
     public AjaxResult list(Long actorMemberId, ScopedLeaderboardQueryDTO query) {
@@ -89,7 +95,7 @@ public class ScopedLeaderboardApplication {
         int limit = clampLimit(query == null ? null : query.getLimit());
 
         Long scopeIdLong = null;
-        if (SCOPE_QUEST.equals(scope) || SCOPE_CLUB.equals(scope)) {
+        if (SCOPE_QUEST.equals(scope) || SCOPE_CLUB.equals(scope) || SCOPE_TEAM.equals(scope)) {
             scopeIdLong = parseId(scopeId);
             if (scopeIdLong == null) return error("scopeId 不合法");
         } else if (SCOPE_CITY.equals(scope)) {
@@ -104,6 +110,10 @@ public class ScopedLeaderboardApplication {
         }
         if (SCOPE_CLUB.equals(scope)) {
             AjaxResult denied = requireClubViewer(scopeIdLong, memberId);
+            if (denied != null) return denied;
+        }
+        if (SCOPE_TEAM.equals(scope)) {
+            AjaxResult denied = requireTeamMember(scopeIdLong, memberId);
             if (denied != null) return denied;
         }
 
@@ -175,6 +185,15 @@ public class ScopedLeaderboardApplication {
         return error("加入俱乐部后才能看本团榜单");
     }
 
+    /** 队内榜前置闸（IDOR）：只有该队在岗成员（play_team_member.status=1）；已退/被踢/申请中都不行。 */
+    private AjaxResult requireTeamMember(Long teamId, Long viewerId) {
+        if (teamId == null || teamId <= 0) return error("缺少队伍ID");
+        if (playTeamMapper.selectPlayTeamById(teamId) == null) return error("队伍不存在");
+        if (viewerId == null || viewerId <= 0 || playTeamMapper.selectActiveMember(teamId, viewerId) == null)
+            return error("只有队伍成员可以查看队内榜");
+        return null;
+    }
+
     /** 与 ApiClubController#canBrowsePublicRoster 同口径；只在本类内使用，不改旧接口。 */
     private boolean canBrowsePublicRoster(Club club, Long viewerId) {
         if (club == null || viewerId == null || viewerId <= 0) return false;
@@ -235,6 +254,7 @@ public class ScopedLeaderboardApplication {
             case SCOPE_CITY:
             case SCOPE_QUEST:
             case SCOPE_CLUB:
+            case SCOPE_TEAM:
                 return value;
             default:
                 return null;

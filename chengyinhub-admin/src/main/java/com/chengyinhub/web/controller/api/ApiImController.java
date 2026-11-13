@@ -1,6 +1,8 @@
 package com.chengyinhub.web.controller.api;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.service.channel.platform.ChannelMessageService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
@@ -29,6 +32,10 @@ public class ApiImController extends BaseController
 {
     @Autowired
     private IImService imService;
+
+    /** 频道会话(type=5)沿用本控制器原链路，只把返回投影成频道十进制字符串快照。 */
+    @Autowired(required = false)
+    private ChannelMessageService channelMessages;
 
     @Operation(summary = "我的会话列表")
     @PostMapping("/conversations")
@@ -59,8 +66,9 @@ public class ApiImController extends BaseController
             Long cid = Convert.toLong(conversation_id, 0L);
             Long cursor = Convert.toLong(cursor_id, 0L);
             int sz = Convert.toInt(size, 20);
-            return AjaxResult.success(after_id == null ? imService.listMessages(getAppUserId(), cid, cursor, sz)
-                    : imService.listMessages(getAppUserId(), cid, cursor, sz, Convert.toLong(after_id, -1L)));
+            Map<String, Object> page = after_id == null ? imService.listMessages(getAppUserId(), cid, cursor, sz)
+                    : imService.listMessages(getAppUserId(), cid, cursor, sz, Convert.toLong(after_id, -1L));
+            return AjaxResult.success(channelPage(cid, page));
         }
         catch (ServiceException e)
         {
@@ -100,7 +108,7 @@ public class ApiImController extends BaseController
             ImMessage m = client_message_id == null
                     ? imService.send(getAppUserId(), cid, target > 0 ? target : null, mt, content, extra_json)
                     : imService.send(getAppUserId(), cid, target > 0 ? target : null, mt, content, extra_json, client_message_id);
-            return AjaxResult.success(m);
+            return AjaxResult.success(channelMessage(m));
         }
         catch (ServiceException e)
         {
@@ -122,7 +130,7 @@ public class ApiImController extends BaseController
                     Convert.toLong(conversation_id, 0L), client_message_id);
             Map<String, Object> result = new HashMap<>();
             result.put("found", receipt != null);
-            result.put("message", receipt);
+            result.put("message", channelMessage(receipt));
             return AjaxResult.success(result);
         } catch (ServiceException e) { return bizError(e); }
         catch (Exception e) { logger.error("IM 原消息回读异常", e); return AjaxResult.error("原消息结果待确认"); }
@@ -292,5 +300,23 @@ public class ApiImController extends BaseController
     private static AjaxResult bizError(ServiceException e)
     {
         return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
+    }
+
+    private Object channelMessage(ImMessage message)
+    {
+        if (message == null || message.getId() == null || channelMessages == null
+                || !channelMessages.isChannel(message.getConversationId())) return message;
+        Map<String, Object> snapshot = channelMessages.snapshot(message.getConversationId(), message.getId());
+        return snapshot == null ? message : snapshot;
+    }
+
+    private Map<String, Object> channelPage(Long conversationId, Map<String, Object> page)
+    {
+        if (page == null || channelMessages == null || !channelMessages.isChannel(conversationId)) return page;
+        List<Long> ids = new ArrayList<>();
+        Object list = page.get("list");
+        if (list instanceof List<?> rows)
+            for (Object row : rows) if (row instanceof ImMessage m && m.getId() != null) ids.add(m.getId());
+        return channelMessages.decorateHistory(conversationId, page, ids);
     }
 }
