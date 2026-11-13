@@ -1,7 +1,7 @@
 // 城瘾 · 游玩页(深色地图沉浸版)
 // 视觉真值:设计原型工具「城瘾游玩页.dc.html」;对接说明见 docs/游玩页-深色地图沉浸版-对接说明.md
 // 数据:GET /api/play/nodes(现网) — 缺坐标/章节/模板呈现字段时做降级;扫码 /checkin、答题 /answer、到达 /arrive。
-const cyModal = require('../../utils/modal.js');
+const cyModal = require('../../utils/modal.js'); const { keepNumerals } = require('./utils/keep-numerals.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
@@ -3780,7 +3780,7 @@ Page({
     let curMood = '';
     let curOdd = 0;   // 越往后越不正常:odd 块起的档位,之后每段都带着(同 mood)
     // cond:试玩里条件正文的「只给谁看」标签(真玩家拿到的条件块已由服务端按本局标签筛过,不带这个)
-    const push = (t, cond, literal) => { String(t || '').split(/\n+/).forEach((x, i) => { const v = x.trim(); if (v) items.push({ kind: 'text', text: applyStoryVars(v, literal ? null : vars), mood: curMood, odd: curOdd, cond: i === 0 && cond ? cond : '' }); }); };
+    const push = (t, cond, literal) => { String(t || '').split(/\n+/).forEach((x, i) => { const v = x.trim(); if (v) items.push({ kind: 'text', text: keepNumerals(applyStoryVars(v, literal ? null : vars)), mood: curMood, odd: curOdd, cond: i === 0 && cond ? cond : '' }); }); };
     const condOf = (b) => (this.data.isPreview && b.when ? String(b.condLabel || '有条件才看到') : '');
     // 真实章节封面是叙事的第一屏，也必须进入 chapterParas，才能和正文共用近焦/渐隐测量。
     if (this.data.chapter && this.data.chapter.cover) {

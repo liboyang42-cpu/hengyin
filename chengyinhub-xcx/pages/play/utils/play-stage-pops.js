@@ -34,11 +34,17 @@ function kitTypeLabel(node) {
   }
   return '';
 }
+/** 玩家只看站名和任务:去掉编辑器里的「第04关」「问答：」「模板 ·」这类制作用前缀 */
+function playerTitle(t) {
+  const s = String(t == null ? '' : t).replace(/^\s*(?:第\s*\d+\s*关|模板|问答)\s*[:：·\-－—\s]\s*/, '').trim();
+  return s;
+}
 /** 地点卡上的数字:距离(有定位或上一站才算)、步行分钟(按 80 m/min,只在有距离时)、开放时段(节点营业时间原样) */
+const WALK_MAX_MIN = 60; // 超过一小时步行不报分钟,只留距离(km,一位小数)
 function sheetFacts(node, distText) {
   const out = { distText: distText || '', walkText: '', hoursText: '' };
   const m = /^([\d.]+)(km|m)$/.exec(distText || '');
-  if (m) { const meters = m[2] === 'km' ? Number(m[1]) * 1000 : Number(m[1]); if (meters > 0) out.walkText = String(Math.max(1, Math.ceil(meters / WALK_M_PER_MIN))); }
+  if (m) { const meters = m[2] === 'km' ? Number(m[1]) * 1000 : Number(m[1]); if (meters > 0) { const min = Math.max(1, Math.ceil(meters / WALK_M_PER_MIN)); if (min <= WALK_MAX_MIN) out.walkText = String(min); } }
   const biz = String(node && node.businessTime || '');
   if (biz && !/^\s*00:00\s*[-–~至]\s*23:59\s*$/.test(biz)) out.hoursText = biz.replace(/:00/g, '').replace(/\s*[-~至]\s*/, '–');
   // x-fix2 P-8:大字格只放时段;「公共区域观察;以现场…为准」这类说明已在地址行(metaLine)里,不挤进数字位
@@ -76,7 +82,7 @@ function methods() {
       const sentence = story.match(/^[^。！？!?]*[。！？!?]?/)[0];
       this.setData({ kitStart: {
         show: true, nodeId: String(node.nodeId), origin,
-        cover: firstImg(node.imgUrl), title: node.gameTitle || node.name || (pk.kit && pk.kit.title) || '玩法', type: origin === 'card' ? (pk.cardLabel || kitTypeLabel(node)) : kitTypeLabel(node),
+        cover: firstImg(node.imgUrl), title: playerTitle(node.gameTitle || node.name || (pk.kit && pk.kit.title)) || '玩法', type: origin === 'card' ? (pk.cardLabel || kitTypeLabel(node)) : kitTypeLabel(node),
         place: origin === 'sheet' ? (node.lat ? node.name || '' : '') : (place ? place.name || '' : ''), arrived: !!(place ? place.arrived || place.done : node.arrived),
         lede: sentence.length <= 40 ? sentence : sentence.slice(0, 38) + '…',
         mode: 'embed', modes: origin === 'story',
@@ -162,4 +168,4 @@ function methods() {
   return api;
 }
 
-module.exports = { KIT_LABELS, kitTypeLabel, sheetFacts, nextIndex, data, methods };
+module.exports = { KIT_LABELS, kitTypeLabel, playerTitle, sheetFacts, nextIndex, data, methods };
