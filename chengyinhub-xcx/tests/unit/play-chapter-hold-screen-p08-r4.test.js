@@ -82,7 +82,7 @@ test('翻转门组件不再认识 held,底部仍是「轻点跳过」', () => {
   assert.doesNotMatch(w, /轻点跳过/)
 })
 
-test('放行:收起等待屏、换上翻转门,门不发 continue 时按原兜底计时进正文;仍被挡时兜底不进', () => {
+test('放行:收起等待屏、换上翻转门,翻转门等玩家点按、无计时自动进正文(D-46);仍被挡时仍挡着', () => {
   const p = page()
   const timers = []
   const realSet = global.setTimeout, realClear = global.clearTimeout
@@ -96,12 +96,13 @@ test('放行:收起等待屏、换上翻转门,门不发 continue 时按原兜�
     p.data.chapterGate = { show: true, held: true, endInfo: null }
     p._releaseChapterGate()
     assert.equal(p.data.chapterGate.held, false)
-    assert.equal(timers.at(-1).ms, 4200)
-    timers.at(-1).fn()
-    assert.equal(entered, 1)
+    // D-46 业主「点了才能进」:页面兜底计时(4.2s/10.8s)已移除,放行后翻转门只等点按
+    assert.equal(timers.length, 0)
+    assert.equal(entered, 0)
     p.data.chapterGate = { show: true, held: true, endInfo: { number: '01' } }
     p._releaseChapterGate()
-    assert.equal(timers.at(-1).ms, 10800, '带上一章完成面时按长计时兜底(r2-finish:完成卡停留后溶解,再翻下一章)')
+    assert.equal(timers.length, 0, 'D-46:带上一章完成面时同样不计时自动前进')
+    assert.equal(entered, 0)
   } finally { global.setTimeout = realSet; global.clearTimeout = realClear }
 
   const q = page()

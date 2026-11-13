@@ -4307,12 +4307,8 @@ Page({
     const held = !chapter.opening && this._leadHolds(chapter.id);   // P-08:先停在「等待放行」屏,放行后才放翻转门
     this.setData({ chapterGate: Object.assign({ show: true, held, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1), // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
       total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '', look: this._look ? { style: this._look.style, palette: this._look.palette || '', legacy: !!this._look.legacy } : null }, flip) });   // l-icons:圆点章节号 / 章节印的颜色跟外观
-    // 2026-09-24 用户:章节门每章都要点一次太打断 —— 停 2.8 秒自己进正文,点一下仍可提前
+    // 2026-11-11 D-46 业主「点了才能进」:取代 2026-09-24「停一下自己进正文」,章节门只在玩家点按时前进,不再计时兜底
     clearTimeout(this._gateTimer);
-    if (held) return;   // 放行由带领轮询解开(见 loadTeamProgress),不靠计时自己进正文
-    this._gateTimer = setTimeout(() => {
-      if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, (boot ? 1800 : 0) + (this.data.chapterGate.endInfo ? 10800 : 4200)); // 过场自己会在播完时发 continue;这里只是兜底
   },
   /** 开局「开机」:黑场里一条白线横向展开再收细,暖光亮起后整层淡出,露出第一道开场门。 */
   _playBoot() {
@@ -4335,17 +4331,13 @@ Page({
     if (Number(this.data.mode) !== 1 || this.data.isPreview || this.data.isMock) return false;
     return leadHoldsChapter(this.data.lead, chapterId, this.data.chapterCards);
   },
-  /** P-08:队长放行了这一章 → 收起「等待放行」屏,换上正常的章节翻转门,播完照常发 continue 进正文;门没发出来时按原兜底计时进。 */
+  /** P-08:队长放行了这一章 → 收起「等待放行」屏,换上正常的章节翻转门;玩家点按后进正文(D-46)。 */
   _releaseChapterGate() {
-    const key = this._pendingChapterGateKey;
     // P-08 第五轮 D:玩家「返回地图」在看地图时放行 → 收起地图,翻转门照常在故事流上播完进正文
     if (this.data.chapterGate.away || this._chapterHoldAway) this.setData({ storyMap: false, 'chapterGate.away': false });
     this._chapterHoldAway = '';
     this.setData({ 'chapterGate.held': false });
     clearTimeout(this._gateTimer);
-    this._gateTimer = setTimeout(() => {
-      if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, this.data.chapterGate.endInfo ? 10800 : 4200);
   },
   /** P-08:带领轮询每读到一次进度就对一次 —— 门前(或「返回地图」去了地图上)正在等的那一章放行了就接着进。 */
   _syncChapterHold() {

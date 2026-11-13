@@ -102,7 +102,7 @@ test('点「返回地图」:等待屏收起、地图打开;仍挂着这一章的
   assert.equal(p._pendingChapterGateKey, '77:12')
 })
 
-test('在地图上被放行:收起地图,照常放 cy-chapter-flip,播完(或兜底计时)进这一章', () => {
+test('在地图上被放行:收起地图,照常放 cy-chapter-flip,等玩家点按才进这一章(D-46:无计时兜底)', () => {
   withTimers((timers) => {
     const p = heldPage()
     p.leaveChapterHold()
@@ -111,9 +111,9 @@ test('在地图上被放行:收起地图,照常放 cy-chapter-flip,播完(或兜
     assert.equal(mapShown(p.data), false)
     assert.equal(flipShown(p.data), true)
     assert.equal(holdShown(p.data), false)
-    assert.equal(timers.at(-1).ms, 4200)
-    timers.at(-1).f()
-    assert.equal(p.entered, 1)
+    // D-46 业主「点了才能进」:放行后翻转门等点按,不再有 4.2s 兜底计时
+    assert.equal(timers.length, 0)
+    assert.equal(p.entered, 0)
   })
 })
 
@@ -128,8 +128,9 @@ test('地图上再点回这一章(「回到故事」),仍被挡着 → 回到等
     release(p)
     p._syncChapterHold()
     assert.equal(flipShown(p.data), true)
-    timers.at(-1).f()
-    assert.equal(p.entered, 1)
+    // D-46:翻转门等玩家点按,无计时自动进正文
+    assert.equal(timers.length, 0)
+    assert.equal(p.entered, 0)
   })
 })
 
@@ -141,8 +142,9 @@ test('地图上放行了但轮询还没到,玩家先点回来 → 不再停在�
     p.closeStoryMap()
     assert.equal(holdShown(p.data), false)
     assert.equal(flipShown(p.data), true)
-    timers.at(-1).f()
-    assert.equal(p.entered, 1)
+    // D-46:翻转门等玩家点按,不计时自动进章
+    assert.equal(timers.length, 0)
+    assert.equal(p.entered, 0)
   })
 })
 
