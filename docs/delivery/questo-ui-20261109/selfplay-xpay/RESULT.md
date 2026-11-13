@@ -75,4 +75,12 @@
 - 本地复核：API 存在性 A=0、silentError、ui-integrity、route-matrix --check、动作台账与自玩票单测通过。
 - CI（head `514a78957`，run 2407）：Backend tests、Fast gates、Mini program static gates、20 个单测分片、Migration gates、Secret scan 全部 success。
 
+## Rebase v3 1113
+
+- 原因:master 新增 #823(e86eb013,topic/index/* 与 topic-preview 主题详情修复),#821 再次冲突;以 merge 方式并入,未改写历史、未强推(合并提交 b9095315)。
+- 冲突处理:ui-integrity-baseline.js 取 master 侧;topic/index/index.js 的 buildRouteMap U4-DYNAMIC 锚点 2134→2157(仅因本线自身增行位移),u4Dynamic keyDigest 按门禁 baselineKeyDigest() 重算并加一行注释;未新增登记、未提高棘轮、未改门禁。action-ledger.json 取 master 侧后用 `--write` 重生成,route-matrix 以 `--json` 重生成。
+- 本地检查:ui-integrity `--warn-as-error` UI-GATE-0 PASS;action-ledger `--check` PASS(6043 controls);未运行 selftest。
+- CI(b9095315):Mini program static checks / static gates、20 个单测分片、Backend tests、Funds MySQL IT、Migration layout/safety、Fast gates、Secret scan、Followup 39、isolated-authenticated-redis-recovery 等全部 success;仅 workflow_dispatch 条件任务 skipped。
+- 合并行为:master 主题详情改动与 #821 的 checkout XPAY 路径(默认关闭开关 chengyin.selfplay.xpay.enabled)同时保留。PR 未合并。
+
 STATUS: DONE
