@@ -25,6 +25,7 @@ public class DeregistrationResultService {
     private final IAccountDeregistrationService deregistration;
     private final LongSupplier clock;
 
+    @org.springframework.beans.factory.annotation.Autowired
     public DeregistrationResultService(JdbcTemplate jdbc, IAccountDeregistrationService deregistration) {
         this(jdbc, deregistration, System::currentTimeMillis);
     }
