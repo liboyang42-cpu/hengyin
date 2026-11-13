@@ -18,3 +18,15 @@
 未改 ci/architecture、工作流、ui-integrity-baseline;未跑 ci/xcx-check.sh 与会写夹具的自检。
 
 ## 检查结果
+
+- PR #824 最新提交 `c136f071`:GitHub CI 27 项通过、6 项按条件跳过、0 失败(含 20 个小程序单测分片、静态门禁、gitleaks)。
+- 本地 `ui-integrity` 通过(UI-GATE-0:PASS),未新增基线条目、未改 keyDigest;`action-ledger` 48 项单测通过。
+- 过程中修了两处自己引入的问题:`pages/play/index.js` 多一行 require 使基线行号失配(改为并入原有一行);`index.wxml` 增行使动作台账漂移(按提示重建 `scripts/uiaudit/action-ledger.json`,仅行号位移,并同步 `action-ledger.test.js` 中章节选择控件行号 540 → 543)。
+
+## 未能目视确认
+- 第 1 项:找到的是「继续」钮在浅纸本下深墨叠黑底;结局页未找到单独的「关闭」钮,未做改动。
+- 第 4 项:按地点卡完成章圆章压「距离」处理,未找到点状圆。
+- 第 6 项:未找到「二〇〇」的具体来源,只处理了故事正文;其他位置的汉字数字未覆盖。
+- 全部 8 项均未在微信开发者工具中截图验证,需要人工走一遍。
+
+STATUS: PARTIAL - CI 全绿,但第 1、4、6 项的定位基于代码推断、8 项均未截图目视验证
