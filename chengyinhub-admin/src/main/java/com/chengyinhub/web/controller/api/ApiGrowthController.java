@@ -47,6 +47,21 @@ public class ApiGrowthController extends BaseController {
         return success(growthService.getLeaderboard(memberId, request));
     }
 
+    @Autowired
+    private com.chengyinhub.business.appgaps.GrowthAnonymousLeaderboard anonymousLeaderboard;
+
+    @Operation(summary = "成长中心匿名排行榜（App）")
+    @PostMapping("/leaderboard/anonymous")
+    public AjaxResult anonymousLeaderboard(LeaderboardQueryDTO request) {
+        Long memberId;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+            return error("请先登录");
+        }
+        return success(anonymousLeaderboard.read(memberId, request));
+    }
+
     @Operation(summary = "完成成长任务")
     @PostMapping("/mission/complete")
     public AjaxResult complete(GrowthMissionCompleteDTO request) {

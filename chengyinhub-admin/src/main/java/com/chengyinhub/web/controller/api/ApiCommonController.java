@@ -106,7 +106,38 @@ public class ApiCommonController extends BaseController {
     @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
     public ResponseEntity<AjaxResult> uploadOSS(@RequestParam("file") MultipartFile file,
                                                 @RequestParam(value = "bizType", required = false) String bizType,
-                                                @RequestParam(value = "refundId", required = false) Long refundId) {
+                                                @RequestParam(value = "refundId", required = false) Long refundId,
+                                                @org.springframework.web.bind.annotation.RequestHeader(value = "X-Upload-Request-ID", required = false) String uploadRequestId) {
+        if (uploadRequestId != null) {
+            // App IM 图片原始上传：只接受普通图片（无 bizType），同一请求号只上传一次。
+            Long actor = currentAppMemberIdOrNull();
+            if (actor == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(AjaxResult.error(401, "请先登录"));
+            if (bizType != null || refundId != null) return badUploadRequest("原始上传只支持普通图片");
+            byte[] bytes;
+            try { bytes = file.getBytes(); } catch (java.io.IOException e) { return badUploadRequest("文件读取失败"); }
+            return ResponseEntity.ok(uploadOriginal.upload(actor, uploadRequestId, bytes, () -> {
+                ResponseEntity<AjaxResult> legacy = uploadOSS(file, null, null);
+                AjaxResult body = legacy.getBody();
+                return body == null ? AjaxResult.error(legacy.getStatusCode().value(), "上传失败") : body;
+            }));
+        }
+        return uploadOSS(file, bizType, refundId);
+    }
+
+    /** App IM 图片原始上传读回（GET，参数在查询串）。 */
+    @org.springframework.web.bind.annotation.GetMapping("/uploadOSS/receipt")
+    public AjaxResult uploadOSSReceipt(@RequestParam(value = "request_id", required = false) String requestId,
+                                       @RequestParam(value = "source_sha256", required = false) String sourceSha256) {
+        Long actor = currentAppMemberIdOrNull();
+        if (actor == null) return AjaxResult.error(401, "请先登录");
+        return uploadOriginal.receipt(actor, requestId, sourceSha256);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.appgaps.UploadOriginal uploadOriginal;
+
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
+    public ResponseEntity<AjaxResult> uploadOSS(MultipartFile file, String bizType, Long refundId) {
         Long memberId = currentAppMemberIdOrNull();
         Long merchantId = null;
         if (UploadImagePolicy.MERCHANT_AFTERCARE_EVIDENCE_BIZ_TYPE.equals(bizType)) {

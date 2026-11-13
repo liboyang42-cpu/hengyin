@@ -66,6 +66,8 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
     @Autowired private com.chengyinhub.business.mapper.CmsActivityMapper cancellationActivityMapper;
     @Autowired private com.chengyinhub.business.mapper.CmsTopicMapper cancellationTopicMapper;
     @Autowired private org.springframework.transaction.PlatformTransactionManager cancellationTransactions;
+    /** App 系列「原始结果」快照（club_event_series_original_result）；未装配时（单测）不记录。 */
+    @Autowired(required = false) private com.chengyinhub.business.appgaps.ClubSeriesOriginalResults seriesOriginalResults;
 
     private final IClubAccessService clubAccessService;
     private final ClubEventScheduleMaterializer scheduleMaterializer;
@@ -277,6 +279,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             if (concurrent == null) throw conflict("系列创建冲突，请刷新后重试");
             return exactSeriesReplay(concurrent, requestFingerprint);
         }
+        List<ClubEventOccurrence> createdOccurrences = new ArrayList<>();
         for (LocalDate date : dates) {
             ClubSessionOpenRequest open = new ClubSessionOpenRequest();
             open.setClubId(request.getClubId());
@@ -295,6 +298,7 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             occurrence.setVersion(0);
             occurrence.setCreateTime(now);
             if (clubEventOpsMapper.insertOccurrence(occurrence) != 1) throw conflict("系列场次关联失败");
+            createdOccurrences.add(occurrence);
             ClubLeadState leadState = new ClubLeadState();
             leadState.setActivityId(activityId);
             leadState.setLeaderMemberId(leadMemberId);
@@ -303,6 +307,10 @@ public class ClubEventOpsServiceImpl implements IClubEventOpsService {
             if (clubLeadMapper.insertClubLeadState(leadState) != 1) throw conflict("默认负责人绑定失败");
             bindCanonicalEventLead(actorMemberId, request.getClubId(), access.getOwnerMemberId(),
                     leadMemberId, activityId, series.getId());
+        }
+        if (seriesOriginalResults != null) {
+            // 同事务冻结首次执行的完整结果；写不进去整个创建回滚，不出现「系列已建、原始结果缺失」。
+            seriesOriginalResults.record(series, createdOccurrences, dates, request);
         }
         series.setWindowWarning(clubSessionService.themeWindowWarning(request.getTopicId(), dates));
         return series;

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.appgaps.mapper.SupportTicketReadMapper">
+ <sql id="ticket">id,ticket_no,member_id,requester_role,category,subject,status,version,timezone,locale,sla_state,
+  sla_first_due_at,sla_resolve_due_at,related_source,related_domain_type,related_resource_id,create_time,resolved_at,closed_at</sql>
+ <select id="selectTickets" resultType="java.util.HashMap" useCache="false">
+  select <include refid="ticket"/> from support_ticket where member_id=#{memberId}
+  <if test="beforeId &gt; 0"> and id &lt; #{beforeId}</if>
+  order by id desc limit #{limit}
+ </select>
+ <select id="selectTicket" resultType="java.util.HashMap" useCache="false">
+  select <include refid="ticket"/> from support_ticket where member_id=#{memberId} and ticket_no=#{ticketNo}
+ </select>
+ <select id="selectMessages" resultType="java.util.HashMap" useCache="false">
+  select id,sender_type,content,content_type,attachments_json,create_time from support_ticket_message
+  where ticket_id=#{ticketId} and is_internal=0 and id &gt; #{afterId} order by id limit #{limit}
+ </select>
+ <select id="selectEvents" resultType="java.util.HashMap" useCache="false">
+  select id,event_type,actor_type,result_state,historical_status,historical_sla_state,historical_version,reason,request_id,message_id,created_at
+  from support_ticket_event where ticket_id=#{ticketId}
+  <if test="beforeId &gt; 0"> and id &lt; #{beforeId}</if>
+  order by id desc limit #{limit}
+ </select>
+</mapper>

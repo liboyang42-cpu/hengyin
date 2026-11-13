@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.appgaps.mapper.MapPublicLayerMapper">
+ <select id="selectStores" resultType="java.util.HashMap" useCache="false">
+  select id,name,address,business_status as businessStatus,location_lat as lat,location_lng as lng,
+   coalesce(update_time,create_time) as versionTime
+  from mms_merchant
+  where del_flag=0 and status=1 and account_status=1
+   and location_lat is not null and location_lng is not null
+   and location_lat between #{south} and #{north} and location_lng between #{west} and #{east}
+   and id &gt; #{afterId}
+  order by id limit #{limit}
+ </select>
+ <select id="selectActivities" resultType="java.util.HashMap" useCache="false">
+  select id,name,address,address_name as addressName,latitude as lat,longitude as lng,start_date as startDate,end_date as endDate,
+   coalesce(update_time,create_time) as versionTime
+  from cms_activity
+  where del_flag=0 and status=1 and publish_status=1
+   and latitude regexp '^-?[0-9]+(\\.[0-9]+)?$' and longitude regexp '^-?[0-9]+(\\.[0-9]+)?$'
+   and cast(latitude as decimal(12,7)) between #{south} and #{north}
+   and cast(longitude as decimal(12,7)) between #{west} and #{east}
+   and id &gt; #{afterId}
+  order by id limit #{limit}
+ </select>
+</mapper>

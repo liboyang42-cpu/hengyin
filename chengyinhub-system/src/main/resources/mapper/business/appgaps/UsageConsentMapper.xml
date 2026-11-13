@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.appgaps.mapper.UsageConsentMapper">
+ <sql id="cols">id,doc_type as docType,doc_version as docVersion,event_type as eventType,request_id as requestId,occurred_at as occurredAt</sql>
+ <sql id="scope">member_id=#{memberId} and scene='app_launch'
+  and doc_type in ('privacy_policy','user_service_agreement','privacy','user_agreement') and event_type in ('AGREE','REVOKE')</sql>
+ <select id="selectHistory" resultType="java.util.HashMap" useCache="false">
+  select <include refid="cols"/> from consent_record where <include refid="scope"/>
+  <if test="beforeId != null"> and id &lt; #{beforeId}</if>
+  order by id desc limit 50
+ </select>
+ <select id="selectByRequest" resultType="java.util.HashMap" useCache="false">
+  select <include refid="cols"/> from consent_record where <include refid="scope"/> and request_id=#{requestId}
+ </select>
+ <select id="selectLatestId" resultType="java.lang.Long" useCache="false">
+  select max(id) from consent_record where <include refid="scope"/> and doc_type=#{docType}
+ </select>
+ <select id="selectDocument" resultType="java.util.HashMap" useCache="false">
+  select doc_type as docType,version,title,content,status,publish_time as publishTime
+  from agreement_doc where doc_type=#{docType} and version=#{version} order by id desc limit 1
+ </select>
+</mapper>
