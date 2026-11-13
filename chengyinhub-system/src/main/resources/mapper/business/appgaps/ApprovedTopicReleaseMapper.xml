@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.appgaps.mapper.ApprovedTopicReleaseMapper">
+ <select id="topic" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select id,member_id as memberId,product_type as productType,publish_mode as publishMode,del_flag as delFlag,
+         name,description,category_ids as categoryIds,img_url as imgUrl,coalesce(config_version,0) as configVersion
+  from cms_topic where id=#{id}
+  <if test="lock">for update</if>
+ </select>
+ <select id="chapters" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select id,name,description,blocks from cms_topic_chapter where topic_id=#{topicId}
+  order by sort_id is null, sort_id, id
+ </select>
+ <select id="nodes" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select id,chapter_id as chapterId,name,description,address,longitude,latitude,img_url as imgUrl,
+         node_time as nodeTime,template_id as templateId
+  from cms_topic_node where topic_id=#{topicId}
+  order by chapter_id, sort_id is null, sort_id, id
+ </select>
+ <select id="templates" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select id,title,description,category_id as categoryId,activity_categoryids as activityCategoryIds,img_url as imgUrl,
+         players,usage_location as usageLocation,required_materials as requiredMaterials,duration,difficulty,
+         rule_instructions as ruleInstructions,validation_method as validationMethod,sensor_type as sensorType,
+         cast(sensor_config as char) as sensorConfig,question_name as questionName,question_a as questionA,question_b as questionB,
+         question_c as questionC,question_d as questionD,question_img as questionImg,question_audio as questionAudio,
+         question_option_media_json as questionOptionMediaJson,feedback_text as feedbackText,story_text as storyText,
+         story_img as storyImg,story_json as storyJson,hint1,hint2,photo_require_desc as photoRequireDesc,photo_review as photoReview,
+         audio_url as audioUrl,audio_duration as audioDuration,interaction_type as interactionType,xp_value as xpValue,
+         medal_name as medalName,medal_img as medalImg,cast(advanced_config_json as char) as advancedConfigJson,
+         (coalesce(trim(question_answer),'')&lt;&gt;'' or coalesce(trim(correct_answer),'')&lt;&gt;'') as answerPresent
+  from cms_member_template where id in
+  <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+ </select>
+
+ <select id="task" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select id,biz_type as bizType,biz_id as bizId,source_type as sourceType,status,version,snapshot_json as snapshotJson
+  from audit_task where id=#{id}
+  <if test="lock">for update</if>
+ </select>
+ <!-- 内容审核槽（open_guard=1）的未结单；举报单在独立槽，不算 -->
+ <select id="openTopicTask" resultType="java.lang.Long" useCache="false" flushCache="true">
+  select id from audit_task where biz_type='TOPIC' and biz_id=#{topicId} and status in (0,3)
+    and not (source_type &lt;=&gt; 'report')
+  order by id desc limit 1
+ </select>
+ <select id="latestApproveRecord" resultType="java.lang.Long" useCache="false" flushCache="true">
+  select max(id) from audit_record where task_id=#{taskId} and action='APPROVE'
+ </select>
+
+ <insert id="insertSubmission">
+  insert into approved_topic_review_submission(topic_id,member_id,request_id,observed_task_id,observed_task_version,
+    source_config_version,snapshot_hash,audit_task_id,submitted_task_version,submitted_task_status,bundle_sha256,capture_json,create_time)
+  values(#{topicId},#{memberId},#{requestId},#{observedTaskId},#{observedTaskVersion},#{sourceConfigVersion},#{snapshotHash},
+    #{auditTaskId},#{submittedTaskVersion},#{submittedTaskStatus},#{bundleSha256},#{captureJson},now(3))
+ </insert>
+ <sql id="submissionCols">
+  id,topic_id as topicId,member_id as memberId,request_id as requestId,observed_task_id as observedTaskId,
+  observed_task_version as observedTaskVersion,source_config_version as sourceConfigVersion,snapshot_hash as snapshotHash,
+  audit_task_id as auditTaskId,submitted_task_version as submittedTaskVersion,submitted_task_status as submittedTaskStatus,
+  bundle_sha256 as bundleSha256
+ </sql>
+ <select id="submissionByRequest" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select <include refid="submissionCols"/> from approved_topic_review_submission
+  where member_id=#{memberId} and request_id=#{requestId}
+ </select>
+ <select id="latestSubmissionForTask" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select <include refid="submissionCols"/> from approved_topic_review_submission
+  where audit_task_id=#{taskId} order by id desc limit 1
+ </select>
+
+ <select id="headRevision" resultType="long" useCache="false" flushCache="true">
+  select coalesce(max(revision_no),0) from approved_topic_release where topic_id=#{topicId}
+ </select>
+ <insert id="insertRelease" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+  insert into approved_topic_release(topic_id,member_id,request_id,revision_no,source_config_version,audit_task_id,audit_record_id,
+    audit_task_version,schema_version,manifest_hash,audit_snapshot_hash,review_submission_id,manifest_json,create_time)
+  values(#{topicId},#{memberId},#{requestId},#{revisionNo},#{sourceConfigVersion},#{auditTaskId},#{auditRecordId},
+    #{auditTaskVersion},1,#{manifestHash},#{auditSnapshotHash},#{reviewSubmissionId},#{manifestJson},now(3))
+ </insert>
+ <select id="releaseByRequest" resultType="java.util.HashMap" useCache="false" flushCache="true">
+  select id,topic_id as topicId,member_id as memberId,request_id as requestId,revision_no as revisionNo,
+         source_config_version as sourceConfigVersion,audit_task_id as auditTaskId,audit_record_id as auditRecordId,
+         audit_task_version as auditTaskVersion,schema_version as schemaVersion,manifest_hash as manifestHash,
+         audit_snapshot_hash as auditSnapshotHash
+  from approved_topic_release where topic_id=#{topicId} and request_id=#{requestId}
+ </select>
+</mapper>
