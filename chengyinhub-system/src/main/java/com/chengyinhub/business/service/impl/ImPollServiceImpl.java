@@ -125,6 +125,34 @@ public class ImPollServiceImpl implements IImPollService {
         return load(poll, true, memberId);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public java.util.Map<String, Object> createReceipt(Long memberId, Long conversationId, String clientPollKey) {
+        if (conversationId == null || conversationId <= 0) throw badRequest("conversation_id 必须为正数");
+        if (clientPollKey == null || clientPollKey.trim().isEmpty() || clientPollKey.trim().length() > 64)
+            throw badRequest("client_poll_key 必须为 1-64 个字符");
+        imService.requireActiveGroupMembership(memberId, conversationId);
+        String key = clientPollKey.trim();
+        ImPoll poll = pollMapper.selectByBusinessKey(conversationId, memberId, key);
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("source", "original-poll-create-v1");
+        out.put("conversation_id", String.valueOf(conversationId));
+        out.put("creator_member_id", String.valueOf(memberId));
+        out.put("client_poll_key", key);
+        if (poll == null || poll.getMessageId() == null) {
+            // 投票行与卡片消息同一事务提交；读到无消息的行只可能是并发中的原请求，按未知处理、不让客户端重发。
+            out.put("state", poll == null ? "NOT_FOUND" : "UNKNOWN");
+            return out;
+        }
+        ImPoll loaded = load(poll, true, memberId);
+        out.put("state", "APPLIED");
+        out.put("poll_id", String.valueOf(loaded.getId()));
+        out.put("message_id", String.valueOf(loaded.getMessageId()));
+        out.put("request_hash", loaded.getRequestHash());
+        out.put("poll", loaded);
+        return out;
+    }
+
     private ImPoll load(ImPoll poll, boolean results, Long memberId) {
         if (poll == null) throw new ServiceException("投票不存在", 404);
         setPollDetails(poll, results, memberId);

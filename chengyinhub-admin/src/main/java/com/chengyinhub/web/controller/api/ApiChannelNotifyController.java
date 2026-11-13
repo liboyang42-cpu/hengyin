@@ -82,6 +82,15 @@ public class ApiChannelNotifyController extends BaseController
         return ChannelHttpResponse.run(this::getAppUserId, me -> notify.deliveryLog(me, limit, event, cursor));
     }
 
+    @Operation(summary = "本机推送尝试（无 APNs 发送端：如实空页）")
+    @GetMapping("/api/im/device/attempts")
+    public ResponseEntity<AjaxResult> pushAttempts(@RequestParam("installation_id") String installationId,
+            @RequestParam(value = "before", defaultValue = "0") String before,
+            @RequestParam(value = "read_attempts", required = false) String readAttempts)
+    {
+        return ChannelHttpResponse.run(this::getAppUserId, me -> notify.pushAttempts(me, installationId, before, readAttempts));
+    }
+
     @Operation(summary = "普通会话已读状态")
     @GetMapping("/api/im/read-state")
     public ResponseEntity<AjaxResult> readState(@RequestParam("conversation_id") String conversationId)

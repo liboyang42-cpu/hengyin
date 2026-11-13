@@ -359,6 +359,34 @@ public class ChannelNotifyService implements ChannelGovernanceService.MuteBridge
         return out;
     }
 
+    /**
+     * 本机安装的推送尝试（App NativePushAttemptReader）：服务端没有 APNs 发送端，也不落尝试记录，
+     * 所以如实回空页（delivery_proven=false），不当作成功或零条投递；带 read_attempts 时回空的已读对账。
+     */
+    public Map<String, Object> pushAttempts(long viewer, String installationId, String before, String readAttempts)
+    {
+        if (installationId == null || !installationId.matches("[A-Za-z0-9._:-]{1,128}")) throw ChannelRejection.badField("installation_id");
+        if (before == null || !before.matches("0|[1-9][0-9]{0,18}")) throw ChannelRejection.badField("before");
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("installation_id", installationId);
+        if (readAttempts != null)
+        {
+            String[] ids = readAttempts.split(",", -1);
+            if (ids.length < 1 || ids.length > 50) throw ChannelRejection.badField("read_attempts");
+            for (String id : ids) if (!id.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) throw ChannelRejection.badField("read_attempts");
+            out.put("source", "original-im-push-read-reconciliation-v1");
+            out.put("read_attempts", List.of());
+        }
+        else
+        {
+            out.put("source", "original-im-push-attempts-v1");
+            out.put("items", List.of());
+            out.put("next_before", "0");
+        }
+        out.put("delivery_proven", false);
+        return out;
+    }
+
     // ================================================================ ordinary IM read / mute (form, request_id 可选)
 
     public Map<String, Object> ordinaryRead(long viewer, long conv, long readTo, String requestId)

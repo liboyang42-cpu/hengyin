@@ -258,6 +258,14 @@ public class ChannelAdmissionService
         out.put("operation", stored.get("operation"));
         Map<String, Object> result = ChannelReceipts.decode(stored.get("response").toString());
         result.remove("replayed");
+        if (ChannelOnboardingService.OPERATION.equals(stored.get("operation")))
+        {
+            // 引导回执带原请求定位与指纹（App NativeChannelOnboardingFlow.recover 逐项核对）。
+            out.put("guild_kind", result.get("guild_kind"));
+            out.put("guild_id", result.get("guild_id"));
+            out.put("object_id", 0);
+            out.put("request_hash", stored.get("fingerprint"));
+        }
         out.put("result", result);
         return out;
     }

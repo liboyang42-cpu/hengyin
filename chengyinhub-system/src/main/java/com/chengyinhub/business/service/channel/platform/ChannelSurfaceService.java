@@ -14,7 +14,7 @@ import com.chengyinhub.business.mapper.channel.platform.ChannelGovernanceMapper;
 
 /**
  * 频道周边只读面：单图消息附件描述（/api/im/message/{id}/attachment）、空间欢迎屏（/api/welcome-screen/get）、
- * 入会引导（/api/onboarding/get|submit）。欢迎屏以俱乐部既有「入会欢迎语」为真源；引导没有服务端配置源，如实回 ONBOARDING_NOT_CONFIGURED。
+ * 入会引导（/api/onboarding/get|submit）。欢迎屏以俱乐部既有「入会欢迎语」为真源；引导配置见 ChannelOnboardingService。
  */
 @Service
 public class ChannelSurfaceService
@@ -29,6 +29,8 @@ public class ChannelSurfaceService
     private ChannelPlatformService platform;
     @Autowired
     private ChannelGuildAccess access;
+    @Autowired
+    private ChannelOnboardingService onboarding;
 
     /** 旧单图消息（msg_type=2）的附件描述：只有审核通过且可见的消息给地址，地址 300 秒内有效。 */
     public Map<String, Object> attachment(long viewer, long messageId)
@@ -93,10 +95,21 @@ public class ChannelSurfaceService
         return out;
     }
 
-    /** 入会引导没有服务端配置源（问题/选项/授角色映射）：成员可读到明确的未配置，非成员 403。 */
+    /** 入会引导：配置源 im_onboarding_prompt/option（空间无配置时补种默认），非成员 403。见 ChannelOnboardingService。 */
     public Map<String, Object> onboarding(long viewer, int guildKind, long guildId)
     {
-        access.requireMember(guildKind, guildId, viewer);
-        throw new ChannelRejection(404, "ONBOARDING_NOT_CONFIGURED", "本空间尚未配置入会引导");
+        return onboarding.read(viewer, guildKind, guildId);
+    }
+
+    public Map<String, Object> onboarding(long viewer, Map<String, Object> body)
+    {
+        Map<String, Object> b = ChannelGovernanceService.body(body, java.util.Set.of("guild_kind", "guild_id"));
+        return onboarding.read(viewer, (int) ChannelGovernanceService.positive(b.get("guild_kind"), "guild_kind"),
+                ChannelGovernanceService.positive(b.get("guild_id"), "guild_id"));
+    }
+
+    public Map<String, Object> submitOnboarding(long viewer, Map<String, Object> body)
+    {
+        return onboarding.submit(viewer, body);
     }
 }

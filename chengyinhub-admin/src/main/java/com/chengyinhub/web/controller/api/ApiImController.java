@@ -124,6 +124,25 @@ public class ApiImController extends BaseController
         }
     }
 
+    @Operation(summary = "路线分享卡公开来源")
+    @PostMapping("/route-share-source")
+    public AjaxResult routeShareSource(String topic_id)
+    {
+        try
+        {
+            return AjaxResult.success(imService.routeShareSource(getAppUserId(), Convert.toLong(topic_id, 0L)));
+        }
+        catch (ServiceException e)
+        {
+            return bizError(e);
+        }
+        catch (Exception e)
+        {
+            logger.error("路线分享来源读取异常", e);
+            return AjaxResult.error("操作失败，请稍后重试");
+        }
+    }
+
     @Operation(summary = "回读原消息发送收据")
     @PostMapping("/send-receipt")
     public AjaxResult sendReceipt(String conversation_id, String client_message_id)

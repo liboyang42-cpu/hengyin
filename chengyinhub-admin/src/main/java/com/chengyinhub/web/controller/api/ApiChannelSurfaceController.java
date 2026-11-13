@@ -40,21 +40,24 @@ public class ApiChannelSurfaceController extends BaseController
         return ChannelHttpResponse.run(this::getAppUserId, me -> surface.welcome(me, body));
     }
 
-    @Operation(summary = "入会引导（未配置时明确返回 ONBOARDING_NOT_CONFIGURED）")
+    @Operation(summary = "入会引导（App JSON 原请求）")
+    @PostMapping(value = "/api/onboarding/get", consumes = "application/json")
+    public ResponseEntity<AjaxResult> onboardingJson(@RequestBody(required = false) Map<String, Object> body)
+    {
+        return ChannelHttpResponse.run(this::getAppUserId, me -> surface.onboarding(me, body));
+    }
+
+    @Operation(summary = "入会引导（查询参数版）")
     @GetMapping("/api/onboarding/get")
     public ResponseEntity<AjaxResult> onboarding(@RequestParam("guild_kind") int guildKind, @RequestParam("guild_id") String guildId)
     {
         return ChannelHttpResponse.run(this::getAppUserId, me -> surface.onboarding(me, guildKind, ChannelHttpResponse.id(guildId)));
     }
 
-    @Operation(summary = "提交入会引导答案（未配置时拒绝）")
+    @Operation(summary = "提交入会引导答案（原回执族 ADMIT / ONBOARDING_SUBMIT）")
     @PostMapping("/api/onboarding/submit")
     public ResponseEntity<AjaxResult> submit(@RequestBody(required = false) Map<String, Object> body)
     {
-        return ChannelHttpResponse.run(this::getAppUserId, me -> {
-            if (body == null) throw com.chengyinhub.business.service.channel.platform.ChannelRejection.badField("body");
-            return surface.onboarding(me, ((Number) body.getOrDefault("guild_kind", 0)).intValue(),
-                    ChannelHttpResponse.id(String.valueOf(body.get("guild_id"))));
-        });
+        return ChannelHttpResponse.run(this::getAppUserId, me -> surface.submitOnboarding(me, body));
     }
 }

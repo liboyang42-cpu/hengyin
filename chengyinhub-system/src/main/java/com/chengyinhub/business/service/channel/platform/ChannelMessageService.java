@@ -96,6 +96,13 @@ public class ChannelMessageService implements IChannelConversationGate
         catch (ChannelRejection e) { throw new ServiceException(e.getMessage(), e.getStatus()).setDetailMessage(e.getErrorCode()); }
     }
 
+    /** IM 文件/视频/语音上传：VIEW_CHANNEL + SEND_MESSAGE + ATTACH_FILE，归档/禁言同发送。 */
+    public void requireAttach(Long memberId, Long conversationId)
+    {
+        try { authorize(memberId == null ? 0 : memberId, conversationId, of(VIEW_CHANNEL, SEND_MESSAGE, ATTACH_FILE), true); }
+        catch (ChannelRejection e) { throw new ServiceException(e.getMessage(), e.getStatus()).setDetailMessage(e.getErrorCode()); }
+    }
+
     record ChannelAccess(ChannelRow channel, long bits) { }
 
     ChannelAccess authorize(long memberId, Long conversationId, long needed, boolean write)

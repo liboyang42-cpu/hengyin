@@ -47,6 +47,7 @@ import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.mapper.RoamHangoutMapper;
 import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.IChannelConversationGate;
+import com.chengyinhub.business.service.IImMediaAttachGate;
 import com.chengyinhub.business.service.IClubParticipationGuard;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.ISystemNotificationIntentService;
@@ -99,6 +100,9 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     /** 频道会话(type=5)授权闸；未装配时频道会话按普通会话成员行处理。 */
     @Autowired(required = false)
     private IChannelConversationGate channelGate;
+    /** 语音/视频/文件消息(10/11/12)的上传挂接闸；未装配时这三类按不支持处理。 */
+    @Autowired(required = false)
+    private IImMediaAttachGate mediaGate;
 
     private String singleBizKey(Long a, Long b)
     {
@@ -820,6 +824,23 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     /** 路线当前不能发送时的统一提示,不暗示下架/私密等具体原因。 */
     static final String ROUTE_CARD_UNAVAILABLE = "该路线暂不可用";
 
+    @Override
+    public Map<String, Object> routeShareSource(Long memberId, Long topicId)
+    {
+        if (memberId == null || memberId <= 0) throw new ServiceException("请先登录", 401);
+        if (topicId == null || topicId <= 0) throw new ServiceException(ROUTE_CARD_UNAVAILABLE, 404).setDetailMessage("ROUTE_UNAVAILABLE");
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicDetailById(topicId, null);
+        if (!isPublicRouteTopic(topic) || topic.getName() == null || topic.getName().trim().isEmpty())
+            throw new ServiceException(ROUTE_CARD_UNAVAILABLE, 404).setDetailMessage("ROUTE_UNAVAILABLE");
+        String name = topic.getName().trim();
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("source", "original-route-share-v1");
+        out.put("topic_id", String.valueOf(topicId));
+        out.put("name", name.length() > 1000 ? name.substring(0, 1000) : name);
+        out.put("publicly_shareable", true);
+        return out;
+    }
+
     private static boolean isPublicRouteTopic(CmsTopic topic)
     {
         return topic != null && Integer.valueOf(1).equals(topic.getStatus())
@@ -945,6 +966,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         String openid = openidOf(memberId);
         int checkStatus = 1;
         String traceId = null;
+        Long mediaUploadId = null;
         if (type == ImMessage.MSG_TEXT)
         {
             String secMsg = wxContentSecurityService.checkText(content, openid);
@@ -996,6 +1018,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             extraJson = safe.toJSONString();
             content = "[投票] " + poll.getQuestion();
         }
+        else if (mediaGate != null && mediaGate.handles(type))
+        {
+            mediaUploadId = mediaGate.prepare(memberId, convId, type, content, extraJson);
+        }
         else
         {
             throw new ServiceException("不支持的消息类型");
@@ -1014,6 +1040,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         msg.setClientMessageId(clientMessageId);
         msg.setRequestHash(requestHash);
         messageMapper.insertImMessage(msg);
+        if (mediaUploadId != null) mediaGate.bind(mediaUploadId, msg.getId());
         if (type == ImMessage.MSG_IMAGE && traceId != null
                 && !wxContentCallbackInboxService.register(traceId,
                         IWxContentSecurityService.BIZ_TYPE_IM_MESSAGE, msg.getId(), content))
@@ -1024,7 +1051,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
 
         String summary = type == ImMessage.MSG_TEXT ? content
                 : (type == ImMessage.MSG_IMAGE ? "[图片]"
-                : ((type == ImMessage.MSG_CARD || type == ImMessage.MSG_POLL) ? content : "[消息]"));
+                : ((type == ImMessage.MSG_CARD || type == ImMessage.MSG_POLL) ? content
+                : (mediaUploadId != null ? mediaGate.summary(type) : "[消息]")));
         if (summary != null && summary.length() > 200)
         {
             summary = summary.substring(0, 200);
