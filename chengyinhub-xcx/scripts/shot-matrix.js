@@ -641,6 +641,7 @@ const RAW = [
   ['F314', 'F314-pass-reveal-normal.png', '/subpackagePass/reveal/index', 'player', 'normal', null, undefined, { selector: '.ky__stage', min: 1 }, 'real-data', 'P1', '', '通行证钥匙开场:序列帧 + 文案 + 开始按钮'],
   // 2026-11-12 club-payout-binding:俱乐部主个人收款页(无俱乐部参数时落到错误态,真数据需主理人身份)
   ['F315', 'F315-club-payout-receiver-missing-param.png', '/pages/club/payout-receiver/index', 'player', 'missing-param', null, undefined, { selector: 'cy-page-title', min: 1 }, 'real-data', 'P1', '', '个人收款:缺俱乐部信息时给出可重试的错误态'],
+  ['F316', 'F316-market-pass-order-missing-param.png', '/subpackageMember/market/pass-order/index', 'player', 'missing-param', null, undefined, { selector: 'cy-page-title', min: 1 }, 'real-data', 'P1', '', '通行证订单详情:缺订单号时给出可重试的错误态'],
 ];
 /* eslint-enable max-len */
 
@@ -688,11 +689,12 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-10-31 dw29 发布集成:master(F202 等,354)叠加 l2-roam 删「动态」二级页 A05–A09(−5)与 V-24 主题模板详情(+1),按实列复算 total 350、P0 139、P1 201、actionable 326(P0 130、P1 194)、A 48、B 72、setData 184、identity+setData 115、real-data 44。
 // 2026-11-09 qx-a4 V3-42:时光胶囊页先删,F97 退场:total 350→349、P1 201→200、actionable 326→325(P1 194→193)、F 96→95、setData 184→183;blocked 与已验 fixture 不变。
 // 2026-11-12 club-payout-binding:新增 F315 个人收款页(missing-param 一行),total 366→367、P1 217→218、actionable P1 210→211 / total 342→343、F 112→113、real-data 59→60。
+// 2026-11-13 pass-mini:新增 F316 通行证订单详情页(missing-param 一行),total 367→368、P1 218→219、actionable P1 211→212 / total 343→344、F 113→114、real-data 60→61。
 const STATS = {
-  "total": 367,
+  "total": 368,
   "byPriority": {
     "P0": 139,
-    "P1": 218,
+    "P1": 219,
     "P2": 10
   },
   "blockedByPriority": {
@@ -702,9 +704,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 211,
+    "P1": 212,
     "P2": 2,
-    "total": 343
+    "total": 344
   },
   "blocked": 24,
   "domains": {
@@ -713,12 +715,12 @@ const STATS = {
     "C": 56,
     "D": 52,
     "E": 26,
-    "F": 113
+    "F": 114
   },
   "control": {
     "setData": 185,
     "identity+setData": 115,
-    "real-data": 60,
+    "real-data": 61,
     "real-device": 7
   },
   "fixtureVerified": 16

@@ -41,6 +41,9 @@ const MATRIX = [
   ['subpackageMember/market/membership/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
   ['subpackageMember/market/passes/index.js', "url: '/api/platform-pass'", 'required', 'member', 'self-account'],
   ['subpackageMember/utils/platform-pass-pay.js', "url: '/api/platform-pass/orders/' + orderNo, method: 'GET'", 'required', 'member', 'self-account'],
+  // 2026-11-13 pass-mini:回到订单继续支付先读本人订单;订单详情页读本人订单(同 ApiPlatformPassController.order,按订单号 + 本人归属);我的订单读 /api/platform-pass/orders 走 passes 页既有 get 封装。
+  ['subpackageMember/utils/platform-pass-pay.js', "url: '/api/platform-pass/orders/' + encodeURIComponent(orderNo), method: 'GET'", 'required', 'member', 'self-account'],
+  ['subpackageMember/market/pass-order/index.js', "url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo), method: 'GET'", 'required', 'member', 'self-account'],
   // 2026-11-10 qx-b5(qx-c3 补登,按服务端实际守卫;以下路径均不在 SecurityConfig 放行清单,落 anyRequest().authenticated()):
   //   报名页促销目录 ApiMarketingPromotionController /catalog:requireAppMemberId,按场次回目录并带本人可用性。
   ['pages/activity/baoming/baoming.js', "url: '/api/marketing/promotions/catalog'", 'required', 'member', 'public-detail+viewer-personalization'],
@@ -492,7 +495,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // x-design1 D6:通行证页删掉 /api/workshop/capabilities 的无人消费请求,129 → 128。
   // D113:游戏主题库改读公开目录 POST,移除其原认证 GET,128 → 127。
   // 2026-11-12 club-payout-binding:个人收款页读本人收款状态一处直接 GET(已入 MATRIX),127 → 128。
-  assert.equal(directCount, 128, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-13 pass-mini:通行证回到订单继续支付一处、订单详情页一处(已入 MATRIX),128 → 130。
+  assert.equal(directCount, 130, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

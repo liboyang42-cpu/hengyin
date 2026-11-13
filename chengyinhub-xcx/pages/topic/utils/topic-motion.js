@@ -54,16 +54,58 @@ function buildHeroCta(info, opts) {
   return { kind: 'signup', text: '立即报名' };
 }
 
-function firstNodeImage(chapter) {
+/* 章节候选图,优先级:章节自己的图 → 本章各站照片 → 站点玩法图。主题封面不在此列(由调用方最后兜底)。 */
+function chapterImages(chapter, cover) {
+  const out = [];
+  const add = (u) => { if (u && u !== cover && out.indexOf(u) < 0) out.push(u); };
+  csv(chapter && chapter.imgArr).forEach(add);
   const nodes = (chapter && chapter.nodes) || [];
-  for (const n of nodes) {
-    const t = n && n.cmsMemberTemplate;
-    const img = (t && text(t.imgUrl)) || csv(n && n.imgUrl)[0] || '';
-    if (img) return img;
+  nodes.forEach((n) => {
+    csv(n && n.imgUrl).forEach(add);
     const shop = (n && n.registrationMerchantList) || [];
-    if (shop[0] && csv(shop[0].picUrl)[0]) return csv(shop[0].picUrl)[0];
+    if (shop[0]) csv(shop[0].picUrl).forEach(add);
+  });
+  nodes.forEach((n) => add(text(n && n.cmsMemberTemplate && n.cmsMemberTemplate.imgUrl)));
+  return out;
+}
+
+/* 每章一张图:优先用没被前面章节用过的本章图;本章图都用过就沿用第一张;一张都没有才用主题封面 */
+function pickChapterImages(chapters, cover) {
+  const used = {};
+  const c = text(cover) ? csv(cover)[0] : '';
+  return (chapters || []).map((ch) => {
+    const list = chapterImages(ch, c);
+    const pick = list.filter((u) => !used[u])[0] || list[0] || c || '';
+    if (pick) used[pick] = true;
+    return pick;
+  });
+}
+
+/* 章节导读:取章节简介,没有就取第一段文本块的开头;只给导读,整章剧情留给游玩 */
+function chapterGuide(chapter) {
+  const MAX = 60;
+  let src = text(chapter && chapter.description);
+  if (!src) {
+    const blocks = (chapter && chapter.blocks) || [];
+    for (const b of Array.isArray(blocks) ? blocks : []) {
+      if (b && b.type === 'text' && text(b.content)) { src = text(b.content); break; }
+    }
   }
-  return csv(chapter && chapter.imgArr)[0] || '';
+  src = src.replace(/\s+/g, ' ');
+  if (src.length <= MAX) return src;
+  const head = src.slice(0, MAX);
+  const cut = Math.max(head.lastIndexOf('。'), head.lastIndexOf('！'), head.lastIndexOf('？'), head.lastIndexOf('.'));
+  return cut >= 12 ? head.slice(0, cut + 1) : head.replace(/[，,、；;\s]+$/, '') + '…';
+}
+
+/* 路线进度兜底:总数与站点标签按整条路线(含未解锁预告章)算,完成数只来自真实进度 */
+function progressFallback(info) {
+  const d = info || {};
+  let n = 0;
+  (d.chaptersList || []).forEach((c) => { n += ((c && c.nodes) || []).length; });
+  const total = Math.max(n, Number(d.locationCount) || 0);
+  const labels = Array.from({ length: total }, (_, i) => (Number(d.productType) === 2 ? '第 ' + (i + 1) + ' 家' : '第' + (i + 1) + '站'));
+  return { total, done: 0, labels };
 }
 
 const CN = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
@@ -90,11 +132,12 @@ function buildStoryCards(info, merchantCards) {
     }));
   }
   const chapters = d.chaptersList || [];
+  const imgs = pickChapterImages(chapters, d.imgUrl);
   return chapters.map((c, i) => ({
-    img: firstNodeImage(c),
+    img: imgs[i],
     label: chapterLabel(i, chapters.length),
     title: text(c && c.name),
-    excerpt: text(c && c.description),
+    excerpt: chapterGuide(c),
     locked: !!(c && c.locked === true),
     meta: [text(c && c.metaTime), text(c && c.metaPlace)].filter(Boolean).join(' · '),
   })).filter((c) => c.title);
@@ -265,4 +308,4 @@ function buildTeams(rows, topicId) {
   return { rows: out, need };
 }
 
-module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, chapterHeading, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };
+module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, chapterHeading, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, chapterGuide, pickChapterImages, progressFallback, storyMeta, buildMerchantCards, passWindow, buildTeams };

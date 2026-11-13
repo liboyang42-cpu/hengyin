@@ -780,10 +780,8 @@ Page({
     if (this._progressLoaded) return;
     this._progressLoaded = true;
     const info = this.data.info || {};
-    const nodes = [];
-    (info.chaptersList || []).forEach((c) => { if (c && c.locked === true) return; (c.nodes || []).forEach((n) => nodes.push(n)); }); // 锁定章节只是预告,不计入可玩进度
-    const labels = (n) => Array.from({ length: n }, (_, i) => (Number(info.productType) === 2 ? '第 ' + (i + 1) + ' 家' : '第' + (i + 1) + '站')); // v13:自由探索按「家」数
-    const fallback = () => { if (!this._unloaded) this.setData({ progress: { total: nodes.length, done: 0, labels: labels(nodes.length) } }); };
+    const labels = (n) => motion.progressFallback({ productType: info.productType, locationCount: n }).labels;
+    const fallback = () => { if (!this._unloaded) this.setData({ progress: motion.progressFallback(info) }); };
     if (Number(this.data.is_join) !== 1 || !this._loggedIn()) return fallback();
     app.sendRequest({ url: '/api/play/nodes', method: 'GET', hideLoading: true, autoErrorToast: false,
       data: { topicId: info.id || this.data.id },
