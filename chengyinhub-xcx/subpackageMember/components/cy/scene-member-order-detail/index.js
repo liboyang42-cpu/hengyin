@@ -49,6 +49,7 @@ const STATUS_TONE = {
   unknown: 'neutral',
 };
 const { createCheckoutWorkflow, hasCompletePaymentParams, isCompletedZeroAmountOrder } = require('../../../../utils/checkout/checkout-workflow.js');
+const xpayPay = require('../../../../utils/checkout/selfplay-xpay-pay.js');
 const teamUp = require('../../../utils/team-up.js');
 const { createRegistrationPaymentVerifier } = require('../../../../utils/checkout/registration-payment-verifier.js');
 const { isRecordList } = require('../../../../utils/response-shape.js');
@@ -677,6 +678,17 @@ Component({
             data: { id: payload.id },
             success: function (res) {
               if (generation !== that._orderGeneration) return;
+              if (res && res.code == '200' && xpayPay.needsSigning(res.data)) {
+                // 服务端决定走虚拟支付:wx.login 后带 jsCode 重取参数
+                xpayPay.signIntent(app, wx, payload.id, function (r) {
+                  if (generation !== that._orderGeneration) return;
+                  cyLoading.hide();
+                  if (r.ok) { cb({ ok: true, data: r.data }); return; }
+                  that.setData({ paying: false });
+                  cb({ ok: false, msg: r.msg });
+                });
+                return;
+              }
               cyLoading.hide();
               if (res && res.code == '200' && (hasCompletePaymentParams(res.data) || isCompletedZeroAmountOrder(res.data, payload.id))) {
                 cb({ ok: true, data: res.data });
@@ -697,6 +709,7 @@ Component({
           });
         },
         requestPayment: function (orderData, cb) {
+          if (xpayPay.isIntent(orderData)) { xpayPay.pay(app, wx, orderData, cb); return; }
           var p = orderData.payParams;
           wx.requestPayment({
             timeStamp: p.timeStamp,
@@ -713,9 +726,10 @@ Component({
         verifyPayment: function (data, cb) {
           var regId = data.registrationId || data.id || that._orderId;
           if (!regId) { cb({ ok: false, errMsg: '缺少订单编号' }); return; }
+          if (xpayPay.isIntent(data)) return xpayPay.verify(app, verifyRegistrationPayment, data, cb);
           return verifyRegistrationPayment({ registrationId: regId }, cb);
         },
-        isPayable: function (d) { return d && d.payParams && d.payParams.package; }
+        isPayable: function (d) { return d && ((d.payParams && d.payParams.package) || xpayPay.hasVirtualPayment(d)); }
       });
     },
 

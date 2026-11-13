@@ -65,6 +65,10 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
     @Autowired
     private PlatformTransactionManager payoutTransactions;
 
+    /** 自玩票虚拟支付:这类单没有 JSAPI 原支付事实,原路退款走虚拟支付退款接口。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.platformpass.SelfPlayXpayService selfPlayXpay;
+
     private record DispatchClaim(RefundApplication refund, boolean queryOnly) { }
 
     private TransactionTemplate payoutTransaction() {
@@ -145,6 +149,10 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
                     "报名单不存在(sourceId=" + refund.getSourceId() + "),无法原路退款,待人工");
             return;
         }
+        if (selfPlayXpay != null && selfPlayXpay.owns(registration.getId())) {
+            payoutXpay(refundId, leaseToken, claim.queryOnly(), registration, refund);
+            return;
+        }
         final RefundApplication claimedRefund = refund;
         OriginalPayment receipt;
         try {
@@ -210,6 +218,41 @@ public class RefundPayoutServiceImpl implements IRefundPayoutService {
             payoutRemark = "原路退款受理失败(微信拒绝/CLOSED/ABNORMAL),待人工处理";
         }
         refundService.markPayoutResult(refundId, leaseToken, wxAccepted, payoutRemark);
+    }
+
+    /**
+     * 虚拟支付(XPAY)原路退款:退款号由虚拟支付服务固定为 XR+报名号,重复/恢复调用幂等,绝不换号重发。
+     * 受理→处理中(由回查/推送收口到成功);渠道拒绝→人工队列;结果未知→保留原身份待查。
+     */
+    private void payoutXpay(Long refundId, String leaseToken, boolean queryOnly, CmsRegistration registration,
+                            RefundApplication refund) {
+        String expectedRefundNo = refund.getRefundNo();
+        if (StringUtils.isBlank(expectedRefundNo)) expectedRefundNo = "RF" + registration.getId();
+        if (!expectedRefundNo.matches("RF" + registration.getId() + "(?:-[1-9][0-9]*)?")) {
+            if (queryOnly) retainUnknownDispatch(refundId, leaseToken, "原退款编号冲突，禁止更换身份重发");
+            else refundService.markPayoutResult(refundId, leaseToken, false, "退款编号与原报名不一致，请人工核对");
+            return;
+        }
+        if (!ensureRefundNoOrEscalate(refundId, leaseToken, expectedRefundNo)) return;
+        com.chengyinhub.business.platformpass.SelfPlayXpayService.RefundOutcome outcome;
+        try {
+            outcome = selfPlayXpay.submitRefundForPayout(registration.getId(), refund.getRefundAmount());
+        } catch (RestoreDispatchGuard.Blocked paused) {
+            throw paused;
+        } catch (RuntimeException e) {
+            retainUnknownDispatch(refundId, leaseToken, "虚拟支付退款调用异常，保留原号待查");
+            return;
+        }
+        switch (outcome) {
+            case ACCEPTED -> refundService.markPayoutResult(refundId, leaseToken, true, "虚拟支付退款已受理");
+            case DONE -> {
+                refundService.markPayoutResult(refundId, leaseToken, true, "虚拟支付退款已完成");
+                refundService.settleChannelRefundSuccess(registration.getId());
+            }
+            case REJECTED -> refundService.markPayoutResult(refundId, leaseToken, false,
+                    "虚拟支付退款被渠道拒绝或金额不支持(仅整单退)，待人工");
+            default -> retainUnknownDispatch(refundId, leaseToken, "虚拟支付退款结果未知，保留原号待查");
+        }
     }
 
     /** No claim, number allocation, submission or synthetic failure during restore. */

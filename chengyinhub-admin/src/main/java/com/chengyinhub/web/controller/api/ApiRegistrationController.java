@@ -54,6 +54,9 @@ public class ApiRegistrationController extends BaseController {
     @Autowired(required = false)
     private GameSloMetrics gameSlo;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.platformpass.SelfPlayXpayService selfPlayXpay;
+
     private static final Logger logger = LoggerFactory.getLogger(ApiRegistrationController.class);
 
     @Autowired
@@ -172,9 +175,10 @@ public class ApiRegistrationController extends BaseController {
     @Operation(summary = "重新支付")
     @PostMapping("/pay")
     @Parameters({
-            @Parameter(name = "id", description = "报名id")
+            @Parameter(name = "id", description = "报名id"),
+            @Parameter(name = "jsCode", description = "wx.login code;自玩票走虚拟支付(XPAY)时必填,用于签名")
     })
-    public AjaxResult pay(String id) {
+    public AjaxResult pay(String id, String jsCode) {
         try {
             // 获取当前登录用户ID
             Long member_id = 0L;
@@ -190,8 +194,9 @@ public class ApiRegistrationController extends BaseController {
                 return error("请先完成报名信息提供的单独同意");
             }
 
-            RegistrationCheckoutResult result = registrationCheckoutService.retryPayment(
-                    member_id, Long.valueOf(id));
+            RegistrationCheckoutResult result = StringUtils.isEmpty(jsCode)
+                    ? registrationCheckoutService.retryPayment(member_id, Long.valueOf(id))
+                    : registrationCheckoutService.retryPayment(member_id, Long.valueOf(id), false, jsCode);
             return AjaxResult.success(result.getMessage(), result.getData());
         } catch (RegistrationOrderExpiredException e) {
             // 2026-09-17 拍板 #21:过期待支付单被 /pay 拒时,前端要能机器识别并自动换幂等键重建,
@@ -201,6 +206,33 @@ public class ApiRegistrationController extends BaseController {
             return checkoutError(e);
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "自玩票虚拟支付(XPAY)支付后确认:只向微信回查,不信客户端结果")
+    @PostMapping("/xpay/confirm")
+    @Parameters({
+            @Parameter(name = "id", description = "报名id")
+    })
+    public AjaxResult xpayConfirm(String id) {
+        Long member_id = 0L;
+        try {
+            member_id = getAppUserId();
+        } catch (Exception e) {
+        }
+        if (member_id <= 0) {
+            return error("请先登录");
+        }
+        if (selfPlayXpay == null) {
+            return AjaxResult.error("支付暂不可用");
+        }
+        try {
+            return AjaxResult.success(selfPlayXpay.confirm(member_id, Long.valueOf(id)));
+        } catch (com.chengyinhub.business.platformpass.SelfPlayXpayException e) {
+            return new AjaxResult(409, e.getMessage());
+        } catch (Exception e) {
+            logger.warn("自玩票虚拟支付确认失败 member_id={}, id={}", member_id, id, e);
+            return AjaxResult.error("支付结果确认中，请稍后再试");
         }
     }
 

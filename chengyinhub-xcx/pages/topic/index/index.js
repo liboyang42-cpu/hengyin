@@ -12,6 +12,7 @@ function recordsRequest(url, method, data, header) {
 /* 结果面板终态停留时长;跳转挂在面板 close 上,时长只此一处 */
 const RESULT_SHEET_MS = 2000;
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const xpayPay = require('../../../utils/checkout/selfplay-xpay-pay.js');
 const { createCheckoutWorkflow, hasCompletePaymentParams, isOrderExpiredFailure, isTerminalOrderConflict,
   ORDER_REBUILD_REQUIRED, ORDER_EXPIRED_USER_MESSAGE } = require('../../../utils/checkout/checkout-workflow.js');
 const subscribe = require('../../../utils/subscribe.js');
@@ -1438,6 +1439,24 @@ Page({
                 cb({ ok: false, msg: '订单金额待确认，请到订单查看' });
                 return;
               }
+              if (xpayPay.needsSigning(d)) {
+                // 服务端决定走虚拟支付:wx.login 后到 /pay 签发(首次签发才冻结商品/环境/金额)
+                loading.show('正在发起支付…');
+                xpayPay.signIntent(app, wx, d.registrationId, function (r) {
+                  loading.hide();
+                  if (r.ok) {
+                    that._selfPlayReqId = null;
+                    cb({ ok: true, data: Object.assign({}, d, r.data) });
+                  } else if (r.expired) {
+                    that._selfPlayReqId = null;
+                    that._rebuildFallbackMessage = ORDER_EXPIRED_USER_MESSAGE;
+                    cb({ ok: false, msg: ORDER_REBUILD_REQUIRED });
+                  } else {
+                    cb({ ok: false, msg: r.msg });
+                  }
+                });
+                return;
+              }
               if (d.payParams && d.payParams.package) {
                 that._selfPlayReqId = null;
                 cb({ ok: true, data: d });
@@ -1487,6 +1506,7 @@ Page({
         });
       },
       requestPayment: function (orderData, cb) {
+        if (xpayPay.isIntent(orderData)) { xpayPay.pay(app, wx, orderData, cb); return; }
         var p = orderData.payParams;
         wx.requestPayment({
           timeStamp: p.timeStamp,
@@ -1503,10 +1523,13 @@ Page({
       verifyPayment: function (data, cb) {
         var regId = data.registrationId;
         if (!regId) { cb({ ok: false, errMsg: '缺少订单编号' }); return; }
+        if (xpayPay.isIntent(data)) return xpayPay.verify(app, verifyRegistrationPayment, data, cb);
         return verifyRegistrationPayment({ registrationId: regId }, cb);
       },
-      isPayable: function (data) { return !!(data && (data.payParams || Number(data.payableAmount) > 0)); },
-      validatePayment: hasCompletePaymentParams
+      isPayable: function (data) { return !!(data && (data.payParams || xpayPay.isIntent(data) || Number(data.payableAmount) > 0)); },
+      validatePayment: function (data) {
+        return xpayPay.isIntent(data) ? xpayPay.hasVirtualPayment(data) : hasCompletePaymentParams(data);
+      }
     });
   },
 
