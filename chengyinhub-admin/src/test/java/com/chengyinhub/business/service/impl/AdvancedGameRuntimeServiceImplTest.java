@@ -1176,6 +1176,55 @@ class AdvancedGameRuntimeServiceImplTest {
         assertFalse(projection.contains("SECRET_OTHER"));
         assertFalse(projection.contains("roleAssignments"));
         assertFalse(projection.contains("turnOrder"));
+        assertFalse(projection.contains("currentRoleId"));
+        Map<?, ?> turn = (Map<?, ?>) ((Map<?, ?>) view.get("multiplayer")).get("turn");
+        assertEquals(Boolean.TRUE, turn.get("myTurn"));
+        assertEquals(0, turn.get("turnsUntilMine"));
+        assertEquals(2, turn.get("size"));
+        assertEquals(1, turn.get("round"));
+        assertEquals(Boolean.FALSE, turn.get("finished"));
+    }
+
+    @Test
+    void turnProjectionTellsEachMemberWhenTheirRoleIsUpAndOnlyTheLeaderSeesTheOrder() {
+        String config = "{\"schemaVersion\":1,\"multiplayer\":{\"enabled\":true,\"assignment\":\"LEADER\","
+                + "\"minPlayers\":2,\"maxPlayers\":3,\"requiredTurns\":4,\"unitScore\":5,"
+                + "\"roles\":[{\"id\":\"scout\",\"label\":\"侦察\",\"min\":1,\"max\":1},"
+                + "{\"id\":\"smuggler\",\"label\":\"走私\",\"min\":0,\"max\":1}],"
+                + "\"turnOrder\":[\"scout\",\"smuggler\",\"smuggler\"]}}";
+        // turnIndex 4 → position 1 (smuggler), round 2; member 7 (scout, leader here) waits 2 turns.
+        GameRuntimeSession session = runningSession(config,
+                "{\"multiplayer\":{\"roles\":{\"7\":\"scout\",\"8\":\"smuggler\"},"
+                        + "\"members\":[{\"memberId\":7,\"name\":\"甲\"},{\"memberId\":8,\"name\":\"乙\"}],"
+                        + "\"completedUnitIds\":[\"u1\",\"u2\"],\"turnIndex\":4,\"leaderMemberId\":7}}" );
+        session.setOwnerType(GameRuntimeSession.OWNER_TEAM);
+        session.setOwnerId(88L);
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+
+        Map<?, ?> multi = (Map<?, ?>) service.state(MEMBER_ID, 51L).get("multiplayer");
+        Map<?, ?> turn = (Map<?, ?>) multi.get("turn");
+        assertEquals(1, turn.get("position"));
+        assertEquals(2, turn.get("round"));
+        assertEquals(Boolean.FALSE, turn.get("myTurn"));
+        assertEquals(2, turn.get("turnsUntilMine"));
+        assertEquals(2, turn.get("completedTurns"));
+        assertEquals("smuggler", turn.get("currentRoleId"));
+        List<?> order = (List<?>) multi.get("turnOrder");
+        assertEquals(3, order.size());
+        assertEquals("走私", ((Map<?, ?>) order.get(1)).get("roleLabel"));
+
+        // Finished: nobody is up any more.
+        GameRuntimeSession done = runningSession(config,
+                "{\"multiplayer\":{\"roles\":{\"7\":\"scout\"},\"members\":[{\"memberId\":7,\"name\":\"甲\"}],"
+                        + "\"completedUnitIds\":[\"a\",\"b\",\"c\",\"d\"],\"turnIndex\":4,\"leaderMemberId\":9}}" );
+        done.setOwnerType(GameRuntimeSession.OWNER_TEAM);
+        done.setOwnerId(88L);
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(done);
+        Map<?, ?> finished = (Map<?, ?>) ((Map<?, ?>) service.state(MEMBER_ID, 51L).get("multiplayer")).get("turn");
+        assertEquals(Boolean.TRUE, finished.get("finished"));
+        assertEquals(Boolean.FALSE, finished.get("myTurn"));
+        assertNull(finished.get("turnsUntilMine"));
+        assertFalse(finished.containsKey("currentRoleId"));
     }
 
     // ── 小队玩法的准入契约(#813 已有 18 个 multiplayer 模板在跑,组队流程是既定设计)
