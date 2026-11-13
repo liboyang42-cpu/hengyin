@@ -57,6 +57,7 @@ class PlatformPassServiceTest {
     private WechatVerifiedPaymentFactService facts;
     private XpayGateway xpay;
     private IWeChatMiniSessionService sessions;
+    private com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper;
     private final Set<Long> published = new java.util.HashSet<>();
 
     @BeforeEach
@@ -80,6 +81,8 @@ class PlatformPassServiceTest {
         ReflectionTestUtils.setField(service, "xpay", xpay);
         ReflectionTestUtils.setField(service, "miniSessions", sessions);
         ReflectionTestUtils.setField(service, "memberMapper", members);
+        registrationMapper = mock(com.chengyinhub.business.mapper.CmsRegistrationMapper.class);
+        ReflectionTestUtils.setField(service, "registrationMapper", registrationMapper);
         // 覆盖 / 报价 / 下单 / 主题库共用的唯一规则：只返回「已发布」的主题行，是否可领由服务按行判定
         when(mapper.selectCoverageTopics(any())).thenAnswer(i -> ((List<Long>) i.getArgument(0)).stream()
                 .filter(published::contains).map(PlatformPassServiceTest::libraryTopic).toList());

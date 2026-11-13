@@ -76,12 +76,7 @@ public interface PlatformPassMapper {
 
     int markClaimsStopped(@Param("membershipId") long membershipId, @Param("now") Date now);
 
-    int clampClaimTicket(@Param("registrationId") long registrationId, @Param("end") Date end);
-
-    int extendClaimTicket(@Param("registrationId") long registrationId, @Param("lo") Date lo,
-                          @Param("hi") Date hi, @Param("newEnd") Date newEnd);
-
-    /** 覆盖与可领取同一口径用：已发布主题的自玩/价格/生命周期列。 */
+/** 覆盖与可领取同一口径用：已发布主题的自玩/价格/生命周期列。 */
     List<Map<String, Object>> selectCoverageTopics(@Param("topicIds") List<Long> topicIds);
 
     int markCancelled(@Param("id") long id, @Param("memberId") long memberId, @Param("cancelTime") Date cancelTime);

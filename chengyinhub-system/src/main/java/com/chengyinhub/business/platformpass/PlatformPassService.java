@@ -82,6 +82,7 @@ public class PlatformPassService {
     @Autowired(required = false) private XpayGateway xpay;
     @Autowired(required = false) private IWeChatMiniSessionService miniSessions;
     @Autowired(required = false) private UmsMemberMapper memberMapper;
+    @Autowired(required = false) private com.chengyinhub.business.mapper.CmsRegistrationMapper registrationMapper;
 
     public PlatformPassService(PlatformPassMapper mapper, PlatformPassProperties properties,
                                PlatformTransactionManager transactions) {
@@ -912,7 +913,7 @@ public class PlatformPassService {
         for (Map<String, Object> claim : mapper.selectActiveClaims(memberId)) {
             long membershipId = num(claim.get("membership_id"));
             Date end = membershipId == revokedMembershipId ? null : ends.get(membershipId);
-            mapper.clampClaimTicket(num(claim.get("registration_id")), end == null ? now : end);
+            clampTicket(num(claim.get("registration_id")), end == null ? now : end);
         }
         mapper.markClaimsStopped(revokedMembershipId, now);
     }
@@ -928,10 +929,19 @@ public class PlatformPassService {
             long membershipId = num(claim.get("membership_id"));
             Date segEnd = own.get(membershipId), chainEnd = ends.get(membershipId);
             if (segEnd != null && chainEnd != null && chainEnd.getTime() > segEnd.getTime() + 1000) {
-                mapper.extendClaimTicket(num(claim.get("registration_id")), new Date(segEnd.getTime() - 1000),
+                extendTicket(num(claim.get("registration_id")), new Date(segEnd.getTime() - 1000),
                         new Date(segEnd.getTime() + 1000), chainEnd);
             }
         }
+    }
+
+    /** 派生票的到期改写由报名表的属主 Mapper 执行；未装配（纯单测）时视为无票可改。 */
+    private void clampTicket(long registrationId, Date end) {
+        if (registrationMapper != null) registrationMapper.clampPassDerivedTicket(registrationId, end);
+    }
+
+    private void extendTicket(long registrationId, Date lo, Date hi, Date newEnd) {
+        if (registrationMapper != null) registrationMapper.extendPassDerivedTicket(registrationId, lo, hi, newEnd);
     }
 
     private void lockMember(long memberId) {

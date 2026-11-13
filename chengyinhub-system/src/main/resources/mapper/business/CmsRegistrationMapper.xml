@@ -1204,4 +1204,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               and p.activity_id = r.owner_id and p.topic_id = #{topicId} and p.status = 1 and p.del_flag = 0)
         group by r.member_id
     </select>
+
+    <!-- T05:只动通行证派生的 ¥0 票(经 claim 关联);已核销/已完成的保留 -->
+    <update id="clampPassDerivedTicket">
+        update cms_registration
+        set expires_at = #{end}
+        where id = #{registrationId} and payment_type = 0 and registration_status = 2
+          and (verification_status is null or verification_status &lt;&gt; 1)
+          and (expires_at is null or expires_at &gt; #{end})
+    </update>
+
+    <update id="extendPassDerivedTicket">
+        update cms_registration
+        set expires_at = least(#{newEnd}, date_add(create_time, interval 90 day))
+        where id = #{registrationId} and payment_type = 0 and registration_status = 2
+          and expires_at between #{lo} and #{hi}
+          and date_add(create_time, interval 90 day) &gt; expires_at
+    </update>
+
+
 </mapper>
