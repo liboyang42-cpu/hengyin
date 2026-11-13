@@ -67,4 +67,12 @@
 - 小程序：`node --test tests/unit/selfplay-xpay-pay.test.js` + 相关既有用例全绿（见 PR）。
 - 后端：单测 `SelfPlayXpayServiceTest`、`SelfPlayXpayPropertiesTest`、`SelfPlayXpayCheckoutRoutingTest`，并扩展 `RegistrationPaymentRetryContractTest`；Java 构建/测试按仓库规定只在 CI 跑。
 
-STATUS: PARTIAL - CI 结果待确认
+## Shepherd 1113
+
+- 两次合入 master（#819 同改 `pages/topic/index/index.js`；随后 #820、#822 入 master），无历史改写；两条功能（主题详情改版 / 自玩票虚拟支付）都保留。冲突只在生成物与登记：`action-ledger.json`（取 master 后 `build-action-ledger.js --write` 重生成，6043 项）、`ui-integrity-baseline.js`（取 master 侧）、`ci/migration-dependencies.json`（两条迁移声明并存）、`build-action-ledger.js`（订单列表 payOrder 声明与通行证 onResume 声明并存）。
+- ui-integrity 棘轮：`topic/index/index.js` 的 U4-DYNAMIC buildRouteMap 锚点仅因本线自身增行位移（→ 2146），调用行逐字相同；`u4Dynamic keyDigest` 按门禁自己的 `baselineKeyDigest()` 重算；不新增登记、不上调棘轮、未改门禁脚本。
+- 合入 #818 后的真实失败（均由本 PR 造成，已修）：后端编译——`PlatformPassService.xpayClientParams` 新签名需 offerId/env，自玩票冻结行补 `offer_id` 并按冻结值签名；动作台账单测——订单列表 `payOrder` 的 `/pay` + `/xpay/confirm` 两次写需声明（`/xpay/confirm` 只是服务端回查）。
+- 本地复核：API 存在性 A=0、silentError、ui-integrity、route-matrix --check、动作台账与自玩票单测通过。
+- CI（head `514a78957`，run 2407）：Backend tests、Fast gates、Mini program static gates、20 个单测分片、Migration gates、Secret scan 全部 success。
+
+STATUS: DONE
