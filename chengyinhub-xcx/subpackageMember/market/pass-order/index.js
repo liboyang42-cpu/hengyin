@@ -1,5 +1,5 @@
 // 通行证订单详情(我的订单 → 通行证订单):待支付可回查 / 继续支付,已开通可申请退款并看进度。
-// 状态文案只来自服务端订单;退款走 POST /api/platform-pass/orders/{orderNo}/refund {reason, requestId}(后端 fix/pass-backend-20261113 合同)。
+// 状态文案只来自服务端订单;退款走 POST /api/platform-pass/orders/{orderNo}/refund-apply {reason}(后端 fix/pass-backend-20261113),进度读订单 refund.reviewStatus。
 const app = getApp()
 const cyToast = require('../../../utils/toast.js')
 const { isBizOk } = require('../../../utils/response-shape.js')
@@ -68,13 +68,10 @@ Page({
     if (this.data.busy) return
     if (!reason) { this.setData({ notice: '请填写退款原因' }); return }
     this.setData({ busy: true, notice: '' })
-    // 同一次申请重试沿用同一个 requestId,服务端按它幂等
-    if (!this._refundId) this._refundId = payFlow.newRequestId()
-    request({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo) + '/refund', method: 'POST', data: { reason, requestId: this._refundId } }).then((res) => {
+    request({ url: '/api/platform-pass/orders/' + encodeURIComponent(this._orderNo) + '/refund-apply', method: 'POST', data: { reason } }).then((res) => {
       if (this._unloaded) return
       this.setData({ busy: false })
       if (!isBizOk(res)) { this.setData({ notice: (res && res.msg) || '申请失败，请稍后再试' }); return }
-      this._refundId = ''
       this.setData({ refunding: false, reason: '' })
       cyToast('已提交退款申请')
       this.load()

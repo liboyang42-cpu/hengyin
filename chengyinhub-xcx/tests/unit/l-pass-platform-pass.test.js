@@ -189,8 +189,8 @@ test('订单状态与退款进度只来自服务端字段,读不到的状态不�
   assert.equal(st('REFUNDING').state, '退款中');
   assert.equal(st('REFUNDED').state, '已退款');
   assert.equal(st('WHAT').state, '状态确认中');
-  assert.equal(st('PAID', { status: 'REQUESTED' }).refund, '退款申请已提交');
-  assert.equal(st('PAID', { status: 'REJECTED' }).refund, '退款申请未通过');
+  assert.equal(st('PAID', { reviewStatus: 'PENDING' }).refund, '退款申请审核中');
+  assert.equal(st('PAID', { reviewStatus: 'REJECTED' }).refund, '退款申请未通过');
   assert.equal(pp.orderRow(base).amount, '¥39');
 });
 
@@ -198,7 +198,8 @@ test('订单可操作性:待支付可继续、已开通且无退款记录才可�
   const base = { orderNo: 'PPO1', priceFen: 3900, validDays: 30 };
   assert.equal(pp.orderRow(Object.assign({ status: 'PENDING' }, base)).canResume, true);
   assert.equal(pp.orderRow(Object.assign({ status: 'PAID' }, base)).canRefund, true);
-  assert.equal(pp.orderRow(Object.assign({ status: 'PAID', refund: { status: 'REQUESTED' } }, base)).canRefund, false);
+  assert.equal(pp.orderRow(Object.assign({ status: 'PAID', refund: { reviewStatus: 'NONE' } }, base)).canRefund, true);
+  assert.equal(pp.orderRow(Object.assign({ status: 'PAID', refund: { reviewStatus: 'PENDING' } }, base)).canRefund, false);
   assert.equal(pp.orderRow(Object.assign({ status: 'REFUNDED' }, base)).canRefund, false);
 });
 
@@ -270,12 +271,13 @@ test('页面:订单详情页已登记、我的订单接入通行证订单、退�
   const passes = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/passes/index.js'), 'utf8');
   assert.match(passes, /\/api\/platform-pass\/orders/);
   const order = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/pass-order/index.js'), 'utf8');
-  assert.match(order, /\/refund/);
+  assert.match(order, /\/refund-apply/);
   assert.doesNotMatch(order, /requestPayment\(/);
 });
 
 test('页面:购买页不再引用普通 JSAPI 支付,确认中回到同一订单', () => {
   const js = fs.readFileSync(path.join(ROOT, 'subpackageMember/market/membership/index.js'), 'utf8');
   assert.doesNotMatch(js, /JSAPI|requestPayment\(/);
-  assert.match(js, /buyError: '确认中', confirmOrderNo/);
+  assert.match(js, /_confirmOrderNo = r\.orderNo/);
+  assert.match(js, /buyError: '确认中'/);
 });

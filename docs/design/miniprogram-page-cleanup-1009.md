@@ -214,6 +214,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `subpackageMember/market/pass/index` | 否 | `chengyinhub-xcx/subpackageMember/market/passes/index.js:92` | KEEP |
 | `subpackageMember/market/gift/index` | 否 | 无直接源引用；兼容契约/外发历史待确认 | KEEP |
 | `subpackageMember/market/membership/index` | 否 | `chengyinhub-xcx/subpackageMember/market/passes/index.js:63` | KEEP |
+| `subpackageMember/market/pass-order/index` | 否 | `chengyinhub-xcx/subpackageMember/market/passes/index.js:124` | KEEP |
 | `subpackageMember/market/library/index` | 否 | `chengyinhub-xcx/subpackageMember/market/membership/index.js:110` | KEEP |
 | `subpackageRoam/citynode-code/index` | 否 | `chengyinhub-xcx/utils/scene-registry.js:50` | KEEP |
 | `subpackageRoam/history/index` | 否 | `chengyinhub-xcx/utils/scene-registry.js:45` | KEEP |

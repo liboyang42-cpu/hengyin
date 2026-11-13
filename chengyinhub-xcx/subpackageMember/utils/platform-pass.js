@@ -127,7 +127,7 @@ function factRows(ov, count, plan) {
 }
 
 const ORDER_STATE = { PENDING: '待支付', PAID: '已开通', CANCELLED: '已取消', REFUNDING: '退款中', REFUNDED: '已退款' }
-const REFUND_STATE = { REQUESTED: '退款申请已提交', PROCESSING: '退款处理中', APPROVED: '退款已同意', REJECTED: '退款申请未通过' }
+const REFUND_STATE = { PENDING: '退款申请审核中', APPROVED: '退款申请已通过', REJECTED: '退款申请未通过' }
 
 /** 订单状态只来自服务端;读不到的状态不编,写「状态确认中」。 */
 function orderStateText(order) {
@@ -135,11 +135,11 @@ function orderStateText(order) {
   return ORDER_STATE[st] || '状态确认中'
 }
 
-/** 退款进度:服务端 order.refund.status;没有退款记录返回空。 */
+/** 退款进度:服务端 order.refund.reviewStatus(NONE = 没有申请);没有记录返回空。 */
 function refundText(order) {
   const r = order && order.refund
-  if (!r || !r.status) return ''
-  return REFUND_STATE[r.status] || '退款确认中'
+  if (!r || !r.reviewStatus || r.reviewStatus === 'NONE') return ''
+  return REFUND_STATE[r.reviewStatus] || '退款确认中'
 }
 
 /** 通行证订单行(我的订单 / 订单详情共用)。 */
@@ -154,7 +154,7 @@ function orderRow(o) {
     time: dateText(o.paidTime || o.createdTime),
     status: String(o.status || ''),
     canResume: o.status === 'PENDING',
-    canRefund: o.status === 'PAID' && !(o.refund && o.refund.status),
+    canRefund: o.status === 'PAID' && (!o.refund || !o.refund.reviewStatus || o.refund.reviewStatus === 'NONE' || o.refund.reviewStatus === 'REJECTED'),
     validTo: o.status === 'PAID' ? dateText(o.validTo) : ''
   }
 }

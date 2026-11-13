@@ -41,7 +41,6 @@ Page({
     view: { enabled: false },
     buying: false,
     buyError: '',
-    confirmOrderNo: '',
     reduced: false
   },
   onLoad() {
@@ -83,7 +82,8 @@ Page({
   onBuy() {
     const v = this.data.view
     if (this.data.buying || !v || v.buyOff || !v.channel) return
-    this.setData({ buying: true, buyError: '', confirmOrderNo: '' })
+    this.setData({ buying: true, buyError: '' })
+    this._confirmOrderNo = ''
     // 同一次购买意图(套餐不变)重试沿用同一个 requestId,服务端按它幂等,不会重复下单
     if (!this._intent || this._intent.plan !== v.selected) this._intent = { plan: v.selected, requestId: payFlow.newRequestId() }
     payFlow.purchase({ request, wx }, v.selected, v.channel, { requestId: this._intent.requestId }).then((r) => {
@@ -92,13 +92,17 @@ Page({
       if (r.state === 'paid') { this._intent = null; this._celebrate(r.order); return }
       // 取消支付只是这次没付:不动已有会员,订单留在我的订单里
       if (r.state === 'cancelled') { cyToast('已取消支付'); return }
-      if (r.state === 'pending') { this.setData({ buyError: '确认中', confirmOrderNo: r.orderNo || '' }); return }
+      if (r.state === 'pending') {
+        this._confirmOrderNo = r.orderNo || ''
+        this.setData({ buyError: '确认中' })
+        return
+      }
       this.setData({ buyError: r.message || '开通失败，请稍后再试' })
     })
   },
   /** 确认中 → 回到同一张订单继续查 */
   goOrder() {
-    const no = this.data.confirmOrderNo
+    const no = this._confirmOrderNo
     if (!no || this._navigating) return
     this._navigating = true
     wx.navigateTo({ url: PASS_ORDER + '?orderNo=' + encodeURIComponent(no), complete: () => { this._navigating = false } })

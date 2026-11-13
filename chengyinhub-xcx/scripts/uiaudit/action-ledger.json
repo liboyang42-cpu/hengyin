@@ -1364528,7 +1364528,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:121"
+        "staticSource": "subpackageMember/market/membership/index.js:125"
       }
     },
     {
@@ -1364595,7 +1364595,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:76"
+        "staticSource": "subpackageMember/market/membership/index.js:75"
       }
     },
     {
@@ -1364766,7 +1364766,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:83"
+        "staticSource": "subpackageMember/market/membership/index.js:82"
       }
     },
     {
@@ -1364790,11 +1364790,11 @@
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
-        "tag": "cy-inline-error",
+        "tag": "view",
         "event": "bindtap",
         "handler": "goOrder",
         "line": 57,
-        "selectorHint": ".pp__err",
+        "selectorHint": "view[bindtap]",
         "visibleCondition": "{{buyError}}",
         "disabledCondition": null,
         "ariaLabel": null,
@@ -1364834,7 +1364834,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:100"
+        "staticSource": "subpackageMember/market/membership/index.js:104"
       }
     },
     {
@@ -1364904,7 +1364904,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:121"
+        "staticSource": "subpackageMember/market/membership/index.js:125"
       }
     },
     {
@@ -1365075,7 +1365075,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:83"
+        "staticSource": "subpackageMember/market/membership/index.js:82"
       }
     },
     {
@@ -1365145,7 +1365145,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:126"
+        "staticSource": "subpackageMember/market/membership/index.js:130"
       }
     },
     {
@@ -1365227,7 +1365227,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/membership/index.js:65"
+        "staticSource": "subpackageMember/market/membership/index.js:64"
       }
     },
     {
@@ -1365550,12 +1365550,12 @@
           "/api/config/features",
           "/api/login/code",
           "/api/platform-pass/orders/",
-          "/api/platform-pass/orders/{param}/refund",
+          "/api/platform-pass/orders/{param}/refund-apply",
           "/api/role/info"
         ],
         "primaryApis": [
           "/api/platform-pass/orders/",
-          "/api/platform-pass/orders/{param}/refund"
+          "/api/platform-pass/orders/{param}/refund-apply"
         ],
         "auxiliaryApis": [
           "/api/config/features",
@@ -1365582,7 +1365582,7 @@
             "source": "server-controller"
           },
           {
-            "url": "/api/platform-pass/orders/{param}/refund",
+            "url": "/api/platform-pass/orders/{param}/refund-apply",
             "method": "POST",
             "auth": "authenticated"
           },
@@ -1365593,9 +1365593,7 @@
             "source": "server-controller"
           }
         ],
-        "writeApis": [
-          "/api/platform-pass/orders/{param}/refund"
-        ]
+        "writeApis": []
       },
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
@@ -1365746,7 +1365744,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "subpackageMember/market/pass-order/index.js:83"
+        "staticSource": "subpackageMember/market/pass-order/index.js:80"
       }
     },
     {

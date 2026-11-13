@@ -129,7 +129,7 @@ const EXPECTED_NAV_ROUTES = [
   'subpackageMember/market/passes/index', 'subpackageMember/market/pass/index',
   'subpackageMember/market/gift/index', 'subpackageA/pages/video-bounty/index',
   // 2026-11-10 l-pass:通行证页(overlay cy-nav-bar 标题,不挂 cy-page-title)、游戏主题库(cy-nav-bar plain + cy-page-title)
-  'subpackageMember/market/membership/index', 'subpackageMember/market/library/index',
+  'subpackageMember/market/membership/index', 'subpackageMember/market/pass-order/index', 'subpackageMember/market/library/index',
   'subpackageJourney/pages/landing/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/promo/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
   'subpackageJourney/pages/report/index', // 2026-11-10 staging 合流:qx-b3/b4 新页补入标题盘点
@@ -144,6 +144,7 @@ const EXPECTED_PAGE_TITLE_ROUTES = [
   'subpackageMember/market/passes/index', 'subpackageMember/market/pass/index',
   'subpackageA/pages/video-bounty/index',
   'subpackageMember/market/library/index', // 2026-11-10 l-pass 游戏主题库
+  'subpackageMember/market/pass-order/index', // 2026-11-13 pass-mini 通行证订单详情
   // 2026-10-26 角色卡与本人发票使用共享导航及页标题；定向计分保留原生导航。
   'subpackageMember/character/index',
   'subpackageMember/invoice/index',
@@ -368,8 +369,9 @@ function assertTitleInventory(readSource = read) {
   // 2026-11-10 qx-final 合入 l-payout:商家收款账户 pages/merchant/payout-account +1,叠加在 l-pass/l-after 合并计数之上。
   // 2026-11-11 l-icons +1(custom 导航):通行证钥匙开场 subpackagePass/reveal ⇒ 171;custom 170。
   // 2026-11-12 club-payout-binding +1(custom 导航):个人收款 pages/club/payout-receiver ⇒ 172;custom 171。
-  assert.equal(rows.length, 172, '注册页面盘点数量发生漂移,需重新核对标题规范')
-  assert.equal(rows.filter((row) => row.custom).length, 171)
+  assert.equal(rows.length, 173, '注册页面盘点数量发生漂移,需重新核对标题规范')
+  // 2026-11-13 pass-mini +1(custom 导航):通行证订单详情 market/pass-order ⇒ 173;custom 172。
+  assert.equal(rows.filter((row) => row.custom).length, 172)
   // 2026-09-02:+2 俱乐部客户列表与客户详情(club/customers、club/customer-detail),
   //   均为 custom 导航 + cy-nav-bar + cy-page-title 的普通二级页 = 133；custom 导航 129 + 2 = 131。
   const knownRoutes = new Set(routes)
