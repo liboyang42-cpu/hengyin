@@ -13,5 +13,10 @@
 - `tests/lint/ui-integrity-baseline.js`：U5 登记点行号 8923→8915（仅位移），keyDigest 重算；未新增基线条目。
 
 ## 验证
-- 全量小程序单测：见 PR；UI-GATE-0: PASS；route-matrix PASS（172 路由 / 27 场景）。
+- CI（PR #813，head 4e724d1d）：20 个单测分片、静态检查、快速门全绿；首轮仅 action-ledger 本地事件合同计数 2901→2900 一处红，已按重建实测修正，未削弱断言。
+- UI-GATE-0: PASS；route-matrix PASS（172 路由 / 27 场景）。
 - 未改 ci/architecture/*、.github/workflows/*；未运行 ci/xcx-check.sh 与 ds-hardcode-gate-selftest.sh。
+
+PR: https://github.com/liboyang42-cpu/hengyin/pull/813（未合并）
+
+STATUS: DONE
