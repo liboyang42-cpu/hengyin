@@ -54,7 +54,7 @@
           <view class="pp__row-m"><text class="pp__row-s">{{item.k}}</text><text class="pp__row-t">{{item.v}}</text></view>
         </view>
       </view>
-      <view wx:if="{{buyError}}" bindtap="goOrder" hover-class="cy-pressed" hover-stay-time="80"><cy-inline-error class="pp__err" kind="field" title="{{buyError}}" /></view>
+      <view wx:if="{{buyError}}" bindtap="goOrder" aria-role="button" aria-label="{{buyError}}" hover-class="cy-pressed" hover-stay-time="80"><cy-inline-error class="pp__err" kind="field" title="{{buyError}}" /></view>
       <view class="pp__pad"></view>
     </view>
   </view>
