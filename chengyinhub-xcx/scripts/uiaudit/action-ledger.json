@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 6035,
+  "controlCount": 6034,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -3292,7 +3292,6 @@
         "subpackageP3/pages/stamp-album/index/index",
         "subpackageP3/pages/stamp-camera/index/index",
         "subpackageRoam/citynode-code/index",
-        "subpackageRoam/citystamp/index",
         "subpackageRoam/history/index",
         "subpackageRoam/my-teams/index",
         "subpackageRoam/nearby/index",
@@ -4566,32 +4565,6 @@
           "route": "pages/activity/official-detail/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-detail/index",
-          "segments": [
-            {
               "selector": "cy-state-shell",
               "index": 0
             },
@@ -5625,32 +5598,6 @@
             {
               "selector": "cy-btn",
               "index": 9
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -12192,32 +12139,6 @@
           "route": "pages/club/detail/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
               "selector": "cy-scene-club-edit",
               "index": 0
             },
@@ -16053,32 +15974,6 @@
           ]
         },
         {
-          "route": "pages/club/group-code/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/group-code/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
           "route": "pages/club/join-requests/index",
           "segments": [
             {
@@ -21109,32 +21004,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/coop/nearby/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/coop/nearby/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -23289,32 +23158,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -27481,32 +27324,6 @@
           ]
         },
         {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
           "route": "pages/merchant/aftercare/detail/index",
           "segments": [
             {
@@ -28512,32 +28329,6 @@
           "route": "pages/merchant/apply/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/apply/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/apply/index",
-          "segments": [
-            {
               "selector": "cy-state-shell",
               "index": 0
             },
@@ -29488,32 +29279,6 @@
           "route": "pages/merchant/citynode/create/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/create/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/create/index",
-          "segments": [
-            {
               "selector": "cy-timeline.cnc-timeline",
               "index": 0
             },
@@ -29957,32 +29722,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -31821,32 +31560,6 @@
           ]
         },
         {
-          "route": "pages/merchant/decor/ai-npc/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/decor/ai-npc/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
           "route": "pages/merchant/decor/coop-setting/index",
           "segments": [
             {
@@ -32817,32 +32530,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/decor/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/decor/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -34348,32 +34035,6 @@
           "route": "pages/merchant/game-node/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/game-node/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/game-node/index",
-          "segments": [
-            {
               "selector": "cy-time-range",
               "index": 0
             },
@@ -36279,32 +35940,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -42160,32 +41795,6 @@
           "route": "pages/play/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
               "selector": "cy-scene-game-coupon-wallet",
               "index": 0
             },
@@ -44384,32 +43993,6 @@
           "route": "pages/play/merchant/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
               "selector": "cy-safety-rating-sheet",
               "index": 0
             },
@@ -44565,32 +44148,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/play/poi-challenge/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/poi-challenge/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -46346,32 +45903,6 @@
           "route": "pages/publish/fabu/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/fabu/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/fabu/index",
-          "segments": [
-            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -47923,32 +47454,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/roam/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/roam/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -50933,32 +50438,6 @@
           ]
         },
         {
-          "route": "pages/searchmap/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/searchmap/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
           "route": "pages/shezhi/about/index",
           "segments": [
             {
@@ -53178,32 +52657,6 @@
           "route": "pages/shezhi/shezhi",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
               "selector": "cy-privacy-sheet",
               "index": 0
             },
@@ -54423,32 +53876,6 @@
             {
               "selector": "cy-btn",
               "index": 5
-            }
-          ]
-        },
-        {
-          "route": "pages/team/detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/team/detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -56344,32 +55771,6 @@
           "route": "pages/topic/index/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/index/index",
-          "segments": [
-            {
               "selector": "cy-result-sheet",
               "index": 0
             },
@@ -58043,32 +57444,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/merchantinfo/merchantinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/merchantinfo/merchantinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -63301,32 +62676,6 @@
           ]
         },
         {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
           "route": "subpackageA/pages/assetcenter/analysis/index",
           "segments": [
             {
@@ -66180,32 +65529,6 @@
           "route": "subpackageB/pages/im/chat/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageB/pages/im/chat/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageB/pages/im/chat/index",
-          "segments": [
-            {
               "selector": "cy-report-sheet",
               "index": 0
             },
@@ -67118,32 +66441,6 @@
         {
           "route": "subpackageJourney/pages/seats/index",
           "segments": [
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/seats/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/seats/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
             {
               "selector": "cy-btn",
               "index": 0
@@ -67262,32 +66559,6 @@
           "route": "subpackageJourney/pages/settle/index",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/settle/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/settle/index",
-          "segments": [
-            {
               "selector": "rank-board",
               "index": 0
             },
@@ -68191,32 +67462,6 @@
             {
               "selector": "cy-btn",
               "index": 3
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/character/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/character/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -77388,32 +76633,6 @@
           "route": "subpackageMember/mycanyu/mycanyu",
           "segments": [
             {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyu/mycanyu",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyu/mycanyu",
-          "segments": [
-            {
               "selector": "cy-scene-member-participation-detail",
               "index": 0
             },
@@ -77827,32 +77046,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyuinfo/mycanyuinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyuinfo/mycanyuinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -83279,32 +82472,6 @@
           ]
         },
         {
-          "route": "subpackageP3/pages/stamp-camera/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageP3/pages/stamp-camera/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
-            }
-          ]
-        },
-        {
           "route": "subpackageRoam/citynode-code/index",
           "segments": [
             {
@@ -83385,32 +82552,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/citystamp/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/citystamp/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -83799,32 +82940,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/my-teams/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/my-teams/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -84003,32 +83118,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/nearby/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/nearby/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -90663,32 +89752,6 @@
             {
               "selector": "cy-btn",
               "index": 1
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/session/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn.pg__action",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/session/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            },
-            {
-              "selector": "cy-btn",
-              "index": 0
             }
           ]
         },
@@ -320905,436 +319968,7 @@
       }
     },
     {
-      "id": "components/cy/privacy-gate/index.wxml:13:bindchange:toggleService:0",
-      "route": "component:components/cy/privacy-gate/index",
-      "hostRoutes": [
-        "pages/activity/official-detail/index",
-        "pages/activity/official-organizer/index",
-        "pages/club/detail/index",
-        "pages/club/group-code/index",
-        "pages/coop/nearby/index",
-        "pages/index/index",
-        "pages/member/index/index",
-        "pages/merchant/apply/index",
-        "pages/merchant/citynode/create/index",
-        "pages/merchant/citynode/index",
-        "pages/merchant/decor/ai-npc/index",
-        "pages/merchant/decor/index",
-        "pages/merchant/game-node/index",
-        "pages/merchant/index/index",
-        "pages/play/index",
-        "pages/play/merchant/index",
-        "pages/play/poi-challenge/index",
-        "pages/publish/fabu/index",
-        "pages/roam/index",
-        "pages/searchmap/index",
-        "pages/shezhi/shezhi",
-        "pages/team/detail/index",
-        "pages/topic/index/index",
-        "pages/topic/merchantinfo/merchantinfo",
-        "pages/userinfo/userinfo",
-        "subpackageB/pages/im/chat/index",
-        "subpackageJourney/pages/seats/index",
-        "subpackageJourney/pages/settle/index",
-        "subpackageMember/character/index",
-        "subpackageMember/mycanyu/mycanyu",
-        "subpackageMember/mycanyuinfo/mycanyuinfo",
-        "subpackageP3/pages/stamp-camera/index/index",
-        "subpackageRoam/citystamp/index",
-        "subpackageRoam/my-teams/index",
-        "subpackageRoam/nearby/index",
-        "subpackageRoam/session/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/activity/official-detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/group-code/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/coop/nearby/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/apply/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/create/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/decor/ai-npc/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/decor/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/game-node/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/poi-challenge/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/fabu/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/roam/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/searchmap/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/team/detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/merchantinfo/merchantinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageB/pages/im/chat/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/seats/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/settle/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/character/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyu/mycanyu",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyuinfo/mycanyuinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageP3/pages/stamp-camera/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/citystamp/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/my-teams/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/nearby/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/session/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/privacy-gate/index.wxml",
-        "js": "components/cy/privacy-gate/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "checkbox-group",
-        "event": "bindchange",
-        "handler": "toggleService",
-        "line": 13,
-        "selectorHint": ".pg-check",
-        "visibleCondition": null,
-        "disabledCondition": null,
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "state",
-      "interactionMode": "event-contract",
-      "baseActionClass": "state",
-      "effectClasses": [
-        "state"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [],
-        "apis": [],
-        "primaryApis": [],
-        "auxiliaryApis": [],
-        "apiContracts": [],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
-      "requiredBranches": [
-        "success"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:27"
-      }
-    },
-    {
-      "id": "components/cy/privacy-gate/index.wxml:13:catchtap:openPrivacyContract:2",
+      "id": "components/cy/privacy-gate/index.wxml:13:catchtap:openPrivacyContract:1",
       "route": "component:components/cy/privacy-gate/index",
       "hostRoutes": [
         "pages/activity/official-detail/index",
@@ -321772,11 +320406,11 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:30"
+        "staticSource": "components/cy/privacy-gate/index.js:28"
       }
     },
     {
-      "id": "components/cy/privacy-gate/index.wxml:13:catchtap:openService:1",
+      "id": "components/cy/privacy-gate/index.wxml:13:catchtap:openService:0",
       "route": "component:components/cy/privacy-gate/index",
       "hostRoutes": [
         "pages/activity/official-detail/index",
@@ -322201,470 +320835,11 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:28"
+        "staticSource": "components/cy/privacy-gate/index.js:26"
       }
     },
     {
-      "id": "components/cy/privacy-gate/index.wxml:18:bindtap:disagreePrivacy:3",
-      "route": "component:components/cy/privacy-gate/index",
-      "hostRoutes": [
-        "pages/activity/official-detail/index",
-        "pages/activity/official-organizer/index",
-        "pages/club/detail/index",
-        "pages/club/group-code/index",
-        "pages/coop/nearby/index",
-        "pages/index/index",
-        "pages/member/index/index",
-        "pages/merchant/apply/index",
-        "pages/merchant/citynode/create/index",
-        "pages/merchant/citynode/index",
-        "pages/merchant/decor/ai-npc/index",
-        "pages/merchant/decor/index",
-        "pages/merchant/game-node/index",
-        "pages/merchant/index/index",
-        "pages/play/index",
-        "pages/play/merchant/index",
-        "pages/play/poi-challenge/index",
-        "pages/publish/fabu/index",
-        "pages/roam/index",
-        "pages/searchmap/index",
-        "pages/shezhi/shezhi",
-        "pages/team/detail/index",
-        "pages/topic/index/index",
-        "pages/topic/merchantinfo/merchantinfo",
-        "pages/userinfo/userinfo",
-        "subpackageB/pages/im/chat/index",
-        "subpackageJourney/pages/seats/index",
-        "subpackageJourney/pages/settle/index",
-        "subpackageMember/character/index",
-        "subpackageMember/mycanyu/mycanyu",
-        "subpackageMember/mycanyuinfo/mycanyuinfo",
-        "subpackageP3/pages/stamp-camera/index/index",
-        "subpackageRoam/citystamp/index",
-        "subpackageRoam/my-teams/index",
-        "subpackageRoam/nearby/index",
-        "subpackageRoam/session/index"
-      ],
-      "hostComponentPaths": [
-        {
-          "route": "pages/activity/official-detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/activity/official-organizer/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/club/group-code/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/coop/nearby/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/member/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/apply/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/create/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/citynode/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/decor/ai-npc/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/decor/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/game-node/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/merchant/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/merchant/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/play/poi-challenge/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/publish/fabu/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/roam/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/searchmap/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/shezhi/shezhi",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/team/detail/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/topic/merchantinfo/merchantinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "pages/userinfo/userinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageB/pages/im/chat/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/seats/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageJourney/pages/settle/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/character/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyu/mycanyu",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageMember/mycanyuinfo/mycanyuinfo",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageP3/pages/stamp-camera/index/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/citystamp/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/my-teams/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/nearby/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        },
-        {
-          "route": "subpackageRoam/session/index",
-          "segments": [
-            {
-              "selector": "cy-privacy-gate",
-              "index": 0
-            }
-          ]
-        }
-      ],
-      "role": "inherited",
-      "entry": {
-        "wxml": "components/cy/privacy-gate/index.wxml",
-        "js": "components/cy/privacy-gate/index.js"
-      },
-      "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
-      "requiredAuthorityLinks": null,
-      "requiredAuthorityLinksByBranch": null,
-      "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {},
-      "requestMode": "ordered",
-      "confirmationMode": null,
-      "control": {
-        "tag": "cy-btn",
-        "event": "bindtap",
-        "handler": "disagreePrivacy",
-        "line": 18,
-        "selectorHint": ".pg__action",
-        "visibleCondition": null,
-        "disabledCondition": "{{submitting}}",
-        "ariaLabel": null,
-        "ariaLabelExpression": null,
-        "ariaRole": null,
-        "ariaRoleExpression": null,
-        "ariaDisabled": null,
-        "ariaDisabledExpression": null,
-        "ariaExpanded": null,
-        "ariaExpandedExpression": null,
-        "ariaChecked": null,
-        "ariaCheckedExpression": null
-      },
-      "actionClass": "other",
-      "interactionMode": "tap",
-      "baseActionClass": "other",
-      "effectClasses": [
-        "other"
-      ],
-      "accessBoundary": null,
-      "externalCapabilities": [],
-      "successCapabilities": [],
-      "targets": {
-        "routes": [
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "primaryApis": [],
-        "auxiliaryApis": [
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": []
-      },
-      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
-      "requiredBranches": [
-        "success",
-        "error"
-      ],
-      "requiredPlatforms": [],
-      "externalGate": null,
-      "evidence": {
-        "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:63"
-      }
-    },
-    {
-      "id": "components/cy/privacy-gate/index.wxml:19:bindagreeprivacyauthorization:agreePrivacy:4",
+      "id": "components/cy/privacy-gate/index.wxml:16:bindagreeprivacyauthorization:agreePrivacy:2",
       "route": "component:components/cy/privacy-gate/index",
       "hostRoutes": [
         "pages/activity/official-detail/index",
@@ -323049,16 +321224,16 @@
         "tag": "button",
         "event": "bindagreeprivacyauthorization",
         "handler": "agreePrivacy",
-        "line": 19,
+        "line": 16,
         "selectorHint": ".pg__agree",
         "visibleCondition": null,
-        "disabledCondition": "{{submitting || !serviceAgreed}}",
+        "disabledCondition": "{{submitting}}",
         "ariaLabel": null,
         "ariaLabelExpression": null,
         "ariaRole": null,
         "ariaRoleExpression": null,
         "ariaDisabled": null,
-        "ariaDisabledExpression": "{{submitting || !serviceAgreed}}",
+        "ariaDisabledExpression": "{{submitting}}",
         "ariaExpanded": null,
         "ariaExpandedExpression": null,
         "ariaChecked": null,
@@ -323131,11 +321306,470 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:36"
+        "staticSource": "components/cy/privacy-gate/index.js:34"
       }
     },
     {
-      "id": "components/cy/privacy-gate/index.wxml:24:bind:close:closeService:5",
+      "id": "components/cy/privacy-gate/index.wxml:17:bindtap:disagreePrivacy:3",
+      "route": "component:components/cy/privacy-gate/index",
+      "hostRoutes": [
+        "pages/activity/official-detail/index",
+        "pages/activity/official-organizer/index",
+        "pages/club/detail/index",
+        "pages/club/group-code/index",
+        "pages/coop/nearby/index",
+        "pages/index/index",
+        "pages/member/index/index",
+        "pages/merchant/apply/index",
+        "pages/merchant/citynode/create/index",
+        "pages/merchant/citynode/index",
+        "pages/merchant/decor/ai-npc/index",
+        "pages/merchant/decor/index",
+        "pages/merchant/game-node/index",
+        "pages/merchant/index/index",
+        "pages/play/index",
+        "pages/play/merchant/index",
+        "pages/play/poi-challenge/index",
+        "pages/publish/fabu/index",
+        "pages/roam/index",
+        "pages/searchmap/index",
+        "pages/shezhi/shezhi",
+        "pages/team/detail/index",
+        "pages/topic/index/index",
+        "pages/topic/merchantinfo/merchantinfo",
+        "pages/userinfo/userinfo",
+        "subpackageB/pages/im/chat/index",
+        "subpackageJourney/pages/seats/index",
+        "subpackageJourney/pages/settle/index",
+        "subpackageMember/character/index",
+        "subpackageMember/mycanyu/mycanyu",
+        "subpackageMember/mycanyuinfo/mycanyuinfo",
+        "subpackageP3/pages/stamp-camera/index/index",
+        "subpackageRoam/citystamp/index",
+        "subpackageRoam/my-teams/index",
+        "subpackageRoam/nearby/index",
+        "subpackageRoam/session/index"
+      ],
+      "hostComponentPaths": [
+        {
+          "route": "pages/activity/official-detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/activity/official-organizer/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/club/group-code/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/coop/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/index/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/member/index/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/apply/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/citynode/create/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/citynode/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/ai-npc/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/decor/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/game-node/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/merchant/index/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/merchant/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/play/poi-challenge/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/publish/fabu/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/roam/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/searchmap/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/shezhi/shezhi",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/team/detail/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/index/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/topic/merchantinfo/merchantinfo",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "pages/userinfo/userinfo",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageB/pages/im/chat/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/seats/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageJourney/pages/settle/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/character/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/mycanyu/mycanyu",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageMember/mycanyuinfo/mycanyuinfo",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageP3/pages/stamp-camera/index/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/citystamp/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/my-teams/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/nearby/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        },
+        {
+          "route": "subpackageRoam/session/index",
+          "segments": [
+            {
+              "selector": "cy-privacy-gate",
+              "index": 0
+            }
+          ]
+        }
+      ],
+      "role": "inherited",
+      "entry": {
+        "wxml": "components/cy/privacy-gate/index.wxml",
+        "js": "components/cy/privacy-gate/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "disagreePrivacy",
+        "line": 17,
+        "selectorHint": ".pg__decline",
+        "visibleCondition": null,
+        "disabledCondition": null,
+        "ariaLabel": "暂不同意",
+        "ariaLabelExpression": null,
+        "ariaRole": "button",
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "other",
+      "interactionMode": "tap",
+      "baseActionClass": "other",
+      "effectClasses": [
+        "other"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [
+          "pages/privacy/index"
+        ],
+        "apis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "primaryApis": [],
+        "auxiliaryApis": [
+          "/api/config/features",
+          "/api/login/code",
+          "/api/role/info"
+        ],
+        "apiContracts": [
+          {
+            "url": "/api/config/features",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/login/code",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          },
+          {
+            "url": "/api/role/info",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler，回读 page.data、页面栈或服务端权威状态，按实际副作用补齐证据",
+      "requiredBranches": [
+        "success",
+        "error"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "components/cy/privacy-gate/index.js:61"
+      }
+    },
+    {
+      "id": "components/cy/privacy-gate/index.wxml:21:bind:close:closeService:4",
       "route": "component:components/cy/privacy-gate/index",
       "hostRoutes": [
         "pages/activity/official-detail/index",
@@ -323520,7 +322154,7 @@
         "tag": "cy-agreement-sheet",
         "event": "bind:close",
         "handler": "closeService",
-        "line": 24,
+        "line": 21,
         "selectorHint": "cy-agreement-sheet[bind:close]",
         "visibleCondition": null,
         "disabledCondition": null,
@@ -323560,7 +322194,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "components/cy/privacy-gate/index.js:29"
+        "staticSource": "components/cy/privacy-gate/index.js:27"
       }
     },
     {
@@ -1006005,7 +1004639,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7365"
+        "staticSource": "pages/play/index.js:7357"
       }
     },
     {
@@ -1006072,7 +1004706,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7374"
+        "staticSource": "pages/play/index.js:7366"
       }
     },
     {
@@ -1006572,7 +1005206,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8554"
+        "staticSource": "pages/play/index.js:8546"
       }
     },
     {
@@ -1006650,7 +1005284,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5964"
+        "staticSource": "pages/play/index.js:5956"
       }
     },
     {
@@ -1006728,7 +1005362,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5964"
+        "staticSource": "pages/play/index.js:5956"
       }
     },
     {
@@ -1006805,7 +1005439,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5958"
+        "staticSource": "pages/play/index.js:5950"
       }
     },
     {
@@ -1006872,7 +1005506,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7324"
+        "staticSource": "pages/play/index.js:7316"
       }
     },
     {
@@ -1007949,7 +1006583,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5944"
+        "staticSource": "pages/play/index.js:5936"
       }
     },
     {
@@ -1008449,7 +1007083,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6348"
+        "staticSource": "pages/play/index.js:6340"
       }
     },
     {
@@ -1008526,7 +1007160,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5944"
+        "staticSource": "pages/play/index.js:5936"
       }
     },
     {
@@ -1009027,7 +1007661,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6130"
+        "staticSource": "pages/play/index.js:6122"
       }
     },
     {
@@ -1009513,7 +1008147,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6052"
+        "staticSource": "pages/play/index.js:6044"
       }
     },
     {
@@ -1010013,7 +1008647,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5817"
+        "staticSource": "pages/play/index.js:5809"
       }
     },
     {
@@ -1010111,7 +1008745,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6116"
+        "staticSource": "pages/play/index.js:6108"
       }
     },
     {
@@ -1010696,7 +1009330,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6052"
+        "staticSource": "pages/play/index.js:6044"
       }
     },
     {
@@ -1010763,7 +1009397,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7347"
+        "staticSource": "pages/play/index.js:7339"
       }
     },
     {
@@ -1011249,7 +1009883,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6052"
+        "staticSource": "pages/play/index.js:6044"
       }
     },
     {
@@ -1011326,7 +1009960,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5944"
+        "staticSource": "pages/play/index.js:5936"
       }
     },
     {
@@ -1011397,7 +1010031,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5121"
+        "staticSource": "pages/play/index.js:5113"
       }
     },
     {
@@ -1011523,7 +1010157,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7562"
+        "staticSource": "pages/play/index.js:7554"
       }
     },
     {
@@ -1011590,7 +1010224,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5117"
+        "staticSource": "pages/play/index.js:5109"
       }
     },
     {
@@ -1011727,7 +1010361,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6028"
+        "staticSource": "pages/play/index.js:6020"
       }
     },
     {
@@ -1011805,7 +1010439,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6547"
+        "staticSource": "pages/play/index.js:6539"
       }
     },
     {
@@ -1011951,7 +1010585,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6547"
+        "staticSource": "pages/play/index.js:6539"
       }
     },
     {
@@ -1012028,7 +1010662,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9332"
+        "staticSource": "pages/play/index.js:9324"
       }
     },
     {
@@ -1013105,7 +1011739,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9385"
+        "staticSource": "pages/play/index.js:9377"
       }
     },
     {
@@ -1013182,7 +1011816,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9375"
+        "staticSource": "pages/play/index.js:9367"
       }
     },
     {
@@ -1013249,7 +1011883,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6558"
+        "staticSource": "pages/play/index.js:6550"
       }
     },
     {
@@ -1013326,7 +1011960,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9385"
+        "staticSource": "pages/play/index.js:9377"
       }
     },
     {
@@ -1013403,7 +1012037,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9375"
+        "staticSource": "pages/play/index.js:9367"
       }
     },
     {
@@ -1013568,7 +1012202,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6559"
+        "staticSource": "pages/play/index.js:6551"
       }
     },
     {
@@ -1013645,7 +1012279,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9379"
+        "staticSource": "pages/play/index.js:9371"
       }
     },
     {
@@ -1013727,7 +1012361,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6596"
+        "staticSource": "pages/play/index.js:6588"
       }
     },
     {
@@ -1013794,7 +1012428,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6697"
+        "staticSource": "pages/play/index.js:6689"
       }
     },
     {
@@ -1013861,7 +1012495,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6729"
+        "staticSource": "pages/play/index.js:6721"
       }
     },
     {
@@ -1013944,7 +1012578,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6678"
+        "staticSource": "pages/play/index.js:6670"
       }
     },
     {
@@ -1014444,7 +1013078,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6616"
+        "staticSource": "pages/play/index.js:6608"
       }
     },
     {
@@ -1014511,7 +1013145,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6600"
+        "staticSource": "pages/play/index.js:6592"
       }
     },
     {
@@ -1014578,7 +1013212,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6601"
+        "staticSource": "pages/play/index.js:6593"
       }
     },
     {
@@ -1015088,7 +1013722,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6772"
+        "staticSource": "pages/play/index.js:6764"
       }
     },
     {
@@ -1015221,7 +1013855,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6332"
+        "staticSource": "pages/play/index.js:6324"
       }
     },
     {
@@ -1015354,7 +1013988,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6332"
+        "staticSource": "pages/play/index.js:6324"
       }
     },
     {
@@ -1015487,7 +1014121,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6332"
+        "staticSource": "pages/play/index.js:6324"
       }
     },
     {
@@ -1015620,7 +1014254,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6332"
+        "staticSource": "pages/play/index.js:6324"
       }
     },
     {
@@ -1015759,7 +1014393,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6332"
+        "staticSource": "pages/play/index.js:6324"
       }
     },
     {
@@ -1015946,7 +1014580,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6917"
+        "staticSource": "pages/play/index.js:6909"
       }
     },
     {
@@ -1016426,7 +1015060,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7019"
+        "staticSource": "pages/play/index.js:7011"
       }
     },
     {
@@ -1016912,7 +1015546,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6752"
+        "staticSource": "pages/play/index.js:6744"
       }
     },
     {
@@ -1017422,7 +1016056,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6772"
+        "staticSource": "pages/play/index.js:6764"
       }
     },
     {
@@ -1017922,7 +1016556,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6730"
+        "staticSource": "pages/play/index.js:6722"
       }
     },
     {
@@ -1018422,7 +1017056,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6606"
+        "staticSource": "pages/play/index.js:6598"
       }
     },
     {
@@ -1018490,7 +1017124,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6546"
+        "staticSource": "pages/play/index.js:6538"
       }
     },
     {
@@ -1018970,7 +1017604,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6828"
+        "staticSource": "pages/play/index.js:6820"
       }
     },
     {
@@ -1019037,7 +1017671,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7526"
+        "staticSource": "pages/play/index.js:7518"
       }
     },
     {
@@ -1019172,7 +1017806,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7526"
+        "staticSource": "pages/play/index.js:7518"
       }
     },
     {
@@ -1019307,7 +1017941,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7489"
+        "staticSource": "pages/play/index.js:7481"
       }
     },
     {
@@ -1019808,7 +1018442,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8636"
+        "staticSource": "pages/play/index.js:8628"
       }
     },
     {
@@ -1020463,7 +1019097,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9243"
+        "staticSource": "pages/play/index.js:9235"
       }
     },
     {
@@ -1020540,7 +1019174,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9154"
+        "staticSource": "pages/play/index.js:9146"
       }
     },
     {
@@ -1020689,7 +1019323,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9076"
+        "staticSource": "pages/play/index.js:9068"
       }
     },
     {
@@ -1020857,7 +1019491,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7462"
+        "staticSource": "pages/play/index.js:7454"
       }
     },
     {
@@ -1021022,7 +1019656,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8688"
+        "staticSource": "pages/play/index.js:8680"
       }
     },
     {
@@ -1021488,7 +1020122,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8652"
+        "staticSource": "pages/play/index.js:8644"
       }
     },
     {
@@ -1021645,7 +1020279,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5280"
+        "staticSource": "pages/play/index.js:5272"
       }
     },
     {
@@ -1021715,7 +1020349,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9506"
+        "staticSource": "pages/play/index.js:9498"
       }
     },
     {
@@ -1021798,7 +1020432,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8467"
+        "staticSource": "pages/play/index.js:8459"
       }
     },
     {
@@ -1021904,7 +1020538,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8907"
+        "staticSource": "pages/play/index.js:8899"
       }
     },
     {
@@ -1021974,7 +1020608,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9495"
+        "staticSource": "pages/play/index.js:9487"
       }
     },
     {
@@ -1022475,7 +1021109,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8636"
+        "staticSource": "pages/play/index.js:8628"
       }
     },
     {
@@ -1022976,7 +1021610,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8636"
+        "staticSource": "pages/play/index.js:8628"
       }
     },
     {
@@ -1023063,7 +1021697,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9243"
+        "staticSource": "pages/play/index.js:9235"
       }
     },
     {
@@ -1023130,7 +1021764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9442"
+        "staticSource": "pages/play/index.js:9434"
       }
     },
     {
@@ -1023197,7 +1021831,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9486"
+        "staticSource": "pages/play/index.js:9478"
       }
     },
     {
@@ -1023284,7 +1021918,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9487"
+        "staticSource": "pages/play/index.js:9479"
       }
     },
     {
@@ -1023351,7 +1021985,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5129"
+        "staticSource": "pages/play/index.js:5121"
       }
     },
     {
@@ -1023438,7 +1022072,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9243"
+        "staticSource": "pages/play/index.js:9235"
       }
     },
     {
@@ -1023508,7 +1022142,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9273"
+        "staticSource": "pages/play/index.js:9265"
       }
     },
     {
@@ -1023575,7 +1022209,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8349"
+        "staticSource": "pages/play/index.js:8341"
       }
     },
     {
@@ -1023589,68 +1022223,13 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": [
-        {
-          "urlTemplate": "/api/game/session/command",
-          "method": "POST",
-          "kind": "write"
-        },
-        {
-          "urlTemplate": "/api/play/theme/action",
-          "method": "POST",
-          "kind": "write"
-        }
-      ],
-      "requiredRequestsByBranch": {
-        "without-chapter-grant": [
-          {
-            "urlTemplate": "/api/game/session/command",
-            "method": "POST",
-            "kind": "write"
-          }
-        ]
-      },
-      "requiredRequestOutcomes": {
-        "success": [
-          "success",
-          "success"
-        ],
-        "first-error": [
-          "error"
-        ],
-        "first-timeout": [
-          "timeout"
-        ],
-        "second-error-after-first": [
-          "success",
-          "error"
-        ],
-        "second-timeout-after-first": [
-          "success",
-          "timeout"
-        ],
-        "duplicate-trigger": [
-          "duplicate-trigger",
-          "duplicate-trigger"
-        ],
-        "forbidden-owner": [
-          "forbidden-owner"
-        ],
-        "without-chapter-grant": [
-          "success"
-        ]
-      },
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
-      "requiredCapabilityByBranch": {
-        "cancelled": "openSetting",
-        "authorize-denied": "authorize",
-        "getLocation-denied": "getLocation",
-        "openSetting-denied": "openSetting",
-        "startLocationUpdate-denied": "startLocationUpdate",
-        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
-      },
+      "requiredCapabilityByBranch": {},
       "requestMode": "ordered",
       "confirmationMode": null,
       "control": {
@@ -1023672,407 +1022251,29 @@
         "ariaChecked": null,
         "ariaCheckedExpression": null
       },
-      "actionClass": "external",
+      "actionClass": "state",
       "interactionMode": "tap",
-      "baseActionClass": "write",
+      "baseActionClass": "state",
       "effectClasses": [
-        "write",
-        "navigation",
         "state"
       ],
-      "accessBoundary": "owned-resource",
-      "externalCapabilities": [
-        "authorize",
-        "createInnerAudioContext",
-        "getLocation",
-        "getSetting",
-        "login",
-        "openSetting",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
-        "vibrateShort"
-      ],
-      "successCapabilities": [
-        "createInnerAudioContext",
-        "getLocation",
-        "getSetting",
-        "login",
-        "startLocationUpdate",
-        "startLocationUpdateBackground",
-        "stopLocationUpdate",
-        "vibrateShort"
-      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
       "targets": {
-        "routes": [
-          "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
-        ],
-        "apis": [
-          "/api/activity/list",
-          "/api/analytics/events/batch",
-          "/api/audit/guard/appeal",
-          "/api/audit/guard/appeal/receipt",
-          "/api/audit/guard/reference",
-          "/api/club/lead/team-progress",
-          "/api/config/features",
-          "/api/game/session/command",
-          "/api/game/session/receipt",
-          "/api/game/session/view",
-          "/api/login/code",
-          "/api/map/reverse-geocode",
-          "/api/orient/scoring/dispute",
-          "/api/orient/scoring/session/",
-          "/api/play/arrive",
-          "/api/play/character",
-          "/api/play/companionLine",
-          "/api/play/contact",
-          "/api/play/encounter",
-          "/api/play/ending",
-          "/api/play/history",
-          "/api/play/journey/casebook",
-          "/api/play/journey/ending",
-          "/api/play/journey/stage-end",
-          "/api/play/journey/thought/sync",
-          "/api/play/my-completed",
-          "/api/play/nodes",
-          "/api/play/os/",
-          "/api/play/player-journey/report",
-          "/api/play/preference/",
-          "/api/play/route-state",
-          "/api/play/run-session",
-          "/api/play/run-session/clear",
-          "/api/play/theme/action",
-          "/api/play/theme/card",
-          "/api/play/theme/gameplay-action",
-          "/api/play/theme/state",
-          "/api/role/info",
-          "/api/team/trail/consent",
-          "/api/team/trail/state",
-          "/api/team/trail/sync",
-          "/api/topic/share-code"
-        ],
-        "primaryApis": [
-          "/api/activity/list",
-          "/api/audit/guard/appeal",
-          "/api/audit/guard/appeal/receipt",
-          "/api/audit/guard/reference",
-          "/api/club/lead/team-progress",
-          "/api/game/session/command",
-          "/api/game/session/receipt",
-          "/api/game/session/view",
-          "/api/map/reverse-geocode",
-          "/api/orient/scoring/dispute",
-          "/api/orient/scoring/session/",
-          "/api/play/arrive",
-          "/api/play/character",
-          "/api/play/companionLine",
-          "/api/play/contact",
-          "/api/play/encounter",
-          "/api/play/ending",
-          "/api/play/history",
-          "/api/play/journey/casebook",
-          "/api/play/journey/ending",
-          "/api/play/journey/stage-end",
-          "/api/play/journey/thought/sync",
-          "/api/play/my-completed",
-          "/api/play/nodes",
-          "/api/play/os/",
-          "/api/play/player-journey/report",
-          "/api/play/preference/",
-          "/api/play/route-state",
-          "/api/play/run-session",
-          "/api/play/run-session/clear",
-          "/api/play/theme/action",
-          "/api/play/theme/card",
-          "/api/play/theme/gameplay-action",
-          "/api/play/theme/state",
-          "/api/team/trail/consent",
-          "/api/team/trail/state",
-          "/api/team/trail/sync",
-          "/api/topic/share-code"
-        ],
-        "auxiliaryApis": [
-          "/api/analytics/events/batch",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
-        "apiContracts": [
-          {
-            "url": "/api/activity/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/analytics/events/batch",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/audit/guard/appeal",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/audit/guard/appeal/receipt",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/audit/guard/reference",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/club/lead/team-progress",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/game/session/command",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/game/session/receipt",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/game/session/view",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/map/reverse-geocode",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/orient/scoring/dispute",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/orient/scoring/session/",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "handler-default"
-          },
-          {
-            "url": "/api/play/arrive",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/character",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/companionLine",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/contact",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/encounter",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/ending",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/history",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/journey/casebook",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/journey/ending",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/journey/stage-end",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/journey/thought/sync",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/my-completed",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/nodes",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/os/",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "handler-default"
-          },
-          {
-            "url": "/api/play/player-journey/report",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/preference/",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "handler-default"
-          },
-          {
-            "url": "/api/play/route-state",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/run-session",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/run-session/clear",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/theme/action",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/theme/card",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/theme/gameplay-action",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/theme/state",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/team/trail/consent",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/team/trail/state",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/team/trail/sync",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/topic/share-code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          }
-        ],
-        "writeApis": [
-          "/api/game/session/command",
-          "/api/play/theme/action"
-        ]
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
       },
-      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
       "requiredBranches": [
-        "success",
-        "first-error",
-        "first-timeout",
-        "second-error-after-first",
-        "second-timeout-after-first",
-        "duplicate-trigger",
-        "forbidden-owner",
-        "without-chapter-grant"
+        "success"
       ],
-      "requiredPlatforms": [
-        "ios",
-        "android"
-      ],
-      "externalGate": "real-device-required",
+      "requiredPlatforms": [],
+      "externalGate": null,
       "evidence": {
         "status": "pending",
         "staticSource": "pages/play/index.js:3743"
@@ -1024145,7 +1022346,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4421"
+        "staticSource": "pages/play/index.js:4413"
       }
     },
     {
@@ -1024215,7 +1022416,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4403"
+        "staticSource": "pages/play/index.js:4395"
       }
     },
     {
@@ -1024715,7 +1022916,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4411"
+        "staticSource": "pages/play/index.js:4403"
       }
     },
     {
@@ -1025215,7 +1023416,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4418"
+        "staticSource": "pages/play/index.js:4410"
       }
     },
     {
@@ -1025285,7 +1023486,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4421"
+        "staticSource": "pages/play/index.js:4413"
       }
     },
     {
@@ -1025355,7 +1023556,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4421"
+        "staticSource": "pages/play/index.js:4413"
       }
     },
     {
@@ -1025426,7 +1023627,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4406"
+        "staticSource": "pages/play/index.js:4398"
       }
     },
     {
@@ -1025496,7 +1023697,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4403"
+        "staticSource": "pages/play/index.js:4395"
       }
     },
     {
@@ -1025563,7 +1023764,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8348"
+        "staticSource": "pages/play/index.js:8340"
       }
     },
     {
@@ -1025855,7 +1024056,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7320"
+        "staticSource": "pages/play/index.js:7312"
       }
     },
     {
@@ -1026355,7 +1024556,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7298"
+        "staticSource": "pages/play/index.js:7290"
       }
     },
     {
@@ -1026490,7 +1024691,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1026759,7 +1024960,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7411"
+        "staticSource": "pages/play/index.js:7403"
       }
     },
     {
@@ -1026827,7 +1025028,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1027096,7 +1025297,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7411"
+        "staticSource": "pages/play/index.js:7403"
       }
     },
     {
@@ -1027167,7 +1025368,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7401"
+        "staticSource": "pages/play/index.js:7393"
       }
     },
     {
@@ -1027273,7 +1025474,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7440"
+        "staticSource": "pages/play/index.js:7432"
       }
     },
     {
@@ -1027341,7 +1025542,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1027614,7 +1025815,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7443"
       }
     },
     {
@@ -1027681,7 +1025882,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7411"
+        "staticSource": "pages/play/index.js:7403"
       }
     },
     {
@@ -1027787,7 +1025988,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7440"
+        "staticSource": "pages/play/index.js:7432"
       }
     },
     {
@@ -1027855,7 +1026056,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1028124,7 +1026325,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7411"
+        "staticSource": "pages/play/index.js:7403"
       }
     },
     {
@@ -1028230,7 +1026431,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7440"
+        "staticSource": "pages/play/index.js:7432"
       }
     },
     {
@@ -1028298,7 +1026499,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1028567,7 +1026768,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7411"
+        "staticSource": "pages/play/index.js:7403"
       }
     },
     {
@@ -1028673,7 +1026874,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7440"
+        "staticSource": "pages/play/index.js:7432"
       }
     },
     {
@@ -1029241,7 +1027442,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1029510,7 +1027711,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7411"
+        "staticSource": "pages/play/index.js:7403"
       }
     },
     {
@@ -1029587,7 +1027788,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7444"
+        "staticSource": "pages/play/index.js:7436"
       }
     },
     {
@@ -1029655,7 +1027856,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1029924,7 +1028125,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7411"
+        "staticSource": "pages/play/index.js:7403"
       }
     },
     {
@@ -1030030,7 +1028231,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7440"
+        "staticSource": "pages/play/index.js:7432"
       }
     },
     {
@@ -1030098,7 +1028299,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1030367,7 +1028568,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7392"
+        "staticSource": "pages/play/index.js:7384"
       }
     },
     {
@@ -1030435,7 +1028636,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1030704,7 +1028905,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7392"
+        "staticSource": "pages/play/index.js:7384"
       }
     },
     {
@@ -1030772,7 +1028973,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1031041,7 +1029242,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7392"
+        "staticSource": "pages/play/index.js:7384"
       }
     },
     {
@@ -1031109,7 +1029310,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1031378,7 +1029579,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7392"
+        "staticSource": "pages/play/index.js:7384"
       }
     },
     {
@@ -1031946,7 +1030147,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7448"
       }
     },
     {
@@ -1032219,7 +1030420,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7447"
+        "staticSource": "pages/play/index.js:7439"
       }
     },
     {
@@ -1032286,7 +1030487,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7411"
+        "staticSource": "pages/play/index.js:7403"
       }
     },
     {
@@ -1032353,7 +1030554,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7433"
+        "staticSource": "pages/play/index.js:7425"
       }
     },
     {
@@ -1032420,7 +1030621,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7420"
+        "staticSource": "pages/play/index.js:7412"
       }
     },
     {
@@ -1032487,7 +1030688,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7506"
+        "staticSource": "pages/play/index.js:7498"
       }
     },
     {
@@ -1033088,7 +1031289,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7795"
+        "staticSource": "pages/play/index.js:7787"
       }
     },
     {
@@ -1033223,7 +1031424,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8184"
+        "staticSource": "pages/play/index.js:8176"
       }
     },
     {
@@ -1033723,7 +1031924,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8192"
+        "staticSource": "pages/play/index.js:8184"
       }
     },
     {
@@ -1040200,7 +1038401,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6705"
+        "staticSource": "pages/play/index.js:6697"
       }
     },
     {
@@ -1040282,7 +1038483,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6706"
+        "staticSource": "pages/play/index.js:6698"
       }
     },
     {
@@ -1041619,7 +1039820,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5241"
+        "staticSource": "pages/play/index.js:5233"
       }
     },
     {
@@ -1041686,7 +1039887,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5245"
+        "staticSource": "pages/play/index.js:5237"
       }
     },
     {
@@ -1041753,7 +1039954,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5246"
+        "staticSource": "pages/play/index.js:5238"
       }
     },
     {
@@ -1043851,7 +1042052,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6505"
+        "staticSource": "pages/play/index.js:6497"
       }
     },
     {
@@ -1044351,7 +1042552,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6443"
+        "staticSource": "pages/play/index.js:6435"
       }
     },
     {
@@ -1044851,7 +1043052,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7572"
+        "staticSource": "pages/play/index.js:7564"
       }
     },
     {
@@ -1045750,7 +1043951,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7795"
+        "staticSource": "pages/play/index.js:7787"
       }
     },
     {
@@ -1045817,7 +1044018,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7971"
+        "staticSource": "pages/play/index.js:7963"
       }
     },
     {
@@ -1045894,7 +1044095,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6499"
+        "staticSource": "pages/play/index.js:6491"
       }
     },
     {
@@ -1045962,7 +1044163,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7744"
+        "staticSource": "pages/play/index.js:7736"
       }
     },
     {
@@ -1046030,7 +1044231,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8184"
+        "staticSource": "pages/play/index.js:8176"
       }
     },
     {
@@ -1046530,7 +1044731,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8192"
+        "staticSource": "pages/play/index.js:8184"
       }
     },
     {
@@ -1047165,7 +1045366,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7462"
+        "staticSource": "pages/play/index.js:7454"
       }
     },
     {
@@ -1047413,7 +1045614,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7482"
+        "staticSource": "pages/play/index.js:7474"
       }
     },
     {
@@ -1047519,7 +1045720,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7483"
+        "staticSource": "pages/play/index.js:7475"
       }
     },
     {
@@ -1047994,7 +1046195,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7481"
+        "staticSource": "pages/play/index.js:7473"
       }
     },
     {
@@ -1048503,7 +1046704,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5635"
+        "staticSource": "pages/play/index.js:5627"
       }
     },
     {
@@ -1048573,7 +1046774,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5984"
+        "staticSource": "pages/play/index.js:5976"
       }
     },
     {
@@ -1049040,7 +1047241,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7485"
+        "staticSource": "pages/play/index.js:7477"
       }
     },
     {
@@ -1050796,7 +1048997,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7459"
+        "staticSource": "pages/play/index.js:7451"
       }
     },
     {
@@ -1051261,7 +1049462,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7460"
+        "staticSource": "pages/play/index.js:7452"
       }
     },
     {
@@ -1051962,7 +1050163,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7461"
+        "staticSource": "pages/play/index.js:7453"
       }
     },
     {
@@ -1052429,7 +1050630,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7484"
+        "staticSource": "pages/play/index.js:7476"
       }
     },
     {
@@ -1052535,7 +1050736,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7520"
+        "staticSource": "pages/play/index.js:7512"
       }
     },
     {
@@ -1052644,7 +1050845,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8347"
+        "staticSource": "pages/play/index.js:8339"
       }
     },
     {
@@ -1052711,7 +1050912,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7517"
+        "staticSource": "pages/play/index.js:7509"
       }
     },
     {
@@ -1053211,7 +1051412,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7466"
+        "staticSource": "pages/play/index.js:7458"
       }
     },
     {
@@ -1053711,7 +1051912,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7466"
+        "staticSource": "pages/play/index.js:7458"
       }
     },
     {
@@ -1054211,7 +1052412,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7466"
+        "staticSource": "pages/play/index.js:7458"
       }
     },
     {
@@ -1054320,7 +1052521,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8347"
+        "staticSource": "pages/play/index.js:8339"
       }
     },
     {
@@ -1054387,7 +1052588,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7517"
+        "staticSource": "pages/play/index.js:7509"
       }
     },
     {
@@ -1054531,7 +1052732,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7471"
+        "staticSource": "pages/play/index.js:7463"
       }
     },
     {
@@ -1055031,7 +1053232,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5972"
+        "staticSource": "pages/play/index.js:5964"
       }
     },
     {
@@ -1055531,7 +1053732,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8525"
+        "staticSource": "pages/play/index.js:8517"
       }
     },
     {
@@ -1055601,7 +1053802,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4421"
+        "staticSource": "pages/play/index.js:4413"
       }
     },
     {
@@ -1057168,7 +1055369,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4359"
+        "staticSource": "pages/play/index.js:4351"
       }
     },
     {
@@ -1058803,7 +1057004,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5844"
+        "staticSource": "pages/play/index.js:5836"
       }
     },
     {
@@ -1058894,7 +1057095,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7462"
+        "staticSource": "pages/play/index.js:7454"
       }
     },
     {
@@ -1059464,7 +1057665,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4421"
+        "staticSource": "pages/play/index.js:4413"
       }
     },
     {
@@ -1060342,7 +1058543,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5483"
+        "staticSource": "pages/play/index.js:5475"
       }
     },
     {
@@ -1060515,7 +1058716,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7320"
+        "staticSource": "pages/play/index.js:7312"
       }
     },
     {
@@ -1063773,7 +1061974,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7748"
+        "staticSource": "pages/play/index.js:7740"
       }
     },
     {
@@ -1065521,7 +1063722,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5486"
+        "staticSource": "pages/play/index.js:5478"
       }
     },
     {
@@ -1066029,7 +1064230,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5535"
+        "staticSource": "pages/play/index.js:5527"
       }
     },
     {
@@ -1071159,7 +1069360,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7748"
+        "staticSource": "pages/play/index.js:7740"
       }
     },
     {
@@ -1071558,7 +1069759,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7795"
+        "staticSource": "pages/play/index.js:7787"
       }
     },
     {
@@ -1079112,7 +1077313,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5953"
+        "staticSource": "pages/play/index.js:5945"
       }
     },
     {
