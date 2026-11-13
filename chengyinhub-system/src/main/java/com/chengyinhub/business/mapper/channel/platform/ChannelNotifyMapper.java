@@ -16,6 +16,17 @@ public interface ChannelNotifyMapper
 
     int upsertPref(Map<String, Object> row);
 
+    Map<String, Object> selectClubDefault(@Param("clubId") long clubId);
+
+    Map<String, Object> lockClubDefault(@Param("clubId") long clubId);
+
+    /** 首次保存（version 1）；已存在时返回 0，由调用方按版本冲突处理。 */
+    int insertClubDefault(@Param("clubId") long clubId, @Param("level") int level, @Param("updatedBy") long updatedBy);
+
+    /** 按版本 CAS：version 不等时返回 0。 */
+    int updateClubDefault(@Param("clubId") long clubId, @Param("level") int level, @Param("expectedVersion") long expectedVersion,
+            @Param("updatedBy") long updatedBy);
+
     Integer conversationType(@Param("id") long id);
 
     Map<String, Object> membership(@Param("conversationId") long conversationId, @Param("memberId") long memberId);

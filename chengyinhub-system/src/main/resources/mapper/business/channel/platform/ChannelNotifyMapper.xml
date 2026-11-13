@@ -28,6 +28,21 @@
             show_preview = VALUES(show_preview), version = version + 1
     </insert>
 
+    <select id="selectClubDefault" resultType="java.util.HashMap" useCache="false">
+        SELECT club_id AS clubId, level, version, updated_at AS updatedAt FROM im_club_notify_default WHERE club_id = #{clubId}
+    </select>
+    <select id="lockClubDefault" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT club_id AS clubId, level, version, updated_at AS updatedAt FROM im_club_notify_default WHERE club_id = #{clubId} FOR UPDATE
+    </select>
+    <insert id="insertClubDefault">
+        INSERT IGNORE INTO im_club_notify_default(club_id, level, version, updated_by, updated_at)
+        VALUES (#{clubId}, #{level}, 1, #{updatedBy}, CURRENT_TIMESTAMP(3))
+    </insert>
+    <update id="updateClubDefault">
+        UPDATE im_club_notify_default SET level = #{level}, version = version + 1, updated_by = #{updatedBy}, updated_at = CURRENT_TIMESTAMP(3)
+         WHERE club_id = #{clubId} AND version = #{expectedVersion}
+    </update>
+
     <select id="conversationType" resultType="java.lang.Integer" useCache="false">
         SELECT type FROM im_conversation WHERE id = #{id}
     </select>

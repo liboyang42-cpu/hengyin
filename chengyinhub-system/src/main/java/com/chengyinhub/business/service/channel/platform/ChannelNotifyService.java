@@ -27,6 +27,8 @@ import com.chengyinhub.business.service.IImService;
  * <li>写：PREFERENCE（JSON /api/im/notify-pref）、MUTE（JSON /api/im/mute，-1 永久/0 取消/n 分钟）、
  *     ACK（JSON /api/im/read）；均按 request_id 落原回执（族 NOTIFY），/api/im/notification-requests/{id} 回读。</li>
  * <li>MUTE 同时写旧 im_conversation_member.muted，保持既有角标口径一致。</li>
+ * <li>俱乐部共享默认（/api/club/settings/notify-level）：成员可读，MANAGE_CHANNEL 可写；按版本 CAS，回执 CLUB_DEFAULT、scope 2，
+ *     版本冲突/耗尽落 REJECTED 回执（CLUB_DEFAULT_VERSION_CONFLICT / _EXHAUSTED）。</li>
  * </ul>
  */
 @Service
@@ -284,6 +286,85 @@ public class ChannelNotifyService implements ChannelGovernanceService.MuteBridge
         }
         Map<String, Object> m = notify.membership(scopeId, viewer);
         if (m == null) throw new ChannelRejection(403, "CONVERSATION_FORBIDDEN", "不是会话成员");
+    }
+
+    // ================================================================ club shared default (CLUB_DEFAULT)
+
+    static final Set<String> CLUB_DEFAULT_KEYS = Set.of("request_id", "clubId", "level", "version");
+
+    /** 未配置：version 0、level 1（仅@）、updated_at null。 */
+    public Map<String, Object> clubDefault(long viewer, String clubId)
+    {
+        long club = scopeId(2, clubId);
+        access.requireMember(ChannelGuildAccess.GUILD_CLUB, club, viewer);
+        return clubDefaultView(club, notify.selectClubDefault(club));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> saveClubDefault(long viewer, Map<String, Object> body)
+    {
+        if (body == null || !CLUB_DEFAULT_KEYS.equals(body.keySet())) throw ChannelRejection.badField("body");
+        String requestId = key(body.get("request_id"));
+        long club = scopeId(2, body.get("clubId"));
+        long level = ChannelGovernanceService.integer(body.get("level"), "level");
+        long version = ChannelGovernanceService.integer(body.get("version"), "version");
+        if (level < 0 || level > 1) throw ChannelRejection.badField("level");
+        if (version < 0) throw ChannelRejection.badField("version");
+        String fp = ChannelReceipts.fingerprint("CLUB_DEFAULT", "2:" + club, body);
+        return ChannelReceipts.once(channels, viewer, "NOTIFY", requestId, fp, "CLUB_DEFAULT", 0L, () ->
+        {
+            access.requireMember(ChannelGuildAccess.GUILD_CLUB, club, viewer);
+            if (!ChannelPermissionCalculator.has(access.guildBits(ChannelGuildAccess.GUILD_CLUB, club, viewer), ChannelCapability.MANAGE_CHANNEL))
+                throw new ChannelRejection(403, "CLUB_DEFAULT_FORBIDDEN", "只有俱乐部管理员可以修改默认通知");
+            Map<String, Object> current = notify.lockClubDefault(club);
+            long stored = current == null ? 0L : ChannelGuildAccess.toLong(current.get("version"));
+            if (stored != version) return clubDefaultRejected(requestId, club, "CLUB_DEFAULT_VERSION_CONFLICT", stored);
+            if (stored == Long.MAX_VALUE) return clubDefaultRejected(requestId, club, "CLUB_DEFAULT_VERSION_EXHAUSTED", stored);
+            int changed = current == null ? notify.insertClubDefault(club, (int) level, viewer)
+                    : notify.updateClubDefault(club, (int) level, version, viewer);
+            Map<String, Object> row = notify.selectClubDefault(club);
+            if (changed != 1)
+                return clubDefaultRejected(requestId, club, "CLUB_DEFAULT_VERSION_CONFLICT", row == null ? 0L : ChannelGuildAccess.toLong(row.get("version")));
+            Map<String, Object> out = receipt(requestId, "CLUB_DEFAULT", 2, club, null);
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("version", ChannelGuildAccess.toLong(row.get("version")));
+            result.put("level", (int) ChannelGuildAccess.toLong(row.get("level")));
+            Date at = ChannelRejection.toDate(row.get("updatedAt"));
+            result.put("updated_at", at == null ? null : iso(at));
+            out.put("result", result);
+            return out;
+        });
+    }
+
+    static Map<String, Object> clubDefaultView(long club, Map<String, Object> row)
+    {
+        Map<String, Object> v = new LinkedHashMap<>();
+        v.put("club_id", String.valueOf(club));
+        v.put("level", row == null ? 1 : (int) ChannelGuildAccess.toLong(row.get("level")));
+        v.put("version", row == null ? 0L : ChannelGuildAccess.toLong(row.get("version")));
+        v.put("configured", row != null);
+        Date at = row == null ? null : ChannelRejection.toDate(row.get("updatedAt"));
+        v.put("updated_at", at == null ? null : iso(at));
+        return v;
+    }
+
+    /** 拒绝也是确定结果：落进同一回执（REJECTED），同 request_id 重放得到同一拒绝。 */
+    private static Map<String, Object> clubDefaultRejected(String requestId, long club, String code, long currentVersion)
+    {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("request_id", requestId);
+        out.put("status", "REJECTED");
+        out.put("operation", "CLUB_DEFAULT");
+        out.put("scope_type", 2);
+        out.put("scope_id", String.valueOf(club));
+        out.put("result_redacted", false);
+        out.put("must_refresh_state", true);
+        out.put("outcome", "REJECTED");
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("version", currentVersion);
+        result.put("rejection_code", code);
+        out.put("result", result);
+        return out;
     }
 
     // ================================================================ mute bridge (频道本人静音)

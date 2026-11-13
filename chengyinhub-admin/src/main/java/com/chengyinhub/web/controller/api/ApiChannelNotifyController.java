@@ -60,6 +60,20 @@ public class ApiChannelNotifyController extends BaseController
         return ChannelHttpResponse.run(this::getAppUserId, me -> notify.ack(me, body));
     }
 
+    @Operation(summary = "俱乐部共享通知默认（成员可读）")
+    @GetMapping("/api/club/settings/notify-level")
+    public ResponseEntity<AjaxResult> clubDefault(@RequestParam("clubId") String clubId)
+    {
+        return ChannelHttpResponse.run(this::getAppUserId, me -> notify.clubDefault(me, clubId));
+    }
+
+    @Operation(summary = "保存俱乐部共享通知默认（管理员，按版本 CAS，回执 CLUB_DEFAULT）")
+    @PostMapping(value = "/api/club/settings/notify-level", consumes = "application/json")
+    public ResponseEntity<AjaxResult> saveClubDefault(@RequestBody(required = false) Map<String, Object> body)
+    {
+        return ChannelHttpResponse.run(this::getAppUserId, me -> notify.saveClubDefault(me, body));
+    }
+
     @Operation(summary = "通知写原回执")
     @RequestMapping(value = "/api/im/notification-requests/{requestId}", method = { RequestMethod.GET, RequestMethod.POST })
     public ResponseEntity<AjaxResult> receipt(@PathVariable("requestId") String requestId)
