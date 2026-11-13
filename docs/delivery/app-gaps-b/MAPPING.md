@@ -56,6 +56,6 @@
 |---|---|
 | `/api/club/channels`、`/api/guilds/{kind}/{id}/channels`（GET/PATCH）、`/channels/manage` | `feature/im-channels`（频道平台：`ApiChannel*`，目录/管理/权限） |
 | `/api/privacy/progress`（GET/POST） | `feature/im-channels`（6b6895f61）`ApiProgressPrivacyController` 已实现 |
-| `/api/club/settings/notify-level` | 依赖 IM 通知偏好 `/api/im/notify-pref` 与 `/api/im/notification-requests/*`（messaging 工作线） |
+| `/api/club/settings/notify-level` | `feature/im-channels`（bb4ee788a 已有 `/api/im/notify-pref`、`/api/im/notification-requests/{id}`，NOTIFY 回执族）。待补：`GET ?clubId=` 回 `{club_id, level(0 全部/1 仅@), version, configured, updated_at}`（未配置=version 0、level 1、updated_at null）；`POST` JSON `{request_id, clubId, level, version}` 按版本 CAS，回执写进同一族（operation `CLUB_DEFAULT`、scope_type 2），版本冲突写 REJECTED + `CLUB_DEFAULT_VERSION_CONFLICT`（耗尽 `..._EXHAUSTED`）；App 契约 `Core/NativeChannelNotification*.swift` |
 | `/api/join-request/cancel`、`/api/space/join-pause`、`/api/invite/revoke`、`/api/channel-platform/admission/requests/{id}` | `feature/im-channels`（6b6895f61）`ApiChannelAdmissionController` 已实现（pass 2 核对），本分支不重复 |
 | `/api/team/original-request` | 依赖好友组队邀请 `/api/friend/team-invite/*`（social/friends 工作线） |
