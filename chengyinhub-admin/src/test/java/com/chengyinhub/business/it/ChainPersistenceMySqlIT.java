@@ -35,6 +35,7 @@ class ChainPersistenceMySqlIT
     private static String url;
     private static SqlSessionFactory sessions;
     private static Path migration;
+    private static Path forward;
 
     @BeforeAll static void createIsolatedSchema() throws Exception
     {
@@ -47,6 +48,8 @@ class ChainPersistenceMySqlIT
                 "chengyinhub-admin/sql/migration_20261105_l8_chain_storage.sql"))) root = root.getParent();
         if (root == null) throw new IllegalStateException("Chain storage migration not found");
         migration = root.resolve("chengyinhub-admin/sql/migration_20261105_l8_chain_storage.sql");
+        // entry.request_id is only the latest-command pointer; command identity is uk_chain_command on the receipt.
+        forward = root.resolve("chengyinhub-admin/sql/migration_20261115_chain_entry_request_nonunique.sql");
         url = MybatisItDatabase.url("l8_chain_storage");
         try (Connection c = connection()) { migrate(c); }
         UnpooledDataSource source = new UnpooledDataSource("com.mysql.cj.jdbc.Driver", url,
@@ -129,6 +132,19 @@ class ChainPersistenceMySqlIT
             assertThrows(IllegalStateException.class, () -> changedContent.matchesOriginal(originalCommand));
         }
         assertCounts(1, 1, 1, 1);
+    }
+
+    @Test void requestIdentityIsUniqueOnTheReceiptNotOnTheEntryPointer() throws Exception
+    {
+        try (Connection c = connection(); Statement s = c.createStatement())
+        {
+            assertEquals(0, scalar(s, "SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE()"
+                    + " AND table_name='im_chain_entry' AND index_name='uk_chain_entry_request'"));
+            assertEquals(1, scalar(s, "SELECT COUNT(DISTINCT non_unique) FROM information_schema.statistics WHERE table_schema=DATABASE()"
+                    + " AND table_name='im_chain_entry' AND index_name='idx_chain_entry_request' AND non_unique=1"));
+            assertEquals(1, scalar(s, "SELECT COUNT(DISTINCT index_name) FROM information_schema.statistics WHERE table_schema=DATABASE()"
+                    + " AND table_name='im_chain_command_receipt' AND index_name='uk_chain_command' AND non_unique=0"));
+        }
     }
 
     @Test void noChangeStillPersistsIndependentOriginalReceiptAndEvent() throws Exception
@@ -264,6 +280,8 @@ class ChainPersistenceMySqlIT
     private static void migrate(Connection c)
     {
         ScriptUtils.executeSqlScript(c, new FileSystemResource(migration));
+        ScriptUtils.executeSqlScript(c, new FileSystemResource(forward));
+        ScriptUtils.executeSqlScript(c, new FileSystemResource(forward)); // rerunnable
     }
 
     private static long scalar(Statement s, String sql) throws SQLException
