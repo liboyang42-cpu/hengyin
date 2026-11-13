@@ -43,7 +43,7 @@ const { createPlayTrail } = require('./utils/play-trail.js');
 const teamTrailKit = require('./utils/team-trail.js');
 const routeCard = require('./utils/route-card.js');
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
-const { ARRIVAL_RADIUS_METERS, ARRIVAL_RADIUS_TEXT } = require('./utils/arrival-radius.js'); // 到点校验半径唯一真源(50m,与后端围栏同值)
+const { ARRIVAL_RADIUS_METERS, ARRIVAL_START_RADIUS_TEXT } = require('./utils/arrival-radius.js'); // 开局校验 300m(与后端 ArrivalPolicy.START_RADIUS_METERS 同值);50m 仅作靠近自动点亮的提示半径
 const {
   normalizePlayerProjection,
   buildPlayerChoiceInput,
@@ -415,7 +415,7 @@ const themeTrade = require('./utils/theme-trade.js');
 const themePlans = require('./utils/theme-plans.js');
 const playerOps = require('./utils/theme-player-ops.js');
 const { loadStoryFont } = require('./utils/story-font.js'); const { storyFontUrl: STORY_FONT_URL } = require('../../utils/config.js');
-const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const playSos = require('./utils/play-sos.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
+const playOverlays = require('./utils/play-hud-overlays.js'); const playTopbar = require('./utils/play-topbar.js'); const locOnce = require('./utils/play-location-once.js'); const playLook = require('./utils/play-look.js'); /* 故事流顶栏:罗盘⇄地图、背包、案件册、各站奖励 */
 const chapterVideo = require('./chapter-video.js'); const packDetail = require('./utils/pack-detail.js'); const menuOpen = require('./utils/menu-open.js');
 Page({
   ...chapterVideo.methods, ...kitCard.methods(), ...stagePops.methods(),
@@ -463,11 +463,11 @@ Page({
   ...themeTrade.methods(req),
   ...themePlans.methods(req),
   ...playerOps.methods(req),
-  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(), ...playSos.methods(),
+  ...playOverlays.methods(req, uuid4), ...playTopbar.methods(req), ...playLook.methods(), ...locOnce.methods(),
   _routeState: normalizeRouteState(null),
 
   data: {
-    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...playSos.data, ...stagePops.data,
+    ...orientLifecycle.data, ...playTopbar.data, ...playHelpPanel.data, ...kitCard.data, ...locOnce.data, ...stagePops.data,
     arrivalGuard: null,
     guardAppealView: null,
     communityPostWrite: false,
@@ -1337,8 +1337,8 @@ Page({
       this._ensureSessionClock();
       // 时钟在数据加载时就建好了,若不重置,「开始」那一刻的用时已经跑了十几秒
       if (this._sessionClock) this._sessionClock.start();
-      // requestPlayLocation 自己带了预览/演示/已开启/请求中四道前置判断,这里不重复挡
-      this.requestPlayLocation();
+      // requestPlayLocation 自己带了预览/演示/已开启/请求中四道前置判断,这里不重复挡;已开局(续玩)不再问
+      if (this._startLocationNeeded()) this.requestPlayLocation();
       this._syncRunState();
       return;
     }
@@ -3737,7 +3737,6 @@ Page({
     // 以下一站为中心;没有下一站(已走完)就用整条路线的中心
     const center = n && n.lat && n.lng ? { lat: Number(n.lat), lng: Number(n.lng) } : this.data.fmCenter;
     this.setData({ storyMap: true, storyMapCenter: center, sessionToolsOpen: false });
-    if (!this.data.gpsOk) this.requestPlayLocation();
     this._flushTrail(true);
   },
   closeStoryMap() {
@@ -4091,7 +4090,7 @@ Page({
     this._startThemeBgm();
     // P-26:城市定向有带坐标的站时,在「开始游戏」这一刻问一次定位,而不是等到第一道题交卷
     const located = Number(this.data.mode) === 1 && (this.data.nodes || []).some((n) => n && n.lat && n.lng);
-    const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); if (located) this.requestPlayLocation(); };
+    const go = () => { this.setData({ 'storyIntro.show': false }); this.openChapterFull(); if (located && this._startLocationNeeded()) this.requestPlayLocation(); };
     if (this.data.reducedMotion) { go(); return; }
     this.setData({ 'storyIntro.out': true });
     this._fxTimers = (this._fxTimers || []).concat(setTimeout(go, 400));
@@ -4308,12 +4307,8 @@ Page({
     const held = !chapter.opening && this._leadHolds(chapter.id);   // P-08:先停在「等待放行」屏,放行后才放翻转门
     this.setData({ chapterGate: Object.assign({ show: true, held, number: chapter.opening ? 0 : (index < 0 ? 1 : index + 1), // 眉标已写「序章 / 第 N 章 / 共 M 章」,副标题再放序数标签就是同一句印两遍(2026-09-22 走查)。
       total: Math.max(cards.length, 1), title: chapter.name || '', subtitle: '', look: this._look ? { style: this._look.style, palette: this._look.palette || '', legacy: !!this._look.legacy } : null }, flip) });   // l-icons:圆点章节号 / 章节印的颜色跟外观
-    // 2026-09-24 用户:章节门每章都要点一次太打断 —— 停 2.8 秒自己进正文,点一下仍可提前
+    // 2026-11-11 D-46 业主「点了才能进」:取代 2026-09-24「停一下自己进正文」,章节门只在玩家点按时前进,不再计时兜底
     clearTimeout(this._gateTimer);
-    if (held) return;   // 放行由带领轮询解开(见 loadTeamProgress),不靠计时自己进正文
-    this._gateTimer = setTimeout(() => {
-      if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, (boot ? 1800 : 0) + (this.data.chapterGate.endInfo ? 10800 : 4200)); // 过场自己会在播完时发 continue;这里只是兜底
   },
   /** 开局「开机」:黑场里一条白线横向展开再收细,暖光亮起后整层淡出,露出第一道开场门。 */
   _playBoot() {
@@ -4336,17 +4331,13 @@ Page({
     if (Number(this.data.mode) !== 1 || this.data.isPreview || this.data.isMock) return false;
     return leadHoldsChapter(this.data.lead, chapterId, this.data.chapterCards);
   },
-  /** P-08:队长放行了这一章 → 收起「等待放行」屏,换上正常的章节翻转门,播完照常发 continue 进正文;门没发出来时按原兜底计时进。 */
+  /** P-08:队长放行了这一章 → 收起「等待放行」屏,换上正常的章节翻转门;玩家点按后进正文(D-46)。 */
   _releaseChapterGate() {
-    const key = this._pendingChapterGateKey;
     // P-08 第五轮 D:玩家「返回地图」在看地图时放行 → 收起地图,翻转门照常在故事流上播完进正文
     if (this.data.chapterGate.away || this._chapterHoldAway) this.setData({ storyMap: false, 'chapterGate.away': false });
     this._chapterHoldAway = '';
     this.setData({ 'chapterGate.held': false });
     clearTimeout(this._gateTimer);
-    this._gateTimer = setTimeout(() => {
-      if (this.data.chapterGate.show && this._pendingChapterGateKey === key) this.continueChapterGate();
-    }, this.data.chapterGate.endInfo ? 10800 : 4200);
   },
   /** P-08:带领轮询每读到一次进度就对一次 —— 门前(或「返回地图」去了地图上)正在等的那一章放行了就接着进。 */
   _syncChapterHold() {
@@ -4540,7 +4531,7 @@ Page({
         } else if (!first && that.data.chapterFull) that.openChapterFull();
         // R9-21:服务端态允许继续时,把上次暂停的会话恢复成 paused(不重开、不丢用时)
         that._restoreRunSession(d, routeState, nodes);
-        if (!that._entryLocationOffered && d.registered !== false && that._playable && !that.data.allDone
+        if (that._startLocationNeeded() && !that._entryLocationOffered && d.registered !== false && that._playable && !that.data.allDone
             && that.data.runState !== 'paused' && nodes.some(node => !node.done && node.lat && node.lng)) {
           that._entryLocationOffered = true;
           that.requestPlayLocation();
@@ -4726,7 +4717,7 @@ Page({
       timeText: c.totalTime ? Math.round(c.totalTime / 60) + ' 分钟' : '',
       description: c.description || '',
       blocks: Array.isArray(c.blocks) ? c.blocks : null,
-      audioUrl: c.audioUrl || '',
+      audioUrl: c.audioUrl || '', reward: c.rewardText || '',   // D-82 章节级奖励 → 章节结束卡
       videoUrl: secureOwnMedia(c.videoUrl), videoPosterUrl: secureOwnMedia(c.videoPosterUrl),
       atmospherePreset: normalizeAtmosphere(this._themePalette(c.atmospherePreset)),
       atmosphereClass: atmosphereClass(this._themePalette(c.atmospherePreset)) + this._chapterTime(i),
@@ -5149,7 +5140,7 @@ Page({
     this.setData({ gpsHint: '正在请求定位…' });
     cyModal.show({
       title: '开启定位',
-      content: '仅在本游玩页前台获取位置，用于显示当前位置和自动判断到点。锁屏、切到后台、暂停、结束或离开后停止。未开启时仍可扫码到达。',
+      content: '仅在开局时检查你是否在起点约 300 米内，之后各站不再要求定位。位置只在本游玩页前台使用，锁屏、切到后台、暂停、结束或离开后停止。',
       confirmText: '开启定位',
       cancelText: '先用扫码',
       success(result) {
@@ -5837,7 +5828,6 @@ Page({
     }, () => {
       this.rebuild();
       this._syncNavMeta();
-      this.requestPlayLocation();
     });
   },
   // 退出陪伴态:到达(onComplete 里加一行调用)或用户点「结束前往」X。nav 本就未激活时是安全 no-op。
@@ -6040,12 +6030,17 @@ Page({
     return (nav.active && nav.targetNodeId != null && this._nodeById(nav.targetNodeId))
       || this.data.sheet.node || (this.data.nextNode && this.data.nodes.find((n) => n.nodeId === this.data.nextNode.nodeId));
   },
+  /* 业主 2026-11-13:定位只在开局(本局第一次到达)看一次,须在首站约 300 米内;开局之后各站到点不再要定位。
+     * 本局已有完成站就是开局校验已过(服务端以进度行为准,这里只是少问一次的提示)。 */
+  _startLocationNeeded() {
+    return !(this.data.nodes || []).some((n) => n && n.done);
+  },
   onArriveTap() {
     const node = this._arriveTarget();
     if (!node) return;
     if (this._arrivalWriteUnknown) return;
     // 高级玩法已通过:解开本身就是到站证明,直接收尾,不再要定位(第十二轮 k2,业主 2026-11-05)。
-    const needsLocation = this._advancedReadyNodeId !== node.nodeId;
+    const needsLocation = this._advancedReadyNodeId !== node.nodeId && this._startLocationNeeded();
     if (!this.data.gpsOk && !this._isStoryGame(node) && needsLocation) { if (this._locAsked) this._locationDeclinedToast(); else this.requestPlayLocation(); return; }   // a1-v3-21 问过不再弹说明
     this.arrive(node.nodeId, 'arrive');
   },
@@ -6832,12 +6827,12 @@ Page({
     const answer = retry && retry.type === 'answer' ? retry.answer : (g.vm == 3 ? this.data.answerSel : this.data.answerInput);
     if (!answer) return this.setData({ gWrong: true, 'game.feedback': '先把答案填上再提交。' });
     if (this.data.isPreview || this.data.isMock) { this.onComplete(g.nodeId, {}); return; }   // 路线级预览只跳过服务端判题,不跳过空值校验
-    /* 城市定向有坐标的站要在 50 米内作答(业主 2026-10-30 拍板,实走 A20):答案随带当前定位,服务端按到达同一围栏判;
+    /* 业主 2026-11-13 取代逐站 50 米:只有开局(本局还没有完成站)时答案随带当前定位,服务端按 300 米开局校验判;
        还没有定位就先请求定位、给提示,不发请求(没有定位一定会被拒,不该算一次提交)。 */
     const gameNode = (this.data.nodes || []).find((n) => String(n.nodeId) === String(g.nodeId));
-    const located = Number(this.data.mode) === 1 && gameNode && gameNode.lat && gameNode.lng;
+    const located = Number(this.data.mode) === 1 && gameNode && gameNode.lat && gameNode.lng && this._startLocationNeeded();
     if (located && !this._loc) {
-      this.setData({ gWrong: false, gNetErr: '先开启定位，到这一站 ' + ARRIVAL_RADIUS_TEXT + '内再作答', gNetRetryable: false });
+      this.setData({ gWrong: false, gNetErr: '开局前请先开启定位，在起点 ' + ARRIVAL_START_RADIUS_TEXT + '内再开始', gNetRetryable: false });
       this.requestPlayLocation();
       return;
     }

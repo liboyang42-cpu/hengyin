@@ -182,7 +182,7 @@ EXPECTED = {
     # 它们与上面各套同用 @EnabledIfEnvironmentVariable(CHENGYIN_FUNDS_MYSQL_IT=1) +
     # MysqlIntegrationTestConfig 的唯一 UUID scratch,普通 CI(无 MySQL)会把它们静默 skip 仍"绿"。
     # 登记进 EXPECTED/-Dtest/自测 fixture 三侧,跳过或漏跑一律 fail-closed。
-    "PlayTeamMybatisIntegrationTest": 21,
+    "PlayTeamMybatisIntegrationTest": 24,
     "PlayTeamNearbyMybatisIntegrationTest": 4,
     # 2026-09-13 R9-40 优惠券使用期生命周期:原6条 = start 前拒且零核销/结算/审计副作用 /
     # end 后拒并落过期 / start 与合法历史券(start NULL)各核销一次 / 精确 start=end 端点包含 /

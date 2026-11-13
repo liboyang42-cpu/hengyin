@@ -66,6 +66,12 @@ class TopicContentSafetyHoldTest {
 
         private boolean riskyCallback() {
             ReflectionTestUtils.setField(service, "cmsTopicService", topics);
+            IImService im = mock(IImService.class);
+            when(im.enqueueSystemNotification(anyLong(), anyInt(), any(), any(), any())).thenReturn(1L);
+            @SuppressWarnings("unchecked")
+            ObjectProvider<IImService> imProvider = mock(ObjectProvider.class);
+            when(imProvider.getObject()).thenReturn(im);
+            ReflectionTestUtils.setField(service, "imServiceProvider", imProvider);
             return Boolean.TRUE.equals(ReflectionTestUtils.invokeMethod(service, "processMappedMediaCheckResult",
                     IWxContentSecurityService.BIZ_TYPE_TOPIC + ":" + TOPIC_ID, "trace-1", true));
         }

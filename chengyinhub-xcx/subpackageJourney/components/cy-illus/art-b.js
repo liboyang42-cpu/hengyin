@@ -82,6 +82,42 @@ var NAMES = { clue: '线索', badge: '勋章', key: '钥匙', success: '成功',
 var LIST = ['clue', 'badge', 'key', 'success', 'fail', 'wait', 'team', 'pass', 'points', 'seal'];
 // ---- 原型逐字结束 ----
 
+// ---- D-118 补画(2026-11-12,业主「可以一起优化 整个app要统一风格的」):v2 原型没画的另外 15 枚,按同一套光影 / 调色盘 / 4.5 描边 / 120 网格补成风格 B ----
+// 做法与上面一致:地影 + 一件主体(纸色 / 金 / 天蓝 / 珊瑚 / 紫 / 柠檬绿,下半深一档,左上白高光)。M(元素, 亮, 暗) = 填色 + 右半深色 + 描边。
+// 不进 SPLIT / MOTION:顶层 <g> 各自走通用弹出(.ib__g--g),与已有 B 图同一进场;没有待机往复(这 15 枚多是空态 / 小图标)。
+var LN3 = 'fill="none" stroke="' + K + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+function M(el, c, dk) { return '<' + el + ' ' + F(c) + '/>' + (dk ? '<' + el + ' fill="' + dk + '" opacity=".55" clip-path="inset(0 0 0 52%)"/>' : '') + '<' + el + ' ' + LN + '/>'; }
+function R(x, y, w, h, r, c, dk) { return M('rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '"', c, dk); }
+function Cr(x, y, r, c, dk) { return M('circle cx="' + x + '" cy="' + y + '" r="' + r + '"', c, dk); }
+function Pa(d, c, dk) { return M('path d="' + d + '"', c, dk); }
+function S5(cx, cy, r, c, dk) { var d = ''; for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + Math.PI * i / 5, rr = i % 2 ? r * .46 : r; d += (i ? 'L' : 'M') + (cx + Math.cos(a) * rr).toFixed(1) + ' ' + (cy + Math.sin(a) * rr).toFixed(1); } return Pa(d + 'Z', c, dk); }
+function S4(cx, cy, r, c) { return '<path d="M' + cx + ' ' + (cy - r) + 'Q' + (cx + r * .16) + ' ' + (cy - r * .16) + ' ' + (cx + r) + ' ' + cy + 'Q' + (cx + r * .16) + ' ' + (cy + r * .16) + ' ' + cx + ' ' + (cy + r) + 'Q' + (cx - r * .16) + ' ' + (cy + r * .16) + ' ' + (cx - r) + ' ' + cy + 'Q' + (cx - r * .16) + ' ' + (cy - r * .16) + ' ' + cx + ' ' + (cy - r) + 'Z" fill="' + c + '" stroke="' + K + '" stroke-width="3" stroke-linejoin="round"/>'; }
+function Hi(d) { return '<path d="' + d + '" ' + HI + '/>'; }
+function Ln(d, w) { return '<path d="' + d + '" ' + (w ? LN3 : LN) + '/>'; }
+function Th(d, c, wk, wc) { return '<path d="' + d + '" fill="none" stroke="' + K + '" stroke-width="' + wk + '" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" fill="none" stroke="' + c + '" stroke-width="' + wc + '" stroke-linecap="round" stroke-linejoin="round"/>'; }
+var SHK = 'M42 56V42c0-11 8-19 18-19s18 8 18 19v14', SHO = 'M42 52V38c0-11 8-18 18-18s18 7 18 18v2';
+function lockBody(c, dk) { return R(28, 54, 64, 48, 12, c, dk) + '<circle cx="60" cy="75" r="6" fill="' + K + '"/><path d="M60 78v10" stroke="' + K + '" stroke-width="5" stroke-linecap="round"/>' + Hi('M37 66v14'); }
+var D2 = {
+  stamp: ground(32) + '<g>' + R(26, 20, 68, 80, 4, C.paper, C.paperD) + R(36, 30, 48, 42, 3, C.sky, C.skyD) + '<circle cx="50" cy="44" r="6" fill="' + C.gold + '" stroke="' + K + '" stroke-width="3"/><path d="M36 72l16-16 12 10 8-6 12 12z" fill="' + C.lime + '" stroke="' + K + '" stroke-width="3.5" stroke-linejoin="round"/>' + Ln('M38 84h30M38 91h18', 1) + '</g><g>' + Cr(86, 84, 15, C.coral, C.coralD) + Ln('M79 84h14M86 77v14', 1) + '</g>',
+  seat: ground(34) + '<g>' + Pa('M36 24h48c6 0 10 4 10 10v32H26V34c0-6 4-10 10-10z', C.sky, C.skyD) + Hi('M36 36c0-3 2-5 6-5') + Pa('M22 62h76v20c0 5-4 8-8 8H30c-4 0-8-3-8-8z', C.lime, C.limeD) + Ln('M34 90v13M86 90v13') + '</g>',
+  trophy: ground(30) + '<g>' + Ln('M38 34c-12 0-16 7-14 15 2 7 8 10 16 10M82 34c12 0 16 7 14 15-2 7-8 10-16 10') + Pa('M38 22h44v28c0 15-10 25-22 25S38 65 38 50z', C.gold, C.goldD) + Hi('M46 32v16') + S5(60, 45, 9, W) + R(54, 74, 12, 14, 2, C.gold, C.goldD) + R(40, 88, 40, 14, 5, C.vio, C.vioD) + '</g>',
+  compass: ground(32) + '<g>' + Cr(60, 60, 40, C.gold, C.goldD) + Cr(60, 60, 29, C.paper, C.paperD) + Ln('M60 27v5M60 88v5M27 60h5M88 60h5', 1) + Pa('M60 32l10 28H50z', C.coral, C.coralD) + Pa('M60 88l10-28H50z', C.sky, C.skyD) + '<circle cx="60" cy="60" r="3.5" fill="' + K + '"/>' + Hi('M36 40c3-5 7-8 12-9') + '</g>',
+  backpack: ground(30) + '<g>' + Ln('M50 28v-8c0-3 2-5 5-5h10c3 0 5 2 5 5v8') + Pa('M34 48c0-12 11-22 26-22s26 10 26 22v50c0 3-2 5-5 5H39c-3 0-5-2-5-5z', C.coral, C.coralD) + Hi('M42 46c2-7 7-11 13-12') + R(42, 68, 36, 28, 8, C.gold, C.goldD) + Ln('M42 58h36M52 79h16') + '</g>',
+  bookmark: ground(26) + '<g>' + Pa('M36 18h48c3 0 5 2 5 5v82l-29-18-29 18V23c0-3 2-5 5-5z', C.vio, C.vioD) + Hi('M44 28v38') + S5(60, 46, 11, C.gold, C.goldD) + '</g>',
+  envelope: ground(36) + '<g>' + R(18, 36, 84, 58, 8, C.paper, C.paperD) + Ln('M24 88l28-22M96 88L68 66', 1) + Pa('M18 44c0-4 3-8 8-8h68c5 0 8 4 8 8L60 74z', C.sky, C.skyD) + Cr(60, 74, 7, C.coral, C.coralD) + Hi('M28 46l12 8') + '</g>',
+  star: ground(30) + '<g>' + S5(60, 58, 40, C.gold, C.goldD) + Hi('M44 40c3-4 7-7 12-8') + '</g>' + S4(98, 28, 7, C.lime) + S4(22, 34, 5, W),
+  locked: ground(28) + '<g>' + Th(SHK, C.grey, 13, 6) + lockBody(C.gold, C.goldD) + '</g>',
+  unlocked: ground(28) + '<g>' + Th(SHO, C.grey, 13, 6) + lockBody(C.lime, C.limeD) + '</g>',
+  hourglass: ground(26) + '<g>' + R(32, 16, 56, 11, 5, C.vio, C.vioD) + R(32, 93, 56, 11, 5, C.vio, C.vioD) + Pa('M42 27h36c0 16-8 25-14 33 6 8 14 17 14 33H42c0-16 8-25 14-33-6-8-14-17-14-33z', C.paper, C.paperD) + '<path d="M49 36h22c-2 8-6 12-11 17-5-5-9-9-11-17z" fill="' + C.lime + '"/><path d="M47 93h26c0-9-5-14-13-18-8 4-13 9-13 18z" fill="' + C.lime + '"/>' + Hi('M47 34c1 7 4 11 8 15') + '</g>',
+  gem: ground(30) + '<g>' + Pa('M28 46l14-22h36l14 22-32 52z', C.vio, C.vioD) + '<path d="M42 24h36l-18 22z" fill="' + W + '" opacity=".4"/>' + Ln('M28 46h64M42 24l18 22 18-22M60 46v52', 1) + Hi('M38 40l6-9') + '</g>' + S4(98, 30, 7, C.lime),
+  sparkles: '<g>' + S4(50, 58, 28, C.lime) + S4(88, 30, 13, C.gold) + S4(86, 88, 9, C.coral) + S4(24, 92, 6, W) + '</g>',
+  question: ground(32) + '<g>' + Pa('M22 54c0-18 17-31 38-31s38 13 38 31-17 31-38 31h-6L38 99l2-19c-11-5-18-14-18-26z', C.sky, C.skyD) + Th('M50 51c0-7 4-11 10-11s10 4 10 10c0 8-10 9-10 17', W, 11, 5) + '<circle cx="60" cy="72" r="4.5" fill="' + W + '" stroke="' + K + '" stroke-width="3"/>' + '</g>',
+  rays: ground(30) + '<g>' + Th('M60 12v14M60 94v14M12 60h14M94 60h14M26 26l10 10M84 84l10 10M94 26L84 36M36 84L26 94', C.gold, 11, 5) + Cr(60, 60, 22, C.gold, C.goldD) + Hi('M47 52c2-5 6-8 11-9') + '</g>' + S4(98, 98, 6, C.lime),
+};
+var NAMES2 = { stamp: '邮戳 / 延伸任务', seat: '席位', trophy: '名次', compass: '雷达 / 方向', backpack: '背包', bookmark: '任务', envelope: '邀请', star: '评价', locked: '未解锁', unlocked: '已解锁', hourglass: '等待', gem: '藏品', sparkles: '闪光', question: '提示', rays: '光芒' };
+var LIST2 = Object.keys(D2);
+LIST2.forEach(function (k) { D[k] = D2[k]; NAMES[k] = NAMES2[k]; });
+
 // 每枚图里需要单独动的子部件(原型 icons.css 里有动画的选择器);'*' = 组里每个子元素各自一层(纸屑 / 爆星各自转)。
 var SPLIT = {
   clue: { mg: ['glint'] },
@@ -141,7 +177,7 @@ function split(name) {
 }
 function has(name) { return Object.prototype.hasOwnProperty.call(D, name); }
 
-module.exports = { D: D, C: C, NAMES: NAMES, LIST: LIST, SPLIT: SPLIT, has: has, split: split, elems: elems, keyOf: keyOf };
+module.exports = { D: D, C: C, NAMES: NAMES, LIST: LIST, LIST2: LIST2, SPLIT: SPLIT, has: has, split: split, elems: elems, keyOf: keyOf };
 
 // 动作时间表(毫秒,原型 icons.css 各 @keyframes 的百分比 × 周期换算)。小程序这里不新增 keyframes(棘轮 146),
 // 改成组件按时间表在根上加类:进场阶段 e1…(加上就不再去掉)、待机阶段 p1…(一圈内逐个累加,周期 T 到了全部撤掉重来)。
@@ -151,7 +187,7 @@ var MOTION = {
   badge: { enter: [620, 950, 1390], idleAt: 900, T: 5200, steps: [0, 520, 1170, 1820, 2600, 3120, 3770, 4420] },
   key: { idleAt: 1100, T: 3400, steps: [1360, 1700, 1972, 2040, 2380, 2652, 2856, 3128] },
   success: { enter: [850, 1090] },
-  fail: { enter: [640, 750, 975, 1000], idleAt: 2000, T: 3600, steps: [0, 540, 810, 1800, 2340, 2610] },
+  fail: { enter: [1000], idleAt: 2000, T: 3600, steps: [0, 540, 810, 1800, 2340, 2610] },
   wait: { idleAt: 1200, T: 4200, steps: [0, 1050, 1100, 2100, 2150, 3108, 3150] },
   team: { idleAt: 1000, T: 3000, steps: [0, 900, 1260, 1350, 1500, 1650, 1800, 2400] },
   pass: { idleAt: 800, T: 3200, steps: [1600] },

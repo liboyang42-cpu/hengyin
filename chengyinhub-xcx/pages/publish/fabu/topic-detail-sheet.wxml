@@ -45,6 +45,7 @@
         </view>
       </view>
 
+      <cy-inline-error kind="field" wx:if="{{errors.imgUrl}}" title="{{errors.imgUrl}}" />
       <view class="node-card__hr"></view>
 
       <view class="node-card__row">

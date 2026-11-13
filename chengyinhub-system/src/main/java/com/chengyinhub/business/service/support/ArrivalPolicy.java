@@ -34,6 +34,12 @@ public final class ArrivalPolicy {
     public static final double LEGACY_RADIUS_METERS = ArriveLocationGuardPolicy.GEOFENCE_METERS;
     public static final double LEGACY_MAX_ACCURACY_METERS = ArriveLocationGuardPolicy.MISSING_ACCURACY_METERS;
 
+    /**
+     * 开局定位校验半径(业主 2026-11-13 拍板:约 300 米,只在开局时看一次)。
+     * 开局之后各站到点不再要求定位,逐站 50m 围栏({@link #LEGACY_RADIUS_METERS})不再用于站点。
+     */
+    public static final double START_RADIUS_METERS = 300d;
+
     public static final String FALLBACK_NONE = "NONE";
     public static final String FALLBACK_ALTERNATE_EVIDENCE = "ALTERNATE_EVIDENCE";
     public static final String FALLBACK_ALTERNATE_NODE = "ALTERNATE_NODE";
@@ -159,6 +165,19 @@ public final class ArrivalPolicy {
         }
         if (accuracyMeters > maxAccuracyMeters) return Fence.ACCURACY_LOW;
         if (distanceMeters > radiusMeters) return Fence.TOO_FAR;
+        return Fence.PASS;
+    }
+
+    /**
+     * 开局校验:与首站(或集合点)距离 &le; {@link #START_RADIUS_METERS}。精度仍先于距离、互不抵扣,
+     * 低精度不能放大可开局范围;精度上限沿用旧 80m 基线。
+     */
+    public static Fence startViolation(double distanceMeters, double accuracyMeters) {
+        if (!Double.isFinite(distanceMeters) || !Double.isFinite(accuracyMeters) || accuracyMeters < 0d) {
+            return Fence.INVALID;
+        }
+        if (accuracyMeters > LEGACY_MAX_ACCURACY_METERS) return Fence.ACCURACY_LOW;
+        if (distanceMeters > START_RADIUS_METERS) return Fence.TOO_FAR;
         return Fence.PASS;
     }
 

@@ -65,6 +65,10 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         if (!selfCheckoutEnabled) {
             throw new IllegalStateException("自助开通暂未开放，请联系官方人工开通");
         }
+        if (memberId == null || memberId <= 0 || merchantId == null || merchantId <= 0
+                || openid == null || openid.trim().isEmpty()) {
+            throw new IllegalArgumentException("商家与微信付款身份不能为空");
+        }
         OmsOrder committed = paymentTransaction().execute(status -> {
             requireBizType(bizType);
             requireRequestId(requestId);
@@ -73,6 +77,11 @@ public class MerchantCommerceService implements IMerchantCommerceService {
             SettlementRule rule = settlementRuleService.getActiveRule(0L, bizType);
             if (rule == null || rule.getUnitPrice() == null || rule.getUnitPrice().compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalStateException("该权益尚未配置价格，请联系官方");
+            }
+            try {
+                rule.getUnitPrice().movePointRight(2).intValueExact();
+            } catch (ArithmeticException invalidPrice) {
+                throw new IllegalStateException("权益价格必须是有效的人民币分金额");
             }
             if (rule.getEntitlementMaxUsage() == null || rule.getEntitlementMaxUsage() <= 0
                     || rule.getEntitlementDays() == null || rule.getEntitlementDays() <= 0) {
@@ -123,7 +132,8 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     public OmsOrder readOwnedOrder(Long memberId, Long merchantId, String orderSn) {
         if (orderSn == null || orderSn.trim().isEmpty()) throw new IllegalArgumentException("订单编号不合法");
         OmsOrder order = orderMapper.selectOmsOrderByOrderSn(orderSn.trim());
-        if (order == null || order.getBizType() == null
+        if (memberId == null || merchantId == null || order == null || !supportsOutTradeNo(order.getOrderSn())
+                || !bizMatchesPrefix(order.getBizType(), order.getOrderSn())
                 || !memberId.equals(order.getMemberId()) || !merchantId.equals(order.getMmsMerchantId())) {
             throw new IllegalArgumentException("无权查看该订单");
         }
@@ -160,6 +170,9 @@ public class MerchantCommerceService implements IMerchantCommerceService {
                 || !bizMatchesPrefix(order.getBizType(), outTradeNo)) return false;
         if (order.getPayAmount() == null
                 || order.getPayAmount().movePointRight(2).intValueExact() != paidAmountFen) return false;
+        if (order.getPayAmount().signum() <= 0 || order.getEntitlementDays() == null
+                || order.getEntitlementDays() <= 0 || order.getEntitlementMaxUsage() == null
+                || order.getEntitlementMaxUsage() <= 0) return false;
         if (Long.valueOf(1L).equals(order.getStatus())) {
             return completeCommerceProof(order, verified);
         }
@@ -173,6 +186,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
 
         MerchantSubscription grant = new MerchantSubscription();
         grant.setMerchantId(order.getMemberId());
+        grant.setSourceOrderId(order.getId());
         grant.setSubscriptionType(order.getBizType());
         grant.setStartDate(new Date());
         if (order.getEntitlementDays() != null) {
@@ -181,7 +195,7 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         grant.setMaxUsage(order.getEntitlementMaxUsage());
         grant.setUsedCount(0);
         grant.setIsActive(1);
-        // MySQL INSERT=1，ON DUPLICATE KEY UPDATE 实际续订=2；两者都是真实成功(移植自 PR #8 mini-foundation-a)。
+        // Each purchase owns a separate contribution; refunding it must not retract another purchase.
         int grantRows = subscriptionMapper.grantMerchantSubscription(grant);
         if (grantRows != 1 && grantRows != 2) {
             throw new IllegalStateException("商业化权益授予失败");
@@ -198,12 +212,126 @@ public class MerchantCommerceService implements IMerchantCommerceService {
         return true;
     }
 
+    /** Full original-payment refund only. Acceptance is not settlement and does not revoke access. */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
+    public Map<String, String> refundOrder(Long memberId, Long merchantId, String orderSn) {
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        requirePaymentOutsideTransaction();
+        OmsOrder order = paymentTransaction().execute(status -> {
+            OmsOrder owned = readOwnedOrder(memberId, merchantId, orderSn);
+            OmsOrder locked = orderMapper.selectCommerceOrderForUpdate(owned.getOrderSn());
+            if (locked == null || !java.util.Objects.equals(memberId, locked.getMemberId())
+                    || !java.util.Objects.equals(merchantId, locked.getMmsMerchantId())
+                    || (!Long.valueOf(1L).equals(locked.getStatus()) && !Long.valueOf(6L).equals(locked.getStatus()))) {
+                throw new IllegalStateException("只有已支付权益订单可申请退款");
+            }
+            originalPayment(locked);
+            if (Long.valueOf(6L).equals(locked.getStatus())) return locked;
+            requireDelivery(locked);
+            subscriptionMapper.createCommerceRefund(locked);
+            return locked;
+        });
+        if (order == null) throw new IllegalStateException("退款意图未提交");
+        String refundNo = "RMC" + order.getId();
+        Reference original = new Reference(order.getVerifiedPaymentFactId(), order.getVerifiedPaymentFactHash());
+        if (Long.valueOf(6L).equals(order.getStatus())) {
+            Map<String, String> settled = new LinkedHashMap<>();
+            settled.put("orderSn", order.getOrderSn());
+            settled.put("refundNo", refundNo);
+            settled.put("refundStatus", "success");
+            return settled;
+        }
+        com.chengyinhub.business.service.RefundRequestResult accepted = wechatPayService.submitRefund(original,
+                order.getOrderSn(), refundNo, order.getPayAmount(), order.getPayAmount(), "商家权益订单退款");
+        Map<String, String> observed = wechatPayService.queryRefundFacts(original, refundNo);
+        if (observed != null && "SUCCESS".equals(observed.get("status")) && !handleRefund(observed)) {
+            throw new IllegalStateException("退款成功事实尚未回写");
+        }
+        Map<String, String> result = new LinkedHashMap<>();
+        result.put("orderSn", order.getOrderSn());
+        result.put("refundNo", refundNo);
+        result.put("refundStatus", observed != null && "SUCCESS".equals(observed.get("status"))
+                ? "success" : accepted == com.chengyinhub.business.service.RefundRequestResult.ACCEPTED
+                ? "processing" : "unknown");
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean handleRefund(Map<String, String> observation) {
+        if (observation == null || !"SUCCESS".equals(observation.get("status"))) return false;
+        com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
+        Reference reference = paymentReference(observation);
+        return Boolean.TRUE.equals(new org.springframework.transaction.support.TransactionTemplate(paymentTransactions).execute(status -> {
+            OmsOrder order = orderMapper.selectCommerceOrderForUpdate(observation.get("outTradeNo"));
+            if (order == null || (!Long.valueOf(1L).equals(order.getStatus())
+                    && !Long.valueOf(6L).equals(order.getStatus()))) return false;
+            Map<String, Object> refund = subscriptionMapper.selectCommerceRefundForUpdate(order.getId());
+            if (refund == null || !("RMC" + order.getId()).equals(observation.get("outRefundNo"))
+                    || !observation.get("outRefundNo").equals(refund.get("refund_no"))) return false;
+            WechatVerifiedPaymentFact original = originalPayment(order);
+            WechatVerifiedPaymentFact fact = verifiedPaymentFacts.requireVerified(reference).facts();
+            fact.requireValid();
+            if (fact.kind() != WechatVerifiedPaymentFact.Kind.REFUND || !reference.hash().equals(fact.factHash())
+                    || !order.getOrderSn().equals(fact.businessOutTradeNo())
+                    || !observation.get("outRefundNo").equals(fact.merchantEventNo())
+                    || fact.amountFen() != original.totalFen() || fact.totalFen() != original.totalFen()
+                    || !original.transactionId().equals(fact.transactionId()) || !original.mchid().equals(fact.mchid())
+                    || !original.appid().equals(fact.appid()) || !original.tradeType().equals(fact.tradeType())
+                    || !original.wxOutTradeNo().equals(fact.wxOutTradeNo()) || !"CNY".equals(fact.currency())
+                    || !java.util.Objects.equals(original.intentRequestHash(), fact.intentRequestHash())) {
+                throw new IllegalStateException("退款事实与原权益订单不一致");
+            }
+            if (refund.get("refund_fact_id") != null) {
+                return Long.valueOf(6L).equals(order.getStatus())
+                        && ((Number) refund.get("refund_fact_id")).longValue() == reference.id()
+                        && reference.hash().equals(refund.get("refund_fact_hash"));
+            }
+            requireDelivery(order);
+            if (subscriptionMapper.revokeCommerceSubscription(order.getId()) != 1
+                    || subscriptionMapper.settleCommerceRefund(order.getId(), reference.id(), reference.hash()) != 1
+                    || orderMapper.markCommerceRefunded(order.getId()) != 1) {
+                throw new IllegalStateException("权益退款回收失败");
+            }
+            return true;
+        }));
+    }
+
+    private void requireDelivery(OmsOrder order) {
+        MerchantSubscription delivery = subscriptionMapper.selectCommerceSubscriptionForUpdate(order.getId());
+        if (delivery == null || !java.util.Objects.equals(order.getId(), delivery.getSourceOrderId())
+                || !java.util.Objects.equals(order.getMemberId(), delivery.getMerchantId())
+                || !java.util.Objects.equals(order.getBizType(), delivery.getSubscriptionType())
+                || !Integer.valueOf(1).equals(delivery.getIsActive())) {
+            throw new IllegalStateException("权益订单缺少同主体的有效履约记录，请联系官方核对");
+        }
+    }
+
+    private WechatVerifiedPaymentFact originalPayment(OmsOrder order) {
+        if (order.getVerifiedPaymentFactId() == null || order.getVerifiedPaymentFactHash() == null
+                || order.getPayAmount() == null || order.getPayAmount().signum() <= 0) {
+            throw new IllegalStateException("权益订单缺少原支付凭据");
+        }
+        return checkedPayment(new Reference(order.getVerifiedPaymentFactId(), order.getVerifiedPaymentFactHash()),
+                order.getOrderSn(), order.getPayAmount().movePointRight(2).intValueExact(),
+                order.getPaymentTransactionId()).facts();
+    }
+
     @Override
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public void reconcileOrder(String outTradeNo) {
         requirePaymentOutsideTransaction();
         OmsOrder order = orderMapper.selectOmsOrderByOrderSn(outTradeNo);
-        if (order == null || !Long.valueOf(0L).equals(order.getStatus())) return;
+        if (order == null) return;
+        if (Long.valueOf(1L).equals(order.getStatus())) {
+            Map<String, Object> refund = paymentTransaction().execute(status ->
+                    subscriptionMapper.selectCommerceRefundForUpdate(order.getId()));
+            if (refund != null && refund.get("refund_fact_id") == null) {
+                refundOrder(order.getMemberId(), order.getMmsMerchantId(), outTradeNo);
+            }
+            return;
+        }
+        if (!Long.valueOf(0L).equals(order.getStatus())) return;
         requireBizType(order.getBizType());
         if (!supportsOutTradeNo(outTradeNo) || !bizMatchesPrefix(order.getBizType(), outTradeNo)) {
             throw new IllegalStateException("商业化订单类型与单号不一致");
@@ -335,7 +463,8 @@ public class MerchantCommerceService implements IMerchantCommerceService {
     }
 
     private boolean bizMatchesPrefix(String bizType, String outTradeNo) {
-        return bizType != null && outTradeNo.startsWith(prefixOf(bizType));
+        return (BIZ_PREMIUM_TEMPLATE.equals(bizType) || BIZ_PROMOTION_SLOT.equals(bizType)
+                || BIZ_CUSTOM_EVENT.equals(bizType)) && outTradeNo != null && outTradeNo.startsWith(prefixOf(bizType));
     }
 
     private Date addDays(Date base, int days) {

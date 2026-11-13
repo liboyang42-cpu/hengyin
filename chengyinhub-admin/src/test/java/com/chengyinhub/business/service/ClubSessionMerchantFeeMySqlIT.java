@@ -269,7 +269,7 @@ class ClubSessionMerchantFeeMySqlIT {
                         + "id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT, current_balance DECIMAL(12,2), after_balance DECIMAL(12,2),"
                         + "change_balance DECIMAL(12,2), change_reason VARCHAR(500), event_type BIGINT, event_id BIGINT, change_type BIGINT, del_flag BIGINT,"
                         + "create_by VARCHAR(64), create_time DATETIME, update_by VARCHAR(64), update_time DATETIME) ENGINE=InnoDB",
-                "CREATE TABLE settlement_detail (id BIGINT PRIMARY KEY AUTO_INCREMENT, claim_id BIGINT NULL, entry_kind VARCHAR(24) NULL,"
+                "CREATE TABLE settlement_detail (id BIGINT PRIMARY KEY AUTO_INCREMENT, club_id BIGINT NULL, club_name VARCHAR(255) NULL, claim_id BIGINT NULL, entry_kind VARCHAR(24) NULL,"
                         + "event_key VARCHAR(128) NULL, batch_id BIGINT, merchant_id BIGINT, source_type VARCHAR(64),"
                         + "source_id BIGINT, receiver_type VARCHAR(32) NOT NULL, receiver_id BIGINT, gross_amount DECIMAL(12,2), commission_amount DECIMAL(12,2),"
                         + "settlement_amount DECIMAL(12,2), status INT, fail_reason VARCHAR(500), idempotency_key VARCHAR(255),"

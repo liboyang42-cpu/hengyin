@@ -47,6 +47,13 @@ public final class P0AcceptanceSchema {
                 throw new IllegalStateException("base schema 快照缺表:" + table);
             }
             db.execute(snapshot.substring(from, to + 1));
+            // DEC-C 个人分账快照列（migration_20261112_dec_c_payout.sql）：快照早于该迁移，测试库须与 Mapper 同步。
+            if ("settlement_detail".equals(table)) {
+                db.execute("ALTER TABLE settlement_detail ADD COLUMN club_id BIGINT NULL, ADD COLUMN club_name VARCHAR(255) NULL");
+            } else if ("coop_settlement".equals(table)) {
+                db.execute("ALTER TABLE coop_settlement ADD COLUMN club_id BIGINT NULL, ADD COLUMN club_name VARCHAR(255) NULL,"
+                        + " ADD COLUMN payout_hold_reason VARCHAR(128) NULL");
+            }
         }
     }
 

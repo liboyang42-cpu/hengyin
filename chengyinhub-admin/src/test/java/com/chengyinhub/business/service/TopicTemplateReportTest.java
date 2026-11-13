@@ -172,7 +172,7 @@ class TopicTemplateReportTest {
             reportTask(AuditTask.BIZ_TEMPLATE_LIBRARY, 191L);
             CmsTemplateLibrary row = new CmsTemplateLibrary();
             row.setId(191L); row.setMemberTemplateId(91L); row.setMemberId(70L);
-            row.setDelFlag(0); row.setStatus(1L); row.setPublishStatus(1L);
+            row.setDelFlag(0); row.setStatus(1L);
             when(libraryMapper.selectCmsTemplateLibraryById(191L)).thenReturn(row);
             CmsMemberTemplate owner = new CmsMemberTemplate();
             owner.setId(91L); owner.setMemberId(70L); owner.setDelFlag(0); owner.setDraftStatus(1);
@@ -193,7 +193,7 @@ class TopicTemplateReportTest {
             reportTask(AuditTask.BIZ_TEMPLATE_LIBRARY, 191L);
             CmsTemplateLibrary row = new CmsTemplateLibrary();
             row.setId(191L); row.setMemberTemplateId(91L); row.setMemberId(70L);
-            row.setDelFlag(0); row.setStatus(1L); row.setPublishStatus(1L);
+            row.setDelFlag(0); row.setStatus(1L);
             when(libraryMapper.selectCmsTemplateLibraryById(191L)).thenReturn(row);
             when(templateMapper.selectCmsMemberTemplateByIdsForUpdate(any())).thenReturn(Collections.emptyList());
             when(libraryMapper.selectByMemberTemplateForUpdate(91L)).thenReturn(Collections.singletonList(row));
@@ -273,7 +273,7 @@ class TopicTemplateReportTest {
             ICmsTemplateLibraryService library = mock(ICmsTemplateLibraryService.class);
             ReflectionTestUtils.setField(c, "templateLibraryService", library);
             CmsTemplateLibrary row = new CmsTemplateLibrary();
-            row.setId(191L); row.setDelFlag(0); row.setStatus(1L); row.setPublishStatus(1L);
+            row.setId(191L); row.setDelFlag(0); row.setStatus(1L);
             when(library.selectCmsTemplateLibraryById(191L)).thenReturn(row);
             when(audit.reportContentOnce(AuditTask.BIZ_TEMPLATE_LIBRARY, 191L, 7L, "知识产权或内容盗用")).thenReturn(false);
 
@@ -281,7 +281,7 @@ class TopicTemplateReportTest {
             assertTrue(r.isSuccess());
             verify(audit).reportContentOnce(AuditTask.BIZ_TEMPLATE_LIBRARY, 191L, 7L, "知识产权或内容盗用");
 
-            row.setPublishStatus(0L);
+            row.setStatus(3L);
             assertFalse(c.libraryReport("191", "知识产权或内容盗用").isSuccess());
         }
 

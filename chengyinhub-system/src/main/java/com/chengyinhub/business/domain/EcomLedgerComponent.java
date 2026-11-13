@@ -18,4 +18,16 @@ public class EcomLedgerComponent {
     public void setReceiverMemberId(Long receiverMemberId) { this.receiverMemberId = receiverMemberId; }
     public java.math.BigDecimal getOriginalAmount() { return originalAmount; }
     public void setOriginalAmount(java.math.BigDecimal originalAmount) { this.originalAmount = originalAmount; }
+    private Long clubId;
+    public Long getClubId() { return clubId; }
+    public void setClubId(Long clubId) { this.clubId = clubId; }
+    private String clubName;
+    public String getClubName() { return clubName; }
+    public void setClubName(String clubName) { this.clubName = clubName; }
+    private String personalOpenid;
+    public String getPersonalOpenid() { return personalOpenid; }
+    public void setPersonalOpenid(String personalOpenid) { this.personalOpenid = personalOpenid; }
+    private String personalAppid;
+    public String getPersonalAppid() { return personalAppid; }
+    public void setPersonalAppid(String personalAppid) { this.personalAppid = personalAppid; }
 }

@@ -3,9 +3,9 @@ const app = getApp();
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
 
 function money(value) {
-  if (value == null || (typeof value === 'string' && !value.trim())) return '—';
+  if (value == null || (typeof value === 'string' && !value.trim())) return '0.00';   // D-119:金额未知写 0
   const n = Number(value);
-  return Number.isFinite(n) ? n.toFixed(2) : '—';
+  return Number.isFinite(n) ? n.toFixed(2) : '0.00';
 }
 
 // 阵容行只带 toType/toId+条款(后端 PricingResult.Lineup 无名称),列表先用类型兜底、名称异步补齐
@@ -14,7 +14,7 @@ function termsText(row) {
   if (row.termsMode === 'TRAFFIC') return '章节供给 · 引流';
   if (row.termsMode === 'REVSHARE') return '章节供给 · ¥' + money(row.fixedFee) + '/核销人次';
   if (row.shareMode === 1) return '分成型 · ' + (row.shareRate != null && row.shareRate !== '' ? row.shareRate + '%' : '—');
-  if (row.shareMode === 2) return '固定 · ¥' + (row.fixedFee != null && row.fixedFee !== '' ? money(row.fixedFee) : '—') + '/人';
+  if (row.shareMode === 2) return '固定 · ¥' + money(row.fixedFee) + '/人';
   return '引流型';
 }
 

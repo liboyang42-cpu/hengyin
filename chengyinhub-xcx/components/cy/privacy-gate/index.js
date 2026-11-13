@@ -20,11 +20,9 @@ Component({
   },
   data: {
     submitting: false,
-    serviceAgreed: false, // 进入弹窗:一行勾选同意两份文件后才能点「同意并继续」
     showServiceSheet: false,
   },
   methods: {
-    toggleService(event) { this.setData({ serviceAgreed: !!event.detail.value.length }); },
     openService() { this.setData({ showServiceSheet: true }); },
     closeService() { this.setData({ showServiceSheet: false }); },
     openPrivacyContract() {
@@ -36,7 +34,7 @@ Component({
     agreePrivacy(event) {
       if (this.data.submitting) return;
       this.setData({ submitting: true });
-      app.agreeUsageConsent(event, this.data.serviceAgreed)
+      app.agreeUsageConsent(event, true)
         .then(() => {
           this.setData({ submitting: false });
           this.triggerEvent('settled', this.agreeDetail({ event: 'agree' }));

@@ -230,15 +230,20 @@ function createClient(app, wxApi) {
     const id = data.id || data.owner_id;
     if (url === '/api/creativesquare/list' || url === '/api/comment/list') {
       page = Number(data.pageNum || 1);
-      pageKey = url + ':' + (data.favorite_only ? 'BOOKMARKS' : data.is_my ? 'OWN' : data.user_id || data.owner_id || 'LATEST');
+      const bookmarks = Number(data.favorite_only) === 1, own = Number(data.is_my) === 1;
+      const mode = String(data.feed_mode || 'latest').trim().toUpperCase();
+      if (url === '/api/creativesquare/list' && !['LATEST', 'FOLLOWING'].includes(mode)) return reject(options, '不支持的广场分区', 400);
+      const keyword = String(data.keyword || '').trim();
+      pageKey = JSON.stringify([url, bookmarks, own, data.user_id || null, data.owner_id || null, mode, keyword, data.pageSize || null]);
       if (page === 1) pages[pageKey] = { generation: requestId(), cursors: { 1: null } };
       const state = pages[pageKey];
       pageState = state;
       if (!state || !Object.prototype.hasOwnProperty.call(state.cursors, page)) return reject(options, '分页游标已失效，请刷新');
-      path = url === '/api/comment/list' ? '/posts/' + id + '/comments' : data.favorite_only ? '/me/bookmarks' : data.is_my ? '/me/posts' : '/feeds/LATEST';
+      path = url === '/api/comment/list' ? '/posts/' + id + '/comments' : bookmarks ? '/me/bookmarks' : own ? '/me/posts' : '/feeds/' + mode;
       body = { limit: data.pageSize };
       if (state.cursors[page] != null) body.cursor = state.cursors[page];
       if (data.user_id > 0) body.authorId = data.user_id;
+      if (keyword && url === '/api/creativesquare/list' && !bookmarks && !own) body.keyword = keyword;
       map = response => {
         if (!response || !Array.isArray(response.items) || typeof response.hasMore !== 'boolean') throw new Error('分页响应不完整');
         const rows = response.items.map(item => {

@@ -232,6 +232,11 @@ Page({
     wx.navigateTo({ url: '/pages/club/settlement/index?clubId=' + id + '&personal=1' })
   },
 
+  openPayoutReceiver() {
+    if (this._unloaded || this._hidden || !positiveId(this._clubId)) return
+    wx.navigateTo({ url: '/pages/club/payout-receiver/index?clubId=' + this._clubId })
+  },
+
   goTopicSettlement(e) {
     if (!this._hasCurrentData()) return
     const topicId = positiveId(e && e.currentTarget && e.currentTarget.dataset.topicId)

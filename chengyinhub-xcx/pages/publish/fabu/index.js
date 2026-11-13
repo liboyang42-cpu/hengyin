@@ -63,7 +63,7 @@ function emptyChapterForm(name = '', opening = false) {
     audioFileName: '',
     // 玩法边界:空 = 不限(存量语义)。承接通过时冻进 offer,之后按冻结的那份校验。
     allowedValidationMethods: '',
-    maxNodeXp: null
+    maxNodeXp: null, rewardText: '' // D-82 章节级奖励:章节结束卡的一行奖励文案,空 = 不出(同行写:下方 UI 基线按行号锚定)
   };
 }
 
@@ -73,10 +73,10 @@ const storyInline = require('../utils/publish/story-inline.js');
 // 段首哨兵:非首段的 textarea 前面垫一个零宽空格。微信 textarea 在段首按退格不发任何事件,
 // 垫了它之后退格会删掉这个字符 → 收到一次 input、值里没了哨兵 → 当成「并入上一段」。
 const STORY_SENTINEL = '​';
-// 顶部「添加」栏(编辑器原型 v2):段落 / 图片 / 音频 / 玩法 / 分支 / 分割线。分割线没有现成 glyph,WXML 画一条短横。
+// 顶部「添加」栏(编辑器原型 v2):段落 / 图片 / 音频 / 玩法 / 分支 / 分割线。分割线用自绘 divider 图标(D-87,与其余添加栏图标同描边同尺寸)。
 const STORY_ADD_ITEMS = [
   { kind: 'text', label: '段落', icon: 'list' }, { kind: 'gallery', label: '图片', icon: 'image' }, { kind: 'audio', label: '音频', icon: 'play' },
-  { kind: 'node', label: '玩法', icon: 'tab-explore' }, { kind: 'branch', label: '分支', icon: 'turn-right' }, { kind: 'divider', label: '分割线', icon: '' },
+  { kind: 'node', label: '玩法', icon: 'tab-explore' }, { kind: 'branch', label: '分支', icon: 'turn-right' }, { kind: 'divider', label: '分割线', icon: 'divider' },
 ];
 const STORY_GALLERY_LAYOUTS = [1, 2, 3, 4].map((n) => ({ n, label: ['单图', '双图', '三图', '四图'][n - 1], cells: Array.from({ length: n }, (_, i) => i) }));
 const storyThemeLook = require('../utils/publish/theme-look.js');
@@ -432,6 +432,8 @@ Page({
 
     //章节数据
     chapterForm: emptyChapterForm(),
+    // D-66:结局区的红字(沿用 cy-inline-error 的既有样式)。空串 = 没意见。
+    chapterEndingError: '',
     // 与 cms_member_template.validation_method 取值域一致;后端 assertAllowedValidationMethods 只收 1-5
     validationMethodOptions: [
       { v: '1', label: '文字作答' },
@@ -4534,7 +4536,7 @@ Page({
       popChapterAction: 1,
       popChapterIndex: chapterIndex,
       assignPendingLocalId: ''
-    }, () => this._syncChapterEndingOptions(chapterForm.ending));
+    }, () => { this._syncChapterEndingOptions(chapterForm.ending); this._refreshChapterEndingError(); });
     this._refreshStructureSummary(); // structure
     if (Number(that.data.formData.productType) === 2) that.loadMerchantCategories();
   },
@@ -5903,7 +5905,7 @@ Page({
     const current = this._coverUploadGuard('imgUrl');
     app.chooseImage((res) => {
       if (!current() || !Array.isArray(res) || typeof res[0] !== 'string' || !res[0].trim()) return;
-      this.setData({ 'formData.imgUrl': res[0] }, () => this.refreshPrimaryActionState());
+      this.setData({ 'formData.imgUrl': res[0], 'errors.imgUrl': '' }, () => this.refreshPrimaryActionState());
     }, 1, { crop: true, cropScale: '3:4' });
   },
   removeBanner() {
@@ -7371,7 +7373,7 @@ Page({
     const ticket = (fd.tickets || [])[0] || null;
     const priced = !!ticket && ticket.price !== '' && ticket.price != null;
     const stock = ticket && Number(ticket.totalStock) > 0 ? ' · ' + Number(ticket.totalStock) + ' 张' : '';
-    const look = this.data.lookView || {};
+    const look = lookEditor.view(fd.look, fd.chapters); // D-81:预览里的风格/配色条与草稿同源,不吃可能过期的 lookView
     const lookOn = (list) => ((list || []).find((x) => x.on) || {}).label || '';
     const recruitOn = (fd.chapters || []).some((c) => Number(c.recruitEnabled) === 1);
     const lockReason = '商家发的城市定向只能自己带，不能邀俱乐部和商家';
@@ -7429,6 +7431,7 @@ Page({
       ],
       switches,
       look: look.look || null,
+      lookStyles: look.styles, lookPalettes: look.palettes, lookStyleKey: look.styleKey,
       lookSample: { kick: fd.name || '', title: ((fd.chapters || [])[0] || {}).name || '',
         story: ((fd.chapters || [])[0] || {}).description || '', opt: '' },
       lookRows: [
@@ -7708,6 +7711,11 @@ Page({
   },
 
   // 剧情预览每一块右上的笔:回到配置里对应的位置(章节 → 章节设置,节点 → 节点编辑,票价 → 票务页)
+  // D-81(业主 2026-11-11「同步写回主题设置」):预览里切风格 / 配色 = 编辑器同一条写回路径(formData.look → 草稿自动保存 → 保存时随 payload.look 上送,
+  // 后端 ThemeLook 校验与归属校验不变),随后重算预览。
+  onPreviewLookStyle(e) { this.onLookStyle(e); this._refreshStoryPreview(); },
+  onPreviewLookPalette(e) { this.onLookPalette(e); this._refreshStoryPreview(); },
+
   onPreviewEdit(e) {
     const ds = (e && e.currentTarget && e.currentTarget.dataset) || {};
     this.closePublishCheck();
@@ -8020,6 +8028,24 @@ Page({
     };
   },
   /** 章节设置里的结局下拉:清单现取,下标按这一章已选的值算 */
+  /** D-66:把「当前这一章的结局设置」也算进整本书的结局检查,给结局区一行红字。
+   *  与提交前的 endingChaptersIssue 同一口径(最多 6 个、恰好一个默认结局)。 */
+  _chapterEndingIssueWithForm() {
+    const form = this.data.chapterForm || {};
+    const list = (this.data.formData.chapters || []).map((chapter, index) => {
+      if (this.data.popChapterAction == 1 && index === this.data.popChapterIndex) {
+        return Object.assign({}, chapter, { ending: form.ending || null });
+      }
+      return chapter;
+    });
+    if (this.data.popChapterAction != 1) list.push({ ending: form.ending || null });
+    return storyEnding.endingChaptersIssue(list);
+  },
+
+  _refreshChapterEndingError(done) {
+    this.setData({ chapterEndingError: this._chapterEndingIssueWithForm() }, done);
+  },
+
   _syncChapterEndingOptions(ending) {
     const patch = thoughtPatchOf(this.data.formData.journeyRules);
     const tags = storyInitialState.optionTagsOf(this.data.formData.chapters);
@@ -8058,7 +8084,8 @@ Page({
     const ending = !on ? null : (hasFallback
       ? { fallback: false, kind: 'thought', thoughtKey: '', thoughtName: '', tag: '', tagLabel: '', nodeId: null, nodeName: '' }
       : { fallback: true, kind: 'fallback' });
-    this.setData({ 'chapterForm.ending': ending }, () => this._syncChapterEndingOptions(ending));
+    this.setData({ 'chapterForm.ending': ending },
+      () => { this._syncChapterEndingOptions(ending); this._refreshChapterEndingError(); });
   },
   onChapterEndingKind(e) {
     const picked = (this.data.chapterEndingKinds || [])[Number(e.detail.value)];
@@ -8066,7 +8093,8 @@ Page({
     // 换触发方式就把另一种的选择清掉 —— 留着会让提交拿到一个对不上 kind 的值
     const ending = picked.key === 'fallback' ? { fallback: true, kind: 'fallback' }
       : { fallback: false, kind: picked.key, thoughtKey: '', thoughtName: '', tag: '', tagLabel: '', nodeId: null, nodeName: '' };
-    this.setData({ 'chapterForm.ending': ending, chapterEndingKindIndex: Number(e.detail.value), chapterEndingPickIndex: -1 });
+    this.setData({ 'chapterForm.ending': ending, chapterEndingKindIndex: Number(e.detail.value), chapterEndingPickIndex: -1 },
+      () => this._refreshChapterEndingError());
   },
   onChapterEndingPick(e) {
     const index = Number(e.detail.value);
@@ -8084,7 +8112,8 @@ Page({
       if (!n) return;
       Object.assign(ending, { nodeId: n.id, nodeName: n.name });
     } else return;
-    this.setData({ 'chapterForm.ending': ending, chapterEndingPickIndex: index });
+    this.setData({ 'chapterForm.ending': ending, chapterEndingPickIndex: index },
+      () => this._refreshChapterEndingError());
   },
 
   // 同一主题锁内读取注册版本与完整定义；读取不会自动确认差异或写回规则。
@@ -8757,7 +8786,7 @@ Page({
       if (!automatic) cyToast('先给主题起个名字，再保存草稿');
       return;
     }
-    if (automatic && this._cloudAutosaveBlocked()) return;
+    if (draftCoverMissing(this, automatic) || (automatic && this._cloudAutosaveBlocked())) return;
     this._cancelCloudDraftAutosave();
     if (!automatic) this._cloudAutosavePaused = false; // 用户明确保存 = 重新放行自动保存
     const apiData = this._buildSubmitPayload(automatic ? { draft: true, quiet: true } : { draft: true });
@@ -10120,6 +10149,8 @@ Page({
       complete: () => { if (!awaitingDecision) unavailable(); }
     });
   },
+  // D-82 章节级奖励输入(放 Page 尾:上方 UI 基线按行号锚定,不挪既有行)
+  onChapterRewardInput(e) { this.setData({ 'chapterForm.rewardText': e.detail.value }); },
 });
 
 // 第九轮 m1-9:行内节点已选的点(放文件尾:上方 UI 基线按行号锚定,不挪既有行)
@@ -10148,4 +10179,16 @@ function reconcileClubPick(page) {
   } else if (page.data.clubIndex !== -1) {
     page.setData({ clubIndex: -1 });
   }
+}
+
+// D-78(2026-11-11 业主「没有封面不能保存」):没有封面的主题不能存云端草稿。手动保存:封面字段下红字 + 打开详情弹窗 + 提示;
+// 自动保存静默跳过(本机自动保存不受影响)。后端 /create、/update 同样拒绝。
+function draftCoverMissing(page, automatic) {
+  if (String(page.data.formData.imgUrl || '').trim()) return false;
+  if (!automatic) {
+    page.setData({ 'errors.imgUrl': '请上传主题封面' });
+    page.openTopicDetail();
+    cyToast('请上传主题封面');
+  }
+  return true;
 }

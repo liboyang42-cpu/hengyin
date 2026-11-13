@@ -116,7 +116,7 @@
     </select>
 
     <select id="selectActiveMembership" resultMap="membershipRow">
-        select m.id, m.member_id, m.order_id, m.valid_from, m.valid_to, m.status
+        select m.id, m.member_id, m.order_id, m.valid_from, m.valid_to, m.status, o.plan_code
         from platform_pass_membership m
         join platform_pass_order o on o.id = m.order_id and o.status = 1
         where m.member_id = #{memberId} and m.status = 1 and m.valid_from &lt;= #{now} and m.valid_to &gt; #{now}
@@ -149,29 +149,39 @@
         select count(*) from platform_pass_claim where membership_id = #{membershipId}
     </select>
 
-    <sql id="officialSelfPlayTopic">
-        t.del_flag = 0 and t.self_play = 1 and t.lifecycle in (3, 4)
-        and exists (
-            select 1 from product_role content_role
-            where content_role.topic_id = t.id and content_role.slot = 'CONTENT'
-              and content_role.status = 1 and content_role.entity_type = 'PLATFORM'
-        )
+    <sql id="publishedTopic">
+        cms_topic.status = 1 and cms_topic.user_status = 1
+        and cms_topic.del_flag = 0 and cms_topic.is_template = 0
     </sql>
 
-    <select id="isOfficialSelfPlayTopic" resultType="int">
-        select count(*) from cms_topic t where t.id = #{topicId} and <include refid="officialSelfPlayTopic"/>
+    <select id="isPublishedTopic" resultType="int">
+        select count(*) from cms_topic where cms_topic.id = #{topicId} and <include refid="publishedTopic"/>
+    </select>
+
+    <select id="selectPublishedTopicIds" resultType="java.lang.Long">
+        select cms_topic.id from cms_topic where <include refid="publishedTopic"/>
+        and cms_topic.id in
+        <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
     </select>
 
     <select id="selectLibrary" resultType="java.util.LinkedHashMap">
-        select t.id, t.name, t.img_url, t.product_type, t.total_time, t.location_count, t.address_name
-        from cms_topic t
-        where <include refid="officialSelfPlayTopic"/>
-        <if test="productType != null">and t.product_type = #{productType}</if>
-        order by t.id desc
+        select cms_topic.id, cms_topic.name, cms_topic.img_url, cms_topic.product_type,
+               cms_topic.total_time, cms_topic.location_count, cms_topic.address_name,
+               cms_topic.self_play, cms_topic.self_play_price, cms_topic.lifecycle,
+               cms_topic.selling_started_at, cms_topic.sale_end_at, cms_topic.end_date
+        from cms_topic
+        where <include refid="com.chengyinhub.business.mapper.PublicContentCatalogMapper.catalogPublicGate"/>
+        <if test="productType != null">and cms_topic.product_type = #{productType}</if>
+        order by cms_topic.id desc
         limit #{limit}
     </select>
 
     <select id="countLibrary" resultType="int">
-        select count(*) from cms_topic t where <include refid="officialSelfPlayTopic"/>
+        select count(*) from cms_topic
+        where <include refid="com.chengyinhub.business.mapper.PublicContentCatalogMapper.catalogPublicGate"/>
+        <if test="topicIds != null and !topicIds.isEmpty()">
+            and cms_topic.id in
+            <foreach collection="topicIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        </if>
     </select>
 </mapper>

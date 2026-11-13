@@ -25,6 +25,20 @@ function markSeen() {
   try { wx.setStorageSync(SEEN_KEY, { uid: String(app.getUserID ? app.getUserID() || '' : ''), at: Date.now() }) } catch (e) { /* 记不上就下次再播一遍 */ }
 }
 
+// D-116(业主 2026-11-11「加预下载」):弱网下首帧不能是黑的。进页先把序列帧 WebP 解码进图片缓存(getImageInfo,帧图本来就在本分包内,不增主包):
+// 完整版 intro 前 3 张 + 待机第 0 张立刻拉,其余 intro / idle 排在后面低并发补;失败一律吞掉(播放器照旧按需挂图)。
+const WARM_FIRST = 3
+function warmFrames(list, done) {
+  const queue = list.slice()
+  const pump = () => {
+    const src = queue.shift()
+    if (!src) return
+    if (typeof wx.getImageInfo !== 'function') return
+    wx.getImageInfo({ src, complete: () => { if (done) done(src); pump() } })
+  }
+  pump(); pump()
+}
+
 Page({
   data: {
     statusBarHeight: app.globalData.statusBarHeight,
@@ -50,6 +64,7 @@ Page({
     this.setData({ reduced, merchant, copy })
     if (merchant) return
     const full = !reduced && (paid || !seenBefore())
+    this._warm(full)
     if (!seenBefore()) markSeen()
     if (!full) { this._end(); return }
     this.setData({ full: true, introOn: true })
@@ -60,6 +75,14 @@ Page({
     t(TL.h, () => this.setData({ 'step.h': true }))
     t(TL.p, () => this.setData({ 'step.p': true }))
     t(TL.btn, () => this.setData({ 'step.btn': true }))
+  },
+  _warm(full) {
+    const src = (a) => a.map((x) => x.src)
+    const intro = src(FR.intro), idle = src(FR.idle)
+    const order = full
+      ? intro.slice(0, WARM_FIRST).concat(idle.slice(0, 1), intro.slice(WARM_FIRST), idle.slice(1))
+      : idle.slice(0, 2).concat(idle.slice(2))
+    warmFrames(order)
   },
   onUnload() { this._unloaded = true; (this._t || []).forEach(clearTimeout) },
   /** 开通成功:眉题 / 标题 / 正文只写上一页带来的服务端事实 */

@@ -35,7 +35,7 @@
  </select>
  <select id="selectForUpdate" resultType="java.util.HashMap" useCache="false" flushCache="true">
   select id,member_id as memberId,object_key as objectKey,media_type as mediaType,review_state as reviewState,
-   review_reason as reviewReason,version,audit_task_id as auditTaskId,owner_type as ownerType,storage_type as storageType,public_url as publicUrl,source_type as sourceType,license_note as licenseNote,attribution,ai_model as aiModel,source_created_at as sourceCreatedAt from app_media_asset where id=#{id} for update
+   review_reason as reviewReason,version,audit_task_id as auditTaskId,safety_rejected as safetyRejected,owner_type as ownerType,storage_type as storageType,public_url as publicUrl,source_type as sourceType,license_note as licenseNote,attribution,ai_model as aiModel,source_created_at as sourceCreatedAt from app_media_asset where id=#{id} for update
  </select>
  <update id="bindAuditTask">
   update app_media_asset set audit_task_id=#{taskId},update_time=now()
@@ -43,12 +43,24 @@
  </update>
  <update id="decide">
   update app_media_asset set review_state=#{state},review_reason=#{reason},update_time=now()
-  where id=#{id} and version=#{version} and review_state='HOLD' and audit_task_id=#{taskId}
+  where id=#{id} and version=#{version} and review_state='HOLD' and audit_task_id=#{taskId} and safety_rejected=0
  </update>
  <update id="retry">
   update app_media_asset set review_state='HOLD',review_reason=null,version=version+1,audit_task_id=null,update_time=now()
-  where id=#{id} and member_id=#{memberId} and version=#{version} and review_state in ('REJECTED','UNAVAILABLE')
+  where id=#{id} and member_id=#{memberId} and version=#{version} and review_state in ('REJECTED','UNAVAILABLE') and safety_rejected=0
  </update>
+ <update id="machineDecide">
+  update app_media_asset set review_state=#{state},review_reason=#{reason},
+   safety_rejected=case when #{risky}=1 then 1 else safety_rejected end,update_time=now()
+  where id=#{id} and version=#{version}
+   and ((#{risky}=1 and safety_rejected=0) or (#{risky}=0 and safety_rejected=0 and review_state='HOLD'))
+ </update>
+ <select id="selectIdsByMediaHash" resultType="long" useCache="false">
+  select id from app_media_asset
+  where sha2(concat('media-asset:',id),256)=#{mediaHash} or sha2(object_key,256)=#{mediaHash}
+   or sha2(public_url,256)=#{mediaHash}
+  order by id
+ </select>
  <update id="updateProvenance">
   update app_media_asset set source_type=#{sourceType},license_note=#{licenseNote},attribution=#{attribution},
    ai_model=#{aiModel},source_created_at=#{sourceCreatedAt},update_time=now()

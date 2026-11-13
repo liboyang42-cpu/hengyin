@@ -40,7 +40,7 @@ public class ApiPlatformPassController extends BaseController {
         return success(service.overview(requireMemberId()));
     }
 
-    @Operation(summary = "游戏主题库：官方开放自玩主题")
+    @Operation(summary = "游戏主题库：公开主题与逐主题通行证覆盖事实")
     @GetMapping("/library")
     public AjaxResult library(@RequestParam(required = false) Integer productType,
                               @RequestParam(required = false, defaultValue = "50") Integer limit) {

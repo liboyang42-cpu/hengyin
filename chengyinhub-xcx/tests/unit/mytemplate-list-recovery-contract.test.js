@@ -114,10 +114,23 @@ test('个人审核与广场状态分开，旧 publishStatus 不能决定上下�
   const pending = page.decorateItem({ ...approved, marketTemplateId: 70, marketStatus: 0 })
   assert.equal(pending._canSubmitMarket, false)
   assert.equal(pending._marketActionText, '撤回广场审核')
-  assert.equal(pending._marketPublishTarget, 0)
-  const delisted = page.decorateItem({ ...approved, marketTemplateId: 70, marketStatus: 1, marketPublishStatus: 0 })
+  assert.equal(pending._canToggleMarket, true)
+  assert.equal(pending._marketStatusTarget, 2)
+  const online = page.decorateItem({ ...approved, marketTemplateId: 70, marketStatus: 1 })
+  assert.equal(online._marketText, '广场已上架')
+  assert.equal(online._canToggleMarket, true)
+  assert.equal(online._marketActionText, '从广场下架')
+  assert.equal(online._marketStatusTarget, 3)
+  const delisted = page.decorateItem({ ...approved, marketTemplateId: 70, marketStatus: 3 })
+  assert.equal(delisted._marketText, '广场已下架')
+  assert.equal(delisted._canSubmitMarket, false)
+  assert.equal(delisted._canToggleMarket, true)
   assert.equal(delisted._marketActionText, '上架广场')
-  assert.equal(delisted._marketPublishTarget, 1)
+  assert.equal(delisted._marketStatusTarget, 1)
+  const rejected = page.decorateItem({ ...approved, marketTemplateId: 70, marketStatus: 2 })
+  assert.equal(rejected._marketText, '广场需重新提交')
+  assert.equal(rejected._canSubmitMarket, true)
+  assert.equal(rejected._canToggleMarket, false)
   for (const marketStatus of ['LISTED', 0.5, null, true]) {
     const unknown = page.decorateItem({ ...approved, marketTemplateId: 70, marketStatus })
     assert.equal(unknown._canSubmitMarket, false)
@@ -146,10 +159,48 @@ test('广场撤回按稳定 ID 定位并发送目标状态，失败后可以重�
   const event = { currentTarget: { dataset: { id: 8, index: 99 } } }
   h.page.templateStatus(event)
   assert.equal(h.requests[0].url, '/api/template/updateLibraryStatus')
-  assert.deepEqual(h.requests[0].data, { template_id: 8, publish_status: 0 })
+  assert.deepEqual(h.requests[0].data, { template_id: 8, status: 2 })
   h.requests[0].fail({ errMsg: 'network' })
   h.page.templateStatus(event)
   assert.equal(h.requests.length, 2)
+})
+
+test('广场上下架仅发送统一状态，保留个人状态并以回读结果刷新', () => {
+  for (const [marketStatus, target] of [[1, 3], [3, 1]]) {
+    for (const scope of ['', 'MERCHANT']) {
+      const h = loadPage()
+      const row = h.page.decorateItem({ id: 8, draftStatus: 1, status: 1, checkStatus: 1,
+        publishStatus: 0, marketTemplateId: 80, marketStatus })
+      h.page.data.operationScope = scope
+      h.page.data.list = [row]
+      const event = { currentTarget: { dataset: { id: 8 } } }
+      h.page.templateStatus(event)
+      h.page.templateStatus(event)
+      assert.equal(h.requests.length, 1)
+      assert.equal(h.requests[0].url, '/api/template/updateLibraryStatus')
+      assert.deepEqual(h.requests[0].data, Object.assign({ template_id: 8, status: target }, scope ? { scope } : {}))
+      h.requests[0].success({ code: 200 })
+      assert.equal(h.requests[1].url, '/api/template/my-list')
+      assert.equal(row.publishStatus, 0)
+      assert.equal(row.status, 1)
+      assert.equal(row.marketStatus, marketStatus)
+    }
+  }
+})
+
+test('个人未过审的广场下架模板不能直接上架，缺失广场状态不能借个人发布状态操作', () => {
+  const h = loadPage()
+  for (const item of [
+    { id: 8, draftStatus: 1, status: 0, checkStatus: 0, marketTemplateId: 80, marketStatus: 3 },
+    { id: 8, draftStatus: 1, status: 1, checkStatus: 1, publishStatus: 1, marketTemplateId: 80 }
+  ]) {
+    const row = h.page.decorateItem(item)
+    assert.equal(row._canSubmitMarket, false)
+    assert.equal(row._canToggleMarket, false)
+    h.page.data.list = [row]
+    h.page.templateStatus({ currentTarget: { dataset: { id: 8 } } })
+  }
+  assert.equal(h.requests.length, 0)
 })
 
 test('商家列表操作保留作用域，个人列表操作不额外切换身份', () => {

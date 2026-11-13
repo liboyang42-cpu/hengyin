@@ -292,7 +292,7 @@ test('summary amount uses the existing resolvable money WXS and keeps exact deci
   vm.runInNewContext(fs.readFileSync(moneyFile, 'utf8'), context);
   assert.equal(context.module.exports.amount(h.entry.data.summary.amountText), '¥3.40');
   assert.equal(context.module.exports.amount('0.00'), '¥0.00');
-  assert.equal(context.module.exports.amount(null), '—');
+  assert.equal(context.module.exports.amount(null), '¥0');   // D-119(2026-11-11 业主「金额也写 0」)
 });
 
 test('detach clears rendered order and private session context without setData or late restoration', async () => {

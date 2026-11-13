@@ -24,6 +24,8 @@ public interface CmsTemplateLibraryMapper
 
     List<CmsTemplateLibrary> selectByMemberTemplateForUpdate(Long memberTemplateId);
 
+    CmsTemplateLibrary selectByIdForUpdate(Long id);
+
     /**
      * 查询模板库列表
      * 
@@ -57,11 +59,10 @@ public interface CmsTemplateLibraryMapper
     public int insertCmsTemplateLibrary(CmsTemplateLibrary cmsTemplateLibrary);
 
     /**
-     * owner 2026-10-23 D5(U-036):同一作者在模板广场里其它未删除条目的标题(不含 memberTemplateId 自己的投影),
-     * 供提交广场时做「同名」判重;比较在 Java 里按 trim 后逐字相等做,不交给库排序规则(general_ci 大小写不敏感)。
+     * 同作者其它未删除条目的标题，排除本库行；Java trim 后逐字比较，与唯一键一致。
      */
     List<String> selectAuthorLiveTitles(@Param("memberId") Long memberId,
-                                        @Param("excludeMemberTemplateId") Long excludeMemberTemplateId);
+                                        @Param("excludeLibraryId") Long excludeLibraryId);
 
     /** O5b-5:模板广场在架条目的 id/title(排除指定作者),按 id 倒序取前 limit 条,供标题相似度提示。 */
     List<CmsTemplateLibrary> selectPublicTitlesForSimilarity(@Param("excludeMemberId") Long excludeMemberId,
@@ -111,12 +112,12 @@ public interface CmsTemplateLibraryMapper
      */
     public int deleteCmsTemplateLibraryByIds(Long[] ids);
 
-    /** 审核撤销/申诉复核：把模板广场审核决定写下的状态 CAS 回待审(0/0)。 */
+    /** 审核撤销/申诉复核：把审核决定写下的状态 CAS 回待审。 */
     int reopenAuditDecision(@Param("id") Long id, @Param("ownerId") Long ownerId,
                             @Param("memberTemplateId") Long memberTemplateId,
-                            @Param("fromStatus") Long fromStatus, @Param("fromPublishStatus") Long fromPublishStatus);
+                            @Param("fromStatus") Long fromStatus);
 
-    /** 举报下架申诉成立(AUDIT-INT-4):从举报下架态(2/0)原样恢复到下架前记录的状态。 */
+    /** 举报下架申诉成立：从驳回态恢复到下架前记录的状态。 */
     int restoreReportTakedown(@Param("id") Long id, @Param("status") Long status,
-                              @Param("publishStatus") Long publishStatus, @Param("reason") String reason);
+                              @Param("reason") String reason);
 }

@@ -345,11 +345,12 @@ test('主题游玩进页先说明定位用途，确认前不采集，并保留�
 
   // V3-11 进游戏先说明用途；真正的 SDK 采集仍只能从明确确认回调进入。
   assert.doesNotMatch(loadData, /initLocation\(|wx\.getLocation/)
-  assert.match(loadData, /if \(!that\._entryLocationOffered && d\.registered !== false && that\._playable && !that\.data\.allDone\s*&& that\.data\.runState !== 'paused' && nodes\.some\(node => !node\.done && node\.lat && node\.lng\)\) \{\s*that\._entryLocationOffered = true;\s*that\.requestPlayLocation\(\)/)
+  assert.match(loadData, /if \(that\._startLocationNeeded\(\) && !that\._entryLocationOffered && d\.registered !== false && that\._playable && !that\.data\.allDone\s*&& that\.data\.runState !== 'paused' && nodes\.some\(node => !node\.done && node\.lat && node\.lng\)\) \{\s*that\._entryLocationOffered = true;\s*that\.requestPlayLocation\(\)/)
   assert.doesNotMatch(previewData, /initLocation\(|requestPlayLocation\(|wx\.getLocation/)
-  assert.match(playJs, /startNav\(node\)\s*\{[\s\S]*?this\.requestPlayLocation\(\)/)
+  // 业主 2026-11-13:导航到某一站不再逐站申请定位
+  assert.doesNotMatch(playJs.slice(playJs.indexOf('  startNav(node) {'), playJs.indexOf('  stopNav() {')), /requestPlayLocation\(\)/)
   assert.match(playJs, /onScanArrive\(\)\s*\{[\s\S]*?this\.scanArrive\(node\)/)
-  assert.match(playJs, /content:\s*'仅在本游玩页前台获取位置[^']*锁屏、切到后台、暂停、结束或离开后停止/)
+  assert.match(playJs, /content:\s*'仅在开局时检查你是否在起点约 300 米内[^']*锁屏、切到后台、暂停、结束或离开后停止/)
   assert.match(playWxml, /bindtap="onScanArriveFromTools"[^>]*aria-label="扫码到达"/)
 })
 

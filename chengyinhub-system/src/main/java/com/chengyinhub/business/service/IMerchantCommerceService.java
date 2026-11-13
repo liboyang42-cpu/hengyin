@@ -16,4 +16,6 @@ public interface IMerchantCommerceService {
 
     /** 用微信真实查单补记漏掉的回调；不改变未确认状态。 */
     void reconcileOrder(String outTradeNo);
+
+    boolean handleRefund(Map<String, String> verifiedFacts);
 }

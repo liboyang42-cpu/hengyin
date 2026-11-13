@@ -311,6 +311,8 @@ public class TopicEditionReopenServiceImpl implements ITopicEditionReopenService
             copy.setMaxPerHeadFee(source.getMaxPerHeadFee());
             copy.setAllowedValidationMethods(source.getAllowedValidationMethods());
             copy.setMaxNodeXp(source.getMaxNodeXp());
+            // D-82 章节级奖励随新期走:漏了结束卡就静默少一行
+            copy.setRewardText(source.getRewardText());
             copy.setCreateBy(COMMAND);
             copy.setCreateTime(new Date());
             requireOne(reopenMapper.insertReopenedChapter(copy), "新期章节写入失败");

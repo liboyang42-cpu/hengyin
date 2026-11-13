@@ -58,6 +58,7 @@ class ApiTopicPublicationIssueContractTest {
         topic.setId(TOPIC);
         topic.setMemberId(OWNER);
         topic.setPublishMode("pro");
+        topic.setImgUrl("media-asset:1"); // D-78:编辑保存也必须有封面
         when(topics.selectCmsTopicById(TOPIC)).thenReturn(topic);
         when(topics.selectTopicIsDraft(TOPIC)).thenReturn(1);
         mvc = MockMvcBuilders.standaloneSetup(controller)

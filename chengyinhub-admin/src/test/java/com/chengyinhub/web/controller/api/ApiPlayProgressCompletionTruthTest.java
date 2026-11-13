@@ -316,7 +316,7 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult missing = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), null, null, null);
         assertEquals("请开启定位", missing.get("msg"));
         AjaxResult outside = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "120", "30", null, null, null, "10");
-        assertEquals("还没到这一站附近", outside.get("msg"));
+        assertEquals("离起点太远，请到起点 300 米内再开始", outside.get("msg"));
         verify(progressService, never()).insertPlayerNodeProgress(any());
 
         AjaxResult arrived = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "121.5", "31.2", null, null, null, "10");
@@ -474,9 +474,9 @@ class ApiPlayProgressCompletionTruthTest
     /** 正控:真答错 → 回执带 data.answerWrong 标记,前端才允许计一次错。 */
     @SuppressWarnings("unchecked")
     @Test
-    void classicLocatedStationJudgesTheAnswerOnlyInsideTheFiftyMetreFence()
+    void classicLocatedStationJudgesTheAnswerOnlyInsideTheStartRadiusOnlyAtRunStart()
     {
-        // 实走 A20(业主 2026-10-30 拍板「执行 50 米」):老路径到达即完成,作答时随带定位按 arrive 同一围栏判
+        // 业主 2026-11-13 取代 2026-10-30 的逐站 50 米:仅开局(本局还没有进度)时作答随带定位按 300 米开局校验判,开局后不再要定位
         topic.setProductType(ProductType.ORIENTEERING);
         node.setTemplateId(900L); node.setLongitude("121.4737"); node.setLatitude("31.2304");
         CmsMemberTemplate tpl = new CmsMemberTemplate();
@@ -495,6 +495,12 @@ class ApiPlayProgressCompletionTruthTest
         AjaxResult near = BasicPlayCommandFixtures.answerAt(controller, a, n, "乱写一个", null, "121.4739", "31.2304", "10");
         assertEquals(null, near.get("errorCode"));
         assertEquals("答案不正确", near.get("msg"), "围栏内照常判题");
+
+        // 已开局:之后的站不带任何定位也照常判题
+        when(proofService.runStarted(PLAYER, ACTIVITY)).thenReturn(true);
+        AjaxResult started = BasicPlayCommandFixtures.answer(controller, a, n, "乱写一个", null);
+        assertEquals(null, started.get("errorCode"));
+        assertEquals("答案不正确", started.get("msg"));
     }
 
     @Test

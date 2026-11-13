@@ -136,4 +136,35 @@ class AppMediaAssetServiceTest {
         assertThrows(com.chengyinhub.common.exception.ServiceException.class,()->service.saveProvenance(13L,9L,
                 Map.of("sourceType","original","licenseNote","test declaration")));
     }
+    @Test void machinePassPublishesAndLaterRiskRevokesWithOneDurableNotice() {
+        Map<String,Object> row=new LinkedHashMap<>();row.put("id",12L);row.put("memberId",9L);
+        row.put("version",0);row.put("mediaType","IMAGE");row.put("reviewState","HOLD");row.put("safetyRejected",0);
+        row.put("storageType","LOCAL");row.put("objectKey","/profile/upload/2026/11/12/0123456789abcdef0123456789abcdef.png");
+        when(mapper.select(12L)).thenReturn(row);when(mapper.selectForUpdate(12L)).thenReturn(row);
+        when(mapper.machineDecide(eq(12L),eq(0),anyString(),nullable(String.class),anyBoolean())).thenAnswer(i->{
+            row.put("reviewState",i.getArgument(2));if(i.<Boolean>getArgument(4))row.put("safetyRejected",1);return 1;
+        });
+        com.chengyinhub.business.service.IImService im=mock(com.chengyinhub.business.service.IImService.class);
+        ObjectProvider<com.chengyinhub.business.service.IImService> noticeProvider=mock(ObjectProvider.class);
+        when(noticeProvider.getObject()).thenReturn(im);
+        when(im.enqueueSystemNotification(anyLong(),anyInt(),anyString(),anyString(),anyString())).thenReturn(99L);
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"notices",noticeProvider);
+        assertThrows(ServiceException.class,()->service.approvedUrl(12L));
+        assertTrue(service.applyMachineResult(12L,false,"pass"));
+        assertNotNull(service.approvedUrl(12L));
+        assertTrue(service.applyMachineResult(12L,true,"risk"));
+        assertThrows(ServiceException.class,()->service.approvedUrl(12L));
+        assertTrue(service.applyMachineResult(12L,true,"risk"));
+        assertTrue(service.applyMachineResult(12L,false,"stale-pass"));
+        assertEquals("REJECTED",row.get("reviewState"));
+        verify(im,times(1)).enqueueSystemNotification(eq(9L),anyInt(),anyString(),anyString(),eq("media-safety:12:0"));
+        verify(mapper,times(2)).machineDecide(eq(12L),eq(0),anyString(),nullable(String.class),anyBoolean());
+    }
+
+    @Test void unsupportedVideoAndModelNeverClaimMachineCapability() {
+        for(String type:java.util.List.of("VIDEO","MODEL3D")) {
+            when(mapper.select(12L)).thenReturn(Map.of("mediaType",type));
+            assertEquals(0,service.machineCheckType(12L));
+        }
+    }
 }

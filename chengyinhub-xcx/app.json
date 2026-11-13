@@ -91,6 +91,7 @@
         "group-code/index",
         "join-requests/index",
         "notify/index",
+        "payout-receiver/index",
         "roles/index",
         "settlement/index",
         "topic-detail/index",
@@ -369,6 +370,18 @@
       "network": "all",
       "packages": [
         "subpackageActivity"
+      ]
+    },
+    "subpackageMember/market/membership/index": {
+      "network": "all",
+      "packages": [
+        "subpackagePass"
+      ]
+    },
+    "subpackageMember/market/passes/index": {
+      "network": "all",
+      "packages": [
+        "subpackagePass"
       ]
     }
   },

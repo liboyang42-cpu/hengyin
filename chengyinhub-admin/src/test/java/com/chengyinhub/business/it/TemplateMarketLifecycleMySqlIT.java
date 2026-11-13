@@ -80,7 +80,8 @@ class TemplateMarketLifecycleMySqlIT {
             connection.createStatement().execute(menu.group());
             ItSchema.applyMigrations(connection, "sql/migration_p3_platform_foundation.sql",
                     "sql/migration_audit_open_task_guard_20260721.sql", "sql/migration_business_audit_event_20260823.sql",
-                    "sql/migration_20261012_app_media_asset.sql", "sql/migration_20261012_app_media_asset_namespaces.sql", "sql/migration_20261109_app_media_provenance.sql");
+                    "sql/migration_20261012_app_media_asset.sql", "sql/migration_20261012_app_media_asset_namespaces.sql", "sql/migration_20261109_app_media_provenance.sql",
+                    "sql/migration_20261112_template_market_status.sql", "sql/migration_20261112_template_usage_count.sql");
             String governance = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("sql/migration_approval_governance_20260828.sql")), java.nio.charset.StandardCharsets.UTF_8);
             java.util.regex.Matcher alter = java.util.regex.Pattern.compile("(?is)ALTER TABLE (?:audit_record|business_audit_event)\\s+.*?;").matcher(governance);
             int applied = 0;
@@ -197,7 +198,7 @@ class TemplateMarketLifecycleMySqlIT {
                 row.setAdvancedConfigJson(seedConfig);
                 row.setPreferenceJson(configs.group(3) == null ? null : configs.group(3).replace("''", "'"));
                 row.setDescription("旧版较长的玩法介绍需要完整保留，采用与再次保存都不能静默截断或丢掉内容。");
-                row.setDuration(7L); row.setMemberId(100000L); row.setStatus(1L); row.setPublishStatus(1L); row.setDelFlag(0);
+                row.setDuration(7L); row.setMemberId(100000L); row.setStatus(1L); row.setDelFlag(0);
                 row.setCreateBy(file.replace("migration_", "").replace(".sql", ""));
                 assertEquals(1, libraries.insertCmsTemplateLibrary(row));
             }
@@ -260,9 +261,9 @@ class TemplateMarketLifecycleMySqlIT {
         assertEquals(1L, members.selectCmsMemberTemplateById(id).getStatus());
         assertEquals(0, count("cms_template_library"));
         Long task = publish.submitTemplateToMarket(id, 7L, "author");
-        assertEquals(0L, projection(id).getPublishStatus());
+        assertEquals(0L, projection(id).getStatus());
         audit.review(task, 8L, approval(0));
-        assertEquals(1L, projection(id).getPublishStatus());
+        assertEquals(1L, projection(id).getStatus());
         assertEquals(1, audit.review(task, 8L, approval(0)), "重试复用不可变审核事件");
         assertEquals(2, count("business_audit_event"));
     }
@@ -278,7 +279,7 @@ class TemplateMarketLifecycleMySqlIT {
         assertThrows(IllegalStateException.class, () -> audit.review(task, 8L, approval(0)));
         assertEquals(0, tasks.selectAuditTaskById(task).getStatus());
         assertEquals(0, tasks.selectAuditTaskById(task).getVersion());
-        assertEquals(0L, projection(id).getPublishStatus());
+        assertEquals(0L, projection(id).getStatus());
         assertEquals(records, count("audit_record"));
     }
 
@@ -296,20 +297,27 @@ class TemplateMarketLifecycleMySqlIT {
                 try { assertTrue(started.await(5, TimeUnit.SECONDS)); }
                 catch (InterruptedException e) { throw new IllegalStateException(e); }
                 assertThrows(TimeoutException.class, () -> pending[0].get(150, TimeUnit.MILLISECONDS), "审批必须等待作者持有的真源锁");
-                assertTrue(publish.updateTemplateLibraryStatus(id, 0, 7L));
+                assertTrue(publish.updateTemplateLibraryStatus(id, 2, 7L));
                 return null;
             });
             assertThrows(ExecutionException.class, () -> pending[0].get(10, TimeUnit.SECONDS));
             assertEquals(4, tasks.selectAuditTaskById(oldTask).getStatus());
-            assertEquals(0L, projection(id).getPublishStatus());
+            assertEquals(2L, projection(id).getStatus());
             Long fresh = publish.submitTemplateToMarket(id, 7L, "author");
             assertNotEquals(oldTask, fresh);
             audit.review(fresh, 8L, approval(0));
-            assertEquals(1L, projection(id).getPublishStatus());
+            assertEquals(1L, projection(id).getStatus());
             CmsMemberTemplate edit = new CmsMemberTemplate(); edit.setId(id); edit.setQuestionAnswer("changed");
             publish.updateAdminTemplate(edit, "author");
-            assertEquals(0L, projection(id).getPublishStatus());
+            assertEquals(2L, projection(id).getStatus(), "个人玩法变更使广场旧审核失效，不自动生成广场待审单");
             assertEquals(0L, members.selectCmsMemberTemplateById(id).getStatus());
+            CmsTemplateLibrary publicQuery = new CmsTemplateLibrary(); publicQuery.setStatus(1L); publicQuery.setDelFlag(0);
+            assertTrue(libraries.selectCmsTemplateLibraryList(publicQuery).stream()
+                    .noneMatch(row -> id.equals(row.getMemberTemplateId())), "失效投影不能继续公开");
+            assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                    () -> publish.submitTemplateToMarket(id, 7L, "author"), "修改后须重新完成个人审核再提交广场审核");
+            assertThrows(com.chengyinhub.common.exception.ServiceException.class,
+                    () -> publish.updateTemplateLibraryStatus(id, 1, 7L), "旧广场审核不能直接恢复上架");
         } finally { worker.shutdownNow(); }
     }
 
@@ -321,14 +329,14 @@ class TemplateMarketLifecycleMySqlIT {
         CmsTemplateLibrary first = projection(id);
         CmsTemplateLibrary duplicate = new CmsTemplateLibrary();
         duplicate.setMemberTemplateId(id); duplicate.setMemberId(7L); duplicate.setDelFlag(0);
-        duplicate.setStatus(2L); duplicate.setPublishStatus(0L);
+        duplicate.setStatus(2L);
         libraries.insertCmsTemplateLibrary(duplicate);
         MemberTemplateVO query = new MemberTemplateVO(); query.setMemberId(7L);
         java.util.List<MemberTemplateVO> rows = members.selectMemberTemplateList(query);
         assertEquals(1, rows.size(), "重复历史投影不能放大我的玩法列表分页");
         assertEquals(1, rows.get(0).getCheckStatus());
         assertEquals(first.getId(), rows.get(0).getMarketTemplateId());
-        assertEquals(0L, rows.get(0).getMarketPublishStatus());
+        assertEquals(0L, rows.get(0).getMarketStatus());
         query.setMemberId(99L);
         assertTrue(members.selectMemberTemplateList(query).isEmpty());
         assertEquals(0, tasks.selectAuditTaskById(task).getStatus());

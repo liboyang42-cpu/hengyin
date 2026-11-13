@@ -5,6 +5,12 @@ import java.util.Date;
 
 /** 原订单分项/成功冲回不可变存储；写权属于结算资金事务。 */
 public class CoopSettlementOriginalComponent {
+    private Long clubId;
+    private String clubName;
+    public Long getClubId() { return clubId; }
+    public void setClubId(Long value) { clubId = value; }
+    public String getClubName() { return clubName; }
+    public void setClubName(String value) { clubName = value; }
     private Long id;
     private Long cashCloseId;
     private Long topicId;

@@ -321,6 +321,24 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         CmsTopic topic = activity.getTopicId() == null
                 ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
         requireSessionSettlementContract(activity, topic);
+        if (clubPrincipalPayee != null && clubPrincipalPayee.personalActivity(activity)) {
+            Long frozenPayee = clubPrincipalPayee.frozenActivity(activity).getMemberId();
+            if (clubPrincipalPayee.activityAlreadyReady(activity.getId())) return false;
+            activitySettlementHoldMapper.holdOpenComplaintRegistrations(activity.getId());
+            recordFreeExploreSessionLedger(activity, topic);
+            BigDecimal cash = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
+            BigDecimal held = activitySettlementHoldMapper.selectHeldSalesByActivityId(activity.getId());
+            cash = cash == null ? BigDecimal.ZERO : cash;
+            if (held != null) cash = cash.subtract(held);
+            com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan fees = merchantFeePlan(activity, frozenPayee, null);
+            if (!fees.isEmpty()) {
+                clubSessionMerchantFee().requireWithinPayeeShare(activity, fees, calculateActivityCommissions(activity, cash, rule).getMerchantCommissionAmount());
+                clubSessionMerchantFee().writeLedger(activity, fees);
+            }
+            clubPrincipalPayee.markActivityReady(activity.getId());
+            // External payout worker consumes the frozen obligations; no wallet fallback, including unsupported payments.
+            return false;
+        }
         // HF-02(A-29): 原子领取——仅当 is_settlement 由 0 翻 1 成功才继续,防并发/重复触发导致重复入账
         if (cmsActivityMapper.claimActivityForSettlement(activity.getId()) == 0) {
             logger.info("活动 {} 已被结算或正在结算,跳过", activity.getId());
@@ -446,6 +464,15 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         CmsTopic heldTopic = activity.getTopicId() == null
                 ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
         requireSessionSettlementContract(activity, heldTopic);
+        if (clubPrincipalPayee != null && clubPrincipalPayee.personalActivity(activity)) {
+            Long payee = clubPrincipalPayee.frozenActivity(activity).getMemberId();
+            com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan fees = merchantFeePlan(activity, payee, registration.getId());
+            if (!fees.isEmpty()) {
+                clubSessionMerchantFee().requireWithinPayeeShare(activity, fees, calculateActivityCommissions(activity, sales, rule).getMerchantCommissionAmount());
+                clubSessionMerchantFee().writeLedger(activity, fees);
+            }
+            return true;
+        }
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
         ActivitySettlementDTO settlement = calculateActivityCommissions(activity, sales, rule);
         Long payee = activityPayee(activity, heldTopic);

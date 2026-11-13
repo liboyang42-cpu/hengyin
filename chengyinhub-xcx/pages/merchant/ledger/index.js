@@ -542,7 +542,7 @@ Page({
       && (row.payeeType == null || row.payeeType === 'merchant' || row.payeeType === 'club')
       && /^[1-9]\d*$/.test(String(row.refId || '')) && Number.isSafeInteger(Number(row.refId)) ? String(row.refId) : '';
     item.coopBreakdown = row.source === 'COOP_SHARE' && row.originalAmount != null
-      ? '原始应结 ' + yuan(row.originalAmount) + ' · 已执行调整 ' + (row.executedAdjustmentAmount == null ? '—' : yuan(row.executedAdjustmentAmount)) : '';
+      ? '原始应结 ' + yuan(row.originalAmount) + ' · 已执行调整 ' + (row.executedAdjustmentAmount == null ? '¥0.00' : yuan(row.executedAdjustmentAmount)) : '';
     return item;
   },
   batchRow(row) {

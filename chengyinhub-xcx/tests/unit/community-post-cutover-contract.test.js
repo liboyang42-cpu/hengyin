@@ -297,3 +297,37 @@ test('guideline cancellation and report submission do not dirty community feeds'
   await reported.request('/api/creativesquare/report', { id: 56 });
   assert.equal(reported.app.globalData.squareListDirtyVersion, undefined);
 });
+test('wire zero flags remain public feed while string one selects owner or bookmarks', async () => {
+  const empty = () => ({ items: [], hasMore: false, nextCursor: null });
+  const h = harness([empty(), empty(), empty()]);
+  await h.request('/api/creativesquare/list', { is_my: '0', favorite_only: '0', pageNum: 1 });
+  await h.request('/api/creativesquare/list', { is_my: '1', pageNum: 1 });
+  await h.request('/api/creativesquare/list', { favorite_only: '1', pageNum: 1 });
+  assert.deepEqual(h.calls.map(row => row.url), ['/api/v1/community/feeds/LATEST', '/api/v1/community/me/posts', '/api/v1/community/me/bookmarks']);
+});
+test('following and search reach canonical feed and cursors stay within their filter scope', async () => {
+  const h = harness([
+    { items: [bundle(80)], hasMore: true, nextCursor: 80 },
+    { items: [bundle(60)], hasMore: true, nextCursor: 60 },
+    { items: [], hasMore: false, nextCursor: null },
+    { items: [], hasMore: false, nextCursor: null }
+  ]);
+  await h.request('/api/creativesquare/list', { feed_mode: 'following', keyword: ' 江边 ', user_id: 990011, pageNum: 1 });
+  await h.request('/api/creativesquare/list', { feed_mode: 'latest', keyword: '江边', user_id: 990011, pageNum: 1 });
+  await h.request('/api/creativesquare/list', { feed_mode: 'following', keyword: '江边', user_id: 990011, pageNum: 2 });
+  await h.request('/api/creativesquare/list', { feed_mode: 'latest', keyword: '江边', user_id: 990011, pageNum: 2 });
+  assert.equal(h.calls[0].url, '/api/v1/community/feeds/FOLLOWING');
+  assert.equal(h.calls[0].data.keyword, '江边');
+  assert.equal(h.calls[0].data.authorId, 990011);
+  assert.equal(h.calls[2].data.cursor, 80);
+  assert.equal(h.calls[3].data.cursor, 60);
+});
+test('a cursor from another search or page size cannot silently continue a different feed', async () => {
+  const h = harness([{ items: [bundle()], hasMore: true, nextCursor: 56 }]);
+  await h.request('/api/creativesquare/list', { keyword: '江边', pageSize: 10, pageNum: 1 });
+  const changedSearch = await h.request('/api/creativesquare/list', { keyword: '公园', pageSize: 10, pageNum: 2 });
+  const changedSize = await h.request('/api/creativesquare/list', { keyword: '江边', pageSize: 20, pageNum: 2 });
+  assert.equal(changedSearch.code, 409);
+  assert.equal(changedSize.code, 409);
+  assert.equal(h.calls.length, 1);
+});

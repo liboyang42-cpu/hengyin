@@ -109,6 +109,7 @@ class MerchantCommerceServiceTest {
         pending.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
         pending.setStatus(0L);
         pending.setPayAmount(new BigDecimal("19.90"));
+        pending.setEntitlementDays(30); pending.setEntitlementMaxUsage(3);
         // One persisted business identity: bindCommercePaymentProof updates this same row before readback.
         // A sequential "paid" shell loses ID/scope/amount/Reference and cannot prove exact consumption.
         when(orderMapper.selectOmsOrderByOrderSn("TPLTM_8")).thenReturn(pending);
@@ -146,6 +147,7 @@ class MerchantCommerceServiceTest {
         OmsOrder pending = new OmsOrder(); pending.setId(8L); pending.setOrderSn("TPLTM_8");
         pending.setMemberId(12L); pending.setMmsMerchantId(34L); pending.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
         pending.setStatus(0L); pending.setPayAmount(new BigDecimal("19.90"));
+        pending.setEntitlementDays(30); pending.setEntitlementMaxUsage(3);
         when(orderMapper.selectOmsOrderByOrderSn("TPLTM_8")).thenReturn(pending);
         when(orderMapper.markCommerceOrderPaid(8L, "wx-tx-8")).thenReturn(1);
         when(subscriptionMapper.grantMerchantSubscription(any())).thenReturn(2);
@@ -178,6 +180,7 @@ class MerchantCommerceServiceTest {
         pending.setBizType(MerchantCommerceService.BIZ_CUSTOM_EVENT);
         pending.setStatus(0L);
         pending.setPayAmount(new BigDecimal("88.00"));
+        pending.setEntitlementDays(30); pending.setEntitlementMaxUsage(3);
         when(orderMapper.selectOmsOrderByOrderSn("CUSTOM_9")).thenReturn(pending);
         when(orderMapper.markCommerceOrderPaid(9L, "wx-tx-9")).thenReturn(1);
         when(subscriptionMapper.grantMerchantSubscription(any())).thenReturn(0);
@@ -497,6 +500,115 @@ class MerchantCommerceServiceTest {
             assertTrue(new java.math.BigInteger(encodedUuid, 36).bitLength() <= 128);
             assertTrue(service.supportsOutTradeNo(number));
         }
+    }
+
+    @Test
+    void checkoutRejectsSubCentPriceBeforePersistingOrDispatching() {
+        service = enabledService();
+        SettlementRule rule = pricedRule(); rule.setUnitPrice(new BigDecimal("0.001"));
+        when(settlementRuleService.getActiveRule(0L, MerchantCommerceService.BIZ_PREMIUM_TEMPLATE)).thenReturn(rule);
+        assertThrows(IllegalStateException.class, () -> service.createOrder(12L, 34L, "openid",
+                MerchantCommerceService.BIZ_PREMIUM_TEMPLATE, "req-1234567890123456"));
+        verify(orderMapper, never()).insertOmsOrder(any());
+        verify(wechatPayService, never()).createGenericOrder(any(), any(), any(), any());
+    }
+
+    @Test
+    void unpaidAndZeroCashCallbacksNeverGrantEntitlement() {
+        OmsOrder order = refundableOrder(); order.setStatus(0L); order.setPayAmount(BigDecimal.ZERO);
+        when(orderMapper.selectCommerceOrderForUpdate(order.getOrderSn())).thenReturn(order);
+        assertFalse(paidOrder(order.getOrderSn(), false, 1990, "wx-tx-8"));
+        assertFalse(paidOrder(order.getOrderSn(), true, 1990, "wx-tx-8"));
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+        verify(orderMapper, never()).markCommerceOrderPaid(any(), any());
+    }
+
+    @Test
+    void acceptedRefundKeepsEntitlementUntilVerifiedSuccessAndNetworkIsOutsideTransaction() {
+        OmsOrder order = refundableOrder();
+        when(subscriptionMapper.selectCommerceSubscriptionForUpdate(8L)).thenReturn(deliveryFor(order));
+        when(wechatPayService.submitRefund(any(), eq(order.getOrderSn()), eq("RMC8"), any(), any(), anyString()))
+                .thenAnswer(call -> {
+                    assertFalse(org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive());
+                    assertTrue(transactions.commits > 0);
+                    return RefundRequestResult.ACCEPTED;
+                });
+        assertEquals("processing", service.refundOrder(12L, 34L, order.getOrderSn()).get("refundStatus"));
+        verify(subscriptionMapper).createCommerceRefund(order);
+        verify(subscriptionMapper, never()).revokeCommerceSubscription(any());
+    }
+
+    @Test
+    void successfulRefundRetractsOnlyOriginalPurchaseAndDuplicateDoesNotRetractAgain() {
+        OmsOrder order = refundableOrder();
+        when(subscriptionMapper.selectCommerceSubscriptionForUpdate(8L)).thenReturn(deliveryFor(order));
+        java.util.Map<String, Object> refund = new java.util.HashMap<>(); refund.put("refund_no", "RMC8");
+        when(subscriptionMapper.selectCommerceRefundForUpdate(8L)).thenReturn(refund);
+        java.util.Map<String, String> observed = refundObservation(order, 1990);
+        when(subscriptionMapper.revokeCommerceSubscription(8L)).thenReturn(1);
+        when(subscriptionMapper.settleCommerceRefund(eq(8L), any(), anyString())).thenAnswer(call -> {
+            refund.put("refund_fact_id", call.getArgument(1)); refund.put("refund_fact_hash", call.getArgument(2)); return 1;
+        });
+        when(orderMapper.markCommerceRefunded(8L)).thenAnswer(call -> { order.setStatus(6L); return 1; });
+        assertTrue(service.handleRefund(observed)); assertTrue(service.handleRefund(observed));
+        verify(subscriptionMapper).revokeCommerceSubscription(8L);
+        verify(orderMapper).markCommerceRefunded(8L);
+        verify(subscriptionMapper, never()).grantMerchantSubscription(any());
+        assertEquals("success", service.refundOrder(12L, 34L, order.getOrderSn()).get("refundStatus"));
+        org.mockito.Mockito.verifyNoInteractions(wechatPayService);
+    }
+
+    @Test
+    void partialOrUnrequestedRefundCannotRevokeAnEntitlement() {
+        OmsOrder order = refundableOrder();
+        when(subscriptionMapper.selectCommerceRefundForUpdate(8L)).thenReturn(java.util.Map.of("refund_no", "RMC8"));
+        assertThrows(IllegalStateException.class, () -> service.handleRefund(refundObservation(order, 1000)));
+        when(subscriptionMapper.selectCommerceRefundForUpdate(8L)).thenReturn(null);
+        assertFalse(service.handleRefund(refundObservation(order, 1990)));
+        verify(subscriptionMapper, never()).revokeCommerceSubscription(any());
+    }
+
+    @Test
+    void refundRejectsAnotherMerchantAndUnattributedLegacyGrantBeforeMoneyDispatch() {
+        OmsOrder order = refundableOrder();
+        assertThrows(IllegalArgumentException.class, () -> service.refundOrder(99L, 34L, order.getOrderSn()));
+        assertThrows(IllegalStateException.class, () -> service.refundOrder(12L, 34L, order.getOrderSn()));
+        org.mockito.Mockito.verifyNoInteractions(wechatPayService);
+        verify(subscriptionMapper, never()).createCommerceRefund(any());
+    }
+
+    private MerchantSubscription deliveryFor(OmsOrder order) {
+        MerchantSubscription delivery = new MerchantSubscription();
+        delivery.setSourceOrderId(order.getId()); delivery.setMerchantId(order.getMemberId());
+        delivery.setSubscriptionType(order.getBizType()); delivery.setIsActive(1);
+        return delivery;
+    }
+
+    private OmsOrder refundableOrder() {
+        OmsOrder order = new OmsOrder(); order.setId(8L); order.setOrderSn("TPLTM_8");
+        order.setMemberId(12L); order.setMmsMerchantId(34L); order.setBizType(MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
+        order.setStatus(1L); order.setPayAmount(new BigDecimal("19.90"));
+        order.setEntitlementDays(30); order.setEntitlementMaxUsage(3); order.setPaymentTransactionId("wx-tx-8");
+        var reference = proof.issue(order.getOrderSn(), 1990, "wx-tx-8");
+        order.setVerifiedPaymentFactId(reference.id()); order.setVerifiedPaymentFactHash(reference.hash());
+        when(orderMapper.selectOmsOrderByOrderSn(order.getOrderSn())).thenReturn(order);
+        return order;
+    }
+
+    private java.util.Map<String, String> refundObservation(OmsOrder order, long refundFen) {
+        var original = proof.reader.requireVerified(new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(
+                order.getVerifiedPaymentFactId(), order.getVerifiedPaymentFactHash())).facts();
+        var fact = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact(
+                com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Kind.REFUND,
+                original.mchid(), original.appid(), original.businessOutTradeNo(), original.wxOutTradeNo(),
+                "RMC8", "wx-refund-8", original.transactionId(), original.tradeType(), "CNY", 1990, refundFen,
+                java.time.Instant.parse("2026-11-12T00:00:00Z"), original.intentRequestHash(), "SUCCESS");
+        var reference = new com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference(100L, fact.factHash());
+        org.mockito.Mockito.doReturn(
+                new com.chengyinhub.business.service.impl.WechatVerifiedPaymentFactService.Stored(reference, fact))
+                .when(proof.reader).requireVerified(reference);
+        return java.util.Map.of("outTradeNo", order.getOrderSn(), "outRefundNo", "RMC8", "status", "SUCCESS",
+                "verified_fact_id", "100", "verified_fact_hash", reference.hash());
     }
 
     private boolean paidOrder(String no,boolean paid,Integer fen,String tx) {

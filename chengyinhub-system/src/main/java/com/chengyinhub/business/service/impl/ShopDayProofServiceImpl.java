@@ -170,6 +170,13 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
     }
 
     @Override
+    public boolean runStarted(Long memberId, Long activityId) {
+        List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressList(
+                probe(memberId, activityId, null));
+        return rows != null && !rows.isEmpty();
+    }
+
+    @Override
     public boolean markGameDone(Long memberId, Long activityId, Long topicId, Long nodeId) {
         return playerNodeProgressMapper.markShopDayGameDone(memberId, activityId, topicId, nodeId) > 0;
     }

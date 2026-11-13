@@ -121,14 +121,14 @@ class AuditReportLaneMyBatisTest {
                     "DROP TABLE IF EXISTS cms_template_library", ddl(base, "cms_template_library"),
                     "INSERT INTO cms_member_template(id,member_id,title,status,check_status,publish_status,draft_status,del_flag)"
                             + " VALUES (40,5,'玩法',2,2,0,1,0)",
-                    "INSERT INTO cms_template_library(id,member_id,member_template_id,title,status,publish_status,del_flag)"
-                            + " VALUES (41,5,40,'玩法',2,0,0)");
+                    "INSERT INTO cms_template_library(id,member_id,member_template_id,title,status,del_flag)"
+                            + " VALUES (41,5,40,'玩法',2,0)");
             assertEquals(1, session.getMapper(CmsMemberTemplateMapper.class).restoreReportTakedown(40L, 5L, 1L, 1, 0L, ""));
             assertEquals(0, session.getMapper(CmsMemberTemplateMapper.class).restoreReportTakedown(40L, 5L, 1L, 1, 0L, ""),
                     "已离开举报下架态不再恢复");
-            assertEquals(1, session.getMapper(CmsTemplateLibraryMapper.class).restoreReportTakedown(41L, 1L, 1L, ""));
+            assertEquals(1, session.getMapper(CmsTemplateLibraryMapper.class).restoreReportTakedown(41L, 1L, ""));
             assertEquals(0, number(c, "SELECT publish_status FROM cms_member_template WHERE id=40"), "未上架的保持未上架");
-            assertEquals(1, number(c, "SELECT publish_status FROM cms_template_library WHERE id=41"));
+            assertEquals(1, number(c, "SELECT status FROM cms_template_library WHERE id=41"));
 
             // 内容安全留置(AUDIT-INT-7)与抽检池标记(AUDIT-INT-8)
             exec(c, "DROP TABLE IF EXISTS cms_topic", ddl(base, "cms_topic"),

@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -84,10 +85,13 @@ class TemplateAdoptSecretBackfillTest {
         ReflectionTestUtils.setField(service, "memberTemplateService", memberService);
         com.chengyinhub.business.mapper.CmsMemberTemplateMapper lockedMembers = mock(com.chengyinhub.business.mapper.CmsMemberTemplateMapper.class);
         ReflectionTestUtils.setField(service, "memberTemplateMapper", lockedMembers);
-        ReflectionTestUtils.setField(service, "libraryMapper", mock(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class));
+        com.chengyinhub.business.mapper.CmsTemplateLibraryMapper lockedLibraries = mock(com.chengyinhub.business.mapper.CmsTemplateLibraryMapper.class);
+        when(lockedLibraries.selectByIdForUpdate(anyLong())).thenAnswer(call -> libraryService.selectCmsTemplateLibraryById(call.getArgument(0)));
+        ReflectionTestUtils.setField(service, "libraryMapper", lockedLibraries);
         ReflectionTestUtils.setField(service, "auditTaskMapper", mock(com.chengyinhub.business.mapper.AuditTaskMapper.class));
         when(lockedMembers.selectCmsMemberTemplateByIdsForUpdate(any())).thenAnswer(call -> {
             java.util.List<Long> ids = call.getArgument(0);
+            if (ids.isEmpty() || ids.get(0) == null || ids.get(0) <= 0) return java.util.Collections.emptyList();
             CmsMemberTemplate row = memberService.selectCmsMemberTemplateById(ids.get(0));
             return row == null ? java.util.Collections.emptyList() : java.util.Collections.singletonList(row);
         });
@@ -210,7 +214,7 @@ class TemplateAdoptSecretBackfillTest {
         String hash = com.chengyinhub.business.service.support.TemplateAdoptionService
                 .inheritedAdvancedConfigHash(inserted.get().getAdvancedConfigJson());
         when(receipts.countCompletedInheritedConfig(7L, 91L, 9001L, hash)).thenReturn(1);
-        source.setPublishStatus(0L);
+        source.setStatus(3L);
         source.setAdvancedConfigJson(LOCKED_TIMER_CONFIG.replace(":60", ":90"));
         org.mockito.Mockito.clearInvocations(libraryService);
         CmsTemplatePublishRequest edit = adoptedRequest(9001L,
@@ -309,9 +313,9 @@ class TemplateAdoptSecretBackfillTest {
         CmsTemplatePublishRequest request = adoptedRequest(9001L, STRIPPED_CONFIG);
         request.setAdoptSourceOnly(true); request.setId(10L);
         assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
-        request.setId(null); source.setPublishStatus(0L);
+        request.setId(null); source.setStatus(3L);
         assertThrows(IllegalArgumentException.class, () -> service.saveOrUpdateDraft(request, 7L, "member7"));
-        source.setPublishStatus(1L);
+        source.setStatus(1L);
         for (Long canonicalId : java.util.Arrays.asList(null, 0L)) {
             source.setMemberTemplateId(canonicalId);
             source.setCouponId(99L); source.setRewardRulesJson(null);
@@ -520,7 +524,7 @@ class TemplateAdoptSecretBackfillTest {
         // 否则这里就是绕过 TemplateSecrets.strip 的秘密窃取路径。不可见 ⇒ 不回填 ⇒ 照常撞必填校验。
         long[] ids = {9101L, 9102L, 9103L, 9104L};
         CmsTemplateLibrary unpublished = visibleSource(SOURCE_CONFIG);
-        unpublished.setPublishStatus(0L);
+        unpublished.setStatus(3L);
         CmsTemplateLibrary disabled = visibleSource(SOURCE_CONFIG);
         disabled.setStatus(0L);
         CmsTemplateLibrary deleted = visibleSource(SOURCE_CONFIG);
@@ -589,7 +593,6 @@ class TemplateAdoptSecretBackfillTest {
         source.setAdvancedConfigJson(configJson);
         source.setDelFlag(0);
         source.setStatus(1L);
-        source.setPublishStatus(1L);
         return source;
     }
 
@@ -612,7 +615,7 @@ class TemplateAdoptSecretBackfillTest {
         JsonNode saved = mapper.readTree(inserted.get().getAdvancedConfigJson()).path("diceRoll");
         assertEquals("作者改写的成功结果", saved.path("successText").asText());
         assertEquals("绕路前往下一站", saved.path("failText").asText());
-        source.setPublishStatus(0L);
+        source.setStatus(3L);
         assertThrows(IllegalArgumentException.class,
                 () -> service.publishTemplateWithTransaction(adoptedRequest(9001L, stripped), 7L, "member7"));
     }

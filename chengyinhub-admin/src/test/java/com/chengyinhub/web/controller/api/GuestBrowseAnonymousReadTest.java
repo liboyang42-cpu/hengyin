@@ -484,10 +484,10 @@ class GuestBrowseAnonymousReadTest {
         assertEquals(new TreeSet<>(Arrays.asList("ApiClubController#detail", "ApiClubController#list",
                 "ApiClubController#topics", "ApiClubController#postList", "ApiClubController#members",
                 "ApiClubController#leaderboard",
-                "ApiCreativeSquareController#viewCreativeSquareInfo", "ApiTopicController#topicInfo")), anonymous);
+                "ApiCreativeSquareController#retiredPostReads", "ApiTopicController#topicInfo")), anonymous);
         assertEquals(new TreeSet<>(Arrays.asList("/api/club/detail", "/api/club/list",
                 "/api/club/topics", "/api/club/post/list", "/api/club/members", "/api/club/leaderboard",
-                "/api/creativesquare/info", "/api/topic/info-to-user")), anonymousPaths);
+                "/api/creativesquare/list", "/api/creativesquare/info", "/api/topic/info-to-user")), anonymousPaths);
         // @Anonymous 的放行不分 HTTP 方法:同一路径上若还挂着别的(写)方法,就会被顺带放行。
         for (String path : anonymousPaths) {
             assertEquals(1, Collections.frequency(allHandlers, path), path + " 只能对应一个处理方法");

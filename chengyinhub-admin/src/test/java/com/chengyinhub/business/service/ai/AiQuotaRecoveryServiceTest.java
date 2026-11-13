@@ -172,12 +172,32 @@ class AiQuotaRecoveryServiceTest {
         assertThrows(IllegalStateException.class,()->service.refundNpcAsrNotSent(7L,original.getRequestId()));
         assertTrue(original.isQuotaRefundPending());verifyNoInteractions(redis);verify(asrIntents,never()).completeQuotaRefund(anyLong(),anyString(),anyString());
     }
-    @Test void unknownOrHandoffCannotBeReclassifiedAsNotSentToRefund() {
+    @Test void missingDurableFailureTransitionOrHandoffNeverBlindlyRefunds() {
         var original=originalAsrProof("UNKNOWN");original.setQuotaRefundPending(true);
         assertThrows(IllegalStateException.class,()->service.refundNpcAsrNotSent(7L,original.getRequestId()));
         original.setState("NOT_SENT");original.setHandoffStarted(true);
         assertThrows(IllegalStateException.class,()->service.refundNpcAsrNotSent(7L,original.getRequestId()));
         verifyNoInteractions(redis);verify(mapper,never()).requestAsrNotSentRefund(anyString(),anyLong());
+    }
+
+    @Test void persistedFailedAndEmptyAsrProofsRefundTheOriginalExactlyOnce() {
+        for (String state : java.util.List.of("UNKNOWN","RECEIVED")) {
+            setup();
+            var original=originalAsrProof(state);original.setQuotaRefundPending(true);
+            when(mapper.recordOutcome(RECEIPT,"REFUND_DUE","DIALOGUE_FAILURE"))
+                    .thenAnswer(call->{row.setState("REFUND_DUE");return 1;});
+            when(redis.execute(any(RedisScript.class),any(RedisSerializer.class),any(RedisSerializer.class),anyList(),any(),any())).thenReturn(2L);
+            when(mapper.complete(anyLong(),anyString(),anyLong(),anyString(),nullable(String.class)))
+                    .thenAnswer(call->{row.setState(call.getArgument(3));return 1;});
+            when(asrIntents.completeQuotaRefund(7L,original.getRequestId(),original.getQuotaReservation()))
+                    .thenAnswer(call->{original.setQuotaRefundPending(false);return 1;});
+            service.refundNpcAsrNotSent(7L,original.getRequestId());
+            service.refundNpcAsrNotSent(7L,original.getRequestId());
+            assertEquals("REFUNDED",row.getState());assertFalse(original.isQuotaRefundPending());
+            verify(redis,times(1)).execute(any(RedisScript.class),any(RedisSerializer.class),any(RedisSerializer.class),
+                    eq(Arrays.<Object>asList(row.getCounterKey(),row.getCounterKey()+":generation",RECEIPT)),eq("ASR_STARTED"),eq("original-generation"));
+            verify(mapper,never()).requestAsrNotSentRefund(anyString(),anyLong());
+        }
     }
 
 }
