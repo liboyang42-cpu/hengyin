@@ -1,5 +1,7 @@
 'use strict'
-// D-69（业主 2026-11-11）：三处到点校验统一一个半径，前后端同值。
+// 业主 2026-11-13 拍板（取代 2026-11-11 D-69 的逐站 50m）：
+// “大概就是 300 米，开头需要注意，游戏中就不需要了，开始的时候稍微停一下。”
+// => 只在开局校验一次 300m；开局之后各站到点不要求定位。
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
@@ -7,29 +9,32 @@ const path = require('node:path')
 
 const root = path.join(__dirname, '../..')
 const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8')
-const { ARRIVAL_RADIUS_METERS, ARRIVAL_RADIUS_TEXT } = require('../../pages/play/utils/arrival-radius.js')
+const { ARRIVAL_START_RADIUS_METERS, ARRIVAL_START_RADIUS_TEXT, ARRIVAL_RADIUS_METERS } = require('../../pages/play/utils/arrival-radius.js')
 
-test('D-69 端上半径常量为 50m，且文案由常量派生', () => {
-  assert.equal(ARRIVAL_RADIUS_METERS, 50)
-  assert.equal(ARRIVAL_RADIUS_TEXT, '50 米')
+test('开局校验半径 300m，文案由常量派生', () => {
+  assert.equal(ARRIVAL_START_RADIUS_METERS, 300)
+  assert.equal(ARRIVAL_START_RADIUS_TEXT, '300 米')
+  assert.equal(ARRIVAL_RADIUS_METERS, 50, '50m 只剩靠近自动点亮的提示半径，不是规则')
 })
 
-test('D-69 自动到达用常量，不再写死 50', () => {
+test('逐站不再申请定位：到点按钮只在未开局时才要求定位', () => {
   const play = read('pages/play/index.js')
-  assert.match(play, /d <= ARRIVAL_RADIUS_METERS/)
-  assert.doesNotMatch(play, /if \(d <= 50 &&/)
+  assert.match(play, /_startLocationNeeded\(\) \{\s*return !\(this\.data\.nodes \|\| \[\]\)\.some\(\(n\) => n && n\.done\);/)
+  assert.match(play, /const needsLocation = this\._advancedReadyNodeId !== node\.nodeId && this\._startLocationNeeded\(\);/)
+  assert.doesNotMatch(play, /到这一站 ' \+ ARRIVAL_RADIUS_TEXT/)
 })
 
-test('D-69 作答前的提示文案与同一个常量同源', () => {
+test('作答前的定位提示只在开局时出现，文案与 300m 常量同源', () => {
   const play = read('pages/play/index.js')
-  assert.match(play, /'先开启定位，到这一站 ' \+ ARRIVAL_RADIUS_TEXT \+ '内再作答'/)
+  assert.match(play, /gameNode\.lng && this\._startLocationNeeded\(\)/)
+  assert.match(play, /'开局前请先开启定位，在起点 ' \+ ARRIVAL_START_RADIUS_TEXT \+ '内再开始'/)
 })
 
-test('D-69 后端三处引用同一个常量（50m 围栏，80m 精度闸独立）', () => {
-  const guard = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ArriveLocationGuardPolicy.java')
-  assert.match(guard, /GEOFENCE_METERS = 50d/)
+test('后端：开局 300m 校验，站点不再用 50m 围栏', () => {
   const policy = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/service/support/ArrivalPolicy.java')
-  assert.match(policy, /LEGACY_RADIUS_METERS = ArriveLocationGuardPolicy\.GEOFENCE_METERS/)
+  assert.match(policy, /START_RADIUS_METERS = 300d/)
   const basic = read('../chengyinhub-admin/src/main/java/com/chengyinhub/web/service/play/PlayBasicCommandApplication.java')
-  assert.match(basic, /GEOFENCE_METERS = ArrivalPolicy\.LEGACY_RADIUS_METERS/)
+  assert.match(basic, /ArrivalPolicy\.startViolation\(/)
+  assert.match(basic, /shopDayProofService\.runStarted\(/)
+  assert.doesNotMatch(basic, /GEOFENCE_METERS/)
 })
