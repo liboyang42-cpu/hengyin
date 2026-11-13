@@ -33,4 +33,9 @@
 - 全部单测（`node --test tests/unit/**/*.test.js`）：17589 项全部通过。
 - `tests/lint/ui-integrity.js --warn-as-error`：UI-GATE-0 PASS。
 - `scripts/js-scope-lint.js`：PASS。
-- 主包大小：纯文本小改，无新增资源；官方包体积由 CI 检查。
+- 主包大小：纯文本小改，无新增资源；CI 的主包与静态检查通过。
+
+## CI（PR #826，提交 a3e65168）
+全部 33 项检查：成功或按范围跳过（后端、迁移、管理端相关），无失败。含 20 个小程序单测分片、Mini program static gates、Fast gates、Secret scan。
+
+STATUS: DONE
