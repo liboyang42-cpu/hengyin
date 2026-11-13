@@ -70,3 +70,8 @@ owner 决定：商家发布的自由探索（`topic.club_id` 空，场次由承�
 
 ### 验证
 - 本地不跑 Java（规则）；后端单测与 Funds MySQL IT 由 PR 的 CI 执行。
+
+### CI
+- PR：https://github.com/liboyang42-cpu/hengyin/pull/816 （CI 与 Funds MySQL IT 结果以该 PR 的检查为准；本地仅跑了 node 门禁：动作台账 --write/--check 6025 控件、ui-integrity 通过、相关 xcx 单测通过）。
+
+STATUS: PARTIAL - 后端结算与三处文案已落地，Java 单测/Funds MySQL IT 待 PR CI 验证；主办方收益页「线下结算」一行因缺主题类型数据未做。
