@@ -3,6 +3,9 @@ package com.chengyinhub.business.platformpass;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.Set;
+
 /**
  * 通行证开关。三个开关全部默认关闭：
  * <ul>
@@ -17,6 +20,8 @@ import org.springframework.stereotype.Component;
 public class PlatformPassProperties {
     private boolean enabled;
     private boolean jsapiEnabled;
+    /** 空集合默认覆盖全部已发布主题；非空时仅覆盖列出的主题 ID。 */
+    private Set<Long> coverageTopicIds = Collections.emptySet();
     private final Xpay xpay = new Xpay();
 
     public boolean isEnabled() { return enabled; }
@@ -24,6 +29,14 @@ public class PlatformPassProperties {
     public boolean isJsapiEnabled() { return jsapiEnabled; }
     public void setJsapiEnabled(boolean v) { jsapiEnabled = v; }
     public Xpay getXpay() { return xpay; }
+    public Set<Long> getCoverageTopicIds() { return coverageTopicIds; }
+    public void setCoverageTopicIds(Set<Long> ids) {
+        coverageTopicIds = ids == null || (ids.size() == 1 && ids.iterator().next() == null)
+                ? Collections.emptySet() : Set.copyOf(ids);
+    }
+    public boolean coversTopic(Long topicId) {
+        return topicId != null && topicId > 0 && (coverageTopicIds.isEmpty() || coverageTopicIds.contains(topicId));
+    }
 
     public static class Xpay {
         private boolean enabled;
@@ -45,6 +58,12 @@ public class PlatformPassProperties {
         public void setEnv(int v) { env = v; }
         public String getApiBase() { return apiBase; }
         public void setApiBase(String v) { apiBase = v; }
+
+        /** 已有订单的回查 / 发货确认 / 退款只需要凭据完整，不依赖「新售」开关（T07）。 */
+        public boolean hasCredentials() {
+            return offerId != null && !offerId.isBlank() && appKey != null && !appKey.isBlank()
+                    && (env == 0 || env == 1);
+        }
 
         public boolean isReady() {
             return enabled && offerId != null && !offerId.isBlank() && appKey != null && !appKey.isBlank()

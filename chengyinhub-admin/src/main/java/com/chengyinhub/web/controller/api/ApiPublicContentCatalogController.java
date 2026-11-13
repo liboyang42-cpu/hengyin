@@ -3,6 +3,10 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.business.domain.dto.PublicCatalogQuery;
 import com.chengyinhub.business.service.ICityDiscoveryCatalogService;
 import com.chengyinhub.business.service.IPublicContentCatalogService;
+import com.chengyinhub.business.domain.vo.PublicContentCatalogItemVO;
+import com.chengyinhub.business.platformpass.PlatformPassService;
+import com.chengyinhub.common.core.domain.model.LoginAppUser;
+import com.chengyinhub.common.utils.SecurityUtils;
 import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -18,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
+import java.util.Set;
 
 /**
  * M7 公开内容目录 / 城市目录 / 落地数据(匿名只读)。
@@ -42,6 +48,9 @@ public class ApiPublicContentCatalogController extends BaseController {
 
     @Autowired
     private ICityDiscoveryCatalogService cityCatalogService;
+
+    @Autowired
+    private PlatformPassService platformPassService;
 
     /**
      * 城市目录：只由真实已公开作品聚合，没有供给的城市不出现。
@@ -93,7 +102,19 @@ public class ApiPublicContentCatalogController extends BaseController {
             // 参数先校验再分页：校验失败不能把 PageHelper 线程变量留给下一条 SQL。
             catalogService.validate(query);
             startPage();
-            return success(getDataTable(catalogService.list(query)));
+            List<PublicContentCatalogItemVO> rows = catalogService.list(query);
+            Object principal = SecurityUtils.getAuthentication() == null ? null
+                    : SecurityUtils.getAuthentication().getPrincipal();
+            Long memberId = principal instanceof LoginAppUser user && user.getAppUser() != null
+                    ? user.getAppUser().getUserId() : null;
+            Set<Long> covered = platformPassService.coveredTopics(memberId,
+                    rows.stream().map(PublicContentCatalogItemVO::getId).toList(), new Date());
+            for (PublicContentCatalogItemVO item : rows) {
+                boolean selfPlay = item.getDeliveryModes() != null && item.getDeliveryModes().contains("SELF_PLAY");
+                boolean available = "ON_SALE".equals(item.getSaleState()) || Boolean.TRUE.equals(item.getFreeSelfPlay());
+                item.setPassCovered(covered.contains(item.getId()) && selfPlay && available);
+            }
+            return success(getDataTable(rows));
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         } finally {

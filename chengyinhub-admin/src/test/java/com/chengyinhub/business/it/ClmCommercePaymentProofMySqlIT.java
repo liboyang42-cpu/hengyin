@@ -55,7 +55,7 @@ class ClmCommercePaymentProofMySqlIT {
             "migration_club_role_membership_resume_fence_20260826.sql","migration_20260821_commerce_order_idempotency.sql",
             "migration_business_audit_event_20260823.sql","migration_20261023_wx_pay_order_intent.sql",
             "migration_wx_payment_callback_inbox_outbox_20260725.sql","migration_20261024_wx_verified_payment_fact.sql",
-            "migration_20261024_clm_commerce_payment_proof.sql");
+            "migration_20261024_clm_commerce_payment_proof.sql", "migration_20261112_dec_c_perks.sql");
         // As in ClubJoinGovernanceMySqlIT, apply the canonical audit-table evolution after
         // the original audit migration has completed its strict baseline checks. This suite
         // does not install unrelated approval/menu tables or rewrite the canonical ALTER.

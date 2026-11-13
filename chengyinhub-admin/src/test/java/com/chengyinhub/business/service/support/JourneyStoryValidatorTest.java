@@ -254,6 +254,28 @@ class JourneyStoryValidatorTest {
         assertTrue(rejected(story(",\"ending\":{\"endings\":[]}")).getMessage().contains("endings 不能为空"));
     }
 
+    // D-66（业主 2026-11-11）：新发布/重新发布的主题最多 6 个结局（含默认结局）。
+    @Test
+    void capsEndingsAtSixForNewAndRepublishedThemes() {
+        // 6 个（5 个条件 + 1 个兜底）应当放行
+        assertNotNull(validator.validate(story(",\"ending\":{\"endings\":[" + endings(6) + "]}"), null), "6 个结局应当放行");
+        // 7 个必须被拒，且是中文人话
+        assertTrue(rejected(story(",\"ending\":{\"endings\":[" + endings(7) + "]}"))
+                .getMessage().contains("结局最多 6 个"));
+    }
+
+    private static String endings(int count) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i < count; i++) {
+            if (sb.length() > 0) sb.append(',');
+            sb.append("{\"code\":\"e").append(i).append("\",\"title\":\"E").append(i)
+              .append("\",\"when\":[{\"op\":\"HAS_TAG\",\"value\":\"tag.x\"}]}");
+        }
+        if (sb.length() > 0) sb.append(',');
+        sb.append("{\"code\":\"default\",\"title\":\"兜底\",\"fallback\":true}");
+        return sb.toString();
+    }
+
     @Test
     void rejectsNonFallbackEndingWithEmptyWhen() {
         assertTrue(rejected(story(",\"ending\":{\"endings\":["

@@ -292,7 +292,7 @@ function loadPage(stored = {}) {
   delete require.cache[require.resolve('../../pages/publish/fabu/index')];
   require('../../pages/publish/fabu/index');
   page.data = { operationScope: '', editingTopicId: '', editLoaded: false, editIsDraft: false, submitting: false, draftSaving: false,
-    draftUuid: 'u-1', draftMemberId: 7, formData: { name: '寒冬', chapters: [] }, pendingMaterials: [] };
+    draftUuid: 'u-1', draftMemberId: 7, formData: { name: '寒冬', imgUrl: 'media-asset:1', chapters: [] }, pendingMaterials: [] };   // D-78:存草稿必须有封面
   page.setData = (patch, cb) => { Object.assign(page.data, patch); if (cb) cb(); };
   page._buildSubmitPayload = () => JSON.parse(JSON.stringify(payload));
   page.applied = [];
@@ -494,7 +494,7 @@ test('编辑页：首次建草稿带稳定意图键，丢回包后重试沿用�
   assert.match(page.data.submitError, /已保留原请求和内容/);
   assert.equal(page._serverDraftAttempt.status, 'UNKNOWN');
   assert.equal(page._serverDraftAttempt.payload.requestId, first);
-  page.data.formData = { name: '寒冬', chapters: [], description: '改了内容' };
+  page.data.formData = { name: '寒冬', imgUrl: 'media-asset:1', chapters: [], description: '改了内容' };
   page.saveServerDraft();
   assert.equal(JSON.parse(sent[1].data).requestId, first, '内容改了也沿用同一键');
   sent[1].success({ code: 200, data: { topicId: 501, recovered: true } });
@@ -1110,4 +1110,31 @@ test('内容安全拒绝的修改动作保留草稿，不重新提交原文', ()
   page.editRejectedContent();
   assert.equal(closed, 1); assert.equal(submitted, 0); assert.equal(sent.length, 0);
   assert.equal(page.data.formData.name, '寒冬');
+});
+
+// D-78(2026-11-11 业主「没有封面不能保存」):没有封面不能存云端草稿;手动保存给红字 + 提示,自动保存静默跳过。
+test('D-78:无封面不能存草稿,手动保存标红封面字段并提示,自动保存静默', () => {
+  let page; global.Page = value => { page = value; };
+  delete require.cache[require.resolve('../../pages/publish/fabu/index')];
+  require('../../pages/publish/fabu/index');
+  const fs = require('node:fs'); const path = require('node:path');
+  const toasts = []; const opened = []; const runs = [];
+  global.wx = Object.assign(global.wx || {}, { showToast: (o) => toasts.push(o.title), hideToast() {} });
+  page.data = { formData: { name: '寒冬', imgUrl: '  ' }, errors: {}, submitting: false, editingTopicId: '' };
+  page.setData = (patch) => Object.assign(page.data, patch);
+  page._serverDraftBusy = () => false;
+  page.openTopicDetail = () => opened.push(1);
+  page._runServerDraft = () => runs.push(1);
+  page._buildSubmitPayload = () => ({});
+  page.saveServerDraft({ automatic: true });
+  assert.deepEqual([runs.length, opened.length, page.data.errors.imgUrl], [0, 0, undefined], '自动保存静默跳过');
+  page.saveServerDraft();
+  assert.equal(runs.length, 0, '手动保存也不发请求');
+  assert.equal(page.data['errors.imgUrl'], '请上传主题封面');
+  assert.equal(opened.length, 1, '打开详情弹窗露出封面字段');
+  const wxml = fs.readFileSync(path.join(__dirname, '../../pages/publish/fabu/topic-detail-sheet.wxml'), 'utf8');
+  assert.match(wxml, /<cy-inline-error kind="field" wx:if="\{\{errors\.imgUrl\}\}" title="\{\{errors\.imgUrl\}\}" \/>/);
+  page.data.formData.imgUrl = 'media-asset:1';
+  page.saveServerDraft();
+  assert.equal(runs.length, 1, '有封面照常保存');
 });

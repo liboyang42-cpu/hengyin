@@ -64,6 +64,7 @@ public class MerchantFinanceQueryService {
     @Autowired private IMmsMerchantService merchantService;
     @Autowired private PiiCryptoService piiCryptoService;
     /** 第十二轮 k5:俱乐部场次结算付给本商家的核销费(按场次一行)。 */
+    @Autowired(required = false) private com.chengyinhub.business.mapper.ClubMapper clubMapper;
     @Autowired(required = false) private com.chengyinhub.business.mapper.SettlementDetailMapper sessionFeeMapper;
     /** 个人账户「待结算」与资产页同源(/api/wallet/stages),见 personalPending。 */
     @Autowired(required = false) private MemberFundsStageService fundsStageService;
@@ -558,6 +559,26 @@ public class MerchantFinanceQueryService {
         return result;
     }
 
+    /** 全权益核销:票款归主办方(发布主题的俱乐部;商家发布的主题则是该商家),店铺与主办方线下结算。 */
+    private String perkNoCashReason(CmsTopic topic) {
+        String base = "票款由主办方收取；店铺如需结算，请联系主办方线下处理";
+        String organizer = organizerName(topic);
+        return organizer == null ? base : base + " · 主办方：" + organizer;
+    }
+
+    private String organizerName(CmsTopic topic) {
+        if (topic == null) return null;
+        String name = null;
+        if (topic.getClubId() != null && topic.getClubId() > 0) {
+            com.chengyinhub.business.domain.Club club = clubMapper == null ? null : clubMapper.selectClubById(topic.getClubId());
+            name = club == null ? null : club.getName();
+        } else if (topic.getMemberId() != null && merchantService != null) {
+            MmsMerchant publisher = merchantService.selectMmsMerchantByMemberId(topic.getMemberId());
+            name = publisher == null ? null : publisher.getName();
+        }
+        return name == null || name.trim().isEmpty() ? null : name.trim();
+    }
+
     private MerchantRedemptionView toRedemptionView(Redemption redemption, List<MerchantPayable> payables,
                                                     Map<String, MerchantPayableBatch> batches, String storeName) {
         if (redemption == null || redemption.getId() == null) return null;
@@ -579,7 +600,7 @@ public class MerchantFinanceQueryService {
         if (offer != null && "PERK".equals(offer.getTermsMode())) {
             row.setSettlementRoute("NONE");
             row.setSettlementState("NOT_APPLICABLE");
-            row.setNoCashReason("权益已履约 · 无现金结算");
+            row.setNoCashReason(perkNoCashReason(topic));
             row.setDisplayState(MerchantFinanceStateResolver.resolve(row.getFulfillmentState(), row.getSettlementState()));
             return row;
         }

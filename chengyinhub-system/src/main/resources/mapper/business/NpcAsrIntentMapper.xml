@@ -32,16 +32,19 @@
       AND state='IN_FLIGHT' AND body_erased=0
   </update>
   <update id="finishNotSent">
-    UPDATE npc_asr_intent SET state='NOT_SENT',transcript=NULL,body_expires_at=NULL,
+    UPDATE npc_asr_intent SET state=#{state},
+      transcript=CASE WHEN #{state}='RECEIVED' AND body_erased=0 THEN '' ELSE NULL END,
+      body_expires_at=CASE WHEN #{state}='RECEIVED' THEN DATE_ADD(NOW(6),INTERVAL 48 HOUR) ELSE NULL END,
       quota_refund_pending=1,update_time=NOW(6)
     WHERE user_id=#{userId} AND request_id=#{requestId} AND claim_token=#{claimToken}
       AND quota_reservation=#{quotaReservation} AND handoff_started=0 AND text_admitted=0
       AND state IN ('IN_FLIGHT','UNKNOWN')
+      AND (#{state} IN ('NOT_SENT','UNKNOWN') OR (#{state}='RECEIVED' AND #{transcript}=''))
   </update>
   <select id="selectQuotaRefundPending" resultMap="Receipt" useCache="false" flushCache="true">
     SELECT id,user_id,request_id,node_id,merchant_member_id,claim_token,state,
       quota_reservation,quota_refund_pending,handoff_started,text_admitted
-    FROM npc_asr_intent WHERE quota_refund_pending=1 AND state='NOT_SENT'
+    FROM npc_asr_intent WHERE quota_refund_pending=1 AND state IN ('NOT_SENT','UNKNOWN','RECEIVED')
       AND quota_reservation IS NOT NULL ORDER BY id LIMIT #{limit}
   </select>
   <select id="selectQuotaRefundProof" resultMap="Receipt" useCache="false" flushCache="true">
@@ -52,7 +55,7 @@
   <update id="completeQuotaRefund">
     UPDATE npc_asr_intent SET quota_refund_pending=0,update_time=NOW(6)
     WHERE user_id=#{userId} AND request_id=#{requestId} AND quota_reservation=#{reservation}
-      AND quota_refund_pending=1 AND state='NOT_SENT' AND handoff_started=0 AND text_admitted=0
+      AND quota_refund_pending=1 AND state IN ('NOT_SENT','UNKNOWN','RECEIVED') AND handoff_started=0 AND text_admitted=0
   </update>
   <update id="beginHandoff">
     UPDATE npc_asr_intent SET handoff_started=1,update_time=NOW(6)

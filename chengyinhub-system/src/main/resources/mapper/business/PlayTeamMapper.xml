@@ -46,8 +46,19 @@
     </select>
 
     <select id="selectPlayTeamByInviteCode" resultMap="PlayTeamResult">
-        select <include refid="teamColumns"/> from play_team where invite_code = #{inviteCode} limit 1
+        select <include refid="teamColumns"/> from play_team
+        where invite_code = #{inviteCode}
+           or (legacy_invite_code = #{inviteCode}
+               and (legacy_invite_expire_time is null or legacy_invite_expire_time &gt; now()))
+        limit 1 for update
     </select>
+
+
+    <update id="rotateInviteCode">
+        update play_team set invite_code = #{inviteCode}, update_time = now()
+        where id = #{teamId} and leader_member_id = #{leaderMemberId}
+          and status in (0, 1)
+    </update>
 
     <insert id="insertPlayTeam" parameterType="com.chengyinhub.business.domain.PlayTeam" useGeneratedKeys="true" keyProperty="id">
         insert into play_team

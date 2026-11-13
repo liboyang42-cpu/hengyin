@@ -267,4 +267,76 @@ class AiQuotaRefundRulesD08Test {
         verifyNoInteractions(recoveryRedis);
         verify(mapper, never()).claim(anyLong(), anyLong(), anyString());
     }
+
+    private void assertDialogueFailureRefund(RuntimeException failure, String content) {
+        for (String bizType : Arrays.asList("npc_chat", "npc_shop_chat", "merchant_npc_chat")) {
+            setUp();
+            if (failure != null) when(llm.chat(anyString(), anyString())).thenThrow(failure);
+            else when(llm.chat(anyString(), anyString())).thenReturn(content);
+            assertThrows(AiProviderOutcomeUnknownException.class,
+                    () -> gateway.generate(MEMBER_ID, "player", bizType, "s", "u"));
+            ArgumentCaptor<String> receipt = ArgumentCaptor.forClass(String.class);
+            verify(quotaRecovery).prepare(eq(MEMBER_ID), eq(bizType), anyString(), anyString(), receipt.capture());
+            verify(quotaRecovery).requireRefund(receipt.getValue(), "DIALOGUE_FAILURE");
+            verify(quotaRecovery, never()).retain(anyString(), anyString());
+        }
+    }
+
+    @Test void dialogueProviderErrorRefundsEachDialoguePoolOriginal() {
+        assertDialogueFailureRefund(new IllegalStateException("provider error"), null);
+    }
+
+    @Test void dialogueTimeoutRefundsWithoutChangingProviderErrorType() {
+        assertDialogueFailureRefund(new AiServiceException("timeout", new java.net.SocketTimeoutException()), null);
+    }
+
+    @Test void dialogueNullAndBlankContentRefundInsteadOfKeepingTheDebit() {
+        assertDialogueFailureRefund(null, null);
+        assertDialogueFailureRefund(null, "  \n ");
+    }
+
+    @Test void dialogueSuccessRetainsDebitAndNeverRefunds() {
+        assertNotNull(gateway.generate(MEMBER_ID, "player", "npc_chat", "s", "u").getText());
+        verify(quotaRecovery).retain(anyString(), eq("SUCCESS"));
+        verify(quotaRecovery, never()).requireRefund(anyString(), anyString());
+    }
+
+    @Test void dialogueWithoutCommittedReservationNeverCallsProviderOrRefundsAClaimedFailure() {
+        doThrow(new IllegalStateException("prepare failed")).when(quotaRecovery)
+                .prepare(anyLong(), anyString(), anyString(), anyString(), anyString());
+        assertThrows(IllegalStateException.class,
+                () -> gateway.generate(MEMBER_ID, "player", "npc_chat", "s", "u"));
+        verifyNoInteractions(llm);
+        verify(quotaRecovery, never()).requireRefund(anyString(), anyString());
+    }
+
+    @Test void failedTextAfterVoiceRefundsOnlyTheSharedOriginalWithoutAnotherDebit() {
+        String token = OLD_KEY.replace(":7:", ":" + MEMBER_ID + ":") + "|0123456789abcdef0123456789abcdef";
+        String receipt = "ai:gen:reservation:" + token.replace('|', ':');
+        var original = new com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff(MEMBER_ID,
+                "e2596106-82d9-4a4f-9ff2-058414599f90", 21L, 41L, token);
+        when(llm.chat(anyString(), anyString())).thenThrow(new IllegalStateException("timeout"));
+        assertThrows(AiProviderOutcomeUnknownException.class, () -> gateway.generateNpcAsrHandoff(original, "s", "u"));
+        verify(quotaRecovery).requireNpcAsrHandoff(original);
+        verify(quotaRecovery).requireRefund(receipt, "DIALOGUE_FAILURE");
+        verify(quotaRecovery, never()).prepare(anyLong(), anyString(), anyString(), anyString(), anyString());
+        verifyNoInteractions(redisTemplate);
+    }
+
+    @Test void successfulTextAfterVoiceFinalizesItsSharedOriginalDebit() {
+        String token = "ai:gen:limit:gen:" + MEMBER_ID + ":20261022|0123456789abcdef0123456789abcdef";
+        var original = new com.chengyinhub.business.service.ai.NpcAsrQuotaHandoff(MEMBER_ID,
+                "e2596106-82d9-4a4f-9ff2-058414599f90", 21L, 41L, token);
+        gateway.generateNpcAsrHandoff(original, "s", "u");
+        verify(quotaRecovery).retain("ai:gen:reservation:" + token.replace('|', ':'), "SUCCESS");
+        verify(quotaRecovery, never()).requireRefund(anyString(), anyString());
+    }
+    @Test void positivelyUnsentDialogueAlsoUsesTheOriginalDialogueRefundDecision() {
+        when(llm.chat(anyString(), anyString())).thenThrow(new com.chengyinhub.business.service.ai.AiProviderNotSentException());
+        AiServiceException error = assertThrows(AiServiceException.class,
+                () -> gateway.generate(MEMBER_ID, "player", "npc_chat", "s", "u"));
+        assertEquals(AiServiceException.Reason.UPSTREAM_UNAVAILABLE, error.getReason());
+        verify(quotaRecovery).requireRefund(anyString(), eq("DIALOGUE_FAILURE"));
+    }
+
 }

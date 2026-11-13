@@ -26,7 +26,28 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </sql>
 
     <select id="selectUmsMemberBalanceDetailList" parameterType="UmsMemberBalanceDetail" resultMap="UmsMemberBalanceDetailResult">
-        <include refid="selectUmsMemberBalanceDetailVo"/>
+        <choose>
+            <when test="params.includeExternalClubIncome == true">
+                select * from (
+                    <include refid="selectUmsMemberBalanceDetailVo"/>
+                    union all
+                    select -l.id as id, l.receiver_member_id as member_id,
+                           null as current_balance, null as after_balance,
+                           cast(l.amount_fen / 100.0 as decimal(18,2)) as change_balance,
+                           concat('来自俱乐部 ', convert(l.club_name using utf8mb4)) collate utf8mb4_unicode_ci as change_reason,
+                           case when o.topic_id &lt; 0 then 2 else 1 end as event_type,
+                           abs(o.topic_id) as event_id, 1 as change_type, 0 as del_flag,
+                           'wechat-profitsharing' as create_by, o.updated_at as create_time,
+                           null as update_by, o.updated_at as update_time
+                    from ecom_profit_share_line l
+                    join ecom_profit_share_order o on o.id = l.share_order_id
+                    where o.state = 'SUCCESS' and l.receiver_type = 'PERSONAL_OPENID'
+                      and l.receiver_kind = 'PERSONAL' and l.club_id is not null and l.amount_fen &gt; 0
+                      and l.receiver_member_id = #{memberId}
+                ) member_statement
+            </when>
+            <otherwise><include refid="selectUmsMemberBalanceDetailVo"/></otherwise>
+        </choose>
         <where>  
             <if test="memberId != null "> and member_id = #{memberId}</if>
             <if test="currentBalance != null "> and current_balance = #{currentBalance}</if>
@@ -37,7 +58,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="eventId != null "> and event_id = #{eventId}</if>
             <if test="changeType != null "> and change_type = #{changeType}</if>
         </where>
-        order by id desc
+        <choose>
+            <when test="params.includeExternalClubIncome == true">order by create_time desc, id desc</when>
+            <otherwise>order by id desc</otherwise>
+        </choose>
     </select>
     
     <select id="selectUmsMemberBalanceDetailById" parameterType="Long" resultMap="UmsMemberBalanceDetailResult">

@@ -151,6 +151,8 @@ public final class TopicContentWriteGuard {
         if (c.getMaxNodeXp() != null && c.getMaxNodeXp() < 0) {
             throw new IllegalStateException("单节点探索值上限不能为负");
         }
+        // D-82 章节级奖励:结束卡一行文案,超长/多行挡在写之前
+        com.chengyinhub.business.util.ChapterRewardText.requireValid(c.getRewardText());
     }
 
     /** 只收 1-5 的逗号串(对齐 cms_member_template.validation_method 的取值域);空 = 不限。 */
@@ -183,7 +185,7 @@ public final class TopicContentWriteGuard {
      * <p><b>先分清两套模板,别把这条误当「模板本来就是公共的」</b>:
      * <ul>
      *   <li>{@code CmsTemplateLibrary} = 公共模板库({@code /api/template/list} 与 {@code /info},
-     *       按 status=1+publishStatus=1 过滤、<b>不看 memberId</b>)—— 那个确实人人可用。</li>
+     *       按 status=1 过滤、<b>不看 memberId</b>)—— 那个确实人人可用。</li>
      *   <li>{@code CmsMemberTemplate} = 我的模板(publish 时绑 memberId)。<b>节点的 templateId 指的是它</b>
      *       ({@code ApiRegistrationMerchantController:88/179} 拿它查 CmsMemberTemplate),
      *       小程序发布页选模板调的也是 {@code /api/template/my-list}(fabu/index.js:3329)。</li>

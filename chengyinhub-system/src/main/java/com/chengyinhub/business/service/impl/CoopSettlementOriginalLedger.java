@@ -140,6 +140,8 @@ public class CoopSettlementOriginalLedger {
             }
             if (!Objects.equals(head.getLineType(), component.getLineType())
                     || !Objects.equals(head.getMerchantId(), component.getReceiverMemberId())
+                    || !Objects.equals(head.getClubId(), component.getClubId())
+                    || !Objects.equals(head.getClubName(), component.getClubName())
                     || !("ACCOUNTING".equals(component.getReceiverKind()) && "PLATFORM".equals(head.getLineType()) && head.getMerchantId() == null
                         || "MEMBER".equals(component.getReceiverKind()) && head.getMerchantId() != null && head.getMerchantId() > 0)) throw conflict("ORIGINAL_RECEIVER_CONFLICT");
             if (component.getCalculationVersion() == null || component.getCalculationVersion().isBlank()
@@ -307,7 +309,7 @@ public class CoopSettlementOriginalLedger {
             BigDecimal amount = reversals.get(row.getId()); if (amount.signum() == 0) continue;
             CoopSettlement head = lockedHeads.get(row.getSettlementId());
             if (!Objects.equals(head.getMerchantId(), row.getReceiverMemberId()) || !Objects.equals(head.getLineType(), row.getLineType())) throw conflict("ORIGINAL_RECEIVER_CHANGED");
-            boolean paid = "MEMBER".equals(row.getReceiverKind()) && Integer.valueOf(1).equals(head.getStatus());
+            boolean paid = row.getClubId() == null && "MEMBER".equals(row.getReceiverKind()) && Integer.valueOf(1).equals(head.getStatus());
             if (paid && ecommerceSettlementGuard != null && ecommerceSettlementGuard.active()
                     && ecommerceSettlementGuard.isPartnerPaymentFact(row.getPaymentFactId())) {
                 // l-payout2：该分项由二级商户收款，T+14 从未记进会员余额；退款由「分账回退」从微信侧追回，不扣会员钱包。
@@ -421,7 +423,10 @@ public class CoopSettlementOriginalLedger {
         catch (Exception e) { throw new IllegalStateException("ORIGINAL_PAYLOAD_FINGERPRINT_FAILED", e); }
     }
     private ObjectNode payload(Object value) {
-        ObjectNode payload = json.valueToTree(value); payload.remove(List.of("id", "createdAt", "sourceFingerprint")); return payload;
+        ObjectNode payload = json.valueToTree(value); payload.remove(List.of("id", "createdAt", "sourceFingerprint"));
+        if (value instanceof CoopSettlementOriginalComponent row && row.getClubId() == null && row.getClubName() == null)
+            payload.remove(List.of("clubId", "clubName"));
+        return payload;
     }
     private void requireSame(Object stored, Object requested) {
         if (stored == null || !payload(stored).equals(payload(requested))) throw conflict("ORIGINAL_COMPONENT_PAYLOAD_CONFLICT");

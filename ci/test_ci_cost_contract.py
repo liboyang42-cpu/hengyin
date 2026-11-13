@@ -211,8 +211,9 @@ def validate(source: str, backend_script: str | None = None, production_workflow
     if backend_script is None:
         backend_script = (Path(__file__).resolve().parent / "backend-test.sh").read_text()
     assert_contains(backend_script, "\nmvn -B clean test\n")
-    assert_contains(backend_script, "\nCHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 CHENGYIN_SELFCREATE_IT_MYSQL=1 \\\n  mvn -B -pl chengyinhub-admin -am test")
+    assert_contains(backend_script, "\nCHENGYIN_MYBATIS_IT=1 CHENGYIN_IM_SEND_MYSQL_IT=1 CHENGYIN_FUNDS_MYSQL_IT=1 CHENGYIN_CONSENT_IDEMPOTENCY_MYSQL_IT=1 CHENGYIN_SELFCREATE_IT_MYSQL=1 \\\n  mvn -B -pl chengyinhub-admin -am test")
     assert_contains(backend_script, "\n  ConsentRecordIdempotencyMySqlIT\n")
+    assert_contains(backend_script, "\n  TemplateD89D90MigrationsMySqlIT\n")
     assert_contains(backend_script, "\n  ThemeCompletionRewardCapMySqlIT\n")
     assert_contains(backend_script, "\n  ScopedLeaderboardMySqlIT\n")
     assert_contains(backend_script, "\n  FreeSelfPlayCreateRealDbIT\n")
@@ -595,6 +596,8 @@ def main() -> None:
         ("consent idempotency IT unlisted", backend_script.replace("\n  ConsentRecordIdempotencyMySqlIT\n", "\n", 1)),
         ("theme completion cap IT unlisted", backend_script.replace("\n  ThemeCompletionRewardCapMySqlIT\n", "\n", 1)),
         ("free self-play IT disabled", backend_script.replace("CHENGYIN_SELFCREATE_IT_MYSQL=1 ", "", 1)),
+        ("template decision migration IT disabled", backend_script.replace("CHENGYIN_MYBATIS_IT=1 ", "", 1)),
+        ("template decision migration IT unlisted", backend_script.replace("\n  TemplateD89D90MigrationsMySqlIT\n", "\n", 1)),
         ("free self-play IT unlisted", backend_script.replace("\n  FreeSelfPlayCreateRealDbIT\n", "\n", 1)),
         ("full unit accidentally enables self-create IT", backend_script.replace("\nmvn -B clean test\n", "\nCHENGYIN_SELFCREATE_IT_MYSQL=1 mvn -B clean test\n", 1)),
         ("full unit accidentally enables funds IT", backend_script.replace("\nmvn -B clean test\n", "\nCHENGYIN_FUNDS_MYSQL_IT=1 mvn -B clean test\n", 1)),

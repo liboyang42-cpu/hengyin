@@ -4,6 +4,9 @@ import java.util.List;
 
 import com.chengyinhub.business.domain.vo.TemplateLibraryVO;
 import com.chengyinhub.common.utils.DateUtils;
+import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.constant.HttpStatus;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.chengyinhub.business.mapper.CmsTemplateLibraryMapper;
@@ -23,8 +26,8 @@ public class CmsTemplateLibraryServiceImpl implements ICmsTemplateLibraryService
     private CmsTemplateLibraryMapper cmsTemplateLibraryMapper;
 
     /**
-     * 模板市场热度:会员首次引用发布 use_num +1(原子自增,按会员幂等)。
-     * 调用点在 TemplatePublishServiceImpl —— 「从模板起草→发布」链路带 originalTemplateId 时计数。
+     * 模板市场热度：初次采用创建草稿/个人玩法时按会员幂等自增。
+     * 调用者必须在插入个人玩法之前持有来源库行锁。
      */
     @Override
     public int incrementUseNumOnFirstAdoption(Long libraryId, Long memberId, Long memberTemplateId)
@@ -76,7 +79,13 @@ public class CmsTemplateLibraryServiceImpl implements ICmsTemplateLibraryService
     public int insertCmsTemplateLibrary(CmsTemplateLibrary cmsTemplateLibrary)
     {
         cmsTemplateLibrary.setCreateTime(DateUtils.getNowDate());
-        return cmsTemplateLibraryMapper.insertCmsTemplateLibrary(cmsTemplateLibrary);
+        requireUniqueTitle(cmsTemplateLibrary, null);
+        cmsTemplateLibrary.setUseNum(0);
+        try {
+            return cmsTemplateLibraryMapper.insertCmsTemplateLibrary(cmsTemplateLibrary);
+        } catch (DuplicateKeyException duplicate) {
+            throw titleConflict(duplicate);
+        }
     }
 
     /**
@@ -89,7 +98,36 @@ public class CmsTemplateLibraryServiceImpl implements ICmsTemplateLibraryService
     public int updateCmsTemplateLibrary(CmsTemplateLibrary cmsTemplateLibrary)
     {
         cmsTemplateLibrary.setUpdateTime(DateUtils.getNowDate());
-        return cmsTemplateLibraryMapper.updateCmsTemplateLibrary(cmsTemplateLibrary);
+        CmsTemplateLibrary stored = cmsTemplateLibraryMapper.selectCmsTemplateLibraryById(cmsTemplateLibrary.getId());
+        requireUniqueTitle(cmsTemplateLibrary, stored);
+        try {
+            return cmsTemplateLibraryMapper.updateCmsTemplateLibrary(cmsTemplateLibrary);
+        } catch (DuplicateKeyException duplicate) {
+            throw titleConflict(duplicate);
+        }
+    }
+
+    private void requireUniqueTitle(CmsTemplateLibrary patch, CmsTemplateLibrary stored) {
+        Integer deleted = patch.getDelFlag() != null ? patch.getDelFlag()
+                : stored == null ? 0 : stored.getDelFlag();
+        if (!Integer.valueOf(0).equals(deleted)) return;
+        Long owner = stored == null ? patch.getMemberId()
+                : patch.getMemberId() == null ? stored.getMemberId() : patch.getMemberId();
+        String title = patch.getTitle() == null && stored != null ? stored.getTitle() : patch.getTitle();
+        if (owner == null || title == null) return;
+        String normalized = title.trim();
+        if (normalized.isEmpty()) return;
+        List<String> titles = cmsTemplateLibraryMapper.selectAuthorLiveTitles(owner, patch.getId());
+        if (titles != null) for (String other : titles) {
+            if (other != null && normalized.equals(other.trim()))
+                throw new ServiceException("你已经有同名模板了", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private RuntimeException titleConflict(DuplicateKeyException duplicate) {
+        if (duplicate.getMessage() != null && duplicate.getMessage().contains("uk_template_author_live_title"))
+            return new ServiceException("你已经有同名模板了", HttpStatus.BAD_REQUEST);
+        return duplicate;
     }
 
     /**

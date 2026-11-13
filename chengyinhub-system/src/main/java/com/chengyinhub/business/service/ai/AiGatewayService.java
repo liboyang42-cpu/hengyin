@@ -25,7 +25,7 @@ public interface AiGatewayService
     /** NPC shop ASR has already reserved this conversation; verify its persisted handoff, never consume again. */
     AiGatewayResult generateNpcAsrHandoff(NpcAsrQuotaHandoff original,String systemPrompt,String userPrompt);
 
-    /** Compensate only the persisted original NOT_SENT proof, through the existing quota recovery owner. */
+    /** Compensate the persisted original failed/empty ASR proof through the existing recovery owner. */
     void refundNpcAsrNotSent(Long memberId,String requestId);
 
     /** Local configuration fingerprint only; excludes credentials and credential digests. */

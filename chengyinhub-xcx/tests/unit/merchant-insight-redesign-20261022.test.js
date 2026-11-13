@@ -42,11 +42,15 @@ function windowOf(days, totals, values) {
   return Object.assign({ days, daily }, totals);
 }
 
+// D-93:环比由服务端 changeRates 下发(SafeRatio.change 四位小数,上期 0 → null),页面不再自己除。
 const TRENDS = {
   windows: [
-    windowOf(7, { visitors: 5, checkins: 9, redeems: 3, prevVisitors: 4, prevCheckins: 10, prevRedeems: 0 }, [0, 1, 3, 0, 2, 0, 6]),
-    windowOf(30, { visitors: 20, checkins: 40, redeems: 12, prevVisitors: 25, prevCheckins: 0, prevRedeems: 6 }, []),
-    windowOf(90, { visitors: 60, checkins: 99, redeems: 30, prevVisitors: 0, prevCheckins: 0, prevRedeems: 0 }, []),
+    windowOf(7, { visitors: 5, checkins: 9, redeems: 3, prevVisitors: 4, prevCheckins: 10, prevRedeems: 0,
+      changeRates: { visitors: '0.2500', checkins: '-0.1000', redeems: null } }, [0, 1, 3, 0, 2, 0, 6]),
+    windowOf(30, { visitors: 20, checkins: 40, redeems: 12, prevVisitors: 25, prevCheckins: 0, prevRedeems: 6,
+      changeRates: { visitors: '-0.2000', checkins: null, redeems: '1.0000' } }, []),
+    windowOf(90, { visitors: 60, checkins: 99, redeems: 30, prevVisitors: 0, prevCheckins: 0, prevRedeems: 0,
+      changeRates: { visitors: null, checkins: null, redeems: null } }, []),
   ],
 };
 const FACTS = { window: '近30天', attribution: { visitors: 21, checkins: 41, redeems: 12, prevVisitors: 25 } };
@@ -82,9 +86,22 @@ test('主卡:大数字/环比/上期/逐日格档位按所选窗口与指标', (
   assert.equal(h30.cols, 15);
   assert.equal(h30.cells.length, 30);
 
-  // 上期为 0:不算百分比
+  // 上期为 0:服务端 changeRate 为 null,不算百分比
   assert.equal(page._buildHero(FACTS, 30, 'checkins', false).deltaText, '');
   assert.equal(page._buildHero(FACTS, 90, 'visitors', false).deltaText, '');
+});
+
+// D-93(2026-11-11 营销首页与店铺参谋指标合并):环比只认服务端 changeRates,端上不再拿本期/上期相除
+test('D-93:环比来自服务端 changeRates;缺 changeRates 时不自己算', () => {
+  const page = loadPage();
+  page._trends = page._indexTrends(TRENDS);
+  assert.equal(page._buildHero(FACTS, 30, 'redeems', false).deltaText, '+100%', '核销环比 = 服务端 1.0000');
+  const stripped = JSON.parse(JSON.stringify(TRENDS));
+  stripped.windows.forEach((w) => { delete w.changeRates; });
+  page._trends = page._indexTrends(stripped);
+  assert.equal(page._buildHero(FACTS, 7, 'visitors', false).deltaText, '', '没有服务端环比就不显示,不在端上现算');
+  const js = fs.readFileSync(path.join(ROOT, PAGE_JS_PATH), 'utf8');
+  assert.doesNotMatch(js, /\(cur - prev\) \/ prev/, 'D-93:删除端上环比算术');
 });
 
 // 2026-10-27 业主 M-21:方块图每次打开都要画 —— 没有 trends 时铺 30 格全浅色,窗口切换仍不出
@@ -218,7 +235,9 @@ test('进度条下一行只说核销率(不重复玩家环比,不随主卡窗口
   assert.equal(page._buildValueCard({ window: '近30天', checkin: { redeemRate: 0.38 } }).caption, '近30天核销率 38%');
   assert.equal(page._buildValueCard({ window: '近30天', checkin: { redeemRate: null } }).caption, ''); // 业主 10-23:缺失就不显示
   assert.doesNotMatch(PAGE_WXML, /核销进度 · /, '旧的「核销进度 · 比上期 +N 位玩家」不再出现');
-  page._trends = page._indexTrends({ windows: TRENDS.windows.map((w) => Object.assign({}, w, { prevVisitors: w.visitors })) });
+  // D-93:持平来自服务端 changeRate = 0
+  page._trends = page._indexTrends({ windows: TRENDS.windows.map((w) => Object.assign({}, w, {
+    prevVisitors: w.visitors, changeRates: Object.assign({}, w.changeRates, { visitors: '0.0000' }) })) });
   assert.equal(page._buildHero(FACTS, 7, 'visitors', false).deltaText, '持平');
   assert.equal(page._buildHero(FACTS, 7, 'visitors', false).deltaDown, false);
 });

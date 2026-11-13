@@ -1,38 +1,4 @@
-/* cy-illus:原型 page.css 的 .il / .il--* 改写成过渡(不新增 keyframes)。只动 transform / opacity。 */
-.il { position: relative; display: inline-block; flex: none; }
-.il__bl, .il__fg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; transform-origin: 50% 50%; will-change: transform, opacity; }
-
-/* 进场起点(未加 is-on) */
-.il__bl { opacity: 0; transform: scale(.3) rotate(-20deg); transition: transform 600ms cubic-bezier(.16,1,.3,1), opacity 600ms cubic-bezier(.16,1,.3,1); }
-.il__fg { opacity: 0; transform: scale(.5) rotate(-8deg); transition: transform 650ms cubic-bezier(.2,1.4,.5,1) 120ms, opacity 400ms ease 120ms; }
-.il-in--swing .il__fg { transform-origin: 33% 35%; transform: rotate(-70deg); transition: transform 900ms cubic-bezier(.16,1,.3,1) 500ms, opacity 300ms ease 500ms; }
-.il-in--press .il__fg { transform: scale(1.5); transition: transform 600ms cubic-bezier(.3,1.3,.5,1) 200ms, opacity 400ms ease 200ms; }
-.il-in--drop .il__fg { transform: translateY(-28rpx) scale(.6); transition: transform 500ms cubic-bezier(.2,1.4,.5,1) 600ms, opacity 400ms ease 600ms; }
-.il-in--burst .il__fg { transform-origin: 50% 47%; transform: scale(0) rotate(-40deg); transition: transform 700ms cubic-bezier(.2,1.4,.5,1) 300ms, opacity 400ms ease 300ms; }
-
-/* 进场终点 */
-.il.is-on .il__bl, .il.is-on .il__fg { opacity: 1; transform: none; }
-
-/* 待机往复:is-idle 在终点与偏移之间来回切,过渡时长 = 半周期 */
-.il.is-on.is-idle .il__bl { transform: scale(1.06) rotate(3deg); }
-.il.is-on .il__bl { transition: transform 2500ms ease-in-out, opacity 600ms ease; }
-.il.is-on .il__fg { transition: transform 1800ms ease-in-out, opacity 400ms ease; }
-.il-idle--float.is-on.is-idle .il__fg { transform: translateY(-6rpx); }
-.il-idle--sway.is-on .il__fg { transition: transform 4500ms linear, opacity 400ms ease; }
-.il-idle--sway.is-on.is-idle .il__fg { transform: rotate(24deg); }
-.il-idle--flip.is-on .il__fg { transition: transform 900ms ease-in-out, opacity 400ms ease; }
-.il-idle--flip.is-on.is-idle .il__fg { transform: rotate(180deg); }
-.il-idle--wobble.is-on.is-idle .il__fg { transform: rotate(-5deg) translateY(-4rpx); }
-.il-idle--swing.is-on .il__fg { transform-origin: 33% 35%; }
-.il-idle--swing.is-on.is-idle .il__fg { transform: rotate(6deg); }
-.il-idle--hang.is-on .il__fg { transform-origin: 50% 15%; }
-.il-idle--hang.is-on.is-idle .il__fg { transform: rotate(3deg); }
-.il-idle--scan.is-on.is-idle .il__fg { transform: translateX(10rpx) rotate(3deg); }
-.il-idle--drift.is-on.is-idle .il__fg { transform: translateX(6rpx); }
-
-/* 减少动态效果:直接终态 */
-.il.is-reduced .il__bl, .il.is-reduced .il__fg { transition: none; opacity: 1; transform: none; }
-
+/* cy-illus 风格 B:只动 transform / opacity / clip-path(不新增 keyframes)。D-118 起 25 枚全部走这一套,旧 .il 画法的样式已删。 */
 /* ===== 风格 B v2 精致插画(l-iconsB,proto/icons icons-b.js + icons.css .ib--*)=====
    每层是一张 120×120 画布的图,transform-origin / translate 的百分比 = 原型 px ÷ 1.2。
    原型的关键帧动画改成阶段类上的过渡:is-on 进场终点,e1… 进场后续阶段(只加不撤),is-idle 待机底态,p1… 一圈内逐个累加(index.js / art-b.js MOTION)。
@@ -135,16 +101,13 @@
 .ib--success.e1 .x-conf-0, .ib--success.e1 .x-conf-1, .ib--success.e1 .x-conf-2, .ib--success.e1 .x-conf-3, .ib--success.e1 .x-conf-4 { opacity: 1; transform: scale(1.3) translateY(-8.33%) rotate(40deg); transition: transform 240ms cubic-bezier(.2,.6,.3,1), opacity 240ms cubic-bezier(.2,.6,.3,1); }
 .ib--success.e2 .x-conf-0, .ib--success.e2 .x-conf-1, .ib--success.e2 .x-conf-2, .ib--success.e2 .x-conf-3, .ib--success.e2 .x-conf-4 { opacity: 0; transform: scale(.9) translateY(21.67%) rotate(200deg); transition: transform 1360ms cubic-bezier(.2,.6,.3,1), opacity 1360ms ease-in; }
 
-/* 失败:落地抖一下(主)再裂成两半 · 小云飘来(次)、只掉一滴 */
+/* 失败:落地后(D-63 业主「去掉」落地抖动)再裂成两半 · 小云飘来(次)、只掉一滴 */
 .ib--fail .x-tile { transform-origin: 50% 48.33%; opacity: 0; transform: translateY(-25%); }
 .ib--fail.is-on .x-tile { opacity: 1; transform: none; transition: transform 550ms cubic-bezier(.2,.8,.2,1) 80ms, opacity 300ms ease 80ms; }
-.ib--fail.e1 .x-tile { transform: translateX(-3.33%) rotate(-2deg); transition: transform 110ms ease-in-out; }
-.ib--fail.e2 .x-tile { transform: translateX(3.33%) rotate(2deg); transition: transform 225ms ease-in-out; }
-.ib--fail.e3 .x-tile { transform: none; transition: transform 110ms ease-in-out; }
 .ib--fail .x-hl { transform-origin: 38.33% 56.67%; }
 .ib--fail .x-hr { transform-origin: 63.33% 56.67%; }
-.ib--fail.e4 .x-hl { transform: translate(-1.67%, .83%) rotate(-2deg); transition: transform 600ms cubic-bezier(.34,1.56,.64,1); }
-.ib--fail.e4 .x-hr { transform: translate(3.33%, 2.5%) rotate(4deg); transition: transform 600ms cubic-bezier(.34,1.56,.64,1); }
+.ib--fail.e1 .x-hl { transform: translate(-1.67%, .83%) rotate(-2deg); transition: transform 600ms cubic-bezier(.34,1.56,.64,1); }
+.ib--fail.e1 .x-hr { transform: translate(3.33%, 2.5%) rotate(4deg); transition: transform 600ms cubic-bezier(.34,1.56,.64,1); }
 .ib--fail .x-cloud { transform-origin: 80% 23.33%; opacity: 0; transform: translateX(21.67%); }
 .ib--fail.is-on .x-cloud { opacity: 1; transform: none; transition: transform 900ms cubic-bezier(.2,.8,.2,1) 1100ms, opacity 600ms ease 1100ms; }
 .ib--fail .x-drop { transform-origin: 80% 32.92%; }

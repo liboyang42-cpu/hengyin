@@ -170,6 +170,18 @@ class TopicPublicationContentSnapshotTest {
         assertTrue(withTheme.path("themeDefinition").isObject());
     }
 
+    /** D-82 章节级奖励随发布冻结进 thoughtChapters,玩家端结束卡读的是这一份。 */
+    @Test void freezesChapterRewardTextIntoThoughtChapters() throws Exception {
+        Fixture f = new Fixture();
+        f.chapter.setRewardText("隐藏线索 ×1");
+        JsonNode row = JSON.readTree(f.compiler.freezePublication(f.topic, null)).path("thoughtChapters").get(0);
+        assertEquals(20L, row.path("chapterId").asLong());
+        assertEquals("隐藏线索 ×1", row.path("rewardText").asText());
+        Fixture none = new Fixture();
+        assertTrue(JSON.readTree(none.compiler.freezePublication(none.topic, null))
+                .path("thoughtChapters").get(0).path("rewardText").isNull(), "没设奖励 = 冻结 null,读侧不出那一行");
+    }
+
     private static final class Fixture {
         final CmsTopic topic = new CmsTopic(); final CmsTopicNode node = new CmsTopicNode();
         final CmsTopicChapter chapter = new CmsTopicChapter(); final CmsMemberTemplate template = new CmsMemberTemplate();

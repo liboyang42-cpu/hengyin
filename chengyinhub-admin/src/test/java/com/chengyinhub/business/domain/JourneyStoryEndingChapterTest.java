@@ -43,6 +43,26 @@ class JourneyStoryEndingChapterTest {
         assertEquals(1, ending.path("epilogues").size(), "尾声原样保留");
     }
 
+    // D-66（业主 2026-11-11）：结局章同样受「最多 6 个（含默认结局）」约束，
+    // 作者不能靠多开结局章绕过 ending.endings 的数量上限。
+    @Test
+    void 负控_结局章超过六个就拒() throws Exception {
+        java.util.List<JourneyStory.EndingChapter> chapters = new java.util.ArrayList<JourneyStory.EndingChapter>();
+        for (int i = 1; i <= 5; i++) {
+            chapters.add(new JourneyStory.EndingChapter((long) i, "结局" + i, "", JSON.readTree(
+                    "{\"when\":[{\"op\":\"HAS_TAG\",\"value\":\"tag.x\"}]}")));
+        }
+        chapters.add(new JourneyStory.EndingChapter(6L, "兜底", "", JSON.readTree("{\"fallback\":true}")));
+        // 6 个放行
+        assertEquals(6, JSON.readTree(JourneyStory.withEndingChapters("{}", chapters, new HashMap<Long, Long>()))
+                .path("ending").path("endings").size());
+        // 第 7 个必须被拒
+        chapters.add(new JourneyStory.EndingChapter(7L, "多余", "", JSON.readTree("{\"fallback\":false,\"when\":[{\"op\":\"HAS_TAG\",\"value\":\"tag.y\"}]}")));
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> JourneyStory.withEndingChapters("{}", chapters, new HashMap<Long, Long>()));
+        assertTrue(error.getMessage().contains("结局最多 6 个"));
+    }
+
     @Test
     void 负控_站点不在本次提交里就拒() throws Exception {
         assertThrows(IllegalArgumentException.class, () -> JourneyStory.withEndingChapters("{}",

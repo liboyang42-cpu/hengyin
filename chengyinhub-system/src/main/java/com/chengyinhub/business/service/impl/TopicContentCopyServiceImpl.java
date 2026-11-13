@@ -476,6 +476,8 @@ public class TopicContentCopyServiceImpl implements ITopicContentCopyService {
             // 静默退化成「不限」,而运营看不出差别。
             newChapter.setAllowedValidationMethods(originalChapter.getAllowedValidationMethods());
             newChapter.setMaxNodeXp(originalChapter.getMaxNodeXp());
+            // D-82 章节级奖励文案:同上,逐字段手抄,漏了副本结束卡就静默少一行
+            newChapter.setRewardText(originalChapter.getRewardText());
             // 新行不再传播历史 null：0 是「不限」的显式值，也是 max_merchant 的持久化口径。
             newChapter.setMaxMerchant(originalChapter.getMaxMerchant() == null ? 0 : originalChapter.getMaxMerchant());
             newChapter.setRequired(originalChapter.getRequired());

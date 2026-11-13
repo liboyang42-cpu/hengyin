@@ -67,6 +67,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="maxPerHeadFee" column="max_per_head_fee"/>
         <result property="allowedValidationMethods" column="allowed_validation_methods"/>
         <result property="maxNodeXp" column="max_node_xp"/>
+        <result property="rewardText" column="reward_text"/>
     </resultMap>
 
     <resultMap id="NodeResult" type="com.chengyinhub.business.domain.CmsTopicNode">
@@ -130,7 +131,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectSourceChapters" resultMap="ChapterResult">
         select id, topic_id, name, description, blocks, video_url, video_poster_url, img_arr, total_time, total_mileage,
                location_count, template_count, sort_id, category, category_id, recruit_enabled, perk_min_value,
-               max_merchant, required, terms_mode, max_per_head_fee, allowed_validation_methods, max_node_xp
+               max_merchant, required, terms_mode, max_per_head_fee, allowed_validation_methods, max_node_xp, reward_text
           from cms_topic_chapter
          where topic_id = #{sourceTopicId}
          order by sort_id asc, id asc
@@ -165,11 +166,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into cms_topic_chapter
             (topic_id, name, description, audio_url, video_url, video_poster_url, atmosphere_preset, img_arr, total_time, total_mileage, location_count, template_count,
              sort_id, category, category_id, recruit_enabled, perk_min_value, max_merchant, required, terms_mode,
-             max_per_head_fee, allowed_validation_methods, max_node_xp, create_by, create_time)
+             max_per_head_fee, allowed_validation_methods, max_node_xp, reward_text, create_by, create_time)
         values
             (#{topicId}, #{name}, #{description}, #{audioUrl}, #{videoUrl}, #{videoPosterUrl}, #{atmospherePreset}, #{imgArr}, #{totalTime}, #{totalMileage}, #{locationCount}, #{templateCount},
              #{sortId}, #{category}, #{categoryId}, #{recruitEnabled}, #{perkMinValue}, #{maxMerchant}, #{required}, #{termsMode},
-             #{maxPerHeadFee}, #{allowedValidationMethods}, #{maxNodeXp}, #{createBy}, #{createTime})
+             #{maxPerHeadFee}, #{allowedValidationMethods}, #{maxNodeXp}, #{rewardText}, #{createBy}, #{createTime})
     </insert>
 
     <insert id="insertReopenedNode" parameterType="com.chengyinhub.business.domain.CmsTopicNode"

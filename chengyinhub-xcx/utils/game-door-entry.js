@@ -50,7 +50,7 @@ function parseShopScene(scene) {
 }
 
 // l-misc(2026-11-10 业主批准):队伍邀请小程序码。后端 /api/team/invite-qrcode 的 scene:
-//   tm.<22 位 base64url 邀请码>  —— 新码原样;
+//   tm.<六位加入码或旧 22 位 base64url 邀请码> —— 原样;
 //   th.<22 位 base64url>         —— 迁移回填的 32 位十六进制旧码(scene 限 32 字符,放不下前缀 + 32 位),还原成小写十六进制。
 // 返回邀请码本身(交给加入页 /api/team/info、/api/team/join 由服务端裁决),认不出就是 null。
 const B64URL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
@@ -75,6 +75,8 @@ function parseTeamScene(scene) {
   if (scene == null || scene === '') return null
   let raw = String(scene)
   try { raw = decodeURIComponent(raw) } catch (e) { /* already decoded */ }
+  const short = /^tm\.([23456789ABCDEFGHJKMNPQRSTUVWXYZ]{6})$/.exec(raw.trim())
+  if (short) return short[1]
   const m = /^(tm|th)\.([A-Za-z0-9_-]{22})$/.exec(raw.trim())
   if (!m) return null
   if (m[1] === 'tm') return m[2]

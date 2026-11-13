@@ -81,7 +81,7 @@ class TemplateDraftDeleteOwnerAcceptanceTest {
 
         assertEquals(0, row.getDelFlag());
         assertEquals(0, projection.getDelFlag());
-        assertEquals(1L, projection.getPublishStatus());
+        assertEquals(1L, projection.getStatus());
         verify(memberTemplateService, never()).updateCmsMemberTemplate(any());
         verify(templateLibraryService, never()).updateCmsTemplateLibrary(any());
         verify(taskMapper, never()).cancelOpenTemplateTasks(anyString(), anyLong());
@@ -113,7 +113,6 @@ class TemplateDraftDeleteOwnerAcceptanceTest {
         projection.setMemberTemplateId(TEMPLATE_ID);
         projection.setDelFlag(0);
         projection.setStatus(1L);
-        projection.setPublishStatus(1L);
         return projection;
     }
 }

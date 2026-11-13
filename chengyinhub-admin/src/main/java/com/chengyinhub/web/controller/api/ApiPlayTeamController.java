@@ -114,6 +114,18 @@ public class ApiPlayTeamController extends BaseController {
         }
     }
 
+    @Operation(summary = "队长更换加入码")
+    @PostMapping("/invite-code/rotate")
+    @RateLimiter(time = 60, count = 10, limitType = LimitType.MEMBER)
+    public AjaxResult rotateInviteCode(@RequestBody Map<String, Object> body) {
+        try {
+            String code = playTeamService.rotateInviteCode(Convert.toLong(body.get("teamId"), 0L), memberId());
+            return AjaxResult.success(Collections.singletonMap("inviteCode", code));
+        } catch (RuntimeException e) {
+            return fail(e);
+        }
+    }
+
     @Operation(summary = "通过邀请加入队伍")
     @PostMapping("/join")
     public AjaxResult join(@RequestBody Map<String, Object> body) {

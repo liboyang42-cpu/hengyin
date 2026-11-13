@@ -57,7 +57,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="advancedConfigJson"    column="advanced_config_json"    />
         <result property="activityCategoryids"    column="activity_categoryids"    />
         <result property="status"    column="status"    />
-        <result property="publishStatus"    column="publish_status"    />
         <result property="reason"    column="reason"    />
         <result property="delFlag"    column="del_flag"    />
         <result property="rating"    column="rating"    />
@@ -79,7 +78,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 
     <sql id="selectCmsTemplateLibraryVo">
-        select id, member_id,member_template_id, category_id, title, description, img_url,players,usage_location,required_materials, duration, difficulty, is_sync, rule_instructions, merchant_guide, reward_rules_json, validation_method, sensor_type, sensor_config, question_name, question_answer, feedback_text, coupon_id, story_text, story_img, story_json, hint1, hint2, answer_reveal, photo_require_desc, photo_review, audio_url, audio_duration, question_a, question_b, question_c, question_d, correct_answer, question_img, question_audio, question_option_media_json, preference_json, advanced_config_json, activity_categoryids, status, publish_status, reason, del_flag,rating,use_num,pack_type, create_by, create_time, update_by, update_time,
+        select id, member_id,member_template_id, category_id, title, description, img_url,players,usage_location,required_materials, duration, difficulty, is_sync, rule_instructions, merchant_guide, reward_rules_json, validation_method, sensor_type, sensor_config, question_name, question_answer, feedback_text, coupon_id, story_text, story_img, story_json, hint1, hint2, answer_reveal, photo_require_desc, photo_review, audio_url, audio_duration, question_a, question_b, question_c, question_d, correct_answer, question_img, question_audio, question_option_media_json, preference_json, advanced_config_json, activity_categoryids, status, reason, del_flag,rating,use_num,pack_type, create_by, create_time, update_by, update_time,
         (select original.interaction_type from cms_member_template original
          where original.id = cms_template_library.member_template_id
            and original.member_id = cms_template_library.member_id) as interaction_type
@@ -89,6 +88,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectByMemberTemplateForUpdate" resultMap="CmsTemplateLibraryResult">
         <include refid="selectCmsTemplateLibraryVo"/>
         where member_template_id = #{memberTemplateId} order by id for update
+    </select>
+
+    <select id="selectByIdForUpdate" resultMap="CmsTemplateLibraryResult">
+        <include refid="selectCmsTemplateLibraryVo"/>
+        where id = #{id} for update
     </select>
 
     <select id="selectCmsTemplateLibraryList" parameterType="CmsTemplateLibrary" resultMap="CmsTemplateLibraryResult">
@@ -117,7 +121,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="correctAnswer != null  and correctAnswer != ''"> and correct_answer = #{correctAnswer}</if>
             <if test="activityCategoryids != null  and activityCategoryids != ''"> AND FIND_IN_SET(#{activityCategoryids}, activity_categoryids) > 0</if>
             <if test="status != null "> and status = #{status}</if>
-            <if test="publishStatus != null "> and publish_status = #{publishStatus}</if>
             <if test="reason != null  and reason != ''"> and reason = #{reason}</if>
             <if test="delFlag != null "> and del_flag = #{delFlag}</if>
             <!-- 模板形态筛选。★ 不传 = 不过滤(全部形态),不是「只看单节点」——
@@ -151,7 +154,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         mt.id, mt.member_id,mt.member_template_id, mt.category_id, mt.title,
         mt.description, mt.img_url,mt.players,mt.usage_location,mt.required_materials, mt.duration, mt.difficulty, mt.is_sync,
         mt.rule_instructions, mt.validation_method, mt.sensor_type, mt.sensor_config, mt.question_name, mt.question_answer, mt.feedback_text, mt.coupon_id, mt.story_text, mt.story_img, mt.story_json, mt.hint1, mt.hint2, mt.answer_reveal, mt.photo_require_desc, mt.photo_review, mt.audio_url, mt.audio_duration, mt.question_a,
-        mt.question_b, mt.question_c, mt.question_d, mt.correct_answer, mt.question_img, mt.question_audio, mt.question_option_media_json, mt.preference_json, mt.advanced_config_json, mt.activity_categoryids, mt.status, mt.publish_status, mt.reason, mt.del_flag,
+        mt.question_b, mt.question_c, mt.question_d, mt.correct_answer, mt.question_img, mt.question_audio, mt.question_option_media_json, mt.preference_json, mt.advanced_config_json, mt.activity_categoryids, mt.status, mt.reason, mt.del_flag,
         mt.rating,mt.use_num,mt.create_by, mt.create_time, mt.update_by, mt.update_time,
         c.category_name,
         c.icon,
@@ -164,7 +167,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         sys_category c ON mt.category_id = c.id
         WHERE
         mt.del_flag = 0
-        AND mt.publish_status = 1
+        AND mt.status = 1
         AND c.del_flag = 0
         AND c.status = 1
         AND mt.category_id IN
@@ -172,16 +175,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{categoryId}
         </foreach>
         ORDER BY
-        mt.create_time DESC
+        ifnull(mt.use_num, 0) DESC, mt.id DESC
     </select>
     
-    <!-- D5(owner 2026-10-23):同作者广场条目同名判重的比对池 —— 未删除、非本模板投影;判等在 Java 侧(trim 后逐字) -->
+    <!-- 同作者未删除库行；Java trim 后逐字比较，排除本库行而非整个真源 -->
     <select id="selectAuthorLiveTitles" resultType="java.lang.String">
         select title
         from cms_template_library
         where member_id = #{memberId}
           and del_flag = 0
-          and (member_template_id is null or member_template_id != #{excludeMemberTemplateId})
+          <if test="excludeLibraryId != null">and id != #{excludeLibraryId}</if>
           and title is not null
     </select>
 
@@ -189,7 +192,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectPublicTitlesForSimilarity" resultMap="CmsTemplateLibraryResult">
         select id, member_id, title
         from cms_template_library
-        where del_flag = 0 and publish_status = 1 and status = 1
+        where del_flag = 0 and status = 1
           and title is not null and title != ''
           <if test="excludeMemberId != null">and member_id != #{excludeMemberId}</if>
         order by id desc
@@ -253,7 +256,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="advancedConfigJson != null and advancedConfigJson.trim() != ''">advanced_config_json,</if>
             <if test="activityCategoryids != null">activity_categoryids,</if>
             <if test="status != null">status,</if>
-            <if test="publishStatus != null">publish_status,</if>
             <if test="reason != null">reason,</if>
             <if test="delFlag != null">del_flag,</if>
             <if test="rating != null">rating,</if>
@@ -309,7 +311,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="advancedConfigJson != null and advancedConfigJson.trim() != ''">#{advancedConfigJson},</if>
             <if test="activityCategoryids != null">#{activityCategoryids},</if>
             <if test="status != null">#{status},</if>
-            <if test="publishStatus != null">#{publishStatus},</if>
             <if test="reason != null">#{reason},</if>
             <if test="delFlag != null">#{delFlag},</if>
             <if test="rating != null">#{rating},</if>
@@ -323,19 +324,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <update id="applyAuditDecision">
         update cms_template_library set status = #{row.status},
-            publish_status = #{row.publishStatus}, reason = #{row.reason}, update_time = now()
+            reason = #{row.reason}, update_time = now()
         where id = #{row.id} and member_id = #{ownerId} and del_flag = 0 and status = 0 and member_template_id = #{row.memberTemplateId}
     </update>
 
     <!-- AUDIT-G2-2:举报成立下架(审核台举报单 REJECT);只动公开中的行,幂等 -->
     <update id="takeDownReported">
-        update cms_template_library set status = 2, publish_status = 0, reason = #{reason}, update_time = now()
-        where id = #{id} and del_flag = 0 and status = 1
+        update cms_template_library set status = 2, reason = #{reason}, update_time = now()
+        where id = #{id} and del_flag = 0 and status in (1,3)
     </update>
 
     <update id="takeDownReportedByMemberTemplate">
-        update cms_template_library set status = 2, publish_status = 0, reason = #{reason}, update_time = now()
-        where member_template_id = #{memberTemplateId} and del_flag = 0 and status = 1
+        update cms_template_library set status = 2, reason = #{reason}, update_time = now()
+        where member_template_id = #{memberTemplateId} and del_flag = 0 and status in (1,3)
     </update>
 
     <update id="updateCmsTemplateLibrary" parameterType="CmsTemplateLibrary">
@@ -418,11 +419,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             </choose>
             <if test="activityCategoryids != null">activity_categoryids = #{activityCategoryids},</if>
             <if test="status != null">status = #{status},</if>
-            <if test="publishStatus != null">publish_status = #{publishStatus},</if>
             <if test="reason != null">reason = #{reason},</if>
             <if test="delFlag != null">del_flag = #{delFlag},</if>
             <if test="rating != null">rating = #{rating},</if>
-            <if test="useNum != null">use_num = #{useNum},</if>
             <if test="createBy != null">create_by = #{createBy},</if>
             <if test="createTime != null">create_time = #{createTime},</if>
             <if test="updateBy != null">update_by = #{updateBy},</if>
@@ -444,16 +443,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- 审核撤销/申诉复核：仅当内容仍停在该审核决定写下的状态时才回到待审 -->
     <update id="reopenAuditDecision">
-        update cms_template_library set status = 0, publish_status = 0, update_time = now()
+        update cms_template_library set status = 0, update_time = now()
         where id = #{id} and member_id = #{ownerId} and del_flag = 0 and member_template_id = #{memberTemplateId}
-          and status = #{fromStatus} and publish_status = #{fromPublishStatus}
+          and status = #{fromStatus}
     </update>
 
-    <!-- AUDIT-INT-4:举报下架申诉成立,只从举报下架态(2/0)原样恢复 -->
+    <!-- 举报下架申诉成立，只从驳回态原样恢复 -->
     <update id="restoreReportTakedown">
-        update cms_template_library set status = #{status}, publish_status = #{publishStatus},
+        update cms_template_library set status = #{status},
             reason = #{reason}, update_time = now()
-        where id = #{id} and del_flag = 0 and status = 2 and publish_status = 0
+        where id = #{id} and del_flag = 0 and status = 2
     </update>
 
 </mapper>

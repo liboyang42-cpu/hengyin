@@ -45,8 +45,8 @@ import com.chengyinhub.web.service.play.PlayNodeContext.PlayCtx;
 /** SCAN, ANSWER, GPS and sensor command orchestration. */
 @Service
 public class PlayBasicCommandApplication {
-    private static final double GEOFENCE_METERS = ArrivalPolicy.LEGACY_RADIUS_METERS;
-    private static final double GEOFENCE_ACCURACY_METERS = ArrivalPolicy.LEGACY_MAX_ACCURACY_METERS;
+    // 业主 2026-11-13:只在开局时做一次 300 米定位校验(ArrivalPolicy.START_RADIUS_METERS),
+    // 开局之后各站到点不再要求定位;逐站 50m 围栏(D-69)已退出站点判定。
     private static final Logger logger = LoggerFactory.getLogger(PlayBasicCommandApplication.class);
 
     @Autowired
@@ -348,7 +348,7 @@ public class PlayBasicCommandApplication {
         String unlockErr = playNodeContext.routeAccessError(memberId, actId, ctx.topicId, node, routeActionId);
         if (unlockErr != null) return PlayCommandErrorContract.rejected(unlockErr, PlayCommandErrorContract.ROUTE_LOCKED);
 
-        // 城市定向「到站后作答」:本局按冻结到达配置有坐标的站,须先经 GPS 围栏(50 米)记过到达才能作答。
+        // 城市定向「到站后作答」:本局按冻结到达配置有坐标的站,须先记过到达才能作答(到达本身不再要求定位,只有开局一次 300 米校验)。
         // 只管到达与任务分开记的本局路线(与 arrive 的 personalArrival 同一判据);老路径到达即完成,不受影响。
         // 实走 A20:规则写「50米内解锁」,人不在附近也能答对完成。
         boolean runtimePath = originalRun.session() != null && topicRouteRuntimeService != null
@@ -358,13 +358,16 @@ public class PlayBasicCommandApplication {
             boolean located = target != null && StringUtils.isNotBlank(target.path("longitude").asText(null))
                     && StringUtils.isNotBlank(target.path("latitude").asText(null));
             if (located && !shopDayProofService.hasArrived(memberId, actId, node.getId())) {
-                return PlayCommandErrorContract.arriveFirst("先到这一站 50 米内，再开始作答", PlayCommandErrorContract.ARRIVE_NOT_RECORDED);
+                return PlayCommandErrorContract.arriveFirst("先到这一站，再开始作答", PlayCommandErrorContract.ARRIVE_NOT_RECORDED);
             }
         } else if (playMode == PlayMode.LINEAR_ORIENTEERING
                 && StringUtils.isNotBlank(node.getLongitude()) && StringUtils.isNotBlank(node.getLatitude())) {
-            // 老路径到达即完成,没有单独的到达记录可查:答案随带的定位按 arrive 同一围栏(精度 80 米、距离 50 米)判
-            FenceRejection fence = answerFenceError(node, longitude, latitude, accuracy);
-            if (fence != null) return PlayCommandErrorContract.arriveFirst(fence.message(), fence.reasonCode());
+            // 老路径到达即完成,没有单独的到达记录可查:本局还没开局时,答案随带的定位按开局校验(300 米)判;
+            // 已开局(本局已有进度)的各站不再要求定位。
+            if (!shopDayProofService.runStarted(memberId, ctx.actId)) {
+                FenceRejection fence = startFenceError(node, longitude, latitude, accuracy);
+                if (fence != null) return PlayCommandErrorContract.arriveFirst(fence.message(), fence.reasonCode());
+            }
         }
 
         // 读节点绑定模板的验证方式 + 校验答案(R18-FREEZE:对错判定按开局快照,新发布不改写
@@ -458,13 +461,13 @@ public class PlayBasicCommandApplication {
         return AjaxResult.success(firstTime ? "答对了！" : "该节点已完成", data);
     }
 
-    /** 作答时定位的到站围栏,与 arrive 坐标判定同口径;null = 在站内。 */
-    private FenceRejection answerFenceError(CmsTopicNode node, String longitude, String latitude, String accuracy) {
+    /** 开局时定位校验(300 米,精度 80 米);作答随带的定位与 arrive 同口径。null = 通过。 */
+    private FenceRejection startFenceError(CmsTopicNode node, String longitude, String latitude, String accuracy) {
         if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) {
-            return new FenceRejection("先开启定位，到这一站 50 米内再作答", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING);
+            return new FenceRejection("开局前请先开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING);
         }
         if (StringUtils.isBlank(accuracy)) {
-            return new FenceRejection("先开启定位，到这一站 50 米内再作答",
+            return new FenceRejection("开局前请先开启定位",
                     com.chengyinhub.business.service.support.ArriveLocationGuard.ACCURACY_MISSING);
         }
         Double playerLat = PlayNodeContext.parseGeoCoordinate(latitude, -90d, 90d);
@@ -475,16 +478,17 @@ public class PlayBasicCommandApplication {
         if (playerLat == null || playerLng == null || nodeLat == null || nodeLng == null || acc == null) {
             return new FenceRejection("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
         }
-        if (acc > GEOFENCE_ACCURACY_METERS) {
-            return new FenceRejection("定位精度不足，请到开阔处再作答", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW);
-        }
         double dist = GeoDistanceUtils.haversineMeters(playerLat, playerLng, nodeLat, nodeLng);
-        if (!Double.isFinite(dist)) return new FenceRejection("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
-        return dist > GEOFENCE_METERS
-                ? new FenceRejection("还没到这一站附近，到 50 米内再作答", PlayCommandErrorContract.ARRIVE_TOO_FAR) : null;
+        ArrivalPolicy.Fence fence = ArrivalPolicy.startViolation(dist, acc);
+        if (fence == ArrivalPolicy.Fence.INVALID) return new FenceRejection("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID);
+        if (fence == ArrivalPolicy.Fence.ACCURACY_LOW) {
+            return new FenceRejection("定位精度不足，请到开阔处再开局", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW);
+        }
+        return fence == ArrivalPolicy.Fence.TOO_FAR
+                ? new FenceRejection("离起点太远，请到起点 300 米内再开始", PlayCommandErrorContract.ARRIVE_TOO_FAR) : null;
     }
 
-    /** 作答到站围栏的细分拒绝:errorCode 仍是既有 ARRIVE_FIRST,细分原因放 reasonCode。 */
+    /** 开局校验的细分拒绝:errorCode 仍是既有 ARRIVE_FIRST,细分原因放 reasonCode。 */
     private record FenceRejection(String message, String reasonCode) { }
 
     public AjaxResult answer(String activityId, String nodeId, String answer, String topicId) {
@@ -700,7 +704,10 @@ public class PlayBasicCommandApplication {
         // 不再要现场定位(玩家不用走回去)。只看服务端会话事实;没解开的站仍走下面原围栏与守卫。
         boolean solvedGame = stationGameProof || advancedGameRuntimeService != null
                 && advancedGameRuntimeService.solvedForArrival(memberId, actId, ctx.topicId, node.getId());
-        if (hasNodeCoord && !solvedGame) {
+        // 业主 2026-11-13:定位只在开局(本局第一次到达)校验一次,须在首站 300 米内;
+        // 本局已有进度 = 开局校验已过,之后各站到点不再要求定位。没开局又不带定位的到达一律拒绝。
+        boolean runStarted = shopDayProofService.runStarted(memberId, actId);
+        if (hasNodeCoord && !solvedGame && !runStarted) {
             if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return arriveRejected(PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING), frozenStation);
             // R10-10:Double.parseDouble 接受 "NaN"/"Infinity",而 NaN 与任何数比较恒 false,
             // 旧写法让无效坐标绕过围栏直接落入 advanceProgress 拿进度和奖励。玩家输入与站点配置
@@ -733,10 +740,10 @@ public class PlayBasicCommandApplication {
             if (arrivalPolicy.locationTooOld(parseLocationTimestamp(locationTimestamp), System.currentTimeMillis())) {
                 return arriveRejected(PlayCommandErrorContract.retryable("定位时间已过期，请重新定位后重试", PlayCommandErrorContract.ARRIVE_LOCATION_STALE), frozenStation);
             }
-            ArrivalPolicy.Fence fence = arrivalPolicy.fenceViolation(dist, acc.doubleValue());
+            ArrivalPolicy.Fence fence = ArrivalPolicy.startViolation(dist, acc.doubleValue());
             if (fence == ArrivalPolicy.Fence.INVALID) return arriveRejected(PlayCommandErrorContract.retryable("定位无效", PlayCommandErrorContract.ARRIVE_LOCATION_INVALID), frozenStation);
             if (fence == ArrivalPolicy.Fence.ACCURACY_LOW) return arriveRejected(PlayCommandErrorContract.retryable("定位精度不足，请到开阔处或扫码完成", PlayCommandErrorContract.ARRIVE_ACCURACY_LOW), frozenStation);
-            if (fence == ArrivalPolicy.Fence.TOO_FAR) return arriveRejected(PlayCommandErrorContract.retryable("还没到这一站附近", PlayCommandErrorContract.ARRIVE_TOO_FAR), frozenStation);
+            if (fence == ArrivalPolicy.Fence.TOO_FAR) return arriveRejected(PlayCommandErrorContract.retryable("离起点太远，请到起点 300 米内再开始", PlayCommandErrorContract.ARRIVE_TOO_FAR), frozenStation);
             // O-01 第 4–7 层(节流/速度/窗口位移/不确定性扣减):开关 off 时不读不写,行为与改动前一致。
             if (arriveLocationGuard != null) {
                 com.chengyinhub.business.service.support.ArriveLocationGuard.Result guard =

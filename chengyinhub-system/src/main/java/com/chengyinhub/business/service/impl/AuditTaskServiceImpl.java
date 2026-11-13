@@ -1063,7 +1063,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             for (CmsTemplateLibrary row : locked.projections) {
                 if (task.getBizId().equals(row.getId()) && template.getId().equals(row.getMemberTemplateId())
                         && template.getMemberId().equals(row.getMemberId()) && Integer.valueOf(0).equals(row.getDelFlag())
-                        && Long.valueOf(0L).equals(row.getStatus()) && Long.valueOf(0L).equals(row.getPublishStatus())) {
+                        && Long.valueOf(0L).equals(row.getStatus())) {
                     current = TemplateAuditSnapshot.market(row);
                 }
             }
@@ -2303,7 +2303,6 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                         new com.chengyinhub.business.domain.CmsTemplateLibrary();
                 projection.setId(bizId);
                 projection.setStatus(down ? 2L : 1L);
-                projection.setPublishStatus(down ? 0L : 1L);
                 projection.setReason(down ? reasonText : "");
                 CmsTemplateLibrary current = libraryMapper.selectCmsTemplateLibraryById(bizId);
                 projection.setMemberTemplateId(current.getMemberTemplateId());
@@ -2700,7 +2699,7 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
 
     /**
      * AUDIT-INT-4:举报成立下架模板/广场条目前,把下架前的公开态并入举报单快照(preTakedown)。
-     * 只记会被 takeDownReported 动到的行(status=1);申诉单复制这份快照,申诉成立据此原样恢复。
+     * 只记会被 takeDownReported 动到的已通过行(status=1/3);申诉单复制这份快照,申诉成立据此原样恢复。
      */
     private void recordPreTakedownState(AuditTask task) {
         com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -2716,13 +2715,15 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             row.put("reason", template.getReason() == null ? "" : template.getReason());
             List<CmsTemplateLibrary> projections = libraryMapper.selectByMemberTemplateForUpdate(task.getBizId());
             if (projections != null) for (CmsTemplateLibrary projection : projections) {
-                if (Integer.valueOf(0).equals(projection.getDelFlag()) && Long.valueOf(1L).equals(projection.getStatus())) {
+                if (Integer.valueOf(0).equals(projection.getDelFlag())
+                        && (Long.valueOf(1L).equals(projection.getStatus()) || Long.valueOf(3L).equals(projection.getStatus()))) {
                     libraries.add(libraryState(json, projection));
                 }
             }
         } else {
             CmsTemplateLibrary library = libraryMapper.selectCmsTemplateLibraryById(task.getBizId());
-            if (library == null || !Long.valueOf(1L).equals(library.getStatus())) return;
+            if (library == null || (!Long.valueOf(1L).equals(library.getStatus())
+                    && !Long.valueOf(3L).equals(library.getStatus()))) return;
             libraries.add(libraryState(json, library));
         }
         com.fasterxml.jackson.databind.node.ObjectNode snapshot;
@@ -2751,7 +2752,6 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
         com.fasterxml.jackson.databind.node.ObjectNode row = json.createObjectNode();
         row.put("id", library.getId());
         row.put("status", library.getStatus());
-        row.put("publishStatus", library.getPublishStatus());
         row.put("reason", library.getReason() == null ? "" : library.getReason());
         return row;
     }
@@ -2784,14 +2784,14 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             }
             for (com.fasterxml.jackson.databind.JsonNode library : pre.path("libraries")) {
                 libraryMapper.restoreReportTakedown(library.path("id").asLong(), library.path("status").asLong(),
-                        library.path("publishStatus").asLong(), library.path("reason").asText(""));
+                        library.path("reason").asText(""));
             }
             return true;
         }
         for (com.fasterxml.jackson.databind.JsonNode library : pre.path("libraries")) {
             if (library.path("id").asLong() == task.getBizId()) {
                 return libraryMapper.restoreReportTakedown(task.getBizId(), library.path("status").asLong(),
-                        library.path("publishStatus").asLong(), library.path("reason").asText("")) == 1;
+                        library.path("reason").asText("")) == 1;
             }
         }
         return false;
@@ -2877,7 +2877,8 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
             List<CmsTemplateLibrary> projections = libraryMapper.selectByMemberTemplateForUpdate(bizId);
             if (projections != null) {
                 for (CmsTemplateLibrary row : projections) {
-                    if (Integer.valueOf(0).equals(row.getDelFlag()) && Long.valueOf(1L).equals(row.getStatus())) {
+                    if (Integer.valueOf(0).equals(row.getDelFlag())
+                            && (Long.valueOf(1L).equals(row.getStatus()) || Long.valueOf(3L).equals(row.getStatus()))) {
                         throw governanceError(ERROR_REVERT_STATE, "该玩法已在模板广场上架，不能撤销通过，请先处理模板广场条目",
                                 HttpStatus.CONFLICT);
                     }
@@ -2934,11 +2935,12 @@ public class AuditTaskServiceImpl implements IAuditTaskService {
                 }
             }
             if (row == null || row.getMemberId() == null
+                    || (approved && !Long.valueOf(1L).equals(row.getStatus()) && !Long.valueOf(3L).equals(row.getStatus()))
                     || !TemplateAuditSnapshot.matches(task.getSnapshotJson(), TemplateAuditSnapshot.market(row))) {
                 return false;
             }
             return libraryMapper.reopenAuditDecision(bizId, row.getMemberId(), row.getMemberTemplateId(),
-                    approved ? 1L : 2L, approved ? 1L : 0L) == 1;
+                    approved ? row.getStatus() : 2L) == 1;
         }
         return false;
     }

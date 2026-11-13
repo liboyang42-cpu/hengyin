@@ -27,6 +27,53 @@ class CommunityTrustControllerSecurityTest {
         org.mockito.Mockito.verify(service).listMyReports(101L, null, "report-key-123");
     }
 
+    @Test
+    void alternateContentReportEndpointCannotBypassPostVisibilityAndOwnership() {
+        var trust = org.mockito.Mockito.mock(com.chengyinhub.business.service.CommunityTrustService.class);
+        var posts = org.mockito.Mockito.mock(com.chengyinhub.business.service.ICommunityPostService.class);
+        var controller = org.mockito.Mockito.spy(new ApiCommunityTrustController());
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "communityTrustService", trust);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "communityPostService", posts);
+        org.mockito.Mockito.doReturn(101L).when(controller).getAppUserId();
+        for (String type : new String[]{"CONTENT", " comment "}) {
+            var request = new com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest();
+            request.setTargetType(type);
+            request.setTargetId(7L);
+            org.mockito.Mockito.when(posts.report(101L, request))
+                    .thenThrow(new com.chengyinhub.common.exception.ServiceException("内容不可见", 404));
+
+            org.junit.jupiter.api.Assertions.assertEquals(404, controller.submitReport(request).get("code"));
+            org.mockito.Mockito.verify(posts).report(101L, request);
+        }
+        org.mockito.Mockito.verifyNoInteractions(trust);
+    }
+
+    @Test
+    void nonContentReportsRetainTheExistingTrustPathAndReporterProjection() {
+        var trust = org.mockito.Mockito.mock(com.chengyinhub.business.service.CommunityTrustService.class);
+        var posts = org.mockito.Mockito.mock(com.chengyinhub.business.service.ICommunityPostService.class);
+        var controller = org.mockito.Mockito.spy(new ApiCommunityTrustController());
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "communityTrustService", trust);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "communityPostService", posts);
+        org.mockito.Mockito.doReturn(101L).when(controller).getAppUserId();
+        var request = new com.chengyinhub.business.domain.dto.CommunityReportSubmitRequest();
+        request.setTargetType("MEMBER");
+        request.setTargetId(102L);
+        var row = new com.chengyinhub.business.domain.CommunityReportCase();
+        row.setId(5L);
+        row.setTargetType("MEMBER");
+        row.setTargetId(102L);
+        row.setStage("SUBMITTED");
+        org.mockito.Mockito.when(trust.submitReport(101L, request)).thenReturn(row);
+
+        var result = controller.submitReport(request);
+
+        org.junit.jupiter.api.Assertions.assertEquals(200, result.get("code"));
+        org.junit.jupiter.api.Assertions.assertTrue(result.get("data") instanceof com.chengyinhub.business.domain.vo.CommunityReportVO);
+        org.mockito.Mockito.verify(trust).submitReport(101L, request);
+        org.mockito.Mockito.verifyNoInteractions(posts);
+    }
+
     private static final String REVIEW_PERMISSION = "business:audit:review";
     private static final String LIST_PERMISSION = "business:audit:list";
 

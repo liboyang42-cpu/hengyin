@@ -107,6 +107,7 @@ chengyinhub-xcx/components/cy/scene-roam-stamp-album/index.js 1  # 2026-08-25 �
 chengyinhub-xcx/subpackageMember/components/cy/scene-route-content/index.js 2  # 2026-08-25 状态底座:失败落页内错误态(cy-error / cy-inline-error / state:error / stale-error),通用 toast 会双弹
 chengyinhub-xcx/pages/club/detail/index.js 3  # 2026-08-25 经营闭环:场次入口失败有精确 toast,统计与经营权限失败落 clubStatsError / managementAccessError;通用 toast 会双弹
 chengyinhub-xcx/pages/club/detail/index.js 2  # 2026-08-26 会员摘要失败落可重试 error 状态；活动举报解析失败由当前操作的精确 toast 承接，通用 toast 会双弹
+chengyinhub-xcx/pages/club/payout-receiver/index.js 4  # 2026-11-12 个人收款页：状态/绑定/解除失败均由页内错误态或精确 toast（errorText 转人话）承接，通用 toast 会双弹
 chengyinhub-xcx/pages/club/detail/index.js 6  # 2026-09-10 设置弹窗五处 + 发帖选择器一处:客户人数与已结算分润取不到就在原位显示「暂时读不到」(留空会被读成「一个客户都没有」「一分钱都没有」);开放设置三个开关(俱乐部公开可见 / 允许成员发帖 / 开放商家承接)失败落 openSettingErrorText 由该行下的 cy-inline-error 承接并可重试。「带上一次游玩记录」选择器失败落 postRefState=error,由半屏里的 cy-error 带重试承接。六处都有页内承接,通用 toast 会双弹
 chengyinhub-xcx/pages/club/detail/index.js 1  # 2026-10-22 W10a:期次空原因读取失败落中性空态「暂时无法确认原因」+ 重新加载,有页内承接,通用 toast 会双弹(2026-10-27 P-14:俱乐部活动月历整体删除,月历场次那一处随之撤掉,2→1)
 chengyinhub-xcx/pages/club/detail/index.js 1  # 2026-10-22 业主「入会欢迎语」:设置 → 开放设置里保存欢迎语失败(含送检拒绝 / 迁移未落库)落 openSettingErrorKey=welcomeNote,由该行下的 cy-inline-error 带原因与「重试」承接;通用 toast 会双弹

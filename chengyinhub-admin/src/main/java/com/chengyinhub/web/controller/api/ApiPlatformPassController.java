@@ -40,7 +40,7 @@ public class ApiPlatformPassController extends BaseController {
         return success(service.overview(requireMemberId()));
     }
 
-    @Operation(summary = "游戏主题库：官方开放自玩主题")
+    @Operation(summary = "游戏主题库：公开主题与逐主题通行证覆盖事实")
     @GetMapping("/library")
     public AjaxResult library(@RequestParam(required = false) Integer productType,
                               @RequestParam(required = false, defaultValue = "50") Integer limit) {
@@ -77,6 +77,12 @@ public class ApiPlatformPassController extends BaseController {
     @PostMapping("/orders/{orderNo}/confirm")
     public AjaxResult confirm(@PathVariable String orderNo) {
         return success(service.confirmXpay(requireMemberId(), orderNo));
+    }
+
+    @Operation(summary = "申请整单退款（登记申请与使用事实，进度见订单详情的 refund 字段）")
+    @PostMapping("/orders/{orderNo}/refund-apply")
+    public AjaxResult refundApply(@PathVariable String orderNo, @RequestBody(required = false) Map<String, Object> body) {
+        return success(service.applyRefund(requireMemberId(), orderNo, body == null ? null : str(body.get("reason"))));
     }
 
     @Operation(summary = "取消待支付单")

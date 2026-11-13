@@ -103,6 +103,9 @@ public class ChapterDTO implements Serializable {
     /** 单节点探索值上限,商家点位不得超过。空 = 不限。 */
     private Integer maxNodeXp;
 
+    /** D-82 章节级奖励文案(结束卡一行)。同上:不在 DTO 上声明,copyProperties 就带不进章节行。 */
+    private String rewardText;
+
     public String getName() {
         return name;
     }
@@ -247,5 +250,13 @@ public class ChapterDTO implements Serializable {
 
     public void setMaxNodeXp(Integer maxNodeXp) {
         this.maxNodeXp = maxNodeXp;
+    }
+
+    public String getRewardText() {
+        return rewardText;
+    }
+
+    public void setRewardText(String rewardText) {
+        this.rewardText = rewardText;
     }
 }

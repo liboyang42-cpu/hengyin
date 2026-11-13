@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "supersessions": {
+    "migration_20261110_ecommerce_payout_wiring.sql": "migration_20261112_dec_c_payout_jobs.sql",
     "migration_business_audit_event_20260823.sql": "migration_approval_governance_request_id_repair_20260830.sql",
     "migration_approval_governance_20260828.sql": "migration_approval_governance_request_id_repair_20260830.sql",
     "migration_club_role_event_ops_20260823.sql": "migration_club_host_reservation_20261109.sql",

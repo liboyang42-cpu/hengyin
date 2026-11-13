@@ -5674,9 +5674,9 @@
      "marketReason": "示例marketReason",
      "_canSubmitMarket": "示例_canSubmitMarket",
      "_canToggleMarket": "示例_canToggleMarket",
-     "_marketPublishTarget": "示例_marketPublishTarget",
+     "_marketStatusTarget": 3,
      "_marketActionText": "示例_marketActionText",
-     "marketPublishStatus": "示例marketPublishStatus"
+     "marketStatus": 1
     }
    ],
    "tplLoaded": true,
@@ -5715,11 +5715,11 @@
      "_stateVariant": "success",
      "_statusText": "个人审核通过",
      "_statusShort": "通过",
-     "marketPublishStatus": 1,
+     "marketStatus": 1,
      "_marketText": "广场已上架",
      "_canToggleMarket": true,
      "_marketActionText": "从广场下架",
-     "_marketPublishTarget": 0,
+     "_marketStatusTarget": 3,
      "_canSubmitMarket": false,
      "useNum": 8,
      "duration": 30
@@ -5736,11 +5736,11 @@
      "_stateVariant": "success",
      "_statusText": "个人审核通过",
      "_statusShort": "通过",
-     "marketPublishStatus": 1,
+     "marketStatus": 1,
      "_marketText": "广场已上架",
      "_canToggleMarket": true,
      "_marketActionText": "从广场下架",
-     "_marketPublishTarget": 0,
+     "_marketStatusTarget": 3,
      "_canSubmitMarket": false,
      "useNum": 8,
      "duration": 30
@@ -18613,6 +18613,11 @@
   "switchKeys": []
  },
  "F314": {
+  "data": null,
+  "dropped": [],
+  "switchKeys": []
+ },
+ "F315": {
   "data": null,
   "dropped": [],
   "switchKeys": []

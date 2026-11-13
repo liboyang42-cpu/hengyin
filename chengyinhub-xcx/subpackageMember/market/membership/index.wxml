@@ -17,9 +17,18 @@
             <text class="pp__eb">城瘾通行证</text>
             <text class="pp__h">{{view.active ? '已开通' : '未开通'}}</text>
             <text class="pp__k" wx:if="{{view.active && view.untilText}}">有效期至 {{view.untilText}}</text>
+            <view class="pp__tags" wx:if="{{view.card.planLabel || view.card.badge || view.card.teammate}}">
+              <text class="pp__tag" wx:if="{{view.card.planLabel}}">{{view.card.planLabel}}</text>
+              <text class="pp__tag" wx:if="{{view.card.teammate}}">{{view.card.teammate}}</text>
+              <text class="pp__tag pp__tag--warn" wx:if="{{view.card.badge}}">{{view.card.badge}}</text>
+            </view>
           </view>
           <!-- l-icons:钥匙是奖励时刻,用 3D 玻璃序列帧(proto/icons A 风格烤帧) -->
           <view class="pp__key"><cy-frames sheets="{{[{ src: '/subpackageMember/images/frames/glass-key.webp', n: 24 }]}}" cols="{{6}}" fw="{{112}}" fh="{{112}}" w="{{184}}" h="{{184}}" fps="{{10}}" delay="{{500}}" reduced-motion="{{reduced}}" /></view>
+        </view>
+        <view class="pp__prog" wx:if="{{view.card.progress}}">
+          <view class="pp__bar" aria-role="progressbar" aria-label="{{view.card.progress.text}}"><view class="pp__bar-fill" style="width: {{view.card.progress.pct || 0}}%;"></view></view>
+          <text class="pp__prog-t">{{view.card.progress.text}}</text>
         </view>
       </view>
 

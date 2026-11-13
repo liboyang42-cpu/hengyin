@@ -10,6 +10,12 @@
   <!-- 9-16 晚拍板第 5 条 + 9-17 总控:余额三段只给主理人本人,管理员不显示(isOwner 由 summary 接口判定) -->
   <cy-funds-stages class="section" wx:if="{{summary && (summary.isOwner || summary.personal) && (state === 'ready' || state === 'empty')}}" bind:stages="onStages" />
 
+  <view class="section" wx:if="{{(state === 'ready' || state === 'empty') && summary.isOwner && clubId}}">
+    <view class="topic-row" bindtap="openPayoutReceiver" aria-role="button" aria-label="个人收款" hover-class="cy-pressed" hover-stay-time="80">
+      <text class="topic-row-name">个人收款</text><cy-icon name="arrow-right" size="24" />
+    </view>
+  </view>
+
   <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
   <cy-error load-failure wx:elif="{{state === 'network-error'}}" title="网络连接失败" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />
   <cy-error load-failure wx:elif="{{state === 'error'}}" title="结算数据暂不可用" sub="{{errorText}}" retry="重新加载" bind:retry="retryLoad" />

@@ -23,10 +23,13 @@ test('风格 B 图形逐字来自原型 icons-b.js 第 7–80 行(sha256 与原�
   assert.deepEqual(Object.keys(B.C).filter((k) => !/D$/.test(k)), ['lime', 'sky', 'coral', 'gold', 'vio', 'paper', 'grey'])
 })
 
-test('十枚名字不变,调用处自动换图;其余 15 枚旧画法保持;未知名仍回落线索', () => {
+test('十枚名字不变,调用处自动换图;D-118:其余 15 枚也是风格 B(旧画法已删);未知名仍回落线索', () => {
   assert.equal(art.LIST.length, 25)
   for (const n of B.LIST) { assert.ok(art.isB(n), n); assert.equal(art.layers(n).b2, true, n) }
-  for (const n of ['stamp', 'trophy', 'locked', 'unlocked', 'sparkles', 'gem', 'envelope', 'star']) { assert.ok(art.has(n)); assert.ok(!art.layers(n).b2, n) }
+  // D-118:另外 15 枚补画成风格 B,不再有旧画法
+  for (const n of B.LIST2) { assert.ok(art.has(n)); assert.equal(art.layers(n).b2, true, n) }
+  assert.equal(B.LIST2.length, 15)
+  assert.deepEqual([...B.LIST, ...B.LIST2].sort(), [...art.LIST].sort())
   assert.equal(art.layers('nope').name, 'clue')
   assert.equal(art.layers('nope').b2, true)
   // 只要一张图的宿主(分享卡等)照样拿 fg
@@ -115,7 +118,7 @@ test('组件:进场后按 enter 加 e1…,idleAt 后每圈逐个累加 p1…,周
   const def = loadComponent()
   const vm = make(def, { name: 'badge' })
   def.lifetimes.attached.call(vm)
-  assert.equal(vm.data.b2, true)
+  assert.ok(vm.data.layers.length > 0)
   assert.equal(vm.data.on, false)
   run(t, 34)
   assert.equal(vm.data.on, true)
@@ -200,12 +203,15 @@ test('通行证页按 proto ps-pass:实色卡 + 标准列表行 + 底部固定�
   assert.doesNotMatch(top.replace(/\/\*[\s\S]*?\*\//g, ''), /backdrop-filter|radial-gradient/)
 })
 
-test('商家看不到通行证:我的里没有入口;通行证页 / 主题库 / 通行证与礼品页按商家视角直接收住', () => {
+test('商家看不到通行证购买入口且通行证页面收住;公开主题库对所有账号开放', () => {
   assert.match(read('subpackageMember/components/cy/profile/index.wxml'), /<view class="pc-team-entry" wx:if="\{\{!isMerchantView\}\}">\s*<cy-cell title="通行证与礼品"/)
-  for (const p of ['subpackageMember/market/membership/index.js', 'subpackageMember/market/library/index.js', 'subpackageMember/market/passes/index.js']) {
+  for (const p of ['subpackageMember/market/membership/index.js', 'subpackageMember/market/passes/index.js']) {
     assert.match(read(p), /try \{ merchant = !!roleGuard\.isMerchantView\(\) \} catch \(e\) \{ merchant = false \}/, p)
   }
   assert.match(read('subpackageMember/market/membership/index.wxml'), /wx:elif="\{\{state === 'merchant'\}\}"[^>]*title="商家账号没有通行证"/)
+  const library = read('subpackageMember/market/library/index.js')
+  assert.match(library, /url: '\/api\/public-catalog\/list', method: 'POST'/)
+  assert.doesNotMatch(library, /this\._merchant|state: '(?:merchant|off)'/)
   let def
   global.Page = (d) => { def = d }
   global.getApp = () => ({ globalData: { statusBarHeight: 20, navBarHeight: 44 }, getUserRole: () => 'merchant', getUserType: () => '', sendRequest: () => assert.fail('商家不该请求通行证接口') })

@@ -12,6 +12,9 @@ public class MerchantSubscription extends BaseEntity {
     private static final long serialVersionUID = 1L;
 
     private Long id;
+    private Long sourceOrderId;
+    public Long getSourceOrderId() { return sourceOrderId; }
+    public void setSourceOrderId(Long sourceOrderId) { this.sourceOrderId = sourceOrderId; }
 
     /** 商家 memberId */
     private Long merchantId;

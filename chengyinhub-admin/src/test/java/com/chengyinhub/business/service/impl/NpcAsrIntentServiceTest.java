@@ -137,21 +137,23 @@ class NpcAsrIntentServiceTest {
         assertEquals("NOT_SENT",f.recognize().getState());assertTrue(f.original().isQuotaRefundPending());
         verifyNoInteractions(f.speech);verify(f.quota).refundNpcAsrNotSent(7L,RID);
     }
-    @Test void unknownShowsQuotaProcessingAndNeverRequestsCompensation() {
+    @Test void unknownKeepsProviderContractButQueuesOriginalQuotaCompensation() {
         var f=new Fixture();when(f.speech.transcribe(any(),anyString())).thenThrow(new AiServiceException("controlled timeout"));
         assertEquals("UNKNOWN",f.recognize().getState());
         var result=f.service().readOutcome("shop",21L,RID,7L);
-        assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());assertEquals("PROCESSING",result.getQuotaStatus());
+        assertEquals("REQUEST_OUTCOME_UNKNOWN",result.getErrorCode());assertEquals("RELEASE_PENDING",result.getQuotaStatus());
         assertTrue(result.getSafeText().contains("额度状态处理中"));assertFalse(result.isRetryable());
-        f.recognize();verify(f.quota,never()).refundNpcAsrNotSent(anyLong(),anyString());
+        f.recognize();verify(f.quota,times(1)).refundNpcAsrNotSent(7L,RID);
         verify(f.quota,never()).retainQuota(anyLong(),anyString(),anyString(),anyString());
         verify(f.speech,times(1)).transcribe(any(),anyString());
     }
-    @Test void receivedEmptyTextStillHoldsTheSingleFunctionQuota() {
+    @Test void receivedEmptyTextQueuesRefundAndCannotHandoffOrConsumeAgain() {
         var f=new Fixture();when(f.speech.transcribe(any(),anyString())).thenReturn("");
-        assertEquals("",f.recognize().getTranscript());assertEquals("HELD",f.service().readOutcome("shop",21L,RID,7L).getQuotaStatus());
-        verify(f.quota).retainQuota(7L,"npc_shop_chat",f.original().getQuotaReservation(),"ASR_RECEIVED");
-        verify(f.quota,never()).refundNpcAsrNotSent(anyLong(),anyString());
+        assertEquals("",f.recognize().getTranscript());assertEquals("RELEASE_PENDING",f.service().readOutcome("shop",21L,RID,7L).getQuotaStatus());
+        verify(f.quota,never()).retainQuota(anyLong(),anyString(),anyString(),anyString());
+        assertFalse(f.service().beginHandoff(7L,RID,21L,41L));f.recognize();
+        verify(f.quota,times(1)).refundNpcAsrNotSent(7L,RID);
+        verify(f.quota,times(1)).consumePlannedQuota(anyLong(),anyString(),anyString());
     }
     @Test void provenNotSentAfterDeletionQueuesOnlyTheOriginalRefundWithoutRestoringBody() {
         var f=new Fixture();when(f.speech.transcribe(any(),anyString())).thenAnswer(call -> {

@@ -36,7 +36,8 @@ test('P-35 放行提示:章节变了才说,首次读到不说', () => {
 test('play 页接线:开玩前先问、章节门挡住不自动进正文、轮询放行后接着走', () => {
   const js = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8');
   assert.match(js, /if \(this\._leadHolds\(node\.chapterId\)\) \{/);
-  assert.match(js, /if \(held\) return;/);
+  // D-46(业主 2026-11-11「点了才能进」):章节门不再有页面计时兜底,被挡与否都只等玩家点按
+  assert.doesNotMatch(js, /_gateTimer\s*=\s*setTimeout/);
   assert.match(js, /const cue = releaseCue\(prevLead, that\.data\.lead\);/);
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8');
   // 第四轮:被挡住时挂「等待放行」屏(见 play-chapter-hold-screen-p08-r4.test.js),不在地图上另挂一行

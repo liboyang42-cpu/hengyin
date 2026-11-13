@@ -336,6 +336,7 @@
           <view class="dd merchant-chapter-option" wx:for="{{myChapterApplications}}" wx:key="id" wx:for-item="application">
             <view>{{application.chapterName || '未命名章节'}} · {{application.statusLabel}}</view>
             <view class="merchant-chapter-meta" wx:if="{{application.termsLabel}}">{{application.termsLabel}}</view>
+            <view class="merchant-chapter-meta" wx:if="{{application.canAcceptInvite && application.termsMode === 'PERK' && info.productType === 2}}">票款由主办方收取；店铺如需结算，请联系主办方线下处理</view>
             <view class="merchant-chapter-actions" wx:if="{{application.canSubmitOffer || application.canWithdraw || application.canConfigureNode}}">
               <cy-btn wx:if="{{application.canConfigureNode}}" variant="ghost" size="sm" class="cy-btn-inline"
                 data-chapter-id="{{application.chapterId}}" bindtap="openChapterNodeForm">配置节点</cy-btn>

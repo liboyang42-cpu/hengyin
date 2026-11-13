@@ -124,6 +124,9 @@ public interface IWxContentSecurityService
      */
     int BIZ_TYPE_MERCHANT_NPC = 18;
 
+    /** 私有上传媒体审核；bizId = app_media_asset.id。 */
+    int BIZ_TYPE_MEDIA_ASSET = 19;
+
     /**
      * 批量送检某条内容的图片（异步）。会拆分 imgArr（逗号/分号分隔），逐张调用 checkMediaAsync，
      * 并把 trace_id 与业务目标登记进 MySQL inbox；Redis 映射仅保留作迁移兼容与辅助清理。

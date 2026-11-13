@@ -290,6 +290,12 @@ class Boot4JacksonMvcContractTest
         }
 
         @Bean
+        org.springframework.transaction.PlatformTransactionManager fixtureTransactionManager()
+        {
+            return mock(org.springframework.transaction.PlatformTransactionManager.class);
+        }
+
+        @Bean
         AppMediaAssetService fixtureMediaAssets()
         {
             // Only registry readback and final storage signatures are fixtures; guard and MVC are real.

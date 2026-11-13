@@ -52,7 +52,8 @@
             attempt_count = attempt_count + 1,
             update_time = NOW(3)
         where trace_hash = UNHEX(#{traceHash})
-          and (state in (0, 3) or (state = 1 and lease_until &lt;= NOW(3)))
+          and (state in (0, 3) or (state = 1 and lease_until &lt;= NOW(3))
+               or (state = 2 and verdict = 0 and #{verdict} = 1))
     </update>
 
     <!-- lease 只在进入最终事务时校验；事务随后一直持有 inbox+目标行锁，无 watchdog TOCTOU。 -->
@@ -99,6 +100,7 @@
             <when test="bizType == 16">select id from npc_profile where id = #{bizId} and scope_type = 4 for update</when>
             <when test="bizType == 17">select id from community_post where id = #{bizId} for update</when>
             <when test="bizType == 18">select id from npc_profile where id = #{bizId} and scope_type = 2 for update</when>
+            <when test="bizType == 19">select id from app_media_asset where id = #{bizId} for update</when>
             <otherwise>select cast(null as signed)</otherwise>
         </choose>
     </select>

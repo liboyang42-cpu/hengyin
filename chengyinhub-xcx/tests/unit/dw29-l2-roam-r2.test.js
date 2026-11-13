@@ -212,7 +212,9 @@ test('通关「去发现」、私信空态「去发现找人」、详情返回�
 test('我的 → 帖文只读本人帖子(is_my=1 → /me/posts),俱乐部详情只读本俱乐部', () => {
   const profile = read('subpackageMember/components/cy/profile/index.js');
   assert.match(profile, /is_my: that\.data\.isSelf \? 1 : 0/);
-  assert.match(read('utils/community-post-api.js'), /data\.is_my \? '\/me\/posts'/);
+  const adapter = read('utils/community-post-api.js');
+  assert.match(adapter, /own = Number\(data\.is_my\) === 1/);
+  assert.match(adapter, /own \? '\/me\/posts'/);
   const club = read('pages/club/detail/index.js');
   assert.match(club, /\/api\/club\/post\/list/);
   assert.doesNotMatch(club, /scope: 'all'/);

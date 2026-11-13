@@ -56,7 +56,7 @@ class TemplateLibraryPackTypeFilterMyBatisTest {
                 + "question_a text, question_b text, question_c text, question_d text, correct_answer varchar(255),"
                 + "question_img varchar(1000), question_audio varchar(1000),"
                 + "question_option_media_json text, preference_json text, advanced_config_json text,"
-                + "activity_categoryids varchar(255), status bigint, publish_status bigint, reason varchar(255),"
+                + "activity_categoryids varchar(255), status bigint, reason varchar(255),"
                 + "del_flag int, rating decimal(10,2), use_num int, pack_type tinyint,"
                 + "create_by varchar(64), create_time timestamp, update_by varchar(64), update_time timestamp)");
         insert(jdbc, "单节点玩法A", 0);
@@ -86,13 +86,12 @@ class TemplateLibraryPackTypeFilterMyBatisTest {
         query.setPackType(packType);
         query.setDelFlag(0);
         query.setStatus(1L);
-        query.setPublishStatus(1L);
         return query;
     }
 
     private static void insert(JdbcTemplate jdbc, String title, Integer packType) {
-        jdbc.update("insert into cms_template_library(title, status, publish_status, del_flag, use_num, pack_type)"
-                + " values (?, 1, 1, 0, 0, ?)", title, packType);
+        jdbc.update("insert into cms_template_library(title, status, del_flag, use_num, pack_type)"
+                + " values (?, 1, 0, 0, ?)", title, packType);
     }
 
     private static SqlSessionFactory factory(DriverManagerDataSource dataSource) throws Exception {

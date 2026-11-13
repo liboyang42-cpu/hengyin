@@ -84,6 +84,14 @@ class MerchantMarketingAnalyticsMapperContractTest {
         assertTrue(sql.contains("from cms_registration r"), "报名/支付事实仍须来自 cms_registration:" + sql);
     }
 
+    private Configuration parsed() throws Exception {
+        Configuration configuration = new Configuration();
+        try (InputStream in = Resources.getResourceAsStream(XML)) {
+            new XMLMapperBuilder(in, configuration, XML, configuration.getSqlFragments()).parse();
+        }
+        return configuration;
+    }
+
     private String boundSql() throws Exception {
         Configuration configuration = new Configuration();
         try (InputStream in = Resources.getResourceAsStream(XML)) {
@@ -110,5 +118,28 @@ class MerchantMarketingAnalyticsMapperContractTest {
             from += needle.length();
         }
         return count;
+    }
+
+    /**
+     * D-93(2026-11-11 营销首页与店铺参谋指标合并):两页「核销」唯一取数。
+     * 商家 ACTIVE 核销 + 自有活动验票,owner 只来自服务端,半开窗口。
+     */
+    @Test
+    void sharedVerifyEventsAreOwnerScopedHalfOpenAndIncludeActivityTicketScans() throws Exception {
+        Configuration configuration = parsed();
+        Map<String, Object> params = new HashMap<>();
+        params.put("ownerMemberId", 99L);
+        params.put("since", new Date(1_000L));
+        params.put("endExclusive", new Date(3_000L));
+        String sql = normalized(configuration.getMappedStatement(NS + "selectVerifyEventTimes")
+                .getBoundSql(params).getSql());
+        assertTrue(sql.contains("rd.merchant_id = ?"), "核销按商家主体 ownerMemberId:" + sql);
+        assertTrue(sql.contains("rd.status = 'active'"), "冲正核销不得算事件:" + sql);
+        assertTrue(sql.contains("rd.create_time >= ? and rd.create_time < ?"), sql);
+        assertTrue(sql.contains("a.member_id = ?") && sql.contains("r.verification_status = 1"),
+                "商家自有活动验票同样是核销(与核销台账同源):" + sql);
+        assertTrue(sql.contains("r.verification_time >= ? and r.verification_time < ?"), sql);
+        assertFalse(sql.contains("<= ?"), "时间上界不得闭区间:" + sql);
+        assertFalse(sql.contains("merchant_chapter_offer"), "不得回到店铺参谋旧的权益 cohort 口径:" + sql);
     }
 }
