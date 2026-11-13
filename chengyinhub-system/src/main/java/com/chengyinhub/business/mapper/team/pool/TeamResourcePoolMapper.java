@@ -11,6 +11,8 @@ public interface TeamResourcePoolMapper
     Map<String, Object> selectTeam(@Param("teamId") long teamId);
     int countActiveMember(@Param("teamId") long teamId, @Param("memberId") long memberId);
     Long selectActivityTopic(@Param("activityId") long activityId);
+    /** 查看者在这一局（owner_type 1 = 主题自玩，2 = 场次）里仍在岗的未结束队伍；没有为 null。 */
+    Long selectViewerRunTeam(@Param("memberId") long memberId, @Param("ownerType") int ownerType, @Param("ownerId") long ownerId);
     String selectPublishedTheme(@Param("topicId") long topicId);
     int countListedNode(@Param("topicId") long topicId, @Param("nodeId") long nodeId);
 

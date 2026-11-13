@@ -91,6 +91,7 @@
     "20261113_im_channels_second_pass": ["20261112_im_channels_platform", "20261105_l9_friend_foundation", "20261105_l8_chain_storage"],
     "20261114_im_channels_third_pass": ["20261113_im_channels_second_pass", "20261012_app_media_asset", "20261012_app_media_asset_namespaces"],
     "20261114_club_notify_default": ["20261113_im_channels_second_pass"],
+    "20261115_im_channels_fourth_pass": ["20261114_im_channels_third_pass"],
     "20261101_author_write_receipt": [],
     "20261101_theme_categories": [],
     "20261101_prefab_life_template_copy": ["seed_prefab_life_20260918"],

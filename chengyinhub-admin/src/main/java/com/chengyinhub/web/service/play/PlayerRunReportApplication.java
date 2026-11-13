@@ -73,6 +73,9 @@ public class PlayerRunReportApplication {
     private ScopedLeaderboardMapper scopedLeaderboardMapper;
     @Autowired
     private PlayCompletionFacts playCompletionFacts;
+    /** 战报的 teamId（队内榜入口）；测试直接 new 时为 null。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.team.pool.TeamResourcePoolService teamPool;
     @Autowired
     private PlayNodeContext playNodeContext;
     @Autowired
@@ -226,6 +229,7 @@ public class PlayerRunReportApplication {
                 : (boundRun ? PlayerRunReportVO.PROGRESS_RUN_INSTANCE
                             : PlayerRunReportVO.PROGRESS_UNATTRIBUTED));
         vo.setRunId(session == null ? null : session.getId());
+        vo.setTeamId(PlayRunTeam.of(teamPool, memberId, actId, tId));
         vo.setPlayInstanceId(boundRun ? session.getPlayInstanceId() : null);
         vo.setRunKind(actId > 0L ? "ACTIVITY" : "SELF_PLAY");
         vo.setCompletedNodes(completed);
