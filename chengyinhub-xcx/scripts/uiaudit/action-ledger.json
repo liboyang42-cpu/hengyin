@@ -1270261,7 +1270261,7 @@
       "targets": {
         "routes": [
           "pages/play/index?topicId=",
-          "subpackageMember/signup/index",
+          "subpackageMember/signup/index?",
           "subpackageMember/signup/index?stype=0&arrive=1"
         ],
         "apis": [],

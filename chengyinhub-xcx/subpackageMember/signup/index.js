@@ -86,7 +86,7 @@ Page({
     that._walletOwner = walletOwner();
     const focus = options && options.focusId;
     that._explicitFocus = !!focus; that._arrive = !!(options && String(options.arrive) === '1') && !reducedMotionOn();
-    that._focusId = exactRegistrationId(focus) ? String(focus) : '';
+    that._focusId = exactRegistrationId(focus) ? String(focus) : ''; that._wantTopicId = /^[1-9]\d{0,18}$/.test(String((options && options.topicId) || '')) ? String(options.topicId) : ''; // 主题页带 topicId 打开:落在该主题的票上
     that.setData({ focusState: focus ? (that._focusId ? 'loading' : 'missing') : '',
       focusError: focus && !that._focusId ? '原报名编号无效，请返回参与记录重新打开' : '' });
     // 两条支线的原料。data 里没有它们,所以在这里立好,别让后面的 concat 撞上 undefined
@@ -308,7 +308,7 @@ Page({
     if (state === 'error' && ((this._topic || {}).login || (this._activity || {}).login)) state = 'login';
     const previous = (this.data.ticketList || [])[this.data.currentSwiperTicket];
     const previousIndex = previous ? list.findIndex(item => item.wKey === previous.wKey) : -1;
-    const currentIndex = previousIndex >= 0 ? previousIndex : 0;
+    const want = this._wantTopicId && (this._topic || {}).state !== 'loading' ? topicTicketIndex(list, this._wantTopicId) : -2; if (want > -2) this._wantTopicId = ''; const currentIndex = want >= 0 ? want : previousIndex >= 0 ? previousIndex : 0; // 主题票到了才定位,只定一次
     const cur = list[currentIndex] || {};
     this.setData({
       ticketList: list,
@@ -750,6 +750,14 @@ function pageTurn(n, dx, vx) {
   return 0;
 }
 /* 卡面文字:类型 · 剩几天(有到期日才写),状态不是待使用时写状态;tab 归类 */
+/* 主题票在票夹里的位置:票是 ownerType=1 的主题票,主题号取 cmsTopic.id,缺了才取 ownerId */
+function topicTicketIndex(list, topicId) {
+  const want = String(topicId || '');
+  if (!want) return -1;
+  return (list || []).findIndex(item => item && item.kind === 'topic'
+    && String((item.cmsTopic && item.cmsTopic.id) || item.ownerId || '') === want);
+}
+
 function walletCard(item) {
   // 卡面「剩 N 天」与背面「N 天内过期」同一套自然日算法(原来卡面按 24 小时向上取整,同一张票两面差一天)
   const days = passDaysLeft(item.wUntil);
@@ -795,4 +803,4 @@ function filterTickets(list, key) {
   if (key === 'upcoming') return list.filter(t => t.topicCompleted !== true);
   return list;
 }
-if (typeof module !== 'undefined') module.exports = { pagePoses, pageTurn, filterTickets };
+if (typeof module !== 'undefined') module.exports = { pagePoses, pageTurn, filterTickets, topicTicketIndex };

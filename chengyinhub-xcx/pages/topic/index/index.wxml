@@ -394,7 +394,7 @@
             <view class="topic-story-paywall__fade"></view>
             <view class="topic-story-paywall__card">
               <view class="topic-story-paywall__title">解锁完整体验</view>
-              <view class="topic-story-paywall__sub">解锁后可看全部故事线、答题揭秘与到店权益</view>
+              <view class="topic-story-paywall__sub">解锁后可看全部故事线、答题揭秘{{merchantCards.length ? '与到店权益' : ''}}</view>
               <view class="topic-story-paywall__price-row">
                 <view class="topic-story-paywall__price">{{money.amount(info.selfPlayPrice)}}</view>
               </view>

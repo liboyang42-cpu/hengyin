@@ -1261,7 +1261,7 @@ image.david_stu {
   --topic-story-paywall-title-color: #cc4bff; /* ds-ok: Figma 4319:13077 标题紫, tokens 无同值语义色 */
   --topic-story-paywall-transparent-bg: rgba(0, 0, 0, 0); /* ds-ok: Figma 4319:13077 解锁卡透明渐变起点, tokens 无透明黑语义色 */
   --topic-story-paywall-cta-bg: #FFFFFF; /* ds-ok: Figma 4319:13077 CTA 纯白,现有主按钮 token 为 #F8F8F8 */
-  padding: 0 var(--cy-page-x) var(--cy-space-6);
+  padding: 0 var(--cy-page-x) calc(168rpx + env(safe-area-inset-bottom)); /* ds-ok: 留出右下浮动价格按钮(50px+16px)的高度,不压住「立即解锁」和找回订单 */
 }
 
 .topic-story-paywall__fade {

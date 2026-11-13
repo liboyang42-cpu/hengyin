@@ -153,16 +153,32 @@ function buildStoryCards(info, merchantCards) {
   })).filter((c) => c.title);
 }
 
+/* 结局章:章名以「结局」开头(和 chapterHeading 判自带序号的口径一致) */
+const ENDING_NAME = /^结局/;
+function isEndingChapter(c) { return ENDING_NAME.test(text(c && c.name)); }
+
+/* 「4 章 · 3 个结局」:totalChapterCount 把结局也算进去了,只数故事章;
+   结局数只能从已下发的 chaptersList 里认,认不出就不写。 */
+function chapterCountText(info) {
+  const d = info || {};
+  const list = d.chaptersList || [];
+  const total = Number(d.totalChapterCount) > 0 ? Number(d.totalChapterCount) : list.length;
+  const endings = Math.min(list.filter(isEndingChapter).length, total);
+  const story = total - endings;
+  if (story <= 0 && !endings) return '';
+  if (story <= 0) return endings + ' 个结局';
+  return story + ' 章' + (endings ? ' · ' + endings + ' 个结局' : '');
+}
+
 function storyMeta(info) {
   const d = info || {};
   const parts = [];
   // chaptersList 只含未购前可预览的章(防剧透),总章数看 totalChapterCount(实走 A2:两章的主题写成「1 章」)
-  const chapters = Number(d.totalChapterCount) > 0 ? Number(d.totalChapterCount) : (d.chaptersList || []).length;
   if (Number(d.productType) === 2) {
     const shops = Number(d.registrationMerchantCount) || 0;
     if (shops > 0) parts.push(shops + ' 家商家');
     parts.push('任意顺序');
-  } else if (chapters) parts.push(chapters + ' 章');
+  } else if (chapterCountText(d)) parts.push(chapterCountText(d));
   if (text(d.totalTimeFormatted)) parts.push('约 ' + text(d.totalTimeFormatted));
   const km = Number(d.totalMileage);
   if (km > 0) parts.push(km + ' 公里');
@@ -220,7 +236,12 @@ function buyChips(info, meta) {
   const d = info || {};
   const win = passWindow({ topicEnd: d.endDate });
   const out = ['可玩至 ' + win.untilText];
-  if (text(meta)) out.push(text(meta).split(' · ').slice(0, 2).join(' · '));
+  if (text(meta)) {
+    // 「4 章 · 3 个结局」是一块,不拆开;再带上后面的时长
+    const segs = text(meta).split(' · ');
+    if (segs[1] && /^\d+ 个结局$/.test(segs[1])) segs.splice(0, 2, segs[0] + ' · ' + segs[1]);
+    out.push(segs.slice(0, 2).join(' · '));
+  }
   out.push(Number(d.productType) === 2 ? '任意顺序' : '可分几天玩完');
   return out;
 }
@@ -318,4 +339,4 @@ function buildTeams(rows, topicId) {
   return { rows: out, need };
 }
 
-module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, chapterHeading, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, chapterGuide, pickChapterImages, progressFallback, storyMeta, buildMerchantCards, passWindow, buildTeams };
+module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, chapterHeading, isEndingChapter, chapterCountText, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, chapterGuide, pickChapterImages, progressFallback, storyMeta, buildMerchantCards, passWindow, buildTeams };
