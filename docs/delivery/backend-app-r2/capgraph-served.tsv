@@ -1,0 +1,177 @@
+/api/activity/create-requests/read	POST	ApiAppGapsOriginalRequestController.activityRead	activities
+/api/activity/create-requests/resume-post-processing	POST	ApiAppGapsOriginalRequestController.activityRead	activities
+/api/activity/create-requests/submit	POST	ApiAppGapsOriginalRequestController.activitySubmit	activities
+/api/approved-topic-release/v1/prepare	POST	ApiAppGapsApprovedTopicReleaseController.prepare	creator/publishing
+/api/approved-topic-release/v1/publish	POST	ApiAppGapsApprovedTopicReleaseController.publish	creator/publishing
+/api/approved-topic-release/v1/review/current	POST	ApiAppGapsApprovedTopicReleaseController.reviewCurrent	creator/publishing
+/api/approved-topic-release/v1/review/prepare	POST	ApiAppGapsApprovedTopicReleaseController.reviewPrepare	creator/publishing
+/api/approved-topic-release/v1/review/sources	POST	ApiAppGapsApprovedTopicReleaseController.reviewSources	creator/publishing
+/api/approved-topic-release/v1/review/status	POST	ApiAppGapsApprovedTopicReleaseController.reviewStatus	creator/publishing
+/api/approved-topic-release/v1/review/submit	POST	ApiAppGapsApprovedTopicReleaseController.reviewSubmit	creator/publishing
+/api/approved-topic-release/v1/status	POST	ApiAppGapsApprovedTopicReleaseController.status	creator/publishing
+/api/channel/{}/board	POST	ApiChannelProgressController.bind	channels
+/api/channel/{}/progress/overview	GET	ApiChannelProgressController.overview	channels
+/api/channel/{}/progress/privacy	POST	ApiProgressPrivacyController.saveChannel	channels
+/api/channels/member-state-requests	GET	ApiChannelPlatformController.detail	channels (native, no backend)
+/api/channels/{}	GET	ApiChannelPlatformController.detail	channels (native, no backend)
+/api/channels/{}/archive	POST	ApiChannelPlatformController.archive	channels (native, no backend)
+/api/channels/{}/effective/{}	GET	ApiChannelPlatformController.effective	channels (native, no backend)
+/api/channels/{}/members	GET	ApiChannelPlatformController.members	channels (native, no backend)
+/api/channels/{}/op-log	GET	ApiChannelPlatformController.opLog	channels (native, no backend)
+/api/channels/{}/permissions	GET	ApiChannelPlatformController.permissions	channels (native, no backend)
+/api/channels/{}/permissions/{}/{}	PUT	ApiChannelPlatformController.putOverwrite	channels (native, no backend)
+/api/channels/{}/restore	POST	ApiChannelPlatformController.restore	channels (native, no backend)
+/api/city-game/action-budget/command	POST	ApiCityGameR491Controller.budgetCommand	city game
+/api/city-game/action-budget/request/{}	GET	ApiCityGameR491Controller.budgetReceipt	city game
+/api/city-game/action-budget/state	GET	ApiCityGameR491Controller.budgetState	city game
+/api/city-game/merchant/operations/availability	GET	ApiCityGameR491Controller.merchantAvailability	city game
+/api/city-game/merchant/operations/intent	POST	ApiCityGameR491Controller.merchantIntent	city game
+/api/city-game/player-rules	GET	ApiCityGameController.playerRules	city game
+/api/city-game/state/deltas	GET	ApiCityGameController.stateDeltas	city game
+/api/city-game/state/snapshot	GET	ApiCityGameController.stateSnapshot	city game
+/api/city-game/task-history	GET	ApiCityGameR491Controller.history	city game
+/api/city-game/team-participation/command	POST	ApiCityGameController.command	city game
+/api/city-game/team-participation/invite	GET	ApiCityGameController.invite	city game
+/api/city-game/team-participation/state	GET	ApiCityGameController.teamState	city game
+/api/city-game/{}/request/{}	GET	ApiCityGameController.originalReceipt	city game
+/api/city-value/visits	POST	ApiCityGameR491Controller.valueBegin	city game
+/api/city-value/visits/feedback	POST	ApiCityGameR491Controller.valueFeedback	city game
+/api/city-value/visits/services	GET	ApiCityGameR491Controller.valueServices	city game
+/api/city/walking/target	GET	ApiCityGameR491Controller.walkingTarget	city game
+/api/club/admission/receipt	POST	ApiClubController.admissionReceipt	club
+/api/club/badge/original-receipt	POST	ApiClubController.badgeOriginalReceipt	club
+/api/club/event-ops/series/original-result	POST	ApiClubEventOpsController.seriesOriginalResult	club
+/api/club/open-settings/welcome-note-receipt	POST	ApiClubController.welcomeNoteReceipt	club
+/api/club/post/operation/receipt	POST	ApiClubController.postOperation	club
+/api/club/roles/assign-receipt	POST	ApiClubRoleController.assignReceipt	club
+/api/club/roles/revoke-receipt	POST	ApiClubRoleController.revokeReceipt	club
+/api/club/settings/notify-level	POST	ApiChannelNotifyController.saveClubDefault	club
+/api/coupon/command-receipt	POST	ApiCouponController.commandReceipt	coupons
+/api/free-explore/bundle/order/refund	POST	ApiFreeExploreBundleExtrasController.refund	roam
+/api/free-explore/bundle/renewal-intent	POST	ApiFreeExploreBundleExtrasController.renewal	roam
+/api/free-explore/bundle/review	POST	ApiFreeExploreBundleExtrasController.review	roam
+/api/free-explore/bundle/shelf	GET	ApiFreeExploreBundleExtrasController.shelf	roam
+/api/free-explore/bundle/transfer	POST	ApiFreeExploreBundleExtrasController.transferWrite	roam
+/api/free-explore/bundle/voucher	GET	ApiFreeExploreBundleExtrasController.voucher	roam
+/api/free-explore/bundle/voucher/appeal	POST	ApiFreeExploreBundleExtrasController.appeal	roam
+/api/friend/accept	POST	ApiFriendController.write	social/friends
+/api/friend/cancel	POST	ApiFriendController.write	social/friends
+/api/friend/channel-invite	POST	ApiFriendController.write	social/friends
+/api/friend/directory	GET	ApiFriendController.directory	social/friends
+/api/friend/directory/detail	GET	ApiFriendController.directoryDetail	social/friends
+/api/friend/group/delete	POST	ApiFriendController.groupDelete	social/friends
+/api/friend/group/list	POST	ApiFriendController.groups	social/friends
+/api/friend/group/save	POST	ApiFriendController.groupSave	social/friends
+/api/friend/list	GET	ApiFriendController.list	social/friends
+/api/friend/metadata	GET	ApiFriendController.metadata	social/friends
+/api/friend/metadata/receipt	GET	ApiFriendController.metadataReceipt	social/friends
+/api/friend/metadata/settle	POST	ApiFriendController.metadataSettle	social/friends
+/api/friend/progress	GET	ApiFriendController.progress	social/friends
+/api/friend/receipt	GET	ApiFriendController.receipt	social/friends
+/api/friend/reject	POST	ApiFriendController.write	social/friends
+/api/friend/relationship	GET	ApiFriendController.relationship	social/friends
+/api/friend/remark	POST	ApiFriendController.remark	social/friends
+/api/friend/removal/receipt	GET	ApiFriendController.removalReceipt	social/friends
+/api/friend/removal/settle	POST	ApiFriendController.removalSettle	social/friends
+/api/friend/remove	POST	ApiFriendController.remove	social/friends
+/api/friend/request	POST	ApiFriendController.write	social/friends
+/api/friend/requests	GET	ApiFriendController.requests	social/friends
+/api/friend/team-invite	POST	ApiFriendController.write	social/friends
+/api/growth/leaderboard/anonymous	POST	ApiGrowthController.anonymousLeaderboard	leaderboards/growth
+/api/guilds/{}/{}/channels	GET	ApiChannelPlatformController.directory	club
+/api/guilds/{}/{}/channels/manage	GET	ApiChannelPlatformController.manage	club
+/api/im/appeals	POST	ApiChannelGovernanceController.submitAppeal	messaging
+/api/im/chain/close	POST	ApiChannelInteractionController.chain	messaging
+/api/im/chain/create	POST	ApiChannelInteractionController.chain	messaging
+/api/im/chain/info	GET	ApiChannelInteractionController.info	messaging
+/api/im/chain/join	POST	ApiChannelInteractionController.chain	messaging
+/api/im/chain/withdraw	POST	ApiChannelInteractionController.chain	messaging
+/api/im/channel/checkin	POST	ApiChannelInteractionController.checkin	messaging
+/api/im/channel/checkin-rank	GET	ApiChannelInteractionController.rank	messaging
+/api/im/channel/checkin-request	GET	ApiChannelInteractionController.checkinReceipt	messaging
+/api/im/channel/checkin-status	GET	ApiChannelInteractionController.status	messaging
+/api/im/device/attempts	GET	ApiChannelNotifyController.pushAttempts	messaging
+/api/im/file/receipt	GET	ApiImMediaController.receipt	messaging
+/api/im/file/scan	POST	ApiImMediaController.scan	messaging
+/api/im/file/upload	POST	ApiImMediaController.upload	messaging
+/api/im/interaction/request	GET	ApiChannelInteractionController.chainReceipt	messaging
+/api/im/message	GET	ApiImMediaController.message	messaging
+/api/im/message/context	GET	ApiChannelMessageController.context	messaging
+/api/im/message/edit	POST	ApiChannelMessageController.edit	messaging
+/api/im/message/mutations	GET	ApiChannelMessageController.mutations	messaging
+/api/im/message/recall	POST	ApiChannelMessageController.recall	messaging
+/api/im/message/request	GET	ApiChannelMessageController.request	messaging
+/api/im/message/{}/revisions	GET	ApiChannelMessageController.revisions	messaging
+/api/im/moderation/actions	GET	ApiChannelGovernanceController.actions	messaging
+/api/im/moderation/ban	POST	ApiChannelGovernanceController.moderate	messaging
+/api/im/moderation/kick	POST	ApiChannelGovernanceController.moderate	messaging
+/api/im/moderation/me	GET	ApiChannelGovernanceController.mine	messaging
+/api/im/moderation/timeout	POST	ApiChannelGovernanceController.moderate	messaging
+/api/im/mute-receipt	GET	ApiChannelNotifyController.muteReceipt	messaging
+/api/im/mute-state	GET	ApiChannelNotifyController.muteState	messaging
+/api/im/notify-log	GET	ApiChannelNotifyController.deliveryLog	messaging
+/api/im/notify-pref	GET	ApiChannelNotifyController.preferences	messaging
+/api/im/pin	POST	ApiChannelMessageController.pin	messaging
+/api/im/pins	GET	ApiChannelMessageController.pins	messaging
+/api/im/pins/sort	POST	ApiChannelMessageController.sortPins	messaging
+/api/im/read-receipt	GET	ApiChannelNotifyController.readReceipt	messaging
+/api/im/read-state	GET	ApiChannelNotifyController.readState	messaging
+/api/im/roles	POST	ApiChannelGovernanceController.createRole	messaging
+/api/im/route-share-source	POST	ApiImController.routeShareSource	messaging
+/api/im/search	GET	ApiChannelMessageController.search	messaging
+/api/im/unpin	POST	ApiChannelMessageController.unpin	messaging
+/api/im/unread-summary	GET	ApiChannelNotifyController.unreadSummary	messaging
+/api/im/video/policy	GET	ApiImMediaController.videoPolicy	messaging
+/api/im/video/receipt	GET	ApiImMediaController.receipt	messaging
+/api/im/video/upload	POST	ApiImMediaController.upload	messaging
+/api/im/voice/receipt	GET	ApiImMediaController.receipt	messaging
+/api/im/voice/upload	POST	ApiImMediaController.upload	messaging
+/api/invite/revoke	POST	ApiChannelAdmissionController.revoke	referral/invite
+/api/join-request/approve	POST	ApiChannelAdmissionController.approve	club
+/api/join-request/cancel	POST	ApiChannelAdmissionController.cancel	club
+/api/join-request/reject	POST	ApiChannelAdmissionController.reject	club
+/api/map/public-layers	POST	ApiAppGapsMapController.publicLayers	map/search
+/api/mod-commerce	ANY	ApiAppGapsWorkshopController.commerceOff	workshop/mods
+/api/native/blacklist/current	GET	ApiNativeBlacklistController.current	native-only (no backend)
+/api/native/blacklist/list	GET	ApiNativeBlacklistController.list	native-only (no backend)
+/api/native/blacklist/receipt	GET	ApiNativeBlacklistController.receipt	native-only (no backend)
+/api/native/blacklist/settle	POST	ApiNativeBlacklistController.settle	native-only (no backend)
+/api/native/blacklist/unblock	POST	ApiNativeBlacklistController.unblock	native-only (no backend)
+/api/native/channels/read-through	POST	ApiChannelMessageController.readThrough	native-only (no backend)
+/api/onboarding/get	POST	ApiChannelSurfaceController.onboardingJson	profile
+/api/onboarding/submit	POST	ApiChannelSurfaceController.submit	profile
+/api/play/advanced/time-window	GET	ApiAdvancedPlayController.timeWindow	play runtime
+/api/play/city-orientation/answer	POST	ApiAppGapsPlayerController.orientationAnswer	play runtime
+/api/play/city-orientation/receipt	GET	ApiAppGapsPlayerController.orientationReceipt	play runtime
+/api/play/egg/collect	POST	ApiPlayerGapsController.collectEgg	play runtime
+/api/play/route-action	GET	ApiPlayerGapsController.routeAction	play runtime
+/api/privacy/progress	POST	ApiProgressPrivacyController.save	account/compliance
+/api/progress/meter	GET	ApiChannelProgressController.meter	play runtime
+/api/progress/requests	GET	ApiProgressPrivacyController.settingsReceipt	play runtime
+/api/progress/requests/{}	GET	ApiProgressPrivacyController.progressReceipt	play runtime
+/api/project/state-requests/context	POST	ApiAppGapsOriginalRequestController.stateContext	creator/publishing
+/api/project/state-requests/read	POST	ApiAppGapsOriginalRequestController.stateRead	creator/publishing
+/api/project/state-requests/submit	POST	ApiAppGapsOriginalRequestController.stateSubmit	creator/publishing
+/api/space/join-pause	POST	ApiChannelAdmissionController.pause	club
+/api/team/original-request	POST	ApiFriendController.teamCommand	team
+/api/template/author-requests/read	POST	ApiAppGapsOriginalRequestController.templateRead	templates
+/api/template/author-requests/submit	POST	ApiAppGapsOriginalRequestController.templateSubmit	templates
+/api/topic/attribute-author	GET	ApiAppGapsTopicController.attributeList	topics/routes
+/api/topic/attribute-author/references	GET	ApiAppGapsTopicController.attributeReferences	topics/routes
+/api/topic/attribute-author/request	GET	ApiAppGapsTopicController.attributeRequest	topics/routes
+/api/topic/attribute-author/validate	POST	ApiAppGapsTopicController.attributeValidate	topics/routes
+/api/topic/cover/selection	POST	ApiAppGapsTopicController.coverSelect	topics/routes
+/api/topic/cover/selection/current	GET	ApiAppGapsTopicController.coverCurrent	topics/routes
+/api/topic/cover/selection/status	POST	ApiAppGapsTopicController.coverStatus	topics/routes
+/api/topic/cover/upload	POST	ApiAppGapsTopicController.coverUpload	topics/routes
+/api/topic/cover/{}/content	GET	ApiAppGapsTopicController.coverContent	topics/routes
+/api/topic/edit-requests/read	POST	ApiAppGapsTopicController.editRead	topics/routes
+/api/topic/edit-requests/resume-post-processing	POST	ApiAppGapsTopicController.editResume	topics/routes
+/api/topic/edit-requests/submit	POST	ApiAppGapsTopicController.editSubmit	topics/routes
+/api/topic/module-preflight	GET	ApiAppGapsTopicController.modulePreflight	topics/routes
+/api/user/deregister/result	GET	ApiAccountDeregistrationController.result	profile
+/api/user/follow-list	GET	ApiPlayerGapsController.followList	profile
+/api/welcome-screen/get	POST	ApiChannelSurfaceController.welcome	profile
+/api/workshop/owned/detail	POST	ApiAppGapsWorkshopController.ownedDetail	workshop/mods
+/api/workshop/owned/list	POST	ApiAppGapsWorkshopController.ownedList	workshop/mods
+/api/workshop/owned/package	POST	ApiAppGapsWorkshopController.ownedPackage	workshop/mods
