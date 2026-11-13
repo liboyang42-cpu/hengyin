@@ -25,4 +25,6 @@
 - 修复后：见下方最终 run（platform / merchant_club / sale_close / player / finance 全 PASS）。
 - 合并后 master 上的链路也会用到这份修复，因此需要先合并本 PR。
 
-FINAL_RUN_PLACEHOLDER
+最终 run 43381735946（source_sha 06f362eb，through=finance，整体 success）：platform / merchant_club / sale_close / player / finance 五链全部 PASS。
+
+STATUS: DONE
