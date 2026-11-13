@@ -2,6 +2,7 @@ package com.chengyinhub.business.citygame;
 
 import com.chengyinhub.business.citygame.CityGameSupport.Membership;
 import com.chengyinhub.business.mapper.CityGameMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,6 +30,7 @@ public class CityGameReadService {
     private final CityGameMapper mapper;
     private final LongSupplier clock;
 
+    @Autowired
     public CityGameReadService(CityGameMapper mapper) { this(mapper, System::currentTimeMillis); }
 
     CityGameReadService(CityGameMapper mapper, LongSupplier clock) {

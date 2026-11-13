@@ -1,6 +1,7 @@
 package com.chengyinhub.business.citygame;
 
 import com.chengyinhub.business.mapper.CityGameMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ public class CityFairnessService {
     private final CityGameMapper mapper;
     private final LongSupplier clock;
 
+    @Autowired
     public CityFairnessService(CityGameMapper mapper) { this(mapper, System::currentTimeMillis); }
 
     CityFairnessService(CityGameMapper mapper, LongSupplier clock) {

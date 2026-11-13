@@ -768,6 +768,15 @@
       "classes": [
         "com.chengyinhub.business.it.FreeExploreSelfPlayPriceGateMySqlIT"
       ]
+    },
+    "app-gaps-a": {
+      "lineage": "app gaps A 20261113 (feature/app-gaps-a): player routes the app builds that the backend lacked",
+      "registered_source": "f351b113eb0173451737720c01e0690271cf6373",
+      "note": "CityGameMysqlIntegrationTest (3) and PlayerGapsMysqlIntegrationTest (3); verified on VPS TEST MySQL 8.0.45 (be-int-mysql) with scratch schemas cy_gaps_a_*.",
+      "classes": [
+        "com.chengyinhub.business.citygame.CityGameMysqlIntegrationTest",
+        "com.chengyinhub.business.service.support.PlayerGapsMysqlIntegrationTest"
+      ]
     }
   },
   "classes": {
@@ -2194,6 +2203,26 @@
       ],
       "gates": {},
       "note": "f-money3 free-explore paid self-play gate on real MySQL; task-owned scratch schema dropped and read back at the end. Source registration 20261111, execution evidence is the dispatched run receipt only."
+    },
+    "com.chengyinhub.business.citygame.CityGameMysqlIntegrationTest": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_CITY_GAME_MYSQL_IT": "1"
+      },
+      "note": "app gaps A CITY game: real migration 20261113_gaps_a_city_game + MyBatis XML; team formation, server dice, occupy/toll/challenge with member points, round settlement, concurrent duplicate request, player rules, bounded snapshot, fairness. Task-owned scratch schema per suite."
+    },
+    "com.chengyinhub.business.service.support.PlayerGapsMysqlIntegrationTest": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_GAPS_A_MYSQL_IT": "1"
+      },
+      "note": "app gaps A player reads on baseline DDL: follow-list keyset, own topic_route_action receipt, reviewed npc_route_egg collection (idempotent). Task-owned scratch schema per suite."
     }
   }
 }

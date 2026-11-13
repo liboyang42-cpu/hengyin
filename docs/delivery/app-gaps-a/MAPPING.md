@@ -8,6 +8,31 @@ Each row says **served** (new route on this branch), **mapped** (the backend alr
 equivalent route under another path, so the app should call that path; nothing duplicated), or
 **deferred** (not built; reason given).
 
+## Summary (89 graph paths)
+
+| Area | Paths | Served | Mapped | Deferred |
+|---|---:|---:|---:|---:|
+| city game | 26 | 8 (+7 game-loop and fairness routes not in the graph) | 0 | 18 |
+| rewards | 18 | 0 | 0 | 18 |
+| play runtime | 13 | 3 | 4 | 6 |
+| roam | 10 | 0 | 2 | 8 |
+| profile | 8 | 1 | 3 | 4 |
+| topics/routes | 14 | 0 | 3 | 11 |
+| **total** | **89** | **12** | **12** | **65** |
+
+Verification (VPS `work`, MySQL 8.0.45 `be-int-mysql`):
+- Unit: `CityGameRulesTest` (9), `AdvancedTimeWindowTest` (3); the existing `AdvancedGameRuntimeServiceImplTest` (231) is still green.
+- Real MySQL IT (registered as batch `app-gaps-a` in `ci/real-storage-it-registry.json`):
+  `CityGameMysqlIntegrationTest` (3, gate `CHENGYIN_CITY_GAME_MYSQL_IT=1`) and
+  `PlayerGapsMysqlIntegrationTest` (3, gate `CHENGYIN_GAPS_A_MYSQL_IT=1`), each in its own scratch schema.
+- Migration `20261113_gaps_a_city_game` passes `ci/migration_ledger.py audit` and was applied to `cy_gaps_a`
+  (a copy of `cy_e2e_beint`; the shared schema was not touched).
+- HTTP smoke: the packaged jar on port 8131 against `cy_gaps_a` (Redis db 11), fixture
+  `scripts/e2e/seed_app_gaps_a.py`, 33/33 checks (team formation and receipts, server roll, task, quote,
+  occupy with points 100 → 70, deltas, fairness, follow list, route-action ownership, egg collect, 401).
+- TEST environment gap found: `cy_e2e_beint` (built by `scripts/e2e/build_schema.py`) has no `npc_route_egg`
+  table although the production baseline does; it was added to `cy_gaps_a` from the baseline DDL for the smoke.
+
 ## City game (26 paths in the graph)
 
 All new routes live in `ApiCityGameController` (`/api/city-game/**`) on one server-authoritative
