@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
  * App 工坊/模组缺口路由。
  * <ul>
  *   <li>/api/workshop/owned/*：免费领取只读，现网无免费领取事实源，如实 NOT_ENABLED。</li>
- *   <li>/api/mod-commerce/**：购买/支付/退款族，按发布策略关闭——任何方法一律 503 拒绝，不触达支付。</li>
+ *   <li>/api/mod-commerce/**：购买/支付/退款族，按发布策略关闭——任何方法一律拒绝，不读请求体、不触达支付。
+ *       App（Core/WorkshopCommerceService）只认 code：未登录回 401（走会话失效），已登录回 503 + errorCode
+ *       WORKSHOP_COMMERCE_DISABLED（落到 unavailable）。</li>
  *   <li>模组安装/升级/举报/创作者收益、创作者待审包/公开主题授权：后端尚无对应领域，显式 503「未开放」，
  *       让 App 落到 disabled 而不是 404 猜测（交付文档里记为 DEFERRED）。</li>
  * </ul>
@@ -24,7 +26,7 @@ public class ApiAppGapsWorkshopController extends BaseController {
 
     public ApiAppGapsWorkshopController(WorkshopOwnedRead owned) { this.owned = owned; }
 
-    private boolean signedIn() {
+    boolean signedIn() {
         try { return getAppUserId() != null; } catch (Exception e) { return false; }
     }
 
@@ -49,7 +51,10 @@ public class ApiAppGapsWorkshopController extends BaseController {
     /** 购买/支付/退款恒关：不读请求体、不建单、不调支付。 */
     @RequestMapping({"/api/mod-commerce", "/api/mod-commerce/**"})
     public AjaxResult commerceOff() {
-        return AjaxResult.error(DISABLED, "WORKSHOP_COMMERCE_DISABLED");
+        if (!signedIn()) return AjaxResult.error(401, "请先登录");
+        AjaxResult off = AjaxResult.error(DISABLED, "工坊购买暂未开放");
+        off.put("errorCode", "WORKSHOP_COMMERCE_DISABLED");
+        return off;
     }
 
     @RequestMapping({"/api/mod-installation/**", "/api/mod-upgrade/**", "/api/mod-owned-report/**", "/api/mod-settlement/**",

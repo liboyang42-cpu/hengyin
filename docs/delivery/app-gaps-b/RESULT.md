@@ -39,7 +39,7 @@
 | 路径 | 状态 | 说明 |
 |---|---|---|
 | `/api/workshop/owned`、`/owned/list`、`/owned/detail`、`/owned/package` | SERVED | 现网无免费领取事实源，如实 `NOT_ENABLED` + 空集（不把付费许可冒充免费领取） |
-| `/api/mod-commerce` | OFF | 购买/支付/退款族一律 503 `WORKSHOP_COMMERCE_DISABLED`，不读请求体、不建单 |
+| `/api/mod-commerce` | OFF | 购买/支付/退款族一律拒绝：未登录 401，已登录 503 + errorCode `WORKSHOP_COMMERCE_DISABLED`（r2 对齐 App 只认 code 的处理）；不读请求体、不建单 |
 | `/api/workshop/purchased`、`/purchased/install` | MAPPED | → `/api/workshop/v2/purchased/*`（后端对 v1 刻意 409 升级） |
 | `/api/mod-installation`、`/api/mod-upgrade` | N/A-v1（owner 决定，显式 503） | App 契约（`Core/ModInstallation*`、`ModUpgrade*`）是「模组发行版 + 商家资源绑定（SITE/POI/SKU/NPC/ROUTE_ENTRY）」安装域：options/compatibility/requests/receipt/history/qa-editor/template-editor，需要模组目录、发行版与 requiredBindings 事实源；后端只有 v2 工坊订单许可（`WKO_*`）+ 私有草稿安装，不存在模组/发行版/绑定模型，也没有免费模组来源。不能用 v2 安装冒充（线格式与语义都不同）。需先建模组目录领域 |
 | `/api/mod-owned-report/licenses` | N/A-v1（owner 决定，显式 503） | 依赖同一模组许可域（`ModOwnedContentReport` 按模组 license 读报告） |
