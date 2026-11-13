@@ -276,6 +276,7 @@
         "market/pass/index",
         "market/gift/index",
         "market/membership/index",
+        "market/pass-order/index",
         "market/library/index"
       ]
     },
