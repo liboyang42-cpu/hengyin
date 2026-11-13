@@ -65,3 +65,17 @@ test('模板预览带出简介与章节导读', () => {
   assert.deepEqual(buildIntro(null), { desc: '', chapters: [] })
   assert.match(read('pages/templatedetail/topic-preview/index.wxml'), /intro\.chapters/)
 })
+
+test('模板预览的章名/导读与主题详情同口径(分包副本不漂移)', () => {
+  const samples = [
+    { name: '街角', description: '先去第一家店。' },
+    { name: '结局 · 归途', description: '雨夜进城。【题目】破译 A=1' },
+    { name: '回响', blocks: [{ type: 'text', content: '长'.repeat(90) }] },
+  ]
+  const intro = buildIntro({ chapters: samples })
+  samples.forEach((c, i) => {
+    assert.equal(intro.chapters[i].name, m.chapterHeading(i, samples.length, c.name))
+    assert.equal(intro.chapters[i].guide, m.chapterGuide(c))
+  })
+  assert.doesNotMatch(read('pages/templatedetail/topic-preview/intro.js'), /require\(/)
+})
