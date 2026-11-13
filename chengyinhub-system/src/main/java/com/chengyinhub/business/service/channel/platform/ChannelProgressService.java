@@ -227,7 +227,11 @@ public class ChannelProgressService
             insert.put("rowLimit", rowLimit);
             insert.put("createBy", viewer);
             try { progress.insertBoard(insert); }
-            catch (org.springframework.dao.DuplicateKeyException dup) { throw new ChannelRejection(409, "BOARD_KEY_TAKEN", "榜单键已存在"); }
+            catch (RuntimeException dup)
+            {
+                if (!ChannelRejection.isDuplicateKey(dup)) throw dup;
+                throw new ChannelRejection(409, "BOARD_KEY_TAKEN", "榜单键已存在");
+            }
             Map<String, Object> log = new HashMap<>();
             log.put("channelId", channelId);
             log.put("action", "PROGRESS_BIND");
@@ -279,7 +283,7 @@ public class ChannelProgressService
             r.put("metric", METRIC);
             r.put("metric_value", done);
             r.put("visible", true);
-            r.put("_last", f == null ? null : f.get("lastTime"));
+            r.put("_last", f == null ? null : ChannelRejection.toDate(f.get("lastTime")));
             if (done == 0)
             {
                 r.put("state", required == 0 ? "NOT_APPLICABLE" : "NO_COMPLETED_EFFORT");

@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
+import com.chengyinhub.business.service.channel.platform.ChannelRejection;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,8 +85,9 @@ public class TeamResourcePoolService
                 {
                     mapper.insertUse(teamId, kind, nodeId, viewer, c.requestId);
                 }
-                catch (DuplicateKeyException race)
+                catch (RuntimeException race)
                 {
+                    if (!ChannelRejection.isDuplicateKey(race)) throw race;
                     // 池行锁下不应出现；出现即说明锁序被破坏，整笔回滚而不是重复扣。
                     throw new IllegalStateException("Concurrent pool use without lock", race);
                 }

@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -373,8 +372,9 @@ public class ChannelPlatformService
                     if (mapper.updateMetadata(channelId, expected, name, topic, setTopic, visibility, slowmode) != 1)
                         throw new ChannelRejection(409, "VERSION_CONFLICT", "频道已被他人修改");
                 }
-                catch (DuplicateKeyException dup)
+                catch (RuntimeException dup)
                 {
+                    if (!ChannelRejection.isDuplicateKey(dup)) throw dup;
                     throw new ChannelRejection(409, "CHANNEL_NAME_TAKEN", "同一分类下已有同名频道");
                 }
                 log(channelId, "EDIT", row.getStatus(), row.getStatus(), c.reason, viewer, c.requestId);
@@ -515,8 +515,9 @@ public class ChannelPlatformService
                     "provision", null);
             insert(viewer, guildKind, guildId, category.getId(), 1, DEFAULT_CHANNEL, null, 1, 0, true, "provision", null);
         }
-        catch (DuplicateKeyException | ChannelRejection race)
+        catch (RuntimeException race)
         {
+            if (!(race instanceof ChannelRejection) && !ChannelRejection.isDuplicateKey(race)) throw race;
             // 另一请求已建好默认频道；本事务回滚由外层负责，这里只读回。
             throw new ChannelRejection(409, "CHANNEL_PROVISION_RACE", "频道正在初始化，请重试");
         }
@@ -545,9 +546,9 @@ public class ChannelPlatformService
         {
             mapper.insertChannel(row);
         }
-        catch (DuplicateKeyException dup)
+        catch (RuntimeException dup)
         {
-            if (isDefault) throw dup;
+            if (isDefault || !ChannelRejection.isDuplicateKey(dup)) throw dup;
             throw new ChannelRejection(409, "CHANNEL_NAME_TAKEN", "同一分类下已有同名频道");
         }
         mapper.ensureConversationMember(id, viewer);
