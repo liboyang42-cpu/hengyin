@@ -398,12 +398,13 @@ test('罗盘点开小地图;没有带坐标的地点时照旧回卡包;导航交
   page.openStoryMap()
   assert.equal(page.data.storyMap, true)
   assert.deepEqual(page.data.storyMapCenter, { lat: 31.2304, lng: 121.4737 }, '以下一站为中心')
-  assert.equal(locationRequests, 1, '没有定位时走现有定位授权入口')
+  // 业主 2026-11-13:定位只在开局问一次,开地图不再逐次申请定位
+  assert.equal(locationRequests, 0, '开小地图不再申请定位')
   page.closeStoryMap()
   assert.equal(page.data.storyMap, false)
   page.data.gpsOk = true
   page.openStoryMap()
-  assert.equal(locationRequests, 1, '已有定位时不重复请求')
+  assert.equal(locationRequests, 0, '已有定位时同样不请求')
   page.closeStoryMap()
 
   const opened = []

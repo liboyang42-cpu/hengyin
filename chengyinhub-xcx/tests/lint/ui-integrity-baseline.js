@@ -1,3 +1,4 @@
+// 2026-11-13 arrival-start-300m(业主拍板:到点定位改为开局一次 300 米校验):play/index.js 净增 3 行,U5 loadMilestone 调用点 8923→8926 仅行号位移,调用行与理由逐字不变、条数不变、不新增登记;u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-12 dec-b3(D-66 结局上限 6＋缺默认结局红字):publish/fabu/index.js 新增结局区红字与刷新助手(+28 行),11 条既有 U4-DYNAMIC 锚点仅行号位移(1235→1237、3598→3600、4688→4690、5070→5072、6157→6159、6436→6438、7136→7138、7148→7150、7215→7217、7773→7775、10056→10079),调用行逐字相同、理由与条数不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-12 dec-ui-2(D-91 个人主页观看者浅色 +1/+11 行、D-81 发布预览风格/配色条 +6 行):cy/profile/index.js U1-VARIABLE 726→727、U4-DYNAMIC 1326→1337 / 2175→2186,fabu/index.js U4-DYNAMIC 7773→7779 / 10056→10062 仅行号位移,调用行与理由逐字未改,条数不变,u1Variable / u4Dynamic 两个 keyDigest 按门禁同一算法重算。
 // 2026-11-12 集成 #806+#805:合并树上 fabu/index.js 的 U4-DYNAMIC 两条锚点 7775→7781、10079→10085 仅行号位移，调用行与理由逐字未改，条数不变、不新增登记；u4Dynamic digest 按门禁同一算法重算。
@@ -1187,7 +1188,7 @@ module.exports = {
 // 2026-11-11 f-play2 合入 f-money3,再合 launch(qx-final3 + f-pages):三侧行号位移取并集,u4Dynamic / u5Silent digest 按合并树实算。
 // 2026-11-11 f-play2 合入 f-money3:pricing/index.js:188(f-money3 侧位移)与 play/index.js:8895(f-play 侧位移)合并,key 集合按合并树实算 digest。
 // 2026-11-11 qx-final3 合入 f-pages 后合并树:f-play(play/index.js)与 f-pages(roam/index.js、cy/profile/index.js)两侧行号位移合并,条数与理由不变,digest 按同一算法重算。
-"fc8fcc7b9ae02ba26fe6626ae4606bf4062205e652f4ae4383cb5fd75412f8ee"
+"47bab137dcc4f7b4c73a535ab6de1002c22427f585acd1ef48b2d1f8224d15ae"
 
     }
   },
@@ -1591,7 +1592,7 @@ module.exports = {
       //   2026-11-02 合 master(master 侧 8072→8082):合并树同一调用行 8218。
       //   2026-11-02 round3 P-08(放行时由门自己接着进 +10 行)、P-10(文字反馈只在答对时用 +2 行):8218→8230,调用与理由未改。
       //   2026-11-03 round5D P-08(「返回地图」三个方法 + 放行对账抽成 _syncChapterHold,上方净增 29 行):8236→8265,调用与理由未改。
-      "chengyinhub-xcx/pages/play/index.js:8923": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
+      "chengyinhub-xcx/pages/play/index.js:8926": "已完成里程碑为可选增强，请求失败保持 milestone=null 且轴不渲染；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/topic/pricing/index.js:188": "合作阵容行补名是 best-effort 装饰读取:拉不到名字就保留「合作俱乐部/承接商家」类型兜底,条款摘要照常、点开合作方页自有错误态;为补名弹全局 toast 会让主办方以为整页定价坏了;owner=小程序,复核=2026-12-31",
     "chengyinhub-xcx/subpackageB/utils/predict-entry.js:15": "消息页「竞猜待答」入口显隐读取(2026-10-22 业主:无待答不出入口):读失败照样显示入口(宁可多一行,不让 48 小时期限提醒消失),不是用户动作,无需弹错;owner=小程序,复核=2026-11-30",
   }
