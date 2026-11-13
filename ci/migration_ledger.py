@@ -27,7 +27,10 @@ MIGRATION_PREFIX = "migration_"
 POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_monitor_missing_jobs", "20261012_roam_presence_revoke_job",
                           "20261104_content_safety_jobs_post_deploy",
                           # 第十二轮 k1 第 10 项(r1 F2):旧 jar 编辑器仍按分钟写,必须等新 jar 起来再换算
-                          "20261104_topic_total_time_seconds"}
+                          "20261104_topic_total_time_seconds",
+                          # qx-c2: two paused sys_job rows naming beans only the new jar has (channelRefundConsumptionTask,
+                          # marketingRevenuePostingTask); CanonicalJobTarget resolves every row's bean on the old jar too.
+                          "marketing_task_registration_20261108"}
 BOOTSTRAP_SQL = {
     "sql/quartz.sql",
     "sql/ry_20250522.sql",
