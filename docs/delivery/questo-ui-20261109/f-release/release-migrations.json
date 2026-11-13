@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "kind": "f-release-migration-set",
-  "candidateHead": "e744fe51378b2280a1def1e8911b123f3ca506c1",
-  "headMigrationCount": 650,
+  "candidateHead": "92fca378eec32082a786aa685ba24b0a6223d6f2",
+  "headMigrationCount": 651,
   "productionAppliedState": "UNKNOWN",
   "baseline": {
     "pack": "docs/delivery/release-closeout-20261029/release-migration-pack.json",
@@ -156,7 +156,8 @@
       "marketing_task_registration_20261108",
       "o14_reco_search_jobs_20261022",
       "20261112_dec_c_payout",
-      "zzz_committed_official_notice_job_reregister_20261111"
+      "zzz_committed_official_notice_job_reregister_20261111",
+      "20261113_stagger_payout_jobs"
     ],
     "4_OWNER_DATA_PRE": [
       "20261027_user_invoice_processing_backfill",
@@ -3007,6 +3008,26 @@
       "idempotency": "IDEMPOTENT_STATIC",
       "destructiveStatements": [],
       "step": 165
+    },
+    {
+      "source": "launch 波次（master 2bb81143 之后）",
+      "class": "必须",
+      "phase": "POST_DEPLOY",
+      "note": "收付通与官方通知任务的 cron 错峰（只改仍为原表达式的 sys_job 行，频率不变）；修复 dec_c_payout_jobs 启用任务后违反 20261101_stagger_sys_job_seconds 末态断言的冲突；放在二者之后",
+      "packPhase": null,
+      "rerun": "幂等",
+      "migrationId": "20261113_stagger_payout_jobs",
+      "path": "chengyinhub-admin/sql/migration_20261113_stagger_payout_jobs.sql",
+      "sha256": "ba5fffc38a8b558984fb992fb8c88344b41453726ab9dd6ab925fb89e12fe86f",
+      "order": 649,
+      "dependsOn": [
+        "20261101_stagger_sys_job_seconds",
+        "20261112_dec_c_payout_jobs",
+        "zzz_committed_official_notice_job_reregister_20261111"
+      ],
+      "idempotency": "IDEMPOTENT_STATIC",
+      "destructiveStatements": [],
+      "step": 166
     }
   ]
 }
