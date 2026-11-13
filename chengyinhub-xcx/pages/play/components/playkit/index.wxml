@@ -141,7 +141,7 @@
 
 <cy-playkit-hangman wx:elif="{{kit.type === 'hangman'}}" inline="{{inline}}"
   show="{{show}}" title="{{kit.title}}" slots="{{kit.slots}}" solved="{{kit.solved}}" display="{{kit.display}}"
-  bind:submit="onSubmit" bind:close="onClose" />
+  bind:submit="onSubmit" bind:close="onClose" bind:continue="onContinue" />
 
 <cy-playkit-accusation wx:elif="{{kit.type === 'accusation'}}" inline="{{inline}}"
   show="{{show}}" title="{{kit.title}}" board-img="{{kit.boardImg}}" board-alt="{{kit.boardAlt}}" intro="{{kit.intro}}"

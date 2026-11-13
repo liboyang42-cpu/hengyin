@@ -47,7 +47,7 @@ function solvedSetup(mode) {
   page.data.mode = mode;
   page.data.gpsOk = false;
   page.data.sheet = { show: true, node };
-  page.data.nodes = [node];
+  page.data.nodes = [node, { nodeId: 6, done: true }];   // 已开局(本局已有完成站):后续站才免定位
   page._advancedReadyNodeId = 7;
   const calls = [];
   page.arrive = (nodeId, via) => calls.push('arrive:' + nodeId + ':' + via);
@@ -64,6 +64,13 @@ for (const mode of [1, 2]) {
   });
 }
 
+test('开局闸:首站(本局没有完成站)玩法已解开也要先定位,不直接收尾', () => {
+  const { page, calls } = solvedSetup(1);
+  page.data.nodes = [page.data.sheet.node];
+  page.onSheetGoTap();
+  assert.deepEqual(calls, ['location']);
+});
+
 test('k2 没解开的站仍按原样:mode 2 开导航,mode 1 先要定位', () => {
   let { page, calls } = solvedSetup(2);
   page._advancedReadyNodeId = null;
@@ -71,6 +78,7 @@ test('k2 没解开的站仍按原样:mode 2 开导航,mode 1 先要定位', () =
   assert.deepEqual(calls, ['nav']);
   ({ page, calls } = solvedSetup(1));
   page._advancedReadyNodeId = null;
+  page.data.nodes = [page.data.sheet.node];   // 未开局才要定位;已开局的后续站不再逐站定位
   page.onSheetGoTap();
   assert.deepEqual(calls, ['location']);
 });
