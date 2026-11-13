@@ -45,4 +45,28 @@ owner 决定：全 PERK 的自由探索主题，平台不分账，全部票款�
 ## 验证
 未改代码，未新增测试，未重建行动台账（无变更）。仅读源码取证（文件:行号见上）。
 
-STATUS: PARTIAL - Step 1(b) 对商家发布不成立（结算被禁），按指令停止编码并交 owner 决策；Step 2 文案/提现指引未改，Step 3 已完成。
+---
+
+## 2026-11-13 落地（owner 已拍板，范围仅限本条）
+
+owner 决定：商家发布的自由探索（`topic.club_id` 空，场次由承办俱乐部开），票款归发布商家（`topic.member_id`），承办俱乐部与合作店铺与商家线下结算；平台费不变（冻结 `fee_platform_rate`，3%）；承办俱乐部按核销付给店铺的核销费（event_type=95）不变；俱乐部发布的主题仍付俱乐部主理人。
+
+### Task A 结算（后端）
+- `CmsActivityServiceImpl`：新增 `isMerchantPublishedSession`（自由探索 + topic.club_id 空 + topic.member_id>0 + activity.club_id>0）；`requireSessionSettlementContract` 在此情形放行（冻结开售合同 / 四店专用合同检查不变）；新增 `activityPayee(activity, topic)`，该情形收款人 = `topic.memberId`，其余情形沿用原 `activityPayee`；`settleActivity`、`recordFreeExploreSessionLedger`、`releaseHeldRegistration` 三处改用；`selectActivitiesForSettlement()` 并入新选单；`strandedReason` 对已可结算的商家场次返回空（不再告警）。
+- 新增 mapper 语句 `selectMerchantPublishedFreeExploreActivitiesForSettlement`（`CmsActivityMapper.xml` / `.java`），时点、退款闸与原选单逐字同源；未改任何既有 SQL 文本。
+- 未动：`settleTopic` 的 `FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN`（非场次路径继续禁止）、`SettlementEntryServiceImpl`（收款人本就是参数）、退款冲回（按实际入账行）、幂等 `claimActivityForSettlement`、核销费。无迁移。
+- 测试：新增 `MerchantPublishedFreeExploreSettlementTest`（商家发布→商家收 97.00/平台 3.00；俱乐部发布→主理人；无承办俱乐部场次仍拒；无发布者仍拒；选单合并去重）。`CoopSettlementTopicFenceTest` 原有的旧路径禁止用例保持。
+
+### Task B 文案
+- 后端 `MerchantFinanceQueryService.perkNoCashReason`：「票款由主办方收取；店铺如需结算，请联系主办方线下处理 · 主办方：名称」（俱乐部主题取俱乐部名，商家主题取发布商家名）。
+- `pages/coop/withdraw`：店铺的核销记录全部是该句时，页内副文改为同一句。
+- `pages/topic/merchantinfo/merchantinfo.wxml`：自由探索 PERK 邀请在「接受邀请」前加同一句。
+- 未做：主办方收益页「合作店铺线下结算」一行——结算详情/各主题结算数据里没有主题类型，硬写会对非全权益主题说错；需要后端先给标记，留待后续。「联系主办方」入口沿用现有，未新增。
+- 已查：全仓没有「商家主题不能结算」的前端文案（`fabu/index.js:8376`、`topic/pricing/index.js:64` 指的是自玩票，与本决定无关）。
+
+### 已知后续
+- 主理人「待结算资金」读侧 (`selectUnsettledActivityFundsByMember`) 仍按场次发起人且排除商家发布场次，发布商家暂看不到这些场次的待结算；入账到余额本身不受影响。
+- 俱乐部结算页 `selectClubSessionSettlements` 按 `a.club_id` 列场次，商家发布场次的实际收款人是商家，该页对俱乐部主理人的展示口径需另行确认。
+
+### 验证
+- 本地不跑 Java（规则）；后端单测与 Funds MySQL IT 由 PR 的 CI 执行。
