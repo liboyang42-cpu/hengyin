@@ -65,3 +65,5 @@
 
 - 小程序：`node --test tests/unit/selfplay-xpay-pay.test.js` + 相关既有用例全绿（见 PR）。
 - 后端：单测 `SelfPlayXpayServiceTest`、`SelfPlayXpayPropertiesTest`、`SelfPlayXpayCheckoutRoutingTest`，并扩展 `RegistrationPaymentRetryContractTest`；Java 构建/测试按仓库规定只在 CI 跑。
+
+STATUS: PARTIAL - CI 结果待确认
