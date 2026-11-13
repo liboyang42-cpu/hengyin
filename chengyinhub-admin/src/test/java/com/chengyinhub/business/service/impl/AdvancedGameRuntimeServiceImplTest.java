@@ -2233,12 +2233,12 @@ class AdvancedGameRuntimeServiceImplTest {
         Map<String,Object> evidence = "ALBUM".equals(mode) ? Collections.singletonMap("imageUrls",Collections.singletonList("http://127.0.0.1/profile/unowned.jpg")) : Collections.singletonMap("imageUrl","http://127.0.0.1/profile/unowned.jpg");
         assertThrows(RuntimeException.class,()->service.act(MEMBER_ID,51L,0,"foreign-photo",action,evidence));assertEquals(1, evidenceChecks.get());verify(sessionMapper,never()).updateStateCas(any());
     }
-    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"SHOT","REVIEW","CARD","REJECT","DEGRADED","ALBUM"})
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"SHOT","REVIEW","CARD","REJECT","DEGRADED","DEGRADED_REJECT","ALBUM"})
     void r5PhotoAndAlbumUseVerifiedServerEvidence(String mode) throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper json=new com.fasterxml.jackson.databind.ObjectMapper();com.fasterxml.jackson.databind.node.ObjectNode config=json.createObjectNode().put("schemaVersion",1);Map<String,Object> payload=new LinkedHashMap<>();String action;
         if("SHOT".equals(mode)){config.putObject("qa").put("enabled",true).put("mode","SHOT");action="SUBMIT_QA";}
         else if("ALBUM".equals(mode)){config.putObject("album").put("enabled",true);action="SUBMIT_ALBUM";payload.put("imageUrls",Arrays.asList("first","second"));}
-        else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("fallback","pass").put("maxTries",1).put("minConfidence",60);action="SUBMIT_PHOTO_CHECK";com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=mock(com.chengyinhub.business.service.ai.PhotoCheckVisionService.class);when(vision.review(any(),any(),any())).thenReturn("DEGRADED".equals(mode)?com.chengyinhub.business.service.ai.PhotoCheckVisionResult.degraded("unavailable"):com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(!"REJECT".equals(mode),90,"review"));AdvancedActionTestFixtures.photos(service, () -> vision.review(MEMBER_ID, "unit-photo", "unit-requirement"));}
+        else{config.putObject("photoCheck").put("enabled",true).put("mode","CARD".equals(mode)?"CARD":"").put("maxTries",1).put("minConfidence",60);if(!"DEGRADED_REJECT".equals(mode))config.with("photoCheck").put("fallback","pass");action="SUBMIT_PHOTO_CHECK";com.chengyinhub.business.service.ai.PhotoCheckVisionService vision=mock(com.chengyinhub.business.service.ai.PhotoCheckVisionService.class);when(vision.review(any(),any(),any())).thenReturn(mode.startsWith("DEGRADED")?com.chengyinhub.business.service.ai.PhotoCheckVisionResult.degraded("unavailable"):com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(!"REJECT".equals(mode),90,"review"));AdvancedActionTestFixtures.photos(service, () -> vision.review(MEMBER_ID, "unit-photo", "unit-requirement"));}
         config.putObject("outcomeRules").put("version",1).putObject("pass");if(!"ALBUM".equals(mode))config.with("outcomeRules").putObject("fail");if(!"ALBUM".equals(mode))payload.put("imageUrl","first");
         java.util.List<String> checked=new ArrayList<>();ReflectionTestUtils.setField(service,"photoEvidenceVerifier",(java.util.function.BiConsumer<String,Long>)(url,member)->{assertEquals(MEMBER_ID,member);checked.add(url);});
         ITopicRouteRuntimeService route=mock(ITopicRouteRuntimeService.class);ReflectionTestUtils.setField(service,"topicRouteRuntimeService",route);when(route.genericPlayer(any(),any(),any())).thenReturn(true);when(route.canPlay(any(),any(),any(),any())).thenReturn(true);when(route.gameplayInstance(any(),any(),any(),any())).thenReturn("quest:r5");when(route.nodeRuntimeConfig(any(),any(),any(),any())).thenReturn(config);
@@ -2246,7 +2246,9 @@ class AdvancedGameRuntimeServiceImplTest {
         Map<String,Object> result=service.act(MEMBER_ID,51L,0,"proof:"+mode,action,payload);assertEquals("ALBUM".equals(mode)?2:1,checked.size());
         /* R11 g1 F3(业主 2026-11-04「一站不能把玩家留住」):审核通道不可用且机会(maxTries=1)用完,记成没过、走「没通过之后」,
            不再停在这一站;仍不算通过(passed=false)。原先这里钉的是「降级一律不出结论、停在原地」。 */
-        if("DEGRADED".equals(mode)){org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision=org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);verify(route).recordGameplayOutcome(any(),any(),any(),any(),any(),any(),decision.capture(),any());assertEquals("FAIL",decision.getValue().path("outcome").asText());assertFalse(json.readTree(session.getStateJson()).path("photoCheck").path("passed").asBoolean());}
+        /* 2026-11-13 走查:作者配了 fallback=pass 时,审核通道不可用 = 兜底放行(FALLBACK_PASS,不是 AI 通过)。 */
+        if("DEGRADED".equals(mode)){org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision=org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);verify(route).recordGameplayOutcome(any(),any(),any(),any(),any(),any(),decision.capture(),any());assertEquals("PASS",decision.getValue().path("outcome").asText());com.fasterxml.jackson.databind.JsonNode photo=json.readTree(session.getStateJson()).path("photoCheck");assertTrue(photo.path("passed").asBoolean());assertEquals("FALLBACK_PASS",photo.path("verdict").asText());assertTrue(photo.path("flagged").asBoolean());assertTrue(photo.path("degraded").asBoolean());}
+        else if("DEGRADED_REJECT".equals(mode)){org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision=org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);verify(route).recordGameplayOutcome(any(),any(),any(),any(),any(),any(),decision.capture(),any());assertEquals("FAIL",decision.getValue().path("outcome").asText());assertFalse(json.readTree(session.getStateJson()).path("photoCheck").path("passed").asBoolean());}
         else{org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision=org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);verify(route).recordGameplayOutcome(any(),any(),any(),any(),any(),any(),decision.capture(),any());assertEquals("REJECT".equals(mode)?"FAIL":"PASS",decision.getValue().path("outcome").asText());}
         if("ALBUM".equals(mode)){assertTrue(json.valueToTree(result).path("playKit").path("album").path("done").asBoolean());service.act(MEMBER_ID,51L,1,"new-key","SUBMIT_ALBUM",payload);assertEquals(2,checked.size());}
     }
@@ -2337,10 +2339,11 @@ class AdvancedGameRuntimeServiceImplTest {
         service.act(MEMBER_ID,51L,2,"submit","SUBMIT_CHECK",Collections.singletonMap("success",true));assertEquals(GameRuntimeSession.STATUS_FAILED,session.getStatus());
     }
 
-    @Test void r5WrongAnswerUsesOneImmutableServerOutcomeInsteadOfLegacyCompletion() throws Exception {
+    @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(ints={0,1})
+    void r5WrongAnswerUsesOneImmutableServerOutcomeInsteadOfLegacyCompletion(int maxTries) throws Exception {
         com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
         com.fasterxml.jackson.databind.node.ObjectNode config = json.createObjectNode().put("schemaVersion", 1);
-        config.putObject("qa").put("enabled", true).put("mode", "TYPE").put("title", "Answer").put("answerText", "correct").put("maxTries", 0);
+        config.putObject("qa").put("enabled", true).put("mode", "TYPE").put("title", "Answer").put("answerText", "correct").put("maxTries", maxTries);
         config.putObject("outcomeRules").put("version", 1).putObject("pass"); config.with("outcomeRules").putObject("fail");
         ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
         ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
@@ -2353,6 +2356,18 @@ class AdvancedGameRuntimeServiceImplTest {
         when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenAnswer(call -> created.get()); when(sessionMapper.updateStateCas(any())).thenReturn(1);
         Map<String, Object> input = new LinkedHashMap<>(); input.put("input", "wrong"); input.put("passed", true);
         service.act(MEMBER_ID, 51L, 0, "r5-wrong", "SUBMIT_QA", input);
+        if (maxTries == 0) {
+            /* 2026-11-13 走查:maxTries 0 = 不限次。答错不结算、不写 FAIL,本局仍在进行,可以接着答(答对即过)。 */
+            assertEquals(GameRuntimeSession.STATUS_RUNNING, created.get().getStatus());
+            verify(route, never()).recordGameplayOutcome(any(), any(), any(), any(), any(), any(), any(), any());
+            service.act(MEMBER_ID, 51L, 1, "r5-wrong-2", "SUBMIT_QA", input);
+            assertEquals(GameRuntimeSession.STATUS_RUNNING, created.get().getStatus());
+            verify(route, never()).recordGameplayOutcome(any(), any(), any(), any(), any(), any(), any(), any());
+            Map<String, Object> right = new LinkedHashMap<>(); right.put("input", "correct");
+            service.act(MEMBER_ID, 51L, 2, "r5-right", "SUBMIT_QA", right);
+            assertEquals(GameRuntimeSession.STATUS_COMPLETED, created.get().getStatus());
+            return;
+        }
         assertEquals(GameRuntimeSession.STATUS_FAILED, created.get().getStatus());
         assertEquals(NOW, created.get().getCompletedAt().getTime());
         assertEquals(1, json.readTree(created.get().getStateJson()).path("attemptOrdinal").asInt());

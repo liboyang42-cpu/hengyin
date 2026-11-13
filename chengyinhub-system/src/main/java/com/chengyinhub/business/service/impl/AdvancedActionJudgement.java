@@ -344,6 +344,10 @@ public final class AdvancedActionJudgement {
         Boolean passed = judgedOutcome(action, state);
         if (passed == null) passed = passedFact(action, state);
         String kit = null;
+        /* 问答 maxTries 0 = 不限次(编辑器与 AdvancedGameConfigValidator 同口径),有限次数则用完才算终局:
+           还有机会的答错不结算,留在本站重答。以前答错一次就写 FAIL,maxTries 0 的 TYPE 题一次错就整局失败。
+           拍照(SHOT)交上来即 correct,不受影响;qa 已 finished(答对或次数用完)才往下判。 */
+        if ("SUBMIT_QA".equals(action) && Boolean.FALSE.equals(passed) && !state.path("qa").path("finished").asBoolean(false)) return null;
         if ("SUBMIT_QA".equals(action)) kit = "qa";
         else if ("SUBMIT_PRICE_PAIR".equals(action)) kit = "pricePair";
         else if ("SUBMIT_BLIND_TASTE".equals(action)) { kit = "blindTaste"; passed = state.path(kit).path("solved").asBoolean(); }
@@ -352,7 +356,7 @@ public final class AdvancedActionJudgement {
         else if ("DRAW".equals(action)) { kit = "random"; passed = state.path("draws").size() >= config.path(kit).path("drawCount").asInt() ? Boolean.TRUE : null; }
         if("SUBMIT_CHECK".equals(action)){kit="check";passed=state.path("check").path("success").asBoolean();}
         if ("SUBMIT_ALBUM".equals(action)) passed=state.path("album").path("done").asBoolean()?Boolean.TRUE:null;
-        if ("SUBMIT_PHOTO_CHECK".equals(action))passed="PASS".equals(state.path("photoCheck").path("verdict").asText())?Boolean.TRUE:"REJECT".equals(state.path("photoCheck").path("verdict").asText())?Boolean.FALSE:null;
+        if ("SUBMIT_PHOTO_CHECK".equals(action))passed="PASS".equals(state.path("photoCheck").path("verdict").asText())||degradedFallbackPass(state)?Boolean.TRUE:"REJECT".equals(state.path("photoCheck").path("verdict").asText())?Boolean.FALSE:null;
         if ("SUBMIT_PROFILE".equals(action)) passed=state.path("profile").path("done").asBoolean()?Boolean.TRUE:null;
         if ("SUBMIT_NOTE".equals(action)) passed=state.path("note").path("done").asBoolean()?Boolean.TRUE:null;
         if ("CLAIM_DAILY_SIGN".equals(action)) passed=state.path("dailySign").path("claimedDate").asText().isEmpty()?null:Boolean.TRUE;
@@ -421,11 +425,18 @@ public final class AdvancedActionJudgement {
             case "SUBMIT_PHOTO_CHECK": {
                 String verdict = state.path("photoCheck").path("verdict").asText("");
                 if ("PASS".equals(verdict)) return Boolean.TRUE;
+                if (degradedFallbackPass(state)) return Boolean.TRUE;
                 if ("FALLBACK_PASS".equals(verdict)) return Boolean.FALSE;
                 return null;
             }
             default: return null;
         }
+    }
+
+    /** 审核通道不可用且作者配了 fallback=pass 的兜底放行:这一站算过(不是 AI 通过,photoVerified 仍为 false)。 */
+    private static boolean degradedFallbackPass(JsonNode state) {
+        JsonNode photo = state.path("photoCheck");
+        return "FALLBACK_PASS".equals(photo.path("verdict").asText("")) && photo.path("degraded").asBoolean(false);
     }
 
     private static Boolean flag(ObjectNode state, String kit, String field) {

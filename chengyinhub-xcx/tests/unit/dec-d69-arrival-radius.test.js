@@ -20,7 +20,8 @@ test('开局校验半径 300m，文案由常量派生', () => {
 test('逐站不再申请定位：到点按钮只在未开局时才要求定位', () => {
   const play = read('pages/play/index.js')
   assert.match(play, /_startLocationNeeded\(\) \{\s*return !\(this\.data\.nodes \|\| \[\]\)\.some\(\(n\) => n && n\.done\);/)
-  assert.match(play, /const needsLocation = this\._advancedReadyNodeId !== node\.nodeId && this\._startLocationNeeded\(\);/)
+  assert.match(play, /const needsLocation = this\._startLocationNeeded\(\);/)
+  assert.doesNotMatch(play, /needsLocation = this\._advancedReadyNodeId/, '首站已解开玩法也要开局定位(2026-11-13 走查 1066km 外通关)')
   assert.doesNotMatch(play, /到这一站 ' \+ ARRIVAL_RADIUS_TEXT/)
 })
 

@@ -6039,8 +6039,8 @@ Page({
     const node = this._arriveTarget();
     if (!node) return;
     if (this._arrivalWriteUnknown) return;
-    // 高级玩法已通过:解开本身就是到站证明,直接收尾,不再要定位(第十二轮 k2,业主 2026-11-05)。
-    const needsLocation = this._advancedReadyNodeId !== node.nodeId && this._startLocationNeeded();
+    // 开局闸(业主 2026-11-13):只看本局是否已开局,与首站是否用高级玩法无关——解开玩法不等于人在起点。
+    const needsLocation = this._startLocationNeeded();
     if (!this.data.gpsOk && !this._isStoryGame(node) && needsLocation) { if (this._locAsked) this._locationDeclinedToast(); else this.requestPlayLocation(); return; }   // a1-v3-21 问过不再弹说明
     this.arrive(node.nodeId, 'arrive');
   },
@@ -7805,7 +7805,7 @@ Page({
         return game.retry();
       }
       case 'continue':
-        if (evt.type === 'qa' && this._kit().type === 'qa' && this.data.playKit.readyForBase) {
+        if ((evt.type === 'qa' || evt.type === 'hangman') && this._kit().type === evt.type && this.data.playKit.readyForBase) {
           this.continueStoryGame();
         }
         return;

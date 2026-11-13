@@ -385,9 +385,9 @@ class ApiPlayGpsGeofenceValidationTest
         verifyNoProgressAndNoReward();
     }
 
-    /** 第十二轮 k2(业主 2026-11-05):本人已解开这一站的玩法 ⇒ 远处重进也算完成,奖励照常;没解开仍被围栏拒。 */
+    /** 业主 2026-11-13:开局闸不看首站玩法是否解开——解开了但无定位的开局到达一律拒,不落进度不发奖。 */
     @Test
-    void solvedAdvancedGameCompletesStationWithoutArrivalFence()
+    void solvedAdvancedGameOnFirstStationStillNeedsStartLocation()
     {
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
                 mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
@@ -397,10 +397,40 @@ class ApiPlayGpsGeofenceValidationTest
         AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
                 null, null, null, null, null, null);
 
-        assertEquals(200, result.get("code"), "解开的站重进不再要现场定位");
-        verify(advanced, org.mockito.Mockito.atLeastOnce()).completeGate(PLAYER, ACTIVITY, TOPIC, NODE);
+        assertNotEquals(200, result.get("code"), "首站玩法已解开也必须带起点 300 米内的定位");
+        assertEquals("ARRIVE_LOCATION_MISSING", result.get("errorCode"));
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void solvedAdvancedGameOnFirstStationTooFarIsRejected()
+    {
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.solvedForArrival(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
+
+        AjaxResult result = arrive("121.6", "31.4");
+
+        assertEquals("离起点太远，请到起点 300 米内再开始", result.get("msg"));
+        verifyNoProgressAndNoReward();
+    }
+
+    /** 第十二轮 k2 保留部分:已开局(本局已有进度)的后续站,解开即完成,不再要现场定位。 */
+    @Test
+    void solvedAdvancedGameAfterRunStartedCompletesWithoutLocation()
+    {
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.solvedForArrival(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(PLAYER, ACTIVITY)).thenReturn(true);
+
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                null, null, null, null, null, null);
+
+        assertEquals(200, result.get("code"), "已开局的后续站解开即完成");
         verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
-        verify(progressionService).onNodeDone(PLAYER);
     }
 
     @Test
