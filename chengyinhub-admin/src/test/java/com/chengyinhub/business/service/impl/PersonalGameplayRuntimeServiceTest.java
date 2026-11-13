@@ -556,10 +556,10 @@ class PersonalGameplayRuntimeServiceTest {
             assertFalse(json.readTree(saved.getStateJson()).path("themeRuntime").path("pending").has("claim-food"));
             TopicRouteAction receipt = db.real.selectActionByAction(session.getId(), 7L, "theme:database-claim");
             assertNotNull(receipt);
-            assertEquals(json.valueToTree(first), json.readTree(receipt.getResponseJson()));
+            assertEquals(json.readTree(json.writeValueAsString(first)), json.readTree(receipt.getResponseJson()));
             Map<String,Object> replay = db.runtime.themeAction(7L, session.getId(), version,
                     "database-claim", "RECEIVE", "claim-food");
-            assertEquals(json.valueToTree(first), json.valueToTree(replay));
+            assertEquals(json.readTree(json.writeValueAsString(first)), json.readTree(json.writeValueAsString(replay)));
             assertEquals(1, db.actionCount());
             assertEquals(saved.getStateJson(), db.row().getStateJson());
             assertEquals(saved.getVersion(), db.row().getVersion());
