@@ -3,7 +3,7 @@
     <view class="ck__back" bindtap="onBack" aria-role="button" aria-label="返回" hover-class="ck-pressed" hover-stay-time="80"><view class="ck__chev"></view></view>
     <text class="ck__title">确认订单</text>
   </view>
-  <scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="ck__body" style="top: {{topInset}}px;">
+  <scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="ck__body" style="margin-top: {{topInset}}px;">
     <!-- 1 主题头 -->
     <view class="ck__head">
       <image wx:if="{{cover}}" class="ck__hero" src="{{cover}}" mode="aspectFill" />
@@ -60,7 +60,9 @@
     <view class="ck__trust" wx:if="{{view.trust.length}}">
       <view class="ck__trust-i" wx:for="{{view.trust}}" wx:key="key"><cy-icon name="{{item.icon}}" size="36" /><text>{{item.label}}</text></view>
     </view>
-
+  </scroll-view>
+  <!-- 10/11 底栏:单独同意(个保法第 23 条,建单必需)紧贴支付行上方;合计 + 支付随报价实时更新 -->
+  <view class="ck__bar">
     <!-- 10 单独同意(个保法第 23 条,建单必需) -->
     <view class="ck__consent">
       <cy-consent-check checked="{{consentChecked}}" text="同意将姓名、手机号提供给主办方，用于报名核验" bind:change="onConsent" />
@@ -70,11 +72,9 @@
         <text class="ck__err-act" bindtap="onPay" aria-role="button" aria-label="重试" hover-class="ck-pressed" hover-stay-time="80">重试</text>
       </view>
     </view>
-    <view class="ck__pad"></view>
-  </scroll-view>
-  <!-- 11 底栏:合计 + 支付,随报价实时更新 -->
-  <view class="ck__bar">
-    <view class="ck__sum"><text class="ck__sum-v">{{view.totalText}}</text><text class="ck__sum-k">1 人</text></view>
-    <view class="ck__pay {{loading || view.loading ? 'is-busy' : ''}} {{view.refused ? 'is-off' : ''}}" bindtap="onPay" aria-role="button" aria-disabled="{{view.refused}}" aria-label="{{view.payLabel}}" hover-class="ck-pressed" hover-stay-time="80">{{loading ? '处理中…' : view.payLabel}}</view>
+    <view class="ck__pay-row">
+      <view class="ck__sum"><text class="ck__sum-v">{{view.totalText}}</text><text class="ck__sum-k">1 人</text></view>
+      <view class="ck__pay {{loading || view.loading ? 'is-busy' : ''}} {{view.refused ? 'is-off' : ''}}" bindtap="onPay" aria-role="button" aria-disabled="{{view.refused}}" aria-label="{{view.payLabel}}" hover-class="ck-pressed" hover-stay-time="80">{{loading ? '处理中…' : view.payLabel}}</view>
+    </view>
   </view>
 </view>

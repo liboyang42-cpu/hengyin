@@ -7,6 +7,8 @@
 // - 信任行:退款只读报价 refundableNow / refundPercentNow;席位数是建单事实(自玩恒 1 人)。
 //   有效期写在单次购买卡上,沿用 topic-motion.passWindow(与建单同口径),信任行不重复。
 
+const { chapterCountText } = require('../../../utils/chapter-count.js');
+
 function isNum(v) {
   return v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
 }
@@ -23,7 +25,9 @@ function headPills(info) {
   const type = Number(d.productType) === 2 ? '自由探索' : (Number(d.productType) === 1 ? '城市定向' : '');
   if (type) out.push(type);
   const chapters = Array.isArray(d.chaptersList) ? d.chaptersList.filter(Boolean) : [];
-  if (chapters.length > 1) out.push(chapters.length + ' 章');
+  const total = Number(d.totalChapterCount) > 0 ? Number(d.totalChapterCount) : chapters.length;
+  const count = chapterCountText(d);
+  if (count && total > 1) out.push(count);
   const nodes = chapters.reduce((n, c) => n + (Array.isArray(c.nodes) ? c.nodes.length : 0), 0);
   if (nodes > 0) out.push(nodes + ' 站');
   return out;
