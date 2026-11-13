@@ -616,6 +616,8 @@ def main():
         report.update(extra)
         write_report()
         print("FAIL: " + message)
+        if extra.get("drift"):
+            print("  drift: " + json.dumps(extra["drift"], ensure_ascii=False, sort_keys=True))
         if extra.get("unexpected"):
             print("  unexpected: " + json.dumps(extra["unexpected"], ensure_ascii=False, sort_keys=True))
         return 1

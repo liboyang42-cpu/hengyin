@@ -1229,7 +1229,14 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*)=2 AND SUM(status='0' AND concurrent='1' AND misfire_policy='3')=2 FROM sys_job WHERE invoke_target IN ('ecommercePayoutTask.shareAndRetry()', 'ecommercePayoutTask.syncOnboarding()')), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 54
+      "step": 54,
+      "rerunKnownDelta": {
+        "table": "sys_job",
+        "ignoredColumns": [
+          "update_time"
+        ],
+        "reason": "UPDATE 带 update_time = NOW()，重跑只刷新两条收付通任务的 update_time；status、cron、invoke_target 等其余列与行集合零变更（沿用 sys_category/settlement_rule 的同类声明）"
+      }
     },
     {
       "migrationId": "20261112_dec_c_safety",
