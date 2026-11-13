@@ -24,4 +24,13 @@
 - `build-action-ledger.js --write` 后 `--check`：PASS（6035 控件）。
 - danger-confirm 门禁：PASS（53 个调用点）。`unbind` 不含门禁识别的危险动词，故不进登记表（登记会被判“源码里找不到”）。
 
-STATUS: PARTIAL - 全量小程序单测与 UI-GATE-0 本机仍在运行，结果待 CI 核对；PR 检查待跟进
+## CI（PR #810，提交 d849005）
+全部检查通过（32 成功、3 跳过、0 失败），PR 无冲突。含 Java 测试、迁移/架构门禁、小程序 20 分片、UI-GATE-0、行动台账、路由矩阵、截图矩阵与覆盖率、danger-confirm、API 存在性与 silentError 门禁。
+
+CI 期间修复（均未削弱测试）：测试夹具 `FakeEcomPayoutMapper` 补新增方法；状态接口改用已导入的 `@GetMapping`（门禁识别映射）；`silentError` 登记；页面计数/GET 矩阵/标题盘点/路由矩阵/清理清单/行动台账计数/截图矩阵 F315 与 fixture 登记；合并 master 解决冲突（GET 总数 127+1=128）。
+
+## 遗留
+- 开关开启后的真实微信个人 OpenID 分账（加接收方、分账、回退）仍需 owner 在沙箱验证；本改动未触碰生产。
+- 开关关闭时绑定仅记录同意（CONSENTED），开关开启后需主理人再点一次“重新绑定”才升级为已确认。
+
+STATUS: DONE
