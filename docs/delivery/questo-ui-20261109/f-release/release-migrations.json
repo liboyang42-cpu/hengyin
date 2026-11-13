@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "f-release-migration-set",
-  "candidateHead": "e744fe51378b2280a1def1e8911b123f3ca506c1",
+  "candidateHead": "66b97c58e81d8e90860adda544d6e639148db4bd",
   "headMigrationCount": 650,
   "productionAppliedState": "UNKNOWN",
   "baseline": {

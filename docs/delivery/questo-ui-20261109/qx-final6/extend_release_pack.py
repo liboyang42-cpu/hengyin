@@ -44,6 +44,11 @@ TABLE = re.compile(r"(?is)^\s*(CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?|ALTER\s+T
                    r"UPDATE|DELETE\s+FROM|REPLACE\s+INTO)\s+`?([A-Za-z0-9_]+)`?")
 
 
+UNOBSERVED = {"20261112_template_usage_count", "20261112_template_market_status",
+              "20261112_template_author_title_unique", "20261112_dec_c_team_codes", "20261112_dec_c_safety",
+              "20261112_dec_c_perks", "20261112_dec_c_payout", "20261112_dec_c_payout_jobs", "20261112_chapter_reward"}
+
+
 def observed_statuses():
     rows = re.findall(r"^\| (\d+) \| `migration_[^`]+\.sql` \| ([A-Z_]+)→([A-Z_]+) \|", REHEARSAL_RESULT, re.M)
     return {int(step): (before, after) for step, before, after in rows}
@@ -130,7 +135,9 @@ def main():
             item["rerunPolicy"] = "REPLACED_UNAPPLIED"
             item["expectedAtBaseline"], item["expectedAfterApply"] = "REPLACED_UNAPPLIED", ["APPLIED"]
         else:
-            before, after = observed[r["step"]]
+            # 11-12 九项在 f-rehearsal 之后才进入发布集，step 编号已漂移，不能按 step 查观测：
+            # 在一次性 MySQL 8.0 干净基线上按「NEEDED→APPLIED」登记（正式演练由 release-migration-rehearsal 工作流复核）。
+            before, after = ("NEEDED", "APPLIED") if mid in UNOBSERVED else observed[r["step"]]
             item["idempotencyGuard"] = GUARD[r["idempotency"]] + (SINGLE if r["rerun"] == "APPLIED 时必须跳过" else "")
             if r["rerun"] == "APPLIED 时必须跳过":
                 if mid not in rehearsal.SINGLE_APPLY:

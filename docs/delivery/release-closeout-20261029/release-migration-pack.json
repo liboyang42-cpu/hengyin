@@ -3,10 +3,10 @@
   "kind": "release-migration-pack",
   "releaseCloseout": "release-closeout-20261029",
   "generatedFor": {
-    "masterCommit": "1eb2ba0c6a5fefc42502ea88ba339ed980e65fab",
-    "sourceTree": "e254e318bfe52e22d567aa69ee1e549a30511f8c",
-    "migrationTree": "56abd15610e80aee2e318c54aeb341ac4b684283",
-    "dependencySha256": "7900271ef7595723e5255fd94dba456ca6e9e478a5babe2fdf23243dcd3373ea",
+    "masterCommit": "66b97c58e81d8e90860adda544d6e639148db4bd",
+    "sourceTree": "8b6175486411ca24fd7b8622934459f7b57f38c1",
+    "migrationTree": "b1b4d2e4a1d356c35177c0901db6a7d49182d2f2",
+    "dependencySha256": "927e27df01d4d30ce1489bb9ea14856463ea17415d915fafe1cd1a063c725419",
     "date": "2026-10-29"
   },
   "baseline": {
@@ -17,7 +17,7 @@
   "ordering": {
     "strategy": "explicit-dependencies-then-path-bytewise",
     "source": "ci/migration-dependencies.json via ci/migration_ledger.py",
-    "orderField": "order = 该迁移在源提交全量 641 个迁移拓扑序中的位置；发布集内按 step 顺序执行"
+    "orderField": "order = 该迁移在源提交全量 650 个迁移拓扑序中的位置；发布集内按 step 顺序执行"
   },
   "phases": {
     "PRE_DEPLOY_REQUIRED": "新 jar 直接读写该表/列，必须先于新 jar 落库",
@@ -1188,12 +1188,104 @@
       "step": 52
     },
     {
+      "migrationId": "20261112_chapter_reward",
+      "path": "chengyinhub-admin/sql/migration_20261112_chapter_reward.sql",
+      "sha256": "c14f4e714e549166c703b902a9b8a5465e7c1247e298ceab9287921c4d934def",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 97,
+      "dependsOn": [],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "D-82：cms_topic_chapter.reward_text 章节结局卡展示文案列（仅展示，不发放；新 jar 读写前执行）",
+      "idempotencyGuard": "information_schema 守卫后条件执行 DDL；f-rehearsal 两遍执行零报错",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "无表级写入（只读断言/存储过程守卫外壳）；按语句归纳，生产体量 UNKNOWN",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT COUNT(*) = 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic_chapter' AND column_name = 'reward_text' AND character_maximum_length = 64), 0))) = 1 AS applied; -- 期望 1"
+      ],
+      "step": 53
+    },
+    {
+      "migrationId": "20261112_dec_c_payout_jobs",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_payout_jobs.sql",
+      "sha256": "e343a7b3091c6ed1e6dd3e68a2b057f59af1724966d09e7eb6240e96115903d0",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 98,
+      "dependsOn": [
+        "20261110_ecommerce_payout_wiring"
+      ],
+      "phase": "POST_DEPLOY",
+      "changes": "DEC-C D-08：启用既有受守卫的进件与计划/提交/同步任务（纯 sys_job，放新 jar 之后）；收付通功能开关不变",
+      "idempotencyGuard": "静态幂等（IF NOT EXISTS / INSERT…WHERE NOT EXISTS / 写绝对值）；f-rehearsal 两遍执行零报错",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "UPDATE sys_job：按键/条件写少量行（按语句归纳）",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT COUNT(*)=2 AND SUM(status='0' AND concurrent='1' AND misfire_policy='3')=2 FROM sys_job WHERE invoke_target IN ('ecommercePayoutTask.shareAndRetry()', 'ecommercePayoutTask.syncOnboarding()')), 0))) = 1 AS applied; -- 期望 1"
+      ],
+      "step": 54
+    },
+    {
+      "migrationId": "20261112_dec_c_safety",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_safety.sql",
+      "sha256": "16383da45984909590b80e653ceea2242a0ab35da2f0b80cddcb994f392f2342",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 99,
+      "dependsOn": [
+        "20261012_app_media_asset",
+        "20261012_app_media_asset_namespaces"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "DEC-C：上传媒体不可变的机审风险粘滞围栏",
+      "idempotencyGuard": "information_schema 守卫后条件执行 DDL；f-rehearsal 两遍执行零报错",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "无表级写入（只读断言/存储过程守卫外壳）；按语句归纳，生产体量 UNKNOWN",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'app_media_asset' AND column_name = 'safety_rejected'), 0))) = 1 AS applied; -- 期望 1"
+      ],
+      "step": 55
+    },
+    {
+      "migrationId": "20261112_dec_c_team_codes",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_team_codes.sql",
+      "sha256": "383571440a9fe5ba9d029105e1a08afb7fb3f8a081826b13b2d38ccf2d81172a",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 100,
+      "dependsOn": [
+        "20260820_play_team_core",
+        "20260822_play_team_invite_code"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "DEC-C D-98：六位无歧义组队加入码；迁移旧邀请码并固定原始期限；暂停组队邀请码写入后执行",
+      "idempotencyGuard": "information_schema 守卫后条件执行 DDL；f-rehearsal 两遍执行零报错",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "UPDATE IGNORE：按键/条件写少量行（按语句归纳）",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'play_team' AND column_name = 'legacy_invite_code'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'play_team' AND column_name = 'legacy_invite_expire_time'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'play_team' AND index_name = 'uk_play_team_legacy_invite'), 0))) = 3 AS applied; -- 期望 1"
+      ],
+      "step": 56
+    },
+    {
       "migrationId": "20261111_ai_generation_log_retention_index",
       "path": "chengyinhub-admin/sql/migration_20261111_ai_generation_log_retention_index.sql",
       "sha256": "bfe04612d5005fa76f361692032f2f6a9c2ad3ec3164022ba66f56e1fdd14e0f",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 104,
+      "order": 108,
       "dependsOn": [
         "ai_generation_log"
       ],
@@ -1208,7 +1300,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'ai_generation_log' AND index_name = 'idx_ai_gen_create_time'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 53
+      "step": 57
     },
     {
       "migrationId": "ai_theme_draft_request_intent_20261024",
@@ -1229,18 +1321,18 @@
       "sha256": "d0ff6289481fadf4aab16d875fabc3f4075ec05fd285b8fe630e9ad6e6f60a94",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 109,
+      "order": 113,
       "dependsOn": [],
-      "step": 54
+      "step": 58
     },
     {
-      "step": 55,
+      "step": 59,
       "migrationId": "audit_problem_20261022",
       "path": "chengyinhub-admin/sql/migration_audit_problem_20261022.sql",
       "sha256": "02353f0296b49751e5a035a129a03fccf9173cddba2194e7489b32449434a080",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 114,
+      "order": 118,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 audit_problem（审核逐项驳回原因）；必须先于打开 chengyin.audit.item-problems.enabled",
@@ -1260,7 +1352,7 @@
       "sha256": "a4901b23460ce852955706482a685de00bb252eb4425b2edfa487afc2b7f7c51",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 125,
+      "order": 129,
       "dependsOn": [
         "c3_team_fields"
       ],
@@ -1275,7 +1367,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) = 0 AS club_session_gather_point_none_missing FROM cms_activity a WHERE a.club_id IS NOT NULL AND a.club_id > 0 AND a.del_flag = 0 AND a.cancel_time IS NULL AND (a.end_date IS NULL OR a.end_date > NOW()) AND (a.latitude IS NULL OR a.latitude = '') AND (a.longitude IS NULL OR a.longitude = '') AND EXISTS ( SELECT 1 FROM oms_ticket t WHERE t.owner_type = 2 AND t.owner_id = a.id AND t.del_flag = 0 AND t.gather_lat IS NOT NULL AND t.gather_lng IS NOT NULL)), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 56
+      "step": 60
     },
     {
       "migrationId": "20261104_club_session_gather_point_readback",
@@ -1283,7 +1375,7 @@
       "sha256": "d07210b85e870e8c56681393fd28c52422839d246f22960d4c5c2824b75df391",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 126,
+      "order": 130,
       "dependsOn": [
         "20261102_club_session_gather_point"
       ],
@@ -1298,7 +1390,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) = 0 AS club_session_gather_point_none_missing FROM cms_activity a WHERE a.club_id IS NOT NULL AND a.club_id > 0 AND a.del_flag = 0 AND a.cancel_time IS NULL AND (a.end_date IS NULL OR a.end_date > NOW()) AND (a.latitude IS NULL OR a.latitude = '') AND (a.longitude IS NULL OR a.longitude = '') AND EXISTS ( SELECT 1 FROM oms_ticket t WHERE t.owner_type = 2 AND t.owner_id = a.id AND t.del_flag = 0 AND t.gather_lat IS NOT NULL AND t.gather_lng IS NOT NULL)), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 57
+      "step": 61
     },
     {
       "migrationId": "20261024_d_chapter_application_round",
@@ -1319,11 +1411,11 @@
       "sha256": "800f1cd74678c78e4350a4b38474f87b567bc62456353b463abcecac8958ab01",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 132,
+      "order": 136,
       "dependsOn": [
         "chapter_recruitment_20260722"
       ],
-      "step": 58
+      "step": 62
     },
     {
       "migrationId": "20261029_club_post_repost",
@@ -1331,7 +1423,7 @@
       "sha256": "72aad6c8dabe9ff04d0ccaa5dfc4f4aa47e4ddb9489670f2cf08499d8f9367b5",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 147,
+      "order": 151,
       "dependsOn": [
         "club_post"
       ],
@@ -1346,7 +1438,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'club_post_repost'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'club_post' AND column_name = 'repost_count'), 0))) = 2 AS applied; -- 期望 1"
       ],
-      "step": 59
+      "step": 63
     },
     {
       "phase": "PRE_DEPLOY",
@@ -1363,23 +1455,23 @@
       "rerunPolicy": "PRECHECK_SKIP_APPLIED",
       "sha256": "668c8955b2c965eeb84436ad70a72e264a9c3aaa7d8d77450a282cc3b680f1ee",
       "baseSha256": null,
-      "step": 60,
+      "step": 64,
       "migrationId": "club_welcome_note_20261022",
       "path": "chengyinhub-admin/sql/migration_club_welcome_note_20261022.sql",
-      "order": 157,
+      "order": 161,
       "dependsOn": [
         "club_open_settings_20260909"
       ],
       "change": "ADDED"
     },
     {
-      "step": 61,
+      "step": 65,
       "migrationId": "doc2_f3_bundle_ledger_20261022",
       "path": "chengyinhub-admin/sql/migration_doc2_f3_bundle_ledger_20261022.sql",
       "sha256": "f94e363d84923f4b6e97bce4ec49382364ec2568e7efe6cdcc83c10ed4b8f419",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 190,
+      "order": 194,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 explore_bundle_order/grant/unit/reservation/waiver/exit_case（F3 套票台账；ledger-enabled 默认关）",
@@ -1410,9 +1502,9 @@
       "sha256": "74b1ef1e1488b1ee69eb8f104dde6466246d690db7fc01de19ab8c84d37b2556",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 191,
+      "order": 195,
       "dependsOn": [],
-      "step": 62
+      "step": 66
     },
     {
       "migrationId": "marketing_attribution_20261108",
@@ -1420,7 +1512,7 @@
       "sha256": "63eedef2fc086d97f4579cf5b7041d36897f0ad9d820c81a94581e0720984ac3",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 230,
+      "order": 234,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "营销归因 2 表",
@@ -1434,7 +1526,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_referral_credential'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_attribution'), 0))) = 2 AS applied; -- 期望 1"
       ],
-      "step": 63
+      "step": 67
     },
     {
       "migrationId": "marketing_product_20261108",
@@ -1442,7 +1534,7 @@
       "sha256": "2287a5be21592f8942467e79191175572d8af69a38f32a61fa37bcd314b058aa",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 231,
+      "order": 235,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "营销商品/礼品 5 表",
@@ -1456,7 +1548,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_product'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_product_item'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_product_order'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_product_order_line'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'gift_entitlement'), 0))) = 5 AS applied; -- 期望 1"
       ],
-      "step": 64
+      "step": 68
     },
     {
       "migrationId": "marketing_extra_seat_20261108",
@@ -1464,7 +1556,7 @@
       "sha256": "0c1c774a1dea7bec5a00343962f79e6583e2900be846d4729ac47f902be2a818",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 232,
+      "order": 236,
       "dependsOn": [
         "marketing_product_20261108"
       ],
@@ -1480,7 +1572,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'marketing_product_order' AND index_name = 'idx_marketing_order_extra_seat'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.check_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_marketing_order_fulfillment' AND check_clause LIKE '%3%'), 0))) = 2 AS applied; -- 期望 1"
       ],
-      "step": 65
+      "step": 69
     },
     {
       "migrationId": "marketing_revenue_allocation_20261108",
@@ -1488,7 +1580,7 @@
       "sha256": "8717990a778f42620bbc9bf809e64275e0c4013ecee0353c7c04c287b5100592",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 233,
+      "order": 237,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "收入分配 4 表",
@@ -1502,7 +1594,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_revenue_rule'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_revenue_allocation'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_revenue_allocation_line'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_revenue_posting_task'), 0))) = 4 AS applied; -- 期望 1"
       ],
-      "step": 66
+      "step": 70
     },
     {
       "migrationId": "marketing_z_channel_voucher_20261108",
@@ -1510,7 +1602,7 @@
       "sha256": "35440a069680d562c9f1d23322f6a432a6080b6f0c56de532f0bc9b7ba303cc1",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 234,
+      "order": 238,
       "dependsOn": [
         "marketing_product_20261108"
       ],
@@ -1526,7 +1618,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_voucher_account'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_order_verification'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_voucher'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_redemption'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_refund_verification'), 0))) = 5 AS applied; -- 期望 1"
       ],
-      "step": 67
+      "step": 71
     },
     {
       "migrationId": "marketing_task_registration_20261108",
@@ -1534,7 +1626,7 @@
       "sha256": "d59914eb0a9d76304d695f881616c2bed079554afd057dbead9b4a582578117b",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 235,
+      "order": 239,
       "dependsOn": [
         "marketing_revenue_allocation_20261108",
         "marketing_z_channel_voucher_20261108"
@@ -1550,7 +1642,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) > 0 FROM sys_job WHERE invoke_target = 'channelRefundConsumptionTask.run()'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_job WHERE invoke_target = 'marketingRevenuePostingTask.run()'), 0))) = 2 AS applied; -- 期望 1"
       ],
-      "step": 68
+      "step": 72
     },
     {
       "migrationId": "20261023_cash_withdraw_fund_fact",
@@ -1572,11 +1664,11 @@
       "sha256": "cf981d89214b219c41639537f301f2b55b2b568f2d310c06621e6df473b3f4ba",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 238,
+      "order": 242,
       "dependsOn": [
         "member_cash_withdraw"
       ],
-      "step": 69
+      "step": 73
     },
     {
       "migrationId": "20261024_cash_withdraw_transfer_intent",
@@ -1596,11 +1688,11 @@
       "sha256": "f2488f404fa9c1940377b47cbe531351bd2e31e3f8b1fc50aa7b2813ba00e55c",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 239,
+      "order": 243,
       "dependsOn": [
         "20261023_cash_withdraw_fund_fact"
       ],
-      "step": 70
+      "step": 74
     },
     {
       "migrationId": "20261025_cash_withdraw_fund_request_compat",
@@ -1621,20 +1713,20 @@
       "sha256": "7f94d39360c9b85c4ca2a65fedbbd3638cd6b09268a509748cc97e0a19212a1f",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 240,
+      "order": 244,
       "dependsOn": [
         "20261023_cash_withdraw_fund_fact"
       ],
-      "step": 71
+      "step": 75
     },
     {
-      "step": 72,
+      "step": 76,
       "migrationId": "member_profile_version_20261022",
       "path": "chengyinhub-admin/sql/migration_member_profile_version_20261022.sql",
       "sha256": "8be4a0d82578fe1d74579f5abbf859307f0b827655d670ff0e398cf026d018ba",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 245,
+      "order": 249,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "新表 ums_member_profile_version（资料版本回执；新 jar 表缺失只 WARN）",
@@ -1649,13 +1741,13 @@
       ]
     },
     {
-      "step": 73,
+      "step": 77,
       "migrationId": "member_visited_poi_poi_key_20261022",
       "path": "chengyinhub-admin/sql/migration_member_visited_poi_poi_key_20261022.sql",
       "sha256": "ddb6c4652f8138a42a2ec380af3981f6674e574834ade341736e12eacb31c07a",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 247,
+      "order": 251,
       "dependsOn": [
         "member_visited_poi"
       ],
@@ -1687,10 +1779,10 @@
       ],
       "sha256": "e26703b2a6cb15eea3996c2d188af546002c88f46135accd5956ce1fdd37cbd1",
       "baseSha256": null,
-      "step": 74,
+      "step": 78,
       "migrationId": "merchant_category_ids_20261022",
       "path": "chengyinhub-admin/sql/migration_merchant_category_ids_20261022.sql",
-      "order": 253,
+      "order": 257,
       "dependsOn": [],
       "change": "ADDED"
     },
@@ -1712,20 +1804,20 @@
       "sha256": "e7f68c884d431fc095102a6327d3a76dc023d9940e30511052c0826322563b58",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 259,
+      "order": 263,
       "dependsOn": [
         "merchant_decor_20260708"
       ],
-      "step": 75
+      "step": 79
     },
     {
-      "step": 76,
+      "step": 80,
       "migrationId": "merchant_desk_receipt_20261022",
       "path": "chengyinhub-admin/sql/migration_merchant_desk_receipt_20261022.sql",
       "sha256": "83746d2cb7e5de51365f97782d9e8692fb58c6bdf3196e854475d102d2fc2278",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 261,
+      "order": 265,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 merchant_desk_receipt（F4 工作台幂等回执；merchant.desk.f4.enabled 默认关）",
@@ -1740,13 +1832,13 @@
       ]
     },
     {
-      "step": 77,
+      "step": 81,
       "migrationId": "merchant_redemption_anchor_20261022",
       "path": "chengyinhub-admin/sql/migration_merchant_redemption_anchor_20261022.sql",
       "sha256": "907c01f72fb7f77ceed83a0aa8eb51de4cbd55dc740218a0e1a65ca33c2da6e0",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 272,
+      "order": 276,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 merchant_redemption_anchor（F4 核销锚点配置）",
@@ -1775,10 +1867,10 @@
       ],
       "sha256": "c5f52a9512e615c08522a8d0fa7b62241863664e3853461aecbd7406d680017e",
       "baseSha256": null,
-      "step": 78,
+      "step": 82,
       "migrationId": "merchant_wechat_qrcode_20261022",
       "path": "chengyinhub-admin/sql/migration_merchant_wechat_qrcode_20261022.sql",
-      "order": 276,
+      "order": 280,
       "dependsOn": [],
       "change": "ADDED"
     },
@@ -1801,11 +1893,11 @@
       "sha256": "b4573ae45593a8e9b823a69d7060f94a57c8cbb4d70e9d27444f2afa4d72a996",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 298,
+      "order": 302,
       "dependsOn": [
         "20261011_npc_voice_version"
       ],
-      "step": 79
+      "step": 83
     },
     {
       "migrationId": "npc_voice_confirmed_attempt_20261024",
@@ -1826,20 +1918,20 @@
       "sha256": "a25f38f256e3c6447ac8d891b35eb2dd3914c143503ff1fe51b0fe48df949041",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 299,
+      "order": 303,
       "dependsOn": [
         "npc_voice_enrollment_intent_20261024"
       ],
-      "step": 80
+      "step": 84
     },
     {
-      "step": 81,
+      "step": 85,
       "migrationId": "o14_city_code_backfill_log_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_city_code_backfill_log_20261022.sql",
       "sha256": "cc5f6e4dd6e8880f42012cbb7069a2ffaf79b8ac5ac75565e09b2c159922a1ed",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 300,
+      "order": 304,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 o14_city_code_backfill_log（O-14 回填来源标记）",
@@ -1854,13 +1946,13 @@
       ]
     },
     {
-      "step": 82,
+      "step": 86,
       "migrationId": "o14_cms_activity_city_code_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_cms_activity_city_code_20261022.sql",
       "sha256": "6f8aa378506994897748617ae9209445cca32c2eefe613549194f6252351ee95",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 301,
+      "order": 305,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "cms_activity 加可空列 city_code VARCHAR(32)（ALGORITHM=INSTANT）+ 索引 idx_cms_activity_city_code（INPLACE, LOCK=NONE）",
@@ -1876,13 +1968,13 @@
       ]
     },
     {
-      "step": 83,
+      "step": 87,
       "migrationId": "o14_cms_topic_city_code_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_cms_topic_city_code_20261022.sql",
       "sha256": "fcda5dcf5bf4172238564758d008b4b64d6eab6a8861335dbb5d063e2dd93ff1",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 302,
+      "order": 306,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "cms_topic 加可空列 city_code VARCHAR(32)（INSTANT）+ 索引 idx_cms_topic_city_code（INPLACE, LOCK=NONE）",
@@ -1898,13 +1990,13 @@
       ]
     },
     {
-      "step": 84,
+      "step": 88,
       "migrationId": "o14_content_city_code_backfill_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_content_city_code_backfill_20261022.sql",
       "sha256": "abfb4c27b3219ab3906c29feb9c3a9c920f498913f26f06bb177740a271c085a",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 303,
+      "order": 307,
       "dependsOn": [
         "o14_city_code_backfill_log_20261022",
         "o14_cms_activity_city_code_20261022",
@@ -1931,13 +2023,13 @@
       }
     },
     {
-      "step": 85,
+      "step": 89,
       "migrationId": "o14_content_search_document_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_content_search_document_20261022.sql",
       "sha256": "1d153c6fbbe8e7595cb169e906c64df975d1f85b88c486d1a0db6e4e8ebe3d5f",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 304,
+      "order": 308,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 content_search_document（O-14 统一搜索投影）",
@@ -1971,11 +2063,11 @@
       "sha256": "c822ad772727ed4ae0328998f7a99be1ece5d6c881f6259fc63de3ebb0822ba1",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 308,
+      "order": 312,
       "dependsOn": [
         "official_broadcast"
       ],
-      "step": 86
+      "step": 90
     },
     {
       "migrationId": "20261026_official_broadcast_delivery",
@@ -1995,11 +2087,11 @@
       "sha256": "ca5538fae79b01ac4690065da6cde4ac3b7922dce5c0d09a04a5ff58bca1076f",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 309,
+      "order": 313,
       "dependsOn": [
         "official_broadcast"
       ],
-      "step": 87
+      "step": 91
     },
     {
       "migrationId": "20261028_official_broadcast_protocol_union",
@@ -2021,21 +2113,21 @@
       "sha256": "44dc1ee52ab1591f0e893f26aaed8b6b1af4948ab53f98307c41a30c637b8b8b",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 310,
+      "order": 314,
       "dependsOn": [
         "20261023_d_official_broadcast_delivery",
         "20261026_official_broadcast_delivery"
       ],
-      "step": 88
+      "step": 92
     },
     {
-      "step": 89,
+      "step": 93,
       "migrationId": "orient_geo_ar_team_20261022",
       "path": "chengyinhub-admin/sql/migration_orient_geo_ar_team_20261022.sql",
       "sha256": "d297c399d1c12d568d551ebe6dc17d6cc87bc95a6bae6d5667ef1e991d01f1e3",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 323,
+      "order": 327,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 orient_node_geo / orient_task_alternative / orient_task_attempt / orient_task_completion / orient_safety_rule + sys_config orient.* 5 键（默认关）",
@@ -2067,9 +2159,9 @@
       "sha256": "7ad0d698bd3b5f0ebb5d36b1c30a2099868ca2b7598570cb82c8848fb93134a8",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 324,
+      "order": 328,
       "dependsOn": [],
-      "step": 90
+      "step": 94
     },
     {
       "migrationId": "orient_score_sync_receipt_20261026",
@@ -2088,9 +2180,9 @@
       "sha256": "615f1a9e64f42ff8d8ee398e32aac14168ff00f67edd4ddf34b6c12f90fd9f33",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 325,
+      "order": 329,
       "dependsOn": [],
-      "step": 91
+      "step": 95
     },
     {
       "migrationId": "20261111_creator_income_detail_idempotency",
@@ -2098,7 +2190,7 @@
       "sha256": "38b671c0a561c7fed9882524abf5adc10bb49c3f6740711b75c669719e32a284",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 334,
+      "order": 338,
       "dependsOn": [
         "p3_phase_b_player_world_creator"
       ],
@@ -2113,16 +2205,16 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='creator_income_detail' AND index_name='uk_creator_income_idempotency' AND non_unique=0 AND column_name='idempotency_key')=1 AS creator_income_idempotency_ready), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 92
+      "step": 96
     },
     {
-      "step": 93,
+      "step": 97,
       "migrationId": "o14_reco_search_jobs_20261022",
       "path": "chengyinhub-admin/sql/migration_o14_reco_search_jobs_20261022.sql",
       "sha256": "046921a70dbbf4f8ea32aa582d651e0a0d9c798cfd9c79a2df3b027972ccc370",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 357,
+      "order": 361,
       "dependsOn": [
         "o14_content_search_document_20261022",
         "p3_platform_foundation"
@@ -2145,7 +2237,7 @@
       "sha256": "da7ea1527f9fbd153ab0c986347c06697a7499f79b05ed695288ff154427ec79",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 368,
+      "order": 372,
       "dependsOn": [
         "perk_ledger_20260716"
       ],
@@ -2160,7 +2252,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema = DATABASE() AND table_name = 'redemption' AND constraint_type = 'CHECK' AND constraint_name = 'ck_perk_redemption_status'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 94
+      "step": 98
     },
     {
       "migrationId": "marketing_promotion_20261108",
@@ -2168,7 +2260,7 @@
       "sha256": "0786a0b49e9e9f5236a8a2ee76b4e40bf0e8d82e687b95815fa149441073d341",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 369,
+      "order": 373,
       "dependsOn": [
         "marketing_redemption_constraint_name_20261108"
       ],
@@ -2183,16 +2275,16 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_offer'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_offer_item'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_tier'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_promotion'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_promotion_redemption'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_order_adjustment'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'marketing_promotion_refund_fact'), 0))) = 7 AS applied; -- 期望 1"
       ],
-      "step": 95
+      "step": 99
     },
     {
-      "step": 96,
+      "step": 100,
       "migrationId": "play_arrive_guard_log_20261022",
       "path": "chengyinhub-admin/sql/migration_play_arrive_guard_log_20261022.sql",
       "sha256": "52b937c5468f03006aef2e6b15c1beeb9a625c539558ca805c57fc4ff453b1fb",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 373,
+      "order": 377,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 play_arrive_guard_log（到达守卫留痕；mode=off 时不读写）",
@@ -2207,13 +2299,13 @@
       ]
     },
     {
-      "step": 97,
+      "step": 101,
       "migrationId": "pms_sku_booking_20261022",
       "path": "chengyinhub-admin/sql/migration_pms_sku_booking_20261022.sql",
       "sha256": "0057c4368f7ade02120c109c791950e75b7f4c5d0dd6b42b8baf1fcb8f1fd8ac",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 382,
+      "order": 386,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 pms_sku_booking_rule / pms_sku_capacity_slot（F4 SKU 预约容量）",
@@ -2233,7 +2325,7 @@
       "sha256": "255cf152999cb4f7000134e313c1c9483d36022a6fe64a70dde498e9b844f4ef",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 386,
+      "order": 390,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "cms_member_template.preset_source",
@@ -2247,7 +2339,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_member_template' AND column_name = 'preset_source'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 98
+      "step": 102
     },
     {
       "migrationId": "public_content_catalog_20261108",
@@ -2255,7 +2347,7 @@
       "sha256": "2d238c2e96ab388ac7494389562ccf5037616fa452e20a3220076c228c71a9b6",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 397,
+      "order": 401,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "被 public_content_catalog_index_shape_20261109 逐字替代（原断言把两列唯一索引数成 1 行，必失败）；只执行替代文件",
@@ -2269,7 +2361,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_landing_metadata'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_landing_translation'), 0))) = 2 AS applied; -- 期望 1"
       ],
-      "step": 99
+      "step": 103
     },
     {
       "migrationId": "public_content_catalog_index_shape_20261109",
@@ -2277,7 +2369,7 @@
       "sha256": "82816800400ec24bf6fdfb353393f7671685daf8c32a370e94afa0a93d1ae05e",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 398,
+      "order": 402,
       "dependsOn": [
         "public_content_catalog_20261108"
       ],
@@ -2292,7 +2384,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_landing_metadata'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'content_landing_translation'), 0))) = 2 AS applied; -- 期望 1"
       ],
-      "step": 100
+      "step": 104
     },
     {
       "migrationId": "public_content_catalog_node_topic_index_20261108",
@@ -2300,7 +2392,7 @@
       "sha256": "6dd9baf633e2a977fe50fc8073506c1fd4f8d380f42aa25bcee6c5de8f168742",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 399,
+      "order": 403,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "cms_topic_node(topic_id) 索引（大表加索引，看锁）",
@@ -2314,7 +2406,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'cms_topic_node' AND index_name = 'idx_topic_node_topic'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 101
+      "step": 105
     },
     {
       "migrationId": "20261023_advanced_command_fingerprint",
@@ -2334,11 +2426,11 @@
       "sha256": "d1c413a6abab0a4f613a2ef7c41914adb1b6e69b0de51d6cb08a01d08a88951f",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 408,
+      "order": 412,
       "dependsOn": [
         "20260820_new_city_preference_chain"
       ],
-      "step": 102
+      "step": 106
     },
     {
       "migrationId": "20261029_unlist_test_topics",
@@ -2357,21 +2449,21 @@
       "sha256": "f4d7cb0f0c55e4f5d5cbd40ffc2ca9c7071b7717a38dffdf5afa611c86f1a023",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 409,
+      "order": 413,
       "dependsOn": [
         "20260823_topic_route_graph",
         "20260917_player_run_session"
       ],
-      "step": 103
+      "step": 107
     },
     {
-      "step": 104,
+      "step": 108,
       "migrationId": "orient_scoring_20261022",
       "path": "chengyinhub-admin/sql/migration_orient_scoring_20261022.sql",
       "sha256": "17893c96611ad13875178c9b6ebf4fcb332e7a11fad5f6fb8a7d1f25fd9e055a",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 410,
+      "order": 414,
       "dependsOn": [
         "20260823_topic_route_graph"
       ],
@@ -2389,13 +2481,13 @@
       ]
     },
     {
-      "step": 105,
+      "step": 109,
       "migrationId": "orient_session_lifecycle_20261022",
       "path": "chengyinhub-admin/sql/migration_orient_session_lifecycle_20261022.sql",
       "sha256": "ffc9001685f87179b58fa7bb9c104bc27c608664b3288e79234053699ffd2735",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 411,
+      "order": 415,
       "dependsOn": [
         "20260823_topic_route_graph"
       ],
@@ -2431,11 +2523,11 @@
       "sha256": "8671f805d52071ce1067838b21581ff53d278be34b8fd4a744b4b14183cbad6e",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 412,
+      "order": 416,
       "dependsOn": [
         "20261023_advanced_command_fingerprint"
       ],
-      "step": 106
+      "step": 110
     },
     {
       "migrationId": "20261103_settlement_rule_three_percent",
@@ -2443,7 +2535,7 @@
       "sha256": "73b9a8e4eb3ed2731eac2ae24e98bf42a374eedce7875bf943f7f67581943ef2",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 419,
+      "order": 423,
       "dependsOn": [
         "20260815_tandianri_h8_rate_convergence",
         "p3_phase_c_web_rules_refund"
@@ -2459,7 +2551,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT (SELECT COUNT(*) FROM settlement_rule WHERE merchant_id = 0 AND biz_type IN ('activity', 'topic', 'topic_club') AND status = 1 AND del_flag = 0 AND NOT (platform_commission_rate = 0.0300 AND merchant_rate = 0.9700 AND creator_rate = 0.0000)) = 0 AND (SELECT COUNT(*) FROM settlement_rule WHERE merchant_id = 0 AND biz_type IN ('activity', 'topic') AND status = 1 AND del_flag = 0 AND platform_commission_rate = 0.0300 AND merchant_rate = 0.9700 AND creator_rate = 0.0000) = 2 AS settlement_rule_three_percent), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 107,
+      "step": 111,
       "rerunKnownDelta": {
         "table": "settlement_rule",
         "ignoredColumns": [
@@ -2474,7 +2566,7 @@
       "sha256": "494130841727ccd9a7e3731ae965fcc0fd23581617d0abaaec57a7e8b8a9e8e8",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 424,
+      "order": 428,
       "dependsOn": [
         "club_role_assignment_20260823"
       ],
@@ -2489,7 +2581,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'club_role_assignment' AND column_name = 'customer_phone_visible'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 108
+      "step": 112
     },
     {
       "migrationId": "club_host_reservation_20261109",
@@ -2497,7 +2589,7 @@
       "sha256": "27bb56a61a8ffe7d95b8387a421f4b9fc37df6b2fcb42dbc6e313a0a71f6d012",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 432,
+      "order": 436,
       "dependsOn": [
         "club_role_event_ops_20260823",
         "club_waitlist_offer_window_20260911"
@@ -2514,7 +2606,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'club_event_series' AND column_name = 'host_reservation_required'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 109
+      "step": 113
     },
     {
       "migrationId": "20261030_merchant_game_mechanics",
@@ -2522,7 +2614,7 @@
       "sha256": "a93b75538118822e3f9e36dbac1c747a50864845399e6eabb3b9b5cd4a425155",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 457,
+      "order": 461,
       "dependsOn": [
         "20261012_missing_role_permission_defaults",
         "m1_permission_full",
@@ -2539,7 +2631,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) = 1 AS assertion_ok FROM user_permission WHERE role = 'merchant' AND membership_level IS NULL AND can_branch = 1 AND can_game_mechanic = 1), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 110
+      "step": 114
     },
     {
       "migrationId": "20261104_merchant_activity_limit",
@@ -2547,7 +2639,7 @@
       "sha256": "e0e247caa5f15e633f6a1eea4ea679a00536f5db7eba37a3720eba5137468a1c",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 458,
+      "order": 462,
       "dependsOn": [
         "20261012_missing_role_permission_defaults",
         "p1_rbac_permission_defaults"
@@ -2563,16 +2655,16 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) = 1 AS merchant_activity_limit_three FROM user_permission WHERE role = 'merchant' AND membership_level IS NULL AND can_create_event = 1 AND max_events = 3), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 111
+      "step": 115
     },
     {
-      "step": 112,
+      "step": 116,
       "migrationId": "member_visited_poi_poi_key_backfill_20261022",
       "path": "chengyinhub-admin/sql/migration_member_visited_poi_poi_key_backfill_20261022.sql",
       "sha256": "2980391167e7bb4113a9523158e7a7fb5577eb8875d534f27db7f612e240af27",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 459,
+      "order": 463,
       "dependsOn": [
         "member_visited_poi_poi_key_20261022",
         "roam"
@@ -2596,7 +2688,7 @@
       "sha256": "39a590a930b1c648590b40ef98a17c2b9b3f59f2a456979aaf799c9c8b2d56eb",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 469,
+      "order": 473,
       "dependsOn": [
         "roam",
         "roam_session_recovery_20260913"
@@ -2612,16 +2704,16 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'roam_session' AND column_name = 'track_json'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 113
+      "step": 117
     },
     {
-      "step": 114,
+      "step": 118,
       "migrationId": "roam_share_version_20261022",
       "path": "chengyinhub-admin/sql/migration_roam_share_version_20261022.sql",
       "sha256": "563ddd80ae4e23ce96d02183380d9175209e68702aaf06f1061fd9a6688170b6",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 471,
+      "order": 475,
       "dependsOn": [
         "20260917_roam_share_snapshot"
       ],
@@ -2654,13 +2746,13 @@
       "sha256": "dbe4bae0ce203ca9959ef649a5eeb4e807395249a1a408d6513ef54fac27692c",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 476,
+      "order": 480,
       "dependsOn": [
         "20261012_roam_claim_fingerprints",
         "city_merchant_node",
         "roam"
       ],
-      "step": 115
+      "step": 119
     },
     {
       "migrationId": "20261025_official_poi_quotes",
@@ -2679,11 +2771,11 @@
       "sha256": "7a0f93fc0dfd6b552a13951e9ccfdb4b7ac72c7fad90d55e332855fe1d8ad77d",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 477,
+      "order": 481,
       "dependsOn": [
         "20261024_official_roam_challenges"
       ],
-      "step": 116
+      "step": 120
     },
     {
       "migrationId": "20261023_g_cash_evidence_expand",
@@ -2705,7 +2797,7 @@
       "sha256": "5f37c67e857850926b0fbe35c442ca003d0ce31a799a445c728f2371c2d484cf",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 486,
+      "order": 490,
       "dependsOn": [
         "coop_settlement",
         "coop_settlement_line",
@@ -2713,16 +2805,16 @@
         "p3_phase_c_web_rules_refund",
         "settlement_claim_20260811"
       ],
-      "step": 117
+      "step": 121
     },
     {
-      "step": 118,
+      "step": 122,
       "migrationId": "20261022_theme_state_key_attribute_def",
       "path": "chengyinhub-admin/sql/migration_20261022_theme_state_key_attribute_def.sql",
       "sha256": "8b69583c24795742c0244610bb8dab6ef9abec64577a0a13666c5929146e0b25",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 512,
+      "order": 516,
       "dependsOn": [
         "theme_state_key_20260916"
       ],
@@ -2739,13 +2831,13 @@
       ]
     },
     {
-      "step": 119,
+      "step": 123,
       "migrationId": "20261022_theme_character",
       "path": "chengyinhub-admin/sql/migration_20261022_theme_character.sql",
       "sha256": "a0a8637bdf95674f4c11dabeb3852ab53a923789507a59e0b5cd64587f1adc71",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 513,
+      "order": 517,
       "dependsOn": [
         "20261022_theme_state_key_attribute_def",
         "theme_state_key_20260916"
@@ -2780,13 +2872,13 @@
       "sha256": "9cba286e9a9963314ee572364b8b944f3c7dd865c00e4266735c37a2a16ecdf0",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 526,
+      "order": 530,
       "dependsOn": [
         "20261022_theme_state_key_attribute_def",
         "theme_state_key_20260916",
         "topic_journey_rules_20260916"
       ],
-      "step": 120
+      "step": 124
     },
     {
       "migrationId": "20261101_prefab_life_template_copy",
@@ -2794,7 +2886,7 @@
       "sha256": "83a6a8b635c81a8526d0c13ed34b0006110118bd53f5e999de59704950f89a75",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 530,
+      "order": 534,
       "dependsOn": [
         "seed_prefab_life_20260918"
       ],
@@ -2809,7 +2901,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT (SELECT COUNT(*) FROM cms_topic WHERE id = 990059) = 0 OR ((SELECT COUNT(*) FROM cms_member_template WHERE id BETWEEN 133 AND 137 AND title LIKE 'PL0%') = 0 AND (SELECT COUNT(*) FROM cms_member_template WHERE id = 135 AND advanced_config_json LIKE '%hello world%') = 0 AND (SELECT JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[0].type')) FROM cms_topic_chapter WHERE id = 212) = 'text' AND (SELECT COUNT(*) FROM cms_topic_chapter WHERE id = 213 AND blocks LIKE '%一根烟%') = 0 AND (SELECT COUNT(*) FROM cms_topic WHERE id = 990059 AND description LIKE '%内部试玩版%') = 0) AS prefab_life_copy_fixed), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 121
+      "step": 125
     },
     {
       "migrationId": "20261101_prefab_life_template_state_keys",
@@ -2817,7 +2909,7 @@
       "sha256": "4cf6758a3c2b9f8205c01be5409cfcf3338d7f3654a8d1c4a20ccef2b9ac372e",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 531,
+      "order": 535,
       "dependsOn": [
         "20261022_theme_state_key_attribute_def",
         "seed_prefab_life_20260918",
@@ -2834,7 +2926,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT ( (SELECT COUNT(*) FROM cms_topic WHERE id = 990059 AND create_by = 'seed_prefab_life_20260918') = 0 OR (SELECT COUNT(*) FROM theme_state_key WHERE topic_id = 990059 AND state_key IN ('counter.energy', 'counter.instability') AND key_type = 'counter') = 2 ) AS prefab_life_state_keys_ready), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 122
+      "step": 126
     },
     {
       "migrationId": "topic_location_contract_20261107",
@@ -2842,7 +2934,7 @@
       "sha256": "89bc1fc72f2b01899f6cefa823b2a66543a3be717319c855a7100c92e1601059",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 532,
+      "order": 536,
       "dependsOn": [
         "o14_cms_topic_city_code_20261022"
       ],
@@ -2857,7 +2949,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND column_name = 'content_contract_json'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 123
+      "step": 127
     },
     {
       "migrationId": "20261028_remove_wildlife_theme",
@@ -2876,12 +2968,12 @@
       "sha256": "96a0967b9529c4bd62158c2fd5ca660458a7feb60a1e1937bf325295c02bcf62",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 541,
+      "order": 545,
       "dependsOn": [
         "publish_solo_story_topics_20260827",
         "seed_official_solo_story_topics_20260823"
       ],
-      "step": 124
+      "step": 128
     },
     {
       "migrationId": "20261028_template_shelf_list_free_explore",
@@ -2900,12 +2992,12 @@
       "sha256": "6779e927a59031f4bfeff8fee4e4f63de746dd4056f18e655ae979c1b46bd181",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 553,
+      "order": 557,
       "dependsOn": [
         "seed_shanghai_solo_topics_20260822",
         "seed_topic_template_shelf_20260726"
       ],
-      "step": 125
+      "step": 129
     },
     {
       "migrationId": "20261030_merchant_game_covers_to_oss",
@@ -2913,7 +3005,7 @@
       "sha256": "24051caa1941817aefd4b15e0c4cff8bdd842c4e8bb37e206ebf86578055ea56",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 562,
+      "order": 566,
       "dependsOn": [
         "20260825_cover_urls_off_package",
         "20261009_merchant_game_a8_cdn_guard",
@@ -2931,7 +3023,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT ( NOT EXISTS (SELECT 1 FROM cms_template_library WHERE img_url LIKE '%merchant-game-covers%') AND NOT EXISTS (SELECT 1 FROM cms_member_template WHERE img_url LIKE '%merchant-game-covers%') AND (SELECT COUNT(*) FROM cms_template_library WHERE img_url IN ( 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/d8881349a8b12d125eefa6d0b3f8865e.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/7e78a8daffcba3a2c94e03c458b50d5a.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/acd7612ec11ea88bc0e0b25fce626e10.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/363d3554bf573a675755ca1abcfc309b.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/c2034bb011bca6d8c5d27dd9a4a2626e.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/22a004404b88798e87c503293ee5585d.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/baa606560cc76d59bc1fbdaac7d0acdc.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/1bc3ecdf1b75c3b58a5fd02d4bd0529e.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/f1ebe784e730fefa3fdebb48c48f9656.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/8fe329c85e9172be1f759d8c78fd8d00.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/d15ed80bd6ace7ab3fdb78ccaccfae5e.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/f7682e0a27bfb39a718306b15cfc4a33.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/e87e7812f002d3846ff78f97d8386db8.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/0c9b46e2f4549e0cee636549cab1c352.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/2e497a3d84ab87029fa43abec1819c77.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/074fbd63e1a74a7487cb79a0ec60b5e2.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/35bc60793ac37154318c49c1f58b2ae9.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/49c397217cff9ef7709992f942fa3283.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/47e2df8dca943e9d2cf4bd1e586e677a.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/4eb7a1de7f7a73bef3b833a739866576.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/c122f18e626eb647224cd2723f3aafaa.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/2ccf78cf28130b62e4778b4e98801782.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/660817d5c22bdbc4f9c7a49da64353da.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/d355ec00c57c54965de94e28f0125fd5.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/739742f12cd264de1d250011fbf55f64.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/dea4b76bba8684ed4737a9fb95738645.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/7054204bc8082141ca068c9443a9862f.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/44635f8ce9ccb2be03c24420830c18f5.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/285cb232b98dd4a36ed6de332614d532.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/ca9be0c6ee70e647d4d7e1bd7b302dac.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/4e93e2f8bdbf7015bf066bd482bfb1d3.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/b01a09009cb9912161aa27793819d9e0.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/dc42e036bcdc86ac602bd04a9247532a.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/53981dd73de1c3d9dc7fd736a487e289.jpg', 'https://chengyin-oss.oss-cn-shanghai.aliyuncs.com/upload/54079a8c0d978ec61aa270e9b78216a6.jpg')) >= 35 ) AS merchant_game_covers_on_oss), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 126
+      "step": 130
     },
     {
       "migrationId": "20261111_rule_seed_split_steps",
@@ -2939,7 +3031,7 @@
       "sha256": "82e98fa8f28660792053d204113d8d16603623d89a08fc8c82b7bfaa1ba3ee19",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 566,
+      "order": 570,
       "dependsOn": [
         "seed_home_solo_node_templates_20260826",
         "seed_merchant_game_a8_20260823",
@@ -2957,16 +3049,92 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT (SELECT COUNT(*) FROM cms_template_library WHERE rule_instructions IN ('1. 到达指定门店。2. 向店员说出今日暗号。3. 输入暗号或扫码完成任务,领取隐藏奖励。(运营提示:暗号每天可换一次;商家必须提前知道暗号和奖励,否则现场体验会断)', '1. 阅读店铺故事或观察现场线索。2. 回答老板留下的问题。3. 答对后点亮店铺故事徽章。(运营提示:题目必须能从现场找到答案,不要出只有老板知道、玩家猜不到的问题)', '1. 找到店内指定拍照点。2. 拍下符合要求的照片。3. 上传照片后完成任务,生成分享素材。(运营提示:拍照要求必须具体,例如「包含店铺招牌」或「拍下今日限定甜品」,不要写「拍一张好看的照片」)', '1. 到达合作门店。2. 扫码或由店员核销。3. 点亮风味印章,集满指定数量兑换奖励。(运营提示:必须提前定义集几枚章可兑换什么,建议 3 家给基础奖励,5 家给进阶奖励;二维码在路线/点位层绑定)', '1. 到店领取新品体验。2. 完成试吃、试喝或试用。3. 提交你的判断,领取体验官奖励。(运营提示:商家改造时把「正确项」设为最想传达的卖点;如要收集真实偏好,等问卷能力上线)', '1. 按任务要求选择商品或套餐组合。2. 拍下你的搭配成果。3. 上传后获得风格称号或专属优惠。(运营提示:商家要提前准备 2-3 套推荐搭配,降低用户选择成本)', '1. 到达集合点。2. 找到领队完成签到。3. 领取今日身份,准备出发。(运营提示:默认放在俱乐部主题的第一个节点,解决迟到、散乱、陌生人尴尬;小规模熟人局可改为无需验证)', '1. 小队同时出发。2. 在限定时间内到达目标点。3. 完成点亮后进入下一站,最终按完成时间和任务数排名。(运营提示:坐标在路线/点位层绑定;GPS 偏差大的点位可改扫码)', '1. 到达指定地点。2. 观察现场细节,找到线索。3. 输入答案,解锁下一段故事。(运营提示:谜题答案必须稳定存在,不要依赖临时海报、会被遮挡的物件或容易变化的菜单)', '1. 阅读今日拍摄主题。2. 在指定区域内寻找画面。3. 上传照片,完成取景任务。(运营提示:如做评选,规则要提前说明——按主题契合、构图、故事感评分)', '1. 完成本队线索。2. 得到接力暗号。3. 将暗号交给下一队,完成接力。(运营提示:第一版队伍顺序由领队线下控制,小程序负责节点完成和记录)', '1. 小队成员抽取角色。2. 按角色分工完成任务。3. 上传证据或回答问题,解锁小队奖励。(运营提示:第一版角色可先线下抽卡,小程序记录「角色任务完成」;系统自动分配角色上线后自动升级)', '1. 先观察桌面或展示柜中的招牌线索。2. 启动 60 秒倒计时。3. 在四个选项中选出本店招牌。4. 用时更短的玩家进入本场榜单。商家采用后必须把题目和四个选项改成本店真实商品。', '1. 抽取一张风味线索卡。2. 回答两道偏好题。3. 并列时完成最后取舍。4. 获得明亮探索家或醇厚治愈派结果。5. 选择对应体验分支并请店员推荐。结果仅用于本局展示 不写入跨节点偏好标签。商家采用后可改结果文案 但不得把偏好推断为健康或消费能力。', '1. 启动五分钟倒计时。2. 从菜单路径或陈列路径选一条。3. 按分支找到隐藏口令。4. 回答最终验证题。商家采用后必须现场走通两条路径 且不能依赖临时海报。', '1. 阅读现场安全提示。2. 启动 60 秒倒计时。3. 选出正确做法。4. 按正确完成用时进入榜单。本玩法只做知识反应 不宣称识别动作质量或运动消耗。', '1. 依次抽出三轮节奏并点击播放。2. 队员根据听到的节拍轻拍桌面。3. 播放并复刻完一段后再抽下一轮。4. 三轮结束后按完赛用时进榜。模板音频为程序合成击打音 不含歌曲采样。', '1. 抽取一个原创故事开场。2. 系统自动分配讲述者与选择者。3. 按角色顺序完成四轮接力。4. 队伍共同选择故事分支并解锁结局。本模板是公开信息的协作接力 不冒充完整隐藏身份推理。', '1. 启动三分钟倒计时。2. 观察示例污渍。3. 选择油性或水性线索分支。4. 在最终题中选出稳妥做法。本玩法只做常识互动 不承诺清洁效果 真实贵重衣物应交由专业人员判断。', '1. 阅读安全情境 不设置速度奖励。2. 选择电器或燃气分支。3. 完成避险顺序。4. 回答最终安全题。本玩法不远程诊断真实故障 遇到危险应立即离开并联系当地紧急服务或合格专业人员。', '1. 向店员领取盲品小样。2. 闭眼尝。3. 睁眼在四个选项中作答。4. 答错可以再答 答对才给分。商家采用后必须把四个选项和正确答案改成本店真实商品 答案由服务端保管 不会下发给玩家。', '1. 全程不开口 用比划 眼神或演技表达你要的东西。2. 开口即失败 由玩家自己认输。3. 店员猜中后扫玩家出示的见证码完成核销。商家采用后请先和店员说明规则 高峰时段不建议开启。', '1. 用店里现有的东西配出你的作品。2. 拍一张照片。3. 给它起一个名字并提交。名字会公开展示 提交前会做内容安全检测。商家采用后可把备选名改成本店风格 并决定是否把作品上今日推荐。', '1. 找个位置坐下。2. 播放店主的歌单。3. 听完。本玩法不判定通关 也不给奖励分 它只是让你在这一站停一会儿。商家采用后请填入曲目地址 并确认已获得播放授权。', '1. 只有在开放时段内才能开局 时段由服务端判定。2. 不在时段内会看到倒计时和订阅提醒。3. 时段内进入即可开始。商家采用后必须把开放时段改成本店真实营业时间 跨夜时段(如 23:00 到 01:00)是允许的。', '1. 授权微信运动。2. 刷新步数 步数由服务端解密微信运动数据得到。3. 达到目标步数即落章。客户端自己填的步数不作数。商家采用后可按线路长度调整目标步数 建议 3000 到 8000 之间。', '1. 到达后领取今日城市签。2. 一天只有一条 由服务端按日期选定。3. 同一天重复领会拿到同一条 不会换。商家采用后可把签文改成本店口吻 每条 1 至 4 行 每行不超过 24 字。', '1. 从外白渡桥起步，沿苏州河向西。2. 每到一座桥，拍下桥头的桥名牌。3. 走累了随时收工，下次接着走。4. 九张集齐视为完成。全程走人行道，不翻护栏，不在桥面车行道一侧停留拍摄。', '1. 进馆后先不看导览，随便走到哪算哪。2. 选一件让你自己停下来的作品。3. 坐下或站定看满十分钟，中途不看手机。4. 拍下展签，写一句话。展厅拍摄请遵守场馆规定，禁拍区域不拍。', '1. 每家店只做一件事：找一本你没听过的书。2. 站着读完前三页。3. 拍下封面，放回原位或结账带走，都算完成。4. 五家店集满五张。请遵守各店的拍照与试读规定，不拆封、不长时间占用座位。', '1. 早上七点半到八点半之间到场。2. 找三样你叫不出名字的时令菜，各拍一张。3. 挑其中一样，问摊主怎么做。4. 买一样今天就吃得掉的东西收工。摊主在做生意，问一句就好，别长时间占着摊位。', '1. 天黑后到达，手机就够。2. 拍第一张：完全不含人的建筑局部。3. 拍第二张：有陌生人但看不清脸的街景。4. 拍第三张：你自己的影子。5. 选一张留下，另外两张当场删掉——这一步才是任务本身。不为取景越过围栏或站上台阶边沿。', '1. 出发前把配速播报关掉。2. 沿武康路、五原路、安福路跑一圈，约五公里。3. 想停就停，遇到好看的路口可以走过去。4. 回到武康大楼路口拍一张，记下当时第一个念头。人行道行人多，请降速避让、礼让行人。', '1. 从龙美术馆前广场出发，沿骑行道往南骑约七点五公里。2. 找一处江边台阶停下。3. 待够十分钟，不刷手机、不听播客，什么都不做。4. 拍一张你面前的江面，然后原路折返。遵守骑行道限速与单向指引。', '1. 只走公共街面，不进私人院落。2. 找那些几乎不会被拍到的细节：旧门牌编号、砖缝里的植物、被漆盖过的招牌、修过三次的排水口。3. 找到就拍，凑满十张结束。这一带住着人：请压低音量，不拍摄居民与室内，遇施工围挡绕行。')) = 0 AND (SELECT COUNT(*) FROM cms_member_template WHERE rule_instructions IN ('1. 到达指定门店。2. 向店员说出今日暗号。3. 输入暗号或扫码完成任务,领取隐藏奖励。(运营提示:暗号每天可换一次;商家必须提前知道暗号和奖励,否则现场体验会断)', '1. 阅读店铺故事或观察现场线索。2. 回答老板留下的问题。3. 答对后点亮店铺故事徽章。(运营提示:题目必须能从现场找到答案,不要出只有老板知道、玩家猜不到的问题)', '1. 找到店内指定拍照点。2. 拍下符合要求的照片。3. 上传照片后完成任务,生成分享素材。(运营提示:拍照要求必须具体,例如「包含店铺招牌」或「拍下今日限定甜品」,不要写「拍一张好看的照片」)', '1. 到达合作门店。2. 扫码或由店员核销。3. 点亮风味印章,集满指定数量兑换奖励。(运营提示:必须提前定义集几枚章可兑换什么,建议 3 家给基础奖励,5 家给进阶奖励;二维码在路线/点位层绑定)', '1. 到店领取新品体验。2. 完成试吃、试喝或试用。3. 提交你的判断,领取体验官奖励。(运营提示:商家改造时把「正确项」设为最想传达的卖点;如要收集真实偏好,等问卷能力上线)', '1. 按任务要求选择商品或套餐组合。2. 拍下你的搭配成果。3. 上传后获得风格称号或专属优惠。(运营提示:商家要提前准备 2-3 套推荐搭配,降低用户选择成本)', '1. 到达集合点。2. 找到领队完成签到。3. 领取今日身份,准备出发。(运营提示:默认放在俱乐部主题的第一个节点,解决迟到、散乱、陌生人尴尬;小规模熟人局可改为无需验证)', '1. 小队同时出发。2. 在限定时间内到达目标点。3. 完成点亮后进入下一站,最终按完成时间和任务数排名。(运营提示:坐标在路线/点位层绑定;GPS 偏差大的点位可改扫码)', '1. 到达指定地点。2. 观察现场细节,找到线索。3. 输入答案,解锁下一段故事。(运营提示:谜题答案必须稳定存在,不要依赖临时海报、会被遮挡的物件或容易变化的菜单)', '1. 阅读今日拍摄主题。2. 在指定区域内寻找画面。3. 上传照片,完成取景任务。(运营提示:如做评选,规则要提前说明——按主题契合、构图、故事感评分)', '1. 完成本队线索。2. 得到接力暗号。3. 将暗号交给下一队,完成接力。(运营提示:第一版队伍顺序由领队线下控制,小程序负责节点完成和记录)', '1. 小队成员抽取角色。2. 按角色分工完成任务。3. 上传证据或回答问题,解锁小队奖励。(运营提示:第一版角色可先线下抽卡,小程序记录「角色任务完成」;系统自动分配角色上线后自动升级)', '1. 先观察桌面或展示柜中的招牌线索。2. 启动 60 秒倒计时。3. 在四个选项中选出本店招牌。4. 用时更短的玩家进入本场榜单。商家采用后必须把题目和四个选项改成本店真实商品。', '1. 抽取一张风味线索卡。2. 回答两道偏好题。3. 并列时完成最后取舍。4. 获得明亮探索家或醇厚治愈派结果。5. 选择对应体验分支并请店员推荐。结果仅用于本局展示 不写入跨节点偏好标签。商家采用后可改结果文案 但不得把偏好推断为健康或消费能力。', '1. 启动五分钟倒计时。2. 从菜单路径或陈列路径选一条。3. 按分支找到隐藏口令。4. 回答最终验证题。商家采用后必须现场走通两条路径 且不能依赖临时海报。', '1. 阅读现场安全提示。2. 启动 60 秒倒计时。3. 选出正确做法。4. 按正确完成用时进入榜单。本玩法只做知识反应 不宣称识别动作质量或运动消耗。', '1. 依次抽出三轮节奏并点击播放。2. 队员根据听到的节拍轻拍桌面。3. 播放并复刻完一段后再抽下一轮。4. 三轮结束后按完赛用时进榜。模板音频为程序合成击打音 不含歌曲采样。', '1. 抽取一个原创故事开场。2. 系统自动分配讲述者与选择者。3. 按角色顺序完成四轮接力。4. 队伍共同选择故事分支并解锁结局。本模板是公开信息的协作接力 不冒充完整隐藏身份推理。', '1. 启动三分钟倒计时。2. 观察示例污渍。3. 选择油性或水性线索分支。4. 在最终题中选出稳妥做法。本玩法只做常识互动 不承诺清洁效果 真实贵重衣物应交由专业人员判断。', '1. 阅读安全情境 不设置速度奖励。2. 选择电器或燃气分支。3. 完成避险顺序。4. 回答最终安全题。本玩法不远程诊断真实故障 遇到危险应立即离开并联系当地紧急服务或合格专业人员。', '1. 向店员领取盲品小样。2. 闭眼尝。3. 睁眼在四个选项中作答。4. 答错可以再答 答对才给分。商家采用后必须把四个选项和正确答案改成本店真实商品 答案由服务端保管 不会下发给玩家。', '1. 全程不开口 用比划 眼神或演技表达你要的东西。2. 开口即失败 由玩家自己认输。3. 店员猜中后扫玩家出示的见证码完成核销。商家采用后请先和店员说明规则 高峰时段不建议开启。', '1. 用店里现有的东西配出你的作品。2. 拍一张照片。3. 给它起一个名字并提交。名字会公开展示 提交前会做内容安全检测。商家采用后可把备选名改成本店风格 并决定是否把作品上今日推荐。', '1. 找个位置坐下。2. 播放店主的歌单。3. 听完。本玩法不判定通关 也不给奖励分 它只是让你在这一站停一会儿。商家采用后请填入曲目地址 并确认已获得播放授权。', '1. 只有在开放时段内才能开局 时段由服务端判定。2. 不在时段内会看到倒计时和订阅提醒。3. 时段内进入即可开始。商家采用后必须把开放时段改成本店真实营业时间 跨夜时段(如 23:00 到 01:00)是允许的。', '1. 授权微信运动。2. 刷新步数 步数由服务端解密微信运动数据得到。3. 达到目标步数即落章。客户端自己填的步数不作数。商家采用后可按线路长度调整目标步数 建议 3000 到 8000 之间。', '1. 到达后领取今日城市签。2. 一天只有一条 由服务端按日期选定。3. 同一天重复领会拿到同一条 不会换。商家采用后可把签文改成本店口吻 每条 1 至 4 行 每行不超过 24 字。', '1. 从外白渡桥起步，沿苏州河向西。2. 每到一座桥，拍下桥头的桥名牌。3. 走累了随时收工，下次接着走。4. 九张集齐视为完成。全程走人行道，不翻护栏，不在桥面车行道一侧停留拍摄。', '1. 进馆后先不看导览，随便走到哪算哪。2. 选一件让你自己停下来的作品。3. 坐下或站定看满十分钟，中途不看手机。4. 拍下展签，写一句话。展厅拍摄请遵守场馆规定，禁拍区域不拍。', '1. 每家店只做一件事：找一本你没听过的书。2. 站着读完前三页。3. 拍下封面，放回原位或结账带走，都算完成。4. 五家店集满五张。请遵守各店的拍照与试读规定，不拆封、不长时间占用座位。', '1. 早上七点半到八点半之间到场。2. 找三样你叫不出名字的时令菜，各拍一张。3. 挑其中一样，问摊主怎么做。4. 买一样今天就吃得掉的东西收工。摊主在做生意，问一句就好，别长时间占着摊位。', '1. 天黑后到达，手机就够。2. 拍第一张：完全不含人的建筑局部。3. 拍第二张：有陌生人但看不清脸的街景。4. 拍第三张：你自己的影子。5. 选一张留下，另外两张当场删掉——这一步才是任务本身。不为取景越过围栏或站上台阶边沿。', '1. 出发前把配速播报关掉。2. 沿武康路、五原路、安福路跑一圈，约五公里。3. 想停就停，遇到好看的路口可以走过去。4. 回到武康大楼路口拍一张，记下当时第一个念头。人行道行人多，请降速避让、礼让行人。', '1. 从龙美术馆前广场出发，沿骑行道往南骑约七点五公里。2. 找一处江边台阶停下。3. 待够十分钟，不刷手机、不听播客，什么都不做。4. 拍一张你面前的江面，然后原路折返。遵守骑行道限速与单向指引。', '1. 只走公共街面，不进私人院落。2. 找那些几乎不会被拍到的细节：旧门牌编号、砖缝里的植物、被漆盖过的招牌、修过三次的排水口。3. 找到就拍，凑满十张结束。这一带住着人：请压低音量，不拍摄居民与室内，遇施工围挡绕行。')) = 0 AS rule_seed_split_done), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 127
+      "step": 131
     },
     {
-      "step": 128,
+      "migrationId": "20261112_template_usage_count",
+      "path": "chengyinhub-admin/sql/migration_20261112_template_usage_count.sql",
+      "sha256": "8ec1f0bb0184793028653a58abce5c6bb54c145d062728f81a025e29bb780172",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 571,
+      "dependsOn": [
+        "seed_celebrate_games_20260821",
+        "seed_life_backup_games_20260820",
+        "seed_merchant_game_a8_20260823",
+        "seed_merchant_game_b27_20260823",
+        "seed_merchant_game_v51_20260827",
+        "seed_template_library_12packs_20260820"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "D89：持久化真实首次采用人数，按既有会员/来源去重回填；模板写入暂停期间执行",
+      "idempotencyGuard": "单次执行：普通 CREATE/ADD 或前置断言，直接重跑以 1050/1060/3141 拒绝且不改库；重跑只在新鲜预检 APPLIED 时跳过（PRECHECK_SKIP_APPLIED）",
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "ALTER cms_template_library：在线 DDL，生产行数 UNKNOWN，窗口内看元数据锁；UPDATE cms_template_library：按键/条件写少量行（按语句归纳）",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT COUNT(*)=1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='cms_template_library' AND column_name='use_num' AND data_type='int' AND is_nullable='NO' AND column_default='0' AND column_comment='D89 distinct first adopters'), 0))) = 1 AS applied; -- 期望 1"
+      ],
+      "step": 132
+    },
+    {
+      "migrationId": "20261112_template_market_status",
+      "path": "chengyinhub-admin/sql/migration_20261112_template_market_status.sql",
+      "sha256": "e9f1d2824bda50d70661549056fabbb91fc72ff4866d75f0f6a1a9ceb839dbda",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 572,
+      "dependsOn": [
+        "20261112_template_usage_count",
+        "p3_platform_foundation"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "D90：广场 status 单一真源并移除 publish_status；停止旧 jar 后维护窗口执行，禁止在线滚动迁移或直接回滚旧 jar",
+      "idempotencyGuard": "information_schema 守卫后条件执行 DDL；f-rehearsal 两遍执行零报错",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "UPDATE audit_task：按键/条件写少量行（按语句归纳）",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT (SELECT COUNT(*)=0 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='cms_template_library' AND column_name='publish_status') AND (SELECT COUNT(*)=1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='cms_template_library' AND column_name='status' AND column_comment='D90 market state 0 pending 1 live 2 rejected 3 approved-offline') AND (SELECT COUNT(*)=0 FROM cms_template_library WHERE status IS NULL OR status NOT IN (0,1,2,3))), 0))) = 1 AS applied; -- 期望 1"
+      ],
+      "step": 133
+    },
+    {
+      "migrationId": "20261112_template_author_title_unique",
+      "path": "chengyinhub-admin/sql/migration_20261112_template_author_title_unique.sql",
+      "sha256": "1d871c3f560a196fe422ec3bf607eddf5bc853b1391e9437e45f6fcde069682f",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 573,
+      "dependsOn": [
+        "20261112_template_market_status"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "D90/D5：同作者未删除广场标题 trim 后逐字唯一；重复先只读预览并阻断，不自动改名，最终索引断言通过才算已应用",
+      "idempotencyGuard": "information_schema 守卫后条件执行 DDL；f-rehearsal 两遍执行零报错",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "无表级写入（只读断言/存储过程守卫外壳）；按语句归纳，生产体量 UNKNOWN",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT (SELECT COUNT(*)=1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='cms_template_library' AND column_name='active_title_key' AND data_type='varbinary' AND character_maximum_length=1024 AND extra='STORED GENERATED' AND generation_expression LIKE '%regexp_replace%') AND (SELECT COUNT(*)=2 AND SUM(non_unique=0 AND ((seq_in_index=1 AND column_name='member_id') OR (seq_in_index=2 AND column_name='active_title_key')))=2 FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='cms_template_library' AND index_name='uk_template_author_live_title')), 0))) = 1 AS applied; -- 期望 1"
+      ],
+      "step": 134
+    },
+    {
+      "step": 135,
       "migrationId": "verification_review_evidence_20261022",
       "path": "chengyinhub-admin/sql/migration_verification_review_evidence_20261022.sql",
       "sha256": "9b13f58da4455c4af67429bbe604086cf28cd451f19ad71f0bf09b489d42d889",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 574,
+      "order": 581,
       "dependsOn": [],
       "phase": "PRE_DEPLOY",
       "changes": "新表 verification_review_evidence（F4 复核补材料）",
@@ -2986,7 +3154,7 @@
       "sha256": "773a0119578cf773f43450c7a25e7c32c3afac0ced70e0f140b52438f2c72e0e",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 575,
+      "order": 582,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "视频悬赏 + 主持小费 6 表",
@@ -3000,7 +3168,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'video_bounty_campaign'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'video_bounty_evidence'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'video_bounty_accrual'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'host_tip_config'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'host_tip_intent'), 0))) = 6 AS applied; -- 期望 1"
       ],
-      "step": 129
+      "step": 136
     },
     {
       "migrationId": "video_bounty_group_verification_20261108",
@@ -3008,7 +3176,7 @@
       "sha256": "7a993c92402a0f203cd8151544d460d296b935f66576718f72555dcb22533079",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 576,
+      "order": 583,
       "dependsOn": [
         "video_bounty_host_tip_20261108"
       ],
@@ -3024,7 +3192,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_group_key'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_by'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_at'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_source_ref'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND column_name = 'verified_group_version'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'video_bounty_submission' AND index_name = 'idx_vbs_verified_group'), 0))) = 6 AS applied; -- 期望 1"
       ],
-      "step": 130
+      "step": 137
     },
     {
       "migrationId": "20261025_coop_order_station_fulfillment",
@@ -3046,13 +3214,13 @@
       "sha256": "73f6586a2f6c0616e3e0283abc0be8bc626d5923b0a776a6a3f01e4ebeec3ba3",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 579,
+      "order": 586,
       "dependsOn": [
         "20261023_g_cash_evidence_expand",
         "business_audit_event_20260823",
         "w2_terms_axes_20260811"
       ],
-      "step": 131
+      "step": 138
     },
     {
       "migrationId": "w8_refund_fulfillment_recovery_20261026",
@@ -3072,11 +3240,11 @@
       "sha256": "28b65fad53c1aa768b7d7d56886e4b4a1998cecb8faad59bcc8d9c996bf432f1",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 580,
+      "order": 587,
       "dependsOn": [
         "p3_phase_c_web_rules_refund"
       ],
-      "step": 132
+      "step": 139
     },
     {
       "migrationId": "20261026_user_invoice_menu",
@@ -3095,22 +3263,22 @@
       "sha256": "078d59279328a462bf73a948382904129ef2abce8acb9864b3731a9bd9614c61",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 585,
+      "order": 592,
       "dependsOn": [
         "20261012_missing_business_menu",
         "20261026_user_invoice_processing",
         "20261026_user_invoice_title_receipt"
       ],
-      "step": 133
+      "step": 140
     },
     {
-      "step": 134,
+      "step": 141,
       "migrationId": "20261013_admin_role_page_grants",
       "path": "chengyinhub-admin/sql/migration_20261013_admin_role_page_grants.sql",
       "sha256": "1f147a2136e999b6fd87a7e0a865d8fde5b0c332170d561b28e415b9fccaf56e",
       "baseSha256": "0834bcafb1c9a2f169377445d463cc34a6dce7fa2e96e6b6f81d09ab65254ead",
       "change": "MODIFIED",
-      "order": 600,
+      "order": 607,
       "dependsOn": [
         "20261012_media_review_menu",
         "20261012_missing_business_menu",
@@ -3130,13 +3298,13 @@
       ]
     },
     {
-      "step": 135,
+      "step": 142,
       "migrationId": "20261016_admin_role_payee_separation_forward",
       "path": "chengyinhub-admin/sql/migration_20261016_admin_role_payee_separation_forward.sql",
       "sha256": "4eeef3936f72f05e69b3440aa818c2c39d53e046aaabd82cfdef10c868cca34e",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 601,
+      "order": 608,
       "dependsOn": [
         "20260816_tandianri_batch3_funds_club_compensation",
         "20260816_tandianri_batch3_funds_club_payee",
@@ -3172,13 +3340,13 @@
       "sha256": "6af4376c7606e5bce733fe97f97f56213930d02cc0d4c2a1e9a39313505606cc",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 602,
+      "order": 609,
       "dependsOn": [
         "20261012_missing_business_menu",
         "topic_source_menu_20260722",
         "web_admin_roles_20260719"
       ],
-      "step": 136
+      "step": 143
     },
     {
       "migrationId": "20261104_review_wording_seeded_text",
@@ -3186,7 +3354,7 @@
       "sha256": "4f7b17900ea8f10e841248a7fe2b6898550f0616a63bf8be0487db58928af9b5",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 603,
+      "order": 610,
       "dependsOn": [
         "20260815_tandianri_roam_revisit_report_permission",
         "20260816_tandianri_batch3_funds_club_compensation",
@@ -3210,7 +3378,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) = 0 AS seeded_job_text_renamed FROM sys_job WHERE invoke_target = 'predictVoidExpiredTask.run()' AND (job_name = '竞猜轮次超时作废' COLLATE utf8mb4_bin OR remark = '商家超过48小时不给竞猜答案的轮次作废且不发奖;自收敛任务,无过期轮次时空跑' COLLATE utf8mb4_bin)), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 137
+      "step": 144
     },
     {
       "migrationId": "20261109_play_help_audit_permission",
@@ -3218,7 +3386,7 @@
       "sha256": "ed68753d75a0dd26ac52d3bdb02d660d37fbef723b825801f4905164af26c95a",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 604,
+      "order": 611,
       "dependsOn": [
         "20261013_admin_role_page_grants",
         "20261016_admin_role_payee_separation_forward"
@@ -3235,7 +3403,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) = 1 FROM sys_menu WHERE perms = 'business:playhelp:query' AND menu_type = 'F'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 138
+      "step": 145
     },
     {
       "migrationId": "20261109_questo_admin_menus",
@@ -3243,7 +3411,7 @@
       "sha256": "0b7db47b797478e61bd512036367f876fcf80e9d16564bb94637c468397a03b8",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 605,
+      "order": 612,
       "dependsOn": [
         "20261012_missing_business_menu",
         "approval_governance_20260828",
@@ -3270,7 +3438,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:contentlanding:review'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:hosttip:audit'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:issue'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:list'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:manage'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:reconcile'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:revoke'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:marketing:channel:verify'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:revenue:list'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:videobounty:config'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE perms = 'business:videobounty:review'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM sys_menu WHERE component = 'business/analytics/postgame'), 0))) = 12 AS applied; -- 期望 1"
       ],
-      "step": 139
+      "step": 146
     },
     {
       "migrationId": "20261023_g_wp08_delivery_jobs_paused",
@@ -3290,7 +3458,7 @@
       "sha256": "9d5b05113ddbf878735ae391313814540a855bd41f21aeaa61b63578e76ee7ab",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 612,
+      "order": 619,
       "dependsOn": [
         "20261012_im_media_visibility",
         "20261013_b_im_notification_intent",
@@ -3298,7 +3466,7 @@
         "20261013_roam_reward_delivery",
         "member_exp_earned_20261011"
       ],
-      "step": 140
+      "step": 147
     },
     {
       "migrationId": "club_post_media_review_budget_20261024",
@@ -3318,11 +3486,11 @@
       "sha256": "5d4f02c02dcd1b67c45ce6d05e575fd9a3045bfea30cb4094fce2063d492669e",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 614,
+      "order": 621,
       "dependsOn": [
         "club_role_media_review_outbox_20260824"
       ],
-      "step": 141
+      "step": 148
     },
     {
       "migrationId": "20261024_wx_verified_payment_fact",
@@ -3343,11 +3511,11 @@
       "sha256": "1bc8ed6c9fdfefbb63890802f663961a27adb5636770394a0671123504d060e9",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 618,
+      "order": 625,
       "dependsOn": [
         "wx_payment_callback_inbox_outbox_20260725"
       ],
-      "step": 142
+      "step": 149
     },
     {
       "migrationId": "20261024_clm_commerce_payment_proof",
@@ -3368,13 +3536,13 @@
       "sha256": "039c786834993b88734742b25ee96e6f42773a755ed5f935b8cf6950679d15f5",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 619,
+      "order": 626,
       "dependsOn": [
         "20261024_wx_verified_payment_fact",
         "club_role_membership_20260823",
         "commerce_order_fields_and_verification_review_20260805"
       ],
-      "step": 143
+      "step": 150
     },
     {
       "migrationId": "20261024_coop_original_refund_components",
@@ -3395,12 +3563,12 @@
       "sha256": "ccde7e23229557657541c972bc55820bb8ed6e078165ed94a9c2c4df778fd6fe",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 620,
+      "order": 627,
       "dependsOn": [
         "20261023_g_cash_evidence_expand",
         "20261024_wx_verified_payment_fact"
       ],
-      "step": 144
+      "step": 151
     },
     {
       "migrationId": "20261024_coop_negative_margin_manual",
@@ -3421,11 +3589,11 @@
       "sha256": "8c1d57fdce3717f39a3b6b671c5671e10f9f7e9035a4cf6c81495b84f27cb5f5",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 621,
+      "order": 628,
       "dependsOn": [
         "20261024_coop_original_refund_components"
       ],
-      "step": 145
+      "step": 152
     },
     {
       "migrationId": "20261024_registration_payment_fact",
@@ -3447,11 +3615,11 @@
       "sha256": "fdc733febedd2a1781bf0976d0ebf2d9b5b411b0d3f5787c72d00c328a5017eb",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 622,
+      "order": 629,
       "dependsOn": [
         "20261024_wx_verified_payment_fact"
       ],
-      "step": 146
+      "step": 153
     },
     {
       "migrationId": "20261024_wx_success_fact_business_index",
@@ -3472,11 +3640,61 @@
       "sha256": "0937ea8846f8ab661d272016b2cf9aa655c18c062f38266ae1e6caecbce7a12c",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 623,
+      "order": 630,
       "dependsOn": [
         "20261024_wx_verified_payment_fact"
       ],
-      "step": 147
+      "step": 154
+    },
+    {
+      "migrationId": "20261112_dec_c_payout",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_payout.sql",
+      "sha256": "e0f634ea8496a9ecb3629a4793130dc7f2fabebd31225b9ae8ced98a045f27f0",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 631,
+      "dependsOn": [
+        "20261024_coop_original_refund_components",
+        "20261110_ecommerce_payout",
+        "20261110_ecommerce_payout_wiring"
+      ],
+      "phase": "POST_DEPLOY",
+      "changes": "DEC-C D-05/D-09/D-16：个人俱乐部收款方与不可变受益快照；依赖 ecommerce_payout_wiring（POST_DEPLOY），随其放新 jar 之后；个人开关保持关闭，新 mapper 读取这些列前须已执行；含收款 mchid 列加宽与退款唯一索引改型",
+      "idempotencyGuard": "单次执行：普通 CREATE/ADD 或前置断言，直接重跑以 1050/1060/3141 拒绝且不改库；重跑只在新鲜预检 APPLIED 时跳过（PRECHECK_SKIP_APPLIED）",
+      "rerunPolicy": "PRECHECK_SKIP_APPLIED",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "ALTER ecom_profit_share_line、ecom_profit_share_return：在线 DDL，生产行数 UNKNOWN，窗口内看元数据锁；新建空表 club_personal_payout_beneficiary、ecom_personal_receiver，瞬时（按语句归纳）",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'ecom_personal_receiver'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'club_personal_payout_beneficiary'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement' AND column_name = 'club_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement' AND column_name = 'club_name'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement' AND column_name = 'payout_hold_reason'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement_original_component' AND column_name = 'club_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'coop_settlement_original_component' AND column_name = 'club_name'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'settlement_detail' AND column_name = 'club_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'settlement_detail' AND column_name = 'club_name'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ecom_profit_share_line' AND column_name = 'receiver_type'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ecom_profit_share_line' AND column_name = 'receiver_appid'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ecom_profit_share_line' AND column_name = 'club_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ecom_profit_share_line' AND column_name = 'club_name'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ecom_profit_share_return' AND column_name = 'return_type'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'ecom_profit_share_return' AND column_name = 'return_appid'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'ecom_profit_share_return' AND index_name = 'uk_ecom_share_return_identity'), 0))) = 16 AS applied; -- 期望 1"
+      ],
+      "step": 155
+    },
+    {
+      "migrationId": "20261112_dec_c_perks",
+      "path": "chengyinhub-admin/sql/migration_20261112_dec_c_perks.sql",
+      "sha256": "8fbec34557b6fdbb00729d1401597cca4f9c0817608c320ed3b92766d4db1cea",
+      "baseSha256": null,
+      "change": "ADDED",
+      "order": 632,
+      "dependsOn": [
+        "20261024_clm_commerce_payment_proof",
+        "merchant_subscription_20260708"
+      ],
+      "phase": "PRE_DEPLOY_REQUIRED",
+      "changes": "DEC-C：商家付费权益按订单归属的权益贡献与原路全额退款结算；不开启收银、不配置价格",
+      "idempotencyGuard": "information_schema 守卫后条件执行 DDL；f-rehearsal 两遍执行零报错",
+      "expectedAtBaseline": "NEEDED",
+      "expectedAfterApply": [
+        "APPLIED"
+      ],
+      "lockRisk": "新建空表 merchant_commerce_refund，瞬时（按语句归纳）",
+      "verifySelectOnly": [
+        "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'merchant_commerce_refund'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'merchant_subscription' AND column_name = 'source_order_id'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'merchant_subscription' AND index_name = 'uk_subscription_source_order'), 0))) = 3 AS applied; -- 期望 1"
+      ],
+      "step": 156
     },
     {
       "migrationId": "x12_topic_look_20261029",
@@ -3484,7 +3702,7 @@
       "sha256": "20d82f0530da9c3173df283710644868a15a88143037f5827a7a281cada5e8eb",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 630,
+      "order": 639,
       "dependsOn": [
         "theme_runtime_20261004"
       ],
@@ -3500,7 +3718,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'cms_topic' AND column_name = 'look_json'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 148
+      "step": 157
     },
     {
       "migrationId": "z_channel_voucher_snapshot_20261109",
@@ -3508,7 +3726,7 @@
       "sha256": "e87238f1aace1d694c0bd7a515893d44577e633cbb3adc76f751db7670d47123",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 631,
+      "order": 640,
       "dependsOn": [
         "marketing_z_channel_voucher_20261108"
       ],
@@ -3524,7 +3742,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'marketing_channel_voucher' AND column_name = 'grant_snapshot_json'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 149
+      "step": 158
     },
     {
       "migrationId": "z_marketing_revenue_channel_reverse_kind_20261108",
@@ -3532,7 +3750,7 @@
       "sha256": "99dab1cc3390cfc2f9139fbd901631570abb616df67776409ab31adec0a5930f",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 632,
+      "order": 641,
       "dependsOn": [
         "marketing_revenue_allocation_20261108"
       ],
@@ -3548,7 +3766,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.check_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_revenue_posting_kind' AND check_clause LIKE '%3%'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 150
+      "step": 159
     },
     {
       "migrationId": "z_marketing_revenue_channel_reverse_kind_index_shape_20261109",
@@ -3556,7 +3774,7 @@
       "sha256": "51a6741ef64cf2645c93fb6f5b08cbb3f9ca8a2fafd748f350de19453d00fe07",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 633,
+      "order": 642,
       "dependsOn": [
         "z_marketing_revenue_channel_reverse_kind_20261108"
       ],
@@ -3572,7 +3790,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.check_constraints WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_revenue_posting_kind' AND check_clause LIKE '%3%'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 151
+      "step": 160
     },
     {
       "migrationId": "z_workshop_apple_iap_20261109",
@@ -3580,7 +3798,7 @@
       "sha256": "d392e0dda6b503426f16e9692afa8d3142b4d55880b676094c8870c7c8c3981a",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 634,
+      "order": 643,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "工坊 Apple IAP 3 表",
@@ -3593,7 +3811,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_apple_original'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_apple_transaction'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_apple_notification'), 0))) = 3 AS applied; -- 期望 1"
       ],
-      "step": 152
+      "step": 161
     },
     {
       "migrationId": "z_workshop_purchase_20261109",
@@ -3601,7 +3819,7 @@
       "sha256": "a494fee635143207ba71725b18c421d30d1eb67086df143ee0dcae315522eb7f",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 635,
+      "order": 644,
       "dependsOn": [],
       "phase": "PRE_DEPLOY_REQUIRED",
       "changes": "工坊购买 3 表",
@@ -3614,7 +3832,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_version'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_order'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_install'), 0))) = 3 AS applied; -- 期望 1"
       ],
-      "step": 153
+      "step": 162
     },
     {
       "migrationId": "z_workshop_paid_review_20261109",
@@ -3622,7 +3840,7 @@
       "sha256": "2b108b10824e873d845734a23a2e24b1547954dc41e3de90fc8ce3978ed0e2c8",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 636,
+      "order": 645,
       "dependsOn": [
         "z_workshop_purchase_20261109"
       ],
@@ -3638,7 +3856,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_apple_product'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'workshop_draft_lineage'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'source_kind'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'review_state'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'audit_task_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'review_hash'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'review_snapshot'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND column_name = 'approved_at'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'version_review_hash'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'currency'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'amount_milliunits'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'app_account_token'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_bundle_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_environment'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_product_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_transaction_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_original_transaction_id'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_fact_hash'), 0) + IFNULL((SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND column_name = 'apple_revocation_hash'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND index_name = 'uk_workshop_version_audit'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND index_name = 'idx_workshop_source'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_version' AND index_name = 'idx_workshop_shelf'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND index_name = 'uk_workshop_apple_account'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND index_name = 'uk_workshop_apple_transaction'), 0) + IFNULL((SELECT COUNT(*) > 0 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'workshop_order' AND index_name = 'uk_workshop_apple_original'), 0))) = 26 AS applied; -- 期望 1"
       ],
-      "step": 154
+      "step": 163
     },
     {
       "migrationId": "zz_questo_collation_align_20261109",
@@ -3646,7 +3864,7 @@
       "sha256": "ddd4db6880b891c23ce546bbf96dd017d18bd0a4436fb2af7f82b54b33c03d87",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 638,
+      "order": 647,
       "dependsOn": [
         "20261108_play_help_run_quota",
         "20261108_registration_seat_invitation",
@@ -3680,7 +3898,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) = 0 FROM information_schema.columns WHERE table_schema = DATABASE() AND collation_name = 'utf8mb4_0900_ai_ci' AND table_name IN ('cms_registration_seat_invitation', 'cms_registration_seat_invitation_request', 'cms_topic_content_revision', 'content_landing_metadata', 'content_landing_translation', 'gift_entitlement', 'host_tip_config', 'host_tip_intent', 'marketing_attribution', 'marketing_channel_order_verification', 'marketing_channel_redemption', 'marketing_channel_refund_verification', 'marketing_channel_voucher', 'marketing_channel_voucher_account', 'marketing_offer', 'marketing_offer_item', 'marketing_order_adjustment', 'marketing_product', 'marketing_product_item', 'marketing_product_order', 'marketing_product_order_line', 'marketing_promotion', 'marketing_promotion_redemption', 'marketing_promotion_refund_fact', 'marketing_referral_credential', 'marketing_revenue_allocation', 'marketing_revenue_allocation_line', 'marketing_revenue_posting_task', 'marketing_revenue_rule', 'marketing_tier', 'play_help_run_quota', 'video_bounty_accrual', 'video_bounty_campaign', 'video_bounty_evidence', 'video_bounty_submission', 'workshop_apple_notification', 'workshop_apple_original', 'workshop_apple_transaction')), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 155
+      "step": 164
     },
     {
       "migrationId": "zzz_committed_official_notice_job_reregister_20261111",
@@ -3688,7 +3906,7 @@
       "sha256": "e8a58381bb89409bd4f1cb8f90e32b9bb9ea5d28e3adab5c5985fff74a624576",
       "baseSha256": null,
       "change": "ADDED",
-      "order": 639,
+      "order": 648,
       "dependsOn": [
         "20261024_d_committed_official_notice_wx"
       ],
@@ -3703,7 +3921,7 @@
       "verifySelectOnly": [
         "SELECT ((IFNULL((SELECT COUNT(*) > 0 FROM sys_job WHERE invoke_target = 'committedOfficialNoticeTask.deliverPending()'), 0))) = 1 AS applied; -- 期望 1"
       ],
-      "step": 156
+      "step": 165
     }
   ],
   "previousPack": "docs/delivery/release-closeout-20261028/release-migration-pack.json",

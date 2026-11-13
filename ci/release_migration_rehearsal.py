@@ -339,6 +339,9 @@ SINGLE_APPLY = frozenset({
     "z_marketing_revenue_channel_reverse_kind_index_shape_20261109",
     "z_workshop_paid_review_20261109",
     "zz_questo_collation_align_20261109",
+    # 11-12 新增：普通 ALTER/MODIFY，直接重跑会被拒绝或重复改列，APPLIED 时必须跳过。
+    "20261112_template_usage_count",
+    "20261112_dec_c_payout",
 })
 
 # 已被替代、永不执行的迁移 -> 替代者（与 scripts/e2e/build_schema.py 的 REPLACED_UNAPPLIED 选择一致）。
