@@ -36,6 +36,12 @@ page { background: #000; } /* ds-ok 预览页固定纯黑底(原型 .px) */
 .tp-title { display: block; margin-top: 16rpx; padding: 0 40rpx; font-size: 52rpx; line-height: 1.15; font-weight: 800; letter-spacing: -0.01em; } /* ds-ok 原型 .x10 h2 26px */
 .tp-ck { margin-top: 32rpx; padding: 0 40rpx; display: flex; flex-direction: column; gap: 20rpx; }
 .tp-ck__li { display: flex; gap: 18rpx; align-items: center; font-size: 30rpx; } /* ds-ok 原型 .x10 .ck li 15px */
+.tp-intro { margin-top: 36rpx; padding: 0 40rpx; display: flex; flex-direction: column; gap: 20rpx; }
+.tp-intro__d { font-size: 27rpx; line-height: 1.7; color: rgba(255, 255, 255, 0.72); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; } /* ds-ok 预览页深色次级字 */
+.tp-intro__ch { display: flex; flex-direction: column; gap: 6rpx; }
+.tp-intro__t { font-size: 29rpx; font-weight: 700; }
+.tp-intro__g { font-size: 25rpx; line-height: 1.6; color: rgba(255, 255, 255, 0.6); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; } /* ds-ok 预览页深色次级字 */
+.tp--light .tp-intro__d, .tp--light .tp-intro__g { color: rgba(0, 0, 0, 0.6); } /* ds-ok 商家浅色版 */
 .tp-ck__ic { width: 32rpx; height: 32rpx; flex-shrink: 0; }
 
 /* ---- 底部白色主按钮 + 光晕 ---- */

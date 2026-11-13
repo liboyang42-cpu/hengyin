@@ -376,7 +376,7 @@
                 aria-role="button" aria-label="{{item.label}} {{item.title}}，{{item.locked ? '未解锁，点按解锁' : (openChapter === index ? '收起' : '展开')}}" hover-class="cy-pressed" hover-stay-time="80">
             <image wx:if="{{item.img}}" class="story-cc__img" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
             <view class="story-cc__blur"></view><view class="story-cc__sh"></view>
-            <view class="story-cc__hd"><text class="story-cc__k">{{item.label}}</text><text class="story-cc__t">{{item.title}}</text></view>
+            <view class="story-cc__hd"><text class="story-cc__k" wx:if="{{item.label}}">{{item.label}}</text><text class="story-cc__t">{{item.title}}</text></view>
             <view class="story-cc__chev"><cy-icon name="{{item.locked ? 'lock' : 'chevron-right'}}" size="28" /></view>
             <view class="story-cc__in"><text class="story-cc__x">{{item.excerpt}}</text><view class="story-cc__meta" wx:if="{{item.meta}}"><text>{{item.meta}}</text></view></view>
           </view>

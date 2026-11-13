@@ -57,7 +57,9 @@ function nodeText(value) {
 // V-23c 业主 2026-10-29「简介最多20个字 在主题配置那里配置好的」:头图下只放主题配置里的短简介(subtitle),最多 20 字一行。
 const HERO_INTRO_MAX = 20;
 function heroIntro(subtitle) {
-  return Array.from(nodeText(decodeDisplayText(subtitle))).slice(0, HERO_INTRO_MAX).join('');
+  const chars = Array.from(nodeText(decodeDisplayText(subtitle)));
+  // 超长时截到 20 字并补省略号,不再从词中间硬切
+  return chars.length > HERO_INTRO_MAX ? chars.slice(0, HERO_INTRO_MAX).join('').replace(/[，,、；;。\s]+$/, '') + '…' : chars.join('');
 }
 
 // 2026-10-30:站点和玩法都没图时用这个主题自己的封面,不再落到通用城市占位图
@@ -401,7 +403,7 @@ Page({
     this.setData({
       activeTab: index, tabPre: !this.data.reducedMotion, tabRun: !this.data.reducedMotion // v13:切标签时各块从下方依次浮上来;依次延迟只在入场这 1.4s 内生效,之后按压立即响应
     }, () => { if (this.data.tabPre) { const run = this._tabRunSeq = (this._tabRunSeq || 0) + 1; this._later(30, () => this.setData({ tabPre: false }, () => this._later(1400, () => { if (run === this._tabRunSeq) this.setData({ tabRun: false }); }))); } });
-    if (String(index) === '2') this._loadProgress();
+    if (String(index) === '2') { this._loadProgress(); [400, 1200].forEach((ms) => this._later(ms, () => { if (String(this.data.activeTab) === '2') this._fitRouteMap(); })); }
     if (String(index) === '1') { this.setData({ openChapter: -1 }); this._later(900, () => { if (String(this.data.activeTab) === '1') this.setData({ openChapter: 0 }); }); } // v13:进故事标签后第一章自己展开
   },
 
@@ -568,6 +570,15 @@ Page({
 
   onHeroSwipe(e) { this.setData({ heroIdx: (e && e.detail && e.detail.current) || 0 }); },
   noop() {},
+  /* 原生 map 还没铺出来时 include-points 会被吞掉:切到路线页、地图铺出后再按全部站点取景(不新增控件绑定) */
+  _fitRouteMap() {
+    const pts = this.data.routeIncludePoints || [];
+    if (!pts.length || !wx.createMapContext) return;
+    try {
+      const ctx = wx.createMapContext('routeMap', this);
+      if (ctx && ctx.includePoints) ctx.includePoints({ points: pts, padding: routePreview.FIT_PADDING });
+    } catch (e) { /* 取景失败不影响路线展示 */ }
+  },
   onRouteReal() { this.setData({ routeReal: true }); },
   onBuyPick(e) { this.setData({ buySel: Number(e.currentTarget.dataset.i) || 0 }); },
   /* 去结算:自玩通行证进确认订单;发布者的票种绑在场次上,进选场次弹层并预选同名票种 */
@@ -2120,7 +2131,7 @@ Page({
   //获取数据
   /** 每章单独使用完整道路；缺失或损坏时只画本章节点虚线，不能跨章补线。 */
   buildRouteMap: function (chaptersList) {
-    this.setData(routePreview.build(chaptersList));
+    this.setData(routePreview.build(chaptersList), () => { if (String(this.data.activeTab) === '2') this._later(400, () => this._fitRouteMap()); });
   },
 
   /**
