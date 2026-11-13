@@ -55,7 +55,7 @@
 | App 路径 | 承接方 |
 |---|---|
 | `/api/club/channels`、`/api/guilds/{kind}/{id}/channels`（GET/PATCH）、`/channels/manage` | `feature/im-channels`（频道平台：`ApiChannel*`，目录/管理/权限） |
-| `/api/privacy/progress`（GET/POST） | 频道进度榜（`feature/im-channels` 的 `/api/channel/{id}/board`、`/api/progress/meter`）同一隐私开关，尚未在该分支实现 |
+| `/api/privacy/progress`（GET/POST） | `feature/im-channels`（6b6895f61）`ApiProgressPrivacyController` 已实现 |
 | `/api/club/settings/notify-level` | 依赖 IM 通知偏好 `/api/im/notify-pref` 与 `/api/im/notification-requests/*`（messaging 工作线） |
-| `/api/join-request/cancel`、`/api/space/join-pause`、`/api/invite/revoke` | 频道平台入会治理（`/api/join-request/submit`、`/api/space/leave`、`/api/channel-platform/admission/requests/*` 同族，均未在任一后端分支实现） |
+| `/api/join-request/cancel`、`/api/space/join-pause`、`/api/invite/revoke`、`/api/channel-platform/admission/requests/{id}` | `feature/im-channels`（6b6895f61）`ApiChannelAdmissionController` 已实现（pass 2 核对），本分支不重复 |
 | `/api/team/original-request` | 依赖好友组队邀请 `/api/friend/team-invite/*`（social/friends 工作线） |
