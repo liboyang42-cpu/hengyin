@@ -31,6 +31,7 @@ Page({
     state: 'loading', // loading | ready | error
     products: [],
     orders: [],
+    passOrders: [], // 平台通行证订单(/api/platform-pass/orders);读不到不影响其他订单
     giftsBought: [],
     giftsReceived: [],
     member: null, // l-pass 通行证入口;服务端未开放为 null,不出
@@ -92,8 +93,9 @@ Page({
       get('/api/marketing/product/list', { limit: 20 }),
       get('/api/marketing/product/orders', { limit: 20 }),
       get('/api/marketing/product/gifts/bought', { limit: 20 }),
-      get('/api/marketing/product/gifts/received', { limit: 20 })
-    ]).then(([products, orders, bought, received]) => {
+      get('/api/marketing/product/gifts/received', { limit: 20 }),
+      get('/api/platform-pass/orders', { limit: 20 })
+    ]).then(([products, orders, bought, received, passOrders]) => {
       if (seq !== this._seq) return
       wx.stopPullDownRefresh()
       // 在售目录读取失败 ⇒ 整页错误,不显示「暂无在售」冒充空
@@ -109,6 +111,7 @@ Page({
       this.setData({
         state: 'ready',
         products: cards,
+        passOrders: (passOrders || []).map(pp.orderRow).filter(Boolean),
         orders: orders.map((o) => mv.orderRow(o, nameById)).filter(Boolean),
         giftsBought: bought.map((g) => mv.giftRow(g, 'bought')).filter(Boolean),
         giftsReceived: received.map((g) => mv.giftRow(g, 'received')).filter(Boolean)
@@ -124,6 +127,12 @@ Page({
     if (!id || this._navigating) return
     this._navigating = true
     wx.navigateTo({ url: '/subpackageMember/market/pass/index?id=' + encodeURIComponent(id), complete: () => { this._navigating = false } })
+  },
+  openPassOrder(e) {
+    const no = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.no
+    if (!no || this._navigating) return
+    this._navigating = true
+    wx.navigateTo({ url: '/subpackageMember/market/pass-order/index?orderNo=' + encodeURIComponent(no), complete: () => { this._navigating = false } })
   },
   // l-after:整页游戏主题库(一行一张俱乐部式卡)
   goLibrary() {
