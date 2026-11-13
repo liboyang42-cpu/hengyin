@@ -15,3 +15,8 @@
 - 小程序：`tests/unit/topic-story-paywall-contract.test.js` 新增 3 例；topic-* / route-map-quality / uiux-player-state-adoption 等相关单测 332 通过 0 失败。
 - `action-ledger.json` 已 `--write` 重建（页面行号漂移）；`ui-integrity-baseline.js` 中 `index.js:2121`→`2125`。
 
+## CI(PR #819,head 87641cff)
+全部通过:Backend tests(含 ApiTemplateSecretsGateTest 新契约)、Mini program static gates / static checks、Mini program unit shard 1–20、Fast gates、Migration layout/safety、Funds MySQL IT、Followup 39、redis recovery、gitleaks。
+过程中两次 ui-integrity 红:U4-DYNAMIC keyDigest 因 `topic/index.js` 行号位移(2121→2125)及合入 master 后键集合变化需按门禁算法重算,已重算并推送;action ledger 本地与 CI 均 PASS。
+
+STATUS: DONE
