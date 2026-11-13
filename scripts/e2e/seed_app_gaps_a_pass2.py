@@ -64,6 +64,13 @@ print(f"DELETE FROM cms_topic WHERE id = {TOPIC};")
 print(f"""INSERT INTO cms_topic(id, name, member_id, product_type, lifecycle, del_flag, img_url, config_version)
  VALUES ({TOPIC}, '外滩自由探索(测试)', 9001, 2, 3, 0, NULL, 1);""")
 print(f"INSERT INTO cms_topic_chapter(id, topic_id, name, required) VALUES (990111, {TOPIC}, '第一章', 1), (990112, {TOPIC}, '第二章', 1);")
+# a draft topic authored by 9001 for the cover and attribute-author checks (a selling topic is sale-frozen)
+DRAFT = 990102
+print(f"DELETE FROM topic_cover_selection WHERE topic_id = {DRAFT};")
+print(f"DELETE FROM theme_state_key WHERE topic_id = {DRAFT};")
+print(f"DELETE FROM theme_attribute_registry_version WHERE topic_id = {DRAFT};")
+print(f"DELETE FROM cms_topic WHERE id = {DRAFT};")
+print(f"INSERT INTO cms_topic(id, name, member_id, product_type, lifecycle, del_flag, config_version) VALUES ({DRAFT}, '草稿主题(测试)', 9001, 2, 0, 0, 1);")
 REG = 990201
 for t in ["explore_bundle_review", "explore_bundle_renewal_intent", "explore_bundle_appeal", "explore_bundle_unit", "explore_bundle_grant", "explore_bundle_order"]:
     print(f"DELETE FROM {t} WHERE registration_id = {REG};")

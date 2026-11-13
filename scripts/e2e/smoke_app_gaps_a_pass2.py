@@ -111,7 +111,7 @@ quote = qt["data"]["quote"]; check("quote has no effect", st == 200 and qt["data
 st, qr = call(t1, "GET", f"/api/city-game/acquisition/quote/{quote['quoteId']}"); check("quote read", st == 200 and qr["data"]["quote"]["quoteHash"] == quote["quoteHash"], qr)
 confirm = {"requestId": quote["confirmRequestId"], "kind": "CONFIRM", "regionId": REGION, "quoteId": quote["quoteId"], "quoteHash": quote["quoteHash"], "confirmed": True}
 st, cfm = call(t1, "POST", "/api/city-game/acquisition/command", confirm)
-check("CONFIRM: title, points 100 → 70", st == 200 and cfm["data"]["title"]["pointsBefore"] == 100 and cfm["data"]["title"]["pointsAfter"] == 70, cfm)
+check("CONFIRM: title, 30 member points charged", st == 200 and cfm["data"]["title"]["pointsBefore"] - cfm["data"]["title"]["pointsAfter"] == 30, cfm)
 st, again = call(t1, "POST", "/api/city-game/acquisition/command", confirm); check("CONFIRM replay, charged once", again["data"] == cfm["data"], again)
 st, ti = call(t1, "GET", f"/api/city-game/acquisition/titles?regionId={REGION}"); check("own titles", len(ti["data"]["titles"]) == 1, ti)
 st, dl = call(t1, "GET", "/api/city-game/state/deltas?" + q + vp + f"&sync=TRANSACTIONAL_EVENTS_V1&cursor={cursor}")
@@ -195,18 +195,18 @@ boundary = "smoke" + uuid.uuid4().hex
 mp = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"c.png\"\r\nContent-Type: image/png\r\n\r\n").encode() + png() + f"\r\n--{boundary}--\r\n".encode()
 st, up = call(t1, "POST", "/api/topic/cover/upload", raw=(mp, f"multipart/form-data; boundary={boundary}"))
 check("cover upload sanitised", st == 200 and up["data"]["kind"] == "OWNED_TOPIC_COVER_V1", up)
-st, cc = call(t1, "GET", "/api/topic/cover/selection/current?topicId=990101"); check("cover current NONE", st == 200 and cc["data"]["selectionState"] == "NONE", cc)
-st, c4 = call(t4, "GET", "/api/topic/cover/selection/current?topicId=990101"); check("not the author → 403", st == 403, c4)
-sel = {"topicId": 990101, "expectedConfigVersion": cc["data"]["topicConfigVersion"], "expectedSelectionVersion": 0, "expectedContentSlotId": cc["data"]["contentSlotId"],
+st, cc = call(t1, "GET", "/api/topic/cover/selection/current?topicId=990102"); check("cover current NONE", st == 200 and cc["data"]["selectionState"] == "NONE", cc)
+st, c4 = call(t4, "GET", "/api/topic/cover/selection/current?topicId=990102"); check("not the author → 403", st == 403, c4)
+sel = {"topicId": 990102, "expectedConfigVersion": cc["data"]["topicConfigVersion"], "expectedSelectionVersion": 0, "expectedContentSlotId": cc["data"]["contentSlotId"],
        "requestId": upper(), "assetId": up["data"]["assetId"], "sourceVersion": up["data"]["sourceVersion"], "contentHash": up["data"]["contentHash"]}
 st, sr = call(t1, "POST", "/api/topic/cover/selection", sel); check("cover selected, config +1", st == 200 and sr["data"]["topicConfigVersion"] == sel["expectedConfigVersion"] + 1, sr)
 st, ss = call(t1, "POST", "/api/topic/cover/selection/status", sel); check("cover status replays", ss["data"] == sr["data"], ss)
 st, ct = call(t1, "GET", f"/api/topic/cover/{up['data']['assetId']}/content?sourceVersion={up['data']['sourceVersion']}&contentHash={up['data']['contentHash']}")
 check("author-only content bytes match hash", st == 200 and hashlib.sha256(ct).hexdigest() == up["data"]["contentHash"], st)
-st, al = call(t1, "GET", "/api/topic/attribute-author?topicId=990101&scope=PERSONAL")
-check("attribute-author list with root configVersion", st == 200 and al.get("topicId") == 990101 and "configVersion" in al, al)
+st, al = call(t1, "GET", "/api/topic/attribute-author?topicId=990102&scope=")
+check("attribute-author list with root configVersion", st == 200 and al.get("topicId") == 990102 and "configVersion" in al, al)
 cv = al["configVersion"]
-body = json.dumps({"topicId": 990101, "expectedConfigVersion": cv, "scope": "PERSONAL",
+body = json.dumps({"topicId": 990102, "expectedConfigVersion": cv, "scope": "",
                    "keys": [{"stateKey": "counter.courage", "keyType": "counter", "scope": "run", "label": "勇气", "initialValue": 1, "minValue": 0, "maxValue": 10}]},
                   ensure_ascii=False, separators=(",", ":"))
 st, va = call(t1, "POST", "/api/topic/attribute-author/validate", raw=(body.encode(), "application/json"))
@@ -216,17 +216,17 @@ sha = hashlib.sha256(("POST\napi/topic/attribute-author\n" + body).encode()).hex
 hdr = {"X-Attribute-Request-Protocol": "original-attribute-author-request-v1", "X-Attribute-Request-Id": reqid, "X-Attribute-Request-SHA256": sha, "X-Attribute-Session-Epoch": "1"}
 st, sv2 = call(t1, "POST", "/api/topic/attribute-author", raw=(body.encode(), "application/json"), headers=hdr)
 check("attribute save: configVersion +1, receipt COMMITTED", st == 200 and sv2["configVersion"] == cv + 1 and sv2["requestReceipt"]["state"] == "COMMITTED", sv2)
-st, rq2 = call(t1, "GET", f"/api/topic/attribute-author/request?topicId=990101&expectedConfigVersion={cv}&scope=PERSONAL&requestId={reqid}"
+st, rq2 = call(t1, "GET", f"/api/topic/attribute-author/request?topicId=990102&expectedConfigVersion={cv}&scope=&requestId={reqid}"
                f"&protocolVersion=original-attribute-author-request-v1&sessionEpoch=1&method=POST&payloadSHA256={sha}")
 check("attribute original receipt", st == 200 and rq2["requestReceipt"]["state"] == "COMMITTED", rq2)
-st, mpf = call(t1, "GET", f"/api/topic/module-preflight?topicId=990101&scope=PERSONAL&expectedConfigVersion={cv + 1}")
+st, mpf = call(t1, "GET", f"/api/topic/module-preflight?topicId=990102&scope=&expectedConfigVersion={cv + 1}")
 check("module preflight report", st == 200 and mpf["data"]["ready"] == (not any(i["level"] == "error" for i in mpf["data"]["issues"])), mpf)
-payload = json.dumps({"id": 990101}, separators=(",", ":"), sort_keys=True).encode()
+payload = json.dumps({"id": 990102}, separators=(",", ":"), sort_keys=True).encode()
 er = {"protocolVersion": "original-project-edit-request-v1", "requestId": str(uuid.uuid4()), "originalPath": "api/topic/update",
       "payloadSHA256": hashlib.sha256(payload).hexdigest(), "payloadBase64Chunks": [base64.b64encode(payload).decode()]}
 st, es = call(t1, "POST", "/api/topic/edit-requests/submit", er)
 check("edit request recorded (original writer decided)", st == 200 and es["data"]["state"] in ("COMMITTED", "REJECTED"), es)
-st, erd = call(t1, "POST", "/api/topic/edit-requests/read", {k: er[k] for k in ("protocolVersion", "requestId", "originalPath", "payloadSHA256")} | {"scope": "PERSONAL"})
+st, erd = call(t1, "POST", "/api/topic/edit-requests/read", {k: er[k] for k in ("protocolVersion", "requestId", "originalPath", "payloadSHA256")} | {"scope": ""})
 check("edit request read returns the same receipt", st == 200 and erd["data"]["state"] == es["data"]["state"], erd)
 
 passed = sum(ok for _, ok in results)
