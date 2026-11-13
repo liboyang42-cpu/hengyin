@@ -59,6 +59,7 @@
 - 渠道（微信侧）发起的退款到账后，分成/结算冲回由告警提示财务核对，本次没有臆造自动冲销规则。
 - XPAY 单没有 JSAPI 的"原支付事实回执"（`registration_payment_fact`），依赖该回执的下游（如发票、营销商品原路核对）对这类单不适用；自玩票的发票口径需业主确认。
 - `ci/xcx-check.sh` 的 action ledger（`scripts/uiaudit/action-ledger.json`）未重新生成；新增端点 `/api/registration/xpay/confirm` 已在后端存在。
+- PR 描述已补「影响分类 ③」迁移声明。
 - 本次没有新增真库 IT（新表只被注解 Mapper 读写，单测用 mock；未改既有表，既有真库夹具无需变更）。
 
 ## 验证
