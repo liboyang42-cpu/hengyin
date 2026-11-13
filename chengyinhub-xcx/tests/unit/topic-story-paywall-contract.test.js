@@ -12,7 +12,7 @@ test('剧情付费墙跟在完整章节列表后，且不渲染后端未下发�
   assert.match(wxml, /wx:if="\{\{info\.storyLocked && info\.lockedChapterCount > 0\}\}"/)
   assert.match(wxml, /topic-story-paywall__title">解锁完整体验/)
   assert.doesNotMatch(wxml, /后面还有 \{\{info\.lockedChapterCount/)
-  assert.match(wxml, /topic-story-paywall__sub">解锁后可看全部故事线、答题揭秘与到店权益/)
+  assert.match(wxml, /topic-story-paywall__sub">解锁后可看全部故事线、答题揭秘\{\{merchantCards\.length \? '与到店权益' : ''\}\}/)
   assert.match(wxml, /topic-story-paywall__price">\{\{money\.amount\(info\.selfPlayPrice\)\}\}/)
   assert.doesNotMatch(wxml, /selfPlayBenefitCount/)
   assert.doesNotMatch(wxml, /项到店体验/)

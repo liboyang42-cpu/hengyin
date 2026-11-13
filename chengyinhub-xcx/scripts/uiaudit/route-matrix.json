@@ -1762,7 +1762,8 @@
       "needsLogin": true,
       "needsData": true,
       "dataKeys": [
-        "focusId"
+        "focusId",
+        "topicId"
       ],
       "hasJs": true,
       "hasWxml": true

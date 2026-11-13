@@ -924,7 +924,7 @@ Page({
       wx.navigateTo({ url: '/pages/play/index?topicId=' + topicId + '&registrationId=' + regId + '&entry=ticket' + name, success: onGone, complete: () => { this._navigating = false; } });
       return;
     }
-    wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0&arrive=1', success: onGone, complete: () => { this._navigating = false; } });
+    wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0&arrive=1' + walletTopicQuery(topicId, '&'), success: onGone, complete: () => { this._navigating = false; } });
   },
 
   goTemplateDetail(e) {
@@ -1930,13 +1930,13 @@ Page({
   onResultSheetClose() {
     this.setData({ 'resultSheet.show': false });
     if (this._revealNext) { const kind = this._revealNext; this._revealNext = ''; this._goAfterReveal(kind); return; }
-    wx.navigateTo({ url: '/subpackageMember/signup/index' });
+    wx.navigateTo({ url: '/subpackageMember/signup/index?' + walletTopicQuery(this._revealTopicId || (this.data.info && this.data.info.id) || this.data.id, '') });
   },
 
-  // 票夹的 focusId 是 registrationId(signup/index.js:118),这里手上只有 topicId,传过去永远定位不到;
-  // 老实打开路线票 tab,让用户在票夹里点那张票进 play。
+  // 票夹的 focusId 是 registrationId(signup/index.js:118),这里手上只有 topicId,传 focusId 永远定位不到;
+  // 带 topicId 打开路线票 tab,票夹自己落在这个主题的票上。
   goJoinedPlay() {
-    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0', complete: () => { this._navigating = false; } });
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/signup/index?stype=0' + walletTopicQuery((this.data.info && this.data.info.id) || this.data.id, '&'), complete: () => { this._navigating = false; } });
   },
 
   //投票弹框打开
@@ -2473,6 +2473,9 @@ function ownerStateText(info) {
 }
 
 // 第十二轮 k1 第 5 项(j6 N1):服务端拒绝第二笔(同一主题已有一笔待支付的单)时,说一句再带玩家去那一笔订单。
+// 打开票夹时带上主题号,票夹落在这个主题的票上
+function walletTopicQuery(id, lead) { return /^[1-9]\d{0,18}$/.test(String(id || '')) ? lead + 'topicId=' + id : ''; }
+
 function openPendingOrderConflict(res, cb) {
   if (!res || res.errorCode !== 'PENDING_ORDER_EXISTS' || !res.data || !res.data.registrationId) return false;
   cb({ ok: false, msg: res.msg });

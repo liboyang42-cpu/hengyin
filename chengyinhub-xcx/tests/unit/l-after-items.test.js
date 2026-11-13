@@ -169,3 +169,21 @@ test('游戏主题库(proto ps-library):读公开目录,一行一张俱乐部式
   assert.ok(sub.pages.includes('market/library/index'))
   assert.match(read('subpackageMember/market/passes/index.wxml'), /bindtap="goLibrary"/)
 })
+
+test('票夹带 topicId 打开:落在该主题的主题票上,找不到返回 -1', () => {
+  const P = path.join(root, 'subpackageMember/signup/index.js')
+  delete require.cache[P]
+  global.getApp = () => ({ globalData: {}, getImgUrl: (x) => x })
+  global.Page = () => {}
+  global.wx = { getStorageSync: () => '' }
+  const { topicTicketIndex } = require(P)
+  const list = [
+    { wKey: 'activity-9', kind: 'activity', ownerId: 55 },
+    { wKey: 'topic-3', kind: 'topic', cmsTopic: { id: 11 } },
+    { wKey: 'topic-2', kind: 'topic', ownerId: 55 },
+  ]
+  assert.equal(topicTicketIndex(list, '11'), 1)
+  assert.equal(topicTicketIndex(list, 55), 2, '场次票的 ownerId 不能冒充主题号')
+  assert.equal(topicTicketIndex(list, '99'), -1)
+  assert.equal(topicTicketIndex(list, ''), -1)
+})
