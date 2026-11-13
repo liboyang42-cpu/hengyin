@@ -31,3 +31,20 @@
 - `ci/migration_gates.py dep-order`、`test_migration_runner_ci_contract` 见提交前输出
 
 ## 远端
+PR：#811（草稿，已按要求含「## 影响分类」）。
+
+| 演练 run | 结果 |
+|---|---|
+| 43334717277 | failure：第一遍后预检不符合 expectedAfterApply（报告 artifact 下载被拒，看不到具体项） |
+| 43335660771 | failure：同上；本次在 `ci/release_migration_rehearsal.py` 里加了失败时打印 unexpected（仅诊断，不放宽断言），得到 `{"20261101_stagger_sys_job_seconds": "NEEDED"}` |
+
+`test_pack_matches_head_release_set` 已通过，pack 失效问题已解决；PR 的常规检查全部为 success（含小程序 20 分片）。
+
+## 剩余失败的根因（需要决策）
+`20261112_dec_c_payout_jobs` 把 `ecommercePayoutTask.shareAndRetry()`（cron `0 0/10 * * * ?`）置为 status='0'。而 `20261101_stagger_sys_job_seconds` 的末态断言是「不存在 status='0' 且 cron 为 `0 0/10 * * * ?` 等整点表达式的任务」。因此全集应用后该项预检回到 NEEDED，第二遍重跑时它的断言也会失败。这是两份已审迁移之间的真实冲突，不是 pack 元数据问题。
+
+不在本任务范围内的修法（任务禁止新增/修改 SQL，也不得放宽测试）：
+1. 在 `dec_c_payout_jobs` 里把两条任务的 cron 一并错峰（如 `7 3/10 * * * ?`），或新增一条错峰迁移；
+2. 或由负责人决定把 stagger 断言收窄。
+
+STATUS: PARTIAL - 演练因 dec_c_payout_jobs 与 stagger_sys_job_seconds 的断言冲突仍失败，需要业主/迁移作者决定修法
