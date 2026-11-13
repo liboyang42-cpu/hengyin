@@ -37,6 +37,7 @@ test('路线地图:取景点包含全部站点,中心取包围盒中心', () => 
   assert.ok(Math.abs(r.mapLatitude - (29.99 + 30.02) / 2) < 1e-9)
   assert.ok(Math.abs(r.mapLongitude - (119.98 + 120.04) / 2) < 1e-9)
   assert.equal(routePreview.FIT_PADDING.length, 4)
+  assert.ok(routePreview.FIT_PADDING[0] + routePreview.FIT_PADDING[2] <= 90, '上下边距合计不得吃掉地图高度的一半')
   const js = read('pages/topic/index/index.js')
   assert.match(js, /ctx\.includePoints\(\{ points: pts, padding: routePreview\.FIT_PADDING \}\)/)
   assert.match(js, /\[400, 1200\]\.forEach\(\(ms\) => this\._later\(ms, \(\) => \{ if \(String\(this\.data\.activeTab\) === '2'\) this\._fitRouteMap/)

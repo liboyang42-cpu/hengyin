@@ -30,7 +30,7 @@
 .ck__hint { display: block; margin-top: 12rpx; font-size: 24rpx; color: var(--cy-color-status-warning); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__err { display: flex; gap: 16rpx; margin-top: 12rpx; font-size: 24rpx; color: var(--cy-color-status-danger); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__err-act { text-decoration: underline; }
-.ck__pad { height: 240rpx; }
+.ck__pad { height: calc(240rpx + env(safe-area-inset-bottom)); } /* 底栏 144rpx + 安全区 + 余量,勾选框不被底栏压住 */
 .ck__bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 28rpx; padding: 24rpx var(--cy-page-x) calc(24rpx + env(safe-area-inset-bottom));
   background: var(--cy-bg-page); border-top: 1rpx solid var(--cy-color-border-subtle); }
 .ck__sum { display: flex; flex-direction: column; }

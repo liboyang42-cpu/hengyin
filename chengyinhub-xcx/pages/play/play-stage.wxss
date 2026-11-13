@@ -48,6 +48,7 @@
 .look--stardust .sheet--game .sheet-desc, .look--stardust .sheet--game .sheet-meta, .look--stardust .sheet--game .sheet-dist__k { color: rgba(255,255,255,.8); } /* ds-ok 原型 */
 .look--stardust .sheet--game .sheet-name, .look--stardust .sheet--game .sheet-dist__n { color: #FFFFFF; } /* ds-ok 原型 */
 .sheet-dist { display: flex; gap: 36rpx; margin: 24rpx 0 8rpx; }
+.sheet.sheet--game .sheet-dist { padding-right: 148rpx; } /* 让开右侧的圆形完成章(92rpx + 右边距 40rpx + 间隙),不压「距离」 */
 .sheet-dist__n { display: block; font-size: 44rpx; font-weight: 700; color: var(--lk-ink, #FFFFFF); } /* ds-ok 回落白 */
 .sheet-dist__k { display: block; margin-top: 2rpx; font-size: 22rpx; letter-spacing: .1em; color: var(--lk-mute, #8A93A0); } /* ds-ok 回落原值 */
 .sheet-kit { display: flex; align-items: center; gap: 24rpx; margin: 16rpx 0 24rpx; padding: 20rpx; transition: transform var(--cy-motion-press) ease; }
@@ -109,6 +110,8 @@
 .pv-ending__rpts { display: inline-flex; align-items: center; gap: 12rpx; margin-top: 28rpx; padding: 12rpx 28rpx; border-radius: var(--cy-radius-pill); background: var(--lk-ok, #22C55E); color: #FFFFFF; font-size: 30rpx; font-weight: 700; font-variant-numeric: tabular-nums; opacity: 0; transform: scale(.8); transition: opacity .5s ease 1.9s, transform .5s cubic-bezier(.2,1.4,.5,1) 1.9s; } /* ds-ok 成功绿上的白字 */
 .pv-ending--in .pv-ending__rpts { opacity: 1; transform: none; }
 .pv-ending--run .pv-ending__go { background: var(--lk-ink, #FFFFFF); color: #072B15; } /* ds-ok 原型 .runend .gb--primary:白药丸上的字取泛绿底色 */
+.look--paper.look-palette--yellow .pv-ending--run .pv-ending__go, .look--paper.look-palette--white .pv-ending--run .pv-ending__go { background: #FFFFFF; color: #072B15; } /* ds-ok 浅纸本:结局底仍是黑,按钮不能取深色墨 */
+.look--paper.look-palette--yellow .pv-ending--run .pv-ending__secondary, .look--paper.look-palette--white .pv-ending--run .pv-ending__secondary { color: rgba(255,255,255,.85); } /* ds-ok 浅纸本:黑底上的文字按钮 */
 .pv-ending--run .pv-ending__secondary { margin: -16rpx 0 calc(env(safe-area-inset-bottom) + 24rpx); min-height: 80rpx; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.6); font-size: 28rpx; } /* ds-ok 文字按钮 */
 .pv-ending--reduced .pv-ending__glow, .pv-ending--reduced .pv-ending__k, .pv-ending--reduced .pv-ending__title, .pv-ending--reduced .pv-ending__copy, .pv-ending--reduced .pv-ending__rpts { transition: none; opacity: 1; transform: none; }
 .pv-ending--reduced .pv-ending__ring { display: none; }

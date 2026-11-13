@@ -15,7 +15,8 @@ function routePoint(row) {
 }
 
 /* 取景:包围盒中心(不再取第一个点当中心),以及 mapContext.includePoints 用的边距 */
-const FIT_PADDING = [60, 40, 60, 40];
+/* 上 36 容下图钉本体,下 44 让开左下角的来源说明行;左右 24。原 [60,40,60,40] 在 210px 高的地图上只剩中间三分之一 */
+const FIT_PADDING = [36, 24, 44, 24];
 function boundsCenter(points) {
   const list = (points || []).filter(function (p) { return routePoint(p) !== null; });
   if (!list.length) return { latitude: 0, longitude: 0 };
