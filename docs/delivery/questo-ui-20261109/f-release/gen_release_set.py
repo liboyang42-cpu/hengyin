@@ -57,6 +57,7 @@ NEW_META = {
     "20261112_dec_c_perks": (REQUIRED, PRE, "DEC-C：商家付费权益按订单归属的权益贡献与原路全额退款结算；不开启收银、不配置价格", None),
     "20261112_dec_c_payout": (REQUIRED, POST, "DEC-C D-05/D-09/D-16：个人俱乐部收款方与不可变受益快照；依赖 ecommerce_payout_wiring（POST_DEPLOY），随其放新 jar 之后；个人开关保持关闭，新 mapper 读取这些列前须已执行；含收款 mchid 列加宽与退款唯一索引改型", None),
     "20261112_dec_c_payout_jobs": (REQUIRED, POST, "DEC-C D-08：启用既有受守卫的进件与计划/提交/同步任务（纯 sys_job，放新 jar 之后）；收付通功能开关不变", "READBACK"),
+    "20261113_stagger_payout_jobs": (REQUIRED, POST, "收付通与官方通知任务的 cron 错峰（只改仍为原表达式的 sys_job 行，频率不变）；修复 dec_c_payout_jobs 启用任务后违反 20261101_stagger_sys_job_seconds 末态断言的冲突；放在二者之后", "READBACK"),
     "20261029_activity_cancellation_receipt": (REQUIRED, PRE, "cms_activity 新增取消回执列；新 jar 读写", None),
     "20261029_topic_cancellation_receipt": (REQUIRED, PRE, "cms_topic.cancellation_epoch + 取消回执表；新 jar 读写", None),
     "20261031_coop_invite_read_time": (REQUIRED, PRE, "coop_invite.read_time 已读回执列", None),

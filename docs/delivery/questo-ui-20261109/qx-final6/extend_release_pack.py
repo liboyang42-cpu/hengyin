@@ -46,7 +46,8 @@ TABLE = re.compile(r"(?is)^\s*(CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?|ALTER\s+T
 
 UNOBSERVED = {"20261112_template_usage_count", "20261112_template_market_status",
               "20261112_template_author_title_unique", "20261112_dec_c_team_codes", "20261112_dec_c_safety",
-              "20261112_dec_c_perks", "20261112_dec_c_payout", "20261112_dec_c_payout_jobs", "20261112_chapter_reward"}
+              "20261112_dec_c_perks", "20261112_dec_c_payout", "20261112_dec_c_payout_jobs", "20261112_chapter_reward",
+              "20261113_stagger_payout_jobs"}
 
 
 def observed_statuses():

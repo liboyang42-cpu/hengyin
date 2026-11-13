@@ -8,6 +8,7 @@
     "20261112_dec_c_safety": ["20261012_app_media_asset", "20261012_app_media_asset_namespaces"],
     "20261112_dec_c_perks": ["merchant_subscription_20260708", "20261024_clm_commerce_payment_proof"],
     "20261112_dec_c_payout": ["20261110_ecommerce_payout", "20261024_coop_original_refund_components", "20261110_ecommerce_payout_wiring"],
+    "20261113_stagger_payout_jobs": ["20261112_dec_c_payout_jobs", "20261101_stagger_sys_job_seconds", "zzz_committed_official_notice_job_reregister_20261111"],
     "20261112_dec_c_payout_jobs": ["20261110_ecommerce_payout_wiring"],
     "20261112_chapter_reward": [],
     "20261110_platform_pass": [],
