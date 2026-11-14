@@ -704,15 +704,15 @@ def probe_token(path, gate_dir, bin_dir, environ, probe=http_probe, seed=seed_sm
 
 def fault_probe(fail_path, token, probe=http_probe):
     """注入开时：注入路径必须 500 + 标记，控制组不受影响；注入关时：过滤器必须透明。"""
-    control = probe("GET", "/api/city/nodes")
+    control = probe("GET", "/api/city/nodes/favorites")
     target_path = fail_path or DEFAULT_FAULT_PROBE_PATH
     target = probe("POST", target_path, token=token)
     injected = target[0] == 500 and FAULT_MARKER in target[1]
     facts = {"fail_path": fail_path, "target_path": target_path, "target_status": target[0],
-             "target_body": target[1][:200], "target_injected": injected, "control_path": "/api/city/nodes",
+             "target_body": target[1][:200], "target_injected": injected, "control_path": "/api/city/nodes/favorites",
              "control_status": control[0], "authenticated": bool(token)}
     if control[0] != 401:
-        raise GateError("控制组 /api/city/nodes 应为未登录 401，实际 %s" % control[0])
+        raise GateError("控制组 /api/city/nodes/favorites 应为未登录 401，实际 %s" % control[0])
     if fail_path and not injected:
         raise GateError("已要求注入 %s，但没有观测到注入响应: %s" % (fail_path, target))
     if not fail_path and injected:

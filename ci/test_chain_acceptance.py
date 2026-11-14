@@ -376,7 +376,7 @@ class RuntimeIsolationTest(unittest.TestCase):
     def test_fault_probe_requires_observed_injection_and_clean_control(self):
         def probe(target_status, target_body, control=401):
             def call(method, path, token=None, **kwargs):
-                if path == "/api/city/nodes":
+                if path == "/api/city/nodes/favorites":
                     return control, ""
                 if not token:
                     return 401, '{"code":401}'
