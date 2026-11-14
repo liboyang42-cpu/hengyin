@@ -28,6 +28,9 @@ function teamSizeOk(subType, teamSize) {
   return Number.isFinite(n) && n > 0;
 }
 
+// 自由探索只有一张门票价，没有带队成本与成团人数：按「非有人带」处理
+function costSub(d) { return d.isFree ? 'free' : d.subType; }
+
 function teamSizeErrorText(subType, teamSize) {
   if (subType !== 'guided' || teamSizeOk(subType, teamSize)) return '';
   return '请填写大于 0 的成团人数';
@@ -57,6 +60,7 @@ Page({
     referenceDeltaText: '',
     saving: false,
     submitError: '',
+    scope: '', isFree: false, platformRate: null, feeText: '', takeHomeText: '', floorStale: false, sliderMin: 0, saleStatusText: '', pendingRows: [],
     canConfirmPrice: false,
     themeClass: 'theme-merchant', phaseBlocked: false, priced: false, // P-34:priced = 已过定价阶段(终价已确认/开售后),与「还没到定价阶段」分开说
     // CU-C-70:成团人数为空/0 时的输入提示(与按钮禁用态同一把尺子)。
@@ -72,13 +76,19 @@ Page({
       this.setData({ loading: false, errorText: '缺少主题信息' });
       return;
     }
-    this.setData({ topicId: topicId, themeClass: options.club === '1' ? 'theme-dark' : 'theme-merchant' }); // 第十二轮 k4(j2 N-15):俱乐部主理人进来用深色
+    this.setData({ scope: options.scope === 'MERCHANT' ? 'MERCHANT' : '', topicId: topicId, themeClass: options.club === '1' ? 'theme-dark' : 'theme-merchant' }); // 第十二轮 k4(j2 N-15):俱乐部主理人进来用深色
     this.preview();
   },
 
   onShow() {
     const reducedMotion = readReducedMotion();
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
+  },
+
+  onUnload() {
+    this._unloaded = true;
+    if (this._goBackTimer) clearTimeout(this._goBackTimer);
+    if (this._recalcTimer) clearTimeout(this._recalcTimer);
   },
 
   goBack() {
@@ -98,8 +108,10 @@ Page({
     const seq = (this._previewSeq || 0) + 1;
     this._previewSeq = seq;
     this.setData({ loading: true, errorText: '' });
+    const rev = this._inputRev || 0;
     const body = { topicId: this.data.topicId, subType: this.data.subType };
-    if (this.data.subType === 'guided') {
+    if (this.data.scope) body.scope = this.data.scope;
+    if (costSub(this.data) === 'guided') {
       body.leadCost = this.data.leadCost === '' ? null : Number(this.data.leadCost);
       body.teamSize = this.data.teamSize === '' ? null : Number(this.data.teamSize);
     }
@@ -122,7 +134,14 @@ Page({
           return;
         }
         const reference = res.data.cityReferencePrice == null ? null : Number(res.data.cityReferencePrice);
-        const min = Math.ceil(floor); const current = res.data.currentPrice == null ? NaN : Number(res.data.currentPrice); const start = Number.isFinite(current) && current >= min ? current : min; // P-34:从作者已填的价起步,低于地板价才回落
+        const isFree = res.data.productType != null && Number(res.data.productType) === 2;
+        const min = Math.ceil(floor); const current = res.data.currentPrice == null ? NaN : Number(res.data.currentPrice);
+        // 作者在本页拖过滑块就保留他选的价（只要不低于新地板）；否则从已填价起步，低于地板价才回落
+        const kept = that._priceTouched && Number(that.data.finalPrice) >= min ? Number(that.data.finalPrice) : NaN;
+        const start = Number.isFinite(kept) ? kept : (Number.isFinite(current) && current >= min ? current : min);
+        const platformRate = res.data.platformRate == null || res.data.platformRate === '' ? null : Number(res.data.platformRate);
+        const stale = rev !== (that._inputRev || 0);
+        const stateAfter = Object.assign({}, that.data, { isFree });
         const sliderMax = Math.max(min + 100, Math.ceil(floor * 2), reference ? Math.ceil(reference * 1.5) : 0, Math.ceil(start * 1.5));
         const sample = Number(res.data.cityReferenceSampleSize || 0);
         const city = res.data.cityReferenceLabel || '同城';
@@ -144,6 +163,10 @@ Page({
           hasPreview: true,
           errorText: '',
           selfPriceError: selfPriceError,
+          isFree: isFree,
+          platformRate: Number.isFinite(platformRate) && platformRate >= 0 ? platformRate : null,
+          floorStale: stale,
+          sliderMin: min,
           lineup: lineup,
           floor: floor,
           floorText: money(res.data.priceMin),
@@ -153,8 +176,8 @@ Page({
           // CU-C-70:floor=0(例:带队成本被静默摊成 0)时 min>=floor 恒真,旧式自校验放行零价。
           // 人数这道条件必须参与,不然按钮点得动而价格是 0。
           canConfirmPrice: pricesOk(ticketRows(that.data.subType, res.data.tickets, floor), start, floor) && res.data.canConfirm !== false
-            && teamSizeOk(that.data.subType, that.data.teamSize) && !selfPriceError,
-          teamSizeError: that._teamTouched ? teamSizeErrorText(that.data.subType, that.data.teamSize) : '', // p3 F6:动过人数或点了确认才报
+            && teamSizeOk(costSub(stateAfter), that.data.teamSize) && !selfPriceError && !stale,
+          teamSizeError: that._teamTouched ? teamSizeErrorText(costSub(stateAfter), that.data.teamSize) : '', // p3 F6:动过人数或点了确认才报
           sliderMax: sliderMax,
           referencePrice: reference,
           referenceText: reference && sample > 0
@@ -162,6 +185,9 @@ Page({
             : '',   // 第十二轮 k3(p3 N11):没有参考价就不画参考价框,不写「样本不足」
         });
         that.updateDelta(start);
+        that.updateFee(start);
+        if (res.data.priced === true) that.loadSaleStatus();
+        if (isFree) that.loadPendingSettlements();
         that.loadLineupNames();
       },
       fail(res) {
@@ -237,32 +263,93 @@ Page({
     this.setData({ tickets, submitError: '', canConfirmPrice: this._canConfirmPrice({ tickets }) });
   },
 
-  onCostInput(e) { this.setData({ leadCost: e.detail.value }); },
+  // 改成本/人数后地板价即失效：先置灰确认，停手 0.6 秒自动重算（也可手点「重新计算地板」）
+  _markStale() {
+    this._inputRev = (this._inputRev || 0) + 1;
+    if (this._recalcTimer) clearTimeout(this._recalcTimer);
+    this._recalcTimer = setTimeout(() => { this._recalcTimer = null; if (!this._unloaded) this.preview(); }, 600);
+  },
+
+  onCostInput(e) {
+    this._markStale();
+    this.setData({ leadCost: e.detail.value, floorStale: true, canConfirmPrice: false });
+  },
 
   onTeamInput(e) {
     const teamSize = e.detail.value;
     this._teamTouched = true;
     // CU-C-70:成团人数就地参与可提交判定 —— 改成 0 后不重算也能点确认的那条路必须堵上。
+    this._markStale();
     this.setData({
       teamSize,
       teamSizeError: teamSizeErrorText(this.data.subType, teamSize),
-      canConfirmPrice: this._canConfirmPrice({ teamSize }),
+      floorStale: true,
+      canConfirmPrice: false,
     });
   },
 
-  recalculate() { this.preview(); },
+  recalculate() {
+    if (this._recalcTimer) { clearTimeout(this._recalcTimer); this._recalcTimer = null; }
+    this.preview();
+  },
 
   // 可提交判定的唯一判据:终价不低于地板、主题已在定价阶段、有人带时人数为正。
   _canConfirmPrice(patch) {
     const data = Object.assign({}, this.data, patch || {});
-    return pricesOk(data.tickets, data.finalPrice, data.floor) && !data.phaseBlocked
-      && teamSizeOk(data.subType, data.teamSize) && !data.selfPriceError;
+    return pricesOk(data.tickets, data.finalPrice, data.floor) && !data.phaseBlocked && !data.floorStale
+      && teamSizeOk(costSub(data), data.teamSize) && !data.selfPriceError;
   },
 
   onSliderChange(e) {
     const value = Number(e.detail.value);
+    this._priceTouched = true;
     this.setData({ finalPrice: value, canConfirmPrice: this._canConfirmPrice({ finalPrice: value }) });
     this.updateDelta(value);
+    this.updateFee(value);
+  },
+
+  // D-23：锁价后的真实状态（已锁价待运营开售 / 审核中 / 在售），页面重进也能看到
+  loadSaleStatus() {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/topic/pricing/sale-status', method: 'GET',
+      data: { topicId: this.data.topicId, scope: this.data.scope || undefined },
+      success(res) {
+        if (that._unloaded || !res || res.code != '200' || !res.data) return;
+        that.setData({ saleStatusText: res.data.message || '' });
+      }
+    });
+  },
+
+  // D-19：跨俱乐部 / 四店探店日场次暂无结算路径，主办方可见「结算待处理」及原因
+  loadPendingSettlements() {
+    const that = this;
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/topic/pricing/settlement-pending', method: 'GET',
+      data: { scope: this.data.scope || undefined },
+      success(res) {
+        if (that._unloaded || !res || res.code != '200' || !Array.isArray(res.data)) return;
+        const topicId = String(that.data.topicId);
+        const pendingRows = res.data.filter(function (r) { return r && String(r.topicId) === topicId; }).map(function (r) {
+          return { key: String(r.activityId), name: r.activityName || '场次', state: r.state || '结算待处理',
+            reason: r.reason || '', money: r.money == null ? '' : '¥' + money(r.money) };
+        });
+        that.setData({ pendingRows: pendingRows });
+      }
+    });
+  },
+
+  // 平台服务费与预计到手（按平台费率，分位向上取整平台费，到手 = 价 - 费）
+  updateFee(value) {
+    const rate = this.data.platformRate;
+    const price = Number(value);
+    if (rate == null || !Number.isFinite(price) || price <= 0 || (this.data.tickets && this.data.tickets.length > 1)) {
+      this.setData({ feeText: '', takeHomeText: '' });
+      return;
+    }
+    const fee = Math.round(price * rate * 100) / 100;
+    const pct = Math.round(rate * 10000) / 100;
+    this.setData({ feeText: '¥' + money(fee) + '（' + pct + '%）', takeHomeText: '¥' + money(price - fee) });
   },
 
   // 灰按钮被点时给一句为什么(cy-btn 在禁用态吞 tap、补发 disabledtap)。
@@ -272,6 +359,7 @@ Page({
     // P-34:开售后人数提示已无意义,先说终价已确认
     // 第四轮(业主:输入问题只在字段下方红字说):人数/票价不对时回执就是那一栏下的红字,不再在底部另起提示框。
     // f-money3:原因已在终价栏下红字常挂,这里不再另起提示。
+    if (!this.data.priced && this.data.floorStale) { toast('正在按新成本重算最低价'); return; }
     if (!this.data.priced && this.data.selfPriceError) { this.setData({ submitError: '' }); return; }
     const teamSizeError = teamSizeErrorText(this.data.subType, this.data.teamSize);
     if (!this.data.priced && teamSizeError) {
@@ -299,6 +387,7 @@ Page({
   confirmPrice() {
     if (!this.data.canConfirmPrice || this.data.saving) return;
     const body = { topicId: this.data.topicId };
+    if (this.data.scope) body.scope = this.data.scope;
     if (this.data.subType === 'guided') {
       body.guidedPrice = this.data.finalPrice;
       if (this.data.tickets.length > 1) {
@@ -306,8 +395,10 @@ Page({
         body.ticketPrices = this.data.tickets.map(function (r) { return { ticketId: r.ticketId, price: Number(r.price) }; });
         body.guidedPrice = Math.min.apply(null, body.ticketPrices.map(function (r) { return r.price; }));
       }
-      body.leadCost = this.data.leadCost === '' ? null : Number(this.data.leadCost);
-      body.teamSize = this.data.teamSize === '' ? null : Number(this.data.teamSize);
+      if (!this.data.isFree) {
+        body.leadCost = this.data.leadCost === '' ? null : Number(this.data.leadCost);
+        body.teamSize = this.data.teamSize === '' ? null : Number(this.data.teamSize);
+      }
     } else {
       body.selfPrice = this.data.finalPrice;
     }
@@ -332,7 +423,7 @@ Page({
           }
           // 第十二轮 k3(p3 N14):原来 0.5 秒就返回,下一步(等开售审核)读不完。
           toast.success(msg, { duration: 2500 });
-          setTimeout(function () { that.goBack(); }, 2500);
+          that._goBackTimer = setTimeout(function () { if (!that._unloaded) that.goBack(); }, 2500);
         } else that.setData({ submitError: (res && res.msg) || '确认失败，请重试' });
       },
       fail(res) { that.setData({ submitError: app.getRequestErrorMessage(res, '网络异常，请稍后重试') }); },

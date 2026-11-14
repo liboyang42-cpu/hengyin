@@ -73,7 +73,7 @@ test('第十轮 f3 p3 F6:滑块右端标出「最高」,不再是一个看着像
 });
 
 test('已开售主题隐藏带队成本整块(含重新计算地板)', () => {
-  assert.match(wxml, /wx:if="\{\{subType==='guided' && !priced\}\}"[\s\S]*?带队成本[\s\S]*?重新计算地板/);
+  assert.match(wxml, /wx:if="\{\{subType==='guided' && !isFree && !priced\}\}"[\s\S]*?带队成本[\s\S]*?重新计算地板/);
 });
 
 test('作者两张不同价的票:逐张列出并预填作者的价,一张票照旧用滑块', () => {

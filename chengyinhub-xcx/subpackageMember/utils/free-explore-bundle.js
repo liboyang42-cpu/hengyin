@@ -25,7 +25,7 @@ function order(value, owner, registrationId) {
     paymentStatus: value.paymentStatus, registrationStatus: value.registrationStatus,
     paymentText: ({ 0: '待支付', 1: '支付中', 2: '已支付', 3: '支付失败', 4: '已退款' })[value.paymentStatus] || '支付状态确认中',
     registrationText: ({ 1: '待支付', 2: '报名成功', 3: '已取消', 4: '已过期' })[value.registrationStatus] || '报名状态确认中', legacy: value.bundle == null,
-    refundHold: null, units: [], reservations: [], fulfilledMerchants: [], exitCases: [], versions: [] };
+    refundHold: null, chapters: [], units: [], reservations: [], fulfilledMerchants: [], exitCases: [], versions: [] };
   if (result.legacy) return result;
   const bundle = value.bundle;
   owned(bundle.order, owner, registrationId);
@@ -43,14 +43,28 @@ function order(value, owner, registrationId) {
     result.paymentText = hold.state === 'SUCCEEDED' ? '原路退款已到账'
       : hold.state === 'ZERO_CASH_COMPLETED' ? '无现金取消已完成' : states[hold.state];
   }
+  // 章节/店铺名与内容：服务端 bundle.chapters；缺失时页面退回「章节」，不报错
+  const chapterRows = Array.isArray(bundle.chapters) ? bundle.chapters : [];
+  const chapterMap = {}, offerMap = {};
+  result.chapters = chapterRows.filter(c => c && exactId(c.chapterId)).map(c => {
+    const stores = (Array.isArray(c.stores) ? c.stores : []).filter(st => st && exactId(st.offerId))
+      .map(st => ({ offerId: exactId(st.offerId), merchantName: String(st.merchantName || '商家'), perkName: String(st.perkName || '') }));
+    stores.forEach(st => { offerMap[st.offerId] = st; });
+    const view = { chapterId: exactId(c.chapterId), name: String(c.name || '章节'), content: String(c.content || ''), stores };
+    chapterMap[view.chapterId] = view;
+    return view;
+  });
   result.units = bundle.units.map(row => {
     owned(row, owner, registrationId);
     if (!exactId(row.id) || !['AVAILABLE', 'RESERVED', 'REDEEMED', 'FORFEITED', 'HELD', 'REFUND_PENDING', 'REFUNDED'].includes(row.status)) throw Error('权益暂时读不全，请刷新');
     const balance = Array.isArray(bundle.balances) && bundle.balances.find(item => exactId(item.grantId)
       && exactId(item.grantId) === exactId(row.grantId) && exactId(item.holderMemberId) === owner);
     const statusText = row.status === 'AVAILABLE' ? (balance && balance.expired === true ? '当前不在有效期内' : '可用') : STATES[row.status];
+    const chapter = chapterMap[exactId(row.chapterId)];
     return { id: exactId(row.id), chapterId: exactId(row.chapterId), status: row.status, statusText,
-      validTo: String(row.validTo || ''), unitCode: String(row.unitCode || '') };
+      validTo: String(row.validTo || ''), unitCode: String(row.unitCode || ''),
+      chapterName: chapter ? chapter.name : '', content: chapter ? chapter.content : '',
+      canReserve: row.status === 'AVAILABLE' && statusText === '可用' && !!(chapter && chapter.stores.length) };
   });
   if (bundle.fulfilledMerchants != null && !Array.isArray(bundle.fulfilledMerchants)) throw Error('商家信息暂时读不到，请刷新');
   result.fulfilledMerchants = (bundle.fulfilledMerchants || []).map(row => {
@@ -58,7 +72,13 @@ function order(value, owner, registrationId) {
     if (!exactId(row.merchantId)) throw Error('商家信息暂时读不到，请刷新');
     return { merchantId: exactId(row.merchantId) };
   });
-  result.reservations = bundle.reservations.map(row => reservation(row, owner, registrationId));
+  result.reservations = bundle.reservations.map(row => {
+    const view = reservation(row, owner, registrationId);
+    const chapter = chapterMap[exactId(row.chapterId)], store = offerMap[exactId(row.offerId)];
+    view.chapterName = chapter ? chapter.name : '';
+    view.shopName = store ? store.merchantName : '';
+    return view;
+  });
   result.exitCases = bundle.exitCases.map(row => {
     owned(row, owner, registrationId);
     if (!exactId(row.id) || !['SWAP_CONSENTED', 'REFUND_UNFULFILLED'].includes(row.decision)) throw Error('售后记录暂时读不到，请刷新');

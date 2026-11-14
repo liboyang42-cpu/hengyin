@@ -90,14 +90,17 @@ Page({
       method: 'POST',
       data: {},
       success(res) {
-        const access = merchantAccessPolicy.normalizeMerchantAccess(
-          res && res.code == '200' ? res.data : null
-        );
+        if (!res || res.code != '200') { that.setData({ merchantAccessError: true }); return; }
+        const access = merchantAccessPolicy.normalizeMerchantAccess(res.data);
+        that.setData({ merchantAccessError: false });
         that.applyMerchantPublishAccess(access.canManageProjects);
       },
-      fail() { that.applyMerchantPublishAccess(false); }
+      // 网络失败不等于没权限：单独记错误态，提供重试，不改写已有权限
+      fail() { that.setData({ merchantAccessError: true }); }
     });
   },
+
+  retryMerchantAccess() { this.loadMerchantAccess(); },
 
   applyMerchantPublishAccess(canManage) {
     const permission = Object.assign({}, (this.data.pub && this.data.pub.permission) || {}, {
@@ -167,6 +170,8 @@ Page({
       cyToast('当前岗位没有项目发布权限');
       return;
     }
+    // 能力卡上次没拉成：弹窗打开时补拉一次，不让弹窗锁在默认玩家态
+    if (!this.data.pubLoaded) this.getPublishHome();
     this.setData({ publishSheetShow: true });
   },
   closePublishSheet() { this.setData({ publishSheetShow: false }); },
