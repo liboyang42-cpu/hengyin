@@ -34,9 +34,9 @@
   font-weight: 700;
   color: var(--xb-text);
 }
-.st-ch__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
-.st-ch__t { font-size: var(--cy-font-label); font-weight: 700; line-height: 1.4; color: var(--xb-text); }
-.st-ch__p { font-size: var(--cy-font-caption); line-height: 1.4; color: var(--xb-muted); }
+.st-ch__main { flex: 1; min-width: 0; }
+.st-ch__t { display: block; font-size: var(--cy-font-label); font-weight: 700; line-height: 1.4; color: var(--xb-text); }
+.st-ch__p { display: block; margin-top: calc(var(--cy-space-1) / 2); font-size: var(--cy-font-caption); line-height: 1.4; color: var(--xb-muted); }
 
 /* 能力 · 概要:与详情 .xb-stat-grid 同一张卡,只是允许换行,一行三格 */
 .cap-sum {
