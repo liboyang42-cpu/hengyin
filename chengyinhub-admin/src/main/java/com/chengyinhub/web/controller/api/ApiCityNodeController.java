@@ -130,7 +130,7 @@ public class ApiCityNodeController extends BaseController {
             collectibleMapper.deleteOne(memberId, MemberCollectible.TYPE_NODE_FAV, id);
             nowFav = false;
         } else {
-            if (roamMapper.selectPlayerMerchantNodeDetail(id, 0L) == null) return error("据点未开放或已下线");
+            if (roamMapper.selectPlayerMerchantNodeDetail(id, 0L) == null) return AjaxResult.error(410, "据点未开放或已下线");
             MemberCollectible c = new MemberCollectible();
             c.setMemberId(memberId);
             c.setCollType(MemberCollectible.TYPE_NODE_FAV);
@@ -177,7 +177,7 @@ public class ApiCityNodeController extends BaseController {
         if (id == null || id <= 0) return error("参数不合规");
         roamMapper.lockClaimOwner(memberId);
         CityNodeVO node = roamMapper.selectPlayerMerchantNodeDetail(id, 0L);
-        if (node == null) return error("据点未开放或已下线");
+        if (node == null) return AjaxResult.error(410, "据点未开放或已下线");
         if (node.getStatus() == null || node.getStatus() != 1) return error("节点未上线");
         if (node.getLat() == null || node.getLng() == null) return error("节点未设置坐标");
 

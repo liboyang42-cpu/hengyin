@@ -370,6 +370,11 @@ def main():
            "valid_end,create_time,del_flag,retail_value) VALUES(%s,%s,1,%s,12.00,200,"
            "'到店出示核销码,每人限一份','2099-12-31 23:59:59',NOW(),0,32.00)", (perk_id, member_id, name))
 
+    print("[seed] 生效隐私政策与用户协议文档(agreement_doc)")
+    ex("INSERT IGNORE INTO agreement_doc(doc_type,version,title,content,status,publish_time) "
+       "VALUES('privacy','1.0.0','隐私政策','ChengYinHub 隐私政策正文',1,NOW()),"
+       "('user_agreement','1.0.0','用户协议','ChengYinHub 用户协议正文',1,NOW())")
+
     print("\n[seed] 结果")
     for t in ("sys_user", "sys_user_role", "ums_member", "mms_merchant", "club", "sys_config"):
         try:

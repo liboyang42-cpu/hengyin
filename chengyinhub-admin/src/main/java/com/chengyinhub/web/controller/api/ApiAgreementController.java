@@ -40,11 +40,11 @@ public class ApiAgreementController extends BaseController {
     @Operation(summary = "读取生效协议")
     public AjaxResult get(String type) {
         if (!isSupportedType(type)) {
-            return error("协议类型不合法");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "协议类型不合法");
         }
         AgreementDocument document = agreementDocumentService.getActive(type);
         if (document == null) {
-            return error("协议暂未发布");
+            return AjaxResult.error(HttpStatus.NOT_FOUND, "协议暂未发布");
         }
         return success(document);
     }

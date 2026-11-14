@@ -1128,4 +1128,27 @@ class TopicUpdateByOwnerTest {
         verify(chapterMapper).deleteCmsTopicChapterById(21L);
         verify(topicMapper).updateCmsTopic(any());
     }
+
+    @Test
+    void missingAndForeignTopicReturnStructuredHttpCodes() {
+        TopicUpdateDTO missingId = new TopicUpdateDTO();
+        assertThrows(IllegalArgumentException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(missingId, ME, "me"));
+
+        TopicUpdateDTO missingTopic = new TopicUpdateDTO();
+        missingTopic.setId(999999L);
+        when(topicMapper.selectCmsTopicById(999999L)).thenReturn(null);
+        com.chengyinhub.common.exception.ServiceException notFound = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(missingTopic, ME, "me"));
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND, notFound.getCode());
+
+        CmsTopic online = topic(1, daysFromNow(3));
+        online.setUserStatus(1);
+        stubExisting(online, 0);
+        com.chengyinhub.common.exception.ServiceException forbidden = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(svc).updateTopicByOwner(whitelistOnlyDto(), 999L, "foreign"));
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.FORBIDDEN, forbidden.getCode());
+    }
 }

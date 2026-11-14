@@ -168,4 +168,17 @@ class ApiAgreementControllerTest {
         document.setStatus(1);
         return document;
     }
+
+    @Test
+    void returnsBadRequestForUnsupportedTypeAndNotFoundWhenUnpublished() {
+        IAgreementDocumentService documents = mock(IAgreementDocumentService.class);
+        when(documents.getActive("privacy")).thenReturn(null);
+        ApiAgreementController controller = controller(documents, mock(IConsentRecordService.class));
+
+        AjaxResult invalid = controller.get("invalid");
+        assertEquals(HttpStatus.BAD_REQUEST, invalid.get(AjaxResult.CODE_TAG));
+
+        AjaxResult unpublished = controller.get("privacy");
+        assertEquals(HttpStatus.NOT_FOUND, unpublished.get(AjaxResult.CODE_TAG));
+    }
 }

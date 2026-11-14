@@ -514,4 +514,19 @@ class TemplateEditOwnershipTest {
         verify(templateLibraryService, never()).updateCmsTemplateLibrary(any());
         verify(templateLibraryService, never()).insertCmsTemplateLibrary(any());
     }
+
+    @Test
+    void missingOrForeignPublishAndDraftThrow404ServiceException() {
+        when(memberTemplateService.selectCmsMemberTemplateById(TEMPLATE_ID)).thenReturn(null);
+
+        com.chengyinhub.common.exception.ServiceException publishEx = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.publishTemplateWithTransaction(request(TEMPLATE_ID), OWNER, "商家甲"));
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND, publishEx.getCode());
+
+        com.chengyinhub.common.exception.ServiceException draftEx = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.saveOrUpdateDraft(request(TEMPLATE_ID), OWNER, "商家甲"));
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND, draftEx.getCode());
+    }
 }

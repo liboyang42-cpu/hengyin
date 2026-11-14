@@ -2963,21 +2963,21 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             Long memberId, String username, boolean chapterFlowV2) {
         Long topicId = dto == null ? null : dto.getId();
         if (topicId == null || topicId <= 0L) {
-            throw new RuntimeException("参数不合规");
+            throw new IllegalArgumentException("参数不合规");
         }
         CmsTopic exist = cmsTopicMapper.selectCmsTopicById(topicId);
         if (exist == null || (exist.getDelFlag() != null && exist.getDelFlag() == 2)) {
-            throw new RuntimeException("主题不存在");
+            throw new ServiceException("主题不存在", HttpStatus.NOT_FOUND);
         }
         // 归属校验(IDOR):只有主题创建者本人能编辑。与 delete / publish-draft / transfer 同口径。
         if (exist.getMemberId() == null || !exist.getMemberId().equals(memberId)) {
-            throw new RuntimeException("无权编辑该主题");
+            throw new ServiceException("无权编辑该主题", HttpStatus.FORBIDDEN);
         }
         boolean hasOpenBundleReview = false;
         if (!chapterFlowV2 && (StringUtils.isNotBlank(dto.getJourneyRules()) || StringUtils.isNotBlank(exist.getJourneyRulesJson()))) {
             exist = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
             if (exist == null || Integer.valueOf(2).equals(exist.getDelFlag()) || !memberId.equals(exist.getMemberId())) {
-                throw new RuntimeException("主题不存在或无权编辑");
+                throw new ServiceException("主题不存在或无权编辑", HttpStatus.NOT_FOUND);
             }
         }
         if (chapterFlowV2) {
@@ -2986,7 +2986,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
             exist = cmsTopicMapper.selectCmsTopicByIdForUpdate(topicId);
             if (exist == null || Integer.valueOf(2).equals(exist.getDelFlag())
                     || !memberId.equals(exist.getMemberId())) {
-                throw new RuntimeException("主题不存在或无权编辑");
+                throw new ServiceException("主题不存在或无权编辑", HttpStatus.NOT_FOUND);
             }
         }
         // R19-DRAFT2:名称非空是草稿也保留的最小身份。字段缺席(null)=不改原值(mapper 的动态
@@ -3007,10 +3007,10 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
         com.chengyinhub.business.util.TopicEditWindow.Scope scope =
                 com.chengyinhub.business.util.TopicEditWindow.resolve(exist, isDraft, new Date());
         if (scope == com.chengyinhub.business.util.TopicEditWindow.Scope.SELLING_FROZEN) {
-            throw new IllegalStateException("主题已进入 SELLING，创作者接口不能修改路线/内容/章节/节点/条款/SKU/价格/时间/角色槽");
+            throw new ServiceException("主题已进入 SELLING，创作者接口不能修改路线/内容/章节/节点/条款/SKU/价格/时间/角色槽", HttpStatus.CONFLICT);
         }
         if (hasOpenBundleReview && isSimplePublishMode(dto.getPublishMode())) {
-            throw new IllegalStateException("主题组合审核中，不能切换为简易版");
+            throw new ServiceException("主题组合审核中，不能切换为简易版", HttpStatus.CONFLICT);
         }
         if (scope == com.chengyinhub.business.util.TopicEditWindow.Scope.WHITELIST) {
             applyWhitelistEdit(exist, dto, username);

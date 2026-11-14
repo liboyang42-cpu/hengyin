@@ -74,4 +74,8 @@ INSERT INTO club_post (id,club_id,author_member_id,content,type,like_count,comme
 -- the legacy /api/creativesquare/list answers 410 on this backend, so ums_creative_square is not seeded.
 DELETE FROM community_guideline_version WHERE id=992071;
 
+INSERT IGNORE INTO agreement_doc (doc_type,version,title,content,status,publish_time)
+VALUES ('privacy','1.0.0','隐私政策','ChengYinHub 隐私政策正文',1,NOW()),
+       ('user_agreement','1.0.0','用户协议','ChengYinHub 用户协议正文',1,NOW());
+
 COMMIT;

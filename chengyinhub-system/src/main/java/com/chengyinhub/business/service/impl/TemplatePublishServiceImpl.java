@@ -119,7 +119,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
                     || (existing.getDelFlag() != null && existing.getDelFlag() != 0)
                     || !memberId.equals(existing.getMemberId())) {
                 // 不区分"不存在"与"不是你的":区分了就等于给出一个模板 id 探测器
-                throw new RuntimeException("模板不存在或无权修改");
+                throw new ServiceException("模板不存在或无权修改", HttpStatus.NOT_FOUND);
             }
         }
 
@@ -781,7 +781,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             existingDraft = lockTemplate(request.getId());
             if (existingDraft == null || !Integer.valueOf(0).equals(existingDraft.getDelFlag())
                     || !memberId.equals(existingDraft.getMemberId())) {
-                throw new RuntimeException("草稿不存在或无权修改");
+                throw new ServiceException("草稿不存在或无权修改", HttpStatus.NOT_FOUND);
             }
         }
         preserveAdoptionIdentity(request, existingDraft);
