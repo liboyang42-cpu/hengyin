@@ -45,7 +45,7 @@ class AnswerPolicyTest {
         assertTrue(policy.matches("正确答案", " RIGHT "), "别名同样走 LEGACY_V1 归一");
         assertTrue(policy.matches("正确答案", "正确答案"), "canonical 永远保留");
         assertFalse(policy.matches("正确答案", "正确答"), "近似错字不得自动通过");
-        assertTrue(policy.matches("正确答案", "正确。"), "共享归一允许显式别名的首尾标点");
+        assertFalse(policy.matches("正确答案", "正确。"));
         assertFalse(policy.matches("", "正确"), "canonical 为空 = 这题没有可判定的答案");
     }
 
