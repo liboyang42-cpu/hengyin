@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import com.chengyinhub.business.domain.MmsMerchant;
 import com.chengyinhub.business.domain.NpcProfile;
 import com.chengyinhub.business.service.IMmsMerchantService;
+import com.chengyinhub.business.service.merchantauthoring.PublicReleaseFacts;
 
 /**
  * 门店 NPC 的<b>事实包</b>:拼进 system prompt 的那段「这家店是什么样的」。
@@ -54,6 +55,9 @@ public class MerchantNpcFactsBuilder
     @Autowired
     private IMmsMerchantService mmsMerchantService;
 
+    @Autowired(required = false)
+    private PublicReleaseFacts publicReleaseFacts;
+
     /**
      * 拼出 system prompt。
      *
@@ -80,6 +84,11 @@ public class MerchantNpcFactsBuilder
             factCount += appendIfPresent(sb, "品牌故事:", merchant.getStoryTitle());
         }
         factCount += appendIfPresent(sb, "店铺知识:", profile.getKnowledge());
+        if (publicReleaseFacts != null)
+        {
+            factCount += appendIfPresent(sb, "已发布公开事实:",
+                    publicReleaseFacts.publicPrompt(merchantId, null, null, null, "STORE"));
+        }
 
         if (factCount == 0)
         {
