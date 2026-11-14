@@ -68,8 +68,8 @@
   <!-- 2026-10-27 owner P-38:附近没有节点时底部也要有卡片带 —— 出一张空态卡,点它放大到全部范围 -->
   <view class="mt-strip" wx:if="{{!sheet && viewMode === 'map'}}" style="padding-bottom:{{safeBottom + 16}}px;">
     <view class="mt-strip__head"><text>{{headerText}}</text></view>
-    <scroll-view class="mt-strip__cards {{listRows.length ? '' : 'mt-strip__cards--empty'}}" scroll-x enhanced show-scrollbar="{{false}}"><view class="mt-strip__track">
-      <cy-empty wx:if="{{!listRows.length && listLoaded && !loadError && !nearbyReadAccess}}" kind="empty" size="sm" title="附近暂无节点" />
+    <view class="mt-empty" wx:if="{{!listRows.length && listLoaded && !loadError && !nearbyReadAccess}}"><cy-empty kind="empty" size="sm" title="附近暂无节点" /></view>
+    <scroll-view wx:if="{{listRows.length}}" class="mt-strip__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="mt-strip__track">
       <view class="mt-card" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
             aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{item.img}}" class="mt-card__cover" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
@@ -80,7 +80,7 @@
     </view></scroll-view>
   </view>
   <!-- 范围、我的队伍都是图标;卡片条在时整体抬到卡片条上方 -->
-  <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:calc({{safeBottom + 16}}px + 380rpx);">
+  <view class="mt-corners {{listRows.length ? '' : 'mt-corners--empty'}}" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:calc({{safeBottom + 16}}px + 380rpx);">
     <!-- 2026-10-28 业主:「范围 1 公里」也变成图标按钮(读屏仍报当前范围) -->
     <view class="mt-corner mt-corner--icon" bindtap="openRange" aria-role="button" aria-label="范围：{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="gps" size="40" /></view>
     <view class="mt-corner mt-corner--icon" bindtap="openMapKind" aria-role="button" aria-label="地图样式" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="40" /></view>

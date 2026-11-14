@@ -37,7 +37,7 @@ const {
   isChannelAllowed,
   readSharePrivacy,
 } = require('../../utils/roam-route-privacy.js');
-const { readNonNegative, footprintCount, formatDistance, formatDuration } = require('../../utils/roam-history-metrics.js');
+const { readNonNegative, footprintCount, formatDistance, formatDuration, formatRoamMoment } = require('../../utils/roam-history-metrics.js');
 const { createIdleDetector } = require('../../utils/roam-idle.js');
 const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
 const { simplifyTrack, limitTrack, normalizeTrack } = require('../../utils/roam-track-simplify.js');
@@ -2159,6 +2159,11 @@ Page({
     if (typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
       return this._recoveryFailure('结算事实暂时无法读取，请重新确认');
     this._finishedAt = result.finishedAt || this._finishedAt || 0;
+    const moment = formatRoamMoment(this._finishedAt);
+    const zone = typeof result.zone === 'string' ? result.zone.trim() : '';
+    const distanceM = readNonNegative(result.distanceM);
+    if (distanceM !== null) this._lastDistanceM = distanceM;
+    const previous = this.data.finish || {};
     const statuses = Array.isArray(badgeDelivery) ? badgeDelivery : result.badgeDelivery;
     const delivered = (code, sourceId) => Array.isArray(statuses) && statuses.some(row => row && typeof row === 'object'
       && row.badgeCode === code && row.state === 'DELIVERED'
@@ -2167,7 +2172,10 @@ Page({
     const milestone = typeof result.medal === 'string' && result.medal.match(/^城市点亮 ([1-9]\d*) 格$/);
     const medal = milestone && delivered('ROAM_TILES_' + milestone[1], milestone[1]) ? result.medal : '';
     const shopMedal = result.shopMedal && delivered(result.shopMedal.code) ? result.shopMedal : null;
-    this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': medal,
+    this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp,
+      'finish.zone': zone || previous.zone || '',
+      'finish.distance': distanceM !== null ? formatDistance(distanceM / 1000) : previous.distance,
+      'finish.date': moment.date || previous.date || '', 'finish.dateLine': moment.dateLine || previous.dateLine || '', 'finish.medal': medal,
       'finish.shopMedal': shopMedal, 'finish.routeStory': result.routeStory || '',
       'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '' });
     this._shopMedalFromServer = !!shopMedal;
@@ -3046,7 +3054,7 @@ Page({
           lastLocation.save(r);
           this._entryMe = { lat: r.latitude, lng: r.longitude };
           this.setData({ introError: '', locErr: false, entryLocated: true });
-          this._openRoamMap({ lat: r.latitude, lng: r.longitude }, true);
+          this._openRoamMap({ lat: r.latitude, lng: r.longitude, accuracy: r.accuracy }, true);
         },
         fail: () => {
           if (stale()) { abandon(); return; }
@@ -3094,6 +3102,8 @@ Page({
   _openRoamMap(startCenter, startTracking) {
     if (startTracking && !this._roamStartedAt && !this.data.unfinishedRoam) this._roamStartedAt = Date.now();
     const p = startCenter || FALLBACK;
+    this._sessionStartFix = startTracking && !(this._track || []).length
+      ? (acceptRoamLocation({ latitude: p.lat, longitude: p.lng, accuracy: p.accuracy }, null, Date.now()) || {}).point : null;
     this._disposeFogRenderer();
     const fogGeneration = this._fogLifecycleGen;
     const locationRevision = bgTracker.revision('roam');
@@ -4173,12 +4183,16 @@ Page({
     const abandon = () => {
       if (!live()) return;
       that._realStarting = false;
+      that._sessionStartFix = null;
       that._locationForegroundOnly = false;
       if (that._realRevokeOff) { that._realRevokeOff(); that._realRevokeOff = null; }
     };
     const onOk = (usingBackground) => {
       if (!live()) return;
-      that._realStarting = false; that._realAnchor = null;
+      that._realStarting = false;
+      that._realAnchor = !(that._track || []).length ? that._sessionStartFix || null : null;
+      if (that._realAnchor) that._track.push({ lat: that._realAnchor.lat, lng: that._realAnchor.lng });
+      that._sessionStartFix = null;
       that._realOn = true;
       wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
       that._locationForegroundOnly = usingBackground === false;
@@ -4221,6 +4235,7 @@ Page({
     });
   },
   _stopReal() {
+    this._sessionStartFix = null;
     this._realAnchor = null;
     bgTracker.release('roam');
     this._realStartEpoch = (this._realStartEpoch || 0) + 1;
@@ -4304,8 +4319,10 @@ Page({
     if (km !== this._stats.distance) { this._stats.distance = km; this._rollStat('distance', km); }
 
     const now = Date.now();
+    const escaped = this._pinFocusId != null && this._playerOutsideSafeView(p);
+    if (escaped) { this._hold = 0; this._pinFocusId = null; }
     if (!this._zoomLock && (!this._hold || now - this._hold > 3000)) {
-      if (!this._centerTimer || now - this._centerTimer >= CENTER_MS) {
+      if (escaped || !this._centerTimer || now - this._centerTimer >= CENTER_MS) {
         this._centerTimer = now;
         patch.center = { lat: p.lat, lng: p.lng };
       }
@@ -4532,15 +4549,23 @@ Page({
     this._syncMarkers();
   },
 
+  _playerOutsideSafeView(p) {
+    const box = photoPins.regionBox(this._pinRegion);
+    if (!box) return false;
+    const inset = photoPins.safeInsets(this._pinSafeArea());
+    return p.lat > box.n - box.h * inset.top || p.lat < box.s + box.h * inset.bottom
+      || p.lng < box.w + box.wd * inset.side || p.lng > box.e - box.wd * inset.side;
+  },
+
   _placeCardFor(poi) {
     const me = this._player;
     const d = me && me.lat != null ? distM(me, poi) : (Number.isFinite(Number(poi.distM)) ? Number(poi.distM) : null);
     const distText = d == null ? '' : (d < 1000 ? Math.max(1, Math.round(d)) + ' 米' : (d / 1000).toFixed(1) + ' 公里');
-    // 只有据点(城市节点)有深链落地页与评分;普通地标(type 1)读节点接口是 410,不给分享、不读评分
-    const shareKind = poi._roamId && poi.isCityNode && !poi.demo ? 'poi' : (poi.merchantId && !poi.demo ? 'merchant' : '');
+    // 官方目录地点与据点共用公开落地页；未核对的普通地标仍不给分享。
+    const shareKind = poi._roamId && (poi.isCityNode || placeMap.hasSeedTag(poi)) && !poi.demo ? 'poi' : (poi.merchantId && !poi.demo ? 'merchant' : '');
     return {
       id: poi.id, name: poi.name || '地点', address: poi.address || '',
-      photo: photoPins.pinPhoto(poi, MOCK_IMG), distText, lat: poi.lat, lng: poi.lng,
+      photo: photoPins.pinPhoto(poi, MOCK_IMG) || '/images/home-route-city-placeholder.jpg', distText, lat: poi.lat, lng: poi.lng,
       shareKind, shareId: shareKind === 'poi' ? String(poi._roamId) : (shareKind === 'merchant' ? String(poi.merchantId) : ''),
     };
   },
@@ -4556,8 +4581,8 @@ Page({
   closePlaceCard() {
     this._placeCardPoi = null;
     this._pinFocusId = null;
-    this._hold = Date.now();
-    this.setData({ placeCard: null });
+    this._hold = 0; this._centerTimer = 0;
+    this.setData({ placeCard: null, center: this._player ? { lat: this._player.lat, lng: this._player.lng } : this.data.center });
     this._syncMarkers();
   },
 
@@ -5184,13 +5209,11 @@ Page({
     }
     this._stopClock(); this._stopReal();
     const shops = doneShopCount(this._pois);   // #22:结算屏/足迹卡的探店数同样按店名去重
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
+    const moment = formatRoamMoment(Date.now());
     const fin = {
       zone: this.data.entryCityStrip && this.data.entryCityStrip.name || (this.data.currentAddress && !['当前位置', '还没定位', '尚未开启定位'].includes(this.data.currentAddress) ? this.data.currentAddress : '城市漫游'),
-      date: (now.getMonth() + 1) + '月' + now.getDate() + '日',
-      dateLine: '今天 · ' + (now.getHours() < 12 ? '上午' : '下午') + ' ' + hh + ':' + mm,
+      date: moment.date,
+      dateLine: moment.dateLine,
       shops,
       distance: formatDistance((this._dist || 0) / 1000),
       explorePct: this._stats.explorePct,

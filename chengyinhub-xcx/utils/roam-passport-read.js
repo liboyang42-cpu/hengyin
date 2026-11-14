@@ -7,7 +7,7 @@ const count = value => value == null ? null : typeof value === 'number' && Numbe
 function fact(raw) {
   if (!raw || typeof raw.sessionId !== 'string' || exactSessionId(raw.sessionId) !== raw.sessionId) throw new Error('记录编号无效')
   const finished = count(raw.finishedAt), started = count(raw.startedAt), distance = count(raw.distanceM)
-  return { sessionId: raw.sessionId, ts: finished || started || 0, startedAt: started, finishedAt: finished,
+  return { sessionId: raw.sessionId, ts: finished || started || 0, startedAt: started, finishedAt: finished, ...(typeof raw.zone === 'string' && raw.zone.trim() ? { zone: raw.zone.trim() } : {}),
     distance: distance == null ? null : distance / 1000, shops: count(raw.shops),
     durSec: finished != null && started != null && finished >= started ? Math.floor((finished - started) / 1000) : null,
     photos: [], track: serverTrack(raw.track), pois: [], serverFact: true }

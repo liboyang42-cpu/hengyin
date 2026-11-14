@@ -73,6 +73,7 @@ public class ApiRoamController extends BaseController {
 
     @Autowired
     private RoamMapper roamMapper;
+    @Autowired private com.chengyinhub.business.service.IMapGeocodeService mapGeocodeService;
     @Autowired private com.chengyinhub.business.service.impl.RoamLocationConsentService locationConsent;
     @Autowired
     private com.chengyinhub.business.service.IConsentRecordService consentRecordService;
@@ -918,6 +919,17 @@ public class ApiRoamController extends BaseController {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("finishedAt", session.getFinishedAt().getTime());
+        data.put("distanceM", session.getDistanceM());
+        // Coarse session metadata comes from the validated track's start, never the finish location or a client label.
+        double[] start = com.chengyinhub.business.service.support.RoamTrackSimplifier.startPoint(track);
+        if (start != null && mapGeocodeService != null) {
+            try {
+                String zone = mapGeocodeService.resolveCity(start[1], start[0]);
+                if (zone != null && !zone.isBlank()) data.put("zone", zone.trim());
+            } catch (RuntimeException e) {
+                logger.warn("漫游地区暂不可用 sessionId={}, reason={}", sid, e.getClass().getSimpleName());
+            }
+        }
         data.put("tileXp", tileXp);
         data.put("poiXp", poiXp);
         data.put("totalXp", totalXp);

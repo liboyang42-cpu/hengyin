@@ -28,13 +28,27 @@ class RoamPassportReadTest {
         assertEquals(true, result.get("hasMore"));
         Map<?, ?> fact = (Map<?, ?>) ((List<?>) result.get("items")).get(0);
         // 2026-10-31 P-7:多一个 track,只读 track_json 列;finish_result_json 里混着的轨迹 / 照片照旧不下发
-        assertEquals(Set.of("sessionId", "startedAt", "finishedAt", "distanceM", "shops", "track"), fact.keySet());
+        assertEquals(Set.of("sessionId", "startedAt", "finishedAt", "distanceM", "shops", "track", "zone"), fact.keySet());
         assertEquals(null, fact.get("track"));
         assertEquals(2L, fact.get("shops"));
         when(mapper.page(7L, 9007199254740994L, 3)).thenReturn(List.of(row(9007199254740993L)));
         assertEquals(false, service.page(7L, "9007199254740994", 2).get("hasMore"));
         verify(mapper).page(7L, 9007199254740994L, 3);
     }
+    @Test void persistedCitySurvivesHistoryAndDetailWithoutLocalArchives() {
+        RoamPassportMapper mapper = mock(RoamPassportMapper.class);
+        RoamPassportReadService service = new RoamPassportReadService(mapper);
+        RoamSession session = row(9);
+        session.setFinishResultJson("{\"zone\":\"上海\",\"sessionShops\":0}");
+        when(mapper.detail(7L, 9L)).thenReturn(session);
+        when(mapper.page(7L, null, 31)).thenReturn(List.of(session));
+        assertEquals("上海", service.detail(7L, "9").get("zone"));
+        Map<?, ?> record = (Map<?, ?>) ((List<?>) service.page(7L, null, 30).get("items")).get(0);
+        assertEquals("上海", record.get("zone"));
+        session.setFinishResultJson("{\"zone\":7}");
+        assertNull(service.detail(7L, "9").get("zone"));
+    }
+
     @Test void unknownHistoricalStatisticsStayUnknownAndForeignRecordIsNotReturned() {
         RoamPassportMapper mapper = mock(RoamPassportMapper.class);
         RoamPassportReadService service = new RoamPassportReadService(mapper);

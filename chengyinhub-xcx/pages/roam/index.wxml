@@ -799,7 +799,7 @@
   </view>
   <!-- 下面三行都跟着系统定位权限走:它们不是本机偏好,给个能勾却不影响任何事的假开关是骗人 -->
   <view class="drow" bindtap="openRoamLocationSetting" aria-role="button" aria-label="位置权限，{{gpsOk ? '已允许' : '未允许'}}" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic"><cy-icon name="pin-solid" size="40" /></view>
+    <view class="dic"><cy-icon name="pin" size="40" /></view>
     <view class="dcopy"><text class="dt">位置权限</text></view>
     <text class="dv">{{gpsOk ? '开' : '关'}}</text>
     <view class="darr"></view>
@@ -866,13 +866,13 @@
       <view wx:else class="runner__face runner__ring runner__ph" style="border-color:{{runnerView.color}};color:{{runnerView.color}}"><text>{{runnerView.initial}}</text></view>
       <view>
         <text class="runner__nm">{{runnerView.nickname}}</text>
-        <text class="runner__sub">正在附近漫游 · {{runnerView.since}}</text>
+        <text class="runner__sub">正在附近漫游{{runnerView.since ? ' · ' + runnerView.since : ''}}</text>
       </view>
     </view>
-    <view class="g3">
-      <view class="g3__c"><text class="g3__v">{{runnerView.explorePct}}%</text><text class="g3__l">地盘</text></view>
-      <view class="g3__c"><text class="g3__v">{{runnerView.shops}}</text><text class="g3__l">探店</text></view>
-      <view class="g3__c"><text class="g3__v">{{runnerView.elapsed}}</text><text class="g3__l">在走</text></view>
+    <view class="g3" wx:if="{{(runnerView.explorePct != null && runnerView.explorePct !== '') || (runnerView.shops != null && runnerView.shops !== '') || runnerView.elapsed}}">
+      <view class="g3__c" wx:if="{{runnerView.explorePct != null && runnerView.explorePct !== ''}}"><text class="g3__v">{{runnerView.explorePct}}%</text><text class="g3__l">地盘</text></view>
+      <view class="g3__c" wx:if="{{runnerView.shops != null && runnerView.shops !== ''}}"><text class="g3__v">{{runnerView.shops}}</text><text class="g3__l">探店</text></view>
+      <view class="g3__c" wx:if="{{runnerView.elapsed}}"><text class="g3__v">{{runnerView.elapsed}}</text><text class="g3__l">在走</text></view>
     </view>
     <block wx:if="{{runnerView.shopPhotos.length}}">
       <text class="runner__k">TA 点亮的店</text>
@@ -1053,7 +1053,6 @@
         <cy-icon name="route" size="32" />
         <text>{{trackTip}}</text>
       </view>
-      <view class="settle__chip">{{currentAddress}}</view>
       <!-- 2026-10-27 owner P-34:「查看漫游数据」改成浮在地图上的按钮 -->
       <view class="settle__mapbtn" bindtap="openPassport" aria-role="button" aria-label="查看漫游数据" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="route" size="28" /><text>查看漫游数据</text></view>
     </view>

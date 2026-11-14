@@ -1,6 +1,7 @@
 // 附近正在漫游的人(原型 otherRunners / otherSheet)。
 // 纯函数放这儿:颜色怎么挑、时长怎么写、后端回包怎么收成一行,都能单测。
 'use strict';
+const { readNonNegative } = require('./roam-history-metrics.js');
 
 /* 每个人一个环色。原型只给了两个人(#A78BFA / #22D3EE),这里补齐成一组
    ——都是深色地图上压得住的中高亮度色,和自己的蓝 #2F7BF6、城市定向蓝 #5A90D6、
@@ -44,7 +45,9 @@ function normalizeRunners(rows) {
     const lat = Number(r.lat);
     const lng = Number(r.lng);
     if (id <= 0 || !isFinite(lat) || !isFinite(lng)) return;
-    const sec = Number(r.elapsedSec) || 0;
+    const sec = readNonNegative(r.elapsedSec);
+    const explorePct = readNonNegative(r.explorePct);
+    const shops = readNonNegative(r.shops);
     out.push({
       memberId: id,
       nickname: r.nickname || '漫游者',
@@ -53,10 +56,10 @@ function normalizeRunners(rows) {
       avatar: r.avatar || '',
       lat, lng,
       color: runnerColor(id),
-      explorePct: Math.max(0, Math.min(99, Number(r.explorePct) || 0)),
-      shops: Math.max(0, Number(r.shops) || 0),
-      elapsed: elapsedLabel(sec),
-      since: sinceLabel(sec),
+      explorePct: explorePct === null ? null : Math.min(99, explorePct),
+      shops,
+      elapsed: sec === null ? '' : elapsedLabel(sec),
+      since: sec === null ? '' : sinceLabel(sec),
       // 「TA 点亮的店」那一排:只留真有图的,没图的格子在原型里根本不存在
       shopPhotos: (Array.isArray(r.shopPhotos) ? r.shopPhotos : [])
         .filter((s) => s && s.image)

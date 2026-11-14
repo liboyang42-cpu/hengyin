@@ -332,13 +332,21 @@ Component({
       if (markerId == null) return;
       this.onMarkerTap({ detail: { markerId } });
     },
+    onStyleReady(e) {
+      const generation = e && e.currentTarget && e.currentTarget.dataset && Number(e.currentTarget.dataset.generation);
+      const detail = e && e.detail;
+      if (generation !== (this._mapGeneration || 0) || !this.data.mapInstances.length
+        || !detail || detail.ability !== 'layer-style' || detail.errCode !== 0) return;
+      clearTimeout(this._styleLoadTimer);
+      this.setData({ mapLoaded: true });
+    },
     onUpdated(e) {
       const generation = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.generation;
       if (!this.data.mapInstances.length || (generation != null && Number(generation) !== (this._mapGeneration || 0))) return;
       if (!this.data.mapLoaded) {
         const remaining = this.data.tone === '2077' ? Math.max(0, (this._styleVisibleAt || 0) - Date.now()) : 0;
         clearTimeout(this._styleLoadTimer);
-        // shortcut: updated precedes custom tiles; cover the measured 3s load until a tile-ready event exists.
+        // shortcut: runtimes without layer-style readiness retain the measured 3.5s fallback.
         if (remaining) this._styleLoadTimer = setTimeout(() => {
           if (!this._mapGone && Number(generation || 0) === (this._mapGeneration || 0)) this.setData({ mapLoaded: true });
         }, remaining);
