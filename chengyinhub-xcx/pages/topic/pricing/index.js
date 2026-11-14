@@ -312,7 +312,7 @@ Page({
   loadSaleStatus() {
     const that = this;
     app.sendRequest({
-      hideLoading: true, silentError: true, url: '/api/topic/pricing/sale-status', method: 'GET',
+      hideLoading: true, autoErrorToast: false, url: '/api/topic/pricing/sale-status', method: 'GET',
       data: { topicId: this.data.topicId, scope: this.data.scope || undefined },
       success(res) {
         if (that._unloaded || !res || res.code != '200' || !res.data) return;
@@ -325,7 +325,7 @@ Page({
   loadPendingSettlements() {
     const that = this;
     app.sendRequest({
-      hideLoading: true, silentError: true, url: '/api/topic/pricing/settlement-pending', method: 'GET',
+      hideLoading: true, autoErrorToast: false, url: '/api/topic/pricing/settlement-pending', method: 'GET',
       data: { scope: this.data.scope || undefined },
       success(res) {
         if (that._unloaded || !res || res.code != '200' || !Array.isArray(res.data)) return;

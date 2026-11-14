@@ -61,7 +61,7 @@ Page({
   loadAccess() {
     this.setData({ pageState: 'loading', errorMessage: '' });
     app.sendRequest({
-      hideLoading: true, silentError: true, url: '/api/merchant/access/me', method: 'POST',
+      hideLoading: true, autoErrorToast: false, url: '/api/merchant/access/me', method: 'POST',
       success: (res) => {
         if (!isOk(res) || !res.data || typeof res.data !== 'object') { this.setData({ pageState: 'error', errorMessage: errorText(res, '经营身份加载失败') }); return; }
         const access = normalizeMerchantAccess(res.data);
@@ -88,7 +88,7 @@ Page({
     const from = Date.now() - 2 * DAY;
     const done = () => { if (fromPull) wx.stopPullDownRefresh(); return seq === this._seq && !this._unloaded; };
     app.sendRequest({
-      hideLoading: true, silentError: true, url: '/api/free-explore/bundle/merchant/reservations', method: 'GET',
+      hideLoading: true, autoErrorToast: false, url: '/api/free-explore/bundle/merchant/reservations', method: 'GET',
       data: { from, to: from + 9 * DAY },
       success: (res) => {
         if (!done()) return;
@@ -118,7 +118,7 @@ Page({
         if (!r.confirm || this._unloaded || this.data.busyId) return;
         this.setData({ busyId: id });
         app.sendRequest({
-          hideLoading: true, silentError: true, url: '/api/free-explore/bundle/merchant/reservation/' + id + '/no-show', method: 'POST', data: {},
+          hideLoading: true, autoErrorToast: false, url: '/api/free-explore/bundle/merchant/reservation/' + id + '/no-show', method: 'POST', data: {},
           success: (res) => {
             if (this._unloaded) return;
             this.setData({ busyId: '' });
