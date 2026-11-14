@@ -198,10 +198,14 @@ public class ChannelInteractionService
         return v;
     }
 
-    public Map<String, Object> chainInfo(long viewer, long conv, long chainId, long cursor, int limit)
+    /** chain_id 缺省时取该会话最新一条接龙（App BeGapImDesk 只带 conversation_id）。 */
+    public Map<String, Object> chainInfo(long viewer, long conv, Long requestedChainId, long cursor, int limit)
     {
         if (cursor < 0 || limit < 1 || limit > 50) throw ChannelRejection.badField("cursor/limit");
         ChannelMessageService.ChannelAccess a = messages.authorize(viewer, conv, of(VIEW_CHANNEL, READ_HISTORY), false);
+        Long latest = requestedChainId != null ? requestedChainId : mapper.selectLatestChainId(conv);
+        if (latest == null) throw new ChannelRejection(404, "CHAIN_NOT_FOUND", "接龙不存在");
+        long chainId = latest;
         Map<String, Object> chain = mapper.selectChain(chainId, conv);
         if (chain == null) throw new ChannelRejection(404, "CHAIN_NOT_FOUND", "接龙不存在");
         boolean canParticipate = ChannelPermissionCalculator.has(a.bits(), SEND_MESSAGE) && a.channel().getStatus() == 0;

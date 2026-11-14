@@ -38,11 +38,12 @@ public class ApiChannelInteractionController extends BaseController
 
     @Operation(summary = "接龙详情与参与列表")
     @GetMapping("/api/im/chain/info")
-    public ResponseEntity<AjaxResult> info(@RequestParam("conversation_id") String conversationId, @RequestParam("chain_id") String chainId,
+    public ResponseEntity<AjaxResult> info(@RequestParam("conversation_id") String conversationId, @RequestParam(value = "chain_id", required = false) String chainId,
             @RequestParam(value = "cursor", defaultValue = "0") long cursor, @RequestParam(value = "limit", defaultValue = "50") int limit)
     {
         return ApiFriendController.envelope(this::getAppUserId,
-                me -> interaction.chainInfo(me, ChannelHttpResponse.id(conversationId), ChannelHttpResponse.id(chainId), cursor, limit));
+                me -> interaction.chainInfo(me, ChannelHttpResponse.id(conversationId), chainId == null ? null : ChannelHttpResponse.id(chainId),
+                        cursor, limit));
     }
 
     @Operation(summary = "接龙原回执")
