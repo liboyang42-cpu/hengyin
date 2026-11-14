@@ -132,21 +132,26 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     private com.chengyinhub.business.service.support.ClubSessionMerchantFee clubSessionMerchantFee;
 
     /**
-     * 获取需要结算的活动列表
+     * 获取需要结算的活动列表；沿用各选单的退款截止、14 天及未结算闸。
      */
     @Override
     public List<CmsActivity> selectActivitiesForSettlement() {
         List<CmsActivity> due = cmsActivityMapper.selectActivitiesForSettlement();
-        // 2026-11-13 业主:商家发布的自由探索,承办俱乐部开的场次同走场次结算,票款给发布商家。
-        List<CmsActivity> merchantPublished = cmsActivityMapper.selectMerchantPublishedFreeExploreActivitiesForSettlement();
-        if (merchantPublished == null || merchantPublished.isEmpty()) {
-            return due;
-        }
         List<CmsActivity> all = new java.util.ArrayList<>(due == null ? java.util.Collections.<CmsActivity>emptyList() : due);
+        List<CmsActivity> additional = new java.util.ArrayList<>();
+        List<CmsActivity> merchantPublished = cmsActivityMapper.selectMerchantPublishedFreeExploreActivitiesForSettlement();
+        if (merchantPublished != null) additional.addAll(merchantPublished);
+        // 决定 A：旧待处理选单保留原时点及已做 FINAL 排除条件，已明确主办方路径的存量场次下轮补结。
+        List<CmsActivity> stranded = cmsActivityMapper.selectFreeExploreActivitiesWithoutSettlementPath();
+        if (stranded != null) {
+            for (CmsActivity activity : stranded) {
+                if (strandedReason(activity) == null) additional.add(activity);
+            }
+        }
         java.util.Set<Long> seen = new java.util.HashSet<>();
-        for (CmsActivity a : all) seen.add(a.getId());
-        for (CmsActivity a : merchantPublished) {
-            if (seen.add(a.getId())) all.add(a);
+        for (CmsActivity activity : all) seen.add(activity.getId());
+        for (CmsActivity activity : additional) {
+            if (seen.add(activity.getId())) all.add(activity);
         }
         return all;
     }
@@ -268,12 +273,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         return true;
     }
 
-    /**
-     * 第十三轮 m6(2026-11-05):已到结算时点、场次结算又付不了的自由探索场次,按「已付未退 + 部分退款留存」
-     * 算实收;有钱就逐场点名(原因、实收),由结算任务记 FAIL 并告警,下轮仍在就继续告警。不动钱、不置已结算:
-     * 四店探店日的钱按代码本意归期级 FINAL(/business/edition-final),跨俱乐部场次代码里没有分钱规则,
-     * 都等业主拍板,见 integ/ROUND13-M6-RESULT.md。没有实收的场次不告警。
-     */
+    /** 仅对缺失/不可读合同或缺主办方等未知路径告警；决定 A 的跨俱乐部/四店场次已有主办方结算路径。 */
     List<String> strandedFreeExploreSales() {
         List<String> stranded = new java.util.ArrayList<>();
         for (Map<String, Object> row : strandedFreeExploreRows(null, true)) {
@@ -309,7 +309,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             BigDecimal money = (paid == null ? BigDecimal.ZERO : paid).add(retained == null ? BigDecimal.ZERO : retained);
             if (money.signum() <= 0) continue;
             String reason = strandedReason(activity);
-            if (reason == null) continue; // 商家发布主题的承办场次已有结算路径,不再告警
+            if (reason == null) continue; // 已明确主办方结算路径，不再显示「结算待处理」
             if (logAlert) {
                 logger.error("【结算告警】自由探索实收没有结算路径,未入账 activityId={}, topicId={}, 实收={}, 原因={}",
                         activity.getId(), activity.getTopicId(), money, reason);
@@ -331,17 +331,16 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     private String strandedReason(CmsActivity activity) {
         CmsTopic topic = cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
         TopicSaleSnapshot snapshot = topic == null ? null : topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());
-        if (snapshot == null) return "缺冻结开售合同";
-        boolean fourStore;
+        if (snapshot == null || !topic.getId().equals(snapshot.getTopicId())) return "缺冻结开售合同";
         try {
-            fourStore = com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
-                    snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType()).requiresFourStoreContract();
+            com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
+                    snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType());
         } catch (RuntimeException unreadable) {
             return "开售合同无法读取";
         }
-        if (fourStore) return "四店探店日(FOUR_STORE_REDEEM)待期级 FINAL,分钱规则待业主拍板";
-        if (isMerchantPublishedSession(activity, topic)) return null;
-        return "场次俱乐部 " + activity.getClubId() + " 不是主题俱乐部 " + topic.getClubId() + ",分钱规则待业主拍板";
+        if (isOrganizerSettledFreeExploreSession(activity, topic) || isMerchantPublishedSession(activity, topic)) return null;
+        if (topic.getClubId() != null && topic.getClubId() > 0 && topic.getClubId().equals(activity.getClubId())) return null;
+        return "场次缺少可结算主办方";
     }
 
     private IllegalStateException strandedFailure(List<String> stranded, int settledCount) {
@@ -554,6 +553,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (activity.getClubId() == null || activity.getClubId() <= 0 || activity.getTopicId() == null) {
             return com.chengyinhub.business.service.support.ClubSessionMerchantFee.emptyPlan();
         }
+        CmsTopic topic = cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
+        if (isOrganizerSettledFreeExploreSession(activity, topic)) {
+            return com.chengyinhub.business.service.support.ClubSessionMerchantFee.emptyPlan();
+        }
         return clubSessionMerchantFee().plan(activity, payee, registrationId);
     }
 
@@ -589,6 +592,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * 转让后新主理人收;非俱乐部场次仍是 cms_activity.member_id。退款冲回按实际入账人扣,见 RefundServiceImpl。
      */
     private Long activityPayee(CmsActivity activity, CmsTopic topic) {
+        if (isOrganizerSettledFreeExploreSession(activity, topic)) return activityPayee(activity);
         if (isMerchantPublishedSession(activity, topic)) {
             return topic.getMemberId();
         }
@@ -605,6 +609,22 @@ public class CmsActivityServiceImpl implements ICmsActivityService
                 && (topic.getClubId() == null || topic.getClubId() <= 0)
                 && topic.getMemberId() != null && topic.getMemberId() > 0
                 && activity.getClubId() != null && activity.getClubId() > 0;
+    }
+
+    /** 2026-11-14 决定 A：原无路径的跨俱乐部/四店场次归场次主办方，店铺在线下结算。 */
+    private boolean isOrganizerSettledFreeExploreSession(CmsActivity activity, CmsTopic topic) {
+        if (activity == null || topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+            return false;
+        }
+        boolean organizer = activity.getClubId() != null && activity.getClubId() > 0
+                || activity.getMemberId() != null && activity.getMemberId() > 0;
+        if (!organizer) return false;
+        if (topic.getClubId() != null && topic.getClubId() > 0 && !topic.getClubId().equals(activity.getClubId())) {
+            return true;
+        }
+        TopicSaleSnapshot snapshot = topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());
+        return snapshot != null && com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
+                snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType()).requiresFourStoreContract();
     }
 
     private Long activityPayee(CmsActivity activity) {
@@ -695,18 +715,16 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
     private void requireSessionSettlementContract(CmsActivity activity, CmsTopic topic) {
         if (topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) return;
-        boolean clubOwned = topic.getClubId() != null && topic.getClubId() > 0
-                && topic.getClubId().equals(activity.getClubId());
-        if (!clubOwned && !isMerchantPublishedSession(activity, topic)) {
-            throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: activityId=" + activity.getId());
-        }
-        TopicSaleSnapshot snapshot = topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());
+        TopicSaleSnapshot snapshot = topicSaleSnapshotMapper == null ? null : topicSaleSnapshotMapper.selectSnapshotByTopicId(topic.getId());
         if (snapshot == null || !topic.getId().equals(snapshot.getTopicId())) {
             throw new ServiceException("自由探索缺少冻结开售合同，拒绝结算 activityId=" + activity.getId());
         }
-        // 四店专用合同仍走原 FINAL；普通俱乐部自由探索按场次结算，不能按产品编号一并拒绝。
-        if (com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
-                snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType()).requiresFourStoreContract()) {
+        com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.read(
+                snapshot.getSchemaVersion(), snapshot.getCanonicalJson(), topic.getProductType());
+        boolean clubOwned = topic.getClubId() != null && topic.getClubId() > 0
+                && topic.getClubId().equals(activity.getClubId());
+        if (!clubOwned && !isMerchantPublishedSession(activity, topic)
+                && !isOrganizerSettledFreeExploreSession(activity, topic)) {
             throw new ServiceException("FREE_EXPLORE_LEGACY_SETTLEMENT_FORBIDDEN: activityId=" + activity.getId());
         }
     }
