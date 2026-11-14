@@ -791,7 +791,7 @@
     <view class="dsw {{reducedMotion ? 'is-on' : ''}}" catchtap="toggleReducedMotion" aria-role="switch" aria-checked="{{reducedMotion}}" aria-label="减少动态效果" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
   </view>
   <view class="drow">
-    <view class="dic"><cy-icon name="team" size="40" /></view>
+    <view class="dic"><cy-icon name="tab-club" size="40" /></view>
     <view class="dcopy"><text class="dt">附近的人位置分享</text></view>
     <view class="dsw {{presenceVisible ? 'is-on' : ''}}" catchtap="togglePresenceSharing"
       aria-role="switch" aria-checked="{{presenceVisible}}" aria-disabled="{{presenceSubmitting}}"

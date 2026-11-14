@@ -823,7 +823,7 @@ Page({
         if (that._nearbyOutcome('pois', owner, seq, res)) return;
         const got = res && res.code == 200 ? PM.unwrapPois(res) : null;
         const rows = got && isRecordList(got.rows) ? await resolvePlaceMedia(app, got.rows) : [];
-        if (that._unloaded || seq !== that._poiSeq) return;
+        if (!that._nearbyCurrent('pois', owner, seq)) return;
         that._pois = rows.map(r => Object.assign({}, r, { coverImg: PM.coverKey(r) }));
         // A4.3:服务端按距离截断时说明一声,不再静默丢掉远处的点
         if (got && got.truncated && !that._truncTold) { that._truncTold = true; cyToast('只显示离你最近的 ' + that._pois.length + ' 处'); }
@@ -918,7 +918,7 @@ Page({
       const c = L.poiCard(p), shop = c.kind === 'shop', tag = c.tags[0] || c.tag;
       return { kind: shop ? 'shop' : 'spot', id: c.id, chipLetter: tag.slice(0, 1), chipColor: shop ? '#FF9F0A' : '#34C759', chipText: tag, img: img(c.img), faces: [], countText: '', // ds-ok v13 商家橙 / 地点绿
         ribbon: '', title: c.title, subName: shop ? (p.merchantName || '') : c.tags.slice(1, 3).join(' · '), metaLine: c.address, metaStrong: c.found ? '到过' : '',
-        address: c.address, desc: c.desc, sourceList: c.sourceList, srcOpen: false, thumbs: [], rows: [{ k: '类型', v: c.tags.join(' · ') || c.tag }].concat(c.address ? [{ k: '地址', v: c.address }] : []),
+        address: c.address, desc: c.desc, sourceList: c.sourceList, srcOpen: false, thumbs: PM.galleryKeys(p).map(img).filter(Boolean), photoCredit: PM.credit(p), creditOpen: false, rows: [{ k: '类型', v: c.tags.join(' · ') || c.tag }].concat(c.address ? [{ k: '地址', v: c.address }] : []),
         // 官方地点(带玩法):背面展开就是完整详情 —— 相册左右滑、玩法、小红书、评价都在这张卡里,不再跳别的半屏
         official: !!p.templateId, game: null, reviews: [], reviewsLoaded: false, ratingText: '',
         primary: p.templateId ? '开始挑战' : '去这里', secondary: p.templateId ? '导航' : '', lat: c.lat, lng: c.lng };
@@ -954,7 +954,7 @@ Page({
     this.setData({ poiCard: card, poiCardIn: false, poiFlip: false, poiExpand: false, pcClip: '', sheet: 'poi', pcTop }); this._syncMarkers(); // 点开的那颗点位藏起来:卡片就是它长出来的
     this._poiInTimer = setTimeout(() => { if (!this._unloaded) this.setData({ poiCardIn: true }); }, 30);
     this.setData({ poiPhoto: 0 });
-    if (card.official) this._loadSpot(card.id);
+    this._poiGalleryRequest = {}; if (card.official) this._loadSpot(card.id);
 
   },
   /* 点正面:队伍进原来的队伍半屏;其余翻到背面 */
@@ -987,7 +987,8 @@ Page({
 
   /* 官方地点:节点详情(相册 / 玩法 / 完成状态 / 评分)+ 评价。只写回仍开着的同一张卡 */
   _loadSpot(id) {
-    const live = () => !this._unloaded && this.data.poiCard && this.data.poiCard.official && String(this.data.poiCard.id) === String(id);
+    const identity = this._myIdentity(), request = this._poiGalleryRequest;
+    const live = () => !!request && request === this._poiGalleryRequest && !this._unloaded && identity === this._myIdentity() && this.data.poiCard && this.data.poiCard.official && String(this.data.poiCard.id) === String(id);
     app.sendRequest({ url: '/api/city/nodes/' + id, method: 'GET', hideLoading: true, silentError: true, autoErrorToast: false,
       success: async (res) => {
         const raw = res && res.code == 200 && res.data;

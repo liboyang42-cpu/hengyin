@@ -83,8 +83,8 @@ const MATRIX = [
   ['pages/coop/invite/index.js', "url: '/api/coop/invite/requests'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
   ['subpackageMember/components/cy/coop-invite-sheet/index.js', "url: '/api/coop/invite/request'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
   ['subpackageMember/components/cy/coop-invite-sheet/index.js', "url: '/api/coop/invite/requests'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
-  ['subpackageRoam/nearby/index.js', "url, method: 'GET', auth: false", 'static', 'visitor/member', 'public-profile-gallery'],
-  ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/profile/' + key.replace", 'static', 'visitor/member', 'public-profile-gallery'],
+  // 两处目录许可读取已合并为同一受限相对路径 reader，保持公开静态资源权限。
+  ['utils/roam-place-media.js', "url, method: 'GET', auth: false", 'static', 'visitor/member', 'public-profile-gallery'],
   // 实际作者页面的受控requestOwnMedia不属于req简写；五个caller逐个归真实本人资产。
   ['pages/privacy/index.js', "this.requestOwnMedia('/api/media/asset/list', 'GET'", 'required', 'author', 'owned-media-asset'],
   ['pages/privacy/index.js', 'loadOlderMedia() {', 'required', 'author', 'owned-media-asset'],
@@ -540,7 +540,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
     if (mode === 'static') {
       assert.equal(scope, 'public-profile-gallery');
       assert.match(call, /auth\s*:\s*false/, '公开静态资源不携带会话');
-      assert.match(source, /(?:url: '\/profile\/'|L\.poiGalleryPath\(poi\.coverImg\))/);
+      assert.match(source, /(?:url: '\/profile\/'|L\.poiGalleryPath\(poi\.coverImg\)|\? '\/profile\/' \+ key\.replace)/);
     } else {
       assert.doesNotMatch(call, /auth\s*:\s*false/, `${file} 的 ${marker} 不能降为匿名请求`);
       assert.ok(mode === 'required' || mode === 'optional');

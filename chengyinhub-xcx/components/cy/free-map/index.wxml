@@ -37,7 +37,7 @@
       <cover-view class="fmap-exit">退出</cover-view>
     </cover-view>
   </map>
-  <view wx:if="{{tone === '2077' && !mapLoaded}}" class="fmap-skeleton" aria-role="status" aria-label="地图加载中"><view></view><view></view><view></view></view>
+  <view wx:if="{{tone === '2077' && !mapLoaded}}" class="fmap-skeleton" aria-role="status" aria-label="地图加载中"><view class="fmap-skeleton__bar"></view><view class="fmap-skeleton__bar"></view><view class="fmap-skeleton__bar"></view></view>
   <canvas type="2d" id="iconcv" class="iconcv"></canvas>
   <!-- 2026-08-04 减法:原来是「白文字胶囊 + 黑圆钮」三组两件套并排飘在地图上 = 6 个元素做 3 件事。
        收成一条深色轨:定位单独一枚,缩放两枚并成一条(它们是同一件事的两个方向)。

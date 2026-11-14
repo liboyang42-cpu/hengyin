@@ -213,3 +213,21 @@ test('b7：底图完成前保持加载态；重复 updated 不反复 setData', (
   assert.equal(map.data.mapLoaded, true)
   assert.equal(updates, 1)
 })
+
+
+test('c5：分润详情在玩家和商家视角使用对应主题与原生导航栏', () => {
+  let role = 'player'
+  const app = { globalData: {}, getUserRole: () => role }
+  const page = mount('../../pages/coop/finance/index.js', app)
+  const colors = []
+  wx.setNavigationBarColor = options => colors.push(options.frontColor)
+  page.onShow()
+  assert.equal(page.data.merchantView, false)
+  assert.equal(app.globalData.theme, 'dark')
+  role = 'merchant'; page.onShow()
+  assert.equal(page.data.merchantView, true)
+  assert.equal(app.globalData.theme, 'light')
+  assert.deepEqual(colors, ['#ffffff', '#000000'])
+  page.onHide()
+  assert.equal(app.globalData.theme, 'dark')
+})

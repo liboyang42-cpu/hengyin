@@ -49,4 +49,4 @@
 .cy-pressed { opacity: .88; }
 
 .fmap-skeleton { position:absolute; inset:0; display:flex; gap:var(--cy-space-6); padding:var(--cy-space-8); box-sizing:border-box; background:var(--cy-color-play-surface-base); pointer-events:none; }
-.fmap-skeleton view { flex:1; border-radius:var(--cy-radius-lg); background:var(--cy-color-skeleton-base); }
+.fmap-skeleton__bar { flex:1; border-radius:var(--cy-radius-lg); background:var(--cy-color-skeleton-base); }
