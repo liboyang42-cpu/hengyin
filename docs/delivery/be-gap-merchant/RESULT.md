@@ -89,3 +89,57 @@ All refusals of the new routes answer **HTTP status == `code`** with `errorCode`
 3. CITY: no redemption audit is linked to a visit, goals/cohort have no emitter, and points/budget have no unit; those parts stay `MISSING_*`/`SOURCE_UNAVAILABLE` until the owner defines them.
 4. `authoring/player/{}/requests/{}` was curl-checked only for the not-found path (store chat is switched off on TEST); the success mapping is unit-tested.
 5. Merge into `integration/backend-app-r2` and an 8120 redeploy are not part of this task.
+
+---
+
+# R3 (2026-11-14) — source producer, CITY goals/points/redemption, providers
+
+Code commit **`3413e8c29`** on `feature/be-gap-merchant` (on top of `7121d9c32`). Same worktree, port 8127 (stopped after the checks), DB `cy_gap_merchant`. Logs/scripts: `/data/workspace/be-gap-merchant-out/` (`r3-tests.log`, `r3-package.log`, `migrate-r3.log`, `smoke-r3-8127.txt`, `smoke-8127-r3rerun.txt`, `fixture-merchant-r3.sql.txt`). Production, hengyin `master`/`main` and TEST 8120 were not touched.
+
+## R3.1 W05 source producer (open item 1 closed)
+
+* Ported from the stranded `0127e3dc1` (`git log --all -S MerchantAuthoringRecordService`): `MerchantAuthoringRecordService` (`record` = candidate after the model returns; `confirm` = ordinary MERCHANT draft via `ITemplatePublishService.saveOrUpdateDraft` + immutable `merchant_authoring_source`, one transaction, locked authority/facts rows, replay by confirmation hash), `MerchantAuthoringFactsService`, `MerchantBoundTemplateDraftService`, `MerchantAuthoringRecordMapper(.xml)`, `MerchantAuthoringCandidate/Source`, the three `dto.ai` request types. The `w05-merchant-authoring` profile gate is removed: the producer is live.
+* Routes: store-bound `POST /api/ai/template/fill` (`merchantFacts` + `merchantConstraints`; legacy fill unchanged; 503 if the service bean is absent), `POST /api/merchant/authoring/catalog | product | facts | draft` (HTTP status == `code`).
+* Migration `migration_20261120_merchant_authoring_candidate.sql` (new table only), ledger `"20261120_merchant_authoring_candidate": ["20261119_merchant_gap"]`.
+* Draft-selection now lists real producer rows: `MerchantAuthoringRecordServiceTest` runs record → confirm → `MerchantDraftSelectionService.list/resolve` on H2 (READY row, same `sourceId`/`contentHash`, recomputed template hash == receipt), replay/409/403, changed store facts 409, no transaction 403.
+
+## R3.2 CITY goals / points / redemption
+
+Owner docs (`origin/ui/owner-handover`, `app-ai-pack-20261108`) only fix "points = existing member points, separate from game score" and "redemption is server-decided"; the mini-program's only merchant city behaviour is the city-node redemption (`/api/verify/citynode/redeem` → `CITY_NODE_REDEEM` audit). Decisions D1–D7 are in **`DECISIONS.md`**:
+
+| Field | Now | Source |
+|---|---|---|
+| `publicGoal` | `MEASURED count` | NEUTRAL-property task attempts at the store's points |
+| `cooperativeGoal` | `MEASURED count` | same, team had ≥2 confirmed members before it |
+| `timeToFirstEffectiveChoice` | `MEASURED {visitCount, medianMillis}` | new `city_value_visit.feedback_at` (`migration_20261120_city_value_visit_feedback_at.sql`, guarded ALTER; ledger dep `20261114_gaps_a_city_r491`), written by the feedback command |
+| `visitCost.netPoints` | `MEASURED {sum, count, unit: MEMBER_POINTS}` | APPLIED quoted actions + self-paid acquisitions on the store's points |
+| `visitCost.budget` | `MEASURED {sum, count, unit: CITY_ACTION_UNITS}` | their action units + `taskCost` per accepted task |
+| `event/{}/benefit` | `VERIFIED` (`BUSINESS_AUDIT_CITY_NODE_REDEEM`, `COUPON_GRANTED_AT_REDEMPTION`, audit id, coupon id) | the visit's own `CITY_NODE_REDEEM` audit; otherwise `SOURCE_UNAVAILABLE` + `evidenceReason` |
+| `byCohort` | `MISSING_DEFINITION` (written reason D7) | — |
+
+A metric with no source row in scope is `MISSING_COVERAGE` (no numbers); `MISSING_UNIT` is no longer returned. Nothing is `SOURCE_UNAVAILABLE` without a reason code.
+
+## R3.3 Providers
+
+`HttpMerchantAvatarProvider` (`chengyin.merchant.avatar.provider=http`, HTTPS endpoint, key from env) behind the existing `MerchantAvatarProvider`; the TEST stub `E2eTestMerchantAvatarProvider` is kept. Avatar and model production keys (no secrets): **`PROVIDERS.md`**.
+
+## R3.4 Tests (VPS, `flock`, `-T 1`, `-Xmx1536m`)
+
+`r3-tests.log`: **126/126**, EXIT 0 — the R2 set (`MerchantNpcGapServiceTest` 7, `MerchantOfferWithdrawalRequestServiceTest` 6, `MarketingConsentResultServiceTest` 1, `MerchantCityValueReportServiceTest` **8** (+3 R3), `MerchantDraftSelectionServiceTest` 2, `MerchantAuthoringGapTest` 2, `ApiMerchantGapControllersTest` 3, `MerchantAuthoringFlowTest` 8, `MerchantAuthoringMapperTest` 1, `NpcProfileServiceTest` 5) + new `MerchantAuthoringRecordServiceTest` 3, `HttpMerchantAvatarProviderTest` 2 + `ApiAiControllerTest` 23, `ApiAiThemeDraftHttpSecurityTest` 35, `ApiAiThemeDraftRequestTest` 12 + real MySQL (be-int-mysql 3330): **`MerchantGapMySqlIT` 5/5** (both new migrations twice; `feedback_at` present; the mapper's candidate/source INSERTs verbatim with 4-byte UTF-8 and the unique key; the CITY report goals/cost/first-choice/VERIFIED benefit on the real CITY tables) and **`CityR491MysqlIntegrationTest` 3/3** (feedback writes `feedback_at`). Gates: `migration_ledger.py audit` problems=[], layout and safety checks pass, dup-create gate passes.
+
+## R3.5 TEST on 8127 (stopped afterwards)
+
+`cy_gap_merchant` + both new migrations (EXIT 0, 648 tables) + TEST-only `fixture-merchant-r3.sql.txt` (SKU 992952; a NEUTRAL goal by a 2-member team on `prop-a`; one paid service visit on `prop-b`; `feedback_at` on the two rated/skipped fixture visits; one `CITY_NODE_REDEEM` audit for player 9004 / POI 1 after visit 1). `smoke-r3-8127.txt`:
+
+* `catalog` 200 `[992951]`, `product` 200 sku `[992952]`, `facts` 200 (player 403).
+* Store-bound `ai/template/fill`: `code=500 AI 服务配置缺失` (TEST has no model key, by design), so the candidate row that `record()` writes was inserted as a TEST fixture from the facts just read; then **`authoring/draft` 200 → templateId 992108, sourceId 3**, replay identical, other text 409, player 403; **`draft-selection/list` → `(3, READY)` with title `店内寻宝R3`**, `resolve` 200 with the receipt's template hash.
+* `city-value/report`: `publicGoal {MEASURED, count 1}`, `cooperativeGoal {MEASURED, count 1}`, `timeToFirstEffectiveChoice {MEASURED, 2 visits, median 60000 ms}`, `netPoints {MEASURED, 30, MEMBER_POINTS}`, `budget {MEASURED, 2, CITY_ACTION_UNITS}`, `byCohort MISSING_DEFINITION`; benefit of visit 1 **`VERIFIED`** (audit 7, coupon 88).
+* `npc/avatar/status` 200 `available=true` (TEST stub kept).
+* The R2 smoke rerun (`smoke-8127-r3rerun.txt`) is unchanged except state the R2 run left behind (the ordinary offer was already withdrawn → `REJECTED_STATE`).
+
+## R3.6 Open items (replace §7 items 1–3)
+
+1. The store-bound template fill was not exercised end to end on TEST (no model key); `record()` is covered by the unit test and its INSERT by the MySQL IT.
+2. Production model/avatar enablement needs the owner's keys/endpoints (`PROVIDERS.md`); defaults stay off.
+3. `byCohort` stays `MISSING_DEFINITION` until the owner defines a merchant cohort key and the app contract can carry a breakdown.
+4. Reports stored before R3 replay their old body.

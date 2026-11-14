@@ -309,8 +309,8 @@ public class CityMerchantValueService {
             }
             throw new CityGameException(409, "CITY_VALUE_VISIT_CLOSED", "到访已结束");
         }
-        store.jdbc.update("UPDATE city_value_visit SET closed = 1, feedback_kind = ?, reason_code = ?, rating = ? WHERE visit_id = ? AND closed = 0",
-                kind, reason, rating, visitId);
+        store.jdbc.update("UPDATE city_value_visit SET closed = 1, feedback_kind = ?, reason_code = ?, rating = ?, feedback_at = ? WHERE visit_id = ? AND closed = 0",
+                kind, reason, rating, new java.sql.Timestamp(store.now()), visitId);
         return visit(memberId, visitId);
     }
 

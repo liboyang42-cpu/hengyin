@@ -27,6 +27,7 @@ import com.chengyinhub.business.domain.vo.ai.AiThemeDraftRecoveryItem;
 import com.chengyinhub.business.service.IAiCreatorService;
 import com.chengyinhub.business.service.impl.AiThemeDraftRequestService;
 import com.chengyinhub.business.service.ai.AiServiceException;
+import com.chengyinhub.business.service.ai.MerchantBoundTemplateDraftService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
@@ -58,6 +59,9 @@ public class ApiAiController extends BaseController
 
     @Autowired
     private IAiCreatorService aiCreatorService;
+
+    @Autowired(required = false)
+    private MerchantBoundTemplateDraftService merchantBoundTemplateDraftService;
 
     @Autowired
     private AiThemeDraftRequestService themeDraftRequests;
@@ -325,6 +329,23 @@ public class ApiAiController extends BaseController
         if (memberId == null) return error("请先登录");
         String gate = gateRole(memberId);
         if (gate != null) return error(gate);
+        if (req != null && (req.getMerchantFacts() != null || req.getMerchantConstraints() != null))
+        {
+            // Store-bound path: server facts + human constraints, the result is recorded as a W05 candidate.
+            if (merchantBoundTemplateDraftService == null) return new AjaxResult(503, "店铺来源草稿服务尚未配置");
+            try
+            {
+                return success(merchantBoundTemplateDraftService.generate(req, memberId));
+            }
+            catch (AiServiceException e)
+            {
+                return error(e.getMessage());
+            }
+            catch (com.chengyinhub.common.exception.ServiceException e)
+            {
+                return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
+            }
+        }
         if (req == null || req.getShopName() == null || req.getShopName().trim().isEmpty())
         {
             return error("请先填写店名");

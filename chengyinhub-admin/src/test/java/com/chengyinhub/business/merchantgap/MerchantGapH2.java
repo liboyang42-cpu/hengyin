@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
-/** H2 (MySQL mode) loaded with migration_20261119_merchant_gap.sql, for the merchant-gap unit tests. */
+/** H2 (MySQL mode) loaded with the merchant-gap migrations (20261119 + 20261120), for the merchant-gap unit tests. */
 public final class MerchantGapH2 {
     public final SingleConnectionDataSource dataSource;
     public final JdbcTemplate jdbc;
@@ -35,7 +35,12 @@ public final class MerchantGapH2 {
 
     /** Runs the migration with MySQL-only table options and plain secondary keys removed. */
     public static void load(Statement statement) throws Exception {
-        String sql = Files.readString(migration());
+        for (String name : MIGRATIONS) load(statement, Files.readString(migration(name)));
+    }
+
+    static final String[] MIGRATIONS = {"migration_20261119_merchant_gap.sql", "migration_20261120_merchant_authoring_candidate.sql"};
+
+    private static void load(Statement statement, String sql) throws Exception {
         StringBuilder kept = new StringBuilder();
         for (String line : sql.split("\n")) {
             String trimmed = line.trim();
@@ -49,9 +54,9 @@ public final class MerchantGapH2 {
         }
     }
 
-    private static Path migration() {
-        Path module = Path.of("sql/migration_20261119_merchant_gap.sql");
+    static Path migration(String name) {
+        Path module = Path.of("sql", name);
         if (Files.exists(module)) return module;
-        return Path.of("chengyinhub-admin/sql/migration_20261119_merchant_gap.sql");
+        return Path.of("chengyinhub-admin/sql", name);
     }
 }

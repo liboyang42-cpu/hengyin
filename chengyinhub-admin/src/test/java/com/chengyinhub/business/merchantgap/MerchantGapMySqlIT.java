@@ -64,10 +64,17 @@ class MerchantGapMySqlIT {
         DriverManagerDataSource source = new DriverManagerDataSource(url(DB), MybatisItDatabase.user(), MybatisItDatabase.password());
         jdbc = new JdbcTemplate(source);
         tx = new DataSourceTransactionManager(source);
-        String sql = Files.readString(Path.of("sql/migration_20261119_merchant_gap.sql"));
         try (Connection c = source.getConnection(); Statement s = c.createStatement()) {
-            s.execute(sql);
-            s.execute(sql);
+            // The CITY tables the R3 report reads (and the visit column 20261120 adds), then both merchant-gap migrations twice.
+            for (String base : List.of("migration_20261113_gaps_a_city_game.sql", "migration_20261114_gaps_a_city_r491.sql",
+                    "migration_business_audit_event_20260823.sql")) {
+                s.execute(Files.readString(Path.of("sql", base)));
+            }
+            for (int run = 0; run < 2; run++) {
+                s.execute(Files.readString(Path.of("sql/migration_20261119_merchant_gap.sql")));
+                s.execute(Files.readString(Path.of("sql/migration_20261120_merchant_authoring_candidate.sql")));
+                s.execute(Files.readString(Path.of("sql/migration_20261120_city_value_visit_feedback_at.sql")));
+            }
         }
         access = mock(IMerchantAccessService.class);
         when(access.require(eq(OWNER), anyString())).thenReturn(new MerchantAccessContext(OWNER, STORE, OWNER, MerchantRoleCode.MERCHANT_OWNER));
@@ -76,10 +83,13 @@ class MerchantGapMySqlIT {
     @Test
     void everyTableAndUniqueKeyExistsAfterTwoRuns() {
         List<String> tables = jdbc.queryForList("SELECT table_name FROM information_schema.tables WHERE table_schema = ? ORDER BY table_name", String.class, DB);
-        assertEquals(List.of("merchant_authoring_source", "merchant_city_value_fact", "merchant_city_value_report", "merchant_city_value_snapshot",
+        assertTrue(tables.stream().map(String::toLowerCase).toList().containsAll(List.of("merchant_authoring_candidate", "merchant_authoring_source",
+                "merchant_city_value_fact", "merchant_city_value_report", "merchant_city_value_snapshot",
                 "merchant_npc_avatar_job", "merchant_npc_knowledge_review", "merchant_offer_withdrawal_request",
                 "w05_authoring_approval", "w05_authoring_draft", "w05_authoring_job", "w05_authoring_release", "w05_authoring_revision",
-                "w05_environment_snapshot"), tables.stream().map(String::toLowerCase).toList());
+                "w05_environment_snapshot")), tables.toString());
+        assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = ? AND table_name = 'city_value_visit' AND column_name = 'feedback_at'",
+                Integer.class, DB));
         Set<String> unique = Set.copyOf(jdbc.queryForList("SELECT DISTINCT index_name FROM information_schema.statistics WHERE table_schema = ? AND non_unique = 0 AND index_name <> 'PRIMARY'", String.class, DB));
         assertTrue(unique.containsAll(Set.of("uk_w05_job_request", "uk_w05_revision", "uk_w05_approval", "uk_w05_release_request",
                 "uk_authoring_source_candidate", "uk_authoring_source_template", "uk_npc_knowledge_request",
@@ -145,5 +155,70 @@ class MerchantGapMySqlIT {
         assertEquals(0, receipt.get("requiredAtWrite"));
         assertEquals(receipt, service.result(OWNER, STORE, 12L, "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"));
         assertEquals(false, service.current(OWNER, STORE, 12L).get("canWithdraw"));
+    }
+
+    /** The candidate/source INSERTs of MerchantAuthoringRecordMapper.xml, verbatim, on the real tables (4-byte UTF-8 kept). */
+    @Test
+    void authoringCandidateAndSourceInsertOnRealRows() throws Exception {
+        String xml = Files.readString(Path.of("../chengyinhub-system/src/main/resources/mapper/business/MerchantAuthoringRecordMapper.xml"));
+        java.util.function.Function<String, String> insert = id -> {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("<insert id=\"" + id + "\"[^>]*>(.*?)</insert>", java.util.regex.Pattern.DOTALL).matcher(xml);
+            assertTrue(m.find(), id);
+            return m.group(1).trim().replaceAll("#\\{[a-zA-Z]+\\}", "?");
+        };
+        String hash = "a".repeat(64);
+        java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+        jdbc.update(insert.apply("insertCandidate"), OWNER, STORE, OWNER, "{\"shopName\":\"店😀\"}", hash, "{}", hash, "trace-1", "{}", now);
+        long candidate = jdbc.queryForObject("SELECT MAX(id) FROM merchant_authoring_candidate", Long.class);
+        jdbc.update(insert.apply("insertSource"), candidate, OWNER, STORE, 6101L, "{}", hash, hash, hash, "{}", now);
+        assertEquals("{\"shopName\":\"店😀\"}", jdbc.queryForObject("SELECT facts_json FROM merchant_authoring_candidate WHERE id = ?", String.class, candidate));
+        assertThrows(org.springframework.dao.DuplicateKeyException.class,
+                () -> jdbc.update(insert.apply("insertSource"), candidate, OWNER, STORE, 6102L, "{}", hash, hash, hash, "{}", now));
+    }
+
+    /** The R3 CITY report SQL (goals, visit cost, first choice, redemption link) on the real CITY tables. */
+    @Test
+    @SuppressWarnings("unchecked")
+    void cityValueReportReadsTheRealCityTables() {
+        jdbc.update("DELETE FROM city_game_point WHERE board_id = 'itb'");
+        jdbc.update("INSERT INTO city_game_point(board_id, point_id, title, latitude, longitude, domain, collected_at, merchant_id, place_id) VALUES ('itb','itp','店',31,121,'MERCHANT',NOW(3),?,71)", STORE);
+        jdbc.update("INSERT INTO city_game_property(board_id, property_id, point_id, track_index, role) VALUES ('itb','itg','itp',0,'NEUTRAL'), ('itb','ito','itp',1,'OPERABLE')");
+        jdbc.update("INSERT INTO city_game_participation(participation_id, board_id, team_id, member_id, confirmed, create_time) VALUES (UUID(),'itb','team-a',1,1,'2026-11-13 08:00:00'), (UUID(),'itb','team-a',2,1,'2026-11-13 08:00:00')");
+        jdbc.update("INSERT INTO city_game_task_attempt(board_id, property_id, team_id, member_id, request_id, create_time) VALUES ('itb','itg','team-a',1,'t1','2026-11-13 09:00:00')");
+        jdbc.update("INSERT INTO city_game_service(board_id, service_id, property_id, title, member_points_fee) VALUES ('itb','svc','ito','咖啡',30)");
+        jdbc.update("INSERT INTO city_game_request(member_id, domain, request_id, board_id, action, request_hash, http_status, decision, current_version, points_charged, create_time) VALUES (1,'game','r1','itb','ACCEPT_SERVICE_VISIT',?,200,'APPLIED',1,30,'2026-11-13 10:00:00')", "b".repeat(64));
+        jdbc.update("INSERT INTO city_game_quote(quote_id, quote_version, board_id, action, target_id, payer_member_id, rule_version, member_points_cost, action_cost, expires_at, consumed_request_id) VALUES (UUID(),1,'itb','ACCEPT_SERVICE_VISIT','svc',1,'v1',30,2,'2026-11-14 00:00:00','r1')");
+        jdbc.update("INSERT INTO city_value_visit(visit_id, member_id, request_id, request_hash, board_id, point_id, poi_id, entered_at, feedback_at, closed, feedback_kind, rating) VALUES (UUID(),9004,'v1',?,'itb','itp',71,'2026-11-13 11:00:00','2026-11-13 11:00:45',1,'SERVICE_RATING',90)", "c".repeat(64));
+        jdbc.update("INSERT INTO business_audit_event(domain_type, domain_id, owner_member_id, actor_member_id, actor_role_code, action, target_type, target_id, relation_id, after_json, request_id, create_time) VALUES ('CITY_NODE',71,?,?,'MERCHANT_OWNER','CITY_NODE_REDEEM','ROAM_CHECKIN',71,9004,?,'citynode-redeem-71-9004','2026-11-13 11:05:00')",
+                OWNER, OWNER, "{\"status\":1,\"receiptVersion\":1,\"data\":{\"memberId\":9004,\"poiId\":71,\"couponId\":88,\"couponGranted\":true}}");
+        com.chengyinhub.business.mapper.CityGameMapper mapper = mock(com.chengyinhub.business.mapper.CityGameMapper.class);
+        Map<String, Object> board = new LinkedHashMap<>();
+        board.put("regionId", "itr"); board.put("boardId", "itb"); board.put("seasonId", "its"); board.put("rulesReleaseId", "itrel");
+        board.put("lifecycle", "OPEN"); board.put("taskCost", 1);
+        when(mapper.selectCurrentBoard("itr")).thenReturn(board);
+        com.chengyinhub.business.citygame.MerchantCityValueReportService service = new com.chengyinhub.business.citygame.MerchantCityValueReportService(
+                new com.chengyinhub.business.citygame.CityR491Store(mapper, jdbc, tx), access);
+        Map<String, String> q = new LinkedHashMap<>();
+        q.put("regionId", "itr"); q.put("boardId", "itb"); q.put("seasonId", "its"); q.put("rulesReleaseId", "itrel");
+        q.put("from", "2026-11-13T00:00:00Z"); q.put("to", "2026-11-14T00:00:00Z");
+        Map<String, String> report = new LinkedHashMap<>(q);
+        report.put("requestId", "it-report-1");
+        Map<String, Object> out = service.report(OWNER, report);
+        Map<String, Map<String, Object>> funnel = (Map<String, Map<String, Object>>) out.get("funnel");
+        assertEquals(1, funnel.get("publicGoal").get("count"));
+        assertEquals(1, funnel.get("cooperativeGoal").get("count"));
+        Map<String, Map<String, Object>> cost = (Map<String, Map<String, Object>>) out.get("visitCost");
+        assertEquals(30L, ((Number) cost.get("netPoints").get("sum")).longValue());
+        assertEquals(3L, ((Number) cost.get("budget").get("sum")).longValue());
+        assertEquals(45_000L, ((Number) ((Map<String, Object>) out.get("timeToFirstEffectiveChoice")).get("medianMillis")).longValue());
+        Map<String, String> events = new LinkedHashMap<>(q);
+        events.put("cursor", "");
+        Map<String, Object> page = service.events(OWNER, events);
+        Map<String, Object> success = ((List<Map<String, Object>>) page.get("events")).stream().filter(e -> "SERVICE_SUCCESS".equals(e.get("kind"))).findFirst().orElseThrow();
+        Map<String, String> benefit = new LinkedHashMap<>(q);
+        benefit.put("snapshotId", String.valueOf(page.get("snapshotId")));
+        Map<String, Object> record = service.benefit(OWNER, (Long) success.get("id"), benefit);
+        assertEquals("VERIFIED", record.get("evidenceStatus"));
+        assertEquals(88L, record.get("couponId"));
     }
 }

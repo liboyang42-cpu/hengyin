@@ -127,6 +127,7 @@ class CityR491MysqlIntegrationTest {
         execute(table(baseline, "ums_member"), table(baseline, "ums_member_points_detail"), table(baseline, "roam_poi"));
         CityGameMysqlIntegrationTest.migrate(dataSource, "sql/migration_20261113_gaps_a_city_game.sql");
         CityGameMysqlIntegrationTest.migrate(dataSource, "sql/migration_20261114_gaps_a_city_r491.sql");
+        CityGameMysqlIntegrationTest.migrate(dataSource, "sql/migration_20261120_city_value_visit_feedback_at.sql");
         execute("INSERT INTO ums_member(id, role, status, del_flag, point) VALUES (7001,'player',1,0,100),(7201,'merchant',1,0,0),(7202,'merchant',1,0,0)");
         execute("INSERT INTO city_game_board(board_id, game_id, region_id, season_id, rules_release_id, release_id, rules_hash, rule_version,"
                 + " lifecycle, title, revision, board_version, event_sequence, dice_id, dice_faces, dice_weights, actions_per_round, max_rounds,"

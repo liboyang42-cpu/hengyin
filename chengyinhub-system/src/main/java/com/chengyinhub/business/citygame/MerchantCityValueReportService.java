@@ -25,12 +25,21 @@ import com.chengyinhub.business.merchantgap.MerchantGapException;
 import com.chengyinhub.business.merchantgap.MerchantGapSupport;
 
 /**
- * Merchant side of the CITY value chain (/api/merchant/city-value/*). The only behaviour source is the player value
- * visit ({@code city_value_visit}, /api/city-value/visits) at the merchant's own points of the region's current board:
- * entry, explicit SKIP/EXIT with a reason, and SERVICE_RATING. A rated visit is the service success; no coupon
- * redemption is linked to a visit, so benefit records answer SOURCE_UNAVAILABLE instead of claiming a grant.
- * Goals, cohort, first-choice timing, net points and budget have no emitter or no unit, and are returned as
- * MISSING_* with no numbers (never 0). Reports are stored by request id; events come from a frozen snapshot.
+ * Merchant side of the CITY value chain (/api/merchant/city-value/*), computed only from committed rows at the
+ * merchant's own points of the region's current board (decisions: docs/delivery/be-gap-merchant/DECISIONS.md):
+ * <ul>
+ *   <li>visits ({@code city_value_visit}): entry, explicit SKIP/EXIT with a reason, SERVICE_RATING = service success,
+ *       and the first explicit choice time ({@code feedback_at - entered_at});</li>
+ *   <li>goals: accepted tasks on NEUTRAL properties of those points ({@code city_game_task_attempt}); a goal is
+ *       cooperative when the completing team had at least two confirmed members who joined before it;</li>
+ *   <li>visit cost: member points actually charged and action-budget units spent by APPLIED board actions that
+ *       target those points (quoted actions, self-paid acquisitions and task acceptances);</li>
+ *   <li>benefit: the mini-program's own city-node redemption audit ({@code CITY_NODE_REDEEM}) for the visit's
+ *       player and POI, VERIFIED only when it granted a coupon and belongs to that visit.</li>
+ * </ul>
+ * Cohort stays MISSING_DEFINITION (one scalar in the app contract, no cohort key defined). A metric with no
+ * source row in scope is MISSING_COVERAGE with no numbers (never a made-up 0). Reports are stored by request id;
+ * events come from a frozen snapshot.
  */
 @Service
 public class MerchantCityValueReportService {
@@ -56,6 +65,7 @@ public class MerchantCityValueReportService {
         final String regionId, boardId, seasonId, rulesReleaseId, from, to;
         final Instant start, end;
         final List<String> points;
+        final long taskCost;
 
         Scope(long merchantId, long actor, Map<String, String> q, Map<String, Object> board, List<String> points, Instant start, Instant end) {
             this.merchantId = merchantId;
@@ -69,6 +79,7 @@ public class MerchantCityValueReportService {
             this.start = start;
             this.end = end;
             this.points = points;
+            this.taskCost = board.get("taskCost") instanceof Number n ? n.longValue() : 0;
         }
 
         String hash() {
@@ -130,8 +141,81 @@ public class MerchantCityValueReportService {
         }
         args.add(Timestamp.from(s.start));
         args.add(Timestamp.from(s.end));
-        return store.jdbc.queryForList("SELECT visit_id, point_id, entered_at, closed, feedback_kind, reason_code, rating FROM city_value_visit WHERE board_id = ? AND point_id IN ("
+        return store.jdbc.queryForList("SELECT visit_id, point_id, entered_at, feedback_at, closed, feedback_kind, reason_code, rating FROM city_value_visit WHERE board_id = ? AND point_id IN ("
                 + in + ") AND entered_at >= ? AND entered_at < ? ORDER BY entered_at, visit_id", args.toArray());
+    }
+
+    /** "?,?,..." for the scope's points, with boardId first and the window last in {@code args}. */
+    private static String pointArgs(Scope s, List<Object> args) {
+        StringBuilder in = new StringBuilder();
+        args.add(s.boardId);
+        for (String p : s.points) {
+            in.append(in.length() == 0 ? "?" : ",?");
+            args.add(p);
+        }
+        args.add(Timestamp.from(s.start));
+        args.add(Timestamp.from(s.end));
+        return in.toString();
+    }
+
+    /** Goals: accepted tasks on NEUTRAL properties of this store's points; [neutral properties, goals, cooperative goals]. */
+    int[] goals(Scope s) {
+        List<Object> args = new ArrayList<>();
+        String in = pointArgs(s, args);
+        List<Object> propertyArgs = new ArrayList<>(args.subList(0, args.size() - 2));
+        Integer neutral = store.jdbc.queryForObject("SELECT COUNT(*) FROM city_game_property WHERE board_id = ? AND role = 'NEUTRAL' AND point_id IN ("
+                + in + ")", Integer.class, propertyArgs.toArray());
+        List<Map<String, Object>> rows = store.jdbc.queryForList(
+                "SELECT t.team_id, (SELECT COUNT(*) FROM city_game_participation m WHERE m.board_id = t.board_id AND m.team_id = t.team_id"
+                        + " AND m.confirmed = 1 AND m.create_time <= t.create_time) AS members"
+                        + " FROM city_game_task_attempt t JOIN city_game_property p ON p.board_id = t.board_id AND p.property_id = t.property_id"
+                        + " WHERE t.board_id = ? AND p.role = 'NEUTRAL' AND p.point_id IN (" + in + ") AND t.create_time >= ? AND t.create_time < ?",
+                args.toArray());
+        int cooperative = 0;
+        for (Map<String, Object> r : rows) if (((Number) r.get("members")).intValue() >= 2) cooperative++;
+        return new int[] {neutral == null ? 0 : neutral, rows.size(), cooperative};
+    }
+
+    /** Visit cost: [actions, member points charged, action units] of APPLIED board actions on this store's points. */
+    long[] cost(Scope s) {
+        List<Object> args = new ArrayList<>();
+        String in = pointArgs(s, args);
+        long actions = 0, points = 0, units = 0;
+        // Quoted actions (acquire / service visit / challenge): the receipt's real charge, the quote's action cost.
+        for (Map<String, Object> r : store.jdbc.queryForList(
+                "SELECT r.points_charged, q.action_cost FROM city_game_request r"
+                        + " JOIN city_game_quote q ON q.consumed_request_id = r.request_id AND q.payer_member_id = r.member_id AND q.board_id = r.board_id"
+                        + " LEFT JOIN city_game_service sv ON q.action = 'ACCEPT_SERVICE_VISIT' AND sv.board_id = q.board_id AND sv.service_id = q.target_id"
+                        + " JOIN city_game_property p ON p.board_id = q.board_id AND p.property_id = COALESCE(sv.property_id, q.target_id)"
+                        + " WHERE r.board_id = ? AND r.domain = 'game' AND r.decision = 'APPLIED' AND p.point_id IN (" + in + ")"
+                        + " AND r.create_time >= ? AND r.create_time < ?", args.toArray())) {
+            actions++;
+            points += ((Number) r.get("points_charged")).longValue();
+            units += ((Number) r.get("action_cost")).longValue();
+        }
+        // Self-paid acquisitions: points before/after frozen in the title, units in its consumed quote.
+        for (Map<String, Object> r : store.jdbc.queryForList(
+                "SELECT t.title_json FROM city_acquisition_title t WHERE t.board_id = ? AND t.point_id IN (" + in + ")"
+                        + " AND t.create_time >= ? AND t.create_time < ?", args.toArray())) {
+            Map<String, Object> title = parse(String.valueOf(r.get("title_json")));
+            List<String> quotes = title.get("quoteId") == null ? List.of() : store.jdbc.queryForList(
+                    "SELECT quote_json FROM city_acquisition_quote WHERE quote_id = ? AND board_id = ? AND consumed = 1",
+                    String.class, String.valueOf(title.get("quoteId")), s.boardId);
+            Map<String, Object> quote = quotes.isEmpty() ? Map.of() : parse(quotes.get(0));
+            if (!(title.get("pointsBefore") instanceof Number before) || !(title.get("pointsAfter") instanceof Number after)) continue;
+            actions++;
+            points += before.longValue() - after.longValue();
+            if (quote.get("actionCost") instanceof Number cost) units += cost.longValue();
+        }
+        // Task acceptances (goals included) cost the board's task units and no points.
+        Integer tasks = store.jdbc.queryForObject("SELECT COUNT(*) FROM city_game_task_attempt t JOIN city_game_property p"
+                + " ON p.board_id = t.board_id AND p.property_id = t.property_id WHERE t.board_id = ? AND p.point_id IN (" + in + ")"
+                + " AND t.create_time >= ? AND t.create_time < ?", Integer.class, args.toArray());
+        if (tasks != null && tasks > 0) {
+            actions += tasks;
+            units += (long) tasks * s.taskCost;
+        }
+        return new long[] {actions, points, units};
     }
 
     // ---- report ----
@@ -216,10 +300,27 @@ public class MerchantCityValueReportService {
         funnel.put("entry", entries == 0 ? missing("MISSING_COVERAGE") : visitsMetric(entries, null));
         funnel.put("meaningfulAction", meaningful == 0 ? missing("MISSING_COVERAGE") : visitsMetric(meaningful, entries));
         funnel.put("serviceSuccess", success == 0 ? missing("MISSING_COVERAGE") : visitsMetric(success, entries));
-        funnel.put("publicGoal", missing("MISSING_COVERAGE"));
-        funnel.put("cooperativeGoal", missing("MISSING_COVERAGE"));
+        int[] goals = goals(s);
+        funnel.put("publicGoal", goals[0] == 0 ? missing("MISSING_COVERAGE") : countMetric(goals[1]));
+        funnel.put("cooperativeGoal", goals[0] == 0 ? missing("MISSING_COVERAGE") : countMetric(goals[2]));
         out.put("funnel", funnel);
-        out.put("timeToFirstEffectiveChoice", missing("MISSING_DEFINITION"));
+        List<Long> choices = new ArrayList<>();
+        for (Map<String, Object> v : visits) {
+            Instant entered = at(v.get("entered_at")), chosen = at(v.get("feedback_at"));
+            if (v.get("feedback_kind") != null && entered != null && chosen != null && !chosen.isBefore(entered)) {
+                choices.add(Duration.between(entered, chosen).toMillis());
+            }
+        }
+        if (choices.isEmpty()) {
+            out.put("timeToFirstEffectiveChoice", missing("MISSING_COVERAGE"));
+        } else {
+            choices.sort(null);
+            int n = choices.size();
+            Map<String, Object> m = metric("MEASURED");
+            m.put("visitCount", n);
+            m.put("medianMillis", n % 2 == 1 ? choices.get(n / 2) : (choices.get(n / 2 - 1) + choices.get(n / 2)) / 2);
+            out.put("timeToFirstEffectiveChoice", m);
+        }
         if (success == 0) {
             out.put("serviceRatings", missing("MISSING_COVERAGE"));
         } else {
@@ -258,9 +359,10 @@ public class MerchantCityValueReportService {
         reasons.put("skip", reasonCounts(entries, skip));
         reasons.put("exit", reasonCounts(entries, exit));
         out.put("skipExitReasons", reasons);
+        long[] spent = cost(s);
         Map<String, Object> cost = new LinkedHashMap<>();
-        cost.put("netPoints", missing("MISSING_UNIT"));
-        cost.put("budget", missing("MISSING_UNIT"));
+        cost.put("netPoints", spent[0] == 0 ? missing("MISSING_COVERAGE") : sumMetric(spent[1], spent[0], "MEMBER_POINTS"));
+        cost.put("budget", spent[0] == 0 ? missing("MISSING_COVERAGE") : sumMetric(spent[2], spent[0], "CITY_ACTION_UNITS"));
         out.put("visitCost", cost);
         return out;
     }
@@ -293,6 +395,25 @@ public class MerchantCityValueReportService {
     }
 
     private static Map<String, Object> missing(String status) { return metric(status); }
+
+    private static Map<String, Object> countMetric(int count) {
+        Map<String, Object> m = metric("MEASURED");
+        m.put("count", count);
+        return m;
+    }
+
+    private static Map<String, Object> sumMetric(long sum, long count, String unit) {
+        Map<String, Object> m = metric("MEASURED");
+        m.put("sum", sum);
+        m.put("count", (int) Math.min(Integer.MAX_VALUE, count));
+        m.put("unit", unit);
+        return m;
+    }
+
+    private static Instant at(Object value) {
+        return value instanceof java.util.Date d ? d.toInstant()
+                : value instanceof java.time.LocalDateTime l ? l.atZone(java.time.ZoneId.systemDefault()).toInstant() : null;
+    }
 
     private static Map<String, Object> visitsMetric(int count, Integer denominator) {
         Map<String, Object> m = metric("MEASURED");
@@ -353,9 +474,11 @@ public class MerchantCityValueReportService {
         if (rows.isEmpty()) throw new MerchantGapException(404, "EVENT_NOT_FOUND", "没有这条事件");
         Map<String, Object> fact = rows.get(0);
         if (!"SERVICE_SUCCESS".equals(fact.get("kind"))) throw new MerchantGapException(409, "NOT_A_SERVICE_SUCCESS", "该事件不是服务成功");
+        Redemption r = redemption(s, (String) fact.get("visit_id"));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("status", "BENEFIT_RECORD");
-        out.put("evidenceStatus", "SOURCE_UNAVAILABLE");
+        out.put("evidenceStatus", r.auditId == null ? "SOURCE_UNAVAILABLE" : "VERIFIED");
+        out.put("evidenceReason", r.reason);
         s.echo(out);
         out.put("snapshotId", snapshotId);
         out.put("eventId", eventId);
@@ -363,11 +486,49 @@ public class MerchantCityValueReportService {
         out.put("serviceId", fact.get("service_id"));
         out.put("serviceType", fact.get("service_type"));
         out.put("occurredAt", fact.get("occurred_at"));
-        out.put("sourceKind", null);
-        out.put("benefit", null);
-        out.put("sourceRecordId", null);
-        out.put("couponId", null);
+        out.put("sourceKind", r.auditId == null ? null : REDEEM_SOURCE);
+        out.put("benefit", r.auditId == null ? null : "COUPON_GRANTED_AT_REDEMPTION");
+        out.put("sourceRecordId", r.auditId);
+        out.put("couponId", r.couponId);
         return out;
+    }
+
+    static final String REDEEM_SOURCE = "BUSINESS_AUDIT_CITY_NODE_REDEEM";
+
+    record Redemption(Long auditId, Long couponId, String reason) {}
+
+    /**
+     * The mini-program redeems a city node once per (POI, player): the store scans the player's code, the reward log
+     * flips 0→1 and a CITY_NODE_REDEEM audit stores the original decision. That redemption belongs to the player's last
+     * rated visit at the same POI entered at or before it. Anything else is SOURCE_UNAVAILABLE with its reason.
+     */
+    Redemption redemption(Scope s, String visitId) {
+        List<Map<String, Object>> visits = store.jdbc.queryForList(
+                "SELECT member_id, poi_id, point_id, entered_at FROM city_value_visit WHERE visit_id = ? AND board_id = ?", visitId, s.boardId);
+        if (visits.isEmpty()) return new Redemption(null, null, "VISIT_NOT_FOUND");
+        Map<String, Object> v = visits.get(0);
+        long member = ((Number) v.get("member_id")).longValue(), poi = ((Number) v.get("poi_id")).longValue();
+        List<Map<String, Object>> audits = store.jdbc.queryForList(
+                "SELECT id, after_json, create_time FROM business_audit_event WHERE domain_type = 'CITY_NODE' AND action = 'CITY_NODE_REDEEM'"
+                        + " AND domain_id = ? AND relation_id = ? ORDER BY id LIMIT 1", poi, member);
+        if (audits.isEmpty()) return new Redemption(null, null, "NO_REDEMPTION_AUDIT");
+        Map<String, Object> audit = audits.get(0);
+        Instant redeemed = at(audit.get("create_time")), entered = at(v.get("entered_at"));
+        // The audit stores whole seconds; a redemption in the visit's own second still belongs to it.
+        if (redeemed == null || entered == null || redeemed.isBefore(entered.truncatedTo(ChronoUnit.SECONDS))) {
+            return new Redemption(null, null, "REDEEMED_BEFORE_VISIT");
+        }
+        Integer later = store.jdbc.queryForObject("SELECT COUNT(*) FROM city_value_visit WHERE member_id = ? AND poi_id = ? AND board_id = ?"
+                + " AND feedback_kind = 'SERVICE_RATING' AND entered_at > ? AND entered_at <= ?", Integer.class,
+                member, poi, s.boardId, v.get("entered_at"), Timestamp.from(redeemed.plusSeconds(1)));
+        if (later != null && later > 0) return new Redemption(null, null, "BELONGS_TO_LATER_VISIT");
+        Map<String, Object> after = parse(String.valueOf(audit.get("after_json")));
+        Object data = after.get("data");
+        if (!(data instanceof Map<?, ?> d) || !(d.get("couponId") instanceof Number coupon) || coupon.longValue() <= 0) {
+            return new Redemption(null, null, "NO_COUPON_CONFIGURED");
+        }
+        if (!Boolean.TRUE.equals(d.get("couponGranted"))) return new Redemption(null, null, "COUPON_NOT_GRANTED");
+        return new Redemption(((Number) audit.get("id")).longValue(), coupon.longValue(), null);
     }
 
     private Map<String, Object> ownSnapshot(Scope s, long id) {
@@ -390,18 +551,19 @@ public class MerchantCityValueReportService {
             int n = 0;
             for (Map<String, Object> v : visits) {
                 String at = iso(v.get("entered_at"));
+                String chosenAt = v.get("feedback_at") == null ? at : iso(v.get("feedback_at"));
                 String visit = (String) v.get("visit_id");
                 String point = (String) v.get("point_id");
                 n += fact(id, s.merchantId, "ENTRY", at, visit, point, null, null);
                 String kind = (String) v.get("feedback_kind");
                 if (kind == null) continue;
-                n += fact(id, s.merchantId, "MEANINGFUL_ACTION", at, visit, point, null, null);
+                n += fact(id, s.merchantId, "MEANINGFUL_ACTION", chosenAt, visit, point, null, null);
                 if ("SERVICE_RATING".equals(kind)) {
                     Integer rating = v.get("rating") == null ? null : ((Number) v.get("rating")).intValue();
-                    n += fact(id, s.merchantId, "SERVICE_SUCCESS", at, visit, point, null, null);
-                    n += fact(id, s.merchantId, "SERVICE_RATING", at, visit, point, null, rating);
+                    n += fact(id, s.merchantId, "SERVICE_SUCCESS", chosenAt, visit, point, null, null);
+                    n += fact(id, s.merchantId, "SERVICE_RATING", chosenAt, visit, point, null, rating);
                 } else {
-                    n += fact(id, s.merchantId, kind, at, visit, point, (String) v.get("reason_code"), null);
+                    n += fact(id, s.merchantId, kind, chosenAt, visit, point, (String) v.get("reason_code"), null);
                 }
             }
             store.jdbc.update("UPDATE merchant_city_value_snapshot SET fact_count = ? WHERE id = ?", n, id);
