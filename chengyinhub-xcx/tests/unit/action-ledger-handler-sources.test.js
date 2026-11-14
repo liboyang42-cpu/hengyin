@@ -547,7 +547,11 @@ test('PlayKit parent delegates real advanced retry and scopes photo consent to i
   const consentGuard = /const consentCurrent = \(\) => !operation\.isAborted\(\) && this\._kitPhotoIntent === intent && contextCurrent\(\) && sameQuestion\(\);/;
   assert.match(parent, consentGuard);
   // 2026-10-30 A23:同账号同一局(路线局,页面重进仍算同一局)已同意过就走 photo-existing-consent(不再弹),否则仍先单独同意
-  assert.match(parent, /if \(option\.name === 'SUBMIT_PHOTO_CHECK'\) \{\s*const consentCurrent = [^\n]+;[\s\S]{0,1400}this\._photoConsentScope === consentScope \|\| storedScope === consentScope \? Promise\.resolve\(\) : app\.requestSeparateConsent\('photo', consentCurrent\)/);
+  assert.match(parent, /if \(option\.name === 'SUBMIT_PHOTO_CHECK'\) \{\s*const consentCurrent = [^\n]+;\s*this\._ensurePhotoConsent\(consentCurrent\)\.then/);
+  const helper = parent.slice(parent.indexOf('  _ensurePhotoConsent(current) {'), parent.indexOf('  onAdvancedActionFail(e) {'));
+  assert.match(helper, /if \(!runId\) return Promise\.reject/);
+  assert.match(helper, /this\._photoConsentScope === scope \|\| stored === scope/);
+  assert.match(helper, /return app\.requestSeparateConsent\('photo', current\)\.then/);
   assert.match(album, /game\.action\('SUBMIT_ALBUM'/);
   const source = fs.readFileSync(path.join(root, 'scripts/uiaudit/build-action-ledger.js'), 'utf8');
   const plan = source.slice(source.indexOf("['pages/play/index.js:onPlayKitAction'"), source.indexOf("['pages/play/index.js:retryGameSubmission'"));
@@ -570,6 +574,18 @@ test('PlayKit parent delegates real advanced retry and scopes photo consent to i
   assert.throws(() => assert.match(parent.replace('contextCurrent() && sameQuestion();', 'contextCurrent();'), consentGuard));
 });
 
+
+test('photo receipt retry records consent then original action, never uploads a new photo', () => {
+  const control = ledger().controls.find(item => item.entry.js === 'pages/play/components/advanced-game/index.js'
+    && item.control.handler === 'retryOriginalPhoto');
+  assert.ok(control);
+  assert.deepEqual(control.requiredRequestsByBranch['unavailable-or-declined'], []);
+  assert.deepEqual(control.requiredRequestsByBranch['consent-accepted-original-retry'].map(r => r.urlTemplate),
+    ['/api/compliance/consents', '/api/play/advanced/action']);
+  assert.deepEqual(control.requiredRequestsByBranch['original-retry-result-unknown'].map(r => r.urlTemplate),
+    ['/api/compliance/consents', '/api/play/advanced/action', '/api/play/advanced/receipt']);
+  assert.ok(!control.targets.primaryApis.includes('/api/common/uploadOSS'));
+});
 
 test('真实 roleGuard.clear 只清缓存；load 仍保留 Controller POST，未知别名不裁剪', () => {
   const { namespaceDependencySource, extractTargets } = require('../../scripts/uiaudit/build-action-ledger')
