@@ -237,3 +237,16 @@ test('P-22:城市定向通关后订单是已完成,不是待核销', () => {
   assert.equal(s.topicCompleted, true)
   assert.notEqual(summarize(Object.assign({}, row, { topicCompleted: undefined })).key, 'completed')
 })
+
+test('已付款但从未开局的自玩通行证显示「可使用」(未开始),开局后才是进行中', () => {
+  const { summarizeOrderState } = require('../../utils/order-status.js');
+  const pass = { registrationStatus: 2, paymentStatus: 2, purchaseKind: 2, ownerType: 1, expiresAt: '2026-12-06 00:00:00' };
+  const now = Date.parse('2026-11-05T05:00:00Z');
+  const fresh = summarizeOrderState(pass, now);
+  assert.equal(fresh.key, 'not_started');
+  assert.equal(fresh.text, '可使用');
+  const started = summarizeOrderState(Object.assign({}, pass, { firstSuccessfulScanAt: '2026-11-05 10:00:00' }), now);
+  assert.equal(started.key, 'in_progress');
+  assert.equal(started.text, '进行中');
+  assert.equal(summarizeOrderState(pass, Date.parse('2026-12-07T05:00:00Z')).text, '已结束');
+});

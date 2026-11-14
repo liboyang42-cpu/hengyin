@@ -112,6 +112,39 @@ public class RoamPoiAdminController extends BaseController
         return toAjax(roamMapper.updatePoiStatus(id, 0));
     }
 
+    /**
+     * 目录地点批量上/下架(按城市 + 种子标签)。
+     * 范围钉死(owner scope):只动 type=1、无商家归属、无玩法模板、非商家申请、同城且带 roam:seed:v1: 标签的目录点,
+     * 商家据点/官方玩法据点即使同城同标签也不会被碰到;上架要求已有坐标,没坐标的行保持下架。
+     * dryRun=true 只回命中数,不写库。
+     */
+    @PreAuthorize("@ss.hasPermi('business:roamPoi:edit')")
+    @Log(title = "漫游目录地点批量上下架", businessType = BusinessType.UPDATE)
+    @PutMapping("/catalog/batch-status")
+    public AjaxResult catalogBatchStatus(String cityCode, String seedTag, Integer status, Boolean dryRun)
+    {
+        if (cityCode == null || !cityCode.matches("[A-Za-z]{2,20}")) return AjaxResult.error("城市码无效");
+        if (status == null || (status != 0 && status != 1)) return AjaxResult.error("状态只能是 0 下架或 1 上架");
+        String tag = (seedTag == null || seedTag.trim().isEmpty()) ? null : seedTag.trim();
+        if (tag != null && !tag.matches("roam:seed:v1:[a-z0-9-]{1,60}"))
+            return AjaxResult.error("种子标签格式应为 roam:seed:v1:<id>");
+        String city = cityCode.toUpperCase();
+        int matched = roamMapper.countCatalogBatchTargets(city, tag, status);
+        java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("cityCode", city);
+        data.put("seedTag", tag);
+        data.put("status", status);
+        data.put("matched", matched);
+        if (Boolean.TRUE.equals(dryRun) || matched == 0) {
+            data.put("updated", 0);
+            data.put("dryRun", Boolean.TRUE.equals(dryRun));
+            return AjaxResult.success(data);
+        }
+        data.put("updated", roamMapper.updateCatalogBatchStatus(city, tag, status));
+        data.put("dryRun", false);
+        return AjaxResult.success(data);
+    }
+
     /** 商家投放/认领申请：直接读取 roam_poi 审核态，仅在本治理页处置。 */
     @PreAuthorize("@ss.hasPermi('business:roamPoi:list')")
     @GetMapping("/applications")

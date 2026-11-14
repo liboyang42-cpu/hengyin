@@ -142,6 +142,10 @@ function summarizeOrderState(row, now) {
   if (!Number.isNaN(start) && current < start) {
     return { key: 'not_started', text: '未开始', refundText: free ? freeText : (refundInfo.reason || '可在退款截止前申请原路退款') };
   }
+  // 已付款但一次都没开局的自玩通行证:能玩、还没玩,不是「进行中」(首次到站/扫码才算开局)。
+  if (pass && Number.isNaN(toTimestamp(value.firstSuccessfulScanAt))) {
+    return { key: 'not_started', text: '可使用', refundText: free ? freeText : (refundInfo.reason || '可在退款截止前申请原路退款') };
+  }
   return { key: 'in_progress', text: '进行中', refundText: free ? freeText : (refundInfo.reason || '可在退款截止前申请原路退款') };
 }
 
