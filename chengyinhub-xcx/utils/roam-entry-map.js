@@ -4,14 +4,12 @@ const H = require('./roam-hangout.js');
 const { toTimestamp, chinaParts } = require('./datetime.js');
 const { readTags, presentationForPoi } = require('./roam-poi-presentation.js');
 const { readFontScale, mapFontSize } = require('./font-scale.js');
+const PM = require('./roam-place-map.js');
 
 const FALLBACK_TEAM_ICON = '/images/d_profile.png';
 const TEAM_MARKER_TAG = 4;
 const POST_MARKER_TAG = 5;
 const PLACE_MARKER_TAG = 6;
-const PLACE_ICON = '/images/roam-pushpin.png';
-// V3-35:城市漫游目录不再是单独清单,目录地点(导入工具写了种子标签的已上架平台点位)直接画在入口地图上。
-const SEED_PREFIX = 'roam:seed:v1:';
 
 function validPoint(row) {
   return row && H.numOrNull(row.latitude) != null && H.numOrNull(row.longitude) != null;
@@ -84,29 +82,37 @@ function buildPostMarkers(rows, getImgUrl) {
   }));
 }
 
+// A1.2:入口地图画全部已上架的 roam_poi(含商家、非种子点);种子标签只决定有没有推荐理由。
 function isCatalogPlace(row) {
-  return !!row && Number(row.id) > 0 && Number(row.type) === 1 && validLatLng(row)
-    && readTags(row.tags).some((tag) => typeof tag === 'string' && tag.indexOf(SEED_PREFIX) === 0);
+  return PM.isRoamPlace(row) && PM.hasSeedTag(row)
 }
-function validLatLng(row) {
-  return H.numOrNull(row.lat) != null && H.numOrNull(row.lng) != null;
+function placeView(row, ctx) {
+  const c = ctx || {}
+  const p = presentationForPoi(row)
+  const img = (key) => (key && c.getImgUrl ? c.getImgUrl(key) : (key || ''))
+  const cover = img(PM.coverKey(row))
+  const meters = PM.distanceFrom(c.origin, row)
+  return { id: Number(row.id), name: String(row.name || ''), address: String(row.address || ''), catLabel: p.catLabel, cat: PM.categoryKey(row),
+    tags: typeof row.tags === 'string' ? row.tags : JSON.stringify(readTags(row.tags)), tagList: PM.visibleTags(row.tags).slice(0, 4),
+    lat: Number(row.lat), lng: Number(row.lng), cover, gallery: PM.galleryKeys(row).map(img), credit: PM.credit(row),
+    reason: PM.reasonFor(row, null), distText: PM.distanceText(meters), meters }
 }
-function placeView(row) {
-  const p = presentationForPoi(row);
-  return { id: Number(row.id), name: String(row.name || ''), address: String(row.address || ''), catLabel: p.catLabel,
-    tags: typeof row.tags === 'string' ? row.tags : JSON.stringify(readTags(row.tags)), lat: Number(row.lat), lng: Number(row.lng) };
+// A1.3 / A2.4 / A2.5:分类图钉、近景名字、远景聚合;只画视口内的点
+function buildPlaceMarkers(places, opts) {
+  const o = opts || {}
+  const fontScale = readFontScale()
+  return PM.buildPins(places, { minCluster: 3, tag: PLACE_MARKER_TAG, scale: o.scale, region: o.region, viewport: o.viewport, center: o.center, fontSize: mapFontSize(11, fontScale) })
 }
-function buildPlaceMarkers(places) {
-  return (places || []).filter(isCatalogPlace).map((row) => ({
-    id: Number(row.id) * 10 + PLACE_MARKER_TAG,
-    latitude: Number(row.lat),
-    longitude: Number(row.lng),
-    width: 20,
-    height: 24,
-    anchor: { x: 0.5, y: 1 },
-    zIndex: 4,
-    iconPath: PLACE_ICON,
-  }));
+// A1.4 / A2.3 / A2.6:底部卡片带里的地点卡,有定位按真实距离排序;没有就保持原顺序、不写距离
+function placeCards(places, origin, getImgUrl, limit) {
+  const rows = (places || []).filter(PM.isRoamPlace).map((row) => ({ row, d: PM.distanceFrom(origin, row) }))
+  if (origin) rows.sort((a, b) => (a.d == null ? 1e12 : a.d) - (b.d == null ? 1e12 : b.d))
+  return rows.slice(0, limit || 12).map(({ row, d }) => {
+    const p = presentationForPoi(row)
+    const cover = PM.coverKey(row)
+    return { key: 'place-' + row.id, id: Number(row.id), kind: 'place', title: String(row.name || '未命名地点'),
+      cover: cover && getImgUrl ? getImgUrl(cover) : cover, tag: p.catLabel, meta: PM.distanceText(d) || String(row.address || '') }
+  })
 }
 
 // 第十二轮 k7(j4 N5):同一主题的几场卡片靠场次开始时刻分开(真数据,不是说明行)。只给场次,不给主题。
@@ -174,7 +180,7 @@ function teamView(team, getImgUrl) {
   };
 }
 
-function build(items, teams, layers, getImgUrl, places) {
+function build(items, teams, layers, getImgUrl, places, opts) {
   const visible = layers || { activities: true, teams: true, posts: true };
   const rows = (items || []).filter((row) => validPoint(row) && H.isMapItem(row));
   const teamRows = (teams || []).filter((row) => validPoint(row) && Number(row.teamId) > 0);
@@ -183,14 +189,18 @@ function build(items, teams, layers, getImgUrl, places) {
   if (visible.activities !== false) markers.push.apply(markers, withActivityCards(H.buildHangoutMarkers(rows, {}, {}), cards));
   if (visible.teams !== false) markers.push.apply(markers, buildTeamMarkers(teamRows));
   if (visible.posts !== false) markers.push.apply(markers, buildPostMarkers(rows, getImgUrl));
-  markers.push.apply(markers, buildPlaceMarkers(places));
+  const pins = visible.places !== false ? buildPlaceMarkers(places, opts) : { markers: [], clusters: [] };
+  markers.push.apply(markers, pins.markers);
+  const placeRows = (places || []).filter(PM.isRoamPlace);
   return {
     markers,
     cards,
-    searchPlaces: cards.map((card) => {
+    clusters: pins.clusters,
+    placeCards: visible.places !== false ? placeCards(places, (opts || {}).origin, getImgUrl) : [],
+    searchPlaces: placeRows.map((row) => ({ id: 'place-' + row.id, name: String(row.name || '未命名地点'), address: String(row.address || ''), kind: 'none', lat: Number(row.lat), lng: Number(row.lng) })).concat(cards.map((card) => {
       const row = rows.find((item) => String(item.id) === String(card.id) && item.kind === card.kind);
       return { id: card.kind + '-' + card.id, name: card.title, address: card.address, kind: Number(row.productType) === 2 ? 'free' : 'city', lat: Number(row.latitude), lng: Number(row.longitude) };
-    }),
+    })),
   };
 }
 
@@ -202,9 +212,10 @@ function parseMarker(markerId) {
   if (tag === TEAM_MARKER_TAG) return { kind: 'team', id };
   if (tag === POST_MARKER_TAG) return { kind: 'post', id };
   if (tag === PLACE_MARKER_TAG) return { kind: 'place', id };
+  if (tag === PM.CLUSTER_TAG) return { kind: 'cluster', index: id - 1 };
   return H.parseMarkerId(markerId);
 }
 
 function hasLayerError(errors) { return !!(errors && (errors.activities || errors.teams)); }
 
-module.exports = { build, activityView, teamView, sessionWhen, parseMarker, hasLayerError, isCatalogPlace, placeView, buildPlaceMarkers };
+module.exports = { build, activityView, teamView, sessionWhen, parseMarker, hasLayerError, isCatalogPlace, placeView, buildPlaceMarkers, placeCards };

@@ -27,7 +27,7 @@ test('首页保留章节入口，移除浮动记录、搜索与图层按钮', ()
 })
 
 test('附近活动只横滑且保持完整轮廓，失败空态留在抽屉内', () => {
-  assert.match(WXML, /class="entry-peek"/)
+  assert.match(WXML, /class="entry-peek( \{\{entryPeekFold[^"]*)?"/)
   assert.match(WXML, /entry-peek__cards" scroll-x/)
   assert.doesNotMatch(WXML, /entryPeekExpanded|toggleEntryPeek|onEntryPeekTouch|entry-peek__cards"[^>]*scroll-y/)
   assert.doesNotMatch(JS, /entryPeekExpanded|toggleEntryPeek|onEntryPeekTouch/)
@@ -105,8 +105,8 @@ test('队伍入口复用附近队伍的持票申请链，定位失败在入口�
   assert.match(WXML, /intro-permission[^>]+wx:if="\{\{introError\}\}"/)
 })
 
-// 2026-11-09 V3-35:城市漫游目录不再是清单,已上架、带导入种子标签的平台点位直接画在入口地图上
-test('V3-35 入口地图只把目录地点(type=1 + 种子标签 + 坐标)画成图钉,点图钉回到同一地点', () => {
+// 2026-11-14 A1.2:入口地图画全部已上架点(含商家、非种子点),种子标签只决定有没有目录推荐理由
+test('A1.2 入口地图画全部带坐标的已上架点,种子标签只决定理由;点图钉回到同一地点', () => {
   const entryMap = require('../../utils/roam-entry-map.js')
   const seed = { id: 7, type: 1, name: '山阴路', address: '虹口区山阴路', lat: 31.27, lng: 121.48, tags: '["roam:street","roam:seed:v1:sh-shanyin-road"]' }
   const rows = [
@@ -115,23 +115,51 @@ test('V3-35 入口地图只把目录地点(type=1 + 种子标签 + 坐标)画成
     { id: 9, type: 2, name: '商家', lat: 31.27, lng: 121.48, merchantId: 3, tags: '["roam:seed:v1:x"]' },
     { id: 10, type: 1, name: '无坐标', lat: null, lng: 121.48, tags: '["roam:seed:v1:y"]' },
   ]
-  assert.deepEqual(rows.filter(entryMap.isCatalogPlace).map((r) => r.id), [7])
-  const view = entryMap.build([], [], { activities: true, teams: true, posts: true }, (u) => u, rows)
-  assert.equal(view.markers.length, 1)
-  assert.deepEqual(entryMap.parseMarker(view.markers[0].id), { kind: 'place', id: 7 })
-  assert.equal(view.markers[0].iconPath, '/images/roam-pushpin.png')
+  assert.deepEqual(rows.filter(entryMap.isCatalogPlace).map((r) => r.id), [7, 9])
+  const view = entryMap.build([], [], { activities: true, teams: true, posts: true }, (u) => u, rows, { scale: 16 })
+  assert.deepEqual(view.markers.map((m) => entryMap.parseMarker(m.id)), [{ kind: 'place', id: 7 }, { kind: 'place', id: 8 }, { kind: 'place', id: 9 }])
+  assert.equal(view.markers[0].iconPath, '/images/roam/pin/pin-street.png')
   assert.equal(view.cards.length, 0, '地点不进附近活动卡')
+  assert.equal(view.placeCards.length, 3, '地点进底部卡片带')
   const place = entryMap.placeView(seed)
   assert.equal(place.catLabel, '宝藏街道')
   assert.equal(place.tags, seed.tags)
-  // 关图层不影响目录地点(它不属于活动 / 队伍 / 帖文三层)
-  assert.equal(entryMap.build([], [], { activities: false, teams: false, posts: false }, (u) => u, rows).markers.length, 1)
+  assert.deepEqual(place.tagList, [])
+  // 地点有自己的图层开关
+  assert.equal(entryMap.build([], [], { activities: false, teams: false, posts: false, places: false }, (u) => u, rows, { scale: 16 }).markers.length, 0)
+  assert.equal(entryMap.build([], [], { activities: false, teams: false, posts: false }, (u) => u, rows, { scale: 16 }).markers.length, 3)
 })
 
-test('V3-35 点地点图钉开同一个入口弹层,理由由分包理由组件回填,换卡后的迟到回填丢弃', () => {
-  assert.match(JS, /hit\.kind === 'place'[\s\S]{0,200}this\._showEntrySheet\('place', null, entryMap\.placeView\(row\)\)/)
+test('A1.1 / A1.5 / A1.6 入口读地点不依赖定位,半径取自视口,读失败保留旧图钉,三路读完只同步一次', () => {
+  const body = JS.slice(JS.indexOf('  _loadEntryMap(center) {'), JS.indexOf('  _entryOrigin() {'))
+  assert.match(body, /const located = !!this\.data\.entryLocated/)
+  assert.match(body, /req\('\/api\/roam\/pois', 'GET', \{ lat: c\.lat, lng: c\.lng, radius \}/)
+  assert.match(body, /placeMap\.mergePlaces\(this\._entryPlaces/)
+  assert.doesNotMatch(body, /this\._entryPlaces = \[\]/)
+  assert.match(body, /Promise\.all\(jobs/)
+  assert.equal((body.match(/this\._syncEntryMap\(/g) || []).length, 1)
+  assert.match(JS, /_entryRadius\(c\) \{[\s\S]{0,200}radiusFromRegion/)
+  const anyCity = JS.slice(JS.indexOf('  _loadEntryAnyCity(seq, owner) {'), JS.indexOf('  enableEntryLocation() {'))
+  assert.doesNotMatch(anyCity, /_entryPlaces = \[\]|entryMarkers: \[\]/)
+})
+
+test('A1.4 / B5.8 地点进图层、卡片带;本城推荐与「<城市> · N 处推荐」来自同一份目录', () => {
+  assert.match(WXML, /data-key="places" bindtap="toggleEntryLayer"/)
+  assert.match(JS, /key !== 'places'\) return;/)
+  assert.match(WXML, /<cy-roam-city-strip lat="\{\{center\.lat\}\}" lng="\{\{center\.lng\}\}" bind:strip="onEntryCityStrip" \/>/)
+  assert.match(JS, /strip\.name \+ ' · ' \+ strip\.count \+ ' 处推荐'/)
+  assert.match(WXML, /entry-peek \{\{entryPeekFold \? 'is-fold' : ''\}\}/)
+  assert.match(JS, /foldEntryPeek\(\) \{ this\.setData\(\{ entryPeekFold/)
+})
+
+test('V3-35 / A3.2 点地点图钉开同一个入口弹层,理由由分包理由组件回填,换卡后的迟到回填丢弃,来源折叠', () => {
+  assert.match(JS, /hit\.kind === 'place'\) \{ this\._openEntryPlaceById\(hit\.id\)/)
+  assert.match(JS, /_openEntryPlaceById\(id\) \{[\s\S]{0,400}entryMap\.placeView\(row,/)
   assert.match(JS, /onEntryPlaceNote\(e\) \{[\s\S]{0,160}place\.tags !== d\.tags\) return;/)
-  assert.match(WXML, /wx:elif="\{\{entrySheet=='place' && entryPlace\}\}"><text class="entry-sheet__title">\{\{entryPlace\.name\}\}<\/text>/)
+  assert.match(WXML, /wx:elif="\{\{entrySheet=='place' && entryPlace\}\}"/)
+  assert.match(WXML, /<text class="entry-sheet__title">\{\{entryPlace\.name\}\}<\/text>/)
+  assert.match(WXML, /bindtap="toggleEntrySources"[^>]*aria-label="资料来源"/)
+  assert.match(WXML, /bindtap="copyEntrySource"/)
 })
 
 // 2026-11-09 V1-P32:活动 / 主题与招募中队伍在漫游地图上常显深色小卡(标题 + 一行服务端事实),不再只是 14px 小点
