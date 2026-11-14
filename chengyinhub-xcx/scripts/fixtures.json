@@ -18626,5 +18626,26 @@
   "data": null,
   "dropped": [],
   "switchKeys": []
+ },
+ "C63": {
+  "data": {
+   "pageState": "ready",
+   "rows": [
+    {
+     "id": "7",
+     "timeText": "11月16日 19:30",
+     "status": "BOOKED",
+     "statusText": "待到店",
+     "canNoShow": false
+    }
+   ],
+   "errorMessage": ""
+  },
+  "dropped": [],
+  "switchKeys": [
+   "pageState",
+   "errorMessage",
+   "rows"
+  ]
  }
 }
