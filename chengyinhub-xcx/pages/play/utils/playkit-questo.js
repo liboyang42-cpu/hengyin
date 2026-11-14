@@ -53,6 +53,7 @@ function hangmanKit(seg) {
     caseSensitive: s.caseSensitive === true,
     solved: s.solved === true,
     display: s.solved === true ? String(s.display || '') : '',
+    feedback: s.solved === true && typeof s.feedback === 'string' ? s.feedback : '',   // 服务端没带时页面补本站文字反馈(hangmanStationText)
   };
 }
 

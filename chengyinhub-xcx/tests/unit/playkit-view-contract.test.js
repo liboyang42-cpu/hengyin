@@ -8,7 +8,7 @@ const test = require('node:test')
 const { pickPlayKit, serverAction, secondsUntilOpen, KIT_PRIORITY, dailySignRevealState } =
   require('../../pages/play/utils/playkit-view.js')
 
-const at = (h, m, s) => new Date(2026, 7, 26, h, m, s || 0)
+const at = (h, m, s) => new Date('2026-08-26T' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s || 0).padStart(2, '0') + '+08:00')   // 开放时刻是中国时钟:按中国时间构造,不随测试机时区
 
 test('失败和超时的新版玩法显示原分数和反馈，不能从队员身份推导重试权限', () => {
   for (const status of ['FAILED', 'EXPIRED']) {

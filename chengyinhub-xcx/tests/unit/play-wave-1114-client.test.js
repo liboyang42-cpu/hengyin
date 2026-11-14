@@ -43,11 +43,13 @@ test('c1 选项文案自带字母时去重,只去与本行字母相同的前缀'
 })
 
 test('b7 用时满 1 小时写 h:mm:ss', () => {
-  const { formatElapsed } = req('utils/play-ui-contract.js')
-  assert.equal(formatElapsed(59), '00:59')
-  assert.equal(formatElapsed(3599), '59:59')
-  assert.equal(formatElapsed(118 * 60 + 41), '1:58:41')
-  assert.equal(formatElapsed(10 * 3600 + 5), '10:00:05')
+  const { formatElapsed, formatRunElapsed } = req('utils/play-ui-contract.js')
+  assert.equal(formatElapsed(118 * 60 + 41), '118:41', '玩法短计时口径不变')
+  const fmt = formatRunElapsed
+  assert.equal(fmt(59), '00:59')
+  assert.equal(fmt(3599), '59:59')
+  assert.equal(fmt(118 * 60 + 41), '1:58:41')
+  assert.equal(fmt(10 * 3600 + 5), '10:00:05')
 })
 
 test('b6/b7 章节完成屏:数据没滚完被点掉时落到真值;h:mm:ss 也会滚', () => {
