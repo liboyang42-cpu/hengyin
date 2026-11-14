@@ -7,8 +7,8 @@ const app = getApp();
 const teamOperation = require('../utils/roam-team-operation.js');
 const teamRecovery = require('../utils/roam-team-recovery.js');
 const session = require('../../utils/session/login-reload.js');
-const { playerMapStyle } = require('../../utils/map-style.js'); function openAddress() { return require('../../utils/open-address.js') }
-const PLAYER_MAP_STYLE = playerMapStyle();
+const mapSwitch = require('../../utils/map-style-switch.js'); function openAddress() { return require('../../utils/open-address.js') }
+const MAP_KIND_DATA = mapSwitch.initialData();
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');
 const lastLocation = require('../../utils/location/last-location.js');
 const { isRecordList } = require('../../utils/response-shape.js');
@@ -60,6 +60,10 @@ function emptyResult() {
 }
 
 Page({
+  ...mapSwitch.methods(),
+  openMapKind() { this.setData({ mapKindSheetShow: true }); },
+  closeMapKind() { this.setData({ mapKindSheetShow: false }); },
+  onMapKindPick(e) { const row = this.data.mapKindItems[Number(e.detail && e.detail.index)]; this.setData({ mapKindSheetShow: false }); if (row) this._applyMapKind(row.kind, true); },
   afterTeamCommandTerminal(receipt, command) {
     this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
     this.refresh(this.data.center);
@@ -79,8 +83,7 @@ Page({
   data: { teamCommandRows: [], teamCommandError: '',
     safeBottom: 0,
     hudTop: 90,
-    fmSubkey: PLAYER_MAP_STYLE.subkey,
-    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle,
+    ...MAP_KIND_DATA, mapKindSheetShow: false,
     center: DEFAULT_CENTER,
     scale: 15,
     markers: [],
@@ -142,7 +145,7 @@ Page({
   },
 
   /* 买完票回到地图,卡片要从「去买这场的票」变成「申请加入」(P2 底注):回前台重拉一次。 */
-  onShow() { this._hidden = false;
+  onShow() { this._hidden = false; this._syncMapKindPref();
     this.reloadTeamCommands();
     const writeOwner = teamOperation.identity(app);
     if (this._teamWriteOwner && this._teamWriteOwner !== writeOwner) {

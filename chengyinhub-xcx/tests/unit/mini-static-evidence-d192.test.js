@@ -15,7 +15,7 @@ test('五处路线动态投影仅提交真实固定展示字段；每项登记�
   const files=['pages/square/components/route-map/index.js','pages/topic/index/index.js'].map(name=>path.join(root,name));
   const approved=new Map(Object.entries(baseline.u4Dynamic));
   assert.equal(scanU4(files,new Map(Object.entries(baseline.u4Debt)),approved).violations.length,0);
-  const target='chengyinhub-xcx/pages/square/components/route-map/index.js:49'; // 第九轮 m1 第 1 项:route-map 上方加浅色地图样式 4 行,锚点 45→49
+  const target='chengyinhub-xcx/pages/square/components/route-map/index.js:53'; // 第九轮 m1 第 1 项 45→49;2026-11-14 maps-1114 route-map 加 preview / look 属性 +4 行,49→53
   approved.delete(target);
   assert.ok(scanU4(files,new Map(Object.entries(baseline.u4Debt)),approved).violations.some(row=>row.key===target));
   for(const name of ['pages/square/components/route-map/index.wxml','pages/topic/index/index.wxml']) {

@@ -11,9 +11,9 @@
     <view class="nb-back__pill" style="width:{{capH}}px;height:{{capH}}px;"><cy-icon name="back" size="40" /></view>
   </view>
 
-  <free-map id="fmap" class="nb-map" scene="explore" center="{{center}}" scale="{{scale}}"
+  <free-map id="fmap" class="nb-map" wx:if="{{fmStyleReady}}" scene="explore" center="{{center}}" scale="{{scale}}"
             map-markers="{{markers}}" map-circles="{{circles}}" show-controls="{{false}}"
-            subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
+            subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tone="{{fmTone}}"
             accessibility-label="附近的队伍地图"
             bind:markertap="onMarkerTap" bind:regionchange="onRegionChange" />
   <!-- marker 图标离屏画布(头像 marker 108 / 远距点 28) -->
@@ -85,6 +85,7 @@
   <view class="mt-corners" wx:if="{{!sheet && viewMode === 'map'}}" style="bottom:calc({{safeBottom + 16}}px + 380rpx);">
     <!-- 2026-10-28 业主:「范围 1 公里」也变成图标按钮(读屏仍报当前范围) -->
     <view class="mt-corner mt-corner--icon" bindtap="openRange" aria-role="button" aria-label="范围：{{rangeText}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="gps" size="40" /></view>
+    <view class="mt-corner mt-corner--icon" bindtap="openMapKind" aria-role="button" aria-label="地图样式" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="map" size="40" /></view>
     <view class="mt-corner mt-corner--icon" bindtap="openMyTeamsPage" aria-role="button" aria-label="{{myTeamsN ? '我的队伍 · ' + myTeamsN : '我的队伍'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="mtab-customers" size="40" /><text class="mt-corner__n" wx:if="{{myTeamsN}}">{{myTeamsN}}</text></view>
   </view>
 
@@ -305,6 +306,8 @@
   <cy-loading-mask id="cy-loading" />
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
 
+  <cy-option-sheet show="{{mapKindSheetShow}}" title="地图样式" items="{{mapKindLabels}}" default-index="{{mapKindIndex}}"
+    bind:select="onMapKindPick" bind:cancel="closeMapKind" />
   <cy-option-sheet show="{{rangeSheetShow}}" title="范围" items="{{rangeItems}}" default-index="{{rangeIndex}}"
     bind:select="onRangePick" bind:cancel="closeRange" />
 

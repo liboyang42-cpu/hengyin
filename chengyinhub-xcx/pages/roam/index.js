@@ -81,7 +81,7 @@ const { normalizeRunners } = require('../../utils/roam-runners.js');
 const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const { currentScene, exitDecision, popScene, pushScene } = require('../../utils/scene-stack.js');
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
-const { playerMapStyle, roam3dFor } = require('../../utils/map-style.js');
+const { roam3dFor } = require('../../utils/map-style.js'); const mapSwitch = require('../../utils/map-style-switch.js'); const mapSnap = require('../../utils/map-snapshot.js'); const { routeGeo } = require('../../utils/roam-route-geo.js');
 const photoPins = require('./photo-pins.js');
 function stripDistText(from, p) {
   if (!from || from.lat == null || !p || p.lat == null) return '';
@@ -90,7 +90,7 @@ function stripDistText(from, p) {
   return m < 1000 ? Math.max(10, Math.round(m / 10) * 10) + ' 米' : (m / 1000).toFixed(1) + ' 公里';
 }
 const { placeShareFromEvent } = require('../../utils/place-share.js');
-const PLAYER_MAP_STYLE = playerMapStyle();
+const MAP_KIND_DATA = mapSwitch.initialData();
 const { getScene } = require('../../utils/scene-registry.js');
 const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { getNodeLevelStyle, buildNodeLevelMarkerStyle } = require('./node-level-style.js'); const entryMap = require('../../utils/roam-entry-map.js');
@@ -313,6 +313,10 @@ function buildNpcPorts(page) {
 }
 
 Page({
+  ...mapSwitch.methods(),
+  onMapKindTap(e) { const kind = e.currentTarget.dataset.kind; if (kind) this._applyMapKind(kind, true); },
+  // 地图重建后迷雾要换上新的 MapContext
+  _onMapKindRebuilt() { const map = this.selectComponent('#roamMap'); if (map) this._mapCtx = map.getMapContext(); },
   data: {
     privacyGateShow: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
@@ -321,8 +325,7 @@ Page({
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
-    fmSubkey: PLAYER_MAP_STYLE.subkey,
-    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle, map3d: false, // 第九轮 m4:16 级以上 3D 楼块 + 俯仰(utils/map-style.js ROAM_3D,默认关)
+    ...MAP_KIND_DATA, map3d: false, // 第九轮 m4:16 级以上 3D 楼块 + 俯仰(utils/map-style.js ROAM_3D,默认关)
     // 起始页(Figma 3956:12602/12809)。modeTitle 是模式名:本页恒为自由漫游,
     // 城市定向/自由探索复用同一版式时只换这三项(标题 / 卡片 / 主行动文案)。
     modeTitle: '自由漫游',
@@ -1092,6 +1095,7 @@ Page({
     // P1-6:兜里短接的读数立即补一次,不等下一拍 1s
     this._hidden = false;
     if (this._clock) this._syncStats();
+    this._syncMapKindPref();
     this.setData({ fontScaleStyle: readPageStyle(), roamPageShown: true });
     if (this._realOn) this._flushTrackLine();
     this._syncPresencePrivacy(); this._eventNavigating = false; this._navigating = false; // 返回时兜底清「官方活动」与其余入口的跳转锁
@@ -5126,7 +5130,7 @@ Page({
   _buildArchFrom(track, pois, center) {
     const W = 576; const H = 520; const padT = 100; const padB = 50; const padX = 60;
     const points = limitTrack(track);
-    if (points.length < 2) return { archSegs: [], archPois: [], archEnd: {} };
+    if (points.length < 2) return { archSegs: [], archPois: [], archEnd: {}, archGeo: null };
     const c = center || points[0];
     const M = (p) => ({ x: (p.lng - c.lng) / m2lng(1, c.lat), y: -(p.lat - c.lat) / m2lat(1) });
     const pts = points.map(M);
@@ -5157,7 +5161,8 @@ Page({
         return { i, x: Math.round(X(m)), y: Math.round(Y(m)), color: p.color };
       });
     const e = pts[pts.length - 1];
-    return { archSegs, archPois, archEnd: { x: Math.round(X(e)), y: Math.round(Y(e)) } };
+    // 真实地图数据:同一条已过位置隐私闸的轨迹,分享卡里的底图是它的快照
+    return { archSegs, archPois, archEnd: { x: Math.round(X(e)), y: Math.round(Y(e)) }, archGeo: routeGeo(points, pois) };
   },
 
   // share.idx / squarePostUnknown 仍是页面数据;只有「显不显示」交给场景栈(#572 单宿主收口)。
@@ -5213,6 +5218,7 @@ Page({
     const app = getApp();
     const communityWrite = typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
     const privacy = readSharePrivacy(wx);
+    this._shareMapUpdated = false;
     this.setData({
       shareArch: this._activeShareArch() || { archSegs: [], archPois: [], archEnd: {} },
       shareFinish: this._activeShareFinish(),
@@ -5261,7 +5267,7 @@ Page({
   },
   _activeShareArch() {
     if (this._shareSource) return this._shareSource.arch;
-    return { archSegs: this.data.archSegs, archPois: this.data.archPois, archEnd: this.data.archEnd };
+    return { archSegs: this.data.archSegs, archPois: this.data.archPois, archEnd: this.data.archEnd, archGeo: this.data.archGeo };
   },
   _activeShareSessionId() {
     if (this._shareSource) return this._shareSource.sessionId || '';
@@ -5545,7 +5551,7 @@ Page({
       releaseLoading();
       if (!current()) return { path: null, saved: false };
       // 只有仍是当前作用域的失败才提示
-      cyToast('生成失败');
+      cyToast(err && err.mapSnapshot ? '地图未生成，请重试' : '生成失败');
       console.warn('card export fail');
       return { path: null, saved: false };
     });
@@ -5633,8 +5639,7 @@ Page({
   },
 
   /** story 卡的拱形卡(与预览 .sh-arch 同构:上迷你地图 + 卡内数字行):复用 C1 的 archSegs 缩放绘制 */
-  _drawShareArch(g, cols, arch) {
-    const { archSegs, archPois, archEnd } = arch || this.data;
+  _drawShareArch(g, cols, arch, mapImage) {
     const x = 165; const y = 140; const w = 420; const h = 560; const rBot = 26;
     this._archPath(g, x, y, w, h, rBot);
     g.fillStyle = '#0D0D0D'; g.fill();
@@ -5647,30 +5652,9 @@ Page({
     g.save();
     this._archPath(g, ix, iy, iw, ih, 20);
     g.clip();
-    if (archSegs && archSegs.length) {
-      const k = Math.min(iw / 576, ih / 520);
-      const ox = ix + (iw - 576 * k) / 2;
-      const oy = iy + (ih - 520 * k) / 2;
-      g.strokeStyle = BRAND; g.lineWidth = 3.5; g.lineCap = 'round';
-      g.shadowColor = 'rgba(255,255,255,.7)'; g.shadowBlur = 8;
-      archSegs.forEach((s) => {
-        const rad = s.deg * Math.PI / 180;
-        g.beginPath();
-        g.moveTo(ox + s.x * k, oy + s.y * k);
-        g.lineTo(ox + (s.x + s.len * Math.cos(rad)) * k, oy + (s.y + s.len * Math.sin(rad)) * k);
-        g.stroke();
-      });
-      g.shadowBlur = 0;
-      (archPois || []).forEach((p) => {
-        g.beginPath(); g.arc(ox + p.x * k, oy + p.y * k, 7, 0, Math.PI * 2);
-        g.fillStyle = p.color || '#D9D9D9'; g.fill();
-        g.strokeStyle = '#fff'; g.lineWidth = 2.5; g.stroke();
-      });
-      if (archEnd && archEnd.x != null) {
-        g.beginPath(); g.arc(ox + archEnd.x * k, oy + archEnd.y * k, 6, 0, Math.PI * 2);
-        g.fillStyle = '#fff'; g.fill();
-        g.strokeStyle = BRAND; g.lineWidth = 3; g.stroke();
-      }
+    if (mapImage) {
+      // 真实地图快照(路线与店铺点已在地图上),只裁剪铺满,不重画
+      mapSnap.drawCover(g, mapImage, ix, iy, iw, ih);
     } else {
       g.fillStyle = '#686868'; g.font = '24px sans-serif'; g.textAlign = 'center';
       g.fillText('今日足迹', ix + iw / 2, iy + ih / 2);
@@ -5680,13 +5664,22 @@ Page({
     this._drawNumsInline(g, cols, x + w / 2, iy + ih + 92);
   },
 
+  /** 分享卡底图:截预览里那张真实 <map>。没有足够轨迹(archGeo 空)= 空态文字,不需要图;截不到就拒绝,走导出失败的重试提示。 */
+  _shareMapImage(cv, idx, arch) {
+    if (idx === 1 || !arch || !arch.archGeo) return Promise.resolve(null);
+    const ctx = wx.createMapContext('rshMap', this);
+    return mapSnap.takeMapSnapshot(ctx, () => this._shareMapUpdated)
+      .then((path) => mapSnap.loadImage(cv, path));
+  },
+  onShareMapUpdated() { this._shareMapUpdated = true; },
+
   /** idx 0=story(750x1000 竖版,拱形卡含路线+卡内数字) 1=square(750x750,数字行);版式与 swiper 预览卡一致 */
   _drawShareCard(idx) {
     const current = this._shareScope();
     // 历史分享时 fin/arch 来自选中 session(_activeShare*),不读也不会改当前漫游的 data。
     const fin = this._activeShareFinish();
     const arch = this._activeShareArch();
-    return this._getShareCanvas().then((cv) => {
+    return this._getShareCanvas().then((cv) => this._shareMapImage(cv, idx, arch).then((mapImage) => [cv, mapImage])).then(([cv, mapImage]) => {
       if (!current()) { const error = new Error('share cancelled'); error.cancelled = true; throw error; }
       const W = 750; const H = idx === 1 ? 750 : 1000;
       const SS = 2; // 2x 超采样,配合 _canvasExport 的显式 dest 输出 1500/2000px 清晰图
@@ -5706,7 +5699,7 @@ Page({
       ];
       g.textAlign = 'center';
       if (idx !== 1) {
-        this._drawShareArch(g, cols, arch); // 卡内含数字行(140..700)
+        this._drawShareArch(g, cols, arch, mapImage); // 卡内含数字行(140..700)
         g.fillStyle = '#5A5A5A'; g.font = '22px sans-serif';
         g.fillText('城瘾 · ' + (fin.date || 'CityFog'), W / 2, 772); // 卡下水印,同预览 sh-wm
       } else {

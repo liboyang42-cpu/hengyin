@@ -228,9 +228,10 @@ test('负控：镭射豁免只放行清单里的那几个值，同文件的新�
 test('漫游回看不信任历史记录携带的任意点色', () => {
   const session = sourceWithoutComments('subpackageRoam/session/index.js')
 
+  // 2026-11-14:分享卡改用真实 map 快照,店铺点色来自 utils/roam-route-geo.js 的固定四色,不读历史记录里的 color
   assert.doesNotMatch(session, /color:\s*p\.color/)
-  assert.match(session, /color:\s*SHARE_CARD\.poi\[i % SHARE_CARD\.poi\.length\]/)
-  assert.match(session, /poi:\s*\['#4B46F5', '#8C91A0', '#646B78', '#121317'\]/)
+  assert.match(session, /routeGeo\(track,/)
+  assert.doesNotMatch(session, /SHARE_CARD\.poi/)
 })
 
 test('主题画面风格的调色只在 .look--<风格> 规则内豁免，挪到普通表面必须判红', () => {

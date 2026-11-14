@@ -28,7 +28,7 @@
 - [ ] **微信官方包体读回**:先用开发者工具 `preview` 或 `upload` 的 `--info-output` 保存 JSON,再执行 `node scripts/wechat-release-contract.js --info <info.json>`；门禁兼容 DevTools `size.total/packages` 与 miniprogram-ci `subPackageInfo`（`__APP__`=主包、`__FULL__`=整包，数字按 bytes），逐项确认主包/每个分包 ≤2M、分包合计 ≤30M,内部主包 `<1.8M` 目标仍保留。没有 `info-output` 不得写“包体合规”。
 - [ ] **个性化地图四套样式(第九轮 m4)**:上传前对上传拷贝跑
       `CY_MAP_SUBKEY=… CY_MAP_STYLE_BLACK=… CY_MAP_STYLE_WHITE=… CY_MAP_STYLE_PAPER=… CY_MAP_STYLE_2077=… node scripts/release-map-style.js --dir <上传拷贝> --require`
-      (序号取腾讯位置服务控制台「样式应用列表」里这四套绑到同一个 key 的序号;说明见 `components/cy/free-map/DARK_MAP.md`)。
+      (序号取腾讯位置服务控制台「样式应用列表」里这四套绑到同一个 key 的绑定序号:white 1 / black 2 / paper 3 / 2077 4,不是 styleId;说明见 `components/cy/free-map/DARK_MAP.md`)。
       仓库本身永远是空 key。
 - [ ] **漫游大气层转场视频(第九轮 m4 第 3 项)**:owner 已批第二版(地球落到中国),片子在
       `origin/claude/map-atmos-20261103` 的 `design/atmos-entry/atmos.mp4`,**不进测试分支、不进小程序包**。

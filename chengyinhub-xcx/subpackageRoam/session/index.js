@@ -7,11 +7,12 @@ const { currentPlayerRoamMemory } = require('../../utils/roam-player-memory.js')
 const { clipSavedTrackForSharing, readSharePrivacy } = require('../../utils/roam-route-privacy.js');
 const { readNonNegative } = require('../../utils/roam-history-metrics.js');
 const { limitTrack } = require('../../utils/roam-track-simplify.js');
+const { routeGeo } = require('../../utils/roam-route-geo.js');
+const mapSnap = require('../../utils/map-snapshot.js');
+const { freeMapKind, mapStyleFor } = require('../../utils/map-style.js');
 const { publishShareSnapshot, readShareSnapshot } = require('../../utils/roam-share-snapshot.js');
 const app = typeof getApp === 'function' ? getApp() : { globalData: {} };
 const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
-// 路线图画布(ss-map:750-80=670rpx 宽,520rpx 高)
-const MW = 670, MH = 520, PAD = 60;
 // Canvas 读不到 WXSS token；这里逐字同步 Figma 浅色叙事 token(220:1415)，
 // 不再让分享卡回退到旧的黑色路线舞台。
 const SHARE_CARD = Object.freeze({
@@ -41,10 +42,10 @@ Page({
     navBarHeight: 44,
     ts: '', sessionId: '',
     s: { pois: [] },
-    segs: [],
-    poiDots: [],
+    geo: null,
+    mapStyle: { subkey: '', layerStyle: 1 },
     err: '',
-    share: { show: false, drawing: false, imagePath: '', error: '', retrySave: false, saving: false, token: '', linkReason: '' },
+    share: { show: false, drawing: false, imagePath: '', mapImage: '', error: '', retrySave: false, saving: false, token: '', linkReason: '' },
     // 第二轮拍板 17:朋友分享进来(带 shareToken)时只读快照 —— sharedState: '' 非分享 | loading | ready | gone | error
     sharedState: '',
     snapshot: null,
@@ -145,9 +146,9 @@ Page({
     this.setData({
       err,
       s: { pois: [] },
-      segs: [],
-      poiDots: [],
+      geo: null,
       'share.show': false,
+      'share.mapImage': '',
       'share.drawing': false,
       'share.imagePath': '',
       'share.error': '',
@@ -184,7 +185,7 @@ Page({
     s.distanceText = s.distance === null ? '—' : String(s.distance);
     s.completeFact = '已完成本次漫游';
 
-    this.setData({ err: '', s, ...this._route(s) });
+    this.setData({ err: '', s, geo: this._route(s).geo });
     return true;
   },
 
@@ -240,36 +241,14 @@ Page({
     return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
   },
 
-  // 轨迹 + POI 一起做 bbox 归一化居中(lat/lng → 卡内 rpx)
+  // 分享足迹卡的真实地图数据(原生 map 的 include-points / polyline / circles)。
   //
-  // ⚠️ 本页 data.segs/poiDots 的**唯一**消费方是分享足迹卡(sheet 里那张预览 + 导出 canvas
-  //    共用同一份,见 index.wxml ss-card-route / _drawShareCard)。页面正文的回放是
-  //    cy-scene-roam-session 自己算的,不走这里。所以位置隐私裁剪放在这一层:
-  //    进这里的就是要给别人看的轨迹,首尾各裁掉设置里的比例。
+  // ⚠️ 本页 data.geo 的**唯一**消费方是分享足迹卡(sheet 里截图用的那张真实 map,导出 canvas 用它的快照,
+  //    见 index.wxml ss-snap / _drawShareCard)。页面正文的回放是 cy-scene-roam-session 自己算的,不走这里。
+  //    所以位置隐私裁剪放在这一层:进这里的就是要给别人看的轨迹,首尾各裁掉设置里的比例。
   _route(s) {
     const track = limitTrack(clipSavedTrackForSharing(s.track || [], readSharePrivacy(wx)));
-    if (track.length < 2) return { segs: [], poiDots: [] };
-    const lat0 = track[0].lat;
-    const kx = Math.cos(lat0 * Math.PI / 180);
-    const M = p => ({ x: p.lng * kx, y: -p.lat });
-    const tp = track.map(M);
-    const pp = (s.pois || []).filter(p => p.lat).map(M);
-    const all = tp.concat(pp);
-    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-    all.forEach(p => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
-    const sc = Math.min((MW - PAD * 2) / Math.max(1e-9, x1 - x0), (MH - PAD * 2) / Math.max(1e-9, y1 - y0));
-    const ox = (MW - (x1 - x0) * sc) / 2 - x0 * sc;
-    const oy = (MH - (y1 - y0) * sc) / 2 - y0 * sc;
-    const X = p => p.x * sc + ox, Y = p => p.y * sc + oy;
-    const segs = [];
-    for (let i = 1; i < tp.length; i++) {
-      const ax = X(tp[i - 1]), ay = Y(tp[i - 1]), bx = X(tp[i]), by = Y(tp[i]);
-      const len = Math.hypot(bx - ax, by - ay);
-      if (len < 2) continue;
-      segs.push({ i, x: Math.round(ax), y: Math.round(ay), len: Math.round(len) + 2, deg: Math.round(Math.atan2(by - ay, bx - ax) * 180 / Math.PI) });
-    }
-    const poiDots = pp.map((p, i) => ({ i, x: Math.round(X(p)), y: Math.round(Y(p)), color: SHARE_CARD.poi[i % SHARE_CARD.poi.length] }));
-    return { segs, poiDots };
+    return { geo: routeGeo(track, (s.pois || []).filter(p => p && p.lat)) };
   },
 
   share() {
@@ -289,13 +268,14 @@ Page({
       return Promise.resolve({ ok: false, imagePath: '' });
     }
     this._saveInFlight = null;
+    this._mapUpdated = false;
     // 裁剪比例可能在上次算完之后被改过;缓存住的 segs 是**旧设置**下的轨迹,重算一次。
     // ⚠️ 逐字段写,不用 `...this._route()` 展开:展开会新增一条 UI-GATE-0 的动态 setData 债务。
     const route = this._route(this.data.s);
     this.setData({
-      segs: route.segs,
-      poiDots: route.poiDots,
-      share: { show: true, drawing: true, imagePath: '', error: '', retrySave: false, saving: false, token: '', linkReason: '' },
+      geo: route.geo,
+      mapStyle: mapStyleFor(freeMapKind()),
+      share: { show: true, drawing: true, imagePath: '', mapImage: '', error: '', retrySave: false, saving: false, token: '', linkReason: '' },
     });
     // 每次打开都重新发布:快照按**当前**裁剪设置重算(服务端按足迹 ts 更新同一令牌)。
     this._sharePublish = null;
@@ -363,7 +343,8 @@ Page({
     const token = (this._shareEpoch || 0) + 1;
     this._shareEpoch = token;
     loading.show('生成足迹卡');
-    this.setData({ 'share.drawing': true, 'share.error': '', 'share.retrySave': false, 'share.saving': false });
+    this._mapUpdated = false;
+    this.setData({ 'share.drawing': true, 'share.error': '', 'share.retrySave': false, 'share.saving': false, 'share.mapImage': '' });
     return Promise.resolve().then(() => this._drawShareCard()).then((imagePath) => {
       if (typeof imagePath !== 'string' || !imagePath.trim()) throw new Error('empty session share card path');
       if (!this._isShareCurrent(token)) return { ok: false, imagePath: '' };
@@ -377,7 +358,7 @@ Page({
       this.setData({
         'share.drawing': false,
         'share.imagePath': '',
-        'share.error': '足迹卡生成失败，请重试',
+        'share.error': error && error.mapSnapshot ? '地图未生成，请重试' : '足迹卡生成失败，请重试',
       });
       return { ok: false, imagePath: '' };
     });
@@ -495,9 +476,20 @@ Page({
     });
   },
 
+  /** 截分享用那张真实 <map> 的快照;没有轨迹(geo 空)= 不需要。截不到就拒绝,走页面已有的「重试」态。 */
+  _shareMapImage(canvas) {
+    if (!this.data.geo) return Promise.resolve(null);
+    const ctx = wx.createMapContext('ssMap', this);
+    return mapSnap.takeMapSnapshot(ctx, () => this._mapUpdated).then((path) => {
+      this.setData({ 'share.mapImage': path });
+      return mapSnap.loadImage(canvas, path);
+    });
+  },
+  onShareMapUpdated() { this._mapUpdated = true; },
+
   _drawShareCard() {
     const token = this._shareEpoch || 0;
-    return this._getShareCanvas().then((canvas) => {
+    return this._getShareCanvas().then((canvas) => this._shareMapImage(canvas).then((mapImage) => [canvas, mapImage])).then(([canvas, mapImage]) => {
       if (!this._isShareCurrent(token)) throw new Error('session share cancelled');
       const width = SHARE_CARD.width;
       const height = SHARE_CARD.height;
@@ -524,34 +516,9 @@ Page({
       g.lineTo(map.x, map.y + map.h);
       g.lineTo(map.x, map.y);
       g.clip();
-      const routeScale = Math.min(map.w / MW, map.h / MH);
-      const routeX = map.x + (map.w - MW * routeScale) / 2;
-      const routeY = map.y + (map.h - MH * routeScale) / 2;
-      g.strokeStyle = SHARE_CARD.route;
-      g.lineWidth = 5;
-      g.lineCap = 'round';
-      (this.data.segs || []).forEach((segment) => {
-        const rad = segment.deg * Math.PI / 180;
-        const x = routeX + segment.x * routeScale;
-        const y = routeY + segment.y * routeScale;
-        g.beginPath();
-        g.moveTo(x, y);
-        g.lineTo(
-          x + segment.len * Math.cos(rad) * routeScale,
-          y + segment.len * Math.sin(rad) * routeScale
-        );
-        g.stroke();
-      });
-      (this.data.poiDots || []).forEach((poi) => {
-        g.beginPath();
-        g.arc(routeX + poi.x * routeScale, routeY + poi.y * routeScale, 8, 0, Math.PI * 2);
-        g.fillStyle = poi.color || SHARE_CARD.secondary;
-        g.fill();
-        g.strokeStyle = SHARE_CARD.ring;
-        g.lineWidth = 3;
-        g.stroke();
-      });
-      if (!this.data.segs.length) {
+      if (mapImage) {
+        mapSnap.drawCover(g, mapImage, map.x, map.y, map.w, map.h);
+      } else {
         g.fillStyle = SHARE_CARD.tertiary;
         g.font = '26px sans-serif';
         g.textAlign = 'center';

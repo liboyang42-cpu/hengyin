@@ -131,7 +131,9 @@ test('拒绝改仓库本身', () => {
 
 test('玩家地图接暗色,商家 / 编辑器地图接浅色', () => {
   const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
-  ['pages/roam/index.js', 'pages/play/index.js', 'subpackageRoam/nearby/index.js'].forEach((p) => assert.match(read(p), /playerMapStyle\(\)/, p));
+  assert.match(read('pages/play/index.js'), /playerMapStyle\(\)/);
+  // 2026-11-14:漫游 / 附近的自由图玩家可切,初值读本机选择(默认 black),见 utils/map-style-switch.js
+  ['pages/roam/index.js', 'subpackageRoam/nearby/index.js'].forEach((p) => assert.match(read(p), /mapSwitch\.initialData\(\)/, p));
   ['pages/publish/fabu/index.js', 'pages/topic/index/index.js', 'pages/square/components/route-map/index.js'].forEach((p) => assert.match(read(p), /lightMapStyle\(\)/, p));
   assert.match(read('pages/searchmap/index.js'), /isMerchantView\(\) \? lightMapStyle\(\) : playerMapStyle\(\)/);
   // 所有原生 <map> 都带上同一套 subkey / layer-style(一个小程序只用一个 subkey)
