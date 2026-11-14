@@ -100,6 +100,23 @@ public class GroupCodeServiceImpl implements IGroupCodeService {
     }
 
     @Override
+    public AjaxResult status(Long activityId, long memberId) {
+        if (memberId <= 0) return AjaxResult.error("请先登录");
+        if (activityId == null || activityId <= 0) return AjaxResult.error("参数缺失");
+        CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
+        if (!isActiveGroupActivity(activity)) return AjaxResult.error("该场次不可带队核销");
+        if (!canCheckIn(activity, memberId)) return AjaxResult.error("您没有该场次的团码核销权限");
+        // 团码是即签即用的签名令牌、不落库,所以这里只有「能出」这一事实,没有「当前码」可读。
+        Map<String, Object> data = new HashMap<>();
+        data.put("activityId", activityId);
+        data.put("topicId", activity.getTopicId());
+        data.put("clubId", activity.getClubId());
+        data.put("issuable", true);
+        data.put("ttlMs", GROUP_CODE_TTL_MS);
+        return AjaxResult.success(data);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult redeem(String code, long merchantMemberId) {
         return redeem(code, merchantMemberId, merchantMemberId, "MERCHANT_OWNER");
