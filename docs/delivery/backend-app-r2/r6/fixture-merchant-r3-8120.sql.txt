@@ -1,0 +1,21 @@
+-- TEST-only fixture for be-gap-merchant R3 on cy_e2e_r2 (8120; never production). Rerunnable.
+SET NAMES utf8mb4;
+-- One SKU for the store product 992951 so the W05 store facts (product + sku) resolve.
+INSERT IGNORE INTO pms_sku(id, product_id, sku_name, price, stock, create_time, update_time) VALUES (992952, 992951, 'E2E 大杯', 0.00, 0, '2026-11-13 09:00:00', '2026-11-13 09:00:00');
+-- CITY board rows at store 8001 points: a goal on NEUTRAL prop-a (pt-a) by a 2-member team, a paid service visit on prop-b (pt-b).
+INSERT IGNORE INTO city_game_participation(participation_id, board_id, team_id, member_id, present, confirmed, create_time) VALUES
+  ('r3000000-0000-4000-8000-000000000001','gapsa-board-1','r3team00-0000-4000-8000-000000000001',9101,1,1,'2026-11-13 08:00:00'),
+  ('r3000000-0000-4000-8000-000000000002','gapsa-board-1','r3team00-0000-4000-8000-000000000001',9102,1,1,'2026-11-13 08:05:00');
+INSERT IGNORE INTO city_game_task_attempt(board_id, property_id, team_id, member_id, request_id, create_time) VALUES
+  ('gapsa-board-1','prop-a','r3team00-0000-4000-8000-000000000001',9101,'r3-task-1','2026-11-13 09:00:00');
+INSERT IGNORE INTO city_game_service(board_id, service_id, property_id, title, member_points_fee) VALUES ('gapsa-board-1','svc-r3','prop-b','E2E 手冲体验',30);
+INSERT IGNORE INTO city_game_request(member_id, domain, request_id, board_id, action, request_hash, http_status, decision, current_version, points_charged, create_time) VALUES
+  (9102,'game','r3-req-1','gapsa-board-1','ACCEPT_SERVICE_VISIT',REPEAT('b',64),200,'APPLIED',2,30,'2026-11-13 09:30:00');
+INSERT IGNORE INTO city_game_quote(quote_id, quote_version, board_id, action, target_id, payer_member_id, rule_version, member_points_cost, action_cost, expires_at, consumed_request_id) VALUES
+  ('r3quote0-0000-4000-8000-000000000001',1,'gapsa-board-1','ACCEPT_SERVICE_VISIT','svc-r3',9102,'v1',30,1,'2026-11-14 00:00:00','r3-req-1');
+-- First explicit choice times of the two fixture visits with feedback (column added by migration_20261120_city_value_visit_feedback_at).
+UPDATE city_value_visit SET feedback_at = '2026-11-13 10:00:40' WHERE visit_id = '7d0f2a10-0000-4000-8000-000000000001';
+UPDATE city_value_visit SET feedback_at = '2026-11-13 11:01:20' WHERE visit_id = '7d0f2a10-0000-4000-8000-000000000002';
+-- The mini-program redemption of POI 1 for player 9004 after visit 1, exactly as CityNodeRedemptionApplication audits it.
+INSERT IGNORE INTO business_audit_event(domain_type, domain_id, owner_member_id, actor_member_id, actor_role_code, action, target_type, target_id, relation_id, before_json, after_json, request_id, create_time) VALUES
+  ('CITY_NODE',1,9002,9002,'MERCHANT_OWNER','CITY_NODE_REDEEM','ROAM_CHECKIN',1,9004,'{"status":0}','{"status":1,"receiptVersion":1,"data":{"memberId":9004,"poiId":1,"couponId":88,"couponGranted":true},"message":"核销成功,券已发放玩家"}','citynode-redeem-1-9004','2026-11-13 10:05:00');
