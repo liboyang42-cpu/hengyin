@@ -188,6 +188,13 @@
     <if test="releaseId != null">and id=#{releaseId}</if>
     order by id desc limit 1
   </select>
+  <select id="latestStoreRelease" resultMap="release">
+    select * from w05_authoring_release
+    where merchant_id=#{merchantId} and binding_key='STORE' and theme_id is null and run_id is null
+      and status in ('PUBLISHED','WITHDRAWN')
+    order by case when status='PUBLISHED' then 0 else 1 end, id desc limit 1
+  </select>
+
   <select id="latestPublished" resultMap="release">
     select * from w05_authoring_release
     where merchant_id=#{merchantId} and status='PUBLISHED' and binding_key='THEME' and run_id is null

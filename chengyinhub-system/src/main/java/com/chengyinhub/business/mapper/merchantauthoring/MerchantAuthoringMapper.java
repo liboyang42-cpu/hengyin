@@ -57,6 +57,8 @@ public interface MerchantAuthoringMapper {
 
     Release latestPublished(@Param("merchantId") Long merchantId, @Param("themeId") Long themeId);
 
+    Release latestStoreRelease(@Param("merchantId") Long merchantId);
+
     int insertEnvironment(Environment row);
 
     Environment findEnvironment(@Param("releaseId") Long releaseId);

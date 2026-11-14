@@ -101,14 +101,7 @@ public class MerchantAuthoringMapperTest {
                 "jdbc:h2:mem:authoring_" + UUID.randomUUID().toString().replace("-", "") + ";MODE=MySQL;DB_CLOSE_DELAY=-1",
                 "sa", "");
         try (Connection connection = source.getConnection(); Statement statement = connection.createStatement()) {
-            String sql = Files.readString(schema());
-            StringBuilder kept = new StringBuilder();
-            for (String line : sql.split("\n")) {
-                if (!line.trim().startsWith("--")) kept.append(line).append('\n');
-            }
-            for (String command : kept.toString().split(";")) {
-                if (!command.isBlank()) statement.execute(command);
-            }
+            com.chengyinhub.business.merchantgap.MerchantGapH2.load(statement);
         }
         Configuration config = new Configuration(new Environment("test", new JdbcTransactionFactory(), source));
         String resource = "mapper/business/merchantauthoring/MerchantAuthoringMapper.xml";
@@ -118,9 +111,4 @@ public class MerchantAuthoringMapperTest {
         return new SqlSessionFactoryBuilder().build(config);
     }
 
-    private static Path schema() {
-        Path module = Path.of("sql/migration_merchant_authoring_w05_candidate.sql");
-        if (Files.exists(module)) return module;
-        return Path.of("chengyinhub-admin/sql/migration_merchant_authoring_w05_candidate.sql");
-    }
 }

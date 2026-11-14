@@ -184,6 +184,12 @@ public class MerchantAuthoringService implements PublicReleaseFacts {
         MerchantAccessContext ctx = store(principal);
         Prepared prepared = prepare(ctx, request);
         Draft draft = newDraft(principal, ctx, prepared, 0);
+        if (prepared.requestId != null) draft.id = "q" + sha256(principal + ":" + prepared.requestId).substring(0, 48);
+        Draft existing = tx.call(mapper -> mapper.findDraftById(draft.id));
+        if (existing != null) {
+            if (!principalEquals(existing.ownerId, principal) || !ctx.getMerchantId().equals(existing.merchantId)) throw conflict(null);
+            return draftView(existing, null, "NONE");
+        }
         tx.call(mapper -> {
             mapper.insertDraft(draft);
             return draft;
@@ -393,6 +399,28 @@ public class MerchantAuthoringService implements PublicReleaseFacts {
         return view;
     }
 
+    /** Player read: the store's own published game, or NONE / WITHDRAWN. Only the public fact whitelist is returned. */
+    public Map<String, Object> playerGame(long merchantId) {
+        MmsMerchant merchant = merchants.selectMmsMerchantById(merchantId);
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("merchantId", merchantId);
+        if (merchant == null || !Integer.valueOf(0).equals(merchant.getDelFlag())) {
+            view.put("outcome", "NONE");
+            return view;
+        }
+        Release release = tx.call(mapper -> mapper.latestStoreRelease(merchantId));
+        Map<String, Object> facts = release == null ? Map.of() : project(release.snapshotJson);
+        if (release == null || ("PUBLISHED".equals(release.status) && facts.isEmpty())) {
+            view.put("outcome", "NONE");
+            return view;
+        }
+        view.put("outcome", release.status);
+        view.put("releaseId", release.id);
+        view.put("revisionVersion", release.revisionVersion);
+        if ("PUBLISHED".equals(release.status)) view.put("facts", facts);
+        return view;
+    }
+
     @Override
     public String publicPrompt(Long merchantId, Long themeId, Long releaseId, String runId, String bindingKey) {
         Map<String, Object> read = readPublic(merchantId, themeId, releaseId, runId, bindingKey);
@@ -578,7 +606,7 @@ public class MerchantAuthoringService implements PublicReleaseFacts {
         if (request == null) throw fail("INPUT", HttpStatus.BAD_REQUEST);
         Prepared prepared = new Prepared();
         prepared.requestId = request.requestId == null ? null : required(request.requestId, 64);
-        prepared.factVersion = required(request.factVersion, 64);
+        prepared.factVersion = request.factVersion == null ? null : required(request.factVersion, 64);
         prepared.templateId = blankToNull(request.templateId);
         prepared.productId = request.productId;
         prepared.skuId = request.skuId;
@@ -596,6 +624,20 @@ public class MerchantAuthoringService implements PublicReleaseFacts {
             }
         }
         prepared.scene = approvedInStore ? "IN_STORE_GAME" : "PRODUCT";
+        if (prepared.draftId != null && prepared.productId == null && prepared.skuId == null) {
+            Draft known = tx.call(mapper -> mapper.findDraftById(prepared.draftId));
+            if (known == null || !ctx.getMerchantId().equals(known.merchantId)) throw fail("NOT_FOUND", HttpStatus.NOT_FOUND);
+            prepared.productId = known.productId;
+            prepared.skuId = known.skuId;
+            if (prepared.themeId == null) prepared.themeId = known.themeId;
+            if ("IN_STORE_GAME".equals(known.scene)) prepared.scene = known.scene;
+        }
+        if (prepared.productId == null && prepared.skuId != null) {
+            PmsSku sku = skus.selectPmsSkuById(prepared.skuId);
+            if (sku == null || sku.getProductId() == null) throw fail("PRODUCT_FORBIDDEN", HttpStatus.FORBIDDEN);
+            prepared.productId = sku.getProductId();
+        }
+        if (prepared.factVersion == null) prepared.factVersion = serverFactVersion(ctx.getMerchantId());
         if (prepared.productId == null && !"IN_STORE_GAME".equals(prepared.scene)) throw fail("PRODUCT_REQUIRED", HttpStatus.BAD_REQUEST);
         if (prepared.productId != null) requireProduct(ctx.getMerchantId(), prepared.productId, prepared.skuId);
         if (prepared.themeId != null && topics.selectCmsTopicById(prepared.themeId) == null) {
@@ -603,6 +645,13 @@ public class MerchantAuthoringService implements PublicReleaseFacts {
         }
         prepared.bindingKey = prepared.themeId == null ? "STORE" : "THEME";
         return prepared;
+    }
+
+    /** The store-fact version the server saw: the store row id and its last update time. */
+    private String serverFactVersion(Long merchantId) {
+        MmsMerchant merchant = merchants.selectMmsMerchantById(merchantId);
+        long updated = merchant == null || merchant.getUpdateTime() == null ? 0L : merchant.getUpdateTime().getTime();
+        return "STORE_ROW_V1:" + merchantId + ":" + updated;
     }
 
     private void requireProduct(Long merchantId, Long productId, Long skuId) {
