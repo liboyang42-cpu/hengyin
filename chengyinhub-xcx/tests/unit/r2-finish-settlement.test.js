@@ -56,7 +56,7 @@ test('r2-finish 结算页:注册在分包、挂隐私弹窗、评价走既有评
   const json = JSON.parse(read('subpackageJourney/pages/settle/index.json'))
   assert.ok(json.usingComponents['cy-privacy-gate'])
   const api = read('subpackageJourney/utils/journey-api.js')
-  assert.match(api, /rate: .*'\/api\/comment\/add', 'POST', \{ owner_type: ownerType, owner_id: ownerId, rating, contents, reply_id: 0 \}, false, true\)/)
+  assert.match(api, /rate: .*'\/api\/comment\/add', 'POST', \{ owner_type: ownerType, owner_id: ownerId, rating, contents, reply_id: 0, request_id: requestId \}, false, true\)/)
   const wxml = read('pages/play/index.wxml')
   assert.match(wxml, /<view class="finsheet__settle" wx:if="\{\{allDone && !isPreview && !isMock && topicId\}\}" bindtap="openSettlement"/)
   const settle = read('subpackageJourney/pages/settle/index.wxml')

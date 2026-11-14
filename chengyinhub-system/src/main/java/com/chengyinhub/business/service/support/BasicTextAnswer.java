@@ -11,6 +11,12 @@ public final class BasicTextAnswer {
     private BasicTextAnswer() {}
 
     public static boolean matches(String questionAnswer, String answer) {
+        // 旧规则命中仍然命中;共享归一器(NFKC/NBSP/U+3000/首尾标点/;分隔)只会多接受,不会少接受。
+        return matchesLegacy(questionAnswer, answer) || AnswerNormalizer.matchesAnyOf(questionAnswer, answer);
+    }
+
+    /** 归一器引入前的原判定,逐字保留;测试用它证明新规则是旧规则的超集。 */
+    static boolean matchesLegacy(String questionAnswer, String answer) {
         if (questionAnswer == null || questionAnswer.trim().isEmpty()) return false;
         String got = normalize(answer);
         if (got.isEmpty()) return false;

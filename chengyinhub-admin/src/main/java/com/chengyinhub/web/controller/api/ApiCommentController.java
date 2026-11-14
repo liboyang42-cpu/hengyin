@@ -62,6 +62,9 @@ public class ApiCommentController extends BaseController {
     @Autowired
     private IUmsCommentService umsCommentService;
 
+    @Autowired(required = false)
+    private RedisCache redisCache;
+
     @Autowired
     private ContentInteractionGuard contentInteractionGuard;
 
@@ -108,9 +111,57 @@ public class ApiCommentController extends BaseController {
             @Parameter(name = "rating", description = "评分0-5"),
             @Parameter(name = "contents", description = "评论内容"),
             @Parameter(name = "reply_id", description = "回复评论ID"),
-            @Parameter(name = "img_arr", description = "评论图片（多张）分号隔开")
+            @Parameter(name = "img_arr", description = "评论图片（多张）分号隔开"),
+            @Parameter(name = "request_id", description = "本次提交意图 ID(16-64 位字母数字_-),同一 ID 重试只落一条")
     })
+    public AjaxResult addComment(String owner_type, String owner_id, String rating, String contents, String reply_id, String img_arr,
+                                 @org.springframework.web.bind.annotation.RequestParam(value = "request_id", required = false) String request_id) {
+        Long requester = getAppUserId();
+        String dedupKey = commentRequestKey(requester, request_id);
+        if (dedupKey != null && redisCache != null) {
+            // E-B13:同一次提交意图(request_id)只落一条评论。响应丢失后重试,返回第一次已落库的那条。
+            Object prior = redisCache.getCacheObject(dedupKey);
+            if (prior != null && !COMMENT_REQUEST_PENDING.equals(String.valueOf(prior))) {
+                UmsComment existing = umsCommentService.selectUmsCommentById(Convert.toLong(prior, 0L));
+                if (existing != null && requester.equals(existing.getMemberId())) return success(existing);
+                redisCache.deleteObject(dedupKey);
+            }
+            if (!Boolean.TRUE.equals(redisCache.setIfAbsent(dedupKey, COMMENT_REQUEST_PENDING, 10, java.util.concurrent.TimeUnit.MINUTES))) {
+                return error("评论提交中，请稍后查看");
+            }
+        } else {
+            dedupKey = null;
+        }
+        boolean published = false;
+        try {
+            AjaxResult result = doAddComment(owner_type, owner_id, rating, contents, reply_id, img_arr);
+            Object data = result == null ? null : result.get(AjaxResult.DATA_TAG);
+            if (dedupKey != null && data instanceof UmsComment && ((UmsComment) data).getId() != null) {
+                redisCache.setCacheObject(dedupKey, ((UmsComment) data).getId(), 7, java.util.concurrent.TimeUnit.DAYS);
+                published = true;
+            }
+            return result;
+        } finally {
+            if (dedupKey != null && !published) {
+                try { redisCache.deleteObject(dedupKey); } catch (Exception ignored) { /* 10 分钟后自然过期 */ }
+            }
+        }
+    }
+
+    /** 兼容无 request_id 的旧调用(旧客户端与既有测试):不做意图去重。 */
     public AjaxResult addComment(String owner_type, String owner_id, String rating, String contents, String reply_id, String img_arr) {
+        return addComment(owner_type, owner_id, rating, contents, reply_id, img_arr, null);
+    }
+
+    private static final String COMMENT_REQUEST_PENDING = "PENDING";
+
+    static String commentRequestKey(Long memberId, String requestId) {
+        if (memberId == null || memberId <= 0 || requestId == null) return null;
+        String rid = requestId.trim();
+        return rid.matches("[A-Za-z0-9_-]{16,64}") ? "comment:add-request:" + memberId + ":" + rid : null;
+    }
+
+    private AjaxResult doAddComment(String owner_type, String owner_id, String rating, String contents, String reply_id, String img_arr) {
         UmsComment umsComment = new UmsComment();
         Long member_id = getAppUserId();
         // 参数校验

@@ -25,7 +25,7 @@ test('p1 F-1:十天后的探索场次,买完是「未开始」,不是「进行�
 });
 
 test('j3 F9:自玩通行证状态按能不能玩,不以「不可退款」当状态;过期是「已结束」', () => {
-  const pass = paid({ ownerType: 1, purchaseKind: 2, ticketId: null, expiresAt: '2026-12-04 23:59:59',
+  const pass = paid({ ownerType: 1, purchaseKind: 2, ticketId: null, expiresAt: '2026-12-04 23:59:59', firstSuccessfulScanAt: '2026-11-04 10:00:00',
     cmsTopic: { startDate: '2026-11-03', endDate: '2026-12-04' },
     refundInfo: { refundable: false, reason: '已开始，不可退款' } });
   const s = summarizeOrderState(pass, NOW);
@@ -49,7 +49,7 @@ test('date-only 结束日整天都算,date-only 值不显示 00:00', () => {
 });
 
 test('我的 订单卡:自玩通行证不写「待核销」,主题日期不带 00:00', () => {
-  const pass = paid({ ownerType: 1, purchaseKind: 2, expiresAt: '2026-12-04 23:59:59',
+  const pass = paid({ ownerType: 1, purchaseKind: 2, expiresAt: '2026-12-04 23:59:59', firstSuccessfulScanAt: '2026-11-04 10:00:00',
     cmsTopic: { name: 'T', startDate: '2026-11-03', endDate: '2026-12-04' }, refundInfo: { refundable: false } });
   assert.equal(isOpenOrder(pass, NOW), true);
   const card = shapeOrderPreview(pass, null, NOW);
@@ -91,7 +91,7 @@ test('订单详情:自玩通行证只说一次不可退款,没有核销/集合�
     cmsTopic: { id: 3, name: 'T', productType: 1, startDate: '2026-11-03', endDate: '2026-12-04' },
     refundInfo: { refundable: false, reason: '已开始，不可退款' } }));
   assert.equal(d.loadState, 'ready');
-  assert.equal(d.info.statusText, '进行中');
+  assert.equal(d.info.statusText, '可使用');   // 付了款还没开局:能玩、没玩,不写「进行中」
   const visible = JSON.stringify([d.info.statusText, d.stateNotice, d.orderTimeline]);
   assert.ok(!/不可退款/.test(visible), visible);
   assert.ok(!d.stateNotice.tag);

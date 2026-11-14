@@ -92,6 +92,7 @@ function createCheckoutWorkflow(deps) {
   var generation = 0;
   var activeControl = null;
   var paymentTimer = null;
+  var reconcileCurrent = null; // unknown 时可再核一次原订单(「刷新订单状态」/轮询)
 
   function call(fn, arg) { if (typeof fn === 'function') fn(arg); }
   function current(run) { return !destroyed && run === generation; }
@@ -142,14 +143,49 @@ function createCheckoutWorkflow(deps) {
         return;
       }
       state = 'paying';
-      var paymentSettled = false;
-      function paymentResult(payRes, callbackMissing) {
-        if (!current(run) || paymentSettled) return;
-        paymentSettled = true;
+      var paymentSettled = false; // 终态已落定(成功/取消/失败),之后不再核对
+      var callbackReceived = false; // SDK 真回调只处理一次
+      var reconcileToken = 0;
+      // E-B7:核对原订单(超时旁路 / 用户点「刷新订单状态」/ 轮询共用)。
+      // 它只读服务端终态:确认已付才结算;其余一律停在 unknown,绝不把「还没回调」当失败或丢弃真回调。
+      function reconcile() {
+        if (!current(run) || paymentSettled) return false;
+        var token = ++reconcileToken;
+        if (!verifyPayment) {
+          state = 'unknown';
+          call(handlers.onPayUnknown, { ok: false, status: 'unknown', errMsg: '支付结果未知，请到订单查看，暂不要重复支付' });
+          return true;
+        }
+        state = 'verifying';
+        call(handlers.onPayVerifying, data);
+        var settledNow = false;
+        var control = verifyPayment(data, function (verifyRes) {
+          settledNow = true;
+          if (!current(run) || token !== reconcileToken || paymentSettled) return;
+          activeControl = null;
+          if (verifyRes && verifyRes.ok) {
+            paymentSettled = true;
+            state = 'done';
+            call(handlers.onPaySuccess, data);
+          } else {
+            state = 'unknown';
+            call(handlers.onPayUnknown, verifyRes && verifyRes.status === 'unknown' ? verifyRes
+              : { ok: false, status: 'unknown', errMsg: '支付结果未知，请到订单查看，暂不要重复支付' });
+          }
+        });
+        if (!settledNow) remember(control);
+        return true;
+      }
+      reconcileCurrent = reconcile;
+      function paymentResult(payRes) {
+        if (!current(run) || paymentSettled || callbackReceived) return;
+        callbackReceived = true;
+        reconcileToken += 1; // 真回调到了:作废在途的旁路核对
+        reconcileCurrent = null;
         if (paymentTimer !== null) clearTimer(paymentTimer);
         paymentTimer = null;
         activeControl = null;
-        if (callbackMissing || payRes && payRes.ok) {
+        if (payRes && payRes.ok) {
           if (verifyPayment) {
             state = 'verifying';
             call(handlers.onPayVerifying, data);
@@ -159,32 +195,35 @@ function createCheckoutWorkflow(deps) {
               if (!current(run)) return;
               activeControl = null;
               if (verifyRes && verifyRes.ok) {
+                paymentSettled = true;
                 state = 'done'; // 支付成功只可能进 done 一次
                 call(handlers.onPaySuccess, data);
               } else if (verifyRes && verifyRes.status === 'unknown') {
                 state = 'unknown'; // 结果不明时禁止重建订单，必须从订单页/服务端回读
+                reconcileCurrent = reconcile; // 允许继续「刷新订单状态」核对
                 call(handlers.onPayUnknown, verifyRes);
               } else {
+                paymentSettled = true;
                 state = 'idle'; // 验证失败可重试(如订单终态仍为非支付,用户可手动重查)
                 call(handlers.onPayFail, safePaymentFailure(verifyRes, '支付确认失败，请稍后重试'));
               }
             });
             if (!verificationSettled) remember(verifyControl);
           } else {
-            state = callbackMissing ? 'unknown' : 'done';
-            if (callbackMissing) call(handlers.onPayUnknown, { ok: false, status: 'unknown',
-              errMsg: '支付结果未知，请到订单查看，暂不要重复支付' });
-            else call(handlers.onPaySuccess, data);
+            paymentSettled = true;
+            state = 'done';
+            call(handlers.onPaySuccess, data);
           }
         } else {
+          paymentSettled = true;
           state = 'idle'; // 取消/失败可重试
           if (payRes && payRes.cancelled) call(handlers.onPayCancel);
           else call(handlers.onPayFail, safePaymentFailure(payRes, '支付失败，请重试'));
         }
       }
-      // SDK 无回调只触发同一原订单的核账，不推断支付失败或再次拉起支付。
-      paymentTimer = setTimer(function () { paymentResult(null, true); }, paymentCallbackTimeoutMs);
-      var payControl = requestPayment(data, function (payRes) { paymentResult(payRes, false); });
+      // SDK 迟迟没回调:只启动旁路核对原订单,不推断失败、不再拉起支付、也不丢弃随后到达的真回调。
+      paymentTimer = setTimer(function () { paymentTimer = null; reconcile(); }, paymentCallbackTimeoutMs);
+      var payControl = requestPayment(data, function (payRes) { paymentResult(payRes); });
       if (state === 'paying') remember(payControl);
     });
     if (state === 'submitting') remember(orderControl);
@@ -197,6 +236,11 @@ function createCheckoutWorkflow(deps) {
       destroyed = true;
       generation += 1;
       stopActive();
+    },
+    /** unknown 时再核一次原订单:确认已付 → onPaySuccess;仍不明 → 回 unknown。不建新单、不再拉起支付。 */
+    recheck: function () {
+      if (state !== 'unknown' || destroyed || typeof reconcileCurrent !== 'function') return false;
+      return reconcileCurrent();
     },
     getState: function () { return state; },
     isBusy: function () { return state === 'submitting' || state === 'paying' || state === 'verifying'; },

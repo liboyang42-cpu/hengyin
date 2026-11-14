@@ -2033,9 +2033,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             // 格式非法时放行 = 时段限定静默失效,商家配了等于没配。
             throw new IllegalStateException("时段限定配置无效，请商家修正开放时段后再试");
         }
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(clock.now());
-        int nowMinute = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
+        // 时段门按业务时区(Asia/Shanghai)取分钟,不依赖 JVM 默认时区(-Duser.timezone)。
+        java.time.ZonedDateTime businessNow = clock.now().toInstant().atZone(BUSINESS_ZONE);
+        int nowMinute = businessNow.getHour() * 60 + businessNow.getMinute();
         boolean open = from < to
                 ? (nowMinute >= from && nowMinute < to)
                 : (nowMinute >= from || nowMinute < to);   // 跨夜
