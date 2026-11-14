@@ -1,0 +1,18 @@
+-- TEST-only fixture for the 8125 curl checks on cy_gap_rw (feature/be-gap-rewards-workshop). Never run elsewhere.
+-- Merchant 9002 (store 8001) pledges coupon 970001 on topic 992001; 9004 reviews; 9009 already completed 992001.
+INSERT INTO sms_coupon(id, name, member_id, merchant_id, status, del_flag, publish_count, receive_count, use_count, start_time, end_time, enable_time, scope_type, coupon_type, create_time)
+  VALUES (970001, 'RW TEST pledge coupon', 9002, 8001, 1, 0, 100, 0, 0, '2026-11-13 00:00:00', '2026-12-31 00:00:00', '2026-11-13 00:00:00', 1, 0, NOW());
+INSERT INTO merchant_chapter_offer(topic_id, chapter_id, merchant_id, quota_total, quota_used, status, terms_mode, create_by, create_time)
+  VALUES (992001, 992011, 9002, 0, 0, 1, 'TRAFFIC', 'be-gap-rw', NOW());
+INSERT INTO w17_reward_policy(policy_code, rule_version, decision, actor_member_id) VALUES
+  ('REVIEWER', '', 'OPEN', 9004), ('RULE', 'rw-test-1', 'OPEN', NULL), ('CLAIM', 'rw-test-1', 'OPEN', NULL), ('STORE_HOLD', '', 'OPEN', NULL);
+-- content_json has the shape WorkshopService.freeze() stores (originalTemplateId 0, personal scope).
+-- 9003 holds one paid ACTIVE workshop license (order line 970201) and installed it into private draft 970301.
+INSERT INTO workshop_version(version_id, seller_id, request_id, request_hash, module_id, source_canonical_id, content_hash, content_json, terms_hash, terms_json, price_fen)
+  VALUES ('WKV_035e7b9cac2c4e2491079d43558b1854', 9002, 'rw-fixture-version', '36407f19eb6c275056898180a2e722aa26182425471ca1ab6cbdbd5a116e5d04', 970101, 970101, 'b1042e6171866990bb251adb89d55556688a73e76868fe000bc4ec9dc47104a2', '{"adoptSourceOnly":false,"description":"E2E licensed route text","isSync":0,"originalTemplateId":0,"scope":"personal","title":"RW TEST licensed text"}', '7f5b2f27e33da1d3df8a02e2e1ecdbc627d634dc82d022c4b335f449af0adfc0', '{"allowedRegions":["310000"],"commercialUse":false,"installLimit":3,"text":"TEST terms","version":"t1"}', 100);
+INSERT INTO workshop_order(id, order_no, buyer_id, request_id, request_hash, version_id, provider, state, license_status, amount_fen, paid_at)
+  VALUES (970201, 'WKO_53c8ea485d3949eeb657285ba5333480', 9003, 'rw-fixture-order', 'ed6657cfb0718d57c43baaeaacaee44b1bd69ae7ec0429c10f3f3ec825441675', 'WKV_035e7b9cac2c4e2491079d43558b1854', 'WECHAT_APP', 'PAID', 'ACTIVE', 100, NOW());
+INSERT INTO cms_member_template(id, member_id, title, del_flag, draft_status, status, publish_status, create_time, update_time)
+  VALUES (970301, 9003, 'RW TEST installed draft', 0, 0, 0, 0, NOW(), NOW());
+INSERT INTO workshop_install(buyer_id, request_id, order_no, command_hash, command_json, outcome_json, draft_id, installed_at)
+  VALUES (9003, '005ffe01-8c94-4ddd-9f8b-e3082646b031', 'WKO_53c8ea485d3949eeb657285ba5333480', '42b6fabd7b796b6460c1085360f58af049d3d3429c7ec69c72bb2dbed7003345', '{}', '{}', 970301, NOW());

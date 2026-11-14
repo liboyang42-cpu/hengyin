@@ -1,0 +1,66 @@
+login 13900000009                                          OK  http=200 code=200 role=player 
+login 13900000004                                          OK  http=200 code=200 role=player 
+login 13900000002                                          OK  http=200 code=200 role=merchant 
+login 13900000003                                          OK  http=200 code=200 role=club 
+noncash list signed out -> 401                             OK  http=401 code=401  
+pledges signed out -> 401                                  OK  http=401 code=401  
+pledges as a player (no merchant access) -> 403            OK  http=200 code=403  
+draft -> receipt APPLIED                                   OK  http=200 code=200  
+draft replay -> same receipt                               OK  http=200 code=200  
+draft same id, other payload -> 409 CONFLICT               OK  http=200 code=409  
+draft CASH (switch ON) -> 409 CASH_REWARD_UNSUPPORTED      OK  http=200 code=409  
+ops read draft                                             OK  http=200 code=200  
+submit -> receipt key = draft version                      OK  http=200 code=200  
+confirm -> CONFIRMED                                       OK  http=200 code=200  
+owned pledges                                              OK  http=200 code=200 store=8001 
+review queue as non-reviewer -> 409 POLICY_CLOSED          OK  http=200 code=409  
+review queue (REVIEWER policy actor)                       OK  http=200 code=200 items=1 
+freeze -> FROZEN                                           OK  http=200 code=200  
+review version read-back FROZEN                            OK  http=200 code=200  
+catalog subject 992001                                     OK  http=200 code=200  
+offer (completed THEME fact)                               OK  http=200 code=200  
+offer without a completion -> errorCode NO_AUTHORITATIVE_FACT OK  http=200 code=200  
+claim -> AWARDED                                           OK  http=200 code=200  
+claim replay -> same award                                 OK  http=200 code=200  
+recover by original requestId                              OK  http=200 code=200  
+list (RewardPledgeAwardRow array)                          OK  http=200 code=200  
+page (NonCashRewardService)                                OK  http=200 code=200  
+detail (award view)                                        OK  http=200 code=200  
+detail with frozen reference (NonCash wire)                OK  http=200 code=200  
+detail with a different reference -> 404                   OK  http=200 code=404  
+someone else's award -> 404                                OK  http=200 code=404  
+store awards                                               OK  http=200 code=200  
+preview (state AWARDED, useStatus 0)                       OK  http=200 code=200  
+resolve coupon dynamic code -> award                       OK  http=200 code=200 token=True 
+redeem without confirm -> 400                              OK  http=200 code=400  
+redeem -> REDEEMED                                         OK  http=200 code=200  
+redeem again -> ALREADY_USED                               OK  http=200 code=200  
+expire after redeem -> receipt, expiredNow false           OK  http=200 code=200  
+ops read expire                                            OK  http=200 code=200  
+return-to-pool without policy -> POLICY_CLOSED             OK  http=200 code=409  
+stats (asOf, awardCount, conserved)                        OK  http=200 code=200  
+hold (STORE_HOLD open) -> receipt                          OK  http=200 code=200  
+withdraw -> WITHDRAWN                                      OK  http=200 code=200  
+ops read withdraw                                          OK  http=200 code=200  
+ops read from another identity -> 403                      OK  http=200 code=403  
+open case                                                  OK  http=200 code=200  
+read case                                                  OK  http=200 code=200  
+someone else's case -> 404                                 OK  http=200 code=404  
+CASH_REFUND case with the TEST switch ON -> OPEN           OK  http=200 code=200  
+targets signed out -> 401                                  OK  http=401 code=401  
+targets list (owner's topics)                              OK  http=200 code=200 items=2 
+target detail                                              OK  http=200 code=200 mode=CITY_ORIENTATION 
+targets with someone else's license -> 404                 OK  http=404 code=404  
+submit -> CREATED (SYSTEM review, guarded private template) OK  http=200 code=200 templateId=992107 
+submit replay -> same operation                            OK  http=200 code=200  
+status -> CREATED                                          OK  http=200 code=200  
+status from someone else -> NOT_FOUND                      OK  http=200 code=200  
+cancel a CREATED one -> stays CREATED                      OK  http=200 code=200  
+submit with a stale hash -> REJECTED + app code            OK  http=200 code=200  
+cancel before submit -> CANCELLED                          OK  http=200 code=200  
+late submit of a cancelled id -> CANCELLED                 OK  http=200 code=200  
+history (3 intents on this license)                        OK  http=200 code=200 scanned=3 
+malformed command -> 400                                   OK  http=400 code=400  
+template row: 992107	9003	0	0	0	0
+events: AUTHOR:PENDING,SYSTEM:APPROVED,AUTHOR:PENDING,SYSTEM:REJECTED,AUTHOR:CANCELLED
+SUMMARY 63/63 OK

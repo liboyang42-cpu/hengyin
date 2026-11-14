@@ -34,6 +34,7 @@ public interface WorkshopMapper {
     Map<String,Object> versionRequest(@Param("owner") long owner, @Param("requestId") String requestId);
     int reserveOrder(Map<String,Object> row);
     Map<String,Object> lockOrder(String orderNo);
+    Map<String,Object> lockOrderById(long id);
 
     /** Locks only the draft's license order row (the alias-scoped lock clause is rejected by the app's Druid wall). */
     Map<String,Object> lockLicenseOrderForDraft(long draftId);

@@ -373,6 +373,38 @@ public class WorkshopService {
         });
     }
 
+    /** What a W18 professional materialization re-checks, inside the caller's transaction (rows are locked). */
+    public record ProfessionalSource(String orderNo, String versionId, long moduleId, String contentHash, String termsHash,
+                                     long ownedDraftId, long draftRevision, String draftPayloadHash,
+                                     CmsTemplatePublishRequest snapshot) {}
+
+    /** The paid, ACTIVE license with order line id {@code orderLineId}, its exact purchased version, and the private
+     * draft that install {@code installRequestId} created from it, fingerprinted the way {@link #targets} reports it. */
+    public ProfessionalSource professionalSource(long owner,long orderLineId,String installRequestId) {
+        member(owner); key(installRequestId);
+        var line = mapper.lockOrderById(orderLineId);
+        if (line == null) throw failure(404,"LICENSE_NOT_FOUND");
+        var order = paidOwned(owner,text(line,"order_no"),true);
+        var receipt = mapper.install(owner,installRequestId);
+        if (receipt == null || receipt.get("draft_id")==null) throw failure(404,"INSTALL_NOT_FOUND");
+        same(receipt,"order_no",order.get("order_no"));
+        var v = version(text(order,"version_id"));
+        long draftId = number(receipt,"draft_id");
+        var draft = mapper.lockDraft(draftId);
+        privateOwned(draft,owner);
+        CmsTemplatePublishRequest snapshot = decode(text(v,"content_json"),CmsTemplatePublishRequest.class);
+        return new ProfessionalSource(text(order,"order_no"),text(v,"version_id"),number(v,"module_id"),text(v,"content_hash"),
+                text(v,"terms_hash"),draftId,revision(draft),targetHash(draft),snapshot);
+    }
+
+    /** One more private, unpublished member draft for the owner. Never published or attached to a node here. */
+    public long createGuardedTemplate(CmsTemplatePublishRequest snapshot,long owner,String username) {
+        Long id = drafts.installWorkshopSnapshot(snapshot,owner,username);
+        var created = id == null ? null : mapper.lockDraft(id);
+        privateOwned(created,owner);
+        return id;
+    }
+
     private CmsTemplatePublishRequest sourceSnapshot(long owner,long sourceId) {
         if(mapper.lockLicenseForDraft(sourceId)!=null) throw failure(409,"PAID_SOURCE_MUST_BE_INDEPENDENT_PRIVATE_DRAFT");
         CmsMemberTemplate source=mapper.lockDraft(sourceId);
