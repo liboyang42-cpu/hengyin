@@ -309,7 +309,7 @@ test('漫游历史区分本地读取失败与真实空记录，并移除文字�
   const empty = mount(relativePath, {}, { getStorageSync() { return [] } })
   empty.instance._load()
   assert.equal(empty.instance.data.state, 'ready')
-  assert.deepEqual(empty.instance.data.list, [])
+  assert.equal(empty.instance.data.list.length, 0)
 
   const wxml = read('components/cy/scene-roam-history/index.wxml')
   assert.match(wxml, /state === 'error'/)

@@ -83,6 +83,7 @@ const { currentScene, exitDecision, popScene, pushScene } = require('../../utils
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
 const { roam3dFor } = require('../../utils/map-style.js'); const mapSwitch = require('../../utils/map-style-switch.js'); const mapSnap = require('../../utils/map-snapshot.js'); const { routeGeo } = require('../../utils/roam-route-geo.js');
 const photoPins = require('./photo-pins.js');
+const { createMarkerIds } = require('../../utils/roam-marker-ids.js');
 const placeMap = require('../../utils/roam-place-map.js');
 const { resolvePlaceMedia } = require('../../utils/roam-place-media.js');
 function stripDistText(from, p) {
@@ -113,16 +114,8 @@ const FOG_FEATHER = 1.6;
 const FOG_UPDATE_MS = 2000;  // poly 全量替换有一帧透底(闪白),放宽节流降频
 const PLAYER_MK = 99;
 const STATUS_MARKER_ID = 99997;
-/* 后端真 POI(/api/roam/pois)的 marker id 基数。微信 <map> 的 marker id 契约是数字
-   (见 utils/roam-hangout.js:4 自述),原来用 'r'+id 字符串下发 —— 真机上针可能点不动,
-   而 demo 点位的数字针正常。编进 70 万段:与商家条目(nodeId/id/9000+i)、上面两个固定值、
-   下面其他人的头像(800000+下标)都错开。onMarkerTap 仍按 p.id 全等匹配,不需要反解。 */
+// 业务 POI 的本地身份；原生 marker 另按类型分配，不用业务 ID 推断点击类型。
 const ROAM_POI_MK_BASE = 700000;
-/* 第九轮 m1 第 5 项:拉远时的密度小圆点。onMarkerTap 先认它,再认 RUNNER_MK_BASE 段。 */
-const DOT_MK_BASE = 960000;
-/* 附近正在漫游的人(原型 otherRunners)。marker id = 基数 + 下标,一次最多 20 个,
-   撞不上 POI 的 id(那批来自 nodeId / id / 9000+i / 700000+roamPoiId),也撞不上上面两个固定值。 */
-const RUNNER_MK_BASE = 800000;
 /* 上报自己的位置:30 s 一次。再密没有意义 —— 服务端把坐标截到约 100 m 一格,
    走不满一格的上报是同一个值。 */
 const PRESENCE_MS = 30000;
@@ -929,6 +922,7 @@ Page({
           gpsOk: auth['scope.userLocation'] === true,
           bgGpsOk: auth['scope.userLocationBackground'] === true,
         });
+        if (!this._hidden && !this._unloaded && this.data.screen === 'entry-map' && !this.data.entryLocated && auth['scope.userLocation'] === true && typeof wx.getLocation === 'function') this.enableEntryLocation(true);
       },
     });
   },
@@ -1123,10 +1117,10 @@ Page({
     }
   },
   onShow() {
-    this._syncRoamPermission();
     // P1-6:兜里短接的读数立即补一次,不等下一拍 1s
     this._hidden = false;
     if (this._clock) this._syncStats();
+    this._syncRoamPermission();
     this.setData({ fontScaleStyle: readPageStyle(), roamPageShown: true });
     this._syncMapKindPref();
     if (this._realOn) this._flushTrackLine();
@@ -2569,6 +2563,13 @@ Page({
 
   _syncMarkers() {
     const mk = [];
+    const targets = this._markerTargets = new Map();
+    const allocate = this._markerIds || (this._markerIds = createMarkerIds());
+    const markerId = (kind, key, target) => {
+      const id = allocate(kind, key);
+      targets.set(id, { kind, target });
+      return id;
+    };
     // 原生气泡不吃 --cy-type-scale:按手机字号同一倍率算出字号(1~1.3,只放大)
     const calloutFont = mapFontSize(11, readFontScale());
     const mapStates = [];
@@ -2587,7 +2588,7 @@ Page({
       if (p.state === 'fog') {
         // A2.1(业主默认):未发现的漫游点以变暗的「?」剪影图钉画在玩家约 1 公里内;不带名字、不带分类,走到点亮后才完整显示
         if (pinMode !== 'dots' && p._roamId && !p.demo && placeMap.isMysteryVisible(p, this._player)) {
-          mk.push({ id: p.id, latitude: p.lat, longitude: p.lng, width: 30, height: 36, anchor: { x: 0.5, y: 1 }, zIndex: 3, alpha: 0.7, iconPath: placeMap.PIN_DIR + 'pin-unknown.png' });
+          mk.push({ id: markerId('poi', p._roamId ? 'roam:' + p._roamId : p.id, p), latitude: p.lat, longitude: p.lng, width: 30, height: 36, anchor: { x: 0.5, y: 1 }, zIndex: 3, alpha: 0.7, iconPath: placeMap.PIN_DIR + 'pin-unknown.png' });
         }
         return;
       }
@@ -2609,7 +2610,7 @@ Page({
       const nodeStyle = buildNodeLevelMarkerStyle(p.nodeLevel, stateKey);
       const size = state.key === 'target' ? 50 : (p.isCityNode ? nodeStyle.size : 34);
       const m = {
-        id: p.id,
+        id: markerId('poi', p._roamId ? 'roam:' + p._roamId : p.id, p),
         latitude: place.lat,
         longitude: place.lng,
         width: size,
@@ -2740,7 +2741,7 @@ Page({
       // A2.4:圆点按分类着色,叠在同一屏幕格的点聚合成一枚并写数量;点开放大到那一片(onMarkerTap 的 DOT_MK_BASE 分支)
       const dotRows = (this._pois || []).filter((p) => !p.demo && p.lat && p.lng).map((p) => ({ id: Number(p._roamId || p.id) || 0, type: p.cat === 'merchant' ? 2 : 1, tags: p.tags, lat: p.lat, lng: p.lng, name: p.name }));
       const dots = placeMap.buildPins(dotRows, { soloDots: true, scale: pinScale, region: layoutRegion, viewport: this._fogScreenSize, fontSize: calloutFont });
-      dots.markers.forEach((d, i) => mk.push(Object.assign({}, d, { id: DOT_MK_BASE + i, zIndex: 2, callout: d.callout })));
+      dots.markers.forEach((d, i) => mk.push(Object.assign({}, d, { id: markerId('dot', i, d), zIndex: 2, callout: d.callout })));
     }
     const goalStateKey = this.data.goal && this.data.goal.stateKey;
     if (goalStateKey === 'location-off' || goalStateKey === 'offline') {
@@ -2749,7 +2750,7 @@ Page({
       mapStates.push({ nodeId: STATUS_MARKER_ID, state: goalStateKey });
       if (anchor && anchor.lat != null && anchor.lng != null) {
         const status = {
-          id: STATUS_MARKER_ID,
+          id: markerId('status', STATUS_MARKER_ID),
           latitude: anchor.lat + m2lat(42),
           longitude: anchor.lng,
           width: 38,
@@ -2764,11 +2765,11 @@ Page({
     }
     // 别人(原型 otherRunners)。排在自己之前 push,zIndex 也压自己一头之下 ——
     // 屏上永远分得清哪一个是「我」。
-    (this._runners || []).forEach((r, i) => {
+    (this._runners || []).forEach((r) => {
       const key = 'runner-' + r.memberId;
       if (!this._icons || !this._icons[key]) return;   // 图还没画出来就先不画这个人,不放一个空白方块上去
       mk.push({
-        id: RUNNER_MK_BASE + i,
+        id: markerId('runner', r.memberId, r),
         latitude: r.lat,
         longitude: r.lng,
         width: 44,
@@ -2791,7 +2792,7 @@ Page({
     if (p && this.data.mapReady) {
       const playerSize = this._playerAvatarIcon ? 48 : 40;
       const pm = {
-        id: PLAYER_MK,
+        id: markerId('player', PLAYER_MK),
         latitude: p.lat,
         longitude: p.lng,
         width: playerSize,
@@ -4298,7 +4299,7 @@ Page({
     this._fetchRunners(p);
     this._maybeRefetchPois(p);
 
-    const km = ((this._dist || 0) / 1000).toFixed(2);
+    const km = formatDistance((this._dist || 0) / 1000);
     const patch = {};
     if (km !== this._stats.distance) { this._stats.distance = km; this._rollStat('distance', km); }
 
@@ -4421,6 +4422,7 @@ Page({
 
   /* ============ 附近 POI:商家横滑 banner / 地标 pace 卡 ============ */
   _checkNear(p) {
+    if (this.data.placeCard && this._placeCardPoi) this.setData({ placeCard: this._placeCardFor(this._placeCardPoi) });
     // 二选一卡开着时不刷新附近 banner:banner 会在 mask(z90)下静默堆积成过期提示;GPS/雾照常走
     if (this.data.visit.active || this.data.discoverReward.show) return;
     const card = this.data.paceCard;
@@ -4484,21 +4486,17 @@ Page({
   },
 
   onMarkerTap(e) {
-    if (e.detail.markerId === PLAYER_MK || e.detail.markerId === STATUS_MARKER_ID) return;
-    // 第九轮 m1 第 5 项:拉远时点一个小圆点 = 放大到那一片(照片图钉在近处才出现)
-    if (e.detail.markerId >= DOT_MK_BASE && e.detail.markerId < DOT_MK_BASE + 100000) {
-      const dot = (this.data.markers || []).find((m) => m.id === e.detail.markerId);
-      if (dot && dot.id >= DOT_MK_BASE) { this._hold = Date.now(); this.setData({ center: { lat: dot.latitude, lng: dot.longitude }, mapScale: photoPins.DOT_SCALE + 2 }); }
+    const marker = this._markerTargets && this._markerTargets.get(Number(e.detail.markerId));
+    if (!marker) return;
+    if (marker.kind === 'dot') {
+      const dot = marker.target;
+      this._hold = Date.now();
+      this.setData({ center: { lat: dot.latitude, lng: dot.longitude }, mapScale: photoPins.DOT_SCALE + 2 });
       return;
     }
-    // 别人的头像:id 是 RUNNER_MK_BASE + 下标,按下标回本地那一批取人
-    if (e.detail.markerId >= RUNNER_MK_BASE) {
-      const row = (this._runners || [])[e.detail.markerId - RUNNER_MK_BASE];
-      if (row) this.openRunner(row.memberId);
-      return;
-    }
-    const poi = (this._pois || []).find((p) => p.id === e.detail.markerId);
-    if (!poi) return;
+    if (marker.kind === 'runner') { this.openRunner(marker.target.memberId); return; }
+    if (marker.kind !== 'poi') return;
+    const poi = marker.target;
     // A2.1:「?」剪影只告诉玩家还差多远,不开卡、不露名字
     if (poi.state === 'fog' && poi._roamId) {
       const gap = placeMap.gapText(placeMap.distanceFrom(this._player, poi) - (poi.radiusM || 80));
@@ -6592,7 +6590,7 @@ Page({
       this._refreshStrip();
     });
   },
-  enableEntryLocation() {
+  enableEntryLocation(automatic) {
     if (this._entryLocating) return;
     this._entryLocating = true;
     wx.getLocation({ type: 'gcj02',
@@ -6602,7 +6600,7 @@ Page({
         this.setData({ center: { lat: r.latitude, lng: r.longitude }, entryLocated: true, entryFarCards: [] });
         this._loadEntryMap(this.data.center);
       },
-      fail: () => { if (!this._unloaded) wx.openSetting({ fail() {} }); },
+      fail: () => { if (!this._unloaded && automatic !== true) wx.openSetting({ fail() {} }); },
       complete: () => { this._entryLocating = false; } });
   },
 

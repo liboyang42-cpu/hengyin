@@ -66,4 +66,9 @@ function formatStartTime(value) {
   return date ? String(date.hours).padStart(2, '0') + ':' + String(date.minutes).padStart(2, '0') : ''
 }
 
-module.exports = { readNonNegative, readDurationSeconds, footprintCount, formatDistance, formatDuration, formatStartTime }
+function sessionDateParts(record) {
+  const { chinaParts } = require('./datetime.js')
+  return chinaParts(record.startedAt || record.ts)
+}
+
+module.exports = { sessionDateParts, readNonNegative, readDurationSeconds, footprintCount, formatDistance, formatDuration, formatStartTime }

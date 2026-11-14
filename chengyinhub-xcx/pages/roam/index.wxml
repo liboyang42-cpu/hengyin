@@ -742,7 +742,7 @@
     <view class="darr"></view>
   </view>
   <view class="drow" bindtap="openRoamSettings" aria-role="button" aria-label="设置" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--gear"></view>
+    <view class="dic"><cy-icon name="settings" size="40" /></view>
     <view class="dcopy"><text class="dt">设置</text></view>
     <view class="darr"></view>
   </view>
@@ -799,7 +799,7 @@
   </view>
   <!-- 下面三行都跟着系统定位权限走:它们不是本机偏好,给个能勾却不影响任何事的假开关是骗人 -->
   <view class="drow" bindtap="openRoamLocationSetting" aria-role="button" aria-label="位置权限，{{gpsOk ? '已允许' : '未允许'}}" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--info"></view>
+    <view class="dic"><cy-icon name="pin-solid" size="40" /></view>
     <view class="dcopy"><text class="dt">位置权限</text></view>
     <text class="dv">{{gpsOk ? '开' : '关'}}</text>
     <view class="darr"></view>
@@ -997,9 +997,9 @@
 <!-- ===================== 结算页(Figma 3992:18005)=====================
      原 arrive「已收队」+ finish 拱形卡两屏合成这一张:时间行 + 标题/✕ + 巨号公里数 +
      六格数据 + 真轨迹图 + 主 CTA 分享。结算/上报的错误行保留在数据格下方 —— 屏换了错误不许跟着消失。 -->
-<view class="settle" wx:if="{{screen=='arrive'}}">
+<view class="settle" wx:if="{{screen=='arrive'}}" style="padding-top:{{chrome.contentTop}}px;">
   <scroll-view scroll-y class="settle__scroll">
-    <view class="settle__meta" style="padding-top:{{chrome.actionTop}}px">{{finish.dateLine}}</view>
+    <view class="settle__meta">{{finish.dateLine}}</view>
     <view class="settle__headrow">
       <text class="settle__title">{{finish.zone}} · 自由漫游</text>
       <view class="settle__x" bindtap="closeSettle" aria-role="button" aria-label="关闭结算页" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="44" /></view>
@@ -1057,13 +1057,13 @@
       <!-- 2026-10-27 owner P-34:「查看漫游数据」改成浮在地图上的按钮 -->
       <view class="settle__mapbtn" bindtap="openPassport" aria-role="button" aria-label="查看漫游数据" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="route" size="28" /><text>查看漫游数据</text></view>
     </view>
+  </scroll-view>
     <view class="settle__ctaw" style="padding-bottom:calc({{settleSafeBottom}}px + var(--cy-space-6));">
       <view class="settle__cta" bindtap="openShare" aria-role="button" aria-label="分享足迹卡" hover-class="cy-pressed" hover-stay-time="80">分享</view>
       <view class="settle__minor">
         <text class="settle__minor-act" bindtap="openSettleHistory" aria-role="button" aria-label="漫游记录" hover-class="cy-pressed" hover-stay-time="80">漫游记录</text>
       </view>
     </view>
-  </scroll-view>
 </view>
 
 <!-- ===================== 首次发现商家 · 券/任务二选一仪式卡 ===================== -->

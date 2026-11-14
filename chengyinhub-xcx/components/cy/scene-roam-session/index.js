@@ -1,7 +1,7 @@
 'use strict'
 
 const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js')
-const { readNonNegative, footprintCount, formatDistance, formatDuration } = require('../../../utils/roam-history-metrics.js')
+const { readNonNegative, footprintCount, formatDistance, formatDuration, sessionDateParts } = require('../../../utils/roam-history-metrics.js')
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js')
 const { buildReplaySchedule, buildRouteGeometry, replayFrame } = require('./route-replay.js')
 const { createReader } = require('../../../utils/roam-passport-read.js')
@@ -150,9 +150,8 @@ Component({
       })
     },
     _normalize(raw) {
-      const timestamp = Number(raw.ts)
-      const date = new Date(Number.isFinite(timestamp) && timestamp > 0 ? timestamp : NaN)
-      const validDate = !Number.isNaN(date.getTime())
+      const date = sessionDateParts(raw)
+      const validDate = !!date
       // distance 兼容老记录的 "0.2" 字符串(见 utils/roam-history-metrics.js);
       // 0 仍是 0。UI-04(2026-09-18):读不出来的统计位显示 0,不再显示横杠
       // (时长仍按文本处理,读不出来保留「—」)。
@@ -164,7 +163,7 @@ Component({
       const unknownCount = raw.serverFact ? '—' : '0'
       return {
         ...raw,
-        dateFull: validDate ? `${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]}` : '日期不可用',
+        dateFull: validDate ? `${date.month}月${date.day}日 周${WEEK[date.weekday]}` : '日期不可用',
         time: formattedDuration || '—',
         distance,
         distanceText: distance === null ? unknownCount : formatDistance(distance),

@@ -5,7 +5,7 @@ const test = require('node:test')
 
 const {
   bindPlayerRoamMemory,
-  clearStoragePreservingPlayerRoamMemory,
+  clearStorageForLogout,
   createPlayerRoamMemory,
 } = require('../../utils/roam-player-memory.js')
 
@@ -95,7 +95,7 @@ test('首次登录前绑定的匿名页可在取得玩家身份后升级一次',
   assert.ok(storage.snapshot()['roam_memory_v1:101:tiles'])
 })
 
-test('正常退出只清账号态，保留各玩家独立的漫游历史与恢复记录', () => {
+test('正常退出清除账号态和本机漫游历史与恢复记录', () => {
   const storage = memoryStorage({
     authorization: 'local-auth',
     role: 'player',
@@ -105,26 +105,19 @@ test('正常退出只清账号态，保留各玩家独立的漫游历史与恢�
     'roam_memory_v1:202:sessions': [{ sessionId: '52', distance: 0.8 }],
   })
 
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.equal(clearStorageForLogout(storage), true)
 
   const snapshot = storage.snapshot()
   assert.equal(snapshot.authorization, undefined, '正常退出不能保留本地凭据')
   assert.equal(snapshot.role, undefined)
   assert.equal(snapshot.user_id, undefined)
-  assert.deepEqual(createPlayerRoamMemory('101', storage).readSessions(), [
-    { sessionId: '34', distance: 1.2 },
-  ])
-  assert.deepEqual(createPlayerRoamMemory('101', storage).readRecoveryState().record, {
-    sessionId: '34', elapsedSeconds: 25,
-  })
-  assert.deepEqual(createPlayerRoamMemory('202', storage).readSessions(), [
-    { sessionId: '52', distance: 0.8 },
-  ])
-  assert.deepEqual(createPlayerRoamMemory('202', storage).readRecoveryState().record, null,
-    '不同账号只能读取自己的玩家桶')
+  for (const owner of ['101', '202']) {
+    assert.deepEqual(createPlayerRoamMemory(owner, storage).readSessions(), [])
+    assert.equal(createPlayerRoamMemory(owner, storage).readRecoveryState().record, null)
+  }
 })
 
-test('退出清理不读取或搬运漫游业务值，只删除非业务键', () => {
+test('退出清理直接删除漫游缓存，不读取或搬运业务值', () => {
   const sessions = [{ sessionId: '34', distance: 1.2 }]
   const recovery = { sessionId: '34', elapsedSeconds: 25 }
   const values = {
@@ -145,12 +138,12 @@ test('退出清理不读取或搬运漫游业务值，只删除非业务键', ()
     },
   }
 
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.equal(clearStorageForLogout(storage), true)
   assert.deepEqual(calls, { reads: 0, writes: 0, clears: 0 })
   assert.equal(values.authorization, undefined)
   assert.equal(values.role, undefined)
-  assert.equal(values['roam_memory_v1:101:sessions'], sessions)
-  assert.equal(values['roam_memory_v1:101:recovery'], recovery)
+  assert.equal(values['roam_memory_v1:101:sessions'], undefined)
+  assert.equal(values['roam_memory_v1:101:recovery'], undefined)
 })
 
 test('存储键列表读取失败时失败关闭，不清任何值', () => {
@@ -169,7 +162,7 @@ test('存储键列表读取失败时失败关闭，不清任何值', () => {
     },
   }
 
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), false)
+  assert.equal(clearStorageForLogout(storage), false)
   assert.deepEqual(values, before)
   assert.equal(clearCalls, 0)
 })
@@ -192,7 +185,7 @@ test('删除本地账号键失败时返回失败且绝不删除漫游桶', () =>
     },
   }
 
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), false)
+  assert.equal(clearStorageForLogout(storage), false)
   assert.equal(values.authorization, 'local-auth')
   assert.equal(values['roam_memory_v1:101:recovery'], recovery)
   assert.equal(clearCalls, 0)
@@ -210,12 +203,12 @@ test('退出只保留严格账号同意台账，不保留全局选择、重试�
   const storage = memoryStorage(Object.fromEntries(rejected.map(key => [key, 'must-delete'])))
   storage.setStorageSync('cy_usage_pending_v1:7', completed)
   storage.setStorageSync('cy_usage_pending_v1:8', pending)
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.equal(clearStorageForLogout(storage), true)
   assert.equal(storage.getStorageSync('cy_usage_pending_v1:7'), completed)
   assert.equal(storage.getStorageSync('cy_usage_pending_v1:8'), pending)
   for (const key of rejected) assert.equal(storage.getStorageSync(key), undefined, key)
   const nonStringKeys = [null, 7, {}, true], removed = []
-  assert.equal(clearStoragePreservingPlayerRoamMemory({
+  assert.equal(clearStorageForLogout({
     getStorageInfoSync: () => ({ keys: nonStringKeys }),
     removeStorageSync: key => removed.push(key),
   }), true)
@@ -229,7 +222,7 @@ test('POI UNKNOWN identity survives account cleanup without preserving photo pay
     'cy_roam_poi_checkin_pending:v1:7:9223372036854775808', key + ':extra']
   const storage = memoryStorage({ [key]: record, [key + ':photo']: { url: 'temporary-photo' }, authorization: 'fixture',
     ...Object.fromEntries(invalid.map(k => [k, {}])) })
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.equal(clearStorageForLogout(storage), true)
   assert.deepEqual(storage.snapshot(), { [key]: record })
 })
 
@@ -238,7 +231,7 @@ test('share revoke UNKNOWN marker survives cleanup scoped to an exact owner', ()
   const key = 'roam_share_revoke_pending:9223372036854775807'
   const storage = memoryStorage({ [key]: 1, 'roam_share_revoke_pending:0': 1,
     'roam_share_revoke_pending:9223372036854775808': 1, 'roam_share_revoke_pending:7:photo': 'private' })
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.equal(clearStorageForLogout(storage), true)
   assert.deepEqual(storage.snapshot(), { [key]: 1 })
 })
 
@@ -247,7 +240,7 @@ test('public TEAM command slot survives cleanup for exact owner/target only', ()
   const pending = { version: 1, actor: '7', domain: 'TEAM', targetId: '9223372036854775807', command: { requestId: 'a'.repeat(32), targetId: '9223372036854775807', action: 'apply' } }
   const storage = memoryStorage({ [key]: pending, 'cy-team-event-command-v1:0:TEAM:7': {},
     'cy-team-event-command-v1:7:TEAM:9223372036854775808': {}, authorization: 'fixture' })
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  assert.equal(clearStorageForLogout(storage), true)
   assert.deepEqual(storage.snapshot(), { [key]: pending })
 })
 
@@ -266,7 +259,8 @@ test('TEAM/EVENT/SIGNUP and invitation scope UNKNOWN survive cleanup and reopen 
   }
   const retained = storage.snapshot()
   delete retained.authorization
-  assert.equal(clearStoragePreservingPlayerRoamMemory(storage), true)
+  delete retained['roam_memory_v1:7:sessions']
+  assert.equal(clearStorageForLogout(storage), true)
   assert.deepEqual(storage.snapshot(), retained)
   for (const [i, spec] of cases.entries()) {
     for (const actor of ['8', '7']) {
@@ -295,14 +289,14 @@ test('unreadable or identity-inconsistent command slot blocks cleanup before any
   for (const record of bad) {
     const storage = memoryStorage({ authorization: 'fixture', [key]: record })
     const before = storage.snapshot()
-    assert.equal(clearStoragePreservingPlayerRoamMemory(storage), false)
+    assert.equal(clearStorageForLogout(storage), false)
     assert.deepEqual(storage.snapshot(), before)
   }
   for (const failure of ['throw', 'missing']) {
     const storage = memoryStorage({ authorization: 'fixture', [key]: good })
     const before = storage.snapshot()
     storage.getStorageSync = failure === 'throw' ? () => { throw Error('read unavailable') } : undefined
-    assert.equal(clearStoragePreservingPlayerRoamMemory(storage), false)
+    assert.equal(clearStorageForLogout(storage), false)
     assert.deepEqual(storage.snapshot(), before)
   }
 })
@@ -314,7 +308,7 @@ test('scope encoding and terminal receipt identity are checked without rewriting
   for (const suffix of ['scope:invite%3Afixture', 'scope:bad%ZZ', 'scope:invite%3afixture']) {
     const key = 'cy-team-event-command-v1:7:TEAM:' + suffix
     const storage = memoryStorage({ [key]: good })
-    assert.equal(clearStoragePreservingPlayerRoamMemory(storage), suffix === 'scope:invite%3Afixture')
+    assert.equal(clearStorageForLogout(storage), suffix === 'scope:invite%3Afixture')
     assert.deepEqual(storage.snapshot(), { [key]: good })
   }
 })

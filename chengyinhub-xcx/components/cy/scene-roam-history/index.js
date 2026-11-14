@@ -2,7 +2,7 @@
 
 const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js'); const pageMotion = require('../../../utils/page-motion.js')
 const { validRecovery } = require('../../../utils/roam-recovery.js')
-const { readNonNegative, readDurationSeconds, formatDistance, formatDuration } = require('../../../utils/roam-history-metrics.js')
+const { readNonNegative, readDurationSeconds, formatDistance, formatDuration, sessionDateParts } = require('../../../utils/roam-history-metrics.js')
 const { routeGeo } = require('../../../utils/roam-route-geo.js')
 const { createReader, merge } = require('../../../utils/roam-passport-read.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
@@ -101,8 +101,8 @@ Component({
       this._nextBefore = null
       const localWarning = this.data.state === 'error'
       this._sessions = merge(this._localSessions, previous)
-      if (previous.length) this._sync()
-      this.setData({ remoteLoading: true, remoteError: false, hasMore: false, localWarning })
+      this._sync()
+      this.setData({ remoteLoading: true, remoteError: false, hasMore: false, localWarning, state: localWarning && !previous.length ? 'error' : 'ready' })
       return this._loadRemotePage(reader)
     },
     async _loadRemotePage(reader) {
@@ -155,10 +155,10 @@ Component({
     _sorted() {
       const list = (this._sessions || []).map((session) => {
         const timestamp = this._timestamp(session && session.ts)
-        const date = new Date(timestamp || NaN)
-        const validDate = !Number.isNaN(date.getTime())
+        const date = sessionDateParts(session)
+        const validDate = !!date
         const dateText = validDate
-          ? `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]}`
+          ? `${date.year}年${date.month}月${date.day}日 周${WEEK[date.weekday]}`
           : '日期不可用'
         const zone = String((session && session.zone) || '').trim()
         const code = (zone || '漫游').replace(/[的这那片街区]/g, '').slice(0, 2) || '城西'
@@ -173,11 +173,11 @@ Component({
           historyKey: session.historyKey || 'local:' + session.ts,
           dateFull: dateText,
           dateShort: validDate
-            ? `${date.getMonth() + 1}/${date.getDate()}/${String(date.getFullYear()).slice(2)}`
+            ? `${date.month}/${date.day}/${String(date.year).slice(2)}`
             : '日期不可用',
           title: (zone && zone !== '这片街区' ? zone : '城市') + '漫游',
-          dateCard: validDate ? `${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]} · ${['凌晨', '上午', '下午', '晚上'][Math.floor(date.getHours() / 6)]}` : '日期不可用',
-          monthText: validDate ? `${date.getFullYear()}年${date.getMonth() + 1}月` : '',
+          dateCard: validDate ? `${date.month}月${date.day}日 周${WEEK[date.weekday]} · ${['凌晨', '上午', '下午', '晚上'][Math.floor(date.hours / 6)]}` : '日期不可用',
+          monthText: validDate ? `${date.year}年${date.month}月` : '',
           route: routeView(session && session.track, session && session.pois),
           // V3-40:有轨迹坐标就画真实底图,没有才用上面的示意图
           geo: routeGeo(session && session.track, session && session.pois),

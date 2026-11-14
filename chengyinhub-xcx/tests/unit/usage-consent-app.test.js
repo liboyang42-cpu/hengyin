@@ -40,7 +40,7 @@ async function logoutThroughSettings(h) {
   assert.equal(h.storage.has('authorization'),false);
   assert.equal(h.storage.has('cy_usage_choice_v1'),false);
   assert.equal([...h.storage.keys()].some(key=>key.startsWith('cy_consent_retry:')),false);
-  assert.equal(h.storage.get('roam_memory_v1:7:sessions')[0].sessionId,'logout-fixture');
+  assert.equal(h.storage.has('roam_memory_v1:7:sessions'),false);
   assert.equal(h.wx.relaunched,'/pages/index/index');
 }
 async function reloginAfterLogout(h,owner='7') {

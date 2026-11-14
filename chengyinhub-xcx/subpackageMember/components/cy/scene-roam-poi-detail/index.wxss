@@ -23,6 +23,7 @@
 .poi-status { color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
 .poi-role { color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
 .poi-tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-1); padding: 0 var(--cy-space-3) var(--cy-space-3); }
+.poi-section .poi-tags { padding-left: 0; padding-right: 0; }
 .poi-tag, .poi-node__badge { padding: var(--cy-space-1) var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); }
 .poi-section, .poi-node { margin-top: var(--cy-space-3); }
 .poi-section__title, .poi-node__title { display: block; margin-bottom: var(--cy-space-2); color: var(--cy-color-text-primary); font-size: var(--cy-type-section-title); font-weight: 700; }

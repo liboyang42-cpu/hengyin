@@ -46,7 +46,8 @@ function shop(id, lat, lng) {
 test('N1:点报名商家的图钉开横滑卡,停在这一家;不再先出地点卡', () => {
   const page = loadRoamPage();
   page._pois = [shop(1, 31.21, 121.41), shop(2, 31.22, 121.42), shop(3, 31.215, 121.415)];
-  page.onMarkerTap({ detail: { markerId: 3 } });
+  page._syncMarkers();
+  page.onMarkerTap({ detail: { markerId: page._markerIds('poi', 3) } });
   assert.equal(page.data.shopStrip.rows.length, 3);
   assert.equal(page.data.shopStrip.idx, 2);
   assert.equal(page.data.shopStrip.rows[2].poiId, '3');
@@ -57,7 +58,8 @@ test('N1:点报名商家的图钉开横滑卡,停在这一家;不再先出地点
 test('N1:第 9 家以后的商家也能被点开,它会被放进条里', () => {
   const page = loadRoamPage();
   page._pois = Array.from({ length: 10 }, (_, i) => shop(i + 1, 31.2 + i * 0.001, 121.4));
-  page.onMarkerTap({ detail: { markerId: 10 } });
+  page._syncMarkers();
+  page.onMarkerTap({ detail: { markerId: page._markerIds('poi', 10) } });
   assert.equal(page.data.shopStrip.rows.length, 8);
   assert.equal(page.data.shopStrip.rows[page.data.shopStrip.idx].poiId, '10');
 });
@@ -65,7 +67,8 @@ test('N1:第 9 家以后的商家也能被点开,它会被放进条里', () => {
 test('N1:不是报名商家的地点照旧出地点卡', () => {
   const page = loadRoamPage();
   page._pois = [{ id: 700005, name: '据点', lat: 31.21, lng: 121.41, cat: 'landmark', state: 'seen', _roamId: 5, isCityNode: true, merchantId: 9, photo: '' }];
-  page.onMarkerTap({ detail: { markerId: 700005 } });
+  page._syncMarkers();
+  page.onMarkerTap({ detail: { markerId: page._markerIds('poi', 'roam:5') } });
   assert.equal(page.data.shopStrip.rows.length, 0);
   assert.ok(page.data.placeCard);
 });
