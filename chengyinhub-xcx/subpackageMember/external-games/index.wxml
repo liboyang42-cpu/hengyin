@@ -1,0 +1,29 @@
+<view class="theme-dark eg">
+  <cy-toast id="cy-toast" />
+  <view style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="外部游戏" safe-top="{{false}}" />
+    <view class="eg__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="4" />
+      <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="目录加载失败" primary="重试" bind:primary="retry" />
+      <cy-state-shell wx:elif="{{state === 'empty'}}" kind="empty" title="还没有上架的外部游戏" />
+      <block wx:else>
+        <view class="eg-row" wx:for="{{rows}}" wx:key="gameId" data-id="{{item.gameId}}" bindtap="openDetail"
+              aria-role="button" aria-label="{{item.name}}，查看详情" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="eg-row__main">
+            <view class="eg-row__head">
+              <text class="eg-row__title">{{item.name}}</text>
+              <cy-tag wx:if="{{item.ratingText}}" variant="mono">{{item.ratingText}}</cy-tag>
+            </view>
+            <text class="eg-row__sub" wx:if="{{item.summary}}">{{item.summary}}</text>
+            <text class="eg-row__meta">{{item.author ? item.author + ' · ' : ''}}v{{item.version}}{{item.sizeText ? ' · ' + item.sizeText : ''}}</text>
+          </view>
+          <cy-icon class="eg-row__arrow" name="arrow-right" size="28" />
+        </view>
+        <view class="eg__more" wx:if="{{hasMore}}" bindtap="loadMore" aria-role="button" aria-label="加载更多外部游戏"
+              hover-class="cy-pressed" hover-stay-time="80">{{loadingMore ? '加载中' : '加载更多'}}</view>
+        <view class="eg__more eg__more--end" wx:else>已经到底了</view>
+      </block>
+    </view>
+  </view>
+</view>

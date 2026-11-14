@@ -541,6 +541,16 @@
             <text class="pc-benefit-text">邀请好友</text>
             <cy-icon class="pc-benefit-arrow" name="arrow-right" size="32" />
           </view>
+          <view class="pc-benefit" bindtap="goRewards" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="我的奖励">
+            <cy-icon class="pc-benefit-ic" name="star" size="48" />
+            <text class="pc-benefit-text">我的奖励</text>
+            <cy-icon class="pc-benefit-arrow" name="arrow-right" size="32" />
+          </view>
+          <view class="pc-benefit" bindtap="goExternalGames" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="外部游戏">
+            <cy-icon class="pc-benefit-ic" name="play" size="48" />
+            <text class="pc-benefit-text">外部游戏</text>
+            <cy-icon class="pc-benefit-arrow" name="arrow-right" size="32" />
+          </view>
         </view>
 
         <view class="pc-sec-tit">当前权益</view>

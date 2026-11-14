@@ -1,0 +1,30 @@
+<view class="theme-dark egd">
+  <view style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-skeleton wx:if="{{state === 'loading'}}" type="detail" />
+    <cy-state-shell wx:elif="{{state === 'missing'}}" kind="empty" title="游戏已下架或不存在" />
+    <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="详情加载失败" primary="重试" bind:primary="retry" />
+    <block wx:else>
+      <cy-page-title title="{{game.name}}" safe-top="{{false}}" />
+      <view class="egd__body">
+        <view class="egd__tags">
+          <cy-tag wx:if="{{game.ratingText}}" variant="mono">{{game.ratingText}}</cy-tag>
+          <cy-tag variant="mono">v{{game.version}}</cy-tag>
+        </view>
+        <text class="egd__summary" wx:if="{{game.summary}}">{{game.summary}}</text>
+
+        <view class="egd__notice" aria-role="text">
+          <cy-icon name="play" size="40" />
+          <text class="egd__notice-text">在城瘾 App 中游玩</text>
+        </view>
+
+        <view class="egd__facts">
+          <view class="egd__fact" wx:if="{{game.author}}"><text class="egd__k">作者</text><text class="egd__v">{{game.author}}</text></view>
+          <view class="egd__fact" wx:if="{{game.sizeText}}"><text class="egd__k">大小</text><text class="egd__v">{{game.sizeText}}</text></view>
+          <view class="egd__fact" wx:if="{{game.permissionText}}"><text class="egd__k">权限</text><text class="egd__v">{{game.permissionText}}</text></view>
+          <view class="egd__fact" wx:if="{{game.approvedText}}"><text class="egd__k">上架</text><text class="egd__v">{{game.approvedText}}</text></view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
