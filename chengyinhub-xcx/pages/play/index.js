@@ -7352,7 +7352,8 @@ Page({
         wx.getLocation({ type: 'gcj02', isHighAccuracy: true,
           success: (loc) => {
             if (!this._isPlayAccountCurrent() || session !== this._sessionKey()) return;
-            this._loc = arrivalReading.stamp({ longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy });
+            const fix = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };   // 精度原样带上,arrive 请求从 _loc 取
+            this._loc = arrivalReading.stamp(fix);
             if (typeof retry === 'function') retry();
           },
           fail: () => { if (this._isPlayAccountCurrent()) this._startRefusal('没有取到定位，请开启定位后重试', retry); } });

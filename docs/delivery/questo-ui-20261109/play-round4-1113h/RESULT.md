@@ -34,3 +34,7 @@
 
 ## 其他
 - 动作台账用 `npm run audit:actions:update` 重新生成。未改 ci/architecture、workflows、基线。
+
+门禁与测试:全量单测 17620 项,修复前 2 项失败(成就行测试补 stationLabel、开局定位写入口数契约)已改;UI 门禁 U4/U5 基线仅行号位移(1882→1889、8918→8962),keyDigest 按门禁 baselineKeyDigest 重算,不新增登记。
+
+STATUS: DONE
