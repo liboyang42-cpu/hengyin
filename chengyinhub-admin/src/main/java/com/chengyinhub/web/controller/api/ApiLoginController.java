@@ -274,6 +274,14 @@ public class ApiLoginController extends BaseController {
         if (member != null && view.get("nickName") == null && StringUtils.isNotBlank(member.getNickname())) {
             view.put("nickName", member.getNickname());
         }
+        // 手机号登录的会话对象同样不带 userType；与 /api/login/phone、/api/user/info 同源回落到会员 userType。
+        if (member != null && view.get("userType") == null) {
+            if (member.getUserType() != null) {
+                view.put("userType", member.getUserType().intValue());
+            } else {
+                view.put("userType", "merchant".equals(resolveMemberRole(member)) ? 2 : 1);
+            }
+        }
         ajax.put("appUser", view);
         return ajax;
     }

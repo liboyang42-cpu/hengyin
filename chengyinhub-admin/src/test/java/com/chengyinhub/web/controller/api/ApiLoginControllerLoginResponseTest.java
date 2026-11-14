@@ -7,6 +7,7 @@ import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.common.core.domain.entity.AppUser;
 import com.chengyinhub.common.core.domain.model.LoginAppUser;
 import com.chengyinhub.framework.web.service.AppLoginService;
+import com.chengyinhub.framework.web.service.SmsVerificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -42,6 +43,8 @@ class ApiLoginControllerLoginResponseTest {
     private MockMvc mockMvc;
     private LoginAppUser loginAppUser;
     private IUmsMemberService memberService;
+    private AppLoginService loginService;
+    private SmsVerificationService smsVerificationService;
 
     @BeforeEach
     void setUp() {
@@ -51,7 +54,8 @@ class ApiLoginControllerLoginResponseTest {
                 .thenReturn(Collections.singletonList(member));
         when(memberService.selectUmsMemberById(42L)).thenReturn(member);
         when(memberService.getOrCreateWechatMember("existing-openid")).thenReturn(member);
-        AppLoginService loginService = mock(AppLoginService.class);
+        loginService = mock(AppLoginService.class);
+        smsVerificationService = mock(SmsVerificationService.class);
         when(loginService.login("13800000000", "password", "existing-openid"))
                 .thenReturn("password-token");
         when(loginService.login("existing-openid")).thenReturn("code-token");
@@ -59,6 +63,7 @@ class ApiLoginControllerLoginResponseTest {
         ApiLoginController controller = new StubOpenIdLoginController(loginAppUser);
         ReflectionTestUtils.setField(controller, "umsMemberService", memberService);
         ReflectionTestUtils.setField(controller, "appLoginService", loginService);
+        ReflectionTestUtils.setField(controller, "smsVerificationService", smsVerificationService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -150,6 +155,64 @@ class ApiLoginControllerLoginResponseTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString())
                 .getJSONObject("appUser");
         assertEquals("player", appUser.getString("role"));
+    }
+
+    @Test
+    void userInfoPhoneSessionPopulatesMerchantRoleAndUserTypeFromMember() throws Exception {
+        AppUser phoneSessionUser = new AppUser();
+        phoneSessionUser.setUserId(9002L);
+        phoneSessionUser.setUserName("13900000002");
+        loginAppUser.setUserId(9002L);
+        loginAppUser.setAppUser(phoneSessionUser);
+
+        UmsMember merchant = new UmsMember();
+        merchant.setId(9002L);
+        merchant.setPhone("13900000002");
+        merchant.setNickname("商家老板");
+        merchant.setUserType(2L);
+        merchant.setRole("merchant");
+        merchant.setStatus(1L);
+        merchant.setDelFlag(0);
+        when(memberService.selectUmsMemberById(9002L)).thenReturn(merchant);
+
+        JSONObject appUser = JSON.parseObject(mockMvc.perform(post("/api/userInfo"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString())
+                .getJSONObject("appUser");
+        assertEquals("merchant", appUser.getString("role"));
+        assertEquals(2, appUser.getIntValue("userType"));
+        assertEquals("商家老板", appUser.getString("nickName"));
+    }
+
+    @Test
+    void phoneLoginReturnsMerchantRoleAndUserType() throws Exception {
+        UmsMember merchant = new UmsMember();
+        merchant.setId(9002L);
+        merchant.setPhone("13900000002");
+        merchant.setNickname("商家老板");
+        merchant.setUserType(2L);
+        merchant.setRole("merchant");
+        merchant.setAvatar("");
+        merchant.setStatus(1L);
+        merchant.setDelFlag(0);
+        UmsMember query = new UmsMember();
+        query.setPhone("13900000002");
+        when(memberService.selectUmsMemberList(any(UmsMember.class)))
+                .thenReturn(Collections.singletonList(merchant));
+        when(smsVerificationService.verify("13900000002", "123456", "127.0.0.1"))
+                .thenReturn(true);
+        when(loginService.loginByMember(merchant, "phone", "13900000002", null))
+                .thenReturn("merchant-phone-token");
+
+        mockMvc.perform(post("/api/login/phone")
+                        .param("phone", "13900000002")
+                        .param("code", "123456"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.token").value("merchant-phone-token"))
+                .andExpect(jsonPath("$.data.id").value(9002))
+                .andExpect(jsonPath("$.data.role").value("merchant"))
+                .andExpect(jsonPath("$.data.userType").value(2))
+                .andExpect(jsonPath("$.data.nickname").value("商家老板"));
     }
 
     private AppUser appUserWithSensitiveFields() {

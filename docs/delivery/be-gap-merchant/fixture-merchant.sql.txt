@@ -1,4 +1,5 @@
 -- TEST-only fixture for be-gap-merchant curl checks on cy_gap_merchant (8127). Never production.
+SET NAMES utf8mb4;
 SELECT IF(DATABASE() = 'cy_gap_merchant', 'ok', (SELECT 'wrong database' FROM information_schema.tables)) AS guard;
 -- CITY: two points of the gaps-a board belong to store 8001; four player visits (one rated, one skip, one plain, one other store).
 UPDATE city_game_point SET merchant_id = 8001 WHERE board_id = 'gapsa-board-1' AND point_id IN ('pt-a', 'pt-b');
