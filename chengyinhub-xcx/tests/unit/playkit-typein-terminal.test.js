@@ -119,3 +119,15 @@ test('等待服务器开始事实期间不能输入或重复开表；回读确�
   assert.equal(c.data.phase, 'run');
   assert.ok(c._t0 > 0);
 });
+
+test('E-A6 终端键盘:目标里键盘没有的字符按目标补键,且能打出来', () => {
+  const { c, update } = typein({ terminalSkin: true, target: 'Room 101!' });
+  assert.deepEqual(Array.from(c.data.extraKeys), ['1', '0', '!']);
+  c.onRun();
+  c.onKey({ currentTarget: { dataset: { key: '1' } } });
+  assert.equal(c.data.typed, '1', '数字键补出来后能输入');
+  c.onKey({ currentTarget: { dataset: { key: '9' } } });
+  assert.equal(c.data.typed, '1', '目标里没有的字符仍被拒');
+  assert.deepEqual(Array.from(typein({ terminalSkin: true, target: '故宫 AB', caseSensitive: true }).c.data.extraKeys), ['故', '宫', 'A', 'B']);
+  assert.equal(typein({ terminalSkin: true, target: 'ab' }).c.data.extraKeys.length, 0);
+});
