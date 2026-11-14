@@ -5,6 +5,7 @@ import com.chengyinhub.business.access.club.ClubPermission;
 import com.chengyinhub.business.access.club.IClubAccessService;
 import com.chengyinhub.business.appgaps.AppGapException;
 import com.chengyinhub.business.appgaps.ClubProxyEnrollService;
+import com.chengyinhub.business.appgaps.ClubWaitlistTickets;
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.dto.ClubAttendanceCorrectionRequest;
 import com.chengyinhub.business.domain.dto.ClubEventCampaignRequest;
@@ -59,11 +60,13 @@ public class ApiClubGapController extends AppGapController {
     private final IClubService clubService;
     private final IClubMemberService clubMembers;
     private final ClubProxyEnrollService proxyEnroll;
+    private final ClubWaitlistTickets tickets;
 
     public ApiClubGapController(ApiClubEventOpsController eventOps, ApiClubEventNotificationController notices,
                                 ApiClubController clubs, ApiClubSettlementController settlements,
                                 IGroupCodeService groupCodes, ChannelPlatformService channels, IClubAccessService clubAccess,
-                                IClubService clubService, IClubMemberService clubMembers, ClubProxyEnrollService proxyEnroll) {
+                                IClubService clubService, IClubMemberService clubMembers, ClubProxyEnrollService proxyEnroll,
+                                ClubWaitlistTickets tickets) {
         this.eventOps = eventOps;
         this.notices = notices;
         this.clubs = clubs;
@@ -74,20 +77,27 @@ public class ApiClubGapController extends AppGapController {
         this.clubService = clubService;
         this.clubMembers = clubMembers;
         this.proxyEnroll = proxyEnroll;
+        this.tickets = tickets;
     }
 
     // ---- 场次（报名页：候补与场次状态） ----
 
-    @Operation(summary = "加入候补 {activityId}（= /api/club/event-ops/waitlist/join）")
+    @Operation(summary = "加入候补 {activityId}（= /api/club/event-ops/waitlist/join；票种取该场次唯一可候补票种）")
     @PostMapping("/api/club/activity/join")
     public AjaxResult activityJoin(@RequestBody(required = false) ClubWaitlistRequest body) {
-        return eventOps.joinWaitlist(body);
+        member();
+        ClubWaitlistRequest scoped = waitlistScope(body);
+        if (scoped.getTicketId() == null) scoped.setTicketId(tickets.forJoin(scoped.getActivityId()));
+        return eventOps.joinWaitlist(scoped);
     }
 
-    @Operation(summary = "取消候补 {activityId}（= /api/club/event-ops/waitlist/cancel）")
+    @Operation(summary = "取消候补 {activityId}（= /api/club/event-ops/waitlist/cancel；票种取本人在该场次的候补）")
     @PostMapping("/api/club/activity/cancel")
     public AjaxResult activityCancel(@RequestBody(required = false) ClubWaitlistRequest body) {
-        return eventOps.cancelWaitlist(body);
+        Long me = member();
+        ClubWaitlistRequest scoped = waitlistScope(body);
+        if (scoped.getTicketId() == null) scoped.setTicketId(tickets.forCancel(me, scoped.getActivityId()));
+        return eventOps.cancelWaitlist(scoped);
     }
 
     @Operation(summary = "场次状态 {clubId, activityId}（= /api/club/event-ops/occurrence/status）")
@@ -236,6 +246,14 @@ public class ApiClubGapController extends AppGapController {
             data.put("exportedAt", System.currentTimeMillis());
         }
         return summary;
+    }
+
+    private static ClubWaitlistRequest waitlistScope(ClubWaitlistRequest body) {
+        if (body == null || body.getActivityId() == null || body.getActivityId() <= 0) throw AppGapException.badRequest("activityId");
+        ClubWaitlistRequest scoped = new ClubWaitlistRequest();
+        scoped.setActivityId(body.getActivityId());
+        scoped.setTicketId(body.getTicketId() != null && body.getTicketId() > 0 ? body.getTicketId() : null);
+        return scoped;
     }
 
     private void require(Long me, Long clubId, Long activityId, String permission, String errorCode) {

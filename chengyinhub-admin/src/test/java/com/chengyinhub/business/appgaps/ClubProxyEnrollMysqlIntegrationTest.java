@@ -57,6 +57,8 @@ class ClubProxyEnrollMysqlIntegrationTest {
                 + " publish_status BIGINT, cancel_time DATETIME NULL, end_date DATETIME NULL)");
         jdbc.execute("CREATE TABLE cms_registration (id BIGINT AUTO_INCREMENT PRIMARY KEY, member_id BIGINT, owner_type INT, owner_id BIGINT,"
                 + " registration_status INT)");
+        jdbc.execute("CREATE TABLE oms_ticket (id BIGINT PRIMARY KEY, owner_type INT, owner_id BIGINT, remaining_inventory BIGINT, del_flag TINYINT DEFAULT 0)");
+        jdbc.execute("CREATE TABLE club_event_waitlist (id BIGINT AUTO_INCREMENT PRIMARY KEY, member_id BIGINT, activity_id BIGINT, ticket_id BIGINT, state VARCHAR(16))");
         migrate("sql/migration_20261118_club_proxy_enroll.sql");
         migrate("sql/migration_20261118_club_proxy_enroll.sql"); // rerunnable
         jdbc.execute("INSERT INTO club(id, member_id, status, del_flag) VALUES (7001, 9003, 1, 0), (7002, 9008, 1, 0), (7003, 9003, 1, 2)");
@@ -117,6 +119,26 @@ class ClubProxyEnrollMysqlIntegrationTest {
         assertEquals("PROXY_ENROLL_ALREADY_REGISTERED", assertThrows(AppGapException.class, () -> service.propose(OWNER, CLUB, OPEN, MEMBER)).getErrorCode());
         assertEquals("INVITED", service.propose(OWNER, CLUB, OPEN, OWNER).get("state"), "the owner counts as a member of their own club");
         assertEquals(1, jdbc.queryForObject("SELECT COUNT(*) FROM club_proxy_enroll", Integer.class));
+    }
+
+    /** App activity/join|cancel send only {activityId}: the waitlist ticket is resolved only when it is unambiguous. */
+    @Test
+    void waitlistTicketIsResolvedOnlyWhenUnambiguous() {
+        ClubWaitlistTickets tickets = new ClubWaitlistTickets(jdbc);
+        jdbc.execute("INSERT INTO oms_ticket(id, owner_type, owner_id, remaining_inventory, del_flag) VALUES"
+                + " (1, 2, 992031, 5, 0), (2, 2, 992032, 0, 0), (3, 2, 992032, 4, 0), (4, 2, 992033, 0, 0), (5, 2, 992033, 0, 0),"
+                + " (6, 2, 992034, 0, 1), (7, 1, 992031, 0, 0)");
+        assertEquals(1L, tickets.forJoin(OPEN), "the only ticket of the session, even with seats left (the waitlist service then says so)");
+        assertEquals(2L, tickets.forJoin(ENDED), "the only sold-out ticket");
+        AppGapException two = assertThrows(AppGapException.class, () -> tickets.forJoin(CANCELLED));
+        assertEquals("TICKET_REQUIRED", two.getErrorCode());
+        assertEquals(List.of(4L, 5L), ((Map<?, ?>) two.getData()).get("ticketIds"));
+        assertEquals("TICKET_NOT_FOUND", assertThrows(AppGapException.class, () -> tickets.forJoin(OTHER_CLUB)).getErrorCode(), "deleted tickets do not count");
+        jdbc.execute("INSERT INTO club_event_waitlist(member_id, activity_id, ticket_id, state) VALUES"
+                + " (9004, 992033, 5, 'WAITING'), (9004, 992033, 4, 'CANCELLED'), (9005, 992033, 4, 'OFFERED'), (9005, 992033, 5, 'REQUESTED')");
+        assertEquals(5L, tickets.forCancel(MEMBER, CANCELLED), "the caller's own active entry, not the cancelled one");
+        assertEquals("TICKET_REQUIRED", assertThrows(AppGapException.class, () -> tickets.forCancel(ADMIN, CANCELLED)).getErrorCode());
+        assertEquals(1L, tickets.forCancel(MEMBER, OPEN), "no entry: the session's ticket (the waitlist service then answers nothing to cancel)");
     }
 
     private void migrate(String path) throws Exception {

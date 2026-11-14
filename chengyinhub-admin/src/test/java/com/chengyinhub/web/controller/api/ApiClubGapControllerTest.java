@@ -5,6 +5,7 @@ import com.chengyinhub.business.access.club.ClubPermission;
 import com.chengyinhub.business.access.club.IClubAccessService;
 import com.chengyinhub.business.appgaps.AppGapException;
 import com.chengyinhub.business.appgaps.ClubProxyEnrollService;
+import com.chengyinhub.business.appgaps.ClubWaitlistTickets;
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.dto.ClubAttendanceCorrectionRequest;
 import com.chengyinhub.business.domain.dto.ClubEventCampaignRequest;
@@ -48,6 +49,7 @@ class ApiClubGapControllerTest {
     private IClubService clubService;
     private IClubMemberService clubMembers;
     private ClubProxyEnrollService proxyEnroll;
+    private ClubWaitlistTickets tickets;
     private ApiClubGapController controller;
     private Long me;
 
@@ -63,9 +65,10 @@ class ApiClubGapControllerTest {
         clubService = mock(IClubService.class);
         clubMembers = mock(IClubMemberService.class);
         proxyEnroll = mock(ClubProxyEnrollService.class);
+        tickets = mock(ClubWaitlistTickets.class);
         me = OWNER;
         controller = new ApiClubGapController(eventOps, notices, clubs, settlements, groupCodes, channels, access,
-                clubService, clubMembers, proxyEnroll) {
+                clubService, clubMembers, proxyEnroll, tickets) {
             @Override
             public Long getAppUserId() {
                 if (me == null) throw new IllegalStateException("未登录");
@@ -77,21 +80,33 @@ class ApiClubGapControllerTest {
     // ---- aliases: the exact app body reaches the long-path controller ----
 
     @Test
-    void activityJoinIsTheWaitlistJoin() {
+    void activityJoinIsTheWaitlistJoinWithTheResolvedTicket() {
         ClubWaitlistRequest body = new ClubWaitlistRequest();
         body.setActivityId(ACTIVITY);
+        when(tickets.forJoin(ACTIVITY)).thenReturn(992041L);
         AjaxResult ok = AjaxResult.success();
-        when(eventOps.joinWaitlist(body)).thenReturn(ok);
+        when(eventOps.joinWaitlist(argThat(r -> r != null && r.getActivityId() == ACTIVITY && r.getTicketId() == 992041L))).thenReturn(ok);
         assertSame(ok, controller.activityJoin(body));
+        when(tickets.forJoin(ACTIVITY)).thenThrow(new AppGapException(400, "TICKET_REQUIRED", "多个票种"));
+        assertEquals("TICKET_REQUIRED", assertThrows(AppGapException.class, () -> controller.activityJoin(body)).getErrorCode());
+        assertEquals(400, assertThrows(AppGapException.class, () -> controller.activityJoin(new ClubWaitlistRequest())).getStatus());
+        me = null;
+        assertEquals(401, assertThrows(AppGapException.class, () -> controller.activityJoin(body)).getStatus());
     }
 
     @Test
-    void activityCancelIsTheWaitlistCancel() {
+    void activityCancelIsTheWaitlistCancelOfTheCallersOwnEntry() {
+        me = MEMBER;
         ClubWaitlistRequest body = new ClubWaitlistRequest();
         body.setActivityId(ACTIVITY);
-        AjaxResult ok = AjaxResult.success();
-        when(eventOps.cancelWaitlist(body)).thenReturn(ok);
+        when(tickets.forCancel(MEMBER, ACTIVITY)).thenReturn(992041L);
+        AjaxResult ok = AjaxResult.success(true);
+        when(eventOps.cancelWaitlist(argThat(r -> r != null && r.getActivityId() == ACTIVITY && r.getTicketId() == 992041L))).thenReturn(ok);
         assertSame(ok, controller.activityCancel(body));
+        body.setTicketId(7L);
+        controller.activityCancel(body);
+        verify(eventOps).cancelWaitlist(argThat(r -> r != null && r.getTicketId() == 7L));
+        verify(tickets, times(1)).forCancel(MEMBER, ACTIVITY);
     }
 
     @Test
