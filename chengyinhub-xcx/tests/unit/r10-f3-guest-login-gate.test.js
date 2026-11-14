@@ -94,7 +94,7 @@ test('k2:游客看俱乐部的成员与贡献榜,不再出「登录后查看」;
   const js = read('pages/club/detail/index.js');
   assert.match(js, /const canSeeRoster = canSeeClubRoster\(club\);/);
   assert.doesNotMatch(js, /loadLeaderboard\(\) \{\n\s*if \(!memberId\(app\)\) return;/);
-  assert.match(js, /if \(!memberId\) \{ if \(!this\.data\.myMemberId\) this\.onLoginRetry\(\); return; \}/);
+  assert.match(js, /if \(!memberId\) return;/);
 });
 
 test('申诉页的游客态不能用加载失败类 kind(会被渲染成空白)', () => {

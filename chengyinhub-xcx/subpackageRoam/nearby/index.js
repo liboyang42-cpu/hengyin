@@ -161,7 +161,7 @@ Page({
     const c = this.data.poiCard; if (c && c.official) this._loadSpot(c.id); // 挑战回来:完成状态、评价跟着刷新
   },
   onHide() {
-    this._hidden = true;
+    this._hidden = true; this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1;
     this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
     this._myReadSeq = (this._myReadSeq || 0) + 1;
     teamRecovery.dispose(this);
@@ -181,9 +181,7 @@ Page({
   },
 
   retryNearby() {
-    if (this.data.nearbyReadAccess === 'login') {
-      return session.retryLogin(this, app, function () { this.refresh(this.data.center); });
-    }
+    if (this._hidden || this._unloaded) return;
     this.refresh(this.data.center);
   },
 
@@ -205,11 +203,6 @@ Page({
     if (this._unloaded) return null;
     const owner = this._myIdentity();
     if (this._nearbyReadOwner !== owner) this._resetNearbyRead(owner);
-    if (!session.memberId(app)) {
-      this._resetNearbyRead(owner);
-      this.setData({ nearbyReadAccess: 'login' });
-      return null;
-    }
     return owner;
   },
 
@@ -225,14 +218,13 @@ Page({
     // 真实 request-client 重登失败会先清旧会话；仍必须清掉页面私有快照。
     if (owner !== nextOwner) {
       this._resetNearbyRead(nextOwner);
-      if (!session.memberId(app)) this.setData({ nearbyReadAccess: 'login' });
-      else if (!this._hidden && owner.split('|')[0] === String(session.memberId(app))) this.refresh(this.data.center);
+      if (!this._hidden) this.refresh(this.data.center);
       return true;
     }
     const code = session.failureStatus(res, statusCode);
     if (code !== 401 && code !== 403) return false;
     this._resetNearbyRead(nextOwner);
-    this.setData({ nearbyReadAccess: code === 401 ? 'login' : 'denied' });
+    this.setData({ nearbyReadAccess: code === 403 ? 'denied' : '', loadError: code === 401 });
     return true;
   },
 
@@ -627,6 +619,7 @@ Page({
   },
 
   apply() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('team', () => this.apply(), { owner: this, target: () => [this.data.current && this.data.current.teamId] })) return;
     const cur = this.data.current;
     if (!cur || this.data.busy) return;
     const that = this;
@@ -1041,6 +1034,7 @@ Page({
   },
   /* 开始挑战:先在卡里确认到没到,不到就在卡上写一句,不弹窗;到了进挑战页(拍照 / 答题 / 勋章各一屏) */
   _startChallenge() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('roam', () => this._startChallenge(), { owner: this, target: () => [this.data.poiCard && this.data.poiCard.id] })) return;
     const c = this.data.poiCard;
     if (!c || this._navigating) return;
     if (c.game && c.game.completed) { // 完成过:接原来的「投一张换一张」城市签
@@ -1067,6 +1061,7 @@ Page({
   closeSpotCam() { this.setData({ camOpen: false }); },
   /* 拍到一张:先传上去拿地址,再进整屏玩法(答题 → 勋章);上传失败回到卡片,卡上写原因 */
   onSpotShot(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('roam', () => this.onSpotShot(e), { owner: this, target: () => [this.data.poiCard && this.data.poiCard.id] })) return;
     const path = (e && e.detail && e.detail.path) || '';
     const c = this.data.poiCard;
     this.setData({ camOpen: false });
@@ -1101,6 +1096,7 @@ Page({
   onReviewStar(e) { this.setData({ 'poiCard.myStars': Number(e.currentTarget.dataset.n) || 0 }); },
   onReviewInput(e) { this.setData({ 'poiCard.myText': e.detail.value }); },
   onReviewSubmit() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('post', () => this.onReviewSubmit(), { owner: this, target: () => [this.data.poiCard && this.data.poiCard.id, this.data.poiCard && this.data.poiCard.myStars, this.data.poiCard && this.data.poiCard.myText] })) return;
     const c = this.data.poiCard;
     if (!c || c.reviewBusy) return;
     const text = String(c.myText || '').trim();

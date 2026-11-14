@@ -7,7 +7,7 @@ const analytics = require('../../../../utils/analytics.js')
 const { chinaDayStart, toTimestamp } = require('../../../../utils/datetime.js')
 const { isRecordList } = require('../../../../utils/response-shape.js')
 const { ticketWindowPassed, ticketWindowText } = require('../../../../utils/ticket-window.js')
-const { isLoginRequired, retryLogin } = require('../../../../utils/session/login-reload.js')
+
 const mediaPreview = require('../../../../utils/media-preview.js')
 
 function ok(res) { return res && (res.code === 200 || res.code === '200') }
@@ -337,17 +337,9 @@ Component({
         return
       }
       this._loadingId = ''
-      // PR10 F-W1-12:未登录(无会话 / 401)不是加载失败 —— 给登录引导,其余失败仍按 load-failure 留白
-      if (isLoginRequired(app, res, status)) {
-        this.setData({ state: 'login', errorMsg: '登录已过期，请重新进入' })
-        return
-      }
       this.setData({ state: 'error', errorMsg })
     },
 
-    loginRetry() {
-      retryLogin(this, app, function () { this.retry() })
-    },
 
     retry() {
       this._loadingId = ''

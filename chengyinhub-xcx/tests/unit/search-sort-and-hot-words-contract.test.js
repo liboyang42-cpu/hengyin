@@ -103,13 +103,14 @@ test('CU-M-66 结果页收下 sortType 但不把它映射成 sort_type(「最近
 
   const guest = loadPage(RESULT_MODULE, null, '')
   guest.page.onLoad({ keyword: encodeURIComponent('外滩'), sortType: '1' })
-  const activity = guest.requests.find((item) => item.url === '/api/activity/list')
-  assert.ok(activity, '游客结果页必须发起活动搜索')
+  const activity = guest.requests.find((item) => item.url === '/api/search/unified')
+  assert.ok(activity, '2026-11-14：游客结果页同样发起公开内容搜索')
+  assert.equal(activity.method, 'GET')
   assert.equal(activity.data.sort_type, undefined, 'sort_type=1 是「附近」,不是「最近」')
 
   // 没带排序(历史链接/直接进入)时不传,走服务端默认
   const plain = loadPage(RESULT_MODULE, null, '')
   plain.page.onLoad({ keyword: encodeURIComponent('外滩') })
   assert.equal(plain.page._filters.sortType, '')
-  assert.equal(plain.requests.find((item) => item.url === '/api/activity/list').data.sort_type, undefined)
+  assert.equal(plain.requests.find((item) => item.url === '/api/search/unified').data.sort_type, undefined)
 })

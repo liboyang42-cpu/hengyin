@@ -13,7 +13,7 @@ const community = require('../../../utils/community-post-api.js').createClient(a
 const FEED_PAGE_SIZE = 20;
 const clubPostRepost = require('../../../utils/club-post-repost.js');
 const postFeedActions = require('../../../utils/post-feed-actions.js');
-const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+
 
 // 主理人 L1-L5 等级对外文案(俱乐部继承展示;level=0 不显示)
 const LEVEL_LABELS = ['', 'L1 新手', 'L2 稳定', 'L3 成熟', 'L4 城市运营者', 'L5 区域策划方'];
@@ -119,7 +119,7 @@ Page({
 
   // r2-store 通票入口卡:玩家视角、已登录、服务端有在售通票才出;读失败就不出,不占位。每次进页只读一次。
   loadStoreCard() {
-    if (this.data.isMerchantViewer || !app.getUserID()) { if (this.data.storeCard) this.setData({ storeCard: null }); return; }
+    if (this.data.isMerchantViewer) { if (this.data.storeCard) this.setData({ storeCard: null }); return; }
     if (this._storeCardRead) return;
     this._storeCardRead = true;
     const that = this;
@@ -159,18 +159,14 @@ Page({
     ctx.done = true;
     this._feedLoading = false;
     if (ctx.loadMore) return;
-    const loginRequired = !ctx.hasSnapshot && isLoginRequired(app, res);
     this.setData({
       feedState: ctx.hasSnapshot ? 'stale-error' : 'error',
-      feedLoginRequired: loginRequired,
-      feedError: loginRequired ? '' : requestError(res, '动态加载失败，请重试'),
+      feedLoginRequired: false,
+      feedError: requestError(res, '动态加载失败，请重试'),
     });
   },
 
-  retryFeed() {
-    if (!this.data.feedLoginRequired) return this.loadFeed();
-    retryLogin(this, app, function () { this.loadFeed(); this.loadClubHome(); });
-  },
+  retryFeed() { return this.loadFeed(); },
 
   _feedSources(requestId) {
     const that = this;
@@ -484,7 +480,7 @@ Page({
   },
 
   // 2026-10-24 owner 拍板「游客可浏览」:游客读公开俱乐部目录(/api/club/list,匿名可读、只出公开可见团),
-  // 卡片照常可点进详情;「加入」走写前登录弹窗。目录读失败才退回原「登录后查看我的俱乐部」入口态。
+  // 2026-11-14：目录失败正常重试；「加入」仍走写前登录弹窗。
   loadGuestClubs() {
     const that = this;
     const requestId = (this._clubHomeRequestId || 0) + 1;
@@ -492,8 +488,8 @@ Page({
     const isCurrent = () => !that._unloaded && requestId === that._clubHomeRequestId && !String(app.getUserID() || '');
     const loginEntry = () => {
       if (!isCurrent()) return;
-      that.setData({ clubsLoginRequired: true, clubsPermissionDenied: false, clubsError: true,
-        clubsState: 'error', clubsErrorText: '' });
+      that.setData({ clubsLoginRequired: false, clubsPermissionDenied: false, clubsError: true,
+        clubsState: 'error', clubsErrorText: '俱乐部加载失败，请重试' });
     };
     app.sendRequest({
       complete() { wx.stopPullDownRefresh(); },

@@ -142,7 +142,7 @@ public class ApiPlayTeamController extends BaseController {
     public AjaxResult nearby(Double lat, Double lng, Integer radius) {
         if (lat == null || lng == null) return error("缺少定位");
         try {
-            return AjaxResult.success(playTeamService.nearby(memberId(), lat, lng, radius == null ? 0 : radius));
+            return AjaxResult.success(playTeamService.nearby(optionalMemberId(), lat, lng, radius == null ? 0 : radius));
         } catch (RuntimeException e) {
             return fail(e);
         }

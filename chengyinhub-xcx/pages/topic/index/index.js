@@ -4,7 +4,7 @@ const toast = require('../../../utils/toast.js');
 const app = getApp();
 const { chinaParts } = require('../../../utils/datetime.js');
 const themeRecords = require('../../../utils/theme-records.js');
-const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+
 function recordsRequest(url, method, data, header) {
   return new Promise(resolve => app.sendRequest({ url, method, data, header, hideLoading: true, autoErrorToast: false,
     success: res => resolve(res || {}), successStatusAbnormal: () => resolve({ code: 'fail' }), fail: () => resolve({ code: 'fail', netFail: true }) }));
@@ -155,8 +155,7 @@ Page({
     loadError: false,
     topicLoaded: false,
     missingTopicId: false,
-    // PR10 F-W1-12:未登录(无会话 / 401)读失败给登录引导,其余加载失败仍按 load-failure 留白
-    loginRequired: false,
+    // 2026-11-14：公开主题读失败直接重试，写入仍走登录闸。
     // 拍板 2026-09-16 #10:发布商家已打烊时,购票/报名入口直接提示「商家暂停营业」
     // (文案与后端 IMerchantBusinessStatusService.MERCHANT_CLOSED_MESSAGE 同源)。
     merchantClosed: false,
@@ -2287,7 +2286,6 @@ Page({
             topicLoaded: true,
             everLoaded: true,   // 成功读到过一次:之后的刷新失败留在原页给重试,不 auto-back 把人踢走
             missingTopicId: false,
-            loginRequired: false,
             merchantClosed: res.data.merchantClosed === true,
             loadErrorTitle: '',
             loadErrorSub: '',
@@ -2317,7 +2315,6 @@ Page({
         that.setData({
           loadError: true,
           missingTopicId: false,
-          loginRequired: isLoginRequired(app, res, statusCode),
           loadRefused: false,
           loadErrorTitle: '主题详情加载失败',
           loadErrorSub: '',
@@ -2337,13 +2334,6 @@ Page({
     this.getData();
   },
 
-  // 登录引导「登录」:重登成功后重读详情
-  onLoginRetry: function () {
-    retryLogin(this, app, function () {
-      this.setData({ loadError: false, loadRefused: false, loginRequired: false, topicLoaded: false, loadErrorTitle: '', loadErrorSub: '' });
-      this.getData();
-    });
-  },
   
   /**
    * 特殊数据处理函数 - 处理主题日期

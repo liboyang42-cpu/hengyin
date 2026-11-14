@@ -5,6 +5,8 @@
 const app = getApp()
 const cyToast = require('../../../utils/toast.js')
 const modal = require('../../../utils/modal.js')
+const login = require('../../../utils/auth/require-login.js')
+const session = require('../../../utils/session/login-reload.js')
 const { isBizOk } = require('../../../utils/response-shape.js')
 const mv = require('../../utils/market-view.js')
 const pu = require('../../utils/pass-unlock-view.js')
@@ -67,17 +69,21 @@ Page({
       fail: () => { if (seq === this._seq) this.setData({ state: 'error', errorTitle: '加载失败' }) }
     })
   },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1 },
+  onShow() { if (this._product && this._quoteOwner !== session.identity(app)) this.quote() },
   quote() {
+    const owner = this._quoteOwner = session.identity(app)
     const seq = (this._quoteSeq = (this._quoteSeq || 0) + 1)
     const fulfillmentKind = this.data.forGift ? mv.FULFILLMENT.GIFT : mv.FULFILLMENT.SELF
     this._quote = null
+    if (!login.hasSession(app)) { this.setData({ buy: { state: 'login', payModes: [] }, buyError: '', checkout: [] }); return }
     this.setData({ buy: { state: 'loading', reason: '', payModes: [] }, buyError: '', checkout: mv.checkoutRows(null, this.data.card) })
     app.sendRequest({
       url: '/api/marketing/product/quote', method: 'POST', header: { 'Content-Type': 'application/json' },
       data: JSON.stringify({ productId: Number(this._id), quantity: 1, fulfillmentKind }),
       hideLoading: true, autoErrorToast: false,
       success: (res) => {
-        if (seq !== this._quoteSeq) return
+        if (seq !== this._quoteSeq || this._unloaded || owner !== session.identity(app)) return
         if (isBizOk(res) && res.data) {
           if (!this._quote || this._quote.quoteSign !== res.data.quoteSign) this._reqId = null
           this._quote = res.data
@@ -91,7 +97,7 @@ Page({
         }
       },
       fail: () => {
-        if (seq !== this._quoteSeq) return
+        if (seq !== this._quoteSeq || this._unloaded || owner !== session.identity(app)) return
         this.setData({ buy: { state: 'unavailable', reason: '报价暂不可用，请稍后重试', payModes: [] } })
       }
     })
@@ -103,7 +109,13 @@ Page({
     this.setData({ forGift })
     this.quote()
   },
+  loginToBuy() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.loginToBuy(), { owner: this, target: () => [this._id, this.data.forGift] })) return
+    this.quote()
+  },
   onBuy(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.onBuy(e), { owner: this, target: () => [this._id, this.data.forGift] })) return
+    if (this._quoteOwner !== session.identity(app)) { this.quote(); return }
     const mode = Number(e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.mode)
     if (!mode || this.data.buying || !this._quote) return
     const label = (this.data.buy.payModes.find((m) => m.mode === mode) || {}).label || ''
@@ -184,8 +196,9 @@ Page({
     cyToast('已购买')
     wx.redirectTo({ url: '/subpackageMember/market/passes/index?tab=orders' })
   },
-  onUnload() { clearTimeout(this._heroT) },
+  onUnload() { this._unloaded = true; this._seq = (this._seq || 0) + 1; this._quoteSeq = (this._quoteSeq || 0) + 1; clearTimeout(this._heroT) },
   goCheckout() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('signup', () => this.goCheckout(), { owner: this, target: () => [this._id] })) return
     const c = this.data.buy && this._quote ? this._quote.checkout : null
     const checkout = c || (this.data.buy && this.data.buy.checkout)
     if (!checkout || !checkout.activityId) { cyToast('该商品需在活动报名中购买'); return }

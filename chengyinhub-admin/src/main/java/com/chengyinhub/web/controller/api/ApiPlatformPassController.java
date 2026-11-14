@@ -37,7 +37,7 @@ public class ApiPlatformPassController extends BaseController {
     @Operation(summary = "通行证页：套餐、本人有效期、可玩主题数、支付渠道")
     @GetMapping
     public AjaxResult overview() {
-        return success(service.overview(requireMemberId()));
+        return success(service.overview(optionalMemberId()));
     }
 
     @Operation(summary = "游戏主题库：公开主题与逐主题通行证覆盖事实")
@@ -96,6 +96,10 @@ public class ApiPlatformPassController extends BaseController {
         AjaxResult result = AjaxResult.error(rejection.getHttpStatus(), rejection.getMessage());
         result.put("reasonCode", rejection.getReasonCode());
         return result;
+    }
+
+    private Long optionalMemberId() {
+        try { return getAppUserId(); } catch (Exception ignored) { return null; }
     }
 
     private long requireMemberId() {

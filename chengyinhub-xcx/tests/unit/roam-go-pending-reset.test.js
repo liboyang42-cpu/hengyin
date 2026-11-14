@@ -15,7 +15,7 @@ function loadRoamPage() {
   const previous = { Page: global.Page, getApp: global.getApp, getCurrentPages: global.getCurrentPages, wx: global.wx }
   try {
     global.Page = config => { definition = config }
-    global.getApp = () => ({ globalData: {} })
+    global.getApp = () => ({ globalData: {}, sendRequest() {} })
     global.getCurrentPages = () => []
     global.wx = { getStorageSync: () => undefined }
     delete require.cache[require.resolve(PAGE_MODULE)]
@@ -34,7 +34,7 @@ function loadRoamPage() {
 test('onShow 清掉 goStart 的在途标记,让已死锁的常驻实例自愈', async () => {
   const page = loadRoamPage()
   const prevGetApp = global.getApp
-  global.getApp = () => ({ globalData: {} })
+  global.getApp = () => ({ globalData: {}, sendRequest() {} })
   try {
     page._roamStartPending = true      // 模拟上一次 goStart 卡在途中(弹窗被吞/网络挂起)
     page.onShow()
@@ -48,7 +48,7 @@ test('onShow 清掉 goStart 的在途标记,让已死锁的常驻实例自愈', 
 test('onShow 一并归零「开完就拍」的意图,别在下次出发时莫名弹相机', async () => {
   const page = loadRoamPage()
   const prevGetApp = global.getApp
-  global.getApp = () => ({ globalData: {} })
+  global.getApp = () => ({ globalData: {}, sendRequest() {} })
   try {
     page._shootAfterStart = true     // 上一次是点相机进来的,卡住了
     page.onShow()
@@ -73,7 +73,7 @@ test('onShow 作废在途流程:旧 chain 的回调弃权,不会开出第二个�
     getLocation: opts => { locOpts = opts },   // 扣住回调,模拟定位还没回来
   }
   global.getApp = () => ({
-    globalData: {},
+    globalData: {}, sendRequest() {},
     getUserID: () => '9',
     recordConsent: () => { consentCalls += 1; return Promise.resolve() },
   })
@@ -99,7 +99,7 @@ test('onShow 归零后 goStart 不再被首行守卫挡掉', async () => {
   const prevGetApp = global.getApp
   const prevWx = global.wx
   let locRequested = false
-  global.getApp = () => ({ globalData: {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
+  global.getApp = () => ({ globalData: {}, sendRequest() {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
   global.wx = {
     getStorageSync: () => undefined,
     setStorageSync: () => {},
@@ -125,7 +125,7 @@ test('取「看过引导」标记时抛异常,不能把 GO 的门闩焊死', asy
   const prevGetApp = global.getApp
   const prevWx = global.wx
   let locRequests = 0
-  global.getApp = () => ({ globalData: {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
+  global.getApp = () => ({ globalData: {}, sendRequest() {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
   page.markRoamIntroSeen = () => { throw new Error('引导本地标记失败') }
   global.wx = {
     getStorageSync: () => undefined,
@@ -138,7 +138,7 @@ test('取「看过引导」标记时抛异常,不能把 GO 的门闩焊死', asy
     await settle()
     assert.equal(locRequests, 1, '取本地标记失败不该挡住这次出发')
     // 常驻页返回后仍能重新明确确认，非关键本地标记异常不影响后续出发。
-    global.getApp = () => ({ globalData: {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
+    global.getApp = () => ({ globalData: {}, sendRequest() {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
     page.onShow()
     page.goStart()
     await settle()

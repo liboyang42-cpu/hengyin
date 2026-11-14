@@ -171,6 +171,17 @@ public class SecurityConfig
                         // owner 2026-11-14:目录地点公开只读详情(CatalogPlaceVO),只认纯数字 id。
                         .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/city/places/{id:\\d+}")).permitAll()
 
+                        // 2026-11-14 owner:公开内容游客可读,仅精确 GET;本人数据与所有写操作仍鉴权。
+                        .requestMatchers(legacyMatchers(HttpMethod.GET,
+                                "/api/roam/entry/nearby", "/api/roam/hangout/nearby", "/api/team/nearby",
+                                "/api/roam/pois", "/api/roam/nearby-exploreday", "/api/city/nodes",
+                                "/api/city/nodes/merchant/{merchantId:\\d+}",
+                                "/api/marketing/product/list", "/api/marketing/product/{productId:\\d+}",
+                                "/api/platform-pass", "/api/ai/npc/profile",
+                        "/api/official/active-for-roam", "/api/growth/leaderboard", "/api/search/unified",
+                                "/api/media/asset/attribution",
+                                "/api/community-trust/safety/merchants/{merchantId:\\d+}")).permitAll()
+
                         // 除上面外的所有请求全部需要鉴权认证
                     .anyRequest().authenticated();
             })

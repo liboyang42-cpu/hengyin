@@ -11,13 +11,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * O-14 统一内容搜索(主题 / 活动 / 帖文)。
  * 与 /api/topic/list、/api/activity/list 同一套约定：表单参数 keyword + pageNum/pageSize,返回 data.rows / data.total。
- * 现有接口不改；本接口默认关闭(chengyin.search.unified.enabled=false),且只对登录用户开放(不改匿名放行名单)。
+ * 现有接口不改；本接口默认关闭(chengyin.search.unified.enabled=false),公开 GET 使用匿名投影，旧 POST 保留认证。
  */
 @RestController
 @Tag(name = "O-14 统一搜索")
@@ -47,6 +48,18 @@ public class ApiContentSearchController extends BaseController {
         } catch (Exception e) {
             return error("请先登录");
         }
+        return search(keyword, types, city_code, memberId);
+    }
+
+    @GetMapping("/unified")
+    public AjaxResult publicUnified(String keyword, String types, String city_code) {
+        if (!unifiedSearchEnabled) return new AjaxResult(503, "统一搜索暂未开放");
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { memberId = 0L; }
+        return search(keyword, types, city_code, memberId);
+    }
+
+    private AjaxResult search(String keyword, String types, String city_code, Long memberId) {
         try {
             // 参数先校验再分页：校验失败不能把 PageHelper 线程变量留给下一条 SQL。
             ContentSearchService.validate(keyword, types, city_code);

@@ -137,6 +137,16 @@ test('C app.ensureLoginFor:已登录同步放行;游客返回 false 并在登录
 
 // 写入口清单:每个都在函数体第一行先过闸(登录后 resume 原函数恰好一次)。
 const WRITE_ENTRIES = [
+  // 2026-11-14：公开附近与商店的写入仍使用原登录弹窗。
+  ['subpackageRoam/nearby/index.js', 'apply', 'team'],
+  ['subpackageRoam/nearby/index.js', '_startChallenge', 'roam'],
+  ['subpackageRoam/nearby/index.js', 'onSpotShot', 'roam'],
+  ['subpackageRoam/nearby/index.js', 'onReviewSubmit', 'post'],
+  ['subpackageMember/market/pass/index.js', 'onBuy', 'checkout'],
+  ['subpackageMember/market/pass/index.js', 'goCheckout', 'signup'],
+  ['subpackageMember/market/membership/index.js', 'onBuy', 'checkout'],
+  ['pages/play/poi-challenge/index.js', 'onShoot', 'roam'],
+  ['pages/play/poi-challenge/index.js', '_submit', 'roam'],
   ['pages/activity/baoming/baoming.js', 'handlePayment', 'checkout'],
   ['pages/activity/baoming/baoming.js', 'joinWaitlist', 'signup'],
   ['pages/activity/official-detail/index.js', 'doSignup', 'signup'],

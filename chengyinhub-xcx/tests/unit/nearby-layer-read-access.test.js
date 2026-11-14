@@ -56,13 +56,15 @@ test('city orientation is absent from map markers, list, counts and category opt
   assert.deepEqual(Array.from(h.page._layerOptions.place), ['全部地点']);
 });
 
-test('guest keeps the map and title, with no protected layer requests or fabricated zero', () => {
+test('2026-11-14 guest reads all three public layers without login or fabricated zero', () => {
   const h = mount(''); h.page.refresh(h.page.data.center);
-  assert.equal(h.requests.length, 0); assert.equal(h.page.data.headerText, '附近');
-  assert.equal(h.page.data.nearbyReadAccess, 'login'); assert.ok(h.page.data.center);
+  assert.equal(h.requests.length, 3); assert.equal(h.page.data.headerText, '附近');
+  assert.equal(h.page.data.nearbyReadAccess, ''); assert.ok(h.page.data.center);
+  assert.deepEqual(h.requests.map(r => r.url.split('/').slice(-2).join('/')),
+    ['team/nearby', 'hangout/nearby', 'roam/pois']);
   const wxml = fs.readFileSync(path.resolve(__dirname, '../../subpackageRoam/nearby/index.wxml'), 'utf8');
-  assert.match(wxml, /<free-map/); assert.match(wxml, /nearbyReadAccess === 'login' \? '去登录'/);
-  assert.match(wxml, /load-failure="\{\{!nearbyReadAccess\}\}"/, 'authentication actions must not be hidden by the ordinary-failure veil');
+  assert.match(wxml, /<free-map/);
+  assert.doesNotMatch(wxml, /登录后查看附近|nearbyReadAccess === 'login'/);
 });
 
 for (const layer of ['teams', 'topics']) for (const status of [401, 403]) {
@@ -72,7 +74,7 @@ for (const layer of ['teams', 'topics']) for (const status of [401, 403]) {
     h.page.setData({ current: { teamId: 42 }, topic, sheet: 'team', headerText: 'stale count' });
     reply(h.requests[layer === 'teams' ? 0 : 1], status, { code: 500 });
     await settled();
-    assert.equal(h.page.data.nearbyReadAccess, status === 401 ? 'login' : 'denied');
+    assert.equal(h.page.data.nearbyReadAccess, status === 401 ? '' : 'denied');
     assert.equal(h.page.data.headerText, '附近'); assert.equal(h.page._teams.length, 0); assert.equal(h.page._items.length, 0);
     assert.equal(h.page.data.current, null); assert.equal(h.page.data.topic, null); assert.equal(h.page.data.sheet, '');
     reply(h.requests[layer === 'teams' ? 1 : 0], 200, layer === 'teams' ? { code: 200, data: { items: [topic] } } : { code: 200, data: [team] });
@@ -131,14 +133,12 @@ test('successful automatic refresh uses a fresh read owner and does not adopt th
 });
 
 for (const stopped of ['_hidden', '_unloaded']) {
-  test('real login finishing after ' + stopped + ' cannot reload nearby layers', async () => {
-    const h = mount(''); h.page.refresh(h.page.data.center); let finish;
-    h.app.getSessionManager = () => createSessionManager({ session: h.session,
-      wxLogin: async () => ({ code: 'fixture-code' }), exchangeCode: () => new Promise(resolve => { finish = resolve; }),
-    });
-    const pending = h.page.retryNearby(); await settled(); h.page[stopped] = true;
-    finish({ token: 'fixture-login', data: { id: '7', userType: 1, role: 'player' } }); await pending;
-    assert.equal(h.requests.length, 0);
+  test('2026-11-14 public retry never logs in and stops after ' + stopped, () => {
+    const h = mount(''); h.app.firstLogin = () => { throw Error('read must not log in'); };
+    h.page.refresh(h.page.data.center); assert.equal(h.requests.length, 3);
+    h.page.retryNearby(); assert.equal(h.requests.length, 6);
+    h.page[stopped] = true; h.page.retryNearby();
+    assert.equal(h.requests.length, 6);
   });
 }
 

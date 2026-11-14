@@ -51,6 +51,25 @@ async function reloginAfterLogout(h,owner='7') {
   reply(request,{token:'fixture-relogin-'+owner,data:{id:owner,role:'player',userType:1,wxOpenId:'fixture-openid-'+owner}});
   assert.equal((await waiting).ok,true);await settle();
 }
+test('2026-11-14 My login awaits privacy agreement; refusal never starts identity exchange',async()=>{
+  const h=mount();let page;
+  const file=path.join(root,'pages/member/index/index.js');
+  vm.runInNewContext(fs.readFileSync(file,'utf8'),{Page:p=>page=p,getApp:()=>h.app,wx:h.wx,
+    require:require('node:module').createRequire(file),console,setTimeout,clearTimeout});
+  page.data=JSON.parse(JSON.stringify(page.data));page.setData=patch=>Object.assign(page.data,patch);
+  page.onShow();
+  const refused=page.loginToRead();page.loginToRead();await settle();
+  assert.equal(page.data.privacyGateShow,true);assert.equal(h.logins.length,0);assert.equal(h.requests.length,0);
+  h.app.declineUsageConsent();page.onPrivacyGateSettled({detail:{event:'disagree'}});await refused;assert.equal(h.logins.length,0);assert.equal(page.data.profileMounts.length,0);
+  const pending=page.loginToRead();await settle();assert.equal(page.data.privacyGateShow,true);assert.equal(h.logins.length,0);
+  const agree=h.app.agreeUsageConsent({detail:{buttonId:'agree'}},true);await settle();
+  assert.equal(h.logins.length,0,'同意动作须先结算隐私组件事件');
+  page.onPrivacyGateSettled({detail:{event:'agree'}});await settle();
+  assert.equal(h.native[0].event,'agree');assert.equal(h.logins.length,1);
+  await exchange(h);await pending;assert.equal(page.data.profileMounts.length,1);
+  await agree;
+});
+
 test('guest initialization finishes and public reads work before any native login or identity exchange',async()=>{
   const h=mount();await h.app.appInitial({});
   assert.equal(h.logins.length,0);assert.equal(h.requests.some(r=>r.url.endsWith('/api/login/code')),false);

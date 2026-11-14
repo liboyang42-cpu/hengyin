@@ -442,22 +442,22 @@ test('同一漫游页面重建后保留累计用时，旧快照也不会归零',
   }
 })
 
-test('游客附近入口可点登录，不发送两条私有读取或制造附近无活动', async () => {
+test('2026-11-14 游客附近入口直接读公开活动与队伍，重试不登录', async () => {
   app.getUserID = () => '';
   const page = mount(); await settle();
-  assert.equal(calls.filter(c => ['/api/roam/entry/nearby', '/api/team/nearby'].includes(c.url)).length, 0);
-  assert.equal(page.data.entryReadAccess, 'login');
-  app.firstLogin = () => { app.getUserID = () => '9'; return Promise.resolve({ ok: true }); };
-  await page.loginForEntryRead(); await settle();
   assert.equal(calls.filter(c => ['/api/roam/entry/nearby', '/api/team/nearby'].includes(c.url)).length, 2);
+  assert.equal(page.data.entryReadAccess, '');
+  app.firstLogin = () => { throw Error('public retry must not log in'); };
+  page.retryEntryRead(); await settle();
+  assert.equal(calls.filter(c => ['/api/roam/entry/nearby', '/api/team/nearby'].includes(c.url)).length, 4);
 });
 test('附近读取401/403明确区分；普通500不伪装无权限', async () => {
   for (const code of [401, 403, 500]) {
     const page = mount(); await settle();
     app.sendRequest = o => o.success({ code });
     page._loadEntryMap({ lat: 31, lng: 121 }); await settle();
-    assert.equal(page.data.entryReadAccess, code === 401 ? 'login' : code === 403 ? 'denied' : '');
-    assert.equal(page.data.entryLoadError, code === 500);
+    assert.equal(page.data.entryReadAccess, code === 403 ? 'denied' : '');
+    assert.equal(page.data.entryLoadError, code !== 403);
   }
 });
 test('旧账号附近权限回包不覆盖新读取；登录在页面退出后完成不继续读', async () => {
@@ -471,9 +471,8 @@ test('旧账号附近权限回包不覆盖新读取；登录在页面退出后�
   assert.equal(page.data.entryLoadError,false);
   // 2026-10-28 p74:附近为空时会再读一次 20km 兜底(第 5 条);这里只锁「页面退出后登录不再读」
   const before=pending.length;
-  let resolve;app.getUserID=()=>'';app.firstLogin=()=>new Promise(r=>{resolve=r;});
-  const login=page.loginForEntryRead();page._unloaded=true;app.getUserID=()=> '10';resolve({ok:true});
-  await login;assert.equal(pending.length,before);
+  app.getUserID=()=>'';app.firstLogin=()=>{throw Error('read must not log in');};
+  page._unloaded=true;page.retryEntryRead();assert.equal(pending.length,before);
 });
 
 
@@ -482,8 +481,8 @@ test('入口保留真实HTTP401/403与续期失败状态，不将网关500或断
     const page=mount();await settle();
     app.sendRequest=o=>o[callback]({code:500},code);
     page._loadEntryMap({lat:31,lng:121});await settle();
-    assert.equal(page.data.entryReadAccess,code===401?'login':code===403?'denied':'');
-    assert.equal(page.data.entryLoadError,code===500);
+    assert.equal(page.data.entryReadAccess,code===403?'denied':'');
+    assert.equal(page.data.entryLoadError,code!==403);
   }
 });
 

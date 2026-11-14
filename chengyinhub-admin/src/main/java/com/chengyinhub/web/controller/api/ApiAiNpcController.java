@@ -74,6 +74,12 @@ public class ApiAiNpcController extends BaseController
     private ICmsTopicNodeService cmsTopicNodeService;
 
     @Autowired
+    private com.chengyinhub.business.service.ICmsTopicService cmsTopicService;
+
+    @Autowired
+    private com.chengyinhub.business.service.ICmsActivityService cmsActivityService;
+
+    @Autowired
     private ICmsMemberTemplateService cmsMemberTemplateService;
 
     @Autowired
@@ -107,6 +113,8 @@ public class ApiAiNpcController extends BaseController
             }
             else if ("activity".equals(scope) && activityId != null)
             {
+                if (anonymousViewer() && !publicNpcActivity(activityId))
+                    return success(new NpcProfileList(Collections.emptyList()));
                 List<NpcProfileVO> vos = npcProfileService.resolveForActivity(activityId);
                 return success(new NpcProfileList(vos));
             }
@@ -116,7 +124,8 @@ public class ApiAiNpcController extends BaseController
                 // 节点还没过审就先把 NPC 文本放出去,等于绕过主办方那一段;② NPC 自身走已过审读闸。
                 CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
                 boolean nodeVisible = node != null && node.getMerchantMemberId() != null
-                        && Integer.valueOf(1).equals(node.getNodeAuditStatus());
+                        && Integer.valueOf(1).equals(node.getNodeAuditStatus())
+                        && (!anonymousViewer() || publicNpcTopic(node.getTopicId()));
                 NpcProfileVO vo = nodeVisible ? npcProfileService.resolveForNode(nodeId) : null;
                 return success(new NpcProfileList(vo != null ? Collections.singletonList(vo) : Collections.<NpcProfileVO>emptyList()));
             }
@@ -128,6 +137,23 @@ public class ApiAiNpcController extends BaseController
                     scope, activityId, nodeId, e.getClass().getName());
             return success(new NpcProfileList(Collections.<NpcProfileVO>emptyList()));
         }
+    }
+
+    private boolean anonymousViewer() {
+        try { Long id = getAppUserId(); return id == null || id <= 0; }
+        catch (Exception ignored) { return true; }
+    }
+
+    private boolean publicNpcTopic(Long topicId) {
+        return topicId != null && topicId > 0 && cmsTopicService.selectCmsTopicDetailById(topicId, 0L) != null;
+    }
+
+    private boolean publicNpcActivity(Long activityId) {
+        com.chengyinhub.business.domain.CmsActivity activity = cmsActivityService.selectCmsActivityById(activityId);
+        return activity != null && Long.valueOf(1).equals(activity.getStatus())
+                && Long.valueOf(1).equals(activity.getPublishStatus())
+                && Integer.valueOf(0).equals(activity.getDelFlag()) && activity.getCancelTime() == null
+                && (activity.getTopicId() == null || activity.getTopicId() <= 0 || publicNpcTopic(activity.getTopicId()));
     }
 
     /**

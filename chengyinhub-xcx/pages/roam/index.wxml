@@ -183,17 +183,15 @@
     <block wx:if="{{!entryPeekFold}}">
     <scroll-view wx:if="{{entryStripTab=='city' && entryCityStrip}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
       <view class="entry-card" wx:for="{{entryCityStrip.items}}" wx:key="id" data-idx="{{index}}" bindtap="onEntryCityPlaceTap" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
-        <image class="entry-card__cover" src="/images/route_city_cover.png" mode="aspectFill" />
+        <image class="entry-card__cover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" />
         <view class="entry-card__shade"></view>
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--place">{{item.catLabel}}</text><text class="entry-card__title">{{item.name}}</text><text class="entry-card__meta">{{item.reason}}</text></view>
       </view>
     </view></scroll-view>
     <block wx:else>
-    <!-- 2026-10-17 合并 master:附近内容读权限态(未登录 / 无权)先于错误与列表 -->
-    <cy-state-shell wx:if="{{entryReadAccess}}" kind="no-permission"
-                    title="{{entryReadAccess === 'login' ? '登录后查看附近活动与队伍' : '当前账号无法查看'}}"
-                    primary="{{entryReadAccess === 'login' ? '去登录' : ''}}" bind:primary="loginForEntryRead" />
-    <cy-error wx:elif="{{entryLoadError}}" load-failure="{{true}}" />
+    <!-- 2026-11-14:公开附近内容游客直接读,失败只重试,不以登录替代读取。 -->
+    <cy-state-shell wx:if="{{entryReadAccess === 'denied'}}" kind="no-permission" title="当前内容无法查看" />
+    <cy-error wx:elif="{{entryLoadError}}" load-failure="{{true}}" bind:retry="retryEntryRead" />
     <scroll-view wx:elif="{{entryCards.length || entryFarCards.length || entryStrip.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
       <view class="entry-card" wx:for="{{entryStrip}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
             bindtap="onEntryCardTap" aria-role="button" aria-label="打开 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">

@@ -27,14 +27,22 @@ Page({
     return changed;
   },
   loginToRead() {
-    if (this._hidden || this._unloaded) return;
-    const epoch = this._profileEpoch || 0, owner = session.memberId(app);
-    return session.retryLogin(this, app, function () {
-      if (epoch !== this._profileEpoch || (owner && owner !== session.memberId(app)) || !authorization()) return;
-      this.syncProfileSession();
-    });
+    if (this._hidden || this._unloaded || this._profileLoginPending) return;
+    const epoch = this._profileEpoch || 0, owner = session.memberId(app), token = authorization();
+    this._profileLoginPending = true;
+    // 2026-11-14：我的显式登录先显示原隐私弹窗，缓存同意也不跳过这一步。
+    const consent = new Promise(resolve => { this._profileConsentResolve = resolve; this.showPrivacyGate(); });
+    return consent.then(agreed => {
+      if (!agreed) return;
+      if (this._hidden || this._unloaded || epoch !== (this._profileEpoch || 0)
+          || owner !== session.memberId(app) || token !== authorization()) return;
+      return session.retryLogin(this, app, function () {
+        if (epoch !== this._profileEpoch || (owner && owner !== session.memberId(app)) || !authorization()) return;
+        this.syncProfileSession();
+      });
+    }, () => {}).finally(() => { this._profileLoginPending = false; });
   },
-  onHide() { this._hidden = true; this._profileEpoch = (this._profileEpoch || 0) + 1; },
+  onHide() { this._hidden = true; this._profileEpoch = (this._profileEpoch || 0) + 1; if (this._profileConsentResolve) this.onPrivacyGateSettled({ detail: { event: 'disagree' } }); },
   onUnload() { this.onHide(); this._unloaded = true; },
   /* Dynamic Type:放 onShow 而非 onLoad —— 用户可能切到微信设置改完字号再切回来 */
   onShow() {
@@ -60,8 +68,11 @@ Page({
   showPrivacyGate() {
     this.setData({ privacyGateShow: true });
   },
-  onPrivacyGateSettled() {
+  onPrivacyGateSettled(event) {
     this.setData({ privacyGateShow: false });
+    const resolve = this._profileConsentResolve;
+    this._profileConsentResolve = null;
+    if (resolve) resolve(!!(event && event.detail && event.detail.event === 'agree'));
   },
   onShareAppMessage: function (res) {
     var profile = this.selectComponent('#profile');

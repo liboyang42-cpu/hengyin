@@ -2,6 +2,7 @@ package com.chengyinhub.business.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -37,11 +38,15 @@ public class PlayTeamNearbyVO {
     @JsonIgnore
     private String memberAvatarsJoined;
     /** NONE / PENDING / JOINED / LEADER / REJECTED(被拒或被移出,不能再申请)。 */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String viewerStatus;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean viewerHasTicket;
     /** 仅 viewerStatus=PENDING 时为本人申请的失效时刻 = min(申请+24h, 场次开始);其他恒 null。 */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Date applyExpireTime;
     /** 仅队长本人可见的待审申请数;其他人恒 null。 */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer pendingCount;
 
     public Long getTeamId() { return teamId; }

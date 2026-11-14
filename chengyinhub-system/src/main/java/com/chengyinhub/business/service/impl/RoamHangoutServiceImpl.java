@@ -40,7 +40,8 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
 
     @Override
     public Map<String, Object> nearby(Long viewerId, double lat, double lng, int radiusM) {
-        requireLogin(viewerId);
+        boolean guest = viewerId == null || viewerId <= 0;
+        viewerId = guest ? 0L : viewerId;
         int r = radiusM <= 0 ? DEFAULT_RADIUS_M : Math.min(radiusM, MAX_RADIUS_M);
         double[] box = bbox(lat, lng, r);
         List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();
@@ -53,8 +54,18 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
         List<Map<String, Object>> topics = cmsTopicMapper.selectNearbyTopics(lat, lng, box[0], box[1], box[2], box[3], r, LIST_LIMIT, viewerId);
         if (topics != null) for (Map<String, Object> t : topics) { t.put("kind", "topic"); t.put("viewerHasTicket", ((Number) t.getOrDefault("viewerHasTicket", 0)).intValue() > 0); if (t.get("ownerRole") == null) t.put("ownerRole", "player"); items.add(t); }
         Map<String, Object> out = new HashMap<String, Object>();
-        out.put("items", items);
+        out.put("items", guest ? items.stream().map(this::publicNearbyItem).toList() : items);
         out.put("radius", r);
+        return out;
+    }
+
+    // 游客固定公开字段白名单,新增 SQL 列不会自动暴露票权或个人状态。
+    private Map<String, Object> publicNearbyItem(Map<String, Object> row) {
+        Map<String, Object> out = new HashMap<>();
+        for (String key : List.of("id", "topicId", "kind", "name", "picUrl", "productType",
+                "addressName", "startDate", "endDate", "ownerRole", "ownerNickname", "latitude", "longitude", "distance")) {
+            if (row.containsKey(key)) out.put(key, row.get(key));
+        }
         return out;
     }
 

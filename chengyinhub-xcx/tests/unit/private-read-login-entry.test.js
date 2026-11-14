@@ -73,7 +73,8 @@ for(const kind of ['order','badge']){
   });
 }
 
-for(const kind of ['earnings','board']){
+// 2026-11-14：全局公开榜退出私人读循环，资产收益仍需登录。
+for(const kind of ['earnings']){
   test(kind+' anonymous login entry only reads current private state after explicit login',async()=>{
     const h=mount(kind);h.owner('');h.load();assert.equal(h.requests.length,0);
     assert.equal(kind==='earnings'?h.page.data.state:h.page.data.boardAuthRequired,kind==='earnings'?'login':true);

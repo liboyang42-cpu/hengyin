@@ -140,9 +140,34 @@ public class ApiRoamController extends BaseController {
         if (truncated) list = new java.util.ArrayList<>(list.subList(0, POIS_NEAR_LIMIT));
         // A5.1:相册只下发前 3 张预览,完整相册走目录详情读口。
         for (RoamPoi poi : list) poi.setGalleryJson(RoamPoiTags.galleryHead(poi.getGalleryJson(), RoamPoiTags.GALLERY_PREVIEW));
-        AjaxResult result = success(list);
+        AjaxResult result = success(uid() <= 0 ? list.stream().map(this::publicPoi).toList() : list);
         result.put("truncated", truncated);
         return result;
+    }
+
+    private Map<String, Object> publicPoi(RoamPoi poi) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", poi.getId());
+        out.put("name", poi.getName());
+        out.put("type", poi.getType());
+        out.put("lat", poi.getLat());
+        out.put("lng", poi.getLng());
+        out.put("radiusM", poi.getRadiusM());
+        out.put("address", poi.getAddress());
+        out.put("description", poi.getDescription());
+        out.put("xp", poi.getXp());
+        out.put("cityCode", poi.getCityCode());
+        out.put("nodeLevel", poi.getNodeLevel());
+        out.put("tags", poi.getTags());
+        out.put("coverImg", poi.getCoverImg());
+        out.put("galleryJson", poi.getGalleryJson());
+        out.put("quotesJson", poi.getQuotesJson());
+        out.put("photoCredit", poi.getPhotoCredit());
+        out.put("badgeCode", poi.getBadgeCode());
+        out.put("merchantId", poi.getMerchantId());
+        out.put("merchantName", poi.getMerchantName());
+        out.put("npcAvatar", poi.getNpcAvatar());
+        return out;
     }
 
     @Operation(summary = "首次发现商家后的合规自由探索活动壳")
@@ -156,7 +181,6 @@ public class ApiRoamController extends BaseController {
     @Operation(summary = "漫游入口附近活动")
     @GetMapping("/entry/nearby")
     public AjaxResult entryNearby(Double lat, Double lng, Integer radius) {
-        if (uid() <= 0) return error("请先登录");
         if (lat == null || lng == null) return error("缺少定位");
         if (!validLat(lat) || !validLng(lng)) return error("定位无效");
         return success(roamHangoutService.nearby(uid(), lat, lng, radius == null ? 0 : radius));

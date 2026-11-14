@@ -81,7 +81,7 @@ class GuestSharedPlaceReadTest {
                 "questionC", "questionD", "completed", "favorited"}) {
             assertNull(data.get(hidden), hidden + " 不得下发给游客");
         }
-        assertEquals(false, data.get("needRedeem"));
+        assertNull(data.get("needRedeem"));
         assertFalse(body.contains("13800000000"));
         verify(mapper, never()).selectPendingCityNodeCouponId(anyLong(), anyLong());
         verify(mapper, never()).selectRewardedPoiIdsByMember(anyLong(), anyList());
