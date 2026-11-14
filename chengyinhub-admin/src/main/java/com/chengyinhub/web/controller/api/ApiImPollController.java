@@ -34,6 +34,13 @@ public class ApiImPollController extends BaseController {
         return invoke(() -> pollService.close(getAppUserId(), command));
     }
 
+    @org.springframework.web.bind.annotation.GetMapping("/create-receipt")
+    public AjaxResult createReceipt(@org.springframework.web.bind.annotation.RequestParam("conversation_id") String conversationId,
+                                    @org.springframework.web.bind.annotation.RequestParam("client_poll_key") String clientPollKey) {
+        Long id = com.chengyinhub.common.core.text.Convert.toLong(conversationId, 0L);
+        return invoke(() -> pollService.createReceipt(getAppUserId(), id, clientPollKey));
+    }
+
     @PostMapping("/result")
     public AjaxResult result(String poll_id) {
         Long id = com.chengyinhub.common.core.text.Convert.toLong(poll_id, 0L);

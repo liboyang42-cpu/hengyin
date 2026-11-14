@@ -1,0 +1,20 @@
+-- TEST-only: undo fixture_8125.sql.txt and everything the 8125 checks wrote, on cy_gap_rw only.
+DELETE FROM workshop_professional_event;
+DELETE FROM workshop_professional_operation;
+DELETE FROM cms_member_template WHERE member_id = 9003 AND (id = 970301 OR title IN ('RW TEST licensed text', 'RW TEST installed draft'));
+DELETE FROM workshop_install WHERE draft_id = 970301;
+DELETE FROM workshop_order WHERE id = 970201;
+DELETE FROM workshop_version WHERE seller_id = 9002 AND request_id = 'rw-fixture-version';
+DELETE FROM w17_reward_op_receipt;
+DELETE FROM w17_reward_case;
+DELETE FROM w17_reward_outbox;
+DELETE FROM w17_reward_receipt;
+DELETE FROM w17_reward_award;
+DELETE FROM w17_reward_intent;
+DELETE FROM w17_reward_stock;
+DELETE FROM w17_reward_pledge_version;
+DELETE FROM w17_reward_pledge;
+DELETE FROM w17_reward_policy;
+DELETE FROM sms_coupon_history WHERE coupon_id = 970001;
+DELETE FROM sms_coupon WHERE id = 970001;
+DELETE FROM merchant_chapter_offer WHERE topic_id = 992001 AND merchant_id = 9002 AND create_by = 'be-gap-rw';

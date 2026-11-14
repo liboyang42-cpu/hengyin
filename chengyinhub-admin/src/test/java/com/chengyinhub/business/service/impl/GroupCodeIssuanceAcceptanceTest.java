@@ -265,4 +265,21 @@ class GroupCodeIssuanceAcceptanceTest {
         a.setStatus(ClubRoleAssignment.STATUS_ACTIVE);
         return a;
     }
+
+    /** App /api/club/group-code: same session and permission checks as issue, but no code is signed. */
+    @Test
+    void statusAnswersTheIssueChecksWithoutSigningACode() {
+        AjaxResult allowed = service.status(ACTIVITY, CHECKIN_STAFF);
+        assertEquals(200, allowed.get("code"));
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> data = (java.util.Map<String, Object>) allowed.get("data");
+        assertEquals(Boolean.TRUE, data.get("issuable"));
+        assertEquals(ACTIVITY, data.get("activityId"));
+        assertEquals(CLUB, data.get("clubId"));
+        assertEquals(false, data.containsKey("code"));
+        assertEquals(500, service.status(ACTIVITY, PLAIN_PLAYER).get("code"));
+        assertEquals(500, service.status(null, CHECKIN_STAFF).get("code"));
+        assertEquals(500, service.status(ACTIVITY, 0L).get("code"));
+        verify(qrcode, never()).generateInlineQrcode(anyString(), anyInt(), anyInt());
+    }
 }

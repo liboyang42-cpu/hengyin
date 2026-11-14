@@ -129,6 +129,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                   or p.member_id in (select c.member_id from club c
                                       where c.id = #{scopeIdLong} and c.del_flag = 0))
             </when>
+            <when test='"team".equals(scope)'>
+                and p.member_id in (select tm.member_id from play_team_member tm
+                                     where tm.team_id = #{scopeIdLong} and tm.status = 1)
+                and exists (select 1 from play_team pt
+                             where pt.id = #{scopeIdLong}
+                               and ((pt.owner_type = 1 and p.topic_id = pt.owner_id and p.activity_id = 0)
+                                 or (pt.owner_type = 2 and p.activity_id = pt.owner_id)))
+            </when>
             <otherwise>
                 and 1 = 0
             </otherwise>

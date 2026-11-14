@@ -3,6 +3,8 @@ package com.chengyinhub.business.service;
 import com.chengyinhub.business.domain.vo.PostGameOutcomeReportVO;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * 完局维护与有效复报的只读报表服务。
@@ -15,4 +17,20 @@ import java.time.LocalDate;
 public interface IPostGameOutcomeReportService {
 
     PostGameOutcomeReportVO generate(LocalDate cohortDate, int windowDays);
+
+    /**
+     * Metrics that cannot be attributed to a topic (they are platform-wide member facts in {@link #generate}) and are
+     * therefore left out of a topic-scoped report instead of being shown with platform numbers.
+     */
+    List<String> TOPIC_SCOPE_OMITTED_METRICS = List.of("REWARD_ISSUANCE", "PRIVATE_PHOTO", "PUBLIC_SHARE",
+            "RECOMMENDATION_CLICK", "CLIENT_OBSERVED_EVENT");
+
+    /**
+     * U08-04 creator scope: the same cohort rules (full-history first valid registration, maturity, refunds, seat and
+     * same-order dedup) restricted to members whose first valid registration was on one of {@code topicIds}.
+     * OFFICIAL_COMPLETION counts only completed route sessions on those topics, and SECOND_VALID_REGISTRATION keeps
+     * the B8 definition (any other valid registration in the window). The metrics in
+     * {@link #TOPIC_SCOPE_OMITTED_METRICS} and the roam revisit block are omitted.
+     */
+    PostGameOutcomeReportVO generateForTopics(LocalDate cohortDate, int windowDays, Collection<Long> topicIds);
 }

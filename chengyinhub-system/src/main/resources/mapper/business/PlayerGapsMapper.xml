@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.PlayerGapsMapper">
+
+    <!-- Members the owner follows, keyset by member id; duplicates in the legacy follow table collapse. -->
+    <select id="selectFollowing" resultType="java.util.LinkedHashMap">
+        SELECT m.id AS id, m.nickname AS nickname, m.avatar AS avatar, 1 AS isFollow
+        FROM ums_member m
+        WHERE m.id &gt; #{cursor} AND m.id &lt;&gt; #{owner} AND m.del_flag = 0
+          AND EXISTS (SELECT 1 FROM ums_member_follow f WHERE f.member_id = #{owner} AND f.follow_member_id = m.id)
+        ORDER BY m.id LIMIT #{limit}
+    </select>
+
+    <!-- Members following the owner; isFollow says whether the owner follows back. -->
+    <select id="selectFollowers" resultType="java.util.LinkedHashMap">
+        SELECT m.id AS id, m.nickname AS nickname, m.avatar AS avatar,
+               EXISTS (SELECT 1 FROM ums_member_follow b WHERE b.member_id = #{owner} AND b.follow_member_id = m.id) AS isFollow
+        FROM ums_member m
+        WHERE m.id &gt; #{cursor} AND m.id &lt;&gt; #{owner} AND m.del_flag = 0
+          AND EXISTS (SELECT 1 FROM ums_member_follow f WHERE f.follow_member_id = #{owner} AND f.member_id = m.id)
+        ORDER BY m.id LIMIT #{limit}
+    </select>
+
+    <select id="selectRouteAction" resultType="java.util.LinkedHashMap">
+        SELECT session_id AS sessionId, member_id AS memberId, action_id AS actionId, CAST(response_json AS CHAR) AS responseJson
+        FROM topic_route_action
+        WHERE session_id = #{sessionId} AND member_id = #{memberId} AND action_id = #{actionId}
+    </select>
+</mapper>

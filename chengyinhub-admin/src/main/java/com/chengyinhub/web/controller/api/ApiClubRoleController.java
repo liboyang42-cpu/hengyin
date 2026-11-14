@@ -147,6 +147,24 @@ public class ApiClubRoleController extends BaseController {
         }
     }
 
+    /** App：按原 requestId 读回委派结果（只读 business_audit_event 审计事实）。 */
+    @PostMapping("/roles/assign-receipt")
+    public AjaxResult assignReceipt(@RequestBody(required = false) Map<String, Object> body) {
+        Long principal = principal();
+        if (principal == null) return error("请先登录");
+        return roleOriginalReceipts.assign(principal, body);
+    }
+
+    /** App：按原 requestId 读回撤销结果。 */
+    @PostMapping("/roles/revoke-receipt")
+    public AjaxResult revokeReceipt(@RequestBody(required = false) Map<String, Object> body) {
+        Long principal = principal();
+        if (principal == null) return error("请先登录");
+        return roleOriginalReceipts.revoke(principal, body);
+    }
+
+    @Autowired private com.chengyinhub.business.appgaps.ClubRoleOriginalReceipts roleOriginalReceipts;
+
     @PostMapping("/roles/revoke")
     public AjaxResult revoke(@RequestBody(required = false) ClubRoleRevokeRequest request) {
         Long principal = principal();

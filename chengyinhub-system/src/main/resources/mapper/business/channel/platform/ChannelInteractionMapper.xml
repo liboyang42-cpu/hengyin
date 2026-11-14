@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelInteractionMapper">
+
+    <!-- 接龙卡片消息：msg_type 14，正文为标题；extra_json 在接龙行落库后回填。 -->
+    <insert id="insertCardMessage" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_message(conversation_id, sender_id, receiver_id, msg_type, content, extra_json, status, check_status, create_time, visible_at)
+        VALUES (#{conversationId}, #{senderId}, 0, 14, #{content}, NULL, 0, 1, NOW(6), NOW(6))
+    </insert>
+    <update id="setMessageExtra">
+        UPDATE im_message SET extra_json = #{extraJson} WHERE id = #{id}
+    </update>
+    <update id="touchConversation">
+        UPDATE im_conversation SET last_msg_type = 14, last_msg_text = #{text}, last_msg_at = NOW(), update_time = NOW() WHERE id = #{conversationId}
+    </update>
+    <update id="fanOutUnread">
+        UPDATE im_conversation_member SET unread_count = unread_count + 1 WHERE conversation_id = #{conversationId} AND member_id != #{senderId} AND deleted = 0
+    </update>
+
+    <sql id="chainCols">
+        id, conversation_id AS conversationId, message_id AS messageId, creator_member_id AS creatorMemberId, title, max_slots AS maxSlots,
+        active_count AS activeCount, status, deadline_at AS deadlineAt, version, (deadline_at &lt;= CURRENT_TIMESTAMP(3)) AS pastDeadline
+    </sql>
+    <insert id="insertChain" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_chain(conversation_id, message_id, creator_member_id, title, max_slots, active_count, status, deadline_at, version)
+        VALUES (#{conversationId}, #{messageId}, #{creatorMemberId}, #{title}, #{maxSlots}, 0, 'OPEN', #{deadlineAt}, 1)
+    </insert>
+    <select id="selectChain" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="chainCols"/> FROM im_chain WHERE id = #{id} AND conversation_id = #{conversationId}
+    </select>
+    <select id="selectLatestChainId" resultType="java.lang.Long" useCache="false" flushCache="true">
+        SELECT MAX(id) FROM im_chain WHERE conversation_id = #{conversationId}
+    </select>
+    <select id="lockChain" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="chainCols"/> FROM im_chain WHERE id = #{id} AND conversation_id = #{conversationId} FOR UPDATE
+    </select>
+    <update id="updateChain">
+        UPDATE im_chain SET active_count = #{activeCount}, status = #{status}, version = version + 1
+         WHERE id = #{id} AND version = #{expectedVersion}
+    </update>
+
+    <sql id="entryCols">
+        id, chain_id AS chainId, member_id AS memberId, content, position, status, version
+    </sql>
+    <select id="lockEntry" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="entryCols"/> FROM im_chain_entry WHERE chain_id = #{chainId} AND member_id = #{memberId} FOR UPDATE
+    </select>
+    <select id="selectEntry" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="entryCols"/> FROM im_chain_entry WHERE chain_id = #{chainId} AND member_id = #{memberId}
+    </select>
+    <select id="nextPosition" resultType="int" useCache="false">
+        SELECT COALESCE(MAX(position), 0) + 1 FROM im_chain_entry WHERE chain_id = #{chainId}
+    </select>
+    <insert id="insertEntry">
+        INSERT INTO im_chain_entry(chain_id, member_id, content, position, status, request_id, version)
+        VALUES (#{chainId}, #{memberId}, #{content}, #{position}, 'ACTIVE', #{requestId}, 1)
+    </insert>
+    <update id="updateEntry">
+        UPDATE im_chain_entry SET status = #{status}, content = #{content}, request_id = #{requestId}, version = version + 1
+         WHERE chain_id = #{chainId} AND member_id = #{memberId} AND version = #{expectedVersion}
+    </update>
+    <select id="listEntries" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="entryCols"/> FROM im_chain_entry
+         WHERE chain_id = #{chainId} AND status = 'ACTIVE' AND position &gt; #{after}
+         ORDER BY position LIMIT #{limit}
+    </select>
+
+    <!-- 打卡 -->
+    <select id="selectCheckin" resultType="java.util.HashMap" useCache="false">
+        SELECT id, channel_id AS channelId, member_id AS memberId, DATE_FORMAT(checkin_date, '%Y-%m-%d') AS checkinDate, source, streak,
+               checked_at AS checkedAt
+          FROM im_channel_checkin WHERE channel_id = #{channelId} AND member_id = #{memberId} AND checkin_date = #{date}
+    </select>
+    <insert id="insertCheckin" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_channel_checkin(channel_id, member_id, checkin_date, source, streak, request_id)
+        VALUES (#{channelId}, #{memberId}, #{date}, 'CHANNEL', #{streak}, #{requestId})
+    </insert>
+    <select id="listHistory" resultType="java.lang.String" useCache="false">
+        SELECT DATE_FORMAT(checkin_date, '%Y-%m-%d') FROM im_channel_checkin
+         WHERE channel_id = #{channelId} AND member_id = #{memberId} AND checkin_date &lt;= #{date}
+         ORDER BY checkin_date DESC LIMIT 30
+    </select>
+    <select id="rank" resultType="java.util.HashMap" useCache="false">
+        SELECT c.member_id AS memberId, COUNT(1) AS days, m.nickname AS nickname, m.avatar AS avatar
+          FROM im_channel_checkin c LEFT JOIN ums_member m ON m.id = c.member_id
+         WHERE c.channel_id = #{channelId} AND c.checkin_date &gt; DATE_SUB(#{date}, INTERVAL 30 DAY) AND c.checkin_date &lt;= #{date}
+         GROUP BY c.member_id, m.nickname, m.avatar
+         ORDER BY days DESC, c.member_id ASC LIMIT #{limit}
+    </select>
+    <select id="countDays" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM im_channel_checkin
+         WHERE channel_id = #{channelId} AND member_id = #{memberId} AND checkin_date &gt; DATE_SUB(#{date}, INTERVAL 30 DAY) AND checkin_date &lt;= #{date}
+    </select>
+    <select id="countAhead" resultType="int" useCache="false">
+        SELECT COUNT(1) FROM (
+            SELECT member_id, COUNT(1) AS days FROM im_channel_checkin
+             WHERE channel_id = #{channelId} AND checkin_date &gt; DATE_SUB(#{date}, INTERVAL 30 DAY) AND checkin_date &lt;= #{date}
+             GROUP BY member_id) t
+         WHERE t.days &gt; #{days} OR (t.days = #{days} AND t.member_id &lt; #{memberId})
+    </select>
+</mapper>

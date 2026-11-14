@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -69,6 +70,7 @@ class ApiAccountDeregistrationControllerTest {
 
         assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
         assertEquals(status, result.get(AjaxResult.DATA_TAG));
+        verify(fixture.resultService).issue(eq(1001L), any());
         verify(fixture.deregistrationService).apply(1001L);
         verify(fixture.smsVerificationService).verify(
                 "13800138000", "123456", "198.51.100.20");
@@ -168,6 +170,8 @@ class ApiAccountDeregistrationControllerTest {
         private final IConsentRecordService consentRecordService = mock(IConsentRecordService.class);
         private final SmsVerificationService smsVerificationService = mock(SmsVerificationService.class);
         private final WechatReconfirmationService wechat = mock(WechatReconfirmationService.class);
+        private final com.chengyinhub.business.appgaps.DeregistrationResultService resultService =
+                mock(com.chengyinhub.business.appgaps.DeregistrationResultService.class);
         private final UmsMember member = new UmsMember();
         private final TestApiAccountDeregistrationController controller =
                 new TestApiAccountDeregistrationController();
@@ -189,6 +193,7 @@ class ApiAccountDeregistrationControllerTest {
             ReflectionTestUtils.setField(controller, "wechatReconfirmationService", wechat);
             ReflectionTestUtils.setField(controller, "consentRecordService", consentRecordService);
             ReflectionTestUtils.setField(controller, "complianceProperties", complianceProperties);
+            ReflectionTestUtils.setField(controller, "deregistrationResultService", resultService);
         }
 
         private AjaxResult apply() {

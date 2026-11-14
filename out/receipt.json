@@ -28,13 +28,17 @@
       }
     ]
   },
-  "problems": [],
+  "problems": [
+    "precheck: 缺环境变量 TEST_CLASS",
+    "precheck: 缺环境变量 SOURCE_SHA",
+    "precheck: 缺环境变量 SOURCE_SHA"
+  ],
   "registered_source": "147754ba8740abf208bda75cf86ed5901cac4c02",
   "registered_source_match": false,
   "schema": "CY-REAL-STORAGE-IT-RECEIPT-20261019",
   "source_sha": "455633229205c94c5c5f8e2cd7917e19edcc042c",
   "timezone": "UTC",
-  "verdict": "INCOMPLETE",
+  "verdict": "FAIL",
   "workflow": {
     "job": null,
     "repository": null,

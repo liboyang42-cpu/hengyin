@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.CityGameMapper">
+
+    <sql id="boardColumns">
+        board_id AS boardId, game_id AS gameId, region_id AS regionId, season_id AS seasonId,
+        rules_release_id AS rulesReleaseId, release_id AS releaseId, rules_hash AS rulesHash, rule_version AS ruleVersion,
+        lifecycle, title, revision, board_version AS boardVersion, event_sequence AS eventSequence,
+        dice_id AS diceId, dice_faces AS diceFaces, dice_weights AS diceWeights,
+        actions_per_round AS actionsPerRound, max_rounds AS maxRounds, roll_cost AS rollCost, acquisition_cost AS acquisitionCost,
+        task_cost AS taskCost, service_cost AS serviceCost, challenge_cost AS challengeCost,
+        acquire_points AS acquirePoints, challenge_points AS challengePoints, holding_yield AS holdingYield, goal_score AS goalScore,
+        holding_limit AS holdingLimit, protection_seconds AS protectionSeconds, quote_valid_seconds AS quoteValidSeconds,
+        term_seconds AS termSeconds, min_members AS minMembers, max_members AS maxMembers,
+        rules_id AS rulesId, rules_text AS rulesText, challenge_rule_id AS challengeRuleId, protection_text AS protectionText,
+        safety_statement AS safetyStatement, valid_from AS validFrom, valid_until AS validUntil,
+        fairness_metric_version AS fairnessMetricVersion, fairness_horizon_seconds AS fairnessHorizonSeconds,
+        fairness_delta_seconds AS fairnessDeltaSeconds,
+        map_datum AS mapDatum, map_south AS mapSouth, map_west AS mapWest, map_north AS mapNorth, map_east AS mapEast,
+        map_zoom AS mapZoom, map_min_zoom AS mapMinZoom, map_max_zoom AS mapMaxZoom
+    </sql>
+
+    <select id="selectBoard" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="boardColumns"/> FROM city_game_board WHERE board_id = #{boardId}
+    </select>
+    <select id="selectBoardForUpdate" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="boardColumns"/> FROM city_game_board WHERE board_id = #{boardId} FOR UPDATE
+    </select>
+    <select id="selectCurrentBoard" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="boardColumns"/> FROM city_game_board
+        WHERE region_id = #{regionId} AND lifecycle IN ('OPEN', 'FROZEN', 'CLOSED')
+        ORDER BY FIELD(lifecycle, 'OPEN', 'FROZEN', 'CLOSED'), valid_from DESC, board_id
+        LIMIT 1
+    </select>
+    <select id="selectBoardByRelease" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="boardColumns"/> FROM city_game_board WHERE release_id = #{releaseId} FOR UPDATE
+    </select>
+    <update id="advanceBoard">
+        UPDATE city_game_board SET board_version = board_version + 1, event_sequence = event_sequence + 1 WHERE board_id = #{boardId}
+    </update>
+    <insert id="insertEvent">
+        INSERT INTO city_game_event(board_id, sequence, kind, property_id, team_id, board_version)
+        VALUES (#{boardId}, #{sequence}, #{kind}, #{propertyId}, #{teamId}, #{boardVersion})
+    </insert>
+    <select id="selectEvents" resultType="java.util.LinkedHashMap">
+        SELECT sequence, kind, property_id AS propertyId, board_version AS boardVersion, create_time AS createTime
+        FROM city_game_event WHERE board_id = #{boardId} AND sequence &gt; #{after} ORDER BY sequence LIMIT #{limit}
+    </select>
+
+    <select id="selectPoints" resultType="java.util.LinkedHashMap">
+        SELECT point_id AS pointId, title, latitude, longitude, domain, collected_at AS collectedAt, availability,
+               merchant_version AS merchantVersion, platform_version AS platformVersion
+        FROM city_game_point WHERE board_id = #{boardId} AND del_flag = 0 ORDER BY point_id
+    </select>
+
+    <sql id="propertyColumns">
+        property_id AS propertyId, point_id AS pointId, track_index AS trackIndex, role, status, state_version AS stateVersion,
+        holder_team_id AS holderTeamId, held_since AS heldSince, protected_until AS protectedUntil, challenge_state AS challengeState
+    </sql>
+    <select id="selectProperties" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="propertyColumns"/> FROM city_game_property WHERE board_id = #{boardId} ORDER BY track_index
+    </select>
+    <select id="selectPropertyForUpdate" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="propertyColumns"/> FROM city_game_property WHERE board_id = #{boardId} AND property_id = #{propertyId} FOR UPDATE
+    </select>
+    <select id="selectPropertyByTrack" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="propertyColumns"/> FROM city_game_property WHERE board_id = #{boardId} AND track_index = #{trackIndex}
+    </select>
+    <select id="countTrack" resultType="int">
+        SELECT COUNT(*) FROM city_game_property WHERE board_id = #{boardId}
+    </select>
+    <update id="updateProperty">
+        UPDATE city_game_property
+        SET status = #{status}, holder_team_id = #{holderTeamId}, held_since = #{heldSince}, protected_until = #{protectedUntil},
+            challenge_state = #{challengeState}, state_version = state_version + 1
+        WHERE board_id = #{boardId} AND property_id = #{propertyId} AND state_version = #{expectedVersion}
+    </update>
+    <select id="countHeld" resultType="long">
+        SELECT COUNT(*) FROM city_game_property WHERE board_id = #{boardId} AND holder_team_id = #{teamId}
+    </select>
+    <select id="selectServices" resultType="java.util.LinkedHashMap">
+        SELECT service_id AS serviceId, property_id AS propertyId, title, member_points_fee AS memberPointsFee
+        FROM city_game_service WHERE board_id = #{boardId} AND status = 'PUBLISHED' ORDER BY service_id
+    </select>
+    <select id="selectService" resultType="java.util.LinkedHashMap">
+        SELECT service_id AS serviceId, property_id AS propertyId, title, member_points_fee AS memberPointsFee
+        FROM city_game_service WHERE board_id = #{boardId} AND service_id = #{serviceId} AND status = 'PUBLISHED'
+    </select>
+
+    <sql id="teamColumns">
+        team_id AS teamId, board_id AS boardId, captain_member_id AS captainMemberId, invite_code AS inviteCode, state, version,
+        session_id AS sessionId, session_state AS sessionState, session_version AS sessionVersion,
+        track_position AS trackPosition, landed_property_id AS landedPropertyId, score
+    </sql>
+    <insert id="insertTeam">
+        INSERT INTO city_game_team(team_id, board_id, captain_member_id, invite_code, state, version)
+        VALUES (#{teamId}, #{boardId}, #{captainMemberId}, #{inviteCode}, 'FORMING', 1)
+    </insert>
+    <select id="selectTeam" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="teamColumns"/> FROM city_game_team WHERE team_id = #{teamId}
+    </select>
+    <select id="selectTeamForUpdate" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="teamColumns"/> FROM city_game_team WHERE team_id = #{teamId} FOR UPDATE
+    </select>
+    <select id="selectTeamByCode" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="teamColumns"/> FROM city_game_team WHERE invite_code = #{inviteCode}
+    </select>
+    <select id="selectTeamByInvite" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="teamColumns"/> FROM city_game_team WHERE invite_code = #{inviteCode} FOR UPDATE
+    </select>
+    <update id="updateTeamState">
+        UPDATE city_game_team SET state = #{state}, session_id = #{sessionId}, session_state = #{sessionState},
+               session_version = CASE WHEN #{sessionId} IS NULL THEN session_version ELSE session_version + 1 END,
+               version = version + 1
+        WHERE team_id = #{teamId}
+    </update>
+    <update id="moveTeam">
+        UPDATE city_game_team SET track_position = #{position}, landed_property_id = #{landedPropertyId} WHERE team_id = #{teamId}
+    </update>
+    <update id="addTeamScore">
+        UPDATE city_game_team SET score = score + #{score} WHERE team_id = #{teamId}
+    </update>
+    <select id="selectTeamsByBoard" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="teamColumns"/> FROM city_game_team WHERE board_id = #{boardId} ORDER BY create_time, team_id
+    </select>
+
+    <sql id="participationColumns">
+        participation_id AS participationId, board_id AS boardId, team_id AS teamId, member_id AS memberId,
+        present, confirmed, membership_version AS membershipVersion
+    </sql>
+    <insert id="insertParticipation">
+        INSERT INTO city_game_participation(participation_id, board_id, team_id, member_id, present, confirmed, membership_version)
+        VALUES (#{participationId}, #{boardId}, #{teamId}, #{memberId}, 1, 0, 1)
+    </insert>
+    <select id="selectParticipation" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="participationColumns"/> FROM city_game_participation WHERE board_id = #{boardId} AND member_id = #{memberId}
+    </select>
+    <select id="selectParticipationForUpdate" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="participationColumns"/> FROM city_game_participation WHERE board_id = #{boardId} AND member_id = #{memberId} FOR UPDATE
+    </select>
+    <update id="updateParticipation">
+        UPDATE city_game_participation SET present = #{present}, confirmed = #{confirmed}, membership_version = membership_version + 1
+        WHERE participation_id = #{participationId}
+    </update>
+    <delete id="deleteParticipation">
+        DELETE FROM city_game_participation WHERE participation_id = #{participationId}
+    </delete>
+    <select id="selectTeamMembers" resultType="java.util.LinkedHashMap">
+        SELECT <include refid="participationColumns"/> FROM city_game_participation WHERE team_id = #{teamId} ORDER BY create_time, participation_id
+    </select>
+
+    <insert id="insertRound">
+        INSERT INTO city_game_round(board_id, team_id, round_seq, actions_total, actions_remaining, status)
+        VALUES (#{boardId}, #{teamId}, #{roundSeq}, #{actions}, #{actions}, 'OPEN')
+    </insert>
+    <select id="selectOpenRound" resultType="java.util.LinkedHashMap">
+        SELECT round_seq AS roundSeq, actions_total AS actionsTotal, actions_remaining AS actionsRemaining
+        FROM city_game_round WHERE board_id = #{boardId} AND team_id = #{teamId} AND status = 'OPEN'
+        ORDER BY round_seq DESC LIMIT 1
+    </select>
+    <select id="selectLastRound" resultType="java.util.LinkedHashMap">
+        SELECT round_seq AS roundSeq, status, settled_score AS settledScore
+        FROM city_game_round WHERE board_id = #{boardId} AND team_id = #{teamId} ORDER BY round_seq DESC LIMIT 1
+    </select>
+    <update id="spendActions">
+        UPDATE city_game_round SET actions_remaining = actions_remaining - #{units}
+        WHERE board_id = #{boardId} AND team_id = #{teamId} AND round_seq = #{roundSeq} AND status = 'OPEN' AND actions_remaining &gt;= #{units}
+    </update>
+    <update id="settleRound">
+        UPDATE city_game_round SET status = 'SETTLED', settled_score = #{score}, settled_at = CURRENT_TIMESTAMP(3)
+        WHERE board_id = #{boardId} AND team_id = #{teamId} AND round_seq = #{roundSeq} AND status = 'OPEN'
+    </update>
+    <insert id="insertRoll">
+        INSERT INTO city_game_roll(board_id, team_id, round_seq, member_id, request_id, purpose, dice_id, face)
+        VALUES (#{boardId}, #{teamId}, #{roundSeq}, #{memberId}, #{requestId}, #{purpose}, #{diceId}, #{face})
+    </insert>
+
+    <insert id="insertTaskAttempt">
+        INSERT IGNORE INTO city_game_task_attempt(board_id, property_id, team_id, member_id, request_id)
+        VALUES (#{boardId}, #{propertyId}, #{teamId}, #{memberId}, #{requestId})
+    </insert>
+    <select id="selectTaskAttemptProperties" resultType="string">
+        SELECT property_id FROM city_game_task_attempt WHERE board_id = #{boardId} AND team_id = #{teamId} ORDER BY property_id
+    </select>
+
+    <insert id="insertQuote">
+        INSERT INTO city_game_quote(quote_id, quote_version, board_id, action, target_id, payer_member_id, rule_version,
+                                    member_points_cost, action_cost, expires_at)
+        VALUES (#{quoteId}, #{quoteVersion}, #{boardId}, #{action}, #{targetId}, #{payerMemberId}, #{ruleVersion},
+                #{memberPointsCost}, #{actionCost}, #{expiresAt})
+    </insert>
+    <select id="selectQuoteForUpdate" resultType="java.util.LinkedHashMap">
+        SELECT quote_id AS quoteId, quote_version AS quoteVersion, board_id AS boardId, action, target_id AS targetId,
+               payer_member_id AS payerMemberId, rule_version AS ruleVersion, member_points_cost AS memberPointsCost,
+               action_cost AS actionCost, expires_at AS expiresAt, consumed_request_id AS consumedRequestId
+        FROM city_game_quote WHERE quote_id = #{quoteId} FOR UPDATE
+    </select>
+    <update id="consumeQuote">
+        UPDATE city_game_quote SET consumed_request_id = #{requestId} WHERE quote_id = #{quoteId} AND consumed_request_id IS NULL
+    </update>
+
+    <select id="selectRequest" resultType="java.util.LinkedHashMap">
+        SELECT member_id AS memberId, domain, request_id AS requestId, board_id AS boardId, action, request_hash AS requestHash,
+               http_status AS httpStatus, decision, current_version AS currentVersion, reason_code AS reasonCode,
+               task_attempt_kept AS taskAttemptKept, points_charged AS pointsCharged, dice_face AS diceFace
+        FROM city_game_request WHERE member_id = #{memberId} AND domain = #{domain} AND request_id = #{requestId}
+    </select>
+    <insert id="insertRequest">
+        INSERT INTO city_game_request(member_id, domain, request_id, board_id, action, request_hash, http_status, decision,
+                                      current_version, reason_code, task_attempt_kept, points_charged, dice_face)
+        VALUES (#{memberId}, #{domain}, #{requestId}, #{boardId}, #{action}, #{requestHash}, #{httpStatus}, #{decision},
+                #{currentVersion}, #{reasonCode}, #{taskAttemptKept}, #{pointsCharged}, #{diceFace})
+    </insert>
+
+    <select id="selectMemberPoints" resultType="long">
+        SELECT IFNULL(point, 0) FROM ums_member WHERE id = #{memberId} AND del_flag = 0
+    </select>
+    <update id="deductMemberPoints">
+        UPDATE ums_member SET point = point - #{points} WHERE id = #{memberId} AND del_flag = 0 AND IFNULL(point, 0) &gt;= #{points}
+    </update>
+    <insert id="insertPointsDetail">
+        INSERT INTO ums_member_points_detail(member_id, current_points, after_points, change_points, change_reason, event_type,
+                                             reward_business_key, change_type, del_flag, create_by, create_time)
+        VALUES (#{memberId}, #{before}, #{before} - #{points}, #{points}, #{reason}, 99, #{businessKey}, 2, 0, 'city-game', NOW())
+    </insert>
+
+    <insert id="recordOuting">
+        INSERT INTO city_game_outing(outing_id, board_id, member_id, outing_day, t0, action_count, points_spent, zero_point_blocks)
+        VALUES (#{outingId}, #{boardId}, #{memberId}, #{day}, #{t0}, 1, #{pointsSpent}, #{zeroPointBlocks})
+        ON DUPLICATE KEY UPDATE action_count = action_count + 1, points_spent = points_spent + VALUES(points_spent),
+                                zero_point_blocks = zero_point_blocks + VALUES(zero_point_blocks)
+    </insert>
+    <select id="selectOutings" resultType="java.util.LinkedHashMap">
+        SELECT outing_id AS outingId, member_id AS memberId, t0, points_spent AS pointsSpent, zero_point_blocks AS zeroPointBlocks
+        FROM city_game_outing WHERE board_id = #{boardId} AND t0 &lt;= #{asOf}
+        ORDER BY member_id, t0, outing_id LIMIT #{limit}
+    </select>
+    <select id="selectBoardFacts" resultType="java.util.LinkedHashMap">
+        SELECT
+            (SELECT COUNT(*) FROM city_game_task_attempt t JOIN city_game_property p
+                ON p.board_id = t.board_id AND p.property_id = t.property_id AND p.role = 'NEUTRAL'
+              WHERE t.board_id = #{boardId} AND t.create_time &lt;= #{asOf}) AS goalCompletions,
+            (SELECT COALESCE(SUM(points_charged), 0) FROM city_game_request
+              WHERE board_id = #{boardId} AND domain = 'game' AND decision = 'APPLIED' AND create_time &lt;= #{asOf}) AS totalGain,
+            (SELECT COALESCE(MAX(score), 0) FROM city_game_team WHERE board_id = #{boardId}) AS topActorGain,
+            (SELECT COALESCE(SUM(score), 0) FROM city_game_team WHERE board_id = #{boardId}) AS effectiveGain,
+            (SELECT COALESCE(SUM(zero_point_blocks), 0) FROM city_game_outing WHERE board_id = #{boardId} AND t0 &lt;= #{asOf}) AS zeroPointBlocks,
+            (SELECT COUNT(*) FROM city_game_request
+              WHERE board_id = #{boardId} AND domain = 'game' AND action = 'START_CHALLENGE' AND decision = 'APPLIED'
+                AND create_time &lt;= #{asOf}) AS challenges
+    </select>
+
+    <!-- gaps A pass 2 -->
+    <update id="freezeBoard">
+        UPDATE city_game_board SET lifecycle = 'FROZEN', board_version = board_version + 1, event_sequence = event_sequence + 1
+        WHERE board_id = #{boardId} AND lifecycle = 'OPEN'
+    </update>
+    <select id="countTeamsStillPlaying" resultType="int">
+        SELECT COUNT(*) FROM city_game_team t WHERE t.board_id = #{boardId} AND t.state = 'LOCKED'
+          AND (NOT EXISTS (SELECT 1 FROM city_game_round r WHERE r.board_id = t.board_id AND r.team_id = t.team_id)
+               OR EXISTS (SELECT 1 FROM city_game_round r WHERE r.board_id = t.board_id AND r.team_id = t.team_id AND r.status = 'OPEN'))
+    </select>
+    <update id="bumpPointSlot">
+        UPDATE city_game_point SET slot_version = slot_version + 1 WHERE board_id = #{boardId} AND point_id = #{pointId}
+    </update>
+    <insert id="insertPointEvent">
+        INSERT INTO city_point_event(board_id, point_id, component, aggregate_version, availability, merchant_version, platform_version, holder_team_id)
+        SELECT board_id, point_id, #{component},
+               CASE #{component} WHEN 'SLOT' THEN slot_version WHEN 'MERCHANT' THEN merchant_version ELSE platform_version END,
+               availability, merchant_version, platform_version, #{holderTeamId}
+        FROM city_game_point WHERE board_id = #{boardId} AND point_id = #{pointId}
+    </insert>
+    <insert id="insertBudgetRoll">
+        INSERT INTO city_game_roll(board_id, team_id, round_seq, member_id, request_id, purpose, dice_id, face, face_index, result_json)
+        VALUES (#{boardId}, #{teamId}, #{roundSeq}, #{memberId}, #{requestId}, 'BUDGET', #{diceId}, #{face}, #{faceIndex}, #{resultJson})
+    </insert>
+    <select id="selectRoundRolls" resultType="java.util.LinkedHashMap">
+        SELECT id, purpose, request_id AS requestId, face, face_index AS faceIndex, result_json AS resultJson, create_time AS createTime
+        FROM city_game_roll WHERE board_id = #{boardId} AND team_id = #{teamId} AND round_seq = #{roundSeq} AND purpose IN ('MOVE', 'BUDGET')
+        ORDER BY id
+    </select>
+    <select id="selectRoundForUpdate" resultType="java.util.LinkedHashMap">
+        SELECT round_seq AS roundSeq, actions_total AS actionsTotal, actions_remaining AS actionsRemaining, status
+        FROM city_game_round WHERE board_id = #{boardId} AND team_id = #{teamId} AND round_seq = #{roundSeq} FOR UPDATE
+    </select>
+</mapper>

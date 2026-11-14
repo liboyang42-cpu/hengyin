@@ -260,6 +260,30 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 declaration);
     }
 
+    /**
+     * Read-only opening calendar of a node's timeWindow, under the same eligibility as resuming
+     * (no new-use admission, no write). Not configured or malformed fails closed.
+     */
+    @Override
+    public Map<String, Object> timeWindow(Long memberId, Long activityId, Long topicId, Long nodeId) {
+        GameInput input = requireInput(memberId, activityId, topicId, nodeId, false);
+        requireRouteNodeAccess(memberId, activityId, topicId, nodeId);
+        JsonNode config = readJson(input.configJson, "高级玩法配置不可用");
+        JsonNode window = config.get("timeWindow");
+        if (!enabled(window)) throw new IllegalStateException("TIME_WINDOW_NOT_CONFIGURED");
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("activityId", input.activityId);
+        out.put("topicId", topicId);
+        out.put("nodeId", nodeId);
+        try {
+            out.putAll(com.chengyinhub.business.service.support.AdvancedTimeWindow.compute(
+                    window.path("openFrom").asText(""), window.path("openTo").asText(""), clock.now().getTime()));
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalStateException("TIME_WINDOW_INVALID");
+        }
+        return out;
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> start(Long memberId, Long activityId, Long topicId, Long nodeId, Long teamId) {
@@ -3797,11 +3821,60 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         value.put("myRole", state.path("roles").path(String.valueOf(actorMemberId)).asText(null));
         JsonNode myRole = findById(config.path("roles"), state.path("roles").path(String.valueOf(actorMemberId)).asText(""));
         value.put("myRoleLabel", myRole == null ? null : myRole.path("label").asText());
-        if (actorMemberId != null && actorMemberId.equals(state.path("leaderMemberId").isNumber()
-                ? state.path("leaderMemberId").asLong() : null)) {
+        boolean leader = actorMemberId != null && actorMemberId.equals(state.path("leaderMemberId").isNumber()
+                ? state.path("leaderMemberId").asLong() : null);
+        if (leader) {
             value.put("roleAssignments", objectMapper.convertValue(state.path("roles"), Map.class));
         }
+        Map<String, Object> turn = publicTurn(config, state, actorMemberId, leader);
+        if (turn != null) value.put("turn", turn);
+        if (leader && turn != null) {
+            List<Map<String, Object>> order = new ArrayList<>();
+            int position = 0;
+            for (JsonNode id : config.path("turnOrder")) {
+                JsonNode role = findById(config.path("roles"), id.asText(""));
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("position", position++);
+                item.put("roleId", id.asText());
+                item.put("roleLabel", role == null ? null : role.path("label").asText());
+                order.add(item);
+            }
+            value.put("turnOrder", order);
+        }
         return value;
+    }
+
+    /**
+     * U06 轮次投影（completeUnit 按 turnOrder[turnIndex % size] 裁决）：每位成员只拿到「是否轮到我、还要等几轮、
+     * 第几圈、是否已完成」，不含其他成员的角色；角色顺序表与当前角色 id 只给队长（与 roleAssignments 同口径）。
+     */
+    private static Map<String, Object> publicTurn(JsonNode config, JsonNode state, Long actorMemberId, boolean leader) {
+        JsonNode order = config.path("turnOrder");
+        if (!order.isArray() || order.size() == 0) return null;
+        int size = order.size();
+        int index = Math.max(0, state.path("turnIndex").asInt(0));
+        int required = Math.max(1, config.path("requiredTurns").asInt(1));
+        int completed = state.path("completedUnitIds").isArray() ? state.path("completedUnitIds").size() : 0;
+        boolean finished = completed >= required;
+        String mine = actorMemberId == null ? "" : state.path("roles").path(String.valueOf(actorMemberId)).asText("");
+        Integer until = null;
+        if (!finished && !mine.isEmpty()) {
+            for (int k = 0; k < size; k++) {
+                if (mine.equals(order.get((index + k) % size).asText())) { until = k; break; }
+            }
+        }
+        Map<String, Object> turn = new LinkedHashMap<>();
+        turn.put("index", index);
+        turn.put("position", index % size);
+        turn.put("size", size);
+        turn.put("round", index / size + 1);
+        turn.put("completedTurns", completed);
+        turn.put("requiredTurns", required);
+        turn.put("finished", finished);
+        turn.put("myTurn", until != null && until == 0);
+        turn.put("turnsUntilMine", until);
+        if (leader) turn.put("currentRoleId", finished ? null : order.get(index % size).asText());
+        return turn;
     }
 
     private Map<String, Object> publicRuntimeConfig(JsonNode config, ObjectNode state, Long actorMemberId) {

@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -85,6 +86,20 @@ public class PostGameOutcomeReportServiceImpl implements IPostGameOutcomeReportS
     @Override
     @Transactional(readOnly = true)
     public PostGameOutcomeReportVO generate(LocalDate cohortDate, int windowDays) {
+        return generate(cohortDate, windowDays, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PostGameOutcomeReportVO generateForTopics(LocalDate cohortDate, int windowDays, Collection<Long> topicIds) {
+        if (topicIds == null) throw new IllegalArgumentException("topicIds 不能为空");
+        Set<Long> scope = new java.util.TreeSet<>();
+        for (Long id : topicIds) if (id != null && id > 0) scope.add(id);
+        return generate(cohortDate, windowDays, scope);
+    }
+
+    /** @param topicScope null = platform report (unchanged B8); otherwise the creator's topics (may be empty). */
+    private PostGameOutcomeReportVO generate(LocalDate cohortDate, int windowDays, Set<Long> topicScope) {
         validate(cohortDate, windowDays);
 
         ZoneId zone = clock.getZone();
@@ -94,7 +109,8 @@ public class PostGameOutcomeReportServiceImpl implements IPostGameOutcomeReportS
         Date windowEnd = Date.from(cohortDate.plusDays(windowDays + 1L).atStartOfDay(zone).toInstant());
         boolean mature = !clock.instant().isBefore(windowEnd.toInstant());
 
-        List<Long> memberIds = require(mapper.selectCohortMemberIds(cohortStart, cohortEnd),
+        List<Long> memberIds = require(topicScope == null ? mapper.selectCohortMemberIds(cohortStart, cohortEnd)
+                        : topicScope.isEmpty() ? new ArrayList<>() : mapper.selectCohortMemberIdsForTopics(cohortStart, cohortEnd, topicScope),
                 "cohort 候选会员查询返回 null，拒绝把未知报成 0");
         List<RegistrationCohortFact> history = loadHistory(memberIds, windowEnd);
 
@@ -113,6 +129,7 @@ public class PostGameOutcomeReportServiceImpl implements IPostGameOutcomeReportS
             rows.sort(Comparator.comparing(RegistrationCohortFact::getPaymentTime)
                     .thenComparing(RegistrationCohortFact::getRegistrationId));
         }
+        if (topicScope != null) keepFirstRegistrationOnTopics(byMember, topicScope, cohortStart, cohortEnd);
 
         CohortTally tally = new CohortTally();
         Set<Long> paidDenominator = new HashSet<>();
@@ -223,12 +240,21 @@ public class PostGameOutcomeReportServiceImpl implements IPostGameOutcomeReportS
         }
 
         Map<String, PostGameOutcomeReportVO.MetricCount> metrics = new LinkedHashMap<>();
+        if (topicScope != null) {
+            metrics.put(COMPLETION, metric(COMPLETION,
+                    topicScope.isEmpty() ? new ArrayList<>() : mapper.selectTopicCompletionFacts(cohortStart, windowEnd, topicScope),
+                    "topic_route_session(status=1 已到终点，限创作者本人主题)",
+                    "创作者口径：只计本人主题的整局终局事实；member-day 去重", true, true,
+                    "主题完成事实查询返回 null，拒绝把未知报成 0"));
+        } else {
         metrics.put(COMPLETION, metric(COMPLETION,
                 mapper.selectCompletionFacts(cohortStart, windowEnd),
                 "player_badge(TOPIC_FINISH_*, 通关发奖事实) + topic_route_session(status=1 已到终点) "
                         + "+ roam_session(status=1 玩家结算)",
                 "服务端整局终局事实；member-day 去重。节点小游戏(game_runtime_session)不算整局完成", true, true,
                 "服务端完成事实查询返回 null，拒绝把未知报成 0"));
+        }
+        if (topicScope == null) {
         metrics.put(REWARD, metric(REWARD,
                 mapper.selectRewardFacts(cohortStart, windowEnd),
                 "cms_topic_completion_coupon_reward_log + topic_completion_xp_award + roam_poi_reward_log",
@@ -249,19 +275,22 @@ public class PostGameOutcomeReportServiceImpl implements IPostGameOutcomeReportS
                 "biz_event_log(finish_route_recommendation_click / roam_exploreday_reco_click)",
                 "按 idempotency_key 去重；点击不等于报名", true, true,
                 "推荐点击事实查询返回 null，拒绝把未知报成 0"));
+        }
         metrics.put(SECOND_REGISTRATION, new PostGameOutcomeReportVO.MetricCount(
                 SECOND_REGISTRATION, mature ? retainedPaid.size() : 0L, mature ? retainedPaid.size() : 0L,
                 mature ? retainedPaid.size() : 0L, null, lastSecondPayment,
                 "cms_registration(payment_status=2) 另一笔不同 parent_order_no",
                 "与主指标分子同源；未成熟时 members=0，须以 mature=false 区分而不是读成 0%",
                 true, true, lastSecondPayment));
+        if (topicScope == null) {
         metrics.put(CLIENT_OBSERVED, metric(CLIENT_OBSERVED,
                 mapper.selectClientObservedOutcomeFacts(cohortStart, windowEnd),
                 "biz_event_log(mission_complete / play_arrive_success / roam_finish / finish_route_recommendation_shown)",
                 "客户端观测，非服务端终局；仅作对照，不参与分母分子", false, false,
                 "客户端观测事实查询返回 null，拒绝把未知报成 0"));
+        }
 
-        RoamRevisitReportVO roamRevisit = roamRevisitReportService == null ? null
+        RoamRevisitReportVO roamRevisit = roamRevisitReportService == null || topicScope != null ? null
                 : roamRevisitReportService.generate(cohortDate, RoamRevisitReportVO.Metric.ROAM_REVISIT, windowDays);
 
         Date computedAt = new Date(clock.millis());
@@ -362,6 +391,28 @@ public class PostGameOutcomeReportServiceImpl implements IPostGameOutcomeReportS
             all.addAll(batch);
         }
         return all;
+    }
+
+    /** Creator scope: drop members whose first (full-history) registration is not on one of the scoped topics. */
+    private void keepFirstRegistrationOnTopics(Map<Long, List<RegistrationCohortFact>> byMember, Set<Long> scope,
+                                               Date cohortStart, Date cohortEnd) {
+        List<Long> firstIds = new ArrayList<>();
+        for (List<RegistrationCohortFact> rows : byMember.values()) {
+            RegistrationCohortFact first = rows.get(0);
+            if (!first.getPaymentTime().before(cohortStart) && first.getPaymentTime().before(cohortEnd)) firstIds.add(first.getRegistrationId());
+        }
+        Map<Long, Long> topicOf = new HashMap<>();
+        for (int from = 0; from < firstIds.size(); from += MEMBER_BATCH_SIZE) {
+            List<Long> batch = firstIds.subList(from, Math.min(firstIds.size(), from + MEMBER_BATCH_SIZE));
+            for (Map<String, Object> row : require(mapper.selectRegistrationTopics(batch), "报名主题查询返回 null，拒绝把未知报成 0")) {
+                if (row == null || !(row.get("registrationId") instanceof Number id)) continue;
+                if (row.get("topicId") instanceof Number topic) topicOf.put(id.longValue(), topic.longValue());
+            }
+        }
+        byMember.values().removeIf(rows -> {
+            Long topic = topicOf.get(rows.get(0).getRegistrationId());
+            return topic == null || !scope.contains(topic);
+        });
     }
 
     private static <T> T require(T value, String message) {

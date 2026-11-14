@@ -775,6 +775,30 @@ class HistoryPlanning(RepoFixture):
             self.assertIn(target, job_text)
         self.assertEqual(2, job_text.count("'3', '1', '1', 'admin'"), "both rows stay registered paused")
 
+    def test_marketing_task_registration_is_post_deploy_and_its_schema_files_have_no_sys_job(self):
+        # qx-c2: the old jar resolves the bean of every sys_job row (paused ones too), so rows naming
+        # channelRefundConsumptionTask / marketingRevenuePostingTask must wait until the new jar is live.
+        job_id = "marketing_task_registration_20261108"
+        schema_ids = ("marketing_revenue_allocation_20261108", "marketing_z_channel_voucher_20261108")
+        for migration_id in (job_id,) + schema_ids:
+            self.write("chengyinhub-admin/sql/migration_" + migration_id + ".sql")
+        manifest = build_manifest(self.tmp, TARGET, dependencies={job_id: list(schema_ids)})
+        phases = {m["migrationId"]: m.get("executionPhase") for m in manifest["migrations"]}
+        self.assertEqual("POST_DEPLOY", phases[job_id])
+        self.assertTrue(all(phases[s] is None for s in schema_ids))
+        plan = plan_release(manifest, [], bootstrap=self.fresh)
+        states = {row["migrationId"]: row["state"] for row in plan["migrations"]}
+        self.assertEqual("DEFERRED_POST_DEPLOY", states[job_id])
+        repo_sql = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "chengyinhub-admin", "sql")
+        for schema_id in schema_ids:
+            with open(os.path.join(repo_sql, "migration_" + schema_id + ".sql"), encoding="utf-8") as handle:
+                self.assertNotRegex(handle.read(), r"(?i)insert\s+into\s+sys_job", schema_id)
+        with open(os.path.join(repo_sql, "migration_" + job_id + ".sql"), encoding="utf-8") as handle:
+            job_text = handle.read()
+        for target in ("channelRefundConsumptionTask.run()", "marketingRevenuePostingTask.run()"):
+            self.assertIn(target, job_text)
+        self.assertEqual(2, job_text.count("'3','1','1','system'"), "both rows stay registered paused")
+
     def test_demo_seed_is_inventory_only_and_never_a_pending_release_write(self):
         self.write("chengyinhub-admin/sql/seed_preset_demo.sql")
         manifest = build_manifest(self.tmp, TARGET, dependencies={"beta": ["alpha"]})

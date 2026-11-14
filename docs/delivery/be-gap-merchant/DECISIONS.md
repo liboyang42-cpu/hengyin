@@ -1,0 +1,30 @@
+# feature/be-gap-merchant — decisions (R3, 2026-11-14)
+
+Scope: the CITY merchant value report (`/api/merchant/city-value/{report,result,events,event/{}/benefit}`), whose goals, points and redemption parts answered `MISSING_*` / `SOURCE_UNAVAILABLE` after R2.
+
+## Sources consulted
+
+* **Owner docs** — app repo `origin/ui/owner-handover`, `docs/owner-handover/app-ai-pack-20261108/` (all files, grep `CITY|城市|积分|兑换|goal|redemption`). They fix two rules that apply here and are otherwise silent on a merchant value report:
+  * "积分是现有可兑换积分，与解谜分分开；不新增币种、不新增钱包" (`UI优化施工清单.md` §0, UG-06/UG-07): points are the existing member points (`ums_member_points_detail`), never mixed with game score.
+  * "答案、到达、奖励、核销、席位：只由服务端判定" (`城瘾内容合同-v1-两端方案.md`): a redemption is only what the server recorded.
+* **Mini-program** — hengyin `chengyinhub-xcx`. It has no CITY board or value-report page (`grep city-value|city-game|城市棋盘` finds nothing). Its merchant city page is `pages/merchant/citynode/index.js`: the store scans the player's city-node code → `POST /api/verify/citynode/redeem` → once per (POI, player) the reward log flips 0→1, the configured coupon is granted (or withheld when the coupon is disabled: "核销成功，该券已失效或停发，未发放") and `CITY_NODE_REDEEM` is audited (`CityNodeRedemptionApplication`). That is the only merchant redemption/benefit behaviour in the mini-program, so it is the benefit source.
+* **App contract** — `Core/CityMerchantValueContracts.swift`: a metric is `{status ∈ MEASURED|MISSING_COVERAGE|MISSING_DEFINITION|MISSING_UNIT, visitCount?, rate?, medianMillis?, sum?, count?, mean?}`; a benefit record is `VERIFIED` (`sourceKind=BUSINESS_AUDIT_CITY_NODE_REDEEM`, `benefit=COUPON_GRANTED_AT_REDEMPTION`, `sourceRecordId>0`, `couponId>0`) or `SOURCE_UNAVAILABLE` (all four null).
+
+## Decisions
+
+| # | Field | Decision | Source rows |
+|---|---|---|---|
+| D1 | `funnel.publicGoal` | `MEASURED count` = goals completed at this store: accepted tasks (`city_game_task_attempt`) on **NEUTRAL** properties (`city_game_property.role`) whose point is one of the store's points on the current board, in the window. That is the board's own goal event (`CityGameActionService`: a NEUTRAL `ACCEPT_TASK` adds `goalScore` and emits `GOAL_COMPLETED`). `MISSING_COVERAGE` when the store has no NEUTRAL property on the board (no goal can happen there), never a made-up 0. | task attempt, property, point |
+| D2 | `funnel.cooperativeGoal` | Docs and mini-program are silent. Decision: a goal from D1 is cooperative when the completing team had **≥ 2 confirmed members who joined before the completion** (`city_game_participation.confirmed=1`, `create_time ≤` the attempt). Same coverage rule as D1. Limitation: membership is read at report time (a member who left and was deleted is not counted). | + participation |
+| D3 | `timeToFirstEffectiveChoice` | New column `city_value_visit.feedback_at` (migration `20261120_city_value_visit_feedback_at`), written by the visit feedback command. The metric is `MEASURED {visitCount, medianMillis}` over visits with feedback in the window: median of `feedback_at − entered_at`. Older rows have no `feedback_at` and are not counted (no backfill); no such visit → `MISSING_COVERAGE`. The feedback facts in `events` now carry `feedback_at` as `occurredAt` when it exists (ENTRY keeps `entered_at`). | visit |
+| D4 | `visitCost.netPoints` | `MEASURED {sum, count, unit: MEMBER_POINTS}`: member points actually charged by **APPLIED** board actions that target the store's points in the window — quoted actions (acquire / service visit / challenge: `city_game_request.points_charged`, joined through the consumed `city_game_quote`, service → property via `city_game_service`) and self-paid acquisitions (`city_acquisition_title.pointsBefore − pointsAfter`). Points are the existing member points (owner rule above). CITY has no refund path for these charges, so "net" = charged. No action → `MISSING_COVERAGE`. | request, quote, service, acquisition title |
+| D5 | `visitCost.budget` | `MEASURED {sum, count, unit: CITY_ACTION_UNITS}`: action-budget units those same actions spent (quote `action_cost`, acquisition quote `actionCost`) plus the board's `taskCost` per accepted task on the store's properties. | + task attempt, board rules |
+| D6 | `event/{}/benefit` | Mini-program behaviour. `VERIFIED` only when the visit's player and POI (`city_value_visit.member_id/poi_id`) have a `CITY_NODE_REDEEM` audit (`business_audit_event`, `domain_id=poi`, `relation_id=player`) that (a) is at or after the visit (whole-second audit time), (b) is not owned by a later rated visit of the same player at the same POI (a POI redeems once per player, so it belongs to the last rated visit before it), and (c) recorded `couponGranted=true` with `couponId>0`. Then `sourceRecordId` = audit id, `couponId` from the audit's original decision. Otherwise `SOURCE_UNAVAILABLE` (the app's only other state) with the written reason in `evidenceReason`: `NO_REDEMPTION_AUDIT`, `REDEEMED_BEFORE_VISIT`, `BELONGS_TO_LATER_VISIT`, `NO_COUPON_CONFIGURED`, `COUPON_NOT_GRANTED`, `VISIT_NOT_FOUND`. | visit, audit |
+| D7 | `byCohort` | Stays `MISSING_DEFINITION`. Written reason: the app contract carries **one scalar metric** for `byCohort`, so a per-cohort breakdown cannot be expressed, and neither the owner docs nor the mini-program define a merchant cohort key. The only cohort on the backend (`CityFairnessService` newcomer) is a per-player self-view, not a merchant segmentation. | — |
+
+Every remaining non-`MEASURED` value therefore has a written reason: `MISSING_COVERAGE` = no source row in scope (D1–D5), `MISSING_DEFINITION` = D7, `SOURCE_UNAVAILABLE` = the per-record `evidenceReason` of D6. `MISSING_UNIT` is no longer returned.
+
+## Not changed
+
+* `sourceCollection` stays `EXPLICIT_VISIT_AND_COMMITTED_CITY_NODE_AUDIT` (the app checks it; D6 now actually reads the committed city-node audit).
+* Stored reports (`merchant_city_value_report.body_json`) are replayed as stored; reports computed before R3 keep their old `MISSING_*` values.

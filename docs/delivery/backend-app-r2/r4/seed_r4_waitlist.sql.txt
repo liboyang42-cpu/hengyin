@@ -1,0 +1,20 @@
+-- TEST-only (integration/backend-app-r2 R4, cy_e2e_r2): a series waitlist policy for the seeded club session 992031, so the app's
+-- /api/club/activity/join and /cancel ({activityId} only) can succeed on TEST. Never run elsewhere.
+-- * club_event_series: club 7001, topic 992001, waitlist on, no host reservation, offer 20 min, ACTIVE.
+-- * club_event_occurrence: binds session 992031 to that series (the policy lookup joins on it).
+-- * oms_ticket 992042: a sold-out (1/0) free ticket on 992031. A waitlist only queues on a sold-out ticket; the existing ticket
+--   992041 (198 left, used by the registration smoke) is unchanged, and the resolver picks the only sold-out ticket.
+INSERT INTO club_event_series (club_id, topic_id, recurrence_type, timezone, default_lead_member_id, default_capacity, waitlist_enabled,
+    host_reservation_required, offer_minutes, status, version, created_by_member_id, request_id, request_fingerprint, create_by, create_time)
+  SELECT 7001, 992001, 'ONCE', 'Asia/Shanghai', 9003, 1, 1, 0, 20, 'ACTIVE', 0, 9003, 'r4-test-waitlist-992031', SHA2('r4-test-waitlist-992031', 256), 'r4-test-seed', NOW()
+  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM club_event_series WHERE club_id = 7001 AND created_by_member_id = 9003 AND request_id = 'r4-test-waitlist-992031');
+INSERT INTO club_event_occurrence (series_id, activity_id, occurrence_at, default_lead_member_id, status, version, create_time)
+  SELECT s.id, 992031, '2026-12-13 09:00:00', 9003, 'ACTIVE', 0, NOW() FROM club_event_series s
+  WHERE s.request_id = 'r4-test-waitlist-992031' AND NOT EXISTS (SELECT 1 FROM club_event_occurrence WHERE activity_id = 992031);
+INSERT INTO oms_ticket (id, member_id, owner_type, owner_id, name, price, start_time, end_time, sale_start_time, sale_end_time,
+    total_inventory, remaining_inventory, mode, team_size, min_people, max_people, signup_deadline, team_status, refund_rule,
+    refund_supported, sync_with_theme, need_audit, del_flag, create_by, create_time)
+  SELECT 992042, 9003, 2, 992031, 'TEST waitlist ticket (sold out)', 0.00, start_time, end_time, sale_start_time, sale_end_time,
+    1, 0, mode, team_size, min_people, max_people, signup_deadline, team_status, refund_rule, refund_supported, sync_with_theme,
+    need_audit, 0, 'r4-test-seed', NOW()
+  FROM oms_ticket WHERE id = 992041 AND NOT EXISTS (SELECT 1 FROM oms_ticket WHERE id = 992042);

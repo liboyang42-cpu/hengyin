@@ -768,6 +768,17 @@
       "classes": [
         "com.chengyinhub.business.it.FreeExploreSelfPlayPriceGateMySqlIT"
       ]
+    },
+    "app-gaps-a": {
+      "lineage": "app gaps A 20261113 (feature/app-gaps-a): player routes the app builds that the backend lacked",
+      "registered_source": "f351b113eb0173451737720c01e0690271cf6373",
+      "note": "Pass 1: CityGameMysqlIntegrationTest (3), PlayerGapsMysqlIntegrationTest (2; egg test removed in r2). Pass 2: CityR491MysqlIntegrationTest (3), AppGapsPass2MysqlIntegrationTest (4). Verified on VPS TEST MySQL 8.0.45 (be-int-mysql) with scratch schemas cy_gaps_a_*.",
+      "classes": [
+        "com.chengyinhub.business.citygame.CityGameMysqlIntegrationTest",
+        "com.chengyinhub.business.citygame.CityR491MysqlIntegrationTest",
+        "com.chengyinhub.business.service.support.PlayerGapsMysqlIntegrationTest",
+        "com.chengyinhub.business.appgaps.AppGapsPass2MysqlIntegrationTest"
+      ]
     }
   },
   "classes": {
@@ -812,7 +823,7 @@
       "note": "Reviewed current source registration for focused Questo backend repairs; execution NOT_RUN; storage proof only, no provider or product acceptance."
     },
     "com.chengyinhub.web.controller.api.AppMediaAssetMySqlIT": {
-      "tests": 5,
+      "tests": 6,
       "storage": [
         "mysql"
       ],
@@ -2194,6 +2205,46 @@
       ],
       "gates": {},
       "note": "f-money3 free-explore paid self-play gate on real MySQL; task-owned scratch schema dropped and read back at the end. Source registration 20261111, execution evidence is the dispatched run receipt only."
+    },
+    "com.chengyinhub.business.citygame.CityGameMysqlIntegrationTest": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_CITY_GAME_MYSQL_IT": "1"
+      },
+      "note": "app gaps A CITY game: real migration 20261113_gaps_a_city_game + MyBatis XML; team formation, server dice, occupy/toll/challenge with member points, round settlement, concurrent duplicate request, player rules, bounded snapshot, fairness. Task-owned scratch schema per suite."
+    },
+    "com.chengyinhub.business.service.support.PlayerGapsMysqlIntegrationTest": {
+      "tests": 2,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_GAPS_A_MYSQL_IT": "1"
+      },
+      "note": "app gaps A player reads on baseline DDL: follow-list keyset, own topic_route_action receipt (route-egg collection removed: eggs decommissioned 2026-09-07, route answers 410). Task-owned scratch schema per suite."
+    },
+    "com.chengyinhub.business.citygame.CityR491MysqlIntegrationTest": {
+      "tests": 3,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_CITY_GAME_MYSQL_IT": "1"
+      },
+      "note": "app gaps A pass 2 r491 CITY surfaces on migrations 20261113 + 20261114_gaps_a_city_r491 and the real MyBatis XML: recorded-only budget roll and replay, lifecycle freeze after the last settlement, store-attested arrival, onsite task, self-funded acquisition (points, budget, ownership), ordered map SLOT delta, neutral task, merchant intent review, value visit, walking target. Task-owned scratch schema."
+    },
+    "com.chengyinhub.business.appgaps.AppGapsPass2MysqlIntegrationTest": {
+      "tests": 4,
+      "storage": [
+        "mysql"
+      ],
+      "gates": {
+        "CHENGYIN_GAPS_A_MYSQL_IT": "1"
+      },
+      "note": "app gaps A pass 2 player routes on baseline DDL + bundle ledger + pass 2 migrations: location share privacy/retention, bundle reads and statements with refused money writes, author-only cover CAS, deregistration result token. Task-owned scratch schema."
     }
   }
 }

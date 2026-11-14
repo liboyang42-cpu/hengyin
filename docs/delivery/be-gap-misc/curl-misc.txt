@@ -1,0 +1,43 @@
+user/sms/send (form, signed out)                     OK  http=200 code=200  | {"msg": "验证码已发送", "code": 200}
+user/sms/send bad phone (long-path refusal)          OK  http=200 code=500  | {"msg": "手机号格式不正确", "code": 500}
+login 13900000009 http=200 code=200 token=yes
+login 13900000004 http=200 code=200 token=yes
+npc/chat/delete signed out                           OK  http=401 code=401  | {"msg": "登录状态已失效，请重新登录", "code": 401}
+npc/chat/delete (requestId)                          OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"deleted": 0}, "writeReceipt": {"operation": "NPC_CHAT_DELETE", "requestId": "misc-npc-a0eadf68", "state": "COMPLETED"}}
+ugc/block form target_member_id                      OK  http=200 code=200  | {"msg": "已拉黑", "code": 200}
+ugc/block self (long-path refusal)                   OK  http=200 code=500  | {"msg": "参数有误", "code": 500}
+original-event own order 74                          OK  http=200 code=200 rows=1 | {"msg": "操作成功", "code": 200, "data": [{"requestId": "misc-test-order-74", "targetType": "ORDER", "targetId": 74, "action": "TEST_FIXTURE_ORDER_EVENT", "afterJson": "{\"note\": \"be-gap-misc TEST fixture\"}", "createTime": "2026-11-14T09:25:43"}]}
+original-event someone else's order                  OK  http=200 code=404  | {"msg": "REGISTRATION_NOT_FOUND", "code": 404}
+original-event own order without audit rows          OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": []}
+pay/create signed out                                OK  http=401 code=401  | {"msg": "登录状态已失效，请重新登录", "code": 401}
+pay/create (switch on) -> registration pay/app       OK  http=200 code=200  | {"msg": "报名完成确认成功", "code": 200, "data": {"registrationId": 74, "registrationNo": "A2026111328FD24F7", "payableAmount": 0.0, "expireTime": "2026-11-13T23:08:50.000+08:00", "expiresAt": null, "paymentType": 1, "registrationIds": [74], "paymentStatus": 2, "registrationStatus": 2}}
+asset/withdraw (switch on) empty body -> 400         OK  http=200 code=400  | {"msg": "姓名不能为空", "code": 400}
+asset/withdraw (switch on) -> bank withdrawal preflight OK  http=200 code=409  | {"msg": "请先同意提供本次提现所需的银行卡信息", "businessCode": "WITHDRAWAL_CONSENT_REQUIRED", "code": 409}
+device/status (no key)                               OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"protocolVersion": 1, "provider": "IOS_CMPEDOMETER_V1", "enabled": true, "rewardEnabled": false, "hardwareVerified": false, "accountId": 9009, "deviceKeyId": null, "appId": "ABCDE12345.com.chengyinhub.test", "environment": "production", "status": "UNENROLLED", "
+device/status flags                                  OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"protocolVersion": 1, "provider": "IOS_CMPEDOMETER_V1", "enabled": true, "rewardEnabled": false, "hardwareVerified": false, "accountId": 9009, "deviceKeyId": null, "appId": "ABCDE12345.com.chengyinhub.test", "environment": "production", "status": "UNENROLLED", "
+device/enrollment-challenge                          OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"protocolVersion": 1, "provider": "IOS_CMPEDOMETER_V1", "enabled": true, "rewardEnabled": false, "hardwareVerified": false, "accountId": 9009, "deviceKeyId": "hk45OcoWRqZlULll8sfeML5o+y+Uj0iSj2CWvVk35Pw=", "appId": "ABCDE12345.com.chengyinhub.test", "environment
+device/enroll bogus attestation -> 409 APP_ATTEST_*  OK  http=200 code=409  | {"msg": "设备验证暂不可用，请刷新状态后重试", "code": 409, "data": {"reasonCode": "APP_ATTEST_CBOR_TRAILING_DATA", "provider": "IOS_CMPEDOMETER_V1", "rewardEnabled": false}}
+device/enrollment-challenge extra field              OK  http=200 code=409  | {"msg": "设备验证暂不可用，请刷新状态后重试", "code": 409, "data": {"reasonCode": "APP_ATTEST_REQUEST_INVALID", "provider": "IOS_CMPEDOMETER_V1", "rewardEnabled": false}}
+device/revoke unknown key -> 409                     OK  http=200 code=409  | {"msg": "设备验证暂不可用，请刷新状态后重试", "code": 409, "data": {"reasonCode": "APP_ATTEST_KEY_UNAVAILABLE", "provider": "IOS_CMPEDOMETER_V1", "rewardEnabled": false}}
+home GET                                             OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"version": 0, "status": "DELETED", "changedAt": null, "effectiveAt": null, "label": null, "latitude": null, "longitude": null, "datum": null}}
+home PUT -> SAVED                                    OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"requestId": "misc-home-34bf74dc", "decision": "SAVED", "version": 1}}
+home PUT same requestId -> replay                    OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"requestId": "misc-home-34bf74dc", "decision": "SAVED", "version": 1}}
+home PUT stale version -> VERSION_CONFLICT           OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"requestId": "misc-home-stale-4a1db1", "decision": "VERSION_CONFLICT", "version": 1}}
+home PUT unknown key -> 400                          OK  http=200 code=400  | {"msg": "HOME_REQUEST_INVALID", "code": 400}
+home GET ACTIVE                                      OK  http=200 code=200  | {"code": 200, "data": {"status": "ACTIVE"}}
+home GET other member -> own (none)                  OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"version": 0, "status": "DELETED", "changedAt": null, "effectiveAt": null, "label": null, "latitude": null, "longitude": null, "datum": null}}
+return/policy                                        OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"policyVersion": "home-return-test-1", "maxAccuracyMeters": 100.0, "maxFixAgeSeconds": 120.0, "dwellSeconds": 0, "serverTimeMillis": 1794620013585}}
+return/runs                                          OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"runs": [], "truncated": false, "nextBeforeRunId": null}}
+return/account completed run -> HOME_RUN_UNAVAILABLE OK  http=200 code=409  | {"msg": "HOME_RUN_UNAVAILABLE", "code": 409}
+return/verify on a completed run -> RUN_UNAVAILABLE  OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"requestId": "misc-v-c5a10642", "decision": "RUN_UNAVAILABLE", "proofId": null, "homeVersion": 1, "expiresAtMillis": null, "retryAfterSeconds": null, "challengeId": null, "accountVersion": null}}
+return/restore unknown proof -> PROOF_UNAVAILABLE    OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"requestId": "misc-r-5f6a50a0", "proofId": "<proofId>", "decision": "PROOF_UNAVAILABLE", "current": 0, "maximum": 0, "accountVersion": 0, "retryAfterSeconds": null}}
+return/receipt unknown -> success without data       OK  http=200 code=200  | {"msg": "操作成功", "code": 200}
+return/policy signed out                             OK  http=401 code=401  | {"msg": "登录状态已失效，请重新登录", "code": 401}
+home DELETE -> DELETED                               OK  http=200 code=200  | {"msg": "操作成功", "code": 200, "data": {"requestId": "misc-del-5e5df4", "decision": "DELETED", "version": 2}}
+us/apple/challenges                                  OK  http=200 code=200  | {"code": 200, "msg": "操作成功", "data": {"challengeId": "<challengeId>", "rawNonce": "<rawNonce>", "state": "<state>", "expiresIn": 300, "market": "US", "provider": "apple"}}
+us/apple/challenges non-empty body -> 400            OK  http=400 code=400  | {"code": 400, "msg": "US_APPLE_INVALID_REQUEST", "errorCode": "US_APPLE_INVALID_REQUEST"}
+us/apple/exchange unknown key -> 401 INVALID_IDENTITY OK  http=401 code=401  | {"code": 401, "msg": "US_APPLE_INVALID_IDENTITY", "errorCode": "US_APPLE_INVALID_IDENTITY"}
+us/apple/exchange reused challenge -> 401 INVALID_CHALLENGE OK  http=401 code=401  | {"code": 401, "msg": "US_APPLE_INVALID_CHALLENGE", "errorCode": "US_APPLE_INVALID_CHALLENGE"}
+us/auth/session with a CN session -> 401 US_SESSION_INVALID OK  http=401 code=401  | {"code": 401, "msg": "US_SESSION_INVALID", "errorCode": "US_SESSION_INVALID"}
+us/auth/session signed out -> 401                    OK  http=401 code=401  | {"msg": "登录状态已失效，请重新登录", "code": 401}
+SUMMARY 40/40 OK

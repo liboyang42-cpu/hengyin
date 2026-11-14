@@ -266,12 +266,30 @@ public class ApiLoginController extends BaseController {
     @Anonymous
     public AjaxResult userInfo() {
         AjaxResult ajax = AjaxResult.success();
-        ajax.put("appUser", userInfoView(getLoginAppUser().getAppUser()));
+        AppUser appUser = getLoginAppUser().getAppUser();
+        UmsMember member = appUser == null || appUser.getUserId() == null
+                ? null : umsMemberService.selectUmsMemberById(appUser.getUserId());
+        java.util.Map<String, Object> view = userInfoView(appUser, resolveMemberRole(member));
+        // 手机号登录的会话对象不带昵称；与 /api/user/info 同源回落到会员昵称。
+        if (member != null && view.get("nickName") == null && StringUtils.isNotBlank(member.getNickname())) {
+            view.put("nickName", member.getNickname());
+        }
+        ajax.put("appUser", view);
         return ajax;
+    }
+
+    /** role 属于 ums_member（登录响应 data.role / /api/user/info 同源），AppUser 会话对象不带；缺省按注册默认玩家。 */
+    private static String resolveMemberRole(UmsMember member) {
+        return member != null && StringUtils.isNotBlank(member.getRole())
+                ? member.getRole() : com.chengyinhub.business.service.IRoleService.ROLE_PLAYER;
     }
 
     /** 会话对象只按白名单输出，口令/盐/查询参数等内部字段不进响应（与 Codex 90883a923e 字段集一致）。 */
     static java.util.Map<String, Object> userInfoView(AppUser appUser) {
+        return userInfoView(appUser, com.chengyinhub.business.service.IRoleService.ROLE_PLAYER);
+    }
+
+    static java.util.Map<String, Object> userInfoView(AppUser appUser, String role) {
         java.util.Map<String, Object> view = new java.util.LinkedHashMap<>();
         if (appUser == null) {
             return view;
@@ -293,6 +311,7 @@ public class ApiLoginController extends BaseController {
         view.put("loginIp", appUser.getLoginIp());
         view.put("loginDate", appUser.getLoginDate());
         view.put("userType", appUser.getUserType());
+        view.put("role", role);
         return view;
     }
 

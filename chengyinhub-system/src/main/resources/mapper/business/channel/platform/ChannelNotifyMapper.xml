@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelNotifyMapper">
+
+    <sql id="prefCols">
+        scope_type AS scopeType, scope_id AS scopeId, level, permanent_muted AS permanentMuted, muted_until AS mutedUntil,
+        quiet_start AS quietStart, quiet_end AS quietEnd, quiet_tz AS quietTz, suppress_broadcast AS suppressBroadcast,
+        suppress_team_status AS suppressTeamStatus, show_preview AS showPreview, version,
+        (muted_until IS NOT NULL AND muted_until &gt; CURRENT_TIMESTAMP(3)) AS mutedActive
+    </sql>
+    <select id="selectPref" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="prefCols"/> FROM im_notify_pref WHERE member_id = #{memberId} AND scope_type = #{scopeType} AND scope_id = #{scopeId}
+    </select>
+    <select id="lockPref" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="prefCols"/> FROM im_notify_pref WHERE member_id = #{memberId} AND scope_type = #{scopeType} AND scope_id = #{scopeId} FOR UPDATE
+    </select>
+    <select id="listPrefs" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="prefCols"/> FROM im_notify_pref WHERE member_id = #{memberId} AND scope_type IN (1, 2) ORDER BY scope_type, scope_id LIMIT 500
+    </select>
+    <insert id="upsertPref" parameterType="java.util.HashMap">
+        INSERT INTO im_notify_pref(member_id, scope_type, scope_id, level, permanent_muted, muted_until, quiet_start, quiet_end, quiet_tz,
+            suppress_broadcast, suppress_team_status, show_preview, version)
+        VALUES (#{memberId}, #{scopeType}, #{scopeId}, #{level}, #{permanentMuted}, #{mutedUntil}, #{quietStart}, #{quietEnd}, #{quietTz},
+            #{suppressBroadcast}, #{suppressTeamStatus}, #{showPreview}, 1)
+        ON DUPLICATE KEY UPDATE level = VALUES(level), permanent_muted = VALUES(permanent_muted), muted_until = VALUES(muted_until),
+            quiet_start = VALUES(quiet_start), quiet_end = VALUES(quiet_end), quiet_tz = VALUES(quiet_tz),
+            suppress_broadcast = VALUES(suppress_broadcast), suppress_team_status = VALUES(suppress_team_status),
+            show_preview = VALUES(show_preview), version = version + 1
+    </insert>
+
+    <select id="selectClubDefault" resultType="java.util.HashMap" useCache="false">
+        SELECT club_id AS clubId, level, version, updated_at AS updatedAt FROM im_club_notify_default WHERE club_id = #{clubId}
+    </select>
+    <select id="lockClubDefault" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT club_id AS clubId, level, version, updated_at AS updatedAt FROM im_club_notify_default WHERE club_id = #{clubId} FOR UPDATE
+    </select>
+    <insert id="insertClubDefault">
+        INSERT IGNORE INTO im_club_notify_default(club_id, level, version, updated_by, updated_at)
+        VALUES (#{clubId}, #{level}, 1, #{updatedBy}, CURRENT_TIMESTAMP(3))
+    </insert>
+    <update id="updateClubDefault">
+        UPDATE im_club_notify_default SET level = #{level}, version = version + 1, updated_by = #{updatedBy}, updated_at = CURRENT_TIMESTAMP(3)
+         WHERE club_id = #{clubId} AND version = #{expectedVersion}
+    </update>
+
+    <select id="conversationType" resultType="java.lang.Integer" useCache="false">
+        SELECT type FROM im_conversation WHERE id = #{id}
+    </select>
+    <select id="membership" resultType="java.util.HashMap" useCache="false">
+        SELECT unread_count AS unread, last_read_msg_id AS lastRead, muted, deleted
+          FROM im_conversation_member WHERE conversation_id = #{conversationId} AND member_id = #{memberId}
+    </select>
+    <select id="latestVisible" resultType="java.lang.Long" useCache="false">
+        SELECT COALESCE(MAX(id), 0) FROM im_message WHERE conversation_id = #{conversationId} AND status = 0
+    </select>
+    <!-- 未读汇总：按会话类型分 tab；频道行(type 5)单独给 CHANNEL_INDEX 读状态；免打扰行不计入全局角标。 -->
+    <select id="unreadRows" resultType="java.util.HashMap" useCache="false">
+        SELECT c.id AS conversationId, c.type + 0 AS type, m.unread_count AS unread, m.last_read_msg_id AS lastRead, m.muted AS muted,
+               (SELECT COUNT(1) FROM im_message_mention mm JOIN im_message msg ON msg.id = mm.message_id
+                 WHERE msg.conversation_id = c.id AND msg.id &gt; m.last_read_msg_id AND msg.status = 0
+                   AND ((mm.mention_type = 'USER' AND mm.target_id = #{memberId}) OR mm.mention_type = 'EVERYONE')) AS mentions
+          FROM im_conversation_member m JOIN im_conversation c ON c.id = m.conversation_id
+         WHERE m.member_id = #{memberId} AND m.deleted = 0
+         LIMIT 2000
+    </select>
+</mapper>

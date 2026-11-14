@@ -30,6 +30,7 @@ public class ApiClubEventOpsController extends BaseController {
     @Autowired private IClubEventAttendanceService attendanceService;
     @Autowired private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
     @Autowired private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
+    @Autowired(required = false) private com.chengyinhub.business.appgaps.ClubSeriesOriginalResults seriesOriginalResults;
 
     /** F-L5C-02:对他人可见的文字写入前送检;审不了按 fail-close 拦截。 */
     private String textRisk(Long actorMemberId, String text) {
@@ -61,6 +62,18 @@ public class ApiClubEventOpsController extends BaseController {
         } catch (ServiceException e) {
             return serviceError(e);
         }
+    }
+
+    /**
+     * App club-series-original-result-v1：按原始 series/create 字段读回首次执行的不可变完整结果；
+     * 只认本人发起的 (clubId, trim(requestId))，原线格式不一致 409，无快照（含本功能上线前的系列）UNKNOWN。
+     */
+    @PostMapping("/series/original-result")
+    public AjaxResult seriesOriginalResult(@RequestBody(required = false) Map<String, Object> request) {
+        Long principal = principal();
+        if (principal == null) return error("请先登录");
+        if (seriesOriginalResults == null) return new AjaxResult(503, "系列原始结果未开放");
+        return seriesOriginalResults.read(principal, request);
     }
 
     @PostMapping("/series/list")

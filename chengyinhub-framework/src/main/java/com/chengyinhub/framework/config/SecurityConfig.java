@@ -150,15 +150,17 @@ public class SecurityConfig
                         // [P0-安全] 由 /api/login/** 收窄为具体登录入口:/api/login/** 会连带放行任何
                         // 未来新增的 /api/login/xxx(曾放行越权的 /api/login/withopenid)。当前 /api/login/
                         // 下只有 jscode2session 的 /api/login/code 需匿名;密码登录 /api/login 已单列。
-                        .requestMatchers(legacyMatchers("/api/common/**","/api/register","/api/login/code","/api/openid","/api/login","/api/login/phone","/api/login/wechat/app","/api/login/apple","/api/sms/send","/api/findpass","/api/comment/list")).permitAll()
+                        .requestMatchers(legacyMatchers("/api/common/**","/api/register","/api/login/code","/api/openid","/api/login","/api/login/phone","/api/login/wechat/app","/api/login/apple","/api/sms/send","/api/user/sms/send","/api/us/auth/apple/challenges","/api/us/auth/apple/exchange","/api/findpass","/api/comment/list")).permitAll()
                         // 商家公开主页(脱敏后)匿名可访问
-                        .requestMatchers(legacyMatchers("/api/merchant/public-detail")).permitAll()
+                        .requestMatchers(legacyMatchers("/api/merchant/public-detail", "/api/merchant/poi/detail")).permitAll()
                         // 商家/会员公开资料(白名单 VO,方法内不要求登录):历史分享链接匿名冷启动用。
                         // 精确到两条路径,绝不写成 /api/merchant/** 或 /api/user/**——那会连带放行
                         // 未来新增的任何同前缀接口(/api/user/update、/api/merchant/decor/save …)。
                         .requestMatchers(legacyMatchers("/api/merchant/public-home", "/api/user/public-info")).permitAll()
                         // 足迹分享落地页(第二轮拍板 17):只凭随机令牌读已裁剪快照,方法内不取登录态。精确 GET 一条。
                         .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/roam/share/snapshot")).permitAll()
+                        // 注销申请会撤销全部会话;结果回读只认申请回执里的一次性 resultToken(只存哈希,只读本人状态)
+                        .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/user/deregister/result")).permitAll()
                         // 第九轮地图天气氛围:只回 rain/snow/fog/clear 与强度,方法内不取登录态,按 IP 限流。精确 GET 一条。
                         .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/map/weather")).permitAll()
                         // 发现商家公开列表(脱敏同 public-detail,方法内不取登录态,强制 status=1):仅精确 POST /list。

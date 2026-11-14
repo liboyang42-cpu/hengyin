@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelOnboardingMapper">
+    <select id="selectPrompts" resultType="java.util.HashMap" useCache="false">
+        SELECT id, title, single_select + 0 AS singleSelect, required + 0 AS required, enabled + 0 AS enabled, sort_no AS sortNo
+          FROM im_onboarding_prompt WHERE guild_kind = #{guildKind} AND guild_id = #{guildId} ORDER BY sort_no, id
+    </select>
+    <select id="selectOptions" resultType="java.util.HashMap" useCache="false">
+        SELECT o.id, o.prompt_id AS promptId, o.label, o.description, o.emoji, o.sort_no AS sortNo
+          FROM im_onboarding_option o JOIN im_onboarding_prompt p ON p.id = o.prompt_id
+         WHERE p.guild_kind = #{guildKind} AND p.guild_id = #{guildId} ORDER BY o.prompt_id, o.sort_no, o.id
+    </select>
+    <insert id="insertPromptIgnore" parameterType="java.util.HashMap">
+        INSERT IGNORE INTO im_onboarding_prompt(guild_kind, guild_id, title, single_select, required, enabled, sort_no)
+        VALUES (#{guildKind}, #{guildId}, #{title}, #{singleSelect}, #{required}, 1, #{sortNo})
+    </insert>
+    <select id="selectPromptId" resultType="long" useCache="false">
+        SELECT id FROM im_onboarding_prompt WHERE guild_kind = #{guildKind} AND guild_id = #{guildId} AND sort_no = #{sortNo}
+    </select>
+    <insert id="insertOptionIgnore">
+        INSERT IGNORE INTO im_onboarding_option(prompt_id, label, description, emoji, sort_no)
+        VALUES (#{promptId}, #{label}, #{description}, #{emoji}, #{sortNo})
+    </insert>
+    <select id="selectAnswer" resultType="java.util.HashMap" useCache="false">
+        SELECT configuration_hash AS configurationHash, answers_json AS answers, request_id AS requestId
+          FROM im_onboarding_answer WHERE guild_kind = #{guildKind} AND guild_id = #{guildId} AND member_id = #{memberId}
+    </select>
+    <insert id="upsertAnswer">
+        INSERT INTO im_onboarding_answer(guild_kind, guild_id, member_id, configuration_hash, answers_json, request_id)
+        VALUES (#{guildKind}, #{guildId}, #{memberId}, #{hash}, #{answers}, #{requestId})
+        ON DUPLICATE KEY UPDATE configuration_hash = VALUES(configuration_hash), answers_json = VALUES(answers_json), request_id = VALUES(request_id)
+    </insert>
+</mapper>

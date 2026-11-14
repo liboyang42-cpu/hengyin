@@ -278,6 +278,30 @@ public class AppLoginService {
         appUserSevice.updateUmsMember(umsMember);
     }
 
+    /**
+     * be-gap-misc US Apple exchange: the caller has verified the Apple identity token and found or created this member's
+     * {@code us_apple_account} link in its realm. CN identities (phone, WeChat, {@code ums_member.apple_id}) never come here.
+     */
+    public String loginByUsAppleLink(UmsMember linked) {
+        if (linked == null || linked.getId() == null) {
+            throw new ServiceException(AUTHENTICATION_ERROR);
+        }
+        long authenticationEpoch = appSessionRegistryService.currentOrCreateEpoch(linked.getId());
+        UmsMember member = appUserSevice.selectUmsMemberById(linked.getId());
+        if (member == null || isInactive(member)) {
+            throw new ServiceException(AUTHENTICATION_ERROR);
+        }
+        AppUser appUser = new AppUser();
+        appUser.setUserId(member.getId());
+        appUser.setUserName(member.getPhone());
+        LoginAppUser loginAppUser = new LoginAppUser();
+        loginAppUser.setUserId(member.getId());
+        loginAppUser.setSessionEpoch(authenticationEpoch);
+        loginAppUser.setAppUser(appUser);
+        recordLoginInfo(loginAppUser.getUserId());
+        return appTokenService.createAppToken(loginAppUser);
+    }
+
     private boolean isInactive(UmsMember member) {
         return Long.valueOf(2L).equals(member.getStatus()) || Integer.valueOf(2).equals(member.getDelFlag());
     }

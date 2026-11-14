@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelWebhookMapper">
+
+    <sql id="subCols">
+        id, owner_type AS ownerType, owner_id AS ownerId, channel_id AS channelId, name, url_host AS urlHost, events_json AS eventsJson,
+        status, deleted, revision, key_version AS keyVersion, fail_count AS failCount, last_error AS lastError,
+        last_delivery_at AS lastDeliveryAt, create_time AS createTime, update_time AS updateTime
+    </sql>
+    <sql id="deliveryCols">
+        id, subscription_id AS subscriptionId, event_id AS eventId, event_type AS eventType, state, attempt, reason,
+        response_snippet AS responseSnippet, http_status AS httpStatus, latency_ms AS latencyMs, next_retry_at AS nextRetryAt,
+        payload_json AS payloadJson, create_time AS createTime
+    </sql>
+    <sql id="endpointCols">
+        id, owner_type AS ownerType, owner_id AS ownerId, channel_id AS channelId, name, avatar_url AS avatarUrl, status, deleted,
+        revision, key_version AS keyVersion, token_prefix AS tokenPrefix, rate_limit_per_min AS rateLimitPerMin,
+        allowed_ips_json AS allowedIpsJson, last_called_at AS lastCalledAt, create_time AS createTime, update_time AS updateTime
+    </sql>
+
+    <insert id="insertSubscription" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_webhook_subscription(owner_type, owner_id, channel_id, name, url, url_host, events_json, status, deleted,
+            revision, key_version, secret_sha256, secret_prefix, secret_cipher, created_by, create_time, update_time)
+        VALUES ('CLUB', #{ownerId}, #{channelId}, #{name}, #{url}, #{urlHost}, #{eventsJson}, #{status}, 0,
+            1, 1, #{secretSha256}, #{secretPrefix}, #{secretCipher}, #{createdBy}, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3))
+    </insert>
+    <select id="selectSubscription" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="subCols"/> FROM im_webhook_subscription WHERE id = #{id}
+    </select>
+    <select id="lockSubscription" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="subCols"/> FROM im_webhook_subscription WHERE id = #{id} FOR UPDATE
+    </select>
+    <select id="listSubscriptions" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="subCols"/> FROM im_webhook_subscription
+         WHERE owner_type = 'CLUB' AND owner_id = #{ownerId} AND channel_id = #{channelId} AND deleted = 0
+         <if test="beforeId != null">AND id &lt; #{beforeId}</if>
+         ORDER BY id DESC
+         LIMIT #{limit}
+    </select>
+    <!-- 修订号 CAS；url 为空表示不改地址。 -->
+    <update id="updateSubscription" parameterType="java.util.HashMap">
+        UPDATE im_webhook_subscription
+           SET name = #{name}, events_json = #{eventsJson}, status = #{status},
+               <if test="url != null">url = #{url}, url_host = #{urlHost},</if>
+               revision = revision + 1, update_time = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND revision = #{revision} AND deleted = 0
+    </update>
+    <update id="deleteSubscription">
+        UPDATE im_webhook_subscription SET deleted = 1, status = 0, revision = revision + 1, update_time = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND revision = #{revision} AND deleted = 0
+    </update>
+    <update id="rotateSubscriptionSecret">
+        UPDATE im_webhook_subscription
+           SET secret_sha256 = #{secretSha256}, secret_prefix = #{secretPrefix}, secret_cipher = #{secretCipher},
+               key_version = key_version + 1, revision = revision + 1, update_time = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND revision = #{revision} AND deleted = 0
+    </update>
+    <select id="selectSubscriptionForDispatch" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT id, owner_id AS ownerId, channel_id AS channelId, url, status, deleted, key_version AS keyVersion,
+               secret_cipher AS secretCipher
+          FROM im_webhook_subscription WHERE id = #{id}
+    </select>
+    <select id="listActiveConversationSubscriptions" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT s.id, s.owner_id AS ownerId, s.channel_id AS channelId, s.events_json AS eventsJson
+          FROM im_channel ch
+          JOIN im_webhook_subscription s ON s.channel_id = ch.id AND s.owner_type = 'CLUB' AND s.owner_id = ch.guild_id
+         WHERE ch.id = #{conversationId} AND ch.guild_kind = 1
+           AND (ch.legacy_conversation_id = ch.id
+                OR EXISTS (SELECT 1 FROM im_conversation cv WHERE cv.id = ch.id AND cv.type = 5))
+           AND s.deleted = 0 AND s.status = 1
+         ORDER BY s.id
+    </select>
+    <update id="recordSubscriptionOutcome">
+        UPDATE im_webhook_subscription
+           SET last_delivery_at = CURRENT_TIMESTAMP(3),
+               <choose>
+                 <when test="ok">last_error = NULL</when>
+                 <otherwise>fail_count = fail_count + 1, last_error = #{error}</otherwise>
+               </choose>
+         WHERE id = #{id}
+    </update>
+
+    <insert id="insertDelivery" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_webhook_delivery(subscription_id, event_id, event_type, state, attempt, reason, payload_json, create_time, update_time)
+        VALUES (#{subscriptionId}, #{eventId}, #{eventType}, 'PENDING', 0, #{reason}, #{payloadJson}, CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3))
+    </insert>
+    <select id="selectDelivery" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="deliveryCols"/> FROM im_webhook_delivery WHERE id = #{id}
+    </select>
+    <select id="lockDelivery" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="deliveryCols"/> FROM im_webhook_delivery WHERE id = #{id} AND subscription_id = #{subscriptionId} FOR UPDATE
+    </select>
+    <update id="requeueDelivery">
+        UPDATE im_webhook_delivery
+           SET state = 'PENDING', next_retry_at = NULL, lease_until = NULL, reason = 'RETRY_REQUESTED',
+               <if test="resetAttempt">attempt = 0,</if>
+               update_time = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND state = #{expectedState} AND attempt = #{expectedAttempt}
+    </update>
+    <select id="selectDueDeliveries" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        (SELECT id, subscription_id AS subscriptionId, state, attempt FROM im_webhook_delivery
+          WHERE state = 'PENDING' AND (next_retry_at IS NULL OR next_retry_at &lt;= CURRENT_TIMESTAMP(3)) ORDER BY id LIMIT #{limit})
+        UNION ALL
+        (SELECT id, subscription_id AS subscriptionId, state, attempt FROM im_webhook_delivery
+          WHERE state = 'FAILED' AND next_retry_at IS NOT NULL AND next_retry_at &lt;= CURRENT_TIMESTAMP(3) ORDER BY next_retry_at, id LIMIT #{limit})
+        UNION ALL
+        (SELECT id, subscription_id AS subscriptionId, state, attempt FROM im_webhook_delivery
+          WHERE state = 'INFLIGHT' AND lease_until &lt; CURRENT_TIMESTAMP(3) ORDER BY id LIMIT #{limit})
+    </select>
+    <update id="claimDelivery">
+        UPDATE im_webhook_delivery
+           SET state = 'INFLIGHT', attempt = attempt + 1, last_attempt_at = CURRENT_TIMESTAMP(3),
+               lease_until = CURRENT_TIMESTAMP(3) + INTERVAL (#{leaseMs} * 1000) MICROSECOND, update_time = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND state = #{expectedState} AND attempt = #{expectedAttempt}
+    </update>
+    <update id="finishDelivery" parameterType="java.util.HashMap">
+        UPDATE im_webhook_delivery
+           SET state = #{state}, reason = #{reason}, http_status = #{httpStatus}, latency_ms = #{latencyMs},
+               response_snippet = #{responseSnippet}, lease_until = NULL,
+               next_retry_at = <choose><when test="nextRetryMs != null">CURRENT_TIMESTAMP(3) + INTERVAL (#{nextRetryMs} * 1000) MICROSECOND</when><otherwise>NULL</otherwise></choose>,
+               update_time = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND state = 'INFLIGHT' AND attempt = #{attempt}
+    </update>
+    <select id="listDeliveries" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="deliveryCols"/> FROM im_webhook_delivery
+         WHERE subscription_id = #{subscriptionId}
+         <if test="state != null">AND state = #{state}</if>
+         <if test="beforeId != null">AND id &lt; #{beforeId}</if>
+         ORDER BY id DESC
+         LIMIT #{limit}
+    </select>
+
+    <select id="selectEndpoint" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="endpointCols"/> FROM im_webhook_endpoint WHERE id = #{id}
+    </select>
+    <select id="lockEndpoint" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="endpointCols"/> FROM im_webhook_endpoint WHERE id = #{id} FOR UPDATE
+    </select>
+    <select id="selectEndpointForIngest" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="endpointCols"/>, secret_cipher AS secretCipher FROM im_webhook_endpoint WHERE id = #{id}
+    </select>
+    <insert id="insertEndpoint" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_webhook_endpoint(owner_type, owner_id, channel_id, name, avatar_url, status, deleted, revision, key_version,
+            token_sha256, token_prefix, secret_cipher, rate_limit_per_min, allowed_ips_json, created_by, create_time, update_time)
+        VALUES ('CLUB', #{ownerId}, #{channelId}, #{name}, #{avatarUrl}, #{status}, 0, 1, 1,
+            #{tokenSha256}, #{tokenPrefix}, #{secretCipher}, #{rateLimitPerMin}, #{allowedIpsJson}, #{createdBy},
+            CURRENT_TIMESTAMP(3), CURRENT_TIMESTAMP(3))
+    </insert>
+    <!-- 修订号 CAS；avatar_url 可置空。 -->
+    <update id="updateEndpoint" parameterType="java.util.HashMap">
+        UPDATE im_webhook_endpoint
+           SET name = #{name}, avatar_url = #{avatarUrl}, status = #{status}, rate_limit_per_min = #{rateLimitPerMin},
+               allowed_ips_json = #{allowedIpsJson}, revision = revision + 1, update_time = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND revision = #{revision} AND deleted = 0
+    </update>
+    <update id="deleteEndpoint">
+        UPDATE im_webhook_endpoint SET deleted = 1, status = 0, revision = revision + 1, update_time = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND revision = #{revision} AND deleted = 0
+    </update>
+    <update id="rotateEndpointSecret">
+        UPDATE im_webhook_endpoint
+           SET token_sha256 = #{tokenSha256}, token_prefix = #{tokenPrefix}, secret_cipher = #{secretCipher},
+               key_version = key_version + 1, revision = revision + 1, update_time = CURRENT_TIMESTAMP(3)
+         WHERE id = #{id} AND revision = #{revision} AND deleted = 0
+    </update>
+    <update id="touchEndpointCalled">
+        UPDATE im_webhook_endpoint SET last_called_at = CURRENT_TIMESTAMP(3) WHERE id = #{id}
+    </update>
+    <select id="countRecentInbound" resultType="int" useCache="false" flushCache="true">
+        SELECT COUNT(*) FROM im_webhook_inbound_log
+         WHERE endpoint_id = #{endpointId} AND create_time &gt; CURRENT_TIMESTAMP(3) - INTERVAL #{seconds} SECOND
+    </select>
+    <insert id="insertNonce">
+        INSERT IGNORE INTO im_webhook_inbound_nonce(endpoint_id, nonce, signed_at, create_time)
+        VALUES (#{endpointId}, #{nonce}, #{signedAt}, CURRENT_TIMESTAMP(3))
+    </insert>
+    <delete id="deleteExpiredNonces">
+        DELETE FROM im_webhook_inbound_nonce WHERE create_time &lt; CURRENT_TIMESTAMP(3) - INTERVAL #{seconds} SECOND LIMIT #{limit}
+    </delete>
+    <insert id="insertInboundLog" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_webhook_inbound_log(endpoint_id, result, reason, message_id, request_hash, nonce, sender_type, webhook_id,
+            original_message_stored, create_time)
+        VALUES (#{endpointId}, #{result}, #{reason}, #{messageId}, #{requestHash}, #{nonce}, #{senderType}, #{webhookId},
+            #{originalMessageStored}, CURRENT_TIMESTAMP(3))
+    </insert>
+    <select id="selectChannelConversation" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT ch.id AS channelId, ch.status AS channelStatus, cv.id AS conversationId, cv.id AS conversationRow
+          FROM im_channel ch
+          LEFT JOIN im_conversation cv ON cv.id = ch.id AND (cv.type = 5 OR ch.legacy_conversation_id = ch.id)
+         WHERE ch.id = #{channelId}
+    </select>
+    <!-- 频道会话 = 同 id 的 im_conversation（type 5 频道会话，或旧会话桥 legacy_conversation_id = id）。 -->
+    <!-- 入站 Webhook 消息：系统发送者（sender_id 0），extra_json 带 sender_type 4 与 webhook_id；待审时不可见（visible_at NULL）。 -->
+    <insert id="insertWebhookMessage" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_message(conversation_id, sender_id, receiver_id, msg_type, content, extra_json, status, check_status, create_time,
+            client_message_id, request_hash, visible_at)
+        VALUES (#{conversationId}, 0, 0, 1, #{content}, #{extraJson}, 0, #{checkStatus}, NOW(), #{clientMessageId}, #{requestHash},
+            <choose><when test="visible">NOW(6)</when><otherwise>NULL</otherwise></choose>)
+    </insert>
+    <update id="touchWebhookConversation">
+        UPDATE im_conversation SET last_msg_type = 1, last_msg_text = #{text}, last_msg_at = NOW(), update_time = NOW() WHERE id = #{conversationId}
+    </update>
+    <update id="fanOutWebhookUnread">
+        UPDATE im_conversation_member SET unread_count = unread_count + 1 WHERE conversation_id = #{conversationId} AND deleted = 0
+    </update>
+    <select id="listEndpoints" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="endpointCols"/> FROM im_webhook_endpoint
+         WHERE owner_type = 'CLUB' AND owner_id = #{ownerId} AND channel_id = #{channelId} AND deleted = 0
+         <if test="beforeId != null">AND id &lt; #{beforeId}</if>
+         ORDER BY id DESC
+         LIMIT #{limit}
+    </select>
+    <select id="listInboundLogs" resultType="java.util.HashMap" useCache="false">
+        SELECT id, endpoint_id AS endpointId, result, reason, message_id AS messageId, request_hash AS requestHash, nonce,
+               sender_type AS senderType, webhook_id AS webhookId, original_message_stored AS originalMessageStored,
+               create_time AS createTime
+          FROM im_webhook_inbound_log
+         WHERE endpoint_id = #{endpointId}
+         <if test="result != null">AND result = #{result}</if>
+         <if test="beforeId != null">AND id &lt; #{beforeId}</if>
+         ORDER BY id DESC
+         LIMIT #{limit}
+    </select>
+</mapper>

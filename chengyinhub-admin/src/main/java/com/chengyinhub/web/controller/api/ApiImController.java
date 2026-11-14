@@ -1,6 +1,8 @@
 package com.chengyinhub.web.controller.api;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.service.channel.platform.ChannelMessageService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
@@ -27,8 +30,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/im")
 public class ApiImController extends BaseController
 {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.chengyinhub.business.service.channel.platform.ChannelNotifyService channelNotify;
+
     @Autowired
     private IImService imService;
+
+    /** 频道会话(type=5)沿用本控制器原链路，只把返回投影成频道十进制字符串快照。 */
+    @Autowired(required = false)
+    private ChannelMessageService channelMessages;
 
     @Operation(summary = "我的会话列表")
     @PostMapping("/conversations")
@@ -59,8 +69,9 @@ public class ApiImController extends BaseController
             Long cid = Convert.toLong(conversation_id, 0L);
             Long cursor = Convert.toLong(cursor_id, 0L);
             int sz = Convert.toInt(size, 20);
-            return AjaxResult.success(after_id == null ? imService.listMessages(getAppUserId(), cid, cursor, sz)
-                    : imService.listMessages(getAppUserId(), cid, cursor, sz, Convert.toLong(after_id, -1L)));
+            Map<String, Object> page = after_id == null ? imService.listMessages(getAppUserId(), cid, cursor, sz)
+                    : imService.listMessages(getAppUserId(), cid, cursor, sz, Convert.toLong(after_id, -1L));
+            return AjaxResult.success(channelPage(cid, page));
         }
         catch (ServiceException e)
         {
@@ -100,7 +111,7 @@ public class ApiImController extends BaseController
             ImMessage m = client_message_id == null
                     ? imService.send(getAppUserId(), cid, target > 0 ? target : null, mt, content, extra_json)
                     : imService.send(getAppUserId(), cid, target > 0 ? target : null, mt, content, extra_json, client_message_id);
-            return AjaxResult.success(m);
+            return AjaxResult.success(channelMessage(m));
         }
         catch (ServiceException e)
         {
@@ -109,6 +120,25 @@ public class ApiImController extends BaseController
         catch (Exception e)
         {
             logger.error("IM 发送消息异常", e);
+            return AjaxResult.error("操作失败，请稍后重试");
+        }
+    }
+
+    @Operation(summary = "路线分享卡公开来源")
+    @PostMapping("/route-share-source")
+    public AjaxResult routeShareSource(String topic_id)
+    {
+        try
+        {
+            return AjaxResult.success(imService.routeShareSource(getAppUserId(), Convert.toLong(topic_id, 0L)));
+        }
+        catch (ServiceException e)
+        {
+            return bizError(e);
+        }
+        catch (Exception e)
+        {
+            logger.error("路线分享来源读取异常", e);
             return AjaxResult.error("操作失败，请稍后重试");
         }
     }
@@ -122,7 +152,7 @@ public class ApiImController extends BaseController
                     Convert.toLong(conversation_id, 0L), client_message_id);
             Map<String, Object> result = new HashMap<>();
             result.put("found", receipt != null);
-            result.put("message", receipt);
+            result.put("message", channelMessage(receipt));
             return AjaxResult.success(result);
         } catch (ServiceException e) { return bizError(e); }
         catch (Exception e) { logger.error("IM 原消息回读异常", e); return AjaxResult.error("原消息结果待确认"); }
@@ -133,15 +163,29 @@ public class ApiImController extends BaseController
         return read(conversation_id, null);
     }
 
+    public AjaxResult read(String conversation_id, String read_to)
+    {
+        return read(conversation_id, read_to, null);
+    }
+
     @Operation(summary = "标记已读")
     @PostMapping("/read")
-    public AjaxResult read(String conversation_id, String read_to)
+    public AjaxResult read(String conversation_id, String read_to, String request_id)
     {
         try
         {
+            if (request_id != null && read_to != null)
+                return AjaxResult.success(channelNotify.ordinaryRead(getAppUserId(), Convert.toLong(conversation_id, 0L),
+                        Convert.toLong(read_to, -1L), request_id));
             if (read_to == null) imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L));
             else imService.markRead(getAppUserId(), Convert.toLong(conversation_id, 0L), Convert.toLong(read_to, -1L));
             return AjaxResult.success();
+        }
+        catch (com.chengyinhub.business.service.channel.platform.ChannelRejection e)
+        {
+            AjaxResult r = new AjaxResult(e.getStatus(), e.getMessage());
+            r.put("errorCode", e.getErrorCode());
+            return r;
         }
         catch (ServiceException e)
         {
@@ -174,15 +218,28 @@ public class ApiImController extends BaseController
         }
     }
 
+    public AjaxResult mute(String conversation_id, String muted)
+    {
+        return mute(conversation_id, muted, null);
+    }
+
     @Operation(summary = "设置会话免打扰")
     @PostMapping("/mute")
-    public AjaxResult mute(String conversation_id, String muted)
+    public AjaxResult mute(String conversation_id, String muted, String request_id)
     {
         try
         {
             Long cid = Convert.toLong(conversation_id, 0L);
+            if (request_id != null)
+                return AjaxResult.success(channelNotify.ordinaryMute(getAppUserId(), cid, Convert.toInt(muted, 0) == 1, request_id));
             imService.setMuted(getAppUserId(), cid, Convert.toInt(muted, 0) == 1);
             return AjaxResult.success();
+        }
+        catch (com.chengyinhub.business.service.channel.platform.ChannelRejection e)
+        {
+            AjaxResult r = new AjaxResult(e.getStatus(), e.getMessage());
+            r.put("errorCode", e.getErrorCode());
+            return r;
         }
         catch (Exception e)
         {
@@ -228,13 +285,21 @@ public class ApiImController extends BaseController
         }
     }
 
+    public AjaxResult block(String target_member_id)
+    {
+        return block(target_member_id, null);
+    }
+
     @Operation(summary = "拉黑")
     @PostMapping("/block")
-    public AjaxResult block(String target_member_id)
+    public AjaxResult block(
+            @RequestParam(value = "target_member_id", required = false) String target_member_id,
+            @RequestParam(value = "peer_id", required = false) String peer_id)
     {
         try
         {
-            imService.block(getAppUserId(), Convert.toLong(target_member_id, 0L));
+            Long targetId = resolveBlockTarget(target_member_id, peer_id);
+            imService.block(getAppUserId(), targetId);
             return AjaxResult.success("已拉黑");
         }
         catch (ServiceException e)
@@ -248,13 +313,21 @@ public class ApiImController extends BaseController
         }
     }
 
+    public AjaxResult unblock(String target_member_id)
+    {
+        return unblock(target_member_id, null);
+    }
+
     @Operation(summary = "取消拉黑")
     @PostMapping("/unblock")
-    public AjaxResult unblock(String target_member_id)
+    public AjaxResult unblock(
+            @RequestParam(value = "target_member_id", required = false) String target_member_id,
+            @RequestParam(value = "peer_id", required = false) String peer_id)
     {
         try
         {
-            imService.unblock(getAppUserId(), Convert.toLong(target_member_id, 0L));
+            Long targetId = resolveBlockTarget(target_member_id, peer_id);
+            imService.unblock(getAppUserId(), targetId);
             return AjaxResult.success("已取消");
         }
         catch (ServiceException e)
@@ -266,6 +339,28 @@ public class ApiImController extends BaseController
             logger.error("IM 取消拉黑异常", e);
             return AjaxResult.error("操作失败，请稍后重试");
         }
+    }
+
+    /** Both names address the same member; never silently prefer one conflicting target. */
+    private static long resolveBlockTarget(String legacyTarget, String peerId)
+    {
+        if (legacyTarget == null && peerId == null) throw new ServiceException("参数有误", 400);
+        Long legacy = legacyTarget == null ? null : parseBlockTarget(legacyTarget);
+        Long peer = peerId == null ? null : parseBlockTarget(peerId);
+        if (legacy != null && peer != null && !legacy.equals(peer))
+            throw new ServiceException("参数有误", 400);
+        return legacy == null ? peer : legacy;
+    }
+
+    private static long parseBlockTarget(String value)
+    {
+        try
+        {
+            long target = Long.parseLong(value.trim());
+            if (target > 0) return target;
+        }
+        catch (NumberFormatException invalidTarget) { }
+        throw new ServiceException("参数有误", 400);
     }
 
     @Operation(summary = "举报消息")
@@ -292,5 +387,23 @@ public class ApiImController extends BaseController
     private static AjaxResult bizError(ServiceException e)
     {
         return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
+    }
+
+    private Object channelMessage(ImMessage message)
+    {
+        if (message == null || message.getId() == null || channelMessages == null
+                || !channelMessages.isChannel(message.getConversationId())) return message;
+        Map<String, Object> snapshot = channelMessages.snapshot(message.getConversationId(), message.getId());
+        return snapshot == null ? message : snapshot;
+    }
+
+    private Map<String, Object> channelPage(Long conversationId, Map<String, Object> page)
+    {
+        if (page == null || channelMessages == null || !channelMessages.isChannel(conversationId)) return page;
+        List<Long> ids = new ArrayList<>();
+        Object list = page.get("list");
+        if (list instanceof List<?> rows)
+            for (Object row : rows) if (row instanceof ImMessage m && m.getId() != null) ids.add(m.getId());
+        return channelMessages.decorateHistory(conversationId, page, ids);
     }
 }

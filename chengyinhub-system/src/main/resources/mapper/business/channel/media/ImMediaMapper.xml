@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.media.ImMediaMapper">
+    <sql id="uploadColumns">
+        u.id, u.kind, u.owner_member_id AS ownerMemberId, u.conversation_id AS conversationId, u.upload_request_id AS uploadRequestId,
+        u.source_sha256 AS sourceSha256, u.asset_id AS assetId, u.file_name AS fileName, u.ext, u.mime, u.byte_size AS byteSize,
+        u.duration_ms AS durationMs, u.width, u.height, u.cover_asset_id AS coverAssetId, u.state, u.message_id AS messageId,
+        a.review_state AS reviewState, a.review_reason AS reviewReason
+    </sql>
+    <insert id="insertUpload" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_media_upload(kind, owner_member_id, conversation_id, upload_request_id, source_sha256, file_name, ext, mime, byte_size, state)
+        VALUES (#{kind}, #{ownerMemberId}, #{conversationId}, #{uploadRequestId}, #{sourceSha256}, #{fileName}, #{ext}, #{mime}, #{byteSize}, 'RESERVED')
+    </insert>
+    <select id="lockByRequest" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="uploadColumns"/> FROM im_media_upload u LEFT JOIN app_media_asset a ON a.id = u.asset_id
+         WHERE u.owner_member_id = #{ownerId} AND u.kind = #{kind} AND u.upload_request_id = #{requestId} FOR UPDATE
+    </select>
+    <select id="selectByRequest" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="uploadColumns"/> FROM im_media_upload u LEFT JOIN app_media_asset a ON a.id = u.asset_id
+         WHERE u.owner_member_id = #{ownerId} AND u.kind = #{kind} AND u.upload_request_id = #{requestId}
+    </select>
+    <select id="selectById" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="uploadColumns"/> FROM im_media_upload u LEFT JOIN app_media_asset a ON a.id = u.asset_id WHERE u.id = #{id}
+    </select>
+    <select id="lockById" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT <include refid="uploadColumns"/> FROM im_media_upload u LEFT JOIN app_media_asset a ON a.id = u.asset_id WHERE u.id = #{id} FOR UPDATE
+    </select>
+    <select id="selectByMessage" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="uploadColumns"/> FROM im_media_upload u LEFT JOIN app_media_asset a ON a.id = u.asset_id WHERE u.message_id = #{messageId}
+    </select>
+    <update id="markUploaded">
+        UPDATE im_media_upload SET asset_id = #{assetId}, state = 'UPLOADED' WHERE id = #{id} AND state = 'RESERVED'
+    </update>
+    <update id="markDeleted">
+        UPDATE im_media_upload SET state = 'DELETED' WHERE id = #{id} AND state = 'UPLOADED' AND message_id IS NULL
+    </update>
+    <update id="bindMessage">
+        UPDATE im_media_upload SET message_id = #{messageId} WHERE id = #{id} AND state = 'UPLOADED' AND message_id IS NULL
+    </update>
+    <select id="selectMessage" resultType="java.util.HashMap" useCache="false">
+        SELECT m.id, m.conversation_id AS conversationId, m.sender_id AS senderId, m.msg_type + 0 AS msgType, m.content,
+               m.extra_json AS extraJson, m.status + 0 AS status, m.check_status + 0 AS checkStatus, m.create_time AS createTime,
+               COALESCE(u.nickname, u.name) AS senderName, u.avatar AS senderAvatar
+          FROM im_message m LEFT JOIN ums_member u ON u.id = m.sender_id
+         WHERE m.id = #{messageId}
+    </select>
+</mapper>

@@ -37,17 +37,19 @@ class ApiLoginControllerLoginResponseTest {
     private static final Set<String> USER_INFO_KEYS = new HashSet<>(Arrays.asList(
             "createBy", "createTime", "updateBy", "updateTime", "remark", "userId", "userName",
             "nickName", "email", "mobile", "sex", "avatar", "status", "delFlag", "loginIp",
-            "loginDate", "userType"));
+            "loginDate", "userType", "role"));
 
     private MockMvc mockMvc;
     private LoginAppUser loginAppUser;
+    private IUmsMemberService memberService;
 
     @BeforeEach
     void setUp() {
         UmsMember member = memberWithSensitiveFields();
-        IUmsMemberService memberService = mock(IUmsMemberService.class);
+        memberService = mock(IUmsMemberService.class);
         when(memberService.selectUmsMemberList(any(UmsMember.class)))
                 .thenReturn(Collections.singletonList(member));
+        when(memberService.selectUmsMemberById(42L)).thenReturn(member);
         when(memberService.getOrCreateWechatMember("existing-openid")).thenReturn(member);
         AppLoginService loginService = mock(AppLoginService.class);
         when(loginService.login("13800000000", "password", "existing-openid"))
@@ -98,12 +100,56 @@ class ApiLoginControllerLoginResponseTest {
         assertEquals(42L, appUser.getLongValue("userId"));
         assertEquals("13800000000", appUser.getString("userName"));
         assertEquals(1, appUser.getIntValue("userType"));
+        assertEquals("player", appUser.getString("role"));
         assertFalse(body.contains("fixture-password-hash"));
         assertFalse(body.contains("fixture-password-salt"));
         assertFalse(body.contains("fixture-search-value"));
         // 会话里的对象不被裁剪：口令仍在服务端会话中供既有逻辑使用。
         assertSame(sessionUser, loginAppUser.getAppUser());
         assertEquals("fixture-password-hash", sessionUser.getPassword());
+    }
+
+    @Test
+    void userInfoRoleComesFromMemberAndStaysInClientRoleSet() throws Exception {
+        for (String role : new String[] {"player", "club", "merchant"}) {
+            memberService.selectUmsMemberById(42L).setRole(role);
+            JSONObject appUser = JSON.parseObject(mockMvc.perform(post("/api/userInfo"))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString())
+                    .getJSONObject("appUser");
+            assertEquals(role, appUser.getString("role"));
+        }
+    }
+
+    @Test
+    void userInfoNickNameFallsBackToMemberNickname() throws Exception {
+        UmsMember member = new UmsMember();
+        member.setId(42L);
+        member.setRole("club");
+        member.setNickname("会员昵称");
+        when(memberService.selectUmsMemberById(42L)).thenReturn(member);
+        JSONObject appUser = JSON.parseObject(mockMvc.perform(post("/api/userInfo"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString())
+                .getJSONObject("appUser");
+        assertEquals("club", appUser.getString("role"));
+        String expected = loginAppUser.getAppUser().getNickName() == null
+                ? "会员昵称" : loginAppUser.getAppUser().getNickName();
+        assertEquals(expected, appUser.getString("nickName"));
+    }
+
+    @Test
+    void userInfoRoleDefaultsToPlayerWhenMemberRoleMissing() throws Exception {
+        UmsMember bare = new UmsMember();
+        bare.setId(42L);
+        when(memberService.selectUmsMemberById(42L)).thenReturn(bare);
+        JSONObject appUser = JSON.parseObject(mockMvc.perform(post("/api/userInfo"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString())
+                .getJSONObject("appUser");
+        assertEquals("player", appUser.getString("role"));
+        when(memberService.selectUmsMemberById(42L)).thenReturn(null);
+        appUser = JSON.parseObject(mockMvc.perform(post("/api/userInfo"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString())
+                .getJSONObject("appUser");
+        assertEquals("player", appUser.getString("role"));
     }
 
     private AppUser appUserWithSensitiveFields() {

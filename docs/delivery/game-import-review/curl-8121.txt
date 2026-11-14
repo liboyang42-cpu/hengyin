@@ -1,0 +1,25 @@
+signing-key (anonymous)                        OK  http=200 code=200 errorCode=None 
+submit signed out -> 401                       OK  http=401 code=401 errorCode=None 
+player login 13900000004                       OK  http=200 code=200 errorCode=None 
+player login 13900000005                       OK  http=200 code=200 errorCode=None 
+submit -> PENDING (server signature)           OK  http=200 code=200 errorCode=None 
+same requestId replays                         OK  http=200 code=200 errorCode=None 
+other author same game -> GAME_ID_TAKEN        OK  http=409 code=409 errorCode=GAME_ID_TAKEN 
+mine lists the submission                      OK  http=200 code=200 errorCode=None count=2
+admin login (TEST-only sys_user)               OK  http=200 code=200 errorCode=None 
+admin queue                                    OK  http=200 code=200 errorCode=None counts={'PENDING': 2, 'ESCALATED': 0, 'APPROVED': 0, 'REJECTED': 0, 'CANCELLED': 0}
+admin detail                                   OK  http=200 code=200 errorCode=None 
+admin approve -> APPROVED                      OK  http=200 code=200 errorCode=None 
+catalog (the Druid WHERE 1 = 1 fix)            OK  http=200 code=200 errorCode=None items=1
+catalog detail has a signed downloadPath       OK  http=200 code=200 errorCode=None 
+signed download                                OK  http=200 code=None errorCode=None bytes=json
+tampered signature -> 403                      OK  http=403 code=403 errorCode=DOWNLOAD_LINK_INVALID 
+reject without reason -> 400                   OK  http=400 code=400 errorCode=BAD_REQUEST 
+reject with reason -> REJECTED                 OK  http=200 code=200 errorCode=None 
+author sees rejectReason                       OK  http=200 code=200 errorCode=None 
+escalate -> ESCALATED                          OK  http=200 code=200 errorCode=None 
+author cancels escalated -> CANCELLED          OK  http=200 code=200 errorCode=None 
+report                                         OK  http=200 code=200 errorCode=None 
+second open report -> REPORT_ALREADY_OPEN      OK  http=409 code=409 errorCode=REPORT_ALREADY_OPEN 
+admin reports (the Druid WHERE id > 0 fix)     OK  http=200 code=200 errorCode=None 
+SUMMARY 24/24 OK

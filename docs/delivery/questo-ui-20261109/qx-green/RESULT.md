@@ -84,4 +84,99 @@
 4. **`scripts/fixtures.json` 与生成器长期不同步**：launch 上全量重跑 `_gen_fixtures.js` 会改动约 5000 行，还会把 4 条既有 fixture 合同和 D35 的 `fixtureVerified` 一起打红，说明其他 lane 改页面后没有重生成。<br>• 本线只并入了 14 条新行的生成结果。<br>• 默认：不全量重生成。<br>• 建议：由矩阵 owner 在下一波统一重生成并校准 fixture。
 5. **动效没有逐帧实拍**：G-1 的 20 组动效只核对了时长和曲线逐值与原关键帧相同，没有 rig 帧条对比；G-3、G-5、G-16 的界面变化也没有实拍。<br>• 默认：上线前由 lead 用 rig 补拍 ai-npc 首次介绍、分享层、落地页、队伍席位、礼物页这几处。
 
-STATUS: PARTIAL - 原有的 7 个小程序红单测和 Gameplay HTTP 用例都已修好(全量单测 17217/17217，generic-only 在 CI 上三个头都 success)；顺带修好了全量 CI 暴露的小程序静态门 11 个子门禁、迁移安全门和分包互引缺陷；本地 ui-integrity、台账、路由矩阵、mvn 打包、后台构建、主包 2038.7 KiB 都通过；还剩 gitleaks 历史命中、架构门 AuthorWriteReceipt 消费者两项，都要你在受信策略或白名单上拍板
+
+## 五、合并后跟进(2026-11-11)
+
+#780 已由 lead 合入。之后 launch 又合入了 l-payout3、qx-final2 和 f-compliance。
+
+#779 在 `206049b6f` 上：35 个 check，33 个通过。另外两个是 Fast gates 与 Backend tests，都只因为第四节第 2 条架构 finding 而红：后端单测 18709 个，0 失败。PR 事件路径上 gitleaks 是绿的。
+
+f-compliance 合入后(`aee716fe1`)，#779 的小程序静态门又变红(run 42978418505)，本线开草稿 PR **#787**(`claude/qx-green2-20261111`)修两处：
+
+- **danger-confirm 门禁**：设置页「AI 对话记录」组件调用 `/api/ai/npc/chat/data/delete` 时没有登记。这个组件本来就先弹 `ai.npc.chatData.delete` 危险确认，所以按同一接口、同一确认键补登记。
+- **孤立单位门禁**：套票可退金额改为 `{{quote.amount || '—'}}`。`amount` 一定是校验过的非空字符串，显示不变。
+
+验证：小程序全量单测 **17227/17227**；静态门各子门禁、台账 `--check` 都通过。全量 CI 已在该分支触发。
+
+f-compliance 合入后 Funds MySQL IT 也变红：`RoamLocationRetentionMySqlIT.realCleanupTaskPreservesFavoriteRouteAndNonLocationFactsAcrossReplay` 报 `Data retention cleanup failed steps=[ai_generation_log]`。原因不在服务端：f-compliance 给真实清理任务加了 ai_generation_log 留存步骤，但这个 IT 自己组装的任务没有注入 `aiGenerationLogMapper`，库里也没有这张表。修法（`3e3d3824f`）：IT 执行已发布的建表迁移和 `create_time` 索引迁移，注入真实 Mapper，种一行 181 天前、一行当前的数据，断言只删过期行、索引存在。原有断言一条没动，只是多覆盖了一个步骤。本地 test-compile 通过；按约定 Java IT 只在 CI 上跑，全量 CI 已重新触发。
+
+`3e3d3824f` 上的全量 CI(run 42981289402)：31 个 job，28 个通过。三个红的都是第四节里需要你拍板的同一类问题：
+- Secret scan (gitleaks)：launch 历史提交里那 1 处命中；
+- Fast gates：只有架构门这一步红，前面三项都通过；
+- Backend tests：单测阶段通过，构建出的 jar 也已上传，只有架构门 verdict=BLOCKED。
+
+其余都通过：20 个小程序单测分片、小程序静态门、小程序静态检查汇总、迁移安全门、迁移布局门、后台构建、后台 E2E 契约门、SBOM 依赖扫描、变更区域检测。另外 Mini followup focused regression(`2195cdfc7`)也通过。Funds MySQL IT 不在 ci.yml 里，单独在本分支手动触发(run 42985977206，`2195cdfc7`)：两个 job 都是 **success**。真库 IT 跑了 754 个，0 失败、0 错误、0 跳过，门禁回读通过；f-compliance 合入后变红的 `RoamLocationRetentionMySqlIT` 已转绿。
+
+
+lead 后来直接在 launch 提交了 `afa90ffd5`，把留存 IT 和危险动作登记的修法换成等价的写法合进去，但漏了套票可退金额的单位兜底。本线把 #787 同步到 `afa90ffd5`，冲突的两个文件都取 launch 版本，所以 #787 现在只差一行：`subpackageMember/free-explore/index.wxml` 第 85 行。本地复核：在 launch 头上跑 `ui-theme-unit-lint.js --units`，报「free-explore/index.wxml:85 {{quote.amount}} 后紧跟单位 元，必须用 || 提供兜底」；加上本行修复后，门禁通过。
+
+
+lead 随后又在 launch 提交了 `00331811d`，加上同一行可退金额兜底。到这一步，#787 的代码修复已全部进 launch，分支同步后只剩本 RESULT 文档。#779 在 `00331811d` 上：Fast gates 的红仍然只来自架构门(本次发现见 artifact `architecture-findings-43012117038-1`)。
+
+
+l-icons / l-iconsB 合入后(`fb9f1c287`)，#779 的小程序静态门有七个子门禁变红：DS 硬编码、孤立单位、死数据字段、截图矩阵、截图覆盖率、UI-GATE-0、UI 有效性。根因只有两个页面：
+- 新路由 `subpackagePass/reveal`：标题字号是原型定值，没有像同文件其他原型值那样标 ds-ok；`paid` 只用来决定按钮去向，却走了 setData；截图矩阵里没有这一行。
+- `subpackageMember/market/membership`：l-iconsB 撤下了主题库缩略图，但页面还在请求 `/api/platform-pass/library` 并 setData `library`；主题数插值前缺 `||` 兜底。
+
+修法(`4f7dc5048`，在 #787 上)：
+- reveal：标题标 ds-ok；`paid` 改为实例字段。
+- membership：去掉多余的主题库请求和字段；主题数改为 `{{view.count || 0}}`。外层 wx:if 已排除 null，显示不变；l-iconsB 单测的固定文本随之更新为兜底写法。
+- 截图矩阵：补 F314 行，同步 STATS 和 fixtures。
+- 动作台账：按新树重建，只少一条 GET，其余是行号平移。
+
+本地复核：七个子门禁、台账 `--check`、路由矩阵 `--check`、U3、危险动作门禁全部通过；小程序全量单测 17248/17248。
+
+
+lead 的 `e01a45ded` 只修了 membership 的 library 字段，其余五个子门禁在 #779 上仍然是红的：DS 硬编码、孤立单位、截图矩阵、截图覆盖率、reveal 的 paid 死字段。本线把 #787 同步到 `e01a45ded`(membership js 和台账都取 launch 版本)，#787 现在只带 reveal 的两处、membership wxml 的兜底、F314 矩阵行和 fixtures，以及一条测试固定文本。合并树上本地复核：上述子门禁、台账、路由矩阵都通过，小程序全量单测全部通过。
+
+
+lead 在 `c7bc75843` 合入了与本线等价的钥匙开场页修复，随后又合入 f-play、f-pages、f-merchant(launch 头 `1059a6791`)。#779 的小程序静态检查在 `c7bc75843` 上仍是红的。本线把 #787 同步到 `1059a6791` 后本地复核，找出以下问题并修复(`b483bc070`)：
+- **`tests/unit/action-ledger.test.js` 语法错误**：合并时截掉了一段多行注释的开头，整个文件跑不起来，48 条台账用例(含固定计数)全部失效。已按 `c7bc75843` 原文逐字补回，48/48 通过。
+- **U4 死字段**：快速配置页(`pages/publish/simple`)在 P-43 撤掉模式眉题后，`mode` 只用在请求体里。已改为实例字段 `_mode`；两份 simple-ai 单测里读写 `data.mode` 的地方改为 `page._mode`，语义不变(71/71)。
+- **弹窗主题作用域**：帖文详情的举报原因半屏挂在主题容器外，商家浅色态会弹出玩家黑窗。已按 `shezhi` 的先例在宿主上挂同一视角的主题类。
+- **弱锚点基线**：A10、A12 已经不弱，按棘轮把基线从 6 条收窄到 4 条。
+- **路由矩阵与动作台账**：按合并树重建。三条路由的视角推断变为 merchant，其余是行号平移。
+
+本地复核：除 U5 外，各子门禁、台账、路由矩阵都通过；小程序全量单测 17288/17288。
+
+**需要你处理(本线被环境安全策略拦下，未绕过)**：U5 silentError 白名单。f-pages 给 `pages/mylike/mylike.js` 新增了「据点」页签，多出两处 silentError(据点收藏列表、取消收藏据点)，实际 6 处，白名单登记 4 处。两处都有可见承接：列表失败落页内 cy-error，取消失败由动作自己的「操作失败」或「取消结果未确认」toast 承接并回读，与已登记的 4 处同一口径。修法：在 `ci/silent-error-allowlist.txt` 把该行的计数改为 6，并补一句原因。本线尝试修改时被拦，没有绕过。
+
+
+lead 随后在 launch 合入了等价修复(`181e222f3`、`4cf14763e`)，包括 mylike 的 silentError 白名单(4→6)和路由视角推断的生成器修正。#787 同步后与 launch 只差本 RESULT 文档；在同一棵树上本地复核，所有小程序子门禁(含 U5)、台账、路由矩阵都通过。
+
+#779 在 `eb272ae74` 和 `4cf14763e` 上，Gameplay HTTP generic-only 和小程序静态门红，都是 runner 的 apt 域名解析失败造成的(装 redis-server / ripgrep 时报「Temporary failure resolving archive.ubuntu.com」)。HTTP 任务的 82 个 Python 前置检查已通过，红在 Java 用例开始之前；静态门也是在装工具时就红了。属于基础设施故障，不是代码问题。本线安排约 30 分钟后对这两个 run 各重跑一次失败的 job。
+
+
+截至 15:26(UTC)，GitHub 托管 runner 解析 Ubuntu apt 源(azure.archive / archive / security.ubuntu.com)仍然失败，持续约一个半小时。Gameplay HTTP generic-only 在 `4cf14763e` 上的 run 43037545384 已经跑了 5 次(第 5 次由本线 15:18 触发)，每次都是 82 个 Python 前置检查通过、装 redis-server / ripgrep 时红，Java 用例一次也没开跑。小程序静态门在 `4cf14763e` 和 `44a97d84c`(只改了 qx-final2 的文档)上同样卡在装 ripgrep。本线不再追加重跑，等基础设施恢复后统一重跑即可；在同一棵树上本地复核，静态门和小程序单测全部通过。
+
+
+#779 当前头 `17de18de5`(在 `4cf14763e` 之后只改了文档)的 CI(run 43048412744)：31 个 job，27 个通过，20 个小程序单测分片全绿。4 个红：
+- Backend tests：「Check private Mapper compiled references」这一步红，就是第四节第 2 条的架构 / 存储端口 finding，需要你在 owners.json 上批准；
+- Fast gates：架构门红，同上；
+- Mini program static gates：装 ripgrep 时 apt 域名解析失败，基础设施故障；
+- Mini program static checks：上一项的汇总。
+Gameplay HTTP generic-only 第 5 次重跑也是 apt 故障(见上)。
+
+
+f-play2(含 f-money2 / f-money3)合入后(`25b8ad033`)，真库 IT `FreeExploreSelfPlayPriceGateMySqlIT.sameRowWithAFreeSelfPlayPassesThisGateAndReachesTheExistingSaleChecks` 报 ClassCastException(Boolean 不能转 Number)。原因：`cms_topic.lifecycle` 是 TINYINT(1)，Connector/J 默认把它映射成 Boolean，值 2 读出来是 true。本线在 #787 上按整数读取原值修复(`96e770693`，断言仍精确等于 2)，并触发了 launch-f-money3 批次。lead 同时在 launch 用 CAST 修了同一处(`865b6992d`)，#787 同步后取 launch 版本，又只剩本文档。在合并树上本地复核：小程序各静态子门禁、台账、路由矩阵、危险动作门禁都通过。
+
+
+`ed9e3406b` 上「Migration safety gate」红：`ci/test_prelaunch_business_seeds.py` 校验 `ci/prelaunch-seed-provenance.json` 里登记的种子源文件哈希，f-money2(`bc02b5125`)改了 `scripts/e2e/seed_fixtures.py` 没同步登记。本线逐行审阅了那 31 行改动：俱乐部 owner 补 club 角色、玩家二号加入 7001、cms_setting 与活动结算默认费率行，全部是固定 E2E 夹具 id 的幂等插入，没有主机或密钥。审阅后按源文件重绑哈希(`70fd8a83b`，在 #787 上)。本地复核：该步骤的 4 个测试文件共 43 个用例全部通过。
+
+
+lead 在 launch 上直接提交了同一哈希修复(`60c43860e`)。随后 qx-final6 合入 f-rehearsal 并把发布迁移包扩到 156 项(`4e9e418ac`)。头 `844638cf7` 上新出现「Release migration rehearsal / rehearsal」红(run 43059982344)：静态 pack 契约通过、MySQL 8.0.45 起库成功，但第 [1] 步建好模拟基线(199 个快照后迁移、16 组合成行)后，「基线库上预检不符合 pack 的 expectedAtBaseline」。上一次绿是 10-29 的 88 项包，这是 156 项包第一次在 CI 上跑。不符合的具体 migrationId 只在 run 的 report artifact 里(release-migration-rehearsal-43059982344-a1)；本环境下载 artifact 的主机被网络策略拦截，也没有 MySQL / docker，无法复现。这属于 f-release / qx-final6 的发布包范围，涉及迁移的上线前预期状态，需要 lead 或你看 artifact 后在 pack 里修正，本线没有改。
+
+
+apt 源故障约在 17:00(UTC)前恢复：lead 记录小程序静态门在 `538a47ab7` 上重新变绿。本线随即在当前 launch 头 `c16af7ca1`(代码与 `844638cf7` 相同，含 f-play2 / f-money2 / f-money3)上手动触发 Gameplay HTTP generic-only(run 43067254372)：**success**。`844638cf7` 的 CI 重跑里 20 个小程序单测分片也全绿；Backend tests 只有「Check private Mapper compiled references」(架构 / 存储端口)这一步红，后端构建与测试、隔离全量启动、迁移真库 IT 都通过。
+
+
+x-fix2 / x-fix3 合入后(`9f91019d5` 起)，小程序单测分片和静态门因动作台账未重建、计数固定值未跟上而变红。本线在 #787(`ca2b1ba1e`)上修过一版：重建台账，新增 goBackDetail ×2 和 onIconError ×2，计数随之对齐。lead 随后在 launch 上独立做了同样的修复，跨页日期单测改为剥掉零宽空格后再比对。#787 同步 `ca2ca9791` 时，冲突文件一律取 launch 版本，现在又只剩本文档。在 `ca2ca9791` 合并树上本地复核：小程序 11 项静态门禁全部通过，全量单测 17323/17323。lead 也已提交发布迁移演练基线修正(`b547919c3`)。
+
+#779 当前头 `9617cbba2`（x-fix2 / x-fix3 收口后）的 CI（run 43089942872 及同头配套 run）：36 个 job，34 个通过。20 个小程序单测分片、小程序静态门与汇总、迁移安全门、迁移布局门、SBOM 依赖扫描、管理端构建、管理端 E2E 契约门、Secret scan（gitleaks）、Funds MySQL IT 及其自检、隔离 Redis 恢复、Followup 39 后端用例、**发布迁移演练 rehearsal** 全部 success。只剩 2 个红，都是架构门：
+- Fast gates：架构门（StoreKit `DEPENDENCY_EXPANSION` 已接受，另有 owners.json 未登记的边界）；
+- Backend tests：「Check private Mapper compiled references」判定 BLOCKED（`ApiTopicTemplateController` → `AuthorWriteReceiptService`），后端构建与测试本身通过。
+这两项都要你在 master 的 `ci/architecture/owners.json` 批准，PR 内改代码无法消除。本地在 `9617cbba2`（与 #787 代码一致）复核：ui-integrity UI-GATE-0:PASS、动作台账 6027 控件零差异，action-ledger 与 d192 单测 51/51。
+
+x-fix4 合入 launch 后（`94e3000e3`、`6b6164559`、`730f94d96`），CI 上「Mini program static checks」和单测分片 2/20、12/20 变红。原因：L-5 去掉了商家口碑页空态的「重新加载」（cy-empty bind:cta retry），动作台账没重建，控件 6027 → 6026、事件合同 2997 → 2996、local 事件合同 2898 → 2897；N-9 让结算页按主题 id 调 `/api/topic/info-to-user` 补主题名，路由矩阵的 needsLogin 随之变成 true。本线在 #787 上重建了台账与路由矩阵，按实测同步了三处计数（`ccb44affb`），在合并树上本地复核：11 项静态门禁全部通过，小程序全量单测 17337/17337。x-fix4 随后在 launch 上独立提交了同样的重建（`833027d04`）。#787 同步时，冲突文件取 launch 版本，复核台账 6026 零差异、路由矩阵 171 路由零差异、action-ledger 单测 48/48。现在 #787 又只剩本文档和 launch 有差异。同一批头上的 Fast gates 与 Backend tests 红，仍然是架构门；Fast gates 的非架构步骤（CI 脚本工作目录无关、接口存在性及自检、silentError 白名单）本地都通过。
+
+STATUS: PARTIAL - 本线负责的代码修复全部进了 launch（含 x-fix4 后的台账重建，与 833027d04 一致）；本地合并树 11 项静态门禁与全量单测 17337/17337 全绿；#779 剩余的 Fast gates 与 Backend tests 两个红都是要你在 master owners.json 批准的架构门

@@ -657,6 +657,42 @@ class PostGameOutcomeReportServiceImplTest {
         assertEquals(Long.valueOf(0), repeat.paid().retainedMembers());
     }
 
+    @Test
+    void topicScopeKeepsOnlyMembersWhoseFirstValidRegistrationIsOnTheScopedTopics() {
+        // 1: first on topic 900 (in scope) and a second order later; 2: first on topic 901 (other creator);
+        // 3: first on topic 900 but fully paid earlier cohort-day order on 901 comes first by time -> out of scope.
+        stubHistory(List.of(
+                paid(1L, 11L, "ORD-1A", "100.00", at("2026-10-01T09:00:00")),
+                paid(1L, 12L, "ORD-1B", "100.00", at("2026-10-15T09:00:00")),
+                paid(2L, 21L, "ORD-2A", "100.00", at("2026-10-01T10:00:00")),
+                paid(3L, 31L, "ORD-3A", "100.00", at("2026-10-01T08:00:00")),
+                paid(3L, 32L, "ORD-3B", "100.00", at("2026-10-01T11:00:00"))));
+        when(mapper.selectCohortMemberIdsForTopics(any(), any(), anyCollection())).thenReturn(List.of(1L, 3L));
+        when(mapper.selectRegistrationTopics(anyCollection())).thenReturn(List.of(
+                Map.<String, Object>of("registrationId", 11L, "topicId", 900L), Map.<String, Object>of("registrationId", 21L, "topicId", 901L),
+                Map.<String, Object>of("registrationId", 31L, "topicId", 901L)));
+        when(mapper.selectTopicCompletionFacts(any(), any(), anyCollection())).thenReturn(new ArrayList<>());
+
+        PostGameOutcomeReportVO report = matureService().generateForTopics(COHORT, 30, List.of(900L));
+
+        assertEquals(1, report.getCohort().eligibleMembers(), "member 3's first valid registration was on another topic");
+        assertEquals(Long.valueOf(1), report.getCohort().retainedMembers());
+        assertEquals(java.util.Set.of("OFFICIAL_COMPLETION", "SECOND_VALID_REGISTRATION"), report.getMetrics().keySet());
+        assertNull(report.getRoamRevisit());
+        verify(mapper, never()).selectCompletionFacts(any(), any());
+        verify(mapper, never()).selectRewardFacts(any(), any());
+        verify(mapper, never()).selectCohortMemberIds(any(), any());
+    }
+
+    @Test
+    void topicScopeWithNoTopicsIsAnEmptyCohortNotAPlatformReport() {
+        PostGameOutcomeReportVO report = matureService().generateForTopics(COHORT, 30, List.of());
+
+        assertEquals(0, report.getCohort().eligibleMembers());
+        verify(mapper, never()).selectCohortMemberIds(any(), any());
+        verify(mapper, never()).selectCohortMemberIdsForTopics(any(), any(), anyCollection());
+    }
+
     private void stubHistory(List<RegistrationCohortFact> facts) {
         List<Long> members = new ArrayList<>();
         for (RegistrationCohortFact fact : facts) {

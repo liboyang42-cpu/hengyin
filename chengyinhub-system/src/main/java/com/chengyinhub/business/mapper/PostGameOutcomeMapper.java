@@ -50,6 +50,17 @@ public interface PostGameOutcomeMapper {
     List<OutcomeFactRow> selectClientObservedOutcomeFacts(@Param("from") Date from,
                                                           @Param("toExclusive") Date toExclusive);
 
+    /** 创作者口径：cohort 当天在这些主题上有过付费报名的会员（候选；首笔是否落在这些主题由服务层判）。 */
+    List<Long> selectCohortMemberIdsForTopics(@Param("from") Date from, @Param("toExclusive") Date toExclusive,
+                                              @Param("topicIds") Collection<Long> topicIds);
+
+    /** 报名 → 主题：owner_type 1 主题取 owner_id；2 活动取 cms_activity.topic_id；自玩通行证回落 r.topic_id。 */
+    List<Map<String, Object>> selectRegistrationTopics(@Param("registrationIds") Collection<Long> registrationIds);
+
+    /** 创作者口径的正式完成：只取这些主题的 topic_route_session(status=1 已到终点)。 */
+    List<OutcomeFactRow> selectTopicCompletionFacts(@Param("from") Date from, @Param("toExclusive") Date toExclusive,
+                                                    @Param("topicIds") Collection<Long> topicIds);
+
     /** 各来源水位（sourceName → 最新时间）。 */
     List<Map<String, Object>> selectSourceWatermarks();
 }

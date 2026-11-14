@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.platform.ChannelAuditMapper">
+
+    <sql id="rowCols">
+        id, guild_kind AS guildKind, guild_id AS guildId, channel_id AS channelId, source, original_id AS originalId,
+        actor_type AS actorType, actor_member_id AS actorMemberId, action, target_type AS targetType, target_id AS targetId,
+        reason, changes_json AS changesJson, changes_redacted AS changesRedacted, original_time AS originalTime,
+        DATE_FORMAT(original_time, '%Y-%m-%d %H:%i:%s.%f') AS originalTimeText,
+        prev_hash AS prevHash, row_hash AS rowHash
+    </sql>
+
+    <insert id="ensureHead">
+        INSERT INTO im_channel_audit_head(guild_kind, guild_id, head_id, head_hash)
+        VALUES (#{guildKind}, #{guildId}, 0, #{genesis})
+        ON DUPLICATE KEY UPDATE guild_kind = guild_kind
+    </insert>
+    <select id="lockHead" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT head_id AS headId, head_hash AS headHash FROM im_channel_audit_head
+         WHERE guild_kind = #{guildKind} AND guild_id = #{guildId} FOR UPDATE
+    </select>
+    <update id="updateHead">
+        UPDATE im_channel_audit_head SET head_id = #{headId}, head_hash = #{headHash}, update_time = CURRENT_TIMESTAMP(3)
+         WHERE guild_kind = #{guildKind} AND guild_id = #{guildId}
+    </update>
+
+    <!-- 原始频道操作：频道属于该空间、尚未投影。 -->
+    <select id="pendingChannelOps" resultType="java.util.HashMap" useCache="false">
+        SELECT o.id, o.channel_id AS channelId, o.action, o.from_status AS fromStatus, o.to_status AS toStatus, o.reason,
+               o.operator_id AS operatorId, o.create_time AS originalTime,
+               DATE_FORMAT(o.create_time, '%Y-%m-%d %H:%i:%s.%f') AS originalTimeText
+          FROM im_channel_op_log o JOIN im_channel c ON c.id = o.channel_id
+         WHERE c.guild_kind = #{guildKind} AND c.guild_id = #{guildId}
+           AND NOT EXISTS (SELECT 1 FROM im_channel_audit_log a WHERE a.source = 'CHANNEL_OP' AND a.original_id = o.id)
+         ORDER BY o.create_time, o.id
+         LIMIT #{limit}
+    </select>
+
+    <!-- 原始处置：频道级取 scope_id；空间级挂到空间默认频道（没有默认频道的不投影）。 -->
+    <sql id="moderationFrom">
+          FROM im_moderation_action m
+          LEFT JOIN im_channel d ON d.guild_kind = m.guild_kind AND d.guild_id = m.guild_id AND d.is_default = 1 AND d.del_flag = 0
+         WHERE m.guild_kind = #{guildKind} AND m.guild_id = #{guildId}
+           AND (m.scope_type = 'CHANNEL' OR d.id IS NOT NULL)
+    </sql>
+    <sql id="moderationCols">
+        m.id, IF(m.scope_type = 'CHANNEL', m.scope_id, d.id) AS channelId, m.target_member_id AS targetMemberId,
+        m.action_type AS actionType, m.scope_type AS scopeType, m.scope_id AS scopeId, m.reason_code AS reasonCode,
+        m.duration_sec AS durationSec, m.delete_message_sec AS deleteMessageSec, m.operator_id AS operatorId,
+        m.revoked_by AS revokedBy
+    </sql>
+    <select id="pendingModerations" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="moderationCols"/>, m.starts_at AS originalTime, DATE_FORMAT(m.starts_at, '%Y-%m-%d %H:%i:%s.%f') AS originalTimeText
+        <include refid="moderationFrom"/>
+           AND NOT EXISTS (SELECT 1 FROM im_channel_audit_log a WHERE a.source = 'MODERATION' AND a.original_id = m.id)
+         ORDER BY m.starts_at, m.id
+         LIMIT #{limit}
+    </select>
+    <select id="pendingRevocations" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="moderationCols"/>, m.revoked_at AS originalTime, DATE_FORMAT(m.revoked_at, '%Y-%m-%d %H:%i:%s.%f') AS originalTimeText
+        <include refid="moderationFrom"/>
+           AND m.revoked_at IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM im_channel_audit_log a WHERE a.source = 'MODERATION_REVOKE' AND a.original_id = m.id)
+         ORDER BY m.revoked_at, m.id
+         LIMIT #{limit}
+    </select>
+    <select id="countUnprojected" resultType="long" useCache="false">
+        SELECT
+          (SELECT COUNT(1) FROM im_channel_op_log o JOIN im_channel c ON c.id = o.channel_id
+            WHERE c.guild_kind = #{guildKind} AND c.guild_id = #{guildId}
+              AND NOT EXISTS (SELECT 1 FROM im_channel_audit_log a WHERE a.source = 'CHANNEL_OP' AND a.original_id = o.id))
+        + (SELECT COUNT(1) <include refid="moderationFrom"/>
+              AND NOT EXISTS (SELECT 1 FROM im_channel_audit_log a WHERE a.source = 'MODERATION' AND a.original_id = m.id))
+        + (SELECT COUNT(1) <include refid="moderationFrom"/> AND m.revoked_at IS NOT NULL
+              AND NOT EXISTS (SELECT 1 FROM im_channel_audit_log a WHERE a.source = 'MODERATION_REVOKE' AND a.original_id = m.id))
+    </select>
+
+    <insert id="insertRow" parameterType="java.util.HashMap" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+        INSERT INTO im_channel_audit_log(guild_kind, guild_id, channel_id, source, original_id, actor_type, actor_member_id, action,
+            target_type, target_id, reason, changes_json, changes_redacted, original_time, prev_hash, row_hash)
+        VALUES (#{guildKind}, #{guildId}, #{channelId}, #{source}, #{originalId}, #{actorType}, #{actorMemberId}, #{action},
+            #{targetType}, #{targetId}, #{reason}, #{changesJson}, #{changesRedacted}, #{originalTimeText}, #{prevHash}, #{rowHash})
+    </insert>
+
+    <select id="listRows" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="rowCols"/> FROM im_channel_audit_log
+         WHERE guild_kind = #{guildKind} AND guild_id = #{guildId}
+         <if test="beforeId != null">AND id &lt; #{beforeId}</if>
+         ORDER BY id DESC
+         LIMIT #{limit}
+    </select>
+    <select id="chainRows" resultType="java.util.HashMap" useCache="false">
+        SELECT <include refid="rowCols"/> FROM im_channel_audit_log
+         WHERE guild_kind = #{guildKind} AND guild_id = #{guildId} AND id &gt; #{afterId}
+         ORDER BY id
+         LIMIT #{limit}
+    </select>
+</mapper>

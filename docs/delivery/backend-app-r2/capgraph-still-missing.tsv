@@ -1,0 +1,163 @@
+path	area
+/api/asset/withdraw	wallet/funds
+/api/channel-platform/admission/requests	channels (native, no backend)
+/api/channel-platform/governance/moderation/requests	channels (native, no backend)
+/api/channel-platform/governance/reports/requests	channels (native, no backend)
+/api/channel-platform/governance/requests	channels (native, no backend)
+/api/channel-platform/requests	channels (native, no backend)
+/api/channel/{}/board/{}	channels
+/api/channels	channels (native, no backend)
+/api/city-game	city game
+/api/city-game/acquisition	city game
+/api/city-game/action-budget	city game
+/api/city-game/arrival-evidence	city game
+/api/city-game/merchant/operations	city game
+/api/city-game/merchant/operations/request	city game
+/api/city-game/neutral-tasks	city game
+/api/city-game/onsite-tasks	city game
+/api/city-game/team-participation	city game
+/api/club-compensation/quality/evidence	club
+/api/club/activity/cancel	club
+/api/club/activity/detail	club
+/api/club/activity/join	club
+/api/club/channels	club
+/api/club/events	club
+/api/club/events/Checkin	club
+/api/club/events/proxy-enroll	club
+/api/club/events/save	club
+/api/club/group-code	club
+/api/club/group-code/save	club
+/api/club/join-requests/apply	club
+/api/club/lead	club
+/api/club/notices	club
+/api/club/notices/send	club
+/api/club/post	club
+/api/club/post/operation	club
+/api/club/post/operation/comment	club
+/api/club/roles	club
+/api/club/settlements/export	club
+/api/club/workbench	club
+/api/common/uploadOSS/receipt	common/upload
+/api/compliance/usage-records	account/compliance
+/api/content-draft	creator/publishing
+/api/coop	merchant-club cooperation
+/api/coupon	coupons
+/api/free-explore/bundle	roam
+/api/friend	social/friends
+/api/game/session	play runtime
+/api/im/appeals/{}/evidence	messaging
+/api/im/appeals/{}/withdraw	messaging
+/api/im/audit-log	messaging
+/api/im/chain	messaging
+/api/im/channel	messaging
+/api/im/file/message	messaging
+/api/im/file/message/{}/authorization	messaging
+/api/im/file/message/{}/preview	messaging
+/api/im/members/{}/roles	messaging
+/api/im/message/{}/attachment	messaging
+/api/im/moderation	messaging
+/api/im/moderation/{}/revoke	messaging
+/api/im/notification-requests	messaging
+/api/im/poll/create-receipt	messaging
+/api/im/roles/{}/members	messaging
+/api/im/video/message	messaging
+/api/im/video/message/{}/authorization	messaging
+/api/im/video/message/{}/preview	messaging
+/api/im/voice/message	messaging
+/api/im/voice/message/{}	messaging
+/api/im/voice/message/{}/authorization	messaging
+/api/im/webhook	messaging
+/api/im/webhook/context	messaging
+/api/invoice	orders/payment
+/api/location-share/personal	roam
+/api/marketing/product	marketing/products
+/api/merchant	merchant
+/api/merchant/authoring/draft-selection/list	merchant
+/api/merchant/authoring/draft-selection/resolve	merchant
+/api/merchant/authoring/drafts	merchant
+/api/merchant/authoring/drafts/{}	merchant
+/api/merchant/authoring/environment	merchant
+/api/merchant/authoring/jobs	merchant
+/api/merchant/authoring/jobs/cancel	merchant
+/api/merchant/authoring/main-line	merchant
+/api/merchant/authoring/player	merchant
+/api/merchant/authoring/player/{}/game	merchant
+/api/merchant/authoring/player/{}/requests/{}	merchant
+/api/merchant/authoring/public	merchant
+/api/merchant/authoring/releases	merchant
+/api/merchant/authoring/releases/{}/withdraw	merchant
+/api/merchant/city-value/event/{}/benefit	merchant
+/api/merchant/city-value/events	merchant
+/api/merchant/city-value/report	merchant
+/api/merchant/city-value/result/{}	merchant
+/api/merchant/crm/marketing-consents/result	merchant
+/api/merchant/insight	merchant
+/api/merchant/npc/avatar/generate	merchant
+/api/merchant/npc/avatar/status	merchant
+/api/merchant/npc/knowledge-review	merchant
+/api/merchant/npc/knowledge-review/request	merchant
+/api/merchant/npc/voice/revoke	merchant
+/api/merchant/npc/voice/script	merchant
+/api/merchant/offer-withdrawal/request	merchant
+/api/merchant/poi/detail	merchant
+/api/merchant/shop/apply	merchant
+/api/mod-installation	workshop/mods
+/api/mod-owned-report/licenses	workshop/mods
+/api/mod-settlement/mine	workshop/mods
+/api/mod-settlement/mine/income	workshop/mods
+/api/mod-upgrade	workshop/mods
+/api/native/device/enroll	native-only (no backend)
+/api/native/device/enrollment-challenge	native-only (no backend)
+/api/native/device/revoke	native-only (no backend)
+/api/native/device/status	native-only (no backend)
+/api/native/home	native-only (no backend)
+/api/native/home/return	native-only (no backend)
+/api/npc/chat/delete	npc/ai
+/api/official/v2/events	official events
+/api/pay/create	orders/payment
+/api/play	play runtime
+/api/play/check	play runtime
+/api/play/city-orientation	play runtime
+/api/play/theme	play runtime
+/api/registration/original-event	registration/tickets
+/api/reward-pledge	rewards
+/api/reward-pledge/awards	rewards
+/api/reward-pledge/drafts	rewards
+/api/reward-pledge/fulfilment/awards	rewards
+/api/reward-pledge/fulfilment/expire	rewards
+/api/reward-pledge/fulfilment/preview	rewards
+/api/reward-pledge/fulfilment/redeem	rewards
+/api/reward-pledge/fulfilment/resolve	rewards
+/api/reward-pledge/ops	rewards
+/api/reward-pledge/pledges	rewards
+/api/reward-pledge/review	rewards
+/api/reward-pledge/versions	rewards
+/api/rewards/noncash	rewards
+/api/rewards/noncash/cases	rewards
+/api/rewards/noncash/claims	rewards
+/api/rewards/noncash/claims/recover	rewards
+/api/rewards/noncash/subjects	rewards
+/api/rewards/noncash/versions	rewards
+/api/roam/passport	roam
+/api/support/tickets	support
+/api/template/report-receipt	templates
+/api/topic/cover	topics/routes
+/api/ugc/block	community square
+/api/us/auth/apple/challenges	US market (no backend)
+/api/us/auth/apple/exchange	US market (no backend)
+/api/us/auth/session	US market (no backend)
+/api/user/address	profile
+/api/user/deregister	profile
+/api/user/sms/send	profile
+/api/v1/community	community square
+/api/workshop/creator/pending-packages	workshop/mods
+/api/workshop/creator/public-theme-use	workshop/mods
+/api/workshop/owned	workshop/mods
+/api/workshop/purchased	workshop/mods
+/api/workshop/purchased/install	workshop/mods
+/api/workshop/purchased/professional-operations/cancel	workshop/mods
+/api/workshop/purchased/professional-operations/history	workshop/mods
+/api/workshop/purchased/professional-operations/status	workshop/mods
+/api/workshop/purchased/professional-operations/submit	workshop/mods
+/api/workshop/purchased/professional-targets/detail	workshop/mods
+/api/workshop/purchased/professional-targets/list	workshop/mods

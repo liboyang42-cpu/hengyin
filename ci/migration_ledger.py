@@ -27,7 +27,10 @@ MIGRATION_PREFIX = "migration_"
 POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_monitor_missing_jobs", "20261012_roam_presence_revoke_job",
                           "20261104_content_safety_jobs_post_deploy",
                           # 第十二轮 k1 第 10 项(r1 F2):旧 jar 编辑器仍按分钟写,必须等新 jar 起来再换算
-                          "20261104_topic_total_time_seconds"}
+                          "20261104_topic_total_time_seconds",
+                          # qx-c2: two paused sys_job rows naming beans only the new jar has (channelRefundConsumptionTask,
+                          # marketingRevenuePostingTask); CanonicalJobTarget resolves every row's bean on the old jar too.
+                          "marketing_task_registration_20261108"}
 BOOTSTRAP_SQL = {
     "sql/quartz.sql",
     "sql/ry_20250522.sql",
@@ -67,6 +70,8 @@ EXPLICIT_AUXILIARY_SQL = {
     # 仅在测试 scratch schema 里执行,不进发布台账、不在生产跑。
     "chengyinhub-admin/src/test/resources/it-schema/scoped-leaderboard-it-schema.sql":
         "TEST_FIXTURE",
+    # TEST-only e2e seed for the be-int TEST database (fix/userinfo-role); never applied to production.
+    "docs/delivery/e2e-seed/seed.sql": "TEST_FIXTURE",
     "docs/delivery/architecture-day/A/schema-candidate.sql": "AUXILIARY_NOT_EXECUTED",
     "docs/delivery/architecture-day/A/schema-preflight.sql": "AUXILIARY_NOT_EXECUTED",
     # 第十一轮 h2 的只读证据(存量文字预检 SELECT),不进发布台账、不在任何库上执行。
@@ -80,6 +85,7 @@ EXPLICIT_AUXILIARY_SQL = {
     "chengyinhub-admin/sql/_四账映射与守恒规则_20260725.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/sql/seed_official_content_template.sql": "REFERENCE_ONLY",
     "chengyinhub-admin/src/test/resources/it-schema/cms-topic-it-schema.sql": "TEST_FIXTURE",
+    "chengyinhub-admin/src/test/resources/it-schema/channels-platform-it-schema.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/wp10-content-copy-scratch.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/it-schema/wp10-content-graph-scratch.sql": "TEST_FIXTURE",
     "chengyinhub-admin/src/test/resources/fixtures/im-club-conversation-batch.sql": "TEST_FIXTURE",

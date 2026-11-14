@@ -121,9 +121,23 @@ public class ApiClubCompensationController extends BaseController {
         return success(data);
     }
 
-    // 2026-09-10 用户裁决:探店日不再交质量证据,整条链路删除。
-    // 原来这里是 /quality/evidence —— 俱乐部上传一个 SHA-256 摘要,再回读核对。
-    // 平台在后台 business:clubquality:confirm 上照常人工判 Q,只是不再要这份附件。
+    static final String QUALITY_EVIDENCE_RETIRED = "QUALITY_EVIDENCE_RETIRED";
+
+    /**
+     * 2026-09-10 用户裁决:探店日不再交质量证据,整条链路删除。
+     * 原来这里是 /quality/evidence —— 俱乐部上传一个 SHA-256 摘要,再回读核对。
+     * 平台在后台 business:clubquality:confirm 上照常人工判 Q,只是不再要这份附件。
+     *
+     * <p>App 的 {@code ClubGapClient} 仍会发这个地址(业主 2026-11-13 只是放行了 App 侧的名字),
+     * 所以路由留着、登录前就回 410 {@code QUALITY_EVIDENCE_RETIRED}(同 {@code ROUTE_EGG_OFFLINE} 的口径):
+     * 不读请求体、不碰任何表,App 按「不可用」展示,而不是 404 / 500。
+     */
+    @PostMapping("/quality/evidence")
+    public AjaxResult qualityEvidence() {
+        AjaxResult retired = new AjaxResult(410, "探店日已不再提交质量证据");
+        retired.put("errorCode", QUALITY_EVIDENCE_RETIRED);
+        return retired;
+    }
 
     private boolean belongsToClub(Long clubId, Long memberId) {
         if (clubId == null || memberId == null) return false;
