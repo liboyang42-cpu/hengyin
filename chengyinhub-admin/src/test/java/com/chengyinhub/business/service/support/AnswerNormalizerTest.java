@@ -1,6 +1,5 @@
 package com.chengyinhub.business.service.support;
 
-import com.chengyinhub.common.utils.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -174,7 +173,7 @@ class AnswerNormalizerTest {
         if (got.isEmpty()) return false;
         boolean has = false;
         for (String c : canonicals) {
-            if (StringUtils.isBlank(c)) continue;
+            if (c == null || c.isBlank()) continue;
             has = true;
             if (got.equalsIgnoreCase(AnswerPolicy.normalize(c))) return true;
         }
