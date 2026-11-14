@@ -318,7 +318,7 @@ Page({
     privacyGateShow: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
     poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
-    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true, places: true }, entryScale: 14, entryPlaceCards: [], entryStrip: [], entryPeekFold: false, entryStripTab: 'near', entryCityStrip: null, entryCityLabel: '本城推荐', entryLoadError: false, entryReadAccess: '', entryLoading: false, entryLocated: false,
+    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true, places: true }, entryScale: 14, entryStrip: [], entryPeekFold: false, entryStripTab: 'near', entryCityStrip: null, entryCityLabel: '本城推荐', entryLoadError: false, entryReadAccess: '', entryLoading: false, entryLocated: false,
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
@@ -6119,8 +6119,8 @@ Page({
 
   _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
   _clearEntryRead() {
-    this._entryItems = []; this._entryTeams = []; this._entryPlaces = [];
-    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], entryPlaceCards: [], entryStrip: [], searchPlaces: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '' });
+    this._entryItems = []; this._entryTeams = []; this._entryPlaces = []; this._entryPlaceCards = [];
+    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], entryStrip: [], searchPlaces: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '' });
   },
   loginForEntryRead() {
     if (this.data.entryReadAccess === 'denied') return;
@@ -6208,7 +6208,7 @@ Page({
     const origin = this._entryOrigin();
     const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl, this._entryPlaces, {
       scale: this._entryMapScale || this.data.entryScale, region: this._entryRegion, viewport: this._fogScreenSize, center: this.data.center, origin });
-    this._entryClusters = view.clusters;
+    this._entryClusters = view.clusters; this._entryPlaceCards = view.placeCards;
     // A2.5:标记、卡片都没变就不 setData
     const sig = photoPins.markerSignature(view.markers) + '#' + view.cards.map((card) => card.key + card.meta).join(',') + '#'
       + view.placeCards.map((card) => card.key + card.meta).join(',') + '#' + (this._entryTeams || []).length + '#' + this.data.entryFarCards.length;
@@ -6216,7 +6216,7 @@ Page({
     this._entrySyncSig = sig;
     // P-32:主地图底部横滑卡 = 同一批附近活动卡 + 附近队伍卡(同一份读数,不另拉)
     const liveCards = [].concat(view.cards, (this._entryTeams || []).map((team) => entryMap.teamView(team, getImgUrl)).filter(Boolean));
-    this.setData({ liveCards, entryMarkers: view.markers, entryCards: view.cards, entryPlaceCards: view.placeCards,
+    this.setData({ liveCards, entryMarkers: view.markers, entryCards: view.cards,
       entryStrip: this._composeStrip(view.cards, view.placeCards, this.data.entryFarCards), searchPlaces: view.searchPlaces,
       introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '' });
     if (!view.cards.length && this._entryErrors && !this._entryErrors.activities && this.data.entryLocated) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
@@ -6227,7 +6227,7 @@ Page({
     const own = [].concat(cards || [], placeCards || []);
     return own.length ? own : (far || []);
   },
-  _refreshStrip() { this.setData({ entryStrip: this._composeStrip(this.data.entryCards, this.data.entryPlaceCards, this.data.entryFarCards) }); },
+  _refreshStrip() { this.setData({ entryStrip: this._composeStrip(this.data.entryCards, this._entryPlaceCards, this.data.entryFarCards) }); },
   _showEntrySheet(entrySheet, entryActivity, entryPlace) {
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryPlace: entryPlace || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {
       wx.nextTick(() => {
