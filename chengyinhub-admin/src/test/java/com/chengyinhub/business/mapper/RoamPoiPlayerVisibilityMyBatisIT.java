@@ -57,7 +57,8 @@ class RoamPoiPlayerVisibilityMyBatisIT {
                     + " lat DECIMAL(12,7), lng DECIMAL(12,7), radius_m INT, address VARCHAR(100), description TEXT,"
                     + " xp INT, coupon_template_id BIGINT, city_code VARCHAR(30), status INT, audit_status INT,"
                     + " application_type INT, applicant_merchant_id BIGINT, audit_reason TEXT, create_time DATETIME,"
-                    + " merchant_id BIGINT, template_id BIGINT, node_level INT, tags TEXT, cover_img TEXT, sort INT)",
+                    + " merchant_id BIGINT, template_id BIGINT, node_level INT, tags TEXT, cover_img TEXT, sort INT,"
+                    + " gallery_json TEXT, quotes_json TEXT, photo_credit TEXT, badge_code VARCHAR(80))",
             "CREATE TABLE roam_poi_found (id BIGINT PRIMARY KEY AUTO_INCREMENT, member_id BIGINT, poi_id BIGINT,"
                     + " session_id BIGINT, found_at DATETIME, UNIQUE KEY(member_id, poi_id))",
             "CREATE TABLE roam_poi_reward_log (id BIGINT PRIMARY KEY AUTO_INCREMENT, poi_id BIGINT, member_id BIGINT,"
