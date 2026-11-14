@@ -217,9 +217,9 @@ test('结账:通行证覆盖 → ¥0、免费领取、明细多一行通行证�
   const products = [{ productId: 1, productName: '城市包', productKind: 2, cashPrice: 88, items: [{ topicId: 990014 }] }];
   const v = checkoutView({ info, quote, quoteState: 'ready', products });
   assert.equal(v.member, true);
-  assert.equal(v.totalText, '¥0');
+  assert.equal(v.totalText, '¥0.00');
   assert.equal(v.payLabel, '免费领取');
-  assert.deepEqual(v.bill.map((r) => [r.k, r.v]), [['自玩门票 × 1', '¥39'], ['通行证', '你已可直接游玩']]);
+  assert.deepEqual(v.bill.map((r) => [r.k, r.v]), [['自玩门票 × 1', '¥39.00'], ['通行证', '你已可直接游玩']]);
   assert.equal(v.single.strike, '');
   assert.deepEqual(v.passes, []);
 });
@@ -227,7 +227,7 @@ test('结账:通行证覆盖 → ¥0、免费领取、明细多一行通行证�
 test('结账:未覆盖时与原来一致(俱乐部减免照旧)', () => {
   const v = checkoutView({ info, quote: { payAmount: 31.2, memberDiscountYuan: 7.8 }, quoteState: 'ready' });
   assert.equal(v.member, false);
-  assert.deepEqual(v.bill.map((r) => r.v), ['¥39', '-¥7.80']);
+  assert.deepEqual(v.bill.map((r) => r.v), ['¥39.00', '-¥7.80']);
 });
 
 test('页面:新页在分包、插图用分包副本、新样式不加 keyframes、入口只在服务端开放时出现', () => {

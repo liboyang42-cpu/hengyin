@@ -70,7 +70,7 @@ test('购买半屏票种:名字取发布者填的票种名称,同名合并取最
   const info = { selfPlay: 1, selfPlayPrice: 39, activityList: [{ id: 1 }], omsTicketList: [tk('单人', 68, 1), tk('双人', 128, 2), tk('四人队', 208, 4), tk('双人', 118, 2), tk('  ', 1, 1)] }
   const opts = m.buyOptions(info)
   assert.deepEqual(opts.map((o) => [o.kind, o.name, o.priceText, o.icon]), [
-    ['pass', '自玩门票', '¥39', 'one'], ['ticket', '单人', '¥68', 'one'], ['ticket', '双人', '¥118 起', 'two'], ['ticket', '四人队', '¥208', 'team']])
+    ['pass', '自玩门票', '¥39.00', 'one'], ['ticket', '单人', '¥68.00', 'one'], ['ticket', '双人', '¥118.00 起', 'two'], ['ticket', '四人队', '¥208.00', 'team']])
   assert.ok(opts.every((o) => o.name), '票种名称不能为空')
   assert.deepEqual(m.buyOptions(Object.assign({}, info, { activityList: [] })).map((o) => o.name), ['自玩门票'], '没有可买的场次时票种不摆出来')
 })
