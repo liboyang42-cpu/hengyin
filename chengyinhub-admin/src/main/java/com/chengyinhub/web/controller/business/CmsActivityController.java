@@ -61,6 +61,14 @@ public class CmsActivityController extends BaseController
      * 查询活动列表
      */
     @PreAuthorize("@ss.hasPermi('business:activity:list')")
+    @GetMapping("/stranded-free-explore")
+    public AjaxResult strandedFreeExplore()
+    {
+        // D-19:结算待处理的自由探索场次(只读;分钱规则待业主拍板,不动钱)
+        return success(cmsActivityService.listStrandedFreeExploreSettlements(null));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:activity:list')")
     @GetMapping("/list")
     public TableDataInfo list(CmsActivity cmsActivity)
     {

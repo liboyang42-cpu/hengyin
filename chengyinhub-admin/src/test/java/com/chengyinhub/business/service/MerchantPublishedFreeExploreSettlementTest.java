@@ -126,6 +126,8 @@ class MerchantPublishedFreeExploreSettlementTest {
         paid.setId(5001L);
         paid.setPaymentStatus(2);
         paid.setRegistrationStatus(2);
+        paid.setPayableAmount(new BigDecimal("100.00"));
+        paid.setFeePlatformRate(new BigDecimal("0.03"));
         when(cmsRegistrationMapper.selectPaidUnrefundedIdsByActivityId(ACTIVITY_ID)).thenReturn(Collections.singletonList(5001L));
         when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(5001L)).thenReturn(paid);
         when(cmsActivityMapper.selectActivitiesForSettlement()).thenReturn(Collections.singletonList(activity));
@@ -170,7 +172,31 @@ class MerchantPublishedFreeExploreSettlementTest {
         verify(umsMemberService, never()).addBalance(eq(PRINCIPAL), any());
         verify(umsMemberService, never()).addBalance(eq(CREATOR), any());
         verify(debtLedger).offsetFromSettlement(MERCHANT, new BigDecimal("97.00"), ACTIVITY_ID);
-        verify(entries).recordClubFreeExploreSessionSettlement(any(CmsRegistration.class), eq(MERCHANT));
+        verify(entries).recordClubFreeExploreSessionSettlement(any(CmsRegistration.class), eq(MERCHANT), eq(new BigDecimal("3.00")));
+    }
+
+    @Test
+    void registrationMissingFrozenRateIsIsolatedWithoutRollingBackSession() {
+        Club club = new Club();
+        club.setId(CLUB_ID);
+        club.setMemberId(PRINCIPAL);
+        when(clubMapper.selectClubById(CLUB_ID)).thenReturn(club);
+        CmsRegistration noRate = new CmsRegistration();
+        noRate.setId(5002L);
+        noRate.setPaymentStatus(2);
+        noRate.setRegistrationStatus(2);
+        noRate.setPayableAmount(new BigDecimal("50.00"));
+        when(cmsRegistrationMapper.selectPaidUnrefundedIdsByActivityId(ACTIVITY_ID)).thenReturn(java.util.Arrays.asList(5001L, 5002L));
+        when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(5002L)).thenReturn(noRate);
+        when(cmsRegistrationMapper.selectTotalSalesByActivityId(ACTIVITY_ID)).thenReturn(new BigDecimal("150.00"));
+
+        assertEquals(1, svc.executeActivitySettlement());
+
+        // 缺费率的 50.00 不进现金也不记分账行,其余 100.00 照常 97/3
+        verify(umsMemberService).addBalance(MERCHANT, new BigDecimal("97.00"));
+        verify(umsMemberService).addBalance(PLATFORM, new BigDecimal("3.00"));
+        verify(entries, never()).recordClubFreeExploreSessionSettlement(
+                org.mockito.ArgumentMatchers.argThat(r -> r != null && Long.valueOf(5002L).equals(r.getId())), any(), any());
     }
 
     @Test
@@ -186,7 +212,7 @@ class MerchantPublishedFreeExploreSettlementTest {
 
         verify(umsMemberService).addBalance(PRINCIPAL, new BigDecimal("97.00"));
         verify(umsMemberService, never()).addBalance(eq(MERCHANT), any());
-        verify(entries).recordClubFreeExploreSessionSettlement(any(CmsRegistration.class), eq(PRINCIPAL));
+        verify(entries).recordClubFreeExploreSessionSettlement(any(CmsRegistration.class), eq(PRINCIPAL), eq(new BigDecimal("3.00")));
     }
 
     @Test
@@ -196,7 +222,7 @@ class MerchantPublishedFreeExploreSettlementTest {
         org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, svc::executeActivitySettlement);
 
         verify(umsMemberService, never()).addBalance(anyLong(), any());
-        verify(entries, never()).recordClubFreeExploreSessionSettlement(any(), any());
+        verify(entries, never()).recordClubFreeExploreSessionSettlement(any(), any(), any());
     }
 
     @Test
