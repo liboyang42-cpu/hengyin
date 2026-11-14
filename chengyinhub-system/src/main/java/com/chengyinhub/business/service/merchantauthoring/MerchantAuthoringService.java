@@ -184,7 +184,8 @@ public class MerchantAuthoringService implements PublicReleaseFacts {
         MerchantAccessContext ctx = store(principal);
         Prepared prepared = prepare(ctx, request);
         Draft draft = newDraft(principal, ctx, prepared, 0);
-        if (prepared.requestId != null) draft.id = "q" + sha256(principal + ":" + prepared.requestId).substring(0, 48);
+        // 33 chars like the generated ids: the audit review request id is draftId:version:kind and must fit in 64.
+        if (prepared.requestId != null) draft.id = "q" + sha256(principal + ":" + prepared.requestId).substring(0, 32);
         Draft existing = tx.call(mapper -> mapper.findDraftById(draft.id));
         if (existing != null) {
             if (!principalEquals(existing.ownerId, principal) || !ctx.getMerchantId().equals(existing.merchantId)) throw conflict(null);
