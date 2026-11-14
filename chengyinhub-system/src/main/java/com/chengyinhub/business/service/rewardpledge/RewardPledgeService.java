@@ -36,6 +36,7 @@ import com.chengyinhub.business.service.rewardpledge.PledgeCouponPort.CouponView
 @Service
 public class RewardPledgeService {
     static final Pattern ID = Pattern.compile("[A-Za-z0-9_-]{1,64}");
+    static final int MAX_PLEDGE_QUANTITY = 1_000_000;
     static final List<String> OPS = List.of("draft", "submit", "confirm", "hold", "withdraw", "expire", "return");
     private final TransactionTemplate tx;
     private final TransactionTemplate fresh;
@@ -972,7 +973,7 @@ public class RewardPledgeService {
     private void validateSupply(Draft draft) {
         requireText(draft.supplyRef);
         requireText(draft.terms);
-        if (draft.quantity <= 0 || draft.serviceStart <= 0 || draft.serviceEnd <= draft.serviceStart
+        if (draft.quantity <= 0 || draft.quantity > MAX_PLEDGE_QUANTITY || draft.serviceStart <= 0 || draft.serviceEnd <= draft.serviceStart
                 || draft.redeemStart <= 0 || draft.redeemEnd <= draft.redeemStart) {
             throw new PledgeRejection("INVALID_INPUT");
         }

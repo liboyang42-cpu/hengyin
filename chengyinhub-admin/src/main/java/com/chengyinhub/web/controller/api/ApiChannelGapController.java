@@ -22,6 +22,8 @@ import com.chengyinhub.business.service.channel.platform.ChannelWebhookDispatche
 import com.chengyinhub.business.service.channel.platform.ChannelWebhookInboundService;
 import com.chengyinhub.business.service.channel.platform.ChannelWebhookService;
 import com.chengyinhub.common.annotation.Anonymous;
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.utils.ip.IpUtils;
@@ -200,6 +202,7 @@ public class ApiChannelGapController extends BaseController
      * 200 ACCEPTED（消息已可见）/ 202 PENDING_REVIEW（消息已落库待审）；拒绝按原因给 4xx，同样带 err。
      */
     @Anonymous
+    @RateLimiter(time = 60, count = 120, limitType = LimitType.IP)
     @Operation(summary = "入站 Webhook 接收（签名校验后落频道消息）")
     @PostMapping("/api/im/webhook/inbound/{id}")
     public ResponseEntity<AjaxResult> inbound(@PathVariable("id") String id,
@@ -229,7 +232,7 @@ public class ApiChannelGapController extends BaseController
         }
         catch (Exception e)
         {
-            logger.error("入站 Webhook 结果待确认", e);
+            logger.error("入站 Webhook 结果待确认 type={}", e.getClass().getSimpleName());
             AjaxResult result = new AjaxResult(500, "结果待确认");
             result.put("errorCode", "OUTCOME_UNKNOWN");
             result.put("err", "OUTCOME_UNKNOWN");

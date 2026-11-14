@@ -221,4 +221,9 @@
          ORDER BY id DESC
          LIMIT #{limit}
     </select>
+    <select id="countDeliveriesByState" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        SELECT state, COUNT(1) AS cnt
+          FROM im_webhook_delivery
+         GROUP BY state
+    </select>
 </mapper>

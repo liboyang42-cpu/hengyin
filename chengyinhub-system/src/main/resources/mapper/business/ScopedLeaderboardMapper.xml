@@ -111,7 +111,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <sql id="scopeWhere">
         <choose>
             <when test='"world".equals(scope)'>
-                and 1 = 1
+                <!-- world scope: no additional scope filter -->
             </when>
             <when test='"quest".equals(scope)'>
                 and p.topic_id = #{scopeIdLong}

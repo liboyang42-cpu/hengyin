@@ -57,6 +57,9 @@ public interface ChannelWebhookMapper
     List<Map<String, Object>> listDeliveries(@Param("subscriptionId") long subscriptionId, @Param("state") String state,
             @Param("beforeId") Long beforeId, @Param("limit") int limit);
 
+    /** 按投递状态统计发件箱/死信队列条数（供 Actuator 健康探针聚合）。 */
+    List<Map<String, Object>> countDeliveriesByState();
+
     Map<String, Object> selectEndpoint(@Param("id") long id);
 
     Map<String, Object> lockEndpoint(@Param("id") long id);

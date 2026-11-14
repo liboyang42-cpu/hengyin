@@ -33,21 +33,31 @@ public class WorkshopProfessionalReviewController extends BaseController {
     @PreAuthorize("@ss.hasPermi('business:audit:review')")
     @PostMapping("/review/{id}/approve")
     public AjaxResult approve(@PathVariable long id, @RequestBody(required = false) Map<String, Object> body) {
-        return success(professional.approve(getUserId(), id, body == null ? null : (String) body.get("note")));
+        return success(professional.approve(getUserId(), id, optionalText(body, "note", 500)));
     }
 
     @Operation(summary = "驳回（必须写原因）")
     @PreAuthorize("@ss.hasPermi('business:audit:review')")
     @PostMapping("/review/{id}/reject")
     public AjaxResult reject(@PathVariable long id, @RequestBody(required = false) Map<String, Object> body) {
-        return success(professional.reject(getUserId(), id, body == null ? null : (String) body.get("reason")));
+        return success(professional.reject(getUserId(), id, optionalText(body, "reason", 500)));
     }
 
     @Operation(summary = "升级（必须写原因）")
     @PreAuthorize("@ss.hasPermi('business:audit:review')")
     @PostMapping("/review/{id}/escalate")
     public AjaxResult escalate(@PathVariable long id, @RequestBody(required = false) Map<String, Object> body) {
-        return success(professional.escalate(getUserId(), id, body == null ? null : (String) body.get("reason")));
+        return success(professional.escalate(getUserId(), id, optionalText(body, "reason", 500)));
+    }
+
+    private static String optionalText(Map<String, Object> body, String field, int maxLength) {
+        if (body == null) return null;
+        Object raw = body.get(field);
+        if (raw == null) return null;
+        if (!(raw instanceof String text) || text.length() > maxLength) {
+            throw AppGapException.badRequest(field);
+        }
+        return text;
     }
 
     @ExceptionHandler(AppGapException.class)

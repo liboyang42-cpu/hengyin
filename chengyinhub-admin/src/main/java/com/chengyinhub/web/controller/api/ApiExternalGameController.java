@@ -4,6 +4,8 @@ import com.chengyinhub.business.appgaps.AppGapException;
 import com.chengyinhub.business.externalgame.ExternalGamePackageValidator;
 import com.chengyinhub.business.externalgame.ExternalGameReviewService;
 import com.chengyinhub.common.annotation.Anonymous;
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -72,6 +74,7 @@ public class ApiExternalGameController extends AppGapController {
     }
 
     @Anonymous
+    @RateLimiter(time = 60, count = 120, limitType = LimitType.IP)
     @Operation(summary = "已上架外部游戏目录")
     @GetMapping("/api/external-game/catalog")
     public AjaxResult catalog(@RequestParam(required = false) String cursor, @RequestParam(required = false) String limit) {
@@ -79,6 +82,7 @@ public class ApiExternalGameController extends AppGapController {
     }
 
     @Anonymous
+    @RateLimiter(time = 60, count = 120, limitType = LimitType.IP)
     @Operation(summary = "已上架外部游戏详情（含限时签名下载地址）")
     @GetMapping("/api/external-game/catalog/{gameId}")
     public AjaxResult catalogDetail(@PathVariable String gameId) {
@@ -86,6 +90,7 @@ public class ApiExternalGameController extends AppGapController {
     }
 
     @Anonymous
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.IP)
     @Operation(summary = "限时签名下载（返回服务端签名的游戏包 JSON）")
     @GetMapping("/api/external-game/catalog/{gameId}/package")
     public ResponseEntity<byte[]> download(@PathVariable String gameId, @RequestParam(required = false) String submissionId,
@@ -99,6 +104,7 @@ public class ApiExternalGameController extends AppGapController {
     }
 
     @Anonymous
+    @RateLimiter(time = 60, count = 120, limitType = LimitType.IP)
     @Operation(summary = "外部游戏签名公钥（Ed25519）")
     @GetMapping("/api/external-game/signing-key")
     public AjaxResult signingKey() {

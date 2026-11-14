@@ -179,7 +179,7 @@ public class ChannelWebhookInboundService
         }
         catch (RuntimeException e)
         {
-            log.warn("[webhook] 入站文本审核调用失败，按待审处理: {}", e.toString());
+            log.warn("[webhook] 入站文本审核调用失败，按待审处理: {}", e.getClass().getSimpleName());
             return IWxContentSecurityService.MSG_UNAVAILABLE;
         }
     }
@@ -260,7 +260,7 @@ public class ChannelWebhookInboundService
         }
         catch (RuntimeException e)
         {
-            log.warn("[webhook] nonce 清理失败: {}", e.toString());
+            log.warn("[webhook] nonce 清理失败: {}", e.getClass().getSimpleName());
         }
     }
 

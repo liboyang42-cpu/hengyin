@@ -48,10 +48,11 @@ public class ChannelWebhookAdminService
         if (subscriptionId != null && subscriptionId <= 0) throw ChannelRejection.badField("subscriptionId");
         int size = pageSize == null ? 20 : Math.max(1, Math.min(MAX_PAGE_SIZE, pageSize));
         int page = pageNum == null ? 1 : Math.max(1, pageNum);
-        StringBuilder where = new StringBuilder(" WHERE 1 = 1");
+        List<String> clauses = new ArrayList<>();
         List<Object> args = new ArrayList<>();
-        if (!"ALL".equals(filter)) { where.append(" AND d.state = ?"); args.add(filter); }
-        if (subscriptionId != null) { where.append(" AND d.subscription_id = ?"); args.add(subscriptionId); }
+        if (!"ALL".equals(filter)) { clauses.add("d.state = ?"); args.add(filter); }
+        if (subscriptionId != null) { clauses.add("d.subscription_id = ?"); args.add(subscriptionId); }
+        String where = clauses.isEmpty() ? "" : " WHERE " + String.join(" AND ", clauses);
         String from = " FROM im_webhook_delivery d LEFT JOIN im_webhook_subscription s ON s.id = d.subscription_id";
         Long total = jdbc.queryForObject("SELECT COUNT(1)" + from + where, Long.class, args.toArray());
         List<Object> pageArgs = new ArrayList<>(args);
