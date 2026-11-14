@@ -171,7 +171,7 @@ public class DashScopeVoiceClient implements VoiceCloneClient
             log.error("[VoiceClient] requestId={} action={} category={} failureType={}",
                     correlationId, what, "TRANSPORT_FAILURE", e.getClass().getSimpleName());
             // Keep VoiceCloneClient's existing exception contract. Do not turn a dispatched failure into NOT_SENT.
-            throw new AiServiceException(what + "失败,请稍后再试", e);
+            throw new AiServiceException(what + "失败，请稍后再试", e);
         }
 
         JSONObject json;
@@ -182,7 +182,7 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         catch (Exception e)
         {
             log.error("[VoiceClient] requestId={} action={} category={}", correlationId, what, "INVALID_JSON");
-            throw new AiServiceException(what + "失败,请稍后再试");
+            throw new AiServiceException(what + "失败，请稍后再试");
         }
         String requestId = safeRequestId(json, correlationId);
         // DashScope 的错误是 HTTP 200 带 code 字段 —— 只看状态码会把失败当成功,
@@ -191,13 +191,13 @@ public class DashScopeVoiceClient implements VoiceCloneClient
         if (code != null && !code.trim().isEmpty())
         {
             log.error("[VoiceClient] requestId={} action={} category={}", requestId, what, "PROVIDER_REJECTED");
-            throw new AiServiceException(what + "失败:" + code);
+            throw new AiServiceException(what + "失败：" + code);
         }
         JSONObject out = json.getJSONObject("output");
         if (out == null)
         {
             log.error("[VoiceClient] requestId={} action={} category={}", requestId, what, "MISSING_OUTPUT");
-            throw new AiServiceException(what + "失败,请稍后再试");
+            throw new AiServiceException(what + "失败，请稍后再试");
         }
         return new ProviderReply(out, requestId);
     }

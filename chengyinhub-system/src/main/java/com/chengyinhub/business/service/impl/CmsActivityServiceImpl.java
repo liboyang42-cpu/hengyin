@@ -523,7 +523,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         BigDecimal heldPlatformFee = null;
         if (heldTopic != null && Integer.valueOf(ProductType.FREE_EXPLORE).equals(heldTopic.getProductType())) {
             if (registration.getFeePlatformRate() == null) {
-                throw new ServiceException("自由探索暂扣单缺冻结平台费率,拒绝补结 registrationId=" + registration.getId());
+                throw new ServiceException("自由探索暂扣单缺冻结平台费率，拒绝补结 registrationId=" + registration.getId());
             }
             heldPlatformFee = heldFee(registration);
         }
@@ -563,7 +563,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     private com.chengyinhub.business.service.support.ClubSessionMerchantFee clubSessionMerchantFee() {
         if (clubSessionMerchantFee == null) {
             // 俱乐部场次的商家费不能因为装配缺失被静默跳过(那会把商家的钱整笔记给主理人)。
-            throw new ServiceException("CLUB_SESSION_MERCHANT_FEE_UNWIRED: 俱乐部场次商家费组件未装配,拒绝结算");
+            throw new ServiceException("CLUB_SESSION_MERCHANT_FEE_UNWIRED: 俱乐部场次商家费组件未装配，拒绝结算");
         }
         return clubSessionMerchantFee;
     }
@@ -646,7 +646,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             return FreeExploreLedger.NONE;
         }
         if (settlementEntryService == null) {
-            throw new ServiceException("FREE_EXPLORE_SESSION_LEDGER_UNWIRED: 自由探索场次分账组件未装配,拒绝结算 activityId="
+            throw new ServiceException("FREE_EXPLORE_SESSION_LEDGER_UNWIRED: 自由探索场次分账组件未装配，拒绝结算 activityId="
                     + activity.getId());
         }
         Long payee = activityPayee(activity, topic);

@@ -94,7 +94,7 @@ public class ApiPricingController extends BaseController {
             // 发布时票价是 0 ⇒ 按免费主题豁免了实名;终价一旦收费,实名闸必须在这一步补上(电商法 §27),
             // 否则「先发免费、后定收费」就是绕过发布者实名的口子。
             if ((isPositive(guidedPrice) || isPositive(selfPrice)) && !memberIdentityService.isRegistered(ownerOf(topicId))) {
-                return error("收费主题要先登记发布者实名(姓名与身份证号),再确认终价");
+                return error("收费主题要先登记发布者实名(姓名与身份证号)，再确认终价");
             }
             if (ticketPrices == null) {
                 pricingService.confirmPrice(topicId, guidedPrice, selfPrice,

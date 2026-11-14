@@ -151,8 +151,8 @@ test('举报动态与举报评论网络失败有提示,成功沿用服务端 msg
   const report = byUrl(h.requests, '/api/club/post/comment/report')[0]
   report.fail()
   assert.equal(toasts.pop(), '网络异常，请重试')
-  report.success({ code: '200', msg: '已举报,平台将尽快处理' })
-  assert.equal(toasts.pop(), '已举报,平台将尽快处理')
+  report.success({ code: '200', msg: '已举报，平台将尽快处理' })
+  assert.equal(toasts.pop(), '已举报，平台将尽快处理')
 })
 
 // UNKNOWN 只读当前状态快照，严格核对原帖和俱乐部；不能断言原写请求从未执行。

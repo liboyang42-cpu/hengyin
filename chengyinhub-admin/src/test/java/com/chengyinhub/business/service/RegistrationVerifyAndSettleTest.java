@@ -231,7 +231,7 @@ class RegistrationVerifyAndSettleTest {
 
         for (int attempt = 0; attempt < 2; attempt++) {
             IllegalStateException error = assertThrows(IllegalStateException.class, this::verifyAndSettle);
-            assertEquals("订单未完成支付或已退款,无法核销", error.getMessage());
+            assertEquals("订单未完成支付或已退款，无法核销", error.getMessage());
         }
 
         verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
@@ -259,7 +259,7 @@ class RegistrationVerifyAndSettleTest {
 
         for (int attempt = 0; attempt < 2; attempt++) {
             IllegalStateException error = assertThrows(IllegalStateException.class, this::verifyAndSettle);
-            assertEquals("订单数据异常,无法核销", error.getMessage());
+            assertEquals("订单数据异常，无法核销", error.getMessage());
         }
 
         verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());
@@ -499,7 +499,7 @@ class RegistrationVerifyAndSettleTest {
         IllegalStateException e = assertThrows(IllegalStateException.class,
                 () -> service.verifyAndSettleForStation(reg(), MERCHANT, 701L));
 
-        assertEquals("订单未完成支付或已退款,无法核销", e.getMessage());
+        assertEquals("订单未完成支付或已退款，无法核销", e.getMessage());
         verify(registrationMerchantMapper, never()).selectCmsRegistrationMerchantByIdForUpdate(anyLong());
         verify(regMapper, never()).verifyIfNotVerified(anyLong(), anyLong());
         verify(settlementSvc, never()).recordPaidRegistration(any(), anyLong());

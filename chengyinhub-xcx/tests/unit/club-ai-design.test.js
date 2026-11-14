@@ -163,10 +163,10 @@ test('★ 频控超限:包含匹配后端文案(数字随 dailyLimit 配置变)+
   const p = makePage(Object.assign({ aiIdea: 'x' }, OWNER));
   p.onClubAiGenerate();
   // 故意用 35 而不是默认 20:页面若硬编码整串,这条就红。
-  sent.success({ code: 500, msg: '今日AI次数已用完(35/天),明天再来吧' });
+  sent.success({ code: 500, msg: '今日AI次数已用完(35/天)，明天再来吧' });
 
   assert.equal(p.data.aiState, 'error');
-  assert.equal(p.data.aiErrorText, '今日AI次数已用完(35/天),明天再来吧', '应原样展示后端拼好的文案');
+  assert.equal(p.data.aiErrorText, '今日AI次数已用完(35/天)，明天再来吧', '应原样展示后端拼好的文案');
   assert.equal(p.data.aiCanRetry, false, '频控超限给重试按钮 = 骗用户点，点了还是失败');
   assert.deepEqual(toasts, [], 'silentError 下不该再自己弹 toast(防双弹)');
 });

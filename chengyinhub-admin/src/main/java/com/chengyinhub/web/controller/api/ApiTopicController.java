@@ -485,7 +485,7 @@ public class ApiTopicController extends BaseController {
                         coopQ.setStatus(1);
                         boolean hasAcceptedClubCoop = !coopInviteService.selectCoopInviteList(coopQ).isEmpty();
                         if (!hasAcceptedClubCoop) {
-                            return error("需为该俱乐部主理人,或先获得该俱乐部的合作邀约通过,才能发起经典定向团");
+                            return error("需为该俱乐部主理人，或先获得该俱乐部的合作邀约通过，才能发起经典定向团");
                         }
                     }
                 }
@@ -1363,7 +1363,7 @@ public class ApiTopicController extends BaseController {
             return error("参数不合规");
         }
         if (reason == null || reason.trim().isEmpty()) {
-            return error("请填写取消原因,它会展示给已付款的玩家");
+            return error("请填写取消原因，它会展示给已付款的玩家");
         }
         Long actorMemberId = 0L;
         try {
@@ -1605,7 +1605,7 @@ public class ApiTopicController extends BaseController {
             coopQ.setToId(cid);
             coopQ.setStatus(1);
             if (coopInviteService.selectCoopInviteList(coopQ).isEmpty()) {
-                return error("需为该俱乐部主理人,或先获得该俱乐部的合作邀约通过,才能移交承接");
+                return error("需为该俱乐部主理人，或先获得该俱乐部的合作邀约通过，才能移交承接");
             }
         }
         // 新草稿归属仍为发起人本人(所有权/核心编辑/换俱乐部权留发起人),由发起人配置为城市定向

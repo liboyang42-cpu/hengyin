@@ -136,9 +136,9 @@ test('cy-illus 修:物件层 SVG 不再有重复属性(XML 不合法 → 图片�
 })
 
 test('地点卡数字只写拿得到的;玩法类型名认得出才写;翻页循环', () => {
-  assert.deepEqual(pops.sheetFacts({ businessTime: '09:00-17:00' }, '1.2km'), { distText: '1.2km', walkText: '15', hoursText: '09–17' })
+  assert.deepEqual(pops.sheetFacts({ businessTime: '09:00-17:00' }, '1.2km'), { distText: '1.2 公里', walkText: '15', hoursText: '09–17' })
   assert.deepEqual(pops.sheetFacts({ businessTime: '00:00-23:59' }, ''), { distText: '', walkText: '', hoursText: '' }, '全天不是有用信息;没有距离就没有步行')
-  assert.deepEqual(pops.sheetFacts({}, '80m'), { distText: '80m', walkText: '1', hoursText: '' })
+  assert.deepEqual(pops.sheetFacts({}, '80m'), { distText: '80 米', walkText: '1', hoursText: '' })
   assert.equal(pops.kitTypeLabel({ previewKit: { type: 'accusation' } }), '判案')
   assert.equal(pops.kitTypeLabel({ advancedConfigJson: JSON.stringify({ qa: { enabled: true }, timer: { enabled: true } }) }), '问答')
   assert.equal(pops.kitTypeLabel({ advancedConfig: { ballShake: { enabled: true } } }), '弹球')

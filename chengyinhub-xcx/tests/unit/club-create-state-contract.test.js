@@ -302,7 +302,7 @@ test('V5a SC-CL-APPROVE：被驳回的俱乐部不占两家名额，重新提交
 
   Object.assign(h.page.data, { step: 4, canNext: true, clubType: '兴趣社群', name: '夜行俱乐部', city: '上海' })
   h.page.submit()
-  h.requests.at(-1).success({ code: 200, msg: '已重新提交,等待审核', data: { clubId: 12, status: 0 } })
+  h.requests.at(-1).success({ code: 200, msg: '已重新提交，等待审核', data: { clubId: 12, status: 0 } })
   assert.equal(h.page.data.submitState, 'success')
   assert.equal(h.page.data.submissionPending, true)
   assert.match(WXML, /submissionPending \? '已重新提交，等待审核' : '俱乐部已创建'/)

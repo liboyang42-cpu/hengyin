@@ -13,7 +13,7 @@ const placeMap = require('../../../utils/roam-place-map.js');
 
 const KEYS = ['A', 'B', 'C', 'D'];
 /* 服务端在写入前拒绝的那几句(与据点详情 PREWRITE_REJECTIONS 同源):这些回来就是「这次没过」,可以再答 */
-const REJECTIONS = ['离据点太远,请到店后再完成', '答案不正确', '请上传拍照打卡照片', '照片地址不合法,请重新上传',
+const REJECTIONS = ['离据点太远，请到店后再完成', '答案不正确', '请上传拍照打卡照片', '照片地址不合法，请重新上传',
   '照片未上传成功或不属于当前账号，请重新拍摄上传', '照片校验暂不可用，请稍后重试', '据点未开放或已下线', '节点未上线', '缺少定位'];
 const BADGE_WALL = '/subpackageP3/pages/badge-wall/index/index';
 

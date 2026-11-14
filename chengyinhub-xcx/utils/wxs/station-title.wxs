@@ -1,0 +1,7 @@
+// 标题尾部最多三字保持在同一行，原始站名仍用于业务请求和回执。
+function text(value) {
+  var title = '' + (value || '');
+  if (getRegExp('[㐀-鿿]{3}[？！。，、：；」』）】》]*$').test(title)) return title.replace(getRegExp('([㐀-鿿])([㐀-鿿])([㐀-鿿][？！。，、：；」』）】》]*)$'), '$1⁠$2⁠$3');
+  return title.replace(getRegExp('([㐀-鿿])([㐀-鿿][？！。，、：；」』）】》]*)$'), '$1⁠$2');
+}
+module.exports = { text: text };

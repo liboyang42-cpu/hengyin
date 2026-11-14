@@ -77,7 +77,7 @@ class AiGatewayRateLimitReasonTest {
                 () -> service.generate(MEMBER_ID, "player", "npc_chat", "[BIZ:npc_chat]\n", "正常提问"));
 
         assertEquals(AiServiceException.Reason.RATE_LIMITED, error.getReason());
-        assertEquals("今日AI次数已用完(100/天),明天再来吧", error.getMessage());
+        assertEquals("今日AI次数已用完(100/天)，明天再来吧", error.getMessage());
         verify(security, never()).checkText(anyString(), anyString());
         verify(llm, never()).chat(anyString(), anyString());
     }
@@ -88,6 +88,6 @@ class AiGatewayRateLimitReasonTest {
                 () -> service.consumeQuota(MEMBER_ID, "npc_chat"));
 
         assertEquals(AiServiceException.Reason.RATE_LIMITED, error.getReason());
-        assertEquals("今日AI次数已用完(100/天),明天再来吧", error.getMessage());
+        assertEquals("今日AI次数已用完(100/天)，明天再来吧", error.getMessage());
     }
 }

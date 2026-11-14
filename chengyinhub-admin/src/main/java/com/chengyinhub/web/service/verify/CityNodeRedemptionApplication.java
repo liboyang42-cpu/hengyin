@@ -104,10 +104,10 @@ public class CityNodeRedemptionApplication {
             return AjaxResult.error("无权核销该据点");
         }
         Long couponId = roamMapper.selectPendingCityNodeCouponId(poiId, playerId);
-        if (couponId == null) return AjaxResult.error("玩家未到店打卡,或该券已核销");
+        if (couponId == null) return AjaxResult.error("玩家未到店打卡，或该券已核销");
         // 幂等:玩家须已到店打卡(status=0 待核销);0→1 条件更新只成功一次,防重复发券
         int flipped = roamMapper.redeemCityNodeReward(poiId, playerId);
-        if (flipped == 0) return AjaxResult.error("玩家未到店打卡,或该券已核销");
+        if (flipped == 0) return AjaxResult.error("玩家未到店打卡，或该券已核销");
         // C-30:券已失效(平台3)/已停发(商家4) → 跳过发券,据点核销照常完成,回执明说「未发放」
         boolean couponSkipped = couponId > 0 && couponHistoryService.isCouponNotIssuable(couponId);
         if (couponSkipped) {
@@ -115,7 +115,7 @@ public class CityNodeRedemptionApplication {
         } else if (couponId > 0 && !couponHistoryService.grantCouponById(playerId, couponId)) {
             // C1 库存耗尽:抛业务异常触发本方法 @Transactional 回滚(status 翻转+占坑一并撤,允许补货后重扫),
             // 并由全局异常处理器转成友好 AjaxResult;不用 setRollbackOnly+return(那会抛 UnexpectedRollbackException→500)
-            throw new ServiceException("券库存不足,核销失败");
+            throw new ServiceException("券库存不足，核销失败");
         }
         Map<String, Object> data = new HashMap<>();
         data.put("memberId", playerId);

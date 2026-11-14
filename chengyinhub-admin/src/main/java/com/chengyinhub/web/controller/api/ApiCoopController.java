@@ -141,7 +141,7 @@ public class ApiCoopController extends BaseController {
         try {
             UmsMember payer = umsMemberService.selectUmsMemberById(memberId);
             String openid = payer == null ? null : payer.getWxOpenId();
-            if (openid == null || openid.isEmpty()) return error("缺少微信身份,无法支付");
+            if (openid == null || openid.isEmpty()) return error("缺少微信身份，无法支付");
             java.util.Map<String, Object> prep = coopInviteService.prepareDeposit(inviteId, memberId);
             java.util.Map<String, String> payParams = wechatPayService.createGenericOrder(
                     (String) prep.get("outTradeNo"),
@@ -1154,7 +1154,7 @@ public class ApiCoopController extends BaseController {
             d.put("conversationId", imService.startSingle(memberId, other));
             return AjaxResult.success(d);
         } catch (Exception e) {
-            return error("暂不可联系:" + e.getMessage());
+            return error("暂不可联系：" + e.getMessage());
         }
     }
 
@@ -1353,7 +1353,7 @@ public class ApiCoopController extends BaseController {
         // 下一步由发布者走现成的 POST /api/coop/invite 发 type0 邀约(带条款),
         // 商家接受 → acceptInviteWithLock → coop_order。结算只认那张单。
 
-        return AjaxResult.success("已选定该候选,请向该商家发出带条款的合作邀约(接受后才成合作单)");
+        return AjaxResult.success("已选定该候选，请向该商家发出带条款的合作邀约(接受后才成合作单)");
     }
 
     /** 单次聚合上限:主题数与候选行数都封顶,防止主办方主题一多把响应拉爆。 */

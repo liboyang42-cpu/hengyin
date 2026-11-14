@@ -66,14 +66,14 @@ public class SmsVerificationService
         if (!Boolean.TRUE.equals(redisCache.setIfAbsent(
                 phoneLimitKey, owner, PHONE_SEND_WINDOW_SECONDS, TimeUnit.SECONDS)))
         {
-            return SendResult.error("发送过于频繁,请稍后再试");
+            return SendResult.error("发送过于频繁，请稍后再试");
         }
         Long ipCount = redisCache.incrementWithinWindow(
                 ipWindowKey, IP_SEND_WINDOW_SECONDS, TimeUnit.SECONDS);
         if (ipCount == null || ipCount > IP_SEND_WINDOW_LIMIT)
         {
             redisCache.compareAndDelete(phoneLimitKey, owner);
-            return SendResult.error("发送过于频繁,请稍后再试");
+            return SendResult.error("发送过于频繁，请稍后再试");
         }
 
         Long dailyCount = redisCache.incrementWithinWindow("sms_send_phone_day_" + phone, 1, TimeUnit.DAYS);

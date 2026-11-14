@@ -64,7 +64,7 @@ class FreeOrderCancelEntryGateAcceptanceTest {
         AjaxResult res = controller.issueDynCode(REG);
 
         assertEquals(500, res.get("code"));
-        assertEquals("订单未完成支付或已结束,无法生成核销码", res.get("msg"));
+        assertEquals("订单未完成支付或已结束，无法生成核销码", res.get("msg"));
         assertNull(res.get("data"));
         verify(perkSvc, never()).isTicketFullyConsumed(anyInt(), anyLong());
         verify(activitySvc, never()).selectCmsActivityById(any());

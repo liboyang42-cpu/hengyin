@@ -99,7 +99,7 @@ public class CashWithdrawAdminController extends BaseController {
         try {
             return cashWithdrawService.freezeWithdraw(body.getId(), getUsername(), body.getFrozenReason())
                     ? AjaxResult.success("已冻结")
-                    : AjaxResult.error("冻结失败:该提现单已在冻结中");
+                    : AjaxResult.error("冻结失败：该提现单已在冻结中");
         } catch (IllegalStateException e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -113,7 +113,7 @@ public class CashWithdrawAdminController extends BaseController {
         try {
             return cashWithdrawService.unfreezeWithdraw(id, getUsername())
                     ? AjaxResult.success("已解冻")
-                    : AjaxResult.error("解冻失败:该提现单本就未冻结");
+                    : AjaxResult.error("解冻失败：该提现单本就未冻结");
         } catch (IllegalStateException e) {
             return AjaxResult.error(e.getMessage());
         }

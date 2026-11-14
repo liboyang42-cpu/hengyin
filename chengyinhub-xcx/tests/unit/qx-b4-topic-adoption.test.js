@@ -18,7 +18,7 @@ const row = (rows, key) => rows.find(r => r.key === key);
 test('采用条件只翻译服务端事实:未知不写成已验证、两端可玩或已授权', () => {
   const rows = a.deliveryRows(full, true);
   assert.equal(row(rows, 'place').value, '需要到现场 · 4 个地点');
-  assert.equal(row(rows, 'operating').value, '仅对合作商家开放');
+  assert.deepEqual(row(rows, 'operating'), { key: 'operating', label: '运营资料', value: '仅合作商家可见' });
   assert.equal(row(rows, 'evidence').value, '预估，未实地验证');
   assert.equal(row(rows, 'revision').value, '第 3 版');
   assert.equal(row(rows, 'locale').value, '简体中文');

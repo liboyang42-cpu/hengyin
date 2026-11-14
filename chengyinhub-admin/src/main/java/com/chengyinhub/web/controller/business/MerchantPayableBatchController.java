@@ -82,7 +82,7 @@ public class MerchantPayableBatchController extends BaseController {
     public AjaxResult confirm(@PathVariable Long id) {
         return merchantPayableService.confirmBatch(id, getUsername())
                 ? AjaxResult.success()
-                : AjaxResult.error("确认失败:该批次已不是「待结」状态(可能已确认或已打款)");
+                : AjaxResult.error("确认失败：该批次已不是「待结」状态(可能已确认或已打款)");
     }
 
     /**
@@ -99,7 +99,7 @@ public class MerchantPayableBatchController extends BaseController {
         try {
             return merchantPayableService.markBatchPaid(id, getUsername(), voucherNo)
                     ? AjaxResult.success()
-                    : AjaxResult.error("记录打款失败:该批次未经对账确认、已记过打款,或已被冻结");
+                    : AjaxResult.error("记录打款失败：该批次未经对账确认、已记过打款，或已被冻结");
         } catch (IllegalStateException e) {
             // ★双人复核:打款人与对账确认人为同一人
             return AjaxResult.error(e.getMessage());
@@ -118,7 +118,7 @@ public class MerchantPayableBatchController extends BaseController {
         String invoiceNo = body.get("invoiceNo") == null ? null : String.valueOf(body.get("invoiceNo"));
         return merchantPayableService.markBatchInvoiceIssued(id, invoiceNo)
                 ? AjaxResult.success()
-                : AjaxResult.error("记录开票失败:该批次已开过票或已红冲");
+                : AjaxResult.error("记录开票失败：该批次已开过票或已红冲");
     }
 
     /**
@@ -135,7 +135,7 @@ public class MerchantPayableBatchController extends BaseController {
         String redNo = body.get("redInvoiceNo") == null ? null : String.valueOf(body.get("redInvoiceNo"));
         return merchantPayableService.markBatchInvoiceRed(id, redNo)
                 ? AjaxResult.success()
-                : AjaxResult.error("记录红冲失败:该批次没有开过蓝票(没开票就谈不上红冲)");
+                : AjaxResult.error("记录红冲失败：该批次没有开过蓝票(没开票就谈不上红冲)");
     }
 
     /** 冻结:暂停该批次的对账确认/打款,不移动任何资金。独立权限点,不与日常 edit 权限捆绑。 */
@@ -150,7 +150,7 @@ public class MerchantPayableBatchController extends BaseController {
         try {
             return merchantPayableService.freezeBatch(id, getUsername(), reason)
                     ? AjaxResult.success("已冻结")
-                    : AjaxResult.error("冻结失败:该批次已在冻结中");
+                    : AjaxResult.error("冻结失败：该批次已在冻结中");
         } catch (IllegalStateException e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -164,7 +164,7 @@ public class MerchantPayableBatchController extends BaseController {
         try {
             return merchantPayableService.unfreezeBatch(id, getUsername())
                     ? AjaxResult.success("已解冻")
-                    : AjaxResult.error("解冻失败:该批次本就未冻结");
+                    : AjaxResult.error("解冻失败：该批次本就未冻结");
         } catch (IllegalStateException e) {
             return AjaxResult.error(e.getMessage());
         }

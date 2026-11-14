@@ -8,9 +8,9 @@ const read = file => fs.readFileSync(path.join(__dirname, '../..', file), 'utf8'
 
 test('站名末尾两字同行，显示处理不改业务站名或英文', () => {
   const context = { module: { exports: {} }, getRegExp: RegExp };
-  vm.runInNewContext(read('pages/play/utils/wxs/station-title.wxs'), context);
+  vm.runInNewContext(read('utils/wxs/station-title.wxs'), context);
   const text = context.module.exports.text;
-  for (const title of ['2 · 毕业那天先发生什么', '发生什么？', '上海']) {
+  for (const title of ['2 · 毕业那天先发生什么', '发生什么？', '1 · 五份称呼是否一只猫', '上海']) {
     const displayed = text(title);
     assert.ok(displayed.includes('\u2060'));
     assert.equal(displayed.replace(/\u2060/g, ''), title);

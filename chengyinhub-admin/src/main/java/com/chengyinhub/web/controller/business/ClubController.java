@@ -365,7 +365,7 @@ public class ClubController extends BaseController {
         }
         // 账户互斥(2026-07-05 恢复严格分离):已是商户者不能审核为俱乐部主理人。
         if (club.getStatus() == 1L && capabilityService.hasCapability(db.getMemberId(), MemberCapability.CAP_MERCHANT)) {
-            return error("该会员已是商户,一个账户不能同时是商户与主理人");
+            return error("该会员已是商户，一个账户不能同时是商户与主理人");
         }
         db.setStatus(club.getStatus());
         db.setRejectReason(club.getRejectReason());

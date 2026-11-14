@@ -3907,10 +3907,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         CmsRegistration current = RegistrationTopicFence.lock(observed, cmsRegistrationMapper,
                 cmsActivityMapper, cmsTopicMapper).registration();
         if (!Long.valueOf(1L).equals(current.getOwnerType()) || current.getOwnerId() == null) {
-            throw new IllegalStateException("订单数据异常,无法核销");
+            throw new IllegalStateException("订单数据异常，无法核销");
         }
         if (!Integer.valueOf(2).equals(current.getPaymentStatus())) {
-            throw new IllegalStateException("订单未完成支付或已退款,无法核销");
+            throw new IllegalStateException("订单未完成支付或已退款，无法核销");
         }
         return current;
     }
@@ -3982,16 +3982,16 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
             CmsRegistration current =
                     cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(registration.getId());
             if (current == null) {
-                throw new IllegalStateException("订单数据异常,无法核销");
+                throw new IllegalStateException("订单数据异常，无法核销");
             }
             if (!Integer.valueOf(2).equals(current.getPaymentStatus())
                     || !Integer.valueOf(2).equals(current.getRegistrationStatus())) {
-                throw new IllegalStateException("订单未完成支付或已退款,无法核销");
+                throw new IllegalStateException("订单未完成支付或已退款，无法核销");
             }
             if (Integer.valueOf(1).equals(current.getVerificationStatus())) {
                 return false;
             }
-            throw new IllegalStateException("订单数据异常,无法核销");
+            throw new IllegalStateException("订单数据异常，无法核销");
         }
         settlementEntryService.recordPaidRegistration(registration, payeeId);
         writeScanLedger(registration.getId(), verifierId, validationMethod, station);

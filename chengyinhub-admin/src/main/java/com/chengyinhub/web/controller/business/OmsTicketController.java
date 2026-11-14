@@ -107,6 +107,6 @@ public class OmsTicketController extends BaseController
     {
         // A3-2(P0):票被订单(oms_order)引用,物理删除在售/已售票=孤儿订单+抹掉交易凭据。
         // 一律禁止裸删;下架请调整上下架时间(del_flag/时间窗)。
-        return AjaxResult.error(HttpStatus.FORBIDDEN, "票务不支持物理删除,请用下架(调整上下架时间)");
+        return AjaxResult.error(HttpStatus.FORBIDDEN, "票务不支持物理删除，请用下架(调整上下架时间)");
     }
 }

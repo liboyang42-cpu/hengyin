@@ -3504,7 +3504,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         requireSessionStatus(session, GameSession.RUNNING);
         if (command.getPayload().containsKey("decision")
                 && !"REJECT".equals(upper(command.getPayload().get("decision")))) {
-            throw error("GAME_FORBIDDEN_SCOPE", "俱乐部只能驳回重交,通过与否由本站商家判定");
+            throw error("GAME_FORBIDDEN_SCOPE", "俱乐部只能驳回重交，通过与否由本站商家判定");
         }
         Long submissionId = positiveLong(command.getPayload().get("submissionId"));
         GameTaskSubmission submission = submissionId == null ? null : runtimeMapper.selectSubmission(submissionId);

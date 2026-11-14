@@ -553,7 +553,7 @@ public class ApiActivityController extends BaseController {
         // 若该活动还有已付款报名,删完活动就查不到了,而用户的钱还在平台 —— 钱原地悬空。
         // 「删除」不该隐含大额资金操作,故此处拒绝并引导去走「取消活动」(那条会整单全额退)。
         if (cmsActivityService.countPaidRegistrations(cid) > 0) {
-            return error("该活动已有用户付费报名,不能直接删除。请先「取消活动」(将全额退款给所有未核销报名),再删除。");
+            return error("该活动已有用户付费报名，不能直接删除。请先「取消活动」(将全额退款给所有未核销报名)，再删除。");
         }
 
         // [资损闸 · W9] 上面那道只看 payment_status=2 = 钱已到账,漏了「钱随时可能进来」:玩家拉起支付、
@@ -562,7 +562,7 @@ public class ApiActivityController extends BaseController {
         // ⚠️ 无条件拦 0,不按 pay_expire_time 放过「过期弃单」—— 该字段后端无强制力(支付口不校验它),
         // 过期单照样付得了。弃单解堵靠 orderCloseTask 关单成 3(约 35 分钟内自愈),不靠这里放行。
         if (cmsActivityService.countPendingRegistrations(cid) > 0) {
-            return error("该活动有用户的报名待支付,此刻删除会导致「钱收了、活动没了」。未支付的单会在支付窗口过期后由系统自动关单(约 30 分钟),届时即可删除。");
+            return error("该活动有用户的报名待支付，此刻删除会导致「钱收了、活动没了」。未支付的单会在支付窗口过期后由系统自动关单(约 30 分钟)，届时即可删除。");
         }
 
         cmsActivity.setId(cid);
@@ -594,7 +594,7 @@ public class ApiActivityController extends BaseController {
             return error("参数不合规");
         }
         if (reason == null || reason.trim().isEmpty()) {
-            return error("请填写取消原因,它会展示给已报名的用户");
+            return error("请填写取消原因，它会展示给已报名的用户");
         }
         Long memberId = 0L;
         try {
