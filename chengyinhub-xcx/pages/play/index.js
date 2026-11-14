@@ -1450,7 +1450,8 @@ Page({
     if (packSkip.isPackPlaying(this.data)) {   // D-26:播放中再点 = 直接落定
       if (packSkip.canSkipPack(this.data, this._packStartedAt, Date.now())) {
         if (this._packTimers) { this._packTimers.forEach(clearTimeout); this._packTimers = []; }
-        this.setData(packSkip.packSettledPatch());
+        this.setData({ packOpen: true, headIn: true, packShake: false, packDim: false, packTear: false, packBurst: false,
+          packSink: false, blastRays: [], blastShards: [] });
         if (!this.data.isPreview) storyResume.patch(this._runSessionScope(), { packOpened: true });
       }
       return;
@@ -8771,14 +8772,13 @@ Page({
     const finishView = this._finishViewContext();
     const settle = (report, state) => {
       if (!this._isFinishViewCurrent(finishView) || !this.data.showFinish) return;
-      const patch = { finishResult: finishResult.resolveFinishResult(report, local, state) };
+      this.setData({ finishResult: finishResult.resolveFinishResult(report, local, state) });
       const timing = finishResult.reportTiming(report);
       if (timing && timing.elapsedSeconds > 0) {
         this._reportElapsed = timing.elapsedSeconds; this._reportElapsedKey = this._finishKey();
-        if (this.data.reviewElapsed) patch.reviewElapsed = formatElapsed(timing.elapsedSeconds);
+        if (this.data.reviewElapsed) this.setData({ reviewElapsed: formatElapsed(timing.elapsedSeconds) });
       }
-      if (timing && timing.completedAt > 0) patch.finishDateLabel = finishResult.finishDateLabelAt(timing.completedAt);
-      this.setData(patch);
+      if (timing && timing.completedAt > 0) this.setData({ finishDateLabel: finishResult.finishDateLabelAt(timing.completedAt) });
     };
     return req('/api/play/player-journey/report', 'GET', query, undefined, true).then((response) => {
       const report = finishResult.readReport(response);
