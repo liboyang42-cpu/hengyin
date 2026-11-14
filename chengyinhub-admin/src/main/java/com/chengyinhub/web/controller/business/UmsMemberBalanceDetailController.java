@@ -82,7 +82,7 @@ public class UmsMemberBalanceDetailController extends BaseController
     {
         // A3-1(P0):余额明细是财务台账(currentBalance/afterBalance/changeBalance),只能由真实交易系统写入。
         // 后台裸新增台账行 = 凭空造余额事实(资损面),一律禁止;余额调整应走带审计的专门流程。
-        return AjaxResult.error(HttpStatus.FORBIDDEN, "余额明细为财务台账,不支持后台新增");
+        return AjaxResult.error(HttpStatus.FORBIDDEN, "余额明细为财务台账，不支持后台新增");
     }
 
     /**
@@ -94,7 +94,7 @@ public class UmsMemberBalanceDetailController extends BaseController
     public AjaxResult edit(@RequestBody UmsMemberBalanceDetail umsMemberBalanceDetail)
     {
         // A3-1(P0):台账为财务真相,后台裸改余额金额 = 篡改财务事实,一律禁止。
-        return AjaxResult.error(HttpStatus.FORBIDDEN, "余额明细为财务台账,不支持后台修改");
+        return AjaxResult.error(HttpStatus.FORBIDDEN, "余额明细为财务台账，不支持后台修改");
     }
 
     /**
@@ -106,6 +106,6 @@ public class UmsMemberBalanceDetailController extends BaseController
     public AjaxResult remove(@PathVariable Long[] ids)
     {
         // A3-1(P0):删台账行 = 抹掉资金变动证据,一律禁止(台账应只增不删)。
-        return AjaxResult.error(HttpStatus.FORBIDDEN, "余额明细为财务台账,不支持删除");
+        return AjaxResult.error(HttpStatus.FORBIDDEN, "余额明细为财务台账，不支持删除");
     }
 }

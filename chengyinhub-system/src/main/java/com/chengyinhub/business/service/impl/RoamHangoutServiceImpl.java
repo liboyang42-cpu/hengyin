@@ -127,7 +127,7 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
     public RoamHangout create(Long memberId, String title, String description, String coverUrl,
                               BigDecimal latitude, BigDecimal longitude, String addressName, Date startAt) {
         requireLogin(memberId);
-        if (imService.isPlatformBlocked(memberId)) throw new ServiceException("账号已被限制,不能开局", 403);
+        if (imService.isPlatformBlocked(memberId)) throw new ServiceException("账号已被限制，不能开局", 403);
         String t = title == null ? "" : title.trim();
         if (t.length() < 2 || t.length() > 30) throw new ServiceException("标题 2–30 字", 400);
         String d = description == null ? null : description.trim();
@@ -138,7 +138,7 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
             throw new ServiceException("请选择地点", 400);
         }
         if (roamHangoutMapper.countActiveByMember(memberId) >= MAX_ACTIVE_PER_MEMBER) {
-            throw new ServiceException("同时最多开 " + MAX_ACTIVE_PER_MEMBER + " 个局,先关一个再开", 400);
+            throw new ServiceException("同时最多开 " + MAX_ACTIVE_PER_MEMBER + " 个局，先关一个再开", 400);
         }
         // 文本同步机审:命中即拒,不落库(广场同款口径)
         String openid = openidOf(memberId);
@@ -147,7 +147,7 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
         if (secMsg != null) {
             // 机审「审不了」也返回非 null 文案:那不是「违规」,文案要分开,别把用户当违规者
             boolean unavailable = IWxContentSecurityService.isDetectionUnavailable(secMsg);
-            throw new ServiceException(unavailable ? secMsg : "标题或说明含违规内容:" + secMsg, unavailable ? 503 : 400);
+            throw new ServiceException(unavailable ? secMsg : "标题或说明含违规内容：" + secMsg, unavailable ? 503 : 400);
         }
 
         RoamHangout h = new RoamHangout();
@@ -199,7 +199,7 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
     @Transactional(rollbackFor = Exception.class)
     public Long join(Long memberId, Long id) {
         requireLogin(memberId);
-        if (imService.isPlatformBlocked(memberId)) throw new ServiceException("账号已被限制,不能加入", 403);
+        if (imService.isPlatformBlocked(memberId)) throw new ServiceException("账号已被限制，不能加入", 403);
         RoamHangout h = roamHangoutMapper.selectByIdForUpdate(id);
         if (h == null) throw new ServiceException("局不存在", 404);
         if (!Integer.valueOf(RoamHangout.STATUS_OPEN).equals(h.getStatus())) throw new ServiceException("这个局已经关了", 400);
@@ -218,7 +218,7 @@ public class RoamHangoutServiceImpl implements IRoamHangoutService {
         requireLogin(memberId);
         RoamHangout h = roamHangoutMapper.selectById(id, memberId);
         if (h == null) throw new ServiceException("局不存在", 404);
-        if (memberId.equals(h.getMemberId())) throw new ServiceException("局主不能退出,只能关局", 400);
+        if (memberId.equals(h.getMemberId())) throw new ServiceException("局主不能退出，只能关局", 400);
         imService.leaveHangoutGroup(id, memberId);
     }
 

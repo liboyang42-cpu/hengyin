@@ -119,7 +119,7 @@ class CityNodeRedemptionApplicationTest {
     @Test void stockRefusalThrowsAndRollsBackInsteadOfReturningAfterTheCas() throws Exception {
         doAnswer(call -> stage("grant", false)).when(coupons).grantCouponById(7001L, 88L);
         ServiceException refusal = assertThrowsExactly(ServiceException.class, () -> controller.redeemCityNodeCode(code()));
-        assertEquals("券库存不足,核销失败", refusal.getMessage());
+        assertEquals("券库存不足，核销失败", refusal.getMessage());
         verify(connection).rollback(); verify(connection, never()).commit(); verifyNoInteractions(audit);
         assertEquals("grant", stages.get(stages.size() - 1));
     }
@@ -133,7 +133,7 @@ class CityNodeRedemptionApplicationTest {
     @Test void duplicateCasDoesNotGrantOrAuditAndKeepsTheOriginalRefusal() throws Exception {
         doAnswer(call -> stage("cas", 0)).when(roam).redeemCityNodeReward(51L, 7001L);
         AjaxResult refusal = controller.redeemCityNodeCode(code());
-        assertEquals(500, refusal.get("code")); assertEquals("玩家未到店打卡,或该券已核销", refusal.get("msg"));
+        assertEquals(500, refusal.get("code")); assertEquals("玩家未到店打卡，或该券已核销", refusal.get("msg"));
         verifyNoInteractions(coupons, audit); verify(connection).commit(); verify(connection, never()).rollback();
     }
     @Test void permissionIsRecheckedInsideTheTransactionBeforeSignatureOrClaimMutation() throws Exception {

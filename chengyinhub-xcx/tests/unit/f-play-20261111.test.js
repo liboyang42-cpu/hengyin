@@ -120,7 +120,7 @@ test('地点卡距离跟着定位走:开着的卡每一跳重算,走到站上不
   assert.equal(writes.length, 0, '距离没变不写');
   dist = '0m';
   page._refreshSheetFacts();
-  assert.deepEqual(writes, [{ 'sheet.node.distText': '0m', 'sheet.node.walkText': '' }]);
+  assert.deepEqual(writes, [{ 'sheet.node.distText': '0 米', 'sheet.node.walkText': '' }]);
   page.data.sheet.show = false; dist = '5m';
   page._refreshSheetFacts();
   assert.equal(writes.length, 1, '卡关着不写');

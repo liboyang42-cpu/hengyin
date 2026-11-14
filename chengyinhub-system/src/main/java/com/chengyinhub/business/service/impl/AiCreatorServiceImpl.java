@@ -198,7 +198,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
             // 放出去会让 club/merchant 也把占位内容当成可用主题。
             if (isMockModel(r))
             {
-                throw new AiServiceException("AI 服务暂未就绪,请稍后重试");
+                throw new AiServiceException("AI 服务暂未就绪，请稍后重试");
             }
             JSONObject json = parseAiJson(r.getText());
             JSONObject planJson = themeDraftPlan(json);
@@ -331,7 +331,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         AiGatewayResult r = gateway.generate(memberId, role, "template_fill", SYS_TEMPLATE_FILL, user.toJSONString());
         if (isMockModel(r))
         {
-            throw new AiServiceException("AI 服务暂未就绪,请稍后重试");
+            throw new AiServiceException("AI 服务暂未就绪，请稍后重试");
         }
 
         AiTemplateFillResp resp = new AiTemplateFillResp();
@@ -524,7 +524,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         // 失败关闭:mock 输出是假解读,放出去商家会照假建议办活动。
         if (isMockModel(r))
         {
-            throw new AiServiceException("AI 服务暂未就绪,请稍后重试");
+            throw new AiServiceException("AI 服务暂未就绪，请稍后重试");
         }
         com.chengyinhub.business.domain.vo.ai.AiMerchantInsightResp resp =
                 new com.chengyinhub.business.domain.vo.ai.AiMerchantInsightResp();
@@ -811,15 +811,15 @@ public class AiCreatorServiceImpl implements IAiCreatorService
                     Integer.valueOf(PLAYER_THEME_DRAFT_DAILY_LIMIT), Integer.valueOf(1));
         } catch (RuntimeException unknown) {
             releasePlayerThemeDraftQuota(reservation);
-            throw new AiServiceException("AI 服务繁忙,请稍后重试", unknown);
+            throw new AiServiceException("AI 服务繁忙，请稍后重试", unknown);
         }
         if (Long.valueOf(-2L).equals(used)) {
             if(quotaRecovery!=null) quotaRecovery.retain(receipt,"RATE_LIMITED");
-            throw new AiServiceException("今日简单创作次数已用完(3/天),明天再来吧");
+            throw new AiServiceException("今日简单创作次数已用完(3/天)，明天再来吧");
         }
         if (used == null || used < 1) {
             releasePlayerThemeDraftQuota(reservation);
-            throw new AiServiceException("AI 服务繁忙,请稍后重试");
+            throw new AiServiceException("AI 服务繁忙，请稍后重试");
         }
         if(quotaRecovery!=null) {
             try { quotaRecovery.reserved(receipt,used); }
@@ -855,7 +855,7 @@ public class AiCreatorServiceImpl implements IAiCreatorService
         catch (RuntimeException e)
         {
             log.warn("[AiCreator] player-theme-draft quota read failed memberId={}", memberId, e);
-            throw new AiServiceException("AI 服务繁忙,请稍后重试");
+            throw new AiServiceException("AI 服务繁忙，请稍后重试");
         }
     }
 

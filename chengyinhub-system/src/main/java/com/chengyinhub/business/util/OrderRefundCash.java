@@ -73,11 +73,11 @@ public final class OrderRefundCash {
                     if (excludeRefundId != null && excludeRefundId.equals(app.getId())) continue;
                     if (excludeRefundId == null && Integer.valueOf(0).equals(app.getStatus())
                             && (!superseding || !Integer.valueOf(RefundApplication.PAYOUT_DISPATCH_PENDING).equals(app.getPayoutStatus()))) {
-                        throw new ServiceException("同单有退款申请正在审核或派发事实不明,请稍后核对", HttpStatus.CONFLICT);
+                        throw new ServiceException("同单有退款申请正在审核或派发事实不明，请稍后核对", HttpStatus.CONFLICT);
                     }
                     if (Integer.valueOf(1).equals(app.getStatus())) {
                         if (app.getRefundAmount() == null || app.getRefundAmount().signum() <= 0) {
-                            throw new ServiceException("历史退款金额无法核对,请人工处理", HttpStatus.CONFLICT);
+                            throw new ServiceException("历史退款金额无法核对，请人工处理", HttpStatus.CONFLICT);
                         }
                         refunded = refunded.add(app.getRefundAmount());
                         approved = true;
@@ -87,11 +87,11 @@ public final class OrderRefundCash {
             if (Integer.valueOf(4).equals(m.getPaymentStatus()) && !approved) {
                 logger.warn("[退款转人工] 同单已退票查不到已批准退款单,已退金额无法核对 parentOrderNo={} registrationId={}",
                         m.getParentOrderNo(), m.getId());
-                throw new ServiceException("同单已退金额无法核对,请联系客服人工处理", HttpStatus.CONFLICT);
+                throw new ServiceException("同单已退金额无法核对，请联系客服人工处理", HttpStatus.CONFLICT);
             }
         }
         if (payer.getWechatPaymentAmount() == null) {
-            throw new ServiceException("原订单现金实付快照缺失,请人工处理", HttpStatus.CONFLICT);
+            throw new ServiceException("原订单现金实付快照缺失，请人工处理", HttpStatus.CONFLICT);
         }
         BigDecimal cash = payer.getWechatPaymentAmount();
         return cash.subtract(refunded);

@@ -758,11 +758,11 @@ public class RefundServiceImpl implements IRefundService {
         }
         List<CmsRegistration> order = cmsRegistrationMapper.selectByParentOrderNoForUpdate(payer.getParentOrderNo(), Long.valueOf(2L).equals(payer.getOwnerType()) ? payer.getOwnerId() : null);
         if (order == null || order.isEmpty()) {
-            throw new ServiceException("父订单报名快照为空,请人工核对", HttpStatus.CONFLICT);
+            throw new ServiceException("父订单报名快照为空，请人工核对", HttpStatus.CONFLICT);
         }
         for (CmsRegistration m : order) {
             if (Integer.valueOf(2).equals(m.getPaymentStatus()) && Integer.valueOf(1).equals(m.getVerificationStatus())) {
-                throw new ServiceException("同单有票已核销,不能按整单退款,请走人工退款工单", HttpStatus.CONFLICT);
+                throw new ServiceException("同单有票已核销，不能按整单退款，请走人工退款工单", HttpStatus.CONFLICT);
             }
         }
         BigDecimal remaining = OrderRefundCash.remaining(order, payer, this, refund.getId());

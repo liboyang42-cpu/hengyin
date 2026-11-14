@@ -148,7 +148,7 @@ class SmsVerificationServiceTest
 
         SmsVerificationService.SendResult result = service(new SecureRandom()).send("13800138000", "203.0.113.8");
 
-        assertEquals("发送过于频繁,请稍后再试", result.getMessage());
+        assertEquals("发送过于频繁，请稍后再试", result.getMessage());
         verify(redisCache, never()).incrementWithinWindow(anyString(), eq(60), eq(TimeUnit.SECONDS));
         verify(sender, never()).send(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     }
@@ -164,7 +164,7 @@ class SmsVerificationServiceTest
         ArgumentCaptor<String> acquiredOwner = ArgumentCaptor.forClass(String.class);
         SmsVerificationService.SendResult result = service(new SecureRandom()).send("13800138000", "203.0.113.8");
 
-        assertEquals("发送过于频繁,请稍后再试", result.getMessage());
+        assertEquals("发送过于频繁，请稍后再试", result.getMessage());
         verify(redisCache).setIfAbsent(eq("sms_limit_phone_13800138000"), acquiredOwner.capture(),
                 eq(60), eq(TimeUnit.SECONDS));
         verify(redisCache).compareAndDelete("sms_limit_phone_13800138000", acquiredOwner.getValue());
@@ -333,7 +333,7 @@ class SmsVerificationServiceTest
         {
             assertTrue(service.send(String.format("13%09d", attempt), "203.0.113.8").isSuccess());
         }
-        assertEquals("发送过于频繁,请稍后再试",
+        assertEquals("发送过于频繁，请稍后再试",
                 service.send("13900139000", "203.0.113.8").getMessage());
         verify(sender, org.mockito.Mockito.times(10)).send(
                 anyString(), anyString(), anyString(), anyString(), anyString(), anyString());

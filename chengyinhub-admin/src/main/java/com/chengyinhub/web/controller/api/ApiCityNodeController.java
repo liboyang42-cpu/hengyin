@@ -205,7 +205,7 @@ public class ApiCityNodeController extends BaseController {
         if (lat == null || lng == null) return error("缺少定位");
         int radius = (node.getRadiusM() != null && node.getRadiusM() > 0) ? node.getRadiusM() : 80;
         double dist = distMeters(lat, lng, node.getLat().doubleValue(), node.getLng().doubleValue());
-        if (!withinReach(dist, radius)) return error("离据点太远,请到店后再完成");
+        if (!withinReach(dist, radius)) return error("离据点太远，请到店后再完成");
 
         // ② 按验证方式判定完成(玩法跟模板走)
         Integer vm = node.getValidationMethod();
@@ -223,7 +223,7 @@ public class ApiCityNodeController extends BaseController {
             String photo = photoUrl == null ? "" : photoUrl.trim();
             if (photo.isEmpty()) return error("请上传拍照打卡照片");
             if (!photo.startsWith("http://") && !photo.startsWith("https://")) {
-                return error("照片地址不合法,请重新上传");
+                return error("照片地址不合法，请重新上传");
             }
         } else if (vm != null && vm == 4) {                // 4扫码:必须扫到本店那张张贴码
             // 2026-08-06 补实现。此前这里没有分支,落到下面的「以到店定位为准」——
@@ -286,7 +286,7 @@ public class ApiCityNodeController extends BaseController {
         data.put("completed", !hasCoupon);
         // ④ C2 防伪造GPS薅券:到店券不再凭客户端 GPS 自动发放,改由商家扫玩家「据点核销码」核销发券
         //    (/api/verify/citynode/issue 玩家出码 → 商家扫 → /api/verify/citynode/redeem 验签+归属+幂等+发券)
-        data.put("hint", hasCoupon ? "已到店打卡,出示据点核销码给商家即可领券" : "已到店打卡");
+        data.put("hint", hasCoupon ? "已到店打卡，出示据点核销码给商家即可领券" : "已到店打卡");
         return AjaxResult.success("完成", data);
     }
 

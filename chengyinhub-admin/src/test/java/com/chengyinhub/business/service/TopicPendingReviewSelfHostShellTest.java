@@ -294,7 +294,7 @@ class TopicPendingReviewSelfHostShellTest {
     @Test
     void proDraftPublish_withOverdueDebt_isRejectedAtSubmission() {
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(0, "pro"));
-        doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE:你有逾期未补足的欠款,暂不能发布新活动,请联系平台客服处理"))
+        doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE：你有逾期未补足的欠款，暂不能发布新活动，请联系平台客服处理"))
                 .when(ledger()).requireNoOverdueDebt(OWNER);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);
@@ -313,7 +313,7 @@ class TopicPendingReviewSelfHostShellTest {
     void approvedTopic_becameOverdueDuringReview_doesNotThrowAndBuildsNoShell() {
         when(topicMapper.selectCmsTopicById(TOPIC)).thenReturn(topic(1, "pro"));
         when(ledger().hasOverdueDebt(OWNER)).thenReturn(true);
-        doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE:你有逾期未补足的欠款,暂不能发布新活动,请联系平台客服处理"))
+        doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE：你有逾期未补足的欠款，暂不能发布新活动，请联系平台客服处理"))
                 .when(ledger()).requireNoOverdueDebt(OWNER);
 
         assertDoesNotThrow(() -> com.chengyinhub.business.service.support.TopicPublicationTestWiring.wire(svc).ensureSelfHostActivityShell(TOPIC),

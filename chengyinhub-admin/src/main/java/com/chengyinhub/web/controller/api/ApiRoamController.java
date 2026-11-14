@@ -231,7 +231,7 @@ public class ApiRoamController extends BaseController {
             double prevDist = GeoDistanceUtils.haversineMeters(((Number) last.get("lat")).doubleValue(), ((Number) last.get("lng")).doubleValue(),
                     poi.getLat().doubleValue(), poi.getLng().doubleValue());
             if (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {
-                return error("移动过快,疑似伪造定位");
+                return error("移动过快，疑似伪造定位");
             }
         }
         int inserted;
@@ -350,7 +350,7 @@ public class ApiRoamController extends BaseController {
         }
         // address_name 可空(建表 DEFAULT ''、DTO 无 @NotBlank)。无名店没法按店名收敛,直接拒:
         // 落库一个空名会把所有无名店在 count(distinct) 里塌成一家。
-        if (name == null || name.trim().isEmpty()) return error("该商家未设名称,无法计入");
+        if (name == null || name.trim().isEmpty()) return error("该商家未设名称，无法计入");
 
         if (GeoDistanceUtils.haversineMeters(lat, lng, shopLat, shopLng) > SHOP_VISIT_RADIUS_M + ROAM_GPS_TOLERANCE_M) {
             return error("还没到该店附近");
@@ -693,7 +693,7 @@ public class ApiRoamController extends BaseController {
                 && lastFix.getLastLat() != null && lastFix.getLastLng() != null) {
             long dtSec = Math.max(1L, (reportAt.getTime() - lastFix.getLastReportAt().getTime()) / 1000L);
             double moved = GeoDistanceUtils.haversineMeters(lat, lng, lastFix.getLastLat().doubleValue(), lastFix.getLastLng().doubleValue());
-            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return error("移动过快,疑似伪造定位");
+            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return error("移动过快，疑似伪造定位");
         }
         BigDecimal blat = BigDecimal.valueOf(lat).setScale(PRESENCE_SCALE, RoundingMode.HALF_UP);
         BigDecimal blng = BigDecimal.valueOf(lng).setScale(PRESENCE_SCALE, RoundingMode.HALF_UP);
@@ -970,7 +970,7 @@ public class ApiRoamController extends BaseController {
         // ① 宽松 geo:玩家离被点 POI 太远则拒
         if (GeoDistanceUtils.haversineMeters(curLat, curLng, poiLat, poiLng) > CHECKIN_LOOSE_RADIUS_M) {
             data.put("tooFar", true);
-            return AjaxResult.success("离得有点远,走近点", data);
+            return AjaxResult.success("离得有点远，走近点", data);
         }
         // ② 就近匹配参与据点(type=2 status=1):60m 包围盒粗筛 → 精确挑最近 ≤50m
         double dLat = 60 / 111320.0;

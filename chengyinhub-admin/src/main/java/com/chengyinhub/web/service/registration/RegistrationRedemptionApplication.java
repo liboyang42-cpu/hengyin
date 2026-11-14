@@ -147,7 +147,7 @@ public class RegistrationRedemptionApplication {
     private AjaxResult assertScanTypeMatchesOwner(String type, CmsRegistration registration) {
         Long ownerType = registration.getOwnerType();
         if (ownerType == null) {
-            return AjaxResult.error("订单数据异常,无法核销");   // fail-closed:判不出归属就别让它进任一分支
+            return AjaxResult.error("订单数据异常，无法核销");   // fail-closed:判不出归属就别让它进任一分支
         }
         boolean isActivityOrder = ownerType.longValue() == 2L;
         if (isActivityOrder != "activity".equals(type)) {
@@ -217,7 +217,7 @@ public class RegistrationRedemptionApplication {
                                              String actorRoleCode) {
         if (topicId == null) {
             // 独立活动(无主题真源)不可能有 ③ 票 —— 走到这儿说明数据不一致,别静默当成「没供给」。
-            return AjaxResult.error("该活动未关联路线,无法按章核销");
+            return AjaxResult.error("该活动未关联路线，无法按章核销");
         }
         Map<Long, Long> scannable = perkLedgerService.resolveScannableChapters(
                 registration.getId(), topicId, merchantOwnerMemberId);
@@ -398,9 +398,9 @@ public class RegistrationRedemptionApplication {
         if (mismatch != null) return mismatch;
         Integer paymentStatus = registration.getPaymentStatus();
         if (paymentStatus == null || paymentStatus != 2) {
-            return AjaxResult.error("订单未完成支付或已退款,无法核销");
+            return AjaxResult.error("订单未完成支付或已退款，无法核销");
         }
-        if (registration.getOwnerId() == null) return AjaxResult.error("订单数据异常,无法核销");
+        if (registration.getOwnerId() == null) return AjaxResult.error("订单数据异常，无法核销");
         if (topicHasOrganizer(registration.getOwnerId())) {
             return AjaxResult.error("本主题由俱乐部带团，请扫领队出示的团码");
         }
@@ -420,7 +420,7 @@ public class RegistrationRedemptionApplication {
         } catch (RuntimeException e) {
             logger.error("城市定向按据点核销失败 registrationId={} registrationMerchantId={} merchantId={}",
                     registration.getId(), registrationMerchantId, access.getOwnerMemberId(), e);
-            return AjaxResult.error("核销失败,请稍后重试");
+            return AjaxResult.error("核销失败，请稍后重试");
         }
         if (!verified) {
             applyStoreVerifyGrowth(registration);
@@ -485,7 +485,7 @@ public class RegistrationRedemptionApplication {
         // ② 资损闸:仅已支付单可核销
         Integer ps = reg.getPaymentStatus();
         if (ps == null || ps != 2) {
-            return ScanContext.fail(notRedeemed("订单未完成支付或已退款,无法核销"));
+            return ScanContext.fail(notRedeemed("订单未完成支付或已退款，无法核销"));
         }
         CmsActivity act = cmsActivityService.selectCmsActivityById(reg.getOwnerId());
         if (act == null) {
@@ -509,7 +509,7 @@ public class RegistrationRedemptionApplication {
         }
         // ③ 必须真是 ③ —— ①② 走整单核销那条路,别让它们进按章核销
         if (!isExplorePass(ctx.registration, ctx.activity)) {
-            return ScanContext.fail(notRedeemed("该订单不是探索票,请走普通核销"));
+            return ScanContext.fail(notRedeemed("该订单不是探索票，请走普通核销"));
         }
         return ctx;
     }
@@ -519,7 +519,7 @@ public class RegistrationRedemptionApplication {
                                               Long topicId, Long merchantOwnerMemberId,
                                               Long operatorMemberId, String actorRoleCode) {
         if (topicId == null) {
-            return AjaxResult.error("该活动未关联路线,无法按章核销");
+            return AjaxResult.error("该活动未关联路线，无法按章核销");
         }
         ExploreChapterRedemptionResult redemption;
         try {
@@ -834,7 +834,7 @@ public class RegistrationRedemptionApplication {
                     // [资损闸] 同 activity 分支:仅已支付单可核销,拒已退款/未支付。
                     Integer ps = cmsRegistration.getPaymentStatus();
                     if (ps == null || ps != 2) {
-                        return notRedeemed("订单未完成支付或已退款,无法核销");
+                        return notRedeemed("订单未完成支付或已退款，无法核销");
                     }
                     // 闸过了 ⇒ 这里保证是 owner_type=1 的主题单 ⇒ 下面把 ownerId 当 topicId 用是安全的。
                     Long topicId = cmsRegistration.getOwnerId();

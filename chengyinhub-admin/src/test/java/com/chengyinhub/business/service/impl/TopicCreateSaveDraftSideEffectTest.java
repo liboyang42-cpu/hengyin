@@ -210,7 +210,7 @@ class TopicCreateSaveDraftSideEffectTest {
     @Test
     void publishedProCreate_withOverdueDebt_isRejectedAtSubmission() {
         SettlementDebtLedger ledger = (SettlementDebtLedger) ReflectionTestUtils.getField(svc, "settlementDebtLedger");
-        doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE:你有逾期未补足的欠款,暂不能发布新活动,请联系平台客服处理"))
+        doThrow(new ServiceException("SETTLEMENT_DEBT_OVERDUE：你有逾期未补足的欠款，暂不能发布新活动，请联系平台客服处理"))
                 .when(ledger).requireNoOverdueDebt(42L);
 
         com.chengyinhub.business.service.support.TopicPublicationTestFixtures.wire(svc);

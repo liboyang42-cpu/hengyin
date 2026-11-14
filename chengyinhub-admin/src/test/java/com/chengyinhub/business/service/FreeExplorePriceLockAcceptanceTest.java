@@ -435,7 +435,7 @@ class FreeExplorePriceLockAcceptanceTest {
         AjaxResult result = controller.confirm(body());
 
         assertEquals(500, result.get(AjaxResult.CODE_TAG));
-        assertEquals("收费主题要先登记发布者实名(姓名与身份证号),再确认终价", result.get(AjaxResult.MSG_TAG));
+        assertEquals("收费主题要先登记发布者实名(姓名与身份证号)，再确认终价", result.get(AjaxResult.MSG_TAG));
         verifyNoInteractions(pricing);
     }
 

@@ -325,7 +325,7 @@ public class TopicRouteConfigValidator {
 
     private long requireMapped(Map<Long, Long> ids, long key, String field) {
         Long mapped = ids == null ? null : ids.get(key);
-        if (mapped == null || mapped <= 0L) throw fail(field, "找不到 nodeId 映射:" + key);
+        if (mapped == null || mapped <= 0L) throw fail(field, "找不到 nodeId 映射：" + key);
         return mapped;
     }
 
@@ -341,7 +341,7 @@ public class TopicRouteConfigValidator {
         if (OPS.contains(op)) {
             String var = text(condition, "var", 64);
             if (!variables.isObject() || !variables.has(var)) {
-                throw fail(edgeId, "condition 使用未声明变量:" + var);
+                throw fail(edgeId, "condition 使用未声明变量：" + var);
             }
             if (!condition.path("value").isNumber()) throw fail(edgeId, "condition.value 必须是数值");
         } else if ("ITEM_HELD".equals(op) || "ITEM_ACQUIRED".equals(op)) {
@@ -375,7 +375,7 @@ public class TopicRouteConfigValidator {
                 catch (IllegalArgumentException invalid) { throw fail(edgeId, invalid.getMessage()); }
                 String var = effect.path("var").asText();
                 if (StoryVocabulary.TICK_CLOCK.equals(op) && (!variables.isObject() || !variables.has(var))) {
-                    throw fail(edgeId, "effect 使用未声明变量:" + var);
+                    throw fail(edgeId, "effect 使用未声明变量：" + var);
                 }
                 continue;
             }
@@ -383,7 +383,7 @@ public class TopicRouteConfigValidator {
             if ("ADD_TAG".equals(op)) text(effect, "value", 64);
             else {
                 String var = text(effect, "var", 64);
-                if (!variables.isObject() || !variables.has(var)) throw fail(edgeId, "effect 使用未声明变量:" + var);
+                if (!variables.isObject() || !variables.has(var)) throw fail(edgeId, "effect 使用未声明变量：" + var);
                 if (!effect.path("value").isNumber()) throw fail(edgeId, "effect.value 必须是数值");
             }
         }
@@ -397,7 +397,7 @@ public class TopicRouteConfigValidator {
             ObjectNode requirement = object(item, "nodeRequirement 必须是对象");
             long nodeId = strictPositiveLong(requirement.path("nodeId"), "nodeRequirements.nodeId");
             requireNode(topicNodeIds, nodeId, "nodeRequirements.nodeId");
-            if (!seen.add(nodeId)) throw fail("nodeRequirements", "同一节点只能声明一次现实条件:" + nodeId);
+            if (!seen.add(nodeId)) throw fail("nodeRequirements", "同一节点只能声明一次现实条件：" + nodeId);
             validatePositiveLongArray(requirement.path("allowedTicketIds"), "allowedTicketIds", Long.MAX_VALUE);
             validatePositiveLongArray(requirement.path("allowedPurchaseKinds"), "allowedPurchaseKinds", 3L);
             validateRoleCodes(requirement.path("requiredRoleCodes"));
@@ -422,7 +422,7 @@ public class TopicRouteConfigValidator {
         for (JsonNode value : values) {
             long parsed = strictPositiveLong(value, field);
             if (parsed > max) throw fail(field, "取值超出范围");
-            if (!seen.add(parsed)) throw fail(field, "不得包含重复值:" + parsed);
+            if (!seen.add(parsed)) throw fail(field, "不得包含重复值：" + parsed);
         }
     }
 
@@ -434,8 +434,8 @@ public class TopicRouteConfigValidator {
         for (JsonNode value : values) {
             if (!value.isTextual()) throw fail("requiredRoleCodes", "必须是字符串数组");
             String role = value.asText().trim();
-            if (!ROLE_CODES.contains(role)) throw fail("requiredRoleCodes", "角色码不支持:" + role);
-            if (!seen.add(role)) throw fail("requiredRoleCodes", "不得包含重复值:" + role);
+            if (!ROLE_CODES.contains(role)) throw fail("requiredRoleCodes", "角色码不支持：" + role);
+            if (!seen.add(role)) throw fail("requiredRoleCodes", "不得包含重复值：" + role);
         }
     }
 
@@ -550,7 +550,7 @@ public class TopicRouteConfigValidator {
         if (value.isEmpty() || value.length() > max) throw fail(field, "不能为空且长度不超过 " + max); return value;
     }
     private void requireNode(Set<Long> nodes, long node, String field) {
-        if (!nodes.contains(node)) throw fail(field, "节点不属于当前主题:" + node);
+        if (!nodes.contains(node)) throw fail(field, "节点不属于当前主题：" + node);
     }
     private ObjectNode object(JsonNode node, String message) { if (!node.isObject()) throw new IllegalArgumentException(message); return (ObjectNode) node; }
     private ArrayNode array(JsonNode node, String field) { if (!node.isArray()) throw fail(field, "必须是数组"); return (ArrayNode) node; }

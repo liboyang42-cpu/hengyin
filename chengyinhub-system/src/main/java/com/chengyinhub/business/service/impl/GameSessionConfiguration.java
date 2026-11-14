@@ -270,7 +270,7 @@ final class GameSessionConfiguration {
         JsonNode conditions = ending.path("conditions");
         if (conditions == null || conditions.isNull() || !conditions.isArray()) return;
         if (conditions.size() == 0 && !ending.path("fallback").asBoolean(false)) {
-            throw error("GAME_CONFIG_INVALID", "结局条件不能为空;兜底结局请用 fallback");
+            throw error("GAME_CONFIG_INVALID", "结局条件不能为空；兜底结局请用 fallback");
         }
         requireStoryRuleCount(conditions, "结局条件");
         for (JsonNode condition : conditions) {

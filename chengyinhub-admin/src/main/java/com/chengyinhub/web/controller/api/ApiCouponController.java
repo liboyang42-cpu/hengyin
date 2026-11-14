@@ -280,7 +280,7 @@ public class ApiCouponController extends BaseController {
             return error("该优惠券已被平台手动失效");
         }
         if (Integer.valueOf(4).equals(coupon.getStatus())) {
-            return error("该优惠券已停发,无需重复操作");
+            return error("该优惠券已停发，无需重复操作");
         }
         if (!Integer.valueOf(0).equals(coupon.getStatus()) && !Integer.valueOf(1).equals(coupon.getStatus())) {
             return error("已结束的优惠券无法停发");
@@ -289,7 +289,7 @@ public class ApiCouponController extends BaseController {
         if (smsCouponService.stopIssuingCoupon(couponId, operation.ownerMemberId) != 1) {
             SmsCoupon current = smsCouponService.selectSmsCouponById(couponId);
             return error(current != null && Integer.valueOf(4).equals(current.getStatus())
-                    ? "该优惠券已停发,无需重复操作" : "停发失败,请刷新后重试");
+                    ? "该优惠券已停发，无需重复操作" : "停发失败，请刷新后重试");
         }
         logger.info("商家停发优惠券 couponId={} ownerMemberId={} actor={}",
                 couponId, operation.ownerMemberId, member_id);

@@ -114,16 +114,16 @@ public class TopicPublishCheckService {
             if (error.getNodeId() != null) {
                 unparsableNodes.add(error.getNodeId());
                 issues.add(PublishCheckIssue.error(CODE_BLOCK_CONFIG_INVALID, error.getNodeId(),
-                        "节点「" + error.getNodeLabel() + "」的高级玩法配置不合法:" + error.getMessage()));
+                        "节点「" + error.getNodeLabel() + "」的高级玩法配置不合法：" + error.getMessage()));
             } else if (TopicStateKeyRefService.KIND_JOURNEY_STORY.equals(error.getKind())) {
                 issues.add(PublishCheckIssue.error(CODE_JOURNEY_STORY_INVALID, null,
-                        "主题剧情配置不合法:" + error.getMessage()));
+                        "主题剧情配置不合法：" + error.getMessage()));
             } else if (TopicStateKeyRefService.KIND_CHAPTER_BLOCKS.equals(error.getKind())) {
                 issues.add(PublishCheckIssue.error(CODE_CHAPTER_BLOCKS_INVALID, null,
-                        "章节故事流配置不合法:" + error.getMessage()));
+                        "章节故事流配置不合法：" + error.getMessage()));
             } else {
                 issues.add(PublishCheckIssue.error(CODE_JOURNEY_RULES_INVALID, null,
-                        "主题数值规则不合法:" + error.getMessage()));
+                        "主题数值规则不合法：" + error.getMessage()));
             }
         }
 
@@ -146,8 +146,8 @@ public class TopicPublishCheckService {
         if (!nodes.isEmpty() && !TopicRouteState.BRANCH_GRAPH.equalsIgnoreCase(topic.getRouteMode())
                 && (refs.isJourneyRulesCheckEnabled() || anyBlockNeedsJourneyState)) {
             issues.add(PublishCheckIssue.warn(CODE_LINEAR_JOURNEY_SESSION, null,
-                    "该主题是线性模式且已用到旅程配置:玩家开始即建局,进度与 hp/luck 存进本局 state_json"
-                            + "(与分支主题同一套);老线性主题不建局,行为不变"));
+                    "该主题是线性模式且已用到旅程配置：玩家开始即建局，进度与 hp/luck 存进本局 state_json"
+                            + "(与分支主题同一套)；老线性主题不建局，行为不变"));
         }
         // O5c:AI 安全预检(开关默认关;关时不追加任何项、不调外部服务)。
         if (topicAiPrecheckService != null && topicAiPrecheckService.isEnabled()) {
@@ -305,7 +305,7 @@ public class TopicPublishCheckService {
                         template.getAdvancedConfigJson(), nodeIdSet);
             } catch (java.io.IOException | RuntimeException e) {
                 issues.add(PublishCheckIssue.error(CODE_BLOCK_CONFIG_INVALID, node.getId(),
-                        "节点「" + TopicStateKeyRefService.nodeLabel(node) + "」的高级玩法配置不合法:" + e.getMessage()));
+                        "节点「" + TopicStateKeyRefService.nodeLabel(node) + "」的高级玩法配置不合法：" + e.getMessage()));
             }
             anyBlockNeedsJourneyState = anyBlockNeedsJourneyState
                     || blockNeedsJourneyState(template.getAdvancedConfigJson());
@@ -335,7 +335,7 @@ public class TopicPublishCheckService {
                 continue;
             }
             issues.add(PublishCheckIssue.error(CODE_STATE_KEY_UNREGISTERED, firstNodeByKey.get(entry.getKey()),
-                    "状态键未注册:" + entry.getKey() + "(引用位置:"
+                    "状态键未注册：" + entry.getKey() + "(引用位置："
                             + String.join("、", entry.getValue()) + ")"));
         }
     }
@@ -365,7 +365,7 @@ public class TopicPublishCheckService {
             if (registered.containsKey(relationKey)
                     && !ThemeStateKey.TYPE_RELATION.equals(registered.get(relationKey))) {
                 issues.add(PublishCheckIssue.error(CODE_STATE_KEY_TYPE_INVALID, null,
-                        "状态键类型不对:" + relationKey + "(来源:主题剧情配置尾声,键类型必须是 relation)"));
+                        "状态键类型不对：" + relationKey + "(来源：主题剧情配置尾声，键类型必须是 relation)"));
             }
         }
     }

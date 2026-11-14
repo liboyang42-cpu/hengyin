@@ -27,7 +27,7 @@ function sequence(owner) {
     'businessAuditEventMapper.insertBusinessAuditEvent(audit)', 'return AjaxResult.success(']) {
     const next = command.indexOf(step); assert.ok(next > previous, step); previous = next;
   }
-  assert.match(command, /throw new ServiceException\("券库存不足,核销失败"\)/);
+  assert.match(command, /throw new ServiceException\("券库存不足，核销失败"\)/);
   assert.match(command, /throw new IllegalStateException\("据点核销审计写入失败"\)/);
 }
 // Source wiring checks only; Java/Spring/MySQL execution is intentionally left to controlled CI.

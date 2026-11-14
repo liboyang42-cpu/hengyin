@@ -71,7 +71,7 @@ public class ApiWalletController extends BaseController {
     @Operation(summary = "提现到微信零钱")
     @PostMapping("/withdraw")
     public AjaxResult withdraw(@RequestBody Map<String, Object> body) {
-        if (!fastWithdrawEnabled) return error("快速提现暂未开放,请使用其他提现方式或联系客服");
+        if (!fastWithdrawEnabled) return error("快速提现暂未开放，请使用其他提现方式或联系客服");
         Long memberId;
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         if (body == null || body.get("amount") == null) return error("请输入提现金额");

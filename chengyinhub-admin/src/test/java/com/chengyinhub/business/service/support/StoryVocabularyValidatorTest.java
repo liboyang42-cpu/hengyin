@@ -78,8 +78,8 @@ class StoryVocabularyValidatorTest {
         String[][] badEffects = {
                 {"[{\"op\":\"GRANT_XP\",\"value\":0}]", "1 至 100"},
                 {"[{\"op\":\"GRANT_XP\",\"value\":101}]", "1 至 100"},
-                {"[{\"op\":\"GRANT_XP\",\"value\":5,\"points\":100}]", "不支持的字段:points"},
-                {"[{\"op\":\"GRANT_BADGE\",\"value\":\"x\",\"couponId\":7}]", "不支持的字段:couponId"},
+                {"[{\"op\":\"GRANT_XP\",\"value\":5,\"points\":100}]", "不支持的字段：points"},
+                {"[{\"op\":\"GRANT_BADGE\",\"value\":\"x\",\"couponId\":7}]", "不支持的字段：couponId"},
                 {"[{\"op\":\"ADD_ITEM\",\"itemId\":\"map\",\"quantity\":0}]", "quantity"},
                 {"[{\"op\":\"TICK_CLOCK\",\"var\":\"counter.alarm\",\"value\":5,\"max\":4}]", "value"},
                 {"[{\"op\":\"TICK_CLOCK\",\"var\":\"counter.ghost\",\"value\":1,\"max\":4}]", "未声明变量"},

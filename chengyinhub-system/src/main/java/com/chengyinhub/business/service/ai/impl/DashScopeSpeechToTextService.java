@@ -109,7 +109,7 @@ public class DashScopeSpeechToTextService implements SpeechToTextService
         }
         catch (Exception e)
         {
-            throw new AiServiceException("语音识别失败,请稍后再试", e);
+            throw new AiServiceException("语音识别失败，请稍后再试", e);
         }
 
         JSONObject result;
@@ -123,7 +123,7 @@ public class DashScopeSpeechToTextService implements SpeechToTextService
         }
         if (result == null || nonBlank(result.getString("code")))
         {
-            throw new AiServiceException("语音识别失败,请稍后再试");
+            throw new AiServiceException("语音识别失败，请稍后再试");
         }
         JSONObject output = result.getJSONObject("output");
         if (output == null)

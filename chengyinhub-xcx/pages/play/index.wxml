@@ -15,7 +15,7 @@
 <wxs src="./utils/wxs/ring.wxs" module="ring" />
 <!-- 文档二 L5 p-bag:背包属性行按类型画星级 / 小条(theme-backpack.wxml 用;include 不带 wxs,声明放宿主) -->
 <wxs module="tbAttr">function stars(v, max) { var a = []; for (var i = 0; i < max && i < 10; i++) a.push(i < v); return a; } function slots(used, cap) { var a = []; for (var i = 0; i < cap && i < 24; i++) a.push(i < used); return a; } function pct(v, max) { return max > 0 ? Math.max(0, Math.min(100, Math.round(v * 100 / max))) : 0; } function pad(n) { var t = n < 4 ? 4 : n + n % 2; var a = []; for (var i = n; i < t; i++) a.push(i); return a; } module.exports = { stars: stars, slots: slots, pct: pct, pad: pad };</wxs>
-<wxs src="../../utils/wxs/list-key.wxs" module="lk" /><wxs src="./utils/wxs/station-title.wxs" module="stationTitle" />
+<wxs src="../../utils/wxs/list-key.wxs" module="lk" /><wxs src="../../utils/wxs/station-title.wxs" module="stationTitle" />
 <wxs src="../../utils/wxs/display-label.wxs" module="dl" />
 
 <cy-advanced-game id="advancedGame" hide-panel="{{(!!playKit.kit && (chapterFull || playKit.show)) || (journeyCheck.r5 && journeyCheck.show)}}" show="{{advancedPlay.show}}" node="{{advancedPlay.node}}" style="--cy-comp-sheet-max-h: calc(100vh - {{chrome.sheetTop}}px)"

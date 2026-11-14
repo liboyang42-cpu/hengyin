@@ -275,7 +275,7 @@ class RegistrationEquityMybatisIntegrationTest {
                 60000L, 77L, "city-node-it-secret");
         com.chengyinhub.common.exception.ServiceException exhausted = assertThrows(
                 com.chengyinhub.common.exception.ServiceException.class, () -> controller.redeemCityNodeCode(code));
-        assertEquals("券库存不足,核销失败", exhausted.getMessage(), "首轮必须真实到达库存回滚，不得把SQL错误当成功负控");
+        assertEquals("券库存不足，核销失败", exhausted.getMessage(), "首轮必须真实到达库存回滚，不得把SQL错误当成功负控");
         assertEquals(0, number("SELECT status FROM roam_poi_reward_log WHERE poi_id=51"));
         assertEquals(0, number("SELECT COUNT(*) FROM sms_coupon_history WHERE member_id=7001"));
         assertEquals(0, number("SELECT COUNT(*) FROM business_audit_event WHERE domain_type='CITY_NODE'"));

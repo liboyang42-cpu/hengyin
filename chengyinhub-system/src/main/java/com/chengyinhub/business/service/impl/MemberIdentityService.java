@@ -70,7 +70,7 @@ public class MemberIdentityService {
             throw new ServiceException("请先登录");
         }
         if (!SOURCES.contains(source)) {
-            throw new ServiceException("实名登记入口不合法,请从发布页重新提交");
+            throw new ServiceException("实名登记入口不合法，请从发布页重新提交");
         }
         if (!consent) {
             throw new ServiceException("请先勾选同意提供真实姓名与身份证号");
@@ -84,7 +84,7 @@ public class MemberIdentityService {
         }
         String normalizedId = IdCardUtils.normalize(idCard);
         if (!IdCardUtils.isValid(normalizedId)) {
-            throw new ServiceException("身份证号格式不正确,请核对后重填");
+            throw new ServiceException("身份证号格式不正确，请核对后重填");
         }
 
         UmsMemberIdentity identity = new UmsMemberIdentity();
@@ -101,7 +101,7 @@ public class MemberIdentityService {
             // 前者幂等放行,后者按「改绑走人工」拒掉。
             UmsMemberIdentity stored = identityMapper.selectByMemberId(memberId);
             if (stored == null || !normalizedId.equalsIgnoreCase(stored.getIdCard())) {
-                throw new ServiceException("实名信息已登记,如需变更请联系平台客服");
+                throw new ServiceException("实名信息已登记，如需变更请联系平台客服");
             }
             return;
         }

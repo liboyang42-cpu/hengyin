@@ -168,7 +168,7 @@ class ApiVerifyControllerTest {
         when(registrationService.selectCmsRegistrationById(9L)).thenReturn(reg(9L, ME, 1, 0, 2L));
         AjaxResult r = controller.issueDynCode(9L);
         assertEquals(500, r.get(AjaxResult.CODE_TAG));
-        assertEquals("订单未完成支付或已结束,无法生成核销码", r.get(AjaxResult.MSG_TAG));
+        assertEquals("订单未完成支付或已结束，无法生成核销码", r.get(AjaxResult.MSG_TAG));
     }
 
     @Test

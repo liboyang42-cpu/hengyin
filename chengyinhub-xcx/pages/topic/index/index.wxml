@@ -1,4 +1,4 @@
-<wxs src="../../../utils/wxs/money.wxs" module="money" /><wxs src="../utils/stat.wxs" module="cnt" />
+<wxs src="../../../utils/wxs/money.wxs" module="money" /><wxs src="../utils/stat.wxs" module="cnt" /><wxs src="../../../utils/wxs/station-title.wxs" module="stationTitle" />
 <view class="theme-dark">
   <cy-toast id="cy-toast" lift="{{selfPlayCheckoutShow}}" />
   <cy-loading-mask id="cy-loading" />
@@ -445,7 +445,7 @@
                   mode="aspectFill" wx:if="{{ (node.registrationMerchantList && node.registrationMerchantList.length > 0) || img.first(node.imgUrl) || img.first(info.imgUrl) }}" />
                 <view class="item-pic item-pic--blank" wx:else></view>
                 <view class="node-card-foot">
-                  <view class="david_hp_con_txt"><text class="node-card-name" wx:if="{{node.registrationMerchantList[0].mmsMerchant.name}}">{{node.registrationMerchantList[0].mmsMerchant.name}}</text><text class="node-card-name" wx:elif="{{node.name}}">{{node.name}}</text></view>
+                  <view class="david_hp_con_txt"><text class="node-card-name" wx:if="{{node.registrationMerchantList[0].mmsMerchant.name}}">{{stationTitle.text(node.registrationMerchantList[0].mmsMerchant.name)}}</text><text class="node-card-name" wx:elif="{{node.name}}">{{stationTitle.text(node.name)}}</text></view>
                   <view class="dz" wx:if="{{ node.address }}">{{ node.address }}</view>
                   <view class="david_hp_con_time" wx:if="{{ node.businessTime }}">{{ node.businessTime }}</view>
                   <view class="stn-gift" wx:if="{{ node.giftText }}">到店礼 · {{ node.giftText }}</view>

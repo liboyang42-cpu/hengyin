@@ -414,7 +414,7 @@ public class ApiClubController extends BaseController {
         d.put("clubId", club.getId());
         d.put("clubCount", clubCount);
         d.put("status", club.getStatus());
-        return AjaxResult.success(Long.valueOf(0L).equals(club.getStatus()) ? "已重新提交,等待审核" : "已创建", d);
+        return AjaxResult.success(Long.valueOf(0L).equals(club.getStatus()) ? "已重新提交，等待审核" : "已创建", d);
     }
 
     /** 列表/详情统一补齐入会方式与主理人展示信息。 */
@@ -2394,7 +2394,7 @@ public class ApiClubController extends BaseController {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (StringUtils.isEmpty(body.getContent()) && StringUtils.isEmpty(body.getImages())) {
-            return error("说点什么,或加张图");
+            return error("说点什么，或加张图");
         }
         Club postClub = clubService.selectClubById(body.getClubId());
         if (postClub == null) return error("俱乐部不存在");
@@ -2591,7 +2591,7 @@ public class ApiClubController extends BaseController {
         // 举报统一走 reportContent 进审核队列(与 comment/square 同法);同内容多次举报的幂等汇聚由服务层 reportContent 负责
         try {
             auditTaskService.reportContent("CLUB_POST", post.getId(), memberId, "用户举报");
-            return AjaxResult.success("已举报,平台将尽快处理");
+            return AjaxResult.success("已举报，平台将尽快处理");
         } catch (Exception e) {
             return error("举报失败");
         }
@@ -2610,7 +2610,7 @@ public class ApiClubController extends BaseController {
         if (memberId.equals(c.getMemberId())) return error("不能举报自己的评论");
         try {
             auditTaskService.reportContent("CLUB_POST_COMMENT", c.getId(), memberId, "用户举报");
-            return AjaxResult.success("已举报,平台将尽快处理");
+            return AjaxResult.success("已举报，平台将尽快处理");
         } catch (Exception e) {
             return error("举报失败");
         }

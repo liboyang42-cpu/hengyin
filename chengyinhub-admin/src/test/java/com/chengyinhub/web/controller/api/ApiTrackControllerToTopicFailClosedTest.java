@@ -60,7 +60,7 @@ class ApiTrackControllerToTopicFailClosedTest {
 
     private void assertFailClosed(AjaxResult r) {
         assertEquals(500, r.get(AjaxResult.CODE_TAG), "解析失败必须返回失败响应");
-        assertEquals("轨迹停靠点数据异常,无法转为路线", r.get(AjaxResult.MSG_TAG),
+        assertEquals("轨迹停靠点数据异常，无法转为路线", r.get(AjaxResult.MSG_TAG),
                 "必须是停靠点解析这道闸的文案,且不得回传原始异常文本");
         verify(trackDraftMapper, never()).updateTrackDraft(any(TrackDraft.class));
     }

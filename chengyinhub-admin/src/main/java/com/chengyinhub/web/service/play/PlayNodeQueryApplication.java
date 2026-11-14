@@ -132,7 +132,7 @@ public class PlayNodeQueryApplication {
                 // 未报名没有权威路线局；返回注册空态，但绝不把未选支线素材塞进响应。
                 read.nodeList = new ArrayList<>();
             } else if (read.routeState == null || !TopicRouteState.BRANCH_GRAPH.equals(read.routeState.getRouteMode())) {
-                return error("路线状态暂时不可用,请重试");
+                return error("路线状态暂时不可用，请重试");
             } else {
                 read.nodeList = visibleBranchNodes(read.nodeList, read.routeState);
             }
@@ -148,7 +148,7 @@ public class PlayNodeQueryApplication {
                 if (read.puzzleHintLevelByNode == null) read.puzzleHintLevelByNode = new HashMap<>();
             } catch (Exception e) {
                 logger.error("谜题提示状态批量读取失败 member={} topic={} activity={}", read.memberId, read.tId, read.progActId, e);
-                return error("谜题提示状态暂时不可用,请重试");
+                return error("谜题提示状态暂时不可用，请重试");
             }
         }
         read.inStoreLoadByChapter = new HashMap<>();

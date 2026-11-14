@@ -294,7 +294,7 @@ class TopicRouteConfigValidatorTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> validator.remapNodeIds(graph, incomplete));
 
-        assertTrue(error.getMessage().contains("找不到 nodeId 映射:2"), error.getMessage());
+        assertTrue(error.getMessage().contains("找不到 nodeId 映射：2"), error.getMessage());
     }
 
     private static final class CollectionsMap {
