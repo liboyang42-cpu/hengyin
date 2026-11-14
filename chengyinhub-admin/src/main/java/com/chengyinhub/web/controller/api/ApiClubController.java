@@ -38,6 +38,7 @@ import com.chengyinhub.business.domain.vo.ClubLifecycleCommandResultVO;
 import com.chengyinhub.business.domain.vo.ClubPostRepostItemVO;
 import com.chengyinhub.business.domain.vo.ClubRegistrationRosterVO;
 import com.chengyinhub.business.domain.vo.PublicClubVO;
+import com.chengyinhub.business.domain.vo.PublicMerchantDiscoveryVO;
 import com.chengyinhub.business.domain.CoopInvite;
 import com.chengyinhub.business.domain.GrowthBadge;
 import com.chengyinhub.business.domain.PlayerBadge;
@@ -1467,11 +1468,30 @@ public class ApiClubController extends BaseController {
     @Operation(summary = "可对接商家列表(承接方,coop_open=1)")
     @PostMapping("/merchants")
     public AjaxResult merchants(@RequestBody(required = false) MmsMerchant query) {
-        if (query == null) query = new MmsMerchant();
-        query.setCoopOpen(1);   // 开放对接
-        query.setStatus(1L);    // 审核通过
-        query.setDelFlag(0);
-        return AjaxResult.success(mmsMerchantService.selectMmsMerchantList(query));
+        try { currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        // 仅允许公开发现字段进入查询条件，阻断通过 memberId/phone/wechat/reson 等私密列做存在性探测，
+        // 并通过 PublicMerchantDiscoveryVO 白名单出参剥离手机号、微信号、营业执照及内部审核字段。
+        MmsMerchant publicQuery = new MmsMerchant();
+        if (query != null) {
+            publicQuery.setName(query.getName());
+            publicQuery.setCategoryId(query.getCategoryId());
+            publicQuery.setTags(query.getTags());
+            publicQuery.setCityRole(query.getCityRole());
+        }
+        publicQuery.setCoopOpen(1);   // 开放对接
+        publicQuery.setStatus(1L);    // 审核通过
+        publicQuery.setAccountStatus(1L);
+        publicQuery.setDelFlag(0);
+        List<MmsMerchant> list = mmsMerchantService.selectMmsMerchantList(publicQuery);
+        List<PublicMerchantDiscoveryVO> publicRows = new ArrayList<>();
+        if (list != null) {
+            for (MmsMerchant m : list) {
+                if (m != null) {
+                    publicRows.add(PublicMerchantDiscoveryVO.from(m));
+                }
+            }
+        }
+        return AjaxResult.success(publicRows);
     }
 
     @Operation(summary = "俱乐部群聊(进入/创建,成员可进)")
@@ -1556,10 +1576,17 @@ public class ApiClubController extends BaseController {
 
     @Operation(summary = "俱乐部勋章列表(主理人自建)")
     @PostMapping("/badge/list")
-    public AjaxResult badgeList(@RequestBody Club body) {
-        try { currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null) return error("缺少俱乐部ID");
-        if (clubService.selectClubById(body.getId()) == null) return error("俱乐部不存在");
+    public AjaxResult badgeList(@RequestBody(required = false) Club body) {
+        Long viewer;
+        try { viewer = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        if (body == null || body.getId() == null) return error("缺少俱乐部ID");
+        Club club = clubService.selectClubById(body.getId());
+        if (club == null) return error("俱乐部不存在");
+        // 非公开俱乐部(publicVisible=0)或未过审俱乐部禁止非成员按 ID 枚举勋章
+        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (!Long.valueOf(1L).equals(club.getStatus()) && !OwnershipUtils.isOwner(club.getMemberId(), viewer)) {
+            return error("俱乐部不存在");
+        }
         return AjaxResult.success(growthBadgeMapper.selectByClub(body.getId()));
     }
 
