@@ -25,7 +25,6 @@ Page({
       quota: { maxThemes: null, themesOnline: 0, themesRemaining: null },
       projectSummary: { total: 0, pending: 0, online: 0, offline: 0, rejected: 0 }
     },
-    pubLoaded: false,
     publishSheetShow: false,
 
     statusBarHeight: getApp().globalData.statusBarHeight,
@@ -149,9 +148,9 @@ Page({
                 themesRemaining: q.themesRemaining
               },
               projectSummary: d.projectSummary || {}
-            },
-            pubLoaded: true
+            }
           });
+          this._pubLoaded = true;
         }
       },
       fail() { /* 能力卡失败不阻断页面 */ }
@@ -171,7 +170,7 @@ Page({
       return;
     }
     // 能力卡上次没拉成：弹窗打开时补拉一次，不让弹窗锁在默认玩家态
-    if (!this.data.pubLoaded) this.getPublishHome();
+    if (!this._pubLoaded) this.getPublishHome();
     this.setData({ publishSheetShow: true });
   },
   closePublishSheet() { this.setData({ publishSheetShow: false }); },
