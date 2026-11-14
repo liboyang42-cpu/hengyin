@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="chengyinhub-e2e-v2" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Shanghai Huangpu E2E City Walk Route</name>
+    <desc>Fixed E2E route near Peoples Square - Nanjing East Rd - Bund for roam POI visibility tests</desc>
+  </metadata>
+  <wpt lat="31.230400" lon="121.473700">
+    <name>Peoples Square Clock Tower</name>
+  </wpt>
+  <wpt lat="31.233500" lon="121.476500">
+    <name>Nanjing East Cat Cafe</name>
+  </wpt>
+  <wpt lat="31.236200" lon="121.480100">
+    <name>Hankou Old Press Monument</name>
+  </wpt>
+  <wpt lat="31.238500" lon="121.484000">
+    <name>Bund Customs Clock Tower</name>
+  </wpt>
+  <trk>
+    <name>E2E Shanghai Huangpu Walk</name>
+    <trkseg>
+      <trkpt lat="31.230400" lon="121.473700"><ele>4.0</ele></trkpt>
+      <trkpt lat="31.231950" lon="121.475100"><ele>4.0</ele></trkpt>
+      <trkpt lat="31.233500" lon="121.476500"><ele>4.5</ele></trkpt>
+      <trkpt lat="31.234850" lon="121.478300"><ele>4.5</ele></trkpt>
+      <trkpt lat="31.236200" lon="121.480100"><ele>5.0</ele></trkpt>
+      <trkpt lat="31.237350" lon="121.482050"><ele>5.0</ele></trkpt>
+      <trkpt lat="31.238500" lon="121.484000"><ele>5.5</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
