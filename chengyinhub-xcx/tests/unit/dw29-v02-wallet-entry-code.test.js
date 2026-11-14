@@ -70,14 +70,14 @@ test('V-02 7 天内到期才写 N 天内过期，当天写今天过期，其余�
 
 test('V-02 过期文案规则(票夹与场景入场码共用)', () => {
   const { passExpiryText } = require('../../utils/ticket-expiry.js')
-  const now = new Date(2026, 9, 29, 10, 0, 0).getTime()
+  const now = new Date('2026-10-29T10:00:00+08:00').getTime() // 业务日期固定中国时区，不随测试主机偏移
   assert.equal(passExpiryText('', now), '')
   assert.equal(passExpiryText('2026-10-29 22:00:00', now), '今天过期')
   assert.equal(passExpiryText('2026-10-30 08:00:00', now), '1 天内过期')
   assert.equal(passExpiryText('2026-11-05 08:00:00', now), '7 天内过期')
   assert.equal(passExpiryText('2026-11-06 08:00:00', now), '')
   assert.equal(passExpiryText('2026-10-29 09:00:00', now), '', '已过期不写')
-  assert.equal(passExpiryText(new Date(2026, 9, 31, 12).getTime(), now), '2 天内过期')
+  assert.equal(passExpiryText(new Date('2026-10-31T12:00:00+08:00').getTime(), now), '2 天内过期')
   assert.equal(passExpiryText('not-a-date', now), '')
 })
 
@@ -122,7 +122,7 @@ test('V-02 翻回正面后不再续签；再翻过来码快过期就重新签发
 
 test('V-02 票夹卡面「剩 N 天」与背面「N 天内过期」同一个自然日数(2026-10-30 DevTools 实测两面差一天)', () => {
   const { passExpiryText, passDaysLeft } = require('../../utils/ticket-expiry.js')
-  const now = new Date(2026, 9, 30, 18, 0, 0).getTime()
+  const now = Date.parse('2026-10-30T18:00:00+08:00')   // 中国时间锚定,不随测试机时区
   const until = '2026-11-04 23:59:59'
   assert.equal(passDaysLeft(until, now), 5)
   assert.equal(passExpiryText(until, now), '5 天内过期')
@@ -134,11 +134,11 @@ test('V-02 票夹卡面「剩 N 天」与背面「N 天内过期」同一个自�
 test('票夹「剩 N 天」与购买页「可玩至」同一天:到期落在零点时最后能玩的是前一天(剩 91 天 / 可玩至 90 天后)', () => {
   const { passDaysLeft } = require('../../utils/ticket-expiry.js')
   const m = require('../../pages/topic/utils/topic-motion.js')
-  const now = new Date(2026, 10, 14, 15, 0, 0)
-  const expiresAt = new Date(2027, 1, 13, 0, 0, 0)
+  const now = new Date('2026-11-14T15:00:00+08:00')
+  const expiresAt = new Date('2027-02-13T00:00:00+08:00')
   assert.equal(passDaysLeft(expiresAt.getTime(), now.getTime()), 90)
   const win = m.passWindow({ now, expiresAt })
   assert.equal(win.untilText, '02/12')
   assert.equal(win.daysText, '90')
-  assert.equal(passDaysLeft(new Date(2027, 1, 12, 23, 59, 59).getTime(), now.getTime()), 90)
+  assert.equal(passDaysLeft(new Date('2027-02-12T23:59:59+08:00').getTime(), now.getTime()), 90)
 })

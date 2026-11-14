@@ -207,6 +207,7 @@ Page({
 
   onLoad(options) {
     this._disposed = false;
+    this._readonly = options.readonly === '1';
     var scope = options.scope === 'my' ? 'my' : 'library';
     var data = {
       id: options.id || 0,
@@ -494,7 +495,13 @@ Page({
   },
 
   goPrimary() {
-    var that = this; if (that._navigating) return; that._navigating = true;
+    var that = this; if (that._navigating) return;
+    // 公共库模板「应用」= 进编辑器建草稿：先登录，只读岗位直接说明
+    if (that.data.scope !== 'my') {
+      if (app.ensureLoginFor && !app.ensureLoginFor('publish', function () { that.goPrimary(); }, { owner: that, target: function () { return [that.data.id, that.data.scope]; } })) return;
+      if (that._readonly) { toast('当前岗位仅可浏览模板'); return; }
+    }
+    that._navigating = true;
     if (that.data.scope === 'my' && (!that.data.info || that.data.info.canEdit !== true)) {
       wx.switchTab({ url: '/pages/template/index', complete: function () { that._navigating = false; } });
       return;

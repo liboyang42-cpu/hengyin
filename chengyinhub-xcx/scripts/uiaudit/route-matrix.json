@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 173,
+    "routes": 174,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -1139,6 +1139,17 @@
     },
     {
       "pagePath": "pages/merchant/verify-records/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/merchant/bundle-reservations/index",
       "pkg": "pages/merchant",
       "tabBar": false,
       "role": "merchant",

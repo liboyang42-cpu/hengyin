@@ -61,6 +61,7 @@ function statStart(v) { return statAt(v, 0); }
 function statAt(v, e) {
   let m;
   if ((m = /^(\d+)$/.exec(v))) return String(Math.round(Number(m[1]) * e));
+  if ((m = /^(\d+):(\d{2}):(\d{2})$/.exec(v))) { const sec = Math.round((Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3])) * e); return Math.floor(sec / 3600) + ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
   if ((m = /^(\d+):(\d{2})$/.exec(v))) { const sec = Math.round((Number(m[1]) * 60 + Number(m[2])) * e); return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
   if ((m = /^(\d+)\/(\d+)$/.exec(v))) return Math.round(Number(m[1]) * e) + '/' + m[2];
   return v;
@@ -265,6 +266,8 @@ Component({
       if (this._stage !== 'end' || this._gone) return;
       this._stage = 'dissolve';
       clearInterval(this._statTimer); this._statTimer = 0;
+      // 数据还没滚完就点了:先落到真值再吹散,不让「00:00 / 0/2」停在屏上
+      this.setData({ endStats: (this.data.endStats || []).map((s) => Object.assign({}, s, { shown: s.v })) });
       const go = () => { this._stage = 'end-done'; this.setData({ endCard: null, endOut: false, endStats: [] }); this._toStart(true); };
       if (this.data.reducedMotion) { go(); return; }
       this._spawnFineDust();

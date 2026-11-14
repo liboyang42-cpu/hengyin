@@ -535,7 +535,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if(zeroChallengeSession && "REROLL_CHECK".equals(normalizedAction))throw new IllegalArgumentException("恢复挑战不消费幸运重掷");
         // P-23:传感器跳过只走普通的一站;恢复挑战与按结果分支的玩法不许跳(跳过会被判成一个结果分支)
         if (("REPORT_SENSOR_FAILURE".equals(normalizedAction) || "SKIP_SENSOR_STATION".equals(normalizedAction))
-                && (zeroChallengeSession || config.has("outcomeRules"))) throw new IllegalStateException("这一站不支持跳过");
+                && (zeroChallengeSession || (config.has("outcomeRules") && !config.path(String.valueOf(safePayload.get("game"))).path("allowSkip").asBoolean(false)))) throw new IllegalStateException("这一站不支持跳过");
         // R14:本次提交判定出的「选择」——分支步骤/选项、问答选项、玩法通过;判完当场写旅程本局状态。
         List<ChoiceRef> choices = new ArrayList<>();
         // 拍物成卡:这一趟真判过且节点是卡片玩法时非空。铸卡推迟到事务提交之后 ——

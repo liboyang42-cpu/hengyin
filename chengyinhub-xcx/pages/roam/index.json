@@ -37,7 +37,8 @@
     "cy-roam-photo": "/subpackageRoam/components/roam-photo/index",
     "cy-map-weather": "/subpackageRoam/components/map-weather/index",
     "cy-roam-place-card": "/subpackageRoam/components/roam-place-card/index",
-    "cy-roam-atmos-entry": "/subpackageRoam/components/roam-atmos-entry/index"
+    "cy-roam-atmos-entry": "/subpackageRoam/components/roam-atmos-entry/index",
+    "cy-roam-city-strip": "/subpackageRoam/components/roam-city-strip/index"
   },
   "componentPlaceholder": {
     "cy-scene-play-activity-detail": "view",
@@ -48,6 +49,7 @@
     "cy-roam-photo": "view",
     "cy-map-weather": "view",
     "cy-roam-place-card": "view",
-    "cy-roam-atmos-entry": "view"
+    "cy-roam-atmos-entry": "view",
+    "cy-roam-city-strip": "view"
   }
 }

@@ -664,7 +664,7 @@ test('商家项目写链路显式携带 MERCHANT scope，个人发布入口不�
   assert.match(projects, /scope:\s*this\.data\.operationScope/);
   assert.match(projectHome, /scope:\s*that\.data\.operationScope/);
   assert.match(shelf, /<tpl-shelf [^>]*scope="\{\{ operationScope \}\}"/);
-  assert.match(topicPreview, /usePayload\(\{ id: this\._id, scope: this\._scope,/); // qx-b4 U02-02:采用请求经 usePayload 组装,scope 原样透传
+  assert.match(topicPreview, /useFlow\.submit\(this, \{ id: this\._id, scope: this\._scope,/); // qx-b4 U02-02:采用请求经 usePayload 组装,scope 原样透传
 
   const genericPublishRoutes = read('components/tabBar/index.js');
   assert.match(genericPublishRoutes, /pagePath:\s*"\/pages\/template\/index"/,

@@ -40,7 +40,7 @@
 
     <!-- 「应用」与右边分享键同一套样式(V-24 业主「应用和旁边分享一样的样式」),点了直接复制进主题配置 -->
     <view class="xb-cta">
-      <cy-btn class="xb-cta-btn xb-cta-btn--share" variant="ghost" bindtap="useTemplate">应用</cy-btn>
+      <cy-btn class="xb-cta-btn" bindtap="useTemplate">用这个模板</cy-btn>
       <button class="xb-share" open-type="share" aria-label="分享主题模板" hover-class="cy-pressed" hover-stay-time="80">
         <cy-icon name="share" size="40" />
       </button>
@@ -135,9 +135,7 @@
           </view>
         </view>
       </view>
-      <view class="xb-caps" wx:else>
-        <view class="xb-caprow"><text class="xb-caprow-k">—</text></view>
-      </view>
+      <cy-empty wx:else kind="empty" title="暂无玩法安排" sub="" />
       <!-- U02-01 采用条件:只读 contentDelivery;r2-create(业主「UI需要优化一下」)只画有权威事实的行,没有事实的行不出现 -->
       <block wx:if="{{ deliveryRows.length }}">
         <view class="xb-block td-cond-hd">

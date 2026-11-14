@@ -54,7 +54,7 @@ test('开售后(priced)说终价已确认,不误报阵容未锁定;定价前照�
   const fs = require('fs');
   const path = require('path');
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/topic/pricing/index.wxml'), 'utf8');
-  assert.match(wxml, /<view class="pg-note" wx:if="\{\{priced\}\}">终价已确认<\/view>\s*<view class="pg-note" wx:elif="\{\{phaseBlocked\}\}">合作阵容锁定后可定价<\/view>/);
+  assert.match(wxml, /<view class="pg-note" wx:if="\{\{priced\}\}">\{\{saleStatusText \|\| '终价已确认'\}\}<\/view>\s*<view class="pg-note" wx:elif="\{\{phaseBlocked\}\}">合作阵容锁定后可定价<\/view>/);
 
   const sold = load();
   sold.data.subType = 'guided';

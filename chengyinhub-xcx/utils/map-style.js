@@ -37,6 +37,53 @@ function kindForLook(look) {
   return 'black';
 }
 
+// 2026-11-14 owner:自由图(漫游、附近)玩家可切四套底图,默认 black;选择用 wx 本地存储记住。
+// layerStyle 是该 key 下的「绑定序号」(white 1 / black 2 / paper 3 / 2077 4),不是控制台 styleId;仓库里序号为 0,上传拷贝由 scripts/release-map-style.js 填。
+const KIND_KEY = 'cy_map_kind';
+const KIND_ITEMS = [
+  { kind: 'white', label: '白' },
+  { kind: 'black', label: '黑' },
+  { kind: 'paper', label: '纸本' },
+  { kind: '2077', label: '2077' },
+];
+
+function validKind(kind) { return KINDS.indexOf(String(kind)) >= 0 ? String(kind) : ''; }
+
+/** 玩家在自由图上选的底图;没存过、读不到、读到不认识的值都回 black。 */
+function freeMapKind(storage) {
+  try {
+    const store = storage || (typeof wx !== 'undefined' ? wx : null);
+    return (store && validKind(store.getStorageSync(KIND_KEY))) || 'black';
+  } catch (e) { return 'black'; }
+}
+
+/** 记住玩家的选择;存不上返回 false(本次仍然生效)。 */
+function saveFreeMapKind(kind, storage) {
+  const k = validKind(kind);
+  if (!k) return false;
+  try {
+    const store = storage || (typeof wx !== 'undefined' ? wx : null);
+    if (!store) return false;
+    store.setStorageSync(KIND_KEY, k);
+    return true;
+  } catch (e) { return false; }
+}
+
+/** 主题发布时存的 look_json(字符串或对象)→ 底图;读不懂 = black。 */
+function kindForLookJson(raw) {
+  let look = raw;
+  if (typeof raw === 'string') {
+    try { look = raw.trim() ? JSON.parse(raw) : null; } catch (e) { look = null; }
+  }
+  if (!look || typeof look !== 'object') return 'black';
+  return kindForLook({ style: String(look.style || '').toUpperCase() });
+}
+
+/** 路线地图给谁看:编辑器 / 商家 / 创作者预览一律 white;玩家看主题发布时的外观。 */
+function routeMapKind(lookRaw, preview) {
+  return preview ? 'white' : kindForLookJson(lookRaw);
+}
+
 /** 叠加层按哪种底配色;没配 key 时返回 '',配色不变。 */
 function mapToneFor(kind, style) {
   return configured(style) && mapStyleFor(kind, style).subkey ? kind : '';
@@ -97,4 +144,4 @@ function playerMapStyle(style) { return mapStyleFor('black', style); }
 /** 商家 / 编辑器地图:white。 */
 function lightMapStyle(style) { return mapStyleFor('white', style); }
 
-module.exports = { MAP_STYLE, ROAM_3D, roam3dFor, KINDS, configured, mapStyleFor, kindForLook, mapToneFor, toneLines, toneCircle, playerMapStyle, lightMapStyle };
+module.exports = { MAP_STYLE, ROAM_3D, roam3dFor, KINDS, KIND_ITEMS, KIND_KEY, freeMapKind, saveFreeMapKind, kindForLookJson, routeMapKind, configured, mapStyleFor, kindForLook, mapToneFor, toneLines, toneCircle, playerMapStyle, lightMapStyle };

@@ -67,7 +67,8 @@ test('C-22 只有后端标了「答案错」才计错;业务拒绝不再解锁�
 
 test('C-24 没有 registrationId 时给一条去票夹的出路,不再是一句死提示', () => {
   const js = PLAY_JS();
-  assert.match(js, /_explainMissingEntryQr\(\) \{[\s\S]{0,500}?wx\.reLaunch\(\{ url: '\/subpackageMember\/signup\/index' \}\)/);
+  // D-25:navigateTo 不清页栈(玩家还能回游戏),带 topicId 落在这条路线的票上
+  assert.match(js, /_explainMissingEntryQr\(\) \{[\s\S]{0,700}?ticketWalletUrl\(this\.data\.topicId\)[\s\S]{0,200}?wx\.navigateTo\(\{ url, fail: \(\) => wx\.reLaunch\(\{ url \}\) \}\)/);
   const openEntry = js.slice(js.indexOf('  openEntryQr() {'), js.indexOf('  noop() {}'));
   assert.match(openEntry, /if \(!regId\) \{ this\._explainMissingEntryQr\(\); return; \}/);
   const ticket = js.slice(js.indexOf('  ensureTicket() {'), js.indexOf("req('/api/verify/dyncode/issue'"));

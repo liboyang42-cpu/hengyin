@@ -105,6 +105,11 @@ const MATRIX = [
   ['components/cy/club-direct-ledger/index.js', "url: scope.kind === 'club'", 'required', 'merchant/club', 'owned-merchant-or-club-receivable'],
   // 2026-10-29 M-32:俱乐部计酬并进账户收益「本月收入明细」,同端点同权限档(商家 FINANCE_READ 派生店主)。
   ['subpackageA/components/earnings-overview/index.js', "url: '/api/club-direct-merchant/merchant'", 'required', 'merchant', 'owned-merchant-or-club-receivable'],
+  // 自由探索定价后状态/结算待处理：服务端按主题发布者(商家岗位解析店主)校验，只返回本人主题/本人场次。
+  ['pages/topic/pricing/index.js', "url: '/api/topic/pricing/sale-status'", 'required', 'author/merchant', 'owned-merchant-resource'],
+  ['pages/topic/pricing/index.js', "url: '/api/topic/pricing/settlement-pending'", 'required', 'author/merchant', 'owned-merchant-resource'],
+  // 商家套票预约：VERIFY 岗位派生店主，只读本店预约。
+  ['pages/merchant/bundle-reservations/index.js', "url: '/api/free-explore/bundle/merchant/reservations'", 'required', 'merchant/VERIFY', 'owned-merchant-or-club-receivable'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status'", 'required', 'member', 'self-account'],
   ['utils/deregister-flow.js', "sendUiStateRequest(app, '/api/user/deregister/status', { method: 'GET',", 'required', 'member', 'self-account'],
   // D-73：漫游任务列表改读 active-for-roam（服务端已按报名中/进行中 + 绑定漫游过滤），权限档不变
@@ -230,7 +235,7 @@ const MATRIX = [
   ['pages/roam/index.js', "req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 20000 }", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
   // 2026-11-09 V3-35:入口地图目录地点图钉,同 /api/roam/pois 权限档
-  ['pages/roam/index.js', "req('/api/roam/pois', 'GET', { lat: c.lat, lng: c.lng, radius: 3000 }", 'required', 'member', 'global-read+viewer-personalization'],
+  ['pages/roam/index.js', "req('/api/roam/pois', 'GET', { lat: c.lat, lng: c.lng, radius }", 'required', 'member', 'global-read+viewer-personalization'],
   ['pages/roam/index.js', "req('/api/roam/badge/shop-streak'", 'required', 'member', 'global-authenticated-read'],
   ['pages/merchant/customer/index.js', 'loadSavedSegments() {', 'required', 'merchant/merchant:crm:segment', 'self-merchant'],
   ['pages/shezhi/components/marketing-consent/index.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
@@ -496,7 +501,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // D113:游戏主题库改读公开目录 POST,移除其原认证 GET,128 → 127。
   // 2026-11-12 club-payout-binding:个人收款页读本人收款状态一处直接 GET(已入 MATRIX),127 → 128。
   // 2026-11-13 pass-mini:通行证回到订单继续支付一处、订单详情页一处(已入 MATRIX),128 → 130。
-  assert.equal(directCount, 130, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-14 free-explore-1114:定价页两处(已锁价状态、结算待处理)+商家套票预约一处,均已入 MATRIX,130 → 133。
+  assert.equal(directCount, 133, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

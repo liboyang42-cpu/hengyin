@@ -64,8 +64,9 @@ test('route-matrix 生成物必须与当前 app.json 和 scene 扫描逐字一�
   // 2026-11-11 l-icons +1:通行证钥匙开场 subpackagePass/reveal ⇒ 171(build-route-matrix.js --json 重建)。
   // 2026-11-12 club-payout-binding +1:俱乐部主个人收款 pages/club/payout-receiver ⇒ 172(build-route-matrix.js --json 重建)。
   // 2026-11-13 pass-mini +1:通行证订单详情 subpackageMember/market/pass-order/index ⇒ 173(build-route-matrix.js --json 重建)。
-  assert.equal(current.routes.length, 173)
-  assert.equal(matrix.counts.routes, 173)
+  // 2026-11-14 free-explore-1114 +1:商家套票预约 pages/merchant/bundle-reservations/index ⇒ 174。
+  assert.equal(current.routes.length, 174)
+  assert.equal(matrix.counts.routes, 174)
   const bundle = matrix.routes.find(route => route.pagePath === 'subpackageMember/free-explore/index')
   assert.equal(bundle.role, 'player')
   assert.equal(bundle.needsLogin, true)

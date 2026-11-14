@@ -4,6 +4,7 @@ const shareCard = require('../../utils/share-card.js');
 const motion = require('../../../utils/motion.js');
 const { countIn } = require('../../../utils/page-motion.js');
 const { readReducedMotion } = require('../../../utils/motion-preference.js');
+const { ticketWalletUrl } = require('../../../utils/ticket-wallet-url.js');
 const app = getApp();
 
 /* r2-finish 结算流程 → l-after(2026-11-10)按业主批准的原型改:整局走完后 总览 → 排行榜(导航栏以下的近全屏弹层,只有 全体 / 队内)
@@ -133,7 +134,7 @@ Page({
   // 结算可由分享 / 卡片直接打开(页栈只有本页):没有上一页时回票夹,不留死胡同(同 play 的 goBackDetail)
   _leave() {
     if (getCurrentPages().length > 1) wx.navigateBack({ delta: 1 });
-    else wx.reLaunch({ url: '/subpackageMember/signup/index' });
+    else wx.reLaunch({ url: ticketWalletUrl((this.data.report && this.data.report.topicId) || this._query.topicId) });
   },
   goRank() { this._go('rank'); },
 

@@ -5,6 +5,7 @@ const art = require('./art.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 
 const app = getApp();
+const FRESH_MS = 15000;        // 货架数据新鲜期：期内重复触发（attached+show、频繁切回）不重拉
 const PAGE_SIZE = 50;          // 后端 startPage 单页上限 50,一次拿不全，要翻页
 const THEME_SEGMENT_TITLE = /^G\d+｜/;
 const RAIL_STEP_RPX = 642;     // 主题精选卡 622rpx + 间距 20rpx,算当前第几张
@@ -85,6 +86,8 @@ function pickGames(rows) {
     if (!row || typeof row !== 'object') return;
     const packType = row.packType == null || row.packType === '' ? 0 : Number(row.packType);
     const title = String(row.title || '').trim();
+    // D-04 取舍：货架只上业主保留的清单（不把填充数据上架）；表外的告警，让后台上新能被发现
+    if (packType === 0 && title && !THEME_SEGMENT_TITLE.test(title) && !art.GAMES[title] && typeof console !== 'undefined') console.warn('[shelf] 玩法模板不在货架清单内，未上架');
     if (packType !== 0 || THEME_SEGMENT_TITLE.test(title) || !art.GAMES[title]) return;
     if (!byTitle[title] || Number(row.id) > Number(byTitle[title].id)) byTitle[title] = row;
   });
@@ -140,6 +143,7 @@ Component({
       this._detached = true; this._shelfEpoch = (this._shelfEpoch || 0) + 1;
       this._topicSeq = (this._topicSeq || 0) + 1; this._gameSeq = (this._gameSeq || 0) + 1;
       this._seq = (this._seq || 0) + 1;
+      if (this._coverTimer) { clearTimeout(this._coverTimer); this._coverTimer = null; }
     }
   },
 
@@ -147,21 +151,28 @@ Component({
     // 回到模板页时静默刷新(后台改了上架不用重进小程序)
     show() {
       this._hidden = false;
-      this.loadTopics();
-      this.loadGames();
+      // attached 刚拉过就不重复拉；回前台超过 FRESH_MS 才静默刷新
+      this.loadTopics(true);
+      this.loadGames(true);
     },
     hide() {
       this._hidden = true;
       this._shelfEpoch = (this._shelfEpoch || 0) + 1;
+      // 在途请求随代次作废：回前台必须重拉，不能被新鲜期挡住
+      if (this._topicBusy) this._topicAt = 0;
+      if (this._gameBusy) this._gameAt = 0;
     }
   },
 
   methods: {
-    loadTopics() {
+    loadTopics(soft) {
+      if (soft && this._topicAt && Date.now() - this._topicAt < FRESH_MS && (this.data.topicLoaded || this._topicBusy)) return;
+      this._topicAt = Date.now();
       const seq = this._topicSeq = (this._topicSeq || 0) + 1;
       const owner = app.getUserID && app.getUserID(), scope = this.data.scope, epoch = this._shelfEpoch;
       const current = () => !this._hidden && !this._detached && seq === this._topicSeq && epoch === this._shelfEpoch
         && owner === (app.getUserID && app.getUserID()) && scope === this.data.scope;
+      this._topicBusy = true;
       app.sendRequest({
         hideLoading: true,
         silentError: true,
@@ -170,6 +181,7 @@ Component({
         data: {},
         success: (res) => {
           if (!current()) return;
+          this._topicBusy = false;
           if (res && res.code == '200' && isRecordList(res.data)) {
             this._topics = res.data.filter((t) => art.HIDDEN_TOPICS.indexOf(art.themeKey(t.name)) < 0).map(decorateTopic);
             this.setData({ topicLoaded: true, topicError: '' });
@@ -179,6 +191,7 @@ Component({
           }
         },
         fail: (res) => {
+          if (current()) { this._topicBusy = false; this._topicAt = 0; }
           if (!current() || this.data.topicLoaded) return;
           this.setData({ topicError: app.getRequestErrorMessage(res, '主题模板加载失败') });
         }
@@ -186,17 +199,20 @@ Component({
     },
 
     // 后端单页最多 50 条：满页且没到 total 就接着取下一页，取全再上货架
-    loadGames() {
+    loadGames(soft) {
+      if (soft && this._gameAt && Date.now() - this._gameAt < FRESH_MS && (this.data.gameLoaded || this._gameBusy)) return;
+      this._gameAt = Date.now();
       const seq = this._gameSeq = (this._gameSeq || 0) + 1;
       const owner = app.getUserID && app.getUserID(), scope = this.data.scope, epoch = this._shelfEpoch;
       const current = () => !this._hidden && !this._detached && seq === this._gameSeq && epoch === this._shelfEpoch
         && owner === (app.getUserID && app.getUserID()) && scope === this.data.scope;
-      const rows = [], seen = new Set();
       const failed = (res) => {
-        if (!current() || this.data.gameLoaded) return;
+        if (!current()) return;
+        this._gameBusy = false; this._gameAt = 0;
+        if (this.data.gameLoaded) return;
         this.setData({ gameError: app.getRequestErrorMessage(res, '玩法模板加载失败') });
       };
-      const page = (n) => app.sendRequest({
+      const fetchPage = (n, done) => app.sendRequest({
         hideLoading: true,
         silentError: true,
         url: '/api/template/list',
@@ -207,25 +223,49 @@ Component({
           const data = res && res.data;
           const list = data ? (data.rows || data) : null;
           if (!res || res.code != '200' || !isRecordList(list)) { failed(res); return; }
-          if (list.some(r => !/^[1-9]\d*$/.test(String(r.id))
-              || typeof r.id === 'number' && !Number.isSafeInteger(r.id) || seen.has(String(r.id)))
-              || new Set(list.map(r => String(r.id))).size !== list.length) { failed(); return; }
-          list.forEach((r) => { seen.add(String(r.id)); rows.push(r); });
-          if (Object.prototype.hasOwnProperty.call(data, 'total')) {
-            const total = Number(data.total);
-            if (!Number.isSafeInteger(total) || total < 0 || rows.length > total || (!list.length && rows.length < total)) { failed(); return; }
-            if (rows.length < total) { page(n + 1); return; }
-          } else if (list.length >= PAGE_SIZE) { page(n + 1); return; }
+          done(data, list);
+        },
+        fail: failed
+      });
+      // 第 1 页拿到 total 后，其余页并行取，取全再校验并上货架
+      this._gameBusy = true;
+      fetchPage(1, (data, first) => {
+        const hasTotal = Object.prototype.hasOwnProperty.call(data, 'total');
+        const total = hasTotal ? Number(data.total) : NaN;
+        if (hasTotal && (!Number.isSafeInteger(total) || total < 0)) { failed(); return; }
+        const pages = [first];
+        const finish = () => {
+          if (!current()) return;
+          const rows = [], seen = new Set();
+          for (const list of pages) {
+            if (list.some(r => !/^[1-9]\d*$/.test(String(r.id))
+                || typeof r.id === 'number' && !Number.isSafeInteger(r.id) || seen.has(String(r.id)))
+                || new Set(list.map(r => String(r.id))).size !== list.length) { failed(); return; }
+            list.forEach((r) => { seen.add(String(r.id)); rows.push(r); });
+          }
+          if (hasTotal && (rows.length > total || rows.length < total)) { failed(); return; }
+          this._gameBusy = false;
           this._games = pickGames(rows);
           this.setData({ gameLoaded: true, gameError: '' });
           this.buildGames();
-        },
-        fail: (res) => {
-          if (!current() || this.data.gameLoaded) return;
-          this.setData({ gameError: app.getRequestErrorMessage(res, '玩法模板加载失败') });
+        };
+        if (hasTotal ? first.length >= total : first.length < PAGE_SIZE) { finish(); return; }
+        if (hasTotal) {
+          const count = Math.ceil(total / PAGE_SIZE) - 1;
+          if (count < 1) { finish(); return; } // total 与首页条数对不上：交给 finish 的校验判失败
+          let left = count;
+          for (let i = 0; i < count; i++) {
+            fetchPage(i + 2, (d, list) => { pages[i + 1] = list; if (--left === 0) finish(); });
+          }
+          return;
         }
+        // 无 total：只能顺序翻页
+        const next = (n) => fetchPage(n, (d, list) => {
+          pages.push(list);
+          if (list.length >= PAGE_SIZE) next(n + 1); else finish();
+        });
+        next(2);
       });
-      page(1);
     },
 
     retry() {
@@ -261,7 +301,7 @@ Component({
         const items = all.filter(s[1]);
         if (items.length) shelves.push({ title: s[0], rows: false, items: items });
       });
-      const featTopics = feat.slice(0, 6);
+      const featTopics = feat.slice(0, art.FEATURED_TOPICS.length);
       const featIndex = Math.min(this.data.featIndex, Math.max(featTopics.length - 1, 0));
       this.setData({ featTopics, topicShelves: shelves, featIndex });
       this.applyTopicCat(this.data.tf);
@@ -311,8 +351,9 @@ Component({
       if (tab === this.data.tab) return;
       this.setData({ tab: tab, featIndex: 0 });
       this.applyGlow();
-      if (tab === 'topic' && !this.data.topicLoaded) this.loadTopics();
-      if (tab === 'game' && !this.data.gameLoaded) this.loadGames();
+      // 成功但为空的货架：切回来时重拉一次，不让空态成为死胡同
+      if (tab === 'topic' && (!this.data.topicLoaded || !this._topics.length)) this.loadTopics();
+      if (tab === 'game' && (!this.data.gameLoaded || !this._games.length)) this.loadGames();
     },
 
     pickTag(e) {
@@ -346,27 +387,39 @@ Component({
       const hit = id && this._topics.find((t) => String(t.id) === id);
       if (!hit || !hit.cover) return;
       hit.cover = '';
-      this.buildTopics();
+      // 弱网下多张封面连续失败：合并成一次重建
+      if (this._coverTimer) return;
+      this._coverTimer = setTimeout(() => { this._coverTimer = null; if (!this._detached) this.buildTopics(); }, 120);
     },
 
     goSearch() { this.triggerEvent('search'); },
 
+    // 防连点：同一目标 600ms 内的重复点击不再压栈
+    _dupNav(key) {
+      const now = Date.now();
+      if (this._navKey === key && now - (this._navAt || 0) < 600) return true;
+      this._navKey = key; this._navAt = now;
+      return false;
+    },
+
     openTopic(e) {
       const item = e.currentTarget.dataset.item || {};
-      if (item.previewOnly) { this.triggerEvent('toast', { text: '这是预览模板，保存后才能查看' }); return; }
+      if (item.previewOnly) { this.triggerEvent('toast', { text: '暂未开放' }); return; }
       if (!item.id) return;
       const qs = ['id=' + item.id];
       if (this.data.scope) qs.push('scope=' + this.data.scope);
       if (this.data.readonly) qs.push('readonly=1');
+      if (this._dupNav('t' + item.id)) return;
       wx.navigateTo({ url: '/pages/templatedetail/topic-preview/index?' + qs.join('&') });
     },
 
     openGame(e) {
       const item = e.currentTarget.dataset.item || {};
-      if (item.previewOnly) { this.triggerEvent('toast', { text: '这是预览模板，保存后才能查看' }); return; }
+      if (item.previewOnly) { this.triggerEvent('toast', { text: '暂未开放' }); return; }
       if (!item.id) return;
+      if (this._dupNav('g' + item.id)) return;
       wx.navigateTo({ url: '/pages/templatedetail/templatedetail?id=' + item.id +
-        (this.data.scope === 'MERCHANT' ? '&operationScope=MERCHANT' : '') });
+        (this.data.scope === 'MERCHANT' ? '&operationScope=MERCHANT' : '') + (this.data.readonly ? '&readonly=1' : '') });
     }
   }
 });

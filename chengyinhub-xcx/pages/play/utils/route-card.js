@@ -10,8 +10,7 @@ const NUMBER_BOX = Object.freeze({ x: 56, y: 620, w: W - 300, h: 300 });
 const CODE = Object.freeze({ cx: W - 136, cy: 792, r: 92 });
 const FUZZ_M = 150;
 const C = Object.freeze({
-  page: '#0B0B0C', grid: 'rgba(255,255,255,.06)', gridBold: 'rgba(255,255,255,.1)',
-  route: '#F8F8F8', glow: 'rgba(248,248,248,.2)', text: '#F8F8F8', muted: 'rgba(248,248,248,.62)', ring: '#FFFFFF',
+  page: '#0B0B0C', text: '#F8F8F8', muted: 'rgba(248,248,248,.62)', ring: '#FFFFFF',
 });
 
 function distM(a, b) {
@@ -94,39 +93,22 @@ function cardModel(input) {
   };
 }
 
-function drawBase(g) {
+// 底图只用真实地图快照;没有快照就是纯底色,调用方在失败时不进入绘制,不画任何替代底图
+function drawBase(g, mapImage) {
   g.fillStyle = C.page; g.fillRect(0, 0, W, H);
-  // 底纹:一组缓弯的「街道」,与城市无关,任何城市都一样
-  g.lineCap = 'round';
-  for (let i = 0; i < 8; i++) {
-    g.strokeStyle = i % 2 ? C.grid : C.gridBold; g.lineWidth = i % 2 ? 2 : 6;
-    const x = i * 108 - 30;
-    g.beginPath(); g.moveTo(x, -20); g.bezierCurveTo(x + 40, 300, x - 40, 640, x + 18, H + 20); g.stroke();
-  }
-  for (let j = 0; j < 9; j++) {
-    g.strokeStyle = j % 2 ? C.grid : C.gridBold; g.lineWidth = j % 2 ? 2 : 6;
-    const y = j * 124 + 20;
-    g.beginPath(); g.moveTo(-20, y); g.bezierCurveTo(240, y + 40, 500, y - 30, W + 20, y + 24); g.stroke();
+  if (!mapImage) return;
+  g.drawImage(mapImage, 0, 0, W, H);
+  if (typeof g.createLinearGradient === 'function') {
+    const sh = g.createLinearGradient(0, H * 0.5, 0, H);
+    sh.addColorStop(0, 'rgba(11,11,12,0)'); sh.addColorStop(0.55, 'rgba(11,11,12,.82)'); sh.addColorStop(1, 'rgba(11,11,12,.94)');
+    g.fillStyle = sh; g.fillRect(0, H * 0.5, W, H * 0.5);
   }
 }
 
-function strokePath(g, pts, upto) {
-  if (pts.length < 2) return;
-  const n = Math.max(2, Math.min(pts.length, upto));
-  g.beginPath(); g.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < n; i++) g.lineTo(pts[i].x, pts[i].y);
-  g.stroke();
-}
-
-/** progress 0..1:路线画到哪儿;1 时文字与码一起出现 */
-function drawCard(g, model, progress, codeImage) {
+/** mapImage:地图快照,路线已在快照里;progress 满 1 才出文字与码 */
+function drawCard(g, model, progress, codeImage, mapImage) {
   const p = Math.max(0, Math.min(1, Number(progress) || 0));
-  drawBase(g);
-  const pts = fitInto(model.route, ROUTE_BOX);
-  const upto = Math.round(2 + (pts.length - 2) * p);
-  g.lineJoin = 'round'; g.lineCap = 'round';
-  g.strokeStyle = C.glow; g.lineWidth = 26; strokePath(g, pts, upto);
-  g.strokeStyle = C.route; g.lineWidth = 8; strokePath(g, pts, upto);
+  drawBase(g, mapImage);
   if (p < 1) return;
   g.textAlign = 'left'; g.textBaseline = 'alphabetic';
   g.fillStyle = C.text; g.font = 'italic 800 176px -apple-system, "Helvetica Neue", sans-serif';

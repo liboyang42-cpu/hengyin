@@ -180,7 +180,15 @@ test('模板货架回到页面时静默刷新两个 tab', () => {
     }
     h.definition.pageLifetimes.hide.call(h.shelf)
     const before = h.calls.length
-    h.definition.pageLifetimes.show.call(h.shelf)
+    // D-01:已加载且仍在新鲜期内回前台不重拉；过了新鲜期才静默刷新
+    const realNow = Date.now
+    if (loaded) {
+      h.definition.pageLifetimes.show.call(h.shelf)
+      assert.deepEqual(h.calls.slice(before).map(r => r.url), [], '新鲜期内不重拉')
+      h.definition.pageLifetimes.hide.call(h.shelf)
+      Date.now = () => realNow() + 60000
+    }
+    try { h.definition.pageLifetimes.show.call(h.shelf) } finally { Date.now = realNow }
     assert.deepEqual(h.calls.slice(before).map(r => r.url), ['/api/template/topic-template/list', '/api/template/list'])
     const snapshot = JSON.stringify(h.shelf.data)
     oldTopic.fail({ msg: '旧主题失败' }); oldGame.fail({ msg: '旧玩法失败' })
@@ -209,8 +217,8 @@ test('模板货架加载、失败与重试走设计系统组件；复制失败�
     '列表加载失败必须有可见重试入口')
   assert.doesNotMatch(wxml + read('pages/template/index.wxml'), /circleThemes/)
   // 2026-10-30 V-24:整包复制从卡堆预览搬到主题模板详情(topic-detail)
-  const preview = read('pages/templatedetail/topic-detail/index.js')
-  assert.match(preview, /fail\(\) \{\s*that\._using = false;/, '复制失败要放行下一次')
+  const preview = read('pages/templatedetail/utils/topic-use-flow.js')
+  assert.match(preview, /fail\(\) \{\s*page\._using = false;/, '复制失败要放行下一次')
 })
 
 test('模板上下架重复点击只发一次', () => {

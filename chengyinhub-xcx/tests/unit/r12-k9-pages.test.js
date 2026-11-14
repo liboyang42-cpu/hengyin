@@ -138,7 +138,7 @@ test('p2 N-9:不相干的主题链接 → 「链接已失效」,不是空白页'
 test('p3 N6:同一页面再点「应用」回到已复制的那份草稿,不再多复制一份', () => {
   const js = read('pages/templatedetail/topic-detail/index.js');
   assert.match(js, /if \(this\._copiedId\) \{ this\._openCopiedDraft\(this\._copiedId\); return; \}/);
-  assert.match(js, /that\._copiedId = copiedId;/);
+  assert.match(js, /onCopied: \(id\) => \{ this\._copiedId = id; \}/);
 });
 
 test('j6 N4:角色页认 id;缺俱乐部 = 「链接已失效 · 返回」', () => {

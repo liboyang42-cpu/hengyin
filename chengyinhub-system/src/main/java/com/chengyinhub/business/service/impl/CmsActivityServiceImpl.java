@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import com.chengyinhub.business.service.support.FreeExploreFeeAllocator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -274,23 +275,57 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * 都等业主拍板,见 integ/ROUND13-M6-RESULT.md。没有实收的场次不告警。
      */
     List<String> strandedFreeExploreSales() {
-        List<CmsActivity> rows = cmsActivityMapper.selectFreeExploreActivitiesWithoutSettlementPath();
         List<String> stranded = new java.util.ArrayList<>();
-        if (rows == null) return stranded;
+        for (Map<String, Object> row : strandedFreeExploreRows(null, true)) {
+            stranded.add("activityId=" + row.get("activityId") + ": FREE_EXPLORE_SALE_HAS_NO_SETTLEMENT_PATH topicId="
+                    + row.get("topicId") + ", 实收=" + ((BigDecimal) row.get("money")).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString()
+                    + ", " + row.get("reason"));
+        }
+        return stranded;
+    }
+
+    /**
+     * D-19:只读列出「结算待处理」的自由探索场次(有实收、无结算路径,分钱规则待业主拍板)。
+     * 不动钱、不记账。ownerMemberId 为空=全部(后台);非空=只列该主办方(主题发布者或场次创建者)自己的。
+     */
+    @Override
+    public List<Map<String, Object>> listStrandedFreeExploreSettlements(Long ownerMemberId) {
+        return strandedFreeExploreRows(ownerMemberId, false);
+    }
+
+    private List<Map<String, Object>> strandedFreeExploreRows(Long ownerMemberId, boolean logAlert) {
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        List<CmsActivity> rows = cmsActivityMapper.selectFreeExploreActivitiesWithoutSettlementPath();
+        if (rows == null) return out;
         for (CmsActivity activity : rows) {
+            if (ownerMemberId != null) {
+                CmsTopic t = activity.getTopicId() == null ? null : cmsTopicMapper.selectCmsTopicById(activity.getTopicId());
+                boolean mine = ownerMemberId.equals(activity.getMemberId())
+                        || (t != null && ownerMemberId.equals(t.getMemberId()));
+                if (!mine) continue;
+            }
             BigDecimal paid = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
             BigDecimal retained = cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(activity.getId());
             BigDecimal money = (paid == null ? BigDecimal.ZERO : paid).add(retained == null ? BigDecimal.ZERO : retained);
             if (money.signum() <= 0) continue;
             String reason = strandedReason(activity);
             if (reason == null) continue; // 商家发布主题的承办场次已有结算路径,不再告警
-            logger.error("【结算告警】自由探索实收没有结算路径,未入账 activityId={}, topicId={}, 实收={}, 原因={}",
-                    activity.getId(), activity.getTopicId(), money, reason);
-            stranded.add("activityId=" + activity.getId() + ": FREE_EXPLORE_SALE_HAS_NO_SETTLEMENT_PATH topicId="
-                    + activity.getTopicId() + ", 实收=" + money.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString()
-                    + ", " + reason);
+            if (logAlert) {
+                logger.error("【结算告警】自由探索实收没有结算路径,未入账 activityId={}, topicId={}, 实收={}, 原因={}",
+                        activity.getId(), activity.getTopicId(), money, reason);
+            }
+            Map<String, Object> row = new java.util.LinkedHashMap<>();
+            row.put("activityId", activity.getId());
+            row.put("activityName", activity.getName());
+            row.put("topicId", activity.getTopicId());
+            row.put("clubId", activity.getClubId());
+            row.put("endDate", activity.getEndDate());
+            row.put("money", money);
+            row.put("state", "结算待处理");
+            row.put("reason", reason);
+            out.add(row);
         }
-        return stranded;
+        return out;
     }
 
     private String strandedReason(CmsActivity activity) {
@@ -325,14 +360,16 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             Long frozenPayee = clubPrincipalPayee.frozenActivity(activity).getMemberId();
             if (clubPrincipalPayee.activityAlreadyReady(activity.getId())) return false;
             activitySettlementHoldMapper.holdOpenComplaintRegistrations(activity.getId());
-            recordFreeExploreSessionLedger(activity, topic);
+            FreeExploreLedger ledger = recordFreeExploreSessionLedger(activity, topic);
             BigDecimal cash = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
             BigDecimal held = activitySettlementHoldMapper.selectHeldSalesByActivityId(activity.getId());
             cash = cash == null ? BigDecimal.ZERO : cash;
             if (held != null) cash = cash.subtract(held);
+            cash = cash.subtract(ledger.isolatedGross);
             com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan fees = merchantFeePlan(activity, frozenPayee, null);
             if (!fees.isEmpty()) {
-                clubSessionMerchantFee().requireWithinPayeeShare(activity, fees, calculateActivityCommissions(activity, cash, rule).getMerchantCommissionAmount());
+                clubSessionMerchantFee().requireWithinPayeeShare(activity, fees,
+                        calculateActivityCommissions(activity, cash, rule, ledger.cashPlatformFee).getMerchantCommissionAmount());
                 clubSessionMerchantFee().writeLedger(activity, fees);
             }
             clubPrincipalPayee.markActivityReady(activity.getId());
@@ -348,7 +385,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         // 1. 计算活动总销售额（已支付且未退款的报名记录，owner_type=2）
         // 客诉期提现闸(9-16 拍板第 3 条):还有未结客诉的报名单只暂扣它自己那部分,其余照放。
         activitySettlementHoldMapper.holdOpenComplaintRegistrations(activity.getId());
-        recordFreeExploreSessionLedger(activity, topic);
+        FreeExploreLedger ledger = recordFreeExploreSessionLedger(activity, topic);
         BigDecimal totalSales = cmsRegistrationMapper.selectTotalSalesByActivityId(activity.getId());
         // 2026-11-02 退款档位:集合前 24 小时内退 50% 的报名,未退回的那一半归主办方,在这里补回。
         BigDecimal retainedSales = cmsRegistrationMapper.selectRetainedSalesAfterPartialRefundByActivityId(activity.getId());
@@ -358,6 +395,16 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         BigDecimal heldSales = activitySettlementHoldMapper.selectHeldSalesByActivityId(activity.getId());
         if (totalSales != null && heldSales != null) {
             totalSales = totalSales.subtract(heldSales);
+        }
+        // D-30:缺冻结费率被隔离的报名不进本场现金(它也没有分账行),留待人工处理。
+        if (totalSales != null && ledger.isolatedGross.signum() > 0) {
+            totalSales = totalSales.subtract(ledger.isolatedGross);
+        }
+        // D-29:自由探索的平台费现金与分账行同一冻结费率、同一余数法;部分退款留存部分另按活动费率。
+        BigDecimal platformOverride = ledger.cashPlatformFee;
+        if (platformOverride != null && retainedSales != null && retainedSales.signum() > 0) {
+            platformOverride = platformOverride.add(retainedSales.multiply(rule.getPlatformCommissionRate())
+                    .setScale(2, RoundingMode.HALF_UP));
         }
         if (totalSales == null || totalSales.compareTo(BigDecimal.ZERO) <= 0) {
             logger.info("活动 {} 没有销售额，跳过分润（已通过领取标记为已结算）", activity.getId());
@@ -371,7 +418,7 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
 
         // 2. 计算各项佣金（含主题设计者，无主题来源时其份额并入商户）
-        ActivitySettlementDTO settlement = calculateActivityCommissions(activity, totalSales, rule);
+        ActivitySettlementDTO settlement = calculateActivityCommissions(activity, totalSales, rule, platformOverride);
 
         // 3. 分配商户分润（活动收款人:俱乐部场次给当前主理人,商家发布主题的承办场次给发布商家,其余给创建人,见 ClubPrincipalPayee）
         Long payee = activityPayee(activity, topic);
@@ -474,7 +521,14 @@ public class CmsActivityServiceImpl implements ICmsActivityService
             return true;
         }
         requireUsablePlatformSettlementAccount(setting, rule, activity.getId());
-        ActivitySettlementDTO settlement = calculateActivityCommissions(activity, sales, rule);
+        BigDecimal heldPlatformFee = null;
+        if (heldTopic != null && Integer.valueOf(ProductType.FREE_EXPLORE).equals(heldTopic.getProductType())) {
+            if (registration.getFeePlatformRate() == null) {
+                throw new ServiceException("自由探索暂扣单缺冻结平台费率,拒绝补结 registrationId=" + registration.getId());
+            }
+            heldPlatformFee = heldFee(registration);
+        }
+        ActivitySettlementDTO settlement = calculateActivityCommissions(activity, sales, rule, heldPlatformFee);
         Long payee = activityPayee(activity, heldTopic);
         com.chengyinhub.business.service.support.ClubSessionMerchantFee.Plan feePlan =
                 merchantFeePlan(activity, payee, registration.getId());
@@ -567,22 +621,75 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * 已过 requireSessionSettlementContract 之后,给每张已付未退的票按支付时同一口径补记主理人 / 平台两行,
      * 随本场一起置已结算(涉诉暂扣的那张留待补结时再置),之后的退款就走既有 clawBackSettledShares 按比例冲回。
      */
-    private void recordFreeExploreSessionLedger(CmsActivity activity, CmsTopic topic) {
-        if (topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) return;
+    private FreeExploreLedger recordFreeExploreSessionLedger(CmsActivity activity, CmsTopic topic) {
+        if (topic == null || !Integer.valueOf(ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+            return FreeExploreLedger.NONE;
+        }
         if (settlementEntryService == null) {
             throw new ServiceException("FREE_EXPLORE_SESSION_LEDGER_UNWIRED: 自由探索场次分账组件未装配,拒绝结算 activityId="
                     + activity.getId());
         }
         Long payee = activityPayee(activity, topic);
         List<Long> ids = cmsRegistrationMapper.selectPaidUnrefundedIdsByActivityId(activity.getId());
-        if (ids == null) return;
+        if (ids == null) return FreeExploreLedger.NONE;
+        List<Long> heldIds = activitySettlementHoldMapper.selectHeldRegistrationIdsByActivityId(activity.getId());
+        java.util.Set<Long> held = heldIds == null ? java.util.Collections.<Long>emptySet() : new java.util.HashSet<>(heldIds);
+        List<CmsRegistration> valid = new java.util.ArrayList<>();
+        BigDecimal isolatedGross = BigDecimal.ZERO;
         for (Long id : ids) {
             CmsRegistration registration = cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(id);
             if (registration == null || !Integer.valueOf(2).equals(registration.getPaymentStatus())
                     || !Integer.valueOf(2).equals(registration.getRegistrationStatus())) {
                 continue;
             }
-            settlementEntryService.recordClubFreeExploreSessionSettlement(registration, payee);
+            BigDecimal gross = freeExploreGross(registration);
+            if (gross.signum() > 0 && registration.getFeePlatformRate() == null) {
+                // D-30:缺冻结费率只隔离这一单,告警留痕,不让整场回滚、每轮重试都失败。
+                logger.error("【结算告警】自由探索报名缺冻结平台费率,已隔离该单,其余照常结算 activityId={}, registrationId={}, 金额={}",
+                        activity.getId(), registration.getId(), gross);
+                if (!held.contains(registration.getId())) isolatedGross = isolatedGross.add(gross);
+                continue;
+            }
+            valid.add(registration);
+        }
+        // D-29:非暂扣单按整场余数法分摊;暂扣单各自 HALF_UP,补结时现金按同一口径,两边到分一致。
+        List<FreeExploreFeeAllocator.Item> cashItems = new java.util.ArrayList<>();
+        for (CmsRegistration r : valid) {
+            if (!held.contains(r.getId())) {
+                cashItems.add(new FreeExploreFeeAllocator.Item(r.getId(), freeExploreGross(r), r.getFeePlatformRate()));
+            }
+        }
+        Map<Long, BigDecimal> fees = FreeExploreFeeAllocator.allocate(cashItems);
+        for (CmsRegistration r : valid) {
+            BigDecimal fee = fees.get(r.getId());
+            if (fee == null) fee = heldFee(r);
+            settlementEntryService.recordClubFreeExploreSessionSettlement(r, payee, fee);
+        }
+        return new FreeExploreLedger(FreeExploreFeeAllocator.total(fees), isolatedGross);
+    }
+
+    /** 暂扣单的平台费:按自己的冻结费率 HALF_UP(补结现金同口径)。 */
+    static BigDecimal heldFee(CmsRegistration registration) {
+        BigDecimal rate = registration.getFeePlatformRate();
+        if (rate == null || rate.signum() <= 0) return BigDecimal.ZERO;
+        return freeExploreGross(registration).multiply(rate).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    static BigDecimal freeExploreGross(CmsRegistration r) {
+        BigDecimal v = r.getPayableAmount() != null ? r.getPayableAmount()
+                : (r.getTotalAmount() != null ? r.getTotalAmount() : r.getOriginalAmount());
+        return v == null ? BigDecimal.ZERO : v;
+    }
+
+    /** 自由探索场次分账结果:cashPlatformFee=null 表示非自由探索(沿用活动费率);isolatedGross=被隔离单金额。 */
+    private static final class FreeExploreLedger {
+        static final FreeExploreLedger NONE = new FreeExploreLedger(null, BigDecimal.ZERO);
+        final BigDecimal cashPlatformFee;
+        final BigDecimal isolatedGross;
+
+        FreeExploreLedger(BigDecimal cashPlatformFee, BigDecimal isolatedGross) {
+            this.cashPlatformFee = cashPlatformFee;
+            this.isolatedGross = isolatedGross;
         }
     }
 
@@ -630,6 +737,12 @@ public class CmsActivityServiceImpl implements ICmsActivityService
      * 计算活动各项佣金
      */
     private ActivitySettlementDTO calculateActivityCommissions(CmsActivity activity, BigDecimal totalSales, SettlementRule rule) {
+        return calculateActivityCommissions(activity, totalSales, rule, null);
+    }
+
+    /** platformOverride 非空且在 [0,totalSales] 内时,平台佣金取它(自由探索冻结费率余数法结果),其余口径不变。 */
+    private ActivitySettlementDTO calculateActivityCommissions(CmsActivity activity, BigDecimal totalSales, SettlementRule rule,
+                                                               BigDecimal platformOverride) {
         ActivitySettlementDTO settlement = new ActivitySettlementDTO();
         settlement.setActivityId(activity.getId());
         settlement.setActivityName(activity.getName());
@@ -646,7 +759,9 @@ public class CmsActivityServiceImpl implements ICmsActivityService
 
         // 计算佣金金额（比例为小数,直接相乘,不再 ÷100）
         settlement.setPlatformCommissionAmount(
-                totalSales.multiply(settlement.getPlatformCommissionRate()).setScale(2, RoundingMode.HALF_UP)
+                platformOverride != null && platformOverride.signum() >= 0 && platformOverride.compareTo(totalSales) <= 0
+                        ? platformOverride
+                        : totalSales.multiply(settlement.getPlatformCommissionRate()).setScale(2, RoundingMode.HALF_UP)
         );
 
         // 商户份额取余数(ROUND10 j1 F3):各份分别 HALF_UP 时,半分值会让三份之和多出 1 分

@@ -5,6 +5,13 @@ function formatElapsed(seconds) {
   return String(minutes).padStart(2, '0') + ':' + String(remain).padStart(2, '0')
 }
 
+// 一整局的用时:满 1 小时写 h:mm:ss,不出 118:41(玩法里的短计时仍用 formatElapsed 累加分钟)
+function formatRunElapsed(seconds) {
+  const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0))
+  if (safeSeconds < 3600) return formatElapsed(safeSeconds)
+  return Math.floor(safeSeconds / 3600) + ':' + String(Math.floor(safeSeconds % 3600 / 60)).padStart(2, '0') + ':' + String(safeSeconds % 60).padStart(2, '0')
+}
+
 function buildPlayHeader(input) {
   const data = input || {}
   const total = Math.max(0, Number(data.total) || 0)
@@ -101,5 +108,5 @@ function createSessionClock(now) {
   }
 }
 
-module.exports = { buildPlayHeader, buildPlayHud, buildPlayRoute, createSessionClock, formatElapsed }
+module.exports = { buildPlayHeader, buildPlayHud, buildPlayRoute, createSessionClock, formatElapsed, formatRunElapsed }
 const { ROUTE_COLORS, ROUTE_BORDER_COLOR } = require('./play-visual-tokens.js')

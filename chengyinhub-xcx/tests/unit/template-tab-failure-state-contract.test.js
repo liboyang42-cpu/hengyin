@@ -156,7 +156,8 @@ test('整套主题货架沿原整包采用进入新主题草稿，不混用小�
   const detail = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)) });
   detail.setData = patch => Object.assign(detail.data, patch); detail.onLoad({ id: '31' }); detail.useTemplate();
   const use = lastRequest(h, '/api/template/topic-template/use');
-  assert.deepEqual(use.data, { id: '31', scope: '' });
+  assert.match(use.data.requestId, /^tu-[a-z0-9-]+$/); // D-03:采用带幂等 requestId
+  assert.deepEqual({ id: use.data.id, scope: use.data.scope }, { id: '31', scope: '' });
   assert.equal(h.navigations.length, 2); use.success({ code: 200, data: { topicId: 8031 } });
   assert.equal(h.navigations[2], '/pages/publish/fabu/index?id=8031');
   assert.equal(h.requests.some(r => r.url === '/api/template/adopt-draft'), false);

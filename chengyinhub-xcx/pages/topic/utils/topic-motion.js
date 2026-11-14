@@ -1,6 +1,8 @@
 /* 主题详情页动效与新增块的数据整形(2026-10-22 业主口述落地,见 docs/design/动效界面落地_20261022)。
    全部是纯函数:只读后端已下发的字段,缺字段就返回空,由 wxml 整块不出,不编造任何数据。 */
 
+const { toTimestamp, chinaDayStart, chinaDayEnd, chinaParts } = require('../../../utils/datetime.js');
+
 function text(value) {
   if (value === null || value === undefined) return '';
   const out = String(value).trim();
@@ -286,21 +288,23 @@ function toDate(value) {
    有通行证 expiresAt 就用它(最准);没有就取「购买后 90 天(后端 CmsRegistrationServiceImpl 的规则)」与主题结束日的较早者。 */
 function passWindow(opts) {
   const o = opts || {};
-  const now = toDate(o.now) || new Date();
-  let until = toDate(o.expiresAt);
+  // 全部按中国时区的自然日算,不随手机时区偏移(utils/datetime.js)
+  const nowTs = toTimestamp(o.now);
+  const now = isNaN(nowTs) ? Date.now() : nowTs;
+  let until = toTimestamp(o.expiresAt);
   let endsWithTopic = false;
-  if (!until) {
-    const ninety = new Date(now.getTime() + 90 * 86400000);
-    const end = toDate(o.topicEnd);
-    if (end) { const endOfDay = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59); if (endOfDay < ninety) { until = endOfDay; endsWithTopic = true; } }
-    if (!until) until = ninety;
+  if (isNaN(until)) {
+    const ninety = now + 90 * 86400000;
+    const end = toTimestamp(o.topicEnd);
+    if (!isNaN(end)) { const endOfDay = chinaDayEnd(end); if (endOfDay < ninety) { until = endOfDay; endsWithTopic = true; } }
+    if (isNaN(until)) until = ninety;
   }
   // 第十二轮 k7 N6:到期落在零点 = 能玩的最后一天是前一天;与订单页「可玩至」同一个日期
-  const last = until.getHours() === 0 && until.getMinutes() === 0 && until.getSeconds() === 0 ? new Date(until.getTime() - 1) : until;
-  const m = last.getMonth() + 1, dd = last.getDate();
+  const last = chinaDayStart(until) === until ? until - 1 : until;
+  const parts = chinaParts(last);
+  const m = parts.month, dd = parts.day;
   // 剩余天数按「今天 → 最后能玩的那一天」的自然日算,与票夹卡面(utils/ticket-expiry passDaysLeft)同一口径
-  const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const days = Math.max(0, Math.round((dayStart(last) - dayStart(now)) / 86400000));
+  const days = Math.max(0, Math.round((chinaDayStart(last) - chinaDayStart(now)) / 86400000));
   return {
     untilText: pad2(m) + '/' + pad2(dd),
     daysText: String(days),

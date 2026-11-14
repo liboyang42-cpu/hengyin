@@ -18,10 +18,11 @@ test('无开局入口:页面不再有开一局 / hangout create / join', () => {
   assert.doesNotMatch(JS, /hangout\/create|hangout\/join|openCreate|submitCreate/)
 })
 
-test('顶部条「附近的队伍 · N 支在招募」+ 底部只剩「范围」「我的队伍」两枚角控件,开卡片时收起', () => {
+test('顶部条「附近的队伍 · N 支在招募」+ 底部只剩「范围」「地图样式」「我的队伍」三枚角控件,开卡片时收起', () => {
   assert.match(WXML, /\{\{headerText\}\}/)
   const corners = WXML.match(/class="mt-corner[ "][^>]*>/g) || []
-  assert.equal(corners.length, 2, '底部角控件必须恰好两枚')
+  assert.equal(corners.length, 3, '底部角控件必须恰好三枚(2026-11-14 加地图样式切换)')
+  assert.match(WXML, /aria-label="地图样式"/)
   const wrap = WXML.match(/<view class="mt-corners"[^>]*>/)
   assert.ok(wrap, '角控件要包在 mt-corners 里')
   assert.match(wrap[0], /wx:if="\{\{!sheet( && viewMode === 'map')?\}\}"/, '开任何半屏时角控件收起(v13:列表模式也收起)')

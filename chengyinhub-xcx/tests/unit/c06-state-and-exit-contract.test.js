@@ -633,10 +633,12 @@ function assertNoMainMapLayer(wxml) {
   // 2026-09-23 用户裁决(优化顺序第 1 项):故事流左上角罗盘点开 = 真实小地图,再点收回。
   // 它是按需挂载的一层(wx:if="{{storyMap}}"),不是常驻舞台 —— 除它和完成页回放之外仍不许有地图。
   const allowed = maps.filter((m) => /class="finsheet__map-native"/.test(m)
+    // 完成页路线卡:真地图快照(取代假网格),只在有路线点时挂在完成页里,不是游玩中的地图层
+    || (/class="finsheet__routemap"/.test(m) && /wx:if="\{\{routeMap\.points\.length\}\}"/.test(m))
     || (/class="story-map__map"/.test(m) && /wx:if="\{\{storyMap\}\}"/.test(m))
     // 2026-09-23 用户:左上角常驻雷达小地图 —— 只在上面没有任何遮盖层时挂载(大地图 / 章节门 / 菜单 / 结局 / 相册 / 整屏玩法都卸掉)
     || (/class="fx-story__radar-map"/.test(m) && /wx:if="\{\{!storyMap && !chapterGate\.show && !sessionToolsOpen && !previewEnding\.show && !themeBackpackOpen && !album\.show && !playKit\.show/.test(m)))
-  assert.equal(allowed.length, maps.length, '页面只允许完成页回放、罗盘大地图与左上角雷达三张地图:' + maps.join(' | '))
+  assert.equal(allowed.length, maps.length, '页面只允许完成页回放与路线卡、罗盘大地图与左上角雷达四张地图:' + maps.join(' | '))
   assert.ok(maps.some((m) => /class="finsheet__map-native"/.test(m)), '完成页路径回放那张不能丢')
 }
 

@@ -13,8 +13,9 @@ test('开局 300m 定位闸与首站是否用高级玩法无关', () => {
   const tap = play.slice(play.indexOf('  onArriveTap() {'), play.indexOf('  onScanArrive() {'))
   assert.match(tap, /const needsLocation = this\._startLocationNeeded\(\);/)
   assert.doesNotMatch(tap, /_advancedReadyNodeId/, '解开玩法不能替代开局定位')
-  // 没定位且需要开局定位:先申请(问过则提示已拒),不发 arrive
-  assert.match(tap, /!this\.data\.gpsOk && !this\._isStoryGame\(node\) && needsLocation\) \{ if \(this\._locAsked\) this\._locationDeclinedToast\(\); else this\.requestPlayLocation\(\); return; \}/)
+  // 没定位且需要开局定位:先申请(_locateThen:没问过就问,问过则复查系统设置),不发 arrive;授权后接着到达
+  assert.match(tap, /!this\.data\.gpsOk && !this\._isStoryGame\(node\) && needsLocation\) \{ this\._locateThen\(\(\) => this\.onArriveTap\(\)\); return; \}/)
+  assert.match(read('pages/play/utils/play-location-once.js'), /_locateThen\(resume\) \{\s*this\._setPendingStart\(resume\);\s*if \(!this\._locAsked\) \{ this\.requestPlayLocation\(\); return; \}/)
 })
 
 test('逐字猜词解开后在故事流里也有「继续」,并回到页面收尾本站', () => {

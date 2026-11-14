@@ -13,7 +13,7 @@ function load(file) {
   const navs = []
   const base = { navigateTo: (o) => navs.push(o), getStorageSync: () => '', getSystemInfoSync: () => ({ statusBarHeight: 20, windowWidth: 375 }) }
   const wx = new Proxy(base, { get(t, k) { return k in t ? t[k] : () => {} } })
-  const app = new Proxy({ globalData: {}, sendRequest() { return { abort() {} } } }, {
+  const app = new Proxy({ globalData: {}, ensureLoginFor: () => true, sendRequest() { return { abort() {} } } }, {
     get(t, k) { return k in t ? t[k] : () => '' },
   })
   global.getApp = () => app

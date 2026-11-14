@@ -364,8 +364,35 @@ public class FreeExploreBundleServiceImpl implements IFreeExploreBundleService {
         bundle.put("reservations", bundleMapper.selectReservationsByRegistration(registration.getId()));
         bundle.put("exitCases", bundleMapper.selectExitCasesByRegistration(registration.getId()));
         bundle.put("policy", policyView());
+        bundle.put("chapters", chapterLabels(order.getTopicId()));
         view.put("bundle", bundle);
         return view;
+    }
+
+    /** D-28:权益页展示用——每章名称、内容摘要与可选店铺(只读、加字段不改既有结构)。 */
+    private List<Map<String, Object>> chapterLabels(Long topicId) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (topicId == null) return out;
+        List<CmsTopicChapter> chapters = chapterMapper.selectRequiredByTopic(topicId);
+        List<MerchantChapterOffer> offers = offerMapper.selectByTopic(topicId);
+        for (CmsTopicChapter chapter : chapters == null ? Collections.<CmsTopicChapter>emptyList() : chapters) {
+            List<Map<String, Object>> stores = new ArrayList<>();
+            for (MerchantChapterOffer offer : offers == null ? Collections.<MerchantChapterOffer>emptyList() : offers) {
+                if (!chapter.getId().equals(offer.getChapterId())) continue;
+                Map<String, Object> store = new LinkedHashMap<>();
+                store.put("offerId", offer.getId());
+                store.put("merchantName", offer.getMerchantName());
+                store.put("perkName", offer.getPerkName());
+                stores.add(store);
+            }
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("chapterId", chapter.getId());
+            item.put("name", chapter.getName());
+            item.put("content", chapter.getDescription());
+            item.put("stores", stores);
+            out.add(item);
+        }
+        return out;
     }
 
     @Override

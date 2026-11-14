@@ -1,4 +1,4 @@
-<view wx:if="{{show}}" class="pr {{phase}} {{reducedMotion ? 'pr--reduced' : ''}}" style="--pr-tier: {{tierColor}};" catchtouchmove="noop" aria-role="dialog" aria-label="通行证已到账">
+<view wx:if="{{show}}" class="pr {{phase}} {{reducedMotion ? 'pr--reduced' : ''}}" style="--pr-tier: {{tierColor}};" catchtouchmove="noop" bindtap="onSkip" hover-class="{{btns || fly || reducedMotion ? 'none' : 'pr-tap'}}" hover-stay-time="80" aria-role="dialog" aria-label="通行证已到账">
   <view class="pr__blur"></view>
   <view class="pr__black"></view>
   <view class="pr__edge">

@@ -8,6 +8,9 @@
  * 纯函数,便于单测。 */
 
 const { isMapItem } = require('../../utils/roam-hangout.js');
+const PM = require('../../utils/roam-place-map.js');
+const { presentationForPoi } = require('../../utils/roam-poi-presentation.js');
+const { placeNoteForTags } = require('./roam-city-catalog.js');
 const POI_TAG = { 1: 6, 2: 7 };          // marker id = poiId*10+6(地标)/ +7(商家);1/2/3 主题活动、4 队伍、9 我
 const SELF_MARKER_ID = 9;
 
@@ -23,8 +26,9 @@ function text(v) {
   return s === 'null' ? '' : s;
 }
 
+// A4.1:tags 可能是 JSON 数组串(目录导入写的)或老的逗号分隔串;roam:* 保留标签不给玩家看
 function splitTags(v) {
-  return text(v).split(/[,，、;；|\s]+/).map((s) => s.trim()).filter(Boolean);
+  return PM.visibleTags(v);
 }
 
 function poiKind(p) { return Number(p && p.type) === 2 ? 'shop' : 'place'; }
@@ -111,16 +115,20 @@ function edgeLod(markers, center, radiusM) {
   return out;
 }
 
-/** 点位卡内容:地标 / 商家。只放后端给的字段。 */
+/** 点位卡内容:地标 / 商家。只放后端给的字段。
+ *  A4.2:推荐理由只有一个受控字段(服务端 quotes 优先,其次目录 note);非商家的 description 绝不直出。 */
 function poiCard(p) {
   const kind = poiKind(p);
+  const note = kind === 'shop' ? null : placeNoteForTags(p.tags);
+  const reason = kind === 'shop' ? '' : PM.reasonFor(p, note);
   return {
     kind,
     id: num(p.id),
-    tag: kind === 'shop' ? '商家' : '地点',
+    tag: kind === 'shop' ? '商家' : presentationForPoi(p).catLabel,
     title: text(p.name) || (kind === 'shop' ? text(p.merchantName) : '') || '未命名地点',
-    img: text(p.coverImg),
-    desc: text(p.description),
+    img: PM.coverKey(p),
+    desc: kind === 'shop' ? text(p.description) : reason,
+    sourceList: note ? note.sources : [],
     address: text(p.address),
     tags: splitTags(p.tags).slice(0, 4),
     found: p.found === true,
