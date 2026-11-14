@@ -23,7 +23,7 @@ for (const [method, url, fallback, payload, expected] of [
     { pendingRows: [{ key: '9', name: '场次', state: '结算待处理', reason: '', money: '¥12.00' }] }],
 ]) {
   test(method + ': 业务/网络失败可见、成功只读、卸载后不提示', () => {
-    const page = Object.assign({}, config, { data: { topicId: 7, scope: 'MERCHANT' } });
+    const page = Object.assign({}, config, { _scope: 'MERCHANT', data: { topicId: 7 } });
     const patches = [];
     page.setData = (patch) => patches.push(patch);
     messages = [];
@@ -45,3 +45,28 @@ for (const [method, url, fallback, payload, expected] of [
     assert.deepEqual(patches, [expected]);
   });
 }
+
+
+test('定价内部状态不传视图，成本变化仍禁止旧地板提交且保留商家 scope', () => {
+  const page = Object.assign({}, config, { data: JSON.parse(JSON.stringify(config.data)) });
+  page.setData = (patch) => Object.assign(page.data, patch);
+  page.loadLineupNames = () => {};
+  page.loadPendingSettlements = () => {};
+  page.onLoad({ topicId: '7', scope: 'MERCHANT' });
+  assert.equal(JSON.parse(request.data).scope, 'MERCHANT');
+  request.success({ code: 200, data: { priceMin: 9.5, canConfirm: true, productType: 2, platformRate: 0.03 } });
+  assert.equal(page.data.sliderMin, 10);
+  assert.equal(page.data.feeText, '¥0.30（3%）');
+  assert.equal(page.data.canConfirmPrice, true);
+  for (const key of ['scope', 'floor', 'floorStale', 'platformRate']) assert.equal(Object.hasOwn(page.data, key), false);
+  page.onCostInput({ detail: { value: '120' } });
+  assert.equal(page.data.canConfirmPrice, false);
+  assert.equal(page._canConfirmPrice(), false);
+  page.recalculate();
+  assert.equal(Object.hasOwn(JSON.parse(request.data), 'leadCost'), false);
+  request.success({ code: 200, data: { priceMin: 12, canConfirm: true, productType: 2, platformRate: 0.03 } });
+  assert.equal(page.data.canConfirmPrice, true);
+  page.confirmPrice();
+  assert.deepEqual(JSON.parse(request.data), { topicId: 7, scope: 'MERCHANT', guidedPrice: 12 });
+  page.onUnload();
+});
