@@ -1,0 +1,64 @@
+login 13900000002                                          HTTP 200 code=200  role=merchant
+login 13900000004                                          HTTP 200 code=200  role=player
+login 13900000003                                          HTTP 200 code=200  role=club
+== authoring (W05) ==
+GET drafts (merchant)                                      HTTP 200 code=200  n=2
+GET drafts (player)                                        HTTP 403 code=403 商家身份无效或权限不足 
+POST drafts (create)                                       HTTP 200 code=200  draftId=q18483805926c81d6a5ee21078d6be921 v=0
+POST drafts (same requestId replay)                        HTTP 200 code=200  same=True
+POST drafts/{id} save v0->1                                HTTP 200 code=200  v=1 bodyHash=9aa0720455da
+POST drafts/{id} stale expectedVersion                     HTTP 409 code=409 CONFLICT 
+GET drafts/{id}                                            HTTP 200 code=200  v=1 outcome=NONE
+POST drafts/{id}/facts (store confirms facts)              HTTP 200 code=200  APPROVED
+GET drafts/{id}/review                                     HTTP 200 code=200  merchantFact=APPROVED
+POST releases (publish)                                    HTTP 200 code=200  outcome=PUBLISHED releaseId=2 facts=['accessibility_alternative', 'business_segment', 'duration_minutes', 'headcount', 'noise_limit', 'photo_limit']
+GET releases?requestId                                     HTTP 200 code=200  PUBLISHED
+GET public (player)                                        HTTP 200 code=200  outcome=PUBLISHED
+GET main-line (no THEME release)                           HTTP 200 code=200  outcome=NONE
+GET environment                                            HTTP 200 code=200  branch=UNAVAILABLE action=EXIT
+GET player/{merchantId}/game                               HTTP 200 code=200  outcome=PUBLISHED facts=['accessibility_alternative', 'business_segment', 'duration_minutes', 'headcount', 'noise_limit', 'photo_limit']
+GET player/{merchantId}/requests/{unknown}                 HTTP 404 code=404 REQUEST_NOT_FOUND 
+POST jobs (generate; no model on TEST)                     HTTP 400 code=400 UPSTREAM_UNAVAILABLE outcome=FAILED err=UPSTREAM_UNAVAILABLE
+GET jobs?requestId                                         HTTP 400 code=400 UPSTREAM_UNAVAILABLE outcome=FAILED
+POST jobs/cancel                                           HTTP 400 code=400 UPSTREAM_UNAVAILABLE outcome=FAILED publish=NONE
+POST releases/{id}/withdraw                                HTTP 200 code=200  WITHDRAWN
+GET player/{merchantId}/game after withdraw                HTTP 200 code=200  outcome=WITHDRAWN
+== draft selection ==
+POST draft-selection/list (owner)                          HTTP 200 code=200  rows=[(2, 'READY')] next=None
+POST draft-selection/list (player)                         HTTP 403 code=403 MERCHANT_FORBIDDEN 
+POST draft-selection/resolve (current)                     HTTP 200 code=200  title=到店打卡·拍一张你的咖啡
+POST draft-selection/resolve (changed hash)                HTTP 409 code=409 SOURCE_CHANGED 
+== city value ==
+GET city-value/report                                      HTTP 200 code=200  status=REPORTED entry={'status': 'MEASURED', 'visitCount': 3} success={'status': 'MEASURED', 'visitCount': 1, 'rate': '1/3'} mean=90/1
+GET city-value/report (requestId reused)                   HTTP 409 code=409 DUPLICATE_REQUEST 
+GET city-value/result/{id}                                 HTTP 200 code=200  same=True
+GET city-value/events                                      HTTP 200 code=200  snapshot=3 kinds=['ENTRY', 'MEANINGFUL_ACTION', 'SERVICE_SUCCESS', 'SERVICE_RATING', 'ENTRY', 'MEANINGFUL_ACTION', 'SKIP', 'ENTRY'] next=None
+GET city-value/event/{id}/benefit                          HTTP 200 code=200  evidence=SOURCE_UNAVAILABLE
+GET city-value/report (player)                             HTTP 403 code=403 MERCHANT_FORBIDDEN 
+== marketing consent result ==
+GET crm/marketing-consents (player)                        HTTP 200 code=200  rows=1
+POST crm/marketing-consents (opt in)                       HTTP 200 code=200  
+GET crm/marketing-consents/result                          HTTP 200 code=200  outcome=RECORDED event=OPT_IN
+GET crm/marketing-consents/result (unseen)                 HTTP 200 code=200  outcome=NOT_OBSERVED
+== store NPC ==
+POST npc/voice/script                                      HTTP 200 code=200  lines=5 consentIndex=0
+POST npc/voice/script (player)                             HTTP 403 code=403 MERCHANT_FORBIDDEN 
+POST npc/voice/revoke                                      HTTP 200 code=200  changed=False
+POST npc/avatar/status                                     HTTP 200 code=200  available=True styles=['CARTOON', 'REALISTIC']
+POST npc/save (existing; store NPC for the avatar)         HTTP 200 code=200  已保存
+POST npc/avatar/generate                                   HTTP 200 code=200  status=SUCCEEDED
+POST npc/knowledge-review                                  HTTP 200 code=200  status=PENDING_REVIEW memberId=9002 audit=6
+POST npc/knowledge-review (same id, other body)            HTTP 409 code=409 REQUEST_ID_CONFLICT 
+GET npc/knowledge-review/request                           HTTP 200 code=200  same4=True
+== offer withdrawal ==
+GET offer-withdrawal/request/current (CITY offer)          HTTP 200 code=200  canWithdraw=False isOrdinary=False
+GET offer-withdrawal/request/current (ordinary)            HTTP 200 code=200  canWithdraw=True
+POST offer-withdrawal/request/withdraw                     HTTP 200 code=200  outcome=WITHDRAWN statusAtWrite=0
+GET offer-withdrawal/request/result                        HTTP 200 code=200  outcome=WITHDRAWN
+GET offer-withdrawal/request/current (after)               HTTP 200 code=200  status=0 canWithdraw=False
+GET offer-withdrawal/request/current (club user)           HTTP 403 code=403 MERCHANT_FORBIDDEN 
+== legacy aliases ==
+POST merchant/insight -> ai/merchant/insight               HTTP 200 code=200  keys=['ai', 'aiError', 'facts', 'generatedAt', 'profile', 'recentVisitors']
+POST merchant/poi/detail -> public-detail (anon)           HTTP 200 code=200  id=8001
+POST merchant/shop/apply -> merchant_registration          HTTP 200 code=500  msg=请先登记实名信息(姓名与身份证号),再发布
+POST npc/voice/script (signed out)                         HTTP 401 code=401  
