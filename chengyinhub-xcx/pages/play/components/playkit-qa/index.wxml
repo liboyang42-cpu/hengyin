@@ -13,8 +13,8 @@
          先让人把题读完,再给他可以按的东西。同时出现的话,人只会扫按钮。 -->
     <view class="qa__body">
       <!-- 题干附件:商家没配就整块不出。没内容就不要显示提示语 -->
-      <view class="qa__media" wx:if="{{hasImage}}">
-        <image class="qa__img" src="{{imageUrl}}" mode="aspectFill" aria-role="img" aria-label="题目配图" />
+      <view class="qa__media" wx:if="{{imageUrl}}">
+        <image class="qa__img" src="{{imageUrl}}" mode="widthFix" aria-role="img" aria-label="题目配图" />
       </view>
       <view class="qa__audio" wx:if="{{audioUrl}}" bindtap="onToggleAudio"
             aria-role="button" aria-label="{{playing ? '暂停题目音频' : '播放题目音频'}}"

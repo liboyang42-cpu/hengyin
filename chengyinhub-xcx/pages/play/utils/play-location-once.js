@@ -1,6 +1,6 @@
 // a1-v3-21(2026-11-10 业主「开启定位最好进入游戏就提示 后面就不需要提示了 而且最好有提示怎么打开」):
 //   · 定位说明只在进入这一局时弹一次(index.js 进页那一处 requestPlayLocation);之后任何入口再调都不再弹,
-//     只在系统里已经授权时静默取一次位置(例如玩家去设置里打开后回来)。
+//     拒绝后只走扫码，点「开启定位」后才可恢复读取。
 //   · 系统拒绝(微信不会再弹授权框)时给一张「怎么打开」:去设置 → 位置信息;打开后回来静默开始定位。
 //   · 问过且没开定位时,站点卡的主按钮是「扫码到达」(直接绑原有 onScanArrive);别的入口点到达只给一句轻提示,不再回到定位说明。
 // index.js 的 UI 门禁基线按行号登记,这里放方法,index.js 只在原行上挂钩(不增删行)。
@@ -57,6 +57,8 @@ function methods() {
     },
     /** 系统里已经授权(例如玩家从「···→设置」回来)而本页还没定位:静默取一次;没授权就放掉等着的开局动作 */
     _recheckLocationSetting(toastIfOff) {
+      if (this._playLocationDeclined) { this._pendingStart = null; if (toastIfOff) this._locationDeclinedToast(); return; }
+      if (this._locationRequesting) return;
       if (typeof wx.getSetting !== 'function') { if (toastIfOff) this._locationDeclinedToast(); return; }
       wx.getSetting({
         success: (r) => {
@@ -79,6 +81,7 @@ function methods() {
     },
     /** 站点卡「开启定位」:系统已拒绝 → 去设置;从没问过系统 → 重新给一次用途说明 */
     onEnableLocation() {
+      this._playLocationDeclined = false;
       if (typeof wx.getSetting !== 'function') return;
       wx.getSetting({
         success: (r) => {
@@ -105,6 +108,7 @@ function methods() {
     },
     /** 开局读数过期就先重取一次再接着做;重取失败照旧用旧读数(服务端再判) */
     _freshStartFix(done) {
+      if (this._playLocationDeclined) { done(); return; }
       if (!isStaleFix(this._loc, Date.now(), this._staleFixFailedAt) || typeof wx.getLocation !== 'function') { done(); return; }
       const key = this._sessionKey();
       wx.getLocation({
@@ -132,6 +136,7 @@ function methods() {
     },
     /** 系统里已授权时静默取一次:requestPlayLocation 同步调 cyModal.show,这一次换成「已同意」直接往下走,调完立刻还原 */
     _relocateSilently() {
+      if (this._playLocationDeclined) return;
       const show = cyModal.show;
       this._locSilent = true;
       cyModal.show = confirmNow;

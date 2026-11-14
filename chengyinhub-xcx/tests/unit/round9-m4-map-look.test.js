@@ -66,7 +66,7 @@ test('play 四张地图都等 fmStyleReady 并带 tone;初值:没配 key 立即�
   // 2026-11-14 业主:雷达与普通地图跟主题外观；路线卡保留独立快照配色。
   [maps[0], maps[1], maps[3]].forEach((tag) => assert.match(tag, /subkey="\{\{fmSubkey\}\}" layer-style="\{\{fmLayerStyle\}\}" tone="\{\{fmTone\}\}"/));
   assert.doesNotMatch(wxml, /radarMap/);
-  assert.match(maps[2], /wx:if="\{\{routeMap\.points\.length\}\}"[\s\S]*subkey="\{\{routeMap\.subkey\}\}" layer-style="\{\{routeMap\.layerStyle\}\}" tone="\{\{routeMap\.tone\}\}"/);
+  assert.match(maps[2], /wx:if="\{\{routeMap\.points\.length && !routeCard\.error\}\}"[\s\S]*subkey="\{\{routeMap\.subkey\}\}" layer-style="\{\{routeMap\.layerStyle\}\}" tone="\{\{routeMap\.tone\}\}"/);
   assert.match(maps[0], /screen !== 'gamePlay' && fmStyleReady\}\}"/, '罗盘雷达等外观');
   assert.match(wxml, /<view class="story-map" wx:if="\{\{storyMap && fmStyleReady\}\}">/, '小地图整层等外观');
   assert.match(maps[3], /wx:if="\{\{fmStyleReady\}\}"/, '完成页回放等外观');

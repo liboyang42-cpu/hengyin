@@ -11,10 +11,10 @@ const quote = { payAmount: 39, pointsUsed: 0, memberDiscountYuan: 0, refundableN
 
 test('报价到达:价格取 payAmount,无减免不划线,积分/席位步进器不出现', () => {
   const v = checkoutView({ info, quote, quoteState: 'ready', win: { untilText: '1 月 9 日' } });
-  assert.equal(v.single.price, '¥39');
+  assert.equal(v.single.price, '¥39.00');
   assert.equal(v.single.strike, '');
-  assert.equal(v.totalText, '¥39');
-  assert.equal(v.payLabel, '支付 ¥39');
+  assert.equal(v.totalText, '¥39.00');
+  assert.equal(v.payLabel, '支付 ¥39.00');
   assert.deepEqual(v.bill.map((r) => r.k), ['自玩门票 × 1']);
   assert.equal(v.points, undefined);
   assert.equal(v.seats, undefined);
@@ -23,9 +23,9 @@ test('报价到达:价格取 payAmount,无减免不划线,积分/席位步进器
 
 test('俱乐部会员减免:划线原价 = 应付 + memberDiscountYuan,明细出减项', () => {
   const v = checkoutView({ info, quote: Object.assign({}, quote, { payAmount: 31.2, memberDiscountYuan: 7.8 }), quoteState: 'ready' });
-  assert.equal(v.single.strike, '¥39');
+  assert.equal(v.single.strike, '¥39.00');
   assert.equal(v.single.price, '¥31.20');
-  assert.deepEqual(v.bill.map((r) => r.v), ['¥39', '-¥7.80']);
+  assert.deepEqual(v.bill.map((r) => r.v), ['¥39.00', '-¥7.80']);
 });
 
 test('可退时只按服务端百分比写', () => {
@@ -38,7 +38,7 @@ test('可退时只按服务端百分比写', () => {
 test('报价加载中:用主题详情价,不写退款行', () => {
   const v = checkoutView({ info, quoteState: 'loading' });
   assert.equal(v.loading, true);
-  assert.equal(v.totalText, '¥39');
+  assert.equal(v.totalText, '¥39.00');
   assert.ok(!v.trust.some((t) => t.key === 'refund'));
 });
 
@@ -66,7 +66,7 @@ test('通票:只列 items 覆盖本主题的商品,排除礼品与加座', () =>
     { productId: 4, productName: '加座', productKind: 8, cashPrice: 10, items: [{ topicId: 990014 }] }
   ];
   const rows = coveringPasses(products, 990014);
-  assert.deepEqual(rows, [{ id: '1', name: '上海城市包', meta: '上海 · 2 个主题 · 30 天有效', price: '¥88' }]);
+  assert.deepEqual(rows, [{ id: '1', name: '上海城市包', meta: '上海 · 2 个主题 · 30 天有效', price: '¥88.00' }]);
   assert.deepEqual(coveringPasses(null, 990014), []);
 });
 
@@ -87,6 +87,6 @@ test('E-B9 报价失败:不退回标价,支付置灰,按钮改「重新获取价
   assert.equal(v.single.price, '—');
   assert.equal(v.bill.length, 0);
   assert.equal(v.payLabel, '重新获取价格');
-  assert.notEqual(v.totalText, '¥39');
+  assert.notEqual(v.totalText, '¥39.00');
   assert.equal(checkoutView({ info, quote, quoteState: 'ready' }).failed, false);
 });

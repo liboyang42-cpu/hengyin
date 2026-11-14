@@ -28,7 +28,8 @@ test('b3 逐字猜词:题面取本站题干(缺时站名),解开后接本站文�
   const { hangmanStationText } = req('pages/play/utils/playkit-questo.js')
   assert.deepEqual(hangmanStationText({ title: '', solved: false }, { question: ' 她是谁? ', passText: '答对了' }, '站名'), { title: '她是谁?', feedback: '' })
   assert.deepEqual(hangmanStationText({ title: '', solved: true }, { question: '', passText: '恭喜' }, '站名'), { title: '站名', feedback: '恭喜' })
-  assert.equal(hangmanStationText({ title: '服务端题面', solved: true }, { question: 'x' }, '站名').title, '服务端题面')
+  assert.equal(hangmanStationText({ title: '站点名', solved: true }, { question: ' 请读题卡上的记号。 ' }, '站名').title, '请读题卡上的记号。')
+  assert.equal(hangmanStationText({ title: '服务端题面', solved: true }, { question: '' }, '站名').title, '服务端题面')
 })
 
 test('c1 选项文案自带字母时去重,只去与本行字母相同的前缀', () => {
@@ -80,8 +81,11 @@ test('E-C2 续玩状态盖局号:换了新一局读不到上一局的开场 / �
   resume.patch(run2, { intro: true })
   assert.equal(resume.read(run2).finished, undefined)
   assert.notEqual(resume.draftKey(run1, 3), resume.draftKey(run2, 3))
-  // 局号还没读到:与旧行为一致
-  assert.equal(resume.read({ memberId: 7, topicId: 9913101 }).intro, true)
+  // 2026-11-14 route-walk：局号未知时不借用旧主题快照。
+  assert.deepEqual(resume.read({ memberId: 7, topicId: 9913101 }), {})
+  resume.patch({ memberId: 7, topicId: 9913101 }, { intro: true })
+  assert.deepEqual(resume.read({ memberId: 7, topicId: 9913101 }), {})
+  assert.equal(resume.read(run1).intro, true, '其他局的记录不被新一局覆盖')
   resume.clear(run2)
   assert.deepEqual(resume.read(run2), {})
 })

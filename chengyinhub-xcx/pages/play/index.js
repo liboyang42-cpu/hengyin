@@ -4331,6 +4331,10 @@ Page({
   showChapterGate() {
     const chapter = this.data.chapter || {};
     if (!chapter.id || chapter.ending) return;   // 结局章不弹开场门:它不是路线的第 N 章
+    const gateScope = JSON.stringify(this._runSessionScope());
+    if (this._chapterGateScope !== gateScope) {
+      this._chapterGateScope = gateScope; this._seenChapterGates = new Set(); this._booted = false;
+    }
     const key = String(this.data.topicId) + ':' + String(chapter.id);
     if (this._seenChapterGates && this._seenChapterGates.has(key)) return;
     this._seenChapterGates = this._seenChapterGates || new Set();
@@ -5185,12 +5189,18 @@ Page({
     this.setData({ gpsHint: '正在请求定位…' });
     cyModal.show({
       title: '开启定位',
-      content: '开局时检查你是否在起点约 300 米内，之后用来点亮 50 米内的站点并画出你走过的路线。位置只在本游玩页前台使用，锁屏、切到后台、暂停、结束或离开后停止。',
+      content: '只在开局时检查你是否在第一站 300 米内，之后各站不再要求定位。开启后可记录走过的路线；选择先用扫码可扫码到达。位置只在本游玩页前台使用，锁屏、切到后台、暂停、结束或离开后停止。',
       confirmText: '开启定位',
       cancelText: '先用扫码',
       success(result) {
         if (!current()) return;
-        if (!result.confirm) { unavailable('定位未开启 · 可扫码完成到达'); return; }
+        if (!result.confirm) {
+          unavailable('定位未开启 · 可扫码完成到达');
+          that._playLocationDeclined = true; that._loc = null;
+          that._stopTracking();
+          return;
+        }
+        that._playLocationDeclined = false;
         wx.getLocation({
           type: 'gcj02', isHighAccuracy: true,
           success(loc) {
@@ -5322,7 +5332,7 @@ Page({
   },
   watchLocation() {
     const that = this;
-    if (!this._isPlayAccountCurrent() || this._themeHidden) { this._stopTracking(); return; }
+    if (!this._isPlayAccountCurrent() || this._themeHidden || this._playLocationDeclined) { this._stopTracking(); return; }
     if (this._watching) return; // 同一持有者不重复注册监听。
     this._watching = true;
     const epoch = this._playLocationEpoch || 0;
@@ -6398,6 +6408,7 @@ Page({
   },
   /** 已授权、本页有定位事件但服务端要新读数:强制重取一次再接着做 */
   _relocateForced(resume) {
+    if (this._playLocationDeclined) { this._locationDeclinedToast(); return; }
     this._pendingStart = null;
     const key = this._sessionKey();
     if (typeof wx.getLocation !== 'function') return;
@@ -7430,9 +7441,10 @@ Page({
   _startRefusal(message, retry) {
     const text = keepMeasure(message || ('离起点太远，请到起点 ' + ARRIVAL_START_RADIUS_TEXT + '内再开始'));
     const session = this._sessionKey();
-    cyModal.show({ title: '还没到起点', content: text, confirmText: '重新定位', cancelText: '知道了',
+    cyModal.show({ title: '还没到起点', content: text, confirmText: this._playLocationDeclined ? '开启定位' : '重新定位', cancelText: '知道了',
       success: (result) => {
         if (!result.confirm || !this._isPlayAccountCurrent() || session !== this._sessionKey()) return;
+        if (this._playLocationDeclined) { this._setPendingStart(retry); this.onEnableLocation(); return; }
         wx.getLocation({ type: 'gcj02', isHighAccuracy: true,
           success: (loc) => {
             if (!this._isPlayAccountCurrent() || session !== this._sessionKey()) return;
@@ -9228,7 +9240,7 @@ Page({
     }, () => { if (current()) this.setData({ finishSnapError: true }); });
   },
   retryRouteThumb() {
-    if ((this.data.routeCard || {}).on) { this._startRouteCard(); return; }
+    if ((this.data.routeCard || {}).on) { this.paintRouteThumb(); this._startRouteCard(); return; }
     this.setData({ finishSnapError: false }, () => this.paintRouteThumb());
   },
   /* 第九轮 m2 第 3 项:路线分享卡。真实走过的轨迹优先(首尾各剪 150 米),没有就用完成站的连线;
@@ -9269,8 +9281,8 @@ Page({
     const points = routeCardMap.includePoints(model.route);
     if (points.length < 2) { this.setData({ routeCard: { on: false, ready: false } }); return; }
     const st = routeCardMap.styleFor(this._look);
-    const fail = () => { if (current()) this.setData({ routeCard: { on: true, ready: false, error: true }, finishSnapError: true }); };
-    // 底图 = 终章同一个 free-map 的真实快照(include-points + polyline),样式随主题外观;失败只报错重试,不画替代底图
+    const fail = () => { if (current()) this.setData({ routeCard: { on: true, ready: false, error: true } }); };
+    // 真实底图优先；SDK 快照失败时由已有 finishSnap 连线图接住，不冒充地图快照成功。
     this._routeMapWait = null;
     this.setData({ routeCard: { on: true, ready: false }, finishSnapError: false,
       routeMap: { points, lines: routeCardMap.polyline(model.route), subkey: st.subkey, layerStyle: st.layerStyle, tone: st.tone } }, () => {
@@ -9280,7 +9292,8 @@ Page({
         const map = this.selectComponent('#routemap');
         return routeCardMap.takeSnapshot(map && map.getMapContext && map.getMapContext());
       }).then((snapPath) => {
-        if (!snapPath || !current()) return;
+        if (!current()) return;
+        if (!snapPath) { fail(); return; }
         wx.createSelectorQuery().select('#routecv').fields({ node: true }).exec((res) => {
           if (!current()) return;
           if (!res || !res[0] || !res[0].node) { fail(); return; }

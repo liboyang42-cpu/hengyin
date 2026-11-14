@@ -84,7 +84,7 @@ test('3 开局太远:数字单位不断行;定位已知且超 300 米时在出�
   assert.ok(/3⁠0⁠0⁠米/.test(keepMeasure('300 米')));
   const src = read('pages/play/index.js');
   assert.match(src, /_startRefusal\(message, retry\)/);
-  assert.match(src, /confirmText: '重新定位'/);
+  assert.match(src, /confirmText: this\._playLocationDeclined \? '开启定位' : '重新定位'/);
   assert.match(src, /const tooFar = this\._startTooFar\(node\);\n\s+if \(tooFar\) \{ this\._startRefusal\(tooFar, \(\) => this\.onArriveTap\(\)\); return; \}/);
   assert.match(src, /const tooFar = this\._startTooFar\(node\);\n\s+if \(tooFar\) \{ this\._startRefusal\(tooFar, \(\) => this\.startStoryGame\(e\)\); return; \}/);
   assert.match(src, /locOnce\.isStartRefusal\(r\)\) that\._startRefusal/);

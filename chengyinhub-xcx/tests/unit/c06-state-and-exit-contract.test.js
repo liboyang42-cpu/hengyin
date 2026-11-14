@@ -634,7 +634,7 @@ function assertNoMainMapLayer(wxml) {
   // 它是按需挂载的一层(wx:if="{{storyMap}}"),不是常驻舞台 —— 除它和完成页回放之外仍不许有地图。
   const allowed = maps.filter((m) => /class="finsheet__map-native"/.test(m)
     // 完成页路线卡:真地图快照(取代假网格),只在有路线点时挂在完成页里,不是游玩中的地图层
-    || (/class="finsheet__routemap"/.test(m) && /wx:if="\{\{routeMap\.points\.length\}\}"/.test(m))
+    || (/class="finsheet__routemap"/.test(m) && /wx:if="\{\{routeMap\.points\.length && !routeCard\.error\}\}"/.test(m))
     || (/class="story-map__map"/.test(m) && /wx:if="\{\{storyMap\}\}"/.test(m))
     // 2026-09-23 用户:左上角常驻雷达小地图 —— 只在上面没有任何遮盖层时挂载(大地图 / 章节门 / 菜单 / 结局 / 相册 / 整屏玩法都卸掉)
     || (/class="fx-story__radar-map"/.test(m) && /wx:if="\{\{!storyMap && !chapterGate\.show && !sessionToolsOpen && !previewEnding\.show && !themeBackpackOpen && !album\.show && !playKit\.show/.test(m)))

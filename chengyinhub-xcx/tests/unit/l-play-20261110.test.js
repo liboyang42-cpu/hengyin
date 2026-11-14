@@ -77,7 +77,7 @@ test('章节开场:星点锁成方块章节号 → 文字解码 → 「读下去
   assert.equal(opening.assembled, undefined, '序章没有方块数字')
 })
 
-test('章节完成:整屏(照片 + 方块号 + 三格数据从 0 滚上来 + 下一站);点下一站 → 吹散 → 下一章开场;减弱动态直接切、数据直接写', () => {
+test('章节完成:整屏(照片 + 方块号 + 三格真实数据 + 下一站);点下一站 → 吹散 → 下一章开场;减弱动态直接切、数据直接写', () => {
   const def = loadFlip()
   const endInfo = { number: '01', kicker: '第 1 章完成', title: '邮局旧址', cover: 'https://x/a.jpg', rows: [{ k: '用时', v: '12:30' }, { k: '本章得分', v: '80' }, { k: '坐标', v: '1/2' }], next: '老书店' }
   const realTimeout = global.setTimeout
@@ -88,7 +88,7 @@ test('章节完成:整屏(照片 + 方块号 + 三格数据从 0 滚上来 + 下
     c._gate()
     assert.equal(c.data.endCard.cover, 'https://x/a.jpg')
     assert.equal(c.data.endCard.next, '老书店')
-    assert.deepEqual(c.data.endStats.map((s) => s.shown), ['00:00', '0', '0/2'], '三格从 0 起滚,a/b 只滚 a')
+    assert.deepEqual(c.data.endStats.map((s) => s.shown), ['12:30', '80', '1/2'], '首帧就显示真实数据，不能伪报零值')
     assert.deepEqual(c.assembled, ['01'])
     assert.ok(!held.some((h) => h.ms === 5200), 'D-46:完成屏不再有 5.2 秒自动吹散')
     c.onTap()            // 点「下一站」:吹散

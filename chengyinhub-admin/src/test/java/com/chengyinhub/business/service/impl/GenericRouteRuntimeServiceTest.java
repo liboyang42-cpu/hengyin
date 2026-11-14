@@ -846,6 +846,28 @@ class GenericRouteRuntimeServiceTest {
         assertThrows(GameSessionException.class, ()->send("spend", "ITEM_USE", "food"));
         send("cancel", "QUEST_CANCEL", "q1"); assertFalse(stored().path("themeRuntime").path("gameplay").has("activeQuest"));
     }
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void trustedSensorSkipAdvancesSharedQuestWithoutCostsOrCorrectAnswerRewards(boolean cooperative) throws Exception {
+        if (cooperative) enableCooperativePuzzles(1);
+        send("sensor-start", "QUEST_START", "q1");
+        String original = instance(8, 11);
+        ObjectNode skip = json.createObjectNode().put("nodeId", 11).put("outcome", "SKIPPED");
+        assertThrows(GameSessionException.class, () -> service.recordSharedGameplayOutcome(
+                8L, 80L, 70L, 11L, original, "old-epoch", skip, Collections.emptyList(), 0));
+        service.recordSharedGameplayOutcome(8L, 80L, 70L, 11L, original, "sensor-skip", skip, Collections.emptyList(), 1);
+        JsonNode state = stored();
+        assertEquals("SKIPPED", state.path("themeRuntime").path("gameplay").path("slots").path("q1").path("completionMode").asText());
+        assertEquals(0, state.path("themeRuntime").path("gameplay").path("slots").path("q1").path("puzzleScore").asInt(-1));
+        assertEquals(0, state.path("variables").path("sys.passed.11").asInt(-1));
+        assertEquals(10, state.path("variables").path("sys.hp").asInt());
+        assertEquals(1, state.path("themeRuntime").path("inventory").path("food").asInt());
+        assertEquals(1, state.path("completedNodeIds").size());
+        if (cooperative) assertEquals(0, state.path("themeRuntime").path("cooperativePuzzles").path("questions").path(original).path("puzzleScore").asInt(-1));
+        send("next-station", "QUEST_START", "q2");
+        assertEquals("q2", stored().path("themeRuntime").path("gameplay").path("activeQuest").asText());
+    }
+
     @Test void onlyFullServerVerdictSettlesOneBusinessSlotAndPaysOnce() throws Exception {
         send("start", "QUEST_START", "q1"); assertThrows(GameSessionException.class, ()->send("unverified", "QUEST_RESOLVE", "q1"));
         service.recordSharedRouteResult(8L,80L,70L,11L,instance(8,11),"answer",true,Collections.emptyList());

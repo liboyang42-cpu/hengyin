@@ -46,13 +46,19 @@ public final class AnswerNormalizer {
     /** 归一后相等且非空。 */
     public static boolean equivalent(String a, String b) {
         String left = normalize(a);
-        return !left.isEmpty() && left.equals(normalize(b));
+        return !left.isEmpty() && acceptsSeparatedInput(left, normalize(b));
     }
 
-    /** 区分大小写的打字题:只做 NFKC + 去空白/格式字符,不去标点、不折叠大小写。 */
+    /** 区分大小写的打字题：NFKC、去空白/格式字符，额外接受玩家分隔写法，不折叠大小写。 */
     public static boolean equivalentKeepCase(String a, String b) {
         String left = fold(a);
-        return !left.isEmpty() && left.equals(fold(b));
+        return !left.isEmpty() && acceptsSeparatedInput(left, fold(b));
+    }
+
+    // 只放宽玩家分隔写法；作者串里的分隔符仍表示备选，不能把多个备选拼成一个答案。
+    private static boolean acceptsSeparatedInput(String authored, String submitted) {
+        return authored.equals(submitted) || (!SEPARATOR.matcher(authored).find()
+                && authored.equals(SEPARATOR.matcher(submitted).replaceAll("")));
     }
 
     private static String fold(String raw) {

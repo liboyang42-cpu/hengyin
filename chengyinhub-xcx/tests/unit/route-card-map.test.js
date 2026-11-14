@@ -56,15 +56,15 @@ test('卡片底图:没有街道格网,有快照才 drawImage 铺底', () => {
   assert.strictEqual(calls.find(([k]) => k === 'drawImage')[1][0], snap)
 })
 
-test('游玩页:快照失败走 finishSnapError 重试,重试重走路线卡,不回落到画布底图', () => {
+test('2026-11-14 route-walk：快照失败显示已有线稿，重试保留真实快照优先', () => {
   const js = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8')
   const body = js.slice(js.indexOf('  _startRouteCard() {'), js.indexOf('  _routeCardPath(cb) {'))
-  assert.match(body, /finishSnapError: true/)
+  assert.match(body, /routeCard: \{ on: true, ready: false, error: true \}/)
   assert.match(body, /\.catch\(fail\)/)
   assert.match(body, /routeCardMap\.takeSnapshot/)
   assert.doesNotMatch(body, /drawCard\(g, model, /)
-  assert.match(js, /retryRouteThumb\(\) \{\s*if \(\(this\.data\.routeCard \|\| \{\}\)\.on\) \{ this\._startRouteCard\(\); return; \}/)
+  assert.match(js, /retryRouteThumb\(\) \{\s*if \(\(this\.data\.routeCard \|\| \{\}\)\.on\) \{ this\.paintRouteThumb\(\); this\._startRouteCard\(\); return; \}/)
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8')
   assert.match(wxml, /id="routemap"[\s\S]*?fit-points="\{\{routeMap\.points\}\}"/)
-  assert.match(wxml, /routeCard\.error\}\}" bindtap="retryRouteThumb"/)
+  assert.match(wxml, /routeCard\.error && !finishSnap\}\}" bindtap="retryRouteThumb"/)
 })

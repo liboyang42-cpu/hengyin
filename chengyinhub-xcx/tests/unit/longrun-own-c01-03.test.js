@@ -26,7 +26,8 @@ for (const change of ['activity', 'epoch', 'unload']) test('restore read ignores
   assert.equal(h.page.restores || 0, 0);
 });
 test('story anchor callback cannot position a newer chapter', () => {
-  const h = load({ pos: { chapterId: '3', i: 1 } });
+  const h = load({ runId: '501', pos: { chapterId: '3', i: 1 } });
+  h.page._routeState = { sessionId: '501' };
   Object.assign(h.page.data, { chapter: { id: 3 }, chapterParas: [{ i: 1, kind: 'text' }], nodes: [] });
   let callback;
   const patches = [];

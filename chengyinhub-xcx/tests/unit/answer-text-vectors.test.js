@@ -56,3 +56,12 @@ test('作者预览判定:全角与分隔符按服务端口径', () => {
   assert.strictEqual(pv.judge(adv('3号线'), kit, 'submit', { mode: 'type', input: '３号线' }), 'win');
   assert.strictEqual(pv.judge(adv('3号线'), kit, 'submit', { mode: 'type', input: '4号线' }), 'fail');
 });
+
+test('有序多段答案接受玩家分隔写法，不拼接备选或交换顺序', () => {
+  for (const input of ['C02、B04', 'C02,B04', 'C02，B04', 'C02;B04', 'C02；B04', 'C02 B04', 'Ｃ０２，Ｂ０４']) {
+    assert.ok(at.matchesAnyOf('C02B04', input), input);
+    assert.strictEqual(require('../../pages/publish/temp/preview-verdict.js').judge({ qa: { answerText: 'C02B04' } }, { type: 'qa' }, 'submit', { mode: 'type', input }), 'win');
+  }
+  for (const input of ['B04、C02', 'C02', 'C02、B05']) assert.ok(!at.matchesAnyOf('C02B04', input));
+  assert.ok(!at.matchesAnyOf('苹果，梨', '苹果梨'));
+});

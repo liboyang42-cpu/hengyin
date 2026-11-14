@@ -104,7 +104,6 @@ Component({
     picGrid: false,
     typed: '',
     typeWrong: false,
-    hasImage: false,
     playing: false,
     feedback: '',
     shownFeedbackImages: [],
@@ -114,7 +113,7 @@ Component({
     burning: false,
     triesCap: 0,
     ctaLabel: '提交',
-    ctaDisabled: false,
+    ctaDisabled: true,
   },
   observers: {
     /* P-10:故事流里的打字题,页面不调 settle(),判过只回流 attempts / feedbackText。
@@ -125,7 +124,7 @@ Component({
       this._seenTypeAttempts = now;
       if (seen == null || now <= seen) return;
       if (this.data.mode !== 'type' || this.data.passed || this.data.finished) return;
-      this.setData({ typed: '', typeWrong: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
+      this.setData({ typed: '', typeWrong: true, ctaDisabled: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
     },
     /* P-10 第四轮 rig 实测:作者的结果反馈(authoredOutcome)可能比 attempts 晚一拍落到组件上 ——
        先到的 attempts 已写了兜底句,这里补清;判定屏摆作者的话,题屏只留描红。 */
@@ -167,7 +166,6 @@ Component({
         optionList: opts,
         /* r2 b2-ug-02:有选项配图时改成图卡网格(图在上、字在下),纯文字题仍是细线行 */
         picGrid: mode === 'pick' && opts.some(o => !!o.img),
-        hasImage: !!this.data.imageUrl,
         /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
            没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */
         typed: '', feedback: (passed || finished || this.data.attempts > 0)
@@ -181,7 +179,7 @@ Component({
         triesCap: this.data.judge === false || finished ? 0 : cappedTries(this.data.maxTries, opts.length),
         ctaLabel: passed ? '继续' : (confirmPick ? '确认选择' : (mode === 'shot' ? '拍一张' : '提交')),
         // 多选一进来一个都没勾,按钮就得是灰的 —— 亮着一颗按不动的按钮比灰着更糟
-        ctaDisabled: !passed && (finished || isMultiPick || confirmPick),
+        ctaDisabled: !passed && (finished || mode === 'type' || isMultiPick || confirmPick),
       });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) {
@@ -228,7 +226,11 @@ Component({
     _cappedTries: cappedTries,
 
     onRun() { this.triggerEvent('run'); },
-    onInput(e) { this.setData({ typed: e.detail.value, typeWrong: false }); },   // P-10:下一次输入即清掉描红
+    onInput(e) {
+      if (this.data.passed || this.data.finished || this.data.submitted) return;
+      const typed = String(e.detail.value || '');
+      this.setData({ typed, typeWrong: false, ctaDisabled: !typed.trim() });
+    },   // P-10:下一次输入即清掉描红
     onToggleAudio() {
       this.setData({ playing: !this.data.playing });
       this.triggerEvent('audio', { playing: this.data.playing });
@@ -311,6 +313,7 @@ Component({
         } else if (this.data.multi) this._submitPick();
         return;
       }
+      if (!String(this.data.typed || '').trim()) return;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       this.triggerEvent('submit', { mode: 'type', input: this.data.typed });
     },
@@ -371,7 +374,7 @@ Component({
           return o.state === 'is-dim' ? Object.assign({}, o, { state: '' }) : o;
         }) : this.data.optionList,
         ctaLabel: pick ? '知道了' : (exhausted ? this.data.ctaLabel : '再试一次'),
-        ctaDisabled: exhausted,
+        ctaDisabled: exhausted || this.data.mode === 'type',
       });
       if (exhausted && stage) stage.fail(false);
     },

@@ -18,7 +18,7 @@ function projection(currentNodeId, done = []) {
 async function enter(routeState, done = []) {
   const requests = [], writes = [], opened = [];
   // A bookmark in the appendix must not select the chapter of a fresh server run.
-  const bookmark = { intro: true, pos: { chapterId: '202', i: 1 }, openNodeId: '22' };
+  const bookmark = { runId: done.length ? routeState.sessionId : 'previous-run', intro: true, pos: { chapterId: '202', i: 1 }, openNodeId: '22' };
   const app = { getUserID: () => '7', sendRequest: request => requests.push(request) };
   let definition;
   global.getApp = () => app;

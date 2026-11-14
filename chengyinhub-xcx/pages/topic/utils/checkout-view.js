@@ -8,15 +8,10 @@
 //   有效期写在单次购买卡上,沿用 topic-motion.passWindow(与建单同口径),信任行不重复。
 
 const { chapterCountText } = require('../../../utils/chapter-count.js');
+const { yuan } = require('../../../utils/money-format.js');
 
 function isNum(v) {
   return v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
-}
-
-function yuan(v) {
-  if (!isNum(v)) return '';
-  const n = Math.round(Number(v) * 100) / 100;
-  return '¥' + (Number.isInteger(n) ? String(n) : n.toFixed(2));
 }
 
 function headPills(info) {

@@ -341,6 +341,8 @@ public final class AdvancedActionJudgement {
      * 宁可不扣血也不误扣、更不给非判定动作凭空记成败。
      */
     ObjectNode serverGameplayDecision(String action, JsonNode config, ObjectNode state) {
+        if ("SKIP_SENSOR_STATION".equals(action) && skippedSensorSection(state) != null)
+            return objectMapper.createObjectNode().put("outcome", "SKIPPED");
         Boolean passed = judgedOutcome(action, state);
         if (passed == null) passed = passedFact(action, state);
         String kit = null;

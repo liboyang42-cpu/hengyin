@@ -30,7 +30,9 @@ function normalize(raw) {
 
 function equivalent(a, b) {
   const left = normalize(a);
-  return !!left && left === normalize(b);
+  const right = normalize(b);
+  return !!left && (left === right || (!SEPARATOR.test(left)
+    && left === right.replace(new RegExp('[' + SEPARATOR_CHARS + ']', 'g'), '')));
 }
 
 /** 按共享分隔符拆成多个写法(去首尾空格、去空段)。 */

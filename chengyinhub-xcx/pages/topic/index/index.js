@@ -38,6 +38,7 @@ const reportSheet = require('../../../utils/community-report-sheet.js');
 const mediaPreview = require('../../../utils/media-preview.js');
 const motion = require('../utils/topic-motion.js');
 const { checkoutView } = require('../utils/checkout-view.js');
+const money = require('../../../utils/money-format.js');
 const KB_MS = 3600;          // 封面每张停留时长
 const DOCK_MS = 620;         // 价格/收藏停靠动画时长(慢-快-慢)
 
@@ -471,7 +472,7 @@ Page({
     const merchantCards = motion.buildMerchantCards(data.chaptersList);
     const sketchPoints = [].concat(...(data.chaptersList || []).map((c) => (c && c.nodes) || [])).map(routePoint).filter(Boolean).map((p) => ({ lat: p.latitude, lng: p.longitude }));
     const price = data.selfPlayPrice;
-    const priceText = (price === undefined || price === null || price === '') ? '' : '¥' + price;
+    const priceText = money.yuan(price) || '';
     this.setData({
       coverImages: motion.buildCoverImages(data), kbIdx: 0,
       publisher: motion.buildPublisher(data),
@@ -894,7 +895,7 @@ Page({
     this._revealTopicId = topicId;
     this._revealRegId = registrationId || 0;
     const price = info.selfPlayPrice;
-    const priceText = (price === undefined || price === null || price === '') ? '' : '¥' + price;
+    const priceText = money.yuan(price) || '';
     this.setData({
       is_join: 1,
       heroCta: motion.buildHeroCta(info, { isJoin: 1, merchantClosed: false, priceText }),

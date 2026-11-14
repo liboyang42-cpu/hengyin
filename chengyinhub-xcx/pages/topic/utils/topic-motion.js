@@ -2,6 +2,7 @@
    全部是纯函数:只读后端已下发的字段,缺字段就返回空,由 wxml 整块不出,不编造任何数据。 */
 
 const { toTimestamp, chinaDayStart, chinaDayEnd, chinaParts } = require('../../../utils/datetime.js');
+const money = require('../../../utils/money-format.js');
 
 function text(value) {
   if (value === null || value === undefined) return '';
@@ -258,7 +259,7 @@ function buyOptions(info) {
   }
   return out.map((o) => Object.assign(o, {
     icon: o.people >= 3 ? 'team' : o.people === 2 ? 'two' : 'one',
-    priceText: o.price === null ? '' : '¥' + o.price + (o.from ? ' 起' : ''),
+    priceText: o.price === null ? '' : money.yuan(o.price) + (o.from ? ' 起' : ''),
   }));
 }
 

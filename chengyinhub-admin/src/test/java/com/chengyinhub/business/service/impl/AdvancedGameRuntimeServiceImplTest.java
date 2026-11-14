@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
@@ -3355,7 +3356,7 @@ class AdvancedGameRuntimeServiceImplTest {
         Map<String, Object> cp = playKit(skipped, "compass");
         assertEquals(Boolean.TRUE, cp.get("done"));
         assertEquals(Boolean.TRUE, cp.get("skipped"));
-        assertNull(session.getScore(), "跳过不发这一段的 xp");
+        assertEquals(0, session.getScore(), "跳过不发这一段的 xp");
         assertTrue(session.getStateJson().contains("\"skipVia\":\"AUTHOR\""), session.getStateJson());
         assertTrue(session.getStateJson().contains("\"skippedBy\":" + MEMBER_ID), session.getStateJson());
 
@@ -3366,6 +3367,46 @@ class AdvancedGameRuntimeServiceImplTest {
                 (com.fasterxml.jackson.databind.node.ObjectNode) new com.fasterxml.jackson.databind.ObjectMapper().readTree(session.getStateJson())),
                 "跳过的一站算走完,能过完成闸");
         assertTrue(service.sensorStationSkipped(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void authoredCompassSkipSettlesGenericAttemptAsSkippedWithZeroScoreAndReplays(boolean outcomeRules) throws Exception {
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode config =
+                (com.fasterxml.jackson.databind.node.ObjectNode) json.readTree(compassConfigSkippable(true));
+        if (outcomeRules) {
+            config.putObject("outcomeRules").put("version", 1).putObject("pass");
+            config.with("outcomeRules").putObject("fail").put("hpCost", 3);
+        }
+        ITopicRouteRuntimeService route = mock(ITopicRouteRuntimeService.class);
+        ReflectionTestUtils.setField(service, "topicRouteRuntimeService", route);
+        when(route.genericPlayer(any(), any(), any())).thenReturn(true);
+        when(route.canPlay(any(), any(), any(), any())).thenReturn(true);
+        when(route.gameplayInstance(any(), any(), any(), any())).thenReturn("quest:compass");
+        when(route.nodeRuntimeConfig(any(), any(), any(), any())).thenReturn(config);
+        GameRuntimeSession session = runningSession(config.toString(),
+                "{\"attemptOrdinal\":1,\"compass\":{\"failedReads\":{\"" + MEMBER_ID + "\":2}}}");
+        session.setPlayInstanceId("quest:compass");
+        session.setScore(8);
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        AtomicReference<PlayAttemptLog> receipt = new AtomicReference<>();
+        when(attemptMapper.insertPlayAttemptLog(any())).thenAnswer(call -> { receipt.set(call.getArgument(0)); return 1; });
+
+        Map<String, Object> first = service.act(MEMBER_ID, 51L, 0, "compass-skip", "SKIP_SENSOR_STATION", compassGame());
+        assertEquals(GameRuntimeSession.STATUS_COMPLETED, session.getStatus());
+        assertEquals(0, session.getScore());
+        org.mockito.ArgumentCaptor<com.fasterxml.jackson.databind.JsonNode> decision =
+                org.mockito.ArgumentCaptor.forClass(com.fasterxml.jackson.databind.JsonNode.class);
+        verify(route).recordGameplayOutcome(eq(MEMBER_ID), any(), any(), eq(NODE_ID),
+                eq("quest:compass"), eq("advanced:51:1"), decision.capture(), any());
+        assertEquals("SKIPPED", decision.getValue().path("outcome").asText());
+        assertTrue(json.readTree(session.getStateJson()).path("compass").path("skipped").asBoolean());
+        when(attemptMapper.selectByIdempotencyKey(receipt.get().getIdempotencyKey())).thenReturn(receipt.get());
+        assertEquals(json.writeValueAsString(first), json.writeValueAsString(
+                service.act(MEMBER_ID, 51L, 0, "compass-skip", "SKIP_SENSOR_STATION", compassGame())));
+        verify(sessionMapper).updateStateCas(any());
     }
 
     @Test
