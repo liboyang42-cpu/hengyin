@@ -55,6 +55,7 @@
       <view class="ck__row ck__row--sum"><text class="ck__k ck__k--sum">合计</text><text class="ck__v ck__v--sum">{{view.totalText}}</text></view>
     </view>
     <view class="ck__refused" wx:if="{{view.refused}}" aria-role="alert">{{view.refusal}}</view>
+    <view class="ck__refused" wx:if="{{view.failed}}" aria-role="alert">价格没取到，请重试</view>
 
     <!-- 8 信任行:只放服务端/建单口径能保证的事实 -->
     <view class="ck__trust" wx:if="{{view.trust.length}}">

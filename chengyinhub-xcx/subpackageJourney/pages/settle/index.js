@@ -165,9 +165,11 @@ Page({
     const ownerId = report.activityId || report.topicId;
     if (!view.isId(ownerId)) { this.setData({ rateError: '这一局暂时不能评价' }); return; }
     this.setData({ rateBusy: true, rateError: '' });
-    api.rate(app, ownerType, ownerId, this.data.stars, text).then(res => {
+    // E-B13:同一次评价意图复用同一个 request_id,网络失败后重试服务端只落一条;成功后清掉,下一次是新意图。
+    if (!this._rateReqId) this._rateReqId = 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+    api.rate(app, ownerType, ownerId, this.data.stars, text, this._rateReqId).then(res => {
       if (this._gone) return;
-      if (api.ok(res)) { this.setData({ rateBusy: false, thanks: true }); motion.haptic({ type: 'medium' }); return; }
+      if (api.ok(res)) { this._rateReqId = ''; this.setData({ rateBusy: false, thanks: true }); motion.haptic({ type: 'medium' }); return; }
       // 服务端原文(内容安全、频控等)照原样显示在字段下面。
       this.setData({ rateBusy: false, rateError: (res && res.msg) || (res && res.netFail ? '网络异常，星级和文字已保留，请重试' : '评价暂时无法提交') });
     });

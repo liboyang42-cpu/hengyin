@@ -26,6 +26,7 @@ Component({
     onPay() {
       const v = this.data.view || {};
       if (this.data.loading || v.loading || v.refused) return;
+      if (v.failed) { this.triggerEvent('requote'); return; }
       this.triggerEvent('pay');
     },
     noop() {},
