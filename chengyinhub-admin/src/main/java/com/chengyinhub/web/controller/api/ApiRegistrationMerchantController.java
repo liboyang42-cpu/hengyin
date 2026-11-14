@@ -110,7 +110,7 @@ public class ApiRegistrationMerchantController extends BaseController {
 
             return result ? AjaxResult.success("报名已取消") : AjaxResult.error("取消失败");
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -138,7 +138,7 @@ public class ApiRegistrationMerchantController extends BaseController {
             TableDataInfo data = getDataTable(list);
             return AjaxResult.success(data);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -171,7 +171,7 @@ public class ApiRegistrationMerchantController extends BaseController {
                     param, getAppUserName());
             return ok ? AjaxResult.success("已保存") : AjaxResult.error("保存失败");
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -199,7 +199,7 @@ public class ApiRegistrationMerchantController extends BaseController {
             return AjaxResult.success(merchantRegistrationDetailReadService
                     .getRegistrationDetail(access.getOwnerMemberId(), registrationId));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -235,7 +235,7 @@ public class ApiRegistrationMerchantController extends BaseController {
                 return AjaxResult.success("未报名");
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -398,7 +398,7 @@ public class ApiRegistrationMerchantController extends BaseController {
             return success(cmsRegistrationMerchant.getId());
 
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }

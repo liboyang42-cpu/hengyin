@@ -40,7 +40,7 @@ public class ApiContentLandingMetadataController extends BaseController {
         try {
             return success(landingService.readOwn(parseId(topic_id), currentMemberId()));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -50,7 +50,7 @@ public class ApiContentLandingMetadataController extends BaseController {
         try {
             return success(landingService.saveMetadata(request, currentMemberId()));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -60,7 +60,7 @@ public class ApiContentLandingMetadataController extends BaseController {
         try {
             return success(landingService.saveTranslation(request, currentMemberId()));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 

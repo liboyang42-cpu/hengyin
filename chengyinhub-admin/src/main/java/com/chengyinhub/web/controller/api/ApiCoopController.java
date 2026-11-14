@@ -315,7 +315,7 @@ public class ApiCoopController extends BaseController {
                             principalMemberId, MerchantPermission.COOP_MANAGE);
                     contractOwnerMemberId = access.getOwnerMemberId();
                 } catch (ServiceException e) {
-                    return new AjaxResult(e.getCode(), e.getMessage());
+                    return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
                 }
                 body.setFromType("merchant");
             }
@@ -325,7 +325,7 @@ public class ApiCoopController extends BaseController {
                         principalMemberId, MerchantPermission.PROJECT_MANAGE);
                 contractOwnerMemberId = access.getOwnerMemberId();
             } catch (ServiceException e) {
-                return new AjaxResult(e.getCode(), e.getMessage());
+                return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
             }
             body.setFromType("merchant");
         } else {
@@ -367,7 +367,7 @@ public class ApiCoopController extends BaseController {
                 if (!Boolean.TRUE.equals(result.getReplayed())) notifyNewInvite(body, toOwner, contractOwnerMemberId);
                 return AjaxResult.success("已发起", result);
             } catch (ServiceException e) {
-                return new AjaxResult(e.getCode(), e.getMessage());
+                return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
             } catch (IllegalStateException e) {
                 return error(e.getMessage());
             }
@@ -472,7 +472,7 @@ public class ApiCoopController extends BaseController {
         try { principal = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         try {
             return success(coopInviteService.findInviteRequest(principal, requestId));
-        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+        } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
     }
 
     /** Cursor scans receipt rows, including unavailable rows, so an unauthorized page still advances. */
@@ -483,7 +483,7 @@ public class ApiCoopController extends BaseController {
         try { principal = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         try {
             return success(coopInviteService.listInviteRequests(principal, before, limit));
-        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+        } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
     }
 
     @GetMapping("/supply-stations")
@@ -498,7 +498,7 @@ public class ApiCoopController extends BaseController {
         Long creator = principal;
         if (OwnershipUtils.notOwner(topic.getMemberId(), creator)) {
             try { creator = merchantAccessService.require(principal, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId(); }
-            catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+            catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
         }
         if (OwnershipUtils.notOwner(topic.getMemberId(), creator)) return error("只能为自己发布的主题选择合作据点");
         try {
@@ -543,7 +543,7 @@ public class ApiCoopController extends BaseController {
         try {
             contractMemberId = resolveActionContractMemberId(memberId, inv, null, toOwner, false, true);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (toOwner == null || !toOwner.equals(contractMemberId)) return error("仅受邀方可标记已读");
         coopInviteService.markRead(inv.getId());
@@ -580,7 +580,7 @@ public class ApiCoopController extends BaseController {
             contractMemberId = resolveActionContractMemberId(
                     memberId, inv, fromOwner, toOwner, allowFrom, allowTo);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         boolean isFrom = fromOwner != null && contractMemberId.equals(fromOwner);
         boolean isTo = toOwner != null && contractMemberId.equals(toOwner);
@@ -759,7 +759,7 @@ public class ApiCoopController extends BaseController {
             memberId = merchantAccessService.require(
                     principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         return AjaxResult.success(coopInviteService.listPerkTemplates(memberId));
     }
@@ -774,7 +774,7 @@ public class ApiCoopController extends BaseController {
             memberId = merchantAccessService.require(
                     principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (body == null || body.getName() == null || body.getName().trim().isEmpty()) return error("请填写权益名称");
         if (body.getPerkType() == null || body.getPerkType() < 0 || body.getPerkType() > 2) return error("权益类型不合法");
@@ -808,7 +808,7 @@ public class ApiCoopController extends BaseController {
             memberId = merchantAccessService.require(
                     principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         Long id = body == null ? null : toLong(body.get("id"));
         if (id == null) return error("缺少ID");
@@ -835,7 +835,7 @@ public class ApiCoopController extends BaseController {
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.COOP_MANAGE);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         Long memberId = access.getOwnerMemberId();
         if (body == null) return error("参数为空");
@@ -866,7 +866,7 @@ public class ApiCoopController extends BaseController {
             ownerMemberId = merchantAccessService.require(
                     principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (ownerMemberId == null || ownerMemberId <= 0) return error("请先登录");
         Long offerId = body == null ? null : toLong(body.get("offerId"));
@@ -895,7 +895,7 @@ public class ApiCoopController extends BaseController {
             memberId = merchantAccessService.require(
                     principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (body == null || body.getOfferId() == null) return error("缺少供给记录");
         Long offerId = body.getOfferId();
@@ -918,7 +918,7 @@ public class ApiCoopController extends BaseController {
             memberId = merchantAccessService.require(
                     principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (memberId == null || memberId <= 0) return error("请先登录");
         if (body == null || body.getOfferId() == null) return error("缺少供给记录");
@@ -940,7 +940,7 @@ public class ApiCoopController extends BaseController {
             memberId = merchantAccessService.require(
                     principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (memberId == null || memberId <= 0) return error("请先登录");
         if (body == null || body.getOfferId() == null) return error("缺少供给记录");
@@ -967,7 +967,7 @@ public class ApiCoopController extends BaseController {
                 memberId = merchantAccessService.require(
                         principalMemberId, MerchantPermission.COOP_MANAGE).getOwnerMemberId();
             } catch (ServiceException e) {
-                return new AjaxResult(e.getCode(), e.getMessage());
+                return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
             }
         }
         List<Long> templateIds = new ArrayList<>();
@@ -1051,7 +1051,7 @@ public class ApiCoopController extends BaseController {
             memberId = merchantAccessService.require(
                     principalMemberId, MerchantPermission.FINANCE_READ).getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         Map<String, Object> d = new HashMap<>();
         d.put("credit", coopInviteService.creditSummary(memberId));
@@ -1255,7 +1255,7 @@ public class ApiCoopController extends BaseController {
         try {
             memberId = projectOwnerMemberId(principalMemberId, query.getScope());
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(query.getTopicId());
         if (topic == null) return error("主题不存在");
@@ -1326,7 +1326,7 @@ public class ApiCoopController extends BaseController {
                     body == null || body.get("scope") == null
                             ? null : String.valueOf(body.get("scope")));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsRegistrationMerchant reg = cmsRegistrationMerchantService.selectCmsRegistrationMerchantById(regId);
         if (reg == null) return error("报名不存在");
@@ -1376,7 +1376,7 @@ public class ApiCoopController extends BaseController {
             memberId = projectOwnerMemberId(principalMemberId,
                     body == null || body.get("scope") == null ? null : String.valueOf(body.get("scope")));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic probe = new CmsTopic();
         probe.setMemberId(memberId);
@@ -1587,7 +1587,7 @@ public class ApiCoopController extends BaseController {
             // 普通发布者/俱乐部主理人仍可使用个人或俱乐部合作路径；但只要存在商家行，
             // 旧 JWT 就不能把“商家已停用”降级成普通用户后继续读取结算与合作方电话。
             MmsMerchant merchant = mmsMerchantService.selectMmsMerchantByMemberId(principalMemberId);
-            if (merchant != null) return new AjaxResult(e.getCode(), e.getMessage());
+            if (merchant != null) return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         Long memberId = merchantAccess == null
                 ? principalMemberId : merchantAccess.getOwnerMemberId();

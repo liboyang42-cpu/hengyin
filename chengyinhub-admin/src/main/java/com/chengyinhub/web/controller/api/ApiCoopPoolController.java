@@ -249,7 +249,7 @@ public class ApiCoopPoolController extends BaseController {
                         principalMemberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CoopClubApply declined;
         try {
@@ -288,7 +288,7 @@ public class ApiCoopPoolController extends BaseController {
                     principalMemberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
         } catch (ServiceException e) {
             // 不是商家成员:只看本人发布的主题;但显式要商家视角时必须把拒绝透出去,不能静默降级成个人视角
-            if (MerchantOperationScope.isMerchant(scope)) return new AjaxResult(e.getCode(), e.getMessage());
+            if (MerchantOperationScope.isMerchant(scope)) return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         Map<Long, CmsTopic> topics = new HashMap<>();
         Map<Long, Club> clubs = new HashMap<>();

@@ -412,7 +412,7 @@ public class ApiClubController extends BaseController {
                     : clubService.onboardLeaderAndInsertClubWithinIdentityMutex(
                             memberId, onboardingProfile, club, MAX_CLUBS_PER_LEADER);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         // logo/封面/案例图异步内容安全送检,违规经回调自动清除(BIZ_TYPE_CLUB_PROFILE)
         try {
@@ -499,7 +499,7 @@ public class ApiClubController extends BaseController {
             ClubLeader stored = clubService.saveLeaderProfileWithinIdentityMutex(memberId, profile);
             return AjaxResult.success("已成为主理人", stored);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 

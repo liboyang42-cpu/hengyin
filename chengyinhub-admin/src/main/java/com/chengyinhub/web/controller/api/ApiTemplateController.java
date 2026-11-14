@@ -151,7 +151,7 @@ public class ApiTemplateController extends BaseController {
             }
 
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         } catch (Exception e) {
@@ -200,7 +200,7 @@ public class ApiTemplateController extends BaseController {
             Long id = templatePublishService.saveOrUpdateDraft(request, memberId, username);
             return success(authorTemplateId(id));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         } catch (Exception e) {
@@ -227,7 +227,7 @@ public class ApiTemplateController extends BaseController {
             if (actor == null || actor <= 0) return error("请先登录");
             Long owner = resolveTemplateOwner(actor, request.getScope());
             return success(templateAdoptionService.adopt(actor, owner, request, getAppUserName()));
-        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+        } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
     }
 
     @GetMapping("/adoption-source")
@@ -236,7 +236,7 @@ public class ApiTemplateController extends BaseController {
             Long actor = getAppUserId();
             if (actor == null || actor <= 0) return error("请先登录");
             return success(templateAdoptionService.source(actor, resolveTemplateOwner(actor, scope), originalTemplateId));
-        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+        } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
     }
 
     @GetMapping("/adoption-receipt")
@@ -245,7 +245,7 @@ public class ApiTemplateController extends BaseController {
             Long actor = getAppUserId();
             if (actor == null || actor <= 0) return error("请先登录");
             return success(templateAdoptionService.receipt(actor, resolveTemplateOwner(actor, scope), scope, requestId));
-        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+        } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
     }
 
     @GetMapping("/adoption-detail")
@@ -303,7 +303,7 @@ public class ApiTemplateController extends BaseController {
                     memberTemplateId, memberId, getAppUserName());
             return success(taskId);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalArgumentException | IllegalStateException e) {
             return error(e.getMessage());
         } catch (Exception e) {
@@ -338,7 +338,7 @@ public class ApiTemplateController extends BaseController {
             }
 
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             logger.error("删除模板失败：", e);
             return error("删除模板失败，请稍后重试");
@@ -388,7 +388,7 @@ public class ApiTemplateController extends BaseController {
             }
 
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             logger.error("更新模板库状态失败：", e);
             return error("更新模板库状态失败，请稍后重试");
@@ -420,7 +420,7 @@ public class ApiTemplateController extends BaseController {
         try {
             member_id = resolveTemplateOwner(member_id, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
 
         MemberTemplateVO memberTemplateVO = new MemberTemplateVO();
@@ -817,7 +817,7 @@ public class ApiTemplateController extends BaseController {
         try {
             ownerId = resolveTemplateOwner(viewerId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         cmsMemberTemplate = memberTemplateService.selectCmsMemberTemplateById(templateId);
         if (cmsMemberTemplate == null) {

@@ -62,7 +62,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
                     chapterId, ownerMemberId, message);
             return AjaxResult.success("已提交，等待主题发布者审核", application);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (MerchantChapterApplicationExistsException e) {
             AjaxResult result = error(e.getMessage());
             result.put("errorCode", e.getErrorCode());
@@ -84,7 +84,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
                     applicationId, merchantOwnerMemberId(memberId));
             return AjaxResult.success("已撤回，可重新申请", application);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (MerchantChapterApplicationWithdrawException e) {
             AjaxResult result = error(e.getMessage());
             result.put("errorCode", e.getErrorCode());
@@ -109,7 +109,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
             return AjaxResult.success(merchantChapterApplicationService.invitableMerchants(
                     topicId, publisherMemberId, lat, lng));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -132,7 +132,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
                             toText(body == null ? null : body.get("message")), replacementOfOfferId);
             return AjaxResult.success("邀请已发出，等待商家接受后占用名额", invited);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -149,7 +149,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
             Long owner = merchantOwnerMemberId(memberId);
             return success(merchantChapterApplicationService.respondInvite(applicationId, owner, accepted));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException | IllegalArgumentException e) {
             return error(e.getMessage());
         }
@@ -165,7 +165,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
             Long owner = publisherMemberId(memberId, body);
             return success(merchantChapterApplicationService.revokeInvite(applicationId, owner));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException | IllegalArgumentException e) {
             return error(e.getMessage());
         }
@@ -188,7 +188,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
                     applicationId, publisherMemberId(memberId, body), approved, auditRemark);
             return AjaxResult.success(approved ? "已通过申请" : "已拒绝申请", application);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -206,7 +206,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
                     topicId, publisherMemberId(memberId, body));
             return AjaxResult.success(rows);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -221,7 +221,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
             return AjaxResult.success(merchantChapterApplicationService.selectForPublisher(
                     publisherMemberId(memberId, body)));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -236,7 +236,7 @@ public class ApiMerchantChapterApplicationController extends BaseController {
             return AjaxResult.success(merchantChapterApplicationService.selectMine(
                     merchantOwnerMemberId(memberId)));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }

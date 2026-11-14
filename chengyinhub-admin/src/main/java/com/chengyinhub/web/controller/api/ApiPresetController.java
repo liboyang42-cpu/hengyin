@@ -141,7 +141,7 @@ public class ApiPresetController extends BaseController {
             return authorWriteReceipts.execute(actor, "TEMPLATE_PRESET_DRAFT", command.getRequestId(),
                     body, () -> createGameplayDraftOnce(body, actor));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (GameplayPresetDraftService.MissingFieldsException missing) {
             return missingFields(missing);
         } catch (IllegalArgumentException e) {

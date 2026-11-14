@@ -77,7 +77,7 @@ public class ApiPredictSettleController extends BaseController {
                     .require(principalMemberId, MerchantPermission.PROJECT_MANAGE)
                     .getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
 
         String denied = assertOwnsNode(node, ownerMemberId);
@@ -92,7 +92,7 @@ public class ApiPredictSettleController extends BaseController {
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             logger.error("竞猜结算失败 node={} day={}", node, day, e);
             return error("结算失败,请稍后重试");
@@ -117,7 +117,7 @@ public class ApiPredictSettleController extends BaseController {
                     .require(principalMemberId, MerchantPermission.PROJECT_MANAGE)
                     .getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
 
         String denied = assertOwnsNode(node, ownerMemberId);
@@ -152,7 +152,7 @@ public class ApiPredictSettleController extends BaseController {
                     .require(principalMemberId, MerchantPermission.PROJECT_MANAGE)
                     .getOwnerMemberId();
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         try {
             return success(playPredictService.pendingInbox(ownerMemberId, GRACE_HOURS));

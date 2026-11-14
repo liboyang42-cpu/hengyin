@@ -371,7 +371,7 @@ public class RegistrationQueryApplication {
             List<Map<String, Object>> data = registrationService.countByParticipateDate(ownerType, ownerId);
             return AjaxResult.success(data);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }

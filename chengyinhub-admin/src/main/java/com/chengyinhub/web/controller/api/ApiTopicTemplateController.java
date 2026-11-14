@@ -206,7 +206,7 @@ public class ApiTopicTemplateController extends BaseController {
                         principalMemberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (requestId == null || requestId.isBlank()) {
             return useTemplateForMember(tid, memberId, bindingIntent, targetCityCode, sourceContentRevisionId);
@@ -232,7 +232,7 @@ public class ApiTopicTemplateController extends BaseController {
                 return useTemplateForMember(tid, scopedMemberId, bindingIntent, targetCityCode, sourceContentRevisionId);
             });
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -307,7 +307,7 @@ public class ApiTopicTemplateController extends BaseController {
         try {
             ownerMemberId = resolveOwnerMemberId(principalMemberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         com.chengyinhub.business.domain.dto.TopicLocationBindingCommand command =
                 new com.chengyinhub.business.domain.dto.TopicLocationBindingCommand();
@@ -323,7 +323,7 @@ public class ApiTopicTemplateController extends BaseController {
         try {
             return AjaxResult.success(locationBindingService.bind(command, ownerMemberId, principalMemberId));
         } catch (ServiceException e) {
-            return e.getCode() == null ? error(e.getMessage()) : new AjaxResult(e.getCode(), e.getMessage());
+            return e.getCode() == null ? error(e.getMessage()) : new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         }
@@ -345,13 +345,13 @@ public class ApiTopicTemplateController extends BaseController {
         try {
             ownerMemberId = resolveOwnerMemberId(principalMemberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         try {
             return AjaxResult.success(locationBindingService.setPlaceCountry(Convert.toLong(topicId, 0L),
                     placeCountryCode, ownerMemberId, principalMemberId));
         } catch (ServiceException e) {
-            return e.getCode() == null ? error(e.getMessage()) : new AjaxResult(e.getCode(), e.getMessage());
+            return e.getCode() == null ? error(e.getMessage()) : new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         }
@@ -373,12 +373,12 @@ public class ApiTopicTemplateController extends BaseController {
         try {
             ownerMemberId = resolveOwnerMemberId(principalMemberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         try {
             return AjaxResult.success(locationBindingService.status(Convert.toLong(topicId, 0L), ownerMemberId));
         } catch (ServiceException e) {
-            return e.getCode() == null ? error(e.getMessage()) : new AjaxResult(e.getCode(), e.getMessage());
+            return e.getCode() == null ? error(e.getMessage()) : new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -432,7 +432,7 @@ public class ApiTopicTemplateController extends BaseController {
                         principalMemberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         Long tid = Convert.toLong(id, 0L);
         if (tid < 1) {

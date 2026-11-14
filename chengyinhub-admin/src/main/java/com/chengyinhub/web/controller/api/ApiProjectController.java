@@ -126,7 +126,7 @@ public class ApiProjectController extends BaseController {
             }
             return AjaxResult.success(projectHomeReadService.getProjectHome(scopedMemberId, topicId));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -191,7 +191,7 @@ public class ApiProjectController extends BaseController {
                     access.getOwnerMemberId(), topicId,
                     access.hasPermission(MerchantPermission.CRM_SENSITIVE_READ)));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         }
@@ -216,7 +216,7 @@ public class ApiProjectController extends BaseController {
                         memberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
 
         List<Map<String, Object>> all = new ArrayList<>();

@@ -40,7 +40,7 @@ public class ApiReferralLandingController extends BaseController {
         try {
             return success(landingService.describeReferral(request == null ? null : request.getToken()));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -51,7 +51,7 @@ public class ApiReferralLandingController extends BaseController {
         try {
             return success(landingService.describeGift(request == null ? null : request.getToken()));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 }

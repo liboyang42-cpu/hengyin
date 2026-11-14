@@ -62,7 +62,7 @@ public class ApiSpoilerController extends BaseController {
         } catch (NumberFormatException e) {
             return error("剧透保护目标无效");
         } catch (ServiceException e) {
-            AjaxResult error = new AjaxResult(e.getCode(), e.getMessage());
+            AjaxResult error = new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
             error.put("errorCode", e.getDetailMessage());
             return error;
         }

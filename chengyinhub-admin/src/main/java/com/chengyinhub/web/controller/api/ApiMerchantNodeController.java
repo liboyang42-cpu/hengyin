@@ -178,7 +178,7 @@ public class ApiMerchantNodeController extends BaseController {
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         String[] err = new String[1];
         MmsMerchant merchant = requireMerchantNodePerm(access, err);
@@ -244,7 +244,7 @@ public class ApiMerchantNodeController extends BaseController {
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         String[] err = new String[1];
         MmsMerchant merchant = requireMerchantNodePerm(access, err);
@@ -305,7 +305,7 @@ public class ApiMerchantNodeController extends BaseController {
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         List<CityNodeVO> nodes = roamMapper.selectMyNodes(access.getMerchantId());
         Map<String, Object> data = new LinkedHashMap<>();
@@ -324,7 +324,7 @@ public class ApiMerchantNodeController extends BaseController {
         try {
             merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         return success(roamPoiApplicationService.listClaimable(keyword));
     }
@@ -338,7 +338,7 @@ public class ApiMerchantNodeController extends BaseController {
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         String[] err = new String[1];
         if (requireMerchantNodePerm(access, err) == null) return error(err[0]);
@@ -359,7 +359,7 @@ public class ApiMerchantNodeController extends BaseController {
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         try {
             return roamPoiApplicationService.cancelClaim(access.getOwnerMemberId(), poiId)
@@ -393,7 +393,7 @@ public class ApiMerchantNodeController extends BaseController {
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.VERIFY);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         String[] err = new String[1];
         if (requireMerchantNodePerm(access, err) == null) return error(err[0]);
@@ -425,7 +425,7 @@ public class ApiMerchantNodeController extends BaseController {
         } catch (ServiceException e) {
             // #826 的应急下线合同：停用的 Owner 仍能把自己的据点下线；
             // 但重新上架必须通过当前 active 主体与 PROJECT_MANAGE 权限。
-            if (st == 1) return new AjaxResult(e.getCode(), e.getMessage());
+            if (st == 1) return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (st == 1) {
             String[] err = new String[1];

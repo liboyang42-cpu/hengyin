@@ -16,7 +16,7 @@ public class ApiDiscoveryFilterController extends BaseController {
         try {
             return success(DiscoveryFilterContract.schema(resource));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 }

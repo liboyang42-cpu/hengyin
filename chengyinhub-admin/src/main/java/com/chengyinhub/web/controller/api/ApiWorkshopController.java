@@ -106,7 +106,7 @@ public class ApiWorkshopController extends BaseController {
     public AjaxResult legacy() { actor(); return new AjaxResult(409,"WORKSHOP_CONTRACT_UPGRADE_REQUIRED"); }
 
     @ExceptionHandler(ServiceException.class)
-    public AjaxResult rejected(ServiceException error) { return new AjaxResult(error.getCode(),error.getMessage()); }
+    public AjaxResult rejected(ServiceException error) { return new AjaxResult(error.getCode() == null ? 500 : error.getCode(), error.getMessage()); }
 
     private long actor() {
         Long actor = getAppUserId(); if (actor==null || actor<=0) throw new ServiceException("LOGIN_REQUIRED",401); return actor;

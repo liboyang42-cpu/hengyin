@@ -438,7 +438,7 @@ public class ApiTopicController extends BaseController {
             try {
                 memberId = resolveProjectOwnerMemberId(principalMemberId, dto.getScope());
             } catch (ServiceException e) {
-                return new AjaxResult(e.getCode(), e.getMessage());
+                return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
             }
 
             // 经典定向发布门禁必须与服务层共用 productType 真源；仅旧版请求未传时才回退票 mode。
@@ -765,7 +765,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(principalMemberId, dto.getScope());
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         // UGC 内容安全:与 /create 同一道闸(先发后审,POST_REVIEW),改文案也要过检。
         // 2026-10-20 分级审核:只复检本次改动过的文本 —— 名称/副标题/简介任一变了才送主文本,
@@ -878,7 +878,7 @@ public class ApiTopicController extends BaseController {
         try {
             owner = resolveProjectOwnerMemberId(principal, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)
@@ -916,7 +916,7 @@ public class ApiTopicController extends BaseController {
         try {
             owner = resolveProjectOwnerMemberId(principal, body.get("scope") == null ? null : String.valueOf(body.get("scope")));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)) return error("主题不存在");
@@ -986,7 +986,7 @@ public class ApiTopicController extends BaseController {
         try {
             owner = resolveProjectOwnerMemberId(principal, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)
@@ -1078,7 +1078,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(principalMemberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() == 2)) {
@@ -1332,7 +1332,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
 
         try {
@@ -1471,7 +1471,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic cmsTopic = cmsTopicService.selectCmsTopicById(cid);
         if (cmsTopic == null) {
@@ -1581,7 +1581,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         Long tid = Convert.toLong(topicId, 0L);
         Long cid = Convert.toLong(clubId, 0L);
@@ -1695,7 +1695,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(cid);
         if (topic == null) {
@@ -1803,7 +1803,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(cid);
         if (topic == null) {
@@ -1878,7 +1878,7 @@ public class ApiTopicController extends BaseController {
                 merchant = mmsMerchantService.selectMmsMerchantByMemberId(principalMemberId);
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         if (merchant == null || merchant.getCategoryId() == null || merchant.getCategoryId() <= 0) {
             return error("请先选择行业类型"); // M-16:与入驻、门店信息同一个词
@@ -1956,7 +1956,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(principalMemberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopicChapter chapter = cmsTopicChapterService.selectCmsTopicChapterById(cid);
         if (chapter == null || chapter.getTopicId() == null) {
@@ -1986,7 +1986,7 @@ public class ApiTopicController extends BaseController {
                 return error("没有改动，可能主题归属已变或本章已结束");
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException | IllegalArgumentException e) {
             // 服务层的招商约束用的是 IllegalState/IllegalArgument,理由写得比「操作失败」有用得多,
             // 原样回给前端(例如「章节已有 N 条商家申请,不能关闭商家承接」)
@@ -2031,7 +2031,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(principalMemberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         com.chengyinhub.business.domain.dto.ChapterSupplyTermsDTO terms = new com.chengyinhub.business.domain.dto.ChapterSupplyTermsDTO();
         terms.setTermsMode(termsMode);
@@ -2041,7 +2041,7 @@ public class ApiTopicController extends BaseController {
         try {
             cmsTopicChapterService.configureSupplyTermsAsOwner(cid, memberId, terms);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -2086,7 +2086,7 @@ public class ApiTopicController extends BaseController {
         try {
             memberId = resolveProjectOwnerMemberId(principalMemberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopicChapter chapter = cmsTopicChapterService.selectCmsTopicChapterById(cid);
         if (chapter == null || chapter.getTopicId() == null) {
@@ -2114,7 +2114,7 @@ public class ApiTopicController extends BaseController {
                 return error("没有改动，可能已经结束过或主题归属已变");
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException | IllegalArgumentException e) {
             return error(e.getMessage());
         }
@@ -2552,7 +2552,7 @@ public class ApiTopicController extends BaseController {
             cmsTopic.setCityKeyword(com.chengyinhub.business.service.DiscoveryFilterContract.cityKeyword(city_keyword));
             cmsTopic.setProductType(com.chengyinhub.business.service.DiscoveryFilterContract.productType(product_type));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         try {
             cmsTopic.setIsRecommend(com.chengyinhub.business.service.DiscoveryFilterContract.only(
@@ -2560,7 +2560,7 @@ public class ApiTopicController extends BaseController {
             cmsTopic.setSelfPlay(com.chengyinhub.business.service.DiscoveryFilterContract.only(
                     "self_play", self_play));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         // M2 自玩路线列表:self_play=1 只返回开放自玩票的主题(首页'随时开走'入口/票夹)
         // self_play 已由冻结 query contract 统一解析；保留 1 的兼容输入。
@@ -2579,7 +2579,7 @@ public class ApiTopicController extends BaseController {
                         cmsTopic.setMemberId(resolveProjectOwnerMemberId(member_id, scope));
                     }
                 } catch (ServiceException e) {
-                    return new AjaxResult(e.getCode(), e.getMessage());
+                    return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
                 }
             } else {
                 // 第十二轮 k9(j6 N8):会话过期时答业务 401,小程序请求层才会静默重登并重试这一次;
@@ -3105,7 +3105,7 @@ public class ApiTopicController extends BaseController {
             // user_type 已不是商家身份真源；统一复用经营工作台的 mms_merchant + RBAC 权限链。
             access = merchantAccessService.resolve(member_id);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         // M-12:合作中心招商池浏览与「申请承接」同权(COOP_MANAGE);管理自己的项目才要 PROJECT_MANAGE。
         // 原先一律要 PROJECT_MANAGE,营销岗能在列表看到主题、点进详情却被拒。

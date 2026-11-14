@@ -65,7 +65,7 @@ public class ApiPublicContentCatalogController extends BaseController {
             startPage();
             return success(getDataTable(cityCatalogService.cities()));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } finally {
             clearPage();
         }
@@ -116,7 +116,7 @@ public class ApiPublicContentCatalogController extends BaseController {
             }
             return success(getDataTable(rows));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } finally {
             clearPage();
         }
@@ -136,7 +136,7 @@ public class ApiPublicContentCatalogController extends BaseController {
             startPage();
             return success(getDataTable(catalogService.mapPoints(query)));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } finally {
             clearPage();
         }
@@ -166,7 +166,7 @@ public class ApiPublicContentCatalogController extends BaseController {
         try {
             return success(catalogService.byIds(topicIds, locale));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -182,7 +182,7 @@ public class ApiPublicContentCatalogController extends BaseController {
         try {
             return success(catalogService.detail(parseId(id), locale));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -194,7 +194,7 @@ public class ApiPublicContentCatalogController extends BaseController {
         try {
             return success(cityCatalogService.filterOptions());
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 

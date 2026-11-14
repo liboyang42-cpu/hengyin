@@ -23,7 +23,7 @@ public class ApiClubDirectMerchantReceivableController extends BaseController {
         try {
             Long owner = merchantAccess.require(getAppUserId(), MerchantPermission.FINANCE_READ).getOwnerMemberId();
             return success(service.listForMerchant(topicId, owner));
-        } catch (ServiceException e) { return new AjaxResult(e.getCode(), e.getMessage()); }
+        } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
         catch (IllegalStateException e) { return error(e.getMessage()); }
     }
 

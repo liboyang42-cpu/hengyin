@@ -5,7 +5,6 @@ import com.chengyinhub.business.service.IUmsMemberCartService;
 import com.chengyinhub.business.service.IViewMemberCartService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
-import com.chengyinhub.common.core.domain.model.LoginUser;
 import com.chengyinhub.common.core.page.TableDataInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -44,10 +43,10 @@ public class ApiCartController extends BaseController {
             @Parameter(name = "pageSize", description = "每页显示记录数")
     })
     public AjaxResult getCartList() {
-        LoginUser loginUser = getLoginUser();
+        Long memberId = getAppUserId();
 
         ViewMemberCart cart = new ViewMemberCart();
-        cart.setMemberId(loginUser.getUserId());
+        cart.setMemberId(memberId);
         cart.setIsBuy(Long.valueOf(0));
         startPage();
         List<ViewMemberCart> viewMemberCartList = viewMemberCartService.selectViewMemberCartList(cart);
@@ -63,9 +62,9 @@ public class ApiCartController extends BaseController {
             @Parameter(name = "cartids", description = "购物车ID 多数据逗号分开")
     })
     public AjaxResult cartDelete(String cartids) {
-        LoginUser loginUser = getLoginUser();
+        Long memberId = getAppUserId();
         try {
-            umsMemberCartService.deleteCarts(loginUser.getUserId(), cartids);
+            umsMemberCartService.deleteCarts(memberId, cartids);
             return success();
         } catch (com.chengyinhub.common.exception.ServiceException exception) {
             return error(exception.getMessage());
@@ -81,9 +80,9 @@ public class ApiCartController extends BaseController {
             @Parameter(name = "is_buy", description = "默认0 ，1是直接购买")
     })
     public AjaxResult cartAdd(String product_id, String sku_id, String quantity, String is_buy) {
-        LoginUser loginUser = getLoginUser();
+        Long memberId = getAppUserId();
         try {
-            return success(umsMemberCartService.addCart(loginUser.getUserId(), product_id, sku_id, quantity, is_buy));
+            return success(umsMemberCartService.addCart(memberId, product_id, sku_id, quantity, is_buy));
         } catch (com.chengyinhub.common.exception.ServiceException exception) {
             return error(exception.getMessage());
         }
@@ -97,9 +96,9 @@ public class ApiCartController extends BaseController {
             @Parameter(name = "sku_id", description = "所选规格ID")
     })
     public AjaxResult cartUpdate(String cart_id, String quantity, String sku_id) {
-        LoginUser loginUser = getLoginUser();
+        Long memberId = getAppUserId();
         try {
-            return success(umsMemberCartService.updateCart(loginUser.getUserId(), cart_id, quantity, sku_id));
+            return success(umsMemberCartService.updateCart(memberId, cart_id, quantity, sku_id));
         } catch (com.chengyinhub.common.exception.ServiceException exception) {
             return error(exception.getMessage());
         }
@@ -111,10 +110,10 @@ public class ApiCartController extends BaseController {
             @Parameter(name = "cartids", description = "购物车ID 多数据逗号分开")
     })
     public AjaxResult cartSettlement(String cartids) {
-        LoginUser loginUser = getLoginUser();
+        Long memberId = getAppUserId();
 
         try {
-            return success(umsMemberCartService.previewSettlement(loginUser.getUserId(), cartids));
+            return success(umsMemberCartService.previewSettlement(memberId, cartids));
         } catch (com.chengyinhub.common.exception.ServiceException exception) {
             return error(exception.getMessage());
         }
@@ -129,9 +128,9 @@ public class ApiCartController extends BaseController {
             @Parameter(name = "addressid", description = "收货地址")
     })
     public AjaxResult orderSettlement(String cartids, String remark, String addressid) {
-        LoginUser loginUser = getLoginUser();
+        Long memberId = getAppUserId();
         try {
-            return success(umsMemberCartService.settleCart(loginUser.getUserId(), loginUser.getUsername(),
+            return success(umsMemberCartService.settleCart(memberId, getAppUserName(),
                     cartids, remark, addressid));
         } catch (com.chengyinhub.common.exception.ServiceException exception) {
             return error(exception.getMessage());

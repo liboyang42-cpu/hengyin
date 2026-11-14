@@ -25,6 +25,8 @@ import com.chengyinhub.common.exception.ServiceException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -112,7 +114,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
             return success(chapterMerchantNodeService.submit(
                     access.getOwnerMemberId(), body.getChapterId(), body.toDraft()));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -128,7 +130,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
                     memberId, MerchantPermission.BASIC_READ);
             return success(chapterMerchantNodeService.listMine(access.getOwnerMemberId(), topicId));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
     }
 
@@ -142,7 +144,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
         try {
             ownerMemberId = resolveProjectOwner(memberId, scope);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = topicService.selectCmsTopicById(topicId);
         // 谁发布谁审核。不校验归属的话,任何人都能翻别人主题的待审内容。
@@ -186,7 +188,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
                 node = assignedStationPosterNode(access.getOwnerMemberId(), nodeId, denied);
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -228,7 +230,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
             data.put("ttlMs", issued.ttlMs);
             return success(data);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -245,7 +247,7 @@ public class ApiChapterMerchantNodeController extends BaseController {
             return success(chapterMerchantNodeService.audit(
                     resolveProjectOwner(memberId, scope), nodeId, Boolean.TRUE.equals(approve), reason));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -258,8 +260,8 @@ public class ApiChapterMerchantNodeController extends BaseController {
     // 主题未开始),读入口(detail/voice status)走 requireOwnNode(归属 + 承接生效,不判冻结)。
 
     @Operation(summary = "商家读取本节点 NPC(含停用,给编辑回填)")
-    @PostMapping("/npc/detail")
-    public AjaxResult npcDetail(@RequestBody NodeNpcRequest body) {
+    @PostMapping(value = "/npc/detail", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AjaxResult npcDetail(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         // 小程序一律 JSON 体发请求 —— 参数必须从 @RequestBody 绑,漏了它每个请求都会是「参数有误」。
@@ -269,15 +271,15 @@ public class ApiChapterMerchantNodeController extends BaseController {
                     memberId, MerchantPermission.PROJECT_MANAGE);
             return success(nodeNpcService.detailForMerchant(access.getOwnerMemberId(), body.getNodeId()));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
     }
 
     @Operation(summary = "商家保存本节点 NPC(名称/头像/台词)")
-    @PostMapping("/npc/save")
-    public AjaxResult npcSave(@RequestBody NodeNpcRequest body) {
+    @PostMapping(value = "/npc/save", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AjaxResult npcSave(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return error("参数有误");
@@ -287,15 +289,15 @@ public class ApiChapterMerchantNodeController extends BaseController {
             return success(nodeNpcService.save(access.getOwnerMemberId(), body.getNodeId(),
                     body.toDraft(), merchantOpenid(access.getOwnerMemberId())));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
     }
 
     @Operation(summary = "节点 NPC 声音:发起复刻(可选)")
-    @PostMapping("/npc/voice/enroll")
-    public AjaxResult npcVoiceEnroll(@RequestBody NodeNpcRequest body) {
+    @PostMapping(value = "/npc/voice/enroll", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AjaxResult npcVoiceEnroll(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return error("参数有误");
@@ -306,15 +308,15 @@ public class ApiChapterMerchantNodeController extends BaseController {
                     body.getNodeId(), body.getVoiceSample(), body.getVoiceRequestId(), body.getVoicePreviousIntentId(),
                     Boolean.TRUE.equals(body.getVoiceDuplicateChargeConsent())));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
     }
 
     @Operation(summary = "节点 NPC 声音:查状态")
-    @PostMapping("/npc/voice/status")
-    public AjaxResult npcVoiceStatus(@RequestBody NodeNpcRequest body) {
+    @PostMapping(value = "/npc/voice/status", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AjaxResult npcVoiceStatus(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return error("参数有误");
@@ -336,15 +338,15 @@ public class ApiChapterMerchantNodeController extends BaseController {
             data.put("voiceReasonCode", mine == null ? null : mine.getVoiceReasonCode());
             return success(data);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
     }
 
     @Operation(summary = "节点 NPC 声音:清除(重录前先清)")
-    @PostMapping("/npc/voice/reset")
-    public AjaxResult npcVoiceReset(@RequestBody NodeNpcRequest body) {
+    @PostMapping(value = "/npc/voice/reset", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AjaxResult npcVoiceReset(@RequestBody(required = false) NodeNpcRequest body) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         if (body == null || body.getNodeId() == null || body.getNodeId() <= 0) return error("参数有误");
@@ -354,10 +356,35 @@ public class ApiChapterMerchantNodeController extends BaseController {
             nodeNpcService.voiceReset(access.getOwnerMemberId(), body.getNodeId());
             return AjaxResult.success("已清除");
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
+    }
+
+    @PostMapping(value = "/npc/detail", consumes = "!application/json")
+    public AjaxResult npcDetailForm(@ModelAttribute NodeNpcRequest body) {
+        return npcDetail(body);
+    }
+
+    @PostMapping(value = "/npc/save", consumes = "!application/json")
+    public AjaxResult npcSaveForm(@ModelAttribute NodeNpcRequest body) {
+        return npcSave(body);
+    }
+
+    @PostMapping(value = "/npc/voice/enroll", consumes = "!application/json")
+    public AjaxResult npcVoiceEnrollForm(@ModelAttribute NodeNpcRequest body) {
+        return npcVoiceEnroll(body);
+    }
+
+    @PostMapping(value = "/npc/voice/status", consumes = "!application/json")
+    public AjaxResult npcVoiceStatusForm(@ModelAttribute NodeNpcRequest body) {
+        return npcVoiceStatus(body);
+    }
+
+    @PostMapping(value = "/npc/voice/reset", consumes = "!application/json")
+    public AjaxResult npcVoiceResetForm(@ModelAttribute NodeNpcRequest body) {
+        return npcVoiceReset(body);
     }
 
     /** 内容安全 v2 需要发表者 openid 做风控;取不到时传 null,由服务降级 scene 检测。 */

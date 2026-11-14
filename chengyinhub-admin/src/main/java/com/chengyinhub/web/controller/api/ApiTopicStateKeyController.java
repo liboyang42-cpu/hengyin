@@ -184,7 +184,7 @@ public class ApiTopicStateKeyController extends BaseController {
         if (e.getCode() == null) {
             return error(e.getMessage());
         }
-        AjaxResult result = new AjaxResult(e.getCode(), e.getMessage());
+        AjaxResult result = new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         if (e.getDetailMessage() != null) {
             result.put("errorCode", e.getDetailMessage());
         }

@@ -46,6 +46,7 @@ import org.apache.commons.math3.stat.descriptive.rank.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -249,7 +250,7 @@ public class ApiActivityController extends BaseController {
                         com.chengyinhub.business.service.DiscoveryFilterContract.ACTIVITY_RADIUS_METERS);
             }
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
 
         boolean publicList = isMy != 1;
@@ -582,7 +583,7 @@ public class ApiActivityController extends BaseController {
      * 0 手续费全额退是跨平台无分歧的口径 —— 主办方违约却扣用户钱,法理站不住,也是舆情雷。
      */
     @Operation(summary = "取消活动(全额退款给所有已报名用户)")
-    @PostMapping("/cancel")
+    @PostMapping(value = "/cancel", consumes = "!application/json")
     @Parameters({
             @Parameter(name = "id", description = "活动id"),
             @Parameter(name = "reason", description = "取消原因(展示给已报名用户)"),
@@ -649,7 +650,7 @@ public class ApiActivityController extends BaseController {
 
     /** [C8-05] 取消确认框要写明「将给 N 位已付款玩家全额退款」:N 由服务端按与取消同一套授权算。 */
     @Operation(summary = "取消活动前预览:将被全额退款的已付款玩家人数")
-    @PostMapping("/cancel_preview")
+    @PostMapping(value = "/cancel_preview", consumes = "!application/json")
     public AjaxResult activityCancelPreview(String id, String scope) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
@@ -683,6 +684,34 @@ public class ApiActivityController extends BaseController {
             logger.error("活动取消预览失败: activityId={}, memberId={}", cid, memberId, e);
             return AjaxResult.error("系统繁忙，请稍后重试");
         }
+    }
+
+
+    /**
+     * 取消活动 JSON 入口：兼容 iOS 原生客户端 application/json 请求体。
+     */
+    @PostMapping(value = "/cancel", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AjaxResult activityCancelJson(@RequestBody(required = false) ActivityCancelJsonRequest body) {
+        return activityCancel(
+                body == null ? null : body.id,
+                body == null ? null : body.reason,
+                body == null ? null : body.scope);
+    }
+
+    /**
+     * 取消活动前预览 JSON 入口：兼容 iOS 原生客户端 application/json 请求体。
+     */
+    @PostMapping(value = "/cancel_preview", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AjaxResult activityCancelPreviewJson(@RequestBody(required = false) ActivityCancelJsonRequest body) {
+        return activityCancelPreview(
+                body == null ? null : body.id,
+                body == null ? null : body.scope);
+    }
+
+    public static class ActivityCancelJsonRequest {
+        public String id;
+        public String reason;
+        public String scope;
     }
 
     @Operation(summary = "活动上下架")

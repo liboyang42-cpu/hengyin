@@ -142,7 +142,7 @@ public class ApiCircleThemeController extends BaseController {
                     request.getTopicId(), ownerMemberId, request.getCandidateCodes());
             return AjaxResult.success("配置已保存", changed);
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }
@@ -159,7 +159,7 @@ public class ApiCircleThemeController extends BaseController {
                     cmsTopicService.reviewCircleSupplies(
                             request == null ? null : request.getTopicId(), ownerMemberId));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }

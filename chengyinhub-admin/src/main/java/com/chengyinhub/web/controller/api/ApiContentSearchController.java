@@ -53,7 +53,7 @@ public class ApiContentSearchController extends BaseController {
             startPage();
             return success(getDataTable(contentSearchService.search(keyword, types, city_code, memberId)));
         } catch (ServiceException e) {
-            return new AjaxResult(e.getCode(), e.getMessage());
+            return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } finally {
             clearPage();
         }
