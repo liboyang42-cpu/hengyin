@@ -37,7 +37,7 @@ const DOMAIN_RULES = [
     // 搜索地图也按 roleGuard.isMerchantView 选择根主题与地图样式。
     // 2026-11-11 f-merchant(M-35):商家工作台的搜索(search2)与「发现」点进的帖文详情(square/detail)进共享域,
     // 同样按 roleGuard.isMerchantView 在根节点二选一。商家可达页的暗根清单由 tests/unit/f-merchant-light-reach.test.js 守。
-    route: /^(?:pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap|search2)\/|pages\/square\/detail\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
+    route: /^(?:pages\/coop\/finance\/index$|pages\/topic\/pricing\/index$|pages\/(?:template|templatedetail|talent|shezhi|mylike|crop|searchmap|search2)\/|pages\/square\/detail\/|pages\/club\/(?:topic-story|detail)\/|pages\/activity\/(?:detail|official-(?:inbox|mine|detail|organizer))\/|subpackageMember\/(?:mytemplate|tixianjilu)\/|subpackageA\/pages\/(?:infomation|myproject|assetcenter\/(?:earnings|analysis|income-detail))\/|subpackageB\/pages\/im\/)/
   },
   {
     domain: 'merchant',

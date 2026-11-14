@@ -320,6 +320,14 @@ Component({
       const d = detail || {};
       const stage = this.selectComponent('#cy-play-stage');
       const multi = this.data.mode === 'pick' && !!this.data.multi;
+      // 答案已由服务端判对但照片尚未通过：只显示答案事实，不能触发通关或发奖。
+      if (ok && d.pendingEvidence && this.data.mode === 'pick') {
+        this.setData({
+          optionList: this.data.optionList.map((o, i) => Object.assign({}, o, { state: i === d.index ? 'is-right' : 'is-dim' })),
+          feedback: d.feedback || '', fbHead: HEAD_OK, ctaDisabled: true,
+        });
+        return;
+      }
       if (ok) {
         if (this.data.mode === 'pick') {
           this.setData({

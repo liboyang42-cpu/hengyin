@@ -25,8 +25,8 @@ test('首页四周为线性渐变，中间保留长条地图', () => {
   assert.match(shade, /pointer-events:none/)
 })
 
-test('首页没有纵向滚动，护照两个卡片区仍可横滑', () => {
-  assert.doesNotMatch(home, /scroll-y/)
+test('开始页不纵滚，护照纵滚且两个卡片区仍可横滑', () => {
+  assert.match(home, /class="intro-passport" scroll-y/)
   assert.match(home, /class="pp-row" scroll-x/)
   assert.match(home, /class="pp-trips" scroll-x/)
   assert.match(wxss, /\.intro\{[^}]*overflow:hidden/s)

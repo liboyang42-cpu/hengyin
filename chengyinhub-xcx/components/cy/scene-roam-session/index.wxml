@@ -19,7 +19,11 @@
       <view class="route-replay__skip" wx:elif="{{replayState === 'playing'}}" bindtap="skipReplay" aria-role="button" aria-label="跳过路线回放" hover-class="cy-pressed" hover-stay-time="80">跳过</view>
     </view>
     <view class="route-replay__map">
-      <view class="route-replay__canvas" wx:if="{{routeSegs.length}}">
+      <free-map wx:if="{{routeGeo && replayState !== 'playing'}}" scene="explore" tone="{{mapTone}}" center="{{ {lat: routeGeo.center.latitude, lng: routeGeo.center.longitude} }}"
+        scale="{{routeGeo.scale}}" map-polyline="{{routeGeo.polyline}}" map-circles="{{routeGeo.circles}}"
+        subkey="{{mapStyle.subkey}}" layer-style="{{mapStyle.layerStyle}}" fit fit-points="{{routeGeo.include}}" fit-padding="{{[24,24,24,24]}}"
+        show-controls="{{false}}" interactive="{{false}}" />
+      <view class="route-replay__canvas" wx:elif="{{routeSegs.length}}">
         <view class="route-replay__segment" wx:for="{{replaySegs}}" wx:key="i" style="left:{{item.x}}rpx;top:{{item.y}}rpx;width:{{item.len}}rpx;transform:rotate({{item.deg}}deg)"></view>
         <view class="route-replay__poi route-replay__poi--{{item.tone}}" wx:for="{{routePoiDots}}" wx:key="i" style="left:{{item.x}}rpx;top:{{item.y}}rpx"></view>
       </view>
@@ -28,12 +32,12 @@
     <view class="route-replay__progress" wx:if="{{routeSegs.length}}">
       <view class="route-replay__track"><view class="route-replay__fill" style="width:{{replayProgress || 0}}%"></view></view>
       <text wx:if="{{replayState === 'playing'}}">正在沿足迹前进 · {{replayProgress || 0}}%</text>
-      <text wx:else>{{replayState === 'done' ? '路线回放完成' : '完整足迹 · 可随时回放'}}</text>
+      <text wx:elif="{{replayState === 'done'}}">路线回放完成</text>
     </view>
   </view>
 
   <view class="kv">
-    <view class="kv__row"><text class="kv__k">总距离</text><text class="kv__v">{{session.distanceText || 0}} 公里</text></view>
+    <view class="kv__row"><text class="kv__k">总距离</text><text class="kv__v">{{session.distanceText || 0}} km</text></view>
     <view class="kv__row"><text class="kv__k">时长</text><text class="kv__v">{{session.time}}</text></view>
     <view class="kv__row"><text class="kv__k">探店</text><text class="kv__v">{{session.shopsText || 0}} 家</text></view>
     <view class="kv__row"><text class="kv__k">探索度</text><text class="kv__v">{{session.explorePctText || 0}}%</text></view>

@@ -589,10 +589,10 @@ const DANGER_ACTIONS = {
   },
   'roam.finish': {
     irreversible: true,
-    title: '结束本次漫游?',
-    content: '足迹和探店都会保存,结算后可领足迹卡。',
+    title: '结束本次漫游？',
+    content: '足迹和探店都会保存，结算后可领足迹卡。',
     consequences: [
-      { icon: 'flag', text: '本次漫游立即结算,足迹与探店记录保留' },
+      { icon: 'flag', text: '本次漫游立即结算，足迹与探店记录保留' },
       { icon: 'warning', text: '此操作不可撤销,结束后不能继续这一次漫游' },
     ],
     confirmText: '结束漫游',

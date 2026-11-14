@@ -41,7 +41,7 @@ function startWithLocation({ reducedMotion = false } = {}) {
     timers.push(timer)
     return timer
   }
-  global.getApp = () => ({
+  global.getApp = () => ({ sendRequest(options) { if (options.url === '/api/compliance/consents/latest') options.success({ code: 200, data: null }); else if (options.fail) options.fail({}); },
     globalData: {},
     getUserID: () => '9',
     recordConsent: () => Promise.resolve(),
@@ -134,4 +134,16 @@ test('opening emoji 使用七个安全随机分区，并保持大小与转向差
   assert.ok(emojis.every(item => Math.abs(item.rotate) >= 8))
   assert.ok(new Set(emojis.map(item => item.size)).size > 1, 'Emoji 不能全部同尺寸')
   assert.ok(new Set(emojis.map(item => item.rotate)).size > 1, 'Emoji 不能全部同方向')
+})
+
+
+test('继续旧记录不把恢复时刻冒充原始开始时间', async () => {
+  const h = startWithLocation()
+  try {
+    h.page.data.unfinishedRoam = true
+    h.page.goStart()
+    await settle(); await settle()
+    assert.equal(h.page.data.screen, 'opening')
+    assert.equal(h.page._roamStartedAt || 0, 0)
+  } finally { h.restore() }
 })

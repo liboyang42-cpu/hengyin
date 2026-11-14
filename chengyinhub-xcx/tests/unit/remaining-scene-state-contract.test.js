@@ -340,10 +340,10 @@ test('单次漫游详情保留合法零值，并把未知统计显示为待确�
   })
   zero.instance.data.ts = '200'
   zero.instance._load()
-  assert.equal(zero.instance.data.session.distanceText, '0')
+  assert.equal(zero.instance.data.session.distanceText, '0.0')
   assert.equal(zero.instance.data.session.shopsText, '0')
   assert.equal(zero.instance.data.session.explorePctText, '0')
-  assert.equal(zero.instance.data.session.time, '00:00')
+  assert.equal(zero.instance.data.session.time, '0:00')
 
   const wxml = read('components/cy/scene-roam-session/index.wxml')
   assert.match(wxml, /session\.shopsText/)

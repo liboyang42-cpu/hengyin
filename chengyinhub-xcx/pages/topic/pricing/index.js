@@ -357,7 +357,7 @@ Page({
     });
   },
 
-  // 平台服务费与预计到手（按平台费率，分位向上取整平台费，到手 = 价 - 费）
+  // 平台服务费与预计到手（按平台费率，平台费四舍五入到分，到手 = 价 - 费）
   updateFee(value) {
     const rate = this._platformRate;
     const price = Number(value);

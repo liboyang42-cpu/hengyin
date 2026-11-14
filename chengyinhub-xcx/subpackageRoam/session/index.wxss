@@ -33,3 +33,5 @@ page { background: var(--cy-color-bg-page); }
 /* 细节打磨二期 L1/L5/L7 */
 .ss-share-link__retry { transition: var(--cy-tr-press); }
 .ss-share-back { transition: var(--cy-tr-press); }
+
+.ss-card-export { display:block; width:630rpx; max-width:100%; margin:var(--cy-space-2) auto; }

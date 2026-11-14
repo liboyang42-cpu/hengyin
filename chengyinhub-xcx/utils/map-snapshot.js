@@ -1,7 +1,7 @@
 'use strict';
 
 // 把真实 <map> 截成图,画进分享 canvas(canvas 不能直接截原生 map)。
-// 截不到就拒绝并带 mapSnapshot 标记,由调用方走自己的「重试」态;不画假地图顶替。
+// 截不到时带 mapSnapshot 标记；调用方可绘制真实足迹回退，不伪造底图。
 const READY_MS = 4000;
 const STEP_MS = 80;
 
@@ -71,4 +71,31 @@ function drawCover(g, image, x, y, w, h) {
   g.drawImage(image, r.sx, r.sy, r.sw, r.sh, x, y, w, h);
 }
 
-module.exports = { takeMapSnapshot, loadImage, coverRect, drawCover, waitFor, failure, READY_MS };
+/** 路线卡完整保留截图，宽高不同时留边，避免 cover 裁掉轨迹首尾。 */
+function drawContain(g, image, x, y, w, h) {
+  const scale = Math.min(w / image.width, h / image.height);
+  if (!(scale > 0 && Number.isFinite(scale))) throw failure('map snapshot has no size');
+  const width = image.width * scale, height = image.height * scale;
+  g.drawImage(image, x + (w - width) / 2, y + (h - height) / 2, width, height);
+}
+
+/** 截图不可用时只画真实足迹；与回放卡共用投影，不补造街道。 */
+function drawRoute(g, geo, x, y, w, h) {
+  const { buildRouteGeometry } = require('./roam-route-geo.js');
+  const track = geo && geo.polyline && geo.polyline[0] && geo.polyline[0].points || [];
+  const route = buildRouteGeometry({ track: track.map(p => ({ lat: p.latitude, lng: p.longitude })) });
+  if (!route.segs.length) return false;
+  const scale = Math.min(w / 670, h / 520);
+  const ox = x + (w - 670 * scale) / 2, oy = y + (h - 520 * scale) / 2;
+  g.strokeStyle = geo.polyline[0].color; g.lineWidth = 4;
+  g.beginPath();
+  route.segs.forEach((s, i) => {
+    const angle = s.deg * Math.PI / 180;
+    if (!i) g.moveTo(ox + s.x * scale, oy + s.y * scale);
+    g.lineTo(ox + (s.x + Math.cos(angle) * s.len) * scale, oy + (s.y + Math.sin(angle) * s.len) * scale);
+  });
+  g.stroke();
+  return true;
+}
+
+module.exports = { takeMapSnapshot, loadImage, coverRect, drawCover, drawContain, drawRoute, waitFor, failure, READY_MS };

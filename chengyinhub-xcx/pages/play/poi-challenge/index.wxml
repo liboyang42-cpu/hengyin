@@ -15,11 +15,14 @@
     bind:shoot="onShoot" bind:continue="onPhotoContinue" bind:verdict="onPhotoVerdict" bind:close="exit" />
 
   <cy-playkit-qa wx:if="{{step === 'quiz'}}" id="quizKit" show mode="pick" theme="dark"
-    title="{{node.questionName}}" lead="{{node.templateTitle || ''}}" options="{{options}}"
+    title="{{questionTitle}}" lead="{{node.templateTitle || ''}}" options="{{options}}"
     bind:submit="onPick" bind:continue="onQuizContinue" bind:verdict="onQuizVerdict" bind:close="exit" />
 
   <cy-medal-screen show="{{step === 'done'}}" items="{{medal.items}}" title="{{medal.title}}" sub="{{medal.sub}}"
     back-top="{{backTop}}" primary-text="写一张城市签" secondary-text="查看徽章墙"
     bind:close="exit" bind:primary="onMedalPrimary" bind:secondary="onMedalSecondary" />
+  <view wx:if="{{photoError && step === 'quiz'}}" class="pc-page__gap" aria-role="alert">
+    <cy-inline-error title="{{photoError}}" action="重拍" bind:action="retakePhoto" />
+  </view>
   <view wx:if="{{gap && (step === 'photo' || step === 'quiz')}}" class="pc-page__gap" bindtap="onNavigate" aria-role="button" aria-label="{{gap.text}}，导航到地点" hover-class="cy-pressed" hover-stay-time="80"><text>{{gap.text}}</text><text>导航</text></view>
 </view>

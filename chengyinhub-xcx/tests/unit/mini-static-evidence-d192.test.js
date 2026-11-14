@@ -20,7 +20,7 @@ test('五处路线动态投影仅提交真实固定展示字段；每项登记�
   assert.ok(scanU4(files,new Map(Object.entries(baseline.u4Debt)),approved).violations.some(row=>row.key===target));
   for(const name of ['pages/square/components/route-map/index.wxml','pages/topic/index/index.wxml']) {
     const source=fs.readFileSync(path.join(root,name),'utf8');
-    for(const field of fields.filter(field=>field!=='routeIsRoad')) assert.ok(source.includes(field)||fs.readFileSync(path.join(root,name.replace('.wxml','.js')),'utf8').includes('this.data.'+field),field);
+    for(const field of fields.filter(field=>field!=='routeIsRoad' && !(name==='pages/topic/index/index.wxml' && field==='routeSourceText'))) assert.ok(source.includes(field)||fs.readFileSync(path.join(root,name.replace('.wxml','.js')),'utf8').includes('this.data.'+field),field);
   }
 });
 

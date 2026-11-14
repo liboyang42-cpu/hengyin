@@ -5,7 +5,7 @@
   <cy-modal-host id="cy-modal-host" />
 <view class="session-shell" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-nav-bar plain custom-back bind:back="goBack" />
-  <cy-page-title title="本次漫游" subtitle="{{s.dateFull ? s.dateFull + (s.time && s.time !== '—' ? ' · ' + s.time : '') : ''}}" safe-top="{{false}}" />
+  <cy-page-title title="本次漫游" subtitle="{{s.dateFull ? s.dateFull + (s.startTime ? ' · ' + s.startTime : '') : ''}}" safe-top="{{false}}" />
   <view class="session-shell__body">
     <block wx:if="{{sharedState}}">
       <view class="session-status" wx:if="{{sharedState === 'loading'}}" aria-role="status">正在打开朋友分享的足迹</view>
@@ -33,7 +33,8 @@
     </view>
 
     <block wx:elif="{{share.imagePath}}">
-      <cy-card class="ss-card">
+      <image wx:if="{{!share.mapImage}}" class="ss-card-export" src="{{share.imagePath}}" mode="widthFix" aria-label="本次足迹卡" />
+      <cy-card wx:else class="ss-card">
         <view class="ss-card-map">
           <image wx:if="{{share.mapImage}}" class="ss-card-real" src="{{share.mapImage}}" mode="aspectFill" aria-hidden="true" />
           <text class="ss-card-map-tip" wx:if="{{!geo}}">这次没有记录到轨迹</text>

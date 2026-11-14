@@ -1,9 +1,9 @@
 {
   "navigationStyle": "custom",
-  "navigationBarTextStyle": "black",
-  "backgroundColor": "#F3F4F4",
-  "backgroundColorTop": "#F3F4F4",
-  "backgroundColorBottom": "#F3F4F4",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000",
+  "backgroundColorTop": "#000000",
+  "backgroundColorBottom": "#000000",
   "usingComponents": {
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",

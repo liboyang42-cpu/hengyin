@@ -1,3 +1,5 @@
+const { resolvePlaceMedia } = require('../../../../utils/roam-place-media.js')
+const placeMedia = require('../../../../utils/roam-place-map.js')
 'use strict'
 
 const modal = require('../../../../utils/modal.js'); const pageMotion = require('../../../../utils/page-motion.js');
@@ -258,10 +260,8 @@ Component({
             }
           }
           if (!node.merchantId) {
-            let images = []
-            try { images = JSON.parse(node.galleryJson || '[]') } catch (_) {}
-            this.setData({ gallery: (Array.isArray(images) ? images : []).filter(u => typeof u === 'string').map(u => app.getImgUrl(u)),
-              tags: String(node.tags || '').split(/[,，、]/).filter(Boolean) })
+            this.setData({ gallery: node.coverImg && !node.photoCredit ? [] : placeMedia.galleryKeys(node).map(u => app.getImgUrl(u)),
+              tags: placeMedia.visibleTags(node.tagsJson || node.tags) })
           }
           try {
             const saved = !pending && !storageError && context && wx.getStorageSync(context.key + ':photo')
@@ -567,16 +567,14 @@ Component({
     onPhotoPick(e) { this.setData({ photoIndex: Number(e.currentTarget.dataset.index) || 0 }) },
     onPhotoCredit() { this.setData({ creditOpen: !this.data.creditOpen }) },
     loadPhotoCredit(node) {
-      const key = node.coverImg, token = this._loadToken, actor = ownerId()
-      if (typeof key !== 'string' || !/^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*\.(?:jpg|png|webp)$/.test(key)) return
-      app.sendRequest({ url: '/profile/' + key.replace(/\.[^.]+$/, '.gallery.json'), method: 'GET', auth: false,
-        hideLoading: true, silentError: true, autoErrorToast: false, success: res => {
-          if (this._closed || token !== this._loadToken || actor !== ownerId()) return
-          const d = res && res.code == 200 && res.data
-          if (d && String(d.poiId) === String(this.data.poiId) && typeof d.credit === 'string')
-            this.setData({ photoCredit: d.credit.slice(0, 2000) })
-        } })
+      const token = this._loadToken, actor = ownerId()
+      resolvePlaceMedia(app, [node]).then(rows => {
+        if (this._closed || token !== this._loadToken || actor !== ownerId()) return
+        const row = rows[0]
+        this.setData({ photoCredit: placeMedia.credit(row), gallery: placeMedia.galleryKeys(row).map(key => app.getImgUrl(key)) })
+      })
     },
+
     loadReviews() {
       const poiId = this.data.poiId, token = this._loadToken, actor = ownerId()
       if (!poiId) return

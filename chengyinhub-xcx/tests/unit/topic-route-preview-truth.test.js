@@ -96,9 +96,9 @@ test('损坏/不足道路不产生箭头；空结果清空旧地图，合法道�
   assert.deepEqual(page.data.routePolyline, []); assert.deepEqual(page.data.routeMarkers, []); assert.deepEqual(page.data.routeIncludePoints, []);
   assert.equal(render([{ nodes: [], routeGeometryAvailable: true, routeGeometry: geometry }]).routeReady, true);
 });
-test('模板统一显示真实来源，距离文案不承诺分钟，重复坐标不编时长', () => {
+test('模板隐藏内部路线来源文案，距离不承诺分钟，重复坐标不编时长', () => {
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/topic/index/index.wxml'), 'utf8');
-  assert.match(wxml, /class="route-map-tip"[^>]*>\{\{routeSourceText\}\}/);
+  assert.doesNotMatch(wxml, /routeSourceText|节点直线预览|尚未规划步行路线/);
   assert.doesNotMatch(wxml, /route-map-tip[^>]*wx:if="\{\{!routeIsRoad\}\}"/);
   assert.doesNotMatch(walk(nodes[0], nodes[1]), /\d+\s*(?:min|分钟)/);
   assert.equal(walk(nodes[0], nodes[0]), '');

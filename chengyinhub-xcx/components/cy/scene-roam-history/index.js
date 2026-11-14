@@ -2,7 +2,7 @@
 
 const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js'); const pageMotion = require('../../../utils/page-motion.js')
 const { validRecovery } = require('../../../utils/roam-recovery.js')
-const { readNonNegative } = require('../../../utils/roam-history-metrics.js')
+const { readNonNegative, formatDistance, formatDuration } = require('../../../utils/roam-history-metrics.js')
 const { routeGeo } = require('../../../utils/roam-route-geo.js')
 const { createReader, merge } = require('../../../utils/roam-passport-read.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
@@ -148,8 +148,8 @@ Component({
         state: 'ready',
         inProgress: this._inProgress === true,
         // NRC 总成绩:没有数据的项写「—」,不造 0(UI-04)
-        summary: { trips: list.length, km: kmKnown ? km.toFixed(2) : '—', shopsText: shopsKnown ? String(shops) : '—',
-          timeText: secsKnown && list.length ? `${Math.floor(secs / 3600)}:${String(Math.floor(secs % 3600 / 60)).padStart(2, '0')}` : '—' },
+        summary: { trips: list.length, km: kmKnown ? formatDistance(km) : '—', shopsText: shopsKnown ? String(shops) : '—',
+          timeText: secsKnown && list.length ? formatDuration(secs) : '—' },
       })
     },
     _sorted() {
@@ -188,11 +188,11 @@ Component({
           toCode: code,
           distanceValue,
           // UI-04:本机记录没取到显示 0;服务端事实(serverFact)的 null 显示「—」不伪造 0
-          distanceText: distanceValue === null ? (session && session.serverFact ? '—' : '0') : String(distanceValue),
+          distanceText: distanceValue === null ? (session && session.serverFact ? '—' : '0') : formatDistance(distanceValue),
           shopsValue,
           shopsText: shopsValue === null ? '—' : String(shopsValue),
           // 2026-10-31 P-7:用时与总成绩同一写法 h:mm(有 durSec 就按它算,老本机记录才退回存下的展示串)
-          time: this._formatDuration(session && session.durSec) || (session && typeof session.time === 'string' && session.time.trim()) || '—',
+          time: formatDuration(session && session.durSec, session && session.time) || '—',
           _timestamp: timestamp,
         }
       })
@@ -205,11 +205,7 @@ Component({
       const parsed = Date.parse(value)
       return Number.isFinite(parsed) ? parsed : 0
     },
-    _formatDuration(seconds) {
-      const value = nonNegativeNumber(seconds)
-      if (value === null) return ''
-      return `${Math.floor(value / 3600)}:${String(Math.floor(value % 3600 / 60)).padStart(2, '0')}`
-    },
+    _formatDuration(seconds) { return formatDuration(seconds) },
     openSession(event) {
       this.triggerEvent('open', { id: 'roam-session', params: { ts: event.currentTarget.dataset.sessionId ? 'server:' + event.currentTarget.dataset.sessionId : event.currentTarget.dataset.ts, sessionId: event.currentTarget.dataset.sessionId || '' } })
     },

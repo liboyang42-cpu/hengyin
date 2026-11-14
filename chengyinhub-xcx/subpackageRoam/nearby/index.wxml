@@ -150,7 +150,7 @@
     <view class="psheet__x" catchtap="closeSheet" aria-role="button" aria-label="关闭" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
     <view class="pbody">
       <text class="ph1">我的队伍</text>
-      
+
       <view class="mt-notice mt-notice--plain" wx:if="{{myReadAccess}}" aria-role="text">{{myReadAccess === 'login' ? '登录后查看自己的队伍' : '当前账号无法查看队伍'}}</view>
       <view class="mt-sbtn mt-sbtn--w" wx:if="{{myReadAccess === 'login'}}" bindtap="loginForMyTeams" aria-role="button" aria-label="去登录" hover-class="cy-pressed" hover-stay-time="80">去登录</view>
       <view class="mt-notice mt-notice--plain" wx:if="{{myReadError}}" aria-role="text">队伍信息未完整读取，请重新打开重试</view>
@@ -241,7 +241,7 @@
           <text class="pb__d" wx:if="{{poiCard.desc}}" user-select>{{poiCard.desc}}</text>
           <view class="pb__photo-note pb__source" wx:if="{{poiCard.sourceList.length}}" bindtap="onPoiSources" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80">资料来源 {{poiCard.srcOpen ? '收起' : '展开'}}</view>
           <block wx:if="{{poiCard.srcOpen}}"><text class="pb__photo-note" wx:for="{{poiCard.sourceList}}" wx:key="*this" data-url="{{item}}" bindtap="onPoiSourceCopy" aria-role="button" aria-label="复制资料链接" hover-class="cy-pressed" hover-stay-time="80">{{item}}</text></block>
-          <text class="pb__more" wx:if="{{!poiExpand}}">上滑看全部</text>
+
           <view class="pb__th" wx:if="{{poiCard.thumbs.length && !(poiExpand && poiCard.official)}}"><image wx:for="{{poiCard.thumbs}}" wx:key="index" wx:if="{{index < 3}}" src="{{item}}" mode="{{poiExpand ? 'widthFix' : 'aspectFill'}}" data-index="{{index}}" catchtap="onPoiImagePreview" aria-role="button" aria-label="查看第{{(index || 0) + 1}}张照片" hover-class="cy-pressed" hover-stay-time="80" /></view>
           <!-- 官方地点展开:玩法 → 小红书 / 基本信息 → 玩家评价,内容把卡填满 -->
           <block wx:if="{{poiExpand && poiCard.official}}">
@@ -279,11 +279,11 @@
               <textarea class="pb__ta" value="{{poiCard.myText}}" maxlength="200" placeholder="说说这次挑战和这个地方" placeholder-class="pb__ph" bindinput="onReviewInput" auto-height fixed aria-label="写评价" />
               <view class="pb__send {{poiCard.reviewBusy ? 'is-off' : ''}}" bindtap="onReviewSubmit" aria-role="button" aria-label="发布评价" hover-class="cy-pressed" hover-stay-time="80">{{poiCard.reviewBusy ? '发布中…' : '发布评价'}}</view>
             </view>
-            <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="照片来源与许可" hover-class="cy-pressed" hover-stay-time="80">照片来源与许可 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
+            <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80">资料来源 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
             <text class="pb__photo-note" wx:if="{{poiCard.creditOpen}}" user-select>{{poiCard.photoCredit}}</text>
           </block>
           <block wx:else>
-            <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit && poiExpand}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="照片来源与许可" hover-class="cy-pressed" hover-stay-time="80">照片来源与许可 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
+            <view class="pb__photo-note pb__source" wx:if="{{poiCard.photoCredit && poiExpand}}" bindtap="onPoiPhotoCredit" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80">资料来源 {{poiCard.creditOpen ? '收起' : '展开'}}</view>
             <text class="pb__photo-note" wx:if="{{poiCard.creditOpen}}" user-select>{{poiCard.photoCredit}}</text>
             <view class="pb__info" wx:if="{{poiExpand}}"><view class="pb__row" wx:for="{{poiCard.rows}}" wx:key="k"><text class="pb__rk">{{item.k}}</text><text>{{item.v}}</text></view></view>
           </block>

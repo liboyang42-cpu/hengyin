@@ -10,6 +10,7 @@
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-toast": "/components/cy/toast/index",
     "cy-loading-mask": "/components/cy/loading-mask/index",
-    "cy-privacy-gate": "/components/cy/privacy-gate/index"
+    "cy-privacy-gate": "/components/cy/privacy-gate/index",
+    "cy-inline-error": "/components/cy/inline-error/index"
   }
 }

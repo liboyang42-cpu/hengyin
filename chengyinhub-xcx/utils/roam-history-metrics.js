@@ -31,4 +31,23 @@ function readNonNegative(value) {
   return null
 }
 
-module.exports = { readNonNegative }
+function formatDistance(km) {
+  const value = readNonNegative(km)
+  return value === null ? '—' : value.toFixed(1)
+}
+function formatDuration(seconds, legacy) {
+  let value = readNonNegative(seconds)
+  if (value === null && typeof legacy === 'string') {
+    const parts = legacy.match(/^(\d+):([0-5]\d)$/)
+    if (parts) value = Number(parts[1]) * 60 + Number(parts[2])
+  }
+  return value === null ? '' : Math.floor(value / 3600) + ':' + String(Math.floor(value / 60) % 60).padStart(2, '0')
+}
+function formatStartTime(value) {
+  if (value == null || value === '' || value === 0) return ''
+  const { chinaParts } = require('./datetime.js')
+  const date = chinaParts(value)
+  return date ? String(date.hours).padStart(2, '0') + ':' + String(date.minutes).padStart(2, '0') : ''
+}
+
+module.exports = { readNonNegative, formatDistance, formatDuration, formatStartTime }
