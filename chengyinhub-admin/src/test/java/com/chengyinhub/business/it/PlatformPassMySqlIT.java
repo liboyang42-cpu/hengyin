@@ -74,7 +74,7 @@ class PlatformPassMySqlIT {
         db = new JdbcTemplate(source);
         assertEquals(MybatisItDatabase.databaseName(suite), db.queryForObject("SELECT DATABASE()", String.class));
         manager = new DataSourceTransactionManager(source);
-        P0AcceptanceSchema.baseTables(db, "cms_topic", "product_role", "club", "cms_topic_chapter", "merchant_chapter_offer", "cms_registration");
+        P0AcceptanceSchema.baseTables(db, "cms_topic", "product_role", "club", "cms_topic_chapter", "merchant_chapter_offer", "cms_registration", "sys_job");
         P0AcceptanceSchema.migrations(source, "migration_20261110_platform_pass.sql",
                 "migration_20261113_platform_pass_hardening.sql",
                 "migration_circle_theme_batch2_20260821.sql", "migration_circle_theme_primary_schema_20260821.sql",
@@ -240,7 +240,12 @@ class PlatformPassMySqlIT {
         Date now = new Date();
         for (long topicId : PUBLIC_TOPICS) {
             assertEquals(1, mapper.isPublishedTopic(topicId));
+        }
+        for (long topicId : CLAIMABLE_TOPICS) {
             assertNotNull(service.coverage(531L, topicId, now));
+        }
+        for (long topicId : List.of(NO_SELF_PLAY_TOPIC, CLOSED_TOPIC)) {
+            assertNull(service.coverage(531L, topicId, now), "Non-claimable topics are excluded from pass coverage");
         }
         List<Long> rejected = List.of(DRAFT_TOPIC, UNLISTED_TOPIC, TEMPLATE_TOPIC, DELETED_TOPIC);
         for (long topicId : rejected) {
@@ -250,7 +255,7 @@ class PlatformPassMySqlIT {
         List<Long> requested = List.of(OFFICIAL_TOPIC, MEMBER_TOPIC, CLUB_TOPIC, NO_SELF_PLAY_TOPIC, CLOSED_TOPIC,
                 DRAFT_TOPIC, UNLISTED_TOPIC, TEMPLATE_TOPIC, DELETED_TOPIC);
         assertEquals(PUBLIC_TOPICS, Set.copyOf(mapper.selectPublishedTopicIds(requested)));
-        assertEquals(PUBLIC_TOPICS, service.coveredTopics(531L, requested, now));
+        assertEquals(CLAIMABLE_TOPICS, service.coveredTopics(531L, requested, now));
         assertNull(service.coverage(532L, OFFICIAL_TOPIC, now), "An active pass is required");
 
         Map<String, Object> catalog = service.library(531L, null, 50);

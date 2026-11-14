@@ -111,6 +111,23 @@ class ContentSearchCityMyBatisIT {
                         .get(0).getCityCode());
             }
             assertEquals(3, search(mapper, null).size());
+            // Mixed city_code collations across source tables (utf8mb4_general_ci / utf8mb4_bin / utf8mb4_0900_ai_ci)
+            // must filter and count cleanly without Illegal mix of collations (1267).
+            st.execute("alter table cms_topic modify city_code varchar(32) character set utf8mb4 collate utf8mb4_general_ci");
+            st.execute("alter table cms_activity modify city_code varchar(32) character set utf8mb4 collate utf8mb4_bin");
+            st.execute("alter table community_post modify city_code varchar(32) character set utf8mb4 collate utf8mb4_0900_ai_ci");
+            st.execute("update cms_topic set city_code='310100' where id=1");
+            st.execute("update cms_activity set city_code='310100' where id=1");
+            st.execute("update community_post set city_code='310100' where id=1");
+            try {
+                PageHelper.startPage(1, 5);
+                List<ContentSearchItemVO> mixedRows = search(mapper, "310100");
+                assertEquals(3, mixedRows.size());
+                assertEquals(3L, ((Page<?>) mixedRows).getTotal());
+            } finally { PageHelper.clearPage(); }
+            st.execute("update cms_topic set city_code=null where id=1");
+            st.execute("update cms_activity set city_code=null where id=1");
+            st.execute("update community_post set city_code=null where id=1");
             // Existing type, public visibility, viewer-block and mute policies remain authoritative.
             st.execute("insert into im_block values(9,7)");
             assertEquals(2, search(mapper, null).size());

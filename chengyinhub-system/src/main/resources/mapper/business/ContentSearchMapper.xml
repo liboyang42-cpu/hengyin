@@ -122,9 +122,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- 城市属于当前源内容事实；NULL 原样返回，不回退过期投影或推断父主题城市。 -->
     <sql id="currentSourceCity">
         case d.document_type
-            when 'TOPIC' then current_topic.city_code
-            when 'ACTIVITY' then current_activity.city_code
-            when 'POST' then current_post.city_code
+            when 'TOPIC' then current_topic.city_code collate utf8mb4_general_ci
+            when 'ACTIVITY' then current_activity.city_code collate utf8mb4_general_ci
+            when 'POST' then current_post.city_code collate utf8mb4_general_ci
         end
     </sql>
 

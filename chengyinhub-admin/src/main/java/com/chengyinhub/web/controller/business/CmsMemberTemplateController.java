@@ -79,11 +79,9 @@ public class CmsMemberTemplateController extends BaseController
 
         CmsMemberTemplate cmsTemplateLibrary= cmsMemberTemplateService.selectCmsMemberTemplateById(id);
 
-        if (cmsTemplateLibrary!=null){
-            if(cmsTemplateLibrary.getCouponId()>0){
-                SmsCoupon smsCoupon=   smsCouponService.selectSmsCouponById(cmsTemplateLibrary.getCouponId());
-                cmsTemplateLibrary.setSmsCoupon(smsCoupon);
-            }
+        if (cmsTemplateLibrary != null && cmsTemplateLibrary.getCouponId() != null && cmsTemplateLibrary.getCouponId() > 0) {
+            SmsCoupon smsCoupon = smsCouponService.selectSmsCouponById(cmsTemplateLibrary.getCouponId());
+            cmsTemplateLibrary.setSmsCoupon(smsCoupon);
         }
         return success(cmsTemplateLibrary);
     }
