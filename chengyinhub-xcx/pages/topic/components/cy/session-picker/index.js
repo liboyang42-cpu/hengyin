@@ -11,6 +11,7 @@
 //
 // 多日 → 先选日期再选票种(稿 11);只有一个场次 → 跳过选日期,顶部直接写明是哪天(稿 11a)。
 const app = getApp();
+const money = require('../../../../../utils/money-format.js');
 const { ticketWindowText } = require('../../../../../utils/ticket-window.js');
 const { refundRuleText } = require('../../../utils/refund-rule.js');
 
@@ -248,7 +249,7 @@ Component({
       if (ticketWindowText(ticket)) return;
       this.setData({
         pickedTicketId: id,
-        totalText: ticket.price == null ? '' : ('¥' + ticket.price),
+        totalText: ticket.price == null ? '' : money.yuan(ticket.price),
       });
     },
 

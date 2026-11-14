@@ -36,7 +36,7 @@
 .qa__media { width: 100%; }
 .qa__img {
   width: 100%;
-  height: 320rpx;
+  height: auto;
   border-radius: var(--cy-radius-md);
 }
 .qa__audio, .qa__lead {

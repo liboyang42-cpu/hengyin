@@ -14,11 +14,12 @@ const PREFIX = 'cy_story_resume:';
 
 function keyOf(scope) {
   const base = pausedRunStorageKey(scope);
-  return base ? PREFIX + base : '';
+  const runId = runIdOf(scope);
+  return base && runId ? PREFIX + base + ':r' + runId : '';
 }
 
 /** E-C2:续玩状态属于哪一局(routeSessionId)。记录上盖着局号,换了新一局就当没有,不把上一局的开场 / 章节门 / finished / 草稿带进来。
- *  局号还没读到(空)时与旧行为一致,不拦。 */
+ *  局号未确定时不读写，旧的仅按主题保存的状态不能让新一局跳过开场。 */
 function runIdOf(scope) {
   return String((scope && scope.routeSessionId) == null ? '' : scope.routeSessionId).trim();
 }
@@ -30,7 +31,7 @@ function read(scope) {
     const value = wx.getStorageSync(key);
     if (!value || typeof value !== 'object') return {};
     const runId = runIdOf(scope);
-    if (runId && value.runId && String(value.runId) !== runId) return {};
+    if (String(value.runId || '') !== runId) return {};
     return value;
   } catch (e) { return {}; }
 }
@@ -53,8 +54,7 @@ function clear(scope) {
 function draftKey(scope, nodeId) {
   const key = keyOf(scope);
   if (!key || nodeId == null) return '';
-  const runId = runIdOf(scope);
-  return key + (runId ? ':r' + runId : '') + ':n' + nodeId;
+  return key + ':n' + nodeId;
 }
 
 module.exports = { read, patch, clear, draftKey };

@@ -20,7 +20,6 @@ const CONFETTI_AFTER_CARD_MS = 2400;      // g20:卡立起来之后彩纸再撒�
 // 2026-11-11 D-46 业主「点了才能进」:取代 2026-09-24「章节门停一下自己进」。章节完成屏(原 END_HOLD_MS 5.2s)与开场屏(原 START_AUTO_MS 3.6s)都不再自动前进,只在玩家点「下一站」/「读下去」(或屏上任意处)时前进。
 const DUST_MS = 1300;                     // l-play:细粉尘吹散时长(refs2/chapter-end-dissolve)
 const COVER_H = 330;                      // 完成屏顶部照片高度(390 宽稿 px,与 .cf__cover 同值)
-const STAT_ROLL_MS = 900;                 // 三格数据滚上来
 const DOT = { cell: 11, r: 4.6, w: 330, h: 260, font: '800 236px sans-serif' };   // l-icons:圆点章节号(原型 dots.js chapter)
 const SEAL = { R1: 62, R2: 46, N1: 44, N2: 28, r1: 3, r2: 1.8, rg: 2.8, box: 100, cell: 7, font: '700 64px "Songti SC","STSong","Noto Serif SC",serif', spinMs: 9000 };
 const SEAL_GAP = 16;                      // 章节印与上方文字 / 下方按钮的最小间距(390 宽稿 px)
@@ -56,16 +55,6 @@ function digitPoints(text, w, h, cell) {
 }
 
 function chars(text) { return Array.from(String(text || '')); }
-/** 数据格怎么滚:纯整数从 0 滚;mm:ss 按秒滚;a/b 只滚 a;别的(例如「—」)不滚,直接写。 */
-function statStart(v) { return statAt(v, 0); }
-function statAt(v, e) {
-  let m;
-  if ((m = /^(\d+)$/.exec(v))) return String(Math.round(Number(m[1]) * e));
-  if ((m = /^(\d+):(\d{2}):(\d{2})$/.exec(v))) { const sec = Math.round((Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3])) * e); return Math.floor(sec / 3600) + ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
-  if ((m = /^(\d+):(\d{2})$/.exec(v))) { const sec = Math.round((Number(m[1]) * 60 + Number(m[2])) * e); return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
-  if ((m = /^(\d+)\/(\d+)$/.exec(v))) return Math.round(Number(m[1]) * e) + '/' + m[2];
-  return v;
-}
 
 function isLightHex(hex) {
   const m = /^#([0-9a-f]{6})$/i.exec(String(hex || ''));
@@ -112,7 +101,6 @@ Component({
     _clear() {
       (this._timers || []).forEach(clearTimeout); this._timers = [];
       clearInterval(this._decodeTimer); this._decodeTimer = 0;
-      clearInterval(this._statTimer); this._statTimer = 0;
       if (this._cv && this._raf) this._cv.cancelAnimationFrame(this._raf);
       this._raf = 0;
     },
@@ -174,11 +162,11 @@ Component({
         const rows = (end.rows || []).slice(0, 3);
         this.setData({
           endCard: { kicker: end.kicker || '', title: end.title || '', cover: end.cover || '', next: end.next || '', reward: end.reward || '' },
-          endStats: rows.map((r) => ({ k: r.k, v: String(r.v), shown: this.data.reducedMotion ? String(r.v) : statStart(String(r.v)) })),
+          endStats: rows.map((r) => ({ k: r.k, v: String(r.v), shown: String(r.v) })),
         });
         this._at(() => this.setData({ endIn: true }), 40);
         if (this._ctx) this._assemble({ text: end.number, top: 96 * this._S, dots: true });
-        this._at(() => this._rollStats(), 600);
+        // 读数直接显示本局真值，卡片照常入场，避免把动画起始的零误认为完成结果。
         // D-46:完成屏不再自己溶解,等玩家点「下一站」(onTap)。
       } else {
         this._toStart(false);
@@ -198,19 +186,6 @@ Component({
       if (this._ctx && info.number) this._at(() => this._placeSeal(), Math.max(fromEnd ? 800 : 600, decodeEnd + 60));
       this._at(() => this.setData({ cta: true }), fromEnd ? 1100 : 900);
       // D-46:开场屏不再自己进正文,等玩家点「读下去」(onTap → _continue)。
-    },
-    /** 三格数据滚上来(只滚拿得到的真读数;mm:ss 按秒滚,a/b 只滚 a;其余直接写)。 */
-    _rollStats() {
-      const stats = this.data.endStats || [];
-      if (this.data.reducedMotion || !stats.length) return;
-      const t0 = Date.now();
-      clearInterval(this._statTimer);
-      this._statTimer = setInterval(() => {
-        if (this._gone) { clearInterval(this._statTimer); return; }
-        const p = E.clamp01((Date.now() - t0) / STAT_ROLL_MS), e = E.easeOutCubic(p);
-        this.setData({ endStats: stats.map((s) => Object.assign({}, s, { shown: statAt(s.v, e) })) });
-        if (p >= 1) { clearInterval(this._statTimer); this._statTimer = 0; }
-      }, 40);
     },
     _finale() {
       this._stage = 'finale';
@@ -265,7 +240,6 @@ Component({
     _dissolve() {
       if (this._stage !== 'end' || this._gone) return;
       this._stage = 'dissolve';
-      clearInterval(this._statTimer); this._statTimer = 0;
       // 数据还没滚完就点了:先落到真值再吹散,不让「00:00 / 0/2」停在屏上
       this.setData({ endStats: (this.data.endStats || []).map((s) => Object.assign({}, s, { shown: s.v })) });
       const go = () => { this._stage = 'end-done'; this.setData({ endCard: null, endOut: false, endStats: [] }); this._toStart(true); };

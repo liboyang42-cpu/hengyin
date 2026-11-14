@@ -19,6 +19,7 @@ const read = relativePath => fs.readFileSync(path.join(ROOT, relativePath), 'utf
 let pageConfig
 let audio
 let requests = []
+let storedRunId
 
 global.getApp = () => ({ globalData: {}, getUserID: () => 1, sendRequest: options => { requests.push(options) } })
 
@@ -68,6 +69,10 @@ function makePage(chapter, nodes) {
     if (callback) callback()
   }
   page.measureChapter = () => {}
+  if (storedRunId) {
+    page._routeState = { sessionId: storedRunId }
+    page._startStoryDust = () => {} // 存档夹具只测续玩，省略粒子循环。
+  }
   return page
 }
 
@@ -1206,10 +1211,12 @@ test('拍照类玩法的入口卡是相机、动作词是「打开相机」(2026
 // ==================== 存档:中途退出回到原处(2026-09-24) ====================
 function withStore(fn) {
   const store = {}
+  const savedRunId = storedRunId
+  storedRunId = 501
   const saved = { get: global.wx.getStorageSync, set: global.wx.setStorageSync }
   global.wx.getStorageSync = k => store[k]
   global.wx.setStorageSync = (k, v) => { store[k] = JSON.parse(JSON.stringify(v)) }
-  try { fn(store) } finally { global.wx.getStorageSync = saved.get; global.wx.setStorageSync = saved.set }
+  try { fn(store) } finally { storedRunId = savedRunId; global.wx.getStorageSync = saved.get; global.wx.setStorageSync = saved.set }
 }
 
 test('读到哪一段、开着哪个玩法记在本地;重进先重开那个玩法,没开就滚回读到的那一段', () => withStore(() => {
@@ -1379,19 +1386,19 @@ test('建档交上去之后出初始状态页:只列作者开了的精力/幸运
     return page
   }
   const page = make()
-  page.onComplete(51, { xp: 0, routeState: { routeMode: 'LINEAR', hp: 10, luck: 3, attributes: [{ label: '想象力', value: 1 }] } })
+  page.onComplete(51, { xp: 0, routeState: { sessionId: 501, routeMode: 'LINEAR', hp: 10, luck: 3, attributes: [{ label: '想象力', value: 1 }] } })
   assert.equal(page.data.startState.show, true)
   assert.deepEqual(page.data.startState.rows.map(r => r.label + r.value), ['精力10', '想象力1'], '幸运没开，不列')
   page.closeStartState()
   t.mock.timers.tick(450)
   assert.equal(page.data.startState.show, false)
   const again = make()
-  again.onComplete(51, { xp: 0, routeState: { routeMode: 'LINEAR', hp: 10, attributes: [] } })
+  again.onComplete(51, { xp: 0, routeState: { sessionId: 501, routeMode: 'LINEAR', hp: 10, attributes: [] } })
   assert.equal(again.data.startState.show, false, '这一局已经看过')
   const other = make()
   other.data.topicId = 6
   other._vitalsOn = null
-  other.onComplete(51, { xp: 0, routeState: { routeMode: 'LINEAR', hp: 10, luck: 3, attributes: [] } })
+  other.onComplete(51, { xp: 0, routeState: { sessionId: 501, routeMode: 'LINEAR', hp: 10, luck: 3, attributes: [] } })
   assert.equal(other.data.startState.show, false, '没开初始状态、也没有属性:不出空页')
 }))
 

@@ -65,3 +65,11 @@ test('g20:通关炸开后彩纸撒到通关卡出来之后,不是卡一出来就
   at.forEach(a => a.fn())
   assert.equal(c.data.cta, true)
 })
+
+test('章节完成卡第一帧即显示真用时与完成数，不从零计数', () => {
+  const c = instance(load(), { endInfo: { number: '01', title: '报到与校准', rows: [{ k: '用时', v: '02:15' }, { k: '坐标', v: '2/2' }] } });
+  c._gate();
+  assert.deepEqual(c.data.endStats.map(row => row.shown), ['02:15', '2/2']);
+  c.flush();
+  assert.deepEqual(c.data.endStats.map(row => row.shown), ['02:15', '2/2']);
+});

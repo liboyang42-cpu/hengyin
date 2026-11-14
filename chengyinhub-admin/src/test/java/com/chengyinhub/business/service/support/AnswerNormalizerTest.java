@@ -18,6 +18,21 @@ class AnswerNormalizerTest {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     @Test
+    void 有序多段答案接受玩家分隔写法但不拼接作者备选() {
+        for (String value : List.of("C02、B04", "C02,B04", "C02，B04", "C02;B04", "C02；B04", "C02 B04", "Ｃ０２，Ｂ０４")) {
+            assertTrue(AnswerPolicy.matchesAdvancedType("C02B04", value), value);
+            assertTrue(BasicTextAnswer.matches("C02B04", value), value);
+            assertTrue(AnswerNormalizer.equivalentKeepCase("C02B04", value), value);
+        }
+        assertFalse(AnswerPolicy.matchesAdvancedType("C02B04", "B04、C02"));
+        assertFalse(AnswerPolicy.matchesAdvancedType("C02B04", "C02"));
+        assertFalse(AnswerPolicy.matchesAdvancedType("C02B04", "C02、B05"));
+        assertFalse(AnswerNormalizer.equivalentKeepCase("C02B04", "c02,b04"));
+        assertFalse(AnswerPolicy.matchesAdvancedType("苹果，梨", "苹果梨"));
+        assertFalse(BasicTextAnswer.matches("苹果，梨", "苹果梨"));
+    }
+
+    @Test
     void 全角数字字母归一() {
         assertEquals("3号线abc", AnswerNormalizer.normalize("３号线ＡＢＣ"));
         assertTrue(AnswerNormalizer.equivalent("3号线", "３号线"));

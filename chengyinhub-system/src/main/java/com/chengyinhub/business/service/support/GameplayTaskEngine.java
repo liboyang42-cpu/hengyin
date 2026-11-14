@@ -169,6 +169,12 @@ public final class GameplayTaskEngine {
     public ObjectNode skipAssisted(JsonNode theme, JourneyRules rules, State state, String questKey,
             String eventId, String ownerKey, long now) {
         if (!GameplayRuntimeConfig.cooperativePuzzles(theme)) throw new IllegalStateException("本局未启用合作跳过");
+        return skipTrusted(theme, rules, state, questKey, eventId, ownerKey, now);
+    }
+
+    /** 仅供已核验跳过授权的服务端运行时使用，复用辅助完成结算，不记为答对。 */
+    public ObjectNode skipTrusted(JsonNode theme, JourneyRules rules, State state, String questKey,
+            String eventId, String ownerKey, long now) {
         JsonNode q = quest(theme, questKey);
         JsonNode prior = state.getThemeRuntime().path("gameplay").path("slots").path(q.path("settlementSlot").asText());
         if (prior.isObject()) return (ObjectNode) prior.deepCopy();

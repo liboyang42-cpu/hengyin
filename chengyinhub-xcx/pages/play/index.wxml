@@ -1336,7 +1336,7 @@
 
 <!-- ===================== 章节结算(半屏,用户裁决:非全屏,底部=继续) ===================== -->
 <view class="finmask" catchtouchmove="noop" wx:if="{{showFinish}}" bindtap="closeFinish" aria-role="button" aria-label="关闭完成面板" hover-class="cy-pressed" hover-stay-time="80"></view>
-<view class="finsheet {{allDone && !isPreview && !isMock && topicId ? 'finsheet--two' : ''}}" wx:if="{{showFinish}}">
+<scroll-view scroll-y enhanced show-scrollbar="{{false}}" class="finsheet {{allDone && !isPreview && !isMock && topicId ? 'finsheet--two' : ''}}" wx:if="{{showFinish}}">
   <!-- 2026-10-28 业主定稿(claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结顺序 —— 地图 → 标题 → 大数字 → 成绩行 → 分组卡 → 一颗按钮 -->
   <!-- 第九轮 m2 第 3 项:路线分享卡(原型 m-card2)。有路线时代替上面的地图盒 -->
   <view class="finsheet__shade" wx:if="{{routeCard.on && !newLifeOS.show}}" hidden="{{finale.show}}" style="height:{{chrome.contentTop}}px"></view><view class="finsheet__card" wx:if="{{routeCard.on && !newLifeOS.show}}" hidden="{{finale.show}}" style="padding-top:var(--cy-space-2)">
@@ -1347,11 +1347,12 @@
     <view class="finsheet__result {{finishResult.win ? 'is-win' : ''}}" wx:if="{{finishResult.label}}">{{finishResult.label}}</view>
   </view>
     <view class="finsheet__routewrap">
-      <free-map id="routemap" class="finsheet__routemap" wx:if="{{routeMap.points.length}}" nodes="{{[]}}" fit="{{true}}" fit-points="{{routeMap.points}}" fit-padding="{{[96, 72, 400, 72]}}"
+      <free-map id="routemap" class="finsheet__routemap" wx:if="{{routeMap.points.length && !routeCard.error}}" nodes="{{[]}}" fit="{{true}}" fit-points="{{routeMap.points}}" fit-padding="{{[96, 72, 400, 72]}}"
                 map-polyline="{{routeMap.lines}}" scale="14" center="{{fmCenter}}" subkey="{{routeMap.subkey}}" layer-style="{{routeMap.layerStyle}}" tone="{{routeMap.tone}}"
                 show-controls="{{false}}" show-photo-callouts="{{false}}" interactive="{{false}}" bindupdated="onRouteMapUpdated" />
       <canvas type="2d" id="routecv" class="finsheet__routecv" aria-role="img" aria-label="路线卡"></canvas>
-      <view class="finsheet__map-error" wx:if="{{routeCard.error}}" bindtap="retryRouteThumb" hover-class="cy-pressed" hover-stay-time="80">路线预览暂未生成 · 重试</view>
+      <image class="finsheet__map-fallback" wx:if="{{routeCard.error && finishSnap && !routeCard.ready}}" src="{{finishSnap}}" mode="aspectFit" aria-role="img" aria-label="路线连线预览" />
+      <view class="finsheet__map-error" wx:if="{{routeCard.error && !finishSnap}}" bindtap="retryRouteThumb" hover-class="cy-pressed" hover-stay-time="80">路线预览暂未生成 · 重试</view>
     </view>
     <view class="finsheet__card-acts" wx:if="{{routeCard.ready}}">
       <cy-btn variant="secondary" style="flex:1" bindtap="saveFinishCard">保存图片</cy-btn>
@@ -1524,7 +1525,7 @@
   <view class="finsheet__dock {{allDone && !isPreview && !isMock && topicId ? 'finsheet__dock--two' : ''}}"></view>
   <view class="finsheet__settle" wx:if="{{allDone && !isPreview && !isMock && topicId}}" bindtap="openSettlement" aria-role="button" aria-label="查看结算" hover-class="cy-pressed" hover-stay-time="80">查看结算</view>
   <view class="finsheet__cta" bindtap="closeFinish" aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>
-</view>
+</scroll-view>
 
 <!-- v13 通关勋章页(业主 2026-10-22):整个主题走完时盖在完成面板上面;「查看记录」露出下面的完成面板 -->
 <cy-medal-screen show="{{showFinish && medalScreen.show}}" items="{{medalScreen.items}}" title="{{medalScreen.title}}" sub="{{medalScreen.sub}}"
@@ -1555,7 +1556,7 @@
 <!-- 剩余点位半屏已删除:剩余点看地点卡层;它原来还顶掉碎片翻卡(else-if),删后碎片恢复常弹 -->
 
 <!-- 足迹分享卡离屏画布(750×1000 逻辑px) -->
-<canvas type="2d" id="snapcv" style="position:fixed;left:-2000px;top:0;width:375px;height:500px;"></canvas>
+<canvas type="2d" id="snapcv" aria-hidden="true" style="position:fixed;left:-2000px;top:0;width:375px;height:500px;opacity:0;pointer-events:none;"></canvas>
 
 <view class="play-loading" wx:if="{{loading}}" style="padding-top:{{chrome.contentTop || 0}}px" aria-role="status" aria-live="polite" aria-label="正在加载路线">
   <!-- x-fix2 L-2:加载骨架在纯黑底上近乎不可见,整屏像黑屏且出不去;压在 z200,外层返回键够不着,这里单放一颗 -->

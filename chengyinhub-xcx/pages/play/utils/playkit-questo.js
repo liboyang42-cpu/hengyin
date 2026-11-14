@@ -71,7 +71,7 @@ function stripOptionKey(text, key) {
 function hangmanStationText(kit, node, fallbackTitle) {
   const n = node || {};
   const k = kit || {};
-  const title = k.title || String(n.question || '').trim() || fallbackTitle || '';
+  const title = String(n.question || '').trim() || k.title || fallbackTitle || '';
   const feedback = k.solved === true ? String(k.feedback || n.passText || '').trim() : '';
   return { title, feedback };
 }
