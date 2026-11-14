@@ -552,4 +552,21 @@ public interface ICmsRegistrationService
      * @return 按主题去重后的可投诉项;不会返 null。同一主题多单时保留先到的那张报名单。
      */
     java.util.List<com.chengyinhub.business.domain.vo.ComplainableTopicVO> selectComplainableTopics(Long memberId);
+
+    /**
+     * 自玩票虚拟支付（XPAY）：服务端已向微信回查确认「已付且金额与冻结价一致」后开通。
+     * 与 JSAPI 回调共用同一个支付成功内核（库存/结算/积分/核销码），重复调用幂等。
+     *
+     * @return SUCCESS 已开通（含重复）；CLOSED 订单已关闭/取消/退款，钱已收但无法开通（调用方须退款）；FAIL 金额或状态不符
+     */
+    String completeXpayPayment(String registrationNo, String wxOrderId, long paidFeeFen);
+
+    /** 渠道（微信客服/用户端）发起并已完成的虚拟支付退款：关闭报名并停止游玩，幂等。返回是否已处于已退款终态。 */
+    boolean applyXpayChannelRefund(String registrationNo);
+
+    /**
+     * 自玩票虚拟支付签发前的可支付校验：与 {@link #beginPaymentAttempt} 同一套准入（归属、原支付事实、可支付状态、
+     * 未被更晚的已付单取代），但不迁移 payment_status、不发起 JSAPI 尝试；过期只拒绝，关单交给带虚拟支付围栏的关单路径。
+     */
+    CmsRegistration requirePayableForXpay(Long registrationId, Long memberId);
 }

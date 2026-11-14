@@ -74,8 +74,9 @@ class PlatformPassMySqlIT {
         db = new JdbcTemplate(source);
         assertEquals(MybatisItDatabase.databaseName(suite), db.queryForObject("SELECT DATABASE()", String.class));
         manager = new DataSourceTransactionManager(source);
-        P0AcceptanceSchema.baseTables(db, "cms_topic", "product_role", "club", "cms_topic_chapter", "merchant_chapter_offer");
+        P0AcceptanceSchema.baseTables(db, "cms_topic", "product_role", "club", "cms_topic_chapter", "merchant_chapter_offer", "cms_registration");
         P0AcceptanceSchema.migrations(source, "migration_20261110_platform_pass.sql",
+                "migration_20261113_platform_pass_hardening.sql",
                 "migration_circle_theme_batch2_20260821.sql", "migration_circle_theme_primary_schema_20260821.sql",
                 "migration_club_topic_display_settings_20260906.sql");
         mapper = passMapper(source);
@@ -307,11 +308,11 @@ class PlatformPassMySqlIT {
     }
 
     @Test
-    void claimedPassCannotBeRefunded() {
+    void claimedPassNeedsManualReviewBeforeRefund() {
         String no = paidXpay(541L, "MONTH", "it-req-0041");
         PlatformPassService.Coverage coverage = service.coverage(541L, OFFICIAL_TOPIC, new Date());
         new TransactionTemplate(manager).executeWithoutResult(s -> service.recordClaim(coverage, 541L, OFFICIAL_TOPIC, 880001L));
-        assertEquals("PASS_ALREADY_USED", assertThrows(PlatformPassException.class,
+        assertEquals("MANUAL_REVIEW_REQUIRED", assertThrows(PlatformPassException.class,
                 () -> service.requestRefund(no, "it-admin", "测试")).getReasonCode());
         assertEquals(1, db.queryForObject("SELECT status FROM platform_pass_order WHERE order_no=?", Integer.class, no));
         // 同一报名行不能记两次领取
@@ -350,8 +351,8 @@ class PlatformPassMySqlIT {
         long id = db.queryForObject("SELECT id FROM platform_pass_order WHERE order_no=?", Long.class, created.get("orderNo"));
         assertEquals(0, mapper.markCancelled(id, 999L, new Date()), "他人不能取消");
         assertEquals(0, mapper.markJsapiPaid(id, 1L, "a".repeat(64), "TX", new Date()), "渠道不符不能置已付");
-        assertEquals(1, mapper.markXpayPaid(id, "WX1", 1, new Date()));
-        assertEquals(0, mapper.markXpayPaid(id, "WX2", 1, new Date()), "已付不能再置已付");
+        assertEquals(1, mapper.markXpayPaid(id, "WX1", 1, new Date(), 2));
+        assertEquals(0, mapper.markXpayPaid(id, "WX2", 1, new Date(), 2), "已付不能再置已付");
         assertEquals(0, mapper.markCancelled(id, 561L, new Date()), "已付不能取消");
     }
 }

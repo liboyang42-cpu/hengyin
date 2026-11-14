@@ -14,6 +14,7 @@ const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js')
 const replayMotionBehavior = require('../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
+const { tidyText } = require('../../utils/keep-numerals.js');
 // C1:核验说明只认服务端 photoVerified=true;兜底放行另有一句,不说「这张过了」
 const { PHOTO_VERIFIED_NOTE, PHOTO_FALLBACK_VERDICT, rewardNote } = require('../../utils/sensor-contract.js');
 
@@ -69,6 +70,7 @@ Component({
     },
     'photoVerified, rewardCeiling, passed': function (photoVerified, rewardCeiling, passed) {
       this.setData({
+        uploadFail: passed ? '' : this.data.uploadFail,   // 过了就不再留着上一次的失败提示
         verifiedNote: passed && photoVerified === true ? PHOTO_VERIFIED_NOTE : '',
         rewardNote: passed ? rewardNote(rewardCeiling) : '',
       });
@@ -86,7 +88,7 @@ Component({
            还有机会就重拍(服务端 passed=false),机会用完服务端放行(passed=true)才说先往下走。 */
         verdict = passed ? '这次没能审，先往下走' : '这次没能审，再拍一张';
         verdictKind = '';
-        if (!passed) reason = String(lastReason || '').trim();
+        if (!passed) reason = tidyText(String(lastReason || '').trim());
       } else if (passed && flagged) {
         // 次数用尽兜底放行:服务端 passed 与 flagged 同时为真。这张是「先算过」,不是「过了」
         verdict = PHOTO_FALLBACK_VERDICT;
@@ -98,7 +100,7 @@ Component({
         verdict = '还差一点，再拍一张';
         verdictKind = 'no';
         // 真实理由(服务端给的),有就摆给玩家看,别只丢一句「再拍一张」
-        reason = String(lastReason || '').trim();
+        reason = tidyText(String(lastReason || '').trim());
       }
       /* 第二次判定要重播。`wx:if="{{verdict}}"` 一旦为真就恒真,节点复用 ——
          连「这张过了」都不播,判定像是本来就在那。
@@ -183,7 +185,7 @@ Component({
 
     /** 一张照片到手:退出取景，没路径就说清，有路径才抖一下并抛给页面。 */
     _emitShot(tempFilePath, size, aborted) {
-      this.setData({ busy: false, framing: false });
+      this.setData({ busy: false, framing: false, uploadFail: '' });   // 新一次尝试开始:清掉上一次的失败提示
       if (!tempFilePath) {
         if (!aborted) cyToast('没拿到照片');
         return;

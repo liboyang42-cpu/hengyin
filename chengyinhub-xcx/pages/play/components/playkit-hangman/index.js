@@ -153,5 +153,8 @@ Component({
       this.triggerEvent('submit', payload);
     },
     onClose() { this.triggerEvent('close'); },
+    /* 解开后的「继续」:内嵌在故事流里时没有可关的整屏,要把「继续」交给页面去收尾本站(到站打卡);
+       整屏时仍是关闭(页面 closePlayKit 在 readyForBase 时同样接着走)。 */
+    onContinue() { this.triggerEvent(this.data.inline ? 'continue' : 'close'); },
   },
 });

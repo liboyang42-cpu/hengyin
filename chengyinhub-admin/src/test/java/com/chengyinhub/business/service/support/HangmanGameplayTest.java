@@ -104,6 +104,27 @@ class HangmanGameplayTest {
         assertThrows(IllegalArgumentException.class, () -> HangmanGameplay.validate(section));
     }
 
+    /** 2026-11-13 走查:单字符/数字答案「先错后对」必须能解开(错字留在槽里不能挡住后一次提交),且能让本站过关。 */
+    @Test void singleDigitAnswerWrongThenRightSolves() {
+        ObjectNode section = config("8");
+        ObjectNode kit = HangmanGameplay.initialState(section);
+        ObjectNode wrong = HangmanGameplay.judge(section, kit, JSON.createObjectNode().set("slots", JSON.createObjectNode().put("0", "3")));
+        assertFalse(wrong.path("solved").asBoolean());
+        assertFalse(kit.path("solved").asBoolean());
+        ObjectNode right = HangmanGameplay.judge(section, kit, JSON.createObjectNode().set("slots", JSON.createObjectNode().put("0", "8")));
+        assertTrue(right.path("solved").asBoolean());
+        assertTrue(kit.path("solved").asBoolean());
+        ObjectNode again = HangmanGameplay.judge(section, kit, JSON.createObjectNode().put("input", "8"));
+        assertTrue(again.path("alreadySolved").asBoolean(), "解开之后重复提交原样回放,不报错");
+    }
+
+    @Test void singleCharacterAnswerAcceptsInputShapeAfterWrongGuess() {
+        ObjectNode section = config("U");
+        ObjectNode kit = HangmanGameplay.initialState(section);
+        assertFalse(HangmanGameplay.judge(section, kit, JSON.createObjectNode().put("input", "x")).path("solved").asBoolean());
+        assertTrue(HangmanGameplay.judge(section, kit, JSON.createObjectNode().put("input", "u")).path("solved").asBoolean());
+    }
+
     @Test void disabledSectionIsInert() {
         ObjectNode disabled = JSON.createObjectNode().put("enabled", false);
         assertDoesNotThrow(() -> HangmanGameplay.validate(disabled));

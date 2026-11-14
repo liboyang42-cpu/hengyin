@@ -94,7 +94,7 @@ test('R03 持久化失败不写、换号丢弃旧回包；明确回滚拒绝才�
 test('R04 付A留本页再付B；A完成不能锁B，同笔done仍不可再次提交', () => {
   const requests = [], modals = [], app = { getUserID: () => 9, sendRequest: request => requests.push(request) };
   const checkout = require('../../utils/checkout/checkout-workflow.js');
-  const locals = { app, ...checkout, createRegistrationPaymentVerifier: () => () => {}, cyLoading: { hide() {} }, toast() {}, modal: { show: value => modals.push(value) }, wx: {} };
+  const locals = { app, ...checkout, xpayPay: require('../../utils/checkout/selfplay-xpay-pay.js'), createRegistrationPaymentVerifier: () => () => {}, cyLoading: { hide() {} }, toast() {}, modal: { show: value => modals.push(value) }, wx: {} };
   const p = host({ list: [{ id: 11 }, { id: 22 }] });
   const file = 'subpackageMember/components/cy/scene-member-order-history/index.js';
   for (const name of ['_syncPaymentAccount', '_initWorkflow', '_updateOrderPaid', 'payOrderRequest']) p[name] = method(file, name, locals);

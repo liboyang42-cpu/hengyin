@@ -840,7 +840,7 @@ class GenericGameplayHttpE2eIT {
     private ObjectNode r5(String kit) {
         ObjectNode c=json.createObjectNode().put("schemaVersion",1);
         ObjectNode main=c.putObject(kit).put("enabled",true);
-        if("qa".equals(kit))main.put("title","答案").put("mode","TYPE").put("answerText","correct");
+        if("qa".equals(kit))main.put("title","答案").put("mode","TYPE").put("answerText","correct").put("maxTries",1);
         if("typeIn".equals(kit))main.put("title","打字").put("target","hello").put("seconds",3).put("tries",1);
         if("check".equals(kit))main.put("checkId","lc").put("tier","hard");
         ObjectNode o=c.putObject("outcomeRules").put("version",1);

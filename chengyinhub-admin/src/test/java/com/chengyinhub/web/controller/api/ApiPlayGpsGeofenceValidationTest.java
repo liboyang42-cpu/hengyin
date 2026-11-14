@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -335,13 +336,59 @@ class ApiPlayGpsGeofenceValidationTest
         AjaxResult result = arrive("121.6", "31.4");
 
         assertNotEquals(200, result.get("code"));
-        assertEquals("还没到这一站附近", result.get("msg"));
+        assertEquals("离起点太远，请到起点 300 米内再开始", result.get("msg"));
         verifyNoProgressAndNoReward();
     }
 
-    /** 第十二轮 k2(业主 2026-11-05):本人已解开这一站的玩法 ⇒ 远处重进也算完成,奖励照常;没解开仍被围栏拒。 */
+    // ---- 业主 2026-11-13 拍板:约 300 米,开局时看一次,游戏中不再逐站定位 ----
+    // 0.00225° 纬度 ≈ 250m,0.00272° ≈ 302m(1° ≈ 111.2km)。
+
     @Test
-    void solvedAdvancedGameCompletesStationWithoutArrivalFence()
+    void startWithinThreeHundredMetresIsAccepted()
+    {
+        AjaxResult result = arrive(NODE_LNG, "31.23265");   // ≈ 250m
+
+        assertEquals(200, result.get("code"));
+        verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
+    }
+
+    @Test
+    void startBeyondThreeHundredMetresIsRejectedWithBusinessMessage()
+    {
+        AjaxResult result = arrive(NODE_LNG, "31.23312");   // ≈ 302m
+
+        assertNotEquals(200, result.get("code"));
+        assertEquals("ARRIVE_TOO_FAR", result.get("errorCode"));
+        assertEquals("离起点太远，请到起点 300 米内再开始", result.get("msg"));
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void stationAfterStartIsAcceptedWithoutAnyLocation()
+    {
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
+
+        // 缺定位、缺精度、甚至人在很远处,开局之后都不再卡站点
+        assertEquals(200, BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                null, null, null, null, null).get("code"));
+    }
+
+    @Test
+    void stationBeforeStartIsRejectedWithoutLocation()
+    {
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(false);
+
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                null, null, null, null, null);
+
+        assertNotEquals(200, result.get("code"));
+        assertEquals("ARRIVE_LOCATION_MISSING", result.get("errorCode"));
+        verifyNoProgressAndNoReward();
+    }
+
+    /** 业主 2026-11-13:开局闸不看首站玩法是否解开——解开了但无定位的开局到达一律拒,不落进度不发奖。 */
+    @Test
+    void solvedAdvancedGameOnFirstStationStillNeedsStartLocation()
     {
         com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
                 mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
@@ -351,10 +398,40 @@ class ApiPlayGpsGeofenceValidationTest
         AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
                 null, null, null, null, null, null);
 
-        assertEquals(200, result.get("code"), "解开的站重进不再要现场定位");
-        verify(advanced, org.mockito.Mockito.atLeastOnce()).completeGate(PLAYER, ACTIVITY, TOPIC, NODE);
+        assertNotEquals(200, result.get("code"), "首站玩法已解开也必须带起点 300 米内的定位");
+        assertEquals("ARRIVE_LOCATION_MISSING", result.get("errorCode"));
+        verifyNoProgressAndNoReward();
+    }
+
+    @Test
+    void solvedAdvancedGameOnFirstStationTooFarIsRejected()
+    {
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.solvedForArrival(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
+
+        AjaxResult result = arrive("121.6", "31.4");
+
+        assertEquals("离起点太远，请到起点 300 米内再开始", result.get("msg"));
+        verifyNoProgressAndNoReward();
+    }
+
+    /** 第十二轮 k2 保留部分:已开局(本局已有进度)的后续站,解开即完成,不再要现场定位。 */
+    @Test
+    void solvedAdvancedGameAfterRunStartedCompletesWithoutLocation()
+    {
+        com.chengyinhub.business.service.IAdvancedGameRuntimeService advanced =
+                mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
+        when(advanced.solvedForArrival(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
+
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                null, null, null, null, null, null);
+
+        assertEquals(200, result.get("code"), "已开局的后续站解开即完成");
         verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
-        verify(progressionService).onNodeDone(PLAYER);
     }
 
     @Test
@@ -367,7 +444,7 @@ class ApiPlayGpsGeofenceValidationTest
 
         AjaxResult result = arrive("121.6", "31.4");
 
-        assertEquals("还没到这一站附近", result.get("msg"));
+        assertEquals("离起点太远，请到起点 300 米内再开始", result.get("msg"));
         verifyNoProgressAndNoReward();
     }
 
@@ -452,7 +529,7 @@ class ApiPlayGpsGeofenceValidationTest
                 mock(com.chengyinhub.business.service.support.ArriveLocationGuard.class);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "arriveLocationGuard", guard);
 
-        assertEquals("还没到这一站附近", arrive("121.6", "31.4").get("msg"));
+        assertEquals("离起点太远，请到起点 300 米内再开始", arrive("121.6", "31.4").get("msg"));
         assertEquals("请开启定位", arrive(null, null).get("msg"));
         verify(guard, never()).check(any(), any(), any(), any(), org.mockito.ArgumentMatchers.anyDouble(),
                 org.mockito.ArgumentMatchers.anyDouble(), any());
@@ -507,6 +584,10 @@ class ApiPlayGpsGeofenceValidationTest
         assertEquals("该站需完成对应任务后才能打卡", arrive(null, null).get("msg"));
         verifyNoProgressAndNoReward();
         when(advanced.hasStationGameProof(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
+        // 2026-11-13:开局闸不看玩法凭证——本局还没开局时,照片玩法已核验也必须带起点 300 米内定位。
+        assertEquals("ARRIVE_LOCATION_MISSING", arrive(null, null).get("errorCode"));
+        verifyNoProgressAndNoReward();
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
         assertEquals(200, arrive(null, null).get("code"));
         verify(progressionService).onNodeDone(PLAYER);
     }
@@ -744,7 +825,7 @@ class ApiPlayGpsGeofenceValidationTest
         AjaxResult result = arrive("121.6", "31.4");
 
         assertNotEquals(200, result.get("code"));
-        assertEquals("还没到这一站附近", result.get("msg"));
+        assertEquals("离起点太远，请到起点 300 米内再开始", result.get("msg"));
         verifyNoProgressAndNoReward();
     }
 

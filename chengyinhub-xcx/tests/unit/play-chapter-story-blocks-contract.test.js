@@ -398,12 +398,13 @@ test('罗盘点开小地图;没有带坐标的地点时照旧回卡包;导航交
   page.openStoryMap()
   assert.equal(page.data.storyMap, true)
   assert.deepEqual(page.data.storyMapCenter, { lat: 31.2304, lng: 121.4737 }, '以下一站为中心')
-  assert.equal(locationRequests, 1, '没有定位时走现有定位授权入口')
+  // 业主 2026-11-13:定位只在开局问一次,开地图不再逐次申请定位
+  assert.equal(locationRequests, 0, '开小地图不再申请定位')
   page.closeStoryMap()
   assert.equal(page.data.storyMap, false)
   page.data.gpsOk = true
   page.openStoryMap()
-  assert.equal(locationRequests, 1, '已有定位时不重复请求')
+  assert.equal(locationRequests, 0, '已有定位时同样不请求')
   page.closeStoryMap()
 
   const opened = []
@@ -1468,9 +1469,9 @@ test('试玩:读完最后一章先播兜底那章;卡上点另一个结局就读
 
 // 第十二轮 k2(业主 2026-11-05「解开的站重进即算完成,玩家不用走回去」):玩法已过的站,有坐标 / GPS 站也直接收尾;
 // 没解开的站照旧先要定位(服务端 /api/play/arrive 同口径,见 ApiPlayGpsGeofenceValidationTest)。
-test('高级玩法已过的站收尾不依赖剧情块引用、不再要定位;没解开的地点与GPS站仍要求定位', async () => {
+test('已开局后高级玩法已过的站收尾不依赖剧情块引用、不再要定位;未开局(首站)无论玩法是否解开都先要定位', async () => {
   const node = { nodeId: 223, vm: 0, lat: 0, lng: 0, hasAdvanced: true }
-  const page = makePage({ blocks: [{ type: 'node', nodeId: 222, locationRequired: false }] }, [node])
+  const page = makePage({ blocks: [{ type: 'node', nodeId: 222, locationRequired: false }] }, [node, { nodeId: 221, done: true }])
   page.data.gpsOk = false
   page.data.advancedPlay = { show: true, node }
   const arrived = []
@@ -1485,13 +1486,24 @@ test('高级玩法已过的站收尾不依赖剧情块引用、不再要定位;�
     page.onArriveTap()
   }
   assert.equal(located, 0)
-  assert.deepEqual(arrived, [223, 223, 223], '解开的站直接收尾')
+  assert.deepEqual(arrived, [223, 223, 223], '已开局:解开的站直接收尾')
   for (const target of [Object.assign({}, node, { nodeId: 224, lat: 31.2, lng: 121.4 }), Object.assign({}, node, { nodeId: 225, vm: 5 })]) {
     page.data.sheet.node = target
     page.onArriveTap()
   }
-  assert.equal(located, 2)
-  assert.deepEqual(arrived, [223, 223, 223], '没解开的真实地点或GPS任务仍先要定位')
+  assert.equal(located, 0, '已开局:后续站不再逐站定位(业主 2026-11-13)')
+  // 未开局(没有任何完成站):首站即使玩法已解开也必须先拿定位(2026-11-13 走查:千里之外解开首站也被接受)
+  const first = makePage({ blocks: [] }, [node])
+  first.data.gpsOk = false
+  first._advancedReadyNodeId = node.nodeId
+  const firstArrived = []
+  let firstLocated = 0
+  first.arrive = id => { firstArrived.push(id) }
+  first.requestPlayLocation = () => { firstLocated++ }
+  first.data.sheet.node = node
+  first.onArriveTap()
+  assert.equal(firstLocated, 1)
+  assert.deepEqual(firstArrived, [], '开局前不带定位不发 arrive')
 })
 
 test('正文打开时切到下一章，标题与正文一起更新，同章重建不重铺', () => {

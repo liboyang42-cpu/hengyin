@@ -1,19 +1,18 @@
 'use strict'
 /**
- * 到点校验半径的单一真源（业主 2026-11-11 拍板：三处到点校验统一一个半径）。
+ * 到点定位规则的端上常量。
  *
- * 三处：
- *   1) 本端 GPS 自动到达（pages/play/index.js 的定位回调，`d <= ARRIVAL_RADIUS_METERS`）
- *   2) 后端 `/api/play/arrive` 围栏（ArriveLocationGuardPolicy.GEOFENCE_METERS）
- *   3) 后端「作答随带定位」的到达判定（ArrivalPolicy.LEGACY_RADIUS_METERS → 同一常量）
+ * 业主 2026-11-13 拍板（取代 2026-11-11 D-69 的「逐站 50m」）：
+ *   “大概就是 300 米，开头需要注意，游戏中就不需要了，开始的时候稍微停一下。”
+ *   - 开局（本局第一次到达）校验一次定位：玩家须在首站（或集合点）约 300 米内，
+ *     与后端 ArrivalPolicy.START_RADIUS_METERS 同值；
+ *   - 开局之后各站到点不再要求定位，端上也不再逐站申请定位、不再按距离禁用按钮。
  *
- * 取值 50m：这是三处里已经在线上跑、且有既有单测与现场口径的默认值（后端 50m 围栏 / 80m 精度闸），
- * 也是「既严格又可靠」的那一档——再小室内/树下会大面积误判，再大等于把「到点」放宽成「到附近」。
- * 作者在节点 arrivalPolicy 里显式覆盖半径时，以冻结副本为准（BE-09），本常量只做缺省。
- *
- * 精度闸（80m）是独立一层，不参与半径计算：低精度不能扩大可到达范围。
+ * ARRIVAL_RADIUS_METERS（50m）不再是规则：只剩「人恰好已在站点旁时自动点亮」的便利提示半径，
+ * 服务端不再以它拒绝任何到达。
  */
+const ARRIVAL_START_RADIUS_METERS = 300
+const ARRIVAL_START_RADIUS_TEXT = ARRIVAL_START_RADIUS_METERS + ' 米'
 const ARRIVAL_RADIUS_METERS = 50
-const ARRIVAL_RADIUS_TEXT = ARRIVAL_RADIUS_METERS + ' 米'
 
-module.exports = { ARRIVAL_RADIUS_METERS, ARRIVAL_RADIUS_TEXT }
+module.exports = { ARRIVAL_START_RADIUS_METERS, ARRIVAL_START_RADIUS_TEXT, ARRIVAL_RADIUS_METERS }

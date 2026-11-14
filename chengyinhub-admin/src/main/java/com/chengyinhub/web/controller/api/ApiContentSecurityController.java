@@ -41,6 +41,9 @@ public class ApiContentSecurityController
     @Autowired(required = false)
     private com.chengyinhub.business.platformpass.PlatformPassService platformPassService;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.platformpass.SelfPlayXpayService selfPlayXpayService;
+
     /**
      * 微信「消息推送」URL 接入验证：service 校验通过后原样返回 echostr。
      */
@@ -138,8 +141,10 @@ public class ApiContentSecurityController
         boolean handled = false;
         try
         {
-            handled = platformPassService != null
-                    && platformPassService.handleXpayPush(com.alibaba.fastjson2.JSON.parseObject(body));
+            com.alibaba.fastjson2.JSONObject event = com.alibaba.fastjson2.JSON.parseObject(body);
+            // 通行证单号(PPO)归通行证;其余按自玩票虚拟支付冻结行认领。互不重叠。
+            handled = (platformPassService != null && platformPassService.handleXpayPush(event))
+                    || (selfPlayXpayService != null && selfPlayXpayService.handleXpayPush(event));
         }
         catch (Exception e)
         {

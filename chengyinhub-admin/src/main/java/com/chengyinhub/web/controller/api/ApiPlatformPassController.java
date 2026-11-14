@@ -79,6 +79,12 @@ public class ApiPlatformPassController extends BaseController {
         return success(service.confirmXpay(requireMemberId(), orderNo));
     }
 
+    @Operation(summary = "申请整单退款（登记申请与使用事实，进度见订单详情的 refund 字段）")
+    @PostMapping("/orders/{orderNo}/refund-apply")
+    public AjaxResult refundApply(@PathVariable String orderNo, @RequestBody(required = false) Map<String, Object> body) {
+        return success(service.applyRefund(requireMemberId(), orderNo, body == null ? null : str(body.get("reason"))));
+    }
+
     @Operation(summary = "取消待支付单")
     @PostMapping("/orders/{orderNo}/cancel")
     public AjaxResult cancel(@PathVariable String orderNo) {

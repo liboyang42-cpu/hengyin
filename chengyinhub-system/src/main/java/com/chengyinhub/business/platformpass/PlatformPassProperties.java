@@ -59,6 +59,12 @@ public class PlatformPassProperties {
         public String getApiBase() { return apiBase; }
         public void setApiBase(String v) { apiBase = v; }
 
+        /** 已有订单的回查 / 发货确认 / 退款只需要凭据完整，不依赖「新售」开关（T07）。 */
+        public boolean hasCredentials() {
+            return offerId != null && !offerId.isBlank() && appKey != null && !appKey.isBlank()
+                    && (env == 0 || env == 1);
+        }
+
         public boolean isReady() {
             return enabled && offerId != null && !offerId.isBlank() && appKey != null && !appKey.isBlank()
                     && (env == 0 || env == 1);

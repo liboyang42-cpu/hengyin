@@ -7,7 +7,8 @@ const ROOT = path.join(__dirname, '..', '..')
 const js = fs.readFileSync(path.join(ROOT, 'pages/play/index.js'), 'utf8')
 const wxml = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxml'), 'utf8')
 const wxss = fs.readFileSync(path.join(ROOT, 'pages/play/index.wxss'), 'utf8')
-const fn = (name) => new Function(js.match(new RegExp('function ' + name + '\\([\\s\\S]*?\\n}\\n'))[0] + '; return ' + name)()
+const { stationLabel } = require('../../pages/play/utils/play-stage-pops.js')
+const fn = (name) => new Function('stationLabel', js.match(new RegExp('function ' + name + '\\([\\s\\S]*?\\n}\\n'))[0] + '; return ' + name)(stationLabel)
 
 test('成就行:「标题 · 值」拆开,站名做副行,首达的值本身就是站名', () => {
   const rows = fn('achievementRows')({ 1: '首达 · 白马咖啡馆', 3: '最快一段 · 1分20秒' }, [{ nodeId: 1, name: '白马咖啡馆' }, { nodeId: 2, name: '摩西会堂' }, { nodeId: 3, name: '霍山公园' }])

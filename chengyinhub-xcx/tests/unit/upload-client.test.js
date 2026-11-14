@@ -174,7 +174,7 @@ test('上传池最多并发 3 个，settle 后才启动队列下一项', () => {
   assert.equal(calls.length, 5);
 });
 
-test('逐文件超时会 abort、保留失败项并继续队列；destroy 屏蔽 onDone', () => {
+test('逐文件超时保留失败项并继续队列(不取消在途请求，留给迟到成功回包复用)；destroy 屏蔽 onDone', () => {
   const timers = [];
   const calls = [];
   let aborted = 0;
@@ -197,7 +197,7 @@ test('逐文件超时会 abort、保留失败项并继续队列；destroy 屏蔽
   });
   const watchdog = timers.find(t => t.ms === 1000);
   watchdog.fn();
-  assert.equal(aborted, 1);
+  assert.equal(aborted, 0, '超时不取消:服务端可能已收下');
   assert.equal(calls.length, 2);
   calls[1].success({ data: JSON.stringify({ code: 200, url: 'B' }) });
   assert.equal(done.ok, false);
@@ -208,7 +208,7 @@ test('逐文件超时会 abort、保留失败项并继续队列；destroy 屏蔽
   const control = client.uploadAll(['c'], { onDone() { called += 1; } });
   control.destroy();
   assert.equal(called, 0);
-  assert.equal(aborted, 2);
+  assert.equal(aborted, 1);
 });
 
 test('上传 abort 同步触发 fail 时 watchdog 仍归类 unknown', () => {
@@ -436,3 +436,24 @@ test('rejected original media can resubmit its owner version without publishing 
   assert.equal(done.failures[0].assetId, '13')
   assert.equal(calls.length, 1)
 })
+
+test('客户端超时后服务端仍收下:迟到的成功回包被同一文件的重试直接复用,不再重复上传', () => {
+  const timers = [];
+  const calls = [];
+  const client = createUploadClient({
+    wxUploadFile(opts) { calls.push(opts); return { abort() {} }; },
+    getBaseUrl: () => 'https://base', getAuthorization: () => 'token',
+    setTimer(fn, ms) { const t = { fn, ms, cleared: false }; timers.push(t); return t; },
+    clearTimer(t) { t.cleared = true; },
+  });
+  let first; let second;
+  client.uploadAll(['photo'], { onDone: v => { first = v; } });
+  assert.equal(timers.find(t => t.ms === 60000) !== undefined, true, '单文件默认 60 秒');
+  timers.find(t => t.ms === 60000).fn();
+  assert.equal(first.failures[0].status, 'unknown');
+  calls[0].success({ statusCode: 200, data: JSON.stringify({ code: 200, url: 'https://x/p.jpg' }) });
+  client.uploadAll(['photo'], { onDone: v => { second = v; } });
+  assert.equal(calls.length, 1, '重试不再发起上传');
+  assert.equal(second.ok, true);
+  assert.equal(second.results[0], 'https://x/p.jpg');
+});

@@ -1,6 +1,7 @@
 <template>
   <div class="app-container cy-domain-page">
     <manual-payout-queue v-if="isManualQueue" :route-query="$route.query" @back="goRefundQueue" />
+    <platform-pass-refund-queue v-else-if="isPlatformPassQueue" @back="goRefundQueue" />
     <activity-cancel-refund-cases v-else-if="isActivityCancelQueue" :route-query="$route.query" @back="goRefundQueue" />
 
     <template v-else>
@@ -9,6 +10,7 @@
         title="退款处理台"
         description="审核决定与真实打款状态分开呈现。客服可发起售后，审核与打款按权限和双人约束继续流转。"
       >
+        <el-button icon="el-icon-postcard" @click="goPlatformPassQueue" v-hasPermi="['business:platformPass:refund']">通行证退款复核</el-button>
         <el-button icon="el-icon-tickets" @click="goActivityCancelQueue" v-hasPermi="['business:refund:review']">活动取消退款</el-button>
         <el-button icon="el-icon-warning-outline" @click="goManualQueue" v-hasPermi="['business:refund:review']">人工打款队列</el-button>
         <el-button type="primary" icon="el-icon-plus" @click="handleAdd" v-hasPermi="['business:refund:review']">发起售后</el-button>
@@ -259,11 +261,12 @@ function enumLookup(map, value, fallback, numeric) {
 
 export default {
   name: 'FinanceRefund',
-  components: { ActivityCancelRefundCases, ManualPayoutQueue, CyDataTable, CyEntityHeader, CyEntityLink, CyFilterBar, CyPageHeader, CyStatusTag },
+  components: { ActivityCancelRefundCases, ManualPayoutQueue, PlatformPassRefundQueue: () => import('./PlatformPassRefundQueue'), CyDataTable, CyEntityHeader, CyEntityLink, CyFilterBar, CyPageHeader, CyStatusTag },
   data() {
     return {
       isManualQueue: false,
       isActivityCancelQueue: false,
+      isPlatformPassQueue: false,
       loading: false,
       listRequestId: 0,
       refundList: [],
@@ -339,16 +342,20 @@ export default {
     loadRoute(query = {}) {
       const manualQueue = firstQueryValue(query.queue) === 'manual'
       const activityCancelQueue = firstQueryValue(query.queue) === 'activity-cancel'
-      const requiredPermission = manualQueue || activityCancelQueue ? 'business:refund:review' : 'business:refund:list'
+      const platformPassQueue = firstQueryValue(query.queue) === 'platform-pass'
+      const requiredPermission = platformPassQueue ? 'business:platformPass:refund'
+        : manualQueue || activityCancelQueue ? 'business:refund:review' : 'business:refund:list'
       if (!auth.hasPermi(requiredPermission)) {
         this.isManualQueue = false
         this.isActivityCancelQueue = false
+        this.isPlatformPassQueue = false
         this.$router.replace('/401')
         return
       }
       this.isManualQueue = manualQueue
       this.isActivityCancelQueue = activityCancelQueue
-      if (this.isManualQueue || this.isActivityCancelQueue) return
+      this.isPlatformPassQueue = platformPassQueue
+      if (this.isManualQueue || this.isActivityCancelQueue || this.isPlatformPassQueue) return
       this.queryParams = createQueryParams(query)
       this.getList()
     },
@@ -413,6 +420,7 @@ export default {
     },
     openDetail(row) { this.detailRow = row; this.detailOpen = true },
     goActivityCancelQueue() { this.$router.push({ name: 'financeRefund', query: { queue: 'activity-cancel' } }) },
+    goPlatformPassQueue() { this.$router.push({ name: 'financeRefund', query: { queue: 'platform-pass' } }) },
     goManualQueue() { this.$router.push({ name: 'financeRefund', query: { queue: 'manual' } }) },
     goRefundQueue() { this.$router.push({ name: 'financeRefund' }) },
     handleQuery() { this.queryParams.pageNum = 1; this.getList() },

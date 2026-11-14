@@ -14,6 +14,20 @@ function routePoint(row) {
   return latitude === null || longitude === null ? null : { latitude, longitude };
 }
 
+/* 取景:包围盒中心(不再取第一个点当中心),以及 mapContext.includePoints 用的边距 */
+/* 上 36 容下图钉本体,下 44 让开左下角的来源说明行;左右 24。原 [60,40,60,40] 在 210px 高的地图上只剩中间三分之一 */
+const FIT_PADDING = [36, 24, 44, 24];
+function boundsCenter(points) {
+  const list = (points || []).filter(function (p) { return routePoint(p) !== null; });
+  if (!list.length) return { latitude: 0, longitude: 0 };
+  const lat = list.map(function (p) { return Number(p.latitude); });
+  const lng = list.map(function (p) { return Number(p.longitude); });
+  return {
+    latitude: (Math.min.apply(null, lat) + Math.max.apply(null, lat)) / 2,
+    longitude: (Math.min.apply(null, lng) + Math.max.apply(null, lng)) / 2
+  };
+}
+
 function build(chaptersList) {
     const chapters = (Array.isArray(chaptersList) ? chaptersList : []).filter(function (chapter) {
       return chapter && typeof chapter === 'object' && !Array.isArray(chapter);
@@ -67,9 +81,9 @@ function build(chaptersList) {
       routeReady: include.length > 0,
       routeIsRoad: roadSegments > 0 && straightSegments === 0,
       routeSourceText: include.length ? source : '', routeMarkers: markers, routePolyline: polyline, routeIncludePoints: include,
-      mapLatitude: include.length ? include[0].latitude : 0,
-      mapLongitude: include.length ? include[0].longitude : 0
+      mapLatitude: boundsCenter(include).latitude,
+      mapLongitude: boundsCenter(include).longitude
     };
 }
 
-module.exports = { build, routeCoordinate, routePoint };
+module.exports = { build, routeCoordinate, routePoint, boundsCenter, FIT_PADDING };

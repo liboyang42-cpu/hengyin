@@ -87,7 +87,14 @@ class PlatformPassSelfPlayCoverageTest {
             Date validTo = new Date(4_102_444_800_000L);
             when(passMapper.selectActiveMembership(eq(MEMBER_ID), any(Date.class)))
                     .thenReturn(Map.of("id", 77L, "valid_to", validTo));
-            when(passMapper.isPublishedTopic(TOPIC_ID)).thenReturn(1);
+            // 覆盖与领取同一口径：已发布 + 自玩可领；领取在事务内按退款同一锁序重验这一段
+            when(passMapper.selectCoverageTopics(List.of(TOPIC_ID))).thenReturn(List.of(Map.of("id", TOPIC_ID,
+                    "self_play", 1, "self_play_price", new BigDecimal("100.00"), "lifecycle", 3,
+                    "selling_started_at", new Date(1_600_000_000_000L), "sale_end_at", new Date(4_102_444_800_000L))));
+            when(passMapper.selectMembershipById(77L)).thenReturn(Map.of("id", 77L, "order_id", 5L));
+            when(passMapper.selectOrderByIdForUpdate(5L)).thenReturn(Map.of("id", 5L, "status", 1));
+            when(passMapper.selectMembershipByIdForUpdate(77L)).thenReturn(Map.of("id", 77L, "member_id", MEMBER_ID,
+                    "status", 1, "valid_from", new Date(1_600_000_000_000L), "valid_to", validTo));
             when(passMapper.insertClaim(any())).thenReturn(1);
             PlatformPassService pass = new PlatformPassService(passMapper, props, mock(PlatformTransactionManager.class));
             ReflectionTestUtils.setField(fixture.service, "platformPassService", pass);

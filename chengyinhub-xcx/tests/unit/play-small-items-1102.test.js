@@ -31,13 +31,14 @@ test('P-24:普通拍照审核上传失败,屏上写「上传失败，请重拍�
   def.observers.photoFailSeq.call(ctx, 1);   // 同一个序号不重复报
   assert.equal(ctx.data.uploadFail, '');
   const wxml = read('pages/play/components/playkit-photocheck/index.wxml');
-  assert.match(wxml, /wx:if="\{\{uploadFail && !verdict\}\}"/);
+  assert.match(wxml, /wx:if="\{\{uploadFail && !verdict && !passed\}\}"/);
   assert.match(read('pages/play/components/playkit/index.wxml'), /photo-fail-seq="\{\{kit\.photoFailSeq\}\}"\n  bind:shoot="onShoot" bind:close="onClose" \/>/);
 });
 
 test('P-26:开始游戏时问定位(每次游玩仍逐次明示用途,不跨次记住同意)', () => {
   const js = read('pages/play/index.js');
-  assert.match(js, /if \(located\) this\.requestPlayLocation\(\);/);
+  // 业主 2026-11-13:定位只在开局问一次;已有完成站(续玩)不再问
+  assert.match(js, /if \(located && this\._startLocationNeeded\(\)\) this\.requestPlayLocation\(\);/);
   assert.doesNotMatch(js, /locationConsent/);
 });
 

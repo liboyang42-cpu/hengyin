@@ -17,6 +17,7 @@ const { toCard } = require('../../../utils/object-card.js');
 const { isR5, feedbackBranch, albumKit } = require('./playkit-r5-segments.js');
 const sensorContract = require('./sensor-contract.js');
 const questo = require('./playkit-questo.js');
+const { tidyText } = require('./keep-numerals.js');
 
 const KIT_PRIORITY = [
   /* 节点玩法模板那批排在最前:它们是这个节点的**主玩法**,没做完就不该先弹别的。
@@ -538,9 +539,9 @@ function pickPlayKit(view, now) {
   if ((['FAILED', 'EXPIRED'].includes(view.status) || view.status === 'COMPLETED' && view.challenge && view.canRetry === true)
       && (!isR5(view) || !!view.challenge || view.plainOutcome === true)) { // 没有通用局的主题:结果反馈没过就在本站重来
     base.terminal = true;
-    base.terminalFeedback = view.outcomeFeedback && view.outcomeFeedback.reply || '';
+    base.terminalFeedback = tidyText(view.outcomeFeedback && view.outcomeFeedback.reply || '');
     base.terminalImages = view.outcomeFeedback && view.outcomeFeedback.images || [];
-    if (playKit.qa && playKit.qa.finished && playKit.qa.answerText) base.terminalDetail = playKit.qa.answerText;
+    if (playKit.qa && playKit.qa.finished && playKit.qa.answerText) base.terminalDetail = tidyText(playKit.qa.answerText);
     base.sessionStatus = view.status;
     base.canRetry = view.canRetry === true;
     base.retryLabel = view.challenge ? (view.ownerType === 2 ? '队长再次挑战' : '再次挑战')
@@ -577,7 +578,7 @@ function pickPlayKit(view, now) {
         multi: seg.judge !== false && !!seg.multi,
         judge: seg.judge !== false,
         failureSeq: 0,
-        answerText: seg.finished ? (seg.answerText || '') : '',
+        answerText: seg.finished ? tidyText(seg.answerText || '') : '',
         lastOptionId: seg.lastOptionId || '',
         lastOptionIds: seg.lastOptionIds || [],
         // 每个所选选项最多 3 张已由服务端逐项校验;多选按选择顺序拼接,这里不再合计截断
@@ -596,7 +597,7 @@ function pickPlayKit(view, now) {
         passed: !!seg.passed,
         answerId: seg.judge !== false ? (seg.answerId || '') : '',
         answerIds: seg.judge !== false && Array.isArray(seg.answerIds) ? seg.answerIds.slice() : [],
-        feedback: seg.lastFeedback || '',
+        feedback: tidyText(seg.lastFeedback || ''),
         // P-10:作者在「结果反馈」里给这次结果写了话(服务端判完才给 outcomeFeedback)→ 由结算判定屏摆作者的话,
         // 这一屏不再写自己的兜底句;没写时为空串,兜底照旧
         authoredOutcome: view.outcomeFeedback && ['PASS', 'FAIL'].includes(view.outcomeFeedback.outcome) ? view.outcomeFeedback.outcome : '',

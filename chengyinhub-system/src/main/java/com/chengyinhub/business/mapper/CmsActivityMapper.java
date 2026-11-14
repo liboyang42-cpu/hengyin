@@ -22,6 +22,9 @@ public interface CmsActivityMapper
      */
     List<CmsActivity> selectActivitiesForSettlement();
 
+    /** 2026-11-13:商家发布的自由探索、由承办俱乐部开的场次,到点待结算(票款给发布商家)。 */
+    List<CmsActivity> selectMerchantPublishedFreeExploreActivitiesForSettlement();
+
     /** 第十三轮 m6:到了结算时点、场次结算又付不了的自由探索场次(只用于告警,不动钱)。 */
     List<CmsActivity> selectFreeExploreActivitiesWithoutSettlementPath();
 

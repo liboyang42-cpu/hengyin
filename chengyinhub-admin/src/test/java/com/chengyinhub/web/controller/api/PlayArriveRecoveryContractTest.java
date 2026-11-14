@@ -268,7 +268,7 @@ class PlayArriveRecoveryContractTest
     {
         AjaxResult result = arrive("121.6", "31.4", "15");
 
-        assertEquals("还没到这一站附近", result.get("msg"), "既有文案不得变");
+        assertEquals("离起点太远，请到起点 300 米内再开始", result.get("msg"), "既有文案不得变");
         assertRejection(result, PlayCommandErrorContract.ARRIVE_TOO_FAR, true);
         assertEquals(Boolean.TRUE, result.get("intentTerminal"), "拒绝已写入终态回执");
         assertEquals(Boolean.TRUE, result.get("newActionIdRequired"), "动作号已被占用,重试必须换新号");

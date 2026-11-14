@@ -49,8 +49,9 @@ test('V-23c 头图简介只放主题配置的短简介(subtitle)，最多 20 字
   assert.match(js, /res\.data\['heroIntro'\] = heroIntro\(res\.data\.subtitle\)/)
   const fn = new Function('nodeText', 'decodeDisplayText', js.slice(js.indexOf('const HERO_INTRO_MAX'), js.indexOf('function templateCover')) + 'return heroIntro')(
     v => (v == null ? '' : String(v).trim() === 'null' ? '' : String(v).trim()), v => v)
-  assert.equal(fn('沿着街角线索，完成一次可报名的城市路线。再多写几个字'), '沿着街角线索，完成一次可报名的城市路线。'.slice(0, 20))
-  assert.equal(Array.from(fn('一二三四五六七八九十一二三四五六七八九十多出来')).length, 20)
+  assert.equal(fn('沿着街角线索，完成一次可报名的城市路线。再多写几个字'), '沿着街角线索，完成一次可报名的城市路线…')
+  assert.equal(fn('一二三四五六七八九十一二三四五六七八九十多出来'), '一二三四五六七八九十一二三四五六七八九十…')
+  assert.equal(fn('一二三四五六七八九十一二三四五六七八九十'), '一二三四五六七八九十一二三四五六七八九十')
   assert.equal(fn(null), ''); assert.equal(fn('null'), '')
   const config = loadTopicPage({ globalData: {}, getImgUrl: v => v })
   assert.equal('heroDescOpen' in config.data, false); assert.equal(config.toggleHeroDesc, undefined)

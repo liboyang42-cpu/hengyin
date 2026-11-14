@@ -58,6 +58,10 @@ public class OrderCloseTask {
     @Autowired
     private AlarmService alarmService;
 
+    /** 自玩票虚拟支付围栏:单可能正在付,先回查再关;未启用/旧 JSAPI 单恒放行。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.platformpass.SelfPlayXpayService selfPlayXpay;
+
     /** 扫描 pay_expire_time 已过仍待支付的报名单:关单 + 回补库存 + 退还预扣积分 */
     public synchronized void closeExpired() {
         Date now = new Date();
@@ -73,6 +77,7 @@ public class OrderCloseTask {
             for (Long id : ids) {
                 scanned++;
                 try {
+                    if (selfPlayXpay != null && !selfPlayXpay.readyToClose(id)) continue;
                     if (cmsRegistrationService.closeExpiredOne(id)) closed++;
                 } catch (RestoreDispatchGuard.Blocked paused) {
                     log.info("过期关单暂停 reason=RECOVERY_DISPATCH_BLOCKED");

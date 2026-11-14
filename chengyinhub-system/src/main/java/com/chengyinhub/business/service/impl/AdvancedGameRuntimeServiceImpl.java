@@ -2546,7 +2546,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             node.put("flagged", true);
             node.put("lastReason", review.getReason());
             node.put("lastConfidence", 0);
-            if (fallbackPass) {
+            if (r5 && "pass".equals(cfg.path("fallback").asText(""))) {
+                /* 2026-11-13 走查:按结果分支的站也要认作者配的 fallback=pass —— 审核通道不可用就放行这一站,
+                   记成 FALLBACK_PASS(兜底放行,不是 AI 通过:photoVerified=false ⇒ 奖励封顶、不发本段 xp、不铸卡)。
+                   fallback 为 reject/缺省时仍按下面原口径:机会用完记没过。 */
+                node.put("passed", true);
+                node.put("verdict", "FALLBACK_PASS");
+            } else if (fallbackPass) {
                 node.put("passed", true);
             } else if (tries >= Math.max(1, cfg.path("maxTries").asInt(1))) {
                 /* R11 g1 F3:审核通道不可用且重拍机会用完 —— 不把玩家留在这一站。

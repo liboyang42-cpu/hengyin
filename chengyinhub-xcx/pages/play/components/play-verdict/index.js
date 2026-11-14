@@ -26,6 +26,7 @@ function makeBubbles(n) {
   return out;
 }
 
+const { tidyText } = require('../../utils/keep-numerals.js');
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 
 Component({
@@ -48,8 +49,10 @@ Component({
     rising: false,
     word: '失败',
     bubbles: makeBubbles(9),
+    shownText: '',
   },
   observers: {
+    text(text) { this.setData({ shownText: tidyText(text) }); },
     'show, kind, timedOut': function (show, kind, timedOut) {
       this.setData({ word: failWord(timedOut) });
       if (!show) { this._clear(); this.setData({ rising: false }); return; }

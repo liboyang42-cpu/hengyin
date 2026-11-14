@@ -1261,7 +1261,7 @@ image.david_stu {
   --topic-story-paywall-title-color: #cc4bff; /* ds-ok: Figma 4319:13077 标题紫, tokens 无同值语义色 */
   --topic-story-paywall-transparent-bg: rgba(0, 0, 0, 0); /* ds-ok: Figma 4319:13077 解锁卡透明渐变起点, tokens 无透明黑语义色 */
   --topic-story-paywall-cta-bg: #FFFFFF; /* ds-ok: Figma 4319:13077 CTA 纯白,现有主按钮 token 为 #F8F8F8 */
-  padding: 0 var(--cy-page-x) var(--cy-space-6);
+  padding: 0 var(--cy-page-x) calc(168rpx + env(safe-area-inset-bottom)); /* ds-ok: 留出右下浮动价格按钮(50px+16px)的高度,不压住「立即解锁」和找回订单 */
 }
 
 .topic-story-paywall__fade {
@@ -1856,6 +1856,8 @@ button::after {
 .story-head__t { font-size: var(--cy-type-page-title); font-weight: 700; color: var(--cy-color-text-primary); }
 .story-head__s { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
 .story-cards { padding: 0 var(--cy-space-6) var(--cy-space-6); display: flex; flex-direction: column; gap: 20rpx; }
+.story-cards.is-docked { padding-bottom: calc(var(--cy-space-6) + 132rpx + env(safe-area-inset-bottom)); }   /* 随时开玩停靠在右下角:列表末尾留出它的位置 */
+.story-cards.is-docked .story-cc__hd { right: 400rpx; }   /* 停靠按钮在右下角:卡上的字让开它,首屏不被盖住 */
 .story-cc { position: relative; height: 200rpx; border-radius: var(--cy-radius-xl); overflow: hidden; clip-path: inset(0 round var(--cy-radius-xl));
   background: var(--cy-color-play-surface-solid); transition: height .45s cubic-bezier(.16,1,.3,1), opacity .56s ease, transform .56s cubic-bezier(.2,.82,.2,1); }
 .story-cc.is-open { height: 520rpx; }
@@ -1869,6 +1871,7 @@ button::after {
 .story-cc__t { font-size: var(--cy-font-subtitle); font-weight: 700; color: #fff; /* ds-ok:照片上的白字 */ }
 .story-cc__chev { position: absolute; right: 24rpx; bottom: 28rpx; color: #fff; /* ds-ok */ transform: rotate(90deg); transition: transform .35s ease; }
 .story-cc.is-open .story-cc__chev { transform: rotate(-90deg); }
+.story-cc.is-locked .story-cc__chev { transform: none; }
 .story-cc__in { position: absolute; left: 28rpx; right: 28rpx; bottom: 28rpx; height: 250rpx; opacity: 0; transform: translateY(24rpx); transition: opacity .3s ease, transform .4s cubic-bezier(.16,1,.3,1);
   display: flex; flex-direction: column; gap: 12rpx; overflow: hidden; }
 .story-cc.is-open .story-cc__in { opacity: 1; transform: none; transition-delay: .12s; }
@@ -1933,6 +1936,8 @@ button::after {
 .topic .det1.dt { position: relative; height: 90vh; min-height: 1300rpx; overflow: hidden; background: #000; padding: 0; } /* ds-ok */
 .topic .det1.dt .bgt-swiper { position: absolute; left: 0; right: 0; top: 0; height: 66%; }
 .topic .det1.dt .bgt { width: 100%; height: 100%; display: block; }
+/* 无封面占位:display:block 会压掉 cy-cover-fb 的居中,插画落到左上角盖住返回键;放回封面区中间并避开导航 */
+.topic .det1.dt .bgt.cy-cover-fb { display: flex; padding-top: 180rpx; }
 .dt__shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 16%, rgba(0,0,0,0) 34%, rgba(0,0,0,.72) 54%, #000 68%); } /* ds-ok */
 .dt__dots { position: absolute; left: 0; right: 0; top: calc(66% - 231rpx); display: flex; justify-content: center; gap: 10rpx; pointer-events: none; }
 .dt__dot { width: 31rpx; height: 12rpx; margin: 0 -9rpx; border-radius: 6rpx; background: rgba(255,255,255,.4); transform: scaleX(.39); transition: transform .25s, background .25s; } /* ds-ok */
@@ -2193,3 +2198,13 @@ button::after {
 .topic-story-paywall__card { box-shadow: var(--cy-depth-rest); }
 
 /* D3:无封面头图 = look 渐变 + 小路线标(同主题卡),不再铺满黑白线稿 */
+
+/* 路线站点无图且主题也无封面:深色中性块,不再铺白底线稿 */
+.topic .davidxfxi .item-pic--blank { background: var(--cy-color-play-surface-solid); }
+/* 未解锁章节预告:介绍可读,封面压暗,右上锁标 */
+.topic .story-cc.is-locked .story-cc__img { filter: brightness(.72); }
+
+/* 地图底部说明:单行不换行,抬高避开地图自带标识 */
+.topic .rmap .route-map-tip { bottom: 56rpx; max-width: calc(100% - 30rpx); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
+/* 章节导读:最多三行 */
+.topic .story-cc__x { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }

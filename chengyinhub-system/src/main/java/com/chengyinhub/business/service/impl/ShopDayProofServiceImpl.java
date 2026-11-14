@@ -170,6 +170,16 @@ public class ShopDayProofServiceImpl implements IShopDayProofService {
     }
 
     @Override
+    public boolean runStarted(Long memberId, Long activityId, Long topicId) {
+        // 自助玩法 activityId 恒为 0:不按主题收窄,玩过别的路线就等于"已开局",开局 300 米闸被绕过。
+        // 带 topicId 时 mapper 会同时把实例解析到该主题最新一局,所以只认本主题本局的进度行。
+        PlayerNodeProgress probe = probe(memberId, activityId, null);
+        probe.setTopicId(topicId);
+        List<PlayerNodeProgress> rows = playerNodeProgressMapper.selectPlayerNodeProgressList(probe);
+        return rows != null && !rows.isEmpty();
+    }
+
+    @Override
     public boolean markGameDone(Long memberId, Long activityId, Long topicId, Long nodeId) {
         return playerNodeProgressMapper.markShopDayGameDone(memberId, activityId, topicId, nodeId) > 0;
     }

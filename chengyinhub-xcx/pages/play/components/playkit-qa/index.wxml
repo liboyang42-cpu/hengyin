@@ -91,7 +91,7 @@
   </view>
 
   <!-- 故事流内嵌且已答对:下面就是「继续故事」,这里不再叠一枚同义的「继续」(实走复核:两枚白按钮上下摞着) -->
-  <view wx:if="{{!(inline && (passed || finished)) && !(mode === 'pick' && !multi && judge !== false && !passed)}}" class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
+  <view wx:if="{{!(inline && (passed || finished || ctaLabel === '继续')) && !(mode === 'pick' && !multi && judge !== false && !passed)}}" class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
         bindtap="onCta"
         aria-role="button" aria-label="{{ctaLabel}}" hover-class="g-btn--press" hover-stay-time="80">
     {{ctaLabel}}

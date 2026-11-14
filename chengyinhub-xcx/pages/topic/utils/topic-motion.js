@@ -54,22 +54,83 @@ function buildHeroCta(info, opts) {
   return { kind: 'signup', text: '立即报名' };
 }
 
-function firstNodeImage(chapter) {
+/* 章节候选图,优先级:章节自己的图 → 本章各站照片 → 站点玩法图。主题封面不在此列(由调用方最后兜底)。 */
+function chapterImages(chapter, cover) {
+  const out = [];
+  const add = (u) => { if (u && u !== cover && out.indexOf(u) < 0) out.push(u); };
+  csv(chapter && chapter.imgArr).forEach(add);
   const nodes = (chapter && chapter.nodes) || [];
-  for (const n of nodes) {
-    const t = n && n.cmsMemberTemplate;
-    const img = (t && text(t.imgUrl)) || csv(n && n.imgUrl)[0] || '';
-    if (img) return img;
+  nodes.forEach((n) => {
+    csv(n && n.imgUrl).forEach(add);
     const shop = (n && n.registrationMerchantList) || [];
-    if (shop[0] && csv(shop[0].picUrl)[0]) return csv(shop[0].picUrl)[0];
+    if (shop[0]) csv(shop[0].picUrl).forEach(add);
+  });
+  nodes.forEach((n) => add(text(n && n.cmsMemberTemplate && n.cmsMemberTemplate.imgUrl)));
+  return out;
+}
+
+/* 每章一张图:优先用没被前面章节用过的本章图;本章图都用过就沿用第一张;一张都没有才用主题封面 */
+function pickChapterImages(chapters, cover) {
+  const used = {};
+  const c = text(cover) ? csv(cover)[0] : '';
+  return (chapters || []).map((ch) => {
+    const list = chapterImages(ch, c);
+    const pick = list.filter((u) => !used[u])[0] || list[0] || c || '';
+    if (pick) used[pick] = true;
+    return pick;
+  });
+}
+
+/* 章节导读:取章节简介,没有就取第一段文本块的开头;只给导读,整章剧情留给游玩 */
+/* 题面/观察位置/密码表属于游玩内容,导读里一律不出(解锁与未解锁同口径):遇到标记就在标记前截断 */
+const PUZZLE_MARK = /【\s*(题目|观察位置|谜题|提示|线索|密码表?|密文|答案)[^】]*】|(?:^|\s)(?:题目|观察位置)[:：]|密码表|对照表|[A-Z]\s*=\s*\d/;
+function stripPuzzle(src) {
+  const m = PUZZLE_MARK.exec(src);
+  return m ? src.slice(0, m.index).trim() : src;
+}
+
+function chapterGuide(chapter) {
+  const MAX = 60;
+  let src = stripPuzzle(text(chapter && chapter.description));
+  if (!src) {
+    const blocks = (chapter && chapter.blocks) || [];
+    for (const b of Array.isArray(blocks) ? blocks : []) {
+      const t = b && b.type === 'text' ? stripPuzzle(text(b.content)) : '';
+      if (t) { src = t; break; }
+    }
   }
-  return '';
+  src = src.replace(/\s+/g, ' ');
+  if (src.length <= MAX) return src;
+  const head = src.slice(0, MAX);
+  const cut = Math.max(head.lastIndexOf('。'), head.lastIndexOf('！'), head.lastIndexOf('？'), head.lastIndexOf('.'));
+  return cut >= 12 ? head.slice(0, cut + 1) : head.replace(/[，,、；;\s]+$/, '') + '…';
+}
+
+/* 路线进度兜底:总数与站点标签按整条路线(含未解锁预告章)算,完成数只来自真实进度 */
+function progressFallback(info) {
+  const d = info || {};
+  let n = 0;
+  (d.chaptersList || []).forEach((c) => { n += ((c && c.nodes) || []).length; });
+  const total = Math.max(n, Number(d.locationCount) || 0);
+  const labels = Array.from({ length: total }, (_, i) => (Number(d.productType) === 2 ? '第 ' + (i + 1) + ' 家' : '第' + (i + 1) + '站'));
+  return { total, done: 0, labels };
 }
 
 const CN = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
-function chapterLabel(i, n) {
+/* 章名自带位置语义(结局/终章/尾声/序章)或「第X章」时,不再加序号前缀 */
+const SELF_ORDINAL = /^(第\s*[0-9一二三四五六七八九十百零两]+\s*章|结局|终章|序章|尾声)/;
+function chapterLabel(i, n, name) {
+  if (name !== undefined && SELF_ORDINAL.test(text(name))) return '';
   if (i === n - 1 && n > 2) return '终章';
   return '第' + (CN[i] || String(i + 1)) + '章';
+}
+
+/* 章节标题:内容里名字已自带「第X章」「终章」「结局」序号时不再加前缀,避免「第一章 · 第一章 …」「第四章 · 结局 · …」 */
+function chapterHeading(i, n, name) {
+  const t = text(name);
+  if (!t) return chapterLabel(i, n);
+  if (SELF_ORDINAL.test(t)) return t;
+  return chapterLabel(i, n) + ' · ' + t;
 }
 
 /* 故事卡:每章一张。自由探索没有章节顺序,用商家当「护照页」。 */
@@ -81,25 +142,29 @@ function buildStoryCards(info, merchantCards) {
     }));
   }
   const chapters = d.chaptersList || [];
+  const imgs = pickChapterImages(chapters, d.imgUrl);
   return chapters.map((c, i) => ({
-    img: firstNodeImage(c),
-    label: chapterLabel(i, chapters.length),
+    img: imgs[i],
+    label: chapterLabel(i, chapters.length, c && c.name),
     title: text(c && c.name),
-    excerpt: text(c && c.description),
+    excerpt: chapterGuide(c),
+    locked: !!(c && c.locked === true),
     meta: [text(c && c.metaTime), text(c && c.metaPlace)].filter(Boolean).join(' · '),
   })).filter((c) => c.title);
 }
+
+/* 章数口径(结局不算章)在 utils/chapter-count.js,详情页和结账页共用。 */
+const { isEndingChapter, chapterCountText } = require('../../../utils/chapter-count.js');
 
 function storyMeta(info) {
   const d = info || {};
   const parts = [];
   // chaptersList 只含未购前可预览的章(防剧透),总章数看 totalChapterCount(实走 A2:两章的主题写成「1 章」)
-  const chapters = Number(d.totalChapterCount) > 0 ? Number(d.totalChapterCount) : (d.chaptersList || []).length;
   if (Number(d.productType) === 2) {
     const shops = Number(d.registrationMerchantCount) || 0;
     if (shops > 0) parts.push(shops + ' 家商家');
     parts.push('任意顺序');
-  } else if (chapters) parts.push(chapters + ' 章');
+  } else if (chapterCountText(d)) parts.push(chapterCountText(d));
   if (text(d.totalTimeFormatted)) parts.push('约 ' + text(d.totalTimeFormatted));
   const km = Number(d.totalMileage);
   if (km > 0) parts.push(km + ' 公里');
@@ -157,7 +222,12 @@ function buyChips(info, meta) {
   const d = info || {};
   const win = passWindow({ topicEnd: d.endDate });
   const out = ['可玩至 ' + win.untilText];
-  if (text(meta)) out.push(text(meta).split(' · ').slice(0, 2).join(' · '));
+  if (text(meta)) {
+    // 「4 章 · 3 个结局」是一块,不拆开;再带上后面的时长
+    const segs = text(meta).split(' · ');
+    if (segs[1] && /^\d+ 个结局$/.test(segs[1])) segs.splice(0, 2, segs[0] + ' · ' + segs[1]);
+    out.push(segs.slice(0, 2).join(' · '));
+  }
   out.push(Number(d.productType) === 2 ? '任意顺序' : '可分几天玩完');
   return out;
 }
@@ -225,10 +295,12 @@ function passWindow(opts) {
     if (end) { const endOfDay = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59); if (endOfDay < ninety) { until = endOfDay; endsWithTopic = true; } }
     if (!until) until = ninety;
   }
-  const days = Math.max(0, Math.ceil((until.getTime() - now.getTime()) / 86400000));
   // 第十二轮 k7 N6:到期落在零点 = 能玩的最后一天是前一天;与订单页「可玩至」同一个日期
   const last = until.getHours() === 0 && until.getMinutes() === 0 && until.getSeconds() === 0 ? new Date(until.getTime() - 1) : until;
   const m = last.getMonth() + 1, dd = last.getDate();
+  // 剩余天数按「今天 → 最后能玩的那一天」的自然日算,与票夹卡面(utils/ticket-expiry passDaysLeft)同一口径
+  const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.max(0, Math.round((dayStart(last) - dayStart(now)) / 86400000));
   return {
     untilText: pad2(m) + '/' + pad2(dd),
     daysText: String(days),
@@ -255,4 +327,4 @@ function buildTeams(rows, topicId) {
   return { rows: out, need };
 }
 
-module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, storyMeta, buildMerchantCards, passWindow, buildTeams };
+module.exports = { buyOptions, buyChips, routeNote, buildChars, chapterLabel, chapterHeading, isEndingChapter, chapterCountText, buildCoverImages, buildPublisher, buildHeroCta, topicSaleClosed, buildStoryCards, chapterGuide, pickChapterImages, progressFallback, storyMeta, buildMerchantCards, passWindow, buildTeams };

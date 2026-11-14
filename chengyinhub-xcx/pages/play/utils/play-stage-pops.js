@@ -34,11 +34,23 @@ function kitTypeLabel(node) {
   }
   return '';
 }
+/** 玩家只看站名和任务:去掉编辑器里的「第04关」「问答：」「模板 ·」这类制作用前缀 */
+function playerTitle(t) {
+  const s = String(t == null ? '' : t).replace(/^\s*(?:第\s*\d+\s*关|模板|问答)\s*[:：·\-－—\s]\s*/, '').trim();
+  return s;
+}
+/** 站名开头的序号(「1 · 老门」「2. 老门」)去掉,只留站名;去完为空则保留原样 */
+function stationLabel(t) {
+  const raw = String(t == null ? '' : t).trim();
+  const s = raw.replace(/^\d+\s*[·.、\-－—:：]\s*/, '').trim();
+  return s || raw;
+}
 /** 地点卡上的数字:距离(有定位或上一站才算)、步行分钟(按 80 m/min,只在有距离时)、开放时段(节点营业时间原样) */
+const WALK_MAX_MIN = 60; // 超过一小时步行不报分钟,只留距离(km,一位小数)
 function sheetFacts(node, distText) {
   const out = { distText: distText || '', walkText: '', hoursText: '' };
   const m = /^([\d.]+)(km|m)$/.exec(distText || '');
-  if (m) { const meters = m[2] === 'km' ? Number(m[1]) * 1000 : Number(m[1]); if (meters > 0) out.walkText = String(Math.max(1, Math.ceil(meters / WALK_M_PER_MIN))); }
+  if (m) { const meters = m[2] === 'km' ? Number(m[1]) * 1000 : Number(m[1]); if (meters > 0) { const min = Math.max(1, Math.ceil(meters / WALK_M_PER_MIN)); if (min <= WALK_MAX_MIN) out.walkText = String(min); } }
   const biz = String(node && node.businessTime || '');
   if (biz && !/^\s*00:00\s*[-–~至]\s*23:59\s*$/.test(biz)) out.hoursText = biz.replace(/:00/g, '').replace(/\s*[-~至]\s*/, '–');
   // x-fix2 P-8:大字格只放时段;「公共区域观察;以现场…为准」这类说明已在地址行(metaLine)里,不挤进数字位
@@ -76,7 +88,7 @@ function methods() {
       const sentence = story.match(/^[^。！？!?]*[。！？!?]?/)[0];
       this.setData({ kitStart: {
         show: true, nodeId: String(node.nodeId), origin,
-        cover: firstImg(node.imgUrl), title: node.gameTitle || node.name || (pk.kit && pk.kit.title) || '玩法', type: origin === 'card' ? (pk.cardLabel || kitTypeLabel(node)) : kitTypeLabel(node),
+        cover: firstImg(node.imgUrl), title: playerTitle(node.gameTitle || node.name || (pk.kit && pk.kit.title)) || '玩法', type: origin === 'card' ? (pk.cardLabel || kitTypeLabel(node)) : kitTypeLabel(node),
         place: origin === 'sheet' ? (node.lat ? node.name || '' : '') : (place ? place.name || '' : ''), arrived: !!(place ? place.arrived || place.done : node.arrived),
         lede: sentence.length <= 40 ? sentence : sentence.slice(0, 38) + '…',
         mode: 'embed', modes: origin === 'story',
@@ -140,14 +152,32 @@ function methods() {
     _chapterPickStates() {
       return (this.data.chapterCards || []).map((c) => chapterTrail.chapterReadState(c, this.data.nodes, this._historyNodes));
     },
+    /** 回看打不开 / 没有可读内容时:只在「走完后回看」这一次里按走完离开 */
+    _afterFinishLeave() {
+      if (!this._reviewPending) return;
+      this._reviewPending = false;
+      this.setData({ chapterFull: false });
+      if (typeof this.goBackDetail === 'function') this.goBackDetail();
+    },
     /** f-play V3-07/08:真实局走完后,完成页「继续」回到故事流的只读回看(最后一章已完成的那章,停在末尾,往上滑读完整个故事;
      *  多章时「…」里有「切换章节」换章)。不是走完的局 / 自由探索 / 一章都没读完时返回 false,照旧离开。 */
     _reviewAfterFinish() {
       const d = this.data;
       if (!d.allDone || d.isPreview || d.isMock || Number(d.mode) === 2 || typeof this.onPickChapter !== 'function') return false;
-      const idx = this._chapterPickStates().lastIndexOf('completed');
+      // 只回看真有故事可读的已完成章:城市路线往往只有站点没有正文,回过去是一张空故事页,这时直接按走完离开
+      const states = this._chapterPickStates();
+      const cards = d.chapterCards || [];
+      const history = typeof this._currentCompletedHistory === 'function' ? this._currentCompletedHistory() : null;
+      let idx = -1;
+      for (let i = states.length - 1; i >= 0; i--) {
+        if (states[i] !== 'completed') continue;
+        const frozen = history && history.chapters.find((c) => c.id === String(cards[i].id));
+        if (chapterTrail.hasReadableStory((frozen || cards[i]).blocks)) { idx = i; break; }
+      }
       if (idx < 0) return false;
-      this.onPickChapter({ currentTarget: { dataset: { idx } } });
+      // 回看真的打开才算数;选章被拦(未解锁 / 历史没读到)就按走完离开,不留一张空故事页
+      this._reviewPending = true;
+      if (this.onPickChapter({ currentTarget: { dataset: { idx } } }) === false) { this._reviewPending = false; return false; }
       clearTimeout(this._reviewEndT);
       // 停在末尾:滚到最后一段(scroll-into-view 认段落 id,与 wxml 的 chapter-game- / chapter-block- 同一口径)
       this._reviewEndT = setTimeout(() => {
@@ -162,4 +192,4 @@ function methods() {
   return api;
 }
 
-module.exports = { KIT_LABELS, kitTypeLabel, sheetFacts, nextIndex, data, methods };
+module.exports = { KIT_LABELS, kitTypeLabel, playerTitle, stationLabel, sheetFacts, nextIndex, data, methods };

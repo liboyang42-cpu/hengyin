@@ -559,7 +559,7 @@ const ACTION_VARIANTS = new Map([
   }]],
   ['subpackageMember/tixian/tixian.js:saveData', [withdrawSubmitVariant('saveData')]],
   // l-pass 通行证开通:同一次点击串行「建单 → 拉支付参数 →(虚拟支付)服务端回查」,开通只认服务端 PAID。
-  // iOS 走 requestVirtualPayment(虚拟支付),其他走 requestPayment(JSAPI);取消不回查。
+  // 2026-11-13 pass-mini:安卓 / iOS 只走 requestVirtualPayment(虚拟支付),不再有 JSAPI;取消不回查。
   ['subpackageMember/market/membership/index.js:onBuy', [{
     id: null, handler: 'onBuy',
     apis: ['/api/platform-pass/orders', '/api/platform-pass/orders/{param}/pay', '/api/platform-pass/orders/{param}/confirm', '/api/platform-pass/orders/{param}'],
@@ -571,16 +571,44 @@ const ACTION_VARIANTS = new Map([
       { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
     ],
     requiredRequestsByBranch: {
-      'jsapi-paid': [
-        { urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' },
-        { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
-      ],
       'xpay-paid': [
         { urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' },
         { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
         { urlTemplate: '/api/platform-pass/orders/{param}/confirm', method: 'POST', kind: 'write' },
       ],
       'order-refused': [{ urlTemplate: '/api/platform-pass/orders', method: 'POST', kind: 'write' }],
+    },
+  }]],
+  // 自玩票虚拟支付:订单列表「继续支付」一次点击只发起一笔支付写(/pay);虚拟支付成功后的 /xpay/confirm 只是让服务端回查开通,
+  // 不是第二次业务写入。JSAPI 单只有 /pay;已付状态只认服务端回读。
+  ['subpackageMember/components/cy/scene-member-order-history/index.js:payOrder', [{
+    id: null, handler: 'payOrder',
+    apis: ['/api/registration/pay', '/api/registration/xpay/confirm', '/api/registration/info'],
+    writeApis: ['/api/registration/pay', '/api/registration/xpay/confirm'],
+    effectClasses: ['write', 'navigation', 'state'],
+    externalCapabilities: ['requestPayment'],
+    requiredRequests: [{ urlTemplate: '/api/registration/pay', method: 'POST', kind: 'write' }],
+    requiredRequestsByBranch: {
+      'jsapi-paid': [{ urlTemplate: '/api/registration/pay', method: 'POST', kind: 'write' }],
+      'xpay-paid': [
+        { urlTemplate: '/api/registration/pay', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/registration/xpay/confirm', method: 'POST', kind: 'write' },
+      ],
+    },
+  }]],
+  // 2026-11-13 pass-mini:订单详情「继续支付」= 回查订单(GET)后对待支付单拉 pay,再服务端 confirm;已付 / 已关闭只回查。
+  ['subpackageMember/market/pass-order/index.js:onResume', [{
+    id: null, handler: 'onResume',
+    apis: ['/api/platform-pass/orders/{param}', '/api/platform-pass/orders/{param}/pay', '/api/platform-pass/orders/{param}/confirm'],
+    writeApis: ['/api/platform-pass/orders/{param}/pay', '/api/platform-pass/orders/{param}/confirm'],
+    effectClasses: ['write', 'state'],
+    externalCapabilities: ['requestVirtualPayment', 'login'],
+    requiredRequests: [{ urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' }],
+    requiredRequestsByBranch: {
+      'resume-paid': [
+        { urlTemplate: '/api/platform-pass/orders/{param}/pay', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/platform-pass/orders/{param}/confirm', method: 'POST', kind: 'write' },
+      ],
     },
   }]],
   ['subpackageA/pages/assetcenter/earnings/index.js:onTxSave', [withdrawSubmitVariant('onTxSave')]],
