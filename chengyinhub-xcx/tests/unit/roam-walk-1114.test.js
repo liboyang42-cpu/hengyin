@@ -199,3 +199,17 @@ test('A4：截图整图缩入卡框，绘制回退足迹也在带留白的框内
   points.forEach(p => { assert.ok(p.x > 10 && p.x < 410); assert.ok(p.y > 20 && p.y < 320) })
   assert.equal(snapshots.drawRoute(ctx, null, 10, 20, 400, 300), false)
 })
+
+
+test('b7：底图完成前保持加载态；重复 updated 不反复 setData', () => {
+  const map = mount('../../components/cy/free-map/index.js')
+  assert.equal(map.data.mapLoaded, false)
+  let updates = 0
+  const set = map.setData
+  map.setData = patch => { updates++; set(patch) }
+  map.triggerEvent = () => {}
+  map.onUpdated({ detail: {} })
+  map.onUpdated({ detail: {} })
+  assert.equal(map.data.mapLoaded, true)
+  assert.equal(updates, 1)
+})

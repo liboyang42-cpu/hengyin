@@ -65,7 +65,7 @@
         <view class="entry-place__copy"><text>{{entryPlace.catLabel}}{{entryPlace.distText ? ' · ' + entryPlace.distText : ''}}</text><text>{{entryPlace.address}}</text></view>
       </view>
       <text class="entry-place__quote" wx:if="{{entryPlace.reason}}" user-select>{{entryPlace.reason}}</text>
-      <view class="entry-place__tags" wx:if="{{entryPlace.tagList.length}}"><text class="entry-place__tag" wx:for="{{entryPlace.tagList}}" wx:key="*this">来源 {{index + 1}}</text></view>
+      <view class="entry-place__tags" wx:if="{{entryPlace.tagList.length}}"><text class="entry-place__tag" wx:for="{{entryPlace.tagList}}" wx:key="*this">{{item}}</text></view>
       <view class="entry-place__src" wx:if="{{entryPlace.sourceList.length || entryPlace.credit}}" bindtap="toggleEntrySources" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80"><text>资料来源</text><text>{{entryPlace.sourcesOpen ? '收起' : '展开'}}</text></view>
       <block wx:if="{{entryPlace.sourcesOpen}}">
         <text class="entry-place__link" wx:for="{{entryPlace.sourceList}}" wx:key="*this" data-url="{{item}}" bindtap="copyEntrySource" aria-role="button" aria-label="复制资料链接" hover-class="cy-pressed" hover-stay-time="80">来源 {{index + 1}}</text>
@@ -213,7 +213,7 @@
     <!-- R-02 首读占位:与读完后同一套 .pp-stats / .pp-row 几何,读数位显示「—」,方卡只留底板 -->
     <block wx:if="{{passportLoading}}">
     <view class="pp-stats" aria-role="status" aria-label="正在读取漫游护照">
-      <view class="pp-stat" wx:for="{{['漫游', '探店', '活跃日', '公里']}}" wx:key="*this"><text class="pp-stat__v">—</text><text class="pp-stat__k">来源 {{index + 1}}</text></view>
+      <view class="pp-stat" wx:for="{{['漫游', '探店', '活跃日', '公里']}}" wx:key="*this"><text class="pp-stat__v">—</text><text class="pp-stat__k">{{item}}</text></view>
     </view>
     <view class="pp-row" aria-hidden="true"><view class="pp-tile" wx:for="{{[1, 2, 3, 4, 5]}}" wx:key="*this"><view class="pp-tile__box"></view></view></view>
     </block>

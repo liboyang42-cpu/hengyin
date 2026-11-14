@@ -1,4 +1,4 @@
-// 2026-11-14 roam-walk：生成器实测到达挑战/重拍及组件事件净增，共 6094→6097（tap 3079，event-contract 3018）。
+// 2026-11-14 roam-walk：生成器实测到达挑战/重拍及组件事件净增，共 6094→6097（tap 3079，event-contract 3018；本地 2685/2919）。
 // 2026-11-14 wave-1114：四线合成源码重建 6094 控件（tap 3078 / event 3016，external tap 394；本地 2684 / 2917）；精确分母随真实入口更新，证据仍 pending。
 // 2026-11-05 play launch: remove daily-sign note input, keyboard and photo contracts; regenerate on current integ, preserving all other controls.
 // 2026-10-28 整批公共合并源9a330f5a：原hosted生成器实测5553控件，非external的tap2414/event2718；全部证据仍pending，不代业务或设备验收。
@@ -1945,7 +1945,7 @@ test('动态证据 digest 同时绑定 WXML/JS/WXSS/JSON，样式漂移不能继
 
 test('动态证据只绑定真实全局运行时依赖，新增无关路由不得批量判旧', () => {
   const standalone = ledger.controls.find((item) =>
-    item.id === 'components/cy/free-map/index.wxml:45:bindtap:recenter:6')  // 第十二轮 k7:队伍图钉无头像首字 +1 行,44→45;第九轮 m1:free-map callout 槽加照片图钉 6 行,行号 31→37;第九轮 m2 第 2 项:加同场队伍头像图钉 7 行,37→44
+    item.id === 'components/cy/free-map/index.wxml:46:bindtap:recenter:6')  // 第十二轮 k7:队伍图钉无头像首字 +1 行,44→45;第九轮 m1:free-map callout 槽加照片图钉 6 行,行号 31→37;第九轮 m2 第 2 项:加同场队伍头像图钉 7 行,37→44
   const appBacked = ledger.controls.find((item) =>
     item.route === 'pages/activity/baoming/baoming' && item.actionClass === 'state')
   assert.ok(standalone)
