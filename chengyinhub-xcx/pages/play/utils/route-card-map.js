@@ -1,7 +1,7 @@
 // 路线卡底图:真实地图快照(include-points + polyline),样式随主题发布时的外观。纯函数,不碰 wx。
 const mapStyle = require('../../../utils/map-style.js');
 
-const LINE = Object.freeze({ color: '#F8F8F8F2', width: 6, borderColor: '#0B0B0C99', borderWidth: 2 });
+const LINE = Object.freeze({ color: '#F8F8F8F2', width: 6, borderColor: '#0B0B0C99', borderWidth: 2 }); /* ds-ok:地图折线 API 色值,非样式表 */
 
 /** 主题外观 → 底图样式与叠加层配色(同 utils/map-style.js kindForLook) */
 function styleFor(look, style) {
