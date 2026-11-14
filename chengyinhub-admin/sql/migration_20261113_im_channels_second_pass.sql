@@ -3,14 +3,57 @@
 -- 依赖：20261112_im_channels_platform（回执表）、20261105_l9_friend_foundation（好友三表）、20261105_l8_chain_storage。
 
 -- 0) 原请求回执族放宽：好友/元数据/移除/治理/申诉/通知/接龙/打卡/准入/个人状态/隐私/角色/举报/媒体/队伍邀请。
-ALTER TABLE im_channel_request_receipt DROP CHECK ck_channel_receipt_family;
-ALTER TABLE im_channel_request_receipt ADD CONSTRAINT ck_channel_receipt_family CHECK (family IN
-    ('META','GOV','MSG','FRIEND','FMETA','FREMOVE','FINVITE','FTEAM','MOD','APPEAL','REPORT','NOTIFY',
-     'CHAIN','CHECKIN','ADMIT','STATE','PRIVACY','ROLE','MEDIA','ONBOARD'));
+SET @ck_exists = (
+    SELECT COUNT(*) FROM information_schema.table_constraints
+     WHERE constraint_schema = DATABASE() AND table_name = 'im_channel_request_receipt'
+       AND constraint_name = 'ck_channel_receipt_family' AND constraint_type = 'CHECK'
+);
+SET @ck_ready = (
+    SELECT COUNT(*) FROM information_schema.check_constraints
+     WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_channel_receipt_family'
+       AND check_clause LIKE '%''ONBOARD''%'
+);
+SET @ddl = IF(
+    @ck_exists > 0 AND @ck_ready = 0,
+    'ALTER TABLE im_channel_request_receipt DROP CHECK ck_channel_receipt_family',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ck_exists = (
+    SELECT COUNT(*) FROM information_schema.table_constraints
+     WHERE constraint_schema = DATABASE() AND table_name = 'im_channel_request_receipt'
+       AND constraint_name = 'ck_channel_receipt_family' AND constraint_type = 'CHECK'
+);
+SET @ddl = IF(
+    @ck_exists = 0,
+    'ALTER TABLE im_channel_request_receipt ADD CONSTRAINT ck_channel_receipt_family CHECK (family IN (''META'',''GOV'',''MSG'',''FRIEND'',''FMETA'',''FREMOVE'',''FINVITE'',''FTEAM'',''MOD'',''APPEAL'',''REPORT'',''NOTIFY'',''CHAIN'',''CHECKIN'',''ADMIT'',''STATE'',''PRIVACY'',''ROLE'',''MEDIA'',''ONBOARD''))',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
 
 -- 1) 好友元数据与分组的 CAS 版本（#727 三表未带版本列）。
-ALTER TABLE member_friend_meta ADD COLUMN version BIGINT NOT NULL DEFAULT 0 COMMENT '备注/分组/星标/进度范围 CAS 版本';
-ALTER TABLE member_friend_group ADD COLUMN version BIGINT NOT NULL DEFAULT 1 COMMENT '分组 CAS 版本';
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'member_friend_meta' AND column_name = 'version') = 0,
+    'ALTER TABLE member_friend_meta ADD COLUMN version BIGINT NOT NULL DEFAULT 0 COMMENT ''备注/分组/星标/进度范围 CAS 版本''',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'member_friend_group' AND column_name = 'version') = 0,
+    'ALTER TABLE member_friend_group ADD COLUMN version BIGINT NOT NULL DEFAULT 1 COMMENT ''分组 CAS 版本''',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
 
 -- 2) 治理处置：禁言(频道)/踢出/封禁(空间)；状态 ACTIVE/EXPIRED(读时按 expires_at 推导)/REVOKED/APPLIED(踢出)。
 CREATE TABLE IF NOT EXISTS im_moderation_action (
@@ -95,17 +138,87 @@ CREATE TABLE IF NOT EXISTS im_channel_member_state (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='频道本人状态';
 
 -- 6) 角色写：角色版本/颜色/分列/展示层级；授予带范围与到期。
-ALTER TABLE im_guild_role
-    ADD COLUMN version BIGINT NOT NULL DEFAULT 1 COMMENT '角色 CAS 版本',
-    ADD COLUMN color INT NULL COMMENT '0xRRGGBB',
-    ADD COLUMN hoist TINYINT NOT NULL DEFAULT 0,
-    ADD COLUMN display_level VARCHAR(8) NULL;
-ALTER TABLE im_guild_role_member
-    ADD COLUMN scope_type VARCHAR(8) NOT NULL DEFAULT 'GUILD',
-    ADD COLUMN scope_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    ADD COLUMN expires_at DATETIME(3) NULL,
-    ADD COLUMN grant_reason VARCHAR(120) NULL,
-    ADD COLUMN granted_by BIGINT NULL;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_guild_role' AND column_name = 'version') = 0,
+    'ALTER TABLE im_guild_role ADD COLUMN version BIGINT NOT NULL DEFAULT 1 COMMENT ''角色 CAS 版本''',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_guild_role' AND column_name = 'color') = 0,
+    'ALTER TABLE im_guild_role ADD COLUMN color INT NULL COMMENT ''0xRRGGBB''',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_guild_role' AND column_name = 'hoist') = 0,
+    'ALTER TABLE im_guild_role ADD COLUMN hoist TINYINT NOT NULL DEFAULT 0',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_guild_role' AND column_name = 'display_level') = 0,
+    'ALTER TABLE im_guild_role ADD COLUMN display_level VARCHAR(8) NULL',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_guild_role_member' AND column_name = 'scope_type') = 0,
+    'ALTER TABLE im_guild_role_member ADD COLUMN scope_type VARCHAR(8) NOT NULL DEFAULT ''GUILD''',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_guild_role_member' AND column_name = 'scope_id') = 0,
+    'ALTER TABLE im_guild_role_member ADD COLUMN scope_id BIGINT UNSIGNED NOT NULL DEFAULT 0',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_guild_role_member' AND column_name = 'expires_at') = 0,
+    'ALTER TABLE im_guild_role_member ADD COLUMN expires_at DATETIME(3) NULL',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_guild_role_member' AND column_name = 'grant_reason') = 0,
+    'ALTER TABLE im_guild_role_member ADD COLUMN grant_reason VARCHAR(120) NULL',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_guild_role_member' AND column_name = 'granted_by') = 0,
+    'ALTER TABLE im_guild_role_member ADD COLUMN granted_by BIGINT NULL',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
 
 -- 7) 频道打卡：每人每频道每个上海自然日一行；连续天数在写入时按前一日计算。
 CREATE TABLE IF NOT EXISTS im_channel_checkin (

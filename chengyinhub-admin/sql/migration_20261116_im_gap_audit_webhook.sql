@@ -3,10 +3,37 @@
 -- 依赖：20261115_im_channels_fourth_pass（回执族已含 BLOCK）、20261113_im_channels_second_pass（im_moderation_action）、
 --       20261105_l8_channel_lifecycle（im_channel / im_channel_op_log）。
 
-ALTER TABLE im_channel_request_receipt DROP CHECK ck_channel_receipt_family;
-ALTER TABLE im_channel_request_receipt ADD CONSTRAINT ck_channel_receipt_family CHECK (family IN
-    ('META','GOV','MSG','FRIEND','FMETA','FREMOVE','FINVITE','FTEAM','MOD','APPEAL','REPORT','NOTIFY',
-     'CHAIN','CHECKIN','ADMIT','STATE','PRIVACY','ROLE','MEDIA','ONBOARD','BLOCK','HOOK'));
+SET @ck_exists = (
+    SELECT COUNT(*) FROM information_schema.table_constraints
+     WHERE constraint_schema = DATABASE() AND table_name = 'im_channel_request_receipt'
+       AND constraint_name = 'ck_channel_receipt_family' AND constraint_type = 'CHECK'
+);
+SET @ck_ready = (
+    SELECT COUNT(*) FROM information_schema.check_constraints
+     WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_channel_receipt_family'
+       AND check_clause LIKE '%''HOOK''%'
+);
+SET @ddl = IF(
+    @ck_exists > 0 AND @ck_ready = 0,
+    'ALTER TABLE im_channel_request_receipt DROP CHECK ck_channel_receipt_family',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ck_exists = (
+    SELECT COUNT(*) FROM information_schema.table_constraints
+     WHERE constraint_schema = DATABASE() AND table_name = 'im_channel_request_receipt'
+       AND constraint_name = 'ck_channel_receipt_family' AND constraint_type = 'CHECK'
+);
+SET @ddl = IF(
+    @ck_exists = 0,
+    'ALTER TABLE im_channel_request_receipt ADD CONSTRAINT ck_channel_receipt_family CHECK (family IN (''META'',''GOV'',''MSG'',''FRIEND'',''FMETA'',''FREMOVE'',''FINVITE'',''FTEAM'',''MOD'',''APPEAL'',''REPORT'',''NOTIFY'',''CHAIN'',''CHECKIN'',''ADMIT'',''STATE'',''PRIVACY'',''ROLE'',''MEDIA'',''ONBOARD'',''BLOCK'',''HOOK''))',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
 
 -- 1) 空间审计投影：原始来源是 im_channel_op_log 与 im_moderation_action（含撤销），每条原始事件投影一次，
 --    按空间串成 SHA-256 链（prev_hash → row_hash）。只投影已存在的原始行，不推断历史，不声称外部锚定。

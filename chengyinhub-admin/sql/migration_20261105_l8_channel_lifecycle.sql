@@ -1,6 +1,6 @@
 -- Additive source only; no historical conversation backfill or production execution.
 -- Existing conversation IDs/types and message rows are never rewritten here.
-CREATE TABLE im_channel (
+CREATE TABLE IF NOT EXISTS im_channel (
     id BIGINT UNSIGNED NOT NULL,
     guild_kind TINYINT NOT NULL DEFAULT 0,
     guild_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -60,7 +60,7 @@ CREATE TABLE im_channel (
     CONSTRAINT ck_channel_legacy CHECK(legacy_conversation_id IS NULL OR legacy_conversation_id=id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE im_channel_op_log (
+CREATE TABLE IF NOT EXISTS im_channel_op_log (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     channel_id BIGINT UNSIGNED NOT NULL,
     action VARCHAR(32) NOT NULL,
@@ -78,7 +78,7 @@ CREATE TABLE im_channel_op_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Immutable original response; no TTL and no inferred historical receipts.
-CREATE TABLE im_channel_lifecycle_receipt (
+CREATE TABLE IF NOT EXISTS im_channel_lifecycle_receipt (
     operator_id BIGINT NOT NULL,
     request_id VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     payload_fingerprint CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,

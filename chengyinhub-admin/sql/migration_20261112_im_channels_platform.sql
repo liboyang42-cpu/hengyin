@@ -3,19 +3,91 @@
 -- 频道 = im_channel(#726) + 同 id 的 im_conversation(type=5)；消息仍存 im_message。
 
 -- 1) 消息版本：编辑/撤回走 CAS；旧行默认 1，不改写历史内容。
-ALTER TABLE im_message
-    ADD COLUMN version INT NOT NULL DEFAULT 1 COMMENT '消息版本(编辑/撤回 CAS)',
-    ADD COLUMN edited_at DATETIME(3) NULL COMMENT '最近一次编辑时间';
+-- MDL-safe online DDL guard: lock_wait_timeout=5s fails fast if a long tx holds MDL on im_message;
+-- ALGORITHM=INPLACE, LOCK=NONE allows concurrent reads/writes without table copy.
+-- Documented pt-osc fallback (if production MySQL rejects INPLACE/LOCK=NONE or requires throttled execution):
+--   pt-online-schema-change --alter "ADD COLUMN version INT NOT NULL DEFAULT 1 COMMENT '消息版本(编辑/撤回 CAS)', ADD COLUMN edited_at DATETIME(3) NULL COMMENT '最近一次编辑时间'" --max-load Threads_running=25 --critical-load Threads_running=50 --chunk-time=0.5 --execute D=<db>,t=im_message
+SET @prev_lock_wait_timeout = @@SESSION.lock_wait_timeout;
+SET SESSION lock_wait_timeout = 5;
+SET @im_msg_has_version = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'im_message' AND column_name = 'version'
+);
+SET @im_msg_has_edited_at = (
+    SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'im_message' AND column_name = 'edited_at'
+);
+SET @ddl = IF(
+    @im_msg_has_version = 0 AND @im_msg_has_edited_at = 0,
+    'ALTER TABLE im_message ADD COLUMN version INT NOT NULL DEFAULT 1 COMMENT ''消息版本(编辑/撤回 CAS)'', ADD COLUMN edited_at DATETIME(3) NULL COMMENT ''最近一次编辑时间'', ALGORITHM=INPLACE, LOCK=NONE',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_message' AND column_name = 'version') = 0,
+    'ALTER TABLE im_message ADD COLUMN version INT NOT NULL DEFAULT 1 COMMENT ''消息版本(编辑/撤回 CAS)'', ALGORITHM=INPLACE, LOCK=NONE',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_message' AND column_name = 'edited_at') = 0,
+    'ALTER TABLE im_message ADD COLUMN edited_at DATETIME(3) NULL COMMENT ''最近一次编辑时间'', ALGORITHM=INPLACE, LOCK=NONE',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET SESSION lock_wait_timeout = @prev_lock_wait_timeout;
 
 -- 1b) 频道元数据版本（App 的 version；与权限纪元 perm_version 分开 CAS）。
-ALTER TABLE im_channel
-    ADD COLUMN meta_version BIGINT NOT NULL DEFAULT 0 COMMENT '元数据版本(名称/主题/可见性/慢速/生命周期/覆盖)';
+SET @ddl = IF(
+    (SELECT COUNT(*) FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'im_channel' AND column_name = 'meta_version') = 0,
+    'ALTER TABLE im_channel ADD COLUMN meta_version BIGINT NOT NULL DEFAULT 0 COMMENT ''元数据版本(名称/主题/可见性/慢速/生命周期/覆盖)''',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
 
 -- 2) 频道操作日志动作扩到编辑与权限覆盖。
-ALTER TABLE im_channel_op_log DROP CHECK ck_channel_op_action;
-ALTER TABLE im_channel_op_log ADD CONSTRAINT ck_channel_op_action CHECK(action IN
-    ('CREATE','ARCHIVE','UNARCHIVE','BAN','UNBAN','DELETE','RESTORE','MOVE','TRANSFER_BUMP',
-     'EDIT','PERMISSION_PUT','PERMISSION_DELETE','PROGRESS_BIND'));
+SET @ck_exists = (
+    SELECT COUNT(*) FROM information_schema.table_constraints
+     WHERE constraint_schema = DATABASE() AND table_name = 'im_channel_op_log'
+       AND constraint_name = 'ck_channel_op_action' AND constraint_type = 'CHECK'
+);
+SET @ck_ready = (
+    SELECT COUNT(*) FROM information_schema.check_constraints
+     WHERE constraint_schema = DATABASE() AND constraint_name = 'ck_channel_op_action'
+       AND check_clause LIKE '%''PROGRESS_BIND''%'
+);
+SET @ddl = IF(
+    @ck_exists > 0 AND @ck_ready = 0,
+    'ALTER TABLE im_channel_op_log DROP CHECK ck_channel_op_action',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
+SET @ck_exists = (
+    SELECT COUNT(*) FROM information_schema.table_constraints
+     WHERE constraint_schema = DATABASE() AND table_name = 'im_channel_op_log'
+       AND constraint_name = 'ck_channel_op_action' AND constraint_type = 'CHECK'
+);
+SET @ddl = IF(
+    @ck_exists = 0,
+    'ALTER TABLE im_channel_op_log ADD CONSTRAINT ck_channel_op_action CHECK (action IN (''CREATE'',''ARCHIVE'',''UNARCHIVE'',''BAN'',''UNBAN'',''DELETE'',''RESTORE'',''MOVE'',''TRANSFER_BUMP'',''EDIT'',''PERMISSION_PUT'',''PERMISSION_DELETE'',''PROGRESS_BIND''))',
+    'SELECT 1'
+);
+PREPARE ddl_stmt FROM @ddl;
+EXECUTE ddl_stmt;
+DEALLOCATE PREPARE ddl_stmt;
 
 -- 3) 原请求回执：同一操作者 + 族 + request_id 只落一次，重放返回原响应。
 CREATE TABLE IF NOT EXISTS im_channel_request_receipt (
