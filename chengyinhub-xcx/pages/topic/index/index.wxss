@@ -2210,3 +2210,6 @@ button::after {
 .topic .story-cc__x { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
 
 .topic-list { padding-bottom:calc(160rpx + env(safe-area-inset-bottom)); }
+
+/* 浮动购票按钮下仍能滚到最后一个站点。 */
+.topic-list--docked { padding-bottom: calc(2 * var(--cy-btn-h) + env(safe-area-inset-bottom)); }

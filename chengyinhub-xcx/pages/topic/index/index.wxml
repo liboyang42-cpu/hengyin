@@ -403,7 +403,7 @@
           </view>
         </view>
       </view>
-      <view class="{{tabPre ? 'tab-pre ' : ''}}{{tabRun ? 'tab-run ' : ''}}tabcont topic-list" wx:if="{{ activeTab == '2' }}">
+      <view class="{{tabPre ? 'tab-pre ' : ''}}{{tabRun ? 'tab-run ' : ''}}tabcont topic-list {{docked && heroCta.text ? 'topic-list--docked' : ''}}" wx:if="{{ activeTab == '2' }}">
         <view class="wp route-top">
           <cy-route-progress total="{{progress.total}}" done="{{progress.done}}" labels="{{progress.labels}}" tone="{{isExplore ? 'free' : 'city'}}" reduced-motion="{{reducedMotion}}" />
           <view class="route-map-wrap rmap" wx:if="{{routeReady}}">

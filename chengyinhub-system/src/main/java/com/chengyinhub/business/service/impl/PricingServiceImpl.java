@@ -232,6 +232,8 @@ public class PricingServiceImpl implements IPricingService {
 
     @Override
     public PricingResult previewTopic(Long topicId, BigDecimal leadCost, Integer teamSize, String subType) {
+        Integer productType = cmsTopicMapper == null ? null : cmsTopicMapper.selectProductTypeById(topicId);
+        if (Integer.valueOf(ProductType.FREE_EXPLORE).equals(productType) && !"self".equals(subType)) subType = "free";
         List<CoopOrder> orders = coopOrderMapper.selectEffectiveOrdersByTopicId(topicId);
         BigDecimal sumShareRate = BigDecimal.ZERO; // 小数累加
         BigDecimal sumFixedFee = BigDecimal.ZERO;
@@ -280,19 +282,19 @@ public class PricingServiceImpl implements IPricingService {
         // 锁价(confirmPrice)会把这一刻的 live 值冻进主题,之后结算只认那份快照。
         PricingResult r = compute(sumShareRate, guaranteeRate, sumFixedFee, leadPerHead, perkCost, platformRate());
         r.setSubType(subType);
+        r.setProductType(productType);
         r.setLineup(lineup);
         // CU-M-32:与 confirmPrice 同一判据(lifecycle==2 + 自由探索必选章生效供给),前端据此事先置灰
         // 「确认终价并开售」,并给出与 confirmPrice 拒绝时完全相同的原话。
         CmsTopic lifecycleRow = cmsTopicMapper == null ? null : cmsTopicMapper.selectCmsTopicLifecycleById(topicId);
         String blockReason = lifecycleRow == null ? LIFECYCLE_BLOCK_REASON : lifecycleBlockReason(lifecycleRow);
-        if (blockReason == null) blockReason = supplyBlockReason(cmsTopicMapper.selectProductTypeById(topicId), topicId);
+        if (blockReason == null) blockReason = supplyBlockReason(productType, topicId);
         r.setCanConfirm(blockReason == null);
         // P-34(第三轮):已过定价阶段(开售及以后)单独标出,定价页不再误报「合作阵容锁定后可定价」
         r.setPriced(lifecycleRow != null && lifecycleRow.getLifecycle() != null && lifecycleRow.getLifecycle() > 2);
         r.setConfirmBlockReason(blockReason);
         // f-money3:「无人带」页签在自由探索主题上不可定价;与 confirmPrice 同一句,前端挂在价格栏下。
-        if ("self".equals(subType) && cmsTopicMapper != null && Integer.valueOf(ProductType.FREE_EXPLORE)
-                .equals(cmsTopicMapper.selectProductTypeById(topicId))) {
+        if ("self".equals(subType) && Integer.valueOf(ProductType.FREE_EXPLORE).equals(productType)) {
             r.setSelfPriceError(FreeExploreSelfPlayPricePolicy.MESSAGE);
         }
         r.setCurrentPrice(currentPrice(topicId, subType));

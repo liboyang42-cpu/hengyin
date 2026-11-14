@@ -1,5 +1,5 @@
 <!-- 主题模板详情(2026-10-30 业主 V-24):版式照抄玩法模板详情 templatedetail —— 封面 + 名字 + 发布方、
-     「应用」与分享同款、详情 / 能力两个 tab。主题模板没有场地:只讲故事和玩法,不出地址。 -->
+     「应用」与分享同款、详情 / 能力两个 tab。 -->
 <view class="{{light ? 'theme-merchant' : 'theme-dark'}}">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -20,8 +20,8 @@
     <cy-error wx:else load-failure class="fill-slot" fill="{{true}}" size="lg" title="主题模板没能打开" sub="{{loadErrorMsg}}" bind:retry="onRetry" auto-back />
   </view>
 
-  <scroll-view wx:if="{{ !loading && !loadError }}" class="xb-scroll xb-scroll--bleed" scroll-y enhanced show-scrollbar="{{ false }}">
-    <view style="height: {{statusBarHeight + navBarHeight}}px;"></view>
+  <view class="td-viewport" wx:if="{{ !loading && !loadError }}" style="top:{{statusBarHeight + navBarHeight}}px;">
+  <scroll-view class="xb-scroll xb-scroll--bleed" scroll-y enhanced show-scrollbar="{{ false }}">
 
     <view class="xb-head">
       <view class="xb-head-cover">
@@ -169,6 +169,7 @@
 
     <view class="xb-scroll-pad"></view>
   </scroll-view>
+  </view>
 </view>
 
 </view>

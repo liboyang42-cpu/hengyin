@@ -34,9 +34,9 @@
   font-weight: 700;
   color: var(--xb-text);
 }
-.st-ch__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
-.st-ch__t { font-size: var(--cy-font-label); font-weight: 700; line-height: 1.4; color: var(--xb-text); }
-.st-ch__p { font-size: var(--cy-font-caption); line-height: 1.4; color: var(--xb-muted); }
+.st-ch__main { flex: 1; min-width: 0; }
+.st-ch__t { display: block; font-size: var(--cy-font-label); font-weight: 700; line-height: 1.4; color: var(--xb-text); }
+.st-ch__p { display: block; margin-top: calc(var(--cy-space-1) / 2); font-size: var(--cy-font-caption); line-height: 1.4; color: var(--xb-muted); }
 
 /* 能力 · 概要:与详情 .xb-stat-grid 同一张卡,只是允许换行,一行三格 */
 .cap-sum {
@@ -127,3 +127,10 @@
 
 /* 封面署名:详情页底部一行,与节点图署名同一字号颜色 */
 .td-cover-credit { display: block; padding: var(--cy-space-4) var(--cy-page-x) 0; }
+
+/* 与固定导航分开裁切滚动视口，两种主题都不让正文穿过状态栏。 */
+.td-viewport { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; overflow: hidden; }
+.td-viewport .xb-scroll { height: 100%; }
+
+/* 顶部对齐避免原生居中排版在状态栏原点残留标题字形。 */
+.xb-head { align-items: flex-start; }

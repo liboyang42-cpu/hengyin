@@ -1,0 +1,5 @@
+// 标题尾部两字保持在同一行，原始站名仍用于业务请求和回执。
+function text(value) {
+  return ('' + (value || '')).replace(getRegExp('([㐀-鿿])([㐀-鿿][？！。，、：；」』）】》]*)$'), '$1⁠$2');
+}
+module.exports = { text: text };

@@ -29,7 +29,7 @@ function teamSizeOk(subType, teamSize) {
 }
 
 // 自由探索只有一张门票价，没有带队成本与成团人数：按「非有人带」处理
-function costSub(d) { return d.isFree ? 'free' : d.subType; }
+function costSub(d) { return d.isFreeExplore ? 'free' : d.subType; }
 
 function teamSizeErrorText(subType, teamSize) {
   if (subType !== 'guided' || teamSizeOk(subType, teamSize)) return '';
@@ -63,7 +63,7 @@ Page({
     referenceDeltaText: '',
     saving: false,
     submitError: '',
-    isFree: false, feeText: '', takeHomeText: '', sliderMin: 0, saleStatusText: '', pendingRows: [],
+    isFreeExplore: false, isFree: false, confirmBlockReason: '', feeText: '', takeHomeText: '', sliderMin: 0, saleStatusText: '', pendingRows: [],
     canConfirmPrice: false,
     themeClass: 'theme-merchant', phaseBlocked: false, priced: false, // P-34:priced = 已过定价阶段(终价已确认/开售后),与「还没到定价阶段」分开说
     // CU-C-70:成团人数为空/0 时的输入提示(与按钮禁用态同一把尺子)。
@@ -138,14 +138,15 @@ Page({
           return;
         }
         const reference = res.data.cityReferencePrice == null ? null : Number(res.data.cityReferencePrice);
-        const isFree = res.data.productType != null && Number(res.data.productType) === 2;
+        const isFreeExplore = res.data.productType != null && Number(res.data.productType) === 2;
+        const subType = isFreeExplore ? 'free' : that.data.subType;
         const min = Math.ceil(floor); const current = res.data.currentPrice == null ? NaN : Number(res.data.currentPrice);
         // 作者在本页拖过滑块就保留他选的价（只要不低于新地板）；否则从已填价起步，低于地板价才回落
         const kept = that._priceTouched && Number(that.data.finalPrice) >= min ? Number(that.data.finalPrice) : NaN;
         const start = Number.isFinite(kept) ? kept : (Number.isFinite(current) && current >= min ? current : min);
         const platformRate = res.data.platformRate == null || res.data.platformRate === '' ? null : Number(res.data.platformRate);
         const stale = rev !== (that._inputRev || 0);
-        const stateAfter = Object.assign({}, that.data, { isFree });
+        const stateAfter = Object.assign({}, that.data, { isFreeExplore, subType });
         const sliderMax = Math.max(min + 100, Math.ceil(floor * 2), reference ? Math.ceil(reference * 1.5) : 0, Math.ceil(start * 1.5));
         const sample = Number(res.data.cityReferenceSampleSize || 0);
         const city = res.data.cityReferenceLabel || '同城';
@@ -162,7 +163,7 @@ Page({
                 };
               })
           : [];
-        const selfPriceError = that.data.subType === 'self' ? (res.data.selfPriceError || '') : '';
+        const selfPriceError = subType === 'self' ? (res.data.selfPriceError || '') : '';
         that._floor = floor;
         that._platformRate = Number.isFinite(platformRate) && platformRate >= 0 ? platformRate : null;
         that._floorStale = stale;
@@ -170,16 +171,19 @@ Page({
           hasPreview: true,
           errorText: '',
           selfPriceError: selfPriceError,
-          isFree: isFree,
+          isFreeExplore: isFreeExplore,
+          isFree: start === 0,
+          subType: subType,
+          confirmBlockReason: res.data.confirmBlockReason || '主题还没进入定价阶段',
           sliderMin: min,
           lineup: lineup,
           floorText: money(res.data.priceMin),
           finalPrice: start,
           // CU-M-32:未到定价阶段(canConfirm===false)事先置灰;老后端不带该字段时仍由服务端拦。
-          phaseBlocked: res.data.canConfirm === false, priced: res.data.priced === true, tickets: ticketRows(that.data.subType, res.data.tickets, floor),
+          phaseBlocked: res.data.canConfirm === false, priced: res.data.priced === true, tickets: ticketRows(subType, res.data.tickets, floor),
           // CU-C-70:floor=0(例:带队成本被静默摊成 0)时 min>=floor 恒真,旧式自校验放行零价。
           // 人数这道条件必须参与,不然按钮点得动而价格是 0。
-          canConfirmPrice: pricesOk(ticketRows(that.data.subType, res.data.tickets, floor), start, floor) && res.data.canConfirm !== false
+          canConfirmPrice: pricesOk(ticketRows(subType, res.data.tickets, floor), start, floor) && res.data.canConfirm !== false
             && teamSizeOk(costSub(stateAfter), that.data.teamSize) && !selfPriceError && !stale,
           teamSizeError: that._teamTouched ? teamSizeErrorText(costSub(stateAfter), that.data.teamSize) : '', // p3 F6:动过人数或点了确认才报
           sliderMax: sliderMax,
@@ -191,7 +195,7 @@ Page({
         that.updateDelta(start);
         that.updateFee(start);
         if (res.data.priced === true) that.loadSaleStatus();
-        if (isFree) that.loadPendingSettlements();
+        if (isFreeExplore) that.loadPendingSettlements();
         that.loadLineupNames();
       },
       fail(res) {
@@ -249,6 +253,7 @@ Page({
   },
 
   chooseType(e) {
+    if (this.data.isFreeExplore) return;
     const type = (e.detail && e.detail.key) !== undefined ? e.detail.key : e.currentTarget.dataset.type;
     if (type === this.data.subType) return;
     this.setData({
@@ -307,7 +312,7 @@ Page({
   onSliderChange(e) {
     const value = Number(e.detail.value);
     this._priceTouched = true;
-    this.setData({ finalPrice: value, canConfirmPrice: this._canConfirmPrice({ finalPrice: value }) });
+    this.setData({ finalPrice: value, isFree: value === 0, canConfirmPrice: this._canConfirmPrice({ finalPrice: value }) });
     this.updateDelta(value);
     this.updateFee(value);
   },
@@ -406,14 +411,14 @@ Page({
     if (!this.data.canConfirmPrice || this.data.saving) return;
     const body = { topicId: this.data.topicId };
     if (this._scope) body.scope = this._scope;
-    if (this.data.subType === 'guided') {
+    if (this.data.isFreeExplore || this.data.subType === 'guided') {
       body.guidedPrice = this.data.finalPrice;
       if (this.data.tickets.length > 1) {
         // 第四轮:逐张写各自终价;guidedPrice 给最低那张(服务端按逐张价重算,不信它)。
         body.ticketPrices = this.data.tickets.map(function (r) { return { ticketId: r.ticketId, price: Number(r.price) }; });
         body.guidedPrice = Math.min.apply(null, body.ticketPrices.map(function (r) { return r.price; }));
       }
-      if (!this.data.isFree) {
+      if (!this.data.isFreeExplore) {
         body.leadCost = this.data.leadCost === '' ? null : Number(this.data.leadCost);
         body.teamSize = this.data.teamSize === '' ? null : Number(this.data.teamSize);
       }
