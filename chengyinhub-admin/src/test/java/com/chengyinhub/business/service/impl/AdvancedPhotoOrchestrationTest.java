@@ -124,6 +124,21 @@ class AdvancedPhotoOrchestrationTest {
         new TransactionTemplate(transactions).execute(status -> { seedOriginal(state, result, providerState); return null; });
     }
 
+    @Test void missingConsentBeforeIntentIsDefinitivelyNotExecutedAndCanRetrySameKey() {
+        doThrow(new ServiceException("请先单独同意照片发送第三方模型处理", 400)
+                .setData(Map.of("reason", "PHOTO_MODEL_CONSENT_REQUIRED"))).when(intents).prepare(any());
+        ServiceException refusal = assertThrows(ServiceException.class, this::act);
+        assertEquals(400, refusal.getCode());
+        assertEquals(Map.of("reason", "PHOTO_MODEL_CONSENT_REQUIRED", "intentNotExecuted", true), refusal.getData());
+        assertEquals(0, providerCalls); assertNull(intent); assertTrue(receipts.isEmpty());
+        assertEquals(0, row.get().getVersion());
+        doAnswer(i -> {
+            original = i.getArgument(0); intent = view(PhotoCheckIntentState.PREPARED, null, "NOT_SENT"); return intent;
+        }).when(intents).prepare(any());
+        act();
+        assertEquals(1, providerCalls); assertEquals(1, receipts.size());
+    }
+
     @Test void intentCommitsBeforeProviderAndReceiptCommitsWithApplied() {
         Map<String,Object> result = act();
         assertEquals(1, result.get("version")); assertEquals(1, providerCalls); assertEquals(5, row.get().getScore());

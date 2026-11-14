@@ -143,6 +143,7 @@ Component({
       const identity = JSON.stringify([String(this.data.sessionId || ''), String(this.data.nodeId || '')]);
       const fresh = this._qaIdentity !== identity || this._qaVisible !== !!show;
       this._qaIdentity = identity;
+      if (fresh) this._submittedText = '';
       this._qaVisible = !!show;
       if (this._introTimer) { clearTimeout(this._introTimer); this._introTimer = null; }
       if (!show) return;
@@ -169,7 +170,7 @@ Component({
         picGrid: mode === 'pick' && opts.some(o => !!o.img),
         /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
            没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */
-        typed: '', feedback: (passed || finished || this.data.attempts > 0)
+        typed: !fresh && passed ? (this._submittedText || this.data.typed) : '', feedback: (passed || finished || this.data.attempts > 0)
           ? (this.data.feedbackText || (mode === 'type' && !passed && !finished && this.data.attempts > 0 && this.data.authoredOutcome !== 'FAIL' ? RETRY_TEXT : '')) : '',
         typeWrong: mode === 'type' && !passed && !finished && this.data.attempts > 0,
         shownFeedbackImages: (passed || finished || this.data.attempts > 0)
@@ -315,6 +316,7 @@ Component({
         return;
       }
       if (!String(this.data.typed || '').trim()) return;
+      this._submittedText = this.data.typed;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       this.triggerEvent('submit', { mode: 'type', input: this.data.typed });
     },
@@ -381,6 +383,10 @@ Component({
       if (exhausted && stage) stage.fail(false);
     },
 
+    onPreviewQuestion() {
+      const current = this.data.imageUrl;
+      if (current) wx.previewImage({ current, urls: [current] });
+    },
     onPreviewFeedback(e) {
       const urls = this.data.shownFeedbackImages;
       const current = urls[Number(e.currentTarget.dataset.i)];

@@ -37,6 +37,23 @@ class PlayFrozenContentProjectionTest {
         return content;
     }
 
+    @Test void advancedHangmanProjectsPublicTemplateQuestionWithoutAnswer() throws Exception {
+        PlayNodeQueryApplication query = new PlayNodeQueryApplication();
+        CmsTopicNode node = node();
+        CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setValidationMethod(0); template.setQuestionName("请读本站题卡");
+        template.setQuestionImg("/question.jpg"); template.setQuestionAnswer("secret-answer");
+        template.setAdvancedConfigJson("{\"hangman\":{\"enabled\":true,\"answer\":\"secret-word\"}}");
+        Map<String, Object> view = new java.util.LinkedHashMap<>();
+        query.projectFrozenTemplate(read(node), new PlayNodeQueryApplication.NodeTask(node, view, 0, template), null);
+        assertEquals("请读本站题卡", view.get("question"));
+        assertEquals("/question.jpg", view.get("questionImg"));
+        assertFalse(json.writeValueAsString(view).contains("secret-"));
+        template.setQuestionName(null);
+        query.projectFrozenTemplate(read(node), new PlayNodeQueryApplication.NodeTask(node, view, 0, template), null);
+        assertNull(view.get("question"), "缺题面不编造答案");
+    }
+
     private CmsTopicNode node() {
         CmsTopicNode node = new CmsTopicNode(); node.setId(11L); node.setTopicId(21L);
         node.setName("作者新名字"); node.setTemplateId(null); node.setStatus(1L);

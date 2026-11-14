@@ -1908,6 +1908,23 @@ class TopicRouteRuntimeServiceImplTest {
         verify(routeMapper, never()).updateStateCas(any(TopicRouteSession.class));
     }
 
+    @Test
+    void personalLinearEntryCreatesAndResumesRunWithoutJourneyConfig() throws Exception {
+        useLinearJourneyTopic();
+        when(nodeMapper.selectCmsTopicNodeList(any(CmsTopicNode.class)))
+                .thenReturn(Arrays.asList(node(1L, 1L), node(2L, 2L)));
+        TopicRouteState first = runtime.personalRun(7L, 10L,
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.NONE);
+        TopicRouteState resumed = runtime.personalRun(7L, 10L,
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration.NONE);
+        assertEquals(99L, first.getSessionId());
+        assertEquals(first.getSessionId(), resumed.getSessionId());
+        assertEquals(1L, resumed.getCurrentNodeId());
+        assertTrue(json.readTree(stored[0].getConfigSnapshotJson()).has("nodeAnswers"));
+        verify(routeMapper, times(1)).insertSession(any(TopicRouteSession.class));
+        verify(routeMapper, never()).insertAction(any(TopicRouteAction.class));
+    }
+
     /**
      * 带 effects 的线性主题建局:快照没有边,节点完成时 effects 写进 state_json,
      * 与分支同一次 CAS、同一 routeActionId 幂等。

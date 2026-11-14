@@ -1199,7 +1199,7 @@ Page({
   _runSessionScope() {
     this._isPlayAccountCurrent();
     return { memberId: this._playOwner, activityId: this.data.activityId, topicId: this.data.topicId,
-      routeSessionId: String((this._routeState || {}).sessionId || '') };
+      routeSessionId: precisePlayId((this._routeState || {}).sessionId) || this._serverRunKey || '' };
   },
   /** 暂停/离页时落盘。只记「已开始未结束」的行程;结束(通关/退出/服务端判结束)会 clear,
    *  所以重进读到的快照一定是可继续的暂停态,不是一个幽灵计时。 */
@@ -4515,6 +4515,7 @@ Page({
       const routeState = acceptProjection ? normalizeRouteState(routeInput) : that._routeState;
       const nodes = that._nodesForRoute(catalog, routeState);
       that._routeState = routeState;
+      that._serverRunKey = precisePlayId(d.runKey);
       if (!that._currentCompletedHistory()) that._discardCompletedHistory();
       if (acceptProjection) that._versionedRouteState = that._routeStateVersionKnown(routeInput) ? routeState : null;
       that._routeNodeCatalog = catalog;
@@ -5207,7 +5208,7 @@ Page({
             if (!current()) return;
             that._loc = arrivalReading.stamp({ longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy });
             that._locationRequesting = false;
-            that.setData({ gpsOk: true, gpsHint: '定位已开启 · 靠近后会自动点亮' }, () => {
+            that.setData({ gpsOk: true, gpsHint: Number(that.data.mode) === 1 ? '定位已开启 · 仅开局核验，后续各站无需定位' : '定位已开启 · 靠近后会自动点亮' }, () => {
               if (!current()) return;
               that._noteLocAccuracy(loc.accuracy);
               that.rebuild();
@@ -5226,7 +5227,7 @@ Page({
     const low = playAccuracy.isLowAccuracy(accuracy);
     if (low === !!this.data.gpsLowAcc) return;
     if (low) this.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
-    else this.setData({ gpsLowAcc: false, gpsHint: '定位已开启 · 靠近后会自动点亮' });
+    else this.setData({ gpsLowAcc: false, gpsHint: Number(this.data.mode) === 1 ? '定位已开启 · 仅开局核验，后续各站无需定位' : '定位已开启 · 靠近后会自动点亮' });
   },
   /* 第九轮 m2 第 1 项:我走过的路(亮线 + 光晕),只在地图露出、页面在前台时推给地图 */
   _playTrail() {
@@ -8124,7 +8125,28 @@ Page({
     const state = game && game.data && game.data.state;
     if (!url || !kit || kit.type !== 'photocheck' || kit.passed || !state || String(state.sessionId) !== String(kit.sessionId)
         || game.data.acting || game.data.unknown) return;
-    this._trackPhotoJudging(game.action('SUBMIT_PHOTO_CHECK', { imageUrl: url }));
+    const scope = this._runSessionScope(), sessionKey = this._sessionKey();
+    const current = () => this._isPlayAccountCurrent() && this._advancedGameComponent() === game
+      && this._sessionKey() === sessionKey && this._runSessionScope().routeSessionId === scope.routeSessionId
+      && this._kit() === kit && game.data.state === state && !game.data.acting && !game.data.unknown;
+    this._ensurePhotoConsent(current).then(() => {
+      if (current()) this._trackPhotoJudging(game.action('SUBMIT_PHOTO_CHECK', { imageUrl: url }));
+    }).catch(error => { if (current()) { cyToast(error.message); this._notifyPhotoFail('submit'); } });
+  },
+
+  _ensurePhotoConsent(current) {
+    const runId = this._runSessionScope().routeSessionId;
+    if (!runId) return Promise.reject(new Error('路线局尚未就绪，请重新进入'));
+    const scope = String(this._playMember()) + '|' + this._sessionKey() + '|' + runId;
+    let stored = '';
+    try { stored = wx.getStorageSync(PHOTO_CONSENT_SCOPE_KEY) || ''; } catch (_) { /* 下次重新确认 */ }
+    if (!current()) return Promise.reject(new Error('玩法已变化，请重新进入'));
+    if (this._photoConsentScope === scope || stored === scope) return Promise.resolve();
+    return app.requestSeparateConsent('photo', current).then(() => {
+      if (!current()) throw new Error('玩法已变化，请重新进入');
+      this._photoConsentScope = scope;
+      try { wx.setStorageSync(PHOTO_CONSENT_SCOPE_KEY, scope); } catch (_) { /* 下次重新确认 */ }
+    });
   },
 
   /** 玩法组件说「这一步没提交成功」(被拒 / 状态已更新 / 回读说没写进去 / 回读也失败)。
@@ -8161,7 +8183,18 @@ Page({
       this._typeInFailSeq = (this._typeInFailSeq || 0) + 1;
       this.setData({ 'playKit.kit.startFailureSeq': this._typeInFailSeq });
     }
-    if (action === 'SUBMIT_PHOTO_CHECK') this._notifyPhotoFail(this._kitPhotoUrl ? 'submit' : 'upload');
+    if (action === 'SUBMIT_PHOTO_CHECK') {
+      this._notifyPhotoFail(this._kitPhotoUrl ? 'submit' : 'upload');
+      if (detail.reason === 'PHOTO_MODEL_CONSENT_REQUIRED') {
+        this._photoConsentScope = '';
+        try { wx.removeStorageSync(PHOTO_CONSENT_SCOPE_KEY); } catch (_) { /* 内存同意已作废 */ }
+        const retryKey = String(state.sessionId) + ':' + state.version;
+        if (this._photoConsentRetry !== retryKey && this._kitPhotoUrl) {
+          this._photoConsentRetry = retryKey;
+          this._resubmitKitPhoto();
+        }
+      }
+    }
   },
 
   _submitKitPhoto(detail, cfg) {
@@ -8268,18 +8301,8 @@ Page({
     }));
     if (option.name === 'SUBMIT_PHOTO_CHECK') {
       const consentCurrent = () => !operation.isAborted() && this._kitPhotoIntent === intent && contextCurrent() && sameQuestion();
-      /* 照片模型处理的单独同意按「这一局」问一次(业主 2026-10-30 拍板,实走 A23):同账号同一局已同意过就直接上传,
-         换局、换账号再问。「这一局」是路线局(routeSessionId),页面退出重进仍是同一局,不再重问(实走复核);
-         没有路线局时退回只记在本页。服务端仍逐次校验已存同意记录,这里只是不再每拍一张就弹一次。 */
-      const runId = (this._routeState || {}).sessionId;
-      const consentScope = String(this._playMember()) + '|' + this._sessionKey() + '|' + (runId == null ? '' : runId);
-      let storedScope = '';
-      try { storedScope = runId == null ? '' : (wx.getStorageSync(PHOTO_CONSENT_SCOPE_KEY) || ''); } catch (e) { storedScope = ''; }
-      const consent = this._photoConsentScope === consentScope || storedScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', consentCurrent);
-      consent.then(() => {
+      this._ensurePhotoConsent(consentCurrent).then(() => {
         if (!consentCurrent()) { settle(); operation.finish(); return; }
-        this._photoConsentScope = consentScope;
-        if (runId != null) { try { wx.setStorageSync(PHOTO_CONSENT_SCOPE_KEY, consentScope); } catch (e) { /* 存不下只是下次重进会再问一次 */ } }
         upload();
       }).catch(error => {
         const owned = consentCurrent();
@@ -9332,6 +9355,7 @@ Page({
   onRouteMapUpdated() { const w = this._routeMapWait; this._routeMapWait = null; if (w) w(); },
   _routeCardPath(cb) {
     const rc = this.data.routeCard || {};
+    if (rc.on && rc.error && !rc.ready) { cb(this.data.finishSnap || ''); return; }
     if (!rc.on || !rc.ready) { cb(''); return; }
     wx.createSelectorQuery().select('#routecv').fields({ node: true }).exec((res) => {
       const cv = res && res[0] && res[0].node;
@@ -9353,7 +9377,7 @@ Page({
   // 第九轮 m2 第 3 项:有路线分享卡时保存的就是那张卡(同一张,不出第二种通关卡)
   paintFinishCard(cb) {
     const rc = this.data.routeCard || {};
-    if (rc.on && rc.ready && typeof this._routeCardPath === 'function') { this._routeCardPath((path) => { if (path) cb(path); else this._paintLegacyFinishCard(cb); }); return; }
+    if (rc.on && (rc.ready || rc.error && this.data.finishSnap) && typeof this._routeCardPath === 'function') { this._routeCardPath((path) => { if (path) cb(path); else this._paintLegacyFinishCard(cb); }); return; }
     this._paintLegacyFinishCard(cb);
   },
   _paintLegacyFinishCard(cb) {

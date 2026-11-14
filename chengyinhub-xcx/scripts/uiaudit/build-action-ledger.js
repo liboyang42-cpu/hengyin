@@ -944,6 +944,30 @@ const ACTION_VARIANTS = new Map([
       'legacy-personal-chapter-entry-after-state', 'personal-zero-hp-already-due-after-state', 'personal-step-baseline-after-state',
       'error', 'timeout', 'duplicate-trigger', 'forbidden-owner'],
   }]],
+  ['pages/play/components/advanced-game/index.js:retryOriginalPhoto', [{
+    handler: 'retryOriginalPhoto',
+    apis: ['/api/compliance/consents', '/api/play/advanced/action', '/api/play/advanced/receipt'],
+    writeApis: ['/api/compliance/consents', '/api/play/advanced/action'],
+    requiredRequests: [
+      { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' },
+      { urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' },
+    ],
+    requiredRequestsByBranch: {
+      'unavailable-or-declined': [],
+      'consent-save-failed-or-context-changed': [{ urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' }],
+      'consent-accepted-original-retry': [
+        { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' },
+      ],
+      'original-retry-result-unknown': [
+        { urlTemplate: '/api/compliance/consents', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/play/advanced/action', method: 'POST', kind: 'write' },
+        { urlTemplate: '/api/play/advanced/receipt', method: 'GET', kind: 'read' },
+      ],
+    },
+    requiredBranches: ['unavailable-or-declined', 'consent-save-failed-or-context-changed',
+      'consent-accepted-original-retry', 'original-retry-result-unknown', 'error', 'timeout', 'duplicate-trigger', 'forbidden-owner'],
+  }]],
   ['pages/play/index.js:retryGameSubmission', [
     { id: 'photo', handler: 'submitPhoto', predicate: { gRetryType: 'photo' }, apis: ['/api/play/photo'] },
     { id: 'checkin', handler: 'checkin', predicate: { gRetryType: 'gameCheckin' }, apis: ['/api/play/checkin'] },
