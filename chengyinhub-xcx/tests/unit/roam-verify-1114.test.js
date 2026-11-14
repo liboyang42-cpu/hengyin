@@ -18,7 +18,14 @@ function component(file, app = { getUserID: () => '', globalData: {}, getImgUrl:
   delete require.cache[require.resolve(absolute)]
   require(absolute)
   const instance = Object.assign({}, definition, definition.methods, { data: structuredClone(definition.data),
-    setData(patch, done) { Object.assign(this.data, patch); if (done) done() }, triggerEvent() {}, selectComponent() { return null } })
+    setData(patch, done) {
+      for (const [key, value] of Object.entries(patch)) {
+        const parts = key.split('.'); let target = this.data
+        parts.slice(0, -1).forEach(part => { target = target[part] })
+        target[parts.at(-1)] = value
+      }
+      if (done) done()
+    }, triggerEvent() {}, selectComponent() { return null } })
   return { definition, instance }
 }
 const place = { poiId: 9912406, name: '目录地点', lat: 31.2, lng: 121.4, tags: '["roam:park","roam:seed:v1:sh-place"]' }
@@ -71,8 +78,13 @@ test('地点标题更新当前栈，迟到的其他地点标题不覆盖', () =>
   const { instance } = component('subpackageMember/components/cy/scene-deep-link/index.js')
   const scene = { id: 'roam-poi-detail', params: { poiId: '42' }, title: '节点详情' }
   instance.data.sceneStack = [scene]; instance.data.sceneCurrent = { ...scene }
+  const patches = [], setData = instance.setData
+  instance.setData = function (patch) { patches.push(patch); setData.call(this, patch) }
   instance.onPoiTitle({ detail: { poiId: '42', name: '公园' } })
   assert.equal(instance.data.sceneStack[0].title, '公园')
+  assert.equal(Object.hasOwn(patches[0], 'sceneCurrent'), false, '只写标题路径，不能重写子组件的参数绑定')
+  instance.onPoiTitle({ detail: { poiId: '42', name: '公园' } })
+  assert.equal(patches.length, 1, '相同标题不触发重复加载')
   instance.onPoiTitle({ detail: { poiId: '43', name: '别处' } })
   assert.equal(instance.data.sceneCurrent.title, '公园')
 })
@@ -98,6 +110,11 @@ test('本城推荐超出附近范围时按种子找真实 ID，再读完整公�
   assert.deepEqual(calls.map(r => r.url), ['/api/roam/pois', '/api/city/places/9912406'])
   assert.ok(calls.every(r => r.method === 'GET'))
   await assert.rejects(readPlace({ sendRequest(req) { req.success({ code: 200, data: { ...place, poiId: 1 } }) } }, 9912406))
+  for (const lat of [null, '', true, 91]) {
+    await assert.rejects(readPlace({ sendRequest(req) { req.success({ code: 200, data: { ...place, lat } }) } }, 9912406))
+  }
+  const numeric = await readPlace({ sendRequest(req) { req.success({ code: 200, data: { ...place, lat: '31.2' } }) } }, 9912406)
+  assert.equal(numeric.lat, 31.2)
 })
 
 test('目录不存在时不按同名点猜 ID，也不伪造无坐标文字卡', async () => {

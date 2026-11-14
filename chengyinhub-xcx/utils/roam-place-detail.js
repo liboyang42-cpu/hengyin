@@ -3,6 +3,7 @@
 const PM = require('./roam-place-map.js')
 const { resolvePlaceMedia } = require('./roam-place-media.js')
 const { exactSessionId } = require('./roam-recovery.js')
+const { normalizeTrack } = require('./roam-track-simplify.js')
 
 function read(app, url, data) {
   return new Promise((resolve, reject) => app.sendRequest({ url, data, method: 'GET',
@@ -15,9 +16,9 @@ async function readPlace(app, id) {
   const res = await read(app, '/api/city/places/' + key)
   const row = res && Number(res.code) === 200 && res.data
   if (!row || exactSessionId(row.poiId) !== key || !PM.hasSeedTag(row)) throw new Error('地点未开放或暂时无法读取')
-  if (row.lat == null || row.lng == null || !Number.isFinite(Number(row.lat)) || !Number.isFinite(Number(row.lng))
-      || Math.abs(Number(row.lat)) > 90 || Math.abs(Number(row.lng)) > 180) throw new Error('地点坐标暂时无法读取')
-  const rows = await resolvePlaceMedia(app, [Object.assign({}, row, { id: row.poiId, type: 1 })])
+  const point = normalizeTrack([row])[0]
+  if (!point) throw new Error('地点坐标暂时无法读取')
+  const rows = await resolvePlaceMedia(app, [Object.assign({}, row, point, { id: row.poiId, type: 1 })])
   return rows[0]
 }
 async function readStripPlace(app, item, nearby, center) {
