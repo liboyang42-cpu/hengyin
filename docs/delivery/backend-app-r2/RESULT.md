@@ -6,6 +6,16 @@ Production was not touched. hengyin `master` was not pushed. The only branch pus
 Tested SHA: **`955175611`** after the R2 follow-up (§0). The first round was tested on `01229ec46` (§1–§5). The commit that updates
 this file follows `955175611` and only changes `docs/`.
 
+## TEST 8120 stable secrets (2026-11-14): keep JWT & TEST secrets across restarts
+
+| Item | Result |
+|---|---|
+| Problem | TEST `/data/workspace/be-int/app/start.sh` regenerated `CHENGYIN_JWT_SECRET`, `COUPON_QR_SECRET`, `CHENGYIN_WXMINI_SECRET`, `CHENGYIN_WXPAY_APIV3_KEY`, and `CHENGYIN_DRUID_PASSWORD` via `openssl rand` on every restart, invalidating all app/admin JWT sessions and coupon QR signatures across every redeploy. |
+| Fix (TEST VPS only) | Stabilized all 5 remaining randomized env vars into `chmod 600` files in `/data/workspace/be-int/app/` (generated once with `umask 077`, never printed, never committed to git), matching `.test-pii-key` and `.test-external-game-key`: `.test-jwt-secret` (`CHENGYIN_JWT_SECRET`, 64 hex), `.test-coupon-qr-secret` (`COUPON_QR_SECRET`, 64 hex, independent from JWT), `.test-wxmini-secret` (`CHENGYIN_WXMINI_SECRET`, 32 hex), `.test-wxpay-apiv3-key` (`CHENGYIN_WXPAY_APIV3_KEY`, 32 hex), `.test-druid-password` (`CHENGYIN_DRUID_PASSWORD`, 32 hex). `start.sh` uses `read_test_secret` to enforce `chmod 600` and read each file (initializing once if missing). Production and `hengyin` code/config defaults were not touched. |
+| Rollback | Saved `app/start.sh.prev-98d6fb7`; all existing `app/*.prev-*` rollback files and `cy_e2e_r2` DB remain intact. |
+| Health check added to curl list | Added `smoke_restart_token.py` and wired it as `restart-token` in `r6/smoke-all.sh`: clears loopback SMS rate-limit keys in Redis db 9, logs in player `9009` (`13900000009`), verifies `POST /api/userInfo` pre-restart, restarts TEST 8120 via `start.sh`, verifies all 7 stabilized env SHA-256 digests in `/proc/<pid>/environ` match `.test-*` and survive restart (`CHENGYIN_JWT_SECRET != COUPON_QR_SECRET`), then reuses the **pre-restart token** on `POST /api/userInfo` and `GET /api/play/nodes`. |
+| Verification (TEST 8120) | `smoke_restart_token.py http://127.0.0.1:8120` passed (`pid 608682 -> 611356`, 7/7 env SHA-256 prefixes unchanged, pre-restart token returned `http=200 code=200 userId=9009` on `POST /api/userInfo` and `http=200 code=200 registered=True total=6` on `GET /api/play/nodes` after restart: `TOKEN_ACROSS_RESTART_OK`). Follow-up `smoke_r2.py http://127.0.0.1:8120` passed (same 39 OK lines). |
+
 ## R6 (2026-11-14): `feature/be-gap-merchant` R3 merged — final backend round, TEST 8120 redeployed, capgraph true-missing 0
 
 | Item | Result |
@@ -239,7 +249,6 @@ The capgraph lists them as BACKEND-UNUSED (299 → 305) until the app adds clien
 4. 14 `*MyBatisTest` classes are not gated and need MySQL on 3306. They pass against be-int-mysql. `MapPublicLayersMySqlIT` depends on the JVM timezone.
 5. Pre-existing and not new here: `CommunityPostServiceImpl.runMaintenance` throws `NumberFormatException: "false"` when an erasure job row exists
    (`legal_hold` read as Boolean). It was already in the previous TEST deployment's log (`fix/userinfo-role` on `cy_e2e_beint`).
-6. TEST `start.sh` used to randomize the PII key on every start (§0). It now reads the stable TEST-only key file. Any other TEST deploy script that
-   keeps a DB across restarts needs the same treatment.
+6. TEST `start.sh` used to randomize the PII key (§0) and JWT/QR/WeChat/Druid secrets on every start. It now reads all 7 TEST-only secrets from `chmod 600` `.test-*` files in `app/`. Any other TEST deploy script that keeps a DB/Redis across restarts needs the same treatment.
 7. The U08-03/U08-04 routes and the U06 `turn` block have no app client yet (owner doc rows are PROPOSED). The wire shapes are documented in §0 and
    in the controller/service Javadoc for the app side to adopt.

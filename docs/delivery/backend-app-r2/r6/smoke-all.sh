@@ -15,5 +15,6 @@ run import $B/r4/smoke_import_8120.py
 run misc $B/r5/smoke_misc_8120.py http://127.0.0.1:8120
 run merchant $B/r5/smoke_merchant_8120.py http://127.0.0.1:8120
 run merchant-r3 $B/r6/smoke_r3_merchant_8120.py http://127.0.0.1:8120
+run restart-token "$(cd "$(dirname "$0")/.." && pwd)/smoke_restart_token.py" http://127.0.0.1:8120
 echo SMOKEDONE
 } > $L/smoke-all.out 2>&1
