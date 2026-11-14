@@ -173,7 +173,7 @@ class AnswerNormalizerTest {
         if (got.isEmpty()) return false;
         boolean has = false;
         for (String c : canonicals) {
-            if (c == null || c.trim().isEmpty()) continue;
+            if (c == null || c.isBlank()) continue;
             has = true;
             if (got.equalsIgnoreCase(AnswerPolicy.normalize(c))) return true;
         }

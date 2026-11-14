@@ -168,6 +168,8 @@ public class SecurityConfig
                         // 游客响应走 PresetRouteGuestProjection / CityNodeGuestProjection,只回已上架的公开字段。
                         .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/preset/route/list", "/api/preset/route/info",
                                 "/api/city/nodes/{id:\\d+}")).permitAll()
+                        // owner 2026-11-14:目录地点公开只读详情(CatalogPlaceVO),只认纯数字 id。
+                        .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/city/places/{id:\\d+}")).permitAll()
 
                         // 除上面外的所有请求全部需要鉴权认证
                     .anyRequest().authenticated();

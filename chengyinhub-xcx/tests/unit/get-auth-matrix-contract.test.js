@@ -544,7 +544,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
 });
 
 // 仅接受两种完整 DSL；参数中不允许嵌套调用，括号必须成对。
-// 固定全部 17 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
+// 固定全部 18 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
 const SECURITY_RULES = [
   'url=>permitAll',
   '"/login","/register","/captchaImage"=>permitAll',
@@ -562,7 +562,8 @@ const SECURITY_RULES = [
   'HttpMethod.GET,"/api/roam/share/snapshot"=>permitAll',
   'HttpMethod.GET,"/api/map/weather"=>permitAll',
   'HttpMethod.POST,"/api/merchant/list"=>permitAll',
-  'HttpMethod.GET,"/api/preset/route/list","/api/preset/route/info","/api/city/nodes/{id:\\\\d+}"=>permitAll'
+  'HttpMethod.GET,"/api/preset/route/list","/api/preset/route/info","/api/city/nodes/{id:\\\\d+}"=>permitAll',
+  'HttpMethod.GET,"/api/city/places/{id:\\\\d+}"=>permitAll'
 ];
 
 function assertSecurityRules(source) {
@@ -579,7 +580,7 @@ function assertSecurityRules(source) {
   assert.match(code, /\.anyRequest\(\)\.authenticated\(\)/);
 }
 
-test('后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes 只放行单个数字 id 的 GET', () => {
+test('后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes/places 只放行单个数字 id 的 GET', () => {
   assertSecurityRules(fs.readFileSync(SECURITY, 'utf8'));
 });
 
@@ -592,7 +593,7 @@ for (const dsl of ['legacy', 'boot4']) {
     ? `.requestMatchers(legacyMatchers(${args})).permitAll()`
     : `.antMatchers(${args}).permitAll()`;
 
-  test(`${dsl} DSL 正例保留全部 17 条权限规则`, () => assertSecurityRules(source));
+  test(`${dsl} DSL 正例保留全部 18 条权限规则`, () => assertSecurityRules(source));
   const mutations = [
     ['official POST 改写 GET', (s) => s.replace('HttpMethod.GET, "/api/official/events"', 'HttpMethod.POST, "/api/official/events"')],
     ['official 移除 GET 限制', (s) => s.replace('HttpMethod.GET, "/api/official/events"', '"/api/official/events"')],
@@ -605,6 +606,9 @@ for (const dsl of ['legacy', 'boot4']) {
     ['map weather 不限方法', (s) => s.replace('HttpMethod.GET, "/api/map/weather"', '"/api/map/weather"')],
     ['map weather 扩大通配符', (s) => s.replace('"/api/map/weather"', '"/api/map/**"')],
     ['city node 详情放成单层通配', (s) => s.replace('"/api/city/nodes/{id:\\\\d+}"', '"/api/city/nodes/*"')],
+    ['catalog place POST 放行', (s) => s.replace('HttpMethod.GET, "/api/city/places/', 'HttpMethod.POST, "/api/city/places/')],
+    ['catalog place 不限方法', (s) => s.replace('HttpMethod.GET, "/api/city/places/', '"/api/city/places/')],
+    ['catalog place 详情放成单层通配', (s) => s.replace('"/api/city/places/{id:\\\\d+}"', '"/api/city/places/*"')],
     ['preset 列表不限方法', (s) => s.replace('HttpMethod.GET, "/api/preset/route/list"', '"/api/preset/route/list"')],
     ['preset 扩大通配符', (s) => s.replace('"/api/preset/route/list", "/api/preset/route/info"', '"/api/preset/**"')],
     ['兜底匿名', (s) => s.replace('.anyRequest().authenticated()', '.anyRequest().permitAll()')],

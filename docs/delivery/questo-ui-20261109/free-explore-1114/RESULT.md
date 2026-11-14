@@ -47,10 +47,10 @@
 
 - 0fb4b8fac 的 CI 另定位独立 U4 死数据门禁 5 项：pubLoaded、scope、platformRate、floorStale、floor 只供 JS 使用。改用页面实例字段，所有调用者与两处 floor 测试读数同步；未增加视图占位消费或基线。死字段门禁通过；19 个相关测试文件 219/219 通过；新增定价状态回归验证 MERCHANT 透传、费用显示、成本失效后禁止旧地板提交，新增测试文件 3/3 通过。
 
-## 最终 CI（头 adbdabd8，PR #833）
+## CI 合入已修复 master（2026-11-14）
 
-- 通过：Funds MySQL IT、Funds IT 自证、Migration safety/layout、Fast gates、Mini program static gates、Secret scan、Followup 39、Redis recovery，以及已完成的小程序单测分片。
-- 未通过：Backend tests 仅剩 3 条，均来自 master 自身（#831 合并后 master 的 CI 已红，run 43583818523 / 43583928421）：AnswerNormalizerTest 性质测试、AnswerPolicyTest 显式别名、PlayKitV51RuntimeTest 跨夜窗口。不在本 PR 改动范围，由 `fix/master-ci-1114` 处理；本 PR 的资金路径测试（FreeExploreFeeAllocatorTest、MerchantPublishedFreeExploreSettlementTest）无失败。
-- 未做：D-04、D-09 受既有业主测试约束未改行为；D-19 分账规则待业主决定，仅可见化。
+- 按 lead 指令正常合入 `origin/master` f7fd2a8728971e52ddde6943cb24bce5264b3ca8（master GitHub CI run 43590611989 已通过）。三项后端测试合同修复与两个支付恢复测试的退出修复均直接来自 master，本线不重复修复。
+- 冲突只涉及生成动作台账与精确计数。使用现有 route-matrix/action-ledger 工具重建，保留两侧控件并按合并源码核对计数；没有手删台账行或降低负控要求。
+- 最终同一 SHA 的全部检查结果记录在交付报告；本次 CI 以 PR #833 最新头为准。保留 D-04/D-09 业主规则和 D-19 visible-only 决定。
 
-STATUS: PARTIAL - D-04/D-09 受既有业主规则约束未改；D-19 分账规则待业主；Backend tests 剩 3 条为 master 自身失败（#831），待 master 修复后复跑
+STATUS: PARTIAL - 产品 D-04/D-09 仍受既有业主规则约束；D-19 分账规则待业主决定；CI 结果见 PR 最新头及交付报告
