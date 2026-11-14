@@ -92,6 +92,7 @@
     on duplicate key update order_no=order_no
   </insert>
   <select id="lockOrder" useCache="false" flushCache="true" resultType="java.util.HashMap">select * from workshop_order where order_no=#{orderNo} for update</select>
+  <select id="lockOrderById" useCache="false" flushCache="true" resultType="java.util.HashMap">select * from workshop_order where id=#{id} for update</select>
   <!-- Druid wall rejects the alias-scoped lock clause (OF o): lock only the license order row by its unique order_no; the subquery rows are not locked. -->
   <select id="lockLicenseOrderForDraft" useCache="false" flushCache="true" resultType="java.util.HashMap">
     select * from workshop_order where order_no=(
