@@ -41,7 +41,7 @@ STATUS: PARTIAL - D-04、D-09 受既有业主测试约束未改行为；D-19 分
 - 主分支故障由 `fix/master-ci-1114` owner 统一修复。按 lead 指令，本 PR 撤回前述三个后端测试修复；只保留自由探索引入的修复，待主分支修复合并后再次正常合入 master。
 - 定价页 D-19/D-23 读取以前在业务失败和网络失败时直接消失；现在按现有 toast 封装显示失败，卸载后的回调保持无提示。新增两项行为测试覆盖业务拒绝、空回包、网络失败、成功只读与卸载。D-19 仍只有 GET 可见化，不增加分账或写账行为。
 - `ui-integrity`：仅重锚两项 templatedetail U4 与既有 pricing 补名 U5；删除已经被实际读取的 pubLoaded 旧债务，u4Field 99→98。keyDigest 使用门禁 `baselineKeyDigest()` 相同算法（排序后的键以换行连接再 SHA-256），有日期注释；没有新增基线项或提高棘轮。
-- 新预约页补 F317 `real-data` 截图矩阵行，fixtureVerified 仍为 16、blocked 仍为 24；矩阵 369 行。仅新增待采集计划，不宣称已截图或完成业务验收。
+- 新预约页保留协作者补入的 C63 `setData` 截图矩阵行（删除合并产生的重复 F317），fixtureVerified 仍为 16、blocked 仍为 24；矩阵 369 行。仅新增待采集计划，不宣称已截图或完成业务验收。
 - 使用 `build-route-matrix.js --json` 与 `npm run audit:actions:update` 重建。当前合并树动作总数 6060：tap 3051、event-contract 3009、external tap 381、本地 tap 2670、本地 event-contract 2910；按实际新增控件同步精确断言，保留台账新鲜度、handler 真源、动作分支及证据 pending 规则。
 - 本机聚焦验证：新增失败反馈 2/2；定价/路由聚焦测试 15/15；截图矩阵双向覆盖与统计通过；UI-GATE-0（warn-as-error）通过。完整 Java 编译/测试与所有分片以本次推送后的 GitHub-hosted CI 为准，后续最终报告记录 SHA 和各检查结果。
 - 未运行本地 Java/Docker/Redis；未运行 `ci/xcx-check.sh` selftests；未改 `ci/architecture/*` 或 workflow；未部署、未合并、未操作生产或密钥。
