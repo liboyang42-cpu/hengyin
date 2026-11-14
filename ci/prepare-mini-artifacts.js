@@ -10,6 +10,18 @@ function prepare() {
   const source = sourceDigest();
   for (const [script, flag] of [['build-route-matrix.js', '--json'], ['build-action-ledger.js', '--write']])
     cp.execFileSync(process.execPath, [path.join(root, 'chengyinhub-xcx/scripts/uiaudit', script), flag], { stdio: 'inherit' });
+  const { classifyRoutes } = require('../chengyinhub-xcx/scripts/uiaudit/impact-map');
+  const { readAppRoutes } = require('../chengyinhub-xcx/scripts/uiaudit/build-route-matrix');
+  const routes = readAppRoutes();
+  const planFile = path.join(root, '.ci-impact.json');
+  const plan = fs.existsSync(planFile) ? JSON.parse(fs.readFileSync(planFile, 'utf8')) : null;
+  const changed = plan?.full ? routes.map(route => route.pagePath + '.wxml')
+    : (plan?.changed || []).filter(file => file.startsWith('chengyinhub-xcx/')).map(file => file.slice('chengyinhub-xcx/'.length));
+  const impact = classifyRoutes(new Set(changed));
+  const pages = [...impact.must, ...impact.should, ...impact.skip].map(row => row.pagePath);
+  if (pages.length !== routes.length || new Set(pages).size !== routes.length
+      || routes.some(route => !pages.includes(route.pagePath))) throw new Error('screenshot impact partition is incomplete');
+  fs.writeFileSync(path.join(root, generated[2]), JSON.stringify(impact, null, 2) + '\n');
   const ledger = JSON.parse(fs.readFileSync(path.join(root, generated[0]), 'utf8'));
   const overlay = require('../chengyinhub-xcx/scripts/uiaudit/action-evidence.json');
   const { validateEvidenceOverlay } = require('../chengyinhub-xcx/scripts/uiaudit/build-action-ledger');

@@ -8,6 +8,7 @@ const root = path.resolve(__dirname, '..');
 const generated = [
   'chengyinhub-xcx/scripts/uiaudit/action-ledger.json',
   'chengyinhub-xcx/scripts/uiaudit/route-matrix.json',
+  'chengyinhub-xcx/scripts/uiaudit/impact-map.json',
 ];
 const metadata = 'chengyinhub-xcx/scripts/uiaudit/generated-source.json';
 const digest = file => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex');
@@ -17,7 +18,7 @@ function sourceDigest() {
   const files = cp.execFileSync('git', ['ls-files', '-co', '--exclude-standard', '-z'], {
     cwd: root, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024,
   }).split('\0').filter(Boolean);
-  const excluded = new Set([...generated, metadata, 'chengyinhub-xcx/scripts/uiaudit/impact-map.json', '.ci-impact.json']);
+  const excluded = new Set([...generated, metadata, '.ci-impact.json']);
   for (const file of [...new Set(files)].sort()) {
     if (excluded.has(file)) continue;
     const absolute = path.join(root, file);

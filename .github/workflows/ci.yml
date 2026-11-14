@@ -821,6 +821,7 @@ jobs:
             .ci-impact.json
             chengyinhub-xcx/scripts/uiaudit/action-ledger.json
             chengyinhub-xcx/scripts/uiaudit/route-matrix.json
+            chengyinhub-xcx/scripts/uiaudit/impact-map.json
             chengyinhub-xcx/scripts/uiaudit/generated-source.json
 
   mini_unit:
