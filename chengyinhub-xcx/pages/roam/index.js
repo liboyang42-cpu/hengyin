@@ -622,7 +622,7 @@ Page({
     const free = Number(poi.productType) === 2;
     const that = this;
     getApp().sendRequest({
-      url: '/api/topic/info-to-user', method: 'POST', data: { id: poi.topicId },
+      url: '/api/ci-speed-missing-endpoint-1114', method: 'POST', data: { id: poi.topicId },
       hideLoading: true, silentError: true,
       success(res) {
         const d = res && res.code == 200 && res.data ? (res.data.topic || res.data) : null;
