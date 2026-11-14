@@ -37,4 +37,9 @@
 - 未跑 `ci/xcx-check.sh` 自证;未改 `ci/architecture/*` 与 workflows。
 - 云端会话没有微信开发者工具,未能截图模拟器;两套主题的视觉以 token 定义与 CI 为准,请业主在 DevTools 打开 `pages/templatedetail/topic-detail/index?id=<主题模板id>`(玩家)与 `…&scope=MERCHANT`(商家)核对。
 
+## PR #840 后续(2026-11-14,同分支并行提交)
+- 另一位代理在本分支追加两提交(cd7a2e86、8abf7f49):自由探索「章即一站」时章本身出站卡并合成一组、概要与详情数字排不重复章节数;封面署名读同一只读接口后在详情页底部出一行。
+- cd7a2e86 上「Mini program static checks」显示失败,是被 8abf7f49 的推送取消(UNIT/STATIC_RESULT=cancelled)导致的汇总红,不是真失败。
+- 在 8abf7f49 上本地复跑:action-ledger 因行号锚点漂移需重建(控件数仍 6095,只更新 staticSource 行号);get-auth-matrix-contract 需为新增的封面署名 GET 调用点登记矩阵行并把直接 GET 计数 133 → 134(同端点、同服务端守卫、同权限档)。两处已修并推送。
+
 STATUS: DONE

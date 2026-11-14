@@ -331,6 +331,9 @@ const MATRIX = [
   //   预设库 ApiPresetController /gameplay/list 只回平台自带声明(GameplayPresetCatalog.publicView,无会员维度);
   //   素材署名 ApiMediaAssetController /attribution 经 AppMediaReferenceGuard.publicAttribution 只回已审核/官方素材的公开来源视图,不按本人过滤。
   ['pages/templatedetail/topic-detail/index.js', "url: '/api/media/asset/attribution'", 'required', 'member', 'global-authenticated-read'],
+  // 2026-11-14 theme-template-cards-1114:主题模板详情封面署名(_loadCoverCredit)再读一次同一只读接口 /attribution,同端点同守卫同权限档;
+  //   上一行的锚点自此落在封面那处,节点图那处用 reference: g.img 锚定。
+  ['pages/templatedetail/topic-detail/index.js', "data: { reference: g.img }", 'required', 'member', 'global-authenticated-read'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -502,7 +505,8 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-12 club-payout-binding:个人收款页读本人收款状态一处直接 GET(已入 MATRIX),127 → 128。
   // 2026-11-13 pass-mini:通行证回到订单继续支付一处、订单详情页一处(已入 MATRIX),128 → 130。
   // 2026-11-14 free-explore-1114:定价页两处(已锁价状态、结算待处理)+商家套票预约一处,均已入 MATRIX,130 → 133。
-  assert.equal(directCount, 133, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-14 theme-template-cards-1114:主题模板详情封面署名一处直接 GET /api/media/asset/attribution(已入 MATRIX),133 → 134。
+  assert.equal(directCount, 134, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。

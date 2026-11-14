@@ -1254843,7 +1254843,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:222"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:249"
       }
     },
     {
@@ -1254927,7 +1254927,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:241"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:268"
       }
     },
     {
@@ -1254994,7 +1254994,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:224"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:251"
       }
     },
     {
@@ -1255071,7 +1255071,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:232"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:259"
       }
     },
     {
@@ -1255138,7 +1255138,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:218"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:245"
       }
     },
     {
