@@ -1,0 +1,27 @@
+<view class="theme-dark ro">
+  <cy-toast id="cy-toast" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-access-gate kind="login" />
+  <view style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="主题奖励" safe-top="{{false}}" />
+    <view class="ro__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="card" count="1" />
+      <cy-state-shell wx:elif="{{state === 'invalid'}}" kind="empty" title="没有找到这个主题" />
+      <cy-state-shell wx:elif="{{state === 'none'}}" kind="empty" title="这个主题暂无奖励" />
+      <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="奖励加载失败" primary="重试" bind:primary="retry" />
+      <block wx:else>
+        <view class="ro-card">
+          <text class="ro-card__terms">{{offer.terms || '门店奖励'}}</text>
+          <view class="ro-card__fact" wx:if="{{offer.redeemText}}"><text class="ro-k">使用时间</text><text class="ro-v">{{offer.redeemText}}</text></view>
+          <view class="ro-card__fact" wx:if="{{offer.serviceText}}"><text class="ro-k">服务时间</text><text class="ro-v">{{offer.serviceText}}</text></view>
+          <view class="ro-card__fact"><text class="ro-k">剩余</text><text class="ro-v">{{offer.available}}</text></view>
+        </view>
+        <text class="ro__block" wx:if="{{!offer.claimable}}">{{offer.blockText}}</text>
+        <text class="ro__error" wx:if="{{claimError}}">{{claimError}}</text>
+        <cy-btn wx:if="{{offer.claimable && !claimed}}" variant="primary" loading="{{claiming}}" bindtap="claim">领取</cy-btn>
+        <cy-btn wx:if="{{claimed}}" variant="secondary" bindtap="goRewards">查看我的奖励</cy-btn>
+      </block>
+    </view>
+  </view>
+</view>

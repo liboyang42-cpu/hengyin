@@ -1,0 +1,27 @@
+<view class="theme-dark rw">
+  <cy-toast id="cy-toast" />
+  <cy-access-gate kind="login" />
+  <view style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar plain custom-back bind:back="goBack" />
+    <cy-page-title title="我的奖励" safe-top="{{false}}" />
+    <view class="rw__body">
+      <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
+      <cy-state-shell wx:elif="{{state === 'error'}}" kind="data" title="奖励加载失败" primary="重试" bind:primary="retry" />
+      <cy-state-shell wx:elif="{{state === 'empty'}}" kind="empty" title="还没有奖励" />
+      <block wx:else>
+        <view class="rw-row" wx:for="{{rows}}" wx:key="awardId">
+          <view class="rw-row__head">
+            <text class="rw-row__title">{{item.title}}</text>
+            <cy-tag wx:if="{{item.validityText}}" variant="{{item.validityTone}}">{{item.validityText}}</cy-tag>
+          </view>
+          <text class="rw-row__sub" wx:if="{{item.conditions}}">{{item.conditions}}</text>
+          <text class="rw-row__meta" wx:if="{{item.validText}}">{{item.validText}}</text>
+        </view>
+        <view class="rw__more" wx:if="{{hasMore}}" bindtap="loadMore" aria-role="button" aria-label="加载更多奖励"
+              hover-class="cy-pressed" hover-stay-time="80">{{loadingMore ? '加载中' : '加载更多'}}</view>
+        <view class="rw__more" bindtap="goCoupons" aria-role="button" aria-label="去我的优惠券使用奖励"
+              hover-class="cy-pressed" hover-stay-time="80">去我的优惠券使用</view>
+      </block>
+    </view>
+  </view>
+</view>

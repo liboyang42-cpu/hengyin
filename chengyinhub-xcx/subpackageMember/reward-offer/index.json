@@ -1,0 +1,16 @@
+{
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "主题奖励",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#000000",
+  "usingComponents": {
+    "cy-nav-bar": "/components/cy/nav-bar/index",
+    "cy-page-title": "/components/cy/page-title/index",
+    "cy-skeleton": "/components/cy/skeleton/index",
+    "cy-state-shell": "/components/cy/state-shell/index",
+    "cy-btn": "/components/cy/btn/index",
+    "cy-toast": "/components/cy/toast/index",
+    "cy-modal-host": "/components/cy/modal-host/index",
+    "cy-access-gate": "/components/cy/access-gate/index"
+  }
+}
