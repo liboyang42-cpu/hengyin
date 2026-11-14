@@ -248,7 +248,7 @@ page{ background:var(--cy-color-bg-page); }
 /* 底图加载异常提示条(看门狗超时才出现,点击重试) */
 /* ★ 浮动提示条逐条照原型 .bar 抄:底 #101418 · 1px 描边 · 满圆角 ·
    内边距 9px 18px = 17/35rpx · 字 12.5px ≈ 24rpx 白 · 不换行。 */
-.maptip{ align-self:center; z-index:60; padding:17rpx 35rpx; white-space:nowrap; /* ds-ok 原型 .bar 9px 18px */
+.maptip{ align-self:center; z-index:2; padding:17rpx 35rpx; white-space:nowrap; /* ds-ok 原型 .bar 9px 18px */
   border-radius: var(--cy-radius-pill); background:#101418; border:2rpx solid rgba(255,255,255,.09); /* ds-ok 原型 .bar / --line */
   color:#FFFFFF; font-size:24rpx; } /* ds-ok 原型 12.5px 白 */
 /* 离线变体:状态靠「图标形状 + 文字」承载,颜色只是辅助(DS §8:状态不得只靠颜色)。
@@ -756,7 +756,7 @@ page{ background:var(--cy-color-bg-page); }
 
 
 /* 徽章(woo,与 play 页同构) */
-.woo{ position:absolute; inset:0; z-index:121; background:rgba(6,8,14,.92); /* ds-ok Figma 实测(用户裁决字面值) */
+.woo{ position:absolute; inset:0; z-index:calc(var(--cy-z-sheet) - 10); background:rgba(6,8,14,.92); /* ds-ok Figma 实测(用户裁决字面值) */
   display:flex; flex-direction:column; align-items:center; justify-content:center; } /* ds-ok 颁发遮罩 */
 .woo__title{ position:absolute; top:0; left:0; right:0; text-align:center;
   font-size:46rpx; font-weight:700; color:#FFFFFF; } /* ds-ok Figma 实测(用户裁决字面值) */
@@ -808,10 +808,10 @@ page{ background:var(--cy-color-bg-page); }
 
 
 /* 主题二维码弹窗:与 play 页大二维码同族堆叠卡(灰后卡 + 浅 sheet) */
-.bigqr-mask{ position:absolute; inset:0; z-index:128; background:rgba(0,0,0,.45); } /* ds-ok Figma 源码 */
-.bigqr-under{ position:absolute; left:25rpx; right:25rpx; top:339rpx; height:120rpx; z-index:129;
+.bigqr-mask{ position:absolute; inset:0; z-index:calc(var(--cy-z-sheet) - 3); background:rgba(0,0,0,.45); } /* ds-ok Figma 源码 */
+.bigqr-under{ position:absolute; left:25rpx; right:25rpx; top:339rpx; height:120rpx; z-index:calc(var(--cy-z-sheet) - 2);
   background:#D1D5DB; border-radius:25rpx 25rpx 0 0; } /* ds-ok 堆叠后层卡 */
-.bigqr{ position:absolute; left:0; right:0; bottom:0; top:370rpx; z-index:130; background:#EBEBEB; /* ds-ok Figma 实测(用户裁决字面值) */
+.bigqr{ position:absolute; left:0; right:0; bottom:0; top:370rpx; z-index:calc(var(--cy-z-sheet) - 1); background:#EBEBEB; /* ds-ok Figma 实测(用户裁决字面值) */
   border-radius:42rpx 42rpx 0 0; display:flex; flex-direction:column; align-items:center; overflow:hidden; } /* ds-ok */
 .bigqr__head{ width:100%; box-sizing:border-box; padding:35rpx 38rpx 8rpx; display:flex; }
 .bigqr__close{ color:#0A0A0A; } /* ds-ok Figma 实测(用户裁决字面值) */
@@ -915,7 +915,7 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .poi-filter__label{ font-size:var(--cy-type-caption); color:var(--cy-color-text-secondary); }
 
 /* 2026-10-22 护照方卡放大层:与方卡同色起步,放大后底部一层模糊渐变托住标题 */
-.pp-open { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 900; pointer-events: none; }
+.pp-open { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: var(--cy-z-modal); pointer-events: none; }
 .pp-open__dim { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 0, 0, .55); opacity: 0; transition: opacity .4s ease; } /* ds-ok 放大层压暗 */
 .pp-open.is-on .pp-open__dim { opacity: 1; }
 .pp-open__card { position: absolute; overflow: hidden; clip-path: inset(0 round 28px); background: var(--cy-color-action-primary-bg); color: var(--cy-color-action-primary-fg);
@@ -986,3 +986,34 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 /* 第十一轮 g2,j4 F5:没有真实定位时「附近活动」右侧一行「开启定位」;点区 88rpx */
 .entry-peek__head { display: flex; align-items: center; justify-content: space-between; }
 .entry-peek__locate { min-height: 88rpx; margin: -26rpx 0; display: flex; align-items: center; color: var(--cy-color-play-accent); font-size: var(--cy-type-label); font-weight: 600; } /* ds-ok 点区 88rpx,负边距让行高不撑开定稿的 entry-peek 高度 */
+
+/* 2026-11-14 漫游前端修复波:卡片带收起、地点卡(封面 / 引文 / 资料来源) */
+.entry-peek { max-height: 50vh; overflow: hidden; }
+.entry-peek.is-fold { height: auto; padding-bottom: var(--cy-space-2); }
+.entry-peek__tabs { display: flex; align-items: center; gap: var(--cy-space-4); min-width: 0; flex: 1; }
+.entry-peek__tab { color: var(--cy-color-text-tertiary); white-space: nowrap; }
+.entry-peek__tab.is-on { color: var(--cy-color-text-primary); }
+.entry-peek__fold { width: 88rpx; height: 88rpx; margin: -26rpx calc(var(--cy-space-3) * -1) -26rpx 0; display: flex; align-items: center; justify-content: center; flex: none; }
+.entry-peek__chev { width: 20rpx; height: 20rpx; border-right: 4rpx solid var(--cy-color-text-secondary); border-bottom: 4rpx solid var(--cy-color-text-secondary); transform: rotate(45deg); margin-top: -8rpx; }
+.entry-peek__chev.is-up { transform: rotate(-135deg); margin-top: 8rpx; }
+.entry-card__tag--place { background: var(--cy-color-play-accent); }
+.entry-place__cover { display: block; width: 100%; height: 320rpx; border-radius: var(--cy-radius-xl); margin-top: var(--cy-space-3); }
+.entry-place__quote { display: block; margin: var(--cy-space-3) 0; padding-left: var(--cy-space-3); border-left: 6rpx solid var(--cy-color-play-accent); color: var(--cy-comp-sheet-player-text); font-size: var(--cy-type-body); line-height: 1.7; }
+.entry-place__tags { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin-bottom: var(--cy-space-3); }
+.entry-place__tag { padding: 4rpx var(--cy-space-2); border-radius: var(--cy-radius-pill); background: var(--cy-color-play-surface); color: var(--cy-comp-sheet-player-text-secondary); font-size: var(--cy-type-caption); }
+.entry-place__src { min-height: 88rpx; display: flex; align-items: center; justify-content: space-between; color: var(--cy-comp-sheet-player-text-secondary); font-size: var(--cy-type-caption); }
+.entry-place__link { display: block; min-height: 64rpx; color: var(--cy-comp-sheet-player-text-secondary); font-size: var(--cy-type-caption); word-break: break-all; }
+.entry-place__credit { display: block; margin-bottom: var(--cy-space-3); color: var(--cy-comp-sheet-player-text-secondary); font-size: var(--cy-type-caption); }
+
+/* 地点卡半屏(不占共用提示位):宿主不拦截地图手势,只有半屏本身接收触摸 */
+.roam-scene-host--free { pointer-events: none; }
+.roam-scene-host--free .pace-sheet { pointer-events: auto; }
+.pace-sheet { position: fixed; left: 0; right: 0; bottom: 0; box-sizing: border-box; max-height: min(var(--cy-comp-sheet-full), var(--cy-psheet-max-h, var(--cy-comp-sheet-max-height))); overflow-y: auto;
+  padding: var(--cy-space-3) var(--cy-page-x) calc(var(--cy-space-3) + env(safe-area-inset-bottom));
+  background: var(--cy-comp-sheet-player-glass); backdrop-filter: blur(var(--cy-comp-sheet-blur)); -webkit-backdrop-filter: blur(var(--cy-comp-sheet-blur));
+  border-radius: var(--cy-comp-sheet-radius) var(--cy-comp-sheet-radius) 0 0; box-shadow: var(--cy-comp-sheet-player-lift); }
+.pc-cover { display: block; width: 100%; height: 300rpx; margin-bottom: var(--cy-space-2); border-radius: var(--cy-radius-xl); }
+.pc-quote { display: block; margin: var(--cy-space-2) 0; padding-left: var(--cy-space-3); border-left: 6rpx solid var(--cy-color-play-accent); font-size: var(--cy-type-body); line-height: 1.7; color: var(--cy-color-text-primary); }
+.pc-src { min-height: 88rpx; display: flex; align-items: center; justify-content: space-between; font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
+.pc-link { word-break: break-all; min-height: 64rpx; }
+.pc-action--nav { margin-left: var(--cy-space-2); background: var(--cy-color-play-surface); color: var(--cy-color-text-primary); }

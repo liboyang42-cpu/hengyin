@@ -237,7 +237,9 @@
             </swiper>
             <text class="pb__cnt" wx:if="{{poiCard.thumbs.length > 1}}">{{poiPhoto + 1}} / {{poiCard.thumbs.length}}</text>
           </view>
-          <text class="pb__d">{{poiCard.desc || '这里还没有介绍。'}}</text>
+          <text class="pb__d" wx:if="{{poiCard.desc}}" user-select>{{poiCard.desc}}</text>
+          <view class="pb__photo-note pb__source" wx:if="{{poiCard.sourceList.length}}" bindtap="onPoiSources" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80">资料来源 {{poiCard.srcOpen ? '收起' : '展开'}}</view>
+          <block wx:if="{{poiCard.srcOpen}}"><text class="pb__photo-note" wx:for="{{poiCard.sourceList}}" wx:key="*this" data-url="{{item}}" bindtap="onPoiSourceCopy" aria-role="button" aria-label="复制资料链接" hover-class="cy-pressed" hover-stay-time="80">{{item}}</text></block>
           <text class="pb__more" wx:if="{{!poiExpand}}">上滑看全部</text>
           <view class="pb__th" wx:if="{{poiCard.thumbs.length && !(poiExpand && poiCard.official)}}"><image wx:for="{{poiCard.thumbs}}" wx:key="index" wx:if="{{index < 3}}" src="{{item}}" mode="{{poiExpand ? 'widthFix' : 'aspectFill'}}" data-index="{{index}}" catchtap="onPoiImagePreview" aria-role="button" aria-label="查看第{{(index || 0) + 1}}张照片" hover-class="cy-pressed" hover-stay-time="80" /></view>
           <!-- 官方地点展开:玩法 → 小红书 / 基本信息 → 玩家评价,内容把卡填满 -->

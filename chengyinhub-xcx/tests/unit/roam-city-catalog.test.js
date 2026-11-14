@@ -110,7 +110,7 @@ test('城市漫游清单下线:组件与入口按钮都不在,目录地点改由
   const js = fs.readFileSync(path.join(root, 'pages/roam/index.js'), 'utf8')
   assert.doesNotMatch(wxml, /cy-roam-city-guide|openCityGuide|intro-guide-hit/)
   assert.doesNotMatch(js, /cityGuideOpen|openCityGuide|closeCityGuide/)
-  assert.match(js, /req\('\/api\/roam\/pois', 'GET'[\s\S]*entryMap\.isCatalogPlace/)
+  assert.match(js, /req\('\/api\/roam\/pois', 'GET'[\s\S]*placeMap\.isRoamPlace/)
   assert.match(wxml, /<cy-roam-place-note tags="\{\{entryPlace\.tags\}\}" bind:note="onEntryPlaceNote" \/>/)
 })
 
@@ -147,7 +147,9 @@ test('目录、目录组件和地点卡理由组件都不进主包，漫游页�
   const wxml = fs.readFileSync(path.join(root, 'pages/roam/index.wxml'), 'utf8')
   // 第九轮 m1 第 9 项:地址行仍是同一行 .pc-body,只加了点开地图
   assert.match(wxml, /<text class="pc-body cy-addr-tap" wx:if="\{\{paceCard\.address\}\}" catchtap="onAddrTap"[^>]*>\{\{paceCard\.address\}\}<\/text>/)
-  assert.match(wxml, /<text class="pc-body" wx:if="\{\{paceCard\.reason\}\}">\{\{paceCard\.reason\}\}<\/text>/)
+  assert.match(wxml, /<text class="pc-quote" wx:if="\{\{paceCard\.reason\}\}" user-select>\{\{paceCard\.reason\}\}<\/text>/)
+  assert.match(wxml, /bindtap="togglePaceSources"[^>]*aria-label="资料来源"/)
+  assert.match(page.componentPlaceholder['cy-roam-city-strip'], /view/)
   assert.match(wxml, /<cy-roam-place-note wx:if="\{\{paceCard\.tags\}\}" tags="\{\{paceCard\.tags\}\}" bind:note="onPlaceNote" \/>/)
 })
 
@@ -165,8 +167,9 @@ test('地点卡理由组件把查表结果交回页面，换卡后的迟到回�
     assert.equal(events[0][1].tags, tags)
     assert.match(events[0][1].reason, /万松老人塔/)
     assert.match(events[0][1].sources, /beijing\.gov\.cn/)
+    assert.ok(events[0][1].sourceList.every((url) => /^https:\/\//.test(url)))
     definition.properties.tags.observer.call(instance, '["roam:park"]')
-    assert.deepEqual(events[1][1], { tags: '["roam:park"]', reason: '', sources: '' })
+    assert.deepEqual(events[1][1], { tags: '["roam:park"]', reason: '', sources: '', sourceList: [] })
   } finally { global.Component = previousComponent }
   const fs = require('node:fs')
   const path = require('node:path')

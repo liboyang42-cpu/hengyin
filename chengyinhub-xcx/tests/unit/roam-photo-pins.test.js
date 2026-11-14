@@ -124,7 +124,8 @@ test('同一份 markers 不重发 setData;拉远换成小圆点与附近点数',
   page._mapScale = 13;
   page._syncMarkers();
   assert.ok(page.data.markers.length > 0);
-  assert.ok(page.data.markers.every((m) => m.iconPath === 'dot.png'));
+  // A2.4:远景圆点按分类着色,叠在同一屏幕格的聚合并写数量
+  assert.ok(page.data.markers.every((m) => /^\/images\/roam\/pin\/dot-[a-z]+\.png$/.test(m.iconPath)));
   assert.equal(page.data.pinCountLabel, '附近 12 个地点');
 });
 
@@ -298,7 +299,7 @@ test('第九轮 m2 补充第 3 项:拉远是热度——叠得越多越大越亮
   assert.deepEqual([1, 3, 9].map((n) => pins.heatLevel(n).level), [1, 2, 3]);
   const js = read('pages/roam/index.js');
   assert.match(js, /this\._icons\['pin-heat' \+ lv\] = await save\(\);/);
-  assert.match(js, /iconPath: icon, zIndex: 2 \+ heat\.level/);
+  assert.match(js, /placeMap\.buildPins\(dotRows, \{ soloDots: true, scale: pinScale, region: layoutRegion/);
 });
 
 test('rig 走查修正:玩家自己的点也占位,图钉不压蓝点', () => {

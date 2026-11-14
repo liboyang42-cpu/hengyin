@@ -5,3 +5,7 @@ page { background: #000; } /* ds-ok 玩家侧深色,与游玩页同底 */
 
 /* 细节打磨二期 L1/L5/L7 */
 .pc-page__exit { transition: var(--cy-tr-press); }
+
+/* A3.6 还没走到:还差多少米 + 导航 */
+.pc-page__gap { position: fixed; left: 50%; bottom: calc(var(--cy-space-4) + env(safe-area-inset-bottom)); z-index: var(--cy-z-sheet); transform: translateX(-50%); min-height: 88rpx; padding: 0 var(--cy-space-4); display: flex; align-items: center; gap: var(--cy-space-3); border-radius: var(--cy-radius-pill); background: var(--cy-color-play-elevated); color: var(--cy-color-text-primary); font-size: var(--cy-type-label); font-weight: 700; }
+.pc-page__gap text:last-child { color: var(--cy-color-play-accent); }
