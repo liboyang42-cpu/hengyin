@@ -5,6 +5,7 @@ const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'../..');
 const baseline=require('../lint/ui-integrity-baseline');
 const {scanU4,scanU5}=require('../lint/ui-integrity');
+const {stableSiteKey}=require('../lint/stable-site-key');
 const {analyzeWxml}=require('../../scripts/state-visibility-gate');
 const preview=require('../../utils/topic-route-preview');
 
@@ -15,9 +16,13 @@ test('五处路线动态投影仅提交真实固定展示字段；每项登记�
   const files=['pages/square/components/route-map/index.js','pages/topic/index/index.js'].map(name=>path.join(root,name));
   const approved=new Map(Object.entries(baseline.u4Dynamic));
   assert.equal(scanU4(files,new Map(Object.entries(baseline.u4Debt)),approved).violations.length,0);
-  const target='chengyinhub-xcx/pages/square/components/route-map/index.js:53'; // 第九轮 m1 第 1 项 45→49;2026-11-14 maps-1114 route-map 加 preview / look 属性 +4 行,49→53
-  approved.delete(target);
-  assert.ok(scanU4(files,new Map(Object.entries(baseline.u4Debt)),approved).violations.some(row=>row.key===target));
+  const targets=[...approved.keys()].filter(key=>key.startsWith('chengyinhub-xcx/pages/square/components/route-map/index.js#site:'));
+  assert.ok(targets.length>0);
+  for(const target of targets) {
+    const missing=new Map(approved);
+    missing.delete(target);
+    assert.ok(scanU4(files,new Map(Object.entries(baseline.u4Debt)),missing).violations.some(row=>row.key===target));
+  }
   for(const name of ['pages/square/components/route-map/index.wxml','pages/topic/index/index.wxml']) {
     const source=fs.readFileSync(path.join(root,name),'utf8');
     for(const field of fields.filter(field=>field!=='routeIsRoad' && !(name==='pages/topic/index/index.wxml' && field==='routeSourceText'))) assert.ok(source.includes(field)||fs.readFileSync(path.join(root,name.replace('.wxml','.js')),'utf8').includes('this.data.'+field),field);
@@ -25,18 +30,20 @@ test('五处路线动态投影仅提交真实固定展示字段；每项登记�
 });
 
 test('原席位回查保留完整回调与禁自动toast，退役flag不得借旧理由重新静默',(t)=>{
-  const file=path.join(root,'utils/registration-seat.js'),key='chengyinhub-xcx/utils/registration-seat.js:62';
+  const name='chengyinhub-xcx/utils/registration-seat.js';
+  const file=path.join(root,'utils/registration-seat.js');
   const approved=new Map(Object.entries(baseline.u5Silent));
   assert.equal(scanU5([file],approved).violations.length,0);
   const source=fs.readFileSync(file,'utf8');
-  assert.equal(approved.has(key),false);
+  const line=source.split('\n').findIndex(row=>row.includes("hideLoading: true, autoErrorToast: false"))+1;
+  assert.equal(approved.has(stableSiteKey(name,source,line)),false);
   assert.doesNotMatch(source,/silentError:\s*true/);
   assert.match(source,/autoErrorToast:\s*false/);
   const injected=source.replace('hideLoading: true, autoErrorToast: false','hideLoading: true, silentError: true, autoErrorToast: false');
   assert.notEqual(injected,source);
   const originalRead=fs.readFileSync;
   t.mock.method(fs,'readFileSync',function(target,...args){return target===file?injected:originalRead.call(this,target,...args);});
-  assert.ok(scanU5([file],approved).violations.some(row=>row.key===key));
+  assert.ok(scanU5([file],approved).violations.some(row=>row.key===stableSiteKey(name,injected,line)));
   assert.match(source,/if \(!isCurrent\(\)\) return null/);
   assert.match(source,/url: '\/api\/verify\/seat\/receipt'/);
   assert.match(source,/fail: \(\) => done\(null\)/);
