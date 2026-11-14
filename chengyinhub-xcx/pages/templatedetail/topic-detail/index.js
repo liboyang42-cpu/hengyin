@@ -5,6 +5,7 @@
 const art = require('../shelf/art.js');
 const cyToast = require('../../../utils/toast.js');
 const adoption = require('../utils/topic-adoption.js');
+const useFlow = require('../utils/topic-use-flow.js');
 
 const app = getApp();
 const TABS = [{ key: 'details', label: '详情' }, { key: 'capabilities', label: '能力' }];
@@ -208,35 +209,11 @@ Page({
   },
 
   _submitUse(intent) {
-    // 后端每次调用都整包复制出新草稿,连点两下就是两份:在途时挡住
-    if (this._using) { cyToast('正在配置，请稍候'); return; }
-    const built = adoption.usePayload({ id: this._id, scope: this._scope, intent,
-      sourceCityCode: adoption.sourceCityOf(this._delivery), revisionId: adoption.revisionIdOf(this._delivery) });
-    const that = this;
-    this._using = true;
-    app.sendRequest({
-      url: '/api/template/topic-template/use',
-      method: 'POST',
-      data: built.data,
-      success(res) {
-        that._using = false;
-        if (that._unloaded) return; // 复制回包晚于离开本页:不再把用户拉去编辑器
-        const result = adoption.useResult(res);
-        if (!result.ok) {
-          // 服务端明确拒绝:原文提示
-          cyToast(result.message || '使用模板失败');
-          return;
-        }
-        const copiedId = result.topicId;
-        that._copiedId = copiedId;
-        that._openCopiedDraft(copiedId);
-      },
-      fail() {
-        that._using = false;
-        if (that._unloaded) return;
-        // 网络失败:不自动重发,由用户再点一次(与改版前一致)
-        cyToast('网络错误，请重试');
-      }
+    useFlow.submit(this, { id: this._id, scope: this._scope, intent,
+      sourceCityCode: adoption.sourceCityOf(this._delivery), revisionId: adoption.revisionIdOf(this._delivery) }, {
+      toast: cyToast,
+      onCopied: (id) => { this._copiedId = id; },
+      open: (id) => this._openCopiedDraft(id)
     });
   },
 

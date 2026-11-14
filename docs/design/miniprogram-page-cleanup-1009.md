@@ -157,6 +157,7 @@ node --test tests/unit/page-cleanup-audit.test.js
 | `pages/merchant/game-node/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:291` | KEEP |
 | `pages/merchant/customer/detail/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:278` | KEEP |
 | `pages/merchant/verify-records/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:315` | KEEP |
+| `pages/merchant/bundle-reservations/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:360` | KEEP |
 | `pages/merchant/payout-account/index` | 否 | `chengyinhub-xcx/pages/merchant/index/index.js:364` | KEEP |
 | `pages/merchant/crm-campaigns/index` | 否 | `chengyinhub-xcx/pages/merchant/customer/index.js:915` | KEEP |
 | `pages/merchant/team/index` | 否 | `chengyinhub-xcx/docs/audit-e2e-202609/logs/walk-merchant.json:305` | KEEP |

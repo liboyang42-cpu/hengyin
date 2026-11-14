@@ -3,7 +3,13 @@ package com.chengyinhub.web.controller.api;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import com.chengyinhub.business.access.merchant.IMerchantAccessService;
+import com.chengyinhub.business.access.merchant.MerchantOperationScope;
+import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.domain.CmsTopic;
+import com.chengyinhub.common.exception.ServiceException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import com.chengyinhub.business.domain.dto.PricingResult;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.IPricingService;
@@ -30,6 +36,12 @@ public class ApiPricingController extends BaseController {
     private IPricingService pricingService;
 
     @Autowired
+    private IMerchantAccessService merchantAccessService;
+
+    @Autowired
+    private com.chengyinhub.business.service.ICmsActivityService cmsActivityService;
+
+    @Autowired
     private ICmsTopicService cmsTopicService;
 
     @Autowired
@@ -45,12 +57,15 @@ public class ApiPricingController extends BaseController {
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         Long topicId = asLong(body.get("topicId"));
         if (topicId == null) return error("缺少主题");
-        AjaxResult owns = requireOwner(topicId, memberId);
+        AjaxResult owns = requireOwner(topicId, memberId, asStr(body.get("scope")));
         if (owns != null) return owns;
         try {
             PricingResult r = pricingService.previewTopic(topicId,
                     asBd(body.get("leadCost")), asInt(body.get("teamSize")),
                     asStr(body.get("subType")));
+            CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+            // D-16:前端据此区分自由探索(只有门票价)与城市定向
+            r.setProductType(topic == null ? null : topic.getProductType());
             return AjaxResult.success(r);
         } catch (IllegalStateException e) {
             return error(e.getMessage());
@@ -64,7 +79,7 @@ public class ApiPricingController extends BaseController {
         try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
         Long topicId = asLong(body.get("topicId"));
         if (topicId == null) return error("缺少主题");
-        AjaxResult owns = requireOwner(topicId, memberId);
+        AjaxResult owns = requireOwner(topicId, memberId, asStr(body.get("scope")));
         if (owns != null) return owns;
         try {
             // 双票:guidedPrice(有人带)+ selfPrice(无人带,复用自玩票);兼容旧字段 finalPrice→guided
@@ -108,7 +123,7 @@ public class ApiPricingController extends BaseController {
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         if (topic == null || !Integer.valueOf(com.chengyinhub.common.constant.ProductType.ORIENTEERING)
                 .equals(topic.getProductType())) {
-            return "终价已确认，请等待开售审核";
+            return "已锁价，等待运营开售";
         }
         try {
             com.chengyinhub.business.domain.vo.TopicSaleReviewProgress progress =
@@ -122,12 +137,84 @@ public class ApiPricingController extends BaseController {
         }
     }
 
-    /** 仅主题发布者可定价 */
-    private AjaxResult requireOwner(Long topicId, Long memberId) {
+    /**
+     * 仅主题发布者可定价。商家岗位(scope=merchant)与 /api/topic/template/use 同一口径:
+     * 按岗位解析出店主作为主题 owner(需 PROJECT_MANAGE 权限),再校验主题确属该 owner;个人视角不变。
+     */
+    private AjaxResult requireOwner(Long topicId, Long memberId, String scope) {
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         if (topic == null) return error("主题不存在");
-        if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return error("仅主题发布者可定价");
+        Long owner = memberId;
+        if (MerchantOperationScope.isMerchant(scope)) {
+            try {
+                owner = merchantAccessService.require(memberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
+            } catch (ServiceException e) {
+                return new AjaxResult(e.getCode(), e.getMessage());
+            }
+        }
+        if (OwnershipUtils.notOwner(topic.getMemberId(), owner)) return error("仅主题发布者可定价");
         return null;
+    }
+
+    /**
+     * D-19:主办方自己的自由探索场次里「结算待处理」的清单(跨俱乐部/四店探店日暂无结算路径,分钱规则待业主拍板)。
+     * 只读,仅本人(或其商家岗位解析出的店主)名下;返回 [{activityId,activityName,topicId,money,state:"结算待处理",reason}]。
+     */
+    @Operation(summary = "结算待处理的自由探索场次")
+    @GetMapping("/settlement-pending")
+    public AjaxResult settlementPending(@RequestParam(value = "scope", required = false) String scope) {
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        Long owner = memberId;
+        if (MerchantOperationScope.isMerchant(scope)) {
+            try {
+                owner = merchantAccessService.require(memberId, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId();
+            } catch (ServiceException e) {
+                return new AjaxResult(e.getCode(), e.getMessage());
+            }
+        }
+        return AjaxResult.success(cmsActivityService.listStrandedFreeExploreSettlements(owner));
+    }
+
+    /**
+     * D-23:自由探索锁价后的状态入口。仅主题发布者(或其商家岗位)可读。
+     * 返回 {topicId, productType, lifecycle, priced, status, message};
+     * status: PRICING(未锁价) / LOCKED_AWAITING_OPS(已锁价,等待运营开售,自由探索) / IN_REVIEW(城市定向已提开售审) / ON_SALE。
+     */
+    @Operation(summary = "定价后状态(已锁价/等待开售)")
+    @GetMapping("/sale-status")
+    public AjaxResult saleStatus(@RequestParam("topicId") Long topicId,
+                                 @RequestParam(value = "scope", required = false) String scope) {
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        AjaxResult owns = requireOwner(topicId, memberId, scope);
+        if (owns != null) return owns;
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
+        Integer lifecycle = topic.getLifecycle();
+        boolean priced = lifecycle != null && lifecycle > 2;
+        String status;
+        String message;
+        if (!priced) {
+            status = "PRICING";
+            message = "尚未锁价";
+        } else if (lifecycle != null && lifecycle >= 4) {
+            status = "ON_SALE";
+            message = "已开售";
+        } else if (Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE).equals(topic.getProductType())) {
+            status = "LOCKED_AWAITING_OPS";
+            message = "已锁价，等待运营开售";
+        } else {
+            status = "IN_REVIEW";
+            message = "已锁价，开售审核中";
+        }
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("topicId", topicId);
+        data.put("productType", topic.getProductType());
+        data.put("lifecycle", lifecycle);
+        data.put("priced", priced);
+        data.put("status", status);
+        data.put("message", message);
+        return AjaxResult.success(data);
     }
 
     private Long ownerOf(Long topicId) {

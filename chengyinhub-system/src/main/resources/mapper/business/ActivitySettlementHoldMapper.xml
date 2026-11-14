@@ -30,6 +30,14 @@
           AND r.payment_status = 2 AND r.registration_status = 2
     </select>
 
+    <select id="selectHeldRegistrationIdsByActivityId" resultType="java.lang.Long">
+        SELECT r.id
+        FROM cms_activity_settlement_hold h
+        JOIN cms_registration r ON r.id = h.registration_id
+        WHERE h.activity_id = #{activityId} AND h.status = 0
+          AND r.payment_status = 2 AND r.registration_status = 2
+    </select>
+
     <select id="selectReleasableHolds" resultMap="HoldResult">
         SELECT h.id, h.activity_id, h.registration_id, h.status
         FROM cms_activity_settlement_hold h

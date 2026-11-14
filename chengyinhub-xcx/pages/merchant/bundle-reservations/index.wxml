@@ -1,0 +1,26 @@
+<view class="bres-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <cy-toast id="cy-toast" />
+  <cy-loading-mask id="cy-loading" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-page-title title="套票预约" safe-top="{{false}}" />
+
+  <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="4" />
+  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg" title="预约加载失败" sub="{{errorMessage}}" retry="重新加载" bind:retry="retry" auto-back />
+  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg" title="当前岗位没有查看预约的权限" retry="" bind:back="onNavBack" auto-back custom-back />
+  <cy-empty wx:elif="{{pageState === 'empty'}}" fill size="lg" kind="empty" title="近期没有套票预约" />
+
+  <scroll-view wx:else scroll-y class="bres-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="bres-shell">
+      <view class="bres-card">
+        <view class="bres-row" wx:for="{{rows}}" wx:key="id" aria-label="{{item.timeText}}，{{item.statusText}}">
+          <view class="bres-main">
+            <text class="bres-time">{{item.timeText}}</text>
+            <text class="bres-status bres-status--{{item.status}}">{{item.statusText}}</text>
+          </view>
+          <cy-btn wx:if="{{item.canNoShow}}" variant="secondary" loading="{{busyId === item.id}}" data-id="{{item.id}}" bindtap="markNoShow">记未到店</cy-btn>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

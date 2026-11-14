@@ -341,6 +341,7 @@ Page({
     else if (action === 'brand') this.goBrandManage();
     else if (action === 'aftercare') this.goAftercare();
     else if (action === 'verifyRecords') this.goVerifyRecords();
+    else if (action === 'bundleReservations') this.goBundleReservations();
     else if (action === 'payoutAccount') this.goPayoutAccount();
   },
 
@@ -351,6 +352,12 @@ Page({
   goAftercare() {
     if (!this.data.merchantAccess.canReadAftercare || this._navigating) return; // 跳转中不响应连点
     this._navigating = true; wx.navigateTo({ url: '/pages/merchant/aftercare/index', complete: () => { this._navigating = false; } });
+  },
+
+  goBundleReservations() {
+    if (!this.data.merchantAccess.canVerify || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/merchant/bundle-reservations/index', complete: () => { this._navigating = false; } });
   },
 
   goVerifyRecords() {

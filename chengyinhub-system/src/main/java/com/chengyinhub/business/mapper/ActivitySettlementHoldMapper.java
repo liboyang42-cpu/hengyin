@@ -15,6 +15,9 @@ public interface ActivitySettlementHoldMapper {
     /** 该活动仍在暂扣中、且报名仍是已付未退的实付合计。 */
     BigDecimal selectHeldSalesByActivityId(@Param("activityId") Long activityId);
 
+    /** 同口径(暂扣中且仍是已付未退)的报名 id,供自由探索平台费分摊时把暂扣单从现金里剔出去。 */
+    java.util.List<Long> selectHeldRegistrationIdsByActivityId(@Param("activityId") Long activityId);
+
     /** 客诉已全部关闭、可以补结或作废的暂扣行。 */
     List<ActivitySettlementHold> selectReleasableHolds();
 

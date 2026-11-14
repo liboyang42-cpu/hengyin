@@ -273,11 +273,11 @@ test('主题点开进卡堆预览(带商家作用域与只读标记),玩法点�
   vm.openGame({ currentTarget: { dataset: { item: { id: 81 } } } });
   assert.deepEqual(navigations, [
     '/pages/templatedetail/topic-preview/index?id=7&scope=MERCHANT&readonly=1',
-    '/pages/templatedetail/templatedetail?id=81&operationScope=MERCHANT'
+    '/pages/templatedetail/templatedetail?id=81&operationScope=MERCHANT&readonly=1'
   ]);
   vm.openTopic({ currentTarget: { dataset: { item: { id: 8, previewOnly: true } } } });
   assert.equal(navigations.length, 2);
-  assert.deepEqual(vm.events.pop(), ['toast', { text: '这是预览模板，保存后才能查看' }]);
+  assert.deepEqual(vm.events.pop(), ['toast', { text: '暂未开放' }]);
 });
 
 test('模板页只留顶栏、发布入口与底栏；货架走分包异步组件，搜索进统一搜索页', () => {
@@ -412,7 +412,8 @@ test('用这个模板：先过写前登录闸，只读岗位拦下，在途不�
   m.page.useTemplate();
   const uses = m.requests.filter((r) => r.url === '/api/template/topic-template/use');
   assert.equal(uses.length, 1, '在途时连点不重复复制');
-  assert.deepEqual(uses[0].data, { id: '7', scope: 'MERCHANT' });
+  assert.match(uses[0].data.requestId, /^tu-/); // D-03:采用带幂等 requestId
+  assert.deepEqual({ id: uses[0].data.id, scope: uses[0].data.scope }, { id: '7', scope: 'MERCHANT' });
   uses[0].success(ok({ topicId: 901 }));
   assert.deepEqual(m.navigations, ['/pages/publish/fabu/index?id=901&scope=MERCHANT']);
 
