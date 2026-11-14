@@ -121,7 +121,7 @@ test('2077 重新挂原生地图，旧 updated 无法撤掉新占位', () => {
   instance._mergeLines = instance._rebuild = () => {}
   instance.data.mapLoaded = true
   definition.properties.tone.observer.call(instance, '2077', 'black')
-  assert.equal(instance.data.mapMounted, true)
+  assert.equal(instance.data.mapInstances.length, 1)
   assert.equal(instance.data.mapLoaded, false)
   instance.onUpdated({ currentTarget: { dataset: { generation: 0 } }, detail: {} })
   assert.equal(instance.data.mapLoaded, false)

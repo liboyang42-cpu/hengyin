@@ -395,7 +395,7 @@ test('club.badge.grant 已登记为不可逆并写明不可撤销', () => {
   const action = getDangerAction('club.badge.grant', { name: '开荒元老', member: '阿青' });
   assert.ok(action);
   assert.equal(action.irreversible, true);
-  assert.equal(action.title, '把「开荒元老」颁给 阿青?');
+  assert.equal(action.title, '把「开荒元老」颁给 阿青？');
   assert.ok(action.consequences.some(c => c.text.includes('此操作不可撤销')));
   // 不承诺未验证的展示口径(团名来源)与并发下的去重
   assert.ok(action.consequences.every(c => !/来源标注|不会多记/.test(c.text)));

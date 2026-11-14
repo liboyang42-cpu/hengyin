@@ -151,10 +151,10 @@ test('b5：照片拒绝不把已验证答案标错，也不能进入勋章完成
   assert.equal(verdict[0], true)
   assert.equal(verdict[1].pendingEvidence, true)
   assert.equal(page.data.step, 'quiz')
-  assert.match(page.data.photoError, /重新拍摄/)
+  assert.match(page._photoError, /重新拍摄/)
   page.retakePhoto()
   assert.equal(page.data.step, 'photo')
-  assert.equal(page.data.photoError, '')
+  assert.equal(page._photoError, '')
   const kit = mount('../../pages/play/components/playkit-qa/index.js', {})
   kit.data.mode = 'pick'; kit.data.optionList = ['A', 'B', 'C'].map(id => ({ id }))
   let wins = 0

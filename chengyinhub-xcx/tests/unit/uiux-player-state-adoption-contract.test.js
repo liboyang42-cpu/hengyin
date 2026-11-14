@@ -529,7 +529,7 @@ test('漫游拒权使用显著权限状态，且不虚构手动选城次动作',
 });
 
 function assertRoamNoTrackState(wxml) {
-  const map = wxml.match(/<view class="settle__map">[\s\S]*?<\/view>\s*<view class="settle__ctaw">/);
+  const map = wxml.match(/<view class="settle__map">[\s\S]*?<\/view>\s*<view class="settle__ctaw"[^>]*>/);
   assert.ok(map, '漫游结算地图结构锚点缺失');
   assert.match(map[0], /class="settle__track-empty"[^>]*wx:if="\{\{!polyline\.length\}\}"/,
     '真实无轨迹结算必须有独立可见状态，不能退回首屏或空白地图');
