@@ -933023,7 +933023,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:250"
+        "staticSource": "pages/play/components/chapter-flip/index.js:257"
       }
     },
     {
@@ -933112,7 +933112,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:103"
+        "staticSource": "pages/play/components/chapter-flip/index.js:110"
       }
     },
     {
@@ -933200,7 +933200,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:250"
+        "staticSource": "pages/play/components/chapter-flip/index.js:257"
       }
     },
     {
@@ -933288,7 +933288,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:250"
+        "staticSource": "pages/play/components/chapter-flip/index.js:257"
       }
     },
     {
@@ -933377,7 +933377,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:309"
+        "staticSource": "pages/play/components/chapter-flip/index.js:316"
       }
     },
     {
@@ -933466,7 +933466,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:308"
+        "staticSource": "pages/play/components/chapter-flip/index.js:315"
       }
     },
     {
@@ -1005794,7 +1005794,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7360"
+        "staticSource": "pages/play/index.js:7404"
       }
     },
     {
@@ -1005861,7 +1005861,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7369"
+        "staticSource": "pages/play/index.js:7413"
       }
     },
     {
@@ -1005992,7 +1005992,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1006361,7 +1006362,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8549"
+        "staticSource": "pages/play/index.js:8593"
       }
     },
     {
@@ -1006439,7 +1006440,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5954"
+        "staticSource": "pages/play/index.js:5971"
       }
     },
     {
@@ -1006517,7 +1006518,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5954"
+        "staticSource": "pages/play/index.js:5971"
       }
     },
     {
@@ -1006594,7 +1006595,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5948"
+        "staticSource": "pages/play/index.js:5965"
       }
     },
     {
@@ -1006661,7 +1006662,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7319"
+        "staticSource": "pages/play/index.js:7339"
       }
     },
     {
@@ -1006792,7 +1006793,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1007292,7 +1007294,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1007738,7 +1007741,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5934"
+        "staticSource": "pages/play/index.js:5951"
       }
     },
     {
@@ -1007869,7 +1007872,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1008238,7 +1008242,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6343"
+        "staticSource": "pages/play/index.js:6363"
       }
     },
     {
@@ -1008315,7 +1008319,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5934"
+        "staticSource": "pages/play/index.js:5951"
       }
     },
     {
@@ -1008446,7 +1008450,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1008816,7 +1008821,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6125"
+        "staticSource": "pages/play/index.js:6144"
       }
     },
     {
@@ -1008923,7 +1008928,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1009302,7 +1009308,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6047"
+        "staticSource": "pages/play/index.js:6066"
       }
     },
     {
@@ -1009433,7 +1009439,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1009802,7 +1009809,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5808"
+        "staticSource": "pages/play/index.js:5825"
       }
     },
     {
@@ -1009900,7 +1009907,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6111"
+        "staticSource": "pages/play/index.js:6130"
       }
     },
     {
@@ -1010106,7 +1010113,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1010485,7 +1010493,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6047"
+        "staticSource": "pages/play/index.js:6066"
       }
     },
     {
@@ -1010552,7 +1010560,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7342"
+        "staticSource": "pages/play/index.js:7386"
       }
     },
     {
@@ -1010659,7 +1010667,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1011038,7 +1011047,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6047"
+        "staticSource": "pages/play/index.js:6066"
       }
     },
     {
@@ -1011115,7 +1011124,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5934"
+        "staticSource": "pages/play/index.js:5951"
       }
     },
     {
@@ -1011186,7 +1011195,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5112"
+        "staticSource": "pages/play/index.js:5127"
       }
     },
     {
@@ -1011312,7 +1011321,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7557"
+        "staticSource": "pages/play/index.js:7601"
       }
     },
     {
@@ -1011379,7 +1011388,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5108"
+        "staticSource": "pages/play/index.js:5123"
       }
     },
     {
@@ -1011516,7 +1011525,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6018"
+        "staticSource": "pages/play/index.js:6035"
       }
     },
     {
@@ -1011594,7 +1011603,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6542"
+        "staticSource": "pages/play/index.js:6562"
       }
     },
     {
@@ -1011662,7 +1011671,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1011740,7 +1011749,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6542"
+        "staticSource": "pages/play/index.js:6562"
       }
     },
     {
@@ -1011817,7 +1011826,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9327"
+        "staticSource": "pages/play/index.js:9371"
       }
     },
     {
@@ -1011948,7 +1011957,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1012448,7 +1012458,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1012894,7 +1012905,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9380"
+        "staticSource": "pages/play/index.js:9424"
       }
     },
     {
@@ -1012971,7 +1012982,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9370"
+        "staticSource": "pages/play/index.js:9414"
       }
     },
     {
@@ -1013038,7 +1013049,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6553"
+        "staticSource": "pages/play/index.js:6573"
       }
     },
     {
@@ -1013213,7 +1013224,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9380"
+        "staticSource": "pages/play/index.js:9424"
       }
     },
     {
@@ -1013290,7 +1013301,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9370"
+        "staticSource": "pages/play/index.js:9414"
       }
     },
     {
@@ -1013357,7 +1013368,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6554"
+        "staticSource": "pages/play/index.js:6574"
       }
     },
     {
@@ -1013434,7 +1013445,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9374"
+        "staticSource": "pages/play/index.js:9418"
       }
     },
     {
@@ -1013516,7 +1013527,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6591"
+        "staticSource": "pages/play/index.js:6611"
       }
     },
     {
@@ -1013583,7 +1013594,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6692"
+        "staticSource": "pages/play/index.js:6712"
       }
     },
     {
@@ -1013650,7 +1013661,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6724"
+        "staticSource": "pages/play/index.js:6744"
       }
     },
     {
@@ -1013733,7 +1013744,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6673"
+        "staticSource": "pages/play/index.js:6693"
       }
     },
     {
@@ -1013864,7 +1013875,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1014233,7 +1014245,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6611"
+        "staticSource": "pages/play/index.js:6631"
       }
     },
     {
@@ -1014300,7 +1014312,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6595"
+        "staticSource": "pages/play/index.js:6615"
       }
     },
     {
@@ -1014367,7 +1014379,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6596"
+        "staticSource": "pages/play/index.js:6616"
       }
     },
     {
@@ -1014475,7 +1014487,8 @@
         "routes": [
           "pages/crop/index",
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1014877,7 +1014890,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6767"
+        "staticSource": "pages/play/index.js:6787"
       }
     },
     {
@@ -1014968,7 +1014981,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/play/answer"
@@ -1015010,7 +1015024,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6327"
+        "staticSource": "pages/play/index.js:6347"
       }
     },
     {
@@ -1015101,7 +1015115,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/play/checkin"
@@ -1015143,7 +1015158,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6327"
+        "staticSource": "pages/play/index.js:6347"
       }
     },
     {
@@ -1015234,7 +1015249,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/play/photo"
@@ -1015276,7 +1015292,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6327"
+        "staticSource": "pages/play/index.js:6347"
       }
     },
     {
@@ -1015367,7 +1015383,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/play/puzzle/reveal"
@@ -1015409,7 +1015426,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6327"
+        "staticSource": "pages/play/index.js:6347"
       }
     },
     {
@@ -1015504,7 +1015521,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/play/checkin"
@@ -1015548,7 +1015566,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6327"
+        "staticSource": "pages/play/index.js:6347"
       }
     },
     {
@@ -1015735,7 +1015753,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6912"
+        "staticSource": "pages/play/index.js:6932"
       }
     },
     {
@@ -1015838,7 +1015856,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1016215,7 +1016234,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7014"
+        "staticSource": "pages/play/index.js:7034"
       }
     },
     {
@@ -1016322,7 +1016341,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1016701,7 +1016721,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6747"
+        "staticSource": "pages/play/index.js:6767"
       }
     },
     {
@@ -1016809,7 +1016829,8 @@
         "routes": [
           "pages/crop/index",
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1017211,7 +1017232,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6767"
+        "staticSource": "pages/play/index.js:6787"
       }
     },
     {
@@ -1017342,7 +1017363,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1017711,7 +1017733,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6725"
+        "staticSource": "pages/play/index.js:6745"
       }
     },
     {
@@ -1017842,7 +1017864,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1018211,7 +1018234,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6601"
+        "staticSource": "pages/play/index.js:6621"
       }
     },
     {
@@ -1018279,7 +1018302,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6541"
+        "staticSource": "pages/play/index.js:6561"
       }
     },
     {
@@ -1018382,7 +1018405,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1018759,7 +1018783,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6823"
+        "staticSource": "pages/play/index.js:6843"
       }
     },
     {
@@ -1018826,7 +1018850,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7521"
+        "staticSource": "pages/play/index.js:7565"
       }
     },
     {
@@ -1018894,7 +1018918,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1018961,7 +1018985,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7521"
+        "staticSource": "pages/play/index.js:7565"
       }
     },
     {
@@ -1019029,7 +1019053,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1019096,7 +1019120,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7484"
+        "staticSource": "pages/play/index.js:7528"
       }
     },
     {
@@ -1019597,7 +1019621,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8631"
+        "staticSource": "pages/play/index.js:8675"
       }
     },
     {
@@ -1019665,7 +1019689,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1019796,7 +1019820,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1020252,7 +1020277,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9238"
+        "staticSource": "pages/play/index.js:9282"
       }
     },
     {
@@ -1020329,7 +1020354,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9149"
+        "staticSource": "pages/play/index.js:9193"
       }
     },
     {
@@ -1020478,7 +1020503,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9071"
+        "staticSource": "pages/play/index.js:9115"
       }
     },
     {
@@ -1020555,7 +1020580,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4229"
+        "staticSource": "pages/play/index.js:4244"
       }
     },
     {
@@ -1020646,7 +1020671,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7457"
+        "staticSource": "pages/play/index.js:7501"
       }
     },
     {
@@ -1020811,7 +1020836,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8683"
+        "staticSource": "pages/play/index.js:8727"
       }
     },
     {
@@ -1021277,7 +1021302,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8647"
+        "staticSource": "pages/play/index.js:8691"
       }
     },
     {
@@ -1021434,7 +1021459,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5271"
+        "staticSource": "pages/play/index.js:5286"
       }
     },
     {
@@ -1021504,7 +1021529,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9501"
+        "staticSource": "pages/play/index.js:9545"
       }
     },
     {
@@ -1021587,7 +1021612,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8462"
+        "staticSource": "pages/play/index.js:8506"
       }
     },
     {
@@ -1021693,7 +1021718,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8902"
+        "staticSource": "pages/play/index.js:8946"
       }
     },
     {
@@ -1021763,7 +1021788,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9490"
+        "staticSource": "pages/play/index.js:9534"
       }
     },
     {
@@ -1022264,7 +1022289,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8631"
+        "staticSource": "pages/play/index.js:8675"
       }
     },
     {
@@ -1022765,7 +1022790,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8631"
+        "staticSource": "pages/play/index.js:8675"
       }
     },
     {
@@ -1022852,7 +1022877,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9238"
+        "staticSource": "pages/play/index.js:9282"
       }
     },
     {
@@ -1022919,7 +1022944,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9437"
+        "staticSource": "pages/play/index.js:9481"
       }
     },
     {
@@ -1022986,7 +1023011,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9481"
+        "staticSource": "pages/play/index.js:9525"
       }
     },
     {
@@ -1023073,7 +1023098,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9482"
+        "staticSource": "pages/play/index.js:9526"
       }
     },
     {
@@ -1023140,7 +1023165,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5120"
+        "staticSource": "pages/play/index.js:5135"
       }
     },
     {
@@ -1023227,7 +1023252,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9238"
+        "staticSource": "pages/play/index.js:9282"
       }
     },
     {
@@ -1023297,7 +1023322,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:9268"
+        "staticSource": "pages/play/index.js:9312"
       }
     },
     {
@@ -1023364,7 +1023389,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3742"
+        "staticSource": "pages/play/index.js:3750"
       }
     },
     {
@@ -1023431,7 +1023456,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8344"
+        "staticSource": "pages/play/index.js:8388"
       }
     },
     {
@@ -1023501,7 +1023526,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4412"
+        "staticSource": "pages/play/index.js:4427"
       }
     },
     {
@@ -1023571,7 +1023596,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4394"
+        "staticSource": "pages/play/index.js:4409"
       }
     },
     {
@@ -1023702,7 +1023727,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1024071,7 +1024097,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4402"
+        "staticSource": "pages/play/index.js:4417"
       }
     },
     {
@@ -1024202,7 +1024228,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1024571,7 +1024598,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4409"
+        "staticSource": "pages/play/index.js:4424"
       }
     },
     {
@@ -1024641,7 +1024668,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4412"
+        "staticSource": "pages/play/index.js:4427"
       }
     },
     {
@@ -1024711,7 +1024738,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4412"
+        "staticSource": "pages/play/index.js:4427"
       }
     },
     {
@@ -1024782,7 +1024809,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4397"
+        "staticSource": "pages/play/index.js:4412"
       }
     },
     {
@@ -1024852,7 +1024879,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4394"
+        "staticSource": "pages/play/index.js:4409"
       }
     },
     {
@@ -1024919,7 +1024946,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8343"
+        "staticSource": "pages/play/index.js:8387"
       }
     },
     {
@@ -1025028,7 +1025055,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3566"
+        "staticSource": "pages/play/index.js:3574"
       }
     },
     {
@@ -1025105,7 +1025132,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3762"
+        "staticSource": "pages/play/index.js:3770"
       }
     },
     {
@@ -1025211,7 +1025238,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7315"
+        "staticSource": "pages/play/index.js:7335"
       }
     },
     {
@@ -1025342,7 +1025369,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1025711,7 +1025739,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7293"
+        "staticSource": "pages/play/index.js:7313"
       }
     },
     {
@@ -1025778,7 +1025806,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1025846,7 +1025874,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1025913,7 +1025941,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1025981,7 +1026009,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1026048,7 +1026076,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1026115,7 +1026143,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7406"
+        "staticSource": "pages/play/index.js:7450"
       }
     },
     {
@@ -1026183,7 +1026211,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1026250,7 +1026278,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1026318,7 +1026346,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1026385,7 +1026413,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1026452,7 +1026480,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7406"
+        "staticSource": "pages/play/index.js:7450"
       }
     },
     {
@@ -1026523,7 +1026551,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7396"
+        "staticSource": "pages/play/index.js:7440"
       }
     },
     {
@@ -1026629,7 +1026657,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7435"
+        "staticSource": "pages/play/index.js:7479"
       }
     },
     {
@@ -1026697,7 +1026725,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1026764,7 +1026792,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1026832,7 +1026860,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1026899,7 +1026927,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1026970,7 +1026998,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7446"
+        "staticSource": "pages/play/index.js:7490"
       }
     },
     {
@@ -1027037,7 +1027065,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7406"
+        "staticSource": "pages/play/index.js:7450"
       }
     },
     {
@@ -1027143,7 +1027171,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7435"
+        "staticSource": "pages/play/index.js:7479"
       }
     },
     {
@@ -1027211,7 +1027239,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1027278,7 +1027306,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1027346,7 +1027374,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1027413,7 +1027441,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1027480,7 +1027508,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7406"
+        "staticSource": "pages/play/index.js:7450"
       }
     },
     {
@@ -1027586,7 +1027614,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7435"
+        "staticSource": "pages/play/index.js:7479"
       }
     },
     {
@@ -1027654,7 +1027682,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1027721,7 +1027749,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1027852,7 +1027880,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1028221,7 +1028250,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4290"
+        "staticSource": "pages/play/index.js:4305"
       }
     },
     {
@@ -1028289,7 +1028318,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1028356,7 +1028385,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1028423,7 +1028452,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7406"
+        "staticSource": "pages/play/index.js:7450"
       }
     },
     {
@@ -1028529,7 +1028558,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7435"
+        "staticSource": "pages/play/index.js:7479"
       }
     },
     {
@@ -1028597,7 +1028626,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1028664,7 +1028693,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1028732,7 +1028761,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1028799,7 +1028828,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1028866,7 +1028895,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7406"
+        "staticSource": "pages/play/index.js:7450"
       }
     },
     {
@@ -1028943,7 +1028972,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7439"
+        "staticSource": "pages/play/index.js:7483"
       }
     },
     {
@@ -1029011,7 +1029040,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1029078,7 +1029107,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1029146,7 +1029175,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1029213,7 +1029242,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1029280,7 +1029309,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7406"
+        "staticSource": "pages/play/index.js:7450"
       }
     },
     {
@@ -1029386,7 +1029415,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7435"
+        "staticSource": "pages/play/index.js:7479"
       }
     },
     {
@@ -1029454,7 +1029483,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1029521,7 +1029550,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1029589,7 +1029618,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1029656,7 +1029685,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1029723,7 +1029752,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7387"
+        "staticSource": "pages/play/index.js:7431"
       }
     },
     {
@@ -1029791,7 +1029820,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1029858,7 +1029887,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1029926,7 +1029955,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1029993,7 +1030022,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1030060,7 +1030089,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7387"
+        "staticSource": "pages/play/index.js:7431"
       }
     },
     {
@@ -1030128,7 +1030157,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1030195,7 +1030224,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1030263,7 +1030292,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1030330,7 +1030359,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1030397,7 +1030426,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7387"
+        "staticSource": "pages/play/index.js:7431"
       }
     },
     {
@@ -1030465,7 +1030494,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1030532,7 +1030561,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1030600,7 +1030629,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1030667,7 +1030696,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1030734,7 +1030763,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7387"
+        "staticSource": "pages/play/index.js:7431"
       }
     },
     {
@@ -1030865,7 +1030894,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1031234,7 +1031264,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4078"
+        "staticSource": "pages/play/index.js:4093"
       }
     },
     {
@@ -1031302,7 +1031332,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7451"
+        "staticSource": "pages/play/index.js:7495"
       }
     },
     {
@@ -1031369,7 +1031399,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1031437,7 +1031467,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1031504,7 +1031534,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3589"
+        "staticSource": "pages/play/index.js:3597"
       }
     },
     {
@@ -1031575,7 +1031605,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7442"
+        "staticSource": "pages/play/index.js:7486"
       }
     },
     {
@@ -1031642,7 +1031672,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7406"
+        "staticSource": "pages/play/index.js:7450"
       }
     },
     {
@@ -1031709,7 +1031739,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7428"
+        "staticSource": "pages/play/index.js:7472"
       }
     },
     {
@@ -1031776,7 +1031806,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7415"
+        "staticSource": "pages/play/index.js:7459"
       }
     },
     {
@@ -1031843,7 +1031873,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7501"
+        "staticSource": "pages/play/index.js:7545"
       }
     },
     {
@@ -1031910,7 +1031940,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:648"
+        "staticSource": "pages/play/index.js:655"
       }
     },
     {
@@ -1031977,7 +1032007,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2702"
+        "staticSource": "pages/play/index.js:2710"
       }
     },
     {
@@ -1032045,7 +1032075,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1032296,7 +1032326,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/common/uploadOSS",
@@ -1032444,7 +1032475,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7790"
+        "staticSource": "pages/play/index.js:7834"
       }
     },
     {
@@ -1032511,7 +1032542,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:439"
+        "staticSource": "pages/play/index.js:446"
       }
     },
     {
@@ -1032579,7 +1032610,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8179"
+        "staticSource": "pages/play/index.js:8223"
       }
     },
     {
@@ -1032710,7 +1032741,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1033079,7 +1033111,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8187"
+        "staticSource": "pages/play/index.js:8231"
       }
     },
     {
@@ -1033210,7 +1033242,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1033579,7 +1033612,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2704"
+        "staticSource": "pages/play/index.js:2712"
       }
     },
     {
@@ -1033710,7 +1033743,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1034079,7 +1034113,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3031"
+        "staticSource": "pages/play/index.js:3039"
       }
     },
     {
@@ -1034146,7 +1034180,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4115"
+        "staticSource": "pages/play/index.js:4130"
       }
     },
     {
@@ -1034277,7 +1034311,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1034646,7 +1034681,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3465"
+        "staticSource": "pages/play/index.js:3473"
       }
     },
     {
@@ -1034713,7 +1034748,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3030"
+        "staticSource": "pages/play/index.js:3038"
       }
     },
     {
@@ -1034781,7 +1034816,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1034848,7 +1034883,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3030"
+        "staticSource": "pages/play/index.js:3038"
       }
     },
     {
@@ -1034979,7 +1035014,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1035348,7 +1035384,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3031"
+        "staticSource": "pages/play/index.js:3039"
       }
     },
     {
@@ -1035479,7 +1035515,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1035848,7 +1035885,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3031"
+        "staticSource": "pages/play/index.js:3039"
       }
     },
     {
@@ -1035979,7 +1036016,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1036348,7 +1036386,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3397"
+        "staticSource": "pages/play/index.js:3405"
       }
     },
     {
@@ -1036479,7 +1036517,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1036848,7 +1036887,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3465"
+        "staticSource": "pages/play/index.js:3473"
       }
     },
     {
@@ -1036979,7 +1037018,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1037349,7 +1037389,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3207"
+        "staticSource": "pages/play/index.js:3215"
       }
     },
     {
@@ -1037480,7 +1037520,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1037850,7 +1037891,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3255"
+        "staticSource": "pages/play/index.js:3263"
       }
     },
     {
@@ -1037917,7 +1037958,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3336"
+        "staticSource": "pages/play/index.js:3344"
       }
     },
     {
@@ -1037999,7 +1038040,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3351"
+        "staticSource": "pages/play/index.js:3359"
       }
     },
     {
@@ -1038120,7 +1038161,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3378"
+        "staticSource": "pages/play/index.js:3386"
       }
     },
     {
@@ -1038251,7 +1038292,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1038620,7 +1038662,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3083"
+        "staticSource": "pages/play/index.js:3091"
       }
     },
     {
@@ -1038751,7 +1038793,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1039120,7 +1039163,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3033"
+        "staticSource": "pages/play/index.js:3041"
       }
     },
     {
@@ -1039187,7 +1039230,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3561"
+        "staticSource": "pages/play/index.js:3569"
       }
     },
     {
@@ -1039255,7 +1039298,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1039322,7 +1039365,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3561"
+        "staticSource": "pages/play/index.js:3569"
       }
     },
     {
@@ -1039399,7 +1039442,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4262"
+        "staticSource": "pages/play/index.js:4277"
       }
     },
     {
@@ -1039489,7 +1039532,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3522"
+        "staticSource": "pages/play/index.js:3530"
       }
     },
     {
@@ -1039556,7 +1039599,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6700"
+        "staticSource": "pages/play/index.js:6720"
       }
     },
     {
@@ -1039638,7 +1039681,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6701"
+        "staticSource": "pages/play/index.js:6721"
       }
     },
     {
@@ -1039705,7 +1039748,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4121"
+        "staticSource": "pages/play/index.js:4136"
       }
     },
     {
@@ -1040111,7 +1040154,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:462"
+        "staticSource": "pages/play/index.js:469"
       }
     },
     {
@@ -1040539,7 +1040582,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1040975,7 +1041019,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5232"
+        "staticSource": "pages/play/index.js:5247"
       }
     },
     {
@@ -1041042,7 +1041086,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5236"
+        "staticSource": "pages/play/index.js:5251"
       }
     },
     {
@@ -1041109,7 +1041153,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5237"
+        "staticSource": "pages/play/index.js:5252"
       }
     },
     {
@@ -1041838,7 +1041882,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1042207,7 +1042252,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3648"
+        "staticSource": "pages/play/index.js:3656"
       }
     },
     {
@@ -1042338,7 +1042383,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1042838,7 +1042884,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1043207,7 +1043254,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6500"
+        "staticSource": "pages/play/index.js:6520"
       }
     },
     {
@@ -1043338,7 +1043385,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1043707,7 +1043755,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6438"
+        "staticSource": "pages/play/index.js:6458"
       }
     },
     {
@@ -1043838,7 +1043886,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1044207,7 +1044256,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7567"
+        "staticSource": "pages/play/index.js:7611"
       }
     },
     {
@@ -1044338,7 +1044387,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1044958,7 +1045008,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/common/uploadOSS",
@@ -1045106,7 +1045157,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7790"
+        "staticSource": "pages/play/index.js:7834"
       }
     },
     {
@@ -1045173,7 +1045224,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7966"
+        "staticSource": "pages/play/index.js:8010"
       }
     },
     {
@@ -1045250,7 +1045301,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:6494"
+        "staticSource": "pages/play/index.js:6514"
       }
     },
     {
@@ -1045318,7 +1045369,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7739"
+        "staticSource": "pages/play/index.js:7783"
       }
     },
     {
@@ -1045386,7 +1045437,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7739"
+        "staticSource": "pages/play/index.js:7783"
       }
     },
     {
@@ -1045454,7 +1045505,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8179"
+        "staticSource": "pages/play/index.js:8223"
       }
     },
     {
@@ -1045585,7 +1045636,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1045954,7 +1046006,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8187"
+        "staticSource": "pages/play/index.js:8231"
       }
     },
     {
@@ -1046121,7 +1046173,8 @@
         "routes": [
           "pages/play/merchant/index?nodeId=",
           "pages/privacy/index",
-          "pages/template/index"
+          "pages/template/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1046498,7 +1046551,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4149"
+        "staticSource": "pages/play/index.js:4164"
       }
     },
     {
@@ -1046589,7 +1046642,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7457"
+        "staticSource": "pages/play/index.js:7501"
       }
     },
     {
@@ -1046657,7 +1046710,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1046837,7 +1046890,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7477"
+        "staticSource": "pages/play/index.js:7521"
       }
     },
     {
@@ -1046943,7 +1046996,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7478"
+        "staticSource": "pages/play/index.js:7522"
       }
     },
     {
@@ -1047034,7 +1047087,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1047418,7 +1047472,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7476"
+        "staticSource": "pages/play/index.js:7520"
       }
     },
     {
@@ -1047549,7 +1047603,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1047927,7 +1047982,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5626"
+        "staticSource": "pages/play/index.js:5641"
       }
     },
     {
@@ -1047997,7 +1048052,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5974"
+        "staticSource": "pages/play/index.js:5991"
       }
     },
     {
@@ -1048088,7 +1048143,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1048464,7 +1048520,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7480"
+        "staticSource": "pages/play/index.js:7524"
       }
     },
     {
@@ -1048694,7 +1048750,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3029"
+        "staticSource": "pages/play/index.js:3037"
       }
     },
     {
@@ -1048907,7 +1048963,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1049841,7 +1049898,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1050220,7 +1050278,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7454"
+        "staticSource": "pages/play/index.js:7498"
       }
     },
     {
@@ -1050311,7 +1050369,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1050685,7 +1050744,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7455"
+        "staticSource": "pages/play/index.js:7499"
       }
     },
     {
@@ -1050752,7 +1050811,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1370"
+        "staticSource": "pages/play/index.js:1377"
       }
     },
     {
@@ -1050819,7 +1050878,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1370"
+        "staticSource": "pages/play/index.js:1377"
       }
     },
     {
@@ -1050950,7 +1051009,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1051319,7 +1051379,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1351"
+        "staticSource": "pages/play/index.js:1358"
       }
     },
     {
@@ -1051386,7 +1051446,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7456"
+        "staticSource": "pages/play/index.js:7500"
       }
     },
     {
@@ -1051477,7 +1051537,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1051853,7 +1051914,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7479"
+        "staticSource": "pages/play/index.js:7523"
       }
     },
     {
@@ -1051959,7 +1052020,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7515"
+        "staticSource": "pages/play/index.js:7559"
       }
     },
     {
@@ -1052068,7 +1052129,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8342"
+        "staticSource": "pages/play/index.js:8386"
       }
     },
     {
@@ -1052135,7 +1052196,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7512"
+        "staticSource": "pages/play/index.js:7556"
       }
     },
     {
@@ -1052266,7 +1052327,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1052635,7 +1052697,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7461"
+        "staticSource": "pages/play/index.js:7505"
       }
     },
     {
@@ -1052766,7 +1052828,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1053135,7 +1053198,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7461"
+        "staticSource": "pages/play/index.js:7505"
       }
     },
     {
@@ -1053266,7 +1053329,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1053635,7 +1053699,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7461"
+        "staticSource": "pages/play/index.js:7505"
       }
     },
     {
@@ -1053744,7 +1053808,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8342"
+        "staticSource": "pages/play/index.js:8386"
       }
     },
     {
@@ -1053811,7 +1053875,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7512"
+        "staticSource": "pages/play/index.js:7556"
       }
     },
     {
@@ -1053888,7 +1053952,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4082"
+        "staticSource": "pages/play/index.js:4097"
       }
     },
     {
@@ -1053955,7 +1054019,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7466"
+        "staticSource": "pages/play/index.js:7510"
       }
     },
     {
@@ -1054086,7 +1054150,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1054455,7 +1054520,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5962"
+        "staticSource": "pages/play/index.js:5979"
       }
     },
     {
@@ -1054586,7 +1054651,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1054955,7 +1055021,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:8520"
+        "staticSource": "pages/play/index.js:8564"
       }
     },
     {
@@ -1055086,7 +1055152,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1055455,7 +1055522,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2625"
+        "staticSource": "pages/play/index.js:2633"
       }
     },
     {
@@ -1055525,7 +1055592,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4412"
+        "staticSource": "pages/play/index.js:4427"
       }
     },
     {
@@ -1055656,7 +1055723,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1056025,7 +1056093,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4087"
+        "staticSource": "pages/play/index.js:4102"
       }
     },
     {
@@ -1056092,7 +1056160,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4107"
+        "staticSource": "pages/play/index.js:4122"
       }
     },
     {
@@ -1056223,7 +1056291,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1056592,7 +1056661,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4350"
+        "staticSource": "pages/play/index.js:4365"
       }
     },
     {
@@ -1056669,7 +1056738,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3749"
+        "staticSource": "pages/play/index.js:3757"
       }
     },
     {
@@ -1056736,7 +1056805,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2603"
+        "staticSource": "pages/play/index.js:2610"
       }
     },
     {
@@ -1056804,7 +1056873,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1056935,7 +1057004,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1057304,7 +1057374,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2604"
+        "staticSource": "pages/play/index.js:2611"
       }
     },
     {
@@ -1057435,7 +1057505,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1057804,7 +1057875,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5834"
+        "staticSource": "pages/play/index.js:5851"
       }
     },
     {
@@ -1057895,7 +1057966,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7457"
+        "staticSource": "pages/play/index.js:7501"
       }
     },
     {
@@ -1058026,7 +1058097,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1058395,7 +1058467,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1694"
+        "staticSource": "pages/play/index.js:1701"
       }
     },
     {
@@ -1058465,7 +1058537,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:4412"
+        "staticSource": "pages/play/index.js:4427"
       }
     },
     {
@@ -1058544,7 +1058616,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1433"
+        "staticSource": "pages/play/index.js:1440"
       }
     },
     {
@@ -1058675,7 +1058747,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1059044,7 +1059117,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5474"
+        "staticSource": "pages/play/index.js:5489"
       }
     },
     {
@@ -1059112,7 +1059185,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1474"
+        "staticSource": "pages/play/index.js:1481"
       }
     },
     {
@@ -1059189,7 +1059262,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1485"
+        "staticSource": "pages/play/index.js:1492"
       }
     },
     {
@@ -1059266,7 +1059339,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1499"
+        "staticSource": "pages/play/index.js:1506"
       }
     },
     {
@@ -1059343,7 +1059416,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1499"
+        "staticSource": "pages/play/index.js:1506"
       }
     },
     {
@@ -1059410,7 +1059483,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2600"
+        "staticSource": "pages/play/index.js:2607"
       }
     },
     {
@@ -1059516,7 +1059589,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7315"
+        "staticSource": "pages/play/index.js:7335"
       }
     },
     {
@@ -1059583,7 +1059656,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2570"
+        "staticSource": "pages/play/index.js:2577"
       }
     },
     {
@@ -1059714,7 +1059787,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1060083,7 +1060157,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1704"
+        "staticSource": "pages/play/index.js:1711"
       }
     },
     {
@@ -1060150,7 +1060224,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2446"
+        "staticSource": "pages/play/index.js:2453"
       }
     },
     {
@@ -1060217,7 +1060291,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2429"
+        "staticSource": "pages/play/index.js:2436"
       }
     },
     {
@@ -1060285,7 +1060359,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2421"
+        "staticSource": "pages/play/index.js:2428"
       }
     },
     {
@@ -1060352,7 +1060426,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2459"
+        "staticSource": "pages/play/index.js:2466"
       }
     },
     {
@@ -1060419,7 +1060493,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2047"
+        "staticSource": "pages/play/index.js:2054"
       }
     },
     {
@@ -1060496,7 +1060570,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2473"
+        "staticSource": "pages/play/index.js:2480"
       }
     },
     {
@@ -1060627,7 +1060701,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1060996,7 +1061071,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2580"
+        "staticSource": "pages/play/index.js:2587"
       }
     },
     {
@@ -1061063,7 +1061138,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1760"
+        "staticSource": "pages/play/index.js:1767"
       }
     },
     {
@@ -1061194,7 +1061269,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1061563,7 +1061639,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1802"
+        "staticSource": "pages/play/index.js:1809"
       }
     },
     {
@@ -1061640,7 +1061716,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1775"
+        "staticSource": "pages/play/index.js:1782"
       }
     },
     {
@@ -1061707,7 +1061783,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1760"
+        "staticSource": "pages/play/index.js:1767"
       }
     },
     {
@@ -1061838,7 +1061914,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1062207,7 +1062284,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2580"
+        "staticSource": "pages/play/index.js:2587"
       }
     },
     {
@@ -1062338,7 +1062415,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1062707,7 +1062785,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7743"
+        "staticSource": "pages/play/index.js:7787"
       }
     },
     {
@@ -1062774,7 +1062852,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:1771"
+        "staticSource": "pages/play/index.js:1778"
       }
     },
     {
@@ -1062841,7 +1062919,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2134"
+        "staticSource": "pages/play/index.js:2141"
       }
     },
     {
@@ -1062909,7 +1062987,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2132"
+        "staticSource": "pages/play/index.js:2139"
       }
     },
     {
@@ -1062976,7 +1063054,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2126"
+        "staticSource": "pages/play/index.js:2133"
       }
     },
     {
@@ -1063044,7 +1063122,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2125"
+        "staticSource": "pages/play/index.js:2132"
       }
     },
     {
@@ -1063121,7 +1063199,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2372"
+        "staticSource": "pages/play/index.js:2379"
       }
     },
     {
@@ -1063210,7 +1063288,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2381"
+        "staticSource": "pages/play/index.js:2388"
       }
     },
     {
@@ -1063299,7 +1063377,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2286"
+        "staticSource": "pages/play/index.js:2293"
       }
     },
     {
@@ -1063366,7 +1063444,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2147"
+        "staticSource": "pages/play/index.js:2154"
       }
     },
     {
@@ -1063433,7 +1063511,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2148"
+        "staticSource": "pages/play/index.js:2155"
       }
     },
     {
@@ -1063500,7 +1063578,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2233"
+        "staticSource": "pages/play/index.js:2240"
       }
     },
     {
@@ -1063568,7 +1063646,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2224"
+        "staticSource": "pages/play/index.js:2231"
       }
     },
     {
@@ -1063684,7 +1063762,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2181"
+        "staticSource": "pages/play/index.js:2188"
       }
     },
     {
@@ -1063773,7 +1063851,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2286"
+        "staticSource": "pages/play/index.js:2293"
       }
     },
     {
@@ -1063840,7 +1063918,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:2282"
+        "staticSource": "pages/play/index.js:2289"
       }
     },
     {
@@ -1064050,7 +1064128,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/club/lead/arrive",
@@ -1064098,7 +1064177,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5477"
+        "staticSource": "pages/play/index.js:5492"
       }
     },
     {
@@ -1064229,7 +1064308,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1064606,7 +1064686,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5526"
+        "staticSource": "pages/play/index.js:5541"
       }
     },
     {
@@ -1067354,7 +1067434,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1067926,7 +1068007,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1068061,7 +1068142,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1068294,7 +1068375,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1068799,7 +1068880,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1069236,7 +1069318,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1069367,7 +1069449,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1069736,7 +1069819,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7743"
+        "staticSource": "pages/play/index.js:7787"
       }
     },
     {
@@ -1069987,7 +1070070,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/common/uploadOSS",
@@ -1070135,7 +1070219,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:7790"
+        "staticSource": "pages/play/index.js:7834"
       }
     },
     {
@@ -1070203,7 +1070287,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1070688,7 +1070772,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1071087,7 +1071171,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1073013,7 +1073098,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/receipt",
@@ -1073111,7 +1073197,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/shared/preview"
@@ -1073207,7 +1073294,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",
@@ -1073383,7 +1073471,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:3586"
+        "staticSource": "pages/play/index.js:3594"
       }
     },
     {
@@ -1073581,7 +1073669,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1074223,7 +1074312,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1074835,7 +1074925,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1075410,7 +1075501,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1075990,7 +1076082,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1076490,7 +1076583,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1077103,7 +1077197,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1077689,7 +1077784,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/index.js:5943"
+        "staticSource": "pages/play/index.js:5960"
       }
     },
     {
@@ -1077910,7 +1078005,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1078458,7 +1078554,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1078982,7 +1079079,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1079419,7 +1079517,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/receipt",
@@ -1079590,7 +1079689,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",
@@ -1079697,7 +1079797,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",
@@ -1080026,7 +1080127,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1080555,7 +1080657,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1081352,7 +1081455,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1082336,7 +1082440,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1083058,7 +1083163,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1083751,7 +1083857,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1084349,7 +1084456,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/activity/list",
@@ -1085058,7 +1085166,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",
@@ -1085173,7 +1085282,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",
@@ -1085360,7 +1085470,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",
@@ -1085469,7 +1085580,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/receipt",
@@ -1085717,7 +1085829,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",
@@ -1086120,7 +1086233,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",
@@ -1086229,7 +1086343,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/receipt",
@@ -1086399,7 +1086514,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/view"
@@ -1086998,7 +1087114,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/receipt",
@@ -1087105,7 +1087222,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",
@@ -1087231,7 +1087349,8 @@
       "targets": {
         "routes": [
           "pages/play/merchant/index?nodeId=",
-          "pages/privacy/index"
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
         ],
         "apis": [
           "/api/game/session/command",

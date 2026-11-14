@@ -26,8 +26,8 @@ test('完成页成就行只在第一个「 · 」处拆开', () => {
 
 test('判定文字:汉字数字不断行、句间双空格并成一个', () => {
   const out = tidyText('拍摄于一九一四年。  门牌清晰')
-  assert.equal(out.replace(/⁠/g, ''), '拍摄于一九一四年。 门牌清晰')
-  assert.notEqual(out, '拍摄于一九一四年。 门牌清晰')
+  assert.equal(out.replace(/⁠/g, ''), '拍摄于一九一四年。门牌清晰')   // 1113h:中文句号后的空格一并去掉
+  assert.notEqual(out, '拍摄于一九一四年。门牌清晰')
   assert.equal(keepNumerals('一个人'), '一个人')
   assert.match(read('pages/play/components/playkit-photocheck/index.js'), /tidyText\(String\(lastReason/)
   assert.match(read('pages/play/utils/playkit-view.js'), /answerText: seg\.finished \? tidyText\(/)

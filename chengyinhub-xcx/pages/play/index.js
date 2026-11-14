@@ -1,7 +1,7 @@
 // 城瘾 · 游玩页(深色地图沉浸版)
 // 视觉真值:设计原型工具「城瘾游玩页.dc.html」;对接说明见 docs/游玩页-深色地图沉浸版-对接说明.md
 // 数据:GET /api/play/nodes(现网) — 缺坐标/章节/模板呈现字段时做降级;扫码 /checkin、答题 /answer、到达 /arrive。
-const { stationLabel, playerTitle } = require('./utils/play-stage-pops.js'); const cyModal = require('../../utils/modal.js'); const { keepNumerals } = require('./utils/keep-numerals.js');
+const { stationLabel, playerTitle } = require('./utils/play-stage-pops.js'); const cyModal = require('../../utils/modal.js'); const { keepNumerals, keepMeasure } = require('./utils/keep-numerals.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
@@ -43,7 +43,7 @@ const { createPlayTrail } = require('./utils/play-trail.js');
 const teamTrailKit = require('./utils/team-trail.js');
 const routeCard = require('./utils/route-card.js');
 const playAccuracy = require('./utils/play-accuracy.js');       // 到达定位精度阈值(80m)与提示
-const { ARRIVAL_RADIUS_METERS, ARRIVAL_START_RADIUS_TEXT } = require('./utils/arrival-radius.js'); // 开局校验 300m(与后端 ArrivalPolicy.START_RADIUS_METERS 同值);50m 仅作靠近自动点亮的提示半径
+const { ARRIVAL_RADIUS_METERS, ARRIVAL_START_RADIUS_METERS, ARRIVAL_START_RADIUS_TEXT } = require('./utils/arrival-radius.js'); // 开局校验 300m(与后端 ArrivalPolicy.START_RADIUS_METERS 同值);50m 仅作靠近自动点亮的提示半径
 const {
   normalizePlayerProjection,
   buildPlayerChoiceInput,
@@ -178,10 +178,17 @@ function startStateRows(routeState, vitalsOn) {
 function introLine(desc) {
   // 只取第一行:换行是作者分的段,压成空格会把下一行的半句拼进来,
   // 40 字一刀切在「｜」上,看着像没删干净的光标(2026-10-27 南京路开场页实测)。
-  const first = String(desc || '').split(/\n/).map((x) => x.trim()).find(Boolean) || '';
-  const text = first.replace(/\s+/g, ' ');
-  const m = text.match(/^[^。！？!?]+[。！？!?]?/); const tail = /[\s｜|·、，,：:；;—-]+$/; const cut = m ? m[0].slice(0, 40) : ''; const clean = cut.replace(tail, '');
-  return !m ? '' : m[0].length <= 40 || clean !== cut ? clean : cut + '…'; // 超 40 字且不是落在分隔符上 = 半句被截,补省略号
+  const lines = String(desc || '').split(/\n/).map((x) => x.trim()).filter(Boolean);
+  const text = (lines[0] || '').replace(/\s+/g, ' ');
+  const m = text.match(/^[^。！？!?]+[。！？!?]?/);
+  if (!m) return '';
+  const tail = /[\s｜|·、，,：:；;—-]+$/;
+  const done = /[。！？!?）」』)】》]$/;
+  const raw = m[0].slice(0, 40);
+  const cut = raw.replace(tail, '');
+  // 只要后面还有内容被舍掉(超 40 字 / 后面还有段落),又不是停在句号上,一律补省略号,与长短无关
+  const dropped = m[0].length > 40 || (!done.test(m[0]) && (lines.length > 1 || text.length > m[0].length));
+  return dropped && cut === raw && !done.test(cut) ? cut + '…' : cut;   // 刚好切在分隔符上(已去掉)照旧不补
 }
 
 function kacchaLines(hits) {
@@ -2603,7 +2610,7 @@ Page({
   closeChapterPick() { this.setData({ 'chapterPick.show': false }); },
   onPickChapter(e) {
     const value = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.idx;
-    if (value == null || value === '' || !this._isPlayAccountCurrent()) return;
+    if (value == null || value === '' || !this._isPlayAccountCurrent()) return false;
     const idx = Number(value);
     const card = Number.isInteger(idx) && (this.data.chapterCards || [])[idx];
     const history = this._currentCompletedHistory();
@@ -2611,8 +2618,8 @@ Page({
     const contradicted = frozen && frozen.blocks.some(block => block.type === 'node'
       && this.data.nodes.some(node => String(node.nodeId) === block.nodeId && node.done !== true));
     const state = frozen && !contradicted ? 'completed' : chapterTrail.chapterReadState(card, this.data.nodes, this._historyNodes);
-    if (state === 'completed' && this._historyReadAttempted && !frozen) return;
-    if (state === 'locked' || this._leadHolds(card.id)) return;
+    if (state === 'completed' && this._historyReadAttempted && !frozen) return false;
+    if (state === 'locked' || this._leadHolds(card.id)) return false;
     const liveId = this._chapterReadCursor ? this._chapterReadCursor.liveId : this.data.chapter.id;
     this.finishChapterVideo(null, false);
     this.closeChapterFull();
@@ -2620,6 +2627,7 @@ Page({
       historyKey: history && playHistory.key(history), configVersion: history && history.configVersion };
     this.setData({ 'chapterPick.show': false, 'chapterPick.cur': idx, chapter: this._chapterFromCard(card),
       chapterGameAnchor: '', packOpen: true }, () => this.openChapterFull());
+    return true;
   },
   /** 顶部输入地址选中一条 = 把地图挪过去并打开它的详情半屏。不跳页。 */
   onSearchPick(e) {
@@ -3766,7 +3774,7 @@ Page({
   },
   openChapterFull() {
     const readOnly = !!this._chapterReadCursor;
-    if (readOnly && this._historyReadAttempted && !this._currentCompletedHistory()) return;
+    if (readOnly && this._historyReadAttempted && !this._currentCompletedHistory()) { if (typeof this._afterFinishLeave === 'function') this._afterFinishLeave(); return; }
     const wasOpen = this.data.chapterFull;
     const items = [];
     const claims = [];     // 读到了、但服务端还没下发的伏笔 —— 渲染完再认领
@@ -3929,6 +3937,13 @@ Page({
     if (inlineCheck && !(blocks && blocks.length)) items.push({ kind: 'journeyCheck', nodeId: check.nodeId, mood: curMood });
     this._pushStoryTasks(items, nodes, blocks, readOnly, curMood);   // V3-15:故事流只放故事,没写内容不再补一句系统提示;延伸任务收进一行入口
     if (!readOnly && claims.length) this._claimThoughts(claims);
+    // 只读回看一屏可读内容都没有(只有封面或空):不开空故事页,交给回看方按走完离开
+    if (readOnly && !wasOpen && !items.some((item) => item.kind !== 'cover' && item.kind !== 'divider')) {
+      this._chapterReadCursor = null;
+      if (typeof this._afterFinishLeave === 'function') this._afterFinishLeave();
+      return;
+    }
+    this._reviewPending = false;
     audioSession.keepAwake('chapterFull', true);
     this.setData({
       chapterFull: true,
@@ -5793,6 +5808,8 @@ Page({
     const node = (this.data.nodes || []).find((n) => String(n.nodeId) === String(id));
     const entry = (this.data.chapterParas || []).find((p) => p.kind === 'game' && String(p.nodeId) === String(id));
     if (!entry || !this._isStoryGame(node) || node.done) return;
+    const tooFar = this._startTooFar(node);
+    if (tooFar) { this._startRefusal(tooFar, () => this.startStoryGame(e)); return; }
     // P-08:带领场里队长还没放行到这一章 —— 先说清楚,不让玩家玩一遍再被服务端静默拒绝
     if (this._leadHolds(node.chapterId)) {
       if (this._autoInlined) delete this._autoInlined[String(node.nodeId)];
@@ -6042,6 +6059,8 @@ Page({
     // 开局闸(业主 2026-11-13):只看本局是否已开局,与首站是否用高级玩法无关——解开玩法不等于人在起点。
     const needsLocation = this._startLocationNeeded();
     if (!this.data.gpsOk && !this._isStoryGame(node) && needsLocation) { if (this._locAsked) this._locationDeclinedToast(); else this.requestPlayLocation(); return; }   // a1-v3-21 问过不再弹说明
+    const tooFar = this._startTooFar(node);
+    if (tooFar) { this._startRefusal(tooFar, () => this.onArriveTap()); return; }
     this.arrive(node.nodeId, 'arrive');
   },
   onScanArrive() {
@@ -6197,7 +6216,8 @@ Page({
             try { that._ensureGuardAppeal().reference(guard); } catch (error) { that.diegetic(error.message); }
           }
           if (playAccuracy.isLowAccuracyMsg(r.msg)) that.setData({ gpsLowAcc: true, gpsHint: playAccuracy.LOW_ACCURACY_HINT });
-          that.diegetic(r.msg || '还没到这一站附近');
+          if (r.errorCode === 'ARRIVE_TOO_FAR' || r.reason === 'ARRIVE_TOO_FAR') that._startRefusal(r.msg, () => that.onArriveTap());
+          else that.diegetic(r.msg || '还没到这一站附近');
           if (that._hasGenericProofFlow()) return that._readGenericProof(nodeId);
         }
       }).catch(() => {
@@ -7322,6 +7342,30 @@ Page({
     if (nx) { const node = this._nodeById(nx.nodeId); if (node && node.lat && node.lng) this.setData({ fmCenter: { lat: node.lat, lng: node.lng } }); }
   },
   diegetic(msg) { cyToast(msg); },
+  /** 开局太远:不是一闪而过的 toast,而是停住的弹窗 + 「重新定位」重试(数字不断行) */
+  _startRefusal(message, retry) {
+    const text = keepMeasure(message || ('离起点太远，请到起点 ' + ARRIVAL_START_RADIUS_TEXT + '内再开始'));
+    const session = this._sessionKey();
+    cyModal.show({ title: '还没到起点', content: text, confirmText: '重新定位', cancelText: '知道了',
+      success: (result) => {
+        if (!result.confirm || !this._isPlayAccountCurrent() || session !== this._sessionKey()) return;
+        wx.getLocation({ type: 'gcj02', isHighAccuracy: true,
+          success: (loc) => {
+            if (!this._isPlayAccountCurrent() || session !== this._sessionKey()) return;
+            const fix = { longitude: loc.longitude, latitude: loc.latitude, accuracy: loc.accuracy };   // 精度原样带上,arrive 请求从 _loc 取
+            this._loc = arrivalReading.stamp(fix);
+            if (typeof retry === 'function') retry();
+          },
+          fail: () => { if (this._isPlayAccountCurrent()) this._startRefusal('没有取到定位，请开启定位后重试', retry); } });
+      } });
+  },
+  /** 本局还没开局、定位已知且离首站超过开局半径:返回提示文案(用于在出任何「成功」判定之前拦下) */
+  _startTooFar(node) {
+    if (!node || Number(this.data.mode) !== 1 || this.data.isPreview || this.data.isMock || !this._loc
+      || !node.lat || !node.lng || !this._startLocationNeeded()) return '';
+    const dist = this.haversine(this._loc.latitude, this._loc.longitude, node.lat, node.lng);
+    return dist > ARRIVAL_START_RADIUS_METERS ? '离起点太远，请到起点 ' + ARRIVAL_START_RADIUS_TEXT + '内再开始' : '';
+  },
   /** §27.3:真实到达成功回执里的读数,按本人+本局+节点只记一次;同回执重读、重试不再追加。 */
   _noteArrivalReading(nodeId, raw) {
     const value = arrivalReading.reading(raw);
@@ -9520,6 +9564,6 @@ function achievementRows(tags, ordered) {
   return ordered.filter((n) => tags[n.nodeId]).map((n) => {
     const tag = String(tags[n.nodeId]); const cut = tag.indexOf(' · '); const title = cut < 0 ? tag : tag.slice(0, cut); const value = cut < 0 ? '' : tag.slice(cut + 3); // 只在第一个「 · 」处拆:站名自带「 · 」(「1 · 老门」)不能只留前半段
     const first = title === '首达';
-    return { key: String(n.nodeId), title, value: first ? '' : (value || ''), sub: first ? (value || '') : (n.name || ''), glyph: glyph[title] || title.slice(0, 1), kind: first ? 'ink' : 'metal' };
+    return { key: String(n.nodeId), title, value: first ? '' : (value || ''), sub: first ? (value || '') : (stationLabel(n.name) || n.name || ''), glyph: glyph[title] || title.slice(0, 1), kind: first ? 'ink' : 'metal' };
   });
 }

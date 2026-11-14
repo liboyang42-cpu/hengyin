@@ -371,7 +371,7 @@
         <view class="story-head" wx:if="{{storyCards.length}}"><text class="story-head__t">{{info.name}}</text><text class="story-head__s">{{storyMeta}}</text></view>
         <view class="story-lead" wx:if="{{storyCards.length && info.subtitle}}">{{info.subtitle}}</view>
         <view class="det-type story-sec" wx:if="{{storyCards.length}}">{{isExplore ? '护照' : '章节'}}</view>
-        <view class="story-cards" wx:if="{{storyCards.length}}">
+        <view class="story-cards {{docked ? 'is-docked' : ''}}" wx:if="{{storyCards.length}}">
           <view class="story-cc {{openChapter === index || item.locked ? 'is-open' : ''}}{{item.locked ? ' is-locked' : ''}}" style="{{tabRun ? 'transition-delay: 0s, ' + (300 + index * 80) + 'ms, ' + (300 + index * 80) + 'ms;' : ''}}" wx:for="{{storyCards}}" wx:key="index" data-i="{{index}}" bindtap="onChapterCard"
                 aria-role="button" aria-label="{{item.label}} {{item.title}}，{{item.locked ? '未解锁，点按解锁' : (openChapter === index ? '收起' : '展开')}}" hover-class="cy-pressed" hover-stay-time="80">
             <image wx:if="{{item.img}}" class="story-cc__img" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
