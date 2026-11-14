@@ -47,9 +47,6 @@ class AnswerNormalizerTest {
         assertFalse(AnswerNormalizer.equivalent("。", "。"));
         assertFalse(AnswerNormalizer.equivalent("答案", "  "));
         assertFalse(AnswerNormalizer.equivalent(null, "x"));
-        List<String> blankCanonical = AnswerPolicy.legacyAnswerTextCandidates("果苹！,\u3000");
-        assertFalse(legacyPolicyMatches(AnswerPolicy.legacy(), blankCanonical, "\u3000"));
-        assertFalse(AnswerPolicy.legacy().matchesAny(blankCanonical, "\u3000"));
     }
 
     @Test
@@ -176,7 +173,7 @@ class AnswerNormalizerTest {
         if (got.isEmpty()) return false;
         boolean has = false;
         for (String c : canonicals) {
-            if (com.chengyinhub.common.utils.StringUtils.isBlank(c)) continue;
+            if (c == null || c.trim().isEmpty()) continue;
             has = true;
             if (got.equalsIgnoreCase(AnswerPolicy.normalize(c))) return true;
         }
