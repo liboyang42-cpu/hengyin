@@ -23,7 +23,7 @@ test('顶部条「附近的队伍 · N 支在招募」+ 底部只剩「范围」
   const corners = WXML.match(/class="mt-corner[ "][^>]*>/g) || []
   assert.equal(corners.length, 3, '底部角控件必须恰好三枚(2026-11-14 加地图样式切换)')
   assert.match(WXML, /aria-label="地图样式"/)
-  const wrap = WXML.match(/<view class="mt-corners"[^>]*>/)
+  const wrap = WXML.match(/<view class="mt-corners(?: [^"]*)?"[^>]*>/)
   assert.ok(wrap, '角控件要包在 mt-corners 里')
   assert.match(wrap[0], /wx:if="\{\{!sheet( && viewMode === 'map')?\}\}"/, '开任何半屏时角控件收起(v13:列表模式也收起)')
   assert.match(WXML, /\{\{rangeText\}\}/)

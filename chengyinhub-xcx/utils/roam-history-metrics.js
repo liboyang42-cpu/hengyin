@@ -71,4 +71,12 @@ function sessionDateParts(record) {
   return chinaParts(record.startedAt || record.ts)
 }
 
-module.exports = { sessionDateParts, readNonNegative, readDurationSeconds, footprintCount, formatDistance, formatDuration, formatStartTime }
+function formatRoamMoment(value) {
+  const { chinaParts } = require('./datetime.js')
+  const date = chinaParts(value)
+  if (!date) return { date: '', dateLine: '' }
+  const day = date.month + '月' + date.day + '日'
+  return { date: day, dateLine: day + ' · ' + formatStartTime(value) }
+}
+
+module.exports = { formatRoamMoment, sessionDateParts, readNonNegative, readDurationSeconds, footprintCount, formatDistance, formatDuration, formatStartTime }

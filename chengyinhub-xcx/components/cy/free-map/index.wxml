@@ -9,7 +9,7 @@
        enable-zoom="{{interactive}}" enable-scroll="{{interactive}}"
        enable-poi="{{true}}" enable-building="{{tilt3d}}" enable-3D="{{tilt3d}}"
        subkey="{{subkey}}" layer-style="{{layerStyle}}"
-       bindupdated="onUpdated" bindmarkertap="onMarkerTap" bindcallouttap="onCalloutTap"
+       bindupdated="onUpdated" bindabilitysuccess="onStyleReady" bindmarkertap="onMarkerTap" bindcallouttap="onCalloutTap"
        bindregionchange="onRegionChange" bindpoitap="onPoiTap">
     <cover-view slot="callout">
       <cover-view wx:for="{{photoCallouts}}" wx:key="id" marker-id="{{item.id}}" class="fmap-photo">

@@ -6,7 +6,7 @@
   <view wx:if="{{node && !node.merchantId}}" class="poi-section">
     <text class="poi-story">{{isCatalog ? node.address : node.merchantAddress}}</text>
     <text wx:if="{{!isCatalog}}" class="poi-role">官方据点 · 免费地点挑战</text>
-    <text wx:if="{{isCatalog && hasLocation}}" class="poi-action" bindtap="openLocation" aria-role="button" aria-label="导航到{{node.name}}" hover-class="cy-pressed" hover-stay-time="80">导航</text>
+    <view wx:if="{{isCatalog && hasLocation}}" class="poi-nav" bindtap="openLocation" aria-role="button" aria-label="导航到{{node.name}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="gps" size="32" /><text>导航</text></view>
     <view class="poi-tags" wx:if="{{tags.length}}"><text wx:for="{{tags}}" wx:key="index" class="poi-tag">{{item}}</text></view>
   </view>
   <view wx:if="{{gallery.length}}" class="poi-section">

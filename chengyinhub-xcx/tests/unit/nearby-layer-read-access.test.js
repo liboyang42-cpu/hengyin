@@ -98,7 +98,7 @@ test('legitimate empty results show zero only after HTTP200 and valid arrays; ne
   const h = mount(); h.page.refresh(h.page.data.center);
   assert.equal(h.page.data.headerText, '附近');
   reply(h.requests[0], 200, { code: 200, data: [] }); reply(h.requests[1], 200, { code: 200, data: { items: [] } });
-  assert.equal(h.page.data.headerText, '附近 · 0 支队伍'); assert.equal(h.page.data.loadError, false);
+  assert.equal(h.page.data.headerText, '附近 · 0 个节点'); assert.equal(h.page.data.loadError, false);
   // 2026-10-22:每次 refresh 依次发 队伍 / 主题活动 / 地标商家 三个读取,第二轮从下标 3 开始
   h.page.refresh(h.page.data.center); h.requests[3].fail({ errMsg: 'fixture network' });
   reply(h.requests[4], 200, { code: 200, data: { items: [] } });
@@ -138,7 +138,7 @@ test('successful automatic refresh uses a fresh read owner and does not adopt th
   assert.equal(h.requests.length, 4); reply(h.requests[3], 200, { code: 200, data: [team] });
   assert.equal(h.page._teams.length, 0); assert.equal(h.requests.length, 7);
   reply(h.requests[4], 200, { code: 200, data: [] }); reply(h.requests[5], 200, { code: 200, data: { items: [] } });
-  assert.equal(h.page.data.headerText, '附近 · 0 支队伍'); assert.equal(h.page.data.nearbyReadAccess, '');
+  assert.equal(h.page.data.headerText, '附近 · 0 个节点'); assert.equal(h.page.data.nearbyReadAccess, '');
 });
 
 for (const stopped of ['_hidden', '_unloaded']) {

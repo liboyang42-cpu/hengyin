@@ -33,7 +33,7 @@ test('normalizeRunners:没 id / 没坐标的整行丢掉,没图的店丢掉,越�
   assert.equal(rows.length, 1);
   const r = rows[0];
   assert.equal(r.explorePct, 99);
-  assert.equal(r.shops, 0);
+  assert.equal(r.shops, null);
   assert.equal(r.elapsed, '38:20');
   assert.deepEqual(r.shopPhotos, [{ name: '昼夜咖啡', image: 'a.jpg' }]);
   assert.equal(r.nickname, '漫游者');   // 后端没给昵称时的兜底,不留空字符串

@@ -48,8 +48,8 @@
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
 
-.fmap-skeleton { position:absolute; top:0; left:0; width:100%; height:100%; z-index:100; background:var(--cy-color-play-surface-base); pointer-events:none; }
-.fmap-skeleton__bar { position:absolute; top:15%; height:70%; width:22%; border-radius:var(--cy-radius-lg); background:var(--cy-color-skeleton-base); }
+.fmap-skeleton { position:absolute; top:0; left:0; width:100%; height:100%; z-index:100; background:transparent; pointer-events:none; }
+.fmap-skeleton__bar { position:absolute; top:15%; height:70%; width:22%; border-radius:var(--cy-radius-lg); background:var(--cy-color-skeleton-base); opacity:.45; }
 .fmap-skeleton__bar--one { left:9%; }
 .fmap-skeleton__bar--two { left:39%; }
 .fmap-skeleton__bar--three { left:69%; }

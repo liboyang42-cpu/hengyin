@@ -317,12 +317,13 @@ Page({
     const raw = H.buildHangoutMarkers(items, this._icons, this._far)
       .concat(T.buildTeamMarkers(teams, this._icons, (this._far || {})[MAP_AVATAR_COLORS.cream] || fallback))
       .concat(this._poiMarkers(f)).concat(H.buildSelfMarker(this._me, this._selfIcon));
-    const places = (this._items || []).length + (this._pois || []).filter((p) => L.poiKind(p) !== 'shop').length;
-    const shops = (this._pois || []).filter((p) => L.poiKind(p) === 'shop').length;
+    const places = items.length + pois.filter((p) => L.poiKind(p) !== 'shop').length;
+    const shops = pois.filter((p) => L.poiKind(p) === 'shop').length;
+    const rows = this._listRows(items, teams, pois);
     this.setData({
       markers: L.edgeLod(P.applyPins(raw, this._pins), this._lodCenter || this.data.center, this._lodRadius || this._radius).filter((m) => !hide || m.id !== hide),
-      headerText: '附近' + (this._nearbyTeamsLoaded ? ' · ' + (this._teams || []).length + ' 支队伍' : '') + (places ? ' · ' + places + ' 处地点' : '') + (shops ? ' · ' + shops + ' 家商家' : ''), // v13 计数条;队伍没读到不写 0
-      listRows: this._listRows(items, teams, pois), listLoaded: !!(this._nearbyTeamsLoaded && this._nearbyTopicsLoaded), // N-01:两路都读到之前不说「附近暂无节点」、不写假的 0
+      headerText: !rows.length && this._nearbyTeamsLoaded && this._nearbyTopicsLoaded ? '附近 · 0 个节点' : '附近' + (this._nearbyTeamsLoaded ? ' · ' + teams.length + ' 支队伍' : '') + (places ? ' · ' + places + ' 处地点' : '') + (shops ? ' · ' + shops + ' 家商家' : ''), // v13 计数条;队伍没读到不写 0
+      listRows: rows, listLoaded: !!(this._nearbyTeamsLoaded && this._nearbyTopicsLoaded), // N-01:两路都读到之前不说「附近暂无节点」、不写假的 0
     });
     this._wantPins(items, teams, pois);
   },
