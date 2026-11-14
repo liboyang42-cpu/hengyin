@@ -179,6 +179,7 @@
 
 /* 多选的服务端回执条:整体通过绿、没通过红 —— 服务端不给逐项对错,这一条就是全部结论 */
 .qa__fb--ok { background: var(--pk-embed-fb-bg, var(--cy-color-status-success-soft)); color: var(--pk-embed-fb-ink, var(--cy-color-status-success)); }   /* 浅色纸面外观:深绿底带与低对比绿字改读外观墨色 */
+.qa__fb--ok .qa__fb-h { color: var(--pk-embed-fb-ink, var(--sub)); }   /* 浅色纸面:「答对了」读外观墨色,不再是低对比灰 */
 .qa__fb--no { padding:var(--cy-space-2) 0; background:transparent; color:var(--cy-color-status-danger); }
 
 /* P-10 打字题答错:下划线变红,反馈条用同一套红;下一次输入即清。只做颜色过渡,不抖动 */

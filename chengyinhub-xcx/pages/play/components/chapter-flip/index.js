@@ -66,6 +66,13 @@ function statAt(v, e) {
   return v;
 }
 
+function isLightHex(hex) {
+  const m = /^#([0-9a-f]{6})$/i.exec(String(hex || ''));
+  if (!m) return false;
+  const n = parseInt(m[1], 16);
+  return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 > 0.6;
+}
+
 Component({
   properties: {
     mode: { type: String, value: 'gate' },          // gate | finale
@@ -362,13 +369,15 @@ Component({
       if (!grid.length && dots) grid = digitPoints(text, w, h, cell);   // x-fix2 L-3
       const pts = grid.map((p) => ({ x: ox + p.x * S, y: oy + p.y * S, row: p.row }));
       const now = Date.now(), M = silver ? E.PAL.silver : E.PAL.gold, lk = dots ? this._colors() : null;
+      const onLight = !!silver && isLightHex(this._colors().bg);   // 浅色外观:银色标志落在浅底上发白,改用外观墨色
       while (this._tiles.length < pts.length) { const st = this._stars[Math.random() * this._stars.length | 0]; this._tiles.push({ x: st.x, y: st.y, vx: 0, vy: 0, sz: 1.4 }); }
       this._tiles.length = pts.length;
       this._tiles.forEach((t, i) => {
         const p = pts[i], shade = dots ? 1 - p.row * 0.25 + (Math.random() - 0.5) * 0.1 : (silver ? 1.04 - p.row * 0.34 : 1 - p.row * 0.22) + (Math.random() - 0.5) * (silver ? 0.16 : 0.12);
         t.loose = 0; t.tx = p.x; t.ty = p.y; t.tsz = (tile || 7.4) * S; t.silver = !!silver; t.dot = !!dots; t.ring = 0; t.seal = 0;
         if (dots) { t.c = lk.a; t.a = Math.min(1, shade); }
-        else { t.c = 'rgb(' + Math.min(255, M[0] * shade | 0) + ',' + Math.min(255, M[1] * shade | 0) + ',' + Math.min(255, M[2] * shade * (silver ? 1.02 : 0.9) | 0) + ')'; t.a = 1; }
+        else if (onLight) { t.c = this._colors().ink; t.a = 1; t.onLight = true; }
+        else { t.onLight = false; t.c = 'rgb(' + Math.min(255, M[0] * shade | 0) + ',' + Math.min(255, M[1] * shade | 0) + ',' + Math.min(255, M[2] * shade * (silver ? 1.02 : 0.9) | 0) + ')'; t.a = 1; }
         t.delay = dots ? Math.abs(p.x - this._cx) * 1.6 + Math.random() * 300 : Math.random() * 380 + Math.abs(p.x - this._cx) * 0.9; t.born = now;
       });
       this._squashT = dots ? 0 : now;
@@ -595,7 +604,7 @@ Component({
         const y = t.y + (t.loose ? 0 : (t.y - this._cy - 120 * this._S) * sq);
         const lit = !t.loose && Math.abs((t.x - 60 * this._S) + (t.y - 150 * this._S) * 0.6 - band) < 26 * this._S;
         ctx.globalAlpha = t.loose ? Math.max(0.35, Math.min(1, t.sz / 3)) : 1;
-        ctx.fillStyle = t.loose ? E.PAL.dust : (lit ? (t.silver ? E.PAL.white : E.PAL.goldLit) : t.c);
+        ctx.fillStyle = t.loose ? E.PAL.dust : (lit ? (t.onLight ? this._colors().a : t.silver ? E.PAL.white : E.PAL.goldLit) : t.c);
         ctx.fillRect(t.x - t.sz / 2, y - t.sz / 2, t.sz, t.sz);
         if (!t.loose && t.sz > 4) { ctx.globalAlpha = 0.22; ctx.fillStyle = E.PAL.white; ctx.fillRect(t.x - t.sz / 2, y - t.sz / 2, t.sz, 1); }
       });

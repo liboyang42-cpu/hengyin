@@ -31,6 +31,7 @@ function createUploadClient(deps) {
   var getClientVersion = deps.getClientVersion || function () { return ''; };
   var getUserID = deps.getUserID || function () { return ''; };
   var uploadPath = deps.uploadPath || '/api/common/uploadOSS';
+  var lateUploads = {}; // 客户端超时后服务端仍存下的文件:同一文件重试直接认这份结果,不再重复上传留孤儿
   var pendingMedia = {}; // Scope by real member and local file; retry checks the original asset, never reuploads it.
   var setTimer = deps.setTimer || setTimeout;
   var clearTimer = deps.clearTimer || clearTimeout;
@@ -61,8 +62,8 @@ function createUploadClient(deps) {
     filePaths = Array.isArray(filePaths) ? filePaths.slice() : [];
     var total = filePaths.length;
     var concurrency = Math.max(1, Math.min(3, Number(opts.concurrency) || 3));
-    var perFileTimeoutMs = Math.max(1000, Number(opts.perFileTimeoutMs) || 15000);
-    var totalDeadlineMs = Math.max(perFileTimeoutMs, Number(opts.totalDeadlineMs) || 60000);
+    var perFileTimeoutMs = Math.max(1000, Number(opts.perFileTimeoutMs) || 60000);
+    var totalDeadlineMs = Math.max(perFileTimeoutMs, Number(opts.totalDeadlineMs) || 90000);
     var mapResult = opts.mapResult || function (data) { return data.url; };
     var onDone = opts.onDone || function () {};
     // 调用方若已拿到每个文件的大小(如 wx.chooseMessageFile 的 tempFiles[i].size),就传进来,
@@ -132,11 +133,10 @@ function createUploadClient(deps) {
       var record = { task: null, watchdog: null };
       active[index] = record;
       record.watchdog = schedule(function () {
-        var task = record.task;
-        record.task = null;
+        // 超时不取消请求:服务端可能已经收下,迟到的成功回包记入 lateUploads,重试同一文件时直接复用。
+        record.timedOut = true;
         // retryable：网络/超时/HTTP 5xx，原文件可原样重传；其余失败由调用方让用户换文件。
         settle(index, { status: 'unknown', retryable: true, msg: '上传超时，请重试此文件' });
-        try { if (task && typeof task.abort === 'function') task.abort(); } catch (e) {}
       }, perFileTimeoutMs);
 
       function accept(data) {
@@ -166,6 +166,9 @@ function createUploadClient(deps) {
           results[index] = typeof mapped === 'string' ? secureUrl : Object.assign({}, mapped, { url: secureUrl });
           settle(index);
       }
+      var lateKey = member + '|' + filePath;
+      var late = lateUploads[lateKey];
+      if (late) { delete lateUploads[lateKey]; accept(late); return; }
       var pendingId = pendingMedia[member + '|' + filePath];
       if (pendingId) {
         var sender = deps.sendRequest || (typeof getApp === 'function' && getApp().sendRequest.bind(getApp()));
@@ -191,6 +194,14 @@ function createUploadClient(deps) {
         header: authHeader(),
         formData: Object.keys(formData).length ? formData : undefined,
         success: function (res) {
+          if (record.timedOut) {
+            // 已按超时交给调用方:只把确认成功的回包留给下一次重试
+            try {
+              var lateData = JSON.parse(res.data);
+              if (Number(res.statusCode) < 500 && lateData && lateData.code == 200 && !lateData.reviewState) lateUploads[lateKey] = lateData;
+            } catch (e) {}
+            return;
+          }
           if (!isCurrentOwner()) return;
           if (res.statusCode == 426) { settle(index, { status: 'failed', reason: 'upgradeRequired', msg: '当前版本需要更新，请先保存内容并重新打开小程序' }); return; }
           if (Number(res.statusCode) >= 500) {
@@ -257,7 +268,7 @@ function createUploadClient(deps) {
     var member = String(getUserID() || '');
     var path = opts.path || uploadPath;
     var onDone = opts.onDone || function () {};
-    var timeoutMs = Math.max(1000, Number(opts.timeoutMs) || 20000);
+    var timeoutMs = Math.max(1000, Number(opts.timeoutMs) || 60000);
     var maxFileSize = Number(opts.maxFileSize) > 0 ? Number(opts.maxFileSize) : MAX_UPLOAD_FILE_SIZE;
     var done = false;
     var task = null;

@@ -152,6 +152,13 @@ function methods() {
     _chapterPickStates() {
       return (this.data.chapterCards || []).map((c) => chapterTrail.chapterReadState(c, this.data.nodes, this._historyNodes));
     },
+    /** 回看打不开 / 没有可读内容时:只在「走完后回看」这一次里按走完离开 */
+    _afterFinishLeave() {
+      if (!this._reviewPending) return;
+      this._reviewPending = false;
+      this.setData({ chapterFull: false });
+      if (typeof this.goBackDetail === 'function') this.goBackDetail();
+    },
     /** f-play V3-07/08:真实局走完后,完成页「继续」回到故事流的只读回看(最后一章已完成的那章,停在末尾,往上滑读完整个故事;
      *  多章时「…」里有「切换章节」换章)。不是走完的局 / 自由探索 / 一章都没读完时返回 false,照旧离开。 */
     _reviewAfterFinish() {
@@ -168,7 +175,9 @@ function methods() {
         if (chapterTrail.hasReadableStory((frozen || cards[i]).blocks)) { idx = i; break; }
       }
       if (idx < 0) return false;
-      this.onPickChapter({ currentTarget: { dataset: { idx } } });
+      // 回看真的打开才算数;选章被拦(未解锁 / 历史没读到)就按走完离开,不留一张空故事页
+      this._reviewPending = true;
+      if (this.onPickChapter({ currentTarget: { dataset: { idx } } }) === false) { this._reviewPending = false; return false; }
       clearTimeout(this._reviewEndT);
       // 停在末尾:滚到最后一段(scroll-into-view 认段落 id,与 wxml 的 chapter-game- / chapter-block- 同一口径)
       this._reviewEndT = setTimeout(() => {

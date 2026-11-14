@@ -1856,6 +1856,8 @@ button::after {
 .story-head__t { font-size: var(--cy-type-page-title); font-weight: 700; color: var(--cy-color-text-primary); }
 .story-head__s { font-size: var(--cy-type-caption); color: var(--cy-color-text-secondary); }
 .story-cards { padding: 0 var(--cy-space-6) var(--cy-space-6); display: flex; flex-direction: column; gap: 20rpx; }
+.story-cards.is-docked { padding-bottom: calc(var(--cy-space-6) + 132rpx + env(safe-area-inset-bottom)); }   /* 随时开玩停靠在右下角:列表末尾留出它的位置 */
+.story-cards.is-docked .story-cc__hd { right: 400rpx; }   /* 停靠按钮在右下角:卡上的字让开它,首屏不被盖住 */
 .story-cc { position: relative; height: 200rpx; border-radius: var(--cy-radius-xl); overflow: hidden; clip-path: inset(0 round var(--cy-radius-xl));
   background: var(--cy-color-play-surface-solid); transition: height .45s cubic-bezier(.16,1,.3,1), opacity .56s ease, transform .56s cubic-bezier(.2,.82,.2,1); }
 .story-cc.is-open { height: 520rpx; }
