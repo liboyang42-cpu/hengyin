@@ -790,7 +790,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                     )
                 )
             </if>
-            <if test="name != null and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="name != null and name != ''">
+                and (name like concat('%', #{name}, '%')
+                    or address_name like concat('%', #{name}, '%')
+                    or city_code like concat('%', #{name}, '%'))
+            </if>
             <if test="categoryIds != null"> and FIND_IN_SET(#{categoryIds}, category_ids) &gt; 0</if>
             <if test="cityKeyword != null and cityKeyword != ''"> and address_name like concat('%', #{cityKeyword}, '%')</if>
             <if test="productType != null"> and product_type = #{productType}</if>

@@ -127,3 +127,7 @@
 
 /* 封面署名:详情页底部一行,与节点图署名同一字号颜色 */
 .td-cover-credit { display: block; padding: var(--cy-space-4) var(--cy-page-x) 0; }
+
+/* 与固定导航分开裁切滚动视口，两种主题都不让正文穿过状态栏。 */
+.td-viewport { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1; overflow: hidden; }
+.td-viewport .xb-scroll { height: 100%; }

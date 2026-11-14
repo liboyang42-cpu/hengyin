@@ -186,7 +186,8 @@ Page({
           summary: buildSummary(info, chapters, stops),
           medalName: info.finishMedalName || '',
           medalImg: info.finishMedalImg || '',
-          deliveryRows: adoption.deliveryRows(info.contentDelivery)
+          deliveryRows: adoption.deliveryRows(info.contentDelivery, info.viewerIsPublisher === true
+            || that._scope === 'MERCHANT' && info.viewerIsMerchant === true)
         });
         that._delivery = info.contentDelivery || null;
         that._loadCredits(seq, nodeImgs);

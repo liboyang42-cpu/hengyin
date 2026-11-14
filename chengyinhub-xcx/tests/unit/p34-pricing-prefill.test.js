@@ -54,7 +54,7 @@ test('开售后(priced)说终价已确认,不误报阵容未锁定;定价前照�
   const fs = require('fs');
   const path = require('path');
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/topic/pricing/index.wxml'), 'utf8');
-  assert.match(wxml, /<view class="pg-note" wx:if="\{\{priced\}\}">\{\{saleStatusText \|\| '终价已确认'\}\}<\/view>\s*<view class="pg-note" wx:elif="\{\{phaseBlocked\}\}">合作阵容锁定后可定价<\/view>/);
+  assert.match(wxml, /<view class="pg-note" wx:if="\{\{priced\}\}">\{\{saleStatusText \|\| '终价已确认'\}\}<\/view>\s*<view class="pg-note" wx:elif="\{\{phaseBlocked\}\}">\{\{isFreeExplore \? confirmBlockReason : '合作阵容锁定后可定价'\}\}<\/view>/);
 
   const sold = load();
   sold.data.subType = 'guided';
@@ -71,4 +71,36 @@ test('开售后(priced)说终价已确认,不误报阵容未锁定;定价前照�
   assert.equal(early.data.priced, false);
   early.onConfirmDisabledTap();
   assert.equal(early.data.submitError, '主题还没进入定价阶段');
+});
+
+test('自由探索按门票价切换免费标记，39 元显示 3% 费用与到手，不要求带队人数', () => {
+  const page = load();
+  preview(page, { productType: 2, subType: 'free', currentPrice: 0, platformRate: 0.03 });
+  assert.equal(page.data.isFreeExplore, true);
+  assert.equal(page.data.subType, 'free');
+  assert.equal(page.data.isFree, true);
+  page.chooseType({ currentTarget: { dataset: { type: 'self' } } });
+  assert.equal(page.data.subType, 'free');
+  page.onSliderChange({ detail: { value: 39 } });
+  assert.equal(page.data.isFree, false);
+  assert.equal(page.data.feeText, '¥1.17（3%）');
+  assert.equal(page.data.takeHomeText, '¥37.83');
+  assert.equal(page.data.canConfirmPrice, true);
+  page.confirmPrice();
+  const confirm = requests.find(r => r.url === '/api/topic/pricing/confirm');
+  assert.deepEqual(JSON.parse(confirm.data), { topicId: 990014, guidedPrice: 39 });
+  page.data.saving = false;
+  page.onSliderChange({ detail: { value: 0 } });
+  assert.equal(page.data.isFree, true);
+});
+
+test('自由探索草稿保留服务端定价阶段闸，不借新模型开放确认', () => {
+  const page = load();
+  preview(page, { productType: 2, subType: 'free', currentPrice: 39, platformRate: 0.03,
+    canConfirm: false, confirmBlockReason: '主题还没进入定价阶段' });
+  assert.equal(page.data.isFree, false);
+  assert.equal(page.data.canConfirmPrice, false);
+  assert.equal(page.data.confirmBlockReason, '主题还没进入定价阶段');
+  page.confirmPrice();
+  assert.equal(requests.filter(r => r.url === '/api/topic/pricing/confirm').length, 0);
 });
