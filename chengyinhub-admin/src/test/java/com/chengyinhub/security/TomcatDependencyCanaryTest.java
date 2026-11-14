@@ -35,7 +35,7 @@ class TomcatDependencyCanaryTest {
 
     @Test
     void 嵌入式Tomcat必须解析为安全点版本() {
-        assertEquals("11.0.26.0", ServerInfo.getServerNumber());
+        assertEquals("11.0.27.0", ServerInfo.getServerNumber());
     }
 
     @Test
