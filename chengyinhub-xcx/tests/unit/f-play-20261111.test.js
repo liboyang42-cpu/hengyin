@@ -160,7 +160,7 @@ test('V3-07 走完后完成页「继续」回到故事流只读回看(最后一�
     const picked = [];
     const page = Object.assign({}, api, { _historyNodes: [], data: Object.assign({
       allDone: true, isPreview: false, isMock: false, mode: 1, chapterFull: false, chapterParas: [],
-      chapterCards: [{ id: 1, blocks: [{ type: 'node', nodeId: '11' }] }, { id: 2, blocks: [{ type: 'node', nodeId: '22' }] }],
+      chapterCards: [{ id: 1, blocks: [{ type: 'node', nodeId: '11' }, { type: 'text', content: '第一章' }] }, { id: 2, blocks: [{ type: 'node', nodeId: '22' }, { type: 'text', content: '第二章' }] }],
       nodes: [{ nodeId: 11, chapterId: 1, done: true }, { nodeId: 22, chapterId: 2, done: true }],
     }, data), onPickChapter(e) { picked.push(e.currentTarget.dataset.idx); }, setData() {} });
     return { page, picked };
@@ -169,6 +169,10 @@ test('V3-07 走完后完成页「继续」回到故事流只读回看(最后一�
   assert.equal(ok.page._reviewAfterFinish(), true);
   assert.deepEqual(ok.picked, [1], '最后一章已完成的那章');
   clearTimeout(ok.page._reviewEndT);
+  // 城市路线只有站点没有正文:回看会落到空故事页,按走完离开
+  const bare = mk({ chapterCards: [{ id: 1, blocks: [{ type: 'node', nodeId: '11' }] }, { id: 2, blocks: [{ type: 'node', nodeId: '22' }] }] });
+  assert.equal(bare.page._reviewAfterFinish(), false);
+  assert.deepEqual(bare.picked, []);
   for (const bad of [{ allDone: false }, { isPreview: true }, { isMock: true }, { mode: 2 },
     { nodes: [{ nodeId: 11, chapterId: 1, done: false }, { nodeId: 22, chapterId: 2, done: false }] }]) {
     const x = mk(bad);

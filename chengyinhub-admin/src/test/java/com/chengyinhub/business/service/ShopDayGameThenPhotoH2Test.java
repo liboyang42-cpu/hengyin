@@ -111,6 +111,15 @@ class ShopDayGameThenPhotoH2Test {
         service = target;
     }
 
+    /** 2026-11-13 走查:自助玩法 activityId 恒为 0,玩过别的路线不能让本路线跳过开局 300 米闸。 */
+    @Test
+    void runStartedOnlyCountsProgressOfTheSameTopic() {
+        jdbc.update("insert into player_node_progress(member_id,activity_id,topic_id,node_id,status,checkin_time) values(?,?,?,?,0,now())",
+                MEMBER, 0L, TOPIC, NODE);
+        assertTrue(service.runStarted(MEMBER, 0L, TOPIC), "同一主题已有进度即已开局");
+        assertFalse(service.runStarted(MEMBER, 0L, TOPIC + 1), "别的主题的进度不能算本路线已开局");
+    }
+
     /**
      * ★P0 本体：答完游戏之后必须还能交到店照片。
      *

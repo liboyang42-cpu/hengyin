@@ -19,7 +19,9 @@ function passDaysLeft(until, now) {
   if (!date) return null
   const today = new Date(typeof now === 'number' ? now : Date.now())
   if (date.getTime() < today.getTime()) return null
-  return Math.round((dayStart(date) - dayStart(today)) / DAY_MS)
+  // 到期落在零点(下一天 00:00)= 能玩的最后一天是前一天,与「可玩至 M 月 D 日」同一个日期,否则卡面比购买页多一天
+  const last = date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0 ? new Date(date.getTime() - 1) : date
+  return Math.round((dayStart(last) - dayStart(today)) / DAY_MS)
 }
 
 function passExpiryText(until, now) {

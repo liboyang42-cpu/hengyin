@@ -238,7 +238,7 @@
           </view>
           <cy-playkit wx:else kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
           <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
-                aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>
+                aria-role="button" aria-label="{{playKit.kit.type === 'qa' || playKit.kit.type === 'hangman' ? '继续' : '继续故事'}}" hover-class="cy-pressed" hover-stay-time="80">{{playKit.kit.type === 'qa' || playKit.kit.type === 'hangman' ? '继续' : '继续故事'}}</view>
         </view>
         <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit">
           <view class="chfull__kit-anchor" id="{{'chapter-kit-' + item.nodeId}}" style="top:calc(0px - max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))))"></view>

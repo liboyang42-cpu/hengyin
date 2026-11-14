@@ -184,9 +184,10 @@ Component({
       if (this._ctx && info.number) this._assemble({ text: info.number, top: 150 * this._S, dots: true });
       this.setData({ start: true });
       if (info.number) ambient.start(this, { cx: this._cx, cy: this._cy });   /* 细节打磨 S2:章节号背后的光晕呼吸与星尘 */
-      if (this._ctx && info.number) this._at(() => this._placeSeal(), fromEnd ? 800 : 600);   // 文字块一落位就量它,再放章节印
       this._at(() => this.setData({ startIn: true }), 40);
-      this._decode(info, fromEnd ? 500 : 300);
+      const decodeEnd = this._decode(info, fromEnd ? 500 : 300);
+      // 文字逐字解码完才是真实高度(说明折行、数据行都是边解码边长高),等它落定再量,章节印才不压住「距离」等数据行
+      if (this._ctx && info.number) this._at(() => this._placeSeal(), Math.max(fromEnd ? 800 : 600, decodeEnd + 60));
       this._at(() => this.setData({ cta: true }), fromEnd ? 1100 : 900);
       // D-46:开场屏不再自己进正文,等玩家点「读下去」(onTap → _continue)。
     },
@@ -309,7 +310,7 @@ Component({
 
     // ---------- 文字逐字解码(三棱锥转动时,标题、说明、数据从左到右一格格换上) ----------
     _decode(info, delay) {
-      if (!info) return;
+      if (!info) return 0;
       const fields = [['k', info.kicker, 22], ['t', info.title, 38], ['d', info.desc, 14]];
       const stats = (info.stats || []).filter((s) => s && s.v !== '' && s.v != null);
       const plan = { k: [], t: [], d: [], stats: stats.map(() => ({ v: [], k: [] })) };
@@ -319,6 +320,7 @@ Component({
         chars(s.v).forEach((c, i) => jobs.push({ set: (v) => { plan.stats[j].v[i] = v; }, c, at: delay + 280 + j * 90 + i * 40 }));
         chars(s.k).forEach((c, i) => jobs.push({ set: (v) => { plan.stats[j].k[i] = v; }, c, at: delay + 320 + j * 90 + i * 30 }));
       });
+      const endAt = jobs.reduce((m, j) => Math.max(m, j.at + 150), 0);
       clearInterval(this._decodeTimer);
       const start = Date.now(), reduced = this.data.reducedMotion;
       const step = () => {
@@ -334,6 +336,7 @@ Component({
       };
       step();
       if (!reduced) this._decodeTimer = setInterval(step, 45);
+      return reduced ? 0 : endAt;
     },
 
     // ---------- 方块(参考 2:星点飞拢锁进方格) ----------

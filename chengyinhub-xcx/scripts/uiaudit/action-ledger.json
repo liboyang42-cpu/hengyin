@@ -933023,7 +933023,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:249"
+        "staticSource": "pages/play/components/chapter-flip/index.js:250"
       }
     },
     {
@@ -933200,7 +933200,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:249"
+        "staticSource": "pages/play/components/chapter-flip/index.js:250"
       }
     },
     {
@@ -933288,7 +933288,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:249"
+        "staticSource": "pages/play/components/chapter-flip/index.js:250"
       }
     },
     {
@@ -933377,7 +933377,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:308"
+        "staticSource": "pages/play/components/chapter-flip/index.js:309"
       }
     },
     {
@@ -933466,7 +933466,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/chapter-flip/index.js:307"
+        "staticSource": "pages/play/components/chapter-flip/index.js:308"
       }
     },
     {
@@ -959264,7 +959264,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/play-verdict/index.js:66"
+        "staticSource": "pages/play/components/play-verdict/index.js:69"
       }
     },
     {
@@ -970830,7 +970830,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-hangman/index.wxml:37:bindtap:onContinue:6",
+      "id": "pages/play/components/playkit-hangman/index.wxml:38:bindtap:onContinue:6",
       "route": "component:pages/play/components/playkit-hangman/index",
       "hostRoutes": [
         "pages/play/index",
@@ -970909,9 +970909,9 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onContinue",
-        "line": 37,
+        "line": 38,
         "selectorHint": ".g-btn",
-        "visibleCondition": "{{solved}}",
+        "visibleCondition": "{{solved && !inline}}",
         "disabledCondition": null,
         "ariaLabel": "继续",
         "ariaLabelExpression": null,
@@ -970954,7 +970954,7 @@
       }
     },
     {
-      "id": "pages/play/components/playkit-hangman/index.wxml:39:bindtap:onSubmit:7",
+      "id": "pages/play/components/playkit-hangman/index.wxml:40:bindtap:onSubmit:7",
       "route": "component:pages/play/components/playkit-hangman/index",
       "hostRoutes": [
         "pages/play/index",
@@ -971033,7 +971033,7 @@
         "tag": "view",
         "event": "bindtap",
         "handler": "onSubmit",
-        "line": 39,
+        "line": 40,
         "selectorHint": ".g-btn",
         "visibleCondition": "{{!solved}}",
         "disabledCondition": null,
@@ -974979,7 +974979,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:214"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:216"
       }
     },
     {
@@ -975117,7 +975117,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:127"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:129"
       }
     },
     {
@@ -975255,7 +975255,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:199"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:201"
       }
     },
     {
@@ -975378,7 +975378,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:196"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:198"
       }
     },
     {
@@ -975520,7 +975520,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:159"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:161"
       }
     },
     {
@@ -975643,7 +975643,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/components/playkit-photocheck/index.js:209"
+        "staticSource": "pages/play/components/playkit-photocheck/index.js:211"
       }
     },
     {
@@ -978959,7 +978959,7 @@
         "handler": "onCta",
         "line": 95,
         "selectorHint": ".g-btn",
-        "visibleCondition": "{{!(inline && (passed || finished)) && !(mode === 'pick' && !multi && judge !== false && !passed)}}",
+        "visibleCondition": "{{!(inline && (passed || finished || ctaLabel === '继续')) && !(mode === 'pick' && !multi && judge !== false && !passed)}}",
         "disabledCondition": null,
         "ariaLabel": null,
         "ariaLabelExpression": "{{ctaLabel}}",
@@ -1007161,7 +1007161,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:66"
+        "staticSource": "pages/play/utils/play-stage-pops.js:72"
       }
     },
     {
@@ -1007661,7 +1007661,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:66"
+        "staticSource": "pages/play/utils/play-stage-pops.js:72"
       }
     },
     {
@@ -1042707,7 +1042707,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:66"
+        "staticSource": "pages/play/utils/play-stage-pops.js:72"
       }
     },
     {
@@ -1044707,7 +1044707,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:66"
+        "staticSource": "pages/play/utils/play-stage-pops.js:72"
       }
     },
     {
@@ -1045281,8 +1045281,8 @@
         "selectorHint": ".chfull__continue",
         "visibleCondition": "{{playKit.readyForBase && advancedPlay.show}}",
         "disabledCondition": null,
-        "ariaLabel": "继续故事",
-        "ariaLabelExpression": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": "{{playKit.kit.type === 'qa' || playKit.kit.type === 'hangman' ? '继续' : '继续故事'}}",
         "ariaRole": "button",
         "ariaRoleExpression": null,
         "ariaDisabled": null,
@@ -1068533,7 +1068533,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:92"
+        "staticSource": "pages/play/utils/play-stage-pops.js:98"
       }
     },
     {
@@ -1068600,7 +1068600,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:92"
+        "staticSource": "pages/play/utils/play-stage-pops.js:98"
       }
     },
     {
@@ -1069100,7 +1069100,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:94"
+        "staticSource": "pages/play/utils/play-stage-pops.js:100"
       }
     },
     {
@@ -1070202,7 +1070202,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:91"
+        "staticSource": "pages/play/utils/play-stage-pops.js:97"
       }
     },
     {
@@ -1070269,7 +1070269,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:91"
+        "staticSource": "pages/play/utils/play-stage-pops.js:97"
       }
     },
     {
@@ -1070888,7 +1070888,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:104"
+        "staticSource": "pages/play/utils/play-stage-pops.js:110"
       }
     },
     {
@@ -1071388,7 +1071388,7 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:115"
+        "staticSource": "pages/play/utils/play-stage-pops.js:121"
       }
     },
     {
@@ -1071455,7 +1071455,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/play/utils/play-stage-pops.js:104"
+        "staticSource": "pages/play/utils/play-stage-pops.js:110"
       }
     },
     {

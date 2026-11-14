@@ -13,7 +13,7 @@
     </view>
 
     <view class="pc__verdict pk-in pc__verdict--{{verdictKind}}" wx:if="{{verdict}}">{{verdict}}</view>
-    <view class="pc__verdict pk-in pc__verdict--no" wx:if="{{uploadFail && !verdict}}" aria-role="status">{{uploadFail}}</view>
+    <view class="pc__verdict pk-in pc__verdict--no" wx:if="{{uploadFail && !verdict && !passed}}" aria-role="status">{{uploadFail}}</view>
     <view class="pc__reason pk-in pk-in--2" wx:if="{{reason}}">{{reason}}</view>
     <view class="pc__tries" wx:if="{{verifiedNote}}">{{verifiedNote}}</view>
     <view class="pc__tries" wx:if="{{rewardNote}}">{{rewardNote}}</view>

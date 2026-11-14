@@ -39,6 +39,12 @@ function playerTitle(t) {
   const s = String(t == null ? '' : t).replace(/^\s*(?:第\s*\d+\s*关|模板|问答)\s*[:：·\-－—\s]\s*/, '').trim();
   return s;
 }
+/** 站名开头的序号(「1 · 老门」「2. 老门」)去掉,只留站名;去完为空则保留原样 */
+function stationLabel(t) {
+  const raw = String(t == null ? '' : t).trim();
+  const s = raw.replace(/^\d+\s*[·.、\-－—:：]\s*/, '').trim();
+  return s || raw;
+}
 /** 地点卡上的数字:距离(有定位或上一站才算)、步行分钟(按 80 m/min,只在有距离时)、开放时段(节点营业时间原样) */
 const WALK_MAX_MIN = 60; // 超过一小时步行不报分钟,只留距离(km,一位小数)
 function sheetFacts(node, distText) {
@@ -151,7 +157,16 @@ function methods() {
     _reviewAfterFinish() {
       const d = this.data;
       if (!d.allDone || d.isPreview || d.isMock || Number(d.mode) === 2 || typeof this.onPickChapter !== 'function') return false;
-      const idx = this._chapterPickStates().lastIndexOf('completed');
+      // 只回看真有故事可读的已完成章:城市路线往往只有站点没有正文,回过去是一张空故事页,这时直接按走完离开
+      const states = this._chapterPickStates();
+      const cards = d.chapterCards || [];
+      const history = typeof this._currentCompletedHistory === 'function' ? this._currentCompletedHistory() : null;
+      let idx = -1;
+      for (let i = states.length - 1; i >= 0; i--) {
+        if (states[i] !== 'completed') continue;
+        const frozen = history && history.chapters.find((c) => c.id === String(cards[i].id));
+        if (chapterTrail.hasReadableStory((frozen || cards[i]).blocks)) { idx = i; break; }
+      }
       if (idx < 0) return false;
       this.onPickChapter({ currentTarget: { dataset: { idx } } });
       clearTimeout(this._reviewEndT);
@@ -168,4 +183,4 @@ function methods() {
   return api;
 }
 
-module.exports = { KIT_LABELS, kitTypeLabel, playerTitle, sheetFacts, nextIndex, data, methods };
+module.exports = { KIT_LABELS, kitTypeLabel, playerTitle, stationLabel, sheetFacts, nextIndex, data, methods };

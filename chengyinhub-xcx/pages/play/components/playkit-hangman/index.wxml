@@ -34,7 +34,8 @@
     </view>
   </view>
 
-  <view wx:if="{{solved}}" class="g-btn" bindtap="onContinue"
+  <!-- 故事流内嵌且已解开:下面就是「继续故事」,这里不再叠一枚同义的「继续」 -->
+  <view wx:if="{{solved && !inline}}" class="g-btn" bindtap="onContinue"
         aria-role="button" aria-label="继续" hover-class="g-btn--press" hover-stay-time="80">继续</view>
   <view wx:elif="{{!solved}}" class="g-btn {{canSubmit ? '' : 'g-btn--disabled'}}" bindtap="onSubmit"
         aria-role="button" aria-label="提交" aria-disabled="{{!canSubmit}}" hover-class="g-btn--press" hover-stay-time="80">提交</view>

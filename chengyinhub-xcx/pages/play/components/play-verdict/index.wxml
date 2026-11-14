@@ -22,7 +22,7 @@
     </block>
     <!-- 2026-10-22 玩法模板「结果反馈」:成功 / 失败反馈的文字与配图就落在这一屏(照试玩台 liquidWin 的 txt)。
          没配反馈时和原来一样:赢只有对勾,输只有两个字。 -->
-    <view class="pv__text" wx:if="{{text}}">{{text}}</view>
+    <view class="pv__text" wx:if="{{text}}">{{shownText || text}}</view>
     <view class="pv__imgs" wx:if="{{images.length}}">
       <image class="pv__img" wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="aspectFill" aria-label="结果配图 {{index + 1}}" />
     </view>

@@ -31,7 +31,7 @@ test('P-24:普通拍照审核上传失败,屏上写「上传失败，请重拍�
   def.observers.photoFailSeq.call(ctx, 1);   // 同一个序号不重复报
   assert.equal(ctx.data.uploadFail, '');
   const wxml = read('pages/play/components/playkit-photocheck/index.wxml');
-  assert.match(wxml, /wx:if="\{\{uploadFail && !verdict\}\}"/);
+  assert.match(wxml, /wx:if="\{\{uploadFail && !verdict && !passed\}\}"/);
   assert.match(read('pages/play/components/playkit/index.wxml'), /photo-fail-seq="\{\{kit\.photoFailSeq\}\}"\n  bind:shoot="onShoot" bind:close="onClose" \/>/);
 });
 

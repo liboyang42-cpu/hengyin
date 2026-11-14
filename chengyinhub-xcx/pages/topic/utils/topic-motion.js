@@ -295,10 +295,12 @@ function passWindow(opts) {
     if (end) { const endOfDay = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59); if (endOfDay < ninety) { until = endOfDay; endsWithTopic = true; } }
     if (!until) until = ninety;
   }
-  const days = Math.max(0, Math.ceil((until.getTime() - now.getTime()) / 86400000));
   // 第十二轮 k7 N6:到期落在零点 = 能玩的最后一天是前一天;与订单页「可玩至」同一个日期
   const last = until.getHours() === 0 && until.getMinutes() === 0 && until.getSeconds() === 0 ? new Date(until.getTime() - 1) : until;
   const m = last.getMonth() + 1, dd = last.getDate();
+  // 剩余天数按「今天 → 最后能玩的那一天」的自然日算,与票夹卡面(utils/ticket-expiry passDaysLeft)同一口径
+  const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.max(0, Math.round((dayStart(last) - dayStart(now)) / 86400000));
   return {
     untilText: pad2(m) + '/' + pad2(dd),
     daysText: String(days),

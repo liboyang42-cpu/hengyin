@@ -1,7 +1,7 @@
 // 城瘾 · 游玩页(深色地图沉浸版)
 // 视觉真值:设计原型工具「城瘾游玩页.dc.html」;对接说明见 docs/游玩页-深色地图沉浸版-对接说明.md
 // 数据:GET /api/play/nodes(现网) — 缺坐标/章节/模板呈现字段时做降级;扫码 /checkin、答题 /answer、到达 /arrive。
-const cyModal = require('../../utils/modal.js'); const { keepNumerals } = require('./utils/keep-numerals.js');
+const { stationLabel, playerTitle } = require('./utils/play-stage-pops.js'); const cyModal = require('../../utils/modal.js'); const { keepNumerals } = require('./utils/keep-numerals.js');
 const cyLoading = require('../../utils/loading.js');
 const cyToast = require('../../utils/toast.js');
 const motion = require('../../utils/motion.js');
@@ -180,8 +180,8 @@ function introLine(desc) {
   // 40 字一刀切在「｜」上,看着像没删干净的光标(2026-10-27 南京路开场页实测)。
   const first = String(desc || '').split(/\n/).map((x) => x.trim()).find(Boolean) || '';
   const text = first.replace(/\s+/g, ' ');
-  const m = text.match(/^[^。！？!?]{1,40}[。！？!?]?/);
-  return m ? m[0].replace(/[\s｜|·、，,：:；;—-]+$/, '') : '';
+  const m = text.match(/^[^。！？!?]+[。！？!?]?/); const tail = /[\s｜|·、，,：:；;—-]+$/; const cut = m ? m[0].slice(0, 40) : ''; const clean = cut.replace(tail, '');
+  return !m ? '' : m[0].length <= 40 || clean !== cut ? clean : cut + '…'; // 超 40 字且不是落在分隔符上 = 半句被截,补省略号
 }
 
 function kacchaLines(hits) {
@@ -7617,7 +7617,7 @@ Page({
     const placeNode = this.data.advancedPlay && this.data.advancedPlay.node;
     const placeName = [this.data.topicName, placeNode && placeNode.name].filter(Boolean).join(' · ');
     view = Object.assign({}, view, { plainOutcome: !((this.data.themeBag || {}).quests || []).length, clueTransform: ((placeNode && placeNode.advancedConfig) || {}).clueTransform }); // 没有通用局:结果反馈没过在本站重来;UG-10 谜面变换模式只在节点公开投影里
-    const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName }), new Date());
+    const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName }), new Date()); if (picked && picked.type === 'hangman' && !picked.title && placeNode) picked.title = stationLabel(playerTitle(placeNode.gameTitle || placeNode.name)); // 逐字猜词服务端不一定带题面:缺时用本站名摆在格子上方
     const kit = dailySignRevealState(previous, picked);
     if (kit && kit.type === 'album' && !kit.done && kit.sessionId === previous.sessionId && kit.version === previous.version) kit.uploaded = !!previous.uploaded;
     if (!kit) { this.setData({ playKit: { show: false, kit: null } }); return; }
@@ -8107,9 +8107,9 @@ Page({
       const consentScope = String(this._playMember()) + '|' + this._sessionKey() + '|' + (runId == null ? '' : runId);
       let storedScope = '';
       try { storedScope = runId == null ? '' : (wx.getStorageSync(PHOTO_CONSENT_SCOPE_KEY) || ''); } catch (e) { storedScope = ''; }
-      const consent = this._photoConsentScope === consentScope || storedScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', consentCurrent);
+      const consent = this._photoConsentScope === consentScope || storedScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', () => !operation.isAborted() && this._kitPhotoIntent === intent);   // 同意弹窗期间页面状态可能刷新:只认「这次拍照仍在途」,题目是否变了在同意之后再判
       consent.then(() => {
-        if (!consentCurrent()) { settle(); operation.finish(); return; }
+        if (!consentCurrent()) { const quiet = operation.isAborted(); settle(); operation.finish(); if (!quiet) cyToast('题目已变化，请重新拍一张'); return; }
         this._photoConsentScope = consentScope;
         if (runId != null) { try { wx.setStorageSync(PHOTO_CONSENT_SCOPE_KEY, consentScope); } catch (e) { /* 存不下只是下次重进会再问一次 */ } }
         upload();
@@ -8752,7 +8752,7 @@ Page({
       tag[seg.node.nodeId] = '最快一段 · ' + (mm ? mm + '分' : '') + ss + '秒';
     }
     // ③ 首达:最后补,同样只在该点还空着时给 —— 徽章/最快段都比"第一个到"更具体
-    if (!tag[ordered[0].nodeId]) tag[ordered[0].nodeId] = '首达 · ' + (ordered[0].name || '第一站');
+    if (!tag[ordered[0].nodeId]) tag[ordered[0].nodeId] = '首达 · ' + (stationLabel(ordered[0].name) || '第一站');
     return tag;
   },
 
@@ -9518,7 +9518,7 @@ function finishDateLabel(d) { return (d.getMonth() + 1) + '月' + d.getDate() + 
 function achievementRows(tags, ordered) {
   const glyph = { 徽章: '徽', 到店券: '券', 最快一段: '速', 首达: '首' };
   return ordered.filter((n) => tags[n.nodeId]).map((n) => {
-    const [title, value] = String(tags[n.nodeId]).split(' · ');
+    const tag = String(tags[n.nodeId]); const cut = tag.indexOf(' · '); const title = cut < 0 ? tag : tag.slice(0, cut); const value = cut < 0 ? '' : tag.slice(cut + 3); // 只在第一个「 · 」处拆:站名自带「 · 」(「1 · 老门」)不能只留前半段
     const first = title === '首达';
     return { key: String(n.nodeId), title, value: first ? '' : (value || ''), sub: first ? (value || '') : (n.name || ''), glyph: glyph[title] || title.slice(0, 1), kind: first ? 'ink' : 'metal' };
   });

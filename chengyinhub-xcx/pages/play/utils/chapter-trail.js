@@ -59,4 +59,7 @@ function chapterReadState(card, nodes, history) {
     && (!n.routeNodeState || n.routeNodeState === 'PLAYABLE')) ? 'available' : 'locked';
 }
 
-module.exports = { hasTrailingContent, trailState, chapterReadState };
+/** 这一章有没有能读的故事块(没有就是空故事页,不该当回看去处) */
+function hasReadableStory(blocks) { return Array.isArray(blocks) && blocks.some(readable); }
+
+module.exports = { hasReadableStory, hasTrailingContent, trailState, chapterReadState };
