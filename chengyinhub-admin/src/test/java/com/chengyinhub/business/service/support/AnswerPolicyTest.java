@@ -33,7 +33,8 @@ class AnswerPolicyTest {
         // 全角空格(U+3000)仍落成半角空格,且不参与去空白 —— 这是原实现的既有行为,
         // 不因为在别处看着像 bug 就悄悄放宽。
         assertEquals("A B", AnswerPolicy.normalize("A　B"));
-        assertFalse(AnswerPolicy.legacy().matches("AB", "A　B"));
+        // 2026-11-14 起共享归一器(AnswerNormalizer)在旧口径之外多接受一层:「A　B」现在能命中「AB」(只放宽)。
+        assertTrue(AnswerPolicy.legacy().matches("AB", "A　B"));
     }
 
     @Test

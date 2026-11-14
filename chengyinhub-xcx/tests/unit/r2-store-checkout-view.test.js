@@ -35,7 +35,7 @@ test('可退时只按服务端百分比写', () => {
   assert.equal(half.trust[0].label, '现在可退 50%');
 });
 
-test('报价加载中/网络失败:用主题详情价,不写退款行', () => {
+test('报价加载中:用主题详情价,不写退款行', () => {
   const v = checkoutView({ info, quoteState: 'loading' });
   assert.equal(v.loading, true);
   assert.equal(v.totalText, '¥39');
@@ -78,4 +78,15 @@ test('结账层组件:无积分开关、无席位步进器、通票点进原详�
   const page = fs.readFileSync(path.join(root, 'index/index.js'), 'utf8');
   assert.match(page, /\/subpackageMember\/market\/pass\/index\?id=/);
   assert.match(page, /url: '\/api\/registration\/quote'/);
+});
+
+test('E-B9 报价失败:不退回标价,支付置灰,按钮改「重新获取价格」', () => {
+  const v = checkoutView({ info, quoteState: 'failed' });
+  assert.equal(v.failed, true);
+  assert.equal(v.totalText, '—');
+  assert.equal(v.single.price, '—');
+  assert.equal(v.bill.length, 0);
+  assert.equal(v.payLabel, '重新获取价格');
+  assert.notEqual(v.totalText, '¥39');
+  assert.equal(checkoutView({ info, quote, quoteState: 'ready' }).failed, false);
 });

@@ -744,9 +744,9 @@ public final class AdvancedActionJudgement {
                             .of(config.path(com.chengyinhub.business.service.support.AnswerPolicy.FIELD));
             correct = policy.isEmpty()
                     ? com.chengyinhub.business.service.support.AnswerPolicy
-                            .matchesLegacyAdvancedType(cfg.path("answerText").asText(""), input)
+                            .matchesAdvancedType(cfg.path("answerText").asText(""), input)
                     : policy.matchesAny(com.chengyinhub.business.service.support.AnswerPolicy
-                            .legacyAnswerTextCandidates(cfg.path("answerText").asText("")), input);
+                            .answerTextCandidates(cfg.path("answerText").asText("")), input);
             node.put("lastInput", input);
         } else if ("PICK".equals(mode)) {
             boolean judge = cfg.path("judge").asBoolean(true);
@@ -1153,6 +1153,13 @@ public final class AdvancedActionJudgement {
         String target = cfg.path("target").asText("");
         boolean same = cfg.path("caseSensitive").asBoolean(false)
                 ? typed.equals(target) : typed.equalsIgnoreCase(target);
+        // E-A5:目标与输入两边 trim + 共享归一器,只放宽(目标带尾空格、全角、NBSP 不再永远判错)。
+        // 区分大小写时只放宽空白/全角,不折叠大小写。
+        if (!same) {
+            same = cfg.path("caseSensitive").asBoolean(false)
+                    ? com.chengyinhub.business.service.support.AnswerNormalizer.equivalentKeepCase(target, typed)
+                    : com.chengyinhub.business.service.support.AnswerNormalizer.equivalent(target, typed);
+        }
         int attempts = node.path("attempts").asInt(0) + 1;
         node.put("attempts", attempts);
         node.remove("startedAtMs");     // 重来要重新开表,老表不留给下一次
