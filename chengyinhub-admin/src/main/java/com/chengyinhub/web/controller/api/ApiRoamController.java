@@ -26,6 +26,9 @@ import com.chengyinhub.business.service.RoamAiContentService;
 import com.chengyinhub.business.service.impl.RoamSessionWriteService;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
+import com.chengyinhub.business.service.support.RoamPoiTags;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.utils.StringUtils;
@@ -131,8 +134,15 @@ public class ApiRoamController extends BaseController {
         double dLat = r / 111320.0;
         double dLng = r / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(lat))));
         // C-13:found 是「这个账号已发现过」的服务端事实(按会员投影),换设备/清缓存不再回到迷雾。
-        List<RoamPoi> list = roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT);
-        return success(list);
+        // A5.2:多取 1 条用来判断是否被截断;data 仍是数组(向后兼容),truncated 作为同级字段下发。
+        List<RoamPoi> list = roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1);
+        boolean truncated = list.size() > POIS_NEAR_LIMIT;
+        if (truncated) list = new java.util.ArrayList<>(list.subList(0, POIS_NEAR_LIMIT));
+        // A5.1:相册只下发前 3 张预览,完整相册走目录详情读口。
+        for (RoamPoi poi : list) poi.setGalleryJson(RoamPoiTags.galleryHead(poi.getGalleryJson(), RoamPoiTags.GALLERY_PREVIEW));
+        AjaxResult result = success(list);
+        result.put("truncated", truncated);
+        return result;
     }
 
     @Operation(summary = "首次发现商家后的合规自由探索活动壳")
@@ -168,6 +178,7 @@ public class ApiRoamController extends BaseController {
     private static final int VISIT_XP = 20;
 
     @Operation(summary = "发现 POI(R6:服务端校验到点,记录供结算发 XP)")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
     @PostMapping("/poi/discover")
     public AjaxResult discoverPoi(String sessionId, Long poiId, Double lat, Double lng) {
         Long memberId = uid();
@@ -267,6 +278,7 @@ public class ApiRoamController extends BaseController {
             org.slf4j.LoggerFactory.getLogger(ApiRoamController.class.getName() + ".teleportAudit");
 
     @Operation(summary = "探店入账(任意真商家:roam 据点 / 报名商家),服务端校验到点")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
     @PostMapping("/shop/visit")
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult shopVisit(String sessionId, Integer sourceType, Long sourceId, Double lat, Double lng) {
@@ -919,6 +931,7 @@ public class ApiRoamController extends BaseController {
     }
 
     @Operation(summary = "点到店(bindpoitap):宽松 geo → 参与据点走扫码 / 非参与点亮发探索值")
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.MEMBER)
     @PostMapping("/checkin")
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
@@ -940,7 +953,7 @@ public class ApiRoamController extends BaseController {
         double dLng = 60 / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(poiLat))));
         List<CityNodeVO> near = roamMapper.selectMerchantNodesNear(
                 poiLat - dLat, poiLat + dLat, poiLng - dLng, poiLng + dLng,
-                poiLat, poiLng, null, null, null, null);
+                poiLat, poiLng, null, null, null, null, 50);
         Long poiId = nearestWithin(near, poiLat, poiLng, NODE_MATCH_RADIUS_M);
         if (poiId != null) {
             data.put("participating", true);

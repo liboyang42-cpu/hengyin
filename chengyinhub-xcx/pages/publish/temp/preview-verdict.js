@@ -1,6 +1,8 @@
 // 编辑页试玩的判定屏(照「城瘾玩法试玩台」:玩完一整屏涌上来,成功绿、失败红,反馈就写在这一屏)。
 // 只在作者自己的手机上算:答案来自他刚填的配置,不经过任何下发通道;正式游玩仍由服务端判定。
 
+const answerText = require('../../../utils/answer-text.js');
+
 const pickIds = detail => (Array.isArray(detail.optionIds) ? detail.optionIds : [detail.optionId]).filter(Boolean);
 
 /** 本地判一次对错:'win' / 'fail';判不了(估数、比价这类答案在玩法自己那儿)返回 ''。
@@ -36,9 +38,11 @@ function judge(advanced, kit, action, detail) {
   if (kit.type !== 'qa' || !qa) return '';
   if (action === 'shoot') return 'win';
   if (d.mode === 'type') {
-    // 与服务端 AdvancedGameRuntimeServiceImpl 同一条:去空格、不分大小写,多个答案用顿号或半角逗号隔开
+    // 与服务端同一规则(AnswerNormalizer):旧的首尾空格 + 大小写仍判对,再多接受全角/NBSP/首尾标点;
+    // 多个答案用 、 , ， ; ； 隔开(utils/answer-text.js 的共享分隔符)。
     const got = String(d.input || '').trim().toLowerCase();
-    return String(qa.answerText || '').split(/[、,]/).some(one => one.trim() && one.trim().toLowerCase() === got) ? 'win' : 'fail';
+    const legacy = String(qa.answerText || '').split(/[、,]/).some(one => one.trim() && one.trim().toLowerCase() === got);
+    return legacy || answerText.matchesAnyOf(qa.answerText, d.input) ? 'win' : 'fail';
   }
   if (d.mode === 'pick') {
     const options = Array.isArray(qa.options) ? qa.options : [];

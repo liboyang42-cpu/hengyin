@@ -1,6 +1,6 @@
 <wxs src="../../../utils/wxs/money.wxs" module="money" /><wxs src="../utils/stat.wxs" module="cnt" />
 <view class="theme-dark">
-  <cy-toast id="cy-toast" />
+  <cy-toast id="cy-toast" lift="{{selfPlayCheckoutShow}}" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />
   <cy-privacy-gate show="{{privacyGateShow}}" bind:settled="onPrivacyGateSettled" />
@@ -541,7 +541,7 @@
     view="{{checkout.view}}" profile-name="{{checkout.profileName}}" profile-phone="{{checkout.profilePhone}}"
     consent-checked="{{selfPlayConsentChecked}}" consent-hint="{{selfPlayConsentHint}}" consent-error="{{selfPlayConsentError}}"
     loading="{{selfPlayConfirmLoading}}"
-    bind:back="onCheckoutBack" bind:profile="onCheckoutProfile" bind:consentchange="onSelfPlayConsentChange" bind:pass="onCheckoutPass" bind:pay="onSelfPlayConfirm" />
+    bind:back="onCheckoutBack" bind:profile="onCheckoutProfile" bind:consentchange="onSelfPlayConsentChange" bind:pass="onCheckoutPass" bind:pay="onSelfPlayConfirm" bind:requote="onCheckoutRequote" />
 
   <cy-pass-reveal show="{{reveal.show}}" cover="{{reveal.cover}}" name="{{reveal.name}}" kind-text="{{reveal.kindText}}"
     until-text="{{reveal.untilText}}" days-text="{{reveal.daysText}}" duration-line="{{reveal.line}}" reduced-motion="{{reducedMotion}}"

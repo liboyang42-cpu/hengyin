@@ -451,6 +451,13 @@ public final class HangmanGameplay {
         for (String alias : aliasTexts(section)) {
             if (key.equals(answerKey(alias.codePoints().toArray(), sensitive))) return true;
         }
+        // E-A4:旧键不中时再按 NFKC 后的键比一次(「ＡＢＣ」=「ABC」),只放宽。
+        String nfkcKey = nfkcAnswerKey(submitted, sensitive);
+        if (nfkcKey.isEmpty()) return false;
+        if (nfkcKey.equals(nfkcAnswerKey(answer, sensitive))) return true;
+        for (String alias : aliasTexts(section)) {
+            if (nfkcKey.equals(nfkcAnswerKey(alias.codePoints().toArray(), sensitive))) return true;
+        }
         return false;
     }
 
@@ -462,6 +469,12 @@ public final class HangmanGameplay {
             key.appendCodePoint(canon(cp, caseSensitive));
         }
         return key.toString();
+    }
+
+    private static String nfkcAnswerKey(int[] cps, boolean caseSensitive) {
+        String folded = java.text.Normalizer.normalize(new String(cps, 0, cps.length),
+                java.text.Normalizer.Form.NFKC);
+        return answerKey(folded.codePoints().toArray(), caseSensitive);
     }
 
     private static boolean isComparable(int cp) {

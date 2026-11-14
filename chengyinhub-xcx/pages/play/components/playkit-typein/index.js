@@ -9,6 +9,20 @@ const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js')
 const replayMotionBehavior = require('../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 
+/** E-A6:终端键盘只有 a-z 与空格;目标里的数字、标点、中文、(区分大小写时的)大写字母按目标补一行键,
+ *  否则这些字符永远打不出来。区分大小写才补大写字母;不区分时大小写按小写键比较。 */
+function extraKeysFor(target, caseSensitive) {
+  const seen = {};
+  const keys = [];
+  Array.from(String(target || '')).forEach((ch) => {
+    if (ch === ' ' || seen[ch]) return;
+    if (/[a-z]/.test(ch) || (!caseSensitive && /[A-Z]/.test(ch))) return;
+    seen[ch] = true;
+    keys.push(ch);
+  });
+  return keys;
+}
+
 Component({
   behaviors: [reducedMotionBehavior, replayMotionBehavior],
   properties: {
@@ -28,6 +42,7 @@ Component({
   },
   data: {
     phase: 'intro',                            // intro | run
+    extraKeys: [],                             // 目标里键盘上没有的字符
     keyRows: ['qwertyuiop'.split(''), 'asdfghjkl'.split(''), 'zxcvbnm'.split('')],
     ghost: '',
     nextKey: '',
@@ -80,6 +95,7 @@ Component({
       this._firstKey = null;
       const tries = Number(this.data.tries) || 0;
       this.setData({
+        extraKeys: extraKeysFor(target, this.data.caseSensitive),
         phase: 'intro',
         typed: '',
         ghost: target || '',
@@ -108,6 +124,7 @@ Component({
     detached() { (this._offTimers || []).forEach(clearTimeout); },
   },
   methods: {
+    _extraKeysFor: extraKeysFor,   // 纯函数出口,供单测
     _powerOff(stage) {
       (this._offTimers || []).forEach(clearTimeout);
       this.setData({ off: 'off' });
@@ -142,7 +159,7 @@ Component({
     onKey(e) {
       if (this.data.locked || this.data.submitting || this.data.phase === 'arming') return;
       const key = e.currentTarget.dataset.key;
-      if (key !== 'back' && !/^[a-zA-Z ]$/.test(key || '')) return;
+      if (key !== 'back' && !/^[a-zA-Z ]$/.test(key || '') && (this.data.extraKeys || []).indexOf(key) < 0) return;
       if (this.data.phase !== 'run') {
         if (key === 'back') return;
         this._firstKey = key;
