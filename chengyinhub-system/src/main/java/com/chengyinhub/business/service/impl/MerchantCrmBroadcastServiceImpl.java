@@ -306,6 +306,7 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
         MerchantCrmBroadcast done = new MerchantCrmBroadcast();
         done.setId(broadcast.getId());
         done.setMerchantId(broadcast.getMerchantId());
+        done.setAudienceCount(recipients.size());
         done.setDeliveredCount(delivered);
         done.setNoConsentCount(noConsent);
         done.setFrequencySkippedCount(frequency);
@@ -316,6 +317,7 @@ public class MerchantCrmBroadcastServiceImpl implements IMerchantCrmBroadcastSer
         requireOne(broadcastMapper.finalizeBroadcast(done));
         // 回写内存对象:调用方拿它转 VO,不额外查一次库(回读只发生在前端刷新时)。
         broadcast.setStatus(done.getStatus());
+        broadcast.setAudienceCount(done.getAudienceCount());
         broadcast.setConsentedCount(done.getConsentedCount());
         broadcast.setNoConsentCount(done.getNoConsentCount());
         broadcast.setFrequencySkippedCount(done.getFrequencySkippedCount());

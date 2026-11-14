@@ -181,7 +181,11 @@ public class ImMediaService implements IImMediaAttachGate
     {
         approvedMessage(viewer, Kind.VOICE, messageId);
         Map<String, Object> up = media.selectByMessage(messageId);
-        return fetch(store.shortLivedUrl(toLong(up.get("assetId")), 60), Kind.VOICE.maxBytes, toLong(up.get("byteSize")));
+        long assetId = toLong(up.get("assetId"));
+        long expected = toLong(up.get("byteSize"));
+        byte[] direct = store.readBytes(assetId, Kind.VOICE.maxBytes, expected);
+        if (direct != null) return direct;
+        return fetch(store.shortLivedUrl(assetId, 60), Kind.VOICE.maxBytes, expected);
     }
 
     /** 单条原消息读取（GET /api/im/message）：与附件描述同一可见性口径。 */

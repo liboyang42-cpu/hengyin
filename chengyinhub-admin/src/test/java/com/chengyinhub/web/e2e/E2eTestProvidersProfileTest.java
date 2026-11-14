@@ -10,7 +10,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import com.chengyinhub.business.service.IWeChatMiniSessionService;
+import com.chengyinhub.business.service.ai.impl.E2eTestSpeechToTextService;
+import com.chengyinhub.business.service.channel.media.E2eTestImMediaStore;
 import com.chengyinhub.business.service.impl.E2eTestContentSecurityService;
+import com.chengyinhub.business.service.impl.E2eTestWeChatMiniSessionService;
+import com.chengyinhub.business.service.impl.E2eTestWxCodeGateway;
+import com.chengyinhub.business.service.impl.E2eTestWxCodeStorage;
 import com.chengyinhub.framework.web.service.E2eTestSmsCodeSender;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,7 +28,15 @@ class E2eTestProvidersProfileTest
     @Test
     void testProvidersAreGatedByProfileAndProperty()
     {
-        for (Class<?> type : new Class<?>[] {E2eTestSmsCodeSender.class, E2eTestContentSecurityService.class})
+        for (Class<?> type : new Class<?>[] {
+                E2eTestSmsCodeSender.class,
+                E2eTestContentSecurityService.class,
+                E2eTestWxCodeGateway.class,
+                E2eTestWxCodeStorage.class,
+                E2eTestImMediaStore.class,
+                E2eTestSpeechToTextService.class,
+                E2eTestWeChatMiniSessionService.class,
+        })
         {
             Profile profile = type.getAnnotation(Profile.class);
             assertNotNull(profile, type.getSimpleName());
@@ -47,13 +61,24 @@ class E2eTestProvidersProfileTest
     }
 
     @Test
-    void passThroughModerationAcceptsTextAndNeverSubmitsMedia()
+    void passThroughModerationAndTestProvidersWorkWithoutExternalKeys()
     {
         E2eTestContentSecurityService service = new E2eTestContentSecurityService();
         assertNull(service.checkText("你好，E2E", "any-openid"));
         assertNull(service.checkText("", null));
         assertFalse(service.canSubmitMedia("openid"));
         assertTrue(service.checkMediaAsync("https://example.invalid/a.jpg", null).startsWith("e2e-test-"));
+        assertEquals("e2e-test-access-token", service.getAccessToken());
+        assertEquals("e2e-test-access-token", service.refreshAccessToken());
         assertTrue(new E2eTestSmsCodeSender().send(null, null, null, null, "13900000004", "123456"));
+
+        E2eTestSpeechToTextService stt = new E2eTestSpeechToTextService();
+        assertTrue(stt.available());
+        assertNotNull(stt.transcribe(new byte[] {1, 2, 3}, "wav"));
+        assertNull(stt.transcribe(new byte[0], "wav"));
+
+        E2eTestWeChatMiniSessionService mini = new E2eTestWeChatMiniSessionService();
+        IWeChatMiniSessionService.WeChatMiniSession session = mini.exchange("e2e-code-9003");
+        assertEquals("e2e-openid-9003", session.getOpenId());
     }
 }
