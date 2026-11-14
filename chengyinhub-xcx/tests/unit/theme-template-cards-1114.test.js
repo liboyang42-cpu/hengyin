@@ -151,3 +151,12 @@ test('wxss:新增样式只用 token,卡面与同页 xb-stat-card 同一张底', 
     assert.match(m[0], /border-radius: var\(--cy-radius-md\);/);
   }
 });
+
+test('能力:自由探索每章就是一站(章下无节点),章本身出一张卡、合成一组;概要不重复章节数', () => {
+  const { page } = mount({ mode: 'FREE_EXPLORE', chapters: [{ name: '小吃', description: '选一家小吃店', nodes: [] }, { name: '糕点', description: '选一家糕点店' }] });
+  assert.equal(page.data.stopGroups.length, 1);
+  assert.deepEqual([page.data.stopGroups[0].no, page.data.stopGroups[0].name], ['', '']);
+  assert.deepEqual(page.data.stops.map((s) => [s.no, s.name, s.doText]), [[1, '小吃', '选一家小吃店'], [2, '糕点', '选一家糕点店']]);
+  assert.deepEqual(page.data.summary.map((s) => s.label), ['模式', '时间', '站点']);
+  assert.equal(mount({ mode: 'CITY', chapters: [{ name: '空章', nodes: [] }] }).page.data.stopGroups.length, 0, '城市定向空章仍不出组');
+});

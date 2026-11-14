@@ -37,6 +37,11 @@ function buildStopGroups(info) {
   let no = 0;
   const groups = (Array.isArray(info.chapters) ? info.chapters : []).map(function (c, i) {
     const nodes = Array.isArray(c.nodes) ? c.nodes : [];
+    // 自由探索的章就是一站(一家店),章下没有节点:章本身出一张卡
+    if (!nodes.length && info.mode === 'FREE_EXPLORE') {
+      no += 1;
+      return { key: String(c.id || i), no: '', name: '', stops: [{ no: no, name: c.name || '第 ' + no + ' 站', game: '', gameIcon: '', doText: c.description || '', dur: '' }] };
+    }
     return {
       key: String(c.id || i),
       no: chapterNo(c, i),
@@ -56,6 +61,10 @@ function buildStopGroups(info) {
       })
     };
   }).filter(function (g) { return g.stops.length; });
+  // 自由探索每章一站:合成一组、不出章头
+  if (info.mode === 'FREE_EXPLORE' && groups.length && groups.every(function (g) { return !g.name; })) {
+    return [{ key: 'all', no: '', name: '', stops: buildStops(groups) }];
+  }
   // 只有一组且没有章名:整组一个头、不出标题
   if (groups.length === 1 && !groups[0].name) groups[0].no = '';
   return groups;
@@ -73,7 +82,8 @@ function buildSummary(info, chapters, stops) {
   return [
     { value: free ? '自由探索' : '城市定向', label: '模式' },
     free ? { value: '可以跨天', label: '时间' } : null,
-    chapters.length ? { value: String(chapters.length), label: '章节' } : null,
+    // 自由探索每章就是一站,章节数与站点数相同,只留站点
+    chapters.length && !(free && chapters.length === stops.length) ? { value: String(chapters.length), label: '章节' } : null,
     stops.length ? { value: String(stops.length), label: '站点' } : null,
     games.length ? { value: String(games.length), label: '玩法' } : null,
     total ? { value: total, label: '总时长' } : null

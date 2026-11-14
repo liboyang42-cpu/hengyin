@@ -45,7 +45,7 @@
   gap: var(--cy-space-2);
   padding: 0 var(--cy-page-x) var(--cy-space-5);
 }
-.cap-sum .xb-stat-card { flex: 0 0 calc((100% - 2 * var(--cy-space-2)) / 3); }
+.cap-sum .xb-stat-card { box-sizing: border-box; flex: 0 0 calc((100% - 2 * var(--cy-space-2)) / 3); }
 
 /* 能力 · 按章分组:章头(编号 + 章名)+ 该章每站一张卡 */
 .cap-ch { padding: 0 var(--cy-page-x) var(--cy-space-4); }
