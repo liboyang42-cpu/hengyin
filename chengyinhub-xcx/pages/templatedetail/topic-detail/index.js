@@ -111,6 +111,7 @@ Page({
     chapters: [],
     stats: [],
     gallery: [],
+    coverCredit: '',
     stops: [],
     stopGroups: [],
     summary: [],
@@ -173,7 +174,8 @@ Page({
           openingExpanded: false,
           openingNeedMore: false,
           chapters: chapters,
-          stats: [
+          // 自由探索每章就是一站,上方章节卡已经列出,这一排数字不再重复
+          stats: info.mode === 'FREE_EXPLORE' ? [] : [
             chapters.length ? { value: String(chapters.length), label: '章节' } : null,
             stops.length ? { value: String(stops.length), label: '节点' } : null,
             total ? { value: total, label: '总时长' } : null
@@ -188,11 +190,26 @@ Page({
         });
         that._delivery = info.contentDelivery || null;
         that._loadCredits(seq, nodeImgs);
+        that._loadCoverCredit(seq, info.imgUrl);
         that._measureOpening(seq);
       },
       fail(res) {
         if (seq !== that._seq) return;
         that.setData({ loading: false, loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
+      }
+    });
+  },
+
+  // 封面署名:与节点图同一个只读接口,读到才在详情页底部出一行
+  _loadCoverCredit(seq, ref) {
+    if (!ref) return;
+    app.sendRequest({
+      hideLoading: true, autoErrorToast: false,
+      url: '/api/media/asset/attribution', method: 'GET', data: { reference: ref },
+      success: res => {
+        if (seq !== this._seq || !res || String(res.code) !== '200') return;
+        const credit = adoption.creditText(res.data);
+        if (credit) this.setData({ coverCredit: credit });
       }
     });
   },

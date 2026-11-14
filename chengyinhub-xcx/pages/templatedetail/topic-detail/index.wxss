@@ -124,3 +124,6 @@
 
 .td-medal-img { width: 112rpx; height: 112rpx; flex: none; }
 .td-credit { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
+
+/* 封面署名:详情页底部一行,与节点图署名同一字号颜色 */
+.td-cover-credit { display: block; padding: var(--cy-space-4) var(--cy-page-x) 0; }

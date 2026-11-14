@@ -160,3 +160,11 @@ test('能力:自由探索每章就是一站(章下无节点),章本身出一张�
   assert.deepEqual(page.data.summary.map((s) => s.label), ['模式', '时间', '站点']);
   assert.equal(mount({ mode: 'CITY', chapters: [{ name: '空章', nodes: [] }] }).page.data.stopGroups.length, 0, '城市定向空章仍不出组');
 });
+
+test('详情:自由探索不出与章节卡重复的数字排;封面署名读到才出一行', () => {
+  const free = mount({ mode: 'FREE_EXPLORE', imgUrl: 'media-asset:1', chapters: [{ name: '小吃', description: 'x' }] });
+  assert.deepEqual(free.page.data.stats, []);
+  const wxml = read(DIR + 'index.wxml');
+  assert.match(wxml, /wx:if="\{\{ coverCredit \}\}">封面 · \{\{ coverCredit \}\}/);
+  assert.match(read(DIR + 'index.js'), /url: '\/api\/media\/asset\/attribution', method: 'GET', data: \{ reference: ref \}/);
+});

@@ -119,6 +119,7 @@
           </view>
         </view>
       </view>
+      <view class="td-credit td-cover-credit" wx:if="{{ coverCredit }}">封面 · {{ coverCredit }}</view>
     </block>
 
     <!-- ===== 能力:概要数字卡 → 按章分组、每站一张卡 → 采用条件键值卡 =====
