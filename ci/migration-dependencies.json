@@ -1012,6 +1012,7 @@
     "20261119_merchant_gap": [],
     "20261120_merchant_authoring_candidate": ["20261119_merchant_gap"],
     "20261120_city_value_visit_feedback_at": ["20261114_gaps_a_city_r491"],
-    "20261121_admin_review_queue_menus": ["20261109_questo_admin_menus", "20261117_workshop_professional"]
+    "20261121_admin_review_queue_menus": ["20261109_questo_admin_menus", "20261117_workshop_professional"],
+    "20261122_perf_hot_route_indexes": ["account_deregister_20260711", "club_post", "im", "o14_content_search_document_20261022", "20261112_im_channels_platform"]
   }
 }
