@@ -101,7 +101,7 @@
         <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !casebook.show && !journeyRewards.show && !advancedPlay.show && screen !== 'gamePlay' && fmStyleReady}}"
                   nodes="{{fmNodes}}" player="{{fmPlayer}}" target="{{nextNode}}"
                   center="{{fmPlayer && fmPlayer.lat ? fmPlayer : (nextNode && nextNode.lat ? nextNode : fmCenter)}}" scale="16" rotate="{{navHeading}}"
-                  subkey="{{radarMap.subkey}}" layer-style="{{radarMap.layerStyle}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
+                  subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tone="{{fmTone}}" interactive="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
                   trail-polyline="{{fmTrail}}" team-pins="{{fmTeamPins}}" accessibility-label="小地图" reduced-motion="{{reducedMotion}}" compact="{{true}}" />
         <view class="radar__me"></view>
         <view class="radar__n" style="transform:rotate({{-navHeading}}deg)"><text style="transform:rotate({{navHeading}}deg)">N</text></view>
@@ -132,6 +132,7 @@
     <view class="fx-story__acts">
       <!-- 2026-10-30:背包(打开既有定稿背包)与案件册(主题有内容才出现)常驻右上角 -->
       <view class="fx-story__act" wx:if="{{themeBag.sessionId}}" bindtap="openThemeBackpack" aria-role="button" aria-label="背包" hover-class="cy-pressed" hover-stay-time="80"><view class="ptb-bag" aria-hidden="true"></view></view>
+      <view class="fx-story__act" wx:if="{{helpPanel.enabled && advancedPlay.show && playKit.kit && !playKit.kit.done && helpPanel.nodeId == advancedPlay.node.nodeId}}" bindtap="openHelpPanel" aria-role="button" aria-label="提示" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="info" size="30" /></view>
       <view class="fx-story__act" wx:if="{{hasCasebook}}" bindtap="openCasebook" aria-role="button" aria-label="案件册" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="draft" size="30" /></view>
       <view class="fx-story__act {{audioNodeId === 'chapter' && audioError ? 'is-error' : ''}}" wx:if="{{chapter.audioUrl}}" bindtap="toggleStoryAudio" aria-role="button" aria-label="{{audioNodeId === 'chapter' && audioLoading ? '旁白加载中' : (audioNodeId === 'chapter' && audioError ? '旁白播放失败，点此重试' : (audioNodeId === 'chapter' && audioPlaying ? '关掉旁白' : '播放旁白'))}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="{{audioNodeId === 'chapter' && audioLoading ? 'clock' : (audioNodeId === 'chapter' && audioError ? 'warning' : 'play')}}" size="30" /></view>
       <view class="fx-story__act" bindtap="toggleSessionTools" aria-role="button" aria-label="{{sessionToolsOpen ? '收起游玩工具' : '游玩工具'}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="more" size="30" /></view>
@@ -301,6 +302,7 @@
         <view class="drow" wx:if="{{playContact}}" bindtap="callPlayContact" aria-role="button" aria-label="{{playContact.label}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dic"><cy-icon name="phone" size="36" /></view><view class="dcopy"><text class="dt">{{playContact.label}}</text></view><view class="darr"></view></view>
 <view wx:if="{{themeBag.inventoryEnabled && themeBag.scope !== 'TEAM'}}" class="drow" bindtap="openThemeHistory" aria-role="button" aria-label="我的游玩记录" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="clock" size="36" /><text>我的游玩记录</text></view>
         <include src="theme-player-ops-entry.wxml" />
+        <view class="drow" wx:if="{{helpPanel.enabled && advancedPlay.show && playKit.kit && !playKit.kit.done && helpPanel.nodeId == advancedPlay.node.nodeId}}" bindtap="openHelpFromTools" aria-role="button" aria-label="提示" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">提示</text></view><view class="darr"></view></view>
         <view class="drow" wx:if="{{gameModule.enabled}}" bindtap="openGameModuleFromTools" aria-role="button" aria-label="本局线索" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">本局线索</text></view><view class="darr"></view></view>
         <view class="drow" wx:if="{{topicId && !isPreview}}" bindtap="openJourneyRewards" aria-role="button" aria-label="各站奖励" hover-class="cy-pressed" hover-stay-time="80"><view class="dic pic pic--gift"></view><view class="dcopy"><text class="dt">各站奖励</text></view><view class="darr"></view></view>
         <view class="drow" wx:if="{{themeBag.sessionId && (themeBag.actionRows.length || themeBag.awaitingChallenge || zeroHpView || themeBag.pendingRows.length)}}" bindtap="openThemeGameplay" aria-role="button" aria-label="打开背包与任务" hover-class="cy-pressed" hover-stay-time="80"><view class="dcopy"><text class="dt">背包与任务</text><text class="ds" wx:if="{{zeroHpView}}">{{zeroHpView.message || zeroHpView.title}}</text><text class="ds" wx:elif="{{themeBag.awaitingChallenge}}">{{themeBag.names.hp}}已归零 · 完成挑战可{{themeBag.challengeRestoreText}}{{themeBag.challengeProgressText ? ' · ' + themeBag.challengeProgressLabel + ' ' + themeBag.challengeProgressText : ''}}</text><text class="ds" wx:elif="{{themeBag.pendingRows.length}}">有待领取物品</text><text class="ds" wx:else>{{themeBag.names.hp}} {{themeBag.hp}} · {{themeBag.names.luck}} {{themeBag.luck}} · {{themeBag.names.action}} {{themeBag.actions}}</text></view><view class="darr"></view></view>
@@ -1088,6 +1090,7 @@
       </view>
       <cy-btn variant="primary" style="margin-top:var(--cy-space-3-5)" bindtap="startGame">开始任务</cy-btn>
       </block>
+      <view class="sheet-note" wx:if="{{mode!=2 && sheet.node.lat && !gpsOk && !isPreview && locAsked}}"><text class="sheet-note-action" bindtap="onEnableLocation" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">开启定位</text> · <text class="sheet-note-action" bindtap="onScanArrive" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">扫码到达</text></view>
     </block>
     <!-- 无模板 → 读文字,到达即完成 -->
     <block wx:else>
@@ -1102,7 +1105,7 @@
       </block>
       <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId && arrivalGuard.appealable}}">本次到达未记录<text class="sheet-note-action" bindtap="appealArrivalFromSheet" hover-class="cy-pressed" hover-stay-time="80"> · 申诉</text></view>
       <view class="sheet-note" wx:elif="{{mode!=2 && arrivalGuard && arrivalGuard.nodeId == sheet.node.nodeId}}">{{arrivalGuard.message}}<text class="sheet-note-action" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text><text wx:for="{{arrivalGuard.fallbacks}}" wx:for-item="alt" wx:key="nodeId" class="sheet-note-action" data-nodeid="{{alt.nodeId}}" bindtap="openArrivalFallback" aria-role="button" aria-label="改去{{alt.name}}" hover-class="cy-pressed" hover-stay-time="80"> · 改去「{{alt.name}}」</text></view>
-      <view class="sheet-note" wx:elif="{{mode!=2 && sheet.node.lat && gpsLowAcc}}">{{gpsHint}}</view><view wx:elif="{{mode!=2 && sheet.node.lat}}"><!-- a1-v3-21:定位只在进这一局时问一次,站点卡不再写定位提示;没开定位时主按钮就是「扫码到达」 --></view>
+      <view class="sheet-note" wx:elif="{{mode!=2 && sheet.node.lat && gpsLowAcc}}">{{gpsHint}}</view><view class="sheet-note" wx:elif="{{mode!=2 && sheet.node.lat && !gpsOk && !isPreview && locAsked}}"><text class="sheet-note-action" bindtap="onEnableLocation" aria-role="button" hover-class="cy-pressed" hover-stay-time="80">开启定位</text></view><view wx:elif="{{mode!=2 && sheet.node.lat}}"><!-- a1-v3-21:定位只在进这一局时问一次,站点卡不再写定位提示;没开定位时主按钮就是「扫码到达」 --></view>
       <!-- 自由探索:核销由商家扫玩家的码完成,所以这里说的是「到店后怎么办」,不是「怎么打卡」 -->
       <view class="sheet-note" wx:else>到店后出示核销码给商家扫<text class="sheet-note-action" wx:if="{{!gpsOk}}" bindtap="onScanArrive" hover-class="cy-pressed" hover-stay-time="80"> · 可扫码到达</text></view>
     </block>
@@ -1267,6 +1270,7 @@
       </view>
       <view class="gp2__neterr" id="gp2NetErr" wx:if="{{gNetErr}}">
         <text class="gp2__neterr-t">{{gNetErr}}</text>
+          <text class="gp2__neterr-r" wx:if="{{gWriteUnknown}}" bindtap="verifyGameWrite" hover-class="cy-pressed" hover-stay-time="80">核对结果</text>
           <text class="gp2__neterr-r" wx:if="{{gNetRetryable}}" bindtap="retryGameSubmission" hover-class="cy-pressed" hover-stay-time="80">{{gRetryType === 'photo' ? '重新上传照片' : (gRetryType === 'gameScan' ? '重新扫码' : (gRetryType === 'puzzleReveal' ? '重新查看答案' : (gRetryType === 'gameCheckin' ? '重新核验' : '重新提交')))}}</text>
       </view>
       <view class="gp2__hint" wx:for="{{lk.rows(shownHints)}}" wx:key="key">{{item.text}}</view>
@@ -1342,7 +1346,13 @@
     <view class="finsheet__title">{{allDone || topicCompleted ? topicName : chapter.name}}</view>
     <view class="finsheet__result {{finishResult.win ? 'is-win' : ''}}" wx:if="{{finishResult.label}}">{{finishResult.label}}</view>
   </view>
-    <canvas type="2d" id="routecv" class="finsheet__routecv" aria-role="img" aria-label="路线卡"></canvas>
+    <view class="finsheet__routewrap">
+      <free-map id="routemap" class="finsheet__routemap" wx:if="{{routeMap.points.length}}" nodes="{{[]}}" fit="{{true}}" fit-points="{{routeMap.points}}" fit-padding="{{[96, 72, 400, 72]}}"
+                map-polyline="{{routeMap.lines}}" scale="14" center="{{fmCenter}}" subkey="{{routeMap.subkey}}" layer-style="{{routeMap.layerStyle}}" tone="{{routeMap.tone}}"
+                show-controls="{{false}}" show-photo-callouts="{{false}}" interactive="{{false}}" bindupdated="onRouteMapUpdated" />
+      <canvas type="2d" id="routecv" class="finsheet__routecv" aria-role="img" aria-label="路线卡"></canvas>
+      <view class="finsheet__map-error" wx:if="{{routeCard.error}}" bindtap="retryRouteThumb" hover-class="cy-pressed" hover-stay-time="80">路线预览暂未生成 · 重试</view>
+    </view>
     <view class="finsheet__card-acts" wx:if="{{routeCard.ready}}">
       <cy-btn variant="secondary" style="flex:1" bindtap="saveFinishCard">保存图片</cy-btn>
       <cy-btn variant="primary" style="flex:1" bindtap="shareRouteCard">分享</cy-btn>

@@ -20,8 +20,14 @@ const { createRegistrationPaymentVerifier } = require('../../../utils/checkout/r
 const { buildTopicStatBar, sessionWindowsText } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
 const { haversine, distanceText } = require('../../../utils/geo.js');
-const { lightMapStyle } = require('../../../utils/map-style.js');
+const { lightMapStyle, mapStyleFor, routeMapKind } = require('../../../utils/map-style.js');
+const { isMerchantView } = require('../../../utils/roleGuard.js');
 const LIGHT_MAP_STYLE = lightMapStyle();
+// 2026-11-14 owner:玩家看路线用主题发布时的外观(纸本 / 2077 / black);商家视角与创作者本人预览保持 white
+function routeMapStyleOf(info) {
+  const s = mapStyleFor(routeMapKind(info && info.lookJson, isMerchantView() || Number(info && info.isOwner) === 1));
+  return { mapSubkey: s.subkey, mapLayerStyle: s.layerStyle };
+}
 const routePreview = require('../../../utils/topic-route-preview.js');
 const marketingConsent = require('../../../utils/marketing-consent-entry.js');
 const ticketSource = require('../../../utils/ticket-source.js');
@@ -883,9 +889,9 @@ Page({
 
   /* 付款成功 → 通行证到账动效。可选的商家营销同意行(拍板第 40 条 A)照旧要给:
      动效收尾时有同意可选才弹原结果面板,否则直接去票夹/开局。 */
-  _showPassReveal(topicId, registrationId) {
+  _showPassReveal(topicId, registrationId, expiresAt) {
     const info = this.data.info || {};
-    const win = motion.passWindow({ topicEnd: info.endDate });
+    const win = motion.passWindow({ topicEnd: info.endDate, expiresAt });
     this._revealTopicId = topicId;
     this._revealRegId = registrationId || 0;
     const price = info.selfPlayPrice;
@@ -1890,7 +1896,7 @@ Page({
   /* 2026-10-22 业主:付完先播「通行证已到账」,再由动效里的「放进票夹 / 开始游戏」决定去向 */
   _onSelfPlayPaid(topicId, data) {
     const regId = data && (data.registrationId || data.id);
-    this._showPassReveal(topicId, Number(regId) > 0 ? regId : 0);
+    this._showPassReveal(topicId, Number(regId) > 0 ? regId : 0, data && data.expiresAt);
   },
 
   _goSelfPlay(topicId) {
@@ -2264,8 +2270,9 @@ Page({
 
           // V-23:详情正文不再放举报行,可否举报只作处理器内部闸,不进页面 data
           that._canReport = canReportTopic(res.data, typeof app.getUserID === 'function' ? app.getUserID() : '');
+          const routeStyle = routeMapStyleOf(res.data);
           that.setData({
-            info: res.data,
+            info: res.data, mapSubkey: routeStyle.mapSubkey, mapLayerStyle: routeStyle.mapLayerStyle,
             // P0(2026-09-05 审核):已购态不再只信 URL 参数 is_join(全仓只有订单详情会传 1,
             // 从首页/搜索进来的已购用户永远看不到「开始玩」)。/info-to-user 已按 ownerType=1 &
             // registrationStatus=2 回填 isSignUp,与自玩通行证的建单口径同源,直接用它。

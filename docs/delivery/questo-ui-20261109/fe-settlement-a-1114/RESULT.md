@@ -1,6 +1,6 @@
 # D-19 主办方结算：业主决定 A（2026-11-14）
 
-依赖 [集成 PR #838](https://github.com/liboyang42-cpu/hengyin/pull/838)（`integ/wave-1114`），必须在该 PR 合入 master 之后合并本线；本工位不合并、不部署。
+依赖 [集成 PR #838](https://github.com/liboyang42-cpu/hengyin/pull/838)（`integ/wave-1114`），已于 2026-11-14 合入 master（`316f717d1040af392647891dbe9a8b01a41b290f`）；本线随后以 merge 合入该 master。本工位不合并 PR、不部署。
 
 ## 决定与实现
 
@@ -17,6 +17,5 @@
 - 原「四店合同必须拒结」断言已由决定 A 正式取代；保留缺快照及坏合同拒结负控。
 - 原 Funds MySQL IT 待处理用例更新为上述三类真实 SQL 向量，核对现金/逐票账本 97/3 分配、每单退款冲回两次仍只扣一次、结算重跑不重复、历史 FINAL 不重付、坏合同回滚、未满 14 天和全额退款不出款。保留套件 15 项登记及其他原资金用例，未改门禁计数或工作流。
 - VPS 聚焦 JUnit 22/22 通过，失败/错误/跳过均为 0（MerchantPublishedFreeExploreSettlementTest、ActivitySettlementIdempotencyTest、FreeExploreFeeAllocatorTest）；快照树 `0d8104495d40ea89763d3892d724644e30bee42b`，预算构建器 exitCode=0。首次测试编译默认堆不足，保持容器 1536MiB 预算不变后使用 Maven 256MiB / 独立 javac 896MiB 完成，无源码/POM/门禁变更。
-- 本 PR CI/Funds MySQL IT 及合入集成后的最终验证仍待回执；不能由源码/fixture 推导生产或真机验收。本线不操作生产，不启用功能，不修改 `ci/architecture/*` 或 workflows，不运行本地 Java/Docker 或 `ci/xcx-check.sh` selftests。
-
-STATUS: PARTIAL - VPS/CI 验证中；待 #838 合并后合入 master 并取得最终全绿
+- 初始提交 `33079df1159fb6654e2e51a5b8ba09377b8964e5` 的 [Funds MySQL IT](https://github.com/liboyang42-cpu/hengyin/actions/runs/43597849222) 已通过：757 项，失败/错误/跳过均为 0，其中 `ClubSessionMerchantFeeMySqlIT` 15 项包含上述三类向量；门禁负控自测亦通过。
+- 合入 master 后最终 SHA 的完整 CI 状态见 [PR #839](https://github.com/liboyang42-cpu/hengyin/pull/839) 与 mailbox `codex-fe-settle-a-out.md` 的最终回执。不能由 CI/fixture 推导生产或真机验收。本线不操作生产，不启用功能，不修改 `ci/architecture/*` 或 workflows，不运行本地 Java/Docker 或 `ci/xcx-check.sh` selftests。

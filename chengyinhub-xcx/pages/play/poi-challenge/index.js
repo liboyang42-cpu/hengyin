@@ -9,6 +9,7 @@ const cyToast = require('../../../utils/toast.js');
 const geo = require('../../../utils/geo.js');
 const loading = require('../../../utils/loading.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+const placeMap = require('../../../utils/roam-place-map.js');
 
 const KEYS = ['A', 'B', 'C', 'D'];
 /* 服务端在写入前拒绝的那几句(与据点详情 PREWRITE_REJECTIONS 同源):这些回来就是「这次没过」,可以再答 */
@@ -27,6 +28,7 @@ Page({
     medal: { items: [], title: '', sub: '' },
     backTop: 48,
     privacyGateShow: false,
+    gap: null,                // 还没走到:{ text:'还差 xx 米', lat, lng, name }
   },
 
   onLoad(q) {
@@ -124,8 +126,16 @@ Page({
       type: 'gcj02',
       success: (loc) => {
         const n = this.data.node;
-        const far = geo.haversine(loc.latitude, loc.longitude, Number(n.lat), Number(n.lng)) > Number(n.radiusM || 80) + 30;
-        if (far) { end(false, '离这里还有点远，走到地点附近再交'); return; }
+        const reach = Number(n.radiusM || 80) + 30;
+        const away = geo.haversine(loc.latitude, loc.longitude, Number(n.lat), Number(n.lng));
+        if (away > reach) {
+          // A3.6:告诉玩家还差多少米,并给导航
+          const text = placeMap.gapText(away - Number(n.radiusM || 80));
+          this.setData({ gap: { text, lat: Number(n.lat), lng: Number(n.lng), name: n.name || '' } });
+          end(false, text);
+          return;
+        }
+        if (this.data.gap) this.setData({ gap: null });
         app.sendRequest({
           url: '/api/city/nodes/' + this._poiId + '/complete', method: 'POST', write: true, hideLoading: true, silentError: true,
           data: { lat: loc.latitude, lng: loc.longitude, answer: answer || '', photoUrl: this._photoUrl || '', code: '' },
@@ -152,10 +162,13 @@ Page({
     const n = this.data.node || {};
     const again = !!r.alreadyClaimed;
     const name = r.badgeName || n.templateTitle || n.name || '地点勋章';
+    const coverKey = placeMap.coverKey(n);
+    const cover = coverKey && typeof app.getImgUrl === 'function' ? app.getImgUrl(coverKey) : '';
     this.setData({
       step: 'done',
       medal: {
-        items: [{ key: 'poi', name, sub: n.name || '', img: '', mic: 'key' }],
+        // A3.5:勋章画面用地点封面;没有封面才退回通用钥匙图标
+        items: [{ key: 'poi', name, sub: n.name || '', img: cover, mic: 'key' }],
         title: again ? '这枚勋章已经收藏过' : '地点挑战完成',
         sub: again ? '再完成一次不会重复发放' : '勋章已放进徽章墙',
       },
@@ -168,6 +181,11 @@ Page({
   onMedalSecondary() { // 带上勋章码:徽章墙会在墙上找到这一枚并写明「已在墙上」
     const code = (this._result && this._result.badgeCode) || (this.data.node && this.data.node.badgeCode) || '';
     wx.redirectTo({ url: BADGE_WALL + (code ? '?badgeCode=' + encodeURIComponent(code) : '') });
+  },
+  onNavigate() {
+    const gap = this.data.gap;
+    if (!gap || !Number.isFinite(gap.lat) || !Number.isFinite(gap.lng)) return;
+    wx.openLocation({ latitude: gap.lat, longitude: gap.lng, name: gap.name, scale: 17 });
   },
   exit() { wx.navigateBack({ fail: () => wx.redirectTo({ url: '/subpackageRoam/nearby/index' }) }); },
 });

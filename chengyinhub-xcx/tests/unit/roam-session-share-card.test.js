@@ -35,12 +35,16 @@ function makeContext() {
   return {
     scale() {}, fillRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {},
     arc() {}, fill() {}, fillText(text) { drawnTexts.push(String(text)) }, save() {}, restore() {}, clip() {},
+    drawImage() {},
     createLinearGradient: () => ({ addColorStop() {} }),
   }
 }
 
 function makeCanvas() {
-  return { width: 0, height: 0, getContext: () => makeContext() }
+  return {
+    width: 0, height: 0, getContext: () => makeContext(),
+    createImage: () => { const image = { width: 400, height: 300, set src(v) { setImmediate(() => image.onload()) } }; return image },
+  }
 }
 
 function deferred() {
@@ -115,6 +119,10 @@ beforeEach(() => {
     canvasToTempFilePath: (options) => {
       exportedCanvas = options.canvas
       options.success({ tempFilePath: '/tmp/roam-session-card.png' })
+    },
+    createMapContext: (id, owner) => {
+      setImmediate(() => owner.onShareMapUpdated())
+      return { takeSnapshot: (options) => options.success({ tempImagePath: '/tmp/map-snap.png' }) }
     },
     showToast: (options) => { toastCalls.push(options) },
     saveImageToPhotosAlbum: (options) => {
@@ -226,8 +234,7 @@ test('非数组存储或目标记录损坏时进入读失败，并清理已经�
     page.onLoad({ ts: '1717243200000' })
     page.setData({
       s: { routeName: '旧路线', pois: [{ name: '旧地点' }] },
-      segs: [{ i: 1 }],
-      poiDots: [{ i: 0 }],
+      geo: { include: [{ latitude: 1, longitude: 2 }] },
       'share.show': true,
       'share.imagePath': '/tmp/old.png',
     })
@@ -237,8 +244,7 @@ test('非数组存储或目标记录损坏时进入读失败，并清理已经�
 
     assert.equal(page.data.err, 'read')
     assert.deepEqual(page.data.s, { pois: [] })
-    assert.deepEqual(page.data.segs, [])
-    assert.deepEqual(page.data.poiDots, [])
+    assert.equal(page.data.geo, null)
     assert.equal(page.data.share.show, false)
     assert.equal(page.data.share.imagePath, '')
   })
@@ -292,7 +298,7 @@ test('缺失或空数组字段保持既有空态，而不是把合法记录误�
 
   assert.equal(page.data.err, '')
   assert.deepEqual(page.data.s.pois, [])
-  assert.deepEqual(page.data.segs, [])
+  assert.equal(page.data.geo, null)
 
   global.wx.getStorageSync = () => []
   page._load()
@@ -567,7 +573,8 @@ test('旧千点历史深链分享先裁隐私再按几何预算，不生成千�
   const track = Array.from({ length: 1000 }, (_, i) => ({ lat: 31 + i * 0.0001, lng: 121 + i % 2 * 0.001 }))
   const before = JSON.stringify(track)
   const route = page._route({ track, pois: [] })
-  assert.ok(route.segs.length > 0 && route.segs.length <= 179)
+  const points = route.geo.polyline[0].points
+  assert.ok(points.length > 1 && points.length <= 180)
   assert.equal(JSON.stringify(track), before)
 })
 
@@ -588,4 +595,24 @@ test('P0-58 用户在系统存图面板点取消:不挂「保存失败」错误�
   assert.deepEqual(failed, { ok: false, saved: false })
   assert.equal(page.data.share.error, '保存失败，请重试')
   assert.equal(page.data.share.retrySave, true)
+})
+
+test('地图快照失败:显示「地图未生成」重试态,不画假地图顶替也不产出图片', async () => {
+  global.wx.createMapContext = (id, owner) => {
+    setImmediate(() => owner.onShareMapUpdated())
+    return { takeSnapshot: (options) => options.fail({ errMsg: 'takeSnapshot:fail' }) }
+  }
+  const page = loadPage()
+  page.onLoad({ ts: '1717243200000' })
+  const result = await page.share()
+  assert.equal(result.ok, false)
+  assert.equal(page.data.share.imagePath, '')
+  assert.equal(page.data.share.error, '地图未生成，请重试')
+  assert.equal(exportedCanvas, null)
+  assert.match(PAGE_WXML, /retry="\{\{err \? '' : '重新生成'\}\}" bind:retry="retryShare"/)
+})
+
+test('分享卡路线来自真实 map 快照:wxml 不再有手画的路线节点', () => {
+  assert.match(PAGE_WXML, /<map id="ssMap"[^>]*include-points="\{\{geo\.include\}\}"[^>]*polyline="\{\{geo\.polyline\}\}"/)
+  assert.doesNotMatch(PAGE_WXML, /ss-card-seg|ss-card-route|ss-card-poi/)
 })

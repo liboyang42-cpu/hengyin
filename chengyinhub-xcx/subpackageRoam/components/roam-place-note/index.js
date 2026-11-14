@@ -8,7 +8,7 @@ Component({
   properties: {
     tags: { type: null, value: '', observer(value) {
       const note = placeNoteForTags(value)
-      this.triggerEvent('note', { tags: value, reason: note ? note.reason : '', sources: note ? note.sourceText : '' })
+      this.triggerEvent('note', { tags: value, reason: note ? note.reason : '', sources: note ? note.sourceText : '', sourceList: note ? note.sources : [] })
     } },
   },
 })

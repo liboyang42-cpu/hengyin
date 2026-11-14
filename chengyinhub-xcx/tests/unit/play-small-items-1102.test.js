@@ -24,15 +24,20 @@ test('P-24:普通拍照审核上传失败,屏上写「上传失败，请重拍�
     require('../../pages/play/components/playkit-photocheck/index.js');
   } finally { global.Component = prevC; global.Behavior = prevB; }
   const ctx = { data: { uploadFail: '', busy: true }, setData(p) { Object.assign(this.data, p); } };
-  def.observers.photoFailSeq.call(ctx, 1);
+  const onFail = def.observers['photoFailSeq, photoFailKind'];
+  onFail.call(ctx, 1, 'upload');
   assert.equal(ctx.data.uploadFail, '上传失败，请重拍');
+  assert.equal(ctx.data.resubmit, false);
   assert.equal(ctx.data.busy, false);
   ctx.data.uploadFail = '';
-  def.observers.photoFailSeq.call(ctx, 1);   // 同一个序号不重复报
+  onFail.call(ctx, 1, 'upload');   // 同一个序号不重复报
   assert.equal(ctx.data.uploadFail, '');
+  onFail.call(ctx, 2, 'submit');   // 提交失败(照片已传上去)不叫「请重拍」,走「重新提交」
+  assert.equal(ctx.data.uploadFail, '提交失败，照片已保留');
+  assert.equal(ctx.data.resubmit, true);
   const wxml = read('pages/play/components/playkit-photocheck/index.wxml');
   assert.match(wxml, /wx:if="\{\{uploadFail && !verdict && !passed\}\}"/);
-  assert.match(read('pages/play/components/playkit/index.wxml'), /photo-fail-seq="\{\{kit\.photoFailSeq\}\}"\n  bind:shoot="onShoot" bind:close="onClose" \/>/);
+  assert.match(read('pages/play/components/playkit/index.wxml'), /photo-fail-seq="\{\{kit\.photoFailSeq\}\}" photo-fail-kind="\{\{kit\.photoFailKind\}\}"[^>]*bind:shoot="onShoot"[^>]*bind:close="onClose" \/>/);
 });
 
 test('P-26:开始游戏时问定位(每次游玩仍逐次明示用途,不跨次记住同意)', () => {

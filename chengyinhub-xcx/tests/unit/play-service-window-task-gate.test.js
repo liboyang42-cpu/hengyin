@@ -21,6 +21,7 @@ test('服务端不允许游玩时不打开任务表单，重新允许后可打�
       _playable: scenario.playable,
       data: { sheet: { node: { nodeId: 222, hasAdvanced: true } }, isPreview: scenario.preview, timeBanner: '活动已结束' },
       stopAudio() {},
+      _startGate() { return false; },   // 开局定位闸另有测试;此处只测「服务端不允许游玩」的前置拦截
       setData(patch) { mutations += 1; if (patch.advancedPlay && patch.advancedPlay.show) opened = true; },
     };
     startGame((message) => notices.push(message)).call(page);

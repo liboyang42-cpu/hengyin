@@ -14,7 +14,9 @@
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
+const mediaDenied = require('../../utils/media-denied.js');
 const cyToast = require('../../../../utils/toast.js');
+const { stripOptionKey } = require('../../utils/playkit-questo.js');
 
 const KEYS = ['A', 'B', 'C', 'D'];
 /* 反馈上面那行小字。原型只有这两个词 —— 「答错了」这种判决式说法在这一格里读着太重,
@@ -41,7 +43,7 @@ const buildOptions = (list) => (list || []).map((o, i) => ({
   k: i, key: KEYS[i] || String(i + 1),
   // 服务端给的那一份 id 要带着走:判定按 id 认,下标在它那边没有意义
   id: o.id || '',
-  t: o.t || ('选项 ' + (KEYS[i] || i + 1)),
+  t: stripOptionKey(o.t, KEYS[i]) || ('选项 ' + (KEYS[i] || i + 1)),
   // UG-02:选项图与替代文字(pickPlayKit 已滤掉不可显示的引用);加载失败时降级为纯文字
   img: o.img || '',
   alt: o.alt || '',
@@ -295,7 +297,7 @@ Component({
             // 拿不到 size 时按未知处理(size undefined),仍由服务端拦截,不伪造。
             this.triggerEvent('shoot', { tempFilePath: path, size: file.size });
           },
-          fail: () => {},
+          fail: (err) => { if (this._isQaContextCurrent(context)) mediaDenied.guideIfDenied(err); },
         });
         return;
       }

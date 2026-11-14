@@ -7,14 +7,15 @@ const app = getApp();
 const teamOperation = require('../utils/roam-team-operation.js');
 const teamRecovery = require('../utils/roam-team-recovery.js');
 const session = require('../../utils/session/login-reload.js');
-const { playerMapStyle } = require('../../utils/map-style.js'); function openAddress() { return require('../../utils/open-address.js') }
-const PLAYER_MAP_STYLE = playerMapStyle();
+const mapSwitch = require('../../utils/map-style-switch.js'); function openAddress() { return require('../../utils/open-address.js') }
+const MAP_KIND_DATA = mapSwitch.initialData();
 const { getCurrentLocation } = require('../../utils/location/location-manager.js');
 const lastLocation = require('../../utils/location/last-location.js');
 const { isRecordList } = require('../../utils/response-shape.js');
 const H = require('../../utils/roam-hangout.js');
 const T = require('../utils/map-team.js'); const L = require('../utils/map-layers.js'); // L:2026-10-22 三类点位/筛选/边缘缩小
 const cyToast = require('../../utils/toast.js');
+const PM = require('../../utils/roam-place-map.js');
 const modal = require('../../utils/modal.js');
 const mediaPreview = require('../../utils/media-preview.js');
 const loading = require('../../utils/loading.js');
@@ -60,6 +61,10 @@ function emptyResult() {
 }
 
 Page({
+  ...mapSwitch.methods(),
+  openMapKind() { this.setData({ mapKindSheetShow: true }); },
+  closeMapKind() { this.setData({ mapKindSheetShow: false }); },
+  onMapKindPick(e) { const row = this.data.mapKindItems[Number(e.detail && e.detail.index)]; this.setData({ mapKindSheetShow: false }); if (row) this._applyMapKind(row.kind, true); },
   afterTeamCommandTerminal(receipt, command) {
     this._teamScopeEpoch = (this._teamScopeEpoch || 0) + 1;
     this.refresh(this.data.center);
@@ -79,8 +84,7 @@ Page({
   data: { teamCommandRows: [], teamCommandError: '',
     safeBottom: 0,
     hudTop: 90,
-    fmSubkey: PLAYER_MAP_STYLE.subkey,
-    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle,
+    ...MAP_KIND_DATA, mapKindSheetShow: false,
     center: DEFAULT_CENTER,
     scale: 15,
     markers: [],
@@ -142,7 +146,7 @@ Page({
   },
 
   /* 买完票回到地图,卡片要从「去买这场的票」变成「申请加入」(P2 底注):回前台重拉一次。 */
-  onShow() { this._hidden = false;
+  onShow() { this._hidden = false; this._syncMapKindPref();
     this.reloadTeamCommands();
     const writeOwner = teamOperation.identity(app);
     if (this._teamWriteOwner && this._teamWriteOwner !== writeOwner) {
@@ -821,7 +825,10 @@ Page({
       data: { lat: center.lat, lng: center.lng, radius },
       success(res) {
         if (that._unloaded || seq !== that._poiSeq) return;
-        that._pois = res && res.code == 200 && isRecordList(res.data) ? res.data : [];
+        const got = res && res.code == 200 ? PM.unwrapPois(res) : null;
+        that._pois = got && isRecordList(got.rows) ? got.rows.map((r) => (r && !r.coverImg && PM.coverKey(r) ? Object.assign({}, r, { coverImg: PM.coverKey(r) }) : r)) : [];
+        // A4.3:服务端按距离截断时说明一声,不再静默丢掉远处的点
+        if (got && got.truncated && !that._truncTold) { that._truncTold = true; cyToast('只显示离你最近的 ' + that._pois.length + ' 处'); }
         that._syncLayerOptions(); that._syncMarkers();
         that._queueIcons(() => (!that._unloaded && seq === that._poiSeq) ? that._genPoiDots() : false).then((made) => { if (made && !that._unloaded) that._syncMarkers(); });
       },
@@ -913,7 +920,7 @@ Page({
       const c = L.poiCard(p), shop = c.kind === 'shop', tag = c.tags[0] || c.tag;
       return { kind: shop ? 'shop' : 'spot', id: c.id, chipLetter: tag.slice(0, 1), chipColor: shop ? '#FF9F0A' : '#34C759', chipText: tag, img: img(c.img), faces: [], countText: '', // ds-ok v13 商家橙 / 地点绿
         ribbon: '', title: c.title, subName: shop ? (p.merchantName || '') : c.tags.slice(1, 3).join(' · '), metaLine: c.address, metaStrong: c.found ? '到过' : '',
-        address: c.address, desc: c.desc, thumbs: [], rows: [{ k: '类型', v: c.tags.join(' · ') || c.tag }].concat(c.address ? [{ k: '地址', v: c.address }] : []),
+        address: c.address, desc: c.desc, sourceList: c.sourceList, srcOpen: false, thumbs: [], rows: [{ k: '类型', v: c.tags.join(' · ') || c.tag }].concat(c.address ? [{ k: '地址', v: c.address }] : []),
         // 官方地点(带玩法):背面展开就是完整详情 —— 相册左右滑、玩法、小红书、评价都在这张卡里,不再跳别的半屏
         official: !!p.templateId, game: null, reviews: [], reviewsLoaded: false, ratingText: '',
         primary: p.templateId ? '开始挑战' : '去这里', secondary: p.templateId ? '导航' : '', lat: c.lat, lng: c.lng };
@@ -1112,6 +1119,8 @@ Page({
       fail: () => done(false), successStatusAbnormal: (res) => done(false, res && res.msg) });
   },
   onPoiImagePreview(e) { mediaPreview.open((this.data.poiCard || {}).thumbs || [], Number(e.currentTarget.dataset.index)); },
+  onPoiSources() { if (this.data.poiCard) this.setData({ 'poiCard.srcOpen': !this.data.poiCard.srcOpen }); },
+  onPoiSourceCopy(e) { const url = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.url; if (url) wx.setClipboardData({ data: String(url) }); },
   onPoiPhotoCredit() { if (this.data.poiCard) this.setData({ 'poiCard.creditOpen': !this.data.poiCard.creditOpen }); },
   onPoiFlip() { this.setData({ poiFlip: !this.data.poiFlip, poiExpand: false }); },
   onPoiExpand() { this._expand(!this.data.poiExpand); },

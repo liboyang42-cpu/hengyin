@@ -124,7 +124,8 @@ test('同一份 markers 不重发 setData;拉远换成小圆点与附近点数',
   page._mapScale = 13;
   page._syncMarkers();
   assert.ok(page.data.markers.length > 0);
-  assert.ok(page.data.markers.every((m) => m.iconPath === 'dot.png'));
+  // A2.4:远景圆点按分类着色,叠在同一屏幕格的聚合并写数量
+  assert.ok(page.data.markers.every((m) => /^\/images\/roam\/pin\/dot-[a-z]+\.png$/.test(m.iconPath)));
   assert.equal(page.data.pinCountLabel, '附近 12 个地点');
 });
 
@@ -245,6 +246,33 @@ test('第九轮 m1 第 9 项:漫游地点卡与商家横滑卡的地址点开地
   assert.equal(opened[0].latitude, 31.2);
 });
 
+test('入口地点与主地图地点的地址按钮复用全站入口,校验坐标并保留名称地址', async () => {
+  const { handlerSlices, expandHandlerBody, inferActionClass } = require('../../scripts/uiaudit/build-action-ledger');
+  const slices = handlerSlices(path.resolve(__dirname, '../../pages/roam/index.js'));
+  for (const handler of ['navEntryPlace', 'navPaceCard']) {
+    assert.equal(inferActionClass(handler, expandHandlerBody(handler, slices, null, { modules: true }), new Set()), 'external');
+  }
+  const page = loadRoamPage();
+  const opened = [];
+  const prev = global.wx;
+  global.wx = { openLocation: (o) => opened.push(o) };
+  try {
+    page.data.entryPlace = { lat: '31.2', lng: '121.4', name: '入口地点', address: '甲路' };
+    page.data.paceCard = { lat: 31.3, lng: 121.5, title: '主地图地点', address: '乙路' };
+    assert.equal(await page.navEntryPlace(), true);
+    assert.equal(await page.navPaceCard(), true);
+    assert.deepEqual(opened, [
+      { latitude: 31.2, longitude: 121.4, name: '入口地点', address: '甲路', scale: 17 },
+      { latitude: 31.3, longitude: 121.5, name: '主地图地点', address: '乙路', scale: 17 },
+    ]);
+    page.data.entryPlace.lat = 91;
+    page.data.paceCard.lng = 181;
+    assert.equal(await page.navEntryPlace(), false);
+    assert.equal(await page.navPaceCard(), false);
+    assert.equal(opened.length, 2);
+  } finally { global.wx = prev; }
+});
+
 // 第九轮 m2 补充第 2 项:任意缩放下图钉互不重叠,参与商铺优先;46 枚与 200 枚都核对
 function crowd(n, seed) {
   let x = seed || 7;
@@ -298,7 +326,7 @@ test('第九轮 m2 补充第 3 项:拉远是热度——叠得越多越大越亮
   assert.deepEqual([1, 3, 9].map((n) => pins.heatLevel(n).level), [1, 2, 3]);
   const js = read('pages/roam/index.js');
   assert.match(js, /this\._icons\['pin-heat' \+ lv\] = await save\(\);/);
-  assert.match(js, /iconPath: icon, zIndex: 2 \+ heat\.level/);
+  assert.match(js, /placeMap\.buildPins\(dotRows, \{ soloDots: true, scale: pinScale, region: layoutRegion/);
 });
 
 test('rig 走查修正:玩家自己的点也占位,图钉不压蓝点', () => {
