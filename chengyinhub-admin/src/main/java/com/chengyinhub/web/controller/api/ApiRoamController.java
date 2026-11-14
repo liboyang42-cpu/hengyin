@@ -953,7 +953,7 @@ public class ApiRoamController extends BaseController {
         double dLng = 60 / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(poiLat))));
         List<CityNodeVO> near = roamMapper.selectMerchantNodesNear(
                 poiLat - dLat, poiLat + dLat, poiLng - dLng, poiLng + dLng,
-                poiLat, poiLng, null, null, null, null);
+                poiLat, poiLng, null, null, null, null, 50);
         Long poiId = nearestWithin(near, poiLat, poiLng, NODE_MATCH_RADIUS_M);
         if (poiId != null) {
             data.put("participating", true);
