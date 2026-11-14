@@ -645,6 +645,9 @@ const RAW = [
 ];
 /* eslint-enable max-len */
 
+// 2026-11-14 D-28：真实商家权限/加载状态由后端决定，新增行不晋级截图或业务证据。
+RAW.push(['F317', 'F317-merchant-bundle-reservations.png', '/pages/merchant/bundle-reservations/index', 'merchant', 'normal', null, undefined, { selector: 'cy-page-title', min: 1 }, 'real-data', 'P1', '', '套票预约：未来七天列表与岗位权限使用真实接口，未到店操作另需实际预约验收']);
+
 const SHOTS = RAW.map(([id, file, route, role, state, data, scrollTop, expect, control, priority, blocked, note, fixtureTarget]) => ({
   id, file, route, role, state, data, scrollTop, expect, control, priority, blocked, note, fixtureTarget,
   fixtureVerified: VERIFIED.has(id),
@@ -691,10 +694,10 @@ const countBy = (pred) => SHOTS.filter(pred).length;
 // 2026-11-12 club-payout-binding:新增 F315 个人收款页(missing-param 一行),total 366→367、P1 217→218、actionable P1 210→211 / total 342→343、F 112→113、real-data 59→60。
 // 2026-11-13 pass-mini:新增 F316 通行证订单详情页(missing-param 一行),total 367→368、P1 218→219、actionable P1 211→212 / total 343→344、F 113→114、real-data 60→61。
 const STATS = {
-  "total": 368,
+  "total": 369,
   "byPriority": {
     "P0": 139,
-    "P1": 219,
+    "P1": 220,
     "P2": 10
   },
   "blockedByPriority": {
@@ -704,9 +707,9 @@ const STATS = {
   },
   "actionable": {
     "P0": 130,
-    "P1": 212,
+    "P1": 213,
     "P2": 2,
-    "total": 344
+    "total": 345
   },
   "blocked": 24,
   "domains": {
@@ -715,12 +718,12 @@ const STATS = {
     "C": 56,
     "D": 52,
     "E": 26,
-    "F": 114
+    "F": 115
   },
   "control": {
     "setData": 185,
     "identity+setData": 115,
-    "real-data": 61,
+    "real-data": 62,
     "real-device": 7
   },
   "fixtureVerified": 16
