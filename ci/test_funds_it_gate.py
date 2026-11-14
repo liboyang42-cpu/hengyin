@@ -391,23 +391,19 @@ class FundsItTriggerPathCoverageTest(unittest.TestCase):
             self.assertTrue(any(fnmatch.fnmatch(relative, pattern) for pattern in globs),
                             "%s 不被任何资金触发路径 glob 命中 —— 单改它不触发真库复验" % relative)
 
-    def test_new_patterns_are_present_in_both_workflow_filter_blocks(self):
-        # 门禁的 enforce_trigger_contract 只管 on.push.paths;dorny filters 走的是同一份
-        # pattern 列表,漏改一侧 PR 侧就仍旧不跑。两处各一次 = 恰好 2 处。
-        workflow = _WORKFLOW.read_text(encoding="utf-8")
-        for pattern in self._NEW_PATTERNS:
-            quoted = "'%s'" % pattern
-            self.assertEqual(2, workflow.count(quoted),
-                             "%s 必须同时出现在 on.push.paths 与 dorny filters(现 %d 处)"
-                             % (pattern, workflow.count(quoted)))
+    def test_master_is_unfiltered_and_PR_uses_shared_money_scope(self):
+        workflow = _WORKFLOW.read_text(encoding='utf-8')
+        triggers = funds_it_gate._extract_on_triggers(workflow)
+        self.assertFalse(any('paths:' in line or 'paths-ignore:' in line for line in triggers['push']))
+        self.assertIn('run: node ci/test-impact.js funds', workflow)
+        self.assertIn('funds: ${{ steps.scope.outputs.funds }}', workflow)
 
-    def test_red_when_business_it_pattern_is_missing_from_push_trigger(self):
-        pattern_line = "      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/**'\n"
-        original = _WORKFLOW.read_text(encoding="utf-8")
-        broken = original.replace(pattern_line, "", 1)
-        self.assertNotEqual(original, broken, "fixture 必须真摘掉 business/it 触发路径")
-        problems = funds_it_gate.enforce_workflow(broken, _GATE_SCRIPT.read_text(encoding="utf-8"))
-        self.assertTrue(any("business/it" in p for p in problems), problems)
+    def test_red_when_master_push_is_path_filtered(self):
+        original = _WORKFLOW.read_text(encoding='utf-8')
+        broken = original.replace('  push:\n', "  push:\n    paths:\n      - '**/*.java'\n", 1)
+        self.assertNotEqual(original, broken)
+        problems = funds_it_gate.enforce_workflow(broken, _GATE_SCRIPT.read_text(encoding='utf-8'))
+        self.assertTrue(any('on.push' in problem for problem in problems), problems)
 
 
 # workflow 声明要注入的 4 个 secret;门禁脚本必须逐个 fail-closed，缺一个都不许静默继续。
@@ -648,17 +644,16 @@ class FundsItWorkflowContractTest(unittest.TestCase):
         self.assertTrue(any("回读并传播" in p for p in problems), problems)
 
     def test_red_when_funds_migration_path_is_missing_from_trigger(self):
-        broken = self.workflow.replace(
-            "      - 'chengyinhub-admin/sql/migration_*funds*.sql'\n", "", 1)
+        broken = self.workflow.replace("  push:\n", "  push:\n    paths:\n      - '**/*funds*.sql'\n", 1)
+        self.assertNotEqual(self.workflow, broken)
         problems = funds_it_gate.enforce_workflow(broken, self.gate)
-        self.assertTrue(any("migration_*funds*.sql" in p for p in problems), problems)
+        self.assertTrue(any("on.push" in p for p in problems), problems)
 
     def test_red_when_tandianri_backfill_migration_path_is_missing_from_trigger(self):
-        required = "      - 'chengyinhub-admin/sql/migration_20260814_tandianri_product_type_backfill.sql'\n"
-        broken = self.workflow.replace(required, "", 1)
-        self.assertNotEqual(self.workflow, broken, "fixture 必须真摘掉探店日资金迁移触发路径")
+        broken = self.workflow.replace("  push:\n", "  push:\n    paths-ignore:\n      - '**/*tandianri*.sql'\n", 1)
+        self.assertNotEqual(self.workflow, broken)
         problems = funds_it_gate.enforce_workflow(broken, self.gate)
-        self.assertTrue(any("tandianri_product_type_backfill" in p for p in problems), problems)
+        self.assertTrue(any("on.push" in p for p in problems), problems)
 
 
 if __name__ == "__main__":

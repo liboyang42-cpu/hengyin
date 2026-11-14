@@ -8,7 +8,7 @@
 
 PR 合并规则：`Mini program static checks`（聚合所有适用快速检查）与两个既有 Funds required checks 均绿。保留原 required-check 名称；小程序分片是动态数量，不应逐项加入 branch protection。资金 PR 必须等完整后端和真库执行完成。
 
-动作台账、路由矩阵和当前截图影响矩阵不再提交。CI 按当前 checkout SHA 生成台账与路由，校验控件映射／唯一性及原证据 overlay，后续 job 只下载同一 SHA 的生成物。真实截图、人工证据、覆盖豁免和债务基线仍保留版本控制，不以重建库存冒充验收。
+动作台账、路由矩阵和当前截图影响矩阵不再提交。CI 按当前 checkout SHA 生成台账与路由，校验控件映射／唯一性及原证据 overlay，后续 job 只下载同一 SHA 的生成物，并校验完整源码指纹、产物摘要和影响计划摘要，拒绝源码或产物漂移。真实截图、人工证据、覆盖豁免和债务基线仍保留版本控制，不以重建库存冒充验收。
 
 本机跑小程序测试前执行 `node ci/prepare-mini-artifacts.js`，然后照常运行测试或 `bash ci/xcx-check.sh`。`npm run test:unit`、`npm run lint` 会自动准备生成物；构建和 Java 测试仍在专用 VPS 或 GitHub-hosted runner。
 

@@ -32,6 +32,7 @@ const {
 } = require('../../scripts/lib/xcx-scan');
 const { lintRepo: lintWxmlHandlers } = require('../../scripts/wxml-handler-lint');
 const BASELINE = require('./ui-integrity-baseline');
+const { stableSiteKey } = require('./stable-site-key');
 const { namespaceDeclarationOffsets, collectBackendMappings } = require('../../../ci/api-existence-gate');
 
 const XCX_ROOT = path.resolve(__dirname, '..', '..');
@@ -713,7 +714,7 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
     const namespaceOffsets = namespaceDeclarationOffsets(source, namespacePrefixes);
     for (const parsed of collectApiLiterals(source)) {
       if (namespaceOffsets.has(parsed.offset)) continue;
-      const key = `${repoRel(file)}:${lineNumber(source, parsed.offset)}`;
+      const key = stableSiteKey(repoRel(file), source, lineNumber(source, parsed.offset));
       if (parsed.dynamic) dynamicReports.push({ key, route: parsed.route });
       else staticCount += 1;
       if (![...backendRoutes].some((route) => routeMatches(parsed.route, route))) {
@@ -762,7 +763,7 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
           overrides: mode.overrides, node: wrapperNode });
         continue;
       }
-      const key = `${repoRel(file)}:${lineNumber(source, request.index)}`;
+      const key = stableSiteKey(repoRel(file), source, lineNumber(source, request.index));
       const allowed = U1_VARIABLE_ALLOWLIST.get(key);
       variableReports.push({ key, detail: expression.slice(0, 100) || 'sendRequest 参数无静态 url', allowed });
       if (!allowed) {
@@ -771,7 +772,7 @@ function scanU1(jsFiles, backendRoutes, namespacePrefixes = collectBackendMappin
     }
     for (const call of finite.wrapperCalls(wrappers.values())) {
       if (call.proven) continue;
-      const key = `${repoRel(file)}:${lineNumber(source, call.node.start)}`;
+      const key = stableSiteKey(repoRel(file), source, lineNumber(source, call.node.start));
       const allowed = U1_VARIABLE_ALLOWLIST.get(key);
       variableReports.push({ key, detail: source.slice(call.node.start, call.node.end).slice(0, 100), allowed });
       if (!allowed) violations.push({ code: 'U1', key,
@@ -942,7 +943,7 @@ function scanU4(jsFiles, debtBaseline = U4_DEBT_BASELINE, dynamicAllowlist = U4_
       while (/\s/.test(masked[argStart])) argStart += 1;
       const line = lineNumber(source, call.index);
       if (masked[argStart] !== '{') {
-        const key = `${repoRel(file)}:${line}`;
+        const key = stableSiteKey(repoRel(file), source, line);
         const allowed = dynamicAllowlist.get(key);
         dynamicReports.push({ key, allowed, detail: 'setData 参数不是对象字面量' });
         if (!allowed) violations.push({ code: 'U4', key, message: '动态 setData 未登记,无法核对顶层字段消费' });
@@ -955,7 +956,7 @@ function scanU4(jsFiles, debtBaseline = U4_DEBT_BASELINE, dynamicAllowlist = U4_
       }
       const { properties, dynamic } = objectProperties(source, masked, argStart, closeBrace);
       for (const entry of dynamic) {
-        const key = `${repoRel(file)}:${lineNumber(source, entry.offset)}`;
+        const key = stableSiteKey(repoRel(file), source, lineNumber(source, entry.offset));
         const allowed = dynamicAllowlist.get(key);
         dynamicReports.push({ key, allowed, detail: entry.raw.slice(0, 100) });
         if (!allowed) violations.push({ code: 'U4', key, message: '动态 setData 字段未登记,无法核对 WXML 消费' });
@@ -1176,7 +1177,7 @@ function scanU5(jsFiles, allowlist = U5_SILENT_ALLOWLIST) {
     const re = /\bsilentError\s*:\s*true\b/g;
     let match;
     while ((match = re.exec(masked))) {
-      const key = `${repoRel(file)}:${lineNumber(source, match.index)}`;
+      const key = stableSiteKey(repoRel(file), source, lineNumber(source, match.index));
       const requestStart = requestOffsets.filter(offset => offset < match.index).pop() ?? -1;
       const objectStart = requestStart < 0 ? -1 : masked.indexOf('{', requestStart);
       const objectEnd = objectStart < 0 ? -1 : matchBrace(masked, objectStart);
@@ -1199,7 +1200,7 @@ function scanU5(jsFiles, allowlist = U5_SILENT_ALLOWLIST) {
       const visibleFallback = feedbackFiles.length > 0
         && feedbackFiles.every(owner => hasVisibleU5Feedback(owner, source, failSource));
       if (visibleFallback) {
-        autoSafe.push({ key, detail: 'fail 回调内存在 toast/tips 或 WXML 已消费的错误/空态 setData' });
+        autoSafe.push({ key: `${repoRel(file)}:${lineNumber(source, match.index)}`, detail: 'fail 回调内存在 toast/tips 或 WXML 已消费的错误/空态 setData' });
         continue;
       }
       const allowed = allowlist.get(key);
@@ -1227,7 +1228,7 @@ function scanLegacy(jsFiles, wxmlFiles) {
     while ((match = navRe.exec(source))) {
       const target = normalize(match[1]);
       if (target.startsWith('/') && !target.includes('${') && !registered.has(target)) {
-        errors.push({ code: 'LEGACY', key: `${repoRel(file)}:${lineNumber(source, match.index)}`, message: `导航目标 ${target} 未在 app.json 注册` });
+        errors.push({ code: 'LEGACY', key: stableSiteKey(repoRel(file), source, lineNumber(source, match.index)), message: `导航目标 ${target} 未在 app.json 注册` });
       }
     }
     // 提示文案闸都扫剥掉注释后的代码:注释里提到「参数错误」不算,代码里 msg.includes('参数错误') 也不算(那是在拦它)。
@@ -1268,7 +1269,7 @@ function scanLegacy(jsFiles, wxmlFiles) {
     while ((match = navRe.exec(source))) {
       const target = normalize(match[1]);
       if (target.startsWith('/') && !target.includes('{{') && !registered.has(target)) {
-        errors.push({ code: 'LEGACY', key: `${repoRel(file)}:${lineNumber(source, match.index)}`, message: `navigator 目标 ${target} 未在 app.json 注册` });
+        errors.push({ code: 'LEGACY', key: stableSiteKey(repoRel(file), source, lineNumber(source, match.index)), message: `navigator 目标 ${target} 未在 app.json 注册` });
       }
     }
   }
@@ -1407,7 +1408,7 @@ function runSelftest() {
     fs.writeFileSync(js, "const app=getApp();function renderFailure(page){page.setData({state:'ERROR'})}Page({load(){app.sendRequest({url:'/api/present',silentError:true,fail(){renderFailure(this)}})}})\n");
     fs.writeFileSync(wxml, '<view wx:if="{{state === \'ERROR\'}}">加载失败</view>\n');
     const u5VisibleHelperStateGood = scanU5([js], new Map()).violations.length === 0;
-    const u5Key = `${repoRel(js)}:1`;
+    const u5Key = stableSiteKey(repoRel(js), "const app=getApp();Page({load(){app.sendRequest({url:'/api/present',silentError:true,fail(){resolve(null)}})}})\n", 1);
     fs.writeFileSync(js, "const app=getApp();Page({load(){app.sendRequest({url:'/api/present',silentError:true,fail(){resolve(null)}})}})\n");
     const u5AllowlistedGood = scanU5([js], new Map([[u5Key, 'fixture:调用方确认该增强允许静默']])).violations.length === 0;
     assertSelftest('U5', u5Bad && u5EmptyFailBad && u5ResolveNullBad

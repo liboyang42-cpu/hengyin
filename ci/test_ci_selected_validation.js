@@ -81,15 +81,15 @@ test('actual CI keeps native 20-way runner, unconditional secret scan, full requ
   assert.match(yaml, /run-name:.*PARTIAL SELECTED CI/)
   assert.match(yaml, /&& '-partial' \|\| ''/)
   const unit = job('mini_unit')
-  for (const token of ['max-parallel: 20', 'fail-fast: false', '19, 20]',
-    'node ci/xcx-unit-manifest.js --selftest', 'node --test --test-shard=${{ matrix.shard }}/20 "tests/unit/**/*.test.js"',
+  for (const token of ['max-parallel: 20', 'fail-fast: false', 'fromJSON(needs.changes.outputs.mini_shards)',
+    'node ci/xcx-unit-manifest.js --selftest', 'node ../ci/run-mini-tests.js',
     'exclude: ${{ fromJSON(needs.changes.outputs.mini_exclude) }}', 'CI_UNIT_OUTCOME: ${{ steps.unit.outcome }}',
     'ci-selected-mini-${{ matrix.shard }}-a${{ github.run_attempt }}']) assert.ok(unit.includes(token), token)
   const secret = job('secret_scan')
   assert.doesNotMatch(secret, /\n    (if|needs):/)
   const mini = job('mini_program')
   for (const token of ['PARTIAL SELECTED CI summary', "if: ${{ needs.changes.outputs.selected != 'true' }}",
-    'test "$CHANGES_RESULT" = success', 'test "$UNIT_RESULT" = success', 'test "$STATIC_RESULT" = success',
+    "required = ['changes', 'fast_gates', 'secret_scan']", "required += ['mini_prepare', 'mini_unit', 'mini_static']", "required += ['backend']",
     'CI_NEEDS: ${{ toJSON(needs) }}', 'ci-selected-summary-${{ github.run_attempt }}']) assert.ok(mini.includes(token), token)
   for (const name of gate.JOBS) {
     assert.ok(job(name).includes('PARTIAL SELECTED'))

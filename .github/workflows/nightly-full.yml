@@ -1,0 +1,23 @@
+name: Nightly full CI dispatch
+on:
+  schedule:
+    - cron: '17 19 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch:
+    name: Dispatch all full regression workflows
+    if: github.repository == 'liboyang42-cpu/hengyin'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: liboyang42-cpu/hengyin
+    steps:
+      - run: |
+          gh workflow run ci.yml --ref master -f validation_scope=full
+          gh workflow run funds-mysql-it.yml --ref master
+          gh workflow run isolated-authenticated-redis-recovery.yml --ref master -f probe_mode=recovery
+          gh workflow run mini-followup-regression.yml --ref master

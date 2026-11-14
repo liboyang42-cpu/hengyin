@@ -245,7 +245,7 @@ fi
 
 section "全量可点击控件动作台账(控件/handler/动作类型/对端回读不可漂移)"
 node "$XCX_DIR/scripts/uiaudit/build-action-ledger.js" --selftest || mark_fail 自证
-if ! node "$XCX_DIR/scripts/uiaudit/build-action-ledger.js" --check; then
+if ! node "$REPO_ROOT/ci/verify-mini-artifacts.js"; then
   mark_fail
 fi
 

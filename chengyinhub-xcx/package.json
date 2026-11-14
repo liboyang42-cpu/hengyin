@@ -2,6 +2,8 @@
   "name": "chengyinhub-xcx",
   "private": true,
   "scripts": {
+    "pretest:unit": "node ../ci/prepare-mini-artifacts.js",
+    "prelint": "node ../ci/prepare-mini-artifacts.js",
     "preflight:release": "node scripts/preflight-release.js",
     "verify:wechat-release": "node scripts/wechat-release-contract.js --source-only",
     "report:mainpkg": "node scripts/mainpkg-size-report.js",

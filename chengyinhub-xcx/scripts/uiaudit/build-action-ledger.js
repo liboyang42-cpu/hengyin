@@ -3789,8 +3789,8 @@ function evidenceReadiness(ledger, overlay) {
   return { ready: pending.length === 0 && nonPassed.length === 0, pending, nonPassed }
 }
 
-function inventoryMatchesCurrent(ledger) {
-  return JSON.stringify(ledger) === JSON.stringify(buildLedger())
+function inventoryMatchesCurrent(ledger, current = buildLedger()) {
+  return JSON.stringify(ledger) === JSON.stringify(current)
 }
 
 function loadEvidenceOverlay() {
