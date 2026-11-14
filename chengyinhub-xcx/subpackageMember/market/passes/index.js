@@ -5,6 +5,8 @@ const { isBizOk } = require('../../../utils/response-shape.js')
 const mv = require('../../utils/market-view.js')
 const pp = require('../../utils/platform-pass.js')
 const roleGuard = require('../../../utils/roleGuard.js')
+const login = require('../../../utils/auth/require-login.js')
+const session = require('../../../utils/session/login-reload.js')
 
 const TABS = [
   { key: 'shop', label: '可购买' },
@@ -39,13 +41,15 @@ Page({
   },
   onLoad(options) {
     const tab = options && TABS.some((t) => t.key === options.tab) ? options.tab : 'shop'
-    this.setData({ tab })
+    this.setData({ tab: login.hasSession(app) ? tab : 'shop' })
+    if (tab !== 'shop' && !login.hasSession(app)) this.onTab({ detail: { key: tab } })
     this.load()
     this.loadPoints()
     this.loadMember()
   },
   // l-pass:通行证入口只看服务端 enabled;有效期 / 可玩主题数只写服务端给的值
   loadMember() {
+    const owner = session.identity(app)
     // l-icons:商家没有通行证(业主 2026-11-11),商家账号不出通行证卡、不出主题库行
     let merchant = false
     try { merchant = !!roleGuard.isMerchantView() } catch (e) { merchant = false }
@@ -53,6 +57,7 @@ Page({
     app.sendRequest({
       url: '/api/platform-pass', method: 'GET', hideLoading: true, autoErrorToast: false,
       success: (res) => {
+        if (this._unloaded || owner !== session.identity(app)) return
         const d = isBizOk(res) && res.data
         if (!d || d.enabled !== true) { this.setData({ member: null }); return }
         const v = pp.passView(d, '', pp.platformOf(wx))
@@ -71,9 +76,12 @@ Page({
   },
   // r2-store 积分余额卡:只读服务端余额;积分只能挣、不卖,这里不出充值包
   loadPoints() {
+    if (!login.hasSession(app)) { this.setData({ pointBalance: null }); return }
+    const owner = session.identity(app)
     app.sendRequest({
       url: '/api/user/info', method: 'POST', hideLoading: true, autoErrorToast: false,
       success: (res) => {
+        if (owner !== session.identity(app)) return
         const p = isBizOk(res) && res.data ? res.data.point : null
         this.setData({ pointBalance: p !== null && p !== undefined && p !== '' && Number.isFinite(Number(p)) ? Number(p) : null })
       }
@@ -84,19 +92,27 @@ Page({
     this._navigating = true
     wx.navigateTo({ url: '/subpackageMember/points-history/index', complete: () => { this._navigating = false } })
   },
-  onShow() { if (this._loaded) { this.load(true); this.loadPoints(); this.loadMember() } },
+  onHide() { this._hidden = true; this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1 },
+  onUnload() { this._unloaded = true; this._seq = (this._seq || 0) + 1 },
+  onShow() { this._hidden = false; if (this._loaded) { this.load(true); this.loadPoints(); this.loadMember() } },
   onPullDownRefresh() { this.load(true) },
   load(quiet) {
+    const owner = session.identity(app), signedIn = login.hasSession(app)
+    if (owner !== this._readOwner) {
+      this._loaded = false
+      this.setData({ orders: [], passOrders: [], giftsBought: [], giftsReceived: [], pointBalance: null, member: null, tab: signedIn ? this.data.tab : 'shop' })
+    }
+    this._readOwner = owner
     const seq = (this._seq = (this._seq || 0) + 1)
     if (!quiet) this.setData({ state: 'loading' })
     Promise.all([
       get('/api/marketing/product/list', { limit: 20 }),
-      get('/api/marketing/product/orders', { limit: 20 }),
-      get('/api/marketing/product/gifts/bought', { limit: 20 }),
-      get('/api/marketing/product/gifts/received', { limit: 20 }),
-      get('/api/platform-pass/orders', { limit: 20 })
+      signedIn ? get('/api/marketing/product/orders', { limit: 20 }) : Promise.resolve([]),
+      signedIn ? get('/api/marketing/product/gifts/bought', { limit: 20 }) : Promise.resolve([]),
+      signedIn ? get('/api/marketing/product/gifts/received', { limit: 20 }) : Promise.resolve([]),
+      signedIn ? get('/api/platform-pass/orders', { limit: 20 }) : Promise.resolve([])
     ]).then(([products, orders, bought, received, passOrders]) => {
-      if (seq !== this._seq) return
+      if (seq !== this._seq || owner !== session.identity(app)) return
       wx.stopPullDownRefresh()
       // 在售目录读取失败 ⇒ 整页错误,不显示「暂无在售」冒充空
       if (!products || !orders || !bought || !received) {
@@ -120,7 +136,11 @@ Page({
   },
   onTab(e) {
     const key = e && e.detail && e.detail.key
+    this._privateTabIntent = key
+    if (key !== 'shop' && app.ensureLoginFor && !app.ensureLoginFor('登录后查看自己的订单和礼品',
+      () => this.onTab(e), { owner: this, target: () => [this._privateTabIntent] })) return
     if (key && key !== this.data.tab) this.setData({ tab: key })
+    if (this._readOwner !== session.identity(app)) this.load()
   },
   openProduct(e) {
     const id = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.id

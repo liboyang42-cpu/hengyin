@@ -59,7 +59,7 @@
   </scroll-view>
 
   <view class="nb-load-error" wx:if="{{nearbyReadAccess || loadError}}" style="top:{{hudTop + (viewMode === 'map' ? 100 : 56)}}px;">
-    <cy-error load-failure="{{!nearbyReadAccess}}" title="{{nearbyReadAccess === 'login' ? '登录后查看附近信息' : nearbyReadAccess === 'denied' ? '当前账号无法查看附近信息' : '附近信息获取失败'}}" retry="{{nearbyReadAccess === 'login' ? '去登录' : '重试'}}" bind:retry="retryNearby" />
+    <cy-error load-failure="{{!nearbyReadAccess}}" title="{{nearbyReadAccess === 'denied' ? '当前内容无法查看' : '附近信息获取失败'}}" retry="重试" bind:retry="retryNearby" />
   </view>
 
   <!-- P1 角控件(稿 591:1020 / 591:1022)。开卡片时收起。 -->

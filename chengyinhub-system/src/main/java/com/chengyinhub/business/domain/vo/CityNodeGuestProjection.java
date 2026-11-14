@@ -14,7 +14,7 @@ public final class CityNodeGuestProjection {
         if (vo == null) return null;
         vo.setMerchantPhone(null);
         vo.setCouponId(null);
-        vo.setNeedRedeem(Boolean.FALSE);
+        vo.setNeedRedeem(null);
         vo.setCompleted(null);
         vo.setFavorited(null);
         vo.setQuestionName(null);

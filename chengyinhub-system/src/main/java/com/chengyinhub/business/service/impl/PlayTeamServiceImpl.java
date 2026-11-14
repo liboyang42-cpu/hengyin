@@ -363,12 +363,20 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
 
     @Override
     public List<PlayTeamNearbyVO> nearby(Long viewerMemberId, double lat, double lng, int radius) {
-        requireMember(viewerMemberId);
-        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) throw new IllegalArgumentException("经纬度格式不正确");
+        boolean guest = viewerMemberId == null || viewerMemberId <= 0;
+        viewerMemberId = guest ? 0L : viewerMemberId;
+        if (!Double.isFinite(lat) || !Double.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) throw new IllegalArgumentException("经纬度格式不正确");
         int r = radius <= 0 ? NEARBY_DEFAULT_RADIUS_M : Math.min(radius, NEARBY_MAX_RADIUS_M);
         double[] box = RoamHangoutServiceImpl.bbox(lat, lng, r);
-        return cmsTopicMapper.selectNearbyPublicTeams(viewerMemberId, lat, lng, box[0], box[1], box[2], box[3], r,
+        List<PlayTeamNearbyVO> rows = cmsTopicMapper.selectNearbyPublicTeams(viewerMemberId, lat, lng, box[0], box[1], box[2], box[3], r,
                 new Date(), NEARBY_LIMIT);
+        if (guest) for (PlayTeamNearbyVO row : rows) {
+            row.setViewerStatus(null);
+            row.setViewerHasTicket(null);
+            row.setApplyExpireTime(null);
+            row.setPendingCount(null);
+        }
+        return rows;
     }
 
     @Override

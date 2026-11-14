@@ -775,6 +775,24 @@ Page({
   /** 服务端已完成事实作为护照统计；本机照片仅作本机补充，不上传。 */
   async _loadIntroPassport() {
     if (this._passportReader) this._passportReader.dispose();
+    // 2026-11-14：游客读公开玩法；个人档案只在点选后登录读取。
+    if (!readSession.memberId(getApp())) {
+      this._activeRoamToken = null; this._activeRoamEventId = '';
+      this.setData({ passportLoading: false, passportError: false, passport: {
+        stats: [],
+        tiles: [
+          { key: 'history', icon: 'route', title: '漫游记录', value: '', img: '', photo: 'history' },
+          { key: 'stamp', icon: 'image', title: '集邮册', value: '', img: '', photo: 'stamp' },
+          { key: 'goals', icon: 'flag', title: '探索目标', value: '', photo: 'goals' },
+        ],
+        plays: [
+          { key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '', photo: 'event' },
+          { key: 'discover', icon: 'discover-shop', title: '发现附近店铺', sub: '现在能去哪', cover: '' },
+        ],
+      } });
+      this._loadActiveRoamEvents(); this._loadOfficialRoutes();
+      return;
+    }
     const { createReader } = require('../../utils/roam-passport-read.js');
     const reader = this._passportReader = createReader(getApp(), wx);
     const scope = this._roamReadScope(), startGeneration = this._roamStartGen;
@@ -841,7 +859,12 @@ Page({
   },
   retryPassport() { return this._loadIntroPassport(); },
   onPassportTileTap(e) {
-    const key = e.currentTarget.dataset.key; if (!e.ppExpanded && this._ppExpand(key)) return; // 2026-10-22:先放大成大卡再执行原动作
+    const key = e.currentTarget.dataset.key;
+    const app = getApp();
+    this._passportTileIntent = key;
+    if (app.ensureLoginFor && !app.ensureLoginFor('登录后查看自己的漫游记录', () => this.onPassportTileTap(e),
+      { owner: this, target: () => [this._passportTileIntent, this.data.introTab] })) return;
+    if (!e.ppExpanded && this._ppExpand(key)) return; // 2026-10-22:先放大成大卡再执行原动作
     if (key === 'history') this.openRoamHistory();
     else if (key === 'stamp') this.goStampAlbum();
     else if (key === 'goals') wx.navigateTo({ url: '/subpackageTools/exploration-goals/index' });
@@ -1065,7 +1088,7 @@ Page({
   onAtmosDone() { if (this.data.atmosOn) this.setData({ atmosOn: false }); },
 
   onHide() {
-    this._hidden = true; this.setData({ roamPageShown: false });
+    this._hidden = true; this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this.setData({ roamPageShown: false });
     this._roamStartGen = (this._roamStartGen || 0) + 1;
     this._roamStartPending = false;
     this._shootAfterStart = false;
@@ -6113,12 +6136,9 @@ Page({
   _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
   _clearEntryRead() {
     this._entryItems = []; this._entryTeams = []; this._entryPlaces = []; this._entryPlaceCards = [];
-    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], entryStrip: [], searchPlaces: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '' });
+    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], entryFarCards: [], entryStrip: [], searchPlaces: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '' });
   },
-  loginForEntryRead() {
-    if (this.data.entryReadAccess === 'denied') return;
-    return readSession.retryLogin(this, getApp(), function () { this._loadEntryMap(this.data.center); });
-  },
+  retryEntryRead() { if (!this._hidden && !this._unloaded) this._loadEntryMap(this.data.center); },
   // A1.5:半径取自视口外接圆(没有视口就按缩放估),不再固定 3km
   _entryRadius(c) {
     const region = this._entryRegion;
@@ -6132,7 +6152,6 @@ Page({
     const seq = (this._entrySeq = (this._entrySeq || 0) + 1);
     if (this._entryReadOwner !== owner) this._clearEntryRead();
     this._entryReadOwner = owner;
-    if (!readSession.memberId(getApp())) { this.setData({ entryReadAccess: 'login', entryLoadError: false, entryLoading: false }); return; }
     const located = !!this.data.entryLocated;
     const radius = this._entryRadius(c);
     this._entryLoadedAt = { lat: c.lat, lng: c.lng, radius };
@@ -6150,15 +6169,15 @@ Page({
       if (owner !== this._entryIdentity() || res && res.reason === 'sessionChanged') {
         this._entrySeq += 1;
         this._clearEntryRead();
-        this.setData({ entryReadAccess: readSession.memberId(getApp()) ? '' : 'login', entryLoadError: false });
-        if (!this._hidden && readSession.memberId(getApp())) this._loadEntryMap(c);
+        this.setData({ entryReadAccess: '', entryLoadError: false });
+        if (!this._hidden) this._loadEntryMap(c);
         return true;
       }
       const code = readSession.failureStatus(res);
       if (code !== 401 && code !== 403) return false;
       this._entrySeq += 1;
       this._clearEntryRead();
-      this.setData({ entryReadAccess: code === 401 ? 'login' : 'denied', entryLoadError: false });
+      this.setData({ entryReadAccess: code === 403 ? 'denied' : '', entryLoadError: code === 401, entryLoading: false });
       return true;
     };
     const jobs = [];
@@ -6214,6 +6233,7 @@ Page({
       introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '' });
     if (!view.cards.length && this._entryErrors && !this._entryErrors.activities && this.data.entryLocated) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
     if (view.placeCards.length) this.setData({ entryLoading: false });
+    this._refreshEntryCityStrip();
   },
   // 附近条 = 活动卡 + 就近地点卡;都没有才退回远处的公开主题
   _composeStrip(cards, placeCards, far) {
@@ -6260,10 +6280,23 @@ Page({
   onEntryCityStrip(e) {
     const d = e.detail || {};
     const strip = d.strip || null;
+    this._entryCityCatalog = strip;
     const label = d.inCity && strip ? strip.name + ' · ' + strip.count + ' 处推荐' : '本城推荐';
     if (label !== this.data.entryCityLabel || (strip && (!this.data.entryCityStrip || this.data.entryCityStrip.city !== strip.city)) || (!strip && this.data.entryCityStrip)) {
       this.setData({ entryCityStrip: strip, entryCityLabel: label });
     }
+    this._refreshEntryCityStrip();
+  },
+  _refreshEntryCityStrip() {
+    const strip = this._entryCityCatalog;
+    if (!strip) return;
+    const app = getApp();
+    const img = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : value => value;
+    const items = strip.items.map(item => {
+      const row = (this._entryPlaces || []).find(r => placeMap.parseTags(r && r.tags).includes(item.seed));
+      return Object.assign({}, item, { cover: row ? img(placeMap.coverKey(row)) : '' });
+    });
+    this.setData({ entryCityStrip: Object.assign({}, strip, { items }) });
   },
   onEntryCityPlaceTap(e) {
     const idx = Number(e.currentTarget.dataset.idx);

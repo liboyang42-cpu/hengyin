@@ -90,6 +90,7 @@ public class ApiCityNodeController extends BaseController {
                 lat - dLat, lat + dLat, lng - dLng, lng + dLng,
                 lat, lng, keyword, categoryId, tag, cityRole, n);
         markUserState(list);
+        if (uid() <= 0) list.forEach(CityNodeGuestProjection::apply);
         return success(list);
     }
 
@@ -125,7 +126,7 @@ public class ApiCityNodeController extends BaseController {
         CityNodeVO node = merchantNodeDiscoveryService.findActiveNode(merchantId);
         if (node == null) return success();
         markUserState(Collections.singletonList(node));
-        return success(node);
+        return success(uid() <= 0 ? CityNodeGuestProjection.apply(node) : node);
     }
 
     @Operation(summary = "我收藏的商家节点")

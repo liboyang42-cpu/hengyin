@@ -7,6 +7,7 @@ const { readReducedMotion } = require('../../../utils/motion-preference.js')
 const pp = require('../../utils/platform-pass.js')
 const payFlow = require('../../utils/platform-pass-pay.js')
 const roleGuard = require('../../../utils/roleGuard.js')
+const session = require('../../../utils/session/login-reload.js')
 
 const REVEAL = '/subpackagePass/reveal/index'
 const PASS_ORDER = '/subpackageMember/market/pass-order/index'
@@ -56,17 +57,21 @@ Page({
     if (merchant) { this.setData({ state: 'merchant' }); return }
     this.load()
   },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1 },
   onUnload() { this._unloaded = true },
+  onShow() { if (this._overview && this._readOwner !== session.identity(app)) this.load() },
   onPageScroll(e) {
     const s = !!(e && e.scrollTop > 40)
     if (s !== this.data.scrolled) this.setData({ scrolled: s })
   },
   load() {
+    const owner = this._readOwner = session.identity(app)
+    this._overview = null
     const seq = (this._seq = (this._seq || 0) + 1)
-    this.setData({ state: 'loading' })
+    this.setData({ state: 'loading', view: { enabled: false } })
     // qx-final2:主题封面只在旧的开通成功层 / 主题网格里用,两者合并后都已退场;主题数取概览的 libraryCount
     get('/api/platform-pass').then((ov) => {
-      if (seq !== this._seq || this._unloaded) return
+      if (seq !== this._seq || this._unloaded || owner !== session.identity(app)) return
       if (!isBizOk(ov) || !ov.data) { this.setData({ state: 'error' }); return }
       this._overview = ov.data
       this.setData({ state: 'ready', view: pp.passView(ov.data, this._selected || '', this._platform, this._canVirtual) })
@@ -80,12 +85,14 @@ Page({
     this.setData({ view: pp.passView(this._overview, code, this._platform, this._canVirtual) })
   },
   onBuy() {
+    if (app.ensureLoginFor && !app.ensureLoginFor('checkout', () => this.onBuy(), { owner: this, target: () => [this.data.view && this.data.view.selected, this.data.view && this.data.view.channel] })) return
+    if (this._readOwner !== session.identity(app)) { this.load(); return }
     const v = this.data.view
     if (this.data.buying || !v || v.buyOff || !v.channel) return
     this.setData({ buying: true, buyError: '' })
     this._confirmOrderNo = ''
     // 同一次购买意图(套餐不变)重试沿用同一个 requestId,服务端按它幂等,不会重复下单
-    if (!this._intent || this._intent.plan !== v.selected) this._intent = { plan: v.selected, requestId: payFlow.newRequestId() }
+    if (!this._intent || this._intent.plan !== v.selected || this._intent.owner !== session.memberId(app)) this._intent = { plan: v.selected, requestId: payFlow.newRequestId(), owner: session.memberId(app) }
     payFlow.purchase({ request, wx }, v.selected, v.channel, { requestId: this._intent.requestId }).then((r) => {
       if (this._unloaded) return
       this.setData({ buying: false })

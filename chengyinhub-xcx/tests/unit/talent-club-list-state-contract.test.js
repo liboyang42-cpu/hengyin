@@ -240,9 +240,9 @@ test('游客不请求私有俱乐部聚合和IM未读，登录点击成功才真
   assert.equal(h.page.data.clubsState,'ready');assert.equal(h.page.data.myClubs.length,0);
   owner='';const g=loadPage();g.app.getUserID=()=>owner;g.app.firstLogin=()=>{loginCalls++;owner='9';return Promise.resolve();};
   g.page.loadClubHome();g.requests[0].fail({errMsg:'offline'});
-  assert.equal(g.page.data.clubsLoginRequired,true);assert.equal(g.page.data.clubsErrorText,'');
+  assert.equal(g.page.data.clubsLoginRequired,false);assert.match(g.page.data.clubsErrorText,/加载失败/);
   g.page.retryClubs();g.page.retryClubs();await Promise.resolve();
-  assert.equal(loginCalls,1);assert.equal(g.requests.length,2);assert.equal(g.requests[1].url,'/api/club/home');
+  assert.equal(loginCalls,0);assert.equal(g.requests.length,3);assert.equal(g.requests[1].url,'/api/club/list');
 });
 test('真实401/403保留不同可见反馈，网络读取失败不伪装登录或权限', () => {
   for(const code of [401,403,500]){
@@ -257,8 +257,8 @@ test('俱乐部身份切换立即清理旧列表，旧账号回包不得恢复�
   const h=loadPage();let owner='7';h.app.getUserID=()=>owner;
   h.page.loadClubHome();h.requests[0].success(validHome());h.page.loadClubHome();const old=h.requests[1];
   owner='';h.page.loadClubHome();assert.equal(h.page.data.myClubs.length,0);
-  h.requests.at(-1).fail({errMsg:'offline'});assert.equal(h.page.data.clubsLoginRequired,true); // 2026-10-24 游客目录失败退回登录入口
+  h.requests.at(-1).fail({errMsg:'offline'});assert.equal(h.page.data.clubsLoginRequired,false); // 2026-11-14：公开目录失败不要求登录
   old.success(validHome());assert.equal(h.page.data.myClubs.length,0);
-  h.app.firstLogin=()=>Promise.reject(new Error('offline'));h.page.retryClubs();await Promise.resolve();await Promise.resolve();
-  assert.equal(h.page.data.clubsLoginPending,false);assert.match(h.page.data.clubsErrorText,/登录没有成功/);
+  h.app.firstLogin=()=>{throw Error('public retry must not log in')};h.page.retryClubs();await Promise.resolve();
+  assert.equal(h.requests.at(-1).url,'/api/club/list');assert.match(h.page.data.clubsErrorText,/加载失败/);
 });

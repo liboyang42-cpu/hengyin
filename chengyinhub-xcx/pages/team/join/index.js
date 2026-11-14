@@ -155,9 +155,9 @@ Page({
           that.setData({
             loading: false,
             refreshing: false,
-            error: authDenied ? '登录后查看队伍邀请' : refused ? app.getRequestErrorMessage(res, '邀请已失效') : hasTeam ? '邀请状态暂未更新' : '邀请暂时不可用',
+            error: authDenied ? '当前邀请无法查看' : refused ? app.getRequestErrorMessage(res, '邀请已失效') : hasTeam ? '邀请状态暂未更新' : '邀请暂时不可用',
             errorKind: authDenied ? 'no-permission' : refused ? 'missing-param' : 'data',
-            errorSub: authDenied ? '请重新登录后再打开邀请' : refused ? '请让队长重新分享' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的邀请信息' : '请让队长重新分享后再试'),
+            errorSub: authDenied ? '' : refused ? '请让队长重新分享' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的邀请信息' : '请让队长重新分享后再试'),
             errorAction: refused ? '返回上一页' : '重新加载'
           });
         }

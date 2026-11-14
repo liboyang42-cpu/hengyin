@@ -27,9 +27,10 @@ function loadPage() {
 // 桩不回调 complete:模拟跳转还没落地时的第二次点击
 function withWx(fn) {
   const calls = []
-  const prevWx = global.wx
+  const prevWx = global.wx, prevApp = global.getApp
+  global.getApp = () => LOAD_APP
   global.wx = { navigateTo: o => calls.push(o), getStorageSync: () => undefined }
-  try { fn(calls) } finally { global.wx = prevWx }
+  try { fn(calls) } finally { global.wx = prevWx; global.getApp = prevApp }
   return calls
 }
 
@@ -85,7 +86,7 @@ test('BL-232 runnerSayHi:开会话在途与跳转中不重复开,开不起来时
       page.runnerSayHi()
       await settle()
       assert.equal(posts.length, 3)
-    } finally { global.wx = prevWx }
+    } finally { global.wx = prevWx; global.getApp = prevApp }
   } finally { global.getApp = prevApp }
 })
 

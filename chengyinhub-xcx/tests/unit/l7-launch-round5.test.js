@@ -110,8 +110,8 @@ test('#1 club/apply 游客:登录引导(no-permission + 登录),登录后重查�
 
 // ---------- #2 游客进发现页帖文流 ----------
 
-test('#2 talent/list 游客帖文流失败给登录入口(与俱乐部列表同款);已登录失败仍是「动态加载失败」', async () => {
-  for (const [userId, expectLogin] of [['', true], ['7', false]]) {
+test('2026-11-14 talent/list 游客公开帖文失败可重试，不触发登录', async () => {
+  for (const [userId, expectLogin] of [['', false], ['7', false]]) {
     let user = userId
     const loginCalls = []
     const m = mount('pages/talent/list/index.js', { app: {
@@ -127,13 +127,10 @@ test('#2 talent/list 游客帖文流失败给登录入口(与俱乐部列表同�
       await flush()
       assert.equal(m.host.data.feedState, 'error')
       assert.equal(m.host.data.feedLoginRequired, expectLogin)
-      if (expectLogin) {
-        m.host.loadClubHome = function () {}
-        m.host.retryFeed()
-        await flush()
-        assert.deepEqual(loginCalls, ['first'])
-        assert.equal(m.requests.filter((r) => r.url === '/api/club/post/feed').length, 2, '登录后重读帖文')
-      }
+      m.host.retryFeed()
+      await flush()
+      assert.deepEqual(loginCalls, [], '公开读取重试不得登录')
+      assert.equal(m.requests.filter(r => r.url === '/api/club/post/feed').length, 2)
     } finally { m.restore() }
   }
   const wxml = read('pages/talent/list/index.wxml')
@@ -341,8 +338,8 @@ test('#9 线索半屏节点状态与队友角色不出原始代码', () => {
 
 // ---------- #10 POI 挑战游客 & 写请求标记 ----------
 
-test('#10 POI 挑战游客读地点 401:登录入口(不是「网络异常」),登录后重读;已登录断网仍是网络异常', async () => {
-  for (const [userId, expectLogin] of [['', true], ['7', false]]) {
+test('2026-11-14 POI 挑战公开地点读失败可重试；写入另过登录闸', async () => {
+  for (const [userId, expectLogin] of [['', false], ['7', false]]) {
     let user = userId
     const m = mount('pages/play/poi-challenge/index.js', { app: {
       getUserID: () => user,
@@ -353,17 +350,14 @@ test('#10 POI 挑战游客读地点 401:登录入口(不是「网络异常」),�
       const read = m.requests.find((r) => r.url === '/api/city/nodes/12')
       read.fail({ code: userId ? 0 : 401, errMsg: userId ? 'request:fail timeout' : '' })
       assert.equal(m.host.data.step, expectLogin ? 'login' : 'error')
-      if (expectLogin) {
-        m.host.loginRetry()
-        await flush()
-        assert.equal(m.requests.filter((r) => r.url === '/api/city/nodes/12').length, 2)
-      } else {
-        assert.equal(m.host.data.errorText, '网络异常，请重试')
-      }
+      assert.equal(m.host.data.errorText, '网络异常，请重试')
+      m.host.retry()
+      assert.equal(m.requests.filter(r => r.url === '/api/city/nodes/12').length, 2)
     } finally { m.restore() }
   }
   const wxml = read('pages/play/poi-challenge/index.wxml')
-  assert.match(wxml, /wx:elif="\{\{step === 'login'\}\}"[\s\S]*?<cy-empty kind="no-permission" title="登录后开始挑战" cta="登录" bind:cta="loginRetry" \/>/)
+  assert.doesNotMatch(wxml, /登录后开始挑战|bind:cta="loginRetry"/)
+  assert.match(read('pages/play/poi-challenge/index.js'), /ensureLoginFor\('roam'/)
   assert.match(read('pages/play/poi-challenge/index.json'), /"cy-empty": "\/components\/cy\/empty\/index"/)
 })
 

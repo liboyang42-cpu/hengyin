@@ -28,6 +28,7 @@ function mount(relativePath, appOverrides, wxOverrides) {
     getPageSize() { return 20 },
     getSession() { return { getRevision: () => 0 } },
     getUserID() { return 7 },
+    getAuthorization() { return 'fixture-member' },
   }, appOverrides || {})
   const wx = Object.assign({
     vibrateShort(options) { vibrations.push(options && options.type) },

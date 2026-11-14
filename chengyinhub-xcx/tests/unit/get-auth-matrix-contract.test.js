@@ -35,11 +35,14 @@ const PLAY_PLAYER_QUERY_APPLICATION = path.resolve(
 // optional = 后端允许匿名，但登录时会按 uid 返回个人态，所以仍使用默认认证；
 // required = 后端 anyRequest().authenticated()，绝不能 auth:false。
 const MATRIX = [
+  // 2026-11-14 owner：公开 GET 精确放行，保留登录态以读取个性投影；本人订单等仍保持 required。
+  ['subpackageP3/pages/growthcenter/leaderboard/index.js', "url: '/api/growth/leaderboard'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
+  ['pages/search2/result/index.js', "url: '/api/search/unified'", 'optional', 'visitor/member', 'public-list+viewer-personalization'],
   // 2026-11-10 l-pass 通行证(ApiPlatformPassController,不在 SecurityConfig 放行清单,落 anyRequest().authenticated();
   //   requireMemberId 只取登录态):概览 = 在售套餐 + 本人有效期;公开主题库已改用匿名 POST,不属于 GET 矩阵;
   //   订单详情按订单号 + 本人归属,他人订单回「订单不存在」。
   ['subpackageMember/market/membership/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
-  ['subpackageMember/market/passes/index.js', "url: '/api/platform-pass'", 'required', 'member', 'self-account'],
+  ['subpackageMember/market/passes/index.js', "url: '/api/platform-pass'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['subpackageMember/utils/platform-pass-pay.js', "url: '/api/platform-pass/orders/' + orderNo, method: 'GET'", 'required', 'member', 'self-account'],
   // 2026-11-13 pass-mini:回到订单继续支付先读本人订单;订单详情页读本人订单(同 ApiPlatformPassController.order,按订单号 + 本人归属);我的订单读 /api/platform-pass/orders 走 passes 页既有 get 封装。
   ['subpackageMember/utils/platform-pass-pay.js', "url: '/api/platform-pass/orders/' + encodeURIComponent(orderNo), method: 'GET'", 'required', 'member', 'self-account'],
@@ -52,11 +55,11 @@ const MATRIX = [
   //   视频悬赏 get() 只服务 /submission/mine 与 /accrual/mine,ApiVideoBountyController 均按 requireAppMemberId 本人过滤。
   ['subpackageA/pages/video-bounty/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
   //   通行证详情 ApiMarketingProductController /{productId}:catalogService.detail,无会员维度;/orders 按 requireAppMemberId 本人。
-  ['subpackageMember/market/pass/index.js', "url: '/api/marketing/product/' + encodeURIComponent(this._id)", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageMember/market/pass/index.js', "url: '/api/marketing/product/' + encodeURIComponent(this._id)", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['subpackageMember/market/pass/index.js', "url: '/api/marketing/product/orders'", 'required', 'member', 'self-account'],
   // 2026-11-10 r2-store:主题结账层列覆盖本主题的通票、发现页通票入口卡,同通行证列表一个在售目录端点(需登录)。
-  ['pages/topic/index/index.js', "url: '/api/marketing/product/list'", 'required', 'member', 'global-authenticated-read'],
-  ['pages/talent/list/index.js', "url: '/api/marketing/product/list'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/topic/index/index.js', "url: '/api/marketing/product/list'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  ['pages/talent/list/index.js', "url: '/api/marketing/product/list'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   //   通行证列表 get() 服务 /list(listSellable,无会员维度)与 /orders、/gifts/bought、/gifts/received(均 requireAppMemberId 本人);
   //   同一调用点按其中最严的本人档登记,四个端点都必须登录。
   ['subpackageMember/market/passes/index.js', "url, method: 'GET', data: data || {}", 'required', 'member', 'self-account'],
@@ -139,16 +142,16 @@ const MATRIX = [
   // club-payout-binding:个人收款状态;服务端只认登录人且须为俱乐部主,clubId 仅用于归属校验。
   ['pages/club/payout-receiver/index.js', "url: '/api/club/personal-receiver/status'", 'required', 'member', 'self-account'],
   ['pages/mylike/mylike.js', "url: '/api/city/nodes/favorites'", 'required', 'member', 'self-account'],
-  ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
+  ['pages/searchmap/index.js', "url: '/api/city/nodes'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-10-29 V-06:漫游顶部搜地点在腾讯地点搜索回空/失败时查商家节点库兜底(同 searchmap 一档)
-  ['components/cy/map-address-search/index.js', "url: '/api/city/nodes'", 'required', 'member', 'global-read+viewer-personalization'],
+  ['components/cy/map-address-search/index.js', "url: '/api/city/nodes'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-11-04 第九轮 m4(owner 批准):分享来的据点游客可读(SecurityConfig 精确 GET 数字 id),游客走 CityNodeGuestProjection。
   ['subpackageMember/components/cy/scene-roam-poi-detail/index.js', "url: '/api/city/nodes/' + this.data.poiId", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 第九轮 m1 第 3 项:漫游地点卡只读同一个节点详情接口里的评分(与上一条同一后端、同一权限)
-  ['subpackageRoam/components/roam-place-card/index.js', "url: '/api/city/nodes/' + p.shareId", 'required', 'member', 'global-read+viewer-personalization'],
+  ['subpackageRoam/components/roam-place-card/index.js', "url: '/api/city/nodes/' + p.shareId", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-10-25 官方地点:地图点位卡展开读节点(相册 / 玩法 / 完成状态),挑战页读同一节点,与据点详情同端点同权限档。
-  ['subpackageRoam/nearby/index.js', "url: '/api/city/nodes/' + id", 'required', 'member', 'global-read+viewer-personalization'],
-  ['pages/play/poi-challenge/index.js', "url: '/api/city/nodes/' + this._poiId", 'required', 'member', 'global-read+viewer-personalization'],
+  ['subpackageRoam/nearby/index.js', "url: '/api/city/nodes/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  ['pages/play/poi-challenge/index.js', "url: '/api/city/nodes/' + this._poiId", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['utils/game-session-client.js', "url: '/api/game/session/view'", 'required', 'player/merchant/club', 'activity-perspective-access'],
   ['utils/game-session-client.js', "url: '/api/game/session/merchant/entries'", 'required', 'merchant', 'self-merchant-game-entry'],
   /* 2026-09-11 本分支新增:承接页的「本站」入口自己也要按 topicId 过滤一遍本商家的场次
@@ -196,7 +199,7 @@ const MATRIX = [
   ['pages/play/index.js', "req('/api/play/os/' + topicId", 'required', 'member', 'self-member-history'],
   // 2026-09-05 漫游·附近的局:走默认认证(后端 anyRequest().authenticated()),viewer 视角决定 isMember 与拉黑过滤。
   //   (原文写「两条 GET」——另一条 /api/roam/hangout/detail 同日随组局下线撤走,这里只剩 nearby 一条。)
-  ['subpackageRoam/nearby/index.js', "url: '/api/roam/hangout/nearby'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageRoam/nearby/index.js', "url: '/api/roam/hangout/nearby'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-09-17 第二轮拍板 22:首页「继续游戏」只列本人仍可继续的游戏会话(服务端按 uid 取,不收 memberId 参数)。
   // 2026-09-17 第二轮拍板 17:朋友分享的足迹快照,未登录可读;只凭随机 32 位令牌取已裁剪/平移的快照,不带分享者身份。
   ['utils/roam-share-snapshot.js', "url: '/api/roam/share/snapshot', method: 'GET'", 'optional', 'visitor/member', 'share-token-snapshot'],
@@ -205,9 +208,9 @@ const MATRIX = [
   // 2026-09-15 地图组队 P 方案:附近公开队伍。ApiPlayTeamController#nearby 走 getAppUserId 未登录即拒;viewerStatus/pendingCount 按 viewer 算。
   // (同日下线组局的 /api/roam/pois 与 /api/roam/hangout/detail 两条 GET:地图上不再有局卡与打卡点列表。
   //  同日撤掉漫游地图 f-hangout 一档:roam 不再调 /api/roam/hangout/nearby,搭子局已下线,该卡整卡退场。)
-  ['subpackageRoam/nearby/index.js', "url: '/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageRoam/nearby/index.js', "url: '/api/team/nearby'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-10-14 漫游上线:我的队伍页「附近招募」读同一端点(同一权限档);那年今日 / 月度回顾只读本人完成记录(归档已审分类)。
-  ['subpackageRoam/my-teams/index.js', "url: '/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageRoam/my-teams/index.js', "url: '/api/team/nearby'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['subpackageTools/utils/features/exploration-anniversary.js', "url: '/api/exploration-anniversary'", 'required', 'member', 'self-member-history'],
   ['subpackageTools/utils/features/monthly-recap-client.js', "url: '/api/monthly-recap'", 'required', 'member', 'self-member-history'],
   // 2026-10-19 移植共享基线(W2):认领门店状态只读本人认领(ApiMerchantClaimController#status 按 getAppUserId);
@@ -222,20 +225,20 @@ const MATRIX = [
   ['pages/roam/index.js', "req('/api/preset/route/list', 'GET'", 'optional', 'visitor/member', 'public-official-route'],
   ['subpackageRoam/official-routes/index.js', "url: '/api/preset/route/list'", 'optional', 'visitor/member', 'public-official-route'],
   ['subpackageRoam/official-route/index.js', "url: '/api/preset/route/info'", 'optional', 'visitor/member', 'public-official-route'],
-  ['pages/roam/index.js', "req('/api/ai/npc/profile'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/roam/index.js', "req('/api/ai/npc/profile'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['pages/roam/index.js', "req('/api/ai/npc/event'", 'required', 'member', 'global-authenticated-read'],
   ['pages/roam/index.js', "req('/api/roam/tiles/page'", 'required', 'member', 'self-member-history'],
   // 8b0871d2e 漫游恢复核对:后端 ApiRoamController#session 未登录即拒,RoamRecoveryService.read 只按 uid 查本人会话
   ['pages/roam/index.js', "req('/api/roam/session'", 'required', 'member', 'self-member-history'],
-  ['pages/roam/index.js', "req('/api/roam/pois'", 'required', 'member', 'global-read+viewer-personalization'],
+  ['pages/roam/index.js', "req('/api/roam/pois'", 'optional', 'visitor/member', 'global-read+viewer-personalization'],
   ['pages/roam/index.js', "req('/api/official/events/' + eventId", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
-  ['pages/roam/index.js', "req('/api/roam/nearby-exploreday'", 'required', 'member', 'global-authenticated-read'],
-  ['pages/roam/index.js', "req('/api/roam/entry/nearby'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/roam/index.js', "req('/api/roam/nearby-exploreday'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  ['pages/roam/index.js', "req('/api/roam/entry/nearby'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-10-28 p74:附近 3km 为空时 20km 兜底,同端点同权限档
-  ['pages/roam/index.js', "req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 20000 }", 'required', 'member', 'global-authenticated-read'],
-  ['pages/roam/index.js', "req('/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/roam/index.js', "req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 20000 }", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  ['pages/roam/index.js', "req('/api/team/nearby'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-11-09 V3-35:入口地图目录地点图钉,同 /api/roam/pois 权限档
-  ['pages/roam/index.js', "req('/api/roam/pois', 'GET', { lat: c.lat, lng: c.lng, radius }", 'required', 'member', 'global-read+viewer-personalization'],
+  ['pages/roam/index.js', "req('/api/roam/pois', 'GET', { lat: c.lat, lng: c.lng, radius }", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['pages/roam/index.js', "req('/api/roam/badge/shop-streak'", 'required', 'member', 'global-authenticated-read'],
   ['pages/merchant/customer/index.js', 'loadSavedSegments() {', 'required', 'merchant/merchant:crm:segment', 'self-merchant'],
   ['pages/shezhi/components/marketing-consent/index.js', "url: '/api/merchant/crm/marketing-consents'", 'required', 'member', 'self-marketing-consent'],
@@ -259,8 +262,8 @@ const MATRIX = [
   ['subpackageB/pages/im/chat/index.js', "url: '/api/v1/community/notifications'", 'required', 'member', 'self-account'],
   ['pages/shezhi/components/post-governance/index.js', "url: '/api/v1/community/me/enforcements'", 'required', 'member', 'self-account'],
   ['subpackageMember/components/cy/merchant-correction-sheet/index.js', "url: '/api/community-trust/contributions/taxonomy'", 'required', 'member', 'global-authenticated-read'],
-  ['subpackageMember/components/cy/profile/index.js', 'url: `/api/community-trust/safety/merchants/${id}`', 'required', 'member', 'global-authenticated-read'],
-  ['subpackageMember/components/cy/profile/index.js', "url: '/api/city/nodes/merchant/' + id", 'required', 'member', 'global-authenticated-read'],
+  ['subpackageMember/components/cy/profile/index.js', 'url: `/api/community-trust/safety/merchants/${id}`', 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  ['subpackageMember/components/cy/profile/index.js', "url: '/api/city/nodes/merchant/' + id", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['subpackageMember/report-detail/index.js', 'url: `/api/community-trust/reports/${id}`', 'required', 'member', 'self-account'],
   ['subpackageMember/report-detail/index.js', "url: '/api/community-trust/reports/taxonomy'", 'required', 'member', 'global-authenticated-read'],
   ['subpackageMember/report-detail/index.js', 'confirmByReadBack(accepted, receipt) {', 'required', 'member', 'self-account'],
@@ -280,10 +283,10 @@ const MATRIX = [
   ['pages/merchant/decor/ai-npc/index.js', "url: '/api/merchant/npc/review'", 'required', 'merchant', 'self-merchant'],
   // 2026-10-23 v13 动效落地(PR #528,用户批准更新冻结数值):主题页角色卡读 NPC 资料、路线页读附近队伍与站点、地图页读据点,四处直接 GET,
   //   端点与既有登记同一权限档(npc/profile、team/nearby = global-authenticated-read;play/nodes = current-session;roam/pois = global-read+viewer-personalization)。
-  ['pages/topic/index/index.js', "url: '/api/ai/npc/profile'", 'required', 'member', 'global-authenticated-read'],
-  ['pages/topic/index/index.js', "url: '/api/team/nearby'", 'required', 'member', 'global-authenticated-read'],
+  ['pages/topic/index/index.js', "url: '/api/ai/npc/profile'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  ['pages/topic/index/index.js', "url: '/api/team/nearby'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   ['pages/topic/index/index.js', "url: '/api/play/nodes'", 'required', 'member', 'current-session'],
-  ['subpackageRoam/nearby/index.js', "url: '/api/roam/pois'", 'required', 'member', 'global-read+viewer-personalization'],
+  ['subpackageRoam/nearby/index.js', "url: '/api/roam/pois'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
   // 2026-10-27 W8 收口逐条复核后端(均未进 SecurityConfig permitAll，全部默认认证)：
   //   赛事联络/签到:玩家读 OfficialEventAttendanceService.read(id, uid, false) 仅公开可见赛事 + 本人 mine 投影;
   //   管理读先 canPublish(uid) 再 organizer(e, uid)。
@@ -330,10 +333,9 @@ const MATRIX = [
   // 2026-11-10 qx-c3 为 qx-b4 补登(按服务端实际守卫):两者都不在 SecurityConfig 放行清单,落 anyRequest().authenticated()。
   //   预设库 ApiPresetController /gameplay/list 只回平台自带声明(GameplayPresetCatalog.publicView,无会员维度);
   //   素材署名 ApiMediaAssetController /attribution 经 AppMediaReferenceGuard.publicAttribution 只回已审核/官方素材的公开来源视图,不按本人过滤。
-  ['pages/templatedetail/topic-detail/index.js', "url: '/api/media/asset/attribution'", 'required', 'member', 'global-authenticated-read'],
-  // 2026-11-14 theme-template-cards-1114:主题模板详情封面署名(_loadCoverCredit)再读一次同一只读接口 /attribution,同端点同守卫同权限档;
-  //   上一行的锚点自此落在封面那处,节点图那处用 reference: g.img 锚定。
-  ['pages/templatedetail/topic-detail/index.js', "data: { reference: g.img }", 'required', 'member', 'global-authenticated-read'],
+  ['pages/templatedetail/topic-detail/index.js', "url: '/api/media/asset/attribution'", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
+  // 2026-11-14 合 master #840：封面署名与节点图署名复用同一公开只读接口。
+  ['pages/templatedetail/topic-detail/index.js', "data: { reference: g.img }", 'optional', 'visitor/member', 'public-detail+viewer-personalization'],
 ];
 
 const VALID_SCOPES = new Set([
@@ -505,8 +507,9 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-12 club-payout-binding:个人收款页读本人收款状态一处直接 GET(已入 MATRIX),127 → 128。
   // 2026-11-13 pass-mini:通行证回到订单继续支付一处、订单详情页一处(已入 MATRIX),128 → 130。
   // 2026-11-14 free-explore-1114:定价页两处(已锁价状态、结算待处理)+商家套票预约一处,均已入 MATRIX,130 → 133。
-  // 2026-11-14 theme-template-cards-1114:主题模板详情封面署名一处直接 GET /api/media/asset/attribution(已入 MATRIX),133 → 134。
-  assert.equal(directCount, 134, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  // 2026-11-14：公开成长榜与合并搜索 POST → GET，已登记两处调用，133 → 135。
+  // 2026-11-14 合 master #840：封面署名新增一处直接 GET，135 → 136。
+  assert.equal(directCount, 136, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
@@ -548,7 +551,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
 });
 
 // 仅接受两种完整 DSL；参数中不允许嵌套调用，括号必须成对。
-// 固定全部 18 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
+// 固定全部 19 条 matcher 的参数、HTTP 方法、权限及顺序，避免跨规则匹配假绿。
 const SECURITY_RULES = [
   'url=>permitAll',
   '"/login","/register","/captchaImage"=>permitAll',
@@ -567,7 +570,9 @@ const SECURITY_RULES = [
   'HttpMethod.GET,"/api/map/weather"=>permitAll',
   'HttpMethod.POST,"/api/merchant/list"=>permitAll',
   'HttpMethod.GET,"/api/preset/route/list","/api/preset/route/info","/api/city/nodes/{id:\\\\d+}"=>permitAll',
-  'HttpMethod.GET,"/api/city/places/{id:\\\\d+}"=>permitAll'
+  'HttpMethod.GET,"/api/city/places/{id:\\\\d+}"=>permitAll',
+  // 2026-11-14：owner 批准的十六条公开读，只允许精确 GET。
+  "HttpMethod.GET,\"/api/roam/entry/nearby\",\"/api/roam/hangout/nearby\",\"/api/team/nearby\",\"/api/roam/pois\",\"/api/roam/nearby-exploreday\",\"/api/city/nodes\",\"/api/city/nodes/merchant/{merchantId:\\\\d+}\",\"/api/marketing/product/list\",\"/api/marketing/product/{productId:\\\\d+}\",\"/api/platform-pass\",\"/api/ai/npc/profile\",\"/api/official/active-for-roam\",\"/api/growth/leaderboard\",\"/api/search/unified\",\"/api/media/asset/attribution\",\"/api/community-trust/safety/merchants/{merchantId:\\\\d+}\"=>permitAll"
 ];
 
 function assertSecurityRules(source) {
@@ -584,7 +589,7 @@ function assertSecurityRules(source) {
   assert.match(code, /\.anyRequest\(\)\.authenticated\(\)/);
 }
 
-test('后端权限真源：official events/roam share 仅精确 GET 匿名，city nodes/places 只放行单个数字 id 的 GET', () => {
+test('后端权限真源：公开目录仅精确 GET 匿名，私人与写兄弟路由保留认证', () => {
   assertSecurityRules(fs.readFileSync(SECURITY, 'utf8'));
 });
 
@@ -597,13 +602,13 @@ for (const dsl of ['legacy', 'boot4']) {
     ? `.requestMatchers(legacyMatchers(${args})).permitAll()`
     : `.antMatchers(${args}).permitAll()`;
 
-  test(`${dsl} DSL 正例保留全部 18 条权限规则`, () => assertSecurityRules(source));
+  test(`${dsl} DSL 正例保留全部 19 条权限规则`, () => assertSecurityRules(source));
   const mutations = [
     ['official POST 改写 GET', (s) => s.replace('HttpMethod.GET, "/api/official/events"', 'HttpMethod.POST, "/api/official/events"')],
     ['official 移除 GET 限制', (s) => s.replace('HttpMethod.GET, "/api/official/events"', '"/api/official/events"')],
     ['official 额外 POST 放行', (s) => s.replace('.anyRequest().authenticated()', rule('HttpMethod.POST, "/api/official/events"') + '.anyRequest().authenticated()')],
     ['official 扩大通配符', (s) => s.replace('"/api/official/events/*"', '"/api/official/events/**"')],
-    ['city nodes GET 放行', (s) => s.replace('.anyRequest().authenticated()', rule('HttpMethod.GET,\n "/api/city/nodes", "/api/city/nodes/*"') + '.anyRequest().authenticated()')],
+    ['city nodes 通配 GET 放行', (s) => s.replace('.anyRequest().authenticated()', rule('HttpMethod.GET,\n "/api/city/nodes", "/api/city/nodes/*"') + '.anyRequest().authenticated()')],
     ['city nodes 所有方法放行', (s) => s.replace('.anyRequest().authenticated()', rule('"/api/city/nodes/**"') + '.anyRequest().authenticated()')],
     ['roam share POST 放行', (s) => s.replace('HttpMethod.GET, "/api/roam/share/snapshot"', 'HttpMethod.POST, "/api/roam/share/snapshot"')],
     ['roam share 扩大通配符', (s) => s.replace('"/api/roam/share/snapshot"', '"/api/roam/share/**"')],

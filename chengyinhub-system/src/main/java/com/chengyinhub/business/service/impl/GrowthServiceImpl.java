@@ -100,6 +100,7 @@ public class GrowthServiceImpl implements IGrowthService {
         Date weekEnd = weekStart == null ? null
                 : Date.from(weekStart.toInstant().atZone(ZoneId.systemDefault()).plusWeeks(1).toInstant());
 
+        boolean guest = memberId <= 0;
         boolean exp = "exp".equals(metric);
         boolean week = "week".equals(period);
 
@@ -107,16 +108,16 @@ public class GrowthServiceImpl implements IGrowthService {
         Map<String, Object> myRank;
         if (exp && week) {
             list = memberLeaderboardMapper.selectExpWeekTop(weekStart, weekEnd, limit);
-            myRank = memberLeaderboardMapper.selectExpWeekMyRank(memberId, weekStart, weekEnd);
+            myRank = guest ? null : memberLeaderboardMapper.selectExpWeekMyRank(memberId, weekStart, weekEnd);
         } else if (exp) {
             list = memberLeaderboardMapper.selectExpTotalTop(limit);
-            myRank = memberLeaderboardMapper.selectExpTotalMyRank(memberId);
+            myRank = guest ? null : memberLeaderboardMapper.selectExpTotalMyRank(memberId);
         } else if (week) {
             list = memberLeaderboardMapper.selectPointWeekTop(weekStart, limit);
-            myRank = memberLeaderboardMapper.selectPointWeekMyRank(memberId, weekStart);
+            myRank = guest ? null : memberLeaderboardMapper.selectPointWeekMyRank(memberId, weekStart);
         } else {
             list = memberLeaderboardMapper.selectPointTotalTop(limit);
-            myRank = memberLeaderboardMapper.selectPointTotalMyRank(memberId);
+            myRank = guest ? null : memberLeaderboardMapper.selectPointTotalMyRank(memberId);
         }
 
         list = nullToEmpty(list);
@@ -129,7 +130,7 @@ public class GrowthServiceImpl implements IGrowthService {
         vo.setMetric(metric);
         vo.setPeriod(period);
         vo.setList(list);
-        vo.setMe(buildMe(memberId, myRank));
+        if (!guest) vo.setMe(buildMe(memberId, myRank));
         return vo;
     }
 

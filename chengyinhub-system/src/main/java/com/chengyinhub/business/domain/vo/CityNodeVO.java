@@ -1,11 +1,13 @@
 package com.chengyinhub.business.domain.vo;
 
 import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * 漫游商家节点视图:roam_poi(type=2) + mms_merchant + cms_member_template 联合。
  * 供 /api/city/nodes 列表与详情;completed/favorited 由控制器按登录态填充。
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CityNodeVO {
     private Double averageRating;
     private Integer ratingCount;

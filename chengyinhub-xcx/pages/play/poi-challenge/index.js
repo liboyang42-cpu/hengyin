@@ -8,7 +8,7 @@ const app = getApp();
 const cyToast = require('../../../utils/toast.js');
 const geo = require('../../../utils/geo.js');
 const loading = require('../../../utils/loading.js');
-const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+
 const placeMap = require('../../../utils/roam-place-map.js');
 
 const KEYS = ['A', 'B', 'C', 'D'];
@@ -42,7 +42,8 @@ Page({
     this.setData({ backTop });
     this._load();
   },
-  onUnload() { this._gone = true; clearTimeout(this._nextTimer); },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
+  onUnload() { this._unloaded = true; this._gone = true; clearTimeout(this._nextTimer); },
 
   _load() {
     if (!this._poiId) { this.setData({ step: 'error', errorText: '没有找到这个地点' }); return; }
@@ -66,22 +67,21 @@ Page({
         }
         this.setData({ step: 'error', errorText: '这个地点还没有配置挑战' });
       },
-      // Round5 #10:游客读地点 401 不是「网络异常」,给登录入口,登录后重读
+      // 2026-11-14：公开地点读取失败可直接重试，上传和完成挑战才要求登录。
       fail: (res) => {
         if (this._gone) return;
-        if (isLoginRequired(app, res)) { this.setData({ step: 'login' }); return; }
         this.setData({ step: 'error', errorText: '网络异常，请重试' });
       },
       successStatusAbnormal: (res) => { if (!this._gone) this.setData({ step: 'error', errorText: (res && res.msg) || '地点暂时打不开' }); },
     });
   },
   retry() { this._load(); },
-  loginRetry() { retryLogin(this, app, function () { this._load(); }); },
   showPrivacyGate() { this.setData({ privacyGateShow: true }); },
   onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
   /* ① 拍照:照片先上传拿地址,拿到才算这一步过;只拍照的地点(核验方式 2)拍完直接交 */
   onShoot(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('roam', () => this.onShoot(e), { owner: this, target: () => [this._poiId] })) return;
     const d = (e && e.detail) || {};
     if (!d.tempFilePath || this._uploading) return;
     this._uploading = true;
@@ -119,6 +119,7 @@ Page({
   _later(fn) { clearTimeout(this._nextTimer); this._nextTimer = setTimeout(() => { if (!this._gone) fn(); }, 1400); },
 
   _submit(answer, done) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('roam', () => this._submit(answer, done), { owner: this, target: () => [this._poiId, this._photoUrl] })) return;
     if (this._submitting) return;
     this._submitting = true;
     const end = (ok, msg) => { this._submitting = false; if (!this._gone) done(ok, msg); };

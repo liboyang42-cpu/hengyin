@@ -131,13 +131,14 @@ class PublicReadEndpointsSecurityChainTest {
         // 第九轮 m4(owner 2026-11-04):只开 GET /api/city/nodes/{数字 id};列表、写和本人接口照旧 401。
         mockMvc.perform(get("/api/city/nodes/123")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200));
-        mockMvc.perform(get("/api/city/nodes")).andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value(401));
+        // 2026-11-14：附近目录与商家公开卡也允许游客读；真实控制器投影由 GuestPublicCatalogSecurityTest 覆盖。
+        mockMvc.perform(get("/api/city/nodes")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/city/nodes/merchant/5")).andExpect(status().isOk());
         for (String route : new String[]{"/api/city/nodes", "/api/city/nodes/123"}) {
             mockMvc.perform(post(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));
         }
-        for (String route : new String[]{"/api/city/nodes/favorites", "/api/city/nodes/merchant/5",
+        for (String route : new String[]{"/api/city/nodes/favorites", "/api/city/nodes/merchant/5/private",
                 "/api/city/nodes/123/complete", "/api/city/nodes/123/favorite", "/api/city/nodes/12a"}) {
             mockMvc.perform(get(route)).andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.code").value(401));

@@ -121,8 +121,6 @@ test('F-W1-12 isLoginRequired:401 / 业务 401 / 历史 code=2 / 无会话 = 未
 // 每页:登录引导 = cy-empty / cy-state-shell kind="no-permission" + 「登录」,且绑定的处理器走 retryLogin。
 const GUIDES = [
   ['pages/club/detail/index', /<cy-empty wx:elif="\{\{loginRequired\}\}" kind="no-permission"[^>]*cta="登录" bind:cta="onLoginRetry"/, 'onLoginRetry'],
-  ['pages/topic/index/index', /<cy-empty wx:elif="\{\{loginRequired\}\}" kind="no-permission"[^>]*cta="登录"[^>]*bind:cta="onLoginRetry"/, 'onLoginRetry'],
-  ['subpackageMember/components/cy/scene-play-activity-detail/index', /wx:elif="\{\{state === 'login'\}\}" kind="no-permission"[^>]*cta="登录" bind:cta="loginRetry"/, 'loginRetry'],
   ['subpackageMember/signup/index', /wx:elif="\{\{walletState === 'login'\}\}">\s*<cy-state-shell[^>]*kind="no-permission"[^>]*primary="登录"[^>]*bind:primary="loginWallet"/, 'loginWallet'],
   ['subpackageB/pages/im/list/index', /wx:elif="\{\{error && loginRequired\}\}" kind="no-permission"[\s\S]*?cta="登录" bind:cta="loginConversations"/, 'loginConversations'],
   ['pages/mylike/mylike', /wx:if="\{\{errorMsg && loginRequired && ztList1\.length === 0\}\}" kind="no-permission"[^>]*cta="登录" bind:cta="loginFavorites"/, 'loginFavorites'],
@@ -130,7 +128,8 @@ const GUIDES = [
   ['pages/merchant/apply/index', /primary="\{\{bootstrapErrorKind === 'no-permission' \? '登录' : '重新检查'\}\}"[^>]*bind:primary="retryBootstrap"/, 'retryBootstrap'],
 ]
 
-test('F-W1-12 八个页面都有登录引导(no-permission + 登录),处理器走 login-reload 的 retryLogin', () => {
+// 2026-11-14：保留私人/本人入口；公开详情的读失败不再要求登录。
+test('F-W1-12 私人页面保留登录引导(no-permission + 登录),处理器走 login-reload 的 retryLogin', () => {
   for (const [base, guide, handler] of GUIDES) {
     const wxml = read(base + '.wxml')
     const js = read(base + '.js')
@@ -145,44 +144,33 @@ test('F-W1-12 八个页面都有登录引导(no-permission + 登录),处理器�
   assert.match(read('subpackageB/pages/im/list/index.wxml'), /<cy-error load-failure class="cy-fade-in" wx:elif="\{\{error\}\}"/)
 })
 
-test('F-W1-12 俱乐部详情:无会话读失败给登录引导,已登录的读失败仍按 notFound 留白;登录后重读', async () => {
-  for (const [userId, expectLogin] of [['', true], ['7', false]]) {
-    let user = userId
-    const loginCalls = []
+test('2026-11-14 公开俱乐部详情失败：游客和会员都可重试，不触发登录', () => {
+  for (const userId of ['', '7']) {
     const { host, requests } = mount('pages/club/detail/index.js', { app: {
-      getUserID: () => user, getAvatar: () => '', getNickname: () => '', getUserRole: () => 'player',
-      firstLogin: () => { loginCalls.push('first'); user = '7'; return Promise.resolve({ ok: true }) },
+      getUserID: () => userId, getAvatar: () => '', getNickname: () => '', getUserRole: () => 'player',
+      firstLogin: () => { throw Error('public read must not log in') },
     } })
     host.data.clubId = 5
     host.loadDetail()
-    const detail = requests.find((r) => r.url === '/api/club/detail')
-    detail.fail({ errMsg: 'request:fail timeout' })
-    assert.equal(host.data.loginRequired, expectLogin)
-    assert.equal(host.data.notFound, !expectLogin)
-    if (expectLogin) {
-      host.loadAll = function () { requests.push({ url: 'reload' }) }
-      host.onLoginRetry()
-      await flush()
-      assert.deepEqual(loginCalls, ['first'])
-      assert.equal(host.data.loginRequired, false)
-      assert.ok(requests.some((r) => r.url === 'reload'), '登录成功后重读俱乐部')
-    }
+    requests.find(r => r.url === '/api/club/detail').fail({ errMsg: 'request:fail timeout' })
+    assert.equal(host.data.loginRequired, false)
+    assert.equal(host.data.notFound, true)
   }
 })
 
-test('F-W1-12 主题页:401 落登录引导而不是 load-failure 留白;断网(已登录)仍是 load-failure', () => {
-  for (const [userId, failArgs, expectLogin] of [['7', [{ code: 401 }, 401], true], ['', [{ errMsg: 'request:fail' }], true], ['7', [{ errMsg: 'request:fail' }], false]]) {
+test('2026-11-14 公开主题：401 和断网均可重试，不变成登录入口', () => {
+  for (const [userId, failArgs, expectLogin] of [['7', [{ code: 401 }, 401], false], ['', [{ errMsg: 'request:fail' }], false], ['7', [{ errMsg: 'request:fail' }], false]]) {
     const { host, requests } = mount('pages/topic/index/index.js', { app: { getUserID: () => userId } })
     host.data.id = 9
     host.getData()
     requests.find((r) => r.url === '/api/topic/info-to-user').fail(...failArgs)
     assert.equal(host.data.loadError, true)
-    assert.equal(host.data.loginRequired, expectLogin)
+    assert.equal(Boolean(host.data.loginRequired), expectLogin)
   }
 })
 
-test('F-W1-12 活动详情:鉴权失败进 login 态(可见引导),普通失败仍是 error 留白', () => {
-  for (const [userId, args, state] of [['7', [{ code: 401 }, 401], 'login'], ['', [{ code: 500 }, 500], 'login'], ['7', [{ code: 500 }, 500], 'error']]) {
+test('2026-11-14 公开活动详情：失败正常重试，不要求游客登录', () => {
+  for (const [userId, args, state] of [['7', [{ code: 401 }, 401], 'error'], ['', [{ code: 500 }, 500], 'error'], ['7', [{ code: 500 }, 500], 'error']]) {
     const { host, requests } = mount('subpackageMember/components/cy/scene-play-activity-detail/index.js', { app: { getUserID: () => userId } })
     host.data.activityId = '33'
     host.load('33')
@@ -237,7 +225,7 @@ test('F-W1-12 我的收藏:主题页签未登录失败给登录引导,已登录�
   }
 })
 
-test('F-W1-12 队伍详情:重登失败的 401 / 无会话给「登录」按钮并走 retryLogin;已登录断网仍是 network', async () => {
+test('2026-11-14 公开队伍详情：游客读失败只重试；私人定向进度仍单独鉴权', async () => {
   let user = ''
   const { host, requests } = mount('pages/team/detail/index.js', { app: {
     getUserID: () => user, firstLogin: () => { user = '7'; return Promise.resolve({ ok: true }) },
@@ -245,11 +233,12 @@ test('F-W1-12 队伍详情:重登失败的 401 / 无会话给「登录」按钮�
   host.onLoad({ teamId: '7' })
   host.onShow()
   requests[0].fail({ code: 401 }, 401)
-  assert.equal(host.data.errorKind, 'no-permission')
-  assert.equal(host.data.errorAction, '登录')
+  assert.equal(host.data.errorKind, 'network')
+  assert.equal(host.data.errorAction, '重新加载')
   host.onErrorAction()
   await flush()
-  assert.equal(requests.length, 2, '登录成功后重读队伍')
+  assert.equal(requests.length, 2, '重试公开读取队伍')
+  assert.equal(user, '', '重试不得创建游客账号')
   const member = mount('pages/team/detail/index.js', { app: { getUserID: () => '7' } })
   member.host.onLoad({ teamId: '7' })
   member.host.onShow()

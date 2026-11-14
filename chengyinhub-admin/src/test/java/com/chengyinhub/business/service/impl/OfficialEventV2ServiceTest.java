@@ -47,6 +47,16 @@ import static org.mockito.Mockito.when;
 
 /** V2 发布门槛：用服务接口验证主办、承接和未验定位能力，避免 UI 假绿。 */
 class OfficialEventV2ServiceTest {
+    @Test
+    void anonymousRoamListOmitsParticipationButMemberRetainsIt() {
+        OfficialEventV2Mapper mapper = mock(OfficialEventV2Mapper.class);
+        when(mapper.selectActiveV2RoamEvents("上海", 0L)).thenReturn(java.util.List.of(new java.util.HashMap<>(java.util.Map.of("id", 7L, "signed", false))));
+        when(mapper.selectActiveV2RoamEvents("上海", 9L)).thenReturn(java.util.List.of(new java.util.HashMap<>(java.util.Map.of("id", 7L, "signed", true))));
+        OfficialEventV2ServiceImpl service = service(mock(OfficialEventMapper.class), mapper);
+        assertFalse(service.activeForRoam("上海", null).get(0).containsKey("signed"));
+        assertEquals(true, service.activeForRoam("上海", 9L).get(0).get("signed"));
+    }
+
 
     private OfficialEventV2ServiceImpl service(OfficialEventMapper eventMapper, OfficialEventV2Mapper v2Mapper) {
         return service(eventMapper, v2Mapper, mock(IOfficialBroadcastService.class), mock(OfficialBroadcastMapper.class));
