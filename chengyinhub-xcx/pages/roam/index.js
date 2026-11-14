@@ -3044,6 +3044,7 @@ Page({
           if (stale()) { abandon(); return; }
           this._roamStartPending = false;
           lastLocation.save(r);
+          this._entryMe = { lat: r.latitude, lng: r.longitude };
           this.setData({ introError: '', locErr: false, entryLocated: true });
           this._openRoamMap({ lat: r.latitude, lng: r.longitude }, true);
         },

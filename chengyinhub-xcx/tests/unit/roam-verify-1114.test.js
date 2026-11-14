@@ -77,6 +77,18 @@ test('地点标题更新当前栈，迟到的其他地点标题不覆盖', () =>
   assert.equal(instance.data.sceneCurrent.title, '公园')
 })
 
+test('缓存位置只定位视口，本次定位成功才显示入口距离', () => {
+  const { instance } = component('pages/roam/index.js')
+  instance._entryMe = { lat: 30, lng: 120 }
+  instance.data.entryLocated = false
+  assert.equal(instance._entryOrigin(), null)
+  global.wx.setStorageSync = () => {}
+  global.wx.getLocation = request => request.success({ latitude: 31, longitude: 121 })
+  instance._loadEntryMap = () => {}
+  instance.enableEntryLocation()
+  assert.deepEqual(instance._entryOrigin(), { lat: 31, lng: 121 })
+})
+
 test('本城推荐超出附近范围时按种子找真实 ID，再读完整公开详情', async () => {
   const calls = []
   const app = { sendRequest(req) { calls.push(req); req.success({ code: 200, data: req.url.endsWith('/pois')
