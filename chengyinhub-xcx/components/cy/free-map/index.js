@@ -95,7 +95,7 @@ Component({
     layerStyle: { type: Number, value: 1 },
     // 第九轮 m4 第 2 项:底图是哪一套(black / white / paper / 2077;'' = 没配 key 的官方默认底图)。
     // 浅底上把白线白圈换成墨色,见 utils/map-style.js toneLines / toneCircle。
-    tone: { type: String, value: '', observer() { this._mergeLines(); this._rebuild(); } },
+    tone: { type: String, value: '', observer(next, previous) { if (next === '2077' && next !== previous && this.data.mapLoaded) this.setData({ mapLoaded: false }); this._mergeLines(); this._rebuild(); } },
     // 第九轮 m4:漫游 16 级以上的 3D 楼块 + 俯仰(试做,默认关;开关在 utils/map-style.js ROAM_3D)
     tilt3d: { type: Boolean, value: false },
     showExit: { type: Boolean, value: false },

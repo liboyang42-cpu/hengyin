@@ -212,6 +212,13 @@ test('b7：底图完成前保持加载态；重复 updated 不反复 setData', (
   map.onUpdated({ detail: {} })
   assert.equal(map.data.mapLoaded, true)
   assert.equal(updates, 1)
+  map._mergeLines = map._rebuild = () => {}
+  map.properties.tone.observer.call(map, '2077', 'black')
+  assert.equal(map.data.mapLoaded, false, '切换到2077也立即恢复占位')
+  map.onUpdated({ detail: {} })
+  assert.equal(map.data.mapLoaded, true)
+  map.properties.tone.observer.call(map, '2077', '2077')
+  assert.equal(map.data.mapLoaded, true, '相同样式不重置已完成底图')
 })
 
 
