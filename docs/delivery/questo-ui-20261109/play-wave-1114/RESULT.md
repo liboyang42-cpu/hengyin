@@ -33,3 +33,8 @@
 - action-ledger、route-matrix 已重算；ui-integrity 通过（仅 3 条行号位移重锚，新增 3 处动态 setData 改为字面量，不新增登记，keyDigest 按门禁重算并有日期注释）。
 - 单测全量 17647 条一度 29 条失败（全部由本分支引入，master 零失败）：1 处真回归（playkit 未产出 photoFailKind/photoJudging）与 pass-reveal 缺按压反馈已改产品代码，其余为行号/正则/计数类测试随预期行为更新，断言意图不变。
 - 未跑 `ci/xcx-check.sh` 自证；未改 ci/architecture 与 workflow；无新 migration。
+
+## CI
+PR #837 全部检查通过（含 20 个单测分片、静态门、后端测试）。
+
+STATUS: PARTIAL - a4（重启后网络异常，未复现未改）、b6（只靠静态推断）、c4 顶栏重叠、a1 的 9913601 实配置与 Java 单测未核实；全部改动未经 DevTools/真机验证
