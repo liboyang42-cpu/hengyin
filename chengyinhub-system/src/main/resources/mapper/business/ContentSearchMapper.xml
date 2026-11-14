@@ -136,7 +136,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         left join cms_topic current_topic on d.document_type = 'TOPIC' and current_topic.id = d.document_id
         left join cms_activity current_activity on d.document_type = 'ACTIVITY' and current_activity.id = d.document_id
         left join community_post current_post on d.document_type = 'POST' and current_post.id = d.document_id
-        where d.visibility_state = 'VISIBLE'
+        where <include refid="unifiedSearchWhere"/>
+        order by d.source_time desc, d.id desc
+    </select>
+
+    <!-- 读侧公共过滤谓词:投影只是候选,每一行都按源表实时公开闸再过一遍;帖文另按看的人排除互相拉黑/屏蔽的作者。 -->
+    <sql id="unifiedSearchWhere">
+        d.visibility_state = 'VISIBLE'
           and d.document_type in
           <foreach collection="types" item="type" open="(" separator="," close=")">#{type}</foreach>
           and d.search_text like concat('%', #{keyword}, '%') escape '\\'
@@ -157,6 +163,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                     and not exists (select 1 from community_member_mute mu
                         where mu.member_id = #{viewerId} and mu.muted_member_id = p.author_id)))
           )
-        order by d.source_time desc, d.id desc
+    </sql>
+
+    <!-- PageHelper 显式 COUNT，避免 JSqlParser 解析多分支 EXISTS / CASE 出现指数级回溯卡顿；与行查询共用 unifiedSearchWhere。 -->
+    <select id="selectUnifiedSearch_COUNT" resultType="Long">
+        select count(0)
+        from content_search_document d
+        <if test="cityCode != null and cityCode != ''">
+            left join cms_topic current_topic on d.document_type = 'TOPIC' and current_topic.id = d.document_id
+            left join cms_activity current_activity on d.document_type = 'ACTIVITY' and current_activity.id = d.document_id
+            left join community_post current_post on d.document_type = 'POST' and current_post.id = d.document_id
+        </if>
+        where <include refid="unifiedSearchWhere"/>
     </select>
+
 </mapper>
