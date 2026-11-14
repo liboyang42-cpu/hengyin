@@ -6,6 +6,21 @@ Production was not touched. hengyin `master` was not pushed. The only branch pus
 Tested SHA: **`955175611`** after the R2 follow-up (§0). The first round was tested on `01229ec46` (§1–§5). The commit that updates
 this file follows `955175611` and only changes `docs/`.
 
+## R3 (2026-11-14): `feature/be-gap-im` merged and deployed
+
+| Item | Result |
+|---|---|
+| Merge | `origin/feature/be-gap-im` `9964bc78b` → merge commit **`fc6c80e70`** (`--no-ff`, no conflicts: be-gap-im was cut from `2e6f6651c`). It brings `/api/channels`, `/api/im/audit-log`, the `/api/im/webhook/*` family, `chain/info` by `conversation_id`, the outbound dispatcher (signed, backoff, DLQ, redrive) and signed inbound ingestion; migrations `20261116_im_gap_audit_webhook` and `20261117_im_webhook_dispatch` with their ledger entries. See `docs/delivery/be-gap-im/RESULT.md`. |
+| Gates | `migration_ledger.py audit` problems=[], `migration-layout-check.sh` and `migration-safety-check.sh` (5/5) pass. |
+| Build | `mvn package -DskipTests` BUILD SUCCESS (`flock`, `-T 1`, `-Xmx1536m`). |
+| Unit tests | `-pl framework,system,admin -am`, surefire `-Xmx1536m`: **19,347 run, 0 failures**, 34 errors = the same 14 DB-needing `*MyBatisTest` classes, which pass **39/39** against be-int-mysql. |
+| Real-MySQL ITs | **21 classes, 87/87**: the R2 list plus be-gap-im `ChannelsGapImMySqlIT` 6/6 and `ChannelsWebhookDispatchMySqlIT` 3/3 (`ChainPersistenceMySqlIT` 9/9, City 3+3, gaps-b 8 classes on `cy_gaps_b_r2`). `MapPublicLayersMySqlIT` 1/1 with `-Duser.timezone=Asia/Shanghai`. MDB-F2 was not rerun (be-gap-im touches no marketing code). |
+| TEST 8120 redeploy | Jar from `fc6c80e70`, same DB **`cy_e2e_r2`**: only the two new migrations were applied (616 tables). The overlay turns the dispatcher **on for TEST only** (`chengyin.im.webhook.dispatch.enabled=true`, `chengyin.im.webhook.inbound-base-url=https://8120-…instabox.tech`). The code default stays off. The PII key file is unchanged, so stored sign-up PII stays readable. **Rollback:** `app/*.prev-2e6f665` (the R2 follow-up deploy); `*.prev-01229ec` and `*.prev-9ac1393` are kept. |
+| curl (R2 list, `smoke_r2.py`) | loopback and public URL: **39 OK**, the same as R2. The only failures are the known OSS-less media upload and WeChat-less image upload. |
+| curl (be-gap-im, `smoke_r3_im.py`) | `/api/channels` 200; `audit-log verify=1` 200 `chain_ok=true` (member 403 `CHANNEL_FORBIDDEN`); `webhook/context` 200; `chain/info?conversation_id=5` body 404 `CHAIN_NOT_FOUND`. A subscription to the TEST app's own public URL: the `test` delivery and a real `/api/im/send` in channel 5 were both claimed and sent signed, and came back `DEAD a1 HTTP_401` (a non-retryable 4xx). This proves the dispatcher is live without calling a third party. Inbound endpoint create 200 (member 403), signed 200 `ACCEPTED` (message 17), replay 409 `REPLAYED`, bad signature 401. Test subscription and endpoint deleted. |
+
+Logs: VPS `/data/workspace/be-int/r3/` (`gates.log`, `build.log`, `test-unit.log`, `its.log`, `mybatis-rerun.log`, `map-rerun.log`, `smoke.log`, `smoke-public.log`, `smoke-im-loopback.txt`).
+
 ## 0. R2 follow-up (2026-11-13, coordinator msg_3856dec207cf)
 
 | # | Item | Commit | What changed |
