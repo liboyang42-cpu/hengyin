@@ -58,6 +58,8 @@ class MerchantPublishedFreeExploreSettlementTest {
     private CmsActivity activity;
     private CmsTopicMapper topicMapper;
     private ISettlementEntryService entries;
+    private com.chengyinhub.business.mapper.TopicSaleSnapshotMapper snapshots;
+    private ISettlementRuleService ruleService;
     private com.chengyinhub.business.domain.CmsTopic topic;
 
     @BeforeEach
@@ -68,7 +70,7 @@ class MerchantPublishedFreeExploreSettlementTest {
         umsMemberService = mock(IUmsMemberService.class);
         debtLedger = mock(SettlementDebtLedger.class);
         CmsSettingMapper settingMapper = mock(CmsSettingMapper.class);
-        ISettlementRuleService ruleService = mock(ISettlementRuleService.class);
+        ruleService = mock(ISettlementRuleService.class);
         IUmsMemberBalanceDetailService balanceDetails = mock(IUmsMemberBalanceDetailService.class);
         PlatformTransactionManager tm = mock(PlatformTransactionManager.class);
         when(tm.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
@@ -84,8 +86,7 @@ class MerchantPublishedFreeExploreSettlementTest {
         ReflectionTestUtils.setField(svc, "cmsTopicMapper", topicMapper);
         entries = mock(ISettlementEntryService.class);
         ReflectionTestUtils.setField(svc, "settlementEntryService", entries);
-        com.chengyinhub.business.mapper.TopicSaleSnapshotMapper snapshots =
-                mock(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class);
+        snapshots = mock(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class);
         when(snapshots.selectSnapshotByTopicId(TOPIC_ID)).thenReturn(TopicSaleCanonicalTestFixture.ordinarySnapshot(TOPIC_ID));
         ReflectionTestUtils.setField(svc, "topicSaleSnapshotMapper", snapshots);
         ReflectionTestUtils.setField(svc, "settlementDetailMapper", mock(SettlementDetailMapper.class));
@@ -241,5 +242,66 @@ class MerchantPublishedFreeExploreSettlementTest {
                 .thenReturn(java.util.Arrays.asList(activity, activity));
 
         assertEquals(1, svc.selectActivitiesForSettlement().size());
+    }
+
+    @Test
+    void crossClubRecoveryUsesSessionOrganizerAndFrozenRemainder() {
+        assertOwnerDecisionA(false, false);
+    }
+
+    @Test
+    void fourStoreRecoveryUsesSessionOrganizerAndFrozenRemainder() {
+        assertOwnerDecisionA(true, false);
+    }
+
+    @Test
+    void fourStoreMerchantSessionPaysItsPublisherInsteadOfTheThemeOwner() {
+        assertOwnerDecisionA(true, true);
+    }
+
+    private void assertOwnerDecisionA(boolean fourStore, boolean merchantSession) {
+        topic.setClubId(fourStore ? CLUB_ID : CLUB_ID + 1);
+        if (fourStore) when(snapshots.selectSnapshotByTopicId(TOPIC_ID)).thenReturn(TopicSaleCanonicalTestFixture.snapshot(TOPIC_ID));
+        Club club = new Club();
+        club.setId(CLUB_ID);
+        club.setMemberId(PRINCIPAL);
+        when(clubMapper.selectClubById(CLUB_ID)).thenReturn(club);
+        if (merchantSession) activity.setClubId(null);
+        Long organizer = merchantSession ? CREATOR : PRINCIPAL;
+        when(cmsActivityMapper.selectActivitiesForSettlement()).thenReturn(Collections.emptyList());
+        when(cmsActivityMapper.selectMerchantPublishedFreeExploreActivitiesForSettlement()).thenReturn(Collections.emptyList());
+        when(cmsActivityMapper.selectFreeExploreActivitiesWithoutSettlementPath()).thenReturn(java.util.Arrays.asList(activity, activity));
+        when(cmsActivityMapper.claimActivityForSettlement(ACTIVITY_ID)).thenReturn(1, 0);
+        when(cmsRegistrationMapper.selectPaidUnrefundedIdsByActivityId(ACTIVITY_ID)).thenReturn(java.util.Arrays.asList(5001L, 5002L, 5003L));
+        for (long id = 5001; id <= 5003; id++) {
+            CmsRegistration r = new CmsRegistration();
+            r.setId(id); r.setOwnerType(2L); r.setOwnerId(ACTIVITY_ID); r.setPurchaseKind(3);
+            r.setPaymentStatus(2); r.setRegistrationStatus(2);
+            r.setPayableAmount(new BigDecimal("9.50"));
+            r.setFeePlatformRate(new BigDecimal("0.03"));
+            when(cmsRegistrationMapper.selectCmsRegistrationByIdForUpdate(id)).thenReturn(r);
+        }
+        when(cmsRegistrationMapper.selectTotalSalesByActivityId(ACTIVITY_ID)).thenReturn(new BigDecimal("28.50"));
+        SettlementRule live = new SettlementRule();
+        live.setPlatformCommissionRate(new BigDecimal("0.10")); live.setMerchantRate(new BigDecimal("0.90"));
+        live.setCreatorRate(BigDecimal.ZERO); live.setInviterRate(BigDecimal.ZERO);
+        when(ruleService.getActiveRule(0L, "activity")).thenReturn(live);
+        var shops = mock(com.chengyinhub.business.service.support.ClubSessionMerchantFee.class);
+        ReflectionTestUtils.setField(svc, "clubSessionMerchantFee", shops);
+
+        assertEquals(1, svc.selectActivitiesForSettlement().size(), "存量待处理选单恢复且去重");
+        assertEquals(Collections.emptyList(), svc.listStrandedFreeExploreSettlements(CREATOR));
+        assertEquals(1, svc.executeActivitySettlement());
+        assertEquals(0, svc.executeActivitySettlement(), "重复/并发领取不得再入账");
+        verify(umsMemberService).addBalance(organizer, new BigDecimal("27.64"));
+        verify(umsMemberService).addBalance(PLATFORM, new BigDecimal("0.86"));
+        verify(umsMemberService, never()).addBalance(eq(MERCHANT), any());
+        verify(entries).recordClubFreeExploreSessionSettlement(
+                org.mockito.ArgumentMatchers.argThat(r -> r != null && Long.valueOf(5001L).equals(r.getId())), eq(organizer), eq(new BigDecimal("0.29")));
+        verify(entries).recordClubFreeExploreSessionSettlement(
+                org.mockito.ArgumentMatchers.argThat(r -> r != null && Long.valueOf(5002L).equals(r.getId())), eq(organizer), eq(new BigDecimal("0.29")));
+        verify(entries).recordClubFreeExploreSessionSettlement(
+                org.mockito.ArgumentMatchers.argThat(r -> r != null && Long.valueOf(5003L).equals(r.getId())), eq(organizer), eq(new BigDecimal("0.28")));
+        verify(shops, never()).plan(any(), any(), any());
     }
 }

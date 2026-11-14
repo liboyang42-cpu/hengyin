@@ -156,7 +156,7 @@ class ActivitySettlementIdempotencyTest {
     }
 
     @Test
-    void clubFreeExploreWithoutSnapshotOrWithFourStoreContractStillRefusesBeforeClaim() {
+    void clubFreeExploreWithoutSnapshotOrWithUnreadableContractStillRefusesBeforeClaim() {
         var topic = new com.chengyinhub.business.domain.CmsTopic();
         topic.setId(200L);
         topic.setClubId(7L);
@@ -169,7 +169,9 @@ class ActivitySettlementIdempotencyTest {
         when(cmsActivityMapper.selectActivitiesForSettlement()).thenReturn(Collections.singletonList(activity));
         var snapshots = mock(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class);
         ReflectionTestUtils.setField(svc, "topicSaleSnapshotMapper", snapshots);
-        for (var snapshot : java.util.Arrays.asList(null, TopicSaleCanonicalTestFixture.snapshot(200L))) {
+        var unreadable = TopicSaleCanonicalTestFixture.snapshot(200L);
+        unreadable.setCanonicalJson("{}");
+        for (var snapshot : java.util.Arrays.asList(null, unreadable)) {
             when(snapshots.selectSnapshotByTopicId(200L)).thenReturn(snapshot);
             assertThrows(IllegalStateException.class, svc::executeActivitySettlement);
         }

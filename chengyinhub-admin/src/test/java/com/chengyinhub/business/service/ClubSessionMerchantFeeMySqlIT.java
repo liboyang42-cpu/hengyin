@@ -220,6 +220,8 @@ class ClubSessionMerchantFeeMySqlIT {
     @BeforeEach
     void resetSchema() throws Exception {
         topic.setProductType(1);
+        topic.setClubId(CLUB);
+        topic.setMemberId(PRINCIPAL);
         execute("DROP TABLE IF EXISTS cms_activity", "DROP TABLE IF EXISTS cms_topic", "DROP TABLE IF EXISTS cms_registration",
                 "DROP TABLE IF EXISTS topic_sale_snapshot", "DROP TABLE IF EXISTS topic_edition_finalization",
                 "DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_balance_detail",
@@ -726,7 +728,7 @@ class ClubSessionMerchantFeeMySqlIT {
         assertMoney("28.13", balance(PRINCIPAL));
         assertMoney("-29.00", money("SELECT SUM(change_balance) FROM ums_member_balance_detail WHERE event_type=6 AND event_id=603"));
 
-        // 四店合同及缺快照不进入普通场次选单，不能抢它的专用 FINAL 结算。
+        // 底层普通选单继续排除四店及缺快照；决定 A 的四店由待处理选单恢复，缺快照仍拒结。
         execute("UPDATE cms_activity SET is_settlement=0 WHERE id=" + ACTIVITY,
                 "UPDATE topic_sale_snapshot SET canonical_json=JSON_SET(canonical_json,'$.completionPolicy.evidenceRule','FOUR_STORE_REDEEM')");
         assertTrue(sql.getMapper(CmsActivityMapper.class).selectActivitiesForSettlement().isEmpty());
@@ -734,73 +736,79 @@ class ClubSessionMerchantFeeMySqlIT {
         assertTrue(sql.getMapper(CmsActivityMapper.class).selectActivitiesForSettlement().isEmpty());
     }
 
-    /**
-     * 第十三轮 m6:到了结算时点却没有场次结算路径的自由探索实收(四店探店日 ¥69 未做期级 FINAL / 别家俱乐部开的场次),
-     * 不再是「没有需要结算的活动」静默收工:任务抛错点名场次、实收与原因(Quartz 记 FAIL 并告警),一分不动、不置已结算,
-     * 下轮仍告警。没满 14 天、全额退款后没有实收、四店已做 FINAL 的,都不告警;同一轮里可结的俱乐部自有场次照常结。
-     */
+    /** 决定 A：旧待处理场次下轮补结给场次主办方；时点/历史 FINAL/未知合同与退款幂等仍有真实 SQL 负控。 */
     @Test
-    void freeExploreSalesWithNoSettlementPathAlarmInsteadOfSittingSilent() throws Exception {
-        long other = ACTIVITY + 1;
-        seedSession(ACTIVITY, 13);
-        seedPaid(74L, ACTIVITY);
-        topic.setProductType(2);
-        execute("UPDATE cms_topic SET product_type=2 WHERE id=" + TOPIC,
-                "UPDATE cms_registration SET payable_amount=69.00, purchase_kind=3, fee_platform_rate=0.0300 WHERE id=74",
-                "DELETE FROM settlement_detail WHERE source_id=74");
-        var canonical = TopicSaleCanonicalTestFixture.canonical();
-        canonical.getCompletionPolicy().put("evidenceRule", "FOUR_STORE_REDEEM");
-        var snapshot = new com.chengyinhub.business.domain.TopicSaleSnapshot();
-        snapshot.setTopicId(TOPIC);
-        snapshot.setSchemaVersion(com.chengyinhub.business.domain.snapshot.TopicSaleCanonicalV1.SCHEMA_VERSION);
-        snapshot.setParameterVersion(1L);
-        snapshot.setSourceReviewTaskId(1L);
-        snapshot.setFrozenAt(new java.util.Date());
-        snapshot.setCanonicalJson(com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.write(canonical, 2));
-        SqlSessionTemplate sql = new SqlSessionTemplate(buildFactory(dataSource));
-        sql.getMapper(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class).insertSnapshot(snapshot);
-        com.chengyinhub.business.domain.TopicSaleSnapshot frozen =
-                sql.getMapper(com.chengyinhub.business.mapper.TopicSaleSnapshotMapper.class).selectSnapshotByTopicId(TOPIC);
-        assertNotNull(frozen);
+    void formerlyStrandedFreeExplorePaysOrganizerWithFrozenFenAndRefundsExactlyOnce() throws Exception {
+        for (int scenario = 0; scenario < 3; scenario++) {
+            if (scenario > 0) resetSchema();
+            boolean fourStore = scenario != 0;
+            boolean merchantSession = scenario == 2;
+            long originalOwner = 9006L;
+            long organizer = merchantSession ? 9801L : PRINCIPAL;
+            topic.setClubId(fourStore ? CLUB : CLUB + 1);
+            topic.setMemberId(originalOwner);
+            seedSession(ACTIVITY, 13);
+            for (long id = 74; id <= 76; id++) seedPaid(id, ACTIVITY);
+            execute("INSERT INTO ums_member(id,balance,status,del_flag) VALUES (9006,0,1,0),(9801,0,1,0)",
+                    "UPDATE cms_topic SET club_id=" + topic.getClubId() + ",member_id=" + originalOwner + " WHERE id=" + TOPIC);
+            if (merchantSession) execute("UPDATE cms_activity SET club_id=NULL,member_id=" + organizer + " WHERE id=" + ACTIVITY);
+            var canonical = fourStore ? TopicSaleCanonicalTestFixture.canonical() : ordinaryExplore();
+            freezeOrdinaryExplore(canonical);
+            execute("UPDATE cms_registration SET payable_amount=9.50,wechat_payment_amount=9.50 WHERE owner_id=" + ACTIVITY);
+            // 有真实到店和冻结的按人头商家费，也必须由主办方线下结算，不生店铺分账。
+            exploreScan(74, MERCHANT, 100);
+            exploreScan(75, MERCHANT, 100);
+            assertEquals(0, activityService.executeActivitySettlement(), "未满14天不能入余额");
+            assertMoney("0.00", balance(PLATFORM).add(balance(organizer)));
 
-        assertEquals(0, activityService.executeActivitySettlement(), "13 天:还没到结算时点,不告警");
+            execute("UPDATE cms_activity SET start_date=DATE_SUB(NOW(),INTERVAL 16 DAY),end_date=DATE_SUB(NOW(),INTERVAL 15 DAY) WHERE id=" + ACTIVITY,
+                    "INSERT INTO topic_edition_finalization(topic_id) VALUES (" + TOPIC + ")");
+            assertEquals(0, activityService.executeActivitySettlement(), "已走历史 FINAL 的旧场次不能再次发钱");
+            assertEquals(0, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=" + ACTIVITY));
+            execute("DELETE FROM topic_edition_finalization",
+                    "UPDATE topic_sale_snapshot SET canonical_json='{}'");
+            assertThrows(IllegalStateException.class, () -> activityService.executeActivitySettlement(),
+                    "未知合同仍应告警并拒结");
+            assertEquals(0, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=" + ACTIVITY));
+            assertMoney("0.00", balance(organizer).add(balance(PLATFORM)));
+            execute("UPDATE topic_sale_snapshot SET canonical_json='"
+                    + com.chengyinhub.business.service.support.TopicSaleCanonicalCodec.write(canonical, 2).replace("'", "''") + "'");
 
-        execute("UPDATE cms_activity SET start_date=DATE_SUB(NOW(),INTERVAL 16 DAY),end_date=DATE_SUB(NOW(),INTERVAL 15 DAY) WHERE id=" + ACTIVITY);
-        IllegalStateException fourStore = assertThrows(IllegalStateException.class, () -> activityService.executeActivitySettlement());
-        assertTrue(fourStore.getMessage().contains("activityId=" + ACTIVITY + ": FREE_EXPLORE_SALE_HAS_NO_SETTLEMENT_PATH"), fourStore.getMessage());
-        assertTrue(fourStore.getMessage().contains("实收=69.00"), fourStore.getMessage());
-        assertTrue(fourStore.getMessage().contains("FOUR_STORE_REDEEM"), fourStore.getMessage());
-        assertEquals(0, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=" + ACTIVITY));
-        assertMoney("0.00", balance(PLATFORM).add(balance(PRINCIPAL)).add(balance(MERCHANT)));
-        assertEquals(0, scalarInt("SELECT COUNT(*) FROM ums_member_balance_detail"));
-        assertThrows(IllegalStateException.class, () -> activityService.executeActivitySettlement(), "下轮仍告警");
+            assertTrue(activityService.listStrandedFreeExploreSettlements(organizer).isEmpty(), "决定 A 的两类不再显示结算待处理");
+            assertEquals(1, activityService.executeActivitySettlement(), "存量未结场次在下轮恢复结算");
+            assertEquals(0, activityService.executeActivitySettlement(), "重跑不能重复结算");
+            assertMoney("0.86", balance(PLATFORM));
+            assertMoney("27.64", balance(organizer));
+            assertMoney("0.00", balance(originalOwner));
+            assertMoney("0.00", balance(MERCHANT));
+            assertEquals(6, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE source_type='registration' AND status=1"));
+            assertEquals(0, scalarInt("SELECT COUNT(*) FROM settlement_detail WHERE receiver_type='coop_merchant'"));
+            assertMoney("0.29", money("SELECT settlement_amount FROM settlement_detail WHERE source_id=74 AND receiver_type='platform'"));
+            assertMoney("0.29", money("SELECT settlement_amount FROM settlement_detail WHERE source_id=75 AND receiver_type='platform'"));
+            assertMoney("0.28", money("SELECT settlement_amount FROM settlement_detail WHERE source_id=76 AND receiver_type='platform'"));
+            assertMoney("28.50", money("SELECT SUM(settlement_amount) FROM settlement_detail WHERE source_type='registration' AND status=1"));
 
-        // 四店已做期级 FINAL:钱归 /business/edition-final 那条线,结算任务不再告警。
-        execute("INSERT INTO topic_edition_finalization(topic_id) VALUES (" + TOPIC + ")");
-        assertEquals(0, activityService.executeActivitySettlement());
-        execute("DELETE FROM topic_edition_finalization");
-
-        // 普通自由探索、别家俱乐部开的场次:代码里没有分钱规则 ⇒ 告警点名两边俱乐部;同一轮自有场次照常结。
-        execute("UPDATE topic_sale_snapshot SET canonical_json=JSON_SET(canonical_json,'$.completionPolicy.evidenceRule','ALL_REQUIRED_STAMPS')",
-                "UPDATE cms_activity SET club_id=" + (CLUB + 1) + " WHERE id=" + ACTIVITY);
-        seedSession(other, 15);
-        seedPaid(76L, other);
-        execute("UPDATE cms_registration SET payable_amount=29.00, purchase_kind=3, fee_platform_rate=0.0300 WHERE id=76",
-                "DELETE FROM settlement_detail WHERE source_id=76");
-        IllegalStateException crossClub = assertThrows(IllegalStateException.class, () -> activityService.executeActivitySettlement());
-        assertTrue(crossClub.getMessage().contains("成功 1 个"), crossClub.getMessage());
-        assertTrue(crossClub.getMessage().contains("场次俱乐部 " + (CLUB + 1) + " 不是主题俱乐部 " + CLUB), crossClub.getMessage());
-        assertTrue(crossClub.getMessage().contains("实收=69.00"), crossClub.getMessage());
-        assertEquals(0, scalarInt("SELECT is_settlement FROM cms_activity WHERE id=" + ACTIVITY));
-        assertMoney("0.87", balance(PLATFORM));
-        assertMoney("28.13", balance(PRINCIPAL));
-
-        // 全额退款后这场没有实收:不再告警。
-        execute("UPDATE cms_registration SET payment_status=4, registration_status=3 WHERE id=74",
-                "INSERT INTO refund_application(id,source_type,source_id,paid_amount,refund_amount,status,del_flag)"
-                        + " VALUES (604,'registration',74,69.00,69.00,1,0)");
-        assertEquals(0, activityService.executeActivitySettlement());
-        assertMoney("29.00", balance(PLATFORM).add(balance(PRINCIPAL)));
+            for (long id = 74; id <= 76; id++) {
+                clawBack(900 + id, id, "9.50", "9.50");
+                clawBack(900 + id, id, "9.50", "9.50");
+            }
+            assertMoney("0.00", balance(organizer));
+            assertMoney("0.00", balance(PLATFORM));
+            assertMoney("0.00", balance(originalOwner));
+            assertMoney("0.00", balance(MERCHANT));
+            assertMoney("-28.50", money("SELECT SUM(change_balance) FROM ums_member_balance_detail WHERE event_type=6 AND event_id IN (974,975,976)"));
+            assertEquals(0, activityService.executeActivitySettlement());
+            assertMoney("0.00", balance(organizer).add(balance(PLATFORM)));
+            // 全额退款的存量场次仍不告警、不出款；零销售只关闭一次结算领取。
+            seedSession(ACTIVITY + 1, 15);
+            seedPaid(77L, ACTIVITY + 1);
+            execute("UPDATE cms_registration SET payable_amount=9.50,purchase_kind=3,fee_platform_rate=0.03,payment_status=4,registration_status=3 WHERE id=77",
+                    "DELETE FROM settlement_detail WHERE source_id=77",
+                    "INSERT INTO refund_application(id,source_type,source_id,paid_amount,refund_amount,status,del_flag) VALUES (977,'registration',77,9.50,9.50,1,0)");
+            assertEquals(1, activityService.executeActivitySettlement());
+            assertEquals(0, activityService.executeActivitySettlement());
+            assertMoney("0.00", balance(organizer).add(balance(PLATFORM)).add(balance(originalOwner)).add(balance(MERCHANT)));
+        }
     }
 
     @Test
