@@ -190,12 +190,12 @@ Page({
   _resetNearbyRead(owner) {
     this._nearbyReadOwner = owner;
     this._teamSeq = (this._teamSeq || 0) + 1;
-    this._topicSeq = (this._topicSeq || 0) + 1;
+    this._topicSeq = (this._topicSeq || 0) + 1; this._poiSeq = (this._poiSeq || 0) + 1;
     this._nearbyTeamsLoaded = false; this._nearbyTopicsLoaded = false;
     this._nearbyFailures = { teams: false, topics: false };
-    this._teams = []; this._items = []; this._icons = {}; this._far = {}; this._iconFailed = {}; this._selfIcon = '';
+    this._teams = []; this._items = []; this._pois = []; this._icons = {}; this._far = {}; this._iconFailed = {}; this._selfIcon = '';
     this.setData({ headerText: '附近', nearbyReadAccess: '', loadError: false,
-      current: null, topic: null, applicants: [], leaderSub: '', sheet: '', sheetIn: false });
+      current: null, topic: null, poiCard: null, poiCardIn: false, applicants: [], leaderSub: '', sheet: '', sheetIn: false });
     this._syncMarkers();
   },
 
@@ -208,12 +208,12 @@ Page({
 
   _nearbyCurrent(layer, owner, seq) {
     return !this._unloaded && owner === this._nearbyReadOwner && owner === this._myIdentity()
-      && seq === (layer === 'teams' ? this._teamSeq : this._topicSeq);
+      && seq === (layer === 'teams' ? this._teamSeq : layer === 'pois' ? this._poiSeq : this._topicSeq);
   },
 
   _nearbyOutcome(layer, owner, seq, res, statusCode) {
     if (this._unloaded || owner !== this._nearbyReadOwner
-        || seq !== (layer === 'teams' ? this._teamSeq : this._topicSeq)) return true;
+        || seq !== (layer === 'teams' ? this._teamSeq : layer === 'pois' ? this._poiSeq : this._topicSeq)) return true;
     const nextOwner = this._myIdentity();
     // 真实 request-client 重登失败会先清旧会话；仍必须清掉页面私有快照。
     if (owner !== nextOwner) {
@@ -811,21 +811,23 @@ Page({
   /* ===== 2026-10-22 业主:三类点位 · 筛选行 · 点位卡(docs/design/动效界面落地_20261022 D 段) ===== */
   /* 地标 / 商家点位:与队伍、主题活动并列的第三类。读不到只是少一层点,不影响队伍与主题。 */
   fetchPois(center, radius) {
+    const owner = this._prepareNearbyRead();
+    if (!owner) return;
     const that = this;
     const seq = (this._poiSeq = (this._poiSeq || 0) + 1);
     app.sendRequest({
       url: '/api/roam/pois', method: 'GET', hideLoading: true, autoErrorToast: false,
       data: { lat: center.lat, lng: center.lng, radius },
       success(res) {
-        if (that._unloaded || seq !== that._poiSeq) return;
+        if (that._nearbyOutcome('pois', owner, seq, res)) return;
         const got = res && res.code == 200 ? PM.unwrapPois(res) : null;
         that._pois = got && isRecordList(got.rows) ? got.rows.map((r) => (r && !r.coverImg && PM.coverKey(r) ? Object.assign({}, r, { coverImg: PM.coverKey(r) }) : r)) : [];
         // A4.3:服务端按距离截断时说明一声,不再静默丢掉远处的点
         if (got && got.truncated && !that._truncTold) { that._truncTold = true; cyToast('只显示离你最近的 ' + that._pois.length + ' 处'); }
         that._syncLayerOptions(); that._syncMarkers();
-        that._queueIcons(() => (!that._unloaded && seq === that._poiSeq) ? that._genPoiDots() : false).then((made) => { if (made && !that._unloaded) that._syncMarkers(); });
+        that._queueIcons(() => that._nearbyCurrent('pois', owner, seq) ? that._genPoiDots() : false).then((made) => { if (made && that._nearbyCurrent('pois', owner, seq)) that._syncMarkers(); });
       },
-      fail() { if (that._unloaded || seq !== that._poiSeq) return; that._pois = []; that._syncLayerOptions(); that._syncMarkers(); },
+      fail(res, status) { if (that._nearbyOutcome('pois', owner, seq, res, status)) return; that._pois = []; that._syncLayerOptions(); that._syncMarkers(); },
     });
   },
 

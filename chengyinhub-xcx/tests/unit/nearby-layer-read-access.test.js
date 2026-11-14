@@ -120,6 +120,15 @@ test('account and token changes clear old cards/markers and reject out-of-order 
   assert.equal(h.page.data.headerText, '附近'); assert.equal(h.page._teams.length, 0);
 });
 
+test('guest switch clears old POI progress and rejects the previous actor response', () => {
+  const h=mount();h.page.refresh(h.page.data.center);const old=h.requests[2];
+  h.page._pois=[{id:9,found:true}];h.page.data.poiCard={id:9,found:true};
+  h.actor('', '');h.page.refresh(h.page.data.center);
+  assert.equal(h.page._pois.length,0);assert.equal(h.page.data.poiCard,null);
+  reply(old,200,{code:200,data:[{id:9,type:1,lat:31,lng:121,found:true}]});
+  assert.equal(h.page._pois.length,0);assert.equal(h.page.data.poiCard,null);
+});
+
 test('successful automatic refresh uses a fresh read owner and does not adopt the old response', async () => {
   const h = mount(); h.app.getSessionManager = () => createSessionManager({ session: h.session,
     wxLogin: async () => ({ code: 'fixture-code' }), exchangeCode: async () => ({ token: 'fixture-refreshed', data: { id: '7', userType: 1, role: 'player' } }),

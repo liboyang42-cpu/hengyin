@@ -6136,7 +6136,7 @@ Page({
   _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
   _clearEntryRead() {
     this._entryItems = []; this._entryTeams = []; this._entryPlaces = []; this._entryPlaceCards = [];
-    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], entryStrip: [], searchPlaces: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '' });
+    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], entryFarCards: [], entryStrip: [], searchPlaces: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '' });
   },
   retryEntryRead() { if (!this._hidden && !this._unloaded) this._loadEntryMap(this.data.center); },
   // A1.5:半径取自视口外接圆(没有视口就按缩放估),不再固定 3km

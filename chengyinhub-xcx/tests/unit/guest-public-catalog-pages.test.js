@@ -47,6 +47,12 @@ test('guest roam entry and nearby map request public layers, with no login or pr
   n.page.refresh(n.page.data.center);assert.equal(n.requests.length,3);assert.equal(n.modals.length,0);
 });
 
+test('guest entry discards the previous actor fallback personalization',()=>{
+  const h=mount('pages/roam/index.js');
+  h.page.data.entryFarCards=[{id:8,registered:true}];h.page._clearEntryRead();
+  assert.equal(h.page.data.entryFarCards.length,0);
+});
+
 test('guest shop loads public products while never requesting orders, gifts or balance',async()=>{
   const h=mount('subpackageMember/market/passes/index.js');h.page.onLoad({});
   assert.deepEqual(h.requests.map(r=>r.url),['/api/marketing/product/list','/api/platform-pass']);
