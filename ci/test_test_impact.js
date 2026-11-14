@@ -12,6 +12,11 @@ test('money and SQL changes always require the full backend; frontend changes do
   assert.equal(moneyPath('pages/roam/index.wxss'), false);
   assert.equal(plan(['chengyinhub-xcx/pages/roam/index.wxss']).backendFull, false);
   assert.equal(plan(['chengyinhub-system/src/main/java/RefundService.java']).backendFull, true);
+  assert.equal(plan(['chengyinhub-admin/src/main/java/ApiActivityController.java']).money, true);
+  assert.equal(plan(['chengyinhub-system/src/main/java/ThemeService.java']).backendFull, true);
+  const moduleOnly = plan(['chengyinhub-generator/src/main/java/GeneratorService.java']);
+  assert.equal(moduleOnly.backendFull, false);
+  assert.deepEqual(moduleOnly.backendModules, ['chengyinhub-generator']);
   assert.equal(plan([], 'push').shards, 20);
   assert.equal(plan([], 'schedule').backendFull, true);
 });

@@ -8,7 +8,8 @@ const root = path.resolve(__dirname, '..');
 const mini = path.join(root, 'chengyinhub-xcx');
 const modules = ['common', 'system', 'framework', 'quartz', 'generator', 'admin'].map(name => 'chengyinhub-' + name);
 const moneyPath = file => /(?:registration|pay|settlement|refund|pass|funds|withdraw|balance|cash|wallet|invoice|price|pricing|checkout|order|fee|discount|ticket|coupon|perk|compensation|commission|revenue|transfer|subscription|renew|bill|deposit|receivable|payout)/i.test(file)
-  || /^(?:pom\.xml|chengyinhub-(?:common|framework)\/src\/main\/)/.test(file)
+  // Shared activity/theme services can change money behavior without a money word in their filename.
+  || /^(?:pom\.xml|ci\/test-impact\.js$|chengyinhub-(?:admin|system|common|framework)\/src\/main\/)/.test(file)
   || /\.sql$/i.test(file);
 
 function dependencies(file, seen = new Set()) {
