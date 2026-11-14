@@ -129,5 +129,8 @@
 .td-cover-credit { display: block; padding: var(--cy-space-4) var(--cy-page-x) 0; }
 
 /* 与固定导航分开裁切滚动视口，两种主题都不让正文穿过状态栏。 */
-.td-viewport { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1; overflow: hidden; }
+.td-viewport { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; overflow: hidden; }
 .td-viewport .xb-scroll { height: 100%; }
+
+/* 顶部对齐避免原生居中排版在状态栏原点残留标题字形。 */
+.xb-head { align-items: flex-start; }

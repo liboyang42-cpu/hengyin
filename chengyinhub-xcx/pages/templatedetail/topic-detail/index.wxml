@@ -32,7 +32,7 @@
         </view>
       </view>
       <view class="xb-head-meta">
-        <rich-text class="xb-head-title ep2" nodes="{{ [{type: 'text', text: name || '主题模板'}] }}" />
+        <view class="xb-head-title ep2">{{ name || '主题模板' }}</view>
         <view class="xb-head-sub ep1">{{ author }}</view>
         <text class="xb-head-badge" wx:if="{{ official }}">官方</text>
       </view>

@@ -21,7 +21,6 @@ test('站名末尾两字同行，显示处理不改业务站名或英文', () =>
 });
 
 test('模板滚动区在导航下裁切，路线末行给悬浮购买条留安全区', () => {
-  assert.match(read('pages/templatedetail/topic-detail/index.wxml'), /<rich-text class="xb-head-title ep2" nodes="\{\{ \[\{type: 'text', text: name \|\| '主题模板'\}\] \}\}"/);
   assert.match(read('pages/templatedetail/topic-detail/index.wxml'), /class="td-viewport"[^>]*top:\{\{statusBarHeight \+ navBarHeight\}\}px/);
   assert.match(read('pages/templatedetail/topic-detail/index.wxss'), /\.td-viewport\s*\{[^}]*overflow:\s*hidden/);
   assert.match(read('pages/topic/index/index.wxml'), /docked && heroCta\.text \? 'topic-list--docked'/);
