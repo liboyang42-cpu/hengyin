@@ -114,7 +114,7 @@ public class CmsMemberTemplate extends BaseEntity
     private String questionName;
 
     /** 问题答案 */
-    @Excel(name = "问题答案")
+    /** UG-12: 答案与秘密字段仅审核可见，禁止运营导出。 */
     private String questionAnswer;
 
     /** 反馈文字 */
@@ -198,7 +198,7 @@ public class CmsMemberTemplate extends BaseEntity
     private String questionD;
 
     /** 正确答案(A/B/C/D) */
-    @Excel(name = "正确答案(A/B/C/D)")
+    /** UG-12: 正确答案仅审核可见，禁止运营导出。 */
     private String correctAnswer;
 
     /** 题干配图URL(看图答题) */

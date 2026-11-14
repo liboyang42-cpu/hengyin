@@ -186,6 +186,7 @@
               <article><span>内容编辑边界</span><strong>{{ editPolicyLabel }}</strong><p>{{ editPolicyDescription }}</p></article>
               <article><span>内容版本</span><strong>{{ publishedVersionLabel }}</strong><p>{{ draftVersionLabel }}</p></article>
             </div>
+            <play-help-readonly-panel v-if="topic && topic.id" :topic-id="topic.id" />
           </section>
           <section class="topic-workspace__operations" aria-label="主题统一待办">
             <cy-entity-header
@@ -465,10 +466,11 @@ import CyMetricCard from '@/components/CyMetricCard'
 import CyEmptyState from '@/components/CyEmptyState'
 import CyResourceState from '@/components/CyResourceState'
 import CyStatusTag from '@/components/CyStatusTag'
+import PlayHelpReadonlyPanel from '@/components/PlayHelpReadonlyPanel'
 
 export default {
   name: 'TopicWorkspace',
-  components: { CyDataTable, CyEntityHeader, CyPageHeader, CyMetricCard, CyEmptyState, CyResourceState, CyStatusTag },
+  components: { CyDataTable, CyEntityHeader, CyPageHeader, CyMetricCard, CyEmptyState, CyResourceState, CyStatusTag, PlayHelpReadonlyPanel },
   data() {
     return {
       activeTab: 'overview',

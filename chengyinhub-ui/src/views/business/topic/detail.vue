@@ -17,8 +17,14 @@
           <el-descriptions-item label="主题类型">
             <dict-tag :options="dict.type.sys_topic_type" :value="topicDetail.topicType" />
           </el-descriptions-item>
-          <el-descriptions-item label="审核状态">
-            <dict-tag :options="dict.type.sys_topic_status" :value="topicDetail.status" />
+          <el-descriptions-item label="审核状态（统一口径）">
+            <el-tag :type="unifiedCheckMeta.tagType" size="small">{{ unifiedCheckMeta.label }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="运营阶段">
+            <el-tag :type="unifiedLifecycleMeta.tagType" size="small">{{ unifiedLifecycleMeta.label }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="当前公开版本">
+            {{ topicDetail.publishedConfigVersion != null ? `v${topicDetail.publishedConfigVersion}` : '未公开' }}（编辑版 {{ topicDetail.configVersion != null ? `v${topicDetail.configVersion}` : '—' }}）
           </el-descriptions-item>
           <el-descriptions-item label="用户端状态">
             <dict-tag :options="dict.type.sys_topic_user_status" :value="topicDetail.userStatus" />
@@ -49,6 +55,8 @@
           </el-descriptions-item>
         </el-descriptions>
         
+        <play-help-readonly-panel v-if="topicDetail && topicDetail.id" :topic-id="topicDetail.id" class="mt10" />
+
         <!-- 主题长图 -->
         <div class="topic-cover mt20">
           <div class="label">主题长图：</div>
@@ -950,6 +958,8 @@ import { addTicket, updateTicket } from "@/api/business/ticket"
 import { addTopicNode, updateTopicNode, delTopicNode } from "@/api/business/topicnode"
 import { getTopicFunnel } from "@/api/business/topicFunnel"
 import { parseTime } from "@/utils/ruoyi"
+import PlayHelpReadonlyPanel from "@/components/PlayHelpReadonlyPanel"
+import { topicLifecycleMeta, topicCheckStatusMeta } from "@/utils/admin-status"
 
 const hasAllPermissions = (permissions, required) =>
   permissions.includes('*:*:*') || required.every(permission => permissions.includes(permission))
@@ -959,7 +969,17 @@ const hasPermission = (permissions, required) =>
 
 export default {
   name: "TopicDetail",
+  components: { PlayHelpReadonlyPanel },
   dicts: ['sys_topic_type', 'sys_topic_status', 'sys_topic_user_status'],
+  computed: {
+    unifiedCheckMeta() {
+      const v = this.topicDetail && (this.topicDetail.checkStatus !== undefined && this.topicDetail.checkStatus !== null ? this.topicDetail.checkStatus : this.topicDetail.status)
+      return topicCheckStatusMeta(v)
+    },
+    unifiedLifecycleMeta() {
+      return topicLifecycleMeta(this.topicDetail && this.topicDetail.lifecycle)
+    }
+  },
   data() {
     // 验证结束时间是否晚于开始时间
     const validateEndTime = (rule, value, callback) => {

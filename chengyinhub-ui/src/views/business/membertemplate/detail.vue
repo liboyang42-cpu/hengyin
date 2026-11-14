@@ -93,7 +93,7 @@
         </div>
         <el-descriptions v-if="Number(templateDetail.validationMethod) === 1" :column="1" border size="small">
           <el-descriptions-item label="验证问题">{{ valueOrFallback(templateDetail.questionName) }}</el-descriptions-item>
-          <el-descriptions-item label="标准答案">{{ valueOrFallback(templateDetail.questionAnswer) }}</el-descriptions-item>
+          <el-descriptions-item label="标准答案">{{ canViewAuditSecrets ? valueOrFallback(templateDetail.questionAnswer) : '仅审核可见（运营只读已隔离，不可导出）' }}</el-descriptions-item>
         </el-descriptions>
         <el-descriptions v-else-if="Number(templateDetail.validationMethod) === 2" :column="1" border size="small">
           <el-descriptions-item label="验证问题">{{ valueOrFallback(templateDetail.questionName) }}</el-descriptions-item>
@@ -115,7 +115,7 @@
           <el-descriptions-item label="选项 B">{{ valueOrFallback(templateDetail.questionB) }}</el-descriptions-item>
           <el-descriptions-item label="选项 C">{{ valueOrFallback(templateDetail.questionC) }}</el-descriptions-item>
           <el-descriptions-item label="选项 D">{{ valueOrFallback(templateDetail.questionD) }}</el-descriptions-item>
-          <el-descriptions-item label="正确答案">{{ valueOrFallback(templateDetail.correctAnswer) }}</el-descriptions-item>
+          <el-descriptions-item label="正确答案">{{ canViewAuditSecrets ? valueOrFallback(templateDetail.correctAnswer) : '仅审核可见（运营只读已隔离，不可导出）' }}</el-descriptions-item>
         </el-descriptions>
         <p v-else class="template-detail__muted">{{ validationLabel(templateDetail.validationMethod) }}；具体内容与运行参数见下方原配置。</p>
       </section>
@@ -210,6 +210,10 @@ export default {
         { label: '模板库投影', value: this.syncLabel(this.templateDetail.isSync) },
         { label: '上架状态', value: this.publishLabel(this.templateDetail.publishStatus) }
       ]
+    },
+    canViewAuditSecrets() {
+      const perms = (this.$store && this.$store.getters && this.$store.getters.permissions) || []
+      return perms.includes('*:*:*') || perms.includes('business:audit:list') || perms.includes('business:audit:review')
     },
     memberLabel() {
       return this.templateDetail && this.templateDetail.memberId != null ? `用户 #${this.templateDetail.memberId}` : '未记录'
