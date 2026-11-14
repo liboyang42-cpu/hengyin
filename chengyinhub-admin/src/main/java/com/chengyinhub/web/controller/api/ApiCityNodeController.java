@@ -3,6 +3,7 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.MemberCollectible;
+import com.chengyinhub.business.domain.vo.CatalogPlaceVO;
 import com.chengyinhub.business.domain.vo.CityNodeGuestProjection;
 import com.chengyinhub.business.domain.vo.CityNodeVO;
 import com.chengyinhub.business.mapper.MemberCollectibleMapper;
@@ -68,19 +69,37 @@ public class ApiCityNodeController extends BaseController {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
     }
 
+    /** /nodes 单次最多返回条数(默认值与上限);由近到远,超出部分不返回。 */
+    static final int NODES_DEFAULT_LIMIT = 100;
+    static final int NODES_MAX_LIMIT = 200;
+
     @Operation(summary = "附近商家节点(经纬度包围盒粗筛)")
     @GetMapping("/nodes")
     public AjaxResult nodes(Double lat, Double lng, Integer radius,
-                            String keyword, Integer categoryId, String tag, String cityRole) {
+                            String keyword, Integer categoryId, String tag, String cityRole, Integer limit) {
         if (lat == null || lng == null) return error("缺少定位");
+        // A5.4:非有限数/越界坐标一律拒绝,不再拿 NaN 去算包围盒。
+        if (!Double.isFinite(lat) || !Double.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return error("定位无效");
+        // A5.5:tags 是 JSON 数组串,按带引号整标签匹配;含 LIKE 通配符/引号/反斜杠的 tag 直接拒绝。
+        if (tag != null && !tag.isEmpty() && (tag.length() > 32 || tag.matches(".*[%_\\\\\"].*"))) return error("标签无效");
         int r = (radius == null || radius <= 0) ? 3000 : Math.min(radius, 20000);
+        int n = (limit == null || limit <= 0) ? NODES_DEFAULT_LIMIT : Math.min(limit, NODES_MAX_LIMIT);
         double dLat = r / 111320.0;
         double dLng = r / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(lat))));
         List<CityNodeVO> list = roamMapper.selectMerchantNodesNear(
                 lat - dLat, lat + dLat, lng - dLng, lng + dLng,
-                lat, lng, keyword, categoryId, tag, cityRole);
+                lat, lng, keyword, categoryId, tag, cityRole, n);
         markUserState(list);
         return success(list);
+    }
+
+    @Operation(summary = "目录地点公开只读详情(照片/引述/署名;无挑战)")
+    @GetMapping("/places/{id}")
+    public AjaxResult place(@PathVariable("id") Long id) {
+        if (id == null || id <= 0) return error("参数不合规");
+        CatalogPlaceVO vo = roamMapper.selectCatalogPlaceById(id);
+        if (vo == null) return AjaxResult.error(410, "地点未开放或已下线");
+        return success(vo);
     }
 
     @Operation(summary = "商家节点详情")

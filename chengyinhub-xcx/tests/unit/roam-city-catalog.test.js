@@ -176,3 +176,64 @@ test('地点卡理由组件把查表结果交回页面，换卡后的迟到回�
   const js = fs.readFileSync(path.resolve(__dirname, '../../pages/roam/index.js'), 'utf8')
   assert.match(js, /onPlaceNote\(e\) \{[\s\S]{0,200}card\.tags !== d\.tags\) return;/)
 })
+
+// 2026-11-14 后端补丁:按 id 索引的坐标清单(OSM 整理)、推荐理由进 quotes_json、封面/署名、status=1 与撤回文件。
+const { buildRevert } = require('../../../scripts/roam-catalog-import.js')
+const keyedNow = new Date('2026-11-14T06:00:00Z')
+function keyed(overrides) {
+  return { [example.id]: Object.assign({ gcj02: [31.25, 121.5], coordSystem: 'GCJ-02', precision: 'poi',
+    source: 'OSM fixture', verifiedOn: '2026-11-14' }, overrides) }
+}
+test('按 id 索引的坐标清单:推荐理由写 quotes_json,description 只放到访说明,标签保持 JSON 数组', () => {
+  const sql = buildImport(fixtureCatalog, keyed(), null, keyedNow)
+  assert.match(sql, /, cover_img, photo_credit, quotes_json\)/)
+  assert.match(sql, /, 1, 31\.250000, 121\.500000, 80,/)
+  const hex = text => 'CONVERT(0x' + Buffer.from(text, 'utf8').toString('hex') + ' USING utf8mb4)'
+  assert.ok(sql.includes(hex(example.visitNote)), 'description 用到访说明')
+  assert.ok(!sql.includes(hex(example.reason)), '推荐理由不再直接写入 description')
+  const quotes = JSON.stringify([{ text: example.reason, source: '城瘾编辑推荐', author: '城瘾', date: example.reviewedOn, url: example.sources[0] }])
+  assert.ok(sql.includes(hex(quotes)), '推荐理由进 quotes_json 且带出处')
+  assert.ok(sql.includes(hex(JSON.stringify(['roam:' + example.category, 'roam:seed:v1:' + example.id].concat(example.tags)))))
+  assert.doesNotMatch(sql, /UPDATE |DELETE /)
+})
+test('缺坐标的地点不导入并在文件头列出;坐标越界、坐标系或精度不合法则拒绝', () => {
+  const two = { places: [example, Object.assign({}, example, { id: 'sh-second' })] }
+  const sql = buildImport(two, Object.assign(keyed(), { 'sh-second': { missing: true } }), null, keyedNow)
+  assert.match(sql, /无坐标，未导入、保持未发布：sh-second/)
+  assert.equal((sql.match(/^INSERT INTO/gm) || []).length, 1)
+  for (const overrides of [{ gcj02: [39.9, 116.4] }, { gcj02: [31.2] }, { coordSystem: 'WGS-84' }, { coordSystem: 'WGS84(HK,no offset)' },
+    { precision: 'rough' }, { source: '' }, { verifiedOn: '2026-11-20' }, { gcj02: [NaN, 121.5] }]) {
+    assert.throws(() => buildImport(fixtureCatalog, keyed(overrides), null, keyedNow), undefined, JSON.stringify(overrides))
+  }
+  assert.throws(() => buildImport(fixtureCatalog, { unknown: { missing: true } }, null, keyedNow))
+})
+test('街道/起点/近似精度放宽到店半径;封面必须带署名', () => {
+  assert.match(buildImport(fixtureCatalog, keyed({ precision: 'street' }), null, keyedNow), /, 1, 31\.250000, 121\.500000, 150,/)
+  const sql = buildImport(fixtureCatalog, keyed({ coverImg: 'https://example.com/a.jpg', photoCredit: 'A / CC BY 4.0' }), null, keyedNow)
+  assert.match(sql, /cover_img/)
+  assert.throws(() => buildImport(fixtureCatalog, keyed({ coverImg: 'https://example.com/a.jpg' }), null, keyedNow))
+  assert.throws(() => buildImport(fixtureCatalog, keyed({ coverImg: 'javascript:alert(1)', photoCredit: 'x' }), null, keyedNow))
+})
+test('status=1 追加幂等上架 UPDATE,撤回文件只动同标签 type=1 无商家行', () => {
+  const tags = []
+  const sql = buildImport(fixtureCatalog, keyed(), null, keyedNow, { status: 1, tags })
+  assert.deepEqual(tags, ['roam:seed:v1:' + example.id])
+  assert.match(sql, /UPDATE roam_poi SET status = 1 WHERE type = 1 AND merchant_id IS NULL/)
+  assert.throws(() => buildImport(fixtureCatalog, keyed(), null, keyedNow, { status: 2 }))
+  const revert = buildRevert(tags)
+  assert.match(revert, /DELETE FROM roam_poi WHERE type = 1 AND merchant_id IS NULL/)
+  assert.match(revert, /roam_poi_found/)
+  assert.match(revert, /UPDATE roam_poi SET status = 0 WHERE type = 1 AND merchant_id IS NULL/)
+  assert.doesNotMatch(revert, /DROP |TRUNCATE /)
+})
+test('已提交的测试库 SQL 与坐标清单同源:31 条上架、2 条缺失不导入', () => {
+  const fs = require('node:fs'); const path = require('node:path')
+  const dir = path.resolve(__dirname, '../../../docs/delivery/questo-ui-20261109/roam-backend-1114')
+  const coords = JSON.parse(fs.readFileSync(path.join(dir, 'catalog-coords-1114.json'), 'utf8'))
+  assert.equal(Object.keys(coords).length, 33)
+  assert.deepEqual(Object.keys(coords).filter(id => coords[id].missing).sort(), ['cd-a4-museum', 'hk-aco-books'])
+  const sql = fs.readFileSync(path.join(dir, 'roam-catalog-test.sql'), 'utf8')
+  assert.equal((sql.match(/^INSERT INTO/gm) || []).length, 31)
+  assert.match(sql, /无坐标，未导入、保持未发布：cd-a4-museum, hk-aco-books/)
+  assert.equal(sql, buildImport(raw, coords, null, new Date('2026-11-14T06:00:00Z'), { status: 1 }))
+})
