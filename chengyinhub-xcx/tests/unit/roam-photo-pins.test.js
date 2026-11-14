@@ -246,6 +246,33 @@ test('第九轮 m1 第 9 项:漫游地点卡与商家横滑卡的地址点开地
   assert.equal(opened[0].latitude, 31.2);
 });
 
+test('入口地点与主地图地点的地址按钮复用全站入口,校验坐标并保留名称地址', async () => {
+  const { handlerSlices, expandHandlerBody, inferActionClass } = require('../../scripts/uiaudit/build-action-ledger');
+  const slices = handlerSlices(path.resolve(__dirname, '../../pages/roam/index.js'));
+  for (const handler of ['navEntryPlace', 'navPaceCard']) {
+    assert.equal(inferActionClass(handler, expandHandlerBody(handler, slices, null, { modules: true }), new Set()), 'external');
+  }
+  const page = loadRoamPage();
+  const opened = [];
+  const prev = global.wx;
+  global.wx = { openLocation: (o) => opened.push(o) };
+  try {
+    page.data.entryPlace = { lat: '31.2', lng: '121.4', name: '入口地点', address: '甲路' };
+    page.data.paceCard = { lat: 31.3, lng: 121.5, title: '主地图地点', address: '乙路' };
+    assert.equal(await page.navEntryPlace(), true);
+    assert.equal(await page.navPaceCard(), true);
+    assert.deepEqual(opened, [
+      { latitude: 31.2, longitude: 121.4, name: '入口地点', address: '甲路', scale: 17 },
+      { latitude: 31.3, longitude: 121.5, name: '主地图地点', address: '乙路', scale: 17 },
+    ]);
+    page.data.entryPlace.lat = 91;
+    page.data.paceCard.lng = 181;
+    assert.equal(await page.navEntryPlace(), false);
+    assert.equal(await page.navPaceCard(), false);
+    assert.equal(opened.length, 2);
+  } finally { global.wx = prev; }
+});
+
 // 第九轮 m2 补充第 2 项:任意缩放下图钉互不重叠,参与商铺优先;46 枚与 200 枚都核对
 function crowd(n, seed) {
   let x = seed || 7;

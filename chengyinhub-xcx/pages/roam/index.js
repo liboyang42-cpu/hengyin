@@ -6253,7 +6253,7 @@ Page({
   navEntryPlace() {
     const place = this.data.entryPlace;
     if (!place || !Number.isFinite(Number(place.lat)) || !Number.isFinite(Number(place.lng))) return;
-    wx.openLocation({ latitude: Number(place.lat), longitude: Number(place.lng), name: place.name || '', address: place.address || '', scale: 17 });
+    const { openAddress } = require('../../utils/open-address.js'); return openAddress(place);
   },
   _openEntryPlaceById(id) {
     const row = (this._entryPlaces || []).find((item) => item && Number(item.id) === Number(id));
@@ -6297,7 +6297,7 @@ Page({
   navPaceCard() {
     const card = this.data.paceCard || {};
     if (!Number.isFinite(Number(card.lat)) || !Number.isFinite(Number(card.lng))) return;
-    wx.openLocation({ latitude: Number(card.lat), longitude: Number(card.lng), name: card.title || '', address: card.address || '', scale: 17 });
+    const { openAddress } = require('../../utils/open-address.js'); return openAddress({ lat: card.lat, lng: card.lng, name: card.title, address: card.address });
   },
   closeEntrySheet() { this.setData({ entrySheet: '', entryActivity: null, entryPlace: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }); },
   backEntrySheetView() { this.setData({ entrySheetView: 'main', entryTeam: null }); },
