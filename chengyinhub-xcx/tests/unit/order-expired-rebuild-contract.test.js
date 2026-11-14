@@ -10,7 +10,7 @@
 //   ③ 重建走的是 /api/registration/create(不是绕过校验的第二条造单路径);
 //   ④ 重建失败/二次过期 → 退回可见提示,且不会无限重建;
 //   ⑤ 非过期失败照旧不重建(不能把所有 /pay 失败都当成过期)。
-const { beforeEach, test } = require('node:test');
+const { afterEach, beforeEach, test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -30,6 +30,10 @@ const FULL_PAY_PARAMS = {
 };
 
 let sandbox;
+const pages = [];
+afterEach(() => {
+  for (const page of pages.splice(0)) page.onUnload();
+});
 
 function installGlobals() {
   global.getApp = () => ({
@@ -93,6 +97,7 @@ function loadModule(modulePath) {
     },
   });
   vm.data = Object.assign({}, sandbox.pageConfig.data);
+  pages.push(vm);
   return vm;
 }
 
