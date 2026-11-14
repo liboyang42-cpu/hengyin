@@ -1,7 +1,9 @@
 // 主题模板详情(2026-10-30 业主 V-24「这个主题详情要出一个原型设计 里面可以看分别有什么游戏 剧情是什么」):
 // 模板预览「查看详情」进来。版式照抄玩法模板详情(templatedetail):封面 + 名字 + 发布方、「应用」与分享同款、
-// 详情 / 能力两个 tab。详情 = 剧情(开场白 → 每章一段 + 这一章依次经过的节点)、规模、节点、通关勋章;
-// 能力 = 概要一行 + 按站列出这一站玩什么、玩家做什么、大概多久。数据只读 /api/template/topic-template/info。
+// 详情 / 能力两个 tab。详情 = 剧情(开场白 → 每章一张紧凑卡)、规模、节点、通关勋章;
+// 能力 = 概要数字卡 + 按章分组、每站一张卡(玩什么、玩家做什么、大概多久)。数据只读 /api/template/topic-template/info。
+// 2026-11-14 业主「主题模板太复杂、能力那块没有排版,要卡片和样式」:开场白默认收 4 行可展开;
+// 章节卡不再列站点路径,站点只在「能力」里按章分组出卡;采用条件改成分组键值卡。
 const art = require('../shelf/art.js');
 const cyToast = require('../../../utils/toast.js');
 const adoption = require('../utils/topic-adoption.js');
@@ -21,47 +23,70 @@ function fmtSec(sec) {
   return h + ' 小时' + (r ? r + ' 分' : '');
 }
 
+// 章节编号:章名本身以「第…章」开头时不再重复编号
+function chapterNo(c, i) { return /^第/.test(String(c.name || '')) ? '' : String(i + 1); }
+
 function buildChapters(info) {
-  let no = 0;
   return (Array.isArray(info.chapters) ? info.chapters : []).map(function (c, i) {
+    return { key: String(c.id || i), no: chapterNo(c, i), name: c.name || '', text: c.description || '' };
+  });
+}
+
+// 能力 tab:按章分组,每站一张卡。玩法图标沿用货架 art.gameArt 的道具图(与玩法模板详情同一套),表外玩法不配图。
+function buildStopGroups(info) {
+  let no = 0;
+  const groups = (Array.isArray(info.chapters) ? info.chapters : []).map(function (c, i) {
     const nodes = Array.isArray(c.nodes) ? c.nodes : [];
+    // 自由探索的章就是一站(一家店),章下没有节点:章本身出一张卡
+    if (!nodes.length && info.mode === 'FREE_EXPLORE') {
+      no += 1;
+      return { key: String(c.id || i), no: '', name: '', stops: [{ no: no, name: c.name || '第 ' + no + ' 站', game: '', gameIcon: '', doText: c.description || '', dur: '' }] };
+    }
     return {
       key: String(c.id || i),
-      // 章名本身以「第…章」开头时不再重复编号
-      no: /^第/.test(String(c.name || '')) ? '' : '第 ' + (i + 1) + ' 章',
+      no: chapterNo(c, i),
       name: c.name || '',
-      text: c.description || '',
-      stops: nodes.map(function (n) { no += 1; return { no: no, name: n.name || '第 ' + no + ' 站' }; })
+      stops: nodes.map(function (n) {
+        no += 1;
+        const minutes = Number(n.gameDuration || 0);
+        const ga = art.gameArt(n.gameTitle);
+        return {
+          no: no,
+          name: n.name || '第 ' + no + ' 站',
+          game: n.gameTitle || '',
+          gameIcon: ga ? ga.prop : '',
+          doText: n.hookTeaser || '',
+          dur: minutes ? '约 ' + minutes + ' 分钟' : ''
+        };
+      })
     };
-  });
+  }).filter(function (g) { return g.stops.length; });
+  // 自由探索每章一站:合成一组、不出章头
+  if (info.mode === 'FREE_EXPLORE' && groups.length && groups.every(function (g) { return !g.name; })) {
+    return [{ key: 'all', no: '', name: '', stops: buildStops(groups) }];
+  }
+  // 只有一组且没有章名:整组一个头、不出标题
+  if (groups.length === 1 && !groups[0].name) groups[0].no = '';
+  return groups;
 }
 
-function buildStops(info) {
-  const out = [];
-  (Array.isArray(info.chapters) ? info.chapters : []).forEach(function (c) {
-    (Array.isArray(c.nodes) ? c.nodes : []).forEach(function (n) {
-      const minutes = Number(n.gameDuration || 0);
-      out.push({
-        no: out.length + 1,
-        name: n.name || '',
-        game: n.gameTitle || '',
-        doText: n.hookTeaser || '',
-        dur: minutes ? '约 ' + minutes + ' 分钟' : ''
-      });
-    });
-  });
-  return out;
+function buildStops(groups) {
+  return groups.reduce(function (all, g) { return all.concat(g.stops); }, []);
 }
 
-function buildSummary(info, stops) {
+// 能力 tab 顶部概要:与详情的 xb-stat-card 同一视觉,一格一个事实
+function buildSummary(info, chapters, stops) {
   const games = Array.isArray(info.games) ? info.games : [];
   const total = fmtSec(info.totalTime);
+  const free = info.mode === 'FREE_EXPLORE';
   return [
-    info.mode === 'FREE_EXPLORE' ? '自由探索' : '城市定向',
-    info.mode === 'FREE_EXPLORE' ? '可以跨天' : '',
-    games.length ? games.length + ' 个玩法' : '',
-    stops.length ? stops.length + ' 站' : '',
-    total ? '约 ' + total : ''
+    { value: free ? '自由探索' : '城市定向', label: '模式' },
+    free ? { value: '可以跨天', label: '时间' } : null,
+    // 自由探索每章就是一站,章节数与站点数相同,只留站点
+    chapters.length && !(free && chapters.length === stops.length) ? { value: String(chapters.length), label: '章节' } : null,
+    stops.length ? { value: String(stops.length), label: '站点' } : null,
+    games.length ? { value: String(games.length), label: '玩法' } : null,
+    total ? { value: total, label: '总时长' } : null
   ].filter(Boolean);
 }
 
@@ -81,10 +106,14 @@ Page({
     author: '',
     official: false,
     opening: '',
+    openingExpanded: false,
+    openingNeedMore: false,
     chapters: [],
     stats: [],
     gallery: [],
+    coverCredit: '',
     stops: [],
+    stopGroups: [],
     summary: [],
     medalName: '',
     medalImg: '',
@@ -128,7 +157,8 @@ Page({
         }
         const a = art.topicArt(info.name);
         const chapters = buildChapters(info);
-        const stops = buildStops(info);
+        const stopGroups = buildStopGroups(info);
+        const stops = buildStops(stopGroups);
         const nodeImgs = [];
         (Array.isArray(info.chapters) ? info.chapters : []).forEach(function (c) {
           (Array.isArray(c.nodes) ? c.nodes : []).forEach(function (n) { if (n.imgUrl) nodeImgs.push({ img: n.imgUrl, name: n.name || '', teaser: n.hookTeaser || '' }); });
@@ -141,25 +171,45 @@ Page({
           author: info.author || '城瘾',
           official: Number(info.isOfficial) === 1,
           opening: info.description || '',
+          openingExpanded: false,
+          openingNeedMore: false,
           chapters: chapters,
-          stats: [
+          // 自由探索每章就是一站,上方章节卡已经列出,这一排数字不再重复
+          stats: info.mode === 'FREE_EXPLORE' ? [] : [
             chapters.length ? { value: String(chapters.length), label: '章节' } : null,
             stops.length ? { value: String(stops.length), label: '节点' } : null,
             total ? { value: total, label: '总时长' } : null
           ].filter(Boolean),
           gallery: nodeImgs,
           stops: stops,
-          summary: buildSummary(info, stops),
+          stopGroups: stopGroups,
+          summary: buildSummary(info, chapters, stops),
           medalName: info.finishMedalName || '',
           medalImg: info.finishMedalImg || '',
           deliveryRows: adoption.deliveryRows(info.contentDelivery)
         });
         that._delivery = info.contentDelivery || null;
         that._loadCredits(seq, nodeImgs);
+        that._loadCoverCredit(seq, info.imgUrl);
+        that._measureOpening(seq);
       },
       fail(res) {
         if (seq !== that._seq) return;
         that.setData({ loading: false, loadError: true, loadErrorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
+      }
+    });
+  },
+
+  // 封面署名:与节点图同一个只读接口,读到才在详情页底部出一行
+  _loadCoverCredit(seq, ref) {
+    if (!ref) return;
+    app.sendRequest({
+      hideLoading: true, autoErrorToast: false,
+      url: '/api/media/asset/attribution', method: 'GET', data: { reference: ref },
+      success: res => {
+        if (seq !== this._seq || !res || String(res.code) !== '200') return;
+        const credit = adoption.creditText(res.data);
+        if (credit) this.setData({ coverCredit: credit });
       }
     });
   },
@@ -179,13 +229,31 @@ Page({
     });
   },
 
+  // 开场白默认收 4 行(4 × 44rpx = 88px);量到实际更高才给「展开」,短文不出假按钮。与玩法模板详情 checkTextOverflow 同一做法。
+  _measureOpening(seq) {
+    const that = this;
+    if (!that.data.opening || typeof wx.createSelectorQuery !== 'function') return;
+    wx.nextTick(function () {
+      if (seq !== that._seq) return;
+      wx.createSelectorQuery().in(that).select('#td-opening').boundingClientRect().exec(function (res) {
+        if (seq !== that._seq || !res || !res[0]) return;
+        if (res[0].height > 88) that.setData({ openingNeedMore: true });
+      });
+    });
+  },
+
+  toggleOpening() { this.setData({ openingExpanded: !this.data.openingExpanded }); },
+
   onRetry() { this.load(); },
 
   goBack() { wx.navigateBack({ fail: () => wx.switchTab({ url: '/pages/template/index' }) }); },
 
   switchTab(e) {
     const key = e && e.detail && e.detail.key;
-    if (key === 'details' || key === 'capabilities') this.setData({ activeTab: key });
+    if (key !== 'details' && key !== 'capabilities') return;
+    this.setData({ activeTab: key });
+    // 从「能力」进来的页面首屏没渲染开场白,量不到高度;切回「详情」再量一次
+    if (key === 'details' && !this.data.openingNeedMore) this._measureOpening(this._seq);
   },
 
   previewNode(e) {

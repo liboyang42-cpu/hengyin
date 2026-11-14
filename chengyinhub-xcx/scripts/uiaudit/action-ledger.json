@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 6094,
+  "controlCount": 6095,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1254843,7 +1254843,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:184"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:249"
       }
     },
     {
@@ -1254927,7 +1254927,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:200"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:268"
       }
     },
     {
@@ -1254994,7 +1254994,7 @@
       "externalGate": null,
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:186"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:251"
       }
     },
     {
@@ -1255071,7 +1255071,74 @@
       "externalGate": "real-device-required",
       "evidence": {
         "status": "pending",
-        "staticSource": "pages/templatedetail/topic-detail/index.js:191"
+        "staticSource": "pages/templatedetail/topic-detail/index.js:259"
+      }
+    },
+    {
+      "id": "pages/templatedetail/topic-detail/index.wxml:73:bindtap:toggleOpening:5",
+      "route": "pages/templatedetail/topic-detail/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "merchant",
+      "entry": {
+        "wxml": "pages/templatedetail/topic-detail/index.wxml",
+        "js": "pages/templatedetail/topic-detail/index.js"
+      },
+      "variant": null,
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {},
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "view",
+        "event": "bindtap",
+        "handler": "toggleOpening",
+        "line": 73,
+        "selectorHint": ".xb-link-more",
+        "visibleCondition": "{{ openingNeedMore || openingExpanded }}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "state",
+      "interactionMode": "tap",
+      "baseActionClass": "state",
+      "effectClasses": [
+        "state"
+      ],
+      "accessBoundary": null,
+      "externalCapabilities": [],
+      "successCapabilities": [],
+      "targets": {
+        "routes": [],
+        "apis": [],
+        "primaryApis": [],
+        "auxiliaryApis": [],
+        "apiContracts": [],
+        "writeApis": []
+      },
+      "expectedReadback": "调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态",
+      "requiredBranches": [
+        "success"
+      ],
+      "requiredPlatforms": [],
+      "externalGate": null,
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/templatedetail/topic-detail/index.js:245"
       }
     },
     {
