@@ -12,6 +12,7 @@
  *   3. 都解析不出 ⇒ openText 为空,调用方据此整行不渲染(不编「营业时间未知」)。
  */
 const geo = require('../../../utils/geo.js');
+const { chinaParts } = require('../../../utils/datetime.js');
 
 const OPEN_OK = 'var(--cy-color-play-accent)';
 const OPEN_SOON = 'var(--cy-color-play-accent)';
@@ -34,7 +35,7 @@ function resolveOpenState(node, nowMinutes) {
   if (/^\s*0?0:00\s*[-~—–至]\s*(23:59|24:00)\s*$/.test(String(node.businessTime || ''))) return { openText: '', openCol: '', openDot: '' };
   const minutes = typeof nowMinutes === 'number'
     ? nowMinutes
-    : (function () { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); }());
+    : (function () { const d = chinaParts(Date.now()); return d.hours * 60 + d.minutes; }());
   const inWindow = geo.bizWindowState(node.businessTime, minutes);
   if (inWindow === true) return { openText: '营业中', openCol: OPEN_OK, openDot: OPEN_OK };
   if (inWindow === false) return { openText: '已打烊', openCol: OPEN_OFF, openDot: OPEN_OFF };

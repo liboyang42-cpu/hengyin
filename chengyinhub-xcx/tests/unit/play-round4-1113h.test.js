@@ -87,7 +87,8 @@ test('3 开局太远:数字单位不断行;定位已知且超 300 米时在出�
   assert.match(src, /confirmText: '重新定位'/);
   assert.match(src, /const tooFar = this\._startTooFar\(node\);\n\s+if \(tooFar\) \{ this\._startRefusal\(tooFar, \(\) => this\.onArriveTap\(\)\); return; \}/);
   assert.match(src, /const tooFar = this\._startTooFar\(node\);\n\s+if \(tooFar\) \{ this\._startRefusal\(tooFar, \(\) => this\.startStoryGame\(e\)\); return; \}/);
-  assert.match(src, /r\.errorCode === 'ARRIVE_TOO_FAR' \|\| r\.reason === 'ARRIVE_TOO_FAR'\) that\._startRefusal/);
+  assert.match(src, /locOnce\.isStartRefusal\(r\)\) that\._startRefusal/);
+  assert.match(read('pages/play/utils/play-location-once.js'), /ARRIVE_TOO_FAR/);
   const api = { _startLocationNeeded: () => true, haversine: (a, b, c, d) => Math.hypot(a - c, b - d) * 111000 };
   const tooFar = src.match(/  _startTooFar\(node\) \{[\s\S]*?\n  \},/)[0].replace('  _startTooFar(node) {', 'function f(node) {').replace(/\n  \},$/, '\n}');
   const f = new Function('ARRIVAL_START_RADIUS_METERS', 'ARRIVAL_START_RADIUS_TEXT', tooFar + '; return f;')(300, '300 米');

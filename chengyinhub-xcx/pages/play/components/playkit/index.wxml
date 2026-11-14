@@ -140,7 +140,7 @@
   bind:verdict="onVerdict" bind:close="onClose" />
 
 <cy-playkit-hangman wx:elif="{{kit.type === 'hangman'}}" inline="{{inline}}"
-  show="{{show}}" title="{{kit.title}}" slots="{{kit.slots}}" solved="{{kit.solved}}" display="{{kit.display}}"
+  show="{{show}}" title="{{kit.title}}" slots="{{kit.slots}}" solved="{{kit.solved}}" display="{{kit.display}}" feedback="{{kit.feedback}}"
   bind:submit="onSubmit" bind:close="onClose" bind:continue="onContinue" />
 
 <cy-playkit-accusation wx:elif="{{kit.type === 'accusation'}}" inline="{{inline}}"
@@ -233,8 +233,8 @@
   last-url="{{kit.lastUrl}}" card="{{kit.card}}"
   photo-verified="{{kit.photoVerified}}" reward-ceiling="{{kit.rewardCeiling}}"
   frame-url="{{kit.frameUrl}}" frame-opacity="{{kit.frameOpacity}}" inline="{{inline}}"
-  photo-fail-seq="{{kit.photoFailSeq}}"
-  bind:shoot="onShoot" bind:close="onClose" />
+  photo-fail-seq="{{kit.photoFailSeq}}" photo-fail-kind="{{kit.photoFailKind}}" judging="{{kit.photoJudging}}"
+  bind:shoot="onShoot" bind:resubmit="onResubmit" bind:close="onClose" />
 
 <cy-playkit-note wx:elif="{{kit.type === 'note'}}"
   show="{{show}}" title="{{kit.title}}" prompt="{{kit.prompt}}" max-length="{{kit.maxLength}}"

@@ -74,6 +74,7 @@ Component({
     slots: { type: Array, value: [] },
     solved: { type: Boolean, value: false },
     display: { type: String, value: '' },
+    feedback: { type: String, value: '' },
   },
   data: { groups: [], active: -1, pop: -1, typedText: '', focused: false, cursor: 0, blankCount: 0, verdict: '', canSubmit: false },
   observers: {

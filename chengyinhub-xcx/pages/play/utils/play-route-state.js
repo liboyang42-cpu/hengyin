@@ -1,4 +1,5 @@
 const { id } = require('../../../utils/orient-score-view.js')
+const { toTimestamp } = require('../../../utils/datetime.js')
 const ROUTE_MODE_LINEAR = 'LINEAR'
 const ROUTE_MODE_BRANCH = 'BRANCH_GRAPH'
 const NODE_STATES = new Set(['HIDDEN', 'DISCOVERED_LOCKED', 'PLAYABLE', 'COMPLETED'])
@@ -62,7 +63,7 @@ function sameNodeId(left, right) {
 function asTimestamp(value) {
   const numeric = Number(value)
   if (Number.isFinite(numeric) && numeric > 0) return numeric
-  const parsed = Date.parse(String(value || ''))
+  const parsed = toTimestamp(value)   // 后端裸串按中国时间锚定,iOS 也认
   return Number.isFinite(parsed) ? parsed : 0
 }
 

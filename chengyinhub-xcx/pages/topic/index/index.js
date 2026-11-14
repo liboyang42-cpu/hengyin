@@ -889,9 +889,9 @@ Page({
 
   /* 付款成功 → 通行证到账动效。可选的商家营销同意行(拍板第 40 条 A)照旧要给:
      动效收尾时有同意可选才弹原结果面板,否则直接去票夹/开局。 */
-  _showPassReveal(topicId, registrationId) {
+  _showPassReveal(topicId, registrationId, expiresAt) {
     const info = this.data.info || {};
-    const win = motion.passWindow({ topicEnd: info.endDate });
+    const win = motion.passWindow({ topicEnd: info.endDate, expiresAt });
     this._revealTopicId = topicId;
     this._revealRegId = registrationId || 0;
     const price = info.selfPlayPrice;
@@ -1896,7 +1896,7 @@ Page({
   /* 2026-10-22 业主:付完先播「通行证已到账」,再由动效里的「放进票夹 / 开始游戏」决定去向 */
   _onSelfPlayPaid(topicId, data) {
     const regId = data && (data.registrationId || data.id);
-    this._showPassReveal(topicId, Number(regId) > 0 ? regId : 0);
+    this._showPassReveal(topicId, Number(regId) > 0 ? regId : 0, data && data.expiresAt);
   },
 
   _goSelfPlay(topicId) {

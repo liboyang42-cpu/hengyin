@@ -258,6 +258,10 @@ test('待支付和已取消票不得进 play，报名成功才带齐 id 开玩',
 
   page.goTicket(tap(0))
   assert.match(sandbox.navigations[0].url, /orderinfo\?id=11/)
+  // 双击只进一次:navigateTo 在途(及落地后 600ms)再点被忽略。沙盒的 setTimeout 不执行回调,下面逐张票之间手动放闩。
+  page.goTicket(tap(0))
+  assert.equal(sandbox.navigations.length, 1, '在途再点同一张不得重复跳转')
+  page._navigating = false
   page.goTicket(tap(1))
   assert.equal(sandbox.navigations.length, 1)
   assert.ok(sandbox.toasts.includes('票已取消'))
@@ -267,6 +271,7 @@ test('待支付和已取消票不得进 play，报名成功才带齐 id 开玩',
   // 主题 id / 名字都不再决定去哪个页:所有票一律进通用 play。专用分包 subpackagePrefab 已拆除
   // (曾按 /^预制人生/ 标题、后按 topicId 990059 换轨),作者配出来的《预制人生》不许再被硬编码版顶掉。
   assert.equal(sandbox.navigations[1].url, '/pages/play/index?topicId=990059&registrationId=14&entry=ticket&topicName=' + encodeURIComponent('已经改名的四站试玩版'))
+  page._navigating = false
   page.goTicket(tap(4))
   assert.match(sandbox.navigations[2].url, /^\/pages\/play\/index\?topicId=504&/)
 })

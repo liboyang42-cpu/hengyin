@@ -8,6 +8,7 @@
 //   POST /api/orient/scoring/dispute              成绩争议(局终后公示期内,理由 1–500 字)
 const character = require('../../../utils/user-character.js');
 const scoreView = require('../../../utils/orient-score-view.js');
+const { toTimestamp, chinaParts } = require('../../../utils/datetime.js');
 const cyModal = require('../../../utils/modal.js');
 const cyToast = require('../../../utils/toast.js');
 
@@ -84,14 +85,14 @@ function clock(ms) {
 function stamp(value) {
   if (typeof value === 'number') return value;
   if (typeof value !== 'string' || !value) return NaN;
-  return new Date(value.replace(/-/g, '/').replace('T', ' ').replace(/\.\d+.*$/, '')).getTime();
+  return toTimestamp(value);
 }
 
 function deadline(value) {
   const at = stamp(value);
   if (!Number.isFinite(at)) return '';
-  const d = new Date(at), pad = v => (v < 10 ? '0' : '') + v;
-  return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const d = chinaParts(at), pad = v => (v < 10 ? '0' : '') + v;
+  return d.month + '月' + d.day + '日 ' + pad(d.hours) + ':' + pad(d.minutes);
 }
 
 const DIMENSION_LABEL = { TASK: '到达节点', PUZZLE: '解谜', BONUS: '奖励', PENALTY: '处罚', ADJUSTMENT: '调整' };

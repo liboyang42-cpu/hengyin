@@ -350,7 +350,7 @@ test('主题游玩进页先说明定位用途，确认前不采集，并保留�
   // 业主 2026-11-13:导航到某一站不再逐站申请定位
   assert.doesNotMatch(playJs.slice(playJs.indexOf('  startNav(node) {'), playJs.indexOf('  stopNav() {')), /requestPlayLocation\(\)/)
   assert.match(playJs, /onScanArrive\(\)\s*\{[\s\S]*?this\.scanArrive\(node\)/)
-  assert.match(playJs, /content:\s*'仅在开局时检查你是否在起点约 300 米内[^']*锁屏、切到后台、暂停、结束或离开后停止/)
+  assert.match(playJs, /content:\s*'开局时检查你是否在起点约 300 米内，之后用来点亮 50 米内的站点并画出你走过的路线[^']*锁屏、切到后台、暂停、结束或离开后停止/)
   assert.match(playWxml, /bindtap="onScanArriveFromTools"[^>]*aria-label="扫码到达"/)
 })
 
