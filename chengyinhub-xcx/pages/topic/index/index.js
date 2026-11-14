@@ -1821,7 +1821,10 @@ Page({
       loading.hide();
       // unknown 是 workflow 故意留的闸(防重复建单扣款),但闸不能是哑巴:
       // 关掉「支付结果待确认」弹层后再点同一个按钮,原来什么都不说。
-      if (that._workflow.getState() === 'unknown') that._showPaymentUnknown();
+      if (that._workflow.getState() === 'unknown') {
+        if (that._unknownPolling) toast('还在确认支付结果，请勿重复支付');
+        else that._showPaymentUnknown();
+      }
     }
   },
 
