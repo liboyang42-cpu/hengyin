@@ -1,0 +1,57 @@
+package com.chengyinhub.business.merchantgap;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.UUID;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
+
+/** H2 (MySQL mode) loaded with migration_20261119_merchant_gap.sql, for the merchant-gap unit tests. */
+public final class MerchantGapH2 {
+    public final SingleConnectionDataSource dataSource;
+    public final JdbcTemplate jdbc;
+    public final DataSourceTransactionManager transactions;
+
+    private MerchantGapH2(SingleConnectionDataSource dataSource) {
+        this.dataSource = dataSource;
+        this.jdbc = new JdbcTemplate(dataSource);
+        this.transactions = new DataSourceTransactionManager(dataSource);
+    }
+
+    public static MerchantGapH2 create(String... extraDdl) throws Exception {
+        SingleConnectionDataSource source = new SingleConnectionDataSource(
+                "jdbc:h2:mem:mgap_" + UUID.randomUUID().toString().replace("-", "") + ";MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "", true);
+        source.setAutoCommit(true);
+        try (Connection connection = source.getConnection(); Statement statement = connection.createStatement()) {
+            load(statement);
+            for (String ddl : extraDdl) statement.execute(ddl);
+        }
+        return new MerchantGapH2(source);
+    }
+
+    /** Runs the migration with MySQL-only table options and plain secondary keys removed. */
+    public static void load(Statement statement) throws Exception {
+        String sql = Files.readString(migration());
+        StringBuilder kept = new StringBuilder();
+        for (String line : sql.split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("--") || trimmed.startsWith("KEY ")) continue;
+            kept.append(line.replace("CHARACTER SET ascii", "")).append('\n');
+        }
+        for (String command : kept.toString().split(";")) {
+            if (command.isBlank()) continue;
+            String ddl = command.replaceAll("(?s"+")\\)\\s*ENGINE=.*$", ")").replaceAll(",(\\s*)\\)$", "$1)");
+            statement.execute(ddl);
+        }
+    }
+
+    private static Path migration() {
+        Path module = Path.of("sql/migration_20261119_merchant_gap.sql");
+        if (Files.exists(module)) return module;
+        return Path.of("chengyinhub-admin/sql/migration_20261119_merchant_gap.sql");
+    }
+}

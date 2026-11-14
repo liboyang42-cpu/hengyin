@@ -1,0 +1,35 @@
+# TEST-only overlay for feature/be-gap-merchant on 8127. TEST DB cy_gap_merchant on loopback docker; no production values.
+server.port=8127
+server.address=127.0.0.1
+spring.datasource.druid.master.url=jdbc:mysql://127.0.0.1:3330/cy_gap_merchant?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=GMT%2B8
+spring.datasource.druid.master.username=root
+spring.datasource.druid.master.password=
+spring.datasource.druid.slave.enabled=false
+spring.datasource.druid.statViewServlet.enabled=false
+spring.data.redis.host=127.0.0.1
+spring.data.redis.port=6391
+spring.data.redis.database=7
+spring.data.redis.password=
+spring.devtools.restart.enabled=false
+ruoyi.profile=/data/workspace/be-gap-merchant-out/run/upload
+alarm.webhook=
+alarm.failure-webhook=
+management.endpoints.web.exposure.include=health,info
+# TEST-only providers (fix/userinfo-role 072e22e2d): SMS code stays in Redis, moderation pass-through. Never in default/production profiles.
+chengyin.e2e.test-providers=true
+chengyin.release.money-payments=true
+chengyin.release.payout=true
+# TEST only (OFF by default everywhere else): the merchant money switches stay ON on TEST like the other gap packages.
+# None of the 29 merchant rows moves money; they do not read these switches.
+# TEST only: W05 authoring policy with fixture values (no model provider on TEST, so generation answers FAILED).
+chengyin.merchant.authoring.enabled=true
+chengyin.merchant.authoring.model-version=test-fixture-model
+chengyin.merchant.authoring.prompt-version=test-prompt-1
+chengyin.merchant.authoring.cost-limit=0
+chengyin.merchant.authoring.template-ids=store-intro,in-store-game
+chengyin.merchant.authoring.in-store-template-ids=in-store-game
+chengyin.merchant.authoring.merchant-review=true
+chengyin.merchant.authoring.theme-review=true
+chengyin.merchant.authoring.visibility=PUBLIC
+chengyin.merchant.authoring.timezone=Asia/Shanghai
+chengyin.merchant.authoring.branches=MORNING,AFTERNOON,EVENING

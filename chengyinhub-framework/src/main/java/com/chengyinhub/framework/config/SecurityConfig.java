@@ -152,7 +152,7 @@ public class SecurityConfig
                         // 下只有 jscode2session 的 /api/login/code 需匿名;密码登录 /api/login 已单列。
                         .requestMatchers(legacyMatchers("/api/common/**","/api/register","/api/login/code","/api/openid","/api/login","/api/login/phone","/api/login/wechat/app","/api/login/apple","/api/sms/send","/api/user/sms/send","/api/us/auth/apple/challenges","/api/us/auth/apple/exchange","/api/findpass","/api/comment/list")).permitAll()
                         // 商家公开主页(脱敏后)匿名可访问
-                        .requestMatchers(legacyMatchers("/api/merchant/public-detail")).permitAll()
+                        .requestMatchers(legacyMatchers("/api/merchant/public-detail", "/api/merchant/poi/detail")).permitAll()
                         // 商家/会员公开资料(白名单 VO,方法内不要求登录):历史分享链接匿名冷启动用。
                         // 精确到两条路径,绝不写成 /api/merchant/** 或 /api/user/**——那会连带放行
                         // 未来新增的任何同前缀接口(/api/user/update、/api/merchant/decor/save …)。

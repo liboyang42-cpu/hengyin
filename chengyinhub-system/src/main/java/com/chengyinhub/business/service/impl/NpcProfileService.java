@@ -28,6 +28,21 @@ public class NpcProfileService
     @Autowired
     private MerchantNpcIdentityDirectory merchantNpcIdentityDirectory;
 
+    /** Lazy: MerchantAuthoringService reaches NpcProfileService again through the topic services. */
+    @Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.merchantauthoring.PublicReleaseFacts publicReleaseFacts;
+
+    /** Approved store release for this merchant, or null when nothing public is bound to STORE. */
+    public String approvedPublicFacts(Long merchantId)
+    {
+        if (publicReleaseFacts == null || merchantId == null)
+        {
+            return null;
+        }
+        return publicReleaseFacts.publicPrompt(merchantId, null, null, null, "STORE");
+    }
+
     /**
      * 取全局 NPC(scope_type=3,常驻地图/我的页)。
      */

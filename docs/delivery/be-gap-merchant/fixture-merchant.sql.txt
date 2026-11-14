@@ -1,0 +1,32 @@
+-- TEST-only fixture for be-gap-merchant curl checks on cy_gap_merchant (8127). Never production.
+SELECT IF(DATABASE() = 'cy_gap_merchant', 'ok', (SELECT 'wrong database' FROM information_schema.tables)) AS guard;
+-- CITY: two points of the gaps-a board belong to store 8001; four player visits (one rated, one skip, one plain, one other store).
+UPDATE city_game_point SET merchant_id = 8001 WHERE board_id = 'gapsa-board-1' AND point_id IN ('pt-a', 'pt-b');
+UPDATE city_game_point SET merchant_id = 8002 WHERE board_id = 'gapsa-board-1' AND point_id = 'pt-c';
+DELETE FROM city_value_visit WHERE request_id LIKE 'mgap-%';
+INSERT INTO city_value_visit(visit_id, member_id, request_id, request_hash, board_id, point_id, poi_id, entered_at, closed, feedback_kind, reason_code, rating) VALUES
+ ('7d0f2a10-0000-4000-8000-000000000001', 9004, 'mgap-1', REPEAT('a',64), 'gapsa-board-1', 'pt-a', 1, '2026-11-13 10:00:00', 1, 'SERVICE_RATING', NULL, 90),
+ ('7d0f2a10-0000-4000-8000-000000000002', 9009, 'mgap-2', REPEAT('a',64), 'gapsa-board-1', 'pt-a', 1, '2026-11-13 11:00:00', 1, 'SKIP', 'no_time', NULL),
+ ('7d0f2a10-0000-4000-8000-000000000003', 9001, 'mgap-3', REPEAT('a',64), 'gapsa-board-1', 'pt-b', 2, '2026-11-13 12:00:00', 0, NULL, NULL, NULL),
+ ('7d0f2a10-0000-4000-8000-000000000004', 9004, 'mgap-4', REPEAT('a',64), 'gapsa-board-1', 'pt-c', 3, '2026-11-13 12:30:00', 1, 'SERVICE_RATING', NULL, 10);
+-- Supply exit: an ordinary FREE_EXPLORE copy of topic 992001 / chapter 992011 / offer 1 for owner 9002.
+DELETE FROM merchant_chapter_offer WHERE id = 992991;
+DELETE FROM cms_topic_chapter WHERE id = 992911;
+DELETE FROM cms_topic WHERE id = 992901;
+CREATE TEMPORARY TABLE t_topic AS SELECT * FROM cms_topic WHERE id = 992001;
+UPDATE t_topic SET id = 992901, product_type = 2, circle_theme_code = NULL, name = 'E2E 自由探索·供给退出';
+INSERT INTO cms_topic SELECT * FROM t_topic;
+CREATE TEMPORARY TABLE t_chapter AS SELECT * FROM cms_topic_chapter WHERE id = 992011;
+UPDATE t_chapter SET id = 992911, topic_id = 992901, required = 0;
+INSERT INTO cms_topic_chapter SELECT * FROM t_chapter;
+CREATE TEMPORARY TABLE t_offer AS SELECT * FROM merchant_chapter_offer WHERE id = 1;
+UPDATE t_offer SET id = 992991, topic_id = 992901, chapter_id = 992911, status = 1, withdraw_reason = NULL, withdraw_required = NULL;
+INSERT INTO merchant_chapter_offer SELECT * FROM t_offer;
+-- Draft chooser: one W05 source for owner 9002 / store 8001 pointing at the owner's own template 6001.
+DELETE FROM merchant_authoring_source WHERE candidate_id = 990001;
+INSERT INTO merchant_authoring_source(candidate_id, owner_member_id, merchant_row_id, actual_template_id, template_snapshot_json, template_content_hash, confirmation_hash, content_hash, source_json, created_at)
+VALUES (990001, 9002, 8001, 6001, '{}', REPEAT('0',64), REPEAT('1',64), SHA2('{"fixture":"be-gap-merchant"}', 256), '{"fixture":"be-gap-merchant"}', NOW(3));
+-- TEST-only: one product of store 8001 so a STORE-bound W05 fact release can be published (cy_gap_merchant only).
+SELECT IF(DATABASE() = 'cy_gap_merchant', 'ok', (SELECT 'wrong database' FROM information_schema.tables)) AS guard;
+DELETE FROM pms_product WHERE id = 992951;
+INSERT INTO pms_product(id, product_name, merchant_id, del_flag) VALUES (992951, 'E2E 猫咖招牌套餐', 8001, 0);
