@@ -6,7 +6,7 @@
   <view class="tb-sheet ptb phl">
     <view class="tb-close" bindtap="closeHelpPanel" aria-role="button" aria-label="关闭提示" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="32" /></view>
     <text class="tb-title">提示</text>
-    <text class="phl__left" wx:if="{{helpPanel.freeLeft !== null}}">本局剩余免费 {{helpPanel.freeLeft}} 次</text>
+    <text class="phl__left" wx:if="{{helpPanel.freeLeft > 0}}">本局剩余免费 {{helpPanel.freeLeft}} 次</text>
     <view class="tb-group" wx:if="{{helpPanel.rows.length}}">
       <view class="tb-row phl__row {{item.state === 'gated' || item.state === 'unavailable' ? 'is-off' : ''}}" wx:for="{{helpPanel.rows}}" wx:key="level"
             data-level="{{item.level}}" bindtap="tapHelpRow" aria-role="button" aria-label="{{item.label}}，{{item.pending ? '结果待确认' : item.action}}" hover-class="cy-pressed" hover-stay-time="80">

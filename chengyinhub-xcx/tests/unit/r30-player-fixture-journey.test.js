@@ -13,7 +13,7 @@ const event = (key, value) => ({ currentTarget: { dataset: { [key]: value } } })
 
 function fixture(image = 'https://assets.example.test/original-question.jpg') {
   const storage = memoryStorage(), requests = [], pending = [], previews = [], snapshots = [];
-  const scope = { memberId: '9', activityId: '', topicId: '8' };
+  const scope = { memberId: '9', activityId: '', topicId: '8', routeSessionId: SESSION };
   let phase = 0, definition, revised = false;
   const chapters = [101, 202].map((chapterId, i) => ({ chapterId, name: '合成章' + (i + 1), blocks: [
     { type: 'text', content: '原开场' + chapterId },

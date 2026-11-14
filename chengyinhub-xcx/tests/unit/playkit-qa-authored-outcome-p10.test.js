@@ -82,3 +82,20 @@ test('第四轮:作者的结果反馈比 attempts 晚到一拍,先写上的兜�
   def.observers.authoredOutcome.call(d, 'FAIL')
   assert.equal(d.data.feedback, '石碑上刻着呢')
 })
+
+test('文字提交只在非空输入时启用，答错清空后重新禁用', () => {
+  const def = loadQa(); const c = qa(def); const events = [];
+  c.triggerEvent = (name, detail) => events.push({ name, detail });
+  c._answerIndex = def.methods._answerIndex;
+  c.selectComponent = () => ({ miss: () => false, nudge() {} });
+  assert.equal(c.data.ctaDisabled, true);
+  def.methods.onInput.call(c, { detail: { value: '  ' } });
+  def.methods.onCta.call(c);
+  assert.equal(c.data.ctaDisabled, true); assert.equal(events.length, 0);
+  def.methods.onInput.call(c, { detail: { value: 'C02、B04' } });
+  assert.equal(c.data.ctaDisabled, false);
+  def.methods.onCta.call(c);
+  assert.deepEqual(events, [{ name: 'submit', detail: { mode: 'type', input: 'C02、B04' } }]);
+  def.methods.settle.call(c, false, {});
+  assert.equal(c.data.typed, ''); assert.equal(c.data.ctaDisabled, true);
+});

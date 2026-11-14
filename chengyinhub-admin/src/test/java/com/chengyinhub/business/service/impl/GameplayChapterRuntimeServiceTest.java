@@ -81,6 +81,35 @@ class GameplayChapterRuntimeServiceTest {
         start(member,node);TopicRouteSession s=sessions.get(member);
         runtime.gameplayAction(member,s.getId(),s.getVersion(),"resolve"+(++request),"QUEST_RESOLVE","node_"+node,null);
     }
+    @Test void trustedSensorSkipCompletesPersonalQuestAndAdvancesWithoutCorrectAnswerRewards() throws Exception {
+        template.setAdvancedConfigJson("{\"schemaVersion\":1,\"compass\":{\"enabled\":true,\"bearing\":135,\"tolerance\":15,\"holdSeconds\":3,\"xp\":8,\"allowSkip\":true},\"outcomeRules\":{\"version\":1,\"pass\":{},\"fail\":{}}}");
+        publish();
+        runtime.state(7L, 10L, 0L);
+        start(7, 101);
+        String instance = runtime.gameplayInstance(7L, 10L, 0L, 101L);
+        assertThrows(RuntimeException.class, () -> runtime.recordGameplayOutcome(8L, 10L, 0L, 101L,
+                instance, "wrong-owner", JSON.createObjectNode().put("nodeId", 101).put("outcome", "SKIPPED"), Collections.emptyList()));
+        assertThrows(RuntimeException.class, () -> runtime.recordGameplayOutcome(7L, 10L, 0L, 102L,
+                instance, "wrong-node", JSON.createObjectNode().put("nodeId", 102).put("outcome", "SKIPPED"), Collections.emptyList()));
+        runtime.recordGameplayOutcome(7L, 10L, 0L, 101L, instance, "sensor-skip",
+                JSON.createObjectNode().put("nodeId", 101).put("outcome", "SKIPPED"), Collections.emptyList());
+        JsonNode state = stored(7);
+        JsonNode slot = state.path("themeRuntime").path("gameplay").path("slots").path("node_101");
+        assertEquals("SKIPPED", slot.path("completionMode").asText());
+        assertEquals(0, slot.path("puzzleScore").asInt(-1));
+        assertEquals(0, state.path("variables").path("sys.passed.101").asInt(-1));
+        assertTrue(state.path("completedNodeIds").toString().contains("101"));
+        assertEquals(20, state.path("variables").path("sys.hp").asInt());
+        assertFalse(state.path("themeRuntime").path("gameplay").has("activeQuestArrivalReceiptId"));
+        PlayerNodeProgressMapper progress = (PlayerNodeProgressMapper) ReflectionTestUtils.getField(runtime, "progressMapper");
+        verify(progress).markGameplayQuestDone(argThat(row -> row.getMemberId().equals(7L)
+                && row.getTopicId().equals(10L) && row.getActivityId().equals(0L) && row.getNodeId().equals(101L)
+                && row.getPlayInstanceId().equals(sessions.get(7L).getPlayInstanceId())
+                && row.getPuzzleScore().equals(0) && row.getCompletionMode().equals("SKIPPED")));
+        start(7, 102);
+        assertEquals("node_102", stored(7).path("themeRuntime").path("gameplay").path("activeQuest").asText());
+    }
+
     @Test void anyNUsesRealChapterOrderAndEndsOnceAtQuantity() throws Exception {
         settings(2).putObject("completion").put("type","ALL");
         settings(0).put("hpCost",2).putObject("completion").put("type","ANY_N").put("quantity",2);

@@ -686,10 +686,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             if (receipt.path("success").asBoolean() || receipt.has("requiredCompletions") && receipt.path("gameCompleted").asBoolean()) session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
             else if (retry) session.setStatus(GameRuntimeSession.STATUS_FAILED);
         }
-        ObjectNode gameplayDecision = zeroChallengeSession || !config.has("outcomeRules") ? null : serverGameplayDecision(normalizedAction, config, state);
+        ObjectNode gameplayDecision = zeroChallengeSession || !config.has("outcomeRules") && !"SKIP_SENSOR_STATION".equals(normalizedAction) ? null : serverGameplayDecision(normalizedAction, config, state);
         if (gameplayDecision != null) {
             gameplayDecision.put("nodeId", session.getNodeId()); state.set("gameplayDecision", gameplayDecision.deepCopy());
-            session.setStatus("PASS".equals(gameplayDecision.path("outcome").asText()) ? GameRuntimeSession.STATUS_COMPLETED : GameRuntimeSession.STATUS_FAILED);
+            session.setStatus("FAIL".equals(gameplayDecision.path("outcome").asText()) ? GameRuntimeSession.STATUS_FAILED : GameRuntimeSession.STATUS_COMPLETED);
+            if ("SKIPPED".equals(gameplayDecision.path("outcome").asText())) session.setScore(0);
         }
         // CT-07 指认结案的结论:只在最终一题(原 qa)判完时落一次,与本次状态更新同一事务。
         // 对错只来自服务端判定的 qa 结果;「提前」由真实进度事实派生(见 accusationGateSatisfied)。
@@ -710,10 +711,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // 非旅程主题在旅程运行时里 no-op,行为零变化。
         boolean scopedTheme=topicRouteRuntimeService!=null && topicRouteRuntimeService.nodeRuntimeConfig(memberId,session.getTopicId(),session.getNodeId(),session.getActivityId())!=null;
         // 非通用主题里结果反馈判出的过/没过,按普通站点的成败事实记(没判出结果的动作不记)。
-        Boolean r5Fact = gameplayDecision == null ? null : Boolean.valueOf("PASS".equals(gameplayDecision.path("outcome").asText()));
+        Boolean r5Fact = gameplayDecision == null || "SKIPPED".equals(gameplayDecision.path("outcome").asText()) ? null : Boolean.valueOf("PASS".equals(gameplayDecision.path("outcome").asText()));
         if (zeroChallengeSession) {
             // 挑战只写恢复回执，不产生普通任务完成事实。
-        } else if (config.has("outcomeRules") && (sharedRun != null || scopedTheme && topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId()))) {
+        } else if ((config.has("outcomeRules") || gameplayDecision != null && "SKIPPED".equals(gameplayDecision.path("outcome").asText())) && (sharedRun != null || scopedTheme && topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId()))) {
             if (gameplayDecision != null) {
                 String attemptId = "advanced:" + session.getId() + ":" + state.path("attemptOrdinal").asLong(1);
                 List<String[]> refs = new ArrayList<>(); for (ChoiceRef choice : choices) if (choice != null) refs.add(new String[]{choice.stepOrKit, choice.optionId});
@@ -1321,7 +1322,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
 
     /** 本局是否已按「跳过·辅助完成」收尾(读局状态,不查库)。 */
     private static boolean isSkipped(JsonNode state) {
-        return state != null && state.path("skip").path("skipped").asBoolean(false);
+        return state != null && (state.path("skip").path("skipped").asBoolean(false)
+                || AdvancedActionJudgement.skippedSensorSection(state) != null);
     }
 
     /** 服务端 photoVerified:只有视觉模型当场真判 PASS 才算;降级与兜底放行都不算 */
@@ -2944,7 +2946,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "lead", cfg);
             // 拍照打卡的补充说明:提示词摆屏幕正中,这一句小字在它下面
             putText(value, "shotNote", cfg);
-            putText(value, "imageUrl", cfg);
+            String questionImage = playMediaUrl(cfg.path("imageUrl").asText(""), actorMemberId);
+            if (!questionImage.isEmpty()) value.put("imageUrl", questionImage);
             putText(value, "audioUrl", cfg);
             List<Map<String, Object>> options = new ArrayList<>();
             for (JsonNode option : cfg.path("options")) {

@@ -2127,7 +2127,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
     @Override
     @Transactional(rollbackFor=Exception.class)
     public void recordSharedGameplayOutcome(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String attemptId,JsonNode decision,List<String[]> choices,Integer authorityEpoch) {
-        if(decision==null || decision.path("nodeId").asLong()!=nodeId || !Arrays.asList("PASS","FAIL").contains(decision.path("outcome").asText()))throw error("GAME_BAD_REQUEST","Invalid trusted outcome");
+        if(decision==null || decision.path("nodeId").asLong()!=nodeId || !Arrays.asList("PASS","FAIL","SKIPPED").contains(decision.path("outcome").asText()))throw error("GAME_BAD_REQUEST","Invalid trusted outcome");
         recordSharedRouteResult(memberId,topicId,activityId,nodeId,instance,attemptId,"PASS".equals(decision.path("outcome").asText()),choices,authorityEpoch,decision,attemptId);
     }
     private void recordSharedRouteResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String actionId,Boolean passed,List<String[]> choices,Integer authorityEpoch,JsonNode decision,String attemptId) {
@@ -2192,6 +2192,23 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         for (JsonNode quest : routeGameplay(session).path("quests")) if (!operationNode && bindingNode(session, quest) == nodeId
                 && quest.path("questKey").asText().equals(state.getThemeRuntime().path("gameplay").path("activeQuest").asText())) sourceNode = quest.path("nodeId").asLong();
         CooperationScope failureScope=null;
+        if (decision != null && "SKIPPED".equals(decision.path("outcome").asText())) {
+            if (operationNode || !taskNode) throw error("GAME_TASK_UNVERIFIED", "跳过不属于当前任务");
+            String questKey = state.getThemeRuntime().path("gameplay").path("activeQuest").asText();
+            JsonNode quest = taskEngine.quest(config, questKey);
+            String questionInstance = GameplayRuntimeConfig.cooperativePuzzles(config) ? cooperativeQuestInstance(session, state) : instance;
+            taskEngine.skipTrusted(config, rules, state, questKey, "sensor-skip:" + claim.getId(),
+                    "TEAM:" + player.teamId, clock.now().getTime());
+            if (GameplayRuntimeConfig.cooperativePuzzles(config)) finishCooperativePuzzle(session, state, quest, questionInstance, true);
+            state.getVariables().put("sys.passed." + sourceNode, 0);
+            saveRouteOwner(session, owner, state);
+            bumpSession(session, session.getStatus(), session.getCurrentChapterId(), memberId, clock.now());
+            claim.setOutcome("APPLIED"); claim.setRevision(session.getRevision()); fact.setRequestHash(hash);
+            appendRunEvent(session, GameActorContext.player(memberId), fact, claim.getId(), balancesBefore);
+            claim.setResultJson(writeJson(sharedRoutePlayer(session, player.teamId, memberId))); claim.setUpdateTime(clock.now());
+            if (runtimeMapper.completeReceipt(claim) != 1) throw error("GAME_STATE_CONFLICT", "跳过回执保存失败");
+            return;
+        }
         if(decision!=null) {
             ObjectNode boundDecision=(ObjectNode)decision.deepCopy();boundDecision.put("nodeId",sourceNode);
             new com.chengyinhub.business.service.support.GameplayOutcomeEngine().remember(snapshot,state,attemptId,boundDecision);

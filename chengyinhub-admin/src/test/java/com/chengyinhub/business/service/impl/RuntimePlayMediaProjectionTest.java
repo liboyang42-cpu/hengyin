@@ -131,6 +131,26 @@ class RuntimePlayMediaProjectionTest {
         assertFalse(dumped.contains("should-not-leak"), dumped);
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    void questionCardUsesReviewedMediaResolverAndNeverLeaksAnInternalReference() {
+        for (long asset : List.of(11L, 12L, 13L, 404L)) {
+            GameRuntimeSession session = new GameRuntimeSession();
+            session.setId(SESSION_ID); session.setActivityId(ACTIVITY_ID); session.setTopicId(TOPIC_ID); session.setNodeId(NODE_ID);
+            session.setTemplateId(TEMPLATE_ID); session.setOwnerType(GameRuntimeSession.OWNER_PLAYER); session.setOwnerId(MEMBER_ID);
+            session.setConfigSnapshotJson(CONFIG.replace("\"options\":[", "\"imageUrl\":\"media-asset:" + asset + "\",\"options\":["));
+            session.setStateJson("{}"); session.setStatus(GameRuntimeSession.STATUS_RUNNING);
+            session.setVersion(0); session.setScore(0); session.setStartedAt(new Date());
+            when(sessionMapper.selectAccessibleById(SESSION_ID, MEMBER_ID)).thenReturn(session);
+            Map<String, Object> view = service.state(MEMBER_ID, SESSION_ID);
+            Map<String, Object> qa = (Map<String, Object>) ((Map<String, Object>) view.get("playKit")).get("qa");
+            if (asset == 11L) assertEquals(APPROVED_URL, qa.get("imageUrl"));
+            else assertFalse(qa.containsKey("imageUrl"));
+            assertFalse(String.valueOf(view).contains("media-asset:"));
+            assertFalse(String.valueOf(view).contains("should-not-leak"));
+        }
+    }
+
     @Test
     void publishedPlayUrlNeverPreviewsUnapprovedAssetsButKeepsNonRegistryReferences() {
         assertEquals(APPROVED_URL, media.publishedPlayUrl("media-asset:11", MEMBER_ID));
