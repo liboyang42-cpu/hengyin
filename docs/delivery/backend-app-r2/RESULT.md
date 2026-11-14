@@ -6,6 +6,23 @@ Production was not touched. hengyin `master` was not pushed. The only branch pus
 Tested SHA: **`955175611`** after the R2 follow-up (§0). The first round was tested on `01229ec46` (§1–§5). The commit that updates
 this file follows `955175611` and only changes `docs/`.
 
+## R5 (2026-11-14): `feature/be-gap-misc` + `feature/be-gap-merchant` merged, redeployed once more
+
+| Item | Result |
+|---|---|
+| Merges | `origin/feature/be-gap-misc` `6de5ac855` → **`e51473e65`**, then `origin/feature/be-gap-merchant` `7121d9c32` (cut from `f89005866`) → **`67379040e`**. Both `--no-ff`, no conflicts. The ledger keeps both new entries (`20261119_be_gap_misc`, `20261119_merchant_gap`); no same-named migrations. |
+| Gates | `migration_ledger.py audit` problems=[], `migration-layout-check.sh` and `migration-safety-check.sh` pass (27 migrations in this batch, ledger order). |
+| Build | `mvn package -DskipTests` BUILD SUCCESS. |
+| Unit tests (on `67379040e`) | **19,522 run, 0 failures**; the 34 errors are the same 14 DB-needing `*MyBatisTest` classes, **39/39** against be-int-mysql. |
+| Real-MySQL ITs | **27 classes, 113/113** with the app's timezone (`-Duser.timezone=Asia/Shanghai`): the R4 list plus `BeGapMiscMysqlIntegrationTest` 3/3 and `MerchantGapMySqlIT` 3/3 (`CHENGYIN_MERCHANT_GAP_MYSQL_IT=1`). `MapPublicLayersMySqlIT` 1/1. |
+| TEST 8120 redeploy | Jar from `67379040e`, same DB `cy_e2e_r2`: only `20261119_be_gap_misc` and `20261119_merchant_gap` were applied (634 → 656 tables). Overlay additions (TEST only; code defaults stay off): the W05 merchant authoring policy fixture values from `be-gap-merchant/application-merchant.properties.txt`, and every misc switch (private home, home return with placeholder policy `home-return-test-1`, US Apple realm `us-test` / client id `com.example.questify.us`, App Attest with the TEST app id `ABCDE12345.com.chengyinhub.test`, categories 2,4 and Apple's public roots in `app/attest/`). **Rollback:** `app/*.prev-aa3dcc8` (the R4 deploy); `*.prev-fc6c80e` and older are kept. |
+| TEST seed | `r5/fixture-merchant-8120.sql.txt` = `be-gap-merchant/fixture-merchant.sql.txt` with its database guard pointed at `cy_e2e_r2` (store 8001/8002 city points + 4 visits, the FREE_EXPLORE copy 992901/992911/992991 for the supply exit, one W05 source row, product 992951). |
+| curl: merchant (`smoke_merchant_8120.py`) | Same outcomes as on 8127 for all 29 rows (W05 drafts/facts/publish/withdraw, draft selection, city value, marketing consent result, store NPC voice/avatar/knowledge review, offer withdrawal, the three aliases). Generation answers `UPSTREAM_UNAVAILABLE` (no model on TEST), `shop/apply` answers the target's real-name refusal for the fixture. Transcript `r5/smoke-merchant.log`. |
+| curl: misc (`smoke_misc_8120.py`) | **41/41 OK** (the 40 checks of `be-gap-misc/smoke_misc.py` plus an `im/unblock` cleanup so the shared IM fixtures stay usable). |
+| curl: club / R2 regression | club `activity/join` 200 (waitlist entry 2) and `activity/cancel` 200 again; `smoke_r2.py` **39 OK** on loopback and on the public URL (the same two known upload failures). On TEST the loopback SMS windows (`sms_send_ip_window_127.0.0.1`, `sms_verify_ip_window_127.0.0.1`) fill up after many smoke logins; clear them in Redis db 9 before rerunning. |
+
+Logs: VPS `/data/workspace/be-int/r5/`.
+
 ## R4 (2026-11-14): `feature/be-gap-club` + `feature/be-gap-rewards-workshop` merged, one redeploy
 
 | Item | Result |
