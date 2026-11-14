@@ -81,9 +81,8 @@ def enforce_trigger_contract(workflow_text):
     if "master" not in "\n".join(triggers.get("push", [])):
         problems.append("on.push.branches 必须包含 master")
     push_body = "\n".join(triggers.get("push", []))
-    for required in REQUIRED_TRIGGER_PATHS:
-        if required not in push_body:
-            problems.append("on.push.paths 缺 %s —— 相关资金改动可能不会触发复验" % required)
+    if re.search(r"^\s+paths(?:-ignore)?:", push_body, re.MULTILINE):
+        problems.append("on.push 不得设置 paths/paths-ignore：master 必须全量复验资金")
     return problems
 
 # class 短名 -> 最少实跑用例数(skipped 必须为 0)。
@@ -546,8 +545,8 @@ def enforce_workflow(workflow_text, gate_text):
         problems.append("Funds MySQL 主 job 必须回读并传播前置自测结果")
     # required check 仍要对每个 PR 出终态(所以 on.pull_request 不得设 paths),
     # 但真库 IT 不得在改 UI/小程序的 PR 上烧额度。
-    if "dorny/paths-filter" not in workflow_text:
-        problems.append("必须用路径过滤决定要不要跑真库 IT")
+    if "run: node ci/test-impact.js funds" not in workflow_text:
+        problems.append("必须用保守资金/SQL影响计划决定PR真库IT")
     if "FUNDS: ${{ needs.funds_it_gate_selftest.outputs.funds }}" not in main_job_text:
         problems.append("真库 IT 必须读自测 job 的 funds 输出，不得每个 UI/小程序 PR 都跑 20 分钟 MySQL")
     if "steps.scope.outputs.run" not in main_job_text:

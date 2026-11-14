@@ -131,3 +131,10 @@ cert/
 # 判「包含私钥正文」直接红 —— 门禁没错,是编译产物本就不该被它看见。
 __pycache__/
 *.pyc
+
+# Current-source inventories are regenerated in CI; authored evidence/baselines stay versioned.
+/chengyinhub-xcx/scripts/uiaudit/action-ledger.json
+/chengyinhub-xcx/scripts/uiaudit/route-matrix.json
+/chengyinhub-xcx/scripts/uiaudit/impact-map.json
+/chengyinhub-xcx/scripts/uiaudit/generated-source.json
+/.ci-impact.json
