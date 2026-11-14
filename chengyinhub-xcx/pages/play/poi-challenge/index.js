@@ -116,14 +116,14 @@ Page({
       const photoRejected = !ok && ['照片未上传成功或不属于当前账号，请重新拍摄上传', '照片校验暂不可用，请稍后重试'].includes(msg);
       this.setData({ photoError: photoRejected ? msg : '' });
       if (kit) kit.settle(ok || photoRejected, { index: d.index, pendingEvidence: photoRejected,
-        feedback: photoRejected ? '答案正确，请重新拍摄照片' : (ok ? '' : msg) });
+        feedback: photoRejected ? '请重新拍摄照片' : (ok ? '' : msg) });
     });
   },
   retakePhoto() {
     this._photoUrl = '';
     this.setData({ step: 'photo', photoError: '' });
   },
-  onQuizContinue() { this._finish(this._result || {}); },
+  onQuizContinue() { if (this.data.photoError) this.retakePhoto(); else this._finish(this._result || {}); },
   /* 判定屏(对勾)停一下再进下一屏,和游玩页节奏一致;失败屏由玩家点退出 */
   onPhotoVerdict(e) { if (e && e.detail && e.detail.kind === 'win') this._later(() => this.onPhotoContinue()); },
   onQuizVerdict(e) { if (e && e.detail && e.detail.kind === 'win') this._later(() => this.onQuizContinue()); },

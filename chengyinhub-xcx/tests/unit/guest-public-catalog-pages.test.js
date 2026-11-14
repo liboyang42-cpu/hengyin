@@ -109,16 +109,21 @@ test('guest official task list does not call my-events; private tab cancel leave
   assert.equal(h.page.data.tab,0);assert.equal(h.requests.length,1);
 });
 
-test('2026-11-14 curated guest cards use published cover and real navigation coordinates',()=>{
+test('2026-11-14 curated guest cards use published cover and real navigation coordinates',async()=>{
   const h=mount('pages/roam/index.js');
   const row={id:91,type:1,name:'公开公园',lat:31.2,lng:121.4,coverImg:'park.jpg',tags:'["roam:seed:v1:park"]'};
   h.page._entryPlaces=[row];
   h.page.onEntryCityStrip({detail:{inCity:true,strip:{city:'SH',name:'上海',count:1,items:[{id:'park',seed:'roam:seed:v1:park',name:'公开公园'}]}}});
   assert.equal(h.page.data.entryCityStrip.items[0].cover,'park.jpg');
-  h.page.onEntryCityPlaceTap({currentTarget:{dataset:{idx:0}}});
+  const pending = h.page.onEntryCityPlaceTap({currentTarget:{dataset:{idx:0}}});
+  assert.equal(h.requests.at(-1).url,'/api/city/places/91');
+  h.requests.at(-1).success({code:200,data:{...row,poiId:91}});
+  await flush();
+  h.requests.at(-1).success({code:200,data:{poiId:91,coverKey:'park.jpg',credit:'fixture license',images:[]}});
+  await pending;
   assert.equal(h.page.data.entryPlace.cover,'park.jpg');
   assert.equal(h.page.data.entryPlace.lat,31.2);assert.equal(h.page.data.entryPlace.lng,121.4);
-  assert.equal(h.modals.length,0);assert.equal(h.requests.length,0);
+  assert.equal(h.modals.length,0);assert.equal(h.requests.length,2);
 });
 
 test('2026-11-14 guest search reads all public categories without login notices',()=>{

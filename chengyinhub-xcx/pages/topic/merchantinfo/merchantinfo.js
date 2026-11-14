@@ -2312,11 +2312,11 @@ Page({
     const merchantCity = this.data.operationScope === 'MERCHANT' && productType === 1;
     const gate = {};
     if (merchantCity) {
-      gate.club = gate.merchant = '商家发的城市定向只能自己带,不能邀俱乐部和商家';
+      gate.club = gate.merchant = '商家发的城市定向只能自己带，不能邀俱乐部和商家';
       return gate;
     }
-    if (productType === 1 && host && host.openClubPool === false) gate.club = '发布时没开「俱乐部承接」,去「更多 › 票价与主题内容」打开';
-    if (productType === 2 && host && host.recruitChapterCount === 0) gate.merchant = '还没有开放商家承接的站,去「更多 › 章节控制」逐站打开';
+    if (productType === 1 && host && host.openClubPool === false) gate.club = '发布时没开「俱乐部承接」，去「更多 › 票价与主题内容」打开';
+    if (productType === 2 && host && host.recruitChapterCount === 0) gate.merchant = '还没有开放商家承接的站，去「更多 › 章节控制」逐站打开';
     return gate;
   },
 
@@ -2639,7 +2639,7 @@ Page({
     const that = this;
     cyModal.show({
       title: '确认候选',
-      content: '确认「' + (ds.name || '该商家') + '」占住这一站?同一站其他待调配报名将自动落选。确认后再向他发带条款的合作邀约,他接受才成合作单。',
+      content: '确认「' + (ds.name || '该商家') + '」占住这一站？同一站其他待调配报名将自动落选。确认后再向他发带条款的合作邀约，他接受才成合作单。',
       confirmText: '确认',
       success(r) {
         if (!r || !r.confirm) return;

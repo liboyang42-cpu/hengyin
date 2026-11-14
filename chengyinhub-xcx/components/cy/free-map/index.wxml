@@ -1,5 +1,5 @@
 <view class="fmap-wrap">
-  <map id="fmap" class="fmap"
+  <map id="fmap" wx:if="{{mapMounted}}" class="fmap" data-generation="{{mapGeneration}}"
        aria-role="img" aria-label="{{accessibilityLabel}}"
        longitude="{{center.lng}}" latitude="{{center.lat}}" scale="{{scale}}"
        markers="{{scene === 'explore' ? mapMarkers : markers}}"
@@ -36,6 +36,7 @@
     <cover-view wx:if="{{showExit}}" class="fmap-exit-hit" style="top:{{exitTop}}px;" bindtap="onExitTap" aria-role="button" aria-label="退出游玩" hover-class="cy-pressed" hover-stay-time="80">
       <cover-view class="fmap-exit">退出</cover-view>
     </cover-view>
+    <cover-view wx:if="{{tone === '2077' && !mapLoaded}}" class="fmap-skeleton" aria-role="status" aria-label="地图加载中"><cover-view class="fmap-skeleton__bar"></cover-view><cover-view class="fmap-skeleton__bar"></cover-view><cover-view class="fmap-skeleton__bar"></cover-view></cover-view>
   </map>
   <view wx:if="{{tone === '2077' && !mapLoaded}}" class="fmap-skeleton" aria-role="status" aria-label="地图加载中"><view class="fmap-skeleton__bar"></view><view class="fmap-skeleton__bar"></view><view class="fmap-skeleton__bar"></view></view>
   <canvas type="2d" id="iconcv" class="iconcv"></canvas>

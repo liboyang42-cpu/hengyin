@@ -352,7 +352,7 @@
 </view>
 <view class="merchant-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-poi-detail'}}" catchtouchmove="blockSceneTouch">
   <cy-scene-sheet show="{{true}}" variant="{{sceneCurrent.variant}}" theme="{{sceneCurrent.theme}}" title="{{sceneCurrent.title}}" can-back="{{sceneCurrent.canBack}}" dirty="{{sceneCurrent.dirty}}" mask-closable="{{sceneCurrent.maskClosable}}" bind:requestclose="requestSceneClose" bind:back="backScene">
-    <cy-scene-roam-poi-detail poi-id="{{sceneCurrent.params.poiId}}" merchant-id="{{sceneCurrent.params.merchantId}}" bind:open="openChildScene" bind:close="closeScene" bind:citystamp="openCityStamp" />
+    <cy-scene-roam-poi-detail poi-id="{{sceneCurrent.params.poiId}}" merchant-id="{{sceneCurrent.params.merchantId}}" bind:open="openChildScene" bind:close="closeScene" bind:citystamp="openCityStamp" bind:titlechange="onPoiTitle" />
   </cy-scene-sheet>
 </view>
 <cy-modal class="theme-merchant" show="{{sceneConfirm.show}}" title="放弃本轮修改" confirm-text="确认放弃" cancel-text="继续编辑" danger bind:confirm="confirmSceneDiscard" bind:cancel="cancelSceneDiscard" />

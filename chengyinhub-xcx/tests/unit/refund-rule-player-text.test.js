@@ -9,9 +9,9 @@ const { refundRuleText } = require('../../pages/topic/utils/refund-rule.js')
 
 test('收费票显示平台三档,不看存的 refund_rule', () => {
   const t = { price: 39.99, mode: 1, refundRule: '开场前24小时可退' }
-  assert.strictEqual(refundRuleText(t), '集合前 24 小时以上全额退;24 小时内退 50%;开始后不退')
+  assert.strictEqual(refundRuleText(t), '集合前 24 小时以上全额退；24 小时内退 50%；开始后不退')
   assert.strictEqual(refundRuleText({ price: 20, mode: 2, refundRule: '不退' }),
-    '开始前 24 小时以上全额退;24 小时内退 50%;开始后不退')
+    '开始前 24 小时以上全额退；24 小时内退 50%；开始后不退')
 })
 
 test('免费票 / 空票不写退款说明', () => {

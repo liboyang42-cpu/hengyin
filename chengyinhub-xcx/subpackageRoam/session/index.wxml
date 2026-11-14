@@ -45,7 +45,7 @@
         <view class="ss-card-stats">
           <view><text>{{s.distanceText}}</text><text>km</text></view>
           <view><text>{{ s.explorePct === 0 ? 0 : (s.explorePct || '--') }}%</text><text>探索度</text></view>
-          <view><text>{{s.shops}}</text><text>点亮</text></view>
+          <view><text>{{s.footprints}}</text><text>处到达</text></view>
         </view>
         <view class="ss-card-brand">城瘾 · CityFog</view>
       </cy-card>

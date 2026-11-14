@@ -95,20 +95,30 @@ Component({
     layerStyle: { type: Number, value: 1 },
     // 第九轮 m4 第 2 项:底图是哪一套(black / white / paper / 2077;'' = 没配 key 的官方默认底图)。
     // 浅底上把白线白圈换成墨色,见 utils/map-style.js toneLines / toneCircle。
-    tone: { type: String, value: '', observer(next, previous) { if (next === '2077' && next !== previous && this.data.mapLoaded) this.setData({ mapLoaded: false }); this._mergeLines(); this._rebuild(); } },
+    tone: { type: String, value: '', observer(next, previous) {
+      if (next !== previous && (next === '2077' || previous === '2077')) {
+        const generation = (this.data.mapGeneration || 0) + 1;
+        this._fitRendered = false;
+        // 新样式使用新原生实例，旧实例的 updated 不能提前撤掉占位。
+        this.setData({ mapMounted: false, mapLoaded: false, mapGeneration: generation }, () => {
+          wx.nextTick(() => { if (!this._mapGone && generation === this.data.mapGeneration) this.setData({ mapMounted: true }); });
+        });
+      }
+      this._mergeLines(); this._rebuild();
+    } },
     // 第九轮 m4:漫游 16 级以上的 3D 楼块 + 俯仰(试做,默认关;开关在 utils/map-style.js ROAM_3D)
     tilt3d: { type: Boolean, value: false },
     showExit: { type: Boolean, value: false },
     exitTop: { type: Number, value: 52 }
   },
-  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [], skew3d: ROAM_3D.skew, mapLoaded: false },
+  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [], skew3d: ROAM_3D.skew, mapLoaded: false, mapMounted: true, mapGeneration: 0 },
   lifetimes: {
     attached() {
       if (this.data.scene === 'explore') { this._icons = {}; return; }
       this._genIcons().then(() => this._rebuild());
     },
     // 卸载时清掉 dropIn 挂起的定时器,避免组件销毁后 setTimeout 仍触发 setData
-    detached() { if (this._dropTimers) { this._dropTimers.forEach((t) => clearTimeout(t)); this._dropTimers = []; } }
+    detached() { this._mapGone = true; if (this._dropTimers) { this._dropTimers.forEach((t) => clearTimeout(t)); this._dropTimers = []; } }
   },
   methods: {
     onExitTap() { this.triggerEvent('exit'); },
@@ -320,6 +330,8 @@ Component({
       this.onMarkerTap({ detail: { markerId } });
     },
     onUpdated(e) {
+      const generation = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.generation;
+      if (!this.data.mapMounted || (generation != null && Number(generation) !== this.data.mapGeneration)) return;
       if (!this.data.mapLoaded) this.setData({ mapLoaded: true });
       if (this.data.fit && this._fitKey && !this._fitRendered) { this._fitRendered = true; this._applyFit(); }
       this.triggerEvent('updated', e.detail);

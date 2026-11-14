@@ -13,7 +13,7 @@ function mount(file, app = {}) {
   let definition
   global.getApp = () => app
   global.getCurrentPages = () => []
-  global.wx = { getStorageSync() {}, setStorageSync() {}, showToast() {}, showModal() {},
+  global.wx = { getStorageSync() {}, setStorageSync() {}, showToast() {}, showModal() {}, nextTick: fn => fn(),
     getWindowInfo: () => ({ windowWidth: 390, windowHeight: 844 }), getSystemInfoSync: () => ({}) }
   global.Page = value => { definition = value }
   global.Component = value => { definition = value }
@@ -162,7 +162,7 @@ test('b5：照片拒绝不把已验证答案标错，也不能进入勋章完成
   kit.settle(true, verdict[1])
   assert.equal(kit.data.optionList[2].state, 'is-right')
   assert.equal(wins, 0)
-  assert.equal(kit.data.ctaDisabled, true)
+  assert.equal(kit.data.ctaDisabled, false)
 })
 
 test('b6：同一标签观察值只回传一次，避免父层回写造成递归更新', () => {
@@ -206,7 +206,7 @@ test('b7：底图完成前保持加载态；重复 updated 不反复 setData', (
   assert.equal(map.data.mapLoaded, false)
   let updates = 0
   const set = map.setData
-  map.setData = patch => { updates++; set(patch) }
+  map.setData = (patch, done) => { updates++; set(patch, done) }
   map.triggerEvent = () => {}
   map.onUpdated({ detail: {} })
   map.onUpdated({ detail: {} })

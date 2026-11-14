@@ -914,7 +914,7 @@ Page({
           sendReceipt: receipt,
           resultSheet: {
             show: true, kind: 'success', title: '协作邀请已发送',
-            sub: '已发给「' + one + '」,对方接受后即可' + (toClub ? '带团' : '承接') + '。',
+            sub: '已发给「' + one + '」，对方接受后即可' + (toClub ? '带团' : '承接') + '。',
             meta: that.data.topicName ? ('关联主题 · ' + that.data.topicName) : '',
             pill: '等待对方确认', why: '', primaryText: '', secondaryText: '', duration: RESULT_SHEET_MS,
           },

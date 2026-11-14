@@ -35,12 +35,28 @@ function formatDistance(km) {
   const value = readNonNegative(km)
   return value === null ? '—' : value.toFixed(1)
 }
-function formatDuration(seconds, legacy) {
+function readDurationSeconds(seconds, legacy) {
   let value = readNonNegative(seconds)
   if (value === null && typeof legacy === 'string') {
     const parts = legacy.match(/^(\d+):([0-5]\d)$/)
     if (parts) value = Number(parts[1]) * 60 + Number(parts[2])
   }
+  return value
+}
+function footprintCount(record) {
+  const rows = record && (Array.isArray(record.places) ? record.places : record.pois)
+  if (!Array.isArray(rows)) return 0
+  const seen = new Set()
+  return rows.filter((row, index) => {
+    if (!row || row.demo) return false
+    const key = row.id == null ? index : String(row.id)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  }).length
+}
+function formatDuration(seconds, legacy) {
+  const value = readDurationSeconds(seconds, legacy)
   return value === null ? '' : Math.floor(value / 3600) + ':' + String(Math.floor(value / 60) % 60).padStart(2, '0')
 }
 function formatStartTime(value) {
@@ -50,4 +66,4 @@ function formatStartTime(value) {
   return date ? String(date.hours).padStart(2, '0') + ':' + String(date.minutes).padStart(2, '0') : ''
 }
 
-module.exports = { readNonNegative, formatDistance, formatDuration, formatStartTime }
+module.exports = { readNonNegative, readDurationSeconds, footprintCount, formatDistance, formatDuration, formatStartTime }

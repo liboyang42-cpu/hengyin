@@ -37,7 +37,7 @@ function buildPlayHud(input) {
     actionLabel: data.paused ? '继续' : '暂停',
     endHoldPct: Math.max(0, Math.min(100, Number(data.endHoldPct) || 0)),
     left: isExplore
-      ? { label: '已走', value: (Number(data.distanceKm) || 0).toFixed(2), unit: 'km' }
+      ? { label: '已走', value: require('./roam-history-metrics.js').formatDistance(data.distanceKm), unit: 'km' }
       : { label: '已完成', value: String(completed), unit: '/' + total },
     right: {
       label: '用时',

@@ -4,7 +4,7 @@
 function refundRuleText(ticket) {
   if (!ticket || !(Number(ticket.price) > 0)) return '';
   const anchor = Number(ticket.mode) === 2 ? '开始前' : '集合前';
-  return anchor + ' 24 小时以上全额退;24 小时内退 50%;开始后不退';
+  return anchor + ' 24 小时以上全额退；24 小时内退 50%；开始后不退';
 }
 
 module.exports = { refundRuleText };

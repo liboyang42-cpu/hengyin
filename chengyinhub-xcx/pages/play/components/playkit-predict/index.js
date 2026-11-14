@@ -247,8 +247,8 @@ function revealOf(d) {
     const answer = pickLabel(d.options, d.settledOption);
     const mine = pickLabel(d.options, d.myOptionKey);
     return d.won
-      ? { revealKind: 'won', revealHead: '猜中了', revealText: '答案是「' + answer + '」,你选的就是它。' }
-      : { revealKind: 'lost', revealHead: '没猜中', revealText: '答案是「' + answer + '」,你选的是「' + mine + '」。' };
+      ? { revealKind: 'won', revealHead: '猜中了', revealText: '答案是「' + answer + '」，你选的就是它。' }
+      : { revealKind: 'lost', revealHead: '没猜中', revealText: '答案是「' + answer + '」，你选的是「' + mine + '」。' };
   }
   // 本站没有承接商家:没人会给答案,不许诺「等商家」
   if (d.shopAnswers === false) return { revealKind: '', revealHead: '', revealText: '' };

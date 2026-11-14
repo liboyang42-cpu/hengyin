@@ -70,12 +70,12 @@
     <view class="mt-strip__head"><text>{{headerText}}</text></view>
     <scroll-view class="mt-strip__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="mt-strip__track">
       <view class="mt-card mt-card--empty" wx:if="{{!listRows.length}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="{{listLoaded ? '附近暂无节点，查看全部范围' : '正在读取附近节点'}}" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="mt-card__copy" wx:if="{{listLoaded && !loadError && !nearbyReadAccess}}"><text class="mt-card__title">附近暂无节点</text><text class="mt-card__meta">点这里看看全部范围</text></view>
+        <view class="mt-card__copy" wx:if="{{listLoaded && !loadError && !nearbyReadAccess}}"><text class="mt-card__title">附近暂无节点</text></view>
       </view>
       <view class="mt-card" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
             aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{item.img}}" class="mt-card__cover" src="{{item.img}}" mode="aspectFill" lazy-load="true" />
-        <view wx:else class="mt-card__cover mt-card__cover--{{item.tone}}"></view>
+        <image wx:else class="mt-card__cover" src="/images/home-route-city-placeholder.jpg" mode="aspectFill" />
         <view class="mt-card__shade"></view>
         <view class="mt-card__copy"><text class="mt-card__tag mt-card__tag--{{item.tone}}">{{item.badge}}</text><text class="mt-card__title">{{item.name}}</text><text class="mt-card__meta" wx:if="{{item.sub}}">{{item.sub}}</text></view>
       </view>

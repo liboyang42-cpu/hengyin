@@ -27,35 +27,35 @@ const DANGER_ACTIONS = {
   // ===== 俱乐部 =====
   'club.dissolve': {
     irreversible: true,
-    title: '解散「{name}」?',
-    content: '解散后俱乐部不再对外展示,内容与群聊入口一并消失。',
+    title: '解散「{name}」？',
+    content: '解散后俱乐部不再对外展示，内容与群聊入口一并消失。',
     consequences: [
-      { icon: 'mtab-customers', text: '全部成员会被移出俱乐部,同时失去群聊入口' },
-      { icon: 'calendar', text: '俱乐部名下的活动与会员权益一并下架;已报名的不会自动取消,也不会自动退款' },
-      { icon: 'warning', text: '此操作不可撤销,解散后无法恢复这个俱乐部' },
+      { icon: 'mtab-customers', text: '全部成员会被移出俱乐部，同时失去群聊入口' },
+      { icon: 'calendar', text: '俱乐部名下的活动与会员权益一并下架；已报名的不会自动取消，也不会自动退款' },
+      { icon: 'warning', text: '此操作不可撤销，解散后无法恢复这个俱乐部' },
     ],
     confirmText: '解散俱乐部',
-    alt: { text: '改为转让主理人', hint: '把俱乐部交给别人打理,成员和内容都留着' },
+    alt: { text: '改为转让主理人', hint: '把俱乐部交给别人打理，成员和内容都留着' },
     done: { title: '俱乐部已解散', text: '成员已收到通知。未结事项仍需在合作中心逐笔处理。' },
   },
   'club.quit': {
     irreversible: true,
-    title: '退出「{name}」?',
+    title: '退出「{name}」？',
     // CU-C-71:重入代价不是全团统一的 —— 公开团(policy≠1)退出后点一下就回来,没有审批可等。
     // 这句只留占位符,由 onQuit 按 club.joinPolicy 填;写死「要重新申请」会误导公开团成员。
     content: '重新进来时，{rejoin}。',
     consequences: [
-      { icon: 'logout', text: '你会被移出团群,看不到成员专属内容' },
-      { icon: 'coupon', text: '会员专属活动的报名资格立即失效,已付款项不随退出自动退回' },
-      { icon: 'warning', text: '此操作不可撤销,当前的成员身份与加入时间不会保留' },
+      { icon: 'logout', text: '你会被移出团群，看不到成员专属内容' },
+      { icon: 'coupon', text: '会员专属活动的报名资格立即失效，已付款项不随退出自动退回' },
+      { icon: 'warning', text: '此操作不可撤销，当前的成员身份与加入时间不会保留' },
     ],
     confirmText: '退出俱乐部',
-    alt: { text: '只关掉群聊提醒', hint: '留在俱乐部,但不再收到群消息推送' },
+    alt: { text: '只关掉群聊提醒', hint: '留在俱乐部，但不再收到群消息推送' },
     done: { title: '已退出俱乐部', text: '想回来的话，{rejoinHint}。' },
   },
   'club.personal-receiver.unbind': {
     irreversible: false,
-    title: '解除个人收款?',
+    title: '解除个人收款？',
     consequences: [
       { icon: 'warning', text: '解除后新的俱乐部收入会暂停，重新绑定后继续' },
     ],
@@ -67,10 +67,10 @@ const DANGER_ACTIONS = {
     irreversible: true,
     // CU-C-107:「删除这条动态?」没有宾语 —— 列表里多条动态时,最后这一步核对不了目标。
     // 占位符由调用方填正文前段(见 postExcerpt)。
-    title: '删除这条动态「{name}」?',
+    title: '删除这条动态「{name}」？',
     consequences: [
       { icon: 'mtab-customers', text: '这条动态下的全部评论和点赞会一起删掉' },
-      { icon: 'warning', text: '此操作不可撤销,动态内容无法找回' },
+      { icon: 'warning', text: '此操作不可撤销，动态内容无法找回' },
     ],
     confirmText: '删除动态',
     alt: null,
@@ -78,9 +78,9 @@ const DANGER_ACTIONS = {
   },
   'club.comment.delete': {
     irreversible: true,
-    title: '删除这条评论?',
+    title: '删除这条评论？',
     consequences: [
-      { icon: 'warning', text: '此操作不可撤销,评论内容无法找回' },
+      { icon: 'warning', text: '此操作不可撤销，评论内容无法找回' },
     ],
     confirmText: '删除评论',
     alt: null,
@@ -88,12 +88,12 @@ const DANGER_ACTIONS = {
   },
   'club.member.remove': {
     irreversible: true,
-    title: '把「{name}」移出俱乐部?',
+    title: '把「{name}」移出俱乐部？',
     content: '对方会收到站内通知。',
     consequences: [
-      { icon: 'logout', text: '对方立即失去俱乐部与群聊入口,以及成员专属内容' },
-      { icon: 'coupon', text: '对方已报名的会员活动不会自动取消,也不会自动退款' },
-      { icon: 'warning', text: '此操作不可撤销,成员身份与加入时间不会保留;对方可以重新申请' },
+      { icon: 'logout', text: '对方立即失去俱乐部与群聊入口，以及成员专属内容' },
+      { icon: 'coupon', text: '对方已报名的会员活动不会自动取消，也不会自动退款' },
+      { icon: 'warning', text: '此操作不可撤销，成员身份与加入时间不会保留；对方可以重新申请' },
     ],
     confirmText: '移出成员',
     alt: null,
@@ -103,7 +103,7 @@ const DANGER_ACTIONS = {
   'merchant.aftercare.reject': {
     // 可逆:平台审核结束前商家仍可再提交「同意」,最新一条意见为准;不动款项。
     irreversible: false,
-    title: '确认不同意这笔退款申请?',
+    title: '确认不同意这笔退款申请？',
     consequences: [
       { icon: 'info', text: '这是商家意见，不会直接驳回申请，最终结果以平台审核为准' },
       { icon: 'clock', text: '平台审核结束前，你仍可以再提交「同意」改变意见' },
@@ -127,27 +127,27 @@ const DANGER_ACTIONS = {
   // ===== AI 对话 =====
   'ai.npc.chatData.delete': {
     irreversible: true,
-    title: '清除我的对话记录?',
-    content: '会删除你与 AI 向导、店铺形象的全部对话记录,立即生效。',
+    title: '清除我的对话记录？',
+    content: '会删除你与 AI 向导、店铺形象的全部对话记录，立即生效。',
     consequences: [
-      { icon: 'trash', text: '范围是你账号下所有 AI 对话(漫游向导和店铺形象),不只是当前这一段' },
+      { icon: 'trash', text: '范围是你账号下所有 AI 对话(漫游向导和店铺形象)，不只是当前这一段' },
       { icon: 'info', text: '不影响你的漫游足迹、邮票、订单等其他数据' },
-      { icon: 'warning', text: '此操作不可撤销,删除后无法恢复这些对话' },
+      { icon: 'warning', text: '此操作不可撤销，删除后无法恢复这些对话' },
     ],
     confirmText: '清除对话记录',
     alt: null,
-    done: { title: '对话记录已清除', text: 'AI 对话记录已从你的账号删除,当前对话也已清空。' },
+    done: { title: '对话记录已清除', text: 'AI 对话记录已从你的账号删除，当前对话也已清空。' },
   },
   // ===== 官方活动 V2 · 主办控制台(pages/activity/official-organizer)=====
   // 口径对齐 OfficialEventV2ServiceImpl 的 schedule / pause / resume;「排期」对用户叫「发布活动」(用户决定 2026-10-15)。
   'official.organizer.schedule': {
     irreversible: true,
-    title: '发布「{name}」?',
-    content: '通过发布检查后对报名可见,按设定的报名与开始时间自动推进。',
+    title: '发布「{name}」？',
+    content: '通过发布检查后对报名可见，按设定的报名与开始时间自动推进。',
     consequences: [
-      { icon: 'calendar', text: '任务、绑定点位与履约需求一并生效,按报名/开始时间自动推进' },
-      { icon: 'info', text: '排期后活动详情对玩家可见;之后需要停下只能用暂停' },
-      { icon: 'warning', text: '此操作不可撤销,发布后无法退回草稿' },
+      { icon: 'calendar', text: '任务、绑定点位与履约需求一并生效，按报名/开始时间自动推进' },
+      { icon: 'info', text: '排期后活动详情对玩家可见；之后需要停下只能用暂停' },
+      { icon: 'warning', text: '此操作不可撤销，发布后无法退回草稿' },
     ],
     confirmText: '发布活动',
     alt: null,
@@ -155,12 +155,12 @@ const DANGER_ACTIONS = {
   },
   'official.organizer.pause': {
     irreversible: false,
-    title: '暂停「{name}」?',
-    content: '暂停后玩家侧显示活动已暂停,通知策略记为待执行。',
+    title: '暂停「{name}」？',
+    content: '暂停后玩家侧显示活动已暂停，通知策略记为待执行。',
     consequences: [
-      { icon: 'clock', text: '暂停期间不能报名、到达证据不计入、承接方不能变更履约;原定结束时间不变' },
-      { icon: 'bell', text: '填写的通知策略不会自动群发,状态记为「待执行」,需要按策略另行通知' },
-      { icon: 'info', text: '恢复前平台会重新检查主办、履约覆盖和时间窗口;到结束时间仍未恢复会直接转入待结算' },
+      { icon: 'clock', text: '暂停期间不能报名、到达证据不计入、承接方不能变更履约；原定结束时间不变' },
+      { icon: 'bell', text: '填写的通知策略不会自动群发，状态记为「待执行」，需要按策略另行通知' },
+      { icon: 'info', text: '恢复前平台会重新检查主办、履约覆盖和时间窗口；到结束时间仍未恢复会直接转入待结算' },
     ],
     confirmText: '暂停活动',
     alt: null,
@@ -168,11 +168,11 @@ const DANGER_ACTIONS = {
   },
   'official.organizer.resume': {
     irreversible: false,
-    title: '恢复「{name}」?',
-    content: '平台会先重新做发布检查,不通过会拒绝恢复并给出原因。',
+    title: '恢复「{name}」？',
+    content: '平台会先重新做发布检查，不通过会拒绝恢复并给出原因。',
     consequences: [
       { icon: 'check', text: '恢复后活动按当前时间回到对应阶段(已排期/报名中/进行中)' },
-      { icon: 'info', text: '如果活动已过结束时间,会转入待结算而不是恢复运行' },
+      { icon: 'info', text: '如果活动已过结束时间，会转入待结算而不是恢复运行' },
     ],
     confirmText: '恢复活动',
     alt: null,
@@ -251,11 +251,11 @@ const DANGER_ACTIONS = {
   // 文案不能再用「地址」;同时要讲清删除不等同于取消已产生的报名。
   'address.delete': {
     irreversible: true,
-    title: '删除这条参与人信息?',
-    content: '姓名和手机号只用于报名联系与到场核验,删除只影响之后报名时选用。',
+    title: '删除这条参与人信息？',
+    content: '姓名和手机号只用于报名联系与到场核验，删除只影响之后报名时选用。',
     consequences: [
-      { icon: 'warning', text: '此操作不可撤销,删除后需要重新填写参与人资料' },
-      { icon: 'calendar', text: '已经产生的报名不会因此取消,历史报名记录仍然有效' },
+      { icon: 'warning', text: '此操作不可撤销，删除后需要重新填写参与人资料' },
+      { icon: 'calendar', text: '已经产生的报名不会因此取消，历史报名记录仍然有效' },
     ],
     confirmText: '删除参与人信息',
     alt: null,
@@ -265,12 +265,12 @@ const DANGER_ACTIONS = {
   // ===== 商家 =====
   'perk.delete': {
     irreversible: true,
-    title: '删除常备权益「{name}」?',
-    content: '已经发出去的权益不受影响,只是之后不能再挂这一条。',
+    title: '删除常备权益「{name}」？',
+    content: '已经发出去的权益不受影响，只是之后不能再挂这一条。',
     consequences: [
       { icon: 'gift', text: '这条权益不会再出现在新的合作与装修里' },
-      { icon: 'check', text: '玩家已经领到的同名权益仍然有效,不受影响' },
-      { icon: 'warning', text: '此操作不可撤销,模板内容无法找回' },
+      { icon: 'check', text: '玩家已经领到的同名权益仍然有效，不受影响' },
+      { icon: 'warning', text: '此操作不可撤销，模板内容无法找回' },
     ],
     confirmText: '删除权益',
     alt: null,
@@ -291,12 +291,12 @@ const DANGER_ACTIONS = {
   },
   'merchant.chapterApplication.withdraw': {
     irreversible: true,
-    title: '撤回这次申请?',
-    content: '撤回后回到未申请状态,需要重新提交。',
+    title: '撤回这次申请？',
+    content: '撤回后回到未申请状态，需要重新提交。',
     consequences: [
-      { icon: 'check', text: '已填的点位内容会保留,重新提交时不用再填一遍' },
-      { icon: 'clock', text: '当前这条申请作废,重新提交按新时间排队' },
-      { icon: 'warning', text: '此操作不可撤销,撤回后这条申请无法恢复' },
+      { icon: 'check', text: '已填的点位内容会保留，重新提交时不用再填一遍' },
+      { icon: 'clock', text: '当前这条申请作废，重新提交按新时间排队' },
+      { icon: 'warning', text: '此操作不可撤销，撤回后这条申请无法恢复' },
     ],
     confirmText: '确认撤回',
     alt: null,
@@ -305,7 +305,7 @@ const DANGER_ACTIONS = {
 
   'merchant.chapterInvitation.revoke': {
     irreversible: true,
-    title: '撤回这条章节邀请?',
+    title: '撤回这条章节邀请？',
     consequences: [
       { icon: 'close', text: '对方将不能再接受这条邀请' },
       { icon: 'warning', text: '此操作不可撤销，需要时请重新发起邀请' },
@@ -322,15 +322,15 @@ const DANGER_ACTIONS = {
         · 不可撤销 —— 时刻只在为空时写一次,再点原样拒掉,不覆盖。 */
   'topic.chapter.finish': {
     irreversible: true,
-    title: '结束「{name}」?',
+    title: '结束「{name}」？',
     content: '结束后这一章不再接受商家承接申请。',
     consequences: [
-      { icon: 'coupon', text: '已售出的票不受影响,玩家照常到店、照常核销' },
-      { icon: 'lock', text: '「开放报名」这一行随之锁死,不能再开;在途的商家申请不会自动通过' },
-      { icon: 'warning', text: '此操作不可撤销,结束后无法重新开放这一章' },
+      { icon: 'coupon', text: '已售出的票不受影响，玩家照常到店、照常核销' },
+      { icon: 'lock', text: '「开放报名」这一行随之锁死，不能再开；在途的商家申请不会自动通过' },
+      { icon: 'warning', text: '此操作不可撤销，结束后无法重新开放这一章' },
     ],
     confirmText: '结束本章',
-    alt: { text: '改为关闭开放报名', hint: '先停掉新的商家申请,这一章仍然可以再打开' },
+    alt: { text: '改为关闭开放报名', hint: '先停掉新的商家申请，这一章仍然可以再打开' },
     done: { title: '本章已结束', text: '已售出的票不受影响。' },
   },
 
@@ -338,7 +338,7 @@ const DANGER_ACTIONS = {
   // N2 俱乐部自建勋章:服务端没有撤回颁发的接口,颁了就收不回 —— 按不可逆登记。
   'club.badge.grant': {
     irreversible: true,
-    title: '把「{name}」颁给 {member}?',
+    title: '把「{name}」颁给 {member}？',
     content: '颁发后对方会拿到这枚俱乐部勋章。',
     consequences: [
       { icon: 'star', text: '这枚勋章会写入对方的勋章记录' },
@@ -351,12 +351,12 @@ const DANGER_ACTIONS = {
   },
   'club.role.revoke': {
     irreversible: true,
-    title: '撤销「{name}」?',
+    title: '撤销「{name}」？',
     content: '撤销后对方立即失去这个范围内的权限。',
     consequences: [
-      { icon: 'lock', text: '对方立刻失去该范围内的全部管理动作,进行中的操作会被打断' },
-      { icon: 'mtab-customers', text: '对方仍然是俱乐部成员,只是不再有这个角色' },
-      { icon: 'warning', text: '此操作不可撤销;要恢复只能重新分配一次角色' },
+      { icon: 'lock', text: '对方立刻失去该范围内的全部管理动作，进行中的操作会被打断' },
+      { icon: 'mtab-customers', text: '对方仍然是俱乐部成员，只是不再有这个角色' },
+      { icon: 'warning', text: '此操作不可撤销；要恢复只能重新分配一次角色' },
     ],
     confirmText: '撤销角色',
     alt: null,
@@ -364,7 +364,7 @@ const DANGER_ACTIONS = {
   },
   'merchant.operator.remove': {
     irreversible: true,
-    title: '移除团队成员「{name}」?',
+    title: '移除团队成员「{name}」？',
     content: '移除后对方的商家权限立即失效。',
     consequences: [
       { icon: 'finance', text: '已经产生的经营记录与流水保留，不会被删掉' },
@@ -376,11 +376,11 @@ const DANGER_ACTIONS = {
   },
   'merchant.invite.revoke': {
     irreversible: true,
-    title: '撤销这条邀请?',
+    title: '撤销这条邀请？',
     content: '撤销后已经发出的邀请链接立即失效。',
     consequences: [
       { icon: 'qr', text: '已经发出去的邀请链接立刻打不开' },
-      { icon: 'warning', text: '此操作不可撤销;要重新邀请需要另发一条,凭证只显示一次' },
+      { icon: 'warning', text: '此操作不可撤销；要重新邀请需要另发一条，凭证只显示一次' },
     ],
     confirmText: '撤销邀请',
     alt: null,
@@ -388,67 +388,67 @@ const DANGER_ACTIONS = {
   },
   'merchant.review.reply.delete': {
     irreversible: true,
-    title: '删除这条公开回复?',
-    content: '只是写错了话,改成新的比删掉更轻。',
+    title: '删除这条公开回复？',
+    content: '只是写错了话，改成新的比删掉更轻。',
     consequences: [
       { icon: 'comment', text: '玩家和其他访客将看不到你写的这段公开回复' },
-      { icon: 'clock', text: '这条评价回到「待回复」,你可以重新写一条' },
-      { icon: 'warning', text: '此操作不可撤销,删掉的回复内容无法找回' },
+      { icon: 'clock', text: '这条评价回到「待回复」，你可以重新写一条' },
+      { icon: 'warning', text: '此操作不可撤销，删掉的回复内容无法找回' },
     ],
     confirmText: '删除回复',
-    alt: { text: '改为修改回复', hint: '保留这条回复的位置,改成你真正想说的内容' },
-    done: { title: '回复已删除', text: '这条评价已回到待回复,可以重新回复。' },
+    alt: { text: '改为修改回复', hint: '保留这条回复的位置，改成你真正想说的内容' },
+    done: { title: '回复已删除', text: '这条评价已回到待回复，可以重新回复。' },
   },
   // ===== 创作(我的项目)=====
   // 这三条都有现成的「下架」开关(toggleStatus / tplToggle),所以替代方案不是编出来的,
   // 是把页面上本来就有的那个按钮摆到确认弹窗里 —— 想让它不出现在外面,下架就够了。
   'route.delete': {
     irreversible: true,
-    title: '删除路线「{name}」?',
-    content: '只是想让它不再出现在列表里的话,下架就够了。',
+    title: '删除路线「{name}」？',
+    content: '只是想让它不再出现在列表里的话，下架就够了。',
     consequences: [
       { icon: 'route', text: '路线下的节点、玩法配置和已排的场次会一起删掉' },
-      { icon: 'mtab-customers', text: '已经报名的玩家不会自动退款,需要你另行处理' },
-      { icon: 'warning', text: '此操作不可撤销,路线内容无法找回' },
+      { icon: 'mtab-customers', text: '已经报名的玩家不会自动退款，需要你另行处理' },
+      { icon: 'warning', text: '此操作不可撤销，路线内容无法找回' },
     ],
     confirmText: '删除路线',
-    alt: { text: '改为下架路线', hint: '玩家看不到,内容和数据都留着,随时可以重新上架' },
+    alt: { text: '改为下架路线', hint: '玩家看不到，内容和数据都留着，随时可以重新上架' },
     done: { title: '路线已删除', text: '' },
   },
   'activity.delete': {
     irreversible: true,
-    title: '删除场次「{name}」?',
-    content: '只是想停止售卖的话,下架就够了。',
+    title: '删除场次「{name}」？',
+    content: '只是想停止售卖的话，下架就够了。',
     consequences: [
       { icon: 'calendar', text: '这一场的时间、名额和报名记录会一起删掉' },
-      { icon: 'mtab-customers', text: '已经报名的玩家不会自动退款,需要你另行处理' },
-      { icon: 'warning', text: '此操作不可撤销,场次内容无法找回' },
+      { icon: 'mtab-customers', text: '已经报名的玩家不会自动退款，需要你另行处理' },
+      { icon: 'warning', text: '此操作不可撤销，场次内容无法找回' },
     ],
     confirmText: '删除场次',
-    alt: { text: '改为下架场次', hint: '停止新报名,已有报名和数据都留着' },
+    alt: { text: '改为下架场次', hint: '停止新报名，已有报名和数据都留着' },
     done: { title: '场次已删除', text: '' },
   },
   'template.delete': {
     irreversible: true,
-    title: '删除节点玩法「{name}」?',
-    content: '只是不想让别人再用的话,从玩法库下架就够了。',
+    title: '删除节点玩法「{name}」？',
+    content: '只是不想让别人再用的话，从玩法库下架就够了。',
     consequences: [
-      { icon: 'play', text: '已经引用了这个玩法的节点不受影响,继续按原配置跑' },
-      { icon: 'warning', text: '此操作不可撤销,玩法配置无法找回' },
+      { icon: 'play', text: '已经引用了这个玩法的节点不受影响，继续按原配置跑' },
+      { icon: 'warning', text: '此操作不可撤销，玩法配置无法找回' },
     ],
     confirmText: '删除玩法',
-    alt: { text: '改为从玩法库下架', hint: '别人搜不到,你自己的节点照常用' },
+    alt: { text: '改为从玩法库下架', hint: '别人搜不到，你自己的节点照常用' },
     done: { title: '节点玩法已删除', text: '' },
   },
   // ===== 2026-09-06 三端审核:原生 showModal 全删后,这批「已登记危险写」按铁律切三段式 =====
   'activity.cancel-refund': {
     irreversible: true,
-    title: '取消这场活动并退款?',
-    content: '将给 {count} 位已付款玩家全额退款,不可撤销。活动同时下架。',
+    title: '取消这场活动并退款？',
+    content: '将给 {count} 位已付款玩家全额退款，不可撤销。活动同时下架。',
     consequences: [
-      { icon: 'finance', text: '已报名未核销的玩家全额退款,款项原路退回' },
-      { icon: 'calendar', text: '活动下架,玩家不能再报名或进入' },
-      { icon: 'warning', text: '此操作不可撤销,取消后无法恢复这场活动' },
+      { icon: 'finance', text: '已报名未核销的玩家全额退款，款项原路退回' },
+      { icon: 'calendar', text: '活动下架，玩家不能再报名或进入' },
+      { icon: 'warning', text: '此操作不可撤销，取消后无法恢复这场活动' },
     ],
     confirmText: '取消并退款',
     alt: null,
@@ -456,12 +456,12 @@ const DANGER_ACTIONS = {
   },
   'topic.cancel-refund': {
     irreversible: true,
-    title: '取消「{name}」并退款?',
-    content: '将给 {count} 位已付款玩家全额退款,不可撤销。主题同时停售,名下场次一并取消。',
+    title: '取消「{name}」并退款？',
+    content: '将给 {count} 位已付款玩家全额退款，不可撤销。主题同时停售，名下场次一并取消。',
     consequences: [
-      { icon: 'finance', text: '已付款未核销的玩家全额退款,款项原路退回' },
-      { icon: 'calendar', text: '主题停售,名下所有场次取消,玩家不能再报名或进入' },
-      { icon: 'warning', text: '已核销的票不退;此操作不可撤销' },
+      { icon: 'finance', text: '已付款未核销的玩家全额退款，款项原路退回' },
+      { icon: 'calendar', text: '主题停售，名下所有场次取消，玩家不能再报名或进入' },
+      { icon: 'warning', text: '已核销的票不退；此操作不可撤销' },
     ],
     confirmText: '取消并退款',
     alt: null,
@@ -469,7 +469,7 @@ const DANGER_ACTIONS = {
   },
   'club.enroll.refund': {
     irreversible: true,
-    title: '取消「{name}」的报名?',
+    title: '取消「{name}」的报名？',
     // 第十二轮 k3(p3 N7):原来四行说明里没有金额,主理人看不出要退多少。改为一行带金额的事实。
     content: '',
     consequences: [
@@ -481,11 +481,11 @@ const DANGER_ACTIONS = {
   },
   'im.block': {
     irreversible: false,
-    title: '拉黑对方?',
+    title: '拉黑对方？',
     content: '',
     consequences: [
       { icon: 'close', text: '不再收到对方的任何消息' },
-      { icon: 'info', text: '对方不会收到拉黑提示;可在此会话更多菜单解除拉黑' },
+      { icon: 'info', text: '对方不会收到拉黑提示；可在此会话更多菜单解除拉黑' },
     ],
     confirmText: '拉黑',
     alt: null,
@@ -493,7 +493,7 @@ const DANGER_ACTIONS = {
   },
   'im.unblock': {
     irreversible: false,
-    title: '解除拉黑?',
+    title: '解除拉黑？',
     content: '',
     consequences: [
       { icon: 'info', text: '对方的新消息会重新送达' },
@@ -505,8 +505,8 @@ const DANGER_ACTIONS = {
   },
   'im.conversation.delete': {
     irreversible: false,
-    title: '隐藏这条会话?',
-    content: '只删除你这边的会话入口,对方的消息记录不受影响。',
+    title: '隐藏这条会话？',
+    content: '只删除你这边的会话入口，对方的消息记录不受影响。',
     consequences: [
       { icon: 'trash', text: '会话从你的列表消失' },
       { icon: 'warning', text: '对方再发消息时，会话和历史消息会重新显示' },
@@ -517,11 +517,11 @@ const DANGER_ACTIONS = {
   },
   'account.logout': {
     irreversible: false,
-    title: '退出当前账号?',
+    title: '退出当前账号？',
     content: '',
     consequences: [
-      { icon: 'logout', text: '本机登录态清除,下次进入需要重新登录' },
-      { icon: 'info', text: '已购通行证、订单和券都保留在账号里,不会丢' },
+      { icon: 'logout', text: '本机登录态清除，下次进入需要重新登录' },
+      { icon: 'info', text: '已购通行证、订单和券都保留在账号里，不会丢' },
     ],
     confirmText: '退出登录',
     alt: null,
@@ -529,10 +529,10 @@ const DANGER_ACTIONS = {
   },
   'account.deregister.cancel': {
     irreversible: false,
-    title: '撤销注销申请?',
+    title: '撤销注销申请？',
     content: '撤销后账号立即恢复正常使用。',
     consequences: [
-      { icon: 'check', text: '账号恢复正常,登录与购买不受影响' },
+      { icon: 'check', text: '账号恢复正常，登录与购买不受影响' },
       { icon: 'info', text: '之后需要注销可以再次申请' },
     ],
     confirmText: '撤销申请',
@@ -541,7 +541,7 @@ const DANGER_ACTIONS = {
   },
   'order.cancel-refund': {
     irreversible: true,
-    title: '取消报名?',
+    title: '取消报名？',
     content: '取消后报名资格失效，现金退款和积分返还按本单实际支付记录处理。{deadline}。',
     consequences: [
       { icon: 'calendar', text: '名额释放，错过后需要重新报名' },
@@ -553,7 +553,7 @@ const DANGER_ACTIONS = {
   },
   'order.cancel-free': {
     irreversible: true,
-    title: '取消报名?',
+    title: '取消报名？',
     content: '本单未收取费用，取消后报名资格失效。',
     consequences: [
       { icon: 'calendar', text: '名额释放，需要时请重新报名' },
@@ -565,7 +565,7 @@ const DANGER_ACTIONS = {
   },
   'order.cancel': {
     irreversible: true,
-    title: '取消这个待支付订单?',
+    title: '取消这个待支付订单？',
     content: '',
     consequences: [
       { icon: 'close', text: '订单关闭，不再保留名额' },
@@ -577,11 +577,11 @@ const DANGER_ACTIONS = {
   },
   'waitlist.quit': {
     irreversible: false,
-    title: '退出候补队列?',
+    title: '退出候补队列？',
     content: '',
     consequences: [
       { icon: 'calendar', text: '已保留的名额会立即让给下一位' },
-      { icon: 'info', text: '之后还想来,可以重新排队,顺位从头算' },
+      { icon: 'info', text: '之后还想来，可以重新排队，顺位从头算' },
     ],
     confirmText: '退出候补',
     alt: null,
@@ -593,7 +593,7 @@ const DANGER_ACTIONS = {
     content: '足迹和探店都会保存，结算后可领足迹卡。',
     consequences: [
       { icon: 'flag', text: '本次漫游立即结算，足迹与探店记录保留' },
-      { icon: 'warning', text: '此操作不可撤销,结束后不能继续这一次漫游' },
+      { icon: 'warning', text: '此操作不可撤销，结束后不能继续这一次漫游' },
     ],
     confirmText: '结束漫游',
     alt: null,
@@ -601,8 +601,8 @@ const DANGER_ACTIONS = {
   },
   'membership.invoice.close': {
     irreversible: false,
-    title: '结束这张待支付账单?',
-    content: '会先向微信支付核对真实状态,再关单并读回终态。',
+    title: '结束这张待支付账单？',
+    content: '会先向微信支付核对真实状态，再关单并读回终态。',
     consequences: [
       { icon: 'finance', text: '关单前不会允许换计划重复下单' },
       { icon: 'info', text: '关掉后可以重新选计划下单' },
@@ -613,11 +613,11 @@ const DANGER_ACTIONS = {
   },
   'membership.cancel': {
     irreversible: false,
-    title: '取消这段付费权益?',
+    title: '取消这段付费权益？',
     content: '取消会立即停止这段权益。',
     consequences: [
       { icon: 'coupon', text: '会员专属权益立即停止' },
-      { icon: 'finance', text: '取消不等于退款,已付款项不会自动退回' },
+      { icon: 'finance', text: '取消不等于退款，已付款项不会自动退回' },
     ],
     confirmText: '取消权益',
     alt: null,
@@ -626,7 +626,7 @@ const DANGER_ACTIONS = {
   // ===== 同行席位(P5) =====
   'seat.invite-cancel': {
     irreversible: false,
-    title: '撤销第 {name} 席的邀请?',
+    title: '撤销第 {name} 席的邀请？',
     consequences: [
       { icon: 'share', text: '已发出的邀请链接立即失效' },
       { icon: 'mtab-customers', text: '席位回到可邀请，可以重新邀请别人' },
@@ -638,11 +638,11 @@ const DANGER_ACTIONS = {
   // ===== 漫游·附近的局(2026-09-06 从 wx.showModal 收编) =====
   'hangout.close': {
     irreversible: true,
-    title: '关掉「{name}」?',
-    content: '关局后群聊一起关闭,所有人都不能再发言。',
+    title: '关掉「{name}」？',
+    content: '关局后群聊一起关闭，所有人都不能再发言。',
     consequences: [
-      { icon: 'mtab-customers', text: '群里的人会看到这局已结束,地图上不再显示' },
-      { icon: 'warning', text: '此操作不可撤销,想再玩只能重新开一局' },
+      { icon: 'mtab-customers', text: '群里的人会看到这局已结束，地图上不再显示' },
+      { icon: 'warning', text: '此操作不可撤销，想再玩只能重新开一局' },
     ],
     confirmText: '关局',
     alt: null,
@@ -650,10 +650,10 @@ const DANGER_ACTIONS = {
   },
   'hangout.leave': {
     irreversible: false,
-    title: '退出「{name}」?',
+    title: '退出「{name}」？',
     consequences: [
       { icon: 'logout', text: '群聊会从你的消息列表消失' },
-      { icon: 'mtab-customers', text: '局还开着的话,随时可以再加入' },
+      { icon: 'mtab-customers', text: '局还开着的话，随时可以再加入' },
     ],
     confirmText: '退出这局',
     alt: null,
@@ -662,15 +662,15 @@ const DANGER_ACTIONS = {
   // ===== 商家优惠券(2026-09-17 用户拍板:可停发自己发的券) =====
   'merchant.coupon.stop': {
     irreversible: true,
-    title: '停发「{name}」?',
-    content: '停发后这张券不能再被领取、发放,已领到的券不受影响。',
+    title: '停发「{name}」？',
+    content: '停发后这张券不能再被领取、发放，已领到的券不受影响。',
     consequences: [
-      { icon: 'coupon', text: '还没领的人再也领不到;已领到的券照常可用、可核销' },
-      { icon: 'warning', text: '此操作不可撤销,停发后无法恢复继续发放' },
+      { icon: 'coupon', text: '还没领的人再也领不到；已领到的券照常可用、可核销' },
+      { icon: 'warning', text: '此操作不可撤销，停发后无法恢复继续发放' },
     ],
     confirmText: '停发该券',
     alt: null,
-    done: { title: '已停发', text: '这张券不再新增发放,已领的照常可用。' },
+    done: { title: '已停发', text: '这张券不再新增发放，已领的照常可用。' },
   },
 };
 

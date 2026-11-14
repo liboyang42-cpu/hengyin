@@ -536,7 +536,7 @@ test('F-39：首次权威轮询确认带领场时展示广播一次，同值轮�
   await new Promise((resolve) => setImmediate(resolve))
 
   assert.equal(page.data.lead.exists, true)
-  assert.deepEqual(messages, ['队长:集合后准备出发'])
+  assert.deepEqual(messages, ['队长：集合后准备出发'])
 
   page.loadTeamProgress()
   requests[1].success({
@@ -545,7 +545,7 @@ test('F-39：首次权威轮询确认带领场时展示广播一次，同值轮�
   })
   await new Promise((resolve) => setImmediate(resolve))
 
-  assert.deepEqual(messages, ['队长:集合后准备出发'])
+  assert.deepEqual(messages, ['队长：集合后准备出发'])
 })
 
 test('章节回执读失败仍保留原身份，重试查到终态才能解锁', async () => {

@@ -185,7 +185,7 @@
     <block wx:if="{{!entryPeekFold}}">
     <scroll-view wx:if="{{entryStripTab=='city' && entryCityStrip}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
       <view class="entry-card" wx:for="{{entryCityStrip.items}}" wx:key="id" data-idx="{{index}}" bindtap="onEntryCityPlaceTap" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
-        <image class="entry-card__cover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" />
+        <image class="entry-card__cover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" />
         <view class="entry-card__shade"></view>
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--place">{{item.catLabel}}</text><text class="entry-card__title">{{item.name}}</text><text class="entry-card__meta">{{item.reason}}</text></view>
       </view>
@@ -197,7 +197,7 @@
     <scroll-view wx:elif="{{entryCards.length || entryFarCards.length || entryStrip.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
       <view class="entry-card" wx:for="{{entryStrip}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
             bindtap="onEntryCardTap" aria-role="button" aria-label="打开 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-        <image class="entry-card__cover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" />
+        <image class="entry-card__cover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" />
         <view class="entry-card__shade"></view>
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.kind === 'place' ? 'place' : (item.tag === '自由探索' ? 'free' : 'city')}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
       </view>
@@ -567,7 +567,7 @@
 <scroll-view wx:if="{{screen=='map' && !shopStrip.rows.length && liveCards.length}}" class="live-peek" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
   <view class="entry-card live-card" wx:for="{{liveCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
         bindtap="onLiveCardTap" aria-role="button" aria-label="打开{{item.tag}} {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-    <image class="entry-card__cover" src="{{item.cover || '/images/route_city_cover.png'}}" mode="aspectFill" />
+    <image class="entry-card__cover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" />
     <view class="entry-card__shade"></view>
     <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.kind === 'team' ? 'team' : (item.tag === '自由探索' ? 'free' : 'city')}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta" wx:if="{{item.meta || item.address}}">{{item.meta || item.address}}</text></view>
   </view>
@@ -805,7 +805,7 @@
     <view class="darr"></view>
   </view>
   <view class="drow {{bgGpsOk ? '' : 'is-off'}}" bindtap="openRoamLocationSetting" aria-role="button" aria-label="后台持续定位，{{bgGpsOk ? '已开启' : '未开启'}}" hover-class="cy-pressed" hover-stay-time="80">
-    <view class="dic pic pic--track"></view>
+    <view class="dic"><cy-icon name="gps" size="40" /></view>
     <view class="dcopy"><text class="dt">后台持续定位</text></view>
     <text class="dv">{{bgGpsOk ? '开' : '关'}}</text>
     <view class="darr"></view>
@@ -988,7 +988,7 @@
   <view class="psheet__grab"></view>
   <view class="psheet__x" catchtap="onProtoSheetClose" aria-role="button" aria-label="关闭{{sceneCurrent.title}}" hover-class="cy-pressed" hover-stay-time="80"><view class="psheet__x-i"></view></view>
   <text class="ph1">{{sceneCurrent.title}}</text>
-  <cy-scene-roam-poi-detail poi-id="{{sceneCurrent.params.poiId}}" bind:open="openChildScene" bind:close="closeScene" bind:completed="onScenePoiCompleted" bind:citystamp="openCityStamp" />
+  <cy-scene-roam-poi-detail poi-id="{{sceneCurrent.params.poiId}}" bind:open="openChildScene" bind:close="closeScene" bind:completed="onScenePoiCompleted" bind:citystamp="openCityStamp" bind:titlechange="onPoiTitle" />
 </view>
 </view>
 
@@ -1005,10 +1005,12 @@
       <view class="settle__x" bindtap="closeSettle" aria-role="button" aria-label="关闭结算页" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close" size="44" /></view>
     </view>
     <view class="settle__hr"></view>
-    <!-- 大数字与格子按城瘾口径:探店/探索度/邮票/探索值/勋章 —— 时间与距离是跑步 App 的,不上(用户裁决) -->
-    <text class="settle__big">{{finish.places.length || 0}}</text>
+    <!-- 到达数与分享、记录共用本次足迹，距离与用时保留可核对的行程事实。 -->
+    <text class="settle__big">{{finish.footprints || 0}}</text>
     <text class="settle__unit">处到达</text>
     <view class="settle__grid">
+      <view class="sgc"><text class="sgc__v">{{finish.distance}}</text><text class="sgc__l">公里</text></view>
+      <view class="sgc"><text class="sgc__v">{{finish.time}}</text><text class="sgc__l">用时</text></view>
       <view class="sgc"><text class="sgc__v">{{finish.explorePct}}%</text><text class="sgc__l">探索度</text></view>
       <view class="sgc"><text class="sgc__v">{{finish.photos.length}}</text><text class="sgc__l">邮票</text></view>
       <view class="sgc"><text class="sgc__v">{{finish.xpAwarded > 0 ? '+' + finish.xpAwarded : 0}}</text><text class="sgc__l">探索值</text></view>
@@ -1041,10 +1043,10 @@
                 sub="{{finish.eventErr === 'unknown' ? '活动进度未确认，请稍后查看' : '漫游已保存，活动进度未上报'}}"
                 retry="{{finish.eventErr === 'unknown' ? '' : '重新上报'}}" bind:retry="retryEventReport" />
     </view>
-    <view class="rw" wx:if="{{finish.places.length}}"><view wx:for="{{finish.places}}" wx:key="id" class="pc-body">{{item.name}}</view></view>
+    <view class="settle__places" wx:if="{{finish.places.length}}"><view wx:for="{{finish.places}}" wx:key="id" class="pc-body">{{item.name}}</view></view>
     <view class="settle__map">
-      <free-map class="settle__map-native" wx:if="{{fmStyleReady}}" tone="{{fmTone}}" scene="explore" center="{{center}}" scale="14"
-                map-markers="{{markers}}" map-polyline="{{polyline}}"
+      <free-map class="settle__map-native" wx:if="{{fmStyleReady}}" tone="{{fmTone}}" scene="explore" center="{{settleGeo ? {lat:settleGeo.center.latitude,lng:settleGeo.center.longitude} : center}}" scale="{{settleGeo ? settleGeo.scale : 14}}"
+                fit="{{!!settleGeo}}" fit-points="{{settleGeo.include}}" map-polyline="{{settleGeo ? settleGeo.polyline : polyline}}" map-circles="{{settleGeo.circles}}"
                 subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
                 show-controls="{{false}}" interactive="{{false}}" />
       <view class="settle__track-empty" wx:if="{{!polyline.length}}" aria-role="status" aria-label="{{trackTip}}">
@@ -1055,7 +1057,7 @@
       <!-- 2026-10-27 owner P-34:「查看漫游数据」改成浮在地图上的按钮 -->
       <view class="settle__mapbtn" bindtap="openPassport" aria-role="button" aria-label="查看漫游数据" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="route" size="28" /><text>查看漫游数据</text></view>
     </view>
-    <view class="settle__ctaw">
+    <view class="settle__ctaw" style="padding-bottom:calc({{settleSafeBottom}}px + var(--cy-space-6));">
       <view class="settle__cta" bindtap="openShare" aria-role="button" aria-label="分享足迹卡" hover-class="cy-pressed" hover-stay-time="80">分享</view>
       <view class="settle__minor">
         <text class="settle__minor-act" bindtap="openSettleHistory" aria-role="button" aria-label="漫游记录" hover-class="cy-pressed" hover-stay-time="80">漫游记录</text>
@@ -1135,7 +1137,7 @@
         <text class="rsh-empty" wx:else>今日足迹</text>
       </view>
       <view class="rsh-stats">
-        <view class="rsh-st"><text class="rsh-v">{{shareFinish.shops == null ? 0 : shareFinish.shops}}</text><text class="rsh-l">探店</text></view>
+        <view class="rsh-st"><text class="rsh-v">{{shareFinish.footprints || 0}}</text><text class="rsh-l">处到达</text></view>
         <view class="rsh-st"><text class="rsh-v">{{shareFinish.distance == null ? 0 : shareFinish.distance}}</text><text class="rsh-l">km</text></view>
         <view class="rsh-st"><text class="rsh-v">{{shareFinish.explorePct == null ? 0 : shareFinish.explorePct}}%</text><text class="rsh-l">探索度</text></view>
       </view>

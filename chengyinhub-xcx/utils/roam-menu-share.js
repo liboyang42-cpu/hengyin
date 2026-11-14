@@ -7,7 +7,7 @@
 const ROAM_SHARE_COVER = '/images/route_city_cover.png'
 
 function roamMenuShare() {
-  return { title: '来城瘾,一起点亮城市', path: '/pages/roam/index', imageUrl: ROAM_SHARE_COVER }
+  return { title: '来城瘾，一起点亮城市', path: '/pages/roam/index', imageUrl: ROAM_SHARE_COVER }
 }
 
 module.exports = { ROAM_SHARE_COVER, roamMenuShare }

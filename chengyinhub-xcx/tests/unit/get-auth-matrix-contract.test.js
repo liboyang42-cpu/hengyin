@@ -84,6 +84,7 @@ const MATRIX = [
   ['subpackageMember/components/cy/coop-invite-sheet/index.js', "url: '/api/coop/invite/request'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
   ['subpackageMember/components/cy/coop-invite-sheet/index.js', "url: '/api/coop/invite/requests'", 'required', 'member/merchant-operator/club-owner', 'self-account'],
   // 两处目录许可读取已合并为同一受限相对路径 reader，保持公开静态资源权限。
+  ['utils/roam-place-detail.js', "url, data, method: 'GET'", 'optional', 'visitor/member', 'public-catalog-place'],
   ['utils/roam-place-media.js', "url, method: 'GET', auth: false", 'static', 'visitor/member', 'public-profile-gallery'],
   // 实际作者页面的受控requestOwnMedia不属于req简写；五个caller逐个归真实本人资产。
   ['pages/privacy/index.js', "this.requestOwnMedia('/api/media/asset/list', 'GET'", 'required', 'author', 'owned-media-asset'],
@@ -347,7 +348,7 @@ const VALID_SCOPES = new Set([
   'self-merchant-game-entry', 'club-owned-activity',
   'owned-merchant-resource', 'self-marketing-consent',
   'share-token-snapshot', 'public-map-weather', 'public-official-route', 'owned-merchant-or-club-receivable', 'owned-media-asset',
-  'controlled-event-operator', 'public-profile-gallery', 'active-team-member', 'owned-topic-target-merchant-stations',
+  'public-catalog-place', 'controlled-event-operator', 'public-profile-gallery', 'active-team-member', 'owned-topic-target-merchant-stations',
 ]);
 
 function productionJsFiles(dir) {
@@ -509,7 +510,7 @@ test('全部 GET 调用点都有 URL + method + auth/角色/scope 分类，新�
   // 2026-11-14 free-explore-1114:定价页两处(已锁价状态、结算待处理)+商家套票预约一处,均已入 MATRIX,130 → 133。
   // 2026-11-14：公开成长榜与合并搜索 POST → GET，已登记两处调用，133 → 135。
   // 2026-11-14 合 master #840：封面署名新增一处直接 GET，135 → 136。
-  assert.equal(directCount, 135, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
+  assert.equal(directCount, 136, '直接 GET 数量变化时必须逐条复核权限并更新矩阵');
   // 2026-10-09 U04 只读主题请求增加6处，22 → 28。
   // 2026-10-19 Claude 小程序线移植到 master(用户批准冻结数值更新):漫游 BL-41 可参与官方活动 req 包装 GET +1(已入 MATRIX),28 → 29。
   // 2026-10-22 L21 BL-186:pages/play 本章结算 GET /api/play/journey/stage-end(与 /ending 同档),29 → 30。
