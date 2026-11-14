@@ -70,6 +70,7 @@ test('已确认地点卡移动后刷新距离，已完成图钉仍能点开', ()
   assert.equal(instance.data.paceCard.inReach, false)
   let opened = null
   instance._openPlaceCard = value => { opened = value }
+  instance._markerTargets = new Map([[42, { kind: 'poi', target: poi }]])
   instance.onMarkerTap({ detail: { markerId: 42 } })
   assert.equal(opened, poi)
 })
@@ -145,16 +146,20 @@ test('poi-detail 只在节点 410 后尝试目录，不把拒权当目录', asyn
   assert.equal(calls.length, 1)
 })
 
-test('2077 重新挂原生地图，旧 updated 无法撤掉新占位', () => {
+test('2077 重新挂原生地图，旧 updated 无法撤掉新占位', (t) => {
+  t.mock.timers.enable({ apis: ['Date', 'setTimeout'] })
   const { definition, instance } = component('components/cy/free-map/index.js')
   instance._mergeLines = instance._rebuild = () => {}
   instance.data.mapLoaded = true
+  instance.data.tone = '2077'
   definition.properties.tone.observer.call(instance, '2077', 'black')
   assert.equal(instance.data.mapInstances.length, 1)
   assert.equal(instance.data.mapLoaded, false)
   instance.onUpdated({ currentTarget: { dataset: { generation: 0 } }, detail: {} })
   assert.equal(instance.data.mapLoaded, false)
   instance.onUpdated({ currentTarget: { dataset: { generation: 1 } }, detail: {} })
+  assert.equal(instance.data.mapLoaded, false)
+  t.mock.timers.tick(3500)
   assert.equal(instance.data.mapLoaded, true)
 })
 

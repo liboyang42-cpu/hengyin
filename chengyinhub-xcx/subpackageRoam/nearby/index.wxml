@@ -68,10 +68,8 @@
   <!-- 2026-10-27 owner P-38:附近没有节点时底部也要有卡片带 —— 出一张空态卡,点它放大到全部范围 -->
   <view class="mt-strip" wx:if="{{!sheet && viewMode === 'map'}}" style="padding-bottom:{{safeBottom + 16}}px;">
     <view class="mt-strip__head"><text>{{headerText}}</text></view>
-    <scroll-view class="mt-strip__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="mt-strip__track">
-      <view class="mt-card mt-card--empty" wx:if="{{!listRows.length}}" data-layer="all" bindtap="onLayerTap" aria-role="button" aria-label="{{listLoaded ? '附近暂无节点，查看全部范围' : '正在读取附近节点'}}" hover-class="cy-pressed" hover-stay-time="80">
-        <view class="mt-card__copy" wx:if="{{listLoaded && !loadError && !nearbyReadAccess}}"><text class="mt-card__title">附近暂无节点</text></view>
-      </view>
+    <scroll-view class="mt-strip__cards {{listRows.length ? '' : 'mt-strip__cards--empty'}}" scroll-x enhanced show-scrollbar="{{false}}"><view class="mt-strip__track">
+      <cy-empty wx:if="{{!listRows.length && listLoaded && !loadError && !nearbyReadAccess}}" kind="empty" size="sm" title="附近暂无节点" />
       <view class="mt-card" wx:for="{{listRows}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}" bindtap="onListRowTap"
             aria-role="button" aria-label="{{item.name}}，{{item.badge}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{item.img}}" class="mt-card__cover" src="{{item.img}}" mode="aspectFill" lazy-load="true" />

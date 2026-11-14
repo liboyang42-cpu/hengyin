@@ -5,7 +5,7 @@ const toast = require('../../utils/toast.js');
 const { ROUTE_COLORS, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { currentPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 const { clipSavedTrackForSharing, readSharePrivacy } = require('../../utils/roam-route-privacy.js');
-const { readNonNegative, footprintCount, formatDistance, formatDuration, formatStartTime } = require('../../utils/roam-history-metrics.js');
+const { readNonNegative, footprintCount, formatDistance, formatDuration, formatStartTime, sessionDateParts } = require('../../utils/roam-history-metrics.js');
 const { limitTrack } = require('../../utils/roam-track-simplify.js');
 const { routeGeo } = require('../../utils/roam-route-geo.js');
 const mapSnap = require('../../utils/map-snapshot.js');
@@ -89,7 +89,7 @@ Page({
         this.setData({ sharedState: result.state === 'error' ? 'error' : 'gone', snapshot: null });
         return false;
       }
-      const d = new Date(Number(result.session.ts));
+      const d = sessionDateParts(result.session);
       this.setData({
         sharedState: 'ready',
         snapshot: result.session,
@@ -98,7 +98,7 @@ Page({
           routeName: result.session.routeName || '城市漫游足迹',
           completeFact: '已完成本次漫游',
           time: result.session.time || '—',
-          dateFull: Number.isNaN(d.getTime()) ? '日期不可用' : `${d.getMonth() + 1}月${d.getDate()}日 周${WEEK[d.getDay()]}`,
+          dateFull: d ? `${d.month}月${d.day}日 周${WEEK[d.weekday]}` : '日期不可用',
         },
       });
       return true;
@@ -166,9 +166,9 @@ Page({
       })),
     });
 
-    const d = new Date(Number(s.ts));
-    const validDate = !Number.isNaN(d.getTime());
-    s.dateFull = validDate ? `${d.getMonth() + 1}月${d.getDate()}日 周${WEEK[d.getDay()]}` : '日期不可用';
+    const d = sessionDateParts(s);
+    const validDate = !!d;
+    s.dateFull = validDate ? `${d.month}月${d.day}日 周${WEEK[d.weekday]}` : '日期不可用';
     s.time = formatDuration(s.durSec, s.time) || '—';
     s.startTime = formatStartTime(s.startedAt);
     const zone = String(s.zone || '').trim();
@@ -181,7 +181,7 @@ Page({
         ? `${poiNames[0]}等${poiNames.length}处足迹回看`
         : (poiNames.length === 1
           ? `${poiNames[0]}周边足迹回看`
-          : (validDate ? `${d.getMonth() + 1}月${d.getDate()}日城市漫游足迹` : '城市漫游足迹')));
+          : (validDate ? `${d.month}月${d.day}日城市漫游足迹` : '城市漫游足迹')));
     s.distance = readNonNegative(s.distance);
     s.distanceText = formatDistance(s.distance);
     s.completeFact = '已完成本次漫游';

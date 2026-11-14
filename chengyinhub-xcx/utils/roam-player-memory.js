@@ -185,7 +185,7 @@ function bindPlayerRoamMemory(holder, app, storage) {
   return holder._roamMemory
 }
 
-function clearStoragePreservingPlayerRoamMemory(storage) {
+function clearStorageForLogout(storage) {
   const target = storage || {}
   if (typeof target.getStorageInfoSync !== 'function'
     || typeof target.removeStorageSync !== 'function') return false
@@ -238,12 +238,13 @@ function clearStoragePreservingPlayerRoamMemory(storage) {
       && storageKey.match(/^cy_roam_poi_checkin_pending:v1:([1-9]\d{0,18}):([1-9]\d{0,18})$/)
     const shareRevokePending = typeof storageKey === 'string'
       && storageKey.match(/^roam_share_revoke_pending:([1-9]\d{0,18})$/)
-    if (isPlayerMemoryKey(storageKey) || /^verification_unknown_v1:[a-f0-9]{64}$/.test(storageKey) ||
+    if (/^verification_unknown_v1:[a-f0-9]{64}$/.test(storageKey) ||
       commandKeys.has(storageKey) ||
       (shareRevokePending && exactSessionId(shareRevokePending[1])) ||
       (poiPending && exactSessionId(poiPending[1]) && exactSessionId(poiPending[2])) ||
       (consentLedger && consentLedger[0] === storageKey)) continue
     try {
+      if (isPlayerMemoryKey(storageKey)) invalidateRoamCache(storageKey.split(':')[1])
       target.removeStorageSync(storageKey)
     } catch (_) {
       return false
@@ -254,7 +255,7 @@ function clearStoragePreservingPlayerRoamMemory(storage) {
 
 module.exports = {
   bindPlayerRoamMemory,
-  clearStoragePreservingPlayerRoamMemory,
+  clearStorageForLogout,
   createPlayerRoamMemory,
   currentPlayerRoamMemory,
 }

@@ -99,6 +99,8 @@ Component({
       if (next !== previous && (next === '2077' || previous === '2077')) {
         const generation = this._mapGeneration = (this._mapGeneration || 0) + 1;
         this._fitRendered = false;
+        clearTimeout(this._styleLoadTimer);
+        this._styleVisibleAt = next === '2077' ? Date.now() + 3500 : 0;
         // 新样式使用新原生实例，旧实例的 updated 不能提前撤掉占位。
         this.setData({ mapInstances: [], mapLoaded: false }, () => {
           wx.nextTick(() => { if (!this._mapGone && generation === this._mapGeneration) this.setData({ mapInstances: [{ generation }] }); });
@@ -114,11 +116,12 @@ Component({
   data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [], skew3d: ROAM_3D.skew, mapLoaded: false, mapInstances: [{ generation: 0 }] },
   lifetimes: {
     attached() {
+      if (this.data.tone === '2077' && !this._styleVisibleAt) this._styleVisibleAt = Date.now() + 3500;
       if (this.data.scene === 'explore') { this._icons = {}; return; }
       this._genIcons().then(() => this._rebuild());
     },
     // 卸载时清掉 dropIn 挂起的定时器,避免组件销毁后 setTimeout 仍触发 setData
-    detached() { this._mapGone = true; if (this._dropTimers) { this._dropTimers.forEach((t) => clearTimeout(t)); this._dropTimers = []; } }
+    detached() { this._mapGone = true; clearTimeout(this._styleLoadTimer); if (this._dropTimers) { this._dropTimers.forEach((t) => clearTimeout(t)); this._dropTimers = []; } }
   },
   methods: {
     onExitTap() { this.triggerEvent('exit'); },
@@ -332,7 +335,15 @@ Component({
     onUpdated(e) {
       const generation = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.generation;
       if (!this.data.mapInstances.length || (generation != null && Number(generation) !== (this._mapGeneration || 0))) return;
-      if (!this.data.mapLoaded) this.setData({ mapLoaded: true });
+      if (!this.data.mapLoaded) {
+        const remaining = this.data.tone === '2077' ? Math.max(0, (this._styleVisibleAt || 0) - Date.now()) : 0;
+        clearTimeout(this._styleLoadTimer);
+        // shortcut: updated precedes custom tiles; cover the measured 3s load until a tile-ready event exists.
+        if (remaining) this._styleLoadTimer = setTimeout(() => {
+          if (!this._mapGone && Number(generation || 0) === (this._mapGeneration || 0)) this.setData({ mapLoaded: true });
+        }, remaining);
+        else this.setData({ mapLoaded: true });
+      }
       if (this.data.fit && this._fitKey && !this._fitRendered) { this._fitRendered = true; this._applyFit(); }
       this.triggerEvent('updated', e.detail);
     },

@@ -7,7 +7,7 @@ const count = value => value == null ? null : typeof value === 'number' && Numbe
 function fact(raw) {
   if (!raw || typeof raw.sessionId !== 'string' || exactSessionId(raw.sessionId) !== raw.sessionId) throw new Error('记录编号无效')
   const finished = count(raw.finishedAt), started = count(raw.startedAt), distance = count(raw.distanceM)
-  return { sessionId: raw.sessionId, ts: finished || started || 0, finishedAt: finished,
+  return { sessionId: raw.sessionId, ts: finished || started || 0, startedAt: started, finishedAt: finished,
     distance: distance == null ? null : distance / 1000, shops: count(raw.shops),
     durSec: finished != null && started != null && finished >= started ? Math.floor((finished - started) / 1000) : null,
     photos: [], track: serverTrack(raw.track), pois: [], serverFact: true }
@@ -19,7 +19,6 @@ function serverTrack(raw) {
   return ok ? raw.map(p => ({ lat: p[0], lng: p[1] })) : []
 }
 function merge(local, remote) {
-  const ids = new Set(remote.map(row => row.sessionId))
   const combined = remote.map(row => {
     const saved = local.find(item => exactSessionId(item.sessionId) === row.sessionId
       && Number.isFinite(Number(item.ts)) && Number(item.ts) > 0
@@ -33,8 +32,8 @@ function merge(local, remote) {
     return { ...saved, ...row, ts: saved && saved.ts || row.ts, localSupplement: !!saved, photos: saved && saved.photos || [], track: saved && saved.track && saved.track.length ? saved.track : row.track, pois: saved && saved.pois || [],
       historyKey: 'server:' + row.sessionId }
   })
-  // Legacy records remain local records; never upload them or add them to server passport totals.
-  return combined.concat(local.filter(row => !ids.has(exactSessionId(row.sessionId))).map(row => ({ ...row, historyKey: 'local:' + row.ts })))
+  // Local archives only supplement confirmed server sessions; they never add trips.
+  return combined
 }
 function createReader(app, platform) {
   const owner = exactSessionId(app.getUserID && app.getUserID())

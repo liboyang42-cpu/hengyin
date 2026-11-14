@@ -772,8 +772,8 @@ page{ background:var(--cy-color-bg-page); }
 
 /* ===================== 结算页(Figma 3992:18005)===================== */
 /* 纯黑底 + 巨号数字 + 2×3 数据格 + 轨迹图 + 白胶囊 CTA;取色自稿子实测 */
-.settle{ position:absolute; inset:0; z-index:30; background:#000000; } /* ds-ok Figma 实测纯黑 */
-.settle__scroll{ height:100%; }
+.settle{ position:absolute; inset:0; z-index:30; display:flex; flex-direction:column; box-sizing:border-box; background:#000000; } /* ds-ok Figma 实测纯黑 */
+.settle__scroll{ flex:1; min-height:0; height:0; }
 .settle__places{ padding:var(--cy-space-4) var(--cy-space-5); }
 .settle__meta{ padding:0 38rpx; font-size:27rpx; color:#6A7282; } /* ds-ok Figma 实测 */
 .settle__headrow{ display:flex; align-items:center; justify-content:space-between; padding:8rpx 38rpx 23rpx; }
