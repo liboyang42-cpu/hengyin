@@ -10,6 +10,7 @@ const merchantAccessPolicy = require('../../utils/merchant-access-policy.js');
 // templatedetail 分包的 tpl-shelf 组件，本页只留顶栏、发布入口与底栏。
 // 主题点开 → topic-preview(卡堆预览 +「用这个模板」);玩法点开 → 既有 templatedetail。
 Page({
+  _pubLoaded: false,
   data: {
     reducedMotion: false,
     pageMetaStyle: '',
@@ -136,6 +137,7 @@ Page({
               canCreateTemplate: that.data.canManageMerchantProjects
             })
             : (d.permission || {});
+          that._pubLoaded = true;
           that.setData({
             pub: {
               role: merchantScoped ? 'merchant' : (d.role || 'player'),
@@ -150,7 +152,6 @@ Page({
               projectSummary: d.projectSummary || {}
             }
           });
-          this._pubLoaded = true;
         }
       },
       fail() { /* 能力卡失败不阻断页面 */ }

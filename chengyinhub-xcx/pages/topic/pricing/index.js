@@ -37,6 +37,10 @@ function teamSizeErrorText(subType, teamSize) {
 }
 
 Page({
+  _scope: '',
+  _platformRate: null,
+  _floorStale: false,
+  _floor: 0,
   data: {
     // 2026-08-05 tab 收敛:全仓最后一处手写 tab。原本是 .pg-tabs/.pg-tab 自绘的
     // segmented 形态(容器灰底 + 选中项白底提亮),cy-tabs 的 segmented 变体同款。
@@ -159,9 +163,9 @@ Page({
               })
           : [];
         const selfPriceError = that.data.subType === 'self' ? (res.data.selfPriceError || '') : '';
+        that._floor = floor;
         that._platformRate = Number.isFinite(platformRate) && platformRate >= 0 ? platformRate : null;
         that._floorStale = stale;
-        that._floor = floor;
         that.setData({
           hasPreview: true,
           errorText: '',
@@ -259,14 +263,14 @@ Page({
     const row = this.data.tickets[idx];
     if (!row) return;
     const tickets = this.data.tickets.slice();
-    tickets[idx] = Object.assign({}, row, { price: e.detail.value, error: ticketPriceError(e.detail.value, (this._floor || 0)) });
+    tickets[idx] = Object.assign({}, row, { price: e.detail.value, error: ticketPriceError(e.detail.value, this._floor) });
     this.setData({ tickets, submitError: '', canConfirmPrice: this._canConfirmPrice({ tickets }) });
   },
 
   // 改成本/人数后地板价即失效：先置灰确认，停手 0.6 秒自动重算（也可手点「重新计算地板」）
   _markStale() {
-    this._inputRev = (this._inputRev || 0) + 1;
     this._floorStale = true;
+    this._inputRev = (this._inputRev || 0) + 1;
     if (this._recalcTimer) clearTimeout(this._recalcTimer);
     this._recalcTimer = setTimeout(() => { this._recalcTimer = null; if (!this._unloaded) this.preview(); }, 600);
   },
@@ -296,7 +300,7 @@ Page({
   // 可提交判定的唯一判据:终价不低于地板、主题已在定价阶段、有人带时人数为正。
   _canConfirmPrice(patch) {
     const data = Object.assign({}, this.data, patch || {});
-    return pricesOk(data.tickets, data.finalPrice, (this._floor || 0)) && !data.phaseBlocked && !this._floorStale
+    return pricesOk(data.tickets, data.finalPrice, this._floor) && !data.phaseBlocked && !this._floorStale
       && teamSizeOk(costSub(data), data.teamSize) && !data.selfPriceError;
   },
 
@@ -381,9 +385,9 @@ Page({
       this.setData({ teamSizeError, submitError: '' });
       return;
     }
-    if (!this.data.priced && !pricesOk(this.data.tickets, this.data.finalPrice, (this._floor || 0))) {
+    if (!this.data.priced && !pricesOk(this.data.tickets, this.data.finalPrice, this._floor)) {
       this.setData({ tickets: this.data.tickets.map(function (r) {
-        return Object.assign({}, r, { error: ticketPriceError(r.price, (this._floor || 0)) });
+        return Object.assign({}, r, { error: ticketPriceError(r.price, this._floor) });
       }, this), submitError: '' });
       return;
     }
