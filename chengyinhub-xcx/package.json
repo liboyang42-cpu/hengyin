@@ -5,7 +5,6 @@
     "pretest:unit": "node ../ci/prepare-mini-artifacts.js",
     "prelint": "node ../ci/prepare-mini-artifacts.js",
     "preflight:release": "node scripts/preflight-release.js",
-    "prepreflight:release": "node ../ci/prepare-mini-artifacts.js",
     "preaudit:actions": "node ../ci/prepare-mini-artifacts.js",
     "preaudit:actions:release": "node ../ci/prepare-mini-artifacts.js",
     "verify:wechat-release": "node scripts/wechat-release-contract.js --source-only",
