@@ -862,6 +862,16 @@ Page({
     wx.navigateTo({ url: '/subpackageMember/market/pass/index?id=' + id, complete: () => { this._navigating = false; } });
   },
 
+  /* E-B9:报价请求失败后的「重新获取价格」。只重取事实,不建单。 */
+  onCheckoutRequote() {
+    const facts = this._checkoutFacts;
+    if (!facts || facts.quoteState !== 'failed') return;
+    facts.quoteState = 'loading';
+    this.setData({ 'checkout.view': checkoutView(facts) });
+    const info = facts.info || this.data.info || {};
+    this._loadCheckoutFacts(info.id || this.data.id);
+  },
+
   onCheckoutBack() {
     if (this.data.selfPlayConfirmLoading || this._selfPlaySubmitting) return;
     this.setData({ selfPlayCheckoutShow: false });
@@ -1597,6 +1607,11 @@ Page({
       that.setData({ selfPlayConsentHint: '请先勾选同意' });
       return;
     }
+    // E-B9:报价没取到不能付(屏上价格不是服务端价),让玩家先重新获取价格。
+    const facts = that._checkoutFacts;
+    if (that.data.selfPlayCheckoutShow && facts && (facts.quoteState === 'failed' || facts.quoteState === 'refused')) return;
+    // E-B10/D-24:「每次购买意图自动重建一次」——点击确认才是新意图,重建标记在这里复位(重建自己走 _createSelfPlayOrder,不经过这里)。
+    that._rebuildUsed = false;
     // 保持用户点击手势：订阅拒绝/失败不阻塞既有同意记录和支付链。
     if (that._hostShareConsentReady || app.recordConsent) {
       subscribe.request(['signupSuccess', 'activityStart', 'refund']);
@@ -1639,23 +1654,32 @@ Page({
     const seq = that._signupSeq = (that._signupSeq || 0) + 1;
     const parts = { realName: '', phone: '' };
     let pending = 2;
+    let failed = false; // E-B8:请求失败 ≠ 资料为空。失败时不覆盖上一份已缓存的资料,也不当作「没填」
     const settle = function () {
       if (--pending > 0 || seq !== that._signupSeq) return;
-      that._signupParts = parts;
-      that._signupProfile = parts.realName && parts.phone ? { realName: parts.realName, phone: parts.phone } : null;
-      if (done) done(that._signupProfile);
+      that._signupLoadFailed = failed;
+      if (!failed) {
+        that._signupParts = parts;
+        that._signupProfile = parts.realName && parts.phone ? { realName: parts.realName, phone: parts.phone } : null;
+      }
+      if (done) done(that._signupProfile, failed);
     };
+    const settleFail = function () { failed = true; settle(); };
     const record = function (res) {
       return res && res.code == '200' && res.data && typeof res.data === 'object' && !Array.isArray(res.data) ? res.data : null;
     };
     app.sendRequest({
       hideLoading: true, url: '/api/user/info', method: 'POST', data: { member_id: app.getUserID() },
-      success(res) { const d = record(res); parts.phone = d ? String(d.phone || d.mobilePhone || '') : ''; settle(); },
-      fail: settle
+      success(res) {
+        if (!res || String(res.code) !== '200') { settleFail(); return; }
+        const d = record(res); parts.phone = d ? String(d.phone || d.mobilePhone || '') : ''; settle();
+      },
+      fail: settleFail
     });
     app.sendRequest({
       hideLoading: true, url: '/api/user/address/list', method: 'POST', data: {},
       success(res) {
+        if (!res || String(res.code) !== '200') { settleFail(); return; }
         const d = record(res);
         const rows = d && Array.isArray(d.rows) ? d.rows : [];
         const uid = app.getUserID && app.getUserID();
@@ -1668,15 +1692,15 @@ Page({
         parts.realName = picked ? String(picked.fullName || picked.realName || '').trim() : '';
         settle();
       },
-      fail: settle
+      fail: settleFail
     });
   },
 
   // 结算页开着时(进页、从参与人信息/个人资料回来)按最新资料刷新那一行
   _fillCheckoutProfile() {
     const that = this;
-    that._loadSignupProfile(function () {
-      if (!that.data.selfPlayCheckoutShow) return;
+    that._loadSignupProfile(function (profile, failed) {
+      if (!that.data.selfPlayCheckoutShow || failed) return; // 取失败时保留屏上已有资料,不刷成空
       const p = that._signupParts || {};
       const phone = String(p.phone || '');
       that.setData({
@@ -1721,8 +1745,9 @@ Page({
     if (that._signupProfileMissing()) {
       // 进页预取可能还没回来(弱网、或进页就点购买)。先现取一次再判,
       // 否则会把「资料其实全」的人误判成没填、推去补一个本来就填好的字段。
-      that._loadSignupProfile(function (profile) {
+      that._loadSignupProfile(function (profile, failed) {
         that._selfPlaySubmitting = false;
+        if (failed) { toast('资料没取到，请检查网络后重试'); return; } // E-B8:不弹「还差姓名和手机号」,不跳资料页
         if (profile) { that._createSelfPlayOrder(topicId); return; }
         modal.show({
           title: '还差姓名和手机号',
@@ -1763,20 +1788,23 @@ Page({
         that._onSelfPlayPaid(topicId, data);
       },
       onPayVerifying: function (data) {
-        loading.show('确认支付结果...');
+        if (!that._unknownPolling) loading.show('确认支付结果...');
       },
       onPaySuccess: function (data) {
+        that._unknownPolling = false;
         that._selfPlaySubmitting = false;
         that._selfPlayReqId = null;
         loading.hide();
         that._onSelfPlayPaid(topicId, data);
       },
       onPayCancel: function () {
+        that._unknownPolling = false;
         that._selfPlaySubmitting = false;
         toast('已取消支付');
       },
       onPayFail: function (res) {
         loading.hide();
+        that._unknownPolling = false;
         that._selfPlaySubmitting = false;
         toast(res && res.errMsg || '支付失败');
         // 付款失败不清幂等键,同一意图重试复用
@@ -1784,11 +1812,7 @@ Page({
       onPayUnknown: function () {
         loading.hide();
         that._selfPlaySubmitting = false;
-        modal.show({
-          title: '支付结果待确认',
-          content: '暂不要重复支付，请稍后从订单或主题页查看通行证状态。',
-          showCancel: false
-        });
+        if (!that._unknownPolling) that._showPaymentUnknown(); // 轮询/手动刷新仍不明时不重复弹窗
       }
     });
 
@@ -1798,13 +1822,50 @@ Page({
       // unknown 是 workflow 故意留的闸(防重复建单扣款),但闸不能是哑巴:
       // 关掉「支付结果待确认」弹层后再点同一个按钮,原来什么都不说。
       if (that._workflow.getState() === 'unknown') {
-        modal.show({
-          title: '支付结果待确认',
-          content: '这笔付款还在确认中，请勿重复支付。稍后可到「我的-订单」查看通行证状态。',
-          showCancel: false
-        });
+        if (that._unknownPolling) toast('还在确认支付结果，请勿重复支付');
+        else that._showPaymentUnknown();
       }
     }
+  },
+
+  /**
+   * E-B7:支付结果未知。只提供「刷新订单状态」(核对原订单,不建新单)并在后台轮询一小段时间;
+   * 确认已付走 onPaySuccess → _onSelfPlayPaid;SDK 真回调迟到也照常处理(workflow 不再丢它)。
+   */
+  _showPaymentUnknown() {
+    const that = this;
+    if (that._unknownPolling) { toast('还在确认支付结果，请稍候'); return; }
+    that._unknownPolling = true;
+    modal.show({
+      title: '支付结果待确认',
+      content: '暂不要重复支付。可以刷新订单状态，确认后会自动进入通行证。',
+      confirmText: '刷新订单状态',
+      cancelText: '稍后再说',
+      success(res) {
+        if (res && res.confirm) { toast('正在刷新订单状态'); that._recheckPayment(); }
+      }
+    });
+    that._pollPayment(0);
+  },
+
+  _recheckPayment() {
+    const wf = this._workflow;
+    if (!wf || wf.getState() !== 'unknown') return;
+    wf.recheck();
+  },
+
+  _pollPayment(n) {
+    const that = this;
+    if (n >= 6) { that._unknownPolling = false; return; }
+    that._later(5000, function () {
+      const wf = that._workflow;
+      if (that._unloaded || !wf) { that._unknownPolling = false; return; }
+      const st = wf.getState();
+      if (st === 'verifying') { that._pollPayment(n); return; } // 核对在途,不占轮询次数
+      if (st !== 'unknown') { that._unknownPolling = false; return; }
+      wf.recheck();
+      that._pollPayment(n + 1);
+    });
   },
 
   /**
@@ -1822,32 +1883,6 @@ Page({
     loading.hide();
     that._createSelfPlayOrder(topicId);
     return true;
-  },
-
-  _retrySelfPlayPayment(registrationId, topicId) {
-    const that = this;
-    app.sendRequest({
-      url: '/api/registration/pay',
-      method: 'POST',
-      data: { id: registrationId },
-      success: (res) => {
-        if (res.code == '200' && res.data && res.data.payParams && res.data.payParams.package) {
-          that._selfPlayReqId = null;
-          // 走 order 路径的重新支付
-          that._workflow.submit({ id: registrationId }, {
-            onOrderFail: function () { toast('支付信息不完整，请重试'); },
-            onPaySuccess: function () { that._onSelfPlayPaid(topicId, { id: registrationId }); },
-            onPayCancel: function () { toast('已取消支付'); },
-            onPayFail: function (res) { toast('支付失败'); }
-          });
-        } else {
-          toast(res.msg || '支付信息不完整，请重试');
-        }
-      },
-      fail: () => {
-        toast('网络错误，请重试');
-      }
-    });
   },
 
   /* 自玩票买完的唯一落点(三个调用点都走这儿)。原来是 toast + 800ms 硬等,

@@ -29,17 +29,8 @@ const RETRY_TEXT = '不对。把它清掉，再试一次。';
 /* 一进来题目占满一屏,一秒后选项才淡进来 */
 const INTRO_MS = 1000;
 
-/** 打字题的比对:忽略大小写与首尾空格,多个答案用、分隔,命中任一即过。
- *  ⚠️ 真判定在服务端,这里只是本地即时反馈;两边规则必须一致,所以抽成纯函数好对齐。 */
-function matchesAnswer(input, answerText) {
-  const got = String(input || '').trim().toLowerCase();
-  if (!got) return false;
-  return String(answerText || '')
-    .split(/[、,,]/)
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean)
-    .some((a) => a === got);
-}
+/* 打字题的判定在服务端(AnswerNormalizer);客户端不再留一份本地比对,避免两边规则漂移。
+   多答案分隔符与向量见 utils/answer-text.js、tests/unit/answer-text-vectors.test.js。 */
 
 /** 次数封顶:选项题最多只能错「选项数 - 1」次。0 表示不限。 */
 function cappedTries(maxTries, optionCount) {
@@ -234,7 +225,6 @@ Component({
       return -1;
     },
 
-    _matchesAnswer: matchesAnswer,      // 纯算法出口,供单测
     _cappedTries: cappedTries,
 
     onRun() { this.triggerEvent('run'); },

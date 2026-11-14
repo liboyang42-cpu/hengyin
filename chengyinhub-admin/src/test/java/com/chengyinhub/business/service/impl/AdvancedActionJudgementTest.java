@@ -96,9 +96,11 @@ class AdvancedActionJudgementTest {
         JsonNode withoutPolicy=json.readTree("{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"answerText\":\"Ａ\"}}");
         assertTrue(judge().evaluate(Action.SUBMIT_QA,new Input(withoutPolicy,json.createObjectNode(),
                 Map.of("input","ａ"),null,7L)).state().path("qa").path("passed").asBoolean(),"仍忽略大小写");
-        assertFalse(judge().evaluate(Action.SUBMIT_QA,new Input(withoutPolicy,json.createObjectNode(),
+        assertTrue(judge().evaluate(Action.SUBMIT_QA,new Input(withoutPolicy,json.createObjectNode(),
                 Map.of("input","A"),null,7L)).state().path("qa").path("passed").asBoolean(),
-                "没配政策不启用 LEGACY_V1 全角折叠,原行为不变");
+                "2026-11-14 起没配政策也走共享归一器(NFKC):全角「Ａ」与「A」等价,旧写法「ａ」仍然通过");
+        assertFalse(judge().evaluate(Action.SUBMIT_QA,new Input(withoutPolicy,json.createObjectNode(),
+                Map.of("input","B"),null,7L)).state().path("qa").path("passed").asBoolean(),"不同答案仍然判错");
     }
 
     @Test void combinedAlbumMustBeAcknowledgedBeforeDrawingAndBeforeCompletion() throws Exception {

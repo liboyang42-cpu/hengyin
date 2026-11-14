@@ -76,6 +76,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="createTime" column="create_time" />
     </resultMap>
 
+    <!-- /api/roam/pois 轻量投影:poiCols + 地点卡要用的封面/相册/引述/署名/勋章码(相册只在 Java 侧取前 3 张) -->
+    <sql id="poiColsLight">id, name, type, lat, lng, radius_m, address, description, xp, coupon_template_id, city_code, status, audit_status, application_type, applicant_merchant_id, audit_reason, create_time, merchant_id, template_id, node_level, tags, cover_img, sort, gallery_json, quotes_json, photo_credit, badge_code</sql>
+
     <sql id="poiCols">id, name, type, lat, lng, radius_m, address, description, xp, coupon_template_id, city_code, status, audit_status, application_type, applicant_merchant_id, audit_reason, create_time, merchant_id, template_id, node_level, tags, cover_img, sort</sql>
 
     <!--
@@ -88,7 +91,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       走 npc_profile 的 idx_scope(scope_type, scope_id, sort),不额外建索引。
     -->
     <select id="selectPoisNear" resultMap="RoamPoiResult">
-        select <include refid="poiCols" />,
+        <!-- A5.3:先在内层用包围盒+排序+limit 把候选收敛到 limit 行,再只对这 limit 行算 3 个相关子查询。
+             A5.2:node_level 高者优先、同级按到盒心距离由近到远;截断时丢掉的是低等级/最远的。 -->
+        select p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp, p.coupon_template_id,
+               p.city_code, p.status, p.audit_status, p.application_type, p.applicant_merchant_id, p.audit_reason,
+               p.create_time, p.merchant_id, p.template_id, p.node_level, p.tags, p.cover_img, p.sort,
+               p.gallery_json, p.quotes_json, p.photo_credit, p.badge_code,
                (select n.avatar from npc_profile n
                  where n.scope_type = 2 and n.scope_id = p.merchant_id
                    and n.enabled = 1 and n.audit_status = 1 and n.del_flag = '0'
@@ -102,23 +110,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 or exists (select 1 from roam_poi_reward_log r
                             where r.poi_id = p.id and r.member_id = #{memberId}
                               and r.status in (0, 1))) as found,
-               <!-- CU-M-54:已打卡但券还没核销(status=0 且配了券)单独一档。found 把 status 0/1
-                    一起当「到过店」,客户端分不出「券到手」与「等商家扫码」—— 重进地图只能
-                    读成候选,同一站先亮后灭。这里是只读投影,不改表也不改写入路径。 -->
+               <!-- CU-M-54:已打卡但券还没核销(status=0 且配了券)单独一档。 -->
                (exists (select 1 from roam_poi_reward_log r
                          where r.poi_id = p.id and r.member_id = #{memberId}
                            and r.status = 0 and r.coupon_id > 0)) as pending_redeem
-        from roam_poi p
-        where p.status = 1
-          and <include refid="cityNodeContentApproved" />
-          and p.lat between #{minLat} and #{maxLat}
-          and p.lng between #{minLng} and #{maxLng}
-        <!-- P1-058:半径最大 20km,城区一盒可达上千点。按到盒心的等距矩形近似距离由近到远,
-             再截 limit 条 —— 截断时丢的是最远的,而不是数据库随手给的任意一批。 -->
-        order by power(p.lat - (#{minLat} + #{maxLat}) / 2, 2)
-                 + power((p.lng - (#{minLng} + #{maxLng}) / 2) * cos(radians((#{minLat} + #{maxLat}) / 2)), 2) asc,
-                 p.id asc
-        limit #{limit}
+        from (
+            select <include refid="poiColsLight" />,
+                   (power(p.lat - (#{minLat} + #{maxLat}) / 2, 2)
+                    + power((p.lng - (#{minLng} + #{maxLng}) / 2) * cos(radians((#{minLat} + #{maxLat}) / 2)), 2)) as near_dist
+            from roam_poi p
+            where p.status = 1
+              and <include refid="cityNodeContentApproved" />
+              and p.lat between #{minLat} and #{maxLat}
+              and p.lng between #{minLng} and #{maxLng}
+            order by coalesce(p.node_level, 0) desc, near_dist asc, p.id asc
+            limit #{limit}
+        ) p
+        order by coalesce(p.node_level, 0) desc, p.near_dist asc, p.id asc
     </select>
 
     <select id="selectPoisByIds" resultMap="RoamPoiResult">
@@ -542,10 +550,49 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             and (p.name like concat('%', #{keyword}, '%') or m.name like concat('%', #{keyword}, '%'))
           </if>
           <if test="categoryId != null">and m.category_id = #{categoryId}</if>
-          <if test="tag != null and tag != ''">and p.tags like concat('%', #{tag}, '%')</if>
+          <!-- A5.5:tags 统一为 JSON 数组串(["a","b"]),按带引号的整标签匹配,不再 LIKE 子串误命中。调用方已拒绝含 % _ \ " 的 tag。 -->
+          <if test="tag != null and tag != ''">and p.tags like concat('%"', #{tag}, '"%')</if>
           <if test="cityRole != null and cityRole != ''">and m.city_role like concat('%', #{cityRole}, '%')</if>
         order by distance asc, p.node_level desc, p.sort asc, p.id desc
+        limit #{limit}
     </select>
+
+    <!-- A3.4:目录地点(type=1 + 种子标签 + 非商家非申请)公开只读详情。只读展示字段,不带模板/券/答案;
+         只认已上架(status=1),下架即 404。种子标签是 JSON 数组里的 "roam:seed:v1:xxx" 项。 -->
+    <select id="selectCatalogPlaceById" resultType="com.chengyinhub.business.domain.vo.CatalogPlaceVO">
+        select p.id as poiId, p.name as name, p.address as address, p.description as description,
+               p.lat as lat, p.lng as lng, p.radius_m as radiusM, p.city_code as cityCode,
+               p.node_level as nodeLevel, p.tags as tags, p.cover_img as coverImg,
+               p.gallery_json as galleryJson, p.quotes_json as quotesJson,
+               p.photo_credit as photoCredit, p.badge_code as badgeCode
+        from roam_poi p
+        where p.id = #{id} and p.type = 1 and p.status = 1
+          and p.merchant_id is null and p.template_id is null and p.application_type is null
+          and p.tags like '%"roam:seed:v1:%'
+    </select>
+
+    <!-- 后台批量上/下架目录地点。范围钉死:type=1、无商家、无模板、非申请(application_type 空)、同城、带种子标签;
+         上架额外要求有坐标。seedTag 为空=该城全部种子点;非空=只动该标签(精确匹配 JSON 数组项)。 -->
+    <sql id="catalogBatchWhere">
+        type = 1 and merchant_id is null and template_id is null and application_type is null
+        and city_code = #{cityCode}
+        and tags like '%"roam:seed:v1:%'
+        <if test="seedTag != null and seedTag != ''">and tags like concat('%"', #{seedTag}, '"%')</if>
+    </sql>
+
+    <select id="countCatalogBatchTargets" resultType="int">
+        select count(*) from roam_poi
+        where <include refid="catalogBatchWhere" />
+        <if test="status == 1">and lat is not null and lng is not null and lat != 0 and lng != 0</if>
+        and (status is null or status != #{status})
+    </select>
+
+    <update id="updateCatalogBatchStatus">
+        update roam_poi set status = #{status}
+        where <include refid="catalogBatchWhere" />
+        <if test="status == 1">and lat is not null and lng is not null and lat != 0 and lng != 0</if>
+        and (status is null or status != #{status})
+    </update>
 
     <select id="selectMerchantNodeDetail" resultMap="CityNodeVOResult">
         <include refid="cityNodeSelect" />
