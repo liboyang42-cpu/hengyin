@@ -497,7 +497,7 @@ class ApiPlayProgressCompletionTruthTest
         assertEquals("答案不正确", near.get("msg"), "围栏内照常判题");
 
         // 已开局:之后的站不带任何定位也照常判题
-        when(proofService.runStarted(PLAYER, ACTIVITY)).thenReturn(true);
+        when(proofService.runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
         AjaxResult started = BasicPlayCommandFixtures.answer(controller, a, n, "乱写一个", null);
         assertEquals(null, started.get("errorCode"));
         assertEquals("答案不正确", started.get("msg"));

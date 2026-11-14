@@ -36,12 +36,12 @@
   left: 0; right: 0; top: 0; bottom: 0;
 }
 /* 结果页顶部返回、文字、进度条保持固定白色，不随父主题翻转。 */
-.skin-qadark .st__back,
 .skin-qadark .st__limit-t,
 .skin-qadark .st__limit-n,
 .st--verdict .st__back,
 .st--verdict .st__limit-t,
 .st--verdict .st__limit-n { color: var(--cy-color-play-accent); }
+.skin-qadark:not(.st--verdict) .st__back { color: var(--pk-embed-back, var(--cy-color-play-accent)); }  /* 浅色纸面外观下读外观墨色(look-tokens.wxss),不再是白叉压在浅底上 */
 .st--verdict .st__limit-bar { background: var(--cy-color-home-upcoming-desc); }
 .st--verdict .st__limit-fill { background: var(--cy-color-play-accent); }
 

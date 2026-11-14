@@ -364,7 +364,7 @@ public class PlayBasicCommandApplication {
                 && StringUtils.isNotBlank(node.getLongitude()) && StringUtils.isNotBlank(node.getLatitude())) {
             // 老路径到达即完成,没有单独的到达记录可查:本局还没开局时,答案随带的定位按开局校验(300 米)判;
             // 已开局(本局已有进度)的各站不再要求定位。
-            if (!shopDayProofService.runStarted(memberId, ctx.actId)) {
+            if (!shopDayProofService.runStarted(memberId, ctx.actId, ctx.topicId)) {
                 FenceRejection fence = startFenceError(node, longitude, latitude, accuracy);
                 if (fence != null) return PlayCommandErrorContract.arriveFirst(fence.message(), fence.reasonCode());
             }
@@ -708,7 +708,7 @@ public class PlayBasicCommandApplication {
         // 开局闸不看首站玩法是否已解开:解开玩法不等于人在起点(2026-11-13 走查:千里之外解开站1也被接受)。
         // 唯一豁免:实体免费收集的店内扫码/拍照已核验凭证(进店本身就是现场证明,不走线路开局闸)。
         // 本局已有进度 = 开局校验已过,之后各站到点不再要求定位。没开局又不带定位的到达一律拒绝。
-        boolean runStarted = shopDayProofService.runStarted(memberId, actId);
+        boolean runStarted = shopDayProofService.runStarted(memberId, actId, ctx.topicId);
         if (hasNodeCoord && !(freeCollectStore && stationGameProof) && !runStarted) {
             if (StringUtils.isBlank(longitude) || StringUtils.isBlank(latitude)) return arriveRejected(PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING), frozenStation);
             // R10-10:Double.parseDouble 接受 "NaN"/"Infinity",而 NaN 与任何数比较恒 false,

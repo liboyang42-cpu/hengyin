@@ -130,3 +130,15 @@ test('V-02 票夹卡面「剩 N 天」与背面「N 天内过期」同一个自�
   assert.equal(passDaysLeft('2026-10-29 23:59:59', now), null)
   assert.match(fs.readFileSync(path.join(__dirname, '../../subpackageMember/signup/index.js'), 'utf8'), /const days = passDaysLeft\(item\.wUntil\);/)
 })
+
+test('票夹「剩 N 天」与购买页「可玩至」同一天:到期落在零点时最后能玩的是前一天(剩 91 天 / 可玩至 90 天后)', () => {
+  const { passDaysLeft } = require('../../utils/ticket-expiry.js')
+  const m = require('../../pages/topic/utils/topic-motion.js')
+  const now = new Date(2026, 10, 14, 15, 0, 0)
+  const expiresAt = new Date(2027, 1, 13, 0, 0, 0)
+  assert.equal(passDaysLeft(expiresAt.getTime(), now.getTime()), 90)
+  const win = m.passWindow({ now, expiresAt })
+  assert.equal(win.untilText, '02/12')
+  assert.equal(win.daysText, '90')
+  assert.equal(passDaysLeft(new Date(2027, 1, 12, 23, 59, 59).getTime(), now.getTime()), 90)
+})

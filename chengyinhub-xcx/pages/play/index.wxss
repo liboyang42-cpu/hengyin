@@ -1812,7 +1812,7 @@ page { background: var(--cy-color-bg-page); }
 .life-arc__photos{ display:flex; gap:16rpx; margin-top:32rpx; overflow-x:auto; }
 .life-arc__photo{ flex:none; width:220rpx; }
 .life-arc__img{ display:block; width:220rpx; height:290rpx; border-radius:16rpx; background:#1C1C1E; } /* ds-ok 照片占位底 */
-.life-arc__cap{ display:block; margin-top:10rpx; font-size:22rpx; color:rgba(255,255,255,.5); } /* ds-ok */
+.life-arc__cap{ display:block; margin-top:10rpx; font-size:22rpx; color:rgba(255,255,255,.5); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } /* ds-ok */
 .life-arc__note{ margin-top:32rpx; }
 .life-arc__quote{ display:block; font-size:32rpx; line-height:1.7; color:#FFFFFF; } /* ds-ok 留言原话 */
 .life-arc__walk{ display:block; margin-top:36rpx; font-size:24rpx; line-height:1.7; color:rgba(255,255,255,.6); } /* ds-ok */

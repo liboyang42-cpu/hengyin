@@ -237,7 +237,9 @@
             <view class="chfull__kitcard-play" aria-hidden="true"><view class="chfull__kitcard-tri"></view></view>
           </view>
           <cy-playkit wx:else kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
-          <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
+          <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show && (playKit.kit.type === 'qa' || playKit.kit.type === 'hangman')}}" bindtap="continueStoryGame"
+                aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>
+          <view class="chfull__continue" wx:elif="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
                 aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>
         </view>
         <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit">

@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -365,7 +366,7 @@ class ApiPlayGpsGeofenceValidationTest
     @Test
     void stationAfterStartIsAcceptedWithoutAnyLocation()
     {
-        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(PLAYER, ACTIVITY)).thenReturn(true);
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
 
         // 缺定位、缺精度、甚至人在很远处,开局之后都不再卡站点
         assertEquals(200, BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
@@ -375,7 +376,7 @@ class ApiPlayGpsGeofenceValidationTest
     @Test
     void stationBeforeStartIsRejectedWithoutLocation()
     {
-        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(PLAYER, ACTIVITY)).thenReturn(false);
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(false);
 
         AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
                 null, null, null, null, null);
@@ -424,7 +425,7 @@ class ApiPlayGpsGeofenceValidationTest
                 mock(com.chengyinhub.business.service.IAdvancedGameRuntimeService.class);
         when(advanced.solvedForArrival(PLAYER, ACTIVITY, TOPIC, NODE)).thenReturn(true);
         com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "advancedGameRuntimeService", advanced);
-        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(PLAYER, ACTIVITY)).thenReturn(true);
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
 
         AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
                 null, null, null, null, null, null);
@@ -586,7 +587,7 @@ class ApiPlayGpsGeofenceValidationTest
         // 2026-11-13:开局闸不看玩法凭证——本局还没开局时,照片玩法已核验也必须带起点 300 米内定位。
         assertEquals("ARRIVE_LOCATION_MISSING", arrive(null, null).get("errorCode"));
         verifyNoProgressAndNoReward();
-        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(PLAYER, ACTIVITY)).thenReturn(true);
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
         assertEquals(200, arrive(null, null).get("code"));
         verify(progressionService).onNodeDone(PLAYER);
     }

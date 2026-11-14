@@ -19,8 +19,9 @@ test('开局 300m 定位闸与首站是否用高级玩法无关', () => {
 
 test('逐字猜词解开后在故事流里也有「继续」,并回到页面收尾本站', () => {
   const wxml = read('pages/play/components/playkit-hangman/index.wxml')
-  assert.match(wxml, /<view wx:if="\{\{solved\}\}" class="g-btn" bindtap="onContinue"/)
-  assert.doesNotMatch(wxml, /solved && !inline/)
+  // 内嵌时故事流那颗按钮(qa / 逐字猜词时就叫「继续」)是唯一的继续,猜词自己的不再叠一枚;整屏仍有
+  assert.match(wxml, /<view wx:if="\{\{solved && !inline\}\}" class="g-btn" bindtap="onContinue"/)
+  assert.match(read('pages/play/index.wxml'), /\(playKit\.kit\.type === 'qa' \|\| playKit\.kit\.type === 'hangman'\)[^>]*bindtap="continueStoryGame"[\s\S]{0,120}>继续<\/view>/)
   const js = read('pages/play/components/playkit-hangman/index.js')
   assert.match(js, /onContinue\(\) \{ this\.triggerEvent\(this\.data\.inline \? 'continue' : 'close'\); \}/)
   assert.match(read('pages/play/components/playkit/index.wxml'), /<cy-playkit-hangman[\s\S]*?bind:continue="onContinue" \/>/)
