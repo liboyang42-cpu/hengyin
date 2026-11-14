@@ -96,7 +96,7 @@ class ApiCityNodeSearchTest {
             List<CityNodeVO> nodes = session.getMapper(RoamMapper.class).selectMerchantNodesNear(
                     31.20, 31.27, 121.44, 121.51,
                     31.2304, 121.4737,
-                    "咖啡", 9, "夜间友好", "街区客厅");
+                    "咖啡", 9, "夜间友好", "街区客厅", 100);
 
             assertEquals(Arrays.asList(1L, 2L), nodes.stream()
                     .map(CityNodeVO::getPoiId)
@@ -105,10 +105,10 @@ class ApiCityNodeSearchTest {
                     "距离必须由查询计算并升序返回");
 
             RoamMapper mapper = session.getMapper(RoamMapper.class);
-            assertEquals(1, mapper.updateMerchantPoiTags(101L, "凌晨友好"));
+            assertEquals(1, mapper.updateMerchantPoiTags(101L, "[\"凌晨友好\"]"));
             List<CityNodeVO> synced = mapper.selectMerchantNodesNear(
                     31.20, 31.27, 121.44, 121.51,
-                    31.2304, 121.4737, null, null, "凌晨友好", null);
+                    31.2304, 121.4737, null, null, "凌晨友好", null, 100);
             assertEquals(Collections.singletonList(1L), synced.stream()
                     .map(CityNodeVO::getPoiId).collect(Collectors.toList()));
             assertEquals(1L, mapper.selectActiveMerchantNode(101L).getPoiId());
@@ -129,11 +129,12 @@ class ApiCityNodeSearchTest {
                 org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
                 org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
                 org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyInt(),
-                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
+                org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyInt()))
                 .thenReturn(Collections.singletonList(node));
 
         AjaxResult result = controller.nodes(31.2304, 121.4737, 3000,
-                "咖啡", 9, "夜间友好", "街区客厅");
+                "咖啡", 9, "夜间友好", "街区客厅", null);
 
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         @SuppressWarnings("unchecked")
@@ -144,7 +145,8 @@ class ApiCityNodeSearchTest {
                 org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
                 org.mockito.ArgumentMatchers.eq(31.2304), org.mockito.ArgumentMatchers.eq(121.4737),
                 org.mockito.ArgumentMatchers.eq("咖啡"), org.mockito.ArgumentMatchers.eq(9),
-                org.mockito.ArgumentMatchers.eq("夜间友好"), org.mockito.ArgumentMatchers.eq("街区客厅"));
+                org.mockito.ArgumentMatchers.eq("夜间友好"), org.mockito.ArgumentMatchers.eq("街区客厅"),
+                org.mockito.ArgumentMatchers.eq(ApiCityNodeController.NODES_DEFAULT_LIMIT));
     }
 
     @Test
@@ -162,6 +164,97 @@ class ApiCityNodeSearchTest {
         assertEquals(200, result.get(AjaxResult.CODE_TAG));
         assertEquals(2L, ((CityNodeVO) result.get(AjaxResult.DATA_TAG)).getPoiId());
         verify(discoveryService).findActiveNode(8L);
+    }
+
+    @Test
+    void nodesRejectsInvalidCoordinatesAndTagsAndClampsLimit() {
+        RoamMapper mapper = mock(RoamMapper.class);
+        ApiCityNodeController controller = new ApiCityNodeController();
+        ReflectionTestUtils.setField(controller, "roamMapper", mapper);
+        for (double[] bad : new double[][]{{Double.NaN, 121.4}, {31.2, Double.POSITIVE_INFINITY}, {91, 121.4}, {31.2, 181}}) {
+            assertEquals("定位无效", controller.nodes(bad[0], bad[1], 3000, null, null, null, null, null).get(AjaxResult.MSG_TAG));
+        }
+        assertEquals("标签无效", controller.nodes(31.2, 121.4, 3000, null, null, "a%b", null, null).get(AjaxResult.MSG_TAG));
+        assertEquals("标签无效", controller.nodes(31.2, 121.4, 3000, null, null, "a\"b", null, null).get(AjaxResult.MSG_TAG));
+        org.mockito.Mockito.verifyNoInteractions(mapper);
+
+        when(mapper.selectMerchantNodesNear(org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyInt()))
+                .thenReturn(Collections.emptyList());
+        assertEquals(200, controller.nodes(31.2, 121.4, 3000, null, null, null, null, 99999).get(AjaxResult.CODE_TAG));
+        verify(mapper).selectMerchantNodesNear(org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(ApiCityNodeController.NODES_MAX_LIMIT));
+    }
+
+    @Test
+    void nodesMapperLimitsRowsAndMatchesWholeJsonTagOnly() throws Exception {
+        try (SqlSession session = cityNodeSqlSessionFactory().openSession()) {
+            RoamMapper mapper = session.getMapper(RoamMapper.class);
+            assertEquals(1, mapper.selectMerchantNodesNear(31.20, 31.27, 121.44, 121.51, 31.2304, 121.4737,
+                    null, null, null, null, 1).size(), "limit 生效");
+            assertEquals(0, mapper.selectMerchantNodesNear(31.20, 31.27, 121.44, 121.51, 31.2304, 121.4737,
+                    null, null, "夜间", null, 100).size(), "子串不命中整标签");
+            assertEquals(5, mapper.selectMerchantNodesNear(31.20, 31.27, 121.44, 121.51, 31.2304, 121.4737,
+                    null, null, "夜间友好", null, 100).size());
+        }
+    }
+
+    @Test
+    void catalogPlaceDetailIsReadOnlyAndOnlyForListedSeedPlaces() throws Exception {
+        try (SqlSession session = cityNodeSqlSessionFactory().openSession()) {
+            Statement st = session.getConnection().createStatement();
+            st.execute("insert into roam_poi (id,name,description,lat,lng,address,gallery_json,quotes_json,photo_credit,radius_m,node_level,tags,city_code,status,type,sort) "
+                    + "values (900,'鲁迅公园','d',31.27,121.48,'地址','[\"a.jpg\"]','[{\"text\":\"q\"}]','CC BY',80,1,"
+                    + "'[\"roam:park\",\"roam:seed:v1:sh-luxun-park\"]','SH',1,1,1)");
+            st.execute("insert into roam_poi (id,name,lat,lng,tags,city_code,status,type,sort) values (901,'无种子',31.27,121.48,'[\"x\"]','SH',1,1,2)");
+            st.execute("insert into roam_poi (id,name,lat,lng,tags,city_code,status,type,sort) values (902,'已下架',31.27,121.48,'[\"roam:seed:v1:z\"]','SH',0,1,3)");
+            st.execute("insert into roam_poi (id,name,lat,lng,tags,city_code,status,type,merchant_id,sort) values (903,'商家点',31.27,121.48,'[\"roam:seed:v1:m\"]','SH',1,1,101,4)");
+            ApiCityNodeController c = new ApiCityNodeController();
+            ReflectionTestUtils.setField(c, "roamMapper", session.getMapper(RoamMapper.class));
+            AjaxResult ok = c.place(900L);
+            assertEquals(200, ok.get(AjaxResult.CODE_TAG));
+            com.chengyinhub.business.domain.vo.CatalogPlaceVO vo = (com.chengyinhub.business.domain.vo.CatalogPlaceVO) ok.get(AjaxResult.DATA_TAG);
+            assertEquals("CC BY", vo.getPhotoCredit());
+            assertEquals("[{\"text\":\"q\"}]", vo.getQuotesJson());
+            assertEquals("[\"a.jpg\"]", vo.getGalleryJson());
+            for (long id : new long[]{901, 902, 903, 1}) assertEquals(410, c.place(id).get(AjaxResult.CODE_TAG), "id=" + id);
+        }
+    }
+
+    @Test
+    void catalogBatchStatusStaysWithinCityAndSeedCatalogRows() throws Exception {
+        try (SqlSession session = cityNodeSqlSessionFactory().openSession()) {
+            Statement st = session.getConnection().createStatement();
+            st.execute("insert into roam_poi (id,name,lat,lng,tags,city_code,status,type,sort) values (910,'沪1',31.27,121.48,'[\"roam:seed:v1:sh-a\"]','SH',0,1,1)");
+            st.execute("insert into roam_poi (id,name,lat,lng,tags,city_code,status,type,sort) values (911,'沪2',31.28,121.48,'[\"roam:seed:v1:sh-b\"]','SH',0,1,2)");
+            st.execute("insert into roam_poi (id,name,lat,lng,tags,city_code,status,type,sort) values (912,'京1',39.9,116.4,'[\"roam:seed:v1:bj-a\"]','BJ',0,1,3)");
+            st.execute("insert into roam_poi (id,name,lat,lng,tags,city_code,status,type,merchant_id,sort) values (913,'商家',31.27,121.48,'[\"roam:seed:v1:sh-m\"]','SH',0,1,101,4)");
+            st.execute("insert into roam_poi (id,name,lat,lng,tags,city_code,status,type,sort) values (914,'无种子',31.27,121.48,'[\"x\"]','SH',0,1,5)");
+            st.execute("insert into roam_poi (id,name,lat,lng,tags,city_code,status,type,application_type,audit_status,sort) values (915,'申请',31.27,121.48,'[\"roam:seed:v1:sh-app\"]','SH',0,1,1,0,6)");
+            RoamMapper m = session.getMapper(RoamMapper.class);
+            assertEquals(2, m.countCatalogBatchTargets("SH", null, 1));
+            assertEquals(1, m.updateCatalogBatchStatus("SH", "roam:seed:v1:sh-a", 1));
+            assertEquals(1, m.updateCatalogBatchStatus("SH", null, 1), "只剩 911 还没上架");
+            assertEquals(0, m.updateCatalogBatchStatus("SH", null, 1), "幂等");
+            assertEquals(1, statusOf(st, 910));
+            assertEquals(1, statusOf(st, 911));
+            assertEquals(0, statusOf(st, 912), "别的城市不动");
+            assertEquals(0, statusOf(st, 913), "商家据点不动");
+            assertEquals(0, statusOf(st, 914), "无种子标签不动");
+            assertEquals(0, statusOf(st, 915), "商家申请行不动");
+            assertEquals(2, m.updateCatalogBatchStatus("SH", null, 0), "可整城下架");
+        }
+    }
+
+    private static int statusOf(Statement st, long id) throws Exception {
+        try (java.sql.ResultSet rs = st.executeQuery("select status from roam_poi where id=" + id)) { rs.next(); return rs.getInt(1); }
     }
 
     private SqlSessionFactory cityNodeSqlSessionFactory() throws Exception {
@@ -228,6 +321,6 @@ class ApiCityNodeSearchTest {
         statement.execute("insert into roam_poi "
                 + "(id, name, lat, lng, radius_m, node_level, tags, city_code, status, type, merchant_id, sort) "
                 + "values (" + id + ", '节点" + id + "', " + lat + ", " + lng + ", 80, "
-                + nodeLevel + ", '" + tags + "', '310000', 1, 2, " + merchantId + ", " + id + ")");
+                + nodeLevel + ", '[\"" + tags + "\"]', '310000', 1, 2, " + merchantId + ", " + id + ")");
     }
 }
