@@ -717,7 +717,7 @@
     </view>
     <view class="drow" bindtap="onCheckinSign" aria-role="button" aria-label="今日城市签" hover-class="cy-pressed" hover-stay-time="80">
       <view class="dic pic pic--journal"></view>
-      <view class="dcopy"><text class="dt">今日城市签</text><text class="ds">先写再看:写一句，才换来上一个人那张</text></view>
+      <view class="dcopy"><text class="dt">今日城市签</text><text class="ds">先写再看：写一句，才换来上一个人那张</text></view>
       <view class="darr"></view>
     </view>
   </view>

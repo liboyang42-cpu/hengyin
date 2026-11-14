@@ -95,7 +95,7 @@
          原生 <map> 会穿透盖在它上面的层,所以只在故事流「上面没东西」时挂载:大地图 / 章节门 / 工具菜单 /
          试玩结局 / 整屏玩法任一在场都卸掉,这时退回画出来的罗盘。 -->
     <!-- 2026-10-30 业主定稿:左上角两种显示 —— 罗盘 / 地图(GTA III 式雷达,见 utils/play-topbar.js)。罗盘点一下切地图,地图点一下进大地图,右下角收回。 -->
-    <view class="fx-story__compass {{navMap ? 'fx-story__radar is-big' : ''}}" bindtap="onNavTap" aria-role="button" aria-label="{{navMap ? '小地图,轻点打开大地图' : '罗盘,轻点切到地图'}}{{storyDistText ? ',下一站 ' + storyDistText : ''}}" hover-class="cy-pressed" hover-stay-time="80">
+    <view class="fx-story__compass {{navMap ? 'fx-story__radar is-big' : ''}}" bindtap="onNavTap" aria-role="button" aria-label="{{navMap ? '小地图，轻点打开大地图' : '罗盘，轻点切到地图'}}{{storyDistText ? '，下一站 ' + storyDistText : ''}}" hover-class="cy-pressed" hover-stay-time="80">
       <view class="compass__dial" wx:if="{{!navMap}}"><view class="compass__n">N</view><view class="compass__dot"></view></view>
       <view class="radar__disc radar__disc--big" wx:else>
         <free-map class="fx-story__radar-map" wx:if="{{!storyMap && !chapterGate.show && !sessionToolsOpen && !previewEnding.show && !themeBackpackOpen && !album.show && !playKit.show && !casebook.show && !journeyRewards.show && !advancedPlay.show && screen !== 'gamePlay' && fmStyleReady}}"
@@ -217,7 +217,7 @@
           <view class="chfull__voice-n"><text class="chfull__voice-dot"></text>{{item.who}}</view>
           <view class="chfull__voice-t cy-story-hand">{{item.text}}</view>
         </view>
-        <view wx:elif="{{item.kind === 'thought'}}" class="chfull__thought" aria-role="text" aria-label="得到一个念头:{{item.name}}">
+        <view wx:elif="{{item.kind === 'thought'}}" class="chfull__thought" aria-role="text" aria-label="得到一个念头：{{item.name}}">
           <view class="chfull__thought-orb"></view>
           <view class="chfull__thought-k">得到一个念头</view>
           <view class="chfull__thought-t">{{item.name}}</view>
@@ -457,7 +457,7 @@
   <text class="pv-ending__title">{{previewEnding.real && previewEnding.reward ? previewEnding.reward.name : previewEnding.list[previewEnding.idx].title}}</text>
   <text class="pv-ending__copy" wx:if="{{previewEnding.real && previewEnding.reward}}">{{previewEnding.list[previewEnding.idx].title}}{{previewEnding.list[previewEnding.idx].summary ? ' · ' + previewEnding.list[previewEnding.idx].summary : ''}}</text>
   <text class="pv-ending__copy" wx:elif="{{previewEnding.list[previewEnding.idx].summary}}">{{previewEnding.list[previewEnding.idx].summary}}</text>
-  <text class="pv-ending__cond" wx:if="{{!previewEnding.real}}">触发:{{previewEnding.list[previewEnding.idx].cond}}</text>
+  <text class="pv-ending__cond" wx:if="{{!previewEnding.real}}">触发：{{previewEnding.list[previewEnding.idx].cond}}</text>
   <view class="pv-ending__chips" wx:if="{{!previewEnding.real && previewEnding.list.length > 1}}">
     <view wx:for="{{previewEnding.list}}" wx:key="code" class="pv-ending__chip {{index === previewEnding.idx ? 'is-on' : ''}}"
           data-idx="{{index}}" bindtap="pickPreviewEnding" aria-role="button" aria-label="看结局「{{item.title}}」" hover-class="cy-pressed" hover-stay-time="80">{{item.title}}</view>
@@ -1211,7 +1211,7 @@
             <text class="pref-result__next-k">下一步</text><text>{{preference.result.nextStep}}</text>
           </view>
           <view class="pref-consent" wx:if="{{preference.pendingTag}}">
-            <view class="pref-consent__head">保存为我的主题标签?</view>
+            <view class="pref-consent__head">保存为我的主题标签？</view>
             <view class="pref-consent__value">{{dl.prefTag(preference.pendingTag.tagCode)}} · {{preference.pendingTag.tagValue}}</view>
             <view class="pref-consent__copy">{{preference.tagDisclosure.purpose}}</view>
             <view class="pref-consent__copy">传给：{{preference.tagDisclosure.recipientLabel}}</view>

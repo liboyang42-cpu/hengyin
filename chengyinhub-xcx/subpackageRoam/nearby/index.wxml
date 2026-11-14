@@ -259,7 +259,7 @@
             <block wx:if="{{poiCard.quotes.length}}">
               <view class="pb__rv-h"><text>网上怎么说</text></view>
               <scroll-view class="pb__hs" scroll-x enhanced show-scrollbar="{{false}}"><view class="pb__hs-track">
-                <view class="pb__qt" wx:for="{{poiCard.quotes}}" wx:key="url" data-index="{{index}}" bindtap="onPoiQuote" aria-role="button" aria-label="复制原文链接:{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
+                <view class="pb__qt" wx:for="{{poiCard.quotes}}" wx:key="url" data-index="{{index}}" bindtap="onPoiQuote" aria-role="button" aria-label="复制原文链接：{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">
                   <text class="pb__qt-t">「{{item.text}}」</text>
                   <text class="pb__qt-s">{{item.label}} · 复制原文链接</text>
                 </view>

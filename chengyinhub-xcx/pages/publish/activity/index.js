@@ -1403,7 +1403,7 @@ Page({
         'formData.collaborators': newCollaboratorIds
       });
 
-      cyToast.success(`已添加: ${selectedUser.nickname}`);
+      cyToast.success(`已添加： ${selectedUser.nickname}`);
     } else {
       cyToast('该合作者已添加');
     }
@@ -1425,7 +1425,7 @@ Page({
       'formData.collaborators': newCollaboratorIds
     });
 
-    cyToast.success(`已移除: ${removedUser.nickname}`);
+    cyToast.success(`已移除： ${removedUser.nickname}`);
   },
 
   // 关闭模板弹框
