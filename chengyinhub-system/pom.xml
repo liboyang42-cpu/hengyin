@@ -17,6 +17,12 @@
 
 
     <dependencies>
+
+        <!-- App Attest wire decoding (be-gap-misc native device enrollment); version follows the Jackson BOM. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-cbor</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.apple.itunes.storekit</groupId>
             <artifactId>app-store-server-library</artifactId>
