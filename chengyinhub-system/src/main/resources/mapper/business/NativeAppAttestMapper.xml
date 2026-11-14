@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.NativeAppAttestMapper">
+    <resultMap id="key" type="com.chengyinhub.business.domain.NativeAppAttestKey">
+        <id property="keyId" column="key_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="provider" column="provider"/>
+        <result property="appId" column="app_id"/>
+        <result property="environment" column="environment"/>
+        <result property="publicKeySpki" column="public_key_spki" jdbcType="VARBINARY"/>
+        <result property="receipt" column="receipt" jdbcType="BLOB"/>
+        <result property="assertionCounter" column="assertion_counter"/>
+        <result property="status" column="status"/>
+        <result property="bundleVersion" column="bundle_version"/>
+        <result property="distributionCategory" column="distribution_category"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    <resultMap id="challenge" type="com.chengyinhub.business.domain.NativeAppAttestChallenge">
+        <id property="challengeId" column="challenge_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="keyId" column="key_id"/>
+        <result property="provider" column="provider"/>
+        <result property="appId" column="app_id"/>
+        <result property="environment" column="environment"/>
+        <result property="nonce" column="nonce" jdbcType="VARBINARY"/>
+        <result property="issuedAt" column="issued_at"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="consumedAt" column="consumed_at"/>
+        <result property="requestDigest" column="request_digest"/>
+    </resultMap>
+    <resultMap id="guard" type="com.chengyinhub.business.domain.NativeAppAttestGuard">
+        <id property="memberId" column="member_id"/>
+        <result property="dayKey" column="day_key"/>
+        <result property="issuedCount" column="issued_count"/>
+        <result property="lastIssuedAt" column="last_issued_at"/>
+    </resultMap>
+    <insert id="ensureGuard">
+        insert ignore into native_app_attest_guard(member_id,day_key,issued_count,last_issued_at)
+        values(#{memberId},'1970-01-01',0,0)
+    </insert>
+    <select id="lockGuard" resultMap="guard">
+        select * from native_app_attest_guard where member_id=#{memberId} for update
+    </select>
+    <update id="updateGuard">
+        update native_app_attest_guard set day_key=#{dayKey},issued_count=#{issuedCount},last_issued_at=#{lastIssuedAt}
+        where member_id=#{memberId}
+    </update>
+    <select id="countActiveKeys" resultType="int">
+        select count(*) from native_app_attest_key where member_id=#{memberId} and status='ACTIVE'
+    </select>
+    <select id="selectKey" resultMap="key">
+        select * from native_app_attest_key where member_id=#{memberId} and key_id=#{keyId}
+    </select>
+    <select id="lockKey" resultMap="key">
+        select * from native_app_attest_key where member_id=#{memberId} and key_id=#{keyId} for update
+    </select>
+    <insert id="insertKey">
+        insert into native_app_attest_key(key_id,member_id,provider,app_id,environment,public_key_spki,receipt,
+            assertion_counter,status,bundle_version,distribution_category,created_at,updated_at)
+        values(#{keyId},#{memberId},#{provider},#{appId},#{environment},#{publicKeySpki},#{receipt},
+            #{assertionCounter},#{status},#{bundleVersion},#{distributionCategory},#{createdAt},#{updatedAt})
+    </insert>
+    <update id="advanceCounter">
+        update native_app_attest_key set assertion_counter=#{newCounter},updated_at=#{now}
+        where member_id=#{memberId} and key_id=#{keyId} and status='ACTIVE'
+          and assertion_counter=#{oldCounter} and #{newCounter} &gt; assertion_counter
+          and #{newCounter} &lt;= 4294967295
+    </update>
+    <update id="revokeKey">
+        update native_app_attest_key set status='REVOKED',updated_at=#{now}
+        where member_id=#{memberId} and key_id=#{keyId} and status='ACTIVE'
+    </update>
+    <insert id="insertChallenge">
+        insert into native_app_attest_challenge(challenge_id,member_id,key_id,provider,app_id,environment,
+            nonce,issued_at,expires_at,consumed_at,request_digest)
+        values(#{challengeId},#{memberId},#{keyId},#{provider},#{appId},#{environment},
+            #{nonce},#{issuedAt},#{expiresAt},null,null)
+    </insert>
+    <select id="lockChallenge" resultMap="challenge">
+        select * from native_app_attest_challenge where member_id=#{memberId} and challenge_id=#{challengeId} for update
+    </select>
+    <update id="consumeChallenge">
+        update native_app_attest_challenge set consumed_at=#{now},request_digest=#{requestDigest}
+        where member_id=#{memberId} and challenge_id=#{challengeId} and consumed_at is null and expires_at &gt; #{now}
+    </update>
+    <delete id="pruneChallenges">
+        delete from native_app_attest_challenge where member_id=#{memberId} and expires_at &lt; #{cutoff}
+    </delete>
+</mapper>

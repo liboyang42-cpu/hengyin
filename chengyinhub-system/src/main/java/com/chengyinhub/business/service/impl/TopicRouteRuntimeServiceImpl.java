@@ -475,6 +475,36 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     }
 
     /** 本局状态写回前先结算伏笔:选项标签、判定成败、到站都可能刚让某个伏笔满足条件。 */
+    /**
+     * be-gap-misc home return (app NativeHomeReturnService): the run's HP as {current, max} from its frozen rules, or null
+     * when the run is not in progress or has no HP. Read only.
+     */
+    public long[] homeReturnHp(TopicRouteSession session) {
+        if (session == null || !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) return null;
+        JourneyRules rules;
+        try { rules = sessionRules(session); } catch (RuntimeException unusable) { return null; }
+        if (!rules.hasRuntimeState() || !rules.getHp().isEnabled() || rules.getHp().getMax() <= 0) return null;
+        int current = hpOf(readEngineState(session.getStateJson()), rules);
+        return new long[] { Math.max(0, Math.min(current, rules.getHp().getMax())), rules.getHp().getMax() };
+    }
+
+    /**
+     * be-gap-misc home return restore: sets sys.hp to the run's frozen maximum on a session the caller has locked
+     * ({@code selectAccessibleByIdForUpdate}), through the same state CAS as every runtime write (version + 1).
+     * Returns false when the CAS lost (the run moved on or ended). Nothing else in the state changes.
+     */
+    public boolean restoreHomeReturnHp(TopicRouteSession locked) {
+        long[] hp = homeReturnHp(locked);
+        if (hp == null) return false;
+        TopicRouteEngine.State state = readEngineState(locked.getStateJson());
+        state.getVariables().put(SYS_HP, Integer.valueOf((int) hp[1]));
+        locked.setStateJson(write(state));
+        locked.setUpdateTime(new Date());
+        if (routeMapper.updateStateCas(locked) != 1) return false;
+        locked.setVersion(locked.getVersion() + 1);
+        return true;
+    }
+
     private String writeSettled(TopicRouteSession session, TopicRouteEngine.State state) {
         JourneyRules rules = sessionRules(session);
         if (rules.getThoughts().size() > 0) settleThoughts(state, rules);
