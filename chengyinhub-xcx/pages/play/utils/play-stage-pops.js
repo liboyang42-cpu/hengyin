@@ -79,6 +79,8 @@ function methods() {
         : origin === 'card' ? (this.data.advancedPlay && this.data.advancedPlay.node)
         : (this.data.nodes || []).find((n) => String(n.nodeId) === String(ds.nodeid));
       if (!node) return;
+      if (origin === 'sheet' && node.hasAdvanced && this._advancedReadyNodeId === node.nodeId
+          && [0, 5, 8, 9, 10].includes(Number(node.vm))) { this.startGame(); return; }
       if (origin === 'story') {
         const entry = (this.data.chapterParas || []).find((p) => p.kind === 'game' && String(p.nodeId) === String(node.nodeId));
         if (!entry || !this._isStoryGame(node) || node.done) { this.startStoryGame(e); return; }

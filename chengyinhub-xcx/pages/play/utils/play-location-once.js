@@ -7,6 +7,7 @@
 const cyModal = require('../../../utils/modal.js');
 const cyToast = require('../../../utils/toast.js');
 const arrivalReading = require('./arrival-reading.js');
+const storyResume = require('./story-resume.js');
 
 /** 开局定位读数超过这个年纪就先重取一次再判 300 米(站着不动的玩家,最近一次定位事件可能是几分钟前) */
 const STALE_FIX_MS = 45000;
@@ -51,6 +52,18 @@ function methods() {
     /** requestPlayLocation 的前置:返回 true = 这一局已经问过,不再弹说明 */
     _locationAskedOnce() {
       if (this._locSilent) return false;
+      const scope = this._runSessionScope && this._runSessionScope();
+      const key = scope && scope.routeSessionId ? JSON.stringify(scope) : '';
+      if (key && this._locationPromptScope !== key) {
+        this._locationPromptScope = key;
+        this._locAsked = false;
+        this._playLocationDeclined = storyResume.read(scope).locationDeclined === true;
+      }
+      if (this._playLocationDeclined) {
+        this._locAsked = true;
+        this.setData({ locAsked: true, gpsOk: false, gpsHint: '定位未开启 · 可扫码完成到达' });
+        return true;
+      }
       if (!this._locAsked) { this._locAsked = true; this.setData({ locAsked: true }); return false; }
       this._recheckLocationSetting();
       return true;
@@ -81,7 +94,9 @@ function methods() {
     },
     /** 站点卡「开启定位」:系统已拒绝 → 去设置;从没问过系统 → 重新给一次用途说明 */
     onEnableLocation() {
+      if (this._isPlayAccountCurrent && !this._isPlayAccountCurrent()) return;
       this._playLocationDeclined = false;
+      if (this._runSessionScope) storyResume.patch(this._runSessionScope(), { locationDeclined: false });
       if (typeof wx.getSetting !== 'function') return;
       wx.getSetting({
         success: (r) => {

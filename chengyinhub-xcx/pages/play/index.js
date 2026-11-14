@@ -5198,6 +5198,7 @@ Page({
         if (!result.confirm) {
           unavailable('定位未开启 · 可扫码完成到达');
           that._playLocationDeclined = true; that._loc = null;
+          storyResume.patch(that._runSessionScope(), { locationDeclined: true });
           that._stopTracking();
           return;
         }
@@ -7732,6 +7733,8 @@ Page({
       && context.sessionKey === this._sessionKey() && String((this.data.chapter || {}).id) === String((context.chapter || {}).id)
       && this.data.advancedPlay === active && active.show && this._advancedGameComponent() === component;
     const current = () => this._advancedSessionContext === context && scopeCurrent();
+    const qaKey = this._qaInputKey(view.sessionId, active.node.nodeId);
+    const submitted = this._qaTypedInputs && this._qaTypedInputs[qaKey];
     if (this._applyR5AdvancedView(view)) return;
     if (this._themeChallengeNodeId === Number(active.node.nodeId)) {
       const kit = pickPlayKit(view, new Date());
@@ -7762,6 +7765,7 @@ Page({
     view = Object.assign({}, view, { plainOutcome: !((this.data.themeBag || {}).quests || []).length, clueTransform: ((placeNode && placeNode.advancedConfig) || {}).clueTransform }); // 没有通用局:结果反馈没过在本站重来;UG-10 谜面变换模式只在节点公开投影里
     const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName }), new Date()); if (picked && picked.type === 'hangman' && placeNode) Object.assign(picked, hangmanStationText(picked, placeNode, stationLabel(playerTitle(placeNode.gameTitle || placeNode.name)))); // 逐字猜词服务端不一定带题面:缺时用本站题干/站名摆在格子上方,解开后接本站文字反馈
     const kit = dailySignRevealState(previous, picked);
+    if (kit && kit.type === 'qa' && kit.passed && submitted && submitted.accepted) kit.acceptedInput = submitted.input;
     if (kit && kit.type === 'album' && !kit.done && kit.sessionId === previous.sessionId && kit.version === previous.version) kit.uploaded = !!previous.uploaded;
     if (!kit) { this.setData({ playKit: { show: false, kit: null } }); return; }
     /* 内嵌(契约 §1.5):不弹整屏那一层 —— 它已经长在故事流里了(见 openChapterFull 的
@@ -8012,6 +8016,13 @@ Page({
       && context.active.show && this._advancedGameComponent() === context.component
       && kit.type === 'typein' && pending.sessionId === kit.sessionId;
   },
+  _qaInputKey(sessionId, nodeId) {
+    if (!this._isPlayAccountCurrent() || !sessionId || !nodeId) return '';
+    const scope = this._runSessionScope();
+    if (!scope.routeSessionId) return '';
+    return JSON.stringify([scope, this._capturePlayLoginContext().generation, String(sessionId), String(nodeId)]);
+  },
+
   _submitPlayKitAction(action, detail) {
     const kit = this._kit();
     if (kit.type === 'album' && ['shoot', 'submit'].includes(action)) {
@@ -8089,6 +8100,29 @@ Page({
       }
       cyToast('开始计时还未确认，请先确认结果');
       return;
+    }
+    if (kit.type === 'qa' && kit.mode === 'type' && action === 'submit' && !kit.passed
+        && typeof payload.input === 'string' && !(game.data || {}).acting && !(game.data || {}).unknown) {
+      const key = this._qaInputKey(kit.sessionId, (this.data.advancedPlay.node || {}).nodeId);
+      const state = (game.data || {}).state || {};
+      if (key && String(state.sessionId) === String(kit.sessionId) && Number(state.version) === Number(kit.version)) {
+        this._qaTypedInputs = this._qaTypedInputs || {};
+        const submitted = this._qaTypedInputs[key] = { input: payload.input, accepted: false };
+        Promise.resolve(game.action(name, payload)).then(ok => {
+          const result = (game.data || {}).state || {};
+          if (this._qaInputKey(kit.sessionId, (this.data.advancedPlay.node || {}).nodeId) !== key
+              || this._qaTypedInputs[key] !== submitted) return;
+          // 只认原提交的确定回包，不拿之后的照片版本推断答案已接受。
+          if (ok !== true || Number(result.version) !== Number(kit.version) + 1 || !(result.playKit && result.playKit.qa && result.playKit.qa.passed)) {
+            delete this._qaTypedInputs[key]; return;
+          }
+          submitted.accepted = true;
+          const current = this._kit();
+          if (current.type === 'qa' && current.passed && String(current.sessionId) === String(kit.sessionId))
+            this.setData({ 'playKit.kit.acceptedInput': submitted.input });
+        }, () => { if (this._qaTypedInputs[key] === submitted) delete this._qaTypedInputs[key]; });
+        return;
+      }
     }
     game.action(name, payload);
   },

@@ -324,7 +324,8 @@ Component({
         if (status >= 400 && status < 500 && status !== 408) {
           wx.removeStorageSync(pendingKey);
           this._unknownCommand = null;
-          this.setData({ acting: false, error: safeUserMessage(res, '操作失败，请重试') });
+          this.setData({ acting: false, error: res.data && res.data.reason === 'PHOTO_MODEL_CONSENT_REQUIRED'
+            ? '' : safeUserMessage(res, '操作失败，请重试') });
           this.emitActionFail(name, sessionId, res.data && res.data.reason);
           return false;
         }

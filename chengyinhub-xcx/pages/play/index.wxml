@@ -165,7 +165,7 @@
   </view>
   <canvas type="2d" id="stBack" class="fx-story__dust"></canvas><view class="look-tex"></view>
   <view class="chfull__stage">
-    <scroll-view class="chfull__scroll st-scroll" scroll-y enhanced bounces show-scrollbar="{{false}}"
+    <scroll-view class="chfull__scroll st-scroll" style="--chfull-fade-end:max(340rpx, calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-4)))" scroll-y enhanced bounces show-scrollbar="{{false}}"
                  bindscroll="onChapterScroll" scroll-into-view="{{chapterGameAnchor}}" scroll-with-animation>
       <view class="chfull__pad"></view>
       <!-- ⚠️ 外层 .chfull__para 每项一个,不能按类型拆成不同类名:measureChapter 用

@@ -583,6 +583,7 @@ function pickPlayKit(view, now) {
         multi: seg.judge !== false && !!seg.multi,
         judge: seg.judge !== false,
         failureSeq: 0,
+        acceptedInput: '', // 仅由页面按原局/本站补入玩家本人已通过的输入。
         answerText: seg.finished ? tidyText(seg.answerText || '') : '',
         lastOptionId: seg.lastOptionId || '',
         lastOptionIds: seg.lastOptionIds || [],

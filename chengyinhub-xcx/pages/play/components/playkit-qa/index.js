@@ -56,6 +56,7 @@ Component({
     inline: { type: Boolean, value: false },   // 故事流里就地玩:过了之后往下走用故事流自己的「继续故事」,本屏不再出第二个「继续」
     show: { type: Boolean, value: false },
     mode: { type: String, value: 'type' },        // type | pick | shot
+    acceptedInput: { type: String, value: '' },
     sessionId: { type: String, value: '' },      // Original runtime identity; never a client-generated business ID.
     nodeId: { type: String, value: '' },
     theme: { type: String, value: 'dark' },       // dark | light
@@ -116,6 +117,9 @@ Component({
     ctaDisabled: true,
   },
   observers: {
+    acceptedInput(value) {
+      if (value && this.data.mode === 'type' && this.data.passed) this.setData({ typed: value });
+    },
     /* P-10:故事流里的打字题,页面不调 settle(),判过只回流 attempts / feedbackText。
        次数涨了且仍没过 = 刚答错:清掉输入框、描红、写一句;首次挂载(_seenTypeAttempts 未定)不算。 */
     attempts: function (value) {
@@ -170,7 +174,7 @@ Component({
         picGrid: mode === 'pick' && opts.some(o => !!o.img),
         /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
            没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */
-        typed: !fresh && passed ? (this._submittedText || this.data.typed) : '', feedback: (passed || finished || this.data.attempts > 0)
+        typed: passed ? (this.data.acceptedInput || (!fresh && (this._submittedText || this.data.typed)) || '') : '', feedback: (passed || finished || this.data.attempts > 0)
           ? (this.data.feedbackText || (mode === 'type' && !passed && !finished && this.data.attempts > 0 && this.data.authoredOutcome !== 'FAIL' ? RETRY_TEXT : '')) : '',
         typeWrong: mode === 'type' && !passed && !finished && this.data.attempts > 0,
         shownFeedbackImages: (passed || finished || this.data.attempts > 0)

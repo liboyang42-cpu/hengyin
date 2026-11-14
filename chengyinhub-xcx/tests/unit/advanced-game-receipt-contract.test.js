@@ -740,6 +740,7 @@ test('照片明确缺同意走真实 abnormal 回调：清 pending 并带机器�
   assert.equal(await game.action('SUBMIT_PHOTO_CHECK', photoInput()), false);
   assert.equal(posts, 1); assert.equal(disk.size, 0); assert.equal(game.data.unknown, false);
   assert.equal(game._unknownCommand, null);
+  assert.equal(game.data.error, '', '重新确认同意属于正常步骤，不打开错误面板');
   assert.deepEqual(events, [{ name: 'actionfail', detail: { action: 'SUBMIT_PHOTO_CHECK', sessionId: 42,
     reason: 'PHOTO_MODEL_CONSENT_REQUIRED' } }]);
 });
