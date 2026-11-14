@@ -157,6 +157,18 @@
           </div>
           <el-alert v-if="detailTask.bizType === 'COMMUNITY_POST' && communityMediaPreviewError" :title="communityMediaPreviewError" type="warning" :closable="false" show-icon />
           <el-button v-if="detailTask.bizType === 'MEDIA_ASSET' || detailTask.bizType === 'COMMUNITY_POST' || appealAttachments.length" size="mini" @click="openDetail(detailRow)">刷新五分钟预览</el-button>
+          <el-descriptions v-if="detailUnifiedStatus" title="统一状态核对（status / checkStatus / userStatus / lifecycle）" :column="2" border size="mini" style="margin: 12px 0">
+            <el-descriptions-item label="审核状态">{{ unifiedCheckLabel }}</el-descriptions-item>
+            <el-descriptions-item label="用户端可见">{{ unifiedUserLabel }}</el-descriptions-item>
+            <el-descriptions-item label="运营阶段">{{ unifiedLifecycleLabel }}</el-descriptions-item>
+            <el-descriptions-item label="当前公开版本">{{ detailPublishedSnapshot && (detailPublishedSnapshot.revisionNo != null ? `r${detailPublishedSnapshot.revisionNo}` : detailPublishedSnapshot.publishedConfigVersion != null ? `v${detailPublishedSnapshot.publishedConfigVersion}` : '未公开') }}</el-descriptions-item>
+          </el-descriptions>
+          <el-table v-if="detailRevisionDiff.length" :data="detailRevisionDiff" size="mini" border style="margin-bottom: 12px">
+            <el-table-column label="差异字段" prop="field" width="130" />
+            <el-table-column label="当前公开版" prop="publishedValue" />
+            <el-table-column label="被审版" prop="reviewedValue" />
+          </el-table>
+          <play-help-readonly-panel v-if="detailTask && ['TOPIC', 'TOPIC_PROJECT_REVIEW', 'TOPIC_SALE_REVIEW'].includes(detailTask.bizType)" :topic-id="detailTask.bizId" />
           <cy-evidence-panel title="内容快照" :items="auditEvidenceItems" empty-text="当前任务没有附带内容快照" />
           <cy-timeline title="处置轨迹" :items="auditTimelineItems" empty-text="尚无处置记录" />
         </template>
@@ -235,6 +247,7 @@ import CyFilterBar from '@/components/CyFilterBar'
 import CyPageHeader from '@/components/CyPageHeader'
 import CyStatusTag from '@/components/CyStatusTag'
 import CyTimeline from '@/components/CyTimeline'
+import PlayHelpReadonlyPanel from '@/components/PlayHelpReadonlyPanel'
 
 const STATUS_PENDING = 0
 const STATUS_APPROVED = 1
@@ -265,7 +278,7 @@ const TEAM_STATUS = { 0: '招募中', 1: '已满员', 2: '进行中', 3: '已结
 
 export default {
   name: 'BusinessAuditWorkbench',
-  components: { CyDataTable, CyEntityHeader, CyEntityLink, CyEvidencePanel, CyFilterBar, CyPageHeader, CyStatusTag, CyTimeline },
+  components: { CyDataTable, CyEntityHeader, CyEntityLink, CyEvidencePanel, CyFilterBar, CyPageHeader, CyStatusTag, CyTimeline, PlayHelpReadonlyPanel },
   data() {
     return {
       loading: false,
@@ -289,6 +302,10 @@ export default {
       appealAttachmentsPreviewDenied: false,
       mediaType: '',
       detailRecords: [],
+      detailUnifiedStatus: null,
+      detailPublishedSnapshot: null,
+      detailReviewedSnapshot: null,
+      detailRevisionDiff: [],
       tableColumns: [
         { key: 'subject', label: '审核对象', minWidth: 210 },
         { key: 'risk', label: '风险与来源', minWidth: 180 },
@@ -342,6 +359,18 @@ export default {
     auditReviewer() { return String(this.$store.getters.id || '') + ':' + String(this.$store.getters.token || '') },
     appealAttachmentImageUrls() {
       return this.appealAttachments.filter(item => item.mediaType === 'IMAGE' && item.previewUrl).map(item => item.previewUrl)
+    },
+    unifiedCheckLabel() {
+      const st = this.detailUnifiedStatus && (this.detailUnifiedStatus.checkStatus !== null && this.detailUnifiedStatus.checkStatus !== undefined ? this.detailUnifiedStatus.checkStatus : this.detailUnifiedStatus.status)
+      return ({ 0: '待审核', 1: '审核通过', 2: '审核驳回', 3: '升级审核', 4: '已取消' })[st] || '状态待确认'
+    },
+    unifiedUserLabel() {
+      const us = this.detailUnifiedStatus && this.detailUnifiedStatus.userStatus
+      return ({ 0: '用户端未上架', 1: '用户端已上架' })[us] || '用户端状态未定义'
+    },
+    unifiedLifecycleLabel() {
+      const lc = this.detailUnifiedStatus && this.detailUnifiedStatus.lifecycle
+      return ({ 0: '草稿', 1: '招募中', 2: '待定价', 3: '售票中', 4: '进行中', 5: '结算中', 6: '已关闭' })[lc] || '—'
     },
     auditHeaderFacts() {
       if (!this.detailTask) return []
@@ -488,6 +517,10 @@ export default {
       this.appealAttachments = []
       this.appealAttachmentsPreviewDenied = false
       this.detailRecords = []
+      this.detailUnifiedStatus = null
+      this.detailPublishedSnapshot = null
+      this.detailReviewedSnapshot = null
+      this.detailRevisionDiff = []
       this.reportCount = 0
       return getAuditTaskDetail(row.id).then(response => {
         if (requestSeq !== this.detailRequestSeq || !this.detailOpen) return
@@ -511,6 +544,10 @@ export default {
         this.appealAttachmentsPreviewDenied = response.appealAttachmentsPreviewDenied === true
         this.detailTask = response.task
         this.detailRecords = response.records
+        this.detailUnifiedStatus = response.unifiedStatus || null
+        this.detailPublishedSnapshot = response.publishedSnapshot || null
+        this.detailReviewedSnapshot = response.reviewedSnapshot || null
+        this.detailRevisionDiff = Array.isArray(response.revisionDiff) ? response.revisionDiff : []
         this.reportCount = response.reportCount
       }).catch(() => {
         if (requestSeq === this.detailRequestSeq && this.detailOpen) this.detailError = '审核证据加载失败，请重新加载。'
@@ -712,7 +749,10 @@ export default {
         this.getList()
       } catch (e) {
         if (owner !== this.auditReviewer || owner !== this.reviewOwner) return
-        this.reviewError = (e && e.message || '审核结果待确认') + '；原输入已保留。'
+        const isConflict = e && (e.code === 409 || e.errorCode === 'AUDIT_SNAPSHOT_STALE' || /冲突|过期|STALE/i.test(String(e.message || '')))
+        this.reviewError = isConflict
+          ? '审核版本冲突：已有他人先行处理，请点击「重新读取事实」查看最终结果（原输入已保留，未自动重试）。'
+          : (e && e.message || '审核结果待确认') + '；原输入已保留。'
         // Only a first attempt rejected before any write can return to editing. An UNKNOWN retry stays frozen.
         if (e && e.auditCode === 400 && !this.reviewWasUnknown) { this.reviewFrozen = false; this.reviewCommand = null }
         else if (this.reviewCommand) this.reviewWasUnknown = true

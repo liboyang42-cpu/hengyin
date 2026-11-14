@@ -764,7 +764,8 @@ export default {
     auditStatusLabel(value) {
       if (value === 0) return '待审核'
       if (value === 1) return '审核通过'
-      if (value === 2) return '审核失败'
+      if (value === 2) return '审核驳回'
+      if (value === 3) return '升级审核'
       return '待确认'
     },
 

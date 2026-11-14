@@ -170,6 +170,7 @@ public class AuditWorkbenchController extends BaseController {
         }
         appendAppealAttachments(ajax, task, records);
         appendJourneyReviewTexts(ajax, task);
+        appendRevisionAndUnifiedStatus(ajax, task);
         return ajax;
     }
 
@@ -220,6 +221,9 @@ public class AuditWorkbenchController extends BaseController {
 
     @org.springframework.beans.factory.annotation.Autowired
     private com.chengyinhub.business.service.impl.AppMediaAssetService appMediaAssetService;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.mapper.CmsTopicContentRevisionMapper topicContentRevisionMapper;
 
     private AuditTask auditTaskForRead(AuditTask task) {
         if (task == null || !AuditTask.BIZ_COMMUNITY_POST.equals(task.getBizType())) return task;
@@ -428,4 +432,95 @@ public class AuditWorkbenchController extends BaseController {
         }
         return "SYS_USER";
     }
+
+    /**
+     * U03-04 & UG-12: 追加当前公开版、被审版与字段级差异，并统一 status/checkStatus/userStatus/lifecycle 口径。
+     * 只读派生，不改写任何实体或历史审核证据；无主题/模板读取权限时安全降级。
+     */
+    private void appendRevisionAndUnifiedStatus(AjaxResult ajax, AuditTask task) {
+        if (task == null) return;
+        java.util.Map<String, Object> unified = new java.util.LinkedHashMap<>();
+        java.util.Map<String, Object> published = new java.util.LinkedHashMap<>();
+        java.util.Map<String, Object> reviewed = new java.util.LinkedHashMap<>();
+        java.util.List<java.util.Map<String, Object>> diff = new java.util.ArrayList<>();
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode reviewedTree = null;
+        if (task.getSnapshotJson() != null && !task.getSnapshotJson().trim().isEmpty()) {
+            try {
+                reviewedTree = mapper.readTree(task.getSnapshotJson());
+            } catch (Exception ignored) {
+                reviewedTree = null;
+            }
+        }
+        String bizType = task.getBizType();
+        if (AuditTask.BIZ_TOPIC.equals(bizType)
+                || AuditTask.BIZ_TOPIC_PROJECT_REVIEW.equals(bizType)
+                || AuditTask.BIZ_TOPIC_SALE_REVIEW.equals(bizType)) {
+            CmsTopic topic = cmsTopicService == null ? null : cmsTopicService.selectCmsTopicById(task.getBizId());
+            if (topic != null) {
+                unified.put("targetType", "TOPIC");
+                unified.put("topicId", topic.getId());
+                unified.put("status", topic.getStatus());
+                unified.put("checkStatus", topic.getCheckStatus());
+                unified.put("userStatus", topic.getUserStatus());
+                unified.put("merchantStatus", topic.getMerchantStatus());
+                unified.put("lifecycle", topic.getLifecycle());
+                unified.put("configVersion", topic.getConfigVersion());
+                unified.put("publishedConfigVersion", topic.getPublishedConfigVersion());
+                published.put("name", topic.getName());
+                published.put("publishedConfigVersion", topic.getPublishedConfigVersion());
+                published.put("lifecycle", topic.getLifecycle());
+                published.put("checkStatus", topic.getCheckStatus());
+                published.put("userStatus", topic.getUserStatus());
+                if (topicContentRevisionMapper != null) {
+                    com.chengyinhub.business.domain.CmsTopicContentRevision rev =
+                            topicContentRevisionMapper.selectLatestByTopicId(topic.getId());
+                    if (rev != null) {
+                        published.put("revisionNo", rev.getRevisionNo());
+                        published.put("contentSha256", rev.getContentSha256());
+                        published.put("origin", rev.getOrigin());
+                        published.put("createTime", rev.getCreateTime());
+                    }
+                }
+            }
+        } else if (AuditTask.BIZ_TEMPLATE.equals(bizType)
+                || AuditTask.BIZ_MERCHANT_NODE_TEMPLATE.equals(bizType)) {
+            CmsMemberTemplate tpl = cmsMemberTemplateService == null
+                    ? null : cmsMemberTemplateService.selectCmsMemberTemplateById(task.getBizId());
+            if (tpl != null) {
+                unified.put("targetType", "TEMPLATE");
+                unified.put("templateId", tpl.getId());
+                unified.put("status", tpl.getStatus());
+                unified.put("checkStatus", tpl.getStatus());
+                unified.put("userStatus", tpl.getPublishStatus());
+                published.put("title", tpl.getTitle());
+                published.put("status", tpl.getStatus());
+                published.put("publishStatus", tpl.getPublishStatus());
+                published.put("validationMethod", tpl.getValidationMethod());
+            }
+        }
+        if (reviewedTree != null && reviewedTree.isObject()) {
+            for (String key : new String[]{"name", "title", "description", "lifecycle", "status", "checkStatus", "userStatus", "publishStatus", "validationMethod", "configVersion"}) {
+                if (reviewedTree.has(key) && !reviewedTree.get(key).isNull()) {
+                    reviewed.put(key, reviewedTree.get(key).asText());
+                }
+            }
+            for (String key : new String[]{"name", "title", "lifecycle", "checkStatus", "userStatus", "publishStatus", "validationMethod"}) {
+                String pubVal = published.get(key) == null ? null : String.valueOf(published.get(key));
+                String revVal = reviewed.get(key) == null ? null : String.valueOf(reviewed.get(key));
+                if ((pubVal != null || revVal != null) && !java.util.Objects.equals(pubVal, revVal)) {
+                    java.util.Map<String, Object> item = new java.util.LinkedHashMap<>();
+                    item.put("field", key);
+                    item.put("publishedValue", pubVal == null ? "—" : pubVal);
+                    item.put("reviewedValue", revVal == null ? "—" : revVal);
+                    diff.add(item);
+                }
+            }
+        }
+        ajax.put("unifiedStatus", unified);
+        ajax.put("publishedSnapshot", published);
+        ajax.put("reviewedSnapshot", reviewed);
+        ajax.put("revisionDiff", diff);
+    }
+
 }
