@@ -8107,9 +8107,9 @@ Page({
       const consentScope = String(this._playMember()) + '|' + this._sessionKey() + '|' + (runId == null ? '' : runId);
       let storedScope = '';
       try { storedScope = runId == null ? '' : (wx.getStorageSync(PHOTO_CONSENT_SCOPE_KEY) || ''); } catch (e) { storedScope = ''; }
-      const consent = this._photoConsentScope === consentScope || storedScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', () => !operation.isAborted() && this._kitPhotoIntent === intent);   // 同意弹窗期间页面状态可能刷新:只认「这次拍照仍在途」,题目是否变了在同意之后再判
+      const consent = this._photoConsentScope === consentScope || storedScope === consentScope ? Promise.resolve() : app.requestSeparateConsent('photo', consentCurrent);
       consent.then(() => {
-        if (!consentCurrent()) { const quiet = operation.isAborted(); settle(); operation.finish(); if (!quiet) cyToast('题目已变化，请重新拍一张'); return; }
+        if (!consentCurrent()) { settle(); operation.finish(); return; }
         this._photoConsentScope = consentScope;
         if (runId != null) { try { wx.setStorageSync(PHOTO_CONSENT_SCOPE_KEY, consentScope); } catch (e) { /* 存不下只是下次重进会再问一次 */ } }
         upload();

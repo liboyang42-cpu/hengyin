@@ -70,13 +70,11 @@ test('浅色纸面:退出叉、打字、答对回执条读外观墨色,暗色外
   assert.match(qa, /\.qa__fb--ok \{ background: var\(--pk-embed-fb-bg, var\(--cy-color-status-success-soft\)\)/)
 })
 
-test('拍照检查:同意弹窗期间只认拍照仍在途,新一次尝试与通过都清掉旧错误', () => {
+test('拍照检查:新一次尝试与通过都清掉旧的上传失败', () => {
   const pc = read('pages/play/components/playkit-photocheck/index.js')
   assert.match(pc, /uploadFail: passed \? '' : this\.data\.uploadFail/)
   assert.match(pc, /busy: false, framing: false, uploadFail: ''/)
   assert.match(read('pages/play/components/playkit-photocheck/index.wxml'), /uploadFail && !verdict && !passed/)
-  const page = read('pages/play/index.js')
-  assert.match(page, /app\.requestSeparateConsent\('photo', \(\) => !operation\.isAborted\(\) && this\._kitPhotoIntent === intent\)/)
 })
 
 test('本局档案照片说明单行省略,不再孤字换行', () => {
