@@ -13,9 +13,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.chengyinhub.business.domain.PmsProduct;
+import com.chengyinhub.business.domain.dto.ai.MerchantAuthoringConfirmation;
+import com.chengyinhub.business.domain.dto.ai.MerchantAuthoringFactsReference;
 import com.chengyinhub.business.domain.vo.ai.NpcChatResp;
 import com.chengyinhub.business.merchantgap.MerchantGapException;
 import com.chengyinhub.business.merchantgap.MerchantGapSupport;
+import com.chengyinhub.business.service.ai.MerchantAuthoringFactsService;
+import com.chengyinhub.business.service.ai.MerchantAuthoringRecordService;
 import com.chengyinhub.business.service.impl.NpcChatService;
 import com.chengyinhub.business.service.merchantauthoring.MerchantAuthoringService;
 import com.chengyinhub.business.service.merchantauthoring.MerchantAuthoringService.Request;
@@ -46,6 +51,62 @@ public class ApiMerchantAuthoringController extends BaseController {
 
     @Autowired
     private NpcChatService npcChat;
+
+    @Autowired
+    private MerchantAuthoringFactsService storeFacts;
+
+    @Autowired
+    private MerchantAuthoringRecordService records;
+
+    // ---- W05 source producer: owned store facts, then an explicit new-draft confirmation of a recorded candidate ----
+
+    @PostMapping("/catalog")
+    public AjaxResult catalog(@RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum, HttpServletResponse response) {
+        noStore(response);
+        try {
+            if (pageNum == null || pageNum <= 0 || pageNum > Integer.MAX_VALUE / 20 + 1) throw new ServiceException("分页参数不合法", 400);
+            Long principal = getAppUserId();
+            java.util.List<PmsProduct> rows = storeFacts.listMine(principal, pageNum);
+            com.chengyinhub.common.core.page.TableDataInfo page = getDataTable(rows);
+            page.setRows(storeFacts.projectCatalog(principal, rows));
+            return AjaxResult.success(page);
+        } catch (ServiceException ex) {
+            return fail(response, ex);
+        }
+    }
+
+    @PostMapping("/product")
+    public AjaxResult product(@RequestBody(required = false) MerchantAuthoringFactsReference body, HttpServletResponse response) {
+        noStore(response);
+        try {
+            if (body == null) throw new ServiceException("商品事实参数不合法", 400);
+            return AjaxResult.success(storeFacts.product(getAppUserId(), body.getProductId()));
+        } catch (ServiceException ex) {
+            return fail(response, ex);
+        }
+    }
+
+    @PostMapping("/facts")
+    public AjaxResult storeFacts(@RequestBody(required = false) MerchantAuthoringFactsReference body, HttpServletResponse response) {
+        noStore(response);
+        try {
+            if (body == null) throw new ServiceException("商品事实参数不合法", 400);
+            return AjaxResult.success(storeFacts.facts(getAppUserId(), body.getProductId(), body.getSkuId()));
+        } catch (ServiceException ex) {
+            return fail(response, ex);
+        }
+    }
+
+    /** Confirms a recorded candidate into a new MERCHANT draft + immutable source row (what draft-selection lists). */
+    @PostMapping("/draft")
+    public AjaxResult confirmDraft(@RequestBody(required = false) MerchantAuthoringConfirmation body, HttpServletResponse response) {
+        noStore(response);
+        try {
+            return AjaxResult.success(records.confirm(getAppUserId(), body));
+        } catch (ServiceException ex) {
+            return fail(response, ex);
+        }
+    }
 
     @PostMapping("/jobs")
     public AjaxResult generate(@RequestBody Map<String, Object> body, HttpServletResponse response) {
