@@ -62,18 +62,20 @@
         </scroll-view>
       </view>
 
-      <!-- 剧情:开场白全文 → 每一章(章名 + 一段 + 这一章依次经过的节点),玩家读到的就是这个故事 -->
+      <!-- 剧情:开场白(默认收 4 行,量到更高才出「展开」)→ 每章一张紧凑卡(编号 + 章名 + 一句话)。
+           2026-11-14 业主「太复杂」:章节卡不再列这一章的站点路径,站点只在「能力」里按章分组出卡。 -->
       <view class="xb-block xb-block--lead" wx:if="{{ opening || chapters.length }}">
         <view class="xb-section-title">
           <image class="xb-section-ico" src="/pages/templatedetail/art/3d/book.png" mode="aspectFit" aria-hidden="true" />
           <text>剧情</text>
         </view>
-        <view class="xb-body xb-body--soft" wx:if="{{ opening }}">{{ opening }}</view>
+        <view id="td-opening" class="xb-body xb-body--soft {{ openingExpanded ? '' : 'td-opening--clamp' }}" wx:if="{{ opening }}">{{ opening }}</view>
+        <view class="xb-link-more" wx:if="{{ openingNeedMore || openingExpanded }}" bindtap="toggleOpening" hover-class="cy-pressed" hover-stay-time="80">{{ openingExpanded ? '收起' : '展开' }}</view>
         <view class="st-ch" wx:for="{{ chapters }}" wx:key="key">
-          <view class="st-ch__hd"><text class="st-ch__no" wx:if="{{ item.no }}">{{ item.no }}</text><text class="st-ch__t">{{ item.name }}</text></view>
-          <view class="st-ch__p" wx:if="{{ item.text }}">{{ item.text }}</view>
-          <view class="st-ch__path" wx:if="{{ item.stops.length }}">
-            <view class="st-ch__stop" wx:for="{{ item.stops }}" wx:for-item="stop" wx:key="no"><text class="st-ch__dot">{{ stop.no }}</text><text class="ep1">{{ stop.name }}</text></view>
+          <view class="st-ch__no" wx:if="{{ item.no }}">{{ item.no }}</view>
+          <view class="st-ch__main">
+            <text class="st-ch__t ep1">{{ item.name }}</text>
+            <text class="st-ch__p ep1" wx:if="{{ item.text }}">{{ item.text }}</text>
           </view>
         </view>
       </view>
@@ -119,35 +121,49 @@
       </view>
     </block>
 
-    <!-- ===== 能力:概要一行 + 按站列玩法 ===== -->
+    <!-- ===== 能力:概要数字卡 → 按章分组、每站一张卡 → 采用条件键值卡 =====
+         2026-11-14 业主「能力那块没有排版,要卡片和样式」:概要从一排 chip 改成与详情同款的 xb-stat-card;
+         站点从平铺行改成卡(序号徽标 / 站名 / 玩法药丸带货架道具图 / 玩家做什么两行 / 时长);不可点、无按压态。 -->
     <block wx:if="{{ activeTab === 'capabilities' }}">
       <view class="cap-sum" wx:if="{{ summary.length }}">
-        <text class="xb-chip" wx:for="{{ summary }}" wx:key="*this">{{ item }}</text>
+        <view class="xb-stat-card" wx:for="{{ summary }}" wx:key="label">
+          <view class="xb-stat-value">{{ item.value }}</view>
+          <view class="xb-stat-label">{{ item.label }}</view>
+        </view>
       </view>
-      <view class="cap-list" wx:if="{{ stops.length }}">
-        <view class="cap-stop" wx:for="{{ stops }}" wx:key="no">
-          <view class="cap-stop__no">{{ item.no }}</view>
-          <view class="cap-stop__main">
-            <text class="cap-stop__name ep1" wx:if="{{ item.name }}">{{ item.name }}</text>
-            <text class="cap-stop__game" wx:if="{{ item.game }}">{{ item.game }}</text>
-            <text class="cap-stop__do" wx:if="{{ item.doText }}">{{ item.doText }}</text>
-            <view class="cap-stop__dur" wx:if="{{ item.dur }}"><cy-icon name="clock" size="22" /><text>{{ item.dur }}</text></view>
+      <block wx:if="{{ stops.length }}">
+        <view class="cap-ch" wx:for="{{ stopGroups }}" wx:key="key">
+          <view class="cap-ch__hd" wx:if="{{ item.no || item.name }}">
+            <text class="cap-ch__no" wx:if="{{ item.no }}">{{ item.no }}</text>
+            <text class="cap-ch__t ep1">{{ item.name }}</text>
           </view>
-        </view>
-      </view>
-      <cy-empty wx:else kind="empty" title="暂无玩法安排" sub="" />
-      <!-- U02-01 采用条件:只读 contentDelivery;r2-create(业主「UI需要优化一下」)只画有权威事实的行,没有事实的行不出现 -->
-      <block wx:if="{{ deliveryRows.length }}">
-        <view class="xb-block td-cond-hd">
-          <view class="xb-section-title"><text>采用条件</text></view>
-        </view>
-        <view class="xb-caps td-cond">
-          <view class="xb-caprow" wx:for="{{ deliveryRows }}" wx:key="key">
-            <text class="xb-caprow-k">{{ item.label }}</text>
-            <text class="td-cond-v">{{ item.value }}</text>
+          <view class="cap-card" wx:for="{{ item.stops }}" wx:for-item="stop" wx:key="no">
+            <view class="cap-card__no">{{ stop.no }}</view>
+            <view class="cap-card__main">
+              <text class="cap-card__name ep1">{{ stop.name }}</text>
+              <view class="cap-card__pill" wx:if="{{ stop.game }}">
+                <image wx:if="{{ stop.gameIcon }}" class="cap-card__pill-img" src="{{ stop.gameIcon }}" mode="aspectFit" aria-hidden="true" />
+                <cy-icon wx:else name="play" size="24" />
+                <text class="ep1">{{ stop.game }}</text>
+              </view>
+              <text class="cap-card__do ep2" wx:if="{{ stop.doText }}">{{ stop.doText }}</text>
+              <view class="cap-card__dur" wx:if="{{ stop.dur }}"><cy-icon name="clock" size="22" /><text>{{ stop.dur }}</text></view>
+            </view>
           </view>
         </view>
       </block>
+      <cy-empty wx:else kind="empty" title="暂无玩法安排" sub="" />
+      <!-- U02-01 采用条件:只读 contentDelivery;只画有权威事实的行,没有事实的行不出现。
+           2026-11-14:改成本页家族的分组键值卡(xb-kv-card:标签左 / 值右 / 细分隔线)。 -->
+      <view class="xb-block td-cond" wx:if="{{ deliveryRows.length }}">
+        <view class="xb-section-title"><text>采用条件</text></view>
+        <view class="xb-kv-card">
+          <view class="xb-kv-row" wx:for="{{ deliveryRows }}" wx:key="key">
+            <text class="xb-kv-k">{{ item.label }}</text>
+            <text class="xb-kv-v">{{ item.value }}</text>
+          </view>
+        </view>
+      </view>
     </block>
 
     <view class="xb-scroll-pad"></view>
