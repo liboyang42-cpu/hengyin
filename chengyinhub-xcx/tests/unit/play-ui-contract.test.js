@@ -379,8 +379,8 @@ test('真实游玩定位方法在用途弹窗前和取消后均零 GPS，明确�
   page.requestPlayLocation()
   assert.equal(dialogs.length, 1, 'a declined offer is not repeated in the same run')
   assert.equal(locations.length, 0)
-  page._locAsked = false
-  page.requestPlayLocation()
+  global.wx.getSetting = options => options.success({ authSetting: {} })
+  page.onEnableLocation()
   dialogs[1].success({ confirm: true })
   assert.equal(locations.length, 1, 'positive control must reach the real SDK caller after consent')
   assert.equal(locations[0].type, 'gcj02')

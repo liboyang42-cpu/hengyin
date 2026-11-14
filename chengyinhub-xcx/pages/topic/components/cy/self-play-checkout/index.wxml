@@ -61,7 +61,7 @@
     <view class="ck__trust" wx:if="{{view.trust.length}}">
       <view class="ck__trust-i" wx:for="{{view.trust}}" wx:key="key"><cy-icon name="{{item.icon}}" size="36" /><text>{{item.label}}</text></view>
     </view>
-    <view class="ck__end-space" aria-hidden="true"></view>
+    <view class="ck__end-space" style="{{footerHeight ? 'height:' + footerHeight + 'px' : ''}}" aria-hidden="true"></view>
   </scroll-view>
   <!-- 10/11 底栏:单独同意(个保法第 23 条,建单必需)紧贴支付行上方;合计 + 支付随报价实时更新 -->
   <view class="ck__bar">

@@ -64,9 +64,8 @@ test('P-09 第三轮:内嵌玩法块的上内边距至少到故事流顶部渐�
   const path = require('node:path')
   const wxml = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxml'), 'utf8')
   const wxss = fs.readFileSync(path.join(__dirname, '../../pages/play/index.wxss'), 'utf8')
-  const fade = wxss.match(/\.chfull__scroll\{[^}]*mask-image:linear-gradient\(to bottom, transparent 0, transparent 220rpx, #000 (\d+)rpx\)/)
-  assert.ok(fade, '故事流顶部渐隐还在')
-  assert.match(wxss, new RegExp('\\.chfull\\{[^}]*--chfull-fade-end:' + fade[1] + 'rpx;'), '变量与遮罩终点同一个数')
+  assert.ok(wxss.includes('mask-image:linear-gradient(to bottom, transparent 0, transparent var(--chfull-fade-end), #000 var(--chfull-fade-end))'), '顶部工具区硬裁切，不让半透明正文穿过按钮');
+  assert.ok(wxml.includes('--chfull-fade-end:max(340rpx, calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-4)))'), '裁切线随原生顶栏安全位置下移');
   // V3-10/53(2026-11-06 业主「只是把之前的全屏缩小了」):块不再垫一屏高的上内边距,
   // 让位改由块内锚点承担 —— 对准锚点时题干仍落在渐隐结束处之下
   const anchors = wxml.match(/class="chfull__kit-anchor" id="[^"]*" style="[^"]*"/g)

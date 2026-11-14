@@ -503,9 +503,9 @@ page { background: var(--cy-color-bg-page); }
 .chfull__title{ display:block; margin-top:12rpx; font-size:50rpx; font-weight:700; line-height:var(--cy-leading-tight); color:#FFFFFF; } /* ds-ok 原型 .h2 26px/700 / 上 6px */
 .chfull__stage{position:absolute;inset:0;}
 .chfull__scroll{ height:100%;
-  /* 顶栏(标题/罗盘/…)透明压在正文上:上沿渐隐,滚上去的字和图在顶栏下方淡出,不与按钮叠字(实走 A26) */
-  -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); /* ds-ok 遮罩只取 alpha,与颜色主题无关 */
-  mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); } /* ds-ok 同上 */
+  /* 顶部工具区全部裁掉，正文只在工具下方显示。 */
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent var(--chfull-fade-end), #000 var(--chfull-fade-end)); /* ds-ok 遮罩只取 alpha */
+  mask-image:linear-gradient(to bottom, transparent 0, transparent var(--chfull-fade-end), #000 var(--chfull-fade-end)); } /* ds-ok 同上 */
 
 .chfull__pad{height:calc(440rpx + env(safe-area-inset-bottom));} /* x-fix4 N-1 底部留白含 Home 条安全区 */
 .chfull__cover{ display:block; width:100%; height:346rpx; border-radius:38rpx; background:#101418; } /* ds-ok 原型 图 180px / r20 / 底 #101418 */
