@@ -27,6 +27,16 @@ function typein(props) {
   return { c, update, wins, spec };
 }
 
+test('打对后保留本人输入，换题或失败仍清空', () => {
+  const { c, update } = typein({ target: 'hello world' });
+  c.data.typed = 'hello world';
+  update({ attempts: 1, passed: true });
+  assert.equal(c.data.typed, 'hello world'); assert.equal(c.data.locked, true);
+  update({ target: 'next', passed: false, attempts: 0 });
+  assert.equal(c.data.typed, '');
+  c.data.typed = 'bad'; update({ attempts: 1 }); assert.equal(c.data.typed, '');
+});
+
 test('开始回包保留正在输入的这一轮，尝试次数变化才重置', () => {
   const { c, update } = typein({ target: 'hello world' });
   c.onRun();

@@ -846,9 +846,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 config.path("photoCheck").path("requirement").asText(""), photoConfigHash(config));
         // A lost prepare response has no intentId at the client: recover by original scoped key.
         PhotoCheckIntentView existing = photoCheckIntentService.read(memberId, sessionId, key, fingerprint);
+        PhotoCheckIntentView intent = existing;
         if (existing == null || existing.state() == PhotoCheckIntentState.PREPARED) {
             try {
                 requirePhotoEligibility(session, memberId, expectedVersion, payload);
+                if (existing == null) intent = photoCheckIntentService.prepare(command);
             } catch (ServiceException | IllegalArgumentException | IllegalStateException refusal) {
                 if (existing != null) throw refusal;
                 // Both current locking reads proved the original identity absent while holding the session lock.
@@ -861,7 +863,6 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 throw new ServiceException(refusal.getMessage(), code == null ? 400 : code).setData(data);
             }
         }
-        PhotoCheckIntentView intent = existing == null ? photoCheckIntentService.prepare(command) : existing;
         requirePhotoBinding(command, intent);
         return new PhotoAdmission(command, intent, null, config.deepCopy());
     }

@@ -323,6 +323,24 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return toAvailableView(session, nodes(topicId));
     }
 
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public TopicRouteState personalRun(Long memberId, Long topicId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        TopicRouteState current = state(memberId, topicId, 0L, declaration);
+        if (current.getSessionId() != null) return current;
+        Scope scope = requireScope(memberId, topicId, 0L);
+        List<CmsTopicNode> liveNodes = nodes(topicId);
+        JourneyTemplateProbe probe = publicationCompiler().probe(liveNodes);
+        String published = scope.topic.getPublishedRouteGraphJson();
+        String snapshot = published != null && validator.readTree(published).path("runtimeSnapshotVersion").asInt() == 1
+                ? freezePublishedJourney(scope.topic)
+                : freezeJourney(linearSnapshot(liveNodes), scope.topic, liveNodes, probe);
+        com.chengyinhub.business.service.support.ContentCapabilityRequirements.assertStartCompatible(
+                validator.readTree(snapshot), declaration);
+        return toLinearView(ensureJourneySession(scope, probe), scope, liveNodes);
+    }
+
     /** Read the original current run; entry commands retain all initialization and role assignment. */
     @Override
     @Transactional(readOnly = true)

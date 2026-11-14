@@ -30,6 +30,30 @@ function qa(def, props) {
   return inst
 }
 
+test('u2 accepted own input survives result observers read-only; next question starts empty', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const def = loadQa();
+  const c = Object.assign(qa(def, { sessionId: 42, nodeId: 1, show: true, reducedMotion: true }), def.methods,
+    { selectComponent: () => null, triggerEvent() {} });
+  const fields = Object.keys(def.observers).find(k => k.startsWith('show, options'));
+  const update = patch => { Object.assign(c.data, patch); def.observers[fields].apply(c, fields.split(',').map(k => c.data[k.trim()])); };
+  update({}); c.data.typed = '本人提交的答案'; c.data.ctaDisabled = false; c.onCta();
+  c.data.typed = ''; update({ passed: true, attempts: 1 });
+  assert.equal(c.data.typed, '本人提交的答案');
+  let submitted = 0; c.triggerEvent = () => { submitted++; }; c.onInput({ detail: { value: '改写' } });
+  assert.equal(c.data.typed, '本人提交的答案');
+  update({ sessionId: 43, nodeId: 2, passed: false, attempts: 0 });
+  assert.equal(c.data.typed, ''); assert.equal(submitted, 0);
+});
+
+test('u4 question image previews full original; missing image does nothing', () => {
+  const def = loadQa(), calls = [];
+  global.wx = Object.assign({}, global.wx, { previewImage: value => calls.push(value) });
+  def.methods.onPreviewQuestion.call({ data: { imageUrl: 'https://fixture.invalid/question.jpg' } });
+  def.methods.onPreviewQuestion.call({ data: { imageUrl: '' } });
+  assert.deepEqual(calls, [{ current: 'https://fixture.invalid/question.jpg', urls: ['https://fixture.invalid/question.jpg'] }]);
+});
+
 test('服务端判完给 outcomeFeedback → kit.authoredOutcome;没给时为空串', () => {
   const base = { sessionId: 1, version: 2, status: 'RUNNING', playKit: { qa: { mode: 'TYPE', title: '江的另一个名字', attempts: 1 } } }
   assert.equal(pickPlayKit(base, new Date()).authoredOutcome, '')

@@ -7,7 +7,8 @@
 .ck__back { position: absolute; left: var(--cy-page-x); bottom: 12rpx; width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--cy-color-bg-surface); display: flex; align-items: center; justify-content: center; }
 .ck__chev { width: 18rpx; height: 18rpx; border-left: 4rpx solid var(--cy-color-text-primary); border-bottom: 4rpx solid var(--cy-color-text-primary); transform: rotate(45deg); margin-left: 6rpx; }
 .ck__title { font-size: var(--cy-font-title, 34rpx); font-weight: 600; color: var(--cy-color-text-primary); line-height: 72rpx; }
-.ck__body { position: relative; flex: 1; min-height: 0; padding: 0 var(--cy-page-x); box-sizing: border-box; }
+.ck__body { position: relative; flex: 1; height: 0; min-height: 0; padding: 0 var(--cy-page-x); box-sizing: border-box; }
+.ck__end-space { height: calc(var(--cy-space-5) + env(safe-area-inset-bottom)); }
 .ck__sec { display: block; margin: 36rpx 4rpx 16rpx; font-size: 28rpx; font-weight: 600; color: var(--cy-color-text-secondary); } /* ds-ok: v13 动效原型定值,业主 2026-10-23 要求与原型一致 */
 .ck__card { background: var(--cy-bg-card); border-radius: var(--cy-radius-xl); }
 .ck__who { display: flex; align-items: center; justify-content: space-between; padding: 28rpx; }

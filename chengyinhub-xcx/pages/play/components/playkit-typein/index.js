@@ -79,6 +79,8 @@ Component({
       const signature = JSON.stringify([attempts, passed, target]);
       if (signature === this._roundSignature) return;
       this._roundSignature = signature;
+      const sameTarget = this._roundTarget === target;
+      this._roundTarget = target;
       /* 没打对整块台面抖一下 —— 与原版问答答错同一条(cy-play-stage 的 nudge,
          原型 .phone.shake:.28s cubic-bezier(.36,.07,.19,.97))。
          判据是「次数涨了但仍没过」:判定在服务端,客户端只认回流的这两个属性。
@@ -97,7 +99,7 @@ Component({
       this.setData({
         extraKeys: extraKeysFor(target, this.data.caseSensitive),
         phase: 'intro',
-        typed: '',
+        typed: passed && sameTarget ? this.data.typed : '',
         ghost: target || '',
         nextKey: (target || '').charAt(0),
         mistyped: false,

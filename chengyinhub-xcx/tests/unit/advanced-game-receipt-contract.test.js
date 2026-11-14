@@ -727,6 +727,49 @@ function photoDisk() {
 const photoInput = () => ({ imageUrl: 'media-asset:701' });
 const tick = () => new Promise(setImmediate);
 
+test('照片明确缺同意走真实 abnormal 回调：清 pending 并带机器原因通知页面', async () => {
+  const disk = photoDisk(); const game = createGame([]); const events = [];
+  game.triggerEvent = (name, detail) => events.push({ name, detail });
+  game.request = definition.methods.request;
+  let posts = 0;
+  appStub.sendRequest = opts => {
+    posts++;
+    opts.successStatusAbnormal({ code: 400, msg: '请先单独同意照片发送第三方模型处理',
+      data: { reason: 'PHOTO_MODEL_CONSENT_REQUIRED', intentNotExecuted: true } });
+  };
+  assert.equal(await game.action('SUBMIT_PHOTO_CHECK', photoInput()), false);
+  assert.equal(posts, 1); assert.equal(disk.size, 0); assert.equal(game.data.unknown, false);
+  assert.equal(game._unknownCommand, null);
+  assert.deepEqual(events, [{ name: 'actionfail', detail: { action: 'SUBMIT_PHOTO_CHECK', sessionId: 42,
+    reason: 'PHOTO_MODEL_CONSENT_REQUIRED' } }]);
+});
+
+test('照片回执 404 可确认同意后重放原照片：保留原版本/键/输入，成功才清盘', async () => {
+  const disk = photoDisk();
+  const game = createGame([{ err: Error('lost') }, { res: { code: 404 } }, okAction(10)]);
+  await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
+  assert.equal(game.data.photoRetryable, true); assert.ok(disk.size > 0);
+  const original = JSON.parse(JSON.stringify(game.calls[0].data));
+  game.data.state.version = 9;
+  let asked = 0;
+  appStub.requestSeparateConsent = async (scene, current) => { asked++; assert.equal(scene, 'photo'); assert.equal(current(), true); };
+  assert.equal(await game.retryOriginalPhoto(), true);
+  assert.equal(asked, 1); assert.deepEqual(game.calls[2].data, original);
+  assert.equal(disk.size, 0); assert.equal(game.data.unknown, false);
+});
+
+test('照片回执 404 的重试被拒绝同意或切账号时不发新动作、不丢原请求', async () => {
+  const disk = photoDisk();
+  const game = createGame([{ err: Error('lost') }, { res: { code: 404 } }]);
+  await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
+  appStub.requestSeparateConsent = async () => { throw Error('未同意'); };
+  assert.equal(await game.retryOriginalPhoto(), false);
+  assert.equal(game.calls.length, 2); assert.ok(disk.size > 0); assert.equal(game.data.unknown, true);
+  appStub.requestSeparateConsent = async () => { appStub._loginEpoch = (appStub._loginEpoch || 0) + 1; };
+  assert.equal(await game.retryOriginalPhoto(), false);
+  assert.equal(game.calls.length, 2); assert.ok(disk.size > 0);
+});
+
 test('Photo 520 保留原 key/输入/expected；个人局只读原回执，版本变化不推断成功', async () => {
   photoDisk();
   const game = createGame([{ res: { code: 520, intentUnknown: true } }, { res: { code: 520 } }], { ownerType: 1 });

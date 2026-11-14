@@ -410,6 +410,12 @@ public class PlayNodeQueryApplication {
         m.put("advancedConfigJson", com.chengyinhub.business.util.AdvancedGamePublicProjection
                 .safeConfigJson(themeNodeConfig==null?tpl.getAdvancedConfigJson():themeNodeConfig.toString(),
                         read.bargainOffered));
+        // 高级玩法也复用模板题面；答案仍只由服务端判定。
+        if (validationMethod != null && validationMethod == 0) {
+            m.put("question", tpl.getQuestionName());
+            m.put("questionImg", tpl.getQuestionImg());
+            m.put("questionAudio", tpl.getQuestionAudio());
+        }
         if (validationMethod != null && (validationMethod == ValidationMethod.APP_SENSOR
                 || SensorChallengePolicy.isPlayablePhotoFilter(validationMethod,
                 tpl.getSensorType(), tpl.getSensorConfig()))) {
@@ -669,6 +675,8 @@ public class PlayNodeQueryApplication {
         data.put("leadSpectator", read.leadSpectator);
         // M2 自玩会话:标记 + 通行证有效期(前端顶部"自由定向中·有效期至 M/D")
         data.put("selfPlay", read.selfPlay);
+        if (read.routeState != null && read.routeState.getSessionId() != null)
+            data.put("runKey", read.routeState.getSessionId().toString());
         if (read.selfPlay) {
             data.put("expiresAt", read.passExpiresAt);
         }

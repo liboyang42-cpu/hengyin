@@ -761,6 +761,8 @@ page { background: var(--cy-color-bg-page); }
 .finsheet__routewrap .finsheet__routecv{ position:absolute; inset:0; z-index:1; }
 .finsheet__routewrap .finsheet__map-fallback{ z-index:2; }
 .finsheet__routewrap .finsheet__map-error{ z-index:3; }
+.finsheet__routewrap.is-fallback{ width:100%; height:auto; aspect-ratio:690 / 320; }
+.finsheet__routewrap.is-fallback .finsheet__routecv{ display:none; }
 .finsheet__shade{ position:sticky; top:0; z-index:6; background:var(--cy-color-play-story-page); } /* 第十一轮 g4(j4 F8):状态栏下一条深色带,卡片标题不再滚到状态栏底下 */
 .finsheet__card-acts{ display:flex; gap:var(--cy-space-3); margin-top:var(--cy-space-4); }
 .finsheet__grid{ display:flex; margin-top:31rpx; }
