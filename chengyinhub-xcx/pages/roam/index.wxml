@@ -792,7 +792,7 @@
   </view>
   <view class="drow">
     <view class="dic"><cy-icon name="tab-club" size="40" /></view>
-    <view class="dcopy"><text class="dt">附近的人位置分享</text></view>
+    <view class="dcopy"><text class="dt">{{presenceSubmitting ? '正在更新位置分享' : '附近的人位置分享'}}</text></view>
     <view class="dsw {{presenceVisible ? 'is-on' : ''}}" catchtap="togglePresenceSharing"
       aria-role="switch" aria-checked="{{presenceVisible}}" aria-disabled="{{presenceSubmitting}}"
       aria-label="附近的人位置分享，{{presenceVisible ? '已开启' : '已关闭'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>

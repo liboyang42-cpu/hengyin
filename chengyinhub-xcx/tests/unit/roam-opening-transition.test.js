@@ -135,3 +135,15 @@ test('opening emoji 使用七个安全随机分区，并保持大小与转向差
   assert.ok(new Set(emojis.map(item => item.size)).size > 1, 'Emoji 不能全部同尺寸')
   assert.ok(new Set(emojis.map(item => item.rotate)).size > 1, 'Emoji 不能全部同方向')
 })
+
+
+test('继续旧记录不把恢复时刻冒充原始开始时间', async () => {
+  const h = startWithLocation()
+  try {
+    h.page.data.unfinishedRoam = true
+    h.page.goStart()
+    await settle(); await settle()
+    assert.equal(h.page.data.screen, 'opening')
+    assert.equal(h.page._roamStartedAt || 0, 0)
+  } finally { h.restore() }
+})

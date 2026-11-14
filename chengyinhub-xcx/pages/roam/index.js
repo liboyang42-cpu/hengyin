@@ -1667,7 +1667,7 @@ Page({
     this._sessionTiles = {}; this._sessionTileCount = 0;
     this._track = []; this._reveals = []; this._historyReveals = []; this._footprintSessions = [];
     this._sessionPhotos = []; this._foundRoamPois = {}; this._recoveryArchiveTs = 0; this._roamStartedAt = 0;
-    this._roamRecoveryAbandoned = true; this._shopMedalFromServer = false;
+    this._roamRecoveryAbandoned = true; this._shopMedalFromServer = false; this._archGeo = null;
     this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
     this._finishRequested = false; this._revealInFlight = false;
     this.setData({ recoveryError: '', recoveryCanContinue: false, revealWriteUnknown: false });
@@ -1697,7 +1697,7 @@ Page({
     this._track = []; this._sessionPhotos = []; this._foundRoamPois = {}; this._pois = [];
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
     this._elapsedSeconds = 0;
-    this._dist = 0; this._lastDistanceM = 0; this._recoveryArchiveTs = 0; this._roamStartedAt = 0;
+    this._dist = 0; this._lastDistanceM = 0; this._recoveryArchiveTs = 0; this._roamStartedAt = 0; this._archGeo = null;
     this._finishRequested = this._roamCompleted = this._recoveryNeedsLookup = false;
     this._recoveryReadFailed = this._revealBootstrapUnknown = false;
     this._eventId = 0; this._eventMissionCode = '';
@@ -3081,7 +3081,7 @@ Page({
   },
 
   _openRoamMap(startCenter, startTracking) {
-    if (startTracking && !this._roamStartedAt) this._roamStartedAt = Date.now();
+    if (startTracking && !this._roamStartedAt && !this.data.unfinishedRoam) this._roamStartedAt = Date.now();
     const p = startCenter || FALLBACK;
     this._disposeFogRenderer();
     const fogGeneration = this._fogLifecycleGen;
@@ -5223,7 +5223,7 @@ Page({
   // 原拱形 finish 屏入口。屏已被结算页(3992:18005)替代;_calcArch 仍要跑 —— C2 分享预览靠 archSegs。
   openFinish() {
     const arch = this._calcArch();
-    this.setData({ archSegs: arch.archSegs, archPois: arch.archPois, archEnd: arch.archEnd, archGeo: arch.archGeo });
+    this._archGeo = arch.archGeo; this.setData({ archSegs: arch.archSegs, archPois: arch.archPois, archEnd: arch.archEnd });
   },
 
   // archSegs 只喂 C2 分享预览和导出 canvas(拱形结算屏已退场),所以位置隐私闸放在这里:
@@ -5376,7 +5376,7 @@ Page({
   },
   _activeShareArch() {
     if (this._shareSource) return this._shareSource.arch;
-    return { archSegs: this.data.archSegs, archPois: this.data.archPois, archEnd: this.data.archEnd, archGeo: this.data.archGeo };
+    return { archSegs: this.data.archSegs, archPois: this.data.archPois, archEnd: this.data.archEnd, archGeo: this._archGeo };
   },
   _activeShareSessionId() {
     if (this._shareSource) return this._shareSource.sessionId || '';
