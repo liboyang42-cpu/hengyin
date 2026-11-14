@@ -4,9 +4,8 @@ const fs = require('node:fs')
 const pathFor = relative => require('node:path').resolve(__dirname, '../..', relative)
 const os = require('node:os')
 const path = require('node:path')
-const { buildLedger, discoverExternalHelperNames, targetsForHandler } = require('../../scripts/uiaudit/build-action-ledger')
-let currentLedger
-const ledger = () => currentLedger || (currentLedger = buildLedger())
+const { discoverExternalHelperNames, targetsForHandler } = require('../../scripts/uiaudit/build-action-ledger')
+const ledger = () => require('../../scripts/uiaudit/action-ledger.json')
 
 test('队间交换真实方法进入台账，预览与核对不写入，发起确认只写一条命令', () => {
   for (const [handler, actionClass, apis] of [

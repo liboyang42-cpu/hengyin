@@ -21,34 +21,6 @@ on:
   workflow_dispatch:
   push:
     branches: [master]
-    paths:
-      - 'chengyinhub-admin/src/main/**'
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/**MybatisIntegrationTest.java'
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/*MySqlIT.java'
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MysqlIntegrationTestConfig.java'
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAlliance*RealDbIT.java'
-      # 2026-09-16:单改 business/it 下任一真库 IT 或 service/impl 的 *MybatisIT 此前不触发本 job
-      # (零告警),WxPayment/WxContent/ActivityCancelFreeOrder 三套单改文件都不复验。
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/**'
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MybatisIT.java'
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MySqlIT.java'
-      # 2026-09-16 晚:暗测试 23 套入闸,其中 business/mapper/ 与 web/controller/api/ 两处
-      # 原 glob 覆盖不到(RegistrationReadContract / RoamSessionWrite)。两处 filter 同步。
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/**'
-      - 'chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/**'
-      - 'chengyinhub-admin/sql/migration_20261012_member_password_width.sql'
-      - 'chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_intent.sql'
-      - 'chengyinhub-admin/sql/migration_20261012_roam_presence_revoke_job.sql'
-      - 'chengyinhub-admin/sql/migration_20261029_activity_cancellation_receipt.sql'
-      - 'chengyinhub-admin/sql/migration_20261029_topic_cancellation_receipt.sql'
-      - 'chengyinhub-system/src/main/**'
-      - 'chengyinhub-admin/sql/migration_*funds*.sql'
-      - 'chengyinhub-admin/sql/migration_20260814_tandianri_product_type_backfill.sql'
-      - 'chengyinhub-admin/sql/migration_p1_funds_spec_contracts_20260724.sql'
-      - 'ci/funds-mysql-it-gate.sh'
-      - 'ci/funds_it_gate.py'
-      - 'ci/test_funds_it_gate.py'
-      - '.github/workflows/funds-mysql-it.yml'
   pull_request:
     branches: [master, feature/prelaunch-audit-1007]
 
@@ -68,56 +40,30 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      funds: ${{ github.event_name != 'pull_request' && 'true' || steps.filter.outputs.funds }}
+      funds: ${{ steps.scope.outputs.funds }}
     steps:
       # 本地算 diff 需要仓库在手(走 API 时本 job 原本不需要 checkout)。
       # fetch-depth:0 拿全提交图;filter=blob:none 不拉历史文件内容 —— 只算 merge-base 用不着。
       - uses: actions/checkout@v4
-        if: github.event_name == 'pull_request'
         with:
           fetch-depth: 0
           filter: blob:none
-      - uses: dorny/paths-filter@v3
-        id: filter
-        if: github.event_name == 'pull_request'
+      - uses: actions/setup-node@v4
         with:
-          # 同 ci.yml:变更清单改用本地 git,绕开 GitHub diff API 对大 PR 的硬上限。
-          # 见 ci.yml 同处注释的病历;`base` 在 PR 事件下会被忽略,唯一开关是 token 置空。
-          token: ''
-          filters: |
-            funds:
-              - 'chengyinhub-admin/src/main/**'
-              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/**MybatisIntegrationTest.java'
-              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/*MySqlIT.java'
-              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/MysqlIntegrationTestConfig.java'
-              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/ExploreAlliance*RealDbIT.java'
-              # 与 on.push.paths 同一套 pattern,两处必须同步(自测钉住各出现 2 次)。
-              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/it/**'
-              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/service/impl/*MybatisIT.java'
-              # 2026-09-16 晚:暗测试 23 套入闸,其中 business/mapper/ 与 web/controller/api/ 两处
-              # 原 glob 覆盖不到(RegistrationReadContract / RoamSessionWrite)。两处 filter 同步。
-              - 'chengyinhub-admin/src/test/java/com/chengyinhub/business/mapper/**'
-              - 'chengyinhub-admin/src/test/java/com/chengyinhub/web/controller/api/**'
-              - 'chengyinhub-system/src/main/**'
-              - 'chengyinhub-admin/sql/migration_*funds*.sql'
-              - 'chengyinhub-admin/sql/migration_20261029_activity_cancellation_receipt.sql'
-              - 'chengyinhub-admin/sql/migration_20261029_topic_cancellation_receipt.sql'
-              - 'chengyinhub-admin/sql/migration_20260814_tandianri_product_type_backfill.sql'
-              - 'chengyinhub-admin/sql/migration_p1_funds_spec_contracts_20260724.sql'
-              - 'ci/funds-mysql-it-gate.sh'
-              - 'ci/funds_it_gate.py'
-              - 'ci/test_funds_it_gate.py'
-              - '.github/workflows/funds-mysql-it.yml'
+          node-version: '22'
+      - name: Classify money and SQL paths conservatively
+        id: scope
+        run: node ci/test-impact.js funds
       - uses: actions/checkout@v4
-        if: github.event_name != 'pull_request' || steps.filter.outputs.funds == 'true'
+        if: github.event_name != 'pull_request' || steps.scope.outputs.funds == 'true'
       - name: Run funds IT gate negative controls
-        if: github.event_name != 'pull_request' || steps.filter.outputs.funds == 'true'
+        if: github.event_name != 'pull_request' || steps.scope.outputs.funds == 'true'
         run: python3 -m unittest ci/test_funds_it_gate.py
       - name: Check funds IT workflow structural contract
-        if: github.event_name != 'pull_request' || steps.filter.outputs.funds == 'true'
+        if: github.event_name != 'pull_request' || steps.scope.outputs.funds == 'true'
         run: python3 ci/funds_it_gate.py workflow .github/workflows/funds-mysql-it.yml ci/funds-mysql-it-gate.sh
       - name: Skip selftest on unrelated PRs
-        if: github.event_name == 'pull_request' && steps.filter.outputs.funds != 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.funds != 'true'
         run: echo "本 PR 未改资金路径，跳过自测。required check 仍给终态。"
 
   funds_mysql_it:
