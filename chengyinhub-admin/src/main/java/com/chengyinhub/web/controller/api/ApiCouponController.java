@@ -189,8 +189,10 @@ public class ApiCouponController extends BaseController {
 
     /** 旧线格式（无命令回执头）：结论与文案与原实现逐字一致。 */
     public AjaxResult publish(CouponPublisDTO request) {
-        // 添加调试日志
-        logger.info("接收到请求参数: {}", request);
+        logger.info("publish coupon scope={} couponType={} count={}",
+                request == null ? null : request.getScope(),
+                request == null ? null : request.getCouponType(),
+                request == null ? null : request.getPublishCount());
         Long member_id = currentAppMember();
         if (member_id == null) {
             return error("请先登录");

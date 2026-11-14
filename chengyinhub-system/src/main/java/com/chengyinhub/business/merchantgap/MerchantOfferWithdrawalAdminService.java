@@ -34,11 +34,12 @@ public class MerchantOfferWithdrawalAdminService {
         if (filter != null && !OUTCOMES.contains(filter)) throw new MerchantGapException(400, "INVALID_REQUEST", "结果筛选无效");
         int size = pageSize == null ? 20 : Math.max(1, Math.min(MAX_PAGE_SIZE, pageSize));
         int page = pageNum == null ? 1 : Math.max(1, pageNum);
-        StringBuilder where = new StringBuilder(" WHERE 1 = 1");
+        List<String> clauses = new ArrayList<>();
         List<Object> args = new ArrayList<>();
-        if (merchantId != null) { where.append(" AND merchant_id = ?"); args.add(merchantId); }
-        if (offerId != null) { where.append(" AND offer_id = ?"); args.add(offerId); }
-        if (filter != null) { where.append(" AND outcome = ?"); args.add(filter); }
+        if (merchantId != null) { clauses.add("merchant_id = ?"); args.add(merchantId); }
+        if (offerId != null) { clauses.add("offer_id = ?"); args.add(offerId); }
+        if (filter != null) { clauses.add("outcome = ?"); args.add(filter); }
+        String where = clauses.isEmpty() ? "" : " WHERE " + String.join(" AND ", clauses);
         Long total = jdbc.queryForObject("SELECT COUNT(1) FROM merchant_offer_withdrawal_request" + where, Long.class, args.toArray());
         List<Object> pageArgs = new ArrayList<>(args);
         pageArgs.add(size);

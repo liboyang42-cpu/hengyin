@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 
@@ -17,6 +19,7 @@ public class ApiMerchantLegacyAliasController {
     @PostMapping("/api/merchant/insight")
     public String insight() { return "forward:/api/ai/merchant/insight"; }
 
+    @RateLimiter(time = 60, count = 60, limitType = LimitType.IP)
     @PostMapping("/api/merchant/poi/detail")
     public String poiDetail() { return "forward:/api/merchant/public-detail"; }
 

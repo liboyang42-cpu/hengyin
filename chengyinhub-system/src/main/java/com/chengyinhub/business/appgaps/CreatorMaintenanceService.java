@@ -66,8 +66,8 @@ public class CreatorMaintenanceService {
         List<Object> args = new ArrayList<>(List.of(me));
         StringBuilder sql = new StringBuilder("SELECT f.id, f.topic_id AS topicId, t.name AS topicName, f.node_id AS nodeId, n.name AS nodeName,"
                 + " f.category, f.content, f.config_version AS configVersion, f.content_revision_id AS contentRevisionId, f.create_time AS createTime,"
-                + " l.ticket_id AS ticketId FROM play_run_feedback f JOIN cms_topic t ON t.id = f.topic_id AND t.member_id = ? AND t.del_flag <> 2"
-                + " LEFT JOIN cms_topic_node n ON n.id = f.node_id LEFT JOIN creator_maintenance_ticket_feedback l ON l.feedback_id = f.id WHERE 1 = 1");
+                + " l.ticket_id AS ticketId FROM play_run_feedback f JOIN cms_topic t ON t.id = f.topic_id"
+                + " LEFT JOIN cms_topic_node n ON n.id = f.node_id LEFT JOIN creator_maintenance_ticket_feedback l ON l.feedback_id = f.id WHERE t.member_id = ? AND t.del_flag <> 2");
         if (topic != null) { sql.append(" AND f.topic_id = ?"); args.add(topic); }
         if (before > 0) { sql.append(" AND f.id < ?"); args.add(before); }
         sql.append(" ORDER BY f.id DESC LIMIT ?");

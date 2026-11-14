@@ -95,6 +95,11 @@ public class WechatEcommercePayGateway implements EcommercePayGateway {
         this.combineNotifyUrl = combineNotifyUrl == null ? "" : combineNotifyUrl;
     }
 
+    /** Whether API certificate path, serial number and APIv3 key are all configured (without opening network clients). */
+    public boolean credentialsConfigured() {
+        return !blank(privateKeyPath) && !blank(merchantSerialNumber) && !blank(apiV3Key);
+    }
+
     private Clients clients() {
         if (!switches.ecommerceEnabled()) throw new IllegalStateException("ECOMMERCE_SWITCH_OFF");
         Clients current = clients;

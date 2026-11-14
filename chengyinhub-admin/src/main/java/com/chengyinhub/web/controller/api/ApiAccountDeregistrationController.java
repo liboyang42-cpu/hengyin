@@ -7,7 +7,9 @@ import com.chengyinhub.business.domain.ConsentRecord;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.vo.DeregistrationStatusVO;
 import com.chengyinhub.common.config.ComplianceProperties;
+import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.enums.LimitType;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.ip.TrustedProxyIpResolver;
@@ -108,6 +110,7 @@ public class ApiAccountDeregistrationController extends BaseController {
         }
     }
 
+    @RateLimiter(time = 60, count = 30, limitType = LimitType.IP)
     @Operation(summary = "注销申请后的结果回读(会话已被撤销时凭申请回执里的 resultToken)")
     @GetMapping("/result")
     public org.springframework.http.ResponseEntity<AjaxResult> result(String resultToken) {

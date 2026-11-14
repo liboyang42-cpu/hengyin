@@ -4,7 +4,9 @@ import com.chengyinhub.business.begapmisc.usapple.UsAppleAuthService;
 import com.chengyinhub.business.begapmisc.usapple.UsAppleAuthService.Outcome;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.service.IUmsMemberService;
+import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.enums.LimitType;
 import com.chengyinhub.framework.web.service.AppLoginService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,6 +41,7 @@ public class ApiUsAppleAuthController extends BaseController {
         this.members = members;
     }
 
+    @RateLimiter(time = 60, count = 20, limitType = LimitType.IP)
     @Operation(summary = "US Apple 登录挑战")
     @PostMapping("/api/us/auth/apple/challenges")
     public ResponseEntity<Map<String, Object>> challenges(@RequestBody(required = false) Map<String, Object> body) {
@@ -46,6 +49,7 @@ public class ApiUsAppleAuthController extends BaseController {
         return reply(service.challenge());
     }
 
+    @RateLimiter(time = 60, count = 10, limitType = LimitType.IP)
     @Operation(summary = "US Apple 身份换取会话")
     @PostMapping("/api/us/auth/apple/exchange")
     public ResponseEntity<Map<String, Object>> exchange(@RequestBody(required = false) Map<String, Object> body) {

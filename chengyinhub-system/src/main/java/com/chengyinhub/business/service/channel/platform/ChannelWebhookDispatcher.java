@@ -115,7 +115,7 @@ public class ChannelWebhookDispatcher
         }
         catch (RuntimeException e)
         {
-            log.error("[webhook] 投递轮次失败", e);
+            log.error("[webhook] 投递轮次失败 type={}", e.getClass().getSimpleName());
         }
     }
 
@@ -146,7 +146,7 @@ public class ChannelWebhookDispatcher
         }
         catch (RuntimeException e)
         {
-            log.warn("[webhook] 投递 {} 处理异常: {}", id, e.toString());
+            log.warn("[webhook] 投递 {} 处理异常: {}", id, e.getClass().getSimpleName());
             outcome = retryOrDead(current, "INTERNAL_ERROR", null, null, null);
         }
         Map<String, Object> finish = new LinkedHashMap<>();

@@ -116,8 +116,20 @@
         SELECT pinned, hidden, muted FROM im_channel_member_state WHERE channel_id = #{channelId} AND member_id = #{memberId}
     </select>
     <insert id="upsertMemberState">
-        INSERT INTO im_channel_member_state(channel_id, member_id, ${field}) VALUES (#{channelId}, #{memberId}, #{value})
-        ON DUPLICATE KEY UPDATE ${field} = VALUES(${field})
+        <choose>
+            <when test="field == 'pinned'">
+                INSERT INTO im_channel_member_state(channel_id, member_id, pinned) VALUES (#{channelId}, #{memberId}, #{value})
+                ON DUPLICATE KEY UPDATE pinned = VALUES(pinned)
+            </when>
+            <when test="field == 'hidden'">
+                INSERT INTO im_channel_member_state(channel_id, member_id, hidden) VALUES (#{channelId}, #{memberId}, #{value})
+                ON DUPLICATE KEY UPDATE hidden = VALUES(hidden)
+            </when>
+            <when test="field == 'muted'">
+                INSERT INTO im_channel_member_state(channel_id, member_id, muted) VALUES (#{channelId}, #{memberId}, #{value})
+                ON DUPLICATE KEY UPDATE muted = VALUES(muted)
+            </when>
+        </choose>
     </insert>
 
     <!-- 角色写 -->
