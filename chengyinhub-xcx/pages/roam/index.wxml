@@ -58,18 +58,20 @@
 
     <block wx:elif="{{entrySheet=='place' && entryPlace}}">
       <cy-roam-place-note tags="{{entryPlace.tags}}" bind:note="onEntryPlaceNote" />
-      <image wx:if="{{entryPlace.cover}}" class="entry-place__cover" src="{{entryPlace.cover}}" mode="aspectFill" />
+      <swiper wx:if="{{entryPlace.gallery.length}}" class="entry-place__cover" indicator-dots><swiper-item wx:for="{{entryPlace.gallery}}" wx:key="*this"><image class="entry-place__cover" src="{{item}}" mode="aspectFill" /></swiper-item></swiper>
+      <image wx:elif="{{entryPlace.cover}}" class="entry-place__cover" src="{{entryPlace.cover}}" mode="aspectFill" />
       <view class="entry-place">
         <view class="entry-layer__icon"><cy-icon name="pin" size="32" /></view>
         <view class="entry-place__copy"><text>{{entryPlace.catLabel}}{{entryPlace.distText ? ' · ' + entryPlace.distText : ''}}</text><text>{{entryPlace.address}}</text></view>
       </view>
       <text class="entry-place__quote" wx:if="{{entryPlace.reason}}" user-select>{{entryPlace.reason}}</text>
-      <view class="entry-place__tags" wx:if="{{entryPlace.tagList.length}}"><text class="entry-place__tag" wx:for="{{entryPlace.tagList}}" wx:key="*this">{{item}}</text></view>
-      <view class="entry-place__src" wx:if="{{entryPlace.sourceList.length}}" bindtap="toggleEntrySources" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80"><text>资料来源</text><text>{{entryPlace.sourcesOpen ? '收起' : '展开'}}</text></view>
+      <view class="entry-place__tags" wx:if="{{entryPlace.tagList.length}}"><text class="entry-place__tag" wx:for="{{entryPlace.tagList}}" wx:key="*this">来源 {{index + 1}}</text></view>
+      <view class="entry-place__src" wx:if="{{entryPlace.sourceList.length || entryPlace.credit}}" bindtap="toggleEntrySources" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80"><text>资料来源</text><text>{{entryPlace.sourcesOpen ? '收起' : '展开'}}</text></view>
       <block wx:if="{{entryPlace.sourcesOpen}}">
-        <text class="entry-place__link" wx:for="{{entryPlace.sourceList}}" wx:key="*this" data-url="{{item}}" bindtap="copyEntrySource" aria-role="button" aria-label="复制资料链接" hover-class="cy-pressed" hover-stay-time="80">{{item}}</text>
-      </block>
+        <text class="entry-place__link" wx:for="{{entryPlace.sourceList}}" wx:key="*this" data-url="{{item}}" bindtap="copyEntrySource" aria-role="button" aria-label="复制资料链接" hover-class="cy-pressed" hover-stay-time="80">来源 {{index + 1}}</text>
       <text class="entry-place__credit" wx:if="{{entryPlace.credit}}">{{entryPlace.credit}}</text>
+    </block>
+
       <view class="entry-sheet__primary" wx:if="{{entryPlace.lat !== null}}" bindtap="navEntryPlace" aria-role="button" aria-label="导航到{{entryPlace.name}}" hover-class="cy-pressed" hover-stay-time="80">导航</view>
     </block>
 
@@ -133,7 +135,7 @@
           </view>
           <view class="intro-card__tear"></view>
           <view class="intro-card__body">
-            <view class="intro-card__row"><text class="intro-card__title">{{introCards[0].title}}</text></view>
+            <view class="intro-card__row"><text class="intro-card__title">{{unfinishedRoam ? '继续漫游' : introCards[0].title}}</text></view>
             <text class="intro-card__sub" wx:if="{{introCards[0].sub}}">{{introCards[0].sub}}</text>
             <text class="intro-card__livetx" wx:if="{{introStartLive}}">{{introStartLive}}</text>
           </view>
@@ -207,11 +209,11 @@
   </view>
   </view>
   <!-- ② 漫游护照:顶部四项读数 + 上排方卡(功能) + 下排大卡(玩法)。版式与 play 第二 tab 同一套 .pp-* -->
-  <view wx:else class="intro-passport">
+  <scroll-view wx:else class="intro-passport" scroll-y enhanced show-scrollbar="{{false}}">
     <!-- R-02 首读占位:与读完后同一套 .pp-stats / .pp-row 几何,读数位显示「—」,方卡只留底板 -->
     <block wx:if="{{passportLoading}}">
     <view class="pp-stats" aria-role="status" aria-label="正在读取漫游护照">
-      <view class="pp-stat" wx:for="{{['漫游', '探店', '活跃日', '公里']}}" wx:key="*this"><text class="pp-stat__v">—</text><text class="pp-stat__k">{{item}}</text></view>
+      <view class="pp-stat" wx:for="{{['漫游', '探店', '活跃日', '公里']}}" wx:key="*this"><text class="pp-stat__v">—</text><text class="pp-stat__k">来源 {{index + 1}}</text></view>
     </view>
     <view class="pp-row" aria-hidden="true"><view class="pp-tile" wx:for="{{[1, 2, 3, 4, 5]}}" wx:key="*this"><view class="pp-tile__box"></view></view></view>
     </block>
@@ -233,7 +235,7 @@
           <cy-icon wx:else name="{{item.icon}}" size="48" />
         </view>
         <text class="pp-tile__t">{{item.title}}</text>
-        <text class="pp-tile__s">{{item.value}}</text>
+
       </view>
     </scroll-view>
 
@@ -247,11 +249,11 @@
           <view class="pp-trip__shade"></view>
           <text class="pp-trip__big">{{item.title}}</text>
         </view>
-        <text class="pp-trip__cap">{{item.sub}}</text>
+
       </view>
     </scroll-view>
     </block>
-  </view>
+  </scroll-view>
 
 </view>
 
@@ -422,22 +424,25 @@
       <text class="pc-title">{{paceCard.title}}</text>
       <view class="pc-close" bindtap="closePaceCard" aria-role="button" aria-label="关闭地点提示" hover-class="cy-pressed" hover-stay-time="80"><view class="pc-close__glyph"><cy-icon name="close-sm" size="32" /></view></view>
     </view>
-    <image wx:if="{{paceCard.cover}}" class="pc-cover" src="{{paceCard.cover}}" mode="aspectFill" />
+    <swiper wx:if="{{paceCard.gallery.length}}" class="pc-cover" indicator-dots><swiper-item wx:for="{{paceCard.gallery}}" wx:key="*this"><image class="pc-cover" src="{{item}}" mode="aspectFill" /></swiper-item></swiper>
+    <image wx:elif="{{paceCard.cover}}" class="pc-cover" src="{{paceCard.cover}}" mode="aspectFill" />
     <text class="pc-demo" wx:if="{{paceCard.demo}}">演示点 · 仅浏览（非真实地点）</text>
     <text class="pc-body" wx:if="{{paceCard.catLabel || paceCard.distText}}">{{paceCard.catLabel}}{{paceCard.catLabel && paceCard.distText ? ' · ' : ''}}{{paceCard.distText}}</text>
     <text class="pc-body cy-addr-tap" wx:if="{{paceCard.address}}" catchtap="onAddrTap" data-lat="{{paceCard.lat}}" data-lng="{{paceCard.lng}}" data-name="{{paceCard.title}}" data-address="{{paceCard.address}}" aria-role="link" aria-label="{{paceCard.address}}，在地图中打开" hover-class="cy-pressed" hover-stay-time="80">{{paceCard.address}}</text>
     <text class="pc-body" wx:if="{{paceCard.body}}">{{paceCard.body}}</text>
     <text class="pc-quote" wx:if="{{paceCard.reason}}" user-select>{{paceCard.reason}}</text>
-    <view class="pc-src" wx:if="{{paceCard.sourceList.length}}" bindtap="togglePaceSources" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80"><text>资料来源</text><text>{{paceCard.sourcesOpen ? '收起' : '展开'}}</text></view>
+    <view class="pc-src" wx:if="{{paceCard.sourceList.length || paceCard.credit}}" bindtap="togglePaceSources" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80"><text>资料来源</text><text>{{paceCard.sourcesOpen ? '收起' : '展开'}}</text></view>
     <block wx:if="{{paceCard.sourcesOpen}}">
-      <text class="pc-body pc-link" wx:for="{{paceCard.sourceList}}" wx:key="*this" data-url="{{item}}" bindtap="copyPaceSource" aria-role="button" aria-label="复制资料链接" hover-class="cy-pressed" hover-stay-time="80">{{item}}</text>
-    </block>
+      <text class="pc-body pc-link" wx:for="{{paceCard.sourceList}}" wx:key="*this" data-url="{{item}}" bindtap="copyPaceSource" aria-role="button" aria-label="复制资料链接" hover-class="cy-pressed" hover-stay-time="80">来源 {{index + 1}}</text>
     <text class="pc-body" wx:if="{{paceCard.credit}}">{{paceCard.credit}}</text>
+    </block>
+
     <cy-roam-place-note wx:if="{{paceCard.tags}}" tags="{{paceCard.tags}}" bind:note="onPlaceNote" />
-    <text class="pc-hint" wx:if="{{paceCard.canDiscover && !paceCard.confirmed && !paceCard.meaning && !paceCard.checkinErr}}">靠近后可确认地点</text>
+    <text class="pc-hint" wx:if="{{paceCard.canDiscover && !paceCard.inReach && !paceCard.confirmed && !paceCard.meaning && !paceCard.checkinErr}}">靠近后可确认地点</text>
     <view class="pc-action" wx:if="{{paceCard.canDiscover && !paceCard.confirmed && !paceCard.meaning && !paceCard.checkinErr}}" bindtap="discoverRoamPoi" data-id="{{paceCard.poiId}}" aria-role="button" aria-label="确认到达漫游点" hover-class="cy-pressed" hover-stay-time="80">确认到点</view>
     <!-- R11 g1(j4 F11):服务端确认到点后,按钮原地换成完成态 -->
     <view class="pc-action pc-action--done" wx:if="{{paceCard.canDiscover && paceCard.confirmed}}" aria-role="text" aria-label="已到达">已到达</view>
+    <view class="pc-action" wx:if="{{paceCard.challengeId}}" bindtap="startPaceChallenge" aria-role="button" aria-label="开始地点挑战" hover-class="cy-pressed" hover-stay-time="80">开始挑战</view>
     <view class="pc-action pc-action--nav" wx:if="{{paceCard.lat && paceCard.lng && !paceCard.demo}}" bindtap="navPaceCard" aria-role="button" aria-label="导航到{{paceCard.title}}" hover-class="cy-pressed" hover-stay-time="80">导航</view>
     <!-- 只在服务器确认到点且后端返回独立审核内容时出现；无来源不留空壳。 -->
     <view class="pc-meaning" wx:if="{{paceCard.meaning}}">
@@ -728,17 +733,17 @@
   <view class="psheet__grab" catchtap="onProtoSheetClose" aria-role="button" aria-label="收起更多" hover-class="cy-pressed" hover-stay-time="80"></view>
   <view class="drow" bindtap="openNearestRunner" aria-role="button" aria-label="附近正在走的人" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--people2"></view>
-    <view class="dcopy"><text class="dt">附近正在走的人</text><text class="ds">{{more.runnerText}}</text></view>
+    <view class="dcopy"><text class="dt">附近正在走的人</text></view>
     <view class="darr"></view>
   </view>
   <view class="drow" bindtap="openRoamRules" aria-role="button" aria-label="玩法说明" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--info"></view>
-    <view class="dcopy"><text class="dt">玩法说明</text><text class="ds">走近店铺就会点亮</text></view>
+    <view class="dcopy"><text class="dt">玩法说明</text></view>
     <view class="darr"></view>
   </view>
   <view class="drow" bindtap="openRoamSettings" aria-role="button" aria-label="设置" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--gear"></view>
-    <view class="dcopy"><text class="dt">设置</text><text class="ds">迷雾、动效、位置权限</text></view>
+    <view class="dcopy"><text class="dt">设置</text></view>
     <view class="darr"></view>
   </view>
 </view>
@@ -770,11 +775,11 @@
   <!-- 2026-10-27 owner P-32:迷雾可以关;关掉只是不画雾,足迹与点亮照常记录 -->
   <view class="drow">
     <view class="dic pic pic--route"></view>
-    <view class="dcopy"><text class="dt">迷雾</text><text class="ds">关掉后地图不再盖雾</text></view>
+    <view class="dcopy"><text class="dt">迷雾</text></view>
     <view class="dsw {{fogOff ? '' : 'is-on'}}" catchtap="toggleFogOff" aria-role="switch" aria-checked="{{!fogOff}}" aria-label="迷雾，{{fogOff ? '已关闭' : '已开启'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
   </view>
   <view class="drow drow--kind">
-    <view class="dic pic pic--route"></view>
+    <view class="dic"><cy-icon name="map" size="40" /></view>
     <view class="dcopy"><text class="dt">地图样式</text></view>
     <view class="dkinds">
       <view wx:for="{{mapKindItems}}" wx:key="kind" class="dkind {{fmKind === item.kind ? 'is-on' : ''}}" data-kind="{{item.kind}}" catchtap="onMapKindTap" aria-role="button" aria-pressed="{{fmKind === item.kind}}" aria-label="地图样式，{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
@@ -782,12 +787,12 @@
   </view>
   <view class="drow">
     <view class="dic pic pic--gear"></view>
-    <view class="dcopy"><text class="dt">减少动态效果</text><text class="ds">关掉地图漂移和呼吸</text></view>
+    <view class="dcopy"><text class="dt">减少动态效果</text></view>
     <view class="dsw {{reducedMotion ? 'is-on' : ''}}" catchtap="toggleReducedMotion" aria-role="switch" aria-checked="{{reducedMotion}}" aria-label="减少动态效果" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
   </view>
   <view class="drow">
-    <view class="dic pic pic--info"></view>
-    <view class="dcopy"><text class="dt">附近的人位置分享</text><text class="ds">{{presenceSubmitting ? '正在保存设置' : '默认关闭 · 街区模糊位置'}}</text></view>
+    <view class="dic"><cy-icon name="team" size="40" /></view>
+    <view class="dcopy"><text class="dt">附近的人位置分享</text></view>
     <view class="dsw {{presenceVisible ? 'is-on' : ''}}" catchtap="togglePresenceSharing"
       aria-role="switch" aria-checked="{{presenceVisible}}" aria-disabled="{{presenceSubmitting}}"
       aria-label="附近的人位置分享，{{presenceVisible ? '已开启' : '已关闭'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
@@ -795,25 +800,25 @@
   <!-- 下面三行都跟着系统定位权限走:它们不是本机偏好,给个能勾却不影响任何事的假开关是骗人 -->
   <view class="drow" bindtap="openRoamLocationSetting" aria-role="button" aria-label="位置权限，{{gpsOk ? '已允许' : '未允许'}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--info"></view>
-    <view class="dcopy"><text class="dt">位置权限</text><text class="ds">使用期间允许</text></view>
+    <view class="dcopy"><text class="dt">位置权限</text></view>
     <text class="dv">{{gpsOk ? '开' : '关'}}</text>
     <view class="darr"></view>
   </view>
   <view class="drow {{bgGpsOk ? '' : 'is-off'}}" bindtap="openRoamLocationSetting" aria-role="button" aria-label="后台持续定位，{{bgGpsOk ? '已开启' : '未开启'}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--track"></view>
-    <view class="dcopy"><text class="dt">后台持续定位</text><text class="ds">锁屏也记录足迹</text></view>
+    <view class="dcopy"><text class="dt">后台持续定位</text></view>
     <text class="dv">{{bgGpsOk ? '开' : '关'}}</text>
     <view class="darr"></view>
   </view>
   <view class="drow {{gpsOk ? '' : 'is-off'}}" bindtap="openRoamLocationSetting" aria-role="button" aria-label="到点提醒，{{gpsOk ? '已开启' : '定位未开启'}}" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--bell"></view>
-    <view class="dcopy"><text class="dt">到点提醒</text><text class="ds">走近节点时震动</text></view>
+    <view class="dcopy"><text class="dt">到点提醒</text></view>
     <text class="dv">{{gpsOk ? '开' : '关'}}</text>
     <view class="darr"></view>
   </view>
   <view class="drow" bindtap="clearRoamLocal" aria-role="button" aria-label="清空本机缓存" hover-class="cy-pressed" hover-stay-time="80">
     <view class="dic pic pic--stamp"></view>
-    <view class="dcopy"><text class="dt">清空本机缓存</text><text class="ds">不影响已上传的记录</text></view>
+    <view class="dcopy"><text class="dt">清空本机缓存</text></view>
     <view class="darr"></view>
   </view>
 </view>
@@ -1001,8 +1006,8 @@
     </view>
     <view class="settle__hr"></view>
     <!-- 大数字与格子按城瘾口径:探店/探索度/邮票/探索值/勋章 —— 时间与距离是跑步 App 的,不上(用户裁决) -->
-    <text class="settle__big">{{finish.shops}}</text>
-    <text class="settle__unit">家探店</text>
+    <text class="settle__big">{{finish.places.length || 0}}</text>
+    <text class="settle__unit">处到达</text>
     <view class="settle__grid">
       <view class="sgc"><text class="sgc__v">{{finish.explorePct}}%</text><text class="sgc__l">探索度</text></view>
       <view class="sgc"><text class="sgc__v">{{finish.photos.length}}</text><text class="sgc__l">邮票</text></view>
@@ -1036,6 +1041,7 @@
                 sub="{{finish.eventErr === 'unknown' ? '活动进度未确认，请稍后查看' : '漫游已保存，活动进度未上报'}}"
                 retry="{{finish.eventErr === 'unknown' ? '' : '重新上报'}}" bind:retry="retryEventReport" />
     </view>
+    <view class="rw" wx:if="{{finish.places.length}}"><view wx:for="{{finish.places}}" wx:key="id" class="pc-body">{{item.name}}</view></view>
     <view class="settle__map">
       <free-map class="settle__map-native" wx:if="{{fmStyleReady}}" tone="{{fmTone}}" scene="explore" center="{{center}}" scale="14"
                 map-markers="{{markers}}" map-polyline="{{polyline}}"
@@ -1152,7 +1158,7 @@
       <view class="sh-vis__seg {{share.visibility === 'private' ? 'is-on' : ''}}" bindtap="onShareVisibility" data-v="private"
             aria-role="radio" aria-checked="{{share.visibility === 'private'}}" hover-class="cy-pressed" hover-stay-time="80">仅自己</view>
     </view>
-    <text class="sh-vis__hint">{{share.visibility === 'public' ? '全站可见' : (share.visibility === 'friends' ? '仅好友可见' : '仅存相册')}}</text>
+
   </view>
   <scroll-view class="rsh-ch" scroll-x enhanced show-scrollbar="{{false}}">
     <button class="rsh-ch-i rsh-ch-btn {{share.visibility === 'private' ? 'is-off' : ''}}" open-type="share" disabled="{{share.visibility === 'private'}}" aria-label="发给微信好友"><view class="rsh-ci"><cy-icon name="share" size="44" /></view><text>微信好友</text></button>

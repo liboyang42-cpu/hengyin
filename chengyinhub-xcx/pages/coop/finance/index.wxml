@@ -1,5 +1,5 @@
 <!-- 深链兼容壳(§4.1):站内从「账户收益」点开的是弹窗;这一页只服务外部直达。 -->
-<view class="fin-shell theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+<view class="fin-shell theme-dark" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
   <cy-modal-host id="cy-modal-host" />

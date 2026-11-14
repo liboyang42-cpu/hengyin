@@ -93,7 +93,7 @@ test('C-05 设置页权限态从 wx.getSetting 读真值,不再是恒「关」�
 test('C-06 未登录先补一次登录;登录不成给「登录没有成功」而不是开出必失败的漫游', async () => {
   const calls = [];
   let logged = false;
-  const appMock = {
+  const appMock = { sendRequest(options) { if (options.url === '/api/compliance/consents/latest') options.success({ code: 200, data: null }); else if (options.fail) options.fail({}); },
     globalData: {},
     getUserID: () => (logged ? '9' : ''),
     firstLogin: () => { logged = true; return Promise.resolve(); },

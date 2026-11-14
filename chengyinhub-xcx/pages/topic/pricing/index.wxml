@@ -8,8 +8,8 @@
   <scroll-view scroll-y class="pg-scroll" enhanced show-scrollbar="{{false}}">
     <cy-skeleton wx:if="{{loading && !hasPreview}}" type="card" count="{{2}}" />
     <cy-empty class="cy-fade-in" wx:elif="{{errorText === '缺少主题信息'}}" fill kind="missing-param" title="缺少主题信息" cta="返回上一页" bind:cta="goBack" />
-    <cy-error load-failure wx:elif="{{errorText && !hasPreview}}" fill title="定价信息加载失败" sub="{{errorText}}"
-              retry="重试" bind:retry="preview" auto-back />
+    <cy-error wx:elif="{{errorText && !hasPreview}}" fill title="定价信息加载失败" sub="{{errorText}}"
+              retry="重试" bind:retry="preview" />
     <block wx:else>
       <cy-inline-error wx:if="{{errorText && hasPreview}}" title="最新定价暂未取回" sub="{{errorText}}" action="重试" bind:action="preview" />
       <view wx:if="{{loading && hasPreview}}" class="pg-refreshing" aria-role="status" aria-live="polite">正在确认最新定价…</view>

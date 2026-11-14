@@ -7,7 +7,7 @@
   <view wx:if="{{localWarning}}">本机补充记录暂时无法读取</view>
   <!-- 2026-10-31 P-7:总成绩照 NRC —— 总公里数粗斜体大数字,下面一行次数 / 探店 / 用时;没有数据写「—」 -->
   <view class="hs-total" wx:if="{{summary.trips}}">
-    <view class="hs-total__big"><text class="hs-total__n">{{summary.km}}</text><text class="hs-total__u">公里</text></view>
+    <view class="hs-total__big"><text class="hs-total__n">{{summary.km}}</text><text class="hs-total__u">km</text></view>
     <view class="hs-total__row">
       <view class="hs-total__i"><text class="hs-total__v">{{summary.trips}}</text><text class="hs-total__l">次漫游</text></view>
       <view class="hs-total__i"><text class="hs-total__v">{{summary.shopsText}}</text><text class="hs-total__l">家店</text></view>
@@ -26,7 +26,7 @@
     <block wx:for="{{list}}" wx:key="historyKey">
     <text class="hs-month" wx:if="{{item.monthHead}}">{{item.monthHead}}</text>
     <view class="rc" bindtap="openSession" data-ts="{{item.ts}}" data-session-id="{{item.serverFact ? item.sessionId : ''}}"
-          aria-role="button" aria-label="{{item.dateCard}} {{item.title}},{{item.distanceText || 0}}公里" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
+          aria-role="button" aria-label="{{item.dateCard}} {{item.title}}，{{item.distanceText || 0}} km" hover-class="cy-pressed" hover-stay-time="80" style="--pmi:{{index}};">
       <cy-route-thumb route="{{item.route}}" geo="{{item.geo}}" />
       <view class="rc__body">
         <view class="rc__row">
@@ -34,7 +34,7 @@
           <text class="rc__date">{{item.dateCard}}</text>
         </view>
         <view class="rc__stats">
-          <view class="rc__st"><text class="rc__v">{{item.distanceText}}</text><text class="rc__l">公里</text></view>
+          <view class="rc__st"><text class="rc__v">{{item.distanceText}}</text><text class="rc__l">km</text></view>
           <view class="rc__st"><text class="rc__v">{{item.shopsText}}</text><text class="rc__l">探店</text></view>
           <view class="rc__st"><text class="rc__v">{{item.time}}</text><text class="rc__l">用时</text></view>
         </view>

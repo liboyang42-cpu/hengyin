@@ -1,4 +1,4 @@
-@import '../../../style/merchant-light.wxss';
+
 
 /* 壳只留页面 chrome;分润卡样式已随内容搬进 components/cy/scene-merchant-profit。 */
 page { background: var(--cy-bg-page); }

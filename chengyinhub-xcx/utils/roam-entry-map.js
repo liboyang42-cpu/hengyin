@@ -95,7 +95,7 @@ function placeView(row, ctx) {
   return { id: Number(row.id), name: String(row.name || ''), address: String(row.address || ''), catLabel: p.catLabel, cat: PM.categoryKey(row),
     tags: typeof row.tags === 'string' ? row.tags : JSON.stringify(readTags(row.tags)), tagList: PM.visibleTags(row.tags).slice(0, 4),
     lat: Number(row.lat), lng: Number(row.lng), cover, gallery: PM.galleryKeys(row).map(img), credit: PM.credit(row),
-    reason: PM.reasonFor(row, null), distText: PM.distanceText(meters), meters }
+    reason: PM.reasonFor(row, null), sourceList: PM.quoteSources(row), sourcesOpen: false, distText: PM.distanceText(meters), meters }
 }
 // A1.3 / A2.4 / A2.5:分类图钉、近景名字、远景聚合;只画视口内的点
 function buildPlaceMarkers(places, opts) {

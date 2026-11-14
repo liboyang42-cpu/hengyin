@@ -421,7 +421,7 @@
               show-location
               bindmarkertap="onNodeTap">
             </map>
-            <view class="route-map-tip" wx:if="{{routeReal}}">{{routeSourceText}}</view>
+
           </view>
           <view class="route-note route-note--{{isExplore ? 'free' : 'city'}}"><text class="route-note__k">{{isExplore ? '没有固定路线' : '固定路线'}}</text><text class="route-note__v">{{routeNote}}</text></view>
           <view wx:if="{{isExplore && merchantCards.length}}"><view class="det-type">参与商家</view><cy-merchant-cards items="{{merchantCards}}" owned="{{is_join == 1}}" bind:open="onMerchantOpen" /></view>
@@ -479,7 +479,7 @@
               src="{{index<=answer? '/pages/topic/images/icon_star2.png' : '/pages/topic/images/icon_star1.png'}}" mode="aspectFit"></image>
           </view>
         </view>
-        
+
         <view class="vote-cont">
           <textarea bindinput="onCommentInput" auto-height placeholder="请输入您的评价内容..." value="{{ plnr }}" />
         </view>

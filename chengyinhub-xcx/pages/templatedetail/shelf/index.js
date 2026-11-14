@@ -35,8 +35,8 @@ function decorateTopic(item) {
   const games = Number(item.gameCount || 0);
   const chapters = Number(item.chapterCount || 0);
   const meta = [];
-  // 未经试走的主题不能看起来像已验证:非 VERIFIED(含未下发)一律标「实验模板」
-  meta.push(item.previewOnly ? '实验预览' : (item.templateStatus === 'VERIFIED' ? '' : '实验模板'));
+  // 实验标记只认服务端明确状态；缺字段不是实验，也不代表已验证。
+  meta.push(item.previewOnly ? '实验预览' : (item.templateStatus === 'EXPERIMENTAL' ? '实验模板' : ''));
   if (chapters > 1) meta.push(chapters + ' 章');
   if (games) meta.push(games + ' 个玩法');
   const dur = fmtSec(item.totalTime);

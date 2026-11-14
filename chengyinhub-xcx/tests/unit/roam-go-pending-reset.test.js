@@ -72,8 +72,8 @@ test('onShow 作废在途流程:旧 chain 的回调弃权,不会开出第二个�
     showModal: options => options.success({ confirm: true }),
     getLocation: opts => { locOpts = opts },   // 扣住回调,模拟定位还没回来
   }
-  global.getApp = () => ({
-    globalData: {}, sendRequest() {},
+  global.getApp = () => ({ sendRequest(options) { if (options.url === '/api/compliance/consents/latest') options.success({ code: 200, data: null }); else if (options.fail) options.fail({}); },
+    globalData: {},
     getUserID: () => '9',
     recordConsent: () => { consentCalls += 1; return Promise.resolve() },
   })
@@ -99,7 +99,7 @@ test('onShow 归零后 goStart 不再被首行守卫挡掉', async () => {
   const prevGetApp = global.getApp
   const prevWx = global.wx
   let locRequested = false
-  global.getApp = () => ({ globalData: {}, sendRequest() {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
+  global.getApp = () => ({ sendRequest(options) { if (options.url === '/api/compliance/consents/latest') options.success({ code: 200, data: null }); else if (options.fail) options.fail({}); }, globalData: {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
   global.wx = {
     getStorageSync: () => undefined,
     setStorageSync: () => {},
@@ -125,7 +125,7 @@ test('取「看过引导」标记时抛异常,不能把 GO 的门闩焊死', asy
   const prevGetApp = global.getApp
   const prevWx = global.wx
   let locRequests = 0
-  global.getApp = () => ({ globalData: {}, sendRequest() {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
+  global.getApp = () => ({ sendRequest(options) { if (options.url === '/api/compliance/consents/latest') options.success({ code: 200, data: null }); else if (options.fail) options.fail({}); }, globalData: {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
   page.markRoamIntroSeen = () => { throw new Error('引导本地标记失败') }
   global.wx = {
     getStorageSync: () => undefined,
@@ -138,7 +138,7 @@ test('取「看过引导」标记时抛异常,不能把 GO 的门闩焊死', asy
     await settle()
     assert.equal(locRequests, 1, '取本地标记失败不该挡住这次出发')
     // 常驻页返回后仍能重新明确确认，非关键本地标记异常不影响后续出发。
-    global.getApp = () => ({ globalData: {}, sendRequest() {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
+    global.getApp = () => ({ sendRequest(options) { if (options.url === '/api/compliance/consents/latest') options.success({ code: 200, data: null }); else if (options.fail) options.fail({}); }, globalData: {}, getUserID: () => '9', recordConsent: () => Promise.resolve() })
     page.onShow()
     page.goStart()
     await settle()

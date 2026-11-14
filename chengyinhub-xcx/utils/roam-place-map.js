@@ -43,7 +43,7 @@ function validLatLng(row) { return !!row && num(row.lat) != null && num(row.lng)
 function isRoamPlace(row) {
   return !!row && Number(row.id) > 0 && validLatLng(row) && (Number(row.type) === 1 || Number(row.type) === 2)
 }
-function hasSeedTag(row) { return !!row && parseTags(row.tags).some((tag) => tag.indexOf(SEED_PREFIX) === 0) }
+function hasSeedTag(row) { return !!row && parseTags(row.tags || row.tagsJson).some((tag) => tag.indexOf(SEED_PREFIX) === 0) }
 
 /** pin / 圆点用的分类键:merchant / park / street / shop / landmark。 */
 function categoryKey(row) {
@@ -61,21 +61,34 @@ function listOf(value) {
   if (typeof value !== 'string' || !value.trim()) return []
   try { const rows = JSON.parse(value); return Array.isArray(rows) ? rows : [] } catch (_) { return [] }
 }
-function coverKey(row) { return text(row && (row.cover || row.coverImg || row.cover_img)) }
+function rawCredit(row) { return text(row && (row.photoCredit || row.photo_credit || row.credit)) }
+function photosAllowed(row) { return !/(?:许可|授权|版权)(?:尚)?未确认|仅测试参考|licen[cs]e.*(?:unconfirmed|unknown)/i.test(rawCredit(row)) }
+function coverKey(row) { return photosAllowed(row) ? text(row && (row.cover || row.coverImg || row.cover_img)) : '' }
 function galleryKeys(row) {
-  return listOf(row && row.gallery).map((item) => text(item && typeof item === 'object' ? (item.key || item.url) : item)).filter(Boolean).slice(0, 6)
+  if (!photosAllowed(row)) return []
+  const gallery = listOf(row && row.gallery)
+  return (gallery.length ? gallery : listOf(row && row.galleryJson)).map((item) => text(item && typeof item === 'object' ? (item.key || item.url) : item)).filter(Boolean).slice(0, 6)
 }
 function quoteList(row) {
-  return listOf(row && row.quotes).map((q) => (typeof q === 'string' ? { text: text(q) } : { text: text(q && q.text), source: text(q && q.source) }))
+  const quotes = listOf(row && row.quotes)
+  return (quotes.length ? quotes : listOf(row && row.quotesJson)).map((q) => (typeof q === 'string' ? { text: text(q) } : { text: text(q && q.text), source: text(q && q.source), url: text(q && q.url) }))
     .filter((q) => q.text)
 }
+function quoteSources(row) { return [...new Set(quoteList(row).map(q => q.url).filter(url => /^https?:\/\//.test(url)))] }
 /** 推荐理由唯一受控来源:服务端 quotes 第一条,其次目录里核对过的 note.reason。绝不读非商家的 description。 */
 function reasonFor(row, note) {
   const quote = quoteList(row)[0]
   if (quote) return quote.text
   return note && note.reason ? String(note.reason) : ''
 }
-function credit(row) { return text(row && (row.photoCredit || row.photo_credit)) }
+function credit(row) {
+  if (!photosAllowed(row)) return ''
+  return [...new Set(rawCredit(row).split(/\n+/).map(line => {
+    const clean = line.replace(/https?:\/\/\S+/g, '').replace(/[·；;\s]+$/, '').trim()
+    const licence = clean.match(/CC\s+(?:BY(?:-SA|-NC(?:-SA)?)?|0)(?:\s+[\d.]+)?|公有领域|公共领域|CC0/i)
+    return licence ? clean.slice(0, licence.index).replace(/[·；;\s]+$/, '') + ' · ' + licence[0] : clean
+  }).filter(Boolean))].join('；')
+}
 function nodeLevel(row) { return Number((row && (row.nodeLevel != null ? row.nodeLevel : row.node_level)) || 1) || 1 }
 
 /** /api/roam/pois 回包可能是数组,也可能(W1 之后)是带 truncated 的对象。 */
@@ -272,7 +285,7 @@ function isMysteryVisible(row, origin) {
 
 module.exports = {
   SEED_PREFIX, MIN_RADIUS_M, MAX_RADIUS_M, MYSTERY_M, PIN_DIR, CLUSTER_TAG,
-  parseTags, visibleTags, isRoamPlace, hasSeedTag, categoryKey, coverKey, galleryKeys, quoteList, reasonFor, credit, nodeLevel,
+  parseTags, visibleTags, isRoamPlace, hasSeedTag, categoryKey, coverKey, galleryKeys, quoteList, quoteSources, reasonFor, credit, photosAllowed, nodeLevel,
   unwrapPois, distanceM, distanceFrom, distanceText, gapText, radiusFromRegion, radiusFromScale, shouldRefetch, mergePlaces,
   cullToRegion, pinMode, buildPins, parsePinMarker, zoomForCluster, isMysteryVisible,
 }

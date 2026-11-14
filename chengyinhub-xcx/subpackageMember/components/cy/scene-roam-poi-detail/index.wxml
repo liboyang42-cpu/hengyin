@@ -58,7 +58,7 @@
   <view wx:if="{{merchant}}" class="poi-section"><text class="poi-section__title">基本信息</text><view class="poi-group"><view class="poi-row"><text>商家名称</text><text class="poi-row__value">{{merchant.displayName}}</text></view><view wx:if="{{merchant.catNames}}" class="poi-row"><text>品类</text><text class="poi-row__value">{{merchant.catNames}}</text></view><view class="poi-row"><text>收费方式</text><text class="poi-row__value">{{merchant.chargeText}}</text></view><view class="poi-row"><text>营业状态</text><text class="poi-row__value">{{merchant.businessStatusText}}</text></view><view wx:if="{{merchant.address && hasLocation}}" class="poi-row" bindtap="openLocation" aria-role="button" aria-label="导航到{{merchant.address}}" hover-class="cy-pressed" hover-stay-time="80"><text>门店地址</text><text class="poi-row__value poi-row__link">{{merchant.address}}</text></view><view wx:elif="{{merchant.address}}" class="poi-row"><text>门店地址</text><text class="poi-row__value">{{merchant.address}}</text></view></view></view>
   <view wx:if="{{node}}" class="poi-section">
     <text class="poi-section__title">地点详情</text><text class="poi-story">{{node.description}}</text>
-    <view wx:if="{{photoCredit}}" bindtap="onPhotoCredit" class="poi-credit" aria-role="button" aria-label="照片来源与许可" hover-class="cy-pressed" hover-stay-time="80">照片来源与许可 {{creditOpen ? '收起' : '展开'}}</view>
+    <view wx:if="{{photoCredit}}" bindtap="onPhotoCredit" class="poi-credit" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80">资料来源 {{creditOpen ? '收起' : '展开'}}</view>
     <text wx:if="{{creditOpen}}" class="poi-story" user-select>{{photoCredit}}</text>
   </view>
   <view wx:if="{{node}}" class="poi-section">

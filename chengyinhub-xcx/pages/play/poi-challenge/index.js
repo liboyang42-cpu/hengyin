@@ -23,7 +23,8 @@ Page({
   data: {
     step: 'loading',          // loading | photo | quiz | done | error
     errorText: '',
-    node: null,
+    photoError: '',
+    node: null, questionTitle: '',
     options: [],
     medal: { items: [], title: '', sub: '' },
     backTop: 48,
@@ -55,7 +56,7 @@ Page({
         const n = res && res.code == 200 && res.data;
         if (!n || positiveId(n.poiId == null ? n.id : n.poiId) !== this._poiId) { this.setData({ step: 'error', errorText: (res && res.msg) || '地点暂时打不开' }); return; }
         const options = KEYS.map((k) => ({ id: k, t: n['question' + k] })).filter((o) => o.t);
-        this.setData({ node: n, options });
+        this.setData({ node: n, options, questionTitle: String(n.questionName || '').replace(/\?/g, '？') });
         if (n.completed) { this._finish({ alreadyClaimed: true, badgeName: '' }); return; }
         if (n.status !== 1) { this.setData({ step: 'error', errorText: '这个地点的挑战暂未开放' }); return; }
         const quiz = n.validationMethod === 3 && options.length > 0;
@@ -110,7 +111,17 @@ Page({
   onPick(e) {
     const d = (e && e.detail) || {};
     const kit = this.selectComponent('#quizKit');
-    this._submit(d.optionId, (ok, msg) => { if (kit) kit.settle(ok, { index: d.index, feedback: ok ? '' : (msg === '答案不正确' ? '' : msg) }); });
+    this._submit(d.optionId, (ok, msg) => {
+      // complete 先判答案，再校验照片；这两句拒绝证明答案已过，但不证明挑战完成。
+      const photoRejected = !ok && ['照片未上传成功或不属于当前账号，请重新拍摄上传', '照片校验暂不可用，请稍后重试'].includes(msg);
+      this.setData({ photoError: photoRejected ? msg : '' });
+      if (kit) kit.settle(ok || photoRejected, { index: d.index, pendingEvidence: photoRejected,
+        feedback: photoRejected ? '答案正确，请重新拍摄照片' : (ok ? '' : msg) });
+    });
+  },
+  retakePhoto() {
+    this._photoUrl = '';
+    this.setData({ step: 'photo', photoError: '' });
   },
   onQuizContinue() { this._finish(this._result || {}); },
   /* 判定屏(对勾)停一下再进下一屏,和游玩页节奏一致;失败屏由玩家点退出 */

@@ -1,3 +1,4 @@
+// 2026-11-14 roam-walk：生成器实测到达挑战/重拍及组件事件净增，共 6094→6097（tap 3079，event-contract 3018）。
 // 2026-11-14 wave-1114：四线合成源码重建 6094 控件（tap 3078 / event 3016，external tap 394；本地 2684 / 2917）；精确分母随真实入口更新，证据仍 pending。
 // 2026-11-05 play launch: remove daily-sign note input, keyboard and photo contracts; regenerate on current integ, preserving all other controls.
 // 2026-10-28 整批公共合并源9a330f5a：原hosted生成器实测5553控件，非external的tap2414/event2718；全部证据仍pending，不代业务或设备验收。

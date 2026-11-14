@@ -534,7 +534,7 @@ test('已有漫游记录点击分享会生成含完成事实的成果卡，而�
 
 test('历史深链正文与导出共享里程读模型，非法值未知且真实0保留', async () => {
   const page = loadPage()
-  for (const [input, number, text] of [['bad', null, '—'], [null, null, '—'], [0, 0, '0'], ['0.2', 0.2, '0.2']]) {
+  for (const [input, number, text] of [['bad', null, '—'], [null, null, '—'], [0, 0, '0.0'], ['0.2', 0.2, '0.2']]) {
     assert.equal(page._setSessionView({ ts: 1717243200000, sessionId: '12', finishedAt: Date.now(), distance: input, pois: [], track: [] }), true)
     assert.equal(page.data.s.distance, number)
     assert.equal(page.data.s.distanceText, text)
@@ -597,7 +597,7 @@ test('P0-58 用户在系统存图面板点取消:不挂「保存失败」错误�
   assert.equal(page.data.share.retrySave, true)
 })
 
-test('地图快照失败:显示「地图未生成」重试态,不画假地图顶替也不产出图片', async () => {
+test('截图失败仍用真实轨迹生成足迹卡，不产生虚构底图', async () => {
   global.wx.createMapContext = (id, owner) => {
     setImmediate(() => owner.onShareMapUpdated())
     return { takeSnapshot: (options) => options.fail({ errMsg: 'takeSnapshot:fail' }) }
@@ -605,11 +605,12 @@ test('地图快照失败:显示「地图未生成」重试态,不画假地图顶
   const page = loadPage()
   page.onLoad({ ts: '1717243200000' })
   const result = await page.share()
-  assert.equal(result.ok, false)
-  assert.equal(page.data.share.imagePath, '')
-  assert.equal(page.data.share.error, '地图未生成，请重试')
-  assert.equal(exportedCanvas, null)
-  assert.match(PAGE_WXML, /retry="\{\{err \? '' : '重新生成'\}\}" bind:retry="retryShare"/)
+  assert.equal(result.ok, true)
+  assert.equal(page.data.share.imagePath, '/tmp/roam-session-card.png')
+  assert.equal(page.data.share.mapImage, '')
+  assert.equal(page.data.share.error, '')
+  assert.ok(exportedCanvas)
+  assert.match(PAGE_WXML, /!share\.mapImage[\s\S]*src="\{\{share\.imagePath\}\}"/)
 })
 
 test('分享卡路线来自真实 map 快照:wxml 不再有手画的路线节点', () => {

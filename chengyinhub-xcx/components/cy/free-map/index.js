@@ -101,7 +101,7 @@ Component({
     showExit: { type: Boolean, value: false },
     exitTop: { type: Number, value: 52 }
   },
-  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [], skew3d: ROAM_3D.skew },
+  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [], skew3d: ROAM_3D.skew, mapLoaded: false },
   lifetimes: {
     attached() {
       if (this.data.scene === 'explore') { this._icons = {}; return; }
@@ -320,6 +320,7 @@ Component({
       this.onMarkerTap({ detail: { markerId } });
     },
     onUpdated(e) {
+      if (!this.data.mapLoaded) this.setData({ mapLoaded: true });
       if (this.data.fit && this._fitKey && !this._fitRendered) { this._fitRendered = true; this._applyFit(); }
       this.triggerEvent('updated', e.detail);
     },

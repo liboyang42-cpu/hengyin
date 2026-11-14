@@ -121,14 +121,14 @@ test('快照:cover 裁剪不拉伸;没渲染 / 截图失败 / 空路径都拒绝
   await assert.rejects(mapSnap.takeMapSnapshot(null), (e) => e.mapSnapshot === true)
 })
 
-test('漫游分享卡:预览是真实 map,导出画快照;失败走「地图未生成」,不再手画路线', () => {
+test('漫游分享卡：优先真实快照，截图不可用时绘制本次真实轨迹', () => {
   const wxml = read('pages/roam/index.wxml')
   assert.match(wxml, /<map wx:if="\{\{shareArch\.archGeo\}\}" id="rshMap"[\s\S]*?bindupdated="onShareMapUpdated"/)
   assert.doesNotMatch(wxml, /class="rsh-seg"|class="rsh-route"/)
   const js = read('pages/roam/index.js')
   assert.match(js, /_shareMapImage\(cv, idx, arch\)/)
-  assert.match(js, /mapSnap\.drawCover\(g, mapImage/)
-  assert.match(js, /err && err\.mapSnapshot \? '地图未生成，请重试' : '生成失败'/)
+  assert.match(js, /mapSnap\.drawContain\(g, mapImage/)
+  assert.match(js, /mapSnap\.drawRoute\(g, arch && arch\.archGeo/)
   const drawArch = js.slice(js.indexOf('  _drawShareArch('), js.indexOf('  /** idx 0=story'))
   assert.doesNotMatch(drawArch, /archSegs/)
 })

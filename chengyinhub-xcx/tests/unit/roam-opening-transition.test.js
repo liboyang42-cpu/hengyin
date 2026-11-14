@@ -41,7 +41,7 @@ function startWithLocation({ reducedMotion = false } = {}) {
     timers.push(timer)
     return timer
   }
-  global.getApp = () => ({
+  global.getApp = () => ({ sendRequest(options) { if (options.url === '/api/compliance/consents/latest') options.success({ code: 200, data: null }); else if (options.fail) options.fail({}); },
     globalData: {},
     getUserID: () => '9',
     recordConsent: () => Promise.resolve(),

@@ -7,6 +7,9 @@ Component({
   options: { virtualHost: true },
   properties: {
     tags: { type: null, value: '', observer(value) {
+      const key = JSON.stringify(value)
+      if (this._noteTags === key) return
+      this._noteTags = key
       const note = placeNoteForTags(value)
       this.triggerEvent('note', { tags: value, reason: note ? note.reason : '', sources: note ? note.sourceText : '', sourceList: note ? note.sources : [] })
     } },

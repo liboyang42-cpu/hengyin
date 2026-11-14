@@ -161,18 +161,18 @@ test('主题货架玩法数使用去重 gameCount，不把节点引用数当成�
     { id: 990040, name: '一起动起来', templateCount: 0, gameCount: 0, chapterCount: 8, productType: 2 }
   ];
   await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok(rows));
-  assert.equal(vm._topics.find((t) => t.id === 990047).meta, '实验模板 · 1 个玩法');
-  assert.equal(vm._topics.find((t) => t.id === 990012).meta, '实验模板 · 4 章 · 7 个玩法');
-  assert.equal(vm._topics.find((t) => t.id === 990040).meta, '实验模板 · 8 章');
+  assert.equal(vm._topics.find((t) => t.id === 990047).meta, '1 个玩法');
+  assert.equal(vm._topics.find((t) => t.id === 990012).meta, '4 章 · 7 个玩法');
+  assert.equal(vm._topics.find((t) => t.id === 990040).meta, '8 章');
   assert.deepEqual(rows.map((t) => [t.id, t.templateCount, t.gameCount]), [
     [990047, 4, 1], [990012, 11, 7], [990040, 0, 0]
   ]);
 });
 
-test('主题时长按秒换算(不再把 14400 秒写成「14400分钟」),未验证的主题标「实验模板」', async () => {
+test('主题时长按秒换算(不再把 14400 秒写成「14400分钟」),只有明确实验状态才标「实验模板」', async () => {
   const { vm, requests } = mountShelf();
   await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([
-    topic(1, '风味巡游', { totalTime: 14400 }),
+    topic(1, '风味巡游', { totalTime: 14400, templateStatus: 'EXPERIMENTAL' }),
     topic(2, '不惑之年', { totalTime: 7800, templateStatus: 'VERIFIED' })
   ]));
   const [a, b] = vm._topics;
@@ -447,7 +447,7 @@ test('标签按多个维度分组(没有「场景」维度);横滑行只放常�
   assert.ok(!art.TOPIC_TAGS.some((t) => /黄浦|徐汇|浦东|虹口/.test(t.name)), '业主去掉了区域维度');
   const { vm, requests } = mountShelf();
   await respond(requests.find((r) => r.url === '/api/template/topic-template/list'), ok([
-    topic(1, '风味巡游', { totalTime: 14400 }), topic(2, '高温末日逃生', { totalTime: 21600 }), topic(3, '异常事务局：不存在的坐标', { productType: 1 })
+    topic(1, '风味巡游', { totalTime: 14400, templateStatus: 'EXPERIMENTAL' }), topic(2, '高温末日逃生', { totalTime: 21600 }), topic(3, '异常事务局：不存在的坐标', { productType: 1 })
   ]));
   assert.ok(vm.data.topicTags.length <= art.TOPIC_ROW.length + 1);
   assert.ok(!vm.data.topicTagGroups.some((g) => g.tags.some((t) => t.key === 'versus')), '没有内容的「竞技对抗」不出现');

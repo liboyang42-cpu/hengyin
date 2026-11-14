@@ -128,7 +128,7 @@ function poiCard(p) {
     title: text(p.name) || (kind === 'shop' ? text(p.merchantName) : '') || '未命名地点',
     img: PM.coverKey(p),
     desc: kind === 'shop' ? text(p.description) : reason,
-    sourceList: note ? note.sources : [],
+    sourceList: [...new Set(PM.quoteSources(p).concat(note ? note.sources : []))],
     address: text(p.address),
     tags: splitTags(p.tags).slice(0, 4),
     found: p.found === true,
@@ -150,7 +150,7 @@ function poiGallery(data, id, cover) {
     && Number.isInteger(item.width) && Number.isInteger(item.height)
     && Math.max(item.width, item.height) >= 1600 && Math.min(item.width, item.height) >= 800)
     .map((item) => item.key);
-  return { keys: Array.from(new Set(keys)), credit: typeof data.credit === 'string' ? data.credit.slice(0, 2000) : '' };
+  return { keys: PM.photosAllowed(data) ? Array.from(new Set(keys)) : [], credit: PM.credit(data), blocked: !PM.photosAllowed(data) };
 }
 
 /** 官方地点公开引述:只认带原文、来源和 https 链接的条目,最多 6 条;label = 来源 · 作者 · 日期 */

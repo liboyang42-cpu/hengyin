@@ -67,6 +67,8 @@ public class ApiPricingController extends BaseController {
             // D-16:前端据此区分自由探索(只有门票价)与城市定向
             r.setProductType(topic == null ? null : topic.getProductType());
             return AjaxResult.success(r);
+        } catch (com.chengyinhub.business.exception.TopicPricingRuleMissingException e) {
+            return error("平台费率暂未配置，请联系平台后重试");
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }

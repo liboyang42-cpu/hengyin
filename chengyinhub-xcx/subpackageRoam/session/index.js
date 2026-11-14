@@ -5,7 +5,7 @@ const toast = require('../../utils/toast.js');
 const { ROUTE_COLORS, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { currentPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 const { clipSavedTrackForSharing, readSharePrivacy } = require('../../utils/roam-route-privacy.js');
-const { readNonNegative } = require('../../utils/roam-history-metrics.js');
+const { readNonNegative, formatDistance, formatDuration, formatStartTime } = require('../../utils/roam-history-metrics.js');
 const { limitTrack } = require('../../utils/roam-track-simplify.js');
 const { routeGeo } = require('../../utils/roam-route-geo.js');
 const mapSnap = require('../../utils/map-snapshot.js');
@@ -169,7 +169,8 @@ Page({
     const d = new Date(Number(s.ts));
     const validDate = !Number.isNaN(d.getTime());
     s.dateFull = validDate ? `${d.getMonth() + 1}月${d.getDate()}日 周${WEEK[d.getDay()]}` : '日期不可用';
-    s.time = s.time || this._fmt(s.durSec);
+    s.time = formatDuration(s.durSec, s.time) || '—';
+    s.startTime = formatStartTime(s.startedAt);
     const zone = String(s.zone || '').trim();
     const poiNames = s.pois.map((poi) => String(poi.name || '').trim()).filter(Boolean);
     // 现有落盘记录的 zone 固定为“这片街区”，不能把占位区名冒充真实足迹名；
@@ -182,7 +183,7 @@ Page({
           ? `${poiNames[0]}周边足迹回看`
           : (validDate ? `${d.getMonth() + 1}月${d.getDate()}日城市漫游足迹` : '城市漫游足迹')));
     s.distance = readNonNegative(s.distance);
-    s.distanceText = s.distance === null ? '—' : String(s.distance);
+    s.distanceText = formatDistance(s.distance);
     s.completeFact = '已完成本次漫游';
 
     this.setData({ err: '', s, geo: this._route(s).geo });
@@ -236,10 +237,7 @@ Page({
     }
   },
 
-  _fmt(sec) {
-    sec = sec || 0;
-    return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
-  },
+  _fmt(sec) { return formatDuration(sec); },
 
   // 分享足迹卡的真实地图数据(原生 map 的 include-points / polyline / circles)。
   //
@@ -476,14 +474,14 @@ Page({
     });
   },
 
-  /** 截分享用那张真实 <map> 的快照;没有轨迹(geo 空)= 不需要。截不到就拒绝,走页面已有的「重试」态。 */
+  /** 截分享用那张真实 <map> 的快照;没有轨迹(geo 空)= 不需要。截图不可用时由导出器绘制同一份真实足迹。 */
   _shareMapImage(canvas) {
     if (!this.data.geo) return Promise.resolve(null);
     const ctx = wx.createMapContext('ssMap', this);
     return mapSnap.takeMapSnapshot(ctx, () => this._mapUpdated).then((path) => {
       this.setData({ 'share.mapImage': path });
       return mapSnap.loadImage(canvas, path);
-    });
+    }).catch(() => null);
   },
   onShareMapUpdated() { this._mapUpdated = true; },
 
@@ -517,8 +515,8 @@ Page({
       g.lineTo(map.x, map.y);
       g.clip();
       if (mapImage) {
-        mapSnap.drawCover(g, mapImage, map.x, map.y, map.w, map.h);
-      } else {
+        mapSnap.drawContain(g, mapImage, map.x, map.y, map.w, map.h);
+      } else if (!mapSnap.drawRoute(g, this.data.geo, map.x, map.y, map.w, map.h)) {
         g.fillStyle = SHARE_CARD.tertiary;
         g.font = '26px sans-serif';
         g.textAlign = 'center';
