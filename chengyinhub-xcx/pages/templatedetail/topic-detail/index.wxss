@@ -1,32 +1,129 @@
-/* 主题模板详情(2026-10-30 业主 V-24):版式照抄玩法模板详情 templatedetail,只新增「剧情」与「能力 · 按站」两块 */
+/* 主题模板详情(2026-10-30 业主 V-24):版式照抄玩法模板详情 templatedetail,只新增「剧情」与「能力」两块。
+   2026-11-14 业主「主题模板太复杂、能力那块没有排版,要卡片和样式」:只在既有版式上整理,不改页面结构;
+   颜色 / 字号 / 圆角 / 间距全走 token,卡面与同页 xb-stat-card / xb-rule-card 同一张底(--cy-color-bg-surface-subtle)。 */
 @import "../templatedetail.wxss";
 
-/* 剧情:开场白 → 每章一段 + 这一章依次经过的节点 */
-.st-ch { margin-top: var(--cy-space-4); }
-.st-ch__hd { display: flex; align-items: baseline; gap: var(--cy-space-2); }
-.st-ch__no { font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
-.st-ch__t { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
-.st-ch__p { margin-top: var(--cy-space-1-5); font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-text-secondary); }
-.st-ch__path { display: flex; flex-wrap: wrap; gap: var(--cy-space-1-5); margin-top: var(--cy-space-2); }
-.st-ch__stop { display: flex; align-items: center; gap: var(--cy-space-1); max-width: 100%; padding: 6rpx var(--cy-space-2) 6rpx 6rpx; border-radius: var(--cy-radius-pill); background: var(--cy-bg-card-2); font-size: var(--cy-font-caption); color: var(--cy-text-body); }
-.st-ch__dot { flex: none; width: 36rpx; height: 36rpx; line-height: 36rpx; border-radius: 50%; text-align: center; background: var(--cy-bg-card); color: var(--cy-text-title); font-size: var(--cy-font-caption); }
+/* 剧情:开场白默认收 4 行(与 .xb-body 44rpx 行高同口径,4 行 = 176rpx),量到更高才出「展开」 */
+.td-opening--clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
 
-/* 能力:顶上一行概要,下面按站列玩法 */
-.cap-sum { display: flex; flex-wrap: wrap; gap: var(--cy-space-2); margin: 0 var(--cy-page-x); }
-.cap-list { margin: var(--cy-space-4) var(--cy-page-x) 0; border-radius: var(--cy-radius-lg); background: var(--cy-bg-card); overflow: hidden; }
-.cap-stop { position: relative; display: flex; gap: var(--cy-space-3); padding: var(--cy-space-3) var(--cy-space-4); }
-.cap-stop + .cap-stop::before { content: ""; position: absolute; left: var(--cy-space-4); right: 0; top: 0; height: 1rpx; background: var(--cy-border-line); }
-.cap-stop__no { flex: none; width: 48rpx; height: 48rpx; line-height: 48rpx; border-radius: 50%; text-align: center; background: var(--cy-bg-card-2); font-size: var(--cy-font-caption); font-weight: 700; color: var(--cy-text-title); }
-.cap-stop__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-space-1); }
-.cap-stop__name { font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
-.cap-stop__game { font-size: var(--cy-font-body); font-weight: 700; color: var(--cy-text-title); }
-.cap-stop__do { font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-text-secondary); }
-.cap-stop__dur { display: flex; align-items: center; gap: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
+/* 每章一张紧凑卡:编号徽标 + 章名一行 + 一句话一行;站点路径不再列在这里(只在「能力」按章出卡) */
+.st-ch {
+  display: flex;
+  align-items: center;
+  gap: var(--cy-space-3);
+  margin-top: var(--cy-space-2);
+  padding: var(--cy-space-2-5) var(--cy-space-3);
+  border-radius: var(--cy-radius-md);
+  background: var(--cy-color-bg-surface-subtle);
+}
+.xb-link-more + .st-ch { margin-top: var(--cy-space-3); }
+.st-ch__no {
+  flex: none;
+  width: 44rpx;
+  height: 44rpx;
+  line-height: 44rpx;
+  border-radius: var(--cy-radius-pill);
+  text-align: center;
+  background: var(--cy-color-bg-elevated);
+  font-size: var(--cy-font-caption);
+  font-weight: 700;
+  color: var(--xb-text);
+}
+.st-ch__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4rpx; }
+.st-ch__t { font-size: var(--cy-font-label); font-weight: 700; line-height: 1.4; color: var(--xb-text); }
+.st-ch__p { font-size: var(--cy-font-caption); line-height: 1.4; color: var(--xb-muted); }
+
+/* 能力 · 概要:与详情 .xb-stat-grid 同一张卡,只是允许换行,一行三格 */
+.cap-sum {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cy-space-2);
+  padding: 0 var(--cy-page-x) var(--cy-space-5);
+}
+.cap-sum .xb-stat-card { box-sizing: border-box; flex: 0 0 calc((100% - 2 * var(--cy-space-2)) / 3); }
+
+/* 能力 · 按章分组:章头(编号 + 章名)+ 该章每站一张卡 */
+.cap-ch { padding: 0 var(--cy-page-x) var(--cy-space-4); }
+.cap-ch__hd {
+  display: flex;
+  align-items: center;
+  gap: var(--cy-space-2);
+  padding: var(--cy-space-1) 0 var(--cy-space-2);
+  font-size: var(--cy-font-subtitle);
+  font-weight: 700;
+  color: var(--xb-text);
+}
+.cap-ch__no {
+  flex: none;
+  min-width: 44rpx;
+  height: 44rpx;
+  line-height: 44rpx;
+  padding: 0 var(--cy-space-1-5);
+  box-sizing: border-box;
+  border-radius: var(--cy-radius-pill);
+  text-align: center;
+  background: var(--cy-color-bg-elevated);
+  font-size: var(--cy-font-caption);
+  color: var(--xb-text);
+}
+.cap-ch__t { flex: 1; min-width: 0; }
+
+/* 站卡:不可点,无按压态 */
+.cap-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cy-space-3);
+  padding: var(--cy-space-3);
+  border-radius: var(--cy-radius-md);
+  background: var(--cy-color-bg-surface-subtle);
+}
+.cap-card + .cap-card { margin-top: var(--cy-space-2); }
+.cap-card__no {
+  flex: none;
+  width: 48rpx;
+  height: 48rpx;
+  line-height: 48rpx;
+  border-radius: var(--cy-radius-pill);
+  text-align: center;
+  background: var(--cy-color-bg-elevated);
+  font-size: var(--cy-font-caption);
+  font-weight: 700;
+  color: var(--xb-text);
+  font-variant-numeric: tabular-nums;
+}
+.cap-card__main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--cy-space-1-5); }
+.cap-card__name { align-self: stretch; font-size: var(--cy-font-body); font-weight: 700; line-height: 1.4; color: var(--xb-text); }
+/* 玩法药丸:货架同一张道具图 + 玩法名;表外玩法用线性 play 图标 */
+.cap-card__pill {
+  max-width: 100%;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cy-space-1);
+  min-height: 48rpx;
+  padding: 4rpx var(--cy-space-2) 4rpx var(--cy-space-1);
+  border-radius: var(--cy-radius-pill);
+  background: var(--cy-color-bg-elevated);
+  font-size: var(--cy-font-caption);
+  color: var(--xb-text);
+}
+.cap-card__pill cy-icon { color: var(--xb-muted); }
+.cap-card__pill-img { flex: none; width: 36rpx; height: 36rpx; }
+.cap-card__do { align-self: stretch; font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--xb-muted); }
+.cap-card__dur { display: flex; align-items: center; gap: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--xb-muted); }
+
+/* 采用条件:本页家族的分组键值卡(xb-kv-card),值是一句事实,右对齐、可换行 */
+.xb-block.td-cond { padding-top: var(--cy-space-2); }
+.td-cond .xb-kv-row { align-items: flex-start; }
+.td-cond .xb-kv-v { font-weight: 500; line-height: 1.5; }
+
 .td-medal-img { width: 112rpx; height: 112rpx; flex: none; }
-
-/* U02-01 采用条件:沿用能力 tab 的 xb-caps 行,值是一句事实;待补充用三级字色 */
-.xb-block.td-cond-hd { padding-top: var(--cy-space-6); padding-bottom: 0; }
-.xb-caps.td-cond { margin-top: 0; }
-.td-cond-v { flex: 1; min-width: 0; font-size: var(--cy-font-body); line-height: 56rpx; color: var(--cy-text-title); }
-
 .td-credit { display: block; margin-top: var(--cy-space-1); font-size: var(--cy-font-caption); color: var(--cy-text-tertiary); }
+
+/* 封面署名:详情页底部一行,与节点图署名同一字号颜色 */
+.td-cover-credit { display: block; padding: var(--cy-space-4) var(--cy-page-x) 0; }
