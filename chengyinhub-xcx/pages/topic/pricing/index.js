@@ -315,8 +315,15 @@ Page({
       hideLoading: true, autoErrorToast: false, url: '/api/topic/pricing/sale-status', method: 'GET',
       data: { topicId: this.data.topicId, scope: this.data.scope || undefined },
       success(res) {
-        if (that._unloaded || !res || res.code != '200' || !res.data) return;
+        if (that._unloaded) return;
+        if (!res || res.code != '200' || !res.data) {
+          toast(app.getRequestErrorMessage(res, '开售状态加载失败，请重试'));
+          return;
+        }
         that.setData({ saleStatusText: res.data.message || '' });
+      },
+      fail(res) {
+        if (!that._unloaded) toast(app.getRequestErrorMessage(res, '开售状态加载失败，请重试'));
       }
     });
   },
@@ -328,13 +335,20 @@ Page({
       hideLoading: true, autoErrorToast: false, url: '/api/topic/pricing/settlement-pending', method: 'GET',
       data: { scope: this.data.scope || undefined },
       success(res) {
-        if (that._unloaded || !res || res.code != '200' || !Array.isArray(res.data)) return;
+        if (that._unloaded) return;
+        if (!res || res.code != '200' || !Array.isArray(res.data)) {
+          toast(app.getRequestErrorMessage(res, '待处理结算加载失败，请重试'));
+          return;
+        }
         const topicId = String(that.data.topicId);
         const pendingRows = res.data.filter(function (r) { return r && String(r.topicId) === topicId; }).map(function (r) {
           return { key: String(r.activityId), name: r.activityName || '场次', state: r.state || '结算待处理',
             reason: r.reason || '', money: r.money == null ? '' : '¥' + money(r.money) };
         });
         that.setData({ pendingRows: pendingRows });
+      },
+      fail(res) {
+        if (!that._unloaded) toast(app.getRequestErrorMessage(res, '待处理结算加载失败，请重试'));
       }
     });
   },

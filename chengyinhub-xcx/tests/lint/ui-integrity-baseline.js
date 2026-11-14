@@ -1,4 +1,5 @@
 // 2026-11-14 free-explore-1114:templatedetail.js U4-DYNAMIC 220→221、336→337 与 pricing/index.js U5 188→214 仅行号位移(调用行与理由未改);pages/template/index.js pubLoaded 现已被页面读取,零消费债务出账 u4Field 99→98;不新增登记;u4Debt / u4Dynamic / u5Silent digest 按 baselineKeyDigest 重算。
+// 2026-11-14 ci-833：只移既有 templatedetail U4(220→221、336→337)与 pricing 补名 U5(188→214)锚点；pubLoaded 已消费，删旧债务并收紧 u4Field 99→98。三个 digest 均按 baselineKeyDigest 的排序键 + 换行 + SHA-256 计算，不新增条目、不提高棘轮。
 // 2026-11-14 answers-checkout-1114(topic/index/index.js 支付未知恢复/资料失败区分/重建标记 +32 行):buildRouteMap U4-DYNAMIC 锚点 2157→2192 仅行号位移,调用行与理由逐字未改,条数不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-14 play-round4-1113h(pages/play/index.js 结算回看/开局太远弹窗/introLine 增行):U4-DYNAMIC 章节正文显形 1882→1889、U5 loadMilestone 8918→8962 仅行号位移,调用行与理由逐字未改、条数不变、不新增登记;u4Dynamic / u5Silent keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-13 selfplay-xpay 再合 master(#823 已入):topic/index.js U4-DYNAMIC buildRouteMap 调用点 2134→2157 仅因本线自身在其上增行而位移,调用行逐字相同、理由与条数不变、不新增登记;u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。

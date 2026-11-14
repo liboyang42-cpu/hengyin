@@ -646,6 +646,9 @@ const RAW = [
 ];
 /* eslint-enable max-len */
 
+// 2026-11-14 D-28：真实商家权限/加载状态由后端决定，新增行不晋级截图或业务证据。
+RAW.push(['F317', 'F317-merchant-bundle-reservations.png', '/pages/merchant/bundle-reservations/index', 'merchant', 'normal', null, undefined, { selector: 'cy-page-title', min: 1 }, 'real-data', 'P1', '', '套票预约：未来七天列表与岗位权限使用真实接口，未到店操作另需实际预约验收']);
+
 const SHOTS = RAW.map(([id, file, route, role, state, data, scrollTop, expect, control, priority, blocked, note, fixtureTarget]) => ({
   id, file, route, role, state, data, scrollTop, expect, control, priority, blocked, note, fixtureTarget,
   fixtureVerified: VERIFIED.has(id),
@@ -716,12 +719,12 @@ const STATS = {
     "C": 57,
     "D": 52,
     "E": 26,
-    "F": 114
+    "F": 115
   },
   "control": {
     "setData": 186,
     "identity+setData": 115,
-    "real-data": 61,
+    "real-data": 62,
     "real-device": 7
   },
   "fixtureVerified": 16
