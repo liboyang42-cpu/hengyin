@@ -263,7 +263,7 @@ Component({
           && !feedbackWritable(this.data.state, { stepId: (this.data.currentStep || {}).id })) return;
       if (this.data.preview || this.data.mock) return this.previewAction(name, payload || {});
       const context = this.sessionRequestContext();
-      const sessionId = this.data.state.sessionId;
+      const sessionId = originalPhoto ? originalPhoto.sessionId : this.data.state.sessionId;
       const version = originalPhoto ? originalPhoto.version : this.data.state.version;
       const body = JSON.parse(JSON.stringify(payload || {}));
       // 幂等键由「session + 服务端 version + 动作 + 入参」派生：同一次意图重试复用同一个键，

@@ -750,6 +750,7 @@ test('照片回执 404 可确认同意后重放原照片：保留原版本/键/�
   await game.action('SUBMIT_PHOTO_CHECK', photoInput()); await tick();
   assert.equal(game.data.photoRetryable, true); assert.ok(disk.size > 0);
   const original = JSON.parse(JSON.stringify(game.calls[0].data));
+  game.data.state.sessionId = '42';
   game.data.state.version = 9;
   let asked = 0;
   appStub.requestSeparateConsent = async (scene, current) => { asked++; assert.equal(scene, 'photo'); assert.equal(current(), true); };
