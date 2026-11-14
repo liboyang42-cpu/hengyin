@@ -961,10 +961,7 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .rsh-stage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 8rpx 0 8rpx; }
 .rsh-card { width: 456rpx; padding: 12rpx; box-sizing: border-box; border-radius: var(--cy-radius-xl) var(--cy-radius-xl) 26rpx 26rpx; background: #0D0D0D; box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, .12); } /* ds-ok P-8 与导出卡同色 */
 .rsh-map { position: relative; width: 432rpx; height: 390rpx; overflow: hidden; border-radius: var(--cy-radius-lg); background: linear-gradient(180deg, #1A1A1A, #0C0C0C); display: flex; align-items: center; justify-content: center; } /* ds-ok P-8 与导出卡同色 */
-.rsh-route { position: absolute; left: 0; top: 0; width: 576rpx; height: 520rpx; transform: scale(.75); transform-origin: 0 0; } /* 坐标系与导出同为 576×520,预览缩 0.75 */
-.rsh-seg { position: absolute; height: 7rpx; margin-top: -3rpx; border-radius: 4rpx; background: #FFFFFF; transform-origin: 0 50%; box-shadow: 0 0 12rpx rgba(255, 255, 255, .7); } /* ds-ok P-8 轨迹白线发光,同导出 */
-.rsh-poi { position: absolute; width: 14rpx; height: 14rpx; margin: -7rpx 0 0 -7rpx; border-radius: 50%; border: 5rpx solid #FFFFFF; } /* ds-ok P-8 店铺点白描边,同导出 */
-.rsh-end { position: absolute; width: 12rpx; height: 12rpx; margin: -6rpx 0 0 -6rpx; border-radius: 50%; background: #FFFFFF; border: 6rpx solid #FFFFFF; } /* ds-ok P-8 终点,同导出 */
+.rsh-real { width: 100%; height: 100%; }
 .rsh-empty { font-size: var(--cy-type-body); color: #686868; } /* ds-ok 同导出空态 */
 .rsh-stats { display: flex; justify-content: space-around; padding: 20rpx 0 12rpx; }
 .rsh-st { display: flex; flex-direction: column; align-items: center; gap: 4rpx; }
@@ -1017,3 +1014,9 @@ cy-proto-cam{ position:fixed; left:0; right:0; top:0; bottom:0; z-index:58; poin
 .pc-src { min-height: 88rpx; display: flex; align-items: center; justify-content: space-between; font-size: var(--cy-type-caption); color: var(--cy-color-text-tertiary); }
 .pc-link { word-break: break-all; min-height: 64rpx; }
 .pc-action--nav { margin-left: var(--cy-space-2); background: var(--cy-color-play-surface); color: var(--cy-color-text-primary); }
+/* 2026-11-14 地图样式四选一(设置页) */
+.drow--kind{ flex-wrap:wrap; }
+.dkinds{ flex:none; margin-left:auto; display:flex; gap:12rpx; }
+.dkind{ min-width:84rpx; height:60rpx; padding:0 18rpx; box-sizing:border-box; display:flex; align-items:center; justify-content:center; border-radius:999rpx; background:#1E2228; color:#8A93A0; font-size:26rpx; } /* ds-ok 同 .dsw 轨色 */
+.dkind.is-on{ background:var(--cy-comp-switch-on); color:#FFFFFF; } /* ds-ok */
+

@@ -7,14 +7,7 @@ const KNOWN_SCENE_TWINS = {
     reason: '活动列表路由页仍自取数自绘，scene-roam-task-list 另有一份嵌入实现。',
     exitIntent: '路由页改为渲染 cy-scene-roam-task-list 后删除此项。',
   },
-  'roam-session': {
-    // 2026-08-08:正文已收进 cy-scene-roam-session(单一真源),这条债的性质变了 ——
-    // 剩下的是「分享足迹卡」:canvas 绘轨迹 + 保存相册,page-only 工具链路,
-    // 不在站内弹窗路径上,且 canvas + 相册授权在 scene-sheet 里另有一套坑。
-    // 它为了画轨迹仍需 wx:for,因此页面不满足薄壳判据。
-    reason: '正文已单一真源;页面仅剩 page-only 的分享足迹卡,其 wx:for 是卡片轨迹渲染,不是正文双份。',
-    exitIntent: '分享足迹卡抽成独立组件(或确认可下线)后,页面即无 wx:for,届时删除此项。',
-  },
+  // 2026-11-14 roam-session 退出:分享足迹卡改为真实 map 快照,页面不再有轨迹 wx:for,孪生门禁自然通过。
   'asset-earnings': {
     // 2026-09-16:组件从 subpackageA 搬进主包后,门禁才第一次看见这条孪生 ——
     // 页面确实委托了 cy-scene-asset-earnings,但自身还有账户读取与资金写入表单

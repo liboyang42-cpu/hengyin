@@ -118,7 +118,7 @@
             retry="确认漫游记录" bind:retry="recoverRoam" />
   <view wx:if="{{introTab=='start'}}" class="intro-start">
     <view class="intro-stage">
-      <free-map id="entryMap" class="intro-map__el" scene="explore" center="{{center}}" scale="{{entryScale}}"
+      <free-map id="entryMap" class="intro-map__el" wx:if="{{fmStyleReady}}" tone="{{fmTone}}" scene="explore" center="{{center}}" scale="{{entryScale}}"
                 show-controls="{{false}}" interactive="{{false}}" map-markers="{{entryMarkers}}"
                 subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
                 bind:markertap="onEntryMarkerTap" accessibility-label="漫游出发地图预览" reduced-motion="{{reducedMotion}}" />
@@ -262,7 +262,7 @@
 <view class="map-stack">
   <free-map id="roamMap" class="rmap" scene="explore"
        center="{{center}}" scale="{{mapScale}}" show-controls="{{false}}"
-       subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tilt3d="{{map3d}}"
+       subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tilt3d="{{map3d}}" wx:if="{{fmStyleReady}}" tone="{{fmTone}}"
        map-markers="{{markers}}" explore-pins="{{explorePins}}" map-polyline="{{polyline}}" map-polygons="{{fogOff ? noFogPolys : fogPolys}}" map-circles="{{sparkCircles}}"
        accessibility-label="{{roamMapA11y}}" reduced-motion="{{reducedMotion}}"
        bind:updated="onMapUpdated" bind:markertap="onMarkerTap" bind:regionchange="onRegionChange" bind:poitap="onPoiTap" />
@@ -775,6 +775,13 @@
     <view class="dcopy"><text class="dt">迷雾</text><text class="ds">关掉后地图不再盖雾</text></view>
     <view class="dsw {{fogOff ? '' : 'is-on'}}" catchtap="toggleFogOff" aria-role="switch" aria-checked="{{!fogOff}}" aria-label="迷雾，{{fogOff ? '已关闭' : '已开启'}}" hover-class="cy-pressed" hover-stay-time="80"><view class="dsw-i"></view></view>
   </view>
+  <view class="drow drow--kind">
+    <view class="dic pic pic--route"></view>
+    <view class="dcopy"><text class="dt">地图样式</text></view>
+    <view class="dkinds">
+      <view wx:for="{{mapKindItems}}" wx:key="kind" class="dkind {{fmKind === item.kind ? 'is-on' : ''}}" data-kind="{{item.kind}}" catchtap="onMapKindTap" aria-role="button" aria-pressed="{{fmKind === item.kind}}" aria-label="地图样式，{{item.label}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+    </view>
+  </view>
   <view class="drow">
     <view class="dic pic pic--gear"></view>
     <view class="dcopy"><text class="dt">减少动态效果</text><text class="ds">关掉地图漂移和呼吸</text></view>
@@ -1032,7 +1039,7 @@
                 retry="{{finish.eventErr === 'unknown' ? '' : '重新上报'}}" bind:retry="retryEventReport" />
     </view>
     <view class="settle__map">
-      <free-map class="settle__map-native" scene="explore" center="{{center}}" scale="14"
+      <free-map class="settle__map-native" wx:if="{{fmStyleReady}}" tone="{{fmTone}}" scene="explore" center="{{center}}" scale="14"
                 map-markers="{{markers}}" map-polyline="{{polyline}}"
                 subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}"
                 show-controls="{{false}}" interactive="{{false}}" />
@@ -1101,7 +1108,7 @@
 </view>
 
 <!-- 原 C1 拱形足迹卡屏已被结算页(3992:18005)替代退场;
-     archRoute 模板留着:C2 分享预览仍以它渲染真足迹。 -->
+     archRoute 模板已无调用方(2026-11-14 分享预览改为真实 map 快照),仅因单测钉住而保留。 -->
 
 <!-- ===================== C2 分享 sheet ===================== -->
 <view class="roam-scene-host" wx:if="{{sceneCurrent && sceneCurrent.id === 'roam-share'}}" catchtouchmove="blockSceneTouch">
@@ -1116,11 +1123,11 @@
   <view class="rsh-stage">
     <view class="rsh-card">
       <view class="rsh-map">
-        <view class="rsh-route" wx:if="{{shareArch.archSegs.length}}">
-          <view class="rsh-seg" wx:for="{{shareArch.archSegs}}" wx:key="i" style="left:{{item.x}}rpx;top:{{item.y}}rpx;width:{{item.len}}rpx;transform:rotate({{item.deg}}deg);"></view>
-          <view class="rsh-poi" wx:for="{{shareArch.archPois}}" wx:key="i" style="left:{{item.x}}rpx;top:{{item.y}}rpx;background:{{item.color || '#D9D9D9'}};"></view>
-          <view class="rsh-end" wx:if="{{shareArch.archEnd.x != null}}" style="left:{{shareArch.archEnd.x}}rpx;top:{{shareArch.archEnd.y}}rpx;"></view>
-        </view>
+        <map wx:if="{{shareArch.archGeo}}" id="rshMap" class="rsh-real" longitude="{{shareArch.archGeo.center.longitude}}" latitude="{{shareArch.archGeo.center.latitude}}" scale="{{shareArch.archGeo.scale}}"
+             include-points="{{shareArch.archGeo.include}}" polyline="{{shareArch.archGeo.polyline}}" circles="{{shareArch.archGeo.circles}}"
+             enable-scroll="{{false}}" enable-zoom="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}"
+             show-location="{{false}}" enable-poi="{{false}}" show-compass="{{false}}" show-scale="{{false}}"
+             subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" bindupdated="onShareMapUpdated" aria-hidden="true"></map>
         <text class="rsh-empty" wx:else>今日足迹</text>
       </view>
       <view class="rsh-stats">

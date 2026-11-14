@@ -574,7 +574,7 @@ Page({
     nodes: [], total: 0, merchantCount: 0, merchantDoneCount: 0, doneCount: 0, allDone: false, topicCompleted: false,
     remainingGameCount: 0, canContinueGames: false,
     fmNodes: [], fmPolyline: [], fmTrail: [], fmTeamPins: [], teamRail: [], teamFollowKey: '', teamConsent: { show: false, share: true }, routeCard: { on: false, ready: false }, fmPlayer: null, fmCenter: { lat: 31.2304, lng: 121.4737 },
-    fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, radarMap: { subkey: MAP_DARK.subkey, layerStyle: MAP_DARK.layerStyle } /* V3-13/14 左上雷达固定用漫游同一套深色底图 */, fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
+    fmSubkey: MAP_DARK.subkey, fmLayerStyle: MAP_DARK.layerStyle, /* 2026-11-14 owner:左上雷达与另两张图一样跟主题外观 */ fmTone: '', fmStyleReady: !mapStyleConfigured(), // S9 暗色底图预留,见上方 MAP_DARK 注释
     nextNode: null,
     sheet: { show: false, node: null, continueText: '前往下一站' }, sheetShown: null, /* 细节打磨 G4:距离 / 步行分钟滚上去用的显示值 */
     advancedPlay: { show: false, node: null },
