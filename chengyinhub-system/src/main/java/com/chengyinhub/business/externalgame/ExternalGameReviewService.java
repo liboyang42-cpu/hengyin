@@ -1,6 +1,7 @@
 package com.chengyinhub.business.externalgame;
 
 import com.chengyinhub.business.appgaps.AppGapException;
+import com.chengyinhub.business.review.ReviewStateMachine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -27,7 +28,7 @@ import java.util.Set;
 import java.util.function.LongSupplier;
 
 /**
- * External game (H5 package) submission and review loop.
+ * External game (H5 package) submission and review loop. The transitions are {@link ReviewStateMachine}.
  * <pre>
  *   submit ──► PENDING ──approve──► APPROVED   (catalog shows the newest APPROVED version of a game)
  *                 │  ├──reject(reason)──► REJECTED ──resubmit (higher version)──► new PENDING
@@ -41,9 +42,10 @@ import java.util.function.LongSupplier;
  */
 @Service
 public class ExternalGameReviewService {
-    public static final String PENDING = "PENDING", APPROVED = "APPROVED", REJECTED = "REJECTED", ESCALATED = "ESCALATED", CANCELLED = "CANCELLED";
+    public static final String PENDING = ReviewStateMachine.PENDING, APPROVED = ReviewStateMachine.APPROVED, REJECTED = ReviewStateMachine.REJECTED,
+            ESCALATED = ReviewStateMachine.ESCALATED, CANCELLED = ReviewStateMachine.CANCELLED;
     public static final String TIMEOUT_REASON = "REVIEW_TIMEOUT";
-    static final Set<String> STATUSES = Set.of(PENDING, APPROVED, REJECTED, ESCALATED, CANCELLED);
+    static final Set<String> STATUSES = ReviewStateMachine.STATUSES;
     static final Set<String> REPORT_REASONS = Set.of("INAPPROPRIATE_CONTENT", "MALICIOUS_CODE", "PAYMENT_OR_SCAM", "COPYRIGHT", "BROKEN", "OTHER");
     static final int MAX_LIMIT = 50, MAX_REASON = 500;
     private static final DateTimeFormatter ISO = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").withZone(ZoneId.of("Asia/Shanghai"));
@@ -205,7 +207,7 @@ public class ExternalGameReviewService {
         Map<String, Object> row = loadSubmission(id);
         if (row == null || longOf(row.get("author_member_id")) != me) throw AppGapException.notFound("SUBMISSION_NOT_FOUND");
         if (CANCELLED.equals(row.get("status"))) return authorView(row); // replay-safe
-        transition(id, Set.of(PENDING, ESCALATED), CANCELLED, "AUTHOR", me, reason == null ? "CANCELLED_BY_AUTHOR" : reason, null);
+        transition(id, ReviewStateMachine.sources(CANCELLED), CANCELLED, "AUTHOR", me, reason == null ? "CANCELLED_BY_AUTHOR" : reason, null);
         return authorView(loadSubmission(id));
     }
 
@@ -266,7 +268,7 @@ public class ExternalGameReviewService {
         long reviewer = requireAdmin(admin);
         long id = requiredId(submissionId, "submissionId");
         String note = text(body == null ? null : body.get("note"), MAX_REASON, false, "note");
-        transition(id, Set.of(PENDING, ESCALATED), APPROVED, "ADMIN", reviewer, note, null);
+        transition(id, ReviewStateMachine.sources(APPROVED), APPROVED, "ADMIN", reviewer, note, null);
         return adminView(loadSubmission(id));
     }
 
@@ -274,7 +276,7 @@ public class ExternalGameReviewService {
         long reviewer = requireAdmin(admin);
         long id = requiredId(submissionId, "submissionId");
         String reason = text(body == null ? null : body.get("reason"), MAX_REASON, true, "reason");
-        transition(id, Set.of(PENDING, ESCALATED), REJECTED, "ADMIN", reviewer, reason, null);
+        transition(id, ReviewStateMachine.sources(REJECTED), REJECTED, "ADMIN", reviewer, reason, null);
         return adminView(loadSubmission(id));
     }
 
@@ -282,7 +284,7 @@ public class ExternalGameReviewService {
         long reviewer = requireAdmin(admin);
         long id = requiredId(submissionId, "submissionId");
         String reason = text(body == null ? null : body.get("reason"), MAX_REASON, true, "reason");
-        transition(id, Set.of(PENDING), ESCALATED, "ADMIN", reviewer, reason, "REVIEWER");
+        transition(id, ReviewStateMachine.sources(ESCALATED), ESCALATED, "ADMIN", reviewer, reason, "REVIEWER");
         return adminView(loadSubmission(id));
     }
 
@@ -294,7 +296,7 @@ public class ExternalGameReviewService {
         int moved = 0;
         for (Long id : overdue) {
             try {
-                transition(id, Set.of(PENDING), ESCALATED, "SYSTEM", null, TIMEOUT_REASON, "TIMEOUT");
+                transition(id, ReviewStateMachine.sources(ESCALATED), ESCALATED, "SYSTEM", null, TIMEOUT_REASON, "TIMEOUT");
                 moved++;
             } catch (AppGapException raced) {
                 // reviewed or cancelled meanwhile
