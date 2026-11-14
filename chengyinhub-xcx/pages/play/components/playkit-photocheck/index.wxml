@@ -31,9 +31,9 @@
     </view>
   </view>
 
-  <view class="g-btn {{busy || passed ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onShoot"
-        aria-role="button" aria-label="{{busy ? '正在处理照片' : '拍一张'}}" hover-class="g-btn--press" hover-stay-time="80">
-    {{busy ? '看一眼…' : (passed ? '这一张已定' : (lastUrl ? '再拍一张' : '拍一张'))}}
+  <view class="g-btn {{busy || judging || passed ? 'g-btn--disabled' : ''}} pe pe--up" style="--pe-d:.9s" bindtap="onShoot"
+        aria-role="button" aria-label="{{judging ? '正在审核' : (busy ? '正在处理照片' : '拍一张')}}" hover-class="g-btn--press" hover-stay-time="80">
+    {{judging ? '审核中…' : (busy ? '看一眼…' : (passed ? '这一张已定' : (resubmit ? '重新提交' : (lastUrl ? '再拍一张' : '拍一张'))))}}
   </view>
 </cy-play-stage>
 

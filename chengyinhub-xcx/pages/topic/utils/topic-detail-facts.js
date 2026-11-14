@@ -1,4 +1,4 @@
-const { chinaParts } = require('../../../utils/datetime.js')
+const { chinaParts, toTimestamp } = require('../../../utils/datetime.js')
 
 /**
  * P-30(2026-11-02 第三轮):场次卡写「场次」自己的时间(cms_activity 开始–结束),不写主题票的售卖窗口。
@@ -40,7 +40,7 @@ function positiveNumber(value) {
 /* 有效期天数:购买后 90 天(后端 CmsRegistrationServiceImpl 规则)与主题结束日取较早者 */
 function validDays(data, now) {
   const t = now || Date.now()
-  const end = data && data.endDate ? new Date(String(data.endDate).replace(/-/g, '/')).getTime() : NaN
+  const end = data && data.endDate ? toTimestamp(data.endDate) : NaN
   const ninety = 90
   if (!Number.isFinite(end)) return ninety
   const left = Math.ceil((end - t) / 86400000)

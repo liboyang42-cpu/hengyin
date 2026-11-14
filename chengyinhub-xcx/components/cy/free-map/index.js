@@ -55,6 +55,8 @@ Component({
     // 雷达小地图要它:以前固定 scale=16 以我为中心,下一站在 3km 外时圆里只有街道(2026-10-27 实测)。
     fit: { type: Boolean, value: false },
     fitPadding: { type: Array, value: [40, 40, 40, 40] },
+    // 非空时视野只框这些点 [{latitude,longitude}](路线卡底图快照用)
+    fitPoints: { type: Array, value: [], observer() { this._fit([]); } },
     center: { type: Object, value: { lat: 31.2304, lng: 121.4737 } },
     scale:  { type: Number, value: 16 },
     mapMarkers:   { type: Array, value: [] },
@@ -168,6 +170,15 @@ Component({
     },
     _fit(mk) {
       if (!this.data.fit) return;
+      const fp = this.data.fitPoints || [];
+      if (fp.length) {
+        this._fitPts = fp;
+        const k = JSON.stringify(fp);
+        if (k === this._fitKey) return;
+        this._fitKey = k; this._fitRendered = false;
+        this._applyFit();
+        return;
+      }
       const nodes = mk.filter((m) => m.id !== ARROW_MARKER_ID && m.id !== PLAYER_MARKER_ID);
       const me = mk.find((m) => m.id === PLAYER_MARKER_ID);
       // 「我」离所有站都超过 5km 就不框进来:否则视野会缩到整个城市甚至全国(开发者工具模拟定位实测 12956km)。

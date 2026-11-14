@@ -755,6 +755,11 @@ page { background: var(--cy-color-bg-page); }
 /* 第九轮 m2 第 3 项:路线分享卡 750×1000 画布,按屏宽 3:4 显示 */
 .finsheet__card{ padding:var(--cy-space-4) var(--cy-page-x) 0; }
 .finsheet__routecv{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 900rpx) * 3 / 4)); display:block; width:var(--rc-w); height:calc(var(--rc-w) * 4 / 3); margin:0 auto; border-radius:var(--cy-radius-lg); overflow:hidden; background:var(--cy-color-play-surface-solid); } /* 第十一轮 g4(j4 F8):屏上预览按高度收,卡、按钮和章节标题在首屏落在固定「继续」之上;画布像素尺寸不变,导出仍是 3:4 */
+.finsheet__routewrap{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 900rpx) * 3 / 4)); position:relative; width:var(--rc-w); height:calc(var(--rc-w) * 4 / 3); margin:0 auto; }
+.finsheet--two .finsheet__routewrap{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 1023rpx) * 3 / 4)); }
+.finsheet__routemap{ position:absolute; inset:0; width:100%; height:100%; border-radius:var(--cy-radius-lg); overflow:hidden; }
+.finsheet__routewrap .finsheet__routecv{ position:absolute; inset:0; z-index:1; }
+.finsheet__routewrap .finsheet__map-error{ z-index:3; }
 .finsheet__shade{ position:sticky; top:0; z-index:6; background:var(--cy-color-play-story-page); } /* 第十一轮 g4(j4 F8):状态栏下一条深色带,卡片标题不再滚到状态栏底下 */
 .finsheet__card-acts{ display:flex; gap:var(--cy-space-3); margin-top:var(--cy-space-4); }
 .finsheet__grid{ display:flex; margin-top:31rpx; }
@@ -1766,7 +1771,7 @@ page { background: var(--cy-color-bg-page); }
 .fx-story__hd.is-kitq{ gap:var(--cy-space-2); }
 .fx-story__hd.is-kitq .fx-story__acts{ display:none; }
 .fx-story__kitq{ flex:1; min-width:0; font-size:var(--cy-type-section-title); font-weight:700; line-height:1.3; color:var(--cy-color-text-primary);
-  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:break-all; }
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:keep-all; overflow-wrap:anywhere; }
 .fx-story__act{ width:88rpx; height:88rpx; border-radius:50%;
   background:var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
 

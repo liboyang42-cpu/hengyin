@@ -17,6 +17,7 @@ const { toCard } = require('../../../utils/object-card.js');
 const { isR5, feedbackBranch, albumKit } = require('./playkit-r5-segments.js');
 const sensorContract = require('./sensor-contract.js');
 const questo = require('./playkit-questo.js');
+const { chinaParts } = require('../../../utils/datetime.js');
 const { tidyText } = require('./keep-numerals.js');
 
 const KIT_PRIORITY = [
@@ -120,8 +121,9 @@ function minuteOfDay(clockText) {
 function secondsUntilOpen(openFrom, now) {
   const from = minuteOfDay(openFrom);
   if (from < 0 || !now) return 0;
-  const nowMinute = now.getHours() * 60 + now.getMinutes();
-  let diff = from - nowMinute;
+  const cn = chinaParts(now);                // 开放时刻是中国时钟,不取手机时区
+  if (!cn) return 0;
+  let diff = from - (cn.hours * 60 + cn.minutes);
   if (diff <= 0) diff += 24 * 60;          // 今天的开点已过,等明天这个点
   return diff * 60 - now.getSeconds();
 }
@@ -1104,6 +1106,7 @@ function serverPayload(type, action, detail) {
     const game = CHALLENGE_GAME[type];
     return game ? { game: game } : {};
   }
+  if (SENSOR_GAME_OF[type] && action === 'readfail' && d.unsupported === true) return { game: SENSOR_GAME_OF[type], denied: true };
   if (SENSOR_GAME_OF[type] && (action === 'readfail' || action === 'skip')) return { game: SENSOR_GAME_OF[type] };
   if (SENSOR_GAME_OF[type] && action === 'micdenied') return { game: SENSOR_GAME_OF[type], denied: true };
   switch (type + ':' + action) {

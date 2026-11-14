@@ -106,11 +106,12 @@ Component({
     onVerdict(e) { this._emit('verdict', e.detail); },
     onMicDenied() { this._emit('micdenied'); },
     /* P-23 罗盘读不出方向:失败次数报给服务端记;够了之后「跳过这一站」也由服务端判 */
-    onReadFail() { this._emit('readfail'); },
+    onReadFail(e) { this._emit('readfail', e && e.detail); },
     onSkip() { this._emit('skip'); },
     onStart() { this._emit('start'); },
     onFinish() { this._emit('finish'); },
     onShoot(e) { this._emit('shoot', e && e.detail); },
+    onResubmit() { this._emit('resubmit'); },
     onAudio(e) { this._emit('audio', e.detail); },
     onChoose(e) { this._emit('choose', e.detail); },
     onScanned(e) { this._emit('scanned', e.detail); },

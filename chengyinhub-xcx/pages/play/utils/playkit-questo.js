@@ -56,6 +56,25 @@ function hangmanKit(seg) {
   };
 }
 
+/** 作者在选项文案里自己写了「A 」「A.」「A、」「（A）」时去掉,界面已经画了字母(否则「A A 许禾自述」)。
+ *  只去与本行字母相同的前缀;去完没有字就原样保留。 */
+function stripOptionKey(text, key) {
+  const raw = String(text == null ? '' : text);
+  const k = String(key || '').trim();
+  if (!/^[A-Za-z]$/.test(k)) return raw;
+  const rest = raw.replace(new RegExp('^\\s*[(（]?' + k + '(?:[)）.．、:：]\\s*|\\s+)', 'i'), '');
+  return rest.trim() ? rest : raw;
+}
+
+/** 逐字猜词服务端不带题面/通关话:题面取本站题干(缺时用站名),解开后接本站「文字反馈」。只是展示,判定仍在服务端。 */
+function hangmanStationText(kit, node, fallbackTitle) {
+  const n = node || {};
+  const k = kit || {};
+  const title = k.title || String(n.question || '').trim() || fallbackTitle || '';
+  const feedback = k.solved === true ? String(k.feedback || n.passText || '').trim() : '';
+  return { title, feedback };
+}
+
 /** 码点切分:补充平面字符各占一格(UG-01 验收④)。 */
 function codePoints(text) {
   return Array.from(String(text || ''));
@@ -173,5 +192,5 @@ function accusationKit(view, qaSeg, resolve) {
   };
 }
 
-module.exports = { displayImage, qaOptions, hangmanSlots, hangmanKit, codePoints, hangmanPayload,
+module.exports = { displayImage, qaOptions, hangmanSlots, hangmanKit, hangmanStationText, stripOptionKey, codePoints, hangmanPayload,
   screenBlocks, accusationOutcome, accusationKit, OUTCOME_LABEL };

@@ -1,8 +1,11 @@
 function formatElapsed(seconds) {
   const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0))
-  const minutes = Math.floor(safeSeconds / 60)
   const remain = safeSeconds % 60
-  return String(minutes).padStart(2, '0') + ':' + String(remain).padStart(2, '0')
+  // 满 1 小时写 h:mm:ss,不再出 118:41
+  if (safeSeconds >= 3600) {
+    return Math.floor(safeSeconds / 3600) + ':' + String(Math.floor(safeSeconds % 3600 / 60)).padStart(2, '0') + ':' + String(remain).padStart(2, '0')
+  }
+  return String(Math.floor(safeSeconds / 60)).padStart(2, '0') + ':' + String(remain).padStart(2, '0')
 }
 
 function buildPlayHeader(input) {
