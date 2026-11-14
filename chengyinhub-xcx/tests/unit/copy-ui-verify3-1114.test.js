@@ -19,6 +19,8 @@ test('站点面板和路线标题共享尾部三字保护，原名不变', () =>
   const title = '1 · 五份称呼是否一只猫';
   const display = context.module.exports.text(title);
   assert.ok(display.endsWith('一\u2060只\u2060猫'));
+  assert.ok(context.module.exports.text('毕业那天先发生什么').endsWith('发生什\u2060么'));
+  assert.ok(context.module.exports.text('前往3个点').endsWith('3\u2060个\u2060点'));
   assert.equal(display.replace(/\u2060/g, ''), title);
   assert.match(read('pages/topic/index/index.wxml'), /stationTitle\.text\(node\.name\)/);
 });
