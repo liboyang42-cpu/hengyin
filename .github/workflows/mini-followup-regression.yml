@@ -2,11 +2,8 @@ name: Mini followup focused regression
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'chengyinhub-admin/**'
-      - 'chengyinhub-system/**'
-      - '.github/workflows/mini-followup-regression.yml'
+  push:
+    branches: [master]
 
 permissions:
   contents: read
