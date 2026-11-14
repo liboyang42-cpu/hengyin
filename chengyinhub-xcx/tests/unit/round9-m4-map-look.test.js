@@ -59,16 +59,18 @@ test('_applyLook 把外观交给底图选择', () => {
   assert.match(src, /this\._applyMapLook\(look\);/);
 });
 
-test('play 三张地图都等 fmStyleReady 并带 tone;初值:没配 key 立即可渲染', () => {
+test('play 四张地图都等 fmStyleReady 并带 tone;初值:没配 key 立即可渲染', () => {
   const wxml = read('pages/play/index.wxml');
   const maps = wxml.match(/<free-map\b[^>]*>/g);
-  assert.equal(maps.length, 3);
+  assert.equal(maps.length, 4);   // 雷达 / 小地图 / 完成页路线卡真地图快照(自带 routeMap 配色) / 完成页回放
   // V3-13/14(2026-11-06 业主「地图里面的样式不对」):左上雷达固定用漫游同一套深色底图,不跟外观换纸本 / 2077;另两张照旧跟外观
-  maps.slice(1).forEach((tag) => assert.match(tag, /tone="\{\{fmTone\}\}"/));
+  [maps[1], maps[3]].forEach((tag) => assert.match(tag, /tone="\{\{fmTone\}\}"/));
+  // 路线卡那张只在有路线点时出现,底图 key / 样式 / 配色全由 routeMap 自带(真底图,不是假网格)
+  assert.match(maps[2], /wx:if="\{\{routeMap\.points\.length\}\}"[\s\S]*subkey="\{\{routeMap\.subkey\}\}" layer-style="\{\{routeMap\.layerStyle\}\}" tone="\{\{routeMap\.tone\}\}"/);
   assert.match(maps[0], /subkey="\{\{radarMap\.subkey\}\}" layer-style="\{\{radarMap\.layerStyle\}\}"/);
   assert.match(maps[0], /screen !== 'gamePlay' && fmStyleReady\}\}"/, '罗盘雷达等外观');
   assert.match(wxml, /<view class="story-map" wx:if="\{\{storyMap && fmStyleReady\}\}">/, '小地图整层等外观');
-  assert.match(maps[2], /wx:if="\{\{fmStyleReady\}\}"/, '完成页回放等外观');
+  assert.match(maps[3], /wx:if="\{\{fmStyleReady\}\}"/, '完成页回放等外观');
   assert.match(read('pages/play/index.js'), /fmTone: '', fmStyleReady: !mapStyleConfigured\(\),/);
 });
 

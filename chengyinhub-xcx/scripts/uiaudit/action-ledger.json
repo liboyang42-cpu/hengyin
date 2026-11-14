@@ -1,7 +1,7 @@
 {
   "schemaVersion": 7,
   "generatedBy": "scripts/uiaudit/build-action-ledger.js --write",
-  "controlCount": 6055,
+  "controlCount": 6058,
   "verificationRule": "success/toast/截图不是完成；每条动作必须按 expectedReadback 读取对端事实。",
   "controls": [
     {
@@ -1005951,9 +1005951,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1006392,16 +1006440,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1006562,9 +1006607,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1006995,16 +1007088,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1007327,9 +1007417,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1007760,16 +1007898,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1007792,9 +1007927,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1008225,16 +1008408,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1008334,9 +1008514,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1008767,16 +1008995,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1008799,9 +1009024,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1009232,16 +1009505,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1009828,9 +1010098,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1010261,16 +1010579,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied",
+        "without-chapter-grant",
         "modal-cancelled"
       ],
       "requiredPlatforms": [
@@ -1010781,9 +1011096,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1011214,16 +1011577,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1011997,9 +1012357,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1012430,16 +1012838,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1013651,9 +1014056,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1014084,16 +1014537,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1014116,9 +1014566,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1014549,16 +1015047,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1015574,9 +1016069,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1016007,16 +1016550,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1016683,7 +1017223,7 @@
       }
     },
     {
-      "id": "pages/play/index.wxml:1273:bindtap:verifyGameWrite:169",
+      "id": "pages/play/index.wxml:1273:bindtap:verifyGameWrite:169:variant:answer",
       "route": "pages/play/index",
       "hostRoutes": [],
       "hostComponentPaths": [],
@@ -1016692,7 +1017232,15 @@
         "wxml": "pages/play/index.wxml",
         "js": "pages/play/index.js"
       },
-      "variant": null,
+      "variant": {
+        "id": "answer",
+        "predicate": {
+          "game.vm": 1
+        },
+        "predicateScope": "page",
+        "componentHostSelector": null,
+        "locatorInstance": null
+      },
       "requiredRequests": null,
       "requiredRequestsByBranch": null,
       "requiredRequestOutcomes": null,
@@ -1016766,379 +1017314,424 @@
           "subpackageMember/signup/index"
         ],
         "apis": [
-          "/api/activity/list",
-          "/api/analytics/events/batch",
-          "/api/audit/guard/appeal",
-          "/api/audit/guard/appeal/receipt",
-          "/api/audit/guard/reference",
-          "/api/club/lead/team-progress",
-          "/api/config/features",
-          "/api/game/session/command",
-          "/api/game/session/receipt",
-          "/api/game/session/view",
-          "/api/login/code",
-          "/api/map/reverse-geocode",
-          "/api/orient/scoring/dispute",
-          "/api/orient/scoring/session/",
-          "/api/play/answer",
-          "/api/play/arrive",
-          "/api/play/character",
-          "/api/play/checkin",
-          "/api/play/companionLine",
-          "/api/play/contact",
-          "/api/play/encounter",
-          "/api/play/ending",
-          "/api/play/history",
-          "/api/play/journey/casebook",
-          "/api/play/journey/ending",
-          "/api/play/journey/stage-end",
-          "/api/play/journey/thought/sync",
-          "/api/play/my-completed",
-          "/api/play/nodes",
-          "/api/play/os/",
-          "/api/play/photo",
-          "/api/play/player-journey/report",
-          "/api/play/preference/",
-          "/api/play/route-state",
-          "/api/play/run-session",
-          "/api/play/run-session/clear",
-          "/api/play/theme/action",
-          "/api/play/theme/card",
-          "/api/play/theme/gameplay-action",
-          "/api/play/theme/state",
-          "/api/role/info",
-          "/api/team/trail/consent",
-          "/api/team/trail/state",
-          "/api/team/trail/sync",
-          "/api/topic/share-code"
+          "/api/play/answer"
         ],
         "primaryApis": [
-          "/api/activity/list",
-          "/api/audit/guard/appeal",
-          "/api/audit/guard/appeal/receipt",
-          "/api/audit/guard/reference",
-          "/api/club/lead/team-progress",
-          "/api/game/session/command",
-          "/api/game/session/receipt",
-          "/api/game/session/view",
-          "/api/map/reverse-geocode",
-          "/api/orient/scoring/dispute",
-          "/api/orient/scoring/session/",
-          "/api/play/answer",
-          "/api/play/arrive",
-          "/api/play/character",
-          "/api/play/checkin",
-          "/api/play/companionLine",
-          "/api/play/contact",
-          "/api/play/encounter",
-          "/api/play/ending",
-          "/api/play/history",
-          "/api/play/journey/casebook",
-          "/api/play/journey/ending",
-          "/api/play/journey/stage-end",
-          "/api/play/journey/thought/sync",
-          "/api/play/my-completed",
-          "/api/play/nodes",
-          "/api/play/os/",
-          "/api/play/photo",
-          "/api/play/player-journey/report",
-          "/api/play/preference/",
-          "/api/play/route-state",
-          "/api/play/run-session",
-          "/api/play/run-session/clear",
-          "/api/play/theme/action",
-          "/api/play/theme/card",
-          "/api/play/theme/gameplay-action",
-          "/api/play/theme/state",
-          "/api/team/trail/consent",
-          "/api/team/trail/state",
-          "/api/team/trail/sync",
-          "/api/topic/share-code"
+          "/api/play/answer"
         ],
-        "auxiliaryApis": [
-          "/api/analytics/events/batch",
-          "/api/config/features",
-          "/api/login/code",
-          "/api/role/info"
-        ],
+        "auxiliaryApis": [],
         "apiContracts": [
           {
-            "url": "/api/activity/list",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/analytics/events/batch",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/audit/guard/appeal",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/audit/guard/appeal/receipt",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/audit/guard/reference",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/club/lead/team-progress",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/config/features",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/game/session/command",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/game/session/receipt",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/game/session/view",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/login/code",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/map/reverse-geocode",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/orient/scoring/dispute",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/orient/scoring/session/",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "handler-default"
-          },
-          {
             "url": "/api/play/answer",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/arrive",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/character",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/checkin",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/companionLine",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/contact",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/encounter",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/ending",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/history",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/journey/casebook",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/journey/ending",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/journey/stage-end",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/journey/thought/sync",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/my-completed",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/nodes",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/os/",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "handler-default"
-          },
-          {
-            "url": "/api/play/photo",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/player-journey/report",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/preference/",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "handler-default"
-          },
-          {
-            "url": "/api/play/route-state",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/run-session",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/run-session/clear",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/theme/action",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/theme/card",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/theme/gameplay-action",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/play/theme/state",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/role/info",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/team/trail/consent",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/team/trail/state",
-            "method": "GET",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/team/trail/sync",
-            "method": "POST",
-            "auth": "authenticated",
-            "source": "server-controller"
-          },
-          {
-            "url": "/api/topic/share-code",
             "method": "POST",
             "auth": "authenticated",
             "source": "server-controller"
           }
         ],
         "writeApis": [
-          "/api/game/session/command",
-          "/api/play/answer",
-          "/api/play/checkin",
-          "/api/play/photo",
-          "/api/play/theme/action"
+          "/api/play/answer"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled",
+        "authorize-denied",
+        "getLocation-denied",
+        "openSetting-denied",
+        "startLocationUpdate-denied",
+        "startLocationUpdateBackground-denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:6411"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1273:bindtap:verifyGameWrite:169:variant:checkin",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": {
+        "id": "checkin",
+        "predicate": {
+          "game.vm": 4
+        },
+        "predicateScope": "page",
+        "componentHostSelector": null,
+        "locatorInstance": null
+      },
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "openSetting",
+        "authorize-denied": "authorize",
+        "getLocation-denied": "getLocation",
+        "openSetting-denied": "openSetting",
+        "startLocationUpdate-denied": "startLocationUpdate",
+        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "verifyGameWrite",
+        "line": 1273,
+        "selectorHint": ".gp2__neterr-r",
+        "visibleCondition": "{{gWriteUnknown}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "authorize",
+        "createInnerAudioContext",
+        "getLocation",
+        "getSetting",
+        "login",
+        "openSetting",
+        "startLocationUpdate",
+        "startLocationUpdateBackground",
+        "stopLocationUpdate",
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "createInnerAudioContext",
+        "getLocation",
+        "getSetting",
+        "login",
+        "startLocationUpdate",
+        "startLocationUpdateBackground",
+        "stopLocationUpdate",
+        "vibrateShort"
+      ],
+      "targets": {
+        "routes": [
+          "pages/play/merchant/index?nodeId=",
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
+        ],
+        "apis": [
+          "/api/play/checkin"
+        ],
+        "primaryApis": [
+          "/api/play/checkin"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/play/checkin",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/play/checkin"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled",
+        "authorize-denied",
+        "getLocation-denied",
+        "openSetting-denied",
+        "startLocationUpdate-denied",
+        "startLocationUpdateBackground-denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:6411"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1273:bindtap:verifyGameWrite:169:variant:choice",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": {
+        "id": "choice",
+        "predicate": {
+          "game.vm": 3
+        },
+        "predicateScope": "page",
+        "componentHostSelector": null,
+        "locatorInstance": null
+      },
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "openSetting",
+        "authorize-denied": "authorize",
+        "getLocation-denied": "getLocation",
+        "openSetting-denied": "openSetting",
+        "startLocationUpdate-denied": "startLocationUpdate",
+        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "verifyGameWrite",
+        "line": 1273,
+        "selectorHint": ".gp2__neterr-r",
+        "visibleCondition": "{{gWriteUnknown}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "authorize",
+        "createInnerAudioContext",
+        "getLocation",
+        "getSetting",
+        "login",
+        "openSetting",
+        "startLocationUpdate",
+        "startLocationUpdateBackground",
+        "stopLocationUpdate",
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "createInnerAudioContext",
+        "getLocation",
+        "getSetting",
+        "login",
+        "startLocationUpdate",
+        "startLocationUpdateBackground",
+        "stopLocationUpdate",
+        "vibrateShort"
+      ],
+      "targets": {
+        "routes": [
+          "pages/play/merchant/index?nodeId=",
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
+        ],
+        "apis": [
+          "/api/play/answer"
+        ],
+        "primaryApis": [
+          "/api/play/answer"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/play/answer",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/play/answer"
+        ]
+      },
+      "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
+      "requiredBranches": [
+        "success",
+        "error",
+        "timeout",
+        "duplicate-trigger",
+        "forbidden-owner",
+        "cancelled",
+        "authorize-denied",
+        "getLocation-denied",
+        "openSetting-denied",
+        "startLocationUpdate-denied",
+        "startLocationUpdateBackground-denied"
+      ],
+      "requiredPlatforms": [
+        "ios",
+        "android"
+      ],
+      "externalGate": "real-device-required",
+      "evidence": {
+        "status": "pending",
+        "staticSource": "pages/play/index.js:6411"
+      }
+    },
+    {
+      "id": "pages/play/index.wxml:1273:bindtap:verifyGameWrite:169:variant:photo",
+      "route": "pages/play/index",
+      "hostRoutes": [],
+      "hostComponentPaths": [],
+      "role": "player",
+      "entry": {
+        "wxml": "pages/play/index.wxml",
+        "js": "pages/play/index.js"
+      },
+      "variant": {
+        "id": "photo",
+        "predicate": {
+          "game.vm": 2
+        },
+        "predicateScope": "page",
+        "componentHostSelector": null,
+        "locatorInstance": null
+      },
+      "requiredRequests": null,
+      "requiredRequestsByBranch": null,
+      "requiredRequestOutcomes": null,
+      "requiredAuthorityLinks": null,
+      "requiredAuthorityLinksByBranch": null,
+      "requiredReadbackLinksByBranch": null,
+      "requiredCapabilityByBranch": {
+        "cancelled": "openSetting",
+        "authorize-denied": "authorize",
+        "getLocation-denied": "getLocation",
+        "openSetting-denied": "openSetting",
+        "startLocationUpdate-denied": "startLocationUpdate",
+        "startLocationUpdateBackground-denied": "startLocationUpdateBackground"
+      },
+      "requestMode": "ordered",
+      "confirmationMode": null,
+      "control": {
+        "tag": "text",
+        "event": "bindtap",
+        "handler": "verifyGameWrite",
+        "line": 1273,
+        "selectorHint": ".gp2__neterr-r",
+        "visibleCondition": "{{gWriteUnknown}}",
+        "disabledCondition": null,
+        "ariaLabel": null,
+        "ariaLabelExpression": null,
+        "ariaRole": null,
+        "ariaRoleExpression": null,
+        "ariaDisabled": null,
+        "ariaDisabledExpression": null,
+        "ariaExpanded": null,
+        "ariaExpandedExpression": null,
+        "ariaChecked": null,
+        "ariaCheckedExpression": null
+      },
+      "actionClass": "external",
+      "interactionMode": "tap",
+      "baseActionClass": "write",
+      "effectClasses": [
+        "write",
+        "navigation",
+        "state"
+      ],
+      "accessBoundary": "owned-resource",
+      "externalCapabilities": [
+        "authorize",
+        "createInnerAudioContext",
+        "getLocation",
+        "getSetting",
+        "login",
+        "openSetting",
+        "startLocationUpdate",
+        "startLocationUpdateBackground",
+        "stopLocationUpdate",
+        "vibrateShort"
+      ],
+      "successCapabilities": [
+        "createInnerAudioContext",
+        "getLocation",
+        "getSetting",
+        "login",
+        "startLocationUpdate",
+        "startLocationUpdateBackground",
+        "stopLocationUpdate",
+        "vibrateShort"
+      ],
+      "targets": {
+        "routes": [
+          "pages/play/merchant/index?nodeId=",
+          "pages/privacy/index",
+          "subpackageMember/signup/index"
+        ],
+        "apis": [
+          "/api/play/photo"
+        ],
+        "primaryApis": [
+          "/api/play/photo"
+        ],
+        "auxiliaryApis": [],
+        "apiContracts": [
+          {
+            "url": "/api/play/photo",
+            "method": "POST",
+            "auth": "authenticated",
+            "source": "server-controller"
+          }
+        ],
+        "writeApis": [
+          "/api/play/photo"
         ]
       },
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
@@ -1019536,9 +1020129,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1019969,16 +1020610,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1020001,9 +1020639,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1020434,16 +1021120,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1021361,9 +1022044,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1021794,16 +1022525,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1021894,9 +1022622,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1022327,16 +1023103,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1024259,9 +1025032,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1024692,16 +1025513,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1024724,9 +1025542,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1025157,16 +1026023,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1025995,9 +1026858,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1026428,16 +1027339,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1026460,9 +1027368,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1026893,16 +1027849,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1027565,9 +1028518,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1027998,16 +1028999,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1030040,9 +1031038,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1030473,16 +1031519,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1033018,9 +1034061,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1033451,16 +1034542,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1034829,9 +1035917,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1035262,16 +1036398,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1035294,9 +1036427,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1035727,16 +1036908,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1035759,9 +1036937,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1036192,16 +1037418,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1036291,9 +1037514,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1036724,16 +1037995,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1036958,9 +1038226,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1037391,16 +1038707,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1037423,9 +1038736,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1037856,16 +1039217,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1037888,9 +1039246,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1038321,16 +1039727,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1038353,9 +1039756,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1038786,16 +1040237,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1038818,9 +1040266,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1039251,16 +1040747,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied",
+        "without-chapter-grant",
         "modal-cancelled"
       ],
       "requiredPlatforms": [
@@ -1039284,9 +1040777,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1039717,16 +1041258,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied",
+        "without-chapter-grant",
         "modal-cancelled"
       ],
       "requiredPlatforms": [
@@ -1040020,9 +1041558,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1040453,16 +1042039,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1040485,9 +1042068,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1040918,16 +1042549,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1042238,9 +1043866,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1042671,16 +1044347,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1043502,9 +1045175,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1043935,16 +1045656,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1043967,9 +1045685,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1044400,16 +1046166,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1044432,9 +1046195,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1044865,16 +1046676,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1044897,9 +1046705,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1045330,16 +1047186,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1045362,9 +1047215,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1045795,16 +1047696,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1045827,9 +1047725,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1046260,16 +1048206,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1047040,9 +1048983,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1047473,16 +1049464,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1048989,9 +1050977,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1049430,16 +1051466,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied",
+        "without-chapter-grant",
         "modal-cancelled"
       ],
       "requiredPlatforms": [
@@ -1050389,9 +1052422,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1050822,16 +1052903,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1052407,9 +1054485,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1052840,16 +1054966,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1053698,9 +1055821,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1054131,16 +1056302,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1054163,9 +1056331,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1054596,16 +1056812,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1054628,9 +1056841,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1055061,16 +1057322,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1055413,9 +1057671,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1055846,16 +1058152,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1055878,9 +1058181,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1056311,16 +1058662,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1056343,9 +1058691,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1056776,16 +1059172,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1056878,9 +1059271,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1057311,16 +1059752,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1057410,9 +1059848,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1057843,16 +1060329,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1058087,9 +1060570,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1058520,16 +1061051,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1058552,9 +1061080,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1058985,16 +1061561,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1059108,9 +1061681,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1059541,16 +1062162,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1059643,9 +1062261,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1060076,16 +1062742,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1060726,9 +1063389,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1061159,16 +1063870,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1061604,9 +1064312,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1062037,16 +1064793,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1062136,9 +1064889,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1062569,16 +1065370,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1062678,9 +1065476,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1063111,16 +1065957,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1063210,9 +1066053,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1063643,16 +1066534,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1067684,9 +1070572,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1068117,16 +1071053,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied",
+        "without-chapter-grant",
         "modal-cancelled"
       ],
       "requiredPlatforms": [
@@ -1069094,9 +1072027,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1069527,16 +1072508,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1069627,9 +1072605,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1070060,16 +1073086,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1071313,9 +1074336,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1071746,16 +1074817,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1073775,9 +1076843,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1074216,16 +1077332,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1074382,9 +1077495,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1074823,16 +1077984,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1075544,9 +1078702,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1075977,16 +1079183,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1076089,9 +1079292,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1076522,16 +1079773,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1076554,9 +1079802,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1076987,16 +1080283,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",
@@ -1079041,9 +1082334,57 @@
         "js": "pages/play/index.js"
       },
       "variant": null,
-      "requiredRequests": null,
-      "requiredRequestsByBranch": null,
-      "requiredRequestOutcomes": null,
+      "requiredRequests": [
+        {
+          "urlTemplate": "/api/game/session/command",
+          "method": "POST",
+          "kind": "write"
+        },
+        {
+          "urlTemplate": "/api/play/theme/action",
+          "method": "POST",
+          "kind": "write"
+        }
+      ],
+      "requiredRequestsByBranch": {
+        "without-chapter-grant": [
+          {
+            "urlTemplate": "/api/game/session/command",
+            "method": "POST",
+            "kind": "write"
+          }
+        ]
+      },
+      "requiredRequestOutcomes": {
+        "success": [
+          "success",
+          "success"
+        ],
+        "first-error": [
+          "error"
+        ],
+        "first-timeout": [
+          "timeout"
+        ],
+        "second-error-after-first": [
+          "success",
+          "error"
+        ],
+        "second-timeout-after-first": [
+          "success",
+          "timeout"
+        ],
+        "duplicate-trigger": [
+          "duplicate-trigger",
+          "duplicate-trigger"
+        ],
+        "forbidden-owner": [
+          "forbidden-owner"
+        ],
+        "without-chapter-grant": [
+          "success"
+        ]
+      },
       "requiredAuthorityLinks": null,
       "requiredAuthorityLinksByBranch": null,
       "requiredReadbackLinksByBranch": null,
@@ -1079482,16 +1082823,13 @@
       "expectedReadback": "重新读取服务端权威资源，核对 owner/scope、状态与幂等结果；success/toast 不算完成；回读 getCurrentPages() 末页 route/options，并确认目标页关键数据已装载；调用真实 handler 后回读 page.data 与可见 DOM，禁止直接 setData 伪造完成态；真机回读微信能力结果及取消/拒绝/超时分支；开发者工具回执不替代真机证据",
       "requiredBranches": [
         "success",
-        "error",
-        "timeout",
+        "first-error",
+        "first-timeout",
+        "second-error-after-first",
+        "second-timeout-after-first",
         "duplicate-trigger",
         "forbidden-owner",
-        "cancelled",
-        "authorize-denied",
-        "getLocation-denied",
-        "openSetting-denied",
-        "startLocationUpdate-denied",
-        "startLocationUpdateBackground-denied"
+        "without-chapter-grant"
       ],
       "requiredPlatforms": [
         "ios",

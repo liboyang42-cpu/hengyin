@@ -1,6 +1,8 @@
 /* 整屏层:模糊的是**下面的页面**(backdrop-filter),不是另画的色块。 */
 .pr { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 960; background: transparent; overflow: hidden; color: var(--cy-color-text-primary); }
 .pr-pressed { opacity: .8; }
+/* 点任意处跳过动画:按住时标题行减淡一档,告诉人点到了(落定后 hover-class 为 none) */
+.pr-tap .pr__head { opacity: .8; }
 .pr__blur { position: absolute; top: 0; right: 0; bottom: 0; left: 0; opacity: 0; transition: opacity .42s ease-out;
   backdrop-filter: blur(52rpx) saturate(1.6) brightness(1.06); -webkit-backdrop-filter: blur(52rpx) saturate(1.6) brightness(1.06); }
 .pr.blur .pr__blur { opacity: 1; }

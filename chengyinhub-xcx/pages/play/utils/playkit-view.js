@@ -328,6 +328,9 @@ function buildPhotoCheck(seg, receipt, placeName) {
        页面每失败一次就把 kit.photoFailSeq 往上加(页面计数单调递增),组件只认「比见过的大」。
        这里恒给 0:会话视图重建时归零不算失败。 */
     photoFailSeq: 0,
+    // 失败落在哪一步('submit' = 照片已传上去只差提交,可重新提交;空 = 上传失败)与「审核中」:同属页面本地态,这里给初值
+    photoFailKind: '',
+    photoJudging: false,
   };
 }
 

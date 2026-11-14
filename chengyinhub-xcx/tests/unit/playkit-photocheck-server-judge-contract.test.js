@@ -132,5 +132,5 @@ test('★R11 降级未放行:说再拍一张、带服务端理由;降级已放�
   const released = runVerdict({ tries: 3, maxTries: 3, flagged: true, degraded: true, passed: true })
   assert.equal(released.verdict, '这次没能审，先往下走')
   const wxml = read(REL.replace(/\.js$/, '.wxml'))
-  assert.match(wxml, /\{\{busy \|\| passed \? 'g-btn--disabled' : ''\}\}/, '按钮只在服务端 passed 后才停用')
+  assert.match(wxml, /\{\{busy \|\| judging \|\| passed \? 'g-btn--disabled' : ''\}\}/, '按钮只在处理中/服务端判分中/服务端 passed 后才停用,不因本地判断停用')
 })

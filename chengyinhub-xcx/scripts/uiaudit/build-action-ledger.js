@@ -951,6 +951,13 @@ const ACTION_VARIANTS = new Map([
     { id: 'reveal', handler: 'revealAnswer', predicate: { gRetryType: 'puzzleReveal' }, apis: ['/api/play/puzzle/reveal'] },
     { id: 'answer', handler: 'submitGame', predicate: { gRetryType: 'answer' }, apis: ['/api/play/answer'] },
   ]],
+  // 「核对结果」:写结果未知后按原动作回读/重走,不新增动作种类;按当前玩法类型分流到原提交函数。
+  ['pages/play/index.js:verifyGameWrite', [
+    { id: 'answer', handler: 'submitGame', predicate: { 'game.vm': 1 }, apis: ['/api/play/answer'] },
+    { id: 'photo', handler: 'submitPhoto', predicate: { 'game.vm': 2 }, apis: ['/api/play/photo'] },
+    { id: 'choice', handler: 'submitGame', predicate: { 'game.vm': 3 }, apis: ['/api/play/answer'] },
+    { id: 'checkin', handler: 'checkin', predicate: { 'game.vm': 4 }, apis: ['/api/play/checkin'] },
+  ]],
   ...[
     'onThemeBagAction', 'retryThemeBagAction', 'onThemeGameplayAction', 'onThemeCancelGameplayAction',
     'confirmThemeCostChoice', 'confirmThemeRewardPreview', 'confirmThemePendingClaim',
@@ -2917,9 +2924,13 @@ function buildLedger() {
             ? 'config-capability' : (effectClasses.includes('write') ? 'owned-resource' : null))
         // Refresh may enter a configured chapter and grant its inventory after the primary write.
         // Keep both writes in the contract; themes without a grant take a separate branch.
-        if (rel(jsFile) === 'pages/play/index.js' && writeApis.length === 2
-          && writeApis.includes('/api/play/theme/action') && !variant.requiredRequests && !variant.requiredRequestsByBranch) {
-          const first = writeApis.find(api => api !== '/api/play/theme/action')
+        // 「核对一次」(verifyArrivalWrite)只在弹窗确认后重走原打卡命令,不是这次点击自己的请求:
+        // 闭包会把 /api/play/checkin 带进来,但它不进必达请求,只留在 targets.writeApis。
+        const playWrites = writeApis.length === 3 && writeApis.includes('/api/play/checkin')
+          ? writeApis.filter(api => api !== '/api/play/checkin') : writeApis
+        if (rel(jsFile) === 'pages/play/index.js' && playWrites.length === 2
+          && playWrites.includes('/api/play/theme/action') && !variant.requiredRequests && !variant.requiredRequestsByBranch) {
+          const first = playWrites.find(api => api !== '/api/play/theme/action')
           const plan = twoStepWritePlan(first, '/api/play/theme/action')
           variant = { ...variant, ...plan,
             requiredRequestsByBranch: { 'without-chapter-grant': [{ urlTemplate: first, method: 'POST', kind: 'write' }] },
