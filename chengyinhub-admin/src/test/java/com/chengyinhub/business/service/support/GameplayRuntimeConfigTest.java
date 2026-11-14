@@ -10,6 +10,22 @@ import static org.junit.jupiter.api.Assertions.*;
 class GameplayRuntimeConfigTest {
     private final ObjectMapper json=new ObjectMapper();
 
+    @Test void teamPoolConfigIsAcceptedStandaloneAndWithRangeValidation() {
+        ObjectNode standalone = json.createObjectNode().put("schemaVersion", 1);
+        standalone.putObject("gameplayRuntime").putObject("teamPool").put("hints", 3).put("skips", 1).put("timerSec", 1800);
+        ObjectNode parsed = GameplayRuntimeConfig.parse(standalone.toString());
+        assertEquals(3, parsed.path("teamPool").path("hints").asInt());
+        assertEquals(1800, parsed.path("teamPool").path("timerSec").asInt());
+
+        ObjectNode outOfRange = json.createObjectNode().put("schemaVersion", 1);
+        outOfRange.putObject("gameplayRuntime").putObject("teamPool").put("hints", 100);
+        assertThrows(IllegalArgumentException.class, () -> ThemeRuntimeConfig.parse(outOfRange.toString()));
+
+        ObjectNode unknownField = json.createObjectNode().put("schemaVersion", 1);
+        unknownField.putObject("gameplayRuntime").putObject("teamPool").put("extra", 1);
+        assertThrows(IllegalArgumentException.class, () -> ThemeRuntimeConfig.parse(unknownField.toString()));
+    }
+
     @Test void cooperativeVersionIsExplicitTeamOnlyAndDoesNotAutoChooseRewards() {
         ObjectNode c = config();
         ObjectNode game = (ObjectNode) c.path("gameplayRuntime");

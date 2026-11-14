@@ -30,8 +30,15 @@ public final class GameplayRuntimeConfig {
     static void validate(ObjectNode themeConfig, Set<String> items, boolean draft) {
         if (!themeConfig.has("gameplayRuntime")) return;
         JsonNode game = themeConfig.get("gameplayRuntime");
-        fields(game, "runtimeScope", "worldMode", "releaseCode", "ruleVersion", "storyVersion", "routeVersion", "survival", "initialGrants", "acts", "quests", "facilities", "plans", "allowTrade", "votePolicy", "arrivalTtlSeconds", "templateTools", "storyEndings", "cooperationVersion");
-        option(game, "runtimeScope", "PLAYER", "TEAM");
+        fields(game, "runtimeScope", "worldMode", "releaseCode", "ruleVersion", "storyVersion", "routeVersion", "survival", "initialGrants", "acts", "quests", "facilities", "plans", "allowTrade", "votePolicy", "arrivalTtlSeconds", "templateTools", "storyEndings", "cooperationVersion", "teamPool");
+        if (game.has("teamPool")) {
+            JsonNode pool = game.get("teamPool");
+            fields(pool, "hints", "skips", "timerSec");
+            if (pool.has("hints")) number(pool, "hints", 0, 99);
+            if (pool.has("skips")) number(pool, "skips", 0, 99);
+            if (pool.has("timerSec")) number(pool, "timerSec", 0, 86_400);
+        }
+        if (game.has("runtimeScope") || !game.has("teamPool")) option(game, "runtimeScope", "PLAYER", "TEAM");
         boolean world = "WORLD_SHARED".equals(game.path("worldMode").asText());
         if ("TEAM".equals(game.path("runtimeScope").asText())) option(game, "worldMode", "TEAM_INDEPENDENT", "WORLD_SHARED");
         else if (game.has("worldMode")) fail("PLAYER 不适用 worldMode");
