@@ -2307,7 +2307,7 @@ Page({
         if (!host) throw new Error('未找到要插入的段落');
         const result = this._storyCommand({ type: 'moveBlockInto', blockKey: key, targetKey: host.key, at: Number(split.at), tailKey: this._genLocalId() },
           { storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });
-        this._storyUndoBar('已插到第 ' + (result.hostIndex + 1) + ' 段中间,段落拆成两段');
+        this._storyUndoBar('已插到第 ' + (result.hostIndex + 1) + ' 段中间，段落拆成两段');
         return;
       }
       this._storyCommand({ type: 'moveBlock', blockKey: key, index: drag.to }, { storyDrag: reset, storyScrollTop: scrollTop, 'storyEditor.selectedBlockKey': key });

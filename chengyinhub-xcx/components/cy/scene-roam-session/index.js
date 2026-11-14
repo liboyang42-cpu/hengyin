@@ -1,7 +1,7 @@
 'use strict'
 
 const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js')
-const { readNonNegative, formatDistance, formatDuration } = require('../../../utils/roam-history-metrics.js')
+const { readNonNegative, footprintCount, formatDistance, formatDuration } = require('../../../utils/roam-history-metrics.js')
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js')
 const { buildReplaySchedule, buildRouteGeometry, replayFrame } = require('./route-replay.js')
 const { createReader } = require('../../../utils/roam-passport-read.js')
@@ -170,6 +170,7 @@ Component({
         distanceText: distance === null ? unknownCount : formatDistance(distance),
         shops,
         shopsText: shops === null ? unknownCount : String(shops),
+        footprints: footprintCount(raw),
         explorePct: explorePct !== null && explorePct <= 100 ? explorePct : null,
         explorePctText: explorePct !== null && explorePct <= 100 ? String(explorePct) : '0',
         pois: (Array.isArray(raw.pois) ? raw.pois : [])

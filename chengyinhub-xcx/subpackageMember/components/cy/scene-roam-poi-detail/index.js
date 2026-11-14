@@ -59,7 +59,7 @@ Component({
     merchantId: { type: String, value: '' },
   },
   data: {
-    photoIndex: 0, photoCredit: '', creditOpen: false, ratingOptions: [1, 2, 3, 4, 5],
+    catalogReason: '', photoIndex: 0, photoCredit: '', creditOpen: false, ratingOptions: [1, 2, 3, 4, 5],
     challengePhoto: '', reviews: [], reviewsError: false, reviewText: '', reviewRating: 0, reviewSubmitting: false, reviewSheetShow: false,
     choiceSheetShow: false,
     choiceSheetItems: [],
@@ -67,7 +67,7 @@ Component({
     errorText: '节点信息加载失败',
     merchant: null,
     merchantError: '',
-    node: null,
+    node: null, isCatalog: false,
     gallery: [],
     tags: [],
     featured: null,
@@ -179,7 +179,7 @@ Component({
       try { if (context) pending = readPending(context) } catch (_) { storageError = true }
       const merchantId = this.data.merchantId
       const resetState = (state) => this.setData({
-        photoIndex: 0, photoCredit: '', creditOpen: false,
+        catalogReason: '', photoIndex: 0, photoCredit: '', creditOpen: false,
         challengePhoto: '', reviews: [], reviewsError: false, reviewText: '', reviewRating: 0, reviewSubmitting: false, reviewSheetShow: false,
         checkinPending: false,
         reverifyChecking: false, reverifyReady: false, reverifyStarted: false, pendingStatusText: '',
@@ -187,7 +187,7 @@ Component({
         merchant: null,
         merchantError: '',
         choiceSheetShow: false,
-        node: null,
+        node: null, isCatalog: false,
         gallery: [],
         tags: [],
         featured: null,
@@ -223,7 +223,8 @@ Component({
           const rawNode = nodeRes && (nodeRes.code === '200' || nodeRes.code === 200) && isRecord(nodeRes.data) ? nodeRes.data : null
           const nodeId = rawNode && positiveId(rawNode.poiId == null ? rawNode.id : rawNode.poiId)
           if (!nodeId || nodeId !== positiveId(poiId) || (rawNode.id != null && positiveId(rawNode.id) !== nodeId)) {
-            this._nodeLoadFailed(nodeRes)
+            if (!pending && !storageError && nodeRes && Number(nodeRes.code) === 410) this._loadCatalog(poiId, token, loadedOwner)
+            else this._nodeLoadFailed(nodeRes)
             return
           }
           const method = typeof rawNode.validationMethod === 'number' ? rawNode.validationMethod : null
@@ -233,6 +234,7 @@ Component({
             canInteract: rawNode.status === 1 && VALIDATION_METHODS.includes(method),
           }
           if (this.data.state !== 'ready') pageMotion.enter(this, 'pmPage'); this.setData({ node, state: 'ready', hasLocation: !!this._coordinates(node, null) })
+          this._emitPlaceTitle(node.name)
           if (pending && typeof node.completed === 'boolean' && typeof node.needRedeem === 'boolean' && node.completed !== node.needRedeem) {
             try {
               if (clearPending(context, pending)) {
@@ -273,8 +275,26 @@ Component({
           this.loadPhotoCredit(node)
         },
         fail: () => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this.setData({ state: 'error', reverifyChecking: false, errorText: '网络异常，请重试' }) },
-        successStatusAbnormal: (res) => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) this._nodeLoadFailed(res) },
+        successStatusAbnormal: (res) => { if (!this._closed && token === this._loadToken && loadedOwner === ownerId()) !pending && !storageError && Number(res && res.code) === 410 ? this._loadCatalog(poiId, token, loadedOwner) : this._nodeLoadFailed(res) },
       })
+    },
+    _emitPlaceTitle(name) {
+      if (!nonEmptyString(name)) return
+      this.triggerEvent('titlechange', { poiId: this.data.poiId, merchantId: this.data.merchantId, name: nonEmptyString(name) })
+    },
+    async _loadCatalog(poiId, token, loadedOwner) {
+      const current = () => !this._closed && token === this._loadToken && loadedOwner === ownerId() && poiId === this.data.poiId
+      try {
+        const row = await require('../../../../utils/roam-place-detail.js').readPlace(app, poiId)
+        if (!current()) return
+        pageMotion.enter(this, 'pmPage')
+        this.setData({ node: row, isCatalog: true, state: 'ready', reverifyChecking: false,
+          gallery: placeMedia.galleryKeys(row).map(key => app.getImgUrl(key)), tags: placeMedia.visibleTags(row.tags),
+          photoCredit: placeMedia.credit(row), catalogReason: placeMedia.reasonFor(row, null), hasLocation: !!this._coordinates(row, null) })
+        this._emitPlaceTitle(row.name)
+      } catch (error) {
+        if (current()) this.setData({ state: 'error', reverifyChecking: false, errorText: error.message })
+      }
     },
     _nodeLoadFailed(res) {
       // 200 但数据形状不对时 msg 是「操作成功」,不能当失败原因(2026-09-17 拍板)。
@@ -325,7 +345,7 @@ Component({
             imageUrl: nonEmptyString(rawFeatured.imgUrl) || nonEmptyString(rawFeatured.coverImg) || nonEmptyString(rawFeatured.img),
             actionable: (featuredType === 1 && !!rawFeatured.featuredId) || featuredType === 2,
           } : null
-          if (this.data.state !== 'ready') pageMotion.enter(this, 'pmPage'); this.setData({ merchant, merchantError: '', gallery, tags, featured, hasLocation: !!this._coordinates(this.data.node, merchant), state: 'ready' })
+          if (this.data.state !== 'ready') pageMotion.enter(this, 'pmPage'); this.setData({ merchant, merchantError: '', gallery, tags, featured, hasLocation: !!this._coordinates(this.data.node, merchant), state: 'ready' }); this._emitPlaceTitle(this.data.node && this.data.node.name || merchant.displayName)
         },
         fail: () => { if (isCurrent()) this._merchantLoadFailed('网络异常，这次没有读到商家信息。') },
         successStatusAbnormal: () => { if (isCurrent()) this._merchantLoadFailed('这次没有读到商家信息，请稍后重试。') },

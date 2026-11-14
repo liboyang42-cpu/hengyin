@@ -1259,7 +1259,7 @@ function applyStoryCommand(input, command) {
     return { draft: draft };
   }
 
-  throw new Error('不支持的故事流命令: ' + String(command.type || ''));
+  throw new Error('不支持的故事流命令： ' + String(command.type || ''));
 }
 
 module.exports = {

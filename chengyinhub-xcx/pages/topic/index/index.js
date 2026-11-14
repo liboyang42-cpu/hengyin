@@ -1390,7 +1390,7 @@ Page({
     if (!club || !topicId) return;
     modal.show({
       title: '移交给俱乐部承接',
-      content: '将复制一份新的城市定向主题(有人带),挂到「' + club.name + '」承接；原主题会下架，历史票不受影响。',
+      content: '将复制一份新的城市定向主题(有人带)，挂到「' + club.name + '」承接；原主题会下架，历史票不受影响。',
       confirmText: '确认移交',
       success(m) {
         if (!m.confirm) return;
@@ -1408,7 +1408,7 @@ Page({
               const newId = r.data && r.data.newTopicId;
               modal.show({
                 title: '已移交',
-                content: '已生成新的城市定向草稿，去配置票种并邀请该俱乐部承接?',
+                content: '已生成新的城市定向草稿，去配置票种并邀请该俱乐部承接？',
                 confirmText: '去配置', cancelText: '稍后',
                 success(g) {
                   if (g.confirm && newId) {

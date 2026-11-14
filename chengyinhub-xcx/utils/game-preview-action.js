@@ -35,7 +35,7 @@ function applyPreviewAction(source, event, startedAt, now = Date.now()) {
         kit.answers[q.key] = q.kaccha.option;
         return hit;
       });
-    if (kit.overrides.length) result.message = '预览:假定触发条件已满足';
+    if (kit.overrides.length) result.message = '预览：假定触发条件已满足';
     kit.done = true;
     result.ready = true;
   } else if (kit.type === 'note' && action === 'submit') {

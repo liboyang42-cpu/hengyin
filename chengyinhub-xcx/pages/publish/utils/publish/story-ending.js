@@ -72,8 +72,8 @@ function serialize(draft) {
   let fallbacks = 0;
   const endings = list.map((item, index) => {
     const code = String((item && item.code) || '').trim();
-    if (!CODE.test(code)) throw new Error('第 ' + (index + 1) + ' 个结局的编号不合法:' + code);
-    if (seen.indexOf(code) >= 0) throw new Error('结局编号重复:' + code);
+    if (!CODE.test(code)) throw new Error('第 ' + (index + 1) + ' 个结局的编号不合法：' + code);
+    if (seen.indexOf(code) >= 0) throw new Error('结局编号重复：' + code);
     seen.push(code);
 
     const title = String((item && item.title) || '').trim();

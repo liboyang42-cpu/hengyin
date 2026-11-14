@@ -48,7 +48,7 @@ test('Explore 沿用同一 HUD 结构但左侧显示真实路程', () => {
     paused: true,
   })
 
-  assert.deepEqual(hud.left, { label: '已走', value: '1.26', unit: 'km' })
+  assert.deepEqual(hud.left, { label: '已走', value: '1.3', unit: 'km' })
   assert.deepEqual(hud.right, { label: '用时', value: '62:03', unit: '' })
   assert.equal(hud.state, 'paused')
   assert.equal(hud.actionLabel, '继续')

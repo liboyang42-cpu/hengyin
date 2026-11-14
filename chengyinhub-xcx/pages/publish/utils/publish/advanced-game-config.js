@@ -1845,7 +1845,7 @@ function validateNormalized(model, opts) {
       for (const other of placed) {
         const dx = x - other[0];
         const dy = y - other[1];
-        if (Math.sqrt(dx * dx + dy * dy) < r + other[2]) return '找东西的两个目标挨得太近,请把它们分开一些';
+        if (Math.sqrt(dx * dx + dy * dy) < r + other[2]) return '找东西的两个目标挨得太近，请把它们分开一些';
       }
       placed.push([x, y, r]);
     }
@@ -1885,7 +1885,7 @@ function validateNormalized(model, opts) {
     }
     // 截止之后才揭晓:同一天里先公布答案再收注,那就不是猜了
     if (revealDays === 0 && revealHour < Number(predict.closeAtHour)) {
-      return '当天揭晓的话,揭晓时间要晚于收注截止时间';
+      return '当天揭晓的话，揭晓时间要晚于收注截止时间';
     }
     const xp = Number(predict.xp);
     if (!Number.isInteger(xp) || xp < 0 || xp > 1000) return '预测奖励分须为 0 至 1000';
@@ -1947,7 +1947,7 @@ function validateNormalized(model, opts) {
        本地放行而服务端判死 = 商家点「发布」才看到一句陌生的报错,那一屏就白配了。 */
     const cardMode = text(photoCheck.mode);
     if (cardMode && PHOTO_CHECK_MODES.indexOf(cardMode) < 0) {
-      return '拍照审核只认两种:普通审核，或拍物成卡';
+      return '拍照审核只认两种：普通审核，或拍物成卡';
     }
     if (text(photoCheck.cardTitle).length > 64) return '藏品卡名称不能超过 64 字';
     const cardStyle = text(photoCheck.cardStyle);

@@ -40,6 +40,7 @@
     <view class="kv__row"><text class="kv__k">总距离</text><text class="kv__v">{{session.distanceText || 0}} km</text></view>
     <view class="kv__row"><text class="kv__k">时长</text><text class="kv__v">{{session.time}}</text></view>
     <view class="kv__row"><text class="kv__k">探店</text><text class="kv__v">{{session.shopsText || 0}} 家</text></view>
+    <view class="kv__row"><text class="kv__k">到达</text><text class="kv__v">{{session.footprints}} 处</text></view>
     <view class="kv__row"><text class="kv__k">探索度</text><text class="kv__v">{{session.explorePctText || 0}}%</text></view>
   </view>
 

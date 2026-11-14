@@ -139,6 +139,7 @@ Component({
     'show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId': function (show, options, mode, multi, passed, finished) {
       if (this._qaDisposed) return;
       this._qaEpoch = (this._qaEpoch || 0) + 1;
+      this._pendingEvidence = false;
       const identity = JSON.stringify([String(this.data.sessionId || ''), String(this.data.nodeId || '')]);
       const fresh = this._qaIdentity !== identity || this._qaVisible !== !!show;
       this._qaIdentity = identity;
@@ -281,7 +282,7 @@ Component({
     onSubmitText() { this.onCta(); },
     onCta() {
       if (this.data.ctaDisabled) return;
-      if (this.data.passed) { this.triggerEvent('continue'); return; }
+      if (this._pendingEvidence || this.data.passed) { this.triggerEvent('continue'); return; }
       if (this.data.finished || this.data.submitted) return;
       if (this.data.mode === 'shot') {
         const context = this._qaContext();
@@ -324,10 +325,11 @@ Component({
       const stage = this.selectComponent('#cy-play-stage');
       const multi = this.data.mode === 'pick' && !!this.data.multi;
       // 答案已由服务端判对但照片尚未通过：只显示答案事实，不能触发通关或发奖。
-      if (ok && d.pendingEvidence && this.data.mode === 'pick') {
+      this._pendingEvidence = !!(ok && d.pendingEvidence && this.data.mode === 'pick');
+      if (this._pendingEvidence) {
         this.setData({
           optionList: this.data.optionList.map((o, i) => Object.assign({}, o, { state: i === d.index ? 'is-right' : 'is-dim' })),
-          feedback: d.feedback || '', fbHead: HEAD_OK, ctaDisabled: true,
+          feedback: d.feedback || '', fbHead: HEAD_OK, ctaLabel: '重拍', ctaDisabled: false,
         });
         return;
       }

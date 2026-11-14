@@ -1942,7 +1942,7 @@ test('动态证据 digest 同时绑定 WXML/JS/WXSS/JSON，样式漂移不能继
 
 test('动态证据只绑定真实全局运行时依赖，新增无关路由不得批量判旧', () => {
   const standalone = ledger.controls.find((item) =>
-    item.id === 'components/cy/free-map/index.wxml:46:bindtap:recenter:6')  // 第十二轮 k7:队伍图钉无头像首字 +1 行,44→45;第九轮 m1:free-map callout 槽加照片图钉 6 行,行号 31→37;第九轮 m2 第 2 项:加同场队伍头像图钉 7 行,37→44
+    item.id === 'components/cy/free-map/index.wxml:47:bindtap:recenter:6')  // 第十二轮 k7:队伍图钉无头像首字 +1 行,44→45;第九轮 m1:free-map callout 槽加照片图钉 6 行,行号 31→37;第九轮 m2 第 2 项:加同场队伍头像图钉 7 行,37→44
   const appBacked = ledger.controls.find((item) =>
     item.route === 'pages/activity/baoming/baoming' && item.actionClass === 'state')
   assert.ok(standalone)

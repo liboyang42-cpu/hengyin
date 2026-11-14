@@ -43,7 +43,7 @@
       <scroll-view class="chapter-atmosphere__list" scroll-x enhanced show-scrollbar="{{false}}">
         <view class="chapter-atmosphere__track look-pal--{{lookView.styleKey}}">
           <view class="chapter-atmosphere__item {{item.className}} {{item.on ? 'is-on' : ''}}" wx:for="{{lookView.palettes}}" wx:key="value" data-value="{{item.value}}"
-                bindtap="onLookPalette" aria-role="button" aria-label="主题配色:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">
+                bindtap="onLookPalette" aria-role="button" aria-label="主题配色：{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">
             <text class="chapter-atmosphere__name">{{item.label}}</text>
             <text class="chapter-atmosphere__note">{{item.note}}</text><cy-icon wx:if="{{item.on}}" class="chapter-atmosphere__check" name="check" size="24" />
           </view>
@@ -56,14 +56,14 @@
         <text class="look-row__k">字体</text>
         <view class="look-chips">
           <view wx:for="{{lookView.fonts}}" wx:key="value" class="look-chip look-font--{{item.value}} {{item.on ? 'is-on' : ''}}" data-value="{{item.value}}" bindtap="onLookFont"
-                aria-role="button" aria-label="字体:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+                aria-role="button" aria-label="字体：{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
         </view>
       </view>
       <view class="look-row">
         <text class="look-row__k">文字动效</text>
         <view class="look-chips">
           <view wx:for="{{lookView.textFxs}}" wx:key="value" class="look-chip {{item.on ? 'is-on' : ''}}" data-value="{{item.value}}" bindtap="onLookTextFx"
-                aria-role="button" aria-label="文字动效:{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
+                aria-role="button" aria-label="文字动效：{{item.label}}" aria-selected="{{item.on}}" hover-class="cy-pressed" hover-stay-time="80">{{item.label}}</view>
         </view>
       </view>
     </view>

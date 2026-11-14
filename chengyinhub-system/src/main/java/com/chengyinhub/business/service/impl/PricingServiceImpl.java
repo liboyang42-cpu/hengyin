@@ -371,7 +371,7 @@ public class PricingServiceImpl implements IPricingService {
         return best;
     }
 
-    private static final String LIFECYCLE_BLOCK_REASON = "主题未在定价阶段,不能确认终价";
+    private static final String LIFECYCLE_BLOCK_REASON = "主题未在定价阶段，不能确认终价";
 
     /** 锁价闸①:只有定价阶段(lifecycle==2)能确认终价。previewTopic 的 canConfirm 与 confirmPrice 共用。 */
     private static String lifecycleBlockReason(CmsTopic topic) {

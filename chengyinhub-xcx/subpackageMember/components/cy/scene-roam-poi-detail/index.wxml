@@ -4,15 +4,15 @@
 <cy-empty class="cy-fade-in" wx:elif="{{state === 'empty'}}" fill size="lg" kind="missing-param" title="找不到这个节点" cta="返回地图" bind:cta="close" />
 <view wx:elif="{{state === 'ready'}}" class="poi-body cy-fade-in" style="{{pmPage === 1 ? '--pm-a:1;' : (pmPage === 2 ? '--pm-a-d:.32s;--pm-a-s:1;' : '')}}">
   <view wx:if="{{node && !node.merchantId}}" class="poi-section">
-    <text class="poi-name">{{node.name}}</text>
-    <text class="poi-story">{{node.merchantAddress}}</text>
-    <text class="poi-role">官方据点 · 免费地点挑战</text>
+    <text class="poi-story">{{isCatalog ? node.address : node.merchantAddress}}</text>
+    <text wx:if="{{!isCatalog}}" class="poi-role">官方据点 · 免费地点挑战</text>
+    <text wx:if="{{isCatalog && hasLocation}}" class="poi-action" bindtap="openLocation" aria-role="button" aria-label="导航到{{node.name}}" hover-class="cy-pressed" hover-stay-time="80">导航</text>
     <view class="poi-tags" wx:if="{{tags.length}}"><text wx:for="{{tags}}" wx:key="index" class="poi-tag">{{item}}</text></view>
   </view>
   <view wx:if="{{gallery.length}}" class="poi-section">
     <text class="poi-section__title">{{merchant ? '店铺相册' : '地点相册'}}</text>
     <image class="poi-full-photo" src="{{gallery[photoIndex]}}" mode="widthFix" bindtap="previewGallery" data-src="{{gallery[photoIndex]}}" aria-role="button" aria-label="查看完整照片" hover-class="cy-pressed" hover-stay-time="80" />
-    <text class="poi-status">{{photoIndex + 1}} / {{gallery.length}} · 点击查看原图</text>
+    <text wx:if="{{gallery.length > 1}}" class="poi-status">{{photoIndex + 1}} / {{gallery.length}}</text>
     <scroll-view scroll-x class="poi-gallery">
       <image wx:for="{{gallery}}" wx:key="index" class="poi-gallery__image" src="{{item}}" mode="aspectFill" data-index="{{index}}" bindtap="onPhotoPick" aria-role="button" aria-label="切换第{{(index || 0) + 1}}张照片" hover-class="cy-pressed" hover-stay-time="80" />
     </scroll-view>
@@ -33,7 +33,7 @@
       <view wx:else class="poi-featured__placeholder"><cy-icon name="image" size="40" /></view><text>{{featured.titleText}}</text>
     </view>
   </view>
-  <view wx:if="{{node}}" class="poi-node">
+  <view wx:if="{{node && !isCatalog}}" class="poi-node">
     <text class="poi-node__badge">漫游 · 到店互动</text>
     <text class="poi-node__title">{{node.templateTitle || node.name || '—'}}</text>
     <text wx:if="{{node.status === 0}}" class="poi-node__meta">节点已下线，保留历史记录{{node.needRedeem ? '，已打卡待核销的券仍可出码领取' : ''}}</text>
@@ -57,11 +57,11 @@
   <view wx:if="{{merchant && (merchant.storyTitle || merchant.description)}}" class="poi-section"><text class="poi-section__title">{{merchant.storyTitle || '品牌故事'}}</text><text class="poi-story">{{merchant.description}}</text></view>
   <view wx:if="{{merchant}}" class="poi-section"><text class="poi-section__title">基本信息</text><view class="poi-group"><view class="poi-row"><text>商家名称</text><text class="poi-row__value">{{merchant.displayName}}</text></view><view wx:if="{{merchant.catNames}}" class="poi-row"><text>品类</text><text class="poi-row__value">{{merchant.catNames}}</text></view><view class="poi-row"><text>收费方式</text><text class="poi-row__value">{{merchant.chargeText}}</text></view><view class="poi-row"><text>营业状态</text><text class="poi-row__value">{{merchant.businessStatusText}}</text></view><view wx:if="{{merchant.address && hasLocation}}" class="poi-row" bindtap="openLocation" aria-role="button" aria-label="导航到{{merchant.address}}" hover-class="cy-pressed" hover-stay-time="80"><text>门店地址</text><text class="poi-row__value poi-row__link">{{merchant.address}}</text></view><view wx:elif="{{merchant.address}}" class="poi-row"><text>门店地址</text><text class="poi-row__value">{{merchant.address}}</text></view></view></view>
   <view wx:if="{{node}}" class="poi-section">
-    <text class="poi-section__title">地点详情</text><text class="poi-story">{{node.description}}</text>
+    <text class="poi-section__title">地点详情</text><text class="poi-story">{{isCatalog ? catalogReason : node.description}}</text>
     <view wx:if="{{photoCredit}}" bindtap="onPhotoCredit" class="poi-credit" aria-role="button" aria-label="资料来源" hover-class="cy-pressed" hover-stay-time="80">资料来源 {{creditOpen ? '收起' : '展开'}}</view>
     <text wx:if="{{creditOpen}}" class="poi-story" user-select>{{photoCredit}}</text>
   </view>
-  <view wx:if="{{node}}" class="poi-section">
+  <view wx:if="{{node && !isCatalog}}" class="poi-section">
     <text class="poi-section__title">玩家评价</text>
     <text wx:if="{{node.ratingCount || !reviewsError}}" class="poi-status">{{node.ratingCount ? (node.averageRating + ' 分 · ' + node.ratingCount + ' 条评价') : '暂无评分，等你来体验'}}</text>
     <cy-error wx:if="{{reviewsError}}" title="评价暂时无法读取" retry="重试" bind:retry="loadReviews" />
@@ -74,7 +74,7 @@
     <!-- f-pages P0-108/P0-109(2026-11-11):评价表单改成半屏弹层;评价区只留「写评价」入口。只对已完成挑战的玩家出(服务端同样拦)。 -->
     <cy-btn wx:if="{{node.completed}}" class="poi-review-open" variant="secondary" bind:tap="openReviewSheet">写评价</cy-btn>
   </view>
-  <view wx:if="{{node}}" class="poi-footer">
+  <view wx:if="{{node && !isCatalog}}" class="poi-footer">
     <cy-btn class="poi-footer__button" variant="secondary" bind:tap="openLocation" disabled="{{!hasLocation}}">导航</cy-btn>
     <cy-btn class="poi-footer__button" aria-disabled="{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}" bind:tap="startInteract" disabled="{{(checkinPending && (!reverifyReady || reverifyStarted)) || node.completed || completing || (!node.needRedeem && !node.canInteract)}}">
       {{node.completed ? '挑战已完成' : completing ? '正在确认' : checkinPending ? (reverifyReady ? (reverifyStarted ? '现场核验中' : '开始现场核验') : '结果待确认') : node.needRedeem ? '出示核销码' : challengePhoto ? '继续答题' : '开始挑战'}}

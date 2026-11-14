@@ -48,5 +48,5 @@
    isolated 下同样够不着 —— 与其留个撤不掉的位移,不如按仓库既有组件按压类的做法只减淡。 */
 .cy-pressed { opacity: .88; }
 
-.fmap-skeleton { position:absolute; inset:0; display:flex; gap:var(--cy-space-6); padding:var(--cy-space-8); box-sizing:border-box; background:var(--cy-color-play-surface-base); pointer-events:none; }
+.fmap-skeleton { position:absolute; top:0; right:0; bottom:0; left:0; z-index:1; display:flex; gap:var(--cy-space-6); padding:var(--cy-space-8); box-sizing:border-box; background:var(--cy-color-play-surface-base); pointer-events:none; }
 .fmap-skeleton__bar { flex:1; border-radius:var(--cy-radius-lg); background:var(--cy-color-skeleton-base); }

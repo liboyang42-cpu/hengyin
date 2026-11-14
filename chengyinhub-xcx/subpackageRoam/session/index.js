@@ -5,7 +5,7 @@ const toast = require('../../utils/toast.js');
 const { ROUTE_COLORS, ROUTE_BORDER_COLOR } = require('../../utils/play-visual-tokens.js');
 const { currentPlayerRoamMemory } = require('../../utils/roam-player-memory.js');
 const { clipSavedTrackForSharing, readSharePrivacy } = require('../../utils/roam-route-privacy.js');
-const { readNonNegative, formatDistance, formatDuration, formatStartTime } = require('../../utils/roam-history-metrics.js');
+const { readNonNegative, footprintCount, formatDistance, formatDuration, formatStartTime } = require('../../utils/roam-history-metrics.js');
 const { limitTrack } = require('../../utils/roam-track-simplify.js');
 const { routeGeo } = require('../../utils/roam-route-geo.js');
 const mapSnap = require('../../utils/map-snapshot.js');
@@ -185,6 +185,7 @@ Page({
     s.distance = readNonNegative(s.distance);
     s.distanceText = formatDistance(s.distance);
     s.completeFact = '已完成本次漫游';
+    s.footprints = footprintCount(raw);
 
     this.setData({ err: '', s, geo: this._route(s).geo });
     return true;
@@ -539,7 +540,7 @@ Page({
       const stats = [
         { value: s.distanceText, label: 'km' },
         { value: String(s.explorePct != null ? s.explorePct : 0) + '%', label: '探索度' },
-        { value: String(s.shops != null ? s.shops : 0), label: '点亮' },
+        { value: String(s.footprints), label: '处到达' },
       ];
       stats.forEach((stat, index) => {
         const x = 170 + index * 205;

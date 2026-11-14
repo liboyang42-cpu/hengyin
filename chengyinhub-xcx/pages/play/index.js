@@ -385,7 +385,7 @@ function buildMockPlayData(kind) {
       latitude: 31.21932, longitude: 121.46716, imgUrl: '/pages/play/images/d_topic2.png',
       description: '观察一处橱窗或门牌，找出它和这条街的关系。', hookText: '有合作商家标记', merchantId: 10001,
       cardHookLong: '如果正在营业，可以把这里当成路线中的停靠点。', validationMethod: 1,
-      gameTitle: '门牌线索', question: '这条街最常出现的树是什么?', answerReveal: '梧桐', feedbackText: '答案藏在抬头能看到的树冠里。',
+      gameTitle: '门牌线索', question: '这条街最常出现的树是什么？', answerReveal: '梧桐', feedbackText: '答案藏在抬头能看到的树冠里。',
       fragmentText: '你拿到了一枚「旧街门牌」。'
     },
     {
@@ -400,7 +400,7 @@ function buildMockPlayData(kind) {
       latitude: 31.22458, longitude: 121.47518, imgUrl: '/pages/play/images/d_topic4.png',
       description: '在天色变化时停留两分钟，记录你看到的城市边界。', hookText: '适合终点收束',
       cardHookLong: '城市定向模式里，这里会作为最后一站。', validationMethod: 3,
-      gameTitle: '黄昏选择题', question: '此刻更适合记录什么?', options: { A: '灯光', B: '声音', C: '人流' }, answerReveal: '都可以，关键是停下来观察。',
+      gameTitle: '黄昏选择题', question: '此刻更适合记录什么？', options: { A: '灯光', B: '声音', C: '人流' }, answerReveal: '都可以，关键是停下来观察。',
       fragmentText: '你拿到了一枚「黄昏切面」。'
     }
   ];
@@ -3605,7 +3605,7 @@ Page({
   _explainMissingEntryQr() {
     cyModal.show({
       title: '从票夹进入才能出示入场码',
-      content: '入场码要绑定你那张票，所以只有从票夹点进来才带得到。现在去票夹?',
+      content: '入场码要绑定你那张票，所以只有从票夹点进来才带得到。现在去票夹？',
       confirmText: '去票夹',
       cancelText: '先不去',
       // D-25:navigateTo 不清页栈,玩家还能返回游戏;页栈满了才退回 reLaunch
@@ -4722,7 +4722,7 @@ Page({
       completionMode: n.completionMode || '',
       // P-10:feedbackText 是模板「文字反馈」= 完成后给的话(编辑器占位就是「恭喜你解开了……」),
       // 只在答对时用(passText);答错兜底永远不拿它,否则服务端没带原因时答错会显示一句祝贺。
-      feedback: '答案还没咬合,再看看四周……', passText: String(n.feedbackText || '').trim(),
+      feedback: '答案还没咬合，再看看四周……', passText: String(n.feedbackText || '').trim(),
       photoDesc: n.photoRequireDesc || '', audio: secureOwnMedia(n.audioUrl), audioDur: (n.audioDuration ? n.audioDuration + '″' : ''),
       medalName: shopDay ? '' : (n.medalName || ''), medalImg: shopDay ? '' : (n.medalImg || ''), medalStyle: shopDay ? '' : (n.medalStyle || 'glow'), couponId: shopDay ? 0 : (n.couponId || 0),
       // 后端 /nodes 新下发的券公开投影(name/amount/endTime;无 code):券页据此显示真面额
@@ -5481,7 +5481,7 @@ Page({
       // 广播变化时轻提示(一次)
       if (d.broadcast && d.broadcast !== that._lastBroadcast) {
         that._lastBroadcast = d.broadcast;
-        that.diegetic('队长:' + d.broadcast);
+        that.diegetic('队长：' + d.broadcast);
       }
       const openedWhileWaiting = Number(d.status) === 2
         && Number(that.data.lead.status) !== 2 && that._playable === false;
@@ -5588,7 +5588,7 @@ Page({
     req('/api/club/lead/start', 'POST', { activityId: context.activityId }).then((r) => {
       if (!that._isLeadOperationContextCurrent(context, false)
           || lifecycleEpoch !== (that._leadLifecycleEpoch || 0) || sequence !== that._leadStartSequence) return;
-      that.diegetic(r.msg || '出发!');
+      that.diegetic(r.msg || '出发！');
       that.loadTeamProgress();
     });
   },
@@ -5802,7 +5802,7 @@ Page({
     const hideLoading = () => { if (loading) { loading = false; cyLoading.hide(); } };
     cyModal.show({
       title: '全团结算',
-      content: '将为到场已购票的全体队员核销并入结算，确认结算?',
+      content: '将为到场已购票的全体队员核销并入结算，确认结算？',
       confirmText: '结算全团',
       success: (res) => {
         if (settled) return;
@@ -7090,7 +7090,7 @@ Page({
     this.setData({ hintUnlocking: true }); // 弹窗期间即占位:连点不再叠出第二个弹窗
     cyModal.show({
       title: '解锁提示',
-      content: '解锁本节点提示需 ' + (g.hintCost || 0) + ' 积分，确认解锁?',
+      content: '解锁本节点提示需 ' + (g.hintCost || 0) + ' 积分，确认解锁？',
       confirmText: '解锁',
       cancelText: '再想想',
       success(res) {
@@ -7369,7 +7369,7 @@ Page({
         this.setData({
           rewardDrop: {
             show: true,
-            text: '解锁徽章:' + newBadges.map((b) => b.name).join('、'),
+            text: '解锁徽章：' + newBadges.map((b) => b.name).join('、'),
             badges: newBadges.map((b) => ({ code: b.code || '', name: b.name || '徽章' })),
           },
         });
@@ -7566,6 +7566,13 @@ Page({
     this.closeScene();
   },
   cancelSceneDiscard() { this.setData({ sceneConfirm: { show: false, action: null, pending: null } }); },
+  onPoiTitle(event) {
+    const scene = this.data.sceneCurrent, detail = event.detail || {};
+    if (!scene || scene.id !== 'roam-poi-detail' || !detail.name || scene.title === detail.name
+        || String(scene.params.poiId || '') !== String(detail.poiId || '')
+        || String(scene.params.merchantId || '') !== String(detail.merchantId || '')) return;
+    this.setData({ 'sceneCurrent.title': detail.name, sceneStack: this.data.sceneStack.map((row, index) => index === this.data.sceneStack.length - 1 ? Object.assign({}, row, { title: detail.name }) : row) });
+  },
   setSceneDirty(dirty = true) {
     if (!this.data.sceneStack.length) return;
     const sceneStack = this.data.sceneStack.slice();

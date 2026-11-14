@@ -179,7 +179,7 @@ Component({
       }
       this._saveToAlbum(path).then((saved) => {
         if (!saved || key === 'save') return;
-        wx.setClipboardData({ data: this._shareText(), success: () => cyToast(key === 'xhs' ? '图片已保存、文案已复制,去小红书发布' : '图片已保存、文案已复制,去朋友圈发布') });
+        wx.setClipboardData({ data: this._shareText(), success: () => cyToast(key === 'xhs' ? '图片已保存、文案已复制，去小红书发布' : '图片已保存、文案已复制，去朋友圈发布') });
       });
     }, () => cyToast('卡片图没生成，请重试'));
   },

@@ -129,7 +129,7 @@ test('读屏文案:服务端配了就用它,没配才用标签拼', () => {
   assert.equal(fromServer, '① 向店员领盲品小样 ② 闭眼尝 ③ 睁眼作答')
 
   const fallback = stepsA11yLabel('blindtaste')
-  assert.ok(fallback.startsWith('玩法步骤:'), fallback)
+  assert.ok(fallback.startsWith('玩法步骤：'), fallback)
   assert.ok(fallback.includes('领小样'), fallback)
   // 空串也要走兜底,不能把空的 aria-label 交出去
   assert.equal(stepsA11yLabel('blindtaste', '   '), fallback)

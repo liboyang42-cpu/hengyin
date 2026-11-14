@@ -42,7 +42,7 @@ function stripFor(cityId) {
     // 目录点还没有坐标;有坐标的服务端行靠种子标签对上(roam:seed:v1:<id>)
     seed: 'roam:seed:v1:' + place.id,
   }))
-  return { city: city.id, name: city.name, count: city.count, items }
+  return { city: city.id, name: city.name, center: CENTERS[city.id], count: city.count, items }
 }
 /** 没有定位、没有可对上的城市时的默认:第一座有地点的目录城市。 */
 function defaultCity() {

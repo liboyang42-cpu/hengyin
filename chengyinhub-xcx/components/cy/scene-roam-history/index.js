@@ -2,7 +2,7 @@
 
 const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js'); const pageMotion = require('../../../utils/page-motion.js')
 const { validRecovery } = require('../../../utils/roam-recovery.js')
-const { readNonNegative, formatDistance, formatDuration } = require('../../../utils/roam-history-metrics.js')
+const { readNonNegative, readDurationSeconds, formatDistance, formatDuration } = require('../../../utils/roam-history-metrics.js')
 const { routeGeo } = require('../../../utils/roam-route-geo.js')
 const { createReader, merge } = require('../../../utils/roam-passport-read.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
@@ -136,7 +136,7 @@ Component({
         else km += session.distanceValue
         if (session.shopsValue === null) shopsKnown = false
         else shops += session.shopsValue
-        const dur = nonNegativeNumber(session && session.durSec)
+        const dur = session.durationValue
         if (dur === null) secsKnown = false
         else secs += dur
         // 按月分组:同一个月的第一张卡上面出月份标题
@@ -187,6 +187,7 @@ Component({
           fromCode: code,
           toCode: code,
           distanceValue,
+          durationValue: readDurationSeconds(session.durSec, session.time),
           // UI-04:本机记录没取到显示 0;服务端事实(serverFact)的 null 显示「—」不伪造 0
           distanceText: distanceValue === null ? (session && session.serverFact ? '—' : '0') : formatDistance(distanceValue),
           shopsValue,
