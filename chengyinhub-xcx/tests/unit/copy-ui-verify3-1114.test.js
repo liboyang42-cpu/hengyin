@@ -22,3 +22,14 @@ test('站点面板和路线标题共享尾部三字保护，原名不变', () =>
   assert.equal(display.replace(/\u2060/g, ''), title);
   assert.match(read('pages/topic/index/index.wxml'), /stationTitle\.text\(node\.name\)/);
 });
+
+test('据点失败提示与后端保持同一句话', () => {
+  const backend = fs.readFileSync(path.join(__dirname, '../../../chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCityNodeController.java'), 'utf8');
+  for (const message of ['离据点太远，请到店后再完成', '照片地址不合法，请重新上传']) {
+    assert.ok(backend.includes('error("' + message + '")'));
+    for (const file of ['pages/play/poi-challenge/index.js', 'subpackageMember/components/cy/scene-roam-poi-detail/index.js']) {
+      assert.ok(read(file).includes(message));
+      assert.ok(!read(file).includes(message.replace('，', ',')));
+    }
+  }
+});
