@@ -1,0 +1,65 @@
+<view class="mp-page theme-merchant" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+  <cy-toast id="cy-toast" />
+  <cy-modal-host id="cy-modal-host" />
+  <cy-nav-bar custom-back bind:back="onNavBack" />
+  <cy-page-title title="套餐" safe-top="{{false}}" />
+
+  <cy-skeleton wx:if="{{pageState === 'loading'}}" type="list" count="3" />
+  <cy-error wx:elif="{{pageState === 'error'}}" fill size="lg"
+            title="套餐加载失败" sub="{{errorMessage}}"
+            retry="重新加载" bind:retry="retry" auto-back />
+  <cy-error wx:elif="{{pageState === 'no-permission'}}" fill size="lg"
+            title="当前岗位不能查看套餐"
+            retry="" bind:back="onNavBack" auto-back custom-back />
+
+  <view wx:elif="{{pageState === 'ready'}}" class="mp-shell">
+    <!-- 本店 -->
+    <text class="mp-section">本店</text>
+    <view class="fin-card mp-card">
+      <view class="fin-row mp-row" aria-label="当前套餐，{{page.currentName}}">
+        <view class="fin-row__dot fin-row__dot--success" aria-hidden="true" />
+        <view class="fin-row__main"><text class="fin-row__t">当前套餐</text></view>
+        <text class="fin-row__v">{{page.currentName}}</text>
+      </view>
+      <view class="fin-row mp-row" wx:if="{{page.periodEnd}}" aria-label="有效期至{{page.periodEnd}}">
+        <view class="fin-row__dot" aria-hidden="true" />
+        <view class="fin-row__main"><text class="fin-row__t">有效期至</text></view>
+        <text class="fin-row__v">{{page.periodEnd}}</text>
+      </view>
+    </view>
+    <text class="mp-desc">套餐内容以平台当前设置为准。</text>
+    <text class="mp-desc" wx:if="{{!page.salesOpen}}">套餐购买即将开放，现在可以先看看各套餐包含的内容。</text>
+    <view class="fin-card mp-card" wx:if="{{order}}">
+      <view class="fin-row mp-row" aria-label="已提交开通申请，订单号{{order.orderNo}}">
+        <view class="fin-row__dot fin-row__dot--warning" aria-hidden="true" />
+        <view class="fin-row__main"><text class="fin-row__t">已提交开通申请</text></view>
+        <text class="fin-row__v fin-row__v--mute">{{order.orderNo}}</text>
+      </view>
+    </view>
+    <text class="mp-desc" wx:if="{{order}}">平台确认收款后为本店开通。</text>
+
+    <!-- 各套餐 -->
+    <block wx:for="{{page.plans}}" wx:key="code">
+      <text class="mp-section">{{item.name}}</text>
+      <text class="mp-badge" wx:if="{{item.current}}">本店当前套餐</text>
+      <view class="fin-card mp-card">
+        <view class="fin-row mp-row" aria-label="{{item.name}}，{{item.priceText}}">
+          <view class="fin-row__dot" aria-hidden="true" />
+          <view class="fin-row__main"><text class="fin-row__t mp-name">{{item.name}}</text></view>
+          <text class="fin-row__v">{{item.priceText}}</text>
+        </view>
+        <view class="fin-row mp-row" wx:for="{{item.features}}" wx:for-item="feature" wx:key="key" aria-label="{{feature.label}}，{{feature.value}}">
+          <view class="fin-row__dot" aria-hidden="true" />
+          <view class="fin-row__main"><text class="fin-row__t">{{feature.label}}</text></view>
+          <text class="fin-row__v">{{feature.value}}</text>
+        </view>
+      </view>
+      <view class="mp-action" wx:if="{{item.buyable && !item.current}}">
+        <cy-btn wx:if="{{page.salesOpen && isOwner}}" variant="primary" loading="{{buying === item.code}}"
+                disabled="{{!!buying}}" data-code="{{item.code}}" bindtap="onBuy">开通{{item.name}}</cy-btn>
+        <cy-btn wx:elif="{{page.salesOpen}}" variant="secondary" disabled="{{true}}">只有店主可以开通套餐</cy-btn>
+        <cy-btn wx:else variant="secondary" disabled="{{true}}">即将开放</cy-btn>
+      </view>
+    </block>
+  </view>
+</view>
