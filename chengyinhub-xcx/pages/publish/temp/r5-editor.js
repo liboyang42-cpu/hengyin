@@ -2,6 +2,7 @@ const catalog = require('../utils/publish/node-game-catalog.js');
 const after = require('../utils/publish/outcome-after.js');
 const tools = require('../utils/publish/template-tools.js');
 const matrix = require('../utils/publish/gameplay-support-matrix.js');
+const { identity } = require('../../../utils/session/login-reload.js');
 const clone = value => JSON.parse(JSON.stringify(value));
 const PARTICIPATION = [{ key: 'direct', label: '直接参与', value: 0, sub: '直接开始', reason: '' }, { key: 'gps', label: '定位到达', value: 5, sub: '到达节点后开始', reason: '' }, { key: 'scan', label: '扫码参与', value: 4, sub: '扫现场码后开始', reason: '' }];
 const REMOVED = ['branch', 'silentOrder', 'diyName', 'musicCorner', 'slowTask', 'multiplayer'];
@@ -118,13 +119,21 @@ const methods = {
     return true;
   },
   closePvVerdict() {
+    if (this._disposed || this._unloaded || this._hidden || !this.data.previewVisible || !this.data.pvVerdict.show) return;
     const kind = this.data.pvVerdict.kind, kit = this.data.pvKit;
     this.setData({ pvVerdict: { show: false, kind: 'win', text: '', images: [] } });
     // 只有玩法这一屏的试玩(选择玩法里的「预览」、「试玩当前玩法」)玩完就回编辑页
     if (kind === 'win' || !kit) { if (this.data.pvStep >= this.data.pvSteps.length - 1) this.closePreview(); else this.pvNext(); return; }
     // 玩法组件的「已提交」是它自己的状态,卸掉重挂才回到开局那一屏(判定屏盖着,看不到这一下)
     this._pvTypeStartedAt = 0;
-    this.setData({ pvKit: null }, () => this.setData({ pvKit: Object.assign({}, kit, { passed: false, attempts: 0, startConfirmed: false, result: null, receipt: null, selectedKey: '' }) }));
+    const steps = this.data.pvSteps, step = this.data.pvStep;
+    const owner = identity(getApp());
+    this.setData({ pvKit: null }, () => {
+      if (this._disposed || this._unloaded || !this.data.previewVisible
+          || identity(getApp()) !== owner
+          || this.data.pvSteps !== steps || this.data.pvStep !== step || this.data.pvKit !== null) return;
+      this.setData({ pvKit: Object.assign({}, kit, { passed: false, attempts: 0, startConfirmed: false, result: null, receipt: null, selectedKey: '' }) });
+    });
   },
   _takeR5Snapshot(kind) { this['_r5Snapshot_' + kind] = clone({ advanced: this.data.advanced, formData: this.data.formData, dirty: this.data.dirty || false, gameKey: this.data.gameKey, gameCurrent: this.data.gameCurrent, gameSection: this.data.gameSection, timerAvailable: this.data.timerAvailable, presentChoice: this.data.presentChoice, presentInlineLocked: this.data.presentInlineLocked, presentLockReason: this.data.presentLockReason, pvMethodLabel: this.data.pvMethodLabel, pvMethodIconName: this.data.pvMethodIconName, participationChanged: !!this._r5ParticipationChanged }); },
   _restoreR5Snapshot(kind) { const saved = this['_r5Snapshot_' + kind]; if (!saved) return; this._r5ParticipationChanged = saved.participationChanged; delete saved.participationChanged; this._setFormState(saved, null, { pristine: true }); delete this['_r5Snapshot_' + kind]; },

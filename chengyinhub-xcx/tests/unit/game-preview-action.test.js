@@ -188,3 +188,103 @@ test('真实作者页：打开→等待→START→到期反馈→重试→提交
   assert.equal(JSON.stringify(p.data.advanced), source);
   assert.equal(requests.length, 0);
 });
+
+function previewOwnerPage() {
+  const fs = require('node:fs'), path = require('node:path');
+  let definition, verdictDefinition, member = '9', authorization = 'preview-session-a', deferred = false;
+  const callbacks = [], requests = [];
+  const app = { globalData: {}, getUserID: () => member, getAuthorization: () => authorization,
+    tips() {}, sendRequest: request => { requests.push(request); assert.fail('作者试玩不得发送正式请求'); } };
+  global.getApp = () => app; global.Behavior = value => value;
+  global.wx = { ...require('../helpers/memory-storage.js')(), getBackgroundAudioManager: () => ({ stop() {} }),
+    showToast() {}, setNavigationBarColor() {}, setBackgroundColor() {} };
+  global.Page = value => { definition = value; };
+  const pageFile = require.resolve('../../pages/publish/temp/index.js'); delete require.cache[pageFile]; require(pageFile);
+  global.Component = value => { verdictDefinition = value; };
+  const verdictFile = require.resolve('../../pages/play/components/play-verdict/index.js'); delete require.cache[verdictFile]; require(verdictFile);
+  const p = { ...definition, data: structuredClone(definition.data) };
+  p.setData = function (patch, done) {
+    for (const [key, value] of Object.entries(patch)) {
+      const parts = key.split('.'); let at = this.data;
+      for (const part of parts.slice(0, -1)) at = at[part];
+      at[parts.at(-1)] = value;
+    }
+    if (done) { if (deferred) callbacks.push(done); else done(); }
+  };
+  p.data.advanced = { qa: { enabled: true, mode: 'TYPE', title: '作者原题', answerText: '排队', maxTries: 0 },
+    answerPolicy: { version: 1, normalizationPolicy: 'LEGACY_V1', acceptedAliases: ['待发送'] },
+    outcomeRules: { version: 1, pass: {}, fail: {} } };
+  p.data.from = 'fabu'; p.tryCurrentGame();
+  const host = fs.readFileSync(path.join(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8').match(/<cy-play-verdict\b[^>]*>/)[0];
+  const closeHandler = host.match(/bind:close="([^"]+)"/)[1];
+  const cta = fs.readFileSync(path.join(__dirname, '../../pages/play/components/play-verdict/index.wxml'), 'utf8').match(/<view class="pv__cta"[^>]*>/)[0];
+  const tap = cta.match(/bindtap="([^"]+)"/)[1];
+  const verdict = { ...verdictDefinition.methods, triggerEvent: name => { assert.equal(name, 'close'); p[closeHandler](); } };
+  return { p, callbacks, requests, close: () => verdict[tap](), defer: () => { deferred = true; }, immediate: () => { deferred = false; },
+    flush: () => { while (callbacks.length) callbacks.shift()(); },
+    submit: input => p.onPvKitAction({ detail: { type: 'qa', action: 'submit', detail: { mode: 'type', input } } }),
+    account: () => { member = '10'; }, session: () => { authorization = 'preview-session-b'; } };
+}
+
+for (const kind of ['win', 'fail']) test('PC-OWNER 同一' + kind + '结果重复close只消费当前反馈一次', () => {
+  const f = previewOwnerPage(), p = f.p;
+  p.setData({ pvSteps: p._buildPvSteps() });
+  f.submit(kind === 'win' ? '待发送' : '错误输入'); assert.equal(p.data.pvVerdict.kind, kind);
+  if (kind === 'fail') f.defer();
+  f.close(); f.close(); f.flush();
+  assert.equal(p.data.previewVisible, true);
+  assert.equal(p.data.pvStep, kind === 'win' ? 1 : 0);
+  assert.equal(p.data.pvVerdict.show, false); assert.ok(p.data.pvKit);
+});
+
+for (const change of ['close', 'new-type', 'new-same-type', 'account', 'session', 'hide', 'hide-show', 'unload', 'next-step']) {
+  test('PC-OWNER 失败重试ack跨' + change + '遵守当前试玩owner', () => {
+    const f = previewOwnerPage(), p = f.p;
+    if (change === 'next-step') p.setData({ pvSteps: p._buildPvSteps() });
+    f.submit('错误输入'); assert.equal(p.data.pvVerdict.kind, 'fail');
+    f.defer(); f.close(); assert.equal(p.data.pvKit, null); assert.equal(f.callbacks.length, 1);
+    if (change === 'close') p.closePreview();
+    if (change.startsWith('new-')) {
+      p.closePreview(); f.immediate();
+      if (change === 'new-type') p.previewGameFromSheet({ currentTarget: { dataset: { key: 'typeIn' } } });
+      else p.tryCurrentGame();
+    }
+    if (change === 'account') f.account();
+    if (change === 'session') f.session();
+    if (change === 'hide' || change === 'hide-show') p.onHide();
+    if (change === 'hide-show') p.onShow();
+    if (change === 'unload') p.onUnload();
+    if (change === 'next-step') p.pvNext();
+    const current = p.data.pvKit;
+    f.flush();
+    if (change === 'hide' || change === 'hide-show') {
+      assert.equal(p.data.pvKit.type, 'qa', '隐藏不关闭同一次试玩，合法重试仍能恢复');
+      assert.equal(p.data.previewVisible, true);
+      if (change === 'hide') p.onShow();
+      assert.equal(p.data.pvKit.type, 'qa');
+    } else assert.equal(p.data.pvKit, current);
+    assert.equal(p.data.pvVerdict.show, false); assert.equal(f.requests.length, 0);
+  });
+}
+
+test('PC-OWNER 隐藏页迟到close不消费结果，回前台后原试玩可正常关闭', () => {
+  const f = previewOwnerPage(), p = f.p;
+  f.submit('待发送'); p.onHide(); f.close();
+  assert.equal(p.data.pvVerdict.show, true); assert.equal(p.data.previewVisible, true);
+  p.onShow(); f.close(); assert.equal(p.data.previewVisible, false);
+});
+
+test('PC-OWNER 正常成功末步关闭、失败ack重试保留canonical别名和原配置', () => {
+  for (const input of ['排队', '待发送']) {
+    const f = previewOwnerPage(), p = f.p, original = JSON.stringify(p.data.advanced);
+    f.submit(input); assert.equal(p.data.pvVerdict.kind, 'win'); f.close();
+    assert.equal(p.data.previewVisible, false); assert.equal(p.data.pvKit, null);
+    assert.equal(JSON.stringify(p.data.advanced), original);
+  }
+  const f = previewOwnerPage(), p = f.p, original = JSON.stringify(p.data.advanced);
+  f.submit('错误输入'); f.defer(); f.close(); assert.equal(p.data.pvKit, null);
+  f.flush(); assert.equal(p.data.pvKit.type, 'qa'); assert.equal(p.data.pvKit.startConfirmed, false);
+  assert.equal(p.data.previewVisible, true); assert.equal(p.data.pvStep, 0);
+  f.submit('待发送'); assert.equal(p.data.pvVerdict.kind, 'win');
+  assert.equal(JSON.stringify(p.data.advanced), original); assert.equal(f.requests.length, 0);
+});
