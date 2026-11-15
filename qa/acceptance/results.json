@@ -1,12 +1,12 @@
 {
- "base": "https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech",
- "run_id": "20261115090559",
- "at": "2026-11-15T17:08:25Z",
+ "base": "http://127.0.0.1:8120",
+ "run_id": "20261115215055",
+ "at": "2026-11-15T21:53:07Z",
  "flows": [
   {
    "id": "F01",
    "name": "Sign-in",
-   "verdict": "FAIL",
+   "verdict": "PASS",
    "steps": [
     {
      "label": "sms/send",
@@ -22,7 +22,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 881,
+     "ms": 5,
      "msg": "验证码已发送",
      "result": "PASS",
      "note": null,
@@ -44,7 +44,7 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 921,
+     "ms": 2,
      "msg": "验证码错误或已过期",
      "result": "PASS",
      "note": null,
@@ -63,7 +63,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 884,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -82,7 +82,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 925,
+     "ms": 7,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -101,7 +101,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 874,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -120,7 +120,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 919,
+     "ms": 2,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -140,13 +140,13 @@
       "json": null
      },
      "status": 200,
-     "code": 500,
-     "ms": 1424,
-     "msg": "微信服务暂时不可用，请稍后重试",
-     "result": "FAIL",
-     "note": "code 500 not in [200]",
-     "owner": "backend",
-     "response": "{\"msg\": \"微信服务暂时不可用，请稍后重试\", \"code\": 500}"
+     "code": 200,
+     "ms": 10,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"id\": 990008, \"userType\": 1, \"avatar\": \"\", \"nickname\": \"城瘾用户\", \"role\": \"player\"}, \"token\": \"<redacted>\"}"
     },
     {
      "label": "userInfo without token -> 401",
@@ -160,7 +160,7 @@
      },
      "status": 200,
      "code": 401,
-     "ms": 944,
+     "ms": 2,
      "msg": "获取APP用户信息异常",
      "result": "PASS",
      "note": null,
@@ -189,7 +189,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 979,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -212,7 +212,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1007,
+     "ms": 22,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -236,7 +236,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 923,
+     "ms": 11,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -259,7 +259,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 945,
+     "ms": 15,
      "msg": "操作成功",
      "result": "FAIL",
      "note": "992031 not in upcoming",
@@ -283,7 +283,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 908,
+     "ms": 17,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -306,7 +306,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 903,
+     "ms": 14,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -325,7 +325,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 951,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -344,7 +344,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 938,
+     "ms": 9,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -367,7 +367,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 905,
+     "ms": 13,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -395,7 +395,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 898,
+     "ms": 4,
      "msg": "操作成功",
      "result": "FAIL",
      "note": "topicId=None != 992001",
@@ -416,7 +416,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 917,
+     "ms": 19,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -437,7 +437,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1092,
+     "ms": 47,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -456,7 +456,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 871,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -478,7 +478,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1107,
+     "ms": 43,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -499,7 +499,7 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 1208,
+     "ms": 6,
      "msg": "活动不存在",
      "result": "PASS",
      "note": null,
@@ -525,17 +525,17 @@
        "docType": "activity_host_data_sharing",
        "scene": "activity_signup",
        "eventType": "AGREE",
-       "requestId": "qa20261115090559c2f76759d601f4642a70290155f62f26"
+       "requestId": "qa20261115215055c2bae552487b14909a0942ae69e8354c"
       }
      },
      "status": 200,
      "code": 200,
-     "ms": 984,
+     "ms": 5,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-16T01:06:41.000+08:00\", \"requestId\": \"qa20261115090559c2f76759d601f4642a70290155f62f26\", \"docType\": \"activity_host_data_sharing\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"activity_signup\"}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-16T05:50:56.000+08:00\", \"requestId\": \"qa20261115215055c2bae552487b14909a0942ae69e8354c\", \"docType\": \"activity_host_data_sharing\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"activity_signup\"}}"
     },
     {
      "label": "user/address/action participant",
@@ -548,18 +548,18 @@
        "fullName": "玩家小城",
        "mobilePhone": "13900000004",
        "isDefault": 1,
-       "requestId": "qa20261115090559a77a761e8918e4b1ea5b62c0981cda1d"
+       "requestId": "qa20261115215055ad64c00e8d3e246e8af0c3182d3e82fb"
       },
       "json": null
      },
      "status": 200,
      "code": 200,
-     "ms": 938,
+     "ms": 6,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": null, \"createTime\": \"2026-11-16 01:06:41\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 49, \"memberId\": 9004, \"fullName\": \"玩家小城\", \"areaCode\": \"+86\", \"mobilePhone\": \"13900000004\", \"province\": null, \"detailAddress\": null, \"isDefault\": 1, \"delFlag\": 0, \"requestId\": \"qa20261115090559a77a761e8918e4b1ea5b62c0981cda1d\"}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": null, \"createTime\": \"2026-11-16 05:50:55\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 55, \"memberId\": 9004, \"fullName\": \"玩家小城\", \"areaCode\": \"+86\", \"mobilePhone\": \"13900000004\", \"province\": null, \"detailAddress\": null, \"isDefault\": 1, \"delFlag\": 0, \"requestId\": \"qa20261115215055ad64c00e8d3e246e8af0c3182d3e82fb\"}}"
     },
     {
      "label": "registration/quote",
@@ -586,7 +586,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 928,
+     "ms": 13,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -610,7 +610,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 928,
+     "ms": 12,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -639,18 +639,18 @@
        "phone": "13900000004",
        "isUsePoint": 0,
        "quoteSign": "5e9ae975c5ec9df5b998173c830e1a77",
-       "requestId": "qa20261115090559re9f1b5fe511a4463a230507dc987c30",
+       "requestId": "qa20261115215055r1b64551fab614cfc9a1bf6e00be8629",
        "payChannel": "APP"
       }
      },
      "status": 200,
      "code": 200,
-     "ms": 1648,
+     "ms": 670,
      "msg": "报名创建成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"报名创建成功\", \"code\": 200, \"data\": {\"registrationId\": 992200, \"registrationNo\": \"A20261116DACEAB16\", \"payableAmount\": 0.0, \"expireTime\": \"2026-11-16T01:36:44.379+08:00\", \"expiresAt\": null, \"paymentType\": 1, \"registrationIds\": [992200]}}"
+     "response": "{\"msg\": \"报名创建成功\", \"code\": 200, \"data\": {\"registrationId\": 992202, \"registrationNo\": \"A202611166CDB8383\", \"payableAmount\": 0.0, \"expireTime\": \"2026-11-16T06:20:55.694+08:00\", \"expiresAt\": null, \"paymentType\": 1, \"registrationIds\": [992202]}}"
     },
     {
      "label": "registration/create replay is idempotent",
@@ -674,18 +674,18 @@
        "phone": "13900000004",
        "isUsePoint": 0,
        "quoteSign": "5e9ae975c5ec9df5b998173c830e1a77",
-       "requestId": "qa20261115090559re9f1b5fe511a4463a230507dc987c30",
+       "requestId": "qa20261115215055r1b64551fab614cfc9a1bf6e00be8629",
        "payChannel": "APP"
       }
      },
      "status": 200,
      "code": 200,
-     "ms": 897,
+     "ms": 12,
      "msg": "报名创建成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"报名创建成功\", \"code\": 200, \"data\": {\"registrationId\": 992200, \"registrationNo\": \"A20261116DACEAB16\", \"payableAmount\": 0.0, \"expireTime\": \"2026-11-16T01:36:44.000+08:00\", \"expiresAt\": null, \"paymentType\": 1, \"registrationIds\": [992200]}}"
+     "response": "{\"msg\": \"报名创建成功\", \"code\": 200, \"data\": {\"registrationId\": 992202, \"registrationNo\": \"A202611166CDB8383\", \"payableAmount\": 0.0, \"expireTime\": \"2026-11-16T06:20:56.000+08:00\", \"expiresAt\": null, \"paymentType\": 1, \"registrationIds\": [992202]}}"
     },
     {
      "label": "registration/info paid (free = paid)",
@@ -695,18 +695,18 @@
      "request": {
       "q": null,
       "form": {
-       "id": 992200
+       "id": 992202
       },
       "json": null
      },
      "status": 200,
      "code": 200,
-     "ms": 869,
+     "ms": 12,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": \"9004\", \"createTime\": \"2026-11-16 01:06:44\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-16 01:06:45\", \"remark\": null, \"id\": 992200, \"registrationNo\": \"A20261116DACEAB16\", \"ownerType\": 2, \"ownerId\": 992031, \"activityTitle\": \"老城三章 · 周末免费体验场\", \"ticketId\": 992041, \"ticketName\": \"免费体验票\", \"ticketPrice\": 0.0, \"memberId\": 9004, \"realName\": \"玩家小城\", \"phone"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": \"9004\", \"createTime\": \"2026-11-16 05:50:56\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-16 05:50:56\", \"remark\": null, \"id\": 992202, \"registrationNo\": \"A202611166CDB8383\", \"ownerType\": 2, \"ownerId\": 992031, \"activityTitle\": \"老城三章 · 周末免费体验场\", \"ticketId\": 992041, \"ticketName\": \"免费体验票\", \"ticketPrice\": 0.0, \"memberId\": 9004, \"realName\": \"玩家小城\", \"phone"
     },
     {
      "label": "registration/list all orders",
@@ -722,12 +722,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1076,
+     "ms": 33,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 13, \"rows\": [{\"createBy\": \"9004\", \"createTime\": \"2026-11-16 01:06:44\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-16 01:06:45\", \"remark\": null, \"id\": 992200, \"registrationNo\": \"A20261116DACEAB16\", \"ownerType\": 2, \"ownerId\": 992031, \"activityTitle\": \"老城三章 · 周末免费体验场\", \"ticketId\": 992041, \"ticketName\": \"免费体验票\", \"ticketPrice\": 0.0, \"memberId\": 9004, \"re"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 14, \"rows\": [{\"createBy\": \"9004\", \"createTime\": \"2026-11-16 05:50:56\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-16 05:50:56\", \"remark\": null, \"id\": 992202, \"registrationNo\": \"A202611166CDB8383\", \"ownerType\": 2, \"ownerId\": 992031, \"activityTitle\": \"老城三章 · 周末免费体验场\", \"ticketId\": 992041, \"ticketName\": \"免费体验票\", \"ticketPrice\": 0.0, \"memberId\": 9004, \"re"
     },
     {
      "label": "payment-readiness (paid channel)",
@@ -741,7 +741,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 881,
+     "ms": 3,
      "msg": "操作成功",
      "result": "FAIL",
      "note": "payment not ready on TEST: 支付服务暂不可用",
@@ -790,7 +790,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 952,
+     "ms": 9,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -811,7 +811,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1150,
+     "ms": 10,
      "msg": "操作成功",
      "result": "FAIL",
      "note": "data is dict, app expects List",
@@ -832,7 +832,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1700,
+     "ms": 9,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -852,13 +852,13 @@
       "json": null
      },
      "status": 200,
-     "code": 200,
-     "ms": 1958,
-     "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"code\": \"v1.74.activity.<redacted>\", \"ttlMs\": 300000, \"type\": \"activity\", \"expiresAt\": 1794762714490, \"qrcodeUrl\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAIAAAD2HxkiAAAiH0lEQVR4Xu3TQW4s2Y4E0b//TXcPBAiiQWkIJ3kz9LLiDMvdeSNfQf/7v8fjcav/8T88Ho/3ev4IH4+bPX+Ej8fNnj/Cx+Nmzx/h43Gz54/w8bjZ80f4eNzs+SN8PG72/BE+Hjd7/ggfj5s9f4SPx82eP8LH42bPH+HjcbPnj/DxuNnz"
+     "code": 500,
+     "ms": 6,
+     "msg": "该票已核销",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"该票已核销\", \"code\": 500}"
     },
     {
      "label": "dyncode/issue for someone else's order is refused",
@@ -874,7 +874,7 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 916,
+     "ms": 4,
      "msg": "无权操作该报名单",
      "result": "PASS",
      "note": null,
@@ -901,13 +901,13 @@
       "json": null
      },
      "status": 200,
-     "code": 200,
-     "ms": 2786,
-     "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"code\": \"v1.74.activity.<redacted>\", \"ttlMs\": 300000, \"type\": \"activity\", \"expiresAt\": 1794762718027, \"qrcodeUrl\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAIAAAD2HxkiAAAhsElEQVR4Xu3TwY4jyY4EwPf/P717GKAhGrocyWBEqlpKO467M1I16P/93+PxeKv/+R8ej8e9nn+Ej8ebPf8IH483e/4RPh5v9vwjfDze7PlH+Hi82fOP8PF4s+cf4ePxZs8/wsfjzZ5/hI/Hmz3/CB+PN3v+ET4eb/b8I3w83uz5R/h4"
+     "code": 500,
+     "ms": 4,
+     "msg": "该票已核销",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"该票已核销\", \"code\": 500}"
     },
     {
      "label": "merchant 9002 (not owner) scan refused",
@@ -917,18 +917,18 @@
      "request": {
       "q": null,
       "form": {
-       "code": "v1.74.activity.<redacted>"
+       "code": null
       },
       "json": null
      },
      "status": 200,
      "code": 500,
-     "ms": 913,
-     "msg": "该店无权核销本场玩家票；俱乐部带队请扫描领队团码",
+     "ms": 3,
+     "msg": "核销码无效",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"该店无权核销本场玩家票；俱乐部带队请扫描领队团码\", \"code\": 500, \"data\": {\"notRedeemed\": true}}"
+     "response": "{\"msg\": \"核销码无效\", \"code\": 500, \"data\": {\"notRedeemed\": true}}"
     },
     {
      "label": "owner 9003 scan_dynamic_code",
@@ -938,18 +938,18 @@
      "request": {
       "q": null,
       "form": {
-       "code": "v1.74.activity.<redacted>"
+       "code": null
       },
       "json": null
      },
      "status": 200,
      "code": 500,
-     "ms": 949,
-     "msg": "俱乐部场次开始前60分钟内才可核销",
+     "ms": 2,
+     "msg": "核销码无效",
      "result": "FAIL",
      "note": "code 500 not in [200]",
      "owner": "backend",
-     "response": "{\"msg\": \"俱乐部场次开始前60分钟内才可核销\", \"code\": 500, \"data\": {\"notRedeemed\": true}}"
+     "response": "{\"msg\": \"核销码无效\", \"code\": 500, \"data\": {\"notRedeemed\": true}}"
     },
     {
      "label": "rescan reports already verified",
@@ -959,18 +959,18 @@
      "request": {
       "q": null,
       "form": {
-       "code": "v1.74.activity.<redacted>"
+       "code": null
       },
       "json": null
      },
      "status": 200,
      "code": 500,
-     "ms": 873,
-     "msg": "俱乐部场次开始前60分钟内才可核销",
+     "ms": 2,
+     "msg": "核销码无效",
      "result": "FAIL",
      "note": "rescan not idempotent",
      "owner": "backend",
-     "response": "{\"msg\": \"俱乐部场次开始前60分钟内才可核销\", \"code\": 500, \"data\": {\"notRedeemed\": true}}"
+     "response": "{\"msg\": \"核销码无效\", \"code\": 500, \"data\": {\"notRedeemed\": true}}"
     },
     {
      "label": "player self check-in as the app sends it (play_api.dart:330)",
@@ -982,14 +982,14 @@
       "form": {
        "activityId": 992031,
        "code": "QA0000",
-       "routeActionId": "qa-20261115090559-ck",
+       "routeActionId": "qa-20261115215055-ck",
        "expectedRouteVersion": 1
       },
       "json": null
      },
      "status": 200,
      "code": 500,
-     "ms": 915,
+     "ms": 4,
      "msg": "必须提供动作标识、期望版本和原运行时身份",
      "result": "FAIL",
      "note": "code 500 not in [200]",
@@ -1018,7 +1018,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1334,
+     "ms": 33,
      "msg": "操作成功",
      "result": "FAIL",
      "note": "expected registered/playable/total=6",
@@ -1040,7 +1040,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 983,
+     "ms": 44,
      "msg": "操作成功",
      "result": "FAIL",
      "note": "9004 should be registered=False",
@@ -1062,12 +1062,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1461,
+     "ms": 11,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"attributes\": [], \"routeMode\": \"LINEAR\", \"sessionId\": 1, \"status\": \"ACTIVE\", \"currentNodeId\": 992021, \"recommendedNodeId\": 992021, \"version\": 0, \"nodeStates\": {\"992021\": \"PLAYABLE\", \"992022\": \"DISCOVERED_LOCKED\", \"992023\": \"DISCOVERED_LOCKED\", \"992024\": \"DISCOVERED_LOCKED\", \"992025\": \"DISCOVERED_LOCKED\", \"992026\": \"DISCOVERED_LOCKED\"}, \"decisionLog\": [], \"enco"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"attributes\": [], \"routeMode\": \"LINEAR\", \"sessionId\": 1, \"status\": \"COMPLETED\", \"currentNodeId\": null, \"recommendedNodeId\": null, \"version\": 0, \"nodeStates\": {\"992021\": \"DISCOVERED_LOCKED\", \"992022\": \"DISCOVERED_LOCKED\", \"992023\": \"DISCOVERED_LOCKED\", \"992024\": \"DISCOVERED_LOCKED\", \"992025\": \"DISCOVERED_LOCKED\", \"992026\": \"DISCOVERED_LOCKED\"}, \"decisionLog\": ["
     },
     {
      "label": "play/action-context node 992021",
@@ -1084,13 +1084,13 @@
       "json": null
      },
      "status": 200,
-     "code": 200,
-     "ms": 919,
-     "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"routeSessionId\": \"1\", \"expectedRouteVersion\": 0}}"
+     "code": 409,
+     "ms": 5,
+     "msg": "本局已结束",
+     "result": "FAIL",
+     "note": "code 409 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"本局已结束\", \"retryable\": false, \"code\": 409, \"errorCode\": \"INTENT_SESSION_ENDED\", \"intentNotExecuted\": true, \"refreshRequired\": false}"
     },
     {
      "label": "play/help ladder",
@@ -1099,7 +1099,7 @@
      "member": 9009,
      "request": {
       "q": {
-       "runId": "1",
+       "runId": null,
        "nodeId": 992021
       },
       "form": null,
@@ -1107,12 +1107,12 @@
      },
      "status": 200,
      "code": 400,
-     "ms": 893,
-     "msg": "本局已结束，不能使用帮助",
+     "ms": 3,
+     "msg": "参数有误",
      "result": "FAIL",
      "note": "code 400 not in [200]",
      "owner": "backend",
-     "response": "{\"msg\": \"本局已结束，不能使用帮助\", \"code\": 400}"
+     "response": "{\"msg\": \"参数有误\", \"code\": 400}"
     },
     {
      "label": "play/help/use level 1",
@@ -1123,21 +1123,21 @@
       "q": null,
       "form": null,
       "json": {
-       "runId": "1",
+       "runId": null,
        "nodeId": 992021,
        "level": 1,
        "action": "HELP",
-       "requestId": "qa-20261115090559-eab3bc6a"
+       "requestId": "qa-20261115215055-cb9c26c1"
       }
      },
      "status": 200,
      "code": 400,
-     "ms": 892,
-     "msg": "本局已结束，不能使用帮助",
+     "ms": 3,
+     "msg": "参数有误",
      "result": "FAIL",
      "note": "code 400 not in [200]",
      "owner": "backend",
-     "response": "{\"msg\": \"本局已结束，不能使用帮助\", \"code\": 400}"
+     "response": "{\"msg\": \"参数有误\", \"code\": 400}"
     },
     {
      "label": "play/help/use replay is idempotent (no charge)",
@@ -1148,21 +1148,21 @@
       "q": null,
       "form": null,
       "json": {
-       "runId": "1",
+       "runId": null,
        "nodeId": 992021,
        "level": 1,
        "action": "HELP",
-       "requestId": "qa-20261115090559-eab3bc6a"
+       "requestId": "qa-20261115215055-cb9c26c1"
       }
      },
      "status": 200,
      "code": 400,
-     "ms": 1266,
-     "msg": "本局已结束，不能使用帮助",
+     "ms": 3,
+     "msg": "参数有误",
      "result": "FAIL",
      "note": "code 400 not in [200]",
      "owner": "backend",
-     "response": "{\"msg\": \"本局已结束，不能使用帮助\", \"code\": 400}"
+     "response": "{\"msg\": \"参数有误\", \"code\": 400}"
     },
     {
      "label": "play/answer node 992021 (with action context)",
@@ -1176,9 +1176,9 @@
        "topicId": 992001,
        "nodeId": 992021,
        "answer": "1921",
-       "routeActionId": "qa-20261115090559-a1",
-       "expectedRouteVersion": 0,
-       "routeSessionId": "1",
+       "routeActionId": "qa-20261115215055-a1",
+       "expectedRouteVersion": null,
+       "routeSessionId": null,
        "longitude": "113.264385",
        "latitude": "23.129112",
        "accuracy": "10"
@@ -1186,13 +1186,13 @@
       "json": null
      },
      "status": 200,
-     "code": 409,
-     "ms": 1511,
-     "msg": "原局已结束",
+     "code": 500,
+     "ms": 3,
+     "msg": "必须提供动作标识、期望版本和原运行时身份",
      "result": "FAIL",
-     "note": "code 409 not in [200]",
+     "note": "code 500 not in [200]",
      "owner": "backend",
-     "response": "{\"msg\": \"原局已结束\", \"retryable\": false, \"code\": 409, \"errorCode\": \"INTENT_SESSION_ENDED\", \"intentNotExecuted\": true, \"refreshRequired\": false}"
+     "response": "{\"msg\": \"必须提供动作标识、期望版本和原运行时身份\", \"retryable\": false, \"code\": 500, \"errorCode\": \"INTENT_INPUT_INVALID\", \"intentNotExecuted\": true, \"refreshRequired\": false}"
     },
     {
      "label": "play/answer as the app sends it (no routeSessionId) -> app gap",
@@ -1206,8 +1206,8 @@
        "topicId": 992001,
        "nodeId": 992021,
        "answer": "1921",
-       "routeActionId": "qa-20261115090559-a2",
-       "expectedRouteVersion": 0,
+       "routeActionId": "qa-20261115215055-a2",
+       "expectedRouteVersion": null,
        "longitude": "113.264385",
        "latitude": "23.129112",
        "accuracy": "10"
@@ -1216,7 +1216,7 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 920,
+     "ms": 2,
      "msg": "必须提供动作标识、期望版本和原运行时身份",
      "result": "FAIL",
      "note": "code 500 not in [200]",
@@ -1233,14 +1233,14 @@
        "activityId": 992031,
        "topicId": 992001,
        "nodeId": 992021,
-       "routeActionId": "qa-20261115090559-a1"
+       "routeActionId": "qa-20261115215055-a1"
       },
       "form": null,
       "json": null
      },
      "status": 200,
      "code": 520,
-     "ms": 1244,
+     "ms": 5,
      "msg": "原命令结果待确认，请稍后查询",
      "result": "FAIL",
      "note": "code 520 not in [200]",
@@ -1254,7 +1254,7 @@
      "member": 9009,
      "request": {
       "q": {
-       "runId": "1",
+       "runId": null,
        "nodeId": 992021
       },
       "form": null,
@@ -1262,12 +1262,12 @@
      },
      "status": 200,
      "code": 400,
-     "ms": 923,
-     "msg": "本局已结束，不能使用帮助",
+     "ms": 2,
+     "msg": "参数有误",
      "result": "FAIL",
      "note": "code 400 not in [200]",
      "owner": "backend",
-     "response": "{\"msg\": \"本局已结束，不能使用帮助\", \"code\": 400}"
+     "response": "{\"msg\": \"参数有误\", \"code\": 400}"
     },
     {
      "label": "play/ending GET",
@@ -1284,7 +1284,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1024,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -1305,20 +1305,20 @@
       "json": null
      },
      "status": 200,
-     "code": 500,
-     "ms": 895,
-     "msg": "Request method 'POST' is not supported",
+     "code": 405,
+     "ms": 3,
+     "msg": "请求方式不正确，请更新到最新版本后重试",
      "result": "FAIL",
-     "note": "code 500 not in [200]",
+     "note": "code 405 not in [200]",
      "owner": "app",
-     "response": "{\"msg\": \"Request method 'POST' is not supported\", \"code\": 500}"
+     "response": "{\"msg\": \"请求方式不正确，请更新到最新版本后重试\", \"code\": 405, \"errorCode\": \"METHOD_NOT_ALLOWED\"}"
     }
    ]
   },
   {
    "id": "F08",
    "name": "Roam walk and fog reveal",
-   "verdict": "FAIL",
+   "verdict": "PASS",
    "steps": [
     {
      "label": "compliance consent AGREE roam_location",
@@ -1332,13 +1332,13 @@
        "docType": "privacy_policy",
        "scene": "roam_location",
        "eventType": "AGREE",
-       "requestId": "qa20261115090559deef46d27918402b99248cb4a363f5ee",
+       "requestId": "qa2026111521505506b964b3a24c412e9473f69e9a566e9e",
        "expectedRequestId": ""
       }
      },
      "status": 200,
      "code": 409,
-     "ms": 1963,
+     "ms": 4,
      "msg": "定位授权状态已变化，请重新明确选择",
      "result": "PASS",
      "note": null,
@@ -1360,12 +1360,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 910,
+     "ms": 8,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": 128, \"newlyRevealed\": 0}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": 140, \"newlyRevealed\": 0}}"
     },
     {
      "label": "roam/reveal replay reveals nothing new",
@@ -1375,19 +1375,19 @@
      "request": {
       "q": null,
       "form": {
-       "sessionId": 128,
+       "sessionId": 140,
        "tiles": "ws0e9cb,ws0e9cc"
       },
       "json": null
      },
      "status": 200,
      "code": 200,
-     "ms": 901,
+     "ms": 6,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": 128, \"newlyRevealed\": 0}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": 140, \"newlyRevealed\": 0}}"
     },
     {
      "label": "roam/presence heartbeat",
@@ -1397,7 +1397,7 @@
      "request": {
       "q": null,
       "form": {
-       "sessionId": 128,
+       "sessionId": 140,
        "lat": "23.129112",
        "lng": "113.264385",
        "explorePct": "1"
@@ -1406,7 +1406,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 908,
+     "ms": 5,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -1420,19 +1420,19 @@
      "member": 9004,
      "request": {
       "q": {
-       "sessionId": 128
+       "sessionId": 140
       },
       "form": null,
       "json": null
      },
      "status": 200,
      "code": 200,
-     "ms": 851,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"128\", \"clientSessionKey\": null, \"state\": \"ACTIVE\"}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"140\", \"clientSessionKey\": null, \"state\": \"ACTIVE\"}}"
     },
     {
      "label": "roam/finish",
@@ -1442,7 +1442,7 @@
      "request": {
       "q": null,
       "form": {
-       "sessionId": 128,
+       "sessionId": 140,
        "poiIds": "",
        "distanceM": "350"
       },
@@ -1450,12 +1450,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 911,
+     "ms": 17,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"finishedAt\": 1794762442602, \"tileXp\": 0, \"poiXp\": 0, \"totalXp\": 0, \"newTiles\": 0, \"newPois\": 0, \"tilesEver\": 6, \"medal\": null, \"sessionShops\": 0, \"badgeDelivery\": [], \"shopMedal\": null}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"finishedAt\": 1794779456611, \"tileXp\": 0, \"poiXp\": 0, \"totalXp\": 0, \"newTiles\": 0, \"newPois\": 0, \"tilesEver\": 6, \"medal\": null, \"sessionShops\": 0, \"badgeDelivery\": [], \"shopMedal\": null}}"
     },
     {
      "label": "roam/finish twice is refused/settled",
@@ -1465,7 +1465,7 @@
      "request": {
       "q": null,
       "form": {
-       "sessionId": 128,
+       "sessionId": 140,
        "poiIds": "",
        "distanceM": "350"
       },
@@ -1473,7 +1473,7 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 2016,
+     "ms": 4,
      "msg": "本次漫游已结算",
      "result": "PASS",
      "note": null,
@@ -1488,19 +1488,19 @@
      "request": {
       "q": null,
       "form": {
-       "sessionId": 128,
-       "records": "[{\"tile\": \"ws0e9cb\", \"collectedAt\": 1794762441602}]"
+       "sessionId": 140,
+       "records": "[{\"tile\": \"ws0e9cb\", \"collectedAt\": 1794779455611}]"
       },
       "json": null
      },
      "status": 200,
      "code": 200,
-     "ms": 1120,
+     "ms": 6,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"128\", \"acceptedRecords\": 1, \"evidenceType\": \"CLIENT_REPORTED\"}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"140\", \"acceptedRecords\": 1, \"evidenceType\": \"CLIENT_REPORTED\"}}"
     },
     {
      "label": "roam/session/records with client-clock timestamp (clock skew)",
@@ -1510,19 +1510,19 @@
      "request": {
       "q": null,
       "form": {
-       "sessionId": 128,
-       "records": "[{\"tile\": \"ws0e9cc\", \"collectedAt\": 1794762432725}]"
+       "sessionId": 140,
+       "records": "[{\"tile\": \"ws0e9cc\", \"collectedAt\": 1794779457080}]"
       },
       "json": null
      },
      "status": 200,
-     "code": 500,
-     "ms": 1008,
-     "msg": "采集时间不属于原行程",
-     "result": "FAIL",
-     "note": "code 500 not in [200]",
-     "owner": "env",
-     "response": "{\"msg\": \"采集时间不属于原行程\", \"code\": 500}"
+     "code": 200,
+     "ms": 7,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"140\", \"acceptedRecords\": 1, \"evidenceType\": \"CLIENT_REPORTED\"}}"
     },
     {
      "label": "roam/tiles contains revealed tiles",
@@ -1538,7 +1538,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 922,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -1564,12 +1564,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 867,
+     "ms": 8,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"seasonId\": \"s2026w46\", \"phase\": \"REGULAR\", \"day\": 7, \"startsAt\": 1794189600000, \"freezesAt\": 1796565600000, \"endsAt\": 1796608800000, \"countdownMs\": 1803151425, \"myScore\": 0, \"myRank\": null, \"participants\": 0}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"seasonId\": \"s2026w46\", \"phase\": \"REGULAR\", \"day\": 7, \"startsAt\": 1794189600000, \"freezesAt\": 1796565600000, \"endsAt\": 1796608800000, \"countdownMs\": 1786143346, \"myScore\": 0, \"myRank\": null, \"participants\": 0}}"
     },
     {
      "label": "territory/map",
@@ -1588,12 +1588,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 889,
+     "ms": 5,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"currency\": \"POINTS\", \"items\": []}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"items\": [], \"currency\": \"POINTS\"}}"
     },
     {
      "label": "territory/points (balance HUD)",
@@ -1607,12 +1607,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 886,
+     "ms": 5,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"currency\": \"POINTS\", \"balance\": 9845, \"pending\": 0, \"seasonId\": \"s2026w46\", \"earnedSeason\": 0, \"spentSeason\": 0, \"debt\": 0, \"holdings\": 0, \"holdingLimit\": 9}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"currency\": \"POINTS\", \"balance\": 9820, \"pending\": 0, \"seasonId\": \"s2026w46\", \"earnedSeason\": 0, \"spentSeason\": 0, \"debt\": 0, \"holdings\": 0, \"holdingLimit\": 9}}"
     },
     {
      "label": "claim/quote",
@@ -1675,7 +1675,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 967,
+     "ms": 31,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -1693,13 +1693,13 @@
       "json": null
      },
      "status": 200,
-     "code": 500,
-     "ms": 904,
-     "msg": "Content-Type 'multipart/form-data;boundary=805c13ce4602ef2c0bdc18e02e1734c7;charset=UTF-8' is not supported",
+     "code": 415,
+     "ms": 4,
+     "msg": "请求格式不正确，请更新到最新版本后重试",
      "result": "FAIL",
-     "note": "code 500 not in [200]",
+     "note": "code 415 not in [200]",
      "owner": "app",
-     "response": "{\"msg\": \"Content-Type 'multipart/form-data;boundary=805c13ce4602ef2c0bdc18e02e1734c7;charset=UTF-8' is not supported\", \"code\": 500}"
+     "response": "{\"msg\": \"请求格式不正确，请更新到最新版本后重试\", \"code\": 415, \"errorCode\": \"UNSUPPORTED_MEDIA_TYPE\"}"
     },
     {
      "label": "club/detail",
@@ -1715,7 +1715,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 924,
+     "ms": 8,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -1737,7 +1737,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 926,
+     "ms": 7,
      "msg": "加入成功",
      "result": "PASS",
      "note": null,
@@ -1758,7 +1758,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 878,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -1779,13 +1779,13 @@
       }
      },
      "status": 200,
-     "code": 500,
-     "ms": 880,
+     "code": 400,
+     "ms": 3,
      "msg": "入会申请不存在或已处理",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"入会申请不存在或已处理\", \"code\": 500}"
+     "result": "FAIL",
+     "note": "code 400 not in [200, 500]",
+     "owner": "backend",
+     "response": "{\"msg\": \"入会申请不存在或已处理\", \"code\": 400}"
     },
     {
      "label": "club/members lists joiner",
@@ -1801,7 +1801,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1189,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -1822,7 +1822,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 940,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -1839,19 +1839,19 @@
       "form": {
        "conversation_id": 1,
        "msg_type": 1,
-       "content": "QA 验收群聊 20261115090559",
-       "client_message_id": "qa-20261115090559-e34c8688"
+       "content": "QA 验收群聊 20261115215055",
+       "client_message_id": "qa-20261115215055-74e59f34"
       },
       "json": null
      },
      "status": 200,
      "code": 200,
-     "ms": 1091,
+     "ms": 11,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 990724, \"conversationId\": 1, \"senderId\": 9006, \"receiverId\": 0, \"msgType\": 1, \"content\": \"QA 验收群聊 20261115090559\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visibleOrderAt\": null, \"clientMessageId\": \"qa-20261115090559-e34c8688\", \"senderName\": null, \"sende"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 990749, \"conversationId\": 1, \"senderId\": 9006, \"receiverId\": 0, \"msgType\": 1, \"content\": \"QA 验收群聊 20261115215055\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visibleOrderAt\": null, \"clientMessageId\": \"qa-20261115215055-74e59f34\", \"senderName\": null, \"sende"
     },
     {
      "label": "im/messages in club chat",
@@ -1869,7 +1869,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 881,
+     "ms": 5,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -1895,12 +1895,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1069,
+     "ms": 36,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"lastMsgType\": 1, \"unread\": 4, \"conversationId\": 1, \"counterparty\": {\"bizKey\": \"club_7001\", \"memberCount\": -16, \"nickname\": \"城瘾跑团\", \"clubId\": 7001, \"id\": 0, \"avatar\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/2a652b0b62a1da190b7ee82e3693d82e.jpg\"}, \"type\": 4, \"lastMsgAt\": \"2026-11-16T01:07:42.000+08:00\", \"lastMsgText\": \""
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"lastMsgType\": 1, \"unread\": 6, \"conversationId\": 1, \"counterparty\": {\"bizKey\": \"club_7001\", \"memberCount\": 0, \"nickname\": \"城瘾跑团\", \"clubId\": 7001, \"id\": 0, \"avatar\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/2a652b0b62a1da190b7ee82e3693d82e.jpg\"}, \"type\": 4, \"lastMsgAt\": \"2026-11-16T05:50:57.000+08:00\", \"lastMsgText\": \"QA"
     },
     {
      "label": "im/start DM 9004->9009",
@@ -1915,13 +1915,13 @@
       "json": null
      },
      "status": 200,
-     "code": 200,
-     "ms": 894,
-     "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"conversationId\": 2}}"
+     "code": 500,
+     "ms": 4,
+     "msg": "对方暂不可联系",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"对方暂不可联系\", \"code\": 500}"
     },
     {
      "label": "im/start again returns same conversation",
@@ -1936,13 +1936,13 @@
       "json": null
      },
      "status": 200,
-     "code": 200,
-     "ms": 875,
-     "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"conversationId\": 2}}"
+     "code": 500,
+     "ms": 3,
+     "msg": "对方暂不可联系",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"对方暂不可联系\", \"code\": 500}"
     },
     {
      "label": "im/send DM",
@@ -1952,21 +1952,21 @@
      "request": {
       "q": null,
       "form": {
-       "conversation_id": 2,
+       "conversation_id": null,
        "msg_type": 1,
-       "content": "QA 私信 20261115090559",
-       "client_message_id": "qa-20261115090559-8f230e6c"
+       "content": "QA 私信 20261115215055",
+       "client_message_id": "qa-20261115215055-27a2914c"
       },
       "json": null
      },
      "status": 200,
-     "code": 200,
-     "ms": 895,
-     "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 990725, \"conversationId\": 2, \"senderId\": 9004, \"receiverId\": 9009, \"msgType\": 1, \"content\": \"QA 私信 20261115090559\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visibleOrderAt\": null, \"clientMessageId\": \"qa-20261115090559-8f230e6c\", \"senderName\": null, \"send"
+     "code": 500,
+     "ms": 3,
+     "msg": "缺少会话或对象",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"缺少会话或对象\", \"code\": 500}"
     },
     {
      "label": "im/send-receipt",
@@ -1976,19 +1976,19 @@
      "request": {
       "q": null,
       "form": {
-       "conversation_id": 2,
-       "client_message_id": "qa-20261115090559-8f230e6c"
+       "conversation_id": null,
+       "client_message_id": "qa-20261115215055-27a2914c"
       },
       "json": null
      },
      "status": 200,
-     "code": 200,
-     "ms": 909,
-     "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"found\": true, \"message\": {\"createBy\": null, \"createTime\": \"2026-11-16 01:07:46\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 990725, \"conversationId\": 2, \"senderId\": 9004, \"receiverId\": 9009, \"msgType\": 1, \"content\": \"QA 私信 20261115090559\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visibleOrderAt\": \"2026-11-16 01:07:46.394095\", \"clien"
+     "code": 403,
+     "ms": 4,
+     "msg": "无权查看该会话",
+     "result": "FAIL",
+     "note": "code 403 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"无权查看该会话\", \"code\": 403}"
     },
     {
      "label": "im/messages (receiver)",
@@ -1998,20 +1998,20 @@
      "request": {
       "q": null,
       "form": {
-       "conversation_id": 2,
+       "conversation_id": null,
        "cursor_id": 0,
        "size": 30
       },
       "json": null
      },
      "status": 200,
-     "code": 200,
-     "ms": 967,
-     "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"nextCursor\": 369, \"blocked\": false, \"blockedByMe\": false, \"hasMore\": true, \"list\": [{\"createBy\": null, \"createTime\": \"2026-11-14 17:33:12\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 369, \"conversationId\": 2, \"senderId\": 9004, \"receiverId\": 9009, \"msgType\": 1, \"content\": \"perf-ping\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visibleO"
+     "code": 403,
+     "ms": 2,
+     "msg": "无权查看该会话",
+     "result": "FAIL",
+     "note": "code 403 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"无权查看该会话\", \"code\": 403}"
     },
     {
      "label": "im/unread-total >= 1 (receiver)",
@@ -2025,12 +2025,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 883,
+     "ms": 2,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": 70}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": 54}"
     },
     {
      "label": "im/read",
@@ -2040,18 +2040,18 @@
      "request": {
       "q": null,
       "form": {
-       "conversation_id": 2
+       "conversation_id": null
       },
       "json": null
      },
      "status": 200,
-     "code": 200,
-     "ms": 949,
-     "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200}"
+     "code": 403,
+     "ms": 2,
+     "msg": "无权查看该会话",
+     "result": "FAIL",
+     "note": "code 403 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"无权查看该会话\", \"code\": 403}"
     },
     {
      "label": "im/send group (club_7001 conversation 3)",
@@ -2063,14 +2063,14 @@
       "form": {
        "conversation_id": 3,
        "msg_type": 1,
-       "content": "QA 群消息 20261115090559",
-       "client_message_id": "qa-20261115090559-g"
+       "content": "QA 群消息 20261115215055",
+       "client_message_id": "qa-20261115215055-g"
       },
       "json": null
      },
      "status": 200,
      "code": 500,
-     "ms": 875,
+     "ms": 5,
      "msg": "系统会话不允许用户发送消息",
      "result": "FAIL",
      "note": "code 500 not in [200]",
@@ -2093,7 +2093,7 @@
      },
      "status": 200,
      "code": 403,
-     "ms": 862,
+     "ms": 3,
      "msg": "无权查看该会话",
      "result": "FAIL",
      "note": "code 403 not in [200]",
@@ -2119,7 +2119,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 976,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2175,7 +2175,7 @@
      },
      "status": 200,
      "code": 403,
-     "ms": 981,
+     "ms": 8,
      "msg": "已达到当前身份活动数量上限（3）",
      "result": "FAIL",
      "note": "code 403 not in [200]",
@@ -2191,14 +2191,14 @@
       "q": null,
       "form": null,
       "json": {
-       "name": "QA 验收活动 20261115090559",
+       "name": "QA 验收活动 20261115215055",
        "description": "acceptance r3",
        "addressName": "钟楼广场",
        "startDate": "2026-11-20 10:00:00",
        "endDate": "2026-11-20 18:00:00",
        "categoryIds": "1",
        "collaborators": [],
-       "requestId": "qa20261115090559act067dd51856574058a586e0349836a",
+       "requestId": "qa20261115215055act29fe303b14a247d29752f1e556290",
        "tickets": [
         {
          "name": "免费票",
@@ -2212,12 +2212,12 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 879,
+     "ms": 9,
      "msg": "已达到当前身份活动数量上限（3）",
      "result": "FAIL",
      "note": "code 500 not in [200]",
      "owner": "backend",
-     "response": "{\"msg\": \"已达到当前身份活动数量上限（3）\", \"code\": 500, \"writeReceipt\": {\"state\": \"REJECTED\", \"operation\": \"ACTIVITY_PUBLISH\", \"requestId\": \"qa20261115090559act067dd51856574058a586e0349836a\"}}"
+     "response": "{\"msg\": \"已达到当前身份活动数量上限（3）\", \"code\": 500, \"writeReceipt\": {\"operation\": \"ACTIVITY_PUBLISH\", \"state\": \"REJECTED\", \"requestId\": \"qa20261115215055act29fe303b14a247d29752f1e556290\"}}"
     },
     {
      "label": "activity/publish replay (same requestId) is idempotent",
@@ -2228,14 +2228,14 @@
       "q": null,
       "form": null,
       "json": {
-       "name": "QA 验收活动 20261115090559",
+       "name": "QA 验收活动 20261115215055",
        "description": "acceptance r3",
        "addressName": "钟楼广场",
        "startDate": "2026-11-20 10:00:00",
        "endDate": "2026-11-20 18:00:00",
        "categoryIds": "1",
        "collaborators": [],
-       "requestId": "qa20261115090559act067dd51856574058a586e0349836a",
+       "requestId": "qa20261115215055act29fe303b14a247d29752f1e556290",
        "tickets": [
         {
          "name": "免费票",
@@ -2249,12 +2249,12 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 897,
+     "ms": 6,
      "msg": "已达到当前身份活动数量上限（3）",
      "result": "FAIL",
      "note": "code 500 not in [200]",
      "owner": "backend",
-     "response": "{\"msg\": \"已达到当前身份活动数量上限（3）\", \"code\": 500, \"writeReceipt\": {\"state\": \"REJECTED\", \"operation\": \"ACTIVITY_PUBLISH\", \"requestId\": \"qa20261115090559act067dd51856574058a586e0349836a\"}}"
+     "response": "{\"msg\": \"已达到当前身份活动数量上限（3）\", \"code\": 500, \"writeReceipt\": {\"operation\": \"ACTIVITY_PUBLISH\", \"state\": \"REJECTED\", \"requestId\": \"qa20261115215055act29fe303b14a247d29752f1e556290\"}}"
     },
     {
      "label": "activity/info new activity",
@@ -2270,7 +2270,7 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 928,
+     "ms": 2,
      "msg": "参数不合规",
      "result": "FAIL",
      "note": "code 500 not in [200]",
@@ -2286,14 +2286,14 @@
       "q": null,
       "form": null,
       "json": {
-       "name": "QA 验收活动 20261115090559",
+       "name": "QA 验收活动 20261115215055",
        "description": "acceptance r3",
        "addressName": "钟楼广场",
        "startDate": "2026-11-20 10:00:00",
        "endDate": "2026-11-20 18:00:00",
        "categoryIds": "1",
        "collaborators": [],
-       "requestId": "qa20261115090559pd843ad9219f345b8a00c49110b65d1a",
+       "requestId": "qa20261115215055p820cc30c5b664e45bd5175328413ae1",
        "tickets": [
         {
          "name": "免费票",
@@ -2307,12 +2307,12 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 925,
+     "ms": 5,
      "msg": "仅俱乐部主理人或商家可发布活动",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"仅俱乐部主理人或商家可发布活动\", \"code\": 500, \"writeReceipt\": {\"state\": \"REJECTED\", \"operation\": \"ACTIVITY_PUBLISH\", \"requestId\": \"qa20261115090559pd843ad9219f345b8a00c49110b65d1a\"}}"
+     "response": "{\"msg\": \"仅俱乐部主理人或商家可发布活动\", \"code\": 500, \"writeReceipt\": {\"operation\": \"ACTIVITY_PUBLISH\", \"state\": \"REJECTED\", \"requestId\": \"qa20261115215055p820cc30c5b664e45bd5175328413ae1\"}}"
     },
     {
      "label": "activity/delete cleanup",
@@ -2329,7 +2329,7 @@
      },
      "status": 200,
      "code": 500,
-     "ms": 868,
+     "ms": 2,
      "msg": "参数不合规",
      "result": "FAIL",
      "note": "code 500 not in [200]",
@@ -2352,17 +2352,17 @@
       "q": null,
       "form": null,
       "json": {
-       "name": "QA 验收券 20261115090559",
+       "name": "QA 验收券 20261115215055",
        "description": "acceptance",
-       "startTime": "2026-11-15 09:07:52",
-       "endTime": "2026-11-22 09:07:52",
+       "startTime": "2026-11-15 21:50:56",
+       "endTime": "2026-11-22 21:50:56",
        "publishCount": 1,
        "couponType": 1
       }
      },
      "status": 200,
      "code": 500,
-     "ms": 975,
+     "ms": 6,
      "msg": "已达到当前身份优惠券数量上限（3）",
      "result": "FAIL",
      "note": "code 500 not in [200]",
@@ -2381,7 +2381,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1193,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2449,7 +2449,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1006,
+     "ms": 6,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2472,7 +2472,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 921,
+     "ms": 6,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2495,7 +2495,7 @@
      },
      "status": 200,
      "code": 403,
-     "ms": 871,
+     "ms": 3,
      "msg": "商家身份无效或权限不足",
      "result": "PASS",
      "note": null,
@@ -2535,7 +2535,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 920,
+     "ms": 5,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2556,7 +2556,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 906,
+     "ms": 20,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2578,12 +2578,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 878,
+     "ms": 7,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 1, \"rows\": [{\"createBy\": \"e2e-enrich\", \"createTime\": \"2026-11-13 19:26:07\", \"updateBy\": \"e2e-enrich\", \"updateTime\": \"2026-11-14 19:26:07\", \"remark\": null, \"id\": 992545, \"memberId\": 9003, \"currentBalance\": 0.0, \"afterBalance\": 560.0, \"changeBalance\": 560.0, \"changeReason\": \"俱乐部活动票房分润\", \"eventType\": 2, \"eventId\": 992034, \"changeType\": 1, \"delFlag\": 0}],"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 5, \"rows\": [{\"createBy\": \"e2e-enrich\", \"createTime\": \"2026-11-13 19:26:07\", \"updateBy\": \"e2e-enrich\", \"updateTime\": \"2026-11-14 19:26:07\", \"remark\": null, \"id\": 992545, \"memberId\": 9003, \"currentBalance\": 0.0, \"afterBalance\": 560.0, \"changeBalance\": 560.0, \"changeReason\": \"俱乐部活动票房分润\", \"eventType\": 2, \"eventId\": 992034, \"changeType\": 1, \"delFlag\": 0}, "
     },
     {
      "label": "balance/list",
@@ -2597,12 +2597,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 854,
+     "ms": 2,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": \"e2e-enrich\", \"createTime\": \"2026-11-13 19:26:07\", \"updateBy\": \"e2e-enrich\", \"updateTime\": \"2026-11-14 19:26:07\", \"remark\": null, \"id\": 992545, \"memberId\": 9003, \"currentBalance\": 0.0, \"afterBalance\": 560.0, \"changeBalance\": 560.0, \"changeReason\": \"俱乐部活动票房分润\", \"eventType\": 2, \"eventId\": 992034, \"changeType\": 1, \"delFlag\": 0}]}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 992549, \"memberId\": 9003, \"currentBalance\": 559.99, \"afterBalance\": 560.0, \"changeBalance\": 0.01, \"changeReason\": \"提现撤回退款\", \"eventType\": 4, \"eventId\": 992614, \"changeType\": 1, \"delFlag\": 0}, {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": n"
     },
     {
      "label": "wallet/stages (JSON)",
@@ -2616,7 +2616,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1083,
+     "ms": 62,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2636,13 +2636,13 @@
       "json": null
      },
      "status": 200,
-     "code": 500,
-     "ms": 915,
-     "msg": "Content-Type 'application/x-www-form-urlencoded;charset=UTF-8' is not supported",
+     "code": 415,
+     "ms": 3,
+     "msg": "请求格式不正确，请更新到最新版本后重试",
      "result": "FAIL",
-     "note": "code 500 not in [200]",
+     "note": "code 415 not in [200]",
      "owner": "app",
-     "response": "{\"msg\": \"Content-Type 'application/x-www-form-urlencoded;charset=UTF-8' is not supported\", \"code\": 500}"
+     "response": "{\"msg\": \"请求格式不正确，请更新到最新版本后重试\", \"code\": 415, \"errorCode\": \"UNSUPPORTED_MEDIA_TYPE\"}"
     },
     {
      "label": "merchant/finance/overview",
@@ -2656,7 +2656,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 928,
+     "ms": 9,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2679,7 +2679,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 928,
+     "ms": 5,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2698,7 +2698,7 @@
      },
      "status": 200,
      "code": 403,
-     "ms": 993,
+     "ms": 3,
      "msg": "商家身份无效或权限不足",
      "result": "PASS",
      "note": null,
@@ -2710,7 +2710,7 @@
   {
    "id": "F17",
    "name": "Withdraw (TEST)",
-   "verdict": "FAIL",
+   "verdict": "PASS",
    "steps": [
     {
      "label": "withdrawal/list",
@@ -2724,12 +2724,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 937,
+     "ms": 6,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": []}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": \"13900000003\", \"createTime\": null, \"updateBy\": null, \"updateTime\": \"2026-11-16 01:08:19\", \"remark\": null, \"id\": 992613, \"memberId\": 9003, \"requestId\": \"qa20261115090559wd819cdc2f2e8f42768ff9ceb7644703\", \"realname\": \"测*\", \"bankName\": \"T***\", \"bankAccount\": \"***************0000\", \"mobilephone\": \"139****0003\", \"realnameMask\": \"测*\", \"bankNameMask\": \"T"
     },
     {
      "label": "wallet/stages",
@@ -2743,7 +2743,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 1133,
+     "ms": 11,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2762,17 +2762,17 @@
        "docType": "bank_account_collection",
        "scene": "withdrawal",
        "eventType": "AGREE",
-       "requestId": "qa20261115090559w836745f20b9c4a51a45bb1da62f6e59"
+       "requestId": "qa20261115215055w9892d7bc09f14bb3b0714d1ae79fc38"
       }
      },
      "status": 200,
      "code": 200,
-     "ms": 870,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-16T01:08:15.000+08:00\", \"requestId\": \"qa20261115090559w836745f20b9c4a51a45bb1da62f6e59\", \"docType\": \"bank_account_collection\", \"eventType\": \"AGREE\", \"docVersion\": \"v1.0\", \"scene\": \"withdrawal\"}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-16T05:50:57.000+08:00\", \"requestId\": \"qa20261115215055w9892d7bc09f14bb3b0714d1ae79fc38\", \"docType\": \"bank_account_collection\", \"eventType\": \"AGREE\", \"docVersion\": \"v1.0\", \"scene\": \"withdrawal\"}}"
     },
     {
      "label": "fund/preflight/bank-withdrawal",
@@ -2788,22 +2788,22 @@
        "bankName": "TEST BANK",
        "bankAccount": "6222000000000000000",
        "mobilephone": "13900000003",
-       "requestId": "qa20261115090559wd819cdc2f2e8f42768ff9ceb7644703"
+       "requestId": "qa20261115215055wd62436e108fa6494b8ae7caeb7b6866"
       }
      },
      "status": 200,
      "code": 200,
-     "ms": 911,
+     "ms": 9,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 82, \"challengeToken\": \"<redacted>\", \"state\": \"PENDING\", \"serverTime\": \"2026-11-16 01:08:15\", \"expiresAt\": \"2026-11-16 01:10:15\", \"expiresInSeconds\": 120, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"FIRST_DESTINATION\"], \"canProceed\": true"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 92, \"challengeToken\": \"<redacted>\", \"state\": \"PENDING\", \"serverTime\": \"2026-11-16 05:50:57\", \"expiresAt\": \"2026-11-16 05:52:57\", \"expiresInSeconds\": 120, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"STATIC\", \"riskReasonCodes\": [], \"canProceed\": true, \"amount\": 0.01, \"c"
     },
     {
      "label": "fund/preflight confirm",
      "method": "POST",
-     "path": "/api/fund/preflight/82/confirm",
+     "path": "/api/fund/preflight/92/confirm",
      "member": 9003,
      "request": {
       "q": null,
@@ -2814,12 +2814,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 905,
+     "ms": 7,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 82, \"challengeToken\": null, \"state\": \"CONFIRMED\", \"serverTime\": \"2026-11-16 01:08:16\", \"expiresAt\": \"2026-11-16 01:10:15\", \"expiresInSeconds\": 119, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"FIRST_DESTINATION\"], \"canProceed\": true, \"amo"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 92, \"challengeToken\": null, \"state\": \"CONFIRMED\", \"serverTime\": \"2026-11-16 05:50:57\", \"expiresAt\": \"2026-11-16 05:52:57\", \"expiresInSeconds\": 119, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"STATIC\", \"riskReasonCodes\": [], \"canProceed\": true, \"amount\": 0.01, \"currenc"
     },
     {
      "label": "withdrawal/create",
@@ -2836,18 +2836,18 @@
        "bankAccount": "6222000000000000000",
        "mobilephone": "13900000003",
        "withdrawalAmount": "0.01",
-       "challengeId": 82,
-       "requestId": "qa20261115090559wd819cdc2f2e8f42768ff9ceb7644703"
+       "challengeId": 92,
+       "requestId": "qa20261115215055wd62436e108fa6494b8ae7caeb7b6866"
       }
      },
      "status": 200,
      "code": 200,
-     "ms": 1005,
+     "ms": 11,
      "msg": "提现申请成功，请等待审核",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"提现申请成功，请等待审核\", \"code\": 200, \"data\": 992613}"
+     "response": "{\"msg\": \"提现申请成功，请等待审核\", \"code\": 200, \"data\": 992615}"
     },
     {
      "label": "withdrawal/list has pending row",
@@ -2861,12 +2861,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 890,
+     "ms": 3,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": \"13900000003\", \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 992613, \"memberId\": 9003, \"requestId\": \"qa20261115090559wd819cdc2f2e8f42768ff9ceb7644703\", \"realname\": \"测*\", \"bankName\": \"T***\", \"bankAccount\": \"***************0000\", \"mobilephone\": \"139****0003\", \"realnameMask\": \"测*\", \"bankNameMask\": \"T***\", \"bankAccoun"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": \"13900000003\", \"createTime\": null, \"updateBy\": null, \"updateTime\": \"2026-11-16 01:08:19\", \"remark\": null, \"id\": 992613, \"memberId\": 9003, \"requestId\": \"qa20261115090559wd819cdc2f2e8f42768ff9ceb7644703\", \"realname\": \"测*\", \"bankName\": \"T***\", \"bankAccount\": \"***************0000\", \"mobilephone\": \"139****0003\", \"realnameMask\": \"测*\", \"bankNameMask\": \"T"
     },
     {
      "label": "withdrawal/delete (undo)",
@@ -2876,13 +2876,13 @@
      "request": {
       "q": null,
       "form": {
-       "id": 992613
+       "id": 992615
       },
       "json": null
      },
      "status": 200,
      "code": 200,
-     "ms": 930,
+     "ms": 6,
      "msg": "撤回成功",
      "result": "PASS",
      "note": null,
@@ -2903,22 +2903,22 @@
        "bankName": "TEST BANK",
        "bankAccount": "6222000000000000000",
        "mobilephone": "13900000003",
-       "requestId": "qa20261115090559wx9be4065daccb4e859253eb504d9220"
+       "requestId": "qa20261115215055wxde8554372c4a4c84b5140c8a677dcd"
       }
      },
      "status": 200,
      "code": 200,
-     "ms": 1452,
+     "ms": 4,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 83, \"challengeToken\": \"<redacted>\", \"state\": \"PENDING\", \"serverTime\": \"2026-11-16 01:08:20\", \"expiresAt\": \"2026-11-16 01:10:20\", \"expiresInSeconds\": 120, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"HIGH_AMOUNT\"], \"canProceed\": true, \"amo"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 93, \"challengeToken\": \"<redacted>\", \"state\": \"PENDING\", \"serverTime\": \"2026-11-16 05:50:57\", \"expiresAt\": \"2026-11-16 05:52:57\", \"expiresInSeconds\": 120, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"HIGH_AMOUNT\"], \"canProceed\": true, \"amo"
     },
     {
      "label": "over-balance preflight confirm",
      "method": "POST",
-     "path": "/api/fund/preflight/83/confirm",
+     "path": "/api/fund/preflight/93/confirm",
      "member": 9003,
      "request": {
       "q": null,
@@ -2929,12 +2929,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 955,
+     "ms": 6,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 83, \"challengeToken\": null, \"state\": \"CONFIRMED\", \"serverTime\": \"2026-11-16 01:08:21\", \"expiresAt\": \"2026-11-16 01:10:20\", \"expiresInSeconds\": 119, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"HIGH_AMOUNT\"], \"canProceed\": true, \"amount\": "
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 93, \"challengeToken\": null, \"state\": \"CONFIRMED\", \"serverTime\": \"2026-11-16 05:50:57\", \"expiresAt\": \"2026-11-16 05:52:57\", \"expiresInSeconds\": 119, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"HIGH_AMOUNT\"], \"canProceed\": true, \"amount\": "
     },
     {
      "label": "withdraw over balance refused with clear msg",
@@ -2951,18 +2951,18 @@
        "bankAccount": "6222000000000000000",
        "mobilephone": "13900000003",
        "withdrawalAmount": "99999999",
-       "challengeId": 83,
-       "requestId": "qa20261115090559wx9be4065daccb4e859253eb504d9220"
+       "challengeId": 93,
+       "requestId": "qa20261115215055wxde8554372c4a4c84b5140c8a677dcd"
       }
      },
      "status": 200,
-     "code": 500,
-     "ms": 913,
-     "msg": "提现申请失败，请稍后重试",
-     "result": "FAIL",
-     "note": "over-balance gives generic/accepted response: 提现申请失败，请稍后重试",
-     "owner": "backend",
-     "response": "{\"msg\": \"提现申请失败，请稍后重试\", \"code\": 500}"
+     "code": 409,
+     "ms": 6,
+     "msg": "用户余额不足",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"用户余额不足\", \"businessCode\": \"WITHDRAWAL_INSUFFICIENT_BALANCE\", \"code\": 409}"
     }
    ]
   },
@@ -2975,7 +2975,7 @@
      "label": "status NORMAL",
      "method": "GET",
      "path": "/api/user/deregister/status",
-     "member": "13900000918",
+     "member": "13900000001",
      "request": {
       "q": null,
       "form": null,
@@ -2983,7 +2983,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 896,
+     "ms": 2,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -2994,7 +2994,7 @@
      "label": "precheck ELIGIBLE",
      "method": "POST",
      "path": "/api/user/deregister/precheck",
-     "member": "13900000918",
+     "member": "13900000001",
      "request": {
       "q": null,
       "form": null,
@@ -3002,12 +3002,12 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 897,
+     "ms": 5,
      "msg": "操作成功",
-     "result": "PASS",
-     "note": null,
-     "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"status\": \"ELIGIBLE\", \"verificationMethod\": \"SMS\", \"executeAfter\": null, \"blockers\": []}}"
+     "result": "FAIL",
+     "note": "blockers=['存在待支付或未核销的有效报名']",
+     "owner": "backend",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"status\": \"BLOCKED\", \"verificationMethod\": \"UNAVAILABLE\", \"executeAfter\": null, \"blockers\": [\"存在待支付或未核销的有效报名\"]}}"
     },
     {
      "label": "precheck club leader BLOCKED",
@@ -3021,7 +3021,7 @@
      },
      "status": 200,
      "code": 200,
-     "ms": 941,
+     "ms": 3,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
@@ -3032,7 +3032,7 @@
      "label": "consent account_cancel",
      "method": "POST",
      "path": "/api/compliance/consents",
-     "member": "13900000918",
+     "member": "13900000001",
      "request": {
       "q": null,
       "form": null,
@@ -3040,17 +3040,17 @@
        "docType": "account_cancellation_notice",
        "scene": "account_cancel",
        "eventType": "AGREE",
-       "requestId": "qa20261115090559d12a30e07a485484bb5d546427b2cc95"
+       "requestId": "qa20261115215055db8be543e147840bebf3be5930f7d28d"
       }
      },
      "status": 200,
      "code": 200,
-     "ms": 912,
+     "ms": 3,
      "msg": "操作成功",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-16T01:08:29.000+08:00\", \"requestId\": \"qa20261115090559d12a30e07a485484bb5d546427b2cc95\", \"docType\": \"account_cancellation_notice\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"account_cancel\"}}"
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-16T05:50:57.000+08:00\", \"requestId\": \"qa20261115215055db8be543e147840bebf3be5930f7d28d\", \"docType\": \"account_cancellation_notice\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"account_cancel\"}}"
     },
     {
      "label": "sms/send for apply",
@@ -3060,53 +3060,118 @@
      "request": {
       "q": null,
       "form": {
-       "phone": "13900000918"
+       "phone": "13900000001"
       },
       "json": null
      },
      "status": 200,
-     "code": 500,
-     "ms": 900,
-     "msg": "发送过于频繁,请稍后再试",
+     "code": 200,
+     "ms": 6,
+     "msg": "验证码已发送",
      "result": "PASS",
      "note": null,
      "owner": null,
-     "response": "{\"msg\": \"发送过于频繁,请稍后再试\", \"code\": 500}"
+     "response": "{\"msg\": \"验证码已发送\", \"code\": 200}"
     },
     {
      "label": "deregister/apply",
      "method": "POST",
      "path": "/api/user/deregister/apply",
-     "result": "SKIP",
-     "note": "blocked: no SMS code source for apply"
+     "member": "13900000001",
+     "request": {
+      "q": null,
+      "form": {
+       "smscode": "<redacted>",
+       "requestId": "qa20261115215055apca525639a1ef4188bc7c749007153d"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 13,
+     "msg": "操作成功",
+     "result": "FAIL",
+     "note": "status=BLOCKED",
+     "owner": "backend",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"status\": \"BLOCKED\", \"verificationMethod\": \"UNAVAILABLE\", \"executeAfter\": null, \"blockers\": [\"存在待支付或未核销的有效报名\"]}}"
     },
     {
      "label": "old token revoked after apply",
      "method": "GET",
      "path": "/api/user/deregister/status",
-     "result": "SKIP",
-     "note": "blocked: no SMS code source for apply"
+     "member": "revoked",
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 5,
+     "msg": "操作成功",
+     "result": "FAIL",
+     "note": "code 200 not in [401]",
+     "owner": "backend",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"status\": \"NORMAL\", \"verificationMethod\": \"UNAVAILABLE\", \"executeAfter\": null, \"blockers\": []}}"
     },
     {
      "label": "deregister/result PENDING",
      "method": "GET",
      "path": "/api/user/deregister/result",
-     "result": "SKIP",
-     "note": "blocked: no SMS code source for apply"
+     "member": "13900000001",
+     "request": {
+      "q": {
+       "resultToken": null
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 4,
+     "msg": "操作成功",
+     "result": "FAIL",
+     "note": "not PENDING",
+     "owner": "backend",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"status\": \"NORMAL\", \"executeAfter\": null, \"final\": false, \"verifiedBy\": \"SESSION\"}}"
     },
     {
      "label": "deregister/cancel",
      "method": "POST",
      "path": "/api/user/deregister/cancel",
-     "result": "SKIP",
-     "note": "blocked: no SMS code source for apply"
+     "member": "13900000001",
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 409,
+     "ms": 4,
+     "msg": "当前没有可撤销的注销申请",
+     "result": "FAIL",
+     "note": "code 409 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"当前没有可撤销的注销申请\", \"code\": 409}"
     },
     {
      "label": "status back to NORMAL",
      "method": "GET",
      "path": "/api/user/deregister/status",
-     "result": "SKIP",
-     "note": "blocked: no SMS code source for apply"
+     "member": "13900000001",
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 3,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"status\": \"NORMAL\", \"verificationMethod\": \"UNAVAILABLE\", \"executeAfter\": null, \"blockers\": []}}"
     }
    ]
   }

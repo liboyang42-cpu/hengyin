@@ -7,7 +7,7 @@ TOPIC_Q = {"activityId": ACTIVITY, "topicId": TOPIC}
 
 
 def flow(f):
-    m = PLAYER2
+    m = int(os.environ.get("E2E_PLAY_MEMBER", PLAYER2))  # a player with a live (not finished) run, e.g. 9001
     f.step("play/nodes (registered player)", "GET", "/api/play/nodes", m, q=TOPIC_Q,
            check=lambda j: None if (data_of(j) or {}).get("registered") and (data_of(j) or {}).get("playable")
            and (data_of(j) or {}).get("total") == 6 else "expected registered/playable/total=6")

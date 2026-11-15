@@ -1,7 +1,77 @@
-# Chengyin backend acceptance — round r3 (`integration/backend-app-r3` @ `81db27155`)
+# Chengyin backend acceptance — round r3
+
+## Wave 5 re-test (2026-11-15 21:49–22:02 UTC, backend `integration/backend-app-r3` @ `785d70908`)
+
+- **Target:** TEST 8120 (be-int, DB `cy_e2e_r2`), called over loopback `http://127.0.0.1:8120` on the `work` VPS. Production was not touched.
+- **Backend:** jar built from `82f0bab79` = `81db27155` + `fix/security-r3` (`2f50c7fe0`) + `fix/acceptance-r3` (`fdf15c0ff`, B1–B8) + `fix/smoke-500-r4` (`d58cdc2d1`). `785d70908` adds one test-only commit on top. Migration `migration_20261125_admin_r3_perms` was applied first.
+- **Runs:** full run #1 (finished 21:49 UTC) directly after an api-smoke round; full run #2 (finished 21:53 UTC) after restoring two fixtures that the api-smoke run had changed (see "Interference"); then targeted re-runs R1 (F11), R2c (F04 + F07 as 9001 in a live window) and R3 (F18). `results.json` / `results.md` hold full run #2; `results-rerun.json` holds the re-runs.
+- **Logins:** fixture phones only. Codes are read from TEST Redis (`E2E_CODE_CMD='docker exec be-int-redis redis-cli -n 9 GET sms_{phone}_code'`). F01's `e2e-code` login works too now (B4).
+- **Result: 3 of 18 flows pass every step in the full run (F01, F08, F17), plus F18 in its re-run. Before the fixes it was 0 of 18.** All eight backend defects B1–B8 behave as fixed on TEST. No new backend defect was found. The remaining non-pass steps are TEST data, the four Flutter app gaps (A1–A4, which the harness asserts on purpose), or harness expectations that the fixes made outdated.
+
+### Per flow (full run #2, pass / fail / skip)
+
+| Flow | Full run #2 | Re-run | Verdict | Cause of each non-pass step |
+|---|---|---|---|---|
+| F01 Sign-in | 8 / 0 / 0 | — | **Pass** | `login/code` with `e2e-code-*` now returns a token (B4 fixed). |
+| F02 Browse home | 8 / 1 / 0 | — | Fail (data) | Unchanged: the harness checks page 1 of the upcoming list only, and 992031 is not on it. |
+| F03 Activity detail | 5 / 1 / 0 | — | Fail (data) | Unchanged: the anonymous detail of a club-run activity is the club gate (product decision, see below). |
+| F04 Register and pay | 8 / 1 / 3 | R2c as 9001: 8 / 1 / 3 | Partial | Free path passes end to end (also as 9001). `payment-readiness` = "支付服务暂不可用" (no pay config on TEST); paid steps skipped (no paid fixture). |
+| F05 Ticket QR | 3 / 2 / 0 | — | Fail | A4 (app shape; native iOS is fine). `dyncode/issue` for registration 74 → "该票已核销": it was redeemed in the previous round (data). |
+| F06 Check-in | 1 / 4 / 0 | — | Fail | Registration 74 is already redeemed (data), so issue/scan/rescan cannot pass. Self check-in in the app's shape → A1 (app). |
+| F07 Play game | 2 / 11 / 0 | R2c as 9001 in a live window: 8 / 5 / 0 | Fail | Full run uses 9009, whose run finished: `route-state` now reports `COMPLETED` and `action-context` answers 409 "本局已结束" (B1 fixed); every later step cascades. As 9001: nodes, route-state (`ACTIVE`), action-context, help ladder, help/use and its idempotent replay pass. `play/answer` now refuses with `errorCode CONFIG_INVALID` "该节点答案未配置", not "答案不正确" (B5 fixed): session 993807 was frozen in the previous round, before the fix, with an empty answer, as FIXES-R3 predicts. A fresh run would freeze the fallback answer. App-shape answer (A1) and `POST ending` (A2, now 405) fail by design. |
+| F08 Roam and fog | 10 / 0 / 0 | — | **Pass** | The client-clock records step now passes (B3 fixed). |
+| F09 City Monopoly | 3 / 0 / 6 | — | Partial | Unchanged: no board/POI fixture. |
+| F10 Club join and chat | 8 / 2 / 0 | — | Fail (app + harness) | Multipart `club/list` → `415 UNSUPPORTED_MEDIA_TYPE` "请求格式不正确…" (A3 app gap, response now per B8). `join-request/approve` → 400 "入会申请不存在或已处理" because 9006 joined directly; the harness accepts only 200/500 and predates the SMOKE-500-R4 change to 400 (harness expectation). |
+| F11 Messages | 2 / 8 / 0 | R1: 8 / 2 / 0 | Fail (data) | Full run: the api-smoke pass had just blocked 9009 for 9004 (`im_block` 94), so the DM chain was refused "对方暂不可联系". After removing that row (R1) the DM chain passes; the group steps fail on fixtures as before. `memberCount` of club_7001 is now 0, not −16 (B6 fixed). |
+| F12 Publish topic | 1 / 0 / 4 | — | Partial | Unchanged: no APPROVED cover asset. |
+| F13 Publish activity | 1 / 5 / 0 | — | Fail (data) | Unchanged: club 9003 at its activity quota (3). |
+| F14 Merchant verify | 1 / 1 / 6 | — | Fail (data) | Unchanged: merchant 9002 at its coupon quota (3); no granted coupon. |
+| F15 Merchant refund | 3 / 0 / 2 | — | Partial | Unchanged: no pending refund_application. |
+| F16 Creator earnings | 8 / 1 / 0 | — | Fail (harness) | Form `wallet/stages` → `415 UNSUPPORTED_MEDIA_TYPE` (B8 response). Native iOS sends JSON. |
+| F17 Withdraw (TEST) | 11 / 0 / 0 | — | **Pass** | Over-balance → `409` "用户余额不足" (B2 fixed). |
+| F18 Account deletion | 5 / 5 / 0 | R3: 10 / 0 / 0 | **Pass (re-run)** | Full run: 9001 still held free registration 992201 from the previous round, so precheck listed "存在待支付或未核销的有效报名" (data; the blocker logic is unchanged). After cancelling that order as 9001 (R3): apply → PENDING, old token 401, result PENDING, cancel → CANCELLED, and status is back to `NORMAL` with `executeAfter: null` (B7 fixed). |
+
+### Backend defects B1–B8: live status on TEST
+
+| # | Status | Live evidence |
+|---|---|---|
+| B1 | **Fixed** | 9009 (session 1, COMPLETED): `route-state` → `status COMPLETED`, nodes `DISCOVERED_LOCKED`, no current node; `action-context` → 409 "本局已结束". 9001 (live session 993807) still gets `ACTIVE` and PLAYABLE nodes. |
+| B2 | **Fixed** | F17 over-balance `withdrawal/create` → code 409 "用户余额不足". |
+| B3 | **Fixed** | F08 records stamped with the client clock → 200. |
+| B4 | **Fixed** | F01 `login/code` with `e2e-code-qa…` → 200 with a token. |
+| B5 | **Fixed** (live run still blocked by data) | `play/answer` → `CONFIG_INVALID` "该节点答案未配置" (no longer "答案不正确" `answerWrong`). 9001's session was frozen before the fix; a session started after the fix freezes `qa.answerText`. |
+| B6 | **Fixed** | `im/conversations` club_7001 `memberCount` 0 (was −16); stored `club.member_count` for 7001 is 0. |
+| B7 | **Fixed** | After `deregister/cancel`: `status NORMAL`, `executeAfter null`, `blockers []`. |
+| B8 | **Fixed** | `POST /api/play/ending` → 405 `METHOD_NOT_ALLOWED`; multipart `club/list` and form `wallet/stages` → 415 `UNSUPPORTED_MEDIA_TYPE`, each with the friendly message and no Spring text. |
+
+App items A1–A4 are unchanged in this harness, because the harness sends the Flutter app's request shapes on purpose. The native iOS fixes are on the app branch `ui/h-acceptance-fixes` (see `qa/acceptance/FIXES-R3.md` on the backend branch).
+
+### Interference from api-smoke (found in this run)
+
+The api-smoke runner changes fixtures that these flows depend on, so the order of the two suites matters:
+- Every smoke pass calls `POST /api/topic/update_user_status` for topic 992001 and toggles it on or off the shelf. After this round's three passes it was off, and full run #1 failed F03, F04 and F07 with "主题活动不存在/已下架" (3 / 6 / 2 passes). It was restored with `UPDATE cms_topic SET user_status=1 WHERE id=992001` (the seed value) before full run #2.
+- A smoke pass created `im_block` id 94 (9004 blocks 9009), which breaks the F11 DM chain. It was deleted before R1.
+- Run acceptance before smoke, or re-check these two fixtures first.
+
+### Changes to the test code in this wave
+
+- `f07_play_game.py`: the player is now `E2E_PLAY_MEMBER` (default 9009, as before). Use a player whose linear run is not finished (here 9001), because after B1 a finished run is reported honestly.
+- Not changed, but outdated after SMOKE-500-R4 (refusals that used to be code 500 now carry 400/404/409): F01 "bad code rejected" still passes, while F10 `join-request/approve` accepts only 200/500. Update these expectations when the harness is next edited.
+
+### TEST state changed by this wave
+
+- DB: migration `migration_20261125_admin_r3_perms` (+10 `sys_menu` button rows, idempotent). Topic 992001 `user_status` 0 → 1 (seed value). `im_block` id 94 (9004 → 9009, created by api-smoke) deleted.
+- 9001: free registration 992201 cancelled (cancel-refund, "无现金退款，本单未使用积分"); a new free registration **992203** on 992031 created by R2c and left active (F07 needs a registered live player). Cancel it before the next F18 run. Deregistration applied and cancelled again (status NORMAL).
+- 9004: new free registration from F04 (full runs). 9003: a withdrawal created and undone (F17). 9006 joined club 7001 (F10).
+- Activity 992031 moved to "now − 10 min" three times for a few seconds (R2, R2b, R2c) and restored each time to 2026-11-22 14:00–17:00 (verified). R2 and R2b were blocked before their first step by the SMS per-IP window and the order cancel; only R2c counts.
+- SMS daily counters for 13900000001–09 were cleared before each run.
+
+---
+
+# Earlier run on `81db27155` (2026-11-15, before the fixes)
 
 - **Target:** TEST server `https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech` (be-int, DB `cy_e2e_r2`). Production was not touched.
-- **Live run:** 2026-11-15 17:05 UTC from the owner's Mac (the cloud session could not reach the TEST host; see the history note at the end). Full run of all 18 flows: `results.json` / `results.md`. Targeted re-runs afterwards: `results-rerun.json`.
+- **Live run:** 2026-11-15 17:05 UTC from the owner's Mac (the cloud session could not reach the TEST host; see the history note at the end). Full run of all 18 flows: `results-81db27155.json` / `results-81db27155.md`. Targeted re-runs afterwards: `results-rerun-81db27155.json`.
 - **Accounts:** only the e2e fixture phones 13900000001–13900000009. SMS codes were read from TEST Redis (`be-int-redis`, db 9).
 - **Result: 0 of 18 flows pass every step.** Most failures are TEST data or harness expectations, not product defects. The confirmed product defects are:
   - **Backend:** 3 medium (B1 linear route session shown as ACTIVE after it ended; B2 over-balance withdrawal gives a generic error; B3 roam records have no clock-skew tolerance) and 5 low (B4–B8).
@@ -39,7 +109,7 @@ How the harness behaves (`harness.py`):
 
 ## 2. Live results per flow
 
-Counts are from the full run (`results.md`). "Re-run" is from `results-rerun.json`. During R1–R3 the start of activity 992031 was briefly set to now − 10 min, then restored to 2026-11-22 14:00–17:00. Verdict key:
+Counts are from the full run (`results-81db27155.md`). "Re-run" is from `results-rerun-81db27155.json`. During R1–R3 the start of activity 992031 was briefly set to now − 10 min, then restored to 2026-11-22 14:00–17:00. Verdict key:
 - **Partial:** every executed step passed; others were skipped for missing TEST data.
 - **Fail (data):** the failures are caused by TEST data or a harness expectation; no product defect.
 - **Fail:** at least one confirmed product defect.
