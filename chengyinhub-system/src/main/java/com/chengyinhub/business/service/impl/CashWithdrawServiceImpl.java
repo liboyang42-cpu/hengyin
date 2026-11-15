@@ -84,6 +84,11 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
 
     @Override
     public MemberCashWithdraw withdraw(Long memberId, BigDecimal amountYuan) {
+        return withdraw(memberId, amountYuan, null);
+    }
+
+    @Override
+    public MemberCashWithdraw withdraw(Long memberId, BigDecimal amountYuan, String boundMiniOpenid) {
         RestoreDispatchGuard.requireDispatchAllowed();
         requireOutsideTransaction();
         if (memberId == null) throw new IllegalStateException("请先登录");
@@ -102,7 +107,7 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         if (m == null) throw new IllegalStateException("用户不存在");
         // 选定转账渠道(判据见 resolveTransferChannel 的 javadoc)。
         final String[] channel = resolveTransferChannel(
-                m.getWxOpenId(), m.getAppOpenId(),
+                miniOpenidOrBound(m.getWxOpenId(), boundMiniOpenid), m.getAppOpenId(),
                 wxPayConfig.getAppid(), wxPayConfig.getAppAppid());
         if (channel == null) {
             throw new IllegalStateException("未绑定微信,无法提现到零钱");
@@ -1137,6 +1142,12 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
      *
      * @return {openid, appid};两列都为空时返回 null(调用方转成业务异常)
      */
+    /** R6b:会员本人的小程序 openid 优先;没有时才用 App 扫码绑定的小程序 openid。 */
+    static String miniOpenidOrBound(String memberMiniOpenid, String boundMiniOpenid) {
+        if (memberMiniOpenid != null && !memberMiniOpenid.isEmpty()) return memberMiniOpenid;
+        return boundMiniOpenid == null || boundMiniOpenid.isBlank() ? memberMiniOpenid : boundMiniOpenid;
+    }
+
     static String[] resolveTransferChannel(String wxOpenid, String appOpenid,
                                            String wxAppid, String appAppid) {
         boolean hasWx = wxOpenid != null && !wxOpenid.isEmpty();

@@ -1031,6 +1031,7 @@
     "20261115_guest_walk": [],
     "20261115_points_governance": [],
     "20261115_money_switch": ["web_admin_nine_domains_20260719"],
+    "20261115_money_payout": ["web_admin_nine_domains_20260719", "20261115_money_switch"],
     "20261115_club_ops": ["club"],
     "20261115_im_conversation_page": ["im"],
     "20261115_marketplace": [],
