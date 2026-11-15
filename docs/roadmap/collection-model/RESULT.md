@@ -111,7 +111,24 @@ onboarding. None committed. No hard-coded secret found in the touched files.
 
 ## Verification
 
-RESULTS_PLACEHOLDER
+All commands run with `LANG=C.UTF-8 LC_ALL=C.UTF-8`.
+
+- `mvn -B -q -DskipTests compile` → success.
+- New tests: `mvn -B -q -pl chengyinhub-admin -am test -Dtest='CollectionPolicyEngineTest,CollectionModelServiceTest,CollectionSplitSettlementServiceTest,CollectionModelPartnerRoutingTest,CollectionModelOrderGateTest'`
+  → 37/37 pass. They cover each policy (PLATFORM, SPLIT, REFUSE and every refusal reason), an exhaustive check that no
+  third-party ticket is ever PLATFORM (>1000 combinations), ceiling off = no reads and no behaviour change, refusal
+  before any order row or stock write, the platform-path guard (JSAPI and APP), dues refusal, take from the frozen rate,
+  missing rate → manual review, refunds first (open refund waits, full refund closes), the platform take as the only
+  receiver with the seller's part RETAINED, and profit-sharing return before refund (stub gateway).
+- Existing suites: `-Dtest='*Registration*Test,*Refund*Test,*Settlement*Test,*Order*Test,Ecommerce*Test,*Payout*Test,ClubMembership*Test,WechatPay*Test,Erqing*Test,*Collection*Test,MoneySwitch*Test,*Checkout*Test'`
+  → 287 classes, 2423 tests, 0 failures, 0 errors, 220 skipped (the skips are existing MySQL/opt-in ITs). A first run
+  showed classloading errors in 44 classes because I recompiled during the run; those 44 classes re-run alone all pass.
+  `MemberFundsStageServiceTest`, `ActivitySettlementIdempotencyTest` and `ErqingGateTest` (19/19) also pass on the final code.
+- `bash ci/migration-safety-check.sh` → 迁移安全门禁:通过. `bash ci/migration-layout-check.sh` → 迁移布局门禁:通过.
+- `python3 ci/role_permission_contract.py` → permissions consistent (role SQL / `v-hasPermi` / `@PreAuthorize`), every admin endpoint guarded.
+- `node ci/api-existence-gate.js` → exit 0.
+- `node ci/silent-error-gate.js` → fails on 4 mini-program files this package does not touch (`subpackageMember/external-game*`,
+  `reward-offer`, `rewards`); same result without my changes (pre-existing, from the base).
 
 ## Not verified
 
