@@ -28,6 +28,16 @@ public class RoamSessionWriteService {
     @Autowired
     private RoamSessionRecordMapper recordMapper;
 
+    /**
+     * B3(acceptance-r3):手机时钟与服务器有漂移(实测 TEST 机 +5.7–5.9 s),采集时间按服务器时钟
+     * 卡死 [startedAt, finishedAt] 会把边界附近的雾格静默丢掉。容差内的时间按行程边界收口后入库。
+     */
+    @org.springframework.beans.factory.annotation.Value("${feature.roam.collected-at-skew-seconds:120}")
+    private long collectedAtSkewSeconds = DEFAULT_COLLECTED_AT_SKEW_SECONDS;
+
+    static final long DEFAULT_COLLECTED_AT_SKEW_SECONDS = 120L;
+    static final long MAX_COLLECTED_AT_SKEW_SECONDS = 600L;
+
     /** Lock original owner/SID, validate all records before any insert. No settlement/reward calls. */
     @Transactional(rollbackFor = Exception.class)
     public int archiveFinishedRecords(Long memberId, Long sessionId, String clientSessionKey, String payload) {
@@ -39,7 +49,8 @@ public class RoamSessionWriteService {
         if (!Integer.valueOf(1).equals(session.getStatus()) || session.getStartedAt() == null || session.getFinishedAt() == null)
             throw new ServiceException("原行程尚未确认结束");
         if (session.getLocationClearedAt() != null) throw new ServiceException("原行程位置已按保留期清除");
-        List<Map<String, Object>> records = validateArchive(payload, session.getStartedAt(), session.getFinishedAt(), new Date());
+        List<Map<String, Object>> records = validateArchive(payload, session.getStartedAt(), session.getFinishedAt(), new Date(),
+                Math.max(0L, Math.min(collectedAtSkewSeconds, MAX_COLLECTED_AT_SKEW_SECONDS)) * 1000L);
         List<String> tiles = new ArrayList<>();
         Map<String, Date> times = new LinkedHashMap<>();
         for (Map<String, Object> record : records) {
@@ -58,6 +69,15 @@ public class RoamSessionWriteService {
     }
 
     static List<Map<String, Object>> validateArchive(String payload, Date startedAt, Date finishedAt, Date now) {
+        return validateArchive(payload, startedAt, finishedAt, now, 0L);
+    }
+
+    /** toleranceMillis 内越界的采集时间收口到 [startedAt, min(finishedAt, now)];超出容差仍拒绝。 */
+    static List<Map<String, Object>> validateArchive(String payload, Date startedAt, Date finishedAt, Date now,
+            long toleranceMillis) {
+        long tolerance = Math.max(0L, toleranceMillis);
+        long lower = startedAt.getTime();
+        long upper = Math.min(finishedAt.getTime(), now.getTime());
         if (payload == null || payload.length() > 16000) throw new ServiceException("采集记录结构无效");
         JSONArray input;
         try { input = JSON.parseArray(payload); }
@@ -74,10 +94,11 @@ public class RoamSessionWriteService {
             Number time = (Number) rawTime;
             long millis = time.longValue();
             if (!Double.isFinite(time.doubleValue()) || time.doubleValue() != (double) millis || millis <= 0
-                    || millis < startedAt.getTime() || millis > finishedAt.getTime() || millis > now.getTime())
+                    || millis < lower - tolerance || millis > upper + tolerance)
                 throw new ServiceException("采集时间不属于原行程");
+            long clamped = Math.max(lower, Math.min(millis, upper));
             Map<String, Object> record = new LinkedHashMap<>();
-            record.put("tile", tile); record.put("collectedAt", new Date(millis));
+            record.put("tile", tile); record.put("collectedAt", new Date(clamped));
             Map<String, Object> prior = unique.putIfAbsent((String) tile, record);
             if (prior != null && !prior.get("collectedAt").equals(record.get("collectedAt")))
                 throw new ServiceException("原采集记录不一致");

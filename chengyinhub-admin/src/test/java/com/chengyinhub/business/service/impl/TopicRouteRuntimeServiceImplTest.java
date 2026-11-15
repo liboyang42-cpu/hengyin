@@ -2239,6 +2239,27 @@ class TopicRouteRuntimeServiceImplTest {
                 json.readTree(stored[0].getConfigSnapshotJson())));
     }
 
+    /** B1(acceptance-r3):已 COMPLETED/ENDED 的线性旅程局不能再报 ACTIVE、不能再给可玩节点。 */
+    @Test
+    void finishedLinearJourneySessionIsNeverReportedActive() throws Exception {
+        useLinearJourneyTopic();
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setJourneyRulesJson(GenericRouteRuntimeServiceTest.rules());
+        topic.setPublishedRouteGraphJson(runtime.freezePublication(topic, null));
+        topic.setJourneyRulesJson(null);
+        TopicRouteState running = runtime.state(7L, 10L, null);
+        assertEquals("ACTIVE", running.getStatus());
+
+        for (int terminal : new int[] {TopicRouteSession.STATUS_COMPLETED, TopicRouteSession.STATUS_ENDED}) {
+            stored[0].setStatus(terminal);
+            TopicRouteState view = runtime.state(7L, 10L, null);
+            assertEquals(terminal == TopicRouteSession.STATUS_COMPLETED ? TopicRouteState.COMPLETED : "ENDED", view.getStatus());
+            assertNull(view.getCurrentNodeId());
+            assertNull(view.getRecommendedNodeId());
+            assertFalse(view.getNodeStates().containsValue(TopicRouteState.PLAYABLE), "已结束的局不得给出可玩节点");
+        }
+    }
+
     // ---------------------------------------------------------------- qx-c5 活动场次首局帮助身份
 
     @Test

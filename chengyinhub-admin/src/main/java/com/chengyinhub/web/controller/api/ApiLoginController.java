@@ -114,6 +114,13 @@ public class ApiLoginController extends BaseController {
     private SmsVerificationService smsVerificationService;
     @Autowired
     private org.springframework.core.env.Environment environment;
+    /**
+     * B4(acceptance-r3):TEST-only。仅当 profile e2e-test 且 chengyin.e2e.test-providers=true 时才有此 bean;
+     * 默认/生产 profile 下恒为 null,登录照旧只走微信 jscode2session。
+     */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.impl.E2eTestWeChatMiniSessionService e2eTestMiniSession;
+
     @Value("${chengyin.test.wechat-api-base-url:https://api.weixin.qq.com}")
     private String wechatApiBaseUrl = "https://api.weixin.qq.com";
 
@@ -231,6 +238,9 @@ public class ApiLoginController extends BaseController {
      * @return
      */
     protected String getOpenID(String code) {
+        if (e2eTestMiniSession != null && code != null && code.startsWith("e2e-code-")) {
+            return e2eTestMiniSession.exchange(code).getOpenId();
+        }
         String appid = Convert.toStr(configService.selectConfigByKey("app.wechat.appid"));
         String appsecret = Convert.toStr(configService.selectConfigByKey("app.wechat.appsecret"));
 

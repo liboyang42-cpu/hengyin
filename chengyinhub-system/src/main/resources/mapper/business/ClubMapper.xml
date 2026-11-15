@@ -287,7 +287,8 @@
     </update>
 
     <update id="updateMemberCount">
-        update club set member_count = member_count + #{delta} where id = #{clubId}
+        <!-- B6(acceptance-r3):计数永不为负(兜底;根因在 ClubMemberServiceImpl.quitMemberAndLeaveGroup) -->
+        update club set member_count = greatest(0, coalesce(member_count, 0) + #{delta}) where id = #{clubId}
     </update>
 
     <update id="deleteClubById" parameterType="Long">

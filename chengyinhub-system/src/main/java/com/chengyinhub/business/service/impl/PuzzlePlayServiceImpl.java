@@ -198,7 +198,9 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
     {
         if (template == null) return null;
         if (StringUtils.isNotBlank(template.getAnswerReveal())) return template.getAnswerReveal().trim();
-        if (Integer.valueOf(1).equals(template.getValidationMethod())) return template.getQuestionAnswer();
+        if (Integer.valueOf(1).equals(template.getValidationMethod()))
+            return com.chengyinhub.business.service.support.BasicTextAnswer.expectedAnswer(
+                    template.getQuestionAnswer(), template.getAdvancedConfigJson());
         if (!Integer.valueOf(3).equals(template.getValidationMethod())) return null;
         String key = template.getCorrectAnswer() == null ? "" : template.getCorrectAnswer().trim().toUpperCase();
         String option = "A".equals(key) ? template.getQuestionA()

@@ -132,6 +132,32 @@ class GlobalExceptionHandlerErrorMappingTest {
         assertEquals(false, msg.contains("Exception"), "不得暴露异常类名,实际:" + msg);
     }
 
+    /** B8(acceptance-r3):错误的方法 → 业务码 405,友好文案,不带 Spring 原文。 */
+    @Test
+    void methodNotSupported_returns405BusinessCodeWithFriendlyMessage() {
+        AjaxResult res = handler.handleHttpRequestMethodNotSupported(
+                new org.springframework.web.HttpRequestMethodNotSupportedException("POST", java.util.Collections.singletonList("GET")),
+                new MockHttpServletRequest("POST", "/api/play/ending"));
+        assertEquals(HttpStatus.BAD_METHOD, res.get("code"));
+        assertEquals("METHOD_NOT_ALLOWED", res.get("errorCode"));
+        assertFalse(msgOf(res).contains("not supported"), msgOf(res));
+        assertFalse(msgOf(res).contains("POST"), msgOf(res));
+    }
+
+    /** B8(acceptance-r3):错误的 Content-Type → 业务码 415,友好文案,不带 Spring 原文。 */
+    @Test
+    void mediaTypeNotSupported_returns415BusinessCodeWithFriendlyMessage() {
+        AjaxResult res = handler.handleHttpMediaTypeNotSupported(
+                new org.springframework.web.HttpMediaTypeNotSupportedException(
+                        org.springframework.http.MediaType.MULTIPART_FORM_DATA,
+                        java.util.Collections.singletonList(org.springframework.http.MediaType.APPLICATION_JSON)),
+                new MockHttpServletRequest("POST", "/api/club/list"));
+        assertEquals(HttpStatus.UNSUPPORTED_TYPE, res.get("code"));
+        assertEquals("UNSUPPORTED_MEDIA_TYPE", res.get("errorCode"));
+        assertFalse(msgOf(res).contains("Content-Type"), msgOf(res));
+        assertFalse(msgOf(res).contains("multipart"), msgOf(res));
+    }
+
     @Test
     void uploadSizeExceeded_returnsActionableLimitNotGenericSystemBusy() {
         org.springframework.web.multipart.MaxUploadSizeExceededException e =

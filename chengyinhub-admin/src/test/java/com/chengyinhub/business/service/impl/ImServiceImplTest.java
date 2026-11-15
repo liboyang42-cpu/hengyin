@@ -841,6 +841,25 @@ class ImServiceImplTest {
         assertEquals(42L, cp.get("clubId"));
     }
 
+    /** B6(acceptance-r3):历史数据里 member_count 为负(实测 -16)也不得外露负数。 */
+    @Test
+    void groupConversationNeverExposesANegativeMemberCount() {
+        ImServiceImpl service = service();
+        when(memberMapper.selectMyConversationSummaries(1L)).thenReturn(Collections.singletonList(
+                summary(member(1L), groupConv(100L, "club_7001"))));
+        Club club = new Club();
+        club.setId(7001L); club.setMemberId(1L); club.setName("俱乐部"); club.setMemberCount(-16);
+        club.setStatus(1L); club.setDelFlag(0);
+        ClubConversationSummary projected = new ClubConversationSummary();
+        org.springframework.beans.BeanUtils.copyProperties(club, projected);
+        when(memberMapper.selectClubConversationSummaries(1L, List.of(7001L))).thenReturn(List.of(projected));
+
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> cp = (java.util.Map<String, Object>) service.listConversations(1L).get(0).get("counterparty");
+        assertEquals(Integer.valueOf(0), cp.get("memberCount"));
+        assertEquals(7001L, cp.get("clubId"));
+    }
+
     @Test
     void groupConversationHiddenWhenClubDeleted() {
         ImServiceImpl service = service();

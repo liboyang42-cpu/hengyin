@@ -535,8 +535,12 @@ public class ClubMemberServiceImpl implements IClubMemberService
         }
         clubRoleAssignmentService.revokeAllForAccessEnd(
                 clubId, memberId, actorMemberId, actorRoleCode, reason);
+        // B6(acceptance-r3)根因:删除不分状态,待审(0)/被拒(2)的申请行从未计入 member_count,
+        // 撤回或清理它们时也减 1,计数就会被减成负数。只有正式成员(status=1)离开才减。
+        ClubMember before = clubMemberMapper.selectAnyByClubAndMember(clubId, memberId);
+        boolean wasCounted = before != null && Integer.valueOf(1).equals(before.getStatus());
         int rows = clubMemberMapper.deleteByClubAndMember(clubId, memberId);
-        if (rows > 0) {
+        if (rows > 0 && wasCounted) {
             clubMapper.updateMemberCount(clubId, -1);
         }
         // REQUIRED 事务内执行：异常向外抛出，业务成员删除与计数更新一并回滚。

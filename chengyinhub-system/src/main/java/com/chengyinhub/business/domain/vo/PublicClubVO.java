@@ -64,7 +64,7 @@ public class PublicClubVO {
         vo.leaderName = club.getLeaderName();
         vo.level = club.getLevel();
         vo.tags = club.getTags();
-        vo.memberCount = club.getMemberCount();
+        vo.memberCount = club.getMemberCount() == null ? null : Integer.valueOf(Math.max(0, club.getMemberCount())); // B6
         vo.topicCount = club.getTopicCount();
         vo.prioritySignupEnabled = club.getPrioritySignupEnabled();
         vo.memberDiscountPrice = club.getMemberDiscountPrice();

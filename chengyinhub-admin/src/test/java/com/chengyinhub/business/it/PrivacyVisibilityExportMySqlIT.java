@@ -418,7 +418,8 @@ class PrivacyVisibilityExportMySqlIT {
 
         DeregistrationStatusVO cancelled = service.cancel(MEMBER_A);
         assertEquals("CANCELLED", cancelled.getStatus());
-        assertEquals("CANCELLED", service.status(MEMBER_A).getStatus());
+        assertEquals("NORMAL", service.status(MEMBER_A).getStatus()); // B7(acceptance-r3)
+        assertNull(service.status(MEMBER_A).getExecuteAfter());
         assertEquals(0, pendingRows(MEMBER_A));
         Map<String, Object> member = db.queryForMap("select deregister_status,deregister_apply_time,"
                 + "deregister_execute_after,del_flag,phone from ums_member where id=?", MEMBER_A);

@@ -521,8 +521,11 @@ public class ClubGovernanceServiceImpl implements ClubGovernanceService {
     }
 
     private void removeMemberForBan(Long clubId, Long memberId) {
+        // B6(acceptance-r3):只有正式成员(status=1)计入 member_count;封禁待审/被拒的申请人不减计数。
+        com.chengyinhub.business.domain.ClubMember before = clubMemberMapper.selectAnyByClubAndMember(clubId, memberId);
+        boolean wasCounted = before != null && Integer.valueOf(1).equals(before.getStatus());
         if (clubMemberMapper.deleteByClubAndMember(clubId, memberId) != 1
-                || clubMapper.updateMemberCount(clubId, -1) != 1) {
+                || (wasCounted && clubMapper.updateMemberCount(clubId, -1) != 1)) {
             throw conflict("成员状态已变化，请刷新后重试");
         }
         // 与封禁记录、成员删除同一 REQUIRED 事务；失败即整体回滚，不能留下仍可发言的 IM 分叉。

@@ -89,6 +89,10 @@ public class PlayBasicIntentApplication {
         BasicIntentScope scope = basicIntentScope(memberId, activityId, topicId, nodeId);
         if (scope.denied != null) return scope.denied;
         Map<String, Object> context = basicActionContext(memberId, scope);
+        // B1(acceptance-r3):不把已 COMPLETED/ENDED 的原局当作可提交的当前局发给客户端。
+        if (Boolean.TRUE.equals(context.remove("routeSessionEnded"))) {
+            return PlayCommandErrorContract.conflict("本局已结束", PlayCommandErrorContract.INTENT_SESSION_ENDED);
+        }
         context.put("routeSessionId", String.valueOf(context.get("routeSessionId")));
         return AjaxResult.success(context);
     }
@@ -113,6 +117,10 @@ public class PlayBasicIntentApplication {
         if (session == null) session = playCommandRouteMapper.selectByOwner(scope.activityId, scope.topicId, memberId, "default");
         context.put("routeSessionId", session == null ? 0L : session.getId());
         context.put("expectedRouteVersion", session == null ? 0 : session.getVersion());
+        if (session != null && session.getStatus() != null
+                && !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) {
+            context.put("routeSessionEnded", Boolean.TRUE);
+        }
         return context;
     }
 

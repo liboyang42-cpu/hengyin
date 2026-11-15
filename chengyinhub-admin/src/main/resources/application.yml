@@ -268,6 +268,8 @@ wx:
 feature:
   roamRecall:
     enabled: ${CHENGYIN_ROAM_RECALL_ENABLED:false}  # 模板+前端授权 ID 配齐后再开启
+  roam:
+    collected-at-skew-seconds: ${CHENGYIN_ROAM_COLLECTED_AT_SKEW_SECONDS:120}  # 采集时间对手机时钟漂移的容差(秒,上限 600)
 
 # 腾讯位置服务：主题路线规划与服务端逆地理编码
 # 申请：https://lbs.qq.com → 创建应用 → 开通 WebServiceAPI

@@ -29,6 +29,7 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -383,6 +384,30 @@ class AccountDeregistrationServiceImplTest {
         when(d.cancelPending(eq(1001L), any(Date.class))).thenReturn(1);
         assertEquals("CANCELLED", service.cancel(1001L).getStatus());
         verify(d).markMemberNormal(1001L);
+    }
+
+    /** B7(acceptance-r3):撤销后 status 回 NORMAL,不再带旧的 executeAfter。 */
+    @Test
+    void statusAfterCancelIsNormalWithoutTheOldExecuteAfter() {
+        AccountDeregistrationMapper d = mock(AccountDeregistrationMapper.class);
+        AccountDeregistration cancelled = new AccountDeregistration();
+        cancelled.setStatus("CANCELLED");
+        cancelled.setExecuteAfter(new Date(System.currentTimeMillis() + 7L * 86_400_000L));
+        when(d.selectLatestByMemberId(1001L)).thenReturn(cancelled);
+        AccountDeregistrationServiceImpl service = wired(d, mock(UmsMemberMapper.class),
+                mock(OmsOrderMapper.class), mock(CmsRegistrationMapper.class), mock(ICashWithdrawService.class),
+                mock(PlatformTransactionManager.class), mock(AlarmService.class));
+
+        assertEquals("NORMAL", service.status(1001L).getStatus());
+        assertNull(service.status(1001L).getExecuteAfter());
+
+        AccountDeregistration pending = new AccountDeregistration();
+        pending.setStatus("PENDING");
+        Date executeAfter = new Date(System.currentTimeMillis() + 60000);
+        pending.setExecuteAfter(executeAfter);
+        when(d.selectLatestByMemberId(1001L)).thenReturn(pending);
+        assertEquals("PENDING", service.status(1001L).getStatus());
+        assertEquals(executeAfter, service.status(1001L).getExecuteAfter());
     }
 
     @Test

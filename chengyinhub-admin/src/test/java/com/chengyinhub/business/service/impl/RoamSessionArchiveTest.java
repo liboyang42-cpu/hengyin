@@ -70,6 +70,8 @@ class RoamSessionArchiveTest {
         verifyNoInteractions(archives);
     }
     @Test void entireBatchValidatesBeforeAnyInsert() {
+        // 容差关掉(0 s)时窗口仍是严格的 [startedAt, finishedAt];默认容差见下方 B3 用例。
+        ReflectionTestUtils.setField(writer, "collectedAtSkewSeconds", 0L);
         for (String payload : Arrays.asList("[{\"tile\":\"wtw3sjq\",\"collectedAt\":2000},{\"tile\":\"bad\",\"collectedAt\":2000}]",
                 record(999), record(3001), "[]", "{}", "null", "[null]",
                 "[{\"tile\":\"wtw3sjq\",\"collectedAt\":\"2000\"}]",
@@ -87,5 +89,32 @@ class RoamSessionArchiveTest {
         assertThrows(ServiceException.class, () -> RoamSessionWriteService.validateArchive(record(2500), new Date(1000), new Date(3000), new Date(2000)));
         assertThrows(ServiceException.class, () -> RoamSessionWriteService.validateArchive("[{\"tile\":\"wtw3sjq\",\"collectedAt\":2000},{\"tile\":\"wtw3sjq\",\"collectedAt\":2500}]",
                 new Date(1000), new Date(3000), new Date(3000)));
+    }
+
+    /** B3(acceptance-r3):手机时钟慢/快几秒的采集时间在容差内收口到行程边界;超出容差仍拒绝。 */
+    @Test void collectedAtToleratesClockSkewAndClampsIntoTheTrip() {
+        long tol = 120_000L;
+        Date start = new Date(1_000_000L), finish = new Date(2_000_000L), now = new Date(2_000_000L);
+        assertEquals(new Date(1_000_000L), RoamSessionWriteService.validateArchive(record(1_000_000L - 6_000L), start, finish, now, tol)
+                .get(0).get("collectedAt"), "手机慢 6 s:收口到 startedAt");
+        assertEquals(new Date(2_000_000L), RoamSessionWriteService.validateArchive(record(2_000_000L + 6_000L), start, finish, now, tol)
+                .get(0).get("collectedAt"), "手机快 6 s:收口到 finishedAt");
+        assertEquals(new Date(1_500_000L), RoamSessionWriteService.validateArchive(record(1_500_000L), start, finish, now, tol)
+                .get(0).get("collectedAt"), "行程内的时间原样保存");
+        assertThrows(ServiceException.class, () -> RoamSessionWriteService.validateArchive(record(1_000_000L - tol - 1), start, finish, now, tol));
+        assertThrows(ServiceException.class, () -> RoamSessionWriteService.validateArchive(record(2_000_000L + tol + 1), start, finish, now, tol));
+        assertThrows(ServiceException.class, () -> RoamSessionWriteService.validateArchive(record(1_000_000L - 1), start, finish, now),
+                "无容差的旧入口保持严格");
+    }
+
+    /** B3(acceptance-r3):默认 120 s 容差下,手机慢 1 ms / 快 1 ms 的采集被收口到行程边界入库。 */
+    @Test void defaultToleranceArchivesSlightlySkewedTilesAtTheTripBoundary() {
+        assertEquals(1, writer.archiveFinishedRecords(77L, 9L, null, record(999)));
+        assertEquals(1, writer.archiveFinishedRecords(77L, 9L, null, record(3001)));
+        org.mockito.ArgumentCaptor<java.util.List> rows = org.mockito.ArgumentCaptor.forClass(java.util.List.class);
+        verify(archives, org.mockito.Mockito.times(2)).insertRecords(eq(77L), eq(9L), rows.capture(), any(Date.class));
+        assertEquals(new Date(1000), ((java.util.Map<?, ?>) rows.getAllValues().get(0).get(0)).get("collectedAt"));
+        assertEquals(new Date(3000), ((java.util.Map<?, ?>) rows.getAllValues().get(1).get(0)).get("collectedAt"));
+        assertThrows(ServiceException.class, () -> writer.archiveFinishedRecords(77L, 9L, null, record(3000 + 120_001)));
     }
 }
