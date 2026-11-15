@@ -1,7 +1,7 @@
 # R6c workshop-iap — backend receipt (hengyin)
 
 Branch `feature/r-workshop-iap`, from `origin/feature/r-money-pass` (the pass agent's branch on top of `roadmap/be-integ`).
-Merged `origin/feature/r-money-pass` again at 3309e242d. App half: chengyin-app `cloud/r-workshop-iap` (one StoreKit fix).
+Merged `origin/feature/r-money-pass` again at cad00371c (its receipt); its `PlatformPassAppleTest` (18) passes alongside these tests. App half: chengyin-app `cloud/r-workshop-iap` (one StoreKit fix).
 
 Nothing here opens a switch. With the shipped defaults every `/api/mod-commerce/**` route still answers today's named
 refusal. No Apple, WeChat or payment server is called by code or tests.
