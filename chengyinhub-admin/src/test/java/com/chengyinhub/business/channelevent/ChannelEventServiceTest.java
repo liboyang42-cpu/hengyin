@@ -469,4 +469,24 @@ class ChannelEventServiceTest
         assertFalse(ChannelEventService.activityVisible(null));
         assertTrue(ChannelEventService.activityGone(null));
     }
+
+    @Test
+    void albumAcceptsTheMembersOwnUploadedImageUrl()
+    {
+        assertEquals("upload/0123456789abcdef0123456789abcdef.jpg",
+                ChannelEventService.objectKey("https://cdn.example.com/upload/0123456789abcdef0123456789abcdef.jpg"));
+        assertNull(ChannelEventService.objectKey("https://cdn.example.com/upload/0123456789abcdef0123456789abcdef.exe"));
+        assertNull(ChannelEventService.objectKey("ftp://cdn/upload/0123456789abcdef0123456789abcdef.jpg"));
+        assertNull(ChannelEventService.objectKey("https://u:p@cdn/upload/0123456789abcdef0123456789abcdef.jpg"));
+        assertNull(ChannelEventService.objectKey(null));
+
+        com.chengyinhub.business.mapper.AppMediaAssetMapper assets = mock(com.chengyinhub.business.mapper.AppMediaAssetMapper.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "mediaAssets", assets);
+        String url = "https://cdn.example.com/upload/0123456789abcdef0123456789abcdef.jpg";
+        when(assets.selectByObjectKey("upload/0123456789abcdef0123456789abcdef.jpg")).thenReturn(Map.of("id", 31L, "memberId", OWNER));
+        event(ChannelEventRow.STATUS_POSTED, -2 * HOUR, -HOUR);
+        when(mapper.countMyConfirmed(ACTIVITY, MEMBER)).thenReturn(1);
+        assertEquals("ALBUM_ASSET_NOT_OWNED", code(() -> service.addPhotoByUrl(MEMBER, EVENT, url)), "someone else's upload");
+        assertEquals("ALBUM_ASSET_INVALID", code(() -> service.addPhotoByUrl(MEMBER, EVENT, "https://evil/x.jpg")));
+    }
 }

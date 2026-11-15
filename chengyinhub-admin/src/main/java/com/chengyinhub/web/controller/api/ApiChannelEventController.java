@@ -128,13 +128,15 @@ public class ApiChannelEventController extends BaseController
                 beforeId == null || beforeId.isBlank() ? null : ChannelHttpResponse.id(beforeId)));
     }
 
-    @Operation(summary = "上传照片到活动相册(先过媒体审核)")
+    @Operation(summary = "上传照片到活动相册(asset_id 或本人已上传图片的 image_url;先过媒体审核)")
     @PostMapping("/api/channel-events/{id}/photos")
     public ResponseEntity<AjaxResult> addPhoto(@PathVariable("id") String id, @RequestBody(required = false) Map<String, Object> body)
     {
         Object asset = body == null ? null : body.get("asset_id");
-        return ChannelHttpResponse.run(this::getAppUserId, me -> events.addPhoto(me, ChannelHttpResponse.id(id),
-                asset == null ? 0L : ChannelHttpResponse.id(asset.toString())));
+        Object url = body == null ? null : body.get("image_url");
+        return ChannelHttpResponse.run(this::getAppUserId, me -> asset == null && url != null
+                ? events.addPhotoByUrl(me, ChannelHttpResponse.id(id), url.toString())
+                : events.addPhoto(me, ChannelHttpResponse.id(id), asset == null ? 0L : ChannelHttpResponse.id(asset.toString())));
     }
 
     @Operation(summary = "从活动相册移除照片")

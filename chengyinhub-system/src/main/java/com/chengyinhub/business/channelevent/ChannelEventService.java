@@ -82,6 +82,8 @@ public class ChannelEventService
     @Autowired(required = false)
     @Lazy
     private AppMediaAssetService media;
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.AppMediaAssetMapper mediaAssets;
 
     public ChannelEventService() { }
 
@@ -594,6 +596,39 @@ public class ChannelEventService
         Map<String, Object> p = mapper.selectPhoto(toLong(row.get("id")));
         Map<String, Object> view = photoView(p, me);
         return view == null ? Map.of("id", String.valueOf(toLong(row.get("id")))) : view;
+    }
+
+    /**
+     * Same as {@link #addPhoto} for an image the app uploaded through the existing image upload (which answers with the
+     * image URL): the URL's object key must be one of this member's own media assets.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> addPhotoByUrl(long me, long eventId, String imageUrl)
+    {
+        String key = objectKey(imageUrl);
+        if (key == null || mediaAssets == null) throw new ChannelRejection(400, "ALBUM_ASSET_INVALID", "照片无效，请重新上传");
+        Map<String, Object> asset = mediaAssets.selectByObjectKey(key);
+        if (asset == null || asset.isEmpty() || toLong(asset.get("memberId")) != me)
+            throw new ChannelRejection(403, "ALBUM_ASSET_NOT_OWNED", "只能上传自己的照片");
+        return addPhoto(me, eventId, toLong(asset.get("id")));
+    }
+
+    /** {@code upload/<32 hex>.<image ext>} from an uploaded image URL; null for anything else. */
+    static String objectKey(String imageUrl)
+    {
+        if (imageUrl == null || imageUrl.length() > 1024) return null;
+        try
+        {
+            java.net.URI uri = java.net.URI.create(imageUrl.strip());
+            if (!"https".equals(uri.getScheme()) && !"http".equals(uri.getScheme())) return null;
+            if (uri.getUserInfo() != null || uri.getFragment() != null || uri.getPath() == null) return null;
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("/(upload/[0-9a-f]{32}\\.(?:jpg|jpeg|png|gif))$").matcher(uri.getPath());
+            return m.find() ? m.group(1) : null;
+        }
+        catch (IllegalArgumentException e)
+        {
+            return null;
+        }
     }
 
     /** The uploader, the host and club admins may remove a photo (members' moderation). */
