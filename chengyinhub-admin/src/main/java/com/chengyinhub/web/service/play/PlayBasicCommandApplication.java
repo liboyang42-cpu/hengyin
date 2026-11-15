@@ -433,7 +433,8 @@ public class PlayBasicCommandApplication {
             CmsMemberTemplate liveTpl = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
             if (liveTpl == null || liveTpl.getValidationMethod() == null) return PlayCommandErrorContract.rejected("该节点未配置答题", PlayCommandErrorContract.CONFIG_INVALID);
             vm = liveTpl.getValidationMethod();
-            questionAnswer = liveTpl.getQuestionAnswer();
+            questionAnswer = com.chengyinhub.business.service.support.BasicTextAnswer.expectedAnswer(
+                    liveTpl.getQuestionAnswer(), liveTpl.getAdvancedConfigJson());
             correctAnswer = liveTpl.getCorrectAnswer();
             answerPolicy = com.chengyinhub.business.service.support.AnswerPolicy
                     .ofAdvancedConfig(liveTpl.getAdvancedConfigJson());
@@ -441,6 +442,10 @@ public class PlayBasicCommandApplication {
         }
         String ans = answer == null ? "" : answer.trim();
         boolean ok;
+        if (vm == 1 && StringUtils.isBlank(questionAnswer)) {
+            // B5(acceptance-r3):没有标准答案是配置问题,不是玩家答错;不记失误、不给 answerWrong。
+            return PlayCommandErrorContract.rejected("该节点答案未配置", PlayCommandErrorContract.CONFIG_INVALID);
+        }
         if (vm == 1) { // 文字验证:同一比较器(去全部空白 + 全角→半角 + 忽略大小写)比对 canonical 与显式别名;
             // P-02:、/逗号分隔的多个标准答案命中任一也算过
             ok = answerPolicy.matches(questionAnswer, ans)

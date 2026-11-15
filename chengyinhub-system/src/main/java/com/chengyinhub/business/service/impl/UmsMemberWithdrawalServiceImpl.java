@@ -225,7 +225,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
         BigDecimal available = balance.subtract(frozen);
         if (available.compareTo(request.getWithdrawalAmount()) < 0) {
             // 命中冷静期时带 PLAYER_WITHDRAWAL_COOLDOWN 机器码：小程序/监控按码分流，不解析中文。
-            throw new RuntimeException(frozenParts.rejectionMessage());
+            throw frozenParts.insufficient();
         }
 
         // 先插入提现记录领取业务意图；唯一键 winner 才能扣余额。
@@ -269,7 +269,7 @@ public class UmsMemberWithdrawalServiceImpl implements IUmsMemberWithdrawalServi
         com.chengyinhub.business.service.support.WithdrawalBalanceAdmissionService.Admission admission =
                 balanceAdmissionService.debitBank(memberId, request.getWithdrawalAmount());
         if (!admission.deducted) {
-            throw new RuntimeException(admission.frozen.rejectionMessage());
+            throw admission.frozen.insufficient();
         }
         balance = admission.before;
 

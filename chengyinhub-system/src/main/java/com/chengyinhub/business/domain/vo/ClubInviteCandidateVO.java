@@ -51,7 +51,7 @@ public final class ClubInviteCandidateVO {
         vo.hasGuideCert = club.getHasGuideCert();
         vo.level = club.getLevel();
         vo.tags = club.getTags();
-        vo.memberCount = club.getMemberCount();
+        vo.memberCount = club.getMemberCount() == null ? null : Integer.valueOf(Math.max(0, club.getMemberCount())); // B6
         vo.topicCount = club.getTopicCount();
         vo.leaderLevel = club.getLeaderLevel();
         vo.leaderTags = club.getLeaderTags();

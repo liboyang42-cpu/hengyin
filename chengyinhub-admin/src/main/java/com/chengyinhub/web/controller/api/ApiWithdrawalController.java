@@ -99,6 +99,9 @@ public class ApiWithdrawalController extends BaseController {
             Long id = bankWithdrawalCommandService.submit(request, member_id, username);
             return AjaxResult.success("提现申请成功，请等待审核", id);
 
+        } catch (com.chengyinhub.business.exception.WithdrawalInsufficientBalanceException e) {
+            // B2(acceptance-r3):余额不足是业务拒绝,不是 500,也不该叫用户「稍后重试」。
+            return AjaxResult.error(409, e.getUserMessage()).put("businessCode", e.getBusinessCode());
         } catch (FundActionPreflightException e) {
             return AjaxResult.error(409, e.getMessage()).put("businessCode", e.getBusinessCode());
         } catch (Exception e) {

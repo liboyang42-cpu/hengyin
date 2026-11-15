@@ -185,7 +185,9 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
     @Override
     public DeregistrationStatusVO status(Long memberId) {
         AccountDeregistration latest = deregistrationMapper.selectLatestByMemberId(memberId);
-        if (latest == null) {
+        // B7(acceptance-r3):撤销后账号已回到正常(markMemberNormal),状态查询同样回 NORMAL,
+        // 且不再带旧的 executeAfter——否则客户端会继续显示注销倒计时。
+        if (latest == null || "CANCELLED".equals(latest.getStatus())) {
             return result("NORMAL", null, new ArrayList<String>());
         }
         return result(latest.getStatus(), latest.getExecuteAfter(), new ArrayList<String>());

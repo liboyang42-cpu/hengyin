@@ -99,6 +99,12 @@ public class WithdrawalFrozenAmountResolver {
                     : describe();
         }
 
+        /** B2(acceptance-r3):银行卡腿余额不足时抛的业务异常,带稳定 businessCode 与给人看的文案。 */
+        public com.chengyinhub.business.exception.WithdrawalInsufficientBalanceException insufficient() {
+            return new com.chengyinhub.business.exception.WithdrawalInsufficientBalanceException(
+                    playerComplaintCooldown.compareTo(BigDecimal.ZERO) > 0, rejectionMessage(), describe());
+        }
+
         /** 拒绝文案：点名是哪一道闸挡的，别只说「余额不足」。 */
         public String describe() {
             boolean hasBounty = referralBounty.compareTo(BigDecimal.ZERO) > 0;

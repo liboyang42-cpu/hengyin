@@ -1281,7 +1281,8 @@ final class TopicRoutePublicationCompiler {
             if (template.getPhotoReview() != null) {
                 target.put("photoReview", template.getPhotoReview().intValue());
             }
-            putAnswerText(target, "questionAnswer", template.getQuestionAnswer());
+            putAnswerText(target, "questionAnswer", com.chengyinhub.business.service.support.BasicTextAnswer
+                    .expectedAnswer(template.getQuestionAnswer(), template.getAdvancedConfigJson()));
             putAnswerText(target, "correctAnswer", template.getCorrectAnswer());
             putAnswerText(target, "answerReveal", template.getAnswerReveal());
             putAnswerText(target, "questionA", template.getQuestionA());

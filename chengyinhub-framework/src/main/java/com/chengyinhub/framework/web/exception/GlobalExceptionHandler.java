@@ -122,7 +122,24 @@ public class GlobalExceptionHandler
     {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',不支持'{}'请求", requestURI, e.getMethod());
-        return AjaxResult.error(userSafeMessage(e.getMessage()));
+        // B8(acceptance-r3):业务码 405 + 给人看的话,不再是 code 500 + Spring 原文。
+        return AjaxResult.error(HttpStatus.BAD_METHOD, METHOD_NOT_ALLOWED_MESSAGE)
+                .put("errorCode", "METHOD_NOT_ALLOWED");
+    }
+
+    static final String METHOD_NOT_ALLOWED_MESSAGE = "请求方式不正确，请更新到最新版本后重试";
+    static final String UNSUPPORTED_MEDIA_TYPE_MESSAGE = "请求格式不正确，请更新到最新版本后重试";
+
+    /**
+     * B8(acceptance-r3):请求体格式不支持(如 JSON 接口收到 multipart / form)→ 业务码 415。
+     */
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public AjaxResult handleHttpMediaTypeNotSupported(org.springframework.web.HttpMediaTypeNotSupportedException e,
+            HttpServletRequest request)
+    {
+        log.warn("请求地址'{}',不支持的请求格式'{}'", request.getRequestURI(), e.getContentType());
+        return AjaxResult.error(HttpStatus.UNSUPPORTED_TYPE, UNSUPPORTED_MEDIA_TYPE_MESSAGE)
+                .put("errorCode", "UNSUPPORTED_MEDIA_TYPE");
     }
 
     /**

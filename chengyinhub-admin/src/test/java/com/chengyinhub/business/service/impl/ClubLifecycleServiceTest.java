@@ -36,6 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -137,6 +138,26 @@ class ClubLifecycleServiceTest {
                 CLUB_ID, MEMBER_ID, MEMBER_ID, "SYSTEM_ACCESS_END", "MEMBER_QUIT_OR_REMOVED");
         order.verify(clubMemberMapper).deleteByClubAndMember(CLUB_ID, MEMBER_ID);
         verify(imService).leaveClubGroup(CLUB_ID, MEMBER_ID);
+    }
+
+    /** B6(acceptance-r3)根因:撤回/清理待审或被拒的申请行不得减 member_count;只有正式成员离开才减。 */
+    @Test
+    void removingAPendingOrRejectedApplicationNeverDecrementsMemberCount() {
+        when(clubMapper.selectClubByIdForUpdate(CLUB_ID)).thenReturn(ownerClub());
+        when(clubMemberMapper.deleteByClubAndMember(CLUB_ID, MEMBER_ID)).thenReturn(1);
+        for (int status : new int[] {0, 2}) {
+            ClubMember application = new ClubMember();
+            application.setClubId(CLUB_ID); application.setMemberId(MEMBER_ID); application.setStatus(status);
+            when(clubMemberMapper.selectAnyByClubAndMember(CLUB_ID, MEMBER_ID)).thenReturn(application);
+            assertEquals(1, memberService.quitMemberAndLeaveGroup(CLUB_ID, MEMBER_ID));
+        }
+        verify(clubMapper, never()).updateMemberCount(any(), any(Integer.class));
+
+        ClubMember active = new ClubMember();
+        active.setClubId(CLUB_ID); active.setMemberId(MEMBER_ID); active.setStatus(1);
+        when(clubMemberMapper.selectAnyByClubAndMember(CLUB_ID, MEMBER_ID)).thenReturn(active);
+        assertEquals(1, memberService.quitMemberAndLeaveGroup(CLUB_ID, MEMBER_ID));
+        verify(clubMapper, times(1)).updateMemberCount(CLUB_ID, -1);
     }
 
     @Test

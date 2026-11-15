@@ -69,6 +69,21 @@ class PlayCommandIntentTest {
                 id, expected, null, 99L, null, null, Collections.singletonList(answer), (java.util.function.Function<com.chengyinhub.web.service.play.PlayOriginalRun, AjaxResult>) originalSession -> execute.get());
     }
 
+    /** B1(acceptance-r3):action-context 不把已结束的原局当作当前局发出去。 */
+    @Test void actionContextRefusesAFinishedPersonalRouteSession() {
+        AjaxResult running = controller.basicActionContext("20", null, "11");
+        assertEquals(200, running.get("code"));
+        assertEquals("99", ((Map<?, ?>) running.get("data")).get("routeSessionId"));
+        assertFalse(((Map<?, ?>) running.get("data")).containsKey("routeSessionEnded"));
+        for (int terminal : new int[] {TopicRouteSession.STATUS_COMPLETED, TopicRouteSession.STATUS_ENDED}) {
+            session.setStatus(terminal);
+            AjaxResult ended = controller.basicActionContext("20", null, "11");
+            assertEquals(409, ended.get("code"));
+            assertEquals("INTENT_SESSION_ENDED", ended.get("errorCode"));
+            assertNull(ended.get("data"));
+        }
+    }
+
     /** Real HTTP-method/application proxies with mocked JDBC/shared logic only, not a MySQL refresh proof. */
     @Test void actionContextAllowsSharedRefreshButActionReceiptKeepsItsReadOnlyTransaction() throws Exception {
         var sharedMethod = com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl.class

@@ -1741,12 +1741,30 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 view.setNodeStates(new LinkedHashMap<Long, String>(stored.getNodeStates()));
             }
         }
+        applyTerminalSessionStatus(view, session);
         view.setSessionId(session.getId());
         view.setVersion(session.getVersion());
         view.setAttributes(JourneyInitialState.playerView(sessionRules(session), stored));
         appendOpening(view, session, stored);
         appendThoughts(view, session, stored);
         return view;
+    }
+
+    /**
+     * B1(acceptance-r3):线性局的读模型由完成事实推导,但局本身已 COMPLETED/ENDED 时
+     * 不得再报 ACTIVE、给出可玩节点——否则客户端拿着已结束的局去提交,只会被 409 拒绝而卡死。
+     */
+    static void applyTerminalSessionStatus(TopicRouteState view, TopicRouteSession session) {
+        if (view == null || session == null || session.getStatus() == null
+                || session.getStatus() == TopicRouteSession.STATUS_RUNNING) return;
+        view.setStatus(session.getStatus() == TopicRouteSession.STATUS_COMPLETED ? TopicRouteState.COMPLETED : "ENDED");
+        view.setCurrentNodeId(null);
+        view.setRecommendedNodeId(null);
+        if (view.getNodeStates() != null) {
+            for (Map.Entry<Long, String> entry : view.getNodeStates().entrySet()) {
+                if (TopicRouteState.PLAYABLE.equals(entry.getValue())) entry.setValue(TopicRouteState.DISCOVERED_LOCKED);
+            }
+        }
     }
 
     private TopicRouteState toView(TopicRouteSession session) {

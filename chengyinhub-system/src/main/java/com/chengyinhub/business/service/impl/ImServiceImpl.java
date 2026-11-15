@@ -217,7 +217,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         Map<String, Object> cp = new HashMap<>();
         cp.put("id", 0); cp.put("bizKey", c.getBizKey());
         cp.put("nickname", club.getName()); cp.put("avatar", club.getLogo() == null ? "" : club.getLogo());
-        cp.put("memberCount", club.getMemberCount()); cp.put("clubId", club.getId());
+        cp.put("memberCount", club.getMemberCount() == null ? null : Integer.valueOf(Math.max(0, club.getMemberCount()))); /* B6:历史负数不外露 */ cp.put("clubId", club.getId());
         return cp;
     }
 
@@ -334,7 +334,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             }
             cp.put("nickname", club.getName());
             cp.put("avatar", club.getLogo() == null ? "" : club.getLogo());
-            cp.put("memberCount", club.getMemberCount());
+            cp.put("memberCount", club.getMemberCount() == null ? null : Integer.valueOf(Math.max(0, club.getMemberCount()))); /* B6:历史负数不外露 */
             cp.put("clubId", club.getId());
             return cp;
         }

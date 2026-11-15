@@ -148,6 +148,24 @@ class BothWithdrawalLegsRejectPlayerCooldownTest {
                 WithdrawalFrozenAmountResolver.Frozen.PLAYER_WITHDRAWAL_COOLDOWN), wechat.getMessage());
     }
 
+    /** B2(acceptance-r3):银行卡腿超额时抛带稳定业务码的余额不足异常,而不是裸 RuntimeException。 */
+    @Test
+    void bankLegOverBalanceCarriesAStableBusinessCode() {
+        givenComplaintFrozen("0");
+        com.chengyinhub.business.exception.WithdrawalInsufficientBalanceException plain = assertThrows(
+                com.chengyinhub.business.exception.WithdrawalInsufficientBalanceException.class,
+                () -> bankLeg.withdrawalRequest(request("101"), MEMBER, "player"));
+        assertEquals("WITHDRAWAL_INSUFFICIENT_BALANCE", plain.getBusinessCode());
+        assertTrue(plain.getUserMessage().contains("余额不足"), plain.getUserMessage());
+
+        givenComplaintFrozen("20");
+        com.chengyinhub.business.exception.WithdrawalInsufficientBalanceException cooldown = assertThrows(
+                com.chengyinhub.business.exception.WithdrawalInsufficientBalanceException.class,
+                () -> bankLeg.withdrawalRequest(request("81"), MEMBER, "player"));
+        assertEquals(WithdrawalFrozenAmountResolver.Frozen.PLAYER_WITHDRAWAL_COOLDOWN, cooldown.getBusinessCode());
+        assertFalse(cooldown.getUserMessage().contains(WithdrawalFrozenAmountResolver.Frozen.PLAYER_WITHDRAWAL_COOLDOWN));
+    }
+
     /** 拒绝时不扣余额、不建提现单 —— 两条腿都不许留下任何副作用。 */
     @Test
     void neitherLegLeavesAnySideEffectWhenItRefuses() {

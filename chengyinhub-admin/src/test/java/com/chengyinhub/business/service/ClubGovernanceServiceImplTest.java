@@ -123,6 +123,7 @@ class ClubGovernanceServiceImplTest {
         when(members.selectByClubAndMember(CLUB, TARGET)).thenReturn(activeMember(CLUB, TARGET));
         when(members.selectByClubAndMemberForUpdate(CLUB, TARGET)).thenReturn(activeMember(CLUB, TARGET));
         when(members.selectByClubAndMember(CLUB, REPORTER)).thenReturn(activeMember(CLUB, REPORTER));
+        when(members.selectAnyByClubAndMember(CLUB, TARGET)).thenReturn(activeMember(CLUB, TARGET));
         when(members.deleteByClubAndMember(CLUB, TARGET)).thenReturn(1);
         when(clubs.updateMemberCount(CLUB, -1)).thenReturn(1);
         when(audits.insertBusinessAuditEvent(any(BusinessAuditEvent.class))).thenReturn(1);
