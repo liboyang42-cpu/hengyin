@@ -83,4 +83,29 @@ public class SpringExternalGameWalletBridge implements ExternalGameWalletBridge 
             throw new IllegalStateException("外部游戏余额明细写入失败: memberId=" + memberId);
         }
     }
+
+    @Override
+    public void debitBalanceFen(long memberId, long fen, String businessKey, String reason) {
+        if (fen <= 0L) return;
+        BigDecimal currentRaw = memberMapper.selectBalanceForUpdate(memberId);
+        BigDecimal current = currentRaw == null ? BigDecimal.ZERO : currentRaw;
+        BigDecimal delta = BigDecimal.valueOf(fen).divide(BigDecimal.valueOf(100), 2, RoundingMode.UNNECESSARY);
+        // balance >= amount guard lives in the same UPDATE (UmsMemberMapper#deductBalance)
+        if (memberMapper.deductBalance(memberId, delta) != 1) {
+            throw new com.chengyinhub.business.appgaps.AppGapException(409, "INSUFFICIENT_BALANCE", "TEST 余额不足");
+        }
+        UmsMemberBalanceDetail detail = new UmsMemberBalanceDetail();
+        detail.setMemberId(memberId);
+        detail.setCurrentBalance(current);
+        detail.setAfterBalance(current.subtract(delta));
+        detail.setChangeBalance(delta.negate());
+        detail.setChangeType(2L);
+        detail.setEventType(BALANCE_EVENT_TYPE_EXTGAME);
+        detail.setChangeReason(reason + (businessKey == null ? "" : " [" + businessKey + "]"));
+        detail.setDelFlag(0L);
+        detail.setCreateTime(DateUtils.getNowDate());
+        if (balanceDetailService.insertUmsMemberBalanceDetail(detail) != 1) {
+            throw new IllegalStateException("外部游戏余额扣款明细写入失败: memberId=" + memberId);
+        }
+    }
 }
