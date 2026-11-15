@@ -601,7 +601,7 @@ public class ChannelEventService
     public Map<String, Object> removePhoto(long me, long photoId)
     {
         Map<String, Object> p = mapper.selectPhoto(photoId);
-        if (p == null) throw new ChannelRejection(404, "PHOTO_NOT_FOUND", "照片不存在");
+        if (p == null || p.isEmpty()) throw new ChannelRejection(404, "PHOTO_NOT_FOUND", "照片不存在");
         ChannelEventRow e = readableEvent(me, toLong(p.get("eventId")));
         boolean allowed = toLong(p.get("memberId")) == me || isHost(e, me) || isClubAdmin(e, me);
         if (!allowed) throw new ChannelRejection(403, "PHOTO_REMOVE_FORBIDDEN", "只能移除自己的照片");
@@ -671,7 +671,8 @@ public class ChannelEventService
     @Transactional(rollbackFor = Exception.class)
     public boolean adminSetPhotoRemoved(long photoId, boolean removed, Long adminUserId)
     {
-        if (mapper.selectPhoto(photoId) == null) throw new ChannelRejection(404, "PHOTO_NOT_FOUND", "照片不存在");
+        Map<String, Object> p = mapper.selectPhoto(photoId);
+        if (p == null || p.isEmpty()) throw new ChannelRejection(404, "PHOTO_NOT_FOUND", "照片不存在");
         return mapper.setPhotoRemoved(photoId, removed ? 1 : 0, removed ? adminUserId : null) == 1;
     }
 
