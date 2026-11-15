@@ -62,12 +62,24 @@ public enum ErrorCode
     CLUB_MEMBERS_ONLY("CLUB.MEMBERS_ONLY", "error.club.membersOnly", 403, "这个俱乐部只对成员开放"),
     CLUB_POST_NOT_FOUND("CLUB.POST_NOT_FOUND", "error.club.postNotFound", 404, "动态不存在"),
     CLUB_INVITE_NOT_FOUND("CLUB.INVITE_NOT_FOUND", "error.club.inviteNotFound", 404, "邀请不存在"),
+    /** S2 collection model: club dues cannot be collected by split settlement yet, and the platform may not collect them. */
+    CLUB_DUES_COLLECTION_UNAVAILABLE("CLUB.DUES_COLLECTION_UNAVAILABLE", "error.club.duesCollectionUnavailable", 422,
+            "俱乐部会费暂时不能在线支付，请联系俱乐部主理人"),
 
     // ---- 活动 / 票务 ----
     ACTIVITY_NOT_FOUND("TICKET.ACTIVITY_NOT_FOUND", "error.ticket.activityNotFound", 404, "活动不存在"),
     ACTIVITY_FORBIDDEN("TICKET.ACTIVITY_FORBIDDEN", "error.ticket.activityForbidden", 403, "无权操作该活动"),
     REGISTRATION_NOT_FOUND("TICKET.REGISTRATION_NOT_FOUND", "error.ticket.registrationNotFound", 404, "报名不存在"),
     COUPON_NOT_FOUND("TICKET.COUPON_NOT_FOUND", "error.ticket.couponNotFound", 404, "该优惠券不存在"),
+    /** S2 collection model: the seller has no bound collection account (sub-merchant), so the sale is refused. */
+    SELLER_NOT_BOUND("TICKET.SELLER_NOT_BOUND", "error.ticket.sellerNotBound", 422,
+            "主办方还没有开通自己的收款账户，暂时不能在线购买，请联系主办方"),
+    /** S2 collection model: the seller is bound but split collection is not open on this server yet. */
+    SELLER_COLLECTION_UNAVAILABLE("TICKET.SELLER_COLLECTION_UNAVAILABLE", "error.ticket.sellerCollectionUnavailable", 422,
+            "主办方收款通道暂未开放，暂时不能在线购买"),
+    /** S2 collection model: split collection works in the WeChat mini-program only for now. */
+    APP_CHANNEL_UNAVAILABLE("TICKET.APP_CHANNEL_UNAVAILABLE", "error.ticket.appChannelUnavailable", 422,
+            "这张票暂时只能在城瘾微信小程序里购买"),
 
     // ---- 商家 / 核销 ----
     MERCHANT_NOT_FOUND("MERCHANT.NOT_FOUND", "error.merchant.notFound", 404, "商家不存在"),

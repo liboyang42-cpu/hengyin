@@ -135,6 +135,10 @@ public class RefundServiceImpl implements IRefundService {
     @Autowired
     private com.chengyinhub.business.service.support.SettlementDebtLedger settlementDebtLedger;
 
+    /** S2 collection model: a split-collected sale was never credited to a wallet, so there is nothing to claw back there. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.collection.CollectionSplitSettlementService collectionSplitSettlement;
+
     @Autowired
     private UmsMemberMapper umsMemberMapper;
 
@@ -1549,7 +1553,10 @@ public class RefundServiceImpl implements IRefundService {
             // 客诉期提现闸:结算时涉诉暂扣、尚未补结的报名单,商家没拿到这单的钱 ⇒ 不扣。
             boolean paid = activity != null && Integer.valueOf(1).equals(activity.getIsSettlement())
                     && (registration.getId() == null
-                        || activitySettlementHoldMapper.countHeldByRegistrationId(registration.getId()) == 0);
+                        || activitySettlementHoldMapper.countHeldByRegistrationId(registration.getId()) == 0)
+                    // S2: the platform take on a split sale is returned by profit-sharing return before the refund
+                    // (EcommercePartnerPaymentAdapter#submitRefund); no wallet was credited, so none is debited.
+                    && !(collectionSplitSettlement != null && collectionSplitSettlement.isSplitCollected(registration.getId()));
             Set<Long> paidCreators = paid
                     ? positiveIncomeReceivers(settledList, 6L, parentId) : new HashSet<Long>();
             return settled -> paid && (!"creator".equals(settled.getReceiverType())

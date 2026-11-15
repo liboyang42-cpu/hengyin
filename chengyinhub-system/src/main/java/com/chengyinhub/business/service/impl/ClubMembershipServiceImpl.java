@@ -76,6 +76,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     @Autowired private BusinessAuditEventMapper businessAuditEventMapper;
     @Autowired private PlatformTransactionManager transactionManager;
     @Autowired private WechatVerifiedPaymentFactService verifiedPaymentFacts;
+    /** S2 collection model: club dues have no split path yet, so they are refused while the model is active. */
+    @Autowired(required = false) private com.chengyinhub.business.collection.CollectionModelService collectionModel;
 
     private Clock clock = Clock.system(SHANGHAI);
 
@@ -232,6 +234,8 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         if (request.getPlanId() == null || request.getPlanId() <= 0
                 || invalidIdempotencyKey(request.getIdempotencyKey())
                 || invalidRequestId(request.getRequestId())) bad("续费参数不完整");
+        // S2 collection model: refuse before any invoice is written (no-op while the money ceiling is off).
+        if (collectionModel != null) collectionModel.requireClubDuesCollectible(request.getClubId());
         // 跨微信网络调用不能和本地 intent 共用一个未提交事务：先短事务提交 PAYING intent，
         // 再调微信，最后用第二个短事务附着参数。JVM 在任一点退出，overview 仍能读到原 invoice。
         RenewalIntent intent = transaction().execute(status -> prepareRenewalIntent(
@@ -291,6 +295,7 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         if (!blank(invoice.getPayParamsJson())) return result;
         // D-12：会费开关关闭时只拦新的微信预下单；上面的查单对账仍照常执行。
         featureGate.requireEnabled();
+        if (collectionModel != null) collectionModel.requireClubDuesCollectible(invoice.getClubId());
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Map<String, String> payParams;
         String payJson;
