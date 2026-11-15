@@ -116,8 +116,11 @@ class UpgradeAuthorizationBoundaryTest {
             "POST, /api/login/phone",
             "POST, /api/login/wechat/app",
             "POST, /api/login/apple",
-            "GET, /api/common/config",
-            "POST, /api/common/config",
+            "POST, /api/common/dict",
+            "POST, /api/common/banner",
+            "POST, /api/common/infomation_list",
+            "POST, /api/common/infomation_detail",
+            "POST, /api/common/channel/callback/meituan",
             "GET, /index.html",
             "GET, /assets/docs/index.html",
             "GET, /assets/nested/theme.css",
@@ -187,7 +190,14 @@ class UpgradeAuthorizationBoundaryTest {
             "GET, /api/upgrade/anonymous/manage",
             "GET, /api/upgrade/class/items/42/private",
             "GET, /api/upgrade/class/manage",
-            "GET, /api/unlisted/protected"
+            "GET, /api/unlisted/protected",
+            // SEC-02:/api/common/ 不再整段匿名,未列出的(含未来新增的)一律要登录
+            "GET, /api/common/config",
+            "POST, /api/common/config",
+            "GET, /api/common/uploadOSS/receipt",
+            "GET, /api/common/channel/callback/meituan",
+            "POST, /api/common/channel/callback/meituan/extra",
+            "POST, /api/common/dict/extra"
     })
     void privateSiblingsNestedPathsAndWrongMethodsStillRequireAuthentication(String method, String path)
             throws Exception {
