@@ -33,6 +33,13 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- R9 BE-27: Prometheus scrape format for Micrometer (version from the Spring Boot BOM).
+             Served only on the private management port; see MetricsEndpointGuard. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- swagger3-->
 <!--        <dependency>-->
 <!--            <groupId>io.springfox</groupId>-->
