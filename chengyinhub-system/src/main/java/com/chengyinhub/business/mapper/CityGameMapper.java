@@ -98,7 +98,7 @@ public interface CityGameMapper {
     List<Map<String, Object>> selectTeamRollAudit(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("limit") int limit);
     /**
      * City Monopoly (CITY-MONOPOLY-SPEC) only: its points economy credits income in 积分 inside its own ledger
-     * (city_points_flow + season debt). The classic territory yield goes through CityCoinService and must not use these.
+     * (city_points_flow + season debt). The classic territory yield uses its own non-points path and must not use these.
      */
     int creditMemberPoints(@Param("memberId") long memberId, @Param("points") long points);
     int insertPointsEarnDetail(@Param("memberId") long memberId, @Param("before") long before, @Param("points") long points,

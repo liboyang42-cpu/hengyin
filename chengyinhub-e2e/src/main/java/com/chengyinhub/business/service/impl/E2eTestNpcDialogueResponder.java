@@ -18,8 +18,9 @@ import com.chengyinhub.business.domain.ThemeStateKey;
 @Component
 @Profile("e2e-test")
 @ConditionalOnProperty(name = "chengyin.e2e.test-providers", havingValue = "true")
-public class E2eTestNpcDialogueResponder
+public class E2eTestNpcDialogueResponder implements com.chengyinhub.business.service.NpcDialogueTestResponder
 {
+    @Override
     public String generateJson(NpcProfile profile, String utterance, List<ThemeStateKey> allowedKeys)
     {
         String name = profile.getName() != null ? profile.getName() : "NPC";

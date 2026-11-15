@@ -308,7 +308,7 @@
                before_units AS beforeUnits, after_units AS afterUnits, board_version AS boardVersion, create_time AS createTime
         FROM city_game_roll WHERE board_id = #{boardId} AND team_id = #{teamId} ORDER BY id DESC LIMIT #{limit}
     </select>
-    <!-- City Monopoly only (CityMonopolyService.applyCredit); classic territory yield is city coin. -->
+    <!-- City Monopoly only (CityMonopolyService.applyCredit); the classic territory yield does not use these. -->
     <update id="creditMemberPoints">
         UPDATE ums_member SET point = IFNULL(point, 0) + #{points} WHERE id = #{memberId} AND del_flag = 0
     </update>
