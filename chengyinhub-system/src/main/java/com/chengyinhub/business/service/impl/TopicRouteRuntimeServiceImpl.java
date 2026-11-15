@@ -4110,6 +4110,184 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return themeViewOf(child);
     }
 
+    @Override
+    public TopicRouteSession requireNpcDialogueSession(Long memberId, Long topicId, Long activityId, Long runId) {
+        if (memberId == null || memberId <= 0L) {
+            throw new ServiceException("请先登录", HttpStatus.UNAUTHORIZED);
+        }
+        TopicRouteSession session;
+        if (runId != null && runId > 0L) {
+            session = routeMapper.selectAccessibleById(runId, memberId);
+            if (session == null) {
+                throw new ServiceException("会话不存在或无权访问", HttpStatus.NOT_FOUND);
+            }
+            if (topicId != null && topicId > 0L && !topicId.equals(session.getTopicId())) {
+                throw new ServiceException("主题与会话不匹配", HttpStatus.BAD_REQUEST);
+            }
+        } else {
+            if (topicId == null || topicId <= 0L) {
+                throw new ServiceException("缺少 runId 或 topicId", HttpStatus.BAD_REQUEST);
+            }
+            session = currentScopedSession(memberId, topicId, activityId);
+            if (session == null) {
+                throw new ServiceException("当前没有进行中的剧本会话", HttpStatus.NOT_FOUND);
+            }
+        }
+        if (session.getStatus() != null && !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(session.getStatus())) {
+            throw new ServiceException("本局已结束，不能继续修改状态", HttpStatus.CONFLICT);
+        }
+        return session;
+    }
+
+    @Override
+    public Map<String, Object> findNpcDialogueReplay(TopicRouteSession session, Long memberId, String actionId) {
+        if (session == null || memberId == null || actionId == null || actionId.isEmpty()) return null;
+        return replayJourneyAction(session, memberId, actionId);
+    }
+
+    @Override
+    public List<ThemeStateKey> allowedNpcDialogueKeys(TopicRouteSession session) {
+        if (session == null || session.getTopicId() == null) return Collections.emptyList();
+        Map<String, ThemeStateKey> merged = new LinkedHashMap<String, ThemeStateKey>();
+        List<ThemeStateKey> frozen = JourneyInitialState.frozenDefinitions(session.getConfigSnapshotJson());
+        if (frozen != null) {
+            for (ThemeStateKey item : frozen) {
+                if (isDialogueWritableKey(item)) merged.put(item.getStateKey(), item);
+            }
+        }
+        if (themeStateKeyMapper != null) {
+            List<ThemeStateKey> registered = themeStateKeyMapper.selectByTopicId(session.getTopicId());
+            if (registered != null) {
+                for (ThemeStateKey item : registered) {
+                    if (isDialogueWritableKey(item) && !merged.containsKey(item.getStateKey())) {
+                        merged.put(item.getStateKey(), item);
+                    }
+                }
+            }
+        }
+        return new ArrayList<ThemeStateKey>(merged.values());
+    }
+
+    private static boolean isDialogueWritableKey(ThemeStateKey key) {
+        if (key == null || key.getStateKey() == null) return false;
+        String sk = key.getStateKey();
+        if (sk.startsWith("relation.")) {
+            return key.getKeyType() == null || ThemeStateKey.TYPE_RELATION.equals(key.getKeyType());
+        }
+        if (sk.startsWith("tag.")) {
+            return key.getKeyType() == null || ThemeStateKey.TYPE_TAG.equals(key.getKeyType());
+        }
+        return false;
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public Map<String, Object> commitNpcDialogue(TopicRouteSession session, Long memberId, Long npcId, String npcName,
+            String npcRelationKey, String actionId, String routeActionId, String reply,
+            List<Map<String, Object>> candidateEffects) {
+        if (session == null || session.getId() == null) throw new ServiceException("会话无效", HttpStatus.BAD_REQUEST);
+        Map<String, Object> replayed = replayJourneyAction(session, memberId, actionId);
+        if (replayed != null) return replayed;
+        TopicRouteSession fresh = routeMapper.selectAccessibleByIdForUpdate(session.getId(), memberId);
+        if (fresh == null) throw new ServiceException("会话不存在或无权访问", HttpStatus.NOT_FOUND);
+        if (fresh.getStatus() != null && !Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(fresh.getStatus())) {
+            throw new ServiceException("本局已结束，不能继续修改状态", HttpStatus.CONFLICT);
+        }
+        Map<String, Object> replayedLocked = replayJourneyAction(fresh, memberId, actionId);
+        if (replayedLocked != null) return replayedLocked;
+
+        List<ThemeStateKey> registered = allowedNpcDialogueKeys(fresh);
+        Map<String, ThemeStateKey> byKey = new LinkedHashMap<String, ThemeStateKey>();
+        for (ThemeStateKey def : registered) byKey.put(def.getStateKey(), def);
+
+        TopicRouteEngine.State state = readEngineState(fresh.getStateJson());
+        List<Map<String, Object>> applied = new ArrayList<Map<String, Object>>();
+        Set<String> seenKeys = new LinkedHashSet<String>();
+        String primaryRelKey = (npcRelationKey != null && byKey.containsKey(npcRelationKey) && npcRelationKey.startsWith("relation."))
+                ? npcRelationKey : null;
+
+        if (candidateEffects != null) {
+            for (Map<String, Object> item : candidateEffects) {
+                if (item == null || applied.size() >= 4) continue;
+                String op = String.valueOf(item.get("type") != null ? item.get("type") : item.get("op")).trim().toUpperCase();
+                String key = item.get("key") != null ? String.valueOf(item.get("key")).trim()
+                        : (item.get("var") != null ? String.valueOf(item.get("var")).trim() : "");
+                if (key.isEmpty() || !seenKeys.add(op + ":" + key)) continue;
+                ThemeStateKey def = byKey.get(key);
+                if (def == null) continue;
+
+                if ("INC".equals(op) && key.startsWith("relation.")) {
+                    int rawDelta = 0;
+                    Object dObj = item.get("delta") != null ? item.get("delta") : item.get("value");
+                    if (dObj instanceof Number) rawDelta = ((Number) dObj).intValue();
+                    else if (dObj != null) {
+                        try { rawDelta = Integer.parseInt(String.valueOf(dObj).trim()); } catch (NumberFormatException ignored) { rawDelta = 0; }
+                    }
+                    if (rawDelta == 0) continue;
+                    int delta = Math.max(-2, Math.min(2, rawDelta));
+                    int minVal = def.getMinValue() != null ? def.getMinValue() : -10;
+                    int maxVal = def.getMaxValue() != null ? def.getMaxValue() : 10;
+                    Number oldNum = state.getVariables().get(key);
+                    int oldVal = oldNum != null ? oldNum.intValue() : (def.getInitialValue() != null ? def.getInitialValue() : 0);
+                    int nextVal = Math.max(minVal, Math.min(maxVal, oldVal + delta));
+                    int actualDelta = nextVal - oldVal;
+                    if (actualDelta == 0) continue;
+                    state.getVariables().put(key, nextVal);
+                    if (primaryRelKey == null) primaryRelKey = key;
+
+                    Map<String, Object> effectReceipt = new LinkedHashMap<String, Object>();
+                    effectReceipt.put("type", "INC");
+                    effectReceipt.put("key", key);
+                    effectReceipt.put("delta", actualDelta);
+                    effectReceipt.put("value", nextVal);
+                    effectReceipt.put("label", def.getLabel() != null ? def.getLabel() : key);
+                    applied.add(effectReceipt);
+                } else if ("ADD_TAG".equals(op) && key.startsWith("tag.")) {
+                    if (state.getTags().contains(key)) continue;
+                    state.getTags().add(key);
+                    Map<String, Object> effectReceipt = new LinkedHashMap<String, Object>();
+                    effectReceipt.put("type", "ADD_TAG");
+                    effectReceipt.put("key", key);
+                    effectReceipt.put("label", def.getLabel() != null ? def.getLabel() : key);
+                    applied.add(effectReceipt);
+                }
+            }
+        }
+
+        if (primaryRelKey == null) {
+            for (ThemeStateKey def : registered) {
+                if (def.getStateKey().startsWith("relation.")) {
+                    primaryRelKey = def.getStateKey();
+                    break;
+                }
+            }
+        }
+
+        Map<String, Object> relationSummary = null;
+        if (primaryRelKey != null) {
+            ThemeStateKey relDef = byKey.get(primaryRelKey);
+            Number cur = state.getVariables().get(primaryRelKey);
+            int val = cur != null ? cur.intValue() : (relDef != null && relDef.getInitialValue() != null ? relDef.getInitialValue() : 0);
+            relationSummary = new LinkedHashMap<String, Object>();
+            relationSummary.put("key", primaryRelKey);
+            relationSummary.put("name", npcName != null ? npcName : (relDef != null && relDef.getLabel() != null ? relDef.getLabel() : primaryRelKey));
+            relationSummary.put("value", val);
+            relationSummary.put("state", PlayJourneyReadServiceImpl.threeState(val));
+        }
+
+        Map<String, Object> receipt = new LinkedHashMap<String, Object>();
+        receipt.put("runId", fresh.getId());
+        receipt.put("topicId", fresh.getTopicId());
+        receipt.put("npcId", npcId);
+        receipt.put("routeActionId", routeActionId);
+        receipt.put("reply", reply);
+        receipt.put("effects", applied);
+        if (relationSummary != null) receipt.put("relation", relationSummary);
+
+        Long nodeId = fresh.getCurrentNodeId() == null ? 0L : fresh.getCurrentNodeId();
+        return commitJourneyAction(fresh, nodeId, actionId, "NPC_DIALOGUE", receipt, state);
+    }
+
     private Scope requireReplayScope(TopicRouteSession previous) {
         return requireReplayScope(previous,false);
     }

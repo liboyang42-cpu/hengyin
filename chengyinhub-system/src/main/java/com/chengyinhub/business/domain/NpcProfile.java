@@ -52,6 +52,12 @@ public class NpcProfile
     private Date updateTime;
     /** 后台列表联查 mms_merchant.name 用,不落库(insert/update 均不含该列)。 */
     private String merchantName;
+    /** 剧本人物(scope_type=1)绑定的 relation.* 状态键。 */
+    private String relationKey;
+    /** 后台列表联查 cms_topic.title 用,不落库。 */
+    private String topicTitle;
+    /** 后台E1人物表回传/更新 theme_state_key.initial_value 用,不落 npc_profile 库。 */
+    private Integer initialRelation;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -112,4 +118,11 @@ public class NpcProfile
     public void setUpdateTime(Date updateTime) { this.updateTime = updateTime; }
     public String getMerchantName() { return merchantName; }
     public void setMerchantName(String merchantName) { this.merchantName = merchantName; }
+
+    public String getRelationKey() { return relationKey; }
+    public void setRelationKey(String relationKey) { this.relationKey = relationKey; }
+    public String getTopicTitle() { return topicTitle; }
+    public void setTopicTitle(String topicTitle) { this.topicTitle = topicTitle; }
+    public Integer getInitialRelation() { return initialRelation; }
+    public void setInitialRelation(Integer initialRelation) { this.initialRelation = initialRelation; }
 }
