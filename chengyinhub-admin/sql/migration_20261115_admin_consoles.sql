@@ -30,8 +30,9 @@ SET @r10_dir := (SELECT menu_id FROM sys_menu WHERE path = 'data-config' AND par
 INSERT INTO sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 SELECT '掉落规则', @r10_dir, 40, 'reward-drop', 'business/rewarddrop/index', 1, 0, 'C', '0', '0', 'business:rewardDrop:list', 'star', 'admin', NOW(), 'R10 admin-consoles'
 FROM dual
-WHERE @r10_dir IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys_menu WHERE perms = 'business:rewardDrop:list');
-SET @r10_page := (SELECT menu_id FROM sys_menu WHERE perms = 'business:rewardDrop:list' AND menu_type = 'C' ORDER BY menu_id LIMIT 1);
+WHERE @r10_dir IS NOT NULL AND NOT EXISTS (SELECT 1 FROM sys_menu WHERE perms = 'business:rewardDrop:list')
+  AND NOT EXISTS (SELECT 1 FROM sys_menu WHERE component = 'business/rewarddrop/index');  -- sys-random 已建同一页面时不再建第二行
+SET @r10_page := (SELECT menu_id FROM sys_menu WHERE (perms = 'business:rewardDrop:list' OR component = 'business/rewarddrop/index') AND menu_type = 'C' ORDER BY menu_id LIMIT 1);
 INSERT INTO sys_menu (menu_name, parent_id, order_num, path, component, is_frame, is_cache, menu_type, visible, status, perms, icon, create_by, create_time, remark)
 SELECT '新建掉落规则', @r10_page, 1, '', '', 1, 0, 'F', '0', '0', 'business:rewardDrop:add', '#', 'admin', NOW(), 'R10 admin-consoles'
 FROM dual

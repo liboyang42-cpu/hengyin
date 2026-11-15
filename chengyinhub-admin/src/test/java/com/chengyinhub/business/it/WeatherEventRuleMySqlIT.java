@@ -142,7 +142,7 @@ class WeatherEventRuleMySqlIT {
         assertTrue(locks.containsKey(9002L));
 
         // Verify rollback script cleanly drops table on isolated DB.
-        String rollbackSql = Files.readString(Path.of("sql/rollback_20261114_weather_event_rule.sql"));
+        String rollbackSql = Files.readString(Path.of("sql/bak_weather_event_rule_20261114_rollback.sql"));
         try (Connection c = dataSource.getConnection(); Statement s = c.createStatement()) {
             s.execute(rollbackSql);
         }

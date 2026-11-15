@@ -75,6 +75,8 @@ public class PlayBasicCommandApplication {
     private IPlayCheckinCodeService playCheckinCodeService;
     @Autowired
     private PlayScanEntryService playScanEntryService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IRandomDispatchService randomDispatchService;
     @Autowired
     private ISensorChallengeService sensorChallengeService;
     @Autowired
@@ -179,12 +181,14 @@ public class PlayBasicCommandApplication {
             }
             PlayerNodeProgress proof = shopDayProofService.markArrived(memberId, actId, node);
             recordFirstSuccessfulScan(memberId, ctx);
+            Map<String, Object> proofData = new LinkedHashMap<>(playTaskPresentation.shopDayProofData(node, proof));
+            attachDispatchedTask(proofData, memberId, node);
             if (inGameChannelService != null) {
                 inGameChannelService.postPlayEvent(
                         com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
                         memberId, actId, ctx.topicId, node.getName(), null);
             }
-            return AjaxResult.success("已记录到店", playTaskPresentation.shopDayProofData(node, proof));
+            return AjaxResult.success("已记录到店", proofData);
         }
         // R18-FREEZE:完成方式闸按开局快照判定(冻结优先,老局快照回退实时模板)
         CmsMemberTemplate checkinTemplate = playNodeContext.effectiveTemplate(memberId, ctx.topicId, ctx.actId, node, originalRun);
@@ -211,6 +215,7 @@ public class PlayBasicCommandApplication {
             if(personalGameplay)arrivalData.put("themeRuntime",topicRouteRuntimeService.recordPlayerArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,expectedRouteVersion));
             if(sharedRoute!=null)arrivalData.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"SCAN",runtimeInstance,authorityEpoch));
             recordFirstSuccessfulScan(memberId, ctx);
+            attachDispatchedTask(arrivalData, memberId, node);
             if (inGameChannelService != null) {
                 inGameChannelService.postPlayEvent(
                         com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
@@ -223,6 +228,7 @@ public class PlayBasicCommandApplication {
         Map<String, Object> data = playNodeCompletionApplication.advanceProgress(memberId, node, actId, null, null, null,
                 RewardPolicy.FULL, routeActionId, expectedRouteVersion, null, null, originalRun);
         recordFirstSuccessfulScan(memberId, ctx);
+        attachDispatchedTask(data, memberId, node);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         if (firstTime && inGameChannelService != null) {
@@ -287,9 +293,23 @@ public class PlayBasicCommandApplication {
             data.put("topicId", entry.topicId);
             data.put("nodeId", entry.nodeId);
             if (entry.activityId != null) data.put("activityId", entry.activityId);
+            if (PlayScanEntry.ACTION_PLAY.equalsIgnoreCase(entry.action) && entry.nodeId != null) {
+                CmsTopicNode entryNode = cmsTopicNodeService.selectCmsTopicNodeById(entry.nodeId);
+                attachDispatchedTask(data, memberId, entryNode);
+            }
             return AjaxResult.success(data);
         } catch (ServiceException e) {
             return PlayCommandErrorContract.rejected(e.getMessage(), PlayCommandErrorContract.SCAN_CODE_INVALID);
+        }
+    }
+
+    private void attachDispatchedTask(Map<String, Object> target, Long memberId, CmsTopicNode entryNode) {
+        if (target == null || randomDispatchService == null || memberId == null || entryNode == null) {
+            return;
+        }
+        Map<String, Object> dispatched = randomDispatchService.dispatchForEntryNode(memberId, entryNode);
+        if (dispatched != null) {
+            target.put("dispatchedTask", dispatched);
         }
     }
 

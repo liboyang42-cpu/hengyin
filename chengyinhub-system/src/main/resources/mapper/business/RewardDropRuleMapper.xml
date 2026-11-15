@@ -27,7 +27,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
               )
     </select>
 
-    <!-- R10 后台规则编辑器：读写全部规则（含停用）。 -->
+    <!-- R10 后台规则编辑器（/business/rewardDropRule）：读写全部规则（含停用）。 -->
     <select id="selectAdminList" parameterType="RewardDropRule" resultMap="RewardDropRuleResult">
         select id, scope, topic_id, scene_key, drop_type, weight, param_json, status, create_time
         from reward_drop_rule
@@ -62,5 +62,49 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateStatus">
         update reward_drop_rule set status = #{status} where id = #{id}
     </update>
+
+    <!-- sys-random 后台（/business/reward-drop）：规则 CRUD、基础概率与预览。 -->
+    <select id="selectRewardDropRuleList" parameterType="RewardDropRule" resultMap="RewardDropRuleResult">
+        select id, scope, topic_id, scene_key, drop_type, weight, param_json, status, create_time
+        from reward_drop_rule
+        <where>
+            <if test="scope != null"> and scope = #{scope} </if>
+            <if test="topicId != null"> and topic_id = #{topicId} </if>
+            <if test="sceneKey != null and sceneKey != ''"> and scene_key = #{sceneKey} </if>
+            <if test="dropType != null"> and drop_type = #{dropType} </if>
+            <if test="status != null"> and status = #{status} </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectRewardDropRuleById" resultMap="RewardDropRuleResult">
+        select id, scope, topic_id, scene_key, drop_type, weight, param_json, status, create_time
+        from reward_drop_rule
+        where id = #{id}
+        limit 1
+    </select>
+
+    <insert id="insertRewardDropRule" parameterType="RewardDropRule" useGeneratedKeys="true" keyProperty="id">
+        insert into reward_drop_rule (scope, topic_id, scene_key, drop_type, weight, param_json, status)
+        values (#{scope}, #{topicId}, #{sceneKey}, #{dropType}, #{weight}, #{paramJson}, #{status})
+    </insert>
+
+    <update id="updateRewardDropRule" parameterType="RewardDropRule">
+        update reward_drop_rule
+        <set>
+            <if test="scope != null"> scope = #{scope}, </if>
+            topic_id = #{topicId},
+            scene_key = #{sceneKey},
+            <if test="dropType != null"> drop_type = #{dropType}, </if>
+            <if test="weight != null"> weight = #{weight}, </if>
+            <if test="paramJson != null"> param_json = #{paramJson}, </if>
+            <if test="status != null"> status = #{status}, </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteRewardDropRuleById">
+        delete from reward_drop_rule where id = #{id}
+    </delete>
 
 </mapper>

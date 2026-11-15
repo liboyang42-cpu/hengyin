@@ -232,4 +232,61 @@
     WHERE id = #{id} AND scope_type = 4 AND del_flag = '0'
   </update>
 
+
+  <resultMap id="ThemeNpcResultMap" type="com.chengyinhub.business.domain.NpcProfile" extends="BaseResultMap">
+    <result column="relation_key" property="relationKey"/>
+    <result column="topic_title" property="topicTitle"/>
+  </resultMap>
+
+  <select id="selectThemeNpcList" resultMap="ThemeNpcResultMap">
+    SELECT p.*, t.name AS topic_title
+    FROM npc_profile p
+    LEFT JOIN cms_topic t ON t.id = p.scope_id
+    WHERE p.scope_type = 1
+      AND (p.del_flag IS NULL OR p.del_flag = '0')
+      <if test="scopeId != null">AND p.scope_id = #{scopeId}</if>
+      <if test="name != null and name != ''">AND p.name LIKE CONCAT('%', #{name}, '%')</if>
+    ORDER BY p.scope_id DESC, p.sort ASC, p.id DESC
+  </select>
+
+  <select id="selectThemeNpcById" resultMap="ThemeNpcResultMap">
+    SELECT p.*, t.name AS topic_title
+    FROM npc_profile p
+    LEFT JOIN cms_topic t ON t.id = p.scope_id
+    WHERE p.id = #{id}
+      AND p.scope_type = 1
+      AND (p.del_flag IS NULL OR p.del_flag = '0')
+    LIMIT 1
+  </select>
+
+  <insert id="insertThemeNpc" parameterType="com.chengyinhub.business.domain.NpcProfile"
+          useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO npc_profile
+      (scope_type, scope_id, name, avatar, persona, greeting, relation_key, sort,
+       audit_status, enabled, del_flag, create_time, update_time)
+    VALUES
+      (1, #{scopeId}, #{name}, #{avatar}, #{persona}, #{greeting}, #{relationKey}, #{sort},
+       #{auditStatus}, #{enabled}, '0', NOW(), NOW())
+  </insert>
+
+  <update id="updateThemeNpc" parameterType="com.chengyinhub.business.domain.NpcProfile">
+    UPDATE npc_profile
+    <set>
+      <if test="name != null">name = #{name},</if>
+      <if test="avatar != null">avatar = #{avatar},</if>
+      <if test="persona != null">persona = #{persona},</if>
+      <if test="greeting != null">greeting = #{greeting},</if>
+      relation_key = #{relationKey},
+      <if test="sort != null">sort = #{sort},</if>
+      <if test="enabled != null">enabled = #{enabled},</if>
+      <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+      update_time = NOW()
+    </set>
+    WHERE id = #{id} AND scope_type = 1 AND (del_flag IS NULL OR del_flag = '0')
+  </update>
+
+  <update id="deleteThemeNpcById">
+    UPDATE npc_profile SET del_flag = '2', update_time = NOW()
+    WHERE id = #{id} AND scope_type = 1 AND (del_flag IS NULL OR del_flag = '0')
+  </update>
 </mapper>

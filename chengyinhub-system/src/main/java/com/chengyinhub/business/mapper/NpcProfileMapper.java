@@ -97,4 +97,11 @@ public interface NpcProfileMapper
 
     /** 内容安全回调判违规:自动下架(清头像 + enabled=0),玩家读立即不可见。 */
     int hideNodeNpcById(@Param("id") Long id);
+
+    // ===== 剧本角色(scope_type=1)后台 E1 维护 =====
+    List<NpcProfile> selectThemeNpcList(@Param("scopeId") Long scopeId, @Param("name") String name);
+    NpcProfile selectThemeNpcById(@Param("id") Long id);
+    int insertThemeNpc(NpcProfile profile);
+    int updateThemeNpc(NpcProfile profile);
+    int deleteThemeNpcById(@Param("id") Long id);
 }

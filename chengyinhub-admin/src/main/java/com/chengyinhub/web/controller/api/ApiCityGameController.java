@@ -115,6 +115,7 @@ public class ApiCityGameController extends BaseController {
     @PostMapping("/game/quote")
     public AjaxResult quote(@RequestBody Map<String, Object> body) { return success(actions.quote(member(), body)); }
 
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 60, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @PostMapping("/game/action")
     public AjaxResult action(@RequestBody Map<String, Object> body) { return success(actions.submit(member(), body)); }
 
@@ -123,9 +124,11 @@ public class ApiCityGameController extends BaseController {
 
     // ---- unified dice roll & audit ----
 
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 60, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @PostMapping("/dice/roll")
     public AjaxResult unifiedDiceRoll(@RequestBody Map<String, Object> body) { return success(actions.unifiedDiceRoll(member(), body)); }
 
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @GetMapping("/dice/audit")
     public AjaxResult diceAudit(@RequestParam(required = false) String boardId,
                                 @RequestParam(required = false) String regionId,

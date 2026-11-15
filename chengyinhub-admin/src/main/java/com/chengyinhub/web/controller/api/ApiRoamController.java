@@ -87,6 +87,8 @@ public class ApiRoamController extends BaseController {
     private IGrowthService growthService;
     @Autowired(required = false)
     private com.chengyinhub.business.service.impl.InGameChannelService inGameChannelService;
+    @Autowired(required = false)
+    private com.chengyinhub.common.core.redis.RedisCache redisCache;
     @Autowired
     private PlayerBadgeMapper playerBadgeMapper;
     @Autowired
@@ -154,6 +156,8 @@ public class ApiRoamController extends BaseController {
     }
     @Autowired(required = false)
     private com.chengyinhub.business.citygame.RoamTerritoryService roamTerritoryService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.citygame.MemberAttributeService memberAttributeService;
 
     /** 包级可见 + 非 final:测试用子类覆写它注入身份,好直调真入口(见 RoamPresenceControllerTest)。 */
     Long uid() {
@@ -1068,11 +1072,19 @@ public class ApiRoamController extends BaseController {
         return success(data);
     }
 
+    /** Pre-City-Monopoly signature (no accuracy / device key); kept for direct callers. */
+    public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
+        return checkin(name, poiLat, poiLng, curLat, curLng, null, null);
+    }
+
     @Operation(summary = "点到店(bindpoitap):宽松 geo → 参与据点走扫码 / 非参与点亮发探索值")
     @PostMapping("/checkin")
-    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20,
+            limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
-    public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
+    public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng,
+                              @org.springframework.web.bind.annotation.RequestParam(required = false) Double hAcc,
+                              @org.springframework.web.bind.annotation.RequestParam(required = false) String deviceKey) {
         Long memberId = uid();
         if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (poiLat == null || poiLng == null || curLat == null || curLng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
@@ -1110,16 +1122,18 @@ public class ApiRoamController extends BaseController {
             data.put("poiId", poiId);
             if (roamTerritoryService != null) {
                 Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckin(
-                        memberId, poiId, null, null, curLat, curLng,
+                        memberId, poiId, null, null, curLat, curLng, hAcc, deviceKey,
                         "ROAM_CHECKIN:" + java.util.UUID.randomUUID(), "ROAM_CHECKIN");
                 if (Boolean.TRUE.equals(terrRev.get("credited"))) {
                     data.put("territoryReward", terrRev);
                 }
+                if (terrRev.get("territory") != null) data.put("territory", terrRev.get("territory"));
             }
-            if (inGameChannelService != null) {
+            // HIGH-S4:频道里的地点名只取服务端据点标题,客户端 name 不进系统消息;同人同点每天最多一条。
+            if (inGameChannelService != null && firstCheckinEventToday(memberId, poiId)) {
                 inGameChannelService.postRoamEvent(
                         com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
-                        memberId, null, (name != null && !name.trim().isEmpty()) ? name.trim() : "漫游据点", null);
+                        memberId, null, serverNodeTitle(near, poiId), null);
             }
             return AjaxResult.success(data);
         }
@@ -1141,13 +1155,18 @@ public class ApiRoamController extends BaseController {
         }
         int xp = 0;
         if (firstVisit) { xp = VISIT_XP; growthService.addExp(memberId, xp, "点亮地点"); }
+        if (firstVisit && memberAttributeService != null) {
+            // Attributes v2 探索: first lit POI +10 AXP (idempotent per member + point key).
+            memberAttributeService.grant(memberId, com.chengyinhub.business.citygame.AttributeRules.Source.NEW_POI, "poi:" + geoKey(poiLat, poiLng));
+        }
         if (roamTerritoryService != null) {
             Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckinByCoords(
-                    memberId, poiLat, poiLng, curLat, curLng,
+                    memberId, poiLat, poiLng, curLat, curLng, hAcc, deviceKey,
                     "ROAM_CHECKIN:" + java.util.UUID.randomUUID());
             if (Boolean.TRUE.equals(terrRev.get("credited"))) {
                 data.put("territoryReward", terrRev);
             }
+            if (terrRev.get("territory") != null) data.put("territory", terrRev.get("territory"));
         }
         data.put("participating", false);
         data.put("firstVisit", firstVisit);
@@ -1159,6 +1178,32 @@ public class ApiRoamController extends BaseController {
                     memberId, null, poiName, xp > 0 ? ("+" + xp + " XP") : null);
         }
         return AjaxResult.success(firstVisit ? "点亮 " + poiName : "已点亮过", data);
+    }
+
+    /** 参与据点的频道标题:服务端节点名,截断到 60 字;取不到用通用名,不回退客户端文本。 */
+    static String serverNodeTitle(List<CityNodeVO> nodes, Long poiId) {
+        if (nodes != null && poiId != null) {
+            for (CityNodeVO n : nodes) {
+                if (n != null && poiId.equals(n.getPoiId()) && n.getName() != null && !n.getName().trim().isEmpty()) {
+                    String t = n.getName().trim();
+                    return t.length() > 60 ? t.substring(0, 60) : t;
+                }
+            }
+        }
+        return "漫游据点";
+    }
+
+    /** 同一会员 + 据点 + 自然日只发一条频道动态;Redis 不可用时不发(失败关闭)。 */
+    boolean firstCheckinEventToday(Long memberId, Long poiId) {
+        if (redisCache == null || memberId == null || poiId == null) return false;
+        String day = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Shanghai")).toString();
+        try {
+            return Boolean.TRUE.equals(redisCache.setIfAbsent(
+                    "roam:checkin:evt:" + memberId + ":" + poiId + ":" + day, 1, 26, java.util.concurrent.TimeUnit.HOURS));
+        } catch (RuntimeException e) {
+            logger.warn("漫游打卡频道去重不可用,本次不发动态 reason={}", e.getClass().getSimpleName());
+            return false;
+        }
     }
 
     // ---------- 纯逻辑(单测友好) ----------

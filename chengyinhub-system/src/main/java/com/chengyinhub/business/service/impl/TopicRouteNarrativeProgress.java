@@ -12,9 +12,12 @@ import com.chengyinhub.common.constant.RewardPolicy;
 import com.chengyinhub.business.service.support.TopicRouteEngine;
 import com.chengyinhub.business.service.support.ThemeRuntimeEngine;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -26,6 +29,7 @@ import java.util.Set;
  * Reuses the runtime's existing engines and rule policy; no runtime callbacks or independent transaction.
  */
 final class TopicRouteNarrativeProgress {
+    private static final Logger logger = LoggerFactory.getLogger(TopicRouteNarrativeProgress.class);
 
     private final CmsTopicMapper topicMapper;
     private final ObjectMapper JSON;
@@ -48,7 +52,9 @@ final class TopicRouteNarrativeProgress {
     private static final String SYS_STEPS_DAY = "sys.steps.day";
 
     JsonNode openingSnapshot(TopicRouteSession session) {
-        if (session == null) return null;
+        if (session == null || session.getConfigSnapshotJson() == null || session.getConfigSnapshotJson().trim().isEmpty()) {
+            return null;
+        }
         try { return JSON.readTree(session.getConfigSnapshotJson()).get("openingChapter"); }
         catch (Exception e) { throw new IllegalStateException("开局快照不可用", e); }
     }
@@ -267,8 +273,28 @@ final class TopicRouteNarrativeProgress {
     }
 
     TopicRouteEngine.State readEngineState(String json) {
-        try { return JSON.readValue(json, TopicRouteEngine.State.class); }
-        catch (Exception e) { throw new IllegalStateException("路线局状态不可用", e); }
+        if (json == null || json.trim().isEmpty() || "null".equals(json.trim())) {
+            return new TopicRouteEngine.State();
+        }
+        try {
+            TopicRouteEngine.State state = JSON.readerFor(TopicRouteEngine.State.class)
+                    .without(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .readValue(json);
+            return state == null ? new TopicRouteEngine.State() : state;
+        } catch (Exception e) {
+            logger.warn("Failed to parse topic route engine state JSON", e);
+            throw new IllegalStateException("路线局状态不可用", e);
+        }
+    }
+
+    /** Tolerant read-only state parser so legacy or malformed state_json degrades to initial state on read paths. */
+    TopicRouteEngine.State readEngineStateOrEmpty(String json) {
+        try {
+            return readEngineState(json);
+        } catch (IllegalStateException e) {
+            logger.warn("Falling back to empty engine state for read projection", e);
+            return new TopicRouteEngine.State();
+        }
     }
 
     /**

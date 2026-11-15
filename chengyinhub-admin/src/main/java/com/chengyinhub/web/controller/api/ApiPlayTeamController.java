@@ -10,8 +10,10 @@ import com.chengyinhub.business.service.ITeamTrailService;
 import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.enums.LimitType;
 import com.chengyinhub.common.annotation.Anonymous;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.utils.UserSafeMessage;
 import com.chengyinhub.common.core.text.Convert;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -329,11 +331,42 @@ public class ApiPlayTeamController extends BaseController {
     }
 
     private AjaxResult fail(RuntimeException e) {
-        AjaxResult result = error(e.getMessage());
         if (e instanceof IPlayTeamService.TeamRejection) {
-            result.put("errorCode", ((IPlayTeamService.TeamRejection) e).getErrorCode());
+            String errorCode = ((IPlayTeamService.TeamRejection) e).getErrorCode();
+            AjaxResult result = AjaxResult.error(teamRejectionStatus(errorCode),
+                    UserSafeMessage.of(e.getMessage(), "当前操作受限"));
+            result.put("errorCode", errorCode);
+            return result;
         }
-        return result;
+        if (e instanceof IllegalArgumentException) {
+            String msg = e.getMessage();
+            int status = msg != null && msg.contains("不存在") ? HttpStatus.NOT_FOUND
+                    : (msg != null && msg.contains("无权") ? HttpStatus.FORBIDDEN : HttpStatus.BAD_REQUEST);
+            return AjaxResult.error(status, UserSafeMessage.of(msg, "请求参数有误"));
+        }
+        if (e instanceof IllegalStateException) {
+            String msg = e.getMessage();
+            int status = HttpStatus.CONFLICT;
+            if (msg != null && (msg.contains("请先登录") || msg.contains("未登录"))) {
+                status = HttpStatus.UNAUTHORIZED;
+            } else if (msg != null && (msg.contains("只有") || msg.contains("无权"))) {
+                status = HttpStatus.FORBIDDEN;
+            } else if (msg != null && msg.contains("不存在")) {
+                status = HttpStatus.NOT_FOUND;
+            }
+            return AjaxResult.error(status, UserSafeMessage.of(msg, "当前状态不可操作"));
+        }
+        return error(e.getMessage());
+    }
+
+    private int teamRejectionStatus(String errorCode) {
+        if ("INVITE_REVOKED".equals(errorCode) || "INVITE_EXPIRED".equals(errorCode)) {
+            return HttpStatus.NOT_FOUND;
+        }
+        if ("APPLY_BLOCKED".equals(errorCode) || "TICKET_REQUIRED".equals(errorCode)) {
+            return HttpStatus.FORBIDDEN;
+        }
+        return HttpStatus.CONFLICT;
     }
 
     private boolean approved(Object value) {

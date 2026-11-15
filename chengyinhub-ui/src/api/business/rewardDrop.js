@@ -1,8 +1,95 @@
 import request from '@/utils/request'
 
-// R10 随机掉落规则编辑器
-export const listRewardDropRules = params => request({ url: '/business/rewardDropRule/list', method: 'get', params })
-export const validateRewardDropRule = data => request({ url: '/business/rewardDropRule/validate', method: 'post', data })
-export const addRewardDropRule = data => request({ url: '/business/rewardDropRule', method: 'post', data })
-export const updateRewardDropRule = (id, data) => request({ url: '/business/rewardDropRule/' + id, method: 'put', data })
-export const setRewardDropRuleStatus = (id, status) => request({ url: '/business/rewardDropRule/' + id + '/status/' + status, method: 'put' })
+// 查询掉落规则列表
+export function listDropRules(query) {
+  return request({
+    url: '/business/reward-drop/rules/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询单条掉落规则
+export function getDropRule(id) {
+  return request({
+    url: '/business/reward-drop/rules/' + id,
+    method: 'get'
+  })
+}
+
+// 新增掉落规则
+export function addDropRule(data) {
+  return request({
+    url: '/business/reward-drop/rules',
+    method: 'post',
+    data: data
+  })
+}
+
+// 修改掉落规则
+export function updateDropRule(data) {
+  return request({
+    url: '/business/reward-drop/rules',
+    method: 'put',
+    data: data
+  })
+}
+
+// 删除掉落规则
+export function delDropRule(id) {
+  return request({
+    url: '/business/reward-drop/rules/' + id,
+    method: 'delete'
+  })
+}
+
+// 获取基础概率（万分）
+export function getBaseDropProb() {
+  return request({
+    url: '/business/reward-drop/base-prob',
+    method: 'get'
+  })
+}
+
+// 更新基础概率（万分）
+export function updateBaseDropProb(baseProbBp) {
+  return request({
+    url: '/business/reward-drop/base-prob',
+    method: 'put',
+    data: { baseProbBp }
+  })
+}
+
+// 预览生效概率与期望产出
+export function previewDropProbabilities(query) {
+  return request({
+    url: '/business/reward-drop/preview',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询可审计随机流水
+export function listRandomAudits(query) {
+  return request({
+    url: '/business/reward-drop/audit/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// R10 规则编辑器接口（/business/rewardDropRule）：只校验不保存、启停
+export function validateRewardDropRule(data) {
+  return request({
+    url: '/business/rewardDropRule/validate',
+    method: 'post',
+    data: data
+  })
+}
+
+export function setRewardDropRuleStatus(id, status) {
+  return request({
+    url: '/business/rewardDropRule/' + id + '/status/' + status,
+    method: 'put'
+  })
+}

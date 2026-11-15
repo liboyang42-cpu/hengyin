@@ -33,6 +33,7 @@ public class ApiPlayEnvironmentController extends BaseController {
     private TopicWeatherEventService topicWeatherEventService;
 
     @Operation(summary = "读取主题当前环境快照、降级状态及天气事件触发结果")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 60, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @GetMapping("/environment")
     public AjaxResult environment(String topicId) {
         Long memberId = currentMemberId();

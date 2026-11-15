@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.NodeTaskPoolMapper">
+
+    <resultMap type="com.chengyinhub.business.domain.NodeTaskPool" id="NodeTaskPoolResult">
+        <id property="id" column="id" />
+        <result property="poolName" column="pool_name" />
+        <result property="merchantMemberId" column="merchant_member_id" />
+        <result property="entryNodeId" column="entry_node_id" />
+        <result property="topicId" column="topic_id" />
+        <result property="status" column="status" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <resultMap type="com.chengyinhub.business.domain.NodeTaskPoolItem" id="NodeTaskPoolItemResult">
+        <id property="id" column="id" />
+        <result property="poolId" column="pool_id" />
+        <result property="nodeId" column="node_id" />
+        <result property="weight" column="weight" />
+        <result property="status" column="status" />
+        <result property="createTime" column="create_time" />
+        <result property="nodeName" column="node_name" />
+    </resultMap>
+
+    <resultMap type="com.chengyinhub.business.domain.NodeTaskDispatch" id="NodeTaskDispatchResult">
+        <id property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="poolId" column="pool_id" />
+        <result property="dispatchDate" column="dispatch_date" />
+        <result property="nodeId" column="node_id" />
+        <result property="randomReceiptId" column="random_receipt_id" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <select id="selectPoolList" parameterType="com.chengyinhub.business.domain.NodeTaskPool" resultMap="NodeTaskPoolResult">
+        select id, pool_name, merchant_member_id, entry_node_id, topic_id, status, create_by, create_time, update_time
+        from node_task_pool
+        <where>
+            <if test="poolName != null and poolName != ''"> and pool_name like concat('%', #{poolName}, '%') </if>
+            <if test="merchantMemberId != null"> and merchant_member_id = #{merchantMemberId} </if>
+            <if test="entryNodeId != null"> and entry_node_id = #{entryNodeId} </if>
+            <if test="topicId != null"> and topic_id = #{topicId} </if>
+            <if test="status != null"> and status = #{status} </if>
+        </where>
+        order by id desc
+    </select>
+
+    <select id="selectPoolById" resultMap="NodeTaskPoolResult">
+        select id, pool_name, merchant_member_id, entry_node_id, topic_id, status, create_by, create_time, update_time
+        from node_task_pool
+        where id = #{id}
+        limit 1
+    </select>
+
+    <select id="selectActivePoolByEntryNodeOrMerchant" resultMap="NodeTaskPoolResult">
+        select id, pool_name, merchant_member_id, entry_node_id, topic_id, status, create_by, create_time, update_time
+        from node_task_pool
+        where status = 1
+          and (
+              (#{entryNodeId} is not null and entry_node_id = #{entryNodeId})
+              or (#{merchantMemberId} is not null and merchant_member_id = #{merchantMemberId})
+              or (#{topicId} is not null and entry_node_id is null and merchant_member_id is null and topic_id = #{topicId})
+          )
+        order by
+          case
+            when #{entryNodeId} is not null and entry_node_id = #{entryNodeId} then 1
+            when #{merchantMemberId} is not null and merchant_member_id = #{merchantMemberId} then 2
+            else 3
+          end,
+          id desc
+        limit 1
+    </select>
+
+    <insert id="insertPool" parameterType="com.chengyinhub.business.domain.NodeTaskPool" useGeneratedKeys="true" keyProperty="id">
+        insert into node_task_pool (pool_name, merchant_member_id, entry_node_id, topic_id, status, create_by)
+        values (#{poolName}, #{merchantMemberId}, #{entryNodeId}, #{topicId}, #{status}, #{createBy})
+    </insert>
+
+    <update id="updatePool" parameterType="com.chengyinhub.business.domain.NodeTaskPool">
+        update node_task_pool
+        <set>
+            <if test="poolName != null"> pool_name = #{poolName}, </if>
+            merchant_member_id = #{merchantMemberId},
+            entry_node_id = #{entryNodeId},
+            topic_id = #{topicId},
+            <if test="status != null"> status = #{status}, </if>
+            update_time = now()
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePoolById">
+        delete from node_task_pool where id = #{id}
+    </delete>
+
+    <select id="selectItemsByPoolId" resultMap="NodeTaskPoolItemResult">
+        select i.id, i.pool_id, i.node_id, i.weight, i.status, i.create_time, n.name as node_name
+        from node_task_pool_item i
+        left join cms_topic_node n on n.id = i.node_id
+        where i.pool_id = #{poolId}
+        order by i.id asc
+    </select>
+
+    <select id="selectActiveItemsByPoolId" resultMap="NodeTaskPoolItemResult">
+        select i.id, i.pool_id, i.node_id, i.weight, i.status, i.create_time, n.name as node_name
+        from node_task_pool_item i
+        left join cms_topic_node n on n.id = i.node_id
+        where i.pool_id = #{poolId}
+          and i.status = 1
+          and i.weight &gt; 0
+        order by i.id asc
+    </select>
+
+    <select id="selectItemById" resultMap="NodeTaskPoolItemResult">
+        select i.id, i.pool_id, i.node_id, i.weight, i.status, i.create_time, n.name as node_name
+        from node_task_pool_item i
+        left join cms_topic_node n on n.id = i.node_id
+        where i.id = #{id}
+        limit 1
+    </select>
+
+    <insert id="insertPoolItem" parameterType="com.chengyinhub.business.domain.NodeTaskPoolItem" useGeneratedKeys="true" keyProperty="id">
+        insert into node_task_pool_item (pool_id, node_id, weight, status)
+        values (#{poolId}, #{nodeId}, #{weight}, #{status})
+    </insert>
+
+    <update id="updatePoolItem" parameterType="com.chengyinhub.business.domain.NodeTaskPoolItem">
+        update node_task_pool_item
+        <set>
+            <if test="nodeId != null"> node_id = #{nodeId}, </if>
+            <if test="weight != null"> weight = #{weight}, </if>
+            <if test="status != null"> status = #{status}, </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deletePoolItemById">
+        delete from node_task_pool_item where id = #{id}
+    </delete>
+
+    <delete id="deleteItemsByPoolId">
+        delete from node_task_pool_item where pool_id = #{poolId}
+    </delete>
+
+    <select id="selectDispatchByMemberPoolDate" resultMap="NodeTaskDispatchResult">
+        select id, member_id, pool_id, date_format(dispatch_date, '%Y-%m-%d') as dispatch_date, node_id, random_receipt_id, created_at
+        from node_task_dispatch
+        where member_id = #{memberId}
+          and pool_id = #{poolId}
+          and dispatch_date = #{dispatchDate}
+        limit 1
+    </select>
+
+    <select id="selectLatestDispatchBeforeDate" resultMap="NodeTaskDispatchResult">
+        select id, member_id, pool_id, date_format(dispatch_date, '%Y-%m-%d') as dispatch_date, node_id, random_receipt_id, created_at
+        from node_task_dispatch
+        where member_id = #{memberId}
+          and pool_id = #{poolId}
+          and dispatch_date &lt; #{dispatchDate}
+        order by dispatch_date desc, id desc
+        limit 1
+    </select>
+
+    <select id="selectDispatchList" parameterType="com.chengyinhub.business.domain.NodeTaskDispatch" resultMap="NodeTaskDispatchResult">
+        select id, member_id, pool_id, date_format(dispatch_date, '%Y-%m-%d') as dispatch_date, node_id, random_receipt_id, created_at
+        from node_task_dispatch
+        <where>
+            <if test="memberId != null"> and member_id = #{memberId} </if>
+            <if test="poolId != null"> and pool_id = #{poolId} </if>
+            <if test="dispatchDate != null and dispatchDate != ''"> and dispatch_date = #{dispatchDate} </if>
+            <if test="nodeId != null"> and node_id = #{nodeId} </if>
+        </where>
+        order by id desc
+        limit 200
+    </select>
+
+    <insert id="insertDispatch" parameterType="com.chengyinhub.business.domain.NodeTaskDispatch" useGeneratedKeys="true" keyProperty="id">
+        insert into node_task_dispatch (member_id, pool_id, dispatch_date, node_id, random_receipt_id)
+        values (#{memberId}, #{poolId}, #{dispatchDate}, #{nodeId}, #{randomReceiptId})
+    </insert>
+
+</mapper>

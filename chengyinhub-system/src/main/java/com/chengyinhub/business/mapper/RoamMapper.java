@@ -238,6 +238,9 @@ public interface RoamMapper {
     RoamSession selectLatestPresenceFix(@Param("memberId") Long memberId, @Param("sessionId") Long sessionId,
                                         @Param("since") Date since);
 
+    /** 本人未结束且已开启附近位置分享(roam-presence-v1)的会话数。 */
+    int countPresenceVisibleSessions(@Param("memberId") Long memberId);
+
     int updatePresenceVisibility(@Param("id") Long id, @Param("memberId") Long memberId,
                                  @Param("visible") Boolean visible);
 

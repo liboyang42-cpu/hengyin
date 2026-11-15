@@ -3,6 +3,7 @@ package com.chengyinhub.web.controller.api;
 import com.chengyinhub.common.exception.ErrorCode;
 
 import com.chengyinhub.business.service.IOrientScoringService;
+import com.chengyinhub.business.service.support.OrientRejection;
 import com.chengyinhub.business.service.support.OrientScoringException;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -100,12 +101,14 @@ public class ApiOrientScoringController extends BaseController {
 
     private AjaxResult run(Supplier<Object> action) {
         if (orientScoringService == null) {
-            return error("城市定向计分暂未开放").put("errorCode", OrientScoringException.DISABLED);
+            return AjaxResult.error(OrientRejection.httpStatusForErrorCode(OrientScoringException.DISABLED),
+                    "城市定向计分暂未开放").put("errorCode", OrientScoringException.DISABLED);
         }
         try {
             return success(OrientPlayerWire.response(action.get()));
         } catch (OrientScoringException e) {
-            return error(e.getMessage()).put("errorCode", e.getErrorCode());
+            return AjaxResult.error(OrientRejection.httpStatusForErrorCode(e.getErrorCode()),
+                    e.getMessage()).put("errorCode", e.getErrorCode());
         }
     }
 
