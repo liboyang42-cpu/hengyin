@@ -6,7 +6,7 @@
   1. `3d0f75fd6`: merge with the conflict resolutions, plus the reward-drop permission union.
   2. `abbf2885e`: security carry-over, in-game channel push.
   3. `4120b73fb`: integration fixes found by the test run.
-  4. This receipt.
+  4. This receipt (draft, then final).
 - `feature/r-integ-master` (M2) was not touched.
 
 ## 1. Conflicts and resolutions
@@ -78,7 +78,7 @@ The suites ran one after another; 16 GB RAM was not enough to run them in parall
 | merge `3d0f75fd6` | 20442 / 2 / 34 / 713 | 20184 / **2** / 0 |
 | `0ea98d97e` | 20281 / 0 / 34 / 713 | 20024 / 0 / 0 |
 | `origin/fix/security-r3` `de7d43c70` | 19851 / 0 / 34 / 713 | 19613 / 0 / 0 |
-| final head (after fixes) | see section 4a | see section 4a |
+| final head `4120b73fb` (after fixes) | 20444 / 0 / 34 / 713 | 20186 / **0** / 0 |
 
 - **Errors.** The 34 errors are the same 14 `*MyBatisTest` classes on all three trees (`Communications link failure`, no MySQL). No other class has an error on any tree.
 - **Failing only on the merge.** Both failed on the merge and passed on both parents, so both are integration defects:
@@ -92,9 +92,14 @@ The suites ran one after another; 16 GB RAM was not enough to run them in parall
 
 ### 4a. Final head
 
-The same command was run on the final head in its own worktree. Results are filled in below.
+The same commands ran on `4120b73fb` (all code fixes; only this receipt follows) in its own worktree.
 
-FINAL_HEAD_RESULTS
+- Totals: 20444 tests, 0 failures, 34 errors, 713 skipped.
+- The errors are the same 14 `*MyBatisTest` classes as on both parents.
+- Excluding those classes: 0 failures and 0 errors.
+- **No test fails on the integration branch that passes on both parents.**
+- The two new `PushFanoutServiceTest` cases account for the +2 tests.
+- After the fixes, both gates still pass and the UI tests still show 642 tests, 616 passing and the same 26 failures.
 
 ## 5. Integration fixes
 
