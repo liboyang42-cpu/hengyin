@@ -290,7 +290,7 @@ class FreezeGameHttpE2eIT {
             ObjectNode body = json.createObjectNode().put("sessionId", session).put("version", state.path("version").asInt())
                     .put("idempotencyKey", run.activityId + "-" + run.label + "-" + team.name + "-" + key + "-" + (++run.request)).put("action", step[0].path("action").asText());
             body.set("payload", step[1]);
-            success(post("/api/play/advanced/action", body, team.captain));
+            GenericGameplayHttpE2eIT.appliedAdvancedActionData(step[0].path("action").asText(), post("/api/play/advanced/action", body, team.captain));
         }
         return session;
     }

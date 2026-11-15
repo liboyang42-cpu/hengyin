@@ -323,6 +323,61 @@ class GenericGameplayHttpE2eIT {
         return receipt;
     }
 
+    // Separate assertion lines let the existing sanitized XML source frames identify only fixed guards.
+    static JsonNode appliedAdvancedActionData(String action, JsonNode response) {
+        int code = response.path("code").asInt(-1);
+        int trustedCode = switch (code) {
+            case 200, 400, 401, 403, 404, 409, 422, 429, 500, 520, 601 -> code;
+            default -> -1;
+        };
+        if (trustedCode != 200) {
+            String safeCode = trustedCode == -1 ? "" : "{\"code\":" + trustedCode + "} ";
+            String message = trustedCode == 400 ? response.path("msg").asText("") : "";
+            switch (message) {
+                case "该玩法未开启排序题": assertEquals(200, trustedCode, safeCode + "ADVANCED_CONFIG_REJECTED field=config.sort.enabled category=SORT_DISABLED"); break;
+                case "该玩法未开启连线题": assertEquals(200, trustedCode, safeCode + "ADVANCED_CONFIG_REJECTED field=config.match.enabled category=MATCH_DISABLED"); break;
+                case "该玩法未开启分类题": assertEquals(200, trustedCode, safeCode + "ADVANCED_CONFIG_REJECTED field=config.classify.enabled category=CLASSIFY_DISABLED"); break;
+                case "该玩法未开启问答": assertEquals(200, trustedCode, safeCode + "ADVANCED_CONFIG_REJECTED field=config.qa.enabled category=QA_DISABLED"); break;
+                case "请先写下你的答案": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.input category=QA_TEXT_REQUIRED"); break;
+                case "请先拍一张": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.imageUrl category=QA_PHOTO_REQUIRED"); break;
+                case "请提交排好的顺序": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.order category=SORT_ORDER_REQUIRED"); break;
+                case "排好的顺序必须包含全部待排项": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.order category=SORT_ITEM_COUNT"); break;
+                case "排好的顺序里有不存在的待排项": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.order category=SORT_UNKNOWN_ITEM"); break;
+                case "排好的顺序不能重复引用同一项": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.order category=SORT_DUPLICATE_ITEM"); break;
+                case "请提交连好的线": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.pairs category=MATCH_PAIRS_REQUIRED"); break;
+                case "连线必须覆盖左侧全部条目": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.pairs category=MATCH_LEFT_COUNT"); break;
+                case "每条连线必须是 [左 id, 右 id] 两个值": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.pairs category=MATCH_PAIR_SHAPE"); break;
+                case "连线里有不存在的左侧条目": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.pairs category=MATCH_UNKNOWN_LEFT"); break;
+                case "连线里有不存在的右侧条目": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.pairs category=MATCH_UNKNOWN_RIGHT"); break;
+                case "左侧条目不能重复连线": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.pairs category=MATCH_DUPLICATE_LEFT"); break;
+                case "右侧条目不能重复连线": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.pairs category=MATCH_DUPLICATE_RIGHT"); break;
+                case "请提交每张卡片放进哪个分类": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.placement category=CLASSIFY_PLACEMENT_REQUIRED"); break;
+                case "每张卡片都要放进一个分类": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.placement category=CLASSIFY_ITEM_COUNT"); break;
+                case "放进了不存在的分类": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.placement category=CLASSIFY_UNKNOWN_BIN"); break;
+                case "请从这几个选项里选一个": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.optionId category=QA_UNKNOWN_OPTION"); break;
+                case "这道题只能选一项": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.optionIds category=QA_SINGLE_REQUIRED"); break;
+                case "请从这几个选项里选": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.optionIds category=QA_MULTI_REQUIRED"); break;
+                case "选了不存在的选项": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.optionIds category=QA_MULTI_UNKNOWN_OPTION"); break;
+                case "同一个选项不能重复选": assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=payload.optionIds category=QA_MULTI_DUPLICATE_OPTION"); break;
+                case "这一题已经答完了", "这一局排序已经结束了", "这一局连线已经结束了", "这一局分类已经结束了", "这一站已经完成了", "高级玩法已结束":
+                    assertEquals(200, trustedCode, safeCode + "ADVANCED_STATE_REJECTED field=status category=ALREADY_FINISHED"); break;
+                case "幂等键不能为空且最多 64 位":
+                    assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=idempotencyKey category=INVALID_REQUEST_KEY"); break;
+                case "原期望版本不能为空且不能为负数":
+                    assertEquals(200, trustedCode, safeCode + "ADVANCED_INPUT_REJECTED field=version category=INVALID_EXPECTED_VERSION"); break;
+                default:
+                    switch (action) {
+                        case "SUBMIT_SORT": assertEquals(200, trustedCode, safeCode + "ADVANCED_REJECTION_UNKNOWN action=SUBMIT_SORT"); break;
+                        case "SUBMIT_MATCH": assertEquals(200, trustedCode, safeCode + "ADVANCED_REJECTION_UNKNOWN action=SUBMIT_MATCH"); break;
+                        case "SUBMIT_CLASSIFY": assertEquals(200, trustedCode, safeCode + "ADVANCED_REJECTION_UNKNOWN action=SUBMIT_CLASSIFY"); break;
+                        case "SUBMIT_QA": assertEquals(200, trustedCode, safeCode + "ADVANCED_REJECTION_UNKNOWN action=SUBMIT_QA"); break;
+                        default: assertEquals(200, trustedCode, safeCode + "ADVANCED_REJECTION_UNKNOWN action=OTHER");
+                    }
+            }
+        }
+        return appliedResponseData(response);
+    }
+
     static JsonNode appliedResponseData(JsonNode response) {
         assertEquals(200, response.path("code").asInt(), response.toString());
         JsonNode data = response.path("data");
@@ -371,6 +426,27 @@ class GenericGameplayHttpE2eIT {
         receipt.putObject("result");
         ObjectNode response = plainJson.createObjectNode().put("code", 200); response.set("data", receipt);
         assertSame(receipt, appliedResponseData(response));
+        assertSame(receipt, appliedAdvancedActionData("SUBMIT_QA", response));
+        String privateMarker = "UNTRUSTED_ACTION_DIAGNOSTIC_SENTINEL";
+        ObjectNode unsafeFailure = plainJson.createObjectNode().put("code", 400).put("msg", privateMarker);
+        unsafeFailure.putObject("data").put("token", privateMarker).put("requestBody", privateMarker);
+        for (String action : new String[]{"SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY", "SUBMIT_QA", privateMarker}) {
+            AssertionError failure = assertThrows(AssertionError.class, () -> appliedAdvancedActionData(action, unsafeFailure));
+            assertTrue(failure.getMessage().contains("ADVANCED_REJECTION_UNKNOWN"));
+            assertTrue(failure.getMessage().contains("\"code\":400"));
+            assertFalse(failure.getMessage().contains(privateMarker));
+        }
+        ObjectNode wrongOrder = unsafeFailure.deepCopy().put("msg", "请提交排好的顺序");
+        AssertionError orderFailure = assertThrows(AssertionError.class, () -> appliedAdvancedActionData("SUBMIT_SORT", wrongOrder));
+        assertTrue(orderFailure.getMessage().contains("field=payload.order category=SORT_ORDER_REQUIRED"));
+        assertFalse(orderFailure.getMessage().contains(privateMarker));
+        ObjectNode wrongPair = unsafeFailure.deepCopy().put("msg", "每条连线必须是 [左 id, 右 id] 两个值");
+        AssertionError pairFailure = assertThrows(AssertionError.class, () -> appliedAdvancedActionData("SUBMIT_MATCH", wrongPair));
+        assertTrue(pairFailure.getMessage().contains("field=payload.pairs category=MATCH_PAIR_SHAPE"));
+        assertFalse(pairFailure.getMessage().contains(privateMarker));
+        AssertionError unknownCode = assertThrows(AssertionError.class, () -> appliedAdvancedActionData("SUBMIT_QA", unsafeFailure.deepCopy().put("code", 987654321)));
+        assertTrue(unknownCode.getMessage().contains("ADVANCED_REJECTION_UNKNOWN"));
+        assertFalse(unknownCode.getMessage().contains("987654321"));
         assertThrows(AssertionError.class, () -> rejectedGameCommand(response));
         ObjectNode failed = response.deepCopy();
         ((ObjectNode) failed.path("data")).put("outcome", "FAILED").put("reasonCode", "GAME_TASK_COST_UNAVAILABLE");
