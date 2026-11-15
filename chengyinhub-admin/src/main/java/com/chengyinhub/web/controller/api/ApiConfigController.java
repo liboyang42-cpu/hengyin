@@ -87,6 +87,11 @@ public class ApiConfigController extends BaseController {
         data.put("freeExploreBundle", freeExploreBundleSwitches != null && freeExploreBundleSwitches.ledgerEnabled());
         // P0-14 / P2-020:生成式 AI 算法备案号公示位;未配置为空串,小程序据此不显示
         data.put("aigcFilingNo", aigcFilingNo());
+        // P1b SEC-16 / SEC-13 / SEC-14:App 备案号、客服联系方式、年龄政策。均来自 sys_config,未配置为空串 / adults,
+        // 客户端据此不显示备案行与联系方式;备案号永不写死在客户端。
+        data.put("appFilingNo", configText(APP_FILING_NO_KEY, 64));
+        data.put("supportContact", configText(SUPPORT_CONTACT_KEY, 128));
+        data.put("agePolicy", agePolicy());
         return success(data);
     }
 
@@ -112,6 +117,30 @@ public class ApiConfigController extends BaseController {
     }
 
     static final String AIGC_FILING_NO_KEY = "aigc.algorithm.filing-no";
+    /** App 备案号(工信部 ICP/App 备案,形如「陕ICP备xxxxxxxx号-xA」);在 beian.miit.gov.cn 可查。 */
+    static final String APP_FILING_NO_KEY = "app.filing.icp-no";
+    /** 玩家可见的客服联系方式(电话或邮箱原文)。 */
+    static final String SUPPORT_CONTACT_KEY = "app.support.contact";
+
+    /** sys_config 原文(去首尾空白、按上限截断);缺失或读失败为空串。 */
+    String configText(String key, int max) {
+        try {
+            String value = configService.selectConfigByKey(key);
+            if (value == null) return "";
+            value = value.trim();
+            return value.length() > max ? value.substring(0, max) : value;
+        } catch (RuntimeException e) {
+            return "";
+        }
+    }
+
+    /** {@code app.agePolicy} 规范化为 adults / guardian;guardian 流程未建,执行口径见 AgeGatePolicy。 */
+    String agePolicy() {
+        String raw = configText(com.chengyinhub.business.service.compliance.AgeGatePolicy.CONFIG_KEY, 16).toLowerCase(java.util.Locale.ROOT);
+        return com.chengyinhub.business.service.compliance.AgeGatePolicy.GUARDIAN.equals(raw)
+                ? com.chengyinhub.business.service.compliance.AgeGatePolicy.GUARDIAN
+                : com.chengyinhub.business.service.compliance.AgeGatePolicy.ADULTS;
+    }
 
     private boolean readFlag(String key) {
         return NpcFeatureFlags.flagOn(configService.selectConfigByKey(key));

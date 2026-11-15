@@ -712,8 +712,10 @@ public class ApiRoamController extends BaseController {
     //
     // 隐私口径(2026-09-10 用户拍板「做,按原型来」)。三条是硬的,改这段代码前先读完:
     //  ① **坐标必须截位**。客户端传来的是真实定位点,落库前一律截到 3 位小数
-    //     (≈ 100 m 一格,见 PRESENCE_SCALE)。够地图上看出「附近有人在走」,
+    //     (≈ 100 m 一格,见 PRESENCE_SCALE),只用于距离过滤;发给别人的坐标再吸附到
+    //     ≥ 500 m 的网格(RoamPresenceBlur,P1b SEC-15)。够地图上看出「附近有人在走」,
     //     不够跟着一个人走。截位在服务端做,不指望客户端自觉。
+    //     双方都须已单独同意公开位置:selectActivePresence / selectNearbyRunners 都带 presence_visible = 1。
     //  ② **只露拍板过的那几样**:昵称、头像、地盘 %、探店数、在走时长、这一趟点亮的店。
     //     NearbyRunnerVO 里没有手机号 / 真名 / 精确坐标,别往里加。
     //  ③ **停止上报 = 立刻消失**。关定位、退出漫游、结算,都会让 last_report_at 变旧,
@@ -901,8 +903,9 @@ public class ApiRoamController extends BaseController {
             row.put("memberId", r.getMemberId());
             row.put("nickname", StringUtils.isEmpty(r.getNickname()) ? "漫游者" : r.getNickname());
             row.put("avatar", r.getAvatar());
-            row.put("lat", r.getLat() == null ? null : r.getLat().setScale(2, RoundingMode.HALF_UP));
-            row.put("lng", r.getLng() == null ? null : r.getLng().setScale(2, RoundingMode.HALF_UP));
+            // P1b SEC-15:对外坐标吸附到 ≥500 m 的网格中心(东西向按纬度放大),只给已公开位置的人。
+            row.put("lat", RoamPresenceBlur.latitude(r.getLat()));
+            row.put("lng", RoamPresenceBlur.longitude(r.getLat(), r.getLng()));
             row.put("explorePct", r.getExplorePct() == null ? 0 : r.getExplorePct());
             row.put("shops", r.getShops() == null ? 0 : r.getShops());
             row.put("elapsedSec", r.getElapsedSec() == null ? 0L : r.getElapsedSec());
