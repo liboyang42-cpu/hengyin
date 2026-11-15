@@ -81,8 +81,12 @@ INSERT INTO points_programme_budget (programme, programme_name, monthly_budget_p
 SELECT 'VISIT', '报名与到店奖励', NULL, '0', 'migration', NOW() FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM points_programme_budget WHERE programme = 'VISIT');
 
--- Seed daily caps for the sources awarded through PointsAwardServiceImpl.award (10 报名成功, 11 到店核销,
--- 12 节点打卡, 13 通关). 500 points = ¥10 at the 0.02 rate.
+INSERT INTO points_programme_budget (programme, programme_name, monthly_budget_points, status, update_by, update_time)
+SELECT 'COMMUNITY', '评价奖励', NULL, '0', 'migration', NOW() FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM points_programme_budget WHERE programme = 'COMMUNITY');
+
+-- Seed daily caps for the governed sources: PointsAwardServiceImpl.award (10 报名成功, 11 到店核销, 12 节点打卡,
+-- 13 通关) and CommentPublicationService (4 活动评价). 500 points = ¥10 at the 0.02 rate.
 INSERT INTO points_award_cap (event_type, source_name, programme, daily_cap_points, status, update_by, update_time)
 SELECT 10, '报名成功', 'VISIT', 500, '0', 'migration', NOW() FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM points_award_cap WHERE event_type = 10);
 INSERT INTO points_award_cap (event_type, source_name, programme, daily_cap_points, status, update_by, update_time)
@@ -91,6 +95,8 @@ INSERT INTO points_award_cap (event_type, source_name, programme, daily_cap_poin
 SELECT 12, '节点打卡', 'PLAY', 500, '0', 'migration', NOW() FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM points_award_cap WHERE event_type = 12);
 INSERT INTO points_award_cap (event_type, source_name, programme, daily_cap_points, status, update_by, update_time)
 SELECT 13, '通关', 'PLAY', 500, '0', 'migration', NOW() FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM points_award_cap WHERE event_type = 13);
+INSERT INTO points_award_cap (event_type, source_name, programme, daily_cap_points, status, update_by, update_time)
+SELECT 4, '活动评价', 'COMMUNITY', 500, '0', 'migration', NOW() FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM points_award_cap WHERE event_type = 4);
 
 -- Config. points.governance.mode: ENFORCE (default) applies caps and budgets; SHADOW only logs; OFF skips.
 INSERT INTO sys_config (config_name, config_key, config_value, config_type, create_by, create_time, remark)
@@ -127,7 +133,7 @@ SELECT '积分治理修改', @pgMenu, 1, '', '', '', '',
 FROM dual WHERE @pgMenu IS NOT NULL AND @pgEditExisting = 0;
 
 -- runner: assert=scalar-true
-SELECT (SELECT COUNT(1) FROM points_programme_budget WHERE programme IN ('PLAY', 'VISIT')) = 2
-   AND (SELECT COUNT(1) FROM points_award_cap WHERE event_type IN (10, 11, 12, 13)) = 4
+SELECT (SELECT COUNT(1) FROM points_programme_budget WHERE programme IN ('PLAY', 'VISIT', 'COMMUNITY')) = 3
+   AND (SELECT COUNT(1) FROM points_award_cap WHERE event_type IN (4, 10, 11, 12, 13)) = 5
    AND (SELECT COUNT(1) FROM sys_config WHERE config_key IN ('points.governance.mode', 'city.coin.holder_yield', 'city.coin.daily_cap')) = 3
    AS points_governance_ready;
