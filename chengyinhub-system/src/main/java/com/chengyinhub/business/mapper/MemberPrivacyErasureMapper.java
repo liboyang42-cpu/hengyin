@@ -70,4 +70,12 @@ public interface MemberPrivacyErasureMapper {
 
     /** W5 C2: USER and REPLY mention rows that name the member. */
     int deleteMentionsOfMember(@Param("memberId") Long memberId);
+
+    // C3 channel events: own RSVPs and album rows are deleted; an event the member posted stays (it is a club
+    // activity) but loses the poster link.
+    int deleteChannelEventRsvps(@Param("memberId") Long memberId);
+
+    int deleteChannelEventPhotos(@Param("memberId") Long memberId);
+
+    int unlinkChannelEventPoster(@Param("memberId") Long memberId);
 }

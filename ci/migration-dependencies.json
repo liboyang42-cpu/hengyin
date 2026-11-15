@@ -1036,6 +1036,7 @@
     "20261115_money_switch": ["web_admin_nine_domains_20260719"],
     "20261115_money_payout": ["web_admin_nine_domains_20260719", "20261115_money_switch"],
     "20261115_club_ops": ["club"],
+    "20261116_channel_events": ["20261105_l8_channel_lifecycle", "20261012_missing_business_menu"],
     "20261115_im_conversation_page": ["im"],
     "20261115_marketplace": [],
     "20261115_sponsored_quests": ["20261115_marketplace"],

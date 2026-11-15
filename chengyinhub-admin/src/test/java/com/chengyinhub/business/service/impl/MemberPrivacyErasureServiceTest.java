@@ -70,6 +70,14 @@ class MemberPrivacyErasureServiceTest {
             assertEquals(0, f.db.queryForObject("select count(*) from im_message_mention where target_id=? and mention_type in ('USER','REPLY')",
                     Integer.class, ERASED));
             assertEquals(3, f.db.queryForObject("select count(*) from im_message_mention where target_id=?", Integer.class, OTHER));
+            // Channel events (C3): own RSVPs and album rows gone; a posted event stays without the poster link.
+            for (String table : new String[]{"channel_event_rsvp", "channel_event_photo"}) {
+                assertEquals(0, f.count(table, ERASED), table + " of the erased member");
+                assertEquals(1, f.count(table, OTHER), table + " of the other member must stay");
+            }
+            assertEquals(1, f.db.queryForObject("select count(*) from channel_event where activity_id=? and poster_member_id=0",
+                    Integer.class, 900 + ERASED));
+            assertEquals(1, f.db.queryForObject("select count(*) from channel_event where poster_member_id=?", Integer.class, OTHER));
 
             // Roam sessions: kept with aggregates, every coordinate gone.
             Map<String, Object> s7 = f.db.queryForMap("select * from roam_session where member_id=?", ERASED);
@@ -240,6 +248,11 @@ class MemberPrivacyErasureServiceTest {
                     + " distance_m double, detail_json varchar(2000))");
             db.execute("create table city_game_board_audit(id bigint auto_increment primary key, board_id varchar(96),"
                     + " action varchar(32), actor_id bigint, actor_type varchar(16), detail_json varchar(2000))");
+            db.execute("create table channel_event(id bigint auto_increment primary key, activity_id bigint, poster_member_id bigint)");
+            db.execute("create table channel_event_rsvp(id bigint auto_increment primary key, event_id bigint, member_id bigint,"
+                    + " status varchar(8))");
+            db.execute("create table channel_event_photo(id bigint auto_increment primary key, event_id bigint, member_id bigint,"
+                    + " asset_id bigint, removed tinyint default 0)");
             // Audit tables the erasure must leave alone.
             db.execute("create table consent_record(id bigint auto_increment primary key, member_id bigint, scene varchar(64),"
                     + " event_type varchar(16))");
@@ -301,6 +314,9 @@ class MemberPrivacyErasureServiceTest {
             db.update("insert into consent_record(member_id,scene,event_type) values(?,'app_launch','AGREE')", m);
             db.update("insert into account_deregistration(member_id) values(?)", m);
             db.update("insert into age_attestation(member_id) values(?)", m);
+            db.update("insert into channel_event(activity_id,poster_member_id) values(?,?)", 900 + m, m);
+            db.update("insert into channel_event_rsvp(event_id,member_id,status) values(1,?,'MAYBE')", m);
+            db.update("insert into channel_event_photo(event_id,member_id,asset_id) values(1,?,?)", m, 300 + m);
         }
 
         int count(String table, long member) {

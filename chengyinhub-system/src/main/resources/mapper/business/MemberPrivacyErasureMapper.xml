@@ -107,4 +107,17 @@
     <delete id="deleteMentionsOfMember">
         delete from im_message_mention where mention_type in ('USER', 'REPLY') and target_id = #{memberId}
     </delete>
+
+    <!-- C3 channel events -->
+    <delete id="deleteChannelEventRsvps">
+        delete from channel_event_rsvp where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteChannelEventPhotos">
+        delete from channel_event_photo where member_id = #{memberId}
+    </delete>
+
+    <update id="unlinkChannelEventPoster">
+        update channel_event set poster_member_id = 0 where poster_member_id = #{memberId}
+    </update>
 </mapper>

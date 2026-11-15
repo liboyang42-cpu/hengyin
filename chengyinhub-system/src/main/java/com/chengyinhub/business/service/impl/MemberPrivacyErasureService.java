@@ -85,6 +85,11 @@ public class MemberPrivacyErasureService {
         // (USER and REPLY targets). Messages, reply/thread links and other members' mentions stay.
         counts.put("im_message_reaction", mapper.deleteMessageReactions(memberId));
         counts.put("im_message_mention", mapper.deleteMentionsOfMember(memberId));
+        // Channel events (C3): RSVPs and album rows deleted (the photo files follow the media asset erasure);
+        // events the member posted stay as club activities without the poster link.
+        counts.put("channel_event_rsvp", mapper.deleteChannelEventRsvps(memberId));
+        counts.put("channel_event_photo", mapper.deleteChannelEventPhotos(memberId));
+        counts.put("channel_event_poster", mapper.unlinkChannelEventPoster(memberId));
         return counts;
     }
 }
