@@ -86,6 +86,8 @@ public class PlayBasicCommandApplication {
     private PlayNodeContext playNodeContext;
     @Autowired
     private PlayTaskPresentation playTaskPresentation;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.impl.InGameChannelService inGameChannelService;
 
     /** 扫码打卡：原节点、输入与前置状态属于同一意图。 */
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
@@ -178,6 +180,11 @@ public class PlayBasicCommandApplication {
             recordFirstSuccessfulScan(memberId, ctx);
             Map<String, Object> proofData = new LinkedHashMap<>(playTaskPresentation.shopDayProofData(node, proof));
             attachDispatchedTask(proofData, memberId, node);
+            if (inGameChannelService != null) {
+                inGameChannelService.postPlayEvent(
+                        com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
+                        memberId, actId, ctx.topicId, node.getName(), null);
+            }
             return AjaxResult.success("已记录到店", proofData);
         }
         // R18-FREEZE:完成方式闸按开局快照判定(冻结优先,老局快照回退实时模板)
@@ -206,6 +213,11 @@ public class PlayBasicCommandApplication {
             if(sharedRoute!=null)arrivalData.put("sharedRuntime",gameSessionRuntimeService.recordSharedBasicArrival(memberId,ctx.topicId,actId,node.getId(),routeActionId,"SCAN",runtimeInstance,authorityEpoch));
             recordFirstSuccessfulScan(memberId, ctx);
             attachDispatchedTask(arrivalData, memberId, node);
+            if (inGameChannelService != null) {
+                inGameChannelService.postPlayEvent(
+                        com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
+                        memberId, actId, ctx.topicId, node.getName(), null);
+            }
             return AjaxResult.success(personalGameplay?"已记录到达，请继续当前任务":"已记录到达，请继续本队任务", arrivalData);
         }
         // 4-5) 记录进度 + 发分 + 通关判定（与答题完成共用）
@@ -216,6 +228,11 @@ public class PlayBasicCommandApplication {
         attachDispatchedTask(data, memberId, node);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
+        if (firstTime && inGameChannelService != null) {
+            inGameChannelService.postPlayEvent(
+                    com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
+                    memberId, actId, ctx.topicId, node.getName(), null);
+        }
         return AjaxResult.success(firstTime ? "打卡成功" : "该节点已打卡", data);
     }
 
@@ -822,6 +839,11 @@ public class PlayBasicCommandApplication {
         if (arrivalReading != null) data.put("arrivalReading", arrivalReading);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
+        if (firstTime && inGameChannelService != null) {
+            inGameChannelService.postPlayEvent(
+                    com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
+                    memberId, actId, ctx.topicId, node.getName(), null);
+        }
         return AjaxResult.success(firstTime ? "已到达，打卡成功" : "该节点已完成", data);
     }
 

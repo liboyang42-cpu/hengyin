@@ -43,6 +43,8 @@ public class RoamTerritoryService {
     private final CityGameMapper mapper;
     private final UgcSubmissionSafety submissionSafety;
     private final LongSupplier clock;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.impl.InGameChannelService inGameChannelService;
 
     @Autowired
     public RoamTerritoryService(JdbcTemplate jdbc, CityGameMapper mapper,
@@ -436,6 +438,20 @@ public class RoamTerritoryService {
         if (boardId != null && propertyId != null) {
             syncBoardPropertyOnClaim(boardId, propertyId, pointId, memberId, territoryId, cleanPhotoUrl, protectedUntilTs);
         }
+        if (inGameChannelService != null) {
+            boolean isTakeover = existingActive != null && ((Number) existingActive.get("owner_member_id")).longValue() != memberId;
+            String evtType = isTakeover
+                    ? com.chengyinhub.business.service.impl.InGameChannelService.EVENT_TAKEOVER
+                    : com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CLAIM;
+            inGameChannelService.postRoamEvent(evtType, memberId, cityCode, title, null);
+            if (boardId != null) {
+                Map<String, Object> participation = mapper.selectParticipation(boardId, memberId);
+                String teamId = participation == null ? null : (String) participation.get("teamId");
+                if (teamId != null) {
+                    inGameChannelService.postCityGameEvent(evtType, memberId, boardId, teamId, title, null);
+                }
+            }
+        }
 
         Map<String, Object> created = jdbc.queryForMap("SELECT * FROM roam_territory WHERE territory_id = ?", territoryId);
         Map<String, Object> out = formatTerritoryRow(created);
@@ -555,6 +571,12 @@ public class RoamTerritoryService {
         out.put("revenueMode", "POINTS");
         out.put("plausibilityStatus", plausibility.status);
         out.put("distanceM", Math.round(distM * 10.0) / 10.0);
+        if (inGameChannelService != null) {
+            inGameChannelService.postRoamEvent(
+                    com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
+                    memberId, str(territory, "city_code"), str(territory, "title"),
+                    ownerRevenue > 0 ? ("过路收益 +" + ownerRevenue + " 积分") : null);
+        }
         return out;
     }
 

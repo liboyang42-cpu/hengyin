@@ -60,6 +60,7 @@
             <result property="type" column="conv_type"/>
             <result property="bizKey" column="conv_biz_key"/>
             <result property="status" column="conv_status"/>
+            <result property="remark" column="conv_remark"/>
         </association>
         <association property="latest" javaType="com.chengyinhub.business.domain.ImMessage"
                      notNullColumn="latest_id">
@@ -90,6 +91,7 @@
         select m.id, m.conversation_id, m.member_id, m.role, m.unread_count, m.last_read_msg_id,
                m.muted, m.deleted, m.create_time,
                c.id as conv_id, c.type as conv_type, c.biz_key as conv_biz_key, c.status as conv_status,
+               c.remark as conv_remark,
                msg.id as latest_id, msg.sender_id as latest_sender_id, msg.msg_type as latest_msg_type,
                msg.content as latest_content, msg.extra_json as latest_extra_json,
                msg.status as latest_status, msg.check_status as latest_check_status,
