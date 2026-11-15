@@ -248,6 +248,8 @@ public final class AdvancedActionJudgement {
         // ===== Figma v5.1 新玩法 =====
         // 少查一个 = 纯该玩法的模板开局即可通关(打卡前置的 completeGate 恒放行)。
         // musicCorner / silentOrder 按 #857 拍板不判定通关;timeWindow 的闸在 start() 已把守。
+        // G2:作者显式打开 scored 时才计入通关(旧模板不受影响)。
+        if (!AmbientKitJudgement.ready(config, state)) return false;
         if (enabled(config.get("blindTaste"))
                 && !state.path("blindTaste").path("solved").asBoolean(false)) return false;
         if (enabled(config.get("diyName"))

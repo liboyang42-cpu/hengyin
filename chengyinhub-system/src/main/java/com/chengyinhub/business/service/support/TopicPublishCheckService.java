@@ -93,6 +93,10 @@ public class TopicPublishCheckService {
     @Autowired
     private AppMediaPublicationGuard mediaPublicationGuard;
 
+    /** G2 / GAM-13:可选注入,未注入(老测试直接 new)时不展示试走门槛。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.gamemech.WalkTestService walkTestService;
+
     /** 试检查:error = 发布会被拦,warn = 不拦但有话要说。主题为空返回空列表。 */
     public List<PublishCheckIssue> check(CmsTopic topic) {
         List<PublishCheckIssue> issues = new ArrayList<PublishCheckIssue>();
@@ -160,6 +164,16 @@ public class TopicPublishCheckService {
                     ? PublishCheckIssue.error(problem.getCode(), problem.getNodeId(), problem.getMessage() + "：" + asset)
                     : PublishCheckIssue.warn(AppMediaProvenance.LICENSE_MISSING, null, "素材来源或授权声明待确认：" + asset);
             issues.add(issue.at("mediaAsset", AppMediaProvenance.LICENSE_MISSING));
+        }
+        // G2 / GAM-13:试走门槛。ENFORCE 时是 error(发布会被拦),ADVISE 时是 warn,OFF 不出现。
+        if (walkTestService != null) {
+            String walkTest = walkTestService.checkMessage(topic.getId());
+            if (walkTest != null) {
+                boolean blocks = walkTestService.mode() == com.chengyinhub.business.gamemech.WalkTestService.Mode.ENFORCE;
+                issues.add(blocks
+                        ? PublishCheckIssue.error(com.chengyinhub.business.gamemech.WalkTestService.CODE_WALK_TEST_MISSING, null, walkTest)
+                        : PublishCheckIssue.warn(com.chengyinhub.business.gamemech.WalkTestService.CODE_WALK_TEST_MISSING, null, walkTest));
+            }
         }
         return locate(topic.getId(), issues, nodes);
     }

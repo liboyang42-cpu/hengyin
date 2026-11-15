@@ -26,6 +26,8 @@ import com.chengyinhub.business.util.TopicEditWindow;
 public class TopicPublicationService {
     @Autowired
     private CmsTopicMapper cmsTopicMapper;
+    @Autowired(required = false)
+    private com.chengyinhub.business.gamemech.WalkTestService walkTestService;
     @Autowired
     private com.chengyinhub.business.service.IAuditTaskService auditTaskService;
     @org.springframework.beans.factory.annotation.Autowired
@@ -165,6 +167,8 @@ public class TopicPublicationService {
         // R19-DRAFT2:草稿保存放宽的那批完整度校验,在这里补回来 —— 半成品可以存,不能发。
         // 直接发布路径的同批校验在 createTopicInternal/rebuildTopicContent 的非草稿分支(它们从未放宽)。
         publicationContentGuard.assertPublishReady(topic);
+        // G2 / GAM-13:试走门槛(creator.walktest.gate=ENFORCE 时才拦;默认 ADVISE 只在试检查里展示)。
+        if (walkTestService != null) walkTestService.assertPublishable(topic);
         publicationContentGuard.assertBranchGraphOnlyForOrienteering(topic.getRouteMode(), topic.getProductType());
         boolean simple = isSimplePublishMode(topic.getPublishMode());
         // 两种发布方式都立即可玩，必须在公开前完成引用校验。

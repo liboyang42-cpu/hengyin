@@ -31,4 +31,6 @@ public enum NotifyEvent {
     TEAM_STATUS,
     /** 售后商家超时自动转平台客服；仅站内信通道处理，不占用订阅消息模板。 */
     AFTERCARE_PLATFORM_TAKEOVER,
+    /** G2 异步对决:发起、接受、出结果;仅站内信通道处理,不占用订阅消息模板。 */
+    GAME_DUEL,
 }

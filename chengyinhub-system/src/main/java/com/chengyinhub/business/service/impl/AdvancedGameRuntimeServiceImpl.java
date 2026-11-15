@@ -643,6 +643,16 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                     case "START_SLOW_TASK":
                         startSlowTask(config, state);
                         break;
+                    // G2 / GAM-07:沉默点单、音乐角、时段限定的服务端判定(见 AmbientKitJudgement)
+                    case "START_SILENT_ORDER":
+                    case "FINISH_SILENT_ORDER":
+                    case "START_MUSIC_CORNER":
+                    case "FINISH_MUSIC_CORNER":
+                    case "CHECK_IN_TIME_WINDOW":
+                        if ("CHECK_IN_TIME_WINDOW".equals(normalizedAction)) requireWithinTimeWindow(config.get("timeWindow"));
+                        int ambientXp = AmbientKitJudgement.apply(normalizedAction, config, state, clock.now().getTime());
+                        if (ambientXp > 0) session.setScore(value(session.getScore()) + ambientXp);
+                        break;
                     case "CLAIM_SLOW_TASK":
                         claimSlowTask(config, state, session);
                         break;
@@ -2727,6 +2737,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "subscribeTmplId", cfg);
             // 订过没有要回带:没这一句,玩家每次重进这一屏都要被"开启提醒"再问一遍
             value.put("subscribed", state.path("timeWindow").path("subscribed").asBoolean(false));
+            AmbientKitJudgement.project("timeWindow", cfg, state, value);
             kit.put("timeWindow", value);
         }
         if (enabled(config.path("blindTaste"))) {
@@ -2755,6 +2766,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "title", cfg);
             putText(value, "rule", cfg);
             value.put("limitSeconds", cfg.path("limitSeconds").asInt(0));
+            AmbientKitJudgement.project("silentOrder", cfg, state, value);
             kit.put("silentOrder", value);
         }
         if (enabled(config.path("diyName"))) {
@@ -2777,6 +2789,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "trackName", cfg);
             putText(value, "audioUrl", cfg);
             value.put("durationSeconds", cfg.path("durationSeconds").asInt(0));
+            AmbientKitJudgement.project("musicCorner", cfg, state, value);
             kit.put("musicCorner", value);
         }
         if (config.path("backgroundMusic").path("audioUrl").isTextual()) {

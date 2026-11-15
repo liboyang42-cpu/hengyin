@@ -817,6 +817,7 @@ public class AdvancedGameConfigValidator {
         optionalText(timeWindow, "eyebrow", 32, "时段限定眉标不能超过 32 字");
         optionalText(timeWindow, "title", 32, "时段限定标题不能超过 32 字");
         optionalText(timeWindow, "subscribeTmplId", 64, "订阅消息模板 id 不能超过 64 字");
+        validateScored(timeWindow, "时段限定");
     }
 
     /**
@@ -865,6 +866,7 @@ public class AdvancedGameConfigValidator {
         if (limit != 0 && (limit < 60 || limit > 3600)) {
             throw new IllegalArgumentException("沉默点单时限须为 60 秒至 1 小时,或 0 表示不限时");
         }
+        validateScored(silentOrder, "沉默点单");
     }
 
     /** DIY 作品命名:纯文本提交,商家审核在既有链路里,这里只管长度与备选。 */
@@ -906,6 +908,7 @@ public class AdvancedGameConfigValidator {
         if (duration != 0 && (duration < 10 || duration > 3600)) {
             throw new IllegalArgumentException("曲目时长须为 10 秒至 1 小时");
         }
+        validateScored(musicCorner, "音乐角");
     }
 
     /**
@@ -2792,6 +2795,15 @@ public class AdvancedGameConfigValidator {
             throw new IllegalArgumentException("精准停表次数须为 0 至 10,0 表示不限");
         }
         validateXp(cfg, "精准停表");
+    }
+
+    /** G2:三个氛围玩法可选「计入通关」;scored 须为布尔,奖励分同其他玩法 0–1000。 */
+    private void validateScored(JsonNode section, String label) {
+        JsonNode scored = section.get("scored");
+        if (scored != null && !scored.isNull() && !scored.isBoolean()) {
+            throw new IllegalArgumentException(label + "「计入通关」须为开或关");
+        }
+        validateXp(section, label);
     }
 
     private void validateXp(JsonNode section, String label) {

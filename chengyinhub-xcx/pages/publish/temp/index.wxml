@@ -154,6 +154,9 @@
     <!-- ============ 玩法规则 ============ -->
     <view class="cg-sec" id="sec-rule"><text class="cg-sec__t">玩法规则<text class="req" aria-hidden="true">*</text></text></view>
     <cy-card class="cg-card">
+      <!-- G2 / GAM-14:AI 助写。只填空着的字段,生成内容标注「AI 起草」,作者核对后照常提交审核。 -->
+      <cy-ai-assist active="{{true}}" chips="{{aiAssistChips}}" state="{{aiAssistState}}" errorText="{{aiAssistError || '生成失败，请重试'}}"
+        sourceNote="{{aiAssistNote}}" placeholder="一句话说说这一站想让玩家做什么" bind:generate="onAiAssistGenerate" bind:cancel="onAiAssistCancel" />
       <!-- 原型:序号是个圆点,画在输入框**外面**左侧;每步一个自增高的输入框 + 删除。
            整份规则仍然存在 formData.ruleInstructions 里(一行一步),没有新建后端字段。 -->
       <view class="cg-steps">
