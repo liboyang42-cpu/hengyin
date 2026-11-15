@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  * 生产环境真实天气源：复用 {@link TencentMapClient}，先按城市解析中心坐标并长期缓存，
  * 再调用腾讯天气实况（/ws/weather/v1/?type=now），并按城市缓存结果、映射为 {@link TopicEnvironmentService#WEATHER_VALUES}。
  *
- * <p>在 TEST / {@code e2e-test} 激活时由 {@link E2eTestTopicWeatherProvider} 接管，避免无 Key 时重复告警。
+ * <p>在 TEST / {@code e2e-test} 激活时由 {@code E2eTestTopicWeatherProvider} 接管，避免无 Key 时重复告警。
  */
 @Component
 @Primary
