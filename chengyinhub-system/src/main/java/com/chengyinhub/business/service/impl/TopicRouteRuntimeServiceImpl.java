@@ -316,11 +316,12 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             // 老线性主题照旧无局;配了旅程规则/块状态的线性主题建局,与分支共用 state_json。
             List<CmsTopicNode> liveNodes = nodes(topicId);
             JourneyTemplateProbe probe = publicationCompiler().probe(liveNodes);
-            if (!journeyConfigured(scope, probe)) return linearState(scope, liveNodes);
-            return toLinearView(ensureJourneySession(scope, probe), scope, liveNodes);
+            if (!journeyConfigured(scope, probe)) return projectRouteStationPauses(
+                    linearState(scope, liveNodes), scope);
+            return projectRouteStationPauses(toLinearView(ensureJourneySession(scope, probe), scope, liveNodes), scope);
         }
         TopicRouteSession session = ensureBranchSession(scope);
-        return toAvailableView(session, nodes(topicId));
+        return projectRouteStationPauses(toAvailableView(session, nodes(topicId)), scope);
     }
 
     @Override
@@ -354,7 +355,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (session == null) return null;
         TopicRouteState view = toView(session);
         view.setRouteMode(sessionRouteMode(session));
-        return view;
+        return projectRouteStationPauses(view, scope);
     }
 
     @Override
@@ -1741,6 +1742,29 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             if (TopicRouteState.PLAYABLE.equals(entry.getValue())) {
                 entry.setValue(TopicRouteState.DISCOVERED_LOCKED);
             }
+        }
+        return view;
+    }
+
+    private TopicRouteState projectRouteStationPauses(TopicRouteState view, Scope scope) {
+        if (gameSessionRuntimeService == null || scope.activityId == null || scope.activityId <= 0
+                || !"ACTIVE".equals(view.getStatus())) return view;
+        Map<Long, Map<String, Object>> pauses = gameSessionRuntimeService.queryRouteStationPauses(scope.topic.getId(), scope.activityId);
+        if (pauses == null) return view;
+        for (Map.Entry<Long, Map<String, Object>> entry : pauses.entrySet()) {
+            String state = view.getNodeStates().get(entry.getKey());
+            if (!TopicRouteState.PLAYABLE.equals(state) && !TopicRouteState.DISCOVERED_LOCKED.equals(state)) continue;
+            Map<String, Object> pause = new LinkedHashMap<>(entry.getValue());
+            Object reason = pause.get("reason");
+            String lockReason = reason == null || String.valueOf(reason).trim().isEmpty()
+                    ? "本站暂停中，请联系带队主理人" : String.valueOf(reason);
+            Object resumeEta = pause.get("resumeEta");
+            if (resumeEta != null && !String.valueOf(resumeEta).trim().isEmpty()) {
+                lockReason += "，预计恢复：" + resumeEta;
+            }
+            view.getNodeStates().put(entry.getKey(), TopicRouteState.DISCOVERED_LOCKED);
+            view.getLockReasons().put(entry.getKey(), lockReason);
+            view.getNodePauses().put(entry.getKey(), pause);
         }
         return view;
     }

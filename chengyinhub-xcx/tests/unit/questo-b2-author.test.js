@@ -154,3 +154,21 @@ test('试玩:逐字猜词演作者配置的格子,指认题演人物卡', () => 
   assert.equal(acc.suspects[0].name, '老板')
   assert.ok(!JSON.stringify(acc).includes('correct'))
 })
+
+
+test('answer aliases: all32 editor rows are addable,33 is blocked and wire order is retained', () => {
+  const advanced = advancedGameConfig.defaultConfig()
+  Object.assign(advanced.qa, { enabled: true, mode: 'TYPE', title: 'Synthetic', answerText: 'CANON' })
+  const page = { _qzAdvanced(fn) { return fn(advanced) } }
+  for (let i = 0; i < 32; i++) {
+    author.methods.qzAliasAdd.call(page)
+    assert.equal(advanced.answerPolicy.acceptedAliases.length, i + 1)
+    advanced.answerPolicy.acceptedAliases[i] = 'alias' + i
+  }
+  const before = structuredClone(advanced)
+  author.methods.qzAliasAdd.call(page)
+  assert.deepEqual(advanced, before)
+  const saved = author.beforeSave(advanced)
+  assert.deepEqual(JSON.parse(advancedGameConfig.serialize(saved)).answerPolicy, before.answerPolicy)
+  assert.deepEqual(advanced, before)
+})

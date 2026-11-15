@@ -165,7 +165,8 @@ Page({
       this._focusLookupSeq = (this._focusLookupSeq || 0) + 1;
       this._focusLookupPending = null;
       this.setData({ currentSwiperTicket: i,
-        focusState: this._explicitFocus ? 'ready' : '', focusError: '' }); this._showQrIfNoGame();
+        focusState: this._explicitFocus ? 'ready' : '', focusError: '' });
+      this._deckLay(); this._bgTo(list[i].wImg); this._showQrIfNoGame();
       this.syncCurrentTeam();
       return;
     }
@@ -640,7 +641,8 @@ Page({
       if (this._unloaded) return;
       this.setData({ deckStill: false });
       setTimeout(() => {
-        if (this._unloaded) return;
+        if (this._unloaded || this.data.currentSwiperTicket !== cur
+            || (this.data.ticketList[cur] || {}).wKey !== list[cur].wKey) return;
         const ease = arrive ? 'transition: transform .78s cubic-bezier(.2,.9,.25,1.08);' : 'transition: transform .7s cubic-bezier(.2,.9,.25,1.08);';
         this.setData({ ['deckPoses[' + cur + ']']: 'transform: perspective(1400px) translate3d(0px,0px,0px) rotateY(0deg) scale(1); transform-origin: 50% 50%; opacity: 1; z-index: 30; --curl: 0;' + ease });
       }, arrive ? 320 : 0);

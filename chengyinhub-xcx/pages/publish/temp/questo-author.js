@@ -24,7 +24,7 @@ const MAX_HINT_LEVELS = 6;
 const MAX_RUN_FREE_USES = 1000;
 const MAX_HANGMAN_CHARS = 40;
 const MAX_HANGMAN_ALIASES = 10;
-const MAX_ANSWER_ALIASES = 20;
+const MAX_ANSWER_ALIASES = 32;
 const BLANK = '_';
 
 const clone = (v) => JSON.parse(JSON.stringify(v == null ? null : v));

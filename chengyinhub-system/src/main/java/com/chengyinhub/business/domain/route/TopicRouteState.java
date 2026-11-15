@@ -72,6 +72,13 @@ public class TopicRouteState {
     public void setNodeStates(Map<Long, String> nodeStates) {
         this.nodeStates = nodeStates == null ? new LinkedHashMap<Long, String>() : nodeStates;
     }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<Long, String> lockReasons = new LinkedHashMap<Long, String>();
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<Long, Map<String, Object>> nodePauses = new LinkedHashMap<Long, Map<String, Object>>();
+    public Map<Long, String> getLockReasons() { return lockReasons; }
+    public Map<Long, Map<String, Object>> getNodePauses() { return nodePauses; }
     public List<Map<String, Object>> getDecisionLog() { return decisionLog; }
     public void setDecisionLog(List<Map<String, Object>> decisionLog) {
         this.decisionLog = decisionLog == null ? new ArrayList<Map<String, Object>>() : decisionLog;

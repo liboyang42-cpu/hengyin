@@ -4,7 +4,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('../helpers/ui-sandbox-vm.js');
 
-function load() {
+function load({ clock = false } = {}) {
+  let now = 0, timerId = 0;
+  const timers = new Map();
   const requests = [];
   let config, owner = 'member-a';
   const navigations = [];
@@ -13,14 +15,33 @@ function load() {
       getTotalPage: (total, size) => Math.ceil(total / size),
       getRequestErrorMessage: (r, fallback) => r.msg || fallback,
       sendRequest: request => requests.push(request) }),
-    Page: page => { config = page; }, setTimeout: () => 1,
+    Page: page => { config = page; },
+    setTimeout(fn, delay) {
+      if (!clock) return 1;
+      timers.set(++timerId, { fn, at: now + Number(delay || 0) }); return timerId;
+    },
+    clearTimeout(id) { timers.delete(id); },
     wx: { showToast() {}, navigateTo(options) { navigations.push(options.url); } }, console,
   };
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../subpackageMember/signup/index.js'), 'utf8'), context);
   const page = Object.assign({}, config, { data: JSON.parse(JSON.stringify(config.data)) });
-  page.setData = patch => Object.assign(page.data, patch);
-  return { page, requests, navigations, owner(value) { owner = value; } };
+  page.setData = patch => {
+    for (const [key, value] of Object.entries(patch)) {
+      const indexed = /^(\w+)\[(\d+)\]$/.exec(key);
+      if (indexed) page.data[indexed[1]][Number(indexed[2])] = value;
+      else page.data[key] = value;
+    }
+  };
+  return { page, requests, navigations, owner(value) { owner = value; }, advance(ms) {
+    const end = now + ms;
+    for (let steps = 0; steps < 1000; steps++) {
+      const next = Array.from(timers.entries()).filter(([, t]) => t.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
+      if (!next) { now = end; return; }
+      timers.delete(next[0]); now = next[1].at; next[1].fn();
+    }
+    throw new Error('timer loop');
+  } };
 }
 function reply(request, rows, total = rows.length) {
   request.success({ code: 200, data: request.url === '/api/team/my' ? rows : { rows, total } });
@@ -166,4 +187,103 @@ test('详情hide/show竞态与两路逆序返回不重复插票；不再轮询�
   const wxml = fs.readFileSync(path.resolve(__dirname, '../../subpackageMember/signup/index.wxml'), 'utf8');
   assert.match(wxml, /未定位到原报名凭证/);
   assert.match(wxml, /walletState === 'ready' && \(!focusState \|\| focusState === 'ready'\)/);
+});
+
+function assertFrontMatchesSelection(page, id) {
+  const selected = page.data.ticketList[page.data.currentSwiperTicket];
+  assert.equal(String(selected.id), String(id));
+  const front = page.data.deckPoses.flatMap((pose, index) =>
+    /opacity: 1;/.test(pose) && /z-index: 30;/.test(pose) ? [index] : []);
+  assert.deepEqual(Array.from(front), [page.data.currentSwiperTicket],
+    'the selected ticket must be the only visible foreground card');
+  assert.equal(page.data.ticketList[front[0]].wTitle, selected.wTitle);
+  if (selected.wImg) assert.equal(page.data.wbg[page.data.wbgOn], selected.wImg);
+}
+
+function previousCard(h) {
+  h.page.onDeckStart({ touches: [{ clientX: 0, clientY: 0 }] });
+  h.page.onDeckMove({ touches: [{ clientX: 200, clientY: 0 }] });
+  h.page.onDeckEnd();
+  h.advance(600);
+}
+
+for (const explicit of [false, true]) for (const topicFirst of [false, true]) {
+  test('retained wallet restores the visual card and action identity: explicit=' + explicit + ', topicFirst=' + topicFirst, () => {
+    const h = load({ clock: true });
+    const rows = Array.from({ length: 19 }, (_, i) => ({ ...topic(20000 + i),
+      cmsTopic: { id: 30000 + i, name: i === 18 ? 'Finished route' : 'Other route ' + i, imgUrl: 'cover-' + i } }));
+    const wanted = rows[18];
+    h.page.onLoad(explicit ? { focusId: String(wanted.id) } : {});
+    h.page.onShow();
+    reply(h.requests[1], rows);
+    const entrance = h.page.data.deckPoses[h.page.data.currentSwiperTicket];
+    assert.match(entrance, /translate\(0px,560px\)/, 'normal card entrance is still played');
+    reply(h.requests[0], [activity(40000)]);
+    assert.equal(h.page.data.deckPoses[h.page.data.currentSwiperTicket], entrance,
+      'the second list must not interrupt entrance of the same card');
+    reply(h.requests[2], []);
+    h.advance(1300);
+    if (!explicit) { previousCard(h); previousCard(h); }
+    assertFrontMatchesSelection(h.page, wanted.id);
+    h.page.onHide();
+    h.page.onShow();
+    assert.equal(h.page.data.currentSwiperTicket, 0, 'exercise the actual retained-page reset');
+    const refreshed = rows.map(row => row.id === wanted.id ? { ...row, topicCompleted: true } : row);
+    const batch = h.requests.slice(3);
+    const first = topicFirst ? 1 : 0, second = 1 - first;
+    const payloads = [[activity(40000)], refreshed];
+    reply(batch[first], payloads[first]);
+    if (topicFirst) assertFrontMatchesSelection(h.page, wanted.id);
+    reply(batch[second], payloads[second]);
+    reply(batch[2], [{ id: 501, ownerType: 1, ownerId: wanted.cmsTopic.id, status: 1 }]);
+    assertFrontMatchesSelection(h.page, wanted.id);
+    assert.equal(h.page.data.ticketList[h.page.data.currentSwiperTicket].topicCompleted, true);
+    assert.equal(h.page.data.currentTeam.id, 501);
+    assert.equal(h.page.data.qrState, 'idle');
+    h.page.goTicket({ currentTarget: { dataset: { index: h.page.data.currentSwiperTicket } } });
+    assert.match(h.navigations.at(-1), new RegExp('registrationId=' + wanted.id + '(?:&|$)'));
+    assert.match(h.navigations.at(-1), new RegExp('topicId=' + wanted.cmsTopic.id + '(?:&|$)'));
+  });
+}
+
+for (const topicFirst of [false, true]) test('settled explicit focus lookup relays out the returned card: topicFirst=' + topicFirst, () => {
+  const h = load({ clock: true });
+  h.page.onLoad({ focusId: '115' }); h.page.onShow();
+  const first = topicFirst ? 1 : 0, second = 1 - first;
+  const payloads = [[activity(11)], [topic(12)]];
+  reply(h.requests[first], payloads[first]); reply(h.requests[second], payloads[second]); reply(h.requests[2], []);
+  h.advance(1300);
+  const info = h.requests.find(r => r.url === '/api/registration/info');
+  assert.ok(info);
+  info.success({ code: 200, data: { ...topic(115), ownerType: 1, memberId: 'member-a' } });
+  assert.equal(h.page.data.focusState, 'ready');
+  assertFrontMatchesSelection(h.page, 115);
+});
+
+test('focus lookup preserves no-game QR and team identity on the actual Page', () => {
+  const h = load({ clock: true }); h.page.onLoad({ focusId: '115' });
+  const info = settleFirstPages(h); h.advance(1300);
+  info.success({ code: 200, data: { ...activity(115), ownerType: 2, memberId: 'member-a',
+    cmsActivity: { id: 63, name: 'Entry only' } } });
+  assertFrontMatchesSelection(h.page, 115);
+  assert.equal(h.page.data.flipped, true);
+  const qr = h.requests.at(-1);
+  assert.equal(qr.url, '/api/verify/dyncode/issue');
+  assert.deepEqual({ ...qr.data }, { registrationId: '115' });
+  h.page.loadMyTeams();
+  reply(h.requests.at(-1), [{ id: 503, ownerType: 2, ownerId: 63, status: 1 }]);
+  assert.equal(h.page.data.currentTeam.id, 503);
+});
+
+for (const delay of [0, 40]) test('late focus during card entrance cannot be overwritten by the old card timer: delay=' + delay, () => {
+  const h = load({ clock: true }); h.page.onLoad({ focusId: '115' });
+  const first = delay === 0 ? 0 : 1, second = 1 - first;
+  const payloads = [[activity(11)], [topic(12)]];
+  reply(h.requests[first], payloads[first]); reply(h.requests[second], payloads[second]); reply(h.requests[2], []);
+  const info = h.requests.find(r => r.url === '/api/registration/info');
+  h.advance(delay);
+  info.success({ code: 200, data: { ...topic(115), ownerType: 1, memberId: 'member-a' } });
+  assertFrontMatchesSelection(h.page, 115);
+  h.advance(1300);
+  assertFrontMatchesSelection(h.page, 115);
 });

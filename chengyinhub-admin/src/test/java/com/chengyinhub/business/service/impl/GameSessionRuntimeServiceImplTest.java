@@ -50,6 +50,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.doAnswer;
@@ -3758,6 +3759,67 @@ class GameSessionRuntimeServiceImplTest {
         session.setStatus(GameSession.FINISHED);
         assertThrows(IllegalStateException.class, () -> service.assertRoutePlayable(ACTIVITY, NODE));
         service.assertRoutePlayable(0L, NODE);
+    }
+
+    @Test
+    void ordinaryRoutePauseProjectionUsesPublicAndMerchantStationsWithoutWrites() {
+        for (Long owner : new Long[]{null, MERCHANT}) {
+            GameSession session = runningSession(4);
+            session.setModuleConfigSnapshotJson("{\"schemaVersion\":1,\"playMode\":\"ROUTE\"}");
+            GameStationRun checkpoint = station(MERCHANT, GameStationRun.ACTIVE);
+            checkpoint.setMerchantMemberId(owner);
+            checkpoint.setSourceType(owner == null ? "HOST_NODE" : "CHAPTER_NODE");
+            checkpoint.setPauseReasonCode("ONSITE");
+            checkpoint.setPauseReason("现场暂时关闭");
+            checkpoint.setResumeEta(DateUtils.parseDate("2026-08-23 16:00:00"));
+            GameStationRun foreign = station(MERCHANT, GameStationRun.PAUSED);
+            foreign.setGameSessionId(SESSION + 1);
+            foreign.setNodeId(NODE + 1);
+            when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+            when(runtimeMapper.selectStations(SESSION)).thenReturn(Arrays.asList(checkpoint, foreign));
+            assertTrue(service.queryRouteStationPauses(TOPIC, ACTIVITY).isEmpty());
+            checkpoint.setStatus(GameStationRun.PAUSED);
+            Map<Long, Map<String, Object>> pauses = service.queryRouteStationPauses(TOPIC, ACTIVITY);
+            assertEquals(Collections.singleton(NODE), pauses.keySet());
+            assertEquals(new java.util.HashSet<>(Arrays.asList("reasonCode", "reason", "resumeEta")), pauses.get(NODE).keySet());
+            assertEquals("现场暂时关闭", pauses.get(NODE).get("reason"));
+            assertEquals("2026-08-23 16:00:00", pauses.get(NODE).get("resumeEta"));
+            assertNull(checkpoint.getFallbackNodeId(), "无备用方案也必须显示暂停安排");
+            checkpoint.setStatus(GameStationRun.ACTIVE);
+            assertTrue(service.queryRouteStationPauses(TOPIC, ACTIVITY).isEmpty());
+            assertEquals(4, session.getRevision());
+            assertEquals(GameSession.RUNNING, session.getStatus());
+        }
+        assertTrue(org.mockito.Mockito.mockingDetails(runtimeMapper).getInvocations().stream()
+                .allMatch(call -> call.getMethod().getName().startsWith("select")), "读投影不得初始化、更新或加写锁");
+        verify(runtimeMapper, never()).selectSessionByActivityForUpdate(anyLong());
+        verifyNoInteractions(playTeamMapper);
+    }
+
+    @Test
+    void ordinaryRoutePauseProjectionRejectsForeignTopicBeforeStationRead() {
+        GameSession session = runningSession(4);
+        session.setModuleConfigSnapshotJson("{\"schemaVersion\":1,\"playMode\":\"ROUTE\"}");
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        assertThrows(GameSessionException.class, () -> service.queryRouteStationPauses(TOPIC + 1, ACTIVITY));
+        assertTrue(service.queryRouteStationPauses(TOPIC, ACTIVITY + 1).isEmpty());
+        verify(runtimeMapper, never()).selectStations(anyLong());
+    }
+
+    @Test
+    void ordinaryRoutePauseProjectionDoesNotApplyToSelfPlayTeamOrFinishedSessions() {
+        assertTrue(service.queryRouteStationPauses(TOPIC, 0L).isEmpty());
+        GameSession session = runningSession(4);
+        when(runtimeMapper.selectSessionByActivity(ACTIVITY)).thenReturn(session);
+        assertTrue(service.queryRouteStationPauses(TOPIC, ACTIVITY).isEmpty(), "非ROUTE原合同不变");
+        session.setModuleConfigSnapshotJson("{\"schemaVersion\":1,\"playMode\":\"ROUTE\"}");
+        session.setStatus(GameSession.FINISHED);
+        assertTrue(service.queryRouteStationPauses(TOPIC, ACTIVITY).isEmpty());
+        session.setStatus(GameSession.RUNNING);
+        session.setModuleConfigSnapshotJson("{\"schemaVersion\":1,\"playMode\":\"ROUTE\",\"themeConfig\":{\"gameplayRuntime\":{\"runtimeScope\":\"TEAM\"}}}");
+        assertTrue(service.queryRouteStationPauses(TOPIC, ACTIVITY).isEmpty());
+        verify(runtimeMapper, never()).selectStations(anyLong());
+        verifyNoInteractions(playTeamMapper);
     }
 
     @Test

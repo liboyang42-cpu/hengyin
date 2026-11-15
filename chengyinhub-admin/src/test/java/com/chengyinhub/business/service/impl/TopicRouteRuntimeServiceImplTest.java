@@ -509,6 +509,95 @@ class TopicRouteRuntimeServiceImplTest {
         verify(routeMapper, never()).selectMemberTopicSessions(anyLong(), anyLong());
     }
 
+    @Test
+    void ordinaryRoutePauseRoundTripProjectsSameOriginalRunWithoutStateWrites() throws Exception {
+        CmsActivity activity = new CmsActivity();
+        activity.setId(11L); activity.setTopicId(10L); activity.setStatus(1L); activity.setDelFlag(0);
+        when(activityMapper.selectCmsActivityById(11L)).thenReturn(activity);
+        TopicRouteSession original = new TopicRouteSession();
+        original.setId(901L); original.setMemberId(7L); original.setTopicId(10L); original.setActivityId(11L);
+        original.setVersion(6); original.setConfigVersion(3L); original.setPlayInstanceId("default");
+        original.setConfigSnapshotJson(topicMapper.selectCmsTopicById(10L).getPublishedRouteGraphJson());
+        original.setStateJson("{\"status\":\"ACTIVE\",\"currentNodeId\":1,\"recommendedNodeId\":1,\"nodeStates\":{\"1\":\"PLAYABLE\",\"2\":\"COMPLETED\",\"3\":\"HIDDEN\",\"4\":\"PLAYABLE\"}}");
+        when(routeMapper.selectByOwner(11L, 10L, 7L, "default")).thenReturn(original);
+        com.chengyinhub.business.service.IGameSessionRuntimeService sessions =
+                mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        ReflectionTestUtils.setField(runtime, "gameSessionRuntimeService", sessions);
+        Map<Long, Map<String, Object>> pauses = new LinkedHashMap<>();
+        when(sessions.queryRouteStationPauses(10L, 11L)).thenReturn(pauses);
+        String stateJson = original.getStateJson();
+        String frozen = original.getConfigSnapshotJson();
+        TopicRouteState active = runtime.queryState(7L, 10L, 11L);
+        assertEquals(TopicRouteState.PLAYABLE, active.getNodeStates().get(1L));
+        Map<String, Object> pause = new LinkedHashMap<>();
+        pause.put("reasonCode", "ONSITE"); pause.put("reason", "现场暂时关闭");
+        pause.put("resumeEta", "2026-08-23 16:00:00");
+        pauses.put(1L, pause); pauses.put(2L, pause); pauses.put(3L, pause); pauses.put(999L, pause);
+        TopicRouteState paused = runtime.queryState(7L, 10L, 11L);
+        TopicRouteState entry = runtime.state(7L, 10L, 11L);
+        for (TopicRouteState view : Arrays.asList(paused, entry)) {
+            assertEquals(901L, view.getSessionId()); assertEquals(6, view.getVersion());
+            assertEquals("ACTIVE", view.getStatus()); assertEquals(1L, view.getCurrentNodeId());
+            assertEquals(1L, view.getRecommendedNodeId());
+            assertEquals(TopicRouteState.DISCOVERED_LOCKED, view.getNodeStates().get(1L));
+            assertEquals("现场暂时关闭，预计恢复：2026-08-23 16:00:00", view.getLockReasons().get(1L));
+            assertEquals(Collections.singleton(1L), view.getNodePauses().keySet());
+            assertEquals(TopicRouteState.COMPLETED, view.getNodeStates().get(2L));
+            assertEquals(TopicRouteState.HIDDEN, view.getNodeStates().get(3L));
+            assertEquals(TopicRouteState.PLAYABLE, view.getNodeStates().get(4L), "其他站仍可进行");
+        }
+        pauses.clear();
+        TopicRouteState resumed = runtime.queryState(7L, 10L, 11L);
+        assertEquals(TopicRouteState.PLAYABLE, resumed.getNodeStates().get(1L));
+        assertTrue(resumed.getNodePauses().isEmpty()); assertTrue(resumed.getLockReasons().isEmpty());
+        assertFalse(json.writeValueAsString(resumed).contains("nodePauses"));
+        assertFalse(json.writeValueAsString(resumed).contains("lockReasons"));
+        assertEquals(stateJson, original.getStateJson()); assertEquals(frozen, original.getConfigSnapshotJson());
+        assertEquals(6, original.getVersion());
+        verify(routeMapper, never()).insertSession(any());
+        assertTrue(org.mockito.Mockito.mockingDetails(routeMapper).getInvocations().stream()
+                .noneMatch(call -> call.getMethod().getName().startsWith("update")
+                        || call.getMethod().getName().startsWith("insert")), "投影不得回填冻结局或初始化新局");
+    }
+
+    @Test
+    void ordinaryLinearPauseProjectionDoesNotTouchSelfPlayOrOtherNodes() {
+        CmsTopic topic = topicMapper.selectCmsTopicById(10L);
+        topic.setRouteMode("LINEAR"); topic.setRouteGraphJson(null); topic.setPublishedRouteGraphJson(null);
+        CmsActivity activity = new CmsActivity();
+        activity.setId(11L); activity.setTopicId(10L); activity.setStatus(1L); activity.setDelFlag(0);
+        when(activityMapper.selectCmsActivityById(11L)).thenReturn(activity);
+        com.chengyinhub.business.service.IGameSessionRuntimeService sessions =
+                mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        ReflectionTestUtils.setField(runtime, "gameSessionRuntimeService", sessions);
+        when(sessions.queryRouteStationPauses(10L, 11L)).thenReturn(
+                Collections.singletonMap(1L, Collections.singletonMap("reason", "人员暂时离岗")));
+        TopicRouteState paused = runtime.state(7L, 10L, 11L);
+        assertEquals(TopicRouteState.DISCOVERED_LOCKED, paused.getNodeStates().get(1L));
+        assertEquals(TopicRouteState.DISCOVERED_LOCKED, paused.getNodeStates().get(2L));
+        assertFalse(paused.getNodePauses().containsKey(2L));
+        TopicRouteState selfPlay = runtime.state(7L, 10L, 0L);
+        assertEquals(TopicRouteState.PLAYABLE, selfPlay.getNodeStates().get(1L));
+        assertTrue(selfPlay.getNodePauses().isEmpty());
+        verify(sessions, never()).queryRouteStationPauses(anyLong(), org.mockito.ArgumentMatchers.eq(0L));
+        verify(routeMapper, never()).insertSession(any());
+    }
+
+    @Test
+    void ordinaryRoutePauseProjectionRetainsExistingReadScopeAndNeverInitializesMissingRun() {
+        CmsActivity activity = new CmsActivity();
+        activity.setId(11L); activity.setTopicId(10L); activity.setStatus(1L); activity.setDelFlag(0);
+        when(activityMapper.selectCmsActivityById(11L)).thenReturn(activity);
+        com.chengyinhub.business.service.IGameSessionRuntimeService sessions =
+                mock(com.chengyinhub.business.service.IGameSessionRuntimeService.class);
+        ReflectionTestUtils.setField(runtime, "gameSessionRuntimeService", sessions);
+        assertNull(runtime.queryState(7L, 10L, 11L), "只读缺原局不能初始化");
+        when(registrationMapper.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.emptyList());
+        assertThrows(IllegalStateException.class, () -> runtime.queryState(8L, 10L, 11L));
+        verify(sessions, never()).queryRouteStationPauses(anyLong(), anyLong());
+        verify(routeMapper, never()).insertSession(any());
+    }
+
     // 2026-10-14 用户已定：自玩通行证在本局内有效。普通线性路线不建局，以本人默认实例下的节点进度判定已开局。
     private PlayerNodeProgress expiredPassOnLinearRoute() {
         CmsTopic topic = topicMapper.selectCmsTopicById(10L);

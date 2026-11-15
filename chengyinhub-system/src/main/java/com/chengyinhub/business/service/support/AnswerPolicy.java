@@ -59,7 +59,7 @@ public final class AnswerPolicy
     public static final String LEGACY_V1 = "LEGACY_V1";
     public static final int CURRENT_VERSION = 1;
     /** 作者能加的别名条数上限;再多就不是"同一答案的写法",而是把题做成了猜词。 */
-    public static final int MAX_ALIASES = 20;
+    public static final int MAX_ALIASES = 32;
     /** 单条别名长度上限,与答案文本同量程。 */
     public static final int MAX_ALIAS_LENGTH = 200;
 

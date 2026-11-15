@@ -19,6 +19,20 @@ function asRecord(value) {
   }
 }
 
+function normalizeNodePause(raw) {
+  if (!isRecord(raw)) return null
+  const text = key => typeof raw[key] === 'string' ? raw[key].trim() : ''
+  return { reasonCode: text('reasonCode'), reason: text('reason'), resumeEta: text('resumeEta') }
+}
+
+function pauseNotice(raw, fallback) {
+  if (typeof fallback === 'string' && fallback.trim()) return fallback
+  const pause = normalizeNodePause(raw)
+  if (!pause) return fallback || '本站已暂停'
+  return ['本站已暂停', pause.reason || fallback || '', pause.resumeEta ? '预计恢复 ' + pause.resumeEta : '']
+    .filter(Boolean).join(' · ')
+}
+
 function normalizeRouteState(raw) {
   const source = asRecord(raw)
   const routeMode = String(source.routeMode || '').toUpperCase() === ROUTE_MODE_BRANCH
@@ -30,8 +44,15 @@ function normalizeRouteState(raw) {
     const state = String(rawStates[nodeId] || '').toUpperCase()
     if (NODE_STATES.has(state)) nodeStates[String(nodeId)] = state
   })
+  const nodePauses = {}
+  Object.keys(asRecord(source.nodePauses)).forEach(key => {
+    if (!/^[1-9][0-9]*$/.test(key)) return
+    const pause = normalizeNodePause(source.nodePauses[key])
+    if (pause) nodePauses[key] = pause
+  })
   return {
     routeMode,
+    nodePauses,
     sessionId: id(source.sessionId) || '',
     status: source.status == null ? '' : String(source.status).toUpperCase(),
     currentNodeId: source.currentNodeId == null ? null : source.currentNodeId,
@@ -95,7 +116,29 @@ function decisionFacts(routeState) {
 function applyRouteStateToNodes(nodes, routeStateInput) {
   const routeState = normalizeRouteState(routeStateInput)
   const rows = Array.isArray(nodes) ? nodes : []
-  if (routeState.routeMode !== ROUTE_MODE_BRANCH) return rows.slice()
+  if (routeState.routeMode !== ROUTE_MODE_BRANCH) {
+    return rows.map(node => {
+      if (!node || node.nodeId == null) return node
+      const key = String(node.nodeId), state = routeState.nodeStates[key]
+      const pause = !node.done && node.routeNodeState !== 'COMPLETED' && state === 'DISCOVERED_LOCKED'
+        ? routeState.nodePauses[key] : null
+      if (pause) {
+        // A station pause must not erase an independent qualification lock on resume.
+        const original = node._stationPauseOriginal || (!node.pause
+          ? { locked: !!node.locked, lockReason: node.lockReason || '' } : null)
+        return Object.assign({}, node, { _stationPauseOriginal: original, routeNodeState: state, paused: true, pause,
+          locked: true, playable: false, lockReason: pauseNotice(pause, routeState.lockReasons[key]) })
+      }
+      if (!node.pause || !state) return node
+      const original = node._stationPauseOriginal
+      const locked = state !== 'COMPLETED' && (!!(original && original.locked) || state === 'DISCOVERED_LOCKED' || state === 'HIDDEN')
+      const next = Object.assign({}, node, { routeNodeState: state, paused: false, pause: null, locked,
+        playable: !locked && state === 'PLAYABLE',
+        lockReason: locked ? (routeState.lockReasons[key] || original && original.lockReason || '完成当前路线后解锁') : '' })
+      delete next._stationPauseOriginal
+      return next
+    })
+  }
   const facts = decisionFacts(routeState)
   return rows.reduce((visible, node) => {
     if (!node || node.nodeId == null) return visible
@@ -103,7 +146,9 @@ function applyRouteStateToNodes(nodes, routeStateInput) {
     if (state === 'HIDDEN') return visible
     const key = String(node.nodeId)
     const completedAt = facts.completedAt[key]
-    visible.push(Object.assign({}, node, {
+    const pause = state === 'DISCOVERED_LOCKED' ? routeState.nodePauses[key] || null : null
+    const stationOverlay = pause ? { paused: true, pause } : node.pause ? { paused: false, pause: null } : {}
+    visible.push(Object.assign({}, node, stationOverlay, {
       routeNodeState: state,
       routeDecisionOrder: facts.order[key] == null ? Number.MAX_SAFE_INTEGER : facts.order[key],
       locked: state === 'DISCOVERED_LOCKED',
@@ -113,7 +158,7 @@ function applyRouteStateToNodes(nodes, routeStateInput) {
         ? (completedAt || asTimestamp(node.completedAt) || asTimestamp(node.doneAt) || 0)
         : (Number(node.doneAt) || 0),
       lockReason: state === 'DISCOVERED_LOCKED'
-        ? (routeState.lockReasons[key] || node.lockReason || '完成当前路线后解锁')
+        ? (pause ? pauseNotice(pause, routeState.lockReasons[key]) : (routeState.lockReasons[key] || (!node.pause && node.lockReason) || '完成当前路线后解锁'))
         : '',
     }))
     return visible
@@ -282,6 +327,7 @@ module.exports = {
   ROUTE_MODE_LINEAR,
   ROUTE_MODE_BRANCH,
   normalizeRouteState,
+  pauseNotice,
   applyRouteStateToNodes,
   resolveNextRouteNode,
   orderedJourneyNodes,

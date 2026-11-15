@@ -539,6 +539,14 @@ public class PlayNodeQueryApplication {
                     "question", "options", "gameTitle", "hint1", "hint2", "storyText",
                     "validationMethod", "sensorType", "sensorConfig"));
         }
+        Map<String, Object> pause = read.routeState == null ? null : read.routeState.getNodePauses().get(n.getId());
+        if (!read.selfPlay && read.progActId != null && read.progActId > 0 && pause != null
+                && !Boolean.TRUE.equals(m.get("done")) && !read.completedNodeIds.contains(n.getId())) {
+            m.put("locked", true);
+            m.put("lockReason", read.routeState.getLockReasons().get(n.getId()));
+            m.put("paused", true);
+            m.put("pause", new LinkedHashMap<>(pause));
+        }
         read.nodes.add(m);
     }
 

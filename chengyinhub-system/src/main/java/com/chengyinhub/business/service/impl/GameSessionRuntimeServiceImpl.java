@@ -2720,6 +2720,37 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         return routeChapterGate(session, nodeId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, Map<String, Object>> queryRouteStationPauses(Long topicId, Long activityId) {
+        if (activityId == null || activityId <= 0) return Collections.emptyMap();
+        GameSession session = runtimeMapper.selectSessionByActivity(activityId);
+        if (!isRouteSession(session) || isSharedRoute(session)
+                || !GameSession.RUNNING.equals(session.getStatus())) return Collections.emptyMap();
+        if (!Objects.equals(activityId, session.getActivityId()) || !Objects.equals(topicId, session.getTopicId())) {
+            throw error("GAME_FORBIDDEN_SCOPE", "活动与主题不匹配");
+        }
+        CmsActivity activity = requireActivity(activityId, false);
+        if (!Objects.equals(topicId, activity.getTopicId())) throw error("GAME_FORBIDDEN_SCOPE", "活动与主题不匹配");
+        Map<Long, Map<String, Object>> pauses = new LinkedHashMap<>();
+        for (GameStationRun station : safe(runtimeMapper.selectStations(session.getId()))) {
+            if (station != null && Objects.equals(session.getId(), station.getGameSessionId())
+                    && Objects.equals(activityId, station.getActivityId()) && station.getNodeId() != null
+                    && GameStationRun.PAUSED.equals(station.getStatus())) {
+                pauses.put(station.getNodeId(), stationPauseView(station));
+            }
+        }
+        return pauses;
+    }
+
+    private Map<String, Object> stationPauseView(GameStationRun station) {
+        Map<String, Object> pause = new LinkedHashMap<>();
+        pause.put("reasonCode", station.getPauseReasonCode());
+        pause.put("reason", station.getPauseReason());
+        pause.put("resumeEta", formatDate(station.getResumeEta()));
+        return pause;
+    }
+
     /**
      * C-04:带队路线局(ROUTE)的章节放行。路线局的冻结配置没有顶层 chapters,所以 chapterOptions 恒空、
      * UNLOCK_CHAPTER 也从未给出;旧带队入口又因「导演运行时拥有本场」拒绝。章节权威统一落在
@@ -4143,11 +4174,7 @@ public class GameSessionRuntimeServiceImpl implements IGameSessionRuntimeService
         if (outcome == null && GameStationRun.PAUSED.equals(station.getStatus())) {
             // R9-38:没有兜底路线时玩家只剩一个干巴巴的"暂停"。后续安排(原因/预计恢复)
             // 是暂停的对外契约,和兜底路线无关,单独下发,由前端决定怎么展示。
-            Map<String, Object> pause = new LinkedHashMap<>();
-            pause.put("reasonCode", station.getPauseReasonCode());
-            pause.put("reason", station.getPauseReason());
-            pause.put("resumeEta", formatDate(station.getResumeEta()));
-            node.put("pause", pause);
+            node.put("pause", stationPauseView(station));
             Map<String, Object> fallback = playerFallbackView(session, station, config, stations);
             if (fallback != null) node.put("fallback", fallback);
         }

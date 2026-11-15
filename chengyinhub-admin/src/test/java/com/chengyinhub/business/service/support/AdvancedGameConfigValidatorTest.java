@@ -1535,6 +1535,24 @@ class AdvancedGameConfigValidatorTest {
     // ---------- BE-08 答案别名政策 ----------
 
     @Test
+    void aliasPolicyThirtyTwoSurvivesSaveNormalizationButThirtyThreeIsRejected() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        var policy = mapper.createObjectNode().put("version", 1);
+        var aliases = policy.putArray("acceptedAliases");
+        for (int i = 0; i < 32; i++) aliases.add("alias" + i);
+        String raw = qaType("\"answerPolicy\":" + policy);
+        validator.assertAnswerPolicy(raw);
+        JsonNode normalized = mapper.readTree(validator.validateAndNormalize(raw));
+        assertEquals(policy, normalized.path("answerPolicy"));
+        aliases.add("alias32");
+        String over = qaType("\"answerPolicy\":" + policy);
+        assertThrows(IllegalArgumentException.class, () -> validator.assertAnswerPolicy(over));
+        assertEquals(policy, mapper.readTree(validator.validateAndNormalize(over)).path("answerPolicy"),
+                "Runtime normalization does not rewrite or discard an unusable author policy");
+        assertTrue(AnswerPolicy.of(policy).isEmpty());
+    }
+
+    @Test
     void answerPolicyIsValidatedAtSaveAndSurvivesNormalization() throws Exception {
         String config = qaType("\"answerPolicy\":{\"version\":1,\"normalizationPolicy\":\"LEGACY_V1\","
                 + "\"acceptedAliases\":[\"芝麻\",\"开门\"]}");

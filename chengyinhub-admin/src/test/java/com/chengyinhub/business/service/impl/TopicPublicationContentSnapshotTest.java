@@ -48,6 +48,27 @@ class TopicPublicationContentSnapshotTest {
      * BE-08:答案别名政策与 canonical answer 同源(模板私有 advancedConfigJson 根层),
      * 发布/建局时一起冻结进 nodeAnswers;没有别名就不写键 —— 老快照读回后仍走旧比较器。
      */
+    @Test void thirtyTwoAliasesFreezeInOrderButNeverEnterPublicPresentation() throws Exception {
+        Fixture fixture = new Fixture();
+        ObjectNode config = JSON.createObjectNode().put("schemaVersion", 1);
+        ObjectNode policy = config.putObject("answerPolicy").put("version", 1);
+        var aliases = policy.putArray("acceptedAliases");
+        for (int i = 0; i < 32; i++) aliases.add("alias" + i);
+        String raw = config.toString();
+        fixture.template.setAdvancedConfigJson(raw);
+        JsonNode frozen = JSON.readTree(fixture.compiler.freezePublication(fixture.topic, null));
+        JsonNode answer = frozen.path("nodeAnswers").path("11");
+        assertEquals("secret", answer.path("questionAnswer").asText());
+        assertEquals(aliases, answer.path("answerPolicy").path("acceptedAliases"));
+        String publicView = com.chengyinhub.business.util.AdvancedGamePublicProjection.safeConfigJson(raw);
+        assertFalse(publicView.contains("answerPolicy"));
+        for (int i = 0; i < 32; i++) {
+            assertFalse(publicView.contains("alias" + i));
+            assertFalse(answer.path("templatePresentation").toString().contains("alias" + i));
+        }
+        assertEquals(raw, fixture.template.getAdvancedConfigJson());
+    }
+
     @Test void freezesExplicitAnswerAliasesBesideTheAnswerAndOmitsTheKeyWhenNotConfigured() throws Exception {
         Fixture withPolicy = new Fixture();
         withPolicy.template.setFeedbackText("暗号正确");

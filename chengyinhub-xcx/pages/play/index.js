@@ -79,6 +79,7 @@ const { normalizeAtmosphere, atmosphereClass, PRESETS: CHAPTER_ATMOSPHERES } = r
 const CHAPTER_ATMOSPHERE_VALUES = CHAPTER_ATMOSPHERES.map((item) => item.value);
 const {
   normalizeRouteState,
+  pauseNotice,
   applyRouteStateToNodes,
   resolveNextRouteNode,
   orderedJourneyNodes,
@@ -957,7 +958,8 @@ Page({
     if (routeState.routeMode !== 'LINEAR' || !this._hasGenericProofFlow()) return nodes;
     return nodes.map(node => {
       const state = routeState.nodeStates[String(node.nodeId)];
-      return state ? Object.assign({}, node, { done: state === 'COMPLETED', playable: state === 'PLAYABLE', locked: state === 'DISCOVERED_LOCKED', routeNodeState: state }) : node;
+      const originalLock = state !== 'COMPLETED' && node.locked === true && (!node.routeNodeState || node.routeNodeState === state);
+      return state ? Object.assign({}, node, { done: state === 'COMPLETED', playable: state === 'PLAYABLE' && !originalLock, locked: state === 'DISCOVERED_LOCKED' || originalLock, routeNodeState: state }) : node;
     });
   },
   _applyRouteState(routeStateInput, callback) {
@@ -2662,7 +2664,7 @@ Page({
   /** 节点级前置解锁:locked 只提示不放行。服务端四个完成入口另有硬闸,这里是 UX 层(文案与服务端一致:说「先完成什么」,不说「不可用」)。 */
   _lockedTip(node) {
     if (node && node.paused) {
-      cyToast('本站已暂停，请改去其他节点');
+      cyToast(pauseNotice(node.pause, node.lockReason));
       return true;
     }
     if (!node || !node.locked) return false;
@@ -4693,7 +4695,9 @@ Page({
       merchantId: n.merchantId || 0,                         // S1 卡堆行「合作商户」标注(后端未下发时恒为0,标注不显示)
       // 节点级前置解锁(服务端 /nodes 下发;硬闸在服务端,这里只做置灰与提示)
       locked: !!n.locked,
-      paused: String(n.runtimeStatus || n.stationStatus || '').toUpperCase() === 'PAUSED',
+      lockReason: typeof n.lockReason === 'string' ? n.lockReason : '',
+      pause: isRecord(n.pause) ? n.pause : null,
+      paused: n.paused === true || String(n.runtimeStatus || n.stationStatus || '').toUpperCase() === 'PAUSED',
       runtimeStatus: String(n.runtimeStatus || '').toUpperCase(),
       unlockAfterNodeId: n.unlockAfterNodeId != null ? Number(n.unlockAfterNodeId) : 0,
       hasTemplate: isGame,

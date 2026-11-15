@@ -157,6 +157,29 @@ class AnswerPolicyTest {
         assertEquals("暗号", frozen.path("acceptedAliases").path(0).asText());
     }
 
+    @Test
+    void thirtyTwoDistinctAliasesRoundTripAndThirtyThreeStillFallBack() {
+        assertEquals(32, AnswerPolicy.MAX_ALIASES);
+        ObjectNode authored = manyAliases(32);
+        ObjectNode before = authored.deepCopy();
+        AnswerPolicy.requireValid(authored);
+        AnswerPolicy parsed = AnswerPolicy.of(authored);
+        assertEquals(authored.path("acceptedAliases"), parsed.toJson().path("acceptedAliases"));
+        for (var alias : authored.path("acceptedAliases")) {
+            assertTrue(parsed.matches("CANON", alias.asText()));
+            assertTrue(parsed.matchesAny(Collections.singletonList("CANON"), alias.asText()));
+        }
+        assertTrue(parsed.matches("CANON", "CANON"));
+        assertFalse(parsed.matches("CANON", "not-an-alias"));
+        assertFalse(parsed.matches("", authored.path("acceptedAliases").get(31).asText()));
+        assertEquals(before, authored);
+        ObjectNode over = manyAliases(33);
+        assertThrows(IllegalArgumentException.class, () -> AnswerPolicy.requireValid(over));
+        assertTrue(AnswerPolicy.of(over).isEmpty());
+        assertTrue(AnswerPolicy.of(over).matches("CANON", "CANON"));
+        assertFalse(AnswerPolicy.of(over).matches("CANON", over.path("acceptedAliases").get(32).asText()));
+    }
+
     private static AnswerPolicy policy(String json) {
         try {
             return AnswerPolicy.of(JSON.readTree(json));

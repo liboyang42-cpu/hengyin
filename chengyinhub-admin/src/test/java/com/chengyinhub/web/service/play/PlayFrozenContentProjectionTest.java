@@ -54,6 +54,44 @@ class PlayFrozenContentProjectionTest {
         assertNull(view.get("question"), "缺题面不编造答案");
     }
 
+    @Test void ordinaryRouteNodePauseRoundTripPreservesCompletedAndSelfPlayFacts() {
+        PlayNodeQueryApplication query = new PlayNodeQueryApplication();
+        CmsTopicNode node = node();
+        var route = new com.chengyinhub.business.domain.route.TopicRouteState();
+        route.setSessionId(91L); route.setVersion(6); route.setStatus("ACTIVE");
+        Map<String, Object> pause = new java.util.LinkedHashMap<>();
+        pause.put("reasonCode", "ONSITE"); pause.put("reason", "现场暂时关闭");
+        pause.put("resumeEta", "2026-08-23 16:00:00");
+        for (int phase = 0; phase < 3; phase++) {
+            route.getNodePauses().clear(); route.getLockReasons().clear();
+            if (phase == 1) { route.getNodePauses().put(11L, pause); route.getLockReasons().put(11L, "现场暂时关闭，预计恢复：2026-08-23 16:00:00"); }
+            for (boolean done : new boolean[]{false, true}) {
+                for (boolean selfPlay : new boolean[]{false, true}) {
+                    PlayNodeQueryApplication.NodeProjection read = new PlayNodeQueryApplication.NodeProjection(
+                            7L, selfPlay, 21L, selfPlay ? 0L : 31L, null, true, false, null,
+                            List.of(node), done ? List.of(11L) : List.of(), Map.of(), Map.of(),
+                            done ? Set.of(11L) : Set.of(), 0, Set.of(), new ArrayList<>(), null, 1, null, false, route);
+                    Map<String, Object> view = new java.util.LinkedHashMap<>();
+                    view.put("locked", false);
+                    query.finishNode(read, new PlayNodeQueryApplication.NodeTask(node, view, 0, null));
+                    boolean paused = phase == 1 && !done && !selfPlay;
+                    assertEquals(paused, Boolean.TRUE.equals(view.get("paused")));
+                    assertEquals(paused, view.get("locked"));
+                    assertEquals(done, view.get("done"));
+                    if (paused) {
+                        assertEquals("现场暂时关闭，预计恢复：2026-08-23 16:00:00", view.get("lockReason"));
+                        assertEquals(pause, view.get("pause"));
+                    } else {
+                        assertFalse(view.containsKey("pause"));
+                        assertFalse(view.containsKey("lockReason"));
+                    }
+                    assertEquals(91L, route.getSessionId()); assertEquals(6, route.getVersion());
+                    assertEquals(1, read.nodes.size());
+                }
+            }
+        }
+    }
+
     private CmsTopicNode node() {
         CmsTopicNode node = new CmsTopicNode(); node.setId(11L); node.setTopicId(21L);
         node.setName("作者新名字"); node.setTemplateId(null); node.setStatus(1L);

@@ -46,6 +46,11 @@ public interface IGameSessionRuntimeService {
     default Long routeCurrentChapterId(Long activityId) { return null; }
     /** C-04:带队路线局进行中、节点所在章节晚于已放行章节时返回「等队长放行」;否则 null。 */
     default String routeChapterGateError(Long activityId, Long nodeId) { return null; }
+
+    /** Server-only arrangements after the caller's existing route scope check; no initialization, locks or writes. */
+    default Map<Long, Map<String, Object>> queryRouteStationPauses(Long topicId, Long activityId) {
+        return java.util.Collections.emptyMap();
+    }
     void assertRoutePlayable(Long activityId, Long nodeId);
     void assertRouteReception(Long activityId, Long nodeId);
     /** F-13:带队路线局在前面各闸都放行、只缺上一站商家接待时返回拒绝原因,不抛异常;否则 null(交原锁定路径判)。 */

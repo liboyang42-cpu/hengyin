@@ -83,6 +83,33 @@ class AdvancedActionJudgementTest {
      * BE-08:高级 {@code qa.TYPE} 的别名只来自模板 {@code advancedConfigJson} 根层政策。
      * 没配政策时逐字保留原比较器(trim + 大小写,不折全角、不删中间空白)。
      */
+    @Test void typeQaAcceptsAllThirtyTwoAliasesWithoutWeakeningWrongOrPickInputs() {
+        ObjectNode config = json.createObjectNode();
+        config.putObject("qa").put("enabled", true).put("mode", "TYPE").put("answerText", "CANON");
+        var aliases = config.putObject("answerPolicy").put("version", 1).putArray("acceptedAliases");
+        for (int i = 0; i < 32; i++) aliases.add("alias" + i);
+        ObjectNode before = config.deepCopy();
+        for (int i = 0; i < 32; i++) {
+            assertTrue(judge().evaluate(Action.SUBMIT_QA, new Input(config, json.createObjectNode(),
+                    Map.of("input", "alias" + i), null, 7L)).state().path("qa").path("passed").asBoolean());
+        }
+        assertFalse(judge().evaluate(Action.SUBMIT_QA, new Input(config, json.createObjectNode(),
+                Map.of("input", "not-an-alias"), null, 7L)).state().path("qa").path("passed").asBoolean());
+        assertEquals(before, config);
+        ObjectNode over = config.deepCopy();
+        ((com.fasterxml.jackson.databind.node.ArrayNode) over.path("answerPolicy").path("acceptedAliases")).add("alias32");
+        assertFalse(judge().evaluate(Action.SUBMIT_QA, new Input(over, json.createObjectNode(),
+                Map.of("input", "alias32"), null, 7L)).state().path("qa").path("passed").asBoolean());
+        ObjectNode pick = config.deepCopy();
+        ObjectNode qa = (ObjectNode) pick.path("qa");
+        qa.put("mode", "PICK");
+        qa.putArray("options").addObject().put("id", "real-id").put("label", "alias31").put("correct", true);
+        assertThrows(IllegalArgumentException.class, () -> judge().evaluate(Action.SUBMIT_QA,
+                new Input(pick, json.createObjectNode(), Map.of("optionId", "alias31"), null, 7L)));
+        assertTrue(judge().evaluate(Action.SUBMIT_QA, new Input(pick, json.createObjectNode(),
+                Map.of("optionId", "real-id"), null, 7L)).state().path("qa").path("passed").asBoolean());
+    }
+
     @Test void typeQaUsesTheRootAliasPolicyOnlyWhenOneIsConfigured() throws Exception {
         JsonNode withPolicy=json.readTree("{\"schemaVersion\":1,\"qa\":{\"enabled\":true,\"mode\":\"TYPE\",\"answerText\":\"A、B\"},"
                 +"\"answerPolicy\":{\"version\":1,\"normalizationPolicy\":\"LEGACY_V1\",\"acceptedAliases\":[\"甲\"]}}");

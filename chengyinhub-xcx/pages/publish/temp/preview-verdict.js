@@ -49,7 +49,7 @@ function judge(advanced, kit, action, detail) {
     const aliases = policy && policy.version === 1
       && (policy.normalizationPolicy == null || policy.normalizationPolicy === 'LEGACY_V1')
       && Object.keys(policy).every(key => ['version', 'normalizationPolicy', 'acceptedAliases'].includes(key))
-      && Array.isArray(policy.acceptedAliases) && policy.acceptedAliases.length <= 20
+      && Array.isArray(policy.acceptedAliases) && policy.acceptedAliases.length <= 32
       && policy.acceptedAliases.every(alias => typeof alias === 'string' && trim(alias) && trim(alias).length <= 200)
       && new Set(policy.acceptedAliases.map(aliasKey)).size === policy.acceptedAliases.length
       && /[^\u0009-\u000d\u001c-\u0020\u1680\u2000-\u2006\u2008-\u200a\u2028-\u2029\u205f\u3000]/.test(trim(String(qa.answerText || '')))

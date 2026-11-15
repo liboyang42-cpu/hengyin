@@ -88,3 +88,25 @@ test('pending recovery reads only the original topic and preserves later local c
     onSuccess(){throw new Error('later local changes must not be replaced');},onFail(result){failure=result;}});
   assert.deepEqual(calls,[501]);assert.equal(failure.localChanges,true);assert.equal(failure.unknown,false);
 });
+
+
+test('32 distinct aliases use the real QA builder;33 and PICK display labels stay rejected',()=>{
+  const builder=require('../../pages/publish/utils/publish/advanced-game-preview.js');
+  const aliases=Array.from({length:32},(_,i)=>'alias'+i);
+  const advanced={qa:{enabled:true,mode:'TYPE',title:'Synthetic',answerText:'CANON'},
+    answerPolicy:{version:1,normalizationPolicy:'LEGACY_V1',acceptedAliases:aliases}};
+  const before=structuredClone(advanced),kit=builder.buildPreviewKit(advanced);
+  assert.equal(kit.type,'qa');
+  for(const input of aliases) assert.equal(pv.judge(advanced,kit,'submit',{mode:'type',input}),'win');
+  assert.equal(pv.judge(advanced,kit,'submit',{mode:'type',input:'CANON'}),'win');
+  assert.equal(pv.judge(advanced,kit,'submit',{mode:'type',input:'wrong'}),'fail');
+  const over={...advanced,answerPolicy:{...advanced.answerPolicy,acceptedAliases:[...aliases,'alias32']}};
+  assert.equal(pv.judge(over,kit,'submit',{mode:'type',input:'alias32'}),'fail');
+  assert.equal(pv.judge(over,kit,'submit',{mode:'type',input:'CANON'}),'win');
+  const pick={...advanced,qa:{enabled:true,mode:'PICK',title:'Synthetic',options:[
+    {id:'real-id',label:'alias31',correct:true},{id:'wrong-id',label:'Other',correct:false}]}};
+  const pickKit=builder.buildPreviewKit(pick);
+  assert.equal(pv.judge(pick,pickKit,'submit',{mode:'pick',optionId:'alias31'}),'fail');
+  assert.equal(pv.judge(pick,pickKit,'submit',{mode:'pick',optionId:'real-id'}),'win');
+  assert.deepEqual(advanced,before);
+});
