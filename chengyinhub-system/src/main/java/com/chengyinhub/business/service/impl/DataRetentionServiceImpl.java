@@ -49,6 +49,9 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
     private RoamLocationRetentionService roamLocationRetentionService;
     @Autowired
     private RoamOrphanLocationRetentionService roamOrphanLocationRetentionService;
+    /** P8 location trust trail; optional so the cleanup still runs before that migration is applied. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.LocationTrustMapper locationTrustMapper;
 
     @Override
     public int cleanRoamLocations(Date cutoff, int batchSize, int maxBatches) {
@@ -68,8 +71,25 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
                 (c,l) -> roamOrphanLocationRetentionService.clearShops(c,l));
         total += loopDelete("roam_poi_reward_log_coordinates", cutoff, batchSize, maxBatches,
                 (c,l) -> roamLocationRetentionService.clearRewardLocations(c,l));
+        total += cleanLocationTrust(cutoff, batchSize, maxBatches);
         return total + loopDelete("roam_share_snapshot_unbound", cutoff, batchSize, maxBatches,
                 (c, l) -> roamShareSnapshotMapper.deleteExpiredUnbound(c, l));
+    }
+
+    /** P8: raw fixes on the trust trail and photo coordinates on claim evidence follow the same 30-day window. */
+    private int cleanLocationTrust(Date cutoff, int batchSize, int maxBatches) {
+        if (locationTrustMapper == null) return 0;
+        int total = 0;
+        try {
+            total += loopDelete("location_trust_fix", cutoff, batchSize, maxBatches,
+                    (c, l) -> locationTrustMapper.deleteFixesBefore(c, l));
+            total += loopDelete("location_claim_evidence_photo_coordinates", cutoff, batchSize, maxBatches,
+                    (c, l) -> locationTrustMapper.clearEvidencePhotoCoordinatesBefore(c, l));
+        } catch (RuntimeException e) {
+            // Table missing before the migration is applied must not stop the roam cleanup above from counting.
+            log.error("定位可信留痕清理失败,下次重试 reason={}", e.getClass().getSimpleName());
+        }
+        return total;
     }
 
     @Override
