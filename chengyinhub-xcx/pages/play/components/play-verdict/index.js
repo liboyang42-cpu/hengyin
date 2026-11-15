@@ -44,6 +44,8 @@ Component({
     images: { type: Array, value: [] },
     // 独立弹出(编辑页预览、玩家端结果反馈)时给一个「继续」收起;挂在玩法台面里时由台面自己管
     closable: { type: Boolean, value: false },
+    fullColor: { type: Boolean, value: false },
+    ctaText: { type: String, value: '继续' },
   },
   data: {
     rising: false,

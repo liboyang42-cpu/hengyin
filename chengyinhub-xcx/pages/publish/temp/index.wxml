@@ -44,7 +44,7 @@
   <!-- ============ 顶部导航 ============ -->
   <!-- 试玩玩法屏时整条导航让位:玩法屏自己带「退出」,再画一个返回箭头会和它叠在一起,
        而且那条白底会把深色的玩法屏框成一张卡。 -->
-  <cy-nav-bar wx:if="{{ !(previewVisible && pvKit && pvStepKey === 'challenge') }}" title="{{ previewVisible ? '玩家视角预览' : '编辑玩法模板' }}" title-align="left" custom-back bind:back="goBack" />
+  <cy-nav-bar wx:if="{{ !(previewVisible && (pvStepKey === 'complete' || (pvKit && pvStepKey === 'challenge'))) }}" title="{{ previewVisible ? '玩家视角预览' : '编辑玩法模板' }}" title-align="left" custom-back bind:back="goBack" />
   <view class="cg-nav-spacer" style="height: {{ statusBarHeight + navBarHeight }}px;"></view>
 
   <cy-empty wx:if="{{creatorLoginRequired}}" title="登录后编辑玩法模板" cta="去登录" bind:cta="onCreatorLogin" />
@@ -1522,18 +1522,20 @@
          玩完由判定屏整屏涌上来,作者配的成功 / 失败反馈就写在这一屏。 -->
     <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind }}"
                      text="{{ pvVerdict.text }}" images="{{ pvVerdict.images }}" closable="{{ true }}" bind:close="closePvVerdict" />
+    <cy-play-verdict wx:if="{{pvStepKey === 'complete'}}" show="{{true}}" kind="win" full-color="{{true}}" closable="{{true}}"
+                     text="任务完成！" cta-text="{{pvSteps[pvStep + 1] === 'reward' ? '领取奖励' : '完成'}}" bind:close="completePreview" />
     <!-- P-40(2026-10-27):玩家视角预览只留左右滑动切换 + 左上角返回,圆形箭头、「开始任务」和底部保存 / 发布栏都已删掉;
          翻页点只做位置指示。 -->
     <!-- 2026-09-18 UI-22:翻页条 + 步骤标签固定在滚动区之上(不再 sticky 在滚动流里),
          步骤标签紧贴翻页点,滚到哪一步都和下面的内容对得上,也不会被滚过去的卡片压住。 -->
-    <view class="cg-pv-head" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}">
+    <view class="cg-pv-head" wx:if="{{ pvStepKey !== 'complete' && !(pvStepKey === 'challenge' && pvKit) }}">
       <!-- 2026-10-28 业主「整页太挤」:顶部改成分段进度条 + 一行「到达节点 1 / 5」 -->
       <view class="cg-pv-pager">
         <view class="cg-pv-seg {{ pvStep >= idx ? 'on' : '' }}" wx:for="{{ pvSteps }}" wx:key="*this" wx:for-index="idx"></view>
       </view>
       <view class="cg-pv-step">{{ pvStepLabel }} {{ pvStep + 1 }} / {{ pvSteps.length }}</view>
     </view>
-    <scroll-view scroll-y class="cg-pv-scroll" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}" bindtouchstart="onPvTouchStart" bindtouchend="onPvTouchEnd">
+    <scroll-view scroll-y class="cg-pv-scroll" wx:if="{{ pvStepKey !== 'complete' && !(pvStepKey === 'challenge' && pvKit) }}" bindtouchstart="onPvTouchStart" bindtouchend="onPvTouchEnd">
       <view class="cg-pv-body">
 
         <!-- 1. 到达点位 -->
@@ -1599,14 +1601,6 @@
           <cy-btn variant="primary" style="margin-top:var(--cy-space-4)" bindtap="pvSubmitChallenge">{{ pvSubmitLabel }}</cy-btn>
         </view>
 
-        <!-- 4. 任务完成 -->
-        <view wx:if="{{ pvStepKey === 'complete' }}" class="cg-pv-panel cg-pv-complete">
-          <view class="cg-pv-check"><cy-icon name="check" size="96" /></view>
-          <view class="cg-pv-complete-t1">任务完成！</view>
-          <view class="cg-pv-complete-t2">你解开了这个节点的秘密</view>
-          <cy-btn variant="primary" class="cy-btn-inline" style="margin-top:var(--cy-space-4)" bindtap="pvNext">{{ rwAny ? '领取奖励' : '完成' }}</cy-btn>
-        </view>
-
         <!-- 5. 获得奖励 -->
         <view class="cg-pv-panel" wx:if="{{ pvStepKey === 'reward' }}">
           <view class="cg-pv-reward-tit">获得奖励</view>
@@ -1631,7 +1625,7 @@
       <view class="cg-scroll-pad"></view>
     </scroll-view>
     <!-- 2026-10-28 业主:底部要有左右按钮(左右滑动照旧能翻) -->
-    <view class="cg-pv-nav" wx:if="{{ !(pvStepKey === 'challenge' && pvKit) }}">
+    <view class="cg-pv-nav" wx:if="{{ pvStepKey !== 'complete' && !(pvStepKey === 'challenge' && pvKit) }}">
       <view class="cg-pv-navbtn {{ pvStep <= 0 ? 'is-off' : '' }}" bindtap="pvPrev" aria-role="button" aria-label="上一步" aria-disabled="{{ pvStep <= 0 }}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
       <text class="cg-pv-navn">{{ pvStep + 1 }} / {{ pvSteps.length }}</text>
       <view class="cg-pv-navbtn {{ pvStep >= pvSteps.length - 1 ? 'is-off' : '' }}" bindtap="pvNext" aria-role="button" aria-label="下一步" aria-disabled="{{ pvStep >= pvSteps.length - 1 }}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="chevron-right" size="40" /></view>

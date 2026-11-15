@@ -2,19 +2,21 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const nodeVm = require('node:vm')
 const { flattenComponentToPage } = require('../helpers/component-as-page.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const HISTORY = path.join(ROOT, 'subpackageMember/components/cy/scene-member-order-history/index.js')
 const DETAIL = path.join(ROOT, 'subpackageMember/components/cy/scene-member-order-detail/index.js')
 
-function historyVm() {
+function historyVm(appOverrides = {}) {
   const sandbox = { requests: [], modals: [], toasts: [] }
   global.getApp = () => ({
     getPageSize: () => 10,
     getUserID: () => 7, // Explicit authenticated order reader fixture.
     getRequestErrorMessage: (res, fallback) => (res && res.msg) || fallback,
     sendRequest: (options) => sandbox.requests.push(options),
+    ...appOverrides,
   })
   global.Component = (config) => { sandbox.def = flattenComponentToPage(config) }
   global.wx = {
@@ -55,6 +57,63 @@ function detailVm() {
   return { vm, sandbox }
 }
 
+// 只投影这两处调用的属性；重试走注册的真实组件方法和 WXML 事件绑定。
+function orderError(vm) {
+  const wxml = fs.readFileSync(HISTORY.replace(/\.js$/, '.wxml'), 'utf8')
+  const tags = wxml.match(/<cy-error\b(?:[^>"']|"[^"]*"|'[^']*')*\/>/g)
+  assert.equal(tags.length, 2)
+  const value = (tag, name, fallback) => {
+    const attr = tag.match(new RegExp('\\s' + name + '(?:="([^"]*)")?(?=\\s|/?>)'))
+    if (!attr) return fallback
+    if (attr[1] === undefined) return true
+    const expression = attr[1].match(/^\{\{([\s\S]*)\}\}$/)
+    return expression ? nodeVm.runInNewContext(expression[1], vm.data) : attr[1]
+  }
+  const tag = tags.find(tag => value(tag, 'wx:(?:if|elif)', false))
+  if (!tag) return null
+  const registration = JSON.parse(fs.readFileSync(HISTORY.replace(/\.js$/, '.json'), 'utf8'))
+  const component = path.join(ROOT, registration.usingComponents['cy-error'] + '.js')
+  let def
+  const previous = global.Component
+  global.Component = config => { def = config }
+  try { delete require.cache[require.resolve(component)]; require(component) } finally { global.Component = previous }
+  const props = {}
+  for (const [name, spec] of Object.entries(def.properties)) {
+    props[name] = value(tag, name.replace(/[A-Z]/g, letter => '-' + letter.toLowerCase()), spec.value)
+  }
+  const template = fs.readFileSync(component.replace(/\.js$/, '.wxml'), 'utf8')
+  assert.match(template, /wx:if="\{\{loadFailure\}\}"[\s\S]*wx:elif="\{\{autoBack\}\}"[\s\S]*wx:else/)
+  assert.equal(props.loadFailure, false, 'loadFailure 分支只有空白，不能恢复订单读取')
+  assert.equal(props.autoBack, false, '留在当前订单列表重试，不自动离开')
+  assert.ok(props.retry)
+  const tap = template.match(/class="cy-error-retry"[^>]*bindtap="([^"]+)"/)[1]
+  return { props, tap() { def.methods[tap].call({ triggerEvent(event) { vm[value(tag, 'bind:' + event)]() } }) } }
+}
+
+test('订单首屏超时显示可见重试，真实 retry 事件只重读列表并恢复成功数据', () => {
+  const { vm, sandbox } = historyVm()
+  vm.getList()
+  sandbox.requests[0].fail({ msg: '请求超时' })
+  sandbox.requests[0].complete()
+  assert.equal(vm.data.loading, false)
+  assert.equal(vm.data.list.length, 0)
+  const error = orderError(vm)
+  assert.equal(error.props.title, '订单加载失败')
+  assert.equal(error.props.sub, '已支付订单不受影响')
+  assert.equal(error.props.retry, '重试')
+  vm.data.page_no = 3
+  error.tap()
+  assert.equal(sandbox.requests.length, 2)
+  assert.ok(sandbox.requests.every(request => request.url === '/api/registration/list'))
+  assert.equal(sandbox.requests[1].data.pageNum, 1)
+  sandbox.requests[1].success({ code: 200, data: { rows: [{ id: 10, registrationStatus: 1 }] } })
+  sandbox.requests[1].complete()
+  assert.deepEqual(vm.data.list.map(row => row.id), [10])
+  assert.equal(vm.data.errorMsg, '')
+  assert.equal(vm.data.hasMore, false)
+  assert.equal(orderError(vm), null)
+})
+
 test('订单列表 200 畸形 rows 进入错误态，保留已确认列表且不抛异常', () => {
   for (const rows of [null, {}, 'not-array', true]) {
     const { vm, sandbox } = historyVm()
@@ -79,11 +138,50 @@ test('订单列表刷新失败使用非阻断错误，成功重试后再替换�
   assert.deepEqual(vm.data.list.map((item) => item.id), [9])
   assert.equal(vm.data.errorMsg, '刷新失败')
 
-  vm.retryList()
+  const error = orderError(vm)
+  assert.equal(error.props.title, '订单刷新失败')
+  error.tap()
   sandbox.requests[1].success({ code: 200, data: { rows: [{ id: 10, registrationStatus: 1 }] } })
   sandbox.requests[1].complete()
   assert.deepEqual(vm.data.list.map((item) => item.id), [10])
   assert.equal(vm.data.errorMsg, '')
+})
+
+test('订单 401/403 保留原登录及拒权恢复，不把权限失败画成空订单', async () => {
+  for (const code of [401, 403]) {
+    let logins = 0
+    const { vm, sandbox } = historyVm({ reLogin() { logins++; return Promise.resolve({ ok: false }) } })
+    vm.getList()
+    sandbox.requests[0].success({ code })
+    sandbox.requests[0].complete()
+    const error = orderError(vm)
+    assert.equal(error.props.title, code === 401 ? '登录后查看订单' : '当前账号无法查看订单')
+    assert.equal(error.props.retry, code === 401 ? '登录' : '重试')
+    assert.equal(error.props.sub, vm.data.errorMsg)
+    assert.equal(vm.data.orderAuthRequired, code === 401)
+    assert.equal(vm.data.orderAccessDenied, code === 403)
+    error.tap()
+    await Promise.resolve()
+    assert.equal(logins, code === 401 ? 1 : 0)
+    assert.equal(sandbox.requests.length, code === 401 ? 1 : 2, '401 走登录分支，403 仍由原读取接口裁决')
+  }
+})
+
+test('订单加载中和成功空列表不显示失败重试；筛选空态条件不变', () => {
+  const { vm, sandbox } = historyVm()
+  vm.getList()
+  assert.equal(vm.data.loading, true)
+  assert.equal(orderError(vm), null)
+  sandbox.requests[0].success({ code: 200, data: { rows: [] } })
+  sandbox.requests[0].complete()
+  assert.equal(vm.data.loading, false)
+  assert.equal(vm.data.hasOrders, false)
+  assert.equal(vm.data.errorMsg, '')
+  assert.equal(orderError(vm), null)
+  const wxml = fs.readFileSync(HISTORY.replace(/\.js$/, '.wxml'), 'utf8')
+  assert.match(wxml, /cy-skeleton wx:if="\{\{loading && list.length==0\}\}"/)
+  assert.match(wxml, /cy-empty wx:if="\{\{!loading && !errorMsg && list.length==0 && !hasOrders\}\}"/)
+  assert.match(wxml, /cy-empty wx:if="\{\{!loading && !errorMsg && list.length==0 && hasOrders\}\}"/)
 })
 
 test('列表取消/退款从确认弹窗到请求全链路 single-flight', () => {

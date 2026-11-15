@@ -288,3 +288,32 @@ test('PC-OWNER 正常成功末步关闭、失败ack重试保留canonical别名�
   f.submit('待发送'); assert.equal(p.data.pvVerdict.kind, 'win');
   assert.equal(JSON.stringify(p.data.advanced), original); assert.equal(f.requests.length, 0);
 });
+
+
+test('全屏成功完成态：末步完成退出本地预览，有奖励只进入奖励页，重复及退役点击无效', () => {
+  const { p, requests } = previewOwnerPage();
+  const original = JSON.stringify(p.data.advanced);
+  p.setData({ previewVisible: true, pvSteps: ['complete'], pvStep: 0, pvStepKey: 'complete', pvKit: null, rwAny: false });
+  p.completePreview();
+  assert.equal(p.data.previewVisible, false, '末步完成必须退出，不能停在完成屏');
+  p.completePreview();
+  assert.equal(p.data.previewVisible, false);
+  p.setData({ previewVisible: true, pvSteps: ['complete', 'reward'], pvStep: 0, pvStepKey: 'complete', rwAny: true });
+  for (const flag of ['_hidden', '_disposed', '_unloaded']) {
+    p[flag] = true; p.completePreview(); assert.equal(p.data.pvStep, 0); p[flag] = false;
+  }
+  p.completePreview();
+  assert.equal(p.data.pvStepKey, 'reward');
+  assert.equal(p.data.previewVisible, true, '奖励仍使用原有预览页');
+  p.completePreview();
+  assert.equal(p.data.pvStep, 1, '旧完成事件不能跳过奖励页');
+  assert.equal(JSON.stringify(p.data.advanced), original);
+  assert.equal(requests.length, 0, '预览不发正式游玩或领奖请求');
+  p.setData({ rwText: true, rwCoupon: false, rwMedal: false, rwAny: true, 'formData.feedbackText': '', storyBeats: [] });
+  const steps = p._buildPvSteps();
+  assert.equal(steps.at(-1), 'complete', '空奖励不生成奖励步骤');
+  p.setData({ previewVisible: true, pvSteps: steps, pvStep: steps.length - 1, pvStepKey: 'complete' });
+  p.completePreview();
+  assert.equal(p.data.previewVisible, false, '奖励开关开启但没有奖励步骤时也必须能完成退出');
+  assert.equal(requests.length, 0);
+});

@@ -1,6 +1,6 @@
 <!-- 判定屏只有两张:猜中了走 win,其余走 fail。凡是「猜中了」都走这一个,
      每个玩法自己发明一套的话,玩家会以为自己在玩不同的产品。 -->
-<view class="pv pv--{{kind}} {{neutral ? 'pv--neutral' : ''}} {{rising ? 'pv--on' : ''}} {{reducedMotion ? 'pv--reduced' : ''}} {{closable ? 'pv--closable' : ''}}" wx:if="{{show}}"
+<view class="pv pv--{{kind}} {{neutral ? 'pv--neutral' : ''}} {{rising ? 'pv--on' : ''}} {{reducedMotion ? 'pv--reduced' : ''}} {{closable ? 'pv--closable' : ''}} {{fullColor ? 'pv--full-color' : ''}}" wx:if="{{show}}"
       aria-role="alert" aria-label="{{kind === 'win' ? ('通过。' + (text || '')) : word}}">
   <view class="pv__fill">
     <view class="pv__wave pv__wave--a"></view>
@@ -26,6 +26,6 @@
     <view class="pv__imgs" wx:if="{{images.length}}">
       <image class="pv__img" wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="aspectFill" aria-label="结果配图 {{index + 1}}" />
     </view>
-    <view class="pv__cta" wx:if="{{closable}}" bindtap="onClose" aria-role="button" aria-label="继续" hover-class="pv__cta--press" hover-stay-time="80">继续</view>
+    <view class="pv__cta" wx:if="{{closable}}" bindtap="onClose" aria-role="button" aria-label="{{ctaText}}" hover-class="pv__cta--press" hover-stay-time="80">{{ctaText}}</view>
   </view>
 </view>

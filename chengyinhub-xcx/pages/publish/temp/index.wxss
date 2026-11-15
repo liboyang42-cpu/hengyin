@@ -694,17 +694,6 @@ page {
   border-radius: var(--cy-radius-md); padding: var(--cy-space-3) var(--cy-space-3-5); font-size: var(--cy-font-body); color: #ffe1b0; /* ds-ok */
 }
 
-/* 完成 */
-.cg-pv-complete { text-align: center; padding-top: var(--cy-space-6); }
-.cg-pv-check {
-  width: 192rpx; height: 192rpx; border-radius: 50%;
-  background: #16a36a; color: #fff; font-size: 96rpx; /* ds-ok: 完成态大对勾装饰图标,远超字号量表是刻意的视觉焦点,非文字 */
-  display: flex; align-items: center; justify-content: center; margin: 0 auto;
-  box-shadow: 0 20rpx 60rpx rgba(22,163,106,.45);
-}
-.cg-pv-complete-t1 { font-size: var(--cy-font-page-title); font-weight: 800; color: #fff; margin-top: var(--cy-space-5); } /* ds-ok: 预览态深色完成页恒白字 */
-.cg-pv-complete-t2 { font-size: var(--cy-font-body); color: #9fb3dd; margin-top: 16rpx; }
-
 /* 奖励 */
 .cg-pv-reward-tit { text-align: center; font-size: var(--cy-font-display); font-weight: 800; color: #fff; margin: var(--cy-space-1-5) 0 var(--cy-legacy-36); } /* ds-ok */
 .cg-pv-coupon { --cy-comp-card-bg: var(--cy-color-bg-surface); --cy-comp-card-radius: var(--cy-radius-lg); --cy-comp-card-pad: 0; overflow: hidden; margin-bottom: var(--cy-space-3); }
@@ -1011,7 +1000,6 @@ page {
 }
 
 .theme-topic-editor .cg-pv-dot.on,
-.theme-topic-editor .cg-pv-check,
 .theme-topic-editor .cg-pv-coupon-l,
 .theme-topic-editor .cg-pv-medal-ico,
 .theme-topic-editor .cg-pv-badge {
@@ -1027,7 +1015,6 @@ page {
 .theme-topic-editor .cg-pv-beat-tag,
 .theme-topic-editor .cg-pv-meta-k,
 .theme-topic-editor .cg-pv-none,
-.theme-topic-editor .cg-pv-complete-t2,
 .theme-topic-editor .cg-pv-coupon-sub,
 .theme-topic-editor .cg-pv-medal-sub,
 .theme-topic-editor .cg-pv-usehint {
@@ -1035,7 +1022,6 @@ page {
 }
 
 .theme-topic-editor .cg-pv-cover-tit,
-.theme-topic-editor .cg-pv-complete-t1,
 .theme-topic-editor .cg-pv-reward-tit,
 .theme-topic-editor .cg-pv-desc,
 .theme-topic-editor .cg-pv-meta-v,

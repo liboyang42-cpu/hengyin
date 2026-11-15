@@ -8,7 +8,7 @@
 
   <view class="moh-body" style="{{pmList === 1 ? '--pm-l:1;' : (pmList === 2 ? '--pm-l-d:.32s;--pm-l-s:1;' : '')}}">
     <cy-skeleton wx:if="{{loading && list.length==0}}" type="list" count="3" />
-    <cy-error load-failure="{{!orderAuthRequired && !orderAccessDenied}}" class="cy-fade-in"
+    <cy-error class="cy-fade-in"
       wx:elif="{{errorMsg && list.length==0}}"
       fill="{{true}}"
       size="lg"
@@ -24,7 +24,7 @@
     <cy-empty wx:if="{{!loading && !errorMsg && list.length==0 && hasOrders}}" fill class="cy-fill-state" size="lg"
               kind="empty" title="当前筛选暂无订单" />
 
-    <cy-error load-failure class="cy-fade-in" wx:if="{{errorMsg && list.length>0}}"
+    <cy-error class="cy-fade-in" wx:if="{{errorMsg && list.length>0}}"
       title="订单刷新失败" retry="重试" bind:retry="retryList" />
 
     <!-- V3-22(2026-11-09 业主「我的订单卡片…间距太空了 而且都没有对齐」;旧规则「不用写几张票 也不用出示核销码 应该是主题的信息

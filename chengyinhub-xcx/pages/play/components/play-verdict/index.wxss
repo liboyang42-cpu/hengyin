@@ -140,3 +140,11 @@
 .pv--closable .pv__text { color: var(--cy-color-text-primary); }
 .pv--closable .pv__img { background: var(--cy-color-bg-surface); }
 .pv--closable .pv__cta { background: var(--cy-color-bg-elevated); color: var(--cy-color-text-primary); }
+
+/* 模板任务完成复用原有绿色液面；其他独立结果反馈保留原配色。 */
+.pv--closable.pv--full-color.pv--win .pv__fill { background: var(--cy-color-status-success); }
+.pv--closable.pv--full-color.pv--win .pv__wave--a { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-status-success) 30rpx, transparent 31rpx); }
+.pv--closable.pv--full-color.pv--win .pv__wave--b { background-image: radial-gradient(circle at 50% 100%, var(--cy-color-status-success) 22rpx, transparent 23rpx); }
+.pv--closable.pv--full-color.pv--win:not(.pv--reduced) .pv__bubble { display: block; }
+.pv--closable.pv--full-color.pv--win .pv__text { color: rgba(255, 255, 255, .92); } /* ds-ok: 复用既有绿色判定屏的白字 */
+.pv--closable.pv--full-color.pv--win .pv__cta { background: #fff; color: #111; } /* ds-ok: 复用既有绿色判定屏的白色按钮 */

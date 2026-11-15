@@ -3003,6 +3003,11 @@ Page({
     this.syncNativeTheme();
   },
 
+  completePreview: function () {
+    if (this._disposed || this._unloaded || this._hidden || !this.data.previewVisible || this.data.pvStepKey !== 'complete') return;
+    if (this.data.pvSteps[this.data.pvStep + 1] === 'reward') this.pvNext();
+    else this.closePreview();
+  },
   pvNext: function () {
     if (this.data.pvStep >= this.data.pvSteps.length - 1) return;
     this._applyPvStep(this.data.pvStep + 1);
