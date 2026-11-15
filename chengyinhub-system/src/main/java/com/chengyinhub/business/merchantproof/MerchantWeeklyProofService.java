@@ -88,7 +88,8 @@ public class MerchantWeeklyProofService {
         return points != null && points > 0;
     }
 
-    List<Touch> touches(long owner, long merchant, Instant from, Instant to) {
+    /** Also read by S3a visit billing, so a billed visit is exactly a verified visit in the proof. */
+    public List<Touch> touches(long owner, long merchant, Instant from, Instant to) {
         Timestamp a = Timestamp.from(from), b = Timestamp.from(to);
         List<Touch> out = new ArrayList<>();
         collect(out, Kind.TICKET_REDEMPTION, "SELECT reg.member_id AS member_id, r.create_time AS at FROM redemption r"

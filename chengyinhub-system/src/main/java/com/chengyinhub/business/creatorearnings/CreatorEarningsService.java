@@ -46,6 +46,10 @@ public class CreatorEarningsService {
     private final CreatorEarningsPolicy policy;
     private final boolean moneyOn;
 
+    /** S3a: the template take setting; absent (tests) = the creator share from configuration. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.merchantplans.TakeRateService takeRates;
+
     public CreatorEarningsService(CreatorEarningMapper mapper, UmsMemberMapper members, IUmsMemberService memberService,
                                   IUmsMemberPointsDetailService pointsDetails, PlatformTransactionManager transactions,
                                   @Value("${chengyin.creator-earnings.adopt-points:5}") int adoptPoints,
@@ -141,8 +145,11 @@ public class CreatorEarningsService {
         Map<String, Object> row = base(CreatorEarningsPolicy.SALE, orderNo, creator, actor, "WORKSHOP", text(r, "itemRef"), r);
         long gross = num(r, "grossMinor");
         row.put("grossMinor", gross);
-        row.put("shareBps", policy.config().saleShareBps());
-        row.put("creatorMinor", policy.creatorShare(gross));
+        // S3a: the template take is a setting; none configured = the creator share from configuration (today).
+        int shareBps = takeRates == null ? policy.config().saleShareBps()
+                : takeRates.templateCreatorShareBps(policy.config().saleShareBps());
+        row.put("shareBps", shareBps);
+        row.put("creatorMinor", gross <= 0 ? 0L : Math.multiplyExact(gross, (long) shareBps) / 10000L);
         row.put("currency", Objects.toString(r.get("currency"), "CNY"));
         row.put("moneyState", CreatorEarningsPolicy.moneyState(moneyOn));
         row.put("orderKey", CreatorEarningsPolicy.incomeOrderKey(orderNo));
