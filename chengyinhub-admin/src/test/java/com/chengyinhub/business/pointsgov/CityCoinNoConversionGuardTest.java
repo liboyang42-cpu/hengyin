@@ -57,7 +57,13 @@ class CityCoinNoConversionGuardTest {
             "chengyinhub-system/src/main/resources/mapper/business/CityCoinMapper.xml",
             // admin dashboard: reads totals only (CityCoinService.dashboard)
             "chengyinhub-system/src/main/java/com/chengyinhub/business/pointsgov/PointsGovernanceService.java",
-            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCityCoinController.java");
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiCityCoinController.java",
+            // growth loops (reviewed 2026-11-15 at integration): a credit-only invite hook, its caller, a read-only
+            // summary field and notification copy. None converts city coin into points, cash, coupons or orders.
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/growthloops/InviteCityCoinHook.java",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/growthloops/InviteRewardService.java",
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/growthloops/CityEventNotifier.java",
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGrowthLoopsController.java");
     private static final List<String> SCANNED = List.of(
             "chengyinhub-admin/src/main", "chengyinhub-system/src/main", "chengyinhub-common/src/main",
             "chengyinhub-framework/src/main", "chengyinhub-quartz/src/main", "chengyinhub-generator/src/main",
