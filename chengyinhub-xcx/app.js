@@ -21,6 +21,7 @@ const { captureDoorScene } = require('./utils/game-door-entry.js');
 const roleGuard = require('./utils/roleGuard.js');
 const { safeUserMessage } = require('./utils/transport/safe-user-message.js');
 const requireLoginGuard = require('./utils/auth/require-login.js');
+const { createAgeGate } = require('./utils/auth/age-gate.js');
 const { avatarSrc } = require('./utils/identity-sync.js');
 const singlePage = require('./utils/single-page-mode.js');
 App({
@@ -243,10 +244,29 @@ App({
         that.getUsageConsent().syncPending().catch(function () {
           console.warn('Usage consent remains pending; retry after login');
         });
+        // SEC-14:游客刚登录成功(不是冷启动恢复缓存会话)才问一次 18 周岁;已确认过的账号不再问。
+        // 这里只启动检查、不拖住登录结果;登录弹窗(require-login)恢复原动作前会等它(awaitAgeCheck)。
+        if (!owner && !authorization) that.startAgeCheck();
       }
       // 不 reject:登录失败不阻断初始化(契约 #18/#19)。
       return r;
     });
+  },
+  // 未确认 18 周岁(选了未满 18 或关掉了确认)→ 年龄闸已退出登录,结果为 false。
+  startAgeCheck: function () {
+    var that = this;
+    if (!this._ageGate) this._ageGate = createAgeGate({
+      show: function (opts) { return modal.show(opts); },
+      toast: function (text) { cyToast(text); }
+    });
+    var run = this._ageGate.check(this).then(null, function () { return true; });
+    this._ageCheck = run;
+    run.then(function () { if (that._ageCheck === run) that._ageCheck = null; });
+    return run;
+  },
+  // 有在途的年龄确认就等它;没有就直接 true。
+  awaitAgeCheck: function () {
+    return this._ageCheck || Promise.resolve(true);
   },
   // 本机是否已缓存一个会话(onLaunch restore 落地的 user_id + authorization)。
   hasCachedSession: function () {

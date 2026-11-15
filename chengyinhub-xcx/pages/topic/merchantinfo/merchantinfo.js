@@ -11,6 +11,8 @@ const app = getApp();
 const { readReducedMotion } = require('../../../utils/motion-preference.js'); const profitSplit = require('../utils/profit-split.js'); // 走查 v2 R09:分润明细口径
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const { chinaDayStart, chinaDayEnd, chinaParts } = require('../../../utils/datetime');
+
+const { signUpWindowText } = require('../../../utils/merchant-signup-window.js');
 /* 数据条的格子只有一份实现:玩家深色版(214:384)与本页浅色版(181:575)是同一块。 */
 const { buildTopicStatBar } = require('../utils/topic-detail-facts.js');
 const { isRecordList } = require('../../../utils/response-shape.js');
@@ -301,6 +303,7 @@ Page({
     myChapterApplications: [],
     myChapterApplicationsLoaded: false,
     chapterApplicationOpen: false,
+    signUpClosedText: '',
     myChapterNodes: [],
     myChapterNodesLoaded: false,
     myChapterNodesError: '',
@@ -596,7 +599,8 @@ Page({
           d.contentIncludes = that.buildContentIncludes(d);
           // 承接报名阶段只展示项目事实，不展示玩家评价或阵容。
           that.setData({ statBar: buildTopicStatBar(d).filter(cell => cell.key !== 'rating' && cell.key !== 'merchant') });
-          that.setData({ info: d, coverFailed: false, detailCoverFailed: false, browseLoadError: '' });
+          // MER-08(2026-09-27 走查):招商截止后底部主按钮仍写「申请承接」,点了才弹「已结束」。现在直接写明。
+          that.setData({ info: d, coverFailed: false, detailCoverFailed: false, browseLoadError: '', signUpClosedText: signUpWindowText(d, Date.now()) });
           if (Number(d.productType) === 2) {
             that.refreshMyChapterApplications();
             that.loadMerchantRecruitmentChapters();
@@ -3322,7 +3326,7 @@ Page({
       return { key: 'rejected', cls: 'state-danger', text: '未通过', sub: data.reason || '未填写驳回原因' };
     }
     if (status !== 1) {
-      return { key: 'pending', cls: 'state-neutral', text: '审核中', sub: '主题发布者确认后即可开始准备' };
+      return { key: 'pending', cls: 'state-neutral', text: '待审核', sub: '主题发布者确认后即可开始准备' }; // MER-08 与工作台同词
     }
 
     const today = new Date(chinaDayStart(Date.now()));

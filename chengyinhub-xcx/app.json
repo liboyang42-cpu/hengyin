@@ -144,6 +144,7 @@
         "verify-records/index",
         "bundle-reservations/index",
         "payout-account/index",
+        "plans/index",
         "crm-campaigns/index",
         "team/index"
       ]

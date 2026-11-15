@@ -252,10 +252,16 @@ function hasTodoSummaryPayload(todo) {
 // 日期一律按 'YYYY-MM-DD' 字符串比:后端 ViewRegistrationMerchant 的
 // startDate/endDate 就是 @JsonFormat("yyyy-MM-dd") 下发的。转 Date 再比会踩时区
 // —— new Date('2026-08-05') 按 UTC 午夜解析,再用本地 getDate() 取值会整体偏一天。
+// MER-08(2026-09-27 走查「起始日差一天」):带时区的时刻(…Z / +08:00 / 时间戳 / Date)先换成上海日历日,
+// 不能直接截前 10 位(UTC 的 9-25T16:00 就是上海 9-26)。不带时区的裸串本来就是中国时间语义,照旧取前 10 位。
 function toDayStr(value) {
   if (!value) return '';
-  const matched = String(value).trim().match(/^\d{4}-\d{2}-\d{2}/);
-  return matched ? matched[0] : '';
+  const raw = typeof value === 'string' ? value.trim() : value;
+  if (typeof raw === 'string' && !/[zZ]$|[+-]\d\d:?\d\d$/.test(raw) && !/^\d{10}(\d{3})?$/.test(raw)) {
+    const matched = raw.match(/^\d{4}-\d{2}-\d{2}/);
+    return matched ? matched[0] : '';
+  }
+  return chinaDateKey(raw) || '';
 }
 
 // 「今天」统一取上海业务日历日,显式 Date 也按同一瞬时转换,不随设备时区变化。
@@ -338,4 +344,5 @@ module.exports = {
   isPendingChapterInvite,
   // 卡面状态签的单一真源:商家工作台与「我的」主页项目预览都从这里取,别各写一套日期判定。
   statusLabelOf,
+  toDayStr,
 };

@@ -169,12 +169,13 @@ test('ME27-002 项目与工作台显示中国档期，不受设备时区影响',
   }
 });
 
-test('待审核的承接显示审核中，而不是直接当成已确认', () => {
+test('待审核的承接显示待审核，而不是直接当成已确认', () => {
   const page = makePage();
   page.processData({ status: 0, topicStartDate: daysFromToday(10) });
 
   assert.equal(page.data.stateKey, 'pending');
-  assert.equal(page.data.stateText, '审核中');
+  // MER-08(2026-11-15):与工作台项目卡、「我的」预览同一个词
+  assert.equal(page.data.stateText, '待审核');
 });
 
 test('被驳回时把驳回原因显示出来', () => {

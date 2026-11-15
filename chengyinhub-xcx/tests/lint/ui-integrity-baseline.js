@@ -1,3 +1,4 @@
+// 2026-11-15 T6 mini-program(年龄确认 app.js +20 行、商家报名窗口 merchantinfo.js +4 行、入驻页手机号脱敏 apply/index.js +7 行):U1-VARIABLE app.js consent adapter 435→455、U4-DYNAMIC merchant/apply 360→367、merchantinfo 667→671 / 2451→2455 / 2483→2487 仅行号位移,调用行与理由逐字未改、条数不变、不新增登记;u1Variable / u4Dynamic keyDigest 按门禁 baselineKeyDigest 重算。
 // 2026-11-14 route-play-walk：topic U4-DYNAMIC 2197→2198、play U5 9077→9089 仅因本补丁增行迁锚；三行调用上下文逐字一致，理由、条数及棘轮不变，按 baselineKeyDigest 重算摘要。
 // 2026-11-14 rebase #842：保留游客读取登记，原调用逐行重锚；两处图片许可读合并、两处动态分享投影退役，不增加债务。
 // 2026-11-14 wave-1114：沿 master 重锚 35 个既有行号键，理由不变；保留 #833 pubLoaded 已消费的债务退役（99→98）与 #834 显式 geo 投影退役的 session 动态 setData 登记（62→61）；keyDigest 由原门禁 baselineKeyDigest() 计算，不新增登记或抬高棘轮。

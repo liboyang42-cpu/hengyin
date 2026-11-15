@@ -33,6 +33,30 @@
       <view class="gc-score-link"><text>查看榜单</text><cy-icon class="gc-arrow-icon" name="chevron-right" size="32" /></view>
     </view>
   </view>
+  <!-- P7 今日任务与连续天数:与 App 同源(/api/growth/center daily + /api/play/growth);服务端没下发就不出现 -->
+  <view class="gc-section" wx:if="{{daily.show}}">
+    <view class="gc-section-head"><text class="gc-section-title">今日任务</text><text wx:if="{{daily.missions.countText}}" class="gc-section-meta">{{daily.missions.countText}}</text></view>
+    <view wx:if="{{daily.missions.state === 'ready'}}" class="gc-badge-list" aria-role="list" aria-label="今日任务">
+      <view class="gc-badge-row" wx:for="{{daily.missions.missions}}" wx:key="code" aria-role="listitem" aria-label="{{item.name}}，{{item.progressText}}，{{item.rewardText}}">
+        <view class="gc-badge-copy">
+          <text class="gc-badge-name">{{item.name}}</text>
+          <text class="gc-badge-hint">{{item.rewardText}}</text>
+        </view>
+        <text class="gc-badge-arrow">{{item.completed ? '已完成' : item.progressText}}</text>
+      </view>
+    </view>
+    <view wx:elif="{{daily.missions.text}}" class="gc-badge-loading"><text>{{daily.missions.text}}</text></view>
+    <view wx:if="{{daily.streak}}" class="gc-badge-list gc-daily-streak" aria-label="连续天数，{{daily.streak.daysText}}">
+      <view class="gc-badge-row">
+        <view class="gc-badge-copy">
+          <text class="gc-badge-name">{{daily.streak.daysText}}</text>
+          <text class="gc-badge-hint">{{daily.streak.freezesText}}</text>
+          <text class="gc-badge-hint" wx:for="{{daily.streak.lines}}" wx:key="*this">{{item}}</text>
+        </view>
+        <text wx:if="{{daily.streak.statusText}}" class="gc-badge-arrow">{{daily.streak.statusText}}</text>
+      </view>
+    </view>
+  </view>
   <view class="gc-section" wx:if="{{!footprintEmpty}}">
     <view class="gc-section-head"><text class="gc-section-title">我的足迹</text><text wx:if="{{overviewAvailable.center}}" class="gc-section-meta">{{overview.levelText}}</text></view>
     <view wx:if="{{overviewState === 'loading' && !overviewLoaded}}" class="gc-metric-list" aria-label="正在加载足迹">

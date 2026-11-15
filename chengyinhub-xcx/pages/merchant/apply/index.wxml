@@ -88,7 +88,7 @@
         </view>
         <view class="succ-desc">{{apply.statusText}}</view>
         <view class="preview-kv"><text class="pk">店铺名称</text><text class="pv">{{apply.name || '—'}}</text></view>
-        <view class="preview-kv"><text class="pk">联系电话</text><text class="pv">{{apply.phone || '—'}}</text></view>
+        <view class="preview-kv"><text class="pk">联系电话</text><text class="pv">{{apply.phoneMasked || '—'}}</text></view>
         <view wx:if="{{apply.address}}" class="preview-kv last cy-addr-tap" bindtap="onApplyAddressTap" aria-role="button" aria-label="在地图中打开 {{apply.address}}" hover-class="cy-pressed" hover-stay-time="80"><text class="pk">店铺地址</text><text class="pv">{{apply.address}}</text></view>
         <view wx:else class="preview-kv last"><text class="pk">店铺地址</text><text class="pv">—</text></view>
       </cy-card>
