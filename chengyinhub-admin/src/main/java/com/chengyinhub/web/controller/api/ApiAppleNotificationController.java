@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.appleiap.WorkshopAppleIapService;
+import com.chengyinhub.business.modcommerce.ModCommerceService;
 import com.chengyinhub.business.platformpass.PlatformPassAppleService;
 import com.chengyinhub.business.platformpass.PlatformPassException;
 import com.chengyinhub.common.annotation.Anonymous;
@@ -27,10 +28,19 @@ import java.util.Map;
 public class ApiAppleNotificationController {
     private final PlatformPassAppleService pass;
     private final ObjectProvider<WorkshopAppleIapService> workshop;
+    /** R6c: workshop template products listed in mod_commerce_offer (dispatch by product id). */
+    private final ObjectProvider<ModCommerceService> templates;
 
     public ApiAppleNotificationController(PlatformPassAppleService pass, ObjectProvider<WorkshopAppleIapService> workshop) {
+        this(pass, workshop, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ApiAppleNotificationController(PlatformPassAppleService pass, ObjectProvider<WorkshopAppleIapService> workshop,
+                                          ObjectProvider<ModCommerceService> templates) {
         this.pass = pass;
         this.workshop = workshop;
+        this.templates = templates;
     }
 
     public record Notification(String signedPayload) { }
@@ -43,6 +53,9 @@ public class ApiAppleNotificationController {
         try {
             var handled = pass.notificationIfPass(raw);
             if (handled.isPresent()) return ResponseEntity.ok(AjaxResult.success(handled.get()));
+            ModCommerceService template = templates == null ? null : templates.getIfAvailable();
+            var templateHandled = template == null ? java.util.Optional.<Map<String, Object>>empty() : template.notificationIfTemplate(raw);
+            if (templateHandled.isPresent()) return ResponseEntity.ok(AjaxResult.success(templateHandled.get()));
             WorkshopAppleIapService other = workshop.getIfAvailable();
             if (other == null) return ResponseEntity.status(503).body(new AjaxResult(503, "APPLE_NOTIFICATION_UNROUTED"));
             Map<String, Object> result = other.notification(raw);

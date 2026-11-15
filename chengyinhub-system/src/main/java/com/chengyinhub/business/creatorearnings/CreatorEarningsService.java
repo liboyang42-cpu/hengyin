@@ -139,7 +139,8 @@ public class CreatorEarningsService {
         return append(row, policy.pointsFor(CreatorEarningsPolicy.PLAY), true);
     }
 
-    boolean sale(Map<String, Object> r) {
+    /** One SALE row for a paid workshop order (also called on grant by mod-commerce). Replay-safe. */
+    public boolean sale(Map<String, Object> r) {
         long creator = num(r, "creatorId"), actor = num(r, "actorId");
         String orderNo = text(r, "orderNo");
         Map<String, Object> row = base(CreatorEarningsPolicy.SALE, orderNo, creator, actor, "WORKSHOP", text(r, "itemRef"), r);
@@ -156,7 +157,8 @@ public class CreatorEarningsService {
         return append(row, 0, false);
     }
 
-    boolean reversal(Map<String, Object> r) {
+    /** One SALE_REVERSAL row for a refunded order whose SALE exists (also called by mod-commerce). Replay-safe. */
+    public boolean reversal(Map<String, Object> r) {
         String orderNo = text(r, "orderNo");
         Map<String, Object> sale = mapper.selectSaleForOrder(CreatorEarningsPolicy.eventKey(CreatorEarningsPolicy.SALE, orderNo));
         if (sale == null) return false;

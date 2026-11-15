@@ -189,6 +189,11 @@ chengyin:
       signing-key-path: ${CHENGYIN_APPLE_SERVER_API_KEY_PATH:}
       key-id: ${CHENGYIN_APPLE_SERVER_API_KEY_ID:}
       issuer-id: ${CHENGYIN_APPLE_SERVER_API_ISSUER_ID:}
+  # R6c 工坊模板 iOS 内购(/api/mod-commerce/**)。默认关闭;只在 TEST/Staging 用环境变量打开,
+  # 还必须资金开关的 pass 区域打开、且上面 pass.apple-iap 的 App Store 校验已配置(共用同一 bundle、环境与根证书)。
+  mod-commerce:
+    enabled: ${CHENGYIN_MOD_COMMERCE_ENABLED:false}
+    market: ${CHENGYIN_MOD_COMMERCE_MARKET:CN}
 
 # MyBatis配置
 mybatis:
