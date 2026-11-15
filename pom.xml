@@ -292,6 +292,13 @@
                 <version>${chengyinhub.version}</version>
             </dependency>
 
+            <!-- TEST-only E2E providers; see chengyinhub-e2e/pom.xml (R9 BE-16) -->
+            <dependency>
+                <groupId>com.chengyinhub</groupId>
+                <artifactId>chengyinhub-e2e</artifactId>
+                <version>${chengyinhub.version}</version>
+            </dependency>
+
             <!-- 通用工具-->
             <dependency>
                 <groupId>com.chengyinhub</groupId>
@@ -336,6 +343,7 @@
         <module>chengyinhub-quartz</module>
         <module>chengyinhub-generator</module>
         <module>chengyinhub-common</module>
+        <module>chengyinhub-e2e</module>
     </modules>
     <packaging>pom</packaging>
 

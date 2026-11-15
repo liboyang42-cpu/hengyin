@@ -15,6 +15,10 @@
         web服务入口
     </description>
 
+    <properties>
+        <chengyin.e2e.providers.scope>test</chengyin.e2e.providers.scope>
+    </properties>
+
     <dependencies>
 
         <!-- spring-boot-devtools -->
@@ -76,6 +80,14 @@
         <dependency>
             <groupId>com.chengyinhub</groupId>
             <artifactId>chengyinhub-generator</artifactId>
+        </dependency>
+
+        <!-- R9 BE-16: TEST-only E2E providers. Test scope by default, so `mvn package` never puts them in the
+             production jar. The TEST server build adds `-Pe2e-test-providers`, which switches the scope to runtime. -->
+        <dependency>
+            <groupId>com.chengyinhub</groupId>
+            <artifactId>chengyinhub-e2e</artifactId>
+            <scope>${chengyin.e2e.providers.scope}</scope>
         </dependency>
 
         <!-- tests -->
@@ -179,6 +191,13 @@
     </build>
 
     <profiles>
+        <!-- R9 BE-16: TEST server build only (`mvn -Pe2e-test-providers -DskipTests package`). Never for production. -->
+        <profile>
+            <id>e2e-test-providers</id>
+            <properties>
+                <chengyin.e2e.providers.scope>runtime</chengyin.e2e.providers.scope>
+            </properties>
+        </profile>
         <!-- Fixed combined workload only. Default/full test compilation is unchanged. -->
         <profile>
             <id>combined-http-fixture-closure</id>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>chengyinhub</artifactId>
+        <groupId>com.chengyinhub</groupId>
+        <version>3.9.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>chengyinhub-e2e</artifactId>
+
+    <description>
+        TEST-only E2E providers (R9 BE-16). Never packaged into the production jar: chengyinhub-admin depends on
+        this module with test scope, and only the explicit Maven profile `e2e-test-providers` puts it on the
+        runtime classpath for the TEST server. Each provider is additionally gated by the `e2e-test` Spring
+        profile and `chengyin.e2e.test-providers=true`.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.chengyinhub</groupId>
+            <artifactId>chengyinhub-framework</artifactId>
+        </dependency>
+    </dependencies>
+</project>
