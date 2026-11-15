@@ -1025,6 +1025,10 @@
     "20261115_merchant_reach": [],
     "20261115_store_account": [],
     "20261115_seed_tools": ["roam", "city_merchant_node"],
-    "20261115_privacy_erasure": ["20261115_fog_map", "20261115_measurement", "20261115_links_push", "20261115_location_trust", "compliance_consent_deregister_20260711"]
+    "20261115_privacy_erasure": ["20261115_fog_map", "20261115_measurement", "20261115_links_push", "20261115_location_trust", "compliance_consent_deregister_20260711"],
+    "20261115_admin_consoles": [],
+    "20261115_growth_loops": ["p3_phase_b_player_world_creator"],
+    "20261115_guest_walk": [],
+    "20261115_points_governance": []
   }
 }
