@@ -21,6 +21,9 @@ public class CommentPublicationService {
     private final IUmsMemberService members;
     private final ICmsPointsSettingService settings;
     private final IUmsMemberPointsDetailService details;
+    /** R7 MON-09: daily cap / monthly budget; optional so existing constructor wiring keeps working. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.pointsgov.PointsGovernanceService governance;
 
     public CommentPublicationService(ContentInteractionGuard guard, IUmsCommentService comments,
             IUmsMemberService members, ICmsPointsSettingService settings, IUmsMemberPointsDetailService details,
@@ -76,6 +79,8 @@ public class CommentPublicationService {
         if (points == 0) return null;
         UmsMember member = members.selectUmsMemberById(comment.getMemberId());
         if (member == null) return null;
+        // R7:会员行锁已在 publish 开头持有;超每日上限/月度预算则不发,评论照常发布。
+        if (governance != null && !governance.admit(member.getId(), 4L, points).admitted()) return null;
         if (!members.addPoints(member.getId(), points)) throw new ServiceException("评论奖励积分失败");
 
         UmsMemberPointsDetail detail = new UmsMemberPointsDetail();
