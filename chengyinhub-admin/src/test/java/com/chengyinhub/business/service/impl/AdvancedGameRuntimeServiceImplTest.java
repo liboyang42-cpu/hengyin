@@ -134,6 +134,9 @@ class AdvancedGameRuntimeServiceImplTest {
         assertEquals("start", ((Map<?, ?>) state.get("branch")).get("currentStepId"));
         assertEquals(NOW + 60_000, inserted.get().getDeadlineAt().getTime());
         assertEquals(0, inserted.get().getVersion());
+        // G1 game-loop (IMM-14): the view carries the server clock beside its own deadline.
+        assertEquals(NOW, state.get("serverNow"));
+        assertEquals(NOW + 60_000, state.get("deadlineAt"));
     }
 
     @Test
