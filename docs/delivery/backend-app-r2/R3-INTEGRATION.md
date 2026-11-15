@@ -11,6 +11,7 @@ Target environment: **TEST only** (`http://127.0.0.1:8120`, `/data/workspace/be-
 | `origin/fix/play-nodes-500` | `c1c1a1a44` | `af6fe3f82` | Clean `--no-ff` | None |
 | `origin/fix/api-smoke-4xx` | `a67acd4c2` | `28deddc26` | Resolved `ApiCartController.java` (`getAppUserId`/`getAppUserName`), combined `ApiCartControllerAppAuthTest.java` (MockMvc 6 routes + 401 check), preserved sections 5 & 6 in `APP-CONTRACT-FIXES.md` | None |
 | `origin/feature/sys-weather` | `a11eb2794` | `6bddcd5d9` | Clean `--no-ff` | `migration_20261114_weather_event_rule.sql` applied (`659 -> 660` tables; no ledger changes) |
+| `origin/feature/sys-weather` (docs) | `80df276d1` | `b71b3911c` | Clean `--no-ff` (`SYS-weather.md` only; 0 code/SQL diffs vs `a11eb2794`) | No additional SQL; note CI migration gates flag `rollback_20261114_weather_event_rule.sql` (`INVALID_EXECUTABLE_PREFIX`) and missing `20261114_weather_event_rule` entry in `ci/migration-dependencies.json` (kept untouched per no-ledger-changes rule) |
 
 ### Verification Receipts (`6bddcd5d9`)
 
