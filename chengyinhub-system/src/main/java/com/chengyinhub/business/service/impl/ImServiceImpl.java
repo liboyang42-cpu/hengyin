@@ -106,6 +106,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     /** 频道出站 Webhook 发件箱（message.created）；未装配时不扇出。 */
     @Autowired(required = false)
     private com.chengyinhub.business.service.channel.platform.ChannelWebhookService webhookOutbox;
+    /** App 远程推送（APNs）；未装配或未配置时不扇出。提交后异步，不影响发送结果。 */
+    @Autowired(required = false)
+    @Lazy
+    private com.chengyinhub.business.service.IPushFanoutService pushFanout;
 
     private String singleBizKey(Long a, Long b)
     {
@@ -1086,6 +1090,12 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             webhookOutbox.enqueueForConversation(convId, "message.created", "msg-" + msg.getId(), messageCreatedEvent(msg));
         }
         memberMapper.markRead(convId, memberId, msg.getId());
+        if (pushFanout != null && type != ImMessage.MSG_IMAGE && checkStatus == 1)
+        {
+            // 图片过审后才算对收件人可见，不在这里推。
+            try { pushFanout.chatMessageSent(msg.getId()); }
+            catch (RuntimeException ignored) { /* 推送是旁路，绝不影响发送 */ }
+        }
         return projectRouteMessage(msg, memberId);
     }
 

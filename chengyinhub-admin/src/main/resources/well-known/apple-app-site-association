@@ -1,0 +1,41 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["9VHY8N755R.com.chengyinhub.chengyinApp"],
+        "components": [
+          { "/": "/door", "comment": "DoorLinkPolicy. Query keys the parser accepts are scene, inviter, and id." },
+          { "/": "/team/join", "comment": "NativeNavigationContract. Requires code. fromTeamId is optional." },
+          { "/": "/pages/team/join/index", "comment": "NativeNavigationContract. code, or the retired teamId form." },
+          { "/": "/badge", "comment": "NativeNavigationContract. Optional name, sub, img, style, rarity." },
+          { "/": "/merchant/team", "comment": "NativeEntryLinkPolicy. Requires a single invite query item." },
+          { "/": "/merchant/public-home/member/*", "comment": "One positive canonical integer. Any other segment is not a screen." },
+          { "/": "/merchant/public-home/*", "comment": "One positive canonical integer. The member path above is the other handled shape." },
+          { "/": "/catalog" },
+          { "/": "/catalog/list" },
+          { "/": "/catalog/filters" },
+          { "/": "/catalog/info" },
+          { "/": "/pages/activity/detail/index", "comment": "NativeContentTarget.activity. Requires one positive id." },
+          { "/": "/pages/club/detail/index", "comment": "NativeContentTarget.club. Requires one positive id." },
+          { "/": "/pages/topic/index/index", "comment": "NativeContentTarget.topic. Requires one positive id." },
+          { "/": "/pages/templatedetail/templatedetail", "comment": "NativeContentTarget.template. Requires one positive id." },
+          { "/": "/pages/square/detail/index", "comment": "NativeContentTarget.post. Requires one positive id." },
+          { "/": "/subpackageRoam/poi-detail/index", "comment": "NativeContentTarget.poi. Requires one positive id." },
+          { "/": "/subpackageRoam/session/index", "comment": "NativeContentTarget.roamSession. Requires one positive id." },
+          { "/": "/subpackageA/pages/video-bounty/index" },
+          { "/": "/subpackageMember/market/passes/index" },
+          { "/": "/subpackageMember/market/pass/index" },
+          { "/": "/subpackageMember/market/gift/index" },
+          { "/": "/subpackageMember/market/membership/index" },
+          { "/": "/subpackageMember/market/library/index" },
+          { "/": "/subpackagePass/reveal/index" },
+          { "/": "/subpackageJourney/pages/landing/index" },
+          { "/": "/subpackageJourney/pages/seats/index" },
+          { "/": "/subpackageJourney/pages/promo/index" },
+          { "/": "/subpackageJourney/pages/report/index" },
+          { "/": "/subpackageJourney/pages/settle/index" }
+        ]
+      }
+    ]
+  }
+}

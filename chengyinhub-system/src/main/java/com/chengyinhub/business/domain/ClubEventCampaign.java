@@ -22,6 +22,8 @@ public class ClubEventCampaign {
     private Integer failedCount;
     private Date createTime;
     private Date updateTime;
+    /** 不落库：任务另选了 APNS 渠道时为 "APNS"（站内信 channel 仍是 IN_APP）。 */
+    private String pushChannel;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -53,4 +55,6 @@ public class ClubEventCampaign {
     public void setCreateTime(Date createTime) { this.createTime = createTime; }
     public Date getUpdateTime() { return updateTime; }
     public void setUpdateTime(Date updateTime) { this.updateTime = updateTime; }
+    public String getPushChannel() { return pushChannel; }
+    public void setPushChannel(String pushChannel) { this.pushChannel = pushChannel; }
 }
