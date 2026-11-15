@@ -91,6 +91,8 @@ class MetricsEndpointGuardWebTest
             get(MAIN, "/demo/refuse");
             get(MAIN, "/demo/refuse");
             get(MAIN, "/demo/ok");
+            String plain = get(MAIN, "/demo/plain").body();
+            assertTrue(plain.contains("\"errorKind\":\"SYSTEM\"") && plain.contains("\"code\":500"), plain);
         }
         finally
         {
@@ -134,6 +136,9 @@ class MetricsEndpointGuardWebTest
                 r.put("errorKind", "BUSINESS");
                 return r;
             }
+
+            @GetMapping("/demo/plain")
+            AjaxResult plain() { return AjaxResult.error("操作失败，请稍后重试"); }
 
             @GetMapping("/demo/ok")
             AjaxResult ok() { return AjaxResult.success(); }

@@ -24,6 +24,11 @@ import io.micrometer.core.instrument.MeterRegistry;
  * {@value #METRIC}{@code {uri, code_class, kind}}: {@code uri} is the route template (low cardinality),
  * {@code code_class} is 2xx/4xx/5xx/other from the envelope code, {@code kind} is the {@code errorKind} marker
  * (BUSINESS, SYSTEM, NOT_BUILT, POLICY_CLOSED) or NONE. Error rate = 5xx with kind SYSTEM over all.
+ *
+ * <p>BE-05: controllers that return {@code AjaxResult.error(...)} themselves (instead of throwing) get the same
+ * additive {@code errorKind} key the exception handler sets: SYSTEM when the message is one of the generic
+ * "something broke" texts, BUSINESS otherwise. The {@code code} and {@code msg} are never changed, because the
+ * app and the mini-program branch on {@code code == 500} plus the message for some outcomes.
  */
 @RestControllerAdvice
 public class ApiEnvelopeMetricsAdvice implements ResponseBodyAdvice<Object>
@@ -71,8 +76,22 @@ public class ApiEnvelopeMetricsAdvice implements ResponseBodyAdvice<Object>
             if (pattern != null) uri = pattern.toString();
         }
         Object kind = body.get("errorKind");
+        if (kind == null && !"2xx".equals(codeClass(body.get(AjaxResult.CODE_TAG))))
+        {
+            kind = inferKind(body.get(AjaxResult.MSG_TAG));
+            body.put("errorKind", kind);
+        }
         registry.counter(METRIC, "uri", uri, "code_class", codeClass(body.get(AjaxResult.CODE_TAG)),
                 "kind", kind == null ? "NONE" : kind.toString()).increment();
+    }
+
+    /** Texts the code base uses when it caught an unexpected failure and hid the details. */
+    static final java.util.Set<String> SYSTEM_TEXTS = java.util.Set.of(
+            com.chengyinhub.common.utils.UserSafeMessage.GENERIC, "操作失败，请稍后重试", "系统繁忙");
+
+    static String inferKind(Object msg)
+    {
+        return msg != null && SYSTEM_TEXTS.contains(String.valueOf(msg).trim()) ? "SYSTEM" : "BUSINESS";
     }
 
     static String codeClass(Object code)

@@ -37,4 +37,28 @@ class MetricsEndpointGuardTest
         assertEquals("other", ApiEnvelopeMetricsAdvice.codeClass(null));
         assertEquals("other", ApiEnvelopeMetricsAdvice.codeClass(601));
     }
+
+    @Test
+    void plainErrorReturnsAreMarkedWithoutTouchingCodeOrMessage()
+    {
+        assertEquals("SYSTEM", ApiEnvelopeMetricsAdvice.inferKind("系统繁忙，请稍后重试"));
+        assertEquals("SYSTEM", ApiEnvelopeMetricsAdvice.inferKind("操作失败，请稍后重试"));
+        assertEquals("BUSINESS", ApiEnvelopeMetricsAdvice.inferKind("格式错误"));
+        assertEquals("BUSINESS", ApiEnvelopeMetricsAdvice.inferKind(null));
+
+        io.micrometer.core.instrument.simple.SimpleMeterRegistry registry = new io.micrometer.core.instrument.simple.SimpleMeterRegistry();
+        ApiEnvelopeMetricsAdvice advice = new ApiEnvelopeMetricsAdvice(registry);
+        com.chengyinhub.common.core.domain.AjaxResult refused = com.chengyinhub.common.core.domain.AjaxResult.error("格式错误");
+        advice.beforeBodyWrite(refused, null, null, null,
+                new org.springframework.http.server.ServletServerHttpRequest(new MockHttpServletRequest()), null);
+        assertEquals(500, refused.get("code"));
+        assertEquals("格式错误", refused.get("msg"));
+        assertEquals("BUSINESS", refused.get("errorKind"));
+
+        com.chengyinhub.common.core.domain.AjaxResult ok = com.chengyinhub.common.core.domain.AjaxResult.success();
+        advice.beforeBodyWrite(ok, null, null, null, null, null);
+        assertFalse(ok.containsKey("errorKind"), "successes are left alone");
+        assertEquals(2.0, registry.find(ApiEnvelopeMetricsAdvice.METRIC).counters().stream()
+                .mapToDouble(c -> c.count()).sum());
+    }
 }
