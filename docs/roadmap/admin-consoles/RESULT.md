@@ -74,7 +74,7 @@ Goal: operations can run what the backend already supports without SQL.
   | `JourneyRulesAdminController` | `/business/journeyRules` | `business:journeyRules:list/edit` |
   | `RoamPlayOpsController` | `/business/roamOps` | `business:roamOps:list` (read-only) |
 
-- `sql/migration_20261115_admin-consoles.sql` (new):
+- `sql/migration_20261115_admin_consoles.sql` (new):
   - `r10_reward_pledge_review_note` table (`IF NOT EXISTS`);
   - 5 C-menus and 7 F-buttons, each guarded by `NOT EXISTS(perms)` and placed under a resolved top-level directory (fail-closed when the directory is missing or not unique);
   - a rollback note at the top and a read-back assertion at the end.
@@ -124,7 +124,7 @@ Run with `LANG=C.UTF-8 LC_ALL=C.UTF-8`.
 
 ## Owner actions and open questions
 
-1. Run `chengyinhub-admin/sql/migration_20261115_admin-consoles.sql`, with the usual read-only pre-check, then grant the new menus to operations roles in 角色管理. Super-admin sees them right away.
+1. Run `chengyinhub-admin/sql/migration_20261115_admin_consoles.sql`, with the usual read-only pre-check, then grant the new menus to operations roles in 角色管理. Super-admin sees them right away.
 2. **Platform pledge review stays off** until someone sets 平台审核 (`PLATFORM_REVIEW`) to OPEN in the console, and a `RULE` version must be opened before approval. Decide who owns those switches.
 3. **A REJECTED pledge state is new.** The merchant can revise it, but the iOS and mini-program merchant screens may show it as an unknown state. Copy is needed in both languages, outside this package.
 4. **Removing a club member from channels** is a channel-wide ban; club membership is kept. Confirm this split, or extend the club-governance flow to end membership.

@@ -45,7 +45,7 @@ Response `data`: `sessionId`, `cellsSent`, `acceptedCells`, `newlyRevealed`, `un
 | `chengyinhub-system/.../business/telemetry/InstallEventSchema.java` | Four `guest_walk_*` events. |
 | `chengyinhub-admin/.../controller/api/ApiRoamGuestWalkController.java` | New route; refusals carry `reason` and `retryable`. |
 | `chengyinhub-admin/src/main/resources/application.yml` | `roam.guestWalk.enabled`. |
-| `chengyinhub-admin/sql/migration_20261115_guest-walk.sql` | New table `roam_guest_walk` (`CREATE TABLE IF NOT EXISTS`), rollback note at the top. |
+| `chengyinhub-admin/sql/migration_20261115_guest_walk.sql` | New table `roam_guest_walk` (`CREATE TABLE IF NOT EXISTS`), rollback note at the top. |
 | Tests | `GuestWalkPolicyTest` (10), `GuestWalkServiceTest` (7), `ApiRoamGuestWalkControllerTest` (3). |
 
 No existing route or field was removed or renamed.
@@ -73,7 +73,7 @@ The full module suite was not rerun; the earlier packages' receipts list its kno
 
 ## Owner actions and open questions
 
-1. **Migrate and deploy**: `migration_20261115_guest-walk.sql` on TEST, then production. The app does not offer the guest walk on the production host until `GuestWalkRelease.productionSaveApproved` is turned on in the app after this is live there.
+1. **Migrate and deploy**: `migration_20261115_guest_walk.sql` on TEST, then production. The app does not offer the guest walk on the production host until `GuestWalkRelease.productionSaveApproved` is turned on in the app after this is live there.
 2. **Sign-in time**: the 24-hour window is measured to the upload, which the app sends right after sign-in (and retries when offline). If the owner wants the window measured to the exact sign-in, the login service would need to record a sign-in timestamp that token refresh does not move.
 3. **First-walk reward**: defined here as 1 XP per newly revealed cell, at most 200 (the same tile XP a normal walk earns). No medal is granted. Confirm, or name a different reward.
 4. **One per member**: a member who already saved a guest walk (for example from another phone) cannot save a second one. Confirm this is wanted.
