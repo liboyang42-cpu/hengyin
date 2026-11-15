@@ -30,7 +30,10 @@ POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_
                           "20261104_topic_total_time_seconds",
                           # qx-c2: two paused sys_job rows naming beans only the new jar has (channelRefundConsumptionTask,
                           # marketingRevenuePostingTask); CanonicalJobTarget resolves every row's bean on the old jar too.
-                          "marketing_task_registration_20261108"}
+                          "marketing_task_registration_20261108",
+                          # r-integ-master: sys_job rows naming beans master's jar lacks (clubChannelDefaultsTask,
+                          # growthWinbackTask); their stagger file only updates those rows, so it follows them.
+                          "20261115_club_reach", "20261115_growth_loops", "20261115_stagger_club_growth_jobs"}
 BOOTSTRAP_SQL = {
     "sql/quartz.sql",
     "sql/ry_20250522.sql",
