@@ -85,6 +85,20 @@ public interface CityGameMapper {
     int insertBudgetRoll(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq, @Param("memberId") long memberId,
                          @Param("requestId") String requestId, @Param("diceId") String diceId, @Param("face") int face, @Param("faceIndex") int faceIndex,
                          @Param("resultJson") String resultJson);
+    int insertUnifiedRoll(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq, @Param("memberId") long memberId,
+                          @Param("requestId") String requestId, @Param("purpose") String purpose, @Param("diceId") String diceId,
+                          @Param("face") int face, @Param("faceIndex") Integer faceIndex, @Param("resultJson") String resultJson,
+                          @Param("sourcePath") String sourcePath, @Param("randomTicket") Long randomTicket, @Param("totalWeight") Long totalWeight,
+                          @Param("previousPosition") Integer previousPosition, @Param("newPosition") Integer newPosition,
+                          @Param("landedPropertyId") String landedPropertyId, @Param("beforeUnits") Integer beforeUnits,
+                          @Param("afterUnits") Integer afterUnits, @Param("boardVersion") Long boardVersion);
+    int insertBoardAudit(@Param("boardId") String boardId, @Param("action") String action, @Param("actorId") Long actorId,
+                         @Param("actorType") String actorType, @Param("rulesHash") String rulesHash, @Param("detailJson") String detailJson);
+    List<Map<String, Object>> selectBoardRollAudit(@Param("boardId") String boardId, @Param("limit") int limit);
+    List<Map<String, Object>> selectTeamRollAudit(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("limit") int limit);
+    int creditMemberPoints(@Param("memberId") long memberId, @Param("points") long points);
+    int insertPointsEarnDetail(@Param("memberId") long memberId, @Param("before") long before, @Param("points") long points,
+                               @Param("reason") String reason, @Param("businessKey") String businessKey);
     List<Map<String, Object>> selectRoundRolls(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq);
     Map<String, Object> selectRoundForUpdate(@Param("boardId") String boardId, @Param("teamId") String teamId, @Param("roundSeq") long roundSeq);
 }

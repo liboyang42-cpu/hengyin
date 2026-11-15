@@ -247,7 +247,13 @@
             (SELECT COALESCE(SUM(zero_point_blocks), 0) FROM city_game_outing WHERE board_id = #{boardId} AND t0 &lt;= #{asOf}) AS zeroPointBlocks,
             (SELECT COUNT(*) FROM city_game_request
               WHERE board_id = #{boardId} AND domain = 'game' AND action = 'START_CHALLENGE' AND decision = 'APPLIED'
-                AND create_time &lt;= #{asOf}) AS challenges
+                AND create_time &lt;= #{asOf}) AS challenges,
+            (SELECT COUNT(*) FROM city_arrival_evidence e
+              WHERE e.board_id = #{boardId} AND e.create_time &lt;= #{asOf}) AS merchantVerifications,
+            (SELECT COALESCE(SUM(GREATEST(0, TIMESTAMPDIFF(MICROSECOND, c.create_time, e.create_time)) DIV 1000), 0)
+               FROM city_arrival_evidence e
+               JOIN city_arrival_challenge c ON c.challenge_id = e.challenge_id
+              WHERE e.board_id = #{boardId} AND e.create_time &lt;= #{asOf}) AS merchantVerificationMillis
     </select>
 
     <!-- gaps A pass 2 -->
@@ -274,9 +280,49 @@
         INSERT INTO city_game_roll(board_id, team_id, round_seq, member_id, request_id, purpose, dice_id, face, face_index, result_json)
         VALUES (#{boardId}, #{teamId}, #{roundSeq}, #{memberId}, #{requestId}, 'BUDGET', #{diceId}, #{face}, #{faceIndex}, #{resultJson})
     </insert>
+    <insert id="insertUnifiedRoll">
+        INSERT INTO city_game_roll(board_id, team_id, round_seq, member_id, request_id, purpose, dice_id, face, face_index, result_json,
+                                   source_path, random_ticket, total_weight, previous_position, new_position, landed_property_id,
+                                   before_units, after_units, board_version)
+        VALUES (#{boardId}, #{teamId}, #{roundSeq}, #{memberId}, #{requestId}, #{purpose}, #{diceId}, #{face}, #{faceIndex}, #{resultJson},
+                #{sourcePath}, #{randomTicket}, #{totalWeight}, #{previousPosition}, #{newPosition}, #{landedPropertyId},
+                #{beforeUnits}, #{afterUnits}, #{boardVersion})
+    </insert>
+    <insert id="insertBoardAudit">
+        INSERT INTO city_game_board_audit(board_id, action, actor_id, actor_type, rules_hash, detail_json)
+        VALUES (#{boardId}, #{action}, #{actorId}, #{actorType}, #{rulesHash}, #{detailJson})
+    </insert>
+    <select id="selectBoardRollAudit" resultType="java.util.LinkedHashMap">
+        SELECT id, board_id AS boardId, team_id AS teamId, round_seq AS roundSeq, member_id AS memberId,
+               request_id AS requestId, purpose, dice_id AS diceId, face, face_index AS faceIndex,
+               source_path AS sourcePath, random_ticket AS randomTicket, total_weight AS totalWeight,
+               previous_position AS previousPosition, new_position AS newPosition, landed_property_id AS landedPropertyId,
+               before_units AS beforeUnits, after_units AS afterUnits, board_version AS boardVersion, create_time AS createTime
+        FROM city_game_roll WHERE board_id = #{boardId} ORDER BY id DESC LIMIT #{limit}
+    </select>
+    <select id="selectTeamRollAudit" resultType="java.util.LinkedHashMap">
+        SELECT id, board_id AS boardId, team_id AS teamId, round_seq AS roundSeq, member_id AS memberId,
+               request_id AS requestId, purpose, dice_id AS diceId, face, face_index AS faceIndex,
+               source_path AS sourcePath, random_ticket AS randomTicket, total_weight AS totalWeight,
+               previous_position AS previousPosition, new_position AS newPosition, landed_property_id AS landedPropertyId,
+               before_units AS beforeUnits, after_units AS afterUnits, board_version AS boardVersion, create_time AS createTime
+        FROM city_game_roll WHERE board_id = #{boardId} AND team_id = #{teamId} ORDER BY id DESC LIMIT #{limit}
+    </select>
+    <update id="creditMemberPoints">
+        UPDATE ums_member SET point = IFNULL(point, 0) + #{points} WHERE id = #{memberId} AND del_flag = 0
+    </update>
+    <insert id="insertPointsEarnDetail">
+        INSERT INTO ums_member_points_detail(member_id, current_points, after_points, change_points, change_reason, event_type,
+                                             reward_business_key, change_type, del_flag, create_by, create_time)
+        VALUES (#{memberId}, #{before}, #{before} + #{points}, #{points}, #{reason}, 99, #{businessKey}, 1, 0, 'roam-territory', NOW())
+    </insert>
     <select id="selectRoundRolls" resultType="java.util.LinkedHashMap">
-        SELECT id, purpose, request_id AS requestId, face, face_index AS faceIndex, result_json AS resultJson, create_time AS createTime
-        FROM city_game_roll WHERE board_id = #{boardId} AND team_id = #{teamId} AND round_seq = #{roundSeq} AND purpose IN ('MOVE', 'BUDGET')
+        SELECT id, purpose, request_id AS requestId, face, face_index AS faceIndex, result_json AS resultJson,
+               source_path AS sourcePath, random_ticket AS randomTicket, total_weight AS totalWeight,
+               previous_position AS previousPosition, new_position AS newPosition, landed_property_id AS landedPropertyId,
+               before_units AS beforeUnits, after_units AS afterUnits, board_version AS boardVersion, create_time AS createTime
+        FROM city_game_roll WHERE board_id = #{boardId} AND team_id = #{teamId} AND round_seq = #{roundSeq}
+          AND purpose IN ('MOVE', 'BUDGET', 'UNIFIED_ROLL')
         ORDER BY id
     </select>
     <select id="selectRoundForUpdate" resultType="java.util.LinkedHashMap">

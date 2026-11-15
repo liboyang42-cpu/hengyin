@@ -112,6 +112,8 @@ public class ApiRoamController extends BaseController {
     private IRoamExploreDayCandidateService roamExploreDayCandidateService;
     @Autowired
     private IRoamHangoutService roamHangoutService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.citygame.RoamTerritoryService roamTerritoryService;
 
     /** 包级可见 + 非 final:测试用子类覆写它注入身份,好直调真入口(见 RoamPresenceControllerTest)。 */
     Long uid() {
@@ -945,6 +947,14 @@ public class ApiRoamController extends BaseController {
         if (poiId != null) {
             data.put("participating", true);
             data.put("poiId", poiId);
+            if (roamTerritoryService != null) {
+                Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckin(
+                        memberId, poiId, null, null, curLat, curLng,
+                        "ROAM_CHECKIN:" + java.util.UUID.randomUUID(), "ROAM_CHECKIN");
+                if (Boolean.TRUE.equals(terrRev.get("credited"))) {
+                    data.put("territoryReward", terrRev);
+                }
+            }
             return AjaxResult.success(data);
         }
         // ③ 非参与:通用点亮,首次到点发探索值(每点终身一次)
@@ -965,6 +975,14 @@ public class ApiRoamController extends BaseController {
         }
         int xp = 0;
         if (firstVisit) { xp = VISIT_XP; growthService.addExp(memberId, xp, "点亮地点"); }
+        if (roamTerritoryService != null) {
+            Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckinByCoords(
+                    memberId, poiLat, poiLng, curLat, curLng,
+                    "ROAM_CHECKIN:" + java.util.UUID.randomUUID());
+            if (Boolean.TRUE.equals(terrRev.get("credited"))) {
+                data.put("territoryReward", terrRev);
+            }
+        }
         data.put("participating", false);
         data.put("firstVisit", firstVisit);
         data.put("xp", xp);
