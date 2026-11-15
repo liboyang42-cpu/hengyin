@@ -1,0 +1,349 @@
+{
+ "base": "https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech",
+ "run_id": "dry",
+ "at": "2026-11-15T16:43:16Z",
+ "flows": [
+  {
+   "id": "F01",
+   "name": "Sign-in",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "sms/send",
+     "method": "POST",
+     "path": "/api/sms/send",
+     "member": null,
+     "request": {
+      "q": null,
+      "form": {
+       "phone": "13900000004"
+      },
+      "json": null
+     },
+     "result": "ERROR",
+     "status": null,
+     "code": null,
+     "ms": 45,
+     "note": "transport: ProxyError: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel co",
+     "owner": "env"
+    },
+    {
+     "label": "login/phone bad code rejected",
+     "method": "POST",
+     "path": "/api/login/phone",
+     "result": "SKIP",
+     "note": "blocked: transport error at 'sms/send'"
+    },
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F02",
+   "name": "Browse home",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F03",
+   "name": "Activity detail",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "activity/info 992031 (anonymous)",
+     "method": "POST",
+     "path": "/api/activity/info",
+     "member": null,
+     "request": {
+      "q": null,
+      "form": {
+       "id": 992031
+      },
+      "json": null
+     },
+     "result": "ERROR",
+     "status": null,
+     "code": null,
+     "ms": 167,
+     "note": "transport: ProxyError: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/activity/info (Caused by ProxyError('Unable to connect to proxy', OSError('Tunn",
+     "owner": "env"
+    },
+    {
+     "label": "activity/info 992031 (signed in)",
+     "method": "POST",
+     "path": "/api/activity/info",
+     "result": "SKIP",
+     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+    },
+    {
+     "label": "topic/info-to-user 992001",
+     "method": "POST",
+     "path": "/api/topic/info-to-user",
+     "result": "SKIP",
+     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+    },
+    {
+     "label": "registration/payment-readiness",
+     "method": "POST",
+     "path": "/api/registration/payment-readiness",
+     "result": "SKIP",
+     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+    },
+    {
+     "label": "play/nodes preview",
+     "method": "GET",
+     "path": "/api/play/nodes",
+     "result": "SKIP",
+     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+    },
+    {
+     "label": "activity/info unknown id",
+     "method": "POST",
+     "path": "/api/activity/info",
+     "result": "SKIP",
+     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+    }
+   ]
+  },
+  {
+   "id": "F04",
+   "name": "Register and pay",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F05",
+   "name": "Ticket QR",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F06",
+   "name": "Check-in",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F07",
+   "name": "Play game: answer, hint, finish",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F08",
+   "name": "Roam walk and fog reveal",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F09",
+   "name": "City Monopoly claim, rent, challenge",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F10",
+   "name": "Club join and chat",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F11",
+   "name": "Messages and group chat",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F12",
+   "name": "Publish a topic",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F13",
+   "name": "Publish an activity",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F14",
+   "name": "Merchant scan-to-verify",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F15",
+   "name": "Merchant refund",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F16",
+   "name": "Creator earnings",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F17",
+   "name": "Withdraw (TEST)",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  },
+  {
+   "id": "F18",
+   "name": "Account deletion",
+   "verdict": "BLOCKED",
+   "steps": [
+    {
+     "label": "(precondition)",
+     "method": "-",
+     "path": "-",
+     "result": "BLOCKED",
+     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+     "owner": "env"
+    }
+   ]
+  }
+ ]
+}

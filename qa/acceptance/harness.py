@@ -136,7 +136,7 @@ def token(member):
     """Log a fixture member in once per run via the real /api/sms/send + /api/login/phone."""
     if member in _TOKENS:
         return _TOKENS[member]
-    phone = PHONE[member]
+    phone = PHONE.get(member, member)  # a fixture member id, or a raw TEST phone (139000009xx)
     pre = os.environ.get("E2E_TOKEN_%s" % phone)
     if pre:
         _TOKENS[member] = pre
@@ -155,6 +155,15 @@ def token(member):
     return r["token"]
 
 
+def forget(member):
+    """Drop a cached token (e.g. after account deletion revokes sessions)."""
+    _TOKENS.pop(member, None)
+
+
+def rid(tag=""):
+    return ("qa%s%s%s" % (RUN_ID, tag, uuid.uuid4().hex))[:48]
+
+
 def run(flow_fn):
     """Run a flow function f(flow) and always return the flow summary."""
     fid, name = flow_fn.FLOW
@@ -164,6 +173,9 @@ def run(flow_fn):
     except Blocked as e:
         f.block(str(e))
         f.steps.append(dict(label="(precondition)", method="-", path="-", result="BLOCKED", note=str(e), owner="env"))
+    except Exception as e:  # a script bug must not hide the other flows
+        f.steps.append(dict(label="(harness error)", method="-", path="-", result="ERROR",
+                            note="%s: %s" % (type(e).__name__, e), owner="qa"))
     return f.summary()
 
 
