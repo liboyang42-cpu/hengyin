@@ -61,6 +61,14 @@ class GenericGameplayHttpE2eIT {
     @Autowired private UmsMemberMapper members;
     @Autowired private AppLoginService login;
     @Autowired private JdbcTemplate database;
+    @Autowired private com.chengyinhub.business.service.IAdvancedGameRuntimeService observedAdvancedRuntime;
+    private final AdvancedActionObserver advancedObserver = new AdvancedActionObserver(GenericGameplayHttpE2eIT.class);
+
+    @org.junit.jupiter.api.BeforeEach void bindAdvancedObservation(org.junit.jupiter.api.TestInfo info) {
+        advancedObserver.begin(info.getTestMethod().orElseThrow());
+    }
+
+    @org.junit.jupiter.api.AfterEach void verifyAdvancedObserver() { advancedObserver.assertHealthy(); }
     private final com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
     private final com.fasterxml.jackson.databind.node.ArrayNode transcript = json.createArrayNode();
     private final ReviewedMediaFixture mediaFixture = new ReviewedMediaFixture("generic");
@@ -323,6 +331,191 @@ class GenericGameplayHttpE2eIT {
         return receipt;
     }
 
+    static final class AdvancedActionObserver implements org.aopalliance.intercept.MethodInterceptor {
+        private static final java.util.Map<String, String> SOURCES = java.util.Map.of(
+                "com.chengyinhub.business.service.impl.AdvancedGameRuntimeServiceImpl", "AdvancedGameRuntimeServiceImpl.java",
+                "com.chengyinhub.business.service.impl.AdvancedActionJudgement", "AdvancedActionJudgement.java",
+                "com.chengyinhub.business.service.impl.GameSessionRuntimeServiceImpl", "GameSessionRuntimeServiceImpl.java",
+                "com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl", "TopicRouteRuntimeServiceImpl.java");
+        private static final java.util.Set<String> EXCEPTIONS = java.util.Set.of(
+                "java.lang.IllegalArgumentException", "java.lang.IllegalStateException", "java.lang.NumberFormatException",
+                "java.lang.ClassCastException", "java.lang.NullPointerException", "java.lang.UnsupportedOperationException",
+                "com.chengyinhub.common.exception.ServiceException", "com.chengyinhub.business.service.GameSessionException",
+                "com.fasterxml.jackson.databind.JsonMappingException", "com.fasterxml.jackson.databind.exc.InvalidDefinitionException");
+        private record Failure(String testMethod, String action, String exceptionClass, String sourceFile, int line) {}
+        private final Class<?> suite;
+        private final java.util.concurrent.ConcurrentLinkedQueue<Failure> failures = new java.util.concurrent.ConcurrentLinkedQueue<>();
+        private final java.util.concurrent.ConcurrentHashMap<String, java.util.concurrent.atomic.AtomicInteger> callsByMethod = new java.util.concurrent.ConcurrentHashMap<>();
+        private final java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        private final java.util.concurrent.atomic.AtomicInteger active = new java.util.concurrent.atomic.AtomicInteger();
+        private final java.util.concurrent.atomic.AtomicInteger thrown = new java.util.concurrent.atomic.AtomicInteger();
+        private final java.util.concurrent.atomic.AtomicBoolean observerFault = new java.util.concurrent.atomic.AtomicBoolean();
+        private volatile String testMethod;
+        private org.springframework.aop.framework.Advised proxy;
+        private org.springframework.aop.Advisor advisor;
+        private org.springframework.aop.Advisor[] originalAdvisors;
+        private String sourceSha;
+
+        AdvancedActionObserver(Class<?> suite) {
+            assertTrue(java.util.Set.of("GenericGameplayHttpE2eIT", "FreezeGameHttpE2eIT", "FreezeReuseThemeHttpE2eIT").contains(suite.getSimpleName()), "OBSERVER_SUITE_NOT_REVIEWED");
+            this.suite = suite;
+        }
+
+        private Path output() { return Paths.get("target/http-e2e/public/advanced-action-observer-" + suite.getSimpleName() + ".json"); }
+
+        void install(com.chengyinhub.business.service.IAdvancedGameRuntimeService service) {
+            assertNull(advisor, "OBSERVER_ALREADY_INSTALLED");
+            sourceSha = System.getenv("SOURCE_SHA");
+            assertTrue(sourceSha != null && sourceSha.matches("[0-9a-f]{40}"), "OBSERVER_SOURCE_SHA_REQUIRED");
+            assertFalse(Files.exists(output()), "OBSERVER_STALE_OUTPUT");
+            proxy = assertInstanceOf(org.springframework.aop.framework.Advised.class, service, "OBSERVER_REQUIRES_EXISTING_AOP_PROXY");
+            assertFalse(proxy.isFrozen(), "OBSERVER_PROXY_FROZEN");
+            originalAdvisors = proxy.getAdvisors();
+            for (org.springframework.aop.Advisor prior : originalAdvisors)
+                assertFalse(prior.getAdvice() instanceof AdvancedActionObserver, "OBSERVER_DUPLICATE_ADVICE");
+            org.springframework.aop.support.StaticMethodMatcherPointcut pointcut = new org.springframework.aop.support.StaticMethodMatcherPointcut() {
+                @Override public boolean matches(java.lang.reflect.Method method, Class<?> targetClass) {
+                    return com.chengyinhub.business.service.IAdvancedGameRuntimeService.class.isAssignableFrom(targetClass)
+                            && method.getName().equals("act") && java.util.Arrays.equals(method.getParameterTypes(),
+                            new Class<?>[]{Long.class, Long.class, Integer.class, String.class, String.class, java.util.Map.class});
+                }
+            };
+            org.springframework.aop.Advisor own = new org.springframework.aop.support.DefaultPointcutAdvisor(pointcut, this);
+            proxy.addAdvisor(0, own);
+            advisor = own;
+            assertSame(own, proxy.getAdvisors()[0], "OBSERVER_INSTALLATION_MISMATCH");
+        }
+
+        void begin(java.lang.reflect.Method method) {
+            assertHealthy();
+            assertEquals(0, active.get(), "OBSERVER_PREVIOUS_CALL_STILL_ACTIVE");
+            assertSame(suite, method.getDeclaringClass(), "OBSERVER_FOREIGN_TEST_METHOD");
+            testMethod = method.getName();
+            callsByMethod.putIfAbsent(testMethod, new java.util.concurrent.atomic.AtomicInteger());
+        }
+
+        private static String action(Object value) {
+            if (!(value instanceof String)) return "OTHER";
+            return switch ((String) value) {
+                case "SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY", "SUBMIT_QA" -> (String) value;
+                default -> "OTHER";
+            };
+        }
+
+        @Override public Object invoke(org.aopalliance.intercept.MethodInvocation invocation) throws Throwable {
+            active.incrementAndGet();
+            String method = testMethod;
+            String action = "OTHER";
+            try {
+                calls.incrementAndGet();
+                assertNotNull(method, "OBSERVER_NO_ACTIVE_TEST_METHOD");
+                callsByMethod.get(method).incrementAndGet();
+                action = action(invocation.getArguments()[4]);
+            } catch (Throwable observationFailure) {
+                observerFault.set(true);
+            }
+            try {
+                return invocation.proceed();
+            } catch (Throwable original) {
+                try { capture(original, method, action); }
+                catch (Throwable observationFailure) { observerFault.set(true); }
+                throw original;
+            } finally {
+                active.decrementAndGet();
+            }
+        }
+
+        private void capture(Throwable original, String method, String action) {
+            assertTrue(thrown.incrementAndGet() <= 64, "OBSERVER_FAILURE_LIMIT");
+            String type = original.getClass().getName();
+            if (!EXCEPTIONS.contains(type)) type = "UNREVIEWED_EXCEPTION_CLASS";
+            StackTraceElement frame = sourceFrame(original.getStackTrace());
+            failures.add(new Failure(method, action, type, SOURCES.get(frame.getClassName()), frame.getLineNumber()));
+        }
+
+        private static StackTraceElement sourceFrame(StackTraceElement[] frames) {
+            for (StackTraceElement frame : frames) {
+                String source = SOURCES.get(frame.getClassName());
+                if (source == null) continue;
+                assertEquals(source, frame.getFileName(), "OBSERVER_SOURCE_FILE_MISMATCH");
+                assertTrue(frame.getLineNumber() > 0 && frame.getLineNumber() <= 100000, "OBSERVER_SOURCE_LINE_INVALID");
+                return frame;
+            }
+            throw new AssertionError("OBSERVER_SOURCE_NOT_REVIEWED");
+        }
+
+        static void assertContract(com.fasterxml.jackson.databind.ObjectMapper json) {
+            try {
+                AdvancedActionObserver observer = new AdvancedActionObserver(GenericGameplayHttpE2eIT.class);
+                observer.testMethod = "UNIT_ONLY";
+                observer.callsByMethod.put("UNIT_ONLY", new java.util.concurrent.atomic.AtomicInteger());
+                org.aopalliance.intercept.MethodInvocation call = org.mockito.Mockito.mock(org.aopalliance.intercept.MethodInvocation.class);
+                org.mockito.Mockito.when(call.getArguments()).thenReturn(new Object[]{null, null, null, null, "SUBMIT_SORT", null});
+                java.util.concurrent.atomic.AtomicInteger delegated = new java.util.concurrent.atomic.AtomicInteger();
+                Object value = new Object();
+                org.mockito.Mockito.doAnswer(ignored -> { delegated.incrementAndGet(); return value; }).when(call).proceed();
+                assertSame(value, observer.invoke(call));
+                assertEquals(1, delegated.get());
+                observer.assertHealthy();
+                String privateMarker = "OBSERVER_PRIVATE_SENTINEL";
+                IllegalArgumentException original = new IllegalArgumentException(privateMarker) {
+                    @Override public StackTraceElement[] getStackTrace() { throw new AssertionError(privateMarker); }
+                };
+                org.mockito.Mockito.doAnswer(ignored -> { delegated.incrementAndGet(); throw original; }).when(call).proceed();
+                assertSame(original, assertThrows(IllegalArgumentException.class, () -> observer.invoke(call)));
+                assertEquals(2, delegated.get());
+                assertThrows(AssertionError.class, observer::assertHealthy);
+                assertFalse(observer.report(json).toString().contains(privateMarker));
+                // Unit-only source metadata: never added to a real observation or written as an artifact.
+                String owner = "com.chengyinhub.business.service.impl.AdvancedActionJudgement";
+                StackTraceElement reviewed = new StackTraceElement(owner, "unit", "AdvancedActionJudgement.java", 1);
+                assertSame(reviewed, sourceFrame(new StackTraceElement[]{reviewed}));
+                assertThrows(AssertionError.class, () -> sourceFrame(new StackTraceElement[]{new StackTraceElement("unreviewed", "unit", "private", 1)}));
+                assertThrows(AssertionError.class, () -> sourceFrame(new StackTraceElement[]{new StackTraceElement(owner, "unit", "private", 1)}));
+                assertThrows(AssertionError.class, () -> sourceFrame(new StackTraceElement[]{new StackTraceElement(owner, "unit", "AdvancedActionJudgement.java", 0)}));
+                assertThrows(AssertionError.class, () -> sourceFrame(new StackTraceElement[]{new StackTraceElement(owner, "unit", "AdvancedActionJudgement.java", 100001)}));
+            } catch (Throwable failedSelfCheck) {
+                throw new AssertionError("OBSERVER_SELF_CHECK_FAILED");
+            }
+        }
+
+        void assertHealthy() { assertFalse(observerFault.get(), "OBSERVER_FAILED_CLOSED"); }
+
+        private ObjectNode report(com.fasterxml.jackson.databind.ObjectMapper json) {
+            ObjectNode report = json.createObjectNode().put("schema", "advanced-act-observer:v1").put("sourceSha", sourceSha)
+                    .put("suite", suite.getSimpleName()).put("actCalls", calls.get()).put("thrownCalls", thrown.get())
+                    .put("observerFault", observerFault.get());
+            ObjectNode methods = report.putObject("callsBySourceTestMethod");
+            new java.util.TreeMap<>(callsByMethod).forEach((name, count) -> methods.put(name, count.get()));
+            ArrayNode events = report.putArray("exceptions");
+            for (Failure failure : failures)
+                events.addObject().put("sourceTestMethod", failure.testMethod()).put("action", failure.action())
+                        .put("exceptionClass", failure.exceptionClass()).put("sourceFile", failure.sourceFile()).put("line", failure.line());
+            return report;
+        }
+
+        void writeAndDetach(com.fasterxml.jackson.databind.ObjectMapper json) throws java.io.IOException {
+            try {
+                assertNotNull(advisor, "OBSERVER_NOT_INSTALLED");
+                assertEquals(0, active.get(), "OBSERVER_CALL_STILL_ACTIVE");
+                Files.createDirectories(output().getParent());
+                Files.write(output(), json.writerWithDefaultPrettyPrinter().writeValueAsBytes(report(json)),
+                        java.nio.file.StandardOpenOption.CREATE_NEW, java.nio.file.StandardOpenOption.WRITE);
+                assertHealthy();
+            } finally {
+                if (advisor != null) {
+                    org.springframework.aop.Advisor own = advisor;
+                    advisor = null;
+                    assertTrue(proxy.removeAdvisor(own), "OBSERVER_DETACH_MISMATCH");
+                    org.springframework.aop.Advisor[] remaining = proxy.getAdvisors();
+                    assertEquals(originalAdvisors.length, remaining.length, "OBSERVER_CHAIN_SIZE_CHANGED");
+                    for (int i = 0; i < remaining.length; i++)
+                        assertTrue(originalAdvisors[i] == remaining[i], "OBSERVER_CHAIN_ORDER_CHANGED");
+                }
+            }
+        }
+    }
+
     // Separate assertion lines let the existing sanitized XML source frames identify only fixed guards.
     static JsonNode appliedAdvancedActionData(String action, JsonNode response) {
         int code = response.path("code").asInt(-1);
@@ -395,6 +588,7 @@ class GenericGameplayHttpE2eIT {
     }
 
     static void configureRequestSerialization(TestRestTemplate client, com.fasterxml.jackson.databind.ObjectMapper plainJson) throws java.io.IOException {
+        AdvancedActionObserver.assertContract(plainJson);
         java.util.List<org.springframework.http.converter.HttpMessageConverter<?>> original =
                 new java.util.ArrayList<>(client.getRestTemplate().getMessageConverters());
         java.util.List<org.springframework.http.converter.HttpMessageConverter<?>> replacements = new java.util.ArrayList<>();
@@ -683,6 +877,7 @@ class GenericGameplayHttpE2eIT {
 
     @org.junit.jupiter.api.BeforeAll void loadExistingPermissionFixture() throws Exception {
         configureRequestSerialization(http, json);
+        advancedObserver.install(observedAdvancedRuntime);
         assertContentSecurityFixture(context);
         // Fresh-schema skips migration data; reuse its existing role defaults for local author capabilities.
         for(String file:new String[]{"sql/migration_p1_rbac_permission_defaults.sql","sql/migration_m1_permission_full.sql","sql/migration_p1_rbac_permission_defaults.sql"})
@@ -693,14 +888,18 @@ class GenericGameplayHttpE2eIT {
     }
 
     @AfterAll void closeLocalServer() throws Exception {
-        try { mediaFixture.close(); } finally {
-            if (context != null) {
-                java.util.concurrent.ScheduledExecutorService executor = context.getBean("scheduledExecutorService", java.util.concurrent.ScheduledExecutorService.class);
-                executor.shutdown();
-                if (!executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) executor.shutdownNow();
+        try {
+            try { mediaFixture.close(); } finally {
+                if (context != null) {
+                    java.util.concurrent.ScheduledExecutorService executor = context.getBean("scheduledExecutorService", java.util.concurrent.ScheduledExecutorService.class);
+                    executor.shutdown();
+                    if (!executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) executor.shutdownNow();
+                }
+                Files.createDirectories(Paths.get("target/http-e2e"));
+                json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/transcript.json").toFile(),transcript);
             }
-            Files.createDirectories(Paths.get("target/http-e2e"));
-            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/transcript.json").toFile(),transcript);
+        } finally {
+            advancedObserver.writeAndDetach(json);
         }
     }
 

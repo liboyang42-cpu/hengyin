@@ -53,6 +53,14 @@ class FreezeGameHttpE2eIT {
     @Autowired private UmsMemberMapper members;
     @Autowired private AppLoginService login;
     @Autowired private JdbcTemplate database;
+    @Autowired private com.chengyinhub.business.service.IAdvancedGameRuntimeService observedAdvancedRuntime;
+    private final GenericGameplayHttpE2eIT.AdvancedActionObserver advancedObserver = new GenericGameplayHttpE2eIT.AdvancedActionObserver(FreezeGameHttpE2eIT.class);
+
+    @org.junit.jupiter.api.BeforeEach void bindAdvancedObservation(org.junit.jupiter.api.TestInfo info) {
+        advancedObserver.begin(info.getTestMethod().orElseThrow());
+    }
+
+    @org.junit.jupiter.api.AfterEach void verifyAdvancedObserver() { advancedObserver.assertHealthy(); }
     private final ObjectMapper json = new ObjectMapper();
     private final ArrayNode transcript = json.createArrayNode();
     private final GenericGameplayHttpE2eIT.ReviewedMediaFixture mediaFixture = new GenericGameplayHttpE2eIT.ReviewedMediaFixture("freeze");
@@ -73,6 +81,7 @@ class FreezeGameHttpE2eIT {
 
     @BeforeAll void loadExistingPermissionFixture() throws Exception {
         GenericGameplayHttpE2eIT.configureRequestSerialization(http, json);
+        advancedObserver.install(observedAdvancedRuntime);
         GenericGameplayHttpE2eIT.assertContentSecurityFixture(context);
         for (String file : new String[]{"sql/migration_p1_rbac_permission_defaults.sql", "sql/migration_m1_permission_full.sql", "sql/migration_p1_rbac_permission_defaults.sql"})
             for (String statement : ItSchema.splitStatements(new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8))) {
@@ -82,14 +91,18 @@ class FreezeGameHttpE2eIT {
     }
 
     @AfterAll void writeEvidence() throws Exception {
-        try { mediaFixture.close(); } finally {
-            if (context != null) {
-                ScheduledExecutorService executor = context.getBean("scheduledExecutorService", ScheduledExecutorService.class);
-                executor.shutdown(); if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow();
+        try {
+            try { mediaFixture.close(); } finally {
+                if (context != null) {
+                    ScheduledExecutorService executor = context.getBean("scheduledExecutorService", ScheduledExecutorService.class);
+                    executor.shutdown(); if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow();
+                }
+                Files.createDirectories(Paths.get("target/http-e2e"));
+                json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-transcript.json").toFile(), transcript);
+                json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-evidence.json").toFile(), evidence);
             }
-            Files.createDirectories(Paths.get("target/http-e2e"));
-            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-transcript.json").toFile(), transcript);
-            json.writerWithDefaultPrettyPrinter().writeValue(Paths.get("target/http-e2e/freeze-evidence.json").toFile(), evidence);
+        } finally {
+            advancedObserver.writeAndDetach(json);
         }
     }
 
