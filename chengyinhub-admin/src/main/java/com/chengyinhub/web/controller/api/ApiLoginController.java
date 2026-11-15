@@ -14,6 +14,7 @@ import com.chengyinhub.common.utils.SecurityUtils;
 import com.chengyinhub.common.annotation.Log;
 import com.chengyinhub.common.config.RuoYiConfig;
 import com.chengyinhub.common.constant.Constants;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.domain.entity.AppUser;
@@ -132,7 +133,7 @@ public class ApiLoginController extends BaseController {
         try {
             openid = getOpenID(code);
         } catch (RuntimeException e) {
-            return AjaxResult.error(WECHAT_SERVICE_UNAVAILABLE);
+            return AjaxResult.error(HttpStatus.SERVICE_UNAVAILABLE, WECHAT_SERVICE_UNAVAILABLE);
         }
 
         // 生成令牌
@@ -621,7 +622,7 @@ public class ApiLoginController extends BaseController {
         String appid = Convert.toStr(configService.selectConfigByKey("app.wechat.app.appid"));
         String appsecret = Convert.toStr(configService.selectConfigByKey("app.wechat.app.appsecret"));
         if (StringUtils.isEmpty(appid) || StringUtils.isEmpty(appsecret)) {
-            return error("原生微信未配置");
+            return AjaxResult.error(HttpStatus.SERVICE_UNAVAILABLE, "原生微信未配置");
         }
 
         String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + appid
@@ -759,7 +760,7 @@ public class ApiLoginController extends BaseController {
 
         String clientId = Convert.toStr(configService.selectConfigByKey("apple.clientId"));
         if (StringUtils.isEmpty(clientId)) {
-            return error("Apple登录未配置");
+            return AjaxResult.error(HttpStatus.SERVICE_UNAVAILABLE, "Apple登录未配置");
         }
 
         // 校验 identityToken(验签 + iss/aud/exp)

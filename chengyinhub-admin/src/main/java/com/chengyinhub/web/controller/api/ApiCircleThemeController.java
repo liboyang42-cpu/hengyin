@@ -8,9 +8,11 @@ import com.chengyinhub.business.domain.dto.CircleExploreActionRequest;
 import com.chengyinhub.business.service.ICircleExploreService;
 import com.chengyinhub.business.service.ICmsTopicService;
 import com.chengyinhub.business.service.ICircleThemeSupplyService;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
+import com.chengyinhub.common.utils.UserSafeMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,7 +47,7 @@ public class ApiCircleThemeController extends BaseController {
             circleExploreService.assertEligible(topicId, memberId);
             return AjaxResult.success(circleThemeSupplyService.listPublicSupplies(topicId));
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -58,7 +60,7 @@ public class ApiCircleThemeController extends BaseController {
             return AjaxResult.success(circleExploreService.create(
                     request == null ? null : request.getTopicId(), memberId));
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -71,7 +73,7 @@ public class ApiCircleThemeController extends BaseController {
             return AjaxResult.success(circleExploreService.join(
                     request == null ? null : request.getInviteCode(), memberId));
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -86,7 +88,7 @@ public class ApiCircleThemeController extends BaseController {
                     request == null ? null : request.getNote(), memberId);
             return success("已记录");
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -101,7 +103,7 @@ public class ApiCircleThemeController extends BaseController {
                     request == null ? null : request.getValue(), memberId);
             return success("已保存");
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -113,7 +115,7 @@ public class ApiCircleThemeController extends BaseController {
         try {
             return AjaxResult.success(circleExploreService.card(sessionId, memberId));
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -144,7 +146,7 @@ public class ApiCircleThemeController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -161,7 +163,7 @@ public class ApiCircleThemeController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return fail(e);
         }
     }
 
@@ -169,5 +171,23 @@ public class ApiCircleThemeController extends BaseController {
         if (!MerchantOperationScope.isMerchant(scope)) return principalMemberId;
         return merchantAccessService.require(principalMemberId, MerchantPermission.PROJECT_MANAGE)
                 .getOwnerMemberId();
+    }
+
+    /** 将圈层主题服务抛出的业务状态拒绝映射为对应 4xx HTTP 状态码，不返回 500。 */
+    private AjaxResult fail(IllegalStateException e) {
+        String raw = e.getMessage();
+        int status = HttpStatus.CONFLICT;
+        if (raw == null || raw.trim().isEmpty()
+                || raw.contains("参数") || raw.contains("为空") || raw.contains("无效")
+                || raw.contains("格式") || raw.contains("必须")) {
+            status = HttpStatus.BAD_REQUEST;
+        } else if (raw.contains("请先登录") || raw.contains("未登录")) {
+            status = HttpStatus.UNAUTHORIZED;
+        } else if (raw.contains("无权") || raw.contains("权限") || raw.contains("仅限") || raw.contains("只有")) {
+            status = HttpStatus.FORBIDDEN;
+        } else if (raw.contains("不存在")) {
+            status = HttpStatus.NOT_FOUND;
+        }
+        return AjaxResult.error(status, UserSafeMessage.of(raw, "当前状态不可操作"));
     }
 }
