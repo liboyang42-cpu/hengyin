@@ -227,7 +227,34 @@ test('F01 弱网刷新保留旧快照时明确标注旧数据时间并可重试�
 
 test('暂停节点在所有进入路径共用的锁闸被阻断', () => {
   assert.match(js, /if \(node && node\.paused\)/)
-  assert.match(js, /本站已暂停/)
+  const h = loadUnknownWritePlayer()
+  try {
+    const pause = { reason: '设备检修', resumeEta: '2026-11-16 06:00:00' }
+    for (const [node, expected] of [
+      [{ paused: true, locked: false }, '本站已暂停'],
+      [{ paused: true, locked: false, pause }, '本站已暂停 · 设备检修 · 预计恢复 2026-11-16 06:00:00'],
+      [{ paused: true, locked: false, pause, lockReason: '本站已暂停 · 平台批准安排 · 预计恢复 2026-11-17 08:00:00' },
+        '本站已暂停 · 平台批准安排 · 预计恢复 2026-11-17 08:00:00'],
+    ]) {
+      const before = h.toastCalls.length
+      assert.equal(h.page._lockedTip(node), true)
+      assert.equal(h.toastCalls.length, before + 1)
+      assert.equal(h.toastCalls.at(-1).title, expected)
+    }
+    const before = h.toastCalls.length
+    assert.equal(h.page._lockedTip({ paused: false, locked: false }), false)
+    assert.equal(h.toastCalls.length, before)
+    h.page._routeState = { routeMode: 'BRANCH_GRAPH' }
+    assert.equal(h.page._lockedTip({ locked: true, lockReason: '先完成前置站' }), true)
+    assert.equal(h.toastCalls.at(-1).title, '先完成前置站')
+    h.page.data.mode = 2
+    assert.equal(h.page.computeNext([{ nodeId: 1, paused: true }], []), null)
+    assert.equal(h.page.computeNext([{ nodeId: 1, paused: true }, { nodeId: 2 }], []).nodeId, 2)
+    assert.equal(h.submitCalls.length, 0)
+    assert.equal(h.receiptCalls.length, 0)
+  } finally {
+    h.cleanup()
+  }
   assert.match(js, /filter\(\(o\) => !o\.x\.done && !o\.x\.paused\)/)
 })
 

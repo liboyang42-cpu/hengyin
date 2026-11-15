@@ -33,7 +33,20 @@ function boundHandlers(wxml) {
   ))
 }
 
+// 同一源码的 handler 闭包会反复访问相同方法；按源码字节和方法名缓存，变异源码仍重新解析。
+const methodBodiesBySource = new Map()
+
 function methodBody(source, name) {
+  let methods = methodBodiesBySource.get(source)
+  if (!methods) {
+    methods = new Map()
+    methodBodiesBySource.set(source, methods)
+  }
+  if (!methods.has(name)) methods.set(name, extractMethodBody(source, name))
+  return methods.get(name)
+}
+
+function extractMethodBody(source, name) {
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const patterns = [
     new RegExp(`(?:^|\\n)\\s*${escaped}\\s*\\([^)]*\\)\\s*\\{`, 'm'),
@@ -265,6 +278,24 @@ test('负控：全页面审计能抓住新增的裸 navigateBack', () => {
   )
   assert.notEqual(mutated, read(file), '负控必须真实移除主题创作页根栈落点')
   assert.ok(findUnsafePageBacks({ [file]: mutated }).violations.includes('pages/publish/fabu/index#goBack'))
+})
+
+test('方法体缓存隔离同路径源码变异、方法名和原本缺失的方法', () => {
+  const source = read('pages/publish/fabu/index.js')
+  const original = methodBody(source, '_exitEditor')
+  const mutated = source.replace(
+    "fail: () => wx.switchTab({ url: '/pages/template/index' })",
+    'fail: () => {}',
+  )
+  assert.notEqual(mutated, source)
+  assert.match(original, /wx\.switchTab/)
+  assert.doesNotMatch(methodBody(mutated, '_exitEditor'), /wx\.switchTab/)
+  assert.equal(methodBody(source, '_exitEditor'), original, '变异审计不能污染原源码缓存')
+  const addedName = '__backAuditAddedMethod'
+  assert.equal(methodBody(source, addedName), '', '方法名必须参与缓存键')
+  const withAddedMethod = source + '\nconst auditMutation = {\n  __backAuditAddedMethod() { wx.navigateBack({}) }\n}\n'
+  assert.match(methodBody(withAddedMethod, addedName), /wx\.navigateBack/, '同路径新增方法不能复用旧的缺失结果')
+  assert.equal(methodBody(source, addedName), '')
 })
 
 function runDefaultNavBack(stackLength, transform = (source) => source) {
