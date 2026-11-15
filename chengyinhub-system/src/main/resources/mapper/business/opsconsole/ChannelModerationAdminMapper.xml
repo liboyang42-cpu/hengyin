@@ -96,7 +96,8 @@
 
     <select id="listActions" resultType="java.util.LinkedHashMap" useCache="false">
         SELECT id, guild_kind AS guildKind, guild_id AS guildId, target_member_id AS targetMemberId, action_type AS actionType,
-               status, version, scope_type AS scopeType, scope_id AS scopeId, reason_code AS reasonCode, reason_text AS reasonText,
+               CASE WHEN status = 'ACTIVE' AND expires_at IS NOT NULL AND expires_at &lt;= CURRENT_TIMESTAMP(3) THEN 'EXPIRED' ELSE status END AS status,
+               version, scope_type AS scopeType, scope_id AS scopeId, reason_code AS reasonCode, reason_text AS reasonText,
                duration_sec AS durationSec, starts_at AS startsAt, expires_at AS expiresAt, operator_id AS operatorId,
                revoked_by AS revokedBy, revoke_reason AS revokeReason, revoked_at AS revokedAt
         FROM im_moderation_action
@@ -104,7 +105,8 @@
             <if test="guildKind != null"> AND guild_kind = #{guildKind} </if>
             <if test="guildId != null"> AND guild_id = #{guildId} </if>
             <if test="targetMemberId != null"> AND target_member_id = #{targetMemberId} </if>
-            <if test="status != null and status != ''"> AND status = #{status} </if>
+            <if test="status == 'ACTIVE'"> AND status = 'ACTIVE' AND (expires_at IS NULL OR expires_at &gt; CURRENT_TIMESTAMP(3)) </if>
+            <if test="status != null and status != '' and status != 'ACTIVE'"> AND status = #{status} </if>
         </where>
         ORDER BY id DESC
         LIMIT #{limit}
