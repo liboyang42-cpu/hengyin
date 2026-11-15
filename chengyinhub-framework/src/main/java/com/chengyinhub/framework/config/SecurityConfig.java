@@ -163,6 +163,9 @@ public class SecurityConfig
                         .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/user/deregister/result")).permitAll()
                         // 第九轮地图天气氛围:只回 rain/snow/fog/clear 与强度,方法内不取登录态,按 IP 限流。精确 GET 一条。
                         .requestMatchers(legacyMatchers(HttpMethod.GET, "/api/map/weather")).permitAll()
+                        // P6 measurement:登录前首会话埋点与 MetricKit 健康数据。方法内不取登录态,按 IP 限流,
+                        // 严格白名单合同;精确两条 POST,/api/telemetry/link 等兄弟路由照旧要登录。
+                        .requestMatchers(legacyMatchers(HttpMethod.POST, "/api/telemetry/anon/events", "/api/telemetry/metrickit")).permitAll()
                         // 发现商家公开列表(脱敏同 public-detail,方法内不取登录态,强制 status=1):仅精确 POST /list。
                         .requestMatchers(legacyMatchers(HttpMethod.POST, "/api/merchant/list")).permitAll()
                         // 第九轮 m4(owner 2026-11-04 批准):分享来的官方路线与据点给游客看。精确三条 GET,

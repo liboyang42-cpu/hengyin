@@ -4,6 +4,7 @@ import com.chengyinhub.business.domain.BizFunnelDaily;
 import com.chengyinhub.business.mapper.BizFunnelDailyMapper;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.business.service.IPostGameOutcomeReportService;
+import com.chengyinhub.business.telemetry.InstallTelemetryService;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,27 +42,53 @@ public class AnalyticsController extends BaseController {
     @Autowired
     private IPostGameOutcomeReportService postGameOutcomeReportService;
 
+    @Autowired
+    private InstallTelemetryService installTelemetryService;
+
     /** 「今天」按运营所在时区取;单测替换为固定时钟。 */
     private Clock clock = Clock.system(ZoneId.of("Asia/Shanghai"));
 
     @PreAuthorize("@ss.hasPermi('business:analytics:list')")
     @GetMapping("/funnel")
     public AjaxResult funnel(String startDate, String endDate) {
+        String[] windowError = new String[1];
+        LocalDate[] window = resolveFunnelWindow(startDate, endDate, windowError);
+        if (window == null) {
+            return error(windowError[0]);
+        }
+        LocalDate effectiveStart = window[0];
+        LocalDate effectiveEnd = window[1];
+        BizFunnelDaily query = new BizFunnelDaily();
+        query.getParams().put("beginStatDate", effectiveStart.toString());
+        query.getParams().put("endStatDate", effectiveEnd.toString());
+        List<BizFunnelDaily> rows = bizFunnelDailyMapper.selectBizFunnelDailyList(query);
+        Map<String, Object> data = new HashMap<>();
+        data.put("startDate", effectiveStart.toString());
+        data.put("endDate", effectiveEnd.toString());
+        data.put("rows", rows);
+        return success(data);
+    }
+
+    /**
+     * D3 漏斗窗口解析:返回 [start, end](含首尾);参数非法时返回 null 并把错误写进 errorOut[0]。
+     * 旧 /funnel 与 P6 /funnel/pre-sign-in 共用同一份窗口合同。
+     */
+    private LocalDate[] resolveFunnelWindow(String startDate, String endDate, String[] errorOut) {
         final LocalDate start;
         final LocalDate end;
         try {
             start = StringUtils.isNotBlank(startDate) ? LocalDate.parse(startDate) : null;
             end = StringUtils.isNotBlank(endDate) ? LocalDate.parse(endDate) : null;
         } catch (DateTimeParseException e) {
-            return error("日期格式必须为 yyyy-MM-dd");
+            return windowError(errorOut, "日期格式必须为 yyyy-MM-dd");
         }
         // LocalDate 还接受零年和扩展年份，这里保留正四位年份的日期合同。
         if ((start != null && (startDate.length() != 10 || start.getYear() < 1))
                 || (end != null && (endDate.length() != 10 || end.getYear() < 1))) {
-            return error("日期格式必须为 yyyy-MM-dd");
+            return windowError(errorOut, "日期格式必须为 yyyy-MM-dd");
         }
         if (start != null && end != null && start.isAfter(end)) {
-            return error("开始日期不能晚于结束日期");
+            return windowError(errorOut, "开始日期不能晚于结束日期");
         }
         // D3:窗口必须有界。都不传 = 最近 30 天(含今天);只传一端 = 从该端起算 30 天。
         LocalDate effectiveStart;
@@ -80,20 +107,32 @@ public class AnalyticsController extends BaseController {
             effectiveEnd = end;
         }
         if (ChronoUnit.DAYS.between(effectiveStart, effectiveEnd) + 1 > FUNNEL_MAX_WINDOW_DAYS) {
-            return error("查询窗口不能超过" + FUNNEL_MAX_WINDOW_DAYS + "天");
+            return windowError(errorOut, "查询窗口不能超过" + FUNNEL_MAX_WINDOW_DAYS + "天");
         }
         if (effectiveStart.getYear() < 1 || effectiveEnd.getYear() > 9999) {
-            return error("日期超出可查询范围");
+            return windowError(errorOut, "日期超出可查询范围");
         }
-        BizFunnelDaily query = new BizFunnelDaily();
-        query.getParams().put("beginStatDate", effectiveStart.toString());
-        query.getParams().put("endStatDate", effectiveEnd.toString());
-        List<BizFunnelDaily> rows = bizFunnelDailyMapper.selectBizFunnelDailyList(query);
-        Map<String, Object> data = new HashMap<>();
-        data.put("startDate", effectiveStart.toString());
-        data.put("endDate", effectiveEnd.toString());
-        data.put("rows", rows);
-        return success(data);
+        return new LocalDate[] {effectiveStart, effectiveEnd};
+    }
+
+    private static LocalDate[] windowError(String[] errorOut, String message) {
+        errorOut[0] = message;
+        return null;
+    }
+
+    /**
+     * P6 measurement(GRO-03):登录前首会话漏斗。按安装号去重,来源 app_install_event / app_install_link,
+     * 即时计算、只读;窗口合同与 /funnel 相同。
+     */
+    @PreAuthorize("@ss.hasPermi('business:analytics:list')")
+    @GetMapping("/funnel/pre-sign-in")
+    public AjaxResult preSignInFunnel(String startDate, String endDate) {
+        String[] windowError = new String[1];
+        LocalDate[] window = resolveFunnelWindow(startDate, endDate, windowError);
+        if (window == null) {
+            return error(windowError[0]);
+        }
+        return success(installTelemetryService.preSignInFunnel(window[0], window[1]));
     }
 
     @PreAuthorize("@ss.hasPermi('business:analytics:list')")

@@ -242,6 +242,18 @@ class PublicReadEndpointsSecurityChainTest {
     }
 
     @Test
+    void measurementIntakeIsAnonymousOnlyForTwoExactPostsAndLinkIsNot() throws Exception {
+        // P6 measurement:登录前埋点与 MetricKit 两条精确 POST 匿名;关联账号与兄弟路由照旧要登录。
+        mockMvc.perform(post("/api/telemetry/anon/events")).andExpect(status().isOk());
+        mockMvc.perform(post("/api/telemetry/metrickit")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/telemetry/anon/events")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/telemetry/metrickit")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/telemetry/link")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/telemetry/anon/events/extra")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/telemetry/anon")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void legacyUserInfoAndSiblingsStillRequireAuthentication() throws Exception {
         // 负控:放行必须精确到路径。写成 /api/user/** 或 /api/merchant/** 时这几条会变 200。
         mockMvc.perform(post("/api/user/info"))
@@ -454,7 +466,9 @@ class PublicReadEndpointsSecurityChainTest {
                 "/api/city/nodes/123/favorite", "/api/city/nodes/12a",
                 "/api/preset/route/list", "/api/preset/route/info", "/api/preset/style/list",
                 "/api/preset/route/info/extra", "/api/preset/route/listing", "/api/preset/route",
-                "/api/map/weather", "/api/map/weather/extra", "/api/map/reverse-geocode", "/api/map/nearby"})
+                "/api/map/weather", "/api/map/weather/extra", "/api/map/reverse-geocode", "/api/map/nearby",
+                "/api/telemetry/anon/events", "/api/telemetry/metrickit", "/api/telemetry/link",
+                "/api/telemetry/anon/events/extra", "/api/telemetry/anon"})
         AjaxResult probeAnyMethod() {
             return AjaxResult.success();
         }
