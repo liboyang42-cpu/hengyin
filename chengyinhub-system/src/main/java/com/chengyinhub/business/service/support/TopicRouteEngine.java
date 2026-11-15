@@ -484,6 +484,7 @@ public class TopicRouteEngine {
         public String getReason() { return reason; }
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public static final class State {
         /**
          * 力竭标志的键与判据(阶段 3)。放在 State 上是因为它有**两个消费方**:
@@ -552,21 +553,21 @@ public class TopicRouteEngine {
         public Long getRecommendedNodeId() { return recommendedNodeId; }
         public void setRecommendedNodeId(Long recommendedNodeId) { this.recommendedNodeId = recommendedNodeId; }
         public Map<Long, String> getNodeStates() { return nodeStates; }
-        public void setNodeStates(Map<Long, String> nodeStates) { this.nodeStates = nodeStates; }
+        public void setNodeStates(Map<Long, String> nodeStates) { this.nodeStates = nodeStates == null ? new LinkedHashMap<Long, String>() : new LinkedHashMap<Long, String>(nodeStates); }
         public Set<Long> getCompletedNodeIds() { return completedNodeIds; }
-        public void setCompletedNodeIds(Set<Long> completedNodeIds) { this.completedNodeIds = completedNodeIds; }
+        public void setCompletedNodeIds(Set<Long> completedNodeIds) { this.completedNodeIds = completedNodeIds == null ? new LinkedHashSet<Long>() : new LinkedHashSet<Long>(completedNodeIds); }
         public Set<Long> getVisitedNodeIds() { return visitedNodeIds; }
-        public void setVisitedNodeIds(Set<Long> visitedNodeIds) { this.visitedNodeIds = visitedNodeIds; }
+        public void setVisitedNodeIds(Set<Long> visitedNodeIds) { this.visitedNodeIds = visitedNodeIds == null ? new LinkedHashSet<Long>() : new LinkedHashSet<Long>(visitedNodeIds); }
         public Map<String, Number> getVariables() { return variables; }
-        public void setVariables(Map<String, Number> variables) { this.variables = variables; }
+        public void setVariables(Map<String, Number> variables) { this.variables = variables == null ? new LinkedHashMap<String, Number>() : new LinkedHashMap<String, Number>(variables); }
         public Set<String> getTags() { return tags; }
-        public void setTags(Set<String> tags) { this.tags = tags; }
+        public void setTags(Set<String> tags) { this.tags = tags == null ? new LinkedHashSet<String>() : new LinkedHashSet<String>(tags); }
         public Set<String> getUsedEdgeIds() { return usedEdgeIds; }
-        public void setUsedEdgeIds(Set<String> usedEdgeIds) { this.usedEdgeIds = usedEdgeIds; }
+        public void setUsedEdgeIds(Set<String> usedEdgeIds) { this.usedEdgeIds = usedEdgeIds == null ? new LinkedHashSet<String>() : new LinkedHashSet<String>(usedEdgeIds); }
         public Map<String, Integer> getEdgeVisits() { return edgeVisits; }
-        public void setEdgeVisits(Map<String, Integer> edgeVisits) { this.edgeVisits = edgeVisits; }
+        public void setEdgeVisits(Map<String, Integer> edgeVisits) { this.edgeVisits = edgeVisits == null ? new LinkedHashMap<String, Integer>() : new LinkedHashMap<String, Integer>(edgeVisits); }
         public List<Map<String, Object>> getDecisionLog() { return decisionLog; }
-        public void setDecisionLog(List<Map<String, Object>> decisionLog) { this.decisionLog = decisionLog; }
+        public void setDecisionLog(List<Map<String, Object>> decisionLog) { this.decisionLog = decisionLog == null ? new ArrayList<Map<String, Object>>() : new ArrayList<Map<String, Object>>(decisionLog); }
         @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
         public com.fasterxml.jackson.databind.node.ObjectNode getThemeRuntime() { return themeRuntime; }
         public void setThemeRuntime(com.fasterxml.jackson.databind.node.ObjectNode value) { themeRuntime = value == null ? JSON.createObjectNode() : value; }

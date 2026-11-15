@@ -427,9 +427,10 @@ class ChapterFlowWriteServiceTest
         TopicUpdateDTO dto = update(legacyChapter());
         dto.setPublishMode("simple");
 
-        IllegalStateException error = assertThrows(IllegalStateException.class,
+        com.chengyinhub.common.exception.ServiceException error = assertThrows(com.chengyinhub.common.exception.ServiceException.class,
                 () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
 
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.CONFLICT, error.getCode());
         assertTrue(error.getMessage().contains("审核中"));
         verify(bundleReviewService, never()).freezeForSubmission(any(), any());
     }
