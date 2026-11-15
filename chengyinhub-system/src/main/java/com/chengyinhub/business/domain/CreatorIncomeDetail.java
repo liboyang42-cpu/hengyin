@@ -16,6 +16,8 @@ public class CreatorIncomeDetail extends BaseEntity {
     private String sourceType;
     private Long sourceId;
     private BigDecimal amount;
+    /** R12：本行积分（积分不是金额）。 */
+    private Integer points;
     private Integer incomeStatus;
     private Date occurTime;
 
@@ -29,6 +31,8 @@ public class CreatorIncomeDetail extends BaseEntity {
     public void setSourceId(Long sourceId) { this.sourceId = sourceId; }
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
+    public Integer getPoints() { return points; }
+    public void setPoints(Integer points) { this.points = points; }
     public Integer getIncomeStatus() { return incomeStatus; }
     public void setIncomeStatus(Integer incomeStatus) { this.incomeStatus = incomeStatus; }
     public Date getOccurTime() { return occurTime; }
