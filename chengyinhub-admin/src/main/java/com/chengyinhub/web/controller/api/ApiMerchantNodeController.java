@@ -23,6 +23,7 @@ import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.IQrcodeService;
 import com.chengyinhub.business.service.IWxContentSecurityService;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.constant.ValidationMethod;
 import com.chengyinhub.common.exception.ServiceException;
@@ -230,7 +231,7 @@ public class ApiMerchantNodeController extends BaseController {
             submitTemplateMedia(tplId, body.getImgUrl(), openid);
             return success(tplId);
         } catch (ServiceException | IllegalArgumentException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
     }
 
@@ -262,7 +263,7 @@ public class ApiMerchantNodeController extends BaseController {
             return error(e.getMessage());
         }
 
-        if (poiId != null && poiId > 0) return error("已上线据点不能复用投放申请入口");
+        if (poiId != null && poiId > 0) return AjaxResult.error(HttpStatus.CONFLICT, "已上线据点不能复用投放申请入口");
         // 没传坐标就回落到商家档案里的店址 —— 报名成为节点只要求「配个玩法」,
         // 店址平台本来就有。档案也没有坐标时才真的没法定位,那时候才报错。
         if (lat == null || lng == null) {
@@ -433,9 +434,9 @@ public class ApiMerchantNodeController extends BaseController {
         }
         try {
             return roamPoiApplicationService.setOwnedNodeStatus(ownerMemberId, poiId, st)
-                    ? success(st == 1 ? "已上架" : "已下线") : error("据点不存在或无权操作");
+                    ? success(st == 1 ? "已上架" : "已下线") : AjaxResult.error(HttpStatus.NOT_FOUND, "据点不存在或无权操作");
         } catch (IllegalArgumentException | IllegalStateException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
     }
 }

@@ -152,7 +152,9 @@ class ApiCoopComplaintReportTest {
         open.setStatus(CoopComplaint.STATUS_ACCEPTED);
         when(fixture.complaintService.listByTopic(TOPIC_ID)).thenReturn(Collections.singletonList(open));
 
-        assertRejected(fixture, fixture.controller.complaintReport(body(TOPIC_ID)));
+        AjaxResult duplicate = fixture.controller.complaintReport(body(TOPIC_ID));
+        assertEquals(409, duplicate.get("code"));
+        verify(fixture.complaintService, never()).create(any());
     }
 
     /** 已结工单不算「处理中」,不该挡住新投诉。 */

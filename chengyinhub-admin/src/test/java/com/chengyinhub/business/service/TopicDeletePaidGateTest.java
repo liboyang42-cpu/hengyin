@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -107,6 +108,8 @@ class TopicDeletePaidGateTest {
         givenChildOrder(status);
         RuntimeException e = assertThrows(RuntimeException.class, () -> delete(ME));
         assertTrue(e.getMessage().contains("场次"), e.getMessage());
+        // SMOKE-500-R4：在途报名挡删除是状态冲突，带 409 业务码。
+        assertEquals(Integer.valueOf(409), ((com.chengyinhub.common.exception.ServiceException) e).getCode());
         verify(topicMapper, never()).updateCmsTopic(ArgumentMatchers.any());
     }
 

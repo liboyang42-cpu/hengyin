@@ -638,8 +638,8 @@ public class ApiActivityController extends BaseController {
             }
             return AjaxResult.success(msg.toString());
         } catch (ServiceException se) {
-            // 业务异常:文案本就是写给主办方看的,原样回显
-            return AjaxResult.error(se.getMessage());
+            // 业务异常:文案本就是写给主办方看的,原样回显;带码的(如 409 生命周期已变化)保留原码
+            return AjaxResult.refusal(se);
         } catch (Exception e) {
             // 非预期异常:getMessage() 可能是 null(弹窗写着「null」)或 SQL 报错(回显表结构),不能给用户看。
             // 注:全局兜底 GlobalExceptionHandler 同样是 error(e.getMessage()),指望它兜是兜不住的。

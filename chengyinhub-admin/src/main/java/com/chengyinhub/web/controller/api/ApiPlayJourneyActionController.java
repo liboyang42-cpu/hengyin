@@ -53,7 +53,7 @@ public class ApiPlayJourneyActionController extends BaseController {
             return success(topicRouteRuntimeService.ask(memberId, longOrZero(input.get("topicId")), optionalActivityId(input),
                     longOrZero(input.get("nodeId")), Convert.toStr(input.get("questionId"), "")));
         } catch (IllegalArgumentException | IllegalStateException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
     }
 
@@ -123,7 +123,7 @@ public class ApiPlayJourneyActionController extends BaseController {
                     longOrZero(body.get("activityId")), claimOf(body), reading == null ? -1 : reading.getTodaySteps(), day);
             return stepsUnavailable ? AjaxResult.success("步数暂未同步，念头已记录", state) : success(state);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
     }
 
@@ -182,7 +182,8 @@ public class ApiPlayJourneyActionController extends BaseController {
                 return response;
             } catch (IllegalArgumentException | IllegalStateException e) {
                 sloResult = GameSloResult.REJECTED;
-                return error(e.getMessage());
+                // 参数类拒绝(如「开局流程不匹配」)回 400；状态类保持原口径,避免客户端把它误判成路线冲突。
+                return e instanceof IllegalArgumentException ? AjaxResult.refusal(e) : error(e.getMessage());
             } catch (RuntimeException e) {
                 sloResult = GameSloMetrics.classify(e);
                 throw e;

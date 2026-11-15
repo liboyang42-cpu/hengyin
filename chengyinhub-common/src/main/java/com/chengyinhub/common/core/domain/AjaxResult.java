@@ -3,6 +3,7 @@ package com.chengyinhub.common.core.domain;
 import java.util.HashMap;
 import java.util.Objects;
 import com.chengyinhub.common.constant.HttpStatus;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.UserSafeMessage;
 
@@ -169,6 +170,33 @@ public class AjaxResult extends HashMap<String, Object>
     public static AjaxResult error(int code, String msg)
     {
         return new AjaxResult(code, msg, null);
+    }
+
+    /**
+     * 把 Controller 就地捕获的业务拒绝还原成与全局异常处理一致的业务码，避免 catch 后 error(e.getMessage()) 一律压成 500：
+     * 带码的 ServiceException 用其自身码（并带回 data）；IllegalArgumentException 为 400（与全局处理一致）；
+     * IllegalStateException 为 409（业务状态冲突）；其余仍为 500。
+     *
+     * @param e 已捕获的业务拒绝
+     * @return 错误消息
+     */
+    public static AjaxResult refusal(RuntimeException e)
+    {
+        String msg = e == null ? null : e.getMessage();
+        if (e instanceof ServiceException se)
+        {
+            int code = se.getCode() == null ? HttpStatus.ERROR : se.getCode();
+            return new AjaxResult(code, msg, se.getData());
+        }
+        if (e instanceof IllegalArgumentException)
+        {
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, msg);
+        }
+        if (e instanceof IllegalStateException)
+        {
+            return AjaxResult.error(HttpStatus.CONFLICT, msg);
+        }
+        return AjaxResult.error(msg);
     }
 
     /**

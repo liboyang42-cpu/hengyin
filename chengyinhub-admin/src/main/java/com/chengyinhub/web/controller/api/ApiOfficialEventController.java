@@ -363,7 +363,7 @@ public class ApiOfficialEventController extends BaseController {
     @GetMapping("/v2/events/{id}/publish-check")
     public AjaxResult v2PublishCheck(@PathVariable("id") Long id) {
         Long memberId = uid();
-        if (!canPublish(memberId) || !officialEventV2Service.canReadControlledEvent(id, memberId)) return error("无权查看该活动发布检查");
+        if (!canPublish(memberId) || !officialEventV2Service.canReadControlledEvent(id, memberId)) return AjaxResult.error(HttpStatus.FORBIDDEN, "无权查看该活动发布检查");
         return success(officialEventV2Service.checkPublishableForOperator(id, memberId));
     }
 

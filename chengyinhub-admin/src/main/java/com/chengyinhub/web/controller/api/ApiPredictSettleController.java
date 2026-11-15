@@ -90,7 +90,7 @@ public class ApiPredictSettleController extends BaseController {
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         } catch (IllegalArgumentException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {

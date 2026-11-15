@@ -129,7 +129,7 @@ public class PlayPuzzleCommandApplication {
             return error("该玩法暂不支持解谜分提示");
         }
         String leadErr = playNodeContext.leadGateError(ctx.actId, node);
-        if (leadErr != null) return error(leadErr);
+        if (leadErr != null) return error(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, leadErr);
         String routeErr = playNodeContext.routeAccessError(memberId, ctx.actId, ctx.topicId, node, null);
         if (routeErr != null) return error(routeErr);
 

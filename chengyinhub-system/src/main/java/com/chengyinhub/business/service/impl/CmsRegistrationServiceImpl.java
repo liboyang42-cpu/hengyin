@@ -1928,7 +1928,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 此前「壳只在过审后存在」是唯一防线;主题事后下架不回写壳,这里补上第二道。
         if (activity.getTopicId() != null && activity.getTopicId() > 0
                 && !isLiveParentTopic(cmsTopicMapper.selectCmsTopicById(activity.getTopicId()))) {
-            throw new RuntimeException("主题活动已下架");
+            throw new ServiceException("主题活动已下架", HttpStatus.NOT_FOUND);
         }
 
         return activity;

@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.business.domain.ClubLeadCheckin;
 import com.chengyinhub.business.domain.ClubLeadState;
 import com.chengyinhub.business.domain.GameCommandReceipt;
@@ -544,7 +545,7 @@ public class ApiClubLeadController extends BaseController {
         ClubLeadState st = ensureState(activityId);
         if (st == null) return error("该场次不是带领场");
         if (!Integer.valueOf(2).equals(st.getStatus())) return error("仅行进中的场次可放行");
-        if (memberId.equals(leaderId) || !canAccessLeadActivity(activityId, memberId, null)) return error("该成员不在本场");
+        if (memberId.equals(leaderId) || !canAccessLeadActivity(activityId, memberId, null)) return AjaxResult.error(HttpStatus.NOT_FOUND, "该成员不在本场");
         try {
             advancedGameRuntimeService.releaseSensorStation(leaderId, memberId, activityId, activity.getTopicId(), nodeId);
         } catch (com.chengyinhub.common.exception.ServiceException | IllegalArgumentException | IllegalStateException e) {

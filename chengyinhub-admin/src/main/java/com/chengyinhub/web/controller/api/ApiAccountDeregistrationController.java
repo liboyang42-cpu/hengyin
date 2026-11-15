@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.business.service.IAccountDeregistrationService;
 import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.business.service.IUmsMemberService;
@@ -81,7 +82,7 @@ public class ApiAccountDeregistrationController extends BaseController {
         String trustedIp = TrustedProxyIpResolver.resolve(request);
         if (member.getPhone() != null && !member.getPhone().trim().isEmpty()) {
             // A supplied WeChat code cannot bypass the bound-phone SMS check.
-            if (!smsVerificationService.verify(member.getPhone(), smscode, trustedIp)) return error("验证码输入有误");
+            if (!smsVerificationService.verify(member.getPhone(), smscode, trustedIp)) return AjaxResult.error(HttpStatus.BAD_REQUEST, "验证码输入有误");
         } else if (!wechatReconfirmationService.verify(memberId, member.getWxOpenId(), wxcode, trustedIp)) {
             return error("微信身份确认失败，请重新确认本人");
         }
@@ -106,7 +107,7 @@ public class ApiAccountDeregistrationController extends BaseController {
         try {
             return success(deregistrationService.cancel(memberId));
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
     }
 

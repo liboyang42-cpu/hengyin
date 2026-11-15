@@ -81,7 +81,7 @@ public class ApiMerchantCommerceController extends BaseController {
             return success(commerceService.orderStatus(
                     access.getOwnerMemberId(), access.getMerchantId(), orderSn));
         } catch (IllegalArgumentException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
     }
 

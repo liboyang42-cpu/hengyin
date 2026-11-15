@@ -74,7 +74,7 @@ class TopicBetaGraduateTest {
 
         AjaxResult r = author.betaGraduate("100", null);
 
-        assertEquals(500, ((Integer) r.get("code")).intValue());
+        assertEquals(409, ((Integer) r.get("code")).intValue());
         assertEquals("该主题不在 Beta 试玩期", r.get("msg"));
     }
 }

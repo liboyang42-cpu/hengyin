@@ -90,7 +90,7 @@ public class ApiPricingController extends BaseController {
             }
             return AjaxResult.success(afterConfirmMessage(topicId, memberId));
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
     }
 

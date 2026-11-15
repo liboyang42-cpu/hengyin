@@ -609,7 +609,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
             throw new ServiceException("只有主题主办方可以取消主题", HttpStatus.FORBIDDEN);
         }
         if (topic.getClubId() != null) {
-            throw new ServiceException("俱乐部主题请在俱乐部「主题设置 → 结束主题」里取消");
+            throw new ServiceException("俱乐部主题请在俱乐部「主题设置 → 结束主题」里取消", HttpStatus.CONFLICT);
         }
         return topic;
     }

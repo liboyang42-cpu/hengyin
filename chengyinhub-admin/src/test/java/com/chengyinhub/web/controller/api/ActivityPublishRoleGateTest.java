@@ -292,7 +292,8 @@ class ActivityPublishRoleGateTest
 
         AjaxResult result = controller.activityCancel("9", "暴雨预警", "MERCHANT");
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        // SMOKE-500-R4:带码的业务拒绝保留原码(无岗位权限 = 403)
+        assertEquals(403, result.get(AjaxResult.CODE_TAG));
         verifyNoInteractions(teamGroupService);
     }
 

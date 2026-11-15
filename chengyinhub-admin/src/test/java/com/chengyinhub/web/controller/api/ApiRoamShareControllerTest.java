@@ -124,15 +124,16 @@ class ApiRoamShareControllerTest {
     void publish_rejects_bad_shapes_without_writing() {
         RoamShareSnapshotMapper mapper = mock(RoamShareSnapshotMapper.class);
         ApiRoamShareController c = controller(9, mapper);
-        assertEquals(500, c.publish(1L, 12L, "{\"track\":[{\"lat\":91,\"lng\":1}]}").get("code"), "越界坐标");
-        assertEquals(500, c.publish(1L, 12L, "{\"track\":[{\"lat\":{\"x\":1},\"lng\":1}]}").get("code"), "嵌套对象冒充坐标");
-        assertEquals(500, c.publish(1L, 12L, "{\"routeName\":{\"a\":1}}").get("code"), "非字符串文本");
-        assertEquals(500, c.publish(1L, 12L, "{\"distance\":-1}").get("code"), "负距离");
-        assertEquals(500, c.publish(1L, 12L, "not json").get("code"));
+        assertEquals(400, c.publish(1L, 12L, "{\"track\":[{\"lat\":91,\"lng\":1}]}").get("code"), "越界坐标");
+        assertEquals(400, c.publish(1L, 12L, "{\"track\":[{\"lat\":{\"x\":1},\"lng\":1}]}").get("code"), "嵌套对象冒充坐标");
+        assertEquals(400, c.publish(1L, 12L, "{\"routeName\":{\"a\":1}}").get("code"), "非字符串文本");
+        assertEquals(400, c.publish(1L, 12L, "{\"distance\":-1}").get("code"), "负距离");
+        assertEquals(400, c.publish(1L, 12L, "not json").get("code"));
+        assertEquals("足迹数据无效", c.publish(1L, 12L, "not json").get("msg"), "SMOKE-500-R4:400 只改码不改文案");
         assertEquals(500, c.publish(0L, 12L, SNAPSHOT).get("code"), "没有足迹 ts");
         StringBuilder big = new StringBuilder("{\"track\":[");
         for (int i = 0; i <= ApiRoamShareController.MAX_TRACK_POINTS; i++) big.append(i == 0 ? "" : ",").append("{\"lat\":1,\"lng\":1}");
-        assertEquals(500, c.publish(1L, 12L, big.append("]}").toString()).get("code"), "轨迹点数上限");
+        assertEquals(400, c.publish(1L, 12L, big.append("]}").toString()).get("code"), "轨迹点数上限");
         assertEquals(500, controller(0, mapper).publish(1L, 12L, SNAPSHOT).get("code"), "未登录不能发布");
         verify(mapper, never()).upsertOwnedSnapshot(anyString(), anyLong(), anyLong(), anyLong(), anyString());
     }
@@ -166,9 +167,9 @@ class ApiRoamShareControllerTest {
                 "存量精确坐标在匿名读取时也必须量化");
 
         AjaxResult gone = anonymous.read("fedcba9876543210fedcba9876543210");
-        assertEquals(500, gone.get("code"));
+        assertEquals(404, gone.get("code"));
         assertEquals(ApiRoamShareController.GONE, gone.get("msg"));
-        assertEquals(500, anonymous.read("1 or 1=1").get("code"));
+        assertEquals(404, anonymous.read("1 or 1=1").get("code"));
         verify(mapper, never()).selectSnapshotJsonByToken("1 or 1=1");
     }
 

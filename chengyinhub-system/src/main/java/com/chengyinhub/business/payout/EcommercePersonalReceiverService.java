@@ -1,5 +1,6 @@
 package com.chengyinhub.business.payout;
 
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.EcomPersonalReceiver;
 import com.chengyinhub.business.domain.UmsMember;
@@ -42,7 +43,7 @@ public class EcommercePersonalReceiverService {
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NEVER)
     public Map<String, Object> bind(Long memberId, Long clubId, String jsCode, Boolean consent) {
         requireMember(memberId);
-        if (!Boolean.TRUE.equals(consent)) throw new ServiceException("PERSONAL_RECEIVER_CONSENT_REQUIRED");
+        if (!Boolean.TRUE.equals(consent)) throw new ServiceException("PERSONAL_RECEIVER_CONSENT_REQUIRED", HttpStatus.BAD_REQUEST);
         if (jsCode == null || jsCode.isBlank()) throw new ServiceException("WECHAT_FRESH_CODE_REQUIRED");
         String appid = switches.spAppid();
         if (appid == null || appid.isBlank() || !appid.equals(sessions.miniAppId()))

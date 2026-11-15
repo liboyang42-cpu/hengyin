@@ -7,6 +7,7 @@ import com.chengyinhub.business.mapper.ClubLeadMapper;
 import com.chengyinhub.business.mapper.GameSessionRuntimeMapper;
 import com.chengyinhub.business.mapper.PlayAttemptLogMapper;
 import com.chengyinhub.business.service.*;
+import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.constant.ValidationMethod;
 import com.chengyinhub.framework.web.exception.GlobalExceptionHandler;
@@ -198,6 +199,19 @@ class PlayLeadAdmissionFailureTest {
         assertEquals("队伍集合中,等队长开始行程", BasicPlayCommandFixtures.submitPreference(controller, 401L, preferenceRequest()).get("msg"));
         verify(leads, times(2)).selectByActivity(500L);
         verifyNoInteractions(routes, progress, preferences);
+    }
+
+    /** SMOKE-500-R4：集合中的门闸在两个提示入口上与 /api/play/help 同口径回 400，文案不变，且不读模板、不扣积分。 */
+    @Test void gatheringLeadGateOnHintEntriesIsA400() {
+        ClubLeadState gathering = new ClubLeadState(); gathering.setStatus(1);
+        doReturn(gathering).when(leads).selectByActivity(500L);
+        AjaxResult puzzle = controller.puzzleHint("500", "401", null, 1);
+        assertEquals(400, puzzle.get("code")); assertEquals("队伍集合中,等队长开始行程", puzzle.get("msg"));
+        AjaxResult unlock = controller.unlockHint(401L, "500", null);
+        assertEquals(400, unlock.get("code")); assertEquals("队伍集合中,等队长开始行程", unlock.get("msg"));
+        verify(puzzles, never()).hintUnlockCost();
+        verify(puzzles, never()).requestHint(any(),any(),any(),any(),anyInt());
+        verifyNoInteractions(ledger);
     }
 
     @Test void preferenceNodeOwnershipRefusalStillPrecedesLeadAndRouteForBothHttpMethods() {

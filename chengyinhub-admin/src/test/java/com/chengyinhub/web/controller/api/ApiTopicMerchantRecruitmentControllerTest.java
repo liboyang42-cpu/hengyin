@@ -120,7 +120,7 @@ class ApiTopicMerchantRecruitmentControllerTest {
 
         AjaxResult result = controller.merchantRecruitmentChapters("42", null);
 
-        assertEquals(500, result.get("code"));
+        assertEquals(409, result.get("code"));
         assertTrue(String.valueOf(result.get("msg")).contains("自由探索"));
     }
 

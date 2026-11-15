@@ -266,4 +266,33 @@ class GlobalExceptionHandlerErrorMappingTest {
         assertEquals("请求参数有误", msgOf(leakRes));
         assertEquals(0, alarmCalls.get());
     }
+
+    /** SMOKE-500-R4 G4：@Valid 字段校验失败（如「活动结束时间不能为空」）是请求参数问题，必须 400 而不是 500。 */
+    @Test
+    void beanValidationFailuresMapTo400() {
+        org.springframework.validation.BeanPropertyBindingResult binding =
+                new org.springframework.validation.BeanPropertyBindingResult(new Object(), "request");
+        binding.addError(new org.springframework.validation.FieldError("request", "endTime", "活动结束时间不能为空"));
+
+        AjaxResult bind = handler.handleBindException(new org.springframework.validation.BindException(binding));
+        assertEquals(Integer.valueOf(HttpStatus.BAD_REQUEST), bind.get("code"));
+        assertEquals("活动结束时间不能为空", msgOf(bind));
+
+        Object valid = handler.handleMethodArgumentNotValidException(
+                new org.springframework.web.bind.MethodArgumentNotValidException(
+                        new org.springframework.core.MethodParameter(validationTarget(), 0), binding));
+        assertEquals(Integer.valueOf(HttpStatus.BAD_REQUEST), ((AjaxResult) valid).get("code"));
+        assertEquals("活动结束时间不能为空", msgOf((AjaxResult) valid));
+    }
+
+    @SuppressWarnings("unused")
+    private static void validationTargetMethod(Object request) { }
+
+    private static java.lang.reflect.Method validationTarget() {
+        try {
+            return GlobalExceptionHandlerErrorMappingTest.class.getDeclaredMethod("validationTargetMethod", Object.class);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 }

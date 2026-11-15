@@ -95,7 +95,7 @@ public class RoamSessionWriteService {
             long millis = time.longValue();
             if (!Double.isFinite(time.doubleValue()) || time.doubleValue() != (double) millis || millis <= 0
                     || millis < lower - tolerance || millis > upper + tolerance)
-                throw new ServiceException("采集时间不属于原行程");
+                throw new ServiceException("采集时间不属于原行程", com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST);
             long clamped = Math.max(lower, Math.min(millis, upper));
             Map<String, Object> record = new LinkedHashMap<>();
             record.put("tile", tile); record.put("collectedAt", new Date(clamped));

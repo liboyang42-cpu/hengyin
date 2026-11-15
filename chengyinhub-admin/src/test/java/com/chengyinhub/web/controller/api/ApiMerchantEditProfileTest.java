@@ -372,4 +372,17 @@ class ApiMerchantEditProfileTest {
         private ISysCategoryService categories;
         private AppMediaReferenceGuard media;
     }
+
+    /** SMOKE-500-R4：经营时间格式不对是参数错误 400，不是 500。 */
+    @Test
+    void invalidBusinessHoursAreBadRequest() {
+        Fixture fixture = fixture();
+        MmsMerchant request = new MmsMerchant();
+        request.setBusinessTime("09:00-22:00");
+
+        AjaxResult result = fixture.controller.updateUserInfo(request);
+
+        assertEquals(400, result.get(AjaxResult.CODE_TAG));
+        assertEquals("请选择有效的经营日与时间", result.get(AjaxResult.MSG_TAG));
+    }
 }

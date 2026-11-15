@@ -433,7 +433,7 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
             if (existing == null || !Integer.valueOf(0).equals(existing.getDelFlag())
                     || !memberId.equals(existing.getMemberId())
                     || !Integer.valueOf(1).equals(existing.getMerchantNodeEnabled())) {
-                throw new ServiceException("据点模板不存在或无权修改");
+                throw new ServiceException("据点模板不存在或无权修改", HttpStatus.NOT_FOUND);
             }
         }
         // 内容字段沿发布 DTO 白名单复制，客户端不能恢复删除状态或伪造审核状态。
