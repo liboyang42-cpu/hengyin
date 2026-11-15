@@ -272,7 +272,8 @@ public class AdvancedGameConfigValidator {
             "estimate", "diyName", "typeIn", "dailySign", "slowTask", "musicCorner", "timeWindow", "diceRoll",
             "hangman",
             "reaction", "ballShake", "countdown", "stopwatch", "coinFlip", "hiddenObject", "scan", "steps",
-            "compass", "shout", "blindTaste", "silentOrder", "sort", "match", "classify", "compare", "photoCheck", "album");
+            "compass", "shout", "blindTaste", "silentOrder", "sort", "match", "classify", "compare", "photoCheck", "album",
+            "trueFalse", "imageGuess", "jigsaw", "scratchCard");
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /** 空配置代表未启用；非空配置经校验后返回紧凑、稳定的 JSON。 */
@@ -386,6 +387,7 @@ public class AdvancedGameConfigValidator {
         validateAlbum(root.get("album"),root.path("outcomeRules").path("version").asInt()==1);
         validateNote(root.get("note"));
         validateTypeIn(root.get("typeIn"));
+        InteractiveMiniGameSupport.validateAll(root);
         // 旅程体验模组化:三个阶段共用的三个**可选**顶层字段。缺省 = 老配置,照旧通过,
         // 所以 schemaVersion 保持 1 不升版。这里只查配置形状,**不查键注册表** ——
         // 键有没有被主题注册由发布期对账,运行期只保证每处引用都是合法键名 + 合法 op。
@@ -573,6 +575,8 @@ public class AdvancedGameConfigValidator {
                     // 逐字猜词同一条前科口径:漏这一行 = 只配 hangman 的节点 hasAdvanced 仍是 false,
                     // 玩家到点直接打卡,玩法静默不存在。
                     || enabled(root.get("hangman"))
+                    || enabled(root.get("trueFalse")) || enabled(root.get("imageGuess"))
+                    || enabled(root.get("jigsaw")) || enabled(root.get("scratchCard"))
                     || root.path("outcomeRules").path("version").asInt()==1 && enabled(root.get("album"));
         } catch (Exception e) {
             throw new IllegalArgumentException("高级玩法配置不是合法 JSON");

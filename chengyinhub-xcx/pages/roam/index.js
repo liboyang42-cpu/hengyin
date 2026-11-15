@@ -1172,6 +1172,10 @@ Page({
       const r = (res && res.data) || {};
       if (r.tooFar) { cyToast('离得有点远，走近点'); return; }
       if (r.participating && r.poiId) {
+        // S5:打卡后服务端给出这家店今天的小游戏;在据点详情里玩。没配好时如实说明,不挡打卡。
+        const sg = r.shopGame || {};
+        if (sg.available && sg.game && sg.game.nameZh) cyToast('今天这家店的小游戏：' + sg.game.nameZh);
+        else if (sg.reason === 'NOT_READY') cyToast('这家店的小游戏还在准备中');
         this.openScene('roam-poi-detail', { poiId: r.poiId });
         return;
       }

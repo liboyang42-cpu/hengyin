@@ -44,8 +44,30 @@ public interface MemberPrivacyErasureMapper {
     /** Keeps the photo hashes for duplicate detection; unlinks the member (member_id = 0) and drops coordinates. */
     int anonymizeClaimEvidence(@Param("memberId") Long memberId);
 
+    // ---- CITY + roam territory (SYS-citygame) ----
+    /** The member's own visitor/claim check-ins carry their coordinates and photo: deleted. */
+    int deleteTerritoryCheckins(@Param("memberId") Long memberId);
+
+    /** Other players' check-ins at the member's territories keep their rows; the owner link goes (owner_member_id = 0). */
+    int unlinkTerritoryCheckinOwner(@Param("memberId") Long memberId);
+
+    /** Territories the member held: released (REVOKED), unlinked (owner 0) and the claim photo dropped. */
+    int releaseTerritories(@Param("memberId") Long memberId);
+
+    /** Anti-cheat audit rows stay for counts; member link (0), coordinates and detail go. */
+    int anonymizeTerritoryAudit(@Param("memberId") Long memberId);
+
+    /** Player rows of the CITY board audit: actor unlinked; territory-claim detail (holds the claim photo) dropped. */
+    int anonymizeBoardAuditPlayer(@Param("memberId") Long memberId);
+
     // ---- measurement / push ----
     int deleteInstallLinks(@Param("memberId") Long memberId);
 
     int deletePushDevices(@Param("memberId") Long memberId);
+
+    /** W5 C2: the member's message reactions. */
+    int deleteMessageReactions(@Param("memberId") Long memberId);
+
+    /** W5 C2: USER and REPLY mention rows that name the member. */
+    int deleteMentionsOfMember(@Param("memberId") Long memberId);
 }

@@ -139,6 +139,7 @@
         "coop-center/index",
         "customer/index",
         "game-node/index",
+        "shop-games/index",
         "customer/detail/index",
         "verify-records/index",
         "payout-account/index",

@@ -58,9 +58,13 @@ public final class GameplaySupportMatrix {
         // ⚠️ 作者端目录(node-game-catalog.js)与客户端 fixture 由 UI 负责人同批补,
         // 未补前本行只让后端发布闸放行,客户端编辑器暂看不到该玩法(见 ui-inputs/V2.md 依赖项)。
         add("hangman", "hangman", null, "PROOF", true, false);
+        add("trueFalse", "trueFalse", null, "PROOF", true, false);
+        add("imageGuess", "imageGuess", null, "PROOF", true, false);
+        add("jigsaw", "jigsaw", null, "PROOF", true, false);
+        add("scratchCard", "scratchCard", null, "PROOF", false, false);
         for (String key : Arrays.asList("timer", "leaderboard", "multiplayer", "timeWindow", "blindTaste", "silentOrder", "diyName", "musicCorner", "dailySign", "slowTask"))
             add(key, key, null, "PRESENTATION", false, true);
-        for(String key:Arrays.asList("qaText","qaPick","sort","match","classify","estimate","pricePair","random","blindTaste","react","shake","quiet","compass","shout","countdown","stopwatch","typeIn","check","d20","coin","dice","profile","note","dailySign","hidden","steps","qaShot","photoCheck","objectCard","album","predict","hangman"))((ObjectNode)TYPES.get(key)).put("r5CompletionProof",true);
+        for(String key:Arrays.asList("qaText","qaPick","sort","match","classify","estimate","pricePair","random","blindTaste","react","shake","quiet","compass","shout","countdown","stopwatch","typeIn","check","d20","coin","dice","profile","note","dailySign","hidden","steps","qaShot","photoCheck","objectCard","album","predict","hangman","trueFalse","imageGuess","jigsaw","scratchCard"))((ObjectNode)TYPES.get(key)).put("r5CompletionProof",true);
         MATRIX.putObject("outcomeRules").put("version",1).put("nextStepId","SETTLED_FEEDBACK").put("failParticipants","UNSUPPORTED").put("vote","TEAM_PASS_OWNER_AFTER");
         MATRIX.putObject("legacyProofs").put("GPS", 5).put("qaText", 1).put("qaPick", 3).put("scan", 4);
         ObjectNode constraints = MATRIX.putObject("constraints");

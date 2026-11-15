@@ -418,7 +418,7 @@ public class CityGameReadService {
         sections.add(section("actionBudget", "PUBLISHED", "scope", "TEAM_ROUND", "unit", "ACTION", "totalUnits", board.get("actionsPerRound"),
                 "rollCost", board.get("rollCost"), "acquisitionCost", board.get("acquisitionCost"), "refillPolicy", "NONE_WITHIN_ROUND",
                 "chargeTiming", "COMMITTED_DICE_RESULT", "actionKind", "DICE_ROLL_AND_ACQUIRE",
-                "resultPolicy", "DICE_RECORD_ONLY_ACQUISITION_EXPLICIT_CONFIRM"));
+                "resultPolicy", "DICE_UNIFIED_TRACK_ACQUISITION_EXPLICIT_CONFIRM"));
         List<Object> acquisition = new ArrayList<>(List.of("mode", "TASK_ACTOR_SELF_PAY_FOR_ORIGINAL_TEAM_UNOWNED_ONLY",
                 "evidenceAcceptance", "MERCHANT_ATTESTED", "evidencePolicy", "ORIGINAL_TASK_EVIDENCE_VALID_AT_CONFIRM",
                 "evidenceAcceptanceReason", "到店任务完成后由平台记录",

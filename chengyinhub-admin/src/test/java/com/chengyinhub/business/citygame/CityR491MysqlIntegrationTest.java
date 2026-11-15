@@ -124,10 +124,11 @@ class CityR491MysqlIntegrationTest {
             for (Map<String, Object> t : new JdbcTemplate(dataSource).queryForList("SHOW TABLES")) s.execute("DROP TABLE `" + t.values().iterator().next() + "`");
         }
         String baseline = Files.readString(Paths.get("../sql/base_schema_20260818.sql"));
-        execute(table(baseline, "ums_member"), table(baseline, "ums_member_points_detail"), table(baseline, "roam_poi"));
+        execute(table(baseline, "ums_member"), table(baseline, "ums_member_points_detail"), table(baseline, "roam_poi"), table(baseline, "sys_menu"));
         CityGameMysqlIntegrationTest.migrate(dataSource, "sql/migration_20261113_gaps_a_city_game.sql");
         CityGameMysqlIntegrationTest.migrate(dataSource, "sql/migration_20261114_gaps_a_city_r491.sql");
         CityGameMysqlIntegrationTest.migrate(dataSource, "sql/migration_20261120_city_value_visit_feedback_at.sql");
+        CityGameMysqlIntegrationTest.migrate(dataSource, "sql/migration_20261123_sys_citygame.sql");
         execute("INSERT INTO ums_member(id, role, status, del_flag, point) VALUES (7001,'player',1,0,100),(7201,'merchant',1,0,0),(7202,'merchant',1,0,0)");
         execute("INSERT INTO city_game_board(board_id, game_id, region_id, season_id, rules_release_id, release_id, rules_hash, rule_version,"
                 + " lifecycle, title, revision, board_version, event_sequence, dice_id, dice_faces, dice_weights, actions_per_round, max_rounds,"
@@ -199,17 +200,21 @@ class CityR491MysqlIntegrationTest {
         Map<String, Object> state = budget.state(A1, REGION);
         assertEquals("AVAILABLE", state.get("status"));
         assertEquals(0L, state.get("version"));
-        tickets.add(2);
+        tickets.add(2); // totalWeight=3 on [1,2,3]; ticket 2 -> faceIndex=2 -> faceValue=3 (wraps track 0->0) vs ticket 1 -> face=2 (0->2)
+        // Use ticket=1 so track advancement (0 -> 2) is also observable via selectTeam:
+        tickets.clear();
+        tickets.add(1);
         CityR491Outcomes.View first = view(budget.command(A1, roll("roll-1", 0)));
         assertEquals(200, first.status);
         @SuppressWarnings("unchecked")
         Map<String, Object> result = (Map<String, Object>) first.data.get("result");
-        assertEquals(2, ((Number) result.get("faceIndex")).intValue());
+        assertEquals(1, ((Number) result.get("faceIndex")).intValue());
         assertEquals(2L, ((Number) result.get("faceValue")).longValue());
         assertEquals(4, ((Number) result.get("beforeUnits")).intValue());
         assertEquals(3, ((Number) result.get("afterUnits")).intValue());
-        assertEquals("NOT_EXECUTED", result.get("effectsStatus"));
-        assertEquals(0, ((Number) mapper.selectTeam(team).get("trackPosition")).intValue(), "a budget roll never moves the token");
+        assertEquals("APPLIED", result.get("effectsStatus"));
+        assertEquals("AVAILABLE", result.get("movementStatus"));
+        assertEquals(2, ((Number) mapper.selectTeam(team).get("trackPosition")).intValue(), "unified roll advances team track position");
         // Same request: the stored reply, not a second roll. Same id, other body: refused.
         CityR491Outcomes.View replay = view(budget.command(A1, roll("roll-1", 0)));
         assertEquals(first.data, replay.data);

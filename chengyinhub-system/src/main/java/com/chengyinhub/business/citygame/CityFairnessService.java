@@ -158,8 +158,7 @@ public class CityFairnessService {
             data.put("factRevision", ((Number) board.get("eventSequence")).longValue());
             data.put("missing", missing);
             data.put("readBack", false);
-            List<String> gaps = List.of("challengeCompensationExits", "gpsFalseRejections", "safetyTickets", "merchantVerifications",
-                    "merchantVerificationMillis");
+            List<String> gaps = List.of("challengeCompensationExits", "gpsFalseRejections", "safetyTickets");
             data.put("coverageGaps", gaps);
             data.put("groups", notComputable ? List.of() : List.of(group()));
             return data;
@@ -180,8 +179,8 @@ public class CityFairnessService {
             g.put("challengeCompensationExits", null);
             g.put("gpsFalseRejections", null);
             g.put("safetyTickets", null);
-            g.put("merchantVerifications", null);
-            g.put("merchantVerificationMillis", null);
+            g.put("merchantVerifications", count(facts.get("merchantVerifications")));
+            g.put("merchantVerificationMillis", count(facts.get("merchantVerificationMillis")));
             return g;
         }
     }

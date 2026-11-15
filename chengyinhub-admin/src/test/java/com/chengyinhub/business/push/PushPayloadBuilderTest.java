@@ -31,6 +31,23 @@ class PushPayloadBuilderTest
     }
 
     @Test
+    void chatPayloadCarriesTheMessageIdOnlyWhenNumeric()
+    {
+        JSONObject withId = JSON.parseObject(PushPayloadBuilder.build(new PushMessage("chat", "小李", "你好", "chat-12",
+                "/subpackageB/pages/im/chat/index?conversationId=12&type=1&messageId=88", "12", "88")));
+        assertEquals("88", withId.getString("message_id"));
+        JSONObject legacy = JSON.parseObject(PushPayloadBuilder.build(new PushMessage("chat", "小李", "你好", "chat-12",
+                "/subpackageB/pages/im/chat/index?conversationId=12&type=1", "12")));
+        assertFalse(legacy.containsKey("message_id"));
+        JSONObject bogus = JSON.parseObject(PushPayloadBuilder.build(new PushMessage("chat", "小李", "你好", "chat-12",
+                "/subpackageB/pages/im/chat/index?conversationId=12&type=1", "12", "x")));
+        assertFalse(bogus.containsKey("message_id"));
+        JSONObject club = JSON.parseObject(PushPayloadBuilder.build(
+                new PushMessage("club", "集合提醒", "请提前到场", "club-21", "/pages/club/detail/index?id=21", null, "5")));
+        assertFalse(club.containsKey("message_id"));
+    }
+
+    @Test
     void clubAndEventPayloadsHaveNoConversationId()
     {
         JSONObject club = JSON.parseObject(PushPayloadBuilder.build(

@@ -11,6 +11,9 @@
       <el-col :span="1.5">
         <el-button plain size="mini" icon="el-icon-refresh" @click="load">刷新</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button v-hasPermi="['business:audit:list']" plain size="mini" type="primary" icon="el-icon-coin" @click="$router.push('/audit-center/external-game-monetization')">变现与激励配置</el-button>
+      </el-col>
       <el-col v-if="timeoutDays" :span="6" class="eg-hint">待审超过 {{ timeoutDays }} 天自动升级</el-col>
     </el-row>
 

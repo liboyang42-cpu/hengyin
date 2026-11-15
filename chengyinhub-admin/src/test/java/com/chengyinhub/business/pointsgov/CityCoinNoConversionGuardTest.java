@@ -63,7 +63,10 @@ class CityCoinNoConversionGuardTest {
             "chengyinhub-system/src/main/java/com/chengyinhub/business/growthloops/InviteCityCoinHook.java",
             "chengyinhub-system/src/main/java/com/chengyinhub/business/growthloops/InviteRewardService.java",
             "chengyinhub-system/src/main/java/com/chengyinhub/business/growthloops/CityEventNotifier.java",
-            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGrowthLoopsController.java");
+            "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/api/ApiGrowthLoopsController.java",
+            // CITY/roam territory holder yield (reviewed 2026-11-15 at the channels integration): calls only
+            // CityCoinService.creditHolderAfterCommit; never reads, spends or converts city coin.
+            "chengyinhub-system/src/main/java/com/chengyinhub/business/citygame/RoamTerritoryService.java");
     private static final List<String> SCANNED = List.of(
             "chengyinhub-admin/src/main", "chengyinhub-system/src/main", "chengyinhub-common/src/main",
             "chengyinhub-framework/src/main", "chengyinhub-quartz/src/main", "chengyinhub-generator/src/main",

@@ -88,8 +88,17 @@ public class TopicEnvironmentService {
     /** 主题开了环境键时刷新本局快照;没开时原样返回,不碰 state。 */
     public void refresh(CmsTopic topic, JourneyRules rules, TopicRouteEngine.State state) {
         if (state == null || !JourneyRpg.environmentEnabled(rules)) return;
+        Map<String, String> resolved = resolveSnapshot(topic, JourneyRpg.environmentKeys(rules));
+        state.getEnvironment().putAll(resolved);
+    }
+
+    /** 只读求值当前环境快照（不写任何持久化状态）。 */
+    public Map<String, String> resolveSnapshot(CmsTopic topic, List<String> keys) {
+        List<String> targetKeys = (keys == null || keys.isEmpty()) ? JourneyRpg.ENV_KEYS : keys;
         ZonedDateTime now = ZonedDateTime.now(clock).withZoneSameInstant(ZONE);
-        for (String key : JourneyRpg.environmentKeys(rules)) {
+        Map<String, String> out = new java.util.LinkedHashMap<String, String>();
+        for (String key : targetKeys) {
+            if (key == null) continue;
             String value;
             switch (key) {
                 case JourneyRpg.ENV_WEATHER: value = weather(topic == null ? null : topic.getAddressName()); break;
@@ -98,8 +107,9 @@ public class TopicEnvironmentService {
                 case JourneyRpg.ENV_SEASON: value = season(now.getMonthValue()); break;
                 default: value = JourneyRpg.ENV_UNKNOWN;
             }
-            state.getEnvironment().put(key, value);
+            out.put(key, value);
         }
+        return Collections.unmodifiableMap(out);
     }
 
     String weather(String topicCity) {

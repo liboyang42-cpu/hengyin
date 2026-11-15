@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.WeatherEventRuleMapper">
+
+    <resultMap id="WeatherEventRuleResult" type="com.chengyinhub.business.domain.WeatherEventRule">
+        <id property="id" column="id" />
+        <result property="topicId" column="topic_id" />
+        <result property="ruleName" column="rule_name" />
+        <result property="conditionKey" column="condition_key" />
+        <result property="conditionValues" column="condition_values" />
+        <result property="unlockNodeId" column="unlock_node_id" />
+        <result property="taskLabel" column="task_label" />
+        <result property="windowStart" column="window_start" />
+        <result property="windowEnd" column="window_end" />
+        <result property="enabled" column="enabled" />
+        <result property="delFlag" column="del_flag" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectWeatherEventRuleVo">
+        select id, topic_id, rule_name, condition_key, condition_values, unlock_node_id,
+               task_label, window_start, window_end, enabled, del_flag, create_time, update_time
+        from weather_event_rule
+    </sql>
+
+    <select id="selectActiveByTopicId" resultMap="WeatherEventRuleResult">
+        <include refid="selectWeatherEventRuleVo" />
+        where topic_id = #{topicId} and del_flag = 0 and enabled = 1
+        order by id asc
+    </select>
+
+    <select id="selectAllByTopicId" resultMap="WeatherEventRuleResult">
+        <include refid="selectWeatherEventRuleVo" />
+        where topic_id = #{topicId} and del_flag = 0
+        order by id asc
+    </select>
+
+    <insert id="insertRule" parameterType="com.chengyinhub.business.domain.WeatherEventRule" useGeneratedKeys="true" keyProperty="id">
+        insert into weather_event_rule
+        (topic_id, rule_name, condition_key, condition_values, unlock_node_id,
+         task_label, window_start, window_end, enabled, del_flag)
+        values
+        (#{topicId}, #{ruleName}, #{conditionKey}, #{conditionValues}, #{unlockNodeId},
+         #{taskLabel}, #{windowStart}, #{windowEnd}, #{enabled}, 0)
+    </insert>
+
+    <update id="softDeleteByTopicId">
+        update weather_event_rule
+        set del_flag = 2
+        where topic_id = #{topicId} and del_flag = 0
+    </update>
+</mapper>

@@ -59,6 +59,10 @@ public class PlayNodeQueryApplication {
     private NpcProfileService npcProfileService;
     @Autowired(required = false)
     private com.chengyinhub.business.service.IMmsMerchantService mmsMerchantService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.externalgame.ExternalGameMonetizationService externalGameMonetization;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.rpg.TopicWeatherEventService topicWeatherEventService;
 
     static final String MERCHANT_CLOSED_TODAY = "今日已打烊";
 
@@ -542,6 +546,28 @@ public class PlayNodeQueryApplication {
         }
 
         com.chengyinhub.business.domain.CmsTopic topicForFlow = cmsTopicService.selectCmsTopicById(read.tId);
+        if (topicWeatherEventService != null && topicForFlow != null && read.nodes != null && !read.nodes.isEmpty()) {
+            try {
+                Map<Long, String> weatherLocks = topicWeatherEventService.weatherLockedNodes(topicForFlow);
+                if (weatherLocks != null && !weatherLocks.isEmpty()) {
+                    for (Map<String, Object> nm : read.nodes) {
+                        Object rawNodeId = nm.get("nodeId");
+                        Long nodeId = rawNodeId instanceof Number ? ((Number) rawNodeId).longValue() : null;
+                        if (nodeId == null || Boolean.TRUE.equals(nm.get("done"))) continue;
+                        String lockReason = weatherLocks.get(nodeId);
+                        if (lockReason != null) {
+                            nm.put("weatherLocked", Boolean.TRUE);
+                            nm.put("locked", Boolean.TRUE);
+                            if (nm.get("lockReason") == null) {
+                                nm.put("lockReason", lockReason);
+                            }
+                        }
+                    }
+                }
+            } catch (RuntimeException e) {
+                logger.warn("天气规则点位门控计算失败 topic={}", read.tId, e);
+            }
+        }
         // 条件正文 / 条件内心声音按本局标签下发(2026-09-24「选择有回响」)
         java.util.Set<String> storyTags;
         if (read.contentSnapshot != null) {
@@ -673,6 +699,18 @@ public class PlayNodeQueryApplication {
             data.put("expiresAt", read.passExpiresAt);
         }
         data.put("chapters", chapters);
+        if (externalGameMonetization != null && read.tId != null) {
+            Map<Long, Map<String, Object>> extBindings = externalGameMonetization.activeBindingsByTopic(read.tId);
+            if (!extBindings.isEmpty()) {
+                for (Map<String, Object> nodeMap : read.nodes) {
+                    Object nidRaw = nodeMap.get("nodeId");
+                    if (nidRaw instanceof Number nid && !Boolean.TRUE.equals(nodeMap.get("locked"))) {
+                        Map<String, Object> bound = extBindings.get(nid.longValue());
+                        if (bound != null) nodeMap.put("externalGame", bound);
+                    }
+                }
+            }
+        }
         data.put("nodes", read.nodes);
         // 规则16:当前可玩集合(nodes/total/doneCount)保持原样;本人已正式完成、但已普通下架的节点
         // 另放 historyNodes 供手记/剧情卡只读回看——不进入 total/完成率/解锁/推荐/地图,也不含任何

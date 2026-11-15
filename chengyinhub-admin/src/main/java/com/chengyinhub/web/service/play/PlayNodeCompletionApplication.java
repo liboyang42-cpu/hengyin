@@ -415,6 +415,8 @@ public class PlayNodeCompletionApplication {
         List<PlayerBadge> newBadges = new ArrayList<>();
         Map<String, Object> dropResult = null;
         int earnedXp = 0;
+        // ux-pages UX-11: 本次实发积分(award 的返回值;0=未发/已发过),判定屏据此显示「+N 积分」,不自行估算
+        int earnedPoints = 0;
         // 名次奖牌本次夺得的名次(1/2/3);没抢到(三档满 / 表未就绪 / 非首次)恒 null。
         // 前端原来只看节点配了 medalName 就弹「专属徽章」,第 4 名起弹的是假奖 —— 必须回传事实。
         Integer medalRank = null;
@@ -427,7 +429,7 @@ public class PlayNodeCompletionApplication {
             //   这些积分照样能花在 ①② 上,同一个经济口径被从另一头捅开。
             //   ①② 的形态一字不改 —— 由 classicOrienteeringStillGrantsTheFullNodeRewardSet 守着。
             if (!shopDay && rewardPolicy == RewardPolicy.FULL) {
-                pointsAwardService.award(memberId, 12L, node.getId(), "节点打卡");
+                earnedPoints = pointsAwardService.award(memberId, 12L, node.getId(), "节点打卡");
                 // 任务触发发券：节点绑定模板配了 couponId 则给玩家发一张(仅首次完成，天然防重发)
                 // C5 防薅券:拍照完成(picUrl!=null)凭任意图不足以证真,不自动发真金券;真金券走扫码核销(C2)/后台审核。非拍照完成(GPS到达/答题/扫码)照常发。
                 if (StringUtils.isBlank(picUrl)) {
@@ -552,6 +554,7 @@ public class PlayNodeCompletionApplication {
         data.put("newBadges", badgeView); // 本次新得徽章(前端弹"+徽章")
         refreshBingo(memberId, node.getTopicId(), data);
         data.put("xp", earnedXp);         // M7 本次入账探索值(前端飞字"+N 探索值")
+        if (earnedPoints > 0) data.put("pointsEarned", earnedPoints); // ux-pages: 本次实发积分,没发就没有这个键
         data.put("medalRank", medalRank); // 名次奖牌本次夺得的名次(null=没抢到,前端不得弹「专属徽章」)
         // 条件奖励:前端据此把「命中 · +50 探索值 · 得到一张券」这一屏渲染出来。
         // 没配或没命中就没有这个键,前端按不存在处理。
