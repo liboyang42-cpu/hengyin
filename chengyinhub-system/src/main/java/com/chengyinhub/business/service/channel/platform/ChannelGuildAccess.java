@@ -100,7 +100,7 @@ public class ChannelGuildAccess
         if (standing == GuildStanding.NONE) return 0L;
         RoleProfile profile = roles(channel.getGuildKind(), channel.getGuildId(), memberId);
         return ChannelPermissionCalculator.effective(standing, profile.permissions(), profile.roleIds(), overwrites,
-                channel.getStatus() == null ? -1 : channel.getStatus());
+                channel.getStatus() == null ? -1 : channel.getStatus(), channel.getKind() == null ? -1 : channel.getKind());
     }
 
     /** 空间级能力（不看单频道覆盖）：管理频道/角色/审计/进度等。 */

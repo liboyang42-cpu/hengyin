@@ -86,7 +86,7 @@ public class ChannelPlatformService
                 continue;
             }
             long bits = ChannelPermissionCalculator.effective(standing, profile.permissions(), profile.roleIds(),
-                    overwrites.getOrDefault(row.getId(), List.of()), row.getStatus());
+                    overwrites.getOrDefault(row.getId(), List.of()), row.getStatus(), row.getKind() == null ? -1 : row.getKind());
             if (!has(bits, VIEW_CHANNEL)) continue;
             visible.add(row);
             bitsById.put(row.getId(), bits);
@@ -448,6 +448,128 @@ public class ChannelPlatformService
             log(channelId, "RESTORE", 3, 1, c.reason, viewer, c.requestId);
             return applied(c.requestId, mapper.selectChannel(channelId), 1, null);
         });
+    }
+
+    static final int REORDER_MAX_ITEMS = 200;
+    static final int POSITION_MAX = 100_000;
+
+    /** One requested placement: channel or category id, target parent (0 = top level), position, optional CAS. */
+    record Placement(long id, long parentId, int position, Long expectedVersion) { }
+
+    /**
+     * C1 channels-structure: reorder channels and categories, and move channels between categories, in one
+     * request. Needs MANAGE_CHANNEL (club owner/admin, team leader). Categories stay top level; the default
+     * channel stays first (position 0); every other position is 1..100000. Each moved row bumps its version
+     * and writes a MOVE line in the channel log. Replays return the original receipt.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> reorder(long viewer, int guildKind, long guildId, Map<String, Object> body, String headerReason)
+    {
+        Command c = Command.of(body, headerReason, Set.of("items"), false);
+        List<Placement> items = placements(c.fields.get("items"));
+        String fp = ChannelReceipts.fingerprint("MOVE", guildKind + ":" + guildId, c.fields);
+        requireGuildBit(viewer, guildKind, guildId, MANAGE_CHANNEL);
+        return ChannelReceipts.once(mapper, viewer, ChannelReceipts.META, c.requestId, fp, "MOVE", 0L, () -> {
+            requireGuildBit(viewer, guildKind, guildId, MANAGE_CHANNEL);
+            List<Placement> sorted = new ArrayList<>(items);
+            sorted.sort(java.util.Comparator.comparingLong(Placement::id));
+            Map<Long, ChannelRow> locked = new HashMap<>();
+            for (Placement p : sorted)
+            {
+                ChannelRow row = mapper.lockChannel(p.id());
+                if (row == null || row.getStatus() == null || row.getStatus() > 1
+                        || row.getGuildKind() != guildKind || row.getGuildId() != guildId)
+                    throw ChannelRejection.notFound();
+                locked.put(p.id(), row);
+            }
+            for (Placement p : sorted)
+            {
+                ChannelRow row = locked.get(p.id());
+                if (p.expectedVersion() != null && row.getMetaVersion() != p.expectedVersion().longValue())
+                    throw new ChannelRejection(409, "VERSION_CONFLICT", "频道已被他人修改");
+                if (row.isCategory())
+                {
+                    if (p.parentId() != 0) throw ChannelRejection.badField("分类不能再放进分类");
+                }
+                else if (p.parentId() != 0)
+                {
+                    ChannelRow parent = locked.containsKey(p.parentId()) ? locked.get(p.parentId()) : mapper.lockChannel(p.parentId());
+                    if (parent == null || !parent.isCategory() || parent.getStatus() == null || parent.getStatus() != 0
+                            || parent.getGuildKind() != guildKind || parent.getGuildId() != guildId)
+                        throw ChannelRejection.badField("父分类不存在");
+                }
+                boolean isDefault = row.getIsDefault() != null && row.getIsDefault() == 1;
+                if (isDefault && p.position() != 0)
+                    throw new ChannelRejection(409, "CHANNEL_STATE_CONFLICT", "默认频道固定在最前");
+                if (!isDefault && p.position() < 1) throw ChannelRejection.badField("position 超出范围");
+            }
+            List<Map<String, Object>> moved = new ArrayList<>();
+            for (Placement p : sorted)
+            {
+                ChannelRow row = locked.get(p.id());
+                long currentParent = row.getParentId() == null ? 0L : row.getParentId();
+                int currentPosition = row.getPosition() == null ? 0 : row.getPosition();
+                if (currentParent == p.parentId() && currentPosition == p.position()) continue;
+                try
+                {
+                    if (mapper.updatePlacement(p.id(), row.getMetaVersion(), p.parentId(), p.position()) != 1)
+                        throw new ChannelRejection(409, "VERSION_CONFLICT", "频道已被他人修改");
+                }
+                catch (RuntimeException dup)
+                {
+                    if (!ChannelRejection.isDuplicateKey(dup)) throw dup;
+                    throw new ChannelRejection(409, "CHANNEL_NAME_TAKEN", "同一分类下已有同名频道");
+                }
+                log(p.id(), "MOVE", row.getStatus(), row.getStatus(), c.reason, viewer, c.requestId);
+                Map<String, Object> view = new LinkedHashMap<>();
+                view.put("id", String.valueOf(p.id()));
+                view.put("parent_id", String.valueOf(p.parentId()));
+                view.put("position", p.position());
+                view.put("version", String.valueOf(row.getMetaVersion() + 1));
+                moved.add(view);
+            }
+            Map<String, Object> r = new LinkedHashMap<>();
+            r.put("request_id", c.requestId);
+            r.put("state", "APPLIED");
+            r.put("guild_kind", guildKind);
+            r.put("guild_id", String.valueOf(guildId));
+            r.put("moved", moved);
+            if (moved.isEmpty()) r.put("unchanged", true);
+            r.put("replayed", false);
+            return r;
+        });
+    }
+
+    static List<Placement> placements(Object raw)
+    {
+        if (!(raw instanceof List<?> list) || list.isEmpty() || list.size() > REORDER_MAX_ITEMS)
+            throw ChannelRejection.badField("items 不合法");
+        List<Placement> out = new ArrayList<>();
+        Set<Long> seen = new java.util.HashSet<>();
+        for (Object entry : list)
+        {
+            if (!(entry instanceof Map<?, ?> m)) throw ChannelRejection.badField("items 不合法");
+            for (Object key : m.keySet())
+                if (!Set.of("id", "parent_id", "position", "expected_version").contains(key))
+                    throw ChannelRejection.badField("未知字段 " + key);
+            long id = idField(m.get("id"), false);
+            long parentId = idField(m.get("parent_id"), true);
+            if (parentId == id) throw ChannelRejection.badField("父分类不存在");
+            Map<String, Object> pos = new HashMap<>();
+            pos.put("position", m.get("position"));
+            int position = intField(pos, "position", 0, POSITION_MAX);
+            Long expected = null;
+            Object v = m.get("expected_version");
+            if (v != null)
+            {
+                if (!(v instanceof String text) || !text.matches("0|[1-9][0-9]{0,18}"))
+                    throw ChannelRejection.badField("expected_version 必须是十进制字符串");
+                expected = Long.parseLong(text);
+            }
+            if (!seen.add(id)) throw ChannelRejection.badField("items 有重复频道");
+            out.add(new Placement(id, parentId, position, expected));
+        }
+        return out;
     }
 
     @Transactional(rollbackFor = Exception.class)
