@@ -33,6 +33,9 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
     private com.chengyinhub.business.service.IWxContentSecurityService wxContentSecurityService;
     @org.springframework.beans.factory.annotation.Autowired
     private com.chengyinhub.business.service.IUmsMemberService umsMemberService;
+    /** APNS 渠道：站内信照写，送达后再推到收件人已登记设备。未装配时 APNS 仍回 501。 */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.IPushFanoutService pushFanout;
     private static final long CLAIM_LEASE_MILLIS = 5L * 60L * 1000L;
     private static final Set<String> AUDIENCES;
     static {
@@ -62,6 +65,7 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
         result.put("inApp", "AVAILABLE");
         result.put("wechatSubscription", "UNAVAILABLE");
         result.put("wechatReason", "WECHAT_TEMPLATE_NOT_CONFIGURED");
+        result.put("apns", pushFanout == null ? "UNAVAILABLE" : pushFanout.apnsConfigured() ? "AVAILABLE" : "NOT_CONFIGURED");
         result.put("phoneIncluded", false);
         return result;
     }
@@ -74,7 +78,7 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
                 validated.clubId, actorMemberId, validated.requestId);
         if (replay != null) {
             requireEquivalentReplay(replay, validated);
-            return replay;
+            return withPushChannel(replay, validated.push);
         }
         com.chengyinhub.business.domain.UmsMember actor = umsMemberService.selectUmsMemberById(actorMemberId);
         String risk = wxContentSecurityService.checkText(validated.title + "\n" + validated.content,
@@ -104,10 +108,11 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
                     validated.clubId, actorMemberId, validated.requestId);
             if (concurrent == null) throw conflict("通知任务创建冲突，请重试");
             requireEquivalentReplay(concurrent, validated);
-            return concurrent;
+            return withPushChannel(concurrent, validated.push);
         }
-        return dispatch(campaign, transactionService.claim(
-                campaign, 500, new Date(System.currentTimeMillis() + CLAIM_LEASE_MILLIS)));
+        if (validated.push) pushFanout.markClubCampaignPush(campaign.getId());
+        return withPushChannel(dispatch(campaign, transactionService.claim(
+                campaign, 500, new Date(System.currentTimeMillis() + CLAIM_LEASE_MILLIS))), validated.push);
     }
 
     @Override
@@ -158,16 +163,33 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
         return campaign;
     }
 
+    private ClubEventCampaign withPushChannel(ClubEventCampaign campaign, boolean push) {
+        if (campaign != null && push) campaign.setPushChannel("APNS");
+        return campaign;
+    }
+
+    private boolean campaignPush(ClubEventCampaign campaign) {
+        try {
+            return pushFanout != null && campaign.getId() != null && pushFanout.clubCampaignPush(campaign.getId());
+        } catch (RuntimeException lookupFailure) {
+            logger.warn("俱乐部通知 APNS 标记读取失败，本轮只发站内信: campaignId={}", campaign.getId());
+            return false;
+        }
+    }
+
     private ClubEventCampaign dispatch(ClubEventCampaign campaign, List<ClubEventDelivery> deliveries) {
+        boolean push = deliveries != null && !deliveries.isEmpty() && campaignPush(campaign);
         if (deliveries != null) for (ClubEventDelivery delivery : deliveries) {
             if (delivery == null || delivery.getId() == null || delivery.getRecipientMemberId() == null
                     || !campaign.getId().equals(delivery.getCampaignId())
                     || !(ClubEventDelivery.PENDING.equals(delivery.getStatus())
                     || ClubEventDelivery.FAILED.equals(delivery.getStatus()))
                     || delivery.getVersion() == null) throw conflict("通知 delivery 状态不一致");
+            boolean sent;
             try {
-                transactionService.deliver(campaign, delivery.getId());
+                sent = transactionService.deliver(campaign, delivery.getId());
             } catch (RuntimeException error) {
+                sent = false;
                 Date nextAttempt = new Date(System.currentTimeMillis() + retryDelay(delivery.getAttemptCount()));
                 try {
                     transactionService.recordFailure(campaign.getId(), delivery.getId(),
@@ -175,6 +197,15 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
                 } catch (RuntimeException receiptFailure) {
                     logger.error("俱乐部通知失败回执写入失败，已隔离并继续: campaignId={}, deliveryId={}",
                             campaign.getId(), delivery.getId(), receiptFailure);
+                }
+            }
+            if (sent && push) {
+                try {
+                    pushFanout.clubNoticeDelivered(campaign.getId(), campaign.getClubId(), campaign.getActivityId(),
+                            campaign.getTitle(), campaign.getContent(), delivery.getRecipientMemberId());
+                } catch (RuntimeException pushFailure) {
+                    logger.warn("俱乐部通知 APNs 推送登记失败（站内信已送达）: campaignId={}, deliveryId={}",
+                            campaign.getId(), delivery.getId());
                 }
             }
         }
@@ -233,7 +264,8 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
         requireExactAccess(access, actorMemberId, request.getClubId(), activityId);
         String channel = upper(request.getChannel());
         if (channel.isEmpty()) channel = "IN_APP";
-        if (!"IN_APP".equals(channel)) {
+        boolean push = "APNS".equals(channel) && pushFanout != null;
+        if (!"IN_APP".equals(channel) && !push) {
             throw new ServiceException("WECHAT_SUBSCRIPTION_UNAVAILABLE: 订阅模板或授权未接入",
                     HttpStatus.NOT_IMPLEMENTED);
         }
@@ -241,7 +273,7 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
         String content = normalize(request.getContent(), 1, 1000, "通知内容");
         String requestId = sending ? normalize(request.getRequestId(), 1, 64, "requestId")
                 : request.getRequestId();
-        return new Validated(request.getClubId(), activityId, audience, title, content, requestId);
+        return new Validated(request.getClubId(), activityId, audience, title, content, requestId, push);
     }
 
     /**
@@ -305,6 +337,11 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
                 || !requested.title.equals(row.getTitle()) || !requested.content.equals(row.getContent())) {
             throw conflict("requestId 已用于不同通知内容");
         }
+        if (requested.push) {
+            pushFanout.markClubCampaignPush(row.getId()); // 幂等；补上创建后、标记前中断的那一种
+        } else if (campaignPush(row)) {
+            throw conflict("requestId 已用于不同通知渠道");
+        }
     }
 
     private void requireExactAccess(ClubAccessContext access, Long actor, Long clubId, Long activityId) {
@@ -344,13 +381,16 @@ public class ClubEventNotificationServiceImpl implements IClubEventNotificationS
         final String title;
         final String content;
         final String requestId;
-        Validated(Long clubId, Long activityId, String audience, String title, String content, String requestId) {
+        final boolean push;
+        Validated(Long clubId, Long activityId, String audience, String title, String content, String requestId,
+                  boolean push) {
             this.clubId = clubId;
             this.activityId = activityId;
             this.audience = audience;
             this.title = title;
             this.content = content;
             this.requestId = requestId;
+            this.push = push;
         }
     }
 }

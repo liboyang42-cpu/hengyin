@@ -1784,6 +1784,11 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     /** Existing current-ticket/paid-recipient wake source. The typed notice owner commits the original
      * BEFORE_START input and one irreversible WeChat attempt. UNKNOWN is only read, never resent.
      * Legacy positive Redis keys are read during cutover; no new TTL key replaces the durable receipt. */
+    /** 出发前提醒的 App 远程推送（APNs）；未装配/未配置时空操作。 */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.IPushFanoutService pushFanout;
+
     @Override
     public BeforeStartNotifyResult notifyBeforeStartBatch() {
         Date now = new Date();
@@ -1796,6 +1801,15 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
                 if (regs == null) continue;
                 for (CmsRegistration r : regs) {
                     scanned++;
+                    if (pushFanout != null) {
+                        // App 推送与微信订阅提醒各自去重（每个票次×会员一次），互不影响计数。
+                        try {
+                            pushFanout.eventReminder(t.getId(), r.getMemberId(), t.getName(), t.getStartTime(),
+                                    t.getOwnerType(), t.getOwnerId());
+                        } catch (RuntimeException ignored) {
+                            logger.warn("出发前提醒 App 推送登记失败 ticketId={} memberId={}", t.getId(), r.getMemberId());
+                        }
+                    }
                     String key = "team:beforenotify:" + t.getId() + ":" + r.getMemberId();
                     // Keep pre-cutover positive success keys; never manufacture a durable acceptance from them.
                     // New delivery identity/receipt lives permanently in the existing notice ledger, not this TTL.
