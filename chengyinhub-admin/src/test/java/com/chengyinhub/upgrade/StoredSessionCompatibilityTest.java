@@ -6,7 +6,7 @@ import com.chengyinhub.common.core.domain.model.LoginUser;
 import com.chengyinhub.framework.config.FastJson2JsonRedisSerializer;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.chengyinhub.common.utils.jwt.SessionJwt;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -26,12 +26,15 @@ class StoredSessionCompatibilityTest {
 
     @Test
     void preUpgradeHs512TokenStillParsesWithTheSameBase64KeySemantics() {
-        Claims claims = Jwts.parser().setSigningKey(KEY).parseClaimsJws(TOKEN).getBody();
+        // SEC-03: the token was signed by jjwt 0.9.1; jjwt 0.13 verifies it through SessionJwt's compatible key.
+        Claims claims = SessionJwt.parse(TOKEN, SessionJwt.hs512Key(KEY));
         assertEquals("fixture-token", claims.get(Constants.LOGIN_USER_KEY));
         assertEquals("fixture-admin", claims.getSubject());
-        assertEquals(TOKEN, Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS512, KEY).compact());
-        assertThrows(io.jsonwebtoken.SignatureException.class,
-                () -> Jwts.parser().setSigningKey("ZGlmZmVyZW50LXRlc3Qta2V5").parseClaimsJws(TOKEN));
+        assertEquals(TOKEN, SessionJwt.sign(new java.util.LinkedHashMap<>(claims), SessionJwt.hs512Key(KEY)));
+        assertThrows(io.jsonwebtoken.security.SignatureException.class,
+                () -> SessionJwt.parse(TOKEN, SessionJwt.hs512Key("ZGlmZmVyZW50LXRlc3Qta2V5")));
+        assertThrows(io.jsonwebtoken.security.SignatureException.class,
+                () -> Jwts.parser().verifyWith(SessionJwt.hs512Key("ZGlmZmVyZW50LXRlc3Qta2V5")).build().parseSignedClaims(TOKEN));
     }
 
     @Test

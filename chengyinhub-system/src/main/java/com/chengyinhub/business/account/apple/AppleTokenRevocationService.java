@@ -5,7 +5,6 @@ import com.chengyinhub.system.service.ISysConfigService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -188,10 +187,10 @@ public class AppleTokenRevocationService {
     /** ES256 client secret for Apple's token endpoints, valid five minutes. */
     String clientSecret() throws Exception {
         long now = clock.millis();
-        return Jwts.builder().setHeaderParam("kid", keyId).setIssuer(teamId)
-                .setIssuedAt(new Date(now)).setExpiration(new Date(now + 300_000L))
-                .setAudience(APPLE_AUDIENCE).setSubject(clientId())
-                .signWith(SignatureAlgorithm.ES256, privateKey()).compact();
+        return Jwts.builder().header().keyId(keyId).and().issuer(teamId)
+                .issuedAt(new Date(now)).expiration(new Date(now + 300_000L))
+                .audience().single(APPLE_AUDIENCE).subject(clientId())
+                .signWith(privateKey(), Jwts.SIG.ES256).compact();
     }
 
     PrivateKey privateKey() throws Exception {

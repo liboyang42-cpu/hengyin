@@ -150,7 +150,14 @@ public class SecurityConfig
                         // [P0-安全] 由 /api/login/** 收窄为具体登录入口:/api/login/** 会连带放行任何
                         // 未来新增的 /api/login/xxx(曾放行越权的 /api/login/withopenid)。当前 /api/login/
                         // 下只有 jscode2session 的 /api/login/code 需匿名;密码登录 /api/login 已单列。
-                        .requestMatchers(legacyMatchers("/api/common/**","/api/register","/api/login/code","/api/openid","/api/login","/api/login/phone","/api/login/wechat/app","/api/login/apple","/api/sms/send","/api/user/sms/send","/api/us/auth/apple/challenges","/api/us/auth/apple/exchange","/api/findpass","/api/comment/list")).permitAll()
+                        // SEC-02:/api/common/ 只放行今天真正公开的路由,逐条列出。原 /api/common/** 通配会让任何新加在
+                        // /api/common/ 下的接口默认匿名;不在这里的一律要登录(含 /uploadOSS/receipt,方法内本就要求登录)。
+                        // 新增公开路由必须加到这里,并在 UpgradeAuthorizationBoundaryTest 与 CommonRoutesInventoryTest 补用例。
+                        .requestMatchers(legacyMatchers("/api/common/dict", "/api/common/banner",
+                                "/api/common/infomation_list", "/api/common/infomation_detail")).permitAll()
+                        // 渠道核销回调:第三方服务端回调,方法内按 providerKey 验签;只放行 POST 单层 providerKey。
+                        .requestMatchers(legacyMatchers(HttpMethod.POST, "/api/common/channel/callback/*")).permitAll()
+                        .requestMatchers(legacyMatchers("/api/register","/api/login/code","/api/openid","/api/login","/api/login/phone","/api/login/wechat/app","/api/login/apple","/api/sms/send","/api/user/sms/send","/api/us/auth/apple/challenges","/api/us/auth/apple/exchange","/api/findpass","/api/comment/list")).permitAll()
                         // 商家公开主页(脱敏后)匿名可访问
                         .requestMatchers(legacyMatchers("/api/merchant/public-detail", "/api/merchant/poi/detail")).permitAll()
                         // 商家/会员公开资料(白名单 VO,方法内不要求登录):历史分享链接匿名冷启动用。

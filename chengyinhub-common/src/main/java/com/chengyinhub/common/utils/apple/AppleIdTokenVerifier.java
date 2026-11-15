@@ -24,7 +24,7 @@ import java.util.Base64;
  *   3. 用 key 的 n/e（base64url）构造 RSAPublicKey；
  *   4. jjwt 验签（exp 由 jjwt 自动校验），并校验 iss / aud。
  *
- * jjwt 版本为 0.9.1：用 Jwts.parser().setSigningKey(PublicKey) 风格（非 0.11+ 的 parserBuilder）。
+ * jjwt 0.13（SEC-03 升级）：Jwts.parser().verifyWith(PublicKey).build()；aud 在 0.12+ 是集合，须恰为 {clientId}。
  *
  * @author chengyin
  */
@@ -65,9 +65,10 @@ public class AppleIdTokenVerifier {
         Claims claims;
         try {
             Jws<Claims> jws = Jwts.parser()
-                    .setSigningKey(publicKey)
-                    .parseClaimsJws(identityToken);
-            claims = jws.getBody();
+                    .verifyWith(publicKey)
+                    .build()
+                    .parseSignedClaims(identityToken);
+            claims = jws.getPayload();
         } catch (Exception e) {
             throw new RuntimeException("identityToken 验签失败: " + e.getMessage());
         }
@@ -76,7 +77,7 @@ public class AppleIdTokenVerifier {
         if (!APPLE_ISS.equals(claims.getIssuer())) {
             throw new RuntimeException("identityToken iss 非法");
         }
-        if (clientId == null || !clientId.equals(claims.getAudience())) {
+        if (clientId == null || !java.util.Set.of(clientId).equals(claims.getAudience())) {
             throw new RuntimeException("identityToken aud 与 clientId 不匹配");
         }
 

@@ -110,11 +110,11 @@ public class AppleIdentityReconfirmationService {
         if (key == null) return null;
         Claims claims;
         try {
-            claims = Jwts.parser().setSigningKey(key).parseClaimsJws(token).getBody();
+            claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
         } catch (Exception invalid) {
             return null; // bad signature, expired, malformed
         }
-        if (!ISSUER.equals(claims.getIssuer()) || !clientId.equals(claims.getAudience())) return null;
+        if (!ISSUER.equals(claims.getIssuer()) || !java.util.Set.of(clientId).equals(claims.getAudience())) return null;
         long now = clock.millis();
         if (claims.getExpiration() == null || claims.getExpiration().getTime() <= now) return null;
         if (claims.getIssuedAt() == null || claims.getIssuedAt().getTime() > now + CLOCK_SKEW_MS

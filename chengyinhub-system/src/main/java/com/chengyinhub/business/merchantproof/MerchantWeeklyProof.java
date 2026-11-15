@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -109,6 +110,41 @@ public final class MerchantWeeklyProof {
 
         out.put("returningPlayers", cohort(players, earlier));
         return out;
+    }
+
+    /**
+     * T5 / S3a plan feature {@code weeklyProofDetail}: the same week split by local day, Monday first. Additive: the
+     * summary above is unchanged, and a shop whose plan does not include detail (Free) never gets this block.
+     * Each day: verified visits (distinct player with a staff verification that day), redemptions, plays at the node
+     * and distinct players. No player identities.
+     */
+    public static List<Map<String, Object>> daily(LocalDate weekStart, List<Touch> week) {
+        List<Map<String, Object>> days = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            LocalDate day = weekStart.plusDays(i);
+            Set<Long> verified = new HashSet<>();
+            Set<Long> players = new HashSet<>();
+            int redemptions = 0;
+            int plays = 0;
+            for (Touch t : week) {
+                if (t.memberId() <= 0 || t.at() == null || !day.equals(t.at().atZone(ZONE).toLocalDate())) continue;
+                players.add(t.memberId());
+                if (t.kind().staffVerified) {
+                    verified.add(t.memberId());
+                    redemptions++;
+                } else {
+                    plays++;
+                }
+            }
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("date", day.toString());
+            row.put("verifiedVisits", verified.size());
+            row.put("redemptions", redemptions);
+            row.put("playsAtNode", plays);
+            row.put("players", players.size());
+            days.add(row);
+        }
+        return days;
     }
 
     /**

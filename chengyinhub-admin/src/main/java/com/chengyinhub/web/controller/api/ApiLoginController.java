@@ -109,6 +109,10 @@ public class ApiLoginController extends BaseController {
     @Autowired
     private ICmsPointsSettingService cmsPointsSettingService;
 
+    /** SEC-11: sign-up points once per device on the app paths (phone, Apple, WeChat app). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.signupdevice.SignupDevicePoints signupDevicePoints;
+
     @Autowired
     private RedisCache redisCache;
 
@@ -585,9 +589,11 @@ public class ApiLoginController extends BaseController {
             umsMember.setWxOpenId("");
             umsMember.setStatus(1L);
             umsMember.setDelFlag(0);
-            umsMember.setPoint(welcomePoints());
+            com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device = claimSignupDevice(request, "phone");
+            umsMember.setPoint(welcomePoints(device));
             int rows = umsMemberService.insertUmsMember(umsMember);
             if (rows > 0) {
+                attachSignupDevice(device, umsMember.getId());
                 umsMember = new UmsMember();
                 umsMember.setPhone(phone);
                 list = umsMemberService.selectUmsMemberList(umsMember);
@@ -604,6 +610,7 @@ public class ApiLoginController extends BaseController {
 
                 return ajax;
             } else {
+                releaseSignupDevice(device);
                 return AjaxResult.error("注册失败");
             }
         }
@@ -734,11 +741,14 @@ public class ApiLoginController extends BaseController {
         }
         umsMember.setStatus(1L);
         umsMember.setDelFlag(0);
-        umsMember.setPoint(welcomePoints());
+        com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device = claimSignupDevice(currentRequest(), "wechat");
+        umsMember.setPoint(welcomePoints(device));
         int rows = umsMemberService.insertUmsMember(umsMember);
         if (rows <= 0) {
+            releaseSignupDevice(device);
             return AjaxResult.error("注册失败");
         }
+        attachSignupDevice(device, umsMember.getId());
 
         // useGeneratedKeys 已回填 id,直接用对象签 token(避免空 unionId/openid 反查越权)
         String token = appLoginService.loginByMember(umsMember, "wechat", appOpenid, unionid);
@@ -817,11 +827,14 @@ public class ApiLoginController extends BaseController {
         }
         umsMember.setStatus(1L);
         umsMember.setDelFlag(0);
-        umsMember.setPoint(welcomePoints());
+        com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device = claimSignupDevice(currentRequest(), "apple");
+        umsMember.setPoint(welcomePoints(device));
         int rows = umsMemberService.insertUmsMember(umsMember);
         if (rows <= 0) {
+            releaseSignupDevice(device);
             return AjaxResult.error("注册失败");
         }
+        attachSignupDevice(device, umsMember.getId());
 
         String token = appLoginService.loginByMember(umsMember, "apple", appleId, null);
         AjaxResult ajax = AjaxResult.success();
@@ -838,6 +851,34 @@ public class ApiLoginController extends BaseController {
      */
     private long welcomePoints() {
         return PointsRuleSwitch.activeValue(cmsPointsSettingService.selectCmsPointsSettingById(1L));
+    }
+
+    /** SEC-11: the welcome points for an app sign-up; 0 when this device already took them. */
+    private long welcomePoints(com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device) {
+        return device == null || device.pointsAllowed() ? welcomePoints() : 0L;
+    }
+
+    private com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim claimSignupDevice(HttpServletRequest request, String channel) {
+        if (signupDevicePoints == null) return null;
+        String header = request == null ? null
+                : request.getHeader(com.chengyinhub.business.signupdevice.SignupDevicePoints.HEADER);
+        return signupDevicePoints.claim(header, channel);
+    }
+
+    private static HttpServletRequest currentRequest() {
+        try {
+            return com.chengyinhub.common.utils.ServletUtils.getRequest();
+        } catch (RuntimeException outsideRequest) {
+            return null;
+        }
+    }
+
+    private void attachSignupDevice(com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device, Long memberId) {
+        if (signupDevicePoints != null) signupDevicePoints.attach(device, memberId);
+    }
+
+    private void releaseSignupDevice(com.chengyinhub.business.signupdevice.SignupDevicePoints.Claim device) {
+        if (signupDevicePoints != null) signupDevicePoints.release(device);
     }
 
     /**

@@ -5,7 +5,6 @@ import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.framework.web.service.AppLoginService;
 import com.chengyinhub.web.controller.api.ApiUsAppleAuthController;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,10 +63,10 @@ class UsAppleAuthServiceTest {
     }
 
     String token(String sub, String nonceDigest, String audience, KeyPair signer, long expiresInMs) {
-        return Jwts.builder().setHeaderParam("kid", "k1").setIssuer("https://appleid.apple.com").setAudience(audience)
-                .setSubject(sub).claim("nonce", nonceDigest).setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiresInMs))
-                .signWith(SignatureAlgorithm.RS256, signer.getPrivate()).compact();
+        return Jwts.builder().header().keyId("k1").and().issuer("https://appleid.apple.com").audience().single(audience)
+                .subject(sub).claim("nonce", nonceDigest).issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiresInMs))
+                .signWith(signer.getPrivate(), Jwts.SIG.RS256).compact();
     }
 
     static Map<String, Object> body(Map<String, Object> challenge, String token) {

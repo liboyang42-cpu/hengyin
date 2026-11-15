@@ -6,7 +6,6 @@ import com.chengyinhub.common.core.domain.model.LoginUser;
 import com.chengyinhub.common.core.redis.RedisCache;
 import com.chengyinhub.system.mapper.SysUserMapper;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -51,8 +50,8 @@ class AdminSessionRevocationTest {
 
     private MockHttpServletRequest request() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        String token = Jwts.builder().setClaims(Collections.singletonMap(Constants.LOGIN_USER_KEY, "fixture-admin-session"))
-                .signWith(SignatureAlgorithm.HS512, key).compact();
+        String token = Jwts.builder().claims(Collections.singletonMap(Constants.LOGIN_USER_KEY, "fixture-admin-session"))
+                .signWith(com.chengyinhub.common.utils.jwt.SessionJwt.hs512Key(key), Jwts.SIG.HS512).compact();
         request.addHeader("Authorization", "Bearer " + token);
         return request;
     }
