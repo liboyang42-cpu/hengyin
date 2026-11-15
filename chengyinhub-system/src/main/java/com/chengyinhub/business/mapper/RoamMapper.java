@@ -51,6 +51,14 @@ public interface RoamMapper {
                                          @Param("keyword") String keyword, @Param("categoryId") Long categoryId,
                                          @Param("tag") String tag);
 
+    /** T2 maps-backend: shared columns (no member marks) of every player-visible place in the box, by id, at most limit. */
+    List<RoamPoi> selectPoiBaseInBox(@Param("minLat") double minLat, @Param("maxLat") double maxLat,
+                                     @Param("minLng") double minLng, @Param("maxLng") double maxLng,
+                                     @Param("limit") int limit);
+
+    /** T2 maps-backend: {poiId, found, pendingRedeem} for one member, same rules as selectPoisNearFiltered. */
+    List<Map<String, Object>> selectPoiMemberMarks(@Param("memberId") Long memberId, @Param("ids") List<Long> ids);
+
     List<RoamPoi> selectPoisByIds(@Param("ids") List<Long> ids);
 
     /** 玩家侧按 id 查据点(同 selectPoisNear 的 status=1 + 审核口径),后台/官方活动请用 selectPoisByIds。 */

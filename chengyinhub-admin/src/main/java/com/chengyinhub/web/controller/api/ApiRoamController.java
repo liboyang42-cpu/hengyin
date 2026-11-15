@@ -72,6 +72,9 @@ public class ApiRoamController extends BaseController {
 
     @Autowired
     private RoamMapper roamMapper;
+    /** T2 maps-backend read cache for /pois; optional so hand-built controllers in tests keep the SQL read. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.readcache.MapPoiTileCache poiTileCache;
     @Autowired private com.chengyinhub.business.service.impl.RoamLocationConsentService locationConsent;
     @Autowired
     private com.chengyinhub.business.service.IConsentRecordService consentRecordService;
@@ -178,8 +181,12 @@ public class ApiRoamController extends BaseController {
         String kw = boundedFilter(keyword, 40);
         String tg = boundedFilter(tag, 20);
         Long cat = categoryId != null && categoryId > 0 ? categoryId : null;
+        // T2 maps-backend: the unfiltered read is served from shared per-tile cache entries (same rows and order;
+        // found / pendingRedeem still read per member). Filtered reads and a missing cache bean go to MySQL.
         List<RoamPoi> list = kw == null && tg == null && cat == null
-                ? roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT)
+                ? (poiTileCache != null
+                    ? poiTileCache.near(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT)
+                    : roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT))
                 : roamMapper.selectPoisNearFiltered(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT,
                         kw, cat, tg);
         return success(list);
