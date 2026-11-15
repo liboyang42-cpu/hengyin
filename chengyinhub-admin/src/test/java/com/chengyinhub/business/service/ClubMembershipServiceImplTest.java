@@ -2350,4 +2350,123 @@ class ClubMembershipServiceImplTest {
         return service.handlePaidInvoice(no,paid,fen,tx,proof.issue(no,fen,tx));
     }
 
+
+    // ---- K1 club dues through split settlement ----
+
+    private Map<String, String> stageRenewal(String idem) {
+        when(mapper.selectSetting(CLUB)).thenReturn(enabledSetting());
+        when(mapper.selectPlanByIdForUpdate(9L)).thenReturn(plan(9L, CLUB, 1, 9900L));
+        UmsMember member = new UmsMember();
+        member.setId(MEMBER);
+        member.setWxOpenId("openid-71");
+        when(members.selectUmsMemberById(MEMBER)).thenReturn(member);
+        AtomicReference<ClubMembershipInvoice> stored = new AtomicReference<>();
+        when(mapper.selectInvoiceByIdempotency(CLUB, MEMBER, idem)).thenAnswer(call -> stored.get());
+        when(mapper.selectInvoiceByOutTradeNoForUpdate(any())).thenAnswer(call -> stored.get());
+        when(mapper.insertInvoice(any())).thenAnswer(call -> {
+            ClubMembershipInvoice inserted = call.getArgument(0, ClubMembershipInvoice.class);
+            inserted.setId(100L);
+            stored.set(inserted);
+            return 1;
+        });
+        when(mapper.markInvoicePayingCas(100L, 0, java.util.Date.from(Instant.parse("2026-08-23T16:00:00Z"))))
+                .thenReturn(1);
+        when(mapper.attachPayParamsCas(eq(100L), eq(1), any(), any())).thenReturn(1);
+        Map<String, String> payParams = new HashMap<>();
+        payParams.put("timeStamp", "1");
+        payParams.put("nonceStr", "n");
+        payParams.put("package", "prepay_id=split");
+        payParams.put("signType", "RSA");
+        payParams.put("paySign", "s");
+        return payParams;
+    }
+
+    private com.chengyinhub.business.collection.CollectionModelService duesModel(
+            com.chengyinhub.business.collection.CollectionDecision decision) {
+        com.chengyinhub.business.collection.CollectionModelService model =
+                mock(com.chengyinhub.business.collection.CollectionModelService.class);
+        when(model.requireClubDuesCollectible(CLUB)).thenReturn(decision);
+        WechatVerifiedFactTestSupport.setField(service, "collectionModel", model);
+        return model;
+    }
+
+    @Test
+    void splitDuesArePaidToTheClubSubMerchantAndNeverToThePlatformAccount() {
+        com.chengyinhub.business.collection.CollectionDecision split = new com.chengyinhub.business.collection.CollectionDecision(
+                com.chengyinhub.business.collection.CollectionPolicy.SPLIT,
+                com.chengyinhub.business.payout.SellerOfRecordPolicy.SellerType.CLUB, CLUB, "1900000999",
+                com.chengyinhub.business.collection.CollectionDecision.SUB_MERCHANT);
+        duesModel(split);
+        com.chengyinhub.business.collection.ClubDuesSplitService duesSplit =
+                mock(com.chengyinhub.business.collection.ClubDuesSplitService.class);
+        WechatVerifiedFactTestSupport.setField(service, "duesSplit", duesSplit);
+        Map<String, String> payParams = stageRenewal("idem-split");
+        when(duesSplit.createOrder(any(ClubMembershipInvoice.class), eq(split), eq("openid-71"))).thenReturn(payParams);
+
+        ClubMembershipRenewalVO result = service.renew(MEMBER, renew(9L, "idem-split"));
+
+        assertEquals(payParams, result.getPayParams());
+        assertEquals("PAYING", result.getPaymentState());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+        ArgumentCaptor<ClubMembershipInvoice> placed = ArgumentCaptor.forClass(ClubMembershipInvoice.class);
+        verify(duesSplit).createOrder(placed.capture(), eq(split), eq("openid-71"));
+        assertEquals(9900L, placed.getValue().getAmountFen());
+        assertTrue(placed.getValue().getOutTradeNo().startsWith("CLM"));
+        InOrder commitBeforeWechat = inOrder(transactions, duesSplit);
+        commitBeforeWechat.verify(transactions).commit(transactionStatus);
+        commitBeforeWechat.verify(duesSplit).createOrder(any(), any(), any());
+    }
+
+    @Test
+    void clubWithoutSubMerchantIsRefusedBeforeAnyInvoiceRow() {
+        com.chengyinhub.business.collection.CollectionModelService model =
+                mock(com.chengyinhub.business.collection.CollectionModelService.class);
+        com.chengyinhub.common.exception.ErrorCode code =
+                com.chengyinhub.common.exception.ErrorCode.CLUB_DUES_COLLECTION_UNAVAILABLE;
+        when(model.requireClubDuesCollectible(CLUB)).thenThrow(new com.chengyinhub.common.exception.BusinessRefusal(
+                code, code.defaultMessage(), com.chengyinhub.common.exception.ErrorContract.LEGACY_ERROR_CODE,
+                code.httpStatus(), Map.of("reason", "SELLER_NOT_BOUND", "nextStep", "BIND_COLLECTION_ACCOUNT")));
+        WechatVerifiedFactTestSupport.setField(service, "collectionModel", model);
+        stageRenewal("idem-unbound");
+
+        assertThrows(com.chengyinhub.common.exception.BusinessRefusal.class,
+                () -> service.renew(MEMBER, renew(9L, "idem-unbound")));
+
+        verify(mapper, never()).insertInvoice(any());
+        verify(mapper, never()).markInvoicePayingCas(any(), anyInt(), any());
+        verify(pay, never()).createGenericOrder(any(), any(), any(), any());
+    }
+
+    @Test
+    void modelOffKeepsTodaysPlatformOrderExactly() {
+        duesModel(new com.chengyinhub.business.collection.CollectionDecision(
+                com.chengyinhub.business.collection.CollectionPolicy.PLATFORM,
+                com.chengyinhub.business.payout.SellerOfRecordPolicy.SellerType.PLATFORM, null, null,
+                com.chengyinhub.business.collection.CollectionDecision.MODEL_OFF));
+        com.chengyinhub.business.collection.ClubDuesSplitService duesSplit =
+                mock(com.chengyinhub.business.collection.ClubDuesSplitService.class);
+        WechatVerifiedFactTestSupport.setField(service, "duesSplit", duesSplit);
+        Map<String, String> payParams = stageRenewal("idem-off");
+        when(pay.createGenericOrder(any(), eq(new java.math.BigDecimal("99.00")), any(), eq("openid-71")))
+                .thenReturn(payParams);
+
+        ClubMembershipRenewalVO result = service.renew(MEMBER, renew(9L, "idem-off"));
+
+        assertEquals(payParams, result.getPayParams());
+        verify(pay).createGenericOrder(any(), any(), any(), any());
+        org.mockito.Mockito.verifyNoInteractions(duesSplit);
+    }
+
+    @Test
+    void overviewTellsTheMemberWhetherDuesCanBePaid() {
+        when(mapper.selectSetting(CLUB)).thenReturn(enabledSetting());
+        assertEquals("AVAILABLE", service.overview(MEMBER, CLUB).getDuesCollection().get("state"),
+                "no collection model bean: today's path");
+        com.chengyinhub.business.collection.CollectionModelService model =
+                mock(com.chengyinhub.business.collection.CollectionModelService.class);
+        when(model.clubDuesStatus(CLUB)).thenReturn(Map.of("state", "NOT_BOUND", "nextStep", "BIND_COLLECTION_ACCOUNT"));
+        WechatVerifiedFactTestSupport.setField(service, "collectionModel", model);
+        assertEquals("NOT_BOUND", service.overview(MEMBER, CLUB).getDuesCollection().get("state"));
+        assertEquals("NOT_BOUND", service.duesCollection(OWNER, CLUB).get("state"));
+    }
 }
