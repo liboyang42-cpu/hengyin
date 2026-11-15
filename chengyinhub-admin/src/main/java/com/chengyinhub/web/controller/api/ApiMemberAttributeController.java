@@ -40,6 +40,7 @@ public class ApiMemberAttributeController extends BaseController {
         return success(service.entries(member(), key, cursor, limit));
     }
 
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @PostMapping("/titles/equip")
     public AjaxResult equip(@RequestBody Map<String, Object> body) {
         Object code = body == null ? null : body.get("titleCode");

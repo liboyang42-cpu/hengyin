@@ -21,7 +21,7 @@ test('rewardDrop 与 taskPool API 及管理页面声明完整且权限一致', (
 
   const rewardView = read('chengyinhub-ui/src/views/business/rewarddrop/index.vue');
   const poolView = read('chengyinhub-ui/src/views/business/nodetaskpool/index.vue');
-  assert.match(rewardView, /business:topicnode:edit/);
+  assert.match(rewardView, /business:rewarddrop:edit/);
   assert.match(rewardView, /previewDropProbabilities/);
   assert.match(poolView, /@\/api\/business\/taskPool/);
   assert.match(poolView, /saveTaskPoolItem/);

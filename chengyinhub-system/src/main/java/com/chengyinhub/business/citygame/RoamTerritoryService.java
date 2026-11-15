@@ -396,8 +396,8 @@ public class RoamTerritoryService {
         }
 
         if (targetLat == null || targetLng == null) {
-            targetLat = lat;
-            targetLng = lng;
+            // MED-S8:没有 POI / 棋盘格目标时不再把玩家自己的定位(可能是住址)存成领地坐标。
+            throw new CityGameException(400, "TERRITORY_TARGET_REQUIRED", "请选择要占领的地点");
         }
         if (title == null || title.trim().isEmpty()) title = "漫游领地";
         if (title.length() > 160) title = title.substring(0, 160);

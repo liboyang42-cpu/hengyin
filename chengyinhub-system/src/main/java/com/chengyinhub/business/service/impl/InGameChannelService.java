@@ -85,6 +85,8 @@ public class InGameChannelService
     @Autowired(required = false)
     private CityGameMapper cityGameMapper;
     @Autowired(required = false)
+    private com.chengyinhub.business.mapper.RoamMapper roamMapper;
+    @Autowired(required = false)
     @Lazy
     private IImService imService;
 
@@ -194,15 +196,13 @@ public class InGameChannelService
         if (membership == null || Integer.valueOf(1).equals(membership.getDeleted()))
         {
             Map<String, Object> out = new LinkedHashMap<>();
+            // MED-S6:非成员只知道频道存在,不返回会话 id 与最后一条消息。
             out.put("exists", true);
-            out.put("conversationId", conv.getId());
             out.put("scope", target.scope);
             out.put("bizKey", target.bizKey);
             out.put("title", displayTitle(conv, target.title));
             out.put("unread", 0);
             out.put("muted", 0);
-            out.put("lastMsgText", conv.getLastMsgText() == null ? "" : conv.getLastMsgText());
-            out.put("lastMsgAt", conv.getLastMsgAt());
             return out;
         }
         Map<String, Object> out = buildChannelPayload(conv, membership, target, countActiveMembers(conv.getId()));
@@ -453,7 +453,10 @@ public class InGameChannelService
     public void postRoamEvent(String eventType, Long actorMemberId, String district, String placeTitle, String detail)
     {
         if (conversationMapper == null || memberMapper == null || messageMapper == null) return;
-        String actorName = actorLabel(actorMemberId);
+        // HIGH-S9:公开漫游频道会暴露"谁此刻在哪",只为已单独开启附近位置分享的会员发,
+        // 署名用脱敏 id,不自动拉动作者进频道。
+        if (!hasPresenceOptIn(actorMemberId)) return;
+        String actorName = maskedActor(actorMemberId);
         String verb = eventVerb(eventType);
         String targetLabel = trimToNull(placeTitle) == null ? "" : "「" + placeTitle.trim() + "」";
         String suffix = trimToNull(detail) == null ? "" : " · " + detail.trim();
@@ -464,7 +467,7 @@ public class InGameChannelService
         extra.put("district", normalizeDistrict(district));
         if (placeTitle != null) extra.put("target", placeTitle);
 
-        List<Long> actors = (actorMemberId != null && actorMemberId > 0) ? List.of(actorMemberId) : List.of();
+        List<Long> actors = List.of();
         String primaryKey = roamBizKey(district);
         postGameEvent(primaryKey, roamTitle(district), eventType, actorMemberId, text, extra, actors, false);
         if (!"roam_nearby".equals(primaryKey))
@@ -672,6 +675,7 @@ public class InGameChannelService
             String title = "场次频道";
             int role = 0;
             Set<Long> extras = new LinkedHashSet<>();
+            boolean allowed = !requireWriteAuth;
             if (cmsTopicMapper != null)
             {
                 CmsTopic topic = cmsTopicMapper.selectCmsTopicById(topicId);
@@ -680,8 +684,21 @@ public class InGameChannelService
                 if (topic.getMemberId() != null && topic.getMemberId() > 0)
                 {
                     extras.add(topic.getMemberId());
-                    if (memberId.equals(topic.getMemberId())) role = 1;
+                    if (memberId.equals(topic.getMemberId()))
+                    {
+                        role = 1;
+                        allowed = true;
+                    }
                 }
+            }
+            // HIGH-S3:场次频道只对场次主人或已付费报名者开放;映射缺失时失败关闭。
+            if (!allowed && playTeamMapper != null && playTeamMapper.hasPaidRegistration(memberId, 1, topicId) > 0)
+            {
+                allowed = true;
+            }
+            if (!allowed)
+            {
+                throw new ServiceException("报名后即可加入场次频道", 403);
             }
             return new Target("topic", TOPIC_PREFIX + topicId, title, null, null, role, extras);
         }
@@ -848,10 +865,9 @@ public class InGameChannelService
             UmsMember m = umsMemberService.selectUmsMemberById(memberId);
             if (m != null)
             {
+                // HIGH-S9:ums_member.name 是真实姓名,任何频道署名都不得使用。
                 String nick = trimToNull(m.getNickname());
                 if (nick != null) return nick;
-                String name = trimToNull(m.getName());
-                if (name != null) return name;
             }
         }
         catch (Exception e)
@@ -859,6 +875,28 @@ public class InGameChannelService
             log.debug("Resolve actor label failed for {}", memberId, e);
         }
         return "玩家#" + memberId;
+    }
+
+    /** 与 CityMonopolyService.mask 同口径的脱敏署名。 */
+    static String maskedActor(Long memberId)
+    {
+        if (memberId == null || memberId <= 0) return "玩家";
+        String s = String.valueOf(memberId);
+        return s.length() <= 2 ? "玩家*" : "玩家" + s.charAt(0) + "***" + s.charAt(s.length() - 1);
+    }
+
+    private boolean hasPresenceOptIn(Long memberId)
+    {
+        if (memberId == null || memberId <= 0 || roamMapper == null) return false;
+        try
+        {
+            return roamMapper.countPresenceVisibleSessions(memberId) > 0;
+        }
+        catch (RuntimeException e)
+        {
+            log.warn("Presence opt-in check failed, roam event skipped reason={}", e.getClass().getSimpleName());
+            return false;
+        }
     }
 
     private static String eventVerb(String eventType)

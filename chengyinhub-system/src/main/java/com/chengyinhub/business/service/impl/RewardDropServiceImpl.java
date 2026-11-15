@@ -71,7 +71,7 @@ public class RewardDropServiceImpl implements IRewardDropService {
         }
         String receiptPrefix = "drop:" + memberId + ":" + tId + ":" + nodeId + ":" + aId + ":" + sceneKey;
         // 2) 掷骰（写入 game_random_audit REWARD_DROP）
-        if (!effectiveRandom().hitBp(baseProbBp(), receiptPrefix + ":hit", memberId, "reward_drop", String.valueOf(nodeId))) {
+        if (!effectiveRandom().hitBp(baseProbBp(), GameRandom.compactReceipt(receiptPrefix + ":hit"), memberId, "reward_drop", String.valueOf(nodeId))) {
             return null;
         }
         // 3) 按 weight 抽类型
@@ -80,7 +80,7 @@ public class RewardDropServiceImpl implements IRewardDropService {
                 IGameRandomService.DOMAIN_REWARD_DROP,
                 rules,
                 this::weightOf,
-                receiptPrefix + ":pick",
+                GameRandom.compactReceipt(receiptPrefix + ":pick"),
                 memberId,
                 "reward_drop_rule",
                 String.valueOf(nodeId),

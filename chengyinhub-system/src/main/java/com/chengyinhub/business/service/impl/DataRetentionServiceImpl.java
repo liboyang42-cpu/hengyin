@@ -49,6 +49,8 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
     private RoamLocationRetentionService roamLocationRetentionService;
     @Autowired
     private RoamOrphanLocationRetentionService roamOrphanLocationRetentionService;
+    @Autowired
+    private com.chengyinhub.business.citygame.CityLocationRetentionService cityLocationRetentionService;
 
     @Override
     public int cleanRoamLocations(Date cutoff, int batchSize, int maxBatches) {
@@ -68,6 +70,12 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
                 (c,l) -> roamOrphanLocationRetentionService.clearShops(c,l));
         total += loopDelete("roam_poi_reward_log_coordinates", cutoff, batchSize, maxBatches,
                 (c,l) -> roamLocationRetentionService.clearRewardLocations(c,l));
+        total += loopDelete("roam_territory_checkin_coordinates", cutoff, batchSize, maxBatches,
+                (c, l) -> cityLocationRetentionService.coarsenTerritoryCheckins(c, l));
+        total += loopDelete("roam_territory_audit_coordinates", cutoff, batchSize, maxBatches,
+                (c, l) -> cityLocationRetentionService.clearTerritoryAudits(c, l));
+        total += loopDelete("city_claim_evidence_coordinates", cutoff, batchSize, maxBatches,
+                (c, l) -> cityLocationRetentionService.clearClaimEvidence(c, l));
         return total + loopDelete("roam_share_snapshot_unbound", cutoff, batchSize, maxBatches,
                 (c, l) -> roamShareSnapshotMapper.deleteExpiredUnbound(c, l));
     }

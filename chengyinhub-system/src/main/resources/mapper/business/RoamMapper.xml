@@ -256,6 +256,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         limit 1
     </select>
 
+    <select id="countPresenceVisibleSessions" resultType="int" useCache="false">
+        select count(1) from roam_session
+        where member_id = #{memberId} and status = 0 and presence_visible = 1
+    </select>
+
     <update id="updatePresenceVisibility">
         update roam_session set presence_visible = #{visible}
         where member_id = #{memberId} and status = 0

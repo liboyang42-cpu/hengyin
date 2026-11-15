@@ -1,0 +1,35 @@
+# r3 security fixes: finding → fix → regression test
+
+Source report: `origin/qa/admin-security-r3:qa/ADMIN-SECURITY-REPORT.md`. Branch: `fix/security-r3`.
+
+| ID | Fix | Regression test |
+|---|---|---|
+| CRIT-S1 | `ExternalGameMonetizationService`: no longer accepts the nonce-keyed HMAC. A result counts as attested only when a server-side game authority signs it (per-game secret or platform Ed25519). Duration is measured on the server, and sessions expire after 2h. | `ExternalGameSecurityR3Test` |
+| CRIT-S2 | `SpringExternalGameNodeBridge`: runs resolveCtx/leadGate/routeAccess/unlockGate, needs an in-progress run, takes the topic from the server-side binding, and grants `XP_BADGE_ONLY`. | `SpringExternalGameNodeBridgeSecurityTest` |
+| HIGH-S1 | Standalone pass XP is idempotent per session, granted only on the first pass per game per day, with a daily cap of 30. | `SpringExternalGameNodeBridgeSecurityTest` |
+| HIGH-S2 | TEST_WALLET and confirm-test need the TEST-only `test-wallet-enabled` flag, and debit the buyer as a pair with the seller credit. | `ExternalGameSecurityR3Test`, `ExternalGameMonetizationMysqlIntegrationTest` |
+| HIGH-S3 | `InGameChannelService.resolveTarget`: the topic/session channel requires the topic owner or a paid registration, otherwise 403. | `InGameChannelSecurityR3Test#highS3_*` |
+| HIGH-S4 | `ApiRoamController.checkin`: the participating branch posts the server-side node title, never the client `name`. One event per member, node and day (Redis, fails closed). `@RateLimiter(MEMBER, 20/min)`. | `RoamCheckinChannelEventSecurityTest` |
+| HIGH-S5 | City dice receipt is `city:{memberId}:{sha256(boardId:requestId)}:{tag}`. `GameRandom` rejects receipts over 64 chars and checks member and ref on replay. | `CityDiceReceiptTest`, `GameRandomTest` |
+| HIGH-S6 | `executeOne` erases or tombstones the r3 per-user tables. | `AccountDeregistrationR3ErasureTest`, `AccountDeregistrationR3ErasureMyBatisTest` |
+| HIGH-S7 | `cleanRoamLocations` coarsens or nulls territory check-in, audit and claim-evidence GPS after 30 days. | `CityLocationRetentionServiceTest`, `DataRetentionServiceImplTest` |
+| HIGH-S8 | Territory and Monopoly lat/lng commands call `requireCurrentAgreement`. | `CityLocationConsentGateTest` |
+| HIGH-S9 | `postRoamEvent` posts only for members with presence opt-in (`roam_session.presence_visible=1`), signs with the masked id, and doesn't auto-join the actor. `actorLabel` never falls back to `ums_member.name`. | `InGameChannelSecurityR3Test#highS9_*` |
+| MED-S6 | `getSummary` for non-members returns only `exists`, title and `unread=0`, with no conversation id or last message. | `InGameChannelSecurityR3Test#medS6_*` |
+| HIGH-A1 | `rewarddrop/index.vue`: the drop-type `el-option` labels use single-quoted attributes, so the JSON samples no longer cut the attribute short. | `chengyinhub-ui/tests/unit/sys-random-admin-r3-security.test.js` (compiles the template and asserts three options) |
+| HIGH-A2 | New `migration_20261125_admin_r3_perms.sql` (additive, NOT EXISTS, registered in `ci/migration-dependencies.json`): `business:rewarddrop:*` and `business:taskpool:*` F rows under the two r3 menus, granted to roles that already hold the page. Controllers and views switched from the unregistered `business:topicnode:*`, which also resolves LOW-S5. | `sys-random-admin-r3-security.test.js` (every perm the views and controllers use is registered), `sys-random-admin-contract.test.js` |
+| MED-A1 | `externalgame/monetization.vue`: the four `.catch(() => {})` now show the server message through `showError`. | `sys-random-admin-r3-security.test.js` |
+| MED-S4 | Member `@RateLimiter` on the Monopoly claim/upgrade/challenge/scout/shield/chance/purchase/map/property/leaderboard endpoints, territory nearby/claim/checkin/leaderboard, CITY dice roll/action/audit, title equip, play environment, in-game channel resolve/summary, and `/api/roam/checkin`. (Counting chance rolls toward the daily cap is not in this change.) | `CityR3RateLimitContractTest`, `RoamCheckinChannelEventSecurityTest#checkinIsMemberRateLimited` |
+| MED-S8 | `RoamTerritoryService.claim`: with no POI or board-space target it throws `TERRITORY_TARGET_REQUIRED` instead of storing the claimer's GPS fix as the territory location. | `RoamTerritoryClaimTargetTest` |
+| MED-S5 (partial) | The minimum duration applies to passed results too (in the CRIT-S1 commit). | `ExternalGameSecurityR3Test` |
+
+## Not fixed in this branch
+
+- **HIGH-S10 (18+ gate):** needs a product and policy decision (adult-only declaration vs. birthday), plus app work in `chengyin-app`. The report itself lists it as "decide on the policy". The task scoped the Highs as S1 to S9.
+- **MED-S1, MED-S2, MED-S3, MED-S7, and the rest of MED-S5:** each needs more than a small change (masking and fog rules for public territory views, server-derived device identity, server-side claim pricing, registration-based channel access with revoke on cancel, device/IP heuristics).
+- **Low findings:** not in scope, except LOW-S5, which HIGH-A2 resolves.
+
+## Verification (2026-11-15, cloud sandbox)
+
+- `LANG=C.UTF-8 LC_ALL=C.UTF-8 mvn -B test`: 12,712 tests run, **0 failures**, 34 errors, 563 skipped. All 34 errors are `*MyBatisTest` classes that create a dedicated MySQL schema and fail with `Communications link failure`, because no MySQL is reachable from the sandbox (MySQL lives only on the test VPS). None of them touch files changed in this branch. Re-run on the VPS: the MyBatis/IT suites, including `AccountDeregistrationR3ErasureMyBatisTest`, `InGameChannelMySqlIT` and `ExternalGameMonetizationMysqlIntegrationTest`.
+- `chengyinhub-ui`: `npm ci` (with `--registry=https://registry.npmjs.org/ --replace-registry-host=registry.npmmirror.com`, because the mirror is unreachable here), `npm run build:prod` passes, and `npm run test:unit` gives 602/627. The 25 failures have the same names as on the r3 base `origin/integration/backend-app-r3` (diffed). The 3 new tests pass. `npm run test:e2e:contract` passes 36/36.

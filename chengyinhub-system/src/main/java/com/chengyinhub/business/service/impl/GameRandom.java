@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,6 +35,9 @@ import java.util.function.ToIntFunction;
  */
 @Service("gameRandom")
 public class GameRandom implements IGameRandomService, AdvancedGameRandom {
+
+    /** {@code game_random_audit.receipt_id} 的列宽。 */
+    public static final int MAX_RECEIPT_LENGTH = 64;
 
     private final IntUnaryOperator nextIntFn;
     private final String seedDigest;
@@ -84,13 +88,18 @@ public class GameRandom implements IGameRandomService, AdvancedGameRandom {
         }
         String normalizedDomain = truncate(domain.trim(), 48);
         boolean callerProvidedReceipt = receiptId != null && !receiptId.isBlank();
+        if (callerProvidedReceipt && receiptId.trim().length() > MAX_RECEIPT_LENGTH) {
+            // 截断会让不同请求共用同一凭据并重放既有结果（HIGH-S5），超长直接拒绝。
+            throw new IllegalArgumentException("receiptId longer than " + MAX_RECEIPT_LENGTH + " chars");
+        }
         String effectiveReceiptId = callerProvidedReceipt
-                ? truncate(receiptId.trim(), 64)
+                ? receiptId.trim()
                 : UUID.randomUUID().toString().replace("-", "");
 
         if (auditMapper != null && callerProvidedReceipt) {
             GameRandomAudit existing = auditMapper.selectByDomainAndReceipt(normalizedDomain, effectiveReceiptId);
             if (existing != null && existing.getTicket() != null) {
+                requireSameOwner(existing, memberId, refType, refId);
                 int existingTotal = existing.getTotal() == null ? total : existing.getTotal();
                 int boundedTicket = Math.floorMod(existing.getTicket(), total);
                 return new DrawResult(boundedTicket, existingTotal, effectiveReceiptId,
@@ -120,6 +129,7 @@ public class GameRandom implements IGameRandomService, AdvancedGameRandom {
             } catch (DuplicateKeyException dup) {
                 GameRandomAudit existing = auditMapper.selectByDomainAndReceipt(normalizedDomain, effectiveReceiptId);
                 if (existing != null && existing.getTicket() != null) {
+                    requireSameOwner(existing, memberId, refType, refId);
                     int existingTotal = existing.getTotal() == null ? total : existing.getTotal();
                     return new DrawResult(Math.floorMod(existing.getTicket(), total), existingTotal,
                             effectiveReceiptId, existing.getSeedDigest(), true);
@@ -205,7 +215,7 @@ public class GameRandom implements IGameRandomService, AdvancedGameRandom {
             int idx = seq.getAndIncrement();
             String receipt = (receiptPrefix == null || receiptPrefix.isBlank())
                     ? null
-                    : (idx == 0 ? receiptPrefix : receiptPrefix + ":" + idx);
+                    : compactReceipt(idx == 0 ? receiptPrefix.trim() : receiptPrefix.trim() + ":" + idx);
             DrawResult res = draw(domain, bound, receipt, memberId, refType, refId,
                     t -> jsonOutcome("bound", bound, "value", t));
             return res.ticket();
@@ -218,6 +228,31 @@ public class GameRandom implements IGameRandomService, AdvancedGameRandom {
             return Collections.emptyList();
         }
         return auditMapper.selectAuditList(filter == null ? new GameRandomAudit() : filter);
+    }
+
+    /**
+     * 把可能超过 {@value #MAX_RECEIPT_LENGTH} 字符的凭据无碰撞地压缩：不超长原样返回；
+     * 超长时保留可读前缀并以整串 SHA-256 结尾，不同输入不会因截断而共用凭据。
+     */
+    public static String compactReceipt(String receipt) {
+        if (receipt == null) {
+            return null;
+        }
+        String trimmed = receipt.trim();
+        if (trimmed.length() <= MAX_RECEIPT_LENGTH) {
+            return trimmed;
+        }
+        String digest = sha256Hex(trimmed).substring(0, 40);
+        return trimmed.substring(0, MAX_RECEIPT_LENGTH - digest.length() - 1) + "#" + digest;
+    }
+
+    /** 重放既有凭据时，调用者的成员与引用必须与首次落库的一致，防止跨账号复用凭据。 */
+    private static void requireSameOwner(GameRandomAudit existing, Long memberId, String refType, String refId) {
+        if (!Objects.equals(existing.getMemberId(), memberId)
+                || !Objects.equals(existing.getRefType(), truncate(refType, 48))
+                || !Objects.equals(existing.getRefId(), truncate(refId, 64))) {
+            throw new IllegalStateException("random receipt is bound to another caller");
+        }
     }
 
     private <T> T pickAt(List<T> candidates, ToIntFunction<T> weightFn, int ticket) {

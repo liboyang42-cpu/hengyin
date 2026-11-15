@@ -30,7 +30,7 @@ public class RewardDropAdminController extends BaseController {
     @Autowired(required = false)
     private IGameRandomService gameRandomService;
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:list')")
+    @PreAuthorize("@ss.hasPermi('business:rewarddrop:list')")
     @GetMapping("/rules/list")
     public TableDataInfo listRules(RewardDropRule filter) {
         startPage();
@@ -38,13 +38,13 @@ public class RewardDropAdminController extends BaseController {
         return getDataTable(list);
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:query')")
+    @PreAuthorize("@ss.hasPermi('business:rewarddrop:query')")
     @GetMapping("/rules/{id}")
     public AjaxResult getRule(@PathVariable Long id) {
         return AjaxResult.success(ruleService.selectRuleById(id));
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:add')")
+    @PreAuthorize("@ss.hasPermi('business:rewarddrop:add')")
     @Log(title = "随机掉落规则", businessType = BusinessType.INSERT)
     @PostMapping("/rules")
     public AjaxResult addRule(@RequestBody RewardDropRule rule) {
@@ -55,7 +55,7 @@ public class RewardDropAdminController extends BaseController {
         }
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:edit')")
+    @PreAuthorize("@ss.hasPermi('business:rewarddrop:edit')")
     @Log(title = "随机掉落规则", businessType = BusinessType.UPDATE)
     @PutMapping("/rules")
     public AjaxResult editRule(@RequestBody RewardDropRule rule) {
@@ -66,14 +66,14 @@ public class RewardDropAdminController extends BaseController {
         }
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:remove')")
+    @PreAuthorize("@ss.hasPermi('business:rewarddrop:remove')")
     @Log(title = "随机掉落规则", businessType = BusinessType.DELETE)
     @DeleteMapping("/rules/{id}")
     public AjaxResult removeRule(@PathVariable Long id) {
         return toAjax(ruleService.deleteRuleById(id));
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:query')")
+    @PreAuthorize("@ss.hasPermi('business:rewarddrop:query')")
     @GetMapping("/base-prob")
     public AjaxResult getBaseProb() {
         int bp = ruleService.getBaseProbBp();
@@ -84,7 +84,7 @@ public class RewardDropAdminController extends BaseController {
         return AjaxResult.success(data);
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:edit')")
+    @PreAuthorize("@ss.hasPermi('business:rewarddrop:edit')")
     @Log(title = "掉落基础概率", businessType = BusinessType.UPDATE)
     @PutMapping("/base-prob")
     public AjaxResult updateBaseProb(@RequestBody Map<String, Object> body) {
@@ -105,14 +105,14 @@ public class RewardDropAdminController extends BaseController {
         }
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:query')")
+    @PreAuthorize("@ss.hasPermi('business:rewarddrop:query')")
     @GetMapping("/preview")
     public AjaxResult preview(@RequestParam(required = false) Long topicId,
                               @RequestParam(required = false) String sceneKey) {
         return AjaxResult.success(ruleService.previewProbabilities(topicId, sceneKey));
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:list')")
+    @PreAuthorize("@ss.hasPermi('business:rewarddrop:list')")
     @GetMapping("/audit/list")
     public AjaxResult listAudits(GameRandomAudit filter) {
         if (gameRandomService == null) {

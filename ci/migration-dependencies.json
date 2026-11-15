@@ -1020,6 +1020,7 @@
     "20261115_external_game_monetization_menus": ["20261115_external_game_monetization", "20261012_missing_business_menu"],
     "20261115_sys_ainpc": ["npc_profile", "20261119_merchant_gap", "20261012_missing_business_menu"],
     "20261123_sys_random": ["20261012_missing_business_menu"],
+    "20261125_admin_r3_perms": ["20261123_sys_random"],
     "20261124_city_numbers_attr": ["20261123_sys_citygame"]
   }
 }
