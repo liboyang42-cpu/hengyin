@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.business.domain.UserInvoiceTitle;
 import com.chengyinhub.business.service.IUserInvoiceService;
 import com.chengyinhub.business.service.compliance.ComplianceFeatureSwitches;
@@ -170,7 +171,8 @@ public class ApiUserInvoiceController extends BaseController {
     }
 
     private AjaxResult coded(String message, String errorCode) {
-        AjaxResult result = error(message);
+        AjaxResult result = UserInvoiceException.NOT_FOUND.equals(errorCode)
+                ? AjaxResult.error(HttpStatus.NOT_FOUND, message) : error(message);
         result.put("errorCode", errorCode);
         return result;
     }

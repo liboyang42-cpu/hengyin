@@ -117,8 +117,18 @@ public class ApiRegistrationController extends BaseController {
         } catch (RegistrationCheckoutException e) {
             return new AjaxResult(e.getCode(), e.getMessage());
         } catch (Exception e) {
+            if (isCodedServiceException(e)) return AjaxResult.refusal((ServiceException) e);
             return AjaxResult.error(checkoutRefusalMessage(e.getMessage()));
         }
+    }
+
+    /** 带业务码的 ServiceException(如 409 现金快照未确认、404 主题下架)保留原码;其余仍按原样 500 回显。 */
+    static AjaxResult codedRefusalOrError(Exception e) {
+        return isCodedServiceException(e) ? AjaxResult.refusal((ServiceException) e) : AjaxResult.error(e.getMessage());
+    }
+
+    private static boolean isCodedServiceException(Exception e) {
+        return e instanceof ServiceException se && se.getCode() != null;
     }
 
     @Operation(summary = "支付服务就绪状态")
@@ -350,7 +360,7 @@ public class ApiRegistrationController extends BaseController {
             }
             return cancellationFeedback(registrationId);
         } catch (Exception e) {
-            return AjaxResult.error(e.getMessage());
+            return codedRefusalOrError(e);
         }
     }
 
@@ -374,7 +384,7 @@ public class ApiRegistrationController extends BaseController {
             }
             return cancellationFeedback(registrationId);
         } catch (Exception e) {
-            return AjaxResult.error(e.getMessage());
+            return codedRefusalOrError(e);
         }
     }
 

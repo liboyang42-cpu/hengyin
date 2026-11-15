@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.business.domain.OmsOrder;
 import com.chengyinhub.business.domain.OmsOrderItem;
 import com.chengyinhub.business.domain.PmsProduct;
@@ -220,7 +221,7 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
         requireQuantity(quantity);
         UmsMemberCart cart = selectUmsMemberCartById(cartId);
         if (cart == null || !memberId.equals(cart.getMemberId())) {
-            throw new ServiceException("购物车信息不存在");
+            throw new ServiceException("购物车信息不存在", HttpStatus.NOT_FOUND);
         }
         PmsProduct product = pmsProductService.selectPmsProductById(cart.getProductId());
         PmsSku sku = pmsSkuService.selectPmsSkuById(skuId);
@@ -386,13 +387,13 @@ public class UmsMemberCartServiceImpl implements IUmsMemberCartService
         }
         List<ViewMemberCart> carts = viewMemberCartService.selectViewMemberCartByIds(cartIds);
         if (carts == null || carts.size() != requestedIds.size()) {
-            throw new ServiceException("购物车数据异常");
+            throw new ServiceException("购物车数据异常", HttpStatus.NOT_FOUND);
         }
         Set<Long> returnedIds = new LinkedHashSet<>();
         for (ViewMemberCart cart : carts) {
             if (cart == null || !requestedIds.contains(cart.getId()) || !returnedIds.add(cart.getId())
                     || !memberId.equals(cart.getMemberId())) {
-                throw new ServiceException("购物车数据异常");
+                throw new ServiceException("购物车数据异常", HttpStatus.NOT_FOUND);
             }
             requireQuantity(cart.getQuantity());
             PmsProduct product = pmsProductService.selectPmsProductById(cart.getProductId());

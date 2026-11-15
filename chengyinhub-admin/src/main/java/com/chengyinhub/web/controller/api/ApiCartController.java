@@ -100,7 +100,7 @@ public class ApiCartController extends BaseController {
         try {
             return success(umsMemberCartService.updateCart(memberId, cart_id, quantity, sku_id));
         } catch (com.chengyinhub.common.exception.ServiceException exception) {
-            return error(exception.getMessage());
+            return AjaxResult.refusal(exception);
         }
     }
 
@@ -115,7 +115,7 @@ public class ApiCartController extends BaseController {
         try {
             return success(umsMemberCartService.previewSettlement(memberId, cartids));
         } catch (com.chengyinhub.common.exception.ServiceException exception) {
-            return error(exception.getMessage());
+            return AjaxResult.refusal(exception);
         }
     }
 

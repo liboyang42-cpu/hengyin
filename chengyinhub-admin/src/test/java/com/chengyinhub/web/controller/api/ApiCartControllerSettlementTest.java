@@ -455,7 +455,8 @@ class ApiCartControllerSettlementTest {
         cart.setMemberId(MEMBER + 1);
         when(cartMapper.selectUmsMemberCartById(5L)).thenReturn(cart);
 
-        assertTrue(controller().cartUpdate("5", "1", String.valueOf(SKU)).isError());
+        // SMOKE-500-R4:别人的/不存在的购物车行 = 404,不再是 500
+        assertEquals(404, controller().cartUpdate("5", "1", String.valueOf(SKU)).get(AjaxResult.CODE_TAG));
 
         verify(cartMapper, never()).updateUmsMemberCart(any());
     }
@@ -479,7 +480,7 @@ class ApiCartControllerSettlementTest {
     void settlementRejectsWhenAnyRequestedCartIsMissing() {
         when(cartView.selectViewMemberCartByIds(any())).thenReturn(Collections.singletonList(cart(1L)));
 
-        assertTrue(controller().cartSettlement("5,999").isError());
+        assertEquals(404, controller().cartSettlement("5,999").get(AjaxResult.CODE_TAG));
         assertTrue(controller().orderSettlement("5,999", "", "1").isError());
 
         verify(memberSvc, never()).deductPoints(anyLong(), anyInt());

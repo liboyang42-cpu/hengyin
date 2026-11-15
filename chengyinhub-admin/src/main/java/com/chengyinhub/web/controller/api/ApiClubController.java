@@ -1,5 +1,6 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.core.text.Convert;
 import java.util.ArrayList;
@@ -900,7 +901,7 @@ public class ApiClubController extends BaseController {
         if (body.getMemberId() == null) return error("缺少成员ID");
 
         Club club = clubService.selectClubById(body.getClubId());
-        if (club == null) return error("俱乐部不存在");
+        if (club == null) return AjaxResult.error(HttpStatus.NOT_FOUND, "俱乐部不存在");
         if (!canManageMembers(club, memberId)) {
             return error("无权管理该俱乐部");
         }
@@ -1194,7 +1195,7 @@ public class ApiClubController extends BaseController {
             clubMemberService.reviewJoinRequest(body.getClubId(), body.getMemberId(), ownerId, approve, why);
             return success(approve ? "已通过入会申请" : "已拒绝入会申请");
         } catch (IllegalArgumentException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
     }
 
@@ -1324,7 +1325,7 @@ public class ApiClubController extends BaseController {
         if (body.getId() == null) return error("缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getId());
         if (club != null && OwnershipUtils.isOwner(club.getMemberId(), memberId)) {
-            return error("主理人不能直接退出；请先在成员治理中转让主理人，或解散俱乐部");
+            return AjaxResult.error(HttpStatus.CONFLICT, "主理人不能直接退出；请先在成员治理中转让主理人，或解散俱乐部");
         }
         ClubLifecycleCommandResultVO lifecycle;
         try {
@@ -1614,7 +1615,7 @@ public class ApiClubController extends BaseController {
         if (club == null) return error("俱乐部不存在");
         if (OwnershipUtils.notOwner(club.getMemberId(), memberId)) return error("只有主理人可颁发");
         GrowthBadge gb = growthBadgeMapper.selectByCode(code);
-        if (gb == null || gb.getClubId() == null || !gb.getClubId().equals(clubId)) return error("勋章不存在或不属于本俱乐部");
+        if (gb == null || gb.getClubId() == null || !gb.getClubId().equals(clubId)) return AjaxResult.error(HttpStatus.NOT_FOUND, "勋章不存在或不属于本俱乐部");
         boolean isMember = OwnershipUtils.isOwner(club.getMemberId(), target) || clubMemberService.selectByClubAndMember(clubId, target) != null;
         if (!isMember) return error("对方不是本俱乐部成员");
         if (playerBadgeMapper.countByMemberAndCode(target, code) > 0) return AjaxResult.success("已颁发过");

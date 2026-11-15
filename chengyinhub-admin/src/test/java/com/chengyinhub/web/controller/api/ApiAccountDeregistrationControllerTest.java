@@ -88,7 +88,7 @@ class ApiAccountDeregistrationControllerTest {
 
         AjaxResult result = fixture.apply();
 
-        assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
+        assertEquals(HttpStatus.BAD_REQUEST, result.get(AjaxResult.CODE_TAG));
         assertEquals("验证码输入有误", result.get(AjaxResult.MSG_TAG));
         verify(fixture.smsVerificationService).verify(
                 "13800138000", "123456", "198.51.100.20");
@@ -121,7 +121,7 @@ class ApiAccountDeregistrationControllerTest {
         Fixture f = new Fixture(consent("v2.0", "AGREE"));
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getRemoteAddr()).thenReturn("198.51.100.20");
-        assertEquals(HttpStatus.ERROR, f.controller.apply(null, "fresh", "request-1", request).get(AjaxResult.CODE_TAG));
+        assertEquals(HttpStatus.BAD_REQUEST, f.controller.apply(null, "fresh", "request-1", request).get(AjaxResult.CODE_TAG));
         verify(f.wechat, never()).verify(anyLong(), any(), any(), any());
         f.member.setPhone(null); f.member.setWxOpenId("owner-seven");
         assertEquals(HttpStatus.ERROR, f.controller.apply(null, "wrong", "request-1", request).get(AjaxResult.CODE_TAG));
@@ -150,7 +150,7 @@ class ApiAccountDeregistrationControllerTest {
 
         AjaxResult result = f.apply();
 
-        assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
+        assertEquals(HttpStatus.BAD_REQUEST, result.get(AjaxResult.CODE_TAG));
         verify(f.deregistrationService, never()).apply(1001L);
     }
     private static void verifyNoSms(Fixture f) { verify(f.smsVerificationService, never()).verify(any(), any(), any()); }

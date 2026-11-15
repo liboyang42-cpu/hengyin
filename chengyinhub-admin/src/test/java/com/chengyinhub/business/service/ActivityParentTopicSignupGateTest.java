@@ -77,6 +77,8 @@ class ActivityParentTopicSignupGateTest {
             RuntimeException e = assertThrows(RuntimeException.class, this::validate,
                     "父主题不在架时场次必须拒单:" + (t == null ? "null" : t.getStatus() + "/" + t.getUserStatus() + "/" + t.getDelFlag()));
             assertEquals("主题活动已下架", e.getMessage());
+            // SMOKE-500-R4:父主题不在架 = 资源不可用,业务码 404 而不是 500。
+            assertEquals(Integer.valueOf(404), ((com.chengyinhub.common.exception.ServiceException) e).getCode());
         }
     }
 
