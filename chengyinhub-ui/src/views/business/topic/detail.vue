@@ -560,6 +560,11 @@
         </template>
       </el-card>
 
+      <!-- 环境条件与天气触发规则 -->
+      <el-card class="mt10" v-if="topicDetail && topicDetail.id">
+        <topic-environment-rules-panel :topic-id="topicDetail.id" :chapters="chapterList" :can-edit="canEditEnvironment" />
+      </el-card>
+
     </el-main>
 
     <!-- 编辑票务对话框 -->
@@ -959,6 +964,7 @@ import { addTopicNode, updateTopicNode, delTopicNode } from "@/api/business/topi
 import { getTopicFunnel } from "@/api/business/topicFunnel"
 import { parseTime } from "@/utils/ruoyi"
 import PlayHelpReadonlyPanel from "@/components/PlayHelpReadonlyPanel"
+import TopicEnvironmentRulesPanel from "./components/TopicEnvironmentRulesPanel"
 import { topicLifecycleMeta, topicCheckStatusMeta } from "@/utils/admin-status"
 
 const hasAllPermissions = (permissions, required) =>
@@ -969,7 +975,7 @@ const hasPermission = (permissions, required) =>
 
 export default {
   name: "TopicDetail",
-  components: { PlayHelpReadonlyPanel },
+  components: { PlayHelpReadonlyPanel, TopicEnvironmentRulesPanel },
   dicts: ['sys_topic_type', 'sys_topic_status', 'sys_topic_user_status'],
   computed: {
     unifiedCheckMeta() {
@@ -978,6 +984,10 @@ export default {
     },
     unifiedLifecycleMeta() {
       return topicLifecycleMeta(this.topicDetail && this.topicDetail.lifecycle)
+    },
+    canEditEnvironment() {
+      const permissions = (this.$store && this.$store.getters && this.$store.getters.permissions) || []
+      return hasPermission(permissions, 'business:topic:edit')
     }
   },
   data() {

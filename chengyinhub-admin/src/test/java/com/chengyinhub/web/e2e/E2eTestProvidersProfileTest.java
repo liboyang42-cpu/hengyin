@@ -17,6 +17,7 @@ import com.chengyinhub.business.service.impl.E2eTestContentSecurityService;
 import com.chengyinhub.business.service.impl.E2eTestWeChatMiniSessionService;
 import com.chengyinhub.business.service.impl.E2eTestWxCodeGateway;
 import com.chengyinhub.business.service.impl.E2eTestWxCodeStorage;
+import com.chengyinhub.business.service.support.rpg.E2eTestTopicWeatherProvider;
 import com.chengyinhub.framework.web.service.E2eTestSmsCodeSender;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -36,6 +37,7 @@ class E2eTestProvidersProfileTest
                 E2eTestImMediaStore.class,
                 E2eTestSpeechToTextService.class,
                 E2eTestWeChatMiniSessionService.class,
+                E2eTestTopicWeatherProvider.class,
         })
         {
             Profile profile = type.getAnnotation(Profile.class);
@@ -80,5 +82,11 @@ class E2eTestProvidersProfileTest
         E2eTestWeChatMiniSessionService mini = new E2eTestWeChatMiniSessionService();
         IWeChatMiniSessionService.WeChatMiniSession session = mini.exchange("e2e-code-9003");
         assertEquals("e2e-openid-9003", session.getOpenId());
+
+        E2eTestTopicWeatherProvider weather = new E2eTestTopicWeatherProvider("");
+        assertEquals("rain", weather.currentWeather("雨城"));
+        assertEquals("clear", weather.currentWeather("杭州"));
+        assertNull(weather.currentWeather(null));
+        assertEquals("fog", new E2eTestTopicWeatherProvider("fog").currentWeather("杭州"));
     }
 }
