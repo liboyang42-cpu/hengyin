@@ -28,3 +28,8 @@ Source report: `origin/qa/admin-security-r3:qa/ADMIN-SECURITY-REPORT.md`. Branch
 - **HIGH-S10 (18+ gate):** needs a product and policy decision (adult-only declaration vs. birthday), plus app work in `chengyin-app`. The report itself lists it as "decide on the policy". The task scoped the Highs as S1 to S9.
 - **MED-S1, MED-S2, MED-S3, MED-S7, and the rest of MED-S5:** each needs more than a small change (masking and fog rules for public territory views, server-derived device identity, server-side claim pricing, registration-based channel access with revoke on cancel, device/IP heuristics).
 - **Low findings:** not in scope, except LOW-S5, which HIGH-A2 resolves.
+
+## Verification (2026-11-15, cloud sandbox)
+
+- `LANG=C.UTF-8 LC_ALL=C.UTF-8 mvn -B test`: 12,712 tests run, **0 failures**, 34 errors, 563 skipped. All 34 errors are `*MyBatisTest` classes that create a dedicated MySQL schema and fail with `Communications link failure`, because no MySQL is reachable from the sandbox (MySQL lives only on the test VPS). None of them touch files changed in this branch. Re-run on the VPS: the MyBatis/IT suites, including `AccountDeregistrationR3ErasureMyBatisTest`, `InGameChannelMySqlIT` and `ExternalGameMonetizationMysqlIntegrationTest`.
+- `chengyinhub-ui`: `npm ci` (with `--registry=https://registry.npmjs.org/ --replace-registry-host=registry.npmmirror.com`, because the mirror is unreachable here), `npm run build:prod` passes, and `npm run test:unit` gives 602/627. The 25 failures have the same names as on the r3 base `origin/integration/backend-app-r3` (diffed). The 3 new tests pass. `npm run test:e2e:contract` passes 36/36.
