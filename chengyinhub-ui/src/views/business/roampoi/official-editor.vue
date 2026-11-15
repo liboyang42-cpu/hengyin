@@ -22,6 +22,7 @@
         <el-button v-if="quotes.length < 6" size="mini" @click="quotes.push(blankQuote())">添加一条</el-button>
         <span>玩家看到的是“来源 · 作者”标注的摘录，与玩家评价分开；须核对原文后再填。</span>
       </el-form-item>
+      <el-form-item v-if="poiId" label="AI 起草"><el-button size="mini" :loading="drafting" :disabled="loading || saving" @click="draftWithAi">按地点生成题目草稿</el-button><span>生成后请核对再保存；保存后仍需审核。</span></el-form-item>
       <el-form-item label="游戏名称"><el-input v-model="game.title" maxlength="80" /></el-form-item>
       <el-form-item label="游戏介绍"><el-input v-model="game.description" type="textarea" maxlength="255" /></el-form-item>
       <el-form-item label="拍照核验"><el-switch v-model="poi.photoRequired" active-text="先拍照，再答题" inactive-text="仅观察答题" /></el-form-item>
@@ -39,6 +40,7 @@
 <script>
 import ImageUpload from '@/components/ImageUpload'
 import { officialPoiDraft, saveOfficialPoi } from '@/api/business/roamPoi'
+import { aiNodeDraft } from '@/api/business/seedContent'
 
 const blankPoi = () => ({ name: '', address: '', cityCode: '', lat: null, lng: null, tags: '', description: '', photoCredit: '', photoRequired: true })
 const blankQuote = () => ({ text: '', source: '', author: '', date: '', url: '' })
@@ -51,10 +53,26 @@ function assetKey(value) {
   if (local >= 0) return text.slice(local)
   return /^https:\/\/[^/]+\/upload\//.test(text) ? text : ''
 }
+// AI 节点草稿 → 本表单的观察题字段;只填表,不保存。
+function applyAiNode(game, node, placeName) {
+  const clip = (value, limit) => String(value || '').trim().slice(0, limit)
+  const key = clip(node.correctAnswer, 1).toUpperCase()
+  return {
+    ...game,
+    title: game.title || clip((placeName || '') + '·观察挑战', 80),
+    description: clip(node.ruleInstructions || node.storyText, 255) || game.description,
+    questionName: clip(node.questionName, 255),
+    questionA: clip(node.optionA, 255),
+    questionB: clip(node.optionB, 255),
+    questionC: clip(node.optionC, 255),
+    questionD: clip(node.optionD, 255),
+    correctAnswer: key && 'ABCD'.includes(key) ? key : game.correctAnswer
+  }
+}
 export default {
   components: { ImageUpload },
   props: { visible: Boolean, poiId: [Number, String] },
-  data: () => ({ poi: blankPoi(), game: blankGame(), pictures: '', quotes: [], letters: ['A', 'B', 'C', 'D'], saving: false, loading: false, error: '', sequence: 0 }),
+  data: () => ({ poi: blankPoi(), game: blankGame(), pictures: '', quotes: [], letters: ['A', 'B', 'C', 'D'], saving: false, loading: false, drafting: false, error: '', sequence: 0 }),
   watch: { visible: { immediate: true, handler(value) { if (value) this.load(); else this.sequence++ } } },
   methods: {
     blankQuote,
@@ -76,6 +94,21 @@ export default {
         this.pictures = (Array.isArray(images) && images.length ? images : [this.poi.coverImg]).filter(Boolean).map(assetKey).filter(Boolean).join(',')
       } catch (_) { if (sequence === this.sequence) this.error = '据点资料读取失败，请关闭后重试' }
       finally { if (sequence === this.sequence) this.loading = false }
+    },
+    async draftWithAi() {
+      if (this.drafting || !this.poiId) return
+      if (this.game.questionName || this.game.questionA) {
+        try { await this.$modal.confirm('用 AI 草稿覆盖当前题目和选项？') } catch (_) { return }
+      }
+      const sequence = this.sequence
+      this.drafting = true; this.error = ''
+      try {
+        const node = ((await aiNodeDraft(this.poiId)).data || {}).node
+        if (sequence !== this.sequence || !this.visible) return
+        if (!node || !node.questionName) { this.error = 'AI 这次没有给出可用草稿，请重试或手动填写'; return }
+        this.game = applyAiNode(this.game, node, this.poi.name)
+      } catch (error) { if (sequence === this.sequence) this.error = error.message || 'AI 草稿生成失败，可手动填写' }
+      finally { this.drafting = false }
     },
     async save() {
       if (this.saving || this.loading) return
