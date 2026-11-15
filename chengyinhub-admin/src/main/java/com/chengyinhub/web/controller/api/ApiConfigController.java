@@ -44,6 +44,10 @@ public class ApiConfigController extends BaseController {
     @Autowired(required = false)
     private com.chengyinhub.business.service.support.FreeExploreBundleSwitches freeExploreBundleSwitches;
 
+    /** T2 maps-backend read cache (optional: hand-built controllers in tests read sys_config directly). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.readcache.ReadCache readCache;
+
     /**
      * 通用特性键(短名)；实际 sys_config key = "feature.flag." + 短名。
      *
@@ -67,6 +71,25 @@ public class ApiConfigController extends BaseController {
     @Anonymous
     @PostMapping("/features")
     public AjaxResult features() {
+        // T2 maps-backend: everything except the two per-viewer community keys is shared and comes from sys_config
+        // (and static settings), so it is cached for everyone; the community keys are computed for this viewer.
+        // Key order is the same as before: head, the two community keys, tail.
+        Map<String, Map<String, Object>> shared = readCache == null ? sharedFeatures()
+                : readCache.read(com.chengyinhub.business.readcache.ReadCacheNamespace.FEATURES, "v1",
+                        readCache.json().getTypeFactory().constructMapType(LinkedHashMap.class,
+                                readCache.json().getTypeFactory().constructType(String.class),
+                                readCache.json().getTypeFactory().constructMapType(LinkedHashMap.class, String.class, Object.class)),
+                        this::sharedFeatures);
+        Map<String, Object> data = new LinkedHashMap<>(shared.get("head"));
+        Long memberId = viewer();
+        data.put("communityPostRead", communityPostFeatureGate.canRead(memberId));
+        data.put("communityPostWrite", communityPostFeatureGate.canWrite(memberId));
+        data.putAll(shared.get("tail"));
+        return success(data);
+    }
+
+    /** The viewer-independent part of {@link #features()}: "head" (keys before the community keys) and "tail". */
+    Map<String, Map<String, Object>> sharedFeatures() {
         Map<String, Object> data = new LinkedHashMap<>();
         for (String k : FLAG_KEYS) {
             data.put(k, readFlag("feature.flag." + k));
@@ -81,20 +104,21 @@ public class ApiConfigController extends BaseController {
         data.put("shopNpcVoice", shopNpcVoice);
         data.put("shopNpcVoiceAvailable", shopNpcVoice);
         data.put("merchantNpcChat", npcFeatureFlags.merchantChatOn());
-        Long memberId = viewer();
-        data.put("communityPostRead", communityPostFeatureGate.canRead(memberId));
-        data.put("communityPostWrite", communityPostFeatureGate.canWrite(memberId));
+        Map<String, Object> tail = new LinkedHashMap<>();
         // R11 p1 F-7:入口按服务端同一个闸显示 —— 功能关着就不摆「发票」「自由探索权益」入口(端点闸照旧)
-        data.put("userInvoice", complianceFeatureSwitches != null && complianceFeatureSwitches.userInvoiceOn());
-        data.put("freeExploreBundle", freeExploreBundleSwitches != null && freeExploreBundleSwitches.ledgerEnabled());
+        tail.put("userInvoice", complianceFeatureSwitches != null && complianceFeatureSwitches.userInvoiceOn());
+        tail.put("freeExploreBundle", freeExploreBundleSwitches != null && freeExploreBundleSwitches.ledgerEnabled());
         // P0-14 / P2-020:生成式 AI 算法备案号公示位;未配置为空串,小程序据此不显示
-        data.put("aigcFilingNo", aigcFilingNo());
+        tail.put("aigcFilingNo", aigcFilingNo());
         // P1b SEC-16 / SEC-13 / SEC-14:App 备案号、客服联系方式、年龄政策。均来自 sys_config,未配置为空串 / adults,
         // 客户端据此不显示备案行与联系方式;备案号永不写死在客户端。
-        data.put("appFilingNo", configText(APP_FILING_NO_KEY, 64));
-        data.put("supportContact", configText(SUPPORT_CONTACT_KEY, 128));
-        data.put("agePolicy", agePolicy());
-        return success(data);
+        tail.put("appFilingNo", configText(APP_FILING_NO_KEY, 64));
+        tail.put("supportContact", configText(SUPPORT_CONTACT_KEY, 128));
+        tail.put("agePolicy", agePolicy());
+        Map<String, Map<String, Object>> shared = new LinkedHashMap<>();
+        shared.put("head", data);
+        shared.put("tail", tail);
+        return shared;
     }
 
     private Long viewer() {
