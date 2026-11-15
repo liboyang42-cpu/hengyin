@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- R12 creator earnings. Append-only: inserts and selects only. Candidate selects skip events already in the
+     ledger; the unique event_key still guards every insert (insert ignore), so a parallel or replayed run is safe. -->
+<mapper namespace="com.chengyinhub.business.mapper.CreatorEarningMapper">
+
+    <!-- A member adopted another member's library template. Once per (template, adopter), ever. -->
+    <select id="selectAdoptionCandidates" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select r.actor_member_id as actorId, l.member_id as creatorId, concat('', l.id) as itemRef,
+               max(l.title) as itemTitle, min(r.created_at) as occurTime
+          from template_adoption_receipt r
+          join cms_template_library l on l.id = r.source_id
+         where r.status = 'COMPLETED'
+           and r.created_at &gt;= #{from} and r.created_at &lt; #{to}
+           and l.member_id &gt; 0 and l.member_id &lt;&gt; r.actor_member_id
+           and not exists (select 1 from creator_earning_ledger e
+                            where e.event_key = concat('ADOPT:T', l.id, ':', r.actor_member_id))
+         group by r.actor_member_id, l.member_id, l.id
+         order by min(r.created_at), l.id, r.actor_member_id
+         limit #{limit}
+    </select>
+
+    <!-- A buyer installed a purchased workshop version. Once per (version, buyer), ever. -->
+    <select id="selectInstallCandidates" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select i.buyer_id as actorId, v.seller_id as creatorId, v.version_id as itemRef,
+               max(json_unquote(json_extract(v.content_json, '$.title'))) as itemTitle, min(i.installed_at) as occurTime
+          from workshop_install i
+          join workshop_order o on o.order_no = i.order_no
+          join workshop_version v on v.version_id = o.version_id
+         where i.draft_id is not null and i.installed_at is not null
+           and i.installed_at &gt;= #{from} and i.installed_at &lt; #{to}
+           and v.seller_id &lt;&gt; i.buyer_id
+           and not exists (select 1 from creator_earning_ledger e
+                            where e.event_key = concat('INSTALL:', v.version_id, ':', i.buyer_id))
+         group by i.buyer_id, v.seller_id, v.version_id
+         order by min(i.installed_at), v.version_id, i.buyer_id
+         limit #{limit}
+    </select>
+
+    <!-- Verified play = a server-recorded node check-in (player_node_progress.status=1) on a node whose template
+         comes from a member's library template (adopted copy, or the library entry's own canonical draft). -->
+    <select id="selectTemplatePlayCandidates" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select p.id as progressId, p.member_id as actorId, l.member_id as creatorId, concat('', l.id) as itemRef,
+               l.title as itemTitle, p.checkin_time as occurTime
+          from player_node_progress p
+          join cms_topic_node n on n.id = p.node_id
+          join cms_member_template t on t.id = n.template_id
+          join cms_template_library l on l.id = (case when t.original_template_id &gt; 0 then t.original_template_id
+                   else (select min(x.id) from cms_template_library x where x.member_template_id = t.id) end)
+         where p.status = 1 and coalesce(p.del_flag, 0) = 0
+           and p.checkin_time &gt;= #{from} and p.checkin_time &lt; #{to}
+           and l.member_id &gt; 0 and l.member_id &lt;&gt; p.member_id
+           and not exists (select 1 from creator_earning_ledger e where e.event_key = concat('PLAY:', p.id))
+         order by p.checkin_time, p.id
+         limit #{limit}
+    </select>
+
+    <!-- Verified play on a node built from a workshop-installed draft (or a draft inherited from one). -->
+    <select id="selectWorkshopPlayCandidates" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select p.id as progressId, p.member_id as actorId, v.seller_id as creatorId, v.version_id as itemRef,
+               json_unquote(json_extract(v.content_json, '$.title')) as itemTitle, p.checkin_time as occurTime
+          from player_node_progress p
+          join cms_topic_node n on n.id = p.node_id
+          left join workshop_install i on i.draft_id = n.template_id
+          left join workshop_draft_lineage g on g.draft_id = n.template_id
+          join workshop_order o on o.order_no = coalesce(i.order_no, g.order_no)
+          join workshop_version v on v.version_id = o.version_id
+         where p.status = 1 and coalesce(p.del_flag, 0) = 0
+           and p.checkin_time &gt;= #{from} and p.checkin_time &lt; #{to}
+           and n.template_id &gt; 0
+           and v.seller_id &lt;&gt; p.member_id
+           and not exists (select 1 from creator_earning_ledger e where e.event_key = concat('PLAY:', p.id))
+         order by p.checkin_time, p.id
+         limit #{limit}
+    </select>
+
+    <!-- A paid workshop order. Apple orders carry milliunits; one minor unit = 10 milliunits. -->
+    <select id="selectSaleCandidates" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select o.order_no as orderNo, o.buyer_id as actorId, v.seller_id as creatorId, v.version_id as itemRef,
+               json_unquote(json_extract(v.content_json, '$.title')) as itemTitle, o.paid_at as occurTime,
+               coalesce(o.amount_fen, floor(o.amount_milliunits / 10)) as grossMinor,
+               coalesce(o.currency, 'CNY') as currency
+          from workshop_order o
+          join workshop_version v on v.version_id = o.version_id
+         where o.paid_at is not null
+           and o.paid_at &gt;= #{from} and o.paid_at &lt; #{to}
+           and v.seller_id &lt;&gt; o.buyer_id
+           and not exists (select 1 from creator_earning_ledger e where e.event_key = concat('SALE:', o.order_no))
+         order by o.paid_at, o.id
+         limit #{limit}
+    </select>
+
+    <!-- A refunded order whose sale is already in the ledger and not yet reversed. -->
+    <select id="selectReversalCandidates" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select o.order_no as orderNo, o.buyer_id as actorId, o.refunded_at as occurTime
+          from workshop_order o
+         where o.state = 'REFUNDED' and o.refunded_at is not null
+           and o.refunded_at &gt;= #{from} and o.refunded_at &lt; #{to}
+           and exists (select 1 from creator_earning_ledger s where s.event_key = concat('SALE:', o.order_no))
+           and not exists (select 1 from creator_earning_ledger e where e.event_key = concat('SALE_REVERSAL:', o.order_no))
+         order by o.refunded_at, o.id
+         limit #{limit}
+    </select>
+
+    <select id="countEvent" resultType="int" useCache="false" flushCache="true">
+        select count(*) from creator_earning_ledger where event_key = #{eventKey}
+    </select>
+
+    <select id="countRewardedPlays" resultType="int" useCache="false" flushCache="true">
+        select count(*) from creator_earning_ledger
+         where creator_member_id = #{creatorId} and occur_date = #{day} and event_type = 'PLAY' and points &gt; 0
+    </select>
+
+    <select id="countRewardedPlayerItemPlays" resultType="int" useCache="false" flushCache="true">
+        select count(*) from creator_earning_ledger
+         where creator_member_id = #{creatorId} and actor_member_id = #{actorId}
+           and item_kind = #{itemKind} and item_ref = #{itemRef}
+           and occur_date = #{day} and event_type = 'PLAY' and points &gt; 0
+    </select>
+
+    <select id="selectSaleForOrder" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select creator_member_id as creatorId, item_kind as itemKind, item_ref as itemRef, item_title as itemTitle,
+               gross_minor as grossMinor, creator_share_bps as shareBps, creator_minor as creatorMinor,
+               currency, income_order_key as orderKey
+          from creator_earning_ledger where event_key = #{eventKey}
+    </select>
+
+    <insert id="insertLedger" parameterType="java.util.Map">
+        insert ignore into creator_earning_ledger
+            (event_key, event_type, creator_member_id, actor_member_id, item_kind, item_ref, item_title, source_ref,
+             points, capped, gross_minor, creator_share_bps, creator_minor, currency, money_state, income_order_key,
+             occur_time, occur_date, create_time)
+        values
+            (#{eventKey}, #{eventType}, #{creatorId}, #{actorId}, #{itemKind}, #{itemRef}, #{itemTitle}, #{sourceRef},
+             #{points}, #{capped}, #{grossMinor}, #{shareBps}, #{creatorMinor}, #{currency}, #{moneyState}, #{orderKey},
+             #{occurTime}, #{occurDate}, current_timestamp(3))
+    </insert>
+
+    <!-- creator_income_detail is keyed by creator_profile.id, so only approved creators get rows; a creator approved
+         later is caught up by the next run. Points are not money: amount carries only the intended share. -->
+    <insert id="mirrorIncomeDetail">
+        insert ignore into creator_income_detail
+            (creator_id, source_type, source_id, idempotency_key, amount, points, income_status, occur_time, create_time, update_time)
+        select cp.id, concat('R12_', e.event_type), e.id, concat('CEL:', e.id), e.creator_minor / 100.0, e.points,
+               case when e.event_type = 'SALE_REVERSAL' then 2 when e.money_state = 'NONE' then 1 else 0 end,
+               e.occur_time, now(), now()
+          from creator_earning_ledger e
+          join creator_profile cp on cp.member_id = e.creator_member_id and cp.apply_status = 1
+         where (e.points &gt; 0 or e.creator_minor &lt;&gt; 0)
+           and not exists (select 1 from creator_income_detail d where d.idempotency_key = concat('CEL:', e.id))
+         order by e.id
+         limit #{limit}
+    </insert>
+
+    <select id="selectSummary" resultType="java.util.HashMap">
+        select coalesce(sum(points), 0) as points,
+               coalesce(sum(case when event_type = 'PLAY' then 1 else 0 end), 0) as plays,
+               coalesce(sum(case when event_type = 'PLAY' and capped = 1 then 1 else 0 end), 0) as cappedPlays,
+               coalesce(sum(case when event_type in ('ADOPT', 'INSTALL') then 1 else 0 end), 0) as uses,
+               coalesce(sum(case when event_type = 'SALE' then 1 else 0 end), 0) as sales,
+               count(distinct concat(item_kind, ':', item_ref)) as items
+          from creator_earning_ledger where creator_member_id = #{creatorId}
+    </select>
+
+    <select id="selectMoneyIntents" resultType="java.util.HashMap">
+        select currency, money_state as moneyState, sum(creator_minor) as creatorMinor
+          from creator_earning_ledger
+         where creator_member_id = #{creatorId} and event_type in ('SALE', 'SALE_REVERSAL')
+         group by currency, money_state
+         order by currency, money_state
+    </select>
+
+    <select id="selectItems" resultType="java.util.HashMap">
+        select item_kind as itemKind, item_ref as itemRef, max(item_title) as title,
+               sum(case when event_type = 'PLAY' then 1 else 0 end) as plays,
+               sum(case when event_type in ('ADOPT', 'INSTALL') then 1 else 0 end) as uses,
+               sum(case when event_type = 'SALE' then 1 else 0 end) as sales,
+               sum(points) as points, max(occur_time) as lastAt
+          from creator_earning_ledger where creator_member_id = #{creatorId}
+         group by item_kind, item_ref
+         order by sum(points) desc, max(occur_time) desc, item_kind, item_ref
+         limit #{limit}
+    </select>
+
+    <select id="selectLedgerPage" resultType="java.util.HashMap">
+        select id, event_type as eventType, item_kind as itemKind, item_ref as itemRef, item_title as itemTitle,
+               points, capped, creator_minor as creatorMinor, currency, money_state as moneyState, occur_time as occurTime
+          from creator_earning_ledger
+         where creator_member_id = #{creatorId}
+           <if test="before != null"> and id &lt; #{before}</if>
+         order by id desc
+         limit #{limit}
+    </select>
+
+    <select id="selectIncomeFacts" resultType="java.util.HashMap">
+        select income_order_key as orderKey, max(item_ref) as itemRef, max(currency) as currency,
+               sum(case when event_type = 'SALE' then creator_minor else 0 end) as creatorAmount,
+               -sum(case when event_type = 'SALE_REVERSAL' then creator_minor else 0 end) as refundedAmount,
+               count(*) as revision,
+               min(case when event_type = 'SALE' then occur_time end) as paidAt
+          from creator_earning_ledger
+         where creator_member_id = #{creatorId} and income_order_key is not null
+           <if test="before != null"> and income_order_key &lt; #{before}</if>
+         group by income_order_key
+         order by income_order_key desc
+         limit #{limit}
+    </select>
+
+    <select id="selectIncomeRows" resultType="java.util.HashMap">
+        select id, event_type as eventType, item_ref as itemRef, currency, creator_minor as creatorMinor, occur_time as occurTime
+          from creator_earning_ledger
+         where creator_member_id = #{creatorId} and income_order_key = #{orderKey}
+         order by id
+    </select>
+
+    <select id="selectCreatorReport" resultType="java.util.HashMap">
+        select e.creator_member_id as creatorId, max(m.nickname) as nickname,
+               count(distinct concat(e.item_kind, ':', e.item_ref)) as items,
+               sum(case when e.event_type in ('ADOPT', 'INSTALL') then 1 else 0 end) as uses,
+               sum(case when e.event_type = 'PLAY' then 1 else 0 end) as plays,
+               sum(case when e.event_type = 'PLAY' and e.capped = 1 then 1 else 0 end) as cappedPlays,
+               sum(e.points) as points,
+               sum(case when e.event_type = 'SALE' then 1 else 0 end) as sales,
+               sum(case when e.event_type in ('SALE', 'SALE_REVERSAL') then e.creator_minor else 0 end) as heldCreatorMinor,
+               max(e.occur_time) as lastAt
+          from creator_earning_ledger e
+          left join ums_member m on m.id = e.creator_member_id
+        <where>
+            <if test="creatorId != null"> and e.creator_member_id = #{creatorId}</if>
+            <if test="from != null"> and e.occur_time &gt;= #{from}</if>
+            <if test="to != null"> and e.occur_time &lt; #{to}</if>
+        </where>
+         group by e.creator_member_id
+         order by sum(e.points) desc, e.creator_member_id
+    </select>
+
+    <select id="selectAdminLedger" resultType="java.util.HashMap">
+        select id, event_key as eventKey, event_type as eventType, creator_member_id as creatorId, actor_member_id as actorId,
+               item_kind as itemKind, item_ref as itemRef, item_title as itemTitle, source_ref as sourceRef, points, capped,
+               gross_minor as grossMinor, creator_share_bps as shareBps, creator_minor as creatorMinor, currency,
+               money_state as moneyState, occur_time as occurTime, create_time as createTime
+          from creator_earning_ledger
+        <where>
+            <if test="creatorId != null"> and creator_member_id = #{creatorId}</if>
+            <if test="eventType != null and eventType != ''"> and event_type = #{eventType}</if>
+        </where>
+         order by id desc
+    </select>
+</mapper>

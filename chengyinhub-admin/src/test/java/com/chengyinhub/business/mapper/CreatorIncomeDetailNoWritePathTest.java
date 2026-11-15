@@ -22,6 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>与 {@link CreatorIncomeDetailWriteGuardTest} 互补：那一条只管「有写入就必须有唯一键」；本条直接断言
  * 生产源码里（所有模块的 Java 与 MyBatis XML）对 creator_income_detail 的 INSERT / REPLACE / UPDATE / DELETE 为零，
  * 并锁住唯一键迁移已登记。将来接写入是业主决定的新功能，届时需同时改本测试并说明。</p>
+ *
+ * <p>2026-11-15 R12 creator-earnings（业主决定：创作者先拿积分与流量激励）：唯一允许的写入是
+ * {@code CreatorEarningMapper.xml} 的 {@code mirrorIncomeDetail}——只 {@code insert ignore}，必带 idempotency_key，
+ * 不 UPDATE、不 DELETE、不 REPLACE（明细只追加，冲正用新行）。其它任何文件出现写入仍然失败。</p>
  */
 class CreatorIncomeDetailNoWritePathTest {
 
@@ -29,6 +33,8 @@ class CreatorIncomeDetailNoWritePathTest {
             "(?is)\\b(?:(?:insert|replace)\\s+(?:ignore\\s+)?into|update|delete\\s+from)\\s+`?creator_income_detail`?\\b");
     private static final List<String> MODULES = List.of("chengyinhub-admin", "chengyinhub-system", "chengyinhub-framework",
             "chengyinhub-common", "chengyinhub-quartz", "chengyinhub-generator");
+    /** R12 的唯一写入者（只追加）。 */
+    private static final String ALLOWED_WRITER = "chengyinhub-system/src/main/resources/mapper/business/CreatorEarningMapper.xml";
     private static final String MIGRATION = "chengyinhub-admin/sql/migration_20261111_creator_income_detail_idempotency.sql";
 
     private static Path root() {
@@ -53,7 +59,19 @@ class CreatorIncomeDetailNoWritePathTest {
             }
         }
         assertTrue(scanned > 1000, "扫描范围异常，只扫到 " + scanned + " 个文件");
-        assertEquals(List.of(), writers, "creator_income_detail 现在不允许有写入路径（审计 P0-17）");
+        writers.remove(ALLOWED_WRITER);
+        assertEquals(List.of(), writers, "creator_income_detail 只允许 R12 收益台账的只追加镜像写入（审计 P0-17）");
+    }
+
+    @Test
+    void theOnlyWriterIsAppendOnlyAndKeyed() throws IOException {
+        String xml = new String(Files.readAllBytes(root().resolve(ALLOWED_WRITER)), StandardCharsets.UTF_8);
+        assertFalse(Pattern.compile("(?is)\\b(?:replace\\s+into|update|delete\\s+from)\\s+`?creator_income_detail`?\\b").matcher(xml).find(),
+                "R12 对 creator_income_detail 只能 insert ignore，不能改、删、覆盖");
+        var insert = Pattern.compile("(?is)insert\\s+ignore\\s+into\\s+creator_income_detail\\s*\\(([^)]*)\\)").matcher(xml);
+        assertTrue(insert.find(), "R12 写入必须是 insert ignore（重放被唯一键挡住）");
+        assertTrue(insert.group(1).contains("idempotency_key"), "R12 写入必须带 idempotency_key");
+        assertFalse(insert.find(), "R12 只有一条写入语句");
     }
 
     @Test
