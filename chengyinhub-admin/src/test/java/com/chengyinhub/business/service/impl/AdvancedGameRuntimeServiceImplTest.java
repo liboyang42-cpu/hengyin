@@ -1972,6 +1972,83 @@ class AdvancedGameRuntimeServiceImplTest {
         return shared;
     }
 
+@org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"SORT", "MATCH", "PHOTO_CHECK"})
+    void sharedTaskActionsUseSharedEligibilityBeforeLegacyChapterGate(String kind) {
+        com.chengyinhub.business.service.IGameSessionRuntimeService shared = sharedRuntime();
+        chapterConflictSession(kind);
+        org.mockito.Mockito.doThrow(new IllegalStateException("unit legacy chapter closed"))
+                .when(shared).assertRoutePlayable(ACTIVITY_ID, NODE_ID);
+
+        service.act(MEMBER_ID, 51L, 0, "shared-chapter", "SUBMIT_" + kind, chapterConflictPayload(kind));
+
+        verify(shared, never()).assertRoutePlayable(any(), any());
+        verify(shared, org.mockito.Mockito.atLeastOnce()).assertSharedRouteWritable(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID, 3);
+        verify(shared).recordSharedRouteResult(org.mockito.ArgumentMatchers.eq(MEMBER_ID),
+                org.mockito.ArgumentMatchers.eq(TOPIC_ID), org.mockito.ArgumentMatchers.eq(ACTIVITY_ID),
+                org.mockito.ArgumentMatchers.eq(NODE_ID), org.mockito.ArgumentMatchers.eq("game:50"),
+                any(), org.mockito.ArgumentMatchers.eq(true), any(), org.mockito.ArgumentMatchers.eq(3));
+        verify(sessionMapper).updateStateCas(any());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({
+            "MATCH,LEGACY_CHAPTER", "MATCH,LEGACY_STATION", "MATCH,TASK", "MATCH,EPOCH", "MATCH,TEAM", "MATCH,INSTANCE",
+            "PHOTO_CHECK,LEGACY_CHAPTER", "PHOTO_CHECK,LEGACY_STATION", "PHOTO_CHECK,TASK",
+            "PHOTO_CHECK,EPOCH", "PHOTO_CHECK,TEAM", "PHOTO_CHECK,INSTANCE"})
+    void chapterGateSelectionPreservesRefusalsBeforeAnyWrite(String kind, String refusal) {
+        com.chengyinhub.business.service.IGameSessionRuntimeService shared = sharedRuntime();
+        GameRuntimeSession session = chapterConflictSession(kind);
+        if (refusal.startsWith("LEGACY_")) {
+            when(shared.sharedRouteSnapshot(any(), any(), any(), any())).thenReturn(null);
+            org.mockito.Mockito.doThrow(new IllegalStateException("unit " + refusal))
+                    .when(shared).assertRoutePlayable(ACTIVITY_ID, NODE_ID);
+        } else if ("TASK".equals(refusal)) {
+            when(shared.sharedRouteSnapshot(any(), any(), any(), any()))
+                    .thenThrow(new ServiceException("unit task locked", 409));
+        } else if ("EPOCH".equals(refusal)) {
+            org.mockito.Mockito.doThrow(new ServiceException("unit epoch changed", 409)).when(shared)
+                    .assertSharedRouteWritable(MEMBER_ID, TOPIC_ID, ACTIVITY_ID, NODE_ID, 3);
+        } else if ("TEAM".equals(refusal)) session.setOwnerId(99L);
+        else session.setPlayInstanceId("game:49");
+
+        assertThrows(RuntimeException.class, () -> service.act(MEMBER_ID, 51L, 0,
+                "denied-chapter", "SUBMIT_" + kind, chapterConflictPayload(kind)));
+
+        verify(sessionMapper, never()).updateStateCas(any());
+        verify(attemptMapper, never()).insertPlayAttemptLog(any());
+        if (refusal.startsWith("LEGACY_")) verify(shared).assertRoutePlayable(ACTIVITY_ID, NODE_ID);
+        else verify(shared, never()).assertRoutePlayable(any(), any());
+        if ("PHOTO_CHECK".equals(kind)) {
+            com.chengyinhub.business.service.ai.PhotoCheckIntentService intents =
+                    (com.chengyinhub.business.service.ai.PhotoCheckIntentService) ReflectionTestUtils.getField(service, "photoCheckIntentService");
+            verify(intents, never()).prepare(any());
+            verify(intents, never()).executeOnce(any(), any(), any());
+        }
+    }
+
+    private GameRuntimeSession chapterConflictSession(String kind) {
+        String config = "SORT".equals(kind) ? sortConfig() : matchConfig();
+        if ("PHOTO_CHECK".equals(kind)) {
+            config = "{\"schemaVersion\":1,\"photoCheck\":{\"enabled\":true,\"maxTries\":1,\"minConfidence\":60}}";
+            AdvancedActionTestFixtures.photos(service, () ->
+                    com.chengyinhub.business.service.ai.PhotoCheckVisionResult.concluded(true, 90, "unit"));
+        }
+        GameRuntimeSession session = runningSession(config, "{\"runtimeAuthorityEpoch\":3}");
+        session.setPlayInstanceId("game:50");
+        session.setOwnerType(GameRuntimeSession.OWNER_TEAM);
+        session.setOwnerId(88L);
+        when(sessionMapper.selectAccessibleById(51L, MEMBER_ID)).thenReturn(session);
+        when(sessionMapper.updateStateCas(any())).thenReturn(1);
+        return session;
+    }
+
+    private Map<String, Object> chapterConflictPayload(String kind) {
+        if ("SORT".equals(kind)) return orderPayload("c", "a", "b");
+        if ("PHOTO_CHECK".equals(kind)) return Collections.singletonMap("imageUrl", "unit-owned-photo");
+        return pairsPayload(new String[]{"l1", "r2"}, new String[]{"l2", "r1"});
+    }
+
     @Test void sharedTeamVerdictUsesServerWholeMechanicsAndSkipsPersonalChain() {
         com.chengyinhub.business.service.IGameSessionRuntimeService shared = sharedRuntime();
         ITopicRouteRuntimeService personal = mock(ITopicRouteRuntimeService.class);
