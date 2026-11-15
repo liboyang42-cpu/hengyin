@@ -1,4 +1,4 @@
--- ================= migration_20261115_club-reach.sql =================
+-- ================= migration_20261115_club_reach.sql =================
 -- club-reach (Q2 roadmap): default club channels 闲聊 / 公告 / 活动 and their backfill job.
 --
 -- ROLLBACK: DELETE FROM sys_job WHERE invoke_target = 'clubChannelDefaultsTask.backfill(200)';

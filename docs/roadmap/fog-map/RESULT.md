@@ -11,7 +11,7 @@ Base: `fix/r5-be-infra-stubs`. App side: chengyin-app `cloud/r-fog-map` (see its
 
 ## What changed
 
-- `chengyinhub-admin/sql/migration_20261115_fog-map.sql`: new table `roam_member_fog_cell` (member, geohash-7 cell, `cell_prefix5`, first and latest reveal time; PK member+cell, index member+prefix, index latest time). Idempotent backfill from `roam_fog_tile` rows that still hold a cell (older ones were already cleared to NULL by the 30-day job). Rollback note at the top. Nothing existing is altered.
+- `chengyinhub-admin/sql/migration_20261115_fog_map.sql`: new table `roam_member_fog_cell` (member, geohash-7 cell, `cell_prefix5`, first and latest reveal time; PK member+cell, index member+prefix, index latest time). Idempotent backfill from `roam_fog_tile` rows that still hold a cell (older ones were already cleared to NULL by the 30-day job). Rollback note at the top. Nothing existing is altered.
 - `chengyinhub-system/.../support/RoamGeohashCover.java`: geohash encode/decode, box validation, precision-5 prefix cover of a box (refuses more than 120 prefixes, never truncates).
 - `chengyinhub-system/.../mapper/RoamFogCellMapper.java` + `mapper/business/RoamFogCellMapper.xml`: upsert (keeps first time, moves latest time forward), kept read by prefixes, 30-day read by prefixes (same window as the legacy readers), kept list for `/tiles`, delete-not-revealed-since (used only while keeping is off).
 - `chengyinhub-system/.../service/impl/RoamFogCellService.java`: owns `roam.fog.retainRevealedCells` (default true). Record, box read (exact box filter after the prefix lookup, max 20 000 cells, `truncated` flag), legacy list, purge.

@@ -13,7 +13,7 @@ App half: `chengyin-app` branch `cloud/r-club-reach`.
 - `ApiClubController.create`: seeds defaults for a club created open (best effort, logged). `ClubController.audit`: seeds on approval.
 - `ApiClubController.detail` + `Club` + `PublicClubVO`: `memberAvatars` (owner first, up to 5, http(s) only). Owner and active members always; others only when `chengyin.club.hero-avatars-public=true` (default false). Field added, nothing removed.
 - `ClubMemberMapper.selectHeroAvatars`, `IClubMemberService.selectHeroAvatars` (default method), impl.
-- `sql/migration_20261115_club-reach.sql`: registers the backfill job **paused**; idempotent; rollback note at top. No schema change.
+- `sql/migration_20261115_club_reach.sql`: registers the backfill job **paused**; idempotent; rollback note at top. No schema change.
 - Tests: new `ClubChannelDefaultsTest` (4 tests); `ChannelsPlatformMySqlIT` expectation 1 → 3 channels.
 
 ## Verification

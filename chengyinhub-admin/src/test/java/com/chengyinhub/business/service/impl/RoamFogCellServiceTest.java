@@ -150,7 +150,7 @@ class RoamFogCellServiceTest {
         assertTrue(xml.contains("s.status = 0 or (s.status = 1 and s.finished_at &gt; date_sub(now(), interval 30 day))"));
         assertTrue(xml.contains("on duplicate key update last_revealed_at = greatest(last_revealed_at, values(last_revealed_at))"));
         String migration = new String(Files.readAllBytes(Paths.get(System.getProperty("user.dir"),
-                "sql/migration_20261115_fog-map.sql")), StandardCharsets.UTF_8);
+                "sql/migration_20261115_fog_map.sql")), StandardCharsets.UTF_8);
         assertTrue(migration.contains("CREATE TABLE IF NOT EXISTS roam_member_fog_cell"));
         assertTrue(migration.contains("Rollback"));
         assertFalse(migration.toLowerCase().contains("drop table if exists roam_fog_tile"));
