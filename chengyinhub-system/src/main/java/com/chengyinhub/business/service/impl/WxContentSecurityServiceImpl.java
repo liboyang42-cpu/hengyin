@@ -125,6 +125,13 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
     @Autowired(required = false)
     private com.chengyinhub.business.service.ISensitiveContentLibrary sensitiveLibrary;
 
+    /**
+     * SEC-12:没有小程序 openid 的作者(手机号 / Apple 账号)走腾讯云文本审核;配了密钥才启用。
+     * 可选注入,老测试直接 new 时为空,保持原有 fail-close。
+     */
+    @Autowired(required = false)
+    private com.chengyinhub.business.moderation.TencentCloudModerationProvider openidFreeModeration;
+
     /** 内容安全下架关闭未结申诉时给作者的说明。 */
     static final String APPEAL_CLOSED_BY_SAFETY = "图片未通过内容安全检测已被下架，原申诉已关闭；请更换图片后重新提交审核";
     // 社区帖文图片:命中 → 帖文生命周期 HIDE。CommunityPostServiceImpl 反向依赖本服务(送检),ObjectProvider 懒取破环
@@ -176,6 +183,12 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
                 && sensitiveLibrary.blockingCategory(content, "TEXT_CHECK", null) != null)
         {
             return com.chengyinhub.business.service.ISensitiveContentLibrary.VIOLATION_MESSAGE;
+        }
+
+        // SEC-12:无 openid 时不再一律拒写 —— 有不依赖 openid 的机审就用它裁决(与微信同一套返回口径)。
+        if (StringUtils.isBlank(openid) && openidFreeModeration != null && openidFreeModeration.configured())
+        {
+            return fromVerdict(openidFreeModeration.checkText(content, openid));
         }
 
         if (!isEnabled())
@@ -290,6 +303,15 @@ public class WxContentSecurityServiceImpl implements IWxContentSecurityService
             // isDetectionUnavailable 判「繁忙 ≠ 违规」;真 suggest=review 才回 REVIEW_REQUIRED。
             return MSG_BUSY;
         }
+    }
+
+    /** 把机审裁决映射回 checkText 的既有字符串口径:放行 null、违规文案、人工复审、审不了(可重试)。 */
+    static String fromVerdict(com.chengyinhub.business.moderation.ModerationVerdict verdict)
+    {
+        if (verdict == com.chengyinhub.business.moderation.ModerationVerdict.PASS) return null;
+        if (verdict == com.chengyinhub.business.moderation.ModerationVerdict.RISK) return "内容包含违规信息，请修改后重试";
+        if (verdict == com.chengyinhub.business.moderation.ModerationVerdict.REVIEW) return IWxContentSecurityService.REVIEW_REQUIRED;
+        return MSG_BUSY;
     }
 
     @Override
