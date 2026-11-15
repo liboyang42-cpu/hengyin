@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- K2 discovery: "near you" candidates. Read only. No paid input (promotion slots, campaign budgets, operator sort)
+     is selected here, so paid placement cannot reach the order. -->
+<mapper namespace="com.chengyinhub.business.discovery.mapper.DiscoveryMapper">
+
+    <select id="selectPlacesInBox" resultType="java.util.LinkedHashMap">
+        select p.id as id, p.name as name, p.lat as lat, p.lng as lng, p.merchant_id as merchantId,
+               p.city_code as cityCode, p.cover_img as coverImg, p.address as address, p.create_time as createTime
+        from roam_poi p
+        where p.status = 1
+          and (p.application_type is null or p.application_type = 2
+               or (p.application_type in (1, 3) and p.audit_status = 1))
+          and p.lat between #{minLat} and #{maxLat}
+          and p.lng between #{minLng} and #{maxLng}
+        order by power(p.lat - (#{minLat} + #{maxLat}) / 2, 2)
+                 + power((p.lng - (#{minLng} + #{maxLng}) / 2) * cos(radians((#{minLat} + #{maxLat}) / 2)), 2) asc,
+                 p.id asc
+        limit #{limit}
+    </select>
+
+    <select id="selectEventsInBox" resultType="java.util.LinkedHashMap">
+        select a.id as id, a.name as name, a.address_name as addressName, a.img_url as coverImg,
+               cast(a.latitude as decimal(10, 7)) as lat, cast(a.longitude as decimal(10, 7)) as lng,
+               a.start_date as startDate, a.end_date as endDate, a.create_time as createTime, a.club_id as clubId
+        from cms_activity a
+        where a.status = 1 and a.publish_status = 1 and coalesce(a.del_flag, 0) = 0 and a.cancel_time is null
+          and (a.end_date is null or a.end_date &gt; now())
+          and a.latitude is not null and a.latitude &lt;&gt; '' and a.longitude is not null and a.longitude &lt;&gt; ''
+          and cast(a.latitude as decimal(10, 7)) between #{minLat} and #{maxLat}
+          and cast(a.longitude as decimal(10, 7)) between #{minLng} and #{maxLng}
+          <choose>
+            <when test="memberId != null">
+              and (a.club_id is null
+                   or exists (select 1 from club_member cm
+                              where cm.club_id = a.club_id and cm.member_id = #{memberId}
+                                and cm.status = 1 and cm.del_flag = 0))
+            </when>
+            <otherwise>and a.club_id is null</otherwise>
+          </choose>
+        order by a.start_date asc, a.id asc
+        limit #{limit}
+    </select>
+</mapper>

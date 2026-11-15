@@ -137,6 +137,11 @@ withdrawal:
 # 故用 property 引用而非另配一把 —— 两把钥匙会让加密与解密对不上,数据永久打不开。
 # 缺本段则 chengyin.pii.key 取 @Value 默认空值,加密静默不启用且报名写入被 fail-closed 拒。
 chengyin:
+  # K2 discovery (MKT-10): "near you" order. false (default) = nearest first, today's pin order.
+  # true = closeness + the player's own interest profile + your club + new. No paid input exists in either order.
+  discovery:
+    scoring:
+      enabled: ${CHENGYIN_DISCOVERY_SCORING_ENABLED:false}
   pii:
     key: ${withdrawal.pii.key}
   # SEC-12:没有小程序 openid 的作者(手机号 / Apple 账号)的机审 = 腾讯云文本(TMS)与图片(IMS)审核。
