@@ -55,6 +55,12 @@
     <select id="selectMentions" resultType="java.util.HashMap" useCache="false">
         SELECT mention_type AS mentionType, target_id AS targetId FROM im_message_mention WHERE message_id = #{messageId}
     </select>
+
+    <select id="selectRoleMemberIds" resultType="java.lang.Long" useCache="false">
+        select distinct rm.member_id
+          from im_guild_role_member rm join im_guild_role r on r.id = rm.role_id and r.status = 1
+         where rm.role_id in <foreach collection="roleIds" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </select>
     <select id="selectChannelClubId" resultType="java.lang.Long" useCache="false">
         SELECT guild_id FROM im_channel WHERE id = #{conversationId} AND guild_kind = 1 AND del_flag = 0
     </select>

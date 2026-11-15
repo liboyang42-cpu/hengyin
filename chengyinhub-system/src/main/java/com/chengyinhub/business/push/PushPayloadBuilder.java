@@ -52,6 +52,8 @@ public final class PushPayloadBuilder
         root.put("page", m.page());
         root.put("kind", m.kind());
         if (PushMessage.KIND_CHAT.equals(m.kind())) root.put("conversation_id", m.conversationId());
+        if (PushMessage.KIND_CHAT.equals(m.kind()) && m.messageId() != null && m.messageId().matches("[1-9][0-9]{0,18}"))
+            root.put("message_id", m.messageId());
         return JSON.toJSONString(root);
     }
 

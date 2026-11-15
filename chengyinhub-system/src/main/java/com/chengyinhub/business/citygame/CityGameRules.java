@@ -83,9 +83,12 @@ public final class CityGameRules {
          */
         public int roll(IntUnaryOperator bound) { return faces[rollIndex(bound)]; }
 
-        /** Weighted roll returning the index into the published faces (faces may repeat). */
-        public int rollIndex(IntUnaryOperator bound) {
-            int ticket = bound.applyAsInt(total);
+        public int totalWeight() { return total; }
+        public int faceCount() { return faces.length; }
+        public long weight(int index) { return weights[index]; }
+
+        /** Resolve weighted face index from an already-drawn uniform ticket in [0, total). */
+        public int indexForTicket(int ticket) {
             if (ticket < 0 || ticket >= total) throw new IllegalStateException("random out of range");
             long cursor = 0;
             for (int i = 0; i < faces.length; i++) {
@@ -93,6 +96,25 @@ public final class CityGameRules {
                 if (ticket < cursor) return i;
             }
             throw new IllegalStateException("unreachable");
+        }
+
+        /** Weighted roll returning the index into the published faces (faces may repeat). */
+        public int rollIndex(IntUnaryOperator bound) {
+            return indexForTicket(bound.applyAsInt(total));
+        }
+
+        public List<Map<String, Object>> probabilityPreview() {
+            List<Map<String, Object>> preview = new java.util.ArrayList<>(faces.length);
+            for (int i = 0; i < faces.length; i++) {
+                Map<String, Object> item = new java.util.LinkedHashMap<>();
+                item.put("index", i);
+                item.put("face", faces[i]);
+                item.put("weight", weights[i]);
+                item.put("totalWeight", (long) total);
+                item.put("probability", total > 0 ? ((double) weights[i]) / ((double) total) : 0.0);
+                preview.add(item);
+            }
+            return preview;
         }
 
         public int face(int index) { return faces[index]; }

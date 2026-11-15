@@ -106,6 +106,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Autowired private com.chengyinhub.business.service.IMarketingGiftPlayEligibility giftPlayEligibility;
     /** 付费内含席位受让人事实（只读）；与礼品事实分开，在同一准入点合并。 */
     @Autowired private com.chengyinhub.business.service.IRegistrationSeatRecipientEligibility seatRecipientEligibility;
+    @Autowired(required = false) private InGameChannelService inGameChannelService;
     private final com.chengyinhub.business.service.support.GameplaySurvivalEngine gameplaySurvival = new com.chengyinhub.business.service.support.GameplaySurvivalEngine();
     private final com.chengyinhub.business.service.support.GameplayCooperationEngine gameplayCooperation = new com.chengyinhub.business.service.support.GameplayCooperationEngine();
     /** 检定运行时系统键:不进键注册表,只由服务端写本局 state(共享契约 v2/v3)。 */
@@ -358,6 +359,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 throw new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT);
             }
             if (nextOpeningNode(opening, state) != null) throw new IllegalStateException("请先完成开局玩法");
+            boolean wasCompleted = Integer.valueOf(TopicRouteSession.STATUS_COMPLETED).equals(session.getStatus());
             state.getTags().add("sys.opening.done");
             session.setStateJson(writeSettled(session,state));
             session.setStatus(statusOf(state));
@@ -369,6 +371,11 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             }
             session.setVersion(session.getVersion() + 1);
             if (scoreActive) orientRouteSettlement.complete(session, state);
+            if (!wasCompleted && Integer.valueOf(TopicRouteSession.STATUS_COMPLETED).equals(session.getStatus())
+                    && inGameChannelService != null) {
+                inGameChannelService.postPlayEvent(InGameChannelService.EVENT_FINISH,
+                        memberId, session.getActivityId(), session.getTopicId(), null, null);
+            }
         }
         TopicRouteState view = TopicRouteState.BRANCH_GRAPH.equals(routeMode(scope))
                 ? toAvailableView(session, nodes(topicId)) : toLinearView(session, scope, nodes(topicId));
@@ -677,6 +684,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         applyStageRest(session, memberId, next, rules, findNode(liveNodes, next.getCurrentNodeId()), true);
         syncTheme(session, next, "node:" + routeActionId, JourneyStatLinks.Reason.TEMPLATE_EFFECT);
         themeEngine.signal(themeConfig(session), next, rules, "NODE", outcome.getNodeId(), "", "", 0, "node:" + outcome.getNodeId());
+        boolean wasCompleted = Integer.valueOf(TopicRouteSession.STATUS_COMPLETED).equals(session.getStatus());
         session.setStateJson(writeSettled(session, next));
         session.setStatus(statusOf(next));
         keepOpeningRunning(session, next);
@@ -689,6 +697,11 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if (routeMapper.updateStateCas(session) != 1) throw new ServiceException("路线状态已更新，请刷新后重试", HttpStatus.CONFLICT);
         session.setVersion(oldVersion + 1);
         if (scoreActive) orientRouteSettlement.complete(session, next);
+        if (!wasCompleted && Integer.valueOf(TopicRouteSession.STATUS_COMPLETED).equals(session.getStatus())
+                && inGameChannelService != null) {
+            inGameChannelService.postPlayEvent(InGameChannelService.EVENT_FINISH,
+                    memberId, session.getActivityId(), session.getTopicId(), null, null);
+        }
         TopicRouteState view = toView(session, next);
         putVitals(view, session, next);
         appendEncounter(view, session);

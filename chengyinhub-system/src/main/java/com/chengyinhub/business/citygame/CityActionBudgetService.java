@@ -68,11 +68,11 @@ public class CityActionBudgetService {
         out.put("binding", CityR491Store.binding(board));
         out.put("teamId", m.teamId());
         out.put("teamVersion", m.teamVersion());
-        out.put("movementStatus", "UNAVAILABLE");
+        out.put("movementStatus", "AVAILABLE");
         out.put("arrivalProof", "NOT_PROVIDED");
         out.put("ownershipEffect", "NONE");
         out.put("pointsEffect", "NONE");
-        out.put("effectsStatus", "NOT_EXECUTED");
+        out.put("effectsStatus", "APPLIED");
         out.put("recentResults", new ArrayList<>());
         if (!configured(board)) {
             out.put("status", "NOT_CONFIGURED");
@@ -87,7 +87,7 @@ public class CityActionBudgetService {
         rules.put("refillPolicy", "NONE_WITHIN_ROUND");
         rules.put("chargeTiming", "COMMITTED_ACTION_EFFECT");
         rules.put("actionKind", "DICE_ROLL_AND_ACQUIRE");
-        rules.put("resultPolicy", "DICE_RECORD_ONLY_ACQUISITION_EXPLICIT_CONFIRM");
+        rules.put("resultPolicy", "DICE_UNIFIED_TRACK_ACQUISITION_EXPLICIT_CONFIRM");
         rules.put("totalUnits", total);
         rules.put("rollCost", rollCost);
         rules.put("acquisitionCost", ((Number) board.get("acquisitionCost")).intValue());
@@ -133,8 +133,22 @@ public class CityActionBudgetService {
     private List<Map<String, Object>> recent(Map<String, Object> board, String teamId, long seq) {
         List<Map<String, Object>> out = new ArrayList<>();
         for (Map<String, Object> roll : store.mapper.selectRoundRolls((String) board.get("boardId"), teamId, seq)) {
-            if (!"BUDGET".equals(roll.get("purpose")) || roll.get("resultJson") == null) continue;
-            out.add(JSON.parseObject(String.valueOf(roll.get("resultJson"))));
+            if (roll.get("resultJson") != null) {
+                out.add(JSON.parseObject(String.valueOf(roll.get("resultJson"))));
+            } else {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("requestId", roll.get("requestId"));
+                item.put("diceId", board.get("diceId"));
+                item.put("effectsStatus", "APPLIED");
+                item.put("faceIndex", roll.get("faceIndex"));
+                item.put("faceValue", roll.get("face"));
+                item.put("previousPosition", roll.get("previousPosition"));
+                item.put("newPosition", roll.get("newPosition"));
+                item.put("landedPropertyId", roll.get("landedPropertyId"));
+                item.put("beforeUnits", roll.get("beforeUnits"));
+                item.put("afterUnits", roll.get("afterUnits"));
+                out.add(item);
+            }
         }
         return out.size() > 20 ? out.subList(out.size() - 20, out.size()) : out;
     }
@@ -180,21 +194,28 @@ public class CityActionBudgetService {
         int rollNumber = c[2] + 1;
         long budgetVersion = expected + 1;
         Map<String, Object>[] result = new Map[1];
-        engine.budgetRoll(board, teamId, seq, memberId, requestId, r -> {
+        engine.executeUnifiedDiceRoll(board, team, seq, memberId, requestId, "BUDGET", "ACTION_BUDGET_COMMAND_ROLL", r -> {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("resultId", resultId);
             row.put("requestId", requestId);
             row.put("diceId", diceId);
             row.put("createdAt", CityGameSupport.iso(new java.util.Date(now)));
-            row.put("effectsStatus", "NOT_EXECUTED");
+            row.put("effectsStatus", "APPLIED");
+            row.put("movementStatus", "AVAILABLE");
             row.put("verifier", VERIFIER);
             row.put("rollNumber", rollNumber);
             row.put("costUnits", rollCost);
-            row.put("beforeUnits", r[2]);
-            row.put("afterUnits", r[3]);
-            row.put("faceIndex", r[0]);
+            row.put("beforeUnits", r.beforeUnits);
+            row.put("afterUnits", r.afterUnits);
+            row.put("faceIndex", r.faceIndex);
             row.put("budgetVersion", budgetVersion);
-            row.put("faceValue", (long) r[1]);
+            row.put("faceValue", (long) r.face);
+            row.put("previousPosition", r.previousPosition);
+            row.put("newPosition", r.newPosition);
+            row.put("landedPropertyId", r.landedPropertyId);
+            row.put("randomTicket", r.randomTicket);
+            row.put("totalWeight", r.totalWeight);
+            row.put("boardVersion", r.boardVersion);
             result[0] = row;
             return JSON.toJSONString(row);
         });

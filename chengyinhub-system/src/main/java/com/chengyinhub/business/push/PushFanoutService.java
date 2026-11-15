@@ -102,10 +102,19 @@ public class PushFanoutService implements IPushFanoutService
         }
         boolean everyone = false;
         List<Long> mentioned = new ArrayList<>();
+        List<Long> roles = new ArrayList<>();
         for (Map<String, Object> m : mapper.selectMentions(messageId))
         {
-            if ("EVERYONE".equals(m.get("mentionType"))) everyone = true;
-            else if ("USER".equals(m.get("mentionType")) && m.get("targetId") instanceof Number n) mentioned.add(n.longValue());
+            Object kind = m.get("mentionType");
+            if ("EVERYONE".equals(kind)) everyone = true;
+            // W5 C2：回复别人也算提到他；@角色 展开成角色成员（只在频道里写入）。
+            else if (("USER".equals(kind) || "REPLY".equals(kind)) && m.get("targetId") instanceof Number n) mentioned.add(n.longValue());
+            else if ("ROLE".equals(kind) && m.get("targetId") instanceof Number n) roles.add(n.longValue());
+        }
+        if (!roles.isEmpty())
+        {
+            List<Long> roleMembers = mapper.selectRoleMemberIds(roles);
+            if (roleMembers != null) mentioned.addAll(roleMembers);
         }
         Map<Long, Map<String, Object>> allowed = new LinkedHashMap<>();
         Map<Long, Boolean> mentionOf = new LinkedHashMap<>();
@@ -120,7 +129,7 @@ public class PushFanoutService implements IPushFanoutService
         }
         if (allowed.isEmpty()) return 0;
         String thread = "chat-" + conversationId;
-        String page = CHAT_PAGE + "?conversationId=" + conversationId + "&type=" + type;
+        String page = CHAT_PAGE + "?conversationId=" + conversationId + "&type=" + type + "&messageId=" + messageId;
         String senderName = msg.get("senderName") == null ? null : msg.get("senderName").toString();
         String text = summary(msg);
         int accepted = 0;
@@ -140,7 +149,7 @@ public class PushFanoutService implements IPushFanoutService
                 else body = (single ? "" : name + (en ? ": " : "：")) + (text == null ? (en ? "[Message]" : "[消息]") : text);
                 if (mention) body = (en ? "[Mentioned you] " : "[有人@你] ") + body;
                 accepted += deliver(List.of(device), new PushMessage(PushMessage.KIND_CHAT, title, body, thread, page,
-                        String.valueOf(conversationId)), CHAT_EXPIRATION_SECONDS);
+                        String.valueOf(conversationId), String.valueOf(messageId)), CHAT_EXPIRATION_SECONDS);
             }
         }
         return accepted;

@@ -8,7 +8,7 @@ import java.util.function.BiConsumer;
 /** 明确注册结果来源；客户端只写配置，不决定运行结果。 */
 public final class GameplayOutcomeRules {
     private GameplayOutcomeRules() { }
-    static final List<String> MAIN_GAMEPLAYS = Collections.unmodifiableList(Arrays.asList("qa", "pricePair", "blindTaste", "predict", "photoCheck", "coinFlip", "diceRoll", "random", "sort", "match", "classify", "estimate", "hiddenObject", "profile", "album", "note", "dailySign", "steps", "reaction", "ballShake", "quietHold", "compass", "shout", "countdown", "stopwatch", "typeIn", "check"));
+    static final List<String> MAIN_GAMEPLAYS = Collections.unmodifiableList(Arrays.asList("qa", "pricePair", "blindTaste", "predict", "photoCheck", "coinFlip", "diceRoll", "random", "sort", "match", "classify", "estimate", "hiddenObject", "profile", "album", "note", "dailySign", "steps", "reaction", "ballShake", "quietHold", "compass", "shout", "countdown", "stopwatch", "typeIn", "check", "trueFalse", "imageGuess", "jigsaw", "scratchCard"));
 
     public static ObjectNode normalize(JsonNode source, JsonNode slots) {
         ThemeRuntimeConfig.fields(source, ThemeRuntimeConfig.set("version", "pass", "fail"));
@@ -31,7 +31,7 @@ public final class GameplayOutcomeRules {
         for (String kit : MAIN_GAMEPLAYS)
             if (block.path(kit).path("enabled").asBoolean()) mains.add(kit);
         if (mains.size() != 1) fail("须且仅须一个主玩法，扫码和分支不是主玩法");
-        boolean once = Arrays.asList("profile", "album", "note", "dailySign").contains(mains.get(0));
+        boolean once = Arrays.asList("profile", "album", "note", "dailySign", "scratchCard").contains(mains.get(0));
         if (once == block.path("outcomeRules").has("fail")) fail(once ? "完成型玩法不配置 fail" : "须配置 fail");
         Set<String> steps = new HashSet<>();
         for (JsonNode step : block.path("branch").path("steps")) steps.add(step.path("id").asText());

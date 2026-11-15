@@ -84,6 +84,27 @@ class PushFanoutServiceTest
     }
 
     @Test
+    void replyAndRoleMentionsReachMentionsOnlyMembers()
+    {
+        when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 4, "team_3"));
+        when(mapper.selectMentions(100L)).thenReturn(List.of(Map.of("mentionType", "REPLY", "targetId", 4L),
+                Map.of("mentionType", "ROLE", "targetId", 30L)));
+        when(mapper.selectRoleMemberIds(List.of(30L))).thenReturn(List.of(5L));
+        when(mapper.selectChatAudience(9L, 1L, false)).thenReturn(List.of(
+                member(4L, "convLevel", 1),          // 仅@，被回复
+                member(5L, "convLevel", 1),          // 仅@，角色被@
+                member(6L, "convLevel", 1)));        // 仅@，都没有
+        when(mapper.selectEnabledDevices(any(), any())).thenAnswer(inv ->
+        {
+            java.util.Collection<Long> ids = inv.getArgument(0);
+            assertEquals(List.of(4L, 5L), new ArrayList<>(ids));
+            return List.of(device(4L, 'd'), device(5L, 'e'));
+        });
+
+        assertEquals(2, service.fanOutChat(100L));
+    }
+
+    @Test
     void groupMessagePushesOnlyToRecipientsWhosePreferencesAllowIt()
     {
         when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 4, "team_3"));
@@ -105,7 +126,8 @@ class PushFanoutServiceTest
         JSONObject first = JSON.parseObject(bodies.get(0));
         assertEquals("chat", first.getString("kind"));
         assertEquals("9", first.getString("conversation_id"));
-        assertEquals("/subpackageB/pages/im/chat/index?conversationId=9&type=4", first.getString("page"));
+        assertEquals("/subpackageB/pages/im/chat/index?conversationId=9&type=4&messageId=100", first.getString("page"));
+        assertEquals("100", first.getString("message_id"));
         assertEquals("chat-9", first.getJSONObject("aps").getString("thread-id"));
         assertEquals("小李：今晚七点集合", first.getJSONObject("aps").getJSONObject("alert").getString("body"));
         assertTrue(JSON.parseObject(bodies.get(1)).getJSONObject("aps").getJSONObject("alert").getString("body").startsWith("[有人@你]"));
