@@ -73,7 +73,7 @@
       <text wx:if="{{commandReject.action === 'join-mode'}}" class="team-reject" aria-role="alert">{{commandReject.message}}</text>
     </view>
 
-    <block wx:if="{{applicantsState}}">
+    <block wx:if="{{joined && leader && team.status == 0 && applicantsState}}">
       <view class="team-section-title">入队申请{{applicants.length ? ' · ' + applicants.length : ''}}</view>
       <cy-skeleton wx:if="{{applicantsState === 'loading'}}" type="list" count="1" loading-label="正在读取入队申请" />
       <cy-inline-error wx:elif="{{applicantsState === 'error'}}" title="入队申请没读到" action="重试" bind:action="retryApplicants" />
@@ -104,7 +104,7 @@
           <view class="team-member-name">{{item.memberName || '城瘾玩家'}}</view>
           <view class="team-member-role">{{item.role == 1 ? '队长' : '队员'}}</view>
         </view>
-        <view wx:if="{{leader && item.role != 1}}" class="team-member-op" bindtap="kick" data-id="{{item.memberId}}" data-name="{{item.memberName || '这名队员'}}"
+        <view wx:if="{{joined && leader && (team.status == 0 || team.status == 1) && item.role == 0}}" class="team-member-op" bindtap="kick" data-id="{{item.memberId}}" data-name="{{item.memberName || '这名队员'}}"
               aria-role="button" aria-label="移出队员 {{item.memberName || '城瘾玩家'}}" hover-class="cy-pressed" hover-stay-time="80">移出</view>
       </view>
       <text wx:if="{{commandReject.action === 'kick'}}" class="team-reject" aria-role="alert">{{commandReject.message}}</text>

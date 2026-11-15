@@ -26,15 +26,16 @@ function mount() {
   page.onLoad({ teamId });
   return { page, requests, writes, account(id, auth) { user = id; token = auth; },
     info(extra = {}) {
-      requests.at(-1).success({ code: 200, data: { team: { id: page.teamId, ownerType: 2, ownerId, status: 0, joinMode: 2 },
-        members: [], joined: true, leader: true, ...extra } });
+      requests.at(-1).success({ code: 200, data: { team: { id: page.teamId, ownerType: 2, ownerId, status: 0, joinMode: 2, joinedCount: 2, maxMembers: 4 },
+        members: [{ memberId: '71', memberName: '甲', role: 1 }, { memberId: '72', memberName: '乙', role: 0 }],
+        joined: true, leader: true, ...extra } });
     } };
 }
 function detail(id = teamId) {
   return { team: { teamId: id, ownerType: 2, ownerId }, threshold: { ratio: 0.6, activeCount: 2, required: 2 },
     summary: { teamDoneCount: 0, totalTasks: 1 },
     tasks: [{ taskId: '9007199254740995', name: '观察街角', completedCount: 2, teamDone: false }],
-    members: [{ memberId: '71', name: '甲', doneTaskIds: ['9007199254740995'] }, { memberId: '72', name: '乙', doneTaskIds: [] }] };
+    members: [{ memberId: '71', name: '甲', role: 1, doneTaskIds: ['9007199254740995'] }, { memberId: '72', name: '乙', role: 0, doneTaskIds: [] }] };
 }
 function start() { const h = mount(); h.page.onShow(); h.info(); return h; }
 function ready() { const h = start(); h.requests.at(-1).success({ code: 200, data: detail() }); return h; }

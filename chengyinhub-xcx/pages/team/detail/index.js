@@ -16,6 +16,9 @@ const requestId = value => {
 };
 
 const STATUS_TEXT = ['招募中', '已满员', '进行中', '已结束', '已解散'];
+const membershipKey = members => JSON.stringify((Array.isArray(members) ? members : [])
+  .filter(m => m && exactId(m.memberId)).map(m => [exactId(m.memberId), m.role == null ? null : String(m.role)])
+  .sort((a, b) => a[0].localeCompare(b[0])));
 
 // 第十二轮 k7(j4 F15):没起名的队伍按队长昵称叫,与「我的队伍」、附近招募同一口径
 function teamTitleOf(team, members) {
@@ -110,14 +113,24 @@ Page({
   cancelCommand() { if (this._recovery) this._recovery.cancel(); },
   acknowledgeCommand() { if (this._recovery) this._recovery.acknowledge(); },
 
-  _resetReads() {
+  _clearApplicants() {
+    this._applicantsEpoch = (this._applicantsEpoch || 0) + 1;
+    this.setData({ applicants: [], applicantsState: '' });
+  },
+  _resetReads(preserveBoard) {
     this._readEpoch = (this._readEpoch || 0) + 1;
     this._teamLoading = false;
-    this.setData({ board: null, boardState: '', boardMessage: '', boardRanks: [], rankingState: '' });
+    this._clearApplicants();
+    if (!preserveBoard) this.setData({ board: null, boardState: '', boardMessage: '', boardRanks: [], rankingState: '' });
   },
   _clearMembership() {
+    this._clearApplicants();
+    this._seats = false;
+    this.closeInviteQr();
     const team = this.data.team ? Object.assign({}, this.data.team, { inviteCode: '' }) : null;
     this.setData({ team, members: [], joined: false, leader: false, joinModeSaving: false,
+      seatChips: [], openSeats: [], inviteText: '', inviteShow: false, inviteCard: null,
+      qrSheet: { show: false, state: '', qr: '', code: '', message: '' },
       board: null, boardRanks: [], rankingState: '' });
   },
   _writeCurrent(context) {
@@ -139,6 +152,7 @@ Page({
       if (this._readContext && (this._readContext.reader.id !== context.reader.id
           || this._readContext.reader.token !== context.reader.token)) return false;
       this._resetReads();
+      this._clearMembership();
       this.setData({ team: null, members: [], joined: false, leader: false, loading: false,
         error: '账号状态已变化，请重新加载队伍', errorAction: '重新加载' });
       return false;
@@ -149,7 +163,7 @@ Page({
   openReport() { this.setData({ reportTeamId: this.teamId, reportShow: true }); },
   closeReport() { this.setData({ reportShow: false }); },
 
-  load(fromPull) {
+  load(fromPull, infoOnly) {
     const that = this;
     if (!this.teamId) {
       if (fromPull) wx.stopPullDownRefresh();
@@ -166,7 +180,7 @@ Page({
       this.setData({ team: null });
     }
     if (this._teamLoading) { if (fromPull) wx.stopPullDownRefresh(); return; }
-    this._resetReads();
+    this._resetReads(infoOnly);
     const context = { epoch: this._readEpoch, teamId: this.teamId, reader: reader(app) };
     this._readContext = context;
     let settled = false;
@@ -191,6 +205,9 @@ Page({
         if (fromPull) wx.stopPullDownRefresh();
         if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id) === context.teamId) {
           const team = res.data.team;
+          const keepBoard = infoOnly && res.data.joined === true && that.data.board
+            && team.joinedCount === that.data.board.threshold.activeCount
+            && membershipKey(res.data.members) === membershipKey(that.data.members);
           that._seats = !!(res.data.seats && Number.isSafeInteger(res.data.seats.available));
           enter(that, 'seatIn', { once: true });
           that.setData({
@@ -206,12 +223,15 @@ Page({
             joinModePublic: team.joinMode == 2,
             // U06-01:席位与邀请期限只回放服务端投影;缺字段整行不画
             seatChips: teamSeats.seatChips(res.data.seats),
-            openSeats: teamSeats.openSeats(team, res.data.seats),
+            openSeats: infoOnly && !that._seats ? [] : teamSeats.openSeats(team, res.data.seats),
             inviteText: teamSeats.inviteText(res.data.invite),
             error: '',
             errorSub: ''
           });
-          that._loadBoard(context, team, res.data.joined === true);
+          if (!infoOnly) that._loadBoard(context, team, res.data.joined === true);
+          else if (keepBoard) that._loadRanking(context, team.ownerType, exactId(team.ownerId));
+          else that.setData({ board: null, boardState: res.data.joined ? 'error' : 'not-member',
+            boardMessage: res.data.joined ? '队伍成员已变化，请重新加载进度' : '', boardRanks: [], rankingState: '' });
           that._loadApplicants(context, !!res.data.leader && team.status === 0);
         } else {
           const authDenied = ['401', '403'].includes(String(res && res.code));
@@ -310,10 +330,16 @@ Page({
           reject({ errorCode: 'ORIENT_TEAM_NOT_MEMBER' }); return;
         }
         const self = d.members.find(m => exactId(m.memberId) === context.reader.id);
+        const membershipChanged = membershipKey(this.data.members) !== membershipKey(d.members)
+          || this.data.team.joinedCount !== d.threshold.activeCount;
+        if (membershipChanged) {
+          this._clearApplicants();
+          this._seats = false;
+          this.setData({ openSeats: [], seatChips: [], inviteText: '', inviteShow: false, inviteCard: null });
+        }
         this.setData({ members: d.members.map(m => ({ memberId: exactId(m.memberId),
           memberName: m.name || '城瘾玩家', memberAvatar: m.avatar || '', role: m.role })),
           'team.joinedCount': d.threshold.activeCount,
-          openSeats: this._seats ? this.data.openSeats : teamSeats.openSeats(Object.assign({}, this.data.team, { joinedCount: d.threshold.activeCount }), null),
           teamTitle: teamTitleOf(this.data.team, d.members.map(m => ({ name: m.name, role: m.role }))),
           joined: true, leader: self.role == null ? this.data.leader : self.role == 1 });
         // Only project server completion facts; never infer team completion from member counts.
@@ -327,24 +353,33 @@ Page({
             // 矩阵按成员成行:每格就是上面 tasks[].members[].done 的同一份服务端事实
             rows: d.members.map((m, mi) => ({ memberId: exactId(m.memberId), name: m.name || '城瘾玩家',
               cells: tasks.map(t => ({ taskId: t.taskId, done: t.members[mi].done })) })) } });
-        this._loadRanking(context, ownerType, ownerId);
+        // 成员变化只补一次info；这次读取不再请求board，避免两个快照相互追刷。
+        if (membershipChanged) this.load(false, true);
+        else this._loadRanking(context, ownerType, ownerId);
       },
       fail: (res, status) => { if (finish()) reject(res, status); }
     });
   },
   // j4 F4:队长在队伍详情就能看到并处理入队申请(与地图队伍半屏同一接口、同一行形状、同一条 handle 原请求)。
   _loadApplicants(context, show) {
-    if (!show) { this.setData({ applicants: [], applicantsState: '' }); return; }
+    const epoch = this._applicantsEpoch = (this._applicantsEpoch || 0) + 1;
+    if (!show || !this.data.joined || !this.data.leader || !this.data.team || this.data.team.status !== 0) {
+      this.setData({ applicants: [], applicantsState: '' }); return;
+    }
     if (this.data.applicantsState !== 'ready') this.setData({ applicantsState: 'loading' });
+    let settled = false;
+    const current = () => !settled && epoch === this._applicantsEpoch && this._readCurrent(context)
+      && this.data.joined && this.data.leader && this.data.team && this.data.team.status === 0;
     app.sendRequest({
       url: '/api/team/applications', method: 'POST', hideLoading: true, autoErrorToast: false,
       data: JSON.stringify({ teamId: requestId(context.teamId) }), header: { 'Content-Type': 'application/json' },
       success: res => {
-        if (!this._readCurrent(context)) return;
+        if (!current()) return;
+        settled = true;
         if (!(res && res.code == 200 && Array.isArray(res.data))) { this.setData({ applicantsState: 'error' }); return; }
         this.setData({ applicants: applicantRows(res.data), applicantsState: 'ready' });
       },
-      fail: () => { if (this._readCurrent(context)) this.setData({ applicantsState: 'error' }); }
+      fail: () => { if (current()) { settled = true; this.setData({ applicantsState: 'error' }); } }
     });
   },
   retryApplicants() { this.load(); },
@@ -362,7 +397,8 @@ Page({
   },
   _handleApplicant(id, approved) {
     const memberId = exactId(id);
-    if (!memberId || !this.data.leader || this._hidden || this._disposed) return;
+    if (!memberId || !this.data.joined || !this.data.leader || !this.data.team || this.data.team.status !== 0
+        || this._teamLoading || this._hidden || this._disposed) return;
     if (!this._recovery) this._openRecovery();
     if (this._recovery.pending()) return;
     this._freshCommand = true; return this._recovery.start('handle', { memberId, approved });
@@ -453,10 +489,10 @@ Page({
       return;
     }
     const t = this.data.team;
-    const open = Array.isArray(this.data.openSeats) ? this.data.openSeats.length : null;
+    const open = this._seats && Array.isArray(this.data.openSeats) ? this.data.openSeats.length : null;
     // 邀请人写队长昵称(服务端 members 里 role 1 的那位);读不到就不写
     const lead = (this.data.members || []).find(m => m && Number(m.role) === 1) || null;
-    const inviter = lead ? String(lead.nickname || lead.nickName || '').trim() : '';
+    const inviter = lead ? String(lead.memberName || '').trim() : '';
     this.setData({ inviteShow: true, inviteCard: { kind: 'invite', id: '', title: t.title || '来和我一起组队出发', cover: t.coverUrl || t.topicCover || '', meta: '邀请 · 来和我一起组队出发', inviter, seatsLeft: open } });
   },
   closeInvite() { this.setData({ inviteShow: false }); },
@@ -502,7 +538,17 @@ Page({
     else dc.open('team.quit', {});
   },
 
+  _canKick(id) {
+    return !this._hidden && !this._disposed && !this._teamLoading && this.data.joined && this.data.leader
+      && this.data.team && [0, 1].includes(this.data.team.status)
+      && this._readContext && this._readCurrent(this._readContext)
+      && this.data.members.some(m => exactId(m.memberId) === exactId(id) && m.role == 0
+        && exactId(m.memberId) !== reader(app).id);
+  },
   kick(e) {
+    const id = exactId(e.currentTarget.dataset.id);
+    if (!id || !this._canKick(id)) return;
+    this._kickConfirmation = { context: this._readContext, memberId: id };
     this._confirmationReader = reader(app);
     const dc = this.selectComponent && this.selectComponent('#dcKick');
     if (dc) dc.open('team.kick', { name: e.currentTarget.dataset.name || '这名队员', id: requestId(e.currentTarget.dataset.id) });
@@ -525,11 +571,13 @@ Page({
   onDisbandAlt() { this.quit(); },
 
   action(url, data, dcId) {
+    const action = url.substring(url.lastIndexOf('/') + 1);
+    if (action === 'kick' && (!this._canKick(data.memberId) || this._kickConfirmation
+        && (this._kickConfirmation.memberId !== exactId(data.memberId) || !this._readCurrent(this._kickConfirmation.context)))) return;
     if (this._confirmationReader && !sameReader(app, this._confirmationReader)) return;
     if (!exactId(data.teamId) || (data.memberId != null && !exactId(data.memberId)) || this._hidden || this._disposed) return;
     if (!this._recovery) this._openRecovery();
     if (this._recovery.pending()) return;
-    const action = url.substring(url.lastIndexOf('/') + 1);
     const dc = this.selectComponent && this.selectComponent(dcId);
     // The durable result panel owns recovery after confirmation, including re-entry.
     if (dc) dc.close();
