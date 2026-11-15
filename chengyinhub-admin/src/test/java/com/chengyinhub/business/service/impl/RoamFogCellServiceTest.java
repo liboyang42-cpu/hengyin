@@ -96,6 +96,13 @@ class RoamFogCellServiceTest {
     }
 
     @Test
+    void aFailedKeptWriteNeverFailsTheReveal() {
+        RoamFogCellMapper mapper = mock(RoamFogCellMapper.class);
+        when(mapper.upsertCells(anyLong(), anyCollection(), any())).thenThrow(new org.springframework.dao.DataAccessResourceFailureException("no table"));
+        assertEquals(0, new RoamFogCellService(mapper, true).record(7L, List.of("wtw3sjq"), new Date()));
+    }
+
+    @Test
     void disabledKeepsNothingAndReadsTheThirtyDayWindow() {
         RoamFogCellMapper mapper = mock(RoamFogCellMapper.class);
         RoamFogCellService service = new RoamFogCellService(mapper, false);

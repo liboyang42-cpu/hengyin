@@ -22,6 +22,7 @@ import java.util.Set;
  */
 @Service
 public class RoamFogCellService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RoamFogCellService.class);
     /** Cells returned per bounding-box read. A 50 km box at walking density stays far below this. */
     public static final int MAX_CELLS = 20000;
 
@@ -36,7 +37,11 @@ public class RoamFogCellService {
 
     public boolean retainEnabled() { return retain; }
 
-    /** Called inside the reveal transaction, after the consent check, with already validated geohash-7 tiles. */
+    /**
+     * Called inside the reveal transaction, after the consent check, with already validated geohash-7 tiles. A failed
+     * write (for example the migration not applied yet) is logged and never fails the reveal: MySQL keeps the rest of
+     * the transaction, and the per-session tiles are still written.
+     */
     public int record(Long memberId, Collection<String> tiles, Date at) {
         if (!retain || memberId == null || memberId <= 0 || tiles == null || at == null) return 0;
         Set<String> cells = new LinkedHashSet<>();
@@ -45,7 +50,12 @@ public class RoamFogCellService {
             if (RoamGeohashCover.isCell(cell, 7)) cells.add(cell);
         }
         if (cells.isEmpty()) return 0;
-        return mapper.upsertCells(memberId, cells, at);
+        try {
+            return mapper.upsertCells(memberId, cells, at);
+        } catch (RuntimeException e) {
+            log.error("迷雾格保留写入失败(本次点亮照常生效) member={} cells={}", memberId, cells.size(), e);
+            return 0;
+        }
     }
 
     /** Result of a bounding-box read. {@code tooLarge} means the box was refused; nothing was read. */
