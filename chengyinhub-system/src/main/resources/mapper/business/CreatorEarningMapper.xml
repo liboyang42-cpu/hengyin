@@ -141,7 +141,7 @@
     <insert id="mirrorIncomeDetail">
         insert ignore into creator_income_detail
             (creator_id, source_type, source_id, idempotency_key, amount, points, income_status, occur_time, create_time, update_time)
-        select cp.id, concat('R12_', e.event_type), e.id, concat('CEL:', e.id), e.creator_minor / 100, e.points,
+        select cp.id, concat('R12_', e.event_type), e.id, concat('CEL:', e.id), e.creator_minor / 100.0, e.points,
                case when e.event_type = 'SALE_REVERSAL' then 2 when e.money_state = 'NONE' then 1 else 0 end,
                e.occur_time, now(), now()
           from creator_earning_ledger e

@@ -180,7 +180,8 @@ public class CreatorEarningsService {
         row.put("itemTitle", title != null && title.length() > 255 ? title.substring(0, 255) : title);
         Date occur = date(source.get("occurTime"));
         row.put("occurTime", occur);
-        row.put("occurDate", Date.from(occur.toInstant().atZone(ZONE).toLocalDate().atStartOfDay(ZONE).toInstant()));
+        // A DATE travels as a plain calendar day, independent of the JVM and database time zones.
+        row.put("occurDate", java.sql.Date.valueOf(occur.toInstant().atZone(ZONE).toLocalDate()));
         row.put("grossMinor", 0L); row.put("shareBps", 0); row.put("creatorMinor", 0L);
         row.put("currency", null); row.put("moneyState", CreatorEarningsPolicy.MONEY_NONE); row.put("orderKey", null);
         return row;
