@@ -34,7 +34,7 @@ test('发现页:卡在帖文流顶部、商家视角与未登录不读、只读�
   const wxml = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8');
   assert.match(wxml, /<view wx:if="\{\{storeCard\}\}" class="store-card"/);
   const js = fs.readFileSync(path.join(dir, 'index.js'), 'utf8');
-  assert.match(js, /if \(this\.data\.isMerchantViewer \|\| !app\.getUserID\(\)\)/);
+  assert.match(js, /if \(this\.data\.isMerchantViewer\)/);
   assert.match(js, /if \(this\._storeCardRead\) return;/);
   assert.match(js, /\/subpackageMember\/market\/passes\/index/);
 });

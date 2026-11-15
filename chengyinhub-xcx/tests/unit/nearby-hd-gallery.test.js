@@ -31,7 +31,7 @@ function mount() {
     wx, require: createRequire(filename),
     setTimeout: () => 1, clearTimeout() {},
   }, { filename });
-  const page = { ...definition, data: { ...definition.data }, _pois: [{ id: 10, type: 1, name: 'Museum', coverImg: cover }],
+  const page = { ...definition, data: { ...definition.data }, _pois: [{ id: 10, type: 1, name: 'Museum', coverImg: cover, tags: '["roam:seed:v1:test"]' }],
     _syncMarkers() {}, _myIdentity: () => identity, setData(patch) {
       for (const [key, value] of Object.entries(patch)) {
         const fields = key.split('.'); let target = this.data;
@@ -42,10 +42,19 @@ function mount() {
   };
   return { page, requests, navigation, wx, changeActor() { identity = 'actor-2'; } };
 }
-test('opening a card loads its public gallery without authorization and keeps navigation', () => {
-  const h = mount(); h.page.openPinCard('poi', 10);
-  assert.equal(h.requests.length, 1); assert.equal(h.requests[0].auth, false);
-  h.requests[0].success({ code: 200, data: document });
+async function loadPlaces(h, metadata = document) {
+  const rows = h.page._pois; h.page._pois = [];
+  h.page._syncLayerOptions = () => {}; h.page._queueIcons = () => Promise.resolve(false);
+  h.page.fetchPois({ lat: 31.2, lng: 121.4 }, 1000);
+  const pending = h.requests.at(-1).success({ code: 200, data: rows });
+  const manifest = h.requests.at(-1);
+  assert.match(manifest.url, /gallery\.json$/); assert.equal(manifest.auth, false);
+  assert.equal(h.page._pois.length, 0, 'licence has not been read: publish no photo yet');
+  manifest.success(metadata ? { code: 200, data: metadata } : { code: 404 });
+  await pending;
+}
+test('a public gallery is checked before publishing a card, retaining preview and navigation', async () => {
+  const h = mount(); await loadPlaces(h); h.page.openPinCard('poi', 10);
   assert.equal(h.page.data.poiCard.thumbs.length, 2); assert.equal(h.page.data.poiCard.primary, '去这里');
   h.page.onPoiPhotoCredit(); assert.equal(h.page.data.poiCard.creditOpen, true);
   h.page.onPoiPhotoCredit(); assert.equal(h.page.data.poiCard.creditOpen, false);
@@ -62,23 +71,27 @@ test('a failed place photo stays a normal marker instead of becoming a black pho
   assert.equal(Object.keys(h.page._pins).length, 0);
 });
 
-test('missing galleries retain the cover; closed cards and changed identities reject late replies', () => {
+test('missing licence blocks the cover; closed cards and changed identities reject late replies', async () => {
   for (const change of [h => h.page.closePoiCard(), h => h.changeActor(), h => { h.page._unloaded = true; }]) {
-    const h = mount(); h.page.openPinCard('poi', 10); change(h);
-    h.requests[0].success({ code: 200, data: document });
-    assert.equal(h.page.data.poiCard.thumbs.length, 0);
+    const h = mount(); h.page._pois[0].templateId = 88; await loadPlaces(h); h.page.openPinCard('poi', 10);
+    const node = h.requests.find(r => r.url === '/api/city/nodes/10');
+    const pending = node.success({ code: 200, data: { ...h.page._pois[0], templateTitle: 'late private progress' } });
+    const manifest = h.requests.at(-1); assert.match(manifest.url, /gallery\.json$/);
+    change(h); manifest.success({ code: 200, data: document }); await pending;
+    assert.ok(!h.page.data.poiCard || !h.page.data.poiCard.game);
   }
-  const h = mount(); h.page.openPinCard('poi', 10); h.requests[0].success({ code: 404 });
-  assert.equal(h.page.data.poiCard.img, 'https://asset.example/' + cover);
+  const h = mount(); await loadPlaces(h, null); h.page.openPinCard('poi', 10);
+  assert.equal(h.page.data.poiCard.img, ''); assert.equal(h.page.data.poiCard.thumbs.length, 0);
 });
 
-test('a playable official place expands in the card; start checks arrival and opens the map camera, never a second sheet', () => {
+test('a playable official place expands in the card; start checks arrival and opens the map camera, never a second sheet', async () => {
   const h = mount(); h.page._pois[0].templateId = 88; h.page._pois[0].lat = 31.2; h.page._pois[0].lng = 121.4;
-  h.page.openPinCard('poi', 10);
+  await loadPlaces(h); h.page.openPinCard('poi', 10);
   assert.equal(h.page.data.poiCard.official, true);
   assert.equal(h.page.data.poiCard.primary, '开始挑战');
   const node = h.requests.find((r) => r.url === '/api/city/nodes/10');
-  node.success({ code: 200, data: { galleryJson: JSON.stringify(['a.jpg', 'b.jpg']), templateTitle: '红色字母档案', validationMethod: 3, badgeCode: 'B', completed: false, radiusM: 80, ratingCount: 2, averageRating: 4.5 } });
+  const pending = node.success({ code: 200, data: { ...h.page._pois[0], gallery: undefined, galleryJson: JSON.stringify(['a.jpg', 'b.jpg']), templateTitle: '红色字母档案', validationMethod: 3, badgeCode: 'B', completed: false, radiusM: 80, ratingCount: 2, averageRating: 4.5 } });
+  h.requests.at(-1).success({ code: 200, data: document }); await pending;
   assert.equal(JSON.stringify(h.page.data.poiCard.thumbs), JSON.stringify(['https://asset.example/a.jpg', 'https://asset.example/b.jpg']));
   assert.equal(h.page.data.poiCard.ratingText, '★ 4.5 · 2 条评价');
   h.page.onPoiExpand();

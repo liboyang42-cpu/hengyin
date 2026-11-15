@@ -27,7 +27,7 @@ test('逐站不再申请定位：到点按钮只在未开局时才要求定位',
 
 test('作答前的定位提示只在开局时出现，文案与 300m 常量同源', () => {
   const play = read('pages/play/index.js')
-  assert.match(play, /gameNode\.lng && this\._startLocationNeeded\(\)/)
+  assert.match(play, /gameNode\.lng && \(this\._startLocationNeeded\(\) \|\| this\._forceStartFix === true\)/)
   assert.match(play, /'开局前请先开启定位，在起点 ' \+ ARRIVAL_START_RADIUS_TEXT \+ '内再开始'/)
 })
 

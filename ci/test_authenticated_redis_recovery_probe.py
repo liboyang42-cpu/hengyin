@@ -29,6 +29,9 @@ class AuthenticatedRedisSafetyTest(unittest.TestCase):
         with mock.patch.object(probe.sys, 'platform', 'linux'):
             probe.validate_execution_env(env)
             probe.validate_execution_env(dict(env, GITHUB_EVENT_NAME='workflow_dispatch'))
+            probe.validate_execution_env(dict(env, GITHUB_EVENT_NAME='push', GITHUB_REF='refs/heads/master'))
+            with self.assertRaises(RuntimeError):
+                probe.validate_execution_env(dict(env, GITHUB_EVENT_NAME='push', GITHUB_REF='refs/heads/foreign'))
             for key, value in [
                 ('DOCKER_HOST', 'ssh://foreign'), ('DOCKER_CONTEXT', 'chengyin-vps-sandbox'),
                 ('RUNNER_ENVIRONMENT', 'self-hosted'), ('GITHUB_JOB', 'backend'),

@@ -93,7 +93,7 @@ test('C-05 设置页权限态从 wx.getSetting 读真值,不再是恒「关」�
 test('C-06 未登录先补一次登录;登录不成给「登录没有成功」而不是开出必失败的漫游', async () => {
   const calls = [];
   let logged = false;
-  const appMock = {
+  const appMock = { sendRequest(options) { if (options.url === '/api/compliance/consents/latest') options.success({ code: 200, data: null }); else if (options.fail) options.fail({}); },
     globalData: {},
     getUserID: () => (logged ? '9' : ''),
     firstLogin: () => { logged = true; return Promise.resolve(); },
@@ -138,7 +138,7 @@ test('C-06 未登录先补一次登录;登录不成给「登录没有成功」�
   assert.equal(page2._roamStartPending, false);
 });
 
-test('C-09 真 POI 的 marker id 是数字(70 万段),点针按 id 全等回解', () => {
+test('C-09 真 POI 的 marker id 是数字，点针按显式类型回解', () => {
   const js = JS();
   assert.match(js, /const ROAM_POI_MK_BASE = 700000;/);
   assert.match(js, /id: ROAM_POI_MK_BASE \+ Number\(n\.id\), _roamId: n\.id/);
@@ -148,7 +148,8 @@ test('C-09 真 POI 的 marker id 是数字(70 万段),点针按 id 全等回解'
   const opened = [];
   page.openScene = (id, params) => opened.push([id, params]);
   page._pois = [{ id: 700009, _roamId: 9, cat: 'landmark', isCityNode: true, state: 'seen' }];
-  page.onMarkerTap({ detail: { markerId: 700009 } });
+  page._markerTargets = new Map([[1, { kind: 'poi', target: page._pois[0] }]]);
+  page.onMarkerTap({ detail: { markerId: 1 } });
   // 第九轮 m1 第 3 项:点针先出地点卡(按数字 id 回解到同一节点),点卡片才进原来的节点详情
   assert.equal(page.data.placeCard && page.data.placeCard.id, 700009, '数字 id 必须回解到对应节点');
   assert.equal(page.data.placeCard.shareId, '9');

@@ -165,7 +165,7 @@ public class PlayPhotoCommandApplication {
                         null, null, RewardPolicy.XP_BADGE_ONLY, routeActionId,
                         expectedRouteVersion, null, null, originalRun);
                 boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
-                return AjaxResult.success(firstTime ? "已提交,任务完成" : "该节点已完成", data);
+                return AjaxResult.success(firstTime ? "已提交，任务完成" : "该节点已完成", data);
             }
             return AjaxResult.success("到店照片已记录", playTaskPresentation.shopDayProofData(node, proof));
         }
@@ -203,7 +203,7 @@ public class PlayPhotoCommandApplication {
                 routeActionId, expectedRouteVersion, null, machineApproveProgressId, originalRun);
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
-        return AjaxResult.success(firstTime ? "已提交,打卡成功" : "该节点已完成", data);
+        return AjaxResult.success(firstTime ? "已提交，打卡成功" : "该节点已完成", data);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)

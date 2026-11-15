@@ -247,9 +247,11 @@ class RoamHangoutServiceTest {
     }
 
     @Test
-    void nearby_未登录_拒绝() {
-        ServiceException e = assertThrows(ServiceException.class, () -> svc.nearby(0L, 31.23, 121.47, 3000));
-        assertTrue(e.getMessage().contains("登录"), e.getMessage());
+    void nearby_游客可读公开目录但写操作仍需登录() {
+        assertTrue(((List<?>) svc.nearby(0L, 31.23, 121.47, 3000).get("items")).isEmpty());
+        verify(mapper).selectNearbyActivities(anyDouble(), anyDouble(), anyDouble(), anyDouble(), anyDouble(), anyDouble(),
+                anyDouble(), anyInt(), eq(0L));
+        assertThrows(ServiceException.class, () -> svc.create(0L, "写操作", null, null, LAT, LNG, "地点", null));
     }
 
     @Test

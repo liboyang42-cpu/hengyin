@@ -956,7 +956,7 @@
             <text class="ai-plan-tag" wx:if="{{aiPlan.estDurationMin}}">约 {{ aiPlan.estDurationMin === 0 ? 0 : (aiPlan.estDurationMin || '--') }} 分钟</text>
           </view>
           <view class="ai-plan-text" wx:if="{{aiPlan.storyline}}">{{aiPlan.storyline}}</view>
-          <view class="ai-plan-fit" wx:if="{{aiPlan.fitReason}}">为什么适合:{{aiPlan.fitReason}}</view>
+          <view class="ai-plan-fit" wx:if="{{aiPlan.fitReason}}">为什么适合：{{aiPlan.fitReason}}</view>
 
           <view class="ai-plan-lbl" wx:if="{{aiPlan.nodes.length}}">路线节点 · {{aiPlan.nodes.length}}</view>
           <view class="ai-plan-node" wx:for="{{aiPlan.nodes}}" wx:key="order">

@@ -294,7 +294,7 @@ class CoopInviteServiceImplTest {
 
         ServiceException ex = assertThrows(ServiceException.class, () -> svc.insertCoopInvite(outboundInvite()));
 
-        assertEquals("你已向对方发过这个主题的邀约,等对方处理后再发", ex.getMessage());
+        assertEquals("你已向对方发过这个主题的邀约，等对方处理后再发", ex.getMessage());
         assertEquals(HttpStatus.BAD_REQUEST, ex.getCode().intValue());
         verify(coopInviteMapper, never()).insertCoopInvite(any());
     }
@@ -359,7 +359,7 @@ class CoopInviteServiceImplTest {
         invite.setNodeId(600L);
 
         ServiceException ex = assertThrows(ServiceException.class, () -> svc.insertCoopInvite(invite));
-        assertEquals("你已向对方发过这个主题的邀约,等对方处理后再发", ex.getMessage());
+        assertEquals("你已向对方发过这个主题的邀约，等对方处理后再发", ex.getMessage());
         verify(coopInviteMapper, never()).insertCoopInvite(any());
     }
 
@@ -410,7 +410,7 @@ class CoopInviteServiceImplTest {
         ServiceException ex = assertThrows(ServiceException.class,
                 () -> svc.createOfficialMerchantInvites(100L, request));
 
-        assertEquals("你已向对方发过这个主题的邀约,等对方处理后再发", ex.getMessage());
+        assertEquals("你已向对方发过这个主题的邀约，等对方处理后再发", ex.getMessage());
         // 整批 fail-closed:不能一家已邀过就把另一家照发,那样对方看到半截名单无从判断。
         verify(coopInviteMapper, never()).insertCoopInvite(any());
     }

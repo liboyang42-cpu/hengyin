@@ -57,6 +57,12 @@ public class PricingResult implements Serializable {
     /** f-money3:无人带页签不能定价的原因(自由探索主题);与 confirmPrice 拒绝原话一致,前端挂在价格栏下。 */
     private String selfPriceError;
 
+    /** 主题产品类型(1 城市定向 / 自由探索见 ProductType),前端据此决定定价页形态。 */
+    private Integer productType;
+
+    public Integer getProductType() { return productType; }
+    public void setProductType(Integer productType) { this.productType = productType; }
+
     public String getSelfPriceError() { return selfPriceError; }
     public void setSelfPriceError(String selfPriceError) { this.selfPriceError = selfPriceError; }
 

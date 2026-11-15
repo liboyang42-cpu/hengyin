@@ -20,7 +20,7 @@ const OPTIONS = [
     key: 'event',
     icon: 'calendar',
     title: '活动',
-    desc: '一次性的线下聚会:定时间、地点与票种，不含路线与节点。',
+    desc: '一次性的线下聚会：定时间、地点与票种，不含路线与节点。',
   },
 ];
 

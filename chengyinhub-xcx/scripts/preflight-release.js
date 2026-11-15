@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { validateAgreementDocs } = require('./release-legal-gate.js');
-const { validateEvidenceOverlay, evidenceReadiness, inventoryMatchesCurrent } = require('./uiaudit/build-action-ledger.js');
+const { buildLedger, validateEvidenceOverlay, evidenceReadiness } = require('./uiaudit/build-action-ledger.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const problems = { block: [], warn: [], info: [] };
@@ -163,21 +163,17 @@ if (!/if\s*\(!this\.isDevEnv\(\)\)\s*\{\s*wx\.removeStorageSync\(['"]debug_user_
 }
 
 // —— 7. Action Ledger 动态行为证据必须全部 release-ready ——
-const actionLedger = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/uiaudit/action-ledger.json'), 'utf8'));
+const actionLedger = buildLedger();
 const actionEvidence = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/uiaudit/action-evidence.json'), 'utf8'));
-if (!inventoryMatchesCurrent(actionLedger)) {
-  add('block', 'Action Ledger inventory 已与当前源码漂移，先运行 npm run audit:actions:update 并审阅 diff');
+const actionEvidenceErrors = validateEvidenceOverlay(actionLedger, actionEvidence);
+if (actionEvidenceErrors.length) {
+  add('block', `Action Ledger evidence 非法:${actionEvidenceErrors[0]}`);
 } else {
-  const actionEvidenceErrors = validateEvidenceOverlay(actionLedger, actionEvidence);
-  if (actionEvidenceErrors.length) {
-    add('block', `Action Ledger evidence 非法:${actionEvidenceErrors[0]}`);
+  const actionReadiness = evidenceReadiness(actionLedger, actionEvidence);
+  if (!actionReadiness.ready) {
+    add('block', `Action Ledger 动态证据未完成:pending=${actionReadiness.pending.length},nonPassed=${actionReadiness.nonPassed.length}`);
   } else {
-    const actionReadiness = evidenceReadiness(actionLedger, actionEvidence);
-    if (!actionReadiness.ready) {
-      add('block', `Action Ledger 动态证据未完成:pending=${actionReadiness.pending.length},nonPassed=${actionReadiness.nonPassed.length}`);
-    } else {
-      add('info', `Action Ledger ${actionLedger.controlCount} 个动作动态证据全部 release-ready`);
-    }
+    add('info', `Action Ledger ${actionLedger.controlCount} 个动作动态证据全部 release-ready`);
   }
 }
 

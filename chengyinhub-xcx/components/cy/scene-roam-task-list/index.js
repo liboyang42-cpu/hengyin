@@ -1,6 +1,8 @@
 'use strict'
 
 const app = getApp()
+const session = require('../../../utils/session/login-reload.js')
+const login = require('../../../utils/auth/require-login.js')
 const { activityStatusMeta, activityStatusText } = require('../../../utils/activity-status.js')
 
 function toTs(value) {
@@ -29,16 +31,24 @@ function progressValue(value) {
 
 Component({
   data: { tab: 0, tabs: ['进行中', '即将', '已结束', '我的'], keyword: '', all: [], mine: [], events: [], state: 'loading', refreshing: false, staleError: '', summary: '', emptyTitle: '', emptySub: '' },
-  lifetimes: { attached() { this.load() }, detached() { this._loadToken = (this._loadToken || 0) + 1 } },
+  lifetimes: { attached() { this._disposed = false; this.load() }, detached() { this._disposed = true; this._loadToken = (this._loadToken || 0) + 1 } },
+  pageLifetimes: { hide() { this._hidden = true; this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1 }, show() { this._hidden = false; if (this._readOwner !== session.identity(app)) this.load() } },
   methods: {
     load() {
       const token = (this._loadToken || 0) + 1
       this._loadToken = token
+      const owner = session.identity(app)
+      const signedIn = login.hasSession(app)
+      if (this._readOwner !== owner) {
+        this._hasLoaded = false
+        this.setData({ all: [], mine: [], events: [], tab: signedIn ? this.data.tab : 0 })
+      }
+      this._readOwner = owner
       const hadSnapshot = this._hasLoaded === true
       this.setData({ state: hadSnapshot ? 'ready' : 'loading', refreshing: hadSnapshot, staleError: '' })
-      let allDone = false; let mineDone = false; let all = []; let mine = []; let failed = false
+      let allDone = false; let mineDone = !signedIn; let all = []; let mine = []; let failed = false
       const finish = () => {
-        if (token !== this._loadToken || !allDone || !mineDone) return
+        if (token !== this._loadToken || owner !== session.identity(app) || !allDone || !mineDone) return
         // 「我的」同样只保留落在这份漫游局列表里的报名：已结束 / 未绑定漫游的活动不该出现在这里。
         const roamIds = new Set(all.map((item) => String(item.id)))
         mine = mine.filter((item) => roamIds.has(String(item.id)))
@@ -58,7 +68,7 @@ Component({
         successStatusAbnormal: () => { if (token !== this._loadToken) return; failed = true; allDone = true; finish() },
         fail: () => { if (token !== this._loadToken) return; failed = true; allDone = true; finish() },
       })
-      app.sendRequest({
+      if (signedIn) app.sendRequest({
         url: '/api/official/my-events', method: 'GET', hideLoading: true, silentError: true,
         success: (res) => { if (token !== this._loadToken) return; if (res && (res.code == 200 || res.code == '200') && Array.isArray(res.data) && res.data.every(isRecord)) mine = res.data.map((item) => this._decorate(item, true)); else failed = true; mineDone = true; finish() },
         successStatusAbnormal: () => { if (token !== this._loadToken) return; failed = true; mineDone = true; finish() },
@@ -89,7 +99,14 @@ Component({
       const copy = keyword ? [`「${keyword}」${events.length} 个结果`, '换个关键词试试'] : [[ '暂无进行中的活动', '' ], [ '暂无即将开始的活动', '' ], [ '暂无已结束的活动', '' ], [ '还没有参与的活动', '' ]][this.data.tab]
       this.setData({ events, summary: keyword ? copy[0] : `${this.data.tabs[this.data.tab]} · 共 ${events.length} 个活动`, emptyTitle: keyword ? '没有找到相关活动' : copy[0], emptySub: copy[1] })
     },
-    selectTab(event) { this.setData({ tab: Number(event.currentTarget.dataset.tab) }, () => this._filter()) },
+    selectTab(event) {
+      const tab = Number(event.currentTarget.dataset.tab)
+      this._tabIntent = tab
+      if (tab === 3 && app.ensureLoginFor && !app.ensureLoginFor('登录后查看自己参与的活动',
+        () => this.selectTab(event), { owner: this, target: () => [this._tabIntent] })) return
+      this.setData({ tab }, () => this._filter())
+      if (this._readOwner !== session.identity(app)) this.load()
+    },
     onKeyword(event) { this.setData({ keyword: event.detail.value }, () => this._filter()) },
     retry() { this.load() },
     // 行是 official_event:交宿主开官方活动详情页。play-activity-detail 查的是 cms_activity,id 会撞到别的活动(3-18)。

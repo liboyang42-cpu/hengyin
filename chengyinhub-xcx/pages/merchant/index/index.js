@@ -311,6 +311,13 @@ Page({
     this.closeScene();
   },
   cancelSceneDiscard() { this.setData({ sceneConfirm: { show: false, action: null, pending: null } }); },
+  onPoiTitle(event) {
+    const scene = this.data.sceneCurrent, detail = event.detail || {};
+    if (!scene || scene.id !== 'roam-poi-detail' || !detail.name || scene.title === detail.name
+        || String(scene.params.poiId || '') !== String(detail.poiId || '')
+        || String(scene.params.merchantId || '') !== String(detail.merchantId || '')) return;
+    this.setData({ 'sceneCurrent.title': detail.name, sceneStack: this.data.sceneStack.map((row, index) => index === this.data.sceneStack.length - 1 ? Object.assign({}, row, { title: detail.name }) : row) });
+  },
   setSceneDirty(dirty) {
     if (!this.data.sceneStack.length) return;
     const sceneStack = this.data.sceneStack.slice();
@@ -341,6 +348,7 @@ Page({
     else if (action === 'brand') this.goBrandManage();
     else if (action === 'aftercare') this.goAftercare();
     else if (action === 'verifyRecords') this.goVerifyRecords();
+    else if (action === 'bundleReservations') this.goBundleReservations();
     else if (action === 'payoutAccount') this.goPayoutAccount();
   },
 
@@ -351,6 +359,12 @@ Page({
   goAftercare() {
     if (!this.data.merchantAccess.canReadAftercare || this._navigating) return; // 跳转中不响应连点
     this._navigating = true; wx.navigateTo({ url: '/pages/merchant/aftercare/index', complete: () => { this._navigating = false; } });
+  },
+
+  goBundleReservations() {
+    if (!this.data.merchantAccess.canVerify || this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/merchant/bundle-reservations/index', complete: () => { this._navigating = false; } });
   },
 
   goVerifyRecords() {

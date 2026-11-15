@@ -143,7 +143,7 @@ public class ApiTrackController extends BaseController {
             // 用户的停靠点静默全失且不可回头。只记内部 ID 与异常类型,不落原始 body、不回传异常文本。
             logger.warn("track_to_topic_waypoint_parse_failed draftId={} memberId={} err={}",
                     d.getId(), memberId, e.getClass().getSimpleName());
-            return error("轨迹停靠点数据异常,无法转为路线");
+            return error("轨迹停靠点数据异常，无法转为路线");
         }
 
         Map<String, Object> chapter = new LinkedHashMap<>();

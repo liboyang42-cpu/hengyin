@@ -80,12 +80,12 @@ public class AiTopicPlanServiceImpl implements IAiTopicPlanService
         catch (RuntimeException e)
         {
             log.error("[AiTopicPlan] candidate-query-failed memberId={}", memberId, e);
-            throw new AiServiceException("商家候选查询失败,请稍后重试", e);
+            throw new AiServiceException("商家候选查询失败，请稍后重试", e);
         }
         List<MerchantCandidateVO> candidates = selectTopCandidates(nearby, radius);
         if (candidates.isEmpty())
         {
-            throw new AiServiceException("附近暂无可用商家节点,请调整地图位置或范围");
+            throw new AiServiceException("附近暂无可用商家节点，请调整地图位置或范围");
         }
 
         Map<Long, MerchantCandidateVO> facts = new HashMap<>();
@@ -98,7 +98,7 @@ public class AiTopicPlanServiceImpl implements IAiTopicPlanService
         }
         if (facts.isEmpty())
         {
-            throw new AiServiceException("附近商家候选数据不完整,请稍后重试");
+            throw new AiServiceException("附近商家候选数据不完整，请稍后重试");
         }
 
         JSONObject user = new JSONObject();
@@ -113,7 +113,7 @@ public class AiTopicPlanServiceImpl implements IAiTopicPlanService
             SYS_MERCHANT_PLAN, user.toJSONString());
         if (isMockModel(gatewayResult))
         {
-            throw new AiServiceException("AI 服务暂未就绪,请联系管理员");
+            throw new AiServiceException("AI 服务暂未就绪，请联系管理员");
         }
 
         List<AiThemePlan> plans = parsePlans(gatewayResult, facts);

@@ -13,8 +13,8 @@
          先让人把题读完,再给他可以按的东西。同时出现的话,人只会扫按钮。 -->
     <view class="qa__body">
       <!-- 题干附件:商家没配就整块不出。没内容就不要显示提示语 -->
-      <view class="qa__media" wx:if="{{hasImage}}">
-        <image class="qa__img" src="{{imageUrl}}" mode="aspectFill" aria-role="img" aria-label="题目配图" />
+      <view class="qa__media" wx:if="{{imageUrl}}">
+        <image class="qa__img" src="{{imageUrl}}" mode="widthFix" bindtap="onPreviewQuestion" aria-role="button" aria-label="查看题目大图" hover-class="qa__press" hover-stay-time="80" />
       </view>
       <view class="qa__audio" wx:if="{{audioUrl}}" bindtap="onToggleAudio"
             aria-role="button" aria-label="{{playing ? '暂停题目音频' : '播放题目音频'}}"
@@ -74,7 +74,7 @@
         <view class="qa__shot-note" wx:if="{{shotNote}}">{{shotNote}}</view>
       </block>
 
-      <view class="qa__shot-note" wx:if="{{submitted && !finished && !passed}}" aria-live="polite">正在确认答案</view>
+      <view class="qa__shot-note" wx:if="{{submitted && !finished && !passed && !feedback}}" aria-live="polite">正在确认答案</view>
       <view class="qa__fb qa__fb-enter {{passed ? 'qa__fb--ok' : (attempts > 0 || typeWrong ? 'qa__fb--no' : '')}}"
             wx:if="{{feedback || shownFeedbackImages.length || (judge !== false && (passed || attempts > 0))}}">
         <!-- 过了就一直写着结果:拍照题过了以后 finished 也为真,原来整块被藏掉,屏上只剩题面,看不出照片过没过(实走复核) -->
@@ -91,7 +91,7 @@
   </view>
 
   <!-- 故事流内嵌且已答对:下面就是「继续故事」,这里不再叠一枚同义的「继续」(实走复核:两枚白按钮上下摞着) -->
-  <view wx:if="{{!(inline && (passed || finished || ctaLabel === '继续')) && !(mode === 'pick' && !multi && judge !== false && !passed)}}" class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
+  <view wx:if="{{!(inline && (passed || finished || ctaLabel === '继续')) && !(mode === 'pick' && !multi && judge !== false && !passed && ctaLabel !== '重拍')}}" class="g-btn {{ctaDisabled ? 'g-btn--disabled' : ''}} {{intro ? 'qa__cta--hold' : ''}} {{burning ? 'qa__cta--burn' : ''}}"
         bindtap="onCta"
         aria-role="button" aria-label="{{ctaLabel}}" hover-class="g-btn--press" hover-stay-time="80">
     {{ctaLabel}}

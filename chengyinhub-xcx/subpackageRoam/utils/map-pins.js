@@ -22,7 +22,7 @@ function text(v) {
   const s = String(v).trim();
   return s === 'null' ? '' : s;
 }
-function firstTag(v) { return text(v).split(/[,，、;；|\s]+/).map((s) => s.trim()).filter(Boolean)[0] || ''; }
+function firstTag(v) { return require('../../utils/roam-place-map.js').visibleTags(v)[0] || ''; } // A4.1:JSON 标签串、roam:* 保留标签
 function short(s, n) { const t = text(s); return t.length > n ? t.slice(0, n) : t; }
 function csv(v) { return text(v).split(',').map((s) => s.trim()).filter(Boolean); }
 
@@ -37,9 +37,9 @@ function pinSpecs(input) {
       tag: topic ? (Number(it.productType) === 2 ? '自由探索' : '城市定向') : short(it.name, 6) });
   });
   (o.pois || []).forEach((p) => {
-    if (!p || p.id == null || !text(p.coverImg)) return;
+    if (!p || p.id == null || !text(p.coverImg || p.cover)) return;
     const shop = Number(p.type) === 2;
-    out.push({ id: Number(p.id) * 10 + (shop ? 7 : 6), kind: shop ? 'shop' : 'spot', img: text(p.coverImg),
+    out.push({ id: Number(p.id) * 10 + (shop ? 7 : 6), kind: shop ? 'shop' : 'spot', img: text(p.coverImg || p.cover),
       tag: short(firstTag(p.tags) || (shop ? '商家' : '地点'), 6) });
   });
   (o.teams || []).forEach((t) => {

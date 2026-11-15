@@ -369,7 +369,7 @@ export default {
           this.pendingActionId = row.id
           return auditMerchantNpc({ id: row.id, auditStatus: 2, auditReason: value.trim() })
         }).then(() => {
-          this.$modal.msgSuccess('已驳回,原因已回传给商家')
+          this.$modal.msgSuccess('已驳回，原因已回传给商家')
           this.getList()
         }).catch(() => {}).finally(() => { this.pendingActionId = null })
         return

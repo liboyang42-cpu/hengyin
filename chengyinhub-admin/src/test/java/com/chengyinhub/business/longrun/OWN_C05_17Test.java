@@ -28,7 +28,7 @@ class OWN_C05_17Test {
         AiServiceException failure = assertThrows(AiServiceException.class,
                 () -> gateway.consumeQuota(7L, "merchant_plan"));
         assertEquals(AiServiceException.Reason.RATE_LIMITED, failure.getReason());
-        assertEquals("今日AI次数已用完(20/天),明天再来吧", failure.getMessage());
+        assertEquals("今日AI次数已用完(20/天)，明天再来吧", failure.getMessage());
         verify(recovery).retain(anyString(), eq("RATE_LIMITED"));
         verify(recovery, never()).requireRefund(anyString(), anyString());
     }

@@ -1,7 +1,7 @@
 const app = getApp();
 const bundle = require('../utils/free-explore-bundle.js');
 const modal = require('../../utils/modal.js');
-const empty = () => ({ review: null, reviewPending: null, reviewBusy: false, reviewContent: '', reviewRating: 5, detail: null, catalog: null, quote: null, exitOptions: null, swapPending: null, pending: null, loading: false, error: '', notice: '' });
+const empty = () => ({ review: null, reviewPending: null, reviewBusy: false, reviewContent: '', reviewRating: 5, detail: null, catalog: null, quote: null, exitOptions: null, swapPending: null, pending: null, reserveForm: null, reservePending: null, reserveBusy: false, loading: false, error: '', notice: '' });
 
 // 自定义导航栏下的占位高度;缺了它标题和第一张卡会压在导航栏底下
 const layout = () => ({ statusBarHeight: app.globalData.statusBarHeight || 44, navBarHeight: app.globalData.navBarHeight || 44 });
@@ -13,6 +13,7 @@ Page({
     this.setData({
       review: null, reviewPending: null, reviewBusy: false, reviewContent: '', reviewRating: 5,
       detail: null, catalog: null, quote: null, exitOptions: null, swapPending: null, pending: null,
+      reserveForm: null, reservePending: null, reserveBusy: false,
       loading: false, error: '', notice: '',
       statusBarHeight: layout().statusBarHeight, navBarHeight: layout().navBarHeight,
     });
@@ -44,6 +45,12 @@ Page({
             || !bundle.exactId(swap.targetOfferId) || !/^[A-Za-z0-9_-]{1,64}$/.test(swap.idempotencyKey)) throw Error('invalid swap');
         this.setData({ swapPending: swap, notice: '换店结果确认中' });
       }
+      const book = wx.getStorageSync(this.reserveKey());
+      if (book) {
+        if (book.owner !== this._owner || book.registrationId !== this._registrationId || !bundle.exactId(book.unitId)
+            || !bundle.exactId(book.offerId) || !Number.isSafeInteger(book.startAt) || !/^[A-Za-z0-9_-]{1,64}$/.test(book.idempotencyKey)) throw Error('invalid reserve');
+        this.setData({ reservePending: book, notice: '预约结果确认中' });
+      }
       const row = wx.getStorageSync(this.key());
       if (row) {
         if (row.owner !== this._owner || row.registrationId !== this._registrationId || !bundle.exactId(row.reservationId)
@@ -54,6 +61,7 @@ Page({
   },
   onHide() { this._hidden = true; this._epoch++; this.clearView(); },
   onUnload() { this.onHide(); this._unloaded = true; },
+  reserveKey() { return 'free_explore_reserve_v1:' + this._owner + ':' + this._registrationId; },
   swapKey() { return 'free_explore_swap_v1:' + this._owner + ':' + this._registrationId; },
   key() { return 'free_explore_cancel_v1:' + this._owner + ':' + this._registrationId; },
   current(epoch) {
@@ -279,6 +287,55 @@ Page({
           this.setData({ notice: '换店结果确认中，请稍后刷新' });
         });
       }, fail: () => { if (this.current(epoch)) this._confirming = false; } });
+  },
+  openReserve(event) {
+    if (!this.ready() || this._storageBlocked || this.data.reservePending || this._writing) return;
+    const unitId = bundle.exactId(event.currentTarget.dataset.id);
+    const unit = this.data.detail && this.data.detail.units.find(item => item.id === unitId && item.canReserve);
+    const chapter = unit && this.data.detail.chapters.find(item => item.chapterId === unit.chapterId);
+    if (!chapter) return;
+    const d = new Date(Date.now() + 8 * 3600000), pad = n => (n < 10 ? '0' : '') + n;
+    const today = d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate());
+    this.setData({ reserveForm: { unitId, chapterName: chapter.name, stores: chapter.stores,
+      offerId: chapter.stores.length === 1 ? chapter.stores[0].offerId : '', date: '', time: '', today }, error: '' });
+  },
+  pickStore(event) { if (this.data.reserveForm) this.setData({ 'reserveForm.offerId': bundle.exactId(event.currentTarget.dataset.id) }); },
+  pickDate(event) { if (this.data.reserveForm) this.setData({ 'reserveForm.date': String(event.detail.value || '') }); },
+  pickTime(event) { if (this.data.reserveForm) this.setData({ 'reserveForm.time': String(event.detail.value || '') }); },
+  confirmReserve() {
+    const form = this.data.reserveForm;
+    if (!this.ready() || this._storageBlocked || !form || this.data.reservePending || this.data.reserveBusy) return;
+    if (!form.offerId) { this.setData({ error: '请选择商家' }); return; }
+    const startAt = Date.parse(form.date + 'T' + form.time + ':00+08:00');
+    if (!form.date || !form.time || !Number.isSafeInteger(startAt) || startAt <= Date.now()) { this.setData({ error: '请选择之后的日期和时间' }); return; }
+    const pending = { owner: this._owner, registrationId: this._registrationId, unitId: form.unitId, offerId: form.offerId,
+      startAt, idempotencyKey: 'fx-book-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12) };
+    try { wx.setStorageSync(this.reserveKey(), pending); } catch (error) { this.setData({ error: '本机存储失败，未预约' }); return; }
+    this.setData({ reservePending: pending, reserveForm: null, error: '' });
+    this.submitReserve();
+  },
+  // 同一幂等键重发：服务端按键重放，不会重复占用权益
+  submitReserve() {
+    const pending = this.data.reservePending;
+    if (!this.ready() || !pending || this.data.reserveBusy) return;
+    this.setData({ reserveBusy: true });
+    this.apiRequest('/api/free-explore/bundle/reservation', 'POST', { registrationId: pending.registrationId, unitId: pending.unitId,
+      offerId: pending.offerId, startAt: pending.startAt, idempotencyKey: pending.idempotencyKey }, (ok, res) => {
+      this.setData({ reserveBusy: false });
+      if (ok) {
+        try {
+          const row = bundle.reservation(res.data, this._owner, this._registrationId);
+          if (row.unitId === pending.unitId) { this.clearReserve(); this.setData({ notice: '预约状态：' + row.statusText }); this.reload(); return; }
+        } catch (error) { /* 回包读不懂：仍按结果未确认处理 */ }
+      }
+      // 409 + businessCode = 服务端明确拒绝；其余（超时、断网、回包异常）都不能断言没成功
+      if (res && res.businessCode) { this.clearReserve(); this.setData({ notice: '', error: res.msg || '预约未成功，请重试' }); return; }
+      this.setData({ notice: '预约结果确认中，请点「重新确认」' });
+    });
+  },
+  clearReserve() {
+    try { wx.removeStorageSync(this.reserveKey()); this.setData({ reservePending: null }); }
+    catch (error) { this._storageBlocked = true; this.setData({ error: '请再次刷新' }); }
   },
   clearSwap() {
     try { wx.removeStorageSync(this.swapKey()); this.setData({ swapPending: null }); }

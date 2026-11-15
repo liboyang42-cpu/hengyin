@@ -3,11 +3,15 @@
 // 病：_createSelfPlayOrder 既不带 requestId、也没有在途防重 ⇒ 连点两下"去支付"就是两次
 // /api/registration/create，后端对空 requestId 直接跳过 replay 探测 ⇒ 两张待支付通行证。
 // 这里把页面真实装进沙箱跑它的方法，断言实际发出的请求，而不是断言源码里有没有某个字符串。
-const { test } = require('node:test');
+const { afterEach, test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
 const PAGE_PATH = path.resolve(__dirname, '../../pages/topic/index/index.js');
+const pages = [];
+afterEach(() => {
+  for (const page of pages.splice(0)) page.onUnload();
+});
 
 function loadTopicPage() {
   const requests = [];
@@ -69,6 +73,7 @@ function loadTopicPage() {
     setData(patch) { Object.assign(this.data, patch); }
   });
   vm.data = Object.assign({}, pageConfig.data);
+  pages.push(vm);
   return { vm, requests, toasts, navigations, payments, consents, consentControl, modals, modalControl, subscriptions };
 }
 
@@ -256,10 +261,11 @@ test('资料不全时不打必被拒的建单，给出出路并放开在途标�
   vm._signupProfile = undefined;
 
   vm._createSelfPlayOrder.call(vm, 500);
-  // 建单前会先现取一次资料(预取可能还没回来)，那次也取不到才给提示
+  // 现取成功但资料为空才给补全提示；网络失败另由恢复用例覆盖。
   const retry = requests.slice(-2);
   assert.deepEqual(retry.map(r => r.url), ['/api/user/info', '/api/user/address/list']);
-  retry.forEach(r => r.fail());
+  retry[0].success({ code: '200', data: {} });
+  retry[1].success({ code: '200', data: { rows: [] } });
 
   assert.equal(requests.filter(r => r.url === '/api/registration/create').length, 0,
     '空姓名建单必被后端拒，不该让玩家看到那句跟自己无关的报错');
@@ -297,7 +303,8 @@ test('提示里确认「去补全」:缺手机号送到资料页(微信手机号
   vm._signupProfile = undefined;
 
   vm._createSelfPlayOrder.call(vm, 500);
-  requests.slice(-2).forEach(r => r.fail());
+  requests.at(-2).success({ code: '200', data: {} });
+  requests.at(-1).success({ code: '200', data: { rows: [] } });
 
   assert.equal(requests.filter(r => r.url === '/api/registration/create').length, 0);
   assert.deepEqual(navigations, ['/pages/gerenziliao/gerenziliao']);

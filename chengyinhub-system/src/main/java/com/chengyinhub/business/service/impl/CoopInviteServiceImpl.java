@@ -617,7 +617,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
             }
             if (Integer.valueOf(0).equals(existing.getStatus()) && Objects.equals(invite.getToType(), existing.getToType())
                     && Objects.equals(invite.getToId(), existing.getToId()) && Objects.equals(invite.getNodeId(), existing.getNodeId())) {
-                throw new ServiceException("你已向对方发过这个主题的邀约,等对方处理后再发", HttpStatus.BAD_REQUEST);
+                throw new ServiceException("你已向对方发过这个主题的邀约，等对方处理后再发", HttpStatus.BAD_REQUEST);
             }
         }
     }
@@ -1363,7 +1363,7 @@ public class CoopInviteServiceImpl implements ICoopInviteService {
         for (CoopInvite existing : mutableInvites(selectCoopInviteList(pending))) {
             if (Integer.valueOf(0).equals(existing.getStatus())
                     && java.util.Objects.equals(existing.getNodeId(), invite.getNodeId())) {
-                throw new ServiceException("你已向对方发过这个主题的邀约,等对方处理后再发", HttpStatus.BAD_REQUEST);
+                throw new ServiceException("你已向对方发过这个主题的邀约，等对方处理后再发", HttpStatus.BAD_REQUEST);
             }
         }
     }

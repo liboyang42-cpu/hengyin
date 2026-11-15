@@ -128,15 +128,14 @@ test('U1只保留原profile请求登记，带队与详情有限路径不保留�
   for (const [file, statement] of [
     [PROFILE, 'app.sendRequest(Object.assign({}, options'],
   ]) {
-    const key = 'chengyinhub-xcx/' + file + ':' + line;
+    const key = require('../lint/stable-site-key').stableSiteKey('chengyinhub-xcx/' + file, read(file), line);
     assert.ok(baseline.u1Variable[key], key);
     assert.ok(read(file).split('\n')[line - 1].includes(statement), key);
   }
   for (const file of ['pages/play/index.js', DETAIL]) {
-    assert.equal(Object.keys(baseline.u1Variable).some(key => key.startsWith('chengyinhub-xcx/' + file + ':')), false);
+    assert.equal(Object.keys(baseline.u1Variable).some(key => key.startsWith('chengyinhub-xcx/' + file + '#site:')), false);
   }
-  assert.equal(baseline.u1Variable['chengyinhub-xcx/' + PROFILE + ':663'], undefined);
-  assert.equal(baseline.u1Variable['chengyinhub-xcx/' + DETAIL + ':190'], undefined);
+  assert.ok(Object.keys(baseline.u1Variable).every(key => /#site:[a-f0-9]{64}:\d+$/.test(key)));
 });
 test('带队复制的原命令固定席位路径且feedback不能改身份；改路径或覆盖url必须红', () => {
   const source = read('pages/play/index.js');

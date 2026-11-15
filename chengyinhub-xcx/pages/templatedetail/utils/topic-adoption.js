@@ -22,7 +22,7 @@ function placeText(location) {
 
 function operatingText(delivery) {
   const visibility = delivery && delivery.operatingRequirementsVisibility;
-  if (visibility === 'PARTNER_ONLY') return '仅对合作商家开放';
+  if (visibility === 'PARTNER_ONLY') return '仅合作商家可见';
   if (visibility !== 'INCLUDED') return PENDING;
   const op = delivery.operatingRequirements || {};
   const parts = [];
@@ -57,12 +57,12 @@ function localeText(delivery) {
 }
 
 // 详情页「采用条件」行;contentDelivery 整段缺失时返回空数组(页面整块不画,不画一排「待补充」)。
-function deliveryRows(delivery) {
+function deliveryRows(delivery, canViewEvidence) {
   if (!delivery || typeof delivery !== 'object') return [];
   return [
     { key: 'place', label: '地点', value: placeText(delivery.locationRequirement) },
-    { key: 'operating', label: '投入', value: operatingText(delivery) },
-    { key: 'evidence', label: '验证', value: evidenceText(delivery.evidence) },
+    { key: 'operating', label: '运营资料', value: operatingText(delivery) },
+    { key: 'evidence', label: '验证', value: canViewEvidence === true ? evidenceText(delivery.evidence) : PENDING },
     { key: 'platform', label: '端侧', value: platformText(delivery) },
     { key: 'locale', label: '语言', value: localeText(delivery) },
     { key: 'license', label: '许可', value: licenseText(delivery.license) },

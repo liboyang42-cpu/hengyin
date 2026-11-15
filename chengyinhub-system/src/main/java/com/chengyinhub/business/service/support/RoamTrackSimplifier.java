@@ -55,6 +55,12 @@ public final class RoamTrackSimplifier {
         return out;
     }
 
+    /** First validated fix also identifies a stationary session without manufacturing a route. */
+    public static double[] startPoint(String raw) {
+        List<double[]> points = read(raw);
+        return points.isEmpty() ? null : points.get(0);
+    }
+
     private static List<double[]> read(String raw) {
         List<double[]> points = new ArrayList<>();
         if (raw == null || raw.isEmpty() || raw.length() > MAX_RAW_CHARS) return points;

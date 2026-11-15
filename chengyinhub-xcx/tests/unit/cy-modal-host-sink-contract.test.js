@@ -83,7 +83,7 @@ test('dangerKey:有宿主时走 cy-danger-confirm 三段式(后果清单),确认
     fresh(MODAL).show({ dangerKey: 'order.cancel-refund', success() {} })
   })
   assert.equal(native.length, 1)
-  assert.equal(native[0].title, '取消报名?')
+  assert.equal(native[0].title, '取消报名？')
   assert.match(native[0].content, /此操作不可撤销/)
   assert.match(native[0].content, /实际支付记录/)
   assert.doesNotMatch(native[0].content, /积分同步返还|预计.*工作日/)

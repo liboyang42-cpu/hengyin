@@ -129,7 +129,7 @@ const NEGATIVE = [
   ['找东西两个目标叠在一起', 'hiddenObject', m => {
     m.hiddenObject.hotspots[1].x = m.hiddenObject.hotspots[0].x;
     m.hiddenObject.hotspots[1].y = m.hiddenObject.hotspots[0].y;
-  }, '找东西的两个目标挨得太近,请把它们分开一些'],
+  }, '找东西的两个目标挨得太近，请把它们分开一些'],
   ['竞猜问题为空', 'predict', m => { m.predict.question = ''; }, '预测问题不能为空'],
   ['竞猜只有一个选项', 'predict', m => { m.predict.options = [{ key: 'a', label: '只有一个' }]; }, '预测选项须为 2 至 4 个'],
   ['竞猜选项 key 重复', 'predict', m => { m.predict.options[1].key = 'a'; }, '预测选项 key 不能重复'],

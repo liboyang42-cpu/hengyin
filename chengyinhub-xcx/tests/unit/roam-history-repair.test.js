@@ -77,7 +77,7 @@ test('R9-42 历史列表:老记录的字符串里程不再显示为缺失,0 显�
   assert.equal(byTs(1717243200000).distanceValue, 0.2)
   assert.equal(byTs(1717243200000).distanceText, '0.2')
   assert.equal(byTs(1717243200001).distanceValue, 0)
-  assert.equal(byTs(1717243200001).distanceText, '0')
+  assert.equal(byTs(1717243200001).distanceText, '0.0')
   assert.equal(byTs(1717243200002).distanceValue, null)
   // UI-04(2026-09-18):数字统计没取到显示 0,不再显示横杠
   assert.equal(byTs(1717243200002).distanceText, '0')
@@ -95,7 +95,7 @@ test('R9-42 本次漫游详情:字符串里程显示为真实值,未知按 UI-04
   const zero = definition.methods._normalize.call(context, {
     ts: 1717243200000, distance: 0, shops: 0, explorePct: 0, durSec: 0, pois: [],
   })
-  assert.equal(zero.distanceText, '0')
+  assert.equal(zero.distanceText, '0.0')
 
   const unknown = definition.methods._normalize.call(context, {
     ts: 1717243200000, distance: 'bad', shops: 1, explorePct: 20, durSec: 60, pois: [],

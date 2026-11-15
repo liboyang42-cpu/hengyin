@@ -144,7 +144,7 @@ test('synthetic record fetch → normalization → replay retains actual point o
     { lat: 31.202, lng: 121.403 }, { lat: 31.201, lng: 121.401 },
   ])
   assert.equal(view.data.session.distance, 1.234)
-  assert.equal(view.data.session.time, '01:05')
+  assert.equal(view.data.session.time, '0:01')
   assert.equal(view.data.session.shopsText, '—')
   assert.equal(view.data.routeSegs.length, 3)
   assert.deepEqual(view.data.routeSegs.map(s => s.deg), [-90, 0, 150], 'north, east, then southwest; no sorting or axis swap')

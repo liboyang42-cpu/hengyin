@@ -97,7 +97,7 @@ public class ApiPredictSettleController extends BaseController {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (Exception e) {
             logger.error("竞猜结算失败 node={} day={}", node, day, e);
-            return error("结算失败,请稍后重试");
+            return error("结算失败，请稍后重试");
         }
     }
 
@@ -160,7 +160,7 @@ public class ApiPredictSettleController extends BaseController {
             return success(playPredictService.pendingInbox(ownerMemberId, GRACE_HOURS));
         } catch (Exception e) {
             logger.error("竞猜待办读取失败 owner={}", ownerMemberId, e);
-            return error("待办读取失败,请稍后重试");
+            return error("待办读取失败，请稍后重试");
         }
     }
 

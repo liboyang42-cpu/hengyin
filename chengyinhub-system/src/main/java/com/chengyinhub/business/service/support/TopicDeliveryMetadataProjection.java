@@ -165,8 +165,7 @@ public class TopicDeliveryMetadataProjection {
     }
 
     /**
-     * 地点需求:只数真实节点行。{@code physicalPlaceRequired} 只在确实有带地址/扫码点位的站点时为 true,
-     * 其余为 false —— 不把纯线上内容说成要出门,也不隐藏确实要到店的事实。
+     * 地点需求只数真实节点行；自由探索门店权益或已有地址/扫码点位要求到现场。
      */
     private ContentDeliveryMetadataVO.LocationRequirement locationRequirement(CmsTopic topic) {
         ContentDeliveryMetadataVO.LocationRequirement location = new ContentDeliveryMetadataVO.LocationRequirement();
@@ -190,7 +189,9 @@ public class TopicDeliveryMetadataProjection {
         location.setStationWithAddressCount(withAddress);
         location.setStationWithScanCheckpointCount(withScan);
         location.setRtlStationCount(rtl);
-        location.setPhysicalPlaceRequired(withAddress > 0 || withScan > 0);
+        // 自由探索的门店槽位尚未绑定地址时，仍须到店使用权益。
+        location.setPhysicalPlaceRequired(Integer.valueOf(com.chengyinhub.common.constant.ProductType.FREE_EXPLORE)
+                .equals(topic.getProductType()) || withAddress > 0 || withScan > 0);
         return location;
     }
 

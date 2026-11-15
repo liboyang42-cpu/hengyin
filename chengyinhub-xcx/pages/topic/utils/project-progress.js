@@ -37,7 +37,7 @@ function buildHostSteps(input) {
   const steps = [
     { key: 'config', label: '配置主题' },
     { key: 'publish', label: '发布', status: lifecycle === 7 ? '审核中' : '待发布',
-      subs: [{ text: lifecycle === 7 ? '平台审核通过后开始招商' : '发布后先开始招商,票务可以之后再配', act: 'goAddStations', actText: '去编辑' }] },
+      subs: [{ text: lifecycle === 7 ? '平台审核通过后开始招商' : '发布后先开始招商，票务可以之后再配', act: 'goAddStations', actText: '去编辑' }] },
     { key: 'recruit', label: '招商', status: '待邀约',
       subs: [
         { text: '俱乐部 ' + clubs + ' 家', ok: clubs > 0, act: 'onQuickAction', actKey: 'club', actText: clubs ? '看俱乐部' : '去邀约' },
@@ -45,11 +45,11 @@ function buildHostSteps(input) {
           act: 'onQuickAction', actKey: 'merchant', actText: pending ? '去处理' : '去招商' },
       ] },
     { key: 'ticket', label: '配置票务', status: '待配置',
-      subs: [{ text: '票种和票价在主题配置里设,配好后提交开售', act: 'goAddStations', actText: '去配置' }] },
+      subs: [{ text: '票种和票价在主题配置里设，配好后提交开售', act: 'goAddStations', actText: '去配置' }] },
     { key: 'sale', label: '售票', status: '售票中',
       subs: [{ text: '已售 ' + paid + ' 份', ok: paid > 0, act: 'onQuickAction', actKey: 'customer', actText: '看客户' }] },
     { key: 'verify', label: '核销接待', status: '待核销',
-      subs: [{ text: '玩家到店出示入场码,扫码核销', act: 'onQuickAction', actKey: 'scan', actText: '去扫码' }] },
+      subs: [{ text: '玩家到店出示入场码，扫码核销', act: 'onQuickAction', actKey: 'scan', actText: '去扫码' }] },
     { key: 'settle', label: '结算', status: '结算中', lock: '每月 5 日',
       subs: [{ text: '每月 5 日结算上月已核销部分', act: 'goFinance', actText: '分润明细' }] },
   ];
@@ -74,7 +74,7 @@ function buildHostSteps(input) {
     key: 'executor', label: clubs ? '俱乐部承办' : '邀请俱乐部承办',
     state: clubs ? 'done' : (published ? 'run' : 'todo'),
     status: !clubs && published ? '待邀约' : '', lock: '',
-    subs: !clubs && published ? [{ text: '有 1 家俱乐部接受承办,才能开始售票', act: 'onQuickAction', actKey: 'club', actText: '去邀请' }] : [],
+    subs: !clubs && published ? [{ text: '有 1 家俱乐部接受承办，才能开始售票', act: 'onQuickAction', actKey: 'club', actText: '去邀请' }] : [],
   };
   if (!clubs && published) {
     mapped.slice(2).forEach(function (step) { step.state = 'todo'; step.status = ''; step.subs = []; });

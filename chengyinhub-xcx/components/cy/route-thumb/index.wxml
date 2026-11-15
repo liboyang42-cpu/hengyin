@@ -1,7 +1,7 @@
 <!-- 漫游轨迹地图卡(2026-10-31 业主批准 P-7 示意图;2026-11-09 V3-40 有坐标时换真实底图):686×360rpx。 -->
 <view class="rc__map" wx:if="{{geo}}">
   <map class="rc__real" longitude="{{geo.center.longitude}}" latitude="{{geo.center.latitude}}" scale="{{geo.scale}}"
-       include-points="{{geo.include}}" polyline="{{geo.polyline}}" circles="{{geo.circles}}"
+       include-points="{{geo.include}}" polyline="{{lines}}" circles="{{geo.circles}}"
        enable-scroll="{{false}}" enable-zoom="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}"
        show-location="{{false}}" enable-poi="{{false}}" show-compass="{{false}}" show-scale="{{false}}"
        subkey="{{subkey}}" layer-style="{{layerStyle}}" aria-hidden="true"></map>

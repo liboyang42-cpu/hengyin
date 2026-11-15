@@ -97,12 +97,19 @@ function chargeLine(use) {
   return '消耗 ' + use.chargedPoints + ' 积分' + (Number.isFinite(use.balanceAfter) ? ' · 余 ' + use.balanceAfter : '');
 }
 
+/** 提示阶梯挂在哪一站:故事里正开着玩法(advancedPlay + kit)时是那一站,否则是任务页的 game。 */
+function helpNodeId(state) {
+  const advanced = state && state.advancedPlay;
+  if (advanced && advanced.show && advanced.node && state.playKit && state.playKit.kit) return id(advanced.node.nodeId);
+  return id(state && state.game && state.game.nodeId);
+}
+
 function methods(send) {
   const panel = {
     _helpCapture() {
       const app = typeof getApp === 'function' ? getApp() : null;
       return { owner: String(app && app.getUserID ? app.getUserID() || '' : ''), runId: id((this._routeState || {}).sessionId),
-        nodeId: id(this.data.game && this.data.game.nodeId), epoch: this._helpEpoch || 0 };
+        nodeId: helpNodeId(this.data), epoch: this._helpEpoch || 0 };
     },
     _helpCurrent(c) {
       const now = this._helpCapture();
@@ -265,4 +272,4 @@ function methods(send) {
   return panel;
 }
 
-module.exports = { data, methods, project, receiptView, chargeLine, TYPE_LABEL };
+module.exports = { data, methods, helpNodeId, project, receiptView, chargeLine, TYPE_LABEL };

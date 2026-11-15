@@ -5,7 +5,7 @@
   <cy-modal-host id="cy-modal-host" />
 <view class="session-shell" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
   <cy-nav-bar plain custom-back bind:back="goBack" />
-  <cy-page-title title="本次漫游" subtitle="{{s.dateFull ? s.dateFull + (s.time && s.time !== '—' ? ' · ' + s.time : '') : ''}}" safe-top="{{false}}" />
+  <cy-page-title title="本次漫游" subtitle="{{s.dateFull ? s.dateFull + (s.startTime ? ' · ' + s.startTime : '') : ''}}" safe-top="{{false}}" />
   <view class="session-shell__body">
     <block wx:if="{{sharedState}}">
       <view class="session-status" wx:if="{{sharedState === 'loading'}}" aria-role="status">正在打开朋友分享的足迹</view>
@@ -20,21 +20,24 @@
 <!-- 深链页专用分享卡；站内弹窗继续由五宿主的 share 事件契约承接。 -->
 <cy-sheet show="{{share.show}}" title="分享足迹卡" bind:close="closeShare">
   <view class="ss-share-sheet">
+    <view class="ss-snap" wx:if="{{geo && share.drawing && !share.mapImage}}">
+      <map id="ssMap" class="ss-snap__map" longitude="{{geo.center.longitude}}" latitude="{{geo.center.latitude}}" scale="{{geo.scale}}"
+           include-points="{{geo.include}}" polyline="{{geo.polyline}}" circles="{{geo.circles}}"
+           enable-scroll="{{false}}" enable-zoom="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}"
+           show-location="{{false}}" enable-poi="{{false}}" show-compass="{{false}}" show-scale="{{false}}"
+           subkey="{{mapStyle.subkey}}" layer-style="{{mapStyle.layerStyle}}" bindupdated="onShareMapUpdated" aria-hidden="true"></map>
+    </view>
     <view class="ss-share-loading" wx:if="{{share.drawing}}">
       <cy-progress-status density="compact" title="正在生成足迹卡"
         aria="正在生成足迹卡" />
     </view>
 
     <block wx:elif="{{share.imagePath}}">
-      <cy-card class="ss-card">
+      <image wx:if="{{!share.mapImage}}" class="ss-card-export" src="{{share.imagePath}}" mode="widthFix" aria-label="本次足迹卡" />
+      <cy-card wx:else class="ss-card">
         <view class="ss-card-map">
-          <view class="ss-card-route">
-            <view class="ss-card-seg" wx:for="{{segs}}" wx:key="i"
-                  style="left:{{item.x}}rpx;top:{{item.y}}rpx;width:{{item.len}}rpx;transform:rotate({{item.deg}}deg)"></view>
-            <view class="ss-card-poi" wx:for="{{poiDots}}" wx:key="i"
-                  style="left:{{item.x}}rpx;top:{{item.y}}rpx;background:{{item.color}}"></view>
-          </view>
-          <text class="ss-card-map-tip" wx:if="{{!segs.length}}">这次没有记录到轨迹</text>
+          <image wx:if="{{share.mapImage}}" class="ss-card-real" src="{{share.mapImage}}" mode="aspectFill" aria-hidden="true" />
+          <text class="ss-card-map-tip" wx:if="{{!geo}}">这次没有记录到轨迹</text>
         </view>
         <view class="ss-card-name">{{s.routeName}}</view>
         <view class="ss-card-fact">{{s.completeFact}}</view>
@@ -42,7 +45,7 @@
         <view class="ss-card-stats">
           <view><text>{{s.distanceText}}</text><text>km</text></view>
           <view><text>{{ s.explorePct === 0 ? 0 : (s.explorePct || '--') }}%</text><text>探索度</text></view>
-          <view><text>{{s.shops}}</text><text>点亮</text></view>
+          <view><text>{{s.footprints}}</text><text>处到达</text></view>
         </view>
         <view class="ss-card-brand">城瘾 · CityFog</view>
       </cy-card>

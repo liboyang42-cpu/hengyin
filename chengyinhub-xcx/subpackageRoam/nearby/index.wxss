@@ -238,7 +238,9 @@ page { background: var(--cy-comp-sheet-player-page); }
 .mt-strip { position: absolute; left: 0; right: 0; bottom: 0; z-index: 18; pointer-events: none; }
 .mt-strip__head, .mt-strip__cards { pointer-events: auto; }
 .mt-strip__head { display: inline-flex; margin: 0 0 15rpx 31rpx; height: 54rpx; padding: 0 23rpx; align-items: center; border-radius: 27rpx; background: rgba(28,28,30,.88); box-shadow: 0 8rpx 24rpx rgba(0,0,0,.25); font-size: 25rpx; font-weight: 600; color: #fff; } /* ds-ok 同 .mt-chip 底色 */
+.mt-corners--empty { margin-bottom:var(--cy-btn-h); }
 .mt-strip__cards { width: 100%; height: 290rpx; white-space: nowrap; } /* 2026-10-28 业主:卡片加宽,铺在最底部 */
+.mt-empty { margin:0 var(--cy-space-4); padding:var(--cy-space-3); display:flex; align-items:center; justify-content:center; background:var(--cy-color-bg-surface); border-radius:var(--cy-radius-lg); }
 .mt-strip__track { display: inline-flex; gap: 23rpx; padding: 0 31rpx; }
 .mt-card { position: relative; display: inline-flex; flex: none; width: 620rpx; height: 260rpx; overflow: hidden; border-radius: 27rpx; background: #2C2C2E; vertical-align: top; box-shadow: 0 12rpx 31rpx rgba(0,0,0,.3); } /* ds-ok 同 .entry-card,加高;压在地图上加投影 */
 .mt-card__cover { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; }
@@ -268,7 +270,6 @@ page { background: var(--cy-comp-sheet-player-page); }
 .nb-back { position: fixed; left: 23rpx; z-index: 40; display: flex; align-items: center; }
 .nb-back__pill { border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(28,28,30,.88); color: #fff; } /* ds-ok 同 .mt-chip 底色 */
 .nb-back::after { content: ''; position: absolute; left: 50%; top: 50%; width: 88rpx; height: 88rpx; transform: translate(-50%, -50%); }
-.mt-card--empty { align-items: flex-end; background: linear-gradient(180deg, #2C2C2E, #1C1C1E); } /* ds-ok 空态卡与 .mt-card 同底 */
 
 /* TEAM-REPORT-01 举报入口:同队伍详情页 .team-report 的次级文字链 */
 .mt-report { min-height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-tertiary); font-size: var(--cy-type-caption); text-decoration: underline; }
@@ -279,7 +280,6 @@ page { background: var(--cy-comp-sheet-player-page); }
 .mt-row { transition: var(--cy-tr-press); }
 .mt-row--list { transition: var(--cy-tr-press); }
 .mt-card { transition: var(--cy-tr-press); }
-.mt-card--empty { transition: var(--cy-tr-press); }
 .mt-corner { transition: var(--cy-tr-press); }
 .mt-corner--icon { transition: var(--cy-tr-press); }
 .mt-btn { transition: var(--cy-tr-press); }

@@ -5,6 +5,7 @@ import com.chengyinhub.common.exception.ErrorCode;
 import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.MemberCollectible;
+import com.chengyinhub.business.domain.vo.CatalogPlaceVO;
 import com.chengyinhub.business.domain.vo.CityNodeGuestProjection;
 import com.chengyinhub.business.domain.vo.CityNodeVO;
 import com.chengyinhub.business.mapper.MemberCollectibleMapper;
@@ -70,19 +71,38 @@ public class ApiCityNodeController extends BaseController {
         try { return getAppUserId(); } catch (Exception e) { return 0L; }
     }
 
+    /** /nodes 单次最多返回条数(默认值与上限);由近到远,超出部分不返回。 */
+    static final int NODES_DEFAULT_LIMIT = 100;
+    static final int NODES_MAX_LIMIT = 200;
+
     @Operation(summary = "附近商家节点(经纬度包围盒粗筛)")
     @GetMapping("/nodes")
     public AjaxResult nodes(Double lat, Double lng, Integer radius,
-                            String keyword, Integer categoryId, String tag, String cityRole) {
+                            String keyword, Integer categoryId, String tag, String cityRole, Integer limit) {
         if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        // A5.4:非有限数/越界坐标一律拒绝,不再拿 NaN 去算包围盒。
+        if (!Double.isFinite(lat) || !Double.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return error("定位无效");
+        // A5.5:tags 是 JSON 数组串,按带引号整标签匹配;含 LIKE 通配符/引号/反斜杠的 tag 直接拒绝。
+        if (tag != null && !tag.isEmpty() && (tag.length() > 32 || tag.matches(".*[%_\\\\\"].*"))) return error("标签无效");
         int r = (radius == null || radius <= 0) ? 3000 : Math.min(radius, 20000);
+        int n = (limit == null || limit <= 0) ? NODES_DEFAULT_LIMIT : Math.min(limit, NODES_MAX_LIMIT);
         double dLat = r / 111320.0;
         double dLng = r / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(lat))));
         List<CityNodeVO> list = roamMapper.selectMerchantNodesNear(
                 lat - dLat, lat + dLat, lng - dLng, lng + dLng,
-                lat, lng, keyword, categoryId, tag, cityRole);
+                lat, lng, keyword, categoryId, tag, cityRole, n);
         markUserState(list);
+        if (uid() <= 0) list.forEach(CityNodeGuestProjection::apply);
         return success(list);
+    }
+
+    @Operation(summary = "目录地点公开只读详情(照片/引述/署名;无挑战)")
+    @GetMapping("/places/{id}")
+    public AjaxResult place(@PathVariable("id") Long id) {
+        if (id == null || id <= 0) return error("参数不合规");
+        CatalogPlaceVO vo = roamMapper.selectCatalogPlaceById(id);
+        if (vo == null) return AjaxResult.error(410, "地点未开放或已下线");
+        return success(vo);
     }
 
     @Operation(summary = "商家节点详情")
@@ -108,7 +128,7 @@ public class ApiCityNodeController extends BaseController {
         CityNodeVO node = merchantNodeDiscoveryService.findActiveNode(merchantId);
         if (node == null) return success();
         markUserState(Collections.singletonList(node));
-        return success(node);
+        return success(uid() <= 0 ? CityNodeGuestProjection.apply(node) : node);
     }
 
     @Operation(summary = "我收藏的商家节点")
@@ -187,7 +207,7 @@ public class ApiCityNodeController extends BaseController {
         if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
         int radius = (node.getRadiusM() != null && node.getRadiusM() > 0) ? node.getRadiusM() : 80;
         double dist = distMeters(lat, lng, node.getLat().doubleValue(), node.getLng().doubleValue());
-        if (!withinReach(dist, radius)) return error("离据点太远,请到店后再完成");
+        if (!withinReach(dist, radius)) return error("离据点太远，请到店后再完成");
 
         // ② 按验证方式判定完成(玩法跟模板走)
         Integer vm = node.getValidationMethod();
@@ -205,7 +225,7 @@ public class ApiCityNodeController extends BaseController {
             String photo = photoUrl == null ? "" : photoUrl.trim();
             if (photo.isEmpty()) return refuse(ErrorCode.BAD_REQUEST, "请上传拍照打卡照片");
             if (!photo.startsWith("http://") && !photo.startsWith("https://")) {
-                return error("照片地址不合法,请重新上传");
+                return error("照片地址不合法，请重新上传");
             }
         } else if (vm != null && vm == 4) {                // 4扫码:必须扫到本店那张张贴码
             // 2026-08-06 补实现。此前这里没有分支,落到下面的「以到店定位为准」——
@@ -268,7 +288,7 @@ public class ApiCityNodeController extends BaseController {
         data.put("completed", !hasCoupon);
         // ④ C2 防伪造GPS薅券:到店券不再凭客户端 GPS 自动发放,改由商家扫玩家「据点核销码」核销发券
         //    (/api/verify/citynode/issue 玩家出码 → 商家扫 → /api/verify/citynode/redeem 验签+归属+幂等+发券)
-        data.put("hint", hasCoupon ? "已到店打卡,出示据点核销码给商家即可领券" : "已到店打卡");
+        data.put("hint", hasCoupon ? "已到店打卡，出示据点核销码给商家即可领券" : "已到店打卡");
         return AjaxResult.success("完成", data);
     }
 

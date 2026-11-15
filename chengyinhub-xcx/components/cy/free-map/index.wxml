@@ -1,5 +1,5 @@
 <view class="fmap-wrap">
-  <map id="fmap" class="fmap"
+  <map id="fmap" wx:for="{{mapInstances}}" wx:key="generation" class="fmap" data-generation="{{item.generation}}"
        aria-role="img" aria-label="{{accessibilityLabel}}"
        longitude="{{center.lng}}" latitude="{{center.lat}}" scale="{{scale}}"
        markers="{{scene === 'explore' ? mapMarkers : markers}}"
@@ -9,7 +9,7 @@
        enable-zoom="{{interactive}}" enable-scroll="{{interactive}}"
        enable-poi="{{true}}" enable-building="{{tilt3d}}" enable-3D="{{tilt3d}}"
        subkey="{{subkey}}" layer-style="{{layerStyle}}"
-       bindupdated="onUpdated" bindmarkertap="onMarkerTap" bindcallouttap="onCalloutTap"
+       bindupdated="onUpdated" bindabilitysuccess="onStyleReady" bindmarkertap="onMarkerTap" bindcallouttap="onCalloutTap"
        bindregionchange="onRegionChange" bindpoitap="onPoiTap">
     <cover-view slot="callout">
       <cover-view wx:for="{{photoCallouts}}" wx:key="id" marker-id="{{item.id}}" class="fmap-photo">
@@ -37,6 +37,11 @@
       <cover-view class="fmap-exit">退出</cover-view>
     </cover-view>
   </map>
+  <cover-view wx:if="{{tone === '2077' && !mapLoaded}}" class="fmap-skeleton" aria-role="status" aria-label="地图加载中">
+    <cover-view class="fmap-skeleton__bar fmap-skeleton__bar--one"></cover-view>
+    <cover-view class="fmap-skeleton__bar fmap-skeleton__bar--two"></cover-view>
+    <cover-view class="fmap-skeleton__bar fmap-skeleton__bar--three"></cover-view>
+  </cover-view>
   <canvas type="2d" id="iconcv" class="iconcv"></canvas>
   <!-- 2026-08-04 减法:原来是「白文字胶囊 + 黑圆钮」三组两件套并排飘在地图上 = 6 个元素做 3 件事。
        收成一条深色轨:定位单独一枚,缩放两枚并成一条(它们是同一件事的两个方向)。

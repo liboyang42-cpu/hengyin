@@ -536,7 +536,7 @@ test('F-39：首次权威轮询确认带领场时展示广播一次，同值轮�
   await new Promise((resolve) => setImmediate(resolve))
 
   assert.equal(page.data.lead.exists, true)
-  assert.deepEqual(messages, ['队长:集合后准备出发'])
+  assert.deepEqual(messages, ['队长：集合后准备出发'])
 
   page.loadTeamProgress()
   requests[1].success({
@@ -545,7 +545,7 @@ test('F-39：首次权威轮询确认带领场时展示广播一次，同值轮�
   })
   await new Promise((resolve) => setImmediate(resolve))
 
-  assert.deepEqual(messages, ['队长:集合后准备出发'])
+  assert.deepEqual(messages, ['队长：集合后准备出发'])
 })
 
 test('章节回执读失败仍保留原身份，重试查到终态才能解锁', async () => {
@@ -685,7 +685,7 @@ test('漫游模板只在结果确定可重试时显示写请求重试入口', ()
   const playJs = fs.readFileSync(path.join(__dirname, '../../pages/play/index.js'), 'utf8')
   assert.match(playJs, /recordArrivalNetworkFailure\(message, attempt\)\s*\{[\s\S]{0,400}?cyToast\(message\)/,
     '到达/打卡写失败必须可见')
-  assert.match(playJs, /recordArrivalHttpUnknown\(message, nodeId\)\s*\{[\s\S]{0,600}?cyToast\(/,
+  assert.match(playJs, /recordArrivalHttpUnknown\(message, nodeId[^)]*\)\s*\{[\s\S]{0,600}?cyToast\(/,
     '结果未知必须可见:看不见它的人只会反复点')
   assert.doesNotMatch(playJs, /arrivalError/, '错误条已删，不得留下只写不读的错误态字段')
   assert.match(ROAM_WXML, /wx:if="\{\{paceCard\.checkinRetryable\}\}" bindtap="retryRoamPoiDiscover"/)

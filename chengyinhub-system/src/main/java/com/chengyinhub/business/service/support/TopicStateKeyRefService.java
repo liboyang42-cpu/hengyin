@@ -173,7 +173,7 @@ public class TopicStateKeyRefService {
         RefCollection refs = collect(topic);
         if (!refs.getParseErrors().isEmpty()) {
             ParseError first = refs.getParseErrors().get(0);
-            throw new ServiceException("主题存在无法解析的配置,暂不能删除状态键:" + parseErrorMessage(first));
+            throw new ServiceException("主题存在无法解析的配置，暂不能删除状态键：" + parseErrorMessage(first));
         }
         Set<String> positions = refs.positionsByKey().get(stateKey);
         return positions == null ? new ArrayList<String>() : new ArrayList<String>(positions);
@@ -185,7 +185,7 @@ public class TopicStateKeyRefService {
             return "节点「" + error.getNodeLabel() + "」的玩法配置无法解析,主题发布失败:" + error.getMessage();
         }
         if (KIND_JOURNEY_RULES.equals(error.getKind())) {
-            return "主题的旅程数值规则无法解析,主题发布失败:" + error.getMessage();
+            return "主题的旅程数值规则无法解析，主题发布失败：" + error.getMessage();
         }
         if (KIND_CHAPTER_BLOCKS.equals(error.getKind())) {
             return "章节故事流配置无法解析,主题发布失败:" + error.getMessage();

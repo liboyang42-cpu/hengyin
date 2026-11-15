@@ -116,6 +116,7 @@ Page({
           that.setData({ loading: false, errorRefused: Boolean(refusalOf(res)), errorMsg: app.getRequestErrorMessage(res, '主题模板加载失败') });
           return;
         }
+        that._delivery = info.contentDelivery || null;
         const a = art.topicArt(info.name);
         const cards = buildDeck(info);
         that.setData({
@@ -210,6 +211,31 @@ Page({
     if (i === this.data.sel) this.setData({ flip: !this.data.flip });
     else this.setData({ sel: i, flip: false });
     this.layout(this.data.cards, false);
+  },
+
+  // 「用这个模板」：与详情页同一条采用流程（requestId 幂等、登录与只读闸一致）
+  useTemplate() {
+    if (!this._id) return;
+    const adoption = require('../utils/topic-adoption.js'); // 点击时才加载，不增加预览首屏依赖
+    const useFlow = require('../utils/topic-use-flow.js');
+    const cyToast = require('../../../utils/toast.js');
+    if (app.ensureLoginFor && !app.ensureLoginFor('publish', () => this.useTemplate(), { owner: this, target: () => [this._id, this._scope] })) return;
+    if (this._readonly) { cyToast('当前岗位仅可浏览模板'); return; }
+    if (this._copiedId) { this._openCopied(this._copiedId); return; }
+    const loc = this._delivery && this._delivery.locationRequirement;
+    const placed = !!(loc && loc.physicalPlaceRequired === true && adoption.sourceCityOf(this._delivery));
+    useFlow.submit(this, { id: this._id, scope: this._scope, intent: placed ? 'SAME_CITY' : '',
+      sourceCityCode: adoption.sourceCityOf(this._delivery), revisionId: adoption.revisionIdOf(this._delivery) }, {
+      toast: cyToast,
+      onCopied: (id) => { this._copiedId = id; },
+      open: (id) => this._openCopied(id)
+    });
+  },
+
+  _openCopied(id) {
+    const qs = ['id=' + id];
+    if (this._scope) qs.push('scope=' + this._scope);
+    wx.navigateTo({ url: '/pages/publish/fabu/index?' + qs.join('&') });
   },
 
   // 2026-10-30 V-24:预览页只看,「查看详情」进主题模板详情;复制草稿(应用)搬到详情页

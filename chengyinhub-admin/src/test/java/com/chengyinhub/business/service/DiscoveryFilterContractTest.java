@@ -32,7 +32,7 @@ class DiscoveryFilterContractTest {
                 () -> DiscoveryFilterContract.activitySort("NEAREST", null, null));
 
         assertEquals(Integer.valueOf(400), invalid.getCode(), "失效枚举必须是可辨别的参数错误");
-        assertEquals("schedule 枚举无效，支持值: [ONGOING, UPCOMING]", invalid.getMessage());
+        assertEquals("schedule 枚举无效，支持值： [ONGOING, UPCOMING]", invalid.getMessage());
         assertEquals("sort=NEAREST 必须同时提供 longitude、latitude；无定位权限请降级 LATEST",
                 noLocation.getMessage(), "定位权限拒绝时必须给出明确降级口径");
     }
@@ -47,7 +47,7 @@ class DiscoveryFilterContractTest {
         assertEquals(Integer.valueOf(400), category.getCode(), "非法分类不能静默变成空列表");
         assertEquals("category_id 必须为正整数", category.getMessage(), "分类错误必须指认具体字段");
         assertEquals(Integer.valueOf(400), radius.getCode(), "未冻结的距离不能进入查询");
-        assertEquals("distance_meters 枚举无效，支持值: [100000]", radius.getMessage(),
+        assertEquals("distance_meters 枚举无效，支持值： [100000]", radius.getMessage(),
                 "距离错误必须返回冻结值");
     }
 

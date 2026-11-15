@@ -18,7 +18,7 @@ const INTERACTION_ICON_BY_TITLE = {
   '今日角色任务': '/images/interaction-templates/club-role-mission.svg',
   // 生活备份 G0–G6(cms_template_library,migration_seed_life_backup_games_20260820)
   'G0｜30秒生活掉线测试': '/images/interaction-templates/life-outage-test.svg',
-  'G1｜现在出状况,你先选什么': '/images/interaction-templates/life-what-first.svg',
+  'G1｜现在出状况，你先选什么': '/images/interaction-templates/life-what-first.svg',
   'G2｜我的底线三选一': '/images/interaction-templates/life-bottom-line.svg',
   'G3｜营业时间拼图': '/images/interaction-templates/life-hours-puzzle.svg',
   'G4｜去之前准备什么': '/images/interaction-templates/life-prep-checklist.svg',

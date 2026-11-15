@@ -84,12 +84,12 @@ test('详情404与读取失败分开，切号迟到结果不进入新账号', as
   assert.deepEqual(view.data.session, { pois: [] })
 })
 
-test('旧本机记录兼容且同会话不重复，服务器统计优先，照片仍仅本机', () => {
+test('历史只列服务端确认的会话，本机同会话补照片不增加次数', () => {
   const local = [{ ts: 11, sessionId: '10', distance: 999, photos: [{ path: 'local', persisted: true }], track: [] }, { ts: 12, distance: 2 }]
   const remote = [{ sessionId: '10', ts: 100, distance: 1, shops: 0, photos: [], track: [], pois: [], serverFact: true }]
   const rows = merge(local, remote)
-  assert.equal(rows.length, 2); assert.equal(rows[0].distance, 1); assert.equal(rows[0].ts, 11)
-  assert.equal(rows[0].photos[0].path, 'local'); assert.equal(rows[1].serverFact, undefined)
+  assert.equal(rows.length, 1); assert.equal(rows[0].distance, 1); assert.equal(rows[0].ts, 11)
+  assert.equal(rows[0].photos[0].path, 'local')
 })
 
 test('护照真实Page只用服务端汇总，本机坏存储不阻断；失败保留错误而非零', async () => {

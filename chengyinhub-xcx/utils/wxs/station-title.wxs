@@ -1,0 +1,7 @@
+// 保留尾部两字保护；数量短语如“一只猫”保留三字，原始站名不变。
+function text(value) {
+  var title = '' + (value || '');
+  if (getRegExp('[一二三四五六七八九十百千万两几0-9][㐀-鿿]{2}[？！。，、：；」』）】》]*$').test(title)) return title.replace(getRegExp('([一二三四五六七八九十百千万两几0-9])([㐀-鿿])([㐀-鿿][？！。，、：；」』）】》]*)$'), '$1⁠$2⁠$3');
+  return title.replace(getRegExp('([㐀-鿿])([㐀-鿿][？！。，、：；」』）】》]*)$'), '$1⁠$2');
+}
+module.exports = { text: text };

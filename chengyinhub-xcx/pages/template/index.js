@@ -10,6 +10,7 @@ const merchantAccessPolicy = require('../../utils/merchant-access-policy.js');
 // templatedetail 分包的 tpl-shelf 组件，本页只留顶栏、发布入口与底栏。
 // 主题点开 → topic-preview(卡堆预览 +「用这个模板」);玩法点开 → 既有 templatedetail。
 Page({
+  _pubLoaded: false,
   data: {
     reducedMotion: false,
     pageMetaStyle: '',
@@ -25,7 +26,6 @@ Page({
       quota: { maxThemes: null, themesOnline: 0, themesRemaining: null },
       projectSummary: { total: 0, pending: 0, online: 0, offline: 0, rejected: 0 }
     },
-    pubLoaded: false,
     publishSheetShow: false,
 
     statusBarHeight: getApp().globalData.statusBarHeight,
@@ -90,14 +90,17 @@ Page({
       method: 'POST',
       data: {},
       success(res) {
-        const access = merchantAccessPolicy.normalizeMerchantAccess(
-          res && res.code == '200' ? res.data : null
-        );
+        if (!res || res.code != '200') { that.setData({ merchantAccessError: true }); return; }
+        const access = merchantAccessPolicy.normalizeMerchantAccess(res.data);
+        that.setData({ merchantAccessError: false });
         that.applyMerchantPublishAccess(access.canManageProjects);
       },
-      fail() { that.applyMerchantPublishAccess(false); }
+      // 网络失败不等于没权限：单独记错误态，提供重试，不改写已有权限
+      fail() { that.setData({ merchantAccessError: true }); }
     });
   },
+
+  retryMerchantAccess() { this.loadMerchantAccess(); },
 
   applyMerchantPublishAccess(canManage) {
     const permission = Object.assign({}, (this.data.pub && this.data.pub.permission) || {}, {
@@ -134,6 +137,7 @@ Page({
               canCreateTemplate: that.data.canManageMerchantProjects
             })
             : (d.permission || {});
+          that._pubLoaded = true;
           that.setData({
             pub: {
               role: merchantScoped ? 'merchant' : (d.role || 'player'),
@@ -146,8 +150,7 @@ Page({
                 themesRemaining: q.themesRemaining
               },
               projectSummary: d.projectSummary || {}
-            },
-            pubLoaded: true
+            }
           });
         }
       },
@@ -167,6 +170,8 @@ Page({
       cyToast('当前岗位没有项目发布权限');
       return;
     }
+    // 能力卡上次没拉成：弹窗打开时补拉一次，不让弹窗锁在默认玩家态
+    if (!this._pubLoaded) this.getPublishHome();
     this.setData({ publishSheetShow: true });
   },
   closePublishSheet() { this.setData({ publishSheetShow: false }); },

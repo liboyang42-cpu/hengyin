@@ -38,7 +38,7 @@ test('superseded read cannot reset or restart the new epoch on sessionChanged',(
 
 for(const kind of ['withdraw','access','predict','order','board']) {
  test(kind+' actual App own refresh failure clears and exits loading',async()=>{
-  const h=mount(kind);h.load();reply(h.requests[0],401,{code:401});await settle();assert.equal(h.loading(),false);assert.equal(h.cleared(),true);assert.equal(h.requests.length,1);
+  const h=mount(kind);h.load();reply(h.requests[0],401,{code:401});await settle();if(kind==='board'){assert.equal(h.requests.length,2);assert.equal(h.scene.data.me,null);reply(h.requests[1],200,{code:200,data:{list:[]}});assert.equal(h.scene.data.boardAuthRequired,false);}else{assert.equal(h.requests.length,1);assert.equal(h.cleared(),true);}assert.equal(h.loading(),false);
  });
  test(kind+' actual transport external token response is rejected then current owner rereads',()=>{
   const h=mount(kind);h.load();h.session.setAuthorization('fixture-external');reply(h.requests[0],200,{code:200,data:{old:true}});assert.equal(h.requests.length,2);

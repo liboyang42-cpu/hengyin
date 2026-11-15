@@ -1856,7 +1856,7 @@ Page({
     if (app.ensureLoginFor && !app.ensureLoginFor('report', () => this.onReportPost(e), { owner: this, target: () => [this.data.clubId, e.currentTarget.dataset.id] })) return; // 2026-10-24 游客写前登录
     const id = e.currentTarget.dataset.id;
     modal.show({
-      title: '举报动态', content: '确认举报?平台将尽快处理。', confirmText: '举报',
+      title: '举报动态', content: '确认举报？平台将尽快处理。', confirmText: '举报',
       success(r) {
         if (!r.confirm) return;
         app.sendRequest({ url: '/api/club/post/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); }, fail() { cyToast('网络异常，请重试'); } });
@@ -2259,10 +2259,6 @@ Page({
         if (opts.preserveSnapshotOnFailure && that.data.club) {
           return;
         }
-        if (isLoginRequired(app, res, statusCode)) {
-          that.setData({ detailLoaded: true, notFound: false, loginRequired: true });
-          return;
-        }
         that.setData({ detailLoaded: true, notFound: true });
       },
       complete() { cb && cb(); },
@@ -2529,8 +2525,8 @@ Page({
   //    现在两个入口都摆明,点哪个去哪个。
   goMemberProfile(e) {
     const memberId = e.currentTarget.dataset.memberId;
-    // 游客的名单 / 榜单是公开投影,不带会员 id:点人先登录,登录后回到本页
-    if (!memberId) { if (!this.data.myMemberId) this.onLoginRetry(); return; }
+    // 2026-11-14：公开投影未提供成员标识时不发起私人读取或登录。
+    if (!memberId) return;
     const that = this;
     const goPublic = () => { if (that._navigating) return; that._navigating = true; wx.navigateTo({ url: '/pages/userinfo/userinfo?userId=' + memberId, complete: () => { that._navigating = false; } }); };
     if (!this.canReadCustomerProfile()) { goPublic(); return; }
@@ -2955,7 +2951,7 @@ Page({
     const comment = (this.data.comments || []).find(function (item) { return String(item.id) === String(id); });
     if (comment && String(comment.memberId) === String(this.data.myMemberId)) return;
     modal.show({
-      title: '举报评论', content: '确认举报?平台将尽快处理。', confirmText: '举报',
+      title: '举报评论', content: '确认举报？平台将尽快处理。', confirmText: '举报',
       success(r) {
         if (!r.confirm) return;
         app.sendRequest({ url: '/api/club/post/comment/report', method: 'POST', data: jsonBody({ id: id }), header: jsonHeader(), success(res) { cyToast(res.msg || '已举报'); }, fail() { cyToast('网络异常，请重试'); } });
@@ -3794,7 +3790,7 @@ Page({
     modal.show({
       title: '申请带队「' + name + '」',
       editable: true,
-      placeholderText: '给商家带句话(可选):带队经验、可带人数…',
+      placeholderText: '给商家带句话(可选)：带队经验、可带人数…',
       confirmText: '提交申请',
       success(r) {
         if (!r.confirm) { done(''); return; }

@@ -89,7 +89,7 @@ public class RefundController extends BaseController {
             // [R6] 回执 URL 等入参合同由服务端权威判定;这里只把原因如实回给财务,不做兜底改写
             return error(e.getMessage());
         }
-        return rows > 0 ? success("已登记,待复核") : error("退款单状态已变化(非待人工),请刷新");
+        return rows > 0 ? success("已登记，待复核") : error("退款单状态已变化(非待人工)，请刷新");
     }
 
     /** 钱移动前先领取 owner+lease+fence；两名操作员只能有一人成功。 */
@@ -112,12 +112,12 @@ public class RefundController extends BaseController {
             String wxStatus = wechatPayService.refreshPayoutFromWx(refund.getRefundNo());
             if (!isDefinitiveManualPayoutStatus(wxStatus)) {
                 if ("SUCCESS".equalsIgnoreCase(wxStatus)) {
-                    return error("微信原路退款已到账,无需人工再退(已自动刷新状态)");
+                    return error("微信原路退款已到账，无需人工再退(已自动刷新状态)");
                 }
                 if ("PROCESSING".equalsIgnoreCase(wxStatus)) {
-                    return error("微信原路退款处理中,禁止人工再退,请待其终态");
+                    return error("微信原路退款处理中，禁止人工再退，请待其终态");
                 }
-                return error("微信退款终态无法确认,禁止人工打款");
+                return error("微信退款终态无法确认，禁止人工打款");
             }
         }
         String token = refundService.claimManualPayout(dto.getRefundId(), getUserId());
@@ -138,7 +138,7 @@ public class RefundController extends BaseController {
         }
         return refundService.releaseManualPayoutClaim(dto.getRefundId(), getUserId(), dto.getLeaseToken())
                 ? success("已释放人工处理权")
-                : error("释放失败:处理权不属于你或已变更,请刷新");
+                : error("释放失败：处理权不属于你或已变更，请刷新");
     }
 
     /**
@@ -160,11 +160,11 @@ public class RefundController extends BaseController {
         if (hasSubmittedRefundNo(refund)) {
             String wxStatus = wechatPayService.refreshPayoutFromWx(refund.getRefundNo());
             if (!isDefinitiveManualPayoutStatus(wxStatus)) {
-                return error("微信退款终态无法确认,禁止接管后人工打款");
+                return error("微信退款终态无法确认，禁止接管后人工打款");
             }
         }
         String token = refundService.takeoverExpiredManualPayout(dto.getRefundId(), getUserId());
-        return token == null ? error("接管失败:租约未过期、无人持有或本就是你自己")
+        return token == null ? error("接管失败：租约未过期、无人持有或本就是你自己")
                 : AjaxResult.success("已接管人工处理权", token);
     }
 
@@ -186,7 +186,7 @@ public class RefundController extends BaseController {
         }
         try {
             int rows = refundService.verifyManualPayout(dto.getRefundId(), getUserId());
-            return rows > 0 ? success("复核完成,退款已闭环") : error("退款单状态已变化(非待复核),请刷新");
+            return rows > 0 ? success("复核完成，退款已闭环") : error("退款单状态已变化(非待复核)，请刷新");
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }

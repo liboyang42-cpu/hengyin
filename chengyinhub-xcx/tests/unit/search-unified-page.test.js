@@ -97,8 +97,10 @@ test('input changes, account changes, hidden and unloaded pages reject late resp
 });
 
 test('guest and unsupported filters retain existing searches; community gate excludes post without changing eligibility', () => {
-  const guest = harness(''); guest.page.onLoad({ keyword: 'city' }); assert.equal(guest.unified().length, 0);
-  assert.ok(guest.requests.some(r => r.url === '/api/topic/list'));
+  // 2026-11-14：游客同样搜索公开内容与俱乐部，保留公开读功能开关。
+  const guest = harness(''); guest.page.onLoad({ keyword: 'city' }); assert.equal(guest.unified().length, 1);
+  assert.equal(guest.unified()[0].method, 'GET');
+  assert.ok(guest.requests.some(r => r.url === '/api/club/list'));
   const filtered = harness(); filtered.page.onLoad({ keyword: 'city', categoryId: '8' });
   assert.equal(filtered.unified().length, 0); assert.equal(filtered.requests[0].data.category_id, '8');
   const gated = harness('7', false); gated.page.onLoad({ keyword: 'city' });

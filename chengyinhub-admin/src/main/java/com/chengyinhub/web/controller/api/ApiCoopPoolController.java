@@ -217,7 +217,7 @@ public class ApiCoopPoolController extends BaseController {
         } catch (Exception ignore) {}
         Map<String, Object> d = new HashMap<>();
         d.put("applyId", row.getId());
-        return AjaxResult.success("已申请,等商家确认", d);
+        return AjaxResult.success("已申请，等商家确认", d);
     }
 
     @Operation(summary = "撤回承接申请(俱乐部)")

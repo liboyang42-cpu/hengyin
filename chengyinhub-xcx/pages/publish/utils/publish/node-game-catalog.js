@@ -204,8 +204,8 @@ const DEMO = {
   typeIn: { title: '输入通行口令', target: '今天也要出发', seconds: 20 },
   photoCheck: { title: '拍下沿途的风景', shotNote: '让街景完整出现在画面里', requirement: '画面包含街景' },
   note: { title: '留给下一位旅人', prompt: '写下此刻想说的话', presets: ['慢慢走', '前面有好风景'] },
-  qaText: { title: '这座桥建于哪一年?', answerText: '1937' },
-  qaPick: { title: '石碑上的图案象征什么?', options: [
+  qaText: { title: '这座桥建于哪一年？', answerText: '1937' },
+  qaPick: { title: '石碑上的图案象征什么？', options: [
     { id: 'opt_1', label: '丰收', fb: '对了，是麦穗。', correct: true },
     { id: 'opt_2', label: '远航', fb: '再看看穗子。', correct: false },
   ] },
@@ -220,18 +220,18 @@ const DEMO = {
       { key: 'B', label: '绕到后巷', feedback: '后巷堆着刚烘好的豆子。', next: 'alley' },
     ],
   }] },
-  estimate: { title: '这罐豆子有多少颗?', unit: '颗', answer: 480, min: 0, max: 1000, tolerance: 50, reveal: '一共 480 颗，老板数了两遍。' },
-  pricePair: { title: '哪一张是这家店的老招牌?', items: [
+  estimate: { title: '这罐豆子有多少颗？', unit: '颗', answer: 480, min: 0, max: 1000, tolerance: 50, reveal: '一共 480 颗，老板数了两遍。' },
+  pricePair: { title: '哪一张是这家店的老招牌？', items: [
     { id: 'pic_1', name: '木牌', imageUrl: '', correct: true },
     { id: 'pic_2', name: '霓虹灯', imageUrl: '', correct: false },
     { id: 'pic_3', name: '手写纸板', imageUrl: '', correct: false },
   ] },
   hidden: { title: '找到那只猫', hint: '它在窗台附近' },
-  predict: { question: '明天中午哪种豆子卖得更多?', options: [{ key: 'A', label: '耶加雪菲' }, { key: 'B', label: '曼特宁' }] },
+  predict: { question: '明天中午哪种豆子卖得更多？', options: [{ key: 'A', label: '耶加雪菲' }, { key: 'B', label: '曼特宁' }] },
   random: { deckName: '今日线索卡', items: [
     { id: 'item_1', label: '线索卡', weight: 1, content: '去吧台问一句今天的手冲是什么。' },
     { id: 'item_2', label: '任务卡', weight: 1, content: '找到店里最旧的那样东西，拍下来。' },
-    { id: 'item_3', label: '彩蛋卡', weight: 1, content: '跟店员说「今天的天气」,看他回你什么。' },
+    { id: 'item_3', label: '彩蛋卡', weight: 1, content: '跟店员说「今天的天气」，看他回你什么。' },
   ] },
   steps: { eyebrow: '低碳行动 · 今日步数', goal: 6000 },
   // 2026-10-23 补:这几个玩法试玩时一直是空行,看不出长什么样
@@ -240,7 +240,7 @@ const DEMO = {
   match: { prompt: '把店和它的招牌连起来',
     left: [{ id: 'left_1', label: '老张咖啡' }, { id: 'left_2', label: '深夜面馆' }],
     right: [{ id: 'right_1', label: '手冲耶加' }, { id: 'right_2', label: '红油抄手' }] },
-  classify: { prompt: '这些东西在哪家店能买到?',
+  classify: { prompt: '这些东西在哪家店能买到？',
     bins: [{ id: 'bin_1', label: '茶馆' }, { id: 'bin_2', label: '书店' }],
     items: [{ id: 'item_1', label: '冻顶乌龙' }, { id: 'item_2', label: '旧版地图' }] },
   blindTaste: { title: '闭上眼，尝一口，猜猜是哪一种', answerKey: 'B',
@@ -251,7 +251,7 @@ const DEMO = {
   shake: { kicker: '倾斜手机，让球撞够边缘' },
   quiet: { kicker: '安静挑战', sub: '一直安静到时间到' },
   compass: { kicker: '把手机转向钟楼', bearing: 135, hint: '它比你想的更靠右' },
-  shout: { kicker: '一起喊,让这儿听见' },
+  shout: { kicker: '一起喊，让这儿听见' },
   countdown: { kicker: '一钟油', doneText: '时间到。' },
   stopwatch: { kicker: '盲停在 10 秒' },
   coin: { kicker: '抛完照做', heads: { label: '正面', action: '这杯店家请' }, tails: { label: '反面', action: '你请下一杯' } },

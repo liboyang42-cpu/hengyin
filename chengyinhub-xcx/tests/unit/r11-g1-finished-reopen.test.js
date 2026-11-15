@@ -9,7 +9,8 @@ test('首屏分派:城市定向且 allDone ⇒ openFinish,否则故事流', () =
   const at = js.indexOf("} else if (String(that.data.mode) !== '2' || skipPack) {\n          // 城市定向:打开就是故事流")
   assert.ok(at > 0, '找不到首屏分派')
   const block = js.slice(at, at + 600)
-  assert.match(block, /if \(that\.data\.allDone\) \{ that\.setData\(\{ screen: '' \}\); that\.openFinish\(\); \}\s*\n\s*else that\._openStory\(\);/)
+  // E-C1:同一局已放过通关页就只刷新数据,不重放
+  assert.match(block, /if \(that\.data\.allDone\) \{[\s\S]*?that\.setData\(\{ screen: '' \}\);\s*\n\s*if \(finishShown\.shouldAutoOpenFinish\(that\._finishShownKey, that\._finishKey\(\)\)\) that\.openFinish\(\);\s*\n\s*\}\s*\n\s*else that\._openStory\(\);/)
   // 分派前必须先 rebuild(allDone 由它按服务端路线态算出)
   const before = js.slice(at - 900, at)
   assert.ok(before.includes('that.rebuild();'), 'allDone 必须先由 rebuild 算出')

@@ -72,10 +72,10 @@ public class ContentSearchService {
         for (String part : value.split(",")) {
             String type = part.trim().toLowerCase();
             if (type.isEmpty()) continue;
-            if (!TYPES.contains(type)) throw new ServiceException("types 枚举无效，支持值: " + TYPES, 400);
+            if (!TYPES.contains(type)) throw new ServiceException("types 枚举无效，支持值： " + TYPES, 400);
             if (!out.contains(type.toUpperCase())) out.add(type.toUpperCase());
         }
-        if (out.isEmpty()) throw new ServiceException("types 枚举无效，支持值: " + TYPES, 400);
+        if (out.isEmpty()) throw new ServiceException("types 枚举无效，支持值： " + TYPES, 400);
         return out;
     }
 

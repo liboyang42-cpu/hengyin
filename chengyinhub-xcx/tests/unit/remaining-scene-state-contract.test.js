@@ -28,6 +28,7 @@ function mount(relativePath, appOverrides, wxOverrides) {
     getPageSize() { return 20 },
     getSession() { return { getRevision: () => 0 } },
     getUserID() { return 7 },
+    getAuthorization() { return 'fixture-member' },
   }, appOverrides || {})
   const wx = Object.assign({
     vibrateShort(options) { vibrations.push(options && options.type) },
@@ -308,7 +309,7 @@ test('漫游历史区分本地读取失败与真实空记录，并移除文字�
   const empty = mount(relativePath, {}, { getStorageSync() { return [] } })
   empty.instance._load()
   assert.equal(empty.instance.data.state, 'ready')
-  assert.deepEqual(empty.instance.data.list, [])
+  assert.equal(empty.instance.data.list.length, 0)
 
   const wxml = read('components/cy/scene-roam-history/index.wxml')
   assert.match(wxml, /state === 'error'/)
@@ -339,10 +340,10 @@ test('单次漫游详情保留合法零值，并把未知统计显示为待确�
   })
   zero.instance.data.ts = '200'
   zero.instance._load()
-  assert.equal(zero.instance.data.session.distanceText, '0')
+  assert.equal(zero.instance.data.session.distanceText, '0.0')
   assert.equal(zero.instance.data.session.shopsText, '0')
   assert.equal(zero.instance.data.session.explorePctText, '0')
-  assert.equal(zero.instance.data.session.time, '00:00')
+  assert.equal(zero.instance.data.session.time, '0:00')
 
   const wxml = read('components/cy/scene-roam-session/index.wxml')
   assert.match(wxml, /session\.shopsText/)

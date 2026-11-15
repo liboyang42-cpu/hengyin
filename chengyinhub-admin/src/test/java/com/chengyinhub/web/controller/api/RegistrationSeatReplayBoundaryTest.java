@@ -127,7 +127,7 @@ class RegistrationSeatReplayBoundaryTest {
     }
     @Test void paidWindowAndRefundGatesRemainForANewUnverifiedSeat() {
         RegistrationSeat second = new RegistrationSeat(); second.setId(102L); second.setRegistrationId(31L); second.setSeatNo(2); second.setStatus(0); rows.add(second);
-        assertEquals("订单未完成支付或已退款,无法核销", scanner.scanDynamicCode(code(false, 2)).get("msg"));
+        assertEquals("订单未完成支付或已退款，无法核销", scanner.scanDynamicCode(code(false, 2)).get("msg"));
         order.setPaymentStatus(2); order.setRegistrationStatus(2); activity.setStartDate(new Date(System.currentTimeMillis() + 2 * 60 * 60 * 1000L));
         assertEquals("俱乐部场次开始前60分钟内才可核销", scanner.scanDynamicCode(code(false, 2)).get("msg"));
         assertEquals(0, second.getStatus()); verify(seats, never()).markVerified(any()); verifyNoInteractions(audits, points, growth);

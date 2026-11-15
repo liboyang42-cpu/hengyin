@@ -16,7 +16,9 @@ test('有两个以上有效坐标才出真实地图数据:折线、起终点与�
   assert.deepEqual(geo.polyline[0].points.map((p) => p.latitude), [31.23, 31.235, 31.24], '坏点丢掉,顺序不变')
   assert.equal(geo.circles.length, 3, '1 个店铺点 + 起点 + 终点')
   assert.deepEqual(geo.circles.slice(-2).map((c) => c.latitude), [31.23, 31.24])
-  assert.equal(geo.include.length, 4)
+  assert.equal(geo.include.length, 6)
+  assert.ok(geo.include.at(-2).latitude < Math.min(...geo.polyline[0].points.map(p => p.latitude)))
+  assert.ok(geo.include.at(-1).longitude > Math.max(...geo.polyline[0].points.map(p => p.longitude)))
   assert.ok(geo.circles.every((c) => c.radius >= 6))
 })
 

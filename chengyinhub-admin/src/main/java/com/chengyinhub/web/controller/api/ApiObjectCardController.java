@@ -87,7 +87,7 @@ public class ApiObjectCardController extends BaseController {
         if (name.length() > TITLE_MAX) return error("卡名不能超过 " + TITLE_MAX + " 字");
 
         PlayerObjectCard renamed = objectCardService.rename(memberId, id, name);
-        if (renamed == null) return error("这张卡不是你的,或已经不存在了");
+        if (renamed == null) return error("这张卡不是你的，或已经不存在了");
         return success(PlayerObjectCardVO.from(renamed, reference -> mediaReferences.visibleUrl(reference, memberId)));
     }
 

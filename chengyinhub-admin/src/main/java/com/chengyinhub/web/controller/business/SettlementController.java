@@ -80,7 +80,7 @@ public class SettlementController extends BaseController {
         // A3-1(P0):手工生成结算批次已停用。generateBatch 全仓仅此端点调用、UI 零调用;
         // 真实结算由系统1(settleActivity/settleTopic)自建批次,保留此手工旁路 = 与系统1并行的重复生成/双花隐患。
         // 对账确认走 confirm 接口,不经由此端点凭空造账目事实。
-        return AjaxResult.error(HttpStatus.FORBIDDEN, "手工生成结算批次已停用,结算由系统自动生成,对账确认请用 confirm 接口");
+        return AjaxResult.error(HttpStatus.FORBIDDEN, "手工生成结算批次已停用，结算由系统自动生成，对账确认请用 confirm 接口");
     }
 
     /**

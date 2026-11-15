@@ -1012,7 +1012,7 @@ public class ApiMerchantController extends BaseController {
         if (!sample.matches("media-asset:[1-9][0-9]{0,18}") && !sample.startsWith("/") && !sample.startsWith("https://") && !sample.startsWith("http://")) return error("录音地址不支持");
 
         NpcProfile mine = ownNpcOrNull(access.getMerchantId());
-        if (mine == null) return error("请先保存形象,再给它配声音");
+        if (mine == null) return error("请先保存形象，再给它配声音");
         sample = mediaReferences.requireAttachment(memberId, sample, true);
         if (sample.length() > 255) return error("录音引用过长");
         final String canonicalSample = sample;

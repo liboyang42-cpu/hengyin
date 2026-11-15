@@ -124,7 +124,7 @@ class AiTopicPlanServiceImplTest
         AiServiceException error = assertThrows(AiServiceException.class,
             () -> service.generate(request(), MEMBER_ID));
 
-        assertEquals("AI 服务暂未就绪,请联系管理员", error.getMessage(),
+        assertEquals("AI 服务暂未就绪，请联系管理员", error.getMessage(),
             "provider 闸必须独立指认，不能由相邻的 JSON/方案数量闸代为接住");
     }
 
@@ -151,7 +151,7 @@ class AiTopicPlanServiceImplTest
         AiServiceException error = assertThrows(AiServiceException.class,
             () -> service.generate(request(), MEMBER_ID));
 
-        assertEquals("附近暂无可用商家节点,请调整地图位置或范围", error.getMessage(),
+        assertEquals("附近暂无可用商家节点，请调整地图位置或范围", error.getMessage(),
             "候选池闸必须说明真实数据为空，不能返回空方案冒充 AI 成功");
         verify(gateway, never()).generate(any(), any(), any(), any(), any());
     }

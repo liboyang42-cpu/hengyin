@@ -28,6 +28,9 @@ import com.chengyinhub.business.service.RoamAiContentService;
 import com.chengyinhub.business.service.impl.RoamSessionWriteService;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.annotation.RateLimiter;
+import com.chengyinhub.common.enums.LimitType;
+import com.chengyinhub.business.service.support.RoamPoiTags;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
 import com.chengyinhub.common.utils.StringUtils;
@@ -72,6 +75,7 @@ public class ApiRoamController extends BaseController {
 
     @Autowired
     private RoamMapper roamMapper;
+    @Autowired private com.chengyinhub.business.service.IMapGeocodeService mapGeocodeService;
     @Autowired private com.chengyinhub.business.service.impl.RoamLocationConsentService locationConsent;
     @Autowired
     private com.chengyinhub.business.service.IConsentRecordService consentRecordService;
@@ -182,11 +186,43 @@ public class ApiRoamController extends BaseController {
         String kw = boundedFilter(keyword, 40);
         String tg = boundedFilter(tag, 20);
         Long cat = categoryId != null && categoryId > 0 ? categoryId : null;
+        // A5.2:多取 1 条用来判断是否被截断;data 仍是数组(向后兼容),truncated 作为同级字段下发。
         List<RoamPoi> list = kw == null && tg == null && cat == null
-                ? roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT)
-                : roamMapper.selectPoisNearFiltered(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT,
+                ? roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1)
+                : roamMapper.selectPoisNearFiltered(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1,
                         kw, cat, tg);
-        return success(list);
+        boolean truncated = list.size() > POIS_NEAR_LIMIT;
+        if (truncated) list = new java.util.ArrayList<>(list.subList(0, POIS_NEAR_LIMIT));
+        // A5.1:相册只下发前 3 张预览,完整相册走目录详情读口。
+        for (RoamPoi poi : list) poi.setGalleryJson(RoamPoiTags.galleryHead(poi.getGalleryJson(), RoamPoiTags.GALLERY_PREVIEW));
+        AjaxResult result = success(uid() <= 0 ? list.stream().map(this::publicPoi).toList() : list);
+        result.put("truncated", truncated);
+        return result;
+    }
+
+    private Map<String, Object> publicPoi(RoamPoi poi) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", poi.getId());
+        out.put("name", poi.getName());
+        out.put("type", poi.getType());
+        out.put("lat", poi.getLat());
+        out.put("lng", poi.getLng());
+        out.put("radiusM", poi.getRadiusM());
+        out.put("address", poi.getAddress());
+        out.put("description", poi.getDescription());
+        out.put("xp", poi.getXp());
+        out.put("cityCode", poi.getCityCode());
+        out.put("nodeLevel", poi.getNodeLevel());
+        out.put("tags", poi.getTags());
+        out.put("coverImg", poi.getCoverImg());
+        out.put("galleryJson", poi.getGalleryJson());
+        out.put("quotesJson", poi.getQuotesJson());
+        out.put("photoCredit", poi.getPhotoCredit());
+        out.put("badgeCode", poi.getBadgeCode());
+        out.put("merchantId", poi.getMerchantId());
+        out.put("merchantName", poi.getMerchantName());
+        out.put("npcAvatar", poi.getNpcAvatar());
+        return out;
     }
 
     @Operation(summary = "首次发现商家后的合规自由探索活动壳")
@@ -200,7 +236,6 @@ public class ApiRoamController extends BaseController {
     @Operation(summary = "漫游入口附近活动")
     @GetMapping("/entry/nearby")
     public AjaxResult entryNearby(Double lat, Double lng, Integer radius) {
-        if (uid() <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
         if (!validLat(lat) || !validLng(lng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
         return success(roamHangoutService.nearby(uid(), lat, lng, radius == null ? 0 : radius));
@@ -251,7 +286,7 @@ public class ApiRoamController extends BaseController {
             double prevDist = GeoDistanceUtils.haversineMeters(((Number) last.get("lat")).doubleValue(), ((Number) last.get("lng")).doubleValue(),
                     poi.getLat().doubleValue(), poi.getLng().doubleValue());
             if (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {
-                return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快,疑似伪造定位");
+                return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快，疑似伪造定位");
             }
         }
         com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
@@ -381,7 +416,7 @@ public class ApiRoamController extends BaseController {
         }
         // address_name 可空(建表 DEFAULT ''、DTO 无 @NotBlank)。无名店没法按店名收敛,直接拒:
         // 落库一个空名会把所有无名店在 count(distinct) 里塌成一家。
-        if (name == null || name.trim().isEmpty()) return error("该商家未设名称,无法计入");
+        if (name == null || name.trim().isEmpty()) return error("该商家未设名称，无法计入");
 
         if (GeoDistanceUtils.haversineMeters(lat, lng, shopLat, shopLng) > SHOP_VISIT_RADIUS_M + ROAM_GPS_TOLERANCE_M) {
             return refuse(ErrorCode.ROAM_TOO_FAR, "还没到该店附近");
@@ -784,7 +819,7 @@ public class ApiRoamController extends BaseController {
                 && lastFix.getLastLat() != null && lastFix.getLastLng() != null) {
             long dtSec = Math.max(1L, (reportAt.getTime() - lastFix.getLastReportAt().getTime()) / 1000L);
             double moved = GeoDistanceUtils.haversineMeters(lat, lng, lastFix.getLastLat().doubleValue(), lastFix.getLastLng().doubleValue());
-            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快,疑似伪造定位");
+            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快，疑似伪造定位");
         }
         com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
                 trust(memberId, sid, com.chengyinhub.business.locationtrust.LocationTrustKind.PRESENCE, null, lat, lng);
@@ -1017,6 +1052,17 @@ public class ApiRoamController extends BaseController {
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("finishedAt", session.getFinishedAt().getTime());
+        data.put("distanceM", session.getDistanceM());
+        // Coarse session metadata comes from the validated track's start, never the finish location or a client label.
+        double[] start = com.chengyinhub.business.service.support.RoamTrackSimplifier.startPoint(track);
+        if (start != null && mapGeocodeService != null) {
+            try {
+                String zone = mapGeocodeService.resolveCity(start[1], start[0]);
+                if (zone != null && !zone.isBlank()) data.put("zone", zone.trim());
+            } catch (RuntimeException e) {
+                logger.warn("漫游地区暂不可用 sessionId={}, reason={}", sid, e.getClass().getSimpleName());
+            }
+        }
         data.put("tileXp", tileXp);
         data.put("poiXp", poiXp);
         data.put("totalXp", totalXp);
@@ -1096,14 +1142,14 @@ public class ApiRoamController extends BaseController {
         // ① 宽松 geo:玩家离被点 POI 太远则拒
         if (GeoDistanceUtils.haversineMeters(curLat, curLng, poiLat, poiLng) > CHECKIN_LOOSE_RADIUS_M) {
             data.put("tooFar", true);
-            return AjaxResult.success("离得有点远,走近点", data);
+            return AjaxResult.success("离得有点远，走近点", data);
         }
         // ② 就近匹配参与据点(type=2 status=1):60m 包围盒粗筛 → 精确挑最近 ≤50m
         double dLat = 60 / 111320.0;
         double dLng = 60 / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(poiLat))));
         List<CityNodeVO> near = roamMapper.selectMerchantNodesNear(
                 poiLat - dLat, poiLat + dLat, poiLng - dLng, poiLng + dLng,
-                poiLat, poiLng, null, null, null, null);
+                poiLat, poiLng, null, null, null, null, 50);
         Long poiId = nearestWithin(near, poiLat, poiLng, NODE_MATCH_RADIUS_M);
         if (poiId != null) {
             data.put("participating", true);

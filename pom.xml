@@ -47,7 +47,7 @@
         <!-- Same-minor security floors: see docs/upgrade/java21-boot41-candidate.md. -->
         <jackson2.version>2.21.7</jackson2.version>
         <jackson3.version>3.1.7</jackson3.version>
-        <tomcat.version>11.0.26</tomcat.version>
+        <tomcat.version>11.0.27</tomcat.version>
     </properties>
 
     <!-- 依赖声明 -->
@@ -69,7 +69,7 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- Apache September security fixes; keep every managed Tomcat module aligned. -->
+            <!-- Apache security fixes (11.0.27 fixes CVE-2026-103119/101296/101356/93446/88041); keep every managed Tomcat module aligned. -->
             <dependency>
                 <groupId>org.apache.tomcat</groupId>
                 <artifactId>tomcat-annotations-api</artifactId>
