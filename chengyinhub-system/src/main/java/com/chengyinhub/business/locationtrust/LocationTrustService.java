@@ -212,6 +212,25 @@ public class LocationTrustService {
         return new RevealFilter(kept, far, over, 0);
     }
 
+    /**
+     * R4 guest-walk: one trail row for a track that was scored as a whole on the device clock (a walk made before
+     * sign-in and uploaded afterwards). {@code lastFix} is the row's point; the reasons and decision come from the
+     * caller's track scoring. Returns the row id, or null when nothing was written.
+     */
+    public Long recordTrack(Long memberId, Long sessionId, LocationTrustKind kind, String refId, LocationFix lastFix,
+                            List<String> reasons, LocationTrustDecision decision, String detail) {
+        LocationTrustConfig cfg = config();
+        if (!cfg.scoring() || memberId == null || memberId <= 0L || lastFix == null || !lastFix.validCoordinates()) return null;
+        LocationTrustPolicy.Verdict verdict = new LocationTrustPolicy.Verdict(decision, reasons == null ? List.of() : reasons, null);
+        LocationTrustDecision applied = cfg.enforcing() ? decision : LocationTrustDecision.ACCEPT;
+        Long fixId = record(memberId, sessionId, kind, refId, lastFix, verdict, applied, System.currentTimeMillis(), detail);
+        if (verdict.flagged() || decision != LocationTrustDecision.ACCEPT) {
+            REVIEW_LOG.warn("event=LOCATION_TRUST kind={} member={} session={} ref={} decision={} applied={} reasons={} detail={} fixId={}",
+                    kind, memberId, sessionId, refId, decision, applied, verdict.reasonText(), detail, fixId);
+        }
+        return fixId;
+    }
+
     /** Clean fixes since {@code since}, newest first, as {lat, lng, receivedAtMs}. Empty on any error. */
     public List<double[]> cleanFixesSince(Long memberId, Date since, int limit) {
         List<double[]> out = new ArrayList<>();

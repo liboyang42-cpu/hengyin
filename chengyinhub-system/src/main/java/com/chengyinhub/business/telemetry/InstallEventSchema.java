@@ -42,6 +42,9 @@ public final class InstallEventSchema {
     private static final Set<String> PERMISSION_RESULTS =
             Set.of("granted", "denied", "limited", "provisional", "restricted", "when_in_use", "always", "not_determined");
 
+    /** Revealed-cell count of a guest walk, bucketed (no exact figure leaves the device before sign-in). */
+    private static final Set<String> CELL_BUCKETS = Set.of("0", "1_9", "10_49", "50_plus");
+
     /** 事件 → 允许的属性键 → 允许值(null 表示短码 [a-z0-9_]{1,40})。 */
     static final Map<String, Map<String, Set<String>>> EVENTS;
 
@@ -58,6 +61,11 @@ public final class InstallEventSchema {
         m.put("first_fog_reveal", props());
         m.put("first_reward", props("kind", null));
         m.put("first_share", props("channel", null));
+        // R4 guest-walk: the one walk before sign-in, and saving it at sign-in.
+        m.put("guest_walk_start", props());
+        m.put("guest_walk_finish", props("cells", CELL_BUCKETS));
+        m.put("guest_walk_save_prompt", props("phase", Set.of("during", "after")));
+        m.put("guest_walk_saved", props("result", Set.of("credited", "uncredited", "duplicate")));
         EVENTS = Collections.unmodifiableMap(m);
     }
 
