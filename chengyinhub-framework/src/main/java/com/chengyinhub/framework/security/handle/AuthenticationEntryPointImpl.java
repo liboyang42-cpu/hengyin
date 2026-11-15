@@ -11,6 +11,8 @@ import com.alibaba.fastjson2.JSON;
 import com.chengyinhub.common.constant.Constants;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
+import com.chengyinhub.common.exception.ErrorCode;
+import com.chengyinhub.common.exception.ErrorContract;
 import com.chengyinhub.common.utils.ServletUtils;
 
 /**
@@ -30,6 +32,16 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint, S
         int code = HttpStatus.UNAUTHORIZED;
         // 稳定人话文案,不暴露请求路径/鉴权术语/堆栈(终审 X17:原样带 URI 的 401 文案会直出到用户屏)
         String msg = "登录状态已失效，请重新登录";
+        if (ErrorContract.isV2(request.getHeader(ErrorContract.HEADER)))
+        {
+            // 错误契约 v2(R5):真实 401 + errorCode。不带该头的请求保持下方原样。
+            AjaxResult typed = AjaxResult.error(code, msg).put(AjaxResult.ERROR_CODE_TAG, ErrorCode.SESSION_EXPIRED.code());
+            response.setStatus(code);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("utf-8");
+            response.getWriter().print(JSON.toJSONString(typed));
+            return;
+        }
         String body = JSON.toJSONString(AjaxResult.error(code, msg));
         if (request.getRequestURI().startsWith(Constants.APP_URI))
         {

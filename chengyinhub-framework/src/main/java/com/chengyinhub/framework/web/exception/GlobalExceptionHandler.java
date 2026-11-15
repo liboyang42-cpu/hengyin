@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -21,7 +23,10 @@ import org.springframework.web.multipart.MultipartException;
 import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.core.text.Convert;
+import com.chengyinhub.common.exception.BusinessRefusal;
 import com.chengyinhub.common.exception.DemoModeException;
+import com.chengyinhub.common.exception.ErrorCode;
+import com.chengyinhub.common.exception.ErrorContract;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.html.EscapeUtil;
@@ -47,7 +52,7 @@ public class GlobalExceptionHandler
     public AjaxResult handleNotFound(Exception exception, HttpServletRequest request)
     {
         log.debug("请求路径不存在 method={}", request.getMethod());
-        return AjaxResult.error(HttpStatus.NOT_FOUND, "请求路径不存在");
+        return AjaxResult.error(HttpStatus.NOT_FOUND, "请求路径不存在").withErrorCode(ErrorCode.NOT_FOUND);
     }
 
     /**
@@ -84,7 +89,7 @@ public class GlobalExceptionHandler
         log.error("请求地址'{}',上传文件超出大小限制.", request.getRequestURI(), e);
         return AjaxResult.error(HttpStatus.BAD_REQUEST,
                 String.format("文件过大，请压缩或更换文件后上传（单个文件最大%s，单次请求最大%s）",
-                        maxFileSize, maxRequestSize));
+                        maxFileSize, maxRequestSize)).withErrorCode(ErrorCode.PAYLOAD_TOO_LARGE);
     }
 
     /**
@@ -98,7 +103,7 @@ public class GlobalExceptionHandler
     public AjaxResult handleMultipartException(MultipartException e, HttpServletRequest request)
     {
         log.error("请求地址'{}',multipart 请求解析失败.", request.getRequestURI(), e);
-        return AjaxResult.error(HttpStatus.BAD_REQUEST, "上传数据无法解析，请重试或更换文件");
+        return AjaxResult.error(HttpStatus.BAD_REQUEST, "上传数据无法解析，请重试或更换文件").withErrorCode(ErrorCode.BAD_REQUEST);
     }
 
     /**
@@ -109,7 +114,7 @@ public class GlobalExceptionHandler
     {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',权限校验失败'{}'", requestURI, e.getMessage());
-        return AjaxResult.error(HttpStatus.FORBIDDEN, "没有权限，请联系管理员授权");
+        return AjaxResult.error(HttpStatus.FORBIDDEN, "没有权限，请联系管理员授权").withErrorCode(ErrorCode.FORBIDDEN);
     }
 
     /**
@@ -121,7 +126,19 @@ public class GlobalExceptionHandler
     {
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',不支持'{}'请求", requestURI, e.getMethod());
-        return AjaxResult.error(userSafeMessage(e.getMessage()));
+        return AjaxResult.error(userSafeMessage(e.getMessage())).withErrorCode(ErrorCode.METHOD_NOT_ALLOWED);
+    }
+
+    /**
+     * 有类型的业务拒绝(R5 error-contract)。旧契约下与迁移前的 {@code error(msg)} 同形;
+     * 选择 v2 的请求由 {@link ErrorContractAdvice} 补 HTTP 4xx 与 errorCode。拒绝是预期分支,不记 error 日志、不报警。
+     */
+    @ExceptionHandler(BusinessRefusal.class)
+    public AjaxResult handleBusinessRefusal(BusinessRefusal e, HttpServletRequest request)
+    {
+        log.info("业务拒绝 code={} uri={}", e.getErrorCode().code(), request.getRequestURI());
+        return AjaxResult.refuse(e.getLegacyCode(), e.getErrorCode(), userSafeMessage(e.getMessage()), e.getData())
+                .withErrorCode(e.getErrorCode(), e.getHttpStatus());
     }
 
     /**
@@ -133,13 +150,23 @@ public class GlobalExceptionHandler
         log.error(e.getMessage(), e);
         Integer code = e.getCode();
         String message = userSafeMessage(e.getMessage());
+        AjaxResult result;
         if (e.getData() != null)
         {
             // 回执化冲突:除 code/msg 外把当前世界随包带回,客户端无需再拉一次。
-            return StringUtils.isNotNull(code) ? new AjaxResult(code, message, e.getData())
+            result = StringUtils.isNotNull(code) ? new AjaxResult(code, message, e.getData())
                     : AjaxResult.error(message, e.getData());
         }
-        return StringUtils.isNotNull(code) ? AjaxResult.error(code, message) : AjaxResult.error(message);
+        else
+        {
+            result = StringUtils.isNotNull(code) ? AjaxResult.error(code, message) : AjaxResult.error(message);
+        }
+        // 无 code 的 ServiceException 是业务拒绝(除非文案明显是兜底故障);有 code 的按 code 判定。
+        if (code == null && !ErrorContract.looksLikeFailure(message))
+        {
+            result.withErrorCode(ErrorCode.REFUSED);
+        }
+        return result;
     }
 
     /**
@@ -150,7 +177,8 @@ public class GlobalExceptionHandler
     {
         String requestURI = request.getRequestURI();
         log.error("请求路径中缺少必需的路径变量'{}',发生系统异常.", requestURI, e);
-        return AjaxResult.error(String.format("请求路径中缺少必需的路径变量[%s]", e.getVariableName()));
+        return AjaxResult.error(String.format("请求路径中缺少必需的路径变量[%s]", e.getVariableName()))
+                .withErrorCode(ErrorCode.BAD_REQUEST);
     }
 
     /**
@@ -169,7 +197,7 @@ public class GlobalExceptionHandler
         // 只暴露参数的简单类型名,不把 java.lang.Long 这类全限定类名直出给用户(终审 §12.3-3)
         String typeName = e.getRequiredType() == null ? "" : e.getRequiredType().getSimpleName();
         return AjaxResult.error(userSafeMessage(String.format("请求参数类型不匹配，参数[%s]要求类型为：'%s'，但输入值为：'%s'",
-                e.getName(), typeName, value)));
+                e.getName(), typeName, value))).withErrorCode(ErrorCode.BAD_REQUEST);
     }
 
     /**
@@ -181,7 +209,7 @@ public class GlobalExceptionHandler
         if (runtimeFailureAlarm != null) runtimeFailureAlarm.systemFailure(e);
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生未知异常.", requestURI, e);
-        return AjaxResult.error(userSafeMessage(e.getMessage()));
+        return AjaxResult.error(userSafeMessage(e.getMessage())).withErrorCode(ErrorCode.SYSTEM_FAILURE);
     }
 
     /**
@@ -193,7 +221,10 @@ public class GlobalExceptionHandler
         if (runtimeFailureAlarm != null) runtimeFailureAlarm.systemFailure(e);
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生系统异常.", requestURI, e);
-        return AjaxResult.error(userSafeMessage(e.getMessage()));
+        // 请求体/必填参数缺失是客户端问题,不是服务端故障。
+        boolean clientError = e instanceof HttpMessageNotReadableException || e instanceof MissingServletRequestParameterException;
+        return AjaxResult.error(userSafeMessage(e.getMessage()))
+                .withErrorCode(clientError ? ErrorCode.BAD_REQUEST : ErrorCode.SYSTEM_FAILURE);
     }
 
     /**
@@ -204,7 +235,7 @@ public class GlobalExceptionHandler
     {
         log.error(e.getMessage(), e);
         String message = e.getAllErrors().get(0).getDefaultMessage();
-        return AjaxResult.error(message);
+        return AjaxResult.error(message).withErrorCode(ErrorCode.BAD_REQUEST);
     }
 
     /**
@@ -215,7 +246,7 @@ public class GlobalExceptionHandler
     {
         log.error(e.getMessage(), e);
         String message = e.getBindingResult().getFieldError().getDefaultMessage();
-        return AjaxResult.error(message);
+        return AjaxResult.error(message).withErrorCode(ErrorCode.BAD_REQUEST);
     }
 
     /**
@@ -224,6 +255,6 @@ public class GlobalExceptionHandler
     @ExceptionHandler(DemoModeException.class)
     public AjaxResult handleDemoModeException(DemoModeException e)
     {
-        return AjaxResult.error("演示模式，不允许操作");
+        return AjaxResult.error("演示模式，不允许操作").withErrorCode(ErrorCode.FORBIDDEN);
     }
 }
