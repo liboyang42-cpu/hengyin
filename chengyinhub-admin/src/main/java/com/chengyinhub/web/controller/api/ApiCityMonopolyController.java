@@ -2,10 +2,12 @@ package com.chengyinhub.web.controller.api;
 
 import com.chengyinhub.business.citygame.CityGameException;
 import com.chengyinhub.business.citygame.CityMonopolyService;
+import com.chengyinhub.business.service.impl.RoamLocationConsentService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -18,9 +20,18 @@ import java.util.Map;
 @RequestMapping("/api/city-game")
 public class ApiCityMonopolyController extends BaseController {
     private final CityMonopolyService service;
+    private final RoamLocationConsentService locationConsent;
 
-    public ApiCityMonopolyController(CityMonopolyService service) {
+    public ApiCityMonopolyController(CityMonopolyService service, RoamLocationConsentService locationConsent) {
         this.service = service;
+        this.locationConsent = locationConsent;
+    }
+
+    /** 接收定位的写命令先过漫游定位授权闸（与 ApiRoamController 同一互斥锁顺序），未同意不落任何坐标。 */
+    private Long consentedMember() {
+        Long memberId = member();
+        locationConsent.requireCurrentAgreement(memberId);
+        return memberId;
     }
 
     private Long member() {
@@ -48,8 +59,9 @@ public class ApiCityMonopolyController extends BaseController {
     }
 
     @PostMapping("/territory/claim/command")
+    @Transactional(rollbackFor = Exception.class)
     public AjaxResult claimCommand(@RequestBody Map<String, Object> body) {
-        return success(service.claimCommand(member(), body));
+        return success(service.claimCommand(consentedMember(), body));
     }
 
     @PostMapping("/territory/upgrade/quote")
@@ -58,8 +70,9 @@ public class ApiCityMonopolyController extends BaseController {
     }
 
     @PostMapping("/territory/upgrade/command")
+    @Transactional(rollbackFor = Exception.class)
     public AjaxResult upgradeCommand(@RequestBody Map<String, Object> body) {
-        return success(service.upgradeCommand(member(), body));
+        return success(service.upgradeCommand(consentedMember(), body));
     }
 
     @PostMapping("/territory/challenge/quote")
@@ -68,8 +81,9 @@ public class ApiCityMonopolyController extends BaseController {
     }
 
     @PostMapping("/territory/challenge/command")
+    @Transactional(rollbackFor = Exception.class)
     public AjaxResult challengeCommand(@RequestBody Map<String, Object> body) {
-        return success(service.challengeCommand(member(), body));
+        return success(service.challengeCommand(consentedMember(), body));
     }
 
     @PostMapping("/territory/scout")
