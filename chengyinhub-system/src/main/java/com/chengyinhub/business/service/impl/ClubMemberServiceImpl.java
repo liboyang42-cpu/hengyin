@@ -657,6 +657,10 @@ public class ClubMemberServiceImpl implements IClubMemberService
         if ("pace".equals(sortBy)) {
             return row.get("pace") != null;
         }
+        String countKey = countBoardKey(sortBy);
+        if (countKey != null) {
+            return toDecimal(row.get(countKey)).compareTo(BigDecimal.ZERO) > 0;
+        }
         // composite(含非法/缺省 sortBy,与 comparatorFor 的回落口径一致):加权分 > 0
         return toDecimal(row.get("score")).compareTo(BigDecimal.ZERO) > 0;
     }
@@ -664,6 +668,12 @@ public class ClubMemberServiceImpl implements IClubMemberService
     /** sortBy 白名单;非法/缺省一律回落 composite。memberId 兜底保证同分时顺序稳定(否则分页/测试会飘)。 */
     private static Comparator<Map<String, Object>> comparatorFor(String sortBy)
     {
+        String countKey = countBoardKey(sortBy);
+        if (countKey != null) {
+            return Comparator.<Map<String, Object>, BigDecimal>comparing(r -> toDecimal(r.get(countKey)))
+                    .reversed()
+                    .thenComparing(ClubMemberServiceImpl::memberIdOf);
+        }
         if ("pace".equals(sortBy)) {
             // 配速升序 = 快的靠前。无配速(零里程)沉底。
             return Comparator.<Map<String, Object>, BigDecimal>comparing(
@@ -685,6 +695,18 @@ public class ClubMemberServiceImpl implements IClubMemberService
         return Comparator.<Map<String, Object>, BigDecimal>comparing(r -> toDecimal(r.get("score")))
                 .reversed()
                 .thenComparing(ClubMemberServiceImpl::memberIdOf);
+    }
+
+    /**
+     * club-ops CLB-13:任何俱乐部都适用的计数榜。events = 到场场次,checkins = 打卡次数,hosted = 带队场次。
+     * 不是计数榜时回 null。
+     */
+    public static String countBoardKey(String sortBy)
+    {
+        if ("events".equals(sortBy)) return "attendedCount";
+        if ("checkins".equals(sortBy)) return "checkinCount";
+        if ("hosted".equals(sortBy)) return "hostedSessions";
+        return null;
     }
 
     private static Long memberIdOf(Map<String, Object> r)
