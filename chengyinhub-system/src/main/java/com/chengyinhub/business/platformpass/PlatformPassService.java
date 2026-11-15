@@ -58,6 +58,8 @@ public class PlatformPassService {
     public static final String REFUND_PREFIX = "RPP";
     public static final String CHANNEL_JSAPI = "JSAPI";
     public static final String CHANNEL_XPAY = "XPAY";
+    /** R6a:iOS 内购。只由 {@link PlatformPassAppleService} 建单、开通与退款;退款只能由 Apple 发起。 */
+    public static final String CHANNEL_APPLE = "APPLE";
     /** 售出时的退款条款引用；具体条款文案由业主确认（T08）。 */
     public static final String REFUND_TERMS_REF = "PASS-REFUND-V1";
     public static final int PENDING = 0, PAID = 1, CANCELLED = 2, REFUNDED = 3, REFUNDING = 4;
@@ -681,6 +683,9 @@ public class PlatformPassService {
             if (num(locked.get("status")) != PAID) {
                 throw PlatformPassException.conflict("ORDER_NOT_REFUNDABLE", "订单当前不可退款");
             }
+            if (CHANNEL_APPLE.equals(locked.get("channel"))) {
+                throw PlatformPassException.conflict("APPLE_REFUND_VIA_APPLE", "App Store 购买的通行证只能由 Apple 退款");
+            }
             if (locked.get("refund_amount_fen") != null
                     && num(locked.get("refund_amount_fen")) < num(locked.get("price_fen"))) {
                 throw PlatformPassException.conflict("PARTIAL_REFUND_RECORDED", "渠道已部分退款，请人工处理");
@@ -737,6 +742,9 @@ public class PlatformPassService {
         Map<String, Object> order = ownedOrder(memberId, orderNo);
         if (num(order.get("status")) != PAID) {
             throw PlatformPassException.conflict("ORDER_NOT_REFUNDABLE", "订单当前不可申请退款");
+        }
+        if (CHANNEL_APPLE.equals(order.get("channel"))) {
+            throw PlatformPassException.conflict("APPLE_REFUND_VIA_APPLE", "App Store 购买的通行证请在 Apple 申请退款");
         }
         String why = reason == null || reason.isBlank() ? "申请退款" : reason.trim();
         if (why.length() > 255) why = why.substring(0, 255);
@@ -864,6 +872,11 @@ public class PlatformPassService {
         row.put("valid_to", to);
         if (mapper.insertMembership(row) != 1) throw new IllegalStateException("通行证有效期写入失败");
         extendClaimTickets(memberId);
+    }
+
+    /** R6a:在调用方事务内,按 Apple 已验证的退款/撤销事实收回这一段。只由 {@link PlatformPassAppleService} 调用。 */
+    void finalizeAppleRefund(Map<String, Object> order, Date refundedAt) {
+        finalizeRefund(order, null, null, refundedAt, num(order.get("price_fen")), "CHANNEL");
     }
 
     /** 在调用方事务内：订单置已退，撤销这一段，并把它之后的段前移（不白送也不吞时长）；派生免费票同事务停用 / 回收。 */
@@ -1012,7 +1025,7 @@ public class PlatformPassService {
     }
 
     /** 售出时的覆盖范围：空配置 = 全部已发布；否则排序后的主题 ID 列表（超长截断，仅作留痕）。 */
-    private String coverageSnapshot() {
+    String coverageSnapshot() {
         Set<Long> ids = properties.getCoverageTopicIds();
         if (ids.isEmpty()) return "ALL";
         String text = "IDS:" + ids.stream().sorted().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
