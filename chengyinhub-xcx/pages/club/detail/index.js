@@ -2691,6 +2691,15 @@ Page({
     wx.navigateTo({ url: '/pages/club/badges/index?clubId=' + clubId, complete: () => { this._navigating = false; } });
   },
 
+  // C1 channels-structure:俱乐部频道页(成员看目录；主理人/管理员可新建、排序、归档)。
+  goClubChannels() {
+    const clubId = this.data.clubId;
+    if (!clubId || !this.data.club || !(this.data.club.isOwner || this.data.club.isJoined)) return;
+    if (this._navigating) return;
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/club/channels/index?clubId=' + clubId, complete: () => { this._navigating = false; } });
+  },
+
   goClubRoles() {
     if (!this.data.club || !(this.data.club.isOwner || this.data.canManageRoles)
         || !this.data.clubId) return;

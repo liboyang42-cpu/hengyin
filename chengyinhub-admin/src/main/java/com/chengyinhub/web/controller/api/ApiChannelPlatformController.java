@@ -87,6 +87,15 @@ public class ApiChannelPlatformController extends BaseController
         return ChannelHttpResponse.run(this::getAppUserId, me -> channels.edit(me, ChannelHttpResponse.id(id), body, reason));
     }
 
+    /** C1: the WeChat mini-program cannot send PATCH; same command, receipts and checks as PATCH /api/channels/{id}. */
+    @Operation(summary = "编辑频道(POST 别名，小程序用)")
+    @PostMapping("/api/channels/{id}/edit")
+    public ResponseEntity<AjaxResult> editByPost(@PathVariable("id") String id, @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = REASON, required = false) String reason)
+    {
+        return ChannelHttpResponse.run(this::getAppUserId, me -> channels.edit(me, ChannelHttpResponse.id(id), body, reason));
+    }
+
     @Operation(summary = "删除频道(可恢复期内)")
     @DeleteMapping("/api/channels/{id}")
     public ResponseEntity<AjaxResult> delete(@PathVariable("id") String id, @RequestBody(required = false) Map<String, Object> body,

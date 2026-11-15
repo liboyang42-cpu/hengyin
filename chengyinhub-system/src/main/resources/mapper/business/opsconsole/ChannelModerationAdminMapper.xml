@@ -5,6 +5,7 @@
     <sql id="channelCols">
         c.id, c.guild_kind AS guildKind, c.guild_id AS guildId, c.kind, c.name, c.topic, c.status, c.visibility,
         c.slowmode_sec AS slowmodeSec, c.create_time AS createTime,
+        c.parent_id AS parentId, c.position, c.is_default AS isDefault,
         (SELECT COUNT(1) FROM im_channel_report r WHERE r.channel_id = c.id AND r.status = 'PENDING') AS pendingReports
     </sql>
 
@@ -16,7 +17,10 @@
         <if test="guildKind != null"> AND c.guild_kind = #{guildKind} </if>
         <if test="guildId != null"> AND c.guild_id = #{guildId} </if>
         <if test="status != null"> AND c.status = #{status} </if>
-        ORDER BY c.id DESC
+        <choose>
+            <when test="guildId != null"> ORDER BY c.parent_id, c.position, c.id </when>
+            <otherwise> ORDER BY c.id DESC </otherwise>
+        </choose>
         LIMIT 100
     </select>
 
