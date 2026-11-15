@@ -81,7 +81,7 @@ public class ApiAppGapsWorkshopController extends BaseController {
         return AjaxResult.success(rows);
     }
 
-    static AjaxResult notBuilt(NotBuiltFeature feature, jakarta.servlet.http.HttpServletResponse response) {
+    public static AjaxResult notBuilt(NotBuiltFeature feature, jakarta.servlet.http.HttpServletResponse response) {
         if (response != null) response.setHeader(NotBuiltFeature.HEADER, feature.name());
         AjaxResult off = AjaxResult.error(DISABLED, feature.messageZh());
         off.put("errorCode", feature.errorCode());
