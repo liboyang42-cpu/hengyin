@@ -29,7 +29,6 @@ import com.chengyinhub.framework.web.service.SysPermissionService;
 import com.chengyinhub.framework.web.service.TokenService;
 import com.chengyinhub.system.mapper.SysUserMapper;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -335,9 +334,9 @@ class ApiAiThemeDraftHttpSecurityTest
 
     private static String signedAppToken(LoginAppUser app, String key, boolean expired)
     {
-        var builder = Jwts.builder().setClaims(new HashMap<>(Map.of(Constants.LOGIN_APP_USER_KEY, app.getToken())));
-        if (expired) builder.setExpiration(new Date(System.currentTimeMillis() - 60_000));
-        return builder.signWith(SignatureAlgorithm.HS512, key).compact();
+        var builder = Jwts.builder().claims(new HashMap<>(Map.of(Constants.LOGIN_APP_USER_KEY, app.getToken())));
+        if (expired) builder.expiration(new Date(System.currentTimeMillis() - 60_000));
+        return builder.signWith(com.chengyinhub.common.utils.jwt.SessionJwt.hs512Key(key), Jwts.SIG.HS512).compact();
     }
 
     private static AiThemeDraftIntentView view(boolean succeeded)

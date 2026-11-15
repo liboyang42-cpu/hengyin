@@ -13,8 +13,7 @@ import com.chengyinhub.common.utils.ip.IpUtils;
 import com.chengyinhub.common.utils.uuid.IdUtils;
 import eu.bitwalker.useragentutils.UserAgent;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.chengyinhub.common.utils.jwt.SessionJwt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +43,24 @@ public class AppTokenService
     // 令牌秘钥
     @Value("${token.secret}")
     private String secret;
+
+    /** SEC-03:与 jjwt 0.9.1 字节兼容的 HS512 密钥(见 SessionJwt),按 secret 缓存。 */
+    private volatile javax.crypto.SecretKey signingKey;
+    private volatile String signingKeySecret;
+
+    private javax.crypto.SecretKey signingKey() {
+        String current = secret;
+        javax.crypto.SecretKey key = signingKey;
+        if (key == null || !java.util.Objects.equals(current, signingKeySecret)) {
+            key = SessionJwt.hs512Key(current);
+            if (SessionJwt.isShortSecret(current)) {
+                org.slf4j.LoggerFactory.getLogger(SessionJwt.class).warn("token.secret 解码后短于 64 字节:为兼容已发会话按 HMAC 规则补零使用,强度仍不足,请安排更换");
+            }
+            signingKeySecret = current;
+            signingKey = key;
+        }
+        return key;
+    }
 
     // App 会话空闲有效期（分钟）
     @Value("${token.app.idleTime}")
@@ -239,9 +256,7 @@ public class AppTokenService
      * @return 令牌
      */
     private String createToken(Map<String, Object> claims) {
-        String token = Jwts.builder()
-                .setClaims(claims)
-                .signWith(SignatureAlgorithm.HS512, secret).compact();
+        String token = SessionJwt.sign(claims, signingKey());
         return token;
     }
 
@@ -252,10 +267,7 @@ public class AppTokenService
      * @return 数据声明
      */
     private Claims parseToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody();
+        return SessionJwt.parse(token, signingKey());
     }
 
     /**

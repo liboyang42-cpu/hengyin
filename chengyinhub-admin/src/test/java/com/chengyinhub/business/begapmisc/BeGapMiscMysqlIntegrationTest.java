@@ -12,7 +12,6 @@ import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.MysqlIntegrationTestConfig;
 import com.chengyinhub.business.service.impl.TopicRouteRuntimeServiceImpl;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -150,9 +149,9 @@ class BeGapMiscMysqlIntegrationTest {
             m.setRole("player"); m.setUserType(1L); m.setStatus(1L); m.setDelFlag(0); return m; });
         UsAppleAuthService service = new UsAppleAuthService(jdbc, members, keys, true, "us-it", "com.example.us");
         Map<String, Object> c = service.challenge().data;
-        String token = Jwts.builder().setHeaderParam("kid", "k").setIssuer("https://appleid.apple.com").setAudience("com.example.us")
-                .setSubject("apple-it-sub").claim("nonce", sha((String) c.get("rawNonce")))
-                .setExpiration(new Date(System.currentTimeMillis() + 60_000)).signWith(SignatureAlgorithm.RS256, apple.getPrivate()).compact();
+        String token = Jwts.builder().header().keyId("k").and().issuer("https://appleid.apple.com").audience().single("com.example.us")
+                .subject("apple-it-sub").claim("nonce", sha((String) c.get("rawNonce")))
+                .expiration(new Date(System.currentTimeMillis() + 60_000)).signWith(apple.getPrivate(), Jwts.SIG.RS256).compact();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("challengeId", c.get("challengeId"));
         body.put("state", c.get("state"));

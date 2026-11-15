@@ -86,10 +86,10 @@ class AppleTokenRevocationServiceTest {
         Map<String, String> revoke = forms.get(1);
         assertEquals("rt-secret", revoke.get("token"));
         assertEquals("refresh_token", revoke.get("token_type_hint"));
-        Jws<Claims> secret = Jwts.parser().setSigningKey(signing.getPublic()).parseClaimsJws(revoke.get("client_secret"));
-        assertEquals("TEAM456", secret.getBody().getIssuer());
-        assertEquals(BUNDLE, secret.getBody().getSubject());
-        assertEquals("https://appleid.apple.com", secret.getBody().getAudience());
+        Jws<Claims> secret = Jwts.parser().verifyWith(signing.getPublic()).build().parseSignedClaims(revoke.get("client_secret"));
+        assertEquals("TEAM456", secret.getPayload().getIssuer());
+        assertEquals(BUNDLE, secret.getPayload().getSubject());
+        assertEquals(java.util.Set.of("https://appleid.apple.com"), secret.getPayload().getAudience());
         assertEquals("KEY123", secret.getHeader().get("kid"));
         assertEquals("ES256", secret.getHeader().get("alg"));
         assertNull(row(7L).get("refresh_token_cipher"), "token is wiped after revocation");
