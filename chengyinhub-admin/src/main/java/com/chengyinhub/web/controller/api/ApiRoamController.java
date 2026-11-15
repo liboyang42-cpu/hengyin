@@ -154,6 +154,8 @@ public class ApiRoamController extends BaseController {
     }
     @Autowired(required = false)
     private com.chengyinhub.business.citygame.RoamTerritoryService roamTerritoryService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.shopgames.ShopGamePlayService shopGamePlays;
 
     /** 包级可见 + 非 final:测试用子类覆写它注入身份,好直调真入口(见 RoamPresenceControllerTest)。 */
     Long uid() {
@@ -1108,6 +1110,9 @@ public class ApiRoamController extends BaseController {
         if (poiId != null) {
             data.put("participating", true);
             data.put("poiId", poiId);
+            // S5: the shop's game, launched now that location trust and the shop radius passed. Additive field;
+            // a problem answers available=false and never fails the check-in.
+            if (shopGamePlays != null) data.put("shopGame", shopGamePlays.launchAfterCheckin(memberId, poiId));
             if (roamTerritoryService != null) {
                 Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckin(
                         memberId, poiId, null, null, curLat, curLng,
