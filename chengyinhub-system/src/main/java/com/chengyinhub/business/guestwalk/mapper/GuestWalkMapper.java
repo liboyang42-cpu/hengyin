@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * R4 guest-walk: one row per saved pre-sign-in walk (roam_guest_walk). An install saves at most one walk and a member
  * receives at most one (both unique keys), so a retried upload reads its first result back instead of crediting again.
- * Table: migration_20261115_guest-walk.sql.
+ * Table: migration_20261115_guest_walk.sql.
  */
 public interface GuestWalkMapper {
 
