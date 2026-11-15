@@ -38,6 +38,14 @@ LANG=C.UTF-8 LC_ALL=C.UTF-8 mvn -B -q -pl chengyinhub-admin -am test \
 # RoamFogCellServiceTest 11/11, RoamFogCellsRouteTest 3/3, RoamTileMemoryPageTest 4/4,
 # RoamRevealFinishBoundsTest 4/4, RoamSessionResumeAcceptanceTest 1/1,
 # DataRetentionServiceImplTest 11/11, DataRetentionCleanupTaskFailureTest 4/4 (its ERROR log line is expected)
+# RoamFogCellServiceTest is 12/12 after the "failed kept write never fails the reveal" test was added.
+
+LANG=C.UTF-8 LC_ALL=C.UTF-8 mvn -B -q -pl chengyinhub-admin -am test        # whole admin suite
+# 12 622 tests, 1 failure, 34 errors in 15 classes, all outside this package:
+# 14 *MyBatisTest classes under business.it (need a database) and
+# ChapterFlowWriteServiceTest.openBundleReviewCannotBeBypassedBySwitchingToSimpleMode.
+# Checked on the untouched base fix/r5-be-infra-stubs: ChapterFlowWriteServiceTest (1 failure) and
+# PublicVisibilityMyBatisTest (5 errors) fail there the same way.
 ```
 
 ## Not verified
