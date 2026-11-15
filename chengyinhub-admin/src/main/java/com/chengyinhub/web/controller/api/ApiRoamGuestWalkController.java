@@ -51,7 +51,7 @@ public class ApiRoamGuestWalkController extends BaseController {
             return error(refused.getMessage()).put("reason", refused.code()).put("retryable", refused.retryable());
         } catch (DuplicateKeyException raced) {
             // Two uploads of the same walk raced; the loser's transaction rolled back and its retry reads the result.
-            return error("正在保存,请稍后再试").put("reason", "IN_PROGRESS").put("retryable", true);
+            return error("正在保存，请稍后再试").put("reason", "IN_PROGRESS").put("retryable", true);
         }
     }
 }
