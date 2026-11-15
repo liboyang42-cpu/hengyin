@@ -120,6 +120,11 @@
                purge_at = #{purgeAt}, delete_reason = #{deleteReason}, update_time = current_timestamp(3)
          where id = #{id} and meta_version = #{expected} and status = #{fromStatus} and del_flag = 0
     </update>
+    <update id="updatePlacement">
+        update im_channel
+           set parent_id = #{parentId}, position = #{position}, meta_version = meta_version + 1, update_time = current_timestamp(3)
+         where id = #{id} and meta_version = #{expected} and status in (0, 1) and del_flag = 0
+    </update>
     <update id="bumpPermissionVersion">
         update im_channel set meta_version = meta_version + 1, perm_version = perm_version + 1, update_time = current_timestamp(3)
          where id = #{id} and meta_version = #{expected} and perm_version = #{expectedPerm} and del_flag = 0

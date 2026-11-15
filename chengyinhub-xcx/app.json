@@ -96,7 +96,8 @@
         "settlement/index",
         "topic-detail/index",
         "topic-story/index",
-        "workbench/index"
+        "workbench/index",
+        "channels/index"
       ]
     },
     {

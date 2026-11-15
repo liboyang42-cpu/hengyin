@@ -63,6 +63,15 @@ public class ApiChannelPlatformController extends BaseController
                 me -> channels.create(me, guildKind, ChannelHttpResponse.id(guildId), body, reason));
     }
 
+    @Operation(summary = "频道/分类排序与移动")
+    @PostMapping("/api/guilds/{guildKind}/{guildId}/channels/reorder")
+    public ResponseEntity<AjaxResult> reorder(@PathVariable("guildKind") int guildKind, @PathVariable("guildId") String guildId,
+            @RequestBody(required = false) Map<String, Object> body, @RequestHeader(value = REASON, required = false) String reason)
+    {
+        return ChannelHttpResponse.run(this::getAppUserId,
+                me -> channels.reorder(me, guildKind, ChannelHttpResponse.id(guildId), body, reason));
+    }
+
     @Operation(summary = "频道详情")
     @GetMapping("/api/channels/{id}")
     public ResponseEntity<AjaxResult> detail(@PathVariable("id") String id)
@@ -73,6 +82,15 @@ public class ApiChannelPlatformController extends BaseController
     @Operation(summary = "编辑频道")
     @PatchMapping("/api/channels/{id}")
     public ResponseEntity<AjaxResult> edit(@PathVariable("id") String id, @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(value = REASON, required = false) String reason)
+    {
+        return ChannelHttpResponse.run(this::getAppUserId, me -> channels.edit(me, ChannelHttpResponse.id(id), body, reason));
+    }
+
+    /** C1: the WeChat mini-program cannot send PATCH; same command, receipts and checks as PATCH /api/channels/{id}. */
+    @Operation(summary = "编辑频道(POST 别名，小程序用)")
+    @PostMapping("/api/channels/{id}/edit")
+    public ResponseEntity<AjaxResult> editByPost(@PathVariable("id") String id, @RequestBody(required = false) Map<String, Object> body,
             @RequestHeader(value = REASON, required = false) String reason)
     {
         return ChannelHttpResponse.run(this::getAppUserId, me -> channels.edit(me, ChannelHttpResponse.id(id), body, reason));

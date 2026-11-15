@@ -239,6 +239,14 @@
         </view>
       </view>
 
+      <!-- C1 channels-structure:频道入口(成员与主理人)。管理动作在频道页里，由服务端按主理人/管理员放行。 -->
+      <view class="ov-badge-entry" wx:if="{{club.isOwner || club.isJoined}}" catchtap="goClubChannels"
+            aria-role="button" aria-label="打开俱乐部频道" hover-class="cy-pressed" hover-stay-time="80">
+        <cy-icon name="comment" size="32" />
+        <text class="ov-badge-entry-text">频道</text>
+        <cy-icon class="ov-badge-entry-arrow" name="arrow-right" size="24" />
+      </view>
+
       <!-- N2 俱乐部勋章只读入口:/api/club/badge/list 需登录,所以只给已加入成员与主理人;游客不显示。 -->
       <view class="ov-badge-entry" wx:if="{{club.isOwner || club.isJoined}}" catchtap="goClubBadges"
             aria-role="button" aria-label="查看俱乐部勋章" hover-class="cy-pressed" hover-stay-time="80">

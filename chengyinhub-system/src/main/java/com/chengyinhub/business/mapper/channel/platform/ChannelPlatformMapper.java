@@ -41,6 +41,9 @@ public interface ChannelPlatformMapper
     int bumpPermissionVersion(@Param("id") long id, @Param("expected") long expected,
             @Param("expectedPerm") long expectedPerm);
     int setConversationStatus(@Param("id") long id, @Param("status") int status);
+    /** C1 channels-structure: move/reorder one live channel or category (meta_version CAS). */
+    int updatePlacement(@Param("id") long id, @Param("expected") long expected, @Param("parentId") long parentId,
+            @Param("position") int position);
 
     // ---- 覆盖与角色 ----
     List<Map<String, Object>> selectOverwrites(@Param("channelId") long channelId);

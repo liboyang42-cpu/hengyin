@@ -64,6 +64,13 @@
           <el-table-column label="空间" width="150">
             <template slot-scope="s">{{ guildText(s.row.guildKind) }} #{{ s.row.guildId }}</template>
           </el-table-column>
+          <el-table-column label="类型" width="90" align="center">
+            <template slot-scope="s">{{ channelKindText(s.row.kind) }}<span v-if="s.row.isDefault === 1">（默认）</span></template>
+          </el-table-column>
+          <el-table-column label="所在分类" width="110" align="center">
+            <template slot-scope="s">{{ String(s.row.parentId || 0) === '0' ? '顶层' : '#' + s.row.parentId }}</template>
+          </el-table-column>
+          <el-table-column label="顺序" prop="position" width="70" align="center" />
           <el-table-column label="话题" prop="topic" min-width="160" show-overflow-tooltip />
           <el-table-column label="状态" width="80" align="center">
             <template slot-scope="s">{{ channelStatusText(s.row.status) }}</template>
@@ -309,6 +316,7 @@ export default {
     reasonText(code) { return REASONS[code] || '其他' },
     guildText(kind) { return kind === 1 ? '俱乐部' : kind === 3 ? '队伍' : '空间' },
     channelStatusText(s) { return s === 0 ? '正常' : s === 1 ? '已归档' : '已关闭' },
+    channelKindText(k) { return { 0: '分类', 1: '文字', 2: '公告', 3: '话题' }[k] || '—' },
     messageStatusText(s) { return this.messageStatusMap[s] || '—' },
     actionText(t) { return { TIMEOUT: '频道禁言', KICK: '踢出', BAN: '封禁 / 移出空间' }[t] || '处置' },
     actionStatusText(s) { return { ACTIVE: '生效中', REVOKED: '已撤销', APPLIED: '已执行', EXPIRED: '已到期' }[s] || '—' }
