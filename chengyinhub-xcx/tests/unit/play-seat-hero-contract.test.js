@@ -65,11 +65,11 @@ test('4a. reducedMotion:卡片 / 背景 / 文字三层过渡全关', () => {
 })
 
 test('4b. 物理返回由 page-container 守卫消费(0 尺寸、无遮罩、afterleave 收 hero)', () => {
-  const pc = WXML.match(/<page-container[^>]*show="\{\{hero\.show\}\}"[^>]*\/>/)
+  const pc = WXML.match(/<cy-back-guard[^>]*show="\{\{hero\.show\}\}"[^>]*\/>/)
   assert.ok(pc, 'page-container 必须绑 hero.show')
-  assert.match(pc[0], /overlay="\{\{false\}\}"/)
-  assert.match(pc[0], /duration="\{\{0\}\}"/)
-  assert.match(pc[0], /bind:afterleave="onHeroNativeBack"/)
+  assert.match(fs.readFileSync(path.join(ROOT, 'components/cy/back-guard/index.wxml'), 'utf8'), /overlay="\{\{false\}\}"/)
+  assert.match(fs.readFileSync(path.join(ROOT, 'components/cy/back-guard/index.wxml'), 'utf8'), /duration="\{\{0\}\}"/)
+  assert.match(pc[0], /bind:back="onHeroNativeBack"/)
   assert.match(method('onHeroNativeBack'), /closeHero\(/)
 })
 

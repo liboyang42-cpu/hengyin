@@ -183,7 +183,7 @@ test('cy-sheet / cy-modal / cy-date-sheet:返回键与用户能点到的出口�
 })
 
 test('共享弹层统一挂 0 尺寸 page-container 守卫', () => {
-  const GUARD_TAG = /<page-container show="\{\{_backGuard\}\}" duration="\{\{0\}\}" overlay="\{\{false\}\}" custom-style="width:0;height:0;background:transparent;pointer-events:none" bind:afterleave="_onBackGuardLeave" \/>/
+  const GUARD_TAG = /<page-container wx:if="\{\{_backGuard\}\}" show="\{\{_backGuard\}\}" duration="\{\{0\}\}" overlay="\{\{false\}\}" custom-style="width:0;height:0;background:transparent;pointer-events:none" bind:afterleave="_onBackGuardLeave" \/>/
   for (const name of ['sheet', 'scene-sheet', 'modal', 'date-sheet', 'publish-sheet', 'back-guard']) {
     assert.match(read(`components/cy/${name}/index.wxml`), GUARD_TAG, name)
     assert.match(read(`components/cy/${name}/index.js`), /Component\(withNativeBackGuard\(/, name)

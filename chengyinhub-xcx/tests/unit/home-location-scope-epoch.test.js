@@ -141,6 +141,21 @@ test('逆地理请求失败与空城市给出不同提示',()=>{
   requests.find(x=>x.url==='/api/map/reverse-geocode').success({code:200,data:{city:''}})
   assert.equal(toasts.at(-1),'未识别到所在城市，可手动选择城市')
 })
+test('HOME-CITY 迟到的手选回退不得跨账号、会话、代次或前后台打开下拉', () => {
+  for (const invalidate of [() => { member = '1002' }, () => { token = 'rotated-session' },
+    p => { p._locationEpoch++ }, p => p.onHide(), p => p.onUnload()]) {
+    member = '1001'; token = 'normal-session'; requests = []; toasts = []
+    const p = page(); p.data.city = '上海市'; p.data.cityPicker = false; p._locationEpoch = 1
+    p.reverseGeocode(undefined, undefined, { epoch: 1, memberId: member, authorization: token,
+      consentRequestId: 'home-consent-original', userInitiated: true })
+    const request = requests.at(-1)
+    invalidate(p)
+    request.success({ code: 200, data: { city: '', manualInputRequired: true, reason: 'MAP_UNAVAILABLE' } })
+    assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityPicker, false)
+    assert.deepEqual(toasts, [])
+  }
+  assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+})
 test('隐藏首页后迟到的同意回执不得开始精确定位',()=>{
   const p=page();p.getHomeCityLocation();p.onHide()
   requests[0].success({code:200,data:consent()})

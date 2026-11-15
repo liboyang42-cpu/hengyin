@@ -47,10 +47,10 @@ test('P0-58 漫游页导出把取消带给调用方，且取消不弹「保存�
 test('P0-50 漫游地点详情的答题半屏有物理返回守卫，返回等同取消', () => {
   const dir = path.resolve(__dirname, '../../subpackageMember/components/cy/scene-roam-poi-detail')
   const wxml = fs.readFileSync(path.join(dir, 'index.wxml'), 'utf8')
-  const guard = wxml.match(/<page-container\b[^>]*>/)
+  const guard = wxml.match(/<cy-back-guard\b[^>]*>/)
   assert.ok(guard, '答题半屏必须挂 page-container 返回守卫')
   assert.match(guard[0], /show="\{\{choiceSheetShow\}\}"/)
-  assert.match(guard[0], /bind:afterleave="onChoiceSheetCancel"/)
+  assert.match(guard[0], /bind:back="onChoiceSheetCancel"/)
   const js = fs.readFileSync(path.join(dir, 'index.js'), 'utf8')
   // 选中提交先把 choiceSheetShow 置 false,随后的 afterleave 必须被守卫忽略,不能再记一次取消
   assert.match(js, /onChoiceSheetCancel\(\) \{\n\s*if \(!this\.data\.choiceSheetShow/)

@@ -1396,7 +1396,7 @@ Page({
     });
   },
 
-  // 物理返回守卫(见 wxml 尾部 page-container):按层级关最上层浮层,而不是退出编辑器
+  // 物理返回由 cy-back-guard 统一退挂；这里只按层级关最上层浮层。
   onNativeBackGuard() {
     if (this.data.structureEditor && this.data.structureEditor.show) { this.closeStructure(); } // structure
     else if (this.data.runtimeZeroEditor && this.data.runtimeZeroEditor.show) this.closeZeroHpEditor();
@@ -1430,15 +1430,6 @@ Page({
       this.closeStoryVarSheet();
     } else if (this.data.storyEditor && this.data.storyEditor.show) {
       this.closeStoryEditor();
-    }
-    // 关掉一层后若还有受护浮层(浮层叠浮层),翻转一次让 page-container 重新挂上
-    const stillGuarded = (this.data.runtimeZeroEditor && this.data.runtimeZeroEditor.show) || (this.data.chapterPreview && this.data.chapterPreview.show) || (this.data.initialStateEditor && this.data.initialStateEditor.show) || (this.data.valueEditor && this.data.valueEditor.show) || this.data.routeMappingShow || this.data.popChapterNodes || this.data.popChapter
-      || (this.data.publishCheck && this.data.publishCheck.show)
-      || (this.data.storyEditor && this.data.storyEditor.show)
-      || this.data.modePickerShow || this.data.topicDetailShow;
-    if (stillGuarded) {
-      this.setData({ backGuardOff: true });
-      setTimeout(() => this.setData({ backGuardOff: false }), 50);
     }
   },
 

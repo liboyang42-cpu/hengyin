@@ -2062,12 +2062,8 @@
 
   <!-- 2026-08-20 物理返回守卫:任一浮层(预览/添加模块/picker/分类)开着时,
        返回键/侧滑先关最上层浮层再谈退页。表达式覆盖本页全部浮层且无排斥项,
-       浮层间切换时保持为真,不产生误触发竞态;backGuardOff 用于返回键消费后重挂。 -->
-  <page-container
-    show="{{!backGuardOff && (previewVisible || showAddSheet || pickerSheet.open || categorySheetVisible || gameSheetOpen || toolSheetOpen || gameConfigOpen || scanSheetOpen || toolSheetKey || checkSheet.show || afterEditor.show)}}"
-    duration="{{0}}" overlay="{{false}}"
-    custom-style="width:0;height:0;background:transparent;pointer-events:none"
-    bind:afterleave="onNativeBackGuard" />
+       浮层间切换时保持原 owner，由共享 stack 处理返回后的重新挂载。 -->
+  <cy-back-guard wx:if="{{(previewVisible || showAddSheet || pickerSheet.open || categorySheetVisible || gameSheetOpen || toolSheetOpen || gameConfigOpen || scanSheetOpen || toolSheetKey || checkSheet.show || afterEditor.show)}}" show="{{(previewVisible || showAddSheet || pickerSheet.open || categorySheetVisible || gameSheetOpen || toolSheetOpen || gameConfigOpen || scanSheetOpen || toolSheetKey || checkSheet.show || afterEditor.show)}}" bind:back="onNativeBackGuard" />
 </view>
 
 <creation-success model="{{creationSuccess}}" bind:action="onCreationSuccessAction" />

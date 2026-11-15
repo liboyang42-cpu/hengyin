@@ -5,6 +5,7 @@ const authorWrites = require('../../../utils/author-write-recovery.js');
 const { applyTheme } = require('../../../utils/theme.js');
 const { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession } = require('../../../utils/session/login-reload.js');
 const modal = require('../../../utils/modal.js');
+const { releaseNativeBackGuards } = require('../../../utils/native-back-guard.js');
 const { resolveMenuChrome } = require('../../../utils/nav-safe-area.js');
 const loading = require('../../../utils/loading.js');
 const { decodeDisplayFields } = require('../../../utils/display-text.js');
@@ -527,15 +528,17 @@ Page({
     if (this._disposed) return;
     this.destroyPreviewAudio();
     if (this._exitAfterPreview) return;
-    // 原生返回拦截关闭完成后再退页，setData 回调时它可能仍在退场。
-    if (this.data.previewVisible) {
-      this._exitAfterPreview = true;
-      this.setData({ previewVisible: false });
-      return;
-    }
-    wx.navigateBack({
-      delta: 1,
-      fail: () => wx.switchTab({ url: '/pages/template/index' })
+    this._exitAfterPreview = true;
+    releaseNativeBackGuards(() => {
+      if (this._disposed) return;
+      this.setData({ previewVisible: false }, () => {
+        if (this._disposed) return;
+        this._exitAfterPreview = false;
+        wx.navigateBack({
+          delta: 1,
+          fail: () => wx.switchTab({ url: '/pages/template/index' })
+        });
+      });
     });
   },
 
@@ -2921,13 +2924,8 @@ Page({
     this.syncNativeTheme();
   },
 
-  // 物理返回守卫(见 wxml 尾部 page-container):关最上层浮层,而不是退出编辑页
+  // 物理返回由 cy-back-guard 统一退挂；这里只关最上层浮层。
   onNativeBackGuard: function () {
-    if (this._exitAfterPreview) {
-      this._exitAfterPreview = false;
-      this.exitPage();
-      return;
-    }
     if (this.data.pickerSheet && this.data.pickerSheet.open) {
       this.closePickerSheet();
     } else if (this.data.checkSheet.show) { this.closeCheckSheet();
@@ -2948,13 +2946,6 @@ Page({
       this.closeAddSheet();
     } else if (this.data.previewVisible) {
       this.closePreview();
-    }
-    const stillGuarded = (this.data.pickerSheet && this.data.pickerSheet.open)
-      || this.data.checkSheet.show || this.data.afterEditor.show || this.data.toolSheetKey || this.data.scanSheetOpen || this.data.gameConfigOpen
-      || this.data.toolSheetOpen || this.data.gameSheetOpen || this.data.categorySheetVisible || this.data.showAddSheet || this.data.previewVisible;
-    if (stillGuarded) {
-      this.setData({ backGuardOff: true });
-      setTimeout(() => this.setData({ backGuardOff: false }), 50);
     }
   },
 

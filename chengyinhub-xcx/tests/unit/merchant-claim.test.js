@@ -50,5 +50,5 @@ test('申请页接入认领 sheet,未新增页面也未改 app.json', () => {
   const sheet = read('pages/merchant/components/merchant-claim-sheet/index.js')
   assert.match(sheet, /\/api\/merchant\/claims\/status/)
   assert.match(sheet, /\/api\/merchant\/claims\/submit/)
-  assert.match(read('pages/merchant/components/merchant-claim-sheet/index.wxml'), /<page-container/)
+  assert.match(read('pages/merchant/components/merchant-claim-sheet/index.wxml'), /<cy-back-guard/)
 })

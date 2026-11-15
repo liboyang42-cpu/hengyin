@@ -23,6 +23,7 @@ const LEAVE_SETTLE_MS = 60
 const SUSPEND_MS = 800
 
 const stack = []          // 开着且启用守卫的弹层实例,后开的在后
+const changing = new Set() // 已发出但尚未收到渲染回调的 native 挂载/卸载
 let suspended = false
 let suspendTimer = null
 
@@ -31,14 +32,53 @@ function pageDepth() {
 }
 
 function setGuard(vm, on, cb) {
+  if (vm._nbgWanted !== on) vm._nbgOwnership = (vm._nbgOwnership || 0) + 1
   vm._nbgWanted = on
-  if (vm._nbgDead || vm.data._backGuard === on) { if (cb) cb(); return }
-  vm.setData({ _backGuard: on }, cb)
+  if (cb) (vm._nbgGuardCallbacks || (vm._nbgGuardCallbacks = [])).push({ on, cb })
+  if (vm._nbgDead) {
+    vm._nbgWriteRevision = (vm._nbgWriteRevision || 0) + 1
+    vm._nbgWriting = false
+    changing.delete(vm)
+    const callbacks = vm._nbgGuardCallbacks || []
+    vm._nbgGuardCallbacks = []
+    callbacks.forEach(item => item.cb())
+    return
+  }
+  if (vm._nbgWriting) return
+  const callbacks = vm._nbgGuardCallbacks || []
+  // 显式卸载的回调必须等 false 真正渲染；关闭重开不能把它改成 true 的确认。
+  const target = callbacks.some(item => !item.on) ? false : vm._nbgWanted
+  const settle = () => {
+    const ready = (vm._nbgGuardCallbacks || []).filter(item => item.on === target)
+    vm._nbgGuardCallbacks = (vm._nbgGuardCallbacks || []).filter(item => item.on !== target)
+    ready.forEach(item => item.cb())
+  }
+  if (vm.data._backGuard === target) {
+    settle()
+    if (!vm._nbgDead && vm.data._backGuard !== vm._nbgWanted) setGuard(vm, vm._nbgWanted)
+    return
+  }
+  const revision = vm._nbgWriteRevision = (vm._nbgWriteRevision || 0) + 1
+  vm._nbgWriting = true
+  changing.add(vm)
+  vm.setData({ _backGuard: target }, () => {
+    if (vm._nbgDead || revision !== vm._nbgWriteRevision) return
+    vm._nbgWriting = false
+    settle()
+    if (vm._nbgWriting || revision !== vm._nbgWriteRevision) return
+    changing.delete(vm)
+    if (vm.data._backGuard !== vm._nbgWanted || (vm._nbgGuardCallbacks || []).length) setGuard(vm, vm._nbgWanted)
+    sync()
+  })
 }
 
 function sync() {
   const top = stack[stack.length - 1]
-  stack.forEach((vm) => setGuard(vm, !suspended && vm === top && !vm._nbgPageHidden))
+  const owner = !suspended && top && !top._nbgPageHidden && !top._nbgDead && pageDepth() <= top._nbgDepth ? top : null
+  const instances = new Set([...stack, ...changing])
+  instances.forEach(vm => { if (vm !== owner) setGuard(vm, false) })
+  // 旧实例的卸载回调到达前不创建新的 page-container。
+  if (owner && ![...changing].some(vm => vm !== owner)) setGuard(owner, true)
 }
 
 function register(vm) {
@@ -50,6 +90,7 @@ function register(vm) {
 }
 
 function unregister(vm) {
+  vm._nbgOwnership = (vm._nbgOwnership || 0) + 1
   const i = stack.indexOf(vm)
   if (i >= 0) stack.splice(i, 1)
   setGuard(vm, false)
@@ -57,16 +98,19 @@ function unregister(vm) {
 }
 
 function onLeave(vm) {
-  if (!vm._nbgWanted) return          // ② 程序收起
+  if (!vm._nbgWanted || vm !== stack[stack.length - 1] || suspended || vm._nbgDead) return
+  const ownership = vm._nbgOwnership
+  const current = () => vm._nbgOwnership === ownership && vm === stack[stack.length - 1]
+    && !vm._nbgDead && !suspended
   vm._nbgWanted = false
   setTimeout(() => {
-    if (stack.indexOf(vm) < 0 || vm._nbgDead) return
-    // ③ 离页 / 选图:不是返回键。守卫记成已撤,页面回来时 show 再挂
+    if (!current()) return
+    // 离页/选图不消费返回；恢复仍由 pageLifetimes.show 负责。
     if (vm._nbgPageHidden || pageDepth() > vm._nbgDepth) { setGuard(vm, false); return }
     setGuard(vm, false, () => {
+      if (!current() || vm._nbgPageHidden || pageDepth() > vm._nbgDepth) return
       if (typeof vm._onNativeBack === 'function') vm._onNativeBack()
-      // 宿主没关掉它(脏数据确认、表单不许关)⇒ 重新挂上,下一次返回仍先落在弹层上
-      setTimeout(() => { if (stack.indexOf(vm) >= 0) sync() }, 0)
+      setTimeout(() => { if (stack.indexOf(vm) >= 0 && !vm._nbgDead) sync() }, 0)
     })
   }, LEAVE_SETTLE_MS)
 }
@@ -76,7 +120,7 @@ function releaseNativeBackGuards(cb) {
   suspended = true
   if (suspendTimer) clearTimeout(suspendTimer)
   suspendTimer = setTimeout(() => { suspendTimer = null; suspended = false; sync() }, SUSPEND_MS)
-  const armed = stack.filter((vm) => vm.data._backGuard)
+  const armed = [...new Set([...stack, ...changing])].filter(vm => vm.data._backGuard || vm._nbgWriting)
   if (!armed.length) { if (cb) cb(); return }
   let left = armed.length
   armed.forEach((vm) => setGuard(vm, false, () => { left -= 1; if (!left && cb) cb() }))
@@ -90,7 +134,7 @@ function chain(a, b) {
 /**
  * 把守卫混进组件定义。onBack(this) = 返回键落下时的出口(关闭或上一步)。
  * 组件 wxml 里放:
- *   <page-container show="{{_backGuard}}" duration="{{0}}" overlay="{{false}}"
+ *   <page-container wx:if="{{_backGuard}}" show="{{_backGuard}}" duration="{{0}}" overlay="{{false}}"
  *     custom-style="width:0;height:0;background:transparent;pointer-events:none" bind:afterleave="_onBackGuardLeave" />
  */
 function withNativeBackGuard(definition, onBack) {
@@ -117,7 +161,11 @@ function withNativeBackGuard(definition, onBack) {
   })
   def.lifetimes = lifetimes
   const pageLifetimes = Object.assign({}, def.pageLifetimes)
-  pageLifetimes.hide = chain(pageLifetimes.hide, function () { this._nbgPageHidden = true })
+  pageLifetimes.hide = chain(pageLifetimes.hide, function () {
+    this._nbgPageHidden = true
+    this._nbgOwnership = (this._nbgOwnership || 0) + 1
+    sync()
+  })
   pageLifetimes.show = chain(pageLifetimes.show, function () {
     if (!this._nbgPageHidden) return
     this._nbgPageHidden = false
@@ -133,6 +181,12 @@ function withNativeBackGuard(definition, onBack) {
 
 // 单测用
 function _reset() {
+  changing.forEach(vm => {
+    vm._nbgWriteRevision = (vm._nbgWriteRevision || 0) + 1
+    vm._nbgWriting = false
+    vm._nbgGuardCallbacks = []
+  })
+  changing.clear()
   stack.splice(0)
   suspended = false
   if (suspendTimer) { clearTimeout(suspendTimer); suspendTimer = null }

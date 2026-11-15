@@ -95,9 +95,7 @@
                    bind:select="onChoiceSheetSelect" bind:cancel="onChoiceSheetCancel" />
   <!-- 物理返回 / iOS 侧滑:0 尺寸 page-container 守卫先关答题半屏(等同点取消),不把整页弹出去。
        选中提交时 choiceSheetShow 已先置 false,onChoiceSheetCancel 的守卫会忽略随后的 afterleave。 -->
-  <page-container show="{{choiceSheetShow}}" duration="{{0}}" overlay="{{false}}"
-    custom-style="width:0;height:0;background:transparent;pointer-events:none"
-    bind:afterleave="onChoiceSheetCancel" />
+  <cy-back-guard wx:if="{{choiceSheetShow}}" show="{{choiceSheetShow}}" bind:back="onChoiceSheetCancel" />
 </view>
 <cy-error load-failure wx:else fill title="页面暂时无法显示" retry="重试" bind:retry="retry" />
     <view wx:if="{{interactionState !== 'idle'}}" class="poi-recovery poi-interaction-recovery"><cy-error title="{{interactionTitle}}" sub="{{interactionText}}" retry="{{interactionActionText}}" bind:retry="recoverInteraction" /></view>

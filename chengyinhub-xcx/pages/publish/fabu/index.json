@@ -1,5 +1,6 @@
 {
   "usingComponents": {
+    "cy-back-guard": "/components/cy/back-guard/index",
     "location-todos": "/pages/publish/components/location-todos/index",
     "cy-list-group": "/pages/publish/components/list-group/index",
     "cy-list-row": "/pages/publish/components/list-row/index",

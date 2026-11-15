@@ -2015,13 +2015,8 @@
 
   <!-- 2026-08-20 物理返回守卫:任一浮层开着时,返回键/侧滑先关最上层浮层(节点抽屉的
        玩法视图先退回详情),不再把整个编辑器弹出去。表达式覆盖本页全部浮层且无排斥项:
-       浮层间切换时它保持为真,不会产生「误触发 afterleave 把底层关掉」的竞态;
-       backGuardOff 用于容器被返回键消费后翻转重挂(page-container 每页只能有一个)。 -->
-  <page-container
-    show="{{!backGuardOff && (structureEditor.show || survivalEditor.show || runtimeZeroEditor.show || chapterPreview.show || initialStateEditor.show || valueEditor.show || routeMappingShow || popChapterNodes || popChapter || publishCheck.show || storyEditor.show || modePickerShow || topicDetailShow)}}"
-    duration="{{0}}" overlay="{{false}}"
-    custom-style="width:0;height:0;background:transparent;pointer-events:none"
-    bind:afterleave="onNativeBackGuard" />
+       浮层间切换时保持原 owner，由共享 stack 处理返回后的重新挂载。 -->
+  <cy-back-guard wx:if="{{(structureEditor.show || survivalEditor.show || runtimeZeroEditor.show || chapterPreview.show || initialStateEditor.show || valueEditor.show || routeMappingShow || popChapterNodes || popChapter || publishCheck.show || storyEditor.show || modePickerShow || topicDetailShow)}}" show="{{(structureEditor.show || survivalEditor.show || runtimeZeroEditor.show || chapterPreview.show || initialStateEditor.show || valueEditor.show || routeMappingShow || popChapterNodes || popChapter || publishCheck.show || storyEditor.show || modePickerShow || topicDetailShow)}}" bind:back="onNativeBackGuard" />
 <include src="runtime-editor.wxml" />
 <include src="runtime-structure-editor.wxml" /> <!-- structure -->
 <include src="survival-editor.wxml" /> <!-- survival -->

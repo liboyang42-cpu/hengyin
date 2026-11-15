@@ -722,9 +722,7 @@
        ★ 卡片克隆里只放图:文字跟着 scale 放大两倍会糊,章节 / 营业态都挪进正文首行。
        ★ 物理返回 / iOS 侧滑由 0 尺寸 page-container 守卫吃掉(同 publish/fabu 的做法),
          afterleave 落到 onHeroNativeBack 关 hero,而不是把整个 play 页弹出去。 -->
-  <page-container wx:if="{{mode==2}}" show="{{hero.show}}" duration="{{0}}" overlay="{{false}}"
-    custom-style="width:0;height:0;background:transparent;pointer-events:none"
-    bind:afterleave="onHeroNativeBack" />
+  <cy-back-guard wx:if="{{(mode==2) && (hero.show)}}" show="{{hero.show}}" bind:back="onHeroNativeBack" />
   <view class="fx-hero {{hero.open ? 'is-open' : ''}}" wx:if="{{mode==2 && hero.show}}"
         aria-role="dialog" aria-modal="true" aria-label="{{hero.node.name}}">
     <!-- 背景不接 tap:关闭走左上返回钮和物理返回。整屏背景挂 hover-class 会在按下时闪一下,不挂又是裸可点元素 -->
@@ -900,7 +898,7 @@
       <cy-btn variant="secondary" style="flex:1" bindtap="closeChapStory">回到卡片</cy-btn>
       <cy-btn variant="primary" style="flex:1" bindtap="heroEnter">{{hero.node.playName ? '开始 · ' + hero.node.playName : '到店打卡'}}</cy-btn>
     </view>
-    <page-container show="{{chapStory.show}}" duration="{{0}}" overlay="{{false}}" bind:afterleave="onStoryNativeBack" />
+    <cy-back-guard wx:if="{{chapStory.show}}" show="{{chapStory.show}}" bind:back="onStoryNativeBack" />
   </view>
 
   <!-- ④ 店铺分身对话。形象居中占屏幕上半,开场问候是居中大字,点输入框就让位给消息流。
@@ -958,7 +956,7 @@
       <view class="fx-npc__send {{shopNpc.input ? '' : 'is-off'}}" bindtap="sendShopNpc"
             aria-role="button" aria-label="发送" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="arrow-right" size="30" /></view>
     </view>
-    <page-container show="{{shopNpc.show}}" duration="{{0}}" overlay="{{false}}" bind:afterleave="onShopNpcNativeBack" />
+    <cy-back-guard wx:if="{{shopNpc.show}}" show="{{shopNpc.show}}" bind:back="onShopNpcNativeBack" />
   </view>
 
 

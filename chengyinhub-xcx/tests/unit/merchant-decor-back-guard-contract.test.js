@@ -6,12 +6,12 @@ const read = (p) => fs.readFileSync(path.join(__dirname, '../..', p), 'utf8')
 
 test('装修页挂不可见 page-container 返回守卫', () => {
   const wxml = read('pages/merchant/decor/index.wxml')
-  const m = wxml.match(/<page-container[\s\S]*?\/>/)
+  const m = wxml.match(/<cy-back-guard[\s\S]*?\/>/)
   assert.ok(m, '缺 page-container')
   // owner 2026-10-22:选图跳裁剪页期间(imagePicking)守卫让位;胶囊多选 sheet 也受返回键保护
   assert.match(m[0], /show="\{\{!backGuardOff && !imagePicking && \(imageEditor \|\| fieldSheet\.show \|\| discardVisible \|\| chipSheet\.show\)\}\}"/)
-  assert.match(m[0], /bind:afterleave="onNativeBackGuard"/)
-  assert.match(m[0], /overlay="\{\{false\}\}"/)
+  assert.match(m[0], /bind:back="onNativeBackGuard"/)
+  assert.match(read('components/cy/back-guard/index.wxml'), /overlay="\{\{false\}\}"/)
 })
 
 test('onNativeBackGuard 按 放弃确认>字段面板>图片编辑 关闭并重挂', () => {

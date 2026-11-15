@@ -3,6 +3,7 @@
   "navigationBarTextStyle": "black",
   "backgroundColor": "#F3F4F4",
   "usingComponents": {
+    "cy-back-guard": "/components/cy/back-guard/index",
     "cy-badge": "/components/cy/badge/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-danger-confirm": "/components/cy/danger-confirm/index",

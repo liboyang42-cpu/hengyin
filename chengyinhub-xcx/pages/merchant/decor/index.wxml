@@ -547,10 +547,6 @@
   />
   <!-- 物理返回守卫:图片编辑/字段面板/胶囊面板/放弃确认任一开着时,返回键先关浮层而不是退页;backGuardOff 用于消费后重挂。
        imagePicking:选图跳裁剪页期间守卫让位(离页也会触发 leave,不能当成返回键关掉图片编辑) -->
-  <page-container
-    show="{{!backGuardOff && !imagePicking && (imageEditor || fieldSheet.show || discardVisible || chipSheet.show)}}"
-    duration="{{0}}" overlay="{{false}}"
-    custom-style="width:0;height:0;background:transparent;pointer-events:none"
-    bind:afterleave="onNativeBackGuard" />
+  <cy-back-guard wx:if="{{!backGuardOff && !imagePicking && (imageEditor || fieldSheet.show || discardVisible || chipSheet.show)}}" show="{{!backGuardOff && !imagePicking && (imageEditor || fieldSheet.show || discardVisible || chipSheet.show)}}" bind:back="onNativeBackGuard" />
 </view>
 <wxs src="../../../utils/wxs/img.wxs" module="img" />

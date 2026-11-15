@@ -49,5 +49,4 @@
   </view>
 </cy-sheet>
 <!-- 物理返回守卫:sheet 开着时返回键只关 sheet,不退出入驻页 -->
-<page-container show="{{show}}" duration="{{0}}" overlay="{{false}}"
-  custom-style="width:0;height:0;background:transparent;pointer-events:none" bind:afterleave="onClose" />
+<cy-back-guard wx:if="{{show}}" show="{{show}}" bind:back="onClose" />

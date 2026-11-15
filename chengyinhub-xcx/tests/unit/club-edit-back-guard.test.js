@@ -21,11 +21,11 @@ function loadEditPage() {
 }
 
 test('BL-18 俱乐部资料编辑页挂 page-container 返回守卫', () => {
-  const m = read('pages/club/edit/index.wxml').match(/<page-container[\s\S]*?\/>/)
+  const m = read('pages/club/edit/index.wxml').match(/<cy-back-guard[\s\S]*?\/>/)
   assert.ok(m, '缺 page-container')
   assert.match(m[0], /show="\{\{!backGuardOff && \(dirty \|\| confirm\.show\)\}\}"/)
-  assert.match(m[0], /overlay="\{\{false\}\}"/)
-  assert.match(m[0], /bind:afterleave="onNativeBackGuard"/)
+  assert.match(read('components/cy/back-guard/index.wxml'), /overlay="\{\{false\}\}"/)
+  assert.match(m[0], /bind:back="onNativeBackGuard"/)
 })
 
 test('BL-18 物理返回：有改动先弹确认，确认框开着时返回 = 继续编辑，不退页', () => {
@@ -52,10 +52,10 @@ test('BL-18 无改动时守卫不挂，afterleave 不做任何事', () => {
 
 test('BL-18 俱乐部详情里的资料编辑弹窗同样有返回守卫', () => {
   const wxml = read('pages/club/detail/index.wxml')
-  const m = wxml.match(/<page-container[\s\S]*?\/>/)
+  const m = wxml.match(/<cy-back-guard[\s\S]*?\/>/)
   assert.ok(m)
   assert.match(m[0], /sceneCurrent\.id === 'club-edit' && \(sceneDirty \|\| sceneConfirm\)/)
-  assert.match(m[0], /bind:afterleave="onSceneNativeBackGuard"/)
+  assert.match(m[0], /bind:back="onSceneNativeBackGuard"/)
   const js = read('pages/club/detail/index.js')
   const body = js.slice(js.indexOf('onSceneNativeBackGuard()'), js.indexOf('onSceneNativeBackGuard()') + 500)
   assert.ok(body.indexOf('cancelSceneDiscard') < body.indexOf('requestSceneClose'))

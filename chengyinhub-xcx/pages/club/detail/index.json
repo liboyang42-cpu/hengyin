@@ -1,6 +1,7 @@
 {
   "navigationStyle": "custom",
   "usingComponents": {
+    "cy-back-guard": "/components/cy/back-guard/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-club-pinned-notice": "/pages/club/components/club-pinned-notice/index",
     "cy-avatar": "/components/cy/avatar/index",

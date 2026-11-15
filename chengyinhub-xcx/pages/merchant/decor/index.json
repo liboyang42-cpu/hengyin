@@ -1,5 +1,6 @@
 {
   "usingComponents": {
+    "cy-back-guard": "/components/cy/back-guard/index",
     "cy-empty": "/components/cy/empty/index",
     "cy-error": "/components/cy/error/index",
     "cy-inline-error": "/components/cy/inline-error/index",

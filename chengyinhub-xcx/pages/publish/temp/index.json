@@ -1,5 +1,6 @@
 {
   "usingComponents": {
+    "cy-back-guard": "/components/cy/back-guard/index",
     "cy-card": "/components/cy/card/index",
     "cy-btn": "/components/cy/btn/index",
     "cy-ai-assist": "/pages/publish/components/ai-assist/index",

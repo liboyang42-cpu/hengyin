@@ -1718,7 +1718,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
   onManualCityChange(e) {
     const idx = Number(e && e.detail && e.detail.value);
     const city = String(homeCity.CITY_OPTIONS[idx] || '').trim();
-    if (city) { this.setData({ city: city, cityManual: false, cityPickerIndex: idx }); homeCity.saveLastCity(city); }
+    if (city) { this.setData({ city: city, cityManual: false, cityPicker: true, cityPickerIndex: idx }); homeCity.saveLastCity(city); }
   },
 
   // V-01:用户主动点城市重新定位，失败时才提示。
@@ -1740,6 +1740,7 @@ function offerManualCity(page, scope, reason) {
   hideLocationLoading(page, scope);
   if (!isCurrentLocationRequest(page, scope)) return;
   if (!page.data.city) applyCityFallback(page);
+  page.setData({ cityPicker: true, cityPickerIndex: homeCity.CITY_OPTIONS.indexOf(page.data.city) });
   if (scope.userInitiated) cyToast(reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : '暂时无法自动识别城市，请手动选择');
 }
 

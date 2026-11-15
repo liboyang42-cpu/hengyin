@@ -37,6 +37,57 @@ function latest(p,row=consent(),opts) {
   r.success({code:200,data:row});return r
 }
 const COLD_TOAST='暂时无法自动识别城市，请手动选择'
+function manualFallback(p, reason, userInitiated = true) {
+  p._locationEpoch = 1
+  p.reverseGeocode(undefined, undefined, { epoch: 1, memberId: member, authorization: token,
+    consentRequestId: 'home-consent-original', userInitiated })
+  const request = requests.at(-1)
+  assert.equal(request.url, '/api/map/reverse-geocode')
+  request.success({ code: 200, data: { city: '', manualInputRequired: true, reason } })
+}
+
+test('HOME-CITY 手选后保留现有下拉，不因已登录而变回GPS入口', () => {
+  const p = page()
+  p.data.city = '上海市'; p.data.cityPicker = false
+  p.onManualCityChange({ detail: { value: 4 } })
+  assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityManual, false)
+  assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, 4)
+  assert.equal(store.home_city_last, '杭州市')
+  assert.equal(requests.length, 0); assert.equal(locations.length, 0)
+  assert.equal(writes.length, 0); assert.equal(modals.length, 0)
+})
+for (const reason of ['MAP_UNAVAILABLE', 'MAP_RATE_LIMITED']) {
+  for (const cachedOnly of [false, true]) {
+    test('HOME-CITY ' + reason + (cachedOnly ? ' 仅lastCity' : ' 已显示城市') + '回退实际打开已有下拉', () => {
+      store.home_city_last = '上海市'; store.home_city_location_declined = 1
+      const p = page()
+      if (!cachedOnly) p.data.city = '上海市'
+      p.data.cityManual = false; p.data.cityPicker = false
+      manualFallback(p, reason)
+      assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityManual, false)
+      assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, 1)
+      assert.deepEqual(toasts, [reason === 'MAP_RATE_LIMITED' ? '定位请求较频繁，请手动选择城市' : COLD_TOAST])
+      p.onManualCityChange({ detail: { value: 4 } })
+      assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityPicker, true)
+      assert.equal(store.home_city_last, '杭州市'); assert.equal(store.home_city_location_declined, 1)
+      assert.equal(requests.length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+    })
+  }
+}
+test('HOME-CITY 无历史城市的手选回退保持空城市与现有选择入口', () => {
+  const p = page(); manualFallback(p, 'MAP_UNAVAILABLE')
+  assert.equal(p.data.city, ''); assert.equal(p.data.cityManual, true)
+  assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, -1)
+  assert.equal(store.home_city_last, undefined); assert.equal(locations.length, 0)
+})
+test('HOME-CITY 自动手选回退保留历史城市并保持静默、不新增定位或同意', () => {
+  store.home_city_last = '上海市'
+  const p = page(); p.data.city = '上海市'
+  manualFallback(p, 'MAP_UNAVAILABLE', false)
+  assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityPicker, true)
+  assert.deepEqual(toasts, []); assert.equal(modals.length, 0)
+  assert.equal(requests.length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+})
 test('D-72 冷启动/onShow 自动定位失败不弹城市提示，没有记住的城市就露选择器而不是上海市',()=>{
   const p=page();latest(p);locations[0].success({latitude:31.23,longitude:121.47})
   requests.find(x=>x.url==='/api/map/reverse-geocode').success({code:200,data:{city:'',manualInputRequired:true,reason:'MAP_UNAVAILABLE'}})
