@@ -13,19 +13,49 @@ function mount(){
   return {...definition,data:structuredClone(definition.data),setData(patch){Object.assign(this.data,patch);}};
 }
 test('city, nearby and live card image guards use only real covers and hide failed image/shade',()=>{
-  const images=[...markup.matchAll(/<image\s+wx:if="\{\{([^}]+)\}\}"\s+class="entry-card__cover"[^>]*>/g)];
-  assert.equal(images.length,3);
-  for(const [tag,expression]of images){
-    assert.match(tag,/src="\{\{item.cover\}\}"/);assert.match(tag,/binderror="onEntryCoverError"/);
+  const assertVisibility=expression=>{
     const visible=new Function('item','entryCoverErrors','return !!('+expression+')');
     assert.equal(visible({cover:''},{}),false);
     assert.equal(visible({cover:'real.jpg'},{}),true);
     assert.equal(visible({cover:'failed.jpg'},{'failed.jpg':true}),false);
     assert.equal(visible({cover:'new.jpg'},{'old.jpg':true}),true);
+  };
+  const assertCovers=source=>{
+    const images=[...source.matchAll(/<image\s+wx:if="\{\{([^}]+)\}\}"\s+class="entry-card__cover"[^>]*>/g)];
+    assert.equal(images.length,3);
+    for(const [tag,expression]of images){
+      const attrs=Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(match=>[match[1],match[2]]));
+      assert.equal(attrs.src,'{{item.cover}}');assert.equal(attrs.binderror,'onEntryCoverError');
+      assertVisibility(expression);
+    }
+    assert.equal((source.match(/class="entry-card[^"\n]*entry-card--text/g)||[]).length,3);
+    const shades=(source.match(/<view\b[^>]*>/g)||[]).filter(tag=>{
+      const classes=(tag.match(/\bclass="([^"]*)"/)||[])[1]||'';
+      return classes.split(/\s+/).includes('entry-card__shade');
+    });
+    assert.equal(shades.length,3);
+    for(const tag of shades){
+      const attrs=Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(match=>[match[1],match[2]]));
+      assert.ok(attrs.class.split(/\s+/).includes('entry-card__shape'),'保留装饰shape语义');
+      assert.equal(attrs['aria-hidden'],'true','装饰不冒充可访问内容');
+      const expression=(attrs['wx:if']||'').match(/^\{\{([^}]+)\}\}$/);
+      assert.ok(expression,'遮罩有自己的实际图片guard');
+      assertVisibility(expression[1]);
+    }
+    assert.doesNotMatch(source,/home-route-city-placeholder|entryActivity.cover \|\|/);
+    return {image:images[0][0],shade:shades[0]};
+  };
+  const {image,shade}=assertCovers(markup);
+  for(const [original,changed]of [
+    [image,image.replace('item.cover && !entryCoverErrors[item.cover]','item.cover')],
+    [image,image.replace(/(\s)src="\{\{item.cover\}\}"/,'$1src="{{item.cover || \'/unit-fake-cover.png\'}}"')],
+    [shade,shade.replace('item.cover && !entryCoverErrors[item.cover]','item.cover')],
+    [shade,shade.replace(' entry-card__shape','')],
+    [shade,shade.replace('aria-hidden="true"','aria-hidden="false"')],
+  ]){
+    assert.notEqual(changed,original,'负控必须实际变异真实图片/遮罩');
+    assert.throws(()=>assertCovers(markup.replace(original,changed)),{name:'AssertionError'});
   }
-  assert.equal((markup.match(/class="entry-card[^"\n]*entry-card--text/g)||[]).length,3);
-  assert.equal((markup.match(/wx:if="\{\{item.cover && !entryCoverErrors\[item.cover\]\}\}" class="entry-card__shade"/g)||[]).length,3);
-  assert.doesNotMatch(markup,/home-route-city-placeholder|entryActivity.cover \|\|/);
 });
 test('a real image error selects text presentation for that URL without modifying sources or another card',()=>{
   const page=mount();page.data.entryStrip=[{id:1,cover:'failed.jpg'},{id:2,cover:'good.jpg'}];

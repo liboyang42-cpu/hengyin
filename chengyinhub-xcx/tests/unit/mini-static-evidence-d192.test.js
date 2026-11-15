@@ -120,3 +120,80 @@ test('节点声音错误使用既有错误组件，恢复动作仅查询原请�
   const json=JSON.parse(fs.readFileSync(path.join(root,'pages/topic/components/cy/node-npc-form/index.json'),'utf8'));
   assert.equal(json.usingComponents['cy-inline-error'],'/components/cy/inline-error/index');
 });
+
+test('首页两处动态投影等量重锚；漏任一登记与新调用点仍红',()=>{
+  const file=path.join(root,'pages/index/index.js');
+  const approved=new Map(Object.entries(baseline.u4Dynamic));
+  const prefix='chengyinhub-xcx/pages/index/index.js#site:';
+  const targets=['6ac92b01d7055b71ff2cefb81dfaa2c937ece2d0429a4c1171d7f47818fc237d',
+    '5f31ebc1ddf09fc0d3ef78a909d93491460bb6349c58875c85b093b75759c162'].map(key=>prefix+key+':1');
+  for(const old of ['24e1efab5e0ca1a6a4829cea880778b64709e9b7fbc9324beadfa9ed521d9a97',
+    'b8d2fe63c3fd7b1cd1e7699ae12ed543a6b8359dbda05165981ce8eda855fcef']) assert.equal(approved.has(prefix+old+':1'),false);
+  assert.equal(approved.size,59);
+  assert.equal(baseline.ratchet.u4Dynamic,59);
+  const digest=require('node:crypto').createHash('sha256').update([...approved.keys()].sort().join('\n')).digest('hex');
+  assert.equal(baseline.ratchet.keyDigest.u4Dynamic,digest);
+  assert.deepEqual(scanU4([file],new Map(Object.entries(baseline.u4Debt)),approved).violations,[]);
+  for(const key of targets) {
+    assert.ok(approved.has(key));
+    const missing=new Map(approved); missing.delete(key);
+    assert.ok(scanU4([file],new Map(Object.entries(baseline.u4Debt)),missing).violations.some(row=>row.key===key));
+  }
+  const source=fs.readFileSync(file,'utf8');
+  const injected=source+'\nPage({load(){this.setData(serverPayload);}});';
+  const originalRead=fs.readFileSync;
+  const mock=require('node:test').mock.method(fs,'readFileSync',function(target,...args){return target===file?injected:originalRead.call(this,target,...args);});
+  try { assert.ok(scanU4([file],new Map(Object.entries(baseline.u4Debt)),approved).violations.some(row=>!approved.has(row.key))); }
+  finally { mock.mock.restore(); }
+});
+
+test('首页真实caller只投影三个固定列表或bottomTopicList下标，服务端键与迟回包不得写顶层',()=>{
+  const file=path.join(root,'pages/index/index.js'),source=fs.readFileSync(file,'utf8');
+  function mount(text=source) {
+    let definition,member='TEST-member'; const requests=[],patches=[];
+    const app={globalData:{features:{},authorization:'TEST-source-only'},getUserID:()=>member,getUserType:()=>1,
+      getPageSize:()=>10,getImgUrl:value=>value||'',sendRequest:request=>{requests.push(request);return {abort(){}};}};
+    const wx={getStorageSync:()=>'',getAccountInfoSync:()=>({miniProgram:{envVersion:'release'}})};
+    vm.runInNewContext(text,{require:createRequire(file),getApp:()=>app,Page:value=>{definition=value;},wx,console});
+    const page={...definition,data:JSON.parse(JSON.stringify(definition.data)),
+      setData(patch,done){
+        patches.push(JSON.parse(JSON.stringify(patch)));
+        for(const [key,value] of Object.entries(patch)) {
+          const parts=key.replace(/\[(\d+)\]/g,'.$1').split('.');let target=this.data;
+          for(const part of parts.slice(0,-1)) target=target[part]||(target[part]={});
+          target[parts.at(-1)]=value;
+        }
+        if(done) done();
+      }};
+    page.data.reducedMotion=true;
+    page.ensureCountdownTimerRunning=()=>{};
+    page._nearbyThemeOwner='TEST-member|TEST-source-only';
+    return {page,requests,patches,changeMember(){member='TEST-other';}};
+  }
+  const response={code:200,data:{rows:[{id:7,name:'TEST',serverOnly:true}],items:[{id:7,name:'TEST',serverOnly:true}],serverInjected:'must not become a key'}};
+  for(const name of ['recommendedTopicList','nearbyTopicList','upcomingActivityList']) {
+    const h=mount();h.page.getListData(name,'/api/topic/list',{});h.requests[0].success(response);
+    const projection=h.patches.find(patch=>Object.hasOwn(patch,name));
+    assert.deepEqual(Object.keys(projection).sort(),[name,'listErr.'+name].sort());
+    assert.equal(projection[name][0].id,7);
+    assert.equal(h.page.data.serverInjected,undefined);
+    assert.equal(h.page.data.serverOnly,undefined);
+  }
+  const stale=mount();stale.page.getListData('nearbyTopicList','/api/roam/hangout/nearby',{});
+  stale.page.getListData('nearbyTopicList','/api/roam/hangout/nearby',{});
+  const before=stale.patches.length;stale.requests[0].success(response);assert.equal(stale.patches.length,before);
+  stale.changeMember();stale.requests[1].success(response);assert.equal(stale.patches.length,before);
+  const bottom=mount();bottom.page.data.bottomTopicList=[{id:1}];bottom.page.loadBottomTopicList(2);
+  bottom.requests[0].success({code:200,data:{rows:[{id:2},{id:3}],total:30,serverInjected:true}});
+  const append=bottom.patches.find(patch=>Object.hasOwn(patch,'bottomTopicList[1]'));
+  assert.deepEqual(Object.keys(append).sort(),['bottomTopicPageNo','hasMoreBottomTopic','bottomTopicList[1]','bottomTopicList[2]'].sort());
+  assert.equal(bottom.page.data.serverInjected,undefined);
+  const wxml=fs.readFileSync(path.join(root,'pages/index/index.wxml'),'utf8');
+  for(const field of ['nearbyTopicList','upcomingActivityList','bottomTopicList','hasMoreBottomTopic','listErr']) assert.ok(wxml.includes(field),field);
+  assert.match(source,/this\.data\.recommendedTopicList/);assert.ok(wxml.includes('recoHero'));
+  assert.ok(/that\.data\.bottomTopicPageNo \+ 1/.test(source));
+  const bad=mount(source.replace('dataObj[listName] = list;','dataObj[listName] = list; dataObj.serverInjected = list;'));
+  bad.page.getListData('recommendedTopicList','/api/topic/list',{});bad.requests[0].success(response);
+  const projection=bad.patches.find(patch=>Object.hasOwn(patch,'recommendedTopicList'));
+  assert.throws(()=>assert.deepEqual(Object.keys(projection).sort(),['recommendedTopicList','listErr.recommendedTopicList'].sort()));
+});

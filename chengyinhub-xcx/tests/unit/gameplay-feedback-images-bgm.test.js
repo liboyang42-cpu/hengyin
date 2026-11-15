@@ -77,7 +77,42 @@ test('编辑页试玩:按作者刚填的答案本地判,反馈取对应那一边
 test('编辑页试玩:玩法那一屏不压翻页点 / 箭头 / 保存栏,判定屏可「继续」', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8');
   assert.doesNotMatch(wxml, /cg-pv-float/);
-  assert.match(wxml, /<cy-play-verdict wx:if="\{\{ pvStepKey === 'challenge' && pvKit \}\}"[^>]*closable="\{\{ true \}\}" bind:close="closePvVerdict"/);
+  const preview = require('../../pages/publish/utils/publish/advanced-game-preview.js');
+  const assertChallenge = (source) => {
+    const tag = (source.match(/<cy-play-verdict\b[^>]*>/g) || [])
+      .find(value => /wx:if="\{\{\s*pvStepKey === 'challenge' && pvKit\s*\}\}"/.test(value));
+    assert.ok(tag, '必须校验同一个真实challenge判定屏');
+    const attrs = Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(match => [match[1], match[2]]));
+    assert.equal((attrs.closable || '').replace(/\s/g, ''), '{{true}}');
+    assert.equal(attrs['bind:close'], 'closePvVerdict');
+    assert.equal(attrs['cta-text'], undefined, '仍使用组件默认继续');
+    const expression = (attrs['full-color'] || '').match(/^\{\{([\s\S]+)\}\}$/);
+    assert.ok(expression, '受控QA成功使用现有full-color');
+    const fullColor = new Function('pvVerdict', 'pvKit', 'return (' + expression[1] + ')');
+    for (const mode of ['TYPE', 'PICK', 'SHOT', undefined]) for (const judge of [false, true, undefined]) {
+      const kit = preview.buildPreviewKit({ qa: { enabled: true, mode, judge } });
+      assert.equal(kit.judge, judge, '真实builder保留原作者判定配置');
+      for (const kind of ['win', 'fail']) {
+        assert.equal(fullColor({ kind }, kit), kind === 'win' && mode !== 'SHOT' && judge !== false,
+          '仅有判定的TYPE/PICK成功可变绿，缺省模式沿原TYPE');
+      }
+    }
+    for (const kit of [preview.buildPreviewKit({ coinFlip: { enabled: true } }), {}]) {
+      for (const kind of ['win', 'fail']) assert.equal(fullColor({ kind }, kit), false, '非QA和未配置默认不变绿');
+    }
+    return tag;
+  };
+  const tag = assertChallenge(wxml);
+  for (const changed of [
+    tag.replace('closable="{{ true }}"', 'closable="{{ false }}"'),
+    tag.replace('bind:close="closePvVerdict"', 'bind:close="pvNext"'),
+    tag.replace(/full-color="\{\{[^"]+\}\}"/, 'full-color="{{true}}"'),
+    tag.replace("pvVerdict.kind === 'win' && ", ''),
+    tag.replace('pvKit.judge !== false', 'true'),
+  ]) {
+    assert.notEqual(changed, tag, '负控必须实际变异真实caller');
+    assert.throws(() => assertChallenge(wxml.replace(tag, changed)), { name: 'AssertionError' });
+  }
   // 2026-10-27 P-40:业主删掉了预览底部保存 / 发布栏(只留左右滑动 + 返回),不再断言 cg-pv-submit 存在
   assert.doesNotMatch(wxml, /class="cg-pv-submit"/);
   const json = JSON.parse(fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.json'), 'utf8'));
