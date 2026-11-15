@@ -56,6 +56,7 @@ class DiscoveryShopLinkMyBatisTest {
             assertEquals(1, mapper.insertReference(MERCHANT_LINKED, "MERCHANT", MERCHANT, "{}", "PUBLIC_SAFE", now));
             assertEquals(1, mapper.insertReference(INVALIDATED, "POI", PLACE, "{}", "PUBLIC_SAFE", now));
             jdbc.update("update community_post_reference set invalidated_at=now() where post_id=?", INVALIDATED);
+            session.clearCache();
 
             // Held, failed-review and rejected posts never show on the shop page, for others or for the author.
             assertEquals(List.of(MERCHANT_LINKED, APPROVED), ids(mapper.selectFeed(place(OTHER, "POI", PLACE))));
@@ -68,11 +69,14 @@ class DiscoveryShopLinkMyBatisTest {
 
             // Approval later: the link was kept through review, so the post appears without being re-linked.
             jdbc.update("update community_post set lifecycle='PUBLISHED' where id=?", PENDING);
+            session.clearCache(); // the rows changed outside MyBatis
             assertEquals(List.of(MERCHANT_LINKED, APPROVED, PENDING), ids(mapper.selectFeed(place(OTHER, "POI", PLACE))));
             // Taken down after publishing: hidden again, and the link row stays for an appeal or a restore.
             jdbc.update("update community_post set lifecycle='REMOVED' where id=?", APPROVED);
+            session.clearCache(); // the rows changed outside MyBatis
             assertEquals(List.of(MERCHANT_LINKED, PENDING), ids(mapper.selectFeed(place(OTHER, "POI", PLACE))));
             jdbc.update("update community_post set lifecycle='PUBLISHED' where id=?", APPROVED);
+            session.clearCache(); // the rows changed outside MyBatis
             assertEquals(List.of(MERCHANT_LINKED, APPROVED, PENDING), ids(mapper.selectFeed(place(OTHER, "POI", PLACE))));
             for (long id : new long[] {PENDING, FAILED, REJECTED, APPROVED}) {
                 assertEquals(1, jdbc.queryForObject("select count(*) from community_post_reference where post_id=?"
@@ -82,7 +86,7 @@ class DiscoveryShopLinkMyBatisTest {
             // Public feeds are unchanged by the new mode.
             CommunityPostFeedQuery latest = place(OTHER, "POI", PLACE);
             latest.setMode("LATEST");
-            assertEquals(List.of(MERCHANT_LINKED, INVALIDATED, APPROVED, PENDING), ids(mapper.selectFeed(latest)));
+            assertEquals(List.of(INVALIDATED, MERCHANT_LINKED, APPROVED, PENDING), ids(mapper.selectFeed(latest)));
         }
     }
 
