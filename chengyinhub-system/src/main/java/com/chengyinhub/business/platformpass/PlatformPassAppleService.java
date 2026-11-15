@@ -125,7 +125,7 @@ public class PlatformPassAppleService {
             throw PlatformPassException.badRequest("REQUEST_ID_REQUIRED", "请求标识无效");
         }
         Map<String, Object> plan = planCode == null ? null : passMapper.selectPlanByCode(planCode.trim().toUpperCase());
-        if (plan == null || PlatformPassService.num(plan.get("status")) != 1) {
+        if (plan == null || plan.isEmpty() || !Long.valueOf(1L).equals(PlatformPassService.num(plan.get("status")))) {
             throw PlatformPassException.notFound("PLAN_NOT_ON_SALE", "该通行证暂未开售");
         }
         String productId = config.productForPlan(str(plan.get("plan_code")));
@@ -136,7 +136,7 @@ public class PlatformPassAppleService {
                 + "|" + PlatformPassService.num(plan.get("price_fen")) + "|" + PlatformPassService.num(plan.get("valid_days"))
                 + "|" + productId);
         Map<String, Object> replay = passMapper.selectOrderByMemberRequest(memberId, requestId);
-        if (replay != null) {
+        if (replay != null && !replay.isEmpty()) {
             if (!fingerprint.equals(replay.get("request_fingerprint"))) {
                 throw PlatformPassException.conflict("REQUEST_CONFLICT", "请求已用于另一笔订单，请重新下单");
             }
