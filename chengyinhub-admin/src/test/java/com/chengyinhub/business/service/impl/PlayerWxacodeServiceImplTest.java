@@ -170,4 +170,27 @@ class PlayerWxacodeServiceImplTest {
         assertTrue(lua.contains("60000"), lua);
         assertTrue(lua.contains("pexpire"), lua);
     }
+
+    @Test
+    void e2eTestGatewayAndStorageRenderPngAndResolveProfileUrl(@org.junit.jupiter.api.io.TempDir java.nio.file.Path tempDir) {
+        String prev = com.chengyinhub.common.config.RuoYiConfig.getProfile();
+        com.chengyinhub.common.config.RuoYiConfig profileCfg = new com.chengyinhub.common.config.RuoYiConfig();
+        profileCfg.setProfile(tempDir.toString());
+        try {
+            PlayerWxacodeServiceImpl e2e = new PlayerWxacodeServiceImpl(
+                    new E2eTestWxCodeGateway(),
+                    new E2eTestWxCodeStorage("http://127.0.0.1:8120"));
+            ReflectionTestUtils.setField(e2e, "tokenService", tokenService);
+            ReflectionTestUtils.setField(e2e, "redisCache", redisCache);
+            ReflectionTestUtils.setField(e2e, "rateRedis", rateRedis);
+            ReflectionTestUtils.setField(e2e, "signingSecret", "test-only-player-code-secret");
+
+            String url = e2e.getOrCreate(9004L);
+
+            assertTrue(url.startsWith("http://127.0.0.1:8120/profile/qrcode/"), url);
+            assertTrue(url.endsWith(".png"), url);
+        } finally {
+            profileCfg.setProfile(prev);
+        }
+    }
 }

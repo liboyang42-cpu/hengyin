@@ -55,4 +55,16 @@ public class E2eTestContentSecurityService extends WxContentSecurityServiceImpl
     {
         return false;
     }
+
+    @Override
+    public String getAccessToken()
+    {
+        return "e2e-test-access-token";
+    }
+
+    @Override
+    public String refreshAccessToken()
+    {
+        return "e2e-test-access-token";
+    }
 }

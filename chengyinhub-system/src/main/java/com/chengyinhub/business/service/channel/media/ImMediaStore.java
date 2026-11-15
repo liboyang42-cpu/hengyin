@@ -14,4 +14,10 @@ public interface ImMediaStore
 
     /** 删除尚未挂到消息上的对象；对象不在本桶时返回 false。 */
     boolean delete(long assetId);
+
+    /** 本地受测实现可直接按资产读取字节，避免同机回环 HTTPS 自调；默认返回 null 由服务层走 URL 拉取。 */
+    default byte[] readBytes(long assetId, long maxBytes, long expected)
+    {
+        return null;
+    }
 }

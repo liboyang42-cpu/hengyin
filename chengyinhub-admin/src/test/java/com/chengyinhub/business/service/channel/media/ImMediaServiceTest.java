@@ -201,4 +201,24 @@ class ImMediaServiceTest
         assertTrue((Long) policy.get("maximumSourceBytes") <= 64L * 1024 * 1024);
         assertEquals(List.of(), List.of());
     }
+
+    @Test void voiceBytesUsesDirectStoreReadBytesWhenPresent()
+    {
+        long OTHER = 8;
+        byte[] voice = new byte[] { 1, 2, 3, 4 };
+        when(conversations.countConversationMember(CONV, OTHER)).thenReturn(1);
+        Map<String, Object> msg = new java.util.LinkedHashMap<>(Map.of("id", MSG, "conversationId", CONV, "senderId", ME,
+                "msgType", 10, "content", "[语音]", "extraJson", "{}", "status", 0, "checkStatus", 1));
+        row.put("kind", "VOICE");
+        row.put("reviewState", "APPROVED");
+        row.put("byteSize", 4L);
+        when(mapper.selectMessage(MSG)).thenReturn(msg);
+        when(mapper.selectByMessage(MSG)).thenReturn(row);
+        when(store.readBytes(ASSET, Kind.VOICE.maxBytes, 4L)).thenReturn(voice);
+
+        byte[] actual = service.voiceBytes(OTHER, MSG);
+
+        assertEquals(4, actual.length);
+        verify(store, never()).shortLivedUrl(anyLong(), anyInt());
+    }
 }

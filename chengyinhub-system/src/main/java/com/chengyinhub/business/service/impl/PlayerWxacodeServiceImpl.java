@@ -9,6 +9,7 @@ import com.chengyinhub.common.utils.StringUtils;
 import com.chengyinhub.common.utils.file.FileOssUploadUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -76,6 +77,13 @@ public class PlayerWxacodeServiceImpl implements IPlayerWxacodeService {
 
     private final WxCodeGateway gateway;
     private final WxCodeStorage storage;
+
+    @Autowired
+    public PlayerWxacodeServiceImpl(ObjectProvider<WxCodeGateway> gatewayProvider,
+                                    ObjectProvider<WxCodeStorage> storageProvider) {
+        this(gatewayProvider.getIfAvailable(HttpWxCodeGateway::new),
+             storageProvider.getIfAvailable(OssWxCodeStorage::new));
+    }
 
     public PlayerWxacodeServiceImpl() {
         this(new HttpWxCodeGateway(), new OssWxCodeStorage());

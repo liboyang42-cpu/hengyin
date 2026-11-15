@@ -299,6 +299,10 @@ class MerchantCrmBroadcastServiceImplTest {
         assertEquals(1, inserted.getValue().getDailySlot());
         assertEquals(2, inserted.getValue().getAudienceCount());
         assertEquals("今晚 8 点临时闭店，别跑空", inserted.getValue().getContent());
+
+        ArgumentCaptor<MerchantCrmBroadcast> finalized = ArgumentCaptor.forClass(MerchantCrmBroadcast.class);
+        verify(broadcastMapper).finalizeBroadcast(finalized.capture());
+        assertEquals(2, finalized.getValue().getAudienceCount());
     }
 
     @Test
