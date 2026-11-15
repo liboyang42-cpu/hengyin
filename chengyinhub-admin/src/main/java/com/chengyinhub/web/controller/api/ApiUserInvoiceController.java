@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.UserInvoiceTitle;
 import com.chengyinhub.business.service.IUserInvoiceService;
 import com.chengyinhub.business.service.compliance.ComplianceFeatureSwitches;
@@ -161,7 +163,7 @@ public class ApiUserInvoiceController extends BaseController {
     private AjaxResult run(MemberCall call) {
         if (!switches.userInvoiceOn()) return new AjaxResult(503, "发票功能暂未开放").put("errorCode", FEATURE_OFF);
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return AjaxResult.success(call.apply(memberId));
         } catch (UserInvoiceException e) {

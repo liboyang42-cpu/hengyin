@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.access.merchant.MerchantOperationScope;
@@ -143,25 +145,25 @@ public class ApiTopicTemplateController extends BaseController {
     public AjaxResult clubInterest(String id) {
         Long tid = Convert.toLong(id, 0L);
         if (tid < 1) {
-            return error("缺少模板ID");
+            return refuse(ErrorCode.BAD_REQUEST, "缺少模板ID");
         }
         Long memberId;
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Club club = clubService.selectClubByMemberId(memberId);
         if (club == null) {
-            return error("仅俱乐部主理人可申请承接");
+            return refuse(ErrorCode.FORBIDDEN, "仅俱乐部主理人可申请承接");
         }
         Integer isTemplate = cmsTopicService.selectTopicIsTemplate(tid);
         if (isTemplate == null || isTemplate != 1) {
-            return error("模板不存在");
+            return refuse(ErrorCode.TEMPLATE_NOT_FOUND, "模板不存在");
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(tid);
         if (topic == null) {
-            return error("模板不存在");
+            return refuse(ErrorCode.TEMPLATE_NOT_FOUND, "模板不存在");
         }
         if (topic.getClubId() != null) {
             return error("该主题已被俱乐部承接");
@@ -184,14 +186,14 @@ public class ApiTopicTemplateController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long tid = Convert.toLong(id, 0L);
         if (tid < 1) {
-            return error("缺少模板ID");
+            return refuse(ErrorCode.BAD_REQUEST, "缺少模板ID");
         }
         if (requestId == null || requestId.isBlank()) {
             Integer isTemplate = cmsTopicService.selectTopicIsTemplate(tid);
@@ -298,10 +300,10 @@ public class ApiTopicTemplateController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long ownerMemberId;
         try {
@@ -336,10 +338,10 @@ public class ApiTopicTemplateController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long ownerMemberId;
         try {
@@ -364,10 +366,10 @@ public class ApiTopicTemplateController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long ownerMemberId;
         try {
@@ -420,10 +422,10 @@ public class ApiTopicTemplateController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long memberId = principalMemberId;
         try {
@@ -436,11 +438,11 @@ public class ApiTopicTemplateController extends BaseController {
         }
         Long tid = Convert.toLong(id, 0L);
         if (tid < 1) {
-            return error("缺少主题ID");
+            return refuse(ErrorCode.BAD_REQUEST, "缺少主题ID");
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(tid);
         if (topic == null) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) {
             return error("只能把自己的主题另存为模板");

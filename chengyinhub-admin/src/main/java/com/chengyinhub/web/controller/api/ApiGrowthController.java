@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.GrowthMissionCompleteDTO;
 import com.chengyinhub.business.domain.dto.LeaderboardQueryDTO;
 import com.chengyinhub.business.service.IGrowthService;
@@ -30,7 +32,7 @@ public class ApiGrowthController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return success(growthService.getCenter(memberId));
     }
@@ -42,7 +44,7 @@ public class ApiGrowthController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return success(growthService.getLeaderboard(memberId, request));
     }
@@ -57,7 +59,7 @@ public class ApiGrowthController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return success(anonymousLeaderboard.read(memberId, request));
     }
@@ -69,7 +71,7 @@ public class ApiGrowthController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return success(growthService.completeMission(memberId, request));
     }

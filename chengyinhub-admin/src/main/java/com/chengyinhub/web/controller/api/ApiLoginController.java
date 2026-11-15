@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.support.PointsRuleSwitch;
 
 
@@ -341,7 +343,7 @@ public class ApiLoginController extends BaseController {
 
         }
         if (member_id == 0L) {
-            return error("请登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请登录");
         }
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
 
@@ -542,7 +544,7 @@ public class ApiLoginController extends BaseController {
             return error("手机号格式不正确");
         }
         if (StringUtils.isEmpty(code)) {
-            return error("请输入验证码");
+            return refuse(ErrorCode.BAD_REQUEST, "请输入验证码");
         }
 
         if (!checkMscode(phone, code, request)) {
@@ -614,7 +616,7 @@ public class ApiLoginController extends BaseController {
     })
     public AjaxResult loginWechatApp(String code) {
         if (StringUtils.isEmpty(code)) {
-            return error("参数有误");
+            return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         }
 
         // 注意:原生 App 走"微信开放平台"的 appid/secret,与小程序的 app.wechat.appid/appsecret 不同 key
@@ -754,7 +756,7 @@ public class ApiLoginController extends BaseController {
     })
     public AjaxResult loginApple(String identityToken) {
         if (StringUtils.isEmpty(identityToken)) {
-            return error("参数有误");
+            return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         }
 
         String clientId = Convert.toStr(configService.selectConfigByKey("apple.clientId"));

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.*;
 import com.chengyinhub.business.domain.vo.PublicMemberVO;
@@ -147,10 +149,10 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             return success(Collections.<String, Object>singletonMap(
@@ -171,11 +173,11 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         try {
@@ -195,11 +197,11 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         try {
@@ -222,11 +224,11 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         try {
@@ -259,11 +261,11 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         try {
@@ -301,7 +303,7 @@ public class ApiUmsMemberController extends BaseController {
 
         }
         if (member_id == 0L) {
-            return error("请登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请登录");
         }
 
 
@@ -320,10 +322,10 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             IncomeBreakdownDTO dto = umsMemberBalanceDetailService.getIncomeBreakdown(memberId);
@@ -341,10 +343,10 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             IncomeStatsDTO dto = umsMemberBalanceDetailService.getTopicIncomeStats(memberId);
@@ -362,10 +364,10 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             IncomeStatsDTO dto = umsMemberBalanceDetailService.getInviteIncomeStats(memberId);
@@ -383,10 +385,10 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             IncomeBrandStatsDTO dto = umsMemberBalanceDetailService.getBrandIncomeStats(memberId);
@@ -404,10 +406,10 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             CmsTopic query = new CmsTopic();
@@ -434,10 +436,10 @@ public class ApiUmsMemberController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             CmsTopic query = new CmsTopic();
@@ -491,7 +493,7 @@ public class ApiUmsMemberController extends BaseController {
 
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         startPage();
@@ -541,10 +543,10 @@ public class ApiUmsMemberController extends BaseController {
         try {
             loginMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (loginMemberId == null || loginMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (StringUtils.isNotBlank(member_id)) {
@@ -654,11 +656,11 @@ public class ApiUmsMemberController extends BaseController {
         try {
             member_id = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         // 一个可更新字段都没有(字段名传错)照旧拒,别 200 装成功
@@ -756,7 +758,7 @@ public class ApiUmsMemberController extends BaseController {
     @GetMapping("/profile/review")
     public AjaxResult profileReview() {
         Long memberId = optionalMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return success(profileReviewService.memberReceipt(memberId));
     }
 
@@ -779,11 +781,11 @@ public class ApiUmsMemberController extends BaseController {
         try {
             member_id = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         return memberInvitationService.bindInviter(member_id, inviter_id)
@@ -838,10 +840,10 @@ public class ApiUmsMemberController extends BaseController {
         String normalizedName = fullName == null ? "" : fullName.trim();
         String normalizedMobile = mobilePhone == null ? "" : mobilePhone.trim();
         if (StringUtils.isBlank(normalizedName)) {
-            return error("请输入姓名");
+            return refuse(ErrorCode.BAD_REQUEST, "请输入姓名");
         }
         if (!normalizedMobile.matches("^1[3-9]\\d{9}$")) {
-            return error("请输入正确的手机号");
+            return refuse(ErrorCode.BAD_REQUEST, "请输入正确的手机号");
         }
         UmsMemberAddress address = new UmsMemberAddress();
         Long memberId = getAppUserId();
@@ -923,11 +925,11 @@ public class ApiUmsMemberController extends BaseController {
             logger.warn("关注操作获取登录会员失败", e);
         }
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long targetId = Convert.toLong(follow_member_id, 0L);
         if (targetId <= 0) {
-            return error("用户不存在");
+            return refuse(ErrorCode.USER_NOT_FOUND, "用户不存在");
         }
         // 只认显式缺省(null)= 旧调用者 toggle;显式传了非 1/0(含空串)= 非法客户端,不猜意图。
         String desired = follow == null ? null : follow.trim();
@@ -951,7 +953,7 @@ public class ApiUmsMemberController extends BaseController {
             case SELF_FOLLOW:
                 return error("不能关注自己");
             case INVALID_MEMBER:
-                return error("用户不存在");
+                return refuse(ErrorCode.USER_NOT_FOUND, "用户不存在");
             default:
                 return error("操作失败，请重试");
         }

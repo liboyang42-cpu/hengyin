@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.MemberIdentityRequest;
 import com.chengyinhub.business.service.impl.MemberIdentityService;
 import com.chengyinhub.common.annotation.RateLimiter;
@@ -45,7 +47,7 @@ public class ApiMemberIdentityController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             memberIdentityService.register(memberId, body.getRealName(), body.getIdCard(),
@@ -66,7 +68,7 @@ public class ApiMemberIdentityController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Map<String, Object> data = new HashMap<>();
         data.put("registered", memberIdentityService.isRegistered(memberId));

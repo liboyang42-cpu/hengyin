@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.enums.PublicActivityScope;
 import com.chengyinhub.business.domain.dto.ActivityCancelResult;
@@ -258,7 +260,7 @@ public class ApiActivityController extends BaseController {
             if (member_id > 0) {
                 cmsActivity.setMemberId(member_id);
             } else {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
         } else if (isMy == 2) {
             //即将上线
@@ -515,7 +517,7 @@ public class ApiActivityController extends BaseController {
         CmsActivity cmsActivity = new CmsActivity();
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         Long memberId = 0L;
@@ -525,7 +527,7 @@ public class ApiActivityController extends BaseController {
 
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         final ActivityPublisher publisher;
         try {
@@ -534,16 +536,16 @@ public class ApiActivityController extends BaseController {
             return error(se.getMessage());
         }
         if (publisher == null) {
-            return error("仅俱乐部主理人或商家可删除活动");
+            return refuse(ErrorCode.FORBIDDEN, "仅俱乐部主理人或商家可删除活动");
         }
 
         // 归属校验:仅活动创建者本人可删除,防止越权删除他人活动(IDOR)
         CmsActivity exist = cmsActivityService.selectCmsActivityById(cid);
         if (exist == null || (exist.getDelFlag() != null && exist.getDelFlag() == 2)) {
-            return error("活动不存在");
+            return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
         }
         if (OwnershipUtils.notOwner(exist.getMemberId(), publisher.ownerMemberId())) {
-            return error("无权操作该活动");
+            return refuse(ErrorCode.ACTIVITY_FORBIDDEN, "无权操作该活动");
         }
         String hostedRun = merchantHostedRunViolation(publisher, exist);
         if (hostedRun != null) {
@@ -592,7 +594,7 @@ public class ApiActivityController extends BaseController {
     public AjaxResult activityCancel(String id, String reason, String scope) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         if (reason == null || reason.trim().isEmpty()) {
             return error("请填写取消原因,它会展示给已报名的用户");
@@ -603,7 +605,7 @@ public class ApiActivityController extends BaseController {
         } catch (Exception e) {
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         // F-L5C-02:取消原因会展示给全部已报名用户,写入前送检。
         String reasonSecMsg = wxContentSecurityService.checkText(reason, resolveOpenid(memberId));
@@ -620,7 +622,7 @@ public class ApiActivityController extends BaseController {
                 res = teamGroupService.cancelActivityByMerchantHost(cid, ownerMemberId, memberId, reason.trim());
             } else {
                 if (!isClubActivityPublisher(memberId)) {
-                    return error("仅俱乐部主理人可取消活动");
+                    return refuse(ErrorCode.FORBIDDEN, "仅俱乐部主理人可取消活动");
                 }
                 // [6-17] 取消活动必须与 /event-ops/cancel 同一套收尾:系列场次还要终止候补、发站内取消通知、
                 // 回收领队。退款金额与派发逻辑仍全在 teamGroupService.cancelActivityByOwner 里,本入口不改钱。
@@ -654,7 +656,7 @@ public class ApiActivityController extends BaseController {
     public AjaxResult activityCancelPreview(String id, String scope) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId = 0L;
         try {
@@ -662,7 +664,7 @@ public class ApiActivityController extends BaseController {
         } catch (Exception e) {
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             int paidPlayers;
@@ -673,7 +675,7 @@ public class ApiActivityController extends BaseController {
             } else if (isClubActivityPublisher(memberId)) {
                 paidPlayers = teamGroupService.countPaidPlayersForActivityCancel(cid, memberId);
             } else {
-                return error("仅俱乐部主理人可取消活动");
+                return refuse(ErrorCode.FORBIDDEN, "仅俱乐部主理人可取消活动");
             }
             Map<String, Object> out = new HashMap<>();
             out.put("paidPlayers", paidPlayers);
@@ -723,7 +725,7 @@ public class ApiActivityController extends BaseController {
     public AjaxResult activityUpdatePublishStatus(String id, String scope) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId = 0L;
         try {
@@ -732,7 +734,7 @@ public class ApiActivityController extends BaseController {
 
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         final ActivityPublisher publisher;
         try {
@@ -741,14 +743,14 @@ public class ApiActivityController extends BaseController {
             return error(se.getMessage());
         }
         if (publisher == null) {
-            return error("仅俱乐部主理人或商家可上下架活动");
+            return refuse(ErrorCode.FORBIDDEN, "仅俱乐部主理人或商家可上下架活动");
         }
 
         CmsActivity cmsActivity = cmsActivityService.selectCmsActivityById(cid);
         if (cmsActivity != null) {
             // 归属校验:仅主办主体可上下架自己的活动(IDOR)。店员登录时操作人 ≠ 主体,按主体比。
             if (OwnershipUtils.notOwner(cmsActivity.getMemberId(), publisher.ownerMemberId())) {
-                return error("无权操作该活动");
+                return refuse(ErrorCode.ACTIVITY_FORBIDDEN, "无权操作该活动");
             }
             String hostedRun = merchantHostedRunViolation(publisher, cmsActivity);
             if (hostedRun != null) {
@@ -785,7 +787,7 @@ public class ApiActivityController extends BaseController {
                 return error(cmsActivity.getPublishStatus() == 1L ? "上架失败" : "下架失败");
             }
         } else {
-            return error("活动不存在");
+            return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
         }
     }
 
@@ -801,12 +803,12 @@ public class ApiActivityController extends BaseController {
         Long member_id = getAppUserId();
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long dataId = Convert.toLong(id, 0L);
         Integer likeType = Convert.toInt(type, 1);
         if (dataId < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         cmsActivityLike.setDataId(dataId);
@@ -899,7 +901,7 @@ public class ApiActivityController extends BaseController {
             Long member_id = getAppUserId();
             // 参数校验
             if (member_id == null || member_id <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
 
             final ActivityPublisher publisher;
@@ -909,7 +911,7 @@ public class ApiActivityController extends BaseController {
                 return error(se.getMessage());
             }
             if (publisher == null) {
-                return error("仅俱乐部主理人或商家可发布活动");
+                return refuse(ErrorCode.FORBIDDEN, "仅俱乐部主理人或商家可发布活动");
             }
             // 分级审核资质闸:未通过入驻审核的商家不能发布(先审后发也不行)
             if (publisher.isMerchant() && !publisher.isMerchantApproved()) {
@@ -997,7 +999,7 @@ public class ApiActivityController extends BaseController {
         } catch (Exception e) {
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         final ActivityPublisher publisher;
         try {
@@ -1006,7 +1008,7 @@ public class ApiActivityController extends BaseController {
             return error(se.getMessage());
         }
         if (publisher == null) {
-            return error("仅俱乐部主理人或商家可发布活动");
+            return refuse(ErrorCode.FORBIDDEN, "仅俱乐部主理人或商家可发布活动");
         }
         String hostViolation = merchantHostViolation(publisher, request);
         if (hostViolation != null) {
@@ -1014,16 +1016,16 @@ public class ApiActivityController extends BaseController {
         }
         Long cid = request == null || request.getId() == null ? 0L : request.getId();
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         CmsActivity exist = cmsActivityService.selectCmsActivityById(cid);
         if (exist == null || (exist.getDelFlag() != null && exist.getDelFlag() == 2)) {
-            return error("活动不存在");
+            return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
         }
         // 归属按主办主体比:店员改自家活动不是越权,但别人(含另一身份)的活动改不了。
         if (OwnershipUtils.notOwner(exist.getMemberId(), publisher.ownerMemberId())) {
-            return error("无权操作该活动");
+            return refuse(ErrorCode.ACTIVITY_FORBIDDEN, "无权操作该活动");
         }
         String hostedRun = merchantHostedRunViolation(publisher, exist);
         if (hostedRun != null) {
@@ -1361,7 +1363,7 @@ public class ApiActivityController extends BaseController {
         if (activityId > 0) {
             cmsActivity.setId(activityId);
         } else {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         Long member_id = 0L;
@@ -1607,7 +1609,7 @@ public class ApiActivityController extends BaseController {
                     }
                 }
             }
-            return error("活动不存在");
+            return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
         }
 
     }

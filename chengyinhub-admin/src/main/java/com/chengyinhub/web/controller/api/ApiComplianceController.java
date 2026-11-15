@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.ConsentRecord;
 import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.common.config.ComplianceProperties;
@@ -69,7 +71,7 @@ public class ApiComplianceController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         String docType = value(body, "docType");
         String scene = value(body, "scene");
@@ -85,7 +87,7 @@ public class ApiComplianceController extends BaseController {
             return error("同意事件不合法");
         }
         if (StringUtils.isEmpty(requestId) || requestId.length() > 64) {
-            return error("请求标识不合法");
+            return refuse(ErrorCode.BAD_REQUEST, "请求标识不合法");
         }
         try {
             if (isMerchantSharing(docType)) {
@@ -130,7 +132,7 @@ public class ApiComplianceController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         String docType = value(body, "docType");
         String scene = value(body, "scene");

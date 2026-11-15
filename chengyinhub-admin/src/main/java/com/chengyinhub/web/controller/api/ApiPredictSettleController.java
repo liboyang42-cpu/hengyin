@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
 import com.chengyinhub.business.domain.CmsTopicNode;
@@ -55,12 +57,12 @@ public class ApiPredictSettleController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
-        if (principalMemberId == null || principalMemberId <= 0) return error("请先登录");
+        if (principalMemberId == null || principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
 
         Long node = Convert.toLong(nodeId, 0L);
-        if (node <= 0) return error("缺少点位");
+        if (node <= 0) return refuse(ErrorCode.BAD_REQUEST, "缺少点位");
         if (StringUtils.isBlank(settledOption)) return error("请选出正确答案");
 
         Date day;
@@ -106,10 +108,10 @@ public class ApiPredictSettleController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long node = Convert.toLong(nodeId, 0L);
-        if (node <= 0) return error("缺少点位");
+        if (node <= 0) return refuse(ErrorCode.BAD_REQUEST, "缺少点位");
 
         Long ownerMemberId;
         try {
@@ -142,9 +144,9 @@ public class ApiPredictSettleController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
-        if (principalMemberId == null || principalMemberId <= 0) return error("请先登录");
+        if (principalMemberId == null || principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
 
         Long ownerMemberId;
         try {

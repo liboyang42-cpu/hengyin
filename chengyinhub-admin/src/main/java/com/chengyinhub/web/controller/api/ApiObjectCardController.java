@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,7 +56,7 @@ public class ApiObjectCardController extends BaseController {
     @PostMapping("/list")
     public AjaxResult list(Integer pageNum, Integer pageSize, String category) {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         int size = clampPageSize(pageSize);
         int num = (pageNum == null || pageNum < 1) ? 1 : pageNum;
 
@@ -78,8 +80,8 @@ public class ApiObjectCardController extends BaseController {
     @PostMapping("/rename")
     public AjaxResult rename(Long id, String title) {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
-        if (id == null || id <= 0) return error("参数有误");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         String name = title == null ? "" : title.trim();
         if (name.isEmpty()) return error("给这张卡起个名字");
         if (name.length() > TITLE_MAX) return error("卡名不能超过 " + TITLE_MAX + " 字");

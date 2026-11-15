@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.common.annotation.Anonymous;
@@ -77,12 +79,12 @@ public class ApiBetaGameController extends BaseController {
         if (gameId > 0) {
             cmsBetaGame.setId(gameId);
         } else {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         cmsBetaGame = cmsBetaGameService.selectCmsBetaGameById(gameId);
         if (cmsBetaGame == null) {
-            return error("数据不存在");
+            return refuse(ErrorCode.NOT_FOUND, "数据不存在");
         }
 
         Long member_id = 0L;
@@ -120,7 +122,7 @@ public class ApiBetaGameController extends BaseController {
         Long member_id = getAppUserId();
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         cmsBetaGameVote.setMemberId(member_id);
@@ -132,7 +134,7 @@ public class ApiBetaGameController extends BaseController {
             if (secMsg != null) return error(secMsg);
             cmsBetaGameVote.setContents(contents);
         } else {
-            return error("请输入评价内容内容");
+            return refuse(ErrorCode.BAD_REQUEST, "请输入评价内容内容");
         }
         Long gameId;
         if (StringUtils.isNotEmpty(id)) {
@@ -141,18 +143,18 @@ public class ApiBetaGameController extends BaseController {
             gameId = Convert.toLong(id, 0L);
             cmsBetaGameVote.setGameId(gameId);
         } else {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         if (StringUtils.isNotEmpty(star)) {
             cmsBetaGameVote.setStar(Convert.toLong(star, 0L));
         } else {
-            return error("请选择评分");
+            return refuse(ErrorCode.BAD_REQUEST, "请选择评分");
         }
 
         //查询游戏存在不
         CmsBetaGame cmsBetaGame = cmsBetaGameService.selectCmsBetaGameById(gameId);
         if (cmsBetaGame == null) {
-            return error("数据不存在");
+            return refuse(ErrorCode.NOT_FOUND, "数据不存在");
         } else {
             if (cmsBetaGame.getStatus() != 1) {
                 return error("活动已下架");

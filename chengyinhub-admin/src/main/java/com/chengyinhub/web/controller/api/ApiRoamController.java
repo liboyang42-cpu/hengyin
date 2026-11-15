@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.badge.RuleEvaluator;
 import com.chengyinhub.business.domain.CmsRegistrationMerchant;
@@ -156,8 +158,8 @@ public class ApiRoamController extends BaseController {
     @Operation(summary = "附近 POI(经纬度包围盒粗筛)")
     @GetMapping("/pois")
     public AjaxResult pois(Double lat, Double lng, Integer radius) {
-        if (lat == null || lng == null) return error("缺少定位");
-        if (!validLat(lat) || !validLng(lng)) return error("定位无效");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        if (!validLat(lat) || !validLng(lng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
         // 走查 P-38(业主):附近地图「全部」= 所有距离;结果仍按距离由近到远截断条数,半径上限只防坐标溢出(POIS_NEAR_LIMIT)。
         int r = (radius == null || radius <= 0) ? 3000 : Math.min(radius, IRoamHangoutService.MAX_RADIUS_M);
         double dLat = r / 111320.0;
@@ -170,17 +172,17 @@ public class ApiRoamController extends BaseController {
     @Operation(summary = "首次发现商家后的合规自由探索活动壳")
     @GetMapping("/nearby-exploreday")
     public AjaxResult nearbyExploreDay(@RequestParam("lat") Double lat, @RequestParam("lng") Double lng) {
-        if (lat == null || lng == null) return error("缺少定位");
-        if (!validLat(lat) || !validLng(lng)) return error("定位无效");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        if (!validLat(lat) || !validLng(lng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
         return success(roamExploreDayCandidateService.findNearestEligible(lat, lng));
     }
 
     @Operation(summary = "漫游入口附近活动")
     @GetMapping("/entry/nearby")
     public AjaxResult entryNearby(Double lat, Double lng, Integer radius) {
-        if (uid() <= 0) return error("请先登录");
-        if (lat == null || lng == null) return error("缺少定位");
-        if (!validLat(lat) || !validLng(lng)) return error("定位无效");
+        if (uid() <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        if (!validLat(lat) || !validLng(lng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
         return success(roamHangoutService.nearby(uid(), lat, lng, radius == null ? 0 : radius));
     }
 
@@ -204,23 +206,23 @@ public class ApiRoamController extends BaseController {
     @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 60, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     public AjaxResult discoverPoi(String sessionId, Long poiId, Double lat, Double lng) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (poiId == null || poiId <= 0) return error("参数有误");
-        if (lat == null || lng == null) return error("缺少定位");
-        if (!validLat(lat) || !validLng(lng)) return error("定位无效");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (poiId == null || poiId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        if (!validLat(lat) || !validLng(lng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectSessionById(sid) : null;
-        if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (session == null || !memberId.equals(session.getMemberId())) return refuse(ErrorCode.ROAM_SESSION_NOT_FOUND, "会话不存在");
+        if (!Integer.valueOf(0).equals(session.getStatus())) return refuse(ErrorCode.ROAM_ALREADY_SETTLED, "本次漫游已结算");
         // C-17:与 /pois 同一审核口径 —— 未过审的商家投放不可发现、不可入账。
         List<RoamPoi> pois = roamMapper.selectPlayerPoisByIds(java.util.Collections.singletonList(poiId));
-        if (pois.isEmpty()) return error("地点不存在或已下线");
+        if (pois.isEmpty()) return refuse(ErrorCode.ROAM_PLACE_NOT_FOUND, "地点不存在或已下线");
         RoamPoi poi = pois.get(0);
         if (poi.getLat() == null || poi.getLng() == null) return error("地点未设坐标");
         // R6:服务端 haversine 校验到点。伪造 poiId 但人不在附近 → 拒,不记录 → finish 不发该 POI XP
         double dist = GeoDistanceUtils.haversineMeters(lat, lng, poi.getLat().doubleValue(), poi.getLng().doubleValue());
         int radius = (poi.getRadiusM() != null && poi.getRadiusM() > 0) ? poi.getRadiusM() : POI_DISCOVER_RADIUS_M;
-        if (dist > radius + ROAM_GPS_TOLERANCE_M) return error("还没到该地点附近");
+        if (dist > radius + ROAM_GPS_TOLERANCE_M) return refuse(ErrorCode.ROAM_TOO_FAR, "还没到该地点附近");
         // R6 反作弊:与上一次到点做瞬移速度校验,挡"读 /pois 拿坐标秒发全城 POI"的伪造定位刷取
         java.util.Map<String, Object> last = roamMapper.selectLastPoiFoundLoc(memberId);
         if (last != null && last.get("foundAt") instanceof java.util.Date
@@ -229,7 +231,7 @@ public class ApiRoamController extends BaseController {
             double prevDist = GeoDistanceUtils.haversineMeters(((Number) last.get("lat")).doubleValue(), ((Number) last.get("lng")).doubleValue(),
                     poi.getLat().doubleValue(), poi.getLng().doubleValue());
             if (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {
-                return error("移动过快,疑似伪造定位");
+                return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快,疑似伪造定位");
             }
         }
         com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
@@ -316,15 +318,15 @@ public class ApiRoamController extends BaseController {
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult shopVisit(String sessionId, Integer sourceType, Long sourceId, Double lat, Double lng) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (sourceType == null || sourceId == null || sourceId <= 0) return error("参数有误");
-        if (lat == null || lng == null) return error("缺少定位");
-        if (!validLat(lat) || !validLng(lng)) return error("定位无效");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (sourceType == null || sourceId == null || sourceId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
+        if (!validLat(lat) || !validLng(lng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
         locationConsent.requireCurrentAgreement(memberId);
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
-        if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (session == null || !memberId.equals(session.getMemberId())) return refuse(ErrorCode.ROAM_SESSION_NOT_FOUND, "会话不存在");
+        if (!Integer.valueOf(0).equals(session.getStatus())) return refuse(ErrorCode.ROAM_ALREADY_SETTLED, "本次漫游已结算");
 
         // ★ 店名与坐标一律从来源表读,不采信客户端:
         //   坐标必须用库里的真坐标,否则伪造坐标可绕过到点校验;
@@ -334,7 +336,7 @@ public class ApiRoamController extends BaseController {
         if (sourceType == 1) {                       // roam_poi 据点
             // C-17:签到/入账同走玩家侧查询 —— 未过审的投放不能成为打卡或结算事实。
             List<RoamPoi> pois = roamMapper.selectPlayerPoisByIds(java.util.Collections.singletonList(sourceId));
-            if (pois.isEmpty()) return error("地点不存在或已下线");
+            if (pois.isEmpty()) return refuse(ErrorCode.ROAM_PLACE_NOT_FOUND, "地点不存在或已下线");
             RoamPoi poi = pois.get(0);
             if (poi.getLat() == null || poi.getLng() == null) return error("地点未设坐标");
             name = poi.getName();
@@ -342,7 +344,7 @@ public class ApiRoamController extends BaseController {
             shopLng = poi.getLng().doubleValue();
         } else if (sourceType == 2) {                // cms_registration_merchant 报名商家
             CmsRegistrationMerchant m = cmsRegistrationMerchantMapper.selectCmsRegistrationMerchantById(sourceId);
-            if (m == null || (m.getDelFlag() != null && m.getDelFlag() != 0)) return error("商家不存在");
+            if (m == null || (m.getDelFlag() != null && m.getDelFlag() != 0)) return refuse(ErrorCode.MERCHANT_NOT_FOUND, "商家不存在");
             // ★ 只认中标(audit_status=1)的报名:待调配(0)/落选(2)的报名在玩法里根本不存在。
             //   不挡的话:userType=2 商家号可在自家坐标零审核自造 3 条报名(落库即 audit_status=0)凑满三店。
             if (m.getAuditStatus() == null || m.getAuditStatus() != 1L) {
@@ -355,14 +357,14 @@ public class ApiRoamController extends BaseController {
             shopLat = mLat;
             shopLng = mLng;
         } else {
-            return error("来源有误");
+            return refuse(ErrorCode.BAD_REQUEST, "来源有误");
         }
         // address_name 可空(建表 DEFAULT ''、DTO 无 @NotBlank)。无名店没法按店名收敛,直接拒:
         // 落库一个空名会把所有无名店在 count(distinct) 里塌成一家。
         if (name == null || name.trim().isEmpty()) return error("该商家未设名称,无法计入");
 
         if (GeoDistanceUtils.haversineMeters(lat, lng, shopLat, shopLng) > SHOP_VISIT_RADIUS_M + ROAM_GPS_TOLERANCE_M) {
-            return error("还没到该店附近");
+            return refuse(ErrorCode.ROAM_TOO_FAR, "还没到该店附近");
         }
 
         auditShopVisitSpeed(memberId, sid, sourceType, sourceId, shopLat, shopLng);
@@ -437,7 +439,7 @@ public class ApiRoamController extends BaseController {
     @PostMapping("/shop/visitors")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public AjaxResult shopVisitors(Integer sourceType, String sourceIds) {
-        if (sourceType == null || (sourceType != 1 && sourceType != 2)) return error("来源有误");
+        if (sourceType == null || (sourceType != 1 && sourceType != 2)) return refuse(ErrorCode.BAD_REQUEST, "来源有误");
         List<Long> ids = new ArrayList<>();
         for (String raw : StringUtils.split(sourceIds == null ? "" : sourceIds, ",")) {
             Long v = Convert.toLong(raw, 0L);
@@ -551,7 +553,7 @@ public class ApiRoamController extends BaseController {
     @GetMapping("/tiles")
     public AjaxResult tiles(Integer limit) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         int max = (limit == null || limit <= 0) ? 5000 : Math.min(limit, 20000);
         List<String> kept = fogCellService == null ? null : fogCellService.retainedCells(memberId, max);
         return success(kept != null ? kept : roamMapper.selectTilesByMember(memberId, max));
@@ -561,12 +563,12 @@ public class ApiRoamController extends BaseController {
     @GetMapping("/fog/cells")
     public AjaxResult fogCells(Double south, Double west, Double north, Double east) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (!com.chengyinhub.business.support.RoamGeohashCover.validBox(south, west, north, east)) return error("范围无效");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (!com.chengyinhub.business.support.RoamGeohashCover.validBox(south, west, north, east)) return refuse(ErrorCode.BAD_REQUEST, "范围无效");
         if (fogCellService == null) return error("迷雾记录暂不可用");
         com.chengyinhub.business.service.impl.RoamFogCellService.BoxRead read =
                 fogCellService.cellsInBox(memberId, south, west, north, east);
-        if (read.tooLarge) return error("范围过大，请放大地图后再看");
+        if (read.tooLarge) return refuse(ErrorCode.ROAM_AREA_TOO_LARGE, "范围过大，请放大地图后再看");
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("cells", read.cells);
         data.put("retained", read.retained);
@@ -578,7 +580,7 @@ public class ApiRoamController extends BaseController {
     @GetMapping("/tiles/page")
     public AjaxResult tilePage(Long afterId, Integer limit) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         long cursor = afterId == null || afterId < 0 ? 0L : afterId;
         int pageSize = (limit == null || limit <= 0) ? 1000 : Math.min(limit, 2000);
         List<Map<String, Object>> rows = roamMapper.selectTilePageByMember(memberId, cursor, pageSize + 1);
@@ -618,7 +620,7 @@ public class ApiRoamController extends BaseController {
     @GetMapping("/session")
     public AjaxResult session(String sessionId, String clientSessionKey) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return success(roamRecoveryService.read(memberId, sessionId, clientSessionKey));
     }
 
@@ -626,7 +628,7 @@ public class ApiRoamController extends BaseController {
     @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     public AjaxResult archiveRecords(String sessionId, String clientSessionKey, String records) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long sid = Convert.toLong(sessionId);
         if (sid == null || sid <= 0 || sessionId == null || !sessionId.matches("[1-9][0-9]{0,18}"))
             return error("会话编号无效");
@@ -645,7 +647,7 @@ public class ApiRoamController extends BaseController {
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult reveal(String sessionId, String tiles, String clientSessionKey, Double lat, Double lng) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (clientSessionKey != null && !clientSessionKey.matches("[a-f0-9]{32}")) return error("会话关联标识无效");
         List<String> tileList = splitTiles(tiles, 500);
         if (tileList.isEmpty()) return error("没有要点亮的格子");
@@ -667,10 +669,10 @@ public class ApiRoamController extends BaseController {
             sid = s.getId();
         }
         RoamSession session = roamMapper.selectOwnedSessionForUpdate(sid, memberId);
-        if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
+        if (session == null || !memberId.equals(session.getMemberId())) return refuse(ErrorCode.ROAM_SESSION_NOT_FOUND, "会话不存在");
         if (clientSessionKey != null && !clientSessionKey.equals(session.getClientSessionKey()))
             return error("会话关联不一致");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (!Integer.valueOf(0).equals(session.getStatus())) return refuse(ErrorCode.ROAM_ALREADY_SETTLED, "本次漫游已结算");
         // P0-23:格子是客户端上报的,服务端至少按会话时长封顶 —— 不能一次请求就把全城点亮刷里程碑勋章。
         //   超出预算的部分直接丢弃(不报错):报错会让客户端待传队列卡死、连带结算排不空。
         Date now = new Date();
@@ -741,11 +743,11 @@ public class ApiRoamController extends BaseController {
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult presence(String sessionId, Double lat, Double lng, Integer explorePct) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long sid = Convert.toLong(sessionId, 0L);
         // 没有会话就没有「在走」这回事 —— 这里不懒建会话(/reveal 才建),
         // 否则一个只打开过地图、从没走过的人也会出现在别人的地图上。
-        if (sid <= 0) return error("会话不存在");
+        if (sid <= 0) return refuse(ErrorCode.ROAM_SESSION_NOT_FOUND, "会话不存在");
         if (lat == null || lng == null) return error("位置为空");
         // NaN/Infinity 必须在这里拒:旧的区间比较对 NaN 全 false,会漏到 BigDecimal.valueOf(NaN) 抛 500。
         if (!validLat(lat) || !validLng(lng)) return error("位置越界");
@@ -762,7 +764,7 @@ public class ApiRoamController extends BaseController {
                 && lastFix.getLastLat() != null && lastFix.getLastLng() != null) {
             long dtSec = Math.max(1L, (reportAt.getTime() - lastFix.getLastReportAt().getTime()) / 1000L);
             double moved = GeoDistanceUtils.haversineMeters(lat, lng, lastFix.getLastLat().doubleValue(), lastFix.getLastLng().doubleValue());
-            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return error("移动过快,疑似伪造定位");
+            if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return refuse(ErrorCode.ROAM_MOVING_TOO_FAST, "移动过快,疑似伪造定位");
         }
         com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
                 trust(memberId, sid, com.chengyinhub.business.locationtrust.LocationTrustKind.PRESENCE, null, lat, lng);
@@ -779,14 +781,14 @@ public class ApiRoamController extends BaseController {
         int hit = roamMapper.updatePresence(sid, memberId, blat, blng, reportAt, pct);
         // 命中 0 = 这场会话不是你的,或已经结算了。不细分原因回话:
         // 分得越细,越能拿它探别人的会话 id。
-        if (hit <= 0) return error("会话不存在");
+        if (hit <= 0) return refuse(ErrorCode.ROAM_SESSION_NOT_FOUND, "会话不存在");
         return success();
     }
 
     @GetMapping("/presence-visibility")
     public AjaxResult presenceVisibility(String sessionId) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         RoamSession own = roamMapper.selectSessionById(Convert.toLong(sessionId, 0L));
         if (own == null || !memberId.equals(own.getMemberId()) || !Integer.valueOf(0).equals(own.getStatus())) {
             return success(false);
@@ -798,8 +800,8 @@ public class ApiRoamController extends BaseController {
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult changePresenceVisibility(String sessionId, Boolean visible, String consentVersion) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (visible == null) return error("请选择是否公开");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (visible == null) return refuse(ErrorCode.BAD_REQUEST, "请选择是否公开");
         Long sid = Convert.toLong(sessionId, 0L);
         if (visible) {
             if (!"roam-presence-v1".equals(consentVersion)) return error("请先单独同意附近的人位置分享");
@@ -862,7 +864,7 @@ public class ApiRoamController extends BaseController {
     @PostMapping("/nearby-runners")
     public AjaxResult nearbyRunners(Double lat, Double lng, Integer radius) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (lat == null || lng == null) return error("位置为空");
         if (!validLat(lat) || !validLng(lng)) return error("位置越界");
         int radiusM = radius == null || radius <= 0 ? RUNNERS_RADIUS_MAX
@@ -929,12 +931,12 @@ public class ApiRoamController extends BaseController {
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)  // C3b:中途失败整体回滚,重试不重复发/不丢
     public AjaxResult finish(String sessionId, String poiIds, Integer distanceM, String track) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         roamMapper.lockClaimOwner(memberId);
         Long sid = Convert.toLong(sessionId, 0L);
         RoamSession session = sid > 0 ? roamMapper.selectOwnedSessionForUpdate(sid, memberId) : null;
-        if (session == null || !memberId.equals(session.getMemberId())) return error("会话不存在");
-        if (!Integer.valueOf(0).equals(session.getStatus())) return error("本次漫游已结算");
+        if (session == null || !memberId.equals(session.getMemberId())) return refuse(ErrorCode.ROAM_SESSION_NOT_FOUND, "会话不存在");
+        if (!Integer.valueOf(0).equals(session.getStatus())) return refuse(ErrorCode.ROAM_ALREADY_SETTLED, "本次漫游已结算");
 
         // ① POI:R6 只认服务端 /poi/discover 已校验到点的记录,不再采信客户端 poiIds(防伪造 poiId 刷 XP)
         List<RoamPoi> foundPois = roamMapper.selectFoundPoisBySession(sid);
@@ -957,7 +959,7 @@ public class ApiRoamController extends BaseController {
         session.setTilesRevealed(sessionTiles);
         session.setPoisFound(newPois);
         session.setXpAwarded(totalXp);
-        if (roamMapper.updateSessionFinish(session) == 0) return error("本次漫游已结算");
+        if (roamMapper.updateSessionFinish(session) == 0) return refuse(ErrorCode.ROAM_ALREADY_SETTLED, "本次漫游已结算");
         session.setStatus(1);
         // 2026-10-31 P-7:简化轨迹给漫游记录卡片画图。只做展示,不参与结算;无效轨迹不存(卡片按没有轨迹画)。
         String trackJson = com.chengyinhub.business.service.support.RoamTrackSimplifier.simplify(track);
@@ -1043,10 +1045,10 @@ public class ApiRoamController extends BaseController {
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (poiLat == null || poiLng == null || curLat == null || curLng == null) return error("缺少定位");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (poiLat == null || poiLng == null || curLat == null || curLng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
         // 点到店四个坐标全是客户端上报:NaN/Infinity/越界会让 ①的距离比较恒 false 而直接放行发探索值。
-        if (!validLat(poiLat) || !validLng(poiLng) || !validLat(curLat) || !validLng(curLng)) return error("定位无效");
+        if (!validLat(poiLat) || !validLng(poiLng) || !validLat(curLat) || !validLng(curLng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
 
         locationConsent.requireCurrentAgreement(memberId);
         Map<String, Object> data = new LinkedHashMap<>();

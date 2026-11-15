@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.support.MemberAccountService;
 import com.chengyinhub.business.service.support.PlayContactService;
 import com.chengyinhub.common.core.controller.BaseController;
@@ -29,7 +31,7 @@ public class ApiMemberAccountController extends BaseController {
     @GetMapping("/api/play/contact")
     public AjaxResult contact(Long topicId, Long nodeId, Long activityId) {
         if (memberId() == null) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (activityId != null && activityId > 0L) {
             return success(playContactService.forActivity(activityId));
@@ -42,7 +44,7 @@ public class ApiMemberAccountController extends BaseController {
     public AjaxResult myAppeals(String status, Integer pageNum, Integer pageSize) {
         Long memberId = memberId();
         if (memberId == null) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             return success(memberAccountService.myAppeals(memberId, status, pageNum, pageSize));
@@ -56,7 +58,7 @@ public class ApiMemberAccountController extends BaseController {
     public AjaxResult reputation() {
         Long memberId = memberId();
         if (memberId == null) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return success(memberAccountService.reputation(memberId));
     }

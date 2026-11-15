@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -94,7 +96,7 @@ public class ApiRegistrationMerchantController extends BaseController {
 
             }
             if (memberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
@@ -125,8 +127,8 @@ public class ApiRegistrationMerchantController extends BaseController {
         try {
             Long principalMemberId;
             try { principalMemberId = getAppUserId(); }
-            catch (Exception e) { return error("请先登录"); }
-            if (principalMemberId == null || principalMemberId <= 0) return error("请先登录");
+            catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+            if (principalMemberId == null || principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             MerchantAccessContext access = merchantAccessService.require(
                     principalMemberId, MerchantPermission.PROJECT_MANAGE);
 
@@ -162,7 +164,7 @@ public class ApiRegistrationMerchantController extends BaseController {
             } catch (Exception e) {
             }
             if (memberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
@@ -190,7 +192,7 @@ public class ApiRegistrationMerchantController extends BaseController {
             } catch (Exception e) {
             }
             if (memberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
@@ -220,7 +222,7 @@ public class ApiRegistrationMerchantController extends BaseController {
 
             }
             if (memberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
@@ -257,7 +259,7 @@ public class ApiRegistrationMerchantController extends BaseController {
 
             }
             if (member_id <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             MerchantAccessContext access = merchantAccessService.require(
                     member_id, MerchantPermission.PROJECT_MANAGE);
@@ -265,16 +267,16 @@ public class ApiRegistrationMerchantController extends BaseController {
 
             UmsMember umsMember = umsMemberService.selectUmsMemberById(member_id);
             if (umsMember == null) {
-                return error("用户不存在");
+                return refuse(ErrorCode.USER_NOT_FOUND, "用户不存在");
             }
             if (!com.chengyinhub.business.service.IRoleService.ROLE_MERCHANT.equals(umsMember.getRole())) {
-                return error("商家才能报名");
+                return refuse(ErrorCode.MERCHANT_ONLY, "商家才能报名");
             }
 
             //查询主题信息
             CmsTopic cmsTopic = cmsTopicService.selectCmsTopicById(param.getTopicId());
             if (cmsTopic == null) {
-                return error("主题不存在");
+                return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
             }
             if (cmsTopic.getStatus() != 1) {
                 return error("主题审核中");
@@ -302,7 +304,7 @@ public class ApiRegistrationMerchantController extends BaseController {
             }
             Long nodeId = normalizeNodeId(param.getNodeId());
             if (nodeId == null) {
-                return error("请选择主题节点");
+                return refuse(ErrorCode.BAD_REQUEST, "请选择主题节点");
             }
             CmsTopicNode topicNode = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
             if (topicNode == null || topicNode.getTopicId() == null

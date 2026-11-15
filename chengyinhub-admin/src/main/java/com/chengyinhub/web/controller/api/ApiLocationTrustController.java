@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -47,7 +49,7 @@ public class ApiLocationTrustController extends BaseController {
                                     Double placeLat, Double placeLng, String placeRef, String captureSource,
                                     Long photoTakenAt, Double photoLat, Double photoLng, Double lat, Double lng) {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         byte[] bytes;
         try {
             bytes = photo == null || photo.isEmpty() ? null
@@ -71,9 +73,9 @@ public class ApiLocationTrustController extends BaseController {
     @GetMapping("/claim-evidence")
     public AjaxResult readClaimEvidence(Long evidenceId) {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Map<String, Object> data = claimEvidenceService.read(memberId, evidenceId);
-        return data == null ? error("取证记录不存在") : success(data);
+        return data == null ? refuse(ErrorCode.NOT_FOUND, "取证记录不存在") : success(data);
     }
 
     private static boolean validPair(Double lat, Double lng) {

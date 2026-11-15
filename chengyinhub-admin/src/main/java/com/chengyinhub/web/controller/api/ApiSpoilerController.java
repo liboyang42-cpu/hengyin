@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.vo.SpoilerAccessSnapshot;
 import com.chengyinhub.business.service.ISpoilerProtectionService;
 import com.chengyinhub.common.core.controller.BaseController;
@@ -26,7 +28,7 @@ public class ApiSpoilerController extends BaseController {
     @PostMapping("/state")
     public AjaxResult state() {
         Long memberId = memberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         SpoilerAccessSnapshot state = spoilerProtectionService.snapshot(
                 memberId, ISpoilerProtectionService.CONTENT_NODE);
         Map<String, Object> out = new LinkedHashMap<>();
@@ -39,8 +41,8 @@ public class ApiSpoilerController extends BaseController {
     @PostMapping("/preference")
     public AjaxResult preference(@RequestBody Map<String, Object> body) {
         Long memberId = memberId();
-        if (memberId == null) return error("请先登录");
-        if (body == null || !(body.get("revealAll") instanceof Boolean)) return error("缺少 revealAll");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null || !(body.get("revealAll") instanceof Boolean)) return refuse(ErrorCode.BAD_REQUEST, "缺少 revealAll");
         boolean revealAll = (Boolean) body.get("revealAll");
         return spoilerProtectionService.updatePreference(memberId, revealAll)
                 ? success("设置成功") : error("设置失败");
@@ -50,7 +52,7 @@ public class ApiSpoilerController extends BaseController {
     @PostMapping("/reveal")
     public AjaxResult reveal(@RequestBody Map<String, Object> body) {
         Long memberId = memberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             Long contentId = body == null || body.get("contentId") == null
                     ? null : Long.valueOf(String.valueOf(body.get("contentId")));

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -200,8 +202,8 @@ public class ApiMerchantDeskController extends BaseController {
 
     private AjaxResult run(String permission, Function<MerchantAccessContext, Object> action) {
         Long principal;
-        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (principal == null || principal <= 0) return error("请先登录");
+        try { principal = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (principal == null || principal <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             deskSwitch.requireEnabled();
             MerchantAccessContext access = merchantAccessService.require(principal, permission);

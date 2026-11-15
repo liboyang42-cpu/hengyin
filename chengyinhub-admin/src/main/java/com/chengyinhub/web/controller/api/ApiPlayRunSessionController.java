@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.mapper.PlayerRunSessionMapper;
 import com.chengyinhub.business.service.ICmsActivityService;
@@ -54,7 +56,7 @@ public class ApiPlayRunSessionController extends BaseController {
     @PostMapping("/save")
     public AjaxResult save(Long activityId, Long topicId, Integer elapsedSeconds, Long savedAt) {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (elapsedSeconds == null || elapsedSeconds < 0 || elapsedSeconds > MAX_PAUSED_SECONDS) return error("用时无效");
         if (savedAt == null || savedAt <= 0) return error("落盘时间无效");
         long actId = positive(activityId) ? activityId : 0L;
@@ -62,12 +64,12 @@ public class ApiPlayRunSessionController extends BaseController {
         if (actId > 0) {
             // 活动场次的主题由服务端按活动回填,不信客户端带来的 topicId。
             CmsActivity activity = cmsActivityService.selectCmsActivityById(actId);
-            if (activity == null || !positive(activity.getTopicId())) return error("活动不存在");
+            if (activity == null || !positive(activity.getTopicId())) return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
             scopeTopicId = activity.getTopicId();
         } else if (positive(topicId)) {
             scopeTopicId = topicId;
         } else {
-            return error("参数有误");
+            return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         }
         long stamped = serverNowMillis();
         runSessionMapper.upsertPaused(memberId, actId, scopeTopicId, elapsedSeconds, stamped);
@@ -78,8 +80,8 @@ public class ApiPlayRunSessionController extends BaseController {
     @GetMapping
     public AjaxResult read(Long activityId, Long topicId) {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
-        if (!positive(activityId) && !positive(topicId)) return error("参数有误");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (!positive(activityId) && !positive(topicId)) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         return success(runSessionMapper.selectScope(memberId, positive(activityId) ? activityId : 0L, topicId));
     }
 
@@ -87,8 +89,8 @@ public class ApiPlayRunSessionController extends BaseController {
     @PostMapping("/clear")
     public AjaxResult clear(Long activityId, Long topicId, Long savedAt) {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
-        if (!positive(activityId) && !positive(topicId)) return error("参数有误");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (!positive(activityId) && !positive(topicId)) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         if (savedAt == null || savedAt <= 0) return error("落盘时间无效");
         long stamped = serverNowMillis();
         runSessionMapper.markEnded(memberId, positive(activityId) ? activityId : 0L, topicId, stamped);
@@ -99,7 +101,7 @@ public class ApiPlayRunSessionController extends BaseController {
     @GetMapping("/list")
     public AjaxResult list() {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return success(runSessionMapper.selectContinuableByMember(memberId, LIST_LIMIT));
     }
 

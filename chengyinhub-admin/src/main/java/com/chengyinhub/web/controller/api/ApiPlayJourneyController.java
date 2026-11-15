@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.IPlayJourneyStoryService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -27,8 +29,8 @@ public class ApiPlayJourneyController extends BaseController {
     @GetMapping("/stage-end")
     public AjaxResult stageEnd(Long topicId, Long activityId, Long chapterId) {
         Long memberId = currentMemberId();
-        if (memberId <= 0) return error("请先登录");
-        if (topicId == null || topicId <= 0L || chapterId == null || chapterId <= 0L) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicId == null || topicId <= 0L || chapterId == null || chapterId <= 0L) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             return success(playJourneyStoryService.stageEnd(memberId, topicId, activityId, chapterId));
         } catch (ServiceException | IllegalArgumentException e) {
@@ -40,8 +42,8 @@ public class ApiPlayJourneyController extends BaseController {
     @GetMapping("/ending")
     public AjaxResult ending(Long topicId, Long activityId) {
         Long memberId = currentMemberId();
-        if (memberId <= 0) return error("请先登录");
-        if (topicId == null || topicId <= 0L) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicId == null || topicId <= 0L) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
         try {
             return success(playJourneyStoryService.ending(memberId, topicId, activityId));
         } catch (ServiceException | IllegalArgumentException e) {

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.MerchantCrmNoteRequest;
 import com.chengyinhub.business.domain.dto.MerchantCrmBatchTagRequest;
 import com.chengyinhub.business.domain.dto.MerchantCrmContactRequest;
@@ -56,7 +58,7 @@ public class ApiMerchantCrmController extends BaseController {
     @GetMapping("/marketing-consents")
     public AjaxResult marketingConsents() {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(marketingConsentService.list(principal)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -65,7 +67,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/marketing-consents")
     public AjaxResult updateMarketingConsent(@RequestBody(required = false) MerchantCrmMarketingConsentRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(marketingConsentService.update(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -74,7 +76,7 @@ public class ApiMerchantCrmController extends BaseController {
     @GetMapping("/campaigns/coupons")
     public AjaxResult campaignCoupons() {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmCampaignService.coupons(principal)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -83,7 +85,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/campaigns/preview")
     public AjaxResult campaignPreview(@RequestBody(required = false) MerchantCrmCampaignPreviewRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmCampaignService.preview(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -92,7 +94,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/campaigns")
     public AjaxResult createCampaign(@RequestBody(required = false) MerchantCrmCampaignRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmCampaignService.create(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -101,7 +103,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/campaigns/{campaignId}/dispatch")
     public AjaxResult dispatchCampaign(@PathVariable Long campaignId) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmCampaignService.dispatch(principal, campaignId)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -110,7 +112,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/campaigns/{campaignId}/retry")
     public AjaxResult retryCampaign(@PathVariable Long campaignId) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmCampaignService.retry(principal, campaignId)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -119,7 +121,7 @@ public class ApiMerchantCrmController extends BaseController {
     @GetMapping("/campaigns")
     public AjaxResult campaigns() {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmCampaignService.list(principal)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -128,7 +130,7 @@ public class ApiMerchantCrmController extends BaseController {
     @GetMapping("/campaigns/{campaignId}")
     public AjaxResult campaignDetail(@PathVariable Long campaignId) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmCampaignService.detail(principal, campaignId)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -137,7 +139,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/broadcast/preview")
     public AjaxResult broadcastPreview(@RequestBody(required = false) MerchantCrmBroadcastRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmBroadcastService.preview(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -146,7 +148,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/broadcast")
     public AjaxResult broadcast(@RequestBody(required = false) MerchantCrmBroadcastRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmBroadcastService.send(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -155,7 +157,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/customers/list")
     public AjaxResult customers(@RequestBody(required = false) MerchantCrmCustomerQuery query) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmAppService.listCustomers(principal, query)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -164,7 +166,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/profiles/reconcile")
     public AjaxResult reconcileProfiles() {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmAppService.reconcileProfiles(principal)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -173,7 +175,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/customers/{customerMemberId}/detail")
     public AjaxResult detail(@PathVariable Long customerMemberId) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmAppService.detail(principal, customerMemberId)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -183,7 +185,7 @@ public class ApiMerchantCrmController extends BaseController {
     public AjaxResult revealContact(@PathVariable Long customerMemberId,
                                     @RequestBody(required = false) MerchantCrmContactRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantCrmAppService.revealContact(principal, customerMemberId,
                     request == null ? null : request.getPurpose()));
@@ -195,7 +197,7 @@ public class ApiMerchantCrmController extends BaseController {
     public AjaxResult addNote(@PathVariable Long customerMemberId,
                               @RequestBody(required = false) MerchantCrmNoteRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmAppService.addNote(principal, customerMemberId, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -205,7 +207,7 @@ public class ApiMerchantCrmController extends BaseController {
     public AjaxResult hideNote(@PathVariable Long customerMemberId,
                                @RequestBody(required = false) MerchantCrmNoteHideRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             merchantCrmAppService.hideNote(principal, customerMemberId,
                     request == null ? null : request.getNoteId(),
@@ -220,7 +222,7 @@ public class ApiMerchantCrmController extends BaseController {
     public AjaxResult assignTag(@PathVariable Long customerMemberId,
                                 @RequestBody(required = false) MerchantCrmTagRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmAppService.assignTag(principal, customerMemberId, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -229,7 +231,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/customers/tags/batch")
     public AjaxResult batchAssignTag(@RequestBody(required = false) MerchantCrmBatchTagRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmAppService.batchAssignTag(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -239,7 +241,7 @@ public class ApiMerchantCrmController extends BaseController {
     public AjaxResult removeTag(@PathVariable Long customerMemberId,
                                 @RequestBody(required = false) MerchantCrmTagRemoveRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             merchantCrmAppService.removeTag(principal, customerMemberId,
                     request == null ? null : request.getTagId(),
@@ -252,7 +254,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/segments")
     public AjaxResult saveSegment(@RequestBody(required = false) MerchantCrmSegmentRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmSegmentService.save(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -261,7 +263,7 @@ public class ApiMerchantCrmController extends BaseController {
     @GetMapping("/segments")
     public AjaxResult segments() {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmSegmentService.list(principal)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -270,7 +272,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/exports")
     public AjaxResult createExport(@RequestBody(required = false) MerchantCrmExportRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmExportService.create(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
     }
@@ -279,7 +281,7 @@ public class ApiMerchantCrmController extends BaseController {
     @PostMapping("/exports/{taskId}/status")
     public AjaxResult exportStatus(@PathVariable Long taskId) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try { return success(merchantCrmExportService.status(principal, taskId)); }
         catch (ServiceException e) { return serviceError(e); }
     }

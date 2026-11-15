@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantOperationScope;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -40,7 +42,7 @@ public class ApiCircleThemeController extends BaseController {
     @GetMapping("/instance/{topicId}/offers")
     public AjaxResult offers(@PathVariable Long topicId) {
         Long memberId = currentMemberId();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             circleExploreService.assertEligible(topicId, memberId);
             return AjaxResult.success(circleThemeSupplyService.listPublicSupplies(topicId));
@@ -53,7 +55,7 @@ public class ApiCircleThemeController extends BaseController {
     @PostMapping("/session")
     public AjaxResult createSession(@RequestBody CircleExploreActionRequest request) {
         Long memberId = currentMemberId();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return AjaxResult.success(circleExploreService.create(
                     request == null ? null : request.getTopicId(), memberId));
@@ -66,7 +68,7 @@ public class ApiCircleThemeController extends BaseController {
     @PostMapping("/session/join")
     public AjaxResult joinSession(@RequestBody CircleExploreActionRequest request) {
         Long memberId = currentMemberId();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return AjaxResult.success(circleExploreService.join(
                     request == null ? null : request.getInviteCode(), memberId));
@@ -79,7 +81,7 @@ public class ApiCircleThemeController extends BaseController {
     @PostMapping("/session/record")
     public AjaxResult record(@RequestBody CircleExploreActionRequest request) {
         Long memberId = currentMemberId();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             circleExploreService.record(request == null ? null : request.getSessionId(),
                     request == null ? null : request.getOfferId(),
@@ -94,7 +96,7 @@ public class ApiCircleThemeController extends BaseController {
     @PostMapping("/session/answer")
     public AjaxResult answer(@RequestBody CircleExploreActionRequest request) {
         Long memberId = currentMemberId();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             circleExploreService.answer(request == null ? null : request.getSessionId(),
                     request == null ? null : request.getStage(),
@@ -109,7 +111,7 @@ public class ApiCircleThemeController extends BaseController {
     @GetMapping("/session/{sessionId}/card")
     public AjaxResult card(@PathVariable Long sessionId) {
         Long memberId = currentMemberId();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return AjaxResult.success(circleExploreService.card(sessionId, memberId));
         } catch (IllegalStateException e) {
@@ -132,9 +134,9 @@ public class ApiCircleThemeController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return error("参数为空");
         try {
             Long ownerMemberId = resolveProjectOwner(memberId, request.getScope());
@@ -152,7 +154,7 @@ public class ApiCircleThemeController extends BaseController {
     @PostMapping("/instance/review")
     public AjaxResult review(@RequestBody CircleExploreActionRequest request) {
         Long memberId = currentMemberId();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             Long ownerMemberId = resolveProjectOwner(memberId, request == null ? null : request.getScope());
             return AjaxResult.success("供给复核已更新",

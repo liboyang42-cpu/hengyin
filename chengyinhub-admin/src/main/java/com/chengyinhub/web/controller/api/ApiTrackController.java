@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
@@ -61,14 +63,14 @@ public class ApiTrackController extends BaseController {
     public AjaxResult saveDraft(@RequestBody TrackDraft draft) {
         Long memberId = uid();
         if (memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Date now = new Date();
         if (draft.getId() != null) {
             // 更新:归属校验
             TrackDraft old = trackDraftMapper.selectTrackDraftById(draft.getId());
             if (old == null || OwnershipUtils.notOwner(old.getMemberId(), memberId)) {
-                return error("无权操作");
+                return refuse(ErrorCode.FORBIDDEN, "无权操作");
             }
             draft.setUpdatedAt(now);
             trackDraftMapper.updateTrackDraft(draft);
@@ -89,7 +91,7 @@ public class ApiTrackController extends BaseController {
     public AjaxResult myDrafts() {
         Long memberId = uid();
         if (memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         TrackDraft probe = new TrackDraft();
         probe.setMemberId(memberId);
@@ -103,15 +105,15 @@ public class ApiTrackController extends BaseController {
     public AjaxResult toTopic(String id) {
         Long memberId = uid();
         if (memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long draftId = com.chengyinhub.common.core.text.Convert.toLong(id, 0L);
         TrackDraft d = draftId > 0 ? trackDraftMapper.selectTrackDraftById(draftId) : null;
         if (d == null) {
-            return error("草稿不存在");
+            return refuse(ErrorCode.NOT_FOUND, "草稿不存在");
         }
         if (OwnershipUtils.notOwner(d.getMemberId(), memberId)) {
-            return error("无权操作");
+            return refuse(ErrorCode.FORBIDDEN, "无权操作");
         }
 
         // 停靠点 → 节点;抽稀轨迹 → 章节 routeGeometry;默认 1 章
@@ -171,15 +173,15 @@ public class ApiTrackController extends BaseController {
     public AjaxResult delete(String id) {
         Long memberId = uid();
         if (memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long draftId = com.chengyinhub.common.core.text.Convert.toLong(id, 0L);
         TrackDraft d = draftId > 0 ? trackDraftMapper.selectTrackDraftById(draftId) : null;
         if (d == null) {
-            return error("草稿不存在");
+            return refuse(ErrorCode.NOT_FOUND, "草稿不存在");
         }
         if (OwnershipUtils.notOwner(d.getMemberId(), memberId)) {
-            return error("无权操作");
+            return refuse(ErrorCode.FORBIDDEN, "无权操作");
         }
         TrackDraft upd = new TrackDraft();
         upd.setId(draftId);

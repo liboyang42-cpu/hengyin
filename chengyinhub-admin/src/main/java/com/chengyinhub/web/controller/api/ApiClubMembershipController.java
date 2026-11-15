@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.ClubMembershipActionRequest;
 import com.chengyinhub.business.domain.dto.ClubMembershipClubRequest;
 import com.chengyinhub.business.domain.dto.ClubMembershipPlanRequest;
@@ -35,7 +37,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/overview")
     public AjaxResult overview(@RequestBody(required = false) ClubMembershipClubRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.overview(principal, request.getClubId())); }
         catch (ServiceException e) { return serviceError(e); }
@@ -44,7 +46,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/setting")
     public AjaxResult setting(@RequestBody(required = false) ClubMembershipClubRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.setting(principal, request.getClubId())); }
         catch (ServiceException e) { return serviceError(e); }
@@ -53,7 +55,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/setting/update")
     public AjaxResult updateSetting(@RequestBody(required = false) ClubMembershipSettingRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.updateSetting(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
@@ -62,7 +64,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/plans")
     public AjaxResult plans(@RequestBody(required = false) ClubMembershipClubRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.plans(principal, request.getClubId(), false)); }
         catch (ServiceException e) { return serviceError(e); }
@@ -71,7 +73,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/plans/manage")
     public AjaxResult managePlans(@RequestBody(required = false) ClubMembershipClubRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.plans(principal, request.getClubId(), true)); }
         catch (ServiceException e) { return serviceError(e); }
@@ -80,7 +82,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/plan/save")
     public AjaxResult savePlan(@RequestBody(required = false) ClubMembershipPlanRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         // 会员方案名、权益与退出/退款说明给俱乐部成员看。
         java.util.List<String> parts = new java.util.ArrayList<String>();
@@ -97,7 +99,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/renew")
     public AjaxResult renew(@RequestBody(required = false) ClubMembershipRenewRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.renew(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
@@ -106,7 +108,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/invoice/resume")
     public AjaxResult resumeInvoice(@RequestBody(required = false) ClubMembershipActionRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.resumeInvoice(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
@@ -115,7 +117,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/invoice/close")
     public AjaxResult closeInvoice(@RequestBody(required = false) ClubMembershipActionRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.closeInvoice(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }
@@ -124,7 +126,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/invoice")
     public AjaxResult invoice(@RequestBody(required = false) ClubMembershipActionRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.invoice(principal, request.getClubId(), request.getId())); }
         catch (ServiceException e) { return serviceError(e); }
@@ -133,7 +135,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/finance/invoices")
     public AjaxResult financeInvoices(@RequestBody(required = false) ClubMembershipClubRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.financeInvoices(principal, request.getClubId())); }
         catch (ServiceException e) { return serviceError(e); }
@@ -142,7 +144,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/term/cancel")
     public AjaxResult cancelTerm(@RequestBody(required = false) ClubMembershipActionRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try {
             clubMembershipService.cancelTerm(principal, request);
@@ -153,7 +155,7 @@ public class ApiClubMembershipController extends BaseController {
     @PostMapping("/refund/review")
     public AjaxResult requestRefundReview(@RequestBody(required = false) ClubMembershipActionRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return bad();
         try { return success(clubMembershipService.requestRefundReview(principal, request)); }
         catch (ServiceException e) { return serviceError(e); }

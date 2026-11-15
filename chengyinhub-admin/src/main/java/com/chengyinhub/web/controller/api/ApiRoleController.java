@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.UserPermission;
 import com.chengyinhub.business.domain.Club;
@@ -79,12 +81,12 @@ public class ApiRoleController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         UmsMember member = umsMemberService.selectUmsMemberById(memberId);
         if (member == null) {
-            return error("用户不存在");
+            return refuse(ErrorCode.USER_NOT_FOUND, "用户不存在");
         }
 
         String role = roleService.resolveRole(member);

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.ClubCampaignRetryRequest;
 import com.chengyinhub.business.domain.dto.ClubEventCampaignRequest;
 import com.chengyinhub.business.service.IClubEventNotificationService;
@@ -34,7 +36,7 @@ public class ApiClubEventNotificationController extends BaseController {
     @PostMapping("/audience-counts")
     public AjaxResult audienceCounts(@RequestBody(required = false) ClubEventCampaignRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少通知范围参数");
         try {
             return success(notificationService.audienceCounts(
@@ -52,7 +54,7 @@ public class ApiClubEventNotificationController extends BaseController {
     @PostMapping("/status")
     public AjaxResult status(@RequestBody(required = false) ClubCampaignRetryRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少通知任务参数");
         try {
             return success(notificationService.campaign(principal, request.getCampaignId()));
@@ -64,7 +66,7 @@ public class ApiClubEventNotificationController extends BaseController {
     @PostMapping("/retry")
     public AjaxResult retry(@RequestBody(required = false) ClubCampaignRetryRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少通知任务参数");
         try {
             return success(notificationService.retryFailed(principal, request.getCampaignId()));
@@ -75,7 +77,7 @@ public class ApiClubEventNotificationController extends BaseController {
 
     private AjaxResult invoke(ClubEventCampaignRequest request, boolean sending) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少通知参数");
         try {
             return success(sending ? notificationService.send(principal, request)

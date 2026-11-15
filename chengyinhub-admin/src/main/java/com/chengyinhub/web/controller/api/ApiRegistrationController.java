@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.domain.dto.RegistrationRequest;
 import com.chengyinhub.business.service.*;
@@ -108,7 +110,7 @@ public class ApiRegistrationController extends BaseController {
         } catch (Exception e) {
         }
         if (member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             com.chengyinhub.business.domain.dto.RegistrationQuoteResult q =
@@ -146,7 +148,7 @@ public class ApiRegistrationController extends BaseController {
 
             }
             if (member_id <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             if (!hasCurrentSignupDataSharingConsent(member_id)) {
                 return error("请先完成报名信息提供的单独同意");
@@ -193,7 +195,7 @@ public class ApiRegistrationController extends BaseController {
 
             }
             if (member_id <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             if (!hasCurrentSignupDataSharingConsent(member_id)) {
                 return error("请先完成报名信息提供的单独同意");
@@ -226,7 +228,7 @@ public class ApiRegistrationController extends BaseController {
         } catch (Exception e) {
         }
         if (member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (selfPlayXpay == null) {
             return AjaxResult.error("支付暂不可用");
@@ -255,7 +257,7 @@ public class ApiRegistrationController extends BaseController {
 
             }
             if (member_id <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             // 与 /pay 同一道合规闸:没有当前版本的报名信息单独同意,一律拒。
             if (!hasCurrentSignupDataSharingConsent(member_id)) {
@@ -310,7 +312,7 @@ public class ApiRegistrationController extends BaseController {
 
             }
             if (memberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
 
             String userName = getAppUserName();
@@ -336,9 +338,9 @@ public class ApiRegistrationController extends BaseController {
     public AjaxResult cancelRefund(String id) {
         Long memberId = 0L;
         try { memberId = getAppUserId(); } catch (Exception e) { }
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long registrationId = Convert.toLong(id, 0L);
-        if (registrationId <= 0) return error("缺少报名ID");
+        if (registrationId <= 0) return refuse(ErrorCode.BAD_REQUEST, "缺少报名ID");
         try {
             com.chengyinhub.business.service.support.RegistrationCancellationReadService.Result existingCase =
                     cancellationReadService.readPlayerManualRefundCase(registrationId, memberId);
@@ -365,9 +367,9 @@ public class ApiRegistrationController extends BaseController {
     public AjaxResult cancelByOwner(String id) {
         Long memberId = 0L;
         try { memberId = getAppUserId(); } catch (Exception e) { }
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long registrationId = Convert.toLong(id, 0L);
-        if (registrationId <= 0) return error("缺少报名ID");
+        if (registrationId <= 0) return refuse(ErrorCode.BAD_REQUEST, "缺少报名ID");
         try {
             if (teamGroupService.cancelPaidRegistrationByOwner(registrationId, memberId) == com.chengyinhub.business.service.ITeamGroupService.CANCEL_MANUAL_REVIEW) {
                 return manualReviewFeedback(registrationId, "本单已转平台人工评估，尚未退款");
@@ -408,7 +410,7 @@ public class ApiRegistrationController extends BaseController {
     })
     public AjaxResult exploreCompletion(String id) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         return registrationQueryApplication.exploreCompletion(memberId, id);
     }
 
@@ -453,7 +455,7 @@ public class ApiRegistrationController extends BaseController {
     })
     public AjaxResult countByDate(String owner_type, String owner_id) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         return registrationQueryApplication.countByDate(principalMemberId, owner_type, owner_id);
     }
 
@@ -466,7 +468,7 @@ public class ApiRegistrationController extends BaseController {
     })
     public AjaxResult myRegistrationList(String owner_type,String status,Integer is_online ) {
         Long member_id;
-        try { member_id = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { member_id = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         AjaxResult result = registrationQueryApplication.myRegistrationList(member_id, owner_type, status, is_online);
         // Preserve the original HTTP-thread PageInfo/TableDataInfo boundary, without enabling startPage.
         if (Integer.valueOf(HttpStatus.SUCCESS).equals(result.get(AjaxResult.CODE_TAG))) {
@@ -532,7 +534,7 @@ public class ApiRegistrationController extends BaseController {
     @PostMapping("/my-joined")
     public AjaxResult myJoined() {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         return registrationQueryApplication.myJoined(memberId);
     }
 

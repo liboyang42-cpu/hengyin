@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantOperationScope;
@@ -108,7 +110,7 @@ public class ApiTemplateController extends BaseController {
             Long principalMemberId = getAppUserId();
             // 参数校验
             if (principalMemberId == null || principalMemberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             Long member_id = resolveTemplateOwner(principalMemberId, request.getScope());
             try {
@@ -174,14 +176,14 @@ public class ApiTemplateController extends BaseController {
         try {
             Long principalMemberId = getAppUserId();
             if (principalMemberId == null || principalMemberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             Long memberId = resolveTemplateOwner(principalMemberId, request.getScope());
             // 采用入口只接收来源身份；标题与优惠券由 service 从可见原单读取并校验。
             // 普通草稿仍校验调用者实际提交的内容和发券权限。
             if (!Boolean.TRUE.equals(request.getAdoptSourceOnly())) {
                 if (StringUtils.isBlank(request.getTitle())) {
-                    return error("请填写游戏标题");
+                    return refuse(ErrorCode.BAD_REQUEST, "请填写游戏标题");
                 }
                 try {
                     couponRewardAuthorizationService.assertOwnedRewardCoupon(request.getCouponId(), memberId);
@@ -224,7 +226,7 @@ public class ApiTemplateController extends BaseController {
         try {
             if (request == null) return error("请指定来源模板");
             Long actor = getAppUserId();
-            if (actor == null || actor <= 0) return error("请先登录");
+            if (actor == null || actor <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             Long owner = resolveTemplateOwner(actor, request.getScope());
             return success(templateAdoptionService.adopt(actor, owner, request, getAppUserName()));
         } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
@@ -234,7 +236,7 @@ public class ApiTemplateController extends BaseController {
     public AjaxResult adoptionSource(@RequestParam String originalTemplateId, @RequestParam(required=false) String scope) {
         try {
             Long actor = getAppUserId();
-            if (actor == null || actor <= 0) return error("请先登录");
+            if (actor == null || actor <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             return success(templateAdoptionService.source(actor, resolveTemplateOwner(actor, scope), originalTemplateId));
         } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
     }
@@ -243,7 +245,7 @@ public class ApiTemplateController extends BaseController {
     public AjaxResult adoptionReceipt(@RequestParam String requestId, @RequestParam(required=false) String scope) {
         try {
             Long actor = getAppUserId();
-            if (actor == null || actor <= 0) return error("请先登录");
+            if (actor == null || actor <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             return success(templateAdoptionService.receipt(actor, resolveTemplateOwner(actor, scope), scope, requestId));
         } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
     }
@@ -296,7 +298,7 @@ public class ApiTemplateController extends BaseController {
         try {
             Long principalMemberId = getAppUserId();
             if (principalMemberId == null || principalMemberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             Long memberId = resolveTemplateOwner(principalMemberId, scope);
             Long taskId = templatePublishService.submitTemplateToMarket(
@@ -323,7 +325,7 @@ public class ApiTemplateController extends BaseController {
             // 获取当前登录用户ID
             Long principalMemberId = getAppUserId();
             if (principalMemberId == null || principalMemberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             Long memberId = resolveTemplateOwner(principalMemberId, scope);
 
@@ -359,7 +361,7 @@ public class ApiTemplateController extends BaseController {
             // 获取当前登录用户ID
             Long principalMemberId = getAppUserId();
             if (principalMemberId == null || principalMemberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             Long memberId = resolveTemplateOwner(principalMemberId, scope);
 
@@ -414,7 +416,7 @@ public class ApiTemplateController extends BaseController {
 
         }
         if (member_id < 1) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         try {
@@ -673,16 +675,16 @@ public class ApiTemplateController extends BaseController {
         if (templateId > 0) {
             cmsTemplateLibrary.setId(templateId);
         } else {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         cmsTemplateLibrary = templateLibraryService.selectCmsTemplateLibraryById(templateId);
         if (cmsTemplateLibrary == null) {
-            return error("模板不存在");
+            return refuse(ErrorCode.TEMPLATE_NOT_FOUND, "模板不存在");
         } else {
             if (!Integer.valueOf(0).equals(cmsTemplateLibrary.getDelFlag())
                     || !Long.valueOf(1L).equals(cmsTemplateLibrary.getStatus())) {
-                return error("模板不存在");
+                return refuse(ErrorCode.TEMPLATE_NOT_FOUND, "模板不存在");
             } else {
                 // 名字收口在 ValidationMethod#label:这串映射原本在本文件里有两份,
                 // 加一个新完成方式要改两处,漏一处就是某个入口显示空白。
@@ -741,14 +743,14 @@ public class ApiTemplateController extends BaseController {
     })
     public AjaxResult libraryReport(String id, String reason) {
         Long libraryId = Convert.toLong(id, 0L);
-        if (libraryId <= 0) return error("参数不合规");
+        if (libraryId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         Long reporterId = currentReporter();
-        if (reporterId == null) return error("请先登录");
+        if (reporterId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         // 与 /info 同一公开谓词:不公开的记录对外「不存在」,也不能借举报建单。
         CmsTemplateLibrary row = templateLibraryService.selectCmsTemplateLibraryById(libraryId);
         if (row == null || !Integer.valueOf(0).equals(row.getDelFlag())
                 || !Long.valueOf(1L).equals(row.getStatus())) {
-            return error("模板不存在");
+            return refuse(ErrorCode.TEMPLATE_NOT_FOUND, "模板不存在");
         }
         return submitReport(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE_LIBRARY, libraryId, reporterId, reason);
     }
@@ -761,15 +763,15 @@ public class ApiTemplateController extends BaseController {
     })
     public AjaxResult personalTemplateReport(String id, String reason) {
         Long templateId = Convert.toLong(id, 0L);
-        if (templateId <= 0) return error("参数不合规");
+        if (templateId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         Long reporterId = currentReporter();
-        if (reporterId == null) return error("请先登录");
+        if (reporterId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         // 与 /myinfo 非本人可读的同一谓词:已审核、已上架、非草稿。
         CmsMemberTemplate template = memberTemplateService.selectCmsMemberTemplateById(templateId);
         if (template == null || !Integer.valueOf(0).equals(template.getDelFlag())
                 || !Integer.valueOf(1).equals(template.getDraftStatus())
                 || !Long.valueOf(1L).equals(template.getStatus()) || !Long.valueOf(1L).equals(template.getPublishStatus())) {
-            return error("模板不存在");
+            return refuse(ErrorCode.TEMPLATE_NOT_FOUND, "模板不存在");
         }
         return submitReport(com.chengyinhub.business.domain.AuditTask.BIZ_TEMPLATE, templateId, reporterId, reason);
     }
@@ -808,11 +810,11 @@ public class ApiTemplateController extends BaseController {
         if (templateId > 0) {
             cmsMemberTemplate.setId(templateId);
         } else {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         Long viewerId = getAppUserId();
-        if (viewerId == null || viewerId <= 0) return error("请先登录");
+        if (viewerId == null || viewerId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long ownerId;
         try {
             ownerId = resolveTemplateOwner(viewerId, scope);
@@ -821,7 +823,7 @@ public class ApiTemplateController extends BaseController {
         }
         cmsMemberTemplate = memberTemplateService.selectCmsMemberTemplateById(templateId);
         if (cmsMemberTemplate == null) {
-            return error("模板不存在");
+            return refuse(ErrorCode.TEMPLATE_NOT_FOUND, "模板不存在");
         } else {
             boolean isOwner = ownerId != null && ownerId.equals(cmsMemberTemplate.getMemberId());
             cmsMemberTemplate.setCanEdit(isOwner);
@@ -837,7 +839,7 @@ public class ApiTemplateController extends BaseController {
                     && Long.valueOf(1L).equals(cmsMemberTemplate.getPublishStatus());
             if (!isOwner && !isPublicEligible) {
                 // 非本人只能读取已审核、已上架实体；所有私有状态与不存在保持同一外观，避免枚举。
-                return error("模板不存在");
+                return refuse(ErrorCode.TEMPLATE_NOT_FOUND, "模板不存在");
             } else if (Integer.valueOf(2).equals(cmsMemberTemplate.getDelFlag())) {
                 return error("模版已删除");
             } else if (!isDraft && !isOwnerPending && !Long.valueOf(1L).equals(cmsMemberTemplate.getStatus())) {

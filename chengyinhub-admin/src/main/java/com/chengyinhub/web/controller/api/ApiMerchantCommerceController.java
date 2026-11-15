@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -31,7 +33,7 @@ public class ApiMerchantCommerceController extends BaseController {
     @PostMapping("/capabilities")
     public AjaxResult capabilities() {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
         Long ownerMemberId = access.getOwnerMemberId();
@@ -50,7 +52,7 @@ public class ApiMerchantCommerceController extends BaseController {
     @PostMapping("/order")
     public AjaxResult createOrder(@RequestBody Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
         // 付款人 = 登录人(经手购买的员工或店主);订单主体 = 商家主体,权益落给商家。
@@ -72,7 +74,7 @@ public class ApiMerchantCommerceController extends BaseController {
     @PostMapping("/order/status")
     public AjaxResult orderStatus(@RequestBody Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
         try {
@@ -89,9 +91,9 @@ public class ApiMerchantCommerceController extends BaseController {
     @PostMapping("/order/refund")
     public AjaxResult refundOrder(@RequestBody Map<String, Object> body) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         MerchantAccessContext access = merchantAccessService.require(memberId, MerchantPermission.PROFILE_WRITE);
-        if (!memberId.equals(access.getOwnerMemberId())) return error("仅商家店主可申请权益退款");
+        if (!memberId.equals(access.getOwnerMemberId())) return refuse(ErrorCode.FORBIDDEN, "仅商家店主可申请权益退款");
         try {
             String orderSn = body == null || body.get("orderSn") == null ? null : String.valueOf(body.get("orderSn"));
             return success(commerceService.refundOrder(access.getOwnerMemberId(), access.getMerchantId(), orderSn));

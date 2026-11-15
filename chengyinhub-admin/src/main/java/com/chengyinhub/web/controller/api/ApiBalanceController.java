@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 
 import com.chengyinhub.business.domain.UmsMemberBalanceDetail;
 import com.chengyinhub.business.domain.UmsMemberPointsDetail;
@@ -47,7 +49,7 @@ public class ApiBalanceController extends BaseController {
 
         }
         if (member_id == 0L) {
-            return error("请登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请登录");
         }
 
         UmsMemberBalanceDetail umsMemberBalanceDetail = new UmsMemberBalanceDetail();

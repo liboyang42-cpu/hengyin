@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,7 +85,7 @@ public class ApiCoopPoolController extends BaseController {
     @PostMapping("/list")
     public AjaxResult list(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
 
         // 我的生效俱乐部(玩家也能看池,但状态派生只对主理人有意义)
         Set<Long> myClubIds = new HashSet<>();
@@ -186,9 +188,9 @@ public class ApiCoopPoolController extends BaseController {
     @PostMapping("/apply")
     public AjaxResult apply(@RequestBody Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long topicId = toLong(body == null ? null : body.get("topicId"));
-        if (topicId == null) return error("缺少主题");
+        if (topicId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少主题");
         Long clubId = toLong(body.get("clubId"));
         String message = body.get("message") == null ? null : String.valueOf(body.get("message"));
         // F-L5C-02:申请留言给主题发布者看,与 /coop/invite 留言同一道内容安全闸。
@@ -222,9 +224,9 @@ public class ApiCoopPoolController extends BaseController {
     @PostMapping("/withdraw")
     public AjaxResult withdraw(@RequestBody Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long topicId = toLong(body == null ? null : body.get("topicId"));
-        if (topicId == null) return error("缺少主题");
+        if (topicId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少主题");
         try {
             coopClubApplyService.withdraw(topicId, memberId);
         } catch (IllegalStateException e) {
@@ -237,9 +239,9 @@ public class ApiCoopPoolController extends BaseController {
     @PostMapping("/decline")
     public AjaxResult decline(@RequestBody Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long applyId = toLong(body == null ? null : body.get("applyId"));
-        if (applyId == null) return error("缺少申请");
+        if (applyId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少申请");
         Long memberId = principalMemberId;
         try {
             String scope = body == null || body.get("scope") == null
@@ -280,7 +282,7 @@ public class ApiCoopPoolController extends BaseController {
     @PostMapping("/received")
     public AjaxResult received(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         String scope = body == null || body.get("scope") == null ? null : String.valueOf(body.get("scope"));
         Long ownerMemberId = null;
         try {
@@ -312,7 +314,7 @@ public class ApiCoopPoolController extends BaseController {
     @PostMapping("/mine")
     public AjaxResult mine(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         List<Long> myClubIds = new ArrayList<>();
         List<Club> myClubs = clubService.selectClubsByMemberId(memberId);
         if (myClubs != null) {

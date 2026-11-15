@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -145,7 +147,7 @@ public class ApiAiController extends BaseController
     public AjaxResult merchantPlan(@RequestBody AiMerchantPlanReq req)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String gate = gateRole(memberId);
         if (gate != null) return error(gate);
 
@@ -164,7 +166,7 @@ public class ApiAiController extends BaseController
     @PostMapping("/theme/draft")
     public AjaxResult themeDraft(@RequestBody AiThemeDraftReq req)
     {
-        if (resolveMemberId() == null) return error("请先登录");
+        if (resolveMemberId() == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return draftError(400, "请先准备本次起草", "AI_DRAFT_PREPARE_REQUIRED", null);
     }
 
@@ -174,7 +176,7 @@ public class ApiAiController extends BaseController
     public AjaxResult themeDraftPrepare(@RequestBody AiThemeDraftPrepareReq req)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(themeDraftRequests.prepare(memberId, req));
         } catch (AiThemeDraftRequestService.IntentRejectedException refused) {
@@ -190,7 +192,7 @@ public class ApiAiController extends BaseController
     public AjaxResult themeDraftExecute(@RequestBody AiThemeDraftExecuteReq req)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             AiThemeDraftIntentView view = themeDraftRequests.execute(memberId, req);
             if (view == null) return draftError(500, "暂时无法确认原请求", "AI_DRAFT_STATE_UNAVAILABLE", null);
@@ -219,7 +221,7 @@ public class ApiAiController extends BaseController
             @RequestParam(required = false) String prepareKey)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if ((requestId == null) == (prepareKey == null)
                 || (requestId != null && requestId.isBlank()) || (prepareKey != null && prepareKey.isBlank()))
             return draftError(400, "请提供一个原请求编号", "AI_DRAFT_INVALID_REQUEST", null);
@@ -239,7 +241,7 @@ public class ApiAiController extends BaseController
     public AjaxResult themeDraftRecovery(@RequestParam(required = false) Long beforeId)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             java.util.List<AiThemeDraftRecoveryItem> pending = themeDraftRequests.readRecovery(memberId, beforeId);
             if (pending == null) return draftError(500, "暂时无法确认原请求", "AI_DRAFT_STATE_UNAVAILABLE", null);
@@ -287,7 +289,7 @@ public class ApiAiController extends BaseController
     public AjaxResult themeDraftQuota()
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String gate = gateThemeDraftRole(memberId);
         if (gate != null) return error(gate);
         try
@@ -306,7 +308,7 @@ public class ApiAiController extends BaseController
     public AjaxResult nodeGenerate(@RequestBody AiNodeGenReq req)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String gate = gateRole(memberId);
         if (gate != null) return error(gate);
 
@@ -326,7 +328,7 @@ public class ApiAiController extends BaseController
     public AjaxResult templateFill(@RequestBody AiTemplateFillReq req)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String gate = gateRole(memberId);
         if (gate != null) return error(gate);
         if (req != null && (req.getMerchantFacts() != null || req.getMerchantConstraints() != null))
@@ -366,7 +368,7 @@ public class ApiAiController extends BaseController
     public AjaxResult chapterOverview(@RequestBody AiChapterOverviewReq req)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String gate = gateRole(memberId);
         if (gate != null) return error(gate);
 
@@ -386,7 +388,7 @@ public class ApiAiController extends BaseController
     public AjaxResult safetyPrecheck(@RequestBody AiSafetyPrecheckReq req)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String gate = gateRole(memberId);
         if (gate != null) return error(gate);
 
@@ -406,7 +408,7 @@ public class ApiAiController extends BaseController
     public AjaxResult merchantTaskSuggest(@RequestBody AiMerchantTaskSuggestReq req)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String gate = gateRole(memberId);
         if (gate != null) return error(gate);
 
@@ -426,7 +428,7 @@ public class ApiAiController extends BaseController
     public AjaxResult merchantInsight()
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         // 店铺参谋看的是本商家经营数据:登录人必须是该商家的成员(店主/员工),
         // 且岗位有 MARKETING_READ;club、玩家、无此权限的岗位一律不放行。
         MerchantAccessContext scope;
@@ -462,7 +464,7 @@ public class ApiAiController extends BaseController
     public AjaxResult clubDesign(@RequestBody AiClubDesignReq req)
     {
         Long memberId = resolveMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         String gate = gateRole(memberId);
         if (gate != null) return error(gate);
 

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.mapper.RoamShareSnapshotMapper;
 import com.chengyinhub.business.service.support.RoamSharePrivacyService;
 import com.chengyinhub.business.service.support.RoamShareSnapshotService;
@@ -57,7 +59,7 @@ public class ApiRoamShareController extends BaseController {
     @PostMapping("/snapshot")
     public AjaxResult publish(Long clientTs, Long sessionId, String snapshot, Integer expectedVersion) {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (clientTs == null || clientTs <= 0) return error("足迹记录无效");
         com.alibaba.fastjson2.JSONObject normalizedJson;
         try {
@@ -111,7 +113,7 @@ public class ApiRoamShareController extends BaseController {
     @PostMapping("/revoke")
     public AjaxResult revoke() {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return success(Collections.singletonMap("revoked", snapshotMapper.deleteByMember(memberId)));
     }
 
@@ -123,7 +125,7 @@ public class ApiRoamShareController extends BaseController {
     @PostMapping("/revoke-token")
     public AjaxResult revokeToken(String token) {
         Long memberId = uid();
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (token == null || !TOKEN.matcher(token).matches()) {
             AjaxResult result = new AjaxResult(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, "分享链接无效");
             result.put("errorCode", "SHARE_TOKEN_INVALID");

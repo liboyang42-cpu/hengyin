@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import java.math.BigDecimal;
 import java.util.Map;
 
@@ -42,9 +44,9 @@ public class ApiPricingController extends BaseController {
     @PostMapping("/preview")
     public AjaxResult preview(@RequestBody Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long topicId = asLong(body.get("topicId"));
-        if (topicId == null) return error("缺少主题");
+        if (topicId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少主题");
         AjaxResult owns = requireOwner(topicId, memberId);
         if (owns != null) return owns;
         try {
@@ -61,9 +63,9 @@ public class ApiPricingController extends BaseController {
     @PostMapping("/confirm")
     public AjaxResult confirm(@RequestBody Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long topicId = asLong(body.get("topicId"));
-        if (topicId == null) return error("缺少主题");
+        if (topicId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少主题");
         AjaxResult owns = requireOwner(topicId, memberId);
         if (owns != null) return owns;
         try {
@@ -125,8 +127,8 @@ public class ApiPricingController extends BaseController {
     /** 仅主题发布者可定价 */
     private AjaxResult requireOwner(Long topicId, Long memberId) {
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
-        if (topic == null) return error("主题不存在");
-        if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return error("仅主题发布者可定价");
+        if (topic == null) return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
+        if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return refuse(ErrorCode.FORBIDDEN, "仅主题发布者可定价");
         return null;
     }
 

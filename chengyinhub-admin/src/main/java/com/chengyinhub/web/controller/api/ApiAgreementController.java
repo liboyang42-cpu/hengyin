@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.AgreementDocument;
 import com.chengyinhub.business.service.IAgreementDocumentService;
 import com.chengyinhub.business.service.IConsentRecordService;
@@ -63,7 +65,7 @@ public class ApiAgreementController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         String type = value(body, "type");
         String requestId = value(body, "requestId");

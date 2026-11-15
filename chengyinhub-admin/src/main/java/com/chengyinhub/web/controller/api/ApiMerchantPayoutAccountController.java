@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantAccessContext;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -26,7 +28,7 @@ public class ApiMerchantPayoutAccountController extends BaseController {
     @PostMapping("/payout-account")
     public AjaxResult payoutAccount() {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             MerchantAccessContext access = merchantAccessService.require(principal, MerchantPermission.FINANCE_READ);
             return success(subMerchantService.ownerView(EcommerceSubMerchantService.OWNER_MERCHANT, access.getMerchantId()));
