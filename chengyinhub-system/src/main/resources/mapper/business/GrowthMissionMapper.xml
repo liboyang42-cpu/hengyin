@@ -9,7 +9,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                mission_desc as missionDesc,
                case when trigger_event = 'store_verify' then 'store_verify' else trigger_event end as triggerEvent,
                exp_reward as expReward,
-               daily_limit as dailyLimit, status, sort_no as sortNo,
+               daily_limit as dailyLimit, target_count as targetCount, status, sort_no as sortNo,
                create_time as createTime, update_time as updateTime
         from growth_mission
         where mission_code = #{missionCode}
@@ -22,7 +22,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                mission_desc as missionDesc,
                case when trigger_event = 'store_verify' then 'store_verify' else trigger_event end as triggerEvent,
                exp_reward as expReward,
-               daily_limit as dailyLimit, status, sort_no as sortNo,
+               daily_limit as dailyLimit, target_count as targetCount, status, sort_no as sortNo,
                create_time as createTime, update_time as updateTime
         from growth_mission
         where trigger_event = #{triggerEvent}
@@ -40,7 +40,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select id, mission_code as missionCode, mission_name as missionName,
                mission_desc as missionDesc, trigger_event as triggerEvent,
                exp_reward as expReward,
-               daily_limit as dailyLimit, status, sort_no as sortNo,
+               daily_limit as dailyLimit, target_count as targetCount, status, sort_no as sortNo,
                create_time as createTime, update_time as updateTime
         from growth_mission
         where status = '0'
@@ -51,7 +51,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select id, mission_code as missionCode, mission_name as missionName,
                mission_desc as missionDesc, trigger_event as triggerEvent,
                exp_reward as expReward,
-               daily_limit as dailyLimit, status, sort_no as sortNo,
+               daily_limit as dailyLimit, target_count as targetCount, status, sort_no as sortNo,
                create_time as createTime, update_time as updateTime
         from growth_mission
         <where>
@@ -65,9 +65,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <insert id="insertGrowthMission" parameterType="GrowthMission" useGeneratedKeys="true" keyProperty="id">
         insert into growth_mission
-        (mission_code, mission_name, mission_desc, trigger_event, exp_reward, daily_limit, status, sort_no, create_time)
+        (mission_code, mission_name, mission_desc, trigger_event, exp_reward, daily_limit, target_count, status, sort_no, create_time)
         values
-        (#{missionCode}, #{missionName}, #{missionDesc}, #{triggerEvent}, #{expReward}, #{dailyLimit}, #{status}, #{sortNo}, #{createTime})
+        (#{missionCode}, #{missionName}, #{missionDesc}, #{triggerEvent}, #{expReward}, #{dailyLimit}, ifnull(#{targetCount}, 1), #{status}, #{sortNo}, #{createTime})
     </insert>
 
     <update id="updateGrowthMission" parameterType="GrowthMission">
@@ -78,6 +78,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="triggerEvent != null">trigger_event = #{triggerEvent},</if>
             <if test="expReward != null">exp_reward = #{expReward},</if>
             <if test="dailyLimit != null">daily_limit = #{dailyLimit},</if>
+            <if test="targetCount != null and targetCount > 0">target_count = #{targetCount},</if>
             <if test="status != null">status = #{status},</if>
             <if test="sortNo != null">sort_no = #{sortNo},</if>
             update_time = #{updateTime}

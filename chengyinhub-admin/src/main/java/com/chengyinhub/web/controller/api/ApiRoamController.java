@@ -112,6 +112,9 @@ public class ApiRoamController extends BaseController {
     private IRoamExploreDayCandidateService roamExploreDayCandidateService;
     @Autowired
     private IRoamHangoutService roamHangoutService;
+    /** P7 daily-loop;单测不注入时跳过 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.impl.DailyLoopRecorder dailyLoopRecorder;
 
     /** 包级可见 + 非 final:测试用子类覆写它注入身份,好直调真入口(见 RoamPresenceControllerTest)。 */
     Long uid() {
@@ -323,6 +326,7 @@ public class ApiRoamController extends BaseController {
         auditShopVisitSpeed(memberId, sid, sourceType, sourceId, shopLat, shopLng);
         roamMapper.recordAnonymousShopVisitor(memberId,sourceType,sourceId);
         int inserted = roamMapper.insertShopVisitIgnore(memberId, sid, sourceType, sourceId, name.trim(), new Date());
+        if (dailyLoopRecorder != null) dailyLoopRecorder.afterShopVisited(memberId, inserted > 0);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("recorded", inserted > 0);
         data.put("shops", roamMapper.countDistinctShopsBySession(sid));
@@ -600,6 +604,7 @@ public class ApiRoamController extends BaseController {
             tileList = tileList.subList(0, remaining);
         }
         int newly = tileList.isEmpty() ? 0 : roamMapper.batchInsertTile(memberId, sid, tileList, now);
+        if (dailyLoopRecorder != null) dailyLoopRecorder.afterCellsRevealed(memberId, Math.max(0, newly));
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("sessionId", clientSessionKey == null ? sid : String.valueOf(sid));
         data.put("newlyRevealed", Math.max(0, newly));
@@ -892,6 +897,12 @@ public class ApiRoamController extends BaseController {
         data.put("sessionShops", sessionShops);
         data.put("badgeDelivery", roamBadgeDeliveryService.readStatus(memberId, sid));
         data.put("shopMedal", shopMedal);   // null = 未达阈值/已拿过/def 未落库
+        // P7(GRO-07):达标的漫游算今天活跃(连续天数/补签卡/今日任务)。提交后另起事务做,
+        // 结果在提交后写进回执的 dailyLoop;失败只记日志,结算照常成功,客户端回读 /api/play/growth 即可。
+        if (dailyLoopRecorder != null) {
+            dailyLoopRecorder.afterWalkFinished(memberId, session.getDistanceM(), sessionTiles,
+                    loop -> data.put("dailyLoop", loop));
+        }
         // 终点故事只消费本次已经由服务端结算的统计值；开关关闭或内容未审时静默。
         if (npcFeatureFlags.eventOn()) {
             try {

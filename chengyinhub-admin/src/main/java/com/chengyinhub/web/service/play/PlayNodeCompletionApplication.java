@@ -78,6 +78,8 @@ public class PlayNodeCompletionApplication {
     private TopicRouteCompletionCoordinator topicRouteCompletionCoordinator;
     @Autowired
     private IPlayerProgressionService playerProgressionService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.impl.DailyLoopRecorder dailyLoopRecorder;
     @Autowired
     private IPointsAwardService pointsAwardService;
     @Autowired
@@ -453,6 +455,8 @@ public class PlayNodeCompletionApplication {
             earnedXp = xpBudgetService.resolveNodeXp(node);
             if (earnedXp <= 0) earnedXp = 12;
             growthService.addExp(memberId, earnedXp, "节点探索");
+            // P7 每日任务「玩一个节点」:提交后另起事务按真实完成数记,失败只记日志不回滚本次完成。
+            if (dailyLoopRecorder != null) dailyLoopRecorder.afterNodePlayed(memberId);
             // M6 随机掉落:首次完成掷骰(内部 uk 幂等,重放/并发不多掉);命中即入账(granting)
             // ③ 整块跳过:dropType=3 会再发一张真金券,dropType=1 的翻倍探索值也不在 B5 的「纯体验」里。
             if (shopDay || rewardPolicy == RewardPolicy.XP_BADGE_ONLY) dropResult = null;

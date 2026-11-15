@@ -20,6 +20,12 @@ public interface IGrowthService {
 
     int completeMission(Long memberId, GrowthMissionCompleteDTO request);
 
+    /**
+     * P7:系统按真实事件记一条每日任务完成(仅 daily_* 事件的任务)。当天幂等,奖励只用 exp_reward 配置。
+     * @return 1 = 本次新记完成;0 = 已记过/不是每日任务
+     */
+    int completeDailyMission(Long memberId, GrowthMission mission);
+
     int applyEvent(Long memberId, String eventName, String bizType, Long bizId);
 
     /** 与成功核销同一事务保存当时的成长任务，不在核销事务内发奖。 */

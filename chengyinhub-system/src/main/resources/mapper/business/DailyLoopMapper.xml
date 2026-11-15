@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.DailyLoopMapper">
+
+    <!-- 「今天」统一用数据库 curdate(),与 growth_mission_progress.progress_date / roam 日限口径一致。 -->
+
+    <select id="countQualifyingWalksToday" resultType="int">
+        select count(*) from roam_session
+        where member_id = #{memberId}
+          and status = 1
+          and finished_at &gt;= curdate() and finished_at &lt; curdate() + interval 1 day
+          <choose>
+              <when test="minMeters &gt; 0 and minCells &gt; 0">
+                  and (ifnull(distance_m, 0) &gt;= #{minMeters} or ifnull(tiles_revealed, 0) &gt;= #{minCells})
+              </when>
+              <when test="minMeters &gt; 0">and ifnull(distance_m, 0) &gt;= #{minMeters}</when>
+              <when test="minCells &gt; 0">and ifnull(tiles_revealed, 0) &gt;= #{minCells}</when>
+          </choose>
+    </select>
+
+    <select id="countRevealedCellsToday" resultType="int">
+        select count(*) from roam_fog_tile
+        where member_id = #{memberId}
+          and revealed_at &gt;= curdate() and revealed_at &lt; curdate() + interval 1 day
+    </select>
+
+    <select id="countNodesPlayedToday" resultType="int">
+        select count(*) from player_node_progress
+        where member_id = #{memberId}
+          and status = 1 and del_flag = 0
+          and checkin_time &gt;= curdate() and checkin_time &lt; curdate() + interval 1 day
+    </select>
+
+    <select id="countShopsVisitedToday" resultType="int">
+        select count(distinct source_type, source_id) from roam_shop_visit
+        where member_id = #{memberId}
+          and visited_at &gt;= curdate() and visited_at &lt; curdate() + interval 1 day
+    </select>
+
+    <select id="selectMissionCodesCompletedToday" resultType="java.lang.String">
+        select distinct mission_code from growth_mission_progress
+        where member_id = #{memberId}
+          and progress_date = curdate()
+          and biz_type = '' and biz_id = 0
+    </select>
+</mapper>
