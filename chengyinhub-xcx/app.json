@@ -211,6 +211,7 @@
       "pages": [
         "shezhi",
         "about/index",
+        "app/index",
         "marketing/index"
       ]
     },

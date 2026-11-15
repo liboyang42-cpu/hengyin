@@ -237,6 +237,11 @@ Page({
   openAiChatRecords() { this.setData({ showAiChatRecords: true }); },
   closeAiChatRecords() { this.setData({ showAiChatRecords: false }); },
 
+  // R11 growth-loops(GRO-05):小程序 → App 入口
+  goApp() {
+    wx.navigateTo({ url: '/pages/shezhi/app/index' });
+  },
+
   goAbout() {
     wx.navigateTo({ url: '/pages/shezhi/about/index' });
   },
