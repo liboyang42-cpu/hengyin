@@ -292,8 +292,8 @@ class ApiCoopControllerInviteAuthzTest {
         CoopInvite forgedType1 = invite(1);
         forgedType1.setToType("merchant");
 
-        assertEquals(500, c.invite(forgedType0).get("code"));
-        assertEquals(500, c.invite(forgedType1).get("code"));
+        assertEquals(400, c.invite(forgedType0).get("code"));
+        assertEquals(400, c.invite(forgedType1).get("code"));
 
         verify(coopInviteService, never()).insertCoopInvite(any());
     }

@@ -114,6 +114,12 @@ public class ApiMarketingProductController extends BaseController {
         return success(giftService.giftsClaimedBy(requireAppMemberId(), limit == null ? 20 : limit));
     }
 
+    /** 「非首次使用型已在成交时生效」等请求与当前授权状态冲突:业务冲突 409,不是系统 500。 */
+    @ExceptionHandler(com.chengyinhub.business.service.RegistrationRequestConflictException.class)
+    public AjaxResult handleRequestConflict(com.chengyinhub.business.service.RegistrationRequestConflictException conflict) {
+        return AjaxResult.error(HttpStatus.CONFLICT, conflict.getMessage());
+    }
+
     @ExceptionHandler(MarketingProductException.class)
     public AjaxResult handleProductRejection(MarketingProductException rejection) {
         AjaxResult result = AjaxResult.error(rejection.getHttpStatus(), rejection.getMessage());

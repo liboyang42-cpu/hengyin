@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
 import java.util.LinkedHashMap;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.business.service.IMerchantClawbackService;
 import com.chengyinhub.business.domain.MerchantClawbackApplication;
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
@@ -282,7 +283,7 @@ public class ApiCoopController extends BaseController {
         }
         if ((body.getInviteType() == 0 && !CoopInvite.TO_MERCHANT.equals(body.getToType()))
                 || (body.getInviteType() == 1 && !"club".equals(body.getToType()))) {
-            return error("邀请类型与受邀方类型不匹配");
+            return AjaxResult.error(HttpStatus.BAD_REQUEST, "邀请类型与受邀方类型不匹配");
         }
         // type0/type1 均须关联主题，否则接受生成的 coop_order 无法参与结算、条款为空。
         if (body.getTopicId() == null) {
@@ -1034,7 +1035,7 @@ public class ApiCoopController extends BaseController {
     public AjaxResult reviewSummary(@RequestBody Map<String, Object> body) {
         try { currentMemberId(); } catch (Exception e) { return error("请先登录"); }
         Long toId = body == null ? null : toLong(body.get("toId"));
-        if (toId == null) return error("缺少被评人");
+        if (toId == null) return AjaxResult.error(HttpStatus.BAD_REQUEST, "缺少被评人");
         Map<String, Object> d = new HashMap<>();
         d.put("summary", coopInviteService.reviewSummary(toId));
         d.put("reviews", coopInviteService.listReviews(toId));
@@ -1110,7 +1111,7 @@ public class ApiCoopController extends BaseController {
         for (com.chengyinhub.business.domain.CoopComplaint ex : coopComplaintService.listByTopic(topicId)) {
             if (memberId.equals(ex.getReporterMemberId()) && ex.getStatus() != null
                     && ex.getStatus() < com.chengyinhub.business.domain.CoopComplaint.STATUS_CLOSED) {
-                return error("你对该主题已有处理中的投诉");
+                return AjaxResult.error(HttpStatus.CONFLICT, "你对该主题已有处理中的投诉");
             }
         }
         // 白名单:只信任 topicId + reason;过错方/垫付额/过错比例/扣划额/status/handler 一律由客服后台设,绝不从 body 取

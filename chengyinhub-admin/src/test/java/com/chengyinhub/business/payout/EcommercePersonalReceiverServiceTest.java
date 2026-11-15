@@ -107,7 +107,9 @@ class EcommercePersonalReceiverServiceTest {
     void explicitConsentAndFreshCodeAreMandatory() {
         Fixture f = new Fixture();
         for (Boolean consent : new Boolean[] { false, null }) {
-            assertThrows(ServiceException.class, () -> f.service.bind(MEMBER, CLUB, "code", consent));
+            ServiceException refused = assertThrows(ServiceException.class, () -> f.service.bind(MEMBER, CLUB, "code", consent));
+            // SMOKE-500-R4:未勾选同意是请求参数问题,业务码 400 而不是 500。
+            assertEquals(Integer.valueOf(400), refused.getCode());
         }
         assertThrows(ServiceException.class, () -> f.service.bind(MEMBER, CLUB, " ", true));
         assertThrows(ServiceException.class, () -> f.service.bind(null, CLUB, "code", true));
