@@ -104,6 +104,26 @@ public class ApiCommunityPostController extends BaseController {
         return withReadPrincipal(memberId -> success(service.referenceOptions(memberId, type, limit)));
     }
 
+    /** K2 discovery (MKT-09): shop picker for shop-visit posts (places and merchants). Read only. */
+    @GetMapping("/shop-options")
+    public AjaxResult shopOptions(@RequestParam(required = false) String keyword,
+                                  @RequestParam(required = false) Double lat,
+                                  @RequestParam(required = false) Double lng,
+                                  @RequestParam(required = false) Integer limit) {
+        return withReadPrincipal(memberId -> success(service.shopOptions(memberId, keyword, lat, lng, limit)));
+    }
+
+    /** K2 discovery (MKT-09): posts linked to one shop, for the shop page. Same visibility and gate as the feeds. */
+    @GetMapping("/places/{type}/{id}/posts")
+    @Anonymous
+    public AjaxResult placePosts(@PathVariable String type, @PathVariable Long id,
+                                 @RequestParam(required = false) Long cursor,
+                                 @RequestParam(required = false) Integer limit) {
+        if (!featureGate.canRead(viewer())) return featureUnavailable();
+        try { return success(service.placePosts(viewer(), type, id, cursor, limit)); }
+        catch (ServiceException e) { return serviceError(e); }
+    }
+
     @GetMapping("/feeds/{mode}")
     @Anonymous
     public AjaxResult feed(@PathVariable String mode,

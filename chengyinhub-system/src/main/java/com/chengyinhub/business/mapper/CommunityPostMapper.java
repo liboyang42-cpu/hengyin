@@ -95,6 +95,10 @@ public interface CommunityPostMapper {
     List<Map<String, Object>> selectReferenceOptions(@Param("referenceType") String referenceType,
                                                       @Param("memberId") Long memberId,
                                                       @Param("limit") int limit);
+    /** K2 discovery: shop picker rows (published places and public merchants), nearest first when a point is given. */
+    List<Map<String, Object>> selectShopOptions(@Param("keyword") String keyword,
+                                                @Param("lat") Double lat, @Param("lng") Double lng,
+                                                @Param("limit") int limit);
     int deleteReferences(Long postId);
     List<Map<String, Object>> selectReferences(Long postId);
     int insertMemberAction(@Param("postId") Long postId, @Param("memberId") Long memberId,
