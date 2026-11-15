@@ -30,6 +30,8 @@ public class EcommercePayoutTask {
     @Autowired(required = false) private com.chengyinhub.business.payout.EcommerceCombinedSettlementService combinedSettlement;
     /** S2 collection model: single-seller split orders past the T+N hold get their profit-sharing plan here. */
     @Autowired(required = false) private com.chengyinhub.business.collection.CollectionSplitSettlementService collectionSplit;
+    /** K1 club dues: dues paid to a club sub-merchant past the hold get their profit-sharing plan here. */
+    @Autowired(required = false) private com.chengyinhub.business.collection.ClubDuesSplitService clubDuesSplit;
     @org.springframework.beans.factory.annotation.Value("${chengyin.collection-model.split-plan-batch:50}")
     private int collectionSplitBatch = 50;
 
@@ -38,6 +40,7 @@ public class EcommercePayoutTask {
         try {
             int planned = profitShareService.planMissing(50);
             if (collectionSplit != null) planned += collectionSplit.planDue(collectionSplitBatch);
+            if (clubDuesSplit != null) planned += clubDuesSplit.planDue(collectionSplitBatch);
             int submitted = profitShareService.submitPlanned(50);
             int synced = profitShareService.syncProcessing(100);
             int returns = profitShareService.syncReturns(100);

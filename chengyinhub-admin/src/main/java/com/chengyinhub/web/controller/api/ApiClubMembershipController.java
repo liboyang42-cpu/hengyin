@@ -96,6 +96,16 @@ public class ApiClubMembershipController extends BaseController {
         catch (ServiceException e) { return serviceError(e); }
     }
 
+    /** K1: owner settings — can this club's dues be paid online, and if not, what to do (bind a collection account). */
+    @PostMapping("/collection")
+    public AjaxResult duesCollection(@RequestBody(required = false) ClubMembershipClubRequest request) {
+        Long principal = principal();
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (request == null) return bad();
+        try { return success(clubMembershipService.duesCollection(principal, request.getClubId())); }
+        catch (ServiceException e) { return serviceError(e); }
+    }
+
     @PostMapping("/renew")
     public AjaxResult renew(@RequestBody(required = false) ClubMembershipRenewRequest request) {
         Long principal = principal();

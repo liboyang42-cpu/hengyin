@@ -659,6 +659,8 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     public Map<String, String> createGenericAppOrder(String outTradeNo, java.math.BigDecimal amountYuan,
                                                       String description) {
         RestoreDispatchGuard.requireDispatchAllowed();
+        // K1: the APP channel has no service-provider order; club dues are never collected by the platform under the model.
+        if (collectionModel != null) collectionModel.requirePlatformMayCollectDues(outTradeNo);
         String appAppid = requireAppChannelAppid();
         requireNotifyUrl();
         com.wechat.pay.java.service.payments.app.model.PrepayRequest request;
@@ -783,6 +785,8 @@ public class WechatPaymentSdkGateway implements WechatPaymentOperations {
     @Override
     public Map<String, String> createGenericOrder(String outTradeNo, java.math.BigDecimal amountYuan, String description, String openid) {
         RestoreDispatchGuard.requireDispatchAllowed();
+        // K1: while the collection model is active the platform account never collects club dues (CLM…).
+        if (collectionModel != null) collectionModel.requirePlatformMayCollectDues(outTradeNo);
         if (!isReady()) {
             throw new IllegalStateException("支付服务暂不可用，请稍后再试");
         }

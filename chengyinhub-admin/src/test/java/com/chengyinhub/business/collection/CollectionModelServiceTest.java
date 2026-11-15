@@ -181,11 +181,15 @@ class CollectionModelServiceTest {
     }
 
     @Test
-    void clubDuesAreRefusedWhileTheModelIsActive() {
+    void clubDuesWithoutABoundClubSubMerchantAreRefusedWhileTheModelIsActive() {
+        // K1 (club-dues) built the split path: dues are refused only when the club cannot be paid by split settlement.
+        when(sellers.clubDuesFacts(3L)).thenReturn(new Facts(ProductKind.CLUB_DUES, false, SellerType.CLUB, 3L, null, null));
         CollectionModelService model = service(true, RAILS_ON);
         BusinessRefusal refusal = assertThrows(BusinessRefusal.class, () -> model.requireClubDuesCollectible(3L));
         assertEquals(ErrorCode.CLUB_DUES_COLLECTION_UNAVAILABLE, refusal.getErrorCode());
-        verify(mapper).recordRefusal("DUES", 3L, CollectionDecision.DUES_SPLIT_NOT_BUILT);
+        verify(mapper).recordRefusal("DUES", 3L, CollectionDecision.SELLER_NOT_BOUND);
+        when(sellers.clubDuesFacts(3L)).thenReturn(new Facts(ProductKind.CLUB_DUES, false, SellerType.CLUB, 3L, "FINISH", SUB));
+        assertTrue(model.requireClubDuesCollectible(3L).split());
     }
 
     @Test

@@ -1,0 +1,105 @@
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="ms-page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar custom-back bind:back="goBack" />
+    <cy-page-title title="{{manage ? '会费设置' : '付费会员'}}" safe-top="{{false}}" />
+
+    <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
+    <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="加载失败" sub="{{errorText}}" retry="重新加载" bind:retry="load" />
+    <cy-empty wx:elif="{{state === 'soon'}}" fill size="lg" kind="empty" title="付费会员即将开放" />
+    <cy-empty wx:elif="{{state === 'off'}}" fill size="lg" kind="empty" title="这个俱乐部还没有付费会员" />
+
+    <view wx:elif="{{manage}}" class="ms-shell">
+      <view class="ms-card">
+        <view class="ms-row" aria-label="收款，{{collection.stateText}}">
+          <text class="ms-label">收款</text>
+          <text class="ms-value ms-value--{{collection.stateTone}}">{{collection.ready ? '已开通' : '未开通'}}</text>
+        </view>
+        <view class="ms-note">{{collection.stateText}}</view>
+        <view class="ms-note" wx:if="{{collection.needsBinding}}">请联系平台为俱乐部开通收款账户</view>
+      </view>
+      <view class="ms-card ms-gap">
+        <view class="ms-row" aria-label="付费会员，{{setting.enabled ? '已开启' : '已关闭'}}">
+          <text class="ms-label">付费会员</text>
+          <text class="ms-value">{{setting.enabled ? '已开启' : '已关闭'}}</text>
+        </view>
+      </view>
+      <view class="ms-action">
+        <cy-btn variant="{{setting.enabled ? 'secondary' : 'primary'}}" loading="{{busy}}" bindtap="onToggleEnabled">{{setting.enabled ? '关闭付费会员' : '开启付费会员'}}</cy-btn>
+      </view>
+
+      <view class="ms-section">会员方案</view>
+      <view wx:if="{{!form}}">
+        <view class="ms-card ms-plan" wx:for="{{plans}}" wx:key="id" data-id="{{item.id}}" bindtap="onEditPlan" hover-class="cy-pressed" hover-stay-time="80" aria-role="button" aria-label="编辑 {{item.name}}">
+          <view class="ms-row">
+            <text class="ms-value">{{item.name}}</text>
+            <text class="ms-value">{{item.priceText}}</text>
+          </view>
+          <view class="ms-note">{{item.durationText}} · {{item.refundText}}{{item.active ? '' : ' · 已下架'}}</view>
+        </view>
+        <cy-empty wx:if="{{!plans.length}}" kind="empty" title="暂无会员方案" />
+        <view class="ms-action">
+          <cy-btn variant="secondary" bindtap="onNewPlan">新建方案</cy-btn>
+        </view>
+      </view>
+      <view wx:else class="ms-card">
+        <view class="ms-row"><text class="ms-label">名称</text><input class="ms-input" value="{{form.name}}" maxlength="40" data-key="name" bindinput="onFormInput" /></view>
+        <view class="ms-row"><text class="ms-label">价格(元)</text><input class="ms-input" type="digit" value="{{form.priceYuan}}" data-key="priceYuan" bindinput="onFormInput" /></view>
+        <view class="ms-row"><text class="ms-label">有效天数</text><input class="ms-input" type="number" value="{{form.durationDays}}" data-key="durationDays" bindinput="onFormInput" /></view>
+        <view class="ms-note">会员权益(每行一项)</view>
+        <view class="ms-row"><textarea class="ms-textarea" value="{{form.benefitsText}}" maxlength="1000" data-key="benefitsText" bindinput="onFormInput" auto-height /></view>
+        <view class="ms-row"><text class="ms-label">可申请退款审核</text><cy-switch checked="{{form.refundReview}}" data-key="refundReview" bind:change="onFormSwitch" accessibility-label="可申请退款审核" /></view>
+        <view class="ms-row"><text class="ms-label">上架</text><cy-switch checked="{{form.active}}" data-key="active" bind:change="onFormSwitch" accessibility-label="上架" /></view>
+        <view class="ms-note ms-error" wx:if="{{formError}}">{{formError}}</view>
+        <view class="ms-action">
+          <cy-btn variant="primary" loading="{{busy}}" bindtap="onSavePlan">保存方案</cy-btn>
+        </view>
+        <view class="ms-action">
+          <cy-btn variant="secondary" disabled="{{busy}}" bindtap="onCancelPlan">取消</cy-btn>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="ms-shell">
+      <view class="ms-card">
+        <view class="ms-row" aria-label="状态，{{view.statusText}}">
+          <text class="ms-label">状态</text>
+          <text class="ms-value ms-value--{{view.statusTone}}">{{view.statusText}}</text>
+        </view>
+        <view class="ms-row" wx:if="{{view.untilText}}" aria-label="有效期至，{{view.untilText}}">
+          <text class="ms-label">有效期至</text>
+          <text class="ms-value">{{view.untilText}}</text>
+        </view>
+        <view class="ms-note" wx:for="{{view.benefits}}" wx:key="*this">{{item}}</view>
+      </view>
+
+      <view class="ms-note ms-gap" wx:if="{{view.blockedText}}">{{view.blockedText}}</view>
+
+      <view class="ms-section">会员方案</view>
+      <view class="ms-card ms-plan" wx:for="{{view.plans}}" wx:key="id">
+        <view class="ms-row">
+          <text class="ms-value">{{item.name}}</text>
+          <text class="ms-value">{{item.priceText}}</text>
+        </view>
+        <view class="ms-note">{{item.durationText}} · {{item.refundText}}</view>
+        <view class="ms-note" wx:for="{{item.benefits}}" wx:for-item="b" wx:key="*this">{{b}}</view>
+        <view class="ms-action">
+          <cy-btn variant="primary" disabled="{{!view.canPay}}" loading="{{busy}}" data-id="{{item.id}}" bindtap="onJoin">{{view.renewLabel}}</cy-btn>
+        </view>
+      </view>
+      <cy-empty wx:if="{{!view.plans.length}}" kind="empty" title="暂无会员方案" />
+
+      <block wx:if="{{view.invoices.length}}">
+        <view class="ms-section">账单</view>
+        <view class="ms-card">
+          <view class="ms-row" wx:for="{{view.invoices}}" wx:key="id" aria-label="{{item.planName}}，{{item.statusText}}">
+            <text class="ms-label">{{item.planName}} {{item.amountText}}</text>
+            <text wx:if="{{item.resumable && view.canPay}}" class="ms-link" data-id="{{item.id}}" bindtap="onResume" hover-class="cy-pressed" hover-stay-time="80" aria-role="button">继续支付</text>
+            <text wx:else class="ms-value">{{item.statusText}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

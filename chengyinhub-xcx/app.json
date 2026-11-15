@@ -90,6 +90,7 @@
         "governance/index",
         "group-code/index",
         "join-requests/index",
+        "membership/index",
         "notify/index",
         "payout-receiver/index",
         "roles/index",
