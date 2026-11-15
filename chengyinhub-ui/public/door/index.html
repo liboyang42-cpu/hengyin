@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>城瘾</title>
+<!-- R11 growth-loops (GRO-05). /door is a universal link path in the AASA file: with the app installed iOS opens the app
+     and this page never loads. Without the app this page offers the App Store, or says honestly that it is coming soon.
+     The App Store URL comes from sys_config growth.app.appStoreUrl via GET /prod-api/api/growth-loops/app-handoff. -->
+<style>
+  :root { color-scheme: light dark; --bg: #0e0f12; --fg: #f2f2f4; --muted: #9a9ca5; --accent: #f2f2f4; --on-accent: #0e0f12; }
+  @media (prefers-color-scheme: light) { :root { --bg: #f6f6f8; --fg: #16171a; --muted: #5d606a; --accent: #16171a; --on-accent: #ffffff; } }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); color: var(--fg);
+         font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+  main { width: 100%; max-width: 420px; padding: 32px 16px; box-sizing: border-box; text-align: center; }
+  h1 { font-size: 24px; margin: 0 0 8px; }
+  p { color: var(--muted); margin: 0 0 24px; line-height: 1.5; }
+  a.btn { display: block; padding: 14px; border-radius: 12px; background: var(--accent); color: var(--on-accent); text-decoration: none; font-weight: 600; }
+  .soon { padding: 14px; border-radius: 12px; border: 1px solid var(--muted); color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1 lang="zh-Hans">城瘾 App</h1>
+  <p id="desc">同一个账号，进度互通。<br><span lang="en">Same account, same progress.</span></p>
+  <div id="action"><div class="soon">即将上架 · Coming soon to the App Store</div></div>
+</main>
+<script>
+  (function () {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/prod-api/api/growth-loops/app-handoff');
+    xhr.onload = function () {
+      try {
+        var res = JSON.parse(xhr.responseText);
+        var url = res && res.data && res.data.appStoreUrl;
+        if (typeof url === 'string' && url.indexOf('https://apps.apple.com/') === 0) {
+          var a = document.createElement('a');
+          a.className = 'btn'; a.href = url; a.textContent = '去 App Store 下载 · Get it on the App Store';
+          var box = document.getElementById('action'); box.innerHTML = ''; box.appendChild(a);
+        }
+      } catch (e) { /* keep the honest "coming soon" state */ }
+    };
+    xhr.send();
+  })();
+</script>
+</body>
+</html>

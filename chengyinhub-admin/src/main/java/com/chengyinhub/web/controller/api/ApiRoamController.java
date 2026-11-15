@@ -120,6 +120,10 @@ public class ApiRoamController extends BaseController {
     /** P7 daily-loop;单测不注入时跳过 */
     @Autowired(required = false)
     private com.chengyinhub.business.service.impl.DailyLoopRecorder dailyLoopRecorder;
+
+    /** R11 growth-loops(GRO-13):被邀请人首次可信漫游后给邀请人发奖励。提交后另起事务,失败不影响结算。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.growthloops.InviteRewardService inviteRewardService;
     /** P8 location trust (SEC-04..SEC-09). Optional so unit tests that build the controller by hand keep the legacy path. */
     @Autowired(required = false)
     private com.chengyinhub.business.locationtrust.LocationTrustService locationTrust;
@@ -1012,6 +1016,10 @@ public class ApiRoamController extends BaseController {
         if (dailyLoopRecorder != null) {
             dailyLoopRecorder.afterWalkFinished(memberId, session.getDistanceM(), sessionTiles,
                     loop -> data.put("dailyLoop", loop));
+        }
+        if (inviteRewardService != null) {
+            inviteRewardService.afterWalkFinished(memberId, sid, session.getDistanceM(), sessionTiles,
+                    invite -> data.put("inviteReward", invite));
         }
         // 终点故事只消费本次已经由服务端结算的统计值；开关关闭或内容未审时静默。
         if (npcFeatureFlags.eventOn()) {

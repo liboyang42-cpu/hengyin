@@ -44,4 +44,10 @@ public interface IPlayerProgressionService
 
     /** 通关:累加主题里程,发通关/里程徽章。返回本次新得徽章 */
     List<PlayerBadge> onTopicComplete(Long memberId, Long topicId);
+
+    /**
+     * R11 growth-loops(GRO-13):邀请人又有一位朋友完成了首次可信漫游。按累计人数发 INVITE_1 / INVITE_3 / INVITE_10
+     * (阈值在 growth_badge.unlock_rule_json;def 未落库则不发)。返回本次新得徽章。
+     */
+    List<PlayerBadge> onInviteRewarded(Long inviterId, int grantedInvites);
 }

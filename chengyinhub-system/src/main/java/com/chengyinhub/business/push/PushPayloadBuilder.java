@@ -8,7 +8,7 @@ import com.alibaba.fastjson2.JSON;
 
 /**
  * APNs 负载（App 依赖这个形状）：
- * <pre>{"aps":{"alert":{"title":..,"body":..},"sound":"default","thread-id":..},"page":"/pages/..","kind":"chat|club|event","conversation_id":"..."}</pre>
+ * <pre>{"aps":{"alert":{"title":..,"body":..},"sound":"default","thread-id":..},"page":"/pages/..","kind":"chat|club|event|growth|city","conversation_id":"..."}</pre>
  * page 只能是相对源路径；整体不超过 4KB（超出时截断 body）。
  */
 public final class PushPayloadBuilder
@@ -21,7 +21,7 @@ public final class PushPayloadBuilder
 
     public static String build(PushMessage m)
     {
-        if (m == null || m.kind() == null || !m.kind().matches("chat|club|event")) throw new IllegalArgumentException("kind");
+        if (m == null || m.kind() == null || !m.kind().matches("chat|club|event|growth|city")) throw new IllegalArgumentException("kind");
         if (m.page() == null || !m.page().startsWith("/") || m.page().startsWith("//") || m.page().contains("://"))
             throw new IllegalArgumentException("page must be a relative source path");
         if (PushMessage.KIND_CHAT.equals(m.kind()) && (m.conversationId() == null || m.conversationId().isEmpty()))

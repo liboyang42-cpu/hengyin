@@ -237,6 +237,19 @@ public class PlayerProgressionServiceImpl implements IPlayerProgressionService
         return changes;
     }
 
+    /** R11 growth-loops 邀请徽章阶梯 1/3/10,source_type 7 = 邀请。 */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<PlayerBadge> onInviteRewarded(Long inviterId, int grantedInvites)
+    {
+        List<PlayerBadge> newly = new ArrayList<>();
+        if (inviterId == null || inviterId <= 0 || grantedInvites <= 0) return newly;
+        for (int threshold : new int[] { 10, 3, 1 }) {
+            awardByThreshold(newly, inviterId, "INVITE_" + threshold, 7, 0L, grantedInvites);
+        }
+        return newly;
+    }
+
     /** GAM-04 徽章阶梯 3/7/14/30:按从高到低发(与原 STREAK_7 先于 STREAK_3 的次序一致)。 */
     private void awardStreakLadder(List<PlayerBadge> newly, Long memberId, int streak)
     {

@@ -32,6 +32,7 @@
     <cy-cell wx:if="{{invoiceOn}}" id="settings-invoice" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg" title="发票" bind:tap="goInvoice" />
     <cy-cell id="settings-service-agreement" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_scroll-text.svg" title="用户服务协议" bind:tap="goUserAgreement" />
     <cy-cell id="settings-deregister" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_user-round-x.svg" title="账号注销" bind:tap="goDeregister" />
+    <cy-cell id="settings-use-app" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_info.svg" title="使用 App" bind:tap="goApp" />
     <cy-cell id="settings-about" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_info.svg" title="关于" bind:tap="goAbout" />
   </view>
 

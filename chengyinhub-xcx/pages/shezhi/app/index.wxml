@@ -1,0 +1,26 @@
+<view class="app-page {{isMerchantView ? 'theme-merchant' : 'theme-dark'}}">
+  <cy-toast id="cy-toast" />
+  <cy-nav-bar plain custom-back bind:back="onBack" />
+  <view class="app-nav-space" style="height:{{statusBarHeight + navBarHeight}}px;"></view>
+  <cy-page-title title="使用 App" safe-top="{{false}}" />
+
+  <view class="app-content">
+    <view class="app-hero">
+      <image class="app-hero__logo" src="/images/cy_logo_mark.png" mode="aspectFit" />
+      <view class="app-hero__name">城瘾 App</view>
+      <view class="app-hero__desc">同一个账号，进度互通。</view>
+    </view>
+
+    <button wx:if="{{canLaunchApp}}" id="app-launch" class="app-launch" open-type="launchApp" app-parameter="mp-handoff"
+            binderror="onLaunchAppError" hover-class="cy-pressed" hover-stay-time="80">回到城瘾 App</button>
+
+    <view class="app-section">
+      <cy-cell id="app-copy-link" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_lc_info.svg"
+               title="复制打开链接" description="在 Safari 打开：已装 App 会直接打开，没装会去 App Store" bind:tap="copyLink" />
+      <cy-cell wx:if="{{appStoreUrl}}" id="app-copy-store" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg"
+               title="复制 App Store 地址" hairline="{{false}}" bind:tap="copyStore" />
+      <cy-cell wx:elif="{{loaded}}" id="app-store-soon" tint="{{isMerchantView ? 'ink' : 'mono'}}" icon="/pages/shezhi/images/icon_agreement.svg"
+               title="App Store" description="即将上架" hairline="{{false}}" />
+    </view>
+  </view>
+</view>
