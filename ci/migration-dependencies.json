@@ -1022,6 +1022,7 @@
     "20261115_store_safety": [],
     "20261115_club_reach": [],
     "20261115_merchant_reach": [],
-    "20261115_store_account": []
+    "20261115_store_account": [],
+    "20261115_seed_tools": ["roam", "city_merchant_node"]
   }
 }
