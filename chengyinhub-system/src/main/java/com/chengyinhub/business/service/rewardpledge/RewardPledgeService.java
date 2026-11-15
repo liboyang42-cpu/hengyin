@@ -170,7 +170,8 @@ public class RewardPledgeService {
             Pledge pledge = inStore(storeId, pledgeId);
             if (pledge.couponId != draft.couponId || pledge.storeId != draft.storeId) throw new PledgeRejection("CONFLICT");
             Version latest = current(pledgeId);
-            if (!"FROZEN".equals(latest.state) && !"WITHDRAWN".equals(latest.state) && !"DRAFT".equals(latest.state)) {
+            if (!"FROZEN".equals(latest.state) && !"WITHDRAWN".equals(latest.state) && !"DRAFT".equals(latest.state)
+                    && !"REJECTED".equals(latest.state)) {
                 throw new PledgeRejection("CONFLICT");
             }
             pledge.quantity = draft.quantity;
