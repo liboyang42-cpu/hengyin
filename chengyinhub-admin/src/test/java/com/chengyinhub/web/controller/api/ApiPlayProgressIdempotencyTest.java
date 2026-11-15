@@ -346,6 +346,28 @@ class ApiPlayProgressIdempotencyTest {
         verify(growthService).addExp(eq(MEMBER), anyInt(), eq("节点探索"));
     }
 
+    /** ux-pages UX-11: the answer carries the points actually awarded, so the verdict never estimates them. */
+    @Test
+    void completionAnswerCarriesThePointsActuallyAwarded() {
+        when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(linearTopic());
+        when(pointsAwardService.award(eq(MEMBER), eq(12L), eq(NODE), eq("节点打卡"))).thenReturn(5);
+
+        Map<String, Object> result = invokeAdvance(MEMBER, gameNodeWithCouponAndFragment(), ACTIVITY, null);
+
+        assertEquals(5, result.get("pointsEarned"));
+    }
+
+    /** No points awarded (no rule, or already awarded): the key is absent, the screen says nothing about points. */
+    @Test
+    void completionAnswerOmitsPointsWhenNoneWereAwarded() {
+        when(cmsTopicService.selectCmsTopicById(TOPIC)).thenReturn(linearTopic());
+        when(pointsAwardService.award(eq(MEMBER), eq(12L), eq(NODE), eq("节点打卡"))).thenReturn(0);
+
+        Map<String, Object> result = invokeAdvance(MEMBER, gameNodeWithCouponAndFragment(), ACTIVITY, null);
+
+        assertEquals(false, result.containsKey("pointsEarned"));
+    }
+
     @Test
     void classicPuzzleCompletionPersistsScoreWithoutChangingTheExistingXpReward()
     {
