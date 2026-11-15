@@ -418,7 +418,8 @@ class FreeExplorePriceLockAcceptanceTest {
 
         AjaxResult result = controller.confirm(body());
 
-        assertEquals(500, result.get(AjaxResult.CODE_TAG));
+        // SMOKE-500-R4：服务端的状态拒绝(IllegalStateException)不再被压成 500，按业务冲突返回 409。
+        assertEquals(409, result.get(AjaxResult.CODE_TAG));
         assertEquals("每个必选章至少需要 1 家生效商家供给,暂不能锁价开售", result.get(AjaxResult.MSG_TAG));
         assertNoWrite();
     }
