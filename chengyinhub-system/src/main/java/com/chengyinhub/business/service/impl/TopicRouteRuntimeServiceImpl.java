@@ -1164,7 +1164,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
                 ((ObjectNode) snapshot).remove(java.util.Arrays.asList("gameSessionId", "teamId", "authorityEpoch", "runtimeInstance"));
                 ((ObjectNode) snapshot).put("contentRouteSessionId", session.getId());
                 if (NodeJourneySnapshot.hasContentSnapshots(snapshot))
-                    ((ObjectNode) snapshot).set("contentTags", JSON.valueToTree(readEngineState(session.getStateJson()).getTags()));
+                    ((ObjectNode) snapshot).set("contentTags", JSON.valueToTree(narrativeProgress.readEngineStateOrEmpty(session.getStateJson()).getTags()));
             }
             if (nodeId != null) {
                 JsonNode answer = NodeJourneySnapshot.answerFromSnapshot(snapshot, nodeId);
@@ -1678,7 +1678,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
 
     /** Existing linear state already records the initial node universe and insertion order. */
     private List<CmsTopicNode> linearSessionNodes(TopicRouteSession session, List<CmsTopicNode> liveNodes) {
-        Map<Long, String> frozen = readEngineState(session.getStateJson()).getNodeStates();
+        Map<Long, String> frozen = narrativeProgress.readEngineStateOrEmpty(session == null ? null : session.getStateJson()).getNodeStates();
         if (frozen == null || frozen.isEmpty()) return liveNodes; // Pre-snapshot compatibility.
         Map<Long, CmsTopicNode> available = new LinkedHashMap<Long, CmsTopicNode>();
         for (CmsTopicNode node : liveNodes) available.put(node.getId(), node);
@@ -1713,23 +1713,38 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      */
     private TopicRouteState toLinearView(TopicRouteSession session, Scope scope, List<CmsTopicNode> liveNodes) {
         TopicRouteState view = linearState(scope, linearSessionNodes(session, liveNodes));
-        if (themeConfig(session).isObject() || validator.readTree(session.getConfigSnapshotJson()).path("runtimeSnapshotVersion").asInt() == 1) {
-            TopicRouteEngine.State stored = readEngineState(session.getStateJson());
-            view.setStatus(stored.getStatus()); view.setCurrentNodeId(stored.getCurrentNodeId()); view.setRecommendedNodeId(stored.getRecommendedNodeId());
-            view.setNodeStates(new LinkedHashMap<Long,String>(stored.getNodeStates()));
+        TopicRouteEngine.State stored = narrativeProgress.readEngineStateOrEmpty(session.getStateJson());
+        if (themeConfig(session).isObject() || configTree(session).path("runtimeSnapshotVersion").asInt() == 1) {
+            if (stored.getStatus() != null) {
+                view.setStatus(stored.getStatus());
+                view.setCurrentNodeId(stored.getCurrentNodeId());
+                view.setRecommendedNodeId(stored.getRecommendedNodeId());
+            }
+            if (stored.getNodeStates() != null && !stored.getNodeStates().isEmpty()) {
+                view.setNodeStates(new LinkedHashMap<Long, String>(stored.getNodeStates()));
+            }
         }
         view.setSessionId(session.getId());
         view.setVersion(session.getVersion());
-        view.setAttributes(JourneyInitialState.playerView(sessionRules(session), readEngineState(session.getStateJson())));
-        appendOpening(view, session, readEngineState(session.getStateJson()));
-        appendThoughts(view, session, readEngineState(session.getStateJson()));
+        view.setAttributes(JourneyInitialState.playerView(sessionRules(session), stored));
+        appendOpening(view, session, stored);
+        appendThoughts(view, session, stored);
         return view;
     }
 
-    private TopicRouteState toView(TopicRouteSession session) { return toView(session, readEngineState(session.getStateJson())); }
+    private TopicRouteState toView(TopicRouteSession session) {
+        return toView(session, narrativeProgress.readEngineStateOrEmpty(session == null ? null : session.getStateJson()));
+    }
     private TopicRouteState toView(TopicRouteSession session, TopicRouteEngine.State state) {
         TopicRouteState view = new TopicRouteState(); view.setRouteMode(TopicRouteState.BRANCH_GRAPH);
-        view.setSessionId(session.getId()); view.setStatus(state.getStatus());
+        view.setSessionId(session.getId());
+        String resolvedStatus = state.getStatus();
+        if (resolvedStatus == null && session != null && session.getStatus() != null) {
+            if (session.getStatus() == TopicRouteSession.STATUS_COMPLETED) resolvedStatus = TopicRouteState.COMPLETED;
+            else if (session.getStatus() == TopicRouteSession.STATUS_ENDED) resolvedStatus = "ENDED";
+            else resolvedStatus = "ACTIVE";
+        }
+        view.setStatus(resolvedStatus);
         view.setCurrentNodeId(state.getCurrentNodeId()); view.setRecommendedNodeId(state.getRecommendedNodeId());
         view.setVersion(session.getVersion()); view.setNodeStates(new LinkedHashMap<Long, String>(state.getNodeStates()));
         view.setDecisionLog(new ArrayList<Map<String, Object>>(state.getDecisionLog()));
@@ -3340,9 +3355,19 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteSession current = routeMapper.selectCurrentByOwner(activity == null ? 0L : activity, topic, member);
         return current == null ? routeMapper.selectByOwner(activity == null ? 0L : activity, topic, member, DEFAULT_INSTANCE) : current;
     }
+    private JsonNode configTree(TopicRouteSession session) {
+        if (session == null || session.getConfigSnapshotJson() == null || session.getConfigSnapshotJson().trim().isEmpty()) {
+            return JSON.createObjectNode();
+        }
+        try {
+            return validator.readTree(session.getConfigSnapshotJson());
+        } catch (IllegalArgumentException e) {
+            return JSON.createObjectNode();
+        }
+    }
+
     private JsonNode themeConfig(TopicRouteSession session) {
-        if (session == null) return JSON.createObjectNode().path("missing");
-        return validator.readTree(session.getConfigSnapshotJson()).path("themeConfig");
+        return configTree(session).path("themeConfig");
     }
     private boolean containsNode(JsonNode ids,Long id) { return TopicRoutePublicationCompiler.containsNode(ids, id); }
     private boolean chapterNodesDone(JsonNode binding,TopicRouteEngine.State state) {for(JsonNode id:binding.path("nodeIds"))if(!state.getCompletedNodeIds().contains(id.asLong()))return false;return true;}
