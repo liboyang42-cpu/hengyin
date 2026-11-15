@@ -31,6 +31,11 @@ public class ApiAppleNotificationController {
     /** R6c: workshop template products listed in mod_commerce_offer (dispatch by product id). */
     private final ObjectProvider<ModCommerceService> templates;
 
+    public ApiAppleNotificationController(PlatformPassAppleService pass, ObjectProvider<WorkshopAppleIapService> workshop) {
+        this(pass, workshop, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
     public ApiAppleNotificationController(PlatformPassAppleService pass, ObjectProvider<WorkshopAppleIapService> workshop,
                                           ObjectProvider<ModCommerceService> templates) {
         this.pass = pass;
@@ -48,7 +53,7 @@ public class ApiAppleNotificationController {
         try {
             var handled = pass.notificationIfPass(raw);
             if (handled.isPresent()) return ResponseEntity.ok(AjaxResult.success(handled.get()));
-            ModCommerceService template = templates.getIfAvailable();
+            ModCommerceService template = templates == null ? null : templates.getIfAvailable();
             var templateHandled = template == null ? java.util.Optional.<Map<String, Object>>empty() : template.notificationIfTemplate(raw);
             if (templateHandled.isPresent()) return ResponseEntity.ok(AjaxResult.success(templateHandled.get()));
             WorkshopAppleIapService other = workshop.getIfAvailable();
