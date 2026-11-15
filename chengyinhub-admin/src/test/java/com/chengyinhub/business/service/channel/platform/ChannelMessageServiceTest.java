@@ -68,6 +68,20 @@ class ChannelMessageServiceTest
         assertEquals("CHANNEL_READ_ONLY", readOnly.getDetailMessage());
     }
 
+    /** C1 channels-structure: the server refuses member posts in announcement channels; owners and admins post. */
+    @Test void announcementChannelRefusesMemberPostsButNotOwnerOrAdmin()
+    {
+        channel.setKind(2);
+        ServiceException denied = assertThrows(ServiceException.class, () -> service.requireSend(MEMBER, CH));
+        assertEquals(403, denied.getCode());
+        assertEquals("MESSAGE_FORBIDDEN", denied.getDetailMessage());
+        assertThrows(ServiceException.class, () -> service.requireAttach(MEMBER, CH));
+        service.requireRead(MEMBER, CH);
+        service.requireSend(OWNER, CH);
+        when(channels.countClubAdmin(CLUB, OTHER)).thenReturn(1);
+        service.requireSend(OTHER, CH);
+    }
+
     @Test void slowmodeAppliesToMembersButNotOwner()
     {
         channel.setSlowmodeSec(60);
