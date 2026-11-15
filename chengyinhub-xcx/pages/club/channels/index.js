@@ -110,6 +110,12 @@ Page({
 
   onRetry() { this.load(); },
 
+  // 邀请:复用俱乐部分享路径 /pages/club/detail/index?id=,不另造频道邀请链接。
+  onShareAppMessage() {
+    const id = this.data.clubId;
+    return { title: '邀请你加入我们的俱乐部', path: id ? '/pages/club/detail/index?id=' + id : '/pages/talent/list/index' };
+  },
+
   onBack() {
     if (getCurrentPages().length > 1) wx.navigateBack();
     else wx.redirectTo({ url: '/pages/club/detail/index?id=' + this.data.clubId });

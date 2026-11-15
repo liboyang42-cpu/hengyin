@@ -29,6 +29,17 @@
       </view>
     </view>
 
+    <!-- 邀请沿用俱乐部分享链接(与俱乐部详情页同一路径)，加入后自动看到频道。 -->
+    <view class="section">
+      <view class="ds-card">
+        <button class="row share-row" open-type="share" aria-label="邀请朋友加入俱乐部" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon name="share" size="32" />
+          <view class="row-text"><text class="row-title">邀请朋友</text><text class="row-desc">发送俱乐部链接，加入后就能看到这些频道</text></view>
+          <cy-icon class="row-pick-arrow" name="arrow-right" size="24" />
+        </button>
+      </view>
+    </view>
+
     <cy-empty wx:if="{{sections.length === 0}}" fill kind="empty" title="还没有频道" />
 
     <view class="section" wx:for="{{sections}}" wx:for-item="section" wx:key="key" wx:if="{{isManager || section.channels.length}}">
