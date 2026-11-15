@@ -10,12 +10,14 @@
         <result property="totalMileage"    column="total_mileage"     />
         <result property="streakDays"      column="streak_days"       />
         <result property="lastCheckinDate" column="last_checkin_date"  />
+        <result property="streakFreezes"   column="streak_freezes"    />
+        <result property="streakFreezesUsed" column="streak_freezes_used" />
         <result property="updateTime"      column="update_time"       />
         <result property="createTime"      column="create_time"       />
     </resultMap>
 
     <select id="selectByMember" parameterType="Long" resultMap="PlayerGrowthResult">
-        select id, member_id, level, total_checkins, total_mileage, streak_days, last_checkin_date, update_time, create_time
+        select id, member_id, level, total_checkins, total_mileage, streak_days, last_checkin_date, streak_freezes, streak_freezes_used, update_time, create_time
         from player_growth where member_id = #{memberId} limit 1
     </select>
 
@@ -28,7 +30,7 @@
 
     <select id="selectByMemberForUpdate" parameterType="Long" resultMap="PlayerGrowthResult"
             useCache="false" flushCache="true">
-        select id, member_id, level, total_checkins, total_mileage, streak_days, last_checkin_date, update_time, create_time
+        select id, member_id, level, total_checkins, total_mileage, streak_days, last_checkin_date, streak_freezes, streak_freezes_used, update_time, create_time
         from player_growth where member_id = #{memberId} limit 1 for update
     </select>
 
@@ -71,6 +73,8 @@
             <if test="totalMileage != null">total_mileage = #{totalMileage},</if>
             <if test="streakDays != null">streak_days = #{streakDays},</if>
             <if test="lastCheckinDate != null">last_checkin_date = #{lastCheckinDate},</if>
+            <if test="streakFreezes != null">streak_freezes = #{streakFreezes},</if>
+            <if test="streakFreezesUsed != null">streak_freezes_used = #{streakFreezesUsed},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
         </trim>
         where member_id = #{memberId}

@@ -15,6 +15,8 @@ public class GrowthMission extends BaseEntity {
     private String triggerEvent;
     private Integer expReward;
     private Integer dailyLimit;
+    /** P7:每日任务的目标次数(如「点亮 20 格」= 20);普通任务为 1 */
+    private Integer targetCount;
     private String status;
     private Integer sortNo;
 
@@ -36,4 +38,7 @@ public class GrowthMission extends BaseEntity {
     public void setStatus(String status) { this.status = status; }
     public Integer getSortNo() { return sortNo; }
     public void setSortNo(Integer sortNo) { this.sortNo = sortNo; }
+
+    public Integer getTargetCount() { return targetCount; }
+    public void setTargetCount(Integer targetCount) { this.targetCount = targetCount; }
 }

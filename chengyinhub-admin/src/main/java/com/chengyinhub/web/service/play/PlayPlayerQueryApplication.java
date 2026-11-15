@@ -251,6 +251,9 @@ public class PlayPlayerQueryApplication {
         data.put("streakDays", g.getStreakDays());
         // P-22(2026-11-02 业主批准):「累计打卡 N 处」= 核销过的店 + 完成的城市站点,不重复计。
         data.put("checkinPlaces", playerProgressionService.countCheckinPlaces(memberId));
+        // P7(GAM-04/GRO-07):连续天数读口径 + 补签卡 + 徽章阶梯。只加字段,streakDays 保持原义(已记天数)。
+        Map<String, Object> streak = playerProgressionService.streakSummary(memberId);
+        if (streak != null) data.putAll(streak);
         return AjaxResult.success(data);
     }
 
