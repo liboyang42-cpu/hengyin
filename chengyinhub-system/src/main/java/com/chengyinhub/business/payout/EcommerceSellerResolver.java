@@ -41,6 +41,18 @@ public class EcommerceSellerResolver {
         return SellerOfRecordPolicy.decide(facts(registration), switches);
     }
 
+    /**
+     * S2 collection model: the seller facts of a ticket by (ownerType, ownerId), read whatever the routing switch says.
+     * Same resolution as {@link #decide}; null when the product cannot be found.
+     */
+    public SellerOfRecordPolicy.Facts factsFor(Long ownerType, Long ownerId) {
+        if (ownerType == null || ownerId == null) return null;
+        CmsRegistration probe = new CmsRegistration();
+        probe.setOwnerType(ownerType);
+        probe.setOwnerId(ownerId);
+        return facts(probe);
+    }
+
     SellerOfRecordPolicy.Facts facts(CmsRegistration registration) {
         if (registration == null || registration.getOwnerId() == null) return null;
         long ownerType = registration.getOwnerType() == null ? 0 : registration.getOwnerType();

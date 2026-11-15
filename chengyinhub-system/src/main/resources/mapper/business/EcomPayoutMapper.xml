@@ -215,6 +215,9 @@
           and not exists (
               select 1 from coop_complaint c where c.del_flag = 0 and c.topic_id = o.topic_id and c.status &lt; 3)
           and (o.topic_id &gt; 0 or exists (
+              select 1 from cy_collection_order x
+              where cast(x.registration_no as binary) = cast(o.out_trade_no as binary)
+                and x.share_order_id = o.id and x.state = 'PLANNED') or exists (
               select 1 from cms_activity a
               join club_personal_payout_beneficiary b on b.scope_type = 'ACTIVITY' and b.scope_id = a.id
               join cms_registration r on r.owner_type = 2 and r.owner_id = a.id
