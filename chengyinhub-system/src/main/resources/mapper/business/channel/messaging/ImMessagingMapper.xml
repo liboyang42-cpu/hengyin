@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.channel.messaging.ImMessagingMapper">
+
+    <select id="selectMessageHead" resultType="java.util.HashMap" useCache="false">
+        select id, conversation_id as conversationId, sender_id as senderId, msg_type as msgType,
+               status, check_status as checkStatus
+          from im_message where id = #{id}
+    </select>
+
+    <insert id="insertMention">
+        insert ignore into im_message_mention (message_id, mention_type, target_id) values (#{messageId}, #{type}, #{targetId})
+    </insert>
+
+    <select id="selectRoles" resultType="java.util.HashMap" useCache="false">
+        select id, guild_kind as guildKind, guild_id as guildId, mentionable, status
+          from im_guild_role
+         where id in <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </select>
+
+    <select id="selectRoleMemberIds" resultType="java.lang.Long" useCache="false">
+        select distinct rm.member_id
+          from im_guild_role_member rm join im_guild_role r on r.id = rm.role_id and r.status = 1
+         where rm.role_id in <foreach collection="roleIds" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </select>
+
+    <select id="selectActiveMemberIds" resultType="java.lang.Long" useCache="false">
+        select member_id from im_conversation_member
+         where conversation_id = #{conversationId} and deleted = 0
+           and member_id in <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </select>
+
+    <insert id="insertRef">
+        insert ignore into im_message_ref (message_id, conversation_id, reply_to_id, thread_root_id)
+        values (#{messageId}, #{conversationId}, #{replyToId}, #{threadRootId})
+    </insert>
+
+    <select id="selectRef" resultType="java.util.HashMap" useCache="false">
+        select message_id as messageId, conversation_id as conversationId, reply_to_id as replyToId, thread_root_id as threadRootId
+          from im_message_ref where message_id = #{messageId}
+    </select>
+
+    <select id="selectRefs" resultType="java.util.HashMap" useCache="false">
+        select message_id as messageId, reply_to_id as replyToId, thread_root_id as threadRootId
+          from im_message_ref
+         where message_id in <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+    </select>
+
+    <!-- 只数仍可见的回复（撤回、未过审的不算）。 -->
+    <select id="selectThreadSummaries" resultType="java.util.HashMap" useCache="false">
+        select r.thread_root_id as rootId, count(*) as replyCount, max(r.message_id) as lastReplyId
+          from im_message_ref r join im_message m on m.id = r.message_id and m.status = 0 and m.check_status = 1
+         where r.conversation_id = #{conversationId}
+           and r.thread_root_id in <foreach collection="rootIds" item="i" open="(" separator="," close=")">#{i}</foreach>
+         group by r.thread_root_id
+    </select>
+
+    <select id="selectThreadMessageIds" resultType="java.lang.Long" useCache="false">
+        select r.message_id
+          from im_message_ref r join im_message m on m.id = r.message_id and m.status = 0 and m.check_status = 1
+         where r.conversation_id = #{conversationId} and r.thread_root_id = #{rootId} and r.message_id &gt; #{after}
+         order by r.message_id asc
+         limit #{limit}
+    </select>
+
+    <insert id="insertReaction">
+        insert ignore into im_message_reaction (message_id, member_id, emoji, conversation_id)
+        values (#{messageId}, #{memberId}, #{emoji}, #{conversationId})
+    </insert>
+
+    <delete id="deleteReaction">
+        delete from im_message_reaction where message_id = #{messageId} and member_id = #{memberId} and emoji = #{emoji}
+    </delete>
+
+    <select id="countMemberReactions" resultType="java.lang.Integer" useCache="false">
+        select count(*) from im_message_reaction where message_id = #{messageId} and member_id = #{memberId}
+    </select>
+
+    <select id="selectReactionCounts" resultType="java.util.HashMap" useCache="false">
+        select message_id as messageId, emoji, count(*) as total,
+               max(case when member_id = #{viewer} then 1 else 0 end) as mine
+          from im_message_reaction
+         where message_id in <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
+         group by message_id, emoji
+    </select>
+</mapper>

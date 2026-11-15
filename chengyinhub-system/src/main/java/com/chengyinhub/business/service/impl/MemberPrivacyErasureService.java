@@ -20,7 +20,7 @@ import java.util.Map;
  * <ul>
  *   <li><b>Deleted</b> (pure personal location or device data, nothing else refers to the rows):
  *       kept fog cells, fog tiles, session tile records, share snapshots, location-trust fixes,
- *       install-id link, push devices.</li>
+ *       install-id link, push devices, message reactions, mention rows that name the member.</li>
  *   <li><b>Anonymised</b> (rows other ledgers or counters refer to; same treatment the 30-day job gives expired
  *       location data): roam sessions lose every coordinate and keep distance/tiles/POI/XP aggregates; POI finds,
  *       shop visits and POI reward logs lose the place and the claim fingerprint (the fingerprint only stops the
@@ -81,6 +81,10 @@ public class MemberPrivacyErasureService {
         // Measurement and push.
         counts.put("app_install_link", mapper.deleteInstallLinks(memberId));
         counts.put("push_device", mapper.deletePushDevices(memberId));
+        // Channel messaging (W5 C2): the member's own reactions, and mention rows that point at the member
+        // (USER and REPLY targets). Messages, reply/thread links and other members' mentions stay.
+        counts.put("im_message_reaction", mapper.deleteMessageReactions(memberId));
+        counts.put("im_message_mention", mapper.deleteMentionsOfMember(memberId));
         return counts;
     }
 }

@@ -110,6 +110,14 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Autowired(required = false)
     @Lazy
     private com.chengyinhub.business.service.IPushFanoutService pushFanout;
+
+    /** W5 C2：文字消息的回复/话题/@提及（发送同事务写行）。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.messaging.MessageComposeSupport compose;
+
+    /** W5 C2：打开中会话的实时提示（提交后发布）。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IImRealtimePublisher realtime;
     @Autowired(required = false)
     private InGameChannelService inGameChannelService;
 
@@ -475,25 +483,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     public Map<String, Object> listMessages(Long memberId, Long conversationId, Long cursorId, int size, Long afterId)
     {
         if (afterId != null && afterId < 0) throw new ServiceException("消息增量位置无效", 400);
+        requireReadable(memberId, conversationId);
         ImConversation conversation = conversationMapper.selectImConversationById(conversationId);
-        if (isClosedHangoutForHistoricalMember(conversation, memberId))
-        {
-            throw new ServiceException("该组局已结束，聊天已关闭", 409).setDetailMessage("HANGOUT_CLOSED");
-        }
-        if (channelGate != null && channelGate.isChannel(conversationId)) channelGate.requireRead(memberId, conversationId);
-        requireConversationMembership(conversationId, memberId, "无权查看该会话");
-        if (!hasActiveGroupAccess(conversation, memberId, false))
-        {
-            throw new RuntimeException(hangoutIdOfBizKey(conversation.getBizKey()) != null ? "已退出该局，无权查看群消息"
-                    : InGameChannelService.isInGameBizKey(conversation.getBizKey()) ? "无权查看该游戏频道"
-                    : teamIdOf(conversation) == null
-                    ? "已退出俱乐部，无权查看群消息" : "已退出队伍，无权查看群消息");
-        }
-        if (conversation != null && Integer.valueOf(ImConversation.TYPE_GROUP).equals(conversation.getType())
-                && !Integer.valueOf(0).equals(conversation.getStatus()))
-        {
-            throw new RuntimeException("群聊已结束");
-        }
         int s = size <= 0 ? 20 : Math.min(size, 50);
         boolean incremental = afterId != null && afterId >= 0;
         // 增量按可见序正序补拉；历史分页沿用可见序倒序窗口。两者都只返回当前读者可见的消息。
@@ -1052,12 +1043,18 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         int checkStatus = 1;
         String traceId = null;
         Long mediaUploadId = null;
+        com.chengyinhub.business.service.channel.messaging.MessageComposeSupport.Plan composePlan = null;
         if (type == ImMessage.MSG_TEXT)
         {
             String secMsg = wxContentSecurityService.checkText(content, openid);
             if (secMsg != null)
             {
                 throw new ServiceException(secMsg);
+            }
+            if (compose != null && conv != null && conv.getType() != null)
+            {
+                composePlan = compose.prepareText(memberId, convId, conv.getType(), extraJson);
+                extraJson = composePlan.extraJson();
             }
         }
         else if (type == ImMessage.MSG_IMAGE)
@@ -1125,6 +1122,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         msg.setClientMessageId(clientMessageId);
         msg.setRequestHash(requestHash);
         messageMapper.insertImMessage(msg);
+        if (composePlan != null) compose.afterInsert(msg, composePlan);
         if (mediaUploadId != null) mediaGate.bind(mediaUploadId, msg.getId());
         if (type == ImMessage.MSG_IMAGE && traceId != null
                 && !wxContentCallbackInboxService.register(traceId,
@@ -1173,6 +1171,15 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             // 图片过审后才算对收件人可见，不在这里推。
             try { pushFanout.chatMessageSent(msg.getId()); }
             catch (RuntimeException ignored) { /* 推送是旁路，绝不影响发送 */ }
+        }
+        if (realtime != null && checkStatus == 1)
+        {
+            // 只发“有新消息”的提示；正文由客户端经 /messages?after_id 按自己的可见性补拉。
+            java.util.Map<String, Object> hint = new java.util.LinkedHashMap<>();
+            hint.put("message_id", String.valueOf(msg.getId()));
+            hint.put("sender_id", String.valueOf(memberId));
+            try { realtime.publish(convId, com.chengyinhub.business.service.IImRealtimePublisher.MESSAGE_CREATED, hint); }
+            catch (RuntimeException ignored) { /* 实时提示是旁路 */ }
         }
         return projectRouteMessage(msg, memberId);
     }
@@ -1247,6 +1254,31 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             throw new ServiceException(errorMessage, 403);
         }
         return membership;
+    }
+
+    /** 读会话的同一道闸（历史分页、实时流、表情回应与引用读取共用）。 */
+    @Override
+    public void requireReadable(Long memberId, Long conversationId)
+    {
+        ImConversation conversation = conversationMapper.selectImConversationById(conversationId);
+        if (isClosedHangoutForHistoricalMember(conversation, memberId))
+        {
+            throw new ServiceException("该组局已结束，聊天已关闭", 409).setDetailMessage("HANGOUT_CLOSED");
+        }
+        if (channelGate != null && channelGate.isChannel(conversationId)) channelGate.requireRead(memberId, conversationId);
+        requireConversationMembership(conversationId, memberId, "无权查看该会话");
+        if (!hasActiveGroupAccess(conversation, memberId, false))
+        {
+            throw new RuntimeException(hangoutIdOfBizKey(conversation.getBizKey()) != null ? "已退出该局，无权查看群消息"
+                    : InGameChannelService.isInGameBizKey(conversation.getBizKey()) ? "无权查看该游戏频道"
+                    : teamIdOf(conversation) == null
+                    ? "已退出俱乐部，无权查看群消息" : "已退出队伍，无权查看群消息");
+        }
+        if (conversation != null && Integer.valueOf(ImConversation.TYPE_GROUP).equals(conversation.getType())
+                && !Integer.valueOf(0).equals(conversation.getStatus()))
+        {
+            throw new RuntimeException("群聊已结束");
+        }
     }
 
     @Override

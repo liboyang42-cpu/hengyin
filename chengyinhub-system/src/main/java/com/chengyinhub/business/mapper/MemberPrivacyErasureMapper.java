@@ -64,4 +64,10 @@ public interface MemberPrivacyErasureMapper {
     int deleteInstallLinks(@Param("memberId") Long memberId);
 
     int deletePushDevices(@Param("memberId") Long memberId);
+
+    /** W5 C2: the member's message reactions. */
+    int deleteMessageReactions(@Param("memberId") Long memberId);
+
+    /** W5 C2: USER and REPLY mention rows that name the member. */
+    int deleteMentionsOfMember(@Param("memberId") Long memberId);
 }
