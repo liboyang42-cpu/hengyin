@@ -207,6 +207,9 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      */
     @Autowired
     private CmsTopicChapterMapper cmsTopicChapterMapper;
+    @Autowired(required = false)
+    private GameRandom gameRandom;
+    private final boolean customD20;
 
     @Autowired
     public TopicRouteRuntimeServiceImpl(TopicRouteSessionMapper routeMapper, CmsTopicMapper topicMapper,
@@ -218,7 +221,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             ThemeStateKeyMapper themeStateKeyMapper) {
         this(routeMapper, topicMapper, nodeMapper, templateMapper, progressMapper, activityMapper,
                 registrationMapper, playerRoleMapper, shopDayProofService, new SecureRandom()::nextLong,
-                secureD20(), Clock.system(ZoneId.of("Asia/Shanghai")),
+                null, Clock.system(ZoneId.of("Asia/Shanghai")),
                 firstReachabilityProvider(reachabilityProviders));
         this.themeStateKeyMapper = themeStateKeyMapper;
     }
@@ -250,7 +253,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             PlayerActivityRoleMapper playerRoleMapper, LongSupplier seedSupplier, Clock clock,
             RouteReachabilityProvider reachabilityProvider) {
         this(routeMapper, topicMapper, nodeMapper, templateMapper, progressMapper, activityMapper,
-                registrationMapper, playerRoleMapper, null, seedSupplier, secureD20(), clock,
+                registrationMapper, playerRoleMapper, null, seedSupplier, null, clock,
                 reachabilityProvider);
     }
 
@@ -267,6 +270,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         this.registrationMapper = registrationMapper; this.playerRoleMapper = playerRoleMapper;
         this.shopDayProofService = shopDayProofService;
         this.seedSupplier = seedSupplier;
+        this.customD20 = d20 != null;
         this.d20 = d20 == null ? secureD20() : d20;
         this.clock = clock == null ? Clock.system(ZoneId.of("Asia/Shanghai")) : clock;
         this.reachabilityProvider = reachabilityProvider;
@@ -2735,7 +2739,20 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
      * nat 20 必成、nat 1 必败,其余比 total >= dc。mod 之和封顶 modCap。
      */
     private PlayCheckReceipt rollDice(CheckContext context, boolean rerolled) {
-        return com.chengyinhub.business.service.support.GameplayCheckEngine.roll(context.check,context.rules,context.state,d20,rerolled,
+        IntSupplier activeD20 = this.d20;
+        if (!customD20 && gameRandom != null) {
+            final java.util.concurrent.atomic.AtomicInteger seq = new java.util.concurrent.atomic.AtomicInteger(0);
+            final String checkId = context.check.path("checkId").asText("");
+            final Long sessionId = context.session == null ? null : context.session.getId();
+            final Long nodeId = context.node == null ? null : context.node.getId();
+            final Long memberId = context.session == null ? null : context.session.getMemberId();
+            final String phase = rerolled ? "reroll" : "roll";
+            activeD20 = () -> {
+                String receiptId = "check:" + sessionId + ":" + nodeId + ":" + checkId + ":" + phase + ":" + seq.getAndIncrement();
+                return gameRandom.d20(receiptId, memberId, "journey_check", checkId);
+            };
+        }
+        return com.chengyinhub.business.service.support.GameplayCheckEngine.roll(context.check,context.rules,context.state,activeD20,rerolled,
                 bargainBonus(context));
     }
 
