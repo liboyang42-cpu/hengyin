@@ -25,7 +25,8 @@ public class ApiOrientTaskReceiptController extends BaseController {
             return AjaxResult.success(OrientPlayerWire.response(taskService.receipt(memberId, topicId,
                     activityId, playInstanceId, taskId, idempotencyKey)));
         } catch (OrientRejection rejected) {
-            return AjaxResult.error(rejected.getMessage()).put("errorCode", rejected.getErrorCode());
+            return AjaxResult.error(OrientRejection.httpStatusForErrorCode(rejected.getErrorCode()),
+                    rejected.getMessage()).put("errorCode", rejected.getErrorCode());
         }
     }
 }

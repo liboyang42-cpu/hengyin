@@ -189,4 +189,55 @@ class GlobalExceptionHandlerErrorMappingTest {
         assertEquals(Integer.valueOf(HttpStatus.ERROR), res.get("code"));
         assertEquals("答案不正确", msgOf(res));
     }
+
+    @Test
+    void httpMessageNotReadable_returns400WithoutSystemAlarm() {
+        java.util.concurrent.atomic.AtomicInteger alarmCalls = new java.util.concurrent.atomic.AtomicInteger();
+        GlobalExceptionHandler spied = new GlobalExceptionHandler();
+        org.springframework.test.util.ReflectionTestUtils.setField(spied, "runtimeFailureAlarm",
+                new RuntimeFailureAlarmFilter(null) {
+                    @Override
+                    public void systemFailure(Throwable failure) {
+                        alarmCalls.incrementAndGet();
+                    }
+                });
+
+        org.springframework.http.converter.HttpMessageNotReadableException e =
+                new org.springframework.http.converter.HttpMessageNotReadableException(
+                        "JSON parse error: Cannot deserialize value of type java.lang.String",
+                        new org.springframework.mock.http.MockHttpInputMessage(new byte[0]));
+        AjaxResult res = spied.handleHttpMessageNotReadableException(e, request());
+
+        assertEquals(Integer.valueOf(HttpStatus.BAD_REQUEST), res.get("code"));
+        assertEquals("请求参数格式有误", msgOf(res));
+        assertEquals(0, alarmCalls.get());
+    }
+
+    @Test
+    void illegalArgumentException_returns400PreservesSafeMessageAndMasksTechnicalLeak() {
+        java.util.concurrent.atomic.AtomicInteger alarmCalls = new java.util.concurrent.atomic.AtomicInteger();
+        GlobalExceptionHandler spied = new GlobalExceptionHandler();
+        org.springframework.test.util.ReflectionTestUtils.setField(spied, "runtimeFailureAlarm",
+                new RuntimeFailureAlarmFilter(null) {
+                    @Override
+                    public void systemFailure(Throwable failure) {
+                        alarmCalls.incrementAndGet();
+                    }
+                });
+
+        AjaxResult safeRes = spied.handleIllegalArgumentException(
+                new IllegalArgumentException("主题ID不能为空"), request());
+        assertEquals(Integer.valueOf(HttpStatus.BAD_REQUEST), safeRes.get("code"));
+        assertEquals("主题ID不能为空", msgOf(safeRes));
+
+        AjaxResult blankRes = spied.handleIllegalArgumentException(new IllegalArgumentException("   "), request());
+        assertEquals(Integer.valueOf(HttpStatus.BAD_REQUEST), blankRes.get("code"));
+        assertEquals("请求参数有误", msgOf(blankRes));
+
+        AjaxResult leakRes = spied.handleIllegalArgumentException(
+                new IllegalArgumentException("java.lang.IllegalArgumentException: bad SQL at /api/foo"), request());
+        assertEquals(Integer.valueOf(HttpStatus.BAD_REQUEST), leakRes.get("code"));
+        assertEquals("请求参数有误", msgOf(leakRes));
+        assertEquals(0, alarmCalls.get());
+    }
 }
