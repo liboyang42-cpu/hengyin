@@ -13,6 +13,7 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -74,6 +75,30 @@ class DataRetentionServiceImplTest {
 
         assertEquals(2300, total);
         verify(browseMapper, times(3)).deleteBrowseRecordsBefore(any(), eq(1000));
+    }
+
+    @Test
+    void cleanRoamLocations_alsoExpiresTerritoryAndMonopolyCoordinates() {
+        com.chengyinhub.business.mapper.RoamMapper roamMapper = mock(com.chengyinhub.business.mapper.RoamMapper.class);
+        when(roamMapper.selectLocationRetentionCandidates(any(), anyInt())).thenReturn(java.util.List.of());
+        ReflectionTestUtils.setField(svc, "roamMapper", roamMapper);
+        ReflectionTestUtils.setField(svc, "roamShareSnapshotMapper",
+                mock(com.chengyinhub.business.mapper.RoamShareSnapshotMapper.class));
+        ReflectionTestUtils.setField(svc, "roamLocationRetentionService",
+                mock(com.chengyinhub.business.service.impl.RoamLocationRetentionService.class));
+        ReflectionTestUtils.setField(svc, "roamOrphanLocationRetentionService",
+                mock(com.chengyinhub.business.service.impl.RoamOrphanLocationRetentionService.class));
+        com.chengyinhub.business.citygame.CityLocationRetentionService city =
+                mock(com.chengyinhub.business.citygame.CityLocationRetentionService.class);
+        ReflectionTestUtils.setField(svc, "cityLocationRetentionService", city);
+        when(city.coarsenTerritoryCheckins(any(), eq(100))).thenReturn(100).thenReturn(3);
+        when(city.clearTerritoryAudits(any(), eq(100))).thenReturn(4);
+        when(city.clearClaimEvidence(any(), eq(100))).thenReturn(5);
+
+        assertEquals(112, svc.cleanRoamLocations(cutoff, 100, 10));
+        verify(city, times(2)).coarsenTerritoryCheckins(eq(cutoff), eq(100));
+        verify(city).clearTerritoryAudits(eq(cutoff), eq(100));
+        verify(city).clearClaimEvidence(eq(cutoff), eq(100));
     }
 
     @Test
