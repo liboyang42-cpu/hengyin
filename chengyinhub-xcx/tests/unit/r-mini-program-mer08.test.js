@@ -27,3 +27,17 @@ test('待审核:工作台卡、「我的」预览、项目页同一个词', () =
   assert.match(read('pages/topic/merchantinfo/merchantinfo.js'), /key: 'pending', cls: 'state-neutral', text: '待审核'/);
   assert.match(read('subpackageMember/components/cy/profile/index.js'), /return dayKey\(str\)\.replace/);
 });
+
+test('招商截止:项目页底部主按钮写明「报名已结束 / 报名未开始」,窗口内照旧(走查第 2 条)', () => {
+  const { signUpWindowText } = require('../../utils/merchant-signup-window.js');
+  const info = { merchantSignUpStartDate: '2026-02-05', merchantSignUpEndDate: '2026-03-28' };
+  assert.equal(signUpWindowText(info, Date.parse('2026-03-28T23:00:00+08:00')), '');
+  assert.equal(signUpWindowText(info, Date.parse('2026-03-29T00:00:01+08:00')), '报名已结束');
+  assert.equal(signUpWindowText(info, Date.parse('2026-02-04T23:59:00+08:00')), '报名未开始');
+  assert.equal(signUpWindowText({}, Date.now()), '');
+  assert.equal(signUpWindowText({ merchantSignUpStartDate: 'x', merchantSignUpEndDate: 'y' }, Date.now()), '');
+  const wxml = read('pages/topic/merchantinfo/merchantinfo.wxml');
+  assert.match(wxml, /disabled="\{\{!myChapterApplications\.length && !!signUpClosedText\}\}"/);
+  assert.match(wxml, /signUpClosedText \|\| '申请承接'/);
+  assert.match(read('pages/topic/merchantinfo/merchantinfo.js'), /signUpClosedText: signUpWindowText\(d, Date\.now\(\)\)/);
+});

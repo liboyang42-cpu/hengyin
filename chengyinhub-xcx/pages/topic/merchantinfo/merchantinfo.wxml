@@ -300,7 +300,7 @@
         <cy-empty wx:if="{{!info.chaptersList.length}}" title="暂无任务向导" />
       </view>
       <view class="bm-btn btn1">
-        <cy-btn variant="primary" style="width:100%" bindtap="bmClick2">{{myChapterApplications.length ? '承接进度' : '申请承接'}}</cy-btn>
+        <cy-btn variant="primary" style="width:100%" disabled="{{!myChapterApplications.length && !!signUpClosedText}}" bindtap="bmClick2">{{myChapterApplications.length ? '承接进度' : (signUpClosedText || '申请承接')}}</cy-btn>
       </view>
       <!-- 「我的点位 / 我的承接申请」原来埋在「申请承接章节」那个弹层里 —— 要看自己申请到哪一步,
            得先点开一个写着「申请承接」的弹窗,读起来像是要再申请一次。稿 159:346 那一屏只画了
