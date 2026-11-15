@@ -58,7 +58,9 @@ public class ApiConfigController extends BaseController {
             "roamDemoPois",       // 小程序 utils/roam-demo-gate.js 读(开发版演示种子门)
             "finishNearbyRoute",  // 小程序 play/index.js 读
             "clubMembership",     // 两端都读(ClubMembershipFeatureGate + club 页)
-            "merchantDeskProducts" // 两端都读(MerchantDeskSwitch 写入口 + 商家工作台商品与履约段),D2 默认关
+            "merchantDeskProducts", // 两端都读(MerchantDeskSwitch 写入口 + 商家工作台商品与履约段),D2 默认关
+            "merchantNonMoney"    // Q1 merchant-reach:App 商家非资金写入(核销/资料/据点/店员/回复/CRM/售后)唯一开关;
+                                  // 同时打开工作台读与核销台(MerchantDeskSwitch)。默认关,owner 部署时打开。不含任何资金写入。
     };
 
     @Operation(summary = "M10 灰度功能开关:返回各特性 on/off")

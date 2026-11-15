@@ -108,7 +108,13 @@ class MerchantCityValueReportServiceTest {
         assertEquals("1/3", funnel.get("serviceSuccess").get("rate"));
         assertEquals(Map.of("status", "MISSING_COVERAGE"), funnel.get("publicGoal"));
         assertEquals("80/1", ((Map<String, Object>) report.get("serviceRatings")).get("mean"));
-        assertEquals(Map.of("status", "MISSING_DEFINITION"), report.get("byCohort"));
+        // Q1 merchant-reach: the cohort is defined (returning within 28 days); one player, no earlier visit.
+        Map<String, Object> cohort = (Map<String, Object>) report.get("byCohort");
+        assertEquals("MEASURED", cohort.get("status"));
+        assertEquals("RETURNING_WITHIN_28_DAYS", cohort.get("definition"));
+        assertEquals(1, cohort.get("players"));
+        assertEquals(0, cohort.get("count"));
+        assertEquals("0/1", cohort.get("rate"));
         Map<String, Object> skip = (Map<String, Object>) ((Map<String, Object>) report.get("skipExitReasons")).get("skip");
         assertEquals(List.of(Map.of("reasonCode", "no_time", "visitCount", 1)), skip.get("reasons"));
         Map<String, Object> exit = (Map<String, Object>) ((Map<String, Object>) report.get("skipExitReasons")).get("exit");
