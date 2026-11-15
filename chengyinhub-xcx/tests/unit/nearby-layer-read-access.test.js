@@ -138,7 +138,8 @@ for (const stopped of ['_hidden', '_unloaded']) {
     });
     const pending = h.page.retryNearby(); await settled(); h.page[stopped] = true;
     finish({ token: 'fixture-login', data: { id: '7', userType: 1, role: 'player' } }); await pending;
-    assert.equal(h.requests.length, 0);
+    // SEC-14:新登录后的 18 周岁状态读取不是附近图层
+    assert.equal(h.requests.filter(r => !r.url.endsWith('/api/compliance/age/status')).length, 0);
   });
 }
 
