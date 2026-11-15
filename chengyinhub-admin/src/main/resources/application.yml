@@ -275,6 +275,9 @@ feature:
 roam:
   fog:
     retainRevealedCells: ${CHENGYIN_ROAM_FOG_RETAIN_REVEALED_CELLS:true}
+  # R4 guest-walk:登录前那一次漫游在登录后保存(POST /api/roam/guest-walk)。关掉后接口如实拒绝、不落库。
+  guestWalk:
+    enabled: ${CHENGYIN_ROAM_GUEST_WALK_ENABLED:true}
 
 # 腾讯位置服务：主题路线规划与服务端逆地理编码
 # 申请：https://lbs.qq.com → 创建应用 → 开通 WebServiceAPI

@@ -17,7 +17,9 @@ public enum LocationTrustKind {
     /** Journey GPS arrive after the start: location optional (owner 2026-11-13), scored when present. */
     JOURNEY_NODE(false),
     /** CITY claim photo evidence. */
-    CLAIM_EVIDENCE(true);
+    CLAIM_EVIDENCE(true),
+    /** R4 guest-walk: the track of one walk made before sign-in, uploaded once after sign-in (fog cells only). */
+    GUEST_WALK(false);
 
     private final boolean pointReward;
 
