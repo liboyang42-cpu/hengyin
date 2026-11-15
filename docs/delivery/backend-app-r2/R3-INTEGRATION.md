@@ -218,3 +218,51 @@ The shared runner in `/data/workspace/api-smoke` belongs to the api-smoke worker
 ### TEST `8120` deploy (`e8c893b73`)
 
 Deployed under `/usr/bin/flock /data/workspace/.deploy.lock` at 13:37 UTC: `Started RuoYiApplication in 21.476 seconds`, `GET /` -> HTTP `200`. No migration in this step. The live checks listed for Wave 4 were repeated with the same results (20 routes `code: 200`, plus the expected 403 and 404). Rollback jar is still `app/app.jar.prev-5fd593b5b` (Wave 3).
+
+## Wave 5 (security, acceptance B1–B8, smoke-500 r4)
+
+Merged into `integration/backend-app-r3` on the `work` VPS. Each branch was checked with `git merge-base --is-ancestor` first; none was already contained, and all three were cut from `81db27155`.
+
+| Branch | Tip | Merge commit | Notes |
+|---|---|---|---|
+| `origin/fix/security-r3` | `2f50c7fe0` | `b09bd87d1` | Clean. 2 Critical + 9 High security fixes and 2 admin fixes. One migration, `migration_20261125_admin_r3_perms.sql` (button permissions under the reward-drop and task-pool pages), declared in `ci/migration-dependencies.json` by the branch (one line, `["20261123_sys_random"]`), with its rollback named `bak_admin_r3_perms_20261125_rollback.sql`. |
+| `origin/fix/acceptance-r3` | `fdf15c0ff` | `da7a2e0a5` | Clean. B1–B8 from `qa/acceptance-r3` REPORT.md. No migration. |
+| `origin/fix/smoke-500-r4` | `d58cdc2d1` | `82f0bab79` | Two conflicts, both from B3 meeting SMOKE-500-R4 in the roam archive check. Both behaviours kept: `RoamSessionWriteService.validateArchive` keeps the acceptance clock-skew tolerance and clamping, and its "采集时间不属于原行程" refusal now carries code 400. `RoamSessionArchiveTest` keeps both acceptance tests and the smoke `outOfSessionCollectedAtIsA400` test. |
+| (integration) | — | `785d70908` | Test only. SMOKE-500-R4 changed the gone/malformed/corrupt replies of `GET /api/roam/share/snapshot` from code 500 to 404 and updated `ApiRoamShareControllerTest`, but the long-run pin `E06_17Test` still expected 500 (2 failures in the full suite). Its three GONE assertions now expect 404; the 503-unavailable and generic-error paths still expect 500. |
+
+### CI migration gates (on `82f0bab79`): both pass
+
+- `bash ci/migration-layout-check.sh`: exit 0 ("690 个 migration_*.sql 全在 chengyinhub-admin/sql/ 第一层", prefixes compliant).
+- `bash ci/migration-safety-check.sh`: exit 0 (unit tests 146 OK + 57 OK; "39 个变动的迁移文件均可被正确分句"; "本批新增 39 个迁移均被共享台账覆盖,全部依赖边顺序正确"). Nothing in `ci/`, the ledger or gitleaks files was changed by this integration.
+
+### Tests
+
+All Maven calls ran under `/usr/bin/flock /data/workspace/.mvn.lock` with `-Xmx1536m -Dspring.test.context.cache.maxSize=4`.
+
+- **Targeted (`82f0bab79`)**: 70 classes, the test classes changed by the three branches plus the classes that read `ci/migration-dependencies.json`, and the roam/deregistration neighbours, with the MySQL IT switches of Wave 4: `Tests run: 845, Failures: 0, Errors: 0, Skipped: 0`, `BUILD SUCCESS`. This includes `PrivacyVisibilityExportMySqlIT` (6), `AccountDeregistrationR3ErasureMyBatisTest` (1) and `ExternalGameMonetizationMysqlIntegrationTest` (3) against MySQL.
+- **Full suite (`82f0bab79`), incomplete**: `Tests run: 18234, Failures: 2, Errors: 0, Skipped: 686`. The surefire fork was killed with exit 137 (out of memory) in `ClubApplyStateMapperSqlTest` while the VPS was overloaded and unreachable, so about 1.5k tests never ran (Wave 4 ran 19811). The 2 failures were the `E06_17Test` pins fixed in `785d70908`. On the coordinator's instruction the full suite is not re-run on the VPS: `785d70908` was pushed as `integration/backend-app-r3-wave5-candidate` for a cloud full-suite run.
+- **Re-check (`785d70908`)**: `E06_17Test`, `ApiRoamShareControllerTest`, `RoamSessionArchiveTest`, `GlobalExceptionHandlerErrorMappingTest`: `Tests run: 44, Failures: 0, Errors: 0, Skipped: 0`.
+- Package: `chengyinhub-admin.jar` 123,483,273 bytes from `82f0bab79` (main code identical to `785d70908`). All `target/` directories deleted afterwards (1.6 GB free on /data).
+
+### TEST migration and `8120` deploy
+
+- `migration_20261125_admin_r3_perms` applied to `cy_e2e_r2`: `sys_menu` 346 → 356 (5 `business:rewarddrop:*` + 5 `business:taskpool:*` buttons under menus 2583 and 2584), 691 tables unchanged, `sys_role_menu` unchanged (no TEST role holds the two parent pages), `cy_migration_history` still 0. Applying it a second time changed nothing.
+- Deployed under `/usr/bin/flock /data/workspace/.deploy.lock` at 21:43 UTC: `Started RuoYiApplication in 34.201 seconds`, `GET /` → 200 after 36 s. Rollback jar `app/app.jar.prev-e8c893b73` (Wave 4 follow-up). Live spot checks: `login/code` with an `e2e-code-*` code returns a token (B4); multipart `club/list` → 415 `UNSUPPORTED_MEDIA_TYPE` (B8).
+
+### api-smoke (`/data/workspace/api-smoke`, 1231 calls per pass)
+
+Columns OK / BUSINESS-REFUSAL-EXPECTED / BACKEND-ERROR / SHAPE-MISMATCH / APP-CONTRACT-BUG, plus (in brackets) the number of calls answered with business code 500 where the results file of that pass was kept.
+
+| Run | Before seed | After seed | Paged runner copy (after a second seed) |
+|---|---|---|---|
+| Wave 4 follow-up jar `e8c893b73` | 753 / 270 / 203 / 0 / 5 | 773 / 262 / 191 / 0 / 5 | 779 / 261 / 186 / 0 / 5 (code 500: 96) |
+| Wave 5 jar `82f0bab79` | 758 / 296 / 172 / 0 / 5 (code 500: 46) | 770 / 290 / 166 / 0 / 5 (37) | **777 / 289 / 160 / 0 / 5 (37)** |
+
+- Paged pass against Wave 4: 25 routes moved from BACKEND-ERROR to BUSINESS-REFUSAL-EXPECTED and 2 to OK (the SMOKE-500-R4 effect); business code 500 fell from 96 to 37 calls.
+- Four routes went from OK to a refusal, all because of TEST state or the runner's own data, not the code: `im/channel/checkin` (the runner sends `checkinDate 2026-11-15`, it is now 11-16 in Asia/Shanghai), and `registration/pay`, `registration/pay/app` and `verify/dyncode/issue` on registration 75, which the `auto-refund` job refunded at 2026-11-16 01:03 (`registration_status 3`, `payment_status 4`). The code behind those refusals is unchanged in Wave 5.
+- The pre-seed passes also show the known state-dependent routes (`activity/delete` and `club/dissolve` on already-deleted fixtures, the two `professional-operations` "hash invalid" routes on the shared runner, see Wave 4 follow-up).
+
+### Acceptance (18 flows, `qa/acceptance-r3` `00054f5b0`)
+
+- Full run: 3 of 18 flows pass every step (F01, F08, F17; 0 of 18 on `81db27155`), and F18 passes in its re-run. B1–B8 all behave as fixed on TEST; no new backend defect. Details, per-flow causes and the B1–B8 evidence are in `qa/acceptance/REPORT.md` on that branch.
+- Found while running: each api-smoke pass toggles topic 992001 on or off the shelf (`POST /api/topic/update_user_status`) and leaves `im_block` 9004 → 9009. Run acceptance before smoke or restore those two fixtures first; both were restored for this run.
