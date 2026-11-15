@@ -15,6 +15,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Component
 public class ExternalGameTrafficSettlementJob {
+    /** R9 BE-26: with two nodes only the scheduling leader runs this @Scheduled method. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.common.core.scheduling.SchedulingLeadership schedulingLeadership;
+
     private static final Logger log = LoggerFactory.getLogger(ExternalGameTrafficSettlementJob.class);
     private final ExternalGameMonetizationService monetization;
     private final AtomicBoolean running = new AtomicBoolean();
@@ -25,6 +29,7 @@ public class ExternalGameTrafficSettlementJob {
 
     @Scheduled(cron = "${chengyin.external-game.traffic-settlement-cron:0 15 2 * * ?}", zone = "Asia/Shanghai")
     public void runDaily() {
+        if (!com.chengyinhub.common.core.scheduling.SchedulingLeadership.allows(schedulingLeadership)) return; // R9 BE-26: leader node only
         if (!running.compareAndSet(false, true)) return;
         try {
             LocalDate yesterday = LocalDate.now(ZoneId.of("Asia/Shanghai")).minusDays(1);
