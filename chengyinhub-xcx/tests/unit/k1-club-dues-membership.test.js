@@ -69,3 +69,19 @@ test('页面:注册在俱乐部分包,缴费前读资金开关 tickets,404 显�
   const detail = read('pages/club/detail/index.js')
   assert.match(detail, /\/pages\/club\/membership\/index\?manage=1&clubId=/)
 })
+
+test('主理人方案表单:校验后转成 plan/save 请求体,价格按分,宽限与逾期为 0', () => {
+  assert.equal(vm.planRequest({ name: '', priceYuan: '9.9', durationDays: 30, benefitsText: 'a' }, 3, 'r').error, '方案名称需为 1-40 字')
+  assert.match(vm.planRequest({ name: 'x', priceYuan: '0', durationDays: 30, benefitsText: 'a' }, 3, 'r').error, /价格/)
+  assert.match(vm.planRequest({ name: 'x', priceYuan: '9.9', durationDays: 30, benefitsText: '' }, 3, 'r').error, /权益/)
+  const built = vm.planRequest({ name: '月度会员', priceYuan: '9.9', durationDays: 30, benefitsText: '优先报名\n专属徽章\n', refundReview: true, active: true }, 3, 'cmp-1')
+  assert.deepEqual(built.body, {
+    clubId: 3, name: '月度会员', priceFen: 990, durationDays: 30, benefits: ['优先报名', '专属徽章'],
+    graceDays: 0, pastDueDays: 0, exitPolicy: 'END_IMMEDIATELY', refundPolicy: 'MANUAL_REVIEW', status: 'ACTIVE', requestId: 'cmp-1',
+  })
+  const edit = vm.planRequest(vm.planForm({ id: 9, version: 2, name: '年度', priceFen: 9900, durationDays: 365, benefitsJson: '["a"]', status: 'INACTIVE' }), 3, 'r2')
+  assert.equal(edit.body.id, 9)
+  assert.equal(edit.body.version, 2)
+  assert.equal(edit.body.status, 'INACTIVE')
+  assert.equal(edit.body.refundPolicy, 'NON_REFUNDABLE')
+})

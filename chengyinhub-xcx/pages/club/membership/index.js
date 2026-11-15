@@ -3,7 +3,7 @@
 // 页面如实显示「在线缴费即将开放」。会费是否走俱乐部自己的收款账户由服务端决定,端上只展示结果。
 const app = getApp();
 const toast = require('../../../utils/toast.js');
-const { shapeOverview, shapeCollection, errorText } = require('./view-model.js');
+const { shapeOverview, shapePlan, shapeCollection, planRequest, planForm, errorText } = require('./view-model.js');
 
 function jsonBody(data) { return JSON.stringify(data || {}); }
 function jsonHeader() { return { 'Content-Type': 'application/json' }; }
@@ -27,6 +27,9 @@ Page({
     view: null,
     collection: null,
     setting: null,
+    plans: [],
+    form: null,
+    formError: '',
     busy: false,
   },
 
@@ -105,12 +108,50 @@ Page({
         done();
         const collection = ok(col) ? shapeCollection(col.data, this._moneyOpen) : null;
         if (!collection) { this.setData({ state: 'error', errorText: errorText(col && col.msg, '收款状态暂不可用') }); return; }
-        this.setData({
-          state: 'ready',
-          setting: { enabled: setting.enabled === true, version: Number.isInteger(setting.version) ? setting.version : 0 },
-          collection,
+        this.post('/api/club/membership/plans/manage', { clubId: this._clubId }, (pl) => {
+          if (seq !== this._seq) return;
+          const plans = ok(pl) && Array.isArray(pl.data) ? pl.data.map(shapePlan).filter(Boolean) : [];
+          this.setData({
+            state: 'ready',
+            setting: { enabled: setting.enabled === true, version: Number.isInteger(setting.version) ? setting.version : 0 },
+            collection,
+            plans,
+            form: null,
+          });
         });
       });
+    });
+  },
+
+  // 主理人:新建 / 编辑会员方案(不收钱;成员缴费仍要等收款与资金开关)。
+  onNewPlan() { this.setData({ form: planForm(null), formError: '' }); },
+  onEditPlan(e) {
+    const id = positiveId(e && e.currentTarget && e.currentTarget.dataset.id);
+    const plan = this.data.plans.find((p) => p.id === id);
+    if (plan) this.setData({ form: planForm(plan.raw), formError: '' });
+  },
+  onCancelPlan() { this.setData({ form: null, formError: '' }); },
+  onFormInput(e) {
+    const key = e && e.currentTarget && e.currentTarget.dataset.key;
+    if (!key || !this.data.form) return;
+    const value = e.detail && e.detail.value;
+    this.setData({ ['form.' + key]: key === 'durationDays' ? Number(value) : value, formError: '' });
+  },
+  onFormSwitch(e) {
+    const key = e && e.currentTarget && e.currentTarget.dataset.key;
+    if (!key || !this.data.form) return;
+    this.setData({ ['form.' + key]: !!(e.detail && e.detail.value) });
+  },
+  onSavePlan() {
+    if (this.data.busy || !this.data.form) return;
+    const built = planRequest(this.data.form, this._clubId, newId('cmp'));
+    if (built.error) { this.setData({ formError: built.error }); return; }
+    this.setData({ busy: true });
+    this.post('/api/club/membership/plan/save', built.body, (res) => {
+      this.setData({ busy: false });
+      if (!ok(res)) { this.setData({ formError: errorText(res && res.msg, '保存失败，请重试') }); return; }
+      toast('已保存');
+      this.load();
     });
   },
 

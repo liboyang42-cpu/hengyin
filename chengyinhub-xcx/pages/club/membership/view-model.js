@@ -58,6 +58,7 @@ function shapePlan(plan) {
     benefits: benefits(plan.benefitsJson || plan.benefits),
     refundText: plan.refundPolicy === 'MANUAL_REVIEW' ? '可申请退款审核' : '不退款',
     active: plan.status !== 'INACTIVE',
+    raw: plan,
   };
 }
 
@@ -121,4 +122,42 @@ function errorText(msg, fallback) {
   return fallback;
 }
 
-module.exports = { shapeOverview, shapePlan, shapeCollection, errorText, blockedText, yuan, STATUS_TEXT };
+// 主理人编辑会员方案:表单 → 后端 plan/save 的请求体。不合法返回 { error }。
+// 宽限期与逾期天数先按 0(到期即止),退出即结束权益;只开放名称、价格、天数、权益、能否申请退款与是否上架。
+function planRequest(form, clubId, requestId) {
+  const f = form || {};
+  const name = typeof f.name === 'string' ? f.name.trim() : '';
+  if (!name || name.length > 40) return { error: '方案名称需为 1-40 字' };
+  const price = Math.round(Number(f.priceYuan) * 100);
+  if (!Number.isFinite(price) || price < 1 || price > 100000000) return { error: '请填写正确的价格' };
+  const days = Number(f.durationDays);
+  if (!Number.isInteger(days) || days < 1 || days > 3650) return { error: '有效天数需为 1-3650 天' };
+  const benefits = String(f.benefitsText || '').split('\n').map((b) => b.trim()).filter(Boolean);
+  if (!benefits.length || benefits.length > 12 || benefits.some((b) => b.length > 80)) return { error: '权益需填写 1-12 项，每项 80 字以内' };
+  const body = {
+    clubId, name, priceFen: price, durationDays: days, benefits,
+    graceDays: 0, pastDueDays: 0, exitPolicy: 'END_IMMEDIATELY',
+    refundPolicy: f.refundReview ? 'MANUAL_REVIEW' : 'NON_REFUNDABLE',
+    status: f.active === false ? 'INACTIVE' : 'ACTIVE',
+    requestId,
+  };
+  if (Number.isInteger(f.id) && f.id > 0) { body.id = f.id; body.version = Number.isInteger(f.version) ? f.version : 0; }
+  return { body };
+}
+
+// plans/manage 的一行 → 编辑表单初值。
+function planForm(plan) {
+  if (!plan || typeof plan !== 'object') return { name: '', priceYuan: '', durationDays: 365, benefitsText: '', refundReview: false, active: true };
+  return {
+    id: Number(plan.id),
+    version: Number.isInteger(plan.version) ? plan.version : 0,
+    name: typeof plan.name === 'string' ? plan.name : '',
+    priceYuan: yuan(plan.priceFen),
+    durationDays: Number(plan.durationDays) || 365,
+    benefitsText: benefits(plan.benefitsJson || plan.benefits).join('\n'),
+    refundReview: plan.refundPolicy === 'MANUAL_REVIEW',
+    active: plan.status !== 'INACTIVE',
+  };
+}
+
+module.exports = { shapeOverview, shapePlan, shapeCollection, planRequest, planForm, errorText, blockedText, yuan, STATUS_TEXT };

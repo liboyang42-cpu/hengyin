@@ -28,6 +28,37 @@
       <view class="ms-action">
         <cy-btn variant="{{setting.enabled ? 'secondary' : 'primary'}}" loading="{{busy}}" bindtap="onToggleEnabled">{{setting.enabled ? '关闭付费会员' : '开启付费会员'}}</cy-btn>
       </view>
+
+      <view class="ms-section">会员方案</view>
+      <view wx:if="{{!form}}">
+        <view class="ms-card ms-plan" wx:for="{{plans}}" wx:key="id" data-id="{{item.id}}" bindtap="onEditPlan" aria-role="button" aria-label="编辑 {{item.name}}">
+          <view class="ms-row">
+            <text class="ms-value">{{item.name}}</text>
+            <text class="ms-value">¥{{item.priceText}}</text>
+          </view>
+          <view class="ms-note">{{item.durationText}} · {{item.refundText}}{{item.active ? '' : ' · 已下架'}}</view>
+        </view>
+        <cy-empty wx:if="{{!plans.length}}" kind="empty" title="暂无会员方案" />
+        <view class="ms-action">
+          <cy-btn variant="secondary" bindtap="onNewPlan">新建方案</cy-btn>
+        </view>
+      </view>
+      <view wx:else class="ms-card">
+        <view class="ms-row"><text class="ms-label">名称</text><input class="ms-input" value="{{form.name}}" maxlength="40" data-key="name" bindinput="onFormInput" /></view>
+        <view class="ms-row"><text class="ms-label">价格(元)</text><input class="ms-input" type="digit" value="{{form.priceYuan}}" data-key="priceYuan" bindinput="onFormInput" /></view>
+        <view class="ms-row"><text class="ms-label">有效天数</text><input class="ms-input" type="number" value="{{form.durationDays}}" data-key="durationDays" bindinput="onFormInput" /></view>
+        <view class="ms-note">会员权益(每行一项)</view>
+        <view class="ms-row"><textarea class="ms-textarea" value="{{form.benefitsText}}" maxlength="1000" data-key="benefitsText" bindinput="onFormInput" auto-height /></view>
+        <view class="ms-row"><text class="ms-label">可申请退款审核</text><switch checked="{{form.refundReview}}" data-key="refundReview" bindchange="onFormSwitch" /></view>
+        <view class="ms-row"><text class="ms-label">上架</text><switch checked="{{form.active}}" data-key="active" bindchange="onFormSwitch" /></view>
+        <view class="ms-note ms-error" wx:if="{{formError}}">{{formError}}</view>
+        <view class="ms-action">
+          <cy-btn variant="primary" loading="{{busy}}" bindtap="onSavePlan">保存方案</cy-btn>
+        </view>
+        <view class="ms-action">
+          <cy-btn variant="secondary" disabled="{{busy}}" bindtap="onCancelPlan">取消</cy-btn>
+        </view>
+      </view>
     </view>
 
     <view wx:else class="ms-shell">
