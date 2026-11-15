@@ -52,6 +52,9 @@ public class ChannelMessageService implements IChannelConversationGate
     private IUmsMemberService members;
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.channel.platform.ChannelGovernanceMapper restrictions;
+    /** W5 C2：编辑/撤回/置顶后给打开中的会话发实时提示（提交后，失败不影响写入）。 */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IImRealtimePublisher realtime;
 
     public ChannelMessageService() { }
 
@@ -100,6 +103,26 @@ public class ChannelMessageService implements IChannelConversationGate
     public void requireAttach(Long memberId, Long conversationId)
     {
         try { authorize(memberId == null ? 0 : memberId, conversationId, of(VIEW_CHANNEL, SEND_MESSAGE, ATTACH_FILE), true); }
+        catch (ChannelRejection e) { throw new ServiceException(e.getMessage(), e.getStatus()).setDetailMessage(e.getErrorCode()); }
+    }
+
+    /** W5 C2：发送时 @ 的范围（频道所属空间、能否 @全体）。权限同发送。 */
+    public record MentionScope(int guildKind, long guildId, boolean everyone) { }
+
+    public MentionScope mentionScope(long memberId, long conversationId)
+    {
+        try
+        {
+            ChannelAccess a = authorize(memberId, conversationId, of(VIEW_CHANNEL, SEND_MESSAGE), true);
+            return new MentionScope(a.channel.getGuildKind(), a.channel.getGuildId(), has(a.bits, MENTION_EVERYONE));
+        }
+        catch (ChannelRejection e) { throw new ServiceException(e.getMessage(), e.getStatus()).setDetailMessage(e.getErrorCode()); }
+    }
+
+    /** W5 C2：表情回应要 VIEW_CHANNEL + READ_HISTORY + ADD_REACTION，归档/禁言同发送。 */
+    public void requireReact(Long memberId, Long conversationId)
+    {
+        try { authorize(memberId == null ? 0 : memberId, conversationId, of(VIEW_CHANNEL, READ_HISTORY, ADD_REACTION), true); }
         catch (ChannelRejection e) { throw new ServiceException(e.getMessage(), e.getStatus()).setDetailMessage(e.getErrorCode()); }
     }
 
@@ -296,6 +319,7 @@ public class ChannelMessageService implements IChannelConversationGate
             if (!pin)
             {
                 messages.deletePin(conv, messageId);
+                hint(conv, com.chengyinhub.business.service.IImRealtimePublisher.PIN_UPDATED, messageId, "UNPIN");
                 r.put("pinned", false);
                 r.put("unpinned", true);
                 return r;
@@ -320,6 +344,7 @@ public class ChannelMessageService implements IChannelConversationGate
             row.put("sortNo", sortNo);
             row.put("pinnedBy", viewer);
             messages.insertPin(row);
+            hint(conv, com.chengyinhub.business.service.IImRealtimePublisher.PIN_UPDATED, messageId, "PIN");
             r.put("pinned", true);
             r.put("id", String.valueOf(toLong(row.get("id"))));
             r.put("sort_no", sortNo);
@@ -560,6 +585,17 @@ public class ChannelMessageService implements IChannelConversationGate
         row.put("version", version);
         row.put("kind", kind);
         messages.insertMutation(row);
+        hint(conv, com.chengyinhub.business.service.IImRealtimePublisher.MESSAGE_UPDATED, messageId, kind);
+    }
+
+    private void hint(long conv, String type, long messageId, String kind)
+    {
+        if (realtime == null) return;
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("message_id", String.valueOf(messageId));
+        data.put("kind", kind);
+        try { realtime.publish(conv, type, data); }
+        catch (RuntimeException ignored) { /* 实时提示是旁路 */ }
     }
 
     private Set<String> currentMentions(long messageId)
