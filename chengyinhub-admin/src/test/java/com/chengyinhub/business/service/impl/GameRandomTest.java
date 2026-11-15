@@ -72,6 +72,51 @@ class GameRandomTest {
     }
 
     @Test
+    void overlongReceiptIsRejectedInsteadOfTruncatedIntoAReplay() {
+        InMemoryAuditMapper mapper = new InMemoryAuditMapper();
+        GameRandom rng = new GameRandom(5L, mapper);
+        String shared = "city:" + "r".repeat(59);
+        rng.draw(IGameRandomService.DOMAIN_CITY_DICE, 6, shared, 7L, "city_board", "b:d", null);
+
+        assertThrows(IllegalArgumentException.class, () -> rng.draw(IGameRandomService.DOMAIN_CITY_DICE, 6,
+                shared + "-tail-A", 7L, "city_board", "b:d", null));
+        assertEquals(1, mapper.rows.size());
+    }
+
+    @Test
+    void replayOfAnotherMembersReceiptIsRejected() {
+        InMemoryAuditMapper mapper = new InMemoryAuditMapper();
+        GameRandom rng = new GameRandom(6L, mapper);
+        rng.draw(IGameRandomService.DOMAIN_CITY_DICE, 6, "city:good", 7L, "city_board", "b1:d", null);
+
+        assertThrows(IllegalStateException.class, () -> rng.draw(IGameRandomService.DOMAIN_CITY_DICE, 6,
+                "city:good", 8L, "city_board", "b1:d", null));
+        assertThrows(IllegalStateException.class, () -> rng.draw(IGameRandomService.DOMAIN_CITY_DICE, 6,
+                "city:good", 7L, "city_board", "b2:d", null));
+        assertTrue(rng.draw(IGameRandomService.DOMAIN_CITY_DICE, 6,
+                "city:good", 7L, "city_board", "b1:d", null).replayed());
+    }
+
+    @Test
+    void compactReceiptKeepsShortReceiptsAndHashesLongOnesWithoutCollision() {
+        assertEquals("pk:1", GameRandom.compactReceipt("pk:1"));
+        String base = "check:1:2:" + "x".repeat(80);
+        String a = GameRandom.compactReceipt(base + ":roll:0");
+        String b = GameRandom.compactReceipt(base + ":roll:1");
+        assertTrue(a.length() <= GameRandom.MAX_RECEIPT_LENGTH);
+        assertTrue(b.length() <= GameRandom.MAX_RECEIPT_LENGTH);
+        assertNotEquals(a, b);
+
+        InMemoryAuditMapper mapper = new InMemoryAuditMapper();
+        AdvancedGameRandom scoped = new GameRandom(9L, mapper).scoped(
+                IGameRandomService.DOMAIN_PLAYKIT_D20, "playkit:1:" + "k".repeat(80), 7L, "session", "1");
+        scoped.nextInt(20);
+        scoped.nextInt(20);
+        assertEquals(2, mapper.rows.size());
+        assertNotEquals(mapper.rows.get(0).getReceiptId(), mapper.rows.get(1).getReceiptId());
+    }
+
+    @Test
     void weightedPickRespectsWeights() {
         GameRandom rng = new GameRandom(7L);
         List<String> items = List.of("A", "B");

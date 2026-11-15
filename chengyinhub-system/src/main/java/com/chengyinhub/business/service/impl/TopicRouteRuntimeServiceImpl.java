@@ -2761,7 +2761,8 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             final Long memberId = context.session == null ? null : context.session.getMemberId();
             final String phase = rerolled ? "reroll" : "roll";
             activeD20 = () -> {
-                String receiptId = "check:" + sessionId + ":" + nodeId + ":" + checkId + ":" + phase + ":" + seq.getAndIncrement();
+                String receiptId = GameRandom.compactReceipt(
+                        "check:" + sessionId + ":" + nodeId + ":" + checkId + ":" + phase + ":" + seq.getAndIncrement());
                 return gameRandom.d20(receiptId, memberId, "journey_check", checkId);
             };
         }

@@ -70,12 +70,27 @@ public class CityGameActionService {
         if (!customRandom && gameRandom != null) {
             return gameRandom.scoped(
                     com.chengyinhub.business.service.IGameRandomService.DOMAIN_CITY_DICE,
-                    "city:" + requestId + ":" + actionTag,
+                    cityDiceReceipt(boardId, memberId, requestId, actionTag),
                     memberId,
                     "city_board",
                     boardId + ":" + (diceId == null ? "" : diceId))::nextInt;
         }
         return random;
+    }
+
+    /**
+     * 城市骰子凭据：{@code city:{memberId}:{sha256(boardId:requestId)}:{tag}}，按需缩短摘要以保证
+     * 整串（含 scoped 的 ":N" 序号）不超过 game_random_audit.receipt_id 的 64 字符，绝不截断。
+     * boardId 最长 96 字符，放不进 64 字符，所以与 requestId 一起进摘要；成员 id 明文绑定。
+     */
+    static String cityDiceReceipt(String boardId, Long memberId, String requestId, String actionTag) {
+        String head = "city:" + memberId + ":";
+        String tail = ":" + actionTag;
+        int digestLength = Math.min(40, com.chengyinhub.business.service.impl.GameRandom.MAX_RECEIPT_LENGTH - 2
+                - head.length() - tail.length());
+        if (digestLength < 16) throw new IllegalArgumentException("city dice receipt tag too long: " + actionTag);
+        String digest = CityGameRules.sha256(boardId + ":" + requestId);
+        return head + digest.substring(0, digestLength) + tail;
     }
 
     // ---- snapshot / deltas ----
@@ -382,8 +397,8 @@ public class CityGameActionService {
                 return a.apply(units, "SERVICE_VISITED", propertyId);
             default: {
                 CityGameRules.Dice dice = CityGameRules.dice((String) board.get("diceFaces"), (String) board.get("diceWeights"));
-                IntUnaryOperator duelRandom = effectiveRandom("CHALLENGE", requestId, memberId, boardId, (String) board.get("diceId"));
-                int attack = dice.roll(duelRandom), defence = dice.roll(duelRandom);
+                int attack = dice.roll(effectiveRandom("CHALLENGE_ATK", requestId, memberId, boardId, (String) board.get("diceId")));
+                int defence = dice.roll(effectiveRandom("CHALLENGE_DEF", requestId, memberId, boardId, (String) board.get("diceId")));
                 mapper.insertRoll(boardId, a.teamId, roundSeq, memberId, requestId, "CHALLENGE", (String) board.get("diceId"), attack);
                 mapper.insertRoll(boardId, holder, roundSeq, memberId, requestId, "DEFENCE", (String) board.get("diceId"), defence);
                 a.diceFace = attack;
