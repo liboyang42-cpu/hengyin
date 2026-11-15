@@ -33,6 +33,16 @@ Page({
     }
     wx.redirectTo({ url: '/subpackageMember/order/order' });
   },
+  onNavBack(event) {
+    if (event && event.detail && event.detail.navigating) return;
+    const pages = getCurrentPages();
+    const previous = pages.length > 1 ? pages[pages.length - 2] : null;
+    if (previous && previous.route === 'pages/team/join/index') {
+      wx.navigateBack({ delta: 1 });
+      return;
+    }
+    this.backToOrderList(event);
+  },
   openChildScene(event) {
     const detail = (event && event.detail) || {};
     if (detail.id) openScene(detail.id, detail.params || {});

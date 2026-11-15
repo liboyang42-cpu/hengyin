@@ -103,9 +103,10 @@ test('p1 N-13:别人的券 → 「这张券不在你的券包里 · 返回」,�
 
 test('p1 N-14:没有这一场的票被拒 → 按钮变「去买这一场的票」,去结算', () => {
   const js = read('pages/team/join/index.js');
-  assert.match(js, /ticketRequired: !value\.busy && !!rejected && value\.outcome\.errorCode === 'TICKET_REQUIRED'/);
+  assert.match(js, /value\.outcome\.errorCode === 'TICKET_REQUIRED'/);
+  assert.match(js, /ticketRequired: !value\.busy && \(projection \? projection\.ticketRequired : !!ticketRejected\)/);
   assert.match(js, /wx\.navigateTo\(\{ url: '\/pages\/activity\/baoming\/baoming\?activityId=' \+ activityId \}\)/);
-  assert.match(read('pages/team/join/index.wxml'), /wx:elif="\{\{team\.status == 0 && ticketRequired && team\.ownerType == 2\}\}" class="team-action primary" bindtap="goBuyTicket"[\s\S]*?>去买这一场的票<\/view>/);
+  assert.match(read('pages/team/join/index.wxml'), /wx:elif="\{\{team\.status == 0 && ticketRequired && purchaseTarget\}\}" class="team-action primary" bindtap="goBuyTicket"[\s\S]*?>去买这一场的票<\/view>/);
 });
 
 test('p1 N-16:参与详情与订单详情、票夹同叫「开始游戏」', () => {

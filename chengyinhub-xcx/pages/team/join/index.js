@@ -17,7 +17,7 @@ Page({
     refreshing: false,
     joining: false,
     joinError: '',
-    ticketRequired: false,
+    ticketRequired: false, purchaseTarget: null,
     inviteText: '', joinedSeats: [], openSeats: [],
     joinHint: '',
     error: '',
@@ -43,23 +43,37 @@ Page({
     this._hidden = false;
     if (refresh) { this._openRecovery(); this.load(); }
   },
-  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; if (this._recovery) this._recovery.dispose(); this._hidden = true; this._epoch = (this._epoch || 0) + 1; this._inviteLoading = false; },
+  onHide() { this._projection = null; this.setData({ purchaseTarget: null }); this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; if (this._recovery) this._recovery.dispose(); this._hidden = true; this._epoch = (this._epoch || 0) + 1; this._inviteLoading = false; },
   onUnload() { this._disposed = true; this.onHide(); },
 
   _openRecovery() {
-    this._recoveryReader = reader(app);
+    const scope = this._recoveryScope = this._context();
+    this._projection = null;
+    this.setData({ purchaseTarget: null });
+    this._recoveryReader = scope.reader;
     if (this._recovery) this._recovery.dispose(); this._freshCommand = false;
     this._recovery = createRecovery({ app, platform: wx, domain: 'TEAM', settle: true,
       scopeKey: 'invite:' + this.inviteCode, targetId: null,
       // 第十一轮 g2(j4 F1,接 j2 F-11):终态回执由共享层静默归档;恢复卡只留给结果未知(card)。
       // 本页刚发出的请求在途时不弹卡(按钮自带忙态)。被拒时后端理由贴在加入按钮上方。
-      changed: value => { const fresh = this._freshCommand; if (!value.busy) this._freshCommand = false;
-        const rejected = value.outcome && value.outcome.state === 'REJECTED' ? value.outcome.message || '暂时无法加入该队伍' : '';
+      changed: value => {
+        if (scope !== this._recoveryScope || !this._current(scope)) return;
+        const fresh = this._freshCommand;
+        if (!value.busy) this._freshCommand = false;
+        const projection = this._projection && this._projection.epoch === this._epoch ? this._projection : null;
+        const ticketRejected = value.outcome && value.outcome.state === 'REJECTED' && value.outcome.errorCode === 'TICKET_REQUIRED';
+        // 新的资格读回可替代旧缺票展示，不改原命令回执；新命令开始时先失效该读回。
+        const resolvedTicket = ticketRejected && projection && projection.ticketKnown && !projection.ticketRequired;
+        const rejected = !resolvedTicket && value.outcome && value.outcome.state === 'REJECTED' ? value.outcome.message || '暂时无法加入该队伍' : '';
+        this._joinErrorCode = !value.busy && rejected ? value.outcome.errorCode : '';
         this.setData({ commandRecovery: value, recoveryShown: !!(value.card || value.busy) && !(fresh && value.busy), joining: value.busy,
           joinError: value.busy ? '' : rejected,
-          // 第十二轮 k9(p1 N-14):没有这一场的票被拒时,按钮换成去买票,不留一个灰掉的「接受邀请并加入」
-          ticketRequired: !value.busy && !!rejected && value.outcome.errorCode === 'TICKET_REQUIRED' }); },
+          ticketRequired: !value.busy && (projection ? projection.ticketRequired : !!ticketRejected) });
+      },
       terminal: () => {
+        if (scope !== this._recoveryScope || !this._current(scope)) return;
+        this._projection = null;
+        this.setData({ purchaseTarget: null });
         this._epoch = (this._epoch || 0) + 1;
         this._inviteLoading = false;
         // Membership can have changed since this receipt; always display a fresh server projection.
@@ -86,6 +100,8 @@ Page({
   load() {
     const that = this;
     if (this._hidden || this._disposed) return;
+    this._projection = null;
+    this.setData({ purchaseTarget: null });
     if (this._reader && !sameReader(app, this._reader)) {
       this._inviteLoading = false;
       this.teamId = '';
@@ -130,6 +146,19 @@ Page({
         if (res && res.code == '200' && res.data && res.data.team && exactId(res.data.team.id)) {
           that.teamId = exactId(res.data.team.id);
           that._recovery.setTarget(that.teamId);
+          const viewer = res.data.viewer;
+          const blockers = viewer && Array.isArray(viewer.joinBlockers) ? viewer.joinBlockers : null;
+          const ticketRequired = !!blockers && blockers.includes('TICKET_REQUIRED');
+          const rawTarget = viewer && viewer.purchaseTarget;
+          const purchaseTarget = context.reader.id && context.reader.token && !res.data.joined && res.data.team.status === 0
+            && blockers && blockers.length === 1 && ticketRequired && rawTarget
+            && [2, '2'].includes(rawTarget.ownerType) && exactId(rawTarget.ownerId)
+            ? { ownerType: 2, ownerId: exactId(rawTarget.ownerId) } : null;
+          that._projection = { context, epoch, ticketKnown: !!blockers, ticketRequired, purchaseTarget };
+          if (that._joinErrorCode === 'TICKET_REQUIRED' && blockers && !ticketRequired) {
+            that._joinErrorCode = '';
+            that.setData({ joinError: '' });
+          }
           enter(that, 'seatIn', { once: true });
           that.setData({
             loading: false,
@@ -141,7 +170,7 @@ Page({
             joinedSeats: teamSeats.joinedSeats(res.data.team),
             openSeats: teamSeats.openSeats(res.data.team, res.data.seats),
             joinHint: teamSeats.blockerText(res.data.viewer, 'join').text,
-            ticketRequired: that.data.ticketRequired || teamSeats.blockerText(res.data.viewer, 'join').code === 'TICKET_REQUIRED',
+            ticketRequired, purchaseTarget,
             error: '',
             errorSub: ''
           });
@@ -202,13 +231,19 @@ Page({
     if (!this._recoveryReader || !sameReader(app, this._recoveryReader)) this._openRecovery();
     if (!this._recovery || this._recovery.pending() || !exactId(this.teamId)) return;
     this._recovery.setTarget(this.teamId);
+    this._projection = null;
+    this.setData({ purchaseTarget: null });
     this._freshCommand = true; return this._recovery.start('join', { inviteCode: this.inviteCode });
   },
 
   goBuyTicket() {
-    const team = this.data.team;
-    const activityId = team && Number(team.ownerType) === 2 && exactId(team.ownerId) ? team.ownerId : null;
-    if (!activityId || this._hidden || this._disposed) return;
+    const projection = this._projection;
+    if (!projection || projection.epoch !== this._epoch || !this._current(projection.context)
+        || this.data.loading || this.data.refreshing || this.data.error || this.data.joining
+        || !this._recovery || this._recovery.pending()) return;
+    const target = projection.purchaseTarget;
+    const activityId = target && target.ownerType === 2 ? exactId(target.ownerId) : '';
+    if (!activityId) return;
     wx.navigateTo({ url: '/pages/activity/baoming/baoming?activityId=' + activityId });
   },
 

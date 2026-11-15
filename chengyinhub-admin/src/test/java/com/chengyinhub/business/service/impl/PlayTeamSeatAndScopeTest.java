@@ -1,12 +1,16 @@
 package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.PlayTeam;
+import com.chengyinhub.business.domain.CmsActivity;
+import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.PlayTeamMember;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
 import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ImBlockMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.service.ICmsActivityService;
+import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.INotifyService;
 import com.chengyinhub.business.service.IPlayTeamService;
 import com.chengyinhub.business.service.IUmsMemberService;
@@ -49,6 +53,9 @@ class PlayTeamSeatAndScopeTest {
     private IImService imService;
     private INotifyService notifyService;
     private PlayTeamServiceImpl service;
+    private CmsActivityMapper cmsActivityMapper;
+    private ICmsActivityService cmsActivityService;
+    private IClubMemberService clubMemberService;
 
     @BeforeEach
     void setUp() {
@@ -60,8 +67,13 @@ class PlayTeamSeatAndScopeTest {
         ReflectionTestUtils.setField(service, "teamMapper", teamMapper);
         ReflectionTestUtils.setField(service, "blockMapper", blockMapper);
         ReflectionTestUtils.setField(service, "imService", imService);
+        cmsActivityService = mock(ICmsActivityService.class);
+        clubMemberService = mock(IClubMemberService.class);
+        cmsActivityMapper = mock(CmsActivityMapper.class);
+        ReflectionTestUtils.setField(service, "cmsActivityService", cmsActivityService);
+        ReflectionTestUtils.setField(service, "clubMemberService", clubMemberService);
         ReflectionTestUtils.setField(service, "notifyService", notifyService);
-        ReflectionTestUtils.setField(service, "cmsActivityMapper", mock(CmsActivityMapper.class));
+        ReflectionTestUtils.setField(service, "cmsActivityMapper", cmsActivityMapper);
         ReflectionTestUtils.setField(service, "cmsTopicMapper", mock(CmsTopicMapper.class));
         ReflectionTestUtils.setField(service, "umsMemberService", mock(IUmsMemberService.class));
         ReflectionTestUtils.setField(service, "wxContentSecurityService", mock(IWxContentSecurityService.class));
@@ -462,6 +474,128 @@ class PlayTeamSeatAndScopeTest {
         assertEquals(Boolean.FALSE, viewer.get("joined"));
         assertEquals(Boolean.FALSE, viewer.get("canApply"), "未登录不能申请");
         assertEquals(Boolean.FALSE, viewer.get("canJoinWithCode"), "未登录不能占席");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void missingTicketInviteHasOnlyAViewerScopedPurchaseTargetAndStillCannotJoin() {
+        PlayTeam team = purchaseInvite();
+        Map<String, Object> result = service.info(null, "purchase-invite", MEMBER_ID);
+        Map<String, Object> viewer = (Map<String, Object>) result.get("viewer");
+        assertEquals(Map.of("ownerType", 2, "ownerId", ACTIVITY_ID), viewer.get("purchaseTarget"));
+        assertEquals(java.util.Set.of("id", "title", "status", "joinMode", "joinedCount", "maxMembers"),
+                ((Map<?, ?>) result.get("team")).keySet(), "nonmember preview must remain the original whitelist");
+        verify(cmsActivityService).selectCmsActivityDetailById(ACTIVITY_ID, MEMBER_ID);
+        IPlayTeamService.TeamRejection refused = assertThrows(IPlayTeamService.TeamRejection.class, () -> service.join("purchase-invite", MEMBER_ID));
+        assertEquals("TICKET_REQUIRED", refused.getErrorCode());
+        verify(teamMapper, never()).reserveSlot(team.getId());
+    }
+
+    @Test
+    void anonymousAndUnrelatedOwnerNeverGetOrReadAPurchaseTarget() {
+        for (Long viewerId : Arrays.asList(null, 0L)) {
+            setUp();
+            purchaseInvite();
+            assertNoPurchaseTarget(viewerId);
+            verify(cmsActivityMapper, never()).selectPublicCmsActivityById(any());
+            verify(cmsActivityService, never()).selectCmsActivityDetailById(any(), any());
+        }
+        for (Integer ownerType : Arrays.asList(null, 1)) {
+            setUp();
+            PlayTeam team = purchaseInvite();
+            team.setOwnerType(ownerType);
+            assertNoPurchaseTarget(MEMBER_ID);
+            verify(cmsActivityMapper, never()).selectPublicCmsActivityById(any());
+        }
+    }
+
+    @Test
+    void publicAvailabilityAndViewerDetailAreBothRequiredForPurchaseTarget() {
+        for (String hidden : Arrays.asList("not-public", "not-visible", "cancelled-public", "cancelled-detail", "wrong-public", "wrong-detail")) {
+            setUp();
+            purchaseInvite();
+            CmsActivity publicActivity = new CmsActivity();
+            publicActivity.setId("wrong-public".equals(hidden) ? ACTIVITY_ID + 1 : ACTIVITY_ID);
+            if ("cancelled-public".equals(hidden)) publicActivity.setCancelTime(new Date());
+            when(cmsActivityMapper.selectPublicCmsActivityById(ACTIVITY_ID))
+                    .thenReturn("not-public".equals(hidden) ? null : publicActivity);
+            CmsActivity visible = new CmsActivity();
+            visible.setId("wrong-detail".equals(hidden) ? ACTIVITY_ID + 1 : ACTIVITY_ID);
+            if ("cancelled-detail".equals(hidden)) visible.setCancelTime(new Date());
+            when(cmsActivityService.selectCmsActivityDetailById(ACTIVITY_ID, MEMBER_ID))
+                    .thenReturn("not-visible".equals(hidden) ? null : visible);
+            assertNoPurchaseTarget(MEMBER_ID);
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void activityClubGateKeepsExactlyTheExistingMemberOrActivityOwnerScope() {
+        for (String scope : Arrays.asList("outsider", "member", "activity-owner")) {
+            setUp();
+            purchaseInvite();
+            CmsActivity activity = new CmsActivity();
+            activity.setId(ACTIVITY_ID);
+            activity.setClubId(501L);
+            activity.setMemberId("activity-owner".equals(scope) ? MEMBER_ID : LEADER_ID);
+            when(cmsActivityService.selectCmsActivityDetailById(ACTIVITY_ID, MEMBER_ID)).thenReturn(activity);
+            when(clubMemberService.selectByClubAndMember(501L, MEMBER_ID))
+                    .thenReturn("member".equals(scope) ? new ClubMember() : null);
+            Map<String, Object> viewer = (Map<String, Object>) service.info(null, "purchase-invite", MEMBER_ID).get("viewer");
+            assertEquals(!"outsider".equals(scope), viewer.containsKey("purchaseTarget"), scope);
+            if ("activity-owner".equals(scope)) {
+                verify(clubMemberService, never()).selectByClubAndMember(any(), any());
+            }
+        }
+    }
+
+    @Test
+    void ticketCannotOfferARecoveryForOtherAdmissionBlockers() {
+        for (String blocked : Arrays.asList("full", "review", "blocked", "rejected", "already-joined", "paid")) {
+            setUp();
+            PlayTeam team = purchaseInvite();
+            if ("full".equals(blocked)) team.setStatus(PlayTeam.STATUS_LOCKED);
+            if ("review".equals(blocked)) when(teamMapper.countOpenReports(TEAM_ID)).thenReturn(1);
+            if ("blocked".equals(blocked)) when(blockMapper.existsBetween(LEADER_ID, MEMBER_ID)).thenReturn(1);
+            if ("rejected".equals(blocked)) {
+                PlayTeamMember row = member(MEMBER_ID, 0);
+                row.setStatus(PlayTeamMember.STATUS_REJECTED);
+                when(teamMapper.selectMemberRow(TEAM_ID, MEMBER_ID)).thenReturn(row);
+            }
+            if ("already-joined".equals(blocked)) {
+                when(teamMapper.selectActiveMember(TEAM_ID, MEMBER_ID)).thenReturn(member(MEMBER_ID, 0));
+            }
+            if ("paid".equals(blocked)) when(teamMapper.hasPaidRegistration(MEMBER_ID, 2, ACTIVITY_ID)).thenReturn(1);
+            assertNoPurchaseTarget(MEMBER_ID);
+            verify(cmsActivityMapper, never()).selectPublicCmsActivityById(any());
+        }
+    }
+
+    @Test
+    void activityReadFailureNeverFallsBackToAPurchaseTargetOrChangesJoinAuthority() {
+        purchaseInvite();
+        when(cmsActivityService.selectCmsActivityDetailById(ACTIVITY_ID, MEMBER_ID))
+                .thenThrow(new IllegalStateException("activity read unavailable"));
+        assertThrows(IllegalStateException.class, () -> service.info(null, "purchase-invite", MEMBER_ID));
+        IPlayTeamService.TeamRejection refused = assertThrows(IPlayTeamService.TeamRejection.class, () -> service.join("purchase-invite", MEMBER_ID));
+        assertEquals("TICKET_REQUIRED", refused.getErrorCode());
+        verify(teamMapper, never()).reserveSlot(any());
+    }
+
+    private PlayTeam purchaseInvite() {
+        PlayTeam team = team(4, 1, PlayTeam.STATUS_RECRUITING);
+        team.setInviteCode("purchase-invite");
+        when(teamMapper.selectPlayTeamByInviteCode("purchase-invite")).thenReturn(team);
+        CmsActivity activity = new CmsActivity();
+        activity.setId(ACTIVITY_ID);
+        when(cmsActivityMapper.selectPublicCmsActivityById(ACTIVITY_ID)).thenReturn(activity);
+        when(cmsActivityService.selectCmsActivityDetailById(ACTIVITY_ID, MEMBER_ID)).thenReturn(activity);
+        return team;
+    }
+
+    private void assertNoPurchaseTarget(Long viewerId) {
+        Map<?, ?> viewer = (Map<?, ?>) service.info(null, "purchase-invite", viewerId).get("viewer");
+        assertEquals(false, viewer.containsKey("purchaseTarget"));
     }
 
     // ---------- helpers ----------

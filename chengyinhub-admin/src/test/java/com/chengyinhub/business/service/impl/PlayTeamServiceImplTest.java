@@ -10,6 +10,8 @@ import com.chengyinhub.business.mapper.CmsTopicMapper;
 import com.chengyinhub.business.mapper.ImBlockMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.service.ICmsActivityService;
+import com.chengyinhub.business.service.IClubMemberService;
 import com.chengyinhub.business.service.INotifyService;
 import com.chengyinhub.business.service.IPlayTeamService;
 import com.chengyinhub.business.service.IUmsMemberService;
@@ -62,6 +64,8 @@ class PlayTeamServiceImplTest {
         ReflectionTestUtils.setField(service, "teamMapper", teamMapper);
         ReflectionTestUtils.setField(service, "blockMapper", blockMapper);
         ReflectionTestUtils.setField(service, "imService", imService);
+        ReflectionTestUtils.setField(service, "cmsActivityService", mock(ICmsActivityService.class));
+        ReflectionTestUtils.setField(service, "clubMemberService", mock(IClubMemberService.class));
         ReflectionTestUtils.setField(service, "notifyService", notifyService);
         umsMemberService = mock(IUmsMemberService.class);
         wxContentSecurityService = mock(IWxContentSecurityService.class);

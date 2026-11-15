@@ -13,6 +13,9 @@ import com.chengyinhub.business.mapper.ImBlockMapper;
 import com.chengyinhub.business.mapper.PlayTeamMapper;
 import com.chengyinhub.business.service.IAuditTaskService;
 import com.chengyinhub.business.service.IImService;
+import com.chengyinhub.business.service.ICmsActivityService;
+import com.chengyinhub.business.service.IClubMemberService;
+import com.chengyinhub.common.utils.OwnershipUtils;
 import com.chengyinhub.business.service.INotifyService;
 import com.chengyinhub.business.service.IPlayTeamService;
 import com.chengyinhub.business.service.IPlayerWxacodeService;
@@ -53,6 +56,10 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
     private ImBlockMapper blockMapper;
     @Autowired
     private CmsActivityMapper cmsActivityMapper;
+    @Autowired
+    private ICmsActivityService cmsActivityService;
+    @Autowired
+    private IClubMemberService clubMemberService;
     @Autowired
     private CmsTopicMapper cmsTopicMapper;
     @Autowired
@@ -593,7 +600,30 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         viewer.put("canJoinWithCode", blockers.get("join").isEmpty());
         viewer.put("applyBlockers", blockers.get("apply"));
         viewer.put("joinBlockers", blockers.get("join"));
+        if (signedIn && !joined && Integer.valueOf(2).equals(team.getOwnerType())
+                && team.getOwnerId() != null && team.getOwnerId() > 0
+                && Integer.valueOf(PlayTeam.STATUS_RECRUITING).equals(team.getStatus())
+                && inviteAvailable(team)
+                && java.util.Collections.singletonList("TICKET_REQUIRED").equals(blockers.get("join"))) {
+            Map<String, Object> target = purchaseTarget(team.getOwnerId(), viewerMemberId);
+            if (target != null) viewer.put("purchaseTarget", target);
+        }
         return viewer;
+    }
+
+    private Map<String, Object> purchaseTarget(Long activityId, Long viewerMemberId) {
+        CmsActivity published = cmsActivityMapper.selectPublicCmsActivityById(activityId);
+        if (published == null || !activityId.equals(published.getId()) || published.getCancelTime() != null) return null;
+        // 复用玩家详情读及其 club 门卡；邀请码不赋予活动查看或购买范围。
+        CmsActivity activity = cmsActivityService.selectCmsActivityDetailById(activityId, viewerMemberId);
+        if (activity == null || !activityId.equals(activity.getId()) || activity.getCancelTime() != null) return null;
+        if (activity.getClubId() != null && activity.getClubId() > 0
+                && !OwnershipUtils.isOwner(activity.getMemberId(), viewerMemberId)
+                && clubMemberService.selectByClubAndMember(activity.getClubId(), viewerMemberId) == null) return null;
+        Map<String, Object> target = new LinkedHashMap<>();
+        target.put("ownerType", 2);
+        target.put("ownerId", activity.getId());
+        return target;
     }
 
     /**
