@@ -1,6 +1,7 @@
 package com.chengyinhub.business.modcommerce.mapper;
 
 import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
@@ -22,23 +23,28 @@ public interface ModCommerceMapper {
             + " v.seller_id, v.module_id, v.content_hash, v.content_json, v.terms_hash, v.terms_json, v.review_state";
 
     /** On sale: enabled offer of an approved release, newest first; {@code before} is an offer row id. */
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select " + OFFER_COLUMNS + " from mod_commerce_offer o join workshop_version v on v.version_id = o.version_id"
             + " where o.enabled = 1 and v.review_state = 'APPROVED' and o.market = #{market} and o.id < #{before}"
             + " order by o.id desc limit #{limit}")
     List<Map<String, Object>> onSale(@Param("market") String market, @Param("before") long before, @Param("limit") int limit);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select " + OFFER_COLUMNS + " from mod_commerce_offer o join workshop_version v on v.version_id = o.version_id"
             + " where o.offer_id = #{offerId}")
     Map<String, Object> offer(@Param("offerId") String offerId);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select " + OFFER_COLUMNS + " from mod_commerce_offer o join workshop_version v on v.version_id = o.version_id"
             + " where o.product_id = #{productId}")
     Map<String, Object> offerByProduct(@Param("productId") String productId);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select " + OFFER_COLUMNS + " from mod_commerce_offer o join workshop_version v on v.version_id = o.version_id"
             + " order by o.id desc limit 500")
     List<Map<String, Object>> adminOffers();
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select version_id, seller_id, module_id, content_hash, content_json, terms_hash, terms_json, review_state"
             + " from workshop_version where version_id = #{versionId}")
     Map<String, Object> version(@Param("versionId") String versionId);
@@ -69,16 +75,20 @@ public interface ModCommerceMapper {
     int insertCommerceOrder(Map<String, Object> row);
 
     /** The payment / license row. Locked first, always, so every writer serialises on the same row. */
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select * from workshop_order where order_no = #{orderNo} for update")
     Map<String, Object> lockWorkshopOrder(@Param("orderNo") String orderNo);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select * from mod_commerce_order where order_no = #{orderNo}")
     Map<String, Object> commerceOrder(@Param("orderNo") String orderNo);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select * from mod_commerce_order where member_id = #{member} and request_id = #{requestId}")
     Map<String, Object> commerceOrderByRequest(@Param("member") long member, @Param("requestId") String requestId);
 
     /** A buyer's earlier, still meaningful order for the same release (a non-consumable is bought once). */
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select w.order_no from workshop_order w join mod_commerce_order c on c.order_no = w.order_no"
             + " where w.buyer_id = #{member} and w.version_id = #{versionId} and w.provider = 'APPLE_IAP'"
             + " and (w.state = 'PAID' or (w.state = 'PENDING' and c.client_state <> 'CANCELLED'))"
@@ -86,10 +96,12 @@ public interface ModCommerceMapper {
             + " limit 1")
     String earlierOrder(@Param("member") long member, @Param("versionId") String versionId);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select w.order_no from workshop_order w join mod_commerce_order c on c.order_no = w.order_no"
             + " where w.provider = 'APPLE_IAP' and w.app_account_token = #{token}")
     String orderByToken(@Param("token") String token);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select w.order_no from workshop_order w join mod_commerce_order c on c.order_no = w.order_no"
             + " where w.provider = 'APPLE_IAP' and w.apple_original_transaction_id = #{originalId}")
     String orderByOriginal(@Param("originalId") String originalId);
@@ -134,16 +146,20 @@ public interface ModCommerceMapper {
             + " where order_no = #{orderNo} and provider = 'APPLE_IAP' and state <> 'REFUNDED'")
     int revoke(Map<String, Object> row);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select w.* from workshop_order w join mod_commerce_order c on c.order_no = w.order_no"
             + " where w.buyer_id = #{member} and w.paid_at is not null and w.id < #{before} order by w.id desc limit #{limit}")
     List<Map<String, Object>> licenses(@Param("member") long member, @Param("before") long before, @Param("limit") int limit);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select id from workshop_order where order_no = #{orderNo} and buyer_id = #{member}")
     Long orderRowId(@Param("orderNo") String orderNo, @Param("member") long member);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select id from mod_commerce_offer where offer_id = #{offerId}")
     Long offerRowId(@Param("offerId") String offerId);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select count(*) from workshop_install where order_no = #{orderNo} and draft_id is not null")
     long installations(@Param("orderNo") String orderNo);
 
@@ -157,6 +173,7 @@ public interface ModCommerceMapper {
     int insertNotification(@Param("uuid") String uuid, @Param("type") String type, @Param("subtype") String subtype,
                            @Param("transactionId") String transactionId, @Param("hash") String hash);
 
+    @Options(useCache = false, flushCache = Options.FlushCachePolicy.TRUE)
     @Select("select * from mod_commerce_apple_notification where notification_uuid = #{uuid} for update")
     Map<String, Object> lockNotification(@Param("uuid") String uuid);
 
