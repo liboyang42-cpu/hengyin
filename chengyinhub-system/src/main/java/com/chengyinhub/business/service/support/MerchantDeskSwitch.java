@@ -19,12 +19,28 @@ public class MerchantDeskSwitch {
      */
     public static final String PRODUCTS_KEY = "feature.flag.merchantDeskProducts";
 
+    /**
+     * Q1 merchant-reach(owner 2026-11-15):商家非资金写入的唯一开关,与 /api/config/features 下发给 App 的
+     * merchantNonMoney 同一 sys_config 键。打开时工作台(今日到店/核销台/对账只读)随之打开;
+     * 商品与价格写入仍只认 {@link #PRODUCTS_KEY},资金写入仍只认资金开关。
+     */
+    public static final String NON_MONEY_KEY = "feature.flag.merchantNonMoney";
+
     @Autowired private ISysConfigService configService;
 
     public boolean isEnabled() {
         try {
             String value = configService.selectConfigByKey(CONFIG_KEY);
-            return value != null && "true".equalsIgnoreCase(value.trim());
+            if (value != null && "true".equalsIgnoreCase(value.trim())) return true;
+        } catch (Exception ignored) {
+            // fall through to the non-money switch
+        }
+        return nonMoneyEnabled();
+    }
+
+    public boolean nonMoneyEnabled() {
+        try {
+            return ComplianceFeatureSwitches.flagOn(configService.selectConfigByKey(NON_MONEY_KEY));
         } catch (Exception ignored) {
             return false;
         }
