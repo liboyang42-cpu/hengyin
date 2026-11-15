@@ -36,9 +36,20 @@ public interface RoamMapper {
      *  memberId 用于投影 found(该账号是否已发现过,roam_poi_found / roam_poi_reward_log);
      *  口径与 cityNodeContentApproved 一致 —— 未过审的商家投放不进玩家图层。 */
     /** 包围盒内在架 POI,按到包围盒中心由近到远排序,最多 limit 条(大半径不再整盒全量返回)。 */
-    List<RoamPoi> selectPoisNear(@Param("minLat") double minLat, @Param("maxLat") double maxLat,
-                                 @Param("minLng") double minLng, @Param("maxLng") double maxLng,
-                                 @Param("memberId") Long memberId, @Param("limit") int limit);
+    default List<RoamPoi> selectPoisNear(double minLat, double maxLat, double minLng, double maxLng,
+                                         Long memberId, int limit) {
+        return selectPoisNearFiltered(minLat, maxLat, minLng, maxLng, memberId, limit, null, null, null);
+    }
+
+    /**
+     * R1 MKT-08: the same player read with optional keyword (place or merchant name), merchant category and tag.
+     * Null filters leave the result unchanged. Filters only narrow; nothing paid changes order or inclusion.
+     */
+    List<RoamPoi> selectPoisNearFiltered(@Param("minLat") double minLat, @Param("maxLat") double maxLat,
+                                         @Param("minLng") double minLng, @Param("maxLng") double maxLng,
+                                         @Param("memberId") Long memberId, @Param("limit") int limit,
+                                         @Param("keyword") String keyword, @Param("categoryId") Long categoryId,
+                                         @Param("tag") String tag);
 
     List<RoamPoi> selectPoisByIds(@Param("ids") List<Long> ids);
 

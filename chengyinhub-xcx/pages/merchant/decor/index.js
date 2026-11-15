@@ -118,6 +118,17 @@ function readBackBusinessStatus(expected, success) {
   });
 }
 
+const TIERS = [
+  { key: 'premium_template', name: '高级模板', desc: '行业高级视觉 · 更多图位' },
+  { key: 'promotion_slot', name: '推广曝光位', desc: '地图/搜索/官方活动优先展示' },
+  { key: 'brand_home', name: '品牌主页', desc: '定制视觉 · 官方认证 · 数据报告' },
+  { key: 'custom_event', name: '活动定制', desc: '人工策划 · 定制路线与权益组合' }
+];
+// R1 MKT-01:推广曝光位下架后不在可开通列表出现,已有授予记录仍用 TIERS 取名。
+function saleTiersOf(tiers, promotionSlotOnSale) {
+  return tiers.filter(t => promotionSlotOnSale === true || t.key !== 'promotion_slot');
+}
+
 Page({
   data: {
     view: 'home', basicEditing: false, pageTitle: '品牌中心',
@@ -178,12 +189,11 @@ Page({
     checkoutState: 'idle', // idle | submitting | paying | verifying | unknown | success | failed
     featuredState: 'idle',  // idle | loading | ready | error
     featuredError: '',
-    tiers: [
-      { key: 'premium_template', name: '高级模板', desc: '行业高级视觉 · 更多图位' },
-      { key: 'promotion_slot', name: '推广曝光位', desc: '地图/搜索/官方活动优先展示' },
-      { key: 'brand_home', name: '品牌主页', desc: '定制视觉 · 官方认证 · 数据报告' },
-      { key: 'custom_event', name: '活动定制', desc: '人工策划 · 定制路线与权益组合' }
-    ]
+    tiers: TIERS,
+    // R1 MKT-01:推广曝光位下架(merchant.promotionSlot.onSale 默认 false)。tiers 保留全量用于给
+    // 已有授予记录起名;可开通列表只渲染 saleTiers。服务端开关读不到时按下架处理。
+    promotionSlotOnSale: false,
+    saleTiers: saleTiersOf(TIERS, false)
   },
 
   // 页内隐私弹窗:没有它 app.js 会回退到 navigateTo(/pages/privacy/index),
@@ -572,10 +582,19 @@ Page({
       this.setData({ capabilityState: typeof enabled === 'boolean' ? 'ready' : 'error',
         chargeEnabled: typeof enabled === 'boolean' ? enabled : null });
     };
+    const applySale = (onSale) => {
+      if (!this._commerceCurrent(scope) || epoch !== this._capabilityEpoch) return;
+      const promotionSlotOnSale = onSale === true;
+      this.setData({ promotionSlotOnSale,
+        saleTiers: saleTiersOf(this.data.tiers, promotionSlotOnSale) });
+    };
     app.sendRequest({
       hideLoading: true, autoErrorToast: false,
       url: '/api/merchant/commerce/capabilities', method: 'POST',
-      success(res) { finish(res && res.code == 200 && res.data ? res.data.selfCheckoutEnabled : null); },
+      success(res) {
+        applySale(res && res.code == 200 && res.data ? res.data.promotionSlotOnSale : false);
+        finish(res && res.code == 200 && res.data ? res.data.selfCheckoutEnabled : null);
+      },
       successStatusAbnormal() { finish(null); }, fail() { finish(null); }
     });
     this.loadActiveSubs();
@@ -708,6 +727,7 @@ Page({
   },
   tapTier(e) {
     const bizType = e.currentTarget.dataset.key;
+    if (bizType === 'promotion_slot' && !this.data.promotionSlotOnSale) { toast('推广曝光位已下架'); return; }
     if (bizType !== 'brand_home' && this._capabilityScope !== this._commerceScope()) { this.loadSubs(); return; }
     if (bizType !== 'brand_home' && this.data.capabilityState !== 'ready') {
       toast(this.data.capabilityState === 'loading' ? '开通能力读取中' : '开通能力读取失败，请重试');

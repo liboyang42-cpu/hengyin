@@ -159,9 +159,14 @@ public class ApiRoamController extends BaseController {
     /** /pois 单次最多返回的点数(由近到远截断);地图一屏画不下更多,也不做整城导出口。 */
     static final int POIS_NEAR_LIMIT = 500;
 
-    @Operation(summary = "附近 POI(经纬度包围盒粗筛)")
-    @GetMapping("/pois")
+    /** 原三参入口(内部与测试调用);等价于不带筛选。 */
     public AjaxResult pois(Double lat, Double lng, Integer radius) {
+        return pois(lat, lng, radius, null, null, null);
+    }
+
+    @Operation(summary = "附近 POI(经纬度包围盒粗筛;R1 可选关键词/行业/标签收窄)")
+    @GetMapping("/pois")
+    public AjaxResult pois(Double lat, Double lng, Integer radius, String keyword, Long categoryId, String tag) {
         if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
         if (!validLat(lat) || !validLng(lng)) return refuse(ErrorCode.LOCATION_INVALID, "定位无效");
         // 走查 P-38(业主):附近地图「全部」= 所有距离;结果仍按距离由近到远截断条数,半径上限只防坐标溢出(POIS_NEAR_LIMIT)。
@@ -169,7 +174,14 @@ public class ApiRoamController extends BaseController {
         double dLat = r / 111320.0;
         double dLng = r / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(lat))));
         // C-13:found 是「这个账号已发现过」的服务端事实(按会员投影),换设备/清缓存不再回到迷雾。
-        List<RoamPoi> list = roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT);
+        // R1 MKT-08:关键词/行业/标签只做收窄;都不传时走原查询,结果与改动前一致。
+        String kw = boundedFilter(keyword, 40);
+        String tg = boundedFilter(tag, 20);
+        Long cat = categoryId != null && categoryId > 0 ? categoryId : null;
+        List<RoamPoi> list = kw == null && tg == null && cat == null
+                ? roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT)
+                : roamMapper.selectPoisNearFiltered(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT,
+                        kw, cat, tg);
         return success(list);
     }
 
@@ -1115,6 +1127,15 @@ public class ApiRoamController extends BaseController {
     }
 
     // ---------- 纯逻辑(单测友好) ----------
+
+    /** R1 MKT-08:筛选词去空白、截长;空串视为不筛。LIKE 通配符按字面匹配。 */
+    static String boundedFilter(String value, int maxLength) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) return null;
+        if (trimmed.length() > maxLength) trimmed = trimmed.substring(0, maxLength);
+        return trimmed.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+    }
 
     /**
      * 格子探索值(套今日 200 上限):tilesToday=今日累计新格(含本次),sessionTiles=本会话新格。

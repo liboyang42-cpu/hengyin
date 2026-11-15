@@ -139,7 +139,7 @@ test('CU-M-54 待核销 marker 保持统一状态图标,不换成店头形象(�
 
 test('CU-M-54 后端投影:pois 查询带出 pending_redeem,不改表也不改写入路径', () => {
   const xml = read('../chengyinhub-system/src/main/resources/mapper/business/RoamMapper.xml')
-  const select = xml.slice(xml.indexOf('id="selectPoisNear"'), xml.indexOf('id="selectPoisByIds"'))
+  const select = xml.slice(xml.indexOf('id="selectPoisNearFiltered"'), xml.indexOf('id="selectPoisByIds"'))
   assert.match(select, /r\.status = 0 and r\.coupon_id > 0\)\) as pending_redeem/)
   const entity = read('../chengyinhub-system/src/main/java/com/chengyinhub/business/domain/RoamPoi.java')
   assert.match(entity, /private Boolean pendingRedeem;/)

@@ -410,6 +410,13 @@ public class ApiMerchantController extends BaseController {
         // 商家在装修页看到"发布后即可选一个置顶到主页",公开主页却什么都不显示。
         // 归属与公开状态每次匿名读取都重新核验,保存时合法不代表此刻仍公开。
         vo.setFeatured(resolvePublicFeatured(m));
+        // R1 storefront:已上架商品与价格。读不到就留 null,主页其余部分照常。
+        try {
+            vo.setStorefront(storefrontService.storefront(m.getId()));
+        } catch (Exception e) {
+            logger.warn("[merchant/public-home] storefront read failed, merchantId={}, errorType={}",
+                    m.getId(), e.getClass().getName());
+        }
         // 门店 AI 形象:取不到就留 null,主页整块不渲染。不能因为形象查询出错就把整个主页判失败。
         try {
             vo.setNpc(npcProfileService.resolveForMerchant(m.getId()));
@@ -445,6 +452,9 @@ public class ApiMerchantController extends BaseController {
 
     @Autowired
     private com.chengyinhub.business.service.IPlayerWxacodeService playerWxacodeService;
+
+    @Autowired
+    private com.chengyinhub.business.marketplace.MarketplaceStorefrontService storefrontService;
 
     /** 公开可见 = 审核通过 && 账号启用 && 未删除。未知值一律失败关闭。 */
     private boolean isPubliclyVisible(MmsMerchant m) {
