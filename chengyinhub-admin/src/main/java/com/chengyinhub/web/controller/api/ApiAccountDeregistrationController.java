@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.account.apple.AppleIdentityReconfirmationService;
+import com.chengyinhub.business.account.apple.AppleTokenRevocationService;
 import com.chengyinhub.business.service.IAccountDeregistrationService;
 import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.business.service.IUmsMemberService;
@@ -45,6 +47,11 @@ public class ApiAccountDeregistrationController extends BaseController {
     private ComplianceProperties complianceProperties;
     @Autowired
     private com.chengyinhub.business.appgaps.DeregistrationResultService deregistrationResultService;
+    /** FLOW-03: Apple-only accounts (no phone, no WeChat openid) confirm deletion with a fresh Sign in with Apple. */
+    @Autowired(required = false)
+    private AppleIdentityReconfirmationService appleReconfirmationService;
+    @Autowired(required = false)
+    private AppleTokenRevocationService appleTokenRevocationService;
 
     @Operation(summary = "注销前置条件检查")
     @PostMapping("/precheck")
@@ -56,7 +63,8 @@ public class ApiAccountDeregistrationController extends BaseController {
 
     @Operation(summary = "提交账号注销申请")
     @PostMapping("/apply")
-    public AjaxResult apply(String smscode, String wxcode, String requestId, HttpServletRequest request) {
+    public AjaxResult apply(String smscode, String wxcode, String appleIdentityToken, String appleAuthorizationCode,
+                            String requestId, HttpServletRequest request) {
         Long memberId = currentMemberId();
         if (memberId == null) return error("请先登录");
         ConsentRecord latestConsent = consentRecordService.latest(memberId,
@@ -79,9 +87,21 @@ public class ApiAccountDeregistrationController extends BaseController {
             return success(existing);
         }
         String trustedIp = TrustedProxyIpResolver.resolve(request);
+        boolean appleConfirmed = false;
         if (member.getPhone() != null && !member.getPhone().trim().isEmpty()) {
-            // A supplied WeChat code cannot bypass the bound-phone SMS check.
+            // A supplied WeChat code or Apple token cannot bypass the bound-phone SMS check.
             if (!smsVerificationService.verify(member.getPhone(), smscode, trustedIp)) return error("验证码输入有误");
+        } else if (isAppleOnly(member)) {
+            // FLOW-03: no phone and no WeChat openid, so the only owner proof is a fresh Sign in with Apple.
+            AppleIdentityReconfirmationService.Result apple = appleReconfirmationService.verify(
+                    memberId, member.getAppleId(), appleIdentityToken, trustedIp);
+            if (apple == AppleIdentityReconfirmationService.Result.UNAVAILABLE) {
+                return error("Apple 身份确认暂时不可用，请稍后重试");
+            }
+            if (apple != AppleIdentityReconfirmationService.Result.CONFIRMED) {
+                return error("Apple 身份确认失败，请重新确认本人");
+            }
+            appleConfirmed = true;
         } else if (!wechatReconfirmationService.verify(memberId, member.getWxOpenId(), wxcode, trustedIp)) {
             return error("微信身份确认失败，请重新确认本人");
         }
@@ -89,13 +109,28 @@ public class ApiAccountDeregistrationController extends BaseController {
         if (applied != null && "PENDING".equals(applied.getStatus())) {
             // Apply revokes every session; the token is the only way to read the result afterwards.
             applied.setResultToken(deregistrationResultService.issue(memberId, requestId));
+            if (appleConfirmed && appleTokenRevocationService != null) {
+                // Best effort: exchange the code now (it expires in 5 minutes) so the token can be revoked on erasure.
+                appleTokenRevocationService.prepare(memberId, appleAuthorizationCode);
+            }
         }
         return success(applied);
     }
 
-    /** Existing Java callers use the SMS-only signature; only the four-argument method is HTTP mapped. */
+    /** The WeChat-or-SMS signature used by existing Java callers and tests; only the six-argument method is HTTP mapped. */
+    public AjaxResult apply(String smscode, String wxcode, String requestId, HttpServletRequest request) {
+        return apply(smscode, wxcode, null, null, requestId, request);
+    }
+
+    /** Existing Java callers use the SMS-only signature; only the six-argument method is HTTP mapped. */
     public AjaxResult apply(String smscode, String requestId, HttpServletRequest request) {
-        return apply(smscode, null, requestId, request);
+        return apply(smscode, null, null, null, requestId, request);
+    }
+
+    private boolean isAppleOnly(UmsMember member) {
+        return appleReconfirmationService != null
+                && (member.getWxOpenId() == null || member.getWxOpenId().trim().isEmpty())
+                && member.getAppleId() != null && !member.getAppleId().trim().isEmpty();
     }
 
     @Operation(summary = "撤销冷静期内的注销申请")
@@ -104,7 +139,9 @@ public class ApiAccountDeregistrationController extends BaseController {
         Long memberId = currentMemberId();
         if (memberId == null) return error("请先登录");
         try {
-            return success(deregistrationService.cancel(memberId));
+            DeregistrationStatusVO cancelled = deregistrationService.cancel(memberId);
+            if (appleTokenRevocationService != null) appleTokenRevocationService.discard(memberId);
+            return success(cancelled);
         } catch (IllegalStateException e) {
             return error(e.getMessage());
         }

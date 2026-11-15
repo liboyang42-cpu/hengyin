@@ -73,6 +73,9 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
     private com.chengyinhub.business.service.IRoamHangoutService roamHangoutService;
     @Autowired
     private IImService imService;
+    /** FLOW-03: revoke Sign in with Apple tokens after erasure; optional so older tests can build the service bare. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.account.apple.AppleTokenRevocationService appleTokenRevocationService;
 
     @Override
     public DeregistrationStatusVO precheck(Long memberId) {
@@ -85,7 +88,8 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
         if ("ELIGIBLE".equals(precheck.getStatus())) {
             precheck.setVerificationMethod(member.getPhone() != null && !member.getPhone().trim().isEmpty()
                     ? "SMS" : member.getWxOpenId() != null && !member.getWxOpenId().trim().isEmpty()
-                    ? "WECHAT" : "UNAVAILABLE");
+                    ? "WECHAT" : member.getAppleId() != null && !member.getAppleId().trim().isEmpty()
+                    ? "APPLE" : "UNAVAILABLE");
         }
         return precheck;
     }
@@ -211,6 +215,7 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
                 Boolean done = tx.execute(s -> executeOne(deregistration, now, failedMembers));
                 if (Boolean.TRUE.equals(done)) {
                     completed++;
+                    revokeAppleTokens(deregistration.getMemberId());
                 }
             } catch (Exception e) {
                 CriticalPathEvents.failure(CriticalPathCode.CP_DEREGISTRATION_FAILED, "execute", e);
@@ -266,6 +271,16 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
                     + " member=" + deregistration.getMemberId()
                     + " cause=" + fallbackFailure.getClass().getSimpleName());
             return false;
+        }
+    }
+
+    /** FLOW-03: after the erasure committed, revoke the member's Apple tokens. Never fails the deletion. */
+    private void revokeAppleTokens(Long memberId) {
+        if (appleTokenRevocationService == null) return;
+        try {
+            appleTokenRevocationService.revokeAfterDeletion(memberId);
+        } catch (RuntimeException ignored) {
+            // revokeAfterDeletion already logs and records; erasure is complete either way
         }
     }
 
