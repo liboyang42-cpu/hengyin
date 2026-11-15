@@ -49,6 +49,8 @@ public class ApiComplianceController extends BaseController {
         // 对不上时 isAllowedScene 返回 false ⇒ 接口报「协议类型或场景不合法」⇒ 小程序侧
         // .catch 只弹一句网络提示,提现根本不会提交(三个入口全废,且看不出真因)。
         scenes.put("bank_account_collection", setOf("withdrawal"));
+        // P1b SEC-15:首次漫游前的出行安全提示(交通、周边环境、私人场所、夜间),按账号记一次「已读知悉」。
+        scenes.put("walk_safety_notice", setOf("walk_start"));
         DOCUMENT_SCENES = Collections.unmodifiableMap(scenes);
     }
 

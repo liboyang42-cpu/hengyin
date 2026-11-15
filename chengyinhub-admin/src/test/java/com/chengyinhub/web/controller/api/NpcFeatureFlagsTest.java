@@ -108,7 +108,9 @@ class NpcFeatureFlagsTest {
                         // R11 p1 F-7:小程序设置页「发票」与参与详情「自由探索权益」入口读这两个键
                         "userInvoice", "freeExploreBundle",
                         // P0-14:「关于」页与 AI 生成入口的算法备案号公示位(字符串,未配置为空串)
-                        "aigcFilingNo")),
+                        "aigcFilingNo",
+                        // P1b SEC-16 / SEC-13 / SEC-14:App 备案号、客服联系方式、年龄政策
+                        "appFilingNo", "supportContact", "agePolicy")),
                 new java.util.TreeSet<>(data.keySet()),
                 "下发键集合必须与小程序/App 的受控功能键逐项一致");
         assertFalse(data.containsKey("selfPlay"), "无人读取的假开关不得再下发(X09)");
@@ -118,6 +120,9 @@ class NpcFeatureFlagsTest {
         assertEquals(false, data.get("merchantDeskProducts"), "D2:商家工作台商品与履约必须默认关闭");
         assertEquals(true, data.get("finishNearbyRoute"), "配置明确为 true 时必须能开启完赛推荐灰度");
         assertEquals("", data.get("aigcFilingNo"), "备案号未配置时下发空串,小程序不显示");
+        assertEquals("", data.get("appFilingNo"), "App 备案号未配置时下发空串,App 不显示备案行");
+        assertEquals("", data.get("supportContact"), "客服联系方式未配置时下发空串");
+        assertEquals("adults", data.get("agePolicy"), "年龄政策缺省为 adults");
     }
 
     @Test
@@ -222,5 +227,24 @@ class NpcFeatureFlagsTest {
         assertEquals("网信算备110000000000000000001号", c.aigcFilingNo());
         when(configService.selectConfigByKey("aigc.algorithm.filing-no")).thenThrow(new IllegalStateException("redis down"));
         assertEquals("", c.aigcFilingNo());
+    }
+
+    @Test
+    void storeSafetySettings_readFromSysConfigAndNeverInvented() {
+        ApiConfigController c = new ApiConfigController();
+        ReflectionTestUtils.setField(c, "configService", configService);
+        when(configService.selectConfigByKey("app.filing.icp-no")).thenReturn("  陕ICP备00000000号-1A ");
+        when(configService.selectConfigByKey("app.support.contact")).thenReturn(" support@example.invalid ");
+        assertEquals("陕ICP备00000000号-1A", c.configText(ApiConfigController.APP_FILING_NO_KEY, 64));
+        assertEquals("support@example.invalid", c.configText(ApiConfigController.SUPPORT_CONTACT_KEY, 128));
+        when(configService.selectConfigByKey("app.filing.icp-no")).thenThrow(new IllegalStateException("redis down"));
+        assertEquals("", c.configText(ApiConfigController.APP_FILING_NO_KEY, 64), "读失败不显示备案号,也不编造");
+
+        when(configService.selectConfigByKey("app.agePolicy")).thenReturn(" Guardian ");
+        assertEquals("guardian", c.agePolicy());
+        when(configService.selectConfigByKey("app.agePolicy")).thenReturn("kids");
+        assertEquals("adults", c.agePolicy(), "未知值按最保守的 adults");
+        when(configService.selectConfigByKey("app.agePolicy")).thenReturn(null);
+        assertEquals("adults", c.agePolicy());
     }
 }

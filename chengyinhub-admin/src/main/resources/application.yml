@@ -292,6 +292,7 @@ compliance:
     activity_host_data_sharing: v2.1   # 报名向主办方提供信息的单独同意
     merchant_onsite_data_sharing: v1.0 # 探店日按单店授权姓名/手机号
     bank_account_collection: v1.0      # 提现向城瘾提供持卡人姓名/银行账号/预留手机号
+    walk_safety_notice: v1.0           # P1b SEC-15:首次漫游前的出行安全提示(按账号记一次)
 
 # E4 商业化先做能力，不开放自助收银台。价格/分成/次数/有效期均由 settlement_rule 配置。
 merchant:
