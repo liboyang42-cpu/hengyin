@@ -72,3 +72,25 @@ export function listWebhookDeliveries(query) {
 export function redriveWebhookDelivery(deliveryId) {
   return request({ url: '/business/im-webhook/deliveries/' + encodeURIComponent(deliveryId) + '/redrive', method: 'post', ...raw })
 }
+
+// ---- External game monetization / split / traffic settlements (/business/external-game/monetization) ----
+
+export function listExternalGameMonetization(query) {
+  return request({ url: '/business/external-game/monetization/list', method: 'get', params: query, ...raw })
+}
+
+export function reviewExternalGameMonetization(gameId, data) {
+  return request({ url: '/business/external-game/monetization/' + encodeURIComponent(gameId) + '/review', method: 'post', data, ...raw })
+}
+
+export function updateExternalGameMonetizationConfig(gameId, data) {
+  return request({ url: '/business/external-game/monetization/' + encodeURIComponent(gameId) + '/config', method: 'put', data, ...raw })
+}
+
+export function listExternalGameSettlements(query) {
+  return request({ url: '/business/external-game/monetization/settlements', method: 'get', params: query, ...raw })
+}
+
+export function triggerExternalGameSettlement(data) {
+  return request({ url: '/business/external-game/monetization/settle', method: 'post', data, ...raw })
+}
