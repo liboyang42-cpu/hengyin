@@ -245,6 +245,40 @@ public class PushFanoutService implements IPushFanoutService
         return reminderFallback.tryAcquire(memberId, "event-" + ticketId);
     }
 
+    // ================================================================ R11 growth-loops: single-member notices
+
+    @Override
+    public int notifyMemberNow(long memberId, MemberNotice notice)
+    {
+        if (memberId <= 0 || notice == null || !sender.configured()) return 0;
+        if (!PushPolicy.noticeAllowed(mapper.selectPref(memberId, 4, memberId), null)) return 0;
+        List<PushDevice> devices = devicesByMember(List.of(memberId)).get(memberId);
+        if (devices == null) return 0;
+        int accepted = 0;
+        for (PushDevice device : devices)
+            accepted += deliver(List.of(device), notice.message(device.english()), notice.ttlSeconds());
+        return accepted;
+    }
+
+    @Override
+    public void notifyMemberAfterCommit(long memberId, MemberNotice notice)
+    {
+        if (memberId <= 0 || notice == null || !sender.configured()) return;
+        afterCommit(() ->
+        {
+            if (!collapse.tryAcquire(memberId, notice.threadId())) return;
+            notifyMemberNow(memberId, notice);
+        });
+    }
+
+    @Override
+    public boolean hasPushableDevice(long memberId)
+    {
+        if (memberId <= 0 || !sender.configured()) return false;
+        List<PushDevice> devices = devicesByMember(List.of(memberId)).get(memberId);
+        return devices != null && !devices.isEmpty();
+    }
+
     // ================================================================ plumbing
 
     private Map<Long, List<PushDevice>> devicesByMember(java.util.Collection<Long> members)
