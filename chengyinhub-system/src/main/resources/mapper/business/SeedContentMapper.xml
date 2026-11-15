@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- Q3 seed-tools. Admin-only reads and draft writes; nothing here is used by player endpoints. -->
+<mapper namespace="com.chengyinhub.business.mapper.SeedContentMapper">
+
+    <resultMap id="SeedPlaceResult" type="com.chengyinhub.business.domain.dto.seed.SeedPlace">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="category" column="category"/>
+        <result property="lat" column="lat"/>
+        <result property="lng" column="lng"/>
+        <result property="address" column="address"/>
+        <result property="coverImg" column="cover_img"/>
+        <result property="galleryJson" column="gallery_json"/>
+        <result property="tags" column="tags"/>
+        <result property="openingHours" column="opening_hours"/>
+        <result property="description" column="description"/>
+        <result property="cityCode" column="city_code"/>
+        <result property="status" column="status"/>
+        <result property="auditStatus" column="audit_status"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="templateId" column="template_id"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="SeedGeoPointResult" type="com.chengyinhub.business.domain.dto.seed.SeedGeoPoint">
+        <result property="id" column="id"/>
+        <result property="key" column="point_key"/>
+        <result property="lat" column="lat"/>
+        <result property="lng" column="lng"/>
+        <result property="flag1" column="flag1"/>
+        <result property="flag2" column="flag2"/>
+    </resultMap>
+
+    <select id="selectPlacesInBox" resultMap="SeedPlaceResult" useCache="false">
+        select id, name, type, lat, lng, address, city_code, status, audit_status, merchant_id, template_id
+        from roam_poi
+        where lat between #{minLat} and #{maxLat} and lng between #{minLng} and #{maxLng}
+    </select>
+
+    <insert id="insertImportedPlace" useGeneratedKeys="true" keyProperty="id">
+        insert into roam_poi (name, type, lat, lng, radius_m, address, description, xp, city_code, status, audit_status,
+                              application_type, tags, cover_img, gallery_json, photo_required, category, opening_hours, create_time)
+        values (#{name}, 1, #{lat}, #{lng}, 80, #{address}, #{description}, 20, #{cityCode}, 0, 3,
+                3, #{tags}, #{coverImg}, #{galleryJson}, 1, #{category}, #{openingHours}, now())
+    </insert>
+
+    <select id="selectOfficialPlacesForExport" resultMap="SeedPlaceResult" useCache="false">
+        select id, name, type, category, lat, lng, address, cover_img, tags, opening_hours, description, city_code,
+               status, audit_status, template_id, create_time
+        from roam_poi
+        where type = 1 and merchant_id is null
+        <if test="cityCode != null and cityCode != ''"> and city_code = #{cityCode}</if>
+        order by id
+    </select>
+
+    <select id="selectPlacesByIds" resultMap="SeedPlaceResult" useCache="false">
+        select id, name, type, lat, lng, address, description, cover_img, city_code, status, audit_status, merchant_id, template_id
+        from roam_poi
+        where id in <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
+    <select id="selectExistingRouteNames" resultType="string" useCache="false">
+        select distinct name from cms_topic
+        where del_flag = 0 and topic_type = 1
+          and name in <foreach collection="names" item="n" open="(" separator="," close=")">#{n}</foreach>
+    </select>
+
+    <!-- Draft only: status 0 (not approved), user_status 0 (not on sale), lifecycle 0, is_draft 1. -->
+    <insert id="insertRouteDraft" useGeneratedKeys="true" keyProperty="id">
+        insert into cms_topic (member_id, topic_type, product_type, name, description, address_name, location_count,
+                               template_count, total_mileage, status, user_status, lifecycle, del_flag, is_draft,
+                               publish_mode, journey_rules_json, create_by, create_time)
+        values (#{memberId}, 1, 1, #{name}, #{description}, #{addressName}, #{locationCount},
+                #{templateCount}, #{totalMileage}, 0, 0, 0, 0, 1,
+                'pro', #{journeyRulesJson}, #{createBy}, now())
+    </insert>
+
+    <insert id="insertRouteNode">
+        insert into cms_topic_node (topic_id, chapter_id, name, description, address, longitude, latitude, img_url,
+                                    template_id, sort_id, create_by, create_time)
+        values (#{topicId}, 0, #{place.name}, #{place.description}, #{place.address}, #{place.lng}, #{place.lat},
+                #{place.coverImg}, #{templateId}, #{sortId}, #{createBy}, now())
+    </insert>
+
+    <select id="selectRouteNodesInBox" resultMap="SeedGeoPointResult" useCache="false">
+        select n.id, n.topic_id as point_key, n.lat, n.lng,
+               case when t.status = 1 and t.user_status = 1 then 1 else 0 end as flag1,
+               case when n.template_id is not null and n.template_id > 0 then 1 else 0 end as flag2
+        from (select id, topic_id, template_id,
+                     cast(latitude as decimal(10,6)) as lat, cast(longitude as decimal(10,6)) as lng
+              from cms_topic_node
+              where latitude regexp '^-?[0-9]+([.][0-9]+)?$' and longitude regexp '^-?[0-9]+([.][0-9]+)?$') n
+        join cms_topic t on t.id = n.topic_id and t.del_flag = 0
+        where n.lat between #{minLat} and #{maxLat} and n.lng between #{minLng} and #{maxLng}
+    </select>
+
+    <select id="selectLiveShopsInBox" resultMap="SeedGeoPointResult" useCache="false">
+        select m.id, cast(m.id as char) as point_key, m.location_lat as lat, m.location_lng as lng,
+               case when exists (select 1 from roam_poi p where p.merchant_id = m.id and p.status = 1
+                                 and p.template_id is not null) then 1 else 0 end as flag1,
+               0 as flag2
+        from mms_merchant m
+        where m.status = 1 and m.account_status = 1 and ifnull(m.del_flag, 0) = 0
+          and m.location_lat between #{minLat} and #{maxLat} and m.location_lng between #{minLng} and #{maxLng}
+    </select>
+
+    <select id="selectBoardPointsInBox" resultMap="SeedGeoPointResult" useCache="false">
+        select null as id, p.board_id as point_key, p.latitude as lat, p.longitude as lng,
+               case when b.lifecycle in ('READY', 'OPEN', 'FROZEN') then 1 else 0 end as flag1,
+               0 as flag2
+        from city_game_point p
+        join city_game_board b on b.board_id = p.board_id
+        where p.del_flag = 0 and b.lifecycle not in ('CLOSED', 'ARCHIVED')
+          and p.latitude between #{minLat} and #{maxLat} and p.longitude between #{minLng} and #{maxLng}
+    </select>
+
+    <select id="countActiveDailyMissions" resultType="int" useCache="false">
+        select count(*) from growth_mission where status = '0' and daily_limit > 0
+    </select>
+
+    <select id="countOpeningEvents" resultType="int" useCache="false">
+        select count(*) from official_event
+        where status in (1, 2, 3) and (activity_end is null or activity_end > now())
+        <if test="cityKeyword != null and cityKeyword != ''">
+          and (city is null or city like concat('%', #{cityKeyword}, '%'))
+        </if>
+    </select>
+
+    <select id="selectBoardAreas" resultType="java.util.LinkedHashMap" useCache="false">
+        select board_id as boardId, title, region_id as regionId, lifecycle,
+               map_south as south, map_west as west, map_north as north, map_east as east
+        from city_game_board
+        where lifecycle not in ('CLOSED', 'ARCHIVED')
+        order by update_time desc
+        limit 100
+    </select>
+</mapper>
