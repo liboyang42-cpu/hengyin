@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * S3b sponsored quests, player side. Players see a campaign only here: as a quest inside the opt-in deals layer,
@@ -39,14 +40,18 @@ public class SponsoredQuestService {
         List<Map<String, Object>> rows = mapper.selectLiveInBox(minLat, maxLat, minLng, maxLng, MAX_ROWS);
         if (rows == null || rows.isEmpty()) return Collections.emptyList();
         List<Long> ids = new ArrayList<>();
-        for (Map<String, Object> row : rows) {
+        List<Map<String, Object>> campaigns = new ArrayList<>();
+        for (Map<String, Object> raw : rows) {
+            Map<String, Object> row = caseless(raw);
+            campaigns.add(row);
             Long id = asLong(row.get("id"));
             if (id != null) ids.add(id);
         }
         Map<Long, List<Map<String, Object>>> places = new LinkedHashMap<>();
         List<Map<String, Object>> placeRows = ids.isEmpty() ? null : mapper.selectLivePlaces(ids);
         if (placeRows != null) {
-            for (Map<String, Object> p : placeRows) {
+            for (Map<String, Object> raw : placeRows) {
+                Map<String, Object> p = caseless(raw);
                 Long campaignId = asLong(p.get("campaignId"));
                 if (campaignId == null) continue;
                 Map<String, Object> place = new LinkedHashMap<>();
@@ -58,7 +63,7 @@ public class SponsoredQuestService {
             }
         }
         List<Map<String, Object>> out = new ArrayList<>();
-        for (Map<String, Object> row : rows) {
+        for (Map<String, Object> row : campaigns) {
             Long id = asLong(row.get("id"));
             List<Map<String, Object>> stops = id == null ? null : places.get(id);
             if (stops == null || stops.isEmpty()) continue;
@@ -88,6 +93,13 @@ public class SponsoredQuestService {
         row.put("label", SponsoredQuestLabel.ZH_HANS);
         row.put("labelEn", SponsoredQuestLabel.EN);
         return row;
+    }
+
+    /** Column aliases keep their case on MySQL but not on every driver; read them case-insensitively. */
+    static Map<String, Object> caseless(Map<String, Object> row) {
+        Map<String, Object> out = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        if (row != null) out.putAll(row);
+        return out;
     }
 
     static void requireBox(Double minLat, Double maxLat, Double minLng, Double maxLng) {
