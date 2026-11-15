@@ -269,6 +269,13 @@ feature:
   roamRecall:
     enabled: ${CHENGYIN_ROAM_RECALL_ENABLED:false}  # 模板+前端授权 ID 配齐后再开启
 
+# 迷雾地图:已点亮格子按玩家永久保留(2026-11-15 拍板,须在漫游定位授权处明确告知)。
+# 法务确认前可随时关闭:false = 恢复原 30 天口径(不再写入、读取回到 30 天会话窗口、留存任务清理 30 天未再点亮的格子)。
+# 原始轨迹与单次会话格子始终按 30 天留存,与本开关无关。
+roam:
+  fog:
+    retainRevealedCells: ${CHENGYIN_ROAM_FOG_RETAIN_REVEALED_CELLS:true}
+
 # 腾讯位置服务：主题路线规划与服务端逆地理编码
 # 申请：https://lbs.qq.com → 创建应用 → 开通 WebServiceAPI
 tencent:

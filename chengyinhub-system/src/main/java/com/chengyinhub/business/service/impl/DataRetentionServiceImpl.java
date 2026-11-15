@@ -49,6 +49,9 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
     private RoamLocationRetentionService roamLocationRetentionService;
     @Autowired
     private RoamOrphanLocationRetentionService roamOrphanLocationRetentionService;
+    /** Removes kept fog cells only while roam.fog.retainRevealedCells is false. */
+    @Autowired(required = false)
+    private RoamFogCellService roamFogCellService;
 
     @Override
     public int cleanRoamLocations(Date cutoff, int batchSize, int maxBatches) {
@@ -68,6 +71,9 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
                 (c,l) -> roamOrphanLocationRetentionService.clearShops(c,l));
         total += loopDelete("roam_poi_reward_log_coordinates", cutoff, batchSize, maxBatches,
                 (c,l) -> roamLocationRetentionService.clearRewardLocations(c,l));
+        if (roamFogCellService != null && !roamFogCellService.retainEnabled())
+            total += loopDelete("roam_member_fog_cell", cutoff, batchSize, maxBatches,
+                    (c,l) -> roamFogCellService.purgeWhenDisabled(c,l));
         return total + loopDelete("roam_share_snapshot_unbound", cutoff, batchSize, maxBatches,
                 (c, l) -> roamShareSnapshotMapper.deleteExpiredUnbound(c, l));
     }

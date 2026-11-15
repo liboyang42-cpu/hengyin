@@ -112,6 +112,9 @@ public class ApiRoamController extends BaseController {
     private IRoamExploreDayCandidateService roamExploreDayCandidateService;
     @Autowired
     private IRoamHangoutService roamHangoutService;
+    /** Kept revealed cells (roam.fog.retainRevealedCells). Optional so slice tests without it keep working. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.impl.RoamFogCellService fogCellService;
 
     /** 包级可见 + 非 final:测试用子类覆写它注入身份,好直调真入口(见 RoamPresenceControllerTest)。 */
     Long uid() {
@@ -496,7 +499,25 @@ public class ApiRoamController extends BaseController {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         int max = (limit == null || limit <= 0) ? 5000 : Math.min(limit, 20000);
-        return success(roamMapper.selectTilesByMember(memberId, max));
+        List<String> kept = fogCellService == null ? null : fogCellService.retainedCells(memberId, max);
+        return success(kept != null ? kept : roamMapper.selectTilesByMember(memberId, max));
+    }
+
+    @Operation(summary = "玩家已点亮迷雾格(按可见范围读取)")
+    @GetMapping("/fog/cells")
+    public AjaxResult fogCells(Double south, Double west, Double north, Double east) {
+        Long memberId = uid();
+        if (memberId <= 0) return error("请先登录");
+        if (!com.chengyinhub.business.support.RoamGeohashCover.validBox(south, west, north, east)) return error("范围无效");
+        if (fogCellService == null) return error("迷雾记录暂不可用");
+        com.chengyinhub.business.service.impl.RoamFogCellService.BoxRead read =
+                fogCellService.cellsInBox(memberId, south, west, north, east);
+        if (read.tooLarge) return error("范围过大，请放大地图后再看");
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("cells", read.cells);
+        data.put("retained", read.retained);
+        data.put("truncated", read.truncated);
+        return success(data);
     }
 
     @Operation(summary = "玩家迷雾记忆增量页(换设备/清缓存恢复版图)")
@@ -600,6 +621,8 @@ public class ApiRoamController extends BaseController {
             tileList = tileList.subList(0, remaining);
         }
         int newly = tileList.isEmpty() ? 0 : roamMapper.batchInsertTile(memberId, sid, tileList, now);
+        // Same transaction, after the consent check: the member's kept map gains these cells (no session, no order).
+        if (fogCellService != null && !tileList.isEmpty()) fogCellService.record(memberId, tileList, now);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("sessionId", clientSessionKey == null ? sid : String.valueOf(sid));
         data.put("newlyRevealed", Math.max(0, newly));
