@@ -139,6 +139,17 @@ withdrawal:
 chengyin:
   pii:
     key: ${withdrawal.pii.key}
+  # SEC-12:没有小程序 openid 的作者(手机号 / Apple 账号)的机审 = 腾讯云文本(TMS)与图片(IMS)审核。
+  # 密钥只从环境变量读取;未配置即不启用,内容按「仅作者可见 + 人工审核」处理。有 openid 的作者仍走微信。
+  # FLOW-03 Apple 令牌撤销另读环境变量 APPLE_SIGNIN_KEY_ID / APPLE_SIGNIN_TEAM_ID / APPLE_SIGNIN_PRIVATE_KEY(PKCS#8 PEM)。
+  moderation:
+    tencent:
+      enabled: ${CHENGYIN_MODERATION_TENCENT_ENABLED:true}
+      secret-id: ${TENCENTCLOUD_SECRET_ID:}
+      secret-key: ${TENCENTCLOUD_SECRET_KEY:}
+      region: ${CHENGYIN_MODERATION_TENCENT_REGION:ap-guangzhou}
+      text-biz-type: ${CHENGYIN_MODERATION_TENCENT_TEXT_BIZ_TYPE:}
+      image-biz-type: ${CHENGYIN_MODERATION_TENCENT_IMAGE_BIZ_TYPE:}
   # 退款人工回执 URL 白名单(逗号分隔 host,精确匹配,只对 HTTPS 绝对地址生效)。
   # 站内路径(/profile/** 等单斜杠路径)始终允许,无需配置;其余 host 一律拒 ——
   # 回执会被另一名财务在人工打款队列里直接点开,白名单是钓鱼/协议注入的唯一闸。

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.business.account.apple.AppleIdentityReconfirmationService;
+import com.chengyinhub.business.account.apple.AppleTokenRevocationService;
 import com.chengyinhub.business.domain.ConsentRecord;
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.vo.DeregistrationStatusVO;
@@ -153,6 +155,67 @@ class ApiAccountDeregistrationControllerTest {
         assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
         verify(f.deregistrationService, never()).apply(1001L);
     }
+    // FLOW-03: Apple-only accounts (no phone, no WeChat openid) confirm with a fresh Sign in with Apple.
+    @Test void appleOnlyAccountDeletesWithFreshAppleConfirmationAndPreparesRevocation() {
+        Fixture f = appleOnly();
+        when(f.apple.verify(1001L, "apple-sub-1", "id-token", "198.51.100.20"))
+                .thenReturn(AppleIdentityReconfirmationService.Result.CONFIRMED);
+        DeregistrationStatusVO pending = new DeregistrationStatusVO();
+        pending.setStatus("PENDING");
+        when(f.deregistrationService.apply(1001L)).thenReturn(pending);
+        AjaxResult result = f.controller.apply(null, null, "id-token", "auth-code", "request-1", request());
+        assertEquals(HttpStatus.SUCCESS, result.get(AjaxResult.CODE_TAG));
+        verify(f.deregistrationService).apply(1001L);
+        verify(f.revocation).prepare(1001L, "auth-code");
+        verifyNoSms(f);
+        verify(f.wechat, never()).verify(anyLong(), any(), any(), any());
+    }
+    @Test void appleOnlyAccountWithInvalidOrMissingTokenIsNotDeleted() {
+        Fixture f = appleOnly();
+        when(f.apple.verify(anyLong(), any(), any(), any())).thenReturn(AppleIdentityReconfirmationService.Result.INVALID);
+        AjaxResult result = f.controller.apply(null, null, "forged", "auth-code", "request-1", request());
+        assertEquals(HttpStatus.ERROR, result.get(AjaxResult.CODE_TAG));
+        assertEquals("Apple 身份确认失败，请重新确认本人", result.get(AjaxResult.MSG_TAG));
+        assertEquals(HttpStatus.ERROR, f.controller.apply(null, "wx-code", "request-1", request()).get(AjaxResult.CODE_TAG));
+        verify(f.deregistrationService, never()).apply(1001L);
+        verify(f.revocation, never()).prepare(anyLong(), any());
+        verify(f.wechat, never()).verify(anyLong(), any(), any(), any());
+    }
+    @Test void appleConfirmationUnavailableIsReportedHonestly() {
+        Fixture f = appleOnly();
+        when(f.apple.verify(anyLong(), any(), any(), any())).thenReturn(AppleIdentityReconfirmationService.Result.UNAVAILABLE);
+        AjaxResult result = f.controller.apply(null, null, "id-token", null, "request-1", request());
+        assertEquals("Apple 身份确认暂时不可用，请稍后重试", result.get(AjaxResult.MSG_TAG));
+        verify(f.deregistrationService, never()).apply(1001L);
+    }
+    @Test void appleTokenCannotBypassSmsOrWechatForAccountsThatHaveThem() {
+        Fixture f = appleOnly();
+        f.member.setPhone("13800138000");
+        when(f.smsVerificationService.verify("13800138000", null, "198.51.100.20")).thenReturn(false);
+        assertEquals(HttpStatus.ERROR, f.controller.apply(null, null, "id-token", "auth-code", "request-1", request()).get(AjaxResult.CODE_TAG));
+        f.member.setPhone(null); f.member.setWxOpenId("owner-seven");
+        assertEquals(HttpStatus.ERROR, f.controller.apply(null, null, "id-token", "auth-code", "request-1", request()).get(AjaxResult.CODE_TAG));
+        verify(f.wechat).verify(1001L, "owner-seven", null, "198.51.100.20");
+        verify(f.apple, never()).verify(anyLong(), any(), any(), any());
+        verify(f.deregistrationService, never()).apply(1001L);
+    }
+    @Test void cancelWipesStoredAppleToken() {
+        Fixture f = appleOnly();
+        assertEquals(HttpStatus.SUCCESS, f.controller.cancel().get(AjaxResult.CODE_TAG));
+        verify(f.revocation).discard(1001L);
+    }
+    private static Fixture appleOnly() {
+        Fixture f = new Fixture(consent("v2.0", "AGREE"));
+        f.member.setPhone(""); f.member.setWxOpenId(""); f.member.setAppleId("apple-sub-1");
+        ReflectionTestUtils.setField(f.controller, "appleReconfirmationService", f.apple);
+        ReflectionTestUtils.setField(f.controller, "appleTokenRevocationService", f.revocation);
+        return f;
+    }
+    private static HttpServletRequest request() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRemoteAddr()).thenReturn("198.51.100.20");
+        return request;
+    }
     private static void verifyNoSms(Fixture f) { verify(f.smsVerificationService, never()).verify(any(), any(), any()); }
 
     private static ConsentRecord consent(String version, String eventType) {
@@ -170,6 +233,8 @@ class ApiAccountDeregistrationControllerTest {
         private final IConsentRecordService consentRecordService = mock(IConsentRecordService.class);
         private final SmsVerificationService smsVerificationService = mock(SmsVerificationService.class);
         private final WechatReconfirmationService wechat = mock(WechatReconfirmationService.class);
+        private final AppleIdentityReconfirmationService apple = mock(AppleIdentityReconfirmationService.class);
+        private final AppleTokenRevocationService revocation = mock(AppleTokenRevocationService.class);
         private final com.chengyinhub.business.appgaps.DeregistrationResultService resultService =
                 mock(com.chengyinhub.business.appgaps.DeregistrationResultService.class);
         private final UmsMember member = new UmsMember();

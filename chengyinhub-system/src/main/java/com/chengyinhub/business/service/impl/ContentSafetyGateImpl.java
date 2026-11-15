@@ -54,6 +54,13 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
     @Autowired(required = false)
     private com.chengyinhub.business.service.ISensitiveContentLibrary sensitiveLibrary;
 
+    /**
+     * SEC-12:没有小程序 openid 的作者(手机号 / Apple 账号)改走不依赖 openid 的机审(腾讯云 TMS/IMS,配了密钥才启用)。
+     * 可选注入;为空或没有可用机审时保持原有 HOLD(仅作者可见 + 人工审核队列)。
+     */
+    @Autowired(required = false)
+    private com.chengyinhub.business.moderation.ModerationRouter moderationRouter;
+
     @Override
     public SafetyDecision decide(PublishSafetyRequest req) {
         if (req == null || req.getContentType() == null) {
@@ -72,6 +79,13 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
                 && sensitiveLibrary.blockingCategory(req.getText(), req.getContentType(), req.getContentId()) != null) {
             logger.info("UGC门禁 BLOCK 敏感词库命中 contentType={} id={}", req.getContentType(), req.getContentId());
             return SafetyDecision.block("TEXT_RISK");
+        }
+
+        // SEC-12:无 openid 且配置了不依赖 openid 的机审 → 由该机审裁决(微信路径对有 openid 的作者保持不变)。
+        com.chengyinhub.business.moderation.ContentModerationProvider fallback =
+                moderationRouter == null ? null : moderationRouter.fallbackFor(req.getOpenid());
+        if (fallback != null) {
+            return decideWithProvider(req, pre, hasText, fallback);
         }
 
         // 1)/2) 文本检测:命中 → BLOCK;异常 → PRE: fail-safe HOLD / POST: 打标放行
@@ -123,6 +137,64 @@ public class ContentSafetyGateImpl implements IContentSafetyGate {
         }
 
         // 6) 纯文本通过(或无内容)→ PASS
+        return SafetyDecision.pass();
+    }
+
+    /**
+     * SEC-12:作者没有 openid,由同步机审(腾讯云)判文本与图片。裁决口径与微信路径一致:
+     * 违规 → BLOCK;要人工 / 审不了 → HOLD(仅作者可见,进审核台与自动复检);结构化商业字段与先审带图仍 HOLD。
+     */
+    private SafetyDecision decideWithProvider(PublishSafetyRequest req, boolean pre, boolean hasText,
+                                              com.chengyinhub.business.moderation.ContentModerationProvider provider) {
+        if (hasText) {
+            com.chengyinhub.business.moderation.ModerationVerdict verdict;
+            try {
+                verdict = provider.checkText(req.getText(), req.getOpenid());
+            } catch (Exception e) {
+                logger.error("UGC门禁 {} 文本检测异常,fail-safe contentType={} id={}",
+                        provider.name(), req.getContentType(), req.getContentId(), e);
+                return unsure(req, pre, "DETECT_ERROR", "HIGH");
+            }
+            if (verdict == com.chengyinhub.business.moderation.ModerationVerdict.RISK) {
+                logger.info("UGC门禁 BLOCK 文本风险 provider={} contentType={} id={}",
+                        provider.name(), req.getContentType(), req.getContentId());
+                return SafetyDecision.block("TEXT_RISK");
+            }
+            if (verdict == com.chengyinhub.business.moderation.ModerationVerdict.REVIEW) {
+                return unsure(req, pre, "TEXT_REVIEW", "NORMAL");
+            }
+            if (verdict != com.chengyinhub.business.moderation.ModerationVerdict.PASS) {
+                return unsure(req, pre, "DETECT_ERROR", "NORMAL");
+            }
+        }
+        boolean hasMedia = req.getMediaUrls() != null && !req.getMediaUrls().isEmpty();
+        if (!pre && hasMedia) {
+            if (!provider.judgesImagesSynchronously()) return hold(req, "MEDIA_UNCHECKED", "NORMAL");
+            for (String url : req.getMediaUrls()) {
+                com.chengyinhub.business.moderation.ModerationVerdict verdict;
+                try {
+                    verdict = provider.checkImage(url, req.getOpenid());
+                } catch (Exception e) {
+                    logger.error("UGC门禁 {} 图片检测异常,转人工 contentType={} id={}",
+                            provider.name(), req.getContentType(), req.getContentId(), e);
+                    return hold(req, "MEDIA_UNCHECKED", "NORMAL");
+                }
+                if (verdict == com.chengyinhub.business.moderation.ModerationVerdict.RISK) {
+                    logger.info("UGC门禁 BLOCK 图片风险 provider={} contentType={} id={}",
+                            provider.name(), req.getContentType(), req.getContentId());
+                    return SafetyDecision.block("IMAGE_RISK");
+                }
+                if (verdict != com.chengyinhub.business.moderation.ModerationVerdict.PASS) {
+                    return hold(req, "MEDIA_UNCHECKED", "NORMAL");
+                }
+            }
+        }
+        if (pre && (req.isHasGeo() || req.isHasPrice() || req.isHasSignup())) {
+            return hold(req, "STRUCTURED_REVIEW", "NORMAL");
+        }
+        if (pre && hasMedia) {
+            return hold(req, "MEDIA_PENDING", "NORMAL");
+        }
         return SafetyDecision.pass();
     }
 
