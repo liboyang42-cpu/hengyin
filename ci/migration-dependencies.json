@@ -1015,6 +1015,11 @@
     "20261121_admin_review_queue_menus": ["20261109_questo_admin_menus", "20261117_workshop_professional"],
     "20261122_perf_hot_route_indexes": ["account_deregister_20260711", "club_post", "im", "o14_content_search_document_20261022", "20261112_im_channels_platform"],
     "20261123_sys_citygame": ["20261113_gaps_a_city_game", "20261114_gaps_a_city_r491", "20261121_admin_review_queue_menus"],
+    "20261114_weather_event_rule": [],
+    "20261115_external_game_monetization": [],
+    "20261115_external_game_monetization_menus": ["20261115_external_game_monetization", "20261012_missing_business_menu"],
+    "20261115_sys_ainpc": ["npc_profile", "20261119_merchant_gap", "20261012_missing_business_menu"],
+    "20261123_sys_random": ["20261012_missing_business_menu"],
     "20261124_city_numbers_attr": ["20261123_sys_citygame"]
   }
 }
