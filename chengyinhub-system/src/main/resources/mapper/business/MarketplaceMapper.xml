@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- R1 marketplace. Paid placement never touches the fog map: nothing here is read by fog or pin ranking. -->
+<mapper namespace="com.chengyinhub.business.mapper.MarketplaceMapper">
+
+    <!-- Issuable now: same gate as SmsCouponHistoryServiceImpl.isNotIssuable plus stock left. -->
+    <sql id="dealIssuable">
+        c.del_flag = 0 and c.scope_type = 1 and c.merchant_id is not null
+        and (c.status is null or c.status not in (2, 3, 4))
+        and (c.enable_time is null or c.enable_time &lt;= now())
+        and (c.start_time is null or c.start_time &lt;= now())
+        and (c.end_time is null or c.end_time &gt; now())
+        and (c.publish_count is null or c.publish_count &lt;= 0 or ifnull(c.receive_count, 0) &lt; c.publish_count)
+    </sql>
+    <!-- Same rule as /api/merchant/public-home isPubliclyVisible. -->
+    <sql id="merchantPublic">
+        m.status = 1 and m.account_status = 1 and m.del_flag = 0
+    </sql>
+
+    <select id="selectDealsInBox" resultType="java.util.LinkedHashMap">
+        select c.id as couponId, c.name as name, c.description as description, c.coupon_type as couponType,
+               c.amount as amount, c.min_point as minPoint,
+               date_format(c.end_time, '%Y-%m-%d %H:%i:%s') as endTime,
+               case when c.publish_count is null or c.publish_count &lt;= 0 then null
+                    else greatest(0, c.publish_count - ifnull(c.receive_count, 0)) end as remaining,
+               m.id as merchantId, m.name as merchantName,
+               p.id as poiId, p.lat as lat, p.lng as lng, coalesce(nullif(p.cover_img, ''), m.cover_image) as coverImg,
+               (#{memberId} is not null and exists (select 1 from marketplace_deal_claim k
+                  where k.coupon_id = c.id and k.member_id = #{memberId})) as claimed
+        from marketplace_deal d
+        join sms_coupon c on c.id = d.coupon_id
+        join mms_merchant m on m.id = c.merchant_id
+        join roam_poi p on p.id = (
+            select p2.id from roam_poi p2
+            where p2.merchant_id = m.id and p2.type = 2 and p2.status = 1
+              and (p2.application_type is null or p2.application_type = 2
+                   or (p2.application_type in (1, 3) and p2.audit_status = 1))
+              and p2.lat between #{minLat} and #{maxLat}
+              and p2.lng between #{minLng} and #{maxLng}
+            order by p2.node_level desc, p2.id asc
+            limit 1)
+        where d.enabled = 1
+          and <include refid="dealIssuable"/>
+          and <include refid="merchantPublic"/>
+        order by d.sort desc, c.id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectEnabledDealCouponForUpdate" resultType="com.chengyinhub.business.domain.SmsCoupon"
+            useCache="false" flushCache="true">
+        select c.id, c.status, c.publish_count as publishCount, c.receive_count as receiveCount,
+               c.start_time as startTime, c.end_time as endTime, c.enable_time as enableTime
+        from marketplace_deal d
+        join sms_coupon c on c.id = d.coupon_id
+        join mms_merchant m on m.id = c.merchant_id
+        where d.coupon_id = #{couponId} and d.enabled = 1
+          and c.del_flag = 0 and c.scope_type = 1
+          and <include refid="merchantPublic"/>
+        for update
+    </select>
+
+    <insert id="insertClaimIgnore">
+        insert ignore into marketplace_deal_claim (coupon_id, member_id, create_time)
+        values (#{couponId}, #{memberId}, now())
+    </insert>
+
+    <select id="selectClaimHistoryId" resultType="java.lang.Long" useCache="false" flushCache="true">
+        select history_id from marketplace_deal_claim where coupon_id = #{couponId} and member_id = #{memberId}
+    </select>
+
+    <update id="markClaimDelivered">
+        update marketplace_deal_claim set history_id = #{historyId}
+        where coupon_id = #{couponId} and member_id = #{memberId} and history_id is null
+    </update>
+
+    <!-- ========== admin ========== -->
+
+    <select id="selectDealAdminList" resultType="java.util.LinkedHashMap">
+        select d.coupon_id as couponId, d.enabled, d.sort, d.update_by as updateBy,
+               date_format(coalesce(d.update_time, d.create_time), '%Y-%m-%d %H:%i:%s') as updateTime,
+               c.name as couponName, c.status as couponStatus, c.publish_count as publishCount,
+               c.receive_count as receiveCount, date_format(c.end_time, '%Y-%m-%d %H:%i:%s') as endTime,
+               m.id as merchantId, m.name as merchantName,
+               (select count(*) from marketplace_deal_claim k where k.coupon_id = d.coupon_id) as claimCount
+        from marketplace_deal d
+        left join sms_coupon c on c.id = d.coupon_id
+        left join mms_merchant m on m.id = c.merchant_id
+        order by d.enabled desc, d.sort desc, d.coupon_id desc
+        limit 500
+    </select>
+
+    <insert id="upsertDeal">
+        insert into marketplace_deal (coupon_id, enabled, sort, create_by, create_time, update_by, update_time)
+        values (#{couponId}, #{enabled}, 0, #{operator}, now(), #{operator}, now())
+        on duplicate key update enabled = values(enabled), update_by = values(update_by), update_time = now()
+    </insert>
+
+    <delete id="deleteDeal">
+        delete from marketplace_deal where coupon_id = #{couponId}
+    </delete>
+
+    <select id="countListableCoupon" resultType="java.lang.Integer">
+        select count(*) from sms_coupon c
+        where c.id = #{couponId} and c.del_flag = 0 and c.scope_type = 1 and c.merchant_id is not null
+    </select>
+
+    <select id="selectPromotionSlotPurchases" resultType="java.util.LinkedHashMap">
+        select o.id as orderId, o.order_sn as orderSn, o.mms_merchant_id as merchantId, m.name as merchantName,
+               o.pay_amount as payAmount,
+               date_format(o.payment_time, '%Y-%m-%d %H:%i:%s') as paymentTime,
+               o.entitlement_days as entitlementDays,
+               case when r.order_id is null then 'none'
+                    when r.refund_fact_id is null then 'requested'
+                    else 'settled' end as refundState
+        from oms_order o
+        left join mms_merchant m on m.id = o.mms_merchant_id
+        left join merchant_commerce_refund r on r.order_id = o.id
+        where o.biz_type = 'promotion_slot' and o.status = 1
+        order by o.payment_time desc, o.id desc
+        limit 500
+    </select>
+
+    <!-- Group by the reported place name and a ~100 m cell; show only a ~1 km area. Places already on the map
+         (any published roam_poi within ~60 m) are not leads. A place needs at least minVisitors different
+         players, so a single player's private spot never appears. No member id, nickname or exact point leaves. -->
+    <select id="selectSalesLeads" resultType="java.util.LinkedHashMap">
+        select g.name as name, round(g.lat, 2) as areaLat, round(g.lng, 2) as areaLng,
+               g.visitors as checkinCount, date_format(g.last_seen, '%Y-%m-%d %H:%i:%s') as lastSeen
+        from (
+            select v.poi_name as name, round(v.lat, 3) as lat, round(v.lng, 3) as lng,
+                   count(*) as visitors, max(v.first_visit_time) as last_seen
+            from member_visited_poi v
+            where v.poi_name is not null and v.poi_name &lt;&gt; '' and v.poi_name &lt;&gt; '未知地点'
+              and v.lat is not null and v.lng is not null
+              and v.first_visit_time &gt;= #{since}
+            group by v.poi_name, round(v.lat, 3), round(v.lng, 3)
+            having count(*) &gt;= #{minVisitors}
+        ) g
+        where not exists (
+            select 1 from roam_poi p
+            where p.status = 1
+              and p.lat between g.lat - 0.0006 and g.lat + 0.0006
+              and p.lng between g.lng - 0.0006 and g.lng + 0.0006)
+        order by g.visitors desc, g.last_seen desc
+        limit #{limit}
+    </select>
+
+    <!-- ========== storefront (public merchant home) ========== -->
+    <!-- Published products only (publish_status = 1, not deleted); prices as stored. -->
+    <select id="selectPublishedProducts" resultType="java.util.LinkedHashMap">
+        select id as productId, product_name as productName, pic, price, original_price as originalPrice, unit
+        from pms_product
+        where merchant_id = #{merchantId} and publish_status = 1 and (del_flag is null or del_flag = 0)
+        order by id desc
+        limit 50
+    </select>
+
+    <select id="selectPublishedSkus" resultType="java.util.LinkedHashMap">
+        select s.id as skuId, s.product_id as productId, s.sku_name as skuName,
+               cast(s.price as char) as price, cast(s.original_price as char) as originalPrice
+        from pms_sku s
+        join pms_product p on p.id = s.product_id
+        where p.merchant_id = #{merchantId} and p.publish_status = 1 and (p.del_flag is null or p.del_flag = 0)
+        order by s.product_id desc, s.id asc
+        limit 500
+    </select>
+</mapper>

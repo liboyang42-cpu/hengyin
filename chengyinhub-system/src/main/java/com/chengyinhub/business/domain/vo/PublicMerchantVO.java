@@ -62,6 +62,12 @@ public class PublicMerchantVO {
      */
     private Object featured;
 
+    /**
+     * R1 storefront:已上架商品、规格与价格({products:[...], purchasable:false})。
+     * 只在 /api/merchant/public-home 填充;读取失败为 null,前端整块不渲染。
+     */
+    private Object storefront;
+
     /** 按白名单逐字段搬运;不做反射拷贝,漏字段要比多字段安全。 */
     public static PublicMerchantVO from(MmsMerchant merchant) {
         return fill(merchant, new PublicMerchantVO());
@@ -102,6 +108,14 @@ public class PublicMerchantVO {
 
     public Object getFeatured() {
         return featured;
+    }
+
+    public Object getStorefront() {
+        return storefront;
+    }
+
+    public void setStorefront(Object storefront) {
+        this.storefront = storefront;
     }
 
     public void setFeatured(Object featured) {
