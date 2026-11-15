@@ -147,6 +147,26 @@ class ErrorContractCompatibilityTest
         assertEquals("AUTH.SESSION_EXPIRED", json.readTree(typed.getContentAsString()).get("errorCode").asText());
     }
 
+    @Test
+    void miniProgramNeverOptsIntoTheNewContract() throws Exception
+    {
+        // 小程序源码(chengyinhub-xcx)不发送 X-Error-Contract,因此永远走旧形状。
+        java.nio.file.Path xcx = java.nio.file.Path.of("..", "chengyinhub-xcx");
+        org.junit.jupiter.api.Assumptions.assumeTrue(java.nio.file.Files.isDirectory(xcx), "mini-program sources not checked out");
+        try (var files = java.nio.file.Files.walk(xcx))
+        {
+            List<java.nio.file.Path> offenders = files
+                    .filter(path -> path.toString().endsWith(".js") || path.toString().endsWith(".ts"))
+                    .filter(path -> !path.toString().contains("node_modules"))
+                    .filter(path -> {
+                        try { return java.nio.file.Files.readString(path).contains(ErrorContract.HEADER); }
+                        catch (java.io.IOException | java.io.UncheckedIOException e) { return false; }
+                    })
+                    .toList();
+            assertEquals(List.of(), offenders);
+        }
+    }
+
     // ---------- 新契约 v2 ----------
 
     private void assertV2(String path, int status, String errorCode, String msg) throws Exception

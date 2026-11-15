@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.IAccountDeregistrationService;
 import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.business.service.IUmsMemberService;
@@ -50,7 +52,7 @@ public class ApiAccountDeregistrationController extends BaseController {
     @PostMapping("/precheck")
     public AjaxResult precheck() {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return success(deregistrationService.precheck(memberId));
     }
 
@@ -58,7 +60,7 @@ public class ApiAccountDeregistrationController extends BaseController {
     @PostMapping("/apply")
     public AjaxResult apply(String smscode, String wxcode, String requestId, HttpServletRequest request) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         ConsentRecord latestConsent = consentRecordService.latest(memberId,
                 "account_cancellation_notice", "account_cancel");
         String currentVersion = complianceProperties.versionOf("account_cancellation_notice");
@@ -67,9 +69,9 @@ public class ApiAccountDeregistrationController extends BaseController {
             return error("请先同意账号注销须知");
         }
         UmsMember member = umsMemberService.selectUmsMemberById(memberId);
-        if (member == null) return error("账号不存在");
+        if (member == null) return refuse(ErrorCode.NOT_FOUND, "账号不存在");
         if (StringUtils.isEmpty(requestId) || requestId.length() > 64) {
-            return error("请求标识不合法");
+            return refuse(ErrorCode.BAD_REQUEST, "请求标识不合法");
         }
         // F-R2S-07:首次提交已生效但回包丢失时,验证码已被原子消费;重试先回放已存在的 PENDING,
         // 不再要求重新验证(只返回本人状态,不产生新的写入)。
@@ -102,7 +104,7 @@ public class ApiAccountDeregistrationController extends BaseController {
     @PostMapping("/cancel")
     public AjaxResult cancel() {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(deregistrationService.cancel(memberId));
         } catch (IllegalStateException e) {
@@ -127,7 +129,7 @@ public class ApiAccountDeregistrationController extends BaseController {
     @GetMapping("/status")
     public AjaxResult status() {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         return success(deregistrationService.status(memberId));
     }
 

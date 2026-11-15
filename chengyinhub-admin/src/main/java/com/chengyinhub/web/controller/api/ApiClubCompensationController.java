@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.Club;
 import com.chengyinhub.business.domain.ClubMember;
 import com.chengyinhub.business.domain.ClubQualityDecision;
@@ -90,7 +92,7 @@ public class ApiClubCompensationController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception notLoggedIn) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long clubId = longOf(body, "clubId");
         if (!belongsToClub(clubId, memberId)) return error("非本俱乐部负责人，无法查看期次");
@@ -110,7 +112,7 @@ public class ApiClubCompensationController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception notLoggedIn) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long clubId = longOf(body, "clubId");
         Map<String, Object> data = new LinkedHashMap<String, Object>();

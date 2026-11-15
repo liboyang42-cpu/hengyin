@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.telemetry.InstallEventSchema;
 import com.chengyinhub.business.telemetry.InstallTelemetryService;
 import com.chengyinhub.common.annotation.RateLimiter;
@@ -54,7 +56,7 @@ public class ApiInstallTelemetryController extends BaseController {
             memberId = null;
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Object installId = body == null ? null : body.get("installId");
         if (body != null && body.size() > 1) {

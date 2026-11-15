@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.*;
 import com.chengyinhub.business.service.*;
 import com.chengyinhub.common.config.WxPayConfig;
@@ -115,7 +117,7 @@ public class ApiCommentController extends BaseController {
         Long member_id = getAppUserId();
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long requestedOwnerType = Convert.toLong(owner_type, 0L);
         if (requestedOwnerType == 3L && !legacyCommunityWritesEnabled) {
@@ -127,7 +129,7 @@ public class ApiCommentController extends BaseController {
         if (StringUtils.isNotEmpty(contents)) {
             umsComment.setContents(contents);
         } else {
-            return error("请输入发布内容");
+            return refuse(ErrorCode.BAD_REQUEST, "请输入发布内容");
         }
         if (StringUtils.isNotEmpty(owner_type)) {
             umsComment.setOwnerType(Convert.toLong(owner_type, 0L));
@@ -200,7 +202,7 @@ public class ApiCommentController extends BaseController {
         Long ownerType = Convert.toLong(owner_type, 0L);
         Long ownerId = Convert.toLong(owner_id, 0L);
         if (ownerType < 1 || ownerType > 4 || ownerId < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         if (ownerType == 4 && !commentFacts.reviewTargetExists(4L, ownerId))
             return error("据点未开放或已下线");
@@ -295,23 +297,23 @@ public class ApiCommentController extends BaseController {
         Long member_id = getAppUserId();
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long commentId = 0L;
         if (StringUtils.isNotEmpty(id)) {
             umsComment.setId(Convert.toLong(id, 0L));
         } else {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         UmsComment existing = umsCommentService.selectUmsCommentById(umsComment.getId());
         if (existing == null) {
-            return error("评论不存在");
+            return refuse(ErrorCode.NOT_FOUND, "评论不存在");
         }
         if (Long.valueOf(3L).equals(existing.getOwnerType()) && !legacyCommunityWritesEnabled) {
             return legacySquareWriteDisabled();
         }
         if (OwnershipUtils.notOwner(existing.getMemberId(), member_id)) {
-            return error("无权删除该评论");
+            return refuse(ErrorCode.FORBIDDEN, "无权删除该评论");
         }
         umsComment.setDelFlag(2);
 
@@ -332,16 +334,16 @@ public class ApiCommentController extends BaseController {
     public AjaxResult reportComment(String id) {
         Long memberId = getAppUserId();
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long commentId = Convert.toLong(id, 0L);
         if (commentId < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         UmsComment existing = umsCommentService.selectUmsCommentById(commentId);
         if (existing == null || existing.getDelFlag() != null && existing.getDelFlag() == 2) {
-            return error("评论不存在");
+            return refuse(ErrorCode.NOT_FOUND, "评论不存在");
         }
         if (Long.valueOf(3L).equals(existing.getOwnerType()) && !legacyCommunityWritesEnabled) {
             return legacySquareWriteDisabled();
@@ -368,13 +370,13 @@ public class ApiCommentController extends BaseController {
         Long member_id = getAppUserId();
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long commentId = 0L;
         if (StringUtils.isNotEmpty(id)) {
             commentId = Convert.toLong(id, 0L);
         } else {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         // 门禁读必须排在锁之后:RR 隔离下先做普通 SELECT 会把读视图建在拿锁等待之前,
         // 并发点赞会基于旧快照双插入(3-20 toggle 回归)。默认开闸时零额外读取。

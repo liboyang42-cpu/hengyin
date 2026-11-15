@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.IClubChapterRecruitService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -24,8 +26,8 @@ public class ApiClubRecruitController extends BaseController {
     @PostMapping("/overview")
     public AjaxResult overview(@RequestBody(required = false) Map<String, Object> body) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
-        if (body == null) return error("缺少俱乐部或主题参数");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部或主题参数");
         try {
             return success(clubChapterRecruitService.overview(principal,
                     asLong(body.get("clubId")), asLong(body.get("topicId"))));

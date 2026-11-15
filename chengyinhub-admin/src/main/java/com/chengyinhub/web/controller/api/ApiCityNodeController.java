@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.common.utils.GeoDistanceUtils;
 import com.chengyinhub.business.domain.CmsMemberTemplate;
 import com.chengyinhub.business.domain.MemberCollectible;
@@ -72,7 +74,7 @@ public class ApiCityNodeController extends BaseController {
     @GetMapping("/nodes")
     public AjaxResult nodes(Double lat, Double lng, Integer radius,
                             String keyword, Integer categoryId, String tag, String cityRole) {
-        if (lat == null || lng == null) return error("缺少定位");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
         int r = (radius == null || radius <= 0) ? 3000 : Math.min(radius, 20000);
         double dLat = r / 111320.0;
         double dLng = r / (111320.0 * Math.max(0.2, Math.cos(Math.toRadians(lat))));
@@ -86,7 +88,7 @@ public class ApiCityNodeController extends BaseController {
     @Operation(summary = "商家节点详情")
     @GetMapping("/nodes/{id}")
     public AjaxResult detail(@PathVariable("id") Long id) {
-        if (id == null || id <= 0) return error("参数不合规");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         Long memberId = uid();
         CityNodeVO vo = roamMapper.selectPlayerMerchantNodeDetail(id, memberId);
         if (vo == null) return AjaxResult.error(410, "据点未开放或已下线");
@@ -102,7 +104,7 @@ public class ApiCityNodeController extends BaseController {
     @Operation(summary = "商家公开主页的在架节点(收藏入口)")
     @GetMapping("/nodes/merchant/{merchantId}")
     public AjaxResult merchantNode(@PathVariable("merchantId") Long merchantId) {
-        if (merchantId == null || merchantId <= 0) return error("参数不合规");
+        if (merchantId == null || merchantId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         CityNodeVO node = merchantNodeDiscoveryService.findActiveNode(merchantId);
         if (node == null) return success();
         markUserState(Collections.singletonList(node));
@@ -113,7 +115,7 @@ public class ApiCityNodeController extends BaseController {
     @GetMapping("/nodes/favorites")
     public AjaxResult favorites() {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         List<CityNodeVO> list = roamMapper.selectFavoriteMerchantNodes(memberId);
         markUserState(list);
         return success(list);
@@ -123,8 +125,8 @@ public class ApiCityNodeController extends BaseController {
     @PostMapping("/nodes/{id}/favorite")
     public AjaxResult favorite(@PathVariable("id") Long id) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (id == null || id <= 0) return error("参数不合规");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         boolean nowFav;
         if (collectibleMapper.countOne(memberId, MemberCollectible.TYPE_NODE_FAV, id) > 0) {
             collectibleMapper.deleteOne(memberId, MemberCollectible.TYPE_NODE_FAV, id);
@@ -173,8 +175,8 @@ public class ApiCityNodeController extends BaseController {
     public AjaxResult complete(@PathVariable("id") Long id, Double lat, Double lng,
                                String answer, String photoUrl, String code) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (id == null || id <= 0) return error("参数不合规");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (id == null || id <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         roamMapper.lockClaimOwner(memberId);
         CityNodeVO node = roamMapper.selectPlayerMerchantNodeDetail(id, 0L);
         if (node == null) return AjaxResult.error(410, "据点未开放或已下线");
@@ -182,7 +184,7 @@ public class ApiCityNodeController extends BaseController {
         if (node.getLat() == null || node.getLng() == null) return error("节点未设置坐标");
 
         // ① 服务端二次半径校验(GPS 只作触发,不作发放唯一依据)
-        if (lat == null || lng == null) return error("缺少定位");
+        if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "缺少定位");
         int radius = (node.getRadiusM() != null && node.getRadiusM() > 0) ? node.getRadiusM() : 80;
         double dist = distMeters(lat, lng, node.getLat().doubleValue(), node.getLng().doubleValue());
         if (!withinReach(dist, radius)) return error("离据点太远,请到店后再完成");
@@ -201,7 +203,7 @@ public class ApiCityNodeController extends BaseController {
             // 跟没有这道闸一样(小程序 app.chooseImage 回的就是上传后的 http(s) URL)。
             // ⚠️ 目前只校验形态,照片内容未过审、也未落库(没有存放列),商家事后无从复核。
             String photo = photoUrl == null ? "" : photoUrl.trim();
-            if (photo.isEmpty()) return error("请上传拍照打卡照片");
+            if (photo.isEmpty()) return refuse(ErrorCode.BAD_REQUEST, "请上传拍照打卡照片");
             if (!photo.startsWith("http://") && !photo.startsWith("https://")) {
                 return error("照片地址不合法,请重新上传");
             }

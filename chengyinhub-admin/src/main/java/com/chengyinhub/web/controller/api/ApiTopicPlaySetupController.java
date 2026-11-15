@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.CmsTopic;
 import com.chengyinhub.business.domain.dto.TopicPlaySetupDTO;
 import com.chengyinhub.business.service.IWxContentSecurityService;
@@ -80,12 +82,12 @@ public class ApiTopicPlaySetupController extends BaseController {
     @GetMapping("/api/play/setup")
     public AjaxResult playerView(Long topicId) {
         if (memberId() == null) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         CmsTopic topic = topicAuthorGate.topic(topicId);
         if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() == 2)
                 || !Integer.valueOf(1).equals(topic.getStatus())) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         return success(topicPlaySetupService.playerView(topic));
     }

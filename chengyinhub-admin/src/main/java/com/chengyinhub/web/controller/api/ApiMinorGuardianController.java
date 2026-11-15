@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.IMinorGuardianService;
 import com.chengyinhub.business.service.IMinorProtectionService;
 import com.chengyinhub.business.service.compliance.ComplianceFeatureSwitches;
@@ -100,7 +102,7 @@ public class ApiMinorGuardianController extends BaseController {
     private AjaxResult run(MemberCall call) {
         if (!switches.minorModeOn()) return coded("未成年模式暂未开放", FEATURE_OFF);
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return AjaxResult.success(call.apply(memberId));
         } catch (MinorGuardianException e) {

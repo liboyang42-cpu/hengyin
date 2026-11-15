@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -68,15 +70,15 @@ public class ApiStatsController extends BaseController {
     @PostMapping("/club")
     public AjaxResult club(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long clubId = positiveLong(body == null ? null : body.get("clubId"));
-        if (clubId == null) return error("缺少俱乐部ID");
+        if (clubId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Club club = clubService.selectClubById(clubId);
         if (club == null || club.getId() == null || club.getMemberId() == null
                 || !memberId.equals(club.getMemberId())
                 || !Long.valueOf(1L).equals(club.getStatus())
                 || !Integer.valueOf(0).equals(club.getDelFlag())) {
-            return error("仅当前俱乐部主理人可查看数据看板");
+            return refuse(ErrorCode.FORBIDDEN, "仅当前俱乐部主理人可查看数据看板");
         }
 
         // 只统计本次显式选中的俱乐部；不再按 owner memberId 汇总其他俱乐部。

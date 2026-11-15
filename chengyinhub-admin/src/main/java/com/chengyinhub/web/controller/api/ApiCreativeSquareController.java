@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.ContentInteractionGuard;
 
 import com.chengyinhub.business.domain.*;
@@ -577,7 +579,7 @@ public class ApiCreativeSquareController extends BaseController {
         Long member_id = getAppUserId();
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (!legacyCommunityWritesEnabled) return legacyWriteDisabled();
 
@@ -589,10 +591,10 @@ public class ApiCreativeSquareController extends BaseController {
             umsCreativeSquare.setId(Convert.toLong(id));
             existing = umsCreativeSquareService.selectUmsCreativeSquareById(umsCreativeSquare.getId());
             if (existing == null) {
-                return error("内容不存在");
+                return refuse(ErrorCode.NOT_FOUND, "内容不存在");
             }
             if (OwnershipUtils.notOwner(existing.getMemberId(), member_id)) {
-                return error("无权编辑该内容");
+                return refuse(ErrorCode.FORBIDDEN, "无权编辑该内容");
             }
         } else {
             //添加
@@ -605,7 +607,7 @@ public class ApiCreativeSquareController extends BaseController {
         if (StringUtils.isNotEmpty(contents)) {
             umsCreativeSquare.setContents(contents);
         } else {
-            return error("请输入发布内容");
+            return refuse(ErrorCode.BAD_REQUEST, "请输入发布内容");
         }
         // R10-06:编辑态区分「未提交」与「显式清空」——参数非 null 即用户明确提交,空串=真清空;
         // 参数缺失(null)= 不提交,mapper 只写非 null 字段,原值保留。发布态维持非空才写。
@@ -926,7 +928,7 @@ public class ApiCreativeSquareController extends BaseController {
         }
         CmsActivity activity = cmsActivityService.selectCmsActivityById(dataId);
         if (activity == null) {
-            return error("活动不存在");
+            return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
         }
         if (OwnershipUtils.isOwner(activity.getMemberId(), memberId)) {
             return null;
@@ -986,7 +988,7 @@ public class ApiCreativeSquareController extends BaseController {
         ViewCreativeSquare viewCreativeSquare = new ViewCreativeSquare();
         boolean favoriteOnly = Convert.toBool(ServletUtils.getParameter("favorite_only"), false);
         if (favoriteOnly) {
-            if (member_id == null || member_id <= 0) return error("请先登录");
+            if (member_id == null || member_id <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             viewCreativeSquare.setFavoriteOnly(true);
         }
         if (StringUtils.isNotEmpty(keyword)) {
@@ -996,7 +998,7 @@ public class ApiCreativeSquareController extends BaseController {
             if (member_id > 0) {
                 viewCreativeSquare.setMemberId(member_id);
             } else {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
         } else {
             if (user_id != null && user_id > 0) {
@@ -1063,7 +1065,7 @@ public class ApiCreativeSquareController extends BaseController {
         if (viewCreativeSquare != null) {
             if (creativeSquareCommunityPolicyService.isHiddenByBlock(
                     member_id, viewCreativeSquare.getMemberId())) {
-                return error("内容不存在");
+                return refuse(ErrorCode.NOT_FOUND, "内容不存在");
             }
             if (viewCreativeSquare.getDelFlag() == 2) {
                 return error("已删除");
@@ -1076,7 +1078,7 @@ public class ApiCreativeSquareController extends BaseController {
                 if (topic == null || !Integer.valueOf(0).equals(topic.getDelFlag())
                         || !Integer.valueOf(1).equals(topic.getStatus())
                         || !Integer.valueOf(1).equals(topic.getUserStatus())) {
-                    return error("内容不存在");
+                    return refuse(ErrorCode.NOT_FOUND, "内容不存在");
                 }
             }
 
@@ -1087,7 +1089,7 @@ public class ApiCreativeSquareController extends BaseController {
             return success(viewCreativeSquare);
 
         } else {
-            return error("数据不存在");
+            return refuse(ErrorCode.NOT_FOUND, "数据不存在");
         }
 
     }
@@ -1101,9 +1103,9 @@ public class ApiCreativeSquareController extends BaseController {
     public AjaxResult creativeSquareBookmark(String id, Integer bookmark, String request_id) {
         Long memberId = getAppUserId();
         Long postId = Convert.toLong(id, 0L);
-        if (memberId == null || memberId <= 0) return error("请先登录");
-        if (postId <= 0 || (bookmark == null || (bookmark != 0 && bookmark != 1))) return error("参数不合规");
-        if (StringUtils.isEmpty(request_id)) return error("缺少请求号");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (postId <= 0 || (bookmark == null || (bookmark != 0 && bookmark != 1))) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
+        if (StringUtils.isEmpty(request_id)) return refuse(ErrorCode.BAD_REQUEST, "缺少请求号");
         Long mappedPostId = viewCreativeSquareService.selectMappedCommunityPostId(postId);
         if (mappedPostId == null || mappedPostId <= 0) return error("旧帖尚无可信社区映射，无法收藏或取消收藏");
         postId = mappedPostId;
@@ -1132,19 +1134,19 @@ public class ApiCreativeSquareController extends BaseController {
         UmsCreativeSquare umsCreativeSquare = new UmsCreativeSquare();
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long member_id = getAppUserId();
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (!legacyCommunityWritesEnabled) return legacyWriteDisabled();
         UmsCreativeSquare existing = umsCreativeSquareService.selectUmsCreativeSquareById(cid);
         if (existing == null) {
-            return error("内容不存在");
+            return refuse(ErrorCode.NOT_FOUND, "内容不存在");
         }
         if (OwnershipUtils.notOwner(existing.getMemberId(), member_id)) {
-            return error("无权删除该内容");
+            return refuse(ErrorCode.FORBIDDEN, "无权删除该内容");
         }
         umsCreativeSquare.setId(cid);
         umsCreativeSquare.setDelFlag(2);
@@ -1164,11 +1166,11 @@ public class ApiCreativeSquareController extends BaseController {
     public AjaxResult ceativeSquareReport(String id, String reason) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId = getAppUserId();
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (!legacyCommunityWritesEnabled) return legacyWriteDisabled();
         String normalizedReason;
@@ -1180,7 +1182,7 @@ public class ApiCreativeSquareController extends BaseController {
 
         UmsCreativeSquare existing = umsCreativeSquareService.selectUmsCreativeSquareById(cid);
         if (existing == null || existing.getDelFlag() != null && existing.getDelFlag() == 2) {
-            return error("内容不存在");
+            return refuse(ErrorCode.NOT_FOUND, "内容不存在");
         }
 
         // 举报只进统一审核队列,不立即下架(内容审核前仍可见);审核台 REJECT 才软封下架、APPROVE 不动
@@ -1199,9 +1201,9 @@ public class ApiCreativeSquareController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
 
         PlayerNodeProgress probe = new PlayerNodeProgress();
         probe.setMemberId(memberId);
@@ -1294,16 +1296,16 @@ public class ApiCreativeSquareController extends BaseController {
         Long member_id = getAppUserId();
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (!legacyCommunityWritesEnabled) return legacyWriteDisabled();
         Long dataId = Convert.toLong(id, 0L);
         Integer likeType = Convert.toInt(type, 0);
         if (dataId < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         if (likeType > 2 || likeType < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         String targetError = contentInteractionGuard.lockSquare(dataId);
         if (targetError != null) return error(targetError);

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.exception.TopicPublicationContentException;
 
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
@@ -433,7 +435,7 @@ public class ApiTopicController extends BaseController {
             memberId = principalMemberId;
             // 参数校验
             if (memberId == null || memberId <= 0) {
-                return error("请先登录");
+                return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             }
             try {
                 memberId = resolveProjectOwnerMemberId(principalMemberId, dto.getScope());
@@ -467,12 +469,12 @@ public class ApiTopicController extends BaseController {
                 if (dto.getClubId() == null) {
                     // 无俱乐部直发:玩家与商家放行,主理人须绑自己的俱乐部
                     if (isLeaderPub) {
-                        return error("请选择发起经典定向团的合作俱乐部");
+                        return refuse(ErrorCode.BAD_REQUEST, "请选择发起经典定向团的合作俱乐部");
                     }
                 } else {
                     Club club = clubService.selectClubById(dto.getClubId());
                     if (club == null) {
-                        return error("俱乐部不存在");
+                        return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
                     }
                     boolean isLeaderOfOwnClub = OwnershipUtils.isOwner(club.getMemberId(), memberId)
                             && leader != null && (leader.getStatus() == null || leader.getStatus() == 1);
@@ -537,7 +539,7 @@ public class ApiTopicController extends BaseController {
             // D-78(owner 2026-11-11「没有封面不能保存」):存草稿同样必须带封面。
             // 只看作者提交的封面地址是否为空;封面已上传、仍在内容安全复核中的照常放行(读侧会先隐藏它)。
             if (StringUtils.isBlank(dto.getImgUrl())) {
-                return error("请上传主题封面");
+                return refuse(ErrorCode.BAD_REQUEST, "请上传主题封面");
             }
 
             // 首次存草稿带请求意图键:同一账号同一键已建过 → 直接回那份草稿(丢回包后的重试);在途 → 请稍后。
@@ -756,10 +758,10 @@ public class ApiTopicController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long memberId;
         try {
@@ -794,7 +796,7 @@ public class ApiTopicController extends BaseController {
         if (ownPrevious) {
             String effectiveCover = dto.getImgUrl() != null ? dto.getImgUrl() : previousTopic.getImgUrl();
             if (StringUtils.isBlank(effectiveCover)) {
-                return error("请上传主题封面");
+                return refuse(ErrorCode.BAD_REQUEST, "请上传主题封面");
             }
         }
         // 稿 E2:编辑同样要拦 —— 否则建的时候不填勋章、回头编辑再填就绕过去了。
@@ -870,10 +872,10 @@ public class ApiTopicController extends BaseController {
     @PostMapping("/host-qrcode")
     public AjaxResult hostQrcode(String id, String scope) {
         Long principal;
-        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (principal == null || principal <= 0) return error("请先登录");
+        try { principal = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (principal == null || principal <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long topicId = Convert.toLong(id, 0L);
-        if (topicId <= 0) return error("参数不合规");
+        if (topicId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         Long owner;
         try {
             owner = resolveProjectOwnerMemberId(principal, scope);
@@ -906,12 +908,12 @@ public class ApiTopicController extends BaseController {
     @PostMapping("/host-node-answer")
     public AjaxResult hostNodeAnswer(@RequestBody Map<String, Object> body) {
         Long principal;
-        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (principal == null || principal <= 0) return error("请先登录");
-        if (body == null) return error("缺少参数");
+        try { principal = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (principal == null || principal <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null) return refuse(ErrorCode.BAD_REQUEST, "缺少参数");
         Long topicId = Convert.toLong(body.get("topicId"), 0L);
         Long nodeId = Convert.toLong(body.get("nodeId"), 0L);
-        if (topicId <= 0 || nodeId <= 0) return error("缺少主题或站点");
+        if (topicId <= 0 || nodeId <= 0) return refuse(ErrorCode.BAD_REQUEST, "缺少主题或站点");
         Long owner;
         try {
             owner = resolveProjectOwnerMemberId(principal, body.get("scope") == null ? null : String.valueOf(body.get("scope")));
@@ -919,7 +921,7 @@ public class ApiTopicController extends BaseController {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
-        if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)) return error("主题不存在");
+        if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)) return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         CmsTopicNode node = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
         if (node == null || !topicId.equals(node.getTopicId())) return error("该站点不属于本主题");
         boolean publisher = !OwnershipUtils.notOwner(topic.getMemberId(), owner);
@@ -954,8 +956,8 @@ public class ApiTopicController extends BaseController {
     @PostMapping("/share-code")
     public AjaxResult shareCode(String id) {
         Long principal;
-        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (principal == null || principal <= 0) return error("请先登录");
+        try { principal = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (principal == null || principal <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long topicId = Convert.toLong(id, 0L);
         String scene = "home";
         if (topicId > 0) {
@@ -978,10 +980,10 @@ public class ApiTopicController extends BaseController {
     @PostMapping("/invite-chapters")
     public AjaxResult inviteChapters(String id, String scope) {
         Long principal;
-        try { principal = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
-        if (principal == null || principal <= 0) return error("请先登录");
+        try { principal = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (principal == null || principal <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long topicId = Convert.toLong(id, 0L);
-        if (topicId <= 0) return error("参数不合规");
+        if (topicId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         Long owner;
         try {
             owner = resolveProjectOwnerMemberId(principal, scope);
@@ -1063,16 +1065,16 @@ public class ApiTopicController extends BaseController {
     private AjaxResult topicEditDetail(String id, String scope, boolean readback) {
         Long topicId = Convert.toLong(id, 0L);
         if (topicId < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long principalMemberId;
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long memberId;
         try {
@@ -1082,10 +1084,10 @@ public class ApiTopicController extends BaseController {
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() == 2)) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) {
-            return error("无权编辑该主题");
+            return refuse(ErrorCode.FORBIDDEN, "无权编辑该主题");
         }
         com.chengyinhub.business.util.TopicEditWindow.Scope editWindowScope;
         Integer isDraft = cmsTopicService.selectTopicIsDraft(topicId);
@@ -1318,7 +1320,7 @@ public class ApiTopicController extends BaseController {
     public AjaxResult topicDelete(String id, String scope) {
         Long tid = Convert.toLong(id, 0L);
         if (tid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId = 0L;
         try {
@@ -1327,7 +1329,7 @@ public class ApiTopicController extends BaseController {
             logger.warn("topicDelete 获取用户ID异常", e);
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
@@ -1360,7 +1362,7 @@ public class ApiTopicController extends BaseController {
     public AjaxResult topicCancel(String id,String reason,String scope,Long cancellationEpoch) {
         Long tid = Convert.toLong(id, 0L);
         if (tid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         if (reason == null || reason.trim().isEmpty()) {
             return error("请填写取消原因,它会展示给已付款的玩家");
@@ -1372,7 +1374,7 @@ public class ApiTopicController extends BaseController {
             logger.warn("topicCancel 获取用户ID异常", e);
         }
         if (actorMemberId == null || actorMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         // F-L5C-02:取消原因会展示给全部已付款玩家,写入前送检。
         String reasonSecMsg = wxContentSecurityService.checkText(reason, resolveOpenid(actorMemberId));
@@ -1412,7 +1414,7 @@ public class ApiTopicController extends BaseController {
     public AjaxResult topicCancelPreview(String id, String scope) {
         Long tid = Convert.toLong(id, 0L);
         if (tid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long actorMemberId = 0L;
         try {
@@ -1421,7 +1423,7 @@ public class ApiTopicController extends BaseController {
             logger.warn("topicCancelPreview 获取用户ID异常", e);
         }
         if (actorMemberId == null || actorMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             Long hostMemberId = resolveProjectOwnerMemberId(actorMemberId, scope);
@@ -1457,7 +1459,7 @@ public class ApiTopicController extends BaseController {
     public AjaxResult topicUpdateUserStatus(String id, String expectedUserStatus, String scope) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId = 0L;
         try {
@@ -1466,7 +1468,7 @@ public class ApiTopicController extends BaseController {
             logger.warn("topicUpdateUserStatus 获取用户ID异常", e);
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
@@ -1475,14 +1477,14 @@ public class ApiTopicController extends BaseController {
         }
         CmsTopic cmsTopic = cmsTopicService.selectCmsTopicById(cid);
         if (cmsTopic == null) {
-            return error("活动不存在");
+            return refuse(ErrorCode.ACTIVITY_NOT_FOUND, "活动不存在");
         }
         // 归属校验(IDOR):创建者本人,或**该主题所属俱乐部**里持 ACTIVITY_MANAGE 的岗位。
         // 放宽的边界写死在 clubId 上:必须是这条主题自己挂着的俱乐部,拿别的俱乐部的岗位过不来。
         // 2026-09-09 放宽原因:俱乐部的「结束主题」需要管理员也能停售,不能只有主理人本人点得动。
         if (OwnershipUtils.notOwner(cmsTopic.getMemberId(), memberId)
                 && !canManageAsClubStaff(memberId, cmsTopic.getClubId())) {
-            return error("无权操作该主题");
+            return refuse(ErrorCode.TOPIC_FORBIDDEN, "无权操作该主题");
         }
 
         //用户端状态：0未上架  1已上架
@@ -1541,7 +1543,7 @@ public class ApiTopicController extends BaseController {
     public AjaxResult topicReport(String id, String reason) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId = 0L;
         try {
@@ -1550,14 +1552,14 @@ public class ApiTopicController extends BaseController {
             logger.warn("topicReport 获取用户ID异常", e);
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         // 只开放公开可见的主题:草稿/下架/驳回的主题不对外,也不能借举报给它们建审核单。
         CmsTopic topic = cmsTopicService.selectCmsTopicById(cid);
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())
                 || !Integer.valueOf(1).equals(topic.getStatus()) || !Integer.valueOf(1).equals(topic.getUserStatus())
                 || Integer.valueOf(1).equals(cmsTopicService.selectTopicIsDraft(cid))) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         try {
             boolean recorded = auditTaskService.reportContentOnce(
@@ -1577,7 +1579,7 @@ public class ApiTopicController extends BaseController {
     @PostMapping("/transfer-to-club")
     public AjaxResult transferToClub(String topicId, String clubId, String scope) {
         Long memberId;
-        try { memberId = getAppUserId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = getAppUserId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
         } catch (ServiceException e) {
@@ -1587,13 +1589,13 @@ public class ApiTopicController extends BaseController {
         Long cid = Convert.toLong(clubId, 0L);
         if (tid <= 0 || cid <= 0) return error("参数不完整");
         CmsTopic topic = cmsTopicService.selectCmsTopicById(tid);
-        if (topic == null) return error("主题不存在");
+        if (topic == null) return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         // 归属校验:仅主题创建者本人可移交(IDOR),防越权移交他人主题
-        if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return error("无权移交该主题");
+        if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return refuse(ErrorCode.FORBIDDEN, "无权移交该主题");
         // 承接俱乐部合法性:须本人主理该俱乐部,或本人已获该俱乐部通过的合作邀约——与 /create 城市定向绑定门禁一致,
         // 否则移交(挂 club_id 后 publish-draft 不复验 coop)会成为绕过 coop 门禁把主题假挂他人俱乐部的口子。
         Club club = clubService.selectClubById(cid);
-        if (club == null) return error("俱乐部不存在");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         ClubLeader leader = clubLeaderService.selectClubLeaderByMemberId(memberId);
         boolean isLeaderOfOwnClub = OwnershipUtils.isOwner(club.getMemberId(), memberId)
                 && leader != null && (leader.getStatus() == null || leader.getStatus() == 1);
@@ -1681,7 +1683,7 @@ public class ApiTopicController extends BaseController {
                                          String publishRequestId, String expectedContentSha256) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId = 0L;
         try {
@@ -1689,7 +1691,7 @@ public class ApiTopicController extends BaseController {
         } catch (Exception e) {
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         final Long principalMemberId = memberId;
         try {
@@ -1699,10 +1701,10 @@ public class ApiTopicController extends BaseController {
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(cid);
         if (topic == null) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) {
-            return error("无权操作该主题");
+            return refuse(ErrorCode.TOPIC_FORBIDDEN, "无权操作该主题");
         }
         // F1:已完成的发布意图重试先收口。发布成功后 is_draft 已被清掉,超时重发在草稿闸会假失败,
         // 且不能再占额度/重开审核。同作者 + 同 publishRequestId + 同 payload 才命中;其余继续原流程。
@@ -1790,7 +1792,7 @@ public class ApiTopicController extends BaseController {
     public AjaxResult betaGraduate(String topicId, String scope) {
         Long cid = Convert.toLong(topicId, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId = 0L;
         try {
@@ -1798,7 +1800,7 @@ public class ApiTopicController extends BaseController {
         } catch (Exception e) {
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             memberId = resolveProjectOwnerMemberId(memberId, scope);
@@ -1807,11 +1809,11 @@ public class ApiTopicController extends BaseController {
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(cid);
         if (topic == null) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         // 归属校验:仅主题作者本人可把 Beta 主题转正式(IDOR)
         if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) {
-            return error("仅主题作者可转正式");
+            return refuse(ErrorCode.FORBIDDEN, "仅主题作者可转正式");
         }
         // ponytail: V1 作者自决转正,后续如需「N 次完赛才可转正」在此加闸
         // 竞态安全:WHERE beta_flag=1 才清,重复点击/并发只成功一次
@@ -1832,12 +1834,12 @@ public class ApiTopicController extends BaseController {
         Long memberId = getAppUserId();
         Long topicId = Convert.toLong(id, 0L);
         Integer desired = type == null || type.trim().isEmpty() ? 1 : Convert.toInt(type, -1);
-        if (memberId == null || memberId <= 0) return error("请先登录");
-        if (topicId < 1 || (desired != 0 && desired != 1)) return error("参数不合规");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (topicId < 1 || (desired != 0 && desired != 1)) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         if (desired == 1) {
             CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
             if (topic == null || (topic.getDelFlag() != null && topic.getDelFlag() != 0)) {
-                return error("主题不存在");
+                return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
             }
         }
         cmsTopicLikeService.setLiked(memberId, topicId, desired == 1);
@@ -1856,14 +1858,14 @@ public class ApiTopicController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long topicId = Convert.toLong(id, 0L);
         if (topicId <= 0) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         MmsMerchant merchant;
         try {
@@ -1873,7 +1875,7 @@ public class ApiTopicController extends BaseController {
                 merchant = mmsMerchantService.selectMmsMerchantById(access.getMerchantId());
             } else {
                 if (!capabilityService.hasCapability(principalMemberId, MemberCapability.CAP_MERCHANT)) {
-                    return error("仅商家可查看章节承接");
+                    return refuse(ErrorCode.FORBIDDEN, "仅商家可查看章节承接");
                 }
                 merchant = mmsMerchantService.selectMmsMerchantByMemberId(principalMemberId);
             }
@@ -1887,7 +1889,7 @@ public class ApiTopicController extends BaseController {
         TopicTemplateDetailVO detail = cmsTopicService.buildTopicTemplateDetail(
                 topicId, true, merchant.getCategoryId());
         if (detail == null) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         if (!Integer.valueOf(ProductType.FREE_EXPLORE).equals(detail.getProductType())) {
             return error("仅自由探索主题支持章节承接");
@@ -1943,14 +1945,14 @@ public class ApiTopicController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long cid = Convert.toLong(chapterId, 0L);
         if (cid <= 0 || enabled == null || (enabled != 0 && enabled != 1)) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId;
         try {
@@ -1960,14 +1962,14 @@ public class ApiTopicController extends BaseController {
         }
         CmsTopicChapter chapter = cmsTopicChapterService.selectCmsTopicChapterById(cid);
         if (chapter == null || chapter.getTopicId() == null) {
-            return error("章节不存在");
+            return refuse(ErrorCode.NOT_FOUND, "章节不存在");
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(chapter.getTopicId());
         if (topic == null) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) {
-            return error("无权操作该主题");
+            return refuse(ErrorCode.TOPIC_FORBIDDEN, "无权操作该主题");
         }
         // 结束是不可逆的:已结束的章节不能靠这条开关「复活」——
         // 否则「结束本章」就退化成了一个可以来回拨的招商开关。
@@ -2018,14 +2020,14 @@ public class ApiTopicController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long cid = Convert.toLong(chapterId, 0L);
         if (cid <= 0) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId;
         try {
@@ -2073,14 +2075,14 @@ public class ApiTopicController extends BaseController {
         try {
             principalMemberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         if (principalMemberId == null || principalMemberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         Long cid = Convert.toLong(chapterId, 0L);
         if (cid <= 0) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         Long memberId;
         try {
@@ -2090,11 +2092,11 @@ public class ApiTopicController extends BaseController {
         }
         CmsTopicChapter chapter = cmsTopicChapterService.selectCmsTopicChapterById(cid);
         if (chapter == null || chapter.getTopicId() == null) {
-            return error("章节不存在");
+            return refuse(ErrorCode.NOT_FOUND, "章节不存在");
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(chapter.getTopicId());
         if (topic == null) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) {
             return error("只有发起人能结束本章");
@@ -2503,7 +2505,7 @@ public class ApiTopicController extends BaseController {
     public AjaxResult xpBudget(String topic_id) {
         Long topicId = Convert.toLong(topic_id, 0L);
         if (topicId <= 0) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         return success(xpBudgetService.computeBudget(topicId));
     }
@@ -2534,13 +2536,13 @@ public class ApiTopicController extends BaseController {
 //        UmsMember umsMember = new UmsMember();
 //        umsMember = umsMemberService.selectUmsMemberById(member_id);
 //        if(umsMember==null){
-//            return error("用户不存在");
+//            return refuse(ErrorCode.USER_NOT_FOUND, "用户不存在");
 //        }
 //        if(umsMember.getStatus()!=1){
-//            return error("会员已禁用，请联系管理员");
+//            return refuse(ErrorCode.ACCOUNT_DISABLED, "会员已禁用，请联系管理员");
 //        }
 //        if(umsMember.getUserType()!=2){
-//            return error("商家才能报名");
+//            return refuse(ErrorCode.MERCHANT_ONLY, "商家才能报名");
 //        }
 
         CmsTopic cmsTopic = new CmsTopic();
@@ -2873,13 +2875,13 @@ public class ApiTopicController extends BaseController {
         UmsMember umsMember = new UmsMember();
         umsMember = umsMemberService.selectUmsMemberById(member_id);
         if (umsMember == null) {
-            return error("用户不存在");
+            return refuse(ErrorCode.USER_NOT_FOUND, "用户不存在");
         }
         if (!Long.valueOf(1L).equals(umsMember.getStatus())) {
-            return error("会员已禁用，请联系管理员");
+            return refuse(ErrorCode.ACCOUNT_DISABLED, "会员已禁用，请联系管理员");
         }
         if (!IRoleService.ROLE_MERCHANT.equals(umsMember.getRole())) {
-            return error("商家才能报名");
+            return refuse(ErrorCode.MERCHANT_ONLY, "商家才能报名");
         }
 
         CmsTopic cmsTopic = new CmsTopic();
@@ -3082,7 +3084,7 @@ public class ApiTopicController extends BaseController {
         if (topicId > 0) {
             cmsTopic.setId(topicId);
         } else {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         Long member_id = 0L;
@@ -3095,10 +3097,10 @@ public class ApiTopicController extends BaseController {
         UmsMember umsMember = new UmsMember();
         umsMember = umsMemberService.selectUmsMemberById(member_id);
         if (umsMember == null) {
-            return error("用户不存在");
+            return refuse(ErrorCode.USER_NOT_FOUND, "用户不存在");
         }
         if (umsMember.getStatus() != 1) {
-            return error("会员已禁用，请联系管理员");
+            return refuse(ErrorCode.ACCOUNT_DISABLED, "会员已禁用，请联系管理员");
         }
         MerchantAccessContext access;
         try {
@@ -3192,7 +3194,7 @@ public class ApiTopicController extends BaseController {
             return success(topicInfoVO);
 
         } else {
-            return error("主题活动不存在");
+            return refuse(ErrorCode.NOT_FOUND, "主题活动不存在");
         }
 
     }

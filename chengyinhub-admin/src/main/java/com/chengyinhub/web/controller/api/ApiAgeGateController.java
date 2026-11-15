@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.compliance.MemberAgeAttestationService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -33,7 +35,7 @@ public class ApiAgeGateController extends BaseController {
     @PostMapping("/status")
     public AjaxResult status() {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(service.status(memberId));
         } catch (RuntimeException e) {
@@ -45,9 +47,9 @@ public class ApiAgeGateController extends BaseController {
     @PostMapping("/confirm")
     public AjaxResult confirm(@RequestBody(required = false) Map<String, Object> body, HttpServletRequest request) {
         Long memberId = currentMemberId();
-        if (memberId == null) return error("请先登录");
+        if (memberId == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Boolean adult = strictBoolean(body == null ? null : body.get("adult"));
-        if (adult == null) return error("请选择是否已满 18 周岁");
+        if (adult == null) return refuse(ErrorCode.BAD_REQUEST, "请选择是否已满 18 周岁");
         Object source = body.get("source");
         try {
             return success(service.confirm(memberId, adult, source == null ? null : String.valueOf(source),

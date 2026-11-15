@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.ClubGovernanceBan;
 import com.chengyinhub.business.domain.ClubGovernanceCase;
 import com.chengyinhub.business.domain.dto.ClubGovernanceAppealRequest;
@@ -37,7 +39,7 @@ public class ApiClubGovernanceController extends BaseController {
     @PostMapping("/list")
     public AjaxResult list(@RequestBody(required = false) ClubGovernanceListRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少俱乐部参数");
         try {
             List<ClubGovernanceBanVO> result = new ArrayList<>();
@@ -55,7 +57,7 @@ public class ApiClubGovernanceController extends BaseController {
     @PostMapping("/ban")
     public AjaxResult ban(@RequestBody(required = false) ClubGovernanceBanRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少封禁参数");
         try {
             ClubGovernanceBan row = clubGovernanceService.ban(principal, request.getClubId(),
@@ -70,7 +72,7 @@ public class ApiClubGovernanceController extends BaseController {
     @PostMapping("/unban")
     public AjaxResult unban(@RequestBody(required = false) ClubGovernanceUnbanRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少解封参数");
         try {
             clubGovernanceService.unban(principal, request.getClubId(), request.getBanId(),
@@ -84,7 +86,7 @@ public class ApiClubGovernanceController extends BaseController {
     @PostMapping("/owner/transfer")
     public AjaxResult transferOwner(@RequestBody(required = false) ClubGovernanceOwnerTransferRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少转让参数");
         try {
             return success(ClubGovernanceOwnerTransferVO.from(clubGovernanceService.transferOwner(
@@ -98,7 +100,7 @@ public class ApiClubGovernanceController extends BaseController {
     @PostMapping("/cases/report")
     public AjaxResult report(@RequestBody(required = false) ClubGovernanceReportRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少举报参数");
         try {
             return success(ClubGovernanceCaseVO.from(clubGovernanceService.submitReport(
@@ -112,7 +114,7 @@ public class ApiClubGovernanceController extends BaseController {
     @PostMapping("/cases/appeal")
     public AjaxResult appeal(@RequestBody(required = false) ClubGovernanceAppealRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少申诉参数");
         try {
             return success(ClubGovernanceCaseVO.from(clubGovernanceService.submitAppeal(
@@ -125,7 +127,7 @@ public class ApiClubGovernanceController extends BaseController {
     @PostMapping("/cases/mine")
     public AjaxResult myCases(@RequestBody(required = false) ClubGovernanceListRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少俱乐部参数");
         try {
             List<ClubGovernanceCaseVO> result = new ArrayList<>();

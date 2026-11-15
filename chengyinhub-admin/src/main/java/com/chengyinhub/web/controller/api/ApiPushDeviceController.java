@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +39,7 @@ public class ApiPushDeviceController extends BaseController
     public AjaxResult register(@RequestBody(required = false) Map<String, Object> body)
     {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try
         {
             return success(devices.register(principal, body));
@@ -53,7 +55,7 @@ public class ApiPushDeviceController extends BaseController
     public AjaxResult unregister(@RequestBody(required = false) Map<String, Object> body)
     {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try
         {
             return success(devices.unregister(principal, body));

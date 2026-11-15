@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 
 import com.chengyinhub.business.domain.UmsMember;
 import com.chengyinhub.business.domain.UmsMemberWithdrawal;
@@ -60,7 +62,7 @@ public class ApiWithdrawalController extends BaseController {
 
         }
         if (member_id == 0L) {
-            return error("请登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请登录");
         }
 
         UmsMemberWithdrawal umsMemberWithdrawal = new UmsMemberWithdrawal();
@@ -84,11 +86,11 @@ public class ApiWithdrawalController extends BaseController {
             member_id = getAppUserId();
             username = getAppUserName();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         // 参数校验
         if (member_id == null || member_id <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             // P3 劝退位:后端格挡提现(此前 withdrawable 仅前端下发,后端不拦→属实钱漏洞)
@@ -115,7 +117,7 @@ public class ApiWithdrawalController extends BaseController {
     public AjaxResult withdrawalDelete(String id) {
         Long cid = Convert.toLong(id, 0L);
         if (cid < 1) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
 
         Long memberId = 0L;
@@ -125,7 +127,7 @@ public class ApiWithdrawalController extends BaseController {
 
         }
         if (memberId == null || memberId <= 0) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
 
         // owner + status=0 + del_flag=0 必须在同一条 SQL 里 CAS，避免查后改 TOCTOU。

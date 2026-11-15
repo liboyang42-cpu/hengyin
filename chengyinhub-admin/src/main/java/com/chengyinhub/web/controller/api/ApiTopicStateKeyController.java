@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 import com.chengyinhub.business.access.merchant.MerchantOperationScope;
 import com.chengyinhub.business.access.merchant.MerchantPermission;
@@ -78,7 +80,7 @@ public class ApiTopicStateKeyController extends BaseController {
     @GetMapping("/state-keys")
     public AjaxResult listStateKeys(Long topicId, String scope) {
         if (invalidTopicId(topicId)) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         String denial = editableDenial(topic, scope);
@@ -92,7 +94,7 @@ public class ApiTopicStateKeyController extends BaseController {
     @PostMapping("/state-keys")
     public AjaxResult registerStateKeys(@RequestBody TopicStateKeyRegisterDTO dto) {
         if (dto == null || invalidTopicId(dto.getTopicId())) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(dto.getTopicId());
         String denial = editableDenial(topic, dto.getScope());
@@ -214,7 +216,7 @@ public class ApiTopicStateKeyController extends BaseController {
     @DeleteMapping("/state-keys")
     public AjaxResult deleteStateKey(Long topicId, String key, String scope) {
         if (invalidTopicId(topicId)) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         String denial = editableDenial(topic, scope);
@@ -233,7 +235,7 @@ public class ApiTopicStateKeyController extends BaseController {
             if (!positions.isEmpty()) {
                 return error("状态键 " + key + " 已被引用,不能删除。引用位置:" + String.join("、", positions));
             }
-            return themeStateKeyService.delete(topic.getId(), key) ? success("删除成功") : error("状态键不存在");
+            return themeStateKeyService.delete(topic.getId(), key) ? success("删除成功") : refuse(ErrorCode.NOT_FOUND, "状态键不存在");
         } catch (ServiceException e) {
             return error(e.getMessage());
         }
@@ -247,7 +249,7 @@ public class ApiTopicStateKeyController extends BaseController {
     @GetMapping("/publish-check")
     public AjaxResult publishCheck(Long topicId, String scope) {
         if (invalidTopicId(topicId)) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         String denial = editableDenial(topic, scope);
@@ -268,7 +270,7 @@ public class ApiTopicStateKeyController extends BaseController {
     @GetMapping("/publish-status")
     public AjaxResult publishStatus(Long topicId, String scope) {
         if (invalidTopicId(topicId)) {
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         String denial = editableDenial(topic, scope);

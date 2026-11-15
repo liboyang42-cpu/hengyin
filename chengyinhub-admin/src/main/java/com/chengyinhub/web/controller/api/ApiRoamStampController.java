@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.RoamStamp;
 import com.chengyinhub.business.domain.RoamStampExchange;
 import com.chengyinhub.business.domain.UmsMember;
@@ -99,7 +101,7 @@ public class ApiRoamStampController extends BaseController {
     @PostMapping("/create")
     public AjaxResult create(String picUrl, String caption, String idempotencyKey) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (picUrl == null || picUrl.trim().isEmpty()) return error("图片不能为空");
         String idemKey = normalizeIdemKey(idempotencyKey);
         if (idemKey != null && idemKey.length() > IDEM_KEY_MAX) return error("幂等键过长");
@@ -177,8 +179,8 @@ public class ApiRoamStampController extends BaseController {
     @PostMapping("/exchange")
     public AjaxResult exchange(Long givenStampId) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
-        if (givenStampId == null || givenStampId <= 0) return error("参数有误");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (givenStampId == null || givenStampId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
 
         // 代价必须是我自己的、还在册的票。校验放在最前面 ——
         // 拿别人的票 id 当代价就等于白嫖一张,这是本玩法唯一的资损面。
@@ -246,7 +248,7 @@ public class ApiRoamStampController extends BaseController {
     @PostMapping("/received")
     public AjaxResult received(Integer pageNum, Integer pageSize) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         int size = clampPageSize(pageSize);
         int num = (pageNum == null || pageNum < 1) ? 1 : pageNum;
         List<RoamStamp> rows = roamStampMapper.selectReceivedByMember(memberId, safeOffset(pageNum, size), size);
@@ -266,7 +268,7 @@ public class ApiRoamStampController extends BaseController {
     @PostMapping("/list")
     public AjaxResult list(Integer pageNum, Integer pageSize) {
         Long memberId = uid();
-        if (memberId <= 0) return error("请先登录");
+        if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         int size = clampPageSize(pageSize);
         int num = (pageNum == null || pageNum < 1) ? 1 : pageNum;
         List<RoamStamp> rows = roamStampMapper.selectByMember(memberId, safeOffset(pageNum, size), size);

@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.support.PlayHelpCostApplication;
 import com.chengyinhub.common.annotation.RateLimiter;
 import com.chengyinhub.common.core.controller.BaseController;
@@ -46,7 +48,7 @@ public class ApiPlayHelpController extends BaseController {
     @PostMapping("/shared")
     public AjaxResult shared(@RequestBody Map<String, Object> body) {
         try {
-            if (body == null) return error("参数有误");
+            if (body == null) return refuse(ErrorCode.BAD_REQUEST, "参数有误");
             return success(gameSessionRuntimeService.cooperativePuzzleHelp(currentMemberId(),
                     Convert.toLong(body.get("activityId")), Convert.toLong(body.get("gameSessionId")),
                     Convert.toLong(body.get("nodeId")), Convert.toStr(body.get("runtimeInstance")),

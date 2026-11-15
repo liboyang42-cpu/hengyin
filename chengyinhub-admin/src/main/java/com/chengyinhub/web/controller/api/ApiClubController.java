@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.common.annotation.Anonymous;
 import com.chengyinhub.common.core.text.Convert;
 import java.util.ArrayList;
@@ -460,8 +462,8 @@ public class ApiClubController extends BaseController {
     @PostMapping("/apply")
     public AjaxResult apply(@Validated @RequestBody Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (StringUtils.isEmpty(body.getName())) return error("请填写俱乐部名称");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (StringUtils.isEmpty(body.getName())) return refuse(ErrorCode.BAD_REQUEST, "请填写俱乐部名称");
         return createClubForMember(memberId, body, leaderSeedFromClub(body));
     }
 
@@ -469,12 +471,12 @@ public class ApiClubController extends BaseController {
     @PostMapping("/become-leader")
     public AjaxResult becomeLeader(@RequestBody(required = false) ClubLeaderProfileRequest body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null) return error("请填写主理人资料");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null) return refuse(ErrorCode.BAD_REQUEST, "请填写主理人资料");
         // 与小程序 canNext 同一组必填:前端可被绕过,服务端缺一项就拒,不建档、不发角色
-        if (StringUtils.isBlank(body.getLeaderName())) return error("请填写主理人姓名");
-        if (StringUtils.isBlank(body.getPhone())) return error("请填写联系电话");
-        if (StringUtils.isBlank(body.getExperience())) return error("请选择组织经验");
+        if (StringUtils.isBlank(body.getLeaderName())) return refuse(ErrorCode.BAD_REQUEST, "请填写主理人姓名");
+        if (StringUtils.isBlank(body.getPhone())) return refuse(ErrorCode.BAD_REQUEST, "请填写联系电话");
+        if (StringUtils.isBlank(body.getExperience())) return refuse(ErrorCode.BAD_REQUEST, "请选择组织经验");
         // F-L5C-02:主理人名展示在俱乐部列表/详情,身份与经历给成员看,写入前送检。
         String leaderRisk = wxContentSecurityService.checkText(IWxContentSecurityService.joinText(
                 body.getLeaderName(), body.getIdentity(), body.getCoFounders(), body.getExperience()), openidOf(memberId));
@@ -507,8 +509,8 @@ public class ApiClubController extends BaseController {
     @PostMapping("/create")
     public AjaxResult create(@RequestBody Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (StringUtils.isEmpty(body.getName())) return error("请填写俱乐部名称");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (StringUtils.isEmpty(body.getName())) return refuse(ErrorCode.BAD_REQUEST, "请填写俱乐部名称");
         return createClubForMember(memberId, body, null);
     }
 
@@ -520,7 +522,7 @@ public class ApiClubController extends BaseController {
     @PostMapping("/name-check")
     public AjaxResult nameCheck(@RequestBody(required = false) Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         String reason = clubService.checkNameForCreate(body == null ? null : body.getName(), memberId);
         Map<String, Object> data = new java.util.LinkedHashMap<>();
         data.put("available", reason == null);
@@ -532,7 +534,7 @@ public class ApiClubController extends BaseController {
     @PostMapping("/my-apply")
     public AjaxResult myApply() {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         List<Club> clubs = clubService.selectClubsByMemberId(memberId);   // 最新的一条在前
         return AjaxResult.success(clubs == null || clubs.isEmpty() ? null : clubs.get(0));
     }
@@ -541,7 +543,7 @@ public class ApiClubController extends BaseController {
     @PostMapping("/update-mine")
     public AjaxResult updateMine(@RequestBody Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         // 多俱乐部:带 id 则改指定团(校验归属);否则兼容旧单团前端取第一个
         Club club;
         if (body.getId() != null) {
@@ -549,7 +551,7 @@ public class ApiClubController extends BaseController {
             // 2026-08-26:展示资料放开给管理员(canGovernClub = owner 或 role=1)。
             // 真闸在 clubService.updateOwnedClubProfile 的行锁内再算一次,这里只是早退。
             if (club == null || !clubMemberService.canGovernClub(club, memberId)) {
-                return error("无权修改该俱乐部");
+                return refuse(ErrorCode.FORBIDDEN, "无权修改该俱乐部");
             }
         } else {
             club = clubService.selectClubByMemberId(memberId);
@@ -559,12 +561,12 @@ public class ApiClubController extends BaseController {
         // ★ 经营配置(成员优先报名 / 保留名额 / 折扣价)决定开卖时票怎么分、钱怎么收,只有主理人能改。
         //   管理员带着这几个字段来必须**报错**,不能悄悄忽略 —— 悄悄忽略会让他以为改成功了。
         if (!actorIsOwner && Boolean.TRUE.equals(body.getOperationConfigUpdated())) {
-            return error("只有主理人可以修改会员经营配置");
+            return refuse(ErrorCode.FORBIDDEN, "只有主理人可以修改会员经营配置");
         }
         if (!actorIsOwner && body.getJoinPolicy() != null) {
-            return error("只有主理人可以修改加入方式");
+            return refuse(ErrorCode.FORBIDDEN, "只有主理人可以修改加入方式");
         }
-        if (StringUtils.isEmpty(body.getName())) return error("请填写俱乐部名称");
+        if (StringUtils.isEmpty(body.getName())) return refuse(ErrorCode.BAD_REQUEST, "请填写俱乐部名称");
         String operationConfigError = validateOperationConfig(body);
         if (operationConfigError != null) return error(operationConfigError);
         if (body.getJoinPolicy() != null && body.getJoinPolicy() != 0 && body.getJoinPolicy() != 1) {
@@ -661,12 +663,12 @@ public class ApiClubController extends BaseController {
     // 游客的 isOwner/isJoined/viewerIsAdmin=false、myJoinReviewReason=""、待审数=0,出参走 PublicClubVO 白名单。
     @Anonymous
     public AjaxResult detail(@RequestBody Club body) {
-        if (body.getId() == null) return error("缺少俱乐部ID");
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getId());
-        if (club == null) return error("俱乐部不存在");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         // 稿 M「俱乐部公开可见」关掉之后:非成员不但搜不到,连详情也打不开。
         // ⚠️ 只藏列表不挡详情等于没挡 —— 链接分享出去照样能进。
-        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (!canViewClub(club)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         attachClubDisplay(club); // 带出主理人等级/标签
         club.setMemberCount(effectiveMemberCount(club)); // 口径统一(含主理人)
         // 该俱乐部办的经典定向团数(按 club_id)
@@ -720,10 +722,10 @@ public class ApiClubController extends BaseController {
     // 第十二轮 k2(业主 2026-11-05):游客可看在营业、对外可见、公开加入的俱乐部名单,走 guestMemberRows 投影。
     @Anonymous
     public AjaxResult members(@RequestBody ClubMember body) {
-        if (body.getClubId() == null) return error("缺少俱乐部ID");
+        if (body.getClubId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Long memberId = viewerOrGuest();
         Club club = clubService.selectClubById(body.getClubId());
-        if (club == null) return error("俱乐部不存在");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         if (memberId == null) {
             if (!guestCanBrowseRoster(club)) return error(guestCanViewClub(club) ? "通过审核后可看成员名单" : "这个俱乐部只对成员开放");
         } else {
@@ -895,31 +897,31 @@ public class ApiClubController extends BaseController {
     @PostMapping("/remove-member")
     public AjaxResult removeMember(@RequestBody ClubMember body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getClubId() == null) return error("缺少俱乐部ID");
-        if (body.getMemberId() == null) return error("缺少成员ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getClubId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
+        if (body.getMemberId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少成员ID");
 
         Club club = clubService.selectClubById(body.getClubId());
-        if (club == null) return error("俱乐部不存在");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         if (!canManageMembers(club, memberId)) {
-            return error("无权管理该俱乐部");
+            return refuse(ErrorCode.FORBIDDEN, "无权管理该俱乐部");
         }
         if (OwnershipUtils.isOwner(club.getMemberId(), body.getMemberId())) {
             return error("不能移除俱乐部创建者");
         }
         ClubMember existing = clubMemberService.selectByClubAndMember(body.getClubId(), body.getMemberId());
         if (existing == null) {
-            return error("成员不存在");
+            return refuse(ErrorCode.NOT_FOUND, "成员不存在");
         }
         // ★ 管理员之间不能互相移除 —— 否则两个管理员可以把对方踢掉,等于绕过「提/撤管理员仅主理人」。
         //   CLUB_CO_OWNER/CLUB_OPERATOR 等新角色走 club_role_assignment、role 是 0,只查 role==1
         //   会漏掉他们:非 owner 也不得移除任何持有活跃角色委派的成员(移除即全权限归零)。
         boolean actorIsOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
         if (!actorIsOwner && Integer.valueOf(1).equals(existing.getRole())) {
-            return error("只有主理人可以移除管理员");
+            return refuse(ErrorCode.FORBIDDEN, "只有主理人可以移除管理员");
         }
         if (!actorIsOwner && holdsActiveRoleAssignment(club.getId(), body.getMemberId())) {
-            return error("只有主理人可以移除持有角色的成员");
+            return refuse(ErrorCode.FORBIDDEN, "只有主理人可以移除持有角色的成员");
         }
         ClubLifecycleCommandResultVO lifecycle;
         try {
@@ -945,7 +947,7 @@ public class ApiClubController extends BaseController {
                            @RequestHeader(value = "X-Club-Admission-Payload-SHA256", required = false) String admissionSha) {
         if (admissionRequestId != null || admissionAction != null || admissionSha != null) {
             Long actor;
-            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            try { actor = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
             return clubAdmissionOriginal.write(actor, body == null ? null : body.getId(), false, admissionRequestId,
                     admissionAction, admissionSha, body == null ? null : body.getJoinMessage(), () -> join(body));
         }
@@ -954,8 +956,8 @@ public class ApiClubController extends BaseController {
 
     public AjaxResult join(Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null) return error("缺少俱乐部ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         // 拍板 2026-10-22:商家可以加入俱乐部(不能报名俱乐部活动,闸在报名/候补侧),这里不再拦商家。
 
         Club club = clubService.selectClubById(body.getId());
@@ -989,10 +991,10 @@ public class ApiClubController extends BaseController {
     @PostMapping("/open-settings/member-post")
     public AjaxResult updateMemberPostAllowed(@RequestBody Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null) return error("缺少俱乐部ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Integer enabled = body.getMemberPostAllowed();
-        if (enabled == null || (enabled != 0 && enabled != 1)) return error("开关值不合法");
+        if (enabled == null || (enabled != 0 && enabled != 1)) return refuse(ErrorCode.BAD_REQUEST, "开关值不合法");
         try {
             clubService.updateMemberPostAllowed(body.getId(), memberId, enabled == 1);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -1014,7 +1016,7 @@ public class ApiClubController extends BaseController {
                                         @RequestHeader(value = "X-Club-Welcome-Source-SHA256", required = false) String welcomeSource) {
         if (welcomeRequestId != null || welcomeSource != null) {
             Long actor;
-            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            try { actor = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
             return clubWelcomeNoteOriginal.write(actor, body == null ? null : body.getId(),
                     body == null ? null : body.getWelcomeNote(), welcomeRequestId, welcomeSource, () -> updateWelcomeNote(body));
         }
@@ -1025,14 +1027,14 @@ public class ApiClubController extends BaseController {
     @PostMapping("/open-settings/welcome-note-receipt")
     public AjaxResult welcomeNoteReceipt(@RequestBody Map<String, Object> body) {
         Long actor;
-        try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { actor = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         return clubWelcomeNoteOriginal.receipt(actor, body);
     }
 
     public AjaxResult updateWelcomeNote(Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null) return error("缺少俱乐部ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         String note = body.getWelcomeNote() == null ? "" : body.getWelcomeNote().trim();
         if (note.codePointCount(0, note.length()) > WELCOME_NOTE_MAX) {
             return error("欢迎语最多 " + WELCOME_NOTE_MAX + " 字");
@@ -1118,10 +1120,10 @@ public class ApiClubController extends BaseController {
     @PostMapping("/open-settings/public-visible")
     public AjaxResult updatePublicVisible(@RequestBody Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null) return error("缺少俱乐部ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Integer enabled = body.getPublicVisible();
-        if (enabled == null || (enabled != 0 && enabled != 1)) return error("开关值不合法");
+        if (enabled == null || (enabled != 0 && enabled != 1)) return refuse(ErrorCode.BAD_REQUEST, "开关值不合法");
         try {
             clubService.updatePublicVisible(body.getId(), memberId, enabled == 1);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -1137,10 +1139,10 @@ public class ApiClubController extends BaseController {
     @PostMapping("/open-settings/merchant-coop")
     public AjaxResult updateMerchantUndertakeOpen(@RequestBody Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null) return error("缺少俱乐部ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Integer enabled = body.getMerchantUndertakeOpen();
-        if (enabled == null || (enabled != 0 && enabled != 1)) return error("开关值不合法");
+        if (enabled == null || (enabled != 0 && enabled != 1)) return refuse(ErrorCode.BAD_REQUEST, "开关值不合法");
         try {
             clubService.updateMerchantUndertakeOpen(body.getId(), memberId, enabled == 1);
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -1156,8 +1158,8 @@ public class ApiClubController extends BaseController {
     @PostMapping("/join-requests")
     public AjaxResult joinRequests(@RequestBody ClubMember body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getClubId() == null) return error("缺少俱乐部ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getClubId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         try {
             List<ClubMember> pending = clubMemberService.selectPendingJoinRequests(body.getClubId(), memberId);
             // 第十二轮 k3(p3 N4):入会申请与成员名单同一套名字(报名姓名 → 昵称 → 「城瘾用户 · 时刻 申请」)。
@@ -1182,8 +1184,8 @@ public class ApiClubController extends BaseController {
 
     private AjaxResult reviewJoinRequest(ClubMember body, boolean approve) {
         Long ownerId;
-        try { ownerId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getClubId() == null || body.getMemberId() == null) return error("缺少俱乐部或申请人ID");
+        try { ownerId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getClubId() == null || body.getMemberId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部或申请人ID");
         String why = body.getReviewReason() == null ? "" : body.getReviewReason().trim();
         if (why.length() > 500) return error("审核理由不能超过500字");
         if (!why.isEmpty()) {
@@ -1202,8 +1204,8 @@ public class ApiClubController extends BaseController {
     @PostMapping("/dissolve")
     public AjaxResult dissolve(@RequestBody Club body) {
         Long ownerId;
-        try { ownerId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null) return error("缺少俱乐部ID");
+        try { ownerId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         try {
             ClubLifecycleCommandResultVO lifecycle = clubLifecycleCommandService.dissolve(body.getId(), ownerId,
                     Boolean.TRUE.equals(body.getDissolveConfirmed()),
@@ -1267,8 +1269,8 @@ public class ApiClubController extends BaseController {
     @PostMapping("/dissolution-blockers")
     public AjaxResult dissolutionBlockers(@RequestBody Club body) {
         Long ownerId;
-        try { ownerId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null) return error("缺少俱乐部ID");
+        try { ownerId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         try {
             return AjaxResult.success(clubService.selectDissolutionBlockers(body.getId(), ownerId));
         } catch (IllegalArgumentException e) {
@@ -1303,7 +1305,7 @@ public class ApiClubController extends BaseController {
                            @RequestHeader(value = "X-Club-Admission-Payload-SHA256", required = false) String admissionSha) {
         if (admissionRequestId != null || admissionAction != null || admissionSha != null) {
             Long actor;
-            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            try { actor = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
             return clubAdmissionOriginal.write(actor, body == null ? null : body.getId(), true, admissionRequestId,
                     admissionAction, admissionSha, body == null ? null : body.getJoinMessage(), () -> quit(body));
         }
@@ -1314,14 +1316,14 @@ public class ApiClubController extends BaseController {
     @PostMapping("/admission/receipt")
     public AjaxResult admissionReceipt(@RequestBody java.util.Map<String, Object> body) {
         Long actor;
-        try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { actor = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         return clubAdmissionOriginal.receipt(actor, body);
     }
 
     public AjaxResult quit(Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null) return error("缺少俱乐部ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getId());
         if (club != null && OwnershipUtils.isOwner(club.getMemberId(), memberId)) {
             return error("主理人不能直接退出；请先在成员治理中转让主理人，或解散俱乐部");
@@ -1349,7 +1351,7 @@ public class ApiClubController extends BaseController {
     @PostMapping("/my")
     public AjaxResult my() {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
 
         Map<String, Object> data = new HashMap<>();
         List<Club> owned = clubService.selectClubsByMemberId(memberId); // 多俱乐部:owned 为列表
@@ -1382,7 +1384,7 @@ public class ApiClubController extends BaseController {
     @PostMapping("/home")
     public AjaxResult home() {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
 
         Map<String, Object> data = new HashMap<>();
 
@@ -1468,7 +1470,7 @@ public class ApiClubController extends BaseController {
     @Operation(summary = "可对接商家列表(承接方,coop_open=1)")
     @PostMapping("/merchants")
     public AjaxResult merchants(@RequestBody(required = false) MmsMerchant query) {
-        try { currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         // 仅允许公开发现字段进入查询条件，阻断通过 memberId/phone/wechat/reson 等私密列做存在性探测，
         // 并通过 PublicMerchantDiscoveryVO 白名单出参剥离手机号、微信号、营业执照及内部审核字段。
         MmsMerchant publicQuery = new MmsMerchant();
@@ -1498,15 +1500,15 @@ public class ApiClubController extends BaseController {
     @PostMapping("/chat")
     public AjaxResult chat(@RequestBody Club body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null) return error("缺少俱乐部ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         try {
             clubParticipationGuard.requireAllowed(body.getId(), memberId);
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         Club club = clubService.selectClubById(body.getId());
-        if (club == null) return error("俱乐部不存在");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         boolean isOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
         boolean isMember = clubMemberService.selectByClubAndMember(club.getId(), memberId) != null;
         if (!isOwner && !isMember) return new AjaxResult(403, "加入俱乐部后才能进群聊");
@@ -1524,7 +1526,7 @@ public class ApiClubController extends BaseController {
                                   @RequestHeader(value = "X-Club-Badge-Source-SHA256", required = false) String badgeSource) {
         if (badgeRequestId != null || badgeSource != null) {
             Long actor;
-            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            try { actor = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
             return clubBadgeOriginal.write(actor, "CREATE", badgeRequestId, badgeSource, body, this::badgeIdByCode, () -> badgeCreate(body));
         }
         return badgeCreate(body);
@@ -1534,7 +1536,7 @@ public class ApiClubController extends BaseController {
     @PostMapping("/badge/original-receipt")
     public AjaxResult badgeOriginalReceipt(@RequestBody Map<String, Object> body) {
         Long actor;
-        try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { actor = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         return clubBadgeOriginal.receipt(actor, body);
     }
 
@@ -1545,13 +1547,13 @@ public class ApiClubController extends BaseController {
 
     public AjaxResult badgeCreate(Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long clubId = badgeLong(body.get("clubId"));
         String name = badgeStr(body.get("badgeName"));
-        if (clubId == null || StringUtils.isEmpty(name)) return error("缺少俱乐部或勋章名");
+        if (clubId == null || StringUtils.isEmpty(name)) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部或勋章名");
         Club club = clubService.selectClubById(clubId);
-        if (club == null) return error("俱乐部不存在");
-        if (OwnershipUtils.notOwner(club.getMemberId(), memberId)) return error("只有主理人可创建勋章");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
+        if (OwnershipUtils.notOwner(club.getMemberId(), memberId)) return refuse(ErrorCode.FORBIDDEN, "只有主理人可创建勋章");
         // X03 能力位:权益清单里的「勋章设计」= canDesignMedal。主理人身份与该能力位是两件事,
         // 前者判「是不是这个俱乐部的主人」,后者判「这个身份解锁了勋章设计没有」。
         String medalCapErr = capabilityGuard.checkDesignMedal(memberId);
@@ -1578,14 +1580,14 @@ public class ApiClubController extends BaseController {
     @PostMapping("/badge/list")
     public AjaxResult badgeList(@RequestBody(required = false) Club body) {
         Long viewer;
-        try { viewer = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null) return error("缺少俱乐部ID");
+        try { viewer = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getId());
-        if (club == null) return error("俱乐部不存在");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         // 非公开俱乐部(publicVisible=0)或未过审俱乐部禁止非成员按 ID 枚举勋章
-        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (!canViewClub(club)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         if (!Long.valueOf(1L).equals(club.getStatus()) && !OwnershipUtils.isOwner(club.getMemberId(), viewer)) {
-            return error("俱乐部不存在");
+            return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         }
         return AjaxResult.success(growthBadgeMapper.selectByClub(body.getId()));
     }
@@ -1597,7 +1599,7 @@ public class ApiClubController extends BaseController {
                                  @RequestHeader(value = "X-Club-Badge-Source-SHA256", required = false) String badgeSource) {
         if (badgeRequestId != null || badgeSource != null) {
             Long actor;
-            try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+            try { actor = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
             return clubBadgeOriginal.write(actor, "GRANT", badgeRequestId, badgeSource, body, this::badgeIdByCode, () -> badgeGrant(body));
         }
         return badgeGrant(body);
@@ -1605,14 +1607,14 @@ public class ApiClubController extends BaseController {
 
     public AjaxResult badgeGrant(Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long clubId = badgeLong(body.get("clubId"));
         Long target = badgeLong(body.get("memberId"));
         String code = badgeStr(body.get("badgeCode"));
         if (clubId == null || target == null || StringUtils.isEmpty(code)) return error("参数不完整");
         Club club = clubService.selectClubById(clubId);
-        if (club == null) return error("俱乐部不存在");
-        if (OwnershipUtils.notOwner(club.getMemberId(), memberId)) return error("只有主理人可颁发");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
+        if (OwnershipUtils.notOwner(club.getMemberId(), memberId)) return refuse(ErrorCode.FORBIDDEN, "只有主理人可颁发");
         GrowthBadge gb = growthBadgeMapper.selectByCode(code);
         if (gb == null || gb.getClubId() == null || !gb.getClubId().equals(clubId)) return error("勋章不存在或不属于本俱乐部");
         boolean isMember = OwnershipUtils.isOwner(club.getMemberId(), target) || clubMemberService.selectByClubAndMember(clubId, target) != null;
@@ -1637,11 +1639,11 @@ public class ApiClubController extends BaseController {
     // 第十二轮 k2(业主 2026-11-05):游客可看在营业、对外可见的俱乐部主题;已上架主题才出(publicTopicListWhere)。
     @Anonymous
     public AjaxResult topics(@RequestBody Club body) {
-        if (body.getId() == null) return error("缺少俱乐部ID");
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getId());
-        if (club == null) return error("俱乐部不存在");
-        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
-        if (viewerOrGuest() == null && !guestCanViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
+        if (!canViewClub(club)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
+        if (viewerOrGuest() == null && !guestCanViewClub(club)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         CmsTopic probe = new CmsTopic();
         probe.setClubId(body.getId());
         // 这个端点不要求登录(游客也能看俱乐部主页),拿不到人就当非成员 —— fail-closed。
@@ -1772,7 +1774,7 @@ public class ApiClubController extends BaseController {
         try {
             memberId = currentMemberId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             Long clubId = body.get("clubId") == null ? null : Long.valueOf(body.get("clubId").toString());
@@ -1791,7 +1793,7 @@ public class ApiClubController extends BaseController {
             memberId = currentMemberId();
             username = getAppUserName();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         try {
             Long activityId = clubSessionService.open(body, memberId, username);
@@ -1824,16 +1826,16 @@ public class ApiClubController extends BaseController {
     @PostMapping("/topic-node-answer")
     public AjaxResult topicNodeAnswer(@RequestBody Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null) return error("缺少参数");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null) return refuse(ErrorCode.BAD_REQUEST, "缺少参数");
         Long clubId = badgeLong(body.get("clubId"));
         Long topicId = badgeLong(body.get("topicId"));
         Long nodeId = badgeLong(body.get("nodeId"));
-        if (clubId == null || topicId == null || nodeId == null) return error("缺少俱乐部、团或站点ID");
+        if (clubId == null || topicId == null || nodeId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部、团或站点ID");
         Club club = clubService.selectClubById(clubId);
-        if (club == null) return error("俱乐部不存在");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         if (!clubMemberService.canGovernClub(club, memberId)) {
-            return error("仅主理人或管理员可查看玩法答案");
+            return refuse(ErrorCode.FORBIDDEN, "仅主理人或管理员可查看玩法答案");
         }
         // 团归属校验:防管理员拿别的俱乐部的 topicId 来读答案
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
@@ -1866,16 +1868,16 @@ public class ApiClubController extends BaseController {
     @PostMapping("/topic-registrations")
     public AjaxResult topicRegistrations(@RequestBody Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long clubId = badgeLong(body.get("clubId"));
         Long topicId = badgeLong(body.get("topicId"));
-        if (clubId == null || topicId == null) return error("缺少俱乐部或团ID");
+        if (clubId == null || topicId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部或团ID");
         Club club = clubService.selectClubById(clubId);
-        if (club == null) return error("俱乐部不存在");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         // 2026-08-26:名册放开给管理员**只读**(带队要按名单点人)。
         // ⚠️ 清退退款是另一个接口,仍然 owner-only,别一起放。
         if (!clubMemberService.canGovernClub(club, memberId)) {
-            return error("仅主理人或管理员可查看报名名册");
+            return refuse(ErrorCode.FORBIDDEN, "仅主理人或管理员可查看报名名册");
         }
         // 团归属校验:发布俱乐部认 topic.club_id,执行俱乐部认生效合作单的 ORGANIZER 权限链。
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
@@ -2053,12 +2055,12 @@ public class ApiClubController extends BaseController {
     // 第十二轮 k2(业主 2026-11-05):游客可看在营业、对外可见的俱乐部帖文,走 guestPostProjection。不开评论与任何写。
     @Anonymous
     public AjaxResult postList(@RequestBody ClubPost body) {
-        if (body.getClubId() == null) return error("缺少俱乐部ID");
+        if (body.getClubId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Club club = clubService.selectClubById(body.getClubId());
-        if (club == null) return error("俱乐部不存在");
-        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
+        if (!canViewClub(club)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         boolean guest = viewerOrGuest() == null;
-        if (guest && !guestCanViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (guest && !guestCanViewClub(club)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         // P0-82:按页取,不再整俱乐部全量拉。首页=置顶帖+最新 limit 条;翻页带 beforeId(上一页最后一条非置顶帖)。
         // 回包仍是数组,老客户端不传 limit 时按上限取首页。
         int limit = body.getLimit() == null ? POST_PAGE_MAX : Math.max(1, Math.min(POST_PAGE_MAX, body.getLimit()));
@@ -2265,7 +2267,7 @@ public class ApiClubController extends BaseController {
     @PostMapping("/post/feed")
     public AjaxResult postFeed(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
 
         // limit 是外部输入,边界收在入口这层:解析不了用默认,越界夹到 [1,50]。
         // 放在 service 里会被 controller 测试的 mock 绕过 —— 那道闸测不到就等于没有。
@@ -2279,7 +2281,7 @@ public class ApiClubController extends BaseController {
         // 2026-10-29 业主:俱乐部 tab 改名「发现」,帖文改看全站。scope=all 走全站流,
         // 可见性 / 拉黑 / 删除在 SQL 里判;不传 scope 的老客户端仍是「我加入 / 我合作过」。
         if (body != null && "all".equals(String.valueOf(body.get("scope")))) {
-            if (memberId == null || memberId <= 0) return error("请先登录");
+            if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             Long beforeId = null;
             if (body.get("beforeId") != null) {
                 try { beforeId = Long.parseLong(String.valueOf(body.get("beforeId")).trim()); } catch (Exception ignored) { }
@@ -2351,14 +2353,14 @@ public class ApiClubController extends BaseController {
         if (body == null || body.getId() == null || body.getId() <= 0
                 || body.getClubId() == null || body.getClubId() <= 0) return error("动态或俱乐部ID不合法");
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Club club = clubService.selectClubById(body.getClubId());
-        if (club == null) return error("俱乐部不存在");
-        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (club == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
+        if (!canViewClub(club)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         ClubPost post = clubPostService.selectClubPostById(body.getId());
         if (post == null || !body.getId().equals(post.getId()) || !body.getClubId().equals(post.getClubId())
-                || !Integer.valueOf(0).equals(post.getDelFlag())) return error("动态不存在");
+                || !Integer.valueOf(0).equals(post.getDelFlag())) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         Map<String, Object> data = new HashMap<>();
         data.put("id", post.getId().toString());
         data.put("clubId", post.getClubId().toString());
@@ -2373,20 +2375,20 @@ public class ApiClubController extends BaseController {
     @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_COMMITTED)
     public AjaxResult postLike(@RequestBody ClubPostLike body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getPostId() == null) return error("缺少动态ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getPostId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少动态ID");
         ClubPost targetPost = clubPostService.selectClubPostById(body.getPostId());
         if (targetPost == null || Integer.valueOf(2).equals(targetPost.getDelFlag())) {
-            return error("动态不存在");
+            return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         }
         Club club = clubService.selectClubByIdForUpdate(targetPost.getClubId());
-        if (club == null) return error("动态不存在");
+        if (club == null) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         targetPost = clubPostService.selectClubPostByIdForUpdate(body.getPostId());
         if (targetPost == null || Integer.valueOf(2).equals(targetPost.getDelFlag())
                 || !club.getId().equals(targetPost.getClubId())) {
-            return error("动态不存在");
+            return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         }
-        if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+        if (!canViewClub(club)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         clubParticipationGuard.requireAllowed(club.getId(), memberId);
         // P1-023:带 liked 时按目标态幂等(重试/重复请求不会来回翻转);不带时保持旧切换语义。
         boolean current = clubPostLikeService.selectByPostAndMember(body.getPostId(), memberId) != null;
@@ -2427,21 +2429,21 @@ public class ApiClubController extends BaseController {
      */
     private AjaxResult changeRepost(ClubPostRepost body, boolean reposted) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (memberId == null || memberId <= 0) return error("请先登录");
-        if (body == null || body.getPostId() == null || body.getPostId() <= 0) return error("缺少动态ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null || body.getPostId() == null || body.getPostId() <= 0) return refuse(ErrorCode.BAD_REQUEST, "缺少动态ID");
         ClubPost targetPost = clubPostService.selectClubPostById(body.getPostId());
-        if (targetPost == null) return error("动态不存在");
-        if (reposted && !Integer.valueOf(0).equals(targetPost.getDelFlag())) return error("动态不存在");
+        if (targetPost == null) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
+        if (reposted && !Integer.valueOf(0).equals(targetPost.getDelFlag())) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         Club club = clubService.selectClubByIdForUpdate(targetPost.getClubId());
-        if (club == null && reposted) return error("动态不存在");
+        if (club == null && reposted) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         targetPost = clubPostService.selectClubPostByIdForUpdate(body.getPostId());
         if (targetPost == null || (club != null && !club.getId().equals(targetPost.getClubId()))) {
-            return error("动态不存在");
+            return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         }
         if (reposted) {
-            if (!Integer.valueOf(0).equals(targetPost.getDelFlag())) return error("动态不存在");
-            if (!canViewClub(club)) return error("这个俱乐部只对成员开放");
+            if (!Integer.valueOf(0).equals(targetPost.getDelFlag())) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
+            if (!canViewClub(club)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
             clubParticipationGuard.requireAllowed(club.getId(), memberId);
         }
         clubPostService.setReposted(targetPost.getId(), memberId, reposted);
@@ -2456,8 +2458,8 @@ public class ApiClubController extends BaseController {
     @PostMapping("/set-member-role")
     public AjaxResult setMemberRole(@RequestBody ClubMember body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getClubId() == null || body.getMemberId() == null || body.getRole() == null) return error("缺少参数");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getClubId() == null || body.getMemberId() == null || body.getRole() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少参数");
         if (body.getRole() != 0 && body.getRole() != 1) return error("角色参数不合法");
         try {
             if (body.getRole() == 1) {
@@ -2510,8 +2512,8 @@ public class ApiClubController extends BaseController {
     @PostMapping("/post/create")
     public AjaxResult postCreate(@RequestBody ClubPost body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getClubId() == null) return error("缺少俱乐部ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getClubId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         try {
             clubParticipationGuard.requireAllowed(body.getClubId(), memberId);
         } catch (ServiceException e) {
@@ -2521,7 +2523,7 @@ public class ApiClubController extends BaseController {
             return error("说点什么,或加张图");
         }
         Club postClub = clubService.selectClubById(body.getClubId());
-        if (postClub == null) return error("俱乐部不存在");
+        if (postClub == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         // ★ 2026-09-10 用户裁决:在俱乐部发帖必须是俱乐部成员,商家在俱乐部内部发不了帖。
         // ⚠️ 这道闸此前只在前端(发帖框藏在 canSeeMembers 后面),接口上一个字都没判 ——
         //    任何没被封禁的人直接打这个接口,都能往任意俱乐部发帖。藏入口不是权限。
@@ -2582,8 +2584,8 @@ public class ApiClubController extends BaseController {
     @PostMapping("/post/update")
     public AjaxResult postUpdate(@RequestBody ClubPostMutationRequest body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null) return error("缺少动态ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少动态ID");
         if (StringUtils.isEmpty(body.getContent()) && StringUtils.isEmpty(body.getImages())) {
             return error("动态内容不能为空");
         }
@@ -2604,7 +2606,7 @@ public class ApiClubController extends BaseController {
             "/post/operation/comment/create", "/post/operation/comment/receipt"})
     public AjaxResult postOperation(@RequestBody Map<String, Object> body, jakarta.servlet.http.HttpServletRequest request) {
         Long actor;
-        try { actor = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { actor = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         String uri = request.getRequestURI();
         String suffix = uri.endsWith("/comment/create") ? "comment-create" : uri.endsWith("/comment/receipt") ? "comment-receipt"
                 : uri.substring(uri.lastIndexOf('/') + 1);
@@ -2633,8 +2635,8 @@ public class ApiClubController extends BaseController {
     @PostMapping("/post/pin")
     public AjaxResult postPin(@RequestBody ClubPostMutationRequest body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null || body.getPinned() == null) return error("缺少参数");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null || body.getPinned() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少参数");
         try {
             ClubPost updated = clubPostService.setPinned(memberId, body.getId(), body.getPinned(),
                     body.getVersion(), body.getRequestId());
@@ -2647,11 +2649,11 @@ public class ApiClubController extends BaseController {
     @Operation(summary = "动态公开编辑历史")
     @PostMapping("/post/history")
     public AjaxResult postHistory(@RequestBody ClubPostMutationRequest body) {
-        if (body == null || body.getId() == null) return error("缺少动态ID");
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少动态ID");
         // F0119:历史按「当前」帖子所在俱乐部的可见性投影 —— 转仅成员可见后,旧历史直链同样拒。
         ClubPost historyPost = clubPostService.selectClubPostById(body.getId());
         if (historyPost != null && !canViewClub(clubService.selectClubById(historyPost.getClubId()))) {
-            return error("这个俱乐部只对成员开放");
+            return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         }
         try {
             return AjaxResult.success(clubPostService.listRevisionHistory(body.getId()));
@@ -2663,12 +2665,12 @@ public class ApiClubController extends BaseController {
     @Operation(summary = "动态评论列表(公开)")
     @PostMapping("/post/comment/list")
     public AjaxResult commentList(@RequestBody ClubPostComment body) {
-        if (body.getPostId() == null) return error("缺少动态ID");
+        if (body.getPostId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少动态ID");
         ClubPost post = clubPostService.selectClubPostById(body.getPostId());
-        if (post == null) return error("动态不存在");
+        if (post == null) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         Club commentClub = clubService.selectClubById(post.getClubId());
-        if (commentClub == null) return error("动态不存在");
-        if (!canViewClub(commentClub)) return error("这个俱乐部只对成员开放");
+        if (commentClub == null) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
+        if (!canViewClub(commentClub)) return refuse(ErrorCode.CLUB_MEMBERS_ONLY, "这个俱乐部只对成员开放");
         ClubPostComment q = new ClubPostComment();
         q.setPostId(body.getPostId());
         return AjaxResult.success(clubPostCommentService.selectClubPostCommentList(q));
@@ -2679,11 +2681,11 @@ public class ApiClubController extends BaseController {
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult commentCreate(@RequestBody ClubPostComment body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getPostId() == null) return error("缺少动态ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getPostId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少动态ID");
         if (StringUtils.isEmpty(body.getContent())) return error("评论内容不能为空");
         ClubPost post = clubPostService.selectClubPostById(body.getPostId());
-        if (post == null || Integer.valueOf(2).equals(post.getDelFlag())) return error("动态不存在");
+        if (post == null || Integer.valueOf(2).equals(post.getDelFlag())) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         try {
             clubParticipationGuard.requireAllowed(post.getClubId(), memberId);
         } catch (ServiceException e) {
@@ -2694,7 +2696,7 @@ public class ApiClubController extends BaseController {
         Club club = clubService.selectClubByIdForUpdate(post.getClubId());
         if (club == null) return error("俱乐部不存在或已解散");
         post = clubPostService.selectClubPostByIdForUpdate(body.getPostId());
-        if (post == null || Integer.valueOf(2).equals(post.getDelFlag())) return error("动态不存在");
+        if (post == null || Integer.valueOf(2).equals(post.getDelFlag())) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         boolean isOwner = OwnershipUtils.isOwner(club.getMemberId(), memberId);
         boolean isMember = clubMemberService.selectByClubAndMember(post.getClubId(), memberId) != null;
         if (!isOwner && !isMember) return error("加入俱乐部后才能评论");
@@ -2714,11 +2716,11 @@ public class ApiClubController extends BaseController {
     @PostMapping("/post/delete")
     public AjaxResult postDelete(@RequestBody ClubPost body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null) return error("缺少动态ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少动态ID");
         ClubPost post = clubPostService.selectClubPostById(body.getId());
-        if (post == null) return error("动态不存在");
-        if (!canModerate(post.getClubId(), post.getAuthorMemberId(), memberId)) return error("无权删除");
+        if (post == null) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
+        if (!canModerate(post.getClubId(), post.getAuthorMemberId(), memberId)) return refuse(ErrorCode.FORBIDDEN, "无权删除");
         clubPostService.deleteClubPostById(post.getId());
         return AjaxResult.success("已删除");
     }
@@ -2728,13 +2730,13 @@ public class ApiClubController extends BaseController {
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult commentDelete(@RequestBody ClubPostComment body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null) return error("缺少评论ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少评论ID");
         ClubPostComment c = clubPostCommentService.selectClubPostCommentById(body.getId());
-        if (c == null || (c.getDelFlag() != null && c.getDelFlag() == 2)) return error("评论不存在");
+        if (c == null || (c.getDelFlag() != null && c.getDelFlag() == 2)) return refuse(ErrorCode.NOT_FOUND, "评论不存在");
         ClubPost post = clubPostService.selectClubPostById(c.getPostId());
         Long clubId = post == null ? null : post.getClubId();
-        if (!canModerate(clubId, c.getMemberId(), memberId)) return error("无权删除");
+        if (!canModerate(clubId, c.getMemberId(), memberId)) return refuse(ErrorCode.FORBIDDEN, "无权删除");
         clubPostCommentService.deleteClubPostCommentById(c.getId());
         clubPostService.incrementCommentCount(c.getPostId(), -1);
         return AjaxResult.success("已删除");
@@ -2744,10 +2746,10 @@ public class ApiClubController extends BaseController {
     @PostMapping("/post/report")
     public AjaxResult postReport(@RequestBody ClubPost body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null) return error("缺少动态ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少动态ID");
         ClubPost post = clubPostService.selectClubPostById(body.getId());
-        if (post == null || (post.getDelFlag() != null && post.getDelFlag() == 2)) return error("动态不存在");
+        if (post == null || (post.getDelFlag() != null && post.getDelFlag() == 2)) return refuse(ErrorCode.NOT_FOUND, "动态不存在");
         // 举报统一走 reportContent 进审核队列(与 comment/square 同法);同内容多次举报的幂等汇聚由服务层 reportContent 负责
         try {
             auditTaskService.reportContent("CLUB_POST", post.getId(), memberId, "用户举报");
@@ -2761,10 +2763,10 @@ public class ApiClubController extends BaseController {
     @PostMapping("/post/comment/report")
     public AjaxResult commentReport(@RequestBody ClubPostComment body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null) return error("缺少评论ID");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少评论ID");
         ClubPostComment c = clubPostCommentService.selectClubPostCommentById(body.getId());
-        if (c == null || (c.getDelFlag() != null && c.getDelFlag() == 2)) return error("评论不存在");
+        if (c == null || (c.getDelFlag() != null && c.getDelFlag() == 2)) return refuse(ErrorCode.NOT_FOUND, "评论不存在");
         // CU-C-138:作者本人不给自己开审核单。前端已按作者隐藏入口,这里兜住绕过页面的直调
         //(与 /post/report 的动态作者闸、治理工单的「不能举报自己」同一口径)。删除入口不受影响。
         if (memberId.equals(c.getMemberId())) return error("不能举报自己的评论");
@@ -2792,10 +2794,10 @@ public class ApiClubController extends BaseController {
     @Anonymous
     public AjaxResult leaderboard(@RequestBody Map<String, Object> body) {
         Long clubId = badgeLong(body.get("id"));
-        if (clubId == null) return error("缺少俱乐部ID");
+        if (clubId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少俱乐部ID");
         Long viewerId = viewerOrGuest();
         Club leaderboardClub = clubService.selectClubById(clubId);
-        if (leaderboardClub == null) return error("俱乐部不存在");
+        if (leaderboardClub == null) return refuse(ErrorCode.CLUB_NOT_FOUND, "俱乐部不存在");
         if (viewerId == null) {
             if (!guestCanBrowseRoster(leaderboardClub)) return error(guestCanViewClub(leaderboardClub) ? "通过审核后可看贡献榜" : "这个俱乐部只对成员开放");
             Object guestSort = body.get("sortBy");

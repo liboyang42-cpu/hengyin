@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.ClubAttendanceCorrectionRequest;
 import com.chengyinhub.business.domain.dto.ClubEventScopeRequest;
 import com.chengyinhub.business.domain.dto.ClubEventCancellationRequest;
@@ -42,7 +44,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/topics")
     public AjaxResult topics(@RequestBody(required = false) Map<String, Object> request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long clubId = positiveLong(request == null ? null : request.get("clubId"));
         if (clubId == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少俱乐部参数");
         try {
@@ -55,7 +57,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/series/create")
     public AjaxResult createSeries(@RequestBody(required = false) ClubEventSeriesRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少系列参数");
         try {
             return success(eventOpsService.createSeries(principal, appUsername(principal), request));
@@ -71,7 +73,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/series/original-result")
     public AjaxResult seriesOriginalResult(@RequestBody(required = false) Map<String, Object> request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (seriesOriginalResults == null) return new AjaxResult(503, "系列原始结果未开放");
         return seriesOriginalResults.read(principal, request);
     }
@@ -79,7 +81,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/series/list")
     public AjaxResult listSeries(@RequestBody(required = false) Map<String, Object> request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long clubId = positiveLong(request == null ? null : request.get("clubId"));
         if (clubId == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少俱乐部参数");
         try {
@@ -92,7 +94,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/series/detail")
     public AjaxResult seriesDetail(@RequestBody(required = false) ClubEventSeriesRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null || request.getClubId() == null || request.getSeriesId() == null) {
             return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少系列参数");
         }
@@ -108,7 +110,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/series/occurrences")
     public AjaxResult seriesOccurrences(@RequestBody(required = false) ClubEventSeriesRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null || request.getClubId() == null || request.getSeriesId() == null) {
             return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少系列参数");
         }
@@ -123,7 +125,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/series/update-future")
     public AjaxResult updateFuture(@RequestBody(required = false) ClubEventSeriesRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少系列参数");
         try {
             return success(eventOpsService.updateFuture(principal, appUsername(principal), request));
@@ -136,7 +138,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/series/close")
     public AjaxResult closeSeries(@RequestBody(required = false) ClubEventSeriesRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少系列参数");
         try {
             return success(eventOpsService.closeSeries(principal, appUsername(principal), request));
@@ -148,7 +150,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/cancel")
     public AjaxResult cancelOccurrence(@RequestBody(required = false) ClubEventCancellationRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少取消参数");
         // 取消原因会发给报名者与候补者。
         String risk = textRisk(principal, request.getReason());
@@ -163,7 +165,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/occurrence/status")
     public AjaxResult occurrenceStatus(@RequestBody(required = false) ClubEventScopeRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少场次参数");
         try {
             return success(eventOpsService.getCancellationState(
@@ -176,7 +178,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/waitlist/join")
     public AjaxResult joinWaitlist(@RequestBody(required = false) ClubWaitlistRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少候补参数");
         try {
             return success(waitlistService.join(principal, request.getActivityId(), request.getTicketId()));
@@ -188,7 +190,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/host/request")
     public AjaxResult requestHost(@RequestBody(required = false) ClubWaitlistRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少预约参数");
         try {
             return success(waitlistService.requestHost(principal, request.getActivityId(), request.getTicketId()));
@@ -200,7 +202,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/host/decide")
     public AjaxResult decideHost(@RequestBody(required = false) ClubWaitlistRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null || request.getAccept() == null) {
             return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少预约决定");
         }
@@ -215,7 +217,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/waitlist/status")
     public AjaxResult waitlistStatus(@RequestBody(required = false) ClubWaitlistRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少候补参数");
         try {
             return success(waitlistService.myStatus(principal, request.getActivityId(), request.getTicketId()));
@@ -227,7 +229,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/waitlist/cancel")
     public AjaxResult cancelWaitlist(@RequestBody(required = false) ClubWaitlistRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少候补参数");
         try {
             return success(waitlistService.cancel(principal, request.getActivityId(), request.getTicketId(),
@@ -240,7 +242,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/roster")
     public AjaxResult roster(@RequestBody(required = false) ClubEventScopeRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少场次参数");
         try {
             return success(attendanceService.roster(principal, request.getClubId(), request.getActivityId()));
@@ -252,7 +254,7 @@ public class ApiClubEventOpsController extends BaseController {
     @PostMapping("/attendance/correct")
     public AjaxResult correctAttendance(@RequestBody(required = false) ClubAttendanceCorrectionRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (request == null) return new AjaxResult(HttpStatus.BAD_REQUEST, "缺少更正参数");
         try {
             return success(attendanceService.correct(principal, request));

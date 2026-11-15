@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import java.util.LinkedHashMap;
 import com.chengyinhub.business.service.IMerchantClawbackService;
 import com.chengyinhub.business.domain.MerchantClawbackApplication;
@@ -134,10 +136,10 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/deposit/create")
     public AjaxResult depositCreate(@RequestBody java.util.Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         if (!wechatPayService.isReady()) return new AjaxResult(503, "支付服务暂不可用，请稍后再试");
         Long inviteId = body == null ? null : toLong(body.get("inviteId"));
-        if (inviteId == null) return error("缺少邀约");
+        if (inviteId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少邀约");
         try {
             UmsMember payer = umsMemberService.selectUmsMemberById(memberId);
             String openid = payer == null ? null : payer.getWxOpenId();
@@ -159,13 +161,13 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/deposit/status")
     public AjaxResult depositStatus(@RequestBody java.util.Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long inviteId = body == null ? null : toLong(body.get("inviteId"));
-        if (inviteId == null) return error("缺少邀约");
+        if (inviteId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少邀约");
         CoopInvite invite = coopInviteService.selectCoopInviteById(inviteId);
         Long payer = invite == null ? null : coopInviteService.depositOwedParty(invite);
         if (invite == null || !Integer.valueOf(0).equals(invite.getDelFlag()) || !memberId.equals(payer)) {
-            return error("无权查看该保证金状态");
+            return refuse(ErrorCode.FORBIDDEN, "无权查看该保证金状态");
         }
         if (Integer.valueOf(1).equals(invite.getDepositStatus()) && invite.getDepositOutTradeNo() != null) {
             try {
@@ -214,12 +216,12 @@ public class ApiCoopController extends BaseController {
         try {
             memberId = currentMemberId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
-        if (memberId == null || memberId <= 0) return error("请先登录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (!wechatPayService.isAppReady()) return new AjaxResult(503, "App 支付服务暂不可用，请稍后再试");
         Long inviteId = body == null ? null : toLong(body.get("inviteId"));
-        if (inviteId == null) return error("缺少邀约");
+        if (inviteId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少邀约");
         try {
             java.util.Map<String, Object> prep = coopInviteService.prepareDeposit(inviteId, memberId);
             java.util.Map<String, String> payParams = wechatPayService.createGenericAppOrder(
@@ -272,13 +274,13 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/invite")
     public AjaxResult invite(@RequestBody CoopInvite body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null) return error("缺少邀约参数");
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null) return refuse(ErrorCode.BAD_REQUEST, "缺少邀约参数");
         if (body.getInviteType() == null || body.getInviteType() < 0 || body.getInviteType() > 1) {
             return error("邀请类型不合法");
         }
         if (body.getToId() == null || body.getToType() == null || body.getToType().trim().isEmpty()) {
-            return error("缺少受邀方");
+            return refuse(ErrorCode.BAD_REQUEST, "缺少受邀方");
         }
         if ((body.getInviteType() == 0 && !CoopInvite.TO_MERCHANT.equals(body.getToType()))
                 || (body.getInviteType() == 1 && !"club".equals(body.getToType()))) {
@@ -290,7 +292,7 @@ public class ApiCoopController extends BaseController {
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(body.getTopicId());
         if (topic == null) {
-            return error("主题不存在");
+            return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         }
         // 防伪造:合同主体只能由服务端从主题发布归属解析；操作员 principal 只属于审计身份，
         // 不能被客户端 fromId/fromType 写成合同或结算主体。
@@ -302,7 +304,7 @@ public class ApiCoopController extends BaseController {
             if (topic.getClubId() != null && topic.getClubId() > 0) {
                 Club publisherClub = clubService.selectClubById(topic.getClubId());
                 if (publisherClub == null || publisherClub.getMemberId() == null) {
-                    return error("主题发布俱乐部不存在");
+                    return refuse(ErrorCode.NOT_FOUND, "主题发布俱乐部不存在");
                 }
                 contractOwnerMemberId = publisherClub.getMemberId();
                 if (!contractOwnerMemberId.equals(principalMemberId)) {
@@ -469,7 +471,7 @@ public class ApiCoopController extends BaseController {
     @GetMapping("/invite/request")
     public AjaxResult inviteRequest(@RequestParam String requestId) {
         Long principal;
-        try { principal = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principal = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         try {
             return success(coopInviteService.findInviteRequest(principal, requestId));
         } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
@@ -480,7 +482,7 @@ public class ApiCoopController extends BaseController {
     public AjaxResult inviteRequests(@RequestParam(required = false) Long before,
             @RequestParam(defaultValue = "20") int limit) {
         Long principal;
-        try { principal = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principal = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         try {
             return success(coopInviteService.listInviteRequests(principal, before, limit));
         } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
@@ -490,11 +492,11 @@ public class ApiCoopController extends BaseController {
     public AjaxResult supplyStations(@org.springframework.web.bind.annotation.RequestParam("topicId") Long topicId,
                                     @org.springframework.web.bind.annotation.RequestParam("merchantMemberId") Long merchantMemberId) {
         Long principal;
-        try { principal = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principal = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         if (topicId == null || topicId <= 0 || merchantMemberId == null || merchantMemberId <= 0)
-            return error("参数不合规");
+            return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
         CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
-        if (topic == null) return error("主题不存在");
+        if (topic == null) return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
         Long creator = principal;
         if (OwnershipUtils.notOwner(topic.getMemberId(), creator)) {
             try { creator = merchantAccessService.require(principal, MerchantPermission.PROJECT_MANAGE).getOwnerMemberId(); }
@@ -534,10 +536,10 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/invite/read")
     public AjaxResult markInviteRead(@RequestBody CoopInvite body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null) return error("缺少参数");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少参数");
         CoopInvite inv = coopInviteService.selectCoopInviteById(body.getId());
-        if (inv == null) return error("邀请不存在");
+        if (inv == null) return refuse(ErrorCode.NOT_FOUND, "邀请不存在");
         Long toOwner = resolveToOwner(inv);
         Long contractMemberId;
         try {
@@ -545,7 +547,7 @@ public class ApiCoopController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
-        if (toOwner == null || !toOwner.equals(contractMemberId)) return error("仅受邀方可标记已读");
+        if (toOwner == null || !toOwner.equals(contractMemberId)) return refuse(ErrorCode.FORBIDDEN, "仅受邀方可标记已读");
         coopInviteService.markRead(inv.getId());
         return AjaxResult.success();
     }
@@ -553,8 +555,8 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/handle")
     public AjaxResult handle(@RequestBody CoopInvite body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body.getId() == null || body.getStatus() == null) return error("缺少参数");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body.getId() == null || body.getStatus() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少参数");
         int target = body.getStatus();
         if (target != 1 && target != 2 && target != 3) return error("操作不合法");
         // F-L5C-02:拒绝/撤回/取消的理由会发给对方(详情 + 订阅消息),与 /invite 留言同一道闸。
@@ -563,7 +565,7 @@ public class ApiCoopController extends BaseController {
         if (handleRisk != null) return error(handleRisk);
 
         CoopInvite inv = coopInviteService.selectCoopInviteById(body.getId());
-        if (inv == null) return error("邀请不存在");
+        if (inv == null) return refuse(ErrorCode.NOT_FOUND, "邀请不存在");
         if (inv.getStatus() == null) return error("邀请状态异常");
         if (Integer.valueOf(CoopInvite.TYPE_LEGACY_MERCHANT_NODE).equals(inv.getInviteType())) {
             return error("历史商家节点邀约仅供查看，不能再处理");
@@ -588,7 +590,7 @@ public class ApiCoopController extends BaseController {
         // ---- 接受 / 拒绝:受邀方本人,且邀约须仍在待确认 ----
         if (target == 1 || target == 2) {
             if (inv.getStatus() != 0) return error("该邀请已处理");
-            if (!isTo) return error("仅受邀方可处理");
+            if (!isTo) return refuse(ErrorCode.FORBIDDEN, "仅受邀方可处理");
             if (inv.getInviteType() != null && inv.getInviteType() == CoopInvite.TYPE_OFFICIAL_MERCHANT
                     && CoopInvite.FROM_OFFICIAL.equals(inv.getFromType())) {
                 try {
@@ -647,7 +649,7 @@ public class ApiCoopController extends BaseController {
 
         // ---- 取消(target==3)----
         if (inv.getStatus() == 0) {
-            if (!isFrom) return error("仅发起方可取消");
+            if (!isFrom) return refuse(ErrorCode.FORBIDDEN, "仅发起方可取消");
             try {
                 coopInviteService.cancelPendingInviteWithLock(inv.getId(), contractMemberId, body.getMessage());
             } catch (IllegalStateException e) {
@@ -663,7 +665,7 @@ public class ApiCoopController extends BaseController {
         }
         if (inv.getStatus() == 1) {
             // 锁价前双方可取消并仅记录信用;锁价后由 service 用 lifecycle 闸拒绝单方取消。
-            if (!isFrom && !isTo) return error("无权取消");
+            if (!isFrom && !isTo) return refuse(ErrorCode.FORBIDDEN, "无权取消");
             String reason = body.getMessage();
             if (reason == null || reason.trim().isEmpty()) return error("取消已接受的合作需填写理由");
             try {
@@ -685,9 +687,9 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/deposit/refund/retry")
     public AjaxResult retryDepositRefund(@RequestBody Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long inviteId = body == null ? null : toLong(body.get("inviteId"));
-        if (inviteId == null) return error("缺少邀约");
+        if (inviteId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少邀约");
         try {
             coopInviteService.requestDepositRefund(inviteId, memberId);
         } catch (IllegalStateException e) {
@@ -753,7 +755,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/perk-template/list")
     public AjaxResult perkTemplateList(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long memberId;
         try {
             memberId = merchantAccessService.require(
@@ -768,7 +770,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/perk-template/save")
     public AjaxResult perkTemplateSave(@RequestBody CoopPerkTemplate body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long memberId;
         try {
             memberId = merchantAccessService.require(
@@ -776,11 +778,11 @@ public class ApiCoopController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
-        if (body == null || body.getName() == null || body.getName().trim().isEmpty()) return error("请填写权益名称");
+        if (body == null || body.getName() == null || body.getName().trim().isEmpty()) return refuse(ErrorCode.BAD_REQUEST, "请填写权益名称");
         if (body.getPerkType() == null || body.getPerkType() < 0 || body.getPerkType() > 2) return error("权益类型不合法");
         if (!validPerkAmount(body.getRetailValue(), false)) return error("权益零售价须为不超过99999999.99的正数，最多两位小数");
         if (!validPerkAmount(body.getUnitCost(), true)) return error("成本价须为0至99999999.99，最多两位小数");
-        if (body.getQuota() == null || body.getQuota() <= 0) return error("请填写正整数可接待份数");
+        if (body.getQuota() == null || body.getQuota() <= 0) return refuse(ErrorCode.BAD_REQUEST, "请填写正整数可接待份数");
         // CU-M-79:过期权益模板不允许创建。validEnd 存当日 00:00,下游 offer 一律按
         // validEnd.after(now) 判在售 ⇒ 选今天等于一建就过期;最早只能选明天。
         if (body.getValidEnd() != null && !body.getValidEnd().after(DateUtils.getNowDate())) {
@@ -802,7 +804,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/perk-template/delete")
     public AjaxResult perkTemplateDelete(@RequestBody Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long memberId;
         try {
             memberId = merchantAccessService.require(
@@ -811,7 +813,7 @@ public class ApiCoopController extends BaseController {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         Long id = body == null ? null : toLong(body.get("id"));
-        if (id == null) return error("缺少ID");
+        if (id == null) return refuse(ErrorCode.BAD_REQUEST, "缺少ID");
         coopInviteService.deletePerkTemplate(id, memberId);
         return AjaxResult.success("已删除");
     }
@@ -830,7 +832,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/offer/enroll")
     public AjaxResult offerEnroll(@RequestBody MerchantChapterOffer body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext access;
         try {
             access = merchantAccessService.require(principalMemberId, MerchantPermission.COOP_MANAGE);
@@ -859,8 +861,8 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/offer/withdraw")
     public AjaxResult offerWithdraw(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (principalMemberId == null || principalMemberId <= 0) return error("请先登录");
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (principalMemberId == null || principalMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long ownerMemberId;
         try {
             ownerMemberId = merchantAccessService.require(
@@ -868,9 +870,9 @@ public class ApiCoopController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
-        if (ownerMemberId == null || ownerMemberId <= 0) return error("请先登录");
+        if (ownerMemberId == null || ownerMemberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         Long offerId = body == null ? null : toLong(body.get("offerId"));
-        if (offerId == null || offerId <= 0) return error("缺少供给记录");
+        if (offerId == null || offerId <= 0) return refuse(ErrorCode.BAD_REQUEST, "缺少供给记录");
         Object rawReason = body.get("reason");
         if (rawReason != null && !(rawReason instanceof String)) return error("退出原因格式不正确");
         String reason = rawReason == null ? null : ((String) rawReason).trim();
@@ -889,7 +891,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/offer/circle-supply/reconfirm")
     public AjaxResult reconfirmCircleSupply(@RequestBody MerchantCircleSupplyProfile body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long memberId;
         try {
             memberId = merchantAccessService.require(
@@ -897,7 +899,7 @@ public class ApiCoopController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
-        if (body == null || body.getOfferId() == null) return error("缺少供给记录");
+        if (body == null || body.getOfferId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少供给记录");
         Long offerId = body.getOfferId();
         body.setId(null);
         try {
@@ -912,7 +914,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/offer/circle-supply/reconfirm-current")
     public AjaxResult reconfirmCurrentCircleSupply(@RequestBody MerchantCircleSupplyProfile body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long memberId;
         try {
             memberId = merchantAccessService.require(
@@ -920,8 +922,8 @@ public class ApiCoopController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
-        if (memberId == null || memberId <= 0) return error("请先登录");
-        if (body == null || body.getOfferId() == null) return error("缺少供给记录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null || body.getOfferId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少供给记录");
         try {
             merchantOfferService.reconfirmCurrentCircleSupply(body.getOfferId(), memberId);
             return AjaxResult.success("已重新确认");
@@ -934,7 +936,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/offer/circle-supply/pause")
     public AjaxResult pauseOwnCircleSupply(@RequestBody MerchantCircleSupplyProfile body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long memberId;
         try {
             memberId = merchantAccessService.require(
@@ -942,8 +944,8 @@ public class ApiCoopController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
-        if (memberId == null || memberId <= 0) return error("请先登录");
-        if (body == null || body.getOfferId() == null) return error("缺少供给记录");
+        if (memberId == null || memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        if (body == null || body.getOfferId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少供给记录");
         try {
             merchantOfferService.deactivateOwnCircleSupply(body.getOfferId(), memberId);
             return AjaxResult.success("供给已暂停");
@@ -956,11 +958,11 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/perks/attach")
     public AjaxResult perksAttach(@RequestBody Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long inviteId = body == null ? null : toLong(body.get("inviteId"));
-        if (inviteId == null) return error("缺少邀约");
+        if (inviteId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少邀约");
         CoopInvite invite = coopInviteService.selectCoopInviteById(inviteId);
-        if (invite == null) return error("邀请不存在");
+        if (invite == null) return refuse(ErrorCode.NOT_FOUND, "邀请不存在");
         Long memberId = principalMemberId;
         if ("merchant".equals(invite.getToType())) {
             try {
@@ -989,16 +991,16 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/perks/list")
     public AjaxResult perksList(@RequestBody Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long inviteId = body == null ? null : toLong(body.get("inviteId"));
-        if (inviteId == null) return error("缺少邀约");
+        if (inviteId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少邀约");
         // 仅合作双方(发起方/受邀方,club 受邀=群主)可看该邀约的供给,防 IDOR
         CoopInvite inv = coopInviteService.selectCoopInviteById(inviteId);
-        if (inv == null) return error("邀约不存在");
+        if (inv == null) return refuse(ErrorCode.NOT_FOUND, "邀约不存在");
         Long toOwner = resolveToOwner(inv);
         Long fromOwner = resolveFromOwner(inv);
         if (!memberId.equals(fromOwner) && !memberId.equals(toOwner)) {
-            return error("无权查看");
+            return refuse(ErrorCode.FORBIDDEN, "无权查看");
         }
         List<CoopPerk> perks = coopInviteService.listPerks(inviteId);
         if (!memberId.equals(toOwner) && perks != null) {
@@ -1013,8 +1015,8 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/review/save")
     public AjaxResult reviewSave(@RequestBody CoopReview body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getTopicId() == null || body.getToId() == null) return error("缺少参数");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getTopicId() == null || body.getToId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少参数");
         if (body.getRating() == null || body.getRating() < 1 || body.getRating() > 5) return error("请打 1~5 分");
         if (memberId.equals(body.getToId())) return error("不能评价自己");
         body.setId(null);
@@ -1032,9 +1034,9 @@ public class ApiCoopController extends BaseController {
     @Operation(summary = "某人的评价摘要(均分+条数)")
     @PostMapping("/review/summary")
     public AjaxResult reviewSummary(@RequestBody Map<String, Object> body) {
-        try { currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long toId = body == null ? null : toLong(body.get("toId"));
-        if (toId == null) return error("缺少被评人");
+        if (toId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少被评人");
         Map<String, Object> d = new HashMap<>();
         d.put("summary", coopInviteService.reviewSummary(toId));
         d.put("reviews", coopInviteService.listReviews(toId));
@@ -1045,7 +1047,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/mybiz")
     public AjaxResult mybiz(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long memberId;
         try {
             memberId = merchantAccessService.require(
@@ -1064,7 +1066,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/complaint/topics")
     public AjaxResult complaintTopics() {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         // ★ 为什么不复用 /api/registration/list?owner_type=3(2026-08-18 真库实测的两个缺陷):
         //   ① 那条链路末端会过 ApiRegistrationController.filterEndedOverWeek(HIDE_AFTER_END_DAYS=7),
         //      把结束超过 7 天的主题从选择源砍掉 —— 那是给「我参与的」列表做视觉收纳的规则,
@@ -1091,8 +1093,8 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/complaint/report")
     public AjaxResult complaintReport(@RequestBody com.chengyinhub.business.domain.CoopComplaint body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getTopicId() == null) return error("缺少主题");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getTopicId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少主题");
         Long topicId = body.getTopicId();
         // 参与校验:投诉人须是该主题报名参与者;否则任意人可对任意主题投诉刷冻结结算(IDOR/资损)。
         // ★ 判据不在这里手写(2026-08-18):选择源与受理口各写一份必然漂 —— 上一版这里比的是
@@ -1105,7 +1107,7 @@ public class ApiCoopController extends BaseController {
                 : cmsRegistrationService.selectComplainableTopics(memberId)) {
             if (topicId.equals(t.getTopicId())) { target = t; break; }
         }
-        if (target == null) return error("仅本主题已支付参与者可投诉");
+        if (target == null) return refuse(ErrorCode.FORBIDDEN, "仅本主题已支付参与者可投诉");
         // 防刷冻结:同一投诉人对同主题已有未结工单则不重复建
         for (com.chengyinhub.business.domain.CoopComplaint ex : coopComplaintService.listByTopic(topicId)) {
             if (memberId.equals(ex.getReporterMemberId()) && ex.getStatus() != null
@@ -1126,10 +1128,10 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/contact")
     public AjaxResult contact(@RequestBody CoopInvite body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (body == null || body.getId() == null) return error("缺少邀约");
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (body == null || body.getId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少邀约");
         CoopInvite inv = coopInviteService.selectCoopInviteById(body.getId());
-        if (inv == null) return error("邀约不存在");
+        if (inv == null) return refuse(ErrorCode.NOT_FOUND, "邀约不存在");
         if (Integer.valueOf(CoopInvite.TYPE_LEGACY_MERCHANT_NODE).equals(inv.getInviteType())) {
             return error("历史商家节点邀约仅供查看，不能再创建会话");
         }
@@ -1142,11 +1144,11 @@ public class ApiCoopController extends BaseController {
         try {
             contractMemberId = resolveActionContractMemberId(memberId, inv, fromOwner, toOwner, true, true);
         } catch (ServiceException e) {
-            return error("无权联系");
+            return refuse(ErrorCode.FORBIDDEN, "无权联系");
         }
         boolean isFrom = fromOwner != null && contractMemberId.equals(fromOwner);
         boolean isTo = toOwner != null && contractMemberId.equals(toOwner);
-        if (!isFrom && !isTo) return error("无权联系");
+        if (!isFrom && !isTo) return refuse(ErrorCode.FORBIDDEN, "无权联系");
         Long other = isFrom ? toOwner : fromOwner;
         if (other == null) return error("对方暂不可联系");
         try {
@@ -1164,7 +1166,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/finance")
     public AjaxResult finance(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Map<String, Object> d = new HashMap<>();
         try {
             d.put("topics", coopInviteService.clubFinance(memberId));
@@ -1236,7 +1238,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/credit")
     public AjaxResult credit(@RequestBody(required = false) Map<String, Object> body) {
         Long memberId;
-        try { memberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { memberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         // 默认查本人;传 memberId 可查他人(主页展示合作方履约率)
         Long target = memberId;
         if (body != null && body.get("memberId") != null) {
@@ -1249,8 +1251,8 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/candidates")
     public AjaxResult candidates(@RequestBody CoopInvite query) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
-        if (query == null || query.getTopicId() == null) return error("缺少主题");
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
+        if (query == null || query.getTopicId() == null) return refuse(ErrorCode.BAD_REQUEST, "缺少主题");
         Long memberId;
         try {
             memberId = projectOwnerMemberId(principalMemberId, query.getScope());
@@ -1258,8 +1260,8 @@ public class ApiCoopController extends BaseController {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsTopic topic = cmsTopicService.selectCmsTopicById(query.getTopicId());
-        if (topic == null) return error("主题不存在");
-        if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return error("仅主题发布者可查看候选池");
+        if (topic == null) return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
+        if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return refuse(ErrorCode.FORBIDDEN, "仅主题发布者可查看候选池");
         if (topic.getClubId() != null && clubService.selectClubById(topic.getClubId()) == null) {
             return error("主题所属俱乐部已解散，候选池不可用");
         }
@@ -1317,9 +1319,9 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/candidates/confirm")
     public AjaxResult confirmCandidate(@RequestBody Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long regId = body == null ? null : toLong(body.get("registrationId"));
-        if (regId == null) return error("缺少报名");
+        if (regId == null) return refuse(ErrorCode.BAD_REQUEST, "缺少报名");
         Long memberId;
         try {
             memberId = projectOwnerMemberId(principalMemberId,
@@ -1329,11 +1331,11 @@ public class ApiCoopController extends BaseController {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
         CmsRegistrationMerchant reg = cmsRegistrationMerchantService.selectCmsRegistrationMerchantById(regId);
-        if (reg == null) return error("报名不存在");
+        if (reg == null) return refuse(ErrorCode.REGISTRATION_NOT_FOUND, "报名不存在");
         // 校验:仅该报名对应主题的发布者可确认
         CmsTopic topic = reg.getTopicId() != null ? cmsTopicService.selectCmsTopicById(reg.getTopicId()) : null;
-        if (topic == null) return error("主题不存在");
-        if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return error("仅主题发布者可确认候选");
+        if (topic == null) return refuse(ErrorCode.TOPIC_NOT_FOUND, "主题不存在");
+        if (OwnershipUtils.notOwner(topic.getMemberId(), memberId)) return refuse(ErrorCode.FORBIDDEN, "仅主题发布者可确认候选");
         DispatchResult dispatch = dispatchService.confirmRegistration(regId);
         if (!dispatch.isSelected()) return error(dispatch.getMessage());
 
@@ -1370,7 +1372,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/candidates/received")
     public AjaxResult candidatesReceived(@RequestBody(required = false) Map<String, Object> body) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         Long memberId;
         try {
             memberId = projectOwnerMemberId(principalMemberId,
@@ -1578,7 +1580,7 @@ public class ApiCoopController extends BaseController {
     @PostMapping("/list")
     public AjaxResult list(@RequestBody(required = false) CoopInvite query) {
         Long principalMemberId;
-        try { principalMemberId = currentMemberId(); } catch (Exception e) { return error("请先登录"); }
+        try { principalMemberId = currentMemberId(); } catch (Exception e) { return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录"); }
         MerchantAccessContext merchantAccess = null;
         try {
             merchantAccess = merchantAccessService.require(

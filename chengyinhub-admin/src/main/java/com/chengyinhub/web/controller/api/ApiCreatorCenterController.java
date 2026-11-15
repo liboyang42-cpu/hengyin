@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.CreatorProfileApplyDTO;
 import com.chengyinhub.business.service.ICreatorCenterService;
 import com.chengyinhub.common.core.controller.BaseController;
@@ -29,7 +31,7 @@ public class ApiCreatorCenterController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return success(creatorCenterService.getCenter(memberId));
     }
@@ -41,7 +43,7 @@ public class ApiCreatorCenterController extends BaseController {
         try {
             memberId = getAppUserId();
         } catch (Exception e) {
-            return error("请先登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return success(creatorCenterService.apply(memberId, request));
     }

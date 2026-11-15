@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.CmsPointsSetting;
 import com.chengyinhub.business.domain.UmsMemberPointsDetail;
 import com.chengyinhub.business.service.ICmsPointsSettingService;
@@ -49,7 +51,7 @@ public class ApiPointsController extends BaseController {
         }
 
         if (member_id == 0L) {
-            return error("请登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请登录");
         }
 
         CmsPointsSetting cmsPointsSetting = new CmsPointsSetting();
@@ -81,7 +83,7 @@ public class ApiPointsController extends BaseController {
 
         }
         if (member_id == 0L) {
-            return error("请登录");
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请登录");
         }
 
         UmsMemberPointsDetail umsMemberPointsDetail = new UmsMemberPointsDetail();

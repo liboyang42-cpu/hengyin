@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.MerchantReviewCreateRequest;
 import com.chengyinhub.business.domain.dto.MerchantReviewReplyDeleteRequest;
 import com.chengyinhub.business.domain.dto.MerchantReviewReplyRequest;
@@ -44,7 +46,7 @@ public class ApiMerchantReviewController extends BaseController {
                                  @RequestParam(value = "pageNum", required = false) Integer pageNum,
                                  @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         Long principal = optionalPrincipal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantReviewService.manageList(principal, filter, pageNum, pageSize));
         } catch (ServiceException e) {
@@ -56,7 +58,7 @@ public class ApiMerchantReviewController extends BaseController {
     @PostMapping("/create")
     public AjaxResult create(@RequestBody(required = false) MerchantReviewCreateRequest request) {
         Long principal = optionalPrincipal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantReviewService.create(principal, request));
         } catch (ServiceException e) {
@@ -68,7 +70,7 @@ public class ApiMerchantReviewController extends BaseController {
     @PostMapping("/reply")
     public AjaxResult reply(@RequestBody(required = false) MerchantReviewReplyRequest request) {
         Long principal = optionalPrincipal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantReviewService.reply(principal, request));
         } catch (ServiceException e) {
@@ -80,7 +82,7 @@ public class ApiMerchantReviewController extends BaseController {
     @PostMapping("/reply/update")
     public AjaxResult updateReply(@RequestBody(required = false) MerchantReviewReplyRequest request) {
         Long principal = optionalPrincipal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantReviewService.updateReply(principal, request));
         } catch (ServiceException e) {
@@ -92,7 +94,7 @@ public class ApiMerchantReviewController extends BaseController {
     @PostMapping("/reply/delete")
     public AjaxResult deleteReply(@RequestBody(required = false) MerchantReviewReplyDeleteRequest request) {
         Long principal = optionalPrincipal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantReviewService.deleteReply(principal, request));
         } catch (ServiceException e) {
@@ -104,7 +106,7 @@ public class ApiMerchantReviewController extends BaseController {
     @PostMapping("/report")
     public AjaxResult report(@RequestBody(required = false) MerchantReviewReportRequest request) {
         Long principal = optionalPrincipal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantReviewService.report(principal, request));
         } catch (ServiceException e) {
@@ -116,7 +118,7 @@ public class ApiMerchantReviewController extends BaseController {
     @PostMapping("/manage/report")
     public AjaxResult reportAsMerchant(@RequestBody(required = false) MerchantReviewReportRequest request) {
         Long principal = optionalPrincipal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantReviewService.reportAsMerchant(principal, request));
         } catch (ServiceException e) {

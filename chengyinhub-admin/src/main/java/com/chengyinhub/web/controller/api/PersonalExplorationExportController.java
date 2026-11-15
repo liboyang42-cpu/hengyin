@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.service.PersonalExplorationExportService;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -30,6 +32,6 @@ public class PersonalExplorationExportController extends BaseController {
             try{return Integer.valueOf(p.getText());}catch(NumberFormatException e){throw JsonMappingException.from(p,"页大小越界");}
         }
     }
-    @PostMapping("/prepare") public AjaxResult prepare(@RequestBody Prepare body){if(body==null)return error("请求不能为空");return success(service.prepare(getAppUserId(),body.startDate,body.endDateExclusive,body.pageSize));}
-    @PostMapping("/page") public AjaxResult page(@RequestBody Page body){if(body==null)return error("请求不能为空");return success(service.page(getAppUserId(),body.cursor));}
+    @PostMapping("/prepare") public AjaxResult prepare(@RequestBody Prepare body){if(body==null)return refuse(ErrorCode.BAD_REQUEST, "请求不能为空");return success(service.prepare(getAppUserId(),body.startDate,body.endDateExclusive,body.pageSize));}
+    @PostMapping("/page") public AjaxResult page(@RequestBody Page body){if(body==null)return refuse(ErrorCode.BAD_REQUEST, "请求不能为空");return success(service.page(getAppUserId(),body.cursor));}
 }

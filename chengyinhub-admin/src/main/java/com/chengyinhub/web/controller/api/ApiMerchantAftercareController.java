@@ -1,5 +1,7 @@
 package com.chengyinhub.web.controller.api;
 
+import com.chengyinhub.common.exception.ErrorCode;
+
 import com.chengyinhub.business.domain.dto.MerchantAftercareRespondRequest;
 import com.chengyinhub.business.service.IMerchantAftercareService;
 import com.chengyinhub.common.core.controller.BaseController;
@@ -26,7 +28,7 @@ public class ApiMerchantAftercareController extends BaseController {
                            @RequestParam(value = "pageNum", required = false) Integer pageNum,
                            @RequestParam(value = "pageSize", required = false) Integer pageSize) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantAftercareService.list(principal, bucket, pageNum, pageSize));
         } catch (ServiceException e) {
@@ -38,7 +40,7 @@ public class ApiMerchantAftercareController extends BaseController {
     @PostMapping("/detail")
     public AjaxResult detail(@RequestParam(value = "refundId", required = false) Long refundId) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantAftercareService.detail(principal, refundId));
         } catch (ServiceException e) {
@@ -50,7 +52,7 @@ public class ApiMerchantAftercareController extends BaseController {
     @PostMapping("/manual-case-detail")
     public AjaxResult manualCaseDetail(@RequestParam(value = "manualCaseId", required = false) Long manualCaseId) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantAftercareService.manualCaseDetail(principal, manualCaseId));
         } catch (ServiceException e) {
@@ -63,7 +65,7 @@ public class ApiMerchantAftercareController extends BaseController {
     public AjaxResult respond(@RequestParam(value = "refundId", required = false) Long refundId,
                               @RequestBody(required = false) MerchantAftercareRespondRequest request) {
         Long principal = principal();
-        if (principal == null) return error("请先登录");
+        if (principal == null) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         try {
             return success(merchantAftercareService.respond(principal, refundId, request));
         } catch (ServiceException e) {
