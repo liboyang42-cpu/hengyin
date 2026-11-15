@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.ClubOpsMapper">
+
+    <!-- 俱乐部位置:地址定点优先,否则最近一场带坐标的已发布场次。公开可见口径与 /api/club/list 的游客口径一致。 -->
+    <select id="selectLocatedClubs" resultType="java.util.LinkedHashMap" useCache="false">
+        select q.* from (
+            select c.id, c.name, c.logo, c.cover, c.city, c.address, c.club_type as clubType,
+                   c.member_count as memberCount,
+                   case when c.location_lat is not null and c.location_lng is not null then 'address' else 'events' end as locationSource,
+                   coalesce(c.location_lat, (
+                       select cast(a.latitude as decimal(12,7)) from cms_activity a
+                       where a.club_id = c.id and a.del_flag = 0 and a.status = 1 and a.publish_status = 1
+                         and a.cancel_time is null
+                         and a.latitude regexp '^-?[0-9]+(\\.[0-9]+)?$' and a.longitude regexp '^-?[0-9]+(\\.[0-9]+)?$'
+                       order by a.start_date desc, a.id desc limit 1)) as lat,
+                   coalesce(c.location_lng, (
+                       select cast(a.longitude as decimal(12,7)) from cms_activity a
+                       where a.club_id = c.id and a.del_flag = 0 and a.status = 1 and a.publish_status = 1
+                         and a.cancel_time is null
+                         and a.latitude regexp '^-?[0-9]+(\\.[0-9]+)?$' and a.longitude regexp '^-?[0-9]+(\\.[0-9]+)?$'
+                       order by a.start_date desc, a.id desc limit 1)) as lng
+            from club c
+            where c.status = 1 and c.del_flag = 0
+              and (c.public_visible is null or c.public_visible &lt;&gt; 0)
+        ) q
+        where q.lat is not null and q.lng is not null
+          and q.lat between #{south} and #{north}
+          and q.lng between #{west} and #{east}
+        order by q.id
+        limit #{limit}
+    </select>
+
+    <select id="selectOccurrences" resultType="java.util.LinkedHashMap" useCache="false">
+        select a.id as activityId, a.topic_id as topicId, a.name as name,
+               a.start_date as startDate, a.end_date as endDate,
+               a.status as status, a.publish_status as publishStatus
+        from cms_activity a
+        where a.club_id = #{clubId} and a.del_flag = 0 and a.cancel_time is null
+          and a.start_date &lt; #{until}
+          and (a.start_date &gt;= #{since} or (a.end_date is not null and a.end_date &gt;= #{since}))
+        order by a.start_date asc, a.id asc
+        limit #{limit}
+    </select>
+
+    <select id="selectAttendance" resultType="java.util.LinkedHashMap" useCache="false">
+        select paid.activityId, paid.startDate, paid.memberId,
+               case when corr.id is not null then corr.new_arrived
+                    when ck.arrived_at is not null or paid.verifiedCount &gt; 0
+                      or exists (select 1 from player_node_progress p
+                                 where p.activity_id = paid.activityId and p.member_id = paid.memberId
+                                   and p.status = 1 and p.del_flag = 0) then 1
+                    else 0 end as arrived
+        from (
+            select a.id as activityId, a.start_date as startDate, r.member_id as memberId,
+                   sum(r.verification_status = 1) as verifiedCount
+            from cms_activity a
+            join cms_registration r on r.owner_type = 2 and r.owner_id = a.id
+                 and r.payment_status = 2 and r.registration_status = 2
+            where a.club_id = #{clubId} and a.del_flag = 0 and a.cancel_time is null
+              and a.start_date &gt;= #{since} and a.start_date &lt; #{until}
+            group by a.id, a.start_date, r.member_id
+        ) paid
+        left join club_lead_checkin ck on ck.activity_id = paid.activityId and ck.member_id = paid.memberId
+        left join club_event_attendance_correction corr on corr.id = (
+            select max(c2.id) from club_event_attendance_correction c2
+            where c2.activity_id = paid.activityId and c2.member_id = paid.memberId
+        )
+        order by paid.startDate asc, paid.activityId asc, paid.memberId asc
+    </select>
+
+    <select id="selectMemberJoins" resultType="java.util.LinkedHashMap" useCache="false">
+        select cm.member_id as memberId, cm.join_time as joinedAt
+        from club_member cm
+        join club c on c.id = cm.club_id and c.del_flag = 0
+        where cm.club_id = #{clubId} and cm.status = 1 and cm.del_flag = 0
+          and cm.member_id &lt;&gt; c.member_id
+    </select>
+
+    <select id="countRunningTopics" resultType="int">
+        select count(*) from cms_topic t
+        where t.club_id = #{clubId} and t.del_flag = 0 and ifnull(t.total_mileage, 0) &gt; 0
+    </select>
+</mapper>
