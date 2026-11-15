@@ -113,5 +113,31 @@ class AdvancedActionJudgementTest {
         assertEquals("body",draw.state().path("draws").path(0).path("content").asText());
     }
 
+    @Test void interactiveMiniGamesEvaluateAndGateMechanicsReady() throws Exception {
+        JsonNode tf = json.readTree("{\"trueFalse\":{\"enabled\":true,\"title\":\"题面\",\"answer\":false,\"xp\":12}}");
+        Plan tfPass = judge().evaluate(Action.SUBMIT_TRUE_FALSE, new Input(tf, json.createObjectNode(), Map.of("answer", false), 5, 7L));
+        assertEquals(17, tfPass.score());
+        assertTrue(AdvancedActionJudgement.mechanicsReady(tf, tfPass.state()));
+
+        JsonNode ig = json.readTree("{\"imageGuess\":{\"enabled\":true,\"title\":\"看图猜\",\"imageUrl\":\"https://cdn.example.com/a.jpg\",\"answer\":\"鼓浪屿\",\"revealSteps\":[\"福建\",\"海岛\"],\"xp\":20}}");
+        Plan igReveal = judge().evaluate(Action.SUBMIT_IMAGE_GUESS, new Input(ig, json.createObjectNode(), Map.of("action", "REVEAL_STEP"), 0, 7L));
+        assertFalse(AdvancedActionJudgement.mechanicsReady(ig, igReveal.state()));
+        Plan igPass = judge().evaluate(Action.SUBMIT_IMAGE_GUESS, new Input(ig, igReveal.state(), Map.of("guess", "鼓浪屿"), 0, 7L));
+        assertEquals(20, igPass.score());
+        assertTrue(AdvancedActionJudgement.mechanicsReady(ig, igPass.state()));
+
+        JsonNode jigsaw = json.readTree("{\"jigsaw\":{\"enabled\":true,\"title\":\"拼图\",\"imageUrl\":\"https://cdn.example.com/b.jpg\",\"rows\":2,\"cols\":2,\"xp\":15}}");
+        Plan jigsawFail = judge().evaluate(Action.SUBMIT_JIGSAW, new Input(jigsaw, json.createObjectNode(), Map.of("order", Arrays.asList(1, 0, 2, 3)), 0, 7L));
+        assertFalse(AdvancedActionJudgement.mechanicsReady(jigsaw, jigsawFail.state()));
+        Plan jigsawPass = judge().evaluate(Action.SUBMIT_JIGSAW, new Input(jigsaw, jigsawFail.state(), Map.of("order", Arrays.asList(0, 1, 2, 3)), 0, 7L));
+        assertEquals(15, jigsawPass.score());
+        assertTrue(AdvancedActionJudgement.mechanicsReady(jigsaw, jigsawPass.state()));
+
+        JsonNode scratch = json.readTree("{\"scratchCard\":{\"enabled\":true,\"title\":\"刮卡\",\"threshold\":0.45,\"prizeText\":\"口令123\",\"xp\":9}}");
+        Plan scratchPass = judge().evaluate(Action.SUBMIT_SCRATCH_CARD, new Input(scratch, json.createObjectNode(), Map.of("progress", 0.6d), 1, 7L));
+        assertEquals(10, scratchPass.score());
+        assertTrue(AdvancedActionJudgement.mechanicsReady(scratch, scratchPass.state()));
+    }
+
     private AdvancedActionJudgement judge() {return new AdvancedActionJudgement(json,()->new Date(100_000),bound->0,()->42);}
 }

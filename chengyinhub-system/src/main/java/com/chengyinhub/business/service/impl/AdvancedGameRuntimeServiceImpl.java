@@ -37,6 +37,7 @@ import com.chengyinhub.business.service.support.AccusationOutcomePolicy;
 import com.chengyinhub.business.service.support.AccusationTemplateSupport;
 import com.chengyinhub.business.service.support.AdvancedGameRandom;
 import com.chengyinhub.business.service.support.HangmanGameplay;
+import com.chengyinhub.business.service.support.InteractiveMiniGameSupport;
 import com.chengyinhub.business.service.support.PlayHelpUsagePolicy;
 import com.chengyinhub.business.util.AdvancedGamePublicProjection;
 import com.chengyinhub.business.util.StoryVars;
@@ -598,8 +599,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         CardMintRequest pendingCardMint = null;
         boolean challengeTimedOut = zeroChallengeSession && session.getDeadlineAt() != null && clock.now().after(session.getDeadlineAt());
         String challengeGame = normalizedAction.startsWith("SUBMIT_") ? challengeGame(normalizedAction) : null;
-        boolean challengeObjectiveSubmission = zeroChallengeSession && Arrays.asList("SUBMIT_QA", "SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY", "SUBMIT_HANGMAN").contains(normalizedAction);
-        if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify", "hangman")) {
+        boolean challengeObjectiveSubmission = zeroChallengeSession && Arrays.asList("SUBMIT_QA", "SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY", "SUBMIT_HANGMAN", "SUBMIT_TRUE_FALSE", "SUBMIT_IMAGE_GUESS", "SUBMIT_JIGSAW").contains(normalizedAction);
+        if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify", "hangman", "trueFalse", "imageGuess", "jigsaw")) {
             JsonNode owned = state.path("zeroChallengeObjectives").path(String.valueOf(memberId)).get(kind);
             if (owned == null) state.remove(kind); else state.set(kind, owned.deepCopy());
         }
@@ -722,13 +723,13 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (attemptGame != null && !challengeTimedOut) consumeAttempt(state.path(attemptGame));
         if (ownTeamSlot && !challengeTimedOut) saveTeamMemberChallenge(state, attemptGame, memberId);
 
-        if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify", "hangman"))
+        if (challengeObjectiveSubmission) for (String kind : Arrays.asList("qa", "sort", "match", "classify", "hangman", "trueFalse", "imageGuess", "jigsaw"))
             if (state.has(kind)) state.with("zeroChallengeObjectives").with(String.valueOf(memberId)).set(kind, state.get(kind).deepCopy());
         ObjectNode chosenDecision=zeroChallengeSession && !selectedChallenge.isEmpty()?serverGameplayDecision(normalizedAction,config,state):null;
         if (zeroChallengeSession && (challengeTimedOut || normalizedAction.startsWith("SUBMIT_") || chosenDecision!=null)) {
             Boolean judged = judgedOutcome(normalizedAction, state);
             Boolean sensor = passedFact(normalizedAction, state);
-            boolean objective = Arrays.asList("SUBMIT_QA", "SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY", "SUBMIT_HANGMAN").contains(normalizedAction);
+            boolean objective = Arrays.asList("SUBMIT_QA", "SUBMIT_SORT", "SUBMIT_MATCH", "SUBMIT_CLASSIFY", "SUBMIT_HANGMAN", "SUBMIT_TRUE_FALSE", "SUBMIT_IMAGE_GUESS", "SUBMIT_JIGSAW").contains(normalizedAction);
             boolean passed = chosenDecision!=null?"PASS".equals(chosenDecision.path("outcome").asText()):objective ? challengeObjectivesPassed(config, state,selectedChallenge) : Boolean.TRUE.equals(sensor);
             boolean retry = challengeTimedOut || !"SUBMIT_BALL_SHAKE".equals(normalizedAction) && (chosenDecision!=null?"FAIL".equals(chosenDecision.path("outcome").asText()):(Boolean.FALSE.equals(judged) || Boolean.FALSE.equals(sensor)));
             Long hits = !challengeTimedOut && "SUBMIT_BALL_SHAKE".equals(normalizedAction) ? Long.valueOf(state.path("ballShake").path("hits").asLong()) : null;
@@ -1789,6 +1790,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (enabled(config.get("hangman"))) {
             state.set(HangmanGameplay.STATE_KEY, HangmanGameplay.initialState(config.path("hangman")));
         }
+        InteractiveMiniGameSupport.initState(config, state);
         return state;
     }
 
@@ -3401,6 +3403,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                     HangmanGameplay.publicProjection(config.path("hangman"), state.path(HangmanGameplay.STATE_KEY)),
                     new TypeReference<Map<String, Object>>() {}));
         }
+        InteractiveMiniGameSupport.populateKit(config, state, kit);
         /* 罗盘指向:目标方位**就是题面**,开局即下发 —— 玩家得先知道往哪转才谈得上对准。
            这与扫码的显形图相反(那是答案,扫中之前一个字都不许出现在回包里)。
            ⚠️ 这一段只发 xp,永远不许挂到店凭证或有金额的完成条件(现场感契约 §3.3)。 */
