@@ -29,6 +29,10 @@ public class SettlementRuleServiceImpl implements ISettlementRuleService {
     @Autowired
     private IUmsMemberService umsMemberService;
 
+    /** S3a: configured take per product type over the generic rows; absent (tests) = today's values. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.merchantplans.TakeRateService takeRates;
+
     @Override
     public List<SettlementRule> selectRuleList(SettlementRule query) {
         return settlementRuleMapper.selectRuleList(query);
@@ -42,7 +46,7 @@ public class SettlementRuleServiceImpl implements ISettlementRuleService {
         if (rule == null && !Long.valueOf(0L).equals(effectiveMerchantId)) {
             rule = settlementRuleMapper.selectActiveRule(0L, bizType);
         }
-        return rule;
+        return takeRates == null ? rule : takeRates.applyTo(rule);
     }
 
     @Override

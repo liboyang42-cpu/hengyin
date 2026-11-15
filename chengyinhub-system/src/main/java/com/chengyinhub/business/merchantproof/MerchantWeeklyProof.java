@@ -37,6 +37,8 @@ public final class MerchantWeeklyProof {
         TICKET_REDEMPTION(true), COUPON_REDEMPTION(true), NODE_REDEMPTION(true), NODE_CHECKIN(false), CITY_POINT_VISIT(false);
         final boolean staffVerified;
         Kind(boolean staffVerified) { this.staffVerified = staffVerified; }
+        /** S3a: visit billing counts the same staff verifications as the proof's verified visits. */
+        public boolean staffVerified() { return staffVerified; }
     }
 
     public record Touch(long memberId, Instant at, Kind kind) {}
