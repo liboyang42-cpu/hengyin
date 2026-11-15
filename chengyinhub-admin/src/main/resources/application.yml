@@ -161,6 +161,25 @@ chengyin:
   # 只在 TEST 部署用环境变量置 true;生产在业主说"开钱"之前不得改动(见 docs/roadmap/money-switch/RUNBOOK.md)。
   money-switch:
     server-ceiling: ${CHENGYIN_MONEY_SWITCH_SERVER_CEILING:false}
+  # R6a 通行证 iOS 内购(StoreKit 2)。默认关闭、无 bundle、无根证书、无商品 → Apple 渠道显示不可用。
+  # 只在 TEST/Staging 用环境变量打开;还必须同时打开 platform-pass.enabled 与资金开关的 pass 区域。
+  # 根证书是运营从 https://www.apple.com/certificateauthority/ 下载到本机的文件路径(逗号分隔)。
+  # 私钥只填 .p8 文件路径(App Store Server API 回查用,默认关),绝不把密钥内容写进配置或仓库。
+  pass:
+    apple-iap:
+      enabled: ${CHENGYIN_PASS_APPLE_IAP_ENABLED:false}
+      bundle-id: ${CHENGYIN_APPLE_BUNDLE_ID:}
+      app-apple-id: ${CHENGYIN_APPLE_APP_APPLE_ID:}
+      environment: ${CHENGYIN_APPLE_IAP_ENVIRONMENT:Sandbox}
+      root-certificate-paths: ${CHENGYIN_APPLE_ROOT_CERTIFICATE_PATHS:}
+      online-checks: ${CHENGYIN_APPLE_IAP_ONLINE_CHECKS:true}
+      product-ids:
+        MONTH: ${CHENGYIN_PASS_APPLE_PRODUCT_MONTH:}
+        YEAR: ${CHENGYIN_PASS_APPLE_PRODUCT_YEAR:}
+      server-api-enabled: ${CHENGYIN_APPLE_SERVER_API_ENABLED:false}
+      signing-key-path: ${CHENGYIN_APPLE_SERVER_API_KEY_PATH:}
+      key-id: ${CHENGYIN_APPLE_SERVER_API_KEY_ID:}
+      issuer-id: ${CHENGYIN_APPLE_SERVER_API_ISSUER_ID:}
 
 # MyBatis配置
 mybatis:
