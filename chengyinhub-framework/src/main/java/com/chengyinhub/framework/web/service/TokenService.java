@@ -50,7 +50,7 @@ public class TokenService
         if (key == null || !java.util.Objects.equals(current, signingKeySecret)) {
             key = SessionJwt.hs512Key(current);
             if (SessionJwt.isShortSecret(current)) {
-                org.slf4j.LoggerFactory.getLogger(SessionJwt.class).warn("token.secret 解码后短于 64 字节:为兼容已发会话按 HMAC 规则补零使用,强度仍不足,请安排更换");
+                org.slf4j.LoggerFactory.getLogger(SessionJwt.class).warn("token.secret 解码后短于 64 字节：为兼容已发会话按 HMAC 规则补零使用，强度仍不足，请安排更换");
             }
             signingKeySecret = current;
             signingKey = key;
