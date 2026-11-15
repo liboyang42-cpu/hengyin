@@ -19,6 +19,12 @@ public interface ICashWithdrawService {
      */
     MemberCashWithdraw withdraw(Long memberId, BigDecimal amountYuan);
 
+    /**
+     * R6b:同上,但会员本人没有小程序 openid 时,用 App 内扫码绑定的小程序 openid({@code cy_member_payout_wechat})
+     * 作为收款身份。会员自己的 openid 永远优先;boundMiniOpenid 为空时与 {@link #withdraw(Long, BigDecimal)} 完全一致。
+     */
+    MemberCashWithdraw withdraw(Long memberId, BigDecimal amountYuan, String boundMiniOpenid);
+
     /** 某会员提现记录 */
     List<MemberCashWithdraw> myWithdraws(Long memberId);
 
