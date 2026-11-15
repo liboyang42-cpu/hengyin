@@ -12,3 +12,4 @@ page { background: var(--cy-bg-page); }
 .sg-link { color: var(--cy-color-brand); }
 .sg-warn { color: var(--cy-color-status-warning); }
 .sg-action { margin-top: var(--cy-space-6); }
+.sg-content { padding: 0 var(--cy-space-4) var(--cy-space-3); }
