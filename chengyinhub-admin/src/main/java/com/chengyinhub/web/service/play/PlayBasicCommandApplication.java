@@ -53,6 +53,9 @@ public class PlayBasicCommandApplication {
     private com.chengyinhub.business.service.IGameSessionRuntimeService gameSessionRuntimeService;
     @Autowired(required = false)
     private com.chengyinhub.business.service.support.ArriveLocationGuard arriveLocationGuard;
+    /** P8 SEC-09: scores the fix at the start AND at every later station that sends one. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.locationtrust.LocationTrustService locationTrust;
     @Autowired
     private ICmsTopicNodeService cmsTopicNodeService;
     @Autowired
@@ -771,6 +774,16 @@ public class PlayBasicCommandApplication {
             }
         }
 
+        // SEC-09: every journey node, not only the start. Owner 2026-11-13 still holds: after the start a station
+        // needs no location, so a missing fix is accepted (unless location.trust.journeyRequireFixAfterStart is on).
+        // A fix that IS sent is scored; a simulated or impossible one is refused with a retryable answer and
+        // stays on the review trail.
+        if (locationTrust != null && hasNodeCoord && !(freeCollectStore && stationGameProof)) {
+            AjaxResult untrusted = journeyTrustRejection(memberId, actId, nId, runStarted, longitude, latitude,
+                    accuracy, locationTimestamp, frozenStation);
+            if (untrusted != null) return untrusted;
+        }
+
         JsonNode arrivalReading = frozenStation != null ? ArrivalReading.project(frozenStation)
                 : originalRun.session() == null ? null
                 : ArrivalReading.projectFrozen(originalRun.session().getConfigSnapshotJson(), nId);
@@ -803,6 +816,31 @@ public class PlayBasicCommandApplication {
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "已到达，打卡成功" : "该节点已完成", data);
+    }
+
+    /** SEC-09 helper; null = proceed. */
+    private AjaxResult journeyTrustRejection(Long memberId, Long actId, Long nodeId, boolean runStarted, String longitude,
+            String latitude, String accuracy, String locationTimestamp, JsonNode frozenStation) {
+        Double lat = PlayNodeContext.parseGeoCoordinate(latitude, -90d, 90d);
+        Double lng = PlayNodeContext.parseGeoCoordinate(longitude, -180d, 180d);
+        if (lat == null || lng == null) {
+            if (runStarted && locationTrust.config().journeyRequireFixAfterStart()) {
+                return arriveRejected(PlayCommandErrorContract.retryable("请开启定位", PlayCommandErrorContract.ARRIVE_LOCATION_MISSING), frozenStation);
+            }
+            return null;
+        }
+        com.chengyinhub.business.locationtrust.LocationTrustService.Assessment a = locationTrust.assess(memberId, null,
+                runStarted ? com.chengyinhub.business.locationtrust.LocationTrustKind.JOURNEY_NODE
+                        : com.chengyinhub.business.locationtrust.LocationTrustKind.JOURNEY_START,
+                actId + ":" + nodeId,
+                com.chengyinhub.business.locationtrust.LocationSignals.current(lat, lng, accuracy, locationTimestamp));
+        if (a.credited()) return null;
+        String message = a.rejected()
+                ? com.chengyinhub.business.locationtrust.LocationTrustMessages.rejected(a.reasons())
+                : com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(a.reasons());
+        return arriveRejected(PlayCommandErrorContract.retryable(message, PlayCommandErrorContract.ARRIVE_LOCATION_UNTRUSTED)
+                .put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(a.reasons()))
+                .put("appealable", false), frozenStation);
     }
 
     /** 端上定位时间(epoch 毫秒)；空白/非数字按缺失处理，由冻结策略决定是否拒绝。 */

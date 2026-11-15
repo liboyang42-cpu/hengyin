@@ -118,6 +118,32 @@ public class ApiRoamController extends BaseController {
     /** P7 daily-loop;单测不注入时跳过 */
     @Autowired(required = false)
     private com.chengyinhub.business.service.impl.DailyLoopRecorder dailyLoopRecorder;
+    /** P8 location trust (SEC-04..SEC-09). Optional so unit tests that build the controller by hand keep the legacy path. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.locationtrust.LocationTrustService locationTrust;
+
+    /** Scores one location write; legacy ACCEPT when the service is absent. */
+    private com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trust(
+            Long memberId, Long sessionId, com.chengyinhub.business.locationtrust.LocationTrustKind kind,
+            String refId, double lat, double lng) {
+        if (locationTrust == null) return com.chengyinhub.business.locationtrust.LocationTrustService.Assessment.legacy();
+        return locationTrust.assess(memberId, sessionId, kind, refId,
+                com.chengyinhub.business.locationtrust.LocationSignals.current(lat, lng));
+    }
+
+    private static AjaxResult trustRejected(com.chengyinhub.business.locationtrust.LocationTrustService.Assessment a) {
+        return AjaxResult.error(com.chengyinhub.business.locationtrust.LocationTrustMessages.rejected(a.reasons()))
+                .put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(a.reasons()))
+                .put("retryable", true);
+    }
+
+    /** Write kept on record but nothing credited: says so plainly in the response. */
+    private static void markWithheld(Map<String, Object> data,
+                                     com.chengyinhub.business.locationtrust.LocationTrustService.Assessment a) {
+        data.put("uncredited", true);
+        data.put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(a.reasons()));
+        data.put("trustMessage", com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(a.reasons()));
+    }
 
     /** 包级可见 + 非 final:测试用子类覆写它注入身份,好直调真入口(见 RoamPresenceControllerTest)。 */
     Long uid() {
@@ -175,6 +201,7 @@ public class ApiRoamController extends BaseController {
 
     @Operation(summary = "发现 POI(R6:服务端校验到点,记录供结算发 XP)")
     @PostMapping("/poi/discover")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 60, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     public AjaxResult discoverPoi(String sessionId, Long poiId, Double lat, Double lng) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
@@ -204,6 +231,17 @@ public class ApiRoamController extends BaseController {
             if (prevDist > MIN_MOVE_DIST_M && prevDist / dtSec > MAX_MOVE_SPEED_MPS) {
                 return error("移动过快,疑似伪造定位");
             }
+        }
+        com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
+                trust(memberId, sid, com.chengyinhub.business.locationtrust.LocationTrustKind.POI_DISCOVER, String.valueOf(poiId), lat, lng);
+        if (trusted.rejected()) return trustRejected(trusted);
+        if (trusted.withheld()) {
+            Map<String, Object> held = new LinkedHashMap<>();
+            held.put("discovered", false);
+            held.put("poiId", poiId);
+            held.put("xp", 0);
+            markWithheld(held, trusted);
+            return AjaxResult.success(com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(trusted.reasons()), held);
         }
         int inserted;
         try {
@@ -274,6 +312,7 @@ public class ApiRoamController extends BaseController {
 
     @Operation(summary = "探店入账(任意真商家:roam 据点 / 报名商家),服务端校验到点")
     @PostMapping("/shop/visit")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult shopVisit(String sessionId, Integer sourceType, Long sourceId, Double lat, Double lng) {
         Long memberId = uid();
@@ -327,6 +366,17 @@ public class ApiRoamController extends BaseController {
         }
 
         auditShopVisitSpeed(memberId, sid, sourceType, sourceId, shopLat, shopLng);
+        // SEC-08: impossible speed (and other withheld fixes) is kept on the review trail but not credited.
+        com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
+                trust(memberId, sid, com.chengyinhub.business.locationtrust.LocationTrustKind.SHOP_VISIT, sourceType + ":" + sourceId, lat, lng);
+        if (trusted.rejected()) return trustRejected(trusted);
+        if (trusted.withheld()) {
+            Map<String, Object> held = new LinkedHashMap<>();
+            held.put("recorded", false);
+            held.put("shops", roamMapper.countDistinctShopsBySession(sid));
+            markWithheld(held, trusted);
+            return AjaxResult.success(com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(trusted.reasons()), held);
+        }
         roamMapper.recordAnonymousShopVisitor(memberId,sourceType,sourceId);
         int inserted = roamMapper.insertShopVisitIgnore(memberId, sid, sourceType, sourceId, name.trim(), new Date());
         if (dailyLoopRecorder != null) dailyLoopRecorder.afterShopVisited(memberId, inserted > 0);
@@ -559,6 +609,12 @@ public class ApiRoamController extends BaseController {
         return reveal(sessionId, tiles, null);
     }
 
+    /** Older signature (no fix); the mapped route below adds the optional current fix. */
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    public AjaxResult reveal(String sessionId, String tiles, String clientSessionKey) {
+        return reveal(sessionId, tiles, clientSessionKey, null, null);
+    }
+
     @GetMapping("/session")
     public AjaxResult session(String sessionId, String clientSessionKey) {
         Long memberId = uid();
@@ -567,6 +623,7 @@ public class ApiRoamController extends BaseController {
     }
 
     @PostMapping("/session/records")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     public AjaxResult archiveRecords(String sessionId, String clientSessionKey, String records) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
@@ -584,8 +641,9 @@ public class ApiRoamController extends BaseController {
 
     @Operation(summary = "点亮迷雾格(批量,幂等)")
     @PostMapping("/reveal")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 60, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
-    public AjaxResult reveal(String sessionId, String tiles, String clientSessionKey) {
+    public AjaxResult reveal(String sessionId, String tiles, String clientSessionKey, Double lat, Double lng) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         if (clientSessionKey != null && !clientSessionKey.matches("[a-f0-9]{32}")) return error("会话关联标识无效");
@@ -616,8 +674,23 @@ public class ApiRoamController extends BaseController {
         // P0-23:格子是客户端上报的,服务端至少按会话时长封顶 —— 不能一次请求就把全城点亮刷里程碑勋章。
         //   超出预算的部分直接丢弃(不报错):报错会让客户端待传队列卡死、连带结算排不空。
         Date now = new Date();
-        int remaining = revealTileBudget(session.getStartedAt(), now.getTime()) - roamMapper.countTilesBySession(sid);
-        if (remaining <= 0) {
+        int sessionTilesSoFar = roamMapper.countTilesBySession(sid);
+        int uncredited = 0;
+        if (locationTrust != null) {
+            // SEC-07: fix adjacency (new clients send the fix with the batch), walking-speed session budget and a
+            // rolling per-window cap. Dropped tiles are logged on the review trail, never returned as an error.
+            com.chengyinhub.business.locationtrust.LocationFix fix = lat != null && lng != null && validLat(lat) && validLng(lng)
+                    ? com.chengyinhub.business.locationtrust.LocationSignals.current(lat, lng) : null;
+            com.chengyinhub.business.locationtrust.LocationTrustService.RevealFilter filtered = locationTrust.creditableTiles(
+                    memberId, sid, session.getStartedAt(), tileList, sessionTilesSoFar,
+                    revealTileBudget(session.getStartedAt(), now.getTime()), fix);
+            uncredited = filtered.dropped();
+            tileList = filtered.credited();
+        }
+        int remaining = revealTileBudget(session.getStartedAt(), now.getTime()) - sessionTilesSoFar;
+        if (tileList.isEmpty()) {
+            // nothing left to credit after the trust filter
+        } else if (remaining <= 0) {
             logger.warn("漫游点亮超出会话时长预算,本批丢弃 member={} session={} tiles={}", memberId, sid, tileList.size());
             tileList = java.util.Collections.emptyList();
         } else if (tileList.size() > remaining) {
@@ -631,6 +704,7 @@ public class ApiRoamController extends BaseController {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("sessionId", clientSessionKey == null ? sid : String.valueOf(sid));
         data.put("newlyRevealed", Math.max(0, newly));
+        if (uncredited > 0) data.put("uncreditedTiles", uncredited);
         return success(data);
     }
 
@@ -661,6 +735,7 @@ public class ApiRoamController extends BaseController {
 
     @Operation(summary = "上报我此刻的位置(漫游心跳,让附近的人看得见我)")
     @PostMapping("/presence")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult presence(String sessionId, Double lat, Double lng, Integer explorePct) {
         Long memberId = uid();
@@ -687,6 +762,12 @@ public class ApiRoamController extends BaseController {
             double moved = GeoDistanceUtils.haversineMeters(lat, lng, lastFix.getLastLat().doubleValue(), lastFix.getLastLng().doubleValue());
             if (moved > MIN_MOVE_DIST_M && moved / dtSec > MAX_MOVE_SPEED_MPS) return error("移动过快,疑似伪造定位");
         }
+        com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
+                trust(memberId, sid, com.chengyinhub.business.locationtrust.LocationTrustKind.PRESENCE, null, lat, lng);
+        if (trusted.rejected()) return trustRejected(trusted);
+        // A simulated or impossible fix is never shown to other players.
+        if (trusted.withheld()) return error(com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(trusted.reasons()))
+                .put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(trusted.reasons()));
         BigDecimal blat = BigDecimal.valueOf(lat).setScale(PRESENCE_SCALE, RoundingMode.HALF_UP);
         BigDecimal blng = BigDecimal.valueOf(lng).setScale(PRESENCE_SCALE, RoundingMode.HALF_UP);
         // 探索度是本机 20×20 格的口径,后端没有等价物 ⇒ 只存不算,但要 clamp:
@@ -841,6 +922,7 @@ public class ApiRoamController extends BaseController {
     }
 
     @PostMapping("/finish")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 10, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)  // C3b:中途失败整体回滚,重试不重复发/不丢
     public AjaxResult finish(String sessionId, String poiIds, Integer distanceM, String track) {
         Long memberId = uid();
@@ -954,6 +1036,7 @@ public class ApiRoamController extends BaseController {
 
     @Operation(summary = "点到店(bindpoitap):宽松 geo → 参与据点走扫码 / 非参与点亮发探索值")
     @PostMapping("/checkin")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
         Long memberId = uid();
@@ -964,6 +1047,18 @@ public class ApiRoamController extends BaseController {
 
         locationConsent.requireCurrentAgreement(memberId);
         Map<String, Object> data = new LinkedHashMap<>();
+        // SEC-06: the player's fix is scored before anything is credited. Poor accuracy / future time = retry;
+        // simulated or impossible speed = nothing credited (visit not recorded, so an honest retry later still counts).
+        com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted =
+                trust(memberId, null, com.chengyinhub.business.locationtrust.LocationTrustKind.CHECKIN, geoKey(poiLat, poiLng), curLat, curLng);
+        if (trusted.rejected()) return trustRejected(trusted);
+        if (trusted.withheld()) {
+            data.put("participating", false);
+            data.put("firstVisit", false);
+            data.put("xp", 0);
+            markWithheld(data, trusted);
+            return AjaxResult.success(com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(trusted.reasons()), data);
+        }
         // ① 宽松 geo:玩家离被点 POI 太远则拒
         if (GeoDistanceUtils.haversineMeters(curLat, curLng, poiLat, poiLng) > CHECKIN_LOOSE_RADIUS_M) {
             data.put("tooFar", true);

@@ -43,6 +43,8 @@ public final class PlayCommandErrorContract
     public static final String ARRIVE_TOO_FAR = "ARRIVE_TOO_FAR";
     /** 冻结到达策略要求定位时效，而上报定位时间缺失/来自未来/已过期:重新定位后可重发。 */
     public static final String ARRIVE_LOCATION_STALE = "ARRIVE_LOCATION_STALE";
+    /** P8 SEC-09:定位被手机标为模拟,或与上一次可信定位相比移动快得不可能:留痕待查,稍后重新定位可重发。 */
+    public static final String ARRIVE_LOCATION_UNTRUSTED = "ARRIVE_LOCATION_UNTRUSTED";
     /** 本局要求先经 GPS 记到达才能作答,而尚无到达事实。 */
     public static final String ARRIVE_NOT_RECORDED = "ARRIVE_NOT_RECORDED";
     /** vm=5 站点缺坐标:配置缺合同,扫码或找运营,重发无用。 */
