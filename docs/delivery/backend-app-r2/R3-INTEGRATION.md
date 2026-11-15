@@ -162,3 +162,59 @@ All Maven runs used `/usr/bin/flock /data/workspace/.mvn.lock mvn -B -o -T 1 ...
 ### Branch status
 
 Every branch named for this wave is merged or already contained: `feature/ingame-channels` `280fcf241`, `feature/extgame-money` `c71445b6b`, `feature/city-numbers-attr` `f8e02dde7`, `feature/game-types` `f9e107746`. If the cloud agent pushes further commits to `feature/city-numbers-attr` after `f8e02dde7`, they are not included.
+
+## Wave 4 follow-up (CI migration gates, smoke re-check)
+
+Two follow-ups requested by the coordinator after Wave 4. Code change: `e8c893b73` only (CI declarations, two file renames, one test path, one doc path). No backend source changed.
+
+### CI migration gates: both pass
+
+| Gate | Before (`c5a2791d9`) | After (`e8c893b73`) |
+|---|---|---|
+| `bash ci/migration-layout-check.sh` | exit 1: two `rollback_*.sql` files with a non-allowed prefix | **exit 0**: "689 个 migration_*.sql 全在 chengyinhub-admin/sql/ 第一层", "新增/修改的 SQL 前缀均合规" |
+| `bash ci/migration-safety-check.sh` | exit 1: 5 migrations without a dependency declaration, and 4 errors in `ci/test_migration_ledger.py` ("SQL inventory is unsafe", caused by the same two `rollback_*.sql` files) | **exit 0**: unit tests `146 OK` + `57 OK`, "38 个变动的迁移文件均可被正确分句", "本批新增 38 个迁移均被共享台账覆盖,全部依赖边顺序正确;schema 执行器使用同一拓扑序" |
+
+What was changed to get there:
+
+- `ci/migration-dependencies.json`, five added lines, one entry each, existing entries and layout untouched (a script check confirmed that every existing key, value and key order is unchanged and that every named dependency is an existing `migration_*.sql` file):
+  - `20261114_weather_event_rule`: `[]` (creates one new table only)
+  - `20261115_external_game_monetization`: `[]` (six new tables, no foreign keys, alters nothing)
+  - `20261115_external_game_monetization_menus`: `20261115_external_game_monetization`, `20261012_missing_business_menu` (inserts under the `audit-center` menu)
+  - `20261115_sys_ainpc`: `npc_profile`, `20261119_merchant_gap`, `20261012_missing_business_menu` (adds columns to `npc_profile` and `merchant_npc_avatar_job`, inserts menus)
+  - `20261123_sys_random`: `20261012_missing_business_menu` (new tables plus menus under `supply`)
+  - These are the same declarations as on `origin/integration/backend-app-r3-cloud` (`799e00d4e`), so the two integration branches agree. The `20261124_city_numbers_attr` entry was already present.
+- Rollback scripts renamed to the allowed helper prefix, contents unchanged, same names as r3-cloud: `rollback_20261114_weather_event_rule.sql` -> `bak_weather_event_rule_20261114_rollback.sql`, `rollback_20261115_external_game_monetization.sql` -> `bak_external_game_monetization_20261115_rollback.sql`. References updated in `WeatherEventRuleMySqlIT` and `SYS-weather.md`. The comment inside `migration_20261114_weather_event_rule.sql` still names the old file; it was left alone so the content of an applied migration does not change.
+- Not touched: `ci/migration_ledger.py`, `ci/migration-applied-baseline.txt`, `ci/migration-assertion-supersessions.json`, any migration SQL content, any gitleaks file. Gate step [4/5] (PR declaration) is skipped outside a PR event; a PR for this branch must declare its migrations in the title or body.
+
+### Tests on `e8c893b73`
+
+- Targeted (same 63 classes and switches as the Wave 4 final run, includes `WeatherEventRuleMySqlIT` and the 10 classes that read `ci/migration-dependencies.json`): `Tests run: 684, Failures: 0, Errors: 0, Skipped: 0`.
+- Full suite: `Tests run: 19811, Failures: 1, Errors: 0, Skipped: 713`. The failure is `ClubEventNotificationTransactionBoundaryTest.failedLaterClaimReceiptRollsBackEarlierOutboxLease` ("Expected IllegalStateException to be thrown, but nothing was thrown"). It is a timing-dependent test, not an effect of this change: the class passed in the three earlier full runs of this round, the test and `ClubEventNotificationTransactionService` are untouched by Waves 3 and 4, and six immediate re-runs of the class on the same tree all passed (6 run, 0 failures each). Cause: the test inserts an outbox row at the H2 database's `current_timestamp` (sub-millisecond precision) and the service then selects rows due at a Java `new Date()` (millisecond precision); when both fall in the same millisecond the row is "not yet due" and the expected exception is never raised. Left for its owner; a fix would be to insert the row a little in the past.
+- Package: `BUILD SUCCESS`, `chengyinhub-admin.jar` 123,465,812 bytes; `target/` deleted afterwards (`1.8G` free).
+
+### Smoke re-check: no backend regression
+
+The question was whether smoke got worse (776 OK / 188 errors -> 755 / 201). Those two rows are different steps of the same procedure, not a before and an after: each smoke round is "pass, then `seed_4xx_fixtures.py`, then pass", and 755 / 201 is the pass before the seed step. Wave 3 gave 754 / 202 at that step. App warm-up plays no part.
+
+All passes below are 1231 calls, columns OK / BUSINESS-REFUSAL-EXPECTED / BACKEND-ERROR / SHAPE-MISMATCH / APP-CONTRACT-BUG.
+
+| Run | Before seed | After seed |
+|---|---|---|
+| Wave 3 jar `5fd593b5b` (reference) | 754 / 270 / 202 / 0 / 5 | 776 / 262 / 188 / 0 / 5 |
+| Wave 4 jar `c5a2791d9`, right after deploy | 755 / 270 / 201 / 0 / 5 | 776 / 262 / 188 / 0 / 5 |
+| Wave 4 jar `c5a2791d9`, re-run 10 minutes later (warmed up) | 752 / 270 / 204 / 0 / 5 | 774 / 262 / 190 / 0 / 5 |
+| Follow-up jar `e8c893b73`, shared runner | 753 / 270 / 203 / 0 / 5 | 773 / 262 / 191 / 0 / 5 |
+| Follow-up jar `e8c893b73`, runner copy that follows paging | — | 779 / 261 / 186 / 0 / 5 |
+
+Per-endpoint diff of the re-runs against Wave 3:
+
+- `POST /api/workshop/purchased/professional-operations/submit` and `/cancel` (club 9003), `OK -> BACKEND-ERROR`, HTTP 400 "hash invalid". Cause is in the smoke runner, not the backend. To build this command the runner reads the fixture draft's revision and payload hash from `POST /api/workshop/v2/purchased/install/targets`, which returns 50 targets per page, newest first, with `hasMore` / `nextBeforeDraftId`. The runner reads only the first page. Every smoke pass creates more drafts for club 9003; there are now 54, and the fixture draft `970301` ("RW TEST installed draft") moved to page 2 between two runs on the same jar. The runner then sends an empty hash and the backend correctly answers 400. `WorkshopService` and `ApiWorkshopController` are unchanged since Wave 3. With a runner copy that follows `nextBeforeDraftId` both routes are `OK` again.
+- `POST /api/roam/session/records` flips between `OK` and "采集时间不属于原行程" from pass to pass (already described in Wave 4).
+- The paged-copy pass ran after a second seed without a pass in between, so a few state-dependent routes read differently from the reference: five are better (`/api/im/route-share-source`, `/api/public-catalog/info`, `/api/registration/quote`, `/api/topic/info-to-user`, `/api/topic/report`: the seeded topic is still on the shelf), `/api/club/event-ops/series/create` is refused with a different message, and `/api/publisher/identity` hit the rate limiter ("访问过于频繁") because three passes ran back to back.
+- None of the changed routes belongs to code merged in Wave 4 (in-game channels, external game monetization, city numbers and attributes), so there was no regression to fix in the backend.
+
+The shared runner in `/data/workspace/api-smoke` belongs to the api-smoke worker and was not edited. The paging change is 7 lines and is saved as `/data/workspace/be-int/r3/w4/smoke_runner-paging.patch`. Until it is applied there (or the smoke-created drafts of club 9003 are cleaned up), the shared runner will keep reporting these two routes as errors.
+
+### TEST `8120` deploy (`e8c893b73`)
+
+Deployed under `/usr/bin/flock /data/workspace/.deploy.lock` at 13:37 UTC: `Started RuoYiApplication in 21.476 seconds`, `GET /` -> HTTP `200`. No migration in this step. The live checks listed for Wave 4 were repeated with the same results (20 routes `code: 200`, plus the expected 403 and 404). Rollback jar is still `app/app.jar.prev-5fd593b5b` (Wave 3).
