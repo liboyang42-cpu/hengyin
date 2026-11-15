@@ -7,6 +7,10 @@
       :updated-at="updatedAt"
     >
       <el-button slot="primary" v-hasPermi="['business:roamPoi:edit']" type="primary" size="small" @click="editOfficial(null)">添加官方据点</el-button>
+      <el-button slot="primary" v-hasPermi="['business:roamPoi:edit']" size="small" @click="openImport('places')">批量导入地点</el-button>
+      <el-button slot="primary" v-hasPermi="['business:roamPoi:edit']" size="small" @click="openImport('routes')">批量导入路线</el-button>
+      <el-button slot="primary" size="small" @click="exportOfficial">导出官方地点</el-button>
+      <el-button slot="primary" size="small" @click="densityVisible = true">片区密度</el-button>
       <el-button slot="primary" size="small" icon="el-icon-refresh" :loading="loading" @click="getList">刷新列表</el-button>
     </cy-page-header>
 
@@ -180,7 +184,7 @@
       <el-table-column label="据点" min-width="180">
         <template slot-scope="s">
           <div class="roam-poi-object__name">{{ s.row.name || '未命名据点' }}</div>
-          <div class="roam-poi-object__meta">#{{ s.row.id }} · {{ s.row.cityCode || '城市码待核对' }}</div>
+          <div class="roam-poi-object__meta">#{{ s.row.id }} · {{ s.row.cityCode || '城市码待核对' }}<span v-if="Number(s.row.auditStatus) === 3 && Number(s.row.applicationType) === 3"> · 导入草稿，待配置游戏</span></div>
         </template>
       </el-table-column>
       <el-table-column label="类型" width="90" align="center">
@@ -232,12 +236,16 @@
       </el-table>
     </section>
     <official-editor :visible="officialEditorVisible" :poi-id="officialEditorId" @close="officialEditorVisible = false" @saved="onOfficialSaved" />
+    <seed-import-dialog :visible="importVisible" :kind="importKind" @close="importVisible = false" @imported="getList" />
+    <density-report-dialog :visible="densityVisible" @close="densityVisible = false" />
   </div>
 </template>
 
 <script>
 import { adminPoiList, poiOnline, poiOffline, roamPoiApplications, approveRoamPoiApplication, rejectRoamPoiApplication } from '@/api/business/roamPoi'
 import OfficialEditor from './official-editor.vue'
+import SeedImportDialog from './seed-import-dialog.vue'
+import DensityReportDialog from './density-report-dialog.vue'
 import { approveOfficialPoi, rejectOfficialPoi } from '@/api/business/roamPoi'
 import CyEmptyState from '@/components/CyEmptyState'
 import CyFilterBar from '@/components/CyFilterBar'
@@ -283,10 +291,11 @@ function routeQuery(filters) {
 
 export default {
   name: 'RoamPoiAdmin',
-  components: { OfficialEditor, CyEmptyState, CyFilterBar, CyPageHeader, CyResourceState },
+  components: { OfficialEditor, SeedImportDialog, DensityReportDialog, CyEmptyState, CyFilterBar, CyPageHeader, CyResourceState },
   data() {
     return {
       officialEditorVisible: false, officialEditorId: null,
+      importVisible: false, importKind: 'places', densityVisible: false,
       loading: false,
       list: [],
       listError: false,
@@ -332,6 +341,11 @@ export default {
   methods: {
     poiCover(key) { return !key ? '' : /^(https?:)?\/\//.test(key) ? key : process.env.VUE_APP_BASE_API + '/profile/' + key.replace(/^\/?profile\//, '').replace(/^\//, '') },
     editOfficial(id) { this.officialEditorId = id; this.officialEditorVisible = true },
+    openImport(kind) { this.importKind = kind; this.importVisible = true },
+    exportOfficial() {
+      const cityCode = this.queryParams.cityCode
+      this.download('business/seed/places/export', cityCode ? { cityCode } : {}, (cityCode ? cityCode + '-' : '') + '官方地点.csv')
+    },
     onOfficialSaved() { return Promise.all([this.getApplications(), this.getList()]) },
     // 审核材料的字典。★ 未配的档位一律显示成「未配」而不是留空 ——
     // 空白会被审核员当成「这项不适用」,而它其实是「商家没配,玩家会卡死在这一关」。

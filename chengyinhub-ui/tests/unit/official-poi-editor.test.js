@@ -8,9 +8,10 @@ function mount(api) {
   const script = source.match(/<script>([\s\S]*?)<\/script>/)[1]
     .replace(/^import ImageUpload .+$/m, 'const ImageUpload = {};')
     .replace(/^import \{ officialPoiDraft, saveOfficialPoi \} .+$/m, 'const { officialPoiDraft, saveOfficialPoi } = api;')
+    .replace(/^import \{ aiNodeDraft \} .+$/m, 'const { aiNodeDraft } = api;')
   const component = new Function('api', script.replace('export default', 'return'))(api)
   const events = []
-  const vm = { ...component.data(), visible: true, poiId: 42, $emit: name => events.push(name), $modal: { msgSuccess() {} } }
+  const vm = { ...component.data(), visible: true, poiId: 42, $emit: name => events.push(name), $modal: { msgSuccess() {}, confirm: () => (api.confirm ? api.confirm() : Promise.resolve()) } }
   for (const [name, method] of Object.entries(component.methods)) vm[name] = method.bind(vm)
   return { vm, events }
 }
@@ -52,4 +53,33 @@ test('official editor round-trips labeled public quotes and refuses quotes witho
   await h.vm.save(); assert.equal(calls.length, 0); assert.match(h.vm.error, /来源/)
   h.vm.quotes.pop(); await h.vm.save()
   assert.deepEqual(JSON.parse(calls[0].poi.quotesJson), [{ text: '环境很安静', source: '去哪儿', author: '少年鲍勃', date: '2024-05-07', url: 'https://touch.travel.qunar.com/comment/57019655' }])
+})
+
+test('AI draft fills the observation question for review and never saves on its own', async () => {
+  const saves = []
+  const h = mount({ saveOfficialPoi: payload => { saves.push(payload) },
+    aiNodeDraft: id => Promise.resolve({ data: { node: { questionName: '亭子匾额上写的是什么？', optionA: '放鹤亭', optionB: '湖心亭', optionC: '', optionD: '', correctAnswer: 'a', ruleInstructions: '走到亭前看匾额' } } }) })
+  h.vm.poi = { id: 42, name: '孤山', photoRequired: true }
+  await h.vm.draftWithAi()
+  assert.equal(h.vm.game.title, '孤山·观察挑战')
+  assert.equal(h.vm.game.questionName, '亭子匾额上写的是什么？')
+  assert.equal(h.vm.game.questionA, '放鹤亭')
+  assert.equal(h.vm.game.correctAnswer, 'A')
+  assert.equal(h.vm.game.description, '走到亭前看匾额')
+  assert.equal(h.vm.drafting, false)
+  assert.deepEqual(saves, [])
+  assert.deepEqual(h.events, [])
+})
+
+test('AI draft asks before overwriting, and reports an empty draft honestly', async () => {
+  let calls = 0
+  const h = mount({ confirm: () => Promise.reject(new Error('cancel')), aiNodeDraft: () => { calls++; return Promise.resolve({ data: {} }) } })
+  h.vm.game.questionName = '已有题目'
+  await h.vm.draftWithAi()
+  assert.equal(calls, 0)
+  assert.equal(h.vm.game.questionName, '已有题目')
+  const empty = mount({ aiNodeDraft: () => Promise.resolve({ data: { node: null } }) })
+  await empty.vm.draftWithAi()
+  assert.match(empty.vm.error, /没有给出可用草稿/)
+  assert.equal(empty.vm.game.questionName, '')
 })
