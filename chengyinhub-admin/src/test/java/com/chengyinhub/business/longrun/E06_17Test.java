@@ -67,11 +67,11 @@ class E06_17Test {
     @Test
     void malformedAndMissingTokensKeepExistingHttp200GoneAndMalformedTokenNeverQueries() throws Exception {
         mvc.perform(get(PATH).param("token", "not-a-token"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(500))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.msg").value(GONE));
         verifyNoInteractions(mapper);
         mvc.perform(get(PATH).param("token", TOKEN))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(500))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.msg").value(GONE));
         verify(mapper).selectSnapshotJsonByToken(TOKEN);
     }
@@ -82,7 +82,7 @@ class E06_17Test {
                 "{\"ts\":1700000000000,\"privateKey\":\"private-payload\",\"track\":[{\"lat\":91,\"lng\":1}]}");
         for (int i = 0; i < 2; i++) {
             mvc.perform(get(PATH).param("token", TOKEN))
-                    .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(500))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.code").value(404))
                     .andExpect(jsonPath("$.msg").value(GONE))
                     .andExpect(jsonPath("$.data").doesNotExist())
                     .andExpect(content().string(not(containsString("private-payload"))));
