@@ -1,0 +1,7250 @@
+{
+ "summary": {
+  "total": 1231,
+  "counts": {
+   "OK": 773,
+   "BUSINESS-REFUSAL-EXPECTED": 262,
+   "BACKEND-ERROR": 191,
+   "SHAPE-MISMATCH": 0,
+   "APP-CONTRACT-BUG": 5
+  },
+  "catalog_stats": {
+   "capgraph_app_called_paths": 1233,
+   "non_prefix_paths": 1166,
+   "prefix_containers_covered": 59,
+   "prefix_expanded_parents": 8,
+   "expanded_concrete_routes": 34,
+   "total_endpoint_calls": 1236,
+   "with_swift_call": 1197,
+   "with_java_info": 1236,
+   "with_req_body": 512,
+   "with_resp_contract": 245,
+   "decodable_models_indexed": 1589,
+   "encodable_models_indexed": 694,
+   "java_dtos_indexed": 3977
+  }
+ },
+ "backend_errors": [
+  {
+   "path": "/api/approved-topic-release/v1/review/status",
+   "resolved_path": "/api/approved-topic-release/v1/review/status",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "creator/publishing",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 3.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "topicId": 992510,
+     "observedAuditTaskId": 992591,
+     "observedAuditTaskVersion": 0,
+     "sourceConfigVersion": 1,
+     "snapshotHash": "78a3bf2c81dc484cd10d7e101888ff7335315345a72e111cda2f85a80f60dcfb",
+     "requestId": "EC176635-EB40-4BE0-91D4-527403C7634E"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"没有该送审请求\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "Core/ApprovedTopicReviewRequest.swift",
+     "line": 7
+    }
+   ],
+   "backend_controller": "ApiAppGapsApprovedTopicReleaseController.reviewStatus"
+  },
+  {
+   "path": "/api/approved-topic-release/v1/status",
+   "resolved_path": "/api/approved-topic-release/v1/status",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "creator/publishing",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 1.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=None msg=缺少字段",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "topicId": 992510,
+     "auditTaskId": 992590
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"缺少字段\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/ApprovedTopicReleasePublicationClient.swift",
+     "line": 8
+    }
+   ],
+   "backend_controller": "ApiAppGapsApprovedTopicReleaseController.status"
+  },
+  {
+   "path": "/api/city-game/acquisition/quote/{}",
+   "resolved_path": "/api/city-game/acquisition/quote/prop-a",
+   "verb": "GET",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "QUOTE_NOT_FOUND",
+   "latency_ms": 3.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "query",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"报价不存在\",\"code\":404,\"errorCode\":\"QUOTE_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 28
+    }
+   ],
+   "backend_controller": "ApiCityGameR491Controller.acquisitionQuote"
+  },
+  {
+   "path": "/api/city-game/acquisition/request/{}",
+   "resolved_path": "/api/city-game/acquisition/request/f2e9637e-ff38-4481-ac30-864cfda2d52e",
+   "verb": "GET",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "CITY_RECEIPT_NOT_FOUND",
+   "latency_ms": 3.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "query",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"没有这条请求的回执\",\"code\":404,\"errorCode\":\"CITY_RECEIPT_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 29
+    }
+   ],
+   "backend_controller": "ApiCityGameR491Controller.acquisitionReceipt"
+  },
+  {
+   "path": "/api/city-game/arrival-evidence/evidence/{}",
+   "resolved_path": "/api/city-game/arrival-evidence/evidence/7d0f2a10-0000-4000-8000-000000000001",
+   "verb": "GET",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "EVIDENCE_NOT_FOUND",
+   "latency_ms": 5.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "query",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"到店凭证不存在\",\"code\":404,\"errorCode\":\"EVIDENCE_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 34
+    }
+   ],
+   "backend_controller": "ApiCityGameR491Controller.arrivalEvidence"
+  },
+  {
+   "path": "/api/city-game/game/action/{}",
+   "resolved_path": "/api/city-game/game/action/b2d414a1-2ed8-46fd-9b63-02178a953f2e",
+   "verb": "GET",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "CITY_RECEIPT_NOT_FOUND",
+   "latency_ms": 4.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "query",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"没有这条请求的回执\",\"code\":404,\"errorCode\":\"CITY_RECEIPT_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 25
+    }
+   ],
+   "backend_controller": "ApiCityGameController.actionReceipt"
+  },
+  {
+   "path": "/api/city-game/onsite-tasks/request/{}",
+   "resolved_path": "/api/city-game/onsite-tasks/request/31e38357-4ff2-4592-9290-ad86cc0cf19d",
+   "verb": "GET",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "CITY_RECEIPT_NOT_FOUND",
+   "latency_ms": 5.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "query",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"没有这条请求的回执\",\"code\":404,\"errorCode\":\"CITY_RECEIPT_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 31
+    }
+   ],
+   "backend_controller": "ApiCityGameR491Controller.onsiteReceipt"
+  },
+  {
+   "path": "/api/city-game/onsite-tasks/result/{}",
+   "resolved_path": "/api/city-game/onsite-tasks/result/prop-a",
+   "verb": "GET",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "RESULT_NOT_FOUND",
+   "latency_ms": 5.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "query",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"结果不存在\",\"code\":404,\"errorCode\":\"RESULT_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 32
+    }
+   ],
+   "backend_controller": "ApiCityGameR491Controller.onsiteResult"
+  },
+  {
+   "path": "/api/city-game/{}/request/{}",
+   "resolved_path": "/api/city-game/team-participation/request/8aa9060a-ae24-4f23-9083-da7232775a5d",
+   "verb": "GET",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "CITY_RECEIPT_NOT_FOUND",
+   "latency_ms": 3.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"没有这条请求的回执\",\"code\":404,\"errorCode\":\"CITY_RECEIPT_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityOriginalReceiptReading.swift",
+     "line": 94
+    }
+   ],
+   "backend_controller": "ApiCityGameController.originalReceipt"
+  },
+  {
+   "path": "/api/city-value/visits/feedback",
+   "resolved_path": "/api/city-value/visits/feedback",
+   "verb": "POST",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "CITY_VALUE_VISIT_NOT_FOUND",
+   "latency_ms": 2.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"到访不存在\",\"code\":404,\"errorCode\":\"CITY_VALUE_VISIT_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityPlayerValueService.swift",
+     "line": 67
+    },
+    {
+     "file": "Core/CityPlayerValueService.swift",
+     "line": 100
+    }
+   ],
+   "backend_controller": "ApiCityGameR491Controller.valueFeedback"
+  },
+  {
+   "path": "/api/club/event-notification/preview",
+   "resolved_path": "/api/club/event-notification/preview",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 501,
+   "error_code": null,
+   "latency_ms": 3.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=501 errorCode=None msg=WECHAT_SUBSCRIPTION_UNAVAILABLE: 订阅模板或授权未接入",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7003,
+     "activityId": 992034,
+     "audienceType": "ALL_MEMBERS",
+     "channel": "smoke",
+     "title": "E2E API smoke check",
+     "content": "E2E API smoke check",
+     "requestId": "4ecb248a-66b1-4bef-870c-c5ed1c93367f"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"WECHAT_SUBSCRIPTION_UNAVAILABLE: 订阅模板或授权未接入\",\"code\":501}",
+   "app_sites": [
+    {
+     "file": "Core/ClubGovernanceContracts.swift",
+     "line": 122
+    }
+   ],
+   "backend_controller": "ApiClubEventNotificationController.preview"
+  },
+  {
+   "path": "/api/club/lead/unlock-chapter-receipt",
+   "resolved_path": "/api/club/lead/unlock-chapter-receipt",
+   "verb": "GET",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 520,
+   "error_code": null,
+   "latency_ms": 5.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=520 errorCode=None msg=章节命令结果待确认",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "activityId": 992032,
+     "commandId": "smoke-cmd-init"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"章节命令结果待确认\",\"code\":520}",
+   "app_sites": [
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 183
+    }
+   ],
+   "backend_controller": "ApiClubLeadController.unlockChapterReceipt"
+  },
+  {
+   "path": "/api/club/post/history",
+   "resolved_path": "/api/club/post/history",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 5.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=动态不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "id": 992051,
+     "content": "E2E API smoke check",
+     "images": "smoke",
+     "pinned": true,
+     "version": 0,
+     "requestId": "84e20ab8-22d9-4079-b572-d5122cbae5e6"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"动态不存在\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/ClubCommunityReadRuntime.swift",
+     "line": 14
+    }
+   ],
+   "backend_controller": "ApiClubController.postHistory"
+  },
+  {
+   "path": "/api/common/uploadOSS/receipt",
+   "resolved_path": "/api/common/uploadOSS/receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "common/upload",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 3.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=读回参数无效",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "request_id": "448f4436-61f6-47eb-a3fc-0592ac9c4462",
+     "source_sha256": "b21e82ec6cbf5a4807d729500f81653e8b8eabd3b7161edbbd0958ea0e4d3f8c"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"读回参数无效\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/IMExpandedService.swift",
+     "line": 241
+    },
+    {
+     "file": "Core/IMExpandedService.swift",
+     "line": 243
+    },
+    {
+     "file": "Core/BusinessRuntimeConfiguration.swift",
+     "line": 281
+    }
+   ],
+   "backend_controller": "ApiCommonController.uploadOSSReceipt"
+  },
+  {
+   "path": "/api/coop/complaint/report",
+   "resolved_path": "/api/coop/complaint/report",
+   "verb": "POST",
+   "role": "player",
+   "area": "merchant-club cooperation",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 11.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=你对该主题已有处理中的投诉",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "id": 1,
+     "topicId": 992001,
+     "registrationId": 75,
+     "reporterMemberId": 1,
+     "respondentMemberId": 1,
+     "status": 1,
+     "advanceAmount": 1.0,
+     "faultRatio": 1,
+     "deductAmount": 1.0,
+     "reason": "E2E API smoke check",
+     "handleNote": "smoke",
+     "handlerId": 1
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"你对该主题已有处理中的投诉\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/WP06ComplaintWrite.swift",
+     "line": 15
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 757
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 779
+    }
+   ],
+   "backend_controller": "ApiCoopController.complaintReport"
+  },
+  {
+   "path": "/api/coop/review/summary",
+   "resolved_path": "/api/coop/review/summary",
+   "verb": "POST",
+   "role": "player",
+   "area": "merchant-club cooperation",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 1.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=缺少被评人",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "toId": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"缺少被评人\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/CooperationFlowService.swift",
+     "line": 27
+    }
+   ],
+   "backend_controller": "ApiCoopController.reviewSummary"
+  },
+  {
+   "path": "/api/friend/metadata/receipt",
+   "resolved_path": "/api/friend/metadata/receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "social/friends",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "FRIEND_RECEIPT_NOT_FOUND",
+   "latency_ms": 4.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=FRIEND_RECEIPT_NOT_FOUND msg=FRIEND_RECEIPT_NOT_FOUND",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "action": "smoke",
+     "target_id": 9009,
+     "request_id": "55a6d44e-8d3f-4c5c-886e-98320808c0ec"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"FRIEND_RECEIPT_NOT_FOUND\",\"code\":404,\"errorCode\":\"FRIEND_RECEIPT_NOT_FOUND\",\"detail\":\"没有找到该请求\"}",
+   "app_sites": [
+    {
+     "file": "Core/NativeFriendMetadataService.swift",
+     "line": 15
+    },
+    {
+     "file": "Core/NativeFriendMetadataService.swift",
+     "line": 74
+    }
+   ],
+   "backend_controller": "ApiFriendController.metadataReceipt"
+  },
+  {
+   "path": "/api/friend/metadata/settle",
+   "resolved_path": "/api/friend/metadata/settle",
+   "verb": "POST",
+   "role": "player",
+   "area": "social/friends",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "FRIEND_RECEIPT_NOT_FOUND",
+   "latency_ms": 2.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=FRIEND_RECEIPT_NOT_FOUND msg=FRIEND_RECEIPT_NOT_FOUND",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "action": "smoke",
+     "request_id": "640dc649-8024-441f-906f-4e62b4bec888",
+     "payload_hash": "smoke",
+     "target_id": 9009
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"FRIEND_RECEIPT_NOT_FOUND\",\"code\":404,\"errorCode\":\"FRIEND_RECEIPT_NOT_FOUND\",\"detail\":\"没有找到该请求\"}",
+   "app_sites": [
+    {
+     "file": "Core/NativeFriendMetadataService.swift",
+     "line": 17
+    }
+   ],
+   "backend_controller": "ApiFriendController.metadataSettle"
+  },
+  {
+   "path": "/api/friend/receipt",
+   "resolved_path": "/api/friend/receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "social/friends",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "FRIEND_RECEIPT_NOT_FOUND",
+   "latency_ms": 1.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=FRIEND_RECEIPT_NOT_FOUND msg=FRIEND_RECEIPT_NOT_FOUND",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "peer_id": 9009,
+     "action": "smoke",
+     "request_id": "31e2a0cc-66b7-4f85-a72e-cbb610f22d73"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"FRIEND_RECEIPT_NOT_FOUND\",\"code\":404,\"errorCode\":\"FRIEND_RECEIPT_NOT_FOUND\",\"detail\":\"没有找到该请求\"}",
+   "app_sites": [
+    {
+     "file": "Core/NativeFriendService.swift",
+     "line": 13
+    }
+   ],
+   "backend_controller": "ApiFriendController.receipt"
+  },
+  {
+   "path": "/api/friend/removal/receipt",
+   "resolved_path": "/api/friend/removal/receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "social/friends",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "FRIEND_RECEIPT_NOT_FOUND",
+   "latency_ms": 2.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=FRIEND_RECEIPT_NOT_FOUND msg=FRIEND_RECEIPT_NOT_FOUND",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "peer_id": 9009,
+     "expected_version": 1,
+     "request_id": "613700d7-fc92-461a-8ab5-e53ef8e88040",
+     "requestID": "b70351c0-70a6-44da-b64f-848911fb49c2",
+     "peerID": 9009,
+     "expectedVersion": "0"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"FRIEND_RECEIPT_NOT_FOUND\",\"code\":404,\"errorCode\":\"FRIEND_RECEIPT_NOT_FOUND\",\"detail\":\"没有找到该请求\"}",
+   "app_sites": [
+    {
+     "file": "Core/NativeFriendRemovalService.swift",
+     "line": 12
+    },
+    {
+     "file": "Core/NativeFriendRemovalService.swift",
+     "line": 66
+    }
+   ],
+   "backend_controller": "ApiFriendController.removalReceipt"
+  },
+  {
+   "path": "/api/game/session/recap/export",
+   "resolved_path": "/api/game/session/recap/export",
+   "verb": "GET",
+   "role": "club(9003)",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=本场游戏尚未准备",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "activityId": 992034
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"本场游戏尚未准备\",\"code\":500,\"data\":{\"reasonCode\":\"GAME_SESSION_NOT_PREPARED\"}}",
+   "app_sites": [
+    {
+     "file": "Core/PlayDirectorRecap.swift",
+     "line": 67
+    }
+   ],
+   "backend_controller": "ApiGameSessionController.exportRecap"
+  },
+  {
+   "path": "/api/game/session/shared/export",
+   "resolved_path": "/api/game/session/shared/export",
+   "verb": "GET",
+   "role": "club(9003)",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=本局没有共享账",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "activityId": 992034,
+     "revision": "smoke",
+     "run": "smoke",
+     "authorityEpoch": "smoke",
+     "operationStatus": "smoke",
+     "authorityMode": "smoke",
+     "teams": "smoke",
+     "stations": "smoke",
+     "availableActions": "smoke",
+     "offlineAnchorAvailable": "smoke",
+     "sessionId": 993801,
+     "configHash": "smoke",
+     "highWaterHash": "smoke",
+     "manual": "smoke",
+     "needsReview": "smoke",
+     "nextSequence": "smoke",
+     "topic": "smoke",
+     "id": 1,
+     "chapters": "smoke",
+     "cmsTopicNodeList": "smoke",
+     "nodeAlternativeConfigsLoaded": "smoke",
+     "nodeAlternativeConfigs": "smoke",
+     "type": "topic",
+     "enabled": "smoke",
+     "promptText": "smoke",
+     "answerConfigured": "smoke"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"本局没有共享账\",\"code\":500,\"data\":{\"reasonCode\":\"GAME_ACTION_UNSUPPORTED\"}}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 638
+    },
+    {
+     "file": "Core/PlayerParityBRoutes.swift",
+     "line": 12
+    },
+    {
+     "file": "Core/PlayerParityBRoutes.swift",
+     "line": 39
+    }
+   ],
+   "backend_controller": "ApiGameSessionController.sharedExport"
+  },
+  {
+   "path": "/api/game/session/shared/preview",
+   "resolved_path": "/api/game/session/shared/preview",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=本局没有共享任务",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "tradeKey": "smoke",
+     "toTeamId": "smoke",
+     "give": "smoke",
+     "take": "smoke",
+     "activityId": 992034,
+     "action": "smoke",
+     "payload": {}
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"本局没有共享任务\",\"code\":500,\"data\":{\"reasonCode\":\"GAME_ACTION_UNSUPPORTED\"}}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 627
+    },
+    {
+     "file": "Core/PlayTeamBackpack.swift",
+     "line": 213
+    },
+    {
+     "file": "Core/PlayRuntimeGap.swift",
+     "line": 564
+    }
+   ],
+   "backend_controller": "ApiGameSessionController.sharedPreview"
+  },
+  {
+   "path": "/api/merchant/authoring/jobs",
+   "resolved_path": "/api/merchant/authoring/jobs",
+   "verb": "GET",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "UPSTREAM_UNAVAILABLE",
+   "latency_ms": 6.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=UPSTREAM_UNAVAILABLE msg=UPSTREAM_UNAVAILABLE",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "requestId": "E33C1FC5-AA93-409E-8480-D14D372E1EFA"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"UPSTREAM_UNAVAILABLE\",\"code\":400,\"data\":{\"outcome\":\"FAILED\",\"settled\":true,\"jobId\":5,\"requestId\":\"E33C1FC5-AA93-409E-8480-D14D372E1EFA\",\"status\":\"FAILED\",\"draftId\":\"q057f87b49f07efb16f92509ddb7195a4\",\"errorCode\":\"UPSTREAM_UNAVAILABLE\",\"costRef\":null,\"outputHash\":null,\"modelVersion\":\"test-fix",
+   "app_sites": [
+    {
+     "file": "Core/MerchantAuthoringService.swift",
+     "line": 10
+    }
+   ],
+   "backend_controller": "ApiMerchantAuthoringController.job"
+  },
+  {
+   "path": "/api/merchant/chapter-application/apply",
+   "resolved_path": "/api/merchant/chapter-application/apply",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 6.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=开放商家承接的章节必须选择适合商家品类",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "chapterId": 992012,
+     "message": "E2E API smoke check"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"开放商家承接的章节必须选择适合商家品类\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantContentCommands.swift",
+     "line": 63
+    }
+   ],
+   "backend_controller": "ApiMerchantChapterApplicationController.apply"
+  },
+  {
+   "path": "/api/merchant/chapter-application/audit",
+   "resolved_path": "/api/merchant/chapter-application/audit",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 6.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=开放商家承接的章节必须选择适合商家品类",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "applicationId": 992802,
+     "approved": true,
+     "remark": "E2E API smoke check"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"开放商家承接的章节必须选择适合商家品类\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantContentCommands.swift",
+     "line": 88
+    }
+   ],
+   "backend_controller": "ApiMerchantChapterApplicationController.audit"
+  },
+  {
+   "path": "/api/merchant/chapter-application/invite",
+   "resolved_path": "/api/merchant/chapter-application/invite",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=开放商家承接的章节必须选择适合商家品类",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "chapterId": 992013,
+     "merchantMemberId": 9002,
+     "message": "E2E API smoke check"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"开放商家承接的章节必须选择适合商家品类\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 3657
+    },
+    {
+     "file": "Core/MerchantContentCommands.swift",
+     "line": 83
+    },
+    {
+     "file": "Core/ChapterReplacementInvitation.swift",
+     "line": 238
+    }
+   ],
+   "backend_controller": "ApiMerchantChapterApplicationController.invite"
+  },
+  {
+   "path": "/api/merchant/chapter-application/invite/respond",
+   "resolved_path": "/api/merchant/chapter-application/invite/respond",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=申请不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "applicationId": 992803,
+     "accepted": true
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"申请不存在\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 3656
+    },
+    {
+     "file": "Core/MerchantContentCommands.swift",
+     "line": 86
+    }
+   ],
+   "backend_controller": "ApiMerchantChapterApplicationController.respondInvite"
+  },
+  {
+   "path": "/api/merchant/chapter-node/npc/voice/enroll",
+   "resolved_path": "/api/merchant/chapter-node/npc/voice/enroll",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 7.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=请先录一段话",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "nodeId": 992021,
+     "consent": true,
+     "voiceDuplicateChargeConsent": true,
+     "requestId": "a7c618c2-daff-4f45-93ba-cdacc84ce5f2"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"请先录一段话\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantContentCommands.swift",
+     "line": 102
+    }
+   ],
+   "backend_controller": "ApiChapterMerchantNodeController.npcVoiceEnroll"
+  },
+  {
+   "path": "/api/merchant/chapter-node/poster-code",
+   "resolved_path": "/api/merchant/chapter-node/poster-code",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=该点位还没有打卡码，请联系主办方",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "nodeId": 992021,
+     "activityId": 992034,
+     "perspective": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"该点位还没有打卡码，请联系主办方\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantContentService.swift",
+     "line": 304
+    }
+   ],
+   "backend_controller": "ApiChapterMerchantNodeController.posterCode"
+  },
+  {
+   "path": "/api/merchant/chapter-node/submit",
+   "resolved_path": "/api/merchant/chapter-node/submit",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=缺少章节",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "id": 8001,
+     "approve": "smoke",
+     "reason": "E2E API smoke check",
+     "nodeId": 992021,
+     "poiId": 992521,
+     "status": "smoke",
+     "scope": "MERCHANT",
+     "message": "E2E API smoke check"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"缺少章节\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantContentCommands.swift",
+     "line": 89
+    }
+   ],
+   "backend_controller": "ApiChapterMerchantNodeController.submit"
+  },
+  {
+   "path": "/api/merchant/city-node/offline",
+   "resolved_path": "/api/merchant/city-node/offline",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=据点不存在或无权操作",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "poiId": 992524
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"据点不存在或无权操作\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantCityNodeHub.swift",
+     "line": 105
+    },
+    {
+     "file": "Core/MerchantContentCommands.swift",
+     "line": 95
+    }
+   ],
+   "backend_controller": "ApiMerchantNodeController.offline"
+  },
+  {
+   "path": "/api/merchant/city-node/save",
+   "resolved_path": "/api/merchant/city-node/save",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=已上线据点不能复用投放申请入口",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "poiId": 992521,
+     "status": "smoke",
+     "nodeId": 992021,
+     "name": "E2E API smoke check",
+     "avatar": "smoke",
+     "greeting": "smoke",
+     "voiceSample": "smoke",
+     "id": 8001,
+     "applicationType": "smoke",
+     "auditStatus": "smoke",
+     "templateId": 6001,
+     "lat": 31.2304,
+     "lng": 121.4737,
+     "radius": 20000,
+     "address": "smoke",
+     "tags": "smoke",
+     "coverImg": "smoke",
+     "cityCode": "310100"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"已上线据点不能复用投放申请入口\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/MerchantCityNodeCreateView.swift",
+     "line": 339
+    },
+    {
+     "file": "Core/MerchantCityNodeHub.swift",
+     "line": 105
+    },
+    {
+     "file": "Core/MerchantCityNodeHub.swift",
+     "line": 114
+    },
+    {
+     "file": "Core/MerchantContentCommands.swift",
+     "line": 96
+    }
+   ],
+   "backend_controller": "ApiMerchantNodeController.save"
+  },
+  {
+   "path": "/api/merchant/city-node/template/submit",
+   "resolved_path": "/api/merchant/city-node/template/submit",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 14.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=据点模板不存在或无权修改",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "id": 992506,
+     "title": "咖啡打卡",
+     "validationMethod": 2
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"据点模板不存在或无权修改\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 4111
+    },
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 4159
+    },
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 4159
+    },
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 249
+    }
+   ],
+   "backend_controller": "ApiMerchantNodeController.templateSubmit"
+  },
+  {
+   "path": "/api/merchant/commerce/order",
+   "resolved_path": "/api/merchant/commerce/order",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 8.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=支付服务暂不可用，请稍后再试",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "bizType": "premium_template",
+     "requestId": "89a1001e-7c28-49b0-b8bf-162382596f8e"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"支付服务暂不可用，请稍后再试\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 281
+    }
+   ],
+   "backend_controller": "ApiMerchantCommerceController.createOrder"
+  },
+  {
+   "path": "/api/merchant/commerce/order/status",
+   "resolved_path": "/api/merchant/commerce/order/status",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=无权查看该订单",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "orderSn": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"无权查看该订单\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 282
+    }
+   ],
+   "backend_controller": "ApiMerchantCommerceController.orderStatus"
+  },
+  {
+   "path": "/api/merchant/crm/broadcast",
+   "resolved_path": "/api/merchant/crm/broadcast",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 12.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=所选客户现在都收不到(未同意接收商家消息或今天已收过)，请换选已同意的客户",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "content": "smoke broadcast",
+     "channel": "SMS",
+     "targetStage": "active",
+     "requestId": "2a7dd55c-1e2f-4131-9e6f-f450c995fcf7"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"所选客户现在都收不到(未同意接收商家消息或今天已收过)，请换选已同意的客户\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 252
+    },
+    {
+     "file": "Core/MerchantEngagementContracts.swift",
+     "line": 192
+    }
+   ],
+   "backend_controller": "ApiMerchantCrmController.broadcast"
+  },
+  {
+   "path": "/api/merchant/finance/public-transfer-batch-detail",
+   "resolved_path": "/api/merchant/finance/public-transfer-batch-detail",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=记录不可见",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "source": "smoke",
+     "batchId": "smoke",
+     "recordType": "smoke",
+     "recordId": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"记录不可见\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantBusinessQuery.swift",
+     "line": 85
+    }
+   ],
+   "backend_controller": "ApiMerchantController.financePublicTransferBatchDetail"
+  },
+  {
+   "path": "/api/merchant/finance/redemption-detail",
+   "resolved_path": "/api/merchant/finance/redemption-detail",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=记录不可见",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "recordType": "smoke",
+     "recordId": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"记录不可见\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantBusinessQuery.swift",
+     "line": 88
+    }
+   ],
+   "backend_controller": "ApiMerchantController.financeRedemptionDetail"
+  },
+  {
+   "path": "/api/merchant/merchant_registration",
+   "resolved_path": "/api/merchant/merchant_registration",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 7.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=已提交过商家入驻申请，请勿重复提交",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "categoryId": 28,
+     "name": "烟测商户",
+     "address": "上海市黄浦区北京路1号"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"已提交过商家入驻申请，请勿重复提交\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantOnboardingService.swift",
+     "line": 81
+    },
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 247
+    },
+    {
+     "file": "Core/Adapt2MerchantTopicRoutes.swift",
+     "line": 15
+    }
+   ],
+   "backend_controller": "ApiMerchantController.merchantRegistration"
+  },
+  {
+   "path": "/api/merchant/npc/voice/enroll",
+   "resolved_path": "/api/merchant/npc/voice/enroll",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=请先确认声音为本人所有或已获得授权",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "nodeId": 992021,
+     "consent": true,
+     "voiceDuplicateChargeConsent": true,
+     "requestId": "81e19138-8004-4bd8-b964-7e9535bde130"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"请先确认声音为本人所有或已获得授权\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantNPCAuthenticatedTransport.swift",
+     "line": 34
+    },
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 250
+    },
+    {
+     "file": "Core/MerchantNPCHTTP.swift",
+     "line": 27
+    },
+    {
+     "file": "Core/MerchantNPCHTTP.swift",
+     "line": 82
+    }
+   ],
+   "backend_controller": "ApiMerchantController.npcVoiceEnroll"
+  },
+  {
+   "path": "/api/merchant/predict/settle",
+   "resolved_path": "/api/merchant/predict/settle",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=这个点位不是预测玩法",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "nodeId": 992021,
+     "playDay": "2026-11-14",
+     "settledOption": "A"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"这个点位不是预测玩法\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantMarketingService.swift",
+     "line": 189
+    }
+   ],
+   "backend_controller": "ApiPredictSettleController.settle"
+  },
+  {
+   "path": "/api/merchant/reviews/report",
+   "resolved_path": "/api/merchant/reviews/report",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 3.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=评价不存在或无权访问",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "reviewId": 1,
+     "merchantMemberId": 1,
+     "reason": "E2E API smoke check",
+     "expectedVersion": 1,
+     "requestId": "62174412-d4d4-4d82-af66-52c95ba8a443"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"评价不存在或无权访问\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 256
+    },
+    {
+     "file": "Core/PublicMerchantReviewWrites.swift",
+     "line": 44
+    }
+   ],
+   "backend_controller": "ApiMerchantReviewController.report"
+  },
+  {
+   "path": "/api/merchant/reviews/{}",
+   "resolved_path": "/api/merchant/reviews/create",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 2.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=merchantRowId 不合法",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "roleCode": "smoke",
+     "requestId": "1e0555df-4014-4018-b5c3-95bdeb2cd9db",
+     "operatorId": "smoke",
+     "version": "0"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"merchantRowId 不合法\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 96
+    }
+   ],
+   "backend_controller": "ApiMerchantReviewController.create"
+  },
+  {
+   "path": "/api/merchant/shop/apply",
+   "resolved_path": "/api/merchant/shop/apply",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=已提交过商家入驻申请，请勿重复提交",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"已提交过商家入驻申请，请勿重复提交\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/MerchantDecorAndShopApplyWizardSectionView.swift",
+     "line": 53
+    },
+    {
+     "file": "Core/MerchantAndPublishAuthoringAudit.swift",
+     "line": 117
+    },
+    {
+     "file": "Core/Adapt2MerchantTopicRoutes.swift",
+     "line": 38
+    }
+   ],
+   "backend_controller": "ApiMerchantLegacyAliasController.shopApply"
+  },
+  {
+   "path": "/api/merchant/update",
+   "resolved_path": "/api/merchant/update",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 6.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=请选择有效的经营日与时间",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "name": "老城咖啡驿站",
+     "introduction": "手冲咖啡与桌游聚会空间",
+     "address": "上海市黄浦区北京路1号",
+     "businessTime": "09:00-22:00"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"请选择有效的经营日与时间\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 248
+    },
+    {
+     "file": "Core/MerchantOperationsDraft.swift",
+     "line": 50
+    },
+    {
+     "file": "Core/MerchantOperationsDraft.swift",
+     "line": 53
+    }
+   ],
+   "backend_controller": "ApiMerchantController.updateUserInfo"
+  },
+  {
+   "path": "/api/official/v2/events/{}/publish-check",
+   "resolved_path": "/api/official/v2/events/992661/publish-check",
+   "verb": "GET",
+   "role": "ops(9001)",
+   "area": "official events",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 8.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=无权查看该活动发布检查",
+   "request": {
+    "encoding": "query",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"无权查看该活动发布检查\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/OfficialOrganizer.swift",
+     "line": 201
+    }
+   ],
+   "backend_controller": "ApiOfficialEventController.v2PublishCheck"
+  },
+  {
+   "path": "/api/orient/task/alternative/receipt",
+   "resolved_path": "/api/orient/task/alternative/receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "ORIENT_NOT_FOUND",
+   "latency_ms": 6.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=ORIENT_NOT_FOUND msg=任务不存在",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "sessionId": 993801,
+     "idempotencyKey": "ad4e948a-74e2-4ea3-8930-f4a576137988",
+     "taskId": 1,
+     "playInstanceId": "smoke",
+     "kind": "smoke",
+     "topicId": 992001,
+     "activityId": 992034
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"任务不存在\",\"code\":404,\"errorCode\":\"ORIENT_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/OrientSessionService.swift",
+     "line": 176
+    }
+   ],
+   "backend_controller": "ApiOrientTaskReceiptController.receipt"
+  },
+  {
+   "path": "/api/orient/task/state",
+   "resolved_path": "/api/orient/task/state",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "ORIENT_NOT_FOUND",
+   "latency_ms": 3.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=ORIENT_NOT_FOUND msg=任务不存在",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "taskId": 1,
+     "playInstanceId": "smoke",
+     "topicId": 992001,
+     "activityId": 992034
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"任务不存在\",\"code\":404,\"errorCode\":\"ORIENT_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/OrientSessionService.swift",
+     "line": 114
+    }
+   ],
+   "backend_controller": "ApiOrientController.taskState"
+  },
+  {
+   "path": "/api/play/action-receipt",
+   "resolved_path": "/api/play/action-receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 520,
+   "error_code": "INTENT_PENDING",
+   "latency_ms": 5.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=520 errorCode=INTENT_PENDING msg=原命令结果待确认，请稍后查询",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "activityId": 992034,
+     "topicId": 992001,
+     "nodeId": 992021,
+     "routeActionId": "smoke"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"原命令结果待确认，请稍后查询\",\"retryable\":true,\"code\":520,\"receiptState\":\"UNKNOWN\",\"errorCode\":\"INTENT_PENDING\",\"refreshRequired\":false}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 591
+    },
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 358
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.basicActionReceipt"
+  },
+  {
+   "path": "/api/play/advanced/leaderboard",
+   "resolved_path": "/api/play/advanced/leaderboard",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 10.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=高级玩法配置版本不支持",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "activityId": 992034,
+     "topicId": 992001,
+     "nodeId": 992021,
+     "sessionId": 2,
+     "routeSessionId": 993804
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"高级玩法配置版本不支持\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PlaySharedPlanAdvancedTransport.swift",
+     "line": 25
+    },
+    {
+     "file": "Core/PlaySharedPlanAdvancedTransport.swift",
+     "line": 34
+    },
+    {
+     "file": "Core/PlayAdvancedRuntime.swift",
+     "line": 183
+    }
+   ],
+   "backend_controller": "ApiAdvancedPlayController.leaderboard"
+  },
+  {
+   "path": "/api/play/advanced/receipt",
+   "resolved_path": "/api/play/advanced/receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 5.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=尚未查到原请求回执，结果仍待确认",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "sessionId": 2,
+     "idempotencyKey": "655cbbc3-60c2-4bbe-a802-18503f58310d",
+     "activityId": 992034,
+     "routeSessionId": 993804
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"尚未查到原请求回执，结果仍待确认\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 681
+    },
+    {
+     "file": "Core/PlayRuntimeGap.swift",
+     "line": 273
+    },
+    {
+     "file": "Core/PlayAdvancedRuntime.swift",
+     "line": 174
+    }
+   ],
+   "backend_controller": "ApiAdvancedPlayController.receipt"
+  },
+  {
+   "path": "/api/play/check/receipt",
+   "resolved_path": "/api/play/check/receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": "CHECK_BAD_REQUEST",
+   "latency_ms": 3.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=CHECK_BAD_REQUEST msg=原检定参数有误",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "sessionId": 993801,
+     "nodeId": 992021,
+     "checkId": "smoke",
+     "action": "smoke",
+     "topicId": 992001,
+     "activityId": 992034
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"原检定参数有误\",\"code\":400,\"errorCode\":\"CHECK_BAD_REQUEST\"}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 681
+    },
+    {
+     "file": "Core/PlayRuntimeGap.swift",
+     "line": 215
+    }
+   ],
+   "backend_controller": "ApiPlayCheckController.receipt"
+  },
+  {
+   "path": "/api/play/help",
+   "resolved_path": "/api/play/help",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 8.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=队伍集合中,等队长开始行程",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "runId": "993804",
+     "nodeId": "992021"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"队伍集合中,等队长开始行程\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 591
+    },
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 412
+    },
+    {
+     "file": "Core/UGGameplayReader.swift",
+     "line": 38
+    }
+   ],
+   "backend_controller": "ApiPlayHelpController.view"
+  },
+  {
+   "path": "/api/play/help/advanced/receipt",
+   "resolved_path": "/api/play/help/advanced/receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 3.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=原局不存在或无权访问",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "sessionId": 993801,
+     "nodeId": 992021
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"原局不存在或无权访问\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 592
+    },
+    {
+     "file": "Core/UGGameplayReader.swift",
+     "line": 54
+    }
+   ],
+   "backend_controller": "ApiPlayHelpController.receiptAdvanced"
+  },
+  {
+   "path": "/api/play/help/receipt",
+   "resolved_path": "/api/play/help/receipt",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 6.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=队伍集合中,等队长开始行程",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "runId": "993804",
+     "nodeId": "992021"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"队伍集合中,等队长开始行程\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 592
+    },
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 415
+    },
+    {
+     "file": "Core/UGGameplayReader.swift",
+     "line": 46
+    }
+   ],
+   "backend_controller": "ApiPlayHelpController.receipt"
+  },
+  {
+   "path": "/api/play/history",
+   "resolved_path": "/api/play/history",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 2.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=本局不存在或无权查看",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "activityId": 992034,
+     "topicId": 992001,
+     "routeSessionId": 993801
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"本局不存在或无权查看\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 681
+    },
+    {
+     "file": "Core/PlayRuntimeGap.swift",
+     "line": 440
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.history"
+  },
+  {
+   "path": "/api/play/journey/stage-end",
+   "resolved_path": "/api/play/journey/stage-end",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 2.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=本主题未配置剧情",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "chapterId": 992011,
+     "nodeId": 992021,
+     "topicId": 992001,
+     "activityId": 992034
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"本主题未配置剧情\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/JourneyNarrativeContracts.swift",
+     "line": 29
+    }
+   ],
+   "backend_controller": "ApiPlayJourneyController.stageEnd"
+  },
+  {
+   "path": "/api/play/preference/{}",
+   "resolved_path": "/api/play/preference/1",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=节点不存在",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "activityId": 992034,
+     "topicId": 992001
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"节点不存在\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PlayPreferenceRuntime.swift",
+     "line": 61
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.preference"
+  },
+  {
+   "path": "/api/play/route-action",
+   "resolved_path": "/api/play/route-action",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 4.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=没有这条路线动作",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "sessionId": 993801,
+     "memberId": 9004,
+     "actionId": "680b070a-d360-416e-bef2-e2bdf6be3820"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"没有这条路线动作\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "App/PlayRouteMapView.swift",
+     "line": 157
+    },
+    {
+     "file": "App/PlayRouteMapView.swift",
+     "line": 200
+    },
+    {
+     "file": "App/PlayRouteMapView.swift",
+     "line": 274
+    }
+   ],
+   "backend_controller": "ApiPlayerGapsController.routeAction"
+  },
+  {
+   "path": "/api/play/seat-invitations/{}",
+   "resolved_path": "/api/play/seat-invitations/1",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 8.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=邀请不存在",
+   "request": {
+    "encoding": "query",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"邀请不存在\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "Core/JourneyLoopSource.swift",
+     "line": 521
+    }
+   ],
+   "backend_controller": "ApiRegistrationSeatInvitationController.status"
+  },
+  {
+   "path": "/api/play/theme/card",
+   "resolved_path": "/api/play/theme/card",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=本局尚未结束",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "sessionId": 993801
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"本局尚未结束\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PlayThemeRecords.swift",
+     "line": 154
+    },
+    {
+     "file": "Core/TopicService.swift",
+     "line": 77
+    }
+   ],
+   "backend_controller": "ApiThemeRuntimeController.card"
+  },
+  {
+   "path": "/api/progress/requests",
+   "resolved_path": "/api/progress/requests",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "PROGRESS_REQUEST_NOT_FOUND",
+   "latency_ms": 6.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "request_id": "C85E5850-71EA-429F-AC57-DB2E95B54738"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"没有找到该请求\",\"code\":404,\"errorCode\":\"PROGRESS_REQUEST_NOT_FOUND\",\"outcome_known\":true}",
+   "app_sites": [
+    {
+     "file": "Core/NativeProgressPrivacyContracts.swift",
+     "line": 25
+    },
+    {
+     "file": "Core/NativeChannelProgressFinalForward.swift",
+     "line": 100
+    },
+    {
+     "file": "Core/NativeChannelProgressFinalForward.swift",
+     "line": 108
+    },
+    {
+     "file": "Core/NativeChannelProgressFinalForward.swift",
+     "line": 111
+    }
+   ],
+   "backend_controller": "ApiProgressPrivacyController.settingsReceipt"
+  },
+  {
+   "path": "/api/progress/requests/{}",
+   "resolved_path": "/api/progress/requests/f604c701-ebfc-4e79-a643-ea870b3b8481",
+   "verb": "GET",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "PROGRESS_REQUEST_NOT_FOUND",
+   "latency_ms": 5.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "aggregateScope": "smoke",
+     "detailScope": "smoke",
+     "photoScope": "smoke",
+     "leaderboardScope": "smoke",
+     "requestId": "937fd87f-8e7b-45e6-9155-6f7270d41966",
+     "expectedRevision": "smoke",
+     "expectedUpdatedAt": "smoke"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"没有找到该请求\",\"code\":404,\"errorCode\":\"PROGRESS_REQUEST_NOT_FOUND\",\"outcome_known\":true}",
+   "app_sites": [
+    {
+     "file": "Core/NativeChannelProgressService.swift",
+     "line": 70
+    }
+   ],
+   "backend_controller": "ApiProgressPrivacyController.progressReceipt"
+  },
+  {
+   "path": "/api/public-catalog/info",
+   "resolved_path": "/api/public-catalog/info",
+   "verb": "POST",
+   "role": "player",
+   "area": "public catalog",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 5.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=作品不存在或未公开",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": "992001",
+     "city_code": "310100",
+     "locale": "zh-CN"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"作品不存在或未公开\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "Core/PWaveP3ThemeCollection.swift",
+     "line": 108
+    }
+   ],
+   "backend_controller": "ApiPublicContentCatalogController.info"
+  },
+  {
+   "path": "/api/registration/quote",
+   "resolved_path": "/api/registration/quote",
+   "verb": "POST",
+   "role": "player",
+   "area": "registration/tickets",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 9.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=主题活动已下架",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "ownerType": 2,
+     "ownerId": 992034,
+     "ticketId": 992044,
+     "tickets": [
+      {
+       "ticketId": 992044,
+       "count": 1
+      }
+     ],
+     "realName": "玩家小城",
+     "phone": "13900000004",
+     "count": 1
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"主题活动已下架\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 463
+    },
+    {
+     "file": "Core/RegistrationProduction.swift",
+     "line": 19
+    },
+    {
+     "file": "Core/RegistrationProduction.swift",
+     "line": 171
+    },
+    {
+     "file": "Core/RegistrationService.swift",
+     "line": 52
+    }
+   ],
+   "backend_controller": "ApiRegistrationController.quote"
+  },
+  {
+   "path": "/api/roam/share/snapshot",
+   "resolved_path": "/api/roam/share/snapshot",
+   "verb": "GET",
+   "role": "player",
+   "area": "roam",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=这条足迹已不再公开",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "token": "smoke-roam-token-00000000000001"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"这条足迹已不再公开\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/RoamSubpagePresentation.swift",
+     "line": 160
+    }
+   ],
+   "backend_controller": "ApiRoamShareController.read"
+  },
+  {
+   "path": "/api/template/topic-template/info",
+   "resolved_path": "/api/template/topic-template/info",
+   "verb": "POST",
+   "role": "player",
+   "area": "templates",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 6.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=模板不存在",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 6001
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"模板不存在\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 3706
+    },
+    {
+     "file": "Core/DiscoveryService.swift",
+     "line": 47
+    }
+   ],
+   "backend_controller": "ApiTopicTemplateController.info"
+  },
+  {
+   "path": "/api/topic/info-to-user",
+   "resolved_path": "/api/topic/info-to-user",
+   "verb": "POST",
+   "role": "player",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 5.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=主题活动不存在",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 992001,
+     "type": "topic",
+     "state": "smoke",
+     "ownerType": 2,
+     "scope": "CLUB",
+     "pageNum": 1,
+     "pageSize": 10
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"主题活动不存在\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "App/PublishTopicAndCommentModerationSectionView.swift",
+     "line": 78
+    },
+    {
+     "file": "Core/RePoint10Routes.swift",
+     "line": 22
+    },
+    {
+     "file": "Core/Adapt2MerchantTopicRoutes.swift",
+     "line": 39
+    },
+    {
+     "file": "Core/RePoint10Routes.swift",
+     "line": 22
+    }
+   ],
+   "backend_controller": "ApiTopicController.topicInfo"
+  },
+  {
+   "path": "/api/topic/merchant-recruitment-chapters",
+   "resolved_path": "/api/topic/merchant-recruitment-chapters",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 17.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=仅自由探索主题支持章节承接",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 992001,
+     "mode": "smoke",
+     "topic": "smoke",
+     "message": "E2E API smoke check",
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"仅自由探索主题支持章节承接\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantContentService.swift",
+     "line": 251
+    }
+   ],
+   "backend_controller": "ApiTopicController.merchantRecruitmentChapters"
+  },
+  {
+   "path": "/api/topic/report",
+   "resolved_path": "/api/topic/report",
+   "verb": "POST",
+   "role": "player",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=主题不存在",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 992001,
+     "reason": "E2E API smoke check"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"主题不存在\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 715
+    },
+    {
+     "file": "Core/ContentReportReasonRules.swift",
+     "line": 8
+    }
+   ],
+   "backend_controller": "ApiTopicController.topicReport"
+  },
+  {
+   "path": "/api/us/auth/session",
+   "resolved_path": "/api/us/auth/session",
+   "verb": "GET",
+   "role": "player",
+   "area": "US market (no backend)",
+   "capgraph_status": "SERVED",
+   "http_status": 401,
+   "biz_code": 401,
+   "error_code": "US_SESSION_INVALID",
+   "latency_ms": 3.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 401 code=401 errorCode=US_SESSION_INVALID msg=US_SESSION_INVALID",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"code\":401,\"msg\":\"US_SESSION_INVALID\",\"errorCode\":\"US_SESSION_INVALID\"}",
+   "app_sites": [
+    {
+     "file": "Core/RePoint10Routes.swift",
+     "line": 28
+    },
+    {
+     "file": "Core/USAppleService.swift",
+     "line": 121
+    }
+   ],
+   "backend_controller": "ApiUsAppleAuthController.session"
+  },
+  {
+   "path": "/api/v1/community/reports",
+   "resolved_path": "/api/v1/community/reports",
+   "verb": "POST",
+   "role": "player",
+   "area": "community square",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 2.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=帖文不存在或不可见",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "targetType": "POST",
+     "targetId": 993204,
+     "reasonCode": "OTHER",
+     "policyVersion": "COMMUNITY_REPORT_POLICY_V1",
+     "description": "E2E API smoke check",
+     "evidenceAssetIds": [],
+     "requestId": "0ad48ddf-9609-442d-8cc6-07df5cd7e2e9"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"帖文不存在或不可见\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 578
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 715
+    },
+    {
+     "file": "Core/SquareReportService.swift",
+     "line": 77
+    },
+    {
+     "file": "Core/OwnerDecisionGuards.swift",
+     "line": 60
+    }
+   ],
+   "backend_controller": "ApiCommunityPostController.report"
+  },
+  {
+   "path": "/api/activity/publish",
+   "resolved_path": "/api/activity/publish",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "activities",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 6.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=已达到当前身份活动数量上限（3）",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "requestId": "5a045b10-426d-453d-8480-6448b9ae6a87",
+     "id": 992034,
+     "name": "E2E API smoke check",
+     "description": "E2E API smoke check",
+     "imgUrl": "media-asset:990003",
+     "imgArr": "media-asset:990003",
+     "categoryIds": "smoke",
+     "addressName": "smoke",
+     "longitude": 121.4737,
+     "latitude": 31.2304,
+     "address": "smoke",
+     "startDate": "2026-11-15 10:00:00",
+     "endDate": "2026-11-16 10:00:00",
+     "scope": "CLUB",
+     "clubId": 7003
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"已达到当前身份活动数量上限（3）\",\"code\":500,\"writeReceipt\":{\"state\":\"REJECTED\",\"operation\":\"ACTIVITY_PUBLISH\",\"requestId\":\"5a045b10-426d-453d-8480-6448b9ae6a87\"}}",
+   "app_sites": [
+    {
+     "file": "Core/PublishModesContracts.swift",
+     "line": 75
+    },
+    {
+     "file": "Core/BusinessRuntimeConfiguration.swift",
+     "line": 335
+    },
+    {
+     "file": "Core/PublishModesService.swift",
+     "line": 133
+    }
+   ],
+   "backend_controller": "ApiActivityController.publish"
+  },
+  {
+   "path": "/api/activity/publish_precheck",
+   "resolved_path": "/api/activity/publish_precheck",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "activities",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 403,
+   "error_code": null,
+   "latency_ms": 3.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=403 errorCode=None msg=已达到当前身份活动数量上限（3）",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "scope": "CLUB",
+     "id": 992034,
+     "clubId": 7001,
+     "isLiked": "smoke",
+     "likeCount": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"已达到当前身份活动数量上限（3）\",\"code\":403}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 153
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 620
+    },
+    {
+     "file": "Core/PlayerGapRoutes.swift",
+     "line": 38
+    },
+    {
+     "file": "Core/PlayerGapRoutes.swift",
+     "line": 187
+    }
+   ],
+   "backend_controller": "ApiActivityController.publishPrecheck"
+  },
+  {
+   "path": "/api/activity/update",
+   "resolved_path": "/api/activity/update",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "activities",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=活动结束时间不能为空",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "requestId": "fe582a2b-7374-45d0-b308-f632f5a1a267",
+     "id": 992034,
+     "name": "E2E API smoke check",
+     "description": "E2E API smoke check",
+     "imgUrl": "smoke",
+     "imgArr": "smoke",
+     "categoryIds": "smoke",
+     "addressName": "smoke",
+     "longitude": 121.4737,
+     "latitude": 31.2304,
+     "address": "smoke",
+     "scope": "CLUB",
+     "clubId": 7003
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"活动结束时间不能为空\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/ActivityEditing.swift",
+     "line": 179
+    }
+   ],
+   "backend_controller": "ApiActivityController.update"
+  },
+  {
+   "path": "/api/ai/npc/chat",
+   "resolved_path": "/api/ai/npc/chat",
+   "verb": "POST",
+   "role": "player",
+   "area": "npc/ai",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 403,
+   "error_code": null,
+   "latency_ms": 2.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=403 errorCode=None msg=NPC 自由追问未开放",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "requestId": "43ab2fbf-6927-42a1-9bc6-83a5c2e2c040",
+     "bizId": 8001,
+     "message": "E2E API smoke check"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"NPC 自由追问未开放\",\"code\":403}",
+   "app_sites": [
+    {
+     "file": "Core/G6CapabilitySource.swift",
+     "line": 61
+    },
+    {
+     "file": "Core/G6CapabilitySource.swift",
+     "line": 115
+    },
+    {
+     "file": "Core/G6CapabilitySource.swift",
+     "line": 237
+    }
+   ],
+   "backend_controller": "ApiAiNpcController.chat"
+  },
+  {
+   "path": "/api/ai/theme/draft/execute",
+   "resolved_path": "/api/ai/theme/draft/execute",
+   "verb": "POST",
+   "role": "player",
+   "area": "npc/ai",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": "AI_DRAFT_PREPARE_REQUIRED",
+   "latency_ms": 3.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=AI_DRAFT_PREPARE_REQUIRED msg=本次起草暂不能继续",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "prepareKey": "3342921a-33b3-420b-a2cf-d76de41165c2",
+     "requestId": "c6093b3c-cb73-4fb2-86d7-b8634fc6055b",
+     "idea": "E2E API smoke check",
+     "productType": 1,
+     "existingNodeNames": [
+      "node-1"
+     ]
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"本次起草暂不能继续\",\"code\":400,\"errorCode\":\"AI_DRAFT_PREPARE_REQUIRED\"}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 643
+    },
+    {
+     "file": "Core/G6CapabilitySource.swift",
+     "line": 64
+    },
+    {
+     "file": "Core/G6CapabilitySource.swift",
+     "line": 140
+    }
+   ],
+   "backend_controller": "ApiAiController.themeDraftExecute"
+  },
+  {
+   "path": "/api/ai/theme/draft/prepare",
+   "resolved_path": "/api/ai/theme/draft/prepare",
+   "verb": "POST",
+   "role": "player",
+   "area": "npc/ai",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": "AI_DRAFT_STATE_UNAVAILABLE",
+   "latency_ms": 4.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=暂时无法确认原请求，请稍后回读",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "prepareKey": "401d5063-67f5-4ffd-9b50-abfd764ffe59",
+     "idea": "E2E API smoke check",
+     "productType": 1,
+     "existingNodeNames": [
+      "node-1"
+     ]
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"暂时无法确认原请求，请稍后回读\",\"code\":500,\"errorCode\":\"AI_DRAFT_STATE_UNAVAILABLE\"}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 643
+    },
+    {
+     "file": "Core/G6CapabilitySource.swift",
+     "line": 63
+    },
+    {
+     "file": "Core/G6CapabilitySource.swift",
+     "line": 133
+    }
+   ],
+   "backend_controller": "ApiAiController.themeDraftPrepare"
+  },
+  {
+   "path": "/api/approved-topic-release/v1/review/current",
+   "resolved_path": "/api/approved-topic-release/v1/review/current",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "creator/publishing",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 2.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "topicId": 992510,
+     "observedAuditTaskId": 992591,
+     "observedAuditTaskVersion": 0,
+     "sourceConfigVersion": 1,
+     "snapshotHash": "78a3bf2c81dc484cd10d7e101888ff7335315345a72e111cda2f85a80f60dcfb",
+     "requestId": "EC176635-EB40-4BE0-91D4-527403C7634E"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"没有该送审请求\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "Core/ApprovedTopicReviewRequest.swift",
+     "line": 8
+    }
+   ],
+   "backend_controller": "ApiAppGapsApprovedTopicReleaseController.reviewCurrent"
+  },
+  {
+   "path": "/api/audit/guard/appeal",
+   "resolved_path": "/api/audit/guard/appeal",
+   "verb": "POST",
+   "role": "player(9004)",
+   "area": "audit/review back-office",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 3.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=原到达请求号无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "logId": 990101,
+     "reason": "smoke guard appeal",
+     "requestId": "2ec939e6-376e-4cb1-8d45-d8473cfe9c80"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"原到达请求号无效\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 660
+    },
+    {
+     "file": "Core/PlayCreatorTailRoutes.swift",
+     "line": 14
+    },
+    {
+     "file": "Core/PlayCreatorTailRoutes.swift",
+     "line": 72
+    }
+   ],
+   "backend_controller": "ApiAuditController.guardAppeal"
+  },
+  {
+   "path": "/api/cart/settlement",
+   "resolved_path": "/api/cart/settlement",
+   "verb": "POST",
+   "role": "player",
+   "area": "orders/payment",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=购物车数据异常",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "cartids": "9925568"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"购物车数据异常\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/WalletCommerceSafety.swift",
+     "line": 323
+    },
+    {
+     "file": "Core/WalletCommerceService.swift",
+     "line": 77
+    }
+   ],
+   "backend_controller": "ApiCartController.cartSettlement"
+  },
+  {
+   "path": "/api/cart/update",
+   "resolved_path": "/api/cart/update",
+   "verb": "POST",
+   "role": "player",
+   "area": "orders/payment",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=购物车信息不存在",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "cart_id": "9925568",
+     "quantity": "1",
+     "sku_id": "992551"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"购物车信息不存在\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/WalletCommerceSafety.swift",
+     "line": 78
+    }
+   ],
+   "backend_controller": "ApiCartController.cartUpdate"
+  },
+  {
+   "path": "/api/channel/redeem",
+   "resolved_path": "/api/channel/redeem",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "channels",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 5.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=兑换码无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "code": "smoke",
+     "requestId": "bad9fbee-35a2-4580-b76b-51a878cb370d"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"兑换码无效\",\"code\":400,\"reasonCode\":\"INVALID_CODE\"}",
+   "app_sites": [
+    {
+     "file": "Core/ChannelRedeemSource.swift",
+     "line": 57
+    }
+   ],
+   "backend_controller": "ApiChannelRedemptionController.redeem"
+  },
+  {
+   "path": "/api/circle-theme/session/join",
+   "resolved_path": "/api/circle-theme/session/join",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 4.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=同行邀请码不存在或会话已结束",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "inviteCode": "smoke",
+     "topicId": 992001
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"同行邀请码不存在或会话已结束\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 630
+    },
+    {
+     "file": "Core/PlayCircleRuntime.swift",
+     "line": 59
+    }
+   ],
+   "backend_controller": "ApiCircleThemeController.joinSession"
+  },
+  {
+   "path": "/api/city-game/acquisition/command",
+   "resolved_path": "/api/city-game/acquisition/command",
+   "verb": "POST",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "CITY_ACQUISITION_INVALID",
+   "latency_ms": 1.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=CITY_ACQUISITION_INVALID msg=占领指令无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"占领指令无效\",\"code\":400,\"errorCode\":\"CITY_ACQUISITION_INVALID\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 29
+    }
+   ],
+   "backend_controller": "ApiCityGameR491Controller.acquisitionCommand"
+  },
+  {
+   "path": "/api/city-game/arrival-evidence/command",
+   "resolved_path": "/api/city-game/arrival-evidence/command",
+   "verb": "POST",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "CITY_ARRIVAL_INVALID",
+   "latency_ms": 1.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=CITY_ARRIVAL_INVALID msg=到店指令无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"到店指令无效\",\"code\":400,\"errorCode\":\"CITY_ARRIVAL_INVALID\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 33
+    }
+   ],
+   "backend_controller": "ApiCityGameR491Controller.arrivalCommand"
+  },
+  {
+   "path": "/api/city-game/game/action",
+   "resolved_path": "/api/city-game/game/action",
+   "verb": "POST",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "CITY_ACTION_INVALID",
+   "latency_ms": 1.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=CITY_ACTION_INVALID msg=行动请求无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"行动请求无效\",\"code\":400,\"errorCode\":\"CITY_ACTION_INVALID\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 25
+    },
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 70
+    },
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 71
+    }
+   ],
+   "backend_controller": "ApiCityGameController.action"
+  },
+  {
+   "path": "/api/city-game/onsite-tasks/command",
+   "resolved_path": "/api/city-game/onsite-tasks/command",
+   "verb": "POST",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "CITY_TASK_INVALID",
+   "latency_ms": 1.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=CITY_TASK_INVALID msg=任务指令无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"任务指令无效\",\"code\":400,\"errorCode\":\"CITY_TASK_INVALID\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 31
+    }
+   ],
+   "backend_controller": "ApiCityGameR491Controller.onsiteCommand"
+  },
+  {
+   "path": "/api/city-game/team-participation/command",
+   "resolved_path": "/api/city-game/team-participation/command",
+   "verb": "POST",
+   "role": "player",
+   "area": "city game",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "CITY_COMMAND_INVALID",
+   "latency_ms": 1.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=CITY_COMMAND_INVALID msg=参与指令无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "regionId": "gaps-a-test",
+     "boardId": "gapsa-board-1",
+     "seasonId": "s2026w46",
+     "rulesReleaseId": "rel-gapsa-1",
+     "revision": "1",
+     "command": "CREATE",
+     "requestId": "6580c130-6962-4c93-b0b3-39b31dc23a2e"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"参与指令无效\",\"code\":400,\"errorCode\":\"CITY_COMMAND_INVALID\"}",
+   "app_sites": [
+    {
+     "file": "Core/CityParticipationCommandRecovery.swift",
+     "line": 126
+    },
+    {
+     "file": "Core/CityGameHTTPService.swift",
+     "line": 23
+    }
+   ],
+   "backend_controller": "ApiCityGameController.command"
+  },
+  {
+   "path": "/api/club/badge/grant",
+   "resolved_path": "/api/club/badge/grant",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 2.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=勋章不存在或不属于本俱乐部",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7003,
+     "memberId": 9004,
+     "badgeCode": "FIRST_STEP"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"勋章不存在或不属于本俱乐部\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/ClubBadgeManagementModels.swift",
+     "line": 89
+    },
+    {
+     "file": "Core/ChannelDiscordMessaging.swift",
+     "line": 3041
+    }
+   ],
+   "backend_controller": "ApiClubController.badgeGrant"
+  },
+  {
+   "path": "/api/club/event-notification/send",
+   "resolved_path": "/api/club/event-notification/send",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 501,
+   "error_code": null,
+   "latency_ms": 3.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=501 errorCode=None msg=WECHAT_SUBSCRIPTION_UNAVAILABLE: 订阅模板或授权未接入",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7003,
+     "activityId": 992034,
+     "audienceType": "ALL_MEMBERS",
+     "channel": "smoke",
+     "title": "E2E API smoke check",
+     "content": "E2E API smoke check",
+     "requestId": "58d34917-5353-49aa-b6a6-1c0b0b335d73"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"WECHAT_SUBSCRIPTION_UNAVAILABLE: 订阅模板或授权未接入\",\"code\":501}",
+   "app_sites": [
+    {
+     "file": "Core/ClubGovernanceCommands.swift",
+     "line": 22
+    }
+   ],
+   "backend_controller": "ApiClubEventNotificationController.send"
+  },
+  {
+   "path": "/api/club/event-ops/series/original-result",
+   "resolved_path": "/api/club/event-ops/series/original-result",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 1.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=读回参数无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"读回参数无效\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/ClubSeriesOriginalResult.swift",
+     "line": 9
+    }
+   ],
+   "backend_controller": "ApiClubEventOpsController.seriesOriginalResult"
+  },
+  {
+   "path": "/api/club/events/save",
+   "resolved_path": "/api/club/events/save",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 4.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=排期类型仅支持 ONCE/WEEKLY/CUSTOM_DATES",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7003,
+     "topicId": 992001,
+     "requestId": "smk-f7f0446a1a7b40579b4a",
+     "title": "Smoke Club Event",
+     "startTime": "2026-12-01 10:00:00",
+     "endTime": "2026-12-01 12:00:00",
+     "address": "上海市黄浦区中山东一路1号",
+     "capacity": 20
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"排期类型仅支持 ONCE/WEEKLY/CUSTOM_DATES\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 1427
+    },
+    {
+     "file": "Core/ClubGapClient.swift",
+     "line": 53
+    },
+    {
+     "file": "Core/ChannelDiscordMessaging.swift",
+     "line": 3082
+    }
+   ],
+   "backend_controller": "ApiClubGapController.eventsSave"
+  },
+  {
+   "path": "/api/club/join-request/approve",
+   "resolved_path": "/api/club/join-request/approve",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 6.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=入会申请不存在或已处理",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7001,
+     "memberId": 9009,
+     "reviewReason": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"入会申请不存在或已处理\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/RePoint06ClubJoin.swift",
+     "line": 11
+    },
+    {
+     "file": "Core/Adapt3ClubBackendAdapters.swift",
+     "line": 76
+    },
+    {
+     "file": "Core/ChannelDiscordMessaging.swift",
+     "line": 3091
+    },
+    {
+     "file": "Core/ClubManagementContracts.swift",
+     "line": 32
+    }
+   ],
+   "backend_controller": "ApiClubController.approveJoinRequest"
+  },
+  {
+   "path": "/api/club/join-request/reject",
+   "resolved_path": "/api/club/join-request/reject",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=入会申请不存在或已处理",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7001,
+     "memberId": 9009,
+     "reviewReason": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"入会申请不存在或已处理\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/RePoint06ClubJoin.swift",
+     "line": 12
+    },
+    {
+     "file": "Core/Adapt3ClubBackendAdapters.swift",
+     "line": 76
+    },
+    {
+     "file": "Core/ChannelDiscordMessaging.swift",
+     "line": 3091
+    },
+    {
+     "file": "Core/ClubManagementContracts.swift",
+     "line": 33
+    }
+   ],
+   "backend_controller": "ApiClubController.rejectJoinRequest"
+  },
+  {
+   "path": "/api/club/lead/release-station",
+   "resolved_path": "/api/club/lead/release-station",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 9.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=该成员不在本场",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "activityId": 992032,
+     "nodeId": 992021,
+     "memberId": 9004
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"该成员不在本场\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 189
+    }
+   ],
+   "backend_controller": "ApiClubLeadController.releaseStation"
+  },
+  {
+   "path": "/api/club/notices/send",
+   "resolved_path": "/api/club/notices/send",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 501,
+   "error_code": null,
+   "latency_ms": 5.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=501 errorCode=None msg=WECHAT_SUBSCRIPTION_UNAVAILABLE: 订阅模板或授权未接入",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7003,
+     "activityId": 992034,
+     "audienceType": "ALL_MEMBERS",
+     "channel": "smoke",
+     "title": "E2E API smoke check",
+     "content": "E2E API smoke check",
+     "requestId": "d84e2f65-0c78-4b28-bc21-6427f67fd256"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"WECHAT_SUBSCRIPTION_UNAVAILABLE: 订阅模板或授权未接入\",\"code\":501}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 1433
+    },
+    {
+     "file": "Core/ClubGapClient.swift",
+     "line": 59
+    },
+    {
+     "file": "Core/ChannelDiscordMessaging.swift",
+     "line": 3048
+    }
+   ],
+   "backend_controller": "ApiClubGapController.noticeSend"
+  },
+  {
+   "path": "/api/club/open-settings/welcome-note-receipt",
+   "resolved_path": "/api/club/open-settings/welcome-note-receipt",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 3.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=读回参数无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"读回参数无效\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/ClubWelcomeNoteFlow.swift",
+     "line": 344
+    }
+   ],
+   "backend_controller": "ApiClubController.welcomeNoteReceipt"
+  },
+  {
+   "path": "/api/club/personal-receiver/bind",
+   "resolved_path": "/api/club/personal-receiver/bind",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=PERSONAL_RECEIVER_CONSENT_REQUIRED",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "jsCode": "e2e-code-9003"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"PERSONAL_RECEIVER_CONSENT_REQUIRED\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 1493
+    },
+    {
+     "file": "Core/PayoutReceiverClient.swift",
+     "line": 16
+    }
+   ],
+   "backend_controller": "ApiClubController.bindPersonalReceiver"
+  },
+  {
+   "path": "/api/club/post/create",
+   "resolved_path": "/api/club/post/create",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "CLUB_POST_REF_UNAVAILABLE",
+   "latency_ms": 7.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=CLUB_POST_REF_UNAVAILABLE msg=引用的记录不存在或当前不可公开",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "id": 992051,
+     "clubId": 7003,
+     "authorMemberId": 1,
+     "content": "E2E API smoke check",
+     "images": "smoke",
+     "refType": 1,
+     "refId": 1,
+     "sportName": "smoke",
+     "sportCover": "smoke",
+     "sportTopicId": 1,
+     "isTopicTemplate": true,
+     "refUnavailable": true
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"引用的记录不存在或当前不可公开\",\"code\":404,\"errorCode\":\"CLUB_POST_REF_UNAVAILABLE\"}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 572
+    }
+   ],
+   "backend_controller": "ApiClubController.postCreate"
+  },
+  {
+   "path": "/api/club/roles/assign-receipt",
+   "resolved_path": "/api/club/roles/assign-receipt",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 2.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=读回参数无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"读回参数无效\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/ClubRoleAssignmentOriginal.swift",
+     "line": 40
+    }
+   ],
+   "backend_controller": "ApiClubRoleController.assignReceipt"
+  },
+  {
+   "path": "/api/content-draft/publish",
+   "resolved_path": "/api/content-draft/publish",
+   "verb": "POST",
+   "role": "creator",
+   "area": "creator/publishing",
+   "capgraph_status": "EXPANDED_FROM_PREFIX",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 4.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=草稿不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "id": 1,
+     "businessType": "TOPIC",
+     "clientDraftKey": "smoke",
+     "subjectId": 1,
+     "payloadJson": "smoke",
+     "expectedVersion": 1,
+     "deviceId": "smoke",
+     "publishedResourceId": 1,
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"草稿不存在\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "Core/VersionedContentDraftService.swift",
+     "line": 7
+    }
+   ],
+   "backend_controller": "ApiContentDraftController.publish"
+  },
+  {
+   "path": "/api/content-draft/restore",
+   "resolved_path": "/api/content-draft/restore",
+   "verb": "POST",
+   "role": "creator",
+   "area": "creator/publishing",
+   "capgraph_status": "EXPANDED_FROM_PREFIX",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 3.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=草稿不存在或已结束",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "draft_id": 1,
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"草稿不存在或已结束\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "Core/VersionedContentDraftService.swift",
+     "line": 7
+    }
+   ],
+   "backend_controller": "ApiContentDraftController.restore"
+  },
+  {
+   "path": "/api/coop/deposit/refund/retry",
+   "resolved_path": "/api/coop/deposit/refund/retry",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant-club cooperation",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=仅取消合作或履约完成后可重试退款",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "inviteId": 993656,
+     "id": 993656
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"仅取消合作或履约完成后可重试退款\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/CooperationFlowContracts.swift",
+     "line": 480
+    }
+   ],
+   "backend_controller": "ApiCoopController.retryDepositRefund"
+  },
+  {
+   "path": "/api/coop/invite",
+   "resolved_path": "/api/coop/invite",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "merchant-club cooperation",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 1.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=邀请类型与受邀方类型不匹配",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "id": 1,
+     "inviteType": 1,
+     "fromType": "smoke",
+     "fromId": 1,
+     "toType": "smoke",
+     "toId": 1,
+     "topicId": 992001,
+     "originApplyId": 1,
+     "nodeId": 992021,
+     "supplyStationId": 1,
+     "supplyStationName": "smoke",
+     "requiresSupplyStation": true
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"邀请类型与受邀方类型不匹配\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/CooperationContextual.swift",
+     "line": 57
+    },
+    {
+     "file": "Core/ClubGapClient.swift",
+     "line": 67
+    }
+   ],
+   "backend_controller": "ApiCoopController.invite"
+  },
+  {
+   "path": "/api/coupon/command-receipt",
+   "resolved_path": "/api/coupon/command-receipt",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "coupons",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 1.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=参数缺失",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "merchantId": 8001,
+     "scope": "MERCHANT",
+     "requestId": "e4a5a1ca-b9a4-4b5b-b69a-90aa7a61547b"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"参数缺失\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 2876
+    },
+    {
+     "file": "Core/CouponCommandReceipts.swift",
+     "line": 20
+    },
+    {
+     "file": "Core/CouponCommandReceipts.swift",
+     "line": 190
+    },
+    {
+     "file": "Core/CouponCommandReceipts.swift",
+     "line": 198
+    }
+   ],
+   "backend_controller": "ApiCouponController.commandReceipt"
+  },
+  {
+   "path": "/api/coupon/stop",
+   "resolved_path": "/api/coupon/stop",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "coupons",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 1.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=参数缺失",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "couponId": 970003,
+     "scope": "MERCHANT"
+    },
+    "headers": {
+     "X-Coupon-Command-Id": "390dce13-b131-4a72-92a1-b78e01e6ab55",
+     "X-Coupon-Merchant-Id": "a2c90a4d-d9bc-44eb-86e5-e0bb080b3daa"
+    }
+   },
+   "response_excerpt": "{\"msg\":\"参数缺失\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 758
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 766
+    },
+    {
+     "file": "App/AppSession.swift",
+     "line": 4416
+    },
+    {
+     "file": "Core/CouponManagementContract.swift",
+     "line": 26
+    }
+   ],
+   "backend_controller": "ApiCouponController.stopIssuing"
+  },
+  {
+   "path": "/api/friend/accept",
+   "resolved_path": "/api/friend/accept",
+   "verb": "POST",
+   "role": "player",
+   "area": "social/friends",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "FRIEND_REQUEST_NOT_FOUND",
+   "latency_ms": 6.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=FRIEND_REQUEST_NOT_FOUND msg=FRIEND_REQUEST_NOT_FOUND",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "peer_id": 9005,
+     "msg": "",
+     "expected_version": 1,
+     "request_id": "749371bc-2abe-4e92-a581-19efa2db7477"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"FRIEND_REQUEST_NOT_FOUND\",\"code\":404,\"errorCode\":\"FRIEND_REQUEST_NOT_FOUND\",\"detail\":\"好友申请已失效\"}",
+   "app_sites": [
+    {
+     "file": "Core/NativeFriendService.swift",
+     "line": 14
+    }
+   ],
+   "backend_controller": "ApiFriendController.write"
+  },
+  {
+   "path": "/api/friend/reject",
+   "resolved_path": "/api/friend/reject",
+   "verb": "POST",
+   "role": "player",
+   "area": "social/friends",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "FRIEND_REQUEST_NOT_FOUND",
+   "latency_ms": 10.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=FRIEND_REQUEST_NOT_FOUND msg=FRIEND_REQUEST_NOT_FOUND",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "peer_id": 9005,
+     "msg": "",
+     "expected_version": 1,
+     "request_id": "696eac91-9f55-49f5-b65a-e640acec3573"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"FRIEND_REQUEST_NOT_FOUND\",\"code\":404,\"errorCode\":\"FRIEND_REQUEST_NOT_FOUND\",\"detail\":\"好友申请已失效\"}",
+   "app_sites": [
+    {
+     "file": "Core/NativeFriendService.swift",
+     "line": 14
+    }
+   ],
+   "backend_controller": "ApiFriendController.write"
+  },
+  {
+   "path": "/api/friend/removal/settle",
+   "resolved_path": "/api/friend/removal/settle",
+   "verb": "POST",
+   "role": "player",
+   "area": "social/friends",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "FRIEND_RECEIPT_NOT_FOUND",
+   "latency_ms": 5.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=FRIEND_RECEIPT_NOT_FOUND msg=FRIEND_RECEIPT_NOT_FOUND",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "peer_id": 9007,
+     "expected_version": 1,
+     "request_id": "791ceaa0-a8e2-4ec6-9164-ff621ebde686"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"FRIEND_RECEIPT_NOT_FOUND\",\"code\":404,\"errorCode\":\"FRIEND_RECEIPT_NOT_FOUND\",\"detail\":\"没有找到该请求\"}",
+   "app_sites": [
+    {
+     "file": "Core/NativeFriendRemovalService.swift",
+     "line": 14
+    }
+   ],
+   "backend_controller": "ApiFriendController.removalSettle"
+  },
+  {
+   "path": "/api/game/session/command",
+   "resolved_path": "/api/game/session/command",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 7.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=游戏命令参数不完整",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "activityId": 992034,
+     "requestId": "1b21e1b0-487e-42cd-acde-c16ddb36cd77",
+     "nodeId": 992021,
+     "voiceSample": "smoke",
+     "outcome": "smoke",
+     "replayed": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"游戏命令参数不完整\",\"code\":500,\"data\":{\"reasonCode\":\"GAME_BAD_REQUEST\"}}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 164
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 634
+    },
+    {
+     "file": "Core/PlayDirectorRuntime.swift",
+     "line": 117
+    },
+    {
+     "file": "Core/MerchantGameNodeService.swift",
+     "line": 192
+    }
+   ],
+   "backend_controller": "ApiGameSessionController.command"
+  },
+  {
+   "path": "/api/game/session/shared/export/anchor",
+   "resolved_path": "/api/game/session/shared/export/anchor",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 7.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=本局没有共享账",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "activityId": 992034
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"本局没有共享账\",\"code\":500,\"data\":{\"reasonCode\":\"GAME_ACTION_UNSUPPORTED\"}}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 638
+    },
+    {
+     "file": "Core/PlayerParityBRoutes.swift",
+     "line": 12
+    },
+    {
+     "file": "Core/PlayerParityBRoutes.swift",
+     "line": 53
+    }
+   ],
+   "backend_controller": "ApiGameSessionController.sharedExportAnchor"
+  },
+  {
+   "path": "/api/guilds/{}/{}/channels",
+   "resolved_path": "/api/guilds/1/7003/channels",
+   "verb": "POST",
+   "role": "player",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "INVALID_FIELD",
+   "latency_ms": 5.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=INVALID_FIELD msg=编号不合法",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "request_id": "df33e231-b40a-4aa9-a54d-8604f3d6a3c9",
+     "reason": "smoke create channel",
+     "name": "smk-09f224",
+     "kind": 1,
+     "parent_id": 54,
+     "topic": "E2E smoke channel",
+     "visibility": 1,
+     "slowmode_sec": 0
+    },
+    "headers": {
+     "reason": "1f4189b7-87cb-4a16-8a66-2644fdc54ad9",
+     "X-Audit-Log-Reason": "smoke create channel"
+    }
+   },
+   "response_excerpt": "{\"msg\":\"编号不合法\",\"code\":400,\"errorCode\":\"INVALID_FIELD\",\"outcome_known\":true}",
+   "app_sites": [
+    {
+     "file": "Core/NativeChannelManagementFinalForward.swift",
+     "line": 68
+    },
+    {
+     "file": "Core/NativeChannelManagementService.swift",
+     "line": 264
+    },
+    {
+     "file": "Core/NativeChannelManagementIntent.swift",
+     "line": 64
+    }
+   ],
+   "backend_controller": "ApiChannelPlatformController.create"
+  },
+  {
+   "path": "/api/im/route-share-source",
+   "resolved_path": "/api/im/route-share-source",
+   "verb": "POST",
+   "role": "player",
+   "area": "messaging",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 4.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=该路线暂不可用",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "topic_id": 992001
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"该路线暂不可用\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "Core/IMExpandedService.swift",
+     "line": 162
+    },
+    {
+     "file": "Core/BusinessRuntimeConfiguration.swift",
+     "line": 277
+    }
+   ],
+   "backend_controller": "ApiImController.routeShareSource"
+  },
+  {
+   "path": "/api/invoice/apply",
+   "resolved_path": "/api/invoice/apply",
+   "verb": "POST",
+   "role": "player",
+   "area": "orders/payment",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": "INVOICE_ORDER_NOT_ELIGIBLE",
+   "latency_ms": 4.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=原订单现金或退款状态无法确认，暂不可开票",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "titleId": "992687",
+     "orderIds": [
+      992701
+     ],
+     "requestId": "f00f298e-7d88-49b3-bf4d-839b2bb242fa"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"原订单现金或退款状态无法确认，暂不可开票\",\"code\":500,\"errorCode\":\"INVOICE_ORDER_NOT_ELIGIBLE\"}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 600
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 698
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 760
+    }
+   ],
+   "backend_controller": "ApiUserInvoiceController.apply"
+  },
+  {
+   "path": "/api/invoice/request",
+   "resolved_path": "/api/invoice/request",
+   "verb": "POST",
+   "role": "player",
+   "area": "orders/payment",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": "INVOICE_NOT_FOUND",
+   "latency_ms": 2.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=暂未查到原申请",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "requestId": "d8abf7a2-52e4-4697-8a27-8c8fdddfcd30"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"暂未查到原申请\",\"code\":500,\"errorCode\":\"INVOICE_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 601
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 698
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 760
+    }
+   ],
+   "backend_controller": "ApiUserInvoiceController.originalRequest"
+  },
+  {
+   "path": "/api/marketing/attribution/claim",
+   "resolved_path": "/api/marketing/attribution/claim",
+   "verb": "POST",
+   "role": "player",
+   "area": "marketing/products",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 3.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=推广凭据与订单商品不匹配",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "orderType": 1,
+     "orderId": 75,
+     "token": "rf1.6l1a9eehpgeil4ntlx5jro18n.1794836365.lcgPXgrJmfYkbR0tl69VwDpXaejdMA6f1qa-EyAP0hs"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"推广凭据与订单商品不匹配\",\"code\":400,\"reasonCode\":\"TARGET_MISMATCH\"}",
+   "app_sites": [
+    {
+     "file": "Core/G6CapabilitySource.swift",
+     "line": 75
+    }
+   ],
+   "backend_controller": "ApiMarketingAttributionController.claim"
+  },
+  {
+   "path": "/api/marketing/group-checkout/create",
+   "resolved_path": "/api/marketing/group-checkout/create",
+   "verb": "POST",
+   "role": "player",
+   "area": "marketing/products",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 2.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=缺少报价签名，请重新报价",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "productId": 2,
+     "quantity": 1,
+     "requestId": "246863ba-96bb-45ab-8a3e-7157c98f4529",
+     "realName": "玩家小城",
+     "phone": "13900000004"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"缺少报价签名，请重新报价\",\"code\":400,\"reasonCode\":\"QUOTE_SIGN_REQUIRED\"}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 318
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 741
+    },
+    {
+     "file": "Core/WP07CommerceClient.swift",
+     "line": 12
+    }
+   ],
+   "backend_controller": "ApiMarketingGroupCheckoutController.create"
+  },
+  {
+   "path": "/api/marketing/product/activate",
+   "resolved_path": "/api/marketing/product/activate",
+   "verb": "POST",
+   "role": "player",
+   "area": "marketing/products",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 8.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=该主题不是首次使用型,已在成交时生效",
+   "request": {
+    "encoding": "form",
+    "query": {
+     "topicId": 992001
+    },
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"该主题不是首次使用型,已在成交时生效\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 318
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 349
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 742
+    },
+    {
+     "file": "Core/WP07CommerceClient.swift",
+     "line": 13
+    }
+   ],
+   "backend_controller": "ApiMarketingProductController.activate"
+  },
+  {
+   "path": "/api/marketing/product/order",
+   "resolved_path": "/api/marketing/product/order",
+   "verb": "POST",
+   "role": "player",
+   "area": "marketing/products",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 2.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=None msg=请求参数格式有误",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "productId": 1,
+     "quantity": 1,
+     "fulfillmentKind": 1,
+     "payMode": 2,
+     "requestId": "ee848f67-23b3-4f5c-845c-146474a6fc84",
+     "quoteSign": "a878e89ce4df4853bd68c3b5e0e18456b7dfd6daf83122ec05220fc7d8091f7c",
+     "quoteExpiresAt": "2026-11-15T21:49:25.177+08:00"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"请求参数格式有误\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/PlayGapMiscSurfaces.swift",
+     "line": 165
+    },
+    {
+     "file": "Core/PlatformPass.swift",
+     "line": 26
+    }
+   ],
+   "backend_controller": "ApiMarketingProductController.order"
+  },
+  {
+   "path": "/api/official/events/{}/complete",
+   "resolved_path": "/api/official/events/992661/complete",
+   "verb": "POST",
+   "role": "player",
+   "area": "official events",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 7.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=请完成对应任务后自动验证；旧版活动请联系主办方处理",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"请完成对应任务后自动验证；旧版活动请联系主办方处理\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/OfficialActionContracts.swift",
+     "line": 104
+    }
+   ],
+   "backend_controller": "ApiOfficialEventController.complete"
+  },
+  {
+   "path": "/api/official/events/{}/signup",
+   "resolved_path": "/api/official/events/992661/signup",
+   "verb": "POST",
+   "role": "player",
+   "area": "official events",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=活动当前不可报名",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"活动当前不可报名\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/OfficialActionContracts.swift",
+     "line": 103
+    }
+   ],
+   "backend_controller": "ApiOfficialEventController.signup"
+  },
+  {
+   "path": "/api/official/v2/organizer-invites/{}/{}",
+   "resolved_path": "/api/official/v2/organizer-invites/992665/decline",
+   "verb": "POST",
+   "role": "ops(9001)",
+   "area": "official events",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 8.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=该邀约不是可拒绝的官方主办关系",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "reason": "E2E API smoke check"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"该邀约不是可拒绝的官方主办关系\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/OfficialActionContracts.swift",
+     "line": 107
+    }
+   ],
+   "backend_controller": "ApiOfficialEventController.declineOrganizerInvitation"
+  },
+  {
+   "path": "/api/official/v2/parties/{}/{}",
+   "resolved_path": "/api/official/v2/parties/992665/accept",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "official events",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=当前邀约不可接受",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "reason": "E2E API smoke check"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"当前邀约不可接受\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/OfficialActionContracts.swift",
+     "line": 107
+    }
+   ],
+   "backend_controller": "ApiOfficialEventController.respondParty"
+  },
+  {
+   "path": "/api/orient/task/alternative",
+   "resolved_path": "/api/orient/task/alternative",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "ORIENT_NOT_FOUND",
+   "latency_ms": 5.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=ORIENT_NOT_FOUND msg=任务不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "topicId": 992001
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"任务不存在\",\"code\":404,\"errorCode\":\"ORIENT_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 640
+    },
+    {
+     "file": "Core/PlayerParityBRoutes.swift",
+     "line": 14
+    },
+    {
+     "file": "Core/PlayerParityBRoutes.swift",
+     "line": 92
+    }
+   ],
+   "backend_controller": "ApiOrientController.configureAlternative"
+  },
+  {
+   "path": "/api/orient/task/alternative/submit",
+   "resolved_path": "/api/orient/task/alternative/submit",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": "ORIENT_BAD_REQUEST",
+   "latency_ms": 3.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=ORIENT_BAD_REQUEST msg=缺少或非法的幂等键(idempotencyKey,8-64 位)",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "sessionId": 993801,
+     "ackConfigVersion": "smoke",
+     "alternativeTaskType": "smoke",
+     "entryId": "smoke",
+     "nodeId": 992021,
+     "reason": "E2E API smoke check",
+     "taskId": 1,
+     "playInstanceId": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"缺少或非法的幂等键(idempotencyKey,8-64 位)\",\"code\":400,\"errorCode\":\"ORIENT_BAD_REQUEST\"}",
+   "app_sites": [
+    {
+     "file": "Core/OrientSessionService.swift",
+     "line": 140
+    }
+   ],
+   "backend_controller": "ApiOrientController.submitAlternative"
+  },
+  {
+   "path": "/api/play/advanced/start",
+   "resolved_path": "/api/play/advanced/start",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 12.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=高级玩法配置版本不支持",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "activityId": 992034,
+     "topicId": 992001,
+     "nodeId": 992021,
+     "sessionId": 2,
+     "routeSessionId": 993804
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"高级玩法配置版本不支持\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 592
+    },
+    {
+     "file": "Core/PlaySharedPlanAdvancedTransport.swift",
+     "line": 18
+    },
+    {
+     "file": "Core/PlaySharedPlanR5Host.swift",
+     "line": 102
+    },
+    {
+     "file": "Core/PlaySharedPlanR5Host.swift",
+     "line": 142
+    }
+   ],
+   "backend_controller": "ApiAdvancedPlayController.start"
+  },
+  {
+   "path": "/api/play/help/skip",
+   "resolved_path": "/api/play/help/skip",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 11.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=队伍集合中,等队长开始行程",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "runId": "993804",
+     "nodeId": "992021",
+     "requestId": "9c07632c-a353-4557-8706-d55a28df988a"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"队伍集合中,等队长开始行程\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 592
+    },
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 424
+    }
+   ],
+   "backend_controller": "ApiPlayHelpController.skip"
+  },
+  {
+   "path": "/api/play/help/use",
+   "resolved_path": "/api/play/help/use",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 10.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=队伍集合中,等队长开始行程",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "runId": "993804",
+     "nodeId": "992021",
+     "level": 1,
+     "action": "HELP",
+     "requestId": "1a7fb209-4ae3-4fc1-a026-80775b95f954"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"队伍集合中,等队长开始行程\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 592
+    },
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 419
+    }
+   ],
+   "backend_controller": "ApiPlayHelpController.use"
+  },
+  {
+   "path": "/api/play/hint/unlock",
+   "resolved_path": "/api/play/hint/unlock",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 7.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=队伍集合中,等队长开始行程",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "nodeId": 992021,
+     "level": "smoke",
+     "activityId": 992034,
+     "topicId": 992001,
+     "sessionId": 2,
+     "routeSessionId": 993804
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"队伍集合中,等队长开始行程\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 143
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.unlockHint"
+  },
+  {
+   "path": "/api/play/journey/ask",
+   "resolved_path": "/api/play/journey/ask",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=参数有误",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "nodeId": 992021,
+     "questionId": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"参数有误\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/JourneyNarrativeService.swift",
+     "line": 35
+    }
+   ],
+   "backend_controller": "ApiPlayJourneyActionController.ask"
+  },
+  {
+   "path": "/api/play/journey/opening/complete",
+   "resolved_path": "/api/play/journey/opening/complete",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 8.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=开局流程不匹配",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "topicId": 992001,
+     "activityId": 992034,
+     "chapterId": 992011,
+     "expectedVersion": "0"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"开局流程不匹配\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 593
+    },
+    {
+     "file": "Core/PlayJourneyOpening.swift",
+     "line": 52
+    }
+   ],
+   "backend_controller": "ApiPlayJourneyActionController.completeOpening"
+  },
+  {
+   "path": "/api/play/journey/thought/sync",
+   "resolved_path": "/api/play/journey/thought/sync",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 9.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=请先购买自玩通行证",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "topicId": 992001,
+     "claim": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"请先购买自玩通行证\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/ChapterThoughtSync.swift",
+     "line": 36
+    }
+   ],
+   "backend_controller": "ApiPlayJourneyActionController.syncThoughts"
+  },
+  {
+   "path": "/api/play/preference/{}/submit",
+   "resolved_path": "/api/play/preference/1/submit",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": "NODE_NOT_FOUND",
+   "latency_ms": 4.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=节点不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "tagValue": "smoke",
+     "routeActionId": "92b21888-7521-403b-bcb3-212dde9a1838",
+     "expectedRouteVersion": 0,
+     "routeSessionId": 993804,
+     "runtimeInstance": "firstrun:00000000-0000-4000-8000-000000993804",
+     "authorityEpoch": 1
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"节点不存在\",\"retryable\":false,\"code\":500,\"errorCode\":\"NODE_NOT_FOUND\",\"intentNotExecuted\":true,\"refreshRequired\":false}",
+   "app_sites": [
+    {
+     "file": "Core/PlayPreferenceRuntime.swift",
+     "line": 68
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.submitPreference"
+  },
+  {
+   "path": "/api/play/puzzle/hint",
+   "resolved_path": "/api/play/puzzle/hint",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 8.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=队伍集合中,等队长开始行程",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "nodeId": 992021,
+     "level": 1,
+     "activityId": 992034,
+     "topicId": 992001,
+     "sessionId": 2,
+     "routeSessionId": 993804
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"队伍集合中,等队长开始行程\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 142
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.puzzleHint"
+  },
+  {
+   "path": "/api/play/scan-entry",
+   "resolved_path": "/api/play/scan-entry",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": "SCAN_CODE_INVALID",
+   "latency_ms": 3.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=无效的打卡码",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "code": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"无效的打卡码\",\"retryable\":false,\"code\":500,\"errorCode\":\"SCAN_CODE_INVALID\",\"intentNotExecuted\":true,\"refreshRequired\":false}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 596
+    },
+    {
+     "file": "Core/DoorReferralService.swift",
+     "line": 45
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.scanEntry"
+  },
+  {
+   "path": "/api/play/sensor-result",
+   "resolved_path": "/api/play/sensor-result",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": "INTENT_INPUT_INVALID",
+   "latency_ms": 4.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=参数有误",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "nodeId": 992021,
+     "answer": "smoke",
+     "code": "smoke",
+     "longitude": 121.4737,
+     "latitude": 31.2304,
+     "accuracy": "smoke",
+     "locationTimestamp": "smoke",
+     "picUrl": "smoke",
+     "routeActionId": "ebf9f544-1578-4ee4-b975-70e019dfb366",
+     "expectedRouteVersion": 0,
+     "routeSessionId": 993804,
+     "runtimeInstance": "firstrun:00000000-0000-4000-8000-000000993804",
+     "authorityEpoch": 1
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"参数有误\",\"retryable\":false,\"code\":500,\"errorCode\":\"INTENT_INPUT_INVALID\",\"intentNotExecuted\":true,\"refreshRequired\":false}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 590
+    },
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 130
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.sensorResult"
+  },
+  {
+   "path": "/api/play/tag/{}/confirm",
+   "resolved_path": "/api/play/tag/1/confirm",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=标签不存在或已撤回",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "tagValue": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"标签不存在或已撤回\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PlayPreferenceRuntime.swift",
+     "line": 75
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.confirmPreferenceTag"
+  },
+  {
+   "path": "/api/play/tag/{}/correct",
+   "resolved_path": "/api/play/tag/1/correct",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=标签不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "tagValue": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"标签不存在\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PlayPreferenceRuntime.swift",
+     "line": 74
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.correctPreferenceTag"
+  },
+  {
+   "path": "/api/play/theme/action",
+   "resolved_path": "/api/play/theme/action",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 2.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=物资动作不接受新奖励或任务选项",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "sessionId": 2,
+     "expectedVersion": 1,
+     "actionId": "7bfdf711-1a3f-4123-be11-ef7d2e2f394b",
+     "operation": "smoke",
+     "contentId": "smoke",
+     "choiceKey": "smoke",
+     "previewVersion": "smoke",
+     "actionType": "smoke",
+     "requestId": "dea1ceb5-3ee5-4fe0-9cce-e5d50cc1aa16",
+     "source": "smoke",
+     "activityId": 992034,
+     "routeSessionId": 993804,
+     "runId": "993804"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"物资动作不接受新奖励或任务选项\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/PlayThemeBackpackDispatch.swift",
+     "line": 101
+    }
+   ],
+   "backend_controller": "ApiThemeRuntimeController.action"
+  },
+  {
+   "path": "/api/play/theme/gameplay-action",
+   "resolved_path": "/api/play/theme/gameplay-action",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 2.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=动作参数不正确",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "sessionId": 2,
+     "expectedVersion": 1,
+     "actionId": "a35767e3-728d-4cca-8906-58b2e45187dc",
+     "operation": "smoke",
+     "contentId": "smoke",
+     "choiceKey": "smoke",
+     "previewVersion": "smoke",
+     "costOption": 1,
+     "actionType": "smoke",
+     "requestId": "3246a503-a5a1-4f9f-a57d-f21c6d592050",
+     "source": "smoke",
+     "activityId": 992034,
+     "routeSessionId": 993804
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"动作参数不正确\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 626
+    },
+    {
+     "file": "Core/PlayRuntimeGap.swift",
+     "line": 536
+    }
+   ],
+   "backend_controller": "ApiThemeRuntimeController.gameplayAction"
+  },
+  {
+   "path": "/api/play/theme/replay",
+   "resolved_path": "/api/play/theme/replay",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 9.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=此主题未开放重玩",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "sessionId": 993801
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"此主题未开放重玩\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 112
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 597
+    },
+    {
+     "file": "Core/PlayThemeRecords.swift",
+     "line": 172
+    }
+   ],
+   "backend_controller": "ApiThemeRuntimeController.replay"
+  },
+  {
+   "path": "/api/registration/create",
+   "resolved_path": "/api/registration/create",
+   "verb": "POST",
+   "role": "player",
+   "area": "registration/tickets",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 7.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=请先补全参与人姓名，再购买",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "ownerType": 2,
+     "ownerId": 992034,
+     "ticketId": 992044,
+     "tickets": [
+      {
+       "ticketId": 992044,
+       "count": 1
+      }
+     ],
+     "realName": "玩家小城",
+     "phone": "13900000004",
+     "count": 1,
+     "requestId": "54d1b636-a551-401d-8fa8-42c90921d75a"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"请先补全参与人姓名，再购买\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 66
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 90
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 582
+    },
+    {
+     "file": "Core/RegistrationProduction.swift",
+     "line": 19
+    }
+   ],
+   "backend_controller": "ApiRegistrationController.createRegistration"
+  },
+  {
+   "path": "/api/registration/explore-completion",
+   "resolved_path": "/api/registration/explore-completion",
+   "verb": "POST",
+   "role": "player",
+   "area": "registration/tickets",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 2.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=参数不合规",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "id": 992107
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"参数不合规\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/ExploreCompletionRead.swift",
+     "line": 43
+    }
+   ],
+   "backend_controller": "ApiRegistrationController.exploreCompletion"
+  },
+  {
+   "path": "/api/registration/scan_dynamic_code",
+   "resolved_path": "/api/registration/scan_dynamic_code",
+   "verb": "POST",
+   "role": "player",
+   "area": "registration/tickets",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 1.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=格式错误",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "code": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"格式错误\",\"code\":500,\"data\":{\"notRedeemed\":true}}",
+   "app_sites": [
+    {
+     "file": "Core/OrderLifecycleDormantAdapter.swift",
+     "line": 47
+    },
+    {
+     "file": "Core/MerchantVerificationHTTPTransport.swift",
+     "line": 10
+    },
+    {
+     "file": "Core/BusinessRuntimeConfiguration.swift",
+     "line": 349
+    },
+    {
+     "file": "Core/MerchantRedemptionContext.swift",
+     "line": 36
+    }
+   ],
+   "backend_controller": "ApiRegistrationController.scanDynamicCode"
+  },
+  {
+   "path": "/api/registration/scan_group_member_ticket",
+   "resolved_path": "/api/registration/scan_group_member_ticket",
+   "verb": "POST",
+   "role": "player",
+   "area": "registration/tickets",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 1.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=核销码无效",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "code": "smoke",
+     "activityId": 992034
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"核销码无效\",\"code\":500,\"data\":{\"notRedeemed\":true}}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 639
+    },
+    {
+     "file": "Core/PlayerParityBRoutes.swift",
+     "line": 13
+    },
+    {
+     "file": "Core/PlayerParityBRoutes.swift",
+     "line": 71
+    }
+   ],
+   "backend_controller": "ApiRegistrationController.scanGroupMemberTicket"
+  },
+  {
+   "path": "/api/registration/scan_qr_code",
+   "resolved_path": "/api/registration/scan_qr_code",
+   "verb": "POST",
+   "role": "player",
+   "area": "registration/tickets",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 1.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=核销码无效",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "code": "smoke",
+     "chapterId": 992011,
+     "type": "topic",
+     "activityId": 992034
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"核销码无效\",\"code\":500,\"data\":{\"notRedeemed\":true}}",
+   "app_sites": [
+    {
+     "file": "Core/OrderLifecycleDormantAdapter.swift",
+     "line": 55
+    },
+    {
+     "file": "Core/MerchantVerificationHTTPTransport.swift",
+     "line": 10
+    },
+    {
+     "file": "Core/BusinessRuntimeConfiguration.swift",
+     "line": 349
+    },
+    {
+     "file": "Core/MerchantRedemptionContext.swift",
+     "line": 37
+    }
+   ],
+   "backend_controller": "ApiRegistrationController.scanQrCode"
+  },
+  {
+   "path": "/api/roam/session/records",
+   "resolved_path": "/api/roam/session/records",
+   "verb": "POST",
+   "role": "player",
+   "area": "roam",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=采集时间不属于原行程",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "sessionId": "121",
+     "clientSessionKey": "1a4e7801c5874b69b8eaf0a1467f9d63",
+     "records": "[{\"tile\": \"wtw3sjr\", \"collectedAt\": 1794749966042}]"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"采集时间不属于原行程\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 611
+    },
+    {
+     "file": "Core/RoamPlayerExtrasService.swift",
+     "line": 10
+    }
+   ],
+   "backend_controller": "ApiRoamController.archiveRecords"
+  },
+  {
+   "path": "/api/roam/share/snapshot",
+   "resolved_path": "/api/roam/share/snapshot",
+   "verb": "POST",
+   "role": "player",
+   "area": "roam",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 2.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=足迹数据无效",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "clientTs": 1763193600000,
+     "sessionId": 30,
+     "snapshot": "{\"routeName\": \"外滩慢游\", \"time\": 1200, \"distance\": 2400, \"explorePct\": 80, \"shops\": 2, \"track\": [[121.4905, 31.2389]], \"pois\": []}",
+     "expectedVersion": 1
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"足迹数据无效\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/RoamSubpagePresentation.swift",
+     "line": 160
+    }
+   ],
+   "backend_controller": "ApiRoamShareController.publish"
+  },
+  {
+   "path": "/api/team/original-request",
+   "resolved_path": "/api/team/original-request",
+   "verb": "POST",
+   "role": "player",
+   "area": "team",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": "INVALID_FIELD",
+   "latency_ms": 2.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=INVALID_FIELD msg=INVALID_FIELD",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"INVALID_FIELD\",\"code\":400,\"errorCode\":\"INVALID_FIELD\",\"detail\":\"envelope\"}",
+   "app_sites": [
+    {
+     "file": "Core/NativeFriendTeamInviteService.swift",
+     "line": 8
+    }
+   ],
+   "backend_controller": "ApiFriendController.teamCommand"
+  },
+  {
+   "path": "/api/template/topic-template/save-as",
+   "resolved_path": "/api/template/topic-template/save-as",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "templates",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 8.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=来源修订与当前发布快照不一致",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": "992001",
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"来源修订与当前发布快照不一致\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 614
+    },
+    {
+     "file": "Core/TemplateAdoptionService.swift",
+     "line": 21
+    }
+   ],
+   "backend_controller": "ApiTopicTemplateController.saveAs"
+  },
+  {
+   "path": "/api/template/topic-template/use",
+   "resolved_path": "/api/template/topic-template/use",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "templates",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 403,
+   "error_code": null,
+   "latency_ms": 16.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=403 errorCode=None msg=WORKSHOP_PAID_SOURCE_PRIVATE",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": "992510",
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"WORKSHOP_PAID_SOURCE_PRIVATE\",\"code\":403}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 710
+    },
+    {
+     "file": "Core/TopicTemplateUse.swift",
+     "line": 17
+    }
+   ],
+   "backend_controller": "ApiTopicTemplateController.use"
+  },
+  {
+   "path": "/api/template/updateLibraryStatus",
+   "resolved_path": "/api/template/updateLibraryStatus",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "templates",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=上架复检暂不可用，请刷新后重试",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "template_id": 992638,
+     "status": "1",
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"上架复检暂不可用，请刷新后重试\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/TemplateAuthoringWireRequestBuilder.swift",
+     "line": 14
+    },
+    {
+     "file": "Core/TemplateAuthoringWireRequestBuilder.swift",
+     "line": 24
+    },
+    {
+     "file": "Core/TemplateAuthoringContract.swift",
+     "line": 18
+    },
+    {
+     "file": "Core/MyProjectMutations.swift",
+     "line": 65
+    }
+   ],
+   "backend_controller": "ApiTemplateController.updateTemplateLibraryStatus"
+  },
+  {
+   "path": "/api/template/{}/market-submit",
+   "resolved_path": "/api/template/9004/market-submit",
+   "verb": "POST",
+   "role": "player",
+   "area": "templates",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 6.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=模板不存在或无权提交",
+   "request": {
+    "encoding": "form",
+    "query": {
+     "scope": "CLUB"
+    },
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"模板不存在或无权提交\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 614
+    },
+    {
+     "file": "Core/TemplateAdoptionService.swift",
+     "line": 22
+    }
+   ],
+   "backend_controller": "ApiTemplateController.submitTemplateToMarket"
+  },
+  {
+   "path": "/api/topic/beta/graduate",
+   "resolved_path": "/api/topic/beta/graduate",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=该主题不在 Beta 试玩期",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "topicId": 992001,
+     "clubId": 7001,
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"该主题不在 Beta 试玩期\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PublisherLifecycleCoordinator.swift",
+     "line": 89
+    }
+   ],
+   "backend_controller": "ApiTopicController.betaGraduate"
+  },
+  {
+   "path": "/api/topic/chapter/recruit",
+   "resolved_path": "/api/topic/chapter/recruit",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 3.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=本章已结束，不能再改商家承接",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "chapterId": 992011,
+     "enabled": 1,
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"本章已结束，不能再改商家承接\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/ClubGovernanceCommands.swift",
+     "line": 26
+    }
+   ],
+   "backend_controller": "ApiTopicController.setChapterRecruit"
+  },
+  {
+   "path": "/api/topic/chapter/supply-terms",
+   "resolved_path": "/api/topic/chapter/supply-terms",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 6.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=主题已开售，这一站的档位已冻结",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "chapterId": 992011,
+     "termsMode": "PERK",
+     "perkMinValue": 30.0,
+     "maxMerchant": 3
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"主题已开售，这一站的档位已冻结\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 154
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 608
+    },
+    {
+     "file": "Core/TopicCreatorEditorService.swift",
+     "line": 22
+    }
+   ],
+   "backend_controller": "ApiTopicController.setChapterSupplyTerms"
+  },
+  {
+   "path": "/api/topic/create",
+   "resolved_path": "/api/topic/create",
+   "verb": "POST",
+   "role": "creator",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 45.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=主题没有可运行节点",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7001,
+     "scope": "CLUB",
+     "name": "smoke-topic-55a9d4",
+     "subtitle": "smoke",
+     "description": "E2E API smoke check",
+     "startDate": "2026-11-20 10:00:00",
+     "img": "media-asset:990003",
+     "imgUrl": "media-asset:990003"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"主题没有可运行节点\",\"code\":500,\"data\":{\"issues\":[{\"level\":\"error\",\"code\":\"FREEZE_INVALID\",\"nodeId\":null,\"field\":\"routeGraphJson\",\"message\":\"主题没有可运行节点\"}]}}",
+   "app_sites": [
+    {
+     "file": "App/ProjectEditCompositionRoute.swift",
+     "line": 12
+    },
+    {
+     "file": "App/ProjectEditCompositionRoute.swift",
+     "line": 39
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 1019
+    },
+    {
+     "file": "Core/ProjectEditStoryContract.swift",
+     "line": 42
+    }
+   ],
+   "backend_controller": "ApiTopicController.createTopic"
+  },
+  {
+   "path": "/api/topic/pricing/confirm",
+   "resolved_path": "/api/topic/pricing/confirm",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 13.4,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=主题未在定价阶段,不能确认终价",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "topicId": 992001,
+     "guidedPrice": 29.0
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"主题未在定价阶段,不能确认终价\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PublisherLifecycleCoordinator.swift",
+     "line": 83
+    },
+    {
+     "file": "Core/TopicPricingXcx.swift",
+     "line": 87
+    }
+   ],
+   "backend_controller": "ApiPricingController.confirm"
+  },
+  {
+   "path": "/api/topic/publish-draft",
+   "resolved_path": "/api/topic/publish-draft",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 422,
+   "error_code": null,
+   "latency_ms": 14.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=422 errorCode=None msg=媒体来源未经审核，请重新上传",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 992641,
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"媒体来源未经审核，请重新上传\",\"code\":422}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 606
+    },
+    {
+     "file": "Core/TopicCreatorEditorService.swift",
+     "line": 16
+    }
+   ],
+   "backend_controller": "ApiTopicController.publishDraft"
+  },
+  {
+   "path": "/api/topic/transfer-to-club",
+   "resolved_path": "/api/topic/transfer-to-club",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 10.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=来源修订与当前发布快照不一致",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "topicId": 992001,
+     "clubId": 7001,
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"来源修订与当前发布快照不一致\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/PublisherLifecycleCoordinator.swift",
+     "line": 88
+    }
+   ],
+   "backend_controller": "ApiTopicController.transferToClub"
+  },
+  {
+   "path": "/api/topic/v2/create",
+   "resolved_path": "/api/topic/v2/create",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 33.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=专业主题至少需要一个章节和一个节点",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7001,
+     "scope": "CLUB",
+     "name": "smoke-v2-ef27d4",
+     "subtitle": "smoke",
+     "description": "E2E API smoke check",
+     "startDate": "2026-11-20 10:00:00",
+     "img": "media-asset:990003",
+     "imgUrl": "media-asset:990003"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"专业主题至少需要一个章节和一个节点\",\"code\":500,\"data\":{\"issues\":[{\"level\":\"error\",\"code\":\"TOPIC_BUNDLE_INVALID\",\"nodeId\":null,\"field\":\"chapters/nodes\",\"message\":\"专业主题至少需要一个章节和一个节点\"}]}}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 1019
+    },
+    {
+     "file": "Core/ProjectEditStoryContract.swift",
+     "line": 7
+    },
+    {
+     "file": "Core/ProjectEditRequestContract.swift",
+     "line": 11
+    },
+    {
+     "file": "Core/BusinessRuntimeConfiguration.swift",
+     "line": 348
+    }
+   ],
+   "backend_controller": "ApiTopicController.createTopicV2"
+  },
+  {
+   "path": "/api/us/auth/apple/exchange",
+   "resolved_path": "/api/us/auth/apple/exchange",
+   "verb": "POST",
+   "role": "player",
+   "area": "US market (no backend)",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "US_APPLE_INVALID_REQUEST",
+   "latency_ms": 4.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=US_APPLE_INVALID_REQUEST msg=US_APPLE_INVALID_REQUEST",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"code\":400,\"msg\":\"US_APPLE_INVALID_REQUEST\",\"errorCode\":\"US_APPLE_INVALID_REQUEST\"}",
+   "app_sites": [
+    {
+     "file": "Core/RePoint10Routes.swift",
+     "line": 25
+    },
+    {
+     "file": "Core/USAppleService.swift",
+     "line": 104
+    }
+   ],
+   "backend_controller": "ApiUsAppleAuthController.exchange"
+  },
+  {
+   "path": "/api/v1/community/appeals",
+   "resolved_path": "/api/v1/community/appeals",
+   "verb": "POST",
+   "role": "player",
+   "area": "community square",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 5.9,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=处置记录不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "enforcementId": 1,
+     "reason": "E2E API smoke check",
+     "evidenceAssetIds": [
+      1
+     ],
+     "requestId": "34e47f36-c1ab-4c68-af72-588fd82de974"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"处置记录不存在\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 578
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 715
+    },
+    {
+     "file": "Core/SquareGovernanceService.swift",
+     "line": 103
+    },
+    {
+     "file": "Core/OwnerDecisionGuards.swift",
+     "line": 58
+    }
+   ],
+   "backend_controller": "ApiCommunityPostController.appeal"
+  },
+  {
+   "path": "/api/verify/citynode/receipt",
+   "resolved_path": "/api/verify/citynode/receipt",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant verify/redeem",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 6.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=格式错误",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "code": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"格式错误\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/CityNodeRedemptionReceiptReading.swift",
+     "line": 48
+    }
+   ],
+   "backend_controller": "ApiVerifyController.cityNodeReceipt"
+  },
+  {
+   "path": "/api/verify/citynode/redeem",
+   "resolved_path": "/api/verify/citynode/redeem",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant verify/redeem",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=格式错误",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "code": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"格式错误\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantVerificationHTTPTransport.swift",
+     "line": 11
+    },
+    {
+     "file": "Core/BusinessRuntimeConfiguration.swift",
+     "line": 349
+    },
+    {
+     "file": "Core/CityNodeRedemption.swift",
+     "line": 11
+    }
+   ],
+   "backend_controller": "ApiVerifyController.redeemCityNodeCode"
+  },
+  {
+   "path": "/api/verify/groupcode/redeem",
+   "resolved_path": "/api/verify/groupcode/redeem",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant verify/redeem",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 6.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=格式错误",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "code": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"格式错误\",\"code\":500,\"data\":{\"notRedeemed\":true}}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantVerificationHTTPTransport.swift",
+     "line": 9
+    },
+    {
+     "file": "Core/BusinessRuntimeConfiguration.swift",
+     "line": 349
+    },
+    {
+     "file": "Core/MerchantRedemptionContext.swift",
+     "line": 34
+    }
+   ],
+   "backend_controller": "ApiVerifyController.redeemGroupCode"
+  },
+  {
+   "path": "/api/workshop/purchased/professional-operations/submit",
+   "resolved_path": "/api/workshop/purchased/professional-operations/submit",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "workshop/mods",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "BAD_REQUEST",
+   "latency_ms": 4.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=BAD_REQUEST msg=hash invalid",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "schema": "w18-paid-professional-text-materialization-command-v1",
+     "requestId": "052ad787-e970-4d60-a67a-a21f0f59c72e",
+     "installationRequestId": "005ffe01-8c94-4ddd-9f8b-e3082646b031",
+     "licenseId": "w18-paid-970201",
+     "moduleId": "992501",
+     "purchasedVersionId": "WKV_99250100000000000000000000992501",
+     "contentHash": "049b393960d0657488d95b7290fc4b3585cac98389e23cdeda14dc5d116a45fd",
+     "termsHash": "ecde1cd87968c6a6032efea6fe230443011424140d21d4a66b26eb93f72e6a1f",
+     "componentHash": "86c9d3f09b02e647156e21e35db83f078393409f4921a423900e35d9fe386f71",
+     "ownedDraftId": 970301,
+     "currentDraftRevision": 1,
+     "currentDraftPayloadHash": "",
+     "targetTopicId": 992641,
+     "targetOwnerModeFingerprint": "947ad244e3519f8096de1fd77c559ff7a54e2dd4e643945eba1616e9ec5592a7",
+     "confirmedMode": "CITY_ORIENTATION"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"hash invalid\",\"code\":400,\"errorCode\":\"BAD_REQUEST\"}",
+   "app_sites": [
+    {
+     "file": "Core/RePoint10Routes.swift",
+     "line": 38
+    },
+    {
+     "file": "Core/WorkshopPaidProfessionalService.swift",
+     "line": 204
+    }
+   ],
+   "backend_controller": "ApiWorkshopProfessionalController.submit"
+  },
+  {
+   "path": "/api/activity/cancel",
+   "resolved_path": "/api/activity/cancel",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "activities",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 15.7,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=原取消生命周期已变化，请人工核对原结果",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "id": 992033,
+     "reason": "E2E API smoke check",
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"原取消生命周期已变化，请人工核对原结果\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 4042
+    },
+    {
+     "file": "Core/MyProjectMutations.swift",
+     "line": 59
+    },
+    {
+     "file": "Core/ActivityHostCancel.swift",
+     "line": 95
+    },
+    {
+     "file": "Core/PublisherCancelAdapter.swift",
+     "line": 17
+    }
+   ],
+   "backend_controller": "ApiActivityController.activityCancel"
+  },
+  {
+   "path": "/api/club/quit",
+   "resolved_path": "/api/club/quit",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 2.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=主理人不能直接退出；请先在成员治理中转让主理人，或解散俱乐部",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "joinMessage": "smoke",
+     "id": 7003,
+     "left": "smoke",
+     "guild_kind": 1,
+     "guild_id": 7001,
+     "request_id": "67a094e0-fa09-472f-bfec-def0ae59d8be"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"主理人不能直接退出；请先在成员治理中转让主理人，或解散俱乐部\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 3233
+    },
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 437
+    },
+    {
+     "file": "Core/Adapt3ClubBackendAdapters.swift",
+     "line": 82
+    },
+    {
+     "file": "Core/ChannelAdmissionGovernanceClient.swift",
+     "line": 96
+    }
+   ],
+   "backend_controller": "ApiClubController.quit"
+  },
+  {
+   "path": "/api/club/remove-member",
+   "resolved_path": "/api/club/remove-member",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 2.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=俱乐部不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "clubId": 7007,
+     "memberId": 9009
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"俱乐部不存在\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/ChannelDiscordMessaging.swift",
+     "line": 1431
+    },
+    {
+     "file": "Core/ClubManagementContracts.swift",
+     "line": 34
+    }
+   ],
+   "backend_controller": "ApiClubController.removeMember"
+  },
+  {
+   "path": "/api/club/roles/revoke-receipt",
+   "resolved_path": "/api/club/roles/revoke-receipt",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "club",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 400,
+   "error_code": null,
+   "latency_ms": 3.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=400 errorCode=None msg=读回参数无效",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"读回参数无效\",\"code\":400}",
+   "app_sites": [
+    {
+     "file": "Core/ClubRoleRevocationOriginal.swift",
+     "line": 40
+    }
+   ],
+   "backend_controller": "ApiClubRoleController.revokeReceipt"
+  },
+  {
+   "path": "/api/friend/cancel",
+   "resolved_path": "/api/friend/cancel",
+   "verb": "POST",
+   "role": "player",
+   "area": "social/friends",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "FRIEND_UNAVAILABLE",
+   "latency_ms": 6.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=FRIEND_UNAVAILABLE msg=FRIEND_UNAVAILABLE",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "peer_id": 9001,
+     "msg": "",
+     "expected_version": 1,
+     "request_id": "72c576a9-09db-4a81-8597-7134b05aed37"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"FRIEND_UNAVAILABLE\",\"code\":404,\"errorCode\":\"FRIEND_UNAVAILABLE\",\"detail\":\"暂时无法添加对方\"}",
+   "app_sites": [
+    {
+     "file": "Core/NativeFriendService.swift",
+     "line": 14
+    }
+   ],
+   "backend_controller": "ApiFriendController.write"
+  },
+  {
+   "path": "/api/merchant/authoring/jobs/cancel",
+   "resolved_path": "/api/merchant/authoring/jobs/cancel",
+   "verb": "POST",
+   "role": "merchant(9002)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 404,
+   "biz_code": 404,
+   "error_code": "NOT_FOUND",
+   "latency_ms": 6.5,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 404",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "requestId": "233e6982-c7e9-4851-9d2d-61ae1200dec1"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"NOT_FOUND\",\"code\":404,\"errorCode\":\"NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantAuthoringService.swift",
+     "line": 11
+    }
+   ],
+   "backend_controller": "ApiMerchantAuthoringController.cancel"
+  },
+  {
+   "path": "/api/merchant/chapter-application/invite/revoke",
+   "resolved_path": "/api/merchant/chapter-application/invite/revoke",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "merchant",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 4.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=邀请不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "applicationId": 992804
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"邀请不存在\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MerchantBusinessMutation.swift",
+     "line": 287
+    }
+   ],
+   "backend_controller": "ApiMerchantChapterApplicationController.revokeInvite"
+  },
+  {
+   "path": "/api/play/seat-invitations/{}/cancel",
+   "resolved_path": "/api/play/seat-invitations/1/cancel",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": null,
+   "latency_ms": 7.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=None msg=邀请不存在",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "invitationId": 1,
+     "requestId": "82279c66-e917-4218-b82e-b89e110b1a2d"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"邀请不存在\",\"code\":404}",
+   "app_sites": [
+    {
+     "file": "Core/JourneyLoopSource.swift",
+     "line": 523
+    }
+   ],
+   "backend_controller": "ApiRegistrationSeatInvitationController.cancel"
+  },
+  {
+   "path": "/api/play/tag/{}/revoke",
+   "resolved_path": "/api/play/tag/1/revoke",
+   "verb": "POST",
+   "role": "player",
+   "area": "play runtime",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 6.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=标签不存在",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"标签不存在\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PlayExperienceService.swift",
+     "line": 224
+    }
+   ],
+   "backend_controller": "ApiPlayProgressController.revokePreferenceTag"
+  },
+  {
+   "path": "/api/registration/cancel-by-owner",
+   "resolved_path": "/api/registration/cancel-by-owner",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "registration/tickets",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 8.8,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=支付现金快照未确认，请通过后台退款工单核对后处理",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 992197,
+     "registrationId": 992197
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"支付现金快照未确认，请通过后台退款工单核对后处理\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/ClubOwnerRefundService.swift",
+     "line": 16
+    },
+    {
+     "file": "Core/ClubOwnerRefundApprovedAccess.swift",
+     "line": 13
+    }
+   ],
+   "backend_controller": "ApiRegistrationController.cancelByOwner"
+  },
+  {
+   "path": "/api/registration/cancel-refund",
+   "resolved_path": "/api/registration/cancel-refund",
+   "verb": "POST",
+   "role": "player",
+   "area": "registration/tickets",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 7.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=支付现金快照未确认，请通过后台退款工单核对后处理",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 992198,
+     "registrationId": 992198
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"支付现金快照未确认，请通过后台退款工单核对后处理\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedProductionRoutes.swift",
+     "line": 104
+    },
+    {
+     "file": "Core/OrderLifecycleCoordinator.swift",
+     "line": 10
+    }
+   ],
+   "backend_controller": "ApiRegistrationController.cancelRefund"
+  },
+  {
+   "path": "/api/topic/cancel",
+   "resolved_path": "/api/topic/cancel",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 7.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=俱乐部主题请在俱乐部「主题设置 → 结束主题」里取消",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 992001,
+     "reason": "E2E API smoke check",
+     "scope": "CLUB",
+     "cancellationEpoch": 1
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"俱乐部主题请在俱乐部「主题设置 → 结束主题」里取消\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PublisherCancelAdapter.swift",
+     "line": 17
+    }
+   ],
+   "backend_controller": "ApiTopicController.topicCancel"
+  },
+  {
+   "path": "/api/topic/cancel_preview",
+   "resolved_path": "/api/topic/cancel_preview",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.2,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=俱乐部主题请在俱乐部「主题设置 → 结束主题」里取消",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 992001,
+     "scope": "CLUB"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"俱乐部主题请在俱乐部「主题设置 → 结束主题」里取消\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/PublisherCancelAdapter.swift",
+     "line": 20
+    },
+    {
+     "file": "Core/PublisherLifecycleHTTP.swift",
+     "line": 69
+    }
+   ],
+   "backend_controller": "ApiTopicController.topicCancelPreview"
+  },
+  {
+   "path": "/api/topic/delete",
+   "resolved_path": "/api/topic/delete",
+   "verb": "POST",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 10.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=该主题的场次仍有待支付或已支付报名，请先处理场次报名，再删除主题",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "id": 992001,
+     "reason": "E2E API smoke check",
+     "scope": "CLUB",
+     "template_id": 6001,
+     "publish_status": "smoke"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"该主题的场次仍有待支付或已支付报名，请先处理场次报名，再删除主题\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "Core/MyProjectMutations.swift",
+     "line": 61
+    },
+    {
+     "file": "Core/PublishModesContracts.swift",
+     "line": 84
+    },
+    {
+     "file": "Core/BusinessRuntimeConfiguration.swift",
+     "line": 335
+    },
+    {
+     "file": "Core/ProjectStateRequestContract.swift",
+     "line": 90
+    }
+   ],
+   "backend_controller": "ApiTopicController.topicDelete"
+  },
+  {
+   "path": "/api/topic/state-keys/named",
+   "resolved_path": "/api/topic/state-keys/named",
+   "verb": "DELETE",
+   "role": "creator(9003)",
+   "area": "topics/routes",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 404,
+   "error_code": "STATE_KEY_NOT_FOUND",
+   "latency_ms": 7.0,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 code=404 errorCode=STATE_KEY_NOT_FOUND msg=这一项不存在。",
+   "request": {
+    "encoding": "query",
+    "query": {
+     "topicId": 992641,
+     "scope": "CLUB",
+     "key": "smoke.key"
+    },
+    "body": null,
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"这一项不存在。\",\"code\":404,\"errorCode\":\"STATE_KEY_NOT_FOUND\"}",
+   "app_sites": [
+    {
+     "file": "App/ReviewedPlayerWriteLeases.swift",
+     "line": 607
+    },
+    {
+     "file": "Core/TopicCreatorEditorService.swift",
+     "line": 19
+    }
+   ],
+   "backend_controller": "ApiTopicAttributeController.deleteNamed"
+  },
+  {
+   "path": "/api/user/deregister/apply",
+   "resolved_path": "/api/user/deregister/apply",
+   "verb": "POST",
+   "role": "player2(9009)",
+   "area": "profile",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.1,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=验证码输入有误",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {
+     "agreed": true,
+     "consent": true,
+     "noticeAgreed": true,
+     "requestId": "5c4353f6-74bc-4a33-b0d7-70f6acc65a0d"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"验证码输入有误\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 3931
+    },
+    {
+     "file": "Core/AccountComplianceService.swift",
+     "line": 429
+    }
+   ],
+   "backend_controller": "ApiAccountDeregistrationController.apply"
+  },
+  {
+   "path": "/api/user/deregister/cancel",
+   "resolved_path": "/api/user/deregister/cancel",
+   "verb": "POST",
+   "role": "player2(9009)",
+   "area": "profile",
+   "capgraph_status": "SERVED",
+   "http_status": 200,
+   "biz_code": 500,
+   "error_code": null,
+   "latency_ms": 5.6,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 200 biz_code=500 msg=当前没有可撤销的注销申请",
+   "request": {
+    "encoding": "form",
+    "query": {},
+    "body": {},
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"当前没有可撤销的注销申请\",\"code\":500}",
+   "app_sites": [
+    {
+     "file": "App/AppCompositionRoot.swift",
+     "line": 3928
+    },
+    {
+     "file": "Core/AccountComplianceService.swift",
+     "line": 451
+    }
+   ],
+   "backend_controller": "ApiAccountDeregistrationController.cancel"
+  },
+  {
+   "path": "/api/workshop/purchased/professional-operations/cancel",
+   "resolved_path": "/api/workshop/purchased/professional-operations/cancel",
+   "verb": "POST",
+   "role": "club(9003)",
+   "area": "workshop/mods",
+   "capgraph_status": "SERVED",
+   "http_status": 400,
+   "biz_code": 400,
+   "error_code": "BAD_REQUEST",
+   "latency_ms": 2.3,
+   "shape_ok": true,
+   "shape_issues": [],
+   "classification": "BACKEND-ERROR",
+   "reason": "HTTP 400 code=400 errorCode=BAD_REQUEST msg=hash invalid",
+   "request": {
+    "encoding": "json",
+    "query": {},
+    "body": {
+     "schema": "w18-paid-professional-text-materialization-command-v1",
+     "requestId": "052ad787-e970-4d60-a67a-a21f0f59c72e",
+     "installationRequestId": "005ffe01-8c94-4ddd-9f8b-e3082646b031",
+     "licenseId": "w18-paid-970201",
+     "moduleId": "992501",
+     "purchasedVersionId": "WKV_99250100000000000000000000992501",
+     "contentHash": "049b393960d0657488d95b7290fc4b3585cac98389e23cdeda14dc5d116a45fd",
+     "termsHash": "ecde1cd87968c6a6032efea6fe230443011424140d21d4a66b26eb93f72e6a1f",
+     "componentHash": "86c9d3f09b02e647156e21e35db83f078393409f4921a423900e35d9fe386f71",
+     "ownedDraftId": 970301,
+     "currentDraftRevision": 1,
+     "currentDraftPayloadHash": "",
+     "targetTopicId": 992641,
+     "targetOwnerModeFingerprint": "947ad244e3519f8096de1fd77c559ff7a54e2dd4e643945eba1616e9ec5592a7",
+     "confirmedMode": "CITY_ORIENTATION"
+    },
+    "headers": {}
+   },
+   "response_excerpt": "{\"msg\":\"hash invalid\",\"code\":400,\"errorCode\":\"BAD_REQUEST\"}",
+   "app_sites": [
+    {
+     "file": "Core/RePoint10Routes.swift",
+     "line": 35
+    },
+    {
+     "file": "Core/WorkshopPaidProfessionalService.swift",
+     "line": 206
+    }
+   ],
+   "backend_controller": "ApiWorkshopProfessionalController.cancel"
+  }
+ ]
+}
