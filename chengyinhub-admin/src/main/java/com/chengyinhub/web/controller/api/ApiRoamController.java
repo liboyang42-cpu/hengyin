@@ -116,6 +116,8 @@ public class ApiRoamController extends BaseController {
     private IRoamHangoutService roamHangoutService;
     @Autowired(required = false)
     private com.chengyinhub.business.citygame.RoamTerritoryService roamTerritoryService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.citygame.MemberAttributeService memberAttributeService;
 
     /** 包级可见 + 非 final:测试用子类覆写它注入身份,好直调真入口(见 RoamPresenceControllerTest)。 */
     Long uid() {
@@ -927,10 +929,17 @@ public class ApiRoamController extends BaseController {
         return success(data);
     }
 
+    /** Pre-City-Monopoly signature (no accuracy / device key); kept for direct callers. */
+    public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
+        return checkin(name, poiLat, poiLng, curLat, curLng, null, null);
+    }
+
     @Operation(summary = "点到店(bindpoitap):宽松 geo → 参与据点走扫码 / 非参与点亮发探索值")
     @PostMapping("/checkin")
     @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
-    public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng) {
+    public AjaxResult checkin(String name, Double poiLat, Double poiLng, Double curLat, Double curLng,
+                              @org.springframework.web.bind.annotation.RequestParam(required = false) Double hAcc,
+                              @org.springframework.web.bind.annotation.RequestParam(required = false) String deviceKey) {
         Long memberId = uid();
         if (memberId <= 0) return error("请先登录");
         if (poiLat == null || poiLng == null || curLat == null || curLng == null) return error("缺少定位");
@@ -956,11 +965,12 @@ public class ApiRoamController extends BaseController {
             data.put("poiId", poiId);
             if (roamTerritoryService != null) {
                 Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckin(
-                        memberId, poiId, null, null, curLat, curLng,
+                        memberId, poiId, null, null, curLat, curLng, hAcc, deviceKey,
                         "ROAM_CHECKIN:" + java.util.UUID.randomUUID(), "ROAM_CHECKIN");
                 if (Boolean.TRUE.equals(terrRev.get("credited"))) {
                     data.put("territoryReward", terrRev);
                 }
+                if (terrRev.get("territory") != null) data.put("territory", terrRev.get("territory"));
             }
             if (inGameChannelService != null) {
                 inGameChannelService.postRoamEvent(
@@ -987,13 +997,18 @@ public class ApiRoamController extends BaseController {
         }
         int xp = 0;
         if (firstVisit) { xp = VISIT_XP; growthService.addExp(memberId, xp, "点亮地点"); }
+        if (firstVisit && memberAttributeService != null) {
+            // Attributes v2 探索: first lit POI +10 AXP (idempotent per member + point key).
+            memberAttributeService.grant(memberId, com.chengyinhub.business.citygame.AttributeRules.Source.NEW_POI, "poi:" + geoKey(poiLat, poiLng));
+        }
         if (roamTerritoryService != null) {
             Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckinByCoords(
-                    memberId, poiLat, poiLng, curLat, curLng,
+                    memberId, poiLat, poiLng, curLat, curLng, hAcc, deviceKey,
                     "ROAM_CHECKIN:" + java.util.UUID.randomUUID());
             if (Boolean.TRUE.equals(terrRev.get("credited"))) {
                 data.put("territoryReward", terrRev);
             }
+            if (terrRev.get("territory") != null) data.put("territory", terrRev.get("territory"));
         }
         data.put("participating", false);
         data.put("firstVisit", firstVisit);
