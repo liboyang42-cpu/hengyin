@@ -186,3 +186,9 @@ What the tests prove:
 5. **Reminder producers.** Event reminders exist only for the ticket "before start" job (`BeforeStartNotifyTask`, scanning 24 hours ahead every hour; sys_job 102 must be enabled). No separate club-activity reminder scheduler exists, and none was invented.
 6. **Delivery history.** `/api/im/device/attempts` and `/api/im/notify-log` still store no per-attempt rows, so they stay empty with `delivery_proven=false`.
 7. **Mentions on send.** On this base, `im_message_mention` rows are written only by message edits (`ChannelMessageService.edit`); `/api/im/send` writes none. `feature/ingame-channels` does not change that either. The push reads mention rows after commit, so @mentions on send will count as soon as a send path writes them in the same transaction. Until then, a mention-only member gets pushes only for edited-in mentions. Nothing here depends on another branch.
+
+## App side (chengyin-app `cloud/r-links-push`)
+
+The app sends exactly the register/unregister bodies above, using the member token. The `page`, `kind` and `conversation_id` keys are read as documented.
+
+A chat tap opens the app's chat inbox. It does not open the transcript, because the app's reviewed rule for `subpackageB/pages/im/chat/index` takes no query. Club and event `page` values open the club detail, activity detail and topic detail in their tabs.
