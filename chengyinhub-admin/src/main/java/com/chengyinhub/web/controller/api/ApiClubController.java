@@ -116,6 +116,9 @@ public class ApiClubController extends BaseController {
     @Autowired
     private IClubService clubService;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChannelPlatformService channelPlatformService;
+
     @Autowired
     private com.chengyinhub.business.payout.EcommercePersonalReceiverService personalReceiverService;
 
@@ -414,6 +417,8 @@ public class ApiClubController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         }
+        // club-reach: an open club starts with 闲聊 / 公告 / 活动 so its channel space never opens empty.
+        if (Long.valueOf(1L).equals(club.getStatus())) seedDefaultChannels(club.getId(), memberId);
         // logo/封面/案例图异步内容安全送检,违规经回调自动清除(BIZ_TYPE_CLUB_PROFILE)
         try {
             wxContentSecurityService.submitMediaCheck(IWxContentSecurityService.BIZ_TYPE_CLUB_PROFILE, club.getId(),
@@ -424,6 +429,36 @@ public class ApiClubController extends BaseController {
         d.put("clubCount", clubCount);
         d.put("status", club.getStatus());
         return AjaxResult.success(Long.valueOf(0L).equals(club.getStatus()) ? "已重新提交,等待审核" : "已创建", d);
+    }
+
+    /**
+     * club-reach CLB-11: real photos for the hero avatar stack. Members and the owner (who can open the roster)
+     * always get them; everyone else only when chengyin.club.hero-avatars-public=true (default false, pending
+     * an owner decision on showing member photos to non-members). Failure or no photos = empty list, and the app
+     * draws its plain placeholder.
+     */
+    private java.util.List<String> heroAvatars(Club club) {
+        boolean viewerInside = Boolean.TRUE.equals(club.getIsOwner()) || Boolean.TRUE.equals(club.getIsJoined());
+        if (!viewerInside && !heroAvatarsPublic) return java.util.Collections.emptyList();
+        try {
+            return clubMemberService.selectHeroAvatars(club.getId(), club.getMemberId(), 5);
+        } catch (RuntimeException e) {
+            log.warn("club hero avatars unavailable, clubId={}", club.getId(), e);
+            return java.util.Collections.emptyList();
+        }
+    }
+
+    @org.springframework.beans.factory.annotation.Value("${chengyin.club.hero-avatars-public:false}")
+    private boolean heroAvatarsPublic;
+
+    /** Best effort: the channel directory also provisions on first open, so a failure here only logs. */
+    private void seedDefaultChannels(Long clubId, Long ownerId) {
+        if (clubId == null || ownerId == null || channelPlatformService == null) return;
+        try {
+            channelPlatformService.ensureClubDefaults(clubId, ownerId);
+        } catch (RuntimeException e) {
+            log.warn("club default channels not seeded, clubId={}", clubId, e);
+        }
     }
 
     /** 列表/详情统一补齐入会方式与主理人展示信息。 */
@@ -712,6 +747,7 @@ public class ApiClubController extends BaseController {
         } catch (Exception ignore) { }
         // 2026-10-22 业主:入会欢迎语(主理人自定),新成员加入后的欢迎弹层最上面显示。单独读,读不到当没写。
         club.setWelcomeNote(clubService.selectWelcomeNote(club.getId()));
+        club.setMemberAvatars(heroAvatars(club));
         return AjaxResult.success(PublicClubVO.from(club));
     }
 

@@ -46,6 +46,8 @@ public class PublicClubVO {
     private Boolean viewerIdentityUnavailable;
     private Integer pendingJoinRequestCount;
     private Integer nonOwnerMemberCount;
+    /** club-reach CLB-11: up to 5 avatar URLs for the hero stack; empty for viewers who may not see the roster. */
+    private java.util.List<String> memberAvatars;
 
     public static PublicClubVO from(Club club) {
         PublicClubVO vo = new PublicClubVO();
@@ -83,6 +85,7 @@ public class PublicClubVO {
         vo.viewerIdentityUnavailable = club.getViewerIdentityUnavailable();
         vo.pendingJoinRequestCount = club.getPendingJoinRequestCount();
         vo.nonOwnerMemberCount = club.getNonOwnerMemberCount();
+        vo.memberAvatars = club.getMemberAvatars() == null ? java.util.Collections.emptyList() : club.getMemberAvatars();
         return vo;
     }
 
@@ -118,4 +121,5 @@ public class PublicClubVO {
     public Boolean getViewerIdentityUnavailable() { return viewerIdentityUnavailable; }
     public Integer getPendingJoinRequestCount() { return pendingJoinRequestCount; }
     public Integer getNonOwnerMemberCount() { return nonOwnerMemberCount; }
+    public java.util.List<String> getMemberAvatars() { return memberAvatars; }
 }

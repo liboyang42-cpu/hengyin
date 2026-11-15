@@ -34,6 +34,11 @@ public class ChannelPlatformService
     static final int MEMBER_COUNT_CAP = 50;
     static final String DEFAULT_CATEGORY = "文字频道";
     static final String DEFAULT_CHANNEL = "综合";
+    /** CLB club-reach: a club opens with 闲聊 (default, position 0), then 公告 (announcement kind 2) and 活动. */
+    static final String CLUB_CHAT_CHANNEL = "闲聊";
+    static final String CLUB_NOTICE_CHANNEL = "公告";
+    static final String CLUB_EVENTS_CHANNEL = "活动";
+    static final int BACKFILL_MAX_BATCH = 500;
 
     @Autowired
     private ChannelPlatformMapper mapper;
@@ -514,6 +519,14 @@ public class ChannelPlatformService
         {
             ChannelRow category = insert(viewer, guildKind, guildId, 0, 0, DEFAULT_CATEGORY, null, 1, 0, false,
                     "provision", null);
+            if (guildKind == ChannelGuildAccess.GUILD_CLUB)
+            {
+                // The default must be a text channel at position 0 (ck_channel_default), so 闲聊 leads the list.
+                insert(viewer, guildKind, guildId, category.getId(), 1, CLUB_CHAT_CHANNEL, null, 1, 0, true, "provision", null);
+                insert(viewer, guildKind, guildId, category.getId(), 2, CLUB_NOTICE_CHANNEL, null, 1, 0, false, "provision", null);
+                insert(viewer, guildKind, guildId, category.getId(), 1, CLUB_EVENTS_CHANNEL, null, 1, 0, false, "provision", null);
+                return;
+            }
             insert(viewer, guildKind, guildId, category.getId(), 1, DEFAULT_CHANNEL, null, 1, 0, true, "provision", null);
         }
         catch (RuntimeException race)
@@ -523,6 +536,57 @@ public class ChannelPlatformService
             throw new ChannelRejection(409, "CHANNEL_PROVISION_RACE", "频道正在初始化，请重试");
         }
     }
+
+    /**
+     * Seeds the default club channels when a club has none (club creation, approval and the backfill job).
+     * Idempotent: a club that already has any channel row, live or deleted, is left alone.
+     * The owner is the operator, so the owner is the first conversation member of each channel.
+     * Runs in its own transaction so a caller's rollback (or a seeding race) never couples to the club write.
+     * @return true when this call created the defaults
+     */
+    @Transactional(rollbackFor = Exception.class, propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public boolean ensureClubDefaults(long clubId, long ownerId)
+    {
+        if (clubId <= 0 || ownerId <= 0) return false;
+        if (!mapper.selectGuildChannels(ChannelGuildAccess.GUILD_CLUB, clubId, true).isEmpty()) return false;
+        provisionDefaults(ownerId, ChannelGuildAccess.GUILD_CLUB, clubId);
+        return true;
+    }
+
+    /**
+     * Backfill: open clubs that have no channel rows get the defaults. Each club runs in its own call so one
+     * failure does not roll back the others. Returns the number of clubs seeded.
+     */
+    public int backfillClubDefaults(int limit)
+    {
+        int batch = Math.max(1, Math.min(limit, BACKFILL_MAX_BATCH));
+        int seeded = 0;
+        for (Map<String, Object> club : mapper.selectOpenClubsWithoutChannels(batch))
+        {
+            long clubId = toLong(club.get("id"));
+            long ownerId = toLong(club.get("ownerId"));
+            try
+            {
+                if (self().ensureClubDefaults(clubId, ownerId)) seeded++;
+            }
+            catch (RuntimeException e)
+            {
+                org.slf4j.LoggerFactory.getLogger(ChannelPlatformService.class)
+                        .warn("club channel backfill skipped clubId={}", clubId, e);
+            }
+        }
+        return seeded;
+    }
+
+    /** The Spring proxy (lazy self-reference) so ensureClubDefaults keeps its own transaction; plain this in unit tests. */
+    private ChannelPlatformService self()
+    {
+        return selfRef != null ? selfRef : this;
+    }
+
+    @Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private ChannelPlatformService selfRef;
 
     private ChannelRow insert(long viewer, int guildKind, long guildId, long parentId, int kind, String name, String topic,
             int visibility, int slowmode, boolean isDefault, String reason, String requestId)

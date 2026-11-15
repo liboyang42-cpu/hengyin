@@ -27,6 +27,8 @@ public interface ChannelPlatformMapper
     List<ChannelRow> selectGuildChannels(@Param("guildKind") int guildKind, @Param("guildId") long guildId,
             @Param("includeDeleted") boolean includeDeleted);
     int countLiveChildren(@Param("parentId") long parentId);
+    /** Open clubs (status 1, not deleted) with no im_channel row at all, oldest first. */
+    List<Map<String, Object>> selectOpenClubsWithoutChannels(@Param("limit") int limit);
     int nextPosition(@Param("guildKind") int guildKind, @Param("guildId") long guildId, @Param("parentId") long parentId);
     int insertConversation(Map<String, Object> row);
     int insertChannel(ChannelRow row);

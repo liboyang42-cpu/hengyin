@@ -83,6 +83,13 @@
     <select id="countLiveChildren" resultType="int" useCache="false">
         select count(1) from im_channel where parent_id = #{parentId} and del_flag = 0 and status in (0, 1)
     </select>
+    <select id="selectOpenClubsWithoutChannels" resultType="java.util.HashMap" useCache="false">
+        select c.id as id, c.member_id as ownerId from club c
+         where c.status = 1 and c.del_flag = 0 and c.member_id is not null
+           and not exists (select 1 from im_channel ch where ch.guild_kind = 1 and ch.guild_id = c.id)
+         order by c.id
+         limit #{limit}
+    </select>
     <select id="nextPosition" resultType="int" useCache="false">
         select coalesce(max(position), -1) + 1 from im_channel
          where guild_kind = #{guildKind} and guild_id = #{guildId} and parent_id = #{parentId} and del_flag = 0
