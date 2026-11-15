@@ -25,7 +25,9 @@ import java.util.Map;
  *       location data): roam sessions lose every coordinate and keep distance/tiles/POI/XP aggregates; POI finds,
  *       shop visits and POI reward logs lose the place and the claim fingerprint (the fingerprint only stops the
  *       same member claiming twice, which a retired member id never can); claim evidence keeps its photo hashes for
- *       duplicate detection but is unlinked from the member and loses its coordinates.</li>
+ *       duplicate detection but is unlinked from the member and loses its coordinates. CITY/roam territories the
+ *       member held are released (REVOKED, owner 0, claim photo dropped); their own territory check-ins are deleted;
+ *       territory anti-cheat and CITY board audit rows stay without the member link, coordinates or claim photo.</li>
  * </ul>
  * Audit records kept on purpose (consent ledger, age attestation, the deregistration request) are not touched here.
  */
@@ -69,6 +71,13 @@ public class MemberPrivacyErasureService {
         // Location trust (P8).
         counts.put("location_trust_fix", mapper.deleteLocationTrustFixes(memberId));
         counts.put("location_claim_evidence", mapper.anonymizeClaimEvidence(memberId));
+        // CITY + roam territory (SYS-citygame): own check-ins deleted, held territories released and unlinked,
+        // anti-cheat and board audit rows kept without the member link, coordinates or claim photo.
+        counts.put("roam_territory_checkin", mapper.deleteTerritoryCheckins(memberId));
+        counts.put("roam_territory_checkin_owner", mapper.unlinkTerritoryCheckinOwner(memberId));
+        counts.put("roam_territory", mapper.releaseTerritories(memberId));
+        counts.put("roam_territory_audit", mapper.anonymizeTerritoryAudit(memberId));
+        counts.put("city_game_board_audit", mapper.anonymizeBoardAuditPlayer(memberId));
         // Measurement and push.
         counts.put("app_install_link", mapper.deleteInstallLinks(memberId));
         counts.put("push_device", mapper.deletePushDevices(memberId));

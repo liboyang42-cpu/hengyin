@@ -84,7 +84,7 @@ public class CityMerchantValueService {
         // The approval hash binds an intent to the exact relation it was shown with.
         out.put("approvalHash", relation == null ? null : CityR491Store.policyHash(relation));
         out.put("availability", relation == null ? "UNAVAILABLE" : "AVAILABLE");
-        out.put("runtimeApplied", false);
+        out.put("runtimeApplied", "APPLIED".equals(row.get("status")));
         out.put("relation", relation);
         return out;
     }

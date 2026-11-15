@@ -64,6 +64,33 @@
         where member_id = #{memberId}
     </update>
 
+    <delete id="deleteTerritoryCheckins">
+        delete from roam_territory_checkin where member_id = #{memberId}
+    </delete>
+
+    <update id="unlinkTerritoryCheckinOwner">
+        update roam_territory_checkin set owner_member_id = 0 where owner_member_id = #{memberId}
+    </update>
+
+    <update id="releaseTerritories">
+        update roam_territory
+        set owner_member_id = 0, claim_photo_url = '', claim_request_id = territory_id, status = 'REVOKED'
+        where owner_member_id = #{memberId}
+    </update>
+
+    <update id="anonymizeTerritoryAudit">
+        update roam_territory_audit
+        set member_id = 0, latitude = null, longitude = null, accuracy_m = null, distance_m = null, detail_json = null
+        where member_id = #{memberId}
+    </update>
+
+    <update id="anonymizeBoardAuditPlayer">
+        update city_game_board_audit
+        set actor_id = null,
+            detail_json = case when action = 'BOARD_TERRITORY_CLAIM' then null else detail_json end
+        where actor_type = 'PLAYER' and actor_id = #{memberId}
+    </update>
+
     <delete id="deleteInstallLinks">
         delete from app_install_link where member_id = #{memberId}
     </delete>
