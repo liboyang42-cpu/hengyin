@@ -27,6 +27,8 @@ import java.util.Map;
 @Tag(name = "外部游戏提交与审核")
 public class ApiExternalGameController extends AppGapController {
     private final ExternalGameReviewService reviews;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.externalgame.ExternalGameMonetizationService monetization;
 
     public ApiExternalGameController(ExternalGameReviewService reviews) { this.reviews = reviews; }
 
@@ -86,6 +88,7 @@ public class ApiExternalGameController extends AppGapController {
     @Operation(summary = "已上架外部游戏详情（含限时签名下载地址）")
     @GetMapping("/api/external-game/catalog/{gameId}")
     public AjaxResult catalogDetail(@PathVariable String gameId) {
+        if (monetization != null) monetization.requireDownloadOrPlayAccess(optionalMember(), gameId);
         return success(reviews.catalogDetail(gameId));
     }
 
@@ -95,6 +98,7 @@ public class ApiExternalGameController extends AppGapController {
     @GetMapping("/api/external-game/catalog/{gameId}/package")
     public ResponseEntity<byte[]> download(@PathVariable String gameId, @RequestParam(required = false) String submissionId,
                                            @RequestParam(required = false) String exp, @RequestParam(required = false) String sig) {
+        if (monetization != null) monetization.requireDownloadOrPlayAccess(optionalMember(), gameId);
         byte[] body = reviews.catalogPackage(gameId, submissionId, exp, sig);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.CACHE_CONTROL, "private, max-age=60")
