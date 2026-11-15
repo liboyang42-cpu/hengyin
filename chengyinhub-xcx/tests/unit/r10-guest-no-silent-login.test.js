@@ -91,6 +91,7 @@ const REVIEWED = new Set([
   'pages/play/utils/theme-backpack.js', // 微信运动取 code
   'pages/privacy/index.js', // onMediaLogin 按钮
   'pages/club/payout-receiver/index.js', // 已登录主理人确认绑定后取一次性 code,不建号
+  'subpackageMember/payout-bind/index.js', // R6b:扫 App 绑定码后取一次性 code 证明微信,服务端只换 openid,不建号不登录
   'pages/roam/index.js', // requireLogin 写前登录(开局)
   'pages/shezhi/shezhi.js', // 「点击登录」按钮
   'pages/talent/list/index.js', // 「登录」重试按钮

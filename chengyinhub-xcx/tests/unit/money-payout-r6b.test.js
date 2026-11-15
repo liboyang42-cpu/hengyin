@@ -80,16 +80,23 @@ test('amount input accepts positive yuan with at most two decimals', () => {
 test('the member cash-out page keeps the customer-service entry while the switch is closed', () => {
   const wxml = fs.readFileSync(path.join(root, 'subpackageMember/tixian/tixian.wxml'), 'utf8')
   const js = fs.readFileSync(path.join(root, 'subpackageMember/tixian/tixian.js'), 'utf8')
-  assert.match(wxml, /<cy-btn wx:else variant="primary" bindtap="saveData">联系客服提现<\/cy-btn>/)
-  assert.match(wxml, /wx:if="\{\{payoutOpen && payoutView\}\}"/)
+  assert.match(wxml, /<cy-btn variant="primary" bindtap="saveData">\{\{payoutOpen \? '申请提现' : '联系客服提现'\}\}<\/cy-btn>/)
   assert.match(js, /payoutOpen: false,/)
-  assert.match(js, /if \(this\.data\.payoutOpen\) \{ this\.submitPayout\(\); return \}\n {4}withdrawCs\.showWithdrawCsPopup\(\)/)
+  assert.match(js, /if \(this\.data\.payoutOpen\) \{ wx\.navigateTo\(\{ url: '\/subpackageMember\/payout-request\/index' \}\); return \}\n {4}withdrawCs\.showWithdrawCsPopup\(\)/)
+  assert.match(js, /moneyPayout\.withdrawalOpen\(function \(open\) \{/)
+})
+
+test('the request page submits only while the server says open, with a payout WeChat and no open request', () => {
+  const js = fs.readFileSync(path.join(root, 'subpackageMember/payout-request/index.js'), 'utf8')
+  assert.match(js, /if \(this\.data\.busy \|\| !view \|\| !this\.data\.open \|\| view\.pendingId \|\| !view\.wechatReady\) return/)
+  assert.match(js, /open: data\.withdrawalOpen === true/)
 })
 
 test('the binding page is registered and claims with a fresh wx.login code', () => {
   const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'))
   const member = (app.subpackages || app.subPackages).find(s => s.root.replace(/\/$/, '') === 'subpackageMember')
   assert.ok(member.pages.includes('payout-bind/index'))
+  assert.ok(member.pages.includes('payout-request/index'))
   const js = fs.readFileSync(path.join(root, 'subpackageMember/payout-bind/index.js'), 'utf8')
   assert.match(js, /wx\.login\(/)
   assert.match(js, /moneyPayout\.claimBinding\(code, res\.code/)

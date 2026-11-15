@@ -7,7 +7,7 @@ const merchantTheme = require('../../utils/merchant-theme.js');
 // 页面仍由场景注册(utils/scene-registry.js 'member-withdraw')挂在这里,所以它不能是旧表单,
 // 只能是一个客服入口。后端 /api/withdrawal/* 接口与共享工具不动。
 const withdrawCs = require('../../utils/withdraw-cs.js');
-// R6b(2026-11-15):资金开关「用户提现」打开时(只在测试环境),页面改走「提现申请 → 平台审核 → 微信零钱」;
+// R6b(2026-11-15):资金开关「用户提现」打开时(只在测试环境),按钮改去「提现申请」页(平台审核后打到微信零钱);
 // 开关关闭、读不到或出错时 payoutOpen 保持 false,页面与今天完全一样(联系客服)。
 const moneyPayout = require('../../utils/money-payout.js');
 Page({
@@ -26,10 +26,6 @@ Page({
     balanceLoaded: false,
     withdrawHistorySheet: false,
     payoutOpen: false,
-    payoutAmount: '',
-    payoutBusy: false,
-    payoutNotice: '',
-    payoutView: null,
   },
 
   /**
@@ -59,7 +55,9 @@ Page({
       }
       that.setData({ balanceLoaded: false })
       that.getUserData()
-      that.loadPayout()
+      moneyPayout.withdrawalOpen(function (open) {
+        if (!that._unloaded) that.setData({ payoutOpen: open })
+      })
     })
   },
 
@@ -84,68 +82,8 @@ Page({
   // 2026-09-15 收款模型定稿 §3:平台不打款,提现不再走银行卡表单、不再调 /api/withdrawal/create,
   // 一律弹平台客服微信线下处理。表单校验/单独同意的旧实现已随表单一起删除(页面不再采集银行卡信息)。
   saveData: function() {
-    if (this.data.payoutOpen) { this.submitPayout(); return }
+    if (this.data.payoutOpen) { wx.navigateTo({ url: '/subpackageMember/payout-request/index' }); return }
     withdrawCs.showWithdrawCsPopup()
-  },
-
-  // R6b:开关打开才读提现申请概览;任何失败都回到今天的客服入口。
-  loadPayout: function () {
-    var that = this
-    moneyPayout.withdrawalOpen(function (open) {
-      if (that._unloaded) return
-      if (!open) { that.setData({ payoutOpen: false, payoutView: null }); return }
-      moneyPayout.overview(function (err, data) {
-        if (that._unloaded) return
-        if (err || !data || data.withdrawalOpen !== true) { that.setData({ payoutOpen: false, payoutView: null }); return }
-        var pending = data.open || null
-        that.setData({
-          payoutOpen: true,
-          payoutView: {
-            available: Number(data.available || 0).toFixed(2),
-            minAmount: String(data.minAmount || ''),
-            wechatReady: data.wechatReady === true,
-            pendingId: pending ? pending.id : null,
-            pendingAmount: pending ? Number(pending.amount || 0).toFixed(2) : '',
-            pendingStatus: pending ? pending.status : '',
-            pendingText: pending ? moneyPayout.statusText(pending.status) : '',
-            last: (data.requests || []).slice(0, 5).map(function (r) {
-              return { id: r.id, amount: Number(r.amount || 0).toFixed(2), text: moneyPayout.statusText(r.status),
-                note: r.status === 'REJECTED' ? (r.reviewNote || '') : (r.status === 'FAILED' ? (r.failReason || '') : '') }
-            })
-          }
-        })
-      })
-    })
-  },
-
-  onPayoutAmount: function (e) { this.setData({ payoutAmount: e.detail.value, payoutNotice: '' }) },
-
-  submitPayout: function () {
-    var that = this
-    var view = this.data.payoutView
-    if (this.data.payoutBusy || !view) return
-    if (view.pendingId) { that.setData({ payoutNotice: '你已有一笔提现在处理中' }); return }
-    var amount = moneyPayout.normalizeAmount(this.data.payoutAmount)
-    if (!amount) { that.setData({ payoutNotice: '请输入正确的提现金额' }); return }
-    that.setData({ payoutBusy: true, payoutNotice: '' })
-    moneyPayout.submit(amount, function (err) {
-      if (that._unloaded) return
-      that.setData({ payoutBusy: false, payoutNotice: err || '', payoutAmount: err ? that.data.payoutAmount : '' })
-      if (!err) cyToast('提现申请已提交，等待审核')
-      that.loadPayout()
-    })
-  },
-
-  cancelPayout: function () {
-    var that = this
-    var view = this.data.payoutView
-    if (this.data.payoutBusy || !view || !view.pendingId || view.pendingStatus !== 'PENDING') return
-    that.setData({ payoutBusy: true, payoutNotice: '' })
-    moneyPayout.cancel(view.pendingId, function (err) {
-      if (that._unloaded) return
-      that.setData({ payoutBusy: false, payoutNotice: err || '' })
-      that.loadPayout()
-    })
   },
 
   getUserData: function() {
