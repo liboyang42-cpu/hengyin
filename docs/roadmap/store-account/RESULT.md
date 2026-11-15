@@ -18,7 +18,7 @@ Branch `feature/r-store-account` (base `fix/r5-be-infra-stubs` @ 32b425c33). App
   - `revokeAfterDeletion` (after erasure commits): `POST /auth/revoke` with `token_type_hint=refresh_token`, then wipes the ciphertext.
   - `discard` (owner cancels): wipes the ciphertext.
   - The client secret is an ES256 JWT (5 min) built from `APPLE_SIGNIN_KEY_ID`, `APPLE_SIGNIN_TEAM_ID`, `APPLE_SIGNIN_PRIVATE_KEY` (PKCS#8 PEM, literal `\n` accepted). If they are missing, it logs a warning and records `PENDING_CONFIG`. **It never throws into the deletion and never fails it.**
-- `chengyinhub-admin/sql/migration_20261115_store-account.sql` (new): `ums_apple_token_revocation` (`CREATE TABLE IF NOT EXISTS`, rollback note at the top). It stores error codes only, never token text or response bodies.
+- `chengyinhub-admin/sql/migration_20261115_store_account.sql` (new): `ums_apple_token_revocation` (`CREATE TABLE IF NOT EXISTS`, rollback note at the top). It stores error codes only, never token text or response bodies.
 - `ApiAccountDeregistrationController.java`: `apply` is now the HTTP-mapped 6-argument method (`smscode, wxcode, appleIdentityToken, appleAuthorizationCode, requestId`).
   - Order: a bound phone → SMS. Else an Apple-only account (no openid, has `apple_id`) → Apple. Else WeChat.
   - An Apple token cannot bypass SMS or WeChat.
@@ -85,7 +85,7 @@ The full-module failures are **all pre-existing and unrelated**:
 1. **Sign in with Apple key for revocation:** create a key with "Sign in with Apple" enabled in the Apple Developer account (Certificates, IDs & Profiles → Keys). Provide `APPLE_SIGNIN_KEY_ID`, `APPLE_SIGNIN_TEAM_ID` and `APPLE_SIGNIN_PRIVATE_KEY` (the .p8 contents) as server environment variables. Make sure `sys_config apple.clientId` holds the app's bundle id.
 2. **`chengyin.pii.key` must be set** on servers that should store refresh tokens (it is already required for registration PII).
 3. **Tencent Cloud content moderation:** open TMS (text) and IMS (image) on a Tencent Cloud account, create a CAM sub-user limited to `tms:TextModeration` and `ims:ImageModeration`, and provide `TENCENTCLOUD_SECRET_ID` / `TENCENTCLOUD_SECRET_KEY`. Optionally set up BizType policies in the console.
-4. Run `chengyinhub-admin/sql/migration_20261115_store-account.sql`.
+4. Run `chengyinhub-admin/sql/migration_20261115_store_account.sql`.
 5. Rows with `status IN ('PENDING_CONFIG','PENDING_NO_TOKEN','REVOKE_FAILED')` in `ums_apple_token_revocation` need manual follow-up. The member can also revoke from iOS Settings → Apple ID → Sign in with Apple.
 
 ## Questions for the owner
