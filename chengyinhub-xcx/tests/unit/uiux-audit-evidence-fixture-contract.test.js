@@ -51,7 +51,7 @@ test('A02 首页首载 fixture 必须按页面嵌套 loading 合同点亮同构�
   assert.ok(fixture && fixture.data)
   assert.equal(typeof fixture.data.listLoading, 'object', 'listLoading 是分区对象，不能注入布尔值')
   assert.equal(fixture.data.listLoading.recommendedTopicList, true)
-  assert.equal(fixture.data.listLoading.nearbyActivityList, true)
+  assert.equal(fixture.data.listLoading.nearbyTopicList, true)
   assert.equal(SELECTORS.A02.selector, 'cy-skeleton')
 
   const mutant = JSON.parse(JSON.stringify(fixture))

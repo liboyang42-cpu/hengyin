@@ -145,15 +145,18 @@ test('首页与城市事件刷新时保留旧内容，只有无旧内容才显�
   const activity = source('pages/activity/list/index.wxml');
 
   assert.match(home, /listLoading\.recommendedTopicList\s*&&\s*!recoHero[\s\S]{0,180}<cy-skeleton[^>]*type="feed-card"/);
-  assert.match(home, /listLoading\.nearbyActivityList\s*&&\s*!nearbyActivityList\.length[\s\S]{0,180}<cy-skeleton[^>]*type="feed-card"/);
+  assert.match(home, /listLoading\.nearbyTopicList\s*&&\s*!nearbyTopicList\.length[\s\S]{0,180}<cy-skeleton[^>]*type="feed-card"/);
   assert.match(home, /listLoading\.upcomingActivityList\s*&&\s*!upcomingActivityList\.length[\s\S]{0,180}<cy-skeleton[^>]*type="feed-card"/);
   // 2026-09-17 A-14-2:文案收窄到「常驻横幅」本义 —— 顶部各区(hero/推荐/附近/即将上线)
   // 刷新失败仍静默降级;底部信息流的「加载更多」失败属 #856 例外表里的用户主动动作,
   // 允许 sec-feed 之后挂 cy-inline-error 行内重试。
   const homeAboveFeed = home.slice(0, home.indexOf('id="sec-feed"'));
   assert.ok(homeAboveFeed.length > 0, '找不到 sec-feed 锚点(页面结构已改?)');
-  assert.doesNotMatch(homeAboveFeed, /cy-inline-error/,
-    '首页已有旧内容时刷新失败静默降级，不挂常驻横幅');
+  const nearbySection = homeAboveFeed.slice(homeAboveFeed.indexOf('id="sec-nearby"'), homeAboveFeed.indexOf('id="sec-upcoming"'));
+  assert.match(nearbySection, /cy-inline-error wx:if="\{\{listErr\.nearbyTopicList && nearbyTopicList\.length\}\}"/,
+    '用户主动定位后的刷新失败应保留旧主题与可操作重试');
+  assert.doesNotMatch(homeAboveFeed.replace(nearbySection, ''), /cy-inline-error/,
+    '其他首页分区的静默降级约束保持');
   assert.match(home, /v3-sec-sync/,
     '刷新中的轻量同步态保留 —— 与 activity/list、address 等同类页一致');
 

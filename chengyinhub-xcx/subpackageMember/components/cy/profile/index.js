@@ -531,6 +531,7 @@ Component({
       // 累积式 this.setData(patch) 它读不出来,会变成一条新的动态 setData 债务(棘轮只许变小)。
       var tabsChanged = JSON.stringify(tabs) !== JSON.stringify(this.data.memberTabs);
       var resetActive = !tabs.some(tab => tab.key === this.data.activeTab);
+      if (resetActive && this.data.activeTab === 'posts') this._pendingCommunityTab = true;
       if (tabsChanged && resetActive) this.setData({ memberTabs: tabs, activeTab: 'about' });
       else if (tabsChanged) this.setData({ memberTabs: tabs });
       else if (resetActive) this.setData({ activeTab: 'about' });
@@ -641,6 +642,7 @@ Component({
         this._profileReadEpoch = (this._profileReadEpoch || 0) + 1;
         this._profileKey = null;
         if (this.data.isSelf) this._clearSelfReadState(owner && token ? '' : 'login');
+        this._pendingCommunityTab = false;
       }
       return changed;
     },
@@ -788,6 +790,7 @@ Component({
       const tabs = profileTabs(this.data.isSelf, this.data.isMerchantView);
       this.syncComposeAccess();   // f-pages P-20:社区开关读到后(loadFeatureFlags 回来再 settle)同步发帖入口
       if (!communityReadable()) {
+        if (this.data.activeTab === 'posts') this._pendingCommunityTab = true;
         this._postsRequestGeneration = (this._postsRequestGeneration || 0) + 1;
         this.setData({ memberTabs: tabs, list: [], clubPostList: [], hasMore: false, feedErr: false, feedAuthError: false,
           activeTab: this.data.activeTab === 'posts' ? 'about' : this.data.activeTab });
@@ -795,7 +798,10 @@ Component({
         const activatePosts = this._pendingCommunityTab;
         this._pendingCommunityTab = false;
         this.setData({ memberTabs: tabs, activeTab: activatePosts ? 'posts' : this.data.activeTab });
-        if (activatePosts && !this.data.list.length) this.getCreativesquareList();
+        if (activatePosts) {
+          this.refreshDirtyPosts();
+          if (!this._squareListDirty && !this._postsDirtyRefreshPromise && !this.data.list.length) this.getCreativesquareList();
+        }
       }
     };
     settle();

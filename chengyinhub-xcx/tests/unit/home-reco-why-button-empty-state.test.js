@@ -18,13 +18,17 @@ test('P-02:编辑精选区块不再有「为什么看到」按钮', () => {
   assert.doesNotMatch(js, /showRecommendationSource|为什么看到这些主题/)
 })
 
-test('D5:精选没有内容时整段(标题也)不挂;失败态只在 !recoHero 时出现', () => {
+test('推荐与附近主题保留标题，空推荐、未定位和失败态必须明确区分', () => {
   assert.doesNotMatch(wxml, /暂时没有精选主题|你附近暂时没有可点亮的节点/)
   const head = wxml.match(/<view id="sec-reco"[^>]*>/)[0]
-  assert.match(head, /wx:if="\{\{recoHero \|\| recoCards\.length \|\| listErr\.recommendedTopicList \|\| listLoading\.recommendedTopicList\}\}"/)
+  assert.doesNotMatch(head, /wx:if=/, '推荐为空时仍显示区块与诚实空态')
+  assert.match(section, /listLoaded\.recommendedTopicList && !listLoading\.recommendedTopicList && !listErr\.recommendedTopicList && !recoHero/)
+  assert.match(section, /title="暂无推荐主题"/)
   const nearby = wxml.match(/<view id="sec-nearby"[^>]*>/)[0]
-  assert.match(nearby, /wx:if="\{\{nearbyActivityList\.length \|\| listErr\.nearbyActivityList \|\| listLoading\.nearbyActivityList\}\}"/)
-  const failed = (section.match(/<view[^>]*>\s*<cy-error load-failure title="编辑精选加载失败"/) || [])[0]
+  assert.doesNotMatch(nearby, /wx:if=/, '未定位时仍提供定位入口')
+  assert.match(wxml, /title="定位后查看附近主题" cta="定位查找" bind:cta="locateNearbyThemes"/)
+  assert.match(wxml, /title="3 公里内暂无主题"/)
+  const failed = (section.match(/<view[^>]*>\s*<cy-error load-failure title="推荐主题加载失败"/) || [])[0]
   assert.ok(failed && /!recoHero/.test(failed), '失败态门控应含 !recoHero')
 })
 

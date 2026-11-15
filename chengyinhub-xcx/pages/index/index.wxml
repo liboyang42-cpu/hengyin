@@ -81,19 +81,22 @@
       </view>
 
       <!-- 编辑精选：紧跟 Banner，作为首页首个内容区块 -->
-      <view id="sec-reco" class="v3-sec v3-sec-reco" wx:if="{{recoHero || recoCards.length || listErr.recommendedTopicList || listLoading.recommendedTopicList}}" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.32s;--pm-r-s:1;' : '')}}">
+      <view id="sec-reco" class="v3-sec v3-sec-reco" style="{{pm_recommendedTopicList === 1 ? '--pm-r:1;' : (pm_recommendedTopicList === 2 ? '--pm-r-d:.32s;--pm-r-s:1;' : '')}}">
         <view class="v3-sec-head">
-          <text class="v3-sec-title">编辑精选</text>
+          <text class="v3-sec-title">推荐主题</text>
         </view>
         <view class="v3-sec-state" wx:if="{{listLoading.recommendedTopicList && !recoHero && !listLoaded.recommendedTopicList}}">
           <cy-skeleton type="feed-card" count="1" />
         </view>
         <view class="v3-sec-state" wx:elif="{{listErr.recommendedTopicList && !recoHero}}">
-          <cy-error load-failure title="编辑精选加载失败"
+          <cy-error load-failure title="推荐主题加载失败"
                     retry="重试" data-list="recommendedTopicList" bind:retry="retryList" />
         </view>
+        <view class="v3-sec-state" wx:if="{{listLoaded.recommendedTopicList && !listLoading.recommendedTopicList && !listErr.recommendedTopicList && !recoHero}}">
+          <cy-empty title="暂无推荐主题" />
+        </view>
         <text class="v3-sec-sync cy-refresh-float cy-refresh-float--pill" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
-              aria-role="status" aria-live="polite">正在更新编辑精选…</text>
+              aria-role="status" aria-live="polite">正在更新推荐主题…</text>
         <swiper class="v3-reco-swiper" wx:if="{{recoCards.length}}" current="{{recoCurrent}}"
                 circular="{{recoCards.length > 1}}" previous-margin="40rpx" next-margin="60rpx"
                 duration="{{reducedMotion ? 0 : 280}}" easing-function="easeOutCubic"
@@ -129,36 +132,42 @@
         </swiper>
       </view>
 
-      <!-- 附近活动：Figma 双列竖卡 -->
-      <view id="sec-nearby" class="v3-sec" wx:if="{{nearbyActivityList.length || listErr.nearbyActivityList || listLoading.nearbyActivityList}}" style="{{pm_nearbyActivityList === 1 ? '--pm-n:1;' : (pm_nearbyActivityList === 2 ? '--pm-n-d:.32s;--pm-n-s:1;' : '')}}">
+      <view id="sec-nearby" class="v3-sec">
         <view class="v3-sec-head">
-          <text class="v3-sec-title">附近活动</text>
+          <text class="v3-sec-title">附近主题</text>
         </view>
-        <!-- 错误与空态必须分开:请求失败时原码停在 [] 并渲染「正在搜寻…」= 页面永久假装在加载 -->
-        <view class="v3-sec-state" wx:if="{{listLoading.nearbyActivityList && !nearbyActivityList.length && !listLoaded.nearbyActivityList}}">
+        <view class="v3-sec-state" wx:if="{{listLoading.nearbyTopicList && !nearbyTopicList.length}}">
           <cy-skeleton type="feed-card" count="2" />
         </view>
-        <view class="v3-sec-state" wx:elif="{{listErr.nearbyActivityList && !nearbyActivityList.length}}">
-          <cy-error load-failure title="附近活动加载失败"
-                    retry="重试" data-list="nearbyActivityList" bind:retry="retryList" />
+        <view class="v3-sec-state" wx:elif="{{listErr.nearbyTopicList && !nearbyTopicList.length}}">
+          <cy-error load-failure title="附近主题加载失败"
+                    retry="重试" data-list="nearbyTopicList" bind:retry="retryList" />
         </view>
-        <text class="v3-sec-sync cy-refresh-float cy-refresh-float--pill" wx:if="{{listLoading.nearbyActivityList && nearbyActivityList.length}}"
-              aria-role="status" aria-live="polite">正在更新附近活动…</text>
-        <scroll-view wx:if="{{nearbyActivityList.length}}" scroll-x="{{true}}" class="v3-rail" show-scrollbar="{{false}}">
+        <view class="v3-sec-state" wx:elif="{{!listLoaded.nearbyTopicList}}">
+          <cy-empty title="定位后查看附近主题" cta="定位查找" bind:cta="locateNearbyThemes" />
+        </view>
+        <view class="v3-sec-state" wx:elif="{{!nearbyTopicList.length}}">
+          <cy-empty title="3 公里内暂无主题" cta="重新定位" bind:cta="locateNearbyThemes" />
+        </view>
+        <view class="v3-sec-head v3-nearby-actions" wx:if="{{nearbyTopicList.length}}">
+          <text class="v3-sec-sync">3 公里内</text>
+          <view bindtap="locateNearbyThemes" aria-role="button" aria-label="重新定位查找附近主题" hover-class="cy-pressed">重新定位</view>
+        </view>
+        <text class="v3-sec-sync cy-refresh-float cy-refresh-float--pill" wx:if="{{listLoading.nearbyTopicList && nearbyTopicList.length}}"
+              aria-role="status" aria-live="polite">正在更新附近主题…</text>
+        <cy-inline-error wx:if="{{listErr.nearbyTopicList && nearbyTopicList.length}}" load-failure
+                         title="附近主题更新失败" action="重试" data-list="nearbyTopicList" bind:action="retryList" />
+        <scroll-view wx:if="{{nearbyTopicList.length}}" scroll-x="{{true}}" class="v3-rail" show-scrollbar="{{false}}">
           <view class="v3-nearby-row">
-            <view class="v3-nearby-card" wx:for="{{nearbyActivityList}}" wx:key="id"
-                  bindtap="goActivity" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
-              <image class="v3-nearby-bg" src="{{item.cover || item.imgUrl || '/images/route_city_cover.png'}}" mode="aspectFill" lazy-load="true" />
+            <view class="v3-nearby-card" wx:for="{{nearbyTopicList}}" wx:key="id"
+                  bindtap="goTopic" data-id="{{item.id}}" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+              <image class="v3-nearby-bg" wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" lazy-load="true" />
               <view class="v3-nearby-mask"></view>
               <view class="v3-nearby-body">
                 <view class="v3-nearby-title ep2">{{item.name}}</view>
                 <view class="v3-nearby-meta flex-ac">
-                  <text class="v3-nearby-live" wx:if="{{item.started}}">进行中</text>
-                  <text class="v3-nearby-time ep1" wx:else>{{item.formattedDateTime}}</text>
-                  <view class="v3-nearby-viewers flex-ac" wx:if="{{item.distance}}">
-                    <image class="v3-nearby-view-ic" src="/images/index-figma/icon-viewers.png" mode="aspectFit" />
-                    <text>{{item.distance}}</text>
-                  </view>
+                  <text class="v3-nearby-time" wx:if="{{item.distance}}">{{item.distance}}</text>
+                  <text class="v3-nearby-time" wx:if="{{item.feedTypeLabel}}">{{item.feedTypeLabel}}</text>
                 </view>
               </view>
             </view>
@@ -226,7 +235,8 @@
             <view class="v2-status" bindtap="goTopic" data-index="{{index}}" data-id="{{item.id}}" hover-class="cy-pressed" hover-stay-time="80">
               <view class="v2-status-row flex-b">
                 <text class="v2-status-k">价格</text>
-                <text class="v2-status-v price">{{money.amount(item.minAmout)}} 起</text>
+                <text wx:if="{{item.homePrice != null}}" class="v2-status-v price">{{money.amount(item.homePrice)}} 起</text>
+                <text wx:else class="v2-status-v price">—</text>
               </view>
               <view class="v2-status-row flex-b">
                 <text class="v2-status-k">时间</text>

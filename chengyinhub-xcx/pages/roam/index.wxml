@@ -35,8 +35,7 @@
     </view>
     <block wx:if="{{entrySheet=='activity' && entryActivity && entrySheetView=='main'}}">
       <view class="entry-activity__summary">
-        <!-- 2026-10-30 没有封面的活动用首页同一张路线插画(与首页 v2-fcover 兜底同一张 route_city_cover.png),不再是灰底 + 图片图标 -->
-        <image class="entry-activity__cover" src="{{entryActivity.cover || '/images/route_city_cover.png'}}" mode="aspectFill" />
+        <image wx:if="{{entryActivity.cover && !entryCoverErrors[entryActivity.cover]}}" class="entry-activity__cover" src="{{entryActivity.cover}}" data-src="{{entryActivity.cover}}" binderror="onEntryCoverError" mode="aspectFill" />
         <view class="entry-activity__copy"><text class="entry-activity__title">{{entryActivity.title}}</text><text class="entry-activity__meta">{{entryActivity.meta || entryActivity.address || '查看活动详情'}}</text></view>
       </view>
       <view wx:if="{{!entryActivity.registered || entryActivity.ended}}" class="entry-sheet__primary" bindtap="openEntryActivityDetail" aria-role="button" aria-label="{{entryActivity.ended ? '查看详情' : '去报名'}}" hover-class="cy-pressed" hover-stay-time="80">{{entryActivity.ended ? '查看详情' : '去报名'}}</view>
@@ -184,9 +183,9 @@
     </view>
     <block wx:if="{{!entryPeekFold}}">
     <scroll-view wx:if="{{entryStripTab=='city' && entryCityStrip}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
-      <view class="entry-card" wx:for="{{entryCityStrip.items}}" wx:key="id" data-idx="{{index}}" bindtap="onEntryCityPlaceTap" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
-        <image class="entry-card__cover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" />
-        <view class="entry-card__shade"></view>
+      <view class="entry-card {{item.cover && !entryCoverErrors[item.cover] ? '' : 'entry-card--text'}}" wx:for="{{entryCityStrip.items}}" wx:key="id" data-idx="{{index}}" bindtap="onEntryCityPlaceTap" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+        <image wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__cover" src="{{item.cover}}" data-src="{{item.cover}}" binderror="onEntryCoverError" mode="aspectFill" />
+        <view wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__shade"></view>
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--place">{{item.catLabel}}</text><text class="entry-card__title">{{item.name}}</text><text class="entry-card__meta">{{item.reason}}</text></view>
       </view>
     </view></scroll-view>
@@ -195,10 +194,10 @@
     <cy-state-shell wx:if="{{entryReadAccess === 'denied'}}" kind="no-permission" title="当前内容无法查看" />
     <cy-error wx:elif="{{entryLoadError}}" load-failure="{{true}}" bind:retry="retryEntryRead" />
     <scroll-view wx:elif="{{entryCards.length || entryFarCards.length || entryStrip.length}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
-      <view class="entry-card" wx:for="{{entryStrip}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
+      <view class="entry-card {{item.cover && !entryCoverErrors[item.cover] ? '' : 'entry-card--text'}}" wx:for="{{entryStrip}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
             bindtap="onEntryCardTap" aria-role="button" aria-label="打开 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-        <image class="entry-card__cover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" />
-        <view class="entry-card__shade"></view>
+        <image wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__cover" src="{{item.cover}}" data-src="{{item.cover}}" binderror="onEntryCoverError" mode="aspectFill" />
+        <view wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__shade"></view>
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.kind === 'place' ? 'place' : (item.tag === '自由探索' ? 'free' : 'city')}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
       </view>
     </view></scroll-view>
@@ -565,10 +564,10 @@
 
 <!-- f-pages P-32:主地图底部横滑卡 —— 附近活动与队伍,与入口页「附近活动」同一张 entry-card、同一份读数;读数为空就不出。 -->
 <scroll-view wx:if="{{screen=='map' && !shopStrip.rows.length && liveCards.length}}" class="live-peek" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
-  <view class="entry-card live-card" wx:for="{{liveCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
+  <view class="entry-card live-card {{item.cover && !entryCoverErrors[item.cover] ? '' : 'entry-card--text'}}" wx:for="{{liveCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
         bindtap="onLiveCardTap" aria-role="button" aria-label="打开{{item.tag}} {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
-    <image class="entry-card__cover" src="{{item.cover || '/images/home-route-city-placeholder.jpg'}}" mode="aspectFill" />
-    <view class="entry-card__shade"></view>
+    <image wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__cover" src="{{item.cover}}" data-src="{{item.cover}}" binderror="onEntryCoverError" mode="aspectFill" />
+    <view wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__shade"></view>
     <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.kind === 'team' ? 'team' : (item.tag === '自由探索' ? 'free' : 'city')}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta" wx:if="{{item.meta || item.address}}">{{item.meta || item.address}}</text></view>
   </view>
 </view></scroll-view>

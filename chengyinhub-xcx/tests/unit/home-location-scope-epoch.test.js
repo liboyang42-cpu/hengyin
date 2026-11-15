@@ -98,8 +98,8 @@ test('首页刷新即使残留旧坐标也不上传给附近排序',()=>{
   const p=page();p.data.locationInfo={latitude:31.23,longitude:121.47}
   for(const key of ['getUserData','loadContinueExplore','loadBottomTopicList','loadBottomActivityList'])p[key]=()=>{}
   const lists=[];p.getListData=(...args)=>lists.push(args);p.loadPageData()
-  const near=lists.find(x=>x[0]==='nearbyActivityList');assert.ok(near)
-  assert.equal(near[2].sort_type,2);assert.equal('latitude' in near[2],false);assert.equal('longitude' in near[2],false)
+  assert.equal(lists.some(x=>x[0]==='nearbyTopicList'),false,'未主动定位时不查附近主题；城市旧坐标不能用于附近查询')
+  assert.equal(lists.some(x=>x[0]==='nearbyActivityList'),false,'不再把按时间排序的活动当成附近内容')
 })
 test('定位API或授权读取失败给简短反馈，不采集或泄露原始错误',()=>{
   const p=page();latest(p,consent(),{userInitiated:true});assert.equal(loading,true)

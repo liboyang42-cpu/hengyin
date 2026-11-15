@@ -42,7 +42,20 @@ function judge(advanced, kit, action, detail) {
     // 多个答案用 、 , ， ; ； 隔开(utils/answer-text.js 的共享分隔符)。
     const got = String(d.input || '').trim().toLowerCase();
     const legacy = String(qa.answerText || '').split(/[、,]/).some(one => one.trim() && one.trim().toLowerCase() === got);
-    return legacy || answerText.matchesAnyOf(qa.answerText, d.input) ? 'win' : 'fail';
+    const policy = advanced.answerPolicy;
+    const trim = value => value.replace(/^[\x00-\x20]+|[\x00-\x20]+$/g, '');
+    const aliasKey = value => trim(value).replace(/[\t\n\x0B\f\r ]+/g, '')
+      .replace(/[！-～　]/g, ch => ch === '　' ? ' ' : String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)).toLowerCase();
+    const aliases = policy && policy.version === 1
+      && (policy.normalizationPolicy == null || policy.normalizationPolicy === 'LEGACY_V1')
+      && Object.keys(policy).every(key => ['version', 'normalizationPolicy', 'acceptedAliases'].includes(key))
+      && Array.isArray(policy.acceptedAliases) && policy.acceptedAliases.length <= 20
+      && policy.acceptedAliases.every(alias => typeof alias === 'string' && trim(alias) && trim(alias).length <= 200)
+      && new Set(policy.acceptedAliases.map(aliasKey)).size === policy.acceptedAliases.length
+      && /[^\u0009-\u000d\u001c-\u0020\u1680\u2000-\u2006\u2008-\u200a\u2028-\u2029\u205f\u3000]/.test(trim(String(qa.answerText || '')))
+      ? policy.acceptedAliases : [];
+    return legacy || answerText.matchesAnyOf(qa.answerText, d.input)
+      || aliases.some(alias => answerText.equivalent(alias, d.input)) ? 'win' : 'fail';
   }
   if (d.mode === 'pick') {
     const options = Array.isArray(qa.options) ? qa.options : [];

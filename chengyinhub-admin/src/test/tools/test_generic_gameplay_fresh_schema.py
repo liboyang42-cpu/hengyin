@@ -50,6 +50,35 @@ class FreshSchemaTest(unittest.TestCase):
         plan = self.plan('/*!50001 CREATE TABLE fixture(id INT) */;', migration=True)
         self.assertEqual(1, len(plan['apply']))
 
+    def test_frozen_mixed_migration_omits_only_data_group_and_keeps_ddl(self):
+        path = tool.ROOT / 'chengyinhub-admin/sql/migration_20261112_template_market_status.sql'
+        plan = tool.plan_file(path, migration=True)
+        self.assertEqual([4, 5, 6, 7, 8, 17], [s['statement'] for s in plan['skipped']])
+        self.assertEqual(11, len(plan['apply']))
+        self.assertTrue(any('DROP COLUMN publish_status' in sql for sql in plan['apply']))
+        self.assertTrue(any('MODIFY COLUMN status BIGINT' in sql for sql in plan['apply']))
+        self.assertEqual(2, sum(sql.startswith('PREPARE ') for sql in plan['apply']))
+        self.assertFalse(any("'UPDATE " in sql for sql in plan['apply']))
+        with self.assertRaisesRegex(ValueError, 'Data-only policy contains persistent DDL'):
+            tool.plan_file(path, migration=True, data_only=True)
+
+    def test_mixed_migration_fingerprint_drift_fails_closed(self):
+        path = tool.ROOT / 'chengyinhub-admin/sql/migration_20261112_template_market_status.sql'
+        original = path.read_bytes()
+        with patch.object(pathlib.Path, 'read_bytes', return_value=original + b'\n-- drift'):
+            with self.assertRaisesRegex(ValueError, 'Local mixed-migration fingerprint changed'):
+                tool.plan_file(path, migration=True)
+
+    def test_mixed_migration_bytes_at_unlisted_path_do_not_gain_exception(self):
+        path = tool.ROOT / 'chengyinhub-admin/sql/migration_20261112_template_market_status.sql'
+        with self.assertRaisesRegex(ValueError, 'Dynamic data cleanup needs explicit local policy'):
+            self.plan(path.read_text(), migration=True)
+
+    def test_unlisted_dynamic_dml_keeps_existing_rejection(self):
+        with self.assertRaisesRegex(ValueError, 'Dynamic data cleanup needs explicit local policy'):
+            self.plan("CREATE TABLE fixture(id INT); SET @sql='DELETE FROM fixture'; "
+                      "PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;", migration=True)
+
     def test_base_seed_is_not_classified_as_production_cleanup(self):
         plan = self.plan("INSERT INTO sys_config VALUES('value;still one');")
         self.assertEqual(1, len(plan['apply']))

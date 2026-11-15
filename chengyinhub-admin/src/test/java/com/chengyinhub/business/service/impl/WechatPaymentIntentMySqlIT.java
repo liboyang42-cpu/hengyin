@@ -58,11 +58,11 @@ class WechatPaymentIntentMySqlIT {
         // Narrow fixtures exercise gateway SQL. Full domain DDL/CAS/ledger coverage remains in domain IT suites.
         jdbc.execute("CREATE TABLE club_membership_invoice(id BIGINT PRIMARY KEY,out_trade_no VARCHAR(64),amount_fen BIGINT,status VARCHAR(16) DEFAULT 'PAYING') ENGINE=InnoDB");
         jdbc.execute("CREATE TABLE coop_invite(id BIGINT PRIMARY KEY,deposit_out_trade_no VARCHAR(64),deposit_amount DECIMAL(10,2),deposit_status INT DEFAULT 1,status INT DEFAULT 1,del_flag INT DEFAULT 0) ENGINE=InnoDB");
-        jdbc.execute("CREATE TABLE oms_order(id BIGINT PRIMARY KEY,order_sn VARCHAR(64),pay_amount DECIMAL(10,2),status BIGINT DEFAULT 0,payment_transaction_id VARCHAR(64),member_id BIGINT,mms_merchant_id BIGINT,biz_type VARCHAR(32),verified_payment_fact_id BIGINT UNSIGNED,verified_payment_fact_hash BINARY(64)) ENGINE=InnoDB");
+        jdbc.execute("CREATE TABLE oms_order(id BIGINT PRIMARY KEY,order_sn VARCHAR(64),pay_amount DECIMAL(10,2),status BIGINT DEFAULT 0,payment_transaction_id VARCHAR(64),member_id BIGINT,mms_merchant_id BIGINT,biz_type VARCHAR(32),entitlement_days INT,entitlement_max_usage INT,verified_payment_fact_id BIGINT UNSIGNED,verified_payment_fact_hash BINARY(64)) ENGINE=InnoDB");
         jdbc.execute("CREATE TABLE cms_registration(id BIGINT PRIMARY KEY,registration_no VARCHAR(64),wechat_payment_amount DECIMAL(10,2),payment_status INT DEFAULT 1,registration_status INT DEFAULT 1) ENGINE=InnoDB");
         jdbc.update("INSERT INTO club_membership_invoice(id,out_trade_no,amount_fen) VALUES(1,'CLM1',1000)");
         jdbc.update("INSERT INTO coop_invite(id,deposit_out_trade_no,deposit_amount) VALUES(1,'DEP1',10.00)");
-        jdbc.update("INSERT INTO oms_order(id,order_sn,pay_amount,member_id,mms_merchant_id,biz_type) VALUES(1,'TPLTM_1',10.00,12,34,?)",MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
+        jdbc.update("INSERT INTO oms_order(id,order_sn,pay_amount,member_id,mms_merchant_id,biz_type,entitlement_days,entitlement_max_usage) VALUES(1,'TPLTM_1',10.00,12,34,?,30,3)",MerchantCommerceService.BIZ_PREMIUM_TEMPLATE);
         jdbc.execute("CREATE TABLE b_payment_grant(order_no VARCHAR(64) PRIMARY KEY,transaction_id VARCHAR(64)) ENGINE=InnoDB");
         jdbc.update("INSERT INTO cms_registration(id,registration_no,wechat_payment_amount) VALUES(1,'REG1',10.00)");
     }
@@ -154,6 +154,10 @@ class WechatPaymentIntentMySqlIT {
             order.setMemberId(((Number)row.get("member_id")).longValue());
             order.setMmsMerchantId(((Number)row.get("mms_merchant_id")).longValue());
             order.setBizType((String)row.get("biz_type"));
+            Number days=(Number)row.get("entitlement_days");
+            Number maxUsage=(Number)row.get("entitlement_max_usage");
+            order.setEntitlementDays(days==null?null:days.intValue());
+            order.setEntitlementMaxUsage(maxUsage==null?null:maxUsage.intValue());
             order.setPayAmount((java.math.BigDecimal)row.get("pay_amount"));
             order.setStatus(((Number)row.get("status")).longValue());
             order.setPaymentTransactionId((String)row.get("payment_transaction_id"));

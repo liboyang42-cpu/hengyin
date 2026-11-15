@@ -316,7 +316,7 @@ Page({
     privacyGateShow: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
     poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
-    screen: 'entry-map', unfinishedRoam: false, entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true, places: true }, entryScale: 14, entryStrip: [], entryPeekFold: false, entryStripTab: 'near', entryCityStrip: null, entryCityLabel: '本城推荐', entryLoadError: false, entryReadAccess: '', entryLoading: false, entryLocated: false,
+    screen: 'entry-map', entryCoverErrors: {}, unfinishedRoam: false, entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true, places: true }, entryScale: 14, entryStrip: [], entryPeekFold: false, entryStripTab: 'near', entryCityStrip: null, entryCityLabel: '本城推荐', entryLoadError: false, entryReadAccess: '', entryLoading: false, entryLocated: false,
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
@@ -4565,7 +4565,7 @@ Page({
     const shareKind = poi._roamId && (poi.isCityNode || placeMap.hasSeedTag(poi)) && !poi.demo ? 'poi' : (poi.merchantId && !poi.demo ? 'merchant' : '');
     return {
       id: poi.id, name: poi.name || '地点', address: poi.address || '',
-      photo: photoPins.pinPhoto(poi, MOCK_IMG) || '/images/home-route-city-placeholder.jpg', distText, lat: poi.lat, lng: poi.lng,
+      photo: photoPins.pinPhoto(poi, MOCK_IMG), distText, lat: poi.lat, lng: poi.lng,
       shareKind, shareId: shareKind === 'poi' ? String(poi._roamId) : (shareKind === 'merchant' ? String(poi.merchantId) : ''),
     };
   },
@@ -6314,6 +6314,11 @@ Page({
     this._refreshEntryCityStrip();
   },
   // 附近条 = 活动卡 + 就近地点卡;都没有才退回远处的公开主题
+  onEntryCoverError(e) {
+    const source = e.currentTarget.dataset.src;
+    if (this._unloaded || !source || this.data.entryCoverErrors[source]) return;
+    this.setData({ entryCoverErrors: Object.assign({}, this.data.entryCoverErrors, { [source]: true }) });
+  },
   _composeStrip(cards, placeCards, far) {
     const own = [].concat(cards || [], placeCards || []);
     return own.length ? own : (far || []);

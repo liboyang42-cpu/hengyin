@@ -1281,6 +1281,11 @@ Page({
             || !visibleOrdering && ids.some(id => cursorId && id >= cursorId)
             || visibleOrdering && orders.some((order, index) => index > 0 && compareOrder(order, orders[index - 1]) <= 0)
             || visibleOrdering && context.cursorOrder && orders.some(order => compareOrder(order, context.cursorOrder) >= 0)) { fail(); return; }
+        const profiles = context.profiles || (context.profiles = new Map());
+        list.forEach(message => profiles.set(Number(message.id), {
+          senderAvatar: typeof message.senderAvatar === 'string' ? message.senderAvatar : '',
+          senderName: typeof message.senderName === 'string' ? message.senderName : ''
+        }));
         if (!cursorId) context.headId = orders.reduce((max, order) => compareOrder(order, max) > 0 ? order : max, context.watermark);
         const fresh = list.filter(message => compareOrder(messageOrder(message), context.watermark) > 0);
         const all = fresh.concat(accumulated);
@@ -1298,6 +1303,15 @@ Page({
         // Advance only after bridging to the last complete server read, never from a local send.
         this._pollInFlight = false;
         if (this.data.loadState !== 'ready') this.setData({ loadState: 'ready' });
+        // Refresh only returned identity fields after the complete read; message order/body stay unchanged.
+        let profileChanged = false;
+        const msgs = this.data.msgs.map(message => {
+          const profile = profiles.get(Number(message.id));
+          if (!profile || profile.senderAvatar === message.senderAvatar && profile.senderName === message.senderName) return message;
+          profileChanged = true;
+          return Object.assign({}, message, profile);
+        });
+        if (profileChanged) this.setData({ msgs });
         if (all.length) this._mergeMessages(all);
         this._pollWatermark = context.headId;
         if (all.length) {

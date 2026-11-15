@@ -8260,6 +8260,7 @@ Page({
       cyToast('主题还在加载，稍等一下');
       return;
     }
+    if (this._serverDraftAttempt) { this.saveServerDraft(); return; }
     if (!this.validateForm()) {
       return;
     }

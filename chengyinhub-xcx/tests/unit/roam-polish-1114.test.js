@@ -93,11 +93,12 @@ test('真实样式生效信号提前撤占位，非样式、失败和旧代事�
   assert.equal(view.data.mapLoaded, true)
 })
 
-test('官方目录无图地点有既有主题封面与公开分享，演示点仍不分享', () => {
+test('官方目录无图地点使用原生无图卡且保留公开分享，演示点仍不分享', () => {
   const { view } = load('pages/roam/index.js')
   const poi = { id: 8, _roamId: 9912406, name: '山阴路', lat: 31.2, lng: 121.4, tags: '["roam:seed:v1:sh-place"]' }
   const card = view._placeCardFor(poi)
-  assert.equal(card.photo, '/images/home-route-city-placeholder.jpg')
+  assert.equal(card.photo, '')
+  assert.equal(view._placeCardFor({ ...poi, photo: 'real-place.jpg' }).photo, 'real-place.jpg')
   assert.equal(card.shareKind, 'poi'); assert.equal(card.shareId, '9912406')
   assert.equal(view._placeCardFor({ ...poi, demo: true }).shareKind, '')
 })

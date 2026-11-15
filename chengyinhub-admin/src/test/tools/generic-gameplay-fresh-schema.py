@@ -26,11 +26,23 @@ from scripts.e2e.build_schema import (scratch_schema_sql, migrations_after_basel
                                       broadcast_forward_plan, BROADCAST_D, BROADCAST_OLD, BROADCAST_UNION, BROADCAST_FORWARD_FILES)
 
 
+# Scratch-only: omit this frozen data-conversion group, preserving both DDL groups.
+LOCAL_MIXED_DATA_SKIP = {
+    'chengyinhub-admin/sql/migration_20261112_template_market_status.sql':
+        ('e9f1d2824bda50d70661549056fabbb91fc72ff4866d75f0f6a1a9ceb839dbda', frozenset(range(4, 8))),
+}
+
+
 def plan_file(path, migration=False, data_only=False):
     text = path.read_text(encoding='utf-8')
     error = unterminated_token(text) or delimiter_error(text)
     if error:
         raise ValueError('Invalid SQL: ' + error)
+    local_data_skip = ()
+    if migration and str(path.relative_to(ROOT)) in LOCAL_MIXED_DATA_SKIP:
+        expected_hash, local_data_skip = LOCAL_MIXED_DATA_SKIP[str(path.relative_to(ROOT))]
+        if hashlib.sha256(path.read_bytes()).hexdigest() != expected_hash:
+            raise ValueError('Local mixed-migration fingerprint changed: ' + str(path))
     parts = split_statements(text)
     # Include quoted DDL used by SET/PREPARE and MySQL executable comments.
     persistent = any(re.search(r'''(?is)(?:^\s*(?:/\*!\d+\s*)?|['"])\s*(?:CREATE\s+(?!TEMPORARY\b)|ALTER\s+|DROP\s+(?!TEMPORARY\b)|RENAME\s+)''', executable_statement(s)) for s in parts)
@@ -40,7 +52,9 @@ def plan_file(path, migration=False, data_only=False):
     for index, statement in enumerate(parts, 1):
         assertion = statement_assertion(statement)  # Unknown metadata fails closed.
         sql = scratch_schema_sql(executable_statement(statement).strip())
-        reason = ('runner assertion requires production readback' if migration and assertion else
+        reason = ('hash-pinned mixed migration data group; fixture uses base_seed'
+                  if index in local_data_skip else
+                  'runner assertion requires production readback' if migration and assertion else
                   'data-only migration; fixture uses base_seed' if migration and (data_only or not persistent) else
                   'migration backfill/cleanup/seed; fixture uses base_seed' if migration and
                   re.match(r'(?i)\s*(?:INSERT|REPLACE|UPDATE|DELETE|TRUNCATE)\b', sql) else None)

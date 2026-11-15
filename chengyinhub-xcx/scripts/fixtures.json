@@ -5,51 +5,18 @@
    "isLoading": false,
    "listErr": {
     "recommendedTopicList": false,
-    "nearbyActivityList": false,
+    "nearbyTopicList": false,
     "upcomingActivityList": false
    },
    "listLoading": {
     "recommendedTopicList": false,
-    "nearbyActivityList": false,
+    "nearbyTopicList": false,
     "upcomingActivityList": false
    },
    "isBottomLoading": false,
    "bottomTopicFailedPage": false,
    "bottomActivityFailedPage": false,
-   "nearbyActivityList": [
-    {
-     "route": "示例route",
-     "name": "示例name",
-     "poster": "示例poster",
-     "motionSrc": "示例motionSrc",
-     "title": "示例title",
-     "subtitle": "示例subtitle",
-     "cover": "/images/route_city_cover.png",
-     "clubLabel": "示例clubLabel",
-     "clubAvatar": "/images/route_city_cover.png",
-     "tags": [],
-     "betaFlag": "示例betaFlag",
-     "statusLabel": "示例statusLabel",
-     "metaLine": "示例metaLine",
-     "id": 1,
-     "imgUrl": "/images/route_city_cover.png",
-     "started": "示例started",
-     "formattedDateTime": "08-05 10:00",
-     "distance": "示例distance",
-     "addressName": "示例addressName",
-     "description": "示例description",
-     "rating": "示例rating",
-     "remainingTime": "08-05 10:00",
-     "feedTypeLabel": "69.00",
-     "feedTags": [],
-     "feedGridMode": "69.00",
-     "feedImages": "69.00",
-     "moreCount": 3,
-     "feedBadgeCount": 3,
-     "minAmout": "示例minAmout",
-     "address": "示例address"
-    }
-   ],
+   "nearbyTopicList": [],
    "upcomingActivityList": [
     {
      "route": "示例route",
@@ -196,7 +163,7 @@
    "isBottomLoading",
    "bottomTopicFailedPage",
    "bottomActivityFailedPage",
-   "nearbyActivityList",
+   "nearbyTopicList",
    "upcomingActivityList",
    "bottomTopicList",
    "bottomActivityList",
@@ -209,17 +176,17 @@
    "isLoading": true,
    "listLoading": {
     "recommendedTopicList": true,
-    "nearbyActivityList": true,
+    "nearbyTopicList": true,
     "upcomingActivityList": true
    },
    "listErr": {
     "recommendedTopicList": false,
-    "nearbyActivityList": false,
+    "nearbyTopicList": false,
     "upcomingActivityList": false
    },
    "recommendedTopicList": [],
    "recoHero": null,
-   "nearbyActivityList": [],
+   "nearbyTopicList": [],
    "upcomingActivityList": [],
    "isBottomLoading": false,
    "bottomTopicFailedPage": false,
@@ -244,17 +211,17 @@
    "isLoading": false,
    "listLoading": {
     "recommendedTopicList": false,
-    "nearbyActivityList": false,
+    "nearbyTopicList": false,
     "upcomingActivityList": false
    },
    "listErr": {
     "recommendedTopicList": true,
-    "nearbyActivityList": true,
+    "nearbyTopicList": true,
     "upcomingActivityList": true
    },
    "recommendedTopicList": [],
    "recoHero": null,
-   "nearbyActivityList": [],
+   "nearbyTopicList": [],
    "upcomingActivityList": [],
    "isBottomLoading": false,
    "bottomTopicFailedPage": true,

@@ -364,7 +364,20 @@ page {
 /* 横滑 rail */
 .v3-rail { white-space: nowrap; width: 100%; }
 
-/* —— 附近活动:双列竖卡 —— */
+.v3-nearby-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--cy-type-caption);
+  color: var(--cy-color-text-primary);
+}
+.v3-nearby-actions > view {
+  min-height: var(--cy-btn-h-sm);
+  display: flex;
+  align-items: center;
+}
+
+/* —— 附近主题:双列竖卡 —— */
 /* ADA 8pt:卡间恒 24rpx */
 .v3-nearby-row { display: inline-flex; gap: var(--cy-space-3); padding: 0 var(--cy-space-4); vertical-align: top; } /* 实测:inline-flex 落在基线上,区块底多出约 6px 字下沿空隙,区块间距 38 对 32 */
 .v3-nearby-card {

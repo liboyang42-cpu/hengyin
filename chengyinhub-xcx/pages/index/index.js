@@ -7,6 +7,7 @@ const app = getApp();
 const { applyTheme } = require('../../utils/theme.js');
 const policy = require('../../utils/identity/identity-policy.js');
 const indexFormat = require('../../utils/index/index-format.js');
+const { topicPrice } = require('../../utils/topic-price.js');
 const { decorateFeedCards } = require('../../utils/index/feed-card.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
@@ -22,6 +23,7 @@ const identitySync = require('../../utils/identity-sync.js');
 const { normalizeMerchantAccess } = require('../../utils/merchant-access-policy.js');
 const { avatarSrc } = identitySync;
 const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
+const { hasCoords, showPermissionGuide } = require('../../utils/location/location-manager.js');
 
 function isHomeCityAgreement(row) {
   return !!row && row.docType === 'privacy_policy' && row.scene === 'home_city_location'
@@ -85,6 +87,7 @@ function normalizeMemberId(memberId) {
 }
 
 function clearPrivateDisplay(page) {
+  if (page._nearbyThemeOwner) page.clearNearbyThemes();
   page.setData({
     userInfo: { avatar: '', nickname: '', point: '0' },
     showPhoneModal: false,
@@ -190,7 +193,7 @@ function buildRecoCardStyles(count, current, target, progress) {
 
 // feed/卡片多图:发布页(publish/fabu)写入的 imgArr 与章节同为 "," 分隔，历史数据也有 ";"。
 // 两种分隔符都吃，避免把整串 "a.jpg,b.jpg" 当成一个坏 URL。
-function decorateImgs(list) {
+function decorateImgs(list, isTopic = false) {
   // 首页五类列表共用这条图片消费者链：
   // 统一拆分逗号/分号格式，避免整串落成一个坏 URL；
   // 统一补全后端相对路径，附近活动不再出现有数据无图；
@@ -202,10 +205,9 @@ function decorateImgs(list) {
   };
 
   // 页面入口只注入 URL 规则，不复制纯函数里的卡片判定。
-  return decorateFeedCards(
-    list,
-    normalizeImage,
-  );
+  const cards = decorateFeedCards(list, normalizeImage);
+  if (isTopic) cards.forEach(item => { item.homePrice = topicPrice(item); });
+  return cards;
 }
 
 Page({
@@ -254,7 +256,7 @@ Page({
     
     // 其他数据保持不变
     recommendedTopicList: [],
-    nearbyActivityList: [],
+    nearbyTopicList: [],
     upcomingActivityList: [],
     bottomTopicList: [],
     bottomActivityList: [],
@@ -545,6 +547,7 @@ Page({
     const resumeHomeLocation = this._homeLocationHidden === true;
     const locationEpochAtShow = this._locationEpoch || 0;
     this._homeLocationHidden = false;
+    if (this._nearbyThemeOwner && this._nearbyThemeOwner !== [app.getUserID() || '', (app.globalData || {}).authorization || ''].join('|')) this.clearNearbyThemes();
     wx.hideTabBar();
 
     const that = this;
@@ -637,6 +640,7 @@ Page({
    */
   onHide() {
     this._homeLocationHidden = true;
+    this.clearNearbyThemes();
     this._operatorAccessEpoch = (this._operatorAccessEpoch || 0) + 1;
     this._locationEpoch = (this._locationEpoch || 0) + 1;
     if (this._locationLoadingEpoch != null) {
@@ -663,6 +667,8 @@ Page({
    */
   onUnload() {
     this._unloaded = true;
+    this._nearbyThemeEpoch = (this._nearbyThemeEpoch || 0) + 1;
+    if (this._listReq) delete this._listReq.nearbyTopicList;
     if (this._offIdentity) { this._offIdentity(); this._offIdentity = null; }
     this._locationEpoch = (this._locationEpoch || 0) + 1;
     if (this._locationLoadingEpoch != null) {
@@ -791,15 +797,73 @@ Page({
       that.loadBottomActivityList(1, true);
     });
     
-    // 首页定位仅用于确定城市，不把精确坐标用于活动排序。
-    that.getListData('nearbyActivityList', '/api/activity/list', {
-      is_my: 0,
-      sort_type: 2,
-      pageNum: 1,
-      pageSize: 4,
-    });
+    // 只刷新本次前台会话中用户主动定位后的查询；城市定位不用于附近排序。
+    const nearby = that._listReq && that._listReq.nearbyTopicList;
+    if (nearby) that.getListData('nearbyTopicList', nearby.url, nearby.params, nearby.processor);
   },
   
+  locateNearbyThemes() {
+    if (this._unloaded || this._homeLocationHidden || this.data.listLoading.nearbyTopicList) return;
+    const epoch = this._nearbyThemeEpoch = (this._nearbyThemeEpoch || 0) + 1;
+    const owner = [app.getUserID() || '', (app.globalData || {}).authorization || ''].join('|');
+    const current = () => !this._unloaded && !this._homeLocationHidden
+      && epoch === this._nearbyThemeEpoch
+      && owner === [app.getUserID() || '', (app.globalData || {}).authorization || ''].join('|');
+    modal.show({
+      title: '查找附近主题',
+      content: '本次位置将发送给城瘾，用于查找 3 公里内的主题。离开首页后停止使用，不记录轨迹。',
+      confirmText: '同意并定位',
+      cancelText: '暂不定位',
+      success: (res) => {
+        if (!res.confirm || !current()) return;
+        const consent = app.getUsageConsent();
+        consent.ensure().then(() => {
+          if (!current()) return;
+          if (typeof wx.getLocation !== 'function') { cyToast('当前设备暂不支持定位'); return; }
+          this.setData({ 'listLoading.nearbyTopicList': true, 'listErr.nearbyTopicList': false });
+          wx.getLocation({
+            type: 'gcj02',
+            success: (point) => {
+              if (!current()) return;
+              if (!hasCoords(point)) {
+                this.setData({ 'listLoading.nearbyTopicList': false });
+                cyToast('未获取到有效位置，请重试'); return;
+              }
+              this._nearbyThemeOwner = owner;
+              this.getListData('nearbyTopicList', '/api/roam/hangout/nearby', {
+                lat: point.latitude, lng: point.longitude, radius: 3000,
+              }, (items) => items.filter(item => item.kind === 'topic')
+                .map(item => Object.assign({}, item, { imgUrl: item.picUrl })));
+            },
+            fail: (error) => {
+              if (!current()) return;
+              this.setData({ 'listLoading.nearbyTopicList': false });
+              if (/auth deny|permission/i.test(error && error.errMsg || '')) {
+                showPermissionGuide(undefined, () => { if (current()) this.locateNearbyThemes(); });
+                cyToast('需要位置权限，请在设置中开启');
+              } else cyToast('定位失败，请检查 GPS 后重试');
+            },
+          });
+        }).catch(() => {
+          if (current()) this.setData({ 'listLoading.nearbyTopicList': false });
+        });
+      },
+    });
+  },
+
+  clearNearbyThemes() {
+    this._nearbyThemeEpoch = (this._nearbyThemeEpoch || 0) + 1;
+    this._listEpoch = this._listEpoch || Object.create(null);
+    this._listEpoch.nearbyTopicList = (this._listEpoch.nearbyTopicList || 0) + 1;
+    const control = this._listControls && this._listControls.nearbyTopicList;
+    if (control && typeof control.abort === 'function') control.abort();
+    if (this._listControls) delete this._listControls.nearbyTopicList;
+    if (this._listReq) delete this._listReq.nearbyTopicList;
+    this._nearbyThemeOwner = '';
+    this.setData({ nearbyTopicList: [], 'listLoading.nearbyTopicList': false,
+      'listLoaded.nearbyTopicList': false, 'listErr.nearbyTopicList': false });
+  },
+
   onReady() {
     this._buildRecoHero();
     // heroBannerList 在 data 里已经是同一份冻结常量(见上方 data 初始化),
@@ -1120,7 +1184,13 @@ Page({
     that._listEpoch = that._listEpoch || Object.create(null);
     const requestEpoch = (that._listEpoch[listName] || 0) + 1;
     that._listEpoch[listName] = requestEpoch;
-    const isCurrent = function () { return that._listEpoch[listName] === requestEpoch; };
+    const nearbyEpoch = that._nearbyThemeEpoch;
+    const isCurrent = function () {
+      return that._listEpoch[listName] === requestEpoch
+        && (listName !== 'nearbyTopicList' || (!that._homeLocationHidden && !that._unloaded
+          && nearbyEpoch === that._nearbyThemeEpoch
+          && that._nearbyThemeOwner === [app.getUserID() || '', (app.globalData || {}).authorization || ''].join('|')));
+    };
     const previous = that._listControls[listName];
     if (previous && typeof previous.abort === 'function') previous.abort();
     delete that._listControls[listName];
@@ -1140,13 +1210,14 @@ Page({
     const control = app.sendRequest({
       hideLoading: true,
       url: url,
-      method: "POST",
+      method: listName === 'nearbyTopicList' ? 'GET' : 'POST',
       auth: false,
       data: params,
       success: function (res) {
         if (!isCurrent()) return;
-        if (res && res.code == "200" && res.data && isRecordList(res.data.rows)) {
-          let list = res.data.rows;
+        const rows = res && res.data && (listName === 'nearbyTopicList' ? res.data.items : res.data.rows);
+        if (res && res.code == "200" && isRecordList(rows)) {
+          let list = listName === 'nearbyTopicList' && dataProcessor ? dataProcessor(rows) : rows;
           
           for (let i = 0; i < list.length; i++) {
             // 新增：格式化显示时间
@@ -1200,23 +1271,20 @@ Page({
               }
             }
             
-            if (list[i]['distance']) {
+            if (list[i]['distance'] || (listName === 'nearbyTopicList' && list[i]['distance'] === 0)) {
               list[i]['distance'] = (list[i]['distance'] / 1000).toFixed(2) + 'km';
             }
           }
           
-          if (dataProcessor && typeof dataProcessor === 'function') {
-            list = dataProcessor(list);
-          }
-  
+          if (listName !== 'nearbyTopicList' && typeof dataProcessor === 'function') list = dataProcessor(list);
           list = that.processTopicDate(list);
-          list = decorateImgs(list);   // 多图拆分 imgArr → imgList/cover
+          list = decorateImgs(list, listName === 'recommendedTopicList' || listName === 'nearbyTopicList');
 
           const dataObj = {};
           dataObj[listName] = list;
           dataObj['listErr.' + listName] = false; pageMotion.enter(that, 'pm_' + listName, { once: true }); // 2026-10-23:列表到达时依次浮上来(H-02:只在首屏入场一次,下拉刷新不再藏起来重播)
           that.setData(dataObj, function () {
-            if (listName === 'nearbyActivityList' || listName === 'recommendedTopicList') {
+            if (listName === 'recommendedTopicList') {
               that._buildRecoHero();
               that._buildHeroBanners();
             }
@@ -1318,7 +1386,7 @@ loadBottomTopicList: function(pageNo, isRefresh = false) {
         if (isRefresh) {
           pageMotion.enter(that, 'pmFeed', { once: true }); // 刷新时替换数据(2026-10-23:新的一页依次浮上来;H-02 只首屏一次)
           that.setData({
-            bottomTopicList: decorateImgs(list),
+            bottomTopicList: decorateImgs(list, true),
             bottomTopicPageNo: pageNo,
             hasMoreBottomTopic: totalPages > pageNo
           });
@@ -1329,7 +1397,7 @@ loadBottomTopicList: function(pageNo, isRefresh = false) {
               bottomTopicPageNo: pageNo,
               hasMoreBottomTopic: totalPages > pageNo
             },
-            appendByIndex('bottomTopicList', that.data.bottomTopicList.length, decorateImgs(list))
+            appendByIndex('bottomTopicList', that.data.bottomTopicList.length, decorateImgs(list, true))
           ));
         }
         

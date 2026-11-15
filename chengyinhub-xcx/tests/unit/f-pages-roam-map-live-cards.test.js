@@ -27,7 +27,7 @@ test('主地图横滑卡只在 screen=map、商家条收起且有卡时渲染,�
   const wxml = read('pages/roam/index.wxml');
   assert.match(wxml, /<scroll-view wx:if="\{\{screen=='map' && !shopStrip\.rows\.length && liveCards\.length\}\}" class="live-peek" scroll-x/);
   const block = wxml.slice(wxml.indexOf('class="live-peek"'), wxml.indexOf('</scroll-view>', wxml.indexOf('class="live-peek"')));
-  assert.match(block, /class="entry-card live-card" wx:for="\{\{liveCards\}\}" wx:key="key" data-kind="\{\{item\.kind\}\}" data-id="\{\{item\.id\}\}"/);
+  assert.match(block, /class="entry-card live-card[^"]*" wx:for="\{\{liveCards\}\}" wx:key="key" data-kind="\{\{item\.kind\}\}" data-id="\{\{item\.id\}\}"/);
   assert.match(block, /bindtap="onLiveCardTap"/);
   assert.match(block, /entry-card__tag--\{\{item\.kind === 'team' \? 'team'/);
   const js = read('pages/roam/index.js');

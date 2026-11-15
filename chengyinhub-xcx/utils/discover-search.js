@@ -2,6 +2,7 @@
 // 页面只负责请求与跳转；这里不依赖 wx/app，便于单测且避免四处手写字段兜底。
 
 const { merchantHomeUrl } = require('./merchant-home-link.js');
+const { topicPrice } = require('./topic-price.js');
 const { templateArt } = require('./template-art.js');
 const { formatDurationMinutes } = require('./template-display.js');
 
@@ -136,7 +137,8 @@ function matchesTemplateKeyword(item, keyword) {
   });
 }
 
-function rowPrice(item) {
+function rowPrice(item, type) {
+  if (type === 'topic') return numericOrNull(topicPrice(item));
   const raw = item && (item.minAmout != null ? item.minAmout : (item.minAmount != null ? item.minAmount : item.price));
   const n = numericOrNull(raw);
   return n != null && n >= 0 ? n : null;
@@ -158,7 +160,7 @@ function matchesFilters(type, item, filters) {
   const useMin = minP != null && minP > 0;
   const useMax = maxP != null && maxP >= 0 && maxP < 1000;
   if (useMin || useMax) {
-    const price = rowPrice(item);
+    const price = rowPrice(item, type);
     if (price != null) {
       if (useMin && price < minP) return false;
       if (useMax && price > maxP) return false;

@@ -217,6 +217,7 @@ function storedBlock(block, nodes, submitted, keepKey) {
   const row = {};
   const fields = {
     text: ['content', 'who', 'level', 'when', 'beat', 'field', 'qid', 'npcId', 'claimLater'],
+    cap: ['cap', 'content'],
     node: [], image: ['url'], audio: ['url'], mood: ['mood'], thought: ['thoughtKey'],
     voice: ['who', 'content', 'when'], odd: ['level'], reveal: ['who', 'content'], dream: ['title', 'images'],
   };
@@ -243,6 +244,13 @@ function storedBlock(block, nodes, submitted, keepKey) {
     if (!PRESETS.some(preset => preset.value === mood)
         && !Object.prototype.hasOwnProperty.call(LEGACY_ALIAS, mood)) throw new Error('invalid mood');
     row.mood = normalizeAtmosphere(mood);
+  }
+  if (block.type === 'cap') {
+    if (typeof row.cap !== 'string' || typeof row.content !== 'string') throw new Error('invalid cap');
+    const trim = value => value.replace(/^[\x00-\x20]+|[\x00-\x20]+$/g, '');
+    row.cap = trim(row.cap); row.content = trim(row.content);
+    if (!['open', 'end'].includes(row.cap) || !row.content || row.content.length > 500)
+      throw new Error('invalid cap');
   }
   if (block.type === 'thought') row.thoughtKey = row.thoughtKey.trim();
   if (block.type === 'dream') {

@@ -3,6 +3,7 @@ const { readReducedMotion } = require('../../../../utils/motion-preference.js');
 // 数据:/api/growth/leaderboard。成长中心主页只展示「自己的排名」摘要,点开才到这里看完整榜单。
 const app = getApp()
 const { identity } = require('../../../../utils/session/login-reload.js')
+const identitySync = require('../../../../utils/identity-sync.js')
 const { isRecord, isRecordList } = require('../../../../utils/response-shape.js')
 
 /* 头像优先级(手册 Utilities §5「优先照片 / Memoji，落回字母」):
@@ -61,9 +62,10 @@ Page({
 
   onShow() {
     this._hidden = false
-    if (this._readSessionChanged) { this._readSessionChanged = false; this.loadBoard() }
-
-    if (this._boardOwner !== undefined && this._boardOwner !== identity(app)) this.loadBoard();
+    const changed = this._readSessionChanged || this._identityEpoch !== identitySync.identityEpoch()
+      || this._boardOwner !== undefined && this._boardOwner !== identity(app)
+    this._readSessionChanged = false
+    if (changed) this.loadBoard()
     const reducedMotion = readReducedMotion();
 
     if (this.data.reducedMotion !== reducedMotion) this.setData({ reducedMotion });
@@ -109,6 +111,7 @@ Page({
 
   loadBoard(done) {
     if (this._unloaded) { if (typeof done === 'function') done(); return }
+    this._identityEpoch = identitySync.identityEpoch()
     const owner = identity(app)
     if (this._boardOwner !== undefined && owner !== this._boardOwner) this.setData({ top3: [], rest: [], me: null })
     this._boardOwner = owner

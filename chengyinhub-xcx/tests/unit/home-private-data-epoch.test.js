@@ -232,7 +232,7 @@ test('开发环境首页也不注入示例用户或假公开列表', () => {
   page.onReady()
 
   assert.deepEqual(page.data.userInfo, { avatar: '', nickname: '', point: '0' })
-  assert.equal(page.data.nearbyActivityList.length, 0, '真实列表为空不能伪造公开内容')
+  assert.equal(page.data.nearbyTopicList.length, 0, '真实列表为空不能伪造公开内容')
 })
 
 test('游客态不重试私人资料请求，也不显示登录过期错误', () => {
