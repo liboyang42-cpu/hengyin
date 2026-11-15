@@ -57,6 +57,9 @@ public class CmsTopicController extends BaseController
     @Autowired
     private ITopicWorkspaceService topicWorkspaceService;
 
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.rpg.TopicWeatherEventService topicWeatherEventService;
+
 
     /** 主题列表的跨服务只读投影。 */
     @Autowired
@@ -354,6 +357,56 @@ public class CmsTopicController extends BaseController
     {
         try {
             return toAjax(topicAdminCommandService.updatePlazaRecommendation(id, request == null ? null : request.getIsRecommend()));
+        } catch (IllegalArgumentException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    /**
+     * 读取主题环境条件配置（journeyRules.rpg.environment + weather_event_rule）。
+     */
+    @PreAuthorize("@ss.hasPermi('business:topic:query')")
+    @GetMapping("/{id}/environment")
+    public AjaxResult getEnvironment(@PathVariable Long id)
+    {
+        if (!topicOperationsScopeAuthorizer.canViewTopic(id)) {
+            return error("主题不存在或当前账号无查看范围");
+        }
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(id);
+        if (topic == null) {
+            return error("主题不存在");
+        }
+        if (topicWeatherEventService == null) {
+            return error("环境规则服务暂不可用");
+        }
+        try {
+            return success(topicWeatherEventService.adminGetConfig(topic));
+        } catch (IllegalArgumentException e) {
+            return error(e.getMessage());
+        }
+    }
+
+    /**
+     * 保存主题环境条件配置（journeyRules.rpg.environment + weather_event_rule）。
+     */
+    @PreAuthorize("@ss.hasPermi('business:topic:edit')")
+    @Log(title = "主题环境条件", businessType = BusinessType.UPDATE)
+    @PutMapping("/{id}/environment")
+    public AjaxResult updateEnvironment(@PathVariable Long id,
+                                        @RequestBody com.chengyinhub.business.service.support.rpg.TopicWeatherEventService.SaveRequest request)
+    {
+        if (!topicOperationsScopeAuthorizer.canEditTopic(id)) {
+            return error("主题不存在或当前账号无编辑权限");
+        }
+        CmsTopic topic = cmsTopicService.selectCmsTopicById(id);
+        if (topic == null) {
+            return error("主题不存在");
+        }
+        if (topicWeatherEventService == null) {
+            return error("环境规则服务暂不可用");
+        }
+        try {
+            return success(topicWeatherEventService.adminSaveConfig(topic, request));
         } catch (IllegalArgumentException e) {
             return error(e.getMessage());
         }

@@ -61,6 +61,8 @@ public class PlayNodeQueryApplication {
     private com.chengyinhub.business.service.IMmsMerchantService mmsMerchantService;
     @Autowired(required = false)
     private com.chengyinhub.business.externalgame.ExternalGameMonetizationService externalGameMonetization;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.support.rpg.TopicWeatherEventService topicWeatherEventService;
 
     static final String MERCHANT_CLOSED_TODAY = "今日已打烊";
 
@@ -544,6 +546,28 @@ public class PlayNodeQueryApplication {
         }
 
         com.chengyinhub.business.domain.CmsTopic topicForFlow = cmsTopicService.selectCmsTopicById(read.tId);
+        if (topicWeatherEventService != null && topicForFlow != null && read.nodes != null && !read.nodes.isEmpty()) {
+            try {
+                Map<Long, String> weatherLocks = topicWeatherEventService.weatherLockedNodes(topicForFlow);
+                if (weatherLocks != null && !weatherLocks.isEmpty()) {
+                    for (Map<String, Object> nm : read.nodes) {
+                        Object rawNodeId = nm.get("nodeId");
+                        Long nodeId = rawNodeId instanceof Number ? ((Number) rawNodeId).longValue() : null;
+                        if (nodeId == null || Boolean.TRUE.equals(nm.get("done"))) continue;
+                        String lockReason = weatherLocks.get(nodeId);
+                        if (lockReason != null) {
+                            nm.put("weatherLocked", Boolean.TRUE);
+                            nm.put("locked", Boolean.TRUE);
+                            if (nm.get("lockReason") == null) {
+                                nm.put("lockReason", lockReason);
+                            }
+                        }
+                    }
+                }
+            } catch (RuntimeException e) {
+                logger.warn("天气规则点位门控计算失败 topic={}", read.tId, e);
+            }
+        }
         // 条件正文 / 条件内心声音按本局标签下发(2026-09-24「选择有回响」)
         java.util.Set<String> storyTags;
         if (read.contentSnapshot != null) {
