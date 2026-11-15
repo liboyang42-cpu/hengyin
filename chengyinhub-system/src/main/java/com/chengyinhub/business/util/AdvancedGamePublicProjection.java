@@ -178,6 +178,7 @@ public final class AdvancedGamePublicProjection {
         putIfText(value, "eyebrow", source);
         putIfText(value, "title", source);
         putIfText(value, "subscribeTmplId", source);
+        copyScored(value, source);
     }
 
     /** ★ answerKey 绝不出现在这里 —— 下发即等于把答案给了客户端,这道题当场作废。 */
@@ -208,6 +209,13 @@ public final class AdvancedGamePublicProjection {
         putIfText(value, "title", source);
         putIfText(value, "rule", source);
         value.put("limitSeconds", source.path("limitSeconds").asInt(0));
+        copyScored(value, source);
+    }
+
+    /** G2:「计入通关」与奖励分是公开规则,不是答案。 */
+    private static void copyScored(ObjectNode value, JsonNode source) {
+        value.put("scored", source.path("scored").asBoolean(false));
+        value.put("xp", source.path("xp").asInt(0));
     }
 
     private static void copyDiyName(ObjectNode target, JsonNode source) {
@@ -240,6 +248,7 @@ public final class AdvancedGamePublicProjection {
         putIfText(value, "trackName", source);
         putIfText(value, "audioUrl", source);
         value.put("durationSeconds", source.path("durationSeconds").asInt(0));
+        copyScored(value, source);
     }
 
     private static void copySteps(ObjectNode target, JsonNode source) {
