@@ -4,6 +4,7 @@ import com.chengyinhub.business.appgaps.AppGapException;
 import com.chengyinhub.business.begapmisc.MiscMoneySwitch;
 import com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -39,6 +40,10 @@ public class ExternalGameMonetizationService {
     public static final int DEFAULT_DAILY_GAME_CAP = 200;
     public static final int DEFAULT_MIN_DURATION_MS = 5000;
     public static final int DEFAULT_REWARD_POINTS = 5;
+    /** CRIT-S1: a play session older than this can no longer report a result. */
+    public static final long SESSION_TTL_MS = 2L * 60 * 60 * 1000;
+    /** HIGH-S1: standalone (no node) pass XP: first pass per game per day only, and at most this much per day. */
+    public static final int STANDALONE_DAILY_XP_CAP = 30;
 
     private static final SecureRandom RNG = new SecureRandom();
     private static final Set<String> PRICING_MODES = Set.of("FREE", "PAID", "TRAFFIC_ONLY");
@@ -52,6 +57,8 @@ public class ExternalGameMonetizationService {
     private final ExternalGameWalletBridge walletBridge;
     private final ExternalGameNodeBridge nodeBridge;
     private final LongSupplier clock;
+    private final String resultSecret;
+    private final boolean testWalletEnabled;
 
     @Autowired
     public ExternalGameMonetizationService(
@@ -60,8 +67,11 @@ public class ExternalGameMonetizationService {
             ExternalGameSigner signer,
             @Autowired(required = false) MiscMoneySwitch moneySwitch,
             @Autowired(required = false) ExternalGameWalletBridge walletBridge,
-            @Autowired(required = false) ExternalGameNodeBridge nodeBridge) {
-        this(jdbc, transactions, signer, moneySwitch, walletBridge, nodeBridge, System::currentTimeMillis);
+            @Autowired(required = false) ExternalGameNodeBridge nodeBridge,
+            @Value("${chengyin.external-game.result-secret:${CHENGYIN_EXTERNAL_GAME_RESULT_SECRET:}}") String resultSecret,
+            @Value("${chengyin.external-game.test-wallet-enabled:false}") boolean testWalletEnabled) {
+        this(jdbc, transactions, signer, moneySwitch, walletBridge, nodeBridge, System::currentTimeMillis,
+                resultSecret, testWalletEnabled);
     }
 
     public ExternalGameMonetizationService(
@@ -72,6 +82,21 @@ public class ExternalGameMonetizationService {
             ExternalGameWalletBridge walletBridge,
             ExternalGameNodeBridge nodeBridge,
             LongSupplier clock) {
+        this(jdbc, transactions, signer, moneySwitch, walletBridge, nodeBridge, clock, null, false);
+    }
+
+    public ExternalGameMonetizationService(
+            JdbcTemplate jdbc,
+            PlatformTransactionManager transactions,
+            ExternalGameSigner signer,
+            MiscMoneySwitch moneySwitch,
+            ExternalGameWalletBridge walletBridge,
+            ExternalGameNodeBridge nodeBridge,
+            LongSupplier clock,
+            String resultSecret,
+            boolean testWalletEnabled) {
+        this.resultSecret = resultSecret == null || resultSecret.isBlank() ? null : resultSecret.trim();
+        this.testWalletEnabled = testWalletEnabled;
         this.jdbc = jdbc;
         this.tx = new TransactionTemplate(transactions);
         this.signer = signer;
@@ -89,6 +114,21 @@ public class ExternalGameMonetizationService {
 
     public boolean payoutOpen() {
         return moneySwitch != null && moneySwitch.payoutOpen();
+    }
+
+    /**
+     * HIGH-S2: the TEST wallet and confirm-test paths move TEST balance without a real payment. They are only open
+     * when the TEST-only flag {@code chengyin.external-game.test-wallet-enabled} is on, independent of the prod money
+     * switch, so switching real payments on in prod never opens them.
+     */
+    public boolean testWalletOpen() {
+        return testWalletEnabled && paymentsOpen();
+    }
+
+    private void requireTestWalletOpen() {
+        if (!testWalletOpen()) {
+            throw new AppGapException(403, "TEST_ONLY", "TEST 钱包与测试确认仅在 TEST 环境开放");
+        }
     }
 
     private void requirePaymentsOpen() {
@@ -293,6 +333,9 @@ public class ExternalGameMonetizationService {
         Map<String, Object> p = body == null ? Map.of() : body;
         String requestId = requireKey(str(p.get("requestId"), null), "requestId");
         String provider = normalizeEnum(str(p.get("provider"), "TEST_WALLET"), PROVIDERS, "provider");
+        if ("TEST_WALLET".equals(provider)) {
+            requireTestWalletOpen();
+        }
         String reqHash = sha256Hex(buyerId + "|" + gId + "|" + provider);
 
         return tx.execute(status -> {
@@ -337,7 +380,6 @@ public class ExternalGameMonetizationService {
             String state = testWallet ? "PAID" : "PENDING";
             String licenseStatus = testWallet ? "ACTIVE" : "PENDING";
             Timestamp paidAt = testWallet ? now : null;
-            Timestamp creditedAt = null;
 
             jdbc.update(
                     "INSERT INTO external_game_order("
@@ -350,13 +392,7 @@ public class ExternalGameMonetizationService {
                     split.platformShareFen(), provider, state, licenseStatus, paidAt, now, now);
 
             if (testWallet) {
-                grantEntitlement(gId, buyerId, orderNo, now);
-                if (split.creatorNetFen() > 0 && walletBridge != null) {
-                    walletBridge.creditBalanceFen(sellerId, split.creatorNetFen(),
-                            "extgame:order:" + orderNo, "外部游戏购买分成(TEST): " + gId);
-                    creditedAt = now;
-                    jdbc.update("UPDATE external_game_order SET creator_credited_at=? WHERE order_no=?", creditedAt, orderNo);
-                }
+                settleTestPayment(orderNo, gId, buyerId, sellerId, amountFen, split.creatorNetFen(), now);
             }
             Map<String, Object> stored = jdbc.queryForMap("SELECT * FROM external_game_order WHERE order_no=?", orderNo);
             return orderView(stored);
@@ -365,7 +401,7 @@ public class ExternalGameMonetizationService {
 
     public Map<String, Object> confirmOrderForTest(long buyerId, String orderNo) {
         requireActor(buyerId);
-        requirePaymentsOpen();
+        requireTestWalletOpen();
         if (orderNo == null || orderNo.isBlank()) throw AppGapException.badRequest("orderNo");
         return tx.execute(status -> {
             List<Map<String, Object>> rows = jdbc.queryForList(
@@ -387,14 +423,35 @@ public class ExternalGameMonetizationService {
             long netFen = num(row.get("creator_net_fen"));
             jdbc.update("UPDATE external_game_order SET state='PAID', license_status='ACTIVE', paid_at=?, update_time=? WHERE order_no=?",
                     now, now, orderNo.trim());
-            grantEntitlement(gId, buyerId, orderNo.trim(), now);
-            if (netFen > 0 && walletBridge != null && row.get("creator_credited_at") == null) {
-                walletBridge.creditBalanceFen(sellerId, netFen,
-                        "extgame:order:" + orderNo.trim(), "外部游戏购买分成(TEST): " + gId);
-                jdbc.update("UPDATE external_game_order SET creator_credited_at=? WHERE order_no=?", now, orderNo.trim());
+            if (row.get("creator_credited_at") == null) {
+                settleTestPayment(orderNo.trim(), gId, buyerId, sellerId, num(row.get("amount_fen")), netFen, now);
+            } else {
+                grantEntitlement(gId, buyerId, orderNo.trim(), now);
             }
             return orderView(jdbc.queryForMap("SELECT * FROM external_game_order WHERE order_no=?", orderNo.trim()));
         });
+    }
+
+    /**
+     * HIGH-S2: TEST payment = paired transfer. The buyer's TEST balance is debited by the full price (guarded in SQL:
+     * insufficient balance fails the whole transaction) before the seller is credited the net share, both under the
+     * same order key inside the caller's transaction. Called only while the order row is locked and not yet credited.
+     */
+    private void settleTestPayment(String orderNo, String gameId, long buyerId, long sellerId,
+                                   long amountFen, long creatorNetFen, Timestamp now) {
+        if (walletBridge == null) {
+            throw new AppGapException(503, "WALLET_UNAVAILABLE", "TEST 钱包未就绪");
+        }
+        String key = "extgame:order:" + orderNo;
+        if (amountFen > 0) {
+            walletBridge.debitBalanceFen(buyerId, amountFen, key, "外部游戏购买(TEST): " + gameId);
+        }
+        grantEntitlement(gameId, buyerId, orderNo, now);
+        if (creatorNetFen > 0) {
+            walletBridge.creditBalanceFen(sellerId, creatorNetFen, key, "外部游戏购买分成(TEST): " + gameId);
+        }
+        jdbc.update("UPDATE external_game_order SET creator_credited_at=? WHERE order_no=? AND creator_credited_at IS NULL",
+                now, orderNo);
     }
 
     public Map<String, Object> getOrder(long memberId, String orderNo) {
@@ -557,8 +614,8 @@ public class ExternalGameMonetizationService {
         Map<String, Object> p = body == null ? Map.of() : body;
         String gId = requireGameId(str(p.get("gameId"), null));
         Long nodeId = nullableLong(p.get("nodeId"));
-        Long topicId = nullableLong(p.get("topicId"));
-        Long activityId = nullableLong(p.get("activityId"));
+        Long clientTopicId = nullableLong(p.get("topicId"));
+        Long clientActivityId = nullableLong(p.get("activityId"));
 
         requireDownloadOrPlayAccess(memberId, gId);
 
@@ -570,6 +627,8 @@ public class ExternalGameMonetizationService {
             }
             long submissionId = num(subObj);
             long creatorId = num(game.get("owner_member_id"));
+            Long topicId = null;
+            Long activityId = null;
 
             if (nodeId != null) {
                 List<Map<String, Object>> bindings = jdbc.queryForList(
@@ -577,6 +636,14 @@ public class ExternalGameMonetizationService {
                 if (bindings.isEmpty() || !gId.equals(bindings.get(0).get("game_id"))) {
                     throw AppGapException.conflict("NODE_BINDING_MISMATCH", "该节点未绑定此外部游戏");
                 }
+                // CRIT-S2: the topic comes from the server-side binding, never from the client.
+                Long boundTopic = nullableLong(bindings.get(0).get("topic_id"));
+                if (clientTopicId != null && boundTopic != null && !clientTopicId.equals(boundTopic)) {
+                    throw AppGapException.conflict("NODE_BINDING_MISMATCH", "该节点不属于此主题");
+                }
+                topicId = boundTopic;
+                // activityId is kept only as a claim; the node bridge re-validates it (registration, window) on result.
+                activityId = clientActivityId != null && clientActivityId > 0 ? clientActivityId : null;
             }
 
             long issuedAtMs = clock.getAsLong();
@@ -611,27 +678,40 @@ public class ExternalGameMonetizationService {
         });
     }
 
+    /**
+     * Result callback for a play session.
+     *
+     * <p>CRIT-S1: the client holds the session nonce, so a nonce-keyed HMAC proves nothing. The nonce now only binds
+     * the result to its session. A result counts as <b>attested</b> only when it is signed by a server-side game
+     * authority: HMAC-SHA256 with the per-game result key ({@link #gameResultKey}, derived from the server-held
+     * {@code chengyin.external-game.result-secret}, never sent to the app), or the platform Ed25519 key. Unattested
+     * results are recorded but cannot complete a node or earn traffic rewards; they get only the capped standalone XP.
+     * Duration is measured on the server ({@code completed_at - started_at}) and sessions expire after
+     * {@link #SESSION_TTL_MS}.
+     */
     public Map<String, Object> submitResult(long memberId, String sessionId, Map<String, Object> body) {
         requireActor(memberId);
         if (sessionId == null || sessionId.isBlank()) throw AppGapException.badRequest("sessionId");
         Map<String, Object> p = body == null ? Map.of() : body;
         String nonce = trimOrNull(str(p.get("nonce"), null));
         String resultSig = trimOrNull(str(p.get("resultSignature"), null));
-        if (nonce == null || resultSig == null) {
-            throw new AppGapException(400, "SIGNATURE_REQUIRED", "结果回执必须携带签名与随机串");
+        if (nonce == null) {
+            throw new AppGapException(400, "SIGNATURE_REQUIRED", "结果回执必须携带会话随机串");
         }
         boolean passed = boolVal(p.get("passed"), false);
         Integer score = p.get("score") == null ? null : intVal(p.get("score"), 0);
-        long durationMs = Math.max(0L, longVal(p.get("durationMs"), 0L));
+        long reportedDurationMs = Math.max(0L, longVal(p.get("durationMs"), 0L));
         String resultDigest = trimOrNull(str(p.get("resultDigest"), null));
         if (resultDigest == null) {
-            resultDigest = sha256Hex((passed ? "1" : "0") + ":" + Objects.toString(score, "") + ":" + durationMs);
+            resultDigest = sha256Hex((passed ? "1" : "0") + ":" + Objects.toString(score, "") + ":" + reportedDurationMs);
         }
         final String finalDigest = resultDigest;
+        final String sid = sessionId.trim();
+        expireIfStale(sid);
 
         return tx.execute(status -> {
             List<Map<String, Object>> rows = jdbc.queryForList(
-                    "SELECT * FROM external_game_play_session WHERE session_id=? FOR UPDATE", sessionId.trim());
+                    "SELECT * FROM external_game_play_session WHERE session_id=? FOR UPDATE", sid);
             if (rows.isEmpty()) throw AppGapException.notFound("SESSION_NOT_FOUND");
             Map<String, Object> sess = rows.get(0);
             if (num(sess.get("member_id")) != memberId) {
@@ -643,12 +723,13 @@ public class ExternalGameMonetizationService {
                 throw new AppGapException(403, "INVALID_NONCE", "会话随机串不匹配");
             }
 
-            String canonical = canonicalResultPayload(sessionId.trim(), gameId, nonce, passed, score, durationMs, finalDigest);
-            String expectedHmac = hmacSha256Hex(nonce, canonical);
-            boolean sigValid = constantTimeEquals(expectedHmac, resultSig)
-                    || (signer.configured() && signer.verifyHex(canonical.getBytes(StandardCharsets.UTF_8), resultSig));
-            if (!sigValid) {
-                throw new AppGapException(403, "INVALID_SIGNATURE", "结果签名校验失败");
+            String canonical = canonicalResultPayload(sid, gameId, nonce, passed, score, reportedDurationMs, finalDigest);
+            boolean attested = false;
+            if (resultSig != null) {
+                attested = verifyAuthoritySignature(gameId, canonical, resultSig);
+                if (!attested) {
+                    throw new AppGapException(403, "INVALID_SIGNATURE", "结果签名校验失败");
+                }
             }
 
             String currentStatus = String.valueOf(sess.get("status"));
@@ -663,6 +744,9 @@ public class ExternalGameMonetizationService {
             if (!"STARTED".equals(currentStatus)) {
                 throw AppGapException.conflict("SESSION_EXPIRED", "游戏会话已失效");
             }
+
+            long nowMs = clock.getAsLong();
+            long durationMs = Math.max(0L, nowMs - toEpochMs(sess.get("started_at")));
 
             // Evaluate node pass gate if bound
             Long nodeId = nullableLong(sess.get("node_id"));
@@ -681,12 +765,17 @@ public class ExternalGameMonetizationService {
                 }
             }
 
+            Date playDate = toSqlDate(sess.get("play_date"));
+            boolean standaloneXpAllowed = nodeId == null && effectivePass
+                    && standaloneXpAllowed(memberId, gameId, playDate);
+
             int xpAwarded = 0;
             Integer medalRank = null;
             boolean nodeCompleted = false;
             if (nodeBridge != null) {
                 ExternalGameNodeBridge.NodePlayOutcome outcome = nodeBridge.onGameResult(
-                        memberId, gameId, sessionId.trim(), nodeId, topicId, activityId, score, effectivePass);
+                        new ExternalGameNodeBridge.GameResult(memberId, gameId, sid, nodeId, topicId, activityId,
+                                score, effectivePass, attested, standaloneXpAllowed));
                 if (outcome != null) {
                     xpAwarded = outcome.xpAwarded();
                     medalRank = outcome.medalRank();
@@ -696,26 +785,80 @@ public class ExternalGameMonetizationService {
 
             // Anti-fraud evaluation for traffic reward eligibility
             long creatorId = num(sess.get("creator_member_id"));
-            Date playDate = toSqlDate(sess.get("play_date"));
-            TrafficEligibility eligibility = evaluateTrafficEligibility(gameId, creatorId, memberId, playDate, effectivePass, durationMs);
-            Timestamp now = new Timestamp(clock.getAsLong());
+            TrafficEligibility eligibility = attested
+                    ? evaluateTrafficEligibility(gameId, creatorId, memberId, playDate, effectivePass, durationMs)
+                    : new TrafficEligibility(false, "UNATTESTED");
+            Timestamp now = new Timestamp(nowMs);
+            String storedSig = resultSig == null ? null : (resultSig.length() <= 64 ? resultSig : sha256Hex(resultSig));
 
             int updated = jdbc.update(
                     "UPDATE external_game_play_session SET status='COMPLETED', passed=?, score=?, duration_ms=?,"
                             + "result_digest=?, result_signature=?, xp_awarded=?, medal_rank=?, node_completed=?,"
                             + "traffic_eligible=?, fraud_reason=?, completed_at=? "
                             + "WHERE session_id=? AND status='STARTED'",
-                    effectivePass ? 1 : 0, score, durationMs, finalDigest, resultSig,
+                    effectivePass ? 1 : 0, score, durationMs, finalDigest, storedSig,
                     xpAwarded, medalRank, nodeCompleted ? 1 : 0,
-                    eligibility.eligible() ? 1 : 0, eligibility.fraudReason(), now, sessionId.trim());
+                    eligibility.eligible() ? 1 : 0, eligibility.fraudReason(), now, sid);
             if (updated != 1) {
                 throw AppGapException.conflict("SESSION_ALREADY_COMPLETED", "并发结果上报冲突");
             }
             Map<String, Object> out = sessionResultView(jdbc.queryForMap(
-                    "SELECT * FROM external_game_play_session WHERE session_id=?", sessionId.trim()));
+                    "SELECT * FROM external_game_play_session WHERE session_id=?", sid));
+            out.put("attested", attested);
             out.put("replayed", false);
             return out;
         });
+    }
+
+    /**
+     * Per-game result key a server-side game authority uses to attest results. Derived from the server-held secret;
+     * provisioned to the game's own server out of band and never returned to the app.
+     */
+    public static String gameResultKey(String serverSecret, String gameId) {
+        return hmacSha256Hex(serverSecret, "EXTGAME_RESULT_KEY|" + gameId);
+    }
+
+    boolean verifyAuthoritySignature(String gameId, String canonical, String signature) {
+        if (resultSecret != null
+                && constantTimeEquals(hmacSha256Hex(gameResultKey(resultSecret, gameId), canonical), signature)) {
+            return true;
+        }
+        return signer != null && signer.configured()
+                && signer.verifyHex(canonical.getBytes(StandardCharsets.UTF_8), signature);
+    }
+
+    /** CRIT-S1: sessions past the TTL become EXPIRED (own transaction, so the state sticks even though we reject). */
+    private void expireIfStale(String sessionId) {
+        Timestamp cutoff = new Timestamp(clock.getAsLong() - SESSION_TTL_MS);
+        jdbc.update("UPDATE external_game_play_session SET status='EXPIRED' WHERE session_id=? AND status='STARTED' AND started_at < ?",
+                sessionId, cutoff);
+    }
+
+    /**
+     * HIGH-S1: standalone pass XP is idempotent per session (the session row is locked and completes once), granted
+     * only for the member's first XP-earning pass of this game today, and never beyond the daily cap.
+     */
+    private boolean standaloneXpAllowed(long memberId, String gameId, Date playDate) {
+        // Serialise the member's same-day completions so two concurrent sessions cannot both see "first pass".
+        jdbc.queryForList("SELECT session_id FROM external_game_play_session WHERE member_id=? AND play_date=? FOR UPDATE",
+                memberId, playDate);
+        Integer sameGame = jdbc.queryForObject(
+                "SELECT COUNT(*) FROM external_game_play_session WHERE member_id=? AND game_id=? AND play_date=? "
+                        + "AND node_id IS NULL AND status='COMPLETED' AND xp_awarded>0",
+                Integer.class, memberId, gameId, playDate);
+        if (sameGame != null && sameGame > 0) return false;
+        Long today = jdbc.queryForObject(
+                "SELECT COALESCE(SUM(xp_awarded),0) FROM external_game_play_session WHERE member_id=? AND play_date=? "
+                        + "AND node_id IS NULL AND status='COMPLETED'",
+                Long.class, memberId, playDate);
+        return today == null || today < STANDALONE_DAILY_XP_CAP;
+    }
+
+    private static long toEpochMs(Object o) {
+        if (o instanceof Timestamp t) return t.getTime();
+        if (o instanceof java.util.Date d) return d.getTime();
+        if (o instanceof java.time.LocalDateTime ldt) return Timestamp.valueOf(ldt).getTime();
+        return Timestamp.valueOf(String.valueOf(o)).getTime();
     }
 
     private record TrafficEligibility(boolean eligible, String fraudReason) {}
@@ -736,7 +879,7 @@ public class ExternalGameMonetizationService {
             return new TrafficEligibility(false, "SELF_PLAY");
         }
         int minDur = (int) num(cfg.get("min_duration_ms"));
-        if (!passed && durationMs < minDur) {
+        if (durationMs < minDur) {
             return new TrafficEligibility(false, "DURATION_TOO_SHORT");
         }
         int userCap = (int) num(cfg.get("daily_user_cap"));

@@ -162,6 +162,44 @@ class PushFanoutServiceTest
     }
 
     @Test
+    void inGameChannelPushesOnlyToMembersWithLiveAccess()
+    {
+        Map<String, Object> msg = message(100L, 0, "city_team_t1");
+        msg.put("conversationStatus", 0);
+        when(mapper.selectChatMessage(100L)).thenReturn(msg);
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        when(mapper.selectChatAudience(9L, 1L, false)).thenReturn(List.of(member(2L), member(3L)));
+        com.chengyinhub.business.service.impl.InGameChannelService inGame =
+                mock(com.chengyinhub.business.service.impl.InGameChannelService.class);
+        // member 3 still has a conversation row but left the CITY team
+        when(inGame.hasActiveAccess(any(), org.mockito.ArgumentMatchers.eq(2L))).thenReturn(true);
+        when(inGame.hasActiveAccess(any(), org.mockito.ArgumentMatchers.eq(3L))).thenReturn(false);
+        service.setInGameChannels(inGame);
+        when(mapper.selectEnabledDevices(any(), any())).thenAnswer(inv ->
+        {
+            java.util.Collection<Long> ids = inv.getArgument(0);
+            assertEquals(List.of(2L), new ArrayList<>(ids));
+            return List.of(device(2L, 'b'));
+        });
+
+        assertEquals(1, service.fanOutChat(100L));
+        assertEquals(List.of("/3/device/" + "b".repeat(64)), paths);
+    }
+
+    @Test
+    void inGameChannelIsNotPushedWhenAccessCannotBeChecked()
+    {
+        Map<String, Object> msg = message(100L, 0, "topic_7");
+        msg.put("conversationStatus", 0);
+        when(mapper.selectChatMessage(100L)).thenReturn(msg);
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        when(mapper.selectChatAudience(9L, 1L, false)).thenReturn(List.of(member(2L)));
+
+        assertEquals(0, service.fanOutChat(100L));
+        assertTrue(paths.isEmpty());
+    }
+
+    @Test
     void unreviewedOrRecalledMessagesAreNotPushed()
     {
         Map<String, Object> pending = message(100L, 1, null);

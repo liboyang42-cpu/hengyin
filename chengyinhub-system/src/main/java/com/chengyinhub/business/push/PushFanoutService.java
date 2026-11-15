@@ -53,6 +53,19 @@ public class PushFanoutService implements IPushFanoutService
     @Autowired(required = false)
     private RedisCache redisCache;
 
+    /**
+     * In-game channels (activity/topic/roam/CITY team): the same live access check the IM read/send paths use
+     * (security r3 HIGH-S3). A conversation row alone is not enough, e.g. after leaving a CITY team.
+     */
+    @Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.impl.InGameChannelService inGameChannels;
+
+    void setInGameChannels(com.chengyinhub.business.service.impl.InGameChannelService inGameChannels)
+    {
+        this.inGameChannels = inGameChannels;
+    }
+
     @Autowired
     public PushFanoutService(PushMapper mapper, ApnsSender sender)
     {
@@ -93,6 +106,15 @@ public class PushFanoutService implements IPushFanoutService
         if (type == 2 || type == 3) return 0; // 系统/商家会话不走聊天推送
         boolean single = type == 1;
         boolean channel = type == IChannelConversationGate.CONVERSATION_TYPE_CHANNEL;
+        String bizKey = (String) msg.get("bizKey");
+        com.chengyinhub.business.domain.ImConversation inGame = null;
+        if (!single && com.chengyinhub.business.service.impl.InGameChannelService.isInGameBizKey(bizKey))
+        {
+            inGame = new com.chengyinhub.business.domain.ImConversation();
+            inGame.setId(conversationId);
+            inGame.setBizKey(bizKey);
+            inGame.setStatus(PushPolicy.integer(msg.get("conversationStatus")));
+        }
         Integer clubDefault = null;
         Long clubId = channel ? mapper.selectChannelClubId(conversationId) : clubIdOf((String) msg.get("bizKey"));
         if (clubId != null)
@@ -124,6 +146,7 @@ public class PushFanoutService implements IPushFanoutService
             boolean me = mentioned.contains(member);
             if (!PushPolicy.chatAllowed(row, me, everyone, clubDefault)) continue;
             if (channel && !canRead(member, conversationId)) continue;
+            if (inGame != null && !inGameAccess(inGame, member)) continue;
             allowed.put(member, row);
             mentionOf.put(member, me || (everyone && !PushPolicy.flag(row.get("suppressBroadcast"))));
         }
@@ -159,6 +182,13 @@ public class PushFanoutService implements IPushFanoutService
     {
         if (channelGate == null) return false; // 频道可见性无法确认时不推内容
         try { channelGate.requireRead(member, conversationId); return true; }
+        catch (RuntimeException denied) { return false; }
+    }
+
+    private boolean inGameAccess(com.chengyinhub.business.domain.ImConversation conversation, long member)
+    {
+        if (inGameChannels == null) return false; // 游戏频道资格无法确认时不推内容
+        try { return inGameChannels.hasActiveAccess(conversation, member); }
         catch (RuntimeException denied) { return false; }
     }
 

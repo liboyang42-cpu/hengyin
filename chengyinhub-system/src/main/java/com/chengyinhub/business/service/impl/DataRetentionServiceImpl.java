@@ -55,6 +55,8 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
     /** P8 location trust trail; optional so the cleanup still runs before that migration is applied. */
     @Autowired(required = false)
     private com.chengyinhub.business.mapper.LocationTrustMapper locationTrustMapper;
+    @Autowired
+    private com.chengyinhub.business.citygame.CityLocationRetentionService cityLocationRetentionService;
 
     @Override
     public int cleanRoamLocations(Date cutoff, int batchSize, int maxBatches) {
@@ -78,6 +80,12 @@ public class DataRetentionServiceImpl implements IDataRetentionService {
             total += loopDelete("roam_member_fog_cell", cutoff, batchSize, maxBatches,
                     (c,l) -> roamFogCellService.purgeWhenDisabled(c,l));
         total += cleanLocationTrust(cutoff, batchSize, maxBatches);
+        total += loopDelete("roam_territory_checkin_coordinates", cutoff, batchSize, maxBatches,
+                (c, l) -> cityLocationRetentionService.coarsenTerritoryCheckins(c, l));
+        total += loopDelete("roam_territory_audit_coordinates", cutoff, batchSize, maxBatches,
+                (c, l) -> cityLocationRetentionService.clearTerritoryAudits(c, l));
+        total += loopDelete("city_claim_evidence_coordinates", cutoff, batchSize, maxBatches,
+                (c, l) -> cityLocationRetentionService.clearClaimEvidence(c, l));
         return total + loopDelete("roam_share_snapshot_unbound", cutoff, batchSize, maxBatches,
                 (c, l) -> roamShareSnapshotMapper.deleteExpiredUnbound(c, l));
     }

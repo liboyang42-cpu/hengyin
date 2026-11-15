@@ -1048,13 +1048,18 @@
     "20261115_shop_games": ["20261115_points_governance", "20261012_missing_business_menu", "play_progress_points", "roam"],
     "20261115_collection_model": ["20261110_ecommerce_payout", "20261115_money_switch"],
     "20261115_external_game_monetization": ["20261116_external_game_review"],
-    "20261115_external_game_monetization_menus": ["20261012_missing_business_menu", "web_admin_nine_domains_20260719"],
+    "20261115_external_game_monetization_menus": ["20261115_external_game_monetization", "20261012_missing_business_menu", "web_admin_nine_domains_20260719"],
     "20261114_weather_event_rule": [],
     "20261115_stagger_club_growth_jobs": ["20261115_stagger_all_sys_jobs", "20261115_club_reach", "20261115_growth_loops"],
     "20261115_game_loop": [],
     "20261116_channels_messaging": ["im", "20261112_im_channels_platform"],
     "20261115_game_mechanics": ["20260823_topic_route_graph", "play_progress_points", "20261115_location_trust"],
     "20261114_missing_topic_pricing_rule": ["20261103_settlement_rule_three_percent"],
-    "20261114_roam_poi_tags_json": ["20261025_official_poi_quotes"]
+    "20261114_roam_poi_tags_json": ["20261025_official_poi_quotes"],
+    "20261115_sys_ainpc": ["npc_profile", "20261119_merchant_gap", "20261012_missing_business_menu"],
+    "20261123_sys_random": ["20261012_missing_business_menu"],
+    "20261125_admin_r3_perms": ["20261123_sys_random"],
+    "20261124_city_numbers_attr": ["20261123_sys_citygame"],
+    "20261126_reward_drop_perm_union": ["20261115_admin_consoles", "20261123_sys_random", "20261125_admin_r3_perms"]
   }
 }

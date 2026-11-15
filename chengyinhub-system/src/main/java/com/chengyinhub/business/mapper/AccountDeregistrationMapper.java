@@ -45,6 +45,40 @@ public interface AccountDeregistrationMapper {
 
     int deleteMemberAddresses(@Param("memberId") Long memberId);
 
+    // ---- r3 个人数据(HIGH-S6):位置/证据/设备/属性/频道成员整行删;须留存的台账保留 member_id,只清 GPS/照片/设备/IP ----
+
+    int deleteTerritoryCheckins(@Param("memberId") Long memberId);
+
+    /** 本人领地转 REVOKED,清认领照片(claim_photo_url NOT NULL → 置空串) */
+    int revokeTerritories(@Param("memberId") Long memberId);
+
+    int scrubTerritoryAudits(@Param("memberId") Long memberId);
+
+    int deleteClaimEvidence(@Param("memberId") Long memberId);
+
+    int deleteDeviceAccounts(@Param("memberId") Long memberId);
+
+    int deleteMemberAttributes(@Param("memberId") Long memberId);
+
+    int deleteMemberTitles(@Param("memberId") Long memberId);
+
+    int deleteMemberArchetype(@Param("memberId") Long memberId);
+
+    /** 只删游戏内频道(群会话 type=4)成员行;单聊/系统会话不动 */
+    int deleteInGameChannelMemberships(@Param("memberId") Long memberId);
+
+    int deleteNodeTaskDispatch(@Param("memberId") Long memberId);
+
+    int scrubMonopolyQuotes(@Param("memberId") Long memberId);
+
+    int scrubMonopolyReceipts(@Param("memberId") Long memberId);
+
+    int scrubYieldEventDevices(@Param("memberId") Long memberId);
+
+    int scrubAbuseSignals(@Param("memberId") Long memberId);
+
+    int scrubExternalGamePlaySessions(@Param("memberId") Long memberId);
+
     /** 执行期阻断 → 置注销单失败(仅 PENDING 时) */
     int markFailed(@Param("id") Long id, @Param("reason") String reason, @Param("time") Date time);
 

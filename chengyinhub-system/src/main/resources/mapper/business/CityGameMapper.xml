@@ -308,6 +308,15 @@
                before_units AS beforeUnits, after_units AS afterUnits, board_version AS boardVersion, create_time AS createTime
         FROM city_game_roll WHERE board_id = #{boardId} AND team_id = #{teamId} ORDER BY id DESC LIMIT #{limit}
     </select>
+    <!-- City Monopoly only (CityMonopolyService.applyCredit); the classic territory yield does not use these. -->
+    <update id="creditMemberPoints">
+        UPDATE ums_member SET point = IFNULL(point, 0) + #{points} WHERE id = #{memberId} AND del_flag = 0
+    </update>
+    <insert id="insertPointsEarnDetail">
+        INSERT INTO ums_member_points_detail(member_id, current_points, after_points, change_points, change_reason, event_type,
+                                             reward_business_key, change_type, del_flag, create_by, create_time)
+        VALUES (#{memberId}, #{before}, #{before} + #{points}, #{points}, #{reason}, 99, #{businessKey}, 1, 0, 'roam-territory', NOW())
+    </insert>
     <select id="selectRoundRolls" resultType="java.util.LinkedHashMap">
         SELECT id, purpose, request_id AS requestId, face, face_index AS faceIndex, result_json AS resultJson,
                source_path AS sourcePath, random_ticket AS randomTicket, total_weight AS totalWeight,

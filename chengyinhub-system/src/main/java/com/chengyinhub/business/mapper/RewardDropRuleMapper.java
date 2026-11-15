@@ -24,4 +24,15 @@ public interface RewardDropRuleMapper {
     int updateRule(RewardDropRule rule);
 
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    // sys-random 后台（/business/reward-drop）：规则 CRUD。
+    List<RewardDropRule> selectRewardDropRuleList(RewardDropRule filter);
+
+    RewardDropRule selectRewardDropRuleById(@Param("id") Long id);
+
+    int insertRewardDropRule(RewardDropRule rule);
+
+    int updateRewardDropRule(RewardDropRule rule);
+
+    int deleteRewardDropRuleById(@Param("id") Long id);
 }

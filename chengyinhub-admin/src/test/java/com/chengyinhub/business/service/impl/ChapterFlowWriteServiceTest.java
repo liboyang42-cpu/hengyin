@@ -432,6 +432,7 @@ class ChapterFlowWriteServiceTest
                 com.chengyinhub.common.exception.ServiceException.class,
                 () -> com.chengyinhub.business.service.support.TopicGraphTestWiring.wire(service).updateTopicByOwnerV2(dto, MEMBER_ID, "tester"));
 
+        assertEquals(com.chengyinhub.common.constant.HttpStatus.CONFLICT, error.getCode());
         assertTrue(error.getMessage().contains("审核中"));
         org.junit.jupiter.api.Assertions.assertEquals(Integer.valueOf(409), error.getCode());
         verify(bundleReviewService, never()).freezeForSubmission(any(), any());

@@ -25,6 +25,7 @@ public class ApiInGameChannelController extends BaseController
     private InGameChannelService inGameChannelService;
 
     @Operation(summary = "解析或加入游戏内频道")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @PostMapping("/resolve")
     public AjaxResult resolve(
             @RequestParam(required = false) String scope,
@@ -52,6 +53,7 @@ public class ApiInGameChannelController extends BaseController
     }
 
     @Operation(summary = "获取游戏内频道未读摘要")
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 60, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @GetMapping("/summary")
     public AjaxResult summary(
             @RequestParam(required = false) String scope,

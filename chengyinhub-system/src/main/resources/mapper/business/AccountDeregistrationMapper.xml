@@ -115,6 +115,77 @@
         delete from ums_member_address where member_id = #{memberId}
     </delete>
 
+    <!-- ===== r3 个人数据表(HIGH-S6) =====
+         整行删:定位打卡/认领证据/设备映射/属性/称号/画像/游戏内频道成员/盲盒下发。
+         保留但去标识化(同 oms_order 等:留 member_id,只清个人字段):roam_territory(转 REVOKED、清照片)、
+         roam_territory_audit(清坐标/精度/detail_json)、city_monopoly_quote/receipt(清 payload/response)、
+         city_yield_event(清访客 device_key)、city_abuse_signal(清 detail_json)、external_game_play_session(清 client_ip_hash)。
+         原样保留(只有 member_id 与积分/统计数字,不改余额):member_attribute_ledger、city_points_flow、city_member_season、
+         city_challenge、city_season_score、external_game_order、external_game_entitlement、game_random_audit。 -->
+    <delete id="deleteTerritoryCheckins">
+        delete from roam_territory_checkin where member_id = #{memberId}
+    </delete>
+
+    <update id="revokeTerritories">
+        update roam_territory set status = 'REVOKED', claim_photo_url = '', version = version + 1
+        where owner_member_id = #{memberId}
+    </update>
+
+    <update id="scrubTerritoryAudits">
+        update roam_territory_audit set latitude = null, longitude = null, accuracy_m = null, detail_json = null
+        where member_id = #{memberId}
+    </update>
+
+    <delete id="deleteClaimEvidence">
+        delete from city_claim_evidence where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteDeviceAccounts">
+        delete from city_device_account where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteMemberAttributes">
+        delete from member_attribute where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteMemberTitles">
+        delete from member_title where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteMemberArchetype">
+        delete from member_archetype where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteInGameChannelMemberships">
+        delete from im_conversation_member
+        where member_id = #{memberId} and conversation_id in (select id from im_conversation where type = 4)
+    </delete>
+
+    <delete id="deleteNodeTaskDispatch">
+        delete from node_task_dispatch where member_id = #{memberId}
+    </delete>
+
+    <update id="scrubMonopolyQuotes">
+        update city_monopoly_quote set payload_json = null where member_id = #{memberId}
+    </update>
+
+    <!-- response_json NOT NULL:置空对象,保留 member_id/request_id/action/body_hash 做幂等审计 -->
+    <update id="scrubMonopolyReceipts">
+        update city_monopoly_receipt set response_json = '{}' where member_id = #{memberId}
+    </update>
+
+    <update id="scrubYieldEventDevices">
+        update city_yield_event set device_key = null where visitor_member_id = #{memberId}
+    </update>
+
+    <update id="scrubAbuseSignals">
+        update city_abuse_signal set detail_json = null where member_id = #{memberId}
+    </update>
+
+    <update id="scrubExternalGamePlaySessions">
+        update external_game_play_session set client_ip_hash = null where member_id = #{memberId}
+    </update>
+
     <update id="markFailed">
         update account_deregistration
         set status = 'FAILED', failure_reason = #{reason}, update_time = #{time}

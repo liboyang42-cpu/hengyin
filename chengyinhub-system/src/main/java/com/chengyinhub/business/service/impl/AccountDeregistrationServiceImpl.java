@@ -22,7 +22,10 @@ import com.chengyinhub.business.service.ICashWithdrawService;
 import com.chengyinhub.business.service.IAppSessionRegistryService;
 import com.chengyinhub.business.service.IImService;
 import com.chengyinhub.business.service.IUmsMemberWithdrawalService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +40,7 @@ import java.util.List;
 
 @Service
 public class AccountDeregistrationServiceImpl implements IAccountDeregistrationService {
+    private static final Logger log = LoggerFactory.getLogger(AccountDeregistrationServiceImpl.class);
     private static final int COOLING_OFF_DAYS = 7;
     /** 注销转 FAILED 时给会员的站内系统消息;不承诺账号状态,解冻失败的行同样适用。 */
     private static final String FAILED_NOTICE = "你的账号注销申请未能完成，本次注销已终止。如仍需注销，可在设置中重新申请；如账号使用异常，请联系客服。";
@@ -375,12 +379,43 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
             // R13:路线图新增的位置/设备个人信息(保留迷雾格、漫游轨迹、定位可信留痕、安装号关联、推送设备)
             if (memberPrivacyErasureService != null) memberPrivacyErasureService.erase(memberId, now);
             roamHangoutService.closeAllByMember(memberId);   // 附近的局:局主没了,局转关、群转关
+            eraseR3PersonalData(memberId);                   // ★HIGH-S6:领地/城市大富翁/属性/频道/外部游戏/随机
             appSessionRegistryService.revokeAll(memberId);
             appSessionRegistryService.finishMemberMutationAfterTransaction(memberId, mutationId);
             return completeDeregistration(deregistration.getId(), now);
         } catch (RuntimeException e) {
             finishFailedMutation(memberId, mutationId, e);
             throw e;
+        }
+    }
+
+    /**
+     * HIGH-S6:r3 个人数据表。位置/证据/设备/属性/频道成员整行删;须留存的台账保留 member_id,只清 GPS/照片/设备/IP。
+     * 积分台账(city_points_flow 等)不删不改。老库可能尚未建这些表/列:单表 BadSqlGrammarException 只记日志,不中止整个注销。
+     */
+    private void eraseR3PersonalData(Long memberId) {
+        eraseOptional("roam_territory_checkin", () -> deregistrationMapper.deleteTerritoryCheckins(memberId));
+        eraseOptional("roam_territory", () -> deregistrationMapper.revokeTerritories(memberId));
+        eraseOptional("roam_territory_audit", () -> deregistrationMapper.scrubTerritoryAudits(memberId));
+        eraseOptional("city_claim_evidence", () -> deregistrationMapper.deleteClaimEvidence(memberId));
+        eraseOptional("city_device_account", () -> deregistrationMapper.deleteDeviceAccounts(memberId));
+        eraseOptional("member_attribute", () -> deregistrationMapper.deleteMemberAttributes(memberId));
+        eraseOptional("member_title", () -> deregistrationMapper.deleteMemberTitles(memberId));
+        eraseOptional("member_archetype", () -> deregistrationMapper.deleteMemberArchetype(memberId));
+        eraseOptional("im_conversation_member", () -> deregistrationMapper.deleteInGameChannelMemberships(memberId));
+        eraseOptional("node_task_dispatch", () -> deregistrationMapper.deleteNodeTaskDispatch(memberId));
+        eraseOptional("city_monopoly_quote", () -> deregistrationMapper.scrubMonopolyQuotes(memberId));
+        eraseOptional("city_monopoly_receipt", () -> deregistrationMapper.scrubMonopolyReceipts(memberId));
+        eraseOptional("city_yield_event", () -> deregistrationMapper.scrubYieldEventDevices(memberId));
+        eraseOptional("city_abuse_signal", () -> deregistrationMapper.scrubAbuseSignals(memberId));
+        eraseOptional("external_game_play_session", () -> deregistrationMapper.scrubExternalGamePlaySessions(memberId));
+    }
+
+    private void eraseOptional(String table, Runnable erase) {
+        try {
+            erase.run();
+        } catch (BadSqlGrammarException e) {
+            log.warn("注销跳过 r3 表 {}(未建表或缺列): {}", table, e.getClass().getSimpleName());
         }
     }
 

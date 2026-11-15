@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chengyinhub.business.domain.dto.ai.NpcChatReq;
+import com.chengyinhub.business.domain.dto.ai.NpcDialogueReq;
+import com.chengyinhub.business.service.INpcDialogueService;
 import com.chengyinhub.business.domain.vo.ai.NpcLineVO;
 import com.chengyinhub.business.domain.vo.ai.NpcProfileVO;
 import com.chengyinhub.business.service.impl.NpcChatDataService;
@@ -63,6 +65,9 @@ public class ApiAiNpcController extends BaseController
 
     @Autowired
     private NpcChatService npcChatService;
+
+    @Autowired
+    private INpcDialogueService npcDialogueService;
 
     @Autowired
     private NpcChatDataService npcChatDataService;
@@ -492,6 +497,14 @@ public class ApiAiNpcController extends BaseController
      * 把 principal 强转 LoginUser,而 app 侧是 LoginAppUser,异常被 handleLog 吞掉,
      * sys_oper_log 零产出),挂了只会制造「已有审计」的假象;修切面属全仓治理任务。
      */
+    @Operation(summary = "主题AI NPC对话与状态效果")
+    @RateLimiter(time = 60, count = 30, limitType = LimitType.MEMBER)
+    @PostMapping("/dialogue")
+    public AjaxResult dialogue(@RequestBody NpcDialogueReq req)
+    {
+        return success(npcDialogueService.dialogue(getAppUserId(), req));
+    }
+
     @Operation(summary = "导出我的NPC聊天记录")
     @GetMapping("/chat/data/export")
     public AjaxResult exportChatData()

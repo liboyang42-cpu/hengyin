@@ -40,6 +40,7 @@ class ExternalGameMonetizationMysqlIntegrationTest {
     private static final MysqlIntegrationTestConfig MYSQL = MysqlIntegrationTestConfig.fromEnvironment("external_game_money_it");
     private static final long CREATOR = 7, PLAYER1 = 9, PLAYER2 = 10, ADMIN = 1;
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String RESULT_SECRET = "it-result-secret";
 
     private DataSource dataSource;
     private JdbcTemplate jdbc;
@@ -84,6 +85,9 @@ class ExternalGameMonetizationMysqlIntegrationTest {
             @Override public void creditBalanceFen(long memberId, long fen, String businessKey, String reason) {
                 testBalances.merge(memberId, fen, Long::sum);
             }
+            @Override public void debitBalanceFen(long memberId, long fen, String businessKey, String reason) {
+                testBalances.merge(memberId, -fen, Long::sum);
+            }
         };
 
         AtomicBoolean paySwitch = new AtomicBoolean(false);
@@ -93,7 +97,7 @@ class ExternalGameMonetizationMysqlIntegrationTest {
         };
 
         ExternalGameMonetizationService svc = new ExternalGameMonetizationService(
-                jdbc, txManager, signer, toggleSwitch, wallet, null, clock::get);
+                jdbc, txManager, signer, toggleSwitch, wallet, null, clock::get, RESULT_SECRET, true);
 
         // Creator sets paid price after game is approved -> PENDING review
         Map<String, Object> saved = svc.saveCreatorConfig(CREATOR, "city.paid", Map.of(
@@ -131,6 +135,7 @@ class ExternalGameMonetizationMysqlIntegrationTest {
         assertEquals("ACTIVE", order.get("licenseStatus"));
         assertEquals(1500L, ((Number) order.get("creatorNetFen")).longValue());
         assertEquals(1500L, testBalances.get(CREATOR));
+        assertEquals(-2000L, testBalances.get(PLAYER1)); // HIGH-S2: paired buyer debit
 
         Map<String, Object> replay = svc.purchaseGame(PLAYER1, "city.paid", Map.of(
                 "requestId", "ord-00000001", "provider", "TEST_WALLET"));
@@ -159,9 +164,8 @@ class ExternalGameMonetizationMysqlIntegrationTest {
                 return new NodeOwnerView(nodeId, 88L);
             }
 
-            @Override public NodePlayOutcome onGameResult(long memberId, String gameId, String sessionId,
-                                                         Long nodeId, Long topicId, Long activityId, Integer score, boolean passed) {
-                if (nodeId != null && passed) {
+            @Override public NodePlayOutcome onGameResult(GameResult r) {
+                if (r.nodeId() != null && r.passed() && r.attested()) {
                     completedNodes.incrementAndGet();
                     return new NodePlayOutcome(35, 1, true);
                 }
@@ -170,7 +174,7 @@ class ExternalGameMonetizationMysqlIntegrationTest {
         };
 
         ExternalGameMonetizationService svc = new ExternalGameMonetizationService(
-                jdbc, txManager, signer, new MiscMoneySwitch(false, false), null, nodeBridge, clock::get);
+                jdbc, txManager, signer, new MiscMoneySwitch(false, false), null, nodeBridge, clock::get, RESULT_SECRET, false);
 
         // Non-owner cannot bind node
         assertEquals(403, assertThrows(AppGapException.class, () -> svc.bindNode(PLAYER1, 501L, Map.of(
@@ -199,7 +203,7 @@ class ExternalGameMonetizationMysqlIntegrationTest {
         // Valid signed result below minScore (50 < 60) -> does NOT complete node
         String canonicalFail = ExternalGameMonetizationService.canonicalResultPayload(
                 sessionId, "city.node", nonce, true, 50, 12000L, "dig-low");
-        String macFail = ExternalGameMonetizationService.hmacSha256Hex(nonce, canonicalFail);
+        String macFail = authorityMac("city.node", canonicalFail);
         Map<String, Object> failRes = svc.submitResult(PLAYER1, sessionId, Map.of(
                 "nonce", nonce, "passed", true, "score", 50, "durationMs", 12000,
                 "resultDigest", "dig-low", "resultSignature", macFail));
@@ -212,7 +216,7 @@ class ExternalGameMonetizationMysqlIntegrationTest {
         String s2 = (String) t2.get("sessionId");
         String n2 = (String) t2.get("nonce");
         String canOk = ExternalGameMonetizationService.canonicalResultPayload(s2, "city.node", n2, true, 95, 15000L, "dig-ok");
-        String macOk = ExternalGameMonetizationService.hmacSha256Hex(n2, canOk);
+        String macOk = authorityMac("city.node", canOk);
         Map<String, Object> okRes = svc.submitResult(PLAYER1, s2, Map.of(
                 "nonce", n2, "passed", true, "score", 95, "durationMs", 15000,
                 "resultDigest", "dig-ok", "resultSignature", macOk));
@@ -229,7 +233,7 @@ class ExternalGameMonetizationMysqlIntegrationTest {
         assertEquals(true, sameReplay.get("replayed"));
 
         String canTamper = ExternalGameMonetizationService.canonicalResultPayload(s2, "city.node", n2, true, 99, 15000L, "dig-other");
-        String macTamper = ExternalGameMonetizationService.hmacSha256Hex(n2, canTamper);
+        String macTamper = authorityMac("city.node", canTamper);
         assertEquals("SESSION_ALREADY_COMPLETED", assertThrows(AppGapException.class, () -> svc.submitResult(PLAYER1, s2, Map.of(
                 "nonce", n2, "passed", true, "score", 99, "durationMs", 15000,
                 "resultDigest", "dig-other", "resultSignature", macTamper))).getErrorCode());
@@ -249,6 +253,9 @@ class ExternalGameMonetizationMysqlIntegrationTest {
             @Override public void creditBalanceFen(long memberId, long fen, String businessKey, String reason) {
                 cashWallet.merge(memberId, fen, Long::sum);
             }
+            @Override public void debitBalanceFen(long memberId, long fen, String businessKey, String reason) {
+                cashWallet.merge(memberId, -fen, Long::sum);
+            }
         };
 
         AtomicBoolean payoutGate = new AtomicBoolean(false);
@@ -258,7 +265,7 @@ class ExternalGameMonetizationMysqlIntegrationTest {
         };
 
         ExternalGameMonetizationService svc = new ExternalGameMonetizationService(
-                jdbc, txManager, signer, sw, wallet, null, clock::get);
+                jdbc, txManager, signer, sw, wallet, null, clock::get, RESULT_SECRET, false);
 
         // Configure POINTS game (cap 1/user/day, 2/game/day, 10 points/play)
         svc.saveCreatorConfig(CREATOR, "city.pts", Map.of("pricingMode", "TRAFFIC_ONLY", "trafficRewardMode", "POINTS"));
@@ -306,11 +313,17 @@ class ExternalGameMonetizationMysqlIntegrationTest {
         String sid = (String) ticket.get("sessionId");
         String nonce = (String) ticket.get("nonce");
         String digest = "dig-" + sid;
+        clock.addAndGet(durationMs); // CRIT-S1: duration is server-measured
         String canonical = ExternalGameMonetizationService.canonicalResultPayload(sid, gameId, nonce, passed, score, durationMs, digest);
-        String mac = ExternalGameMonetizationService.hmacSha256Hex(nonce, canonical);
+        String mac = authorityMac(gameId, canonical);
         return svc.submitResult(memberId, sid, Map.of(
                 "nonce", nonce, "passed", passed, "score", score, "durationMs", durationMs,
                 "resultDigest", digest, "resultSignature", mac));
+    }
+
+    private static String authorityMac(String gameId, String canonical) {
+        return ExternalGameMonetizationService.hmacSha256Hex(
+                ExternalGameMonetizationService.gameResultKey(RESULT_SECRET, gameId), canonical);
     }
 
     private void approveGame(String gameId) throws Exception {
