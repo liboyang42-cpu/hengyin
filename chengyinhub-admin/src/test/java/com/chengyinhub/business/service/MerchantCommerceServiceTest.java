@@ -209,6 +209,30 @@ class MerchantCommerceServiceTest {
     }
 
     @Test
+    void promotionSlotOffSaleRefusesNewOrdersButReplaysExistingOnes() {
+        service = enabledService();
+        assertFalse(service.isPromotionSlotOnSale());
+        when(settlementRuleService.getActiveRule(0L, MerchantCommerceService.BIZ_PROMOTION_SLOT)).thenReturn(pricedRule());
+        IllegalStateException refused = assertThrows(IllegalStateException.class,
+                () -> service.createOrder(12L, 34L, "openid", MerchantCommerceService.BIZ_PROMOTION_SLOT,
+                        "req-promo-1234567890"));
+        assertTrue(refused.getMessage().contains("已下架"));
+        verify(orderMapper, never()).insertOmsOrder(any());
+
+        OmsOrder existing = new OmsOrder();
+        existing.setOrderSn("PROMOT_existing");
+        existing.setBizType(MerchantCommerceService.BIZ_PROMOTION_SLOT);
+        existing.setStatus(1L);
+        when(orderMapper.selectCommerceOrderByRequest(12L, 34L,
+                MerchantCommerceService.BIZ_PROMOTION_SLOT, "req-promo-replay-123456")).thenReturn(existing);
+        java.util.Map<String, String> replay = service.createOrder(12L, 34L, "openid",
+                MerchantCommerceService.BIZ_PROMOTION_SLOT, "req-promo-replay-123456");
+        assertEquals("PROMOT_existing", replay.get("orderSn"));
+        assertEquals("success", replay.get("paymentStatus"));
+        verify(orderMapper, never()).insertOmsOrder(any());
+    }
+
+    @Test
     void createOrderStoresRequestIdAndReturnsStableOrderReference() {
         service = enabledService();
         SettlementRule rule = pricedRule();
@@ -485,6 +509,7 @@ class MerchantCommerceServiceTest {
     @Test
     void allCommercePrefixesKeepTheFullUuidValueWithinCanonicalOrderNumberLength() {
         service = enabledService();
+        ReflectionTestUtils.setField(service, "promotionSlotOnSale", true);
         when(orderMapper.insertOmsOrder(any())).thenAnswer(call -> { call.getArgument(0, OmsOrder.class).setId(99L); return 1; });
         when(wechatPayService.createGenericOrder(any(), any(), any(), any())).thenReturn(Collections.emptyMap());
         String[] types = { MerchantCommerceService.BIZ_PREMIUM_TEMPLATE, MerchantCommerceService.BIZ_PROMOTION_SLOT, MerchantCommerceService.BIZ_CUSTOM_EVENT };

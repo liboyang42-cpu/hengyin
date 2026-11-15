@@ -39,6 +39,7 @@ public class ApiMerchantCommerceController extends BaseController {
         String role = owner != null && owner.getRole() != null ? owner.getRole() : "merchant";
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("selfCheckoutEnabled", commerceService.isSelfCheckoutEnabled());
+        result.put("promotionSlotOnSale", commerceService.isPromotionSlotOnSale());
         result.put("premiumTemplate", commerceService.entitlement(ownerMemberId, role,
                 MerchantCommerceService.BIZ_PREMIUM_TEMPLATE, 0));
         result.put("cityNode", commerceService.entitlement(ownerMemberId, role,

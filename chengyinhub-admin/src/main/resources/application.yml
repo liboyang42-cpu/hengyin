@@ -314,6 +314,9 @@ compliance:
 merchant:
   commerce:
     self-checkout-enabled: ${CHENGYIN_MERCHANT_SELF_CHECKOUT_ENABLED:false}
+  # R1 MKT-01:推广曝光位下架。付费位不进迷雾地图;打开前须先有读取该权益的展示位。
+  promotionSlot:
+    onSale: ${CHENGYIN_MERCHANT_PROMOTION_SLOT_ON_SALE:false}
   verification-risk:
     high-rate-threshold: ${CHENGYIN_VERIFY_HIGH_RATE_THRESHOLD:0.90}
     one-minute-threshold: ${CHENGYIN_VERIFY_ONE_MINUTE_THRESHOLD:8}
