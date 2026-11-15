@@ -111,15 +111,21 @@ class Flow:
         return dict(id=self.fid, name=self.name, verdict=verdict, steps=self.steps)
 
 
+_SECRET_KEYS = r'(?:token|accessToken|refreshToken|qrToken|ticketToken|secret|challengeToken|resultToken|smscode)'
+
+
 def _redact(d):
     s = json.dumps(d, ensure_ascii=False)
     s = re.sub(r'("code"\s*:\s*")\d{4,6}"', r'\1******"', s)
-    return json.loads(s)
+    s = re.sub(r'("code"\s*:\s*")(?!v1\.)[^"]{16,}"', r'\1<redacted>"', s)  # opaque scan tokens sent as form "code"
+    return json.loads(_scrub(s))
 
 
 def _scrub(s):
     """Never write tokens or QR secrets into results."""
-    return re.sub(r'("(?:token|accessToken|refreshToken|qrToken|ticketToken|secret)"\s*:\s*")[^"]+"', r'\1<redacted>"', s)
+    s = re.sub(r'("%s"\s*:\s*")[^"]+"' % _SECRET_KEYS, r'\1<redacted>"', s)
+    # signed entry / coupon codes ("v1.<reg>.<type>.<ts>.<nonce>.<sig>"): keep the readable prefix, drop the signature
+    return re.sub(r'\b(v1\.\d+\.[a-z_0-9]+)\.[-\w.]{20,}', r'\1.<redacted>', s)
 
 
 def _sms_code(phone):

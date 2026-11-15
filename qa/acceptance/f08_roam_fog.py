@@ -23,14 +23,19 @@ def flow(f):
     f.step("roam/presence heartbeat", "POST", "/api/roam/presence", m,
            form={"sessionId": sid, "lat": "23.129112", "lng": "113.264385", "explorePct": "1"})
     f.step("roam/session", "GET", "/api/roam/session", m, q={"sessionId": sid}, check=ok_data)
-    f.step("roam/finish", "POST", "/api/roam/finish", m,
-           form={"sessionId": sid, "poiIds": "", "distanceM": "350"}, check=lambda j: need(j, "finishedAt"))
+    fin = f.step("roam/finish", "POST", "/api/roam/finish", m,
+                 form={"sessionId": sid, "poiIds": "", "distanceM": "350"}, check=lambda j: need(j, "finishedAt"))
     f.step("roam/finish twice is refused/settled", "POST", "/api/roam/finish", m,
            form={"sessionId": sid, "poiIds": "", "distanceM": "350"}, expect_code=None,
            check=lambda j: None if j.get("code") != 200 or "已结算" in (j.get("msg") or "") else "double settle accepted")
-    recs = [{"tile": TILES[0], "collectedAt": t0 + 500}]
+    # collectedAt must lie inside [startedAt, finishedAt] on the SERVER clock (RoamSessionWriteService.validateArchive).
+    # The TEST VPS clock runs ~6 s ahead of this machine, so anchor on the server's finishedAt, then also send the
+    # client-clock value (what a phone whose clock is a few seconds behind would send) as a separate, labelled step.
+    fin_ms = (data_of(fin) or {}).get("finishedAt") or (t0 + 500)
     f.step("roam/session/records", "POST", "/api/roam/session/records", m,
-           form={"sessionId": sid, "records": json.dumps(recs)})
+           form={"sessionId": sid, "records": json.dumps([{"tile": TILES[0], "collectedAt": fin_ms - 1000}])})
+    f.step("roam/session/records with client-clock timestamp (clock skew)", "POST", "/api/roam/session/records", m,
+           form={"sessionId": sid, "records": json.dumps([{"tile": TILES[1], "collectedAt": t0 + 500}])}, owner="env")
     f.step("roam/tiles contains revealed tiles", "GET", "/api/roam/tiles", m, q={"limit": 500},
            check=lambda j: None if TILES[0] in json.dumps(data_of(j)) else "revealed tile not listed")
 

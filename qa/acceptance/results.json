@@ -1,12 +1,12 @@
 {
  "base": "https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech",
- "run_id": "dry",
- "at": "2026-11-15T16:43:16Z",
+ "run_id": "20261115090559",
+ "at": "2026-11-15T17:08:25Z",
  "flows": [
   {
    "id": "F01",
    "name": "Sign-in",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
      "label": "sms/send",
@@ -20,49 +20,366 @@
       },
       "json": null
      },
-     "result": "ERROR",
-     "status": null,
-     "code": null,
-     "ms": 45,
-     "note": "transport: ProxyError: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel co",
-     "owner": "env"
+     "status": 200,
+     "code": 200,
+     "ms": 881,
+     "msg": "验证码已发送",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"验证码已发送\", \"code\": 200}"
     },
     {
      "label": "login/phone bad code rejected",
      "method": "POST",
      "path": "/api/login/phone",
-     "result": "SKIP",
-     "note": "blocked: transport error at 'sms/send'"
+     "member": null,
+     "request": {
+      "q": null,
+      "form": {
+       "phone": "13900000004",
+       "code": "******"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 921,
+     "msg": "验证码错误或已过期",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"验证码错误或已过期\", \"code\": 500}"
     },
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "userInfo (top-level appUser.role)",
+     "method": "POST",
+     "path": "/api/userInfo",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 884,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"appUser\": {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"userId\": 9004, \"userName\": \"13900000004\", \"nickName\": \"玩家小城\", \"email\": null, \"mobile\": null, \"sex\": null, \"avatar\": null, \"status\": null, \"delFlag\": null, \"loginIp\": null, \"loginDate\": null, \"userType\": 1, \"role\": \"player\"}, \"code\": 200}"
+    },
+    {
+     "label": "user/info",
+     "method": "POST",
+     "path": "/api/user/info",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 925,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"id\": 9004, \"userType\": 1, \"role\": \"player\", \"phone\": \"13900000004\", \"name\": \"玩家小城\", \"wechat\": \"\", \"levelId\": 3, \"nickname\": \"玩家小城\", \"avatar\": \"\", \"casePics\": \"\", \"caseIntroducton\": \"\", \"website\": \"\", \"introduction\": \"E2E API smoke profile\", \"balance\": 288.5, \"point\": 9800, \"createTime\": \"2026-11-13 22:37:59\", \"followNum\": 1, \"friendNum\": 1, \"fansNum\": 1, \"top"
+    },
+    {
+     "label": "userInfo club leader role",
+     "method": "POST",
+     "path": "/api/userInfo",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 874,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"appUser\": {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"userId\": 9003, \"userName\": \"13900000003\", \"nickName\": \"海派城市漫游团\", \"email\": null, \"mobile\": null, \"sex\": null, \"avatar\": null, \"status\": null, \"delFlag\": null, \"loginIp\": null, \"loginDate\": null, \"userType\": 1, \"role\": \"club\"}, \"code\": 200}"
+    },
+    {
+     "label": "userInfo merchant role",
+     "method": "POST",
+     "path": "/api/userInfo",
+     "member": 9002,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 919,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"appUser\": {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"userId\": 9002, \"userName\": \"13900000002\", \"nickName\": \"梧桐慢焙主理人\", \"email\": null, \"mobile\": null, \"sex\": null, \"avatar\": null, \"status\": null, \"delFlag\": null, \"loginIp\": null, \"loginDate\": null, \"userType\": 2, \"role\": \"merchant\"}, \"code\": 200}"
+    },
+    {
+     "label": "login/code with e2e-code test code",
+     "method": "POST",
+     "path": "/api/login/code",
+     "member": null,
+     "request": {
+      "q": null,
+      "form": {
+       "code": "<redacted>"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 1424,
+     "msg": "微信服务暂时不可用，请稍后重试",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"微信服务暂时不可用，请稍后重试\", \"code\": 500}"
+    },
+    {
+     "label": "userInfo without token -> 401",
+     "method": "POST",
+     "path": "/api/userInfo",
+     "member": null,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 401,
+     "ms": 944,
+     "msg": "获取APP用户信息异常",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"获取APP用户信息异常\", \"code\": 401}"
     }
    ]
   },
   {
    "id": "F02",
    "name": "Browse home",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "common/banner",
+     "method": "POST",
+     "path": "/api/common/banner",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "showType": 1,
+       "linkType": 0
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 979,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": \"seed\", \"createTime\": \"2026-11-14 20:30:34\", \"updateBy\": \"\", \"updateTime\": null, \"remark\": null, \"id\": 993011, \"showType\": 1, \"linkType\": 1, \"dataId\": \"992001\", \"picUrl\": \"\", \"contents\": \"外滩钟声 · 老城寻踪三章开放组队\", \"sortId\": 1, \"status\": 1}, {\"createBy\": \"seed\", \"createTime\": \"2026-11-14 20:30:34\", \"updateBy\": \"\", \"updateTime\": null, \"remark\": null, \"id\""
+    },
+    {
+     "label": "topic/list main feed",
+     "method": "POST",
+     "path": "/api/topic/list",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "is_my": 0,
+       "pageNum": 1,
+       "pageSize": 10
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1007,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 15, \"rows\": [{\"inviteWindowOpen\": null, \"id\": 993056, \"memberId\": 9002, \"clubId\": null, \"topicType\": 2, \"productType\": 1, \"name\": \"黄浦江风味补给夜行\", \"subtitle\": \"商家联名主题\", \"description\": \"门店特色探索主题与隐藏暗号体验\", \"totalTime\": 60, \"totalMileage\": 2.4, \"locationCount\": 0, \"addressName\": \"上海市黄浦区南京东路188号\", \"templateCount\": 0, \"startDate\": null, \"endDate\": null, \"imgUrl"
+    },
+    {
+     "label": "topic/list recommended",
+     "method": "POST",
+     "path": "/api/topic/list",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "is_my": 0,
+       "is_recommend": 1,
+       "pageNum": 1,
+       "pageSize": 10
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 923,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 9, \"rows\": [{\"inviteWindowOpen\": null, \"id\": 993006, \"memberId\": 9003, \"clubId\": 7002, \"topicType\": 2, \"productType\": 1, \"name\": \"陆家嘴天际线 · 未来都市观察局\", \"subtitle\": \"用AR视角与城市剪影卡片记录摩天大楼群\", \"description\": \"黄昏时分沿滨江大道漫步，完成建筑观察闪击与天际线拼图。\", \"totalTime\": 85, \"totalMileage\": 3.0, \"locationCount\": 0, \"addressName\": \"上海市浦东新区滨江大道\", \"templateCount\": 0, \"startDate\": \"2"
+    },
+    {
+     "label": "activity/list upcoming lists 992031",
+     "method": "POST",
+     "path": "/api/activity/list",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "is_my": 2,
+       "pageNum": 1,
+       "pageSize": 6
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 945,
+     "msg": "操作成功",
+     "result": "FAIL",
+     "note": "992031 not in upcoming",
+     "owner": "backend",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 12, \"rows\": [{\"id\": 993061, \"memberId\": 9002, \"topicId\": 993051, \"productType\": 1, \"name\": \"猫咖驿站 · 周末夜场探索\", \"description\": \"欢迎到店打卡解锁限定印章与线索卡\", \"imgUrl\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/b574de6557d91b1a16ee0cc87149ba16.jpg\", \"imgArr\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/"
+    },
+    {
+     "label": "activity/list nearby",
+     "method": "POST",
+     "path": "/api/activity/list",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "is_my": 0,
+       "sort_type": 2,
+       "pageNum": 1,
+       "pageSize": 6
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 908,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 12, \"rows\": [{\"id\": 993061, \"memberId\": 9002, \"topicId\": 993051, \"productType\": 1, \"name\": \"猫咖驿站 · 周末夜场探索\", \"description\": \"欢迎到店打卡解锁限定印章与线索卡\", \"imgUrl\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/b574de6557d91b1a16ee0cc87149ba16.jpg\", \"imgArr\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/"
+    },
+    {
+     "label": "activity/list stream",
+     "method": "POST",
+     "path": "/api/activity/list",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "is_my": 0,
+       "pageNum": 1,
+       "pageSize": 10
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 903,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 12, \"rows\": [{\"id\": 993061, \"memberId\": 9002, \"topicId\": 993051, \"productType\": 1, \"name\": \"猫咖驿站 · 周末夜场探索\", \"description\": \"欢迎到店打卡解锁限定印章与线索卡\", \"imgUrl\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/b574de6557d91b1a16ee0cc87149ba16.jpg\", \"imgArr\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/"
+    },
+    {
+     "label": "play/run-session/list",
+     "method": "GET",
+     "path": "/api/play/run-session/list",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 951,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": []}"
+    },
+    {
+     "label": "registration/my-joined holds 992031",
+     "method": "POST",
+     "path": "/api/registration/my-joined",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 938,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": \"9009\", \"createTime\": \"2026-11-14 19:33:08\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-14 19:33:08\", \"remark\": null, \"id\": 992106, \"registrationNo\": \"A20261114E2E0006\", \"ownerType\": 2, \"ownerId\": 992035, \"activityTitle\": \"南京东路猫咖驿站 · 店家主题夜游\", \"ticketId\": 992045, \"ticketName\": \"猫咖夜游特调标准票\", \"ticketPrice\": 39.0, \"memberId\": 9009, \"realName\": \"E2E 玩"
+    },
+    {
+     "label": "anonymous browse: activity/list",
+     "method": "POST",
+     "path": "/api/activity/list",
+     "member": null,
+     "request": {
+      "q": null,
+      "form": {
+       "is_my": 0,
+       "pageNum": 1,
+       "pageSize": 10
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 905,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 12, \"rows\": [{\"id\": 993061, \"memberId\": 9002, \"topicId\": 993051, \"productType\": 1, \"name\": \"猫咖驿站 · 周末夜场探索\", \"description\": \"欢迎到店打卡解锁限定印章与线索卡\", \"imgUrl\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/b574de6557d91b1a16ee0cc87149ba16.jpg\", \"imgArr\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/"
     }
    ]
   },
   {
    "id": "F03",
    "name": "Activity detail",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
      "label": "activity/info 992031 (anonymous)",
@@ -76,272 +393,2720 @@
       },
       "json": null
      },
-     "result": "ERROR",
-     "status": null,
-     "code": null,
-     "ms": 167,
-     "note": "transport: ProxyError: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/activity/info (Caused by ProxyError('Unable to connect to proxy', OSError('Tunn",
-     "owner": "env"
+     "status": 200,
+     "code": 200,
+     "ms": 898,
+     "msg": "操作成功",
+     "result": "FAIL",
+     "note": "topicId=None != 992001",
+     "owner": "backend",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"clubName\": \"城瘾跑团\", \"activityName\": \"老城三章 · 周末免费体验场\", \"clubId\": 7001, \"gate\": true, \"message\": \"这一场由「城瘾跑团」执行，加入后查看\"}}"
     },
     {
      "label": "activity/info 992031 (signed in)",
      "method": "POST",
      "path": "/api/activity/info",
-     "result": "SKIP",
-     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "id": 992031
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 917,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"id\": 992031, \"memberId\": 9003, \"name\": \"老城三章 · 周末免费体验场\", \"description\": \"面向新玩家的黄浦老城入门局，现场主理人带队答疑。\", \"imgUrl\": \"\", \"imgArr\": \"\", \"categoryIds\": null, \"addressName\": \"上海市黄浦区外滩钟楼广场\", \"longitude\": \"121.490317\", \"latitude\": \"31.241701\", \"address\": \"上海市黄浦区外滩钟楼广场\", \"status\": 1, \"publishStatus\": 1, \"state\": \"notStarted\", \"stateText\": \"未开始\", \"cancelTime\": null, \"cance"
     },
     {
      "label": "topic/info-to-user 992001",
      "method": "POST",
      "path": "/api/topic/info-to-user",
-     "result": "SKIP",
-     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "id": 992001
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1092,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"canResubmitSupplyReview\": false, \"id\": 992001, \"memberId\": 9003, \"clubId\": 7001, \"topicType\": 2, \"productType\": 1, \"circleThemeCode\": null, \"name\": \"外滩钟声 · 老城寻踪三章\", \"subtitle\": \"从人民广场钟楼走到外滩万国建筑群的三幕城市解谜\", \"description\": \"串联老城钟楼、老邮局与江畔码头旧仓的三幕实景城市定向，支持单人推理与好友组队检定。\", \"addressName\": \"上海市黄浦区外滩钟楼广场\", \"totalTime\": 90, \"totalMileage\": null, \"locationCount\": 6, \"templa"
     },
     {
      "label": "registration/payment-readiness",
      "method": "POST",
      "path": "/api/registration/payment-readiness",
-     "result": "SKIP",
-     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 871,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"ready\": false, \"message\": \"支付服务暂不可用\"}}"
     },
     {
      "label": "play/nodes preview",
      "method": "GET",
      "path": "/api/play/nodes",
-     "result": "SKIP",
-     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+     "member": 9004,
+     "request": {
+      "q": {
+       "activityId": 992031,
+       "topicId": 992001
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1107,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"topicId\": 992001, \"topicDesc\": \"串联老城钟楼、老邮局与江畔码头旧仓的三幕实景城市定向，支持单人推理与好友组队检定。\", \"topicName\": \"外滩钟声 · 老城寻踪三章\", \"topicCover\": \"https://www.chengyinhub.com/prod-api/profile/covers/topic-templates/shanghai-solo/old-movie.jpg\", \"topicAiGenerated\": false, \"topicAudioUrl\": null, \"look\": null, \"mode\": 1, \"productType\": 1, \"playable\": false, \"timeNote\": \"活动未开始\", \"total\": "
     },
     {
      "label": "activity/info unknown id",
      "method": "POST",
      "path": "/api/activity/info",
-     "result": "SKIP",
-     "note": "blocked: transport error at 'activity/info 992031 (anonymous)'"
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "id": 1
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 1208,
+     "msg": "活动不存在",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"活动不存在\", \"code\": 500}"
     }
    ]
   },
   {
    "id": "F04",
    "name": "Register and pay",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "consent activity_signup",
+     "method": "POST",
+     "path": "/api/compliance/consents",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "docType": "activity_host_data_sharing",
+       "scene": "activity_signup",
+       "eventType": "AGREE",
+       "requestId": "qa20261115090559c2f76759d601f4642a70290155f62f26"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 984,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-16T01:06:41.000+08:00\", \"requestId\": \"qa20261115090559c2f76759d601f4642a70290155f62f26\", \"docType\": \"activity_host_data_sharing\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"activity_signup\"}}"
+    },
+    {
+     "label": "user/address/action participant",
+     "method": "POST",
+     "path": "/api/user/address/action",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "fullName": "玩家小城",
+       "mobilePhone": "13900000004",
+       "isDefault": 1,
+       "requestId": "qa20261115090559a77a761e8918e4b1ea5b62c0981cda1d"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 938,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": null, \"createTime\": \"2026-11-16 01:06:41\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 49, \"memberId\": 9004, \"fullName\": \"玩家小城\", \"areaCode\": \"+86\", \"mobilePhone\": \"13900000004\", \"province\": null, \"detailAddress\": null, \"isDefault\": 1, \"delFlag\": 0, \"requestId\": \"qa20261115090559a77a761e8918e4b1ea5b62c0981cda1d\"}}"
+    },
+    {
+     "label": "registration/quote",
+     "method": "POST",
+     "path": "/api/registration/quote",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "ownerType": 2,
+       "ownerId": 992031,
+       "ticketId": 992041,
+       "tickets": [
+        {
+         "ticketId": 992041,
+         "count": 1
+        }
+       ],
+       "realName": "玩家小城",
+       "phone": "13900000004",
+       "isUsePoint": 0
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 928,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"payAmount\": 0.0, \"pointsUsed\": 0, \"pointsDeductYuan\": 0.0, \"couponDeductYuan\": 0, \"quoteSign\": \"5e9ae975c5ec9df5b998173c830e1a77\", \"memberDiscountYuan\": 0.0, \"clubMember\": true, \"prioritySignupEnabled\": false, \"refundDeadline\": \"2026-11-22T14:00:00.000+08:00\", \"refundableNow\": true, \"delivery\": {\"purchaseKind\": 1, \"ticketName\": \"免费体验票\", \"teamSize\": 1, \"minPeo"
+    },
+    {
+     "label": "registration/quote as the app sends it (no tickets/realName)",
+     "method": "POST",
+     "path": "/api/registration/quote",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "ownerType": 2,
+       "ownerId": 992031,
+       "ticketId": 992041,
+       "isUsePoint": 0
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 928,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"payAmount\": 0.0, \"pointsUsed\": 0, \"pointsDeductYuan\": 0.0, \"couponDeductYuan\": 0, \"quoteSign\": \"5e9ae975c5ec9df5b998173c830e1a77\", \"memberDiscountYuan\": 0.0, \"clubMember\": true, \"prioritySignupEnabled\": false, \"refundDeadline\": \"2026-11-22T14:00:00.000+08:00\", \"refundableNow\": true, \"delivery\": {\"purchaseKind\": 1, \"ticketName\": \"免费体验票\", \"teamSize\": 1, \"minPeo"
+    },
+    {
+     "label": "registration/create free",
+     "method": "POST",
+     "path": "/api/registration/create",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "ownerType": 2,
+       "ownerId": 992031,
+       "ticketId": 992041,
+       "tickets": [
+        {
+         "ticketId": 992041,
+         "count": 1
+        }
+       ],
+       "realName": "玩家小城",
+       "phone": "13900000004",
+       "isUsePoint": 0,
+       "quoteSign": "5e9ae975c5ec9df5b998173c830e1a77",
+       "requestId": "qa20261115090559re9f1b5fe511a4463a230507dc987c30",
+       "payChannel": "APP"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1648,
+     "msg": "报名创建成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"报名创建成功\", \"code\": 200, \"data\": {\"registrationId\": 992200, \"registrationNo\": \"A20261116DACEAB16\", \"payableAmount\": 0.0, \"expireTime\": \"2026-11-16T01:36:44.379+08:00\", \"expiresAt\": null, \"paymentType\": 1, \"registrationIds\": [992200]}}"
+    },
+    {
+     "label": "registration/create replay is idempotent",
+     "method": "POST",
+     "path": "/api/registration/create",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "ownerType": 2,
+       "ownerId": 992031,
+       "ticketId": 992041,
+       "tickets": [
+        {
+         "ticketId": 992041,
+         "count": 1
+        }
+       ],
+       "realName": "玩家小城",
+       "phone": "13900000004",
+       "isUsePoint": 0,
+       "quoteSign": "5e9ae975c5ec9df5b998173c830e1a77",
+       "requestId": "qa20261115090559re9f1b5fe511a4463a230507dc987c30",
+       "payChannel": "APP"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 897,
+     "msg": "报名创建成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"报名创建成功\", \"code\": 200, \"data\": {\"registrationId\": 992200, \"registrationNo\": \"A20261116DACEAB16\", \"payableAmount\": 0.0, \"expireTime\": \"2026-11-16T01:36:44.000+08:00\", \"expiresAt\": null, \"paymentType\": 1, \"registrationIds\": [992200]}}"
+    },
+    {
+     "label": "registration/info paid (free = paid)",
+     "method": "POST",
+     "path": "/api/registration/info",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "id": 992200
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 869,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": \"9004\", \"createTime\": \"2026-11-16 01:06:44\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-16 01:06:45\", \"remark\": null, \"id\": 992200, \"registrationNo\": \"A20261116DACEAB16\", \"ownerType\": 2, \"ownerId\": 992031, \"activityTitle\": \"老城三章 · 周末免费体验场\", \"ticketId\": 992041, \"ticketName\": \"免费体验票\", \"ticketPrice\": 0.0, \"memberId\": 9004, \"realName\": \"玩家小城\", \"phone"
+    },
+    {
+     "label": "registration/list all orders",
+     "method": "POST",
+     "path": "/api/registration/list",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "owner_type": 3
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1076,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 13, \"rows\": [{\"createBy\": \"9004\", \"createTime\": \"2026-11-16 01:06:44\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-16 01:06:45\", \"remark\": null, \"id\": 992200, \"registrationNo\": \"A20261116DACEAB16\", \"ownerType\": 2, \"ownerId\": 992031, \"activityTitle\": \"老城三章 · 周末免费体验场\", \"ticketId\": 992041, \"ticketName\": \"免费体验票\", \"ticketPrice\": 0.0, \"memberId\": 9004, \"re"
+    },
+    {
+     "label": "payment-readiness (paid channel)",
+     "method": "POST",
+     "path": "/api/registration/payment-readiness",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 881,
+     "msg": "操作成功",
+     "result": "FAIL",
+     "note": "payment not ready on TEST: 支付服务暂不可用",
+     "owner": "backend",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"ready\": false, \"message\": \"支付服务暂不可用\"}}"
+    },
+    {
+     "label": "paid quote",
+     "method": "POST",
+     "path": "/api/registration/quote",
+     "result": "SKIP",
+     "note": "blocked: no paid ticket fixture on TEST (set E2E_PAID_ACTIVITY/E2E_PAID_TICKET) - data seeding needed"
+    },
+    {
+     "label": "paid create",
+     "method": "POST",
+     "path": "/api/registration/create",
+     "result": "SKIP",
+     "note": "blocked: no paid ticket fixture on TEST (set E2E_PAID_ACTIVITY/E2E_PAID_TICKET) - data seeding needed"
+    },
+    {
+     "label": "pay/app returns payParams (TEST pay stub)",
+     "method": "POST",
+     "path": "/api/registration/pay/app",
+     "result": "SKIP",
+     "note": "blocked: no paid ticket fixture on TEST (set E2E_PAID_ACTIVITY/E2E_PAID_TICKET) - data seeding needed"
     }
    ]
   },
   {
    "id": "F05",
    "name": "Ticket QR",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "registration/list ticket wallet",
+     "method": "POST",
+     "path": "/api/registration/list",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "owner_type": 2
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 952,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 2, \"rows\": [{\"createBy\": \"9009\", \"createTime\": \"2026-11-14 19:33:08\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-14 19:33:08\", \"remark\": null, \"id\": 992106, \"registrationNo\": \"A20261114E2E0006\", \"ownerType\": 2, \"ownerId\": 992035, \"activityTitle\": \"南京东路猫咖驿站 · 店家主题夜游\", \"ticketId\": 992045, \"ticketName\": \"猫咖夜游特调标准票\", \"ticketPrice\": 39.0, \"memberId\": 900"
+    },
+    {
+     "label": "wallet shape matches app (data is a list)",
+     "method": "POST",
+     "path": "/api/registration/list",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "owner_type": 2
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1150,
+     "msg": "操作成功",
+     "result": "FAIL",
+     "note": "data is dict, app expects List",
+     "owner": "app",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 2, \"rows\": [{\"createBy\": \"9009\", \"createTime\": \"2026-11-14 19:33:08\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-14 19:33:08\", \"remark\": null, \"id\": 992106, \"registrationNo\": \"A20261114E2E0006\", \"ownerType\": 2, \"ownerId\": 992035, \"activityTitle\": \"南京东路猫咖驿站 · 店家主题夜游\", \"ticketId\": 992045, \"ticketName\": \"猫咖夜游特调标准票\", \"ticketPrice\": 39.0, \"memberId\": 900"
+    },
+    {
+     "label": "registration/info ticket detail",
+     "method": "POST",
+     "path": "/api/registration/info",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "id": 74
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1700,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": \"9009\", \"createTime\": \"2026-11-13 22:38:50\", \"updateBy\": \"system\", \"updateTime\": \"2026-11-13 22:38:50\", \"remark\": null, \"id\": 74, \"registrationNo\": \"A2026111328FD24F7\", \"ownerType\": 2, \"ownerId\": 992031, \"activityTitle\": \"老城三章 · 周末免费体验场\", \"ticketId\": 992041, \"ticketName\": \"免费体验票\", \"ticketPrice\": 0.0, \"memberId\": 9009, \"realName\": \"E2E 玩家二号\", \"phone"
+    },
+    {
+     "label": "verify/dyncode/issue",
+     "method": "POST",
+     "path": "/api/verify/dyncode/issue",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "registrationId": 74
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1958,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"code\": \"v1.74.activity.<redacted>\", \"ttlMs\": 300000, \"type\": \"activity\", \"expiresAt\": 1794762714490, \"qrcodeUrl\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAIAAAD2HxkiAAAiH0lEQVR4Xu3TQW4s2Y4E0b//TXcPBAiiQWkIJ3kz9LLiDMvdeSNfQf/7v8fjcav/8T88Ho/3ev4IH4+bPX+Ej8fNnj/Cx+Nmzx/h43Gz54/w8bjZ80f4eNzs+SN8PG72/BE+Hjd7/ggfj5s9f4SPx82eP8LH42bPH+HjcbPnj/DxuNnz"
+    },
+    {
+     "label": "dyncode/issue for someone else's order is refused",
+     "method": "POST",
+     "path": "/api/verify/dyncode/issue",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "registrationId": 74
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 916,
+     "msg": "无权操作该报名单",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"无权操作该报名单\", \"code\": 500}"
     }
    ]
   },
   {
    "id": "F06",
    "name": "Check-in",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "player dyncode/issue",
+     "method": "POST",
+     "path": "/api/verify/dyncode/issue",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "registrationId": 74
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 2786,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"code\": \"v1.74.activity.<redacted>\", \"ttlMs\": 300000, \"type\": \"activity\", \"expiresAt\": 1794762718027, \"qrcodeUrl\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAIAAAD2HxkiAAAhsElEQVR4Xu3TwY4jyY4EwPf/P717GKAhGrocyWBEqlpKO467M1I16P/93+PxeKv/+R8ej8e9nn+Ej8ebPf8IH483e/4RPh5v9vwjfDze7PlH+Hi82fOP8PF4s+cf4ePxZs8/wsfjzZ5/hI/Hmz3/CB+PN3v+ET4eb/b8I3w83uz5R/h4"
+    },
+    {
+     "label": "merchant 9002 (not owner) scan refused",
+     "method": "POST",
+     "path": "/api/registration/scan_dynamic_code",
+     "member": 9002,
+     "request": {
+      "q": null,
+      "form": {
+       "code": "v1.74.activity.<redacted>"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 913,
+     "msg": "该店无权核销本场玩家票；俱乐部带队请扫描领队团码",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"该店无权核销本场玩家票；俱乐部带队请扫描领队团码\", \"code\": 500, \"data\": {\"notRedeemed\": true}}"
+    },
+    {
+     "label": "owner 9003 scan_dynamic_code",
+     "method": "POST",
+     "path": "/api/registration/scan_dynamic_code",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": {
+       "code": "v1.74.activity.<redacted>"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 949,
+     "msg": "俱乐部场次开始前60分钟内才可核销",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"俱乐部场次开始前60分钟内才可核销\", \"code\": 500, \"data\": {\"notRedeemed\": true}}"
+    },
+    {
+     "label": "rescan reports already verified",
+     "method": "POST",
+     "path": "/api/registration/scan_dynamic_code",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": {
+       "code": "v1.74.activity.<redacted>"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 873,
+     "msg": "俱乐部场次开始前60分钟内才可核销",
+     "result": "FAIL",
+     "note": "rescan not idempotent",
+     "owner": "backend",
+     "response": "{\"msg\": \"俱乐部场次开始前60分钟内才可核销\", \"code\": 500, \"data\": {\"notRedeemed\": true}}"
+    },
+    {
+     "label": "player self check-in as the app sends it (play_api.dart:330)",
+     "method": "POST",
+     "path": "/api/play/checkin",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "activityId": 992031,
+       "code": "QA0000",
+       "routeActionId": "qa-20261115090559-ck",
+       "expectedRouteVersion": 1
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 915,
+     "msg": "必须提供动作标识、期望版本和原运行时身份",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "app",
+     "response": "{\"msg\": \"必须提供动作标识、期望版本和原运行时身份\", \"retryable\": false, \"code\": 500, \"errorCode\": \"INTENT_INPUT_INVALID\", \"intentNotExecuted\": true, \"refreshRequired\": false}"
     }
    ]
   },
   {
    "id": "F07",
    "name": "Play game: answer, hint, finish",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "play/nodes (registered player)",
+     "method": "GET",
+     "path": "/api/play/nodes",
+     "member": 9009,
+     "request": {
+      "q": {
+       "activityId": 992031,
+       "topicId": 992001
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1334,
+     "msg": "操作成功",
+     "result": "FAIL",
+     "note": "expected registered/playable/total=6",
+     "owner": "backend",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"topicId\": 992001, \"topicDesc\": \"串联老城钟楼、老邮局与江畔码头旧仓的三幕实景城市定向，支持单人推理与好友组队检定。\", \"topicName\": \"外滩钟声 · 老城寻踪三章\", \"topicCover\": \"https://www.chengyinhub.com/prod-api/profile/covers/topic-templates/shanghai-solo/old-movie.jpg\", \"topicAiGenerated\": false, \"topicAudioUrl\": null, \"look\": null, \"mode\": 1, \"productType\": 1, \"playable\": false, \"timeNote\": \"活动未开始\", \"total\": "
+    },
+    {
+     "label": "play/nodes (unregistered 9004 is not playable)",
+     "method": "GET",
+     "path": "/api/play/nodes",
+     "member": 9004,
+     "request": {
+      "q": {
+       "activityId": 992031,
+       "topicId": 992001
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 983,
+     "msg": "操作成功",
+     "result": "FAIL",
+     "note": "9004 should be registered=False",
+     "owner": "backend",
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"topicId\": 992001, \"topicDesc\": \"串联老城钟楼、老邮局与江畔码头旧仓的三幕实景城市定向，支持单人推理与好友组队检定。\", \"topicName\": \"外滩钟声 · 老城寻踪三章\", \"topicCover\": \"https://www.chengyinhub.com/prod-api/profile/covers/topic-templates/shanghai-solo/old-movie.jpg\", \"topicAiGenerated\": false, \"topicAudioUrl\": null, \"look\": null, \"mode\": 1, \"productType\": 1, \"playable\": false, \"timeNote\": \"活动未开始\", \"total\": "
+    },
+    {
+     "label": "play/route-state",
+     "method": "GET",
+     "path": "/api/play/route-state",
+     "member": 9009,
+     "request": {
+      "q": {
+       "activityId": 992031,
+       "topicId": 992001
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1461,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"attributes\": [], \"routeMode\": \"LINEAR\", \"sessionId\": 1, \"status\": \"ACTIVE\", \"currentNodeId\": 992021, \"recommendedNodeId\": 992021, \"version\": 0, \"nodeStates\": {\"992021\": \"PLAYABLE\", \"992022\": \"DISCOVERED_LOCKED\", \"992023\": \"DISCOVERED_LOCKED\", \"992024\": \"DISCOVERED_LOCKED\", \"992025\": \"DISCOVERED_LOCKED\", \"992026\": \"DISCOVERED_LOCKED\"}, \"decisionLog\": [], \"enco"
+    },
+    {
+     "label": "play/action-context node 992021",
+     "method": "GET",
+     "path": "/api/play/action-context",
+     "member": 9009,
+     "request": {
+      "q": {
+       "activityId": 992031,
+       "topicId": 992001,
+       "nodeId": 992021
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 919,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"routeSessionId\": \"1\", \"expectedRouteVersion\": 0}}"
+    },
+    {
+     "label": "play/help ladder",
+     "method": "GET",
+     "path": "/api/play/help",
+     "member": 9009,
+     "request": {
+      "q": {
+       "runId": "1",
+       "nodeId": 992021
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 400,
+     "ms": 893,
+     "msg": "本局已结束，不能使用帮助",
+     "result": "FAIL",
+     "note": "code 400 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"本局已结束，不能使用帮助\", \"code\": 400}"
+    },
+    {
+     "label": "play/help/use level 1",
+     "method": "POST",
+     "path": "/api/play/help/use",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "runId": "1",
+       "nodeId": 992021,
+       "level": 1,
+       "action": "HELP",
+       "requestId": "qa-20261115090559-eab3bc6a"
+      }
+     },
+     "status": 200,
+     "code": 400,
+     "ms": 892,
+     "msg": "本局已结束，不能使用帮助",
+     "result": "FAIL",
+     "note": "code 400 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"本局已结束，不能使用帮助\", \"code\": 400}"
+    },
+    {
+     "label": "play/help/use replay is idempotent (no charge)",
+     "method": "POST",
+     "path": "/api/play/help/use",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "runId": "1",
+       "nodeId": 992021,
+       "level": 1,
+       "action": "HELP",
+       "requestId": "qa-20261115090559-eab3bc6a"
+      }
+     },
+     "status": 200,
+     "code": 400,
+     "ms": 1266,
+     "msg": "本局已结束，不能使用帮助",
+     "result": "FAIL",
+     "note": "code 400 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"本局已结束，不能使用帮助\", \"code\": 400}"
+    },
+    {
+     "label": "play/answer node 992021 (with action context)",
+     "method": "POST",
+     "path": "/api/play/answer",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "activityId": 992031,
+       "topicId": 992001,
+       "nodeId": 992021,
+       "answer": "1921",
+       "routeActionId": "qa-20261115090559-a1",
+       "expectedRouteVersion": 0,
+       "routeSessionId": "1",
+       "longitude": "113.264385",
+       "latitude": "23.129112",
+       "accuracy": "10"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 409,
+     "ms": 1511,
+     "msg": "原局已结束",
+     "result": "FAIL",
+     "note": "code 409 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"原局已结束\", \"retryable\": false, \"code\": 409, \"errorCode\": \"INTENT_SESSION_ENDED\", \"intentNotExecuted\": true, \"refreshRequired\": false}"
+    },
+    {
+     "label": "play/answer as the app sends it (no routeSessionId) -> app gap",
+     "method": "POST",
+     "path": "/api/play/answer",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "activityId": 992031,
+       "topicId": 992001,
+       "nodeId": 992021,
+       "answer": "1921",
+       "routeActionId": "qa-20261115090559-a2",
+       "expectedRouteVersion": 0,
+       "longitude": "113.264385",
+       "latitude": "23.129112",
+       "accuracy": "10"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 920,
+     "msg": "必须提供动作标识、期望版本和原运行时身份",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "app",
+     "response": "{\"msg\": \"必须提供动作标识、期望版本和原运行时身份\", \"retryable\": false, \"code\": 500, \"errorCode\": \"INTENT_INPUT_INVALID\", \"intentNotExecuted\": true, \"refreshRequired\": false}"
+    },
+    {
+     "label": "play/action-receipt",
+     "method": "GET",
+     "path": "/api/play/action-receipt",
+     "member": 9009,
+     "request": {
+      "q": {
+       "activityId": 992031,
+       "topicId": 992001,
+       "nodeId": 992021,
+       "routeActionId": "qa-20261115090559-a1"
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 520,
+     "ms": 1244,
+     "msg": "原命令结果待确认，请稍后查询",
+     "result": "FAIL",
+     "note": "code 520 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"原命令结果待确认，请稍后查询\", \"retryable\": true, \"code\": 520, \"receiptState\": \"UNKNOWN\", \"errorCode\": \"INTENT_PENDING\", \"refreshRequired\": false}"
+    },
+    {
+     "label": "play/help/receipt",
+     "method": "GET",
+     "path": "/api/play/help/receipt",
+     "member": 9009,
+     "request": {
+      "q": {
+       "runId": "1",
+       "nodeId": 992021
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 400,
+     "ms": 923,
+     "msg": "本局已结束，不能使用帮助",
+     "result": "FAIL",
+     "note": "code 400 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"本局已结束，不能使用帮助\", \"code\": 400}"
+    },
+    {
+     "label": "play/ending GET",
+     "method": "GET",
+     "path": "/api/play/ending",
+     "member": 9009,
+     "request": {
+      "q": {
+       "activityId": 992031,
+       "topicId": 992001
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1024,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"opener\": \"\", \"fragments\": []}}"
+    },
+    {
+     "label": "play/ending POST as the app calls it -> app/backend method mismatch",
+     "method": "POST",
+     "path": "/api/play/ending",
+     "member": 9009,
+     "request": {
+      "q": {
+       "activityId": 992031,
+       "topicId": 992001
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 895,
+     "msg": "Request method 'POST' is not supported",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "app",
+     "response": "{\"msg\": \"Request method 'POST' is not supported\", \"code\": 500}"
     }
    ]
   },
   {
    "id": "F08",
    "name": "Roam walk and fog reveal",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "compliance consent AGREE roam_location",
+     "method": "POST",
+     "path": "/api/compliance/consents",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "docType": "privacy_policy",
+       "scene": "roam_location",
+       "eventType": "AGREE",
+       "requestId": "qa20261115090559deef46d27918402b99248cb4a363f5ee",
+       "expectedRequestId": ""
+      }
+     },
+     "status": 200,
+     "code": 409,
+     "ms": 1963,
+     "msg": "定位授权状态已变化，请重新明确选择",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"定位授权状态已变化，请重新明确选择\", \"code\": 409}"
+    },
+    {
+     "label": "roam/reveal (new session)",
+     "method": "POST",
+     "path": "/api/roam/reveal",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 0,
+       "tiles": "ws0e9cb,ws0e9cc"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 910,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": 128, \"newlyRevealed\": 0}}"
+    },
+    {
+     "label": "roam/reveal replay reveals nothing new",
+     "method": "POST",
+     "path": "/api/roam/reveal",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 128,
+       "tiles": "ws0e9cb,ws0e9cc"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 901,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": 128, \"newlyRevealed\": 0}}"
+    },
+    {
+     "label": "roam/presence heartbeat",
+     "method": "POST",
+     "path": "/api/roam/presence",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 128,
+       "lat": "23.129112",
+       "lng": "113.264385",
+       "explorePct": "1"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 908,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200}"
+    },
+    {
+     "label": "roam/session",
+     "method": "GET",
+     "path": "/api/roam/session",
+     "member": 9004,
+     "request": {
+      "q": {
+       "sessionId": 128
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 851,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"128\", \"clientSessionKey\": null, \"state\": \"ACTIVE\"}}"
+    },
+    {
+     "label": "roam/finish",
+     "method": "POST",
+     "path": "/api/roam/finish",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 128,
+       "poiIds": "",
+       "distanceM": "350"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 911,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"finishedAt\": 1794762442602, \"tileXp\": 0, \"poiXp\": 0, \"totalXp\": 0, \"newTiles\": 0, \"newPois\": 0, \"tilesEver\": 6, \"medal\": null, \"sessionShops\": 0, \"badgeDelivery\": [], \"shopMedal\": null}}"
+    },
+    {
+     "label": "roam/finish twice is refused/settled",
+     "method": "POST",
+     "path": "/api/roam/finish",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 128,
+       "poiIds": "",
+       "distanceM": "350"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 2016,
+     "msg": "本次漫游已结算",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"本次漫游已结算\", \"code\": 500}"
+    },
+    {
+     "label": "roam/session/records",
+     "method": "POST",
+     "path": "/api/roam/session/records",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 128,
+       "records": "[{\"tile\": \"ws0e9cb\", \"collectedAt\": 1794762441602}]"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1120,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"sessionId\": \"128\", \"acceptedRecords\": 1, \"evidenceType\": \"CLIENT_REPORTED\"}}"
+    },
+    {
+     "label": "roam/session/records with client-clock timestamp (clock skew)",
+     "method": "POST",
+     "path": "/api/roam/session/records",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "sessionId": 128,
+       "records": "[{\"tile\": \"ws0e9cc\", \"collectedAt\": 1794762432725}]"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 1008,
+     "msg": "采集时间不属于原行程",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "env",
+     "response": "{\"msg\": \"采集时间不属于原行程\", \"code\": 500}"
+    },
+    {
+     "label": "roam/tiles contains revealed tiles",
+     "method": "GET",
+     "path": "/api/roam/tiles",
+     "member": 9004,
+     "request": {
+      "q": {
+       "limit": 500
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 922,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [\"ws0e9cc\", \"ws0e9cb\", \"wtw3sjt\", \"wtw3sjr\", \"wtw3sjq\", \"wtw3skc\"]}"
     }
    ]
   },
   {
    "id": "F09",
    "name": "City Monopoly claim, rent, challenge",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "season/current",
+     "method": "GET",
+     "path": "/api/city-game/season/current",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 867,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"seasonId\": \"s2026w46\", \"phase\": \"REGULAR\", \"day\": 7, \"startsAt\": 1794189600000, \"freezesAt\": 1796565600000, \"endsAt\": 1796608800000, \"countdownMs\": 1803151425, \"myScore\": 0, \"myRank\": null, \"participants\": 0}}"
+    },
+    {
+     "label": "territory/map",
+     "method": "GET",
+     "path": "/api/city-game/territory/map",
+     "member": 9004,
+     "request": {
+      "q": {
+       "minLat": "23.10",
+       "minLng": "113.24",
+       "maxLat": "23.15",
+       "maxLng": "113.29"
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 889,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"currency\": \"POINTS\", \"items\": []}}"
+    },
+    {
+     "label": "territory/points (balance HUD)",
+     "method": "GET",
+     "path": "/api/city-game/territory/points",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 886,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"currency\": \"POINTS\", \"balance\": 9845, \"pending\": 0, \"seasonId\": \"s2026w46\", \"earnedSeason\": 0, \"spentSeason\": 0, \"debt\": 0, \"holdings\": 0, \"holdingLimit\": 9}}"
+    },
+    {
+     "label": "claim/quote",
+     "method": "POST",
+     "path": "/api/city-game/territory/claim/quote",
+     "result": "SKIP",
+     "note": "blocked: no monopoly board/POI fixture on TEST (set E2E_MONOPOLY_POI) - data seeding needed"
+    },
+    {
+     "label": "claim/command",
+     "method": "POST",
+     "path": "/api/city-game/territory/claim/command",
+     "result": "SKIP",
+     "note": "blocked: no monopoly board/POI fixture on TEST (set E2E_MONOPOLY_POI) - data seeding needed"
+    },
+    {
+     "label": "rent: visitor checkin pays owner in points",
+     "method": "POST",
+     "path": "/api/roam/territory/checkin",
+     "result": "SKIP",
+     "note": "blocked: no monopoly board/POI fixture on TEST (set E2E_MONOPOLY_POI) - data seeding needed"
+    },
+    {
+     "label": "challenge/quote",
+     "method": "POST",
+     "path": "/api/city-game/territory/challenge/quote",
+     "result": "SKIP",
+     "note": "blocked: no monopoly board/POI fixture on TEST (set E2E_MONOPOLY_POI) - data seeding needed"
+    },
+    {
+     "label": "challenge/command",
+     "method": "POST",
+     "path": "/api/city-game/territory/challenge/command",
+     "result": "SKIP",
+     "note": "blocked: no monopoly board/POI fixture on TEST (set E2E_MONOPOLY_POI) - data seeding needed"
+    },
+    {
+     "label": "territory/revenue (owner)",
+     "method": "GET",
+     "path": "/api/city-game/territory/revenue",
+     "result": "SKIP",
+     "note": "blocked: no monopoly board/POI fixture on TEST (set E2E_MONOPOLY_POI) - data seeding needed"
     }
    ]
   },
   {
    "id": "F10",
    "name": "Club join and chat",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "club/list (JSON)",
+     "method": "POST",
+     "path": "/api/club/list",
+     "member": 9006,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {}
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 967,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"id\": 7003, \"memberId\": 9003, \"name\": \"梧桐摄影漫步社\", \"logo\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/58fa766dbcf1b791e03a716bfd29eba0.jpg\", \"cover\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/b75b57331491f9de75d498f6166033f9.jpg\", \"description\": \"梧桐摄影漫步社日常活动\", \"clubTypes\": null, \"activ"
+    },
+    {
+     "label": "club/list as the app sends it (multipart) -> app/backend encoding",
+     "method": "POST",
+     "path": "/api/club/list",
+     "member": 9006,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 904,
+     "msg": "Content-Type 'multipart/form-data;boundary=805c13ce4602ef2c0bdc18e02e1734c7;charset=UTF-8' is not supported",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "app",
+     "response": "{\"msg\": \"Content-Type 'multipart/form-data;boundary=805c13ce4602ef2c0bdc18e02e1734c7;charset=UTF-8' is not supported\", \"code\": 500}"
+    },
+    {
+     "label": "club/detail",
+     "method": "POST",
+     "path": "/api/club/detail",
+     "member": 9006,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "id": 7001
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 924,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"id\": 7001, \"memberId\": 9003, \"name\": \"城瘾跑团\", \"logo\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/2a652b0b62a1da190b7ee82e3693d82e.jpg\", \"cover\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/124aa632ab81864422f8c1b3104d80f3.jpg\", \"description\": \"每周举办外滩与法租界城市定向、实景解谜与徒步社交活动，欢迎新老玩家加入。\", \"clu"
+    },
+    {
+     "label": "club/join",
+     "method": "POST",
+     "path": "/api/club/join",
+     "member": 9006,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "id": 7001,
+       "joinMessage": "QA 验收入会"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 926,
+     "msg": "加入成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"加入成功\", \"code\": 200, \"data\": {\"state\": \"joined\"}}"
+    },
+    {
+     "label": "club/join-requests (leader)",
+     "method": "POST",
+     "path": "/api/club/join-requests",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "clubId": 7001
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 878,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 7, \"clubId\": 7001, \"memberId\": 9005, \"role\": 0, \"status\": 0, \"joinMessage\": \"城市探索爱好者，希望能加入城瘾跑团参与周末活动\", \"joinTime\": \"2026-11-14 19:26:07\", \"delFlag\": 0, \"nickname\": \"商家二号\", \"avatar\": \"\", \"levelId\": 1, \"isOwner\": null}]}"
+    },
+    {
+     "label": "club/join-request/approve (leader)",
+     "method": "POST",
+     "path": "/api/club/join-request/approve",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "clubId": 7001,
+       "memberId": 9006
+      }
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 880,
+     "msg": "入会申请不存在或已处理",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"入会申请不存在或已处理\", \"code\": 500}"
+    },
+    {
+     "label": "club/members lists joiner",
+     "method": "POST",
+     "path": "/api/club/members",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "clubId": 7001
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1189,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 96, \"clubId\": 7001, \"memberId\": 9006, \"role\": 0, \"status\": 1, \"joinMessage\": null, \"joinTime\": \"2026-11-16 00:56:50\", \"delFlag\": 0, \"nickname\": \"商家三号\", \"avatar\": \"\", \"levelId\": 1, \"isOwner\": false}, {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"update"
+    },
+    {
+     "label": "club/chat opens group conversation",
+     "method": "POST",
+     "path": "/api/club/chat",
+     "member": 9006,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "id": 7001
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 940,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"conversationId\": 1}}"
+    },
+    {
+     "label": "im/send to club chat",
+     "method": "POST",
+     "path": "/api/im/send",
+     "member": 9006,
+     "request": {
+      "q": null,
+      "form": {
+       "conversation_id": 1,
+       "msg_type": 1,
+       "content": "QA 验收群聊 20261115090559",
+       "client_message_id": "qa-20261115090559-e34c8688"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1091,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 990724, \"conversationId\": 1, \"senderId\": 9006, \"receiverId\": 0, \"msgType\": 1, \"content\": \"QA 验收群聊 20261115090559\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visibleOrderAt\": null, \"clientMessageId\": \"qa-20261115090559-e34c8688\", \"senderName\": null, \"sende"
+    },
+    {
+     "label": "im/messages in club chat",
+     "method": "POST",
+     "path": "/api/im/messages",
+     "member": 9006,
+     "request": {
+      "q": null,
+      "form": {
+       "conversation_id": 1,
+       "cursor_id": 0,
+       "size": 30
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 881,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"nextCursor\": 1, \"blocked\": false, \"blockedByMe\": false, \"hasMore\": false, \"list\": [{\"createBy\": null, \"createTime\": \"2026-11-13 22:38:49\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 1, \"conversationId\": 1, \"senderId\": 9003, \"receiverId\": 0, \"msgType\": 1, \"content\": \"欢迎来到城瘾跑团频道，周六老城三章见！\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visi"
     }
    ]
   },
   {
    "id": "F11",
    "name": "Messages and group chat",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "im/conversations",
+     "method": "POST",
+     "path": "/api/im/conversations",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1069,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"lastMsgType\": 1, \"unread\": 4, \"conversationId\": 1, \"counterparty\": {\"bizKey\": \"club_7001\", \"memberCount\": -16, \"nickname\": \"城瘾跑团\", \"clubId\": 7001, \"id\": 0, \"avatar\": \"https://8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech/profile/upload/2026/11/14/2a652b0b62a1da190b7ee82e3693d82e.jpg\"}, \"type\": 4, \"lastMsgAt\": \"2026-11-16T01:07:42.000+08:00\", \"lastMsgText\": \""
+    },
+    {
+     "label": "im/start DM 9004->9009",
+     "method": "POST",
+     "path": "/api/im/start",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "target_member_id": 9009
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 894,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"conversationId\": 2}}"
+    },
+    {
+     "label": "im/start again returns same conversation",
+     "method": "POST",
+     "path": "/api/im/start",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "target_member_id": 9009
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 875,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"conversationId\": 2}}"
+    },
+    {
+     "label": "im/send DM",
+     "method": "POST",
+     "path": "/api/im/send",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "conversation_id": 2,
+       "msg_type": 1,
+       "content": "QA 私信 20261115090559",
+       "client_message_id": "qa-20261115090559-8f230e6c"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 895,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 990725, \"conversationId\": 2, \"senderId\": 9004, \"receiverId\": 9009, \"msgType\": 1, \"content\": \"QA 私信 20261115090559\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visibleOrderAt\": null, \"clientMessageId\": \"qa-20261115090559-8f230e6c\", \"senderName\": null, \"send"
+    },
+    {
+     "label": "im/send-receipt",
+     "method": "POST",
+     "path": "/api/im/send-receipt",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "conversation_id": 2,
+       "client_message_id": "qa-20261115090559-8f230e6c"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 909,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"found\": true, \"message\": {\"createBy\": null, \"createTime\": \"2026-11-16 01:07:46\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 990725, \"conversationId\": 2, \"senderId\": 9004, \"receiverId\": 9009, \"msgType\": 1, \"content\": \"QA 私信 20261115090559\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visibleOrderAt\": \"2026-11-16 01:07:46.394095\", \"clien"
+    },
+    {
+     "label": "im/messages (receiver)",
+     "method": "POST",
+     "path": "/api/im/messages",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "conversation_id": 2,
+       "cursor_id": 0,
+       "size": 30
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 967,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"nextCursor\": 369, \"blocked\": false, \"blockedByMe\": false, \"hasMore\": true, \"list\": [{\"createBy\": null, \"createTime\": \"2026-11-14 17:33:12\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 369, \"conversationId\": 2, \"senderId\": 9004, \"receiverId\": 9009, \"msgType\": 1, \"content\": \"perf-ping\", \"extraJson\": null, \"status\": 0, \"checkStatus\": 1, \"visibleO"
+    },
+    {
+     "label": "im/unread-total >= 1 (receiver)",
+     "method": "POST",
+     "path": "/api/im/unread-total",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 883,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": 70}"
+    },
+    {
+     "label": "im/read",
+     "method": "POST",
+     "path": "/api/im/read",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "conversation_id": 2
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 949,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200}"
+    },
+    {
+     "label": "im/send group (club_7001 conversation 3)",
+     "method": "POST",
+     "path": "/api/im/send",
+     "member": 9009,
+     "request": {
+      "q": null,
+      "form": {
+       "conversation_id": 3,
+       "msg_type": 1,
+       "content": "QA 群消息 20261115090559",
+       "client_message_id": "qa-20261115090559-g"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 875,
+     "msg": "系统会话不允许用户发送消息",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"系统会话不允许用户发送消息\", \"code\": 500}"
+    },
+    {
+     "label": "im/messages group",
+     "method": "POST",
+     "path": "/api/im/messages",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": {
+       "conversation_id": 3,
+       "cursor_id": 0,
+       "size": 30
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 403,
+     "ms": 862,
+     "msg": "无权查看该会话",
+     "result": "FAIL",
+     "note": "code 403 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"无权查看该会话\", \"code\": 403}"
     }
    ]
   },
   {
    "id": "F12",
    "name": "Publish a topic",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "publisher/identity/status",
+     "method": "POST",
+     "path": "/api/publisher/identity/status",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {}
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 976,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"registered\": true}}"
+    },
+    {
+     "label": "topic/create (save draft)",
+     "method": "POST",
+     "path": "/api/topic/create",
+     "result": "SKIP",
+     "note": "blocked: no APPROVED cover media asset on TEST (set E2E_COVER_ASSET_ID) - data seeding needed"
+    },
+    {
+     "label": "topic/publish-draft",
+     "method": "POST",
+     "path": "/api/topic/publish-draft",
+     "result": "SKIP",
+     "note": "blocked: no APPROVED cover media asset on TEST (set E2E_COVER_ASSET_ID) - data seeding needed"
+    },
+    {
+     "label": "topic/publish-draft replay is idempotent",
+     "method": "POST",
+     "path": "/api/topic/publish-draft",
+     "result": "SKIP",
+     "note": "blocked: no APPROVED cover media asset on TEST (set E2E_COVER_ASSET_ID) - data seeding needed"
+    },
+    {
+     "label": "play/nodes on new topic (no '路线尚未发布')",
+     "method": "GET",
+     "path": "/api/play/nodes",
+     "result": "SKIP",
+     "note": "blocked: no APPROVED cover media asset on TEST (set E2E_COVER_ASSET_ID) - data seeding needed"
     }
    ]
   },
   {
    "id": "F13",
    "name": "Publish an activity",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "activity/publish_precheck",
+     "method": "POST",
+     "path": "/api/activity/publish_precheck",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": {
+       "scope": ""
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 403,
+     "ms": 981,
+     "msg": "已达到当前身份活动数量上限（3）",
+     "result": "FAIL",
+     "note": "code 403 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"已达到当前身份活动数量上限（3）\", \"code\": 403}"
+    },
+    {
+     "label": "activity/publish",
+     "method": "POST",
+     "path": "/api/activity/publish",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "name": "QA 验收活动 20261115090559",
+       "description": "acceptance r3",
+       "addressName": "钟楼广场",
+       "startDate": "2026-11-20 10:00:00",
+       "endDate": "2026-11-20 18:00:00",
+       "categoryIds": "1",
+       "collaborators": [],
+       "requestId": "qa20261115090559act067dd51856574058a586e0349836a",
+       "tickets": [
+        {
+         "name": "免费票",
+         "price": 0,
+         "startTime": "2026-11-20 10:00:00",
+         "endTime": "2026-11-20 18:00:00",
+         "totalStock": 10
+        }
+       ]
+      }
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 879,
+     "msg": "已达到当前身份活动数量上限（3）",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"已达到当前身份活动数量上限（3）\", \"code\": 500, \"writeReceipt\": {\"state\": \"REJECTED\", \"operation\": \"ACTIVITY_PUBLISH\", \"requestId\": \"qa20261115090559act067dd51856574058a586e0349836a\"}}"
+    },
+    {
+     "label": "activity/publish replay (same requestId) is idempotent",
+     "method": "POST",
+     "path": "/api/activity/publish",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "name": "QA 验收活动 20261115090559",
+       "description": "acceptance r3",
+       "addressName": "钟楼广场",
+       "startDate": "2026-11-20 10:00:00",
+       "endDate": "2026-11-20 18:00:00",
+       "categoryIds": "1",
+       "collaborators": [],
+       "requestId": "qa20261115090559act067dd51856574058a586e0349836a",
+       "tickets": [
+        {
+         "name": "免费票",
+         "price": 0,
+         "startTime": "2026-11-20 10:00:00",
+         "endTime": "2026-11-20 18:00:00",
+         "totalStock": 10
+        }
+       ]
+      }
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 897,
+     "msg": "已达到当前身份活动数量上限（3）",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"已达到当前身份活动数量上限（3）\", \"code\": 500, \"writeReceipt\": {\"state\": \"REJECTED\", \"operation\": \"ACTIVITY_PUBLISH\", \"requestId\": \"qa20261115090559act067dd51856574058a586e0349836a\"}}"
+    },
+    {
+     "label": "activity/info new activity",
+     "method": "POST",
+     "path": "/api/activity/info",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": {
+       "id": null
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 928,
+     "msg": "参数不合规",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"参数不合规\", \"code\": 500}"
+    },
+    {
+     "label": "player cannot publish activity",
+     "method": "POST",
+     "path": "/api/activity/publish",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "name": "QA 验收活动 20261115090559",
+       "description": "acceptance r3",
+       "addressName": "钟楼广场",
+       "startDate": "2026-11-20 10:00:00",
+       "endDate": "2026-11-20 18:00:00",
+       "categoryIds": "1",
+       "collaborators": [],
+       "requestId": "qa20261115090559pd843ad9219f345b8a00c49110b65d1a",
+       "tickets": [
+        {
+         "name": "免费票",
+         "price": 0,
+         "startTime": "2026-11-20 10:00:00",
+         "endTime": "2026-11-20 18:00:00",
+         "totalStock": 10
+        }
+       ]
+      }
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 925,
+     "msg": "仅俱乐部主理人或商家可发布活动",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"仅俱乐部主理人或商家可发布活动\", \"code\": 500, \"writeReceipt\": {\"state\": \"REJECTED\", \"operation\": \"ACTIVITY_PUBLISH\", \"requestId\": \"qa20261115090559pd843ad9219f345b8a00c49110b65d1a\"}}"
+    },
+    {
+     "label": "activity/delete cleanup",
+     "method": "POST",
+     "path": "/api/activity/delete",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": {
+       "id": null,
+       "scope": ""
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 868,
+     "msg": "参数不合规",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"参数不合规\", \"code\": 500}"
     }
    ]
   },
   {
    "id": "F14",
    "name": "Merchant scan-to-verify",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "coupon/publish (merchant)",
+     "method": "POST",
+     "path": "/api/coupon/publish",
+     "member": 9002,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "name": "QA 验收券 20261115090559",
+       "description": "acceptance",
+       "startTime": "2026-11-15 09:07:52",
+       "endTime": "2026-11-22 09:07:52",
+       "publishCount": 1,
+       "couponType": 1
+      }
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 975,
+     "msg": "已达到当前身份优惠券数量上限（3）",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "backend",
+     "response": "{\"msg\": \"已达到当前身份优惠券数量上限（3）\", \"code\": 500}"
+    },
+    {
+     "label": "coupon/myrecvlist (player)",
+     "method": "POST",
+     "path": "/api/coupon/myrecvlist",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1193,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": null, \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 970101, \"couponId\": 970002, \"memberId\": 9004, \"couponCode\": \"CPN9004U01\", \"qrcodeUrl\": null, \"getType\": 1, \"getTime\": \"2026-11-14\", \"useStatus\": 0, \"useTime\": null, \"orderId\": null, \"orderSn\": null, \"startTime\": \"2026-11-13\", \"endTime\": \"2027-01-13\", \"note\": \"E2E"
+    },
+    {
+     "label": "coupon/qr-token (player)",
+     "method": "POST",
+     "path": "/api/coupon/qr-token",
+     "result": "SKIP",
+     "note": "blocked: no granted coupon for player on TEST (set E2E_COUPON_HISTORY_ID) - data seeding needed"
+    },
+    {
+     "label": "coupon/verification (merchant)",
+     "method": "POST",
+     "path": "/api/coupon/verification",
+     "result": "SKIP",
+     "note": "blocked: no granted coupon for player on TEST (set E2E_COUPON_HISTORY_ID) - data seeding needed"
+    },
+    {
+     "label": "coupon/verification replay",
+     "method": "POST",
+     "path": "/api/coupon/verification",
+     "result": "SKIP",
+     "note": "blocked: no granted coupon for player on TEST (set E2E_COUPON_HISTORY_ID) - data seeding needed"
+    },
+    {
+     "label": "coupon/verification by another merchant refused",
+     "method": "POST",
+     "path": "/api/coupon/verification",
+     "result": "SKIP",
+     "note": "blocked: no granted coupon for player on TEST (set E2E_COUPON_HISTORY_ID) - data seeding needed"
+    },
+    {
+     "label": "coupon/status used",
+     "method": "POST",
+     "path": "/api/coupon/status",
+     "result": "SKIP",
+     "note": "blocked: no granted coupon for player on TEST (set E2E_COUPON_HISTORY_ID) - data seeding needed"
+    },
+    {
+     "label": "merchant/verification-records",
+     "method": "POST",
+     "path": "/api/merchant/verification-records",
+     "result": "SKIP",
+     "note": "blocked: no granted coupon for player on TEST (set E2E_COUPON_HISTORY_ID) - data seeding needed"
     }
    ]
   },
   {
    "id": "F15",
    "name": "Merchant refund",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "merchant/orders",
+     "method": "POST",
+     "path": "/api/merchant/orders",
+     "member": 9002,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {}
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1006,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": \"9004\", \"createTime\": \"2026-11-13 19:26:07\", \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 992701, \"orderType\": 1, \"orderSn\": \"ORD20261114E2E01\", \"payId\": null, \"memberId\": 9004, \"mmsMerchantId\": 8001, \"productQuantity\": 1, \"productTotalAmount\": 29.0, \"deliveryFee\": 0.0, \"payAmount\": 29.0, \"taxFee\": null, \"orderTotalAmount\": 29.0, \"p"
+    },
+    {
+     "label": "merchant/aftercare/list PENDING",
+     "method": "POST",
+     "path": "/api/merchant/aftercare/list",
+     "member": 9002,
+     "request": {
+      "q": {
+       "bucket": "PENDING",
+       "pageNum": 1,
+       "pageSize": 20
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 921,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"bucket\": \"PENDING\", \"pageNum\": 1, \"pageSize\": 20, \"total\": 0, \"hasMore\": false, \"items\": []}}"
+    },
+    {
+     "label": "player cannot read merchant aftercare",
+     "method": "POST",
+     "path": "/api/merchant/aftercare/list",
+     "member": 9004,
+     "request": {
+      "q": {
+       "bucket": "ALL",
+       "pageNum": 1,
+       "pageSize": 20
+      },
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 403,
+     "ms": 871,
+     "msg": "商家身份无效或权限不足",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"商家身份无效或权限不足\", \"code\": 403}"
+    },
+    {
+     "label": "merchant/aftercare/detail",
+     "method": "POST",
+     "path": "/api/merchant/aftercare/detail",
+     "result": "SKIP",
+     "note": "blocked: no pending (status=0) refund_application for a 9002 activity on TEST - data seeding needed"
+    },
+    {
+     "label": "merchant/aftercare/respond AGREE",
+     "method": "POST",
+     "path": "/api/merchant/aftercare/respond",
+     "result": "SKIP",
+     "note": "blocked: no pending (status=0) refund_application for a 9002 activity on TEST - data seeding needed"
     }
    ]
   },
   {
    "id": "F16",
    "name": "Creator earnings",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "creator/center",
+     "method": "POST",
+     "path": "/api/creator/center",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 920,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"applyStatus\": \"not_applied\", \"profile\": null, \"metric\": null, \"recentIncome\": [], \"revenue\": null, \"revenueState\": \"UNKNOWN\", \"revenueUnavailableReason\": null}}"
+    },
+    {
+     "label": "club/settlement/summary club 7001",
+     "method": "POST",
+     "path": "/api/club/settlement/summary",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "clubId": 7001
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 906,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"settledAmountText\": \"¥0.00\", \"settledAmountStatus\": \"verified\", \"unverifiedSettledCount\": 0, \"pendingAdjustment\": null, \"topics\": [], \"sessions\": [], \"isOwner\": true, \"personal\": false}}"
+    },
+    {
+     "label": "user/balance/list income",
+     "method": "POST",
+     "path": "/api/user/balance/list",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": {
+       "pageNum": 1,
+       "pageSize": 20
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 878,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"total\": 1, \"rows\": [{\"createBy\": \"e2e-enrich\", \"createTime\": \"2026-11-13 19:26:07\", \"updateBy\": \"e2e-enrich\", \"updateTime\": \"2026-11-14 19:26:07\", \"remark\": null, \"id\": 992545, \"memberId\": 9003, \"currentBalance\": 0.0, \"afterBalance\": 560.0, \"changeBalance\": 560.0, \"changeReason\": \"俱乐部活动票房分润\", \"eventType\": 2, \"eventId\": 992034, \"changeType\": 1, \"delFlag\": 0}],"
+    },
+    {
+     "label": "balance/list",
+     "method": "POST",
+     "path": "/api/balance/list",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 854,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": \"e2e-enrich\", \"createTime\": \"2026-11-13 19:26:07\", \"updateBy\": \"e2e-enrich\", \"updateTime\": \"2026-11-14 19:26:07\", \"remark\": null, \"id\": 992545, \"memberId\": 9003, \"currentBalance\": 0.0, \"afterBalance\": 560.0, \"changeBalance\": 560.0, \"changeReason\": \"俱乐部活动票房分润\", \"eventType\": 2, \"eventId\": 992034, \"changeType\": 1, \"delFlag\": 0}]}"
+    },
+    {
+     "label": "wallet/stages (JSON)",
+     "method": "POST",
+     "path": "/api/wallet/stages",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {}
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1083,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"amountsKnown\": true, \"pendingSettlement\": 54.0, \"complaintPeriod\": [], \"disputed\": 0, \"withdrawable\": 560.0}}"
+    },
+    {
+     "label": "wallet/stages form-encoded (app encoding?)",
+     "method": "POST",
+     "path": "/api/wallet/stages",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": {
+       "x": "1"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 915,
+     "msg": "Content-Type 'application/x-www-form-urlencoded;charset=UTF-8' is not supported",
+     "result": "FAIL",
+     "note": "code 500 not in [200]",
+     "owner": "app",
+     "response": "{\"msg\": \"Content-Type 'application/x-www-form-urlencoded;charset=UTF-8' is not supported\", \"code\": 500}"
+    },
+    {
+     "label": "merchant/finance/overview",
+     "method": "POST",
+     "path": "/api/merchant/finance/overview",
+     "member": 9002,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {}
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 928,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"personalArrivedThisMonthGross\": \"400.00\", \"personalExecutedAdjustmentsThisMonth\": \"0.00\", \"personalArrivedThisMonthNet\": \"400.00\", \"publicPayablePending\": \"150.00\", \"adjustmentPending\": \"0.00\", \"adjustmentPendingCount\": 0}}"
+    },
+    {
+     "label": "merchant/finance/settlement-entries",
+     "method": "POST",
+     "path": "/api/merchant/finance/settlement-entries",
+     "member": 9002,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "source": "all",
+       "pageNum": 1,
+       "pageSize": 20
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 928,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"rows\": [{\"entryKey\": \"coop:992654\", \"claimRef\": {\"groupType\": \"COOP_SETTLEMENT\", \"headCount\": 3, \"groupId\": 992654, \"claimCount\": null, \"type\": \"GROUP\"}, \"settlementRoute\": \"COOP_ORDER\", \"entryKind\": \"EARNING\", \"source\": \"COOP_SHARE\", \"sourceId\": \"992654\", \"destination\": \"PERSONAL_ACCOUNT\", \"signedAmount\": \"60.00\", \"originalAmount\": \"60.00\", \"executedAdjustme"
+    },
+    {
+     "label": "player cannot read merchant finance",
+     "method": "POST",
+     "path": "/api/merchant/finance/overview",
+     "member": 9004,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {}
+     },
+     "status": 200,
+     "code": 403,
+     "ms": 993,
+     "msg": "商家身份无效或权限不足",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"商家身份无效或权限不足\", \"code\": 403}"
     }
    ]
   },
   {
    "id": "F17",
    "name": "Withdraw (TEST)",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "withdrawal/list",
+     "method": "POST",
+     "path": "/api/withdrawal/list",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 937,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": []}"
+    },
+    {
+     "label": "wallet/stages",
+     "method": "POST",
+     "path": "/api/wallet/stages",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {}
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1133,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"amountsKnown\": true, \"pendingSettlement\": 54.0, \"complaintPeriod\": [], \"disputed\": 0, \"withdrawable\": 560.0}}"
+    },
+    {
+     "label": "consent bank_account_collection",
+     "method": "POST",
+     "path": "/api/compliance/consents",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "docType": "bank_account_collection",
+       "scene": "withdrawal",
+       "eventType": "AGREE",
+       "requestId": "qa20261115090559w836745f20b9c4a51a45bb1da62f6e59"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 870,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-16T01:08:15.000+08:00\", \"requestId\": \"qa20261115090559w836745f20b9c4a51a45bb1da62f6e59\", \"docType\": \"bank_account_collection\", \"eventType\": \"AGREE\", \"docVersion\": \"v1.0\", \"scene\": \"withdrawal\"}}"
+    },
+    {
+     "label": "fund/preflight/bank-withdrawal",
+     "method": "POST",
+     "path": "/api/fund/preflight/bank-withdrawal",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "amount": "0.01",
+       "realname": "测试主理人",
+       "bankName": "TEST BANK",
+       "bankAccount": "6222000000000000000",
+       "mobilephone": "13900000003",
+       "requestId": "qa20261115090559wd819cdc2f2e8f42768ff9ceb7644703"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 911,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 82, \"challengeToken\": \"<redacted>\", \"state\": \"PENDING\", \"serverTime\": \"2026-11-16 01:08:15\", \"expiresAt\": \"2026-11-16 01:10:15\", \"expiresInSeconds\": 120, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"FIRST_DESTINATION\"], \"canProceed\": true"
+    },
+    {
+     "label": "fund/preflight confirm",
+     "method": "POST",
+     "path": "/api/fund/preflight/82/confirm",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "challengeToken": "<redacted>"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 905,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 82, \"challengeToken\": null, \"state\": \"CONFIRMED\", \"serverTime\": \"2026-11-16 01:08:16\", \"expiresAt\": \"2026-11-16 01:10:15\", \"expiresInSeconds\": 119, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"FIRST_DESTINATION\"], \"canProceed\": true, \"amo"
+    },
+    {
+     "label": "withdrawal/create",
+     "method": "POST",
+     "path": "/api/withdrawal/create",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "amount": "0.01",
+       "realname": "测试主理人",
+       "bankName": "TEST BANK",
+       "bankAccount": "6222000000000000000",
+       "mobilephone": "13900000003",
+       "withdrawalAmount": "0.01",
+       "challengeId": 82,
+       "requestId": "qa20261115090559wd819cdc2f2e8f42768ff9ceb7644703"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1005,
+     "msg": "提现申请成功，请等待审核",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"提现申请成功，请等待审核\", \"code\": 200, \"data\": 992613}"
+    },
+    {
+     "label": "withdrawal/list has pending row",
+     "method": "POST",
+     "path": "/api/withdrawal/list",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 890,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": [{\"createBy\": \"13900000003\", \"createTime\": null, \"updateBy\": null, \"updateTime\": null, \"remark\": null, \"id\": 992613, \"memberId\": 9003, \"requestId\": \"qa20261115090559wd819cdc2f2e8f42768ff9ceb7644703\", \"realname\": \"测*\", \"bankName\": \"T***\", \"bankAccount\": \"***************0000\", \"mobilephone\": \"139****0003\", \"realnameMask\": \"测*\", \"bankNameMask\": \"T***\", \"bankAccoun"
+    },
+    {
+     "label": "withdrawal/delete (undo)",
+     "method": "POST",
+     "path": "/api/withdrawal/delete",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": {
+       "id": 992613
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 930,
+     "msg": "撤回成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"撤回成功\", \"code\": 200}"
+    },
+    {
+     "label": "over-balance preflight",
+     "method": "POST",
+     "path": "/api/fund/preflight/bank-withdrawal",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "amount": "99999999",
+       "realname": "测试主理人",
+       "bankName": "TEST BANK",
+       "bankAccount": "6222000000000000000",
+       "mobilephone": "13900000003",
+       "requestId": "qa20261115090559wx9be4065daccb4e859253eb504d9220"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 1452,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 83, \"challengeToken\": \"<redacted>\", \"state\": \"PENDING\", \"serverTime\": \"2026-11-16 01:08:20\", \"expiresAt\": \"2026-11-16 01:10:20\", \"expiresInSeconds\": 120, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"HIGH_AMOUNT\"], \"canProceed\": true, \"amo"
+    },
+    {
+     "label": "over-balance preflight confirm",
+     "method": "POST",
+     "path": "/api/fund/preflight/83/confirm",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "challengeToken": "<redacted>"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 955,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"challengeId\": 83, \"challengeToken\": null, \"state\": \"CONFIRMED\", \"serverTime\": \"2026-11-16 01:08:21\", \"expiresAt\": \"2026-11-16 01:10:20\", \"expiresInSeconds\": 119, \"question\": \"你确认将资金提现到TEST BANK（***************0000）吗？\", \"consequence\": \"确认并提交后将扣减可用余额并进入提现审核；打款完成后可能无法撤回。\", \"riskLevel\": \"WARNING\", \"riskReasonCodes\": [\"HIGH_AMOUNT\"], \"canProceed\": true, \"amount\": "
+    },
+    {
+     "label": "withdraw over balance refused with clear msg",
+     "method": "POST",
+     "path": "/api/withdrawal/create",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "amount": "99999999",
+       "realname": "测试主理人",
+       "bankName": "TEST BANK",
+       "bankAccount": "6222000000000000000",
+       "mobilephone": "13900000003",
+       "withdrawalAmount": "99999999",
+       "challengeId": 83,
+       "requestId": "qa20261115090559wx9be4065daccb4e859253eb504d9220"
+      }
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 913,
+     "msg": "提现申请失败，请稍后重试",
+     "result": "FAIL",
+     "note": "over-balance gives generic/accepted response: 提现申请失败，请稍后重试",
+     "owner": "backend",
+     "response": "{\"msg\": \"提现申请失败，请稍后重试\", \"code\": 500}"
     }
    ]
   },
   {
    "id": "F18",
    "name": "Account deletion",
-   "verdict": "BLOCKED",
+   "verdict": "FAIL",
    "steps": [
     {
-     "label": "(precondition)",
-     "method": "-",
-     "path": "-",
-     "result": "BLOCKED",
-     "note": "cannot reach TEST server: HTTPSConnectionPool(host='8120-agqyfqxs5vwolymtoibzq3fhde.instabox.tech', port=443): Max retries exceeded with url: /api/sms/send (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
-     "owner": "env"
+     "label": "status NORMAL",
+     "method": "GET",
+     "path": "/api/user/deregister/status",
+     "member": "13900000918",
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 896,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"status\": \"NORMAL\", \"verificationMethod\": \"UNAVAILABLE\", \"executeAfter\": null, \"blockers\": []}}"
+    },
+    {
+     "label": "precheck ELIGIBLE",
+     "method": "POST",
+     "path": "/api/user/deregister/precheck",
+     "member": "13900000918",
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 897,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"status\": \"ELIGIBLE\", \"verificationMethod\": \"SMS\", \"executeAfter\": null, \"blockers\": []}}"
+    },
+    {
+     "label": "precheck club leader BLOCKED",
+     "method": "POST",
+     "path": "/api/user/deregister/precheck",
+     "member": 9003,
+     "request": {
+      "q": null,
+      "form": null,
+      "json": null
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 941,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"status\": \"BLOCKED\", \"verificationMethod\": \"UNAVAILABLE\", \"executeAfter\": null, \"blockers\": [\"账户余额未处理\", \"持有商家身份，请先处理商家业务\", \"持有俱乐部身份，请先处理俱乐部业务\"]}}"
+    },
+    {
+     "label": "consent account_cancel",
+     "method": "POST",
+     "path": "/api/compliance/consents",
+     "member": "13900000918",
+     "request": {
+      "q": null,
+      "form": null,
+      "json": {
+       "docType": "account_cancellation_notice",
+       "scene": "account_cancel",
+       "eventType": "AGREE",
+       "requestId": "qa20261115090559d12a30e07a485484bb5d546427b2cc95"
+      }
+     },
+     "status": 200,
+     "code": 200,
+     "ms": 912,
+     "msg": "操作成功",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"操作成功\", \"code\": 200, \"data\": {\"occurredAt\": \"2026-11-16T01:08:29.000+08:00\", \"requestId\": \"qa20261115090559d12a30e07a485484bb5d546427b2cc95\", \"docType\": \"account_cancellation_notice\", \"eventType\": \"AGREE\", \"docVersion\": \"v2.1\", \"scene\": \"account_cancel\"}}"
+    },
+    {
+     "label": "sms/send for apply",
+     "method": "POST",
+     "path": "/api/sms/send",
+     "member": null,
+     "request": {
+      "q": null,
+      "form": {
+       "phone": "13900000918"
+      },
+      "json": null
+     },
+     "status": 200,
+     "code": 500,
+     "ms": 900,
+     "msg": "发送过于频繁,请稍后再试",
+     "result": "PASS",
+     "note": null,
+     "owner": null,
+     "response": "{\"msg\": \"发送过于频繁,请稍后再试\", \"code\": 500}"
+    },
+    {
+     "label": "deregister/apply",
+     "method": "POST",
+     "path": "/api/user/deregister/apply",
+     "result": "SKIP",
+     "note": "blocked: no SMS code source for apply"
+    },
+    {
+     "label": "old token revoked after apply",
+     "method": "GET",
+     "path": "/api/user/deregister/status",
+     "result": "SKIP",
+     "note": "blocked: no SMS code source for apply"
+    },
+    {
+     "label": "deregister/result PENDING",
+     "method": "GET",
+     "path": "/api/user/deregister/result",
+     "result": "SKIP",
+     "note": "blocked: no SMS code source for apply"
+    },
+    {
+     "label": "deregister/cancel",
+     "method": "POST",
+     "path": "/api/user/deregister/cancel",
+     "result": "SKIP",
+     "note": "blocked: no SMS code source for apply"
+    },
+    {
+     "label": "status back to NORMAL",
+     "method": "GET",
+     "path": "/api/user/deregister/status",
+     "result": "SKIP",
+     "note": "blocked: no SMS code source for apply"
     }
    ]
   }
