@@ -10,6 +10,7 @@
   border: 1rpx solid var(--cy-color-border-strong); border-radius: var(--cy-radius-md);
   font-size: var(--cy-font-body); background: var(--cy-color-bg-surface);
 }
+.mcs__input { height: 92rpx; padding: 0 var(--cy-space-3); }
 .mcs__search .mcs__input { flex: 1; }
 .mcs__area { height: 180rpx; }
 .mcs__cand { padding: var(--cy-space-3); border-bottom: 1rpx solid var(--cy-color-border-strong); font-size: var(--cy-font-body); }

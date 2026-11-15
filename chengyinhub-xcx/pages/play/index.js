@@ -4711,7 +4711,7 @@ Page({
       gameTitle: n.gameTitle || (vm === 6 ? '生活偏好校准' : (vm === 4 ? '现场打卡' : (vm === 2 ? '拍照任务' : (vm ? '节点任务' : '')))),
       duration: n.duration ? (n.duration + ' 分钟') : '', difficulty: n.difficulty || '', players: n.players || '',
       materials: n.requiredMaterials || '', rule: stripOperatorNotes(n.ruleInstructions || ''), // V-12:运营备注不给玩家看
-      story: n.storyText || '', cover: n.storyImg || n.imgUrl || '',
+      story: n.storyText || '', cover: n.storyImg || n.imgUrl || '', storyImage: n.storyImg || '',
       cardHook: n.cardHookLong || '',
       fragmentText: n.fragmentText || '',
       hint1: n.hint1 || '', hint2: n.hint2 || '', reveal: n.answerReveal || '',
@@ -7766,6 +7766,8 @@ Page({
     view = Object.assign({}, view, { plainOutcome: !((this.data.themeBag || {}).quests || []).length, clueTransform: ((placeNode && placeNode.advancedConfig) || {}).clueTransform }); // 没有通用局:结果反馈没过在本站重来;UG-10 谜面变换模式只在节点公开投影里
     const picked = this.data.isPreview && view.previewKit ? view.previewKit : pickPlayKit(Object.assign({}, view, { placeName }), new Date()); if (picked && picked.type === 'hangman' && placeNode) Object.assign(picked, hangmanStationText(picked, placeNode, stationLabel(playerTitle(placeNode.gameTitle || placeNode.name)))); // 逐字猜词服务端不一定带题面:缺时用本站题干/站名摆在格子上方,解开后接本站文字反馈
     const kit = dailySignRevealState(previous, picked);
+    // 模板故事图也承载任务证据；题面没另配图时沿用当前节点的授权图片，不拿地点封面代替。
+    if (kit && kit.type === 'qa' && !kit.imageUrl && placeNode && placeNode.storyImage) kit.imageUrl = placeNode.storyImage;
     if (kit && kit.type === 'qa' && kit.passed && submitted && submitted.accepted) kit.acceptedInput = submitted.input;
     if (kit && kit.type === 'album' && !kit.done && kit.sessionId === previous.sessionId && kit.version === previous.version) kit.uploaded = !!previous.uploaded;
     if (!kit) { this.setData({ playKit: { show: false, kit: null } }); return; }

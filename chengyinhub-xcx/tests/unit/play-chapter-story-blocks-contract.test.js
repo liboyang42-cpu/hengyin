@@ -353,6 +353,102 @@ test('卡包打开内嵌问答时展示独立题面，故事流打开时继续�
   assert.equal(page.data.playKit.kit.type, 'qa')
 })
 
+function evidenceQaPage(raw = {}) {
+  const page = makePage({ id: 1, blocks: [] }, [])
+  const node = page.normNode(Object.assign({ nodeId: 51, name: '任务', validationMethod: 1,
+    imgUrl: 'https://example.invalid/place.jpg', storyImg: 'https://example.invalid/evidence.jpg',
+    advancedConfigJson: JSON.stringify({ qa: { enabled: true, mode: 'TYPE' } }) }, raw), 0, 1)
+  page.data.nodes = [node]
+  page.data.advancedPlay = { show: true, node }
+  return page
+}
+
+function evidenceQaView() {
+  return { nodeId: 51, sessionId: 71, version: 2, status: 'RUNNING',
+    playKit: { qa: { mode: 'TYPE', title: '根据材料作答', attempts: 1, finished: false } } }
+}
+
+test('normNode保留独立任务故事图，不把地点封面当作材料', () => {
+  const page = evidenceQaPage()
+  assert.equal(page.data.nodes[0].storyImage, 'https://example.invalid/evidence.jpg')
+  assert.equal(page.data.nodes[0].imgUrl, 'https://example.invalid/place.jpg')
+  assert.equal(evidenceQaPage({ storyImg: '' }).data.nodes[0].storyImage, '')
+})
+
+test('当前QA在作答前读取本节点故事证据图，保持原尝试和输入合同', () => {
+  const page = evidenceQaPage()
+  const view = evidenceQaView()
+  page.onAdvancedSession({ detail: view })
+  const kit = page.data.playKit.kit
+  assert.equal(kit.type, 'qa')
+  assert.equal(kit.imageUrl, 'https://example.invalid/evidence.jpg')
+  assert.equal(kit.attempts, 1)
+  assert.equal(kit.finished, false)
+  assert.equal(kit.answerText, '')
+  assert.equal(view.playKit.qa.imageUrl, undefined, '不改服务端原回包')
+})
+
+test('显式题面图优先且没有故事图时不拿建筑图补QA', () => {
+  const page = evidenceQaPage()
+  const view = evidenceQaView()
+  view.playKit.qa.imageUrl = 'https://example.invalid/question.jpg'
+  page.onAdvancedSession({ detail: view })
+  assert.equal(page.data.playKit.kit.imageUrl, view.playKit.qa.imageUrl)
+  const bare = evidenceQaPage({ storyImg: '' })
+  bare.onAdvancedSession({ detail: evidenceQaView() })
+  assert.equal(bare.data.playKit.kit.imageUrl, '')
+})
+
+test('故事证据图不会写入非QA玩法', () => {
+  const page = evidenceQaPage()
+  const view = Object.assign(evidenceQaView(), { playKit: { random: { items: [], drawCount: 1 } } })
+  page.onAdvancedSession({ detail: view })
+  assert.equal(page.data.playKit.kit.type, 'random')
+  assert.equal(page.data.playKit.kit.imageUrl || '', '')
+})
+
+test('旧节点旧会话旧版本和换账号回包不替换当前证据图', () => {
+  for (const stale of ['node', 'session', 'version', 'previousVersion', 'account']) {
+    const page = evidenceQaPage()
+    const view = evidenceQaView()
+    page.data.playKit = { show: true, kit: { type: 'qa', sessionId: 71, version: 2,
+      imageUrl: 'https://example.invalid/current.jpg' } }
+    const original = page.data.playKit
+    if (stale === 'node') view.nodeId = 52
+    if (stale === 'session') page._advancedGameComponent = () => ({ data: { state: { sessionId: 72, version: 2 } } })
+    if (stale === 'version') page._advancedGameComponent = () => ({ data: { state: { sessionId: 71, version: 3 } } })
+    if (stale === 'previousVersion') view.version = 1
+    if (stale === 'account') page._isPlayAccountCurrent = () => false
+    page.onAdvancedSession({ detail: view })
+    assert.equal(page.data.playKit, original, stale)
+  }
+})
+
+test('QA材料图在输入前完整排版，单张图片可走真实放大处理器', () => {
+  const qaPath = require.resolve('../../pages/play/components/playkit-qa/index.js')
+  const previousComponent = global.Component, previousBehavior = global.Behavior
+  const previewImage = wx.previewImage
+  let definition, opened
+  try {
+    global.Behavior = value => value
+    global.Component = value => { definition = value }
+    wx.previewImage = value => { opened = value }
+    delete require.cache[qaPath]
+    require(qaPath)
+    const image = 'https://example.invalid/evidence.jpg'
+    definition.methods.onPreviewQuestion.call({ data: { imageUrl: image } })
+    assert.deepEqual(opened, { current: image, urls: [image] })
+    const wxml = read('pages/play/components/playkit-qa/index.wxml')
+    assert.match(wxml, /src="\{\{imageUrl\}\}" mode="widthFix" bindtap="onPreviewQuestion"/)
+    assert.ok(wxml.indexOf('class="qa__media"') < wxml.indexOf('class="qa__input'))
+  } finally {
+    global.Component = previousComponent
+    global.Behavior = previousBehavior
+    wx.previewImage = previewImage
+    delete require.cache[qaPath]
+  }
+})
+
 function storyEndVisible(last) {
   const match = read('pages/play/index.wxml').match(/<view class="chfull__end" wx:if="\{\{([^}]+)\}\}">/);
   assert.ok(match, '故事末尾必须绑定真实显示条件');

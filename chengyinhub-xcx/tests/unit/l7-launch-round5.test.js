@@ -5,6 +5,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('node:vm')
 const { createRequire } = require('node:module')
+const { createRequireLogin, hasSession } = require('../../utils/auth/require-login.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
@@ -110,7 +111,8 @@ test('#1 club/apply 游客:登录引导(no-permission + 登录),登录后重查�
 
 // ---------- #2 游客进发现页帖文流 ----------
 
-test('2026-11-14 talent/list 游客公开帖文失败可重试，不触发登录', async () => {
+// club/post/feed 是需身份的聚合流；公开目录与本团公开帖文分别走 club/list、club/post/list。
+test('talent/list 普通读取失败可重试，游客和会员都不被当作需登录', async () => {
   for (const [userId, expectLogin] of [['', false], ['7', false]]) {
     let user = userId
     const loginCalls = []
@@ -123,18 +125,78 @@ test('2026-11-14 talent/list 游客公开帖文失败可重试，不触发登录
       await flush()
       const feed = m.requests.find((r) => r.url === '/api/club/post/feed')
       assert.ok(feed, '应请求 /api/club/post/feed')
-      feed.fail({ code: userId ? 500 : 401, msg: '服务异常' })
+      feed.fail({ code: 500, msg: '服务异常' })
       await flush()
       assert.equal(m.host.data.feedState, 'error')
       assert.equal(m.host.data.feedLoginRequired, expectLogin)
       m.host.retryFeed()
       await flush()
-      assert.deepEqual(loginCalls, [], '公开读取重试不得登录')
+      assert.deepEqual(loginCalls, [], '普通读取失败重试不得登录')
       assert.equal(m.requests.filter(r => r.url === '/api/club/post/feed').length, 2)
     } finally { m.restore() }
   }
   const wxml = read('pages/talent/list/index.wxml')
   assert.match(wxml, /load-failure="\{\{!feedLoginRequired\}\}"[^>]*title="\{\{feedLoginRequired \? '登录后查看帖文' : '动态加载失败'\}\}"[^>]*retry="\{\{feedLoginRequired \? '登录' : '重试'\}\}" bind:retry="retryFeed"/)
+})
+
+async function assertFeedLoginRecovery(source) {
+  let user = '', credential = ''
+  const loginCalls = [], prompts = []
+  const m = mount('pages/talent/list/index.js', { source, app: {
+    getUserID: () => user, getAuthorization: () => credential,
+    firstLogin: () => {
+      loginCalls.push('first'); user = '7'; credential = 'fixture-session'
+      return Promise.resolve({ ok: true })
+    },
+  } })
+  const guard = createRequireLogin({ getApp: () => m.app, getPages: () => [m.host],
+    show: options => prompts.push(options) })
+  m.app.ensureLoginFor = (reason, resume, context) => {
+    if (hasSession(m.app)) return true
+    guard.withLogin(Object.assign({}, context, { reason }), resume)
+    return false
+  }
+  try {
+    m.host.data.activeTopTab = 'feed'
+    m.host.loadFeed()
+    await flush()
+    const feed = m.requests.find(r => r.url === '/api/club/post/feed')
+    assert.ok(feed)
+    feed.fail({ code: 401 })
+    await flush()
+    assert.equal(m.host.data.feedState, 'error')
+    assert.equal(m.host.data.feedLoginRequired, true, '聚合流真实401必须保留显式登录恢复')
+    assert.deepEqual(loginCalls, [], '浏览失败不能自行建号')
+    assert.equal(prompts.length, 0, '浏览失败不能自行弹登录')
+
+    m.host.retryFeed()
+    assert.equal(prompts.length, 1)
+    assert.equal(m.requests.length, 1, '显式登录尚未确认时不能冒充已恢复')
+    prompts[0].success({ confirm: false })
+    await flush()
+    assert.deepEqual(loginCalls, [])
+    assert.equal(m.requests.length, 1)
+
+    m.host.retryFeed()
+    prompts[1].success({ confirm: true })
+    await flush()
+    assert.deepEqual(loginCalls, ['first'])
+    assert.equal(m.requests.length, 2, '正常登录续接只重读一次')
+    m.requests[1].success({ code: 200, data: { rows: [], hasMore: false } })
+    await flush()
+    assert.equal(m.host.data.feedState, 'empty')
+    assert.equal(m.host.data.feedLoginRequired, false)
+  } finally { m.restore() }
+}
+
+test('talent/list 聚合流401只提供显式登录恢复，取消不读取，正常登录后重读', async () => {
+  await assertFeedLoginRecovery(read('pages/talent/list/index.js'))
+})
+
+test('负控：把聚合流401强行当普通重试必须判红', async () => {
+  const source = read('pages/talent/list/index.js')
+  const broken = mutated(source, 'feedLoginRequired: loginRequired,', 'feedLoginRequired: false,')
+  await assert.rejects(assertFeedLoginRecovery(broken), assert.AssertionError)
 })
 
 // ---------- #4 屏上不出后端代码 ----------

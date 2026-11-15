@@ -111,7 +111,6 @@ function preparePlayFinish(page, mode) {
   page.data.nodes = []
   page.data.total = 0
   page.loadEnding = () => {}
-  page._loadLifeEnding = (next) => { page._lifeEndingPendingScope = ''; next() }   // 先看「本局完成」卡的读取不在这条合同里
   page.paintRouteThumb = () => {}
   page.buildReview = () => {}
   page.loadMilestone = () => {}
@@ -127,15 +126,57 @@ test('任务完成处理器会触发共享彩旗反馈', () => {
   assertCelebrates(page, 'task-complete')
 })
 
-test('城市定向与自由探索结束分别触发共享彩旗反馈', () => {
+test('城市定向与自由探索结束分别触发共享彩旗反馈', async () => {
   for (const [mode, moment] of [[1, 'classic-finish'], [2, 'free-finish']]) {
     const page = loadPage(PLAY_PAGE)
     preparePlayFinish(page, mode)
+    const requestStart = requests.length
 
     page.openFinish()
+    if (mode === 1) {
+      const scope = page._lifeEndingPendingScope
+      assert.ok(scope)
+      assert.equal(page.data.celebrationEvent, '', '结局读取未终止前不得提前庆祝')
+      const ending = requests[requestStart]
+      assert.equal(ending.url, '/api/play/journey/ending')
+      assert.equal(ending.method, 'GET')
+      assert.equal(ending.silentError, true)
+      ending.success({ code: 500 })
+      await Promise.resolve()
+      assert.equal(page._lifeEndingPendingScope, '')
+      assert.equal(page._lifeEndingFailedScope, scope, '真实读取登记失败终态后才进入完成页')
+    } else {
+      assert.ok(requests.slice(requestStart).every(req => req.url !== '/api/play/journey/ending'))
+    }
 
     assertCelebrates(page, moment)
+    assert.equal(page._celebrationSeq, 1, '每次正常完成只庆祝一次')
   }
+})
+
+test('负控：旧局结局失败不得完成或庆祝新局，新局真实终态仍能庆祝', async () => {
+  const page = loadPage(PLAY_PAGE)
+  preparePlayFinish(page, 1)
+  page._routeState = { sessionId: 2 }
+  page.openFinish()
+  const old = requests.at(-1)
+
+  page._routeState.sessionId = 3
+  page.openFinish()
+  const current = requests.at(-1)
+  const currentScope = page._lifeEndingPendingScope
+  assert.notEqual(current, old)
+  old.success({ code: 500 })
+  await Promise.resolve()
+  assert.equal(page.data.showFinish, false)
+  assert.equal(page.data.celebrationEvent, '')
+  assert.equal(page._lifeEndingPendingScope, currentScope, '旧回包不能消费新局读取')
+
+  current.success({ code: 500 })
+  await Promise.resolve()
+  assert.equal(page._lifeEndingFailedScope, currentScope)
+  assertCelebrates(page, 'classic-finish')
+  assert.equal(page._celebrationSeq, 1)
 })
 
 test('F-38：自由探索终章没有可见内容时保留完成面板，不打开空故事层', async () => {

@@ -3,7 +3,7 @@
 // - 分享:POST /api/marketing/referral/token → token 拼进分享 path 的 ref;失败静默降级为普通分享。
 // - 落地:读 query ref,按登录账号隔离存本地(换号失效);不显示「来自 XX 的推荐」,不参与报价。
 // - 下单成功后旁路 claim:失败不上屏、最多重试 1 次;成功或任何终态码都清掉,避免挂到下一单。
-const STORAGE_KEY = 'cy_marketing_ref_v1'
+const STORAGE_KEY = 'cy_marketing_ref_v1' // gitleaks:allow -- local storage namespace; not stored referral token or auth
 const MAX_TOKEN_LEN = 512
 
 function currentMemberId() {

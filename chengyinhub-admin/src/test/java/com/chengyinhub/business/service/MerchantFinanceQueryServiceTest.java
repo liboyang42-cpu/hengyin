@@ -279,6 +279,149 @@ class MerchantFinanceQueryServiceTest {
         assertEquals(null, service.redemptionDetail(8L, "activity_ticket", "74"), "详情 SQL 层带归属,别人的票不可见");
     }
 
+    @Test
+    void paidBatchWithoutPaidAtRemainsLedgerErrorAcrossProjections() {
+        MerchantPayableBatch batch = currentPaidBatch();
+        batch.setPaidAt(null);
+        assertPublicBatchProjections(batch, false);
+    }
+
+    @Test
+    void paidBatchWithoutVoucherRemainsLedgerErrorAcrossProjections() {
+        for (String voucher : Arrays.asList(null, "", " \t ")) {
+            MerchantPayableBatch batch = currentPaidBatch();
+            batch.setPayVoucherNo(voucher);
+            assertPublicBatchProjections(batch, false);
+        }
+    }
+
+    @Test
+    void paidBatchWithUnknownOrNonPositiveAmountPreservesPositiveLedgerObligation() {
+        for (String amount : Arrays.asList(null, "0.00", "-12.00")) {
+            MerchantPayableBatch batch = currentPaidBatch();
+            batch.setAmountTotal(amount == null ? null : new BigDecimal(amount));
+            assertPublicBatchProjections(batch, false);
+        }
+    }
+
+    @Test
+    void completePositivePaidBatchRemainsSettledAcrossProjections() {
+        assertPublicBatchProjections(currentPaidBatch(), true);
+    }
+
+    @Test
+    void invalidPaidPositiveBatchKeepsItsExecutedOffsetNet() {
+        for (boolean missingPaidAt : new boolean[]{true, false}) {
+            MerchantPayableBatch batch = currentPaidBatch();
+            batch.setAmountTotal(new BigDecimal("4.00"));
+            if (missingPaidAt) batch.setPaidAt(null); else batch.setPayVoucherNo(" \t ");
+            MerchantSettlementOverview overview = publicAdjustmentOverview(batch, Collections.singletonList(
+                    clawback(101L, "OFFSET_BATCH", "EXECUTED", "8.00")));
+            assertEquals("4.00", overview.getPublicPayablePending(), "已冲抵8元不能因付款事实缺项复活");
+            assertEquals("0.00", overview.getAdjustmentPending());
+            assertEquals("0.00", overview.getPersonalArrivedThisMonthNet());
+        }
+    }
+
+    @Test
+    void invalidPaidRebuildUsesOnlyExecutedOffsetsForItsOwnBatch() {
+        for (String amount : Arrays.asList(null, "0.00", "-12.00")) {
+            MerchantPayableBatch batch = currentPaidBatch();
+            batch.setAmountTotal(amount == null ? null : new BigDecimal(amount));
+            MerchantSettlementOverview overview = publicAdjustmentOverview(batch, Arrays.asList(
+                    clawback(101L, "OFFSET_BATCH", "EXECUTED", "8.00"),
+                    clawback(101L, "OFFSET_BATCH", "PENDING_REVIEW", "2.00"),
+                    clawback(101L, "OFFSET_BATCH", "REJECTED", "3.00"),
+                    clawback(101L, "BALANCE", "EXECUTED", "4.00"),
+                    clawback(102L, "OFFSET_BATCH", "EXECUTED", "5.00")));
+            assertEquals("4.00", overview.getPublicPayablePending(), "重建12元须仅减同批次已执行冲抵8元");
+            assertEquals("2.00", overview.getAdjustmentPending(), "待审调整只保留待处理义务，不能先扣批次");
+            assertEquals(1, overview.getAdjustmentPendingCount());
+            assertEquals("0.00", overview.getPersonalArrivedThisMonthNet());
+        }
+    }
+
+    @Test
+    void invalidPaidRebuildPreservesNegativeNetAfterExecutedOffsets() {
+        for (String amount : Arrays.asList(null, "0.00", "-12.00")) {
+            MerchantPayableBatch batch = currentPaidBatch();
+            batch.setAmountTotal(amount == null ? null : new BigDecimal(amount));
+            MerchantSettlementOverview overview = publicAdjustmentOverview(batch, Collections.singletonList(
+                    clawback(101L, "OFFSET_BATCH", "EXECUTED", "15.00")));
+            assertEquals("0.00", overview.getPublicPayablePending());
+            assertEquals("3.00", overview.getAdjustmentPending(), "重建净额12-15=-3不能夹成0或反向付给商家");
+            assertEquals(1, overview.getAdjustmentPendingCount());
+        }
+    }
+
+    private static MerchantSettlementOverview publicAdjustmentOverview(
+            MerchantPayableBatch batch, java.util.List<MerchantClawbackApplication> clawbacks) {
+        MerchantFinanceQueryService service = serviceWithBalanceRows(Collections.emptyList());
+        MerchantPayableMapper payables = (MerchantPayableMapper) ReflectionTestUtils.getField(service, "payableMapper");
+        MerchantPayableBatchMapper batches = (MerchantPayableBatchMapper) ReflectionTestUtils.getField(service, "batchMapper");
+        MerchantClawbackApplicationMapper adjustments =
+                (MerchantClawbackApplicationMapper) ReflectionTestUtils.getField(service, "clawbackMapper");
+        when(payables.selectByMerchant(7L)).thenReturn(Collections.singletonList(
+                payable(11L, "ACCRUAL", "12.00", new Date())));
+        when(batches.selectByMerchant(7L)).thenReturn(Collections.singletonList(batch));
+        when(adjustments.selectByMerchantMemberId(7L)).thenReturn(clawbacks);
+        return service.overview(7L);
+    }
+
+    private static MerchantClawbackApplication clawback(Long batchId, String path, String status, String amount) {
+        MerchantClawbackApplication clawback = new MerchantClawbackApplication();
+        clawback.setTargetBatchId(batchId);
+        clawback.setSettlePath(path);
+        clawback.setStatus(status);
+        clawback.setAmount(new BigDecimal(amount));
+        return clawback;
+    }
+
+    private static MerchantPayableBatch currentPaidBatch() {
+        java.text.SimpleDateFormat period = new java.text.SimpleDateFormat("yyyy-MM");
+        period.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Shanghai"));
+        Date now = new Date();
+        return batch(101L, period.format(now), "12.00", "PAID", now);
+    }
+
+    private static void assertPublicBatchProjections(MerchantPayableBatch batch, boolean paid) {
+        MerchantFinanceQueryService service = serviceWithBalanceRows(Collections.emptyList());
+        MerchantPayableMapper payableMapper = (MerchantPayableMapper) ReflectionTestUtils.getField(service, "payableMapper");
+        MerchantPayableBatchMapper batchMapper = (MerchantPayableBatchMapper) ReflectionTestUtils.getField(service, "batchMapper");
+        RedemptionMapper redemptionMapper = org.mockito.Mockito.mock(RedemptionMapper.class);
+        ReflectionTestUtils.setField(service, "redemptionMapper", redemptionMapper);
+        Date now = new Date();
+        Redemption redemption = new Redemption();
+        redemption.setId(31L);
+        redemption.setStatus("ACTIVE");
+        redemption.setCreateTime(now);
+        when(payableMapper.selectByMerchant(7L)).thenReturn(Collections.singletonList(payable(11L, "ACCRUAL", "12.00", now)));
+        when(batchMapper.selectByMerchant(7L)).thenReturn(Collections.singletonList(batch));
+        when(redemptionMapper.selectByMerchant(7L)).thenReturn(Collections.singletonList(redemption));
+        when(redemptionMapper.selectByMerchantAndId(7L, 31L)).thenReturn(redemption);
+
+        PublicTransferBatch projected = service.publicTransferBatches(7L, 1, 20).getRows().get(0);
+        assertEquals(paid ? "PAID" : "PENDING", projected.getPaymentState());
+        assertEquals(paid ? null : "LEDGER_ERROR", projected.getDisplayState());
+        MerchantSettlementEntry entry = service.settlementEntries(7L, "public", 1, 20).getRows().get(0);
+        assertEquals("12.00", entry.getSignedAmount(), "原始正额计提不能被坏批次金额覆盖");
+        assertEquals(paid ? "SETTLED" : "LEDGER_ERROR", entry.getDisplayState());
+        MerchantFinancePage<MerchantRedemptionView> page = service.redemptions(7L, "all", 1, 20);
+        MerchantRedemptionView row = page.getRows().get(0);
+        assertEquals("12.00", row.getSettlementAmount());
+        assertEquals(paid ? "SETTLED" : "ERROR", row.getSettlementState());
+        assertEquals(paid ? "SETTLED" : "LEDGER_ERROR", row.getDisplayState());
+        assertEquals(row.getDisplayState(), service.redemptionDetail(7L, "redemption", "31").getDisplayState());
+        com.chengyinhub.business.domain.vo.MerchantRedemptionSummary summary =
+                (com.chengyinhub.business.domain.vo.MerchantRedemptionSummary) page.getSummary();
+        assertEquals(1, summary.getCount());
+        assertEquals(paid ? "12.00" : "0.00", summary.getArrivedAmount(), "坏 PAID 不能计入本月已入账");
+        assertEquals(paid ? "0.00" : "12.00", service.overview(7L).getPublicPayablePending(),
+                "缺少完整付款事实时，正额待对公义务仍须保留");
+        assertEquals(paid ? 0L : 1L, service.redemptions(7L, "pending", 1, 20).getTotal());
+        assertEquals(paid ? 1L : 0L, service.redemptions(7L, "handled", 1, 20).getTotal());
+    }
+
     private static UmsMemberBalanceDetail income(String amount, Long eventType, Long changeType, Date createTime) {
         UmsMemberBalanceDetail detail = balance(amount, eventType, createTime);
         detail.setChangeType(changeType);

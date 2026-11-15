@@ -1,10 +1,12 @@
-const { test } = require('node:test')
+const { test, afterEach } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('node:vm')
 
 const ROOT = path.resolve(__dirname, '../..')
+const nativeBackGuard = require('../../utils/native-back-guard.js')
+afterEach(() => nativeBackGuard._reset())
 
 function loadPage(relativePath, wx, transform = source => source) {
   const filename = path.join(ROOT, relativePath)
@@ -21,6 +23,7 @@ function loadPage(relativePath, wx, transform = source => source) {
     wx,
     require(request) {
       if (request.endsWith('/theme.js')) return { applyTheme: theme => { if (wx.onTheme) wx.onTheme(theme) } }
+      if (request.includes('native-back-guard')) return nativeBackGuard
       if (request.includes('motion-preference')) return { readReducedMotion: () => false }
       if (request.includes('play-visual-tokens')) return { TOPIC_EDITOR_SWITCH_COLOR: '#000000' }
       if (request.includes('advanced-game-config')) return { defaultConfig: () => ({}) }
@@ -39,7 +42,12 @@ function loadPage(relativePath, wx, transform = source => source) {
   assert.ok(definition, `${relativePath} 没有注册 Page`)
   const page = Object.assign({}, definition)
   page.data = JSON.parse(JSON.stringify(definition.data || {}))
-  page.setData = function (patch) { Object.assign(this.data, patch) }
+  const renderCallbacks = []
+  page.setData = function (patch, callback) {
+    Object.assign(this.data, patch)
+    if (typeof callback === 'function') renderCallbacks.push(callback)
+  }
+  page._renderCallbacks = renderCallbacks
   return page
 }
 
@@ -142,7 +150,11 @@ function runEditorSuccessBack(transform = source => source) {
   page.data.previewVisible = true
   page.data.creationSuccess = { secondaryAction: 'back', show: true }
   page._leaveCreationSuccess('secondaryAction')
-  return { events, page }
+  return { events, page, renderPreviewDone() {
+    const callbacks = page._renderCallbacks.splice(0)
+    assert.equal(callbacks.length, 1, '必须等待真实 exitPage 的 setData 渲染回调')
+    callbacks.forEach(callback => callback.call(page))
+  } }
 }
 
 test('预览层内保存成功的“返回上一页”必须离开编辑器，不能只关预览', () => {
@@ -150,7 +162,7 @@ test('预览层内保存成功的“返回上一页”必须离开编辑器，�
   assert.equal(result.events.length, 0, '原生预览拦截退场前不能导航')
   assert.equal(result.page._exitAfterPreview, true)
   assert.equal(result.page.data.previewVisible, false)
-  result.page.onNativeBackGuard()
+  result.renderPreviewDone()
   assert.equal(result.events.length, 1)
   assert.equal(result.events[0].type, 'navigateBack')
   assert.equal(result.events[0].options.delta, 1)

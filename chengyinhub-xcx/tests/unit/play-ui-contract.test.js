@@ -2,9 +2,24 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const vm = require('node:vm')
+const { createRequire } = require('node:module')
 const { buildPlayHeader, buildPlayHud, buildPlayRoute, createSessionClock } = require('../../utils/play-ui-contract.js')
 
 const readXcx = (relativePath) => fs.readFileSync(path.resolve(__dirname, '../..', relativePath), 'utf8')
+
+function freeMapDefinition() {
+  const file = path.resolve(__dirname, '../../components/cy/free-map/index.js')
+  let definition
+  vm.runInNewContext(fs.readFileSync(file, 'utf8'), { require: createRequire(file), Component: value => { definition = value } })
+  return definition
+}
+
+function assertPoiBinding(template, definition) {
+  assert.equal(definition.properties.enablePoi.type.name, 'Boolean')
+  assert.equal(definition.properties.enablePoi.value, true, 'interactive maps keep POI enabled by default')
+  assert.match(template, /enable-poi="\{\{enablePoi\}\}"/, 'native map must forward the Boolean property, including false')
+}
 
 test('三种模式共用顶部状态条合同', () => {
   const classic = buildPlayHeader({ section: '第一章', modeLabel: '经典定向', title: '旧街到黄昏', current: 2, total: 5, actionLabel: '重看本章' })
@@ -120,7 +135,22 @@ test('三模式与自由探索过场均使用真实腾讯原生地图', () => {
   const mapWxss = readXcx('components/cy/free-map/index.wxss')
 
   assert.match(mapWxml, /<map\s+id="fmap"/)
-  assert.match(mapWxml, /enable-poi="\{\{true\}\}"/)
+  const definition = freeMapDefinition()
+  assertPoiBinding(mapWxml, definition)
+  const binding = mapWxml.match(/enable-poi="\{\{(\w+)\}\}"/)[1]
+  const mapStyle = require('../../utils/map-style.js')
+  const styles = { subkey: 'TEST-STYLE-ONLY', white: 1, black: 2, paper: 3, cyber: 4 }
+  for (const [kind, layer] of [['white', 1], ['black', 2], ['paper', 3], ['2077', 4]]) {
+    const style = mapStyle.mapStyleFor(kind, styles)
+    assert.equal(style.layerStyle, layer)
+    for (const enablePoi of [definition.properties.enablePoi.value, false]) {
+      const data = { ...style, enablePoi }
+      assert.equal(data[binding], enablePoi, `${kind}: explicit false must not become true`)
+    }
+  }
+  assert.match(mapWxml, /subkey="\{\{subkey\}\}" layer-style="\{\{layerStyle\}\}"/)
+  assert.throws(() => assertPoiBinding(mapWxml.replace('enable-poi="{{enablePoi}}"', 'enable-poi="{{true}}"'), definition), /native map must forward/)
+  assert.throws(() => assertPoiBinding(mapWxml, { properties: { enablePoi: { type: Boolean, value: false } } }), /interactive maps keep POI/)
   // 2026-09-22 主地图与起始页过场随地图层一起删;完成页回放那一处仍是真原生地图。
   assert.ok((playWxml.match(/<free-map\b/g) || []).length >= 1, '完成页路径回放仍应使用 free-map')
   assert.match(roamWxml, /<free-map\b[^>]*scene="explore"/s)

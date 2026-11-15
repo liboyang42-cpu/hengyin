@@ -5,6 +5,11 @@
 真正连 MySQL8 跑六套 IT 仍是外部动作(runner 上执行),本负控不冒充那层已验证。
 """
 import importlib.util
+import hashlib
+import json
+import re
+import xml.etree.ElementTree as ET
+from unittest.mock import patch
 import os
 import pathlib
 import socket
@@ -65,7 +70,7 @@ def all_required_clean(directory):
     for short, tests in (
         ("CoopDepositRefundMybatisIntegrationTest", 36),
         ("GrowthMissionProofMybatisIntegrationTest", 26),
-        ("MerchantIdentityMybatisIntegrationTest", 21),
+        ("MerchantIdentityMybatisIntegrationTest", 24),
         ("MerchantProfilePersistenceMybatisIntegrationTest", 9),
         ("StoreVerifyGrowthDeliveryTransactionTest", 4),
         ("RefundNotificationMybatisIntegrationTest", 9),
@@ -654,6 +659,175 @@ class FundsItWorkflowContractTest(unittest.TestCase):
         self.assertNotEqual(self.workflow, broken)
         problems = funds_it_gate.enforce_workflow(broken, self.gate)
         self.assertTrue(any("on.push" in p for p in problems), problems)
+
+
+class FundsItEvidenceTest(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.directory = pathlib.Path(temporary.name)
+        self.reports, self.output = self.directory / "reports", self.directory / "safe"
+        self.reports.mkdir()
+        self.short = "MerchantIdentityMybatisIntegrationTest"
+        self.fqcn = "com.chengyinhub.business.service." + self.short
+        source = (_REPO_ROOT / funds_it_gate.SOURCE_FILES[self.short]).read_text()
+        self.methods = re.findall(r"@Test\s+(?:public\s+)?void\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", source)
+        self.report = self.reports / ("TEST-" + self.fqcn + ".xml")
+        self.safe = self.output / self.report.name
+        self.env = dict(GITHUB_SHA=subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT, text=True).strip(),
+            GITHUB_RUN_ID="123", GITHUB_RUN_ATTEMPT="1",
+            FUNDS_TEST_OUTCOME="success", FUNDS_CLEANUP_OUTCOME="success")
+        self.committed_source_matches = True
+        original_check_output = subprocess.check_output
+
+        def committed_source(command, *args, **kwargs):
+            # Unit fixture models a future clean checkout without committing this shared worktree.
+            if command[:2] == ["git", "show"] and command[2].startswith("HEAD:"):
+                return ((_REPO_ROOT / command[2][5:]).read_bytes()
+                        if self.committed_source_matches else b"synthetic different committed source")
+            return original_check_output(command, *args, **kwargs)
+
+        mocked_git = patch.object(funds_it_gate.subprocess, "check_output", side_effect=committed_source)
+        mocked_git.start()
+        self.addCleanup(mocked_git.stop)
+
+    def sample(self):
+        suite = ET.Element("testsuite", name=self.fqcn, tests=str(len(self.methods)),
+                           failures="0", errors="0", skipped="0")
+        for name in self.methods:
+            ET.SubElement(suite, "testcase", classname=self.fqcn, name=name)
+        return suite
+
+    def write(self, suite):
+        self.report.write_bytes(ET.tostring(suite))
+
+    def collect(self, env=None):
+        code = funds_it_gate.export_merchant_evidence(self.reports, self.output, self.env if env is None else env)
+        identity = json.loads((self.output / "funds-test-identity.json").read_text())
+        return code, identity
+
+    def test_actual_case_projection_drops_private_payloads(self):
+        self.assertEqual(24, len(self.methods))
+        suite = self.sample()
+        marker = "SYNTHETIC_MUST_NOT_PUBLISH"
+        suite.set("private", marker)
+        properties = ET.SubElement(suite, "properties")
+        ET.SubElement(properties, "property", name="private-value", value=marker)
+        for tag in ("system-out", "system-err"):
+            ET.SubElement(suite, tag).text = marker
+            ET.SubElement(suite.find("testcase"), tag).text = marker
+        suite.find("testcase").set("private", marker)
+        self.write(suite)
+        raw_hash = hashlib.sha256(self.report.read_bytes()).hexdigest()
+        code, identity = self.collect()
+        self.assertEqual((0, "PASS"), (code, identity["state"]))
+        self.assertEqual(raw_hash, identity["raw_xml_sha256"])
+        self.assertEqual(hashlib.sha256(self.safe.read_bytes()).hexdigest(), identity["safe_xml_sha256"])
+        safe = ET.parse(self.safe).getroot()
+        self.assertEqual(set(self.methods), {case.get("name") for case in safe})
+        self.assertEqual(24, len(safe))
+        self.assertEqual(set(self.methods), set(identity["methods"]))
+        self.assertEqual(self.env["GITHUB_SHA"], identity["source_sha"])
+        self.assertEqual("UNKNOWN", identity["maven_exit"])
+        for name, digest in identity["source_files_sha256"].items():
+            self.assertEqual(hashlib.sha256((_REPO_ROOT / name).read_bytes()).hexdigest(), digest)
+        self.assertNotIn(marker, self.safe.read_text() + json.dumps(identity))
+        self.assertEqual({"name", "tests", "failures", "errors", "skipped"}, set(safe.attrib))
+        self.assertTrue(all(set(case.attrib) == {"classname", "name"} for case in safe))
+
+    def test_preserves_failure_error_skip_without_private_bodies(self):
+        marker = "SYNTHETIC_MUST_NOT_PUBLISH"
+        for tag, key in (("failure", "failures"), ("error", "errors"), ("skipped", "skipped")):
+            with self.subTest(tag=tag):
+                suite = self.sample()
+                suite.set(key, "1")
+                node = ET.SubElement(suite.find("testcase"), tag, type=marker, message=marker)
+                node.text = marker
+                self.write(suite)
+                code, identity = self.collect()
+                self.assertEqual((1, "FAILED"), (code, identity["state"]))
+                self.assertEqual(1, identity["actual"][key])
+                safe_node = ET.parse(self.safe).getroot().find("testcase").find(tag)
+                self.assertIsNotNone(safe_node)
+                self.assertIsNone(safe_node.text)
+                self.assertNotIn(marker, self.safe.read_text() + json.dumps(identity))
+
+    def test_missing_duplicate_foreign_count_and_retry_are_unproven(self):
+        for mode in ("missing", "malformed", "duplicate", "foreign", "unknown", "suite", "short", "count", "retry"):
+            with self.subTest(mode=mode):
+                suite = self.sample()
+                if mode == "duplicate":
+                    suite.findall("testcase")[1].set("name", self.methods[0])
+                elif mode == "foreign":
+                    suite.find("testcase").set("classname", "SYNTHETIC_MUST_NOT_PUBLISH")
+                elif mode == "unknown":
+                    suite.find("testcase").set("name", "SYNTHETIC_MUST_NOT_PUBLISH")
+                elif mode == "suite":
+                    suite.set("name", "SYNTHETIC_MUST_NOT_PUBLISH")
+                elif mode == "short":
+                    suite.remove(suite.find("testcase"))
+                    suite.set("tests", "23")
+                elif mode == "count":
+                    suite.set("tests", "21")
+                elif mode == "retry":
+                    ET.SubElement(suite.find("testcase"), "flakyFailure")
+                self.write(suite)
+                if mode == "missing":
+                    self.report.unlink()
+                elif mode == "malformed":
+                    self.report.write_text("<invalid")
+                code, identity = self.collect()
+                self.assertEqual((1, "UNPROVEN"), (code, identity["state"]))
+                self.assertFalse(self.safe.exists(), "不得遗留上次通过XML")
+                self.assertNotIn("SYNTHETIC_MUST_NOT_PUBLISH", json.dumps(identity))
+
+    def test_source_run_and_execution_identity_are_required(self):
+        for key, value in (("GITHUB_SHA", "f" * 40), ("GITHUB_SHA", ""),
+                           ("GITHUB_RUN_ID", ""), ("GITHUB_RUN_ATTEMPT", "0"),
+                           ("FUNDS_TEST_OUTCOME", ""), ("FUNDS_CLEANUP_OUTCOME", "")):
+            with self.subTest(key=key, value=value):
+                self.write(self.sample())
+                code, identity = self.collect(dict(self.env, **{key: value}))
+                self.assertEqual((1, "UNPROVEN"), (code, identity["state"]))
+                self.assertFalse(self.safe.exists())
+        self.write(self.sample())
+        with patch.dict(funds_it_gate.EXPECTED, {self.short: 21}):
+            code, identity = self.collect()
+        self.assertEqual((1, "SOURCE_COUNT_MISMATCH"), (code, identity["reason"]))
+        self.committed_source_matches = False
+        code, identity = self.collect()
+        self.assertEqual((1, "SOURCE_BYTES_MISMATCH"), (code, identity["reason"]))
+        self.assertFalse(self.safe.exists())
+
+    def test_gate_or_cleanup_failure_cannot_become_pass(self):
+        self.write(self.sample())
+        for key in ("FUNDS_TEST_OUTCOME", "FUNDS_CLEANUP_OUTCOME"):
+            for outcome in ("failure", "cancelled", "skipped"):
+                with self.subTest(key=key, outcome=outcome):
+                    code, identity = self.collect(dict(self.env, **{key: outcome}))
+                    self.assertEqual((1, "FAILED"), (code, identity["state"]))
+                    self.assertEqual(dict(tests=24, failures=0, errors=0, skipped=0), identity["actual"])
+
+    def test_workflow_uploads_only_safe_files_after_original_cleanup(self):
+        workflow = _WORKFLOW.read_text()
+        self.assertIn("run: bash ci/funds-mysql-it-gate.sh", workflow)
+        self.assertIn("id: funds_test", workflow)
+        self.assertIn("id: funds_cleanup", workflow)
+        self.assertNotIn("continue-on-error", workflow)
+        self.assertLess(workflow.index("Funds exact scratch container confirmed absent"),
+                        workflow.index("Collect source-bound safe MerchantIdentity JUnit"))
+        collector = workflow.split("- name: Collect source-bound safe MerchantIdentity JUnit", 1)[1].split("- name:", 1)[0]
+        self.assertIn("if: always() && steps.scope.outputs.run == 'true'", collector)
+        self.assertIn("steps.funds_test.outcome", collector)
+        self.assertIn("steps.funds_cleanup.outcome", collector)
+        upload = workflow.split("- name: Preserve safe MerchantIdentity test evidence", 1)[1]
+        self.assertIn("if: always() && steps.scope.outputs.run == 'true'", upload)
+        self.assertIn("funds-evidence/" + self.report.name, upload)
+        self.assertIn("funds-evidence/funds-test-identity.json", upload)
+        self.assertIn("retention-days: 1", upload)
+        self.assertNotIn("surefire-reports", upload)
+        self.assertNotIn("*", upload)
 
 
 if __name__ == "__main__":

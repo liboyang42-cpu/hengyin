@@ -82,17 +82,32 @@ public class MerchantFinanceQueryService {
             netByPeriod.put(period, netByPeriod.containsKey(period) ? netByPeriod.get(period).add(signed) : signed);
         }
         Map<String, MerchantPayableBatch> batches = batchesByPeriod(memberId);
+        List<MerchantClawbackApplication> clawbacks = safeList(clawbackMapper.selectByMerchantMemberId(memberId));
         BigDecimal publicPending = BigDecimal.ZERO;
         BigDecimal adjustmentPending = BigDecimal.ZERO;
         int adjustmentCount = 0;
         for (Map.Entry<String, BigDecimal> item : netByPeriod.entrySet()) {
             MerchantPayableBatch batch = batches.get(item.getKey());
-            BigDecimal net = batch == null || batch.getAmountTotal() == null ? item.getValue() : batch.getAmountTotal();
-            boolean paid = batch != null && MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus());
+            boolean paid = isPaidBatch(batch);
+            boolean rebuildNet = batch == null || batch.getAmountTotal() == null
+                    || (MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus()) && !paid
+                    && batch.getAmountTotal().signum() <= 0);
+            BigDecimal net = rebuildNet ? item.getValue() : batch.getAmountTotal();
+            // 批次冲抵只改批次金额，重建净额时须保留已执行的同批次扣减。
+            if (rebuildNet && batch != null && batch.getId() != null) {
+                for (MerchantClawbackApplication clawback : clawbacks) {
+                    if (clawback != null && MerchantClawbackApplication.STATUS_EXECUTED.equals(clawback.getStatus())
+                            && MerchantClawbackApplication.SETTLE_PATH_OFFSET_BATCH.equals(clawback.getSettlePath())
+                            && batch.getId().equals(clawback.getTargetBatchId())
+                            && clawback.getAmount() != null && clawback.getAmount().signum() > 0) {
+                        net = net.subtract(clawback.getAmount());
+                    }
+                }
+            }
             if (!paid && net.signum() > 0) publicPending = publicPending.add(net);
             if (!paid && net.signum() <= 0) { adjustmentPending = adjustmentPending.add(net.abs()); adjustmentCount++; }
         }
-        for (MerchantClawbackApplication clawback : safeList(clawbackMapper.selectByMerchantMemberId(memberId))) {
+        for (MerchantClawbackApplication clawback : clawbacks) {
             if (clawback != null && MerchantClawbackApplication.STATUS_PENDING_REVIEW.equals(clawback.getStatus())
                     && clawback.getAmount() != null) { adjustmentPending = adjustmentPending.add(clawback.getAmount()); adjustmentCount++; }
         }
@@ -446,16 +461,15 @@ public class MerchantFinanceQueryService {
                     payable.getRedemptionId());
             entry.setClaimRef(singleClaimRef());
             entry.setRefId(batch == null || batch.getId() == null ? null : String.valueOf(batch.getId()));
-            if (batch != null && MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus())
-                    && (batch.getPaidAt() == null || blank(batch.getPayVoucherNo()))) {
+            boolean paid = isPaidBatch(batch);
+            if (batch != null && MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus()) && !paid) {
                 entry.setDisplayState(MerchantFinanceStateResolver.resolve("ACTIVE", "ERROR"));
             } else if (MerchantPayable.ENTRY_REVERSAL.equals(payable.getEntryType())) {
                 entry.setDisplayState(MerchantFinanceStateResolver.resolve("REVERSED",
-                        batch != null && MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus())
-                                ? "ADJUSTED" : "ADJUSTMENT_PENDING"));
+                        paid ? "ADJUSTED" : "ADJUSTMENT_PENDING"));
             } else {
                 entry.setDisplayState(MerchantFinanceStateResolver.resolve("ACTIVE",
-                        batch != null && MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus()) ? "SETTLED" : "PENDING"));
+                        paid ? "SETTLED" : "PENDING"));
             }
             target.add(entry);
         }
@@ -629,17 +643,25 @@ public class MerchantFinanceQueryService {
         BigDecimal net = BigDecimal.ZERO;
         row.setSettlementRoute("CHAPTER_OFFER");
         boolean paid = false;
+        boolean ledgerError = false;
         boolean pendingReversal = false;
         MerchantPayable latest = facts.get(facts.size() - 1);
         for (MerchantPayable fact : facts) {
             BigDecimal signed = MerchantPayable.ENTRY_REVERSAL.equals(fact.getEntryType()) ? fact.getAmount().negate() : fact.getAmount();
             net = net.add(signed);
             MerchantPayableBatch batch = batches.get(shanghaiPeriod(fact.getCreateTime()));
-            if (batch != null && MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus())) paid = true;
+            boolean batchPaid = isPaidBatch(batch);
+            if (batchPaid) paid = true;
+            if (batch != null && MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus()) && !batchPaid) ledgerError = true;
             if (MerchantPayable.ENTRY_REVERSAL.equals(fact.getEntryType())
-                    && (batch == null || !MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus()))) pendingReversal = true;
+                    && !batchPaid) pendingReversal = true;
         }
         row.setSettlementAmount(money(net));
+        if (ledgerError) {
+            row.setSettlementState("ERROR");
+            row.setDisplayState(MerchantFinanceStateResolver.resolve(row.getFulfillmentState(), row.getSettlementState()));
+            return row;
+        }
         if (net.signum() == 0 && offer == null) {
             row.setSettlementRoute("COOP_ORDER");
             row.setSettlementState("NOT_APPLICABLE");
@@ -663,8 +685,7 @@ public class MerchantFinanceQueryService {
         result.setAmountTotal(money(amount));
         result.setNetDirection(amount.signum() > 0 ? "PLATFORM_PAYS_MERCHANT"
                 : (amount.signum() == 0 ? "ZERO" : "MERCHANT_OWES_PLATFORM"));
-        boolean paidInvalid = MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus())
-                && (amount.signum() <= 0 || batch.getPaidAt() == null || blank(batch.getPayVoucherNo()));
+        boolean paidInvalid = MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus()) && !isPaidBatch(batch);
         result.setPaymentState(paidInvalid ? "PENDING" : (batch.getStatus() == null ? "PENDING" : batch.getStatus()));
         result.setDisplayState(paidInvalid ? "LEDGER_ERROR" : null);
         result.setInvoiceState(batch.getInvoiceStatus() == null ? "NONE" : batch.getInvoiceStatus());
@@ -672,6 +693,12 @@ public class MerchantFinanceQueryService {
         result.setPaidAt(batch.getPaidAt());
         result.setPayVoucherNo(batch.getPayVoucherNo());
         return result;
+    }
+
+    private static boolean isPaidBatch(MerchantPayableBatch batch) {
+        return batch != null && MerchantPayableBatch.STATUS_PAID.equals(batch.getStatus())
+                && batch.getAmountTotal() != null && batch.getAmountTotal().signum() > 0
+                && batch.getPaidAt() != null && !blank(batch.getPayVoucherNo());
     }
 
     private boolean matchesRedemptionFilter(MerchantRedemptionView row, String filter) {

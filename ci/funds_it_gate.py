@@ -13,6 +13,10 @@
   · 实跑用例 < 期望 → 少跑了(部分被跳过/过滤)→ fail-closed
 """
 import glob
+import hashlib
+import json
+import pathlib
+import subprocess
 import os
 import re
 import sys
@@ -215,7 +219,7 @@ EXPECTED = {
     # 2026-11-04 第十一轮 g3 第 2 项(4751ec46):25 → 26,+1 = leaderboardsHoldPlayerAccountsWithPointsOnly
     # (成长周榜 Top 与我的名次只排 role=player 且积分 > 0 的账号,商家账号查不到名次;真 XML + 真库)。
     "GrowthMissionProofMybatisIntegrationTest": 26,
-    "MerchantIdentityMybatisIntegrationTest": 21,
+    "MerchantIdentityMybatisIntegrationTest": 24,
     # 2026-09-24 CU-M-78 +1 条(解除招牌主推显式清空 featured_id,真 XML + 真库回读),8 → 9。
     "MerchantProfilePersistenceMybatisIntegrationTest": 9,
     # 2026-10-15 PR10 复审 +1 条(整单核销撤销:真库标记核销台账已撤销、作废未发放成长待办),3 → 4。
@@ -589,7 +593,117 @@ def enforce_workflow(workflow_text, gate_text):
     return problems
 
 
+def export_merchant_evidence(reports_dir, output_dir, environ=None):
+    """Publish only reviewed method outcomes; original Surefire payload stays private."""
+    env = os.environ if environ is None else environ
+    output = pathlib.Path(output_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    short = "MerchantIdentityMybatisIntegrationTest"
+    safe_path = output / ("TEST-com.chengyinhub.business.service." + short + ".xml")
+    safe_path.unlink(missing_ok=True)
+    identity = {"format": "chengyin.funds-junit-evidence.v1", "state": "UNPROVEN",
+                "layer": "CI_MYSQL_JUNIT_ONLY", "test_deployed": False}
+    try:
+        repo = pathlib.Path(__file__).resolve().parent.parent
+        sha = env.get("GITHUB_SHA", "")
+        run_id, attempt = env.get("GITHUB_RUN_ID", ""), env.get("GITHUB_RUN_ATTEMPT", "")
+        if (not re.fullmatch(r"[0-9a-f]{40}", sha)
+                or not re.fullmatch(r"[1-9][0-9]*", run_id)
+                or not re.fullmatch(r"[1-9][0-9]*", attempt)):
+            raise ValueError("SOURCE_IDENTITY_MISSING")
+        head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo,
+                                       stderr=subprocess.DEVNULL, text=True).strip()
+        if head != sha:
+            raise ValueError("SOURCE_IDENTITY_MISMATCH")
+        outcomes = [env.get("FUNDS_TEST_OUTCOME"), env.get("FUNDS_CLEANUP_OUTCOME")]
+        if any(value not in ("success", "failure", "cancelled", "skipped") for value in outcomes):
+            raise ValueError("EXECUTION_IDENTITY_MISSING")
+        source_path = repo / SOURCE_FILES[short]
+        source = source_path.read_text(encoding="utf-8")
+        methods = re.findall(r"@Test\s+(?:public\s+)?void\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", source)
+        expected = EXPECTED[short]
+        if (len(methods) != expected or len(set(methods)) != expected
+                or count_test_methods(source) != expected):
+            raise ValueError("SOURCE_COUNT_MISMATCH")
+        fqcn = "com.chengyinhub.business.service." + short
+        source_paths = [SOURCE_FILES[short],
+                        "chengyinhub-system/src/main/resources/mapper/business/MmsMerchantMapper.xml",
+                        "ci/funds_it_gate.py", ".github/workflows/funds-mysql-it.yml"]
+        source_hashes = {}
+        for name in source_paths:
+            data = (repo / name).read_bytes()
+            committed = subprocess.check_output(["git", "show", "HEAD:" + name], cwd=repo,
+                                                stderr=subprocess.DEVNULL)
+            if data != committed:
+                raise ValueError("SOURCE_BYTES_MISMATCH")
+            source_hashes[name] = hashlib.sha256(data).hexdigest()
+        identity.update(source_sha=head, run_id=run_id, run_attempt=attempt,
+                        checkout_tree=subprocess.check_output(
+                            ["git", "rev-parse", "HEAD^{tree}"], cwd=repo,
+                            stderr=subprocess.DEVNULL, text=True).strip(),
+                        source_files_sha256=source_hashes,
+                        gate_outcome=outcomes[0], cleanup_outcome=outcomes[1],
+                        maven_exit="UNKNOWN", expected_tests=expected)
+        report = pathlib.Path(reports_dir) / ("TEST-" + fqcn + ".xml")
+        if report.is_symlink() or not report.is_file():
+            raise ValueError("REPORT_MISSING")
+        raw = report.read_bytes()
+        identity["raw_xml_sha256"] = hashlib.sha256(raw).hexdigest()
+        suite = ET.fromstring(raw)
+        cases = suite.findall("testcase")
+        if (suite.tag != "testsuite" or suite.get("name") != fqcn
+                or len(cases) != expected or len(list(suite.iter("testcase"))) != expected
+                or any(node.tag not in ("testcase", "properties", "system-out", "system-err")
+                       for node in suite)):
+            raise ValueError("SUITE_IDENTITY_OR_COUNT")
+        names = [case.get("name") for case in cases]
+        if (set(names) != set(methods) or len(set(names)) != expected
+                or any(case.get("classname") != fqcn for case in cases)):
+            raise ValueError("CASE_IDENTITY_MISMATCH")
+        counts = {"tests": expected, "failures": 0, "errors": 0, "skipped": 0}
+        safe = ET.Element("testsuite", name=fqcn)
+        allowed_types = {"org.opentest4j.AssertionFailedError", "java.lang.AssertionError",
+                         "java.lang.IllegalStateException", "java.sql.SQLException",
+                         "org.mybatis.spring.MyBatisSystemException",
+                         "org.apache.ibatis.exceptions.TooManyResultsException"}
+        for case in cases:
+            terminal = [node for node in case if node.tag in ("failure", "error", "skipped")]
+            if (len(terminal) > 1 or any(node.tag not in (
+                    "failure", "error", "skipped", "system-out", "system-err") for node in case)):
+                raise ValueError("CASE_TERMINAL_UNPROVEN")
+            target = ET.SubElement(safe, "testcase", classname=fqcn, name=case.get("name"))
+            if terminal:
+                node = terminal[0]
+                counts[{"failure": "failures", "error": "errors", "skipped": "skipped"}[node.tag]] += 1
+                attributes = {} if node.tag == "skipped" else {
+                    "type": node.get("type") if node.get("type") in allowed_types else "UNKNOWN"}
+                ET.SubElement(target, node.tag, attributes)
+        for key, value in counts.items():
+            if suite.get(key) != str(value):
+                raise ValueError("REPORT_COUNTS_INCONSISTENT")
+            safe.set(key, str(value))
+        ET.ElementTree(safe).write(safe_path, encoding="utf-8", xml_declaration=True)
+        identity.update(actual=counts, methods=names,
+                        safe_xml_sha256=hashlib.sha256(safe_path.read_bytes()).hexdigest())
+        identity["state"] = ("PASS" if counts == dict(tests=expected, failures=0, errors=0, skipped=0)
+                             and outcomes == ["success", "success"] else "FAILED")
+    except (OSError, ValueError, ET.ParseError, subprocess.SubprocessError) as exc:
+        codes = {"SOURCE_IDENTITY_MISSING", "SOURCE_IDENTITY_MISMATCH", "EXECUTION_IDENTITY_MISSING",
+                 "SOURCE_COUNT_MISMATCH", "SOURCE_BYTES_MISMATCH", "REPORT_MISSING", "SUITE_IDENTITY_OR_COUNT",
+                 "CASE_IDENTITY_MISMATCH", "CASE_TERMINAL_UNPROVEN", "REPORT_COUNTS_INCONSISTENT"}
+        identity["reason"] = str(exc) if type(exc) is ValueError and str(exc) in codes else "EVIDENCE_UNPROVEN"
+        safe_path.unlink(missing_ok=True)
+    (output / "funds-test-identity.json").write_text(json.dumps(identity, indent=2) + "\n", encoding="utf-8")
+    print("Funds JUnit evidence: " + identity["state"])
+    return 0 if identity["state"] == "PASS" else 1
+
+
 def main(argv):
+    if len(argv) > 1 and argv[1] == "evidence":
+        if len(argv) != 4:
+            sys.stderr.write("evidence requires reports and safe output directories\n")
+            return 2
+        return export_merchant_evidence(argv[2], argv[3])
     if len(argv) > 2 and argv[1] == "workflow":
         workflow_text = open(argv[2], encoding="utf-8").read()
         gate_text = open(argv[3], encoding="utf-8").read()

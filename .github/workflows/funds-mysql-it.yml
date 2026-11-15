@@ -130,6 +130,7 @@ jobs:
           docker logs "$container"
           exit 1
       - name: Run funds MySQL integration gate (fail-closed on missing MySQL)
+        id: funds_test
         if: steps.scope.outputs.run == 'true'
         run: bash ci/funds-mysql-it-gate.sh
         env:
@@ -142,6 +143,7 @@ jobs:
           B_PAYMENT_INTENT_DDL_APPROVED: '1'
           A_REGISTRATION_PAYMENT_FACT_DDL_APPROVED: '1'
       - name: Stop Oracle MySQL scratch
+        id: funds_cleanup
         if: always() && steps.mysql.outputs.container != ''
         env:
           MYSQL_CONTAINER: ${{ steps.mysql.outputs.container }}
@@ -158,3 +160,19 @@ jobs:
             fi
           done <<< "$names"
           echo "::notice::Funds exact scratch container confirmed absent"
+      - name: Collect source-bound safe MerchantIdentity JUnit
+        if: always() && steps.scope.outputs.run == 'true'
+        env:
+          FUNDS_TEST_OUTCOME: ${{ steps.funds_test.outcome }}
+          FUNDS_CLEANUP_OUTCOME: ${{ steps.funds_cleanup.outcome }}
+        run: python3 ci/funds_it_gate.py evidence chengyinhub-admin/target/surefire-reports "$RUNNER_TEMP/funds-evidence"
+      - name: Preserve safe MerchantIdentity test evidence
+        if: always() && steps.scope.outputs.run == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: funds-mysql-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/funds-evidence/TEST-com.chengyinhub.business.service.MerchantIdentityMybatisIntegrationTest.xml
+            ${{ runner.temp }}/funds-evidence/funds-test-identity.json
+          if-no-files-found: error
+          retention-days: 1

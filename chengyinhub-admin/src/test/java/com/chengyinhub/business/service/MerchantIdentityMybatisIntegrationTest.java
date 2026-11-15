@@ -48,6 +48,7 @@ class MerchantIdentityMybatisIntegrationTest {
     private IRoleService canonicalRoles;
     private MemberCapabilityMapper capabilityMapper;
     private MerchantOperatorMapper operators;
+    private MmsMerchantMapper merchantMapper;
 
     @BeforeAll
     void database() throws Exception {
@@ -88,7 +89,7 @@ class MerchantIdentityMybatisIntegrationTest {
                 new ClassPathResource("mapper/business/MemberCapabilityMapper.xml"));
         SqlSessionTemplate sql = new SqlSessionTemplate(factory.getObject());
         members = sql.getMapper(UmsMemberMapper.class);
-        MmsMerchantMapper merchantMapper = sql.getMapper(MmsMerchantMapper.class);
+        merchantMapper = sql.getMapper(MmsMerchantMapper.class);
         ClubMapper clubMapper = sql.getMapper(ClubMapper.class);
         CapabilityServiceImpl caps = new CapabilityServiceImpl();
         capabilityTarget = caps;
@@ -194,6 +195,45 @@ class MerchantIdentityMybatisIntegrationTest {
         reset(operators);
         when(claimFacts.auditCas(anyLong(),anyString(),anyInt(),anyString(),anyLong(),any(),anyString(),anyString())).thenReturn(0);
         ReflectionTestUtils.setField(merchantTarget,"umsMemberService",mock(IUmsMemberService.class));
+    }
+
+    @Test
+    void ownerLookupIgnoresDeletedHistoryWithoutErasingItsCount() {
+        db.update("INSERT INTO mms_merchant(id,member_id,status,account_status,del_flag) VALUES(16,901,1,1,2),(77,901,1,1,0)");
+        assertEquals(77L, merchants.selectMmsMerchantByMemberId(901L).getId());
+        transactions.executeWithoutResult(s -> {
+            assertEquals(77L, merchantMapper.selectMmsMerchantByMemberIdForUpdate(901L).getId());
+            assertEquals(2, merchantMapper.countMmsMerchantRowsByMemberIdForUpdate(901L));
+        });
+        db.update("UPDATE mms_merchant SET del_flag=2 WHERE id=77");
+        assertNull(merchants.selectMmsMerchantByMemberId(901L));
+        transactions.executeWithoutResult(s -> {
+            assertNull(merchantMapper.selectMmsMerchantByMemberIdForUpdate(901L));
+            assertEquals(2, merchantMapper.countMmsMerchantRowsByMemberIdForUpdate(901L));
+        });
+    }
+
+    @Test
+    void ownerLookupKeepsPendingAndRejectedApplications() {
+        db.update("INSERT INTO mms_merchant(id,member_id,status,account_status,del_flag) VALUES(16,901,1,1,2),(77,901,0,0,0)");
+        for (long status : new long[]{0L, 2L}) {
+            db.update("UPDATE mms_merchant SET status=? WHERE id=77", status);
+            assertEquals(status, merchants.selectMmsMerchantByMemberId(901L).getStatus());
+            transactions.executeWithoutResult(s ->
+                    assertEquals(status, merchantMapper.selectMmsMerchantByMemberIdForUpdate(901L).getStatus()));
+        }
+    }
+
+    @Test
+    void ownerLookupRejectsMultipleUndeletedSubjects() {
+        db.update("INSERT INTO mms_merchant(id,member_id,status,account_status,del_flag) VALUES(76,901,1,1,0),(77,901,1,1,0)");
+        assertInstanceOf(org.apache.ibatis.exceptions.TooManyResultsException.class,
+                assertThrows(org.mybatis.spring.MyBatisSystemException.class,
+                        () -> merchants.selectMmsMerchantByMemberId(901L)).getCause());
+        transactions.executeWithoutResult(s ->
+                assertInstanceOf(org.apache.ibatis.exceptions.TooManyResultsException.class,
+                        assertThrows(org.mybatis.spring.MyBatisSystemException.class,
+                                () -> merchantMapper.selectMmsMerchantByMemberIdForUpdate(901L)).getCause()));
     }
 
     @Test
@@ -616,7 +656,7 @@ class MerchantIdentityMybatisIntegrationTest {
     private Object proxy(Object target) {ProxyFactory p = new ProxyFactory(target);p.addAdvice(new TransactionInterceptor(manager,new AnnotationTransactionAttributeSource()));return p.getProxy();}
     private static void await(CountDownLatch latch) {try {if (!latch.await(5, TimeUnit.SECONDS)) throw new AssertionError("transaction barrier timed out");}catch(InterruptedException e){Thread.currentThread().interrupt();throw new AssertionError(e);}}
     private static final String MERCHANT_DDL = "CREATE TABLE mms_merchant ("
-                    + "id BIGINT AUTO_INCREMENT PRIMARY KEY, member_id BIGINT UNIQUE, name VARCHAR(255), wechat VARCHAR(255),"
+                    + "id BIGINT AUTO_INCREMENT PRIMARY KEY, member_id BIGINT, name VARCHAR(255), wechat VARCHAR(255),"
                     + "wechat_qrcode VARCHAR(512), category_ids VARCHAR(255),"
                     + "category_id INT, logo VARCHAR(500), description TEXT, derivatives TEXT, derivative_benefits VARCHAR(100), website VARCHAR(255),"
                     + "preference VARCHAR(255), phone VARCHAR(50), address VARCHAR(255), business_time VARCHAR(255),"

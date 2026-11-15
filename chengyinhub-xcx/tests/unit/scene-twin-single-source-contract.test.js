@@ -82,8 +82,8 @@ function twinSceneIds() {
 //   · 页面 js 零业务请求     —— 自己取数就是在自己实现正文
 // 这两条在全站实测能把两类干净分开(2026-08-08 基线 b8790ca58):
 //   9 个已收口的壳:wx:for 全 0、业务请求全 0
-//   12 个双份实现:除 share-invite 外全部至少踩中一项
-// share-invite 页面本身只有 541 字节、也没委托组件,由白名单登记,不靠本判据。
+// profile 登录换号和分享快照 map 仅用单例 epoch key 重挂组件，不是业务正文循环；
+// 只识别下方真实构造与挂载结构，额外列表或实例业务载荷仍按分叉处理。
 function pageImplementsContentItself(route, readSource = read) {
   const base = route.replace(/^\//, '')
   let wxml = ''
@@ -93,9 +93,18 @@ function pageImplementsContentItself(route, readSource = read) {
   // 登录换号时只重挂一个 profile 组件；这不是页面自绘业务列表。
   const singletonProfileMount = base === 'pages/member/index/index'
     && /profileMounts:\s*owner\s*&&\s*token\s*\?\s*\[\{\s*id:\s*this\._profileEpoch\s*\}\]\s*:\s*\[\]/.test(js)
-  const body = singletonProfileMount
+  let body = singletonProfileMount
     ? wxml.replace(/<cy-profile\b(?=[^>]*\bwx:for="\{\{profileMounts\}\}")[^>]*\/>/g, '')
     : wxml
+  // 快照 map 每次生成卡片只挂一个 {id: epoch}，真正回看正文仍委托 scene-roam-session。
+  const singletonSnapshotMount = base === SCENES['roam-session'].route.replace(/^\//, '')
+    && (js.match(/\bshareMapInstances\s*:/g) || []).length === 2
+    && /shareMapInstances:\s*\[\]/.test(js)
+    && /this\.setData\(\{\s*shareMapInstances:\s*\[\{\s*id:\s*token\s*\}\],/.test(js)
+  if (singletonSnapshotMount) {
+    const mount = /<cy-free-map\b(?=[^>]*\bid="ssMap")(?=[^>]*\bwx:for="\{\{shareMapInstances\}\}")(?=[^>]*\bwx:key="id")(?=[^>]*\bdata-request-id="\{\{item\.id\}\}")[^>]*\/>/g
+    if ((body.match(mount) || []).length === 1) body = body.replace(mount, '')
+  }
   const rendersList = /wx:for=/.test(body)
   const fetchesBusinessData = /url:\s*['"]\/api\//.test(js)
   return rendersList || fetchesBusinessData
@@ -116,6 +125,7 @@ test('登录薄壳只重挂单个 profile；新增正文循环或业务数据挂
   const route = SCENES['share-invite'].route
   const base = route.replace(/^\//, '')
   assert.equal(pageImplementsContentItself(route), false)
+  assert.equal(routeRendersScene('share-invite', route), true, 'member薄壳经profile仍委托真实分享组件')
   const extraList = `${read(`${base}.wxml`)}<view wx:for="{{orders}}">{{item.id}}</view>`
   const withList = relative => relative === `${base}.wxml` ? extraList : read(relative)
   assert.equal(pageImplementsContentItself(route, withList), true)
@@ -125,6 +135,31 @@ test('登录薄壳只重挂单个 profile；新增正文循环或业务数据挂
   const withRows = relative => relative === `${base}.js` ? userRows : read(relative)
   assert.equal(pageImplementsContentItself(route, withRows), true)
   assert.throws(() => assertTwinGate(withRows), /未登记分叉: share-invite/)
+})
+
+test('分享快照仅重挂单个map，业务循环、实例载荷与移除正文委托仍必须判红', () => {
+  const sceneId = 'roam-session', route = SCENES[sceneId].route
+  const base = route.replace(/^\//, '')
+  const wxml = read(base + '.wxml'), js = read(base + '.js')
+  assert.equal(routeRendersScene(sceneId, route), true)
+  assert.equal(pageImplementsContentItself(route), false)
+  const changes = [
+    [base + '.wxml', wxml + '<view wx:for="{{orders}}">{{item.id}}</view>'],
+    [base + '.wxml', wxml.replace('wx:for="{{shareMapInstances}}"', 'wx:for="{{orders}}"')],
+    [base + '.js', js.replace('[{ id: token }]', '[{ id: token, track: this.data.s.track }]')],
+    [base + '.js', js.replace('[{ id: token }]', '[{ id: token }, { id: token + 1 }]')],
+  ]
+  for (const [file, mutated] of changes) {
+    assert.notEqual(mutated, read(file), '负控必须真实变异')
+    const withChange = relative => relative === file ? mutated : read(relative)
+    assert.equal(pageImplementsContentItself(route, withChange), true)
+    assert.throws(() => assertTwinGate(withChange), /未登记分叉: roam-session/)
+  }
+  const removed = wxml.replace(/<cy-scene-roam-session\b[^>]*\/>/g, '<view>正文委托已移除</view>')
+  assert.notEqual(removed, wxml, '负控必须摘掉真实委托')
+  const withoutScene = relative => relative === base + '.wxml' ? removed : read(relative)
+  assert.equal(routeRendersScene(sceneId, route, withoutScene), false)
+  assert.throws(() => assertTwinGate(withoutScene), /未登记分叉: roam-session/)
 })
 
 function assertTwinGate(readSource = read) {

@@ -248,6 +248,7 @@ const BUILDERS = {
      商家要核对的是「屏上长这样」,不是「答案对不对」,那在配置里他自己写的。 */
   qa: (c) => ({
     type: 'qa',
+    judge: c.judge,
     mode: ({ TYPE: 'type', PICK: 'pick', SHOT: 'shot' })[c.mode] || 'type',
     theme: 'dark',
     title: orBlank(c.title),

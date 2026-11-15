@@ -4,9 +4,18 @@ const { test } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
+const vm = require('node:vm')
+const { createRequire } = require('node:module')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8')
+
+function freeMapDefinition() {
+  const file = path.join(ROOT, 'components/cy/free-map/index.js')
+  let definition
+  vm.runInNewContext(fs.readFileSync(file, 'utf8'), { require: createRequire(file), Component: value => { definition = value } })
+  return definition
+}
 
 function assertScreenFogContract({ roamWxml, roamWxss, roamJs, mapWxml }) {
   assert.match(roamWxml, /<view class="map-stack">[\s\S]*?<free-map[\s\S]*?<canvas type="2d" id="fogscreen"/,
@@ -55,7 +64,17 @@ function assertScreenFogContract({ roamWxml, roamWxss, roamJs, mapWxml }) {
     '手势只作废在途重绘不遮；程序视野大幅变化到新 image load 之间仍须全黑')
   assert.match(roamJs, /onPoiTap\(e\)[\s\S]*?if \(this\.data\.fogScreenGuard\) return;[\s\S]*?this\._fogMode === 'screen'[\s\S]*?!isPointRevealed\([\s\S]*?\)\) return;[\s\S]*?req\('\/api\/roam\/checkin'/,
     '黑雾区的隐形原生 POI 必须在请求前被坐标闸拦住')
-  assert.match(mapWxml, /enable-poi="\{\{true\}\}"/, '原生 POI 必须保留，否则点到店入口会失效')
+  const property = freeMapDefinition().properties.enablePoi
+  assert.equal(property.type.name, 'Boolean')
+  assert.equal(property.value, true, '漫游交互图默认必须保留原生 POI')
+  assert.match(mapWxml, /enable-poi="\{\{enablePoi\}\}"/, '原生 POI 必须透传属性，不能吞掉显式关闭值')
+  const tags = roamWxml.match(/<free-map\b[^>]*>/g) || []
+  const main = tags.find(tag => tag.includes('id="roamMap"'))
+  assert.ok(main, '必须核当前交互地图宿主')
+  const mainOverride = main.match(/enable-poi="\{\{(true|false)\}\}"/)
+  assert.equal(mainOverride ? mainOverride[1] === 'true' : property.value, true, '漫游交互地图的 POI 不得被关闭')
+  const share = tags.find(tag => tag.includes('id="rshMap"'))
+  assert.match(share || '', /enable-poi="\{\{false\}\}"/, '分享快照应保留既有关闭 POI 合同')
   assert.match(roamWxml, /bind:poitap="onPoiTap"/, '原生 POI 点击链路必须保留')
 }
 
@@ -132,4 +151,13 @@ test('负控：遮罩写死全遮、移除 image 或放开雾外 POI 必须判�
   assert.throws(() => assertScreenFogContract(hitLayer), /可见遮罩必须压住地图且不吃点击/)
   assert.throws(() => assertScreenFogContract(noBootstrap), /首张遮罩加载前必须用不透明黑层/)
   assert.throws(() => assertScreenFogContract(lowBootstrap), /fail-closed 保护层必须高于/)
+  const forcedPoi = { ...base, mapWxml: base.mapWxml.replace('enable-poi="{{enablePoi}}"', 'enable-poi="{{true}}"') }
+  assert.notEqual(forcedPoi.mapWxml, base.mapWxml)
+  assert.throws(() => assertScreenFogContract(forcedPoi), /不能吞掉显式关闭值/)
+  const noInteractivePoi = { ...base, roamWxml: base.roamWxml.replace('id="roamMap"', 'id="roamMap" enable-poi="{{false}}"') }
+  assert.notEqual(noInteractivePoi.roamWxml, base.roamWxml)
+  assert.throws(() => assertScreenFogContract(noInteractivePoi), /漫游交互地图的 POI 不得被关闭/)
+  const noPoiHandler = { ...base, roamWxml: base.roamWxml.replace('bind:poitap="onPoiTap"', '') }
+  assert.notEqual(noPoiHandler.roamWxml, base.roamWxml)
+  assert.throws(() => assertScreenFogContract(noPoiHandler), /原生 POI 点击链路必须保留/)
 })

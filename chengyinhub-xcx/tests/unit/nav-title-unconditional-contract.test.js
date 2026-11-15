@@ -2,6 +2,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
+const vm = require('node:vm')
 
 const ROOT = path.resolve(__dirname, '../..')
 const read = (relativePath) => fs.readFileSync(path.join(ROOT, relativePath), 'utf8')
@@ -22,8 +23,10 @@ const ALLOWED = [
   /* 试玩玩法屏时整条导航让位:玩法壳(cy-play-stage)自己在同一位置画「退出」,
      两个返回出口会叠在一起,而且那条白底会把深色的玩法屏框成一张卡。
      ⚠️ 这一支不是「某个状态没有返回出口」—— 条件为真的那一态由玩法壳提供出口,
-     其余所有态(编辑、加载、错误、预览的到达/完成步)都走无条件的 cy-nav-bar。 */
-  `pages/publish/temp/index | cy-nav-bar | 自带 wx:if="{{ !(previewVisible && pvKit && pvStepKey === 'challenge') }}"`,
+     完整预览的 complete 复用全屏绿色 verdict，由真实 completePreview CTA 退出或进入奖励。
+     仅这两种全屏态让位；编辑、加载、错误和到达/剧情/奖励阶段仍保留旧导航。
+     下方状态表与负控约束这一条精确登记，不接受其他页面或更宽条件。 */
+  `pages/publish/temp/index | cy-nav-bar | 自带 wx:if="{{ !(previewVisible && (pvStepKey === 'complete' || (pvKit && pvStepKey === 'challenge'))) }}"`,
   // 同一路由承载两种页面形态：selecting 是场次选择页（有标题），wx:else 是二维码凭证组件
   // （cy-qr-voucher 自带视觉主体，不套 page-title）。返回钮在条件外无条件渲染（见
   // secondary-nav-consistency.test.js 的 assertBackOutsideCondition），出口不会丢。
@@ -116,6 +119,29 @@ function scanRoute(route, source) {
     conditionalSources(source, tag).map((chain) => `${route} | ${tag} | ${chain}`))
 }
 
+function tempPreviewNavContract(source) {
+  const nav = (source.match(/<cy-nav-bar\b[^>]*>/g) || [])
+  if (nav.length !== 1 || !/custom-back\s+bind:back="goBack"/.test(nav[0])) return false
+  if (!/title="\{\{ previewVisible \? '玩家视角预览' : '编辑玩法模板' \}\}"/.test(nav[0])) return false
+  if (conditionalSources(source, 'cy-nav-bar').length !== 1) return false
+  const condition = nav[0].match(/wx:if="\{\{([\s\S]*?)\}\}"/)
+  if (!condition) return false
+  const shown = state => Boolean(vm.runInNewContext(condition[1], { editorLoading: false, loadError: false, creatorLoginRequired: false, ...state }, { timeout: 50 }))
+  for (const pvStepKey of ['', 'arrival', 'story', 'challenge', 'complete', 'reward']) {
+    for (const pvKit of [null, {}]) {
+      for (const state of [{}, { editorLoading: true }, { loadError: '读取失败' }, { creatorLoginRequired: true }]) {
+        if (!shown({ previewVisible: false, pvStepKey, pvKit, ...state })) return false
+      }
+      const expected = pvStepKey !== 'complete' && !(pvStepKey === 'challenge' && pvKit)
+      if (shown({ previewVisible: true, pvStepKey, pvKit }) !== Boolean(expected)) return false
+    }
+  }
+  const complete = (source.match(/<cy-play-verdict\b[^>]*>/g) || []).find(tag => tag.includes("pvStepKey === 'complete'"))
+  return Boolean(complete && /closable="\{\{true\}\}"/.test(complete)
+    && /full-color="\{\{true\}\}"/.test(complete) && /bind:close="completePreview"/.test(complete)
+    && /class="cg-pv-exit"[^>]*bindtap="closePreview"/.test(source))
+}
+
 function allRoutes() {
   const app = JSON.parse(read('app.json'))
   return app.pages.concat(app.subPackages.flatMap((pkg) => pkg.pages.map((page) => `${pkg.root}/${page}`)))
@@ -132,6 +158,28 @@ test('导航与页标题不得被裹进只覆盖部分状态的条件分支', ()
     '出现了新的条件化 nav/title。若确属互斥分支各自完整，补进 ALLOWED 并写明理由；'
       + '否则把 cy-nav-bar / cy-page-title 提到条件之外——否则加载/空/错态会整段丢标题和返回出口。',
   )
+})
+
+test('完整预览只有全屏完成与原玩法壳让出旧头部，其他阶段与加载错误保留标题返回', () => {
+  assert.equal(tempPreviewNavContract(read('pages/publish/temp/index.wxml')), true)
+})
+
+test('负控：不能把完成态例外扩到其他阶段、加载错误或丢失真实退出', () => {
+  const source = read('pages/publish/temp/index.wxml')
+  const changes = [
+    source.replace("pvStepKey === 'complete' ||", "pvStepKey !== 'reward' ||"),
+    source.replace('!(previewVisible &&', '!editorLoading && !loadError && !(previewVisible &&'),
+    source.replace('bind:close="completePreview"', 'bind:close="noop"'),
+  ]
+  for (const mutated of changes) {
+    assert.notEqual(mutated, source, '负控必须真实改动当前条件或出口')
+    assert.equal(tempPreviewNavContract(mutated), false)
+  }
+  const nav = source.match(/<cy-nav-bar\b[^>]*>/)[0]
+  assert.equal(tempPreviewNavContract(source.replace(nav, '<view wx:if="{{!loadError}}">' + nav + '</view>')), false)
+  const copied = scanRoute('pages/play/index', nav)
+  assert.equal(copied.length, 1, '负控必须实际识别复制到其他caller的条件')
+  assert.ok(copied.every(item => !ALLOWED.includes(item)), 'temp精确例外不能放行其他caller')
 })
 
 test('负控:把 cy-nav-bar 挪进错误分支时必须判红', () => {

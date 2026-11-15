@@ -185,7 +185,7 @@
     <scroll-view wx:if="{{entryStripTab=='city' && entryCityStrip}}" class="entry-peek__cards" scroll-x enhanced show-scrollbar="{{false}}"><view class="entry-peek__track">
       <view class="entry-card {{item.cover && !entryCoverErrors[item.cover] ? '' : 'entry-card--text'}}" wx:for="{{entryCityStrip.items}}" wx:key="id" data-idx="{{index}}" bindtap="onEntryCityPlaceTap" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__cover" src="{{item.cover}}" data-src="{{item.cover}}" binderror="onEntryCoverError" mode="aspectFill" />
-        <view wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__shade"></view>
+        <view wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__shade entry-card__shape" aria-hidden="true"></view>
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--place">{{item.catLabel}}</text><text class="entry-card__title">{{item.name}}</text><text class="entry-card__meta">{{item.reason}}</text></view>
       </view>
     </view></scroll-view>
@@ -197,7 +197,7 @@
       <view class="entry-card {{item.cover && !entryCoverErrors[item.cover] ? '' : 'entry-card--text'}}" wx:for="{{entryStrip}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
             bindtap="onEntryCardTap" aria-role="button" aria-label="打开 {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
         <image wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__cover" src="{{item.cover}}" data-src="{{item.cover}}" binderror="onEntryCoverError" mode="aspectFill" />
-        <view wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__shade"></view>
+        <view wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__shade entry-card__shape" aria-hidden="true"></view>
         <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.kind === 'place' ? 'place' : (item.tag === '自由探索' ? 'free' : 'city')}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta">{{item.meta || item.address || '查看活动详情'}}</text></view>
       </view>
     </view></scroll-view>
@@ -567,7 +567,7 @@
   <view class="entry-card live-card {{item.cover && !entryCoverErrors[item.cover] ? '' : 'entry-card--text'}}" wx:for="{{liveCards}}" wx:key="key" data-kind="{{item.kind}}" data-id="{{item.id}}"
         bindtap="onLiveCardTap" aria-role="button" aria-label="打开{{item.tag}} {{item.title}}" hover-class="cy-pressed" hover-stay-time="80">
     <image wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__cover" src="{{item.cover}}" data-src="{{item.cover}}" binderror="onEntryCoverError" mode="aspectFill" />
-    <view wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__shade"></view>
+    <view wx:if="{{item.cover && !entryCoverErrors[item.cover]}}" class="entry-card__shade entry-card__shape" aria-hidden="true"></view>
     <view class="entry-card__copy"><text class="entry-card__tag entry-card__tag--{{item.kind === 'team' ? 'team' : (item.tag === '自由探索' ? 'free' : 'city')}}">{{item.tag}}</text><text class="entry-card__title">{{item.title}}</text><text class="entry-card__meta" wx:if="{{item.meta || item.address}}">{{item.meta || item.address}}</text></view>
   </view>
 </view></scroll-view>

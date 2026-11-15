@@ -1521,7 +1521,7 @@
     <!-- 照「城瘾玩法试玩台」:玩法铺满整屏,不压翻页点和箭头;
          玩完由判定屏整屏涌上来,作者配的成功 / 失败反馈就写在这一屏。 -->
     <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind }}"
-                     text="{{ pvVerdict.text }}" images="{{ pvVerdict.images }}" closable="{{ true }}" bind:close="closePvVerdict" />
+                     text="{{ pvVerdict.text }}" images="{{ pvVerdict.images }}" closable="{{ true }}" full-color="{{ pvVerdict.kind === 'win' && pvKit.type === 'qa' && pvKit.judge !== false && (pvKit.mode === 'type' || pvKit.mode === 'pick') }}" bind:close="closePvVerdict" />
     <cy-play-verdict wx:if="{{pvStepKey === 'complete'}}" show="{{true}}" kind="win" full-color="{{true}}" closable="{{true}}"
                      text="任务完成！" cta-text="{{pvSteps[pvStep + 1] === 'reward' ? '领取奖励' : '完成'}}" bind:close="completePreview" />
     <!-- P-40(2026-10-27):玩家视角预览只留左右滑动切换 + 左上角返回,圆形箭头、「开始任务」和底部保存 / 发布栏都已删掉;

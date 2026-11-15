@@ -11,12 +11,31 @@ function assertIndexHeroContract({ js, wxml, wxss }) {
   assert.match(wxml, /wx:if="\{\{city\}\}"/, '城市信息只在实际值存在时渲染');
   assert.doesNotMatch(wxml, /city\s*\|\|\s*'上海'/, '未取得城市时不能伪造默认城市');
   assert.doesNotMatch(wxml, /v3-hero-bell-dot/, '没有未读数据时不能常驻通知点');
-  // 2026-09-17 A-14-2:文案收紧到「常驻错误横幅」本义 —— hero/推荐/附近/即将上线这些
-  // 有旧内容的分区刷新失败仍必须静默降级;列表底部的「加载更多」失败属于用户主动动作,
-  // 按 #856 的例外表保留 cy-inline-error 行内重试(在 sec-feed 之后)。
-  const aboveFeed = wxml.slice(0, wxml.indexOf('id="sec-feed"'));
-  assert.ok(aboveFeed.length > 0, '找不到 sec-feed 锚点(页面结构已改?)');
-  assert.doesNotMatch(aboveFeed, /cy-inline-error/, '已有内容时刷新失败要静默降级，不挂常驻错误横幅');
+  const feed = wxml.indexOf('<view id="sec-feed"');
+  assert.ok(feed > 0, '找不到 sec-feed 锚点(页面结构已改?)');
+  const aboveFeed = wxml.slice(0, feed);
+  // 首次读取失败用完整错误态；已有附近主题保留卡片，仅显示当前查询的行内重试。
+  const failures = [
+    ['recommendedTopicList', 'recoHero'],
+    ['nearbyTopicList', 'nearbyTopicList.length'],
+    ['upcomingActivityList', 'upcomingActivityList.length'],
+  ];
+  for (const [list, content] of failures) {
+    const guard = 'wx:elif="{{listErr.' + list + ' && !' + content + '}}"';
+    const start = aboveFeed.indexOf(guard);
+    assert.ok(start >= 0, '完整错误态必须只在无旧内容时出现：' + list);
+    const branch = aboveFeed.slice(start, aboveFeed.indexOf('</view>', start));
+    assert.match(branch, /<cy-error load-failure/);
+    assert.ok(branch.includes('data-list="' + list + '" bind:retry="retryList"'));
+  }
+  const inline = aboveFeed.match(/<cy-inline-error\b[^>]*\/>/g) || [];
+  assert.equal(inline.length, 1, '只为用户主动定位后的附近查询保留行内重试');
+  assert.match(inline[0], /wx:if="\{\{listErr\.nearbyTopicList && nearbyTopicList\.length\}\}" load-failure/);
+  assert.match(inline[0], /title="附近主题更新失败" action="重试" data-list="nearbyTopicList" bind:action="retryList"/);
+  assert.match(aboveFeed, /<swiper class="v3-reco-swiper" wx:if="\{\{recoCards\.length\}\}"/);
+  for (const list of ['nearbyTopicList', 'upcomingActivityList']) {
+    assert.ok(aboveFeed.includes('<scroll-view wx:if="{{' + list + '.length}}"'), '刷新错误不能遮掉已有卡片：' + list);
+  }
 }
 
 function assertAddressErrorContract({ js, wxml, json }) {
@@ -37,9 +56,29 @@ test('Q118：首页首帧不展示伪 loading 或无条件蓝点', () => {
     wxss: read('pages/index/index.wxss'),
   };
   if (process.env.Q118_NEGATIVE === 'index') {
-    source.wxml = source.wxml.replace('<cy-icon name="bell" size="32" />', '<cy-icon name="bell" size="32" /><view class="v3-hero-bell-dot"></view>');
+    const original = source.wxml;
+    source.wxml = source.wxml.replace('<view id="sec-hero"', '<view class="v3-hero-bell-dot"></view><view id="sec-hero"');
+    assert.notEqual(source.wxml, original, '负控必须实际注入蓝点');
   }
   assertIndexHeroContract(source);
+});
+
+test('Q118负控：常驻错误、丢失重试、隐藏旧内容或伪造蓝点必须判红', () => {
+  const source = {
+    js: read('pages/index/index.js'),
+    wxml: read('pages/index/index.wxml'),
+    wxss: read('pages/index/index.wxss'),
+  };
+  for (const mutated of [
+    source.wxml.replace('listErr.nearbyTopicList && nearbyTopicList.length', 'listErr.nearbyTopicList'),
+    source.wxml.replace('listErr.nearbyTopicList && !nearbyTopicList.length', 'listErr.nearbyTopicList'),
+    source.wxml.replace('bind:action="retryList"', 'bind:action="noop"'),
+    source.wxml.replace('<scroll-view wx:if="{{nearbyTopicList.length}}"', '<scroll-view wx:if="{{nearbyTopicList.length && !listErr.nearbyTopicList}}"'),
+    source.wxml.replace('<view id="sec-hero"', '<view class="v3-hero-bell-dot"></view><view id="sec-hero"'),
+  ]) {
+    assert.notEqual(mutated, source.wxml, '负控必须真实变异');
+    assert.throws(() => assertIndexHeroContract({ ...source, wxml: mutated }));
+  }
 });
 
 test('Q118：地址加载失败时不保留新增参与人信息 CTA', () => {

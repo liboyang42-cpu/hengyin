@@ -317,3 +317,81 @@ test('全屏成功完成态：末步完成退出本地预览，有奖励只进�
   assert.equal(p.data.previewVisible, false, '奖励开关开启但没有奖励步骤时也必须能完成退出');
   assert.equal(requests.length, 0);
 });
+
+test('作者QA判定成功复用现成全屏绿动画，失败与无判定或拍照不冒充成功', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const host = fs.readFileSync(path.join(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8').match(/<cy-play-verdict\b[^>]*>/)[0];
+  const expression = host.match(/full-color="{{(.*?)}}"/);
+  assert.ok(expression, 'challenge结果必须接入现成full-color，而非仅给complete演示屏');
+  const fullColor = (pvVerdict, pvKit) => Function('pvVerdict', 'pvKit', 'return (' + expression[1] + ')')(pvVerdict, pvKit);
+  const f = previewOwnerPage();
+  f.submit('待发送');
+  assert.equal(fullColor(f.p.data.pvVerdict, f.p.data.pvKit), true);
+  f.close(); f.p.tryCurrentGame(); f.submit('错误');
+  assert.equal(fullColor(f.p.data.pvVerdict, f.p.data.pvKit), false);
+  for (const kit of [{ type: 'qa', mode: 'pick', judge: true }, { type: 'qa', mode: 'type', judge: true }]) {
+    assert.equal(fullColor({ kind: 'win' }, kit), true);
+    assert.equal(fullColor({ kind: 'fail' }, kit), false);
+    assert.equal(fullColor({ kind: 'win' }, { ...kit, judge: false }), false);
+  }
+  for (const kit of [{ type: 'qa', mode: 'shot', judge: true }, { type: 'random' }, { type: 'profile' }]) {
+    assert.equal(fullColor({ kind: 'win' }, kit), false);
+  }
+  assert.equal(f.requests.length, 0);
+});
+
+function currentQARecovery(mode, judgment) {
+  const f = previewOwnerPage(), p = f.p;
+  p.closePreview();
+  p.data.advanced.qa.mode = mode;
+  p.data.advanced.qa.options = [
+    { id: 'actual-wrong', label: 'Wrong', correct: false },
+    { id: 'actual-right', label: 'Right', correct: true }
+  ];
+  p.data.advanced.qa.imageUrl = '/profile/fixture-evidence.jpg';
+  if (judgment !== undefined) p.data.advanced.qa.judge = judgment;
+  p.data.advanced.outcomeRules.pass = { reply: 'Configured pass', images: ['/profile/fixture-pass.jpg'] };
+  p.data.advanced.outcomeRules.fail = { reply: 'Configured fail', images: ['/profile/fixture-fail.jpg'] };
+  const original = JSON.stringify(p.data.advanced);
+  p.tryCurrentGame();
+  const fs = require('node:fs'), path = require('node:path');
+  const host = fs.readFileSync(path.join(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8').match(/<cy-play-verdict\b[^>]*>/)[0];
+  const expression = host.match(/full-color="{{(.*?)}}"/)[1];
+  const fullColor = () => Function('pvVerdict', 'pvKit', 'return (' + expression + ')')(p.data.pvVerdict, p.data.pvKit);
+  const submit = correct => p.onPvKitAction({ detail: { type: 'qa', action: mode === 'SHOT' ? 'shoot' : 'submit',
+    detail: mode === 'PICK' ? { mode: 'pick', optionId: correct ? 'actual-right' : 'actual-wrong' } :
+      { mode: mode.toLowerCase(), input: correct ? '待发送' : 'wrong' } } });
+  return { ...f, original, fullColor, submit };
+}
+
+for (const mode of ['TYPE', 'PICK']) for (const judgment of [false, true, undefined]) {
+  test('SUCCESS-R1 actual builder→Page ' + mode + ' judge=' + judgment + '保留原判定与配图，只有已判定成功变绿', () => {
+    for (const correct of [true, false]) {
+      const f = currentQARecovery(mode, judgment), p = f.p;
+      const built = preview.buildPreviewKit(p.data.advanced);
+      f.submit(correct);
+      assert.equal(f.fullColor(), correct && judgment !== false, '无判定不进入全屏绿色答对动画');
+      assert.equal(built.judge, judgment, '纯builder必须保留原judge字段');
+      assert.equal(p.data.pvKit.judge, judgment, 'tryCurrentGame必须实际使用builder透传值');
+      assert.equal(p.data.pvKit.imageUrl, '/profile/fixture-evidence.jpg');
+      assert.equal(p.data.pvVerdict.kind, correct ? 'win' : 'fail', '本修复不改原本地判定规则');
+      assert.equal(p.data.pvVerdict.show, true);
+      assert.equal(f.fullColor(), correct && judgment !== false, '无判定不进入全屏绿色答对动画');
+      assert.equal(p.data.pvVerdict.text, correct ? 'Configured pass' : 'Configured fail');
+      assert.deepEqual(p.data.pvVerdict.images, [correct ? '/profile/fixture-pass.jpg' : '/profile/fixture-fail.jpg']);
+      assert.equal(JSON.stringify(p.data.advanced), f.original, '作者原配置零写');
+      assert.equal(f.requests.length, 0);
+    }
+  });
+}
+
+test('SUCCESS-R1 actual SHOT builder→Page保留显式题图与原收尾，不使用QA答对绿屏', () => {
+  const f = currentQARecovery('SHOT', true);
+  assert.equal(f.p.data.pvKit.mode, 'shot');
+  assert.equal(f.p.data.pvKit.imageUrl, '/profile/fixture-evidence.jpg');
+  f.submit(true);
+  assert.equal(f.p.data.pvVerdict.kind, 'win');
+  assert.equal(f.fullColor(), false);
+  assert.equal(JSON.stringify(f.p.data.advanced), f.original);
+  assert.equal(f.requests.length, 0);
+});

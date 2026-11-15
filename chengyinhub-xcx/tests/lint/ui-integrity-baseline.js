@@ -1003,7 +1003,7 @@ module.exports = {
 // 2026-11-02 走查修复 l4-counter(M-12/M-21/M-24 在 merchantinfo.js 前段 +8 行):2 条 U4-DYNAMIC 锚点仅行号位移(2433→2441、2465→2473),调用行逐字相同、理由与条数不变;digest 按门禁 baselineKeyDigest 重算。
 // 2026-11-03 集成 l4-counter 合 pay-gate/l1/l2/l3:两侧登记取并集,不新增登记;u4Dynamic digest 按门禁 baselineKeyDigest 在合并树重算。
 // 2026-11-03 Round5 l7-launch:club/apply 游客登录入口(+11 行),onInput 233→244、toggleBool 244→255 仅行号位移,调用行逐字相同、理由与条数不变;digest 按门禁同一算法重算。
-"f76318e3be4f452384cb6f357ac0086c3ed2a1b5d49a262248dfacad5f381420",
+"e648d2aea244d63f0a3fea72b0a665444dbd5cd4da7e71a2ba0f9314d4abd5e2",
 // 2026-10-28 模板页货架改版(#652)合 master(#610):本线删 template/index 两条 + master play 1621→1624 重锚，合并树 60 条，digest 按同一算法重算。
 // 2026-10-20 R5 尾段(#327,owner 批准 12 条重锚):fabu 729→731、898→900、2524→2530、3570→3588、3951→3969、4957→4990、5215→5248、5866→5899、5876→5909、5929→5962、6270→6303、7936→8060,逐行比对 master 原行一字未改,理由与条数 58 不变;digest 按同一算法显式重算。
       // 2026-08-20 开卡包四拍动效:u5Silent 条数不变(12),只是 play/index.js 的调用点
@@ -1400,10 +1400,10 @@ module.exports = {
   //   逐条回读:仍是同一个动态 setData 调用点,受控字段与理由一字未改,digest 显式重算。
   // 2026-10-11 模板生命周期修复：既有两处登记等量换行号 217→218 / 304→331；身份清空复用静态 applyDetailPayload，不新增动态豁免。
   "u4Dynamic": {
-    "chengyinhub-xcx/pages/square/components/route-map/index.js#site:e4e5690abe0c0937eca3121402facfdad3e2bca240778163c4cb0cd0a50cca81:1": "loadRoute入场清图仅调用utils/topic-route-preview.build([])，固定routeReady/routeIsRoad/routeSourceText/mapLatitude/mapLongitude/routeMarkers/routePolyline/routeIncludePoints；七个字段由WXML/JS消费，routeIsRoad是同源道路判定的固定元数据（不声称其单独可见），不展开服务端键；session revision+read epoch阻断迟到。owner=小程序；复核=2026-10-24",
+    "chengyinhub-xcx/pages/square/components/route-map/index.js#site:1f2d058b0e312a2bc32dcf37fe0e01ab2517c61e8f74a024dd6d1d9c5383bcb6:1": "loadRoute入场清图仅合并topic-route-preview.build([])固定八个路线展示字段与mapInstances:[]；mapInstances由同页map的wx:for消费，epoch由updated处理器校验；routeIsRoad仅同源固定判定元数据，其余七字段由WXML/JS消费。不展开服务端键，session revision+read epoch阻断迟到。owner=小程序；复核=2026-11-15",
     "chengyinhub-xcx/pages/square/components/route-map/index.js#site:42bc88fb7efaf77ad1612929aa731030c6203a0f3b113b65e89580371c9b11a6:1": "同一loadRoute业务拒绝清图，routePreview.build([])只返回固定路线视图字段并触发empty；共享topic-route-preview实现与WXML逐字段核对，不从响应提供键。owner=小程序；复核=2026-10-24",
     "chengyinhub-xcx/pages/square/components/route-map/index.js#site:9f1b9a5b3d3e7082aeddd687f383225f1e3a7189830a0743305489e6ad46ed96:1": "同一loadRoute网络失败清图，current()先校验session revision/read epoch，固定投影routePreview.build([])与empty事件给宿主可见空态；不回写其他页面。owner=小程序；复核=2026-10-24",
-    "chengyinhub-xcx/pages/square/components/route-map/index.js#site:44921de201ba95028535c4a43ced945810c8e0783ddfa54387fa51f622a49dba:1": "buildRouteMap的局部view只由utils/topic-route-preview.build(chaptersList)产生；固定路线视图八字段，routeReady决定ready/empty，节点只供值、不能供setData键；地图与提示消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
+    "chengyinhub-xcx/pages/square/components/route-map/index.js#site:4f3371bd3648318ccfcdd6a64445d235a4fe46a5756805367dc450d9a5dbc3e7:1": "buildRouteMap局部view只由topic-route-preview.build(chaptersList)固定八字段产生，再合并唯一mapInstances字段（routeReady时仅含当前read epoch，否则为空）；同页map的wx:for/key/data-epoch与updated共同消费。节点只供值、不能供setData键；routeIsRoad仅固定元数据，其余七字段由地图/提示/JS消费；ready展示事件不替代snapshot updated门。owner=小程序；复核=2026-11-15",
     "chengyinhub-xcx/pages/topic/index/index.js#site:93ddb53f658873945da9a6558cf2b63e8e185e4787516f09c0d665f097936ce8:1": "buildRouteMap只提交utils/topic-route-preview.build(chaptersList)固定八个路线视图字段；每章道路独立校验，缺损退节点虚线，不展开章节任意键；路线地图/提示与JS选择消费其余七字段，routeIsRoad仅同源固定判定元数据，不声称直接渲染。owner=小程序；复核=2026-10-24",
 
     // 2026-10-19 Claude 小程序线移植到 master:本线新增 6 处动态 setData 逐项登记(棘轮/digest 待审批后同步)。

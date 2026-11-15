@@ -51,20 +51,58 @@ test('drawn card immediately opens its server content and unseen cards stay hidd
   assert.equal(c.data.deck[1].opened, false); assert.equal(c.data.deck[1].body, '');
   c._clear();
 });
-test('legacy without an ending still finishes; optional read is quiet and a stale reply cannot finish another run', async () => {
+function lifeEndingMethod(req) {
   const source = fs.readFileSync(path.join(ROOT, 'pages/play/index.js'), 'utf8');
   const begin = source.indexOf('  _loadLifeEnding(next) {');
   const end = source.indexOf('  /** 把一章结局章', begin);
+  assert.ok(begin >= 0 && end > begin, 'must load the real production ending method');
+  const archive = require('../../pages/play/utils/life-archive');
+  return new Function('req', 'lifeArchive', 'return ({' + source.slice(begin, end) + '})._loadLifeEnding;')(req, archive);
+}
+
+test('legacy without an ending still finishes; optional read is quiet and a stale reply cannot finish another run', async () => {
   let reply, options;
   const req = (...args) => { options = args; return new Promise(resolve => { reply = resolve; }); };
-  const method = new Function('req', 'return ({' + source.slice(begin, end) + '})._loadLifeEnding;')(req);
-  const page = { data: { topicId: 1, activityId: 0 }, _routeState: { sessionId: 2 }, _isPlayAccountCurrent: () => true };
+  const method = lifeEndingMethod(req);
+  const shown = [];
+  const page = { data: { topicId: 1, activityId: 0, endingError: false }, _routeState: { sessionId: 2 },
+    _lifeEndingPendingScope: 'session-2', _isPlayAccountCurrent: () => true,
+    setData(patch) { Object.assign(this.data, patch); }, _showEnding(card) { shown.push(card); } };
   let finished = 0;
   method.call(page, () => finished++);
+  assert.equal(options[0], '/api/play/journey/ending');
+  assert.equal(options[1], 'GET');
+  assert.deepEqual(options[2], { topicId: 1, activityId: 0 });
   assert.equal(options[4], true, 'missing optional ending must not show a configuration error toast');
   reply({ code: 500, msg: '本主题未配置剧情' }); await Promise.resolve();
   assert.equal(finished, 1);
+  assert.equal(page._lifeEndingPendingScope, '');
+  assert.equal(page._lifeEndingFailedScope, 'session-2');
+  assert.equal(page.data.endingError, true);
+  assert.deepEqual(shown, []);
+  page._lifeEndingPendingScope = 'session-2-retry';
   method.call(page, () => finished++); page._routeState.sessionId = 3;
   reply({ code: 200, data: null }); await Promise.resolve();
   assert.equal(finished, 1, 'old ending response must not finish the new run');
+  assert.deepEqual(shown, [], 'old ending response must not cover the new run');
+  assert.equal(page._lifeEndingPendingScope, 'session-2-retry');
+  assert.equal(page._lifeEndingFailedScope, 'session-2');
+});
+
+test('successful empty ending reaches shown scope without consuming the continue callback', async () => {
+  let reply, shown, finished = 0;
+  const method = lifeEndingMethod(() => new Promise(resolve => { reply = resolve; }));
+  const page = { data: { topicId: 1, activityId: 0, topicName: '原主题', nodes: [], endingError: true },
+    _routeState: { sessionId: 2 }, _lifeEndingPendingScope: 'session-2',
+    _isPlayAccountCurrent: () => true, setData(patch) { Object.assign(this.data, patch); },
+    _showEnding(card) { shown = card; } };
+  method.call(page, () => finished++);
+  reply({ code: 200, data: null }); await Promise.resolve();
+  assert.equal(page._lifeEndingShown, true);
+  assert.equal(page._lifeEndingShownScope, 'session-2');
+  assert.equal(page._lifeEndingFailedScope, '');
+  assert.equal(page.data.endingError, false);
+  assert.equal(shown.show, true);
+  assert.equal(shown.list[0].title, page.data.topicName);
+  assert.equal(finished, 0, 'shown ending must await the real continue action');
 });

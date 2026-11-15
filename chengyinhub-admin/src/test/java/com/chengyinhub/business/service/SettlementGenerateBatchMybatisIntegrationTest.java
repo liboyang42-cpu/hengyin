@@ -257,8 +257,8 @@ class SettlementGenerateBatchMybatisIntegrationTest {
 
         Long batchId = settlementService.generateBatch(request);
 
-        assertEquals(0, number("SELECT batch_id FROM settlement_detail WHERE idempotency_key='REG-HISTORICAL-8D'"));
-        assertEquals(batchId.longValue(), number("SELECT batch_id FROM settlement_detail WHERE idempotency_key='REG-BOUNDARY-14D'"));
+        assertEquals(0, number("SELECT batch_id FROM settlement_detail WHERE idempotency_key='REG-HISTORICAL-8D'")); // gitleaks:allow -- fixed SQL idempotency row identifier; not authentication
+        assertEquals(batchId.longValue(), number("SELECT batch_id FROM settlement_detail WHERE idempotency_key='REG-BOUNDARY-14D'")); // gitleaks:allow -- fixed SQL idempotency row identifier; not authentication
         assertEquals(3, number("SELECT COUNT(*) FROM settlement_detail WHERE batch_id=" + batchId));
         assertEquals(0, new BigDecimal("210.00").compareTo(
                 decimal("SELECT total_amount FROM settlement_batch WHERE id=" + batchId)));
