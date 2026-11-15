@@ -32,6 +32,11 @@ public interface IClubMembershipService {
     ClubMembershipAccessEndResultVO handleMemberAccessEnded(Long clubId, Long memberId,
                                                              String eventType, String requestId);
     ClubMembershipAccessEndResultVO handleClubAccessEnded(Long clubId, String eventType, String requestId);
+    /**
+     * K1: dues collection status for a club's owner settings (needs club write access): {@code state} AVAILABLE |
+     * SPLIT | NOT_BOUND | WAIT_FOR_PLATFORM | UNAVAILABLE, {@code reason}, {@code nextStep}. No merchant ids.
+     */
+    java.util.Map<String, Object> duesCollection(Long principalMemberId, Long clubId);
     boolean supportsOutTradeNo(String outTradeNo);
     boolean handlePaidInvoice(String outTradeNo, boolean paid, Integer amountFen, String transactionId,
             com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference reference);

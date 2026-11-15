@@ -18,6 +18,8 @@ public class ClubMembershipOverviewVO {
     private List<ClubMembershipPlan> plans = Collections.emptyList();
     private List<ClubMembershipRefundReview> refundReviews = Collections.emptyList();
     private List<ClubMembershipInvoice> invoices = Collections.emptyList();
+    /** K1: whether dues can be paid online now and, if not, why ({@code state}, {@code reason}, {@code nextStep}). */
+    private java.util.Map<String, Object> duesCollection = Collections.emptyMap();
 
     public boolean isClubMembershipEnabled() { return clubMembershipEnabled; }
     public void setClubMembershipEnabled(boolean clubMembershipEnabled) { this.clubMembershipEnabled = clubMembershipEnabled; }
@@ -37,4 +39,6 @@ public class ClubMembershipOverviewVO {
     public void setRefundReviews(List<ClubMembershipRefundReview> refundReviews) { this.refundReviews = refundReviews; }
     public List<ClubMembershipInvoice> getInvoices() { return invoices; }
     public void setInvoices(List<ClubMembershipInvoice> invoices) { this.invoices = invoices; }
+    public java.util.Map<String, Object> getDuesCollection() { return duesCollection; }
+    public void setDuesCollection(java.util.Map<String, Object> duesCollection) { this.duesCollection = duesCollection; }
 }
