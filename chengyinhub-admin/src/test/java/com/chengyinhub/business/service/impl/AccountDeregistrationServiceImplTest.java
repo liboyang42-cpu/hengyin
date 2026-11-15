@@ -457,6 +457,56 @@ class AccountDeregistrationServiceImplTest {
     }
 
     @Test
+    void precheckOffersAppleConfirmationOnlyForAppleOnlyAccounts() {
+        AccountDeregistrationMapper d = mock(AccountDeregistrationMapper.class);
+        UmsMemberMapper m = mock(UmsMemberMapper.class);
+        UmsMember member = new UmsMember(); member.setId(1001L); member.setRole("player");
+        when(m.selectUmsMemberById(1001L)).thenReturn(member);
+        AccountDeregistrationServiceImpl service = wired(d, m, mock(OmsOrderMapper.class),
+                mock(CmsRegistrationMapper.class), mock(ICashWithdrawService.class),
+                mock(PlatformTransactionManager.class), mock(AlarmService.class));
+        member.setPhone(""); member.setWxOpenId(""); member.setAppleId("apple-sub-1");
+        assertEquals("APPLE", service.precheck(1001L).getVerificationMethod());
+        member.setWxOpenId("owner"); assertEquals("WECHAT", service.precheck(1001L).getVerificationMethod());
+        member.setPhone("13800138000"); assertEquals("SMS", service.precheck(1001L).getVerificationMethod());
+        member.setPhone(null); member.setWxOpenId(null); member.setAppleId(" ");
+        assertEquals("UNAVAILABLE", service.precheck(1001L).getVerificationMethod());
+    }
+
+    @Test
+    void completedDeletionRevokesAppleTokensAndRevocationFailureNeverFailsIt() {
+        AccountDeregistrationMapper d = mock(AccountDeregistrationMapper.class);
+        UmsMemberMapper m = mock(UmsMemberMapper.class);
+        OmsOrderMapper o = mock(OmsOrderMapper.class);
+        CmsRegistrationMapper r = mock(CmsRegistrationMapper.class);
+        ICashWithdrawService c = mock(ICashWithdrawService.class);
+        PlatformTransactionManager t = mock(PlatformTransactionManager.class);
+        AccountDeregistration due = new AccountDeregistration();
+        due.setId(9L); due.setMemberId(1001L);
+        due.setStatus("PENDING"); due.setExecuteAfter(new Date(0));
+        when(d.selectByIdForUpdate(9L)).thenReturn(due);
+        when(d.selectDue(any(Date.class))).thenReturn(Collections.singletonList(due));
+        when(d.complete(eq(9L), any(Date.class))).thenReturn(1);
+        UmsMember member = new UmsMember();
+        member.setId(1001L); member.setBalance(BigDecimal.ZERO); member.setDelFlag(0); member.setAppleId("apple-sub-1");
+        when(m.selectUmsMemberById(1001L)).thenReturn(member);
+        when(o.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
+        when(r.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.emptyList());
+        when(t.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
+        AccountDeregistrationServiceImpl service = wired(d, m, o, r, c, t, mock(AlarmService.class));
+        com.chengyinhub.business.account.apple.AppleTokenRevocationService revocation =
+                mock(com.chengyinhub.business.account.apple.AppleTokenRevocationService.class);
+        when(revocation.revokeAfterDeletion(1001L)).thenThrow(new IllegalStateException("apple down"));
+        ReflectionTestUtils.setField(service, "appleTokenRevocationService", revocation);
+
+        assertEquals(1, service.executeDue(new Date()));
+        verify(d).complete(eq(9L), any(Date.class));
+        InOrder order = inOrder(d, revocation);
+        order.verify(d).complete(eq(9L), any(Date.class));
+        order.verify(revocation).revokeAfterDeletion(1001L);
+    }
+
+    @Test
     void playerViewWithOwnedBusinessesBlocksPrecheckAndApply() {
         AccountDeregistrationMapper d = mock(AccountDeregistrationMapper.class);
         UmsMemberMapper m = mock(UmsMemberMapper.class);
