@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 import com.chengyinhub.business.service.IWeChatMiniSessionService;
 import com.chengyinhub.business.service.ai.impl.E2eTestSpeechToTextService;
+import com.chengyinhub.business.service.impl.E2eTestNpcDialogueResponder;
 import com.chengyinhub.business.service.channel.media.E2eTestImMediaStore;
 import com.chengyinhub.business.service.impl.E2eTestContentSecurityService;
 import com.chengyinhub.business.service.impl.E2eTestWeChatMiniSessionService;
@@ -36,6 +37,7 @@ class E2eTestProvidersProfileTest
                 E2eTestImMediaStore.class,
                 E2eTestSpeechToTextService.class,
                 E2eTestWeChatMiniSessionService.class,
+                E2eTestNpcDialogueResponder.class,
         })
         {
             Profile profile = type.getAnnotation(Profile.class);

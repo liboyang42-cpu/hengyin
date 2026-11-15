@@ -639,7 +639,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     }
 
     private static boolean isDialogue(String bizType) {
-        return "npc_chat".equals(bizType) || "npc_shop_chat".equals(bizType) || "merchant_npc_chat".equals(bizType);
+        return "npc_chat".equals(bizType) || "npc_shop_chat".equals(bizType) || "merchant_npc_chat".equals(bizType) || "npc_dialogue".equals(bizType);
     }
 
     private void refundDialogueFailure(Long memberId, String bizType, String reservation) {
@@ -670,7 +670,7 @@ public class AiGatewayServiceImpl implements AiGatewayService
     {
         // npc_event 刻意不在此列:它是 cache-only(不调模型),且今天并不经本网关
         //  (ApiAiNpcController /event 直连 NpcEventService)。真要收编时再单独判。
-        if ("npc_chat".equals(bizType))
+        if ("npc_chat".equals(bizType) || "npc_dialogue".equals(bizType))
         {
             return RATE_GROUP_NPC;
         }
