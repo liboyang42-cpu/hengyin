@@ -82,7 +82,9 @@ class ApiCreatorEarningsControllerTest {
             if (java.lang.reflect.Modifier.isPublic(m.getModifiers()) && m.getReturnType().getSimpleName().equals("AjaxResult"))
                 assertTrue(m.isAnnotationPresent(GetMapping.class), m.getName() + " must be GET");
         }
-        RequestMapping off = ApiAppGapsWorkshopController.class.getMethod("notEnabled").getAnnotation(RequestMapping.class);
+        RequestMapping off = ApiAppGapsWorkshopController.class.getMethod("notEnabled",
+                jakarta.servlet.http.HttpServletRequest.class, jakarta.servlet.http.HttpServletResponse.class)
+                .getAnnotation(RequestMapping.class);
         assertTrue(Arrays.asList(off.value()).contains("/api/mod-settlement/**"),
                 "anything that is not one of the exact GET reads (payout writes) still answers 503");
         for (var f : ApiCreatorEarningsController.class.getDeclaredFields())
