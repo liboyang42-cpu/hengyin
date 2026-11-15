@@ -1,0 +1,9 @@
+page { background: var(--cy-bg-page); color: var(--cy-text-title); }
+.pb-page { min-height: 100vh; display: flex; flex-direction: column; }
+.pb-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pb-card { margin: 0 var(--cy-page-x) var(--cy-space-3); padding: var(--cy-space-4); border-radius: var(--cy-radius-md); background: var(--cy-color-input-bg-empty); }
+.pb-title { font-size: var(--cy-font-body); font-weight: 700; margin-bottom: var(--cy-space-1); }
+.pb-text { font-size: var(--cy-font-label); line-height: var(--cy-leading-normal); color: var(--cy-text-body); }
+.pb-input { margin-top: var(--cy-space-3); height: var(--cy-btn-h); padding: 0 var(--cy-space-3); border-radius: var(--cy-radius-md); background: var(--cy-color-input-bg-filled); color: var(--cy-color-input-text); font-size: var(--cy-font-body); }
+.pb-notice { margin: 0 var(--cy-page-x); font-size: var(--cy-font-label); color: var(--cy-color-text-secondary); }
+.pb-bottom { margin-top: auto; padding: var(--cy-space-5) var(--cy-page-x) calc(var(--cy-space-4) + env(safe-area-inset-bottom)); }

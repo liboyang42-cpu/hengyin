@@ -24,9 +24,39 @@
          姓名/银行名称/银行账号/手机号是敏感个人信息,页面不再采集,也不再要单独同意;
          整页只留一个客服入口。后端 /api/withdrawal/* 与共享校验工具不动。 -->
 
+    <!-- R6b:只有资金开关「用户提现」打开(测试环境)时出现;关闭时整块不渲染,页面与今天一致。 -->
+    <view class="txcon" wx:if="{{payoutOpen && payoutView}}">
+      <view class="txcon_ly">
+        <text class="txcon_ly_name">本次可申请</text>
+        <text class="tx-cs-note">¥{{payoutView.available}}</text>
+      </view>
+      <view class="txcon_ly" wx:if="{{!payoutView.wechatReady}}">
+        <text class="tx-cs-note">还没有可收款的微信，请先用微信登录小程序，或在 App 里扫码绑定收款微信</text>
+      </view>
+      <view class="txcon_ly" wx:if="{{payoutView.pendingId}}">
+        <text class="txcon_ly_name">¥{{payoutView.pendingAmount}}</text>
+        <text class="tx-cs-note">{{payoutView.pendingText}}</text>
+        <view class="txyr_right" wx:if="{{payoutView.pendingStatus === 'PENDING'}}" bindtap="cancelPayout" aria-role="button" aria-label="撤回这笔提现申请" hover-class="cy-pressed" hover-stay-time="80">撤回</view>
+      </view>
+      <view class="txcon_ly {{payoutAmount ? 'txcon_ly--filled' : ''}}" wx:else>
+        <text class="txcon_ly_name">提现金额</text>
+        <view class="txcon_ly_inp txcon_ly_inp--amount">
+          <text class="txcon_ly_currency">¥</text>
+          <input type="digit" value="{{payoutAmount}}" placeholder="最低 {{payoutView.minAmount}} 元" placeholder-class="tx-placeholder" bindinput="onPayoutAmount" aria-label="提现金额" />
+        </view>
+      </view>
+      <view class="txcon_ly" wx:for="{{payoutView.last}}" wx:key="id">
+        <text class="txcon_ly_name">¥{{item.amount}}</text>
+        <text class="tx-cs-note">{{item.text}}{{item.note ? '：' + item.note : ''}}</text>
+      </view>
+      <view class="txtpis_tit" wx:if="{{payoutNotice}}" aria-role="alert">{{payoutNotice}}</view>
+      <view class="txtpis_txt">提交后由平台审核，通过后打到你的微信零钱；审核前可以撤回。</view>
+    </view>
+
     <view class="tx-bottom">
       <view class="tx-cta">
-        <cy-btn variant="primary" bindtap="saveData">联系客服提现</cy-btn>
+        <cy-btn wx:if="{{payoutOpen && payoutView}}" variant="primary" loading="{{payoutBusy}}" disabled="{{payoutBusy || !!payoutView.pendingId || !payoutView.wechatReady}}" bindtap="saveData">提交提现申请</cy-btn>
+        <cy-btn wx:else variant="primary" bindtap="saveData">联系客服提现</cy-btn>
       </view>
     </view>
   </view>

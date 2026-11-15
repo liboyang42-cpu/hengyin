@@ -1129,6 +1129,12 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
         return mapper.unfreezeWithdraw(id) > 0;
     }
 
+    /** R6b:会员本人的小程序 openid 优先;没有时才用 App 扫码绑定的小程序 openid。 */
+    static String miniOpenidOrBound(String memberMiniOpenid, String boundMiniOpenid) {
+        if (memberMiniOpenid != null && !memberMiniOpenid.isEmpty()) return memberMiniOpenid;
+        return boundMiniOpenid == null || boundMiniOpenid.isBlank() ? memberMiniOpenid : boundMiniOpenid;
+    }
+
     /**
      * 选定提现转账的 (openid, appid) 组合 —— 两者**必须同源**,微信按
      * (appid, openid) 认人,配错会被判「不匹配」而拒付。
@@ -1142,12 +1148,6 @@ public class CashWithdrawServiceImpl implements ICashWithdrawService {
      *
      * @return {openid, appid};两列都为空时返回 null(调用方转成业务异常)
      */
-    /** R6b:会员本人的小程序 openid 优先;没有时才用 App 扫码绑定的小程序 openid。 */
-    static String miniOpenidOrBound(String memberMiniOpenid, String boundMiniOpenid) {
-        if (memberMiniOpenid != null && !memberMiniOpenid.isEmpty()) return memberMiniOpenid;
-        return boundMiniOpenid == null || boundMiniOpenid.isBlank() ? memberMiniOpenid : boundMiniOpenid;
-    }
-
     static String[] resolveTransferChannel(String wxOpenid, String appOpenid,
                                            String wxAppid, String appAppid) {
         boolean hasWx = wxOpenid != null && !wxOpenid.isEmpty();

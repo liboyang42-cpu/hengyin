@@ -282,7 +282,8 @@
         "market/gift/index",
         "market/membership/index",
         "market/pass-order/index",
-        "market/library/index"
+        "market/library/index",
+        "payout-bind/index"
       ]
     },
     {
