@@ -1341,7 +1341,7 @@ public class ApiTopicController extends BaseController {
             return cmsTopicService.deleteTopicByOwner(tid, memberId)
                     ? success("删除成功") : error("删除失败");
         } catch (RuntimeException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
     }
 
@@ -1397,7 +1397,7 @@ public class ApiTopicController extends BaseController {
             original.put("cancellationState","DONE");
             return AjaxResult.success(msg.toString(),original);
         } catch (ServiceException se) {
-            return AjaxResult.error(se.getMessage());
+            return AjaxResult.refusal(se);
         } catch (Exception e) {
             logger.error("主题取消失败: topicId={}, memberId={}", tid, actorMemberId, e);
             return AjaxResult.error("系统繁忙，请稍后重试");
@@ -1430,7 +1430,7 @@ public class ApiTopicController extends BaseController {
             out.put("cancellationEpoch",teamGroupService.topicCancellationEpoch(tid,hostMemberId));
             return AjaxResult.success(out);
         } catch (ServiceException se) {
-            return AjaxResult.error(se.getMessage());
+            return AjaxResult.refusal(se);
         } catch (Exception e) {
             logger.error("主题取消预览失败: topicId={}, memberId={}", tid, actorMemberId, e);
             return AjaxResult.error("系统繁忙，请稍后重试");
@@ -1557,7 +1557,7 @@ public class ApiTopicController extends BaseController {
         if (topic == null || Integer.valueOf(2).equals(topic.getDelFlag())
                 || !Integer.valueOf(1).equals(topic.getStatus()) || !Integer.valueOf(1).equals(topic.getUserStatus())
                 || Integer.valueOf(1).equals(cmsTopicService.selectTopicIsDraft(cid))) {
-            return error("主题不存在");
+            return AjaxResult.error(HttpStatus.NOT_FOUND, "主题不存在");
         }
         try {
             boolean recorded = auditTaskService.reportContentOnce(
@@ -1816,7 +1816,7 @@ public class ApiTopicController extends BaseController {
         // ponytail: V1 作者自决转正,后续如需「N 次完赛才可转正」在此加闸
         // 竞态安全:WHERE beta_flag=1 才清,重复点击/并发只成功一次
         if (cmsTopicService.graduateBeta(cid) <= 0) {
-            return error("该主题不在 Beta 试玩期");
+            return AjaxResult.error(HttpStatus.CONFLICT, "该主题不在 Beta 试玩期");
         }
         return success("已转为正式主题");
     }
@@ -1890,7 +1890,7 @@ public class ApiTopicController extends BaseController {
             return error("主题不存在");
         }
         if (!Integer.valueOf(ProductType.FREE_EXPLORE).equals(detail.getProductType())) {
-            return error("仅自由探索主题支持章节承接");
+            return AjaxResult.error(HttpStatus.CONFLICT, "仅自由探索主题支持章节承接");
         }
         List<TopicTemplateChapterVO> eligibleChapters = new ArrayList<>();
         if (detail.getChapters() != null) {
@@ -1973,7 +1973,7 @@ public class ApiTopicController extends BaseController {
         // 否则「结束本章」就退化成了一个可以来回拨的招商开关。
         // ⚠️ 这里只是提前给一句人话,**真正的闸在 SQL 的 WHERE 里**(见下)。
         if (chapter.getFinishTime() != null) {
-            return error("本章已结束，不能再改商家承接");
+            return AjaxResult.error(HttpStatus.CONFLICT, "本章已结束，不能再改商家承接");
         }
         try {
             /* ⚠️ 不走 updateCmsTopicChapter:那条是裸 where id = #{id}。
@@ -2043,7 +2043,7 @@ public class ApiTopicController extends BaseController {
         } catch (ServiceException e) {
             return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage());
         } catch (IllegalStateException e) {
-            return error(e.getMessage());
+            return AjaxResult.refusal(e);
         }
         return success("这一站的档位已保存");
     }

@@ -132,8 +132,16 @@ class PersonalGameplayRuntimeServiceTest {
         assertEquals(true,service.themeView(7L,10L,0L,99L).get("replayAllowed"));
         ObjectNode disabled=(ObjectNode)json.readTree(config());disabled.put("replayEnabled",false);topic.setPublishedThemeRuntimeConfigJson(disabled.toString());
         assertEquals(false,service.themeView(7L,10L,0L,99L).get("replayAllowed"));
-        assertEquals("此主题未开放重玩",assertThrows(ServiceException.class,()->service.replayTheme(7L,99L)).getMessage());
+        ServiceException notReplayable=assertThrows(ServiceException.class,()->service.replayTheme(7L,99L));
+        assertEquals("此主题未开放重玩",notReplayable.getMessage());
+        assertEquals(Integer.valueOf(409),notReplayable.getCode()); // SMOKE-500-R4:状态冲突,不是 500
         assertEquals(before,session.getStateJson());verify(mapper,never()).updateStateCas(any());
+    }
+    /** SMOKE-500-R4:未结束的局取结果卡是状态冲突 409,文案不变。 */
+    @Test void themeCardOfUnfinishedRunIsAConflict() {
+        ServiceException unfinished=assertThrows(ServiceException.class,()->service.themeCard(7L,99L));
+        assertEquals("本局尚未结束",unfinished.getMessage());
+        assertEquals(Integer.valueOf(409),unfinished.getCode());
     }
     @Test void replayReadbackAndCommandShareLatestSessionAndIdempotentChildRules() throws Exception {
         finishForReplay();TopicRouteSession other=new TopicRouteSession();other.setId(100L);

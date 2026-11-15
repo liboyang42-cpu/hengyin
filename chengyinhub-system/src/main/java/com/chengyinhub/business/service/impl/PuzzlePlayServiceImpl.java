@@ -290,7 +290,8 @@ public class PuzzlePlayServiceImpl implements IPuzzlePlayService
         PlayNodeAccessService.Context ctx = accessService.resolveContext(memberId, activityId, ctxTopicId, nodeScope(node));
         if (ctx.failure() != null) return new NodeHintUnlockResult(null, new NodeHintUnlockResult.Failure(ctx.failure().originalAjaxCode(), ctx.failure().message()));
         String leadErr = accessService.leadGateError(ctx.activityId(), nodeScope(node));
-        if (leadErr != null) return hintFailure(leadErr);
+        if (leadErr != null) return new NodeHintUnlockResult(null, new NodeHintUnlockResult.Failure(
+                com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, leadErr));
         String routeErr = accessService.routeAccessError(memberId, ctx.activityId(), ctx.topicId(), nodeScope(node), null);
         if (routeErr != null) return hintFailure(routeErr);
         CmsMemberTemplate tpl = originalHintTemplate(memberId, ctx.topicId(), node, ctx.activityId());

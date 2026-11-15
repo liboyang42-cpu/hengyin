@@ -63,7 +63,7 @@ public class ApiRoamShareController extends BaseController {
         try {
             normalizedJson = privacyService.normalize(clientTs, snapshot);
         } catch (RuntimeException e) {
-            return error("足迹数据无效");
+            return AjaxResult.error(com.chengyinhub.common.constant.HttpStatus.BAD_REQUEST, "足迹数据无效");
         }
         // F-L5C-02:快照里的路线名、勋章名、地点名由客户端提交、对任何拿到链接的人可见,公开前送检。
         String secText = shareTexts(normalizedJson);
@@ -135,7 +135,7 @@ public class ApiRoamShareController extends BaseController {
     @Operation(summary = "读取足迹分享快照(未登录可读)")
     @GetMapping("/snapshot")
     public AjaxResult read(String token) {
-        if (token == null || !TOKEN.matcher(token).matches()) return error(GONE);
+        if (token == null || !TOKEN.matcher(token).matches()) return AjaxResult.error(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND, GONE);
         String json;
         try {
             json = snapshotMapper.selectSnapshotJsonByToken(token);
@@ -144,11 +144,11 @@ public class ApiRoamShareController extends BaseController {
             // transport failure so existing readers offer retry instead.
             throw new ShareReadUnavailableException(e);
         }
-        if (json == null) return error(GONE);
+        if (json == null) return AjaxResult.error(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND, GONE);
         try {
             return success(privacyService.normalizeStored(json));
         } catch (RuntimeException e) {
-            return error(GONE);
+            return AjaxResult.error(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND, GONE);
         }
     }
 
