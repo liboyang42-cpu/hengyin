@@ -48,11 +48,11 @@
         <block wx:if="{{isManager && section.category}}">
           <text wx:if="{{section.category.archived}}" class="row-value">已归档</text>
           <view wx:if="{{reordering}}" class="row-actions">
-            <text class="row-link-plain {{section.category.canUp && !busy ? '' : 'disabled'}}" data-id="{{section.category.id}}" data-dir="up" catchtap="onMove" aria-role="button" aria-label="上移分类">上移</text>
-            <text class="row-link-plain {{section.category.canDown && !busy ? '' : 'disabled'}}" data-id="{{section.category.id}}" data-dir="down" catchtap="onMove" aria-role="button" aria-label="下移分类">下移</text>
+            <text class="row-link-plain {{section.category.canUp && !busy ? '' : 'disabled'}}" data-id="{{section.category.id}}" data-dir="up" catchtap="onMove" aria-role="button" aria-label="上移分类" hover-class="cy-pressed" hover-stay-time="80">上移</text>
+            <text class="row-link-plain {{section.category.canDown && !busy ? '' : 'disabled'}}" data-id="{{section.category.id}}" data-dir="down" catchtap="onMove" aria-role="button" aria-label="下移分类" hover-class="cy-pressed" hover-stay-time="80">下移</text>
           </view>
           <view wx:else class="row-actions">
-            <text class="row-link-plain" data-id="{{section.category.id}}" catchtap="onArchive" aria-role="button" aria-label="{{section.category.archived ? '取消归档分类' : '归档分类'}}">{{section.category.archived ? '取消归档' : '归档'}}</text>
+            <text class="row-link-plain" data-id="{{section.category.id}}" catchtap="onArchive" aria-role="button" aria-label="{{section.category.archived ? '取消归档分类' : '归档分类'}}" hover-class="cy-pressed" hover-stay-time="80">{{section.category.archived ? '取消归档' : '归档'}}</text>
           </view>
         </block>
       </view>
@@ -65,13 +65,13 @@
           </view>
           <text wx:if="{{!isManager && item.unread > 0}}" class="row-value row-value--primary">{{item.unread > 99 ? '99+' : item.unread}}</text>
           <view wx:if="{{isManager && reordering}}" class="row-actions">
-            <text wx:if="{{!item.isDefault}}" class="row-link-plain {{busy ? 'disabled' : ''}}" data-id="{{item.id}}" catchtap="onMoveTo" aria-role="button" aria-label="把 {{item.name}} 移到别的分类">移到</text>
-            <text class="row-link-plain {{item.canUp && !busy ? '' : 'disabled'}}" data-id="{{item.id}}" data-dir="up" catchtap="onMove" aria-role="button" aria-label="上移 {{item.name}}">上移</text>
-            <text class="row-link-plain {{item.canDown && !busy ? '' : 'disabled'}}" data-id="{{item.id}}" data-dir="down" catchtap="onMove" aria-role="button" aria-label="下移 {{item.name}}">下移</text>
+            <text wx:if="{{!item.isDefault}}" class="row-link-plain {{busy ? 'disabled' : ''}}" data-id="{{item.id}}" catchtap="onMoveTo" aria-role="button" aria-label="把 {{item.name}} 移到别的分类" hover-class="cy-pressed" hover-stay-time="80">移到</text>
+            <text class="row-link-plain {{item.canUp && !busy ? '' : 'disabled'}}" data-id="{{item.id}}" data-dir="up" catchtap="onMove" aria-role="button" aria-label="上移 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">上移</text>
+            <text class="row-link-plain {{item.canDown && !busy ? '' : 'disabled'}}" data-id="{{item.id}}" data-dir="down" catchtap="onMove" aria-role="button" aria-label="下移 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">下移</text>
           </view>
           <view wx:elif="{{isManager}}" class="row-actions">
-            <text wx:if="{{!item.archived}}" class="row-link-plain" data-id="{{item.id}}" catchtap="onEdit" aria-role="button" aria-label="设置 {{item.name}}">设置</text>
-            <text wx:if="{{!item.isDefault || item.archived}}" class="row-link-plain" data-id="{{item.id}}" catchtap="onArchive" aria-role="button" aria-label="{{item.archived ? '取消归档' : '归档'}} {{item.name}}">{{item.archived ? '取消归档' : '归档'}}</text>
+            <text wx:if="{{!item.archived}}" class="row-link-plain" data-id="{{item.id}}" catchtap="onEdit" aria-role="button" aria-label="设置 {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">设置</text>
+            <text wx:if="{{!item.isDefault || item.archived}}" class="row-link-plain" data-id="{{item.id}}" catchtap="onArchive" aria-role="button" aria-label="{{item.archived ? '取消归档' : '归档'}} {{item.name}}" hover-class="cy-pressed" hover-stay-time="80">{{item.archived ? '取消归档' : '归档'}}</text>
           </view>
           <cy-icon wx:else class="row-pick-arrow" name="arrow-right" size="24" />
         </view>
@@ -84,9 +84,9 @@
     <view class="picker" wx:if="{{editor}}">
       <cy-field label="名称" placeholder="1–64 个字" value="{{editor.name}}" maxlength="64" required bind:input="onNameInput" />
       <cy-field wx:if="{{editor.kind !== 0}}" label="话题" placeholder="一句话说明这个频道聊什么(可不填)" value="{{editor.topic}}" maxlength="120" bind:input="onTopicInput" />
-      <cy-field wx:if="{{editor.mode === 'create'}}" variant="select" label="类型" display-value="{{editor.kindLabel}}" bind:select="onPickKind" />
-      <cy-field wx:if="{{editor.mode === 'create' && editor.kind !== 0}}" variant="select" label="分类" display-value="{{editor.parentLabel}}" bind:select="onPickParent" />
-      <cy-field wx:if="{{editor.kind !== 0}}" variant="select" label="慢速模式" display-value="{{editor.slowmodeLabel}}" helper-text="成员两次发言之间至少间隔这么久；主理人和管理员不受限" bind:select="onPickSlowmode" />
+      <cy-cell wx:if="{{editor.mode === 'create'}}" title="类型" value="{{editor.kindLabel}}" bind:tap="onPickKind" />
+      <cy-cell wx:if="{{editor.mode === 'create' && editor.kind !== 0}}" title="分类" value="{{editor.parentLabel}}" bind:tap="onPickParent" />
+      <cy-cell wx:if="{{editor.kind !== 0}}" title="慢速模式" description="成员两次发言之间至少间隔这么久；主理人和管理员不受限" value="{{editor.slowmodeLabel}}" bind:tap="onPickSlowmode" />
       <view class="assign-btn {{busy ? 'disabled' : ''}}" bindtap="onEditorSave" aria-role="button" aria-label="保存" hover-class="cy-pressed" hover-stay-time="80">保存</view>
     </view>
   </cy-sheet>
