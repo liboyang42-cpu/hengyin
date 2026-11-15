@@ -15,6 +15,9 @@ public interface IImService
     /** 我的会话列表(组装对方信息 + 最后一条 + 未读) */
     List<Map<String, Object>> listConversations(Long memberId);
 
+    /** R9 BE-17：会话列表键集分页，回 {items, nextCursor, hasMore}。 */
+    Map<String, Object> listConversationPage(Long memberId, String cursor, Integer size);
+
     /** 会话消息分页(校验我是参与者)；返回 { list(按时间正序), nextCursor, hasMore } */
     Map<String, Object> listMessages(Long memberId, Long conversationId, Long cursorId, int size);
 

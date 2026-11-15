@@ -55,6 +55,29 @@ public class ApiImController extends BaseController
         }
     }
 
+    /**
+     * R9 BE-17：会话列表分页。旧 {@code /conversations} 仍回数组（最多最近 200 个会话）；
+     * 新客户端用本接口按 nextCursor 翻页，每页最多 50。
+     */
+    @Operation(summary = "我的会话列表(分页)")
+    @PostMapping("/conversations/page")
+    public AjaxResult conversationPage(String cursor, String size)
+    {
+        try
+        {
+            return AjaxResult.success(imService.listConversationPage(getAppUserId(), cursor, Convert.toInt(size, 20)));
+        }
+        catch (ServiceException e)
+        {
+            return AjaxResult.error(e.getCode() == null ? 400 : e.getCode(), e.getMessage());
+        }
+        catch (Exception e)
+        {
+            logger.error("IM 会话列表分页异常", e);
+            return AjaxResult.error("操作失败，请稍后重试");
+        }
+    }
+
     public AjaxResult messages(String conversation_id, String cursor_id, String size)
     {
         return messages(conversation_id, cursor_id, size, null);

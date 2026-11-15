@@ -27,8 +27,26 @@ public interface ImConversationMemberMapper
     /** 我的会话(按会话最后消息时间倒序) */
     public List<ImConversationMember> selectMyConversations(@Param("memberId") Long memberId);
 
-    /** 列表批量读模型；群资格与路线卡投影仍由原业务守卫校验。 */
-    List<ConversationSummary> selectMyConversationSummaries(@Param("memberId") Long memberId);
+    /**
+     * R9 BE-17：旧版整表列表的服务端上限。{@code /api/im/conversations} 仍回数组(App/小程序兼容)，
+     * 但最多回最近 {@value} 个会话；更多请走 {@code /api/im/conversations/page}。
+     */
+    int LEGACY_LIST_CAP = 200;
+
+    /** 列表批量读模型；群资格与路线卡投影仍由原业务守卫校验。R9 BE-17：最多 {@link #LEGACY_LIST_CAP} 行。 */
+    default List<ConversationSummary> selectMyConversationSummaries(Long memberId)
+    {
+        return selectMyConversationSummaryPage(memberId, null, null, LEGACY_LIST_CAP);
+    }
+
+    /**
+     * R9 BE-17：键集分页。顺序 (im_conversation.last_msg_at desc, id desc)，last_msg_at 为空的排最后。
+     * 游标是上一页最后一行的 (lastMsgAt, conversationId)；首页两者都传 null。
+     */
+    List<ConversationSummary> selectMyConversationSummaryPage(@Param("memberId") Long memberId,
+                                                              @Param("cursorAt") java.util.Date cursorAt,
+                                                              @Param("cursorConversationId") Long cursorConversationId,
+                                                              @Param("limit") int limit);
 
     /** 仅本次列表涉及的俱乐部；当前会员谓词与 ClubMemberMapper.selectByClubAndMember 一致。 */
     List<ClubConversationSummary> selectClubConversationSummaries(@Param("memberId") Long memberId,
