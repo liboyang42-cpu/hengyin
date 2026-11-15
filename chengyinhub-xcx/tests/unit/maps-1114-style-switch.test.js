@@ -123,7 +123,7 @@ test('快照:cover 裁剪不拉伸;没渲染 / 截图失败 / 空路径都拒绝
 
 test('漫游分享卡：优先真实快照，截图不可用时绘制本次真实轨迹', () => {
   const wxml = read('pages/roam/index.wxml')
-  assert.match(wxml, /<map wx:if="\{\{shareArch\.archGeo\}\}" id="rshMap"[\s\S]*?bindupdated="onShareMapUpdated"/)
+  assert.match(wxml, /<block wx:if="\{\{shareArch\.archGeo\}\}">[\s\S]*?<free-map wx:if="\{\{fmStyleReady\}\}" id="rshMap"[\s\S]*?bindready="onShareMapReady"/)
   assert.doesNotMatch(wxml, /class="rsh-seg"|class="rsh-route"/)
   const js = read('pages/roam/index.js')
   assert.match(js, /_shareMapImage\(cv, idx, arch\)/)

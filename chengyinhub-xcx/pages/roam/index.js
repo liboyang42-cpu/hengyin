@@ -455,6 +455,7 @@ Page({
     shareColors: ['#121317', '#20283A', '#3A2A1E', '#2E2A6B'], /* ds-ok P-8 漫游分享卡底色色块(业主批准稿) */
     shareCard: { show: false, card: {} }, // P-8 晒勋章:通用分享层
     shareArch: { archSegs: [], archPois: [], archEnd: {} },
+    shareMapInstances: [],
     shareFinish: {},
     discoverReward: { show: false, poi: {} },
     celebrationEvent: '',
@@ -5368,8 +5369,10 @@ Page({
     const app = getApp();
     const communityWrite = typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
     const privacy = readSharePrivacy(wx);
-    this._shareMapUpdated = false;
+    this._shareMapReady = null;
+    this._shareMapOwner = String(app.getUserID() || '');
     this.setData({
+      shareMapInstances: [{ id: this._shareEpoch || 0 }],
       shareArch: this._activeShareArch() || { archSegs: [], archPois: [], archEnd: {} },
       shareFinish: this._activeShareFinish(),
       share: {
@@ -5435,6 +5438,8 @@ Page({
 
   _cancelShareWork() {
     this._shareEpoch = (this._shareEpoch || 0) + 1;
+    this._shareMapReady = null;
+    this._shareMapOwner = '';
     const flow = this._squarePostFlow;
     if (flow && flow.sent && !flow.settled) {
       this._squarePostUnknownOwners = this._squarePostUnknownOwners || {};
@@ -5818,11 +5823,39 @@ Page({
   /** 分享卡底图:截预览里那张真实 <map>。没有足够轨迹(archGeo 空)= 空态文字,不需要图;截图不可用时绘制同一份真实足迹。 */
   _shareMapImage(cv, idx, arch) {
     if (idx === 1 || !arch || !arch.archGeo) return Promise.resolve(null);
-    const ctx = wx.createMapContext('rshMap', this);
-    return mapSnap.takeMapSnapshot(ctx, () => this._shareMapUpdated)
-      .then((path) => mapSnap.loadImage(cv, path)).catch(() => null);
+    const scope = this._shareScope(), view = this.data.shareArch;
+    if (!view || JSON.stringify(view.archGeo) !== JSON.stringify(arch.archGeo)) return Promise.resolve(null);
+    const style = { subkey: this.data.fmSubkey, layerStyle: this.data.fmLayerStyle, tone: this.data.fmTone };
+    const current = () => scope() && this._shareMapOwner === String(getApp().getUserID() || '')
+      && this.data.shareArch === view && this.data.fmSubkey === style.subkey
+      && this.data.fmLayerStyle === style.layerStyle && this.data.fmTone === style.tone;
+    const settled = () => {
+      const ready = this._shareMapReady;
+      return ready && ready.map === this.selectComponent('#rshMap')
+        && (ready.ready === false || ready.map.isSnapshotReady(style, ready.generation));
+    };
+    return mapSnap.waitFor(() => !current() || settled()).then((done) => {
+      const ready = this._shareMapReady;
+      const valid = () => current() && ready && ready === this._shareMapReady && ready.ready === true
+        && ready.map === this.selectComponent('#rshMap') && ready.map.isSnapshotReady(style, ready.generation);
+      if (!done || !valid()) throw mapSnap.failure('share map not ready');
+      return mapSnap.takeMapSnapshot(ready.map.getMapContext(), valid).then((path) => {
+        if (!valid()) throw mapSnap.failure('share map changed');
+        return mapSnap.loadImage(cv, path);
+      }).then((image) => {
+        if (!valid()) throw mapSnap.failure('share map changed');
+        return image;
+      });
+    }).catch(() => null);
   },
-  onShareMapUpdated() { this._shareMapUpdated = true; },
+  onShareMapReady(e) {
+    const detail = e && e.detail;
+    if (!detail || String(e.currentTarget?.dataset?.requestId) !== String(this._shareEpoch || 0)) return;
+    const map = this.selectComponent('#rshMap');
+    if (map && Number.isInteger(detail.generation) && typeof detail.ready === 'boolean') {
+      this._shareMapReady = { map, ready: detail.ready, generation: detail.generation };
+    }
+  },
 
   /** idx 0=story(750x1000 竖版,拱形卡含路线+卡内数字) 1=square(750x750,数字行);版式与 swiper 预览卡一致 */
   _drawShareCard(idx) {

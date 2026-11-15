@@ -1127,11 +1127,13 @@
   <view class="rsh-stage">
     <view class="rsh-card">
       <view class="rsh-map">
-        <map wx:if="{{shareArch.archGeo}}" id="rshMap" class="rsh-real" longitude="{{shareArch.archGeo.center.longitude}}" latitude="{{shareArch.archGeo.center.latitude}}" scale="{{shareArch.archGeo.scale}}"
-             include-points="{{shareArch.archGeo.include}}" polyline="{{shareArch.archGeo.polyline}}" circles="{{shareArch.archGeo.circles}}"
-             enable-scroll="{{false}}" enable-zoom="{{false}}" enable-rotate="{{false}}" enable-overlooking="{{false}}"
-             show-location="{{false}}" enable-poi="{{false}}" show-compass="{{false}}" show-scale="{{false}}"
-             subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" bindupdated="onShareMapUpdated" aria-hidden="true"></map>
+        <block wx:if="{{shareArch.archGeo}}">
+        <free-map wx:if="{{fmStyleReady}}" id="rshMap" class="rsh-real" wx:for="{{shareMapInstances}}" wx:key="id" data-request-id="{{item.id}}"
+             scene="explore" center="{{ {lat:shareArch.archGeo.center.latitude,lng:shareArch.archGeo.center.longitude} }}" scale="{{shareArch.archGeo.scale}}"
+             fit fit-points="{{shareArch.archGeo.include}}" fit-padding="{{[0,0,0,0]}}" map-polyline="{{shareArch.archGeo.polyline}}" map-circles="{{shareArch.archGeo.circles}}"
+             interactive="{{false}}" enable-poi="{{false}}" show-controls="{{false}}" show-photo-callouts="{{false}}"
+             subkey="{{fmSubkey}}" layer-style="{{fmLayerStyle}}" tone="{{fmTone}}" bindready="onShareMapReady" aria-hidden="true" />
+        </block>
         <text class="rsh-empty" wx:else>今日足迹</text>
       </view>
       <view class="rsh-stats">

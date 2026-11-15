@@ -5,10 +5,22 @@ const data = { coopHelp: null };
 
 // 方法表写成顶层对象字面量(UI 门禁的混入扫描按 `const X = { … }` 认方法);请求函数由 methods(req) 注入。
 const coopMethods = {
+    _coopScope(questKey) {
+      if (!this._isPlayAccountCurrent()) return '';
+      const view = this.data.themeBag || {}, cooperation = view.cooperation;
+      const question = coop.question(cooperation, questKey);
+      if (!question) return '';
+      return JSON.stringify([this._boundPlayOwner(), this._capturePlayLoginContext().generation,
+        this.data.topicId, this.data.activityId, (this._routeState || {}).sessionId,
+        view.activityId, view.sessionId, view.teamId, cooperation.gameSessionId, cooperation.authorityEpoch,
+        question.nodeId, question.runtimeInstance]);
+    },
     openCoopHelp(e) {
       const view = this.data.themeBag || {};
       const questKey = e.currentTarget.dataset.key;
-      if (!coop.canHelp(view.cooperation, questKey)) return Promise.resolve(false);
+      const scope = this._coopScope(questKey);
+      if (!scope || !coop.canHelp(view.cooperation, questKey)) return Promise.resolve(false);
+      this._coopHelpScope = scope;
       this._coopSeq = (this._coopSeq || 0) + 1;
       this.setData({ coopHelp: { questKey, loading: true, error: '', rows: [], skip: null, freeText: '', content: '', contentLevel: null, skipConfirm: false, busyLevel: null, unknown: null } });
       return this._coopSend('VIEW', null, null);
@@ -34,21 +46,34 @@ const coopMethods = {
     _coopSend(operation, level, requestId) {
       const view = this.data.themeBag || {};
       const sheet = this.data.coopHelp;
-      const body = coop.helpBody({ activityId: view.activityId, cooperation: view.cooperation, questKey: sheet.questKey, operation, level, requestId });
+      if (!sheet || !this._isPlayAccountCurrent()) return Promise.resolve(false);
+      const scope = this._coopHelpScope;
+      if (!scope || scope !== this._coopScope(sheet.questKey)) { this.setData({ coopHelp: null }); return Promise.resolve(false); }
+      const pending = this._coopPending && this._coopPending.scope === scope ? this._coopPending : null;
+      if (operation !== 'VIEW' && pending && (pending.operation !== operation || pending.level !== level || pending.body.requestId !== requestId)) {
+        this.setData({ 'coopHelp.error': '请先核对原帮助请求' }); return Promise.resolve(false);
+      }
+      // 原请求号只重放原命令；重拉投影不能把未知结果改绑到另一个实例。
+      const body = operation !== 'VIEW' && pending ? pending.body
+        : coop.helpBody({ activityId: view.activityId, cooperation: view.cooperation, questKey: sheet.questKey, operation, level, requestId });
       if (!body) { this.setData({ 'coopHelp.loading': false, 'coopHelp.error': '本题合作状态已变化，请刷新' }); return Promise.resolve(false); }
+      if (operation !== 'VIEW') this._coopPending = { scope, operation, level, body };
       const seq = this._coopSeq;
       this.setData({ 'coopHelp.busyLevel': operation === 'VIEW' ? null : level, 'coopHelp.error': '' });
       return this._coopReq('/api/play/help/shared', 'POST', body, { 'content-type': 'application/json' }, true).then(res => {
-        if (seq !== this._coopSeq || !this.data.coopHelp) return false;
+        if (seq !== this._coopSeq || !this.data.coopHelp || !this._isPlayAccountCurrent()) return false;
+        if (scope !== this._coopScope(sheet.questKey)) { this.setData({ coopHelp: null }); return false; }
         const r = coop.outcome(res);
         const patch = { 'coopHelp.loading': false, 'coopHelp.busyLevel': null };
         if (r.state === 'UNKNOWN') {
           Object.assign(patch, { 'coopHelp.error': operation === 'VIEW' ? '提示没有读到' : '结果未确认，再点一次会查询原请求', 'coopHelp.unknown': operation === 'VIEW' ? null : { operation, level, requestId } });
           this.setData(patch); return false;
         }
-        if (r.state === 'REJECTED') { Object.assign(patch, { 'coopHelp.error': r.message, 'coopHelp.unknown': null, 'coopHelp.skipConfirm': false }); this.setData(patch); return false; }
+        if (r.state === 'REJECTED') { if (operation !== 'VIEW') this._coopPending = null; Object.assign(patch, { 'coopHelp.error': r.message, 'coopHelp.unknown': null, 'coopHelp.skipConfirm': false }); this.setData(patch); return false; }
         const d = r.data;
-        patch['coopHelp.unknown'] = null;
+        if (operation !== 'VIEW') this._coopPending = null;
+        patch['coopHelp.unknown'] = operation === 'VIEW' && pending
+          ? { operation: pending.operation, level: pending.level, requestId: pending.body.requestId } : null;
         if (Array.isArray(d.levels)) { const lv = coop.levelRows(d.levels); patch['coopHelp.rows'] = lv.rows; patch['coopHelp.skip'] = lv.skip; }
         if (d.remainingFreeUses != null) patch['coopHelp.freeText'] = coop.freeText(d.remainingFreeUses);
         if (operation === 'USE') {
@@ -65,7 +90,7 @@ const coopMethods = {
           this.setData({ coopHelp: null });
           return this.refreshThemeBackpack ? this.refreshThemeBackpack().then(() => true) : true;
         }
-        if (d.cooperation && this.data.themeBag) patch['themeBag.cooperation'] = d.cooperation;
+        if (d.cooperation && this.data.themeBag.cooperation === view.cooperation) patch['themeBag.cooperation'] = d.cooperation;
         this.setData(patch);
         return true;
       });

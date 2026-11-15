@@ -9,7 +9,7 @@ const { readNonNegative, footprintCount, formatDistance, formatDuration, formatS
 const { limitTrack } = require('../../utils/roam-track-simplify.js');
 const { routeGeo } = require('../../utils/roam-route-geo.js');
 const mapSnap = require('../../utils/map-snapshot.js');
-const { freeMapKind, mapStyleFor } = require('../../utils/map-style.js');
+const { freeMapKind, mapStyleFor, mapToneFor } = require('../../utils/map-style.js');
 const { publishShareSnapshot, readShareSnapshot } = require('../../utils/roam-share-snapshot.js');
 const app = typeof getApp === 'function' ? getApp() : { globalData: {} };
 const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
@@ -43,7 +43,8 @@ Page({
     ts: '', sessionId: '',
     s: { pois: [] },
     geo: null,
-    mapStyle: { subkey: '', layerStyle: 1 },
+    mapStyle: { subkey: '', layerStyle: 1, tone: '' },
+    shareMapInstances: [],
     err: '',
     share: { show: false, drawing: false, imagePath: '', mapImage: '', error: '', retrySave: false, saving: false, token: '', linkReason: '' },
     // 第二轮拍板 17:朋友分享进来(带 shareToken)时只读快照 —— sharedState: '' 非分享 | loading | ready | gone | error
@@ -267,13 +268,14 @@ Page({
       return Promise.resolve({ ok: false, imagePath: '' });
     }
     this._saveInFlight = null;
-    this._mapUpdated = false;
+    this._shareMapReady = null;
     // 裁剪比例可能在上次算完之后被改过;缓存住的 segs 是**旧设置**下的轨迹,重算一次。
     // ⚠️ 逐字段写,不用 `...this._route()` 展开:展开会新增一条 UI-GATE-0 的动态 setData 债务。
     const route = this._route(this.data.s);
+    const kind = freeMapKind();
     this.setData({
       geo: route.geo,
-      mapStyle: mapStyleFor(freeMapKind()),
+      mapStyle: Object.assign(mapStyleFor(kind), { tone: mapToneFor(kind) }),
       share: { show: true, drawing: true, imagePath: '', mapImage: '', error: '', retrySave: false, saving: false, token: '', linkReason: '' },
     });
     // 每次打开都重新发布:快照按**当前**裁剪设置重算(服务端按足迹 ts 更新同一令牌)。
@@ -342,8 +344,8 @@ Page({
     const token = (this._shareEpoch || 0) + 1;
     this._shareEpoch = token;
     loading.show('生成足迹卡');
-    this._mapUpdated = false;
-    this.setData({ 'share.drawing': true, 'share.error': '', 'share.retrySave': false, 'share.saving': false, 'share.mapImage': '' });
+    this._shareMapReady = null;
+    this.setData({ shareMapInstances: [{ id: token }], 'share.drawing': true, 'share.error': '', 'share.retrySave': false, 'share.saving': false, 'share.mapImage': '' });
     return Promise.resolve().then(() => this._drawShareCard()).then((imagePath) => {
       if (typeof imagePath !== 'string' || !imagePath.trim()) throw new Error('empty session share card path');
       if (!this._isShareCurrent(token)) return { ok: false, imagePath: '' };
@@ -478,13 +480,39 @@ Page({
   /** 截分享用那张真实 <map> 的快照;没有轨迹(geo 空)= 不需要。截图不可用时由导出器绘制同一份真实足迹。 */
   _shareMapImage(canvas) {
     if (!this.data.geo) return Promise.resolve(null);
-    const ctx = wx.createMapContext('ssMap', this);
-    return mapSnap.takeMapSnapshot(ctx, () => this._mapUpdated).then((path) => {
-      this.setData({ 'share.mapImage': path });
-      return mapSnap.loadImage(canvas, path);
+    const token = this._shareEpoch || 0, geo = this.data.geo;
+    const style = Object.assign({}, this.data.mapStyle);
+    const current = () => this._isShareCurrent(token) && this.data.geo === geo
+      && this.data.mapStyle.subkey === style.subkey && this.data.mapStyle.layerStyle === style.layerStyle
+      && this.data.mapStyle.tone === style.tone;
+    const settled = () => {
+      const ready = this._shareMapReady;
+      return ready && ready.map === this.selectComponent('#ssMap')
+        && (ready.ready === false || ready.map.isSnapshotReady(style, ready.generation));
+    };
+    return mapSnap.waitFor(() => !current() || settled()).then((done) => {
+      const ready = this._shareMapReady;
+      const valid = () => current() && ready && ready === this._shareMapReady && ready.ready === true
+        && ready.map === this.selectComponent('#ssMap') && ready.map.isSnapshotReady(style, ready.generation);
+      if (!done || !valid()) throw mapSnap.failure('share map not ready');
+      return mapSnap.takeMapSnapshot(ready.map.getMapContext(), valid).then((path) => {
+        if (!valid()) throw mapSnap.failure('share map changed');
+        return mapSnap.loadImage(canvas, path).then((image) => {
+          if (!valid()) throw mapSnap.failure('share map changed');
+          this.setData({ 'share.mapImage': path });
+          return image;
+        });
+      });
     }).catch(() => null);
   },
-  onShareMapUpdated() { this._mapUpdated = true; },
+  onShareMapReady(e) {
+    const detail = e && e.detail;
+    if (!detail || String(e.currentTarget?.dataset?.requestId) !== String(this._shareEpoch || 0)) return;
+    const map = this.selectComponent('#ssMap');
+    if (map && Number.isInteger(detail.generation) && typeof detail.ready === 'boolean') {
+      this._shareMapReady = { map, ready: detail.ready, generation: detail.generation };
+    }
+  },
 
   _drawShareCard() {
     const token = this._shareEpoch || 0;

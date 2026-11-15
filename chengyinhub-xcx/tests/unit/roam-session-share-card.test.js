@@ -75,9 +75,14 @@ function loadPage() {
   const page = Object.assign({}, pageConfig, {
     data: JSON.parse(JSON.stringify(pageConfig.data)),
   })
+  const map = { isSnapshotReady: () => true, getMapContext: () => global.wx.createMapContext('fmap', page) }
+  page.selectComponent = () => map
   page.setData = (patch, callback) => {
     Object.entries(patch).forEach(([path, value]) => setByPath(page.data, path, value))
     if (callback) callback()
+    if (patch.shareMapInstances) setImmediate(() => page.onShareMapReady({
+      currentTarget: { dataset: { requestId: patch.shareMapInstances[0].id } }, detail: { ready: true, generation: 0 },
+    }))
   }
   return page
 }
@@ -121,7 +126,6 @@ beforeEach(() => {
       options.success({ tempFilePath: '/tmp/roam-session-card.png' })
     },
     createMapContext: (id, owner) => {
-      setImmediate(() => owner.onShareMapUpdated())
       return { takeSnapshot: (options) => options.success({ tempImagePath: '/tmp/map-snap.png' }) }
     },
     showToast: (options) => { toastCalls.push(options) },
@@ -599,7 +603,6 @@ test('P0-58 用户在系统存图面板点取消:不挂「保存失败」错误�
 
 test('截图失败仍用真实轨迹生成足迹卡，不产生虚构底图', async () => {
   global.wx.createMapContext = (id, owner) => {
-    setImmediate(() => owner.onShareMapUpdated())
     return { takeSnapshot: (options) => options.fail({ errMsg: 'takeSnapshot:fail' }) }
   }
   const page = loadPage()
@@ -614,6 +617,6 @@ test('截图失败仍用真实轨迹生成足迹卡，不产生虚构底图', as
 })
 
 test('分享卡路线来自真实 map 快照:wxml 不再有手画的路线节点', () => {
-  assert.match(PAGE_WXML, /<map id="ssMap"[^>]*include-points="\{\{geo\.include\}\}"[^>]*polyline="\{\{geo\.polyline\}\}"/)
+  assert.match(PAGE_WXML, /<cy-free-map id="ssMap"[^>]*fit-points="\{\{geo\.include\}\}"[^>]*map-polyline="\{\{geo\.polyline\}\}"/)
   assert.doesNotMatch(PAGE_WXML, /ss-card-seg|ss-card-route|ss-card-poi/)
 })

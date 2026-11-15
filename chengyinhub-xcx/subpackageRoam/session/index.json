@@ -3,6 +3,7 @@
   "navigationBarTextStyle": "white",
   "backgroundColor": "#000000",
   "usingComponents": {
+    "cy-free-map": "/components/cy/free-map/index",
     "cy-card": "/components/cy/card/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-icon": "/components/cy/icon/index",

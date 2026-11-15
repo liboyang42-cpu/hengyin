@@ -72,6 +72,7 @@ Component({
     showControls: { type: Boolean, value: true },
     showPhotoCallouts: { type: Boolean, value: true },
     interactive:  { type: Boolean, value: true },
+    enablePoi: { type: Boolean, value: true },
     accessibilityLabel: { type: String, value: '探索地图' },
     reducedMotion: {
       type: Boolean,

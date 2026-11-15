@@ -9961,7 +9961,7 @@ Page({
           nodesForm: {
             ...that.data.nodesForm,
             name: that.data.nodesForm.name || poi.name,
-            address: poi.address,
+            address: poi.address || poi.name || '',
             longitude: poi.longitude,
             latitude: poi.latitude
           },
