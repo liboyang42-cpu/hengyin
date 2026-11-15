@@ -45,16 +45,35 @@ public class CityGameActionService {
     private final CityGameMapper mapper;
     private final IntUnaryOperator random;
     private final LongSupplier clock;
+    private final boolean customRandom;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.impl.GameRandom gameRandom;
 
     @Autowired
     public CityGameActionService(CityGameMapper mapper) {
-        this(mapper, new SecureRandom()::nextInt, System::currentTimeMillis);
+        this.mapper = mapper;
+        this.random = new SecureRandom()::nextInt;
+        this.clock = System::currentTimeMillis;
+        this.customRandom = false;
     }
 
     CityGameActionService(CityGameMapper mapper, IntUnaryOperator random, LongSupplier clock) {
         this.mapper = mapper;
         this.random = random;
         this.clock = clock;
+        this.customRandom = true;
+    }
+
+    private IntUnaryOperator effectiveRandom(String actionTag, String requestId, Long memberId, String boardId, String diceId) {
+        if (!customRandom && gameRandom != null) {
+            return gameRandom.scoped(
+                    com.chengyinhub.business.service.IGameRandomService.DOMAIN_CITY_DICE,
+                    "city:" + requestId + ":" + actionTag,
+                    memberId,
+                    "city_board",
+                    boardId + ":" + (diceId == null ? "" : diceId))::nextInt;
+        }
+        return random;
     }
 
     // ---- snapshot / deltas ----
@@ -259,7 +278,7 @@ public class CityGameActionService {
             if (!boardId.equals(targetId)) return a.close("REJECTED", "TARGET_MISMATCH");
             if (expectedVersion != a.currentVersion) return a.close("VERSION_CONFLICT", null);
             CityGameRules.Dice dice = CityGameRules.dice((String) board.get("diceFaces"), (String) board.get("diceWeights"));
-            int face = dice.roll(random);
+            int face = dice.roll(effectiveRandom("MOVE", requestId, memberId, boardId, (String) board.get("diceId")));
             int position = CityGameRules.advance(((Number) team.get("trackPosition")).intValue(), face, mapper.countTrack(boardId));
             Map<String, Object> landed = mapper.selectPropertyByTrack(boardId, position);
             mapper.insertRoll(boardId, a.teamId, roundSeq, memberId, requestId, "MOVE", (String) board.get("diceId"), face);
@@ -357,7 +376,8 @@ public class CityGameActionService {
                 return a.apply(units, "SERVICE_VISITED", propertyId);
             default: {
                 CityGameRules.Dice dice = CityGameRules.dice((String) board.get("diceFaces"), (String) board.get("diceWeights"));
-                int attack = dice.roll(random), defence = dice.roll(random);
+                IntUnaryOperator duelRandom = effectiveRandom("CHALLENGE", requestId, memberId, boardId, (String) board.get("diceId"));
+                int attack = dice.roll(duelRandom), defence = dice.roll(duelRandom);
                 mapper.insertRoll(boardId, a.teamId, roundSeq, memberId, requestId, "CHALLENGE", (String) board.get("diceId"), attack);
                 mapper.insertRoll(boardId, holder, roundSeq, memberId, requestId, "DEFENCE", (String) board.get("diceId"), defence);
                 a.diceFace = attack;

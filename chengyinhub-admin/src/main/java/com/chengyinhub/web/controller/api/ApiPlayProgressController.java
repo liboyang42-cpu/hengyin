@@ -37,6 +37,8 @@ public class ApiPlayProgressController extends BaseController {
     private PlayPuzzleCommandApplication playPuzzleCommandApplication;
     @Autowired
     private PlayContentManifestApplication playContentManifestApplication;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.IRandomDispatchService randomDispatchService;
 
     /** OPS-01：只观测映射到 POST /api/play/arrive 的这条路径；测试直接 new 时为 null。 */
     @Autowired(required = false)
@@ -382,6 +384,21 @@ public class ApiPlayProgressController extends BaseController {
     public AjaxResult unlockHint(Long nodeId)
     {
         return playPuzzleCommandApplication.unlockHint(currentMemberId(), nodeId);
+    }
+
+    @Operation(summary = "查询会员当日盲盒派发任务")
+    @RateLimiter(time = 10, count = 120, limitType = LimitType.MEMBER)
+    @GetMapping("/random-dispatch/today")
+    public AjaxResult todayRandomDispatch(@RequestParam Long nodeId)
+    {
+        Long memberId = currentMemberId();
+        if (memberId <= 0) {
+            return AjaxResult.error("请先登录");
+        }
+        java.util.Map<String, Object> dispatched = randomDispatchService == null
+                ? null
+                : randomDispatchService.findTodayDispatch(memberId, nodeId);
+        return AjaxResult.success(dispatched);
     }
 
     private Long currentMemberId()
