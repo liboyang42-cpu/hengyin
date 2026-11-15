@@ -56,3 +56,11 @@ These Swift path prefixes omit `{id}` / child segments (or construct URLs via st
 | Method & Path | Swift Site (`DES-ag5` / `DES-ag8`) | Backend Expected Contract (`ApiMerchantChapterApplicationController.java`) |
 |---|---|---|
 | `POST /api/merchant/chapter-application/audit` | `Core/MerchantContentCommands.swift:88` (`auditApplication(id:approve:reason:)`) sends JSON body `{"id": id, "approve": approve, "reason": reason}` | `ApiMerchantChapterApplicationController.java:176-184` reads `applicationId`, `approved`, and `auditRemark`, returning code `500` (`"缺少审核结果"`) when `approved` is missing. Update the App payload keys to `{"applicationId": id, "approved": approve, "auditRemark": reason}` (without changing backend contract behavior that existing tests depend on). |
+
+---
+
+## 6. Closed Legacy AI Theme Draft Endpoint (`400 AI_DRAFT_PREPARE_REQUIRED`)
+
+| Method & Path | Swift Sites (`DES-ag8`) | Backend Expected Contract (`ApiAiController.java`) |
+|---|---|---|
+| `POST /api/ai/theme/draft` | `Core/PublishModesContracts.swift:100` (`PublishingRequest.aiThemeDraft(idea:)` sends `POST` JSON `{"idea": ...}` to `"api/ai/theme/draft"`), `Core/PublishingAuxiliaryService.swift:15-17,74,88` (`DraftRequest`/auxiliary calls on `"api/ai/theme/draft"`), `Core/MerchantNPCOriginalDraftWriter.swift:30` (`path = "api/ai/theme/draft"`); cf. `Core/G6CapabilitySource.swift:63-66,127-160` which already registers the V2 routes | Legacy `POST /api/ai/theme/draft` is permanently closed (`ApiAiController.java:162-169`, `@Operation(summary = "主题草稿旧提交入口已关闭")`) and unconditionally returns `400` (`errorCode="AI_DRAFT_PREPARE_REQUIRED"`, `"请先准备本次起草"`). Migrate remaining Swift callers to the 2-phase V2 flow: (1) `POST /api/ai/theme/draft/prepare` (`ApiAiController.java:173-185`, JSON `AiThemeDraftPrepareReq`), (2) `POST /api/ai/theme/draft/execute` (`:189-213`, JSON `AiThemeDraftExecuteReq`), with read-back/recovery via `GET /api/ai/theme/draft/request` (`:217-234`, query `requestId` **or** `prepareKey`, never both) and `GET /api/ai/theme/draft/recovery` (`:238-259`, optional `beforeId`). |

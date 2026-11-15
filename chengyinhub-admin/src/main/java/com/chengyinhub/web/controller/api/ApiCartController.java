@@ -129,8 +129,9 @@ public class ApiCartController extends BaseController {
     })
     public AjaxResult orderSettlement(String cartids, String remark, String addressid) {
         Long memberId = getAppUserId();
+        String userName = getAppUserName();
         try {
-            return success(umsMemberCartService.settleCart(memberId, getAppUserName(),
+            return success(umsMemberCartService.settleCart(memberId, userName,
                     cartids, remark, addressid));
         } catch (com.chengyinhub.common.exception.ServiceException exception) {
             return error(exception.getMessage());
