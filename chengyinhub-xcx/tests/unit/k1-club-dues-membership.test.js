@@ -22,7 +22,7 @@ test('资金开关关着:不能缴费,如实说即将开放', () => {
   const v = vm.shapeOverview(overview(), false, false)
   assert.equal(v.canPay, false)
   assert.equal(v.blockedText, '在线缴费即将开放')
-  assert.equal(v.plans[0].priceText, '99')
+  assert.equal(v.plans[0].priceText, '¥99')
   assert.deepEqual(v.plans[0].benefits, ['活动优先报名'])
 })
 

@@ -32,6 +32,11 @@ function yuan(fen) {
   return (n / 100).toFixed(2).replace(/\.00$/, '');
 }
 
+function money(fen) {
+  const y = yuan(fen);
+  return y ? '¥' + y : '—';
+}
+
 function day(value) {
   if (!value) return '';
   const d = new Date(value);
@@ -53,7 +58,7 @@ function shapePlan(plan) {
   return {
     id,
     name: typeof plan.name === 'string' ? plan.name : '',
-    priceText: yuan(plan.priceFen),
+    priceText: money(plan.priceFen),
     durationText: Number(plan.durationDays) > 0 ? Number(plan.durationDays) + ' 天' : '',
     benefits: benefits(plan.benefitsJson || plan.benefits),
     refundText: plan.refundPolicy === 'MANUAL_REVIEW' ? '可申请退款审核' : '不退款',
@@ -75,7 +80,7 @@ function shapeOverview(data, moneyOpen, owner) {
   const invoices = (Array.isArray(data.invoices) ? data.invoices : []).map((inv) => ({
     id: Number(inv && inv.id),
     planName: inv && typeof inv.planNameSnapshot === 'string' ? inv.planNameSnapshot : '',
-    amountText: yuan(inv && inv.amountFen),
+    amountText: money(inv && inv.amountFen),
     statusText: INVOICE_TEXT[inv && inv.status] || '处理中',
     resumable: !!inv && (inv.status === 'PAYING' || inv.status === 'CREATED'),
     version: inv && Number.isInteger(inv.version) ? inv.version : null,
