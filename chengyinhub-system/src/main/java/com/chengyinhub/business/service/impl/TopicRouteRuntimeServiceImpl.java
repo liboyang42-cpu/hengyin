@@ -3320,7 +3320,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         TopicRouteSession session=routeMapper.selectAccessibleById(sessionId,memberId);
         if(session==null)throw new ServiceException("本局不存在或无权查看",403);
         JsonNode result=readEngineState(session.getStateJson()).getThemeRuntime().get("result");
-        if(result==null)throw new ServiceException("本局尚未结束");
+        if(result==null)throw new ServiceException("本局尚未结束", HttpStatus.CONFLICT);
         ObjectNode card=themeEngine.card(result);
         if(result.path("card").path("showUnlocks").asBoolean()) {
             ObjectNode unlocks=card.putObject("unlocks");unlocks.put("total",result.path("endingCount").asInt());ArrayNode known=unlocks.putArray("known");Set<String> seen=new LinkedHashSet<>();
@@ -4309,7 +4309,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         if(Integer.valueOf(TopicRouteSession.STATUS_RUNNING).equals(previous.getStatus()))throw new ServiceException("请先结束当前局");
         Scope scope=requireScope(previous.getMemberId(),previous.getTopicId(),previous.getActivityId(),newUse);
         ObjectNode live=ThemeRuntimeConfig.parse(scope.topic.getPublishedThemeRuntimeConfigJson());
-        if(live==null || !live.path("replayEnabled").asBoolean())throw new ServiceException("此主题未开放重玩");
+        if(live==null || !live.path("replayEnabled").asBoolean())throw new ServiceException("此主题未开放重玩", HttpStatus.CONFLICT);
         if(routeMapper.selectByOwner(previous.getActivityId(),previous.getTopicId(),previous.getMemberId(),"replay:"+previous.getId())==null) {
             TopicRouteSession current=currentSession(previous.getMemberId(),previous.getTopicId(),previous.getActivityId());
             if(current!=null && !previous.getId().equals(current.getId()))throw new ServiceException("请继续或查看最新一局");

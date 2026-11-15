@@ -88,4 +88,11 @@ class RoamSessionArchiveTest {
         assertThrows(ServiceException.class, () -> RoamSessionWriteService.validateArchive("[{\"tile\":\"wtw3sjq\",\"collectedAt\":2000},{\"tile\":\"wtw3sjq\",\"collectedAt\":2500}]",
                 new Date(1000), new Date(3000), new Date(3000)));
     }
+    /** SMOKE-500-R4:采集时间落在原行程之外是请求数据问题,400 而不是 500,文案不变。 */
+    @Test void outOfSessionCollectedAtIsA400() {
+        ServiceException e = assertThrows(ServiceException.class,
+                () -> RoamSessionWriteService.validateArchive(record(4000), new Date(1000), new Date(3000), new Date(5000)));
+        assertEquals("采集时间不属于原行程", e.getMessage());
+        assertEquals(Integer.valueOf(400), e.getCode());
+    }
 }

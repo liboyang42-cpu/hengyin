@@ -80,7 +80,7 @@ public class PlayHistoryQueryApplication {
         TopicRouteSession session = historySessionMapper.selectAccessibleById(routeSessionId, memberId);
         if (session == null || !routeSessionId.equals(session.getId()) || !memberId.equals(session.getMemberId())
                 || !activityId.equals(session.getActivityId()) || !topicId.equals(session.getTopicId()))
-            return error("本局不存在或无权查看");
+            return error(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND, "本局不存在或无权查看");
         com.chengyinhub.business.domain.CmsTopic topic = cmsTopicService.selectCmsTopicById(topicId);
         if (topic == null || playCompletionFacts.topicHistoryBlocked(topic)) return error("历史内容不可用");
         ObjectMapper json = new ObjectMapper();

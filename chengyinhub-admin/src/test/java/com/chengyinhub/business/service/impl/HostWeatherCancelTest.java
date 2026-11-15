@@ -419,6 +419,19 @@ class HostWeatherCancelTest {
         verify(ticketMapper, never()).restoreInventory(anyLong(), anyLong());
     }
 
+    /** SMOKE-500-R4：俱乐部主题走俱乐部「结束主题」，这里是业务状态冲突 409，不是 500。 */
+    @Test
+    void clubTopicCancelByHostIsAConflict() {
+        topic(OWNER).setClubId(7001L);
+
+        ServiceException conflict = assertThrows(ServiceException.class,
+                () -> service.cancelTopicByHost(TOPIC, OWNER, STAFF, "台风停运"));
+
+        assertEquals(Integer.valueOf(409), conflict.getCode());
+        assertEquals("俱乐部主题请在俱乐部「主题设置 → 结束主题」里取消", conflict.getMessage());
+        verify(refundService, never()).saveRefund(any(RefundApplication.class));
+    }
+
     @Test
     void topicCancelRefusesWhenTheTopicIsAlreadySettled() {
         topic(OWNER).setIsSettlement(1);

@@ -108,7 +108,7 @@ public class PlayPreferenceApplication {
         Long memberId = actorMemberId;
         if (memberId <= 0) return error("请先登录");
         try { return AjaxResult.success(playerTopicTagService.confirm(memberId, tagId)); }
-        catch (IllegalArgumentException e) { return error(e.getMessage()); }
+        catch (IllegalArgumentException e) { return AjaxResult.refusal(e); }
     }
 
     public AjaxResult revokePreferenceTag(Long actorMemberId, Long tagId)
@@ -116,7 +116,7 @@ public class PlayPreferenceApplication {
         Long memberId = actorMemberId;
         if (memberId <= 0) return error("请先登录");
         try { return AjaxResult.success(playerTopicTagService.revoke(memberId, tagId)); }
-        catch (IllegalArgumentException e) { return error(e.getMessage()); }
+        catch (IllegalArgumentException e) { return AjaxResult.refusal(e); }
     }
 
     public AjaxResult correctPreferenceTag(Long actorMemberId, Long tagId,
@@ -126,7 +126,7 @@ public class PlayPreferenceApplication {
         if (memberId <= 0) return error("请先登录");
         if (request == null) return error("参数有误");
         try { return AjaxResult.success(preferencePlayService.correctPending(memberId, tagId, request.getTagValue())); }
-        catch (IllegalArgumentException e) { return error(e.getMessage()); }
+        catch (IllegalArgumentException e) { return AjaxResult.refusal(e); }
     }
 
     public AjaxResult newLifeOperatingSystem(Long actorMemberId, Long topicId)
@@ -150,7 +150,7 @@ public class PlayPreferenceApplication {
             return out;
         }
         out.node = cmsTopicNodeService.selectCmsTopicNodeById(nodeId);
-        if (out.node == null) { out.error = error("节点不存在"); return out; }
+        if (out.node == null) { out.error = error(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND, "节点不存在"); return out; }
         out.playCtx = playNodeContext.resolveCtx(memberId, activityId, topicId, out.node);
         if (out.playCtx.error != null) { out.error = out.playCtx.error; return out; }
         String leadErr = playNodeContext.leadGateError(out.playCtx.actId, out.node);

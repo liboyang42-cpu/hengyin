@@ -3844,7 +3844,7 @@ public class CmsTopicServiceImpl implements ICmsTopicService {
                 registrationQuery.setOwnerId(activity.getId());
                 registrationQuery.setPaymentStatus(paymentStatus);
                 if (!nullToEmpty(cmsRegistrationMapper.selectCmsRegistrationList(registrationQuery)).isEmpty()) {
-                    throw new RuntimeException("该主题的场次仍有待支付或已支付报名，请先处理场次报名，再删除主题");
+                    throw new ServiceException("该主题的场次仍有待支付或已支付报名，请先处理场次报名，再删除主题", HttpStatus.CONFLICT);
                 }
             }
         }
