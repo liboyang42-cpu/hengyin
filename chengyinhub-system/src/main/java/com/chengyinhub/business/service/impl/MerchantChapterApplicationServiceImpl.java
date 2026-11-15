@@ -16,6 +16,8 @@ import com.chengyinhub.business.service.IMerchantChapterApplicationService;
 import com.chengyinhub.business.service.MerchantChapterApplicationExistsException;
 import com.chengyinhub.business.service.MerchantChapterApplicationWithdrawException;
 import com.chengyinhub.business.support.ChapterRecruitmentRules;
+import com.chengyinhub.common.constant.HttpStatus;
+import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.constant.ProductType;
 import com.chengyinhub.common.constant.RecruitmentWindowPolicy;
 import com.chengyinhub.common.utils.DateUtils;
@@ -245,7 +247,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
         }
         MerchantChapterApplication application = applicationMapper.selectMerchantChapterApplicationById(applicationId);
         if (application == null || application.getChapterId() == null) {
-            throw new IllegalStateException("申请不存在");
+            throw new ServiceException("申请不存在", HttpStatus.NOT_FOUND);
         }
 
         // 与 enroll 同一锁序：章节锁 -> 主题锁。审批通过会预占名额，必须和实际入驻串行。
@@ -552,7 +554,7 @@ public class MerchantChapterApplicationServiceImpl implements IMerchantChapterAp
     public MerchantChapterApplication revokeInvite(Long applicationId, Long publisherMemberId) {
         MerchantChapterApplication application = applicationMapper.selectByIdIncludingDeleted(applicationId);
         if (application == null || application.getChapterId() == null) {
-            throw new IllegalStateException("邀请不存在");
+            throw new ServiceException("邀请不存在", HttpStatus.NOT_FOUND);
         }
         supplyReviewService.lockBeforeChapter(application.getChapterId());
         if (chapterMapper.lockChaptersForCapacity(Collections.singletonList(application.getChapterId())).isEmpty()) {

@@ -177,4 +177,30 @@ class ApiChapterMerchantNodeAccessTest {
         }
         return controller;
     }
+
+    /** SMOKE-500-R4：缺章节、缺录音都是参数错误 400，且不进入服务层。 */
+    @Test
+    void missingChapterOrVoiceSampleIsBadRequest() {
+        IChapterMerchantNodeService nodes = mock(IChapterMerchantNodeService.class);
+        IMerchantAccessService access = mock(IMerchantAccessService.class);
+        when(access.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE))
+                .thenReturn(new MerchantAccessContext(PRINCIPAL, 11L, OWNER,
+                        MerchantRoleCode.MERCHANT_MANAGER));
+        ApiChapterMerchantNodeController controller = controller(nodes, access);
+        com.chengyinhub.business.service.impl.NodeNpcService npc =
+                mock(com.chengyinhub.business.service.impl.NodeNpcService.class);
+        ReflectionTestUtils.setField(controller, "nodeNpcService", npc);
+
+        AjaxResult submit = controller.submit(new ApiChapterMerchantNodeController.ChapterNodeRequest());
+        assertEquals(400, submit.get(AjaxResult.CODE_TAG));
+        assertEquals("缺少章节", submit.get(AjaxResult.MSG_TAG));
+        verify(nodes, never()).submit(any(), any(), any());
+
+        ApiChapterMerchantNodeController.NodeNpcRequest voice = new ApiChapterMerchantNodeController.NodeNpcRequest();
+        voice.setNodeId(992021L);
+        AjaxResult enroll = controller.npcVoiceEnroll(voice);
+        assertEquals(400, enroll.get(AjaxResult.CODE_TAG));
+        assertEquals("请先录一段话", enroll.get(AjaxResult.MSG_TAG));
+        org.mockito.Mockito.verifyNoInteractions(npc);
+    }
 }

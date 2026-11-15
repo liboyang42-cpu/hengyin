@@ -779,4 +779,21 @@ class MerchantChapterApplicationServiceImplTest {
                 service.audit(APPLICATION, PUBLISHER, false, "品类不符").getStatus());
         verify(committedNotice).submitOutcome(eq(TOPIC), eq(APPLICATION), any(), eq(com.chengyinhub.business.service.support.ChapterApplicationInviteNotice.Outcome.REVIEW), eq(MERCHANT), eq("章节申请审核结果"), eq("章节申请未通过：品类不符"));
     }
+
+    /** SMOKE-500-R4：邀请/申请不存在是 404 业务拒绝，不能落成 500。 */
+    @Test
+    void missingInviteOrApplicationIsNotFound() {
+        com.chengyinhub.common.exception.ServiceException respond = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.respondInvite(992803L, MERCHANT, true));
+        assertEquals("申请不存在", respond.getMessage());
+        assertEquals(Integer.valueOf(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND), respond.getCode());
+
+        com.chengyinhub.common.exception.ServiceException revoke = assertThrows(
+                com.chengyinhub.common.exception.ServiceException.class,
+                () -> service.revokeInvite(992804L, PUBLISHER));
+        assertEquals("邀请不存在", revoke.getMessage());
+        assertEquals(Integer.valueOf(com.chengyinhub.common.constant.HttpStatus.NOT_FOUND), revoke.getCode());
+        verify(applicationMapper, never()).updateAudit(any(), any(), any(), any(), any());
+    }
 }

@@ -71,11 +71,11 @@ class ApiMerchantOperatorEndpointTest {
                 () -> assertEquals(HttpStatus.SUCCESS, controller.financeOverview().get("code")),
                 () -> assertEquals(HttpStatus.SUCCESS,
                         controller.financeRedemptions(Collections.emptyMap()).get("code")),
-                () -> assertEquals(HttpStatus.ERROR,
+                () -> assertEquals(HttpStatus.NOT_FOUND,
                         controller.financeRedemptionDetail(Collections.emptyMap()).get("code")),
                 () -> assertEquals(HttpStatus.SUCCESS,
                         controller.financePublicTransferBatches(Collections.emptyMap()).get("code")),
-                () -> assertEquals(HttpStatus.ERROR,
+                () -> assertEquals(HttpStatus.NOT_FOUND,
                         controller.financePublicTransferBatchDetail(Collections.emptyMap()).get("code")),
                 () -> assertEquals(HttpStatus.SUCCESS,
                         controller.financeSettlementEntries(Collections.emptyMap()).get("code")));

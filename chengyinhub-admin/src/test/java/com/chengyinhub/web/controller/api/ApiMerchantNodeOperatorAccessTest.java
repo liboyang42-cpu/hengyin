@@ -313,4 +313,43 @@ class ApiMerchantNodeOperatorAccessTest {
         merchant.setLocationLng(120.2);
         return merchant;
     }
+
+    /** SMOKE-500-R4：下线不存在/非本店据点 → 404/400；已上线据点复用投放入口 → 409；改不存在的据点模板 → 404。 */
+    @Test
+    void merchantNodeRefusalsCarryBusinessCodes() {
+        when(accessService.require(PRINCIPAL, MerchantPermission.PROJECT_MANAGE))
+                .thenReturn(managerAccess());
+        when(merchantService.selectMmsMerchantById(MERCHANT)).thenReturn(activeMerchant());
+
+        when(applicationService.setOwnedNodeStatus(OWNER, 992524L, 0)).thenReturn(false);
+        AjaxResult missing = controller.offline(992524L, 0);
+        assertEquals(404, missing.get(AjaxResult.CODE_TAG));
+        assertEquals("据点不存在或无权操作", missing.get(AjaxResult.MSG_TAG));
+
+        when(applicationService.setOwnedNodeStatus(OWNER, 992525L, 0))
+                .thenThrow(new IllegalArgumentException("据点不存在或无权操作"));
+        AjaxResult foreign = controller.offline(992525L, 0);
+        assertEquals(400, foreign.get(AjaxResult.CODE_TAG));
+        assertEquals("据点不存在或无权操作", foreign.get(AjaxResult.MSG_TAG));
+
+        CmsMemberTemplate template = new CmsMemberTemplate();
+        template.setId(801L);
+        template.setMemberId(OWNER);
+        when(templateService.selectCmsMemberTemplateById(801L)).thenReturn(template);
+        AjaxResult online = controller.save(992521L, 801L, 30.1, 120.2, 80,
+                "晚风咖啡", "湖滨路 1 号", null, null, "330100");
+        assertEquals(409, online.get(AjaxResult.CODE_TAG));
+        assertEquals("已上线据点不能复用投放申请入口", online.get(AjaxResult.MSG_TAG));
+        verify(applicationService, never()).submitPlacement(any(), any());
+
+        when(templatePublishService.saveMerchantNodeTemplate(any(CmsMemberTemplate.class), eq(OWNER), any()))
+                .thenThrow(new com.chengyinhub.common.exception.ServiceException("据点模板不存在或无权修改", 404));
+        CmsMemberTemplate body = new CmsMemberTemplate();
+        body.setId(992506L);
+        body.setTitle("咖啡打卡");
+        body.setValidationMethod(0);
+        AjaxResult tpl = controller.templateSubmit(body);
+        assertEquals(404, tpl.get(AjaxResult.CODE_TAG));
+        assertEquals("据点模板不存在或无权修改", tpl.get(AjaxResult.MSG_TAG));
+    }
 }

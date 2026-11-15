@@ -155,4 +155,24 @@ class ApiMerchantRegistrationStateGateTest {
         request.setLocationLng(121.4D);
         return request;
     }
+
+    /** SMOKE-500-R4：已有入驻申请再提交是状态冲突 409，不是 500。 */
+    @Test
+    void duplicateApplicationIsConflict() {
+        IMmsMerchantService merchants = mock(IMmsMerchantService.class);
+        UmsMemberMapper members = mock(UmsMemberMapper.class);
+        when(members.lockMemberById(MEMBER)).thenReturn(MEMBER);
+        when(merchants.selectMmsMerchantByMemberId(MEMBER)).thenReturn(existing(0L, 0L));
+        ApiMerchantController controller = controller(merchants);
+        ReflectionTestUtils.setField(controller, "umsMemberMapper", members);
+        ReflectionTestUtils.setField(controller, "merchantOperatorMapper", mock(MerchantOperatorMapper.class));
+        MerchantRegistrationDTO request = request();
+        request.setId(null);
+
+        AjaxResult result = controller.merchantRegistration(request);
+
+        assertEquals(409, result.get(AjaxResult.CODE_TAG));
+        assertEquals("已提交过商家入驻申请，请勿重复提交", result.get(AjaxResult.MSG_TAG));
+        verify(merchants, never()).insertMmsMerchant(any());
+    }
 }

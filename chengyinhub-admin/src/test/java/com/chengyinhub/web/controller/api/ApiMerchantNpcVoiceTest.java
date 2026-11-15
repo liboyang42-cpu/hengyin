@@ -290,7 +290,9 @@ class ApiMerchantNpcVoiceTest {
 
         AjaxResult r = controller.npcVoiceEnroll(request);
 
-        assertEquals(500, r.get(AjaxResult.CODE_TAG));
+        // SMOKE-500-R4：未确认授权是参数错误 400(原为 500)，原文案不变。
+        assertEquals(400, r.get(AjaxResult.CODE_TAG));
+        assertEquals("请先确认声音为本人所有或已获得授权", r.get(AjaxResult.MSG_TAG));
         verify(npcProfileMapper, never()).updateMerchantNpcVoice(any());
         verify(voiceClient, never()).enroll(anyString());
     }

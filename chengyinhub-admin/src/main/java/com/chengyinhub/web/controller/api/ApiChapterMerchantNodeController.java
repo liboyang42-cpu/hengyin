@@ -20,6 +20,7 @@ import com.chengyinhub.business.service.IQrcodeService;
 import com.chengyinhub.business.service.IUmsMemberService;
 import com.chengyinhub.business.service.impl.NodeNpcService;
 import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.constant.HttpStatus;
 import com.chengyinhub.common.core.domain.AjaxResult;
 import com.chengyinhub.common.exception.ServiceException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -110,6 +111,9 @@ public class ApiChapterMerchantNodeController extends BaseController {
                 merchantAccessService.require(memberId, MerchantPermission.COOP_MANAGE);
                 return success(merchantChapterApplicationService.submitToEmptyTopic(
                         access.getOwnerMemberId(), body.getTopicId(), body.getMessage(), body.toDraft()));
+            }
+            if (body.getChapterId() == null || body.getChapterId() <= 0) {
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, "缺少章节");
             }
             return success(chapterMerchantNodeService.submit(
                     access.getOwnerMemberId(), body.getChapterId(), body.toDraft()));
@@ -304,6 +308,9 @@ public class ApiChapterMerchantNodeController extends BaseController {
         try {
             MerchantAccessContext access = merchantAccessService.require(
                     memberId, MerchantPermission.PROJECT_MANAGE);
+            if (body.getVoiceSample() == null || body.getVoiceSample().trim().isEmpty()) {
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, "请先录一段话");
+            }
             return success(nodeNpcService.voiceEnroll(memberId, access.getOwnerMemberId(),
                     body.getNodeId(), body.getVoiceSample(), body.getVoiceRequestId(), body.getVoicePreviousIntentId(),
                     Boolean.TRUE.equals(body.getVoiceDuplicateChargeConsent())));

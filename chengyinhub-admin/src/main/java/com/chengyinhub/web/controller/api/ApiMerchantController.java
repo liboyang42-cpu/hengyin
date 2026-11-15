@@ -990,7 +990,7 @@ public class ApiMerchantController extends BaseController {
         if (memberId == null || memberId < 1) return error("请先登录");
         consentGuard.requireCurrentAgreement(memberId, "voice_clone_processing", "merchant_voice");
         if (body == null) return error("参数有误");
-        if (!Boolean.TRUE.equals(body.getVoiceConsent())) return error("请先确认声音为本人所有或已获得授权");
+        if (!Boolean.TRUE.equals(body.getVoiceConsent())) return AjaxResult.error(HttpStatus.BAD_REQUEST, "请先确认声音为本人所有或已获得授权");
         MerchantAccessContext access = merchantAccessService.require(
                 memberId, MerchantPermission.PROFILE_WRITE);
 
@@ -1261,7 +1261,7 @@ public class ApiMerchantController extends BaseController {
         if (request.getBusinessTime() != null) {
             String hours = request.getBusinessTime();
             if (hours.length() > 255 || !hours.matches("周(?:一至周日|[一二三四五六日](?:、[一二三四五六日])*) ([01][0-9]|2[0-3]):[0-5][0-9]-(?:次日)?([01][0-9]|2[0-3]):[0-5][0-9]")) {
-                return error("请选择有效的经营日与时间");
+                return AjaxResult.error(HttpStatus.BAD_REQUEST, "请选择有效的经营日与时间");
             }
             String[] range = hours.substring(hours.indexOf(' ') + 1).replace("次日", "").split("-");
             if (range[0].equals(range[1])) return error("开始与结束时间不能相同");
@@ -1994,7 +1994,7 @@ public class ApiMerchantController extends BaseController {
         if (result != null && !access.hasPermission(MerchantPermission.FINANCE_READ)) {
             redactRedemptionFinance(result);
         }
-        return result == null ? error("记录不可见") : success(result);
+        return result == null ? AjaxResult.error(HttpStatus.NOT_FOUND, "记录不可见") : success(result);
     }
 
     @Operation(summary = "商家对公结算批次")
@@ -2020,7 +2020,7 @@ public class ApiMerchantController extends BaseController {
         Long batchId = body == null ? null : aggregateLong(body.get("batchId"));
         Object result = merchantFinanceQueryService.publicTransferBatchDetail(
                 access.getOwnerMemberId(), batchId);
-        return result == null ? error("记录不可见") : success(result);
+        return result == null ? AjaxResult.error(HttpStatus.NOT_FOUND, "记录不可见") : success(result);
     }
 
     @Operation(summary = "商家已成立收入与调整明细")
@@ -2182,7 +2182,7 @@ public class ApiMerchantController extends BaseController {
         } else {
             MmsMerchant existing = mmsMerchantService.selectMmsMerchantByMemberId(member_id);
             if (existing != null) {
-                return error("已提交过商家入驻申请，请勿重复提交");
+                return AjaxResult.error(HttpStatus.CONFLICT, "已提交过商家入驻申请，请勿重复提交");
             }
             //账号状态：1启用  2禁用
             mmsMerchant.setAccountStatus(0L);
