@@ -5,6 +5,7 @@ const test = require('node:test')
 const vm = require('node:vm')
 const { maskNonCode } = require('../../scripts/lib/xcx-scan')
 const { exactId } = require('../../utils/user-character.js')
+const nativeBackGuard = require('../../utils/native-back-guard.js')
 
 const ROOT = path.resolve(__dirname, '../..')
 
@@ -96,6 +97,7 @@ function runBackCase(spec, stackLength, transform = (source) => source) {
     if (body) Object.assign(methods, vm.runInNewContext(`({${name}() ${body}})`, {
       getCurrentPages: () => Array.from({ length: stackLength }, () => ({})),
       wx: navigation.wx,
+      releaseNativeBackGuards: nativeBackGuard.releaseNativeBackGuards,
       // 券编辑页的离场闸先问脏数据;本用例只验根栈落点,按「无未保存修改」直走返回。
       couponForm: { isDirty: () => false },
     }))
@@ -108,7 +110,7 @@ function runBackCase(spec, stackLength, transform = (source) => source) {
     refreshStep() {},
     destroyPreviewAudio() {},
   }, spec.instance, methods)
-  context[spec.handler]()
+  try { context[spec.handler]() } finally { nativeBackGuard._reset() }
   return events
 }
 
@@ -303,9 +305,10 @@ test('负控：共享导航栏移除根栈出口时必须判红', () => {
 
 test('玩法预览保存后等原生返回拦截关闭完成，再回到已有主题来源', () => {
   const events = []
-  let context
+  let context, guardRenderDone, pageRenderDone
   const source = read('pages/publish/temp/index.js')
-  const methods = vm.runInNewContext(`({exitPage() ${methodBody(source, 'exitPage')},onNativeBackGuard() ${methodBody(source, 'onNativeBackGuard')}})`, {
+  const methods = vm.runInNewContext(`({exitPage() ${methodBody(source, 'exitPage')}})`, {
+    releaseNativeBackGuards: nativeBackGuard.releaseNativeBackGuards,
     wx: {
       navigateBack(options) {
         if (!context.nativeGuardClosed) return options.fail({ errMsg: 'navigateBack:fail page-container intercepted' })
@@ -317,12 +320,22 @@ test('玩法预览保存后等原生返回拦截关闭完成，再回到已有�
   context = Object.assign({
     data: { previewVisible: true }, nativeGuardClosed: false,
     destroyPreviewAudio() {},
-    setData(patch) { Object.assign(this.data, patch) },
+    setData(patch, callback) { Object.assign(this.data, patch); pageRenderDone = callback },
   }, methods)
-  context.exitPage()
-  context.exitPage()
-  assert.deepEqual(events, [], 'DOM 隐藏回执和连点都不能提前消耗导航栈')
-  context.nativeGuardClosed = true
-  context.onNativeBackGuard()
-  assert.deepEqual(events, ['return-to-theme'])
+  nativeBackGuard._stack.push({
+    data: { _backGuard: true }, _nbgWanted: true,
+    setData(patch, callback) { Object.assign(this.data, patch); guardRenderDone = callback },
+  })
+  try {
+    context.exitPage()
+    context.exitPage()
+    assert.deepEqual(events, [], 'DOM 隐藏回执和连点都不能提前消耗导航栈')
+    assert.equal(typeof guardRenderDone, 'function', '必须通过真实共享守卫等待卸载回执')
+    context.nativeGuardClosed = true
+    guardRenderDone()
+    assert.deepEqual(events, [], '守卫卸载后仍须等待预览隐藏的渲染回执')
+    assert.equal(typeof pageRenderDone, 'function')
+    pageRenderDone()
+    assert.deepEqual(events, ['return-to-theme'])
+  } finally { nativeBackGuard._reset() }
 })
