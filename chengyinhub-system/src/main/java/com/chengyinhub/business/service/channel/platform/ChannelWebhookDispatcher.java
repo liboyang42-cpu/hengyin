@@ -47,6 +47,10 @@ import com.chengyinhub.business.security.PiiCryptoService;
 @Component
 public class ChannelWebhookDispatcher
 {
+    /** R9 BE-26: with two nodes only the scheduling leader runs this @Scheduled method. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.common.core.scheduling.SchedulingLeadership schedulingLeadership;
+
     private static final Logger log = LoggerFactory.getLogger(ChannelWebhookDispatcher.class);
     public static final String HEADER_TIMESTAMP = "X-Chengyin-Timestamp";
     public static final String HEADER_NONCE = "X-Chengyin-Nonce";
@@ -102,6 +106,7 @@ public class ChannelWebhookDispatcher
             initialDelayString = "${chengyin.im.webhook.dispatch.initial-delay-ms:15000}")
     public void tick()
     {
+        if (!com.chengyinhub.common.core.scheduling.SchedulingLeadership.allows(schedulingLeadership)) return; // R9 BE-26: leader node only
         if (!enabled) return;
         if (crypto == null || !crypto.isEnabled())
         {
