@@ -41,6 +41,18 @@ public class InAppNotifyChannel implements NotifyChannel {
         if (message.event() == NotifyEvent.REFUND) {
             return sendRefund(message);
         }
+        if (message.event() == NotifyEvent.GAME_DUEL) {
+            try {
+                JSONObject extra = new JSONObject();
+                extra.put("cardType", "gameDuel");
+                extra.put("duelId", message.get("duelId"));
+                Long id = imService.sendSystem(message.memberId(), ImMessage.MSG_CARD, message.get("text"), extra.toJSONString());
+                return id != null && id > 0;
+            } catch (Throwable t) {
+                log.error("[通知] 对决站内信异常 memberId={} reason={}", message.memberId(), t.getClass().getSimpleName());
+                return false;
+            }
+        }
         if (message.event() != NotifyEvent.TEAM_STATUS) return false;
         try {
             JSONObject extra = new JSONObject();

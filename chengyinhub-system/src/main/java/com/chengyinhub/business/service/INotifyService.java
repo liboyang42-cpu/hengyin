@@ -67,4 +67,9 @@ public interface INotifyService {
      * 已经能推送的召回被误判成不可发。在改之前,别在文档或注释里说它问了所有通道。
      */
     boolean isRoamRecallReady();
+
+    /** G2 异步对决状态站内信(发起/接受/出结果)。默认不发,由实现类接到站内信通道。 */
+    default boolean notifyGameDuel(Long memberId, Long duelId, String text) {
+        return false;
+    }
 }
