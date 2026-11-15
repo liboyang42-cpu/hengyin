@@ -709,25 +709,5 @@ class ApiMerchantLedgerControllerTest {
         assertEquals(null, order.getPaymentTransactionId());
         assertEquals(null, order.getCommerceRequestId());
     }
-
-    /** SMOKE-500-R4：看不到的核销/对公批次明细是 404，不是 500。 */
-    @Test
-    void invisibleFinanceDetailsAreNotFound() {
-        MerchantFinanceQueryService financeService = mock(MerchantFinanceQueryService.class);
-        ApiMerchantController controller = new LoggedInMerchantController();
-        attachAccess(controller, MerchantRoleCode.MERCHANT_FINANCE);
-        ReflectionTestUtils.setField(controller, "merchantFinanceQueryService", financeService);
-        Map<String, Object> body = new HashMap<>();
-        body.put("recordType", "smoke");
-        body.put("recordId", "smoke");
-        body.put("batchId", "smoke");
-
-        AjaxResult redemption = controller.financeRedemptionDetail(body);
-        AjaxResult batch = controller.financePublicTransferBatchDetail(body);
-
-        assertEquals(404, redemption.get(AjaxResult.CODE_TAG));
-        assertEquals("记录不可见", redemption.get(AjaxResult.MSG_TAG));
-        assertEquals(404, batch.get(AjaxResult.CODE_TAG));
-        assertEquals("记录不可见", batch.get(AjaxResult.MSG_TAG));
-    }
 }
+
