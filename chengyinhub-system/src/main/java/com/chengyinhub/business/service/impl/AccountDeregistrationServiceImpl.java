@@ -76,6 +76,12 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
     /** FLOW-03: revoke Sign in with Apple tokens after erasure; optional so older tests can build the service bare. */
     @Autowired(required = false)
     private com.chengyinhub.business.account.apple.AppleTokenRevocationService appleTokenRevocationService;
+    /**
+     * R13: erases kept fog cells, roam tracks, location-trust trail/evidence, install link and push devices in the
+     * same per-account transaction. Spring always provides it; optional only so older tests can build the service bare.
+     */
+    @Autowired(required = false)
+    private MemberPrivacyErasureService memberPrivacyErasureService;
 
     @Override
     public DeregistrationStatusVO precheck(Long memberId) {
@@ -366,6 +372,8 @@ public class AccountDeregistrationServiceImpl implements IAccountDeregistrationS
             // ★清发布者实名登记(姓名+身份证号):注销后人已经不是人了,这行密文没有留存理由
             deregistrationMapper.deleteMemberIdentity(memberId);
             deregistrationMapper.deleteMemberAddresses(memberId);
+            // R13:路线图新增的位置/设备个人信息(保留迷雾格、漫游轨迹、定位可信留痕、安装号关联、推送设备)
+            if (memberPrivacyErasureService != null) memberPrivacyErasureService.erase(memberId, now);
             roamHangoutService.closeAllByMember(memberId);   // 附近的局:局主没了,局转关、群转关
             appSessionRegistryService.revokeAll(memberId);
             appSessionRegistryService.finishMemberMutationAfterTransaction(memberId, mutationId);

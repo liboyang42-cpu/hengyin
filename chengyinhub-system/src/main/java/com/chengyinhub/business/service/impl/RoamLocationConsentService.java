@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.ConsentRecord;
 import com.chengyinhub.business.mapper.ConsentRecordMapper;
+import com.chengyinhub.business.mapper.RoamFogCellMapper;
 import com.chengyinhub.business.mapper.RoamMapper;
 import com.chengyinhub.common.config.ComplianceProperties;
 import com.chengyinhub.common.exception.ServiceException;
@@ -17,8 +18,15 @@ public class RoamLocationConsentService {
     private final RoamMapper roam;
     private final ConsentRecordMapper records;
     private final ComplianceProperties properties;
+    /** R13: kept fog cells are deleted when roam location consent is withdrawn. */
+    private final RoamFogCellMapper fogCells;
     public RoamLocationConsentService(RoamMapper roam, ConsentRecordMapper records, ComplianceProperties properties) {
-        this.roam=roam; this.records=records; this.properties=properties;
+        this(roam, records, properties, null);
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public RoamLocationConsentService(RoamMapper roam, ConsentRecordMapper records, ComplianceProperties properties,
+                                      RoamFogCellMapper fogCells) {
+        this.roam=roam; this.records=records; this.properties=properties; this.fogCells=fogCells;
     }
     public static class ConsentChangedException extends IllegalArgumentException {
         public ConsentChangedException() { super("定位授权状态已变化，请重新明确选择"); }
@@ -44,6 +52,8 @@ public class RoamLocationConsentService {
             // A committed old AGREE receipt is never permission to restart after a later REVOKE.
             if (current==null || !requestId.equals(current.getRequestId())
                     || !Objects.equals(properties.versionOf("privacy_policy"),current.getDocVersion())) throw new ConsentChangedException();
+            // Replayed withdrawal: deleting again is a no-op once done, and finishes it if an earlier build did not.
+            if("roam_location".equals(scene) && "REVOKE".equals(event)) deleteKeptCells(member);
             return previous;
         }
         if ("AGREE".equals(event) && !Objects.equals(current==null?"":current.getRequestId(),expectedRequestId))
@@ -56,10 +66,17 @@ public class RoamLocationConsentService {
         if(records.insertConsentRecord(row)!=1)throw new IllegalStateException("定位授权未保存");
         // 撤回漫游定位在服务端立即生效:同一事务里关闭本人所有未结束会话的「附近的人」展示,
         // 不等 5 分钟心跳过期,也不依赖客户端是否还在运行。
-        if("roam_location".equals(scene) && "REVOKE".equals(event)) roam.updatePresenceVisibility(null,member,false);
+        if("roam_location".equals(scene) && "REVOKE".equals(event)) {
+            roam.updatePresenceVisibility(null,member,false);
+            // R13: kept fog cells last only while the consent does; withdrawal removes them in the same transaction.
+            deleteKeptCells(member);
+        }
         ConsentRecord receipt=records.selectByRequestId(member,requestId);
         if(receipt==null)throw new IllegalStateException("定位授权回读失败");
         return receipt;
+    }
+    private void deleteKeptCells(Long member) {
+        if (fogCells != null) fogCells.deleteByMember(member);
     }
     /** Caller retains the original complete geometry/reward transaction; no separate commit or client purpose tag. */
     public void requireCurrentAgreement(Long member) {

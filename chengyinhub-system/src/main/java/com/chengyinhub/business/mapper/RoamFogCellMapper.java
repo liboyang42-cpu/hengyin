@@ -28,4 +28,7 @@ public interface RoamFogCellMapper {
 
     /** Used only while keeping is switched off: removes cells not revealed again since the cutoff. */
     int deleteNotRevealedSince(@Param("cutoff") Date cutoff, @Param("limit") Integer limit);
+
+    /** R13: every kept cell of one member (roam location consent withdrawn, or account erased). Idempotent. */
+    int deleteByMember(@Param("memberId") Long memberId);
 }

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- R13 privacy erasure. Portable SQL only (also runs on H2 in the tests). Each statement is scoped to one member. -->
+<mapper namespace="com.chengyinhub.business.mapper.MemberPrivacyErasureMapper">
+
+    <select id="selectSessionsForErasure" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select id, finish_result_json from roam_session
+        where member_id = #{memberId}
+          and (location_cleared_at is null or last_lat is not null or last_lng is not null or track_json is not null)
+        order by id
+    </select>
+
+    <update id="anonymizeSession">
+        update roam_session
+        set last_lat = null, last_lng = null, last_report_at = null, presence_visible = 0, track_json = null,
+            finish_result_json = #{resultJson}, location_cleared_at = coalesce(location_cleared_at, #{now})
+        where id = #{id} and member_id = #{memberId}
+    </update>
+
+    <delete id="deleteFogTiles">
+        delete from roam_fog_tile where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteSessionRecords">
+        delete from roam_session_record_archive where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteShareSnapshots">
+        delete from roam_share_snapshot where member_id = #{memberId}
+    </delete>
+
+    <select id="selectShopVisitSources" resultType="java.util.HashMap" useCache="false" flushCache="true">
+        select distinct source_type, source_id from roam_shop_visit
+        where member_id = #{memberId} and source_id is not null
+        order by source_type, source_id
+    </select>
+
+    <update id="anonymizeShopVisits">
+        update roam_shop_visit set source_id = null, shop_name = '', claim_fingerprint = null
+        where member_id = #{memberId} and (source_id is not null or claim_fingerprint is not null or shop_name &lt;&gt; '')
+    </update>
+
+    <update id="anonymizePoiFound">
+        update roam_poi_found set poi_id = null, claim_fingerprint = null
+        where member_id = #{memberId} and (poi_id is not null or claim_fingerprint is not null)
+    </update>
+
+    <update id="anonymizePoiRewardLog">
+        update roam_poi_reward_log
+        set trigger_lat = null, trigger_lng = null, claim_fingerprint = null,
+            poi_id = case when coalesce(coupon_id, 0) = 0 then null else poi_id end
+        where member_id = #{memberId}
+          and (trigger_lat is not null or trigger_lng is not null or claim_fingerprint is not null
+               or (coalesce(coupon_id, 0) = 0 and poi_id is not null))
+    </update>
+
+    <delete id="deleteLocationTrustFixes">
+        delete from location_trust_fix where member_id = #{memberId}
+    </delete>
+
+    <update id="anonymizeClaimEvidence">
+        update location_claim_evidence
+        set member_id = 0, photo_lat = null, photo_lng = null, fix_id = null, consumed_ref = null
+        where member_id = #{memberId}
+    </update>
+
+    <delete id="deleteInstallLinks">
+        delete from app_install_link where member_id = #{memberId}
+    </delete>
+
+    <delete id="deletePushDevices">
+        delete from push_device where member_id = #{memberId}
+    </delete>
+</mapper>
