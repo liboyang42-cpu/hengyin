@@ -17,17 +17,14 @@ SELECT 'migration_20261115_privacy_erasure.sql' AS running;
 
 -- 1) Kept fog cells of members whose latest roam location consent is a withdrawal.
 DELETE c FROM roam_member_fog_cell c
-JOIN (
-  SELECT r.member_id
-  FROM consent_record r
-  JOIN (
-    SELECT member_id, MAX(id) AS latest_id
-    FROM consent_record
-    WHERE doc_type = 'privacy_policy' AND scene = 'roam_location' AND scope_type IS NULL AND scope_id IS NULL
-    GROUP BY member_id
-  ) latest ON latest.latest_id = r.id
-  WHERE r.event_type = 'REVOKE'
-) revoked ON revoked.member_id = c.member_id;
+JOIN consent_record r ON r.member_id = c.member_id
+WHERE r.doc_type = 'privacy_policy' AND r.scene = 'roam_location' AND r.scope_type IS NULL AND r.scope_id IS NULL
+  AND r.event_type = 'REVOKE'
+  AND r.id = (
+    SELECT MAX(x.id) FROM consent_record x
+    WHERE x.member_id = c.member_id AND x.doc_type = 'privacy_policy' AND x.scene = 'roam_location'
+      AND x.scope_type IS NULL AND x.scope_id IS NULL
+  );
 
 -- 2) Kept fog cells of deleted accounts.
 DELETE c FROM roam_member_fog_cell c
