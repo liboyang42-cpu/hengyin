@@ -72,7 +72,8 @@ public class MarketplaceDealService {
                 || minLat >= maxLat || minLng >= maxLng) {
             throw new IllegalArgumentException("地图范围无效");
         }
-        if (maxLat - minLat > MAX_SPAN_DEGREES || maxLng - minLng > MAX_SPAN_DEGREES) {
+        // Clients clamp each side to 0.25° around a center; allow floating-point rounding on that sum.
+        if (maxLat - minLat > MAX_SPAN_DEGREES + 1e-9 || maxLng - minLng > MAX_SPAN_DEGREES + 1e-9) {
             throw new IllegalArgumentException("地图范围太大，请放大地图后再看优惠");
         }
     }

@@ -46,6 +46,9 @@ class MarketplaceDealServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.dealsInBox(30.0, 31.0, 121.4, 121.5, 1L));
         assertThrows(IllegalArgumentException.class, () -> service.dealsInBox(31.2, 31.3, 120.0, 121.5, 1L));
         verify(mapper, never()).selectDealsInBox(anyDouble(), anyDouble(), anyDouble(), anyDouble(), any(), anyInt());
+        // A client box clamped to ±0.25° around a center must pass despite rounding.
+        double lat = 44.123456789, lng = 125.987654321;
+        service.dealsInBox(lat - 0.25, lat + 0.25, lng - 0.25, lng + 0.25, 1L);
     }
 
     @Test
