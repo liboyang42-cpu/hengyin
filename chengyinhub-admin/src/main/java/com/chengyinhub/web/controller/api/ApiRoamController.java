@@ -85,6 +85,8 @@ public class ApiRoamController extends BaseController {
     private RoamSessionWriteService roamSessionWriteService;
     @Autowired
     private IGrowthService growthService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.impl.InGameChannelService inGameChannelService;
     @Autowired
     private PlayerBadgeMapper playerBadgeMapper;
     @Autowired
@@ -150,6 +152,10 @@ public class ApiRoamController extends BaseController {
         data.put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(a.reasons()));
         data.put("trustMessage", com.chengyinhub.business.locationtrust.LocationTrustMessages.withheld(a.reasons()));
     }
+    @Autowired(required = false)
+    private com.chengyinhub.business.citygame.RoamTerritoryService roamTerritoryService;
+    @Autowired(required = false)
+    private com.chengyinhub.business.shopgames.ShopGamePlayService shopGamePlays;
 
     /** 包级可见 + 非 final:测试用子类覆写它注入身份,好直调真入口(见 RoamPresenceControllerTest)。 */
     Long uid() {
@@ -1046,6 +1052,11 @@ public class ApiRoamController extends BaseController {
         }
         if (roamMapper.saveFinishResult(sid, memberId, com.alibaba.fastjson2.JSON.toJSONString(data)) != 1)
             throw new com.chengyinhub.common.exception.ServiceException("结算结果保存失败，请重新核对");
+        if (inGameChannelService != null) {
+            inGameChannelService.postRoamEvent(
+                    com.chengyinhub.business.service.impl.InGameChannelService.EVENT_FINISH,
+                    memberId, null, "城市漫游", totalXp > 0 ? ("+" + totalXp + " XP") : null);
+        }
         if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
             final Long originalSid = sid;
             org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
@@ -1099,6 +1110,22 @@ public class ApiRoamController extends BaseController {
         if (poiId != null) {
             data.put("participating", true);
             data.put("poiId", poiId);
+            // S5: the shop's game, launched now that location trust and the shop radius passed. Additive field;
+            // a problem answers available=false and never fails the check-in.
+            if (shopGamePlays != null) data.put("shopGame", shopGamePlays.launchAfterCheckin(memberId, poiId));
+            if (roamTerritoryService != null) {
+                Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckin(
+                        memberId, poiId, null, null, curLat, curLng,
+                        "ROAM_CHECKIN:" + java.util.UUID.randomUUID(), "ROAM_CHECKIN");
+                if (Boolean.TRUE.equals(terrRev.get("credited"))) {
+                    data.put("territoryReward", terrRev);
+                }
+            }
+            if (inGameChannelService != null) {
+                inGameChannelService.postRoamEvent(
+                        com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
+                        memberId, null, (name != null && !name.trim().isEmpty()) ? name.trim() : "漫游据点", null);
+            }
             return AjaxResult.success(data);
         }
         // ③ 非参与:通用点亮,首次到点发探索值(每点终身一次)
@@ -1119,10 +1146,23 @@ public class ApiRoamController extends BaseController {
         }
         int xp = 0;
         if (firstVisit) { xp = VISIT_XP; growthService.addExp(memberId, xp, "点亮地点"); }
+        if (roamTerritoryService != null) {
+            Map<String, Object> terrRev = roamTerritoryService.rewardExternalCheckinByCoords(
+                    memberId, poiLat, poiLng, curLat, curLng,
+                    "ROAM_CHECKIN:" + java.util.UUID.randomUUID());
+            if (Boolean.TRUE.equals(terrRev.get("credited"))) {
+                data.put("territoryReward", terrRev);
+            }
+        }
         data.put("participating", false);
         data.put("firstVisit", firstVisit);
         data.put("xp", xp);
         data.put("name", poiName);
+        if (firstVisit && inGameChannelService != null) {
+            inGameChannelService.postRoamEvent(
+                    com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CHECKIN,
+                    memberId, null, poiName, xp > 0 ? ("+" + xp + " XP") : null);
+        }
         return AjaxResult.success(firstVisit ? "点亮 " + poiName : "已点亮过", data);
     }
 

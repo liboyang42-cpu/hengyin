@@ -83,6 +83,8 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
     @Autowired
     private com.chengyinhub.business.service.INotifyService notifyService;
+    @Autowired(required = false)
+    private InGameChannelService inGameChannelService;
 
     @Autowired
     private com.chengyinhub.business.service.IImService imService;
@@ -2776,6 +2778,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
 
         // 生成核销二维码
         generateVerificationQrcode(registration.getId());
+        if (inGameChannelService != null) {
+            inGameChannelService.onRegistrationConfirmed(registration);
+        }
     }
 
     /**
@@ -3296,6 +3301,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
                     "被邀请用户报名任意活动", 6L, registration.getId());
         }
         ensureRegistrationScans(registration);
+        if (inGameChannelService != null) {
+            inGameChannelService.onRegistrationConfirmed(registration);
+        }
         if (paymentTransitioned) {
             registerPaymentAfterCommit(paidRegistrationIds, registration.getMemberId(),
                     registration.getActivityTitle(), freshPaymentClaimed);

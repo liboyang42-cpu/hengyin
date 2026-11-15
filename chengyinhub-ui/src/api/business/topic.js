@@ -266,3 +266,18 @@ export function getTopicLeadFulfillment(id) {
     method: 'get'
   })
 }
+
+export function getTopicEnvironment(id) {
+  return request({
+    url: '/business/topic/' + id + '/environment',
+    method: 'get'
+  })
+}
+
+export function saveTopicEnvironment(id, data) {
+  return request({
+    url: '/business/topic/' + id + '/environment',
+    method: 'put',
+    data
+  })
+}

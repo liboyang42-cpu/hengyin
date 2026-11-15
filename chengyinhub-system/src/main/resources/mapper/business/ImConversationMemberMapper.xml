@@ -61,6 +61,7 @@
             <result property="bizKey" column="conv_biz_key"/>
             <result property="status" column="conv_status"/>
             <result property="lastMsgAt" column="conv_last_msg_at"/>
+            <result property="remark" column="conv_remark"/>
         </association>
         <association property="latest" javaType="com.chengyinhub.business.domain.ImMessage"
                      notNullColumn="latest_id">
@@ -93,6 +94,7 @@
         select m.id, m.conversation_id, m.member_id, m.role, m.unread_count, m.last_read_msg_id,
                m.muted, m.deleted, m.create_time,
                m.conv_id, m.conv_type, m.conv_biz_key, m.conv_status, m.conv_last_msg_at,
+               m.conv_remark,
                msg.id as latest_id, msg.sender_id as latest_sender_id, msg.msg_type as latest_msg_type,
                msg.content as latest_content, msg.extra_json as latest_extra_json,
                msg.status as latest_status, msg.check_status as latest_check_status,
@@ -104,7 +106,7 @@
             select pm.id, pm.conversation_id, pm.member_id, pm.role, pm.unread_count, pm.last_read_msg_id,
                    pm.muted, pm.deleted, pm.create_time,
                    pc.id as conv_id, pc.type as conv_type, pc.biz_key as conv_biz_key, pc.status as conv_status,
-                   pc.last_msg_at as conv_last_msg_at
+                   pc.last_msg_at as conv_last_msg_at, pc.remark as conv_remark
             from im_conversation_member pm
             join im_conversation pc on pc.id = pm.conversation_id
             where pm.member_id = #{memberId} and pm.deleted = 0 and pc.status = 0

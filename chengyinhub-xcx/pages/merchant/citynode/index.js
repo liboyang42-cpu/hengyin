@@ -210,6 +210,11 @@ Page({
     this.loadMine();
   },
 
+  // S5:店铺小游戏(在适合本店类型的小游戏池里挑选)。
+  goShopGames() {
+    wx.navigateTo({ url: '/pages/merchant/shop-games/index' });
+  },
+
   goCreate() {
     if (!this.data.merchantAccess.canManageProjects) {
       return toast('当前岗位没有节点管理权限');

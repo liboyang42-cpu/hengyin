@@ -1,0 +1,73 @@
+package com.chengyinhub.web.controller.api;
+
+import com.chengyinhub.business.citygame.CityGameException;
+import com.chengyinhub.business.citygame.RoamTerritoryService;
+import com.chengyinhub.common.core.controller.BaseController;
+import com.chengyinhub.common.core.domain.AjaxResult;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+/**
+ * Merged Roam + CITY territory endpoints: unified map nearby query, geotagged photo + GPS
+ * claiming, visitor check-ins earning owner in-game POINTS, and season leaderboard.
+ */
+@RestController
+@RequestMapping("/api/roam/territory")
+public class ApiRoamTerritoryController extends BaseController {
+    private final RoamTerritoryService service;
+
+    public ApiRoamTerritoryController(RoamTerritoryService service) {
+        this.service = service;
+    }
+
+    private Long member() {
+        try {
+            return getAppUserId();
+        } catch (Exception e) {
+            throw new CityGameException(401, "UNAUTHORIZED", "请先登录");
+        }
+    }
+
+    @GetMapping("/nearby")
+    public AjaxResult nearby(@RequestParam Double lat,
+                             @RequestParam Double lng,
+                             @RequestParam(required = false) Integer radius,
+                             @RequestParam(required = false) String boardId,
+                             @RequestParam(required = false) String regionId,
+                             @RequestParam(required = false) String seasonId) {
+        return success(service.nearby(member(), lat, lng, radius, boardId, regionId, seasonId));
+    }
+
+    @PostMapping("/claim")
+    public AjaxResult claim(@RequestBody Map<String, Object> body) {
+        return success(service.claim(member(), body));
+    }
+
+    @PostMapping("/checkin")
+    public AjaxResult checkin(@RequestBody Map<String, Object> body) {
+        return success(service.checkin(member(), body));
+    }
+
+    @GetMapping("/leaderboard")
+    public AjaxResult leaderboard(@RequestParam(required = false) String boardId,
+                                  @RequestParam(required = false) String regionId,
+                                  @RequestParam(required = false) String seasonId,
+                                  @RequestParam(required = false) Integer limit) {
+        return success(service.leaderboard(boardId, regionId, seasonId, limit));
+    }
+
+    @GetMapping("/my")
+    public AjaxResult myTerritories() {
+        return success(service.myTerritories(member()));
+    }
+
+    @ExceptionHandler(CityGameException.class)
+    public ResponseEntity<AjaxResult> failed(CityGameException e, HttpServletRequest request) {
+        AjaxResult body = new AjaxResult(e.getStatus(), e.getMessage(), e.getData());
+        body.put("errorCode", e.getErrorCode());
+        return ResponseEntity.status(e.getStatus()).body(body);
+    }
+}

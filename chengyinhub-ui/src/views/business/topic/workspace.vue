@@ -451,6 +451,13 @@
             icon="el-icon-warning-outline"
           />
         </el-tab-pane>
+
+        <el-tab-pane label="环境条件" name="environment">
+          <div class="pane-heading">
+            <div><span>Environment &amp; Weather</span><h2>环境感知与天气触发规则</h2></div>
+          </div>
+          <topic-environment-rules-panel :topic-id="topic.id" :chapters="chapters" :can-edit="canEditEnvironment" />
+        </el-tab-pane>
       </el-tabs>
     </section>
   </main>
@@ -467,10 +474,11 @@ import CyEmptyState from '@/components/CyEmptyState'
 import CyResourceState from '@/components/CyResourceState'
 import CyStatusTag from '@/components/CyStatusTag'
 import PlayHelpReadonlyPanel from '@/components/PlayHelpReadonlyPanel'
+import TopicEnvironmentRulesPanel from './components/TopicEnvironmentRulesPanel'
 
 export default {
   name: 'TopicWorkspace',
-  components: { CyDataTable, CyEntityHeader, CyPageHeader, CyMetricCard, CyEmptyState, CyResourceState, CyStatusTag, PlayHelpReadonlyPanel },
+  components: { CyDataTable, CyEntityHeader, CyPageHeader, CyMetricCard, CyEmptyState, CyResourceState, CyStatusTag, PlayHelpReadonlyPanel, TopicEnvironmentRulesPanel },
   data() {
     return {
       activeTab: 'overview',
@@ -672,6 +680,9 @@ export default {
       return this.isOfficialTopic
         && this.operation.editPolicy !== 'LOCKED'
         && checkPermi(['business:topic:edit'])
+    },
+    canEditEnvironment() {
+      return this.operation.editPolicy !== 'LOCKED' && checkPermi(['business:topic:edit'])
     },
     editorActionLabel() {
       return this.operation.editPolicy === 'CONTENT_CORRECTION_ONLY' ? '内容勘误' : '编辑主题'

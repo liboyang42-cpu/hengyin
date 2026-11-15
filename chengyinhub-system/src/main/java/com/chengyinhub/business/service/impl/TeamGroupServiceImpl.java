@@ -1789,6 +1789,23 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
     @org.springframework.context.annotation.Lazy
     private com.chengyinhub.business.service.IPushFanoutService pushFanout;
 
+    /** C3 channel events: members who answered "maybe" on an event card; enrolled members are reminded below. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.channelevent.ChannelEventService channelEvents;
+
+    /** App push only (no WeChat notice: "maybe" holds no ticket). Same once-per-ticket-and-member rule as enrolled members. */
+    private void remindChannelEventMaybes(OmsTicket t) {
+        if (channelEvents == null || pushFanout == null || t == null || t.getId() == null) return;
+        try {
+            for (Long memberId : channelEvents.maybeMembersForReminder(t.getId())) {
+                pushFanout.eventReminder(t.getId(), memberId, t.getName(), t.getStartTime(), t.getOwnerType(), t.getOwnerId());
+            }
+        } catch (RuntimeException e) {
+            logger.warn("频道活动「可能去」提醒登记失败 ticketId={}", t.getId());
+        }
+    }
+
     @Override
     public BeforeStartNotifyResult notifyBeforeStartBatch() {
         Date now = new Date();
@@ -1797,6 +1814,7 @@ public class TeamGroupServiceImpl implements ITeamGroupService {
         int scanned = 0, skipped = 0, delivered = 0, failed = 0;
         if (tickets != null) {
             for (OmsTicket t : tickets) {
+                remindChannelEventMaybes(t);
                 List<CmsRegistration> regs = cmsRegistrationMapper.selectPaidByTicket(t.getId());
                 if (regs == null) continue;
                 for (CmsRegistration r : regs) {
