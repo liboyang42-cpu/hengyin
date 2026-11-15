@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.GrowthScopedBoardMapper">
+
+    <!-- G1 game-loop (GRO-15). 只有开启了可见(visible = 1)且进度隐私不是 OUT 的玩家才会出现在别人的好友榜 / 同区榜上。 -->
+    <sql id="visibleOnly">
+        join growth_board_visibility v on v.member_id = c.mid and v.visible = 1
+        left join member_progress_privacy p on p.member_id = c.mid
+    </sql>
+
+    <select id="selectFriendCandidates" resultType="java.lang.Long">
+        select distinct c.mid from (
+            select f.follow_member_id as mid from ums_member_follow f where f.member_id = #{memberId}
+            union
+            select mate.member_id as mid from club_member mine
+              join club_member mate on mate.club_id = mine.club_id and mate.status = 1 and mate.del_flag = 0
+             where mine.member_id = #{memberId} and mine.status = 1 and mine.del_flag = 0
+        ) c
+        <include refid="visibleOnly"/>
+        where c.mid &lt;&gt; #{memberId} and ifnull(p.leaderboard_scope, 'IN') &lt;&gt; 'OUT'
+        order by c.mid
+        limit #{cap}
+    </select>
+
+    <select id="selectDistrictCandidates" resultType="java.lang.Long">
+        select c.mid from (
+            select m.id as mid from ums_member m
+             where m.area_id = #{areaId} and m.del_flag = 0 and m.role = 'player'
+        ) c
+        <include refid="visibleOnly"/>
+        where c.mid &lt;&gt; #{memberId} and ifnull(p.leaderboard_scope, 'IN') &lt;&gt; 'OUT'
+        order by c.mid
+        limit #{cap}
+    </select>
+
+    <select id="selectAreaId" resultType="java.lang.Long">
+        select area_id from ums_member where id = #{memberId} and del_flag = 0
+    </select>
+
+    <sql id="idList">
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </sql>
+
+    <select id="selectScores" resultType="java.util.HashMap">
+        select m.id as memberId, m.nickname as nickname, m.avatar as avatar,
+        <choose>
+            <when test="metric == 'exp' and period == 'week'">ifnull(s.s, 0) as score,</when>
+            <when test="metric == 'exp'">ifnull(g.exp_value, 0) as score,</when>
+            <when test="period == 'week'">ifnull(s.s, 0) as score,</when>
+            <otherwise>ifnull(m.point, 0) as score,</otherwise>
+        </choose>
+               m.create_time as createdAt
+        from ums_member m
+        <choose>
+            <when test="metric == 'exp' and period == 'week'">
+                left join (
+                    select member_id, sum(exp_value - revoked_exp) as s from member_exp_earned
+                     where exp_value &gt; 0 and earned_at &gt;= #{weekStart} and earned_at &lt; #{weekEnd}
+                       and member_id in <include refid="idList"/>
+                     group by member_id
+                ) s on s.member_id = m.id
+            </when>
+            <when test="metric == 'exp'">
+                left join member_growth g on g.member_id = m.id
+            </when>
+            <when test="period == 'week'">
+                left join (
+                    select member_id, sum(change_points) as s from ums_member_points_detail
+                     where change_type = 1 and del_flag = 0 and create_time &gt;= #{weekStart}
+                       and member_id in <include refid="idList"/>
+                     group by member_id
+                ) s on s.member_id = m.id
+            </when>
+            <otherwise/>
+        </choose>
+        where m.id in <include refid="idList"/> and m.del_flag = 0 and m.role = 'player'
+    </select>
+
+    <select id="selectVisible" resultType="java.lang.Integer">
+        select visible from growth_board_visibility where member_id = #{memberId}
+    </select>
+
+    <insert id="upsertVisible">
+        insert into growth_board_visibility (member_id, visible, update_time)
+        values (#{memberId}, #{visible}, #{now})
+        on duplicate key update visible = values(visible), update_time = values(update_time)
+    </insert>
+</mapper>

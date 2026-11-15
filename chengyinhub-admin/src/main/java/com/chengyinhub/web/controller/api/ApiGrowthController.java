@@ -10,6 +10,7 @@ import com.chengyinhub.common.core.domain.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,7 +47,38 @@ public class ApiGrowthController extends BaseController {
         } catch (Exception e) {
             return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
+        // G1 game-loop (GRO-15):好友榜 / 同区榜只多一个可选 scope;不带或不认识的 scope 仍是原来的全站榜。
+        String scope = com.chengyinhub.business.growthboard.GrowthScopedLeaderboard.normalizeScope(request == null ? null : request.getScope());
+        if (scope != null) return success(scopedLeaderboard.read(memberId, request, scope));
         return success(growthService.getLeaderboard(memberId, request));
+    }
+
+    @Autowired
+    private com.chengyinhub.business.growthboard.GrowthScopedLeaderboard scopedLeaderboard;
+
+    @Operation(summary = "我是否出现在好友榜与同区榜上")
+    @GetMapping("/leaderboard/visibility")
+    public AjaxResult boardVisibility() {
+        Long memberId;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        }
+        return success(java.util.Map.of("visible", scopedLeaderboard.isVisible(memberId)));
+    }
+
+    @Operation(summary = "开启或关闭:在好友榜与同区榜上显示我")
+    @PostMapping("/leaderboard/visibility")
+    public AjaxResult setBoardVisibility(Boolean visible) {
+        Long memberId;
+        try {
+            memberId = getAppUserId();
+        } catch (Exception e) {
+            return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+        }
+        if (visible == null) return error("visible 必填");
+        return success(java.util.Map.of("visible", scopedLeaderboard.setVisible(memberId, visible)));
     }
 
     @Autowired

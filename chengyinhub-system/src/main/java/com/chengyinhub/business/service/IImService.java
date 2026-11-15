@@ -32,6 +32,9 @@ public interface IImService
     ImMessage send(Long memberId, Long conversationId, Long targetMemberId, Integer msgType,
                    String content, String extraJson, String clientMessageId);
 
+    /** W5 C2：读会话的同一道闸（与历史分页相同），不通过抛异常。实时流、表情回应、引用与话题读取共用。 */
+    void requireReadable(Long memberId, Long conversationId);
+
     /** 群功能共用的实时成员闸；会话索引行不能独立授权。 */
     void requireActiveGroupMembership(Long memberId, Long conversationId);
 

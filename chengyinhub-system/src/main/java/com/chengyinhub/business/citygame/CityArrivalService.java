@@ -32,6 +32,12 @@ public class CityArrivalService {
 
     private final CityR491Store store;
     private final IMerchantAccessService merchants;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private RoamTerritoryService territoryService;
+
+    void setTerritoryService(RoamTerritoryService territoryService) {
+        this.territoryService = territoryService;
+    }
 
     public CityArrivalService(CityR491Store store, IMerchantAccessService merchants) {
         this.store = store;
@@ -349,6 +355,17 @@ public class CityArrivalService {
                     c.get("session_id"), c.get("merchant_id"), c.get("place_id"), memberId, access.getRoleCode(), reason.trim(),
                     new Date(now), new Date(now + EVIDENCE_TTL * 1000L));
             data.put("evidence", wireEvidence(store.jdbc.queryForMap("SELECT * FROM city_arrival_evidence WHERE evidence_id = ?", evidenceId), board, point));
+            if (territoryService != null) {
+                Map<String, Object> terrRev = territoryService.rewardExternalCheckin(
+                        ((Number) c.get("member_id")).longValue(),
+                        c.get("place_id") instanceof Number ? ((Number) c.get("place_id")).longValue() : null,
+                        (String) c.get("board_id"),
+                        (String) c.get("point_id"),
+                        null, null, "CITY_ARRIVAL:" + evidenceId, "CITY_ARRIVAL");
+                if (Boolean.TRUE.equals(terrRev.get("credited"))) {
+                    data.put("territoryReward", terrRev);
+                }
+            }
         }
         return CityR491Store.ok(data);
     }

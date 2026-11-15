@@ -3558,6 +3558,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         view.put("version", value(session.getVersion()));
         view.put("startedAt", session.getStartedAt() == null ? null : session.getStartedAt().getTime());
         view.put("deadlineAt", session.getDeadlineAt() == null ? null : session.getDeadlineAt().getTime());
+        // G1 game-loop (IMM-14):服务端此刻,与 startedAt/deadlineAt 同一时钟。App 用它锚定剩余时间,不信手机时钟。
+        view.put("serverNow", clock.now().getTime());
         view.put("completedAt", session.getCompletedAt() == null ? null : session.getCompletedAt().getTime());
         view.put("config", publicRuntimeConfig(config, state, actorMemberId));
         // CT-07:指认页的公开面(人物卡/引导屏/线索板)始终只给确认前能看的;

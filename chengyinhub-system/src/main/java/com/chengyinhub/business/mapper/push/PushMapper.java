@@ -34,6 +34,9 @@ public interface PushMapper
 
     List<Map<String, Object>> selectMentions(@Param("messageId") long messageId);
 
+    /** W5 C2：@角色 展开成成员（只算启用中的角色）。 */
+    List<Long> selectRoleMemberIds(@Param("roleIds") List<Long> roleIds);
+
     /** 频道所属俱乐部（im_channel.guild_kind = 1）。 */
     Long selectChannelClubId(@Param("conversationId") long conversationId);
 

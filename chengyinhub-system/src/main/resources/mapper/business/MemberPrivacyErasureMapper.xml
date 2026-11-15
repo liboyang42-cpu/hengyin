@@ -64,6 +64,33 @@
         where member_id = #{memberId}
     </update>
 
+    <delete id="deleteTerritoryCheckins">
+        delete from roam_territory_checkin where member_id = #{memberId}
+    </delete>
+
+    <update id="unlinkTerritoryCheckinOwner">
+        update roam_territory_checkin set owner_member_id = 0 where owner_member_id = #{memberId}
+    </update>
+
+    <update id="releaseTerritories">
+        update roam_territory
+        set owner_member_id = 0, claim_photo_url = '', claim_request_id = territory_id, status = 'REVOKED'
+        where owner_member_id = #{memberId}
+    </update>
+
+    <update id="anonymizeTerritoryAudit">
+        update roam_territory_audit
+        set member_id = 0, latitude = null, longitude = null, accuracy_m = null, distance_m = null, detail_json = null
+        where member_id = #{memberId}
+    </update>
+
+    <update id="anonymizeBoardAuditPlayer">
+        update city_game_board_audit
+        set actor_id = null,
+            detail_json = case when action = 'BOARD_TERRITORY_CLAIM' then null else detail_json end
+        where actor_type = 'PLAYER' and actor_id = #{memberId}
+    </update>
+
     <delete id="deleteInstallLinks">
         delete from app_install_link where member_id = #{memberId}
     </delete>
@@ -71,4 +98,26 @@
     <delete id="deletePushDevices">
         delete from push_device where member_id = #{memberId}
     </delete>
+
+    <!-- W5 C2 channels-messaging -->
+    <delete id="deleteMessageReactions">
+        delete from im_message_reaction where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteMentionsOfMember">
+        delete from im_message_mention where mention_type in ('USER', 'REPLY') and target_id = #{memberId}
+    </delete>
+
+    <!-- C3 channel events -->
+    <delete id="deleteChannelEventRsvps">
+        delete from channel_event_rsvp where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteChannelEventPhotos">
+        delete from channel_event_photo where member_id = #{memberId}
+    </delete>
+
+    <update id="unlinkChannelEventPoster">
+        update channel_event set poster_member_id = 0 where poster_member_id = #{memberId}
+    </update>
 </mapper>

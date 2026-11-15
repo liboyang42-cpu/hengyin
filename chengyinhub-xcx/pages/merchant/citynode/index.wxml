@@ -24,6 +24,7 @@
   </view>
   <view class="cn-ops" wx:if="{{accessState === 'ready'}}">
     <view class="cn-op" wx:if="{{merchantAccess.canManageProjects}}" bindtap="toggleClaim" aria-role="button" aria-label="认领节点" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="plus" size="26" /><text>认领节点</text></view>
+    <view class="cn-op" bindtap="goShopGames" aria-role="button" aria-label="店铺小游戏" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="arrow-right" size="26" /><text>店铺小游戏</text></view>
     <view class="cn-op" wx:if="{{merchantAccess.canVerify}}" bindtap="scanRedeem" aria-role="button" aria-label="扫码核销" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="qr-scan" size="26" /><text>扫码核销</text></view>
   </view>
 
