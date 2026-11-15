@@ -1029,6 +1029,7 @@
     "20261115_admin_consoles": [],
     "20261115_growth_loops": ["p3_phase_b_player_world_creator"],
     "20261115_guest_walk": [],
-    "20261115_points_governance": []
+    "20261115_points_governance": [],
+    "20261115_money_switch": ["web_admin_nine_domains_20260719"]
   }
 }
