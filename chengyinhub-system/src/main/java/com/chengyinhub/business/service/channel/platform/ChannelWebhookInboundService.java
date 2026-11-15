@@ -41,6 +41,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class ChannelWebhookInboundService
 {
+    /** R9 BE-26: with two nodes only the scheduling leader runs this @Scheduled method. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.common.core.scheduling.SchedulingLeadership schedulingLeadership;
+
     private static final Logger log = LoggerFactory.getLogger(ChannelWebhookInboundService.class);
     public static final int WINDOW_SECONDS = 300;
     /** nonce 保留时间：超过时间窗的请求本来就被拒，留两倍窗口足够。 */
@@ -254,6 +258,7 @@ public class ChannelWebhookInboundService
     @Scheduled(fixedDelayString = "${chengyin.im.webhook.inbound.nonce-cleanup-ms:600000}", initialDelayString = "${chengyin.im.webhook.inbound.nonce-cleanup-ms:600000}")
     public void purgeNonces()
     {
+        if (!com.chengyinhub.common.core.scheduling.SchedulingLeadership.allows(schedulingLeadership)) return; // R9 BE-26: leader node only
         try
         {
             hooks.deleteExpiredNonces(NONCE_TTL_SECONDS, 1000);

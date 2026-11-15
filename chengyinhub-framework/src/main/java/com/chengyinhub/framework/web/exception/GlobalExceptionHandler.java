@@ -46,6 +46,22 @@ public class GlobalExceptionHandler
     /** 未预期的系统异常返回给用户的稳定文案(判据真源 = {@link UserSafeMessage},与自己 try/catch 的控制器共用)。 */
     private static final String GENERIC_SYSTEM_ERROR_MSG = UserSafeMessage.GENERIC;
 
+    /**
+     * R9 BE-05: additive envelope key that separates a deliberate business refusal from a system fault.
+     * RuoYi codes both as {@code code=500}; the mini-program and the app already branch on {@code code} and
+     * {@code msg}, so the code stays as it is and this key is only added. Clients and the smoke harness read
+     * {@code errorKind} to tell "the rule said no" ({@value #KIND_BUSINESS}) from "something broke" ({@value #KIND_SYSTEM}).
+     */
+    public static final String ERROR_KIND = "errorKind";
+    public static final String KIND_BUSINESS = "BUSINESS";
+    public static final String KIND_SYSTEM = "SYSTEM";
+
+    static AjaxResult kind(AjaxResult result, String kind)
+    {
+        result.put(ERROR_KIND, kind);
+        return result;
+    }
+
     /** Missing routes/resources are expected 404s, not application failures. */
     @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
     @ResponseStatus(org.springframework.http.HttpStatus.NOT_FOUND)
@@ -166,7 +182,7 @@ public class GlobalExceptionHandler
         {
             result.withErrorCode(ErrorCode.REFUSED);
         }
-        return result;
+        return kind(result, KIND_BUSINESS);
     }
 
     /**
@@ -209,7 +225,7 @@ public class GlobalExceptionHandler
         if (runtimeFailureAlarm != null) runtimeFailureAlarm.systemFailure(e);
         String requestURI = request.getRequestURI();
         log.error("请求地址'{}',发生未知异常.", requestURI, e);
-        return AjaxResult.error(userSafeMessage(e.getMessage())).withErrorCode(ErrorCode.SYSTEM_FAILURE);
+        return kind(AjaxResult.error(userSafeMessage(e.getMessage())).withErrorCode(ErrorCode.SYSTEM_FAILURE), KIND_SYSTEM);
     }
 
     /**
@@ -223,8 +239,8 @@ public class GlobalExceptionHandler
         log.error("请求地址'{}',发生系统异常.", requestURI, e);
         // 请求体/必填参数缺失是客户端问题,不是服务端故障。
         boolean clientError = e instanceof HttpMessageNotReadableException || e instanceof MissingServletRequestParameterException;
-        return AjaxResult.error(userSafeMessage(e.getMessage()))
-                .withErrorCode(clientError ? ErrorCode.BAD_REQUEST : ErrorCode.SYSTEM_FAILURE);
+        return kind(AjaxResult.error(userSafeMessage(e.getMessage()))
+                .withErrorCode(clientError ? ErrorCode.BAD_REQUEST : ErrorCode.SYSTEM_FAILURE), clientError ? KIND_BUSINESS : KIND_SYSTEM);
     }
 
     /**

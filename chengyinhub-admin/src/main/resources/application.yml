@@ -230,13 +230,26 @@ xss:
   urlPatterns: /system/*,/monitor/*,/tool/*,/api/*
 
 management:
+  # R9 BE-27: 指标。/actuator/prometheus 只在独立管理端口上提供,绑定本机地址,不经公网;主端口一律 404
+  # (见 MetricsEndpointGuard)。默认管理端口与主端口相同 ⇒ 现有 http://127.0.0.1:8080/actuator/health 部署探活不变,
+  # Prometheus 不可用。开启:CHENGYIN_MANAGEMENT_PORT=9091(注意:health/info 随之搬到 9091,部署探活要同步改)。
+  server:
+    port: ${CHENGYIN_MANAGEMENT_PORT:${server.port:8080}}
+    address: ${CHENGYIN_MANAGEMENT_ADDRESS:127.0.0.1}
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
     health:
       show-details: when_authorized
+  metrics:
+    tags:
+      application: chengyinhub
+    distribution:
+      # 请求时延直方图只取少量 SLO 桶,控制序列数(按路由模板 × 状态)。
+      slo:
+        http.server.requests: 100ms,300ms,1s,3s,10s
 
 #微信支付配置
 wx:

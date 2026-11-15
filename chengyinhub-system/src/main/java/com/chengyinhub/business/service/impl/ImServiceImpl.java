@@ -133,7 +133,77 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     @Override
     public List<Map<String, Object>> listConversations(Long memberId)
     {
-        List<ConversationSummary> mine = memberMapper.selectMyConversationSummaries(memberId);
+        return projectConversations(memberMapper.selectMyConversationSummaries(memberId), memberId);
+    }
+
+    /** R9 BE-17：会话列表最大页长。 */
+    static final int CONVERSATION_PAGE_MAX = 50;
+
+    /**
+     * R9 BE-17：会话列表键集分页。cursor 为上一页回包里的 nextCursor（不透明字符串），首页传 null/空。
+     * 回 {items, nextCursor, hasMore}；items 与旧数组同形。页内仍按最新可见消息排序，跨页按会话最后消息时间。
+     */
+    @Override
+    public Map<String, Object> listConversationPage(Long memberId, String cursor, Integer size)
+    {
+        int limit = size == null || size <= 0 ? 20 : Math.min(size, CONVERSATION_PAGE_MAX);
+        ConversationCursor at = ConversationCursor.parse(cursor);
+        List<ConversationSummary> raw = memberMapper.selectMyConversationSummaryPage(
+                memberId, at == null ? null : at.lastMsgAt, at == null ? null : at.conversationId, limit + 1);
+        boolean hasMore = raw != null && raw.size() > limit;
+        List<ConversationSummary> page = raw == null ? new ArrayList<>() : hasMore ? raw.subList(0, limit) : raw;
+        String next = null;
+        if (hasMore)
+        {
+            ImConversation last = page.get(page.size() - 1).getConversation();
+            next = last == null ? null : ConversationCursor.format(last.getLastMsgAt(), last.getId());
+        }
+        Map<String, Object> out = new HashMap<>();
+        out.put("items", projectConversations(page, memberId));
+        out.put("nextCursor", next);
+        out.put("hasMore", next != null);
+        return out;
+    }
+
+    /** 不透明游标：「最后消息毫秒或 n」+「_」+「会话 id」。 */
+    static final class ConversationCursor
+    {
+        final java.util.Date lastMsgAt;
+        final Long conversationId;
+
+        private ConversationCursor(java.util.Date lastMsgAt, Long conversationId)
+        {
+            this.lastMsgAt = lastMsgAt;
+            this.conversationId = conversationId;
+        }
+
+        static String format(java.util.Date lastMsgAt, Long conversationId)
+        {
+            if (conversationId == null) return null;
+            return (lastMsgAt == null ? "n" : String.valueOf(lastMsgAt.getTime())) + "_" + conversationId;
+        }
+
+        static ConversationCursor parse(String raw)
+        {
+            if (raw == null || raw.trim().isEmpty()) return null;
+            String[] parts = raw.trim().split("_", -1);
+            try
+            {
+                if (parts.length != 2) throw new NumberFormatException();
+                long id = Long.parseLong(parts[1]);
+                if (id <= 0) throw new NumberFormatException();
+                java.util.Date at = "n".equals(parts[0]) ? null : new java.util.Date(Long.parseLong(parts[0]));
+                return new ConversationCursor(at, id);
+            }
+            catch (NumberFormatException e)
+            {
+                throw new ServiceException("会话列表位置无效，请从头加载", 400);
+            }
+        }
+    }
+
+    private List<Map<String, Object>> projectConversations(List<ConversationSummary> mine, Long memberId)
+    {
         List<Map<String, Object>> out = new ArrayList<>();
         Map<Long, ImMessage> latestVisible = new HashMap<>();
         if (mine == null)

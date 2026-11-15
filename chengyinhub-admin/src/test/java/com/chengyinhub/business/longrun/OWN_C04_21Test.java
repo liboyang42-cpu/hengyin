@@ -174,6 +174,10 @@ public class OWN_C04_21Test {
         ReflectionTestUtils.setField(service, "umsMemberMapper", members);
         ReflectionTestUtils.setField(service, "umsMemberService", memberService);
         ReflectionTestUtils.setField(service, "transactionManager", manager);
+        // R9 BE-13: this case covers the direct-pay path (auto-pay on + money switch open); the default goes to review.
+        ReflectionTestUtils.setField(service, "autoPay", true);
+        ReflectionTestUtils.setField(service, "cashPayoutSwitch",
+                new com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch(true, true));
         assertDoesNotThrow(() -> service.onVerification(9L));
         org.mockito.ArgumentCaptor<org.springframework.transaction.TransactionDefinition> definition =
                 org.mockito.ArgumentCaptor.forClass(org.springframework.transaction.TransactionDefinition.class);

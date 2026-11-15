@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 @Service
 public class MerchantCrmSegmentServiceImpl implements IMerchantCrmSegmentService {
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(MerchantCrmSegmentServiceImpl.class);
     private static final Pattern REQUEST_ID = Pattern.compile("[A-Za-z0-9._:-]{6,64}");
     private static final List<String> SEGMENTS = Arrays.asList("repeat", "dormant", "pending", "abnormal", "new", "noted");
 
@@ -65,7 +66,15 @@ public class MerchantCrmSegmentServiceImpl implements IMerchantCrmSegmentService
         MerchantAccessContext access = merchantAccessService.require(principalMemberId, MerchantPermission.CRM_READ);
         List<MerchantCrmSegment> rows = merchantCrmSegmentMapper.selectActiveSegments(access.getMerchantId(), 50);
         List<MerchantCrmSegmentVO> out = new ArrayList<>();
-        if (rows != null) for (MerchantCrmSegment row : rows) out.add(toVO(row));
+        if (rows != null) for (MerchantCrmSegment row : rows) {
+            // R9 BE-05: one damaged filter row must not make the whole list unreadable (smoke saw the list fail
+            // with 分群条件损坏). The damaged row is left out and logged; using it still fails loudly where it is read.
+            try { out.add(toVO(row)); }
+            catch (ServiceException damaged) {
+                LOG.error("CRM segment filter unreadable, left out of list merchantId={} segmentId={}",
+                        access.getMerchantId(), row.getId());
+            }
+        }
         return out;
     }
 

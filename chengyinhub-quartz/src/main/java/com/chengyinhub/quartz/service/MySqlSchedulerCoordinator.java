@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 
 /** One session owns scheduling; task sessions also fence work that survives a leader handoff. */
 @Component
-public class MySqlSchedulerCoordinator implements SmartLifecycle {
+public class MySqlSchedulerCoordinator implements SmartLifecycle, com.chengyinhub.common.core.scheduling.SchedulingLeadership {
     private static final Logger log = LoggerFactory.getLogger(MySqlSchedulerCoordinator.class);
     private final DataSource source;
     private final ConcurrentTaskScheduler tasks;
@@ -70,7 +70,7 @@ public class MySqlSchedulerCoordinator implements SmartLifecycle {
     }
 
     public synchronized boolean isBuiltin(String canonical) { return plans.containsKey(canonical); }
-    public boolean isLeader() { return jobsEnabled && running && leader; }
+    @Override public boolean isLeader() { return jobsEnabled && running && leader; }
 
     public MySqlSessionLock.Lease definitionLock() {
         MySqlSessionLock.Lease lease = MySqlSessionLock.acquire(source, "jobdef", "definitions", 3);

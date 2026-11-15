@@ -117,4 +117,34 @@ public interface MerchantReferralBountyMapper
     /** 快照里这些报名,现在还有几条是「有效核销」(未退款)= 仍有效的人头数。clawback 判定用。 */
     int countStillValidAmong(@Param("registrationIds") List<Long> registrationIds,
                              @Param("merchantMemberId") Long merchantMemberId);
+
+    // ---------------------------------------------------------------- R9 BE-13 审核队列
+
+    MerchantReferralBounty selectById(@Param("id") Long id);
+
+    /** 运营队列:按状态/拓展人/商家筛选,新到旧。分页由调用方 startPage()。 */
+    List<MerchantReferralBounty> selectQueue(@Param("status") Integer status,
+                                             @Param("inviterMemberId") Long inviterMemberId,
+                                             @Param("merchantMemberId") Long merchantMemberId);
+
+    /** 拓展人本人看自己的赏金(只读)。 */
+    List<MerchantReferralBounty> selectByInviter(@Param("inviterMemberId") Long inviterMemberId);
+
+    /** CAS:仅 status=0 可置 4(达成激活、待审核)。不入账、不冻结。 */
+    int markAwaitingReviewIfPending(@Param("id") Long id,
+                                    @Param("activatedAt") Date activatedAt,
+                                    @Param("snapshot") String snapshot,
+                                    @Param("amount") java.math.BigDecimal amount);
+
+    /** CAS:仅 status=4 可置 1(审核通过并入账)。 */
+    int markPaidIfAwaitingReview(@Param("id") Long id,
+                                 @Param("paidAt") Date paidAt,
+                                 @Param("frozenUntil") Date frozenUntil,
+                                 @Param("reviewBy") String reviewBy,
+                                 @Param("note") String note);
+
+    /** CAS:仅 status in (0,4) 可置 5(驳回)。 */
+    int markRejectedIfOpen(@Param("id") Long id,
+                           @Param("reviewBy") String reviewBy,
+                           @Param("note") String note);
 }

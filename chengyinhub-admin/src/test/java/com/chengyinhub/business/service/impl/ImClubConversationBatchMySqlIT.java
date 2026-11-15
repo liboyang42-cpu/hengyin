@@ -94,14 +94,41 @@ class ImClubConversationBatchMySqlIT
         {
             reset();
             for(int i=0;i<size;i++) {club(1000+i,99,1L,0);membership(1000+i,1,1,0);group(2000+i,"club_"+(1000+i),1);}
-            statements.set(0);var expected=originalRows(1L);assertEquals(1+3*size,statements.get(),"original summary + club/member/display per row");
-            statements.set(0);assertEquals(expected,service.listConversations(1L));assertEquals(size==0?1:2,statements.get());
+            // R9 BE-17: the legacy array route is capped at LEGACY_LIST_CAP most recent conversations.
+            int served=Math.min(size,ImConversationMemberMapper.LEGACY_LIST_CAP);
+            statements.set(0);var expected=originalRows(1L);assertEquals(1+3*served,statements.get(),"original summary + club/member/display per row");
+            statements.set(0);var listed=service.listConversations(1L);assertEquals(expected,listed);assertEquals(served,listed.size());
+            assertEquals(size==0?1:2,statements.get());
             statements.set(0);assertTrue(service.listConversations(999L).isEmpty());assertEquals(1,statements.get());
         }
         reset();
         for(int i=0;i<64;i++){club(1000+i,1,1L,0);group(2000+i,"club_"+(1000+i),1);}
         statements.set(0);var expected=originalRows(1L);assertEquals(1+2*64,statements.get(),"owner short-circuits the original member lookup");
         statements.set(0);assertEquals(expected,service.listConversations(1L));assertEquals(2,statements.get());
+    }
+
+    /** R9 BE-17: keyset pages walk every conversation exactly once, through equal and null last_msg_at values. */
+    @Test void keysetPagesCoverEveryConversationOnceAcrossTiesAndNulls()
+    {
+        int size=257;
+        for(int i=0;i<size;i++) {club(1000+i,99,1L,0);membership(1000+i,1,1,0);group(2000+i,"club_"+(1000+i),1);}
+        db.update("update im_conversation set last_msg_at='2026-10-24 09:00:00' where id between 2100 and 2149");
+        db.update("update im_conversation set last_msg_at=null where id between 2200 and 2219");
+        java.util.List<Object> seen=new ArrayList<>();String cursor=null;int pages=0;
+        do {
+            statements.set(0);
+            Map<String,Object> page=service.listConversationPage(1L,cursor,50);
+            assertTrue(statements.get()<=2,"one page read + one club batch, got "+statements.get());
+            for(var row:(List<Map<String,Object>>)page.get("items"))seen.add(row.get("conversationId"));
+            cursor=(String)page.get("nextCursor");pages++;
+            assertEquals(cursor!=null,page.get("hasMore"));
+        } while(cursor!=null&&pages<20);
+        assertEquals(6,pages);
+        assertEquals(size,seen.size(),"no row repeated or skipped");
+        assertEquals(size,new java.util.HashSet<>(seen).size());
+        // Newest first: the 50 rows bumped to 09:00 lead, the 20 null rows trail.
+        assertTrue(((Long)seen.get(0))>=2100L&&((Long)seen.get(0))<=2149L);
+        assertTrue(((Long)seen.get(size-1))>=2200L&&((Long)seen.get(size-1))<=2219L);
     }
 
     @Test void committedMembershipExitAndClubDisableRemovePreviewWithoutReadSideEffects()

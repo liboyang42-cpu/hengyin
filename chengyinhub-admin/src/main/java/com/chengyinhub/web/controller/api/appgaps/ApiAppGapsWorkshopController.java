@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Tag(name = "App 工坊缺口")
 public class ApiAppGapsWorkshopController extends BaseController {
-    static final int DISABLED = 503;
+    static final int DISABLED = NotBuiltFeature.CODE;
     private final WorkshopOwnedRead owned;
 
     public ApiAppGapsWorkshopController(WorkshopOwnedRead owned) { this.owned = owned; }
@@ -48,19 +48,46 @@ public class ApiAppGapsWorkshopController extends BaseController {
         return owned.pkg(claimId);
     }
 
-    /** 购买/支付/退款恒关：不读请求体、不建单、不调支付。 */
+    /**
+     * 购买/支付/退款恒关：不读请求体、不建单、不调支付。R9 BE-06：族名、文案与「未建成」标记见 {@link NotBuiltFeature}。
+     */
     @RequestMapping({"/api/mod-commerce", "/api/mod-commerce/**"})
-    public AjaxResult commerceOff() {
+    public AjaxResult commerceOff(jakarta.servlet.http.HttpServletRequest request,
+                                  jakarta.servlet.http.HttpServletResponse response) {
         if (!signedIn()) return AjaxResult.error(401, "请先登录");
-        AjaxResult off = AjaxResult.error(DISABLED, "工坊购买暂未开放");
-        off.put("errorCode", "WORKSHOP_COMMERCE_DISABLED");
-        return off;
+        return notBuilt(NotBuiltFeature.MOD_COMMERCE, response);
     }
 
-    @RequestMapping({"/api/mod-installation/**", "/api/mod-upgrade/**", "/api/mod-owned-report/**", "/api/mod-settlement/**",
-            "/api/workshop/creator/pending-packages/**", "/api/workshop/creator/public-theme-use/**"})
-    public AjaxResult notEnabled() {
+    /**
+     * 后端尚无对应领域的族：模组安装/升级/已购举报/创作者收益、创作者待审包/公开主题授权。
+     * 每个前缀对应 {@link NotBuiltFeature} 的一个具名条目，不再是匿名通配 503。
+     */
+    @RequestMapping({"/api/mod-installation", "/api/mod-installation/**", "/api/mod-upgrade", "/api/mod-upgrade/**",
+            "/api/mod-owned-report", "/api/mod-owned-report/**", "/api/mod-settlement", "/api/mod-settlement/**",
+            "/api/workshop/creator/pending-packages", "/api/workshop/creator/pending-packages/**",
+            "/api/workshop/creator/public-theme-use", "/api/workshop/creator/public-theme-use/**"})
+    public AjaxResult notEnabled(jakarta.servlet.http.HttpServletRequest request,
+                                 jakarta.servlet.http.HttpServletResponse response) {
         if (!signedIn()) return AjaxResult.error(401, "请先登录");
-        return AjaxResult.error(DISABLED, "WORKSHOP_FEATURE_NOT_ENABLED");
+        NotBuiltFeature feature = NotBuiltFeature.forPath(request == null ? null : request.getRequestURI());
+        return notBuilt(feature == null ? NotBuiltFeature.MOD_INSTALLATION : feature, response);
+    }
+
+    /** 机器可读清单：哪些 App 路由族尚未建成或按发布策略关闭。App 与冒烟脚本据此如实显示「未上线」，不计入已服务。 */
+    @GetMapping("/api/meta/not-built")
+    public AjaxResult notBuiltList() {
+        java.util.List<java.util.Map<String, Object>> rows = new java.util.ArrayList<>();
+        for (NotBuiltFeature f : NotBuiltFeature.values()) rows.add(f.describe());
+        return AjaxResult.success(rows);
+    }
+
+    static AjaxResult notBuilt(NotBuiltFeature feature, jakarta.servlet.http.HttpServletResponse response) {
+        if (response != null) response.setHeader(NotBuiltFeature.HEADER, feature.name());
+        AjaxResult off = AjaxResult.error(DISABLED, feature.messageZh());
+        off.put("errorCode", feature.errorCode());
+        off.put("feature", feature.name());
+        off.put("notBuilt", Boolean.TRUE);
+        off.put("errorKind", feature.status() == NotBuiltFeature.Status.POLICY_CLOSED ? "POLICY_CLOSED" : "NOT_BUILT");
+        return off;
     }
 }

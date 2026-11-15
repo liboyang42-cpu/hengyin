@@ -17,6 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Component
 public class UserInvoiceRefundReconciliationJob {
+    /** R9 BE-26: with two nodes only the scheduling leader runs this @Scheduled method. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.common.core.scheduling.SchedulingLeadership schedulingLeadership;
+
     private static final Logger log=LoggerFactory.getLogger(UserInvoiceRefundReconciliationJob.class);
     private final UserInvoiceProcessingMapper processing;
     private final UserInvoiceMapper invoices;
@@ -33,6 +37,7 @@ public class UserInvoiceRefundReconciliationJob {
     @Scheduled(fixedDelayString="${chengyin.user-invoice.refund-reconcile-delay-ms:30000}",
                initialDelayString="${chengyin.user-invoice.refund-reconcile-delay-ms:30000}")
     public void reconcilePendingRefundFacts() {
+        if (!com.chengyinhub.common.core.scheduling.SchedulingLeadership.allows(schedulingLeadership)) return; // R9 BE-26: leader node only
         if(!running.compareAndSet(false,true)) return;
         try {
             List<Long> candidates=processing.refundPauseCandidates(afterRegistrationId);

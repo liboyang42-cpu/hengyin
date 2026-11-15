@@ -23,6 +23,10 @@ public class MerchantReferralBounty
     public static final int STATUS_CLAWED_BACK = 2;
     /** 状态:已失效(超 30 天窗口未达标) */
     public static final int STATUS_EXPIRED = 3;
+    /** 状态:已达成激活条件,等运营审核(R9 BE-13)。未入账、不冻结、不计封顶。 */
+    public static final int STATUS_AWAITING_REVIEW = 4;
+    /** 状态:运营驳回(R9 BE-13)。终态,不入账。 */
+    public static final int STATUS_REJECTED = 5;
 
     private Long id;
     private Long merchantMemberId;
@@ -38,6 +42,9 @@ public class MerchantReferralBounty
     private Date frozenUntil;
     private Date clawedBackAt;
     private String clawbackReason;
+    private String reviewBy;
+    private Date reviewTime;
+    private String reviewNote;
     private String delFlag;
     private Date createTime;
     private Date updateTime;
@@ -74,4 +81,10 @@ public class MerchantReferralBounty
     public void setCreateTime(Date createTime) { this.createTime = createTime; }
     public Date getUpdateTime() { return updateTime; }
     public void setUpdateTime(Date updateTime) { this.updateTime = updateTime; }
+    public String getReviewBy() { return reviewBy; }
+    public void setReviewBy(String reviewBy) { this.reviewBy = reviewBy; }
+    public Date getReviewTime() { return reviewTime; }
+    public void setReviewTime(Date reviewTime) { this.reviewTime = reviewTime; }
+    public String getReviewNote() { return reviewNote; }
+    public void setReviewNote(String reviewNote) { this.reviewNote = reviewNote; }
 }
