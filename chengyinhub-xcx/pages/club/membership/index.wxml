@@ -1,0 +1,74 @@
+<view class="theme-dark">
+  <cy-toast id="cy-toast" />
+  <cy-modal-host id="cy-modal-host" />
+  <view class="ms-page" style="padding-top: {{statusBarHeight + navBarHeight}}px;">
+    <cy-nav-bar custom-back bind:back="goBack" />
+    <cy-page-title title="{{manage ? '会费设置' : '付费会员'}}" safe-top="{{false}}" />
+
+    <cy-skeleton wx:if="{{state === 'loading'}}" type="list" count="3" />
+    <cy-error wx:elif="{{state === 'error'}}" fill size="lg" title="加载失败" sub="{{errorText}}" retry="重新加载" bind:retry="load" />
+    <cy-empty wx:elif="{{state === 'soon'}}" fill size="lg" kind="empty" title="付费会员即将开放" />
+    <cy-empty wx:elif="{{state === 'off'}}" fill size="lg" kind="empty" title="这个俱乐部还没有付费会员" />
+
+    <view wx:elif="{{manage}}" class="ms-shell">
+      <view class="ms-card">
+        <view class="ms-row" aria-label="收款，{{collection.stateText}}">
+          <text class="ms-label">收款</text>
+          <text class="ms-value ms-value--{{collection.stateTone}}">{{collection.ready ? '已开通' : '未开通'}}</text>
+        </view>
+        <view class="ms-note">{{collection.stateText}}</view>
+        <view class="ms-note" wx:if="{{collection.needsBinding}}">请联系平台为俱乐部开通收款账户</view>
+      </view>
+      <view class="ms-card ms-gap">
+        <view class="ms-row" aria-label="付费会员，{{setting.enabled ? '已开启' : '已关闭'}}">
+          <text class="ms-label">付费会员</text>
+          <text class="ms-value">{{setting.enabled ? '已开启' : '已关闭'}}</text>
+        </view>
+      </view>
+      <view class="ms-action">
+        <cy-btn variant="{{setting.enabled ? 'secondary' : 'primary'}}" loading="{{busy}}" bindtap="onToggleEnabled">{{setting.enabled ? '关闭付费会员' : '开启付费会员'}}</cy-btn>
+      </view>
+    </view>
+
+    <view wx:else class="ms-shell">
+      <view class="ms-card">
+        <view class="ms-row" aria-label="状态，{{view.statusText}}">
+          <text class="ms-label">状态</text>
+          <text class="ms-value ms-value--{{view.statusTone}}">{{view.statusText}}</text>
+        </view>
+        <view class="ms-row" wx:if="{{view.untilText}}" aria-label="有效期至，{{view.untilText}}">
+          <text class="ms-label">有效期至</text>
+          <text class="ms-value">{{view.untilText}}</text>
+        </view>
+        <view class="ms-note" wx:for="{{view.benefits}}" wx:key="*this">{{item}}</view>
+      </view>
+
+      <view class="ms-note ms-gap" wx:if="{{view.blockedText}}">{{view.blockedText}}</view>
+
+      <view class="ms-section">会员方案</view>
+      <view class="ms-card ms-plan" wx:for="{{view.plans}}" wx:key="id">
+        <view class="ms-row">
+          <text class="ms-value">{{item.name}}</text>
+          <text class="ms-value">¥{{item.priceText}}</text>
+        </view>
+        <view class="ms-note">{{item.durationText}} · {{item.refundText}}</view>
+        <view class="ms-note" wx:for="{{item.benefits}}" wx:for-item="b" wx:key="*this">{{b}}</view>
+        <view class="ms-action">
+          <cy-btn variant="primary" disabled="{{!view.canPay}}" loading="{{busy}}" data-id="{{item.id}}" bindtap="onJoin">{{view.renewLabel}}</cy-btn>
+        </view>
+      </view>
+      <cy-empty wx:if="{{!view.plans.length}}" kind="empty" title="暂无会员方案" />
+
+      <block wx:if="{{view.invoices.length}}">
+        <view class="ms-section">账单</view>
+        <view class="ms-card">
+          <view class="ms-row" wx:for="{{view.invoices}}" wx:key="id" aria-label="{{item.planName}}，{{item.statusText}}">
+            <text class="ms-label">{{item.planName}} ¥{{item.amountText}}</text>
+            <text wx:if="{{item.resumable && view.canPay}}" class="ms-link" data-id="{{item.id}}" bindtap="onResume">继续支付</text>
+            <text wx:else class="ms-value">{{item.statusText}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

@@ -716,6 +716,16 @@
         <cy-icon class="cset-chevron" name="arrow-right" size="28" />
       </view>
 
+      <!-- K1 club-dues:付费会员(成员看方案、加入续费)与会费设置(主理人)。能否在线缴费由服务端与资金开关决定。 -->
+      <view class="cset-row" wx:if="{{club.isOwner}}" catchtap="goMembershipSetting" aria-role="button" aria-label="会费设置" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cset-main"><text class="cset-title">会费设置</text></view>
+        <cy-icon class="cset-chevron" name="arrow-right" size="28" />
+      </view>
+      <view class="cset-row" wx:if="{{club.isOwner || club.isJoined}}" catchtap="goMembership" aria-role="button" aria-label="付费会员" hover-class="cy-pressed" hover-stay-time="80">
+        <view class="cset-main"><text class="cset-title">付费会员</text></view>
+        <cy-icon class="cset-chevron" name="arrow-right" size="28" />
+      </view>
+
       <view class="cset-row" wx:if="{{club.isOwner || club.viewerIsAdmin || canManageActivities || canOperateEvents || hasEventScope}}" catchtap="toggleSettingsPanel" data-key="tools"
             aria-role="button" aria-expanded="{{settingsPanel === 'tools'}}" aria-label="项目工具" hover-class="cy-pressed" hover-stay-time="80">
         <view class="cset-main">

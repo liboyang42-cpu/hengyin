@@ -3,7 +3,7 @@
   "generatedFrom": "app.json + scene-* 组件扫描",
   "previousBatch": null,
   "counts": {
-    "routes": 177,
+    "routes": 182,
     "scenes": 27,
     "added": 0,
     "removed": 0
@@ -660,6 +660,20 @@
       "hasWxml": true
     },
     {
+      "pagePath": "pages/club/membership/index",
+      "pkg": "pages/club",
+      "tabBar": false,
+      "role": "club",
+      "needsLogin": true,
+      "needsData": true,
+      "dataKeys": [
+        "clubId",
+        "id"
+      ],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "pages/club/notify/index",
       "pkg": "pages/club",
       "tabBar": false,
@@ -1125,6 +1139,17 @@
       "hasWxml": true
     },
     {
+      "pagePath": "pages/merchant/shop-games/index",
+      "pkg": "pages/merchant",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
       "pagePath": "pages/merchant/customer/detail/index",
       "pkg": "pages/merchant",
       "tabBar": false,
@@ -1416,6 +1441,17 @@
       "tabBar": false,
       "role": "merchant",
       "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "pages/shezhi/app/index",
+      "pkg": "pages/shezhi",
+      "tabBar": false,
+      "role": "merchant",
+      "needsLogin": true,
       "needsData": false,
       "dataKeys": [],
       "hasJs": true,
@@ -1901,6 +1937,28 @@
       "tabBar": false,
       "role": "player",
       "needsLogin": true,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/payout-bind/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
+      "needsData": false,
+      "dataKeys": [],
+      "hasJs": true,
+      "hasWxml": true
+    },
+    {
+      "pagePath": "subpackageMember/payout-request/index",
+      "pkg": "subpackageMember",
+      "tabBar": false,
+      "role": "player",
+      "needsLogin": false,
       "needsData": false,
       "dataKeys": [],
       "hasJs": true,

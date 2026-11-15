@@ -1115,6 +1115,17 @@ Page({
     this.selectGroupCodeActivity();
   },
 
+  // K1 club-dues:付费会员页(成员)与会费设置(主理人,manage=1)。
+  goMembership() {
+    const club = this.data.club;
+    if (!club || !(club.isOwner || club.isJoined) || !this.data.clubId) return;
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/membership/index?clubId=' + this.data.clubId, complete: () => { this._navigating = false; } });
+  },
+  goMembershipSetting() {
+    const club = this.data.club;
+    if (!club || !club.isOwner || !this.data.clubId) return;
+    if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/club/membership/index?manage=1&clubId=' + this.data.clubId, complete: () => { this._navigating = false; } });
+  },
   goClubNotify() {
     const club = this.data.club;
     // 守卫与显示条件必须同源,否则「看不见但点得到」或反过来
