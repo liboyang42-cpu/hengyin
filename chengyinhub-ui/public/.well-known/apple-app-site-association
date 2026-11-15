@@ -11,6 +11,7 @@
           { "/": "/merchant/team", "comment": "NativeEntryLinkPolicy. Requires a single invite query item." },
           { "/": "/merchant/public-home/member/*", "comment": "One positive canonical integer. Any other segment is not a screen." },
           { "/": "/merchant/public-home/*", "comment": "One positive canonical integer. The member path above is the other handled shape." },
+          { "/": "/game/*", "comment": "ExternalGameLink. One catalogue game id; optional node (positive integer)." },
           { "/": "/catalog" },
           { "/": "/catalog/list" },
           { "/": "/catalog/filters" },
