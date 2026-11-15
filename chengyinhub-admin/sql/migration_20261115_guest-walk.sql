@@ -9,7 +9,7 @@
 
 CREATE TABLE IF NOT EXISTS roam_guest_walk (
   id              BIGINT        NOT NULL AUTO_INCREMENT,
-  install_id      CHAR(36)      NOT NULL COMMENT 'client install id (random UUID, same as P6 measurement)',
+  install_id      CHAR(36)      NOT NULL COMMENT 'client install id for the guest walk (random UUID, not the statistics id)',
   walk_id         CHAR(36)      NOT NULL COMMENT 'client walk id (UUID)',
   member_id       BIGINT        NOT NULL,
   session_id      BIGINT        NULL     COMMENT 'roam_session created for the walk; NULL when nothing was credited',
