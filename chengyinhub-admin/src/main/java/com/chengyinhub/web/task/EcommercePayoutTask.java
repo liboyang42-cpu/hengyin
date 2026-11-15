@@ -28,11 +28,16 @@ public class EcommercePayoutTask {
     @Autowired private AlarmService alarmService;
     /** l-payout3 合单结算；合单开关关闭时 active() 为假，不读不写。 */
     @Autowired(required = false) private com.chengyinhub.business.payout.EcommerceCombinedSettlementService combinedSettlement;
+    /** S2 collection model: single-seller split orders past the T+N hold get their profit-sharing plan here. */
+    @Autowired(required = false) private com.chengyinhub.business.collection.CollectionSplitSettlementService collectionSplit;
+    @org.springframework.beans.factory.annotation.Value("${chengyin.collection-model.split-plan-batch:50}")
+    private int collectionSplitBatch = 50;
 
     public void shareAndRetry() {
         if (!switches.profitSharingEnabled()) return;
         try {
             int planned = profitShareService.planMissing(50);
+            if (collectionSplit != null) planned += collectionSplit.planDue(collectionSplitBatch);
             int submitted = profitShareService.submitPlanned(50);
             int synced = profitShareService.syncProcessing(100);
             int returns = profitShareService.syncReturns(100);

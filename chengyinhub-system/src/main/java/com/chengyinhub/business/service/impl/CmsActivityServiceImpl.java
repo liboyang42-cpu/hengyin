@@ -122,6 +122,10 @@ public class CmsActivityServiceImpl implements ICmsActivityService
     @Autowired
     private com.chengyinhub.business.mapper.ActivitySettlementHoldMapper activitySettlementHoldMapper;
 
+    /** S2 collection model: activity tickets collected by the seller's sub-merchant never enter a wallet settlement. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.collection.CollectionSplitSettlementService collectionSplitSettlement;
+
     /** 收款方欠款:结算入账先抵欠款;逾期未清不能发布新活动。 */
     @Autowired
     private com.chengyinhub.business.service.support.SettlementDebtLedger settlementDebtLedger;
@@ -359,6 +363,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         if (totalSales != null && heldSales != null) {
             totalSales = totalSales.subtract(heldSales);
         }
+        if (totalSales != null && collectionSplitSettlement != null) {
+            // S2: split sales are already with the seller's sub-merchant; the platform's take on them is a profit-sharing
+            // receiver amount (CollectionSplitSettlementService#planDue). Zero, with no read, while the model and rails are off.
+            totalSales = totalSales.subtract(collectionSplitSettlement.splitSalesForActivity(activity.getId()));
+        }
         if (totalSales == null || totalSales.compareTo(BigDecimal.ZERO) <= 0) {
             logger.info("活动 {} 没有销售额，跳过分润（已通过领取标记为已结算）", activity.getId());
             return true;
@@ -455,6 +464,11 @@ public class CmsActivityServiceImpl implements ICmsActivityService
         }
         BigDecimal sales = registration.getPayableAmount();
         if (sales == null || sales.compareTo(BigDecimal.ZERO) <= 0) {
+            return true;
+        }
+        if (collectionSplitSettlement != null && collectionSplitSettlement.isSplitCollected(registration.getId())) {
+            // S2: the seller's sub-merchant holds this sale; releasing the hold lets split settlement plan its profit
+            // sharing. Nothing is credited to any wallet.
             return true;
         }
         CmsActivity activity = cmsActivityMapper.selectCmsActivityById(hold.getActivityId());

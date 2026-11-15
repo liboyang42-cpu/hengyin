@@ -254,6 +254,10 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Autowired
     private IMerchantPayableService merchantPayableService;
 
+    /** S2 collection model: refuses third-party tickets the platform may not collect. Inactive unless the money ceiling is on. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.collection.CollectionModelService collectionModel;
+
     /** P1:支付回调先按 notify_hash 落 inbox 去重;状态推进仍由下方既有 CAS 负责。 */
     @Autowired
     private IWxPaymentCallbackInboxService wxPaymentCallbackInboxService;
@@ -615,6 +619,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // [#22 二清闸] 价格算完才判得了「这笔到底收不收钱」——积分全额抵扣后 payable=0 的单不进资金链,
         // 不构成二清,不能拦。必须在建单前拦:建了单再拦 = 留一堆永远付不掉的孤儿单。
         assertCollectible(sellerTopic, payableAmount, registrationActivity);
+        requireCollectionModel(Convert.toLong(ownerType), ownerId, payableAmount);
         if (payableAmount.compareTo(BigDecimal.ZERO) > 0 && sellerTopic != null) {
             assertFeeRateValid(sellerTopic.getFeePlatformRate());
         }
@@ -881,6 +886,7 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         // 还被显式传 ZERO)⇒ 全部放行 ⇒ 首单事后变成 100 元待支付,第三方照收。
         // 这个洞是 code-review 从本闸初版里挖出来的,ErqingGateTest#multiTicket_freeFirstPaidSecond_rejected 守着。
         assertCollectible(orderTopic, order.payableAmount, orderActivity);
+        requireCollectionModel(Convert.toLong(ownerType), ownerId, order.payableAmount);
 
         // 2) 建各行:行内一律不动积分(整单层统一处理);从单 payable=0,由首单汇总承担
         List<CmsRegistration> allCreated = new java.util.ArrayList<>();
@@ -1996,6 +2002,17 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
         CmsActivity activity = Long.valueOf(2L).equals(registration.getOwnerType())
                 ? cmsActivityMapper.selectCmsActivityById(registration.getOwnerId()) : null;
         assertCollectible(resolveSellerTopic(registration), payable, activity);
+        requireCollectionModel(registration.getOwnerType(), registration.getOwnerId(), payable);
+    }
+
+    /**
+     * S2 collection model (owner ruling 2026-09-15, confirmed 2026-11-15). While the money switch's server ceiling is on,
+     * a paid ticket of a third-party seller that cannot be paid by split settlement is refused here, before any stock,
+     * entitlement or points are taken; this restores the refusal the 2026-11-02 change removed. Ceiling off (production):
+     * no-op, behaviour exactly as above.
+     */
+    private void requireCollectionModel(Long ownerType, Long ownerId, BigDecimal payable) {
+        if (collectionModel != null) collectionModel.requireCollectible(ownerType, ownerId, payable);
     }
 
     @Override
@@ -2140,7 +2157,9 @@ public class CmsRegistrationServiceImpl implements ICmsRegistrationService, IReg
     @Override
     public CmsRegistration preparePaymentRetry(Long registrationId, Long memberId) {
         RestoreDispatchGuard.requireDispatchAllowed();
-        return requirePayableRegistration(cmsRegistrationMapper.selectCmsRegistrationById(registrationId), memberId);
+        CmsRegistration payable = requirePayableRegistration(cmsRegistrationMapper.selectCmsRegistrationById(registrationId), memberId);
+        requireCollectionModel(payable.getOwnerType(), payable.getOwnerId(), payable.getPayableAmount());
+        return payable;
     }
 
     private CmsRegistration requirePayableRegistration(CmsRegistration registration, Long memberId) {
