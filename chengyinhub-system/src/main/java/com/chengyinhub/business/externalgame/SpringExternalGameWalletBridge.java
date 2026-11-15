@@ -24,6 +24,9 @@ public class SpringExternalGameWalletBridge implements ExternalGameWalletBridge 
     private final IUmsMemberService memberService;
     private final IUmsMemberPointsDetailService pointsDetailService;
     private final IUmsMemberBalanceDetailService balanceDetailService;
+    /** G3: optional so existing wiring and tests are unchanged; null means ungoverned (as before). */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.pointsgov.PointsGovernanceService governance;
 
     public SpringExternalGameWalletBridge(
             UmsMemberMapper memberMapper,
@@ -58,6 +61,22 @@ public class SpringExternalGameWalletBridge implements ExternalGameWalletBridge 
         if (pointsDetailService.insertUmsMemberPointsDetail(detail) != 1) {
             throw new IllegalStateException("外部游戏积分明细写入失败: memberId=" + memberId);
         }
+    }
+
+    @Override
+    public PointsCredit creditPointsGoverned(long memberId, int points, String businessKey, String reason) {
+        if (points <= 0) return new PointsCredit(0, "NOTHING");
+        // Lock the member row first so the governance daily sum and the credit see the same state.
+        memberMapper.selectPointsForUpdate(memberId);
+        if (governance != null) {
+            com.chengyinhub.business.pointsgov.PointsGovernanceService.Admission admission =
+                    governance.admit(memberId, EVENT_TYPE_EXTGAME_REWARD, points);
+            if (!admission.admitted()) return new PointsCredit(0, admission.outcome());
+            creditPoints(memberId, points, businessKey, reason);
+            return new PointsCredit(points, admission.outcome());
+        }
+        creditPoints(memberId, points, businessKey, reason);
+        return new PointsCredit(points, "UNGOVERNED");
     }
 
     @Override

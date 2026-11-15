@@ -440,12 +440,24 @@ public class ExternalGameReviewService {
                 default -> throw new IllegalArgumentException(to);
             };
             if (n != 1) throw new AppGapException(409, "INVALID_TRANSITION", "当前状态不允许该操作", Map.of("status", current, "target", to));
-            if (APPROVED.equals(to)) {
+            // G3: approving a new version of a game an operator took down does not re-list it; restore does.
+            if (APPROVED.equals(to) && !activeTakedown((String) rows.get(0).get("game_id"))) {
                 jdbc.update("UPDATE external_game SET approved_submission_id = ?, approved_time = ?, update_time = ? WHERE game_id = ?",
                         id, now, now, rows.get(0).get("game_id"));
             }
             event(id, current, to, actorType, actorId, reason, now);
         });
+    }
+
+    /** G3 takedown guard; a missing external_game_takedown table (before the migration) means no takedown. */
+    private boolean activeTakedown(Object gameId) {
+        try {
+            Integer n = jdbc.queryForObject("SELECT COUNT(1) FROM external_game_takedown WHERE game_id = ? AND status = 'ACTIVE'",
+                    Integer.class, gameId);
+            return n != null && n > 0;
+        } catch (org.springframework.dao.DataAccessException missingTableBeforeMigration) {
+            return false;
+        }
     }
 
     private void event(long submissionId, String from, String to, String actorType, Long actorId, String reason, Timestamp at) {
