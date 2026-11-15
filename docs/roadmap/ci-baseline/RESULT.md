@@ -29,7 +29,7 @@ the owner marks `backend-tests` as required (chengyin-app
 | same with local `mysql:8.0.45` (Docker) and the workflow's `CHENGYIN_MYBATIS_IT_*` values | 5 min; 12,571 run, **1 failure**, 0 errors, 559 skipped |
 | the workflow's summary script on those reports | prints the table and the one failure |
 | `python3 -m unittest` on the 17 `ci/test_*.py` files that mention workflows, with and without the new file | identical results (5 fail both ways, unrelated) |
-| GitHub Actions run 43710560708 on this branch | got a runner, MySQL service started, checkout and Java setup passed; still running when this receipt was written |
+| GitHub Actions run 43711073129 on this branch (`0c602f5d`) | ran on GitHub-hosted Ubuntu in 8 min, MySQL service healthy; summary: 11,598 run, **1 failed** (the known test below), 0 errors, 409 skipped; surefire reports uploaded. Red, as expected. (Run 43710560708 was cancelled by the next push: the concurrency group works) |
 
 ## Known failure (base, not caused by this package)
 
@@ -42,7 +42,6 @@ service's exception type. The workflow was not weakened to hide it.
 
 ## Not verified
 
-- A completed run on GitHub (in progress at the time of writing).
 - `mvn test` does not run the named `*IT` suites or download the Apple IAP fixtures. `ci.yml`'s `Backend tests` job (master and selected PR bases) still covers those through `ci/backend-test.sh`.
 
 ## Owner actions
