@@ -157,6 +157,10 @@ chengyin:
   refund:
     payout-receipt:
       allowed-hosts: ${CHENGYIN_REFUND_RECEIPT_ALLOWED_HOSTS:www.chengyinhub.com}
+  # Q5 资金总开关的服务端上限。false(默认,生产值)时 /api/app/money-switch 六个区域全部返回关,后台也不能打开任何区域。
+  # 只在 TEST 部署用环境变量置 true;生产在业主说"开钱"之前不得改动(见 docs/roadmap/money-switch/RUNBOOK.md)。
+  money-switch:
+    server-ceiling: ${CHENGYIN_MONEY_SWITCH_SERVER_CEILING:false}
 
 # MyBatis配置
 mybatis:
