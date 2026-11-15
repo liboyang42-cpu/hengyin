@@ -56,8 +56,8 @@
     </select>
 
     <insert id="insertImConversation" parameterType="ImConversation" useGeneratedKeys="true" keyProperty="id">
-        insert into im_conversation (type, biz_key, last_msg_type, last_msg_text, last_msg_at, status, create_time)
-        values (#{type}, #{bizKey}, #{lastMsgType}, #{lastMsgText}, #{lastMsgAt}, #{status}, sysdate())
+        insert into im_conversation (type, biz_key, last_msg_type, last_msg_text, last_msg_at, status, remark, create_time)
+        values (#{type}, #{bizKey}, #{lastMsgType}, #{lastMsgText}, #{lastMsgAt}, #{status}, #{remark}, sysdate())
     </insert>
 
     <update id="updateLastMessage">

@@ -106,6 +106,8 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     /** 频道出站 Webhook 发件箱（message.created）；未装配时不扇出。 */
     @Autowired(required = false)
     private com.chengyinhub.business.service.channel.platform.ChannelWebhookService webhookOutbox;
+    @Autowired(required = false)
+    private InGameChannelService inGameChannelService;
 
     private String singleBizKey(Long a, Long b)
     {
@@ -318,6 +320,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
                 cp.put("hangoutId", hangoutId);
                 return cp;
             }
+            if (InGameChannelService.isInGameBizKey(c.getBizKey()) && inGameChannelService != null)
+            {
+                return inGameChannelService.counterpartyOf(c, memberId);
+            }
             Club club = clubOfBizKey(c.getBizKey());
             if (club == null)
             {
@@ -405,6 +411,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         if (!hasActiveGroupAccess(conversation, memberId, false))
         {
             throw new RuntimeException(hangoutIdOfBizKey(conversation.getBizKey()) != null ? "已退出该局，无权查看群消息"
+                    : InGameChannelService.isInGameBizKey(conversation.getBizKey()) ? "无权查看该游戏频道"
                     : teamIdOf(conversation) == null
                     ? "已退出俱乐部，无权查看群消息" : "已退出队伍，无权查看群消息");
         }
@@ -903,6 +910,7 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             if (!hasActiveGroupAccess(observed, memberId, true))
             {
                 throw new ServiceException(hangoutIdOfBizKey(observed.getBizKey()) != null ? "已退出该局，不能继续发送群消息"
+                        : InGameChannelService.isInGameBizKey(observed.getBizKey()) ? "无权在该游戏频道发送消息"
                         : teamIdOf(observed) == null
                         ? "已退出俱乐部，不能继续发送群消息" : "已退出队伍，不能继续发送群消息", 403);
             }
@@ -1233,6 +1241,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
             }
             ImConversationMember mine = memberMapper.selectByConvAndMember(conversation.getId(), memberId);
             return mine != null && !Integer.valueOf(1).equals(mine.getDeleted());
+        }
+        if (InGameChannelService.isInGameBizKey(conversation.getBizKey()))
+        {
+            return inGameChannelService != null && inGameChannelService.hasActiveAccess(conversation, memberId);
         }
         Long clubId = clubIdOf(conversation);
         Club club = clubId == null ? null : (forUpdate
