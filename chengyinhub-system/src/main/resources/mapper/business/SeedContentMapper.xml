@@ -130,9 +130,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </if>
     </select>
 
-    <select id="selectBoardAreas" resultType="java.util.LinkedHashMap" useCache="false">
-        select board_id as boardId, title, region_id as regionId, lifecycle,
-               map_south as south, map_west as west, map_north as north, map_east as east
+    <!-- Explicit map keys: MyBatis matches columns case-insensitively, so keys stay camelCase on any driver. -->
+    <resultMap id="BoardAreaResult" type="java.util.LinkedHashMap">
+        <result property="boardId" column="board_id"/>
+        <result property="title" column="title"/>
+        <result property="regionId" column="region_id"/>
+        <result property="lifecycle" column="lifecycle"/>
+        <result property="south" column="map_south" javaType="java.math.BigDecimal"/>
+        <result property="west" column="map_west" javaType="java.math.BigDecimal"/>
+        <result property="north" column="map_north" javaType="java.math.BigDecimal"/>
+        <result property="east" column="map_east" javaType="java.math.BigDecimal"/>
+    </resultMap>
+
+    <select id="selectBoardAreas" resultMap="BoardAreaResult" useCache="false">
+        select board_id, title, region_id, lifecycle, map_south, map_west, map_north, map_east
         from city_game_board
         where lifecycle not in ('CLOSED', 'ARCHIVED')
         order by update_time desc
