@@ -27,7 +27,7 @@ public class NodeTaskPoolController extends BaseController {
     @Autowired
     private IRandomDispatchService dispatchService;
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:list')")
+    @PreAuthorize("@ss.hasPermi('business:taskpool:list')")
     @GetMapping("/list")
     public TableDataInfo list(NodeTaskPool filter) {
         startPage();
@@ -35,7 +35,7 @@ public class NodeTaskPoolController extends BaseController {
         return getDataTable(list);
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:query')")
+    @PreAuthorize("@ss.hasPermi('business:taskpool:query')")
     @GetMapping("/{id}")
     public AjaxResult getInfo(@PathVariable Long id) {
         NodeTaskPool pool = dispatchService.selectPoolById(id);
@@ -48,7 +48,7 @@ public class NodeTaskPoolController extends BaseController {
         return AjaxResult.success(data);
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:add')")
+    @PreAuthorize("@ss.hasPermi('business:taskpool:add')")
     @Log(title = "盲盒任务池", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody NodeTaskPool pool) {
@@ -62,7 +62,7 @@ public class NodeTaskPoolController extends BaseController {
         }
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:edit')")
+    @PreAuthorize("@ss.hasPermi('business:taskpool:edit')")
     @Log(title = "盲盒任务池", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody NodeTaskPool pool) {
@@ -73,20 +73,20 @@ public class NodeTaskPoolController extends BaseController {
         }
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:remove')")
+    @PreAuthorize("@ss.hasPermi('business:taskpool:remove')")
     @Log(title = "盲盒任务池", businessType = BusinessType.DELETE)
     @DeleteMapping("/{id}")
     public AjaxResult remove(@PathVariable Long id) {
         return toAjax(dispatchService.deletePoolById(id));
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:list')")
+    @PreAuthorize("@ss.hasPermi('business:taskpool:list')")
     @GetMapping("/{poolId}/items")
     public AjaxResult listItems(@PathVariable Long poolId) {
         return AjaxResult.success(dispatchService.selectItemsByPoolId(poolId));
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:edit')")
+    @PreAuthorize("@ss.hasPermi('business:taskpool:edit')")
     @Log(title = "盲盒任务池条目", businessType = BusinessType.UPDATE)
     @PostMapping("/items")
     public AjaxResult saveItem(@RequestBody NodeTaskPoolItem item) {
@@ -97,14 +97,14 @@ public class NodeTaskPoolController extends BaseController {
         }
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:remove')")
+    @PreAuthorize("@ss.hasPermi('business:taskpool:remove')")
     @Log(title = "盲盒任务池条目", businessType = BusinessType.DELETE)
     @DeleteMapping("/items/{id}")
     public AjaxResult removeItem(@PathVariable Long id) {
         return toAjax(dispatchService.deletePoolItemById(id));
     }
 
-    @PreAuthorize("@ss.hasPermi('business:topicnode:list')")
+    @PreAuthorize("@ss.hasPermi('business:taskpool:list')")
     @GetMapping("/dispatch/list")
     public AjaxResult listDispatches(NodeTaskDispatch filter) {
         return AjaxResult.success(dispatchService.selectDispatchList(filter));

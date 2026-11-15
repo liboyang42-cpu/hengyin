@@ -15,7 +15,7 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="getList">搜索</el-button>
-        <el-button type="primary" plain icon="el-icon-plus" size="mini" v-hasPermi="['business:topicnode:add']" @click="handleAddPool">新建任务池</el-button>
+        <el-button type="primary" plain icon="el-icon-plus" size="mini" v-hasPermi="['business:taskpool:add']" @click="handleAddPool">新建任务池</el-button>
       </el-form-item>
     </el-form>
 
@@ -35,8 +35,8 @@
             </el-table-column>
             <el-table-column label="操作" width="120" align="center">
               <template slot-scope="scope">
-                <el-button size="mini" type="text" v-hasPermi="['business:topicnode:edit']" @click.stop="handleEditPool(scope.row)">编辑</el-button>
-                <el-button size="mini" type="text" v-hasPermi="['business:topicnode:remove']" @click.stop="handleDeletePool(scope.row)">删除</el-button>
+                <el-button size="mini" type="text" v-hasPermi="['business:taskpool:edit']" @click.stop="handleEditPool(scope.row)">编辑</el-button>
+                <el-button size="mini" type="text" v-hasPermi="['business:taskpool:remove']" @click.stop="handleDeletePool(scope.row)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -53,7 +53,7 @@
               style="float: right; padding: 3px 0;"
               type="text"
               icon="el-icon-plus"
-              v-hasPermi="['business:topicnode:edit']"
+              v-hasPermi="['business:taskpool:edit']"
               @click="handleAddItem"
             >添加任务节点</el-button>
           </div>
@@ -69,8 +69,8 @@
             </el-table-column>
             <el-table-column label="操作" width="120" align="center">
               <template slot-scope="scope">
-                <el-button size="mini" type="text" v-hasPermi="['business:topicnode:edit']" @click="handleEditItem(scope.row)">编辑</el-button>
-                <el-button size="mini" type="text" v-hasPermi="['business:topicnode:remove']" @click="handleDeleteItem(scope.row)">移除</el-button>
+                <el-button size="mini" type="text" v-hasPermi="['business:taskpool:edit']" @click="handleEditItem(scope.row)">编辑</el-button>
+                <el-button size="mini" type="text" v-hasPermi="['business:taskpool:remove']" @click="handleDeleteItem(scope.row)">移除</el-button>
               </template>
             </el-table-column>
           </el-table>

@@ -15,7 +15,7 @@
             type="primary"
             size="small"
             icon="el-icon-check"
-            v-hasPermi="['business:topicnode:edit']"
+            v-hasPermi="['business:rewarddrop:edit']"
             @click="handleSaveBaseProb"
           >保存基础概率</el-button>
         </el-form-item>
@@ -81,7 +81,7 @@
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="getList">搜索</el-button>
-        <el-button icon="el-icon-plus" type="primary" plain size="mini" v-hasPermi="['business:topicnode:add']" @click="handleAdd">新增规则</el-button>
+        <el-button icon="el-icon-plus" type="primary" plain size="mini" v-hasPermi="['business:rewarddrop:add']" @click="handleAdd">新增规则</el-button>
       </el-form-item>
     </el-form>
 
@@ -104,8 +104,8 @@
       </el-table-column>
       <el-table-column label="操作" width="160" align="center">
         <template slot-scope="scope">
-          <el-button size="mini" type="text" icon="el-icon-edit" v-hasPermi="['business:topicnode:edit']" @click="handleEdit(scope.row)">编辑</el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" v-hasPermi="['business:topicnode:remove']" @click="handleDelete(scope.row)">删除</el-button>
+          <el-button size="mini" type="text" icon="el-icon-edit" v-hasPermi="['business:rewarddrop:edit']" @click="handleEdit(scope.row)">编辑</el-button>
+          <el-button size="mini" type="text" icon="el-icon-delete" v-hasPermi="['business:rewarddrop:remove']" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -130,9 +130,9 @@
         </el-form-item>
         <el-form-item label="掉落类型">
           <el-select v-model="form.dropType" style="width: 100%;">
-            <el-option label="1 - XP倍率 ({\"mult\":2})" :value="1" />
-            <el-option label="2 - 徽章碎片 ({\"badgeCode\":\"FRAGMENT\"})" :value="2" />
-            <el-option label="3 - 商家彩蛋券 ({\"couponTemplateId\":1})" :value="3" />
+            <el-option label='1 - XP倍率 ({"mult":2})' :value="1" />
+            <el-option label='2 - 徽章碎片 ({"badgeCode":"FRAGMENT"})' :value="2" />
+            <el-option label='3 - 商家彩蛋券 ({"couponTemplateId":1})' :value="3" />
           </el-select>
         </el-form-item>
         <el-form-item label="抽取权重">

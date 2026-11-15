@@ -234,6 +234,10 @@ export default {
         this.loadConfigs()
       }
     },
+    showError(err) {
+      const text = typeof err === 'string' ? err : (err && (err.msg || err.message))
+      this.$message.error(text || '请求失败，请稍后重试')
+    },
     loadConfigs() {
       this.loadingConfigs = true
       listExternalGameMonetization({ reviewStatus: this.statusFilter, pageNum: 1, pageSize: 50 })
@@ -243,7 +247,7 @@ export default {
           this.moneyGateOpen = Boolean(data.moneyGateOpen)
           this.payoutGateOpen = Boolean(data.payoutGateOpen)
         })
-        .catch(() => {})
+        .catch(err => this.showError(err))
         .finally(() => { this.loadingConfigs = false })
     },
     openReviewDialog(row) {
@@ -284,7 +288,7 @@ export default {
           this.dialogVisible = false
           this.loadConfigs()
         })
-        .catch(() => {})
+        .catch(err => this.showError(err))
         .finally(() => { this.submitting = false })
     },
     loadSettlements() {
@@ -300,7 +304,7 @@ export default {
           this.settlementRows = data.rows || []
           this.payoutGateOpen = Boolean(data.payoutGateOpen)
         })
-        .catch(() => {})
+        .catch(err => this.showError(err))
         .finally(() => { this.loadingSettlements = false })
     },
     runManualSettle() {
@@ -311,7 +315,7 @@ export default {
           this.$message.success(`日结完成：成功 ${d.settledCount || 0} 笔，门控延迟 ${d.deferredCount || 0} 笔`)
           this.loadSettlements()
         })
-        .catch(() => {})
+        .catch(err => this.showError(err))
         .finally(() => { this.settling = false })
     }
   }
