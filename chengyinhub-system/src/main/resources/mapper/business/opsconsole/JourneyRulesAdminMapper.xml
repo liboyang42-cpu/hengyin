@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.opsconsole.JourneyRulesAdminMapper">
+
+    <select id="searchTopics" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT id, name, lifecycle, status, user_status AS userStatus, member_id AS memberId,
+               (journey_rules_json IS NOT NULL) AS hasRules,
+               (SELECT COUNT(1) FROM theme_state_key k WHERE k.topic_id = t.id) AS stateKeyCount,
+               update_time AS updateTime
+        FROM cms_topic t
+        WHERE del_flag = 0
+        <if test="topicId != null"> AND id = #{topicId} </if>
+        <if test="keyword != null and keyword != ''"> AND name LIKE CONCAT('%', #{keyword}, '%') </if>
+        ORDER BY id DESC
+        LIMIT 100
+    </select>
+
+    <update id="updateJourneyRules">
+        UPDATE cms_topic SET journey_rules_json = #{json}, update_time = NOW()
+        WHERE id = #{id} AND del_flag = 0 AND journey_rules_json &lt;=&gt; #{expected}
+    </update>
+</mapper>

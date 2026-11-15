@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chengyinhub.business.mapper.opsconsole.RoamPlayOpsMapper">
+
+    <!-- 只读聚合视图：禁止出现 track_json / lat / lng / cell_key / geohash7 / state_json（单测守着）。 -->
+
+    <sql id="sessionWindow">
+        <if test="since != null and since != ''"> AND s.started_at &gt;= #{since} </if>
+        <if test="until != null and until != ''"> AND s.started_at &lt; #{until} </if>
+    </sql>
+
+    <select id="sessions" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT s.id, s.member_id AS memberId, s.started_at AS startedAt, s.finished_at AS finishedAt,
+               s.distance_m AS distanceM, s.tiles_revealed AS tilesRevealed, s.pois_found AS poisFound,
+               s.xp_awarded AS xpAwarded, s.status
+        FROM roam_session s
+        <where>
+            <if test="memberId != null"> AND s.member_id = #{memberId} </if>
+            <if test="status != null"> AND s.status = #{status} </if>
+            <include refid="sessionWindow"/>
+        </where>
+        ORDER BY s.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="sessionTotals" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT COUNT(1) AS sessions, COUNT(DISTINCT s.member_id) AS members,
+               COALESCE(SUM(s.distance_m), 0) AS distanceM, COALESCE(SUM(s.tiles_revealed), 0) AS tilesRevealed,
+               COALESCE(SUM(s.pois_found), 0) AS poisFound, COALESCE(SUM(s.status = 0), 0) AS open
+        FROM roam_session s
+        <where>
+            <include refid="sessionWindow"/>
+        </where>
+    </select>
+
+    <select id="fogByMember" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT f.member_id AS memberId, COUNT(1) AS revealedCells,
+               MIN(f.first_revealed_at) AS firstRevealedAt, MAX(f.last_revealed_at) AS lastRevealedAt
+        FROM roam_member_fog_cell f
+        <where>
+            <if test="memberId != null"> AND f.member_id = #{memberId} </if>
+        </where>
+        GROUP BY f.member_id
+        ORDER BY revealedCells DESC, f.member_id
+        LIMIT #{limit}
+    </select>
+
+    <select id="fogTotals" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT COUNT(1) AS revealedCells, COUNT(DISTINCT f.member_id) AS members,
+               COALESCE(SUM(f.last_revealed_at &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY)), 0) AS touchedLast7Days
+        FROM roam_member_fog_cell f
+    </select>
+
+    <select id="teams" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT t.id, t.owner_type AS ownerType, t.owner_id AS ownerId, t.leader_member_id AS leaderMemberId, t.title,
+               t.join_mode AS joinMode, t.max_members AS maxMembers, t.joined_count AS joinedCount, t.status,
+               t.expire_time AS expireTime, t.create_time AS createTime,
+               (SELECT COUNT(1) FROM play_team_member m WHERE m.team_id = t.id AND m.status = 1) AS activeMembers,
+               (SELECT COUNT(1) FROM play_team_member m WHERE m.team_id = t.id AND m.status = 0) AS pendingMembers
+        FROM play_team t
+        <where>
+            <if test="ownerType != null"> AND t.owner_type = #{ownerType} </if>
+            <if test="ownerId != null"> AND t.owner_id = #{ownerId} </if>
+            <if test="status != null"> AND t.status = #{status} </if>
+        </where>
+        ORDER BY t.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="playRuns" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT r.id, r.member_id AS memberId, r.activity_id AS activityId, r.topic_id AS topicId, r.run_state AS runState,
+               r.elapsed_seconds AS elapsedSeconds, r.create_time AS createTime, r.update_time AS updateTime
+        FROM player_run_session r
+        <where>
+            <if test="memberId != null"> AND r.member_id = #{memberId} </if>
+            <if test="topicId != null"> AND r.topic_id = #{topicId} </if>
+            <if test="runState != null and runState != ''"> AND r.run_state = #{runState} </if>
+        </where>
+        ORDER BY r.update_time DESC, r.id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="runtimeSessions" resultType="java.util.LinkedHashMap" useCache="false">
+        SELECT g.id, g.activity_id AS activityId, g.topic_id AS topicId, g.node_id AS nodeId, g.template_id AS templateId,
+               g.owner_type AS ownerType, g.owner_id AS ownerId, g.status, g.score, g.completed_units AS completedUnits,
+               g.started_at AS startedAt, g.deadline_at AS deadlineAt, g.completed_at AS completedAt
+        FROM game_runtime_session g
+        <where>
+            <if test="topicId != null"> AND g.topic_id = #{topicId} </if>
+            <if test="ownerType != null"> AND g.owner_type = #{ownerType} </if>
+            <if test="ownerId != null"> AND g.owner_id = #{ownerId} </if>
+            <if test="status != null"> AND g.status = #{status} </if>
+        </where>
+        ORDER BY g.id DESC
+        LIMIT #{limit}
+    </select>
+</mapper>
