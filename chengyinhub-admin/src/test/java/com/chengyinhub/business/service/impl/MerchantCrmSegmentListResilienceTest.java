@@ -18,7 +18,7 @@ import com.chengyinhub.business.access.merchant.MerchantRoleCode;
 import com.chengyinhub.business.domain.MerchantCrmSegment;
 import com.chengyinhub.business.domain.vo.MerchantCrmSegmentVO;
 import com.chengyinhub.business.mapper.MerchantCrmSegmentMapper;
-import com.chengyinhub.business.service.IMerchantAccessService;
+import com.chengyinhub.business.access.merchant.IMerchantAccessService;
 
 /** R9 BE-05: a damaged saved filter must not make the merchant's whole segment list fail. */
 class MerchantCrmSegmentListResilienceTest
