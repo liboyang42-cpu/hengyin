@@ -97,6 +97,10 @@
         <el-form-item label="经验奖励" prop="expReward">
           <el-input-number v-model="missionForm.expReward" :min="0" :precision="0" controls-position="right" />
         </el-form-item>
+        <el-form-item label="每日目标" prop="targetCount">
+          <el-input-number v-model="missionForm.targetCount" :min="1" :precision="0" controls-position="right" />
+          <div class="growth-config__audit-note">仅对每日任务（daily_walk / daily_reveal / daily_play / daily_shop）生效：当天真实次数达到目标即自动记完成。</div>
+        </el-form-item>
         <el-row :gutter="12">
           <el-col :span="12">
             <el-form-item label="状态" prop="status">
@@ -163,6 +167,7 @@ export default {
         { key: 'missionName', label: '任务名称', prop: 'missionName', minWidth: 160, showOverflowTooltip: true },
         { key: 'triggerEvent', label: '触发事件', prop: 'triggerEvent', minWidth: 160, showOverflowTooltip: true },
         { key: 'expReward', label: '经验奖励', prop: 'expReward', width: 96, align: 'center' },
+        { key: 'targetCount', label: '每日目标', prop: 'targetCount', width: 96, align: 'center' },
         { key: 'status', label: '状态', prop: 'status', width: 100, align: 'center' },
         { key: 'sortNo', label: '排序', prop: 'sortNo', width: 80, align: 'center' },
         { key: 'actions', label: '操作', width: 94, align: 'right', fixed: 'right', locked: true }
@@ -194,6 +199,7 @@ export default {
         missionDesc: '',
         triggerEvent: '',
         expReward: 0,
+        targetCount: 1,
         status: '0',
         sortNo: 0
       }
@@ -253,6 +259,7 @@ export default {
         missionDesc: row.missionDesc || '',
         triggerEvent: row.triggerEvent || '',
         expReward: Number(row.expReward || 0),
+        targetCount: Number(row.targetCount || 1),
         status: String(row.status == null ? '0' : row.status),
         sortNo: Number(row.sortNo || 0)
       } : this.emptyMissionForm()
