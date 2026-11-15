@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page theme-dark">
   <cy-toast id="cy-toast" />
   <cy-modal-host id="cy-modal-host" />
   <cy-nav-bar custom-back bind:back="onBack" />
