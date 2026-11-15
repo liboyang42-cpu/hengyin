@@ -57,13 +57,13 @@ node --test tests/unit/*.test.js
 #   they need node_modules (vue-template-compiler, vue-router) or belong to other pages.
 ```
 
-Admin console build (`npm ci` + SFC compile contract + `build:prod`): `npm ci` was still installing when this receipt was first committed; see the follow-up note below if it completed.
+Admin console build: **not run**. `npm ci --ignore-scripts` in `chengyinhub-ui` stalled for over 35 minutes in this environment (only 926 of the packages arrived, with no `vue` or `vue-cli-service`), so I stopped it and removed the partial `node_modules`. The SFC template-compile contract (`admin-sfc-template-compile-contract.test.js`) and `npm run build:prod` therefore still need a run on a machine that has the console dependencies.
 
 ## Not verified
 
 - No MySQL: the SQL ran on H2 (MySQL mode) with the touched columns only; `regexp`, `cast`, `exists` and the board joins should be re-checked on the test VPS MySQL.
 - No live AI call: the AI draft path is tested with a mocked `IAiCreatorService`; quota and model behaviour for the official operator member are as in production code.
-- No browser run of the dialogs (unit-level only).
+- No browser run of the dialogs (unit-level only), and no console build or SFC template compile (see above).
 - XLSX import was tested with a POI-generated workbook, not with files saved by Excel/WPS/Numbers.
 
 ## Owner actions and open questions
