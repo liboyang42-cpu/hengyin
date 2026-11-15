@@ -98,4 +98,13 @@
     <delete id="deletePushDevices">
         delete from push_device where member_id = #{memberId}
     </delete>
+
+    <!-- W5 C2 channels-messaging -->
+    <delete id="deleteMessageReactions">
+        delete from im_message_reaction where member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteMentionsOfMember">
+        delete from im_message_mention where mention_type in ('USER', 'REPLY') and target_id = #{memberId}
+    </delete>
 </mapper>

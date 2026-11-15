@@ -62,6 +62,15 @@ class MemberPrivacyErasureServiceTest {
             assertEquals(2, counts.get("roam_member_fog_cell"));
             assertEquals(2, counts.get("push_device"));
 
+            // W5 C2: reactions and mention rows that name member 7 are gone; role mentions (not a member id) stay.
+            assertEquals(1, counts.get("im_message_reaction"));
+            assertEquals(2, counts.get("im_message_mention"));
+            assertEquals(0, f.count("im_message_reaction", ERASED));
+            assertEquals(1, f.count("im_message_reaction", OTHER));
+            assertEquals(0, f.db.queryForObject("select count(*) from im_message_mention where target_id=? and mention_type in ('USER','REPLY')",
+                    Integer.class, ERASED));
+            assertEquals(3, f.db.queryForObject("select count(*) from im_message_mention where target_id=?", Integer.class, OTHER));
+
             // Roam sessions: kept with aggregates, every coordinate gone.
             Map<String, Object> s7 = f.db.queryForMap("select * from roam_session where member_id=?", ERASED);
             assertNull(s7.get("last_lat"));
@@ -216,6 +225,10 @@ class MemberPrivacyErasureServiceTest {
                     + " member_id bigint, linked_at datetime)");
             db.execute("create table push_device(id bigint auto_increment primary key, member_id bigint, token varchar(200),"
                     + " environment varchar(12))");
+            db.execute("create table im_message_reaction(message_id bigint not null, member_id bigint not null,"
+                    + " emoji varchar(16) not null, conversation_id bigint not null, primary key(message_id, member_id, emoji))");
+            db.execute("create table im_message_mention(message_id bigint not null, mention_type varchar(16) not null,"
+                    + " target_id bigint not null default 0, primary key(message_id, mention_type, target_id))");
             db.execute("create table roam_territory(territory_id char(36) primary key, owner_member_id bigint not null,"
                     + " claim_photo_url varchar(500) not null, claim_request_id varchar(96) not null, status varchar(16),"
                     + " latitude decimal(16,12), longitude decimal(16,12), unique(owner_member_id, claim_request_id))");
@@ -267,6 +280,10 @@ class MemberPrivacyErasureServiceTest {
                     UUID.randomUUID().toString(), m);
             db.update("insert into push_device(member_id,token,environment) values(?,?,'PRODUCTION')", m, "aa" + m);
             db.update("insert into push_device(member_id,token,environment) values(?,?,'SANDBOX')", m, "bb" + m);
+            db.update("insert into im_message_reaction values(900,?,'heart',50)", m);
+            db.update("insert into im_message_mention values(?,'USER',?)", 900 + m, m);
+            db.update("insert into im_message_mention values(?,'REPLY',?)", 950 + m, m);
+            db.update("insert into im_message_mention values(?,'ROLE',?)", 970 + m, m);
             db.update("insert into roam_territory values(?,?,'https://img/claim.jpg','claim-1','ACTIVE',31.2,121.4)", "terr-" + m, m);
             db.update("insert into roam_territory_checkin values(?,?,?,?,'claim-1',31.2,121.4,'https://img/claim.jpg')",
                     "ck-claim-" + m, "terr-" + m, m, m);

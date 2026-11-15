@@ -51,8 +51,4 @@ public interface ImMessagingMapper
 
     /** 每条消息每个表情的人数，以及本人是否点过。 */
     List<Map<String, Object>> selectReactionCounts(@Param("ids") List<Long> ids, @Param("viewer") long viewer);
-
-    // ---------------------------------------------------------------- erasure
-
-    int deleteMemberReactions(@Param("memberId") long memberId);
 }

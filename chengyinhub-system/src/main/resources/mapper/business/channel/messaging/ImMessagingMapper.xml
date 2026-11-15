@@ -83,8 +83,4 @@
          where message_id in <foreach collection="ids" item="i" open="(" separator="," close=")">#{i}</foreach>
          group by message_id, emoji
     </select>
-
-    <delete id="deleteMemberReactions">
-        delete from im_message_reaction where member_id = #{memberId}
-    </delete>
 </mapper>
