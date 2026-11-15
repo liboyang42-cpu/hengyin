@@ -120,6 +120,7 @@
           WHEN #{mode}='FEATURED' THEN 'EDITOR_PICK'
           WHEN #{mode}='TRENDING' THEN 'HEALTHY_TREND'
           WHEN #{mode}='FOR_YOU' THEN 'RELEVANT_EXPLORATION'
+          WHEN #{mode}='PLACE' THEN 'LINKED_PLACE'
           ELSE 'CHRONOLOGICAL'
         END reason_code,
         (p.like_count + p.bookmark_count*2 + p.comment_count*2) trending_score
@@ -156,6 +157,23 @@
               AND (fe.ends_at IS NULL OR fe.ends_at&gt;NOW()))
           </when>
           <when test="mode == 'FOR_YOU' or mode == 'TRENDING'">AND p.recommendation_eligible=1</when>
+          <!-- K2 discovery (MKT-09): posts linked to one shop. Same visibility policy as every feed (only published,
+               audience-visible posts; held, hidden and removed posts never show). A merchant's page also lists posts
+               linked to its places, and a place that belongs to a merchant also lists posts linked to the merchant. -->
+          <when test="mode == 'PLACE'">
+            AND EXISTS(SELECT 1 FROM community_post_reference lr
+              WHERE lr.post_id=p.id AND lr.invalidated_at IS NULL
+                AND (
+                  (lr.reference_type=#{placeType} AND lr.reference_id=#{placeId})
+                  <if test="placeType == 'MERCHANT'">
+                  OR (lr.reference_type='POI' AND lr.reference_id IN (SELECT lp.id FROM roam_poi lp WHERE lp.merchant_id=#{placeId}))
+                  </if>
+                  <if test="placeType == 'POI'">
+                  OR (lr.reference_type='MERCHANT' AND lr.reference_id IN (SELECT lp.merchant_id FROM roam_poi lp
+                        WHERE lp.id=#{placeId} AND lp.merchant_id IS NOT NULL))
+                  </if>
+                ))
+          </when>
         </choose>
         <choose>
           <when test="mode == 'TRENDING'">
@@ -359,6 +377,10 @@
         <when test="referenceType == 'POI'">
           SELECT COUNT(*) FROM roam_poi WHERE id=#{referenceId} AND COALESCE(status,1)=1
         </when>
+        <!-- K2 discovery (MKT-09): a shop-visit post may link a public merchant (same rule as /api/merchant/public-home). -->
+        <when test="referenceType == 'MERCHANT'">
+          SELECT COUNT(*) FROM mms_merchant m WHERE m.id=#{referenceId} AND m.status=1 AND m.account_status=1 AND m.del_flag=0
+        </when>
         <otherwise>SELECT 0</otherwise>
       </choose>
     </select>
@@ -399,6 +421,11 @@
                  COALESCE(p.city_code,p.description) subtitle
           FROM roam_poi p WHERE p.id=#{referenceId} AND p.status=1
         </when>
+        <when test="referenceType == 'MERCHANT'">
+          SELECT m.id reference_id,'MERCHANT' reference_type,m.name title,
+                 COALESCE(NULLIF(m.cover_image,''),m.logo) cover_url,COALESCE(m.address,'') subtitle
+          FROM mms_merchant m WHERE m.id=#{referenceId} AND m.status=1 AND m.account_status=1 AND m.del_flag=0
+        </when>
         <otherwise>SELECT NULL WHERE 1=0</otherwise>
       </choose>
     </select>
@@ -430,6 +457,11 @@
           FROM roam_poi p WHERE p.status=1 AND p.city_code IS NOT NULL AND p.city_code&lt;&gt;''
           ORDER BY p.id DESC LIMIT #{limit}
         </when>
+        <when test="referenceType == 'MERCHANT'">
+          SELECT m.id,m.name,NULL city_code,COALESCE(m.address,'') subtitle
+          FROM mms_merchant m WHERE m.status=1 AND m.account_status=1 AND m.del_flag=0
+          ORDER BY m.id DESC LIMIT #{limit}
+        </when>
         <!-- P0-24:与 countReferenceTarget / selectReferenceSnapshot 同口径(club.status=1 未删);
              只列本人创建或已通过的俱乐部。原 MEMBER 分支已移除:发帖白名单不收 MEMBER,选了必 400。 -->
         <when test="referenceType == 'CLUB'">
@@ -443,6 +475,40 @@
         </when>
         <otherwise>SELECT NULL id,NULL name,NULL subtitle WHERE 1=0</otherwise>
       </choose>
+    </select>
+    <!-- K2 discovery (MKT-09): composer shop picker. Published, approved places (same rule as the roam map) and public
+         merchants that have no published place yet (a merchant with a place is picked through its place, which carries
+         merchant_id). Keyword is escaped by the caller. With a point: a ~25 km box, nearest first. Read only. -->
+    <select id="selectShopOptions" resultType="java.util.LinkedHashMap">
+      SELECT s.reference_type,s.reference_id,s.name,s.subtitle,s.city_code,s.merchant_id FROM (
+        SELECT 'POI' reference_type,p.id reference_id,p.name name,COALESCE(p.address,'') subtitle,
+               p.city_code city_code,p.merchant_id merchant_id,p.lat lat,p.lng lng
+        FROM roam_poi p
+        WHERE p.status=1
+          AND (p.application_type IS NULL OR p.application_type=2
+               OR (p.application_type IN (1,3) AND p.audit_status=1))
+          <if test="keyword != null and keyword != ''">AND p.name LIKE CONCAT('%',#{keyword},'%')</if>
+          <if test="lat != null and lng != null">
+            AND p.lat BETWEEN #{lat}-0.25 AND #{lat}+0.25 AND p.lng BETWEEN #{lng}-0.25 AND #{lng}+0.25
+          </if>
+        UNION ALL
+        SELECT 'MERCHANT' reference_type,m.id reference_id,m.name name,COALESCE(m.address,'') subtitle,
+               NULL city_code,m.id merchant_id,m.location_lat lat,m.location_lng lng
+        FROM mms_merchant m
+        WHERE m.status=1 AND m.account_status=1 AND m.del_flag=0
+          AND NOT EXISTS(SELECT 1 FROM roam_poi mp WHERE mp.merchant_id=m.id AND mp.status=1)
+          <if test="keyword != null and keyword != ''">AND m.name LIKE CONCAT('%',#{keyword},'%')</if>
+          <if test="lat != null and lng != null">
+            AND m.location_lat BETWEEN #{lat}-0.25 AND #{lat}+0.25 AND m.location_lng BETWEEN #{lng}-0.25 AND #{lng}+0.25
+          </if>
+      ) s
+      <choose>
+        <when test="lat != null and lng != null">
+          ORDER BY POWER(s.lat-#{lat},2)+POWER((s.lng-#{lng})*COS(RADIANS(#{lat})),2) ASC,s.reference_type ASC,s.reference_id ASC
+        </when>
+        <otherwise>ORDER BY s.reference_type DESC,s.reference_id DESC</otherwise>
+      </choose>
+      LIMIT #{limit}
     </select>
     <delete id="deleteReferences">DELETE FROM community_post_reference WHERE post_id=#{postId}</delete>
     <select id="selectReferences" resultType="map">

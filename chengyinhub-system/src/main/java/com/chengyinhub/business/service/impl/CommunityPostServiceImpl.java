@@ -53,7 +53,9 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
     private static final Set<String> DISCLOSURES = set("NONE", "SPONSORED", "GIFTED", "MERCHANT_OWNER", "MERCHANT_EMPLOYEE");
     private static final Set<String> ACTIONS = set("LIKE", "BOOKMARK", "NOT_INTERESTED", "SEE_LESS_AUTHOR", "SEE_LESS_TOPIC");
     private static final Set<String> FEEDS = set("LATEST", "FOLLOWING", "NEARBY", "TOPIC", "COMMUNITY", "FEATURED", "FOR_YOU", "TRENDING");
-    private static final Set<String> REFERENCE_TYPES = set("ACTIVITY", "TOPIC", "ROUTE", "CLUB", "POI");
+    private static final Set<String> REFERENCE_TYPES = set("ACTIVITY", "TOPIC", "ROUTE", "CLUB", "POI", "MERCHANT");
+    /** K2 discovery (MKT-09): a shop is a roam place (POI) or a public merchant (MERCHANT). */
+    private static final Set<String> SHOP_TYPES = set("POI", "MERCHANT");
     private static final Set<String> REFERENCE_PRIVACY = set("PUBLIC_SAFE");
     private static final Set<String> AUTHOR_SAFETY_LABELS = set("DANGEROUS_ACTIVITY", "SENSITIVE_CONTENT",
             "FLASHING_IMAGES", "SPOILER", "TEMPORARY_CLOSURE", "ACCESSIBILITY_LIMIT", "WEATHER_RISK");
@@ -487,6 +489,52 @@ public class CommunityPostServiceImpl implements ICommunityPostService {
             throw error("不支持的关联类型", 400);
         }
         return mapper.selectReferenceOptions(type, memberId, boundedLimit(limit));
+    }
+
+    @Override
+    public List<Map<String, Object>> shopOptions(Long memberId, String keyword, Double lat, Double lng, Integer limit) {
+        requirePrincipal(memberId);
+        String term = keyword == null ? null : keyword.trim();
+        if (term != null && term.length() > 40) throw error("搜索词太长", 400);
+        boolean point = lat != null && lng != null;
+        if (point && (!Double.isFinite(lat) || !Double.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180)) {
+            throw error("位置无效", 400);
+        }
+        List<Map<String, Object>> rows = mapper.selectShopOptions(blank(term) ? null : escapeLike(term),
+                point ? lat : null, point ? lng : null, boundedLimit(limit));
+        return rows == null ? new ArrayList<>() : rows;
+    }
+
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public Map<String, Object> placePosts(Long viewerId, String placeType, Long placeId, Long cursor, Integer limit) {
+        String type = upper(placeType);
+        if (!SHOP_TYPES.contains(type) || !positive(placeId)) throw error("店铺无效", 400);
+        CommunityPostFeedQuery query = new CommunityPostFeedQuery();
+        query.setViewerId(viewerId == null || viewerId < 0 ? 0L : viewerId);
+        query.setMode("PLACE");
+        query.setPlaceType(type);
+        query.setPlaceId(placeId);
+        query.setCursor(cursor);
+        int size = boundedLimit(limit);
+        query.setLimit(size + 1);
+        List<CommunityPost> rows = mapper.selectFeed(query);
+        if (rows == null) rows = new ArrayList<>();
+        boolean hasMore = rows.size() > size;
+        if (hasMore) rows = new ArrayList<>(rows.subList(0, size));
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (CommunityPost post : rows) items.add(hydrate(post, query.getViewerId()));
+        Map<String, Object> result = new HashMap<>();
+        result.put("items", items);
+        result.put("hasMore", hasMore);
+        result.put("nextCursor", rows.isEmpty() ? null : rows.get(rows.size() - 1).getId());
+        result.put("placeType", type);
+        result.put("placeId", placeId);
+        return result;
+    }
+
+    private static String escapeLike(String term) {
+        return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     @Override
