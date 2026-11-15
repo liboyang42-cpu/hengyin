@@ -206,15 +206,46 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
     @Autowired(required = false)
     private AlarmService cardMintAlarmService;
 
+    @Autowired(required = false)
+    private GameRandom gameRandom;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final AdvancedGameConfigValidator configValidator = new AdvancedGameConfigValidator();
     private AdvancedGameClock clock = Date::new;
-    private AdvancedGameRandom random = new SecureRandom()::nextInt;
+    private final AdvancedGameRandom defaultRandom = new SecureRandom()::nextInt;
+    private AdvancedGameRandom random = defaultRandom;
     /** C1 挑战身份的随机源。测试可替换 */
     private java.util.function.LongSupplier attemptIdSource = new SecureRandom()::nextLong;
 
     private AdvancedActionJudgement actionJudgement() {
         return new AdvancedActionJudgement(objectMapper, clock, random, attemptIdSource);
+    }
+
+    private AdvancedActionJudgement actionJudgement(String normalizedAction, JsonNode config,
+                                                    GameRuntimeSession session, Long memberId,
+                                                    String idempotencyKey) {
+        if (gameRandom == null || random != defaultRandom) {
+            return actionJudgement();
+        }
+        String domain = null;
+        if ("FLIP_COIN".equals(normalizedAction)) {
+            domain = com.chengyinhub.business.service.IGameRandomService.DOMAIN_PLAYKIT_COIN;
+        } else if ("ROLL_DICE".equals(normalizedAction)) {
+            domain = "d20".equals(config.path("diceRoll").path("mode").asText())
+                    ? com.chengyinhub.business.service.IGameRandomService.DOMAIN_PLAYKIT_D20
+                    : com.chengyinhub.business.service.IGameRandomService.DOMAIN_PLAYKIT_DICE;
+        } else if ("DRAW".equals(normalizedAction)) {
+            domain = com.chengyinhub.business.service.IGameRandomService.DOMAIN_PLAYKIT_RANDOM;
+        }
+        if (domain == null) {
+            return actionJudgement();
+        }
+        String prefix = (idempotencyKey == null || idempotencyKey.isBlank())
+                ? null
+                : ("playkit:" + session.getId() + ":" + idempotencyKey.trim());
+        AdvancedGameRandom auditedRandom = gameRandom.scoped(
+                domain, prefix, memberId, "game_runtime_session", String.valueOf(session.getId()));
+        return new AdvancedActionJudgement(objectMapper, clock, auditedRandom, attemptIdSource);
     }
 
     private ObjectNode serverGameplayDecision(String action, JsonNode config, ObjectNode state) {
@@ -594,9 +625,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if (attemptGame != null && !challengeTimedOut) actionJudgement().requireCurrentAttempt(state.path(attemptGame), safePayload, memberId);
         if (!challengeTimedOut) {
             if (AdvancedActionJudgement.handles(normalizedAction)) {
-                AdvancedActionJudgement.Plan plan = actionJudgement().evaluate(
-                        AdvancedActionJudgement.Action.valueOf(normalizedAction),
-                        new AdvancedActionJudgement.Input(config, state, safePayload, session.getScore(), memberId));
+                AdvancedActionJudgement.Plan plan = actionJudgement(normalizedAction, config, session, memberId, idempotencyKey)
+                        .evaluate(
+                                AdvancedActionJudgement.Action.valueOf(normalizedAction),
+                                new AdvancedActionJudgement.Input(config, state, safePayload, session.getScore(), memberId));
                 // Upload-reference I/O remains in this transaction owner, before any proposed state is applied.
                 if (plan.photoEvidence() != null) {
                     photoEvidenceVerifier.accept(plan.photoEvidence().imageUrl(), plan.photoEvidence().memberId());

@@ -6,6 +6,7 @@ import com.chengyinhub.business.domain.RewardDropLog;
 import com.chengyinhub.business.domain.RewardDropRule;
 import com.chengyinhub.business.mapper.RewardDropLogMapper;
 import com.chengyinhub.business.mapper.RewardDropRuleMapper;
+import com.chengyinhub.business.service.IGameRandomService;
 import com.chengyinhub.business.service.IRewardDropService;
 import com.chengyinhub.system.service.ISysConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +14,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -26,13 +26,12 @@ import java.util.Map;
  * <ul>
  *   <li>幂等:reward_drop_log 的 uk(member,topic,node,activity) + 掷骰前 countByUk 预检 + 并发 DuplicateKey 兜底
  *       → 同一节点重放/并发绝不多掉;</li>
- *   <li>无偏:SecureRandom 掷骰(万分基础概率)+ 按 weight 抽取类型。</li>
+ *   <li>无偏:统一可审计随机核心 {@link GameRandom}（SecureRandom 默认）掷骰 + 按 weight 抽取类型。</li>
  * </ul>
  */
 @Service
 public class RewardDropServiceImpl implements IRewardDropService {
 
-    private static final SecureRandom RANDOM = new SecureRandom();
     private static final int DEFAULT_PROB_BP = 1500; // 15%
 
     @Autowired
@@ -43,6 +42,15 @@ public class RewardDropServiceImpl implements IRewardDropService {
     private ISysConfigService configService;
     @Autowired
     private com.chengyinhub.business.mapper.CouponSourceGrantMapper couponSourceGrantMapper;
+    @Autowired(required = false)
+    private GameRandom gameRandom;
+
+    private GameRandom effectiveRandom() {
+        if (gameRandom == null) {
+            gameRandom = new GameRandom();
+        }
+        return gameRandom;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -61,19 +69,30 @@ public class RewardDropServiceImpl implements IRewardDropService {
         if (logMapper.countByUk(memberId, tId, nodeId, aId, sceneKey) > 0) {
             return null;
         }
-        // 2) 掷骰
-        if (!hit(baseProbBp())) {
+        String receiptPrefix = "drop:" + memberId + ":" + tId + ":" + nodeId + ":" + aId + ":" + sceneKey;
+        // 2) 掷骰（写入 game_random_audit REWARD_DROP）
+        if (!effectiveRandom().hitBp(baseProbBp(), receiptPrefix + ":hit", memberId, "reward_drop", String.valueOf(nodeId))) {
             return null;
         }
         // 3) 按 weight 抽类型
         List<RewardDropRule> rules = ruleMapper.selectApplicableRules(tId, sceneKey);
-        RewardDropRule pick = weightedPick(rules);
-        if (pick == null) {
+        IGameRandomService.PickResult<RewardDropRule> picked = effectiveRandom().weightedPick(
+                IGameRandomService.DOMAIN_REWARD_DROP,
+                rules,
+                this::weightOf,
+                receiptPrefix + ":pick",
+                memberId,
+                "reward_drop_rule",
+                String.valueOf(nodeId),
+                r -> r.getDropType() + ":" + r.getId());
+        if (picked == null || picked.item() == null) {
             return null;
         }
+        RewardDropRule pick = picked.item();
         // 4) 组描述 + 占位(uk 抢占,失败=并发已掉)
         Map<String, Object> drop = buildDrop(pick, nodeXp);
         drop.put("sceneKey", sceneKey);
+        drop.put("randomReceiptId", picked.draw().receiptId());
         RewardDropLog log = new RewardDropLog();
         log.setMemberId(memberId);
         log.setTopicId(tId);
@@ -121,7 +140,7 @@ public class RewardDropServiceImpl implements IRewardDropService {
 
     // ---------- 可测方法(包级) ----------
 
-    /** 掷骰命中:SecureRandom 万分判定 */
+    /** 掷骰命中:GameRandom 万分判定 */
     boolean hit(int probBp) {
         if (probBp <= 0) {
             return false;
@@ -129,7 +148,7 @@ public class RewardDropServiceImpl implements IRewardDropService {
         if (probBp >= 10000) {
             return true;
         }
-        return RANDOM.nextInt(10000) < probBp;
+        return effectiveRandom().nextInt(10000) < probBp;
     }
 
     /** 按 weight 加权抽取 */
@@ -144,7 +163,7 @@ public class RewardDropServiceImpl implements IRewardDropService {
         if (total <= 0) {
             return null;
         }
-        int r = RANDOM.nextInt(total);
+        int r = effectiveRandom().nextInt(total);
         int acc = 0;
         for (RewardDropRule rule : rules) {
             acc += weightOf(rule);
