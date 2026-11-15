@@ -105,12 +105,13 @@ class CityGameMysqlIntegrationTest {
                 "DROP TABLE IF EXISTS city_game_round", "DROP TABLE IF EXISTS city_game_roll", "DROP TABLE IF EXISTS city_game_task_attempt",
                 "DROP TABLE IF EXISTS city_game_quote", "DROP TABLE IF EXISTS city_game_request", "DROP TABLE IF EXISTS city_game_event",
                 "DROP TABLE IF EXISTS city_game_outing", "DROP TABLE IF EXISTS ums_member", "DROP TABLE IF EXISTS ums_member_points_detail",
-                "DROP TABLE IF EXISTS city_point_event", "DROP TABLE IF EXISTS city_map_stream", "DROP TABLE IF EXISTS city_r491_request");
+                "DROP TABLE IF EXISTS city_point_event", "DROP TABLE IF EXISTS city_map_stream", "DROP TABLE IF EXISTS city_r491_request", "DROP TABLE IF EXISTS city_game_board_draft", "DROP TABLE IF EXISTS city_game_board_audit", "DROP TABLE IF EXISTS roam_territory_audit", "DROP TABLE IF EXISTS roam_territory_checkin", "DROP TABLE IF EXISTS roam_territory", "DROP TABLE IF EXISTS sys_menu");
         String baseline = Files.readString(Paths.get("../sql/base_schema_20260818.sql"));
-        execute(table(baseline, "ums_member"), table(baseline, "ums_member_points_detail"));
+        execute(table(baseline, "ums_member"), table(baseline, "ums_member_points_detail"), table(baseline, "sys_menu"));
         // The real, unmodified migration files, each on one connection (session variables in guarded ALTERs).
         migrate("sql/migration_20261113_gaps_a_city_game.sql");
         migrate("sql/migration_20261114_gaps_a_city_r491.sql");
+        migrate("sql/migration_20261123_sys_citygame.sql");
         execute("INSERT INTO ums_member(id, role, status, del_flag, point) VALUES (7001,'player',1,0,100),(7002,'player',1,0,0),"
                 + "(7101,'player',1,0,50),(7999,'player',1,0,10)");
         execute("INSERT INTO city_game_board(board_id, game_id, region_id, season_id, rules_release_id, release_id, rules_hash, rule_version,"

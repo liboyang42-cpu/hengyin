@@ -258,14 +258,13 @@ public class CityGameActionService {
         if (action == Action.ROLL_ROUND) {
             if (!boardId.equals(targetId)) return a.close("REJECTED", "TARGET_MISMATCH");
             if (expectedVersion != a.currentVersion) return a.close("VERSION_CONFLICT", null);
-            CityGameRules.Dice dice = CityGameRules.dice((String) board.get("diceFaces"), (String) board.get("diceWeights"));
-            int face = dice.roll(random);
-            int position = CityGameRules.advance(((Number) team.get("trackPosition")).intValue(), face, mapper.countTrack(boardId));
-            Map<String, Object> landed = mapper.selectPropertyByTrack(boardId, position);
-            mapper.insertRoll(boardId, a.teamId, roundSeq, memberId, requestId, "MOVE", (String) board.get("diceId"), face);
-            mapper.moveTeam(a.teamId, position, landed == null ? null : (String) landed.get("propertyId"));
-            a.diceFace = face;
-            return a.apply(units, "TEAM_MOVED", null);
+            UnifiedRollResult rolled = executeUnifiedDiceRoll(board, team, roundSeq, memberId, requestId,
+                    "MOVE", "GAME_ACTION_ROLL_ROUND", r -> com.alibaba.fastjson2.JSON.toJSONString(
+                            unifiedResultPayload(board, requestId, roundSeq, r, "APPLIED", clock.getAsLong())));
+            a.diceFace = rolled.face;
+            a.currentVersion = rolled.boardVersion;
+            a.outing(0, 0);
+            return a.store("APPLIED", null);
         }
         if (action == Action.SUBMIT_EVIDENCE || action == Action.COMPLETE_SERVICE_VISIT) return a.close("REJECTED", "UNSUPPORTED_ACTION");
 
@@ -470,37 +469,233 @@ public class CityGameActionService {
         return mapper.selectBoard((String) board.get("boardId"));
     }
 
-    /** Result of one r491 budget roll: recorded only, the team token does not move. */
-    public static final class BudgetRoll {
-        public final int faceIndex, face, before, after;
+    /** Result of one server-authoritative unified dice roll (movement + budget + audit). */
+    public static final class UnifiedRollResult {
+        public final int faceIndex, face, previousPosition, newPosition, beforeUnits, afterUnits;
+        public final long randomTicket, totalWeight, boardVersion;
+        public final String landedPropertyId;
 
-        BudgetRoll(int faceIndex, int face, int before, int after) {
+        UnifiedRollResult(int faceIndex, int face, int previousPosition, int newPosition, int beforeUnits,
+                          int afterUnits, long randomTicket, long totalWeight, long boardVersion,
+                          String landedPropertyId) {
             this.faceIndex = faceIndex;
             this.face = face;
-            this.before = before;
-            this.after = after;
+            this.previousPosition = previousPosition;
+            this.newPosition = newPosition;
+            this.beforeUnits = beforeUnits;
+            this.afterUnits = afterUnits;
+            this.randomTicket = randomTicket;
+            this.totalWeight = totalWeight;
+            this.boardVersion = boardVersion;
+            this.landedPropertyId = landedPropertyId;
         }
     }
 
     /**
-     * r491 action-budget ROLL: the server rolls the published weighted die, records the result and spends roll_cost
-     * units of the team round. It has no movement, ownership or points effect (contract CITY_ACTION_BUDGET_V2).
-     * Caller holds the board lock (selectBoardForUpdate) and the team lock.
+     * Single server-authoritative dice roll path shared by /game/action (ROLL_ROUND),
+     * /action-budget/command (ROLL), and /dice/roll. Caller holds board + team locks.
      */
-    BudgetRoll budgetRoll(Map<String, Object> board, String teamId, long roundSeq, long memberId, String requestId,
-                          java.util.function.Function<int[], String> resultJson) {
+    UnifiedRollResult executeUnifiedDiceRoll(Map<String, Object> board, Map<String, Object> team, long roundSeq,
+                                             long memberId, String requestId, String purpose, String sourcePath,
+                                             java.util.function.Function<UnifiedRollResult, String> resultJsonSupplier) {
         String boardId = (String) board.get("boardId");
+        String teamId = (String) team.get("teamId");
         Map<String, Object> round = mapper.selectRoundForUpdate(boardId, teamId, roundSeq);
         int cost = ((Number) board.get("rollCost")).intValue();
         int before = ((Number) round.get("actionsRemaining")).intValue();
+        if (before < cost) throw new CityGameException(409, "ACTION_BUDGET_EXHAUSTED", "本回合行动力不足");
         CityGameRules.Dice dice = CityGameRules.dice((String) board.get("diceFaces"), (String) board.get("diceWeights"));
-        int index = dice.rollIndex(random);
+        int totalWeight = dice.totalWeight();
+        int ticket = Math.floorMod(random.applyAsInt(totalWeight), totalWeight);
+        int index = dice.indexForTicket(ticket);
         int face = dice.face(index);
-        mapper.insertBudgetRoll(boardId, teamId, roundSeq, memberId, requestId, (String) board.get("diceId"), face, index,
-                resultJson.apply(new int[]{index, face, before, before - cost}));
-        recordEvent(board, "BUDGET_ROLLED", null, teamId);
+        int previousPosition = ((Number) team.get("trackPosition")).intValue();
+        int trackCount = mapper.countTrack(boardId);
+        int newPosition = trackCount <= 0 ? previousPosition : CityGameRules.advance(previousPosition, face, trackCount);
+        Map<String, Object> landed = trackCount <= 0 ? null : mapper.selectPropertyByTrack(boardId, newPosition);
+        String landedPropertyId = landed == null ? null : (String) landed.get("propertyId");
+        mapper.moveTeam(teamId, newPosition, landedPropertyId);
+        long boardVersion = recordEvent(board, "TEAM_MOVED", landedPropertyId, teamId);
+        UnifiedRollResult rolled = new UnifiedRollResult(index, face, previousPosition, newPosition, before,
+                before - cost, ticket, totalWeight, boardVersion, landedPropertyId);
+        String resultJson = resultJsonSupplier == null ? null : resultJsonSupplier.apply(rolled);
+        mapper.insertUnifiedRoll(boardId, teamId, roundSeq, memberId, requestId, purpose, (String) board.get("diceId"),
+                face, index, resultJson, sourcePath, (long) ticket, (long) totalWeight, previousPosition,
+                newPosition, landedPropertyId, before, before - cost, boardVersion);
+        Map<String, Object> auditDetail = new LinkedHashMap<>();
+        auditDetail.put("sourcePath", sourcePath);
+        auditDetail.put("purpose", purpose);
+        auditDetail.put("teamId", teamId);
+        auditDetail.put("roundSeq", roundSeq);
+        auditDetail.put("requestId", requestId);
+        auditDetail.put("diceId", board.get("diceId"));
+        auditDetail.put("faceIndex", index);
+        auditDetail.put("face", face);
+        auditDetail.put("randomTicket", ticket);
+        auditDetail.put("totalWeight", totalWeight);
+        auditDetail.put("previousPosition", previousPosition);
+        auditDetail.put("newPosition", newPosition);
+        auditDetail.put("landedPropertyId", landedPropertyId);
+        auditDetail.put("beforeUnits", before);
+        auditDetail.put("afterUnits", before - cost);
+        auditDetail.put("boardVersion", boardVersion);
+        mapper.insertBoardAudit(boardId, "DICE_ROLL", memberId, "PLAYER", null,
+                com.alibaba.fastjson2.JSON.toJSONString(auditDetail));
         spend(board, teamId, roundSeq, cost);
-        return new BudgetRoll(index, face, before, before - cost);
+        return rolled;
+    }
+
+    static Map<String, Object> unifiedResultPayload(Map<String, Object> board, String requestId, long roundSeq,
+                                                    UnifiedRollResult r, String effectsStatus, long nowMillis) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("requestId", requestId);
+        row.put("boardId", board.get("boardId"));
+        row.put("roundSeq", roundSeq);
+        row.put("diceId", board.get("diceId"));
+        row.put("createdAt", iso(new Date(nowMillis)));
+        row.put("effectsStatus", effectsStatus);
+        row.put("movementStatus", "AVAILABLE");
+        row.put("faceIndex", r.faceIndex);
+        row.put("faceValue", (long) r.face);
+        row.put("previousPosition", r.previousPosition);
+        row.put("newPosition", r.newPosition);
+        row.put("landedPropertyId", r.landedPropertyId);
+        row.put("beforeUnits", r.beforeUnits);
+        row.put("afterUnits", r.afterUnits);
+        row.put("randomTicket", r.randomTicket);
+        row.put("totalWeight", r.totalWeight);
+        row.put("boardVersion", r.boardVersion);
+        return row;
+    }
+
+    /** Direct unified dice roll endpoint (/api/city-game/dice/roll) with requestId idempotency and audit. */
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> unifiedDiceRoll(Long memberId, Map<String, Object> body) {
+        requireMember(memberId);
+        if (body == null) throw new CityGameException(400, "CITY_ACTION_INVALID", "掷骰子请求无效");
+        String requestId = str(body, "requestId");
+        String boardIdParam = str(body, "boardId");
+        String regionId = str(body, "regionId");
+        if (!CityGameRules.id(requestId)) {
+            throw new CityGameException(400, "CITY_ACTION_INVALID", "requestId 无效");
+        }
+        Map<String, Object> current = CityGameRules.id(boardIdParam) ? mapper.selectBoard(boardIdParam)
+                : (CityGameRules.id(regionId) ? mapper.selectCurrentBoard(regionId) : null);
+        if (current == null) throw new CityGameException(404, "CITY_BOARD_NOT_FOUND", "城市棋盘不存在");
+        String resolvedBoardId = (String) current.get("boardId");
+        String hash = CityGameRules.requestHash(body);
+        Map<String, Object> board = freezeIfDue(mapper.selectBoardForUpdate(resolvedBoardId));
+        Map<String, Object> previous = mapper.selectRequest(memberId, "unified-dice", requestId);
+        if (previous != null) {
+            if (!hash.equals(previous.get("requestHash"))) {
+                throw new CityGameException(409, "CITY_REQUEST_REUSED", "请求编号已用于其他行动");
+            }
+            Map<String, Object> out = receipt(previous);
+            out.put("idempotentReplay", true);
+            List<Map<String, Object>> matching = mapper.selectBoardRollAudit(resolvedBoardId, 30);
+            for (Map<String, Object> rollRow : matching) {
+                if (requestId.equals(rollRow.get("requestId"))) {
+                    out.put("roll", rollRow);
+                    break;
+                }
+            }
+            return out;
+        }
+        Long expectedInput = num(body, "expectedVersion");
+        Attempt a = new Attempt(memberId, requestId, hash, Action.ROLL_ROUND, board,
+                expectedInput != null ? expectedInput : ((Number) board.get("boardVersion")).longValue());
+        a.currentVersion = ((Number) board.get("boardVersion")).longValue();
+        if (!"OPEN".equals(board.get("lifecycle"))) {
+            Map<String, Object> closed = a.close("BLOCKED", "BOARD_NOT_OPEN");
+            closed.put("idempotentReplay", false);
+            return closed;
+        }
+        Membership m = membership(mapper, resolvedBoardId, memberId);
+        if (!m.joined()) {
+            Map<String, Object> closed = a.close("REJECTED", "NOT_JOINED");
+            closed.put("idempotentReplay", false);
+            return closed;
+        }
+        Map<String, Object> team = mapper.selectTeamForUpdate(m.teamId());
+        a.teamId = m.teamId();
+        Map<String, Object> round = mapper.selectOpenRound(resolvedBoardId, a.teamId);
+        if (round == null) {
+            Map<String, Object> closed = a.close("REJECTED", "ACTION_BUDGET_EXHAUSTED");
+            closed.put("idempotentReplay", false);
+            return closed;
+        }
+        long roundSeq = ((Number) round.get("roundSeq")).longValue();
+        a.roundSeq = roundSeq;
+        if (expectedInput != null && expectedInput != a.currentVersion) {
+            Map<String, Object> closed = a.close("VERSION_CONFLICT", null);
+            closed.put("idempotentReplay", false);
+            return closed;
+        }
+        int cost = CityGameRules.actionCost(Action.ROLL_ROUND, board);
+        if (((Number) round.get("actionsRemaining")).intValue() < cost) {
+            Map<String, Object> closed = a.close("REJECTED", "ACTION_BUDGET_EXHAUSTED");
+            closed.put("idempotentReplay", false);
+            return closed;
+        }
+        long nowMillis = clock.getAsLong();
+        UnifiedRollResult rolled = executeUnifiedDiceRoll(board, team, roundSeq, memberId, requestId,
+                "UNIFIED_ROLL", "UNIFIED_DICE_ROLL", r -> com.alibaba.fastjson2.JSON.toJSONString(
+                        unifiedResultPayload(board, requestId, roundSeq, r, "APPLIED", nowMillis)));
+        a.diceFace = rolled.face;
+        a.currentVersion = rolled.boardVersion;
+        a.outing(0, 0);
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("memberId", memberId);
+        row.put("domain", "unified-dice");
+        row.put("requestId", requestId);
+        row.put("boardId", resolvedBoardId);
+        row.put("action", "ROLL_ROUND");
+        row.put("requestHash", hash);
+        row.put("httpStatus", 200);
+        row.put("decision", "APPLIED");
+        row.put("currentVersion", rolled.boardVersion);
+        row.put("reasonCode", null);
+        row.put("taskAttemptKept", 0);
+        row.put("pointsCharged", 0L);
+        row.put("diceFace", rolled.face);
+        mapper.insertRequest(row);
+        Map<String, Object> out = receipt(row);
+        out.put("idempotentReplay", false);
+        out.put("teamId", a.teamId);
+        out.put("roundSeq", roundSeq);
+        out.put("faceIndex", rolled.faceIndex);
+        out.put("faceValue", rolled.face);
+        out.put("previousPosition", rolled.previousPosition);
+        out.put("newPosition", rolled.newPosition);
+        out.put("landedPropertyId", rolled.landedPropertyId);
+        out.put("beforeUnits", rolled.beforeUnits);
+        out.put("afterUnits", rolled.afterUnits);
+        out.put("randomTicket", rolled.randomTicket);
+        out.put("totalWeight", rolled.totalWeight);
+        out.put("effectsStatus", "APPLIED");
+        out.put("movementStatus", "AVAILABLE");
+        return out;
+    }
+
+    /** Server-authoritative dice roll audit log for the member's board/team. */
+    public Map<String, Object> diceAudit(Long memberId, String boardId, String regionId, Integer limit) {
+        requireMember(memberId);
+        Map<String, Object> board = CityGameRules.id(boardId) ? mapper.selectBoard(boardId)
+                : (CityGameRules.id(regionId) ? mapper.selectCurrentBoard(regionId) : null);
+        if (board == null) throw new CityGameException(404, "CITY_BOARD_NOT_FOUND", "城市棋盘不存在");
+        String resolvedBoardId = (String) board.get("boardId");
+        int capped = limit == null ? 50 : Math.max(1, Math.min(limit, 200));
+        Membership m = membership(mapper, resolvedBoardId, memberId);
+        List<Map<String, Object>> rolls = m.joined()
+                ? mapper.selectTeamRollAudit(resolvedBoardId, m.teamId(), capped)
+                : List.of();
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("boardId", resolvedBoardId);
+        out.put("regionId", board.get("regionId"));
+        out.put("teamId", m.joined() ? m.teamId() : null);
+        out.put("diceId", board.get("diceId"));
+        out.put("rolls", rolls);
+        return out;
     }
 
     /** Stored PROTECTED becomes HELD once the window passes; the stored row is not rewritten by reads. */

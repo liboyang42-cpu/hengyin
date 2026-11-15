@@ -121,6 +121,18 @@ public class ApiCityGameController extends BaseController {
     @GetMapping("/game/action/{requestId}")
     public AjaxResult actionReceipt(@PathVariable String requestId) { return success(actions.receipt(member(), requestId)); }
 
+    // ---- unified dice roll & audit ----
+
+    @PostMapping("/dice/roll")
+    public AjaxResult unifiedDiceRoll(@RequestBody Map<String, Object> body) { return success(actions.unifiedDiceRoll(member(), body)); }
+
+    @GetMapping("/dice/audit")
+    public AjaxResult diceAudit(@RequestParam(required = false) String boardId,
+                                @RequestParam(required = false) String regionId,
+                                @RequestParam(required = false) Integer limit) {
+        return success(actions.diceAudit(member(), boardId, regionId, limit));
+    }
+
     // ---- fairness ----
 
     @GetMapping("/fairness/report")
