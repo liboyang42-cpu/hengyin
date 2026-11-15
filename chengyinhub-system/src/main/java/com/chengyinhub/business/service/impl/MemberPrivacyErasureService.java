@@ -81,6 +81,11 @@ public class MemberPrivacyErasureService {
         // Measurement and push.
         counts.put("app_install_link", mapper.deleteInstallLinks(memberId));
         counts.put("push_device", mapper.deletePushDevices(memberId));
+        // Channel events (C3): RSVPs and album rows deleted (the photo files follow the media asset erasure);
+        // events the member posted stay as club activities without the poster link.
+        counts.put("channel_event_rsvp", mapper.deleteChannelEventRsvps(memberId));
+        counts.put("channel_event_photo", mapper.deleteChannelEventPhotos(memberId));
+        counts.put("channel_event_poster", mapper.unlinkChannelEventPoster(memberId));
         return counts;
     }
 }

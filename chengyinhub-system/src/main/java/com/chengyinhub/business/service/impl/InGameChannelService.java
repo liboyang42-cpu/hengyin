@@ -269,6 +269,38 @@ public class InGameChannelService
         return conv.getId();
     }
 
+    /**
+     * C3 channel events: the chat thread under an event card is this activity's channel. Adds one member to it
+     * (RSVP going/maybe, or a club member opening the thread) and returns the conversation id; null when the channel
+     * service or the activity is unavailable.
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Long ensureActivityThreadMember(Long activityId, Long memberId)
+    {
+        if (activityId == null || activityId <= 0 || memberId == null || memberId <= 0
+                || conversationMapper == null || memberMapper == null)
+        {
+            return null;
+        }
+        String title = "活动频道";
+        Long creatorId = null;
+        if (cmsActivityMapper != null)
+        {
+            CmsActivity activity = cmsActivityMapper.selectCmsActivityById(activityId);
+            if (activity == null) return null;
+            if (trimToNull(activity.getName()) != null) title = activity.getName().trim();
+            creatorId = activity.getMemberId();
+        }
+        ImConversation conv = getOrCreateConversation(ACTIVITY_PREFIX + activityId, title);
+        conversationMapper.selectImConversationByIdForUpdate(conv.getId());
+        ensureMember(conv.getId(), memberId, memberId.equals(creatorId) ? 1 : 0, false);
+        if (creatorId != null && creatorId > 0 && !creatorId.equals(memberId))
+        {
+            ensureMember(conv.getId(), creatorId, 1, false);
+        }
+        return conv.getId();
+    }
+
     public boolean hasActiveAccess(ImConversation conversation, Long memberId)
     {
         if (conversation == null || memberId == null || memberId <= 0 || conversation.getBizKey() == null)
