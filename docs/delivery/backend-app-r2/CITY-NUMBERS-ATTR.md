@@ -574,7 +574,13 @@ What the simulation asserts:
 - Hardcore players at launch density recycle ≥ 0.85 of what they earn, and their P95 end balance stays below the 1,500 KPI alert.
 - At extreme density (×25), rent saturates at the owner daily cap.
 
-Module suite (`mvn -B test -pl chengyinhub-admin -am`): see §5.1. It was still running when this commit was made; the result is recorded in a follow-up commit.
+### 5.1 Module suite
+
+`LANG=C.UTF-8 LC_ALL=C.UTF-8 mvn -B test -pl chengyinhub-admin -am` → **Tests run: 12,639, Failures: 1, Errors: 34, Skipped: 560**.
+
+- **All 34 errors** are MySQL-backed MyBatis ITs: AuditReportLane, ClubCrmCheckinDetail, ClubDissolutionGate, ClubTopicManageStats, ComplianceF7, MerchantDashboardAggregation, MerchantNumbersAgree, O08MemberOnlyTopicLocation, PublicActivityScopeGate, PublicTopicFeedGate, PublicVisibility, RedemptionRewardClawback, TopicDraftVisibility and TopicSyncPostRestore (`*MyBatisTest`). Each fails with `Communications link failure` because this container has no MySQL server.
+- **The 1 failure** is `ChapterFlowWriteServiceTest.openBundleReviewCannotBeBypassedBySwitchingToSimpleMode` (expected `IllegalStateException`, got `ServiceException`). It fails the same way on the untouched base `origin/feature/sys-citygame` (`eb610901a`; checked in a separate worktree: 44 run, 1 failure), so it predates this change and is unrelated to it.
+- After the rules-hash fix, the City tests were re-run: the 70 new tests plus `CityBoardAndTerritoryUnitTest`, `CityGameRulesTest` and `MerchantCityValueReportServiceTest` all pass.
 
 Not run: the MySQL integration tests (`*MysqlIntegrationTest`, `*MyBatisTest`, `*MySqlIT`). This container has no MySQL server, so they fail with `Communications link failure`, and AGENTS.md keeps DB tests on the dedicated TEST VPS. `SysCityGameMysqlIntegrationTest` builds `RoamTerritoryService` without the monopoly bean, so it still exercises the legacy path unchanged.
 
