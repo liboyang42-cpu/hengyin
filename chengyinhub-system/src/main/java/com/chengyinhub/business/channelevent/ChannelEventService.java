@@ -300,7 +300,7 @@ public class ChannelEventService
         extra.put("startAt", row.getStartAt() == null ? null : row.getStartAt().getTime());
         extra.put("endAt", row.getEndAt() == null ? null : row.getEndAt().getTime());
         extra.put("capacity", row.getCapacity());
-        extra.put("paid", row.isPaid());
+        extra.put("paid", row.paidEvent());
         return extra;
     }
 
@@ -367,7 +367,7 @@ public class ChannelEventService
         v.put("lat", e.getLat());
         v.put("lng", e.getLng());
         v.put("capacity", e.getCapacity());
-        v.put("paid", e.isPaid());
+        v.put("paid", e.paidEvent());
         v.put("state", state(e, now));
         v.put("going_count", going);
         v.put("maybe_count", maybe);
@@ -418,7 +418,7 @@ public class ChannelEventService
         boolean enrolled = mapper.countMyConfirmed(e.getActivityId(), me) > 0;
         if (GOING.equals(status) && !enrolled)
         {
-            ChannelRejection r = new ChannelRejection(409, "ENROL_REQUIRED", e.isPaid() ? "购票后即算参加" : "报名后即算参加");
+            ChannelRejection r = new ChannelRejection(409, "ENROL_REQUIRED", e.paidEvent() ? "购票后即算参加" : "报名后即算参加");
             throw r;
         }
         mapper.upsertRsvp(e.getId(), me, status);
@@ -436,7 +436,7 @@ public class ChannelEventService
         out.put("owner_type", 2);
         out.put("owner_id", String.valueOf(e.getActivityId()));
         out.put("ticket_id", e.getTicketId() == null ? null : String.valueOf(e.getTicketId()));
-        out.put("paid", e.isPaid());
+        out.put("paid", e.paidEvent());
         out.put("paid_events_open", paidEventsOpen());
         Integer remaining = e.getTicketId() == null ? null : mapper.selectRemaining(e.getTicketId());
         out.put("remaining", remaining);
@@ -634,7 +634,7 @@ public class ChannelEventService
             v.put("endAt", e.getEndAt());
             v.put("placeName", e.getPlaceName());
             v.put("capacity", e.getCapacity());
-            v.put("paid", e.isPaid());
+            v.put("paid", e.paidEvent());
             v.put("state", state(e, new Date()));
             v.put("goingCount", mapper.countGoing(e.getActivityId()));
             v.put("maybeCount", mapper.countRsvpWithoutEnrolment(e.getId(), e.getActivityId(), MAYBE));

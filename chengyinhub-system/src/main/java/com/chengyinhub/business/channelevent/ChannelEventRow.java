@@ -63,5 +63,5 @@ public class ChannelEventRow
     public Date getCreateTime() { return createTime; }
     public void setCreateTime(Date createTime) { this.createTime = createTime; }
 
-    public boolean isPaid() { return paid != null && paid == 1; }
+    public boolean paidEvent() { return paid != null && paid == 1; }
 }
