@@ -86,7 +86,14 @@ python3 ci/role_permission_contract.py                                         #
 node --test tests/unit/s5-shop-games-admin-contract.test.js tests/unit/admin-sfc-template-compile-contract.test.js \
   tests/unit/admin-plain-language-contract.test.js                             # 14 pass (vue-template-compiler installed --no-save)
 node --test tests/unit/s5-shop-games-merchant.test.js                          # 4 pass (mini-program)
-# full suite comparison: pending (running at commit time)
+node --test "tests/unit/**/*.test.js"   # mini-program, this branch: 17646 tests, 17573 pass, 73 fail
+  # The base run hit its 25-minute limit, so the 23 files holding the 73 failures (action-ledger files aside) were rerun
+  # on both trees: base 29 fail, branch 33 fail. The 4 extra were caused by this package (a native <picker> and
+  # tappable rows without press feedback) and are fixed: picker-unification and press-feedback now pass.
+node scripts/uiaudit/build-action-ledger.js --check   # fails on the base already (pages/shezhi/app/index not in
+  # route-matrix); on this branch it also names pages/merchant/shop-games/index. route-matrix.json was NOT regenerated
+  # here because that rewrites other packages' entries: the integrator should run
+  # scripts/uiaudit/build-route-matrix.js once after merging.
 ```
 
 What the 17 JUnit tests cover:
