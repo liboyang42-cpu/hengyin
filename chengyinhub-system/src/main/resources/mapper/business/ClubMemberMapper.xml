@@ -79,6 +79,22 @@
         where club_id = #{clubId} and status = 1 and del_flag = 0
     </select>
 
+    <!-- club-reach CLB-11:俱乐部头图头像叠。主理人在前,再按入会时间倒序取在营成员;只出非空头像 URL,不出 id/昵称。 -->
+    <select id="selectHeroAvatars" resultType="java.lang.String">
+        select x.avatar from (
+            select m.avatar as avatar, 0 as ord, null as joined
+              from ums_member m where m.id = #{ownerId}
+            union all
+            select m.avatar as avatar, 1 as ord, cm.join_time as joined
+              from club_member cm join ums_member m on m.id = cm.member_id
+             where cm.club_id = #{clubId} and cm.status = 1 and cm.del_flag = 0
+               <if test="ownerId != null"> and cm.member_id &lt;&gt; #{ownerId}</if>
+        ) x
+        where x.avatar is not null and trim(x.avatar) &lt;&gt; ''
+        order by x.ord, x.joined desc
+        limit #{limit}
+    </select>
+
     <!--
       D22:该俱乐部现有管理员数。口径 role=1 AND status=1(正常态)AND del_flag=0。
       **不含主理人** —— 他是 club.member_id、本就不在 club_member 里(set-member-role 明确拒绝给创建者

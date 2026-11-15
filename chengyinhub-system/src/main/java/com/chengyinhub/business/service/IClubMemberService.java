@@ -39,6 +39,12 @@ public interface IClubMemberService
 
     public int countByClub(Long clubId);
 
+    /** club-reach CLB-11: up to {@code limit} avatar URLs for the club hero (owner first). Empty when unknown. */
+    default java.util.List<String> selectHeroAvatars(Long clubId, Long ownerId, int limit)
+    {
+        return java.util.Collections.emptyList();
+    }
+
     /**
      * 俱乐部成员数的**全端唯一口径**:{@code club_member} 行数 + 主理人(他没有成员行时计 1)。
      *

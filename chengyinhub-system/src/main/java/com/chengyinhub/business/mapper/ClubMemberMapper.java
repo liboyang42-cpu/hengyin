@@ -32,6 +32,10 @@ public interface ClubMemberMapper
 
     public int countByClub(Long clubId);
 
+    /** club-reach CLB-11: owner first, then the most recent active members; only non-blank avatar URLs. */
+    public java.util.List<String> selectHeroAvatars(@org.apache.ibatis.annotations.Param("clubId") Long clubId,
+            @org.apache.ibatis.annotations.Param("ownerId") Long ownerId, @org.apache.ibatis.annotations.Param("limit") int limit);
+
     /** D22:该俱乐部现有管理员数(role=1 且 status=1 正常态)。不含主理人 —— 他不在本表里。 */
     public int countAdminsByClub(Long clubId);
 

@@ -280,6 +280,22 @@ public class ClubMemberServiceImpl implements IClubMemberService
     }
 
     @Override
+    public java.util.List<String> selectHeroAvatars(Long clubId, Long ownerId, int limit)
+    {
+        if (clubId == null || limit <= 0) return java.util.Collections.emptyList();
+        java.util.List<String> rows = clubMemberMapper.selectHeroAvatars(clubId, ownerId, Math.min(limit, 10));
+        java.util.List<String> safe = new java.util.ArrayList<String>();
+        if (rows == null) return safe;
+        for (String raw : rows)
+        {
+            String url = raw == null ? "" : raw.trim();
+            // Only absolute web URLs reach the app; anything else falls back to the plain placeholder.
+            if (url.startsWith("https://") || url.startsWith("http://")) safe.add(url);
+        }
+        return safe;
+    }
+
+    @Override
     public int countEffectiveMembers(Club club)
     {
         if (club == null || club.getId() == null) {

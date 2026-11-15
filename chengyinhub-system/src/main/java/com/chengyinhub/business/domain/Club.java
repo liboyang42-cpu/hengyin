@@ -271,6 +271,11 @@ public class Club extends BaseEntity
     public void setViewerIdentityUnavailable(Boolean viewerIdentityUnavailable) { this.viewerIdentityUnavailable = viewerIdentityUnavailable; }
     public Integer getPendingJoinRequestCount() { return pendingJoinRequestCount; }
     public void setPendingJoinRequestCount(Integer pendingJoinRequestCount) { this.pendingJoinRequestCount = pendingJoinRequestCount; }
+    /** club-reach CLB-11: hero avatar URLs (owner first), detail only. Not a column. */
+    private java.util.List<String> memberAvatars;
+    public java.util.List<String> getMemberAvatars() { return memberAvatars; }
+    public void setMemberAvatars(java.util.List<String> memberAvatars) { this.memberAvatars = memberAvatars; }
+
     public Integer getNonOwnerMemberCount() { return nonOwnerMemberCount; }
     public void setNonOwnerMemberCount(Integer nonOwnerMemberCount) { this.nonOwnerMemberCount = nonOwnerMemberCount; }
     public Boolean getDissolveConfirmed() { return dissolveConfirmed; }
