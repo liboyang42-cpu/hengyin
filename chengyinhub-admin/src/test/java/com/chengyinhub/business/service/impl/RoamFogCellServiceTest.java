@@ -66,6 +66,14 @@ class RoamFogCellServiceTest {
     }
 
     @Test
+    void theAppsLargestBoxIsAlwaysAccepted() {
+        // The app never asks for more than 0.3 x 0.3 degrees (RoamFogBox.maxSpanDegrees).
+        for (double lat = -60; lat <= 60; lat += 7.3)
+            for (double lng = -170; lng <= 170; lng += 11.9)
+                assertNotNull(RoamGeohashCover.prefixes(lat, lng, lat + 0.3, lng + 0.3), lat + "," + lng);
+    }
+
+    @Test
     void boxValidation() {
         assertTrue(RoamGeohashCover.validBox(S, W, N, E));
         assertFalse(RoamGeohashCover.validBox(N, W, S, E));
