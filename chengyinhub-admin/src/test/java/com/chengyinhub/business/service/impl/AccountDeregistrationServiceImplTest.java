@@ -506,6 +506,59 @@ class AccountDeregistrationServiceImplTest {
         order.verify(revocation).revokeAfterDeletion(1001L);
     }
 
+    /** R13: roadmap location/device data is erased in the same account transaction, before completion. */
+    @Test
+    void completedDeletionErasesRoadmapLocationAndDeviceDataBeforeCompletion() {
+        AccountDeregistrationMapper d = mock(AccountDeregistrationMapper.class);
+        PlatformTransactionManager t = mock(PlatformTransactionManager.class);
+        AccountDeregistrationServiceImpl service = dueService(d, t);
+        MemberPrivacyErasureService erasure = mock(MemberPrivacyErasureService.class);
+        ReflectionTestUtils.setField(service, "memberPrivacyErasureService", erasure);
+
+        assertEquals(1, service.executeDue(new Date()));
+        InOrder order = inOrder(d, erasure, t);
+        order.verify(d).anonymizeMember(1001L);
+        order.verify(erasure).erase(eq(1001L), any(Date.class));
+        order.verify(d).complete(eq(9L), any(Date.class));
+        order.verify(t).commit(any(TransactionStatus.class));
+    }
+
+    /** R13: a failed erasure step rolls the whole account erasure back and never claims completion. */
+    @Test
+    void roadmapErasureFailureRollsBackAndDoesNotComplete() {
+        AccountDeregistrationMapper d = mock(AccountDeregistrationMapper.class);
+        PlatformTransactionManager t = mock(PlatformTransactionManager.class);
+        AccountDeregistrationServiceImpl service = dueService(d, t);
+        MemberPrivacyErasureService erasure = mock(MemberPrivacyErasureService.class);
+        when(erasure.erase(eq(1001L), any(Date.class))).thenThrow(new IllegalStateException("push_device missing"));
+        when(d.markFailed(eq(9L), anyString(), any(Date.class))).thenReturn(1);
+        ReflectionTestUtils.setField(service, "memberPrivacyErasureService", erasure);
+
+        assertEquals(0, service.executeDue(new Date()));
+        verify(d, never()).complete(anyLong(), any(Date.class));
+        verify(t).rollback(any(TransactionStatus.class));
+        verify(d).markFailed(eq(9L), eq("执行异常:IllegalStateException"), any(Date.class));
+    }
+
+    private AccountDeregistrationServiceImpl dueService(AccountDeregistrationMapper d, PlatformTransactionManager t) {
+        UmsMemberMapper m = mock(UmsMemberMapper.class);
+        OmsOrderMapper o = mock(OmsOrderMapper.class);
+        CmsRegistrationMapper r = mock(CmsRegistrationMapper.class);
+        AccountDeregistration due = new AccountDeregistration();
+        due.setId(9L); due.setMemberId(1001L);
+        due.setStatus("PENDING"); due.setExecuteAfter(new Date(0));
+        when(d.selectByIdForUpdate(9L)).thenReturn(due);
+        when(d.selectDue(any(Date.class))).thenReturn(Collections.singletonList(due));
+        when(d.complete(eq(9L), any(Date.class))).thenReturn(1);
+        UmsMember member = new UmsMember();
+        member.setId(1001L); member.setBalance(BigDecimal.ZERO); member.setDelFlag(0);
+        when(m.selectUmsMemberById(1001L)).thenReturn(member);
+        when(o.selectOmsOrderList(any(OmsOrder.class))).thenReturn(Collections.emptyList());
+        when(r.selectCmsRegistrationList(any(CmsRegistration.class))).thenReturn(Collections.emptyList());
+        when(t.getTransaction(any())).thenReturn(mock(TransactionStatus.class));
+        return wired(d, m, o, r, mock(ICashWithdrawService.class), t, mock(AlarmService.class));
+    }
+
     @Test
     void playerViewWithOwnedBusinessesBlocksPrecheckAndApply() {
         AccountDeregistrationMapper d = mock(AccountDeregistrationMapper.class);
