@@ -14,6 +14,10 @@
       {{feedback}}
     </view>
 
+    <!-- 2026-11-15 T6(城市定向剧情与 App 对齐):选之前说清选了就定 —— 服务端按这一条走下去、结局写进记录,
+         各选项的去向不预告(跳转表不下发,见 index.js 顶部)。只读或已选时不出。 -->
+    <view class="br__hint" wx:if="{{!isEnd && writable && picked < 0 && options.length}}">选定后不能更改，故事会按你的选择走下去</view>
+
     <view class="br__opts" wx:if="{{!isEnd}}">
       <view class="br__opt {{index === 0 ? 'br__opt--first' : ''}} {{picked === index ? 'is-on' : (picked >= 0 || !writable ? 'is-off' : '')}} pe pe--right" style="--pe-d:.75s;--pe-s:.12s;--pe-i:{{index}}"
             wx:for="{{options}}" wx:key="k" data-i="{{index}}" bindtap="onPick"
