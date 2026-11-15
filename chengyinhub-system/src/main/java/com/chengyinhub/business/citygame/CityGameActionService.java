@@ -43,6 +43,8 @@ public class CityGameActionService {
     private static final ZoneId BOARD_ZONE = ZoneId.of("Asia/Shanghai");
 
     private final CityGameMapper mapper;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.service.impl.InGameChannelService inGameChannelService;
     private final IntUnaryOperator random;
     private final LongSupplier clock;
     private final boolean customRandom;
@@ -368,6 +370,11 @@ public class CityGameActionService {
         switch (action) {
             case ACQUIRE_PROPERTY:
                 write(boardId, property, propertyId, held, a.teamId, new Date(now), held.equals("PROTECTED") ? protectedUntil : null, null);
+                if (inGameChannelService != null) {
+                    inGameChannelService.postCityGameEvent(
+                            com.chengyinhub.business.service.impl.InGameChannelService.EVENT_CLAIM,
+                            memberId, boardId, a.teamId, str(property, "name"), null);
+                }
                 return a.apply(units, "PROPERTY_ACQUIRED", propertyId);
             case ACCEPT_SERVICE_VISIT:
                 mapper.addTeamScore(holder, price);
@@ -382,6 +389,17 @@ public class CityGameActionService {
                 a.diceFace = attack;
                 if (CityGameRules.challengerWins(attack, defence)) {
                     write(boardId, property, propertyId, held, a.teamId, new Date(now), held.equals("PROTECTED") ? protectedUntil : null, "RESOLVED");
+                    if (inGameChannelService != null) {
+                        String propName = str(property, "name");
+                        inGameChannelService.postCityGameEvent(
+                                com.chengyinhub.business.service.impl.InGameChannelService.EVENT_TAKEOVER,
+                                memberId, boardId, a.teamId, propName, "挑战成功 " + attack + ":" + defence);
+                        if (holder != null && !holder.equals(a.teamId)) {
+                            inGameChannelService.postCityGameEvent(
+                                    com.chengyinhub.business.service.impl.InGameChannelService.EVENT_TAKEOVER,
+                                    memberId, boardId, holder, propName, "据点被其他小队接管");
+                        }
+                    }
                 } else {
                     write(boardId, property, propertyId, "HELD", holder, date(property.get("heldSince")), null, "RESOLVED");
                 }
@@ -461,6 +479,11 @@ public class CityGameActionService {
                 Map<String, Object> fresh = mapper.selectBoard(boardId);
                 mapper.insertEvent(boardId, ((Number) fresh.get("eventSequence")).longValue(), "BOARD_FROZEN", null, null,
                         ((Number) fresh.get("boardVersion")).longValue());
+                if (inGameChannelService != null) {
+                    inGameChannelService.postCityGameEvent(
+                            com.chengyinhub.business.service.impl.InGameChannelService.EVENT_FINISH,
+                            null, boardId, teamId, str(board, "name"), "本轮已收官封盘");
+                }
             }
         }
     }
