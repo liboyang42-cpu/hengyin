@@ -114,7 +114,9 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
             }
             answerHash = null;
         } else {
-            String normalized = normalizeAnswer(answer);
+            String normalized = type == AltType.QUIZ
+                    ? com.chengyinhub.business.service.support.AnswerNormalizer.normalize(answer)
+                    : normalizeAnswer(answer);
             if (!normalized.isEmpty()) answerHash = CanonicalDigest.sha256Hex(normalized);
             if (!Boolean.FALSE.equals(enabled) && trimToNull(answerHash) == null) {
                 throw new OrientRejection(OrientRejection.BAD_REQUEST, type == AltType.SCAN ? "请填写扫码内容" : "请填写答案");
@@ -273,6 +275,11 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
             boolean ok = alt.getAnswerHash() != null && MessageDigest.isEqual(
                     alt.getAnswerHash().getBytes(StandardCharsets.US_ASCII),
                     payload.getBytes(StandardCharsets.US_ASCII));
+            // 归一器上线前存下的 QUIZ 哈希是旧归一(NFKC+折叠空白+小写)算的:再按旧口径比一次,只放宽。
+            if (!ok && type == AltType.QUIZ && alt.getAnswerHash() != null) {
+                ok = MessageDigest.isEqual(alt.getAnswerHash().getBytes(StandardCharsets.US_ASCII),
+                        CanonicalDigest.sha256Hex(normalizeAnswer(cmd.answer)).getBytes(StandardCharsets.US_ASCII));
+            }
             attempt.setStatus(ok ? COMPLETED : REJECTED);
         }
         Date now = new Date();
@@ -552,7 +559,7 @@ public class OrientTaskServiceImpl implements IOrientTaskService {
     private static String payloadDigest(AltType type, SubmitCommand cmd) {
         switch (type) {
             case SCAN: return CanonicalDigest.sha256Hex(normalizeAnswer(cmd.code));
-            case QUIZ: return CanonicalDigest.sha256Hex(normalizeAnswer(cmd.answer));
+            case QUIZ: return CanonicalDigest.sha256Hex(com.chengyinhub.business.service.support.AnswerNormalizer.normalize(cmd.answer));
             default: return CanonicalDigest.sha256Hex(cmd.picUrl == null ? "" : cmd.picUrl.trim());
         }
     }

@@ -22,6 +22,13 @@ public interface ISettlementEntryService {
      */
     int recordClubFreeExploreSessionSettlement(CmsRegistration registration, Long payeeMemberId);
 
+    /**
+     * 同上,但平台费由调用方按整场余数法分摊后传入({@code platformFee},到分),保证逐单分账行之和
+     * 与场次现金平台费一致(D-29)。不再逐张 HALF_UP。
+     */
+    int recordClubFreeExploreSessionSettlement(CmsRegistration registration, Long payeeMemberId,
+                                               java.math.BigDecimal platformFee);
+
     int recordCouponVerification(SmsCouponHistory history, SmsCoupon coupon);
 
     /**

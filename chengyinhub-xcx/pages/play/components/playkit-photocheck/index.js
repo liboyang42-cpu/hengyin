@@ -14,6 +14,7 @@ const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js')
 const replayMotionBehavior = require('../../behaviors/replay-motion.js');
 const motion = require('../../../../utils/motion.js');
 const cyToast = require('../../../../utils/toast.js');
+const mediaDenied = require('../../utils/media-denied.js');
 const { tidyText } = require('../../utils/keep-numerals.js');
 // C1:核验说明只认服务端 photoVerified=true;兜底放行另有一句,不说「这张过了」
 const { PHOTO_VERIFIED_NOTE, PHOTO_FALLBACK_VERDICT, rewardNote } = require('../../utils/sensor-contract.js');
@@ -45,10 +46,15 @@ Component({
     card: { type: Object, value: null },
     // P-24:页面上传失败一次就 +1(单调递增);组件只认比见过的大,屏上写「上传失败，请重拍」
     photoFailSeq: { type: Number, value: 0 },
+    // 失败发生在哪一步:'submit' = 照片已传上去、提交没成(保留地址,可重新提交);其它 = 上传失败
+    photoFailKind: { type: String, value: '' },
+    // 页面正等服务端视觉判分
+    judging: { type: Boolean, value: false },
   },
   data: {
     busy: false,
     uploadFail: '',
+    resubmit: false,
     triesLabel: '',
     verdict: '',
     verdictKind: '',
@@ -62,12 +68,14 @@ Component({
     outlineFailed: false,
   },
   observers: {
-    photoFailSeq: function (seq) {
+    'photoFailSeq, photoFailKind': function (seq, kind) {
       const n = Number(seq) || 0;
       if (n <= (this._seenFailSeq || 0)) return;
       this._seenFailSeq = n;
-      this.setData({ uploadFail: '上传失败，请重拍', busy: false });
+      const submit = kind === 'submit';
+      this.setData({ uploadFail: submit ? '提交失败，照片已保留' : '上传失败，请重拍', resubmit: submit, busy: false });
     },
+    judging: function (on) { if (on) this.setData({ uploadFail: '', resubmit: false }); },
     'photoVerified, rewardCeiling, passed': function (photoVerified, rewardCeiling, passed) {
       this.setData({
         uploadFail: passed ? '' : this.data.uploadFail,   // 过了就不再留着上一次的失败提示
@@ -128,7 +136,8 @@ Component({
      */
     onShoot() {
       // R11 g1 F3:只认服务端 passed。flagged 是留给商家的痕迹,不是「这一站定了」
-      if (this.data.busy || this.data.passed) return;
+      if (this.data.busy || this.data.judging || this.data.passed) return;
+      if (this.data.resubmit) { this.setData({ uploadFail: '', resubmit: false }); this.triggerEvent('resubmit'); return; }
       if (this.data.uploadFail) this.setData({ uploadFail: '' });
       /* ⚠️ 内嵌呈现(故事流里就地玩)不进页内取景:.chfull__para 恒带 transform:scale() 与
          filter:blur()(见 pages/play/index.wxml 那一行的行内样式,值永远是数字、不是 none),
@@ -153,7 +162,7 @@ Component({
           const file = (res && res.tempFiles && res.tempFiles[0]) || {};
           this._emitShot(file.tempFilePath || '', file.size, !res);
         },
-        fail: () => { this.setData({ busy: false }); },
+        fail: (err) => { this.setData({ busy: false }); mediaDenied.guideIfDenied(err); },
       });
     },
 
@@ -185,7 +194,7 @@ Component({
 
     /** 一张照片到手:退出取景，没路径就说清，有路径才抖一下并抛给页面。 */
     _emitShot(tempFilePath, size, aborted) {
-      this.setData({ busy: false, framing: false, uploadFail: '' });   // 新一次尝试开始:清掉上一次的失败提示
+      this.setData({ busy: false, framing: false, uploadFail: '', resubmit: false });   // 新一次尝试开始:清掉上一次的失败提示
       if (!tempFilePath) {
         if (!aborted) cyToast('没拿到照片');
         return;

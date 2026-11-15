@@ -45,7 +45,7 @@ test('结算「继续」不去空故事页:只回看有正文的已完成章', (
 })
 
 test('逐字猜词没有题面时用站名', () => {
-  assert.match(read('pages/play/index.js'), /picked\.type === 'hangman' && !picked\.title && placeNode\) picked\.title = stationLabel\(/)
+  assert.match(read('pages/play/index.js'), /picked\.type === 'hangman' && placeNode\) Object\.assign\(picked, hangmanStationText\(picked, placeNode, stationLabel\(/)
 })
 
 test('章节门:说明超长补省略号,章节印等文字解码完再量', () => {

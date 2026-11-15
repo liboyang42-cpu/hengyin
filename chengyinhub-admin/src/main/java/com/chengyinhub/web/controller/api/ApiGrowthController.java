@@ -12,6 +12,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import com.chengyinhub.business.domain.vo.MemberLeaderboardVO;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -94,6 +98,27 @@ public class ApiGrowthController extends BaseController {
             return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         }
         return success(anonymousLeaderboard.read(memberId, request));
+    }
+
+    @GetMapping("/leaderboard")
+    public AjaxResult publicLeaderboard(LeaderboardQueryDTO request) {
+        Long memberId;
+        try { memberId = getAppUserId(); } catch (Exception e) { memberId = 0L; }
+        MemberLeaderboardVO board = growthService.getLeaderboard(memberId, request);
+        if (memberId != null && memberId > 0) return success(board);
+        // 2026-11-14：公开榜只含展示字段，不返回用户标识或“我的”排名。
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("metric", board.getMetric());
+        result.put("period", board.getPeriod());
+        result.put("list", board.getList().stream().map(row -> {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("rank", row.getRank());
+            item.put("nickname", row.getNickname());
+            item.put("avatar", row.getAvatar());
+            item.put("score", row.getScore());
+            return item;
+        }).toList());
+        return success(result);
     }
 
     @Operation(summary = "完成成长任务")

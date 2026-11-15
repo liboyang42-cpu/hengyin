@@ -233,7 +233,7 @@ public class ApiTopicStateKeyController extends BaseController {
         try {
             List<String> positions = topicStateKeyRefService.referencesOf(topic, key);
             if (!positions.isEmpty()) {
-                return error("状态键 " + key + " 已被引用,不能删除。引用位置:" + String.join("、", positions));
+                return error("状态键 " + key + " 已被引用，不能删除。引用位置：" + String.join("、", positions));
             }
             return themeStateKeyService.delete(topic.getId(), key) ? success("删除成功") : refuse(ErrorCode.NOT_FOUND, "状态键不存在");
         } catch (ServiceException e) {

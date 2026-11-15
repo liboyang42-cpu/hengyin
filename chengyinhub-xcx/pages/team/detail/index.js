@@ -214,9 +214,7 @@ Page({
           that._loadBoard(context, team, res.data.joined === true);
           that._loadApplicants(context, !!res.data.leader && team.status === 0);
         } else {
-          // PR10 F-W1-12:未登录(无会话 / 401)的按钮是「登录」(走 retryLogin),不是只会再撞一次的「重新加载」。
-          const needLogin = isLoginRequired(app, res);
-          const authDenied = needLogin || String(res && res.code) === '403';
+          const authDenied = ['401', '403'].includes(String(res && res.code));
           // j4 F2:服务端明确拒绝(无权查看该队伍、队伍不存在)是业务结论:写出理由并给返回出路,不留白、不留旧队伍。
           const refused = !authDenied && !!res && res.errorCode === 'TEAM_INFO_REFUSED';
           that._clearMembership();
@@ -225,12 +223,12 @@ Page({
           that.setData({
             loading: false,
             refreshing: false,
-            error: authDenied ? '登录后查看队伍' : refused ? app.getRequestErrorMessage(res, '无法查看这支队伍') : hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
+            error: authDenied ? '当前队伍无法查看' : refused ? app.getRequestErrorMessage(res, '无法查看这支队伍') : hasTeam ? '队伍状态暂未更新' : '队伍暂时不可用',
             errorKind: authDenied ? 'no-permission' : refused ? 'missing-param' : 'data',
             errorSub: authDenied ? '' : refused ? '' : app.getRequestErrorMessage(res, hasTeam ? '已保留上次确认的队伍信息' : '请稍后重新加载'),
-            boardState: needLogin ? 'login' : 'error',
+            boardState: 'error',
             boardMessage: '队伍成员资格暂未确认，请重新加载',
-            errorAction: needLogin ? '登录' : refused ? '返回上一页' : '重新加载'
+            errorAction: refused ? '返回上一页' : '重新加载'
           });
         }
       },
@@ -239,21 +237,6 @@ Page({
         settled = true;
         that._teamLoading = false;
         if (fromPull) wx.stopPullDownRefresh();
-        // PR10 F-W1-12:静默重登失败回到这里(401),或根本没有会话 ⇒ 登录引导,不按网络失败留白
-        if (isLoginRequired(app, res, statusCode)) {
-          that._clearMembership();
-          that.setData({ team: null });
-          that.setData({
-            loading: false,
-            refreshing: false,
-            error: '登录后查看队伍',
-            errorKind: 'no-permission',
-            errorSub: '',
-            boardState: 'login', boardMessage: '请重新登录后查看定向进度',
-            errorAction: '登录'
-          });
-          return;
-        }
         that.setData({
           loading: false,
           refreshing: false,

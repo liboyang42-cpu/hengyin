@@ -30,7 +30,7 @@ test('保留短业务文案，响应对象原地净化使旧页面 res.msg 也�
     assert.equal(safeUserMessage({ msg: raw }, '操作失败'), '操作失败', raw);
   }
   // 带下一步的多句业务文案是给用户看的,不能被吞成通用兜底
-  for (const raw of ['票务库存数据异常，请先核对后再调整', '章节数据异常,请稍后重试', '轨迹停靠点数据异常,无法转为路线']) {
+  for (const raw of ['票务库存数据异常，请先核对后再调整', '章节数据异常,请稍后重试', '轨迹停靠点数据异常，无法转为路线']) {
     assert.equal(safeUserMessage({ msg: raw }, '操作失败'), raw, raw);
   }
   const body = { code: 500, msg: '<html>secret</html>', data: { id: 1 } };

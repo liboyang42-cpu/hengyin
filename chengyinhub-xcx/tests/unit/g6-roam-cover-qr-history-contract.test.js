@@ -141,7 +141,7 @@ test('CU-M-55 正在进行中的漫游:历史空态改口,不再称「还没有�
   const h = boot('components/cy/scene-roam-history/index.js', { wx: recoveryStorage(record) })
   h.instance._load()
   assert.equal(h.instance.data.state, 'ready')
-  assert.deepEqual(h.instance.data.list, [])
+  assert.equal(h.instance.data.list.length, 0)
   assert.equal(h.instance.data.inProgress, true)
 
   const none = boot('components/cy/scene-roam-history/index.js', { wx: { getStorageSync: () => [] } })

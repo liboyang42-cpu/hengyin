@@ -183,7 +183,7 @@ test('★上传/提交失败时通知拍物成卡那一屏回取景,且这一模
   const body = strip(page.slice(at, page.indexOf('\n  },\n', at)))
   // P-24(2026-11-02):普通拍照审核也要收到失败(屏上写「上传失败，请重拍」),拍物成卡照旧回取景
   assert.ok(/if \(kitNow && kitNow\.type === 'photocheck'\) this\._notifyPhotoFail\(\)/.test(body), '失败没通知那一屏:玩家会对着转圈干等 45 秒')
-  const nAt = page.indexOf('  _notifyPhotoFail() {')
+  const nAt = page.indexOf('  _notifyPhotoFail(kind) {')
   const notify = strip(page.slice(nAt, page.indexOf('\n  },', nAt)))
   assert.ok(/'playKit\.kit\.photoFailSeq': this\._photoFailSeq/.test(notify), '_notifyPhotoFail 没把计数送到那一屏')
   // 五处失败出口都走 fail(),不许有漏网的 cyToast 直接 return
@@ -209,7 +209,7 @@ test('★玩法组件报「这一步没提交成功」时,页面让拍物成卡�
   const at = page.indexOf('onAdvancedActionFail(e) {')
   assert.ok(at > 0, '页面没有 onAdvancedActionFail')
   const body = page.slice(at, page.indexOf('\n  },', at))
-  assert.ok(/SUBMIT_PHOTO_CHECK/.test(body) && /this\._notifyPhotoFail\(\)/.test(body), body)
+  assert.ok(/SUBMIT_PHOTO_CHECK/.test(body) && /this\._notifyPhotoFail\(/.test(body), body)
 })
 
 test('★预览标记一路到拍物成卡那一屏;编辑页预览收到拍照事件明说不判定', () => {

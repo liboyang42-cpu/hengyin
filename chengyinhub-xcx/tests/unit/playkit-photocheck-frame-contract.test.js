@@ -271,6 +271,7 @@ function loadPatchedView(patch) {
   fs.copyFileSync(path.join(path.dirname(viewAbs), 'playkit-questo.js'), path.join(viewDir, 'playkit-questo.js'))
   fs.copyFileSync(path.join(path.dirname(viewAbs), 'keep-numerals.js'), path.join(viewDir, 'keep-numerals.js'))
   fs.copyFileSync(path.join(ROOT, 'utils/object-card.js'), path.join(dir, 'utils/object-card.js'))
+  fs.copyFileSync(path.join(ROOT, 'utils/datetime.js'), path.join(dir, 'utils/datetime.js'))
   fs.copyFileSync(path.join(ROOT, 'utils/object-card-reveal.js'), path.join(dir, 'utils/object-card-reveal.js'))
   const target = path.join(viewDir, 'playkit-view.js')
   const original = fs.readFileSync(viewAbs, 'utf8')

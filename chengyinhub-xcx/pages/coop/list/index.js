@@ -731,7 +731,7 @@ Page({
     modal.show({
       danger: true,
       title: '拒绝申请',
-      content: '拒绝「' + name + '」的带队申请?对方会收到通知，之后仍可重新申请。',
+      content: '拒绝「' + name + '」的带队申请？对方会收到通知，之后仍可重新申请。',
       confirmText: '拒绝',
       cancelText: '再想想',
       success(r) {
@@ -826,7 +826,7 @@ Page({
     if (!this._beginAction(actionKey)) return;
     modal.show({
       title: '确认候选',
-      content: '确认该商家占住这个地点?同地点其他待调配报名将自动落选。\n确认后需再向他发出带条款的合作邀约，他接受才成合作单。',
+      content: '确认该商家占住这个地点？同地点其他待调配报名将自动落选。\n确认后需再向他发出带条款的合作邀约，他接受才成合作单。',
       confirmText: '确认',
       success(r) {
         if (!r.confirm) { that._finishAction(actionKey, '', ''); return; }

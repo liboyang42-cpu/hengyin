@@ -82,7 +82,8 @@ for (const kind of Object.keys(pages)) {
       // Public activity detail has its own anonymous read; an auth failure is explicit.
       reply(h.requests.at(-1), 401, { code: 401 }); await settled();
     }
-    assert.equal(h.access(), true);
+    // 2026-11-14：公开活动和附近目录在清会话后继续匿名读；本人数据仍落登录态。
+    assert.equal(h.access(), kind !== 'cancelled' && kind !== 'roam');
     if (kind === 'nearbyMy') assert.equal(h.page.data.myLoading, false);
     if (kind === 'stamp' || kind === 'object') assert.equal(h.page.data.loading, false);
   });

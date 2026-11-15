@@ -10,6 +10,17 @@ const LEGACY_KEY_PREFIX = 'play_paused_run_v1:'
 // 一次步行行程不可能按天计;超过这个值的快照只可能是脏数据,不当成可恢复会话。
 const MAX_PAUSED_SECONDS = 7 * 24 * 3600
 
+/** E-C2:快照盖上路线局号(routeSessionId);读到别的局的快照当没有,新一局不继承上一局的暂停用时。局号缺失时与旧行为一致。 */
+function runIdOf(scope) {
+  const text = String(scope && scope.routeSessionId != null ? scope.routeSessionId : '').trim()
+  return /^[1-9]\d{0,18}$/.test(text) ? text : ''
+}
+
+function sameRun(raw, scope) {
+  const runId = runIdOf(scope)
+  return !runId || !raw || raw.runId == null || String(raw.runId) === runId
+}
+
 function exactScopeId(value) {
   const text = String(value == null ? '' : value).trim()
   return /^[1-9]\d{0,18}$/.test(text) ? text : ''
@@ -57,7 +68,7 @@ function readPausedRun(wx, scope) {
   try { if (legacyKey && typeof wx.removeStorageSync === 'function') wx.removeStorageSync(legacyKey) } catch (error) {}
   let raw = null
   try { raw = wx.getStorageSync(key) } catch (error) { return null }
-  return normalizePausedRun(raw)
+  return sameRun(raw, scope) ? normalizePausedRun(raw) : null
 }
 
 /** O-09:本机后写的快照不能比本机先写的旧 —— 已采纳的服务端时刻可能比手机时钟快(手机被拨慢),
@@ -70,7 +81,8 @@ function writePausedRun(wx, scope, elapsedSeconds, now) {
   const savedAt = previous && previous.savedAt >= now ? previous.savedAt + 1 : now
   const record = normalizePausedRun({ state: 'paused', elapsedSeconds, savedAt })
   if (!record) return false
-  try { wx.setStorageSync(key, record); return true } catch (error) { return false }
+  const runId = runIdOf(scope)
+  try { wx.setStorageSync(key, runId ? Object.assign({}, record, { runId }) : record); return true } catch (error) { return false }
 }
 
 function clearRunSession(wx, scope) {
@@ -107,7 +119,8 @@ function adoptServerSavedAt(wx, scope, elapsedSeconds, now, res) {
   try {
     const local = normalizePausedRun(wx.getStorageSync(key))
     if (!local || local.elapsedSeconds !== elapsedSeconds || local.savedAt < now) return
-    wx.setStorageSync(key, { state: 'paused', elapsedSeconds, savedAt: serverSavedAt })
+    const runId = runIdOf(scope)
+    wx.setStorageSync(key, Object.assign({ state: 'paused', elapsedSeconds, savedAt: serverSavedAt }, runId ? { runId } : {}))
   } catch (error) {}
 }
 
@@ -161,6 +174,7 @@ function newerPausedRun(local, remote) {
 module.exports = {
   MAX_PAUSED_SECONDS,
   pausedRunStorageKey,
+  runIdOf,
   normalizePausedRun,
   readPausedRun,
   writePausedRun,

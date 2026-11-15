@@ -2,7 +2,7 @@
 // 与主题详情复用同一分章投影；只有明确验证的供应商几何可画为道路。
 const toast = require('../../../../utils/toast.js');
 const routePreview = require('../../../../utils/topic-route-preview.js');
-const { lightMapStyle } = require('../../../../utils/map-style.js');
+const { lightMapStyle, mapStyleFor, routeMapKind } = require('../../../../utils/map-style.js');
 const LIGHT_MAP_STYLE = lightMapStyle();
 const app = getApp();
 
@@ -18,6 +18,10 @@ Component({
         if (v && Number(v) > 0) this.loadRoute(v);
       }
     },
+    // 谁在看:默认 preview(广场发布 / 活动选择里的预览截图,white);玩家展示时传 preview=false,按主题发布时的外观取底图
+    preview: { type: Boolean, value: true },
+    // 主题 look_json,只在 preview=false 时用
+    look: { type: null, value: '' },
     // 地图高度(如 '400rpx' / '300px')
     height: {
       type: String,
@@ -55,6 +59,9 @@ Component({
         success(res) {
           if (!current()) return;
           if (res.code == '200' && res.data && String(res.data.id) === String(topicId) && res.data.chaptersList) {
+            // layer-style 不能热改:地图在 routeReady 之后才挂出,样式先于它写进 data
+            const style = mapStyleFor(routeMapKind(that.data.look || res.data.lookJson, that.data.preview));
+            that.setData({ mapSubkey: style.subkey, mapLayerStyle: style.layerStyle });
             that.buildRouteMap(res.data.chaptersList);
           } else {
             that.setData(routePreview.build([]));

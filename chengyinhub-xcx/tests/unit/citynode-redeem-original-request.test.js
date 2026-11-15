@@ -94,8 +94,8 @@ test('回执分类:绑定码内据点与玩家,couponGranted 严格布尔,事务
   assert.equal(classify(receipt({ memberId: 35 }), 'success', undefined).status, 'unknown', '别的玩家的回执')
   assert.equal(classify(receipt({ poiId: 13 }), 'success', undefined).status, 'unknown', '别的据点的回执')
   assert.equal(classify({ code: 200, msg: '核销成功' }, 'success', undefined).status, 'unknown')
-  assert.equal(classify({ code: 500, msg: '玩家未到店打卡,或该券已核销' }, 'success', undefined).status, 'failed')
-  assert.equal(classify({ code: 500, msg: '券库存不足,核销失败' }, 'success', undefined).status, 'failed')
+  assert.equal(classify({ code: 500, msg: '玩家未到店打卡，或该券已核销' }, 'success', undefined).status, 'failed')
+  assert.equal(classify({ code: 500, msg: '券库存不足，核销失败' }, 'success', undefined).status, 'failed')
   // 验码阶段的后端原话换成商家能做的下一步
   const expired = classify({ code: 500, msg: '已过期' }, 'success', undefined)
   assert.equal(expired.status, 'failed')
@@ -168,10 +168,10 @@ test('明确成功与明确失败都清掉本次待办;账号隔离', () => {
     env.switchUser(8)
     env.scan(CODE)
     assert.equal(env.redeems().length, 3)
-    env.redeems()[2].success({ code: 500, msg: '玩家未到店打卡,或该券已核销' })
+    env.redeems()[2].success({ code: 500, msg: '玩家未到店打卡，或该券已核销' })
     const failed = env.modals.pop()
     assert.equal(failed.title, '核销失败')
-    assert.equal(failed.content, '玩家未到店打卡,或该券已核销')
+    assert.equal(failed.content, '玩家未到店打卡，或该券已核销')
     assert.equal(Object.keys(storage).length, 1)
   } finally { env.restore() }
 })

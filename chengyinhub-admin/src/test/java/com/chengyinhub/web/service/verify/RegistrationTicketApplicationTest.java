@@ -54,7 +54,7 @@ class RegistrationTicketApplicationTest {
     @Test void originalOwnershipAndPaidStatusChecksStillPrecedeSeatPreparation() {
         assertEquals("无权操作该报名单", application.issueDynCode(99L, 31L, 2).get("msg"));
         order.setPaymentStatus(4);
-        assertEquals("订单未完成支付或已结束,无法生成核销码", application.issueDynCode(51L, 31L, 2).get("msg"));
+        assertEquals("订单未完成支付或已结束，无法生成核销码", application.issueDynCode(51L, 31L, 2).get("msg"));
         verifyNoInteractions(seats, activities, perks, qr);
     }
     @Test void missingSeatStillReturnsOnlyChoiceMetadataWithoutPreparingOrSigningASeat() {

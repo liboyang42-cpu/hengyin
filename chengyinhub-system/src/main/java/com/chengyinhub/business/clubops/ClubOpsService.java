@@ -336,7 +336,7 @@ public class ClubOpsService {
     static double coordinate(Object raw, double bound, String field) {
         Double value = toDouble(raw);
         if (value == null || value.isNaN() || value.isInfinite() || Math.abs(value) > bound) {
-            throw new ServiceException("位置参数无效:" + field, 400);
+            throw new ServiceException("位置参数无效：" + field, 400);
         }
         return value;
     }
@@ -344,7 +344,7 @@ public class ClubOpsService {
     static int boundedInt(Object raw, int fallback, int min, int max, String field) {
         if (raw == null) return fallback;
         Long value = raw instanceof Boolean ? null : toLong(raw);
-        if (value == null || value < min || value > max) throw new ServiceException("参数无效:" + field, 400);
+        if (value == null || value < min || value > max) throw new ServiceException("参数无效：" + field, 400);
         return value.intValue();
     }
 

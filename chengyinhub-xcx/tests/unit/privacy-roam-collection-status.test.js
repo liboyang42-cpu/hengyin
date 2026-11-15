@@ -64,7 +64,8 @@ test('隐私页漫游行渲染采集状态', () => {
 
 test('清空本机缓存确认文案覆盖 clearLocal 的四样,且不用术语', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/roam/index.wxml'), 'utf8');
-  const sheet = wxml.slice(wxml.indexOf('<block wx:if="{{clearAsk}}">'), wxml.indexOf('</block>', wxml.indexOf('<block wx:if="{{clearAsk}}">')));
+  const gate = wxml.indexOf('wx:if="{{clearAsk}}"');
+  const sheet = wxml.slice(gate, wxml.indexOf('</view>\n\n', gate)); // 2026-11-14 A6.1:确认层已进 .roam-scene-host
   const lede = /<text class="roam-rules__lede">([^<]+)<\/text>/.exec(sheet)[1];
   for (const item of ['迷雾', '足迹', '漫游记录', '找回记录', '足迹链接也会失效', '已上传到城瘾的记录不受影响']) assert.ok(lede.includes(item), item);
   assert.doesNotMatch(lede, /tile|reveal|session|recovery|缓存桶|epoch/i);

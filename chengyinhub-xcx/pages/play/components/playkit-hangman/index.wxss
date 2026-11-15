@@ -22,6 +22,9 @@
   letter-spacing: var(--lk-ls, normal);
   line-height: 1.5;
   text-align: center;
+  max-width: 100%;
+  word-break: keep-all;                   /* 短题面不在字中间折行(「一只 / 猫」),超宽才折 */
+  overflow-wrap: anywhere;
 }
 /* 格子板:词组之间可换行,一个词里不换行 */
 .hm__board {
@@ -105,4 +108,12 @@
 }
 .hm--reduced .hm__cell, .hm--reduced .hm__err, .hm--reduced .hm__in { transition: none; }
 .hm--reduced .hm__cell.is-pop, .hm--reduced .hm__cell.is-active { transform: none; }
-.hm__q, .hm__board, .hm__in, .hm__err, .hm__fb { flex-shrink: 0; }
+.hm__pass {
+  margin-top: var(--cy-space-3);
+  font-size: var(--cy-type-body);
+  line-height: 1.6;
+  color: var(--ink);
+  text-align: center;
+  word-break: break-all;
+}
+.hm__q, .hm__board, .hm__in, .hm__err, .hm__fb, .hm__pass { flex-shrink: 0; }

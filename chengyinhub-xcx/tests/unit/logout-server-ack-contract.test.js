@@ -113,7 +113,7 @@ test('#16 服务端注销成功才清本地登录态', () => {
   assert.equal(globalData.role, '');
 });
 
-test('正常退出后同账号可恢复漫游，不保留凭据且切号不串数据', () => {
+test('正常退出清掉本机漫游缓存，不保留凭据且切号不串数据', () => {
   const initialStorage = {
     authorization: 'stored-auth',
     role: 'player',
@@ -131,10 +131,10 @@ test('正常退出后同账号可恢复漫游，不保留凭据且切号不串�
   assert.equal(storage.authorization, undefined, '本地凭据必须随正常退出清除');
   assert.equal(storage.role, undefined);
   assert.equal(storage.user_id, undefined);
-  assert.deepEqual(storage['roam_memory_v1:9:sessions'], initialStorage['roam_memory_v1:9:sessions']);
-  assert.deepEqual(storage['roam_memory_v1:9:recovery'], initialStorage['roam_memory_v1:9:recovery']);
-  assert.deepEqual(storage['roam_memory_v1:10:sessions'], initialStorage['roam_memory_v1:10:sessions'],
-    '正常退出不能连带删除设备上另一个玩家的独立漫游历史');
+  assert.equal(storage['roam_memory_v1:9:sessions'], undefined);
+  assert.equal(storage['roam_memory_v1:9:recovery'], undefined);
+  assert.equal(storage['roam_memory_v1:10:sessions'], undefined,
+    '退出时清掉设备上的漫游缓存');
   assert.equal(storage['roam_memory_v1:10:recovery'], undefined,
     '不同账号不能读到当前账号恢复记录');
 });
@@ -213,7 +213,7 @@ test('删除本地账号键失败时保留业务原值，重试成功后才清�
 
   assert.equal(storage.authorization, undefined);
   assert.equal(storage.role, undefined);
-  assert.equal(storage['roam_memory_v1:9:recovery'], recovery);
+  assert.equal(storage['roam_memory_v1:9:recovery'], undefined);
   assert.equal(globalData.authorization, '');
   assert.deepEqual(cleared.relaunched, ['/pages/index/index']);
 });

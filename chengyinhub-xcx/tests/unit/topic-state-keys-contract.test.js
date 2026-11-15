@@ -22,7 +22,7 @@ test('C7: 键名由系统生成且合后端规则;界面只显示名字', () => 
   assert.equal(keys.nameError('clue', '半张货单', ['半张货单']), '已有同名的线索。')
   assert.equal(keys.nameError('item', '撬棍', ['撬棍']), '已有同名的物品。')
   assert.equal(keys.nameError('tag', '新来的', []), '')
-  assert.deepEqual(keys.parseUsedIn('状态键 clue.a 已被引用,不能删除。引用位置:节点「旧码头仓库」、主题剧情配置'), ['节点「旧码头仓库」', '主题剧情配置'])
+  assert.deepEqual(keys.parseUsedIn('状态键 clue.a 已被引用，不能删除。引用位置：节点「旧码头仓库」、主题剧情配置'), ['节点「旧码头仓库」', '主题剧情配置'])
   assert.deepEqual(keys.parseUsedIn('fixture rejection'), [])
   assert.equal(keys.normalizeKeys([{ stateKey: 'bad' }]), null)
   const row = keys.normalizeKeys([{ stateKey: 'clue.k1', keyType: 'flag' }])[0]

@@ -560,7 +560,7 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         if(zeroChallengeSession && "REROLL_CHECK".equals(normalizedAction))throw new IllegalArgumentException("恢复挑战不消费幸运重掷");
         // P-23:传感器跳过只走普通的一站;恢复挑战与按结果分支的玩法不许跳(跳过会被判成一个结果分支)
         if (("REPORT_SENSOR_FAILURE".equals(normalizedAction) || "SKIP_SENSOR_STATION".equals(normalizedAction))
-                && (zeroChallengeSession || config.has("outcomeRules"))) throw new IllegalStateException("这一站不支持跳过");
+                && (zeroChallengeSession || (config.has("outcomeRules") && !config.path(String.valueOf(safePayload.get("game"))).path("allowSkip").asBoolean(false)))) throw new IllegalStateException("这一站不支持跳过");
         // R14:本次提交判定出的「选择」——分支步骤/选项、问答选项、玩法通过;判完当场写旅程本局状态。
         List<ChoiceRef> choices = new ArrayList<>();
         // 拍物成卡:这一趟真判过且节点是卡片玩法时非空。铸卡推迟到事务提交之后 ——
@@ -721,10 +721,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             if (receipt.path("success").asBoolean() || receipt.has("requiredCompletions") && receipt.path("gameCompleted").asBoolean()) session.setStatus(GameRuntimeSession.STATUS_COMPLETED);
             else if (retry) session.setStatus(GameRuntimeSession.STATUS_FAILED);
         }
-        ObjectNode gameplayDecision = zeroChallengeSession || !config.has("outcomeRules") ? null : serverGameplayDecision(normalizedAction, config, state);
+        ObjectNode gameplayDecision = zeroChallengeSession || !config.has("outcomeRules") && !"SKIP_SENSOR_STATION".equals(normalizedAction) ? null : serverGameplayDecision(normalizedAction, config, state);
         if (gameplayDecision != null) {
             gameplayDecision.put("nodeId", session.getNodeId()); state.set("gameplayDecision", gameplayDecision.deepCopy());
-            session.setStatus("PASS".equals(gameplayDecision.path("outcome").asText()) ? GameRuntimeSession.STATUS_COMPLETED : GameRuntimeSession.STATUS_FAILED);
+            session.setStatus("FAIL".equals(gameplayDecision.path("outcome").asText()) ? GameRuntimeSession.STATUS_FAILED : GameRuntimeSession.STATUS_COMPLETED);
+            if ("SKIPPED".equals(gameplayDecision.path("outcome").asText())) session.setScore(0);
         }
         // CT-07 指认结案的结论:只在最终一题(原 qa)判完时落一次,与本次状态更新同一事务。
         // 对错只来自服务端判定的 qa 结果;「提前」由真实进度事实派生(见 accusationGateSatisfied)。
@@ -745,10 +746,10 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
         // 非旅程主题在旅程运行时里 no-op,行为零变化。
         boolean scopedTheme=topicRouteRuntimeService!=null && topicRouteRuntimeService.nodeRuntimeConfig(memberId,session.getTopicId(),session.getNodeId(),session.getActivityId())!=null;
         // 非通用主题里结果反馈判出的过/没过,按普通站点的成败事实记(没判出结果的动作不记)。
-        Boolean r5Fact = gameplayDecision == null ? null : Boolean.valueOf("PASS".equals(gameplayDecision.path("outcome").asText()));
+        Boolean r5Fact = gameplayDecision == null || "SKIPPED".equals(gameplayDecision.path("outcome").asText()) ? null : Boolean.valueOf("PASS".equals(gameplayDecision.path("outcome").asText()));
         if (zeroChallengeSession) {
             // 挑战只写恢复回执，不产生普通任务完成事实。
-        } else if (config.has("outcomeRules") && (sharedRun != null || scopedTheme && topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId()))) {
+        } else if ((config.has("outcomeRules") || gameplayDecision != null && "SKIPPED".equals(gameplayDecision.path("outcome").asText())) && (sharedRun != null || scopedTheme && topicRouteRuntimeService.genericPlayer(memberId,session.getTopicId(),session.getActivityId()))) {
             if (gameplayDecision != null) {
                 String attemptId = "advanced:" + session.getId() + ":" + state.path("attemptOrdinal").asLong(1);
                 List<String[]> refs = new ArrayList<>(); for (ChoiceRef choice : choices) if (choice != null) refs.add(new String[]{choice.stepOrKit, choice.optionId});
@@ -880,9 +881,11 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 config.path("photoCheck").path("requirement").asText(""), photoConfigHash(config));
         // A lost prepare response has no intentId at the client: recover by original scoped key.
         PhotoCheckIntentView existing = photoCheckIntentService.read(memberId, sessionId, key, fingerprint);
+        PhotoCheckIntentView intent = existing;
         if (existing == null || existing.state() == PhotoCheckIntentState.PREPARED) {
             try {
                 requirePhotoEligibility(session, memberId, expectedVersion, payload);
+                if (existing == null) intent = photoCheckIntentService.prepare(command);
             } catch (ServiceException | IllegalArgumentException | IllegalStateException refusal) {
                 if (existing != null) throw refusal;
                 // Both current locking reads proved the original identity absent while holding the session lock.
@@ -895,7 +898,6 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
                 throw new ServiceException(refusal.getMessage(), code == null ? 400 : code).setData(data);
             }
         }
-        PhotoCheckIntentView intent = existing == null ? photoCheckIntentService.prepare(command) : existing;
         requirePhotoBinding(command, intent);
         return new PhotoAdmission(command, intent, null, config.deepCopy());
     }
@@ -1356,7 +1358,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
 
     /** 本局是否已按「跳过·辅助完成」收尾(读局状态,不查库)。 */
     private static boolean isSkipped(JsonNode state) {
-        return state != null && state.path("skip").path("skipped").asBoolean(false);
+        return state != null && (state.path("skip").path("skipped").asBoolean(false)
+                || AdvancedActionJudgement.skippedSensorSection(state) != null);
     }
 
     /** 服务端 photoVerified:只有视觉模型当场真判 PASS 才算;降级与兜底放行都不算 */
@@ -2069,9 +2072,9 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             // 格式非法时放行 = 时段限定静默失效,商家配了等于没配。
             throw new IllegalStateException("时段限定配置无效，请商家修正开放时段后再试");
         }
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(clock.now());
-        int nowMinute = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
+        // 时段门按业务时区(Asia/Shanghai)取分钟,不依赖 JVM 默认时区(-Duser.timezone)。
+        java.time.ZonedDateTime businessNow = clock.now().toInstant().atZone(BUSINESS_ZONE);
+        int nowMinute = businessNow.getHour() * 60 + businessNow.getMinute();
         boolean open = from < to
                 ? (nowMinute >= from && nowMinute < to)
                 : (nowMinute >= from || nowMinute < to);   // 跨夜
@@ -2983,7 +2986,8 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             putText(value, "lead", cfg);
             // 拍照打卡的补充说明:提示词摆屏幕正中,这一句小字在它下面
             putText(value, "shotNote", cfg);
-            putText(value, "imageUrl", cfg);
+            String questionImage = playMediaUrl(cfg.path("imageUrl").asText(""), actorMemberId);
+            if (!questionImage.isEmpty()) value.put("imageUrl", questionImage);
             putText(value, "audioUrl", cfg);
             List<Map<String, Object>> options = new ArrayList<>();
             for (JsonNode option : cfg.path("options")) {

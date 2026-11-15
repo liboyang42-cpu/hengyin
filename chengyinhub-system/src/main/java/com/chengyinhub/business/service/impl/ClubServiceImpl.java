@@ -177,13 +177,13 @@ public class ClubServiceImpl implements IClubService
     {
         if (mmsMerchantMapper.countMmsMerchantRowsByMemberIdForUpdate(memberId) > 0)
         {
-            throw new ServiceException("您已注册为商户,一个账户不能同时是商户与俱乐部主理人",
+            throw new ServiceException("您已注册为商户，一个账户不能同时是商户与俱乐部主理人",
                     HttpStatus.CONFLICT);
         }
         MerchantOperator operator = merchantOperatorMapper.selectActiveByMemberId(memberId);
         if (operator != null)
         {
-            throw new ServiceException("您已加入商家团队,一个账户不能同时是商家员工与俱乐部主理人",
+            throw new ServiceException("您已加入商家团队，一个账户不能同时是商家员工与俱乐部主理人",
                     HttpStatus.CONFLICT);
         }
     }

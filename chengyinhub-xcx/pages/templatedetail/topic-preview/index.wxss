@@ -48,6 +48,8 @@ page { background: #000; } /* ds-ok 预览页固定纯黑底(原型 .px) */
 .tp-cta { position: fixed; left: 32rpx; right: 32rpx; bottom: calc(56rpx + env(safe-area-inset-bottom)); z-index: 6; }
 .tp-cta::before { content: ""; position: absolute; left: -32rpx; right: -32rpx; top: -80rpx; bottom: -200rpx; background: linear-gradient(180deg, rgba(0, 0, 0, 0), #000 55%); z-index: -2; } /* ds-ok 原型 .fab-bar.x 底部渐隐 */
 .tp-cta__glow { position: absolute; left: 10%; right: 10%; top: -60rpx; height: 120rpx; border-radius: 50%; background: var(--glow); filter: blur(28px); z-index: -1; opacity: .9; }
+.tp-cta__row { display: flex; gap: 20rpx; }
+.tp-cta__btn--pri { flex: 1; }
 .tp-cta__btn { height: 96rpx; border-radius: 999rpx; background: #F8F8F8; color: #0A0A0A; display: flex; align-items: center; justify-content: center; font-size: 30rpx; font-weight: 700; } /* ds-ok 原型 .btn.pri 白色主按钮 */
 
 /* ---- 商家侧浅色(业主规则：商家一律浅色)—— 只换颜色，版式不变；色值同货架 .shelf--light ---- */
@@ -67,3 +69,5 @@ page { background: #000; } /* ds-ok 预览页固定纯黑底(原型 .px) */
 /* 细节打磨二期 L1/L5/L7 */
 .tp-state__btn { transition: var(--cy-tr-press); }
 .tp-cta__btn { transition: var(--cy-tr-press); }
+.tp-cta__btn--sec { flex: none; padding: 0 44rpx; background: rgba(255, 255, 255, 0.12); color: #F8F8F8; } /* ds-ok 原型 .btn.sec 次按钮 */
+.tp--light .tp-cta__btn--sec { background: rgba(17, 17, 20, 0.06); color: #111114; } /* ds-ok 浅底次按钮 */

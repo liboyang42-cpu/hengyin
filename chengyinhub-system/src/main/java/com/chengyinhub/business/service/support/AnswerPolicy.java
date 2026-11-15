@@ -180,6 +180,15 @@ public final class AnswerPolicy
         for (String alias : acceptedAliases) {
             if (got.equalsIgnoreCase(normalize(alias))) return true;
         }
+        // 共享归一器再多接受一层(只放宽):NBSP/U+3000/零宽/首尾标点/NFKC。
+        if (canonicals != null) {
+            for (String canonical : canonicals) {
+                if (AnswerNormalizer.equivalent(canonical, submitted)) return true;
+            }
+        }
+        for (String alias : acceptedAliases) {
+            if (AnswerNormalizer.equivalent(alias, submitted)) return true;
+        }
         return false;
     }
 
@@ -229,6 +238,30 @@ public final class AnswerPolicy
         if (got.isEmpty()) return false;
         for (String one : legacyAnswerTextCandidates(answerText)) {
             if (one.toLowerCase().equals(got)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * 高级 qa.TYPE 的候选写法:旧分段({@code [、,,]})∪ 共享分隔符分段 ∪ 整串。
+     * 旧分段与整串保留,保证原来能命中的输入仍命中;新增 ，；; 分段只会多接受。
+     */
+    public static List<String> answerTextCandidates(String answerText)
+    {
+        if (StringUtils.isBlank(answerText)) return Collections.emptyList();
+        java.util.LinkedHashSet<String> all = new java.util.LinkedHashSet<>(legacyAnswerTextCandidates(answerText));
+        all.addAll(AnswerNormalizer.split(answerText));
+        all.add(answerText.trim());
+        return new ArrayList<>(all);
+    }
+
+    /** 没配政策的高级 qa.TYPE:旧比对 || 共享归一器(只放宽)。 */
+    public static boolean matchesAdvancedType(String answerText, String submitted)
+    {
+        if (matchesLegacyAdvancedType(answerText, submitted)) return true;
+        if (submitted == null) return false;
+        for (String one : answerTextCandidates(answerText)) {
+            if (AnswerNormalizer.equivalent(one, submitted)) return true;
         }
         return false;
     }

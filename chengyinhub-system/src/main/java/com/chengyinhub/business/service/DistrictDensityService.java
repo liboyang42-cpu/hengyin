@@ -189,7 +189,7 @@ public class DistrictDensityService {
             BigDecimal s = null, w = null, n = null, e = null;
             for (int i = 0; i < points.size(); i++) {
                 List<BigDecimal> pt = points.get(i);
-                if (pt == null || pt.size() != 2 || pt.get(0) == null || pt.get(1) == null) throw new ServiceException("多边形顶点格式应为 [纬度, 经度]");
+                if (pt == null || pt.size() != 2 || pt.get(0) == null || pt.get(1) == null) throw new ServiceException("多边形顶点格式应为 [纬度，经度]");
                 BigDecimal lat = pt.get(0), lng = pt.get(1);
                 poly[i] = new double[] {lat.doubleValue(), lng.doubleValue()};
                 s = s == null || lat.compareTo(s) < 0 ? lat : s; n = n == null || lat.compareTo(n) > 0 ? lat : n;

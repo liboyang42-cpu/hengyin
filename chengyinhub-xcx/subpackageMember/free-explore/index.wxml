@@ -35,8 +35,10 @@
       <cy-empty wx:if="{{detail.legacy}}" kind="empty" title="这笔订单没有套票权益" />
       <block wx:else>
         <cy-card wx:for="{{detail.units}}" wx:key="id">
-          <text class="bundle-title">权益 {{index + 1}} · {{item.statusText}}</text>
+          <text class="bundle-title">{{item.chapterName || '权益 ' + (index + 1)}} · {{item.statusText}}</text>
+          <text wx:if="{{item.content}}" class="bundle-note">{{item.content}}</text>
           <text class="bundle-note">有效期至 {{item.validTo}}</text>
+          <cy-btn wx:if="{{item.canReserve && !pending && !swapPending && !reservePending}}" variant="secondary" data-id="{{item.id}}" bindtap="openReserve">预约</cy-btn>
           <cy-btn wx:if="{{(item.status === 'RESERVED' || item.status === 'AVAILABLE') && !pending && !swapPending}}" variant="secondary" data-id="{{item.id}}" bindtap="loadExitOptions">更换商家</cy-btn>
         </cy-card>
         <view wx:if="{{detail.fulfilledMerchants.length}}">
@@ -46,12 +48,24 @@
         <text class="bundle-title">预约记录</text>
         <cy-empty wx:if="{{!detail.reservations.length}}" kind="empty" title="暂无预约记录" />
         <cy-card wx:for="{{detail.reservations}}" wx:key="id">
-          <text class="bundle-title">{{item.startAt}} · {{item.statusText}}</text>
+          <text class="bundle-title">{{item.shopName || item.chapterName || '预约'}} · {{item.statusText}}</text>
+          <text class="bundle-note">{{item.startAt}}</text>
           <view wx:if="{{item.canCancel && !pending && !swapPending}}" class="bundle-actions">
             <cy-btn variant="secondary" data-id="{{item.id}}" data-waiver="false" bindtap="cancelReservation">取消预约</cy-btn>
             <cy-btn variant="secondary" data-id="{{item.id}}" data-waiver="true" bindtap="cancelReservation">使用每月免费取消</cy-btn>
           </view>
           <cy-btn wx:if="{{item.merchantId}}" variant="secondary" data-member-id="{{item.merchantId}}" bindtap="loadReviews">商家评价</cy-btn>
+        </cy-card>
+        <cy-card wx:if="{{reservePending}}">
+          <text class="bundle-title">预约结果确认中</text>
+          <cy-btn variant="secondary" loading="{{reserveBusy}}" bindtap="submitReserve">重新确认</cy-btn>
+        </cy-card>
+        <cy-card wx:if="{{reserveForm && !reservePending}}">
+          <text class="bundle-title">预约 {{reserveForm.chapterName}}</text>
+          <cy-btn wx:for="{{reserveForm.stores}}" wx:key="offerId" variant="{{reserveForm.offerId === item.offerId ? 'primary' : 'secondary'}}" data-id="{{item.offerId}}" bindtap="pickStore">{{item.merchantName}}</cy-btn>
+          <cy-date-field mode="date" value="{{reserveForm.date}}" start="{{reserveForm.today}}" bind:change="pickDate"><view class="bundle-note">日期：{{reserveForm.date || '请选择'}}</view></cy-date-field>
+          <cy-date-field mode="time" value="{{reserveForm.time}}" bind:change="pickTime"><view class="bundle-note">时间：{{reserveForm.time || '请选择'}}</view></cy-date-field>
+          <cy-btn variant="primary" loading="{{reserveBusy}}" bindtap="confirmReserve">确认预约</cy-btn>
         </cy-card>
         <cy-card wx:if="{{reviewPending}}">
           <text class="bundle-title">评价结果确认中</text>

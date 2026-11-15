@@ -70,7 +70,7 @@ Page({
     const seq = this._listSeq = (this._listSeq || 0) + 1
     this._pageNum = 1
     this._hasMore = false // 只给 loadMore 判断,不渲染
-    this.setData({ loading: true, error: '', moreError: '' })
+    this.setData({ loading: true, loadingMore: false, error: '', moreError: '' })
     this.post('/api/public-catalog/list', catalog.buildQuery(this.data.selected, { pageNum: 1, pageSize: PAGE_SIZE }),
       (patch) => { if (seq === this._listSeq) this.setData({ loading: false, error: patch.error }) }).then((res) => {
       if (seq !== this._listSeq) { if (typeof done === 'function') done(); return }

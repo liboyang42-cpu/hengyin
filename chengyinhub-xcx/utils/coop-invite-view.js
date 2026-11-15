@@ -213,7 +213,7 @@ function decorateApplies(rows, box) {
       titleText: it.topicName || '主题 #' + it.topicId,
       dateText: dateOf(it.startDate),
       subText: box === 'received' ? '俱乐部申请带队' : '申请带队' + (it.clubName ? ' · ' + it.clubName : ''),
-      termsText: it.message ? '留言:' + it.message : '申请只表意向，条款随商家回的邀约走',
+      termsText: it.message ? '留言：' + it.message : '申请只表意向，条款随商家回的邀约走',
     });
   });
 }

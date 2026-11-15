@@ -4,6 +4,7 @@
   "navigationBarTextStyle": "white",
   "backgroundColor": "#000000",
   "usingComponents": {
+    "cy-empty": "/components/cy/empty/index",
     "cy-nav-bar": "/components/cy/nav-bar/index",
     "cy-inline-error": "/components/cy/inline-error/index",
     "cy-avatar": "/components/cy/avatar/index",

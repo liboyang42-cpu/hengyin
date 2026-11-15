@@ -142,6 +142,7 @@
         "shop-games/index",
         "customer/detail/index",
         "verify-records/index",
+        "bundle-reservations/index",
         "payout-account/index",
         "crm-campaigns/index",
         "team/index"

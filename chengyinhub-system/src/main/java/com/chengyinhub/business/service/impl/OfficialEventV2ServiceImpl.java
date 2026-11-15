@@ -1404,7 +1404,11 @@ public class OfficialEventV2ServiceImpl implements IOfficialEventV2Service {
 
     @Override
     public List<Map<String, Object>> activeForRoam(String city, Long memberId) {
-        return v2Mapper.selectActiveV2RoamEvents(city, memberId);
+        List<Map<String, Object>> rows = v2Mapper.selectActiveV2RoamEvents(city, memberId == null ? 0L : memberId);
+        if (memberId == null || memberId <= 0) {
+            for (Map<String, Object> row : rows) row.remove("signed");
+        }
+        return rows;
     }
 
     private OfficialEvent requireV2Event(Long eventId) {

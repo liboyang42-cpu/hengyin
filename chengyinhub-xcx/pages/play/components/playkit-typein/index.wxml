@@ -19,6 +19,9 @@
         <view class="terminal__key {{nextKey === key ? 'terminal__key--next' : ''}}" wx:for="{{row}}" wx:for-item="key" wx:key="*this" data-key="{{key}}" bindtap="onKey" hover-class="terminal__key--hit" aria-role="button" aria-label="{{key}}">{{key}}</view>
         <view wx:if="{{rowIndex === 2}}" class="terminal__key terminal__fn" data-key="back" bindtap="onKey" hover-class="terminal__key--hit" aria-role="button" aria-label="退格">⌫</view>
       </view>
+      <view wx:if="{{extraKeys.length}}" class="terminal__row terminal__row--extra">
+        <view class="terminal__key {{nextKey === key ? 'terminal__key--next' : ''}}" wx:for="{{extraKeys}}" wx:for-item="key" wx:key="*this" data-key="{{key}}" bindtap="onKey" hover-class="terminal__key--hit" aria-role="button" aria-label="{{key}}">{{key}}</view>
+      </view>
       <view class="terminal__row"><view class="terminal__key terminal__space {{nextKey === ' ' ? 'terminal__key--next' : ''}}" data-key=" " bindtap="onKey" hover-class="terminal__key--hit" aria-role="button" aria-label="空格">space</view></view>
     </view>
   </view>

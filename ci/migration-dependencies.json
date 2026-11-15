@@ -1053,6 +1053,8 @@
     "20261115_stagger_club_growth_jobs": ["20261115_stagger_all_sys_jobs", "20261115_club_reach", "20261115_growth_loops"],
     "20261115_game_loop": [],
     "20261116_channels_messaging": ["im", "20261112_im_channels_platform"],
-    "20261115_game_mechanics": ["20260823_topic_route_graph", "play_progress_points", "20261115_location_trust"]
+    "20261115_game_mechanics": ["20260823_topic_route_graph", "play_progress_points", "20261115_location_trust"],
+    "20261114_missing_topic_pricing_rule": ["20261103_settlement_rule_three_percent"],
+    "20261114_roam_poi_tags_json": ["20261025_official_poi_quotes"]
   }
 }

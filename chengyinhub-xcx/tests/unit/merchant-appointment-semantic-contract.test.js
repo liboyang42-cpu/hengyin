@@ -26,7 +26,7 @@ test('商家更多菜单不再用预约文案跳转核销台账', () => {
 
   // BL-76:「核销记录」是独立只读页(/api/merchant/verification-records),不是预约入口,也不跳 ledger。
   // 2026-11-10 l-payout:「收款账户」只读页(FINANCE_READ)排在核销记录之后。
-  assert.deepEqual(menuActions, ['messages', 'aftercare', 'verifyRecords', 'payoutAccount', 'coupon', 'brand']);
+  assert.deepEqual(menuActions, ['messages', 'aftercare', 'verifyRecords', 'bundleReservations', 'payoutAccount', 'coupon', 'brand']);
   assert.doesNotMatch(menu, /预约|预订|booking|appointment/i);
   assert.doesNotMatch(onMore, /预约|预订|booking|appointment/i);
   // 2026-09-22 M-07:「我的消息」核销流水点开去核销记录是正当入口,但只许挂在 goEvent 上、不许带预约口吻。

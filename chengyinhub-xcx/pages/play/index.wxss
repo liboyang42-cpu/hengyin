@@ -503,9 +503,9 @@ page { background: var(--cy-color-bg-page); }
 .chfull__title{ display:block; margin-top:12rpx; font-size:50rpx; font-weight:700; line-height:var(--cy-leading-tight); color:#FFFFFF; } /* ds-ok 原型 .h2 26px/700 / 上 6px */
 .chfull__stage{position:absolute;inset:0;}
 .chfull__scroll{ height:100%;
-  /* 顶栏(标题/罗盘/…)透明压在正文上:上沿渐隐,滚上去的字和图在顶栏下方淡出,不与按钮叠字(实走 A26) */
-  -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); /* ds-ok 遮罩只取 alpha,与颜色主题无关 */
-  mask-image:linear-gradient(to bottom, transparent 0, transparent 220rpx, #000 340rpx); } /* ds-ok 同上 */
+  /* 顶部工具区全部裁掉，正文只在工具下方显示。 */
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent var(--chfull-fade-end), #000 var(--chfull-fade-end)); /* ds-ok 遮罩只取 alpha */
+  mask-image:linear-gradient(to bottom, transparent 0, transparent var(--chfull-fade-end), #000 var(--chfull-fade-end)); } /* ds-ok 同上 */
 
 .chfull__pad{height:calc(440rpx + env(safe-area-inset-bottom));} /* x-fix4 N-1 底部留白含 Home 条安全区 */
 .chfull__cover{ display:block; width:100%; height:346rpx; border-radius:38rpx; background:#101418; } /* ds-ok 原型 图 180px / r20 / 底 #101418 */
@@ -755,6 +755,14 @@ page { background: var(--cy-color-bg-page); }
 /* 第九轮 m2 第 3 项:路线分享卡 750×1000 画布,按屏宽 3:4 显示 */
 .finsheet__card{ padding:var(--cy-space-4) var(--cy-page-x) 0; }
 .finsheet__routecv{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 900rpx) * 3 / 4)); display:block; width:var(--rc-w); height:calc(var(--rc-w) * 4 / 3); margin:0 auto; border-radius:var(--cy-radius-lg); overflow:hidden; background:var(--cy-color-play-surface-solid); } /* 第十一轮 g4(j4 F8):屏上预览按高度收,卡、按钮和章节标题在首屏落在固定「继续」之上;画布像素尺寸不变,导出仍是 3:4 */
+.finsheet__routewrap{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 900rpx) * 3 / 4)); position:relative; width:var(--rc-w); height:calc(var(--rc-w) * 4 / 3); margin:0 auto; }
+.finsheet--two .finsheet__routewrap{ --rc-w:min(calc(100vw - 2 * var(--cy-page-x)), calc((100vh - 1023rpx) * 3 / 4)); }
+.finsheet__routemap{ position:absolute; inset:0; width:100%; height:100%; border-radius:var(--cy-radius-lg); overflow:hidden; }
+.finsheet__routewrap .finsheet__routecv{ position:absolute; inset:0; z-index:1; }
+.finsheet__routewrap .finsheet__map-fallback{ z-index:2; }
+.finsheet__routewrap .finsheet__map-error{ z-index:3; }
+.finsheet__routewrap.is-fallback{ width:100%; height:auto; aspect-ratio:690 / 320; }
+.finsheet__routewrap.is-fallback .finsheet__routecv{ display:none; }
 .finsheet__shade{ position:sticky; top:0; z-index:6; background:var(--cy-color-play-story-page); } /* 第十一轮 g4(j4 F8):状态栏下一条深色带,卡片标题不再滚到状态栏底下 */
 .finsheet__card-acts{ display:flex; gap:var(--cy-space-3); margin-top:var(--cy-space-4); }
 .finsheet__grid{ display:flex; margin-top:31rpx; }
@@ -1766,7 +1774,7 @@ page { background: var(--cy-color-bg-page); }
 .fx-story__hd.is-kitq{ gap:var(--cy-space-2); }
 .fx-story__hd.is-kitq .fx-story__acts{ display:none; }
 .fx-story__kitq{ flex:1; min-width:0; font-size:var(--cy-type-section-title); font-weight:700; line-height:1.3; color:var(--cy-color-text-primary);
-  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:break-all; }
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; word-break:keep-all; overflow-wrap:anywhere; }
 .fx-story__act{ width:88rpx; height:88rpx; border-radius:50%;
   background:var(--cy-color-bg-elevated); display:flex; align-items:center; justify-content:center; }
 
@@ -1921,7 +1929,7 @@ page { background: var(--cy-color-bg-page); }
 /* ===== 2026-10-28 完成页改版(业主定稿 claude.ai/artifact/DF1tPhSNWFrzQhDu8hoUAy):整屏深色,NRC 跑步总结 + Revolut 分组卡 =====
    做法:在 .finsheet 作用域里把它本来就在用的 play-story 色值换成深色,版式只改布局;390 宽稿按 1.923rpx/px 移植。 */
 .finmask{ display:none; }
-.finsheet{ position:fixed; inset:0; height:auto; max-height:none; border-radius:0; padding:0 0 calc(230rpx + env(safe-area-inset-bottom));
+.finsheet{ position:fixed; inset:0; height:100vh; max-height:none; border-radius:0; padding:0 0 calc(230rpx + env(safe-area-inset-bottom));
   --cy-color-play-story-page:#000000; --cy-color-play-story-text:#FFFFFF; --cy-color-play-story-muted:rgba(235,235,245,.6); /* ds-ok 定稿深色 */
   --cy-color-play-story-line:rgba(255,255,255,.08); --cy-color-play-story-surface:#1C1C1E; --cy-color-play-story-accent:#FFFFFF; /* ds-ok 定稿深色 */
   --cy-color-play-story-accent-soft:rgba(255,255,255,.16); --cy-color-play-story-cta-fg:#000000; --cy-color-play-ink-muted:rgba(235,235,245,.6); /* ds-ok 定稿深色 */

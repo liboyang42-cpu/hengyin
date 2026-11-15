@@ -55,6 +55,8 @@ Component({
     // 雷达小地图要它:以前固定 scale=16 以我为中心,下一站在 3km 外时圆里只有街道(2026-10-27 实测)。
     fit: { type: Boolean, value: false },
     fitPadding: { type: Array, value: [40, 40, 40, 40] },
+    // 非空时视野只框这些点 [{latitude,longitude}](路线卡底图快照用)
+    fitPoints: { type: Array, value: [], observer() { this._fit([]); } },
     center: { type: Object, value: { lat: 31.2304, lng: 121.4737 } },
     scale:  { type: Number, value: 16 },
     mapMarkers:   { type: Array, value: [] },
@@ -93,20 +95,33 @@ Component({
     layerStyle: { type: Number, value: 1 },
     // 第九轮 m4 第 2 项:底图是哪一套(black / white / paper / 2077;'' = 没配 key 的官方默认底图)。
     // 浅底上把白线白圈换成墨色,见 utils/map-style.js toneLines / toneCircle。
-    tone: { type: String, value: '', observer() { this._mergeLines(); this._rebuild(); } },
+    tone: { type: String, value: '', observer(next, previous) {
+      if (next !== previous && (next === '2077' || previous === '2077')) {
+        const generation = this._mapGeneration = (this._mapGeneration || 0) + 1;
+        this._fitRendered = false;
+        clearTimeout(this._styleLoadTimer);
+        this._styleVisibleAt = next === '2077' ? Date.now() + 3500 : 0;
+        // 新样式使用新原生实例，旧实例的 updated 不能提前撤掉占位。
+        this.setData({ mapInstances: [], mapLoaded: false }, () => {
+          wx.nextTick(() => { if (!this._mapGone && generation === this._mapGeneration) this.setData({ mapInstances: [{ generation }] }); });
+        });
+      }
+      this._mergeLines(); this._rebuild();
+    } },
     // 第九轮 m4:漫游 16 级以上的 3D 楼块 + 俯仰(试做,默认关;开关在 utils/map-style.js ROAM_3D)
     tilt3d: { type: Boolean, value: false },
     showExit: { type: Boolean, value: false },
     exitTop: { type: Number, value: 52 }
   },
-  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [], skew3d: ROAM_3D.skew },
+  data: { markers: [], circles: [], photoCallouts: [], teamCallouts: [], lines: [], skew3d: ROAM_3D.skew, mapLoaded: false, mapInstances: [{ generation: 0 }] },
   lifetimes: {
     attached() {
+      if (this.data.tone === '2077' && !this._styleVisibleAt) this._styleVisibleAt = Date.now() + 3500;
       if (this.data.scene === 'explore') { this._icons = {}; return; }
       this._genIcons().then(() => this._rebuild());
     },
     // 卸载时清掉 dropIn 挂起的定时器,避免组件销毁后 setTimeout 仍触发 setData
-    detached() { if (this._dropTimers) { this._dropTimers.forEach((t) => clearTimeout(t)); this._dropTimers = []; } }
+    detached() { this._mapGone = true; clearTimeout(this._styleLoadTimer); if (this._dropTimers) { this._dropTimers.forEach((t) => clearTimeout(t)); this._dropTimers = []; } }
   },
   methods: {
     onExitTap() { this.triggerEvent('exit'); },
@@ -168,6 +183,15 @@ Component({
     },
     _fit(mk) {
       if (!this.data.fit) return;
+      const fp = this.data.fitPoints || [];
+      if (fp.length) {
+        this._fitPts = fp;
+        const k = JSON.stringify(fp);
+        if (k === this._fitKey) return;
+        this._fitKey = k; this._fitRendered = false;
+        this._applyFit();
+        return;
+      }
       const nodes = mk.filter((m) => m.id !== ARROW_MARKER_ID && m.id !== PLAYER_MARKER_ID);
       const me = mk.find((m) => m.id === PLAYER_MARKER_ID);
       // 「我」离所有站都超过 5km 就不框进来:否则视野会缩到整个城市甚至全国(开发者工具模拟定位实测 12956km)。
@@ -308,7 +332,26 @@ Component({
       if (markerId == null) return;
       this.onMarkerTap({ detail: { markerId } });
     },
+    onStyleReady(e) {
+      const generation = e && e.currentTarget && e.currentTarget.dataset && Number(e.currentTarget.dataset.generation);
+      const detail = e && e.detail;
+      if (generation !== (this._mapGeneration || 0) || !this.data.mapInstances.length
+        || !detail || detail.ability !== 'layer-style' || detail.errCode !== 0) return;
+      clearTimeout(this._styleLoadTimer);
+      this.setData({ mapLoaded: true });
+    },
     onUpdated(e) {
+      const generation = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.generation;
+      if (!this.data.mapInstances.length || (generation != null && Number(generation) !== (this._mapGeneration || 0))) return;
+      if (!this.data.mapLoaded) {
+        const remaining = this.data.tone === '2077' ? Math.max(0, (this._styleVisibleAt || 0) - Date.now()) : 0;
+        clearTimeout(this._styleLoadTimer);
+        // shortcut: runtimes without layer-style readiness retain the measured 3.5s fallback.
+        if (remaining) this._styleLoadTimer = setTimeout(() => {
+          if (!this._mapGone && Number(generation || 0) === (this._mapGeneration || 0)) this.setData({ mapLoaded: true });
+        }, remaining);
+        else this.setData({ mapLoaded: true });
+      }
       if (this.data.fit && this._fitKey && !this._fitRendered) { this._fitRendered = true; this._applyFit(); }
       this.triggerEvent('updated', e.detail);
     },

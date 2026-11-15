@@ -1,10 +1,12 @@
 'use strict'
 
 const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js')
-const { readNonNegative } = require('../../../utils/roam-history-metrics.js')
+const { readNonNegative, footprintCount, formatDistance, formatDuration, sessionDateParts } = require('../../../utils/roam-history-metrics.js')
 const reducedMotionBehavior = require('../../../behaviors/reduced-motion.js')
 const { buildReplaySchedule, buildRouteGeometry, replayFrame } = require('./route-replay.js')
 const { createReader } = require('../../../utils/roam-passport-read.js')
+const { routeGeo } = require('../../../utils/roam-route-geo.js')
+const { freeMapKind, mapStyleFor, mapToneFor } = require('../../../utils/map-style.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
 
 function nonNegativeNumber(value) {
@@ -68,6 +70,9 @@ Component({
     replaySegs: [],
     replayProgress: 0,
     replayState: 'idle',
+    routeGeo: null,
+    mapStyle: { subkey: '', layerStyle: 1 },
+    mapTone: 'black',
   },
   observers: {
     ts() { this._load() },
@@ -136,32 +141,35 @@ Component({
         session,
         routeSegs: route.segs,
         routePoiDots: route.poiDots,
+        routeGeo: routeGeo(session.track, session.pois),
+        mapStyle: mapStyleFor(freeMapKind()),
+        mapTone: mapToneFor(freeMapKind()),
         replaySegs: route.segs,
         replayProgress: route.segs.length ? 100 : 0,
         replayState: 'idle',
       })
     },
     _normalize(raw) {
-      const timestamp = Number(raw.ts)
-      const date = new Date(Number.isFinite(timestamp) && timestamp > 0 ? timestamp : NaN)
-      const validDate = !Number.isNaN(date.getTime())
+      const date = sessionDateParts(raw)
+      const validDate = !!date
       // distance 兼容老记录的 "0.2" 字符串(见 utils/roam-history-metrics.js);
       // 0 仍是 0。UI-04(2026-09-18):读不出来的统计位显示 0,不再显示横杠
       // (时长仍按文本处理,读不出来保留「—」)。
       const distance = readNonNegative(raw.distance)
       const shops = nonNegativeInteger(raw.shops)
       const explorePct = nonNegativeNumber(raw.explorePct)
-      const formattedDuration = this._formatDuration(raw.durSec)
+      const formattedDuration = formatDuration(raw.durSec, raw.time)
       // 服务端已完成事实(serverFact)的 null 是服务端也不知道:显示「—」不伪造 0;本机旧记录仍按 UI-04 显示 0。
       const unknownCount = raw.serverFact ? '—' : '0'
       return {
         ...raw,
-        dateFull: validDate ? `${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]}` : '日期不可用',
-        time: typeof raw.time === 'string' && raw.time.trim() ? raw.time.trim() : (formattedDuration || '—'),
+        dateFull: validDate ? `${date.month}月${date.day}日 周${WEEK[date.weekday]}` : '日期不可用',
+        time: formattedDuration || '—',
         distance,
-        distanceText: distance === null ? unknownCount : String(distance),
+        distanceText: distance === null ? unknownCount : formatDistance(distance),
         shops,
         shopsText: shops === null ? unknownCount : String(shops),
+        footprints: footprintCount(raw),
         explorePct: explorePct !== null && explorePct <= 100 ? explorePct : null,
         explorePctText: explorePct !== null && explorePct <= 100 ? String(explorePct) : '0',
         pois: (Array.isArray(raw.pois) ? raw.pois : [])
@@ -172,11 +180,7 @@ Component({
           })),
       }
     },
-    _formatDuration(seconds) {
-      const value = nonNegativeInteger(seconds)
-      if (value === null) return ''
-      return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`
-    },
+    _formatDuration(seconds) { return formatDuration(seconds) },
     retry() { this._load() },
     _clearReplayTimer() {
       if (this._replayTimer) clearTimeout(this._replayTimer)

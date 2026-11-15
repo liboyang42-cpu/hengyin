@@ -8,11 +8,12 @@ const app = getApp();
 const cyToast = require('../../../utils/toast.js');
 const geo = require('../../../utils/geo.js');
 const loading = require('../../../utils/loading.js');
-const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
+
+const placeMap = require('../../../utils/roam-place-map.js');
 
 const KEYS = ['A', 'B', 'C', 'D'];
 /* 服务端在写入前拒绝的那几句(与据点详情 PREWRITE_REJECTIONS 同源):这些回来就是「这次没过」,可以再答 */
-const REJECTIONS = ['离据点太远,请到店后再完成', '答案不正确', '请上传拍照打卡照片', '照片地址不合法,请重新上传',
+const REJECTIONS = ['离据点太远，请到店后再完成', '答案不正确', '请上传拍照打卡照片', '照片地址不合法，请重新上传',
   '照片未上传成功或不属于当前账号，请重新拍摄上传', '照片校验暂不可用，请稍后重试', '据点未开放或已下线', '节点未上线', '缺少定位'];
 const BADGE_WALL = '/subpackageP3/pages/badge-wall/index/index';
 
@@ -22,11 +23,12 @@ Page({
   data: {
     step: 'loading',          // loading | photo | quiz | done | error
     errorText: '',
-    node: null,
+    node: null, questionTitle: '',
     options: [],
     medal: { items: [], title: '', sub: '' },
     backTop: 48,
     privacyGateShow: false,
+    gap: null,                // 还没走到:{ text:'还差 xx 米', lat, lng, name }
   },
 
   onLoad(q) {
@@ -40,7 +42,8 @@ Page({
     this.setData({ backTop });
     this._load();
   },
-  onUnload() { this._gone = true; clearTimeout(this._nextTimer); },
+  onHide() { this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; },
+  onUnload() { this._unloaded = true; this._gone = true; clearTimeout(this._nextTimer); },
 
   _load() {
     if (!this._poiId) { this.setData({ step: 'error', errorText: '没有找到这个地点' }); return; }
@@ -52,7 +55,7 @@ Page({
         const n = res && res.code == 200 && res.data;
         if (!n || positiveId(n.poiId == null ? n.id : n.poiId) !== this._poiId) { this.setData({ step: 'error', errorText: (res && res.msg) || '地点暂时打不开' }); return; }
         const options = KEYS.map((k) => ({ id: k, t: n['question' + k] })).filter((o) => o.t);
-        this.setData({ node: n, options });
+        this.setData({ node: n, options, questionTitle: String(n.questionName || '').replace(/\?/g, '？') });
         if (n.completed) { this._finish({ alreadyClaimed: true, badgeName: '' }); return; }
         if (n.status !== 1) { this.setData({ step: 'error', errorText: '这个地点的挑战暂未开放' }); return; }
         const quiz = n.validationMethod === 3 && options.length > 0;
@@ -64,22 +67,21 @@ Page({
         }
         this.setData({ step: 'error', errorText: '这个地点还没有配置挑战' });
       },
-      // Round5 #10:游客读地点 401 不是「网络异常」,给登录入口,登录后重读
+      // 2026-11-14：公开地点读取失败可直接重试，上传和完成挑战才要求登录。
       fail: (res) => {
         if (this._gone) return;
-        if (isLoginRequired(app, res)) { this.setData({ step: 'login' }); return; }
         this.setData({ step: 'error', errorText: '网络异常，请重试' });
       },
       successStatusAbnormal: (res) => { if (!this._gone) this.setData({ step: 'error', errorText: (res && res.msg) || '地点暂时打不开' }); },
     });
   },
   retry() { this._load(); },
-  loginRetry() { retryLogin(this, app, function () { this._load(); }); },
   showPrivacyGate() { this.setData({ privacyGateShow: true }); },
   onPrivacyGateSettled() { this.setData({ privacyGateShow: false }); },
 
   /* ① 拍照:照片先上传拿地址,拿到才算这一步过;只拍照的地点(核验方式 2)拍完直接交 */
   onShoot(e) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('roam', () => this.onShoot(e), { owner: this, target: () => [this._poiId] })) return;
     const d = (e && e.detail) || {};
     if (!d.tempFilePath || this._uploading) return;
     this._uploading = true;
@@ -108,15 +110,27 @@ Page({
   onPick(e) {
     const d = (e && e.detail) || {};
     const kit = this.selectComponent('#quizKit');
-    this._submit(d.optionId, (ok, msg) => { if (kit) kit.settle(ok, { index: d.index, feedback: ok ? '' : (msg === '答案不正确' ? '' : msg) }); });
+    this._submit(d.optionId, (ok, msg) => {
+      // complete 先判答案，再校验照片；这两句拒绝证明答案已过，但不证明挑战完成。
+      const photoRejected = !ok && ['照片未上传成功或不属于当前账号，请重新拍摄上传', '照片校验暂不可用，请稍后重试'].includes(msg);
+      this._photoError = photoRejected ? msg : '';
+      if (kit) kit.settle(ok || photoRejected, { index: d.index, pendingEvidence: photoRejected,
+        feedback: photoRejected ? '请重新拍摄照片' : (ok ? '' : msg) });
+    });
   },
-  onQuizContinue() { this._finish(this._result || {}); },
+  retakePhoto() {
+    this._photoUrl = '';
+    this._photoError = '';
+    this.setData({ step: 'photo' });
+  },
+  onQuizContinue() { if (this._photoError) this.retakePhoto(); else this._finish(this._result || {}); },
   /* 判定屏(对勾)停一下再进下一屏,和游玩页节奏一致;失败屏由玩家点退出 */
   onPhotoVerdict(e) { if (e && e.detail && e.detail.kind === 'win') this._later(() => this.onPhotoContinue()); },
   onQuizVerdict(e) { if (e && e.detail && e.detail.kind === 'win') this._later(() => this.onQuizContinue()); },
   _later(fn) { clearTimeout(this._nextTimer); this._nextTimer = setTimeout(() => { if (!this._gone) fn(); }, 1400); },
 
   _submit(answer, done) {
+    if (app.ensureLoginFor && !app.ensureLoginFor('roam', () => this._submit(answer, done), { owner: this, target: () => [this._poiId, this._photoUrl] })) return;
     if (this._submitting) return;
     this._submitting = true;
     const end = (ok, msg) => { this._submitting = false; if (!this._gone) done(ok, msg); };
@@ -124,8 +138,16 @@ Page({
       type: 'gcj02',
       success: (loc) => {
         const n = this.data.node;
-        const far = geo.haversine(loc.latitude, loc.longitude, Number(n.lat), Number(n.lng)) > Number(n.radiusM || 80) + 30;
-        if (far) { end(false, '离这里还有点远，走到地点附近再交'); return; }
+        const reach = Number(n.radiusM || 80) + 30;
+        const away = geo.haversine(loc.latitude, loc.longitude, Number(n.lat), Number(n.lng));
+        if (away > reach) {
+          // A3.6:告诉玩家还差多少米,并给导航
+          const text = placeMap.gapText(away - Number(n.radiusM || 80));
+          this.setData({ gap: { text, lat: Number(n.lat), lng: Number(n.lng), name: n.name || '' } });
+          end(false, text);
+          return;
+        }
+        if (this.data.gap) this.setData({ gap: null });
         app.sendRequest({
           url: '/api/city/nodes/' + this._poiId + '/complete', method: 'POST', write: true, hideLoading: true, silentError: true,
           data: { lat: loc.latitude, lng: loc.longitude, answer: answer || '', photoUrl: this._photoUrl || '', code: '' },
@@ -152,10 +174,13 @@ Page({
     const n = this.data.node || {};
     const again = !!r.alreadyClaimed;
     const name = r.badgeName || n.templateTitle || n.name || '地点勋章';
+    const coverKey = placeMap.coverKey(n);
+    const cover = coverKey && typeof app.getImgUrl === 'function' ? app.getImgUrl(coverKey) : '';
     this.setData({
       step: 'done',
       medal: {
-        items: [{ key: 'poi', name, sub: n.name || '', img: '', mic: 'key' }],
+        // A3.5:勋章画面用地点封面;没有封面才退回通用钥匙图标
+        items: [{ key: 'poi', name, sub: n.name || '', img: cover, mic: 'key' }],
         title: again ? '这枚勋章已经收藏过' : '地点挑战完成',
         sub: again ? '再完成一次不会重复发放' : '勋章已放进徽章墙',
       },
@@ -168,6 +193,11 @@ Page({
   onMedalSecondary() { // 带上勋章码:徽章墙会在墙上找到这一枚并写明「已在墙上」
     const code = (this._result && this._result.badgeCode) || (this.data.node && this.data.node.badgeCode) || '';
     wx.redirectTo({ url: BADGE_WALL + (code ? '?badgeCode=' + encodeURIComponent(code) : '') });
+  },
+  onNavigate() {
+    const gap = this.data.gap;
+    if (!gap || !Number.isFinite(gap.lat) || !Number.isFinite(gap.lng)) return;
+    wx.openLocation({ latitude: gap.lat, longitude: gap.lng, name: gap.name, scale: 17 });
   },
   exit() { wx.navigateBack({ fail: () => wx.redirectTo({ url: '/subpackageRoam/nearby/index' }) }); },
 });

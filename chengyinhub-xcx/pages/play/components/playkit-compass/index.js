@@ -167,13 +167,13 @@ Component({
         aligned: false, noData: false, hasHeading: false, holdPct: 0, holdLeft: '0.0', turnHint: '', lowAccuracy: false,
       });
     },
-    _failed(attempt) {
+    _failed(attempt, unsupported) {
       if (!this._current(attempt) || attempt.phase === 'reporting' || attempt.phase === 'done') return;
       this._abort();
       this.setData({ noData: true });
       cyToast('方向读取失败，请重试或退出');
       // P-23:失败次数由服务端记,够两次后它才会给出「跳过这一站」
-      this.triggerEvent('readfail');
+      this.triggerEvent('readfail', unsupported ? { unsupported: true } : {});
     },
     _armWatchdog(attempt, ms) {
       if (this._watchdog) clearTimeout(this._watchdog);
@@ -196,7 +196,9 @@ Component({
       if (typeof wx.startCompass !== 'function' || typeof wx.onCompassChange !== 'function'
         || typeof wx.offCompassChange !== 'function' || typeof wx.stopCompass !== 'function'
         || typeof this.data.target !== 'number' || !Number.isFinite(this.data.target)) {
-        this._failed(attempt); return;
+        // 这台设备根本没有罗盘接口:再读也是零,和「拒绝授权」同口径一次就够门槛
+        this._failed(attempt, typeof wx.startCompass !== 'function' || typeof wx.onCompassChange !== 'function'
+          || typeof wx.offCompassChange !== 'function' || typeof wx.stopCompass !== 'function'); return;
       }
       this._target = ((this.data.target % 360) + 360) % 360;
       const accept = () => {

@@ -42,4 +42,11 @@ function archiveRecords(pendingTiles, collectedAt) {
   })
 }
 
-module.exports = { exactSessionId, validRecovery, newSessionKey, archiveRecords }
+function currentLocationConsent(res, version) {
+  const row = res && Number(res.code) === 200 && res.data
+  return !!row && row.docType === 'privacy_policy' && row.scene === 'roam_location'
+    && row.eventType === 'AGREE' && row.docVersion === version
+    && typeof row.requestId === 'string' && !!row.requestId && row.scopeType == null && row.scopeId == null
+}
+
+module.exports = { exactSessionId, validRecovery, newSessionKey, archiveRecords, currentLocationConsent }

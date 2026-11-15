@@ -33,7 +33,8 @@ class AnswerPolicyTest {
         // 全角空格(U+3000)仍落成半角空格,且不参与去空白 —— 这是原实现的既有行为,
         // 不因为在别处看着像 bug 就悄悄放宽。
         assertEquals("A B", AnswerPolicy.normalize("A　B"));
-        assertFalse(AnswerPolicy.legacy().matches("AB", "A　B"));
+        // 2026-11-14 起共享归一器(AnswerNormalizer)在旧口径之外多接受一层:「A　B」现在能命中「AB」(只放宽)。
+        assertTrue(AnswerPolicy.legacy().matches("AB", "A　B"));
     }
 
     @Test
@@ -44,7 +45,8 @@ class AnswerPolicyTest {
         assertTrue(policy.matches("正确答案", " RIGHT "), "别名同样走 LEGACY_V1 归一");
         assertTrue(policy.matches("正确答案", "正确答案"), "canonical 永远保留");
         assertFalse(policy.matches("正确答案", "正确答"), "近似错字不得自动通过");
-        assertFalse(policy.matches("正确答案", "正确。"));
+        assertTrue(policy.matches("正确答案", "正确。"), "显式别名也接受首尾标点归一");
+        assertFalse(policy.matches("正确答案", "正确答。"), "去掉标点后错字仍不得通过");
         assertFalse(policy.matches("", "正确"), "canonical 为空 = 这题没有可判定的答案");
     }
 

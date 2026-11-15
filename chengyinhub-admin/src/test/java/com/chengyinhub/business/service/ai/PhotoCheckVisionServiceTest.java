@@ -183,7 +183,7 @@ class PhotoCheckVisionServiceTest {
 
     @Test
     void 负控_每日额度超限时降级且不调模型() {
-        doThrow(new AiServiceException(AiServiceException.Reason.RATE_LIMITED, "今日AI次数已用完(20/天),明天再来吧"))
+        doThrow(new AiServiceException(AiServiceException.Reason.RATE_LIMITED, "今日AI次数已用完(20/天)，明天再来吧"))
                 .when(gateway).consumeQuota(MEMBER_ID, "photo_check");
         AtomicBoolean called = new AtomicBoolean(false);
         ReflectionTestUtils.setField(service, "visionClient", new LlmClient() {

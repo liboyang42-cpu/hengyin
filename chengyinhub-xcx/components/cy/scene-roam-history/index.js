@@ -2,7 +2,7 @@
 
 const { currentPlayerRoamMemory } = require('../../../utils/roam-player-memory.js'); const pageMotion = require('../../../utils/page-motion.js')
 const { validRecovery } = require('../../../utils/roam-recovery.js')
-const { readNonNegative } = require('../../../utils/roam-history-metrics.js')
+const { readNonNegative, readDurationSeconds, formatDistance, formatDuration, sessionDateParts } = require('../../../utils/roam-history-metrics.js')
 const { routeGeo } = require('../../../utils/roam-route-geo.js')
 const { createReader, merge } = require('../../../utils/roam-passport-read.js')
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
@@ -101,8 +101,8 @@ Component({
       this._nextBefore = null
       const localWarning = this.data.state === 'error'
       this._sessions = merge(this._localSessions, previous)
-      if (previous.length) this._sync()
-      this.setData({ remoteLoading: true, remoteError: false, hasMore: false, localWarning })
+      this._sync()
+      this.setData({ remoteLoading: true, remoteError: false, hasMore: false, localWarning, state: localWarning && !previous.length ? 'error' : 'ready' })
       return this._loadRemotePage(reader)
     },
     async _loadRemotePage(reader) {
@@ -136,7 +136,7 @@ Component({
         else km += session.distanceValue
         if (session.shopsValue === null) shopsKnown = false
         else shops += session.shopsValue
-        const dur = nonNegativeNumber(session && session.durSec)
+        const dur = session.durationValue
         if (dur === null) secsKnown = false
         else secs += dur
         // 按月分组:同一个月的第一张卡上面出月份标题
@@ -148,17 +148,17 @@ Component({
         state: 'ready',
         inProgress: this._inProgress === true,
         // NRC 总成绩:没有数据的项写「—」,不造 0(UI-04)
-        summary: { trips: list.length, km: kmKnown ? km.toFixed(2) : '—', shopsText: shopsKnown ? String(shops) : '—',
-          timeText: secsKnown && list.length ? `${Math.floor(secs / 3600)}:${String(Math.floor(secs % 3600 / 60)).padStart(2, '0')}` : '—' },
+        summary: { trips: list.length, km: kmKnown ? formatDistance(km) : '—', shopsText: shopsKnown ? String(shops) : '—',
+          timeText: secsKnown && list.length ? formatDuration(secs) : '—' },
       })
     },
     _sorted() {
       const list = (this._sessions || []).map((session) => {
         const timestamp = this._timestamp(session && session.ts)
-        const date = new Date(timestamp || NaN)
-        const validDate = !Number.isNaN(date.getTime())
+        const date = sessionDateParts(session)
+        const validDate = !!date
         const dateText = validDate
-          ? `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]}`
+          ? `${date.year}年${date.month}月${date.day}日 周${WEEK[date.weekday]}`
           : '日期不可用'
         const zone = String((session && session.zone) || '').trim()
         const code = (zone || '漫游').replace(/[的这那片街区]/g, '').slice(0, 2) || '城西'
@@ -173,11 +173,11 @@ Component({
           historyKey: session.historyKey || 'local:' + session.ts,
           dateFull: dateText,
           dateShort: validDate
-            ? `${date.getMonth() + 1}/${date.getDate()}/${String(date.getFullYear()).slice(2)}`
+            ? `${date.month}/${date.day}/${String(date.year).slice(2)}`
             : '日期不可用',
           title: (zone && zone !== '这片街区' ? zone : '城市') + '漫游',
-          dateCard: validDate ? `${date.getMonth() + 1}月${date.getDate()}日 周${WEEK[date.getDay()]} · ${['凌晨', '上午', '下午', '晚上'][Math.floor(date.getHours() / 6)]}` : '日期不可用',
-          monthText: validDate ? `${date.getFullYear()}年${date.getMonth() + 1}月` : '',
+          dateCard: validDate ? `${date.month}月${date.day}日 周${WEEK[date.weekday]} · ${['凌晨', '上午', '下午', '晚上'][Math.floor(date.hours / 6)]}` : '日期不可用',
+          monthText: validDate ? `${date.year}年${date.month}月` : '',
           route: routeView(session && session.track, session && session.pois),
           // V3-40:有轨迹坐标就画真实底图,没有才用上面的示意图
           geo: routeGeo(session && session.track, session && session.pois),
@@ -187,12 +187,13 @@ Component({
           fromCode: code,
           toCode: code,
           distanceValue,
+          durationValue: readDurationSeconds(session.durSec, session.time),
           // UI-04:本机记录没取到显示 0;服务端事实(serverFact)的 null 显示「—」不伪造 0
-          distanceText: distanceValue === null ? (session && session.serverFact ? '—' : '0') : String(distanceValue),
+          distanceText: distanceValue === null ? (session && session.serverFact ? '—' : '0') : formatDistance(distanceValue),
           shopsValue,
           shopsText: shopsValue === null ? '—' : String(shopsValue),
           // 2026-10-31 P-7:用时与总成绩同一写法 h:mm(有 durSec 就按它算,老本机记录才退回存下的展示串)
-          time: this._formatDuration(session && session.durSec) || (session && typeof session.time === 'string' && session.time.trim()) || '—',
+          time: formatDuration(session && session.durSec, session && session.time) || '—',
           _timestamp: timestamp,
         }
       })
@@ -205,11 +206,7 @@ Component({
       const parsed = Date.parse(value)
       return Number.isFinite(parsed) ? parsed : 0
     },
-    _formatDuration(seconds) {
-      const value = nonNegativeNumber(seconds)
-      if (value === null) return ''
-      return `${Math.floor(value / 3600)}:${String(Math.floor(value % 3600 / 60)).padStart(2, '0')}`
-    },
+    _formatDuration(seconds) { return formatDuration(seconds) },
     openSession(event) {
       this.triggerEvent('open', { id: 'roam-session', params: { ts: event.currentTarget.dataset.sessionId ? 'server:' + event.currentTarget.dataset.sessionId : event.currentTarget.dataset.ts, sessionId: event.currentTarget.dataset.sessionId || '' } })
     },

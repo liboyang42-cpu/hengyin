@@ -205,12 +205,15 @@ public class PlayEntryApplication {
         boolean bargainOffered = hasJourneyState && topicRouteRuntimeService != null
                 && topicRouteRuntimeService.bargainOffered(memberId, tId, progActId);
         if (registered && topicRouteRuntimeService != null
-                && (playMode == PlayMode.LINEAR_ORIENTEERING || hasJourneyState)) {
+                && (selfPlay || playMode == PlayMode.LINEAR_ORIENTEERING || hasJourneyState)) {
             try {
-                routeState = capabilities == null ? topicRouteRuntimeService.state(memberId, tId, progActId)
-                        : topicRouteRuntimeService.state(memberId, tId, progActId,
-                                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
-                                        .parse(clientPlatform, clientVersion, capabilities));
+                com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration =
+                        com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration
+                                .parse(clientPlatform, clientVersion, capabilities);
+                routeState = selfPlay
+                        ? topicRouteRuntimeService.personalRun(memberId, tId, declaration)
+                        : capabilities == null ? topicRouteRuntimeService.state(memberId, tId, progActId)
+                        : topicRouteRuntimeService.state(memberId, tId, progActId, declaration);
                 if (routeState != null && routeState.getSessionId() != null)
                     contentSnapshot = contentSnapshotForRead(memberId,tId,progActId,true,routeTopic);
             } catch (IllegalArgumentException | IllegalStateException | com.chengyinhub.common.exception.ServiceException e) {

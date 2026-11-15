@@ -21,6 +21,7 @@ public class MerchantNodeDiscoveryServiceImpl implements IMerchantNodeDiscoveryS
     @Override
     public int syncTags(Long merchantId, String tags) {
         if (merchantId == null || merchantId <= 0) return 0;
-        return roamMapper.updateMerchantPoiTags(merchantId, tags);
+        // A5.5:roam_poi.tags 统一为 JSON 数组串
+        return roamMapper.updateMerchantPoiTags(merchantId, com.chengyinhub.business.service.support.RoamPoiTags.normalize(tags));
     }
 }

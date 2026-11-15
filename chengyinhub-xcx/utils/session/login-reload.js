@@ -4,6 +4,10 @@ function memberId(app) {
   const id = String(app && typeof app.getUserID === 'function' && app.getUserID() || '');
   return id === '0' ? '' : id;
 }
+function identity(app) {
+  const token = app && typeof app.getAuthorization === 'function' ? app.getAuthorization() : (app && app.globalData || {}).authorization;
+  return [memberId(app), token || ''].join('|');
+}
 function failureStatus(res, statusCode) {
   return Number(statusCode || res && (res.statusCode || res.code));
 }
@@ -49,4 +53,4 @@ function isLoginRequired(app, res, statusCode) {
   const code = failureStatus(res, statusCode);
   return code === 401 || code === 2 || !memberId(app);
 }
-module.exports = { memberId, failureStatus, retryLogin, waitForInitialSession, recoverReadSession, isLoginRequired };
+module.exports = { memberId, identity, failureStatus, retryLogin, waitForInitialSession, recoverReadSession, isLoginRequired };

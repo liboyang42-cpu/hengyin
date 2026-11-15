@@ -14,7 +14,9 @@
 
 const reducedMotionBehavior = require('../../../../behaviors/reduced-motion.js');
 const motion = require('../../../../utils/motion.js');
+const mediaDenied = require('../../utils/media-denied.js');
 const cyToast = require('../../../../utils/toast.js');
+const { stripOptionKey } = require('../../utils/playkit-questo.js');
 
 const KEYS = ['A', 'B', 'C', 'D'];
 /* 反馈上面那行小字。原型只有这两个词 —— 「答错了」这种判决式说法在这一格里读着太重,
@@ -27,17 +29,8 @@ const RETRY_TEXT = '不对。把它清掉，再试一次。';
 /* 一进来题目占满一屏,一秒后选项才淡进来 */
 const INTRO_MS = 1000;
 
-/** 打字题的比对:忽略大小写与首尾空格,多个答案用、分隔,命中任一即过。
- *  ⚠️ 真判定在服务端,这里只是本地即时反馈;两边规则必须一致,所以抽成纯函数好对齐。 */
-function matchesAnswer(input, answerText) {
-  const got = String(input || '').trim().toLowerCase();
-  if (!got) return false;
-  return String(answerText || '')
-    .split(/[、,,]/)
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean)
-    .some((a) => a === got);
-}
+/* 打字题的判定在服务端(AnswerNormalizer);客户端不再留一份本地比对,避免两边规则漂移。
+   多答案分隔符与向量见 utils/answer-text.js、tests/unit/answer-text-vectors.test.js。 */
 
 /** 次数封顶:选项题最多只能错「选项数 - 1」次。0 表示不限。 */
 function cappedTries(maxTries, optionCount) {
@@ -50,7 +43,7 @@ const buildOptions = (list) => (list || []).map((o, i) => ({
   k: i, key: KEYS[i] || String(i + 1),
   // 服务端给的那一份 id 要带着走:判定按 id 认,下标在它那边没有意义
   id: o.id || '',
-  t: o.t || ('选项 ' + (KEYS[i] || i + 1)),
+  t: stripOptionKey(o.t, KEYS[i]) || ('选项 ' + (KEYS[i] || i + 1)),
   // UG-02:选项图与替代文字(pickPlayKit 已滤掉不可显示的引用);加载失败时降级为纯文字
   img: o.img || '',
   alt: o.alt || '',
@@ -63,6 +56,7 @@ Component({
     inline: { type: Boolean, value: false },   // 故事流里就地玩:过了之后往下走用故事流自己的「继续故事」,本屏不再出第二个「继续」
     show: { type: Boolean, value: false },
     mode: { type: String, value: 'type' },        // type | pick | shot
+    acceptedInput: { type: String, value: '' },
     sessionId: { type: String, value: '' },      // Original runtime identity; never a client-generated business ID.
     nodeId: { type: String, value: '' },
     theme: { type: String, value: 'dark' },       // dark | light
@@ -111,7 +105,6 @@ Component({
     picGrid: false,
     typed: '',
     typeWrong: false,
-    hasImage: false,
     playing: false,
     feedback: '',
     shownFeedbackImages: [],
@@ -121,9 +114,12 @@ Component({
     burning: false,
     triesCap: 0,
     ctaLabel: '提交',
-    ctaDisabled: false,
+    ctaDisabled: true,
   },
   observers: {
+    acceptedInput(value) {
+      if (value && this.data.mode === 'type' && this.data.passed) this.setData({ typed: value });
+    },
     /* P-10:故事流里的打字题,页面不调 settle(),判过只回流 attempts / feedbackText。
        次数涨了且仍没过 = 刚答错:清掉输入框、描红、写一句;首次挂载(_seenTypeAttempts 未定)不算。 */
     attempts: function (value) {
@@ -132,7 +128,7 @@ Component({
       this._seenTypeAttempts = now;
       if (seen == null || now <= seen) return;
       if (this.data.mode !== 'type' || this.data.passed || this.data.finished) return;
-      this.setData({ typed: '', typeWrong: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
+      this.setData({ typed: '', typeWrong: true, ctaDisabled: true, fbHead: HEAD_NO, feedback: this.data.feedbackText || (this.data.authoredOutcome === 'FAIL' ? '' : RETRY_TEXT) });
     },
     /* P-10 第四轮 rig 实测:作者的结果反馈(authoredOutcome)可能比 attempts 晚一拍落到组件上 ——
        先到的 attempts 已写了兜底句,这里补清;判定屏摆作者的话,题屏只留描红。 */
@@ -147,9 +143,11 @@ Component({
     'show, options, mode, multi, passed, finished, judge, lastOptionId, lastOptionIds, feedbackText, feedbackImages, sessionId, nodeId': function (show, options, mode, multi, passed, finished) {
       if (this._qaDisposed) return;
       this._qaEpoch = (this._qaEpoch || 0) + 1;
+      this._pendingEvidence = false;
       const identity = JSON.stringify([String(this.data.sessionId || ''), String(this.data.nodeId || '')]);
       const fresh = this._qaIdentity !== identity || this._qaVisible !== !!show;
       this._qaIdentity = identity;
+      if (fresh) this._submittedText = '';
       this._qaVisible = !!show;
       if (this._introTimer) { clearTimeout(this._introTimer); this._introTimer = null; }
       if (!show) return;
@@ -174,10 +172,9 @@ Component({
         optionList: opts,
         /* r2 b2-ug-02:有选项配图时改成图卡网格(图在上、字在下),纯文字题仍是细线行 */
         picGrid: mode === 'pick' && opts.some(o => !!o.img),
-        hasImage: !!this.data.imageUrl,
         /* P-10:打字题答错时服务端常不带反馈文案,原来整块反馈不渲染 = 玩家看不出判过了。
            没有文案就写一句固定的「不对」,输入框描红,下一次输入即清。 */
-        typed: '', feedback: (passed || finished || this.data.attempts > 0)
+        typed: passed ? (this.data.acceptedInput || (!fresh && (this._submittedText || this.data.typed)) || '') : '', feedback: (passed || finished || this.data.attempts > 0)
           ? (this.data.feedbackText || (mode === 'type' && !passed && !finished && this.data.attempts > 0 && this.data.authoredOutcome !== 'FAIL' ? RETRY_TEXT : '')) : '',
         typeWrong: mode === 'type' && !passed && !finished && this.data.attempts > 0,
         shownFeedbackImages: (passed || finished || this.data.attempts > 0)
@@ -188,7 +185,7 @@ Component({
         triesCap: this.data.judge === false || finished ? 0 : cappedTries(this.data.maxTries, opts.length),
         ctaLabel: passed ? '继续' : (confirmPick ? '确认选择' : (mode === 'shot' ? '拍一张' : '提交')),
         // 多选一进来一个都没勾,按钮就得是灰的 —— 亮着一颗按不动的按钮比灰着更糟
-        ctaDisabled: !passed && (finished || isMultiPick || confirmPick),
+        ctaDisabled: !passed && (finished || mode === 'type' || isMultiPick || confirmPick),
       });
       const stage = this.selectComponent('#cy-play-stage');
       if (stage) {
@@ -232,11 +229,14 @@ Component({
       return -1;
     },
 
-    _matchesAnswer: matchesAnswer,      // 纯算法出口,供单测
     _cappedTries: cappedTries,
 
     onRun() { this.triggerEvent('run'); },
-    onInput(e) { this.setData({ typed: e.detail.value, typeWrong: false }); },   // P-10:下一次输入即清掉描红
+    onInput(e) {
+      if (this.data.passed || this.data.finished || this.data.submitted) return;
+      const typed = String(e.detail.value || '');
+      this.setData({ typed, typeWrong: false, ctaDisabled: !typed.trim() });
+    },   // P-10:下一次输入即清掉描红
     onToggleAudio() {
       this.setData({ playing: !this.data.playing });
       this.triggerEvent('audio', { playing: this.data.playing });
@@ -287,7 +287,7 @@ Component({
     onSubmitText() { this.onCta(); },
     onCta() {
       if (this.data.ctaDisabled) return;
-      if (this.data.passed) { this.triggerEvent('continue'); return; }
+      if (this._pendingEvidence || this.data.passed) { this.triggerEvent('continue'); return; }
       if (this.data.finished || this.data.submitted) return;
       if (this.data.mode === 'shot') {
         const context = this._qaContext();
@@ -305,7 +305,7 @@ Component({
             // 拿不到 size 时按未知处理(size undefined),仍由服务端拦截,不伪造。
             this.triggerEvent('shoot', { tempFilePath: path, size: file.size });
           },
-          fail: () => {},
+          fail: (err) => { if (this._isQaContextCurrent(context)) mediaDenied.guideIfDenied(err); },
         });
         return;
       }
@@ -319,6 +319,8 @@ Component({
         } else if (this.data.multi) this._submitPick();
         return;
       }
+      if (!String(this.data.typed || '').trim()) return;
+      this._submittedText = this.data.typed;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       this.triggerEvent('submit', { mode: 'type', input: this.data.typed });
     },
@@ -328,6 +330,15 @@ Component({
       const d = detail || {};
       const stage = this.selectComponent('#cy-play-stage');
       const multi = this.data.mode === 'pick' && !!this.data.multi;
+      // 答案已由服务端判对但照片尚未通过：只显示答案事实，不能触发通关或发奖。
+      this._pendingEvidence = !!(ok && d.pendingEvidence && this.data.mode === 'pick');
+      if (this._pendingEvidence) {
+        this.setData({
+          optionList: this.data.optionList.map((o, i) => Object.assign({}, o, { state: i === d.index ? 'is-right' : 'is-dim' })),
+          feedback: d.feedback || '', fbHead: HEAD_OK, ctaLabel: '重拍', ctaDisabled: false,
+        });
+        return;
+      }
       if (ok) {
         if (this.data.mode === 'pick') {
           this.setData({
@@ -371,11 +382,15 @@ Component({
           return o.state === 'is-dim' ? Object.assign({}, o, { state: '' }) : o;
         }) : this.data.optionList,
         ctaLabel: pick ? '知道了' : (exhausted ? this.data.ctaLabel : '再试一次'),
-        ctaDisabled: exhausted,
+        ctaDisabled: exhausted || this.data.mode === 'type',
       });
       if (exhausted && stage) stage.fail(false);
     },
 
+    onPreviewQuestion() {
+      const current = this.data.imageUrl;
+      if (current) wx.previewImage({ current, urls: [current] });
+    },
     onPreviewFeedback(e) {
       const urls = this.data.shownFeedbackImages;
       const current = urls[Number(e.currentTarget.dataset.i)];

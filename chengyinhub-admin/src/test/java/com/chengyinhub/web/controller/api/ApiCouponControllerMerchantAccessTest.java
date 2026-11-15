@@ -689,7 +689,7 @@ class ApiCouponControllerMerchantAccessTest {
         assertEquals("该优惠券已被平台手动失效", controller.stopIssuing(30L, "MERCHANT").get(AjaxResult.MSG_TAG));
 
         when(couponService.selectSmsCouponById(31L)).thenReturn(merchantCoupon(31L, 4));
-        assertEquals("该优惠券已停发,无需重复操作", controller.stopIssuing(31L, "MERCHANT").get(AjaxResult.MSG_TAG));
+        assertEquals("该优惠券已停发，无需重复操作", controller.stopIssuing(31L, "MERCHANT").get(AjaxResult.MSG_TAG));
 
         when(couponService.selectSmsCouponById(32L)).thenReturn(merchantCoupon(32L, 2));
         assertEquals("已结束的优惠券无法停发", controller.stopIssuing(32L, "MERCHANT").get(AjaxResult.MSG_TAG));

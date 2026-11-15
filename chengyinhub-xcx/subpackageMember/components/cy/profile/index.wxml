@@ -299,7 +299,7 @@
         </view>
 
         <view class="pc-rank" bindtap="goGrowthCenter" hover-class="pc-tap" hover-stay-time="80"
-              aria-role="button" aria-label="总积分排名 {{rankDisplay.no}},查看成长中心详情">
+              aria-role="button" aria-label="总积分排名 {{rankDisplay.no}}，查看成长中心详情">
           <!-- 后端 /api/user/points/statistics 按总积分排序,没有月份或城市筛选,
                展示口径必须与接口一致。 -->
           <text class="pc-rank-title">总积分排名</text>

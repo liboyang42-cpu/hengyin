@@ -18,7 +18,7 @@ function load(candidate = source) {
     if (id.includes('identity-policy')) return require('../../utils/identity/identity-policy.js');
     if (id.includes('roleGuard')) return { isClubLeader: () => app.globalData.role === 'club', clear() {} };
     if (id.includes('merchant-theme')) return { merchantPageShow() {}, merchantPageRestore() {} };
-    if (id.includes('roam-player-memory')) return { clearStoragePreservingPlayerRoamMemory: () => true };
+    if (id.includes('roam-player-memory')) return { clearStorageForLogout: () => true };
     return {};
   }});
   const page = Object.assign({}, def, { data: JSON.parse(JSON.stringify(def.data)), setData(p) { Object.assign(this.data, p); } });

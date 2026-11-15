@@ -30,7 +30,10 @@ POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_
                           "20261104_topic_total_time_seconds",
                           # qx-c2: two paused sys_job rows naming beans only the new jar has (channelRefundConsumptionTask,
                           # marketingRevenuePostingTask); CanonicalJobTarget resolves every row's bean on the old jar too.
-                          "marketing_task_registration_20261108"}
+                          "marketing_task_registration_20261108",
+                          # r-integ-master: sys_job rows naming beans master's jar lacks (clubChannelDefaultsTask,
+                          # growthWinbackTask); their stagger file only updates those rows, so it follows them.
+                          "20261115_club_reach", "20261115_growth_loops", "20261115_stagger_club_growth_jobs"}
 BOOTSTRAP_SQL = {
     "sql/quartz.sql",
     "sql/ry_20250522.sql",
@@ -132,6 +135,9 @@ EXPLICIT_AUXILIARY_SQL = {
     "docs/delivery/questo-ui-20261109/f-release/release-precheck.sql": "AUXILIARY_NOT_EXECUTED",
     # f-rehearsal 只写进本机一次性 cy_e2e_* 演练库的合成行（rehearse.py 读取）；runner 不执行、不进台账。
     "docs/delivery/questo-ui-20261109/f-rehearsal/seed_rows.sql": "AUXILIARY_NOT_EXECUTED",
+    # roam-backend-1114:由 scripts/roam-catalog-import.js 离线生成、仅供 lead 手工在隔离测试库执行/撤回;runner 不执行、不进台账。
+    "docs/delivery/questo-ui-20261109/roam-backend-1114/roam-catalog-test.sql": "AUXILIARY_NOT_EXECUTED",
+    "docs/delivery/questo-ui-20261109/roam-backend-1114/roam-catalog-test-revert.sql": "AUXILIARY_NOT_EXECUTED",
 }
 IGNORED_DIRS = {".git", "node_modules", "target"}
 MIGRATION_ID = re.compile(r"^[a-z0-9][a-z0-9_]*$")

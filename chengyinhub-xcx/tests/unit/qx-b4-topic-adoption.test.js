@@ -16,15 +16,22 @@ const full = {
 const row = (rows, key) => rows.find(r => r.key === key);
 
 test('采用条件只翻译服务端事实:未知不写成已验证、两端可玩或已授权', () => {
-  const rows = a.deliveryRows(full);
+  const rows = a.deliveryRows(full, true);
   assert.equal(row(rows, 'place').value, '需要到现场 · 4 个地点');
-  assert.equal(row(rows, 'operating').value, '仅对合作商家开放');
+  assert.deepEqual(row(rows, 'operating'), { key: 'operating', label: '运营资料', value: '仅合作商家可见' });
   assert.equal(row(rows, 'evidence').value, '预估，未实地验证');
   assert.equal(row(rows, 'revision').value, '第 3 版');
   assert.equal(row(rows, 'locale').value, '简体中文');
   // r2-create(b4-u02-01「UI需要优化一下」):没有权威事实的行(端侧待核实、许可未提供)不画
   assert.equal(row(rows, 'platform'), undefined);
   assert.equal(row(rows, 'license'), undefined);
+});
+
+test('玩家与游客不显示内部验证状态，合作方显式获准才显示', () => {
+  assert.equal(row(a.deliveryRows(full), 'evidence'), undefined);
+  assert.equal(row(a.deliveryRows(full, false), 'evidence'), undefined);
+  assert.equal(row(a.deliveryRows(full, 'MERCHANT'), 'evidence'), undefined);
+  assert.equal(row(a.deliveryRows(full, true), 'evidence').value, '预估，未实地验证');
 });
 
 test('资料缺失的行不画;contentDelivery 整段缺失不画', () => {

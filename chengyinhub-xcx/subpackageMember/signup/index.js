@@ -216,13 +216,12 @@ Page({
     this._readFocusTicket();
   },
 
-  _openTicket(item, kind) {
+  /* 这张票点下去去哪:{ url } 能进,{ msg } 要先告诉玩家,{ silent } 页面此刻不该动。
+     动画路径在黑场之前先问一遍,过期/取消不用先看完 900ms 黑场才被告知。 */
+  _ticketTarget(item, kind) {
     if (this._unloaded || this._refreshOnShow || this._walletOwner !== walletOwner()
-        || this.data.focusState === 'loading' || this.data.focusState === 'missing') return;
-    if (!item || !item.id) {
-      toast('跳转失败');
-      return;
-    }
+        || this.data.focusState === 'loading' || this.data.focusState === 'missing') return { silent: true };
+    if (!item || !item.id) return { msg: '跳转失败' };
     const status = Number(item.registrationStatus);
     /* 2026-09-10 用户定的方向:**票夹点进去就是开始玩**。订单有订单的页面,
        而且这条路是单向的 —— 只有订单页能来票夹(scene-member-order-detail 的「查看票夹」),
@@ -230,30 +229,30 @@ Page({
        ⚠️ 待支付是唯一还会落到订单页的一档:它还不是一张票,是一笔没付完的单,
           付款就在那一页上,没有第二个地方能付。文案也照实写成「去支付」,不写「查看详情」。 */
     if (status === 1) {
-      wx.navigateTo({ url: '/subpackageMember/orderinfo/orderinfo?id=' + item.id });
-      return;
+      return { url: '/subpackageMember/orderinfo/orderinfo?id=' + item.id };
     }
-    if (status === 3 || status === 4) {
-      toast(status === 4 ? '票已过期' : '票已取消');
-      return;
-    }
-    if (status !== 2 || Number(item.paymentStatus) !== 2) {
-      toast('票状态待确认');
-      return;
-    }
+    if (status === 3 || status === 4) return { msg: status === 4 ? '票已过期' : '票已取消' };
+    if (status !== 2 || Number(item.paymentStatus) !== 2) return { msg: '票状态待确认' };
     const ownerId = kind === 'activity'
       ? ((item.cmsActivity && item.cmsActivity.id) || item.ownerId)
       : ((item.cmsTopic && item.cmsTopic.id) || item.ownerId);
-    if (!ownerId) {
-      toast('场次信息待同步');
-      return;
-    }
+    if (!ownerId) return { msg: '场次信息待同步' };
     const query = kind === 'activity'
       ? ('activityId=' + ownerId)
       : ('topicId=' + ownerId);
     const ticketName = item.wTitle ? '&topicName=' + encodeURIComponent(item.wTitle) : '';
     // 所有票一律进通用 play:主题名不是路由依据(2026-09-22 拆除按 /^预制人生/ 换轨到专用分包)。
-    wx.navigateTo({ url: '/pages/play/index?' + query + '&registrationId=' + item.id + '&entry=ticket' + ticketName });
+    return { url: '/pages/play/index?' + query + '&registrationId=' + item.id + '&entry=ticket' + ticketName };
+  },
+
+  /* 双击只进一次:navigateTo 在途及落地后的 600ms 内再点直接忽略(减动效路径没有 entering 锁) */
+  _openTicket(item, kind) {
+    if (this._navigating) return;
+    const target = this._ticketTarget(item, kind);
+    if (target.msg) { toast(target.msg); return; }
+    if (!target.url) return;
+    this._navigating = true;
+    wx.navigateTo({ url: target.url, complete: () => { setTimeout(() => { this._navigating = false; }, 600); } });
   },
 
   // FE-19 票夹直连 play(主题/城市路线 ownerType=1):带 topicId + registrationId(供 play 出示入场码)
@@ -330,6 +329,10 @@ Page({
     const kind = item.kind === 'activity' ? 'activity' : 'topic';
     // 2026-10-28「开始游戏」(data-go):按钮填满 → 票卡往前冲出 → 黑色铺满,再进游戏;减动效直接进
     if (!ds.go || this.data.reduced || typeof setTimeout !== 'function') { this._openTicket(item, kind); return; }
+    if (this._navigating) return;
+    const target = this._ticketTarget(item, kind);
+    if (target.msg) { toast(target.msg); return; }
+    if (!target.url) return;
     this.setData({ flipped: false, entering: true });
     this._goTimer = setTimeout(() => {
       if (this._unloaded) return;

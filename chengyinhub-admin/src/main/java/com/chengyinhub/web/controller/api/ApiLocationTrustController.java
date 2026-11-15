@@ -56,7 +56,7 @@ public class ApiLocationTrustController extends BaseController {
                     : photo.getSize() > ClaimEvidenceService.MAX_PHOTO_BYTES ? new byte[ClaimEvidenceService.MAX_PHOTO_BYTES + 1]
                     : photo.getBytes();
         } catch (IOException e) {
-            return error("照片读取失败,请重新拍摄");
+            return error("照片读取失败，请重新拍摄");
         }
         LocationFix fix = lat != null && lng != null ? LocationSignals.current(lat, lng) : null;
         try {

@@ -73,7 +73,7 @@ function stepsA11yLabel(type, fallbackText) {
   if (fallbackText && String(fallbackText).trim()) return String(fallbackText).trim();
   const steps = stepIcons(type);
   if (!steps.length) return '';
-  return '玩法步骤:' + steps.map((s) => s.index + ' ' + s.label).join(',');
+  return '玩法步骤：' + steps.map((s) => s.index + ' ' + s.label).join(',');
 }
 
 module.exports = { stepIcons, stepsA11yLabel, STEPS };

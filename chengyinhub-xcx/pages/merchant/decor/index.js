@@ -24,7 +24,7 @@ const tagLibrary = require('../../../utils/tag-library.js');
 // saver 指明这一条存去哪个接口 —— 三个接口的白名单不同,存错地方会静默丢字段。
 const FIELDS = {
   name:        { label: '店铺名称', placeholder: '店铺名称(必填)', saver: 'brand' },
-  cityRole:    { label: '城市角色名', placeholder: '如:巷口的夜间补给站', saver: 'decor' },
+  cityRole:    { label: '城市角色名', placeholder: '如：巷口的夜间补给站', saver: 'decor' },
   // CU-M-72:入口与卡片写「一句话介绍」,label 是弹层标题与关闭钮无障碍名的唯一真源,别在这改名夹英文
   slogan:      { label: '一句话介绍', placeholder: '一句话说清你的店', saver: 'decor' },
   preference: { label: '经营类目', placeholder: '如 餐饮 · 咖啡', saver: 'brand', max: 100 },
@@ -77,10 +77,10 @@ const tagIconSrc = label => (tagLibrary.decorateTags([label], 'merchant', tagLib
 
 // 品牌故事提示问题(引导商家,不自动生成内容)
 const STORY_HINTS = [
-  '你的店和这条街有什么关系?',
-  '用户第一次来最应该注意什么?',
-  '店里有没有一个可以被发现的小细节?',
-  '你希望用户完成任务后记住哪句话?'
+  '你的店和这条街有什么关系？',
+  '用户第一次来最应该注意什么？',
+  '店里有没有一个可以被发现的小细节？',
+  '你希望用户完成任务后记住哪句话？'
 ];
 
 function requestText(error, fallback) {

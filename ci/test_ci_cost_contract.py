@@ -312,16 +312,13 @@ def validate(source: str, backend_script: str | None = None, production_workflow
     }
     for job, output in expected.items():
         block = job_block(source, job)
-        assert_contains(block, "    needs: changes\n")
+        assert_contains(block, "    needs: [changes, mini_prepare]\n" if job in ("mini_unit", "mini_static") else "    needs: changes\n")
         assert_contains(block, "github.event_name == 'workflow_dispatch'")
         assert_contains(
             block,
             f"needs.changes.outputs.{output} == 'true'",
         )
-        if "github.ref == 'refs/heads/master'" in block:
-            raise AssertionError(
-                f"{job} must not run on every master push; path-filter instead"
-            )
+        assert_contains(block, "needs.changes.outputs.full == 'true'")
 
     # Secret scanning intentionally remains unconditional: path-filtering it
     # would create a blind spot for secrets in docs, fixtures, or new file types.
@@ -343,11 +340,11 @@ def validate(source: str, backend_script: str | None = None, production_workflow
 
     mini = job_block(source, "mini_program")
     for contract in (
-        "    needs: [changes, mini_unit, mini_static, fast_gates, backend, admin_ui, admin_ui_contract, secret_scan, dependency_audit, migration_layout, migration_safety]\n",
-        "    if: ${{ always() && (needs.changes.result != 'success' || github.event_name == 'workflow_dispatch' || needs.changes.outputs.xcx == 'true') }}\n",
-        '          test "$CHANGES_RESULT" = success\n',
-        '          test "$UNIT_RESULT" = success\n',
-        '          test "$STATIC_RESULT" = success\n',
+        "    needs: [changes, mini_prepare, mini_unit, mini_static, fast_gates, backend, admin_ui, admin_ui_contract, secret_scan, dependency_audit, migration_layout, migration_safety]\n",
+        "    if: ${{ always() }}\n",
+        "          required = ['changes', 'fast_gates', 'secret_scan']\n",
+        "              required += ['mini_prepare', 'mini_unit', 'mini_static']\n",
+        "              required += ['backend']\n",
         "          UNIT_RESULT: ${{ needs.mini_unit.result }}\n",
         "          STATIC_RESULT: ${{ needs.mini_static.result }}\n",
         "        if: ${{ needs.changes.outputs.selected != 'true' }}\n",
@@ -357,16 +354,16 @@ def validate(source: str, backend_script: str | None = None, production_workflow
         assert_contains(mini, contract)
     unit = job_block(source, "mini_unit")
     for contract in (
-        "    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && format('PARTIAL SELECTED - Mini shard {0} of 20 partitions', matrix.shard) || format('Mini program unit shard ({0}/20)', matrix.shard) }}\n",
+        "    name: ${{ github.event_name == 'workflow_dispatch' && inputs.validation_scope == 'selected' && format('PARTIAL SELECTED - Mini shard {0} of 20 partitions', matrix.shard) || (github.event_name == 'pull_request' && format('Mini impacted tests ({0})', matrix.shard) || format('Mini program unit shard ({0}/20)', matrix.shard)) }}\n",
         "      fail-fast: false\n",
         "      max-parallel: 20\n",
-        "        shard: [" + ", ".join(map(str, range(1, 21))) + "]\n",
+        "        shard: ${{ fromJSON(needs.changes.outputs.mini_shards) }}\n",
         "        exclude: ${{ fromJSON(needs.changes.outputs.mini_exclude) }}\n",
         "          CI_UNIT_OUTCOME: ${{ steps.unit.outcome }}\n",
         "      TZ: Asia/Shanghai\n",
         "    runs-on: ubuntu-latest\n",
         "        run: node ci/xcx-unit-manifest.js --selftest\n",
-        '        run: node --test --test-shard=${{ matrix.shard }}/20 "tests/unit/**/*.test.js"\n',
+        "node ../ci/run-mini-tests.js",
     ):
         assert_contains(unit, contract)
     static = job_block(source, "mini_static")
@@ -549,11 +546,11 @@ def main() -> None:
     negative_controls += tuple(
         ("mini parallel " + needle.strip(), remove_from_job(source, job, needle))
         for job, needle in (
-            ("mini_program", '          test "$UNIT_RESULT" = success\n'),
-            ("mini_program", '          test "$STATIC_RESULT" = success\n'),
-            ("mini_program", "always() && "),
-            ("mini_unit", "19, 20"),
-            ("mini_unit", "--test-shard=${{ matrix.shard }}/20 "),
+            ("mini_program", "              required += ['mini_prepare', 'mini_unit', 'mini_static']\n"),
+            ("mini_program", "              required += ['backend']\n"),
+            ("mini_program", "always()"),
+            ("mini_unit", "fromJSON(needs.changes.outputs.mini_shards)"),
+            ("mini_unit", "node ../ci/run-mini-tests.js"),
             ("mini_unit", "        run: node ci/xcx-unit-manifest.js --selftest\n"),
             ("mini_unit", "        exclude: ${{ fromJSON(needs.changes.outputs.mini_exclude) }}\n"),
             ("mini_unit", "          CI_UNIT_OUTCOME: ${{ steps.unit.outcome }}\n"),

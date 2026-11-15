@@ -148,7 +148,7 @@ public class CmsMerchantNpcController extends BaseController {
         String reason = trimToNull(body.get("auditReason") == null ? null
                 : String.valueOf(body.get("auditReason")));
         if (status == 2 && (reason == null || reason.isEmpty())) {
-            return error("驳回必须写明原因,否则商家不知道该改什么");
+            return error("驳回必须写明原因，否则商家不知道该改什么");
         }
 
         if (npcProfileMapper.selectMerchantNpcById(id) == null) {
@@ -163,9 +163,9 @@ public class CmsMerchantNpcController extends BaseController {
         int rows = npcProfileMapper.auditMerchantNpc(profile);
         if (rows != 1) {
             // WHERE 里钉了 audit_status=0,0 行 = 它已经不在待审状态(别人审过了 / 商家又改了)。
-            return error("这条已经不是待审状态了,刷新后再看");
+            return error("这条已经不是待审状态了，刷新后再看");
         }
-        return success(status == 1 ? "已通过,形象将出现在玩家侧" : "已驳回,原因已回传给商家");
+        return success(status == 1 ? "已通过，形象将出现在玩家侧" : "已驳回，原因已回传给商家");
     }
 
     /** 解析成 Long。认不出返回 null,不抛 —— 见 audit() 里那条注释。 */

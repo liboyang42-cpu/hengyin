@@ -59,8 +59,8 @@ public class ClaimEvidenceService {
         if (s.placeLat() == null || s.placeLng() == null || !LocationFix.of(s.placeLat(), s.placeLng()).validCoordinates())
             throw new ServiceException("地点坐标无效");
         if (s.photo() == null || s.photo().length == 0) throw new ServiceException("请用相机拍一张现场照片");
-        if (s.photo().length > MAX_PHOTO_BYTES) throw new ServiceException("照片太大,请重新拍摄");
-        if (mapper == null) throw new ServiceException("现场取证暂不可用,请稍后再试");
+        if (s.photo().length > MAX_PHOTO_BYTES) throw new ServiceException("照片太大，请重新拍摄");
+        if (mapper == null) throw new ServiceException("现场取证暂不可用，请稍后再试");
         String placeRef = s.placeRef() == null || s.placeRef().isBlank() ? null
                 : s.placeRef().trim().length() > 64 ? s.placeRef().trim().substring(0, 64) : s.placeRef().trim();
         LocationTrustConfig cfg = trustService.config();

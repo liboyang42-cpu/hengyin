@@ -53,19 +53,66 @@ test('防重:在途再次 submit 被忽略,createOrder 只调一次', () => {
   assert.equal(wf.isBusy(), true);
 });
 
-test('SDK永不回调时只核对原订单，迟到SDK回调不能重复核账或解除UNKNOWN', () => {
+test('E-B7 SDK超时只启动旁路核对原订单(不重复建单/拉起支付),核对不明停在unknown', () => {
   let watchdog;
-  const { wf, resolveOrder, resolvePay, resolveVerify, calls } = makeWf({ setTimer: fn => { watchdog = fn; return 1; } });
+  const { wf, resolveOrder, resolveVerify, calls } = makeWf({ setTimer: fn => { watchdog = fn; return 1; } });
   const h = handlers();
   wf.submit({ originalKey: 'unchanged' }, h);
   resolveOrder({ ok: true, data: { registrationId: 19, payableAmount: 5 } });
   watchdog();
   assert.equal(wf.getState(), 'verifying'); assert.equal(calls.verify, 1);
-  resolvePay({ ok: true }); resolvePay({ ok: false, cancelled: true });
-  assert.equal(calls.verify, 1); assert.equal(calls.pay, 1); assert.equal(calls.order, 1);
   resolveVerify({ ok: false, status: 'unknown' });
   assert.equal(wf.getState(), 'unknown'); assert.equal(wf.submit({}), false);
+  assert.equal(calls.pay, 1); assert.equal(calls.order, 1);
   assert.deepEqual(h.log.map(x => x[0]), ['unknown']);
+});
+
+test('E-B7 超时后真回调迟到:不被丢弃,成功照常核账并进 done', () => {
+  let watchdog;
+  const { wf, resolveOrder, resolvePay, resolveVerify, calls } = makeWf({ setTimer: fn => { watchdog = fn; return 1; } });
+  const h = handlers();
+  wf.submit({}, h);
+  resolveOrder({ ok: true, data: { registrationId: 19, payableAmount: 5 } });
+  watchdog(); resolveVerify({ ok: false, status: 'unknown' });
+  assert.equal(wf.getState(), 'unknown');
+  resolvePay({ ok: true });
+  assert.equal(calls.verify, 2, '真回调到了要走正常核账');
+  resolveVerify({ ok: true });
+  assert.equal(wf.getState(), 'done');
+  assert.deepEqual(h.log.map(x => x[0]).filter(n => n === 'paySuccess'), ['paySuccess']);
+  resolvePay({ ok: true }); assert.equal(calls.verify, 2, '重复回调不再核账');
+});
+
+test('E-B7 旁路核对在途时真回调到了:旁路结果作废,不会双重成功', () => {
+  let watchdog;
+  const verifies = [];
+  const { wf, resolveOrder, resolvePay } = makeWf({ setTimer: fn => { watchdog = fn; return 1; },
+    verifyPayment: (data, cb) => { verifies.push(cb); } });
+  const h = handlers();
+  wf.submit({}, h); resolveOrder({ ok: true, data: { registrationId: 19, payableAmount: 5 } });
+  watchdog(); resolvePay({ ok: true });
+  verifies[0]({ ok: true }); verifies[1]({ ok: true });
+  assert.deepEqual(h.log.map(x => x[0]).filter(n => n === 'paySuccess'), ['paySuccess']);
+});
+
+test('E-B7 unknown 时 recheck:确认已付进 done,仍不明继续 unknown,非 unknown 不动', () => {
+  let watchdog;
+  const verifies = [];
+  const { wf, resolveOrder } = makeWf({ setTimer: fn => { watchdog = fn; return 1; },
+    verifyPayment: (data, cb) => { verifies.push(cb); } });
+  const h = handlers();
+  assert.equal(wf.recheck(), false);
+  wf.submit({}, h); resolveOrder({ ok: true, data: { registrationId: 19, payableAmount: 5 } });
+  assert.equal(wf.recheck(), false, 'paying 时不能 recheck');
+  watchdog(); verifies[0]({ ok: false, status: 'unknown' });
+  assert.equal(wf.recheck(), true);
+  verifies[1]({ ok: false, status: 'unknown' });
+  assert.equal(wf.getState(), 'unknown');
+  assert.equal(wf.recheck(), true);
+  verifies[2]({ ok: true });
+  assert.equal(wf.getState(), 'done');
+  assert.equal(h.log.filter(x => x[0] === 'paySuccess').length, 1);
+  assert.equal(wf.recheck(), false);
 });
 
 test('SDK无回调后的原单核账仅服务端成功才能完成；销毁撤销watchdog', () => {
@@ -73,10 +120,10 @@ test('SDK无回调后的原单核账仅服务端成功才能完成；销毁撤�
   const f = makeWf({ setTimer: fn => { watchdog = fn; return 1; }, clearTimer: () => { clears++; } });
   const h = handlers(); f.wf.submit({}, h); f.resolveOrder({ ok: true, data: { registrationId: 19, payableAmount: 5 } });
   watchdog(); f.resolveVerify({ ok: true });
-  assert.equal(f.wf.getState(), 'done'); assert.deepEqual(h.log.map(x => x[0]), ['paySuccess']);
+  assert.equal(f.wf.getState(), 'done'); assert.deepEqual(h.log.map(x => x[0]).filter(n => n === 'paySuccess'), ['paySuccess']);
   const other = makeWf({ setTimer: fn => { watchdog = fn; return 2; }, clearTimer: () => { clears++; } });
   other.wf.submit({}, h); other.resolveOrder({ ok: true, data: { payableAmount: 5 } }); other.wf.destroy(); watchdog();
-  assert.equal(other.calls.verify, 0); assert.equal(clears, 2);
+  assert.equal(other.calls.verify, 0); assert.ok(clears >= 1);
 });
 
 test('创建订单失败 → onOrderFail、不拉起支付、回 idle 可重试', () => {

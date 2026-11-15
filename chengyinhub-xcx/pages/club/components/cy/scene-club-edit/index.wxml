@@ -59,11 +59,11 @@
       </view>
       <view class="frow">
         <text class="fl">关键词</text>
-        <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="keywords" value="{{keywords}}" bindinput="onInput" placeholder="如:城市探索、解谜(选填)" placeholder-class="ph" aria-label="俱乐部关键词，选填" />
+        <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="keywords" value="{{keywords}}" bindinput="onInput" placeholder="如：城市探索、解谜(选填)" placeholder-class="ph" aria-label="俱乐部关键词，选填" />
       </view>
       <view class="frow last">
         <text class="fl">风格</text>
-        <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="style" value="{{style}}" bindinput="onInput" placeholder="如:轻松、沉浸、硬核(选填)" placeholder-class="ph" aria-label="俱乐部风格，选填" />
+        <input disabled="{{saving || draftAvailable || draftBlocked}}" class="fi" data-field="style" value="{{style}}" bindinput="onInput" placeholder="如：轻松、沉浸、硬核(选填)" placeholder-class="ph" aria-label="俱乐部风格，选填" />
       </view>
     </view>
 
@@ -114,7 +114,7 @@
         <text class="op-locked-sub">仅主理人可设置</text>
         <!-- 现状回显(Figma 29:149):管理员改不了这三项,但要能看见现值 ——
              这是管理员唯一能知道「保留了几个名额」的地方,没有它锁说明就只是拒绝。 -->
-        <text class="op-locked-cur">当前:{{opCurrentText}}</text>
+        <text class="op-locked-cur">当前：{{opCurrentText}}</text>
       </view>
     </view>
     <block wx:if="{{isOwner}}">

@@ -324,6 +324,24 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
         return toAvailableView(session, nodes(topicId));
     }
 
+    @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public TopicRouteState personalRun(Long memberId, Long topicId,
+            com.chengyinhub.business.service.support.ContentCapabilityRequirements.Declaration declaration) {
+        TopicRouteState current = state(memberId, topicId, 0L, declaration);
+        if (current.getSessionId() != null) return current;
+        Scope scope = requireScope(memberId, topicId, 0L);
+        List<CmsTopicNode> liveNodes = nodes(topicId);
+        JourneyTemplateProbe probe = publicationCompiler().probe(liveNodes);
+        String published = scope.topic.getPublishedRouteGraphJson();
+        String snapshot = published != null && validator.readTree(published).path("runtimeSnapshotVersion").asInt() == 1
+                ? freezePublishedJourney(scope.topic)
+                : freezeJourney(linearSnapshot(liveNodes), scope.topic, liveNodes, probe);
+        com.chengyinhub.business.service.support.ContentCapabilityRequirements.assertStartCompatible(
+                validator.readTree(snapshot), declaration);
+        return toLinearView(ensureJourneySession(scope, probe), scope, liveNodes);
+    }
+
     /** Read the original current run; entry commands retain all initialization and role assignment. */
     @Override
     @Transactional(readOnly = true)
@@ -3154,7 +3172,7 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
     @Override
     @Transactional(isolation=Isolation.READ_COMMITTED,rollbackFor=Exception.class)
     public void recordGameplayOutcome(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String attemptId,JsonNode decision,List<String[]> choices) {
-        if (decision == null || decision.path("nodeId").asLong() != nodeId || !Arrays.asList("PASS","FAIL").contains(decision.path("outcome").asText())) throw new IllegalArgumentException("Invalid trusted outcome");
+        if (decision == null || decision.path("nodeId").asLong() != nodeId || !Arrays.asList("PASS","FAIL","SKIPPED").contains(decision.path("outcome").asText())) throw new IllegalArgumentException("Invalid trusted outcome");
         recordNodeResult(memberId,topicId,activityId,nodeId,instance,attemptId,"PASS".equals(decision.path("outcome").asText()),false,0,choices,decision,attemptId);
     }
     private void recordNodeResult(Long memberId,Long topicId,Long activityId,Long nodeId,String instance,String actionId,Boolean passed,boolean mistake,int outcome,List<String[]> choices,JsonNode decision,String attemptId) {
@@ -3174,6 +3192,25 @@ public class TopicRouteRuntimeServiceImpl implements ITopicRouteRuntimeService {
             }
             TopicRouteEngine.State state=readEngineState(session.getStateJson());
             JsonNode operation=state.getThemeRuntime().path("gameplay").path("activeOperation");
+            if (decision != null && "SKIPPED".equals(decision.path("outcome").asText())) {
+                String active = state.getThemeRuntime().path("gameplay").path("activeQuest").asText();
+                if (operation.isObject() || active.isEmpty() || gameplayTasks.quest(themeConfig(session), active).path("nodeId").asLong() != nodeId)
+                    throw new ServiceException("跳过不属于当前任务", 409);
+                ObjectNode receipt = gameplayTasks.skipTrusted(themeConfig(session), rules, state, active,
+                        event, "MEMBER:" + memberId, clock.millis());
+                state.getVariables().put(SYS_PASSED_PREFIX + nodeId, 0);
+                if (state.getThemeRuntime().path("gameplay").has("activeQuestArrivalReceiptId"))
+                    consumeBasicArrival(state, nodeId, state.getThemeRuntime().path("gameplay").path("activeQuestArrivalReceiptId").asText(), event);
+                state.getThemeRuntime().with("gameplay").remove("activeQuestArrivalReceiptId");
+                commitJourneyAction(session, nodeId, event, "GAMEPLAY_SKIP",
+                        JSON.convertValue(receipt, new TypeReference<Map<String, Object>>() {}), state);
+                PlayerNodeProgress progress = new PlayerNodeProgress();
+                progress.setMemberId(memberId); progress.setTopicId(topicId); progress.setActivityId(session.getActivityId());
+                progress.setPlayInstanceId(session.getPlayInstanceId()); progress.setNodeId(nodeId);
+                progress.setPuzzleScore(0); progress.setCompletionMode("SKIPPED");
+                progressMapper.markGameplayQuestDone(progress);
+                return;
+            }
             if (decision != null) {
                 String active=state.getThemeRuntime().path("gameplay").path("activeQuest").asText();
                 if (operation.isObject() ? operation.path("nodeId").asLong()!=nodeId : active.isEmpty() || gameplayTasks.quest(themeConfig(session),active).path("nodeId").asLong()!=nodeId) throw new ServiceException("Outcome does not belong to the current attempt",409);

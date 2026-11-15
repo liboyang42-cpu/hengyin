@@ -15,7 +15,7 @@ function cityNodeTarget(code) {
 }
 
 // redeemCityNodeCode 整体 @Transactional:这些文案要么在任何写入之前返回,要么随 ServiceException 整笔回滚。
-const NOT_REDEEMED = ['请先登录', '据点不存在', '无权核销该据点', '玩家未到店打卡,或该券已核销', '券库存不足,核销失败'];
+const NOT_REDEEMED = ['请先登录', '据点不存在', '无权核销该据点', '玩家未到店打卡，或该券已核销', '券库存不足，核销失败'];
 // VerifyDynCodeUtil 验码阶段的后端原话(尚未碰库),给商家换成下一步能做的话
 function codeRejected(msg) {
   return msg === '核销码无效' || msg === '空码' || msg === '格式错误' || msg === '签名不匹配' || msg === '参数错误'

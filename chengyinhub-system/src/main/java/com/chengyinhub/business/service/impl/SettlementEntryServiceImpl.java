@@ -187,7 +187,7 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
             return 0;
         }
         return insertSplitDetails("registration", registration.getId(), merchantId, creatorId,
-                amount, rule, platformRate, registration);
+                amount, rule, platformRate, registration, null);
     }
 
     @Override
@@ -209,7 +209,27 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
         // 与 recordPaidRegistration 的活动口径同源:全局 activity 规则(ownerId=0),平台率取下单冻结的快照。
         SettlementRule rule = settlementRuleService.getActiveRule(0L, "activity");
         return insertSplitDetails("registration", registration.getId(), payeeMemberId, null,
-                amount, rule, registration.getFeePlatformRate(), registration);
+                amount, rule, registration.getFeePlatformRate(), registration, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int recordClubFreeExploreSessionSettlement(CmsRegistration registration, Long payeeMemberId,
+                                                      BigDecimal platformFee) {
+        if (registration == null || registration.getId() == null || payeeMemberId == null || payeeMemberId <= 0
+                || platformFee == null || platformFee.signum() < 0
+                || !Long.valueOf(2L).equals(registration.getOwnerType())
+                || registration.getPurchaseKind() == null || registration.getPurchaseKind() != PurchaseKind.EXPLORE_PASS) {
+            throw new IllegalStateException("只给俱乐部自有自由探索场次的探索票补记分账行,registrationId="
+                    + (registration == null ? null : registration.getId()));
+        }
+        BigDecimal amount = firstNonNull(registration.getPayableAmount(), registration.getTotalAmount(), registration.getOriginalAmount());
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return 0;
+        }
+        SettlementRule rule = settlementRuleService.getActiveRule(0L, "activity");
+        return insertSplitDetails("registration", registration.getId(), payeeMemberId, null,
+                amount, rule, registration.getFeePlatformRate(), registration, platformFee);
     }
 
     @Override
@@ -227,7 +247,7 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
         BigDecimal amount = coupon.getAmount() == null ? BigDecimal.ZERO : coupon.getAmount();
         SettlementRule rule = settlementRuleService.getActiveRule(merchantId, "coupon");
         BigDecimal platformRate = rule == null ? null : rule.getPlatformCommissionRate();
-        return insertSplitDetails("coupon", history.getId(), merchantId, null, amount, rule, platformRate, null);
+        return insertSplitDetails("coupon", history.getId(), merchantId, null, amount, rule, platformRate, null, null);
     }
 
     @Override
@@ -257,9 +277,10 @@ public class SettlementEntryServiceImpl implements ISettlementEntryService {
      */
     private int insertSplitDetails(String sourceType, Long sourceId, Long merchantId, Long creatorId,
                                    BigDecimal gross, SettlementRule rule, BigDecimal platformRate,
-                                   CmsRegistration registration) {
+                                   CmsRegistration registration, BigDecimal platformShareOverride) {
         BigDecimal grossAmount = gross == null ? BigDecimal.ZERO : gross;
-        BigDecimal platformShare = share(grossAmount, platformRate);
+        BigDecimal platformShare = platformShareOverride != null
+                ? platformShareOverride : share(grossAmount, platformRate);
 
         // ★★★ [H8 写侧 fail-closed] 发布者分润已取消,creator 份额【全并 merchant】:
         // 命中的规则只要 creator_rate 不是 0(含 NULL = 「不知道」),就【整笔拒绝入账】——

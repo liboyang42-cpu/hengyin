@@ -64,7 +64,8 @@ class ContentSearchCityMyBatisIT {
             ItSchema.applyMigrations(sql.getConnection(), "sql/migration_o14_content_search_document_20261022.sql");
             // Minimal source fixture columns used by the real gates, all in this suite's isolated schema.
             st.execute("create table cms_topic(id bigint primary key,city_code varchar(32),status int,user_status int,"
-                    + "del_flag int,is_template int,club_member_only int,club_id bigint,circle_theme_code varchar(32),circle_reviewed_at datetime)");
+                    + "del_flag int,is_template int,club_member_only int,club_id bigint,circle_theme_code varchar(32),circle_reviewed_at datetime,"
+                    + "name varchar(200),address_name varchar(255),description text)");
             st.execute("create table cms_activity(id bigint primary key,city_code varchar(32),status int,publish_status int,"
                     + "del_flag int,cancel_time datetime,topic_id bigint,club_id bigint)");
             st.execute("create table community_post(id bigint primary key,city_code varchar(32),lifecycle varchar(32),"
@@ -77,7 +78,7 @@ class ContentSearchCityMyBatisIT {
             st.execute("create table im_block(member_id bigint,blocked_member_id bigint)");
             st.execute("create table community_member_mute(member_id bigint,muted_member_id bigint)");
             // Same numeric ID in all three sources catches cross-type city joins.
-            st.execute("insert into cms_topic values(1,'310100',1,1,0,0,0,null,null,null)");
+            st.execute("insert into cms_topic values(1,'310100',1,1,0,0,0,null,null,null,'match','上海市黄浦区','散步路线')");
             st.execute("insert into cms_activity values(1,'310100',1,1,0,null,1,null)");
             st.execute("insert into community_post values(1,'310100','PUBLISHED','PUBLIC',1,9)");
             st.execute("insert into community_search_document values('POST',1,'VISIBLE')");
@@ -86,6 +87,19 @@ class ContentSearchCityMyBatisIT {
                     + type + "',1,'match','match','310100','VISIBLE','2026-01-01 00:00:00','2026-01-01 00:00:00')");
             ContentSearchMapper mapper = sql.getMapper(ContentSearchMapper.class);
             assertEquals(3, search(mapper, "310100").size());
+            for (String keyword : Arrays.asList("上海", "黄浦", "310100", "散步")) {
+                assertEquals(1, mapper.selectUnifiedSearch(keyword, Collections.singletonList("TOPIC"), null, null).size());
+            }
+            st.execute("update cms_topic set address_name='西安市碑林区'");
+            assertTrue(mapper.selectUnifiedSearch("上海", Collections.singletonList("TOPIC"), null, null).isEmpty());
+            assertEquals(1, mapper.selectUnifiedSearch("西安", Collections.singletonList("TOPIC"), null, null).size());
+            assertTrue(mapper.selectUnifiedSearch("\\%", Collections.singletonList("TOPIC"), null, null).isEmpty());
+            for (String hidden : Arrays.asList("status=0", "is_template=1", "club_member_only=1", "del_flag=1")) {
+                st.execute("update cms_topic set " + hidden);
+                assertTrue(mapper.selectUnifiedSearch("西安", Collections.singletonList("TOPIC"), null, null).isEmpty(),
+                        "address matching must preserve public gate: " + hidden);
+                st.execute("update cms_topic set status=1,is_template=0,club_member_only=0,del_flag=0");
+            }
             String[] tables = {"cms_topic", "cms_activity", "community_post"};
             String[] cities = {"440100", "320500", "110100"};
             for (int i = 0; i < tables.length; i++) st.execute("update " + tables[i] + " set city_code='" + cities[i] + "' where id=1");

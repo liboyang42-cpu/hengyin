@@ -99,7 +99,7 @@ function rangeText(m) { return '范围 ' + km(m); }
 function nextRadius(m) { const i = RADII.indexOf(Number(m)); return RADII[(i + 1) % RADII.length]; }
 function myTeamsText(n) { return Number(n) > 0 ? '我的队伍 · ' + Number(n) : '我的队伍'; }
 
-const GONE = { dropTeam: true, title: '这支队伍现在申请不了', why: '队伍已满、活动已开始或正在审核,地图上已经刷新' };
+const GONE = { dropTeam: true, title: '这支队伍现在申请不了', why: '队伍已满、活动已开始或正在审核，地图上已经刷新' };
 const ERRORS = {
   apply: {
     TICKET_REQUIRED: { title: '要先买这一场的票', patch: { viewerHasTicket: false, viewerStatus: 'NONE' }, primary: '去买票', secondary: '先不买', primaryAction: 'buy' },
@@ -107,7 +107,7 @@ const ERRORS = {
     APPLY_PENDING: { title: '你已经申请过了', patch: { viewerStatus: 'PENDING' } },
     ALREADY_JOINED: { title: '你已在这支队伍里', patch: { viewerStatus: 'JOINED' } },
     TEAM_FULL: GONE, ACTIVITY_STARTED: GONE, TEAM_UNDER_REVIEW: GONE,
-    TEAM_NOT_PUBLIC: { dropTeam: true, title: '这支队伍只接受邀请', why: '队长已把它改成邀请制,地图上已经刷新' },
+    TEAM_NOT_PUBLIC: { dropTeam: true, title: '这支队伍只接受邀请', why: '队长已把它改成邀请制，地图上已经刷新' },
     APPLY_BLOCKED: { title: '暂时不能申请这支队伍' },
   },
   withdraw: {

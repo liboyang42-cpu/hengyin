@@ -1740,12 +1740,12 @@ Page({
   },
   fillPreferenceExample: function () {
     const value = JSON.stringify({
-      steps: [{ key: 'space', type: 'single', title: '你现在的空间更像哪一种?', options: [
+      steps: [{ key: 'space', type: 'single', title: '你现在的空间更像哪一种？', options: [
         { key: 'A', text: '小而紧凑', scores: { compact: 2, open: 0 } },
         { key: 'B', text: '开阔但杂乱', scores: { compact: 0, open: 2 } }
       ] }],
       dimensions: ['compact', 'open'],
-      tiebreak: { key: 'tradeoff', type: 'single', title: '如果只能先改一个?', options: [
+      tiebreak: { key: 'tradeoff', type: 'single', title: '如果只能先改一个？', options: [
         { key: 'A', text: '先减物品', scores: { compact: 1 } },
         { key: 'B', text: '先改动线', scores: { open: 1 } }
       ] },

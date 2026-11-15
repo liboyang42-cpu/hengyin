@@ -217,14 +217,14 @@ class ApiClubLeaderProfileSecurityTest {
         persisted.set(activeLeaderProfile());
         when(clubService.saveLeaderProfileWithinIdentityMutex(any(Long.class), any(ClubLeader.class)))
                 .thenThrow(new ServiceException(
-                        "您已注册为商户,一个账户不能同时是商户与俱乐部主理人", HttpStatus.CONFLICT));
+                        "您已注册为商户，一个账户不能同时是商户与俱乐部主理人", HttpStatus.CONFLICT));
 
         mvc.perform(post("/api/club/become-leader")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(maliciousJson("商家不得恢复主理人")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(409))
-                .andExpect(jsonPath("$.msg").value("您已注册为商户,一个账户不能同时是商户与俱乐部主理人"));
+                .andExpect(jsonPath("$.msg").value("您已注册为商户，一个账户不能同时是商户与俱乐部主理人"));
 
         verify(leaderService, never()).updateClubLeader(any());
         verify(capabilityService, never()).grant(any(), any(), any());
@@ -235,14 +235,14 @@ class ApiClubLeaderProfileSecurityTest {
         persisted.set(activeLeaderProfile());
         when(clubService.insertClubWithinOwnerQuota(any(Club.class), any(Integer.class)))
                 .thenThrow(new ServiceException(
-                        "您已注册为商户,一个账户不能同时是商户与俱乐部主理人", HttpStatus.CONFLICT));
+                        "您已注册为商户，一个账户不能同时是商户与俱乐部主理人", HttpStatus.CONFLICT));
 
         mvc.perform(post("/api/club/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"不应创建的俱乐部\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(409))
-                .andExpect(jsonPath("$.msg").value("您已注册为商户,一个账户不能同时是商户与俱乐部主理人"));
+                .andExpect(jsonPath("$.msg").value("您已注册为商户，一个账户不能同时是商户与俱乐部主理人"));
 
         verify(clubService).insertClubWithinOwnerQuota(any(), any(Integer.class));
     }

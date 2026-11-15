@@ -1,0 +1,15 @@
+@import '../../../style/merchant-light.wxss';
+
+page { background: var(--cy-bg-page); }
+.bres-page { min-height: 100vh; box-sizing: border-box; background: var(--cy-bg-page); display: flex; flex-direction: column; }
+.bres-scroll { flex: 1; min-height: 0; }
+.bres-shell { box-sizing: border-box; padding: 0 var(--cy-page-x) var(--cy-space-8); }
+.bres-card { border-radius: var(--cy-radius-lg); background: var(--cy-color-bg-surface); padding: 0 var(--cy-space-3-5); }
+.bres-row { display: flex; align-items: center; justify-content: space-between; gap: var(--cy-space-2); min-height: var(--cy-btn-h); padding: var(--cy-space-2) 0; border-bottom: 1rpx solid var(--cy-color-border-subtle); }
+.bres-row:last-child { border-bottom: 0; }
+.bres-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--cy-space-1); }
+.bres-time { color: var(--cy-text-title); font-size: var(--cy-font-body); font-weight: 600; font-variant-numeric: tabular-nums; }
+.bres-status { color: var(--cy-text-secondary); font-size: var(--cy-font-caption); }
+.bres-status--BOOKED { color: var(--cy-color-action-primary-bg); }
+.bres-status--FULFILLED { color: var(--cy-color-status-success); }
+.bres-status--NO_SHOW, .bres-status--LATE_CANCELLED { color: var(--cy-color-status-danger); }

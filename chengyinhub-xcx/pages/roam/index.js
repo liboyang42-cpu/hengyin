@@ -37,7 +37,7 @@ const {
   isChannelAllowed,
   readSharePrivacy,
 } = require('../../utils/roam-route-privacy.js');
-const { readNonNegative } = require('../../utils/roam-history-metrics.js');
+const { readNonNegative, footprintCount, formatDistance, formatDuration, formatRoamMoment } = require('../../utils/roam-history-metrics.js');
 const { createIdleDetector } = require('../../utils/roam-idle.js');
 const { acceptRoamLocation } = require('../../utils/roam-track-filter.js');
 const { simplifyTrack, limitTrack, normalizeTrack } = require('../../utils/roam-track-simplify.js');
@@ -81,8 +81,11 @@ const { normalizeRunners } = require('../../utils/roam-runners.js');
 const presencePrivacy = require('../../utils/roam-presence-privacy.js');
 const { currentScene, exitDecision, popScene, pushScene } = require('../../utils/scene-stack.js');
 // 个性化地图(暗色底图)与 play 页共用一份配置,见 utils/map-style.js
-const { playerMapStyle, roam3dFor } = require('../../utils/map-style.js');
+const { roam3dFor } = require('../../utils/map-style.js'); const mapSwitch = require('../../utils/map-style-switch.js'); const mapSnap = require('../../utils/map-snapshot.js'); const { routeGeo } = require('../../utils/roam-route-geo.js');
 const photoPins = require('./photo-pins.js');
+const { createMarkerIds } = require('../../utils/roam-marker-ids.js');
+const placeMap = require('../../utils/roam-place-map.js');
+const { resolvePlaceMedia } = require('../../utils/roam-place-media.js');
 function stripDistText(from, p) {
   if (!from || from.lat == null || !p || p.lat == null) return '';
   const m = distM({ lat: Number(from.lat), lng: Number(from.lng) }, { lat: Number(p.lat), lng: Number(p.lng) });
@@ -90,7 +93,7 @@ function stripDistText(from, p) {
   return m < 1000 ? Math.max(10, Math.round(m / 10) * 10) + ' 米' : (m / 1000).toFixed(1) + ' 公里';
 }
 const { placeShareFromEvent } = require('../../utils/place-share.js');
-const PLAYER_MAP_STYLE = playerMapStyle();
+const MAP_KIND_DATA = mapSwitch.initialData();
 const { getScene } = require('../../utils/scene-registry.js');
 const { openScene: openPageScene } = require('../../utils/scene-entry.js');
 const { getNodeLevelStyle, buildNodeLevelMarkerStyle } = require('./node-level-style.js'); const entryMap = require('../../utils/roam-entry-map.js');
@@ -111,16 +114,8 @@ const FOG_FEATHER = 1.6;
 const FOG_UPDATE_MS = 2000;  // poly 全量替换有一帧透底(闪白),放宽节流降频
 const PLAYER_MK = 99;
 const STATUS_MARKER_ID = 99997;
-/* 后端真 POI(/api/roam/pois)的 marker id 基数。微信 <map> 的 marker id 契约是数字
-   (见 utils/roam-hangout.js:4 自述),原来用 'r'+id 字符串下发 —— 真机上针可能点不动,
-   而 demo 点位的数字针正常。编进 70 万段:与商家条目(nodeId/id/9000+i)、上面两个固定值、
-   下面其他人的头像(800000+下标)都错开。onMarkerTap 仍按 p.id 全等匹配,不需要反解。 */
+// 业务 POI 的本地身份；原生 marker 另按类型分配，不用业务 ID 推断点击类型。
 const ROAM_POI_MK_BASE = 700000;
-/* 第九轮 m1 第 5 项:拉远时的密度小圆点。onMarkerTap 先认它,再认 RUNNER_MK_BASE 段。 */
-const DOT_MK_BASE = 960000;
-/* 附近正在漫游的人(原型 otherRunners)。marker id = 基数 + 下标,一次最多 20 个,
-   撞不上 POI 的 id(那批来自 nodeId / id / 9000+i / 700000+roamPoiId),也撞不上上面两个固定值。 */
-const RUNNER_MK_BASE = 800000;
 /* 上报自己的位置:30 s 一次。再密没有意义 —— 服务端把坐标截到约 100 m 一格,
    走不满一格的上报是同一个值。 */
 const PRESENCE_MS = 30000;
@@ -313,16 +308,19 @@ function buildNpcPorts(page) {
 }
 
 Page({
+  ...mapSwitch.methods(),
+  onMapKindTap(e) { const kind = e.currentTarget.dataset.kind; if (kind) this._applyMapKind(kind, true); },
+  // 地图重建后迷雾要换上新的 MapContext
+  _onMapKindRebuilt() { const map = this.selectComponent('#roamMap'); if (map) this._mapCtx = map.getMapContext(); },
   data: {
     privacyGateShow: false,
     // BL-01 漫游点位筛选(范围 + 只看未到过),值在 utils/roam-poi-filter.js。
     poiFilter: { radiusM: 3000, unvisitedOnly: false }, poiFilterTabs: roamPoiFilter.radiusTabs(),
-    screen: 'entry-map', entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true }, entryLoadError: false, entryReadAccess: '', entryLoading: false, entryLocated: false,
+    screen: 'entry-map', unfinishedRoam: false, entryMarkers: [], entryCards: [], entryFarCards: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '', entrySheetView: 'main', entrySheetIn: false, entryLayers: { activities: true, teams: true, posts: true, places: true }, entryScale: 14, entryStrip: [], entryPeekFold: false, entryStripTab: 'near', entryCityStrip: null, entryCityLabel: '本城推荐', entryLoadError: false, entryReadAccess: '', entryLoading: false, entryLocated: false,
     introError: '',
     // 个性化地图透传给本页三个 <free-map>(起始预览 / 主漫游图 / 结算图),三处必须同源,
     // 否则同一次漫游里会出现一亮一暗。值在 utils/map-style.js。
-    fmSubkey: PLAYER_MAP_STYLE.subkey,
-    fmLayerStyle: PLAYER_MAP_STYLE.layerStyle, map3d: false, // 第九轮 m4:16 级以上 3D 楼块 + 俯仰(utils/map-style.js ROAM_3D,默认关)
+    ...MAP_KIND_DATA, map3d: false, // 第九轮 m4:16 级以上 3D 楼块 + 俯仰(utils/map-style.js ROAM_3D,默认关)
     // 起始页(Figma 3956:12602/12809)。modeTitle 是模式名:本页恒为自由漫游,
     // 城市定向/自由探索复用同一版式时只换这三项(标题 / 卡片 / 主行动文案)。
     modeTitle: '自由漫游',
@@ -398,7 +396,6 @@ Page({
     presenceVisible: false,
     presenceSubmitting: false,
     /* 工具抽屉那几行的副标题(现算,不写死)。 */
-    more: { funText: '', runnerText: '', stampText: '' },
     /* 半屏进场用的开关(原型 .sheet 的 @keyframes up 在这儿是 transition)。 */
     sceneIn: false,
     /* 原型的取景卡(camPanel)是浮在地图上的一张卡,不是另开一页。 */
@@ -463,7 +460,7 @@ Page({
     celebrationEvent: '',
     roamPrompt: { show: false },    // 漫游提示（prompt-slot 栈最低优先级）
     footprintHint: { show: false }, // 本地足迹边缘，优先于通用提示、让位于到点/商家/活动
-    finish: { photos: [] },
+    finish: { photos: [] }, settleGeo: null, settleSafeBottom: 0,
     archSegs: [], archPois: [], archEnd: {},
   },
 
@@ -532,6 +529,13 @@ Page({
     this.closeScene();
   },
   cancelSceneDiscard() { this.setData({ sceneConfirm: { show: false, action: null, pending: null } }); },
+  onPoiTitle(event) {
+    const scene = this.data.sceneCurrent, detail = event.detail || {};
+    if (!scene || scene.id !== 'roam-poi-detail' || !detail.name || scene.title === detail.name
+        || String(scene.params.poiId || '') !== String(detail.poiId || '')
+        || String(scene.params.merchantId || '') !== String(detail.merchantId || '')) return;
+    this.setData({ 'sceneCurrent.title': detail.name, sceneStack: this.data.sceneStack.map((row, index) => index === this.data.sceneStack.length - 1 ? Object.assign({}, row, { title: detail.name }) : row) });
+  },
   setSceneDirty(dirty = true) {
     if (!this.data.sceneStack.length) return;
     const sceneStack = this.data.sceneStack.slice();
@@ -771,6 +775,24 @@ Page({
   /** 服务端已完成事实作为护照统计；本机照片仅作本机补充，不上传。 */
   async _loadIntroPassport() {
     if (this._passportReader) this._passportReader.dispose();
+    // 2026-11-14：游客读公开玩法；个人档案只在点选后登录读取。
+    if (!readSession.memberId(getApp())) {
+      this._activeRoamToken = null; this._activeRoamEventId = '';
+      this.setData({ passportLoading: false, passportError: false, passport: {
+        stats: [],
+        tiles: [
+          { key: 'history', icon: 'route', title: '漫游记录', value: '', img: '', photo: 'history' },
+          { key: 'stamp', icon: 'image', title: '集邮册', value: '', img: '', photo: 'stamp' },
+          { key: 'goals', icon: 'flag', title: '探索目标', value: '', photo: 'goals' },
+        ],
+        plays: [
+          { key: 'event', icon: 'calendar', title: '官方活动', sub: '限时任务与奖励', cover: '', photo: 'event' },
+          { key: 'discover', icon: 'discover-shop', title: '发现附近店铺', sub: '现在能去哪', cover: '' },
+        ],
+      } });
+      this._loadActiveRoamEvents(); this._loadOfficialRoutes();
+      return;
+    }
     const { createReader } = require('../../utils/roam-passport-read.js');
     const reader = this._passportReader = createReader(getApp(), wx);
     const scope = this._roamReadScope(), startGeneration = this._roamStartGen;
@@ -837,7 +859,12 @@ Page({
   },
   retryPassport() { return this._loadIntroPassport(); },
   onPassportTileTap(e) {
-    const key = e.currentTarget.dataset.key; if (!e.ppExpanded && this._ppExpand(key)) return; // 2026-10-22:先放大成大卡再执行原动作
+    const key = e.currentTarget.dataset.key;
+    const app = getApp();
+    this._passportTileIntent = key;
+    if (app.ensureLoginFor && !app.ensureLoginFor('登录后查看自己的漫游记录', () => this.onPassportTileTap(e),
+      { owner: this, target: () => [this._passportTileIntent, this.data.introTab] })) return;
+    if (!e.ppExpanded && this._ppExpand(key)) return; // 2026-10-22:先放大成大卡再执行原动作
     if (key === 'history') this.openRoamHistory();
     else if (key === 'stamp') this.goStampAlbum();
     else if (key === 'goals') wx.navigateTo({ url: '/subpackageTools/exploration-goals/index' });
@@ -895,6 +922,7 @@ Page({
           gpsOk: auth['scope.userLocation'] === true,
           bgGpsOk: auth['scope.userLocationBackground'] === true,
         });
+        if (!this._hidden && !this._unloaded && this.data.screen === 'entry-map' && !this.data.entryLocated && auth['scope.userLocation'] === true && typeof wx.getLocation === 'function') this.enableEntryLocation(true);
       },
     });
   },
@@ -966,13 +994,14 @@ Page({
       promptTop,
       searchTop,
       chrome,
+      settleSafeBottom: this._win ? this._win.safeBottom : 0,
       isDevtools: this._isDevtools(),
       reducedMotion: readReducedMotion(),
       fogOff: readFogOff(),
     });
     // BL-23:入口地图首屏不再固定落在默认城市坐标 —— 有上次成功定位就从那里开始
     const lastPoint = lastLocation.load();
-    if (lastPoint) this.setData({ center: { lat: lastPoint.latitude, lng: lastPoint.longitude }, entryLocated: true }); // j4 F5:没有真实定位时入口不按默认坐标算「距你」
+    if (lastPoint) { this._entryMe = { lat: lastPoint.latitude, lng: lastPoint.longitude }; this.setData({ center: { lat: lastPoint.latitude, lng: lastPoint.longitude }, entryLocated: false }); } // 缓存只决定初始视口，距离等本次定位成功后再显示
     this._entryItems = []; this._entryTeams = []; this._entryPlaces = []; this._loadEntryMap(this.data.center);
     this._loadIntroPassport();
     this._reveals = [];
@@ -1061,7 +1090,7 @@ Page({
   onAtmosDone() { if (this.data.atmosOn) this.setData({ atmosOn: false }); },
 
   onHide() {
-    this._hidden = true; this.setData({ roamPageShown: false });
+    this._hidden = true; this._loginContinuationEpoch = (this._loginContinuationEpoch || 0) + 1; this.setData({ roamPageShown: false });
     this._roamStartGen = (this._roamStartGen || 0) + 1;
     this._roamStartPending = false;
     this._shootAfterStart = false;
@@ -1088,11 +1117,12 @@ Page({
     }
   },
   onShow() {
-    this._syncRoamPermission();
     // P1-6:兜里短接的读数立即补一次,不等下一拍 1s
     this._hidden = false;
     if (this._clock) this._syncStats();
+    this._syncRoamPermission();
     this.setData({ fontScaleStyle: readPageStyle(), roamPageShown: true });
+    this._syncMapKindPref();
     if (this._realOn) this._flushTrackLine();
     this._syncPresencePrivacy(); this._eventNavigating = false; this._navigating = false; // 返回时兜底清「官方活动」与其余入口的跳转锁
     // 系统定位权限与位置分享偏好分别回读。
@@ -1247,7 +1277,7 @@ Page({
       imgUrl: p.imgUrl || MOCK_IMG,
       state: 'fog',
       first: true,
-      metaLine: catMap[p.cat].catLabel + ' · 距你很近',
+      metaLine: catMap[p.cat].catLabel,
     })));
     this._player = { ...c };
     this.setData({ center: c });
@@ -1417,14 +1447,15 @@ Page({
     return () => generation === this._roamWriteGeneration && playerId === owner();
   },
 
-  _fetchNearbyMerchants(c) {
+  _fetchNearbyMerchants(c, opts) {
     const current = this._roamReadScope();
+    this._merchantFetchedAt = { lat: c.lat, lng: c.lng };
     return req('/api/map/nearby', 'POST', {
       longitude: String(c.lng),
       latitude: String(c.lat),
       radius: '800',
       limit: '20',
-    }).then((res) => {
+    }, { silentError: !!(opts && opts.silent) }).then((res) => {
       if (!current()) return;
       this._resolveNearbyReady();  // 无论成功失败都 resolve,避免 _fetchRoamPois 死等
       // 商家图层挂了原来直接 return:地图上只是少了店,一句提示都没有。
@@ -1469,7 +1500,7 @@ Page({
           color: '#D9D9D9',
           state: 'fog',
           first: true,
-          metaLine: '商家 · 探店 · ' + (n.distance ? Math.round(n.distance) + 'm' : '距你很近'),
+          metaLine: '商家 · 探店' + (n.distance ? ' · ' + Math.round(n.distance) + 'm' : ''),
           distM: n.distance ? Math.round(n.distance) : null,
           // 商家上传头像优先；没有时才使用门店 NPC 形象。
           mapAvatar: merchantAvatar || npcAvatar,
@@ -1483,8 +1514,11 @@ Page({
         };
       }).filter(Boolean);
       if (!merchants.length) return;
-      const others = this._pois.filter((p) => p.cat !== 'merchant');
-      this._pois = this._mergeSessionDonePois(merchants.concat(others));
+      // 漫游点里的商家(_roamId)不属于这一路,不能被换掉;A2.2 走远重拉时旧商家离新中心 1.6km 内的并存
+      const oldShops = opts && opts.merge ? this._pois.filter((p) => p.cat === 'merchant' && !p._roamId && !p.demo && !merchants.some((m) => String(m.id) === String(p.id))
+        && !(placeMap.distanceFrom(c, p) > 1600)) : [];
+      const others = this._pois.filter((p) => p.cat !== 'merchant' || p._roamId);
+      this._pois = this._mergeSessionDonePois(merchants.concat(oldShops, others));
       this._seenSweepHistory(); // 异步并入的报名商家若在历史点亮区,直接带星
       this._syncMarkers();
       this._syncSparkCircles();
@@ -1497,14 +1531,15 @@ Page({
   // ⚠️ 原码把「网络没通」和「后端这一带确实没铺 POI」都走同一条 return,两者都静默保留
   // _initWorld 的 13 家演示商家(转角奶茶/深夜食堂…)—— 用户分不出真假,会走过去打卡。
   // 演示种子仅在开发版且显式打开 roamDemoPois 时注入；网络失败仍需显示离线状态。
-  _fetchRoamPois(c) {
+  _fetchRoamPois(c, opts) {
+    c = this._player || c;
     const scope = this._roamReadScope(), seq = this._roamPoiSeq = (this._roamPoiSeq || 0) + 1, current = () => scope() && seq === this._roamPoiSeq; // 连续重拉只认最后一次,旧回包晚到不覆盖新结果
     // 等待附近商家加载完成再拉 POI,避免并发修改 this._pois 丢数据
     const nearbyDone = this._nearbyReady || Promise.resolve();
     return nearbyDone.then(() => {
     if (!current()) return;
     const radiusM = this._poiFilterState().radiusM || ROAM_POI_RADIUS_M; // BL-01 筛选范围,默认仍是 3km
-    return req('/api/roam/pois', 'GET', { lat: String(c.lat), lng: String(c.lng), radius: String(radiusM) }).then((res) => {
+    return req('/api/roam/pois', 'GET', { lat: String(c.lat), lng: String(c.lng), radius: String(radiusM) }, { silentError: !!(opts && opts.silent) }).then(async (res) => {
       if (!current()) return;
       if (netFail(res)) {
         // req 的 fail 哨兵 = 网络故障。此时"地图上这些点"既没被证实也没被证伪。
@@ -1515,14 +1550,20 @@ Page({
         this.setData({ poiEmpty: false }, () => this._syncGoal());
         return;
       }
-      if (!isRecordList(res.data)) {
+      const got = placeMap.unwrapPois(res);
+      if (!got || !isRecordList(got.rows)) {
         this.setData({ poiEmpty: false }, () => this._syncGoal());
         return;
       }
-      const list = res.data;
+      const list = await resolvePlaceMedia(getApp(), got.rows);
+      if (!current()) return;
+      this._poiTruncated = got.truncated;
+      this._poiFetchedAt = { lat: c.lat, lng: c.lng, radius: radiusM }; // 读成功才记;失败后 10 秒节流一过会再试
       this.setData({ poiEmpty: !list.length }, () => this._syncGoal());
       // BL-01:换范围会重拉,上一轮的漫游点位先摘掉(打完卡的由 _mergeSessionDonePois 保留),否则同 id 叠两份。
-      const rest = (this._pois || []).filter((p) => !p._roamId);
+      // A2.2:玩家走远后的重拉(opts.merge)按 id 去重合并,离新中心 2 倍半径外的旧点才丢。
+      const rest = (this._pois || []).filter((p) => !p._roamId || (opts && opts.merge && !list.some((n) => n && Number(n.id) === Number(p._roamId))
+        && !(placeMap.distanceFrom(c, p) > 2 * radiusM)));
       if (!list.length) {
         if (rest.length !== (this._pois || []).length) {
           this._pois = this._mergeSessionDonePois(rest);
@@ -1537,6 +1578,9 @@ Page({
         const st = roamPoiLocalState(n);
         const merchantAvatar = n.merchantAvatar || n.avatarUrl || n.avatar || '';
         const npcAvatar = n.npcAvatar || '';
+        // A2.3:真实距离;没有玩家位置就不写
+        const distText = placeMap.distanceText(placeMap.distanceFrom(this._player, n));
+        const cover = placeMap.coverKey(n);
         return {
           id: ROAM_POI_MK_BASE + Number(n.id), _roamId: n.id, cat: m.cat, isCityNode: n.type === 2 || !!n.templateId, name: n.name,
           lat: Number(n.lat), lng: Number(n.lng), address: n.address || '', tags: n.tags || '',
@@ -1545,10 +1589,13 @@ Page({
           icon: m.icon, catLabel: m.catLabel, color,
           imgUrl: MOCK_IMG, state: st, first: !n.found,
           // 第九轮 m1:据点封面(roam_poi.cover_img)才是照片图钉;没有封面就是深色圆
-          photo: n.coverImg && typeof getApp().getImgUrl === 'function' ? getApp().getImgUrl(n.coverImg) : '',
+          photo: cover && typeof getApp().getImgUrl === 'function' ? getApp().getImgUrl(cover) : '',
+          // A4.2:推荐理由唯一受控字段(服务端 quotes 优先,其次目录 note);非商家绝不直出 description
+          quote: placeMap.reasonFor(n, null), credit: placeMap.credit(n), sourceList: placeMap.quoteSources(n),
+          gallery: placeMap.galleryKeys(n), found: !!n.found,
           merchantId: n.merchantId || null,
-          metaLine: m.catLabel + ' · 距你很近', radiusM: n.radiusM || 80,
-          nodeLevel: Number(n.nodeLevel || 1),
+          metaLine: m.catLabel + (distText ? ' · ' + distText : ''), radiusM: n.radiusM || 80,
+          nodeLevel: placeMap.nodeLevel(n),
           // 商家上传头像优先；没有时才使用门店 NPC 形象。
           mapAvatar: merchantAvatar || npcAvatar,
           mapAvatarKind: merchantAvatar ? 'merchant' : (npcAvatar ? 'npc' : ''),
@@ -1625,8 +1672,8 @@ Page({
     this._tilesRevision = (this._tilesRevision || 0) + 1;
     this._sessionTiles = {}; this._sessionTileCount = 0;
     this._track = []; this._reveals = []; this._historyReveals = []; this._footprintSessions = [];
-    this._sessionPhotos = []; this._foundRoamPois = {}; this._recoveryArchiveTs = 0;
-    this._roamRecoveryAbandoned = true; this._shopMedalFromServer = false;
+    this._sessionPhotos = []; this._foundRoamPois = {}; this._recoveryArchiveTs = 0; this._roamStartedAt = 0;
+    this._roamRecoveryAbandoned = true; this._shopMedalFromServer = false; this._archGeo = null;
     this._recoveryNeedsLookup = this._revealBootstrapUnknown = this._recoveryReadFailed = false;
     this._finishRequested = false; this._revealInFlight = false;
     this.setData({ recoveryError: '', recoveryCanContinue: false, revealWriteUnknown: false });
@@ -1656,7 +1703,7 @@ Page({
     this._track = []; this._sessionPhotos = []; this._foundRoamPois = {}; this._pois = [];
     this._stats = { time: '00:00', shops: 0, explorePct: 0, distance: '0.0' };
     this._elapsedSeconds = 0;
-    this._dist = 0; this._lastDistanceM = 0; this._recoveryArchiveTs = 0;
+    this._dist = 0; this._lastDistanceM = 0; this._recoveryArchiveTs = 0; this._roamStartedAt = 0; this._archGeo = null;
     this._finishRequested = this._roamCompleted = this._recoveryNeedsLookup = false;
     this._recoveryReadFailed = this._revealBootstrapUnknown = false;
     this._eventId = 0; this._eventMissionCode = '';
@@ -1679,7 +1726,7 @@ Page({
       medal: { show: false }, discoverReward: { show: false, poi: {} },
       visit: { active: false, checkinOk: false, poi: {}, photos: [] },
       archSegs: [], archPois: [], archEnd: {}, 'share.squarePostUnknown': this._squarePostUnknown,
-      recoveryError: '',
+      recoveryError: '', unfinishedRoam: false,
       recoveryCanContinue: false, revealWriteUnknown: false, roamSessionReady: false });
   },
 
@@ -1703,6 +1750,7 @@ Page({
       pendingTiles: (this._pendingTiles || []).slice(), allTiles: Object.keys(this._sessionTiles || {}),
       finishRequested: !!this._finishRequested, distanceM: this._finishRequested ? this._lastDistanceM : (this._dist || 0),
       archiveTs: this._recoveryArchiveTs || 0, finish: this.data.finish || {}, stats: this._stats, track: this._track || [],
+      startedAt: this._roamStartedAt || null,
       elapsedSeconds: this._sessionClock ? this._sessionClock.elapsedSeconds() : (this._elapsedSeconds || 0),
       photos: this._sessionPhotos || [], foundPois: this._foundRoamPois || {},
       pois: (this._pois || []).filter(p => p.state === 'done'),
@@ -1736,6 +1784,7 @@ Page({
     this._recoveryReadFailed = false;
     if (!state.record) return true;
     const r = state.record;
+    this._roamStartedAt = Number(r.startedAt) || 0;
     this._clientSessionKey = r.clientSessionKey || '';
     this._roamSid = exactSessionId(r.sessionId) || 0;
     this._pendingTiles = r.pendingTiles.slice();
@@ -1755,8 +1804,8 @@ Page({
     }
     this._eventId = r.eventId || 0; this._eventMissionCode = r.missionCode || '';
     this._recoveryNeedsLookup = true;
-    this.setData({ roamSessionReady: false });
-    if (r.finishRequested) this.setData({ screen: 'arrive', finish: r.finish || {} });
+    this.setData({ roamSessionReady: false, unfinishedRoam: !r.finishRequested });
+    if (r.finishRequested) this.setData({ screen: 'arrive', finish: Object.assign({}, r.finish || {}, { footprints: footprintCount(r.finish) }), settleGeo: routeGeo(this._track, this._pois) });
     this.recoverRoam();
     return true;
   },
@@ -2114,6 +2163,11 @@ Page({
     if (typeof result.totalXp !== 'number' || !Number.isFinite(result.totalXp))
       return this._recoveryFailure('结算事实暂时无法读取，请重新确认');
     this._finishedAt = result.finishedAt || this._finishedAt || 0;
+    const moment = formatRoamMoment(this._finishedAt);
+    const zone = typeof result.zone === 'string' ? result.zone.trim() : '';
+    const distanceM = readNonNegative(result.distanceM);
+    if (distanceM !== null) this._lastDistanceM = distanceM;
+    const previous = this.data.finish || {};
     const statuses = Array.isArray(badgeDelivery) ? badgeDelivery : result.badgeDelivery;
     const delivered = (code, sourceId) => Array.isArray(statuses) && statuses.some(row => row && typeof row === 'object'
       && row.badgeCode === code && row.state === 'DELIVERED'
@@ -2122,7 +2176,10 @@ Page({
     const milestone = typeof result.medal === 'string' && result.medal.match(/^城市点亮 ([1-9]\d*) 格$/);
     const medal = milestone && delivered('ROAM_TILES_' + milestone[1], milestone[1]) ? result.medal : '';
     const shopMedal = result.shopMedal && delivered(result.shopMedal.code) ? result.shopMedal : null;
-    this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp, 'finish.medal': medal,
+    this.setData({ screen: 'arrive', 'finish.xpAwarded': result.totalXp,
+      'finish.zone': zone || previous.zone || '',
+      'finish.distance': distanceM !== null ? formatDistance(distanceM / 1000) : previous.distance,
+      'finish.date': moment.date || previous.date || '', 'finish.dateLine': moment.dateLine || previous.dateLine || '', 'finish.medal': medal,
       'finish.shopMedal': shopMedal, 'finish.routeStory': result.routeStory || '',
       'finish.resultIncomplete': !complete, 'finish.settleErr': '', recoveryError: '' });
     this._shopMedalFromServer = !!shopMedal;
@@ -2148,7 +2205,7 @@ Page({
     if (!this._roamCompleted) {
       if (medal || shopMedal) this._triggerCelebration('medal-earned');
       if (result.routeStory) analytics.track('roam_route_story_shown', { bizType: 'roam' });
-      if (medal) cyToast('获得勋章:' + medal);
+      if (medal) cyToast('获得勋章：' + medal);
     }
     this._roamCompleted = true; this._finishRequested = false;
     this._recoveryNeedsLookup = false; this._revealBootstrapUnknown = false;
@@ -2518,6 +2575,13 @@ Page({
 
   _syncMarkers() {
     const mk = [];
+    const targets = this._markerTargets = new Map();
+    const allocate = this._markerIds || (this._markerIds = createMarkerIds());
+    const markerId = (kind, key, target) => {
+      const id = allocate(kind, key);
+      targets.set(id, { kind, target });
+      return id;
+    };
     // 原生气泡不吃 --cy-type-scale:按手机字号同一倍率算出字号(1~1.3,只放大)
     const calloutFont = mapFontSize(11, readFontScale());
     const mapStates = [];
@@ -2532,7 +2596,14 @@ Page({
     const explorePins = [];
     const pinSafe = this._pinSafeArea();
     (this._pois || []).forEach((p) => {
-      if (p.state === 'fog') return;
+      if (p._roamId && this._foundRoamPois && this._foundRoamPois[p._roamId] && p.state === 'fog') p.state = 'done';
+      if (p.state === 'fog') {
+        // A2.1(业主默认):未发现的漫游点以变暗的「?」剪影图钉画在玩家约 1 公里内;不带名字、不带分类,走到点亮后才完整显示
+        if (pinMode !== 'dots' && p._roamId && !p.demo && placeMap.isMysteryVisible(p, this._player)) {
+          mk.push({ id: markerId('poi', p._roamId ? 'roam:' + p._roamId : p.id, p), latitude: p.lat, longitude: p.lng, width: 30, height: 36, anchor: { x: 0.5, y: 1 }, zIndex: 3, alpha: 0.7, iconPath: placeMap.PIN_DIR + 'pin-unknown.png' });
+        }
+        return;
+      }
       const stateKey = getRoamPoiState(p, visit);
       if (roamPoiFilter.hiddenByFilter(p, poiFilter, stateKey)) return;
       const state = getPlayMapState(stateKey);
@@ -2551,7 +2622,7 @@ Page({
       const nodeStyle = buildNodeLevelMarkerStyle(p.nodeLevel, stateKey);
       const size = state.key === 'target' ? 50 : (p.isCityNode ? nodeStyle.size : 34);
       const m = {
-        id: p.id,
+        id: markerId('poi', p._roamId ? 'roam:' + p._roamId : p.id, p),
         latitude: place.lat,
         longitude: place.lng,
         width: size,
@@ -2679,15 +2750,10 @@ Page({
     });
     if (pinMode === 'dots') {
       // 拉远:真实点位按屏幕格合并成小圆点(雾里的点也算 —— 迷雾层盖在地图上面,点不会被剧透)
-      const dots = photoPins.bucketDots((this._pois || []).filter((p) => !p.demo), pinRegion, this._fogScreenSize);
-      // 第九轮 m2 补充第 3 项:热度——位置仍是真实点位的平均;叠得多的点更大、更亮
-      dots.forEach((d, i) => {
-        const heat = photoPins.heatLevel(d.count);
-        const icon = this._icons && (this._icons['pin-heat' + heat.level] || this._icons['pin-dot']);
-        if (!icon) return;
-        mk.push({ id: DOT_MK_BASE + i, latitude: d.lat, longitude: d.lng, width: heat.size, height: heat.size,
-          anchor: { x: 0.5, y: 0.5 }, iconPath: icon, zIndex: 2 + heat.level });
-      });
+      // A2.4:圆点按分类着色,叠在同一屏幕格的点聚合成一枚并写数量;点开放大到那一片(onMarkerTap 的 DOT_MK_BASE 分支)
+      const dotRows = (this._pois || []).filter((p) => !p.demo && p.lat && p.lng).map((p) => ({ id: Number(p._roamId || p.id) || 0, type: p.cat === 'merchant' ? 2 : 1, tags: p.tags, lat: p.lat, lng: p.lng, name: p.name }));
+      const dots = placeMap.buildPins(dotRows, { soloDots: true, scale: pinScale, region: layoutRegion, viewport: this._fogScreenSize, fontSize: calloutFont });
+      dots.markers.forEach((d, i) => mk.push(Object.assign({}, d, { id: markerId('dot', i, d), zIndex: 2, callout: d.callout })));
     }
     const goalStateKey = this.data.goal && this.data.goal.stateKey;
     if (goalStateKey === 'location-off' || goalStateKey === 'offline') {
@@ -2696,7 +2762,7 @@ Page({
       mapStates.push({ nodeId: STATUS_MARKER_ID, state: goalStateKey });
       if (anchor && anchor.lat != null && anchor.lng != null) {
         const status = {
-          id: STATUS_MARKER_ID,
+          id: markerId('status', STATUS_MARKER_ID),
           latitude: anchor.lat + m2lat(42),
           longitude: anchor.lng,
           width: 38,
@@ -2711,11 +2777,11 @@ Page({
     }
     // 别人(原型 otherRunners)。排在自己之前 push,zIndex 也压自己一头之下 ——
     // 屏上永远分得清哪一个是「我」。
-    (this._runners || []).forEach((r, i) => {
+    (this._runners || []).forEach((r) => {
       const key = 'runner-' + r.memberId;
       if (!this._icons || !this._icons[key]) return;   // 图还没画出来就先不画这个人,不放一个空白方块上去
       mk.push({
-        id: RUNNER_MK_BASE + i,
+        id: markerId('runner', r.memberId, r),
         latitude: r.lat,
         longitude: r.lng,
         width: 44,
@@ -2738,7 +2804,7 @@ Page({
     if (p && this.data.mapReady) {
       const playerSize = this._playerAvatarIcon ? 48 : 40;
       const pm = {
-        id: PLAYER_MK,
+        id: markerId('player', PLAYER_MK),
         latitude: p.lat,
         longitude: p.lng,
         width: playerSize,
@@ -2990,8 +3056,9 @@ Page({
           if (stale()) { abandon(); return; }
           this._roamStartPending = false;
           lastLocation.save(r);
+          this._entryMe = { lat: r.latitude, lng: r.longitude };
           this.setData({ introError: '', locErr: false, entryLocated: true });
-          this._openRoamMap({ lat: r.latitude, lng: r.longitude }, true);
+          this._openRoamMap({ lat: r.latitude, lng: r.longitude, accuracy: r.accuracy }, true);
         },
         fail: () => {
           if (stale()) { abandon(); return; }
@@ -3002,7 +3069,7 @@ Page({
       });
     };
     // Existing system permission does not replace a fresh explicit choice after a recorded revoke.
-    try { cyModal.show({
+    const askConsent = () => { try { cyModal.show({
       title: '开启实时定位',
       content: '用于实时定位、打卡和轨迹记录，锁屏后仍会记录，结束漫游即停止。',
       confirmText: '同意并开启',
@@ -3016,11 +3083,31 @@ Page({
         }).then(locate).catch(() => abandon('同意记录失败，请检查网络后重试'));
       },
       fail: () => abandon('定位同意未完成，请重试'),
-    }); } catch (e) { abandon('定位同意未完成，请重试'); }
+    }); } catch (e) { abandon('定位同意未完成，请重试'); } };
+    const { currentLocationConsent } = require('../../utils/roam-recovery.js');
+    const { VERSIONS } = require('../../utils/compliance/usage-consent.js');
+    const readFailed = () => {
+      if (stale()) { abandon(); return; }
+      abandon();
+      this.setData({ introError: '定位授权状态暂时无法读取，请重试', locErr: false });
+    };
+    loginApp.sendRequest({ url: '/api/compliance/consents/latest', method: 'POST',
+      data: JSON.stringify({ docType: 'privacy_policy', scene: 'roam_location' }),
+      header: { 'Content-Type': 'application/json' }, hideLoading: true,
+      success: res => {
+        if (stale()) { abandon(); return; }
+        if (!res || Number(res.code) !== 200) { readFailed(); return; }
+        if (currentLocationConsent(res, VERSIONS.privacy_policy)) locate();
+        else askConsent();
+      }, successStatusAbnormal: readFailed, fail: readFailed,
+    });
   },
 
   _openRoamMap(startCenter, startTracking) {
+    if (startTracking && !this._roamStartedAt && !this.data.unfinishedRoam) this._roamStartedAt = Date.now();
     const p = startCenter || FALLBACK;
+    this._sessionStartFix = startTracking && !(this._track || []).length
+      ? (acceptRoamLocation({ latitude: p.lat, longitude: p.lng, accuracy: p.accuracy }, null, Date.now()) || {}).point : null;
     this._disposeFogRenderer();
     const fogGeneration = this._fogLifecycleGen;
     const locationRevision = bgTracker.revision('roam');
@@ -4100,12 +4187,16 @@ Page({
     const abandon = () => {
       if (!live()) return;
       that._realStarting = false;
+      that._sessionStartFix = null;
       that._locationForegroundOnly = false;
       if (that._realRevokeOff) { that._realRevokeOff(); that._realRevokeOff = null; }
     };
     const onOk = (usingBackground) => {
       if (!live()) return;
-      that._realStarting = false; that._realAnchor = null;
+      that._realStarting = false;
+      that._realAnchor = !(that._track || []).length ? that._sessionStartFix || null : null;
+      if (that._realAnchor) that._track.push({ lat: that._realAnchor.lat, lng: that._realAnchor.lng });
+      that._sessionStartFix = null;
       that._realOn = true;
       wx.onLocationChange(that._onRealLoc = (loc) => { if (live() && that._realOn) that._realTick(loc); });
       that._locationForegroundOnly = usingBackground === false;
@@ -4148,6 +4239,7 @@ Page({
     });
   },
   _stopReal() {
+    this._sessionStartFix = null;
     this._realAnchor = null;
     bgTracker.release('roam');
     this._realStartEpoch = (this._realStartEpoch || 0) + 1;
@@ -4185,6 +4277,20 @@ Page({
     this._applyMovePatch(p, prev);
   },
 
+  // A2.2:玩家离上次读点的中心超过半径一半,按新位置重拉(漫游点 3km、商家 800m),新旧按 id 合并
+  _maybeRefetchPois(p) {
+    if (!p || this._poiRefetchAt && Date.now() - this._poiRefetchAt < 10000) return;
+    const here = { lat: p.lat, lng: p.lng };
+    const roamAt = this._poiFetchedAt;
+    const shopAt = this._merchantFetchedAt;
+    const roamFar = roamAt && placeMap.shouldRefetch(roamAt, here, roamAt.radius);
+    const shopFar = shopAt && placeMap.shouldRefetch(shopAt, here, 800);
+    if (!roamFar && !shopFar) return;
+    this._poiRefetchAt = Date.now();
+    if (shopFar) this._fetchNearbyMerchants(here, { merge: true, silent: true });
+    if (roamFar) this._fetchRoamPois(here, { merge: true, silent: true });
+  },
+
   // BL-02:位移 < 3m 持续 60s 时 HUD 显示「原地停留中」;不碰计时/距离/点亮规则
   _syncIdle(point, now) {
     if (!point) {
@@ -4210,14 +4316,17 @@ Page({
     // 两条都自带节流,放心每步调(原型 otherRunners:地图上跑着别的玩家)
     this._reportPresence(p);
     this._fetchRunners(p);
+    this._maybeRefetchPois(p);
 
-    const km = ((this._dist || 0) / 1000).toFixed(2);
+    const km = formatDistance((this._dist || 0) / 1000);
     const patch = {};
     if (km !== this._stats.distance) { this._stats.distance = km; this._rollStat('distance', km); }
 
     const now = Date.now();
+    const escaped = this._pinFocusId != null && this._playerOutsideSafeView(p);
+    if (escaped) { this._hold = 0; this._pinFocusId = null; }
     if (!this._zoomLock && (!this._hold || now - this._hold > 3000)) {
-      if (!this._centerTimer || now - this._centerTimer >= CENTER_MS) {
+      if (escaped || !this._centerTimer || now - this._centerTimer >= CENTER_MS) {
         this._centerTimer = now;
         patch.center = { lat: p.lat, lng: p.lng };
       }
@@ -4334,8 +4443,17 @@ Page({
 
   /* ============ 附近 POI:商家横滑 banner / 地标 pace 卡 ============ */
   _checkNear(p) {
+    if (this.data.placeCard && this._placeCardPoi) this.setData({ placeCard: this._placeCardFor(this._placeCardPoi) });
     // 二选一卡开着时不刷新附近 banner:banner 会在 mask(z90)下静默堆积成过期提示;GPS/雾照常走
     if (this.data.visit.active || this.data.discoverReward.show) return;
+    const card = this.data.paceCard;
+    if (card && card.show) {
+      const current = this._pois.find(poi => poi.id === card.poiId);
+      if (current) this.setData({ paceCard: this._paceCardFor(current, {
+        meaning: card.meaning, checkinErr: card.checkinErr, checkinRetryable: card.checkinRetryable,
+      }) });
+      else this.closePaceCard();
+    }
     let landmark = null;
     for (const poi of this._pois) {
       // fog=雾中未见,seen=星标已现未探店 —— 两态都要弹探店浮卡
@@ -4389,21 +4507,23 @@ Page({
   },
 
   onMarkerTap(e) {
-    if (e.detail.markerId === PLAYER_MK || e.detail.markerId === STATUS_MARKER_ID) return;
-    // 第九轮 m1 第 5 项:拉远时点一个小圆点 = 放大到那一片(照片图钉在近处才出现)
-    if (e.detail.markerId >= DOT_MK_BASE && e.detail.markerId < DOT_MK_BASE + 100000) {
-      const dot = (this.data.markers || []).find((m) => m.id === e.detail.markerId);
-      if (dot && dot.id >= DOT_MK_BASE) { this._hold = Date.now(); this.setData({ center: { lat: dot.latitude, lng: dot.longitude }, mapScale: photoPins.DOT_SCALE + 2 }); }
+    const marker = this._markerTargets && this._markerTargets.get(Number(e.detail.markerId));
+    if (!marker) return;
+    if (marker.kind === 'dot') {
+      const dot = marker.target;
+      this._hold = Date.now();
+      this.setData({ center: { lat: dot.latitude, lng: dot.longitude }, mapScale: photoPins.DOT_SCALE + 2 });
       return;
     }
-    // 别人的头像:id 是 RUNNER_MK_BASE + 下标,按下标回本地那一批取人
-    if (e.detail.markerId >= RUNNER_MK_BASE) {
-      const row = (this._runners || [])[e.detail.markerId - RUNNER_MK_BASE];
-      if (row) this.openRunner(row.memberId);
+    if (marker.kind === 'runner') { this.openRunner(marker.target.memberId); return; }
+    if (marker.kind !== 'poi') return;
+    const poi = marker.target;
+    // A2.1:「?」剪影只告诉玩家还差多远,不开卡、不露名字
+    if (poi.state === 'fog' && poi._roamId) {
+      const gap = placeMap.gapText(placeMap.distanceFrom(this._player, poi) - (poi.radiusM || 80));
+      cyToast(gap ? gap + '，走近点亮' : '走近点亮');
       return;
     }
-    const poi = (this._pois || []).find((p) => p.id === e.detail.markerId);
-    if (!poi || poi.state === 'done') return;
     // 第九轮 m1 第 4 项:横滑卡开着时,点图钉 = 滑到它那张卡
     const rows = (this.data.shopStrip && this.data.shopStrip.rows) || [];
     if (rows.length) {
@@ -4433,15 +4553,23 @@ Page({
     this._syncMarkers();
   },
 
+  _playerOutsideSafeView(p) {
+    const box = photoPins.regionBox(this._pinRegion);
+    if (!box) return false;
+    const inset = photoPins.safeInsets(this._pinSafeArea());
+    return p.lat > box.n - box.h * inset.top || p.lat < box.s + box.h * inset.bottom
+      || p.lng < box.w + box.wd * inset.side || p.lng > box.e - box.wd * inset.side;
+  },
+
   _placeCardFor(poi) {
     const me = this._player;
     const d = me && me.lat != null ? distM(me, poi) : (Number.isFinite(Number(poi.distM)) ? Number(poi.distM) : null);
     const distText = d == null ? '' : (d < 1000 ? Math.max(1, Math.round(d)) + ' 米' : (d / 1000).toFixed(1) + ' 公里');
-    // 只有据点(城市节点)有深链落地页与评分;普通地标(type 1)读节点接口是 410,不给分享、不读评分
-    const shareKind = poi._roamId && poi.isCityNode && !poi.demo ? 'poi' : (poi.merchantId && !poi.demo ? 'merchant' : '');
+    // 官方目录地点与据点共用公开落地页；未核对的普通地标仍不给分享。
+    const shareKind = poi._roamId && (poi.isCityNode || placeMap.hasSeedTag(poi)) && !poi.demo ? 'poi' : (poi.merchantId && !poi.demo ? 'merchant' : '');
     return {
       id: poi.id, name: poi.name || '地点', address: poi.address || '',
-      photo: photoPins.pinPhoto(poi, MOCK_IMG), distText, lat: poi.lat, lng: poi.lng,
+      photo: photoPins.pinPhoto(poi, MOCK_IMG) || '/images/home-route-city-placeholder.jpg', distText, lat: poi.lat, lng: poi.lng,
       shareKind, shareId: shareKind === 'poi' ? String(poi._roamId) : (shareKind === 'merchant' ? String(poi.merchantId) : ''),
     };
   },
@@ -4457,8 +4585,8 @@ Page({
   closePlaceCard() {
     this._placeCardPoi = null;
     this._pinFocusId = null;
-    this._hold = Date.now();
-    this.setData({ placeCard: null });
+    this._hold = 0; this._centerTimer = 0;
+    this.setData({ placeCard: null, center: this._player ? { lat: this._player.lat, lng: this._player.lng } : this.data.center });
     this._syncMarkers();
   },
 
@@ -4506,6 +4634,8 @@ Page({
   closePaceCard() { this.setData({ paceCard: { show: false, title: '', body: '', demo: false } }); },
 
   _paceCardFor(poi, patch) {
+    const previous = this.data.paceCard || {};
+    const samePlace = previous.poiId === poi.id && previous.tags === (poi.tags || '');
     return Object.assign({
       show: true,
       title: poi.name || '地点',
@@ -4514,8 +4644,16 @@ Page({
       lat: poi.lat, lng: poi.lng,   // 第九轮 m1 第 9 项:地址可点开地图
       // 推荐理由与资料来源由分包里的目录按种子标签查,主包只透传 tags
       tags: poi.tags || '',
+      // A4.2 / A3.2:推荐理由只有一个受控字段(服务端 quotes 优先,目录 note 补位);来源折叠成「资料来源」
+      reason: poi.quote || (samePlace ? previous.reason : '') || '',
+      sourceList: [...new Set((poi.sourceList || []).concat(samePlace ? previous.sourceList || [] : []))],
+      sourcesOpen: samePlace && !!previous.sourcesOpen, cover: poi.photo || '', credit: poi.credit || '',
+      gallery: (poi.gallery || []).map(key => getApp().getImgUrl(key)),
+      catLabel: poi.catLabel || '', distText: placeMap.distanceText(placeMap.distanceFrom(this._player, poi)),
       demo: !!poi.demo,
       poiId: poi.id,
+      challengeId: poi.isCityNode && poi._roamId && !poi.demo ? poi._roamId : null,
+      inReach: placeMap.distanceFrom(this._player, poi) != null && placeMap.distanceFrom(this._player, poi) <= Number(poi.radiusM || 80) + 30,
       // 只有服务端 roam 非商户 POI 需要这条到点校验；商家仍走既有确定性探店链路。
       canDiscover: !!(poi._roamId && poi.cat !== 'merchant' && !poi.demo),
       // R11 g1(j4 F11):这个点本人已经确认过(服务端回执落地后 poi.state='done'),再打开也是完成态
@@ -4529,6 +4667,14 @@ Page({
   discoverRoamPoi(e) {
     const poiId = e && e.currentTarget && e.currentTarget.dataset ? e.currentTarget.dataset.id : e;
     this._discoverRoamPoiById(poiId);
+  },
+
+  startPaceChallenge() {
+    const id = this.data.paceCard && this.data.paceCard.challengeId;
+    if (!id || this._navigating) return;
+    this._navigating = true;
+    this.closePaceCard();
+    wx.navigateTo({ url: '/pages/play/poi-challenge/index?poiId=' + encodeURIComponent(id), complete: () => { this._navigating = false; } });
   },
 
   retryRoamPoiDiscover() {
@@ -5001,7 +5147,7 @@ Page({
         show: true,
         short: cfg.nameEn || '三店连亮',
         name: cfg.name || '初探 · 连亮三店',
-        sub: cfg.statement || '一口气点亮 3 处,城市开始记得你',
+        sub: cfg.statement || '一口气点亮 3 处，城市开始记得你',
       },
     });
     this._triggerCelebration('medal-earned');
@@ -5067,20 +5213,25 @@ Page({
     }
     this._stopClock(); this._stopReal();
     const shops = doneShopCount(this._pois);   // #22:结算屏/足迹卡的探店数同样按店名去重
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
+    const moment = formatRoamMoment(Date.now());
     const fin = {
-      zone: '这片街区',
-      date: (now.getMonth() + 1) + '月' + now.getDate() + '日',
-      dateLine: '今天 · ' + (now.getHours() < 12 ? '上午' : '下午') + ' ' + hh + ':' + mm,
+      zone: this.data.entryCityStrip && this.data.entryCityStrip.name || (this.data.currentAddress && !['当前位置', '还没定位', '尚未开启定位'].includes(this.data.currentAddress) ? this.data.currentAddress : '城市漫游'),
+      date: moment.date,
+      dateLine: moment.dateLine,
       shops,
-      distance: ((this._dist || 0) / 1000).toFixed(1),
+      distance: formatDistance((this._dist || 0) / 1000),
       explorePct: this._stats.explorePct,
-      time: this._stats.time,
+      time: formatDuration(this._elapsedSeconds || 0), durSec: this._elapsedSeconds || 0,
       photos: (this._sessionPhotos || []).slice(-8),
+      places: (this._pois || []).filter(p => p.state === 'done' && !p.demo).map(p => ({ id: p.id, name: p.name, catLabel: p.catLabel })),
     };
-    this.setData({ screen: 'arrive', finish: fin });
+    this._placeCardPoi = null;
+    fin.footprints = footprintCount(fin);
+    const settleGeo = routeGeo(this._track, (this._pois || []).filter(p => p.state === 'done' && !p.demo));
+    this.setData({ screen: 'arrive', finish: fin, settleGeo, placeCard: null, entrySheet: '', entryPlace: null,
+      paceCard: { show: false, title: '', body: '', demo: false }, nearbyBanner: { show: false }, nearbyPois: [],
+      camOpen: false, topicView: null, checkinView: null, runnerView: null, multiView: null,
+      sceneStack: [], sceneCurrent: null });
     this._triggerCelebration('roam-finish');
     // 结算提示必须在上面 setData 之后派发 —— 那次 setData 整体覆盖 finish，
     // 而 showFinishLine 用路径写法只补提示字段。先覆盖再补，顺序反了提示会被冲掉。
@@ -5115,7 +5266,10 @@ Page({
   },
 
   // 原拱形 finish 屏入口。屏已被结算页(3992:18005)替代;_calcArch 仍要跑 —— C2 分享预览靠 archSegs。
-  openFinish() { this.setData({ ...this._calcArch() }); },
+  openFinish() {
+    const arch = this._calcArch();
+    this._archGeo = arch.archGeo; this.setData({ archSegs: arch.archSegs, archPois: arch.archPois, archEnd: arch.archEnd });
+  },
 
   // archSegs 只喂 C2 分享预览和导出 canvas(拱形结算屏已退场),所以位置隐私闸放在这里:
   // 进 _calcArch 的就是**要被别人看到**的那条轨迹,首尾各裁掉设置里的百分比。
@@ -5130,7 +5284,7 @@ Page({
   _buildArchFrom(track, pois, center) {
     const W = 576; const H = 520; const padT = 100; const padB = 50; const padX = 60;
     const points = limitTrack(track);
-    if (points.length < 2) return { archSegs: [], archPois: [], archEnd: {} };
+    if (points.length < 2) return { archSegs: [], archPois: [], archEnd: {}, archGeo: null };
     const c = center || points[0];
     const M = (p) => ({ x: (p.lng - c.lng) / m2lng(1, c.lat), y: -(p.lat - c.lat) / m2lat(1) });
     const pts = points.map(M);
@@ -5161,7 +5315,8 @@ Page({
         return { i, x: Math.round(X(m)), y: Math.round(Y(m)), color: p.color };
       });
     const e = pts[pts.length - 1];
-    return { archSegs, archPois, archEnd: { x: Math.round(X(e)), y: Math.round(Y(e)) } };
+    // 真实地图数据:同一条已过位置隐私闸的轨迹,分享卡里的底图是它的快照
+    return { archSegs, archPois, archEnd: { x: Math.round(X(e)), y: Math.round(Y(e)) }, archGeo: routeGeo(points, pois) };
   },
 
   // share.idx / squarePostUnknown 仍是页面数据;只有「显不显示」交给场景栈(#572 单宿主收口)。
@@ -5173,7 +5328,7 @@ Page({
     // 分享预览的真路线(archSegs)原来由拱形屏铺垫;屏退场后在这里补算。
     // ⚠️ 每次打开都重算,不再「已有就不算」:裁剪比例/开关可能在这中间被改过,
     //    缓存住的是**上一次设置**下的轨迹,用户以为调了设置其实分享的还是老那条。
-    this.setData({ ...this._calcArch() });
+    this.openFinish();
     this._openShareSheet();
   },
 
@@ -5217,6 +5372,7 @@ Page({
     const app = getApp();
     const communityWrite = typeof app.canUseCommunity === 'function' && app.canUseCommunity(true);
     const privacy = readSharePrivacy(wx);
+    this._shareMapUpdated = false;
     this.setData({
       shareArch: this._activeShareArch() || { archSegs: [], archPois: [], archEnd: {} },
       shareFinish: this._activeShareFinish(),
@@ -5252,6 +5408,7 @@ Page({
         zone: (typeof session.zone === 'string' && session.zone.trim()) || '这片街区',
         date: validDate ? (date.getMonth() + 1) + '月' + date.getDate() + '日' : '',
         shops: shops === null ? null : shops,
+        footprints: footprintCount(session),
         distance: distance === null ? null : distance,
         explorePct: explorePct === null ? null : explorePct,
       },
@@ -5265,7 +5422,7 @@ Page({
   },
   _activeShareArch() {
     if (this._shareSource) return this._shareSource.arch;
-    return { archSegs: this.data.archSegs, archPois: this.data.archPois, archEnd: this.data.archEnd };
+    return { archSegs: this.data.archSegs, archPois: this.data.archPois, archEnd: this.data.archEnd, archGeo: this._archGeo };
   },
   _activeShareSessionId() {
     if (this._shareSource) return this._shareSource.sessionId || '';
@@ -5386,7 +5543,7 @@ Page({
       if (!current() || !r.saved) return { ok: false, channel: ch, saved: false, posted: false, cancelled: r.outcome === ALBUM_SAVE.CANCELLED };
       cyModal.show({
         title: '去' + ch + '发布',
-        content: '足迹卡已存到相册，打开' + ch + '选它就行。文案参考(可长按复制):\n' + copy,
+        content: '足迹卡已存到相册，打开' + ch + '选它就行。文案参考（可长按复制）：\n' + copy,
         confirmText: '知道了', showCancel: false,
       });
       return { ok: true, channel: ch, saved: true, posted: false };
@@ -5549,7 +5706,7 @@ Page({
       releaseLoading();
       if (!current()) return { path: null, saved: false };
       // 只有仍是当前作用域的失败才提示
-      cyToast('生成失败');
+      cyToast(err && err.mapSnapshot ? '地图未生成，请重试' : '生成失败');
       console.warn('card export fail');
       return { path: null, saved: false };
     });
@@ -5637,8 +5794,7 @@ Page({
   },
 
   /** story 卡的拱形卡(与预览 .sh-arch 同构:上迷你地图 + 卡内数字行):复用 C1 的 archSegs 缩放绘制 */
-  _drawShareArch(g, cols, arch) {
-    const { archSegs, archPois, archEnd } = arch || this.data;
+  _drawShareArch(g, cols, arch, mapImage) {
     const x = 165; const y = 140; const w = 420; const h = 560; const rBot = 26;
     this._archPath(g, x, y, w, h, rBot);
     g.fillStyle = '#0D0D0D'; g.fill();
@@ -5651,31 +5807,10 @@ Page({
     g.save();
     this._archPath(g, ix, iy, iw, ih, 20);
     g.clip();
-    if (archSegs && archSegs.length) {
-      const k = Math.min(iw / 576, ih / 520);
-      const ox = ix + (iw - 576 * k) / 2;
-      const oy = iy + (ih - 520 * k) / 2;
-      g.strokeStyle = BRAND; g.lineWidth = 3.5; g.lineCap = 'round';
-      g.shadowColor = 'rgba(255,255,255,.7)'; g.shadowBlur = 8;
-      archSegs.forEach((s) => {
-        const rad = s.deg * Math.PI / 180;
-        g.beginPath();
-        g.moveTo(ox + s.x * k, oy + s.y * k);
-        g.lineTo(ox + (s.x + s.len * Math.cos(rad)) * k, oy + (s.y + s.len * Math.sin(rad)) * k);
-        g.stroke();
-      });
-      g.shadowBlur = 0;
-      (archPois || []).forEach((p) => {
-        g.beginPath(); g.arc(ox + p.x * k, oy + p.y * k, 7, 0, Math.PI * 2);
-        g.fillStyle = p.color || '#D9D9D9'; g.fill();
-        g.strokeStyle = '#fff'; g.lineWidth = 2.5; g.stroke();
-      });
-      if (archEnd && archEnd.x != null) {
-        g.beginPath(); g.arc(ox + archEnd.x * k, oy + archEnd.y * k, 6, 0, Math.PI * 2);
-        g.fillStyle = '#fff'; g.fill();
-        g.strokeStyle = BRAND; g.lineWidth = 3; g.stroke();
-      }
-    } else {
+    if (mapImage) {
+      // 真实地图完整缩入卡框，保留轨迹首尾。
+      mapSnap.drawContain(g, mapImage, ix, iy, iw, ih);
+    } else if (!mapSnap.drawRoute(g, arch && arch.archGeo, ix, iy, iw, ih)) {
       g.fillStyle = '#686868'; g.font = '24px sans-serif'; g.textAlign = 'center';
       g.fillText('今日足迹', ix + iw / 2, iy + ih / 2);
     }
@@ -5684,13 +5819,22 @@ Page({
     this._drawNumsInline(g, cols, x + w / 2, iy + ih + 92);
   },
 
+  /** 分享卡底图:截预览里那张真实 <map>。没有足够轨迹(archGeo 空)= 空态文字,不需要图;截图不可用时绘制同一份真实足迹。 */
+  _shareMapImage(cv, idx, arch) {
+    if (idx === 1 || !arch || !arch.archGeo) return Promise.resolve(null);
+    const ctx = wx.createMapContext('rshMap', this);
+    return mapSnap.takeMapSnapshot(ctx, () => this._shareMapUpdated)
+      .then((path) => mapSnap.loadImage(cv, path)).catch(() => null);
+  },
+  onShareMapUpdated() { this._shareMapUpdated = true; },
+
   /** idx 0=story(750x1000 竖版,拱形卡含路线+卡内数字) 1=square(750x750,数字行);版式与 swiper 预览卡一致 */
   _drawShareCard(idx) {
     const current = this._shareScope();
     // 历史分享时 fin/arch 来自选中 session(_activeShare*),不读也不会改当前漫游的 data。
     const fin = this._activeShareFinish();
     const arch = this._activeShareArch();
-    return this._getShareCanvas().then((cv) => {
+    return this._getShareCanvas().then((cv) => this._shareMapImage(cv, idx, arch).then((mapImage) => [cv, mapImage])).then(([cv, mapImage]) => {
       if (!current()) { const error = new Error('share cancelled'); error.cancelled = true; throw error; }
       const W = 750; const H = idx === 1 ? 750 : 1000;
       const SS = 2; // 2x 超采样,配合 _canvasExport 的显式 dest 输出 1500/2000px 清晰图
@@ -5704,13 +5848,13 @@ Page({
       g.fillStyle = this.data.share.bg || bg; g.fillRect(0, 0, W, H);
       // UI-04(2026-09-18):没取到的数字统计显示 0(原为「—」,R9-42 的旧口径已被本批覆盖)。
       const cols = [
-        { v: fin.shops == null ? '0' : String(fin.shops), l: '探店' },
+        { v: String(fin.footprints == null ? footprintCount(fin) : fin.footprints), l: '处到达' },
         { v: fin.distance == null ? '0' : String(fin.distance), l: 'km' },
         { v: fin.explorePct == null ? '0' : String(fin.explorePct) + '%', l: '探索度' },
       ];
       g.textAlign = 'center';
       if (idx !== 1) {
-        this._drawShareArch(g, cols, arch); // 卡内含数字行(140..700)
+        this._drawShareArch(g, cols, arch, mapImage); // 卡内含数字行(140..700)
         g.fillStyle = '#5A5A5A'; g.font = '22px sans-serif';
         g.fillText('城瘾 · ' + (fin.date || 'CityFog'), W / 2, 772); // 卡下水印,同预览 sh-wm
       } else {
@@ -5730,14 +5874,14 @@ Page({
       if (!state.ok) return this._recoveryFailure('足迹存档暂时无法读取，本次记录保留待重试');
       const s = state.sessions;
       const session = {
-        ts: this._recoveryArchiveTs, ...fin, finishedAt: this._finishedAt || 0,
+        ts: this._recoveryArchiveTs, ...fin, startedAt: this._roamStartedAt || null, finishedAt: this._finishedAt || 0,
         // R9-42:落盘用统一数值合同(number)。展示用的 fin.distance 是 "0.2" 字符串,
         // 直接存会让只读 number 的组件把它当成未知;这里归一成 number,老记录的字符串
         // 由读方(readNonNegative)兼容,0 与未知分开。
         distance: readNonNegative(fin.distance),
         sessionId: exactSessionId(this._roamSid), clientSessionKey: this._clientSessionKey || '',
         photos: archivedSessionPhotos(fin.photos),
-        pois: (this._pois || []).filter((p) => p.state === 'done').map((p) => ({
+        pois: (this._pois || []).filter((p) => p.state === 'done' && !p.demo).map((p) => ({
           // id 必须存:_applyLocalPoiFound 靠它跨会话判「已探过」,否则首次发现卡每次进页重弹
           id: p.id, name: p.name, cat: p.cat, icon: p.icon, catLabel: p.catLabel, color: p.color, lat: p.lat, lng: p.lng,
         })),
@@ -5828,6 +5972,7 @@ Page({
       endHoldPct: this.data.endHoldPct,
     });
     // 时间带冒号,_rollStat 会原样透传 —— 走同一条路只是为了让镜像永远跟得上
+    playHud.right.value = formatDuration(this._sessionClock.elapsedSeconds());
     this._stats.time = playHud.right.value;
     this.setData({ playHud });
     this._rollStat('time', playHud.right.value);
@@ -5893,20 +6038,9 @@ Page({
 
   /* ── 工具抽屉(原型 f-more)与它通向的几处 ────────────────────────────────
      三键左边那枚「更多」拉开;九行的去处逐条对到现有场景,没有一行是新编的。
-     副标题里的数字现算(附近几处能去 / 几个人在走 / 几枚邮票),不写死。 */
-  openRoamMore() {
-    const pois = (this._pois || []).filter((p) => p.state !== 'fog');
-    const runners = (this._runners || []).length;
-    this.setData({
-      more: {
-        funText: pois.length ? ('这一片有 ' + pois.length + ' 处能去') : '这一片还没点亮',
-        runnerText: runners ? (runners + ' 人在这片') : '这会儿没人在附近走',
-        stampText: '投一张换一张',
-        filterText: this._poiFilterSummary(),
-      },
-    });
-    this.openScene('roam-more');
-  },
+     只保留去处，不再计算已删除的辅助说明。 */
+  openRoamMore() { this.openScene('roam-more'); },
+
   /* 抽屉第一行「查找附近好玩的」= 原型 f-fun:开的是横滑白卡,不是 DS 的半屏列表。
      ⚠️ roam-discover 那件半屏没删 —— 游玩页仍在用它(那边原型没有对应屏)。 */
   openRoamDiscover() { this.openShopStrip(); },
@@ -6081,12 +6215,15 @@ Page({
 
   _entryIdentity() { return [readSession.memberId(getApp()), (getApp().globalData || {}).authorization || ''].join('|'); },
   _clearEntryRead() {
-    this._entryItems = []; this._entryTeams = []; this._entryPlaces = [];
-    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], searchPlaces: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '' });
+    this._entryItems = []; this._entryTeams = []; this._entryPlaces = []; this._entryPlaceCards = [];
+    this.setData({ introTeamsLive: '', entryMarkers: [], entryCards: [], entryFarCards: [], entryStrip: [], searchPlaces: [], entryActivity: null, entryPlace: null, entryTeam: null, entrySheet: '' });
   },
-  loginForEntryRead() {
-    if (this.data.entryReadAccess === 'denied') return;
-    return readSession.retryLogin(this, getApp(), function () { this._loadEntryMap(this.data.center); });
+  retryEntryRead() { if (!this._hidden && !this._unloaded) this._loadEntryMap(this.data.center); },
+  // A1.5:半径取自视口外接圆(没有视口就按缩放估),不再固定 3km
+  _entryRadius(c) {
+    const region = this._entryRegion;
+    if (region) return placeMap.radiusFromRegion(region, ROAM_POI_RADIUS_M);
+    return placeMap.radiusFromScale(c.lat, this._entryMapScale || this.data.entryScale || 14, this._fogScreenSize);
   },
   _loadEntryMap(center) {
     if (typeof getApp().sendRequest !== 'function') return;
@@ -6095,60 +6232,99 @@ Page({
     const seq = (this._entrySeq = (this._entrySeq || 0) + 1);
     if (this._entryReadOwner !== owner) this._clearEntryRead();
     this._entryReadOwner = owner;
-    if (!readSession.memberId(getApp())) { this.setData({ entryReadAccess: 'login', entryLoadError: false, entryLoading: false }); return; } if (!this.data.entryLocated) { this._loadEntryAnyCity(seq, owner); return; }
+    const located = !!this.data.entryLocated;
+    const radius = this._entryRadius(c);
+    this._entryLoadedAt = { lat: c.lat, lng: c.lng, radius };
     this._entryErrors = { activities: false, teams: false };
-    this.setData({ entryLoadError: false, entryReadAccess: '', entryLoading: !(this.data.entryCards.length || this.data.entryFarCards.length) }); // R-01:还没有卡片时先出卡片形状的占位,读完(有卡 / 兜底读完 / 失败)才可能出「附近暂无活动」
-    const settle = (layer, failed) => {
-      if (this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity()) return;
-      this._entryErrors[layer] = !!failed;
-      this.setData({ entryLoadError: entryMap.hasLayerError(this._entryErrors) }); if (layer === 'activities' && failed) this.setData({ entryLoading: false });
-      this._syncEntryMap();
-    };
+    // A1.1:没有定位也按地图中心读地点;活动 / 队伍的「距你」依赖定位,未定位时只读公开主题
+    if (!located) {
+      this._entryItems = []; this._entryTeams = [];
+      this.setData({ entryLoadError: false, entryReadAccess: '', entryMarkers: [], entryCards: [], introTeamsLive: '', entryLoading: !this.data.entryFarCards.length });
+    } else {
+      this.setData({ entryLoadError: false, entryReadAccess: '', entryLoading: !(this.data.entryCards.length || this.data.entryFarCards.length) }); // R-01:还没有卡片时先出卡片形状的占位,读完(有卡 / 兜底读完 / 失败)才可能出「附近暂无活动」
+    }
+    const stale = () => this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity();
     const auth = (res) => {
       if (this._unloaded || seq !== this._entrySeq) return true;
       if (owner !== this._entryIdentity() || res && res.reason === 'sessionChanged') {
         this._entrySeq += 1;
         this._clearEntryRead();
-        this.setData({ entryReadAccess: readSession.memberId(getApp()) ? '' : 'login', entryLoadError: false });
-        if (!this._hidden && readSession.memberId(getApp())) this._loadEntryMap(c);
+        this.setData({ entryReadAccess: '', entryLoadError: false });
+        if (!this._hidden) this._loadEntryMap(c);
         return true;
       }
       const code = readSession.failureStatus(res);
       if (code !== 401 && code !== 403) return false;
       this._entrySeq += 1;
       this._clearEntryRead();
-      this.setData({ entryReadAccess: code === 401 ? 'login' : 'denied', entryLoadError: false });
+      this.setData({ entryReadAccess: code === 403 ? 'denied' : '', entryLoadError: code === 401, entryLoading: false });
       return true;
     };
-    req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 3000 }, { silentError: true }).then((res) => {
-      if (auth(res)) return;
-      const data = apiOk(res) && res.data;
-      const ok = data && isRecordList(data.items);
-      if (ok) this._entryItems = data.items.filter((row) => row && row.kind !== 'hangout');
-      settle('activities', !ok);
-    });
-    req('/api/team/nearby', 'GET', { lat: c.lat, lng: c.lng, radius: 3000 }, { silentError: true }).then((res) => {
-      if (auth(res)) return;
-      const ok = apiOk(res) && Array.isArray(res.data);
-      if (ok) this._entryTeams = res.data.filter(Boolean);
-      settle('teams', !ok);
-    });
-    // V3-35:目录地点画在地图上;读失败走请求层默认提示,不并进附近活动的错误态
-    req('/api/roam/pois', 'GET', { lat: c.lat, lng: c.lng, radius: 3000 }).then((res) => {
-      if (this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity()) return;
-      this._entryPlaces = apiOk(res) && Array.isArray(res.data) ? res.data.filter(entryMap.isCatalogPlace) : [];
-      this._syncEntryMap();
+    const jobs = [];
+    if (located) {
+      jobs.push(req('/api/roam/entry/nearby', 'GET', { lat: c.lat, lng: c.lng, radius }, { silentError: true }).then((res) => {
+        if (auth(res)) return;
+        const data = apiOk(res) && res.data;
+        const ok = data && isRecordList(data.items);
+        if (ok) this._entryItems = data.items.filter((row) => row && row.kind !== 'hangout');
+        this._entryErrors.activities = !ok;
+      }));
+      jobs.push(req('/api/team/nearby', 'GET', { lat: c.lat, lng: c.lng, radius }, { silentError: true }).then((res) => {
+        if (auth(res)) return;
+        const ok = apiOk(res) && Array.isArray(res.data);
+        if (ok) this._entryTeams = res.data.filter(Boolean);
+        this._entryErrors.teams = !ok;
+      }));
+    } else {
+      jobs.push(this._loadEntryAnyCity(seq, owner));
+    }
+    // V3-35 / A1.2:已上架的漫游点画在地图上;读失败保留旧图钉,新结果与旧结果按 id 合并
+    jobs.push(req('/api/roam/pois', 'GET', { lat: c.lat, lng: c.lng, radius }).then(async (res) => {
+      if (stale()) return;
+      const got = apiOk(res) ? placeMap.unwrapPois(res) : null;
+      if (!got) return;
+      const places = await resolvePlaceMedia(getApp(), got.rows.filter(placeMap.isRoamPlace));
+      if (stale()) return;
+      this._entryPlaces = placeMap.mergePlaces(this._entryPlaces, places, c, radius);
+    }).catch(() => {}));
+    // A1.6:三路读完只同步一次
+    Promise.all(jobs.map((job) => Promise.resolve(job).catch(() => {}))).then(() => {
+      if (stale()) return;
+      this.setData({ entryLoadError: located ? entryMap.hasLayerError(this._entryErrors) : !!this._entryErrors.activities });
+      if (located && this._entryErrors.activities) this.setData({ entryLoading: false });
+      this._syncEntryMap(true);
     });
   },
-  _syncEntryMap() {
+  _entryOrigin() { return this.data.entryLocated ? this._entryMe || null : null; },
+  _syncEntryMap(force) {
     const app = getApp();
     const getImgUrl = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
-    const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl, this._entryPlaces);
+    const origin = this._entryOrigin();
+    const view = entryMap.build(this._entryItems, this._entryTeams, this.data.entryLayers, getImgUrl, this._entryPlaces, {
+      scale: this._entryMapScale || this.data.entryScale, region: this._entryRegion, viewport: this._fogScreenSize, center: this.data.center, origin });
+    this._entryClusters = view.clusters; this._entryPlaceCards = view.placeCards;
+    // A2.5:标记、卡片都没变就不 setData
+    const sig = photoPins.markerSignature(view.markers) + '#' + view.cards.map((card) => card.key + card.meta).join(',') + '#'
+      + view.placeCards.map((card) => card.key + card.meta).join(',') + '#' + (this._entryTeams || []).length + '#' + this.data.entryFarCards.length;
+    if (!force && sig === this._entrySyncSig) return;
+    this._entrySyncSig = sig;
     // P-32:主地图底部横滑卡 = 同一批附近活动卡 + 附近队伍卡(同一份读数,不另拉)
     const liveCards = [].concat(view.cards, (this._entryTeams || []).map((team) => entryMap.teamView(team, getImgUrl)).filter(Boolean));
-    this.setData({ liveCards, entryMarkers: view.markers, entryCards: view.cards, searchPlaces: view.searchPlaces, introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '' }); if (!view.cards.length && this._entryErrors && !this._entryErrors.activities) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
+    this.setData({ liveCards, entryMarkers: view.markers, entryCards: view.cards,
+      entryStrip: this._composeStrip(view.cards, view.placeCards, this.data.entryFarCards), searchPlaces: view.searchPlaces,
+      introTeamsLive: this._entryTeams.length ? '附近 ' + this._entryTeams.length + ' 支队伍在组队' : '' });
+    if (!view.cards.length && this._entryErrors && !this._entryErrors.activities && this.data.entryLocated) this._loadEntryFallback(); else if (view.cards.length) this.setData({ entryFarCards: [], entryLoading: false }); // 2026-10-28 附近为空走兜底
+    if (view.placeCards.length) this.setData({ entryLoading: false });
+    this._refreshEntryCityStrip();
   },
+  // 附近条 = 活动卡 + 就近地点卡;都没有才退回远处的公开主题
+  _composeStrip(cards, placeCards, far) {
+    const own = [].concat(cards || [], placeCards || []);
+    return own.length ? own : (far || []);
+  },
+  _refreshStrip() { this.setData({ entryStrip: this._composeStrip(this.data.entryCards, this._entryPlaceCards, this.data.entryFarCards) }); },
   _showEntrySheet(entrySheet, entryActivity, entryPlace) {
+    this._entryPlaceToken = (this._entryPlaceToken || 0) + 1;
     this.setData({ entrySheet, entryActivity: entryActivity || null, entryPlace: entryPlace || null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }, () => {
       wx.nextTick(() => {
         if (this.data.entrySheet === entrySheet) this.setData({ entrySheetIn: true });
@@ -6162,24 +6338,101 @@ Page({
     const d = e.detail || {};
     const place = this.data.entryPlace;
     if (!place || place.tags !== d.tags) return;
-    this.setData({ 'entryPlace.reason': d.reason || '' });
+    // 推荐理由只有一个受控字段:服务端 quotes 优先,其次目录 note;来源折叠成「资料来源」
+    const reason = place.reason || d.reason || '';
+    const sources = [...new Set((place.sourceList || []).concat(Array.isArray(d.sourceList) ? d.sourceList : []))];
+    if (place.reason === reason && JSON.stringify(place.sourceList || []) === JSON.stringify(sources)) return;
+    this.setData({ 'entryPlace.reason': reason, 'entryPlace.sourceList': sources });
+  },
+  toggleEntrySources() { this.setData({ 'entryPlace.sourcesOpen': !(this.data.entryPlace && this.data.entryPlace.sourcesOpen) }); },
+  copyEntrySource(e) {
+    const url = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.url;
+    if (url && typeof wx.setClipboardData === 'function') wx.setClipboardData({ data: String(url) });
+  },
+  navEntryPlace() {
+    const place = this.data.entryPlace;
+    if (!place || !Number.isFinite(Number(place.lat)) || !Number.isFinite(Number(place.lng))) return;
+    const { openAddress } = require('../../utils/open-address.js'); return openAddress(place);
+  },
+  _openEntryPlaceById(id) {
+    const row = (this._entryPlaces || []).find((item) => item && Number(item.id) === Number(id));
+    if (!row) return;
+    const app = getApp();
+    this._showEntrySheet('place', null, entryMap.placeView(row, { getImgUrl: typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : null, origin: this._entryOrigin() }));
+  },
+  foldEntryPeek() { this.setData({ entryPeekFold: !this.data.entryPeekFold }); },
+  switchEntryStrip(e) { const tab = e.currentTarget.dataset.tab; if (tab === 'near' || tab === 'city') this.setData({ entryStripTab: tab }); },
+  // B5.8:本城推荐(同一份目录,不需要定位)。拖到有目录地点的城市时,标签写「<城市> · N 处推荐」
+  onEntryCityStrip(e) {
+    const d = e.detail || {};
+    const strip = d.strip || null;
+    this._entryCityCatalog = strip;
+    const label = d.inCity && strip ? strip.name + ' · ' + strip.count + ' 处推荐' : '本城推荐';
+    if (label !== this.data.entryCityLabel || (strip && (!this.data.entryCityStrip || this.data.entryCityStrip.city !== strip.city)) || (!strip && this.data.entryCityStrip)) {
+      this.setData({ entryCityStrip: strip, entryCityLabel: label });
+    }
+    this._refreshEntryCityStrip();
+  },
+  _refreshEntryCityStrip() {
+    const strip = this._entryCityCatalog;
+    if (!strip) return;
+    const app = getApp();
+    const img = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : value => value;
+    const items = strip.items.map(item => {
+      const row = (this._entryPlaces || []).find(r => placeMap.parseTags(r && r.tags).includes(item.seed));
+      return Object.assign({}, item, { cover: row ? img(placeMap.coverKey(row)) : '' });
+    });
+    this.setData({ entryCityStrip: Object.assign({}, strip, { items }) });
+  },
+  async onEntryCityPlaceTap(e) {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const strip = this.data.entryCityStrip;
+    const item = strip && strip.items[idx];
+    if (!item) return;
+    const owner = this._entryIdentity();
+    const token = this._entryPlaceToken = (this._entryPlaceToken || 0) + 1;
+    try {
+      const row = await require('../../utils/roam-place-detail.js').readStripPlace(getApp(), item, this._entryPlaces, strip.center);
+      if (this._unloaded || owner !== this._entryIdentity() || token !== this._entryPlaceToken) return;
+      this.setData({ center: { lat: Number(row.lat), lng: Number(row.lng) } });
+      this._showEntrySheet('place', null, entryMap.placeView(row, { getImgUrl: getApp().getImgUrl.bind(getApp()), origin: this._entryOrigin() }));
+    } catch (error) {
+      if (!this._unloaded && owner === this._entryIdentity() && token === this._entryPlaceToken) cyToast(error.message);
+    }
   },
   onPlaceNote(e) {
     const d = e.detail || {};
     const card = this.data.paceCard || {};
     if (!card.show || card.tags !== d.tags) return;
-    this.setData({ 'paceCard.reason': d.reason || '', 'paceCard.sources': d.sources || '' });
+    const reason = card.reason || d.reason || '';
+    const sources = [...new Set((card.sourceList || []).concat(Array.isArray(d.sourceList) ? d.sourceList : []))];
+    if (card.reason === reason && JSON.stringify(card.sourceList || []) === JSON.stringify(sources)) return;
+    this.setData({ 'paceCard.reason': reason, 'paceCard.sourceList': sources });
   },
-  closeEntrySheet() { this.setData({ entrySheet: '', entryActivity: null, entryPlace: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }); },
+  togglePaceSources() { this.setData({ 'paceCard.sourcesOpen': !(this.data.paceCard && this.data.paceCard.sourcesOpen) }); },
+  copyPaceSource(e) {
+    const url = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.url;
+    if (url && typeof wx.setClipboardData === 'function') wx.setClipboardData({ data: String(url) });
+  },
+  navPaceCard() {
+    const card = this.data.paceCard || {};
+    if (!Number.isFinite(Number(card.lat)) || !Number.isFinite(Number(card.lng))) return;
+    const { openAddress } = require('../../utils/open-address.js'); return openAddress({ lat: card.lat, lng: card.lng, name: card.title, address: card.address });
+  },
+  closeEntrySheet() { this._entryPlaceToken = (this._entryPlaceToken || 0) + 1; this.setData({ entrySheet: '', entryActivity: null, entryPlace: null, entryTeam: null, entrySheetView: 'main', entrySheetIn: false }); },
   backEntrySheetView() { this.setData({ entrySheetView: 'main', entryTeam: null }); },
   toggleEntryLayer(e) {
     const key = e.currentTarget.dataset.key;
-    if (key !== 'activities' && key !== 'teams' && key !== 'posts') return;
+    if (key !== 'activities' && key !== 'teams' && key !== 'posts' && key !== 'places') return;
     const entryLayers = Object.assign({}, this.data.entryLayers, { [key]: !this.data.entryLayers[key] });
-    this.setData({ entryLayers }, () => this._syncEntryMap());
+    this.setData({ entryLayers }, () => this._syncEntryMap(true));
+  },
+  _placeCenter(id) {
+    const row = (this._entryPlaces || []).find((item) => item && Number(item.id) === Number(id));
+    return row ? { lat: Number(row.lat), lng: Number(row.lng) } : null;
   },
   openEntryActivityList() { wx.navigateTo({ url: '/pages/activity/list/index' }); },
-  onEntryCardTap(e) { const d = e.currentTarget.dataset; if (d.kind === 'far-topic') { wx.navigateTo({ url: '/pages/topic/index/index?id=' + d.id }); return; } this.openEntryActivity(d.kind, d.id); },
+  onEntryCardTap(e) { const d = e.currentTarget.dataset; if (d.kind === 'place') { this.setData({ center: this._placeCenter(d.id) || this.data.center }); this._openEntryPlaceById(d.id); return; } if (d.kind === 'far-topic') { wx.navigateTo({ url: '/pages/topic/index/index?id=' + d.id }); return; } this.openEntryActivity(d.kind, d.id); },
   // P-32:主地图底部横滑卡。队伍 → 队伍详情;活动 / 主题 → 各自详情页(主地图上没有入口弹层宿主,直接去页)
   onLiveCardTap(e) {
     const d = (e && e.currentTarget && e.currentTarget.dataset) || {};
@@ -6201,9 +6454,15 @@ Page({
     const hit = entryMap.parseMarker(e.detail && e.detail.markerId);
     if (!hit) return;
     if (hit.kind === 'team') { this._openEntryTeamById(hit.id); return; }
-    if (hit.kind === 'place') {
-      const row = (this._entryPlaces || []).find((item) => item && Number(item.id) === hit.id);
-      if (row) this._showEntrySheet('place', null, entryMap.placeView(row));
+    if (hit.kind === 'place') { this._openEntryPlaceById(hit.id); return; }
+    if (hit.kind === 'cluster') {
+      const cluster = (this._entryClusters || [])[hit.index];
+      if (cluster) {
+        let scale = placeMap.zoomForCluster(this._entryMapScale || this.data.entryScale);
+        if (scale === this.data.entryScale) scale = scale >= 20 ? 19 : scale + 1; // 手势缩放不会回写 entryScale:同值 setData 不动图,挪一档才会真的缩放
+        this._entryMapScale = scale; this._entryRegion = null;
+        this.setData({ center: { lat: cluster.lat, lng: cluster.lng }, entryScale: scale });
+      }
       return;
     }
     if (hit.kind === 'post') {
@@ -6249,13 +6508,20 @@ Page({
     if (phase !== 'end' || (causedBy !== 'gesture' && causedBy !== 'drag' && causedBy !== 'scale') || !detail.centerLocation) return;
     const center = { lat: detail.centerLocation.latitude, lng: detail.centerLocation.longitude };
     if (this._entryRegionTimer) clearTimeout(this._entryRegionTimer);
+    // A1.5:停手 600ms 后合并成一次;视口、缩放变了先本地重画(聚合 / 名字),位移或半径变化够大才重读
     this._entryRegionTimer = setTimeout(() => {
       this._entryRegionTimer = null;
+      if (this._unloaded) return;
+      if (detail.region) this._entryRegion = detail.region;
+      if (detail.scale != null) this._entryMapScale = detail.scale;
       this.setData({ center });
-      this._loadEntryMap(center);
+      const last = this._entryLoadedAt;
+      const radius = this._entryRadius(center);
+      const moved = !last || placeMap.shouldRefetch({ lat: last.lat, lng: last.lng }, center, Math.min(last.radius, radius) * 2 / 3);
+      const resized = !last || radius > last.radius * 1.3;
+      if (moved || resized) this._loadEntryMap(center); else this._syncEntryMap();
     }, 600);
   },
-
 
   /* ===== 2026-10-22 业主:护照方卡点开 —— 方卡原地放大成一张大卡(整面渐变 + 底部模糊),
      放大到位后照原样执行这张卡的动作;只加动画,不改版式、不加步骤。减少动态效果时直接执行。 */
@@ -6326,6 +6592,7 @@ Page({
       if (rows.length) {
         this._entryItems = (this._entryItems || []).concat(rows.filter((row) => !(this._entryItems || []).some((it) => it.kind === row.kind && String(it.id) === String(row.id))));
         this.setData({ entryLoading: false, entryFarCards: rows.slice(0, 8).map((row) => entryMap.activityView(row, this._entryTeams, img)) });
+        this._refreshStrip();
         return;
       }
       req('/api/topic/list', 'POST', { pageNum: 1, pageSize: 8, sort_type: 1 }, { silentError: true, auth: false }).then((r2) => {
@@ -6333,6 +6600,7 @@ Page({
         const list = apiOk(r2) && r2.data && isRecordList(r2.data.rows) ? r2.data.rows : [];
         this.setData({ entryLoading: false, entryFarCards: list.map((t) => ({ key: 'far-topic-' + t.id, id: t.id, kind: 'far-topic', title: String(t.name || '未命名主题'),
           cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
+        this._refreshStrip();
       });
     });
   },
@@ -6341,25 +6609,25 @@ Page({
      把那里的队伍打在入口地图上。改读不分城市的公开主题(卡上不写距离),「附近活动」头上只留一行「开启定位」。 */
   _loadEntryAnyCity(seq, owner) {
     const app = getApp(), img = typeof app.getImgUrl === 'function' ? app.getImgUrl.bind(app) : (url) => url;
-    this._entryItems = []; this._entryTeams = []; this._entryPlaces = []; this._entryErrors = { activities: false, teams: false };
-    this.setData({ entryLoadError: false, entryReadAccess: '', entryMarkers: [], entryCards: [], introTeamsLive: '', entryLoading: !this.data.entryFarCards.length });
-    req('/api/topic/list', 'POST', { pageNum: 1, pageSize: 8, sort_type: 1 }, { auth: false }).then((r2) => {
+    return req('/api/topic/list', 'POST', { pageNum: 1, pageSize: 8, sort_type: 1 }, { auth: false }).then((r2) => {
       if (this._unloaded || seq !== this._entrySeq || owner !== this._entryIdentity()) return;
-      if (!(apiOk(r2) && r2.data && isRecordList(r2.data.rows))) { this.setData({ entryLoading: false, entryLoadError: true }); return; }
+      if (!(apiOk(r2) && r2.data && isRecordList(r2.data.rows))) { this._entryErrors.activities = true; return; }
       this.setData({ entryLoading: false, entryFarCards: r2.data.rows.map((t) => ({ key: 'far-topic-' + t.id, id: t.id, kind: 'far-topic', title: String(t.name || '未命名主题'),
         cover: img(String(t.imgArr || t.imgUrl || '').split(/[,;]/)[0].trim()), tag: Number(t.productType) === 2 ? '自由探索' : '城市定向', meta: String(t.city || t.addressName || '') })) });
+      this._refreshStrip();
     });
   },
-  enableEntryLocation() {
+  enableEntryLocation(automatic) {
     if (this._entryLocating) return;
     this._entryLocating = true;
     wx.getLocation({ type: 'gcj02',
       success: (r) => {
         if (this._unloaded || !lastLocation.save(r)) return;
+        this._entryMe = { lat: r.latitude, lng: r.longitude };
         this.setData({ center: { lat: r.latitude, lng: r.longitude }, entryLocated: true, entryFarCards: [] });
         this._loadEntryMap(this.data.center);
       },
-      fail: () => { if (!this._unloaded) wx.openSetting({ fail() {} }); },
+      fail: () => { if (!this._unloaded && automatic !== true) wx.openSetting({ fail() {} }); },
       complete: () => { this._entryLocating = false; } });
   },
 

@@ -91,8 +91,15 @@ public class RoamSessionWriteService {
         RoamSession session = roamMapper.selectOwnedSessionForUpdate(sessionId, memberId);
         if (session == null || !memberId.equals(session.getMemberId())) throw new ServiceException("会话不存在");
         if (!Integer.valueOf(0).equals(session.getStatus())) throw new ServiceException("本次漫游已结算");
-        return roamMapper.insertPoiFoundIgnore(memberId, poiId, sessionId, new Date());
+        int inserted = roamMapper.insertPoiFoundIgnore(memberId, poiId, sessionId, new Date());
+        // A5.7:同一次漫游的新发现数量设上限(与分享快照 MAX_POIS 同量级),超出回滚本次写入。
+        if (inserted > 0 && roamMapper.countPoisBySession(sessionId) > MAX_POIS_PER_SESSION)
+            throw new ServiceException("本次漫游发现的地点已达上限");
+        return inserted;
     }
+
+    /** 单次漫游可记录的新发现地点上限。 */
+    static final int MAX_POIS_PER_SESSION = 50;
 
     /** MySQL Connector/J 8 对 Map 结果里的 DATETIME 返回 LocalDateTime；按 JVM 默认时区还原为原 Date(与写入同口径)。 */
     private static Date dbDate(Object value) {

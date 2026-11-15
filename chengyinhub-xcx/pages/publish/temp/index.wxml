@@ -112,7 +112,7 @@
           <view class="cg-col">
             <view class="cg-label">所需材料</view>
             <input class="cg-input" value="{{ formData.requiredMaterials }}" bindinput="onRequiredMaterialsChange"
-              placeholder="如:手机、笔" placeholder-class="cg-ph" />
+              placeholder="如：手机、笔" placeholder-class="cg-ph" />
           </view>
           <view class="cg-col">
             <view class="cg-label">商铺类型</view>
@@ -1130,7 +1130,7 @@
     <cy-card class="cg-cfg" wx:if="{{ !advanced.qa.enabled && formData.validationMethod === 1 }}">
     <view class="cg-cfg-label">问题 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{ formData.questionName }}" bindinput="onQuestionNameChange"
-      placeholder="例如:这座桥建于哪一年?" placeholder-class="cg-ph" />
+      placeholder="例如：这座桥建于哪一年？" placeholder-class="cg-ph" />
     <view class="cg-cfg-label">正确答案 <text class="req" wx:if="{{!formData.originalTemplateId}}" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{ formData.questionAnswer }}" bindinput="onQuestionAnswerChange"
       placeholder="可填多个，用、分隔" placeholder-class="cg-ph" />
@@ -1140,7 +1140,7 @@
     <cy-card class="cg-cfg" wx:if="{{ !advanced.qa.enabled && formData.validationMethod === 3 }}">
     <view class="cg-cfg-label">问题 <text class="req" aria-hidden="true">*</text></view>
     <input class="cg-cfg-input" value="{{ optionQuestion }}" bindinput="onOptionQuestionChange"
-      placeholder="例如:石碑上的图案象征什么?" placeholder-class="cg-ph" />
+      placeholder="例如：石碑上的图案象征什么？" placeholder-class="cg-ph" />
     <view class="cg-cfg-label">选项 · 点圆圈设为正确答案</view>
     <view class="cg-choice-list">
       <view class="cg-choice-item" wx:for="{{ optionItems }}" wx:key="letter" wx:for-item="opt" wx:for-index="oi">
@@ -1224,7 +1224,7 @@
     <cy-card class="cg-cfg" wx:if="{{ !advanced.qa.enabled && formData.validationMethod === 2 }}">
     <view class="cg-cfg-label">拍照要求</view>
     <textarea class="cg-cfg-textarea" value="{{ formData.photoRequireDesc }}" bindinput="onPhotoRequireDescChange"
-      maxlength="50" placeholder="告诉玩家要拍什么，例如:与这棵古树合影" placeholder-class="cg-ph" />
+      maxlength="50" placeholder="告诉玩家要拍什么，例如：与这棵古树合影" placeholder-class="cg-ph" />
     </cy-card>
 
     <!-- 结果反馈(2026-10-22 主人定稿):先写清三步,下面成功反馈 / 失败反馈各一个开关,打开才出现编辑。
@@ -1278,9 +1278,9 @@
     </view>
     <view class="cg-hint-fields" wx:if="{{ hintEnabled }}">
       <input class="cg-cfg-input" value="{{ formData.hint1 }}" bindinput="onHint1Change"
-        placeholder="一级提示，如:留意脚下的石板" placeholder-class="cg-ph" />
+        placeholder="一级提示，如：留意脚下的石板" placeholder-class="cg-ph" />
       <input class="cg-cfg-input" value="{{ formData.hint2 }}" bindinput="onHint2Change"
-        placeholder="二级提示(可选),更明确的引导" placeholder-class="cg-ph" />
+        placeholder="二级提示(可选)，更明确的引导" placeholder-class="cg-ph" />
       <input class="cg-cfg-input" value="{{ formData.answerReveal }}" bindinput="onAnswerRevealChange"
         placeholder="备用答案，卡住时直接给出" placeholder-class="cg-ph" />
     </view>
@@ -1381,7 +1381,7 @@
             </view>
             <cy-card class="cg-rw-cfg" wx:if="{{ rwText }}">
               <textarea class="cg-cfg-textarea" value="{{ formData.feedbackText }}" bindinput="onFeedbackTextChange"
-                placeholder="例如:恭喜你解开了老城的第一个秘密!" placeholder-class="cg-ph" />
+                placeholder="例如：恭喜你解开了老城的第一个秘密！" placeholder-class="cg-ph" />
             </cy-card>
           </view>
 
@@ -1430,7 +1430,7 @@
               <view class="cg-beat-del" wx:if="{{ storyBeats.length > 1 }}" bindtap="removeStoryBeat" data-index="{{ bi }}" aria-role="button" aria-label="删除时间节点 {{bi + 1}}" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="close-sm" size="28" /></view>
             </view>
             <textarea class="cg-beat-text" value="{{ beat.text }}" bindinput="onStoryBeatText" data-index="{{ bi }}" auto-height
-              placeholder="这一刻发生了什么?写下玩家此时读到的片段…" placeholder-class="cg-ph" />
+              placeholder="这一刻发生了什么？写下玩家此时读到的片段…" placeholder-class="cg-ph" />
             <view class="cg-beat-row">
               <input class="cg-beat-tagin" value="{{ beat.tag }}" bindinput="onStoryBeatTag" data-index="{{ bi }}"
                 placeholder="时刻标签，如「此刻」" placeholder-class="cg-ph" />
@@ -1605,7 +1605,7 @@
         <!-- 4. 任务完成 -->
         <view wx:if="{{ pvStepKey === 'complete' }}" class="cg-pv-panel cg-pv-complete">
           <view class="cg-pv-check"><cy-icon name="check" size="96" /></view>
-          <view class="cg-pv-complete-t1">任务完成!</view>
+          <view class="cg-pv-complete-t1">任务完成！</view>
           <view class="cg-pv-complete-t2">你解开了这个节点的秘密</view>
           <cy-btn variant="primary" class="cy-btn-inline" style="margin-top:var(--cy-space-4)" bindtap="pvNext">{{ rwAny ? '领取奖励' : '完成' }}</cy-btn>
         </view>
@@ -1724,7 +1724,7 @@
           <view wx:if="{{ formData.audioUrl }}">
             <view class="cg-cfg-label">时长（秒，选填）</view>
             <input class="cg-cfg-input" type="number" value="{{ formData.audioDuration }}" bindinput="onAudioDurationChange"
-              placeholder="例如:45" placeholder-class="cg-ph" />
+              placeholder="例如：45" placeholder-class="cg-ph" />
           </view>
             </view>
     <view class="cg-adv-add cg-adv-add--danger" data-key="voice" bindtap="removeVoiceTool" aria-role="button" aria-label="移除语音讲解" hover-class="cy-pressed" hover-stay-time="80">移除语音讲解</view>

@@ -287,4 +287,17 @@ class TopicDeliveryMetadataProjectionTest {
         assertEquals(Integer.valueOf(0), delivery.getLocationRequirement().getStationCount());
         assertEquals(Boolean.FALSE, delivery.getLocationRequirement().getPhysicalPlaceRequired());
     }
+    @Test
+    void freeExploreRequiresOnSiteShopsBeforeSlotsHaveAddresses() {
+        when(metaMapper.selectByTopicId(21L)).thenReturn(null);
+        when(nodeMapper.selectCmsTopicNodeList(any())).thenReturn(Collections.emptyList());
+        CmsTopic source = topic();
+        source.setProductType(2);
+
+        ContentDeliveryMetadataVO delivery = projection.build(source, false);
+
+        assertEquals(Boolean.TRUE, delivery.getLocationRequirement().getPhysicalPlaceRequired());
+        assertEquals(Integer.valueOf(0), delivery.getLocationRequirement().getStationCount());
+        assertEquals(Integer.valueOf(0), delivery.getLocationRequirement().getStationWithAddressCount());
+    }
 }

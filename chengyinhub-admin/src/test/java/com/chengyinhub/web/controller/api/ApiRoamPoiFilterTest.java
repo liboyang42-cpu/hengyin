@@ -41,7 +41,7 @@ class ApiRoamPoiFilterTest {
         AjaxResult r = controller.pois(31.23, 121.47, 3000, "  ", 0L, "");
         assertEquals(200, r.get("code"));
         verify(roamMapper).selectPoisNear(anyDouble(), anyDouble(), anyDouble(), anyDouble(), eq(PLAYER),
-                eq(ApiRoamController.POIS_NEAR_LIMIT));
+                eq(ApiRoamController.POIS_NEAR_LIMIT + 1)); // master A5.2: one extra row probes truncation
         verify(roamMapper, never()).selectPoisNearFiltered(anyDouble(), anyDouble(), anyDouble(), anyDouble(), any(),
                 anyInt(), any(), any(), any());
     }
@@ -50,7 +50,7 @@ class ApiRoamPoiFilterTest {
     void filtersAreTrimmedBoundedAndPassedThrough() {
         controller.pois(31.23, 121.47, 3000, " 咖啡 ", 12L, null);
         verify(roamMapper).selectPoisNearFiltered(anyDouble(), anyDouble(), anyDouble(), anyDouble(), eq(PLAYER),
-                eq(ApiRoamController.POIS_NEAR_LIMIT), eq("咖啡"), eq(12L), isNull());
+                eq(ApiRoamController.POIS_NEAR_LIMIT + 1), eq("咖啡"), eq(12L), isNull());
     }
 
     @Test

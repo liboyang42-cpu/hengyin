@@ -98,7 +98,7 @@ public class PlayPuzzleCommandApplication {
                 RewardPolicy.FULL, routeActionId, expectedRouteVersion, null, null, originalRun);
         data.put("answerReveal", reveal);
         if (ctx.nightWarning) data.put("nightWarning", true);
-        return AjaxResult.success("已查看答案,本题解谜分为 0", data);
+        return AjaxResult.success("已查看答案，本题解谜分为 0", data);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
