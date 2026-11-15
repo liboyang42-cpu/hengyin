@@ -17,6 +17,10 @@ import com.chengyinhub.business.merchantproof.MerchantWeeklyProof;
  */
 @Component
 public class MerchantVisitBillingJob {
+    /** R9 BE-26: with two nodes only the scheduling leader runs this @Scheduled method. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.common.core.scheduling.SchedulingLeadership schedulingLeadership;
+
     private static final Logger log = LoggerFactory.getLogger(MerchantVisitBillingJob.class);
     private final MerchantVisitBillingService billing;
     private final boolean enabled;
@@ -30,6 +34,7 @@ public class MerchantVisitBillingJob {
 
     @Scheduled(cron = "${chengyin.merchant-plans.visit-billing.cron:0 23 * * * ?}", zone = "Asia/Shanghai")
     public void run() {
+        if (!com.chengyinhub.common.core.scheduling.SchedulingLeadership.allows(schedulingLeadership)) return; // R9 BE-26: leader node only
         if (!enabled || !running.compareAndSet(false, true)) return;
         try {
             LocalDate today = LocalDate.now(MerchantWeeklyProof.ZONE);

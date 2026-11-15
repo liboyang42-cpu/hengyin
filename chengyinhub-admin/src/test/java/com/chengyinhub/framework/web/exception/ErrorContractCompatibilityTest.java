@@ -96,7 +96,7 @@ class ErrorContractCompatibilityTest
         Map<?, ?> legacy = json.readValue(call("/legacy/thrown", null).getContentAsString(), Map.class);
         Map<?, ?> typed = json.readValue(call("/typed/thrown", null).getContentAsString(), Map.class);
         assertEquals(legacy, typed);
-        assertEquals(Map.of("code", 500, "msg", "地点不存在或已下线"), typed);
+        assertEquals(Map.of("code", 500, "msg", "地点不存在或已下线", "errorKind", "BUSINESS"), typed);
     }
 
     @ParameterizedTest
