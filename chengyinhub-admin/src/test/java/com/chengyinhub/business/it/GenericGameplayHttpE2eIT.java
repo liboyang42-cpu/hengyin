@@ -664,7 +664,7 @@ class GenericGameplayHttpE2eIT {
         assertEquals("energy",storedTemplate.path("effects").path(0).path("var").asText());
         ObjectNode templateReadback=json.createObjectNode().put("templateId",templateId).put("memberId",author.getId());templateReadback.set("advancedConfig",storedTemplate);
         transcript.addObject().put("method","DB_READBACK").put("path","cms_member_template:"+templateId).put("httpStatus",0).set("response",templateReadback);
-        ObjectNode topic = topicRequest("本地HTTP通用主题");
+        ObjectNode topic = topicRequest("本地HTTP通用主题", author.getId());
         ResponseEntity<JsonNode> created = http.exchange("/api/topic/v2/create", org.springframework.http.HttpMethod.POST,
                 new org.springframework.http.HttpEntity<>(topic,headers),JsonNode.class);
         record("POST","/api/topic/v2/create",topic,created);
@@ -731,12 +731,13 @@ class GenericGameplayHttpE2eIT {
     }
     @Test void terminalVoteAdoptionUsesThePersistedFinalChapter() throws Exception {
         org.springframework.http.HttpHeaders headers=loginHeaders("13800000003","结局测试作者");
+        long authorId=database.queryForObject("SELECT id FROM ums_member WHERE phone=?",Long.class,"13800000003");
         ObjectNode advanced=json.createObjectNode().put("schemaVersion",1);
         ObjectNode tools=advanced.putObject("interactionTools").put("votePolicy","MAJORITY").put("decidesEnding",true);
         ArrayNode plans=tools.putArray("plans");plans.addObject().put("planKey","finish").put("title","共同结束");
         long templateId=success(post("/api/template/draft",json.createObjectNode().put("title","本地结局投票模板")
                 .put("validationMethod",4).put("isSync",0).put("advancedConfigJson",advanced.toString()),headers)).asLong();
-        ObjectNode topic=topicRequest("本地HTTP结局主题");
+        ObjectNode topic=topicRequest("本地HTTP结局主题", authorId);
         ObjectNode ending=((ArrayNode)topic.path("chapters")).addObject().put("name","最终章").put("schemaVersion",1);
         ending.putArray("nodes");ending.putArray("blocks").addObject().put("type","text").put("content","到达共同结局");
         ending.putObject("ending").put("fallback",true);
@@ -773,13 +774,14 @@ class GenericGameplayHttpE2eIT {
      */
     @Test void f2HttpAttributeDefinitionAndCharacterCardStayOwnerScoped() throws Exception {
         org.springframework.http.HttpHeaders author=loginHeaders("13600000201","F2属性作者");
+        long authorId=database.queryForObject("SELECT id FROM ums_member WHERE phone=?",Long.class,"13600000201");
         org.springframework.http.HttpHeaders stranger=loginHeaders("13600000202","F2旁观者");
-        long topicId=success(post("/api/topic/v2/create",topicRequest("F2属性卡"),author)).path("topicId").asLong();
+        long topicId=success(post("/api/topic/v2/create",topicRequest("F2属性卡", authorId),author)).path("topicId").asLong();
         ObjectNode reg=json.createObjectNode().put("topicId",topicId);
         reg.putArray("keys").addObject().put("stateKey","counter.str").put("keyType","counter").put("scope","run").put("label","力量").put("initialValue",3);
         success(post("/api/topic/state-keys",reg,author));
         // #625 模板角色卡只展示 journeyRules 启用的注册键：作者按注册版本确认启用 counter.str 后存草稿。
-        ObjectNode draft=topicRequest("F2属性卡");draft.put("id",topicId);refreshChapterIds(draft,topicId);
+        ObjectNode draft=topicRequest("F2属性卡", authorId);draft.put("id",topicId);refreshChapterIds(draft,topicId);
         draft.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.str\",\"label\":\"力量\",\"initial\":3,\"min\":0,\"max\":100}]}");
         confirmAttributeBinding(draft,success(get("/api/topic/attribute-binding?topicId="+topicId,author)));
         success(post("/api/topic/v2/update",draft,author));
@@ -866,7 +868,7 @@ class GenericGameplayHttpE2eIT {
         s.templateId=success(post("/api/template/draft",template,s.headers)).asLong();
         template.put("id",s.templateId);success(post("/api/template/draft",template,s.headers));
         JsonNode read=success(form("/api/template/myinfo",s.templateId,s.headers));assertTrue(read.toString().contains("advancedConfigJson"),read.toString());
-        ObjectNode topic=topicRequest("LC "+phone);if("TEAM".equals(scope))topic.put("teamMode",1).put("teamMaxMembers",4);s.topicId=success(post("/api/topic/v2/create",topic,s.headers)).path("topicId").asLong();topic.put("id",s.topicId);refreshChapterIds(topic,s.topicId);
+        ObjectNode topic=topicRequest("LC "+phone, s.memberId);if("TEAM".equals(scope))topic.put("teamMode",1).put("teamMaxMembers",4);s.topicId=success(post("/api/topic/v2/create",topic,s.headers)).path("topicId").asLong();topic.put("id",s.topicId);refreshChapterIds(topic,s.topicId);
         topic.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"checkEnabled\":true,\"hp\":{\"enabled\":true,\"init\":6,\"max\":12},\"luck\":{\"enabled\":true,\"init\":2,\"max\":3},\"recovery\":{\"stageRestHpFloor\":0,\"stageRestLuckFloor\":0,\"stationEndIfHurt\":0}}");
         ObjectNode rules=(ObjectNode)json.readTree(topic.path("journeyRules").asText());
         if(!valueKey.startsWith("sys.")){rules.putArray("attributes").addObject().put("key",valueKey).put("label","能量").put("initial",6).put("min",0).put("max",12);ObjectNode registration=json.createObjectNode().put("topicId",s.topicId);registration.putArray("keys").addObject().put("stateKey",valueKey).put("keyType","counter").put("scope","run").put("label","能量").put("initialValue",6).put("minValue",0).put("maxValue",12);success(post("/api/topic/state-keys",registration,s.headers));}
@@ -937,6 +939,7 @@ class GenericGameplayHttpE2eIT {
     }
     @Test void r5HttpDefaultAdoptedQaCanPublishAsZeroHpChallenge() throws Exception {
         org.springframework.http.HttpHeaders headers=loginHeaders("13800000931","归零挑战作者");
+        long authorId=database.queryForObject("SELECT id FROM ums_member WHERE phone=?",Long.class,"13800000931");
         ObjectNode config=r5("qa");config.remove("interactionRules");
         config.with("outcomeRules").with("pass").putArray("costs");
         config.with("outcomeRules").with("fail").putArray("costs");
@@ -946,7 +949,7 @@ class GenericGameplayHttpE2eIT {
         template.put("id",templateId);success(post("/api/template/draft",template,headers));
         assertEquals(1,json.readTree(success(form("/api/template/myinfo",templateId,headers))
                 .path("advancedConfigJson").asText()).path("outcomeRules").path("version").asInt());
-        ObjectNode topic=topicRequest("R5默认采用归零挑战");
+        ObjectNode topic=topicRequest("R5默认采用归零挑战", authorId);
         long topicId=success(post("/api/topic/v2/create",topic,headers)).path("topicId").asLong();
         topic.put("id",topicId);
         JsonNode read=success(form("/api/topic/edit-detail",topicId,headers));
@@ -1180,7 +1183,7 @@ class GenericGameplayHttpE2eIT {
         ObjectNode c=r5("qa");ObjectNode tools=c.putObject("interactionTools").put("votePolicy","MAJORITY");tools.putArray("plans").addObject().put("planKey","continue").put("title","继续前行").putArray("materialCost").addObject().put("itemId","stock").put("quantity",1);c.with("interactionRules").withArray("resourceSlots").addObject().put("key","stock").put("kind","ITEM").put("label","投入物资").put("required",true);
         Lifecycle s=lifecycle(c,"BLOCK_HP_COST","counter.energy","TEAM",true);JsonNode frozen=persistedTopic(s.topicId,"vote-team-world");assertEquals("TEAM",frozen.path("published").path("gameplayRuntime").path("runtimeScope").asText());assertEquals("WORLD_SHARED",frozen.path("published").path("gameplayRuntime").path("worldMode").asText());assertTrue(frozen.path("published").path("gameplayRuntime").path("plans").size()>0,frozen.toString());assertEquals("paper",frozen.path("published").path("gameplayRuntime").path("plans").path(0).path("materialCost").path(0).path("itemId").asText());
         JsonNode read=success(form("/api/topic/edit-detail",s.topicId,s.headers));assertTrue(read.toString().contains("MAJORITY"));
-        ObjectNode topic=topicRequest("PLAYER投票拒绝");long topicId=success(post("/api/topic/v2/create",topic,s.headers)).path("topicId").asLong();topic.put("id",topicId);refreshChapterIds(topic,topicId);topic.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.energy\",\"label\":\"能量\",\"initial\":6,\"min\":0,\"max\":12}]}");ObjectNode reg=json.createObjectNode().put("topicId",topicId);reg.putArray("keys").addObject().put("stateKey","counter.energy").put("keyType","counter").put("scope","run").put("label","能量").put("initialValue",6);success(post("/api/topic/state-keys",reg,s.headers));ObjectNode ch=(ObjectNode)topic.path("chapters").path(0);ch.withArray("nodes").addObject().put("clientNodeKey","vote-player").put("name","投票站").put("templateId",s.templateId).put("nodeTime",0).put("nodeMoney",0).put("latitude","31.2304").put("longitude","121.4737").put("address","本地位置");ch.withArray("blocks").addObject().put("type","node").put("nodeIndex",0);ObjectNode theme=json.createObjectNode().put("schemaVersion",1).put("capacity",6);theme.putObject("gameplayRuntime").put("runtimeScope","PLAYER");ObjectNode b=theme.putObject("templateBindings").putObject("client:vote-player").put("templateId",s.templateId).put("slotDigest",GameplayTemplateRules.slotDigest(c.path("interactionRules").path("resourceSlots")));b.putObject("values").put("vital","counter.energy");b.putObject("items").put("stock","paper");theme.putArray("items").addObject().put("id","paper").put("kind","ITEM").put("name","纸张").put("image",mediaFixture.approvedImage(context, database, s.memberId)).put("slotCost",1);topic.put("themeRuntimeConfig",theme.toString());JsonNode refusal=post("/api/topic/v2/update",topic,s.headers);rejected(refusal);assertTrue(refusal.path("msg").asText().contains("投票")||refusal.path("msg").asText().contains("公共世界"),refusal.toString());
+        ObjectNode topic=topicRequest("PLAYER投票拒绝", s.memberId);long topicId=success(post("/api/topic/v2/create",topic,s.headers)).path("topicId").asLong();topic.put("id",topicId);refreshChapterIds(topic,topicId);topic.put("journeyRules","{\"schemaVersion\":1,\"stateEnabled\":true,\"attributes\":[{\"key\":\"counter.energy\",\"label\":\"能量\",\"initial\":6,\"min\":0,\"max\":12}]}");ObjectNode reg=json.createObjectNode().put("topicId",topicId);reg.putArray("keys").addObject().put("stateKey","counter.energy").put("keyType","counter").put("scope","run").put("label","能量").put("initialValue",6);success(post("/api/topic/state-keys",reg,s.headers));ObjectNode ch=(ObjectNode)topic.path("chapters").path(0);ch.withArray("nodes").addObject().put("clientNodeKey","vote-player").put("name","投票站").put("templateId",s.templateId).put("nodeTime",0).put("nodeMoney",0).put("latitude","31.2304").put("longitude","121.4737").put("address","本地位置");ch.withArray("blocks").addObject().put("type","node").put("nodeIndex",0);ObjectNode theme=json.createObjectNode().put("schemaVersion",1).put("capacity",6);theme.putObject("gameplayRuntime").put("runtimeScope","PLAYER");ObjectNode b=theme.putObject("templateBindings").putObject("client:vote-player").put("templateId",s.templateId).put("slotDigest",GameplayTemplateRules.slotDigest(c.path("interactionRules").path("resourceSlots")));b.putObject("values").put("vital","counter.energy");b.putObject("items").put("stock","paper");theme.putArray("items").addObject().put("id","paper").put("kind","ITEM").put("name","纸张").put("image",mediaFixture.approvedImage(context, database, s.memberId)).put("slotCost",1);topic.put("themeRuntimeConfig",theme.toString());JsonNode refusal=post("/api/topic/v2/update",topic,s.headers);rejected(refusal);assertTrue(refusal.path("msg").asText().contains("投票")||refusal.path("msg").asText().contains("公共世界"),refusal.toString());
     }
     @Test void legacyHttpFrozenScanSessionIgnoresLaterR5TemplateEdit() throws Exception {
         ObjectNode legacy=json.createObjectNode().put("schemaVersion",1);legacy.putObject("interactionRules").put("limit",2).putArray("resourceSlots").addObject().put("key","vital").put("kind","VALUE").put("label","能量").put("required",true);legacy.putArray("effects").addObject().put("var","vital").put("op","INC").put("value",1);
@@ -1308,8 +1311,9 @@ class GenericGameplayHttpE2eIT {
         assertEquals(source.path("memberId").asLong(),database.queryForObject("SELECT member_id FROM cms_topic WHERE id=?",Long.class,copyId));
         assertEquals(before,database.queryForObject("SELECT theme_runtime_config_json FROM cms_topic WHERE id=?",String.class,topicId));
     }
-    private ObjectNode topicRequest(String name) {
-        ObjectNode request=json.createObjectNode().put("name",name).put("saveDraft",1).put("publishMode","simple").put("productType",1).put("routeMode","LINEAR");
+    private ObjectNode topicRequest(String name, long authorId) {
+        ObjectNode request=json.createObjectNode().put("name",name).put("saveDraft",1).put("publishMode","simple").put("productType",1).put("routeMode","LINEAR")
+                .put("imgUrl", mediaFixture.approvedImage(context, database, authorId));
         ObjectNode chapter=request.putArray("chapters").addObject().put("name","第一章").put("schemaVersion",1);
         chapter.putArray("nodes");chapter.putArray("blocks").addObject().put("type","text").put("content","本地作者流程验证");return request;
     }

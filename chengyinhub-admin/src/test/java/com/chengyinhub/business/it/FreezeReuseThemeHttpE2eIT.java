@@ -106,7 +106,8 @@ class FreezeReuseThemeHttpE2eIT {
         }
         // 先登记本主题数值域，再采用模板，避免绑定尚未注册的 counter。
         ObjectNode topic = json.createObjectNode().put("name", "海港停电夜").put("saveDraft", 1).put("publishMode", "simple").put("productType", 1)
-                .put("routeMode", "LINEAR").put("teamMode", 1).put("teamMaxMembers", 2).put("journeyRules", rules().toString());
+                .put("routeMode", "LINEAR").put("teamMode", 1).put("teamMaxMembers", 2).put("journeyRules", rules().toString())
+                .put("imgUrl", mediaFixture.approvedImage(context, database, authorId));
         ArrayNode chapters = topic.putArray("chapters");
         for (JsonNode chapter : layout) {
             ObjectNode row = chapters.addObject().put("name", chapter.path("name").asText()).put("schemaVersion", 1);

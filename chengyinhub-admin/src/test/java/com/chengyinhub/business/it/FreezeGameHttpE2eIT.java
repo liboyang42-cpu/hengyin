@@ -118,7 +118,8 @@ class FreezeGameHttpE2eIT {
         // 2) 主题与七章（每章即一幕），站点采用上面的模板
         JsonNode layout = json.readTree(getClass().getClassLoader().getResourceAsStream("freeze-game/chapters.json"));
         ObjectNode topic = json.createObjectNode().put("name", "末日寒冬 · 零下72小时").put("saveDraft", 1).put("publishMode", "simple").put("productType", 1)
-                .put("routeMode", "LINEAR").put("teamMode", 1).put("teamMaxMembers", 2);
+                .put("routeMode", "LINEAR").put("teamMode", 1).put("teamMaxMembers", 2)
+                .put("imgUrl", mediaFixture.approvedImage(context, database, authorId));
         ArrayNode chapters = topic.putArray("chapters");
         ObjectNode bindings = json.createObjectNode();
         for (JsonNode chapter : layout) {
