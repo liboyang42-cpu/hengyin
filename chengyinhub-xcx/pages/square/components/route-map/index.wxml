@@ -1,5 +1,6 @@
 <view class="rm-wrap" wx:if="{{routeReady}}" style="height:{{height}};">
   <map
+    wx:for="{{mapInstances}}" wx:key="epoch" data-epoch="{{item.epoch}}" bindupdated="onMapUpdated"
     id="rmMap"
     subkey="{{mapSubkey}}" layer-style="{{mapLayerStyle}}"
     class="rm-map"

@@ -330,6 +330,14 @@ Component({
       const d = detail || {};
       const stage = this.selectComponent('#cy-play-stage');
       const multi = this.data.mode === 'pick' && !!this.data.multi;
+      if (d.unjudged) {
+        this._pendingEvidence = false;
+        this.setData({ feedback: d.feedback || '', fbHead: '', typeWrong: false, submitted: false,
+          ctaLabel: this.data.mode === 'shot' ? '拍一张' : '提交', ctaDisabled: false,
+          optionList: this.data.mode === 'pick' ? this.data.optionList.map((o, i) => Object.assign({}, o,
+            { state: multi ? (o.state === 'is-on' ? 'is-on' : '') : (i === d.index ? 'is-on' : '') })) : this.data.optionList });
+        return;
+      }
       // 答案已由服务端判对但照片尚未通过：只显示答案事实，不能触发通关或发奖。
       this._pendingEvidence = !!(ok && d.pendingEvidence && this.data.mode === 'pick');
       if (this._pendingEvidence) {

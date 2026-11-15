@@ -325,6 +325,7 @@ function normalizeProjectPreview(item) {
   var sales = item.salesAmout != null ? Number(item.salesAmout) : 0;
   return {
     id: item.id,
+    state: item.state,
     name: item.name || item.title || '未命名路线',
     cover: pickProjectCover(item),
     pointVal: isNaN(sales) ? 0 : Math.round(sales),
@@ -2373,9 +2374,11 @@ Component({
     else this.goOrder();
   },
   onProjectPreviewTap: function (e) {
-    // projectPreviewList 源为 /api/topic/list?is_my=1(仅 topic),故单卡直达主题详情;无 id 兜底进 myproject
     var id = e.currentTarget.dataset.id;
-    if (id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/pages/topic/index/index?id=' + id, complete: () => { this._navigating = false; } }); }
+    var item = this.data.projectPreviewList.find(row => String(row.id) === String(id));
+    // 与管理页一致：本人草稿/未通过可继续编辑，商家承接卡仍只读。
+    var edit = !this.data.isMerchantView && item && (item.state === 'draft' || item.state === 'rejected');
+    if (id) { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: (edit ? '/pages/publish/fabu/index?id=' : '/pages/topic/index/index?id=') + id, complete: () => { this._navigating = false; } }); }
     else this.goProject();
   },
   goMyJoin: function () { wx.navigateTo({ url: '/subpackageMember/mycanyu/mycanyu' }); },

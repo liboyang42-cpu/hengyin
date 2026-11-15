@@ -1,7 +1,7 @@
 // cy-playkit-hangman · 逐字猜词(施工清单 UG-01;l-kits 2026-11-10 照 proto/game gp-kit-full 改成系统键盘)
 //
 // ★ 答案不在客户端:槽位形状(预填/空槽/分隔符)与本局已补字符都来自服务端 publicProjection。
-//   组件只收集玩家补的字,交给 SUBMIT_HANGMAN {slots};对错、重建整词、别名比对全在服务端。
+//   组件收集补格 {slots} 或完整候选 {input};对错、重建整词、别名比对全在服务端。
 // 不画自定义键盘:格子下面一个输入框接系统键盘,输入什么,可编辑格按顺序填什么;点某一格 = 把光标挪到它。
 // 交失败(缺槽/越界/冲突)由页面按原错误提示,本组件**不清空**玩家已填内容;服务端判「没解开」才清空重来(原型)。
 
@@ -76,10 +76,10 @@ Component({
     display: { type: String, value: '' },
     feedback: { type: String, value: '' },
   },
-  data: { groups: [], active: -1, pop: -1, typedText: '', focused: false, cursor: 0, blankCount: 0, verdict: '', canSubmit: false },
+  data: { groups: [], active: -1, pop: -1, typedText: '', wholeWord: false, word: '', focused: false, cursor: 0, blankCount: 0, verdict: '', canSubmit: false },
   observers: {
     'show, slots, solved': function (show, slots, solved) {
-      if (!show) { this._typed = {}; this._pending = false; this._clearPop(); return; }
+      if (!show) { this._typed = {}; this._pending = false; this._clearPop(); this.setData({ wholeWord: false, word: '' }); return; }
       /* 刚交过、服务端回来仍未解开:整体提示「不对」并清空重来(原型 hangSubmit 失败分支;服务端不给逐格对错) */
       const wrong = this._pending && !solved;
       this._pending = false;
@@ -91,10 +91,11 @@ Component({
         groups: groupCells(cells),
         blankCount: editable(slots).length,
         typedText: text,
+        word: wrong ? '' : this.data.word,
         verdict: wrong ? 'no' : (solved ? 'ok' : this.data.verdict),
         active: solved ? -1 : this.data.active,
         pop: -1,
-        canSubmit: !solved && !!hangmanPayload(slots, this._typed, ''),
+        canSubmit: !solved && (this.data.wholeWord ? !wrong && !!String(this.data.word || '').trim() : !!hangmanPayload(slots, this._typed, '')),
       });
       if (solved) motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });
       else if (wrong) motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'light' });
@@ -108,9 +109,17 @@ Component({
     _cellAt: cellAt,
     _initialText: initialText,
     _clearPop() { if (this._popT) { clearTimeout(this._popT); this._popT = null; } },
+    onToggleWord() {
+      if (this.data.solved) return;
+      const wholeWord = !this.data.wholeWord;
+      this.setData({ wholeWord, focused: true, active: -1, verdict: '',
+        cursor: (wholeWord ? this.data.word : this.data.typedText).length,
+        canSubmit: wholeWord ? !!String(this.data.word || '').trim() : !!hangmanPayload(this.data.slots, this._typed, '') });
+    },
     /** 点格子:把光标挪到它、唤起系统键盘。预填 / 分隔符不响应;点格子板空白处 = 接着往下填。 */
     onPickCell(e) {
       if (this.data.solved) return;
+      if (this.data.wholeWord) this.onToggleWord();
       const kind = e.currentTarget.dataset.kind;
       if (kind === 'PREFILLED' || kind === 'SEPARATOR') return;
       const i = Number(e.currentTarget.dataset.i);
@@ -127,6 +136,7 @@ Component({
     onInput(e) {
       const slots = this.data.slots;
       const value = String(e.detail.value || '');
+      if (this.data.wholeWord) { this.setData({ word: value, verdict: '', canSubmit: !!value.trim() }); return; }
       const typed = distribute(slots, value);
       const prev = this._typed || {};
       // 刚填上的那一格弹一下(只在多了字时;删字不弹)
@@ -147,7 +157,9 @@ Component({
     },
     onSubmit() {
       if (this.data.solved) return;
-      const payload = hangmanPayload(this.data.slots, this._typed, '');
+      if (this.data.wholeWord && !String(this.data.word || '').trim()) return;
+      const payload = this.data.wholeWord ? hangmanPayload(this.data.slots, this._typed, this.data.word)
+        : hangmanPayload(this.data.slots, this._typed, '');
       if (!payload) return;
       this._pending = true;
       motion.haptic({ reducedMotion: this.data.reducedMotion, type: 'medium' });

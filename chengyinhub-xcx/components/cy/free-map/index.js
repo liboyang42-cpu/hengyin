@@ -91,21 +91,12 @@ Component({
     //   layerStyle(Number) — 个性化样式编号,透传为 wxml 的 layer-style 属性,官方默认 1(标准/浅色底图)
     // 二者默认值与微信 <map> 组件自身默认值完全一致 → 不传/传默认值时底图渲染与改动前逐字节相同。
     // 用户在控制台建好暗色样式后,把拿到的 subkey/编号通过 pages/play 的 MAP_DARK 常量传入即可点亮暗色。
-    subkey:     { type: String, value: '' },
-    layerStyle: { type: Number, value: 1 },
+    subkey:     { type: String, value: '', observer(next, previous) { if (next !== previous) this._resetMapStyle(); } },
+    layerStyle: { type: Number, value: 1, observer(next, previous) { if (next !== previous) this._resetMapStyle(); } },
     // 第九轮 m4 第 2 项:底图是哪一套(black / white / paper / 2077;'' = 没配 key 的官方默认底图)。
     // 浅底上把白线白圈换成墨色,见 utils/map-style.js toneLines / toneCircle。
     tone: { type: String, value: '', observer(next, previous) {
-      if (next !== previous && (next === '2077' || previous === '2077')) {
-        const generation = this._mapGeneration = (this._mapGeneration || 0) + 1;
-        this._fitRendered = false;
-        clearTimeout(this._styleLoadTimer);
-        this._styleVisibleAt = next === '2077' ? Date.now() + 3500 : 0;
-        // 新样式使用新原生实例，旧实例的 updated 不能提前撤掉占位。
-        this.setData({ mapInstances: [], mapLoaded: false }, () => {
-          wx.nextTick(() => { if (!this._mapGone && generation === this._mapGeneration) this.setData({ mapInstances: [{ generation }] }); });
-        });
-      }
+      if (next !== previous) this._resetMapStyle();
       this._mergeLines(); this._rebuild();
     } },
     // 第九轮 m4:漫游 16 级以上的 3D 楼块 + 俯仰(试做,默认关;开关在 utils/map-style.js ROAM_3D)
@@ -125,7 +116,36 @@ Component({
   },
   methods: {
     onExitTap() { this.triggerEvent('exit'); },
+    _resetMapStyle(force = false) {
+      const signature = JSON.stringify([this.data.subkey, this.data.layerStyle, this.data.tone]);
+      if (this._mapGone || (!force && signature === this._mapStyleSignature)) return;
+      this._mapStyleSignature = signature;
+      const generation = this._mapGeneration = (this._mapGeneration || 0) + 1;
+      this._fitRendered = false;
+      this._snapshotUpdatedGeneration = this._snapshotStyleGeneration = this._snapshotFailedGeneration = this._snapshotReadyGeneration = null;
+      clearTimeout(this._styleLoadTimer);
+      this._styleVisibleAt = this.data.tone === '2077' ? Date.now() + 3500 : 0;
+      this.setData({ mapInstances: [], mapLoaded: false }, () => {
+        wx.nextTick(() => { if (!this._mapGone && generation === this._mapGeneration) this.setData({ mapInstances: [{ generation }] }); });
+      });
+    },
+    isSnapshotReady(style, generation) {
+      const active = this._mapGeneration || 0;
+      return !this._mapGone && this.data.mapInstances.length > 0
+        && (generation == null || generation === active)
+        && this._snapshotUpdatedGeneration === active && this._snapshotFailedGeneration !== active
+        && (!(this.data.subkey || this.data.tone === '2077') || this._snapshotStyleGeneration === active)
+        && (!this.data.fit || !this._fitKey || this._fitRendered && this._snapshotFitKey === this._fitKey)
+        && (!style || style.subkey === this.data.subkey && style.layerStyle === this.data.layerStyle && style.tone === this.data.tone);
+    },
+    _emitSnapshotReady() {
+      const generation = this._mapGeneration || 0;
+      if (!this.isSnapshotReady() || this._snapshotReadyGeneration === generation) return;
+      this._snapshotReadyGeneration = generation;
+      this.triggerEvent('ready', { ready: true, generation });
+    },
     _mergeLines() {
+      this._snapshotUpdatedGeneration = this._snapshotReadyGeneration = null;
       const base = this.data.mapPolyline || [], trail = this.data.trailPolyline || [];
       this.setData({ lines: toneLines(trail.length ? base.concat(trail) : base, this.data.tone) });
     },
@@ -188,7 +208,9 @@ Component({
         this._fitPts = fp;
         const k = JSON.stringify(fp);
         if (k === this._fitKey) return;
+        const replacing = this._fitKey != null;
         this._fitKey = k; this._fitRendered = false;
+        if (replacing) this._resetMapStyle(true);
         this._applyFit();
         return;
       }
@@ -208,11 +230,31 @@ Component({
     _applyFit() {
       const pts = this._fitPts;
       if (!pts || !pts.length) return;
+      const generation = this._mapGeneration || 0, key = this._fitKey;
+      const request = this._fitRequest = (this._fitRequest || 0) + 1;
+      let settled = false;
+      this._snapshotFitKey = this._snapshotUpdatedGeneration = this._snapshotReadyGeneration = null;
+      const current = () => !settled && !this._mapGone && generation === (this._mapGeneration || 0)
+        && request === this._fitRequest && key === this._fitKey && this._snapshotFailedGeneration !== generation;
+      const success = () => {
+        if (!current()) return;
+        settled = true;
+        this._snapshotFitKey = key;
+        // API 成功前的 updated 不能补作成功后的渲染证明。
+        this._snapshotUpdatedGeneration = null;
+      };
+      const fail = () => {
+        if (!current()) return;
+        settled = true;
+        this._snapshotFitKey = this._snapshotUpdatedGeneration = this._snapshotReadyGeneration = null;
+        this.triggerEvent('ready', { ready: false, generation });
+      };
       try {
         const ctx = wx.createMapContext('fmap', this);
-        if (pts.length === 1) this.setData({ center: { lat: pts[0].latitude, lng: pts[0].longitude } });
-        else if (ctx && ctx.includePoints) ctx.includePoints({ points: pts, padding: this.data.fitPadding });
-      } catch (e) { console.warn('fit fail'); }
+        if (pts.length === 1) this.setData({ center: { lat: pts[0].latitude, lng: pts[0].longitude } }, success);
+        else if (ctx && ctx.includePoints) ctx.includePoints({ points: pts, padding: this.data.fitPadding, success, fail });
+        else fail();
+      } catch (e) { fail(); console.warn('fit fail'); }
     },
     _rebuild() {
       // S5 M2 竞态修复:dropIn 挂起的分批 setTimeout 若在此时仍未跑完,会用过时闭包快照覆盖本次
@@ -335,25 +377,41 @@ Component({
     onStyleReady(e) {
       const generation = e && e.currentTarget && e.currentTarget.dataset && Number(e.currentTarget.dataset.generation);
       const detail = e && e.detail;
-      if (generation !== (this._mapGeneration || 0) || !this.data.mapInstances.length
-        || !detail || detail.ability !== 'layer-style' || detail.errCode !== 0) return;
+      if (this._mapGone || generation !== (this._mapGeneration || 0) || !this.data.mapInstances.length
+        || !detail || detail.ability !== 'layer-style') return;
+      if (detail.errCode !== 0) return;
+      if (this._snapshotFailedGeneration === generation) return;
+      this._snapshotStyleGeneration = generation;
       clearTimeout(this._styleLoadTimer);
       this.setData({ mapLoaded: true });
+      this._emitSnapshotReady();
+    },
+    onStyleFailed(e) {
+      if (e && e.detail && e.detail.ability === 'layer-style') this.onMapError(e);
+    },
+    onMapError(e) {
+      const generation = Number(e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.generation);
+      if (this._mapGone || generation !== (this._mapGeneration || 0) || !this.data.mapInstances.length) return;
+      this._snapshotFailedGeneration = generation;
+      this._snapshotStyleGeneration = this._snapshotFitKey = this._snapshotUpdatedGeneration = this._snapshotReadyGeneration = null;
+      this.triggerEvent('ready', { ready: false, generation });
     },
     onUpdated(e) {
       const generation = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.generation;
-      if (!this.data.mapInstances.length || (generation != null && Number(generation) !== (this._mapGeneration || 0))) return;
+      if (this._mapGone || !this.data.mapInstances.length || (generation != null && Number(generation) !== (this._mapGeneration || 0))) return;
       if (!this.data.mapLoaded) {
         const remaining = this.data.tone === '2077' ? Math.max(0, (this._styleVisibleAt || 0) - Date.now()) : 0;
         clearTimeout(this._styleLoadTimer);
-        // shortcut: runtimes without layer-style readiness retain the measured 3.5s fallback.
+        // shortcut: retain the measured 3.5s display fallback; snapshots still require native style success.
         if (remaining) this._styleLoadTimer = setTimeout(() => {
           if (!this._mapGone && Number(generation || 0) === (this._mapGeneration || 0)) this.setData({ mapLoaded: true });
         }, remaining);
         else this.setData({ mapLoaded: true });
       }
       if (this.data.fit && this._fitKey && !this._fitRendered) { this._fitRendered = true; this._applyFit(); }
+      else if (!this.data.fit || !this._fitKey || this._snapshotFitKey === this._fitKey) this._snapshotUpdatedGeneration = generation == null ? 0 : Number(generation);
       this.triggerEvent('updated', e.detail);
+      this._emitSnapshotReady();
     },
     onRegionChange(e) {
       this.triggerEvent('regionchange', Object.assign({}, e.detail || {}, {

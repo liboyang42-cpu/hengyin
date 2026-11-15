@@ -152,21 +152,27 @@ Page({
     return !this._unloaded && !ctx.done && ctx.requestId === this._feedRequestId;
   },
 
-  // 两路请求的 fail 与归并的 reject 都汇到这里,同一轮只落一次。首屏/刷新失败进错误态(load-failure 留白);
-  // 翻页失败按全站口径不出错误文案,没取到的那一路保留游标,下次触底重试。
-  _onFeedFail(ctx, res) {
+  // 两路 fail 与归并 reject 同轮只落一次；鉴权失败显示登录，普通加载失败沿用留白。
+  // 普通翻页失败保留游标，下次触底重试。
+  _onFeedFail(ctx, res, statusCode) {
     if (!ctx || !this._feedCurrent(ctx)) return;
     ctx.done = true;
     this._feedLoading = false;
-    if (ctx.loadMore) return;
+    const code = Number(res && res.code);
+    const loginRequired = Number(statusCode) === 401 || Number(statusCode) === 2 || code === 401 || code === 2;
+    if (ctx.loadMore && !loginRequired) return;
     this.setData({
-      feedState: ctx.hasSnapshot ? 'stale-error' : 'error',
-      feedLoginRequired: false,
+      feedState: loginRequired ? 'error' : (ctx.hasSnapshot ? 'stale-error' : 'error'),
+      feedLoginRequired: loginRequired,
       feedError: requestError(res, '动态加载失败，请重试'),
     });
   },
 
-  retryFeed() { return this.loadFeed(); },
+  retryFeed() {
+    if (this.data.feedLoginRequired && !app.ensureLoginFor('登录后查看帖文', () => this.loadFeed(),
+      { owner: this, target: () => [this.data.activeTopTab, this._feedRequestId] })) return;
+    return this.loadFeed();
+  },
 
   _feedSources(requestId) {
     const that = this;
@@ -185,7 +191,7 @@ Page({
             const rows = res.data.rows.map(discoverFeed.normalizeClubPost);
             resolve({ rows: rows, hasMore: res.data.hasMore, cursor: rows.length ? rows[rows.length - 1].id : beforeId });
           },
-          fail(res) { if (requestId === that._feedRequestId) that._onFeedFail(that._feedCtx, res); reject(res); },
+          fail(res, statusCode) { if (requestId === that._feedRequestId) that._onFeedFail(that._feedCtx, res, statusCode); reject(res); },
         });
       });
     } }];
@@ -202,7 +208,7 @@ Page({
               if (!res || res.code != 200 || !isRecord(res.data) || !isRecordList(res.data.rows)) return reject(res);
               resolve({ rows: res.data.rows.map(discoverFeed.normalizeCommunityPost), hasMore: res.data.hasMore === true, cursor: page + 1 });
             },
-            fail(res) { if (requestId === that._feedRequestId) that._onFeedFail(that._feedCtx, res); reject(res); },
+            fail(res, statusCode) { if (requestId === that._feedRequestId) that._onFeedFail(that._feedCtx, res, statusCode); reject(res); },
           });
         });
       } });

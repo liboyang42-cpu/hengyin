@@ -61,17 +61,23 @@ function applyPreviewAction(source, event, startedAt, now = Date.now()) {
     kit.receipt = Object.assign({}, kit.receipt, { settled: true, text: kit.receipt.success ? kit.successText : kit.failText });
     result.ready = true;
   } else if (kit.type === 'typein' && action === 'start') {
-    if (kit.passed || (kit.tries > 0 && kit.attempts >= kit.tries)) return null;
+    if (kit.passed || (kit.tries > 0 && kit.attempts >= kit.tries) || (kit.r5 && kit.startConfirmed && startedAt)) return null;
     result.startedAt = now;
     kit.startConfirmed = true;
-  } else if (kit.type === 'typein' && action === 'submit') {
-    if (!startedAt || kit.passed || (kit.tries > 0 && kit.attempts >= kit.tries)) return null;
+    // 本地试玩从 START 开表；打开预览和重复点击都不能消耗或延长本次限时。
+    if (kit.r5) kit.deadlineAt = kit.limitSeconds > 0 ? now + kit.limitSeconds * 1000 : 0;
+  } else if (kit.type === 'typein' && (action === 'submit' || (kit.r5 && action === 'refresh'))) {
+    if (!startedAt || kit.passed || (kit.tries > 0 && kit.attempts >= kit.tries) || (kit.r5 && !kit.startConfirmed)) return null;
+    const expired = kit.r5 && kit.deadlineAt > 0 && (action === 'refresh' ? now >= kit.deadlineAt : now > kit.deadlineAt);
+    if (action === 'refresh' && !expired) return null;
     const normalize = value => kit.caseSensitive ? String(value).trim() : String(value).trim().toLowerCase();
-    kit.passed = normalize(detail.text || '') === normalize(kit.target) && now - startedAt <= kit.seconds * 1000;
+    kit.passed = expired ? kit.timeoutResult === 'COMPLETED'
+      : normalize(detail.text || '') === normalize(kit.target) && (kit.r5 || now - startedAt <= kit.seconds * 1000);
     kit.attempts += 1;
     kit.startConfirmed = false;
+    if (kit.r5) kit.deadlineAt = 0;
     result.startedAt = 0;
-    result.ready = kit.passed || (kit.tries > 0 && kit.attempts >= kit.tries);
+    result.ready = kit.r5 || kit.passed || (kit.tries > 0 && kit.attempts >= kit.tries);
     result.message = kit.passed ? '预览：挑战完成' : '预览：未通过';
   } else return null;
   return result;

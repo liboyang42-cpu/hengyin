@@ -24,8 +24,7 @@ function resolveFinishResult(report, local, state) {
   const kind = report && typeof report.completionKind === 'string' ? report.completionKind : ''
   const server = SERVER_LABELS[kind]
   if (server) return { label: server.label, win: server.win, source: 'report', kind }
-  if (l.topicCompleted === true) return { label: '已通关', win: true, source: 'receipt', kind: '' }
-  if (l.allDone === true && state !== 'ok') return { label: '', win: false, source: 'unknown', kind: '' }
+  if (l.topicCompleted === true || l.allDone === true && state !== 'ok') return { label: '', win: false, source: 'unknown', kind: '' }
   return { label: l.chapterDone ? '本章完成' : '已结束', win: false, source: 'local', kind: '' }
 }
 

@@ -48,5 +48,5 @@ test('finish card title and result use the topic when the server declared comple
   // R11 g1(j4 F8):「本章完成」只在本章真完成时说,其余「已结束」;qx-b8 U08-01 起结果词由 finishResult(服务端战报/到达回执)给出
   assert.match(wxml, /\{\{finishResult\.label\}\}/);
   const { resolveFinishResult } = require('../../pages/play/utils/finish-result.js');
-  assert.equal(resolveFinishResult(null, { topicCompleted: true }, 'pending').label, '已通关');
+  assert.equal(resolveFinishResult(null, { topicCompleted: true }, 'pending').label, '');
 });

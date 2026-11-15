@@ -1,7 +1,7 @@
 <!-- UG-01 逐字猜词(l-kits 2026-11-10,照 proto/game gp-kit-full「玩法 · 全屏(逐字猜词 · 系统键盘)」):
      题面与格子整组居中;预填格深一档、当前格描边主色上浮;不画自定义键盘 —— 点格子唤起系统键盘,
      输入框就在格子下面,输入什么格子就填什么,每填一格弹一下;「提交」固定底部,填满才亮;答对格子依次变绿。
-     判定只在服务端:组件只收集玩家补的字,交 SUBMIT_HANGMAN {slots}。 -->
+     判定只在服务端:组件只收集玩家补的字,交 SUBMIT_HANGMAN {slots} 或完整候选 {input}。 -->
 <cy-play-stage id="cy-play-stage" skin="qadark" show="{{show}}" back-label="退出" bind:back="onClose">
   <view class="g-col hm {{inline ? 'hm--inline' : ''}} {{reducedMotion ? 'pk--reduced' : ''}} {{reducedMotion ? 'hm--reduced' : ''}}">
     <view class="hm__stage">
@@ -24,9 +24,14 @@
 
       <block wx:if="{{!solved}}">
         <!-- 系统键盘的接收框就在格子下面:输入什么,格子按顺序填什么 -->
-        <input class="hm__in {{verdict === 'no' ? 'is-wrong' : ''}}" value="{{typedText}}" focus="{{focused}}" cursor="{{cursor}}" maxlength="{{blankCount}}"
+        <input wx:if="{{wholeWord}}" class="hm__in {{verdict === 'no' ? 'is-wrong' : ''}}" value="{{word}}" focus="{{focused}}" cursor="{{cursor}}" maxlength="80"
+               bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" confirm-type="done" bindconfirm="onSubmit"
+               placeholder="输入完整答案" placeholder-class="hm__ph" aria-label="完整答案" />
+        <input class="hm__in {{verdict === 'no' ? 'is-wrong' : ''}}" value="{{typedText}}" focus="{{focused}}" cursor="{{cursor}}" maxlength="{{blankCount}}" wx:else
                bindinput="onInput" bindfocus="onFocus" bindblur="onBlur" confirm-type="done" bindconfirm="onSubmit"
                placeholder="点格子，用系统键盘输入" placeholder-class="hm__ph" aria-label="逐字猜词输入框" />
+        <view class="hm__mode" bindtap="onToggleWord" aria-role="button" aria-label="{{wholeWord ? '补全空格' : '输入完整答案'}}"
+              hover-class="hm__press" hover-stay-time="80">{{wholeWord ? '补全空格' : '输入完整答案'}}</view>
         <view class="hm__err {{verdict === 'no' ? 'is-show' : ''}}" aria-live="polite">{{verdict === 'no' ? '不对，再想想' : ''}}</view>
       </block>
 

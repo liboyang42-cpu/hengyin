@@ -21,8 +21,8 @@ test('U08-01 本地站点都完成但战报在途或读不到:结果未知,不�
   const local = { topicCompleted: false, allDone: true, chapterDone: true }
   assert.equal(fr.resolveFinishResult(null, local, 'pending').label, '')
   assert.equal(fr.resolveFinishResult(null, local, 'failed').label, '')
-  // 到达回执里服务端已判 completed 的,在途时可先说已通关
-  assert.equal(fr.resolveFinishResult(null, { topicCompleted: true, allDone: true }, 'pending').label, '已通关')
+  // completed 也可能是辅助完成；须等战报的明确分类。
+  assert.equal(fr.resolveFinishResult(null, { topicCompleted: true, allDone: true }, 'pending').label, '')
   // 战报说仍在进行:不升级
   assert.equal(fr.resolveFinishResult({ completionKind: 'IN_PROGRESS' }, local, 'ok').label, '本章完成')
   assert.equal(fr.resolveFinishResult({ completionKind: 'IN_PROGRESS' }, { allDone: false, chapterDone: false }, 'ok').label, '已结束')

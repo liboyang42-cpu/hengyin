@@ -395,10 +395,15 @@ function buildSinglePreviewKit(config, opts) {
     if (!kit) continue;
     if (key === 'album') kit.title = txt(o.title) || '相册';
     if (key === 'qa') questoPreview(kit, config);
+    if (key === 'typeIn' && config.outcomeRules?.version === 1) {
+      kit.r5 = true;
+      kit.limitSeconds = config.timer?.enabled ? num(config.timer.durationSeconds, 0) : 0;
+      kit.timeoutResult = config.timer?.timeoutResult || 'FAILED';
+    }
     kit.present = advancedGameConfig.explicitPresent(config) || advancedGameConfig.defaultPresent(key);
     /* 通用的限时 / 次数是**另一段**(timer),不是各玩法自己的 ——
        原型里这两个开关只给真的会执行的玩法,所以由调用方按玩法决定要不要带。 */
-    if (o.limitSeconds > 0 && kit.limitSeconds === 0) kit.limitSeconds = o.limitSeconds;
+    if (!kit.r5 && o.limitSeconds > 0 && kit.limitSeconds === 0) kit.limitSeconds = o.limitSeconds;
     if (o.maxTries > 0 && kit.maxTries === 0) kit.maxTries = o.maxTries;
     return kit;
   }

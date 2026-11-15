@@ -26,6 +26,7 @@ test('R4-3:ending 读取失败 → 页面跳过结局直接进完成页;回空�
     const method = new Function('req', 'lifeArchive', 'return ({' + source.slice(begin, end) + '})._loadLifeEnding;')(req, lifeArchive)
     const shown = []
     const page = { data: { topicId: 1, activityId: 0, topicName: '提篮桥', nodes: [] }, _routeState: { sessionId: 2 }, _isPlayAccountCurrent: () => true,
+      setData(patch) { Object.assign(this.data, patch); },
       _showEnding: (card) => shown.push(card) }
     let finished = 0
     method.call(page, () => finished++)

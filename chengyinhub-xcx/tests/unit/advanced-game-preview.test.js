@@ -191,3 +191,38 @@ test('计步预览组件原样显示锁定目标100、800和默认6000,个人目
   screen._paint(800, 0)
   assert.equal(screen._goal, 1000)
 })
+
+
+test('R5 输入试玩只投影显式 timer，开始前无 deadline，旧 seconds 不改写', () => {
+  for (const duration of [0, 20, 60]) {
+    const c = base();
+    c.typeIn = { enabled: true, title: '作者标题', target: 'HELLO', seconds: duration === 20 ? 60 : 20, tries: 0 };
+    c.outcomeRules = { version: 1, pass: {}, fail: {} };
+    c.timer = { enabled: duration > 0, durationSeconds: duration || 60, timeoutResult: 'FAILED' };
+    const before = JSON.stringify(c);
+    const kit = pv.buildPreviewKit(c, { limitSeconds: 999 });
+    assert.equal(kit.r5, true);
+    assert.equal(kit.limitSeconds, duration, '根 timer 才是 R5 限时，调用选项和旧 seconds 都不能替代');
+    assert.equal(kit.deadlineAt, 0, '只打开预览不能开始耗时');
+    assert.equal(kit.timeoutResult, 'FAILED');
+    assert.equal(kit.seconds, c.typeIn.seconds, '保留旧字段，不做迁移');
+    assert.equal(JSON.stringify(c), before);
+  }
+});
+
+test('legacy 输入试玩仍按作者 seconds，R5 超时完成保留显式结果', () => {
+  for (const seconds of [20, 60]) {
+    const c = base();
+    c.typeIn = { enabled: true, target: 'HELLO', seconds };
+    c.timer = { enabled: true, durationSeconds: 45, timeoutResult: 'FAILED' };
+    const kit = pv.buildPreviewKit(c);
+    assert.equal(kit.r5, false);
+    assert.equal(kit.seconds, seconds);
+    assert.equal(kit.deadlineAt, 0);
+  }
+  const c = base();
+  c.typeIn = { enabled: true, target: 'HELLO', seconds: 20 };
+  c.outcomeRules = { version: 1, pass: {}, fail: {} };
+  c.timer = { enabled: true, durationSeconds: 60, timeoutResult: 'COMPLETED' };
+  assert.equal(pv.buildPreviewKit(c).timeoutResult, 'COMPLETED');
+});

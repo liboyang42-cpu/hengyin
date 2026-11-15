@@ -97,7 +97,7 @@ Page({
         this._photoUrl = url;
         const kit = this.selectComponent('#photoKit');
         if (this.data.node.validationMethod === 3) { if (kit) kit.settle(true, { feedback: '照片已保存，接下来答一道题' }); return; }
-        this._submit('', (ok, msg) => { if (kit) kit.settle(ok, { feedback: ok ? '' : msg }); });
+        this._submit('', (ok, msg, unjudged) => { if (kit) kit.settle(ok, { unjudged, feedback: ok ? '' : msg }); });
       },
     });
   },
@@ -110,11 +110,12 @@ Page({
   onPick(e) {
     const d = (e && e.detail) || {};
     const kit = this.selectComponent('#quizKit');
-    this._submit(d.optionId, (ok, msg) => {
+    this._submit(d.optionId, (ok, msg, unjudged) => {
       // complete 先判答案，再校验照片；这两句拒绝证明答案已过，但不证明挑战完成。
       const photoRejected = !ok && ['照片未上传成功或不属于当前账号，请重新拍摄上传', '照片校验暂不可用，请稍后重试'].includes(msg);
       this._photoError = photoRejected ? msg : '';
       if (kit) kit.settle(ok || photoRejected, { index: d.index, pendingEvidence: photoRejected,
+        unjudged: !photoRejected && unjudged,
         feedback: photoRejected ? '请重新拍摄照片' : (ok ? '' : msg) });
     });
   },
@@ -133,7 +134,7 @@ Page({
     if (app.ensureLoginFor && !app.ensureLoginFor('roam', () => this._submit(answer, done), { owner: this, target: () => [this._poiId, this._photoUrl] })) return;
     if (this._submitting) return;
     this._submitting = true;
-    const end = (ok, msg) => { this._submitting = false; if (!this._gone) done(ok, msg); };
+    const end = (ok, msg, unjudged) => { this._submitting = false; if (!this._gone) done(ok, msg, unjudged); };
     wx.getLocation({
       type: 'gcj02',
       success: (loc) => {
@@ -144,7 +145,7 @@ Page({
           // A3.6:告诉玩家还差多少米,并给导航
           const text = placeMap.gapText(away - Number(n.radiusM || 80));
           this.setData({ gap: { text, lat: Number(n.lat), lng: Number(n.lng), name: n.name || '' } });
-          end(false, text);
+          end(false, text, true);
           return;
         }
         if (this.data.gap) this.setData({ gap: null });
@@ -154,18 +155,18 @@ Page({
           success: (res) => {
             if (res && res.code == 200 && res.data && typeof res.data.needRedeem === 'boolean') { this._result = res.data; end(true); return; }
             const msg = (res && res.msg) || '';
-            if (REJECTIONS.indexOf(msg) >= 0) { end(false, msg); return; }
+            if (REJECTIONS.indexOf(msg) >= 0) { end(false, msg, msg !== '答案不正确'); return; }
             this._submitting = false; cyToast('结果还没确认，请稍后重试');
           },
           fail: () => { this._submitting = false; cyToast('网络异常，请重试'); },
           successStatusAbnormal: (res) => {
             const msg = (res && res.msg) || '';
-            if (REJECTIONS.indexOf(msg) >= 0) { end(false, msg); return; }
+            if (REJECTIONS.indexOf(msg) >= 0) { end(false, msg, msg !== '答案不正确'); return; }
             this._submitting = false; cyToast(msg || '结果还没确认，请稍后重试');
           },
         });
       },
-      fail: () => { end(false, '需要定位才能确认你到了这里'); },
+      fail: () => { end(false, '需要定位才能确认你到了这里', true); },
     });
   },
 

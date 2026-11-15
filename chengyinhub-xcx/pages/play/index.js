@@ -1092,6 +1092,7 @@ Page({
     this.suspendOrientLifecycle(); this._stopTopbar();
     this.setData({ arrivalGuard: null });
     this._playDisposed = true;
+    if (this._routeMapWait) this._routeMapWait.settle(null);
     if (this._leadVerificationWorkflow) { this._leadVerificationWorkflow.destroy(); this._leadVerificationWorkflow = null; }
     this._leadArrivalEpoch = (this._leadArrivalEpoch || 0) + 1; this._leadArriving = false;
     this._themeRecordsDisposed = true;
@@ -8684,7 +8685,12 @@ Page({
       that.setData({ endingError: true });
     });
   },
-  retryEnding() { this.loadEnding(); },
+  retryEnding() {
+    if (this.data.mode === 2) { this.loadEnding(); return; }
+    this._lifeEndingFailedScope = '';
+    this.setData({ endingError: false, showFinish: false });
+    this.openFinish();
+  },
   /**
    * 真玩家的结局 + 「这一生的档案」(2026-09-24):本局完成后先问服务端走到了哪个结局,
    * 盖在完成页之前;点「继续」才进完成页。主题没配结局 / 拿不到 → 直接进完成页,不挡路。
@@ -8693,11 +8699,18 @@ Page({
     if (!this._isPlayAccountCurrent()) return;
     const params = { topicId: this.data.topicId, activityId: this.data.activityId || 0 };
     const routeSessionId = String((this._routeState || {}).sessionId || '');
+    const shownScope = this._lifeEndingPendingScope;
     const sequence = this._lifeEndingReadSequence = (this._lifeEndingReadSequence || 0) + 1;
     const isCurrent = () => this._isPlayAccountCurrent() && sequence === this._lifeEndingReadSequence
       && params.topicId === this.data.topicId && params.activityId === (this.data.activityId || 0)
       && routeSessionId === String((this._routeState || {}).sessionId || '');
-    const finish = () => { if (isCurrent()) { this._lifeEndingPendingScope = ''; next(); } };
+    const finish = () => {
+      if (!isCurrent()) return;
+      this._lifeEndingPendingScope = '';
+      this._lifeEndingFailedScope = shownScope;
+      this.setData({ endingError: true });
+      next();
+    };
     req('/api/play/journey/ending', 'GET', params, undefined, true).then((res) => {
       if (!isCurrent()) return;
       const d = res && (res.code == 200 || res.code == '200') ? res.data : null;
@@ -8705,8 +8718,13 @@ Page({
       // 没配结局的路线也给同一张「本局完成」卡(标题取主题名,档案取本局走过的站),不是只有故事路线才有
       const ending = d && d.title ? d : { code: '', title: this.data.topicName || '本局完成', summary: '' };
       const archive = lifeArchive.fromServer(d && d.archive, this.data.nodes);
-      const card = () => { if (isCurrent()) this._showEnding({ show: true, real: true, idx: 0, list: [{ code: ending.code, title: ending.title, summary: ending.summary || '' }],
-        archive, hasArchive: !lifeArchive.isEmpty(archive) }); };
+      const card = () => {
+        if (!isCurrent()) return;
+        this._lifeEndingShown = true; this._lifeEndingShownScope = shownScope; this._lifeEndingFailedScope = '';
+        this.setData({ endingError: false });
+        this._showEnding({ show: true, real: true, idx: 0, list: [{ code: ending.code, title: ending.title, summary: ending.summary || '' }],
+          archive, hasArchive: !lifeArchive.isEmpty(archive) });
+      };
       // 结局章(2026-09-24):服务端挑中的那一章先当故事流读,读完才出结局卡与这一生的档案。
       // 局已结束时服务端回的是归档结果,结局章在 story.chapter 里(进行中的局才在顶层):两处都认,
       // 否则通关后结局章(连同作者配的结尾音乐)永远不播,只剩摘要卡。
@@ -8786,8 +8804,9 @@ Page({
     const lifeEndingScope = JSON.stringify([this._boundPlayOwner(), this._sessionKey(), String((this._routeState || {}).sessionId || '')]);
     if (this._lifeEndingPendingScope === lifeEndingScope) return;
     if (!this.data.isPreview && !this.data.isMock && this.data.mode !== 2
+        && this._lifeEndingFailedScope !== lifeEndingScope
         && (!this._lifeEndingShown || this._lifeEndingShownScope !== lifeEndingScope)) {
-      this._lifeEndingShown = true; this._lifeEndingShownScope = lifeEndingScope; this._lifeEndingPendingScope = lifeEndingScope;
+      this._lifeEndingPendingScope = lifeEndingScope;
       this._loadLifeEnding(() => this.openFinish());
       return;
     }
@@ -8870,6 +8889,7 @@ Page({
   },
   _hideFinish(callback) {
     this._finishArtworkEpoch = (this._finishArtworkEpoch || 0) + 1;
+    if (this._routeMapWait) this._routeMapWait.settle(null);
     this._milestoneReadSequence = (this._milestoneReadSequence || 0) + 1;
     if (this._reviewTimer) { clearTimeout(this._reviewTimer); this._reviewTimer = null; }
     this._finishRecommendationEpoch = (this._finishRecommendationEpoch || 0) + 1;
@@ -9340,6 +9360,8 @@ Page({
     if (this.data.isPreview || this.data.isMock) return;
     const artwork = this._captureFinishArtwork('_route');
     const current = () => this._isFinishArtworkCurrent(artwork);
+    if (this._routeMapWait) this._routeMapWait.settle(null);
+    if (!current()) return;
     const model = this._routeCardModel('');
     this._routeCardFile = '';
     const points = routeCardMap.includePoints(model.route);
@@ -9347,46 +9369,64 @@ Page({
     const st = routeCardMap.styleFor(this._look);
     const fail = () => { if (current()) this.setData({ routeCard: { on: true, ready: false, error: true } }); };
     // 真实底图优先；SDK 快照失败时由已有 finishSnap 连线图接住，不冒充地图快照成功。
-    this._routeMapWait = null;
-    this.setData({ routeCard: { on: true, ready: false }, finishSnapError: false,
-      routeMap: { points, lines: routeCardMap.polyline(model.route), subkey: st.subkey, layerStyle: st.layerStyle, tone: st.tone } }, () => {
-      const updated = new Promise((resolve) => { this._routeMapWait = resolve; setTimeout(resolve, 6000); });
-      updated.then(() => new Promise((r) => setTimeout(r, 600))).then(() => {
-        if (!current()) return null;
-        const map = this.selectComponent('#routemap');
-        return routeCardMap.takeSnapshot(map && map.getMapContext && map.getMapContext());
-      }).then((snapPath) => {
-        if (!current()) return;
-        if (!snapPath) { fail(); return; }
-        wx.createSelectorQuery().select('#routecv').fields({ node: true }).exec((res) => {
-          if (!current()) return;
-          if (!res || !res[0] || !res[0].node) { fail(); return; }
-          const cv = res[0].node, dpr = 2;
-          cv.width = routeCard.W * dpr; cv.height = routeCard.H * dpr;
-          const g = cv.getContext('2d'); g.scale(dpr, dpr);
-          const base = cv.createImage();
-          base.onerror = fail;
-          base.onload = () => {
-            if (!current()) return;
-            const extras = this._routeCardExtras(model);
-            extras.then(([codeUrl, city]) => {
-              if (!current()) return;
-              const full = this._routeCardModel(city);
-              const draw = (img) => { if (!current()) return; routeCard.drawCard(g, full, 1, img, base); this.setData({ 'routeCard.ready': true }); };
-              if (!codeUrl) { draw(null); return; }
-              const img = cv.createImage();
-              const timer = setTimeout(() => draw(null), 5000);
-              img.onload = () => { clearTimeout(timer); draw(img); };
-              img.onerror = () => { clearTimeout(timer); draw(null); };
-              img.src = codeUrl;
-            });
-          };
-          base.src = snapPath;
-        });
-      }).catch(fail);
+    let snapshot;
+    const mapCurrent = () => snapshot && this.selectComponent('#routemap') === snapshot.map
+      && snapshot.map.isSnapshotReady(st, snapshot.generation);
+    const updated = new Promise((resolve, reject) => {
+      const wait = { requestId: artwork.sequence, style: st, current, settle: value => {
+        clearTimeout(wait.timer);
+        if (this._routeMapWait === wait) this._routeMapWait = null;
+        if (value) resolve(value); else reject(new Error('route-map-not-ready'));
+      } };
+      this._routeMapWait = wait;
+      wait.timer = setTimeout(() => wait.settle(null), 6000);
     });
+    this.setData({ routeCard: { on: true, ready: false }, finishSnapError: false,
+      routeMap: { instances: [{ id: artwork.sequence }], points, lines: routeCardMap.polyline(model.route), subkey: st.subkey, layerStyle: st.layerStyle, tone: st.tone } });
+    updated.then(ready => {
+      snapshot = ready;
+      if (!current()) return null;
+      if (!mapCurrent()) throw new Error('route-map-changed');
+      return routeCardMap.takeSnapshot(snapshot.map.getMapContext());
+    }).then((snapPath) => {
+      if (!current()) return;
+      if (!snapPath || !mapCurrent()) { fail(); return; }
+      wx.createSelectorQuery().select('#routecv').fields({ node: true }).exec((res) => {
+        if (!current()) return;
+        if (!mapCurrent() || !res || !res[0] || !res[0].node) { fail(); return; }
+        const cv = res[0].node, dpr = 2;
+        cv.width = routeCard.W * dpr; cv.height = routeCard.H * dpr;
+        const g = cv.getContext('2d'); g.scale(dpr, dpr);
+        const base = cv.createImage();
+        base.onerror = fail;
+        base.onload = () => {
+          if (!current()) return;
+          if (!mapCurrent()) { fail(); return; }
+          const extras = this._routeCardExtras(model);
+          extras.then(([codeUrl, city]) => {
+            if (!current()) return;
+            const full = this._routeCardModel(city);
+            const draw = (img) => { if (!current()) return; if (!mapCurrent()) { fail(); return; } routeCard.drawCard(g, full, 1, img, base); this.setData({ 'routeCard.ready': true }); };
+            if (!codeUrl) { draw(null); return; }
+            const img = cv.createImage();
+            const timer = setTimeout(() => draw(null), 5000);
+            img.onload = () => { clearTimeout(timer); draw(img); };
+            img.onerror = () => { clearTimeout(timer); draw(null); };
+            img.src = codeUrl;
+          });
+        };
+        base.src = snapPath;
+      });
+    }).catch(fail);
   },
-  onRouteMapUpdated() { const w = this._routeMapWait; this._routeMapWait = null; if (w) w(); },
+  onRouteMapUpdated(e) {
+    const wait = this._routeMapWait, detail = e && e.detail;
+    if (!wait || !detail || String(e.currentTarget?.dataset?.requestId) !== String(wait.requestId)) return;
+    if (!wait.current() || detail.ready === false) { wait.settle(null); return; }
+    const map = this.selectComponent('#routemap');
+    if (detail.ready === true && Number.isInteger(detail.generation) && map && typeof map.isSnapshotReady === 'function'
+        && map.isSnapshotReady(wait.style, detail.generation)) wait.settle({ map, generation: detail.generation });
+  },
   _routeCardPath(cb) {
     const rc = this.data.routeCard || {};
     if (rc.on && rc.error && !rc.ready) { cb(this.data.finishSnap || ''); return; }

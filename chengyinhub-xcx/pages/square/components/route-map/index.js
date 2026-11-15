@@ -2,6 +2,7 @@
 // 与主题详情复用同一分章投影；只有明确验证的供应商几何可画为道路。
 const toast = require('../../../../utils/toast.js');
 const routePreview = require('../../../../utils/topic-route-preview.js');
+const mapSnap = require('../../../../utils/map-snapshot.js');
 const { lightMapStyle, mapStyleFor, routeMapKind } = require('../../../../utils/map-style.js');
 const LIGHT_MAP_STYLE = lightMapStyle();
 const app = getApp();
@@ -33,6 +34,7 @@ Component({
     mapSubkey: LIGHT_MAP_STYLE.subkey,
     mapLayerStyle: LIGHT_MAP_STYLE.layerStyle,
     routeReady: false,
+    mapInstances: [],
     routeIsRoad: false,
     routeSourceText: '',
     mapLatitude: 0,
@@ -50,7 +52,9 @@ Component({
       const session = app.getSession(), revision = session.getRevision();
       const current = () => !that._routeDetached && that._routeReadEpoch === epoch
         && app.getSession() === session && session.getRevision() === revision;
-      that.setData(routePreview.build([]));
+      this._routeCurrent = current;
+      this._routeMapUpdated = null;
+      that.setData(Object.assign(routePreview.build([]), { mapInstances: [] }));
       app.sendRequest({
         hideLoading: true,
         url: '/api/topic/info-to-user',
@@ -79,24 +83,31 @@ Component({
     // 拍平章节节点 → marker + polyline(贴路线优先,否则节点直连)
     buildRouteMap(chaptersList) {
       const view = routePreview.build(chaptersList);
-      this.setData(view, () => this.triggerEvent(view.routeReady ? 'ready' : 'empty'));
+      // 每次加载换原生实例，迟到 updated 保留旧代次，不能解锁新图。
+      this.setData(Object.assign(view, { mapInstances: view.routeReady ? [{ epoch: this._routeReadEpoch }] : [] }),
+        () => this.triggerEvent(view.routeReady ? 'ready' : 'empty'));
 
     },
 
     // 截取当前路线地图为临时图片(发布静态预览图用),返回 Promise<tempImagePath>
     snapshotRoute() {
-      const that = this;
-      return new Promise(function (resolve, reject) {
-        if (!that.data.routeReady) {
-          reject('route not ready');
-          return;
-        }
-        const ctx = wx.createMapContext('rmMap', that);
-        ctx.takeSnapshot({
-          success: function (res) { resolve(res.tempImagePath); },
-          fail: function (e) { reject(e); }
-        });
+      const epoch = this._routeReadEpoch, routeCurrent = this._routeCurrent;
+      const current = () => !!routeCurrent && routeCurrent() && this.data.routeReady;
+      if (!current()) return Promise.reject(mapSnap.failure('route not ready'));
+      let ctx;
+      try { ctx = wx.createMapContext('rmMap', this); }
+      catch (error) { return Promise.reject(mapSnap.failure('map context unavailable', error)); }
+      return mapSnap.takeMapSnapshot(ctx, () => current() && this._routeMapUpdated === epoch).then((path) => {
+        if (!current()) throw mapSnap.failure('route changed');
+        return path;
       });
+    },
+
+    onMapUpdated(e) {
+      const epoch = e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.epoch;
+      if (epoch == null || Number(epoch) !== this._routeReadEpoch || !this.data.routeReady
+        || !this._routeCurrent || !this._routeCurrent()) return;
+      this._routeMapUpdated = Number(epoch);
     },
 
     onNodeTap(e) {

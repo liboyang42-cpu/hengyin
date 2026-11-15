@@ -117,3 +117,4 @@
   word-break: break-all;
 }
 .hm__q, .hm__board, .hm__in, .hm__err, .hm__fb, .hm__pass { flex-shrink: 0; }
+.hm__mode { min-height: var(--cy-btn-h); display: flex; align-items: center; justify-content: center; color: var(--ink); font-size: var(--cy-type-label); }

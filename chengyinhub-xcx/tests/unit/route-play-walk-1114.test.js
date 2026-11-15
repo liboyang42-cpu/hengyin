@@ -16,13 +16,14 @@ function routeCardHarness(snapshot) {
   const map = { includePoints: r => r, styleFor: () => ({}), polyline: () => [], takeSnapshot: () => snapshot() };
   const card = { W: 600, H: 800, drawCard() { drawn++; } };
   const begin = source.indexOf('  _startRouteCard() {');
-  const end = source.indexOf('  onRouteMapUpdated()', begin);
-  const run = new Function('routeCardMap', 'routeCard', 'wx', 'setTimeout', 'return ({' + source.slice(begin, end) + '})._startRouteCard;')(
-    map, card, wx, fn => { queueMicrotask(fn); return 1; });
-  const page = { data: { finishSnap: 'line.png', finishSnapError: false },
-    _captureFinishArtwork: () => ({}), _isFinishArtworkCurrent: () => current,
+  const end = source.indexOf('  _routeCardPath(cb)', begin);
+  const methods = new Function('routeCardMap', 'routeCard', 'wx', 'setTimeout', 'clearTimeout', 'return ({' + source.slice(begin, end) + '});')(
+    map, card, wx, () => 1, () => {});
+  const component = { getMapContext: () => ({}), isSnapshotReady: () => true };
+  const page = { ...methods, data: { finishSnap: 'line.png', finishSnapError: false },
+    _captureFinishArtwork: () => ({ sequence: 1 }), _isFinishArtworkCurrent: () => current,
     _routeCardModel: () => ({ route: [{ lat: 31, lng: 121 }, { lat: 32, lng: 122 }] }),
-    _routeCardExtras: () => Promise.resolve([null, '']), selectComponent: () => ({ getMapContext: () => ({}) }),
+    _routeCardExtras: () => Promise.resolve([null, '']), selectComponent: () => component,
     setData(patch, next) {
       for (const [key, value] of Object.entries(patch)) {
         if (key.startsWith('routeCard.')) this.data.routeCard[key.slice(10)] = value;
@@ -30,7 +31,7 @@ function routeCardHarness(snapshot) {
       }
       if (next) next();
     } };
-  return { page, run: () => run.call(page), stale: () => { current = false; }, drawn: () => drawn };
+  return { page, run() { page._startRouteCard(); page.onRouteMapUpdated({ currentTarget: { dataset: { requestId: 1 } }, detail: { ready: true, generation: 0 } }); }, stale: () => { current = false; }, drawn: () => drawn };
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
