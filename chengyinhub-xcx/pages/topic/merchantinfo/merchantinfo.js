@@ -3322,7 +3322,7 @@ Page({
       return { key: 'rejected', cls: 'state-danger', text: '未通过', sub: data.reason || '未填写驳回原因' };
     }
     if (status !== 1) {
-      return { key: 'pending', cls: 'state-neutral', text: '审核中', sub: '主题发布者确认后即可开始准备' };
+      return { key: 'pending', cls: 'state-neutral', text: '待审核', sub: '主题发布者确认后即可开始准备' }; // MER-08 与工作台同词
     }
 
     const today = new Date(chinaDayStart(Date.now()));
