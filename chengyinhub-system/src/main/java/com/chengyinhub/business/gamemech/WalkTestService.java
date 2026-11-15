@@ -136,7 +136,7 @@ public class WalkTestService {
             double d = GeoDistance.meters(fix.lat(), fix.lng(), lat, lng);
             if (d < best) { best = d; nearNode = TreasureHuntService.asLong(node.get("id")); }
         }
-        if (nearNode == null || best > ONSITE_RADIUS_M) throw new ServiceException("你离路线上的地点还远,到了再记录", 409);
+        if (nearNode == null || best > ONSITE_RADIUS_M) throw new ServiceException("你离路线上的地点还远，到了再记录", 409);
         LocationTrustService.Assessment a = trust.assess(memberId, null, LocationTrustKind.WALK_TEST_ONSITE,
                 "topic:" + topic.getId(), fix);
         if (a.rejected()) throw new ServiceException(LocationTrustMessages.rejected(a.reasons()), 409);

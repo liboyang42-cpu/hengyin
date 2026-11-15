@@ -56,7 +56,7 @@ public class ApiGameMechanicsController extends BaseController {
             return error(e.getMessage());
         } catch (org.springframework.dao.DataAccessException e) {
             logger.error("game mechanics storage unavailable reason={}", e.getClass().getSimpleName());
-            return error("这个玩法暂时还没开放,请稍后再试");
+            return error("这个玩法暂时还没开放，请稍后再试");
         }
     }
 

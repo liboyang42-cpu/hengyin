@@ -52,7 +52,7 @@ public class DuelService {
         if (relation == null) throw new ServiceException("只能向好友或同一俱乐部的伙伴发起对决", 403);
         if (mapper.countOpenDuels(challengerId, opponentId, topicId) > 0) throw new ServiceException("你们在这条路线上已有一场对决", 409);
         if (mapper.countDuelsSince(challengerId, new Date(clock.getAsLong() - 24L * 3600 * 1000)) >= DAILY_LIMIT) {
-            throw new ServiceException("今天发起的对决已经够多了,明天再来", 429);
+            throw new ServiceException("今天发起的对决已经够多了，明天再来", 429);
         }
         Map<String, Object> row = new LinkedHashMap<>();
         row.put("topicId", topicId);
@@ -73,7 +73,7 @@ public class DuelService {
         if (!PENDING.equals(duel.get("status")) || expired(duel)) throw new ServiceException("这场对决已不能回应", 409);
         int version = TreasureHuntService.asInt(duel.get("version"));
         if (mapper.updateDuelStatus(duelId, accept ? ACTIVE : DECLINED, accept, version) != 1) {
-            throw new ServiceException("对决状态已变化,请刷新", 409);
+            throw new ServiceException("对决状态已变化，请刷新", 409);
         }
         Long challenger = TreasureHuntService.asLong(duel.get("challengerId"));
         send(challenger, duelId, nick(memberId) + (accept ? " 接受了「" : " 婉拒了「") + duel.get("topicName") + "」的对决");
