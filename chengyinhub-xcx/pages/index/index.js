@@ -139,8 +139,8 @@ function isCurrentLocationRequest(page, scope) {
 const homeCity = require('../../utils/index/home-city-location.js');
 /** D-72:没有历史定位/识别失败时的统一收口 —— 有玩家自己的城市就用，没有就露选择器，不再冒充上海。 */
 function applyCityFallback(page) {
-  const city = homeCity.fallbackCity();
-  if (city) page.setData({ city, cityManual: false });
+  const city = page.data.city || homeCity.fallbackCity();
+  if (city) page.setData({ city, cityManual: false, cityPicker: true, cityPickerIndex: homeCity.CITY_OPTIONS.indexOf(city) });
   else page.setData({ city: '', cityManual: true });
 }
 function showHomeCityLocationError(page, scope, kind) {
@@ -1592,7 +1592,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false, cityPicker: false });
     // Round5 #7:本机记过「暂不定位」→ 自动流程到此为止(沿用上次城市/默认城市),等用户点城市再问
     if (!scope.userInitiated && homeCity.readLocationDeclined()) {
-      if (!this.data.city) applyCityFallback(this);
+      applyCityFallback(this);
       return;
     }
     app.sendRequest({
@@ -1607,7 +1607,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
         if (!res || Number(res.code) !== 200) { showHomeCityLocationError(that, scope, 'consent'); return; }
         const previous = res.data;
         if (previous && previous.docType === 'privacy_policy' && previous.scene === 'home_city_location'
-            && previous.eventType === 'REVOKE') return;
+            && previous.eventType === 'REVOKE') { applyCityFallback(that); return; }
         if (isHomeCityAgreement(res.data)) {
           scope.consentRequestId = res.data.requestId;
           that.executeHomeCityLocation(scope);
@@ -1642,7 +1642,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     if (this.data.locationPrompt) this.setData({ locationPrompt: null });
     if (!scope || !isCurrentLocationRequest(this, scope)) return;
     homeCity.saveLocationDeclined(!confirm);
-    if (!confirm) { if (!this.data.city) applyCityFallback(this); return; }
+    if (!confirm) { applyCityFallback(this); return; }
     this.recordHomeCityConsent(scope);
   },
 

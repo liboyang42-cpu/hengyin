@@ -38,6 +38,23 @@ function latest(p,row=consent(),opts) {
   r.success({code:200,data:row});return r
 }
 const flush=()=>new Promise(resolve=>setImmediate(resolve))
+test('HOME-COLD 迟到REVOKE或暂不定位不能跨账号会话代次隐藏卸载恢复下拉', () => {
+  for (const signal of ['revoke', 'decline']) {
+    for (const invalidate of [() => { member = '1002' }, () => { token = 'rotated-session' },
+      p => { p._locationEpoch++ }, p => p.onHide(), p => p.onUnload()]) {
+      member = '1001'; token = 'normal-session'; requests = []; modals = []; toasts = []
+      const p = page(); p.data.city = '上海市'; p.getHomeCityLocation()
+      const request = requests.at(-1)
+      if (signal === 'decline') request.success({ code: 200, data: null })
+      invalidate(p)
+      if (signal === 'revoke') request.success({ code: 200, data: consent({ eventType: 'REVOKE' }) })
+      else p.onLocationPromptDecline()
+      assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityPicker, false)
+      assert.equal(locations.length, 0); assert.equal(writes.length, 0); assert.deepEqual(toasts, [])
+    }
+  }
+})
+
 test('当前账号有效单独同意后自动取精确位置',()=>{
   latest(page());assert.equal(locations.length,1);assert.equal(locations[0].type,'gcj02')
   assert.equal(modals.length,0);assert.equal(writes.length,0)

@@ -37,6 +37,41 @@ function latest(p,row=consent(),opts) {
   r.success({code:200,data:row});return r
 }
 const COLD_TOAST='暂时无法自动识别城市，请手动选择'
+test('HOME-COLD 已拒定位的登录首页冷重入仍可用原下拉换城', () => {
+  store.home_city_location_declined = 1
+  page().onManualCityChange({ detail: { value: 1 } })
+  const p = page(); p.getHomeCityLocation()
+  assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityManual, false)
+  assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, 1)
+  assert.equal(p.data.locationPrompt, null)
+  assert.equal(requests.length, 0); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+  p.onManualCityChange({ detail: { value: 4 } })
+  assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityPicker, true)
+  assert.equal(store.home_city_last, '杭州市'); assert.equal(store.home_city_location_declined, 1)
+  assert.deepEqual(Object.keys(store).sort(), ['home_city_last', 'home_city_location_declined'])
+  assert.equal(modals.length, 0); assert.deepEqual(toasts, [])
+})
+test('HOME-COLD 有历史城市时正常暂不定位保留城市和手选入口', () => {
+  store.home_city_last = '上海市'
+  const p = page(); latest(p, null)
+  assert.ok(p.data.locationPrompt)
+  p.onLocationPromptDecline()
+  assert.equal(p.data.locationPrompt, null); assert.equal(p.data.city, '上海市')
+  assert.equal(p.data.cityManual, false); assert.equal(p.data.cityPicker, true)
+  assert.equal(p.data.cityPickerIndex, 1); assert.equal(store.home_city_location_declined, 1)
+  assert.equal(requests.length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+  assert.deepEqual(toasts, [])
+})
+test('HOME-COLD 首页用途REVOKE后保留历史城市手选且不再询问或采集', () => {
+  store.home_city_last = '上海市'
+  const p = page(); latest(p, consent({ eventType: 'REVOKE' }))
+  assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityManual, false)
+  assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, 1)
+  assert.equal(p.data.locationPrompt, null); assert.equal(modals.length, 0)
+  assert.equal(requests.length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+  assert.deepEqual(store, { home_city_last: '上海市' }); assert.deepEqual(toasts, [])
+})
+
 function manualFallback(p, reason, userInitiated = true) {
   p._locationEpoch = 1
   p.reverseGeocode(undefined, undefined, { epoch: 1, memberId: member, authorization: token,
