@@ -5,6 +5,7 @@ import com.chengyinhub.business.service.support.GameplaySupportMatrix;
 import com.chengyinhub.business.service.support.AccusationTemplateSupport;
 import com.chengyinhub.business.service.support.QaOptionMediaSupport;
 import com.chengyinhub.business.service.support.HangmanGameplay;
+import com.chengyinhub.business.service.support.InteractiveMiniGameSupport;
 import com.chengyinhub.common.utils.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -125,6 +126,7 @@ public final class AdvancedGamePublicProjection {
             copyAlbum(safe, config.path("album"));
             copyNote(safe, config.path("note"));
             copyTypeIn(safe, config.path("typeIn"));
+            InteractiveMiniGameSupport.copySafeConfigs(safe, config);
             // G1 逐字猜词:只给槽位形状(长度/空槽数/大小写口径)。答案、别名、format 预填字符
             // 是冻结配置里的秘密,一个都不下发;玩家实际看到的槽位来自会话视图的 publicProjection。
             if (config.path("hangman").path("enabled").asBoolean(false)) {

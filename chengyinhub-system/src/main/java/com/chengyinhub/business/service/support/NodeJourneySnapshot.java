@@ -206,7 +206,9 @@ public final class NodeJourneySnapshot {
             "compass",
             // G1 逐字猜词:同一份名单。漏登记会让冻结 playables 不含 hangman,客户端到点拿不到入口,
             // ContentCapabilityRequirements 也推导不出 game.hangman。
-            "hangman"));
+            "hangman",
+            // 独立节点小游戏套件:判断题 / 猜图揭晓 / 拼图 / 刮刮卡
+            "trueFalse", "imageGuess", "jigsaw", "scratchCard"));
 
     /** 块配置里要冻结的旅程相关段;其余玩法段落(如 timeWindow)不冻结,仍读实时配置。 */
     private static final List<String> JOURNEY_SEGMENTS = Collections.unmodifiableList(Arrays.asList(

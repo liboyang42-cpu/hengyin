@@ -3,6 +3,7 @@ package com.chengyinhub.business.service.impl;
 import com.chengyinhub.business.service.support.AdvancedGameClock;
 import com.chengyinhub.business.service.support.AdvancedGameRandom;
 import com.chengyinhub.business.service.support.HangmanGameplay;
+import com.chengyinhub.business.service.support.InteractiveMiniGameSupport;
 import com.chengyinhub.common.utils.StringUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -62,6 +63,10 @@ public final class AdvancedActionJudgement {
         SUBMIT_TYPE_IN,
         /** 逐字猜词:只补空白槽,由 {@code HangmanGameplay} 判定;不加次数、不加费用。 */
         SUBMIT_HANGMAN,
+        SUBMIT_TRUE_FALSE,
+        SUBMIT_IMAGE_GUESS,
+        SUBMIT_JIGSAW,
+        SUBMIT_SCRATCH_CARD,
         REPORT_SENSOR_FAILURE,
         SKIP_SENSOR_STATION
     }
@@ -113,6 +118,10 @@ public final class AdvancedActionJudgement {
             case SUBMIT_COMPARE -> submitCompare(config, state, payload, score);
             case SUBMIT_TYPE_IN -> submitTypeIn(config, state, payload, score);
             case SUBMIT_HANGMAN -> submitHangman(config, state, payload);
+            case SUBMIT_TRUE_FALSE -> addXp(score, InteractiveMiniGameSupport.submitTrueFalse(config, state, payload));
+            case SUBMIT_IMAGE_GUESS -> addXp(score, InteractiveMiniGameSupport.submitImageGuess(config, state, payload));
+            case SUBMIT_JIGSAW -> addXp(score, InteractiveMiniGameSupport.submitJigsaw(config, state, payload));
+            case SUBMIT_SCRATCH_CARD -> addXp(score, InteractiveMiniGameSupport.submitScratchCard(config, state, payload));
             case REPORT_SENSOR_FAILURE -> reportSensorFailure(config, state, payload, input.memberId());
             case SKIP_SENSOR_STATION -> skipSensorStation(config, state, payload, input.memberId());
         }
@@ -191,7 +200,8 @@ public final class AdvancedActionJudgement {
 
     /** 客观题组(任务/归零挑战的备选题)。逐字猜词在这里是合法一员,它的通过标志是 solved。 */
     private static final List<String> OBJECTIVE_KITS =
-            Collections.unmodifiableList(Arrays.asList("qa", "sort", "match", "classify", "hangman"));
+            Collections.unmodifiableList(Arrays.asList("qa", "sort", "match", "classify", "hangman",
+                    "trueFalse", "imageGuess", "jigsaw"));
 
     /** 客观题组里某一种是否已通过。逐字猜词写 {@code solved} 而不是 {@code passed},不能混用。 */
     private static boolean objectivePassed(ObjectNode state, String kind) {
@@ -315,6 +325,7 @@ public final class AdvancedActionJudgement {
            (打卡前置的 completeGate 恒放行),那正是这套机制反复踩过的前科。 */
         if (enabled(config.get("hangman"))
                 && !state.path(HangmanGameplay.STATE_KEY).path("solved").asBoolean(false)) return false;
+        if (!InteractiveMiniGameSupport.mechanicsReady(config, state)) return false;
         return true;
     }
 
@@ -330,6 +341,10 @@ public final class AdvancedActionJudgement {
 
     private static void addIfPresent(List<ChoiceRef> choices, ChoiceRef choice) {
         if (choice != null) choices.add(choice);
+    }
+
+    private static void addXp(ScoreChange score, int earned) {
+        if (earned > 0) score.setScore(value(score.getScore()) + earned);
     }
 
     /**
@@ -348,6 +363,9 @@ public final class AdvancedActionJudgement {
            还有机会的答错不结算,留在本站重答。以前答错一次就写 FAIL,maxTries 0 的 TYPE 题一次错就整局失败。
            拍照(SHOT)交上来即 correct,不受影响;qa 已 finished(答对或次数用完)才往下判。 */
         if ("SUBMIT_QA".equals(action) && Boolean.FALSE.equals(passed) && !state.path("qa").path("finished").asBoolean(false)) return null;
+        if ("SUBMIT_TRUE_FALSE".equals(action) && Boolean.FALSE.equals(passed) && !state.path("trueFalse").path("finished").asBoolean(false)) return null;
+        if ("SUBMIT_IMAGE_GUESS".equals(action) && Boolean.FALSE.equals(passed) && !state.path("imageGuess").path("finished").asBoolean(false)) return null;
+        if ("SUBMIT_JIGSAW".equals(action) && Boolean.FALSE.equals(passed) && !state.path("jigsaw").path("finished").asBoolean(false)) return null;
         if ("SUBMIT_QA".equals(action)) kit = "qa";
         else if ("SUBMIT_PRICE_PAIR".equals(action)) kit = "pricePair";
         else if ("SUBMIT_BLIND_TASTE".equals(action)) { kit = "blindTaste"; passed = state.path(kit).path("solved").asBoolean(); }
@@ -387,6 +405,9 @@ public final class AdvancedActionJudgement {
             case "SUBMIT_CLASSIFY": return lastCorrect(state, "classify");
             case "SUBMIT_COMPARE": return lastCorrect(state, "compare");
             case "SUBMIT_PRICE_PAIR": return lastCorrect(state, "pricePair");
+            case "SUBMIT_TRUE_FALSE": return lastCorrect(state, "trueFalse");
+            case "SUBMIT_IMAGE_GUESS": return lastCorrect(state, "imageGuess");
+            case "SUBMIT_JIGSAW": return lastCorrect(state, "jigsaw");
             case "SUBMIT_HIDDEN_OBJECT":
                 JsonNode hit = state.path("hiddenObject").path("lastHit");
                 return hit.isBoolean() ? Boolean.valueOf(hit.asBoolean()) : null;
@@ -412,6 +433,8 @@ public final class AdvancedActionJudgement {
             // 不能把一次猜错当成这一题失败结算。
             case "SUBMIT_HANGMAN":
                 return state.path(HangmanGameplay.STATE_KEY).path("solved").asBoolean(false) ? Boolean.TRUE : null;
+            case "SUBMIT_SCRATCH_CARD":
+                return state.path("scratchCard").path("revealed").asBoolean(false) ? Boolean.TRUE : null;
             case "SUBMIT_COMPASS": return state.path("compass").path("done").asBoolean(false) ? Boolean.TRUE : null;
             case "SUBMIT_STEPS": return state.path("steps").path("reached").asBoolean(false) ? Boolean.TRUE : null;
             // P-23:跳过记成「没过」—— 这一站走完了,但不是对准的;不扣血(不在 judgedOutcome 里)
