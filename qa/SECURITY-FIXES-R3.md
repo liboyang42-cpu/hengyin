@@ -19,3 +19,12 @@ Source report: `origin/qa/admin-security-r3:qa/ADMIN-SECURITY-REPORT.md`. Branch
 | HIGH-A1 | `rewarddrop/index.vue`: the drop-type `el-option` labels use single-quoted attributes, so the JSON samples no longer cut the attribute short. | `chengyinhub-ui/tests/unit/sys-random-admin-r3-security.test.js` (compiles the template and asserts three options) |
 | HIGH-A2 | New `migration_20261125_admin_r3_perms.sql` (additive, NOT EXISTS, registered in `ci/migration-dependencies.json`): `business:rewarddrop:*` and `business:taskpool:*` F rows under the two r3 menus, granted to roles that already hold the page. Controllers and views switched from the unregistered `business:topicnode:*`, which also resolves LOW-S5. | `sys-random-admin-r3-security.test.js` (every perm the views and controllers use is registered), `sys-random-admin-contract.test.js` |
 | MED-A1 | `externalgame/monetization.vue`: the four `.catch(() => {})` now show the server message through `showError`. | `sys-random-admin-r3-security.test.js` |
+| MED-S4 | Member `@RateLimiter` on the Monopoly claim/upgrade/challenge/scout/shield/chance/purchase/map/property/leaderboard endpoints, territory nearby/claim/checkin/leaderboard, CITY dice roll/action/audit, title equip, play environment, in-game channel resolve/summary, and `/api/roam/checkin`. (Counting chance rolls toward the daily cap is not in this change.) | `CityR3RateLimitContractTest`, `RoamCheckinChannelEventSecurityTest#checkinIsMemberRateLimited` |
+| MED-S8 | `RoamTerritoryService.claim`: with no POI or board-space target it throws `TERRITORY_TARGET_REQUIRED` instead of storing the claimer's GPS fix as the territory location. | `RoamTerritoryClaimTargetTest` |
+| MED-S5 (partial) | The minimum duration applies to passed results too (in the CRIT-S1 commit). | `ExternalGameSecurityR3Test` |
+
+## Not fixed in this branch
+
+- **HIGH-S10 (18+ gate):** needs a product and policy decision (adult-only declaration vs. birthday), plus app work in `chengyin-app`. The report itself lists it as "decide on the policy". The task scoped the Highs as S1 to S9.
+- **MED-S1, MED-S2, MED-S3, MED-S7, and the rest of MED-S5:** each needs more than a small change (masking and fog rules for public territory views, server-derived device identity, server-side claim pricing, registration-based channel access with revoke on cancel, device/IP heuristics).
+- **Low findings:** not in scope, except LOW-S5, which HIGH-A2 resolves.

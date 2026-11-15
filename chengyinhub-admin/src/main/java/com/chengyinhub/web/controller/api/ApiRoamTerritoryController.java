@@ -42,6 +42,7 @@ public class ApiRoamTerritoryController extends BaseController {
         }
     }
 
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @GetMapping("/nearby")
     public AjaxResult nearby(@RequestParam Double lat,
                              @RequestParam Double lng,
@@ -52,18 +53,21 @@ public class ApiRoamTerritoryController extends BaseController {
         return success(service.nearby(member(), lat, lng, radius, boardId, regionId, seasonId));
     }
 
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @PostMapping("/claim")
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult claim(@RequestBody Map<String, Object> body) {
         return success(service.claim(consentedMember(), body));
     }
 
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @PostMapping("/checkin")
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult checkin(@RequestBody Map<String, Object> body) {
         return success(service.checkin(consentedMember(), body));
     }
 
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 30, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @GetMapping("/leaderboard")
     public AjaxResult leaderboard(@RequestParam(required = false) String boardId,
                                   @RequestParam(required = false) String regionId,
