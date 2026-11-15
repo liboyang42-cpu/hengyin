@@ -1,3 +1,4 @@
+<wxs src="../../utils/wxs/money.wxs" module="money" />
 <view class="theme-dark">
   <cy-toast id="cy-toast" />
   <cy-loading-mask id="cy-loading" />
@@ -15,13 +16,13 @@
       <view class="pr-row" wx:if="{{!open}}" aria-role="alert"><text class="pr-note">提现暂未开放，本页不会提交任何申请。</text></view>
       <view class="pr-row">
         <text class="pr-label">本次可申请</text>
-        <text class="pr-value">¥{{view.available}}</text>
+        <text class="pr-value">{{money.amount2(view.available)}}</text>
       </view>
       <view class="pr-row" wx:if="{{!view.wechatReady}}">
         <text class="pr-note">还没有可收款的微信，请先用微信登录小程序，或在城瘾 App 里扫码绑定收款微信。</text>
       </view>
       <view class="pr-row" wx:if="{{view.pendingId}}">
-        <text class="pr-label">¥{{view.pendingAmount}}</text>
+        <text class="pr-label">{{money.amount2(view.pendingAmount)}}</text>
         <text class="pr-note">{{view.pendingText}}</text>
         <view class="pr-chip" wx:if="{{view.pendingStatus === 'PENDING'}}" bindtap="cancel" aria-role="button" aria-label="撤回这笔提现申请" hover-class="cy-pressed" hover-stay-time="80">撤回</view>
       </view>
@@ -31,7 +32,7 @@
       </view>
       <view class="pr-notice" wx:if="{{notice}}" aria-role="alert">{{notice}}</view>
       <view class="pr-row" wx:for="{{view.last}}" wx:key="id">
-        <text class="pr-label">¥{{item.amount}}</text>
+        <text class="pr-label">{{money.amount2(item.amount)}}</text>
         <text class="pr-note">{{item.text}}</text>
       </view>
       <view class="pr-tip">提交后由平台审核，通过后打到你的微信零钱；审核前可以撤回。打款时才从余额扣除。</view>
