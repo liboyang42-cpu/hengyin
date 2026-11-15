@@ -1041,6 +1041,7 @@
     "20261115_referral_bounty_review": ["merchant_referral_bounty"],
     "20261115_stagger_all_sys_jobs": [],
     "20261115_merchant_plans": ["20261115_money_switch", "web_admin_nine_domains_20260719"],
-    "20261115_collection_model": ["20261110_ecommerce_payout", "20261115_money_switch"]
+    "20261115_collection_model": ["20261110_ecommerce_payout", "20261115_money_switch"],
+    "20261115_maps_backend": ["roam", "roam_merchant_application_20260806", "m1_3_activity_club"]
   }
 }
