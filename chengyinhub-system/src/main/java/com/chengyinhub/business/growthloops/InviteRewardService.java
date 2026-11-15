@@ -107,11 +107,12 @@ public class InviteRewardService
     {
         if (!settings.inviteRewardEnabled()) return Decision.none("DISABLED");
         Map<String, Object> invitee = mapper.selectInvitee(inviteeId);
-        if (invitee == null || WinbackService.number(invitee.get("status")) != 1 || WinbackService.number(invitee.get("delFlag")) != 0)
+        if (invitee == null || invitee.isEmpty() || WinbackService.number(invitee.get("status")) != 1 || WinbackService.number(invitee.get("delFlag")) != 0)
             return Decision.none("NO_MEMBER");
         Long inviterId = InviteRewardPolicy.inviterOf(invitee.get("inviteUserId"), inviteeId);
         if (inviterId == null) return Decision.none("NOT_INVITED");
-        if (mapper.selectInviteReward(inviteeId) != null) return Decision.none("ALREADY_DONE");
+        Map<String, Object> existing = mapper.selectInviteReward(inviteeId);
+        if (existing != null && !existing.isEmpty()) return Decision.none("ALREADY_DONE");
         if (!(walkSettings != null ? walkSettings : FALLBACK_WALK).walkQualifies(distanceM, newCells))
             return Decision.waitFor("WALK_TOO_SHORT");
 
