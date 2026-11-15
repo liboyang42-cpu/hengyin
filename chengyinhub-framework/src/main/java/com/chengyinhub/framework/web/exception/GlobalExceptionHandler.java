@@ -153,8 +153,9 @@ public class GlobalExceptionHandler
     public AjaxResult handleBusinessRefusal(BusinessRefusal e, HttpServletRequest request)
     {
         log.info("业务拒绝 code={} uri={}", e.getErrorCode().code(), request.getRequestURI());
-        return AjaxResult.refuse(e.getLegacyCode(), e.getErrorCode(), userSafeMessage(e.getMessage()), e.getData())
-                .withErrorCode(e.getErrorCode(), e.getHttpStatus());
+        // errorKind 与 ServiceException 一致:无头请求时两条拒绝路径逐字节相同。
+        return kind(AjaxResult.refuse(e.getLegacyCode(), e.getErrorCode(), userSafeMessage(e.getMessage()), e.getData())
+                .withErrorCode(e.getErrorCode(), e.getHttpStatus()), KIND_BUSINESS);
     }
 
     /**

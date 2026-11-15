@@ -238,7 +238,7 @@ class MerchantNpcAvatarTest {
     @Test
     void allThreeAvatarQueriesShareTheSameFilterAndOrder() throws Exception {
         String canonical = statement(readMapper("mapper/business/NpcProfileMapper.xml"), "selectEnabledByScope");
-        String roam = statement(readMapper("mapper/business/RoamMapper.xml"), "selectPoisNear");
+        String roam = statement(readMapper("mapper/business/RoamMapper.xml"), "selectPoisNearFiltered");
         String nearby = statement(readMapper("mapper/business/ApiMapMapper.xml"), "selectNearbyNodes");
 
         // ⚠️ 两处联查必须断言**带别名**的写法(n.del_flag)。写成裸 del_flag = '0' 是假绿:

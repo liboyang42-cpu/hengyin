@@ -15,6 +15,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Component
 public class CreatorEarningsJob {
+    /** R9 BE-26: with two nodes only the scheduling leader runs this @Scheduled method. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.common.core.scheduling.SchedulingLeadership schedulingLeadership;
+
     private static final Logger log = LoggerFactory.getLogger(CreatorEarningsJob.class);
     private final CreatorEarningsService earnings;
     private final boolean enabled;
@@ -28,6 +32,7 @@ public class CreatorEarningsJob {
 
     @Scheduled(cron = "${chengyin.creator-earnings.cron:0 7 * * * ?}", zone = "Asia/Shanghai")
     public void run() {
+        if (!com.chengyinhub.common.core.scheduling.SchedulingLeadership.allows(schedulingLeadership)) return; // R9 BE-26: leader node only
         if (!enabled || !running.compareAndSet(false, true)) return;
         try {
             LocalDate today = LocalDate.now(CreatorEarningsService.ZONE);
