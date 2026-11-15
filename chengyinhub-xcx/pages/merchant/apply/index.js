@@ -3,6 +3,12 @@ const toast = require('../../../utils/toast.js'); function openAddress() { retur
 const app = getApp();
 const roleGuard = require('../../../utils/roleGuard.js');
 const { isValidMobile } = require('../../../utils/form-state.js');
+// MER-08(2026-09-27 商家走查 §3.8):入驻审核状态页整串明文显示手机号,改用 138****0000;
+// 表单与刚提交的回执仍是商家自己输入的完整号码,便于核对和修改。不是 11 位的原样返回(不猜格式)。
+function maskPhone(value) {
+  const text = value == null ? '' : String(value).trim();
+  return /^1\d{10}$/.test(text) ? text.slice(0, 3) + '****' + text.slice(7) : text;
+}
 const merchantTheme = require('../../../utils/merchant-theme.js');
 const merchantIdentity = require('../../../utils/merchant-identity-policy.js');
 const { isLoginRequired, retryLogin } = require('../../../utils/session/login-reload.js');
@@ -245,6 +251,7 @@ Page({
             reson: displayText(source.reson),
             createTime: displayText(source.createTime)
           }));
+          apply.phoneMasked = maskPhone(apply.phone);
           var keepDraft = preserveDraft && apply.canReapply;
           that.setData({
             bootstrapState: 'ready',

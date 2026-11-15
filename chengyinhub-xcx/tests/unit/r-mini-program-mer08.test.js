@@ -41,3 +41,19 @@ test('招商截止:项目页底部主按钮写明「报名已结束 / 报名未�
   assert.match(wxml, /signUpClosedText \|\| '申请承接'/);
   assert.match(read('pages/topic/merchantinfo/merchantinfo.js'), /signUpClosedText: signUpWindowText\(d, Date\.now\(\)\)/);
 });
+
+test('入驻审核状态页手机号脱敏,表单与刚提交的回执保留原号(走查 §3.8)', () => {
+  const src = read('pages/merchant/apply/index.js');
+  const fn = src.match(/function maskPhone\(value\) \{[\s\S]*?\n\}/);
+  assert.ok(fn, '入驻页必须带 maskPhone');
+  const maskPhone = new Function(fn[0] + '; return maskPhone;')();
+  assert.equal(maskPhone('13800001234'), '138****1234');
+  assert.equal(maskPhone(' 13800001234 '), '138****1234');
+  assert.equal(maskPhone('021-12345678'), '021-12345678');
+  assert.equal(maskPhone(null), ''); assert.equal(maskPhone(''), '');
+  const wxml = read('pages/merchant/apply/index.wxml');
+  assert.match(wxml, /\{\{apply\.phoneMasked \|\| '—'\}\}/);
+  assert.match(wxml, /value="\{\{phone\}\}"/);
+  const js = read('pages/merchant/apply/index.js');
+  assert.match(js, /apply\.phoneMasked = maskPhone\(apply\.phone\)/);
+});
