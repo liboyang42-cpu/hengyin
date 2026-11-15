@@ -87,7 +87,12 @@ the console, the dues take is today's club ticket take (`settlement_rule` `topic
 
 ## Mini-program suite
 
-MINIPROGRAM_SUITE_PLACEHOLDER
+`node --test "tests/unit/**/*.test.js"` (17,651 tests) showed failures in 24 files. Those 24 files were re-run on this
+branch and on a clean `origin/roadmap/be-integ` worktree: base 53 failing, this branch 37 failing, and every failure on
+this branch also fails on the base (no new failure). Along the way this package's page was fixed for the shared
+contracts it tripped (bare `¥{{…}}`, native `<switch>`, press feedback, silent-error registration). The route-count
+tests (`route-matrix-freshness`, `title-system-owner-contract`, `nav-page-title-spacing`) already fail on the base
+(base app.json has 181 pages vs pinned 173); this branch adds one page and rebuilt `route-matrix.json`.
 
 ## Not verified
 
