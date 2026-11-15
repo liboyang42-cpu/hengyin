@@ -20,7 +20,6 @@ import com.chengyinhub.business.service.impl.UmsMemberCartServiceImpl;
 import com.chengyinhub.business.mapper.UmsMemberCartMapper;
 import com.chengyinhub.business.mapper.UmsMemberAddressMapper;
 import com.chengyinhub.common.core.domain.AjaxResult;
-import com.chengyinhub.common.core.domain.model.LoginUser;
 import com.chengyinhub.common.exception.ServiceException;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -113,10 +112,8 @@ class ApiCartControllerSettlementTest {
 
     private ApiCartController controller() {
         ApiCartController c = spy(new ApiCartController());
-        LoginUser lu = mock(LoginUser.class);
-        when(lu.getUserId()).thenReturn(MEMBER);
-        when(lu.getUsername()).thenReturn("u");
-        doReturn(lu).when(c).getLoginUser();
+        doReturn(MEMBER).when(c).getAppUserId();
+        doReturn("u").when(c).getAppUserName();
         ReflectionTestUtils.setField(c, "viewMemberCartService", cartView);
         ReflectionTestUtils.setField(c, "umsMemberCartService", cartSvc);
         ReflectionTestUtils.setField(cartSvc, "umsMemberCartMapper", cartMapper);
@@ -136,9 +133,7 @@ class ApiCartControllerSettlementTest {
     void cartDeleteForwardsRawIdsAndAuthenticatedMemberToService() {
         IUmsMemberCartService service = mock(IUmsMemberCartService.class);
         ApiCartController controller = spy(new ApiCartController());
-        LoginUser loginUser = mock(LoginUser.class);
-        when(loginUser.getUserId()).thenReturn(MEMBER);
-        doReturn(loginUser).when(controller).getLoginUser();
+        doReturn(MEMBER).when(controller).getAppUserId();
         ReflectionTestUtils.setField(controller, "umsMemberCartService", service);
 
         assertTrue(controller.cartDelete("5,6").isSuccess());
@@ -151,10 +146,8 @@ class ApiCartControllerSettlementTest {
     void controllerForwardsRawCartParametersToService() {
         IUmsMemberCartService service = mock(IUmsMemberCartService.class);
         ApiCartController controller = spy(new ApiCartController());
-        LoginUser loginUser = mock(LoginUser.class);
-        when(loginUser.getUserId()).thenReturn(MEMBER);
-        when(loginUser.getUsername()).thenReturn("u");
-        doReturn(loginUser).when(controller).getLoginUser();
+        doReturn(MEMBER).when(controller).getAppUserId();
+        doReturn("u").when(controller).getAppUserName();
         ReflectionTestUtils.setField(controller, "umsMemberCartService", service);
 
         controller.cartAdd("1", "2", "3", "0");
