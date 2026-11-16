@@ -55,12 +55,14 @@ class MemberPrivacyErasureServiceTest {
 
             // Deleted for member 7.
             for (String table : new String[]{"roam_member_fog_cell", "roam_fog_tile", "roam_session_record_archive",
-                    "roam_share_snapshot", "location_trust_fix", "app_install_link", "push_device"}) {
+                    "roam_share_snapshot", "location_trust_fix", "app_install_link", "push_device",
+                    "member_data_copy_request"}) {
                 assertEquals(0, f.count(table, ERASED), table + " of the erased member");
                 assertTrue(f.count(table, OTHER) > 0, table + " of the other member must stay");
             }
             assertEquals(2, counts.get("roam_member_fog_cell"));
             assertEquals(2, counts.get("push_device"));
+            assertEquals(2, counts.get("member_data_copy_request"), "W7 ONB-10: open and closed copy requests");
 
             // W5 C2: reactions and mention rows that name member 7 are gone; role mentions (not a member id) stay.
             assertEquals(1, counts.get("im_message_reaction"));
@@ -254,6 +256,8 @@ class MemberPrivacyErasureServiceTest {
                     + " distance_m double, detail_json varchar(2000))");
             db.execute("create table city_game_board_audit(id bigint auto_increment primary key, board_id varchar(96),"
                     + " action varchar(32), actor_id bigint, actor_type varchar(16), detail_json varchar(2000))");
+            db.execute("create table member_data_copy_request(id bigint auto_increment primary key, member_id bigint not null,"
+                    + " status varchar(16), note varchar(500))");
             db.execute("create table channel_event(id bigint auto_increment primary key, activity_id bigint, poster_member_id bigint)");
             db.execute("create table club_invite(id bigint auto_increment primary key, code varchar(10), creator_member_id bigint,"
                     + " revoked_at timestamp null)");
@@ -324,6 +328,8 @@ class MemberPrivacyErasureServiceTest {
             db.update("insert into age_attestation(member_id) values(?)", m);
             db.update("insert into channel_event(activity_id,poster_member_id) values(?,?)", 900 + m, m);
             db.update("insert into club_invite(code,creator_member_id) values(?,?)", "INV" + m, m);
+            db.update("insert into member_data_copy_request(member_id,status) values(?,'DELIVERED')", m);
+            db.update("insert into member_data_copy_request(member_id,status,note) values(?,'PENDING',null)", m);
             db.update("insert into channel_event_rsvp(event_id,member_id,status) values(1,?,'MAYBE')", m);
             db.update("insert into channel_event_photo(event_id,member_id,asset_id) values(1,?,?)", m, 300 + m);
         }

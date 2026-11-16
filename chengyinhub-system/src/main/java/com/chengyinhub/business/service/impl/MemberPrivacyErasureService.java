@@ -20,7 +20,7 @@ import java.util.Map;
  * <ul>
  *   <li><b>Deleted</b> (pure personal location or device data, nothing else refers to the rows):
  *       kept fog cells, fog tiles, session tile records, share snapshots, location-trust fixes,
- *       install-id link, push devices, message reactions, mention rows that name the member.</li>
+ *       install-id link, push devices, message reactions, mention rows that name the member, data-copy requests (ONB-10).</li>
  *   <li><b>Anonymised</b> (rows other ledgers or counters refer to; same treatment the 30-day job gives expired
  *       location data): roam sessions lose every coordinate and keep distance/tiles/POI/XP aggregates; POI finds,
  *       shop visits and POI reward logs lose the place and the claim fingerprint (the fingerprint only stops the
@@ -92,6 +92,8 @@ public class MemberPrivacyErasureService {
         counts.put("channel_event_poster", mapper.unlinkChannelEventPoster(memberId));
         // Club invites (W7 SOC-15): links the member made stop working and lose the creator link; use counts stay.
         counts.put("club_invite", mapper.revokeClubInvitesByCreator(memberId));
+        // Data-copy requests (W7 ONB-10): the account is going away, so its copy requests (and their notes) go too.
+        counts.put("member_data_copy_request", mapper.deleteDataCopyRequests(memberId));
         return counts;
     }
 }
