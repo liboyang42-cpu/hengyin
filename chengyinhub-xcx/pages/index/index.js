@@ -798,7 +798,9 @@ Page({
     
     // 只刷新本次前台会话中用户主动定位后的查询；城市定位不用于附近排序。
     const nearby = that._listReq && that._listReq.nearbyTopicList;
-    if (nearby) that.getListData('nearbyTopicList', nearby.url, nearby.params, nearby.processor);
+    if (nearby && nearby.url === '/api/roam/hangout/nearby') {
+      that.getListData('nearbyTopicList', '/api/roam/hangout/nearby', nearby.params, nearby.processor);
+    }
   },
   
   loadRecommendedTopics() {
@@ -817,7 +819,9 @@ Page({
   loadCityEvents() {
     if (this.data.nearbyEventsLocated) {
       const nearby = this._listReq && this._listReq.nearbyActivityList;
-      if (nearby) this.getListData('nearbyActivityList', nearby.url, nearby.params, nearby.processor);
+      if (nearby && nearby.url === '/api/roam/hangout/nearby') {
+        this.getListData('nearbyActivityList', '/api/roam/hangout/nearby', nearby.params, nearby.processor);
+      }
       return;
     }
     this.getListData('nearbyActivityList', '/api/activity/list', {
@@ -832,9 +836,12 @@ Page({
     if (this._locationLoadingEpoch != null) { this._locationLoadingEpoch = null; cyLoading.hide(); }
     this._locationPromptScope = null;
     homeCity.saveLastCity(city);
+    // 推荐源只由 JS 消费，切城须同步清掉真正上屏的卡片与轮播状态。
+    this.data.recommendedTopicList = [];
+    this._buildRecoHero();
     this.setData({ city, locationPrompt: null, cityManual: false, cityPicker: true, cityPickerIndex: homeCity.CITY_OPTIONS.indexOf(city),
-      recommendedTopicList: [], nearbyActivityList: [], 'listLoaded.recommendedTopicList': false,
-      'listLoaded.nearbyActivityList': false });
+      nearbyActivityList: [], 'listLoaded.recommendedTopicList': false,
+      'listLoaded.nearbyActivityList': false, 'listErr.recommendedTopicList': false, 'listErr.nearbyActivityList': false });
     this.loadRecommendedTopics(); this.loadCityEvents();
   },
 
@@ -1224,7 +1231,11 @@ Page({
     const req = this._listReq && this._listReq[listName];
     if (listName === 'recommendedTopicList') { this.loadRecommendedTopics(); return; }
     if (!req) return;
-    this.getListData(listName, req.url, req.params, req.processor);
+    if ((listName === 'upcomingActivityList' || listName === 'nearbyActivityList') && req.url === '/api/activity/list') {
+      this.getListData(listName, '/api/activity/list', req.params, req.processor);
+    } else if ((listName === 'nearbyTopicList' || listName === 'nearbyActivityList') && req.url === '/api/roam/hangout/nearby') {
+      this.getListData(listName, '/api/roam/hangout/nearby', req.params, req.processor);
+    }
   },
 
   getListData: function (listName, url, params, dataProcessor = null, onLoaded = null) {

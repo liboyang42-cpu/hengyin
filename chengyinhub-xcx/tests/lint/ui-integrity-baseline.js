@@ -394,7 +394,7 @@ module.exports = {
     //   ⚠️ 只准调小。这几个数字是欠债余额,不是配额。
     // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还 ——
     //   长按 3 秒结束的逻辑早就写好了,这次真接到主键的 touchstart/touchend 上,99→97。
-    "u1Variable": 8,
+    "u1Variable": 7,
     // 2026-09-06 合入 github/master:D6 商家承接段装回章节弹窗、音频块回归故事流,
     //   master 里 6 条「零绑定债务」(onChapterRecruitToggleChange / onChapterMerchantCategoryChange /
     //   onChapterMaxMerchantInput / onChapterTermsModeChange / onChapterPerkMinValueInput / onPreviewAudio)
@@ -581,7 +581,7 @@ module.exports = {
       // 2026-10-11 登录隔离及正常失败状态兼容：App consent wrapper 329→343，同一调用及理由，数量仍11。
       // 2026-10-14 W5尾项:profile 544→559/870→885、参与详情 176→177 仅行号下移，同一调用及理由，数量仍11。
       // 2026-11-03 Round5 l7-launch:search2/result 合并搜索 503 退回列表请求(+11 行),193→199 仅行号位移,同一调用及理由,数量不变;digest 按门禁同一算法重算。
-      "u1Variable": "528873539b83f4fa2cb7a19bcf0902dad61f661a648de9da76494d0c842263e4",
+      "u1Variable": "ba52c0f7a5f651ded0cc2f1c37fcb8d529f5b603c0c96bccf662ad65b50f5bb4",
       // 2026-08-25 816 并入:key 集合按上面的逐条核对结果变化,digest 显式更新。
       "u3Debt": // 2026-09-09 一枚圆钮:roam#onCenterHoldStart / onCenterHoldEnd 两笔零绑定债务已还
       //   —— 长按 3 秒结束的逻辑接到了主键的 touchstart/touchend 上。99→97,digest 显式更新。
@@ -1221,7 +1221,6 @@ module.exports = {
     "chengyinhub-xcx/subpackageMember/components/cy/profile/index.js#site:1613a2ce46d70ff9d0e8556131a966a67ffd9c239adacb03b41bb984785e3860:1": "_submitVerification 的 options 仅来自本页1678扫码、1741选章、1772选站三处：verification-scan.js只产出groupcode/redeem、scan_dynamic_code、coupon/verification、scan_qr_code四个固定/api路由，另两处为scan_qr_code_chapter/station字面量；非法扫码先返回，Object.assign仅复制原options并替换反馈回调，不改url/data/method；seat分支保留原actor/login revision/页面代次与UNKNOWN只读原receipt，不存在外部URL直传；owner=小程序，复核=2026-10-24",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-route-content/index.js#site:bbc0dd0ce7e3c623e810fde44ef1b2d399dcd2fb69968025350bec3e2b1e9268:1": "config 只由本文件 sceneRequest(sceneId) 的有限映射生成，所有请求 URL 均为映射内 /api 字面量，未知 sceneId 返回 null、缺必需 id 也在请求前终止；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/subpackageMember/components/cy/scene-route-content/index.js#site:274e82543a8978f6d35600664e1a7614127ad04bc90fe94dd722eed6e2016572:1": "request 只取自本方法内 requests[sceneId] 的七个非提现固定写接口对象，未知 sceneId 显示提交错误并返回；提现分支在此前已转交 withdrawal-preflight，不会走到本调用；owner=小程序，复核=2026-09-15",
-    "chengyinhub-xcx/pages/index/index.js#site:6d70661838a11d65ea61f616007c8a75ca7f3e605c2c5d71b15d6ea2f0b60742:1": "retry 只回放 _listReq 中由 getListData 首次字面量调用冻结的 topic/list 或 activity/list，外部输入不能写该缓存；owner=小程序，复核=2026-09-15",
     "chengyinhub-xcx/pages/search2/result/index.js#site:bd17752f4096c272b9b4d9036c5745707e82b6ab6a4c093f4def8c9046513063:1": "request 数组只由 utils/discover-search.buildRequests 构造，其按搜索类型枚举后端字面量且当前 U1 全仓扫描覆盖；owner=小程序，复核=2026-09-15",
   },
   "u3Debt": {

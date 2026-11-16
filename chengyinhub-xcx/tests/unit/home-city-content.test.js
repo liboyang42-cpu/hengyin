@@ -100,3 +100,64 @@ test('leaving the nearby scope aborts its event request and removes retained coo
   assert.equal(h.page._listReq.nearbyActivityList,undefined);assert.equal(h.page._listControls.nearbyActivityList,undefined);
   reply(old,[{id:99,name:'Old location result'}]);assert.deepEqual(h.page.data.nearbyActivityList,[]);
 });
+
+test('switching city clears the rendered editorial hero and cards even when the new city fails',()=>{
+  const h=mount();h.page.loadRecommendedTopics();reply(h.requests[0],[topic(1),topic(2),topic(3)]);
+  h.page.setData({recoCurrent:2,'listErr.recommendedTopicList':true,'listErr.nearbyActivityList':true});
+  h.page.loadRecommendedTopics();const old=h.requests.at(-1);
+  assert.equal(h.page.data.recoHero.id,1);assert.equal(h.page.data.recoCards.length,3);
+  h.page.selectHomeCity('杭州市');
+  assert.equal(old.control.aborted,true);
+  assert.deepEqual(h.page.data.recommendedTopicList,[]);
+  assert.equal(h.page.data.recoHero,null,'old-city hero must disappear before the new request settles');
+  assert.deepEqual(h.page.data.recoCards,[]);assert.deepEqual(h.page.data.recoCardStyles,[]);
+  assert.equal(h.page.data.recoCurrent,0);
+  assert.equal(h.page.data.listErr.recommendedTopicList,false);assert.equal(h.page.data.listErr.nearbyActivityList,false);
+  const next=h.requests.filter(r=>r.data?.city_keyword==='杭州市');assert.equal(next.length,2);
+  next.forEach(r=>reply(r,[],500));
+  assert.equal(h.page.data.listErr.recommendedTopicList,true);assert.equal(h.page.data.listErr.nearbyActivityList,true);
+  assert.equal(h.page.data.recoHero,null);assert.deepEqual(h.page.data.recoCards,[]);
+  reply(old,[topic(99)]);assert.equal(h.page.data.recoHero,null,'old-city late completion cannot restore its cards');
+});
+
+test('retry replays only the genuine public list and endpoint combinations',()=>{
+  for(const [list,url] of [['nearbyActivityList','/api/activity/list'],['upcomingActivityList','/api/activity/list']]){
+    const h=mount('杭州市');const params={pageNum:1,pageSize:6,city_keyword:'杭州市'};
+    h.page.getListData(list,url,params);reply(h.requests[0],[],500);
+    h.page.retryList({currentTarget:{dataset:{list}}});
+    assert.equal(h.requests.length,2);assert.equal(h.requests[1].url,url);assert.equal(h.requests[1].method,'POST');
+    assert.deepEqual(h.requests[1].data,params);reply(h.requests[1],[{id:8,name:'Real city event'}]);
+    if(h.page.data.countdownTimer) clearInterval(h.page.data.countdownTimer);
+    assert.equal(h.page.data[list][0].id,8);assert.equal(h.page.data.listErr[list],false);
+  }
+  for(const [list,url] of [['nearbyTopicList','/api/activity/list'],['nearbyActivityList','/api/topic/list'],['upcomingActivityList','/api/roam/hangout/nearby'],['unknownList','/api/activity/list'],['nearbyTopicList','/api/not-an-endpoint']]){
+    const h=mount();h.page._listReq={[list]:{url,params:{},processor:rows=>rows}};
+    h.page.retryList({currentTarget:{dataset:{list}}});
+    assert.equal(h.requests.length,0,'unknown or mismatched cached target must not be sent: '+list+' '+url);
+  }
+});
+
+test('nearby retries preserve consented fix and kind projection for both topics and events',async()=>{
+  const h=mount();h.page.locateNearbyThemes();h.modals[0].success({confirm:true});await Promise.resolve();await Promise.resolve();
+  h.positions[0].success({latitude:31.23,longitude:121.47});
+  h.requests.slice().forEach(r=>reply(r,[],500));
+  for(const [list,kind,id] of [['nearbyTopicList','topic',11],['nearbyActivityList','activity',12]]){
+    h.page.retryList({currentTarget:{dataset:{list}}});const retry=h.requests.at(-1);
+    assert.equal(retry.url,'/api/roam/hangout/nearby');assert.equal(retry.method,'GET');
+    assert.deepEqual(retry.data,{lat:31.23,lng:121.47,radius:3000});
+    reply(retry,[{id,kind,name:'Real nearby item',picUrl:'real.jpg'},{id:99,kind:'hangout',name:'Other layer'}]);
+    assert.deepEqual(h.page.data[list].map(x=>x.id),[id]);assert.equal(h.page.data.listErr[list],false);
+  }
+  assert.equal(h.positions.length,1,'retry must reuse this foreground fix, not request another location');
+});
+
+test('public refresh rejects mismatched cached nearby endpoint without replacing it with another route',()=>{
+  const h=mount();h.page.data.nearbyEventsLocated=true;
+  h.page._listReq={nearbyActivityList:{url:'/api/topic/list',params:{lat:31,lng:121},processor:rows=>rows}};
+  h.page.loadCityEvents();assert.equal(h.requests.length,0);
+  h.page._listReq.nearbyTopicList={url:'/api/not-an-endpoint',params:{lat:31,lng:121},processor:rows=>rows};
+  h.page.getUserData=()=>{};h.page.loadRecommendedTopics=()=>{};h.page.loadCityEvents=()=>{};
+  h.page.loadBottomTopicList=()=>{};h.page.loadBottomActivityList=()=>{};
+  h.page.loadPageData();assert.equal(h.requests.length,1);
+  assert.equal(h.requests[0].url,'/api/activity/list');assert.equal(h.requests[0].data.status,2);
+});
