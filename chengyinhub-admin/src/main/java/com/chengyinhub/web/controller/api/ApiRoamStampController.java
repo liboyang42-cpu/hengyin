@@ -52,6 +52,27 @@ public class ApiRoamStampController extends BaseController {
     @Autowired
     private IUmsMemberService umsMemberService;
 
+    /** GAME-12: place lookup (a city node's id is its POI id). Optional so hand-built unit tests keep the free-photo path. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.mapper.RoamMapper roamMapper;
+
+    /** GAME-12: scores the fix like the place check-in (accuracy, fix time, simulated, impossible speed). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.locationtrust.LocationTrustService locationTrust;
+
+    /**
+     * GAME-12: place stamps (kind = 1), earned at the place, once per place. Off by default until the owner
+     * confirms that stamps are place-bound collectibles; while off, {@code poiId} and the fix are ignored and
+     * every stamp is a free photo (postcard), exactly as before.
+     */
+    @org.springframework.beans.factory.annotation.Value("${chengyin.roam.place-stamp.enabled:false}")
+    private boolean placeStampEnabled;
+
+    /** Extra metres on top of the place radius for a place stamp (GPS drift). */
+    static final int PLACE_STAMP_SLACK_M = 50;
+    /** Radius used when the place has none configured (same as the place check-in). */
+    static final int PLACE_STAMP_DEFAULT_RADIUS_M = 80;
+
     /** 包级可见(非 private):测试用子类覆写它注入身份,好让行为测试能真调 create/list 入口方法,
      *  而不是只测静态纯函数 —— 闸放错层时,只有真走入口的测试抓得到。 */
     Long uid() {
@@ -97,9 +118,14 @@ public class ApiRoamStampController extends BaseController {
         return (int) off;
     }
 
-    @Operation(summary = "存一枚邮票(自由拍)")
-    @PostMapping("/create")
+    /** Free photo (postcard): the original three-field call. */
     public AjaxResult create(String picUrl, String caption, String idempotencyKey) {
+        return create(picUrl, caption, idempotencyKey, null, null, null);
+    }
+
+    @Operation(summary = "存一枚邮票(自由拍;带 poiId 与定位且开关打开时为地点盖章)")
+    @PostMapping("/create")
+    public AjaxResult create(String picUrl, String caption, String idempotencyKey, Long poiId, Double lat, Double lng) {
         Long memberId = uid();
         if (memberId <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
         if (picUrl == null || picUrl.trim().isEmpty()) return error("图片不能为空");
@@ -112,12 +138,49 @@ public class ApiRoamStampController extends BaseController {
             String risk = wxContentSecurityService.checkText(checkedCaption, author == null ? null : author.getWxOpenId());
             if (risk != null) return error(risk);
         }
+        // GAME-12: a place stamp needs the place, a trusted fix and the player within radius + 50 m.
+        com.chengyinhub.business.domain.vo.CityNodeVO place = null;
+        String trustCode = null;
+        if (placeStampEnabled && poiId != null && poiId > 0) {
+            if (roamMapper == null) return error("地点盖章暂不可用，请稍后再试");
+            place = roamMapper.selectPlayerMerchantNodeDetail(poiId, 0L);
+            if (place == null || place.getStatus() == null || place.getStatus() != 1 || place.getLat() == null || place.getLng() == null) {
+                return refuse(ErrorCode.ROAM_PLACE_NOT_FOUND, "这个地点暂时不能盖章");
+            }
+            if (lat == null || lng == null) return refuse(ErrorCode.LOCATION_REQUIRED, "需要定位才能给这个地点盖章");
+            RoamStamp already = roamStampMapper.selectByMemberAndPoi(memberId, poiId);
+            if (already != null) return success(placeReply(already.getId(), place, memberId, true, null));
+            if (locationTrust != null) {
+                com.chengyinhub.business.locationtrust.LocationTrustService.Assessment trusted = locationTrust.assess(
+                        memberId, null, com.chengyinhub.business.locationtrust.LocationTrustKind.CITY_NODE, String.valueOf(poiId),
+                        com.chengyinhub.business.locationtrust.LocationSignals.current(lat, lng));
+                if (trusted.rejected()) {
+                    return AjaxResult.error(com.chengyinhub.business.locationtrust.LocationTrustMessages.rejected(trusted.reasons()))
+                            .put("trustCode", com.chengyinhub.business.locationtrust.LocationTrustMessages.code(trusted.reasons()))
+                            .put("reasonCode", "STAMP_LOCATION_UNTRUSTED").put("retryable", true);
+                }
+                // A doubtful fix keeps the photo as a postcard; the place is not stamped.
+                if (trusted.withheld()) {
+                    trustCode = com.chengyinhub.business.locationtrust.LocationTrustMessages.code(trusted.reasons());
+                    place = null;
+                }
+            }
+            if (place != null && !placeStampWithinReach(place, lat, lng)) {
+                return AjaxResult.error("离这个地点太远，到了再盖章").put("reasonCode", "STAMP_TOO_FAR").put("retryable", true);
+            }
+        }
         RoamStamp s = new RoamStamp();
         s.setMemberId(memberId);
         s.setPicUrl(picUrl.trim());
         s.setCaption(checkedCaption);
-        s.setKind(0);            // P0 只有自由拍
-        s.setGeohash7(null);     // 普通票不占格,uk 允许多行 NULL
+        s.setKind(place == null ? 0 : 1);   // 0 自由拍(明信片);1 地点盖章(GAME-12)
+        s.setGeohash7(null);     // 普通票不占格,uk 允许多行 NULL;地点章按 uk_member_poi 去重,不按格(同格可有多个地点)
+        if (place != null) {
+            s.setPoiId(poiId);
+            // 只存地点自己的坐标,不存玩家的定位点。
+            s.setLat(place.getLat());
+            s.setLng(place.getLng());
+        }
         s.setCheckState(0);      // 0=未送检;送检成功后由回调迁到 1/2
         s.setIdemKey(idemKey);
         s.setDelFlag(0);
@@ -133,6 +196,11 @@ public class ApiRoamStampController extends BaseController {
             // create 加上 @Transactional(REPEATABLE READ 快照在事务开始时定格),这句就查不到
             // 赢家 → existed=null → 原样抛 → 用户拿到 500 而不是幂等命中。要加事务先改这里。
             RoamStamp existed = idemKey == null ? null : roamStampMapper.selectByMemberAndIdemKey(memberId, idemKey);
+            // GAME-12: a concurrent second stamp for the same place (uk_member_poi) answers with the first one.
+            if (existed == null && place != null) {
+                RoamStamp samePlace = roamStampMapper.selectByMemberAndPoi(memberId, poiId);
+                if (samePlace != null) return success(placeReply(samePlace.getId(), place, memberId, true, null));
+            }
             if (existed == null) throw e;
             Map<String, Object> hit = new LinkedHashMap<String, Object>();
             hit.put("id", existed.getId());
@@ -142,9 +210,38 @@ public class ApiRoamStampController extends BaseController {
 
         submitStampMediaCheck(s, memberId);
 
+        if (place != null) return success(placeReply(s.getId(), place, memberId, false, null));
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("id", s.getId());
+        if (placeStampEnabled && poiId != null && poiId > 0) {
+            // The fix was doubtful: saved as a postcard, the place not stamped.
+            data.put("kind", 0);
+            data.put("placeStamped", false);
+            if (trustCode != null) data.put("trustCode", trustCode);
+        }
         return success(data);
+    }
+
+    /** GAME-12: reply for a place stamp: {id, kind, placeName, placesStamped, alreadyStamped}. */
+    private Map<String, Object> placeReply(Long id, com.chengyinhub.business.domain.vo.CityNodeVO place, Long memberId,
+                                           boolean alreadyStamped, String trustCode) {
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+        data.put("id", id);
+        data.put("kind", 1);
+        data.put("placeStamped", true);
+        data.put("alreadyStamped", alreadyStamped);
+        data.put("placeName", place.getName());
+        data.put("placesStamped", roamStampMapper.countPlacesByMember(memberId));
+        if (trustCode != null) data.put("trustCode", trustCode);
+        return data;
+    }
+
+    /** GAME-12: within the place radius (default 80 m) plus 50 m. */
+    static boolean placeStampWithinReach(com.chengyinhub.business.domain.vo.CityNodeVO place, double lat, double lng) {
+        int radius = place.getRadiusM() != null && place.getRadiusM() > 0 ? place.getRadiusM() : PLACE_STAMP_DEFAULT_RADIUS_M;
+        double dist = com.chengyinhub.common.utils.GeoDistanceUtils.haversineMeters(lat, lng,
+                place.getLat().doubleValue(), place.getLng().doubleValue());
+        return dist <= radius + PLACE_STAMP_SLACK_M;
     }
 
     /**
@@ -280,6 +377,8 @@ public class ApiRoamStampController extends BaseController {
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("list", safeRows);
         data.put("total", roamStampMapper.countByMember(memberId));
+        // GAME-12: places stamped (place stamps only); free photos stay in `total`.
+        data.put("placesStamped", roamStampMapper.countPlacesByMember(memberId));
         data.put("pageNum", num);
         data.put("pageSize", size);
         return success(data);

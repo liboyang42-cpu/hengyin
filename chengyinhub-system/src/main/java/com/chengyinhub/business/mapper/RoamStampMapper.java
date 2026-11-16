@@ -18,6 +18,12 @@ public interface RoamStampMapper {
 
     int countByMember(@Param("memberId") Long memberId);
 
+    /** GAME-12: distinct places this member holds a visible place stamp for. */
+    int countPlacesByMember(@Param("memberId") Long memberId);
+
+    /** GAME-12: this member's place stamp for one place, if any (any check state). */
+    RoamStamp selectByMemberAndPoi(@Param("memberId") Long memberId, @Param("poiId") Long poiId);
+
     RoamStamp selectById(@Param("id") Long id);
 
     /** 按幂等键回查。insert 撞 1062 时用它区分「撞的是 uk_member_idem」——
