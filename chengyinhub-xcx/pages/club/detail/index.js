@@ -32,7 +32,8 @@ const { editionEmptyCopy, shapeEditionEmptyReason } = require('../utils/edition-
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
 const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/display-text.js');
-const clubInvite = require('../../../utils/club-invite.js');
+// W7 SOC-15:邀请逻辑按需加载(只有带 invite= 的链接才用到)。
+function clubInvite() { return require('../../../utils/club-invite.js') }
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
 // 不在本页另写一套解析。
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
@@ -845,7 +846,7 @@ Page({
     this._requestedTab = opt && (opt.tab === 'manage' || opt.tab === 'overview') ? opt.tab : '';
     this._requestedPostId = opt && opt.postId ? String(opt.postId) : '';
     // W7 SOC-15:邀请链接带 invite=<邀请码>;落地信息只决定横幅与加入走哪条路,加入规则仍由服务端判。
-    this._inviteCode = clubInvite.parseInviteCode(opt);
+    this._inviteCode = opt && opt.invite ? clubInvite().parseInviteCode(opt) : '';
     this.setData({
       myMemberId: app.getUserID && app.getUserID(),
       isMerchantViewer: this._operationScope === 'MERCHANT'
@@ -2723,7 +2724,7 @@ Page({
       url: '/api/club/invites/' + code, method: 'GET',
       success(res) {
         if (code !== that._inviteCode) return;
-        const banner = res && res.code == '200' ? clubInvite.inviteBanner(res.data) : null;
+        const banner = res && res.code == '200' ? clubInvite().inviteBanner(res.data) : null;
         that._inviteValid = !!(banner && banner.valid);
         that.setData({ inviteBanner: banner });
       },
@@ -2739,7 +2740,7 @@ Page({
     const onJoined = function (res) {
       if (res.code == '200') {
         if (viaInvite) {
-          that._inviteTarget = clubInvite.afterAcceptUrl(that.data.clubId, res.data);
+          that._inviteTarget = clubInvite().afterAcceptUrl(that.data.clubId, res.data);
           that._inviteValid = false;
           that.setData({ inviteBanner: null });
         }
