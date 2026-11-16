@@ -138,6 +138,11 @@
         where id = #{id} and member_id = #{memberId} and verdict = 'ACCEPT' and consumed_at is null
     </update>
 
+    <update id="consumeEvidenceForReview">
+        update location_claim_evidence set consumed_at = #{now}, consumed_ref = #{consumedRef}
+        where id = #{id} and member_id = #{memberId} and verdict in ('ACCEPT', 'REVIEW') and consumed_at is null
+    </update>
+
     <update id="clearEvidencePhotoCoordinatesBefore">
         update location_claim_evidence set photo_lat = null, photo_lng = null
         where create_time &lt; #{cutoff} and (photo_lat is not null or photo_lng is not null)

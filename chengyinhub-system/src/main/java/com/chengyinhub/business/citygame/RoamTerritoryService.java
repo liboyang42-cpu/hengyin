@@ -250,7 +250,9 @@ public class RoamTerritoryService {
                             + "t.territory_id AS territoryId, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
                             + "t.checkin_toll_points AS checkinTollPoints, t.owner_revenue_points AS ownerRevenuePoints, "
                             + "t.checkin_count AS checkinCount, t.revenue_total_points AS revenueTotalPoints, t.status AS territoryStatus, "
-                            + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname "
+                            + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname, "
+                            + "t.rules_kind AS rulesKind, COALESCE(t.tier, pt.tier) AS tier, t.upgrade_level AS upgradeLevel, "
+                            + "t.decay_state AS decayState, COALESCE(t.district_id, pt.district_id) AS districtId "
                             + "FROM city_game_point pt "
                             + "JOIN city_game_board b ON b.board_id = pt.board_id "
                             + "LEFT JOIN city_game_property pr ON pr.board_id = pt.board_id AND pr.point_id = pt.point_id "
@@ -273,7 +275,9 @@ public class RoamTerritoryService {
                         + "t.point_id AS pointId, t.owner_member_id AS ownerMemberId, t.claim_photo_url AS claimPhotoUrl, "
                         + "t.checkin_toll_points AS checkinTollPoints, t.owner_revenue_points AS ownerRevenuePoints, "
                         + "t.checkin_count AS checkinCount, t.revenue_total_points AS revenueTotalPoints, t.status AS territoryStatus, "
-                        + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname "
+                        + "t.protected_until AS territoryProtectedUntil, m.nickname AS ownerNickname, "
+                        + "t.rules_kind AS rulesKind, t.tier AS tier, t.upgrade_level AS upgradeLevel, "
+                        + "t.decay_state AS decayState, t.district_id AS districtId "
                         + "FROM roam_poi poi "
                         + "LEFT JOIN roam_territory t ON t.poi_id = poi.id AND t.status = 'ACTIVE' "
                         + "LEFT JOIN ums_member m ON m.id = t.owner_member_id "
@@ -327,6 +331,13 @@ public class RoamTerritoryService {
         item.put("checkinCount", r.get("checkinCount") instanceof Number ? ((Number) r.get("checkinCount")).longValue() : 0L);
         item.put("revenueTotalPoints", r.get("revenueTotalPoints") instanceof Number ? ((Number) r.get("revenueTotalPoints")).longValue() : 0L);
         item.put("distanceM", Math.round(distM * 10.0) / 10.0);
+        // CITY-1: which claim flow the app must run for this place, plus the City Monopoly facts it shows.
+        item.put("claimFlow", monopolyActive((String) r.get("boardId")) ? "MONOPOLY" : "LEGACY");
+        item.put("rulesKind", r.get("rulesKind"));
+        item.put("tier", r.get("tier") instanceof Number ? ((Number) r.get("tier")).intValue() : null);
+        item.put("upgradeLevel", r.get("upgradeLevel") instanceof Number ? ((Number) r.get("upgradeLevel")).intValue() : null);
+        item.put("decayState", r.get("decayState"));
+        item.put("districtId", r.get("districtId"));
         return item;
     }
 
@@ -508,12 +519,30 @@ public class RoamTerritoryService {
 
     void syncBoardPropertyOnClaim(String boardId, String propertyId, String pointId, long memberId,
                                           String territoryId, String photoUrl, Timestamp protectedUntilTs) {
+        projectBoardHolder(boardId, propertyId, pointId, memberId, territoryId, photoUrl, protectedUntilTs, null);
+    }
+
+    /**
+     * CITY-10: writes the holder's team onto the board property. A team holding that is not the projection of the
+     * former City Monopoly holder ({@code formerHolder}) is left alone and logged as BOARD_HELD_BY_TEAM.
+     */
+    void projectBoardHolder(String boardId, String propertyId, String pointId, long memberId,
+                            String territoryId, String photoUrl, Timestamp protectedUntilTs, Long formerHolder) {
         Map<String, Object> board = mapper.selectBoardForUpdate(boardId);
         if (board == null || !"OPEN".equals(board.get("lifecycle"))) return;
         Map<String, Object> prop = mapper.selectPropertyForUpdate(boardId, propertyId);
         if (prop == null) return;
         Map<String, Object> participation = mapper.selectParticipation(boardId, memberId);
         String teamId = participation == null ? null : (String) participation.get("teamId");
+        // CITY-10: the board row is a projection of who holds the place. Never overwrite another team's holding.
+        Object currentTeam = prop.get("holderTeamId");
+        Map<String, Object> former = formerHolder == null ? null : mapper.selectParticipation(boardId, formerHolder);
+        boolean projectionOfFormer = former != null && currentTeam != null && currentTeam.equals(former.get("teamId"));
+        if (currentTeam != null && !currentTeam.equals(teamId) && !projectionOfFormer) {
+            org.slf4j.LoggerFactory.getLogger(RoamTerritoryService.class).warn(
+                    "event=BOARD_HELD_BY_TEAM board={} property={} team={} territory={}", boardId, propertyId, currentTeam, territoryId);
+            return;
+        }
         long expectedVer = ((Number) prop.get("stateVersion")).longValue();
         mapper.updateProperty(boardId, propertyId, expectedVer, "PROTECTED", teamId,
                 new Date(protectedUntilTs.getTime() - 1000L), new Date(protectedUntilTs.getTime()), null);
@@ -548,9 +577,8 @@ public class RoamTerritoryService {
         List<Map<String, Object>> existing = jdbc.queryForList(
                 "SELECT * FROM roam_territory_checkin WHERE member_id = ? AND request_id = ? LIMIT 1", memberId, requestId);
         if (!existing.isEmpty()) {
-            Map<String, Object> out = new LinkedHashMap<>(existing.get(0));
-            out.put("idempotentReplay", true);
-            return out;
+            // CITY-4: a replay answers in the same camelCase shape as the first answer.
+            return checkinReplay(existing.get(0), memberId);
         }
 
         long now = clock.getAsLong();
@@ -588,10 +616,15 @@ public class RoamTerritoryService {
             out.put("idempotentReplay", false);
             out.put("checkinId", checkinId);
             out.put("territoryId", territoryId);
+            out.put("ownerMemberId", ownerId);
             out.put("selfVisit", selfVisit);
+            out.put("cooldownActive", false);
             out.put("visitorPointsSpent", 0L);
             out.put("ownerRevenuePoints", granted);
             out.put("revenueMode", "POINTS");
+            out.put("rentState", rent.get("yieldEventId") != null ? "PENDING" : "NONE");
+            out.put("ineligibleReason", rent.get("ineligibleReason"));
+            out.put("visitorPoints", rent.get("visitorPoints") instanceof Number ? ((Number) rent.get("visitorPoints")).longValue() : 0L);
             out.put("territory", rent);
             out.put("plausibilityStatus", plausibility.status);
             out.put("distanceM", Math.round(distM * 10.0) / 10.0);
@@ -942,6 +975,28 @@ public class RoamTerritoryService {
             return rows.isEmpty() ? null : rows.get(0);
         }
         return findActiveTerritoryForUpdate(poiId, boardId, propertyId);
+    }
+
+    /** CITY-4: rebuilds the check-in answer from the stored row (same keys as the first answer). */
+    static Map<String, Object> checkinReplay(Map<String, Object> row, long memberId) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        long owner = row.get("owner_member_id") instanceof Number ? ((Number) row.get("owner_member_id")).longValue() : 0L;
+        boolean points = "POINTS".equals(row.get("revenue_mode"));
+        long granted = row.get("owner_revenue_points") instanceof Number ? ((Number) row.get("owner_revenue_points")).longValue() : 0L;
+        out.put("idempotentReplay", true);
+        out.put("checkinId", row.get("checkin_id"));
+        out.put("territoryId", row.get("territory_id"));
+        out.put("ownerMemberId", owner);
+        out.put("selfVisit", owner == memberId);
+        out.put("cooldownActive", false);
+        out.put("visitorPointsSpent", row.get("points_spent") instanceof Number ? ((Number) row.get("points_spent")).longValue() : 0L);
+        out.put("ownerRevenuePoints", granted);
+        out.put("revenueMode", row.get("revenue_mode"));
+        if (points) out.put("rentState", granted > 0 ? "PENDING" : "NONE");
+        out.put("plausibilityStatus", row.get("plausibility_status"));
+        Object d = row.get("distance_m");
+        out.put("distanceM", d instanceof Number ? Math.round(((Number) d).doubleValue() * 10.0) / 10.0 : null);
+        return out;
     }
 
     private boolean hasRecentRevenueCheckin(String territoryId, long visitorMemberId, long nowMillis) {

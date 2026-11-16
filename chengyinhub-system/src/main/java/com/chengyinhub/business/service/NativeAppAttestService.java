@@ -131,6 +131,31 @@ public class NativeAppAttestService implements NativeStepAssertionVerifier {
         if(mapper.advanceCounter(request.accountId,request.deviceKeyId,key.getAssertionCounter(),counter,clock.millis())!=1)fail("APP_ATTEST_COUNTER_REPLAY");
         return counter;
     }
+    /**
+     * City Monopoly (CITY-2): verifies an assertion over the exact City Monopoly canonical payload with the member's
+     * enrolled native-steps key and advances the key counter. Requires the caller's transaction: the counter commits only with the claim,
+     * upgrade or challenge it protects. The payload must name the same member and key. Not proxied as a nested
+     * transaction on purpose: a refused assertion must not mark the caller's transaction rollback-only, because the
+     * caller still records the refusal; nothing is written before the final counter CAS.
+     */
+    public boolean verifyCityAssertion(long memberId,String deviceKeyId,String canonicalPayload,String assertion) {
+        ready();
+        if(!TransactionSynchronizationManager.isActualTransactionActive())fail("APP_ATTEST_TRANSACTION_REQUIRED");
+        if(memberId<=0 || canonicalPayload==null)fail("APP_ATTEST_BINDING_MISMATCH");
+        keyId(deviceKeyId);
+        String[] fields=canonicalPayload.split("\n",-1);
+        if(fields.length!=6 || !"CHENGYIN_CITY_MONOPOLY_V1".equals(fields[0]) || !Long.toString(memberId).equals(fields[2])
+                || !deviceKeyId.equals(fields[5]))fail("APP_ATTEST_BINDING_MISMATCH");
+        NativeAppAttestKey key=mapper.lockKey(memberId,deviceKeyId);
+        if(key==null || !binding(key) || !"ACTIVE".equals(key.getStatus()))fail("APP_ATTEST_KEY_UNAVAILABLE");
+        long counter;
+        try { counter=configuration.verifier().verifyAssertion(decode(assertion,1,4096,"APP_ATTEST_ASSERTION_INVALID"),
+                    key.getPublicKeySpki(),canonicalPayload.getBytes(StandardCharsets.UTF_8)).getCounter(); }
+        catch(AppAttestVerificationException invalid) { fail(appReason(invalid.getReasonCode()));return false; }
+        if(counter<=key.getAssertionCounter() || counter>4294967295L)fail("APP_ATTEST_COUNTER_REPLAY");
+        if(mapper.advanceCounter(memberId,deviceKeyId,key.getAssertionCounter(),counter,clock.millis())!=1)fail("APP_ATTEST_COUNTER_REPLAY");
+        return true;
+    }
     /** The app treats only APP_ATTEST_* reasons as a definitive refusal (NativeEnrollmentService); verifier codes are namespaced. */
     static String appReason(String verifierCode) {
         String code = verifierCode == null || verifierCode.isEmpty() ? "VERIFICATION_FAILED" : verifierCode;

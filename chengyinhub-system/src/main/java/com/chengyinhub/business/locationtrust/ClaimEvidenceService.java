@@ -139,6 +139,23 @@ public class ClaimEvidenceService {
         return mapper.consumeEvidence(evidenceId, memberId, truncate(claimRef, 64), new Date()) == 1;
     }
 
+    /**
+     * City Monopoly claim: like {@link #consumeForClaim} but REVIEW evidence may also be used once; the claim then goes
+     * to human review. Never consumes REJECT evidence.
+     */
+    public boolean consumeForReviewedClaim(Long memberId, Long evidenceId, String claimRef) {
+        if (mapper == null || memberId == null || evidenceId == null) return false;
+        ClaimEvidenceRow row = mapper.selectEvidenceOwned(evidenceId, memberId);
+        if (row == null || row.getConsumedAt() != null || !("ACCEPT".equals(row.getVerdict()) || "REVIEW".equals(row.getVerdict()))) return false;
+        return mapper.consumeEvidenceForReview(evidenceId, memberId, truncate(claimRef, 64), new Date()) == 1;
+    }
+
+    /** Server-side photo facts of one evidence row owned by the member (no consumption). Null when not found. */
+    public ClaimEvidenceRow readRow(Long memberId, Long evidenceId) {
+        if (mapper == null || memberId == null || evidenceId == null) return null;
+        return mapper.selectEvidenceOwned(evidenceId, memberId);
+    }
+
     /** Read-only verdict for the claim flow (no consumption). Null when not found for this member. */
     public Map<String, Object> read(Long memberId, Long evidenceId) {
         if (mapper == null || memberId == null || evidenceId == null) return null;

@@ -57,5 +57,9 @@ public interface LocationTrustMapper {
     int consumeEvidence(@Param("id") Long id, @Param("memberId") Long memberId, @Param("consumedRef") String consumedRef,
                         @Param("now") Date now);
 
+    /** City Monopoly: ACCEPT or REVIEW evidence (a REVIEW claim goes to a person); one use only. */
+    int consumeEvidenceForReview(@Param("id") Long id, @Param("memberId") Long memberId, @Param("consumedRef") String consumedRef,
+                        @Param("now") Date now);
+
     int clearEvidencePhotoCoordinatesBefore(@Param("cutoff") Date cutoff, @Param("limit") int limit);
 }
