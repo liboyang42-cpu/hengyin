@@ -142,7 +142,8 @@ class MerchantReferralBountyDeadlockRetryMySqlIT {
         // R9 BE-13: this IT covers the direct-pay path (auto-pay on + money switch open); the default goes to review.
         ReflectionTestUtils.setField(bounty, "autoPay", true);
         ReflectionTestUtils.setField(bounty, "cashPayoutSwitch",
-                new com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch(true, true));
+                new com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch(true, true,
+                        com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()));
         verifier.use(db, bounty);
         pool = Executors.newFixedThreadPool(2);
     }
