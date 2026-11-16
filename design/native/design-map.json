@@ -1,0 +1,43 @@
+{
+  "referenceWidth": 375,
+  "spacing": {
+    "xs": "--cy-space-1",
+    "sm": "--cy-space-2",
+    "md": "--cy-space-3",
+    "lg": "--cy-space-4",
+    "xl": "--cy-space-5",
+    "xxl": "--cy-space-6",
+    "section": "--cy-space-8",
+    "compact": "--cy-space-1-5",
+    "control": "--cy-space-2-5",
+    "between": "--cy-space-3-5",
+    "content": "--cy-space-4-5",
+    "page": "--cy-page-x"
+  },
+  "radius": {
+    "sm": "--cy-radius-sm",
+    "md": "--cy-radius-md",
+    "lg": "--cy-radius-lg",
+    "xl": "--cy-radius-xl",
+    "xxl": "--cy-radius-2xl"
+  },
+  "colors": {
+    "pageBackground": {"mini": "--cy-color-bg-page", "ios": "Color(uiColor: .systemBackground)"},
+    "cardSurface": {"mini": "--cy-color-bg-elevated", "ios": "Color(uiColor: .secondarySystemGroupedBackground)"},
+    "primaryText": {"mini": "--cy-color-text-primary", "ios": "Color.primary"},
+    "secondaryText": {"mini": "--cy-color-text-secondary", "ios": "Color.secondary"}
+  },
+  "typography": {
+    "pageTitle": {"mini": "--cy-type-page-title", "ios": "Font.largeTitle"},
+    "sectionTitle": {"mini": "--cy-type-section-title", "ios": "Font.title2"},
+    "cardTitle": {"mini": "--cy-type-card-title", "ios": "Font.headline"},
+    "body": {"mini": "--cy-type-body", "ios": "Font.body"},
+    "label": {"mini": "--cy-type-label", "ios": "Font.subheadline"},
+    "caption": {"mini": "--cy-type-caption", "ios": "Font.caption"}
+  },
+  "iosAccent": {
+    "light": "#6D28D9",
+    "dark": "#C4B5FD",
+    "reason": "Preserve the existing native accent. Mini consumer neutral and merchant accents remain in their own theme scopes."
+  }
+}

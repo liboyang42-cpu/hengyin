@@ -1,0 +1,215 @@
+{
+  "design-system": {
+    "mini": [
+      "style/tokens.wxss",
+      "style/components.wxss"
+    ],
+    "ios": [
+      "App/QuestifyPalette.swift",
+      "App/QuestifyMotion.swift",
+      "App/QuestifyMotionComponents.swift",
+      "App/QuestifyImageEntityCard.swift"
+    ]
+  },
+  "home": {
+    "mini": [
+      "pages/index/",
+      "utils/index/home-city-location.js"
+    ],
+    "ios": [
+      "App/HomeFeedView.swift",
+      "App/HomeFeedModel.swift",
+      "App/DiscoveryHomeView.swift",
+      "App/SessionHomeFeedView.swift",
+      "Core/HomeFeedContracts.swift",
+      "Core/HomeFeedReading.swift",
+      "Core/HomeFeedService.swift",
+      "Core/TopicService.swift",
+      "Core/ActivitySummary.swift"
+    ]
+  },
+  "templates": {
+    "mini": [
+      "pages/template/",
+      "pages/templatedetail/"
+    ],
+    "ios": [
+      "App/DiscoveryTemplateBrowserView.swift",
+      "App/DiscoveryTemplateDetailView.swift"
+    ]
+  },
+  "activity-detail": {
+    "mini": [
+      "pages/activity/detail/",
+      "subpackageMember/components/cy/scene-play-activity-detail/"
+    ],
+    "ios": [
+      "App/ActivityDetailView.swift",
+      "App/ActivityPresentationComponents.swift"
+    ]
+  },
+  "team-invitation": {
+    "mini": [
+      "pages/team/join/",
+      "pages/team/detail/"
+    ],
+    "ios": [
+      "App/TeamHomeView.swift",
+      "App/SessionTeamViews.swift",
+      "App/NativeNavigationCompletionViews.swift",
+      "App/TicketWalletView.swift",
+      "App/TeamComponents.swift",
+      "Core/TeamContracts.swift"
+    ]
+  },
+  "account-favorite-posts": {
+    "mini": [
+      "pages/mylike/",
+      "utils/community-post-api.js"
+    ],
+    "ios": [
+      "App/AccountCollectionFavoritesView.swift",
+      "Core/AccountCollectionContracts.swift",
+      "Core/AccountCollectionService.swift"
+    ]
+  },
+  "player-qa-evidence": {
+    "mini": [
+      "pages/play/index.js",
+      "pages/play/components/playkit/index.wxml",
+      "pages/play/components/playkit-qa/index.js",
+      "pages/play/components/playkit-qa/index.wxml",
+      "pages/play/components/playkit-qa/index.wxss"
+    ],
+    "ios": [
+      "App/PlayExperienceView.swift",
+      "App/ChapterStoryView.swift",
+      "App/PlayAdvancedView.swift",
+      "App/PlayKitScreen.swift",
+      "App/PlayKitQuestionForms.swift"
+    ]
+  },
+  "template-gameplay-rehearsal": {
+    "mini": [
+      "pages/publish/temp/index.js",
+      "pages/publish/temp/index.wxml",
+      "pages/publish/temp/index.wxss",
+      "pages/play/components/play-verdict/index.js",
+      "pages/play/components/play-verdict/index.wxml",
+      "pages/play/components/play-verdict/index.wxss",
+      "pages/publish/temp/preview-verdict.js",
+      "pages/publish/temp/r5-editor.js",
+      "utils/story-player-label.js"
+    ],
+    "ios": [
+      "App/TemplateRehearsalSuccessView.swift",
+      "App/TemplateLegacyQuestionRehearsalView.swift",
+      "App/TemplateAuthoringView.swift",
+      "App/TemplateCreatorConfigurationView.swift",
+      "Core/TemplateCreatorRehearsal.swift",
+      "Core/TemplateLegacyQuestionRehearsal.swift",
+      "App/TemplateCreatorRehearsalView.swift",
+      "Resources/Localizable.xcstrings",
+      "Core/ChapterStoryContracts.swift"
+    ]
+  },
+  "play-route-pause": {
+    "mini": [
+      "pages/play/utils/play-route-state.js",
+      "pages/play/index.js"
+    ],
+    "ios": [
+      "Core/PlayContracts.swift",
+      "Core/PlayProgression.swift",
+      "App/PlayExperienceView.swift"
+    ]
+  },
+  "ticket-wallet": {
+    "mini": [
+      "subpackageMember/signup/"
+    ],
+    "ios": [
+      "App/TicketWalletView.swift"
+    ]
+  },
+  "merchant-profile-projects": {
+    "mini": [
+      "subpackageMember/components/cy/profile/index.js",
+      "subpackageMember/components/cy/profile/index.wxml"
+    ],
+    "ios": [
+      "App/MerchantHomeView.swift",
+      "Core/MerchantContentService.swift",
+      "Core/MerchantContentDomain.swift",
+      "Core/MerchantAccess.swift"
+    ]
+  },
+  "player-story-scroll": {
+    "mini": [
+      "pages/play/index.js",
+      "pages/play/index.wxml",
+      "pages/play/components/chapter-flip/index.wxml",
+      "pages/play/index.wxss",
+      "utils/story-player-label.js"
+    ],
+    "ios": [
+      "App/ChapterStoryView.swift",
+      "App/PlayExperienceView.swift",
+      "Core/ChapterStoryContracts.swift"
+    ]
+  },
+  "merchant-workbench-full-layout": {
+    "mini": [
+      "pages/merchant/index/index.json",
+      "pages/merchant/index/index.js",
+      "pages/merchant/index/index.wxml",
+      "pages/merchant/index/index.wxss"
+    ],
+    "ios": [
+      "App/MerchantHomeView.swift"
+    ]
+  },
+  "activity-session-picker": {
+    "mini": [
+      "components/cy/session-picker/",
+      "pages/topic/index/index.js",
+      "pages/topic/index/index.json"
+    ],
+    "ios": [
+      "App/SessionRegistrationSheet.swift",
+      "App/RegistrationSheetView.swift",
+      "App/TopicDetailView.swift"
+    ]
+  },
+  "member-order-refund-progress": {
+    "mini": [
+      "subpackageMember/utils/order-settlement-view.js",
+      "subpackageMember/components/cy/scene-member-order-detail/"
+    ],
+    "ios": [
+      "App/ProfileOrdersView.swift",
+      "App/OrderLifecycleView.swift"
+    ]
+  },
+  "profile-self-order-cards": {
+    "mini": [
+      "subpackageMember/components/cy/profile/index.wxss"
+    ],
+    "ios": [
+      "App/ProfileSelfOrdersSection.swift"
+    ]
+  },
+  "merchant-redemption-records": {
+    "mini": [
+      "pages/merchant/ledger/index.js",
+      "pages/merchant/ledger/index.wxml",
+      "pages/merchant/ledger/order-detail/index.js",
+      "pages/merchant/ledger/order-detail/index.wxml",
+      "utils/merchant-access-policy.js"
+    ],
+    "ios": [
+      "App/MerchantBusinessViews.swift",
+      "Core/MerchantBusinessQuery.swift"
+    ]
+  }
+}
