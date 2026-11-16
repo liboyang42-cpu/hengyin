@@ -27,6 +27,7 @@ const gameSessionClient = require('../../utils/game-session-client.js');
 const orientLifecycle = require('./utils/orient-lifecycle.js');
 const arrivalGuardView = require('./utils/arrival-guard-view.js');
 const arrivalReading = require('./utils/arrival-reading.js');
+const { photoFix: photoFixOf } = require('./utils/photo-fix.js');
 const playHelpPanel = require('./utils/play-help-panel.js');
 const guardAppeal = require('./utils/guard-appeal.js');
 const playBoardView = require('./utils/play-board-view.js');
@@ -6899,7 +6900,9 @@ Page({
     const attempt = { type: 'photo', nodeId, pic, viewContext };
     this._lastGameAttempt = attempt;
     this._withThoughtSync(() => {
-      attempt.payload = this._legacyGameWritePayload('photo', 'photo', nodeId, { nodeId, picUrl: pic }, retryAttempt);
+      const photoNode = (this.data.nodes || []).find((n) => String(n.nodeId) === String(nodeId));
+      const fix = photoFixOf(this._loc, photoNode, this.data.mode);   // 带坐标的站:奖品要到场(不拦完成)
+      attempt.payload = this._legacyGameWritePayload('photo', 'photo', nodeId, Object.assign({ nodeId, picUrl: pic }, fix), retryAttempt);
       return req('/api/play/photo', 'POST', this._retriedRouteWriteBody(attempt.payload, retryAttempt));
     }, isCurrent)
       .then((r) => {
