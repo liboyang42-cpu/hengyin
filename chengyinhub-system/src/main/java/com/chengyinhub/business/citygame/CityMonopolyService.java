@@ -1289,7 +1289,7 @@ public class CityMonopolyService {
         insertChallenge(requestId, terr, seasonId, memberId, defender, fee, dc, roll, roll == 20 || roll == 1, rerolled, mods.parts(),
                 roll + mods.total(), win ? "WIN" : "LOSS", split);
         out.put("roll", roll);
-        out.put("nat", roll == 20 ? 20 : roll == 1 ? 1 : null);
+        out.put("nat", natural(roll));
         out.put("rerolled", rerolled);
         out.put("mods", mods.parts());
         out.put("dc", dc);
@@ -1299,6 +1299,13 @@ public class CityMonopolyService {
         out.put("property", property);
         out.put("balance", balance(memberId));
         return receipt(memberId, requestId, "CHALLENGE", body, out);
+    }
+
+    /** Natural 20 or natural 1, else null. Boxed on every branch: a mixed int/null ternary unboxes null and throws (B10). */
+    static Integer natural(int roll) {
+        if (roll == 20) return Integer.valueOf(20);
+        if (roll == 1) return Integer.valueOf(1);
+        return null;
     }
 
     private int assists(CityMonopolyConfig c, long memberId, Map<String, Object> terr, long now) {
