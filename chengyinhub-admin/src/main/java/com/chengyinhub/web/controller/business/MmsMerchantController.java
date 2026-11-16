@@ -36,6 +36,9 @@ public class MmsMerchantController extends BaseController {
     @Autowired
     private IMmsMerchantService mmsMerchantService;
 
+    @Autowired
+    private com.chengyinhub.business.service.impl.MemberIdentityService memberIdentityService;
+
     /**
      * 查询商家列表
      */
@@ -65,7 +68,12 @@ public class MmsMerchantController extends BaseController {
     @PreAuthorize("@ss.hasPermi('business:merchant:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id) {
-        return success(mmsMerchantService.selectMmsMerchantById(id));
+        MmsMerchant merchant = mmsMerchantService.selectMmsMerchantById(id);
+        AjaxResult result = success(merchant);
+        // 入驻审核看经营者实名:只给脱敏值(张* / 110***********1234),后台没有明文查看入口。
+        // 存量商家没登记过实名时为 null,详情照常返回。
+        result.put("ownerIdentity", merchant == null ? null : memberIdentityService.maskedView(merchant.getMemberId()));
+        return result;
     }
 
     /**

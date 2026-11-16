@@ -54,6 +54,23 @@ public final class IdCardUtils {
         return checkCode(id) == last;
     }
 
+    /**
+     * 身份证号脱敏:前 3 后 4,中间等长 *(18 位 → 110***********1234)。
+     *
+     * <p>所有读路径(玩家 / 商家 / 后台)只允许下发这个形态。不足 8 位的串一律全遮,
+     * 不给「短到前 3 后 4 就把整串露出来」的机会。null / 空串返回 null。
+     */
+    public static String mask(String raw) {
+        String id = normalize(raw);
+        if (id.isEmpty()) {
+            return null;
+        }
+        if (id.length() < 8) {
+            return "*".repeat(id.length());
+        }
+        return id.substring(0, 3) + "*".repeat(id.length() - 7) + id.substring(id.length() - 4);
+    }
+
     private static char checkCode(String id) {
         int sum = 0;
         for (int i = 0; i < 17; i++) {

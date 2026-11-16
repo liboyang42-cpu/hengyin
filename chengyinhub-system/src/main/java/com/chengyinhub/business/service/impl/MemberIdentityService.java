@@ -2,6 +2,7 @@ package com.chengyinhub.business.service.impl;
 
 import com.chengyinhub.business.domain.UmsMemberIdentity;
 import com.chengyinhub.business.mapper.UmsMemberIdentityMapper;
+import com.chengyinhub.business.security.PiiCryptoService;
 import com.chengyinhub.business.service.IConsentRecordService;
 import com.chengyinhub.common.exception.ServiceException;
 import com.chengyinhub.common.utils.IdCardUtils;
@@ -15,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -49,7 +52,11 @@ public class MemberIdentityService {
     public static final String MSG_NOT_REGISTERED = "请先登记实名信息(姓名与身份证号),再发布";
 
     private static final int NAME_MIN = 2;
-    private static final int NAME_MAX = 20;
+    private static final int NAME_MAX = 30;
+
+    /** 身份证号不合法的统一文案。不带入参,不回显用户填的号码。 */
+    public static final String MSG_ID_CARD_INVALID = "身份证号格式不正确,请核对后重填";
+    public static final String MSG_IDENTITY_REQUIRED = "请填写真实姓名与身份证号";
 
     @Autowired
     private UmsMemberIdentityMapper identityMapper;
@@ -72,20 +79,9 @@ public class MemberIdentityService {
         if (!SOURCES.contains(source)) {
             throw new ServiceException("实名登记入口不合法,请从发布页重新提交");
         }
-        if (!consent) {
-            throw new ServiceException("请先勾选同意提供真实姓名与身份证号");
-        }
-        String name = realName == null ? "" : realName.trim();
-        if (name.length() < NAME_MIN || name.length() > NAME_MAX) {
-            throw new ServiceException("请填写真实姓名(2-" + NAME_MAX + " 个字)");
-        }
-        if (StringUtils.containsAny(name, "0123456789")) {
-            throw new ServiceException("姓名里不应包含数字");
-        }
+        validateSubmission(realName, idCard, consent);
+        String name = realName.trim();
         String normalizedId = IdCardUtils.normalize(idCard);
-        if (!IdCardUtils.isValid(normalizedId)) {
-            throw new ServiceException("身份证号格式不正确,请核对后重填");
-        }
 
         UmsMemberIdentity identity = new UmsMemberIdentity();
         identity.setMemberId(memberId);
@@ -107,6 +103,49 @@ public class MemberIdentityService {
         }
         consentRecordService.record(memberId, CONSENT_DOC_TYPE, CONSENT_DOC_VERSION, source,
                 "AGREE", IdUtils.fastSimpleUUID(), ipAddress);
+    }
+
+    /**
+     * 只校验不落库:同意 → 姓名 2-30 字且不含数字 → 身份证号 18 位且 GB 11643-1999 校验位自洽(末位 x 视同 X)。
+     *
+     * <p>不是 {@code @Transactional}:商家入驻在自己的事务里先调它,校验失败直接回错误文案,
+     * 不会把外层事务标成 rollback-only。所有文案都不带入参。
+     */
+    public void validateSubmission(String realName, String idCard, boolean consent) {
+        if (!consent) {
+            throw new ServiceException("请先勾选同意提供真实姓名与身份证号");
+        }
+        String name = realName == null ? "" : realName.trim();
+        if (name.length() < NAME_MIN || name.length() > NAME_MAX) {
+            throw new ServiceException("请填写真实姓名(" + NAME_MIN + "-" + NAME_MAX + " 个字)");
+        }
+        if (StringUtils.containsAny(name, "0123456789")) {
+            throw new ServiceException("姓名里不应包含数字");
+        }
+        if (!IdCardUtils.isValid(IdCardUtils.normalize(idCard))) {
+            throw new ServiceException(MSG_ID_CARD_INVALID);
+        }
+    }
+
+    /**
+     * 脱敏视图:{@code realNameMasked}(张*)与 {@code idCardNumberMasked}(110***********1234)。
+     * 未登记返回 null。这是玩家 / 商家 / 后台所有读路径唯一可用的出口,明文只活在这一个方法栈里。
+     */
+    public Map<String, Object> maskedView(Long memberId) {
+        if (memberId == null || memberId <= 0) {
+            return null;
+        }
+        UmsMemberIdentity stored = identityMapper.selectByMemberId(memberId);
+        if (stored == null) {
+            return null;
+        }
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("registered", true);
+        view.put("realNameMasked", PiiCryptoService.maskName(stored.getRealName()));
+        view.put("idCardNumberMasked", IdCardUtils.mask(stored.getIdCard()));
+        view.put("source", stored.getSource());
+        view.put("consentTime", stored.getConsentTime());
+        return view;
     }
 
     /** 发布闸:未登记返回统一文案,已登记返回 null。口径与 quotaService.checkCreate 一致。 */

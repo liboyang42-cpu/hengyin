@@ -72,6 +72,48 @@ public class MerchantRegistrationDTO implements Serializable {
     @Schema(description = "微信二维码", example = "")
     private String wechat;
 
+    /**
+     * 经营者真实姓名(2-30 字)。新入驻必填(或此前已在 /api/publisher/identity 登记过)。
+     *
+     * <p>这里刻意<b>不</b>挂 Bean Validation 注解:校验失败时全局异常处理器会把
+     * rejected value 原样打进日志,等于把身份证号写进日志文件。校验统一在
+     * MemberIdentityService 里做,报错文案不带入参。
+     */
+    @Schema(description = "经营者真实姓名,2-30 字,新入驻必填", example = "")
+    private String realName;
+
+    /** 经营者身份证号(18 位,末位可为 X/x,GB 11643-1999 校验位)。只进加密列,任何响应只回脱敏值。 */
+    @Schema(description = "经营者身份证号,18 位,新入驻必填", example = "")
+    private String idCardNumber;
+
+    /** 「同意向平台提供真实姓名与身份证号」单独勾选(PIPL 第29条),随 realName/idCardNumber 一起提交时必须为 true。 */
+    @Schema(description = "实名信息单独同意,提交 realName/idCardNumber 时必须为 true", example = "true")
+    private Boolean identityConsent;
+
+    public String getRealName() {
+        return realName;
+    }
+
+    public void setRealName(String realName) {
+        this.realName = realName;
+    }
+
+    public String getIdCardNumber() {
+        return idCardNumber;
+    }
+
+    public void setIdCardNumber(String idCardNumber) {
+        this.idCardNumber = idCardNumber;
+    }
+
+    public Boolean getIdentityConsent() {
+        return identityConsent;
+    }
+
+    public void setIdentityConsent(Boolean identityConsent) {
+        this.identityConsent = identityConsent;
+    }
+
     public String getWechat() {
         return wechat;
     }
