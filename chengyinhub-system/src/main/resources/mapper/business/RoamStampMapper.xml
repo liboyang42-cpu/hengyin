@@ -19,14 +19,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="idemKey" column="idem_key"/>
         <result property="delFlag" column="del_flag"/>
         <result property="createTime" column="create_time"/>
+        <result property="poiId" column="poi_id"/>
     </resultMap>
 
     <insert id="insertStamp" parameterType="com.chengyinhub.business.domain.RoamStamp"
             useGeneratedKeys="true" keyProperty="id">
         insert into roam_stamp (member_id, pic_url, caption, kind, geohash7, lat, lng, city_code,
-                                check_state, check_trace, idem_key, del_flag, create_time)
+                                check_state, check_trace, idem_key, del_flag, create_time, poi_id)
         values (#{memberId}, #{picUrl}, #{caption}, #{kind}, #{geohash7}, #{lat}, #{lng}, #{cityCode},
-                #{checkState}, #{checkTrace}, #{idemKey}, #{delFlag}, now())
+                #{checkState}, #{checkTrace}, #{idemKey}, #{delFlag}, now(), #{poiId})
     </insert>
 
     <select id="selectByMember" resultMap="RoamStampResult">
@@ -41,6 +42,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="countByMember" resultType="int">
         select count(*) from roam_stamp
         where member_id = #{memberId} and del_flag = 0 and check_state != 2
+    </select>
+
+    <!-- GAME-12: places stamped = visible place stamps (kind 1), one row per place by uk_member_poi. -->
+    <select id="countPlacesByMember" resultType="int">
+        select count(*) from roam_stamp
+        where member_id = #{memberId} and kind = 1 and poi_id is not null and del_flag = 0 and check_state != 2
+    </select>
+
+    <select id="selectByMemberAndPoi" resultMap="RoamStampResult">
+        select id, member_id, pic_url, caption, kind, geohash7, lat, lng, city_code,
+               check_state, check_trace, idem_key, del_flag, create_time, poi_id
+        from roam_stamp
+        where member_id = #{memberId} and poi_id = #{poiId}
     </select>
 
     <select id="selectById" resultMap="RoamStampResult">

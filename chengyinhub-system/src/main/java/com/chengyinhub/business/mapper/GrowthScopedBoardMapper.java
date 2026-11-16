@@ -23,6 +23,9 @@ public interface GrowthScopedBoardMapper {
     /** 本人所在地;未设置为 null。 */
     Long selectAreaId(@Param("memberId") long memberId);
 
+    /** GAME-13:玩家自己选的所在地(6 位行政区划代码);null = 清除。 */
+    int updateAreaId(@Param("memberId") long memberId, @Param("areaId") Long areaId);
+
     /**
      * 给定玩家的分数行 {memberId, nickname, avatar, score, createdAt}。只返回未注销的玩家账号。
      * metric: point / exp;period: total / week(week 需 weekStart/weekEnd)。

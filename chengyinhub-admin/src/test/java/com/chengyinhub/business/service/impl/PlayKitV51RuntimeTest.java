@@ -284,7 +284,9 @@ class PlayKitV51RuntimeTest {
 
         IllegalStateException e = assertThrows(IllegalStateException.class,
                 () -> service.start(MEMBER_ID, ACTIVITY_ID, TOPIC_ID, NODE_ID, null));
-        assertTrue(e.getMessage().contains("还没到开放时间"), e.getMessage());
+        // GAME-19:跨夜时段在白天被拒,说的是「今晚几点开放」,并带上机器可读的码。
+        assertEquals("这一站 23:00 开放，到时再来", e.getMessage());
+        assertEquals(TimeWindowRefusal.NOT_YET, ((TimeWindowRefusal) e).reasonCode());
     }
 
     @Test

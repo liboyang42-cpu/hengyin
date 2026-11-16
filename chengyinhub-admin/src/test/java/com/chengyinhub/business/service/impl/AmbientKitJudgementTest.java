@@ -108,4 +108,29 @@ class AmbientKitJudgementTest {
         assertThrows(IllegalArgumentException.class,
                 () -> AmbientKitJudgement.apply("START_MUSIC_CORNER", config, mapper.createObjectNode(), 0L));
     }
+
+    // GAME-19:时段限定在窗外分清「还没开」与「今天已关」,跨夜时段窗外总是「今天稍后开放」。
+    @Test
+    void timeWindowBeforeInsideAfterAndOvernight() {
+        int from = 20 * 60, to = 23 * 60;
+        TimeWindowRefusal before = TimeWindowRefusal.judge(from, to, 19 * 60, "20:00", "23:00");
+        assertEquals(TimeWindowRefusal.NOT_YET, before.reasonCode());
+        assertEquals("20:00", before.opensAt());
+        assertEquals("这一站 20:00 开放，到时再来", before.getMessage());
+        assertEquals(null, TimeWindowRefusal.judge(from, to, 20 * 60, "20:00", "23:00"), "start is inside");
+        assertEquals(null, TimeWindowRefusal.judge(from, to, 23 * 60 - 1, "20:00", "23:00"));
+        TimeWindowRefusal after = TimeWindowRefusal.judge(from, to, 23 * 60, "20:00", "23:00");
+        assertEquals(TimeWindowRefusal.CLOSED, after.reasonCode(), "end is exclusive and means closed for today");
+        assertEquals("23:00", after.closedAt());
+        assertEquals("这一站今天 23:00 已关闭，明天 20:00 再来", after.getMessage());
+        assertEquals(TimeWindowRefusal.CLOSED, TimeWindowRefusal.judge(from, to, 23 * 60 + 30, "20:00", "23:00").reasonCode());
+
+        int nightFrom = 23 * 60, nightTo = 60;
+        assertEquals(null, TimeWindowRefusal.judge(nightFrom, nightTo, 23 * 60 + 30, "23:00", "01:00"));
+        assertEquals(null, TimeWindowRefusal.judge(nightFrom, nightTo, 30, "23:00", "01:00"), "after midnight is inside");
+        TimeWindowRefusal day = TimeWindowRefusal.judge(nightFrom, nightTo, 12 * 60, "23:00", "01:00");
+        assertEquals(TimeWindowRefusal.NOT_YET, day.reasonCode(), "an overnight window opens again later today");
+        assertEquals(TimeWindowRefusal.NOT_YET, TimeWindowRefusal.judge(nightFrom, nightTo, 60, "23:00", "01:00").reasonCode());
+        assertTrue(day instanceof IllegalStateException, "existing catch blocks keep working");
+    }
 }
