@@ -7707,7 +7707,10 @@ Page({
   // 起飞过场已删除(用户裁决):过场层与其播放/关闭函数族一并退场
 
   // ---------- 旅程手记(原型 journalScreen:半屏 + 一行行 .kv) ----------
-  openJournal() {
+  openJournal(finishView) {
+    this._journalEpoch = (this._journalEpoch || 0) + 1;
+    this._journalFinishReturn = finishView && finishView.owner && finishView.routeSessionId
+      && this._isFinishViewCurrent(finishView) ? finishView : null;
     this._endingEpoch = (this._endingEpoch || 0) + 1;
     this.setData({ showJournal: true, journalOut: false, journalDot: false, 'ending.show': false }, () => {
       this.buildJournal();
@@ -8993,7 +8996,8 @@ Page({
     });
   },
   openFinishJournal() {
-    this._hideFinish(() => this.openJournal());
+    if (!this.data.showFinish) return;
+    this._hideFinish(() => this.openJournal(this._finishViewContext()));
   },
 
   loadNewLifeOS() {
@@ -9835,9 +9839,16 @@ Page({
   // 播完再卸载;减动效直接卸载。程序里一关一开的切换不走这里(那是直接换下一层,不叠)。
   _outThen(which) {
     const flag = { journal: 'journalOut', gmod: 'gmodOut', board: 'boardOut' }[which] || 'sheetOut';
-    const still = () => this.data[flag];
+    const journalEpoch = this._journalEpoch;
+    const still = () => this.data[flag] && (which !== 'journal' || journalEpoch === this._journalEpoch);
     const unmount = () => {
-      if (which === 'journal') this.setData({ journalOut: false, showJournal: false });
+      if (which === 'journal') {
+        const finishView = this._journalFinishReturn;
+        this._journalFinishReturn = null;
+        this.setData({ journalOut: false, showJournal: false }, () => {
+          if (journalEpoch === this._journalEpoch && this._isFinishViewCurrent(finishView)) this.setData({ showFinish: true });
+        });
+      }
       else if (which === 'gmod') this.setData({ gmodOut: false, 'gameModule.sheetShow': false });
       else if (which === 'board') this.setData({ boardOut: false, 'board.show': false });
       else this.setData({ sheetOut: false, 'sheet.show': false });

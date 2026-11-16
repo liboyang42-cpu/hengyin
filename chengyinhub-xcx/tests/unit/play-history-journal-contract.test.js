@@ -131,6 +131,7 @@ test('完成页转手记后迟到的城市故事响应不能覆盖手记', async
   const page = pageWithHistory()
   page.data.mode = 2
   page.loadEnding()
+  page.data.showFinish = true
   page.openFinishJournal()
   requests[0].success({ code: 200, data: { opener: '旧响应', fragments: [] } })
   await Promise.resolve()
@@ -162,4 +163,164 @@ test('手记及共用半屏必须盖过故事层，仍低于场景宿主', () =>
   assert.ok(levels.mask > levels.chfull, '遮罩不能被全屏故事盖住')
   assert.ok(levels.sheet > levels.mask, '半屏必须在遮罩之上')
   assert.ok(levels.sheet < levels['play-scene-host'], '全局场景宿主仍在半屏之上')
+})
+
+
+function finishJournalFixture() {
+  const app = {
+    globalData: { user_id: 50, features: {} }, _loginEpoch: 0,
+    getUserID: () => 50,
+    sendRequest: request => requests.push(request),
+  }
+  global.getApp = () => app
+  const page = pageWithHistory()
+  Object.assign(page.data, {
+    topicId: 9914601, activityId: 0, regId: 9917319, showFinish: true,
+    showJournal: false, reducedMotion: true, finishScore: 12,
+    finishDateLabel: '2026-11-16', finishSnap: 'original-route-image',
+    finishResult: { status: 'UNKNOWN', earnedXp: null },
+    finale: { show: false, info: { elapsed: '00:42' } },
+    medalScreen: { show: false, items: [] },
+  })
+  page._routeState = { routeMode: 'LINEAR', sessionId: '111', version: 8 }
+  page._finishArtworkEpoch = 7
+  for (const name of ['openFinish', '_openFinale', '_triggerCelebration', '_endRunSession',
+    'loadFinishResult', 'loadMilestone', 'loadStageEnd', 'loadNodes']) {
+    page[name] = () => assert.fail('journal return must not call ' + name)
+  }
+  return { page, app }
+}
+
+function originalFinishFields(page) {
+  return JSON.parse(JSON.stringify({
+    score: page.data.finishScore, date: page.data.finishDateLabel,
+    snap: page.data.finishSnap, result: page.data.finishResult,
+    finale: page.data.finale, medals: page.data.medalScreen,
+    route: page._routeState, total: page.data.total, done: page.data.doneCount,
+  }))
+}
+
+test('finish→journal→close restores the same finish, including UNKNOWN reward state, without replay or reads', () => {
+  const { page } = finishJournalFixture()
+  const before = originalFinishFields(page)
+  page.openFinishJournal()
+  assert.equal(page.data.showFinish, false)
+  assert.equal(page.data.showJournal, true)
+  page.closeJournal()
+  assert.equal(page.data.showJournal, false)
+  assert.equal(page.data.showFinish, true)
+  assert.deepEqual(originalFinishFields(page), before)
+  assert.equal(requests.length, 0)
+})
+
+test('finish journal return waits for the existing280ms out animation', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const { page } = finishJournalFixture()
+  page.data.reducedMotion = false
+  page.openFinishJournal()
+  page.closeJournal()
+  assert.equal(page.data.journalOut, true)
+  assert.equal(page.data.showJournal, true)
+  assert.equal(page.data.showFinish, false)
+  t.mock.timers.tick(279)
+  assert.equal(page.data.showFinish, false)
+  t.mock.timers.tick(1)
+  assert.equal(page.data.showJournal, false)
+  assert.equal(page.data.journalOut, false)
+  assert.equal(page.data.showFinish, true)
+  assert.equal(requests.length, 0)
+})
+
+test('ordinary tools journal close never restores a consumed finish origin', () => {
+  const { page } = finishJournalFixture()
+  page.openFinishJournal(); page.closeJournal()
+  assert.equal(page.data.showFinish, true)
+  page._hideFinish()
+  page.setData({ sessionToolsOpen: true })
+  page.openJournalFromTools()
+  assert.equal(page.data.sessionToolsOpen, false)
+  page.closeJournal()
+  assert.equal(page.data.showFinish, false)
+  assert.equal(page.data.showJournal, false)
+  assert.equal(requests.length, 0)
+})
+
+test('late journal close cannot restore another owner, login generation, route, finish epoch or unloaded page', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const invalidations = [
+    ({ app }) => { app.getUserID = () => 51 },
+    ({ app }) => { app._loginEpoch += 1 },
+    ({ page }) => { page.data.topicId = 9914701 },
+    ({ page }) => { page._routeState.sessionId = '112' },
+    ({ page }) => { page._finishArtworkEpoch += 1 },
+    ({ page }) => { page._playDisposed = true },
+  ]
+  for (const invalidate of invalidations) {
+    const fixture = finishJournalFixture()
+    fixture.page.data.reducedMotion = false
+    fixture.page.openFinishJournal(); fixture.page.closeJournal()
+    invalidate(fixture)
+    t.mock.timers.tick(280)
+    assert.equal(fixture.page.data.showFinish, false)
+  }
+  assert.equal(requests.length, 0)
+})
+
+test('unknown original owner or route cannot arm a finish return', () => {
+  for (const unknown of ['owner', 'route']) {
+    const { page, app } = finishJournalFixture()
+    if (unknown === 'owner') app.getUserID = () => ''
+    else page._routeState.sessionId = ''
+    page.openFinishJournal(); page.closeJournal()
+    assert.equal(page.data.showFinish, false)
+    assert.equal(page.data.showJournal, false)
+  }
+})
+
+test('old journal out timer cannot unmount a newly reopened tools journal or return it to finish', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const { page } = finishJournalFixture()
+  page.data.reducedMotion = false
+  page.openFinishJournal(); page.closeJournal()
+  t.mock.timers.tick(100)
+  page.openJournalFromTools(); page.closeJournal()
+  t.mock.timers.tick(180)
+  assert.equal(page.data.showJournal, true, 'new journal still owns its own out animation')
+  assert.equal(page.data.showFinish, false)
+  t.mock.timers.tick(100)
+  assert.equal(page.data.showJournal, false)
+  assert.equal(page.data.showFinish, false)
+})
+
+test('finish journal return leaves missing immutable history empty rather than filling from live author text', () => {
+  const { page } = finishJournalFixture()
+  page._historyReadAttempted = true
+  page._historyNodes = []
+  page.data.nodes[0].description = 'CURRENT AUTHOR TEXT MUST NOT FILL OLD HISTORY'
+  page.openFinishJournal()
+  assert.deepEqual(page.data.journalCards[0].paras, [''])
+  page.closeJournal()
+  assert.deepEqual(page.data.journalCards[0].paras, [''])
+})
+
+
+test('double finish-journal taps before hide callback keep one original return context', () => {
+  const { page } = finishJournalFixture()
+  const set = page.setData
+  const hidden = []
+  page.setData = function (patch, callback) {
+    if (patch.showFinish === false && callback) {
+      set.call(this, patch)
+      hidden.push(callback)
+    } else set.call(this, patch, callback)
+  }
+  page.openFinishJournal()
+  page.openFinishJournal()
+  assert.equal(hidden.length, 1, 'hidden finish cannot start a second handoff')
+  hidden.shift()()
+  assert.equal(page.data.showJournal, true)
+  page.openFinishJournal()
+  page.closeJournal()
+  assert.equal(page.data.showFinish, true)
+  assert.equal(requests.length, 0)
 })
