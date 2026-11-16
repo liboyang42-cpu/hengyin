@@ -90,6 +90,8 @@ public class MemberPrivacyErasureService {
         counts.put("channel_event_rsvp", mapper.deleteChannelEventRsvps(memberId));
         counts.put("channel_event_photo", mapper.deleteChannelEventPhotos(memberId));
         counts.put("channel_event_poster", mapper.unlinkChannelEventPoster(memberId));
+        // Club invites (W7 SOC-15): links the member made stop working and lose the creator link; use counts stay.
+        counts.put("club_invite", mapper.revokeClubInvitesByCreator(memberId));
         return counts;
     }
 }

@@ -78,6 +78,12 @@ class MemberPrivacyErasureServiceTest {
             assertEquals(1, f.db.queryForObject("select count(*) from channel_event where activity_id=? and poster_member_id=0",
                     Integer.class, 900 + ERASED));
             assertEquals(1, f.db.queryForObject("select count(*) from channel_event where poster_member_id=?", Integer.class, OTHER));
+            // Club invites (W7 SOC-15): the erased member's links are revoked and unlinked; others' stay live.
+            assertEquals(0, f.db.queryForObject("select count(*) from club_invite where creator_member_id=?", Integer.class, ERASED));
+            assertEquals(1, f.db.queryForObject("select count(*) from club_invite where code=? and creator_member_id=0"
+                    + " and revoked_at is not null", Integer.class, "INV" + ERASED));
+            assertEquals(1, f.db.queryForObject("select count(*) from club_invite where creator_member_id=? and revoked_at is null",
+                    Integer.class, OTHER));
 
             // Roam sessions: kept with aggregates, every coordinate gone.
             Map<String, Object> s7 = f.db.queryForMap("select * from roam_session where member_id=?", ERASED);
@@ -249,6 +255,8 @@ class MemberPrivacyErasureServiceTest {
             db.execute("create table city_game_board_audit(id bigint auto_increment primary key, board_id varchar(96),"
                     + " action varchar(32), actor_id bigint, actor_type varchar(16), detail_json varchar(2000))");
             db.execute("create table channel_event(id bigint auto_increment primary key, activity_id bigint, poster_member_id bigint)");
+            db.execute("create table club_invite(id bigint auto_increment primary key, code varchar(10), creator_member_id bigint,"
+                    + " revoked_at timestamp null)");
             db.execute("create table channel_event_rsvp(id bigint auto_increment primary key, event_id bigint, member_id bigint,"
                     + " status varchar(8))");
             db.execute("create table channel_event_photo(id bigint auto_increment primary key, event_id bigint, member_id bigint,"
@@ -315,6 +323,7 @@ class MemberPrivacyErasureServiceTest {
             db.update("insert into account_deregistration(member_id) values(?)", m);
             db.update("insert into age_attestation(member_id) values(?)", m);
             db.update("insert into channel_event(activity_id,poster_member_id) values(?,?)", 900 + m, m);
+            db.update("insert into club_invite(code,creator_member_id) values(?,?)", "INV" + m, m);
             db.update("insert into channel_event_rsvp(event_id,member_id,status) values(1,?,'MAYBE')", m);
             db.update("insert into channel_event_photo(event_id,member_id,asset_id) values(1,?,?)", m, 300 + m);
         }
