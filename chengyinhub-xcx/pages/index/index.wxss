@@ -398,7 +398,7 @@ page {
   bottom: 0;
   background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.75) 100%); /* ds-ok 卡面压深渐变:底部压深承载标题(白字压最亮封面实测 9.68:1),token 层无渐变表达 */
 }
-.v3-nearby-body { position: absolute; left: var(--cy-space-2-5); right: var(--cy-space-2-5); bottom: var(--cy-space-2-5); }
+.v3-nearby-body { position: absolute; left: var(--cy-space-2-5); right: var(--cy-space-2-5); bottom: var(--cy-space-2-5); white-space: normal; }
 .v3-nearby-title {
   font-size: var(--cy-type-card-title);
   font-weight: 700;

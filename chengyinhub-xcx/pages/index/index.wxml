@@ -149,7 +149,7 @@
               <view class="v3-nearby-mask"></view>
               <view class="v3-nearby-body"><view class="v3-nearby-title ep2">{{item.name}}</view>
                 <view class="v3-nearby-meta flex-ac">
-                  <text class="v3-nearby-time">{{nearbyEventsLocated ? item.distance : (item.addressName || city)}}</text>
+                  <text class="v3-nearby-time ep1">{{nearbyEventsLocated ? item.distance : (item.addressName || city)}}</text>
                   <text class="v3-nearby-time" wx:if="{{item.minAmout != null}}">{{money.amount(item.minAmout)}} 起</text><text wx:else>—</text>
                 </view>
               </view>
