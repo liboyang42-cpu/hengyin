@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Propagation;
 @Service
 public class MmsMerchantServiceImpl implements IMmsMerchantService
 {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MmsMerchantServiceImpl.class);
     private static final String OWNER_CHANGE_REASON = "MERCHANT_OWNER_CHANGED";
     private static final String OWNER_CHANGE_ACTOR = "SYSTEM_OWNER_CHANGE";
     /** 与 mms_merchant.disable_reason 的 varchar(500) 对齐。 */
@@ -71,6 +72,9 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
     @Autowired private IUmsMemberService umsMemberService;
     @Autowired private IUmsMemberPointsDetailService umsMemberPointsDetailService;
     @Autowired private ICmsPointsSettingService cmsPointsSettingService;
+    /** MERCHANT-14:审核结果站内信(best-effort,提交后发送;未注入时不发)。 */
+    @Autowired(required = false) @org.springframework.context.annotation.Lazy
+    private com.chengyinhub.business.service.INotifyService notifyService;
 
     /**
      * 查询商家
@@ -211,7 +215,35 @@ public class MmsMerchantServiceImpl implements IMmsMerchantService
                 && !Long.valueOf(1L).equals(current.getStatus())) {
             awardApprovalReferral(nextOwner);
         }
+        if (rows == 1) notifyReviewDecision(current, nextOwner, nextStatus, mmsMerchant.getReson());
         return rows;
+    }
+
+    /**
+     * MERCHANT-14:审核状态从「非通过/非驳回」变成通过(1)或驳回(2)时,提交后给申请人发一条站内信。
+     * 同一状态重复保存不再发;通知失败不影响审核。
+     */
+    void notifyReviewDecision(MmsMerchant before, Long owner, Long nextStatus, String reason) {
+        if (notifyService == null || owner == null || nextStatus == null) return;
+        boolean approved = Long.valueOf(1L).equals(nextStatus);
+        boolean rejected = Long.valueOf(2L).equals(nextStatus);
+        if ((!approved && !rejected) || nextStatus.equals(before.getStatus())) return;
+        String shownReason = rejected ? (reason != null ? reason : before.getReson()) : null;
+        Runnable send = () -> {
+            try {
+                notifyService.notifyMerchantReview(owner, approved, shownReason);
+            } catch (RuntimeException e) {
+                log.warn("event=MERCHANT_REVIEW_NOTICE_SKIPPED merchant={} reason={}", before.getId(), e.getClass().getSimpleName());
+            }
+        };
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override public void afterCommit() { send.run(); }
+                    });
+        } else {
+            send.run();
+        }
     }
 
     private void awardApprovalReferral(Long memberId) {

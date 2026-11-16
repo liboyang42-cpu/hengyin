@@ -72,4 +72,9 @@ public interface INotifyService {
     default boolean notifyGameDuel(Long memberId, Long duelId, String text) {
         return false;
     }
+
+    /** MERCHANT-14 商家入驻审核结果站内信:approved=true 为通过,否则为驳回;reason 可为空。默认不发。 */
+    default boolean notifyMerchantReview(Long memberId, boolean approved, String reason) {
+        return false;
+    }
 }

@@ -86,6 +86,21 @@ class NpcFeatureFlagsTest {
      */
     @Test
     @SuppressWarnings("unchecked")
+    void merchantReviewSla_isTheTrimmedConfigText() {
+        config("false", "false");
+        when(configService.selectConfigByKey("merchant.onboarding.review-sla")).thenReturn("  1-3 个工作日 ");
+        ApiConfigController c = new ApiConfigController();
+        ReflectionTestUtils.setField(c, "configService", configService);
+        ReflectionTestUtils.setField(c, "npcFeatureFlags", flags);
+        ReflectionTestUtils.setField(c, "communityPostFeatureGate", communityPostFeatureGate);
+
+        Map<String, Object> data = (Map<String, Object>) c.features().get(AjaxResult.DATA_TAG);
+
+        assertEquals("1-3 个工作日", data.get("merchantReviewSla"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
     void featuresEndpoint_readsThroughSameComponent() {
         config("false", "true");
         when(configService.selectConfigByKey("feature.flag.finishNearbyRoute")).thenReturn("true");
@@ -112,7 +127,9 @@ class NpcFeatureFlagsTest {
                         // P0-14:「关于」页与 AI 生成入口的算法备案号公示位(字符串,未配置为空串)
                         "aigcFilingNo",
                         // P1b SEC-16 / SEC-13 / SEC-14:App 备案号、客服联系方式、年龄政策
-                        "appFilingNo", "supportContact", "agePolicy")),
+                        "appFilingNo", "supportContact", "agePolicy",
+                        // MERCHANT-14:商家入驻审核时长的公示文案(字符串,未配置为空串)
+                        "merchantReviewSla")),
                 new java.util.TreeSet<>(data.keySet()),
                 "下发键集合必须与小程序/App 的受控功能键逐项一致");
         assertFalse(data.containsKey("selfPlay"), "无人读取的假开关不得再下发(X09)");
@@ -123,6 +140,7 @@ class NpcFeatureFlagsTest {
         assertEquals(false, data.get("merchantNonMoney"), "Q1:商家非资金写入在生产必须默认关闭");
         assertEquals(true, data.get("finishNearbyRoute"), "配置明确为 true 时必须能开启完赛推荐灰度");
         assertEquals("", data.get("aigcFilingNo"), "备案号未配置时下发空串,小程序不显示");
+        assertEquals("", data.get("merchantReviewSla"), "MERCHANT-14:审核时长未配置时下发空串,App 不写具体时长");
         assertEquals("", data.get("appFilingNo"), "App 备案号未配置时下发空串,App 不显示备案行");
         assertEquals("", data.get("supportContact"), "客服联系方式未配置时下发空串");
         assertEquals("adults", data.get("agePolicy"), "年龄政策缺省为 adults");
