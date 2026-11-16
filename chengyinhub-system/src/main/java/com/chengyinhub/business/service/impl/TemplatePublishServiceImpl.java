@@ -522,12 +522,11 @@ public class TemplatePublishServiceImpl implements ITemplatePublishService {
 
     /** x-template-games R9:采用来的官方示例题,题目和答案原样不动不能发布(开关默认开)。 */
     private void assertOfficialPlaceholderReplaced(Long originalTemplateId, CmsMemberTemplate template) {
-        if (originalTemplateId == null || originalTemplateId <= 0) return;
+        if (com.chengyinhub.business.service.support.OfficialPlaceholderGuard.check(originalTemplateId, template) == null) return;
         String raw = sysConfigService == null ? null
                 : sysConfigService.selectConfigByKey(com.chengyinhub.business.service.support.OfficialPlaceholderGuard.KEY);
         if (!com.chengyinhub.business.service.support.OfficialPlaceholderGuard.enabled(raw)) return;
-        String refusal = com.chengyinhub.business.service.support.OfficialPlaceholderGuard.check(
-                templateLibraryService.selectCmsTemplateLibraryById(originalTemplateId), template);
+        String refusal = com.chengyinhub.business.service.support.OfficialPlaceholderGuard.check(originalTemplateId, template);
         if (refusal != null) throw new ServiceException(refusal, HttpStatus.BAD_REQUEST);
     }
 
