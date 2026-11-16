@@ -127,6 +127,17 @@ public class MapPoiTileCache {
         ranked.sort(Comparator.comparingInt((Ranked r) -> level(r.poi())).reversed()
                 .thenComparingDouble(Ranked::distance)
                 .thenComparing(r -> r.poi().getId()));
+        // Java's cos / pow and the server's libm can differ in the last bit or two, so two places whose distances are
+        // within that margin could rank the other way in MySQL. Exact mirror ties (same |dLat| and |dLng|) are equal
+        // on both sides and break by id; any other near tie among the places that decide the answer goes to MySQL.
+        for (int i = 0; i < ranked.size() - 1 && i < limit; i++) {
+            Ranked a = ranked.get(i), b = ranked.get(i + 1);
+            if (level(a.poi()) == level(b.poi()) && nearTie(a.distance(), b.distance())
+                    && !mirror(a.poi(), b.poi(), centerLat, centerLng)) {
+                cache.nearTie();
+                return mapper.selectPoisNear(minLat, maxLat, minLng, maxLng, memberId, limit);
+            }
+        }
         List<RoamPoi> ordered = new ArrayList<>(Math.min(limit, ranked.size()));
         for (int i = 0; i < ranked.size() && i < limit; i++) ordered.add(ranked.get(i).poi());
         mark(ordered, memberId);
@@ -134,13 +145,27 @@ public class MapPoiTileCache {
     }
 
     /**
-     * {@code power(p.lat - c_lat, 2) + power((p.lng - c_lng) * cos(radians(c_lat)), 2)} as MySQL evaluates it:
-     * the differences are exact decimals, each is converted to double once, then squared and summed in double.
+     * {@code power(p.lat - c_lat, 2) + power((p.lng - c_lng) * cos(radians(c_lat)), 2)} in the same steps as MySQL:
+     * the differences are exact decimals, each is converted to double once, then squared and summed in double. Java's
+     * cos and pow may differ from the server's libm in the last bit; {@link #nearTie} keeps that from changing order.
      */
     static double squaredDistance(RoamPoi p, BigDecimal centerLat, BigDecimal centerLng, double k) {
         double dLat = p.getLat().subtract(centerLat).doubleValue();
         double dLng = p.getLng().subtract(centerLng).doubleValue() * k;
         return Math.pow(dLat, 2) + Math.pow(dLng, 2);
+    }
+
+    /** Relative margin far above the few-ULP difference between Java's and MySQL's double maths (about 1e-15). */
+    static final double NEAR_TIE = 1e-12;
+
+    static boolean nearTie(double a, double b) {
+        return Math.abs(a - b) <= NEAR_TIE * Math.max(Math.abs(a), Math.abs(b));
+    }
+
+    /** Same distance to the centre on both axes (same point, or mirrored): equal in MySQL too, whatever its libm. */
+    static boolean mirror(RoamPoi a, RoamPoi b, BigDecimal centerLat, BigDecimal centerLng) {
+        return a.getLat().subtract(centerLat).abs().compareTo(b.getLat().subtract(centerLat).abs()) == 0
+                && a.getLng().subtract(centerLng).abs().compareTo(b.getLng().subtract(centerLng).abs()) == 0;
     }
 
     static int level(RoamPoi p) {

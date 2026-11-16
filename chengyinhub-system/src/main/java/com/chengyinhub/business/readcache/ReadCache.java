@@ -55,6 +55,7 @@ public class ReadCache {
             .build();
     private final AtomicLong hits = new AtomicLong();
     private final AtomicLong misses = new AtomicLong();
+    private final AtomicLong nearTies = new AtomicLong();
     private final AtomicLong errors = new AtomicLong();
     private final AtomicLong invalidations = new AtomicLong();
 
@@ -135,6 +136,8 @@ public class ReadCache {
     void hit(int n) { hits.addAndGet(n); }
 
     void miss(int n) { misses.addAndGet(n); }
+    /** A tile-cache answer handed to MySQL because two places were too close to call (MapPoiTileCache). */
+    void nearTie() { nearTies.incrementAndGet(); }
 
     void failed(String what, String namespace, Exception e) {
         long n = errors.incrementAndGet();
@@ -194,6 +197,7 @@ public class ReadCache {
     public long hits() { return hits.get(); }
 
     public long misses() { return misses.get(); }
+    public long nearTies() { return nearTies.get(); }
 
     public long errors() { return errors.get(); }
 

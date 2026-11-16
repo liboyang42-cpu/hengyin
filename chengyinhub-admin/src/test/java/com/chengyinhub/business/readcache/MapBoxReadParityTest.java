@@ -371,4 +371,27 @@ public class MapBoxReadParityTest {
             assertFalse(e.getValue().contains("\"pendingRedeem\":true"), e.getKey());
         }
     }
+
+    @Test
+    void nearTieGuardOnlyTriggersForCloseCallsThatAreNotMirrors() {
+        assertTrue(MapPoiTileCache.nearTie(2.1421408084498252E-4, 2.142140808449825E-4), "one ULP apart");
+        assertFalse(MapPoiTileCache.nearTie(2.1421408084498252E-4, 2.1421408084598252E-4));
+        java.math.BigDecimal c = new java.math.BigDecimal("30.230000"), d = new java.math.BigDecimal("120.150000");
+        RoamPoi a = new RoamPoi(), b = new RoamPoi(), x = new RoamPoi();
+        a.setLat(new java.math.BigDecimal("30.231000")); a.setLng(new java.math.BigDecimal("120.152000"));
+        b.setLat(new java.math.BigDecimal("30.229000")); b.setLng(new java.math.BigDecimal("120.148000"));
+        x.setLat(new java.math.BigDecimal("30.232000")); x.setLng(new java.math.BigDecimal("120.151000"));
+        assertTrue(MapPoiTileCache.mirror(a, b, c, d), "mirrored about the centre");
+        assertTrue(MapPoiTileCache.mirror(a, a, c, d), "same point");
+        assertFalse(MapPoiTileCache.mirror(a, x, c, d));
+        double k = Math.cos(Math.toRadians(c.doubleValue()));
+        assertEquals(MapPoiTileCache.squaredDistance(a, c, d, k), MapPoiTileCache.squaredDistance(b, c, d, k));
+    }
+
+    @Test
+    void ordinaryBoxesNeverHitTheNearTieGuard() {
+        double[] b = box(30.23, 120.155, 380);
+        tiles.near(b[0], b[1], b[2], b[3], MEMBER, 500);
+        assertEquals(0, cache.nearTies());
+    }
 }
