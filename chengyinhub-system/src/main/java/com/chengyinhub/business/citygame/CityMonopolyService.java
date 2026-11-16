@@ -1861,6 +1861,16 @@ public class CityMonopolyService {
 
     /** Territory layer for a bbox; properties in tiles the viewer has not lit return only district and tier. */
     public Map<String, Object> map(Long memberId, Double minLat, Double minLng, Double maxLat, Double maxLng) {
+        return map(memberId, minLat, minLng, maxLat, maxLng, false);
+    }
+
+    /**
+     * W7 x-fog-monopoly: the layer the fog map draws. Every row says its {@code state} (MINE / HELD / PROTECTED / FREE /
+     * FOGGED); lit held places add {@code rentPerVisit} (base × level, weathered halves it). With {@code includeFree},
+     * unheld places of live City Monopoly boards in view are listed under {@code free}, with the same fog rule: a free
+     * place in a cell the viewer has not lit says only its tier, district and cell.
+     */
+    public Map<String, Object> map(Long memberId, Double minLat, Double minLng, Double maxLat, Double maxLng, boolean includeFree) {
         CityGameSupport.requireMember(memberId);
         if (minLat == null || minLng == null || maxLat == null || maxLng == null || maxLat - minLat > 0.5 || maxLng - minLng > 0.5) {
             throw new CityGameException(400, "BBOX_INVALID", "地图范围无效");
@@ -1873,21 +1883,105 @@ public class CityMonopolyService {
         for (Map<String, Object> t : inView) {
             if (t.get("geohash7") != null && ((Number) t.get("owner_member_id")).longValue() != memberId) wanted.add(String.valueOf(t.get("geohash7")));
         }
+        List<Map<String, Object>> free = includeFree ? freeInView(minLat, minLng, maxLat, maxLng) : List.of();
+        for (Map<String, Object> f : free) {
+            if (f.get("geohash7") != null) wanted.add(String.valueOf(f.get("geohash7")));
+        }
         Set<String> lit = litCells(memberId, wanted);
+        long now = now();
         List<Map<String, Object>> items = new ArrayList<>();
         for (Map<String, Object> t : inView) {
             boolean visible = (t.get("geohash7") != null && lit.contains(String.valueOf(t.get("geohash7")).toLowerCase(java.util.Locale.ROOT))) || ((Number) t.get("owner_member_id")).longValue() == memberId;
             if (!visible) {
-                Map<String, Object> fogged = new LinkedHashMap<>();
-                fogged.put("districtId", t.get("district_id"));
-                fogged.put("tier", t.get("tier"));
-                fogged.put("geohash7", t.get("geohash7"));
-                items.add(fogged);
+                items.add(foggedRow(t));
             } else {
-                items.add(wire(c, t, memberId, false));
+                Map<String, Object> row = wire(c, t, memberId, false);
+                row.put("state", heldState(t, memberId, now));
+                row.put("fogged", false);
+                row.put("rentPerVisit", rentPerVisit(c, t));
+                items.add(row);
             }
         }
-        return Map.of("items", items, "currency", "POINTS");
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("items", items);
+        out.put("currency", "POINTS");
+        if (includeFree) {
+            List<Map<String, Object>> freeRows = new ArrayList<>();
+            for (Map<String, Object> f : free) {
+                boolean visible = f.get("geohash7") != null && lit.contains(String.valueOf(f.get("geohash7")).toLowerCase(java.util.Locale.ROOT));
+                freeRows.add(visible ? freeRow(c, f) : foggedRow(f));
+            }
+            out.put("free", freeRows);
+        }
+        return out;
+    }
+
+    /** Most free places one map read lists. */
+    static final int FREE_LIMIT = 300;
+
+    /** A row in unrevealed fog: the tier, the district and the ~150 m cell (a "something is here" hint), nothing else. */
+    static Map<String, Object> foggedRow(Map<String, Object> t) {
+        Map<String, Object> fogged = new LinkedHashMap<>();
+        fogged.put("districtId", t.get("district_id"));
+        fogged.put("tier", t.get("tier"));
+        fogged.put("geohash7", t.get("geohash7"));
+        fogged.put("state", "FOGGED");
+        fogged.put("fogged", true);
+        return fogged;
+    }
+
+    static String heldState(Map<String, Object> t, long viewer, long now) {
+        if (((Number) t.get("owner_member_id")).longValue() == viewer) return "MINE";
+        Long until = t.get("protected_until") == null ? null : CityGameSupport.millis(t.get("protected_until"));
+        return until != null && until > now ? "PROTECTED" : "HELD";
+    }
+
+    /** Rent one eligible visit pays before time, set, event and caps: base × level, halved while weathered. */
+    static long rentPerVisit(CityMonopolyConfig c, Map<String, Object> t) {
+        int tier = CityMonopolyRules.normalizeTier(t.get("tier") instanceof Number ? ((Number) t.get("tier")).intValue() : null);
+        int level = t.get("upgrade_level") instanceof Number ? ((Number) t.get("upgrade_level")).intValue() : 0;
+        double rent = CityMonopolyRules.baseYield(c, tier) * CityMonopolyRules.levelYieldMultiplier(c, level);
+        if ("WEATHERED".equals(t.get("decay_state"))) rent *= c.num("city.monopoly.decay.weathered.yield");
+        return Math.max(0L, Math.round(rent));
+    }
+
+    /** Unheld places of live City Monopoly boards in the box, with their cell (computed when the point has none). */
+    List<Map<String, Object>> freeInView(double minLat, double minLng, double maxLat, double maxLng) {
+        List<Map<String, Object>> rows = jdbc.queryForList("SELECT p.board_id, p.point_id, p.title, p.latitude, p.longitude, p.tier, p.district_id, "
+                + "p.geohash7, p.place_id FROM city_game_point p WHERE p.del_flag = 0 AND p.availability = 'AVAILABLE' "
+                + "AND p.latitude BETWEEN ? AND ? AND p.longitude BETWEEN ? AND ? "
+                + "AND NOT EXISTS (SELECT 1 FROM roam_territory t WHERE t.board_id = p.board_id AND t.point_id = p.point_id AND t.status = 'ACTIVE') "
+                + "LIMIT " + FREE_LIMIT, minLat, maxLat, minLng, maxLng);
+        Map<String, Boolean> live = new java.util.HashMap<>();
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (rows == null) return out;
+        for (Map<String, Object> r : rows) {
+            String board = (String) r.get("board_id");
+            if (board == null || !live.computeIfAbsent(board, this::liveBoard)) continue;
+            Map<String, Object> row = new LinkedHashMap<>(r);
+            Double lat = dbl(r.get("latitude")), lng = dbl(r.get("longitude"));
+            if (row.get("geohash7") == null && lat != null && lng != null) row.put("geohash7", RoamTerritoryService.encodeGeohash7(lat, lng));
+            out.add(row);
+        }
+        return out;
+    }
+
+    static Map<String, Object> freeRow(CityMonopolyConfig c, Map<String, Object> f) {
+        int tier = CityMonopolyRules.normalizeTier(f.get("tier") instanceof Number ? ((Number) f.get("tier")).intValue() : null);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("pointId", f.get("point_id"));
+        out.put("boardId", f.get("board_id"));
+        out.put("poiId", f.get("place_id"));
+        out.put("title", f.get("title"));
+        out.put("tier", tier);
+        out.put("districtId", f.get("district_id"));
+        out.put("geohash7", f.get("geohash7"));
+        out.put("lat", dbl(f.get("latitude")));
+        out.put("lng", dbl(f.get("longitude")));
+        out.put("state", "FREE");
+        out.put("fogged", false);
+        out.put("rentPerVisit", (long) CityMonopolyRules.baseYield(c, tier));
+        return out;
     }
 
     static final int LIT_CHUNK = 200;
@@ -1941,14 +2035,43 @@ public class CityMonopolyService {
         out.put("weeklyVisits", visits);
         if ("ACTIVE".equals(t.get("status")) && MONOPOLY.equals(t.get("rules_kind"))) {
             long owner = ((Number) t.get("owner_member_id")).longValue();
-            out.put("estimatedYield", CityMonopolyRules.computeYield(c, new CityMonopolyRules.YieldInput(
+            CityMonopolyRules.YieldQuote estimate = CityMonopolyRules.computeYield(c, new CityMonopolyRules.YieldInput(
                     ((Number) t.get("tier")).intValue(), ((Number) t.get("upgrade_level")).intValue(), CityMonopolyRules.SetState.NONE,
                     zdt(c, now).toLocalTime(), CityMonopolyRules.Weather.CLEAR, c.num("city.monopoly.yield.event_multiplier"),
                     c.num("city.monopoly.yield.city_launch_multiplier"), false, attrLevel(owner, "charm"),
-                    "WEATHERED".equals(t.get("decay_state")), false)).raw());
+                    "WEATHERED".equals(t.get("decay_state")), false));
+            out.put("estimatedYield", estimate.raw());
+            // W7 x-fog-monopoly: what the rent is made of, in a fixed order; the app names each key in plain words.
+            putMultipliers(out, estimate.multipliers());
         }
         if ("ACTIVE".equals(t.get("status")) && scouted(memberId, territoryId, now)) out.put("dc", dc(c, t, now));
         return out;
+    }
+
+    /** This week's rent event multiplier as rent applies it (clamped to the configured maximum); 1.0 means none. */
+    static double eventMultiplier(CityMonopolyConfig c) {
+        return Math.min(c.num("city.monopoly.yield.event_multiplier"), c.num("city.monopoly.yield.event_multiplier_max"));
+    }
+
+    /** Display order of the rent multipliers; keys the server adds later follow in their own order. */
+    static final List<String> MULTIPLIER_ORDER = List.of("level", "set", "time", "env", "launch", "team", "charm", "weathered", "concentration");
+
+    /** Puts {@code multipliers} (key → factor) and {@code multiplierKeys} (display order, factors of exactly 1 left out). */
+    static void putMultipliers(Map<String, Object> out, Map<String, Double> multipliers) {
+        Map<String, Double> shown = new LinkedHashMap<>();
+        List<String> keys = new ArrayList<>();
+        if (multipliers != null) {
+            List<String> order = new ArrayList<>(MULTIPLIER_ORDER);
+            for (String k : multipliers.keySet()) if (!order.contains(k)) order.add(k);
+            for (String k : order) {
+                Double v = multipliers.get(k);
+                if (v == null || Math.abs(v - 1.0) < 1e-9) continue;
+                shown.put(k, Math.round(v * 100.0) / 100.0);
+                keys.add(k);
+            }
+        }
+        out.put("multipliers", shown);
+        out.put("multiplierKeys", keys);
     }
 
     public Map<String, Object> revenue(Long memberId, Long cursor, Integer limit) {
@@ -2101,6 +2224,8 @@ public class CityMonopolyService {
         out.put("freezesAt", s.freezesAt().toInstant().toEpochMilli());
         out.put("endsAt", s.endsAt().toInstant().toEpochMilli());
         out.put("countdownMs", Math.max(0, s.freezesAt().toInstant().toEpochMilli() - now));
+        // W7 x-fog-monopoly: this week's rent event (1.0 = none), clamped like the rent itself.
+        out.put("eventMultiplier", eventMultiplier(c));
         List<Map<String, Object>> solo = soloScores(c, s.seasonId());
         int rank = 0;
         for (int i = 0; i < solo.size(); i++) if (((Number) solo.get(i).get("subjectId")).longValue() == memberId) rank = i + 1;

@@ -634,7 +634,7 @@ public class RoamTerritoryService {
             out.put("idempotentReplay", false);
             out.put("checkinId", checkinId);
             out.put("territoryId", territoryId);
-            out.put("ownerMemberId", ownerId);
+            putHolder(out, ownerId, memberId);
             out.put("selfVisit", selfVisit);
             out.put("cooldownActive", false);
             out.put("visitorPointsSpent", 0L);
@@ -680,7 +680,7 @@ public class RoamTerritoryService {
         out.put("idempotentReplay", false);
         out.put("checkinId", checkinId);
         out.put("territoryId", territoryId);
-        out.put("ownerMemberId", ownerId);
+        putHolder(out, ownerId, memberId);
         out.put("selfVisit", selfVisit);
         out.put("cooldownActive", cooldownHit);
         out.put("visitorPointsSpent", tollPoints);
@@ -784,8 +784,14 @@ public class RoamTerritoryService {
                         + "VALUES (?,?,?,?,?,?,?,?,?,?,NULL,0,?,'CITY_COIN','PASS',?)",
                 checkinId, territoryId, visitorMemberId, ownerId, sourceKey, checkinKind,
                 useLat, useLng, null, distM, ownerRevenue, new Timestamp(now));
-        return Map.of("credited", true, "territoryId", territoryId, "ownerMemberId", ownerId,
-                "ownerRevenuePoints", ownerRevenue, "revenueMode", REVENUE_MODE, "checkinId", checkinId);
+        Map<String, Object> credited = new LinkedHashMap<>();
+        credited.put("credited", true);
+        credited.put("territoryId", territoryId);
+        putHolder(credited, ownerId, visitorMemberId);
+        credited.put("ownerRevenuePoints", ownerRevenue);
+        credited.put("revenueMode", REVENUE_MODE);
+        credited.put("checkinId", checkinId);
+        return credited;
     }
 
     /** Coordinate-based fallback hook when /api/roam/checkin lights a non-participating point near an active territory. */
@@ -1037,6 +1043,18 @@ public class RoamTerritoryService {
         return findActiveTerritoryForUpdate(poiId, boardId, propertyId);
     }
 
+    /**
+     * W7 x-fog-monopoly (carried over from x-city-territory): a check-in answer names the holder the way CITY-12 does.
+     * {@code ownerMemberId} stays as a key for older builds but is the id only for the player's own place; everyone
+     * else gets {@code holderMasked} ("玩家1***9") and {@code isMine}.
+     */
+    static void putHolder(Map<String, Object> out, long owner, long viewer) {
+        boolean mine = owner > 0 && owner == viewer;
+        out.put("ownerMemberId", mine ? owner : null);
+        out.put("holderMasked", owner > 0 ? CityMonopolyService.mask(owner) : null);
+        out.put("isMine", mine);
+    }
+
     /** CITY-4: rebuilds the check-in answer from the stored row (same keys as the first answer). */
     static Map<String, Object> checkinReplay(Map<String, Object> row, long memberId) {
         Map<String, Object> out = new LinkedHashMap<>();
@@ -1046,7 +1064,7 @@ public class RoamTerritoryService {
         out.put("idempotentReplay", true);
         out.put("checkinId", row.get("checkin_id"));
         out.put("territoryId", row.get("territory_id"));
-        out.put("ownerMemberId", owner);
+        putHolder(out, owner, memberId);
         out.put("selfVisit", owner == memberId);
         out.put("cooldownActive", false);
         out.put("visitorPointsSpent", row.get("points_spent") instanceof Number ? ((Number) row.get("points_spent")).longValue() : 0L);
