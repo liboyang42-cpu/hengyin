@@ -1194,6 +1194,9 @@
     </view>
     </cy-card>
 
+    <!-- x-life-games:已发布的自有偏好题,只读汇总玩家选了什么(回答满 3 份才显示分布) -->
+    <cy-preference-tally wx:if="{{ isMyScope && tallyTemplateId && formData.validationMethod === 6 }}" templateId="{{ tallyTemplateId }}" scope="{{ operationScope }}" />
+
     <!-- 题干附件:文字作答与选项问答共用一段,别在两张卡里各写一份(改一处漏一处) -->
     <cy-card class="cg-cfg" wx:if="{{ formData.validationMethod === 1 || formData.validationMethod === 3 }}">
     <view class="cg-cfg-label">题干附件</view>
