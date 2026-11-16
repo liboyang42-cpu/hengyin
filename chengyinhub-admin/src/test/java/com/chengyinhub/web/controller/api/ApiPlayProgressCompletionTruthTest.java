@@ -604,6 +604,42 @@ class ApiPlayProgressCompletionTruthTest
         assertEquals("第 7 根。老周在这里留下了第二张字条。", ((Map<String, Object>) result.get("data")).get("answerReveal"));
     }
 
+    /** x-life-games R10:答对回执带作者的完成反馈(与 /nodes 同源),答错不带。 */
+    @SuppressWarnings("unchecked")
+    @Test
+    void correctReceiptCarriesTheAuthorsFeedbackTextAndAWrongOneDoesNot() {
+        topic.setProductType(ProductType.FREE_EXPLORE);
+        topic.setJourneyRulesJson("{\"schemaVersion\":1,\"checkEnabled\":false,\"thoughts\":["
+                + "{\"key\":\"echo\",\"name\":\"回声\",\"need\":1}]}");
+        node.setTemplateId(900L);
+        CmsMemberTemplate tpl = new CmsMemberTemplate();
+        tpl.setValidationMethod(3); tpl.setCorrectAnswer("C");
+        tpl.setFeedbackText("时间对上了，把这一段记进你的可用时间。");
+        when(templateService.selectCmsMemberTemplateById(900L)).thenReturn(tpl);
+        when(progressService.insertPlayerNodeProgress(any())).thenAnswer(call -> {
+            ((PlayerNodeProgress) call.getArgument(0)).setId(901L);
+            return 1;
+        });
+        com.chengyinhub.web.service.TopicRouteCompletionCoordinator coordinator =
+                mock(com.chengyinhub.web.service.TopicRouteCompletionCoordinator.class);
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller,"topicRouteCompletionCoordinator",coordinator);
+        com.chengyinhub.business.domain.route.TopicRouteState state =
+                new com.chengyinhub.business.domain.route.TopicRouteState();
+        state.setRouteMode("LINEAR"); state.setStatus("ACTIVE");
+        when(coordinator.advanceOriginal(eq(PLAYER),eq(TOPIC),eq(ACTIVITY),eq(NODE),eq(99L),eq("answer-1"),eq(2),
+                eq("player-node-progress:901"),isNull(),isNull())).thenReturn(state);
+        BasicPlayCommandFixtures.frozenRun(controller,ACTIVITY,TOPIC,NODE,2,new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                .put("validationMethod",3).put("correctAnswer","C").put("answerReveal","三家都开着的是 14:00–18:00。"));
+        AjaxResult wrong = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "B", null, "answer-0", 2);
+        assertNotEquals(200, wrong.get("code"));
+        org.junit.jupiter.api.Assertions.assertFalse(String.valueOf(wrong.get("data")).contains("可用时间"), "答错不带完成反馈");
+        AjaxResult result = BasicPlayCommandFixtures.answer(controller, String.valueOf(ACTIVITY), String.valueOf(NODE), "C", null, "answer-1", 2);
+        assertEquals(200, result.get("code"));
+        Map<String, Object> data = (Map<String, Object>) result.get("data");
+        assertEquals("三家都开着的是 14:00–18:00。", data.get("answerReveal"));
+        assertEquals("时间对上了，把这一段记进你的可用时间。", data.get("feedbackText"));
+    }
+
     /** 负控:业务拒绝(下架站)不许带 answerWrong —— 否则连碰两次业务错误就解锁「揭示答案」。 */
     @Test
     void businessRefusalResponseDoesNotCarryTheAnswerWrongMarker()

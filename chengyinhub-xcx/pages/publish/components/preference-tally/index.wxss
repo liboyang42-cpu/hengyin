@@ -1,0 +1,11 @@
+/* 只用现有 token,与编辑页「全部结果分支预览」同一读法 */
+.pt-card { display: block; }
+.pt-label { color: var(--cy-color-text-primary); font-size: var(--cy-type-body); font-weight: 700; }
+.pt-hint { margin-top: var(--cy-space-1); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); line-height: 1.5; }
+.pt-total { margin-top: var(--cy-space-2); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
+.pt-row { margin-top: var(--cy-space-2); padding: var(--cy-space-3); border: 1rpx solid var(--cy-border-line); border-radius: var(--cy-radius-md); background: var(--cy-color-bg-page); }
+.pt-row__head { display: flex; justify-content: space-between; gap: var(--cy-space-2); }
+.pt-row__title { color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
+.pt-row__num { color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); font-family: var(--cy-font-numeric); }
+.pt-bar { margin-top: var(--cy-space-1); height: 8rpx; border-radius: var(--cy-radius-sm); background: var(--cy-color-bg-surface-subtle); overflow: hidden; }
+.pt-bar__fill { height: 100%; background: var(--cy-color-text-secondary); }

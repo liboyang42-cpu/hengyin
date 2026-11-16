@@ -539,8 +539,22 @@ public class PlayBasicCommandApplication {
         if (ctx.nightWarning) data.put("nightWarning", true); // M2 自玩夜间提示(不阻断)
         // P-11:答对之后才把作者的揭示随回执给出,题卡停一拍写「对了」+ 揭示
         if (StringUtils.isNotBlank(answerReveal)) data.put("answerReveal", answerReveal.trim());
+        // x-life-games R10:作者写的完成反馈随答对回执一起给(与 /nodes 同源:冻结内容优先,否则实时模板),
+        // App 在判定下面显示;小程序仍用节点列表里的 passText,多一个键不影响它。
+        String feedbackText = answerFeedbackText(node, frozenAnswer);
+        if (StringUtils.isNotBlank(feedbackText)) data.put("feedbackText", feedbackText.trim());
         boolean firstTime = Boolean.TRUE.equals(data.get("firstTime"));
         return AjaxResult.success(firstTime ? "答对了！" : "该节点已完成", data);
+    }
+
+    private String answerFeedbackText(CmsTopicNode node, com.fasterxml.jackson.databind.JsonNode frozenAnswer) {
+        if (playNodeContext.hasFrozenContent(frozenAnswer)) {
+            CmsMemberTemplate frozen = playNodeContext.frozenTemplateView(node, frozenAnswer);
+            return frozen == null ? null : frozen.getFeedbackText();
+        }
+        if (node.getTemplateId() == null) return null;
+        CmsMemberTemplate live = cmsMemberTemplateService.selectCmsMemberTemplateById(node.getTemplateId());
+        return live == null ? null : live.getFeedbackText();
     }
 
     /** 开局时定位校验(300 米,精度 80 米);作答随带的定位与 arrive 同口径。null = 通过。 */
