@@ -10,6 +10,21 @@ const pickIds = detail => (Array.isArray(detail.optionIds) ? detail.optionIds : 
 function judge(advanced, kit, action, detail) {
   const d = detail || {};
   if (!kit) return '';
+  const qa = advanced && advanced.qa;
+  if (kit.type === 'qa' && qa && qa.judge === false && kit.mode !== 'shot' && qa.mode !== 'SHOT') {
+    if (!['answer', 'submit'].includes(action) || (kit.mode && kit.mode !== d.mode)) return '';
+    if (d.mode === 'type') return typeof d.input === 'string' && d.input.trim() ? 'neutral' : '';
+    if (d.mode !== 'pick') return '';
+    const options = Array.isArray(qa.options) ? qa.options : [];
+    let ids;
+    if (Object.prototype.hasOwnProperty.call(d, 'optionIds')) {
+      if (!Array.isArray(d.optionIds)) return '';
+      ids = d.optionIds;
+    } else if (Object.prototype.hasOwnProperty.call(d, 'optionId')) ids = [d.optionId];
+    else ids = Number.isInteger(d.index) && options[d.index] ? [options[d.index].id] : [];
+    return ids.length && (qa.multi === true || ids.length === 1) && new Set(ids).size === ids.length
+      && ids.every(id => typeof id === 'string' && id && options.some(option => option.id === id)) ? 'neutral' : '';
+  }
   if (action === 'verdict') return d.kind === 'fail' ? 'fail' : 'win';
   if (action === 'drawn' || action === 'scanned') return 'win';
   if (kit.type === 'typein') return kit.passed ? 'win' : 'fail';
@@ -34,7 +49,6 @@ function judge(advanced, kit, action, detail) {
     const ids = Object.keys(want);
     return ids.length && ids.length === Object.keys(got).length && ids.every(id => got[id] === want[id]) ? 'win' : 'fail';
   }
-  const qa = advanced && advanced.qa;
   if (kit.type !== 'qa' || !qa) return '';
   if (action === 'shoot') return 'win';
   if (d.mode === 'type') {
@@ -72,7 +86,14 @@ function judge(advanced, kit, action, detail) {
 }
 
 /** 判定屏上那句话和配图:作者在「结果反馈」里打开了哪一边就带哪一边,没打开就只有对勾 / 两个字。 */
-function feedback(advanced, kind) {
+function feedback(advanced, kind, detail) {
+  if (kind === 'neutral') {
+    const options = advanced && advanced.qa && advanced.qa.options;
+    const ids = pickIds(detail || {});
+    const replies = Array.isArray(options) ? options.filter(option => ids.includes(option.id))
+      .map(option => typeof option.fb === 'string' ? option.fb.trim() : '').filter(Boolean) : [];
+    return { text: replies.join('\n') || '已记录', images: [] };
+  }
   const rules = (advanced && advanced.outcomeRules) || {};
   const row = (kind === 'win' ? rules.pass : rules.fail) || {};
   return {

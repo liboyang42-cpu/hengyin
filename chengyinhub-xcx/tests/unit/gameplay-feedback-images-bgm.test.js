@@ -74,6 +74,41 @@ test('编辑页试玩:按作者刚填的答案本地判,反馈取对应那一边
   assert.deepEqual(pv.feedback(advanced, 'fail'), { text: '', images: [] }, '无法打开那一边就只有两个字');
 });
 
+test('QA关闭判定仅记录有效输入，严格保留默认判定及作者选择反馈', () => {
+  const fs = require('node:fs'), vm = require('node:vm'), { createRequire } = require('node:module');
+  const file = require.resolve('../../pages/publish/temp/preview-verdict.js');
+  const source = fs.readFileSync(file, 'utf8');
+  const builder = require('../../pages/publish/utils/publish/advanced-game-preview.js');
+  const check = pv => {
+    for (const judge of [false, true, undefined]) {
+      const advanced = { qa: { enabled: true, mode: 'TYPE', judge, answerText: '甲' } };
+      const kit = builder.buildPreviewKit(advanced);
+      for (const input of ['甲', '乙']) assert.equal(pv.judge(advanced, kit, 'submit', { mode: 'type', input }),
+        judge === false ? 'neutral' : input === '甲' ? 'win' : 'fail');
+      if (judge === false) for (const input of ['', ' ', {}, []]) assert.equal(pv.judge(advanced, kit, 'submit', { mode: 'type', input }), '');
+    }
+    const advanced = { qa: { enabled: true, mode: 'PICK', judge: false,
+      options: [{ id: 'a', correct: true, fb: '甲反馈', img: '/profile/a.jpg' }, { id: 'b', correct: false, fb: '乙反馈' }] } };
+    const before = JSON.stringify(advanced), kit = builder.buildPreviewKit(advanced);
+    for (const id of ['a', 'b']) {
+      assert.equal(pv.judge(advanced, kit, 'submit', { mode: 'pick', optionId: id }), 'neutral');
+      assert.equal(pv.feedback(advanced, 'neutral', { mode: 'pick', optionId: id }).text, id === 'a' ? '甲反馈' : '乙反馈');
+    }
+    assert.equal(pv.judge(advanced, kit, 'submit', { mode: 'pick', optionId: 'unknown' }), '');
+    assert.equal(pv.judge(advanced, kit, 'submit', { mode: 'type', input: '甲' }), '');
+    assert.equal(kit.options[0].img, '/profile/a.jpg'); assert.equal(JSON.stringify(advanced), before);
+  };
+  const load = code => { const box = { module: { exports: {} }, require: createRequire(file) }; vm.runInNewContext(code, box); return box.module.exports; };
+  check(load(source));
+  for (const [from, to] of [
+    ['qa.judge === false', 'qa.judge !== true'],
+    ["typeof d.input === 'string' && d.input.trim()", 'true'],
+    ["options.some(option => option.id === id)", 'true']
+  ]) {
+    assert.ok(source.includes(from)); assert.throws(() => check(load(source.replace(from, to))), assert.AssertionError);
+  }
+});
+
 test('编辑页试玩:玩法那一屏不压翻页点 / 箭头 / 保存栏,判定屏可「继续」', () => {
   const wxml = fs.readFileSync(path.join(ROOT, 'pages/publish/temp/index.wxml'), 'utf8');
   assert.doesNotMatch(wxml, /cg-pv-float/);

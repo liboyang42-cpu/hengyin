@@ -1520,7 +1520,7 @@
           aria-role="button" aria-label="退出试玩" hover-class="cy-pressed" hover-stay-time="80"><cy-icon name="back" size="40" /></view>
     <!-- 照「城瘾玩法试玩台」:玩法铺满整屏,不压翻页点和箭头;
          玩完由判定屏整屏涌上来,作者配的成功 / 失败反馈就写在这一屏。 -->
-    <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind }}"
+    <cy-play-verdict wx:if="{{ pvStepKey === 'challenge' && pvKit }}" show="{{ pvVerdict.show }}" kind="{{ pvVerdict.kind === 'neutral' ? 'win' : pvVerdict.kind }}" neutral="{{pvVerdict.kind === 'neutral'}}"
                      text="{{ pvVerdict.text }}" images="{{ pvVerdict.images }}" closable="{{ true }}" full-color="{{ pvVerdict.kind === 'win' && pvKit.type === 'qa' && pvKit.judge !== false && (pvKit.mode === 'type' || pvKit.mode === 'pick') }}" bind:close="closePvVerdict" />
     <cy-play-verdict wx:if="{{pvStepKey === 'complete'}}" show="{{true}}" kind="win" full-color="{{true}}" closable="{{true}}"
                      text="任务完成！" cta-text="{{pvSteps[pvStep + 1] === 'reward' ? '领取奖励' : '完成'}}" bind:close="completePreview" />

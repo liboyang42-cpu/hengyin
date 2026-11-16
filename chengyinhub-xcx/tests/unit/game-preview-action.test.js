@@ -374,16 +374,71 @@ for (const mode of ['TYPE', 'PICK']) for (const judgment of [false, true, undefi
       assert.equal(built.judge, judgment, '纯builder必须保留原judge字段');
       assert.equal(p.data.pvKit.judge, judgment, 'tryCurrentGame必须实际使用builder透传值');
       assert.equal(p.data.pvKit.imageUrl, '/profile/fixture-evidence.jpg');
-      assert.equal(p.data.pvVerdict.kind, correct ? 'win' : 'fail', '本修复不改原本地判定规则');
+      assert.equal(p.data.pvVerdict.kind, judgment === false ? 'neutral' : correct ? 'win' : 'fail', '仅明确关闭判定时记录，其余原判定保持');
       assert.equal(p.data.pvVerdict.show, true);
       assert.equal(f.fullColor(), correct && judgment !== false, '无判定不进入全屏绿色答对动画');
-      assert.equal(p.data.pvVerdict.text, correct ? 'Configured pass' : 'Configured fail');
-      assert.deepEqual(p.data.pvVerdict.images, [correct ? '/profile/fixture-pass.jpg' : '/profile/fixture-fail.jpg']);
+      assert.equal(p.data.pvVerdict.text, judgment === false ? '已记录' : correct ? 'Configured pass' : 'Configured fail');
+      assert.deepEqual(p.data.pvVerdict.images, judgment === false ? [] : [correct ? '/profile/fixture-pass.jpg' : '/profile/fixture-fail.jpg']);
       assert.equal(JSON.stringify(p.data.advanced), f.original, '作者原配置零写');
       assert.equal(f.requests.length, 0);
     }
   });
 }
+
+for (const mode of ['TYPE', 'PICK']) test('QA-NEUTRAL actual builder→Page ' + mode + '关闭判定后有效输入只记录并继续', () => {
+  for (const correct of [true, false]) {
+    const f = currentQARecovery(mode, false), p = f.p;
+    p.data.advanced.qa.answerText = '甲';
+    p.data.advanced.qa.options[0].label = '乙'; p.data.advanced.qa.options[1].label = '甲';
+    p.tryCurrentGame(); f.original = JSON.stringify(p.data.advanced);
+    p.setData({ pvSteps: p._buildPvSteps() });
+    const challenge = p.data.pvSteps.indexOf('challenge'); p._applyPvStep(challenge);
+    if (mode === 'TYPE') p.onPvKitAction({ detail: { type: 'qa', action: 'submit', detail: { mode: 'type', input: correct ? '甲' : '乙' } } });
+    else f.submit(correct);
+    assert.equal(p.data.pvKit.judge, false);
+    assert.equal(p.data.pvVerdict.kind, 'neutral');
+    assert.equal(p.data.pvVerdict.text, '已记录');
+    assert.deepEqual(p.data.pvVerdict.images, []);
+    assert.equal(p.data.pvKit.imageUrl, '/profile/fixture-evidence.jpg');
+    assert.equal(f.fullColor(), false);
+    f.close();
+    assert.equal(p.data.pvStep, challenge + 1);
+    assert.equal(JSON.stringify(p.data.advanced), f.original);
+    assert.equal(f.requests.length, 0);
+  }
+});
+
+for (const mode of ['TYPE', 'PICK']) test('QA-NEUTRAL actual builder→Page ' + mode + '仍拒绝空值与非法输入形状', () => {
+  const invalid = mode === 'TYPE' ? [{ mode: 'type', input: '' }, { mode: 'type', input: '  ' }, { mode: 'type', input: {} }] :
+    [{ mode: 'pick', optionIds: [] }, { mode: 'pick', optionId: 'unknown' },
+      { mode: 'pick', optionIds: ['actual-right', 'unknown'] }, { mode: 'pick', optionIds: ['actual-right', 'actual-right'] },
+      { mode: 'pick', optionIds: ['actual-right', 'actual-wrong'] }, { mode: 'pick', optionIds: 'actual-right' }];
+  for (const detail of invalid) {
+    const f = currentQARecovery(mode, false), p = f.p;
+    p.onPvKitAction({ detail: { type: 'qa', action: 'submit', detail } });
+    assert.equal(p.data.pvVerdict.show, false);
+    assert.equal(f.requests.length, 0);
+    assert.equal(JSON.stringify(p.data.advanced), f.original);
+  }
+});
+
+test('QA-NEUTRAL actual Page保留选择反馈/选项图并以现有neutral壳显示', () => {
+  const f = currentQARecovery('PICK', false), p = f.p;
+  p.data.advanced.qa.options[0].fb = '乙的现场反馈'; p.data.advanced.qa.options[0].img = '/profile/choice-b.jpg';
+  p.tryCurrentGame(); const before = JSON.stringify(p.data.advanced); f.submit(false);
+  assert.equal(p.data.pvVerdict.kind, 'neutral'); assert.equal(p.data.pvVerdict.text, '乙的现场反馈');
+  assert.equal(p.data.pvKit.options[0].img, '/profile/choice-b.jpg'); assert.equal(f.fullColor(), false);
+  const fs = require('node:fs'), path = require('node:path');
+  const host = fs.readFileSync(path.join(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8').match(/<cy-play-verdict\b[^>]*>/)[0];
+  for (const [name, expected] of [['kind', 'win'], ['neutral', true]]) {
+    const expression = host.match(new RegExp(name + '=\"{{(.*?)}}\"'))[1];
+    assert.equal(Function('pvVerdict', 'return (' + expression + ')')(p.data.pvVerdict), expected);
+  }
+  const component = fs.readFileSync(path.join(__dirname, '../../pages/play/components/play-verdict/index.wxml'), 'utf8');
+  const aria = component.match(/aria-label=\"{{(.*?)}}\"/)[1];
+  assert.equal(Function('neutral', 'kind', 'text', 'word', 'return (' + aria + ')')(true, 'win', '乙的现场反馈', '失败'), '乙的现场反馈');
+  assert.equal(JSON.stringify(p.data.advanced), before); assert.equal(f.requests.length, 0);
+});
 
 test('SUCCESS-R1 actual SHOT builder→Page保留显式题图与原收尾，不使用QA答对绿屏', () => {
   const f = currentQARecovery('SHOT', true);

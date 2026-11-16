@@ -114,7 +114,7 @@ const methods = {
   showPvVerdict(kit, detail, action) {
     const pv = require('./preview-verdict.js'), config = this._pvAdvanced || this.data.advanced, kind = pv.judge(config, kit, action || (detail && detail.action), detail && detail.detail);
     if (!kind) return false;
-    const fb = pv.feedback(config, kind);
+    const fb = pv.feedback(config, kind, detail && detail.detail);
     this.setData({ pvVerdict: { show: true, kind, text: fb.text, images: fb.images } });
     return true;
   },
@@ -123,7 +123,7 @@ const methods = {
     const kind = this.data.pvVerdict.kind, kit = this.data.pvKit;
     this.setData({ pvVerdict: { show: false, kind: 'win', text: '', images: [] } });
     // 只有玩法这一屏的试玩(选择玩法里的「预览」、「试玩当前玩法」)玩完就回编辑页
-    if (kind === 'win' || !kit) { if (this.data.pvStep >= this.data.pvSteps.length - 1) this.closePreview(); else this.pvNext(); return; }
+    if (kind === 'win' || kind === 'neutral' || !kit) { if (this.data.pvStep >= this.data.pvSteps.length - 1) this.closePreview(); else this.pvNext(); return; }
     // 玩法组件的「已提交」是它自己的状态,卸掉重挂才回到开局那一屏(判定屏盖着,看不到这一下)
     this._pvTypeStartedAt = 0;
     const steps = this.data.pvSteps, step = this.data.pvStep;
