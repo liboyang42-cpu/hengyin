@@ -11,7 +11,7 @@ const { decorateFeedCards } = require('../../utils/index/feed-card.js');
 const { buildHomeActionBanners, openHomeActionBanner } = require('../../utils/index/home-action-banner.js');
 const { readReducedMotion } = require('../../utils/motion-preference.js');
 const { openScene } = require('../../utils/scene-entry.js');
-const { parseDoorScene, parseTopicScene, parseActivityScene, parseShopScene, parseTeamScene, pathForScanEntry } = require('../../utils/game-door-entry.js');
+const { parseDoorScene, parseTopicScene, parseActivityScene, parseShopScene, parseTeamScene, pathForScanEntry, withDoorLinkScene } = require('../../utils/game-door-entry.js');
 
 const { buildActivityShare } = require('../../utils/activity-share.js'); const { ROAM_SHARE_COVER } = require('../../utils/roam-menu-share.js');
 const { appendByIndex } = require('../../utils/list-append.js');
@@ -369,7 +369,8 @@ Page({
     that.startCountdownTimer();
   },
 
-  consumeDoorScene(options) {
+  consumeDoorScene(rawOptions) {
+    const options = withDoorLinkScene(rawOptions); // ONB-5:标准链接码(options.q)与小程序码同一 scene
     // 主办方「本主题二维码」:直接进主题详情(买票 / 已有票进游玩都在详情页上)
     const topicId = parseTopicScene(options && options.scene) || parseTopicScene(app.pendingDoorScene);
     if (topicId) {
