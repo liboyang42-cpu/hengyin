@@ -64,6 +64,8 @@ public class ImMessage extends BaseEntity
     private String senderName;
     /** 发送者头像(瞬态:仅消息列表回填供群聊渲染,不入库) */
     private String senderAvatar;
+    /** SOC-4 瞬态：群聊 / 频道里当前读者已拉黑该发送者；未拉黑时不输出 */
+    private Boolean senderBlocked;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -78,6 +80,9 @@ public class ImMessage extends BaseEntity
     public void setSenderName(String senderName) { this.senderName = senderName; }
     public String getSenderAvatar() { return senderAvatar; }
     public void setSenderAvatar(String senderAvatar) { this.senderAvatar = senderAvatar; }
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    public Boolean getSenderBlocked() { return senderBlocked; }
+    public void setSenderBlocked(Boolean senderBlocked) { this.senderBlocked = senderBlocked; }
 
     public Long getReceiverId() { return receiverId; }
     public void setReceiverId(Long receiverId) { this.receiverId = receiverId; }

@@ -152,7 +152,15 @@ public class ChannelMessageService implements IChannelConversationGate
     public Map<String, Object> decorateHistory(long conversationId, Map<String, Object> page, List<Long> orderedIds)
     {
         Map<String, Object> data = new LinkedHashMap<>(page);
-        data.put("list", snapshots(conversationId, orderedIds));
+        List<Map<String, Object>> list = snapshots(conversationId, orderedIds);
+        // SOC-4：保留历史页对“已拉黑发送者”的标记（快照不删行）。
+        Set<String> blocked = new HashSet<>();
+        if (page.get("list") instanceof List<?> rows)
+            for (Object row : rows)
+                if (row instanceof com.chengyinhub.business.domain.ImMessage m && m.getId() != null
+                        && Boolean.TRUE.equals(m.getSenderBlocked())) blocked.add(String.valueOf(m.getId()));
+        if (!blocked.isEmpty()) for (Map<String, Object> v : list) if (blocked.contains(v.get("id"))) v.put("senderBlocked", true);
+        data.put("list", list);
         Long cursor = messages.maxMutation(conversationId);
         data.put("mutation_cursor", String.valueOf(cursor == null ? 0L : cursor));
         data.put("sync_contract", SYNC_CONTRACT);

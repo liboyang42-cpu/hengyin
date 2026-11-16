@@ -33,4 +33,11 @@
            or (member_id = #{b} and blocked_member_id = #{a})
     </select>
 
+    <select id="selectBlockedAmong" resultType="java.lang.Long">
+        select blocked_member_id from im_block
+        where member_id = #{viewer}
+          and blocked_member_id in
+          <foreach collection="senderIds" item="sid" open="(" separator="," close=")">#{sid}</foreach>
+    </select>
+
 </mapper>
