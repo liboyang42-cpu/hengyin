@@ -356,6 +356,10 @@ jobs:
       - name: Check CI scripts are CWD-independent
         run: bash ci/test_cwd_independence.sh
 
+      - name: Test native design source and Git hook isolation
+        if: '!cancelled()'
+        run: python3 -B -m unittest discover -s scripts/tests -p test_native_design.py
+
       # ★ 故意【不】挂 needs: changes / if: —— 这道闸的两侧分别是小程序和后端 Java,
       #   任何一侧单独变动都可能把一条调用变成死链(后端删了个 @PostMapping,前端毫不知情)。
       #   给它加路径过滤 = 亲手造一个盲区,而这道闸抓的恰恰是「两边各自看都正常」的缺陷。
