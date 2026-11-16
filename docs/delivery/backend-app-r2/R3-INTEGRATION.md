@@ -294,3 +294,42 @@ All Maven calls ran under `/usr/bin/flock /data/workspace/.mvn.lock` with `LANG=
 - Full `run_all.py` run: **17 of 18 flows pass**, and F04's paid path is TEST-SKIP. F09 now passes: a challenge with d20 roll 15 resolved (`city_challenge` outcome WIN), and app.log has no NPE. F06 fails only on app defect A5 (the native client's self check-in sends no `nodeId`); this is not a backend change.
 - F-19 re-check as 9004, before and after the deploy: `registration/list` totals match `cms_registration` (29 → 31 after the run's fixtures), all rows are 9004's, and `my-joined` returns 6 items including 992031. Not reproducible; no defect.
 - No new defects. Details in `qa/acceptance/REPORT.md` (wave 7) on `qa/acceptance-r3`.
+
+## Wave 8 (merchant onboarding identity)
+
+Merged into `integration/backend-app-r3` on the `work` VPS with `--no-ff`. The branch was cut from `3149dfea5` (the Wave 7 tip) and was not already contained.
+
+| Branch | Tip | Merge commit | Notes |
+|---|---|---|---|
+| `origin/fix/merchant-identity-r3` | `c18158761` | `5acc166a0` | Clean. `POST /api/merchant/merchant_registration` now takes `realName` + `idCardNumber` + `identityConsent`, and validation runs before anything is written (GB 11643 check digit, PIPL consent). Registration reuses `MemberIdentityService` (AES-256-GCM `v1:` columns, HMAC blind index, `merchant_apply` source) inside the merchant transaction. Read paths go only through `maskedView`: `/api/publisher/identity/status` and the admin `GET /business/merchant/{id}` `ownerIdentity`. No migration. Receipt: `qa/MERCHANT-IDENTITY-R3.md`. |
+
+Review notes:
+- No API returns the full number.
+- `@Log(title = "商家入驻")` is attached to the private helper `registrationCategoryIds`, so AOP never applies it.
+- The DTO has no Bean Validation annotations on the PII fields, and error messages never echo the input.
+- No `@RepeatSubmit` is used and no aspect captures the request body.
+
+### Tests (VPS, targeted only; full suites ran on the cloud agent, see the receipt)
+
+All Maven calls held `/usr/bin/flock /data/workspace/.mvn.lock` and ran offline with `LANG=C.UTF-8 LC_ALL=C.UTF-8`, `-Xmx1536m -Dspring.test.context.cache.maxSize=4`, `-pl chengyinhub-admin -am`.
+
+- **Selection:** every test class that references `MemberIdentityService`, `MemberIdentityRequest`, `MerchantRegistrationDTO`, `IdCardUtils`, `ApiMemberIdentityController`, `MmsMerchantController`, `merchant_registration` or `UmsMemberIdentity` (`*MySqlIT` excluded). Also added: the 14 `business.it.*MyBatisTest` classes the cloud container could not run (no MySQL there) and `MerchantIdentityR3Test`. That makes 57 classes.
+- **Result: `Tests run: 350, Failures: 0, Errors: 1`.**
+  - `MerchantIdentityR3Test` passed 13/13, and all 14 `*MyBatisTest` classes passed against be-int-mysql.
+  - The single error is `GenericGameplayHttpE2eIT`. The grep picked it up, but it is a CI-only HTTP E2E IT whose initializer calls `System.setSecurityManager`, which this JDK rejects. It is unrelated to this merge.
+- **Package:** `chengyinhub-admin.jar` is 123,485,525 bytes. The `target/` directories were deleted afterwards.
+
+### TEST `8120` deploy
+
+- Deployed under `/usr/bin/flock /data/workspace/.deploy.lock` at 20:25 UTC. `Started RuoYiApplication in 19.68 seconds`, and `GET /` returned 200 after 20 s. Rollback jar: `app/app.jar.prev-3f0cdb762` (Wave 7).
+- `CHENGYIN_WITHDRAWAL_PII_KEY` is present in the process (checked for presence only).
+- The only `Caused by` in the log is the missing WeChat Pay `apiclient_key.pem`, the same as on the previous jar.
+- Live check (17/17):
+  - A synthetic, checksum-valid number with area `999999` was submitted by fresh TEST member 990014. The response and the status read were masked (`999***********0016`, `测*`).
+  - A bad check digit got `身份证号格式不正确,请核对后重填`.
+  - The DB columns hold `v1:` ciphertext (67 and 63 chars).
+  - `app.log` and `sys_oper_log` contain no plaintext.
+
+### Acceptance (`qa/acceptance-r3`, wave 8)
+
+Full `run_all.py` result: **17 of 18 flows pass**, the same as Wave 7. F04's paid path is TEST-SKIP. F06 fails only on app A5. No new defects. Details are in `qa/acceptance/REPORT.md` (wave 8).
