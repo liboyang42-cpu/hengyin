@@ -465,7 +465,9 @@ public class PlayBasicCommandApplication {
             // 但**不加 errorCode**:原合同里「答错」不是传输/恢复错误,判据是
             // msg=「答案不正确」+ data.answerWrong。加了码会让既有客户端把普通答错
             // 当成业务拒绝(而业务拒绝恰恰不该带这个标记),等于改既有 body 语义。
-            return AjaxResult.error("答案不正确",
+            // GAME-10:只给有类型的 REFUSED(决定 v2 的 4xx),body 逐字不变,仍不加 body errorCode。
+            return AjaxResult.refuse(com.chengyinhub.common.constant.HttpStatus.ERROR,
+                    com.chengyinhub.common.exception.ErrorCode.REFUSED, "答案不正确",
                     java.util.Collections.singletonMap("answerWrong", true));
         }
 
