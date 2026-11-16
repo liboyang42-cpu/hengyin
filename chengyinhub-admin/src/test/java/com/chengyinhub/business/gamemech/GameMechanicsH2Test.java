@@ -145,6 +145,76 @@ class GameMechanicsH2Test {
     }
 
     @Test
+    void creatorCannotCollectTheirOwnHunt() {
+        TreasureHuntService svc = new TreasureHuntService(mapper, trust, points);
+        Long id = (Long) svc.creatorSave(100L, huntBody()).get("id");
+        svc.creatorSubmit(100L, id);
+        svc.adminDecide(id, "approve", null, "ops");
+        ServiceException e = assertThrows(ServiceException.class, () -> svc.find(id, 100L, LocationFix.of(30.26001, 120.15001)));
+        assertEquals("这是你自己藏的宝", e.getMessage());
+        assertTrue(mapper.selectFinds(id, 100L).isEmpty());
+        verify(points, times(0)).award(eq(100L), anyLong(), anyLong(), anyString());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void editsKeepItemIdsAndRemovedItemsStopCounting() {
+        TreasureHuntService svc = new TreasureHuntService(mapper, trust, points);
+        Long id = (Long) svc.adminSave(huntBody(), "ops").get("id");
+        svc.adminDecide(id, "approve", null, "ops");
+        assertEquals(true, svc.find(id, 200L, LocationFix.of(30.26001, 120.15001)).get("found"));
+        List<Map<String, Object>> before = mapper.selectItems(id);
+        Long kept = ((Number) before.get(0).get("id")).longValue();
+        // Operator edit: the found item comes back with its id (moved slightly), the other one is replaced.
+        Map<String, Object> body = huntBody();
+        Map<String, Object> keep = item("铜铃", 30.26002, 120.15002);
+        keep.put("id", kept);
+        body.put("id", id);
+        body.put("items", List.of(keep, item("石狮", 30.2800, 120.1700)));
+        svc.adminSave(body, "ops");
+        List<Map<String, Object>> after = mapper.selectItems(id);
+        assertEquals(2, after.size());
+        assertEquals(kept, ((Number) after.get(0).get("id")).longValue(), "the edited item keeps its id");
+        assertEquals(1, svc.playerDetail(id, 200L).get("foundCount"), "the find of the kept item still counts");
+        // Finding the replaced item's old spot is nothing now; the hunt completes only with the new item.
+        assertEquals(false, svc.find(id, 200L, LocationFix.of(30.27, 120.16)).get("found"));
+        Map<String, Object> last = svc.find(id, 200L, LocationFix.of(30.28, 120.17));
+        assertEquals(true, last.get("completed"));
+        assertEquals(2, last.get("foundCount"));
+    }
+
+    @Test
+    void anEditThatDropsAFoundItemDoesNotCompleteTheHuntEarly() {
+        TreasureHuntService svc = new TreasureHuntService(mapper, trust, points);
+        Long id = (Long) svc.adminSave(huntBody(), "ops").get("id");
+        svc.adminDecide(id, "approve", null, "ops");
+        svc.find(id, 200L, LocationFix.of(30.26001, 120.15001));
+        Map<String, Object> body = huntBody();
+        body.put("id", id);
+        body.put("items", List.of(item("木牌", 30.2700, 120.1600), item("石狮", 30.2800, 120.1700)));
+        svc.adminSave(body, "ops");
+        assertEquals(0, svc.playerDetail(id, 200L).get("foundCount"));
+        Map<String, Object> one = svc.find(id, 200L, LocationFix.of(30.27, 120.16));
+        assertEquals(false, one.get("completed"), "an old find of a removed item must not count");
+        assertEquals(1, one.get("foundCount"));
+    }
+
+    @Test
+    void approvingAHuntNeedsItsOwnPermission() throws Exception {
+        java.nio.file.Path base = java.nio.file.Path.of(System.getProperty("user.dir"));
+        if (!java.nio.file.Files.exists(base.resolve("chengyinhub-admin"))) base = base.getParent();
+        String src = java.nio.file.Files.readString(base.resolve(
+                "chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/GameMechanicsAdminController.java"));
+        int approve = src.indexOf("@PutMapping(\"/business/treasureHunt/{id}/approve\")");
+        assertTrue(approve > 0);
+        assertTrue(src.lastIndexOf("business:treasureHunt:approve", approve) > src.lastIndexOf("@PutMapping", approve - 1));
+        assertTrue(src.contains("if (\"approve\".equals(decision)) return AjaxResult.error(403"));
+        String sql = java.nio.file.Files.readString(base.resolve("chengyinhub-admin/sql/migration_20261116_shop_games_judged.sql"));
+        assertTrue(sql.contains("'business:treasureHunt:approve'"));
+        assertFalse(sql.contains("sys_role_menu"), "granted to no role");
+    }
+
+    @Test
     void withheldFixIsNotAFind() {
         TreasureHuntService svc = new TreasureHuntService(mapper, trust, points);
         Long id = (Long) svc.adminSave(huntBody(), "ops").get("id");

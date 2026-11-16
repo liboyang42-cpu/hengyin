@@ -35,7 +35,7 @@
       <el-table-column label="操作" width="260">
         <template slot-scope="s">
           <el-button v-hasPermi="['business:treasureHunt:edit']" type="text" @click="openEdit(s.row)">修改</el-button>
-          <el-button v-if="[0, 1, 4].includes(s.row.status)" v-hasPermi="['business:treasureHunt:edit']" type="text" @click="decide(s.row, 'approve')">通过并上线</el-button>
+          <el-button v-if="[0, 1, 4].includes(s.row.status)" v-hasPermi="['business:treasureHunt:approve']" type="text" @click="decide(s.row, 'approve')">通过并上线</el-button>
           <el-button v-if="[1, 2].includes(s.row.status)" v-hasPermi="['business:treasureHunt:edit']" type="text" @click="decide(s.row, 'reject')">退回</el-button>
           <el-button v-if="s.row.status === 2" v-hasPermi="['business:treasureHunt:edit']" type="text" @click="decide(s.row, 'end')">结束</el-button>
         </template>
@@ -123,7 +123,7 @@ export default {
           cityCode: d.cityCode || '',
           window: d.startTime || d.endTime ? [d.startTime, d.endTime] : [],
           aiAssisted: !!d.aiAssisted,
-          items: (d.items || []).map(i => ({ name: i.name, clue: i.clue, lat: String(i.lat), lng: String(i.lng), radiusM: i.radiusM }))
+          items: (d.items || []).map(i => ({ id: i.id, name: i.name, clue: i.clue, lat: String(i.lat), lng: String(i.lng), radiusM: i.radiusM }))
         }
         this.formOpen = true
       })
@@ -139,7 +139,7 @@ export default {
         aiAssisted: this.form.aiAssisted,
         startTime: window[0] || null,
         endTime: window[1] || null,
-        items: this.form.items.map(i => ({ name: i.name, clue: i.clue, lat: Number(i.lat), lng: Number(i.lng), radiusM: i.radiusM }))
+        items: this.form.items.map(i => ({ id: i.id || undefined, name: i.name, clue: i.clue, lat: Number(i.lat), lng: Number(i.lng), radiusM: i.radiusM }))
       }
       saveTreasureHunt(body).then(() => {
         this.$modal.msgSuccess('已保存')

@@ -818,7 +818,19 @@ public class ExternalGameMonetizationService {
         return hmacSha256Hex(serverSecret, "EXTGAME_RESULT_KEY|" + gameId);
     }
 
+    /** W7 GAME-9: creator-provisioned per-game keys, tried before the derived key. Optional. */
+    @Autowired(required = false)
+    private ExternalGameResultKeyService resultKeys;
+
+    void setResultKeys(ExternalGameResultKeyService resultKeys) {
+        this.resultKeys = resultKeys;
+    }
+
     boolean verifyAuthoritySignature(String gameId, String canonical, String signature) {
+        String stored = resultKeys == null ? null : resultKeys.activeKey(gameId);
+        if (stored != null && constantTimeEquals(hmacSha256Hex(stored, canonical), signature)) {
+            return true;
+        }
         if (resultSecret != null
                 && constantTimeEquals(hmacSha256Hex(gameResultKey(resultSecret, gameId), canonical), signature)) {
             return true;

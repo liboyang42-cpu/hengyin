@@ -1231,8 +1231,10 @@ Page({
       if (r.uncredited) { cyToast(r.trustCode === 'FIX_MISSING' ? '需要打开定位才能点亮这里' : '这次没有记上，到了再试'); return; }
       if (r.participating && r.poiId) {
         // S5:打卡后服务端给出这家店今天的小游戏;在据点详情里玩。没配好时如实说明,不挡打卡。
+        // W7 GAME-8:店铺小游戏开关关着(NOT_OPEN)时服务端不发局,这里也不提示,不许诺玩不了的游戏。
         const sg = r.shopGame || {};
-        if (sg.available && sg.game && sg.game.nameZh) cyToast('今天这家店的小游戏：' + sg.game.nameZh);
+        if (sg.reason === 'NOT_OPEN') { /* 未开放:不提示 */ }
+        else if (sg.available && sg.game && sg.game.nameZh) cyToast('今天这家店的小游戏：' + sg.game.nameZh);
         else if (sg.reason === 'NOT_READY') cyToast('这家店的小游戏还在准备中');
         this.openScene('roam-poi-detail', { poiId: r.poiId });
         return;

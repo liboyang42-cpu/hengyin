@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +25,11 @@ import com.chengyinhub.business.locationtrust.LocationTrustKind;
 import com.chengyinhub.business.locationtrust.LocationTrustMessages;
 import com.chengyinhub.business.locationtrust.LocationTrustService;
 import com.chengyinhub.business.merchantgap.MerchantGapException;
+import com.chengyinhub.business.service.IAdvancedGameRuntimeService;
 import com.chengyinhub.business.service.IPointsAwardService;
+import com.chengyinhub.business.service.support.RewardPresencePolicy;
 import com.chengyinhub.common.utils.GeoDistanceUtils;
+import com.chengyinhub.system.service.ISysConfigService;
 
 /**
  * S5 shop games: launching a shop's game for a player at the shop, and recording the result.
@@ -39,6 +43,13 @@ import com.chengyinhub.common.utils.GeoDistanceUtils;
  *       the player within the place's radius plus {@link #RADIUS_SLACK_M}.</li>
  *   <li>A win ({@link ShopGameCatalog#PASS_ROUNDS} of {@link ShopGameCatalog#ROUNDS}) awards points only through
  *       {@link IPointsAwardService#award}, which applies the points governance daily cap and monthly budget.</li>
+ *   <li>W7 GAME-8 / MERCHANT-5: the switch {@value #KEY_PLAY_ENABLED} (sys_config, default {@code false}) opens shop
+ *       games. While it is off no play row is written and {@code result} answers 409 {@code SHOP_GAME_NOT_OPEN}.</li>
+ *   <li>The result is judged by the server: {@code finish} reads the player's own advanced runtime session on the
+ *       play's template, started after the launch. Rounds sent by the client are ignored.</li>
+ *   <li>Owner decision 2 (2026-11-16, "progress is free, prizes need presence"): a judged win always finishes the
+ *       play, but points need a fix within {@link RewardPresencePolicy} of the shop; device-reported games
+ *       ({@link ShopGameCatalog.Game#deviceReported()}) and runtime-capped evidence pay no points.</li>
  * </ul>
  */
 @Service
@@ -47,7 +58,13 @@ public class ShopGamePlayService {
     public static final String SOURCE_ROAM_CHECKIN = "ROAM_CHECKIN";
     public static final String SOURCE_JOURNEY_NODE = "JOURNEY_NODE";
     public static final String SOURCE_CITY_LANDING = "CITY_LANDING";
-    public static final List<String> SOURCES = List.of(SOURCE_ROAM_CHECKIN, SOURCE_JOURNEY_NODE, SOURCE_CITY_LANDING);
+    /** W7: the place page's own "play today's game" button; same location trust and radius as a landing. */
+    public static final String SOURCE_PLACE_PAGE = "PLACE_PAGE";
+    public static final List<String> SOURCES = List.of(SOURCE_ROAM_CHECKIN, SOURCE_JOURNEY_NODE, SOURCE_CITY_LANDING,
+            SOURCE_PLACE_PAGE);
+    /** sys_config switch; anything but {@code true} keeps shop games closed (safe default). */
+    public static final String KEY_PLAY_ENABLED = "shopgames.play.enabled";
+    public static final String REASON_NOT_OPEN = "NOT_OPEN";
     public static final int PLAY_MINUTES = 30;
     public static final int RADIUS_SLACK_M = 50;
     public static final int DEFAULT_RADIUS_M = 80;
@@ -60,6 +77,11 @@ public class ShopGamePlayService {
     private LocationTrustService locationTrust;
     @Autowired(required = false)
     private IPointsAwardService points;
+    @Autowired(required = false)
+    private IAdvancedGameRuntimeService runtime;
+    @Autowired(required = false)
+    private ISysConfigService sysConfig;
+    private Function<String, String> configLookup;
     private Clock clock = Clock.system(ZONE);
 
     public ShopGamePlayService(JdbcTemplate jdbc, ShopGameProfileService profiles) {
@@ -76,10 +98,32 @@ public class ShopGamePlayService {
         this.clock = clock;
     }
 
-    /** Which ready game this player gets at this shop today. Pure. */
-    public static int pick(long memberId, String day, int readyCount) {
+    /** For tests: sys_config values and the runtime reward-cap check. */
+    ShopGamePlayService withConfig(Function<String, String> lookup, IAdvancedGameRuntimeService runtimeService) {
+        this.configLookup = lookup;
+        this.runtime = runtimeService;
+        return this;
+    }
+
+    private String config(String key) {
+        try {
+            if (configLookup != null) return configLookup.apply(key);
+            return sysConfig == null ? null : sysConfig.selectConfigByKey(key);
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    /** Whether shop games are open. Missing, unreadable or anything but "true" means closed. */
+    public boolean playOpen() {
+        String v = config(KEY_PLAY_ENABLED);
+        return v != null && "true".equalsIgnoreCase(v.trim());
+    }
+
+    /** Which ready game this player gets at this shop today: a fixed rotation of (player, shop, day). Pure. */
+    public static int pick(long memberId, long merchantId, String day, int readyCount) {
         if (readyCount <= 0) return -1;
-        return Math.floorMod((Long.toString(memberId) + "|" + day).hashCode(), readyCount);
+        return Math.floorMod((memberId + "|" + merchantId + "|" + day).hashCode(), readyCount);
     }
 
     String today() { return LocalDate.now(clock).toString(); }
@@ -89,6 +133,7 @@ public class ShopGamePlayService {
      * problem gives {@code available=false} with a reason, and the check-in itself is unaffected.
      */
     public Map<String, Object> launchAfterCheckin(long memberId, long poiId) {
+        if (!playOpen()) return unavailable(poiId, REASON_NOT_OPEN);
         try {
             return issue(memberId, poiId, SOURCE_ROAM_CHECKIN);
         } catch (RuntimeException e) {
@@ -107,9 +152,10 @@ public class ShopGamePlayService {
         if ((poiArg == null) == (merchantArg == null)) throw new MerchantGapException(400, "INVALID_REQUEST", "请求无效");
         long poiId = poiArg == null ? 0L : poiArg;
         String source = body.get("source") == null ? "" : body.get("source").toString().trim().toUpperCase(Locale.ROOT);
-        if (!SOURCE_JOURNEY_NODE.equals(source) && !SOURCE_CITY_LANDING.equals(source)) {
+        if (!SOURCE_JOURNEY_NODE.equals(source) && !SOURCE_CITY_LANDING.equals(source) && !SOURCE_PLACE_PAGE.equals(source)) {
             throw new MerchantGapException(400, "INVALID_SOURCE", "请求无效");
         }
+        if (!playOpen()) return unavailable(poiId, REASON_NOT_OPEN);
         Double lat = coordinate(body.get("lat"), 90);
         Double lng = coordinate(body.get("lng"), 180);
         if (lat == null || lng == null) throw new MerchantGapException(400, "LOCATION_REQUIRED", "需要定位才能开始这家店的小游戏");
@@ -164,7 +210,7 @@ public class ShopGamePlayService {
             out.put("games", ShopGameProfileService.gameMaps(profiles.withTemplates(merchantId, r.games())));
             return out;
         }
-        ShopGameProfileService.Entry chosen = ready.get(pick(memberId, day, ready.size()));
+        ShopGameProfileService.Entry chosen = ready.get(pick(memberId, merchantId, day, ready.size()));
         Instant now = clock.instant();
         Timestamp expires = Timestamp.from(now.plusSeconds(PLAY_MINUTES * 60L));
         try {
@@ -179,18 +225,16 @@ public class ShopGamePlayService {
         return describe(row, poiId, false);
     }
 
-    /** Records the result of the player's own play: {@code {"playId":1,"roundsWon":2}}. Once per play. */
+    /**
+     * Records the result of the player's own play: {@code {"playId":1,"sessionId":9,"lat":..,"lng":..,"accuracy":..}}.
+     * Once per play. The outcome comes from the judged runtime session; a {@code roundsWon} in the body is ignored.
+     */
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> finish(Long memberId, Map<String, Object> body) {
         if (memberId == null || memberId <= 0) throw new MerchantGapException(401, "UNAUTHORIZED", "请先登录");
         if (body == null) throw new MerchantGapException(400, "INVALID_REQUEST", "请求无效");
+        if (!playOpen()) throw new MerchantGapException(409, "SHOP_GAME_NOT_OPEN", "店铺小游戏还没开放");
         long playId = positive(body.get("playId"));
-        Object rw = body.get("roundsWon");
-        if (!(rw instanceof Number n) || n.doubleValue() != Math.rint(n.doubleValue())
-                || n.intValue() < 0 || n.intValue() > ShopGameCatalog.ROUNDS) {
-            throw new MerchantGapException(400, "INVALID_REQUEST", "请求无效");
-        }
-        int roundsWon = n.intValue();
         List<Map<String, Object>> rows = jdbc.queryForList(PLAY_COLUMNS + " WHERE id = ? AND member_id = ? FOR UPDATE",
                 playId, memberId);
         if (rows.isEmpty()) throw new MerchantGapException(404, "PLAY_NOT_FOUND", "没有找到这局小游戏");
@@ -199,21 +243,94 @@ public class ShopGamePlayService {
         if (!"ISSUED".equals(status)) return result(row, true);
         Instant expires = instant(row.get("expires_at"));
         if (clock.instant().isAfter(expires)) {
+            // Answered, not thrown: a throw would roll the EXPIRED mark back.
             jdbc.update("UPDATE cy_shop_game_play SET status = 'EXPIRED', finished_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'ISSUED'", playId);
-            throw new MerchantGapException(409, "PLAY_EXPIRED", "这局小游戏已超时,明天再来试试");
+            Map<String, Object> out = result(row, false);
+            out.put("status", "EXPIRED");
+            out.put("won", false);
+            out.put("points", 0);
+            return out;
         }
-        boolean won = roundsWon >= ShopGameCatalog.PASS_ROUNDS;
+        Judged judged = judge(memberId, row, body.get("sessionId"));
+        boolean won = judged.won();
+        String rewardCeilingReason = null;
+        if (won) rewardCeilingReason = rewardCeiling(row, judged, body);
         int awarded = 0;
-        if (won && points != null) {
+        if (won && rewardCeilingReason == null && points != null) {
             awarded = Math.max(0, points.award(memberId, ShopGameCatalog.POINTS_EVENT_TYPE, playId, "店铺小游戏"));
         }
+        int roundsWon = won ? ShopGameCatalog.PASS_ROUNDS : 0;
         int n2 = jdbc.update("UPDATE cy_shop_game_play SET status = ?, rounds_won = ?, points = ?, finished_at = CURRENT_TIMESTAMP"
                 + " WHERE id = ? AND status = 'ISSUED'", won ? "WON" : "LOST", roundsWon, awarded, playId);
         if (n2 != 1) throw new IllegalStateException("shop game play changed while finishing");
         Map<String, Object> after = jdbc.queryForList(PLAY_COLUMNS + " WHERE id = ?", playId).get(0);
         Map<String, Object> out = result(after, false);
-        out.put("capped", won && awarded == 0);
+        out.put("capped", won && rewardCeilingReason == null && awarded == 0);
+        out.put("rewardCeilingReason", rewardCeilingReason);
         return out;
+    }
+
+    /** The server's verdict on a play: the runtime session that played its template. */
+    record Judged(boolean won, Long activityId, Long topicId, Long nodeId) { }
+
+    static final String SESSION_COLUMNS = "SELECT id, status, activity_id, topic_id, node_id, started_at FROM game_runtime_session";
+
+    private Judged judge(long memberId, Map<String, Object> play, Object sessionArg) {
+        if (!(sessionArg instanceof Number n) || n.doubleValue() != Math.rint(n.doubleValue()) || n.longValue() <= 0) {
+            throw new MerchantGapException(409, "PLAY_NOT_JUDGED", "这局小游戏还没有结果");
+        }
+        Object tpl = play.get("template_id");
+        if (!(tpl instanceof Number t)) throw new MerchantGapException(409, "PLAY_NOT_JUDGED", "这局小游戏还没有结果");
+        List<Map<String, Object>> sessions = jdbc.queryForList(SESSION_COLUMNS
+                + " WHERE id = ? AND owner_type = 1 AND owner_id = ? AND template_id = ?", n.longValue(), memberId, t.longValue());
+        if (sessions.isEmpty()) throw new MerchantGapException(409, "PLAY_NOT_JUDGED", "这局小游戏还没有结果");
+        Map<String, Object> session = sessions.get(0);
+        Object started = session.get("started_at");
+        if (started == null || instant(started).isBefore(instant(play.get("issued_at")))) {
+            throw new MerchantGapException(409, "PLAY_NOT_JUDGED", "这局小游戏还没有结果");
+        }
+        int st = session.get("status") instanceof Number s ? s.intValue() : -1;
+        if (st == 0) throw new MerchantGapException(409, "PLAY_NOT_FINISHED", "这局小游戏还没玩完");
+        return new Judged(st == 1, longOrNull(session.get("activity_id")), longOrNull(session.get("topic_id")),
+                longOrNull(session.get("node_id")));
+    }
+
+    /**
+     * Why a judged win pays no points, or null when it pays. Owner decision 2: prizes need presence at the shop;
+     * games the device reports, and runtime evidence the runtime itself caps, pay none.
+     */
+    private String rewardCeiling(Map<String, Object> play, Judged judged, Map<String, Object> body) {
+        ShopGameCatalog.Game g = ShopGameCatalog.game(String.valueOf(play.get("game_key")));
+        if (g == null || g.deviceReported()) return "DEVICE_REPORTED";
+        if (runtime != null && runtime.rewardCappedToXpBadge(play.get("member_id") instanceof Number m ? m.longValue() : null,
+                judged.activityId(), judged.topicId(), judged.nodeId())) {
+            return "UNJUDGED_EVIDENCE";
+        }
+        RewardPresencePolicy policy = RewardPresencePolicy.read(this::config);
+        if (policy.remotePaysFull()) return null;
+        Map<String, Object> place = playPlace(play);
+        if (place == null) return RewardPresencePolicy.REASON_REMOTE;
+        int radius = place.get("radius_m") instanceof Number r && r.intValue() > 0 ? r.intValue() : 0;
+        double rewardRadius = Math.max(RewardPresencePolicy.DEFAULT_RADIUS_METERS, radius);
+        boolean present = RewardPresencePolicy.within(coordinate(body.get("lat"), 90), coordinate(body.get("lng"), 180),
+                body.get("accuracy") instanceof Number a ? a.doubleValue() : null,
+                ((Number) place.get("lat")).doubleValue(), ((Number) place.get("lng")).doubleValue(),
+                rewardRadius);
+        return present ? null : RewardPresencePolicy.REASON_REMOTE;
+    }
+
+    private Map<String, Object> playPlace(Map<String, Object> play) {
+        Object poi = play.get("poi_id");
+        if (poi instanceof Number p && p.longValue() > 0) {
+            Map<String, Object> place = place(p.longValue());
+            if (place != null) return place;
+        }
+        Object merchant = play.get("merchant_id");
+        return merchant instanceof Number m ? shopPlace(m.longValue()) : null;
+    }
+
+    private static Long longOrNull(Object v) {
+        return v instanceof Number n ? n.longValue() : null;
     }
 
     static final String PLAY_COLUMNS = "SELECT id, member_id, merchant_id, poi_id, game_key, template_id, source, status,"

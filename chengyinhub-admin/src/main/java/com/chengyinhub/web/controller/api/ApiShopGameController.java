@@ -22,9 +22,11 @@ import com.chengyinhub.common.core.domain.AjaxResult;
  *   <li>{@code GET /api/shop-games/profile?poiId=|merchantId=}: a shop's game profile (kind, games, standard rules).</li>
  *   <li>{@code GET /api/shop-games/catalog}: every shop kind with its pool, and the standard rules.</li>
  *   <li>{@code GET /api/shop-games/city-landing?poiId=|merchantId=}: City Monopoly's read-only landing hook.</li>
- *   <li>{@code POST /api/shop-games/launch}: {@code {poiId, source: JOURNEY_NODE|CITY_LANDING, lat, lng}}.
+ *   <li>{@code POST /api/shop-games/launch}: {@code {poiId, source: JOURNEY_NODE|CITY_LANDING|PLACE_PAGE, lat, lng}}.
  *       A roam check-in launches inside {@code /api/roam/checkin} (field {@code shopGame}).</li>
- *   <li>{@code POST /api/shop-games/result}: {@code {playId, roundsWon}}; a win awards points under governance caps.</li>
+ *   <li>{@code POST /api/shop-games/result}: {@code {playId, sessionId, lat, lng, accuracy}}; the judged runtime session
+ *       decides the outcome, and a win at the shop awards points under governance caps. 409 {@code SHOP_GAME_NOT_OPEN}
+ *       while {@code shopgames.play.enabled} is off.</li>
  * </ul>
  */
 @RestController
@@ -44,9 +46,16 @@ public class ApiShopGameController extends BaseController {
     public ResponseEntity<AjaxResult> profile(@RequestParam(required = false) Long poiId,
                                               @RequestParam(required = false) Long merchantId) {
         return ApiMerchantGapController.answer(() -> {
-            if (poiId != null && poiId > 0) return profiles.profileForPoi(poiId);
-            if (merchantId != null && merchantId > 0) return profiles.profile(merchantId);
-            throw new MerchantGapException(400, "INVALID_REQUEST", "请求无效");
+            Map<String, Object> out;
+            if (poiId != null && poiId > 0) out = profiles.profileForPoi(poiId);
+            else if (merchantId != null && merchantId > 0) out = profiles.profile(merchantId);
+            else throw new MerchantGapException(400, "INVALID_REQUEST", "请求无效");
+            // W7 GAME-8: clients show "not open yet" instead of a play promise while the switch is off.
+            if (out != null) {
+                out = new java.util.LinkedHashMap<>(out);
+                out.put("playOpen", plays.playOpen());
+            }
+            return out;
         });
     }
 

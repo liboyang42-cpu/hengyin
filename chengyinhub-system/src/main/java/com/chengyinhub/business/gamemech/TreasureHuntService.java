@@ -90,7 +90,7 @@ public class TreasureHuntService {
         out.put("items", items);
         out.put("itemCount", items.size());
         Map<String, Object> progress = memberId == null ? null : mapper.selectProgress(huntId, memberId);
-        out.put("foundCount", found.size());
+        out.put("foundCount", (int) items.stream().filter(i -> Boolean.TRUE.equals(i.get("found"))).count());
         out.put("completed", progress != null && progress.get("completedAt") != null);
         out.put("rewardPoints", progress == null ? 0 : asInt(progress.get("rewardPoints")));
         return out;
@@ -103,6 +103,8 @@ public class TreasureHuntService {
         if (fix == null || !fix.validCoordinates()) throw new ServiceException("请先打开定位", 400);
         Map<String, Object> hunt = mapper.selectHunt(huntId);
         if (hunt == null || asInt(hunt.get("status")) != LIVE || !liveNow(hunt)) throw new ServiceException("这场寻宝不存在或已结束", 404);
+        // W7 GAME-16: the creator saw the exact spots, so their own hunt is not theirs to collect.
+        if (memberId.equals(asLong(hunt.get("creatorMemberId")))) throw new ServiceException("这是你自己藏的宝", 403);
         LocationTrustService.Assessment assessment = trust.assess(memberId, null, LocationTrustKind.TREASURE_FIND,
                 "hunt:" + huntId, fix);
         if (assessment.rejected()) throw new ServiceException(LocationTrustMessages.rejected(assessment.reasons()), 409);
@@ -135,7 +137,8 @@ public class TreasureHuntService {
         }
         Long itemId = asLong(hit.get("id"));
         mapper.insertFind(huntId, itemId, memberId, assessment.fixId());
-        int foundCount = foundIds(huntId, memberId).size();
+        // W7 GAME-16: only finds of items that are still in the hunt count toward completion.
+        int foundCount = activeFound(foundIds(huntId, memberId), items);
         mapper.upsertProgress(huntId, memberId, foundCount);
         boolean completed = foundCount >= items.size() && !items.isEmpty();
         int reward = 0;
@@ -301,6 +304,8 @@ public class TreasureHuntService {
             int r = radius == null ? 60 : (int) Math.round(radius);
             if (r < 20 || r > 300) throw new ServiceException("寻找半径须为 20 至 300 米", 400);
             Map<String, Object> item = new LinkedHashMap<>();
+            Long itemId = asLong(m.get("id"));
+            if (itemId != null && itemId > 0) item.put("id", itemId);
             item.put("sort", sort++);
             item.put("name", name);
             item.put("clue", clue);
@@ -333,12 +338,23 @@ public class TreasureHuntService {
             row.put("id", huntId);
             row.put("updateBy", by);
             mapper.updateHunt(row);
-            mapper.deleteItems(huntId);
         }
+        // W7 GAME-16: an edit keeps item ids. An item sent back with its id is updated in place (players keep that
+        // find); a new item is inserted; an item left out is removed, and its old finds stop counting.
+        Set<Long> existing = new HashSet<>();
+        if (id != null && id > 0) for (Map<String, Object> old : mapper.selectItems(huntId)) existing.add(asLong(old.get("id")));
+        Set<Long> kept = new HashSet<>();
         for (Map<String, Object> item : (List<Map<String, Object>>) row.get("items")) {
             item.put("huntId", huntId);
-            mapper.insertItem(item);
+            Long itemId = asLong(item.get("id"));
+            if (itemId != null && existing.contains(itemId) && kept.add(itemId)) {
+                mapper.updateItem(item);
+            } else {
+                item.remove("id");
+                mapper.insertItem(item);
+            }
         }
+        for (Long old : existing) if (!kept.contains(old)) mapper.deleteItem(huntId, old);
         return huntId;
     }
 
@@ -365,6 +381,13 @@ public class TreasureHuntService {
         out.put("endTime", row.get("endTime"));
         out.put("official", row.get("creatorMemberId") == null);
         return out;
+    }
+
+    /** Finds that point at an item still in the hunt. */
+    static int activeFound(Set<Long> found, List<Map<String, Object>> items) {
+        int n = 0;
+        for (Map<String, Object> item : items) if (found.contains(asLong(item.get("id")))) n++;
+        return n;
     }
 
     private Set<Long> foundIds(Long huntId, Long memberId) {

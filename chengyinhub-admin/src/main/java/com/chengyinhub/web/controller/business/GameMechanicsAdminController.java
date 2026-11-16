@@ -57,13 +57,26 @@ public class GameMechanicsAdminController extends BaseController {
         return run(() -> treasure.adminSave(body, getUsername()));
     }
 
-    /** decision: approve (上线) / reject (退回,须写原因) / end (结束). */
+    /**
+     * W7 GAME-16: putting a hunt live is its own permission, apart from editing it (granted to no role by the
+     * migration). The literal path wins over {@code {decision}} below.
+     */
+    @PreAuthorize("@ss.hasPermi('business:treasureHunt:approve')")
+    @Log(title = "寻宝审核", businessType = BusinessType.UPDATE)
+    @PutMapping("/business/treasureHunt/{id}/approve")
+    public AjaxResult huntApprove(@PathVariable("id") Long id, @RequestBody(required = false) Map<String, Object> body) {
+        String note = body == null || body.get("note") == null ? null : body.get("note").toString();
+        return run(() -> { treasure.adminDecide(id, "approve", note, getUsername()); return treasure.adminDetail(id); });
+    }
+
+    /** decision: reject (退回,须写原因) / end (结束). Approve has its own route and permission above. */
     @PreAuthorize("@ss.hasPermi('business:treasureHunt:edit')")
     @Log(title = "寻宝审核", businessType = BusinessType.UPDATE)
     @PutMapping("/business/treasureHunt/{id}/{decision}")
     public AjaxResult huntDecide(@PathVariable("id") Long id, @PathVariable("decision") String decision,
                                  @RequestBody(required = false) Map<String, Object> body) {
         String note = body == null || body.get("note") == null ? null : body.get("note").toString();
+        if ("approve".equals(decision)) return AjaxResult.error(403, "上线需要单独的审核权限");
         return run(() -> { treasure.adminDecide(id, decision, note, getUsername()); return treasure.adminDetail(id); });
     }
 
