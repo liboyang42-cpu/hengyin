@@ -1076,6 +1076,7 @@
     "20261115_hardening": ["web_admin_nine_domains_20260719", "20261115_money_pass", "20261115_merchant_plans", "20261115_admin_consoles"],
     "20261116_journey_presence": ["play_progress_points", "20260820_questo_puzzle_atmosphere"],
     "20261116_shop_games_judged": ["20261115_shop_games", "20261115_game_mechanics", "20261115_merchant_plans"],
-    "20261116_external_game_result_key": ["20261115_external_game_monetization_menus", "20261116_external_game_review"]
+    "20261116_external_game_result_key": ["20261115_external_game_monetization_menus", "20261116_external_game_review"],
+    "20261117_shop_game_runner": ["20261116_shop_games_judged", "20260822_advanced_game_runtime"]
   }
 }
