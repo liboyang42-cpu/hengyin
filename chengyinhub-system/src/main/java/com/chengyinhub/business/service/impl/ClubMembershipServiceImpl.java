@@ -42,7 +42,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact;
 import com.chengyinhub.business.domain.dto.WechatVerifiedPaymentFact.Reference;
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -136,14 +135,15 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         return duesStatus(clubId);
     }
 
-    /** K1: model off → today's path ({@code AVAILABLE}), with no reads; model on → the club sub-merchant decision. */
+    /** K1 / W7 MERCHANT-1: the club sub-merchant decision; without the collection model dues wait for the platform. */
     private Map<String, Object> duesStatus(Long clubId) {
         if (collectionModel != null) return collectionModel.clubDuesStatus(clubId);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("modelActive", false);
-        out.put("collectible", true);
-        out.put("reason", "MODEL_OFF");
-        out.put("state", "AVAILABLE");
+        out.put("collectible", false);
+        out.put("reason", com.chengyinhub.business.collection.CollectionDecision.SPLIT_RAILS_OFF);
+        out.put("state", "WAIT_FOR_PLATFORM");
+        out.put("nextStep", "WAIT_FOR_PLATFORM");
         return out;
     }
 
@@ -253,13 +253,15 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         requirePaymentOutsideTransaction();
         requireRequest(request, request == null ? null : request.getClubId());
         requireMember(principalMemberId, request.getClubId());
+        // W7 MERCHANT-1: dues are third-party money. No invoice and no WeChat call unless the Q5 tickets area is open
+        // and the collection model is active; the platform account never collects dues.
+        requireDuesMoneyOpen(request.getClubId());
         if (request.getPlanId() == null || request.getPlanId() <= 0
                 || invalidIdempotencyKey(request.getIdempotencyKey())
                 || invalidRequestId(request.getRequestId())) bad("续费参数不完整");
-        // S2 / K1 collection model: refuse before any invoice is written (no-op while the money ceiling is off); SPLIT →
-        // the club's own sub-merchant collects.
-        com.chengyinhub.business.collection.CollectionDecision dues = collectionModel == null ? null
-                : collectionModel.requireClubDuesCollectible(request.getClubId());
+        // S2 / K1 collection model: refuse before any invoice is written; SPLIT → the club's own sub-merchant collects.
+        com.chengyinhub.business.collection.CollectionDecision dues =
+                collectionModel.requireClubDuesCollectible(request.getClubId());
         // 跨微信网络调用不能和本地 intent 共用一个未提交事务：先短事务提交 PAYING intent，
         // 再调微信，最后用第二个短事务附着参数。JVM 在任一点退出，overview 仍能读到原 invoice。
         RenewalIntent intent = transaction().execute(status -> prepareRenewalIntent(
@@ -317,8 +319,10 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
         if (!blank(invoice.getPayParamsJson())) return result;
         // D-12：会费开关关闭时只拦新的微信预下单；上面的查单对账仍照常执行。
         featureGate.requireEnabled();
-        com.chengyinhub.business.collection.CollectionDecision dues = collectionModel == null ? null
-                : collectionModel.requireClubDuesCollectible(invoice.getClubId());
+        // W7 MERCHANT-1: a new prepay needs the money switch; the query and reconcile above still settle old invoices.
+        requireDuesMoneyOpen(invoice.getClubId());
+        com.chengyinhub.business.collection.CollectionDecision dues =
+                collectionModel.requireClubDuesCollectible(invoice.getClubId());
         com.chengyinhub.common.config.RestoreDispatchGuard.requireDispatchAllowed();
         Map<String, String> payParams;
         String payJson;
@@ -1021,19 +1025,29 @@ public class ClubMembershipServiceImpl implements IClubMembershipService {
     }
 
     /**
-     * One prepay for a dues invoice. Model off (or no decision): today's platform order, unchanged. SPLIT: the club's
-     * own sub-merchant through the service-provider order. A SPLIT decision without the split service is refused,
-     * never sent to the platform account.
+     * One prepay for a dues invoice: only through the club's own sub-merchant (SPLIT). W7 MERCHANT-1: the platform
+     * merchant account never collects dues, so anything other than a SPLIT decision with the split service is refused.
      */
     private Map<String, String> prepay(ClubMembershipInvoice invoice, String wxOpenId,
                                        com.chengyinhub.business.collection.CollectionDecision dues) {
-        if (dues != null && dues.split()) {
-            if (duesSplit == null) throw new IllegalStateException("俱乐部会费分账收款未就绪");
-            return duesSplit.createOrder(invoice, dues, wxOpenId);
+        if (dues == null || !dues.split() || duesSplit == null) {
+            throw new IllegalStateException("俱乐部会费分账收款未就绪");
         }
-        return wechatPayService.createGenericOrder(invoice.getOutTradeNo(),
-                BigDecimal.valueOf(invoice.getAmountFen(), 2),
-                "俱乐部会费-" + invoice.getPlanNameSnapshot(), wxOpenId);
+        return duesSplit.createOrder(invoice, dues, wxOpenId);
+    }
+
+    /** W7 MERCHANT-1: refuse before any invoice or WeChat call unless the money switch and collection model allow dues. */
+    private void requireDuesMoneyOpen(Long clubId) {
+        if (collectionModel == null) {
+            com.chengyinhub.common.exception.ErrorCode code =
+                    com.chengyinhub.common.exception.ErrorCode.CLUB_DUES_COLLECTION_UNAVAILABLE;
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("reason", com.chengyinhub.business.collection.CollectionDecision.MONEY_SWITCH_CLOSED);
+            data.put("nextStep", "WAIT_FOR_PLATFORM");
+            throw new com.chengyinhub.common.exception.BusinessRefusal(code, code.defaultMessage(),
+                    com.chengyinhub.common.exception.ErrorContract.LEGACY_ERROR_CODE, code.httpStatus(), data);
+        }
+        collectionModel.requireDuesMoneyOpen(clubId);
     }
 
     private ClubMembershipInvoice attachPrepayParams(ClubMembershipInvoice expected, String payJson) {

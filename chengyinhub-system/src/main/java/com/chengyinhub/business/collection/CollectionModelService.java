@@ -5,6 +5,8 @@ import com.chengyinhub.business.domain.CmsActivity;
 import com.chengyinhub.business.domain.CmsRegistration;
 import com.chengyinhub.business.domain.vo.PlatformSettlementAccountVO;
 import com.chengyinhub.business.mapper.CmsActivityMapper;
+import com.chengyinhub.business.moneyswitch.MoneyArea;
+import com.chengyinhub.business.moneyswitch.MoneyGate;
 import com.chengyinhub.business.moneyswitch.MoneySwitchService;
 import com.chengyinhub.business.payout.EcommerceSellerResolver;
 import com.chengyinhub.business.payout.PayoutSwitches;
@@ -28,9 +30,15 @@ import java.util.Map;
  * S2 collection model (owner ruling 2026-09-15, confirmed 2026-11-15): the platform collects only for its own official
  * tickets; every third-party seller is paid through single-seller split settlement, never collect-then-redistribute.
  *
- * <p><b>Gate.</b> The model acts only while the money switch's server ceiling ({@code chengyin.money-switch.server-ceiling},
- * false in production) is on. While it is off, {@link #active()} is false, nothing here reads a table, every method
- * returns "platform, as today" and no caller changes behaviour.
+ * <p><b>Gate.</b> The model acts only while its own flag {@code chengyin.collection-model.enabled} (env
+ * {@code CHENGYIN_COLLECTION_MODEL_ENABLED}, default false) is on. W7 MERCHANT-3 decoupled it from the app money ceiling
+ * ({@code chengyin.money-switch.server-ceiling}), so counsel's answer on S2 can be applied to the mini-program without
+ * "money on" for the app. While the flag is off, {@link #active()} is false, nothing here reads a table and ticket
+ * methods return "platform, as today".
+ *
+ * <p><b>Club dues</b> (W7 MERCHANT-1) are third-party money and are never collected by the platform, whatever the flags:
+ * a new dues prepay needs the Q5 {@code tickets} area open, this model active and a SPLIT decision for the club's own
+ * sub-merchant. Anything else is refused with {@code CLUB.DUES_COLLECTION_UNAVAILABLE} before any invoice is written.
  *
  * <p><b>Policy per seller type</b> (configuration, see {@code application.yml}):
  * {@code chengyin.collection-model.policy.merchant|club|member} = {@code SPLIT} (default) or {@code REFUSE}. A third
@@ -84,9 +92,32 @@ public class CollectionModelService {
         return CollectionPolicy.REFUSE;
     }
 
-    /** True only while the money switch's server ceiling is on (TEST / Staging). Production: false. */
+    /** W7 MERCHANT-3: the S2 model's own flag, independent of the app money ceiling. Default false (production). */
+    private boolean modelEnabled = false;
+
+    @Value("${chengyin.collection-model.enabled:false}")
+    public void setModelEnabled(boolean enabled) {
+        this.modelEnabled = enabled;
+    }
+
+    /** True only while {@code chengyin.collection-model.enabled} is on. Production: false. */
     public boolean active() {
-        return moneySwitch != null && moneySwitch.serverCeiling();
+        return modelEnabled;
+    }
+
+    /** True only while the Q5 {@code tickets} area is effectively open (ceiling and stored row). Any problem: false. */
+    public boolean duesMoneyOpen() {
+        return new MoneyGate(moneySwitch).isOpen(MoneyArea.TICKETS);
+    }
+
+    /**
+     * W7 MERCHANT-1: before any dues invoice or WeChat call. Refuses with {@code CLUB.DUES_COLLECTION_UNAVAILABLE}
+     * ({@code data.reason=MONEY_SWITCH_CLOSED}, {@code nextStep=WAIT_FOR_PLATFORM}) unless the Q5 {@code tickets} area is
+     * open and the collection model is active. Reads no table.
+     */
+    public void requireDuesMoneyOpen(Long clubId) {
+        if (duesMoneyOpen() && active()) return;
+        throw duesRefusal(clubId, CollectionDecision.MONEY_SWITCH_CLOSED, "WAIT_FOR_PLATFORM");
     }
 
     /** The configured third-party policy per seller type (admin view). */
@@ -174,11 +205,13 @@ public class CollectionModelService {
     // ------------------------------------------------------------------ K1 club dues
 
     /**
-     * Decision for a club's dues. Model off → PLATFORM / MODEL_OFF with no reads (today's behaviour). Model on: the seller
-     * is always the club; SPLIT needs a finished sub-merchant, rails on and the dues policy SPLIT. Never PLATFORM.
+     * Decision for a club's dues. Never PLATFORM (W7 MERCHANT-1): model off → REFUSE / SPLIT_RAILS_OFF with no reads.
+     * Model on: the seller is always the club; SPLIT needs a finished sub-merchant, rails on and the dues policy SPLIT.
      */
     public CollectionDecision decideClubDues(Long clubId) {
-        if (!active()) return CollectionDecision.platform(CollectionDecision.MODEL_OFF);
+        if (!active()) {
+            return CollectionDecision.refuse(SellerOfRecordPolicy.SellerType.CLUB, clubId, CollectionDecision.SPLIT_RAILS_OFF);
+        }
         if (clubDuesPolicy != CollectionPolicy.SPLIT) {
             return CollectionDecision.refuse(SellerOfRecordPolicy.SellerType.CLUB, clubId, CollectionDecision.DUES_SPLIT_NOT_BUILT);
         }
@@ -194,48 +227,58 @@ public class CollectionModelService {
     }
 
     /**
-     * Club dues renewal and invoice resume, before any invoice or prepay. Model off → returns PLATFORM / MODEL_OFF and the
-     * caller keeps today's path. Model on → returns the SPLIT decision (club sub-merchant) or throws the typed refusal
-     * {@code CLUB.DUES_COLLECTION_UNAVAILABLE} with {@code data.reason} and {@code data.nextStep}.
+     * Club dues renewal and invoice resume, before any invoice or prepay. Returns the SPLIT decision (club sub-merchant)
+     * or throws the typed refusal {@code CLUB.DUES_COLLECTION_UNAVAILABLE} with {@code data.reason} and
+     * {@code data.nextStep}. W7 MERCHANT-1: never returns PLATFORM; the Q5 {@code tickets} area must be open too.
      */
     public CollectionDecision requireClubDuesCollectible(Long clubId) {
-        if (!active()) return CollectionDecision.platform(CollectionDecision.MODEL_OFF);
+        requireDuesMoneyOpen(clubId);
         CollectionDecision decision = decideClubDues(clubId);
         if (decision.split()) return decision;
-        recordRefusal("DUES", clubId == null ? 0L : clubId, decision.reason());
+        throw duesRefusal(clubId, decision.reason(), duesNextStep(decision));
+    }
+
+    private BusinessRefusal duesRefusal(Long clubId, String reason, String nextStep) {
+        recordRefusal("DUES", clubId == null ? 0L : clubId, reason);
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("reason", decision.reason());
-        data.put("nextStep", duesNextStep(decision));
+        data.put("reason", reason);
+        data.put("nextStep", nextStep);
         ErrorCode code = ErrorCode.CLUB_DUES_COLLECTION_UNAVAILABLE;
-        throw new BusinessRefusal(code, code.defaultMessage(), ErrorContract.LEGACY_ERROR_CODE, code.httpStatus(), data);
+        return new BusinessRefusal(code, code.defaultMessage(), ErrorContract.LEGACY_ERROR_CODE, code.httpStatus(), data);
     }
 
     /**
-     * Last line before the platform merchant account is asked to collect club dues (out_trade_no {@code CLM...}). While
-     * the model is active the platform never collects dues; the split path goes through the club's sub-merchant only.
+     * Last line before the platform merchant account is asked to collect club dues (out_trade_no {@code CLM...}). The
+     * platform never collects dues, in any mode (W7 MERCHANT-1); the split path goes through the club's sub-merchant only.
      */
     public void requirePlatformMayCollectDues(String outTradeNo) {
-        if (!active() || outTradeNo == null || !outTradeNo.startsWith("CLM")) return;
+        if (outTradeNo == null || !outTradeNo.startsWith("CLM")) return;
         recordRefusal("DUES", 0L, CollectionDecision.SPLIT_RAILS_OFF);
         throw new IllegalStateException(ErrorCode.CLUB_DUES_COLLECTION_UNAVAILABLE.defaultMessage());
     }
 
     /**
      * What the app and mini-program may show about a club's dues: whether they can be paid now and, if not, why and who
-     * can fix it. {@code state}: {@code AVAILABLE} (today's path, model off), {@code SPLIT} (club sub-merchant),
-     * {@code NOT_BOUND} (club has no finished collection account), {@code WAIT_FOR_PLATFORM} (rails off) or
-     * {@code UNAVAILABLE}. No merchant ids.
+     * can fix it. {@code state}: {@code SPLIT} (club sub-merchant), {@code NOT_BOUND} (club has no finished collection
+     * account), {@code WAIT_FOR_PLATFORM} (money switch closed, model off or rails off) or {@code UNAVAILABLE}. W7
+     * MERCHANT-1: {@code AVAILABLE} (the old platform path) is no longer reported. No merchant ids.
      */
     public Map<String, Object> clubDuesStatus(Long clubId) {
         Map<String, Object> out = new LinkedHashMap<>();
         boolean on = active();
         out.put("modelActive", on);
+        if (!on || !duesMoneyOpen()) {
+            out.put("collectible", false);
+            out.put("reason", on ? CollectionDecision.MONEY_SWITCH_CLOSED : CollectionDecision.SPLIT_RAILS_OFF);
+            out.put("state", "WAIT_FOR_PLATFORM");
+            out.put("nextStep", "WAIT_FOR_PLATFORM");
+            return out;
+        }
         CollectionDecision decision = decideClubDues(clubId);
         out.put("collectible", !decision.refused());
         out.put("reason", decision.reason());
         String state;
-        if (!on) state = "AVAILABLE";
-        else if (decision.split()) state = "SPLIT";
+        if (decision.split()) state = "SPLIT";
         else if (CollectionDecision.SELLER_NOT_BOUND.equals(decision.reason())
                 || CollectionDecision.SUB_MCHID_IS_PLATFORM.equals(decision.reason())) state = "NOT_BOUND";
         else if (CollectionDecision.SPLIT_RAILS_OFF.equals(decision.reason())) state = "WAIT_FOR_PLATFORM";

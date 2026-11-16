@@ -50,6 +50,15 @@ public class CreatorEarningsService {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.chengyinhub.business.merchantplans.TakeRateService takeRates;
 
+    /**
+     * W7 MERCHANT-3: the money state is PENDING_PAYOUT only while the property is on AND the Q5 {@code payout} area is
+     * open. No gate (hand-built in tests) reads closed.
+     */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.moneyswitch.MoneyGate moneyGate;
+
+    void setMoneyGate(com.chengyinhub.business.moneyswitch.MoneyGate moneyGate) { this.moneyGate = moneyGate; }
+
     public CreatorEarningsService(CreatorEarningMapper mapper, UmsMemberMapper members, IUmsMemberService memberService,
                                   IUmsMemberPointsDetailService pointsDetails, PlatformTransactionManager transactions,
                                   @Value("${chengyin.creator-earnings.adopt-points:5}") int adoptPoints,
@@ -68,7 +77,10 @@ public class CreatorEarningsService {
 
     public CreatorEarningsPolicy policy() { return policy; }
 
-    public boolean moneyOn() { return moneyOn; }
+    public boolean moneyOn() {
+        return moneyOn && moneyGate != null
+                && moneyGate.isOpen(com.chengyinhub.business.moneyswitch.MoneyArea.PAYOUT);
+    }
 
     // ------------------------------------------------------------------ accrual
 
@@ -86,7 +98,7 @@ public class CreatorEarningsService {
         summary.put("sale", drain(() -> mapper.selectSaleCandidates(from, to, BATCH), this::sale));
         summary.put("reversal", drain(() -> mapper.selectReversalCandidates(from, to, BATCH), this::reversal));
         summary.put("mirrored", mirror());
-        summary.put("moneyState", CreatorEarningsPolicy.moneyState(moneyOn));
+        summary.put("moneyState", CreatorEarningsPolicy.moneyState(moneyOn()));
         return summary;
     }
 
@@ -152,7 +164,7 @@ public class CreatorEarningsService {
         row.put("shareBps", shareBps);
         row.put("creatorMinor", gross <= 0 ? 0L : Math.multiplyExact(gross, (long) shareBps) / 10000L);
         row.put("currency", Objects.toString(r.get("currency"), "CNY"));
-        row.put("moneyState", CreatorEarningsPolicy.moneyState(moneyOn));
+        row.put("moneyState", CreatorEarningsPolicy.moneyState(moneyOn()));
         row.put("orderKey", CreatorEarningsPolicy.incomeOrderKey(orderNo));
         return append(row, 0, false);
     }
@@ -170,7 +182,7 @@ public class CreatorEarningsService {
         row.put("shareBps", (int) num(sale, "shareBps"));
         row.put("creatorMinor", -num(sale, "creatorMinor"));
         row.put("currency", sale.get("currency"));
-        row.put("moneyState", CreatorEarningsPolicy.moneyState(moneyOn));
+        row.put("moneyState", CreatorEarningsPolicy.moneyState(moneyOn()));
         row.put("orderKey", sale.get("orderKey"));
         return append(row, 0, false);
     }
@@ -271,7 +283,7 @@ public class CreatorEarningsService {
             money.add(row);
         }
         result.put("money", money);
-        result.put("moneyOn", moneyOn);
+        result.put("moneyOn", moneyOn());
         List<Map<String, Object>> items = new ArrayList<>();
         for (Map<String, Object> i : mapper.selectItems(creator, 100)) {
             Map<String, Object> row = new LinkedHashMap<>();
