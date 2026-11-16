@@ -124,7 +124,7 @@ test('故事玩法自动展开，流中只有标题而没有入口方框', () =>
 // 原型:故事流停在玩法入口卡,卡就是唯一的下一步。旧版底部还亮着「出发」,点了只会弹「请先完成开局玩法」。
 test('流停在未玩的故事玩法时,底部不再摆「出发 / 继续探索」', () => {
   const wxml = read('pages/play/index.wxml')
-  assert.match(wxml, /<view class="chfull__end" wx:if="\{\{\(chapterParas\[chapterParas\.length - 1\]\.kind !== 'game' && /)
+  assert.match(wxml, /<view class="chfull__end" wx:if="\{\{chapterFlowAction && \(\(chapterParas\[chapterParas\.length - 1\]\.kind !== 'game' && /)
 })
 
 // 原型:做完的入口卡留在原位,右上变成半透明「已完成」(.fsentry.done)。旧版做完卡整张消失,读者找不到刚玩过什么。
@@ -636,10 +636,226 @@ test('QA材料图在输入前完整排版，单张图片可走真实放大处理
   }
 })
 
+function settleScrolledKit(page, top = 40, rect = { top: 100, bottom: 500, height: 400 }) {
+  const previous = wx.createSelectorQuery
+  const box = { top: 0, bottom: 600, height: 600 }
+  const query = { in() { return this }, select() { return this }, selectAll() { return this },
+    boundingClientRect() { return this }, exec(callback) {
+      callback([box, page.data.chapterParas.map(() => rect)])
+    } }
+  wx.createSelectorQuery = () => query
+  try {
+    page.onChapterScroll({ detail: { scrollTop: top } })
+    clearTimeout(page._settleTimer)
+    page._settleStory()
+  } finally { wx.createSelectorQuery = previous }
+}
+
+function readyScrollPage() {
+  const node = { nodeId: 51, chapterId: 1, name: '原任务', vm: 0, hasAdvanced: true, done: false }
+  const page = makePage({ id: 1, blocks: [{ type: 'node', nodeId: 51, locationRequired: false }] }, [node])
+  page.data.chapterFull = true
+  page.data.chapterParas = [{ i: 0, kind: 'kit', nodeId: 51 }]
+  page._playKitNodeId = 51
+  page.data.advancedPlay = { show: true, node }
+  page.data.helpPanel.nodeId = '51'
+  const game = { data: { state: { sessionId: 71, version: 1, readyForBase: false } },
+    continueBase() { return page.onAdvancedReady({ detail: { nodeId: 51 } }) } }
+  page.selectComponent = () => game
+  const view = ready => ({ nodeId: 51, sessionId: 71, version: 1, readyForBase: ready,
+    present: 'inline', playKit: { qa: { mode: 'TYPE', title: '公开测试题面' } } })
+  page.onAdvancedSession({ detail: view(false) })
+  return { page, node, game, ready() {
+    game.data.state.readyForBase = true
+    page.onAdvancedSession({ detail: view(true) })
+  } }
+}
+
+test('普通正文直接露出真实下一任务，不需要继续探索且滚动不代完成', () => {
+  for (const isPreview of [false, true]) for (const blocks of [[{ type: 'text', content: '走到下一站。' }],
+    [{ type: 'text', content: '走到下一站。' }, { type: 'node', nodeId: 51 }, { type: 'text', content: '未完成不剧透' }]]) {
+    const node = { nodeId: 51, chapterId: 1, name: '原地点任务', lat: 31, lng: 121, vm: 0, done: false }
+    const page = makePage({ id: 1, blocks }, [node])
+    page.data.nextNode = { nodeId: 51 }
+    page.data.isPreview = isPreview
+    page.openChapterFull()
+    const entry = page.data.chapterParas.find(p => p.kind === 'nextTask')
+    assert.equal(entry && entry.nodeId, 51)
+    assert.equal(page.data.chapterFlowAction, '')
+    assert.ok(!page.data.chapterParas.some(p => p.text === '未完成不剧透'))
+    settleScrolledKit(page)
+    settleScrolledKit(page, 80)
+    assert.equal(node.done, false)
+    assert.equal(requests.filter(r => r.method === 'POST').length, 0)
+    let opened
+    page.openSheet = n => { opened = n }
+    page.openStoryTask({ currentTarget: { dataset: { nodeid: entry.nodeId } } })
+    assert.equal(opened, node, '保留正常开始任务与定位/扫码入口，不滚动伪造到达')
+  }
+})
+
+test('实际滚动只对权威ready任务衔接一次，未ready不写入完成', () => {
+  const { page, node, ready } = readyScrollPage()
+  let arrivals = 0
+  page.arrive = () => { arrivals++ }
+  settleScrolledKit(page)
+  assert.equal(arrivals, 0)
+  ready()
+  assert.equal(arrivals, 0, 'sheet入口首次ready不凭计时直接跳过反馈阅读')
+  settleScrolledKit(page, 80)
+  settleScrolledKit(page, 120)
+  assert.equal(arrivals, 1, '走真实continueBase→onAdvancedReady→基础到达路径且去重')
+  assert.equal(node.done, false, '没有服务器完成回执不能改node.done')
+})
+
+test('正常大幅下滑越过ready结果仍衔接，不必上下寻找精确位置', () => {
+  const { page, game } = readyScrollPage()
+  page._storyOpenNode = true
+  game.data.state.readyForBase = true
+  page.onAdvancedSession({ detail: { nodeId: 51, sessionId: 71, version: 1, readyForBase: true, present: 'inline',
+    playKit: { random: { title: '查看原结果', drawCount: 1, drawn: [] } } } })
+  assert.equal(page.data.playKit.kit.type, 'random')
+  let continued = 0
+  page.continueStoryGame = () => { continued++ }
+  assert.equal(continued, 0, '排除原900ms自动的结果玩法仍先留给玩家看')
+  settleScrolledKit(page, 40, { top: 0, bottom: 0, height: 0 })
+  assert.equal(continued, 0, '隐藏/未排版的零几何不算读过结果')
+  settleScrolledKit(page, 1600, { top: -600, bottom: -100, height: 500 })
+  settleScrolledKit(page, 1800, { top: -800, bottom: -300, height: 500 })
+  assert.equal(continued, 1)
+})
+
+test('权威路线读取明确拒绝后可由正常滚动重拉，同版本不被handled永久锁死', async t => {
+  const previousNextTick = wx.nextTick
+  wx.nextTick = callback => callback()
+  t.after(() => { if (previousNextTick) wx.nextTick = previousNextTick; else delete wx.nextTick })
+  const { normalizeRouteState } = require('../../pages/play/utils/play-route-state.js')
+  const { page, ready } = readyScrollPage()
+  page._routeState = normalizeRouteState({ sessionId: 501, routeMode: 'LINEAR', version: 1, status: 'ACTIVE' })
+  let arrived = 0
+  page.arrive = () => { arrived++ }
+  ready()
+  const active = page.data.advancedPlay
+  settleScrolledKit(page)
+  const first = requests.filter(r => r.url === '/api/play/route-state').at(-1)
+  assert.ok(first, '使用真实Page.refreshRouteState GET，不stub其返回值')
+  settleScrolledKit(page, 80)
+  assert.equal(requests.filter(r => r.url === '/api/play/route-state').length, 1, '读取在途去重')
+  first.success({ code: 503, msg: '本次读取被明确拒绝' })
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(arrived, 0)
+  assert.equal(page.data.advancedPlay, active, '拒绝前没有关闭/伪完成玩法')
+  assert.equal(requests.filter(r => r.url === '/api/play/route-state').length, 1, '不安排定时重试')
+  settleScrolledKit(page, 120)
+  const reads = requests.filter(r => r.url === '/api/play/route-state')
+  assert.equal(reads.length, 2, '下一次正常滚动应可重新读取，不要求新版本或重新开局')
+  assert.equal(page._routeState.version, 1)
+  settleScrolledKit(page, 160)
+  assert.equal(requests.filter(r => r.url === '/api/play/route-state').length, 2, '恢复读取在途仍去重')
+  reads[1].success({ code: 200, data: { sessionId: 501, routeMode: 'LINEAR', version: 1, status: 'ACTIVE' } })
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(arrived, 1)
+  assert.equal(requests.filter(r => r.method === 'POST').length, 0, '本用例不伪造服务器完成回执')
+})
+
+test('非故事页面已完成玩法重入保留原权威收尾回调', async () => {
+  const { page, ready } = readyScrollPage()
+  page.data.chapterFull = false
+  page._freshStoryGame = '51'
+  let continued = 0
+  page.continueStoryGame = () => { continued++ }
+  ready()
+  await new Promise(resolve => setTimeout(resolve, 450))
+  assert.equal(continued, 1, '普通地点详情重入已完成玩法不能被故事滚动条件堵住')
+})
+
+test('顶层作者反馈先关闭再衔接，重复关闭和滚动不重复回调', () => {
+  const { page, ready } = readyScrollPage()
+  let continued = 0
+  page.continueStoryGame = () => { continued++ }
+  page.data.r5Verdict.show = true
+  ready()
+  settleScrolledKit(page)
+  assert.equal(continued, 0)
+  page.closeR5Verdict()
+  assert.equal(continued, 1)
+  page.closeR5Verdict()
+  settleScrolledKit(page, 80)
+  assert.equal(continued, 1)
+})
+
+test('滚动ready不得穿透UNKNOWN、held或旧账号/局/章节/组件/版本', () => {
+  for (const stale of ['arrivalUnknown', 'gameUnknown', 'advancedUnknown', 'advancedPending', 'held', 'account', 'epoch', 'session', 'chapter', 'component', 'version']) {
+    const { page, game, ready } = readyScrollPage()
+    let continued = 0
+    page.continueStoryGame = () => { continued++ }
+    ready()
+    if (stale === 'arrivalUnknown') page._arrivalWriteUnknown = true
+    if (stale === 'gameUnknown') page._gameWriteUnknown = true
+    if (stale === 'advancedUnknown') game.data.unknown = true
+    if (stale === 'advancedPending') game.data.acting = true
+    if (stale === 'held') page.data.chapterGate = { show: true, held: true }
+    if (stale === 'account') page._isPlayAccountCurrent = () => false
+    if (stale === 'epoch') page._playLoadEpoch = 4
+    if (stale === 'session') page._sessionKey = () => 'new-session'
+    if (stale === 'chapter') page.data.chapter = { id: 2 }
+    if (stale === 'component') page.selectComponent = () => ({ data: game.data })
+    if (stale === 'version') game.data.state.version = 2
+    settleScrolledKit(page)
+    assert.equal(continued, 0, stale)
+  }
+})
+
+test('真实作者previewKit不带会话字段时仍按组件权威身份衔接，减动效不丢结果', () => {
+  const { buildPreviewKit } = require('../../pages/publish/utils/publish/advanced-game-preview.js')
+  const kit = buildPreviewKit({ present: 'inline', qa: { enabled: true, mode: 'TYPE', title: '公开测试题面' } })
+  assert.equal(kit.sessionId, undefined)
+  const node = { nodeId: 51, chapterId: 1, name: '试玩任务', vm: 0, hasAdvanced: true, done: false }
+  const page = makePage({ id: 1, blocks: [{ type: 'node', nodeId: 51, locationRequired: false }] }, [node])
+  page.data.isPreview = true
+  page.data.reducedMotion = true
+  page.data.chapterFull = true
+  page.data.chapterParas = [{ i: 0, kind: 'kit', nodeId: 51 }]
+  page._playKitNodeId = 51
+  page.data.advancedPlay = { show: true, node }
+  const state = { sessionId: 'preview', nodeId: 51, version: 1, readyForBase: true }
+  const game = { data: { state }, continueBase() { page.onAdvancedReady({ detail: { nodeId: 51 } }) } }
+  page.selectComponent = () => game
+  page.onAdvancedSession({ detail: { ...state, previewKit: kit } })
+  let arrived = 0
+  page.arrive = () => { arrived++ }
+  settleScrolledKit(page)
+  settleScrolledKit(page, 80)
+  assert.equal(arrived, 1)
+  assert.equal(requests.filter(r => r.method === 'POST').length, 0)
+})
+
+test('普通正文不显示推进继续，跨章与结果保留明确动作及原callback', () => {
+  const wxml = read('pages/play/index.wxml')
+  const story = wxml.slice(wxml.indexOf('<view class="chfull__stage">'), wxml.indexOf('<!-- 游玩工具层'))
+  assert.doesNotMatch(story, /bindtap="continueStoryGame"/)
+  assert.doesNotMatch(story, />继续(?:故事|探索)?<\/view>/)
+  const page = makePage({ id: 1, blocks: [{ type: 'text', content: '正文' }] }, [])
+  page._chapterTrailNext = { id: 2, name: '下一章', blocks: [] }
+  page.openChapterFull()
+  assert.equal(page.data.chapterFlowAction, '下一章')
+  assert.equal(page.data.chapter.id, 1, '滚动/铺正文不提前换章')
+  page.continueChapterStory()
+  assert.equal(page.data.chapter.id, 2)
+  let ending = 0
+  page._afterEndingChapter = () => { ending++ }
+  page.data.chapter.ending = true
+  page.openChapterFull()
+  assert.equal(page.data.chapterFlowAction, '查看结局')
+  page.continueChapterStory()
+  page.continueChapterStory()
+  assert.equal(ending, 1)
+})
+
 function storyEndVisible(last) {
   const match = read('pages/play/index.wxml').match(/<view class="chfull__end" wx:if="\{\{([^}]+)\}\}">/);
   assert.ok(match, '故事末尾必须绑定真实显示条件');
-  return require('node:vm').runInNewContext(match[1], { chapterParas: [last] });
+  return require('node:vm').runInNewContext(match[1], { chapterParas: [last], chapterFlowAction: '下一章' });
 }
 
 test('未完成的普通玩法和encounter检定下面不摆「继续探索」', () => {
@@ -837,7 +1053,7 @@ test('故事玩法只在服务端确认完成后自动衔接，重复回包不�
   page.data.advancedPlay = { show: true, node }
   let continued = 0
   page.continueStoryGame = () => { continued++ }
-  const detail = { nodeId: 51, readyForBase: false, playKit: { typeIn: { title: '开机' } } }
+  const detail = { nodeId: 51, present: 'inline', readyForBase: false, playKit: { typeIn: { title: '开机' } } }
   page.onAdvancedSession({ detail })
   assert.equal(continued, 0)
   page.onAdvancedSession({ detail: { ...detail, readyForBase: true } })

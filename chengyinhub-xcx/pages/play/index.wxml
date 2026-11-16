@@ -24,7 +24,7 @@
   bind:actionfail="onAdvancedActionFail" bind:bgm="onAdvancedBgm" />
 
 <!-- 预览态返回(2026-09-24 用户:左上角就是返回,没有其它字,没有跳过)。a1-v3-10-53(业主「上面有两个返回」):玩法自己的返回在屏上时这颗让开。
-     下一章 / 看结局改由故事流底部的「继续探索」接上(continueChapterStory 在试玩里走 advancePreview)。 -->
+     跨章 / 查看结果保留正文末尾的明确动作，普通剧情与任务结果沿滚动衔接。 -->
 <view class="preview-back glass" wx:if="{{isPreview && !playKit.show && !album.show && !(chapterFull && advancedPlay.show && playKit.kit && !playKit.card)}}" style="top: {{statusBarHeight + 8}}px;"
       bindtap="previewGoBack" aria-role="button" aria-label="返回草稿编辑" hover-class="cy-pressed" hover-stay-time="80">
   <cy-icon name="back" size="32" />
@@ -227,6 +227,11 @@
         </view>
         <!-- 2026-09-24 用户:故事流的卡片要居中,不写「故事玩法」。图标 / 名字 / 动作竖排居中,与居中的正文同一条中线。
              内嵌玩法(auto)不出动作钮:读到就直接铺开成玩法本身,这张卡只是铺开前那一瞬的占位。 -->
+        <view wx:elif="{{item.kind === 'nextTask'}}" class="chfull__game-cue" data-nodeid="{{item.nodeId}}" bindtap="openStoryTask"
+              aria-role="button" aria-label="开始任务：{{item.text}}" hover-class="cy-pressed" hover-stay-time="80">
+          <view class="chfull__fsentry-title">{{item.text}}</view>
+          <text>开始任务</text>
+        </view>
         <view wx:elif="{{item.kind === 'game'}}" class="chfull__game-cue" data-nodeid="{{item.nodeId}}" data-origin="story" bindtap="openKitStart"
               aria-role="button" aria-label="{{item.go}}:{{item.text}}" hover-class="cy-pressed" hover-stay-time="80">
           <view class="chfull__fsentry-title">{{item.text}}</view>
@@ -238,10 +243,6 @@
             <view class="chfull__kitcard-play" aria-hidden="true"><view class="chfull__kitcard-tri"></view></view>
           </view>
           <cy-playkit wx:else kit="{{playKit.kit}}" show="{{true}}" inline="{{true}}" bind:kitaction="onPlayKitAction" />
-          <view class="chfull__continue" wx:if="{{playKit.readyForBase && advancedPlay.show && (playKit.kit.type === 'qa' || playKit.kit.type === 'hangman')}}" bindtap="continueStoryGame"
-                aria-role="button" aria-label="继续" hover-class="cy-pressed" hover-stay-time="80">继续</view>
-          <view class="chfull__continue" wx:elif="{{playKit.readyForBase && advancedPlay.show}}" bindtap="continueStoryGame"
-                aria-role="button" aria-label="继续故事" hover-class="cy-pressed" hover-stay-time="80">继续故事</view>
         </view>
         <view wx:elif="{{item.kind === 'journeyCheck'}}" class="chfull__kit">
           <view class="chfull__kit-anchor" id="{{'chapter-kit-' + item.nodeId}}" style="top:calc(0px - max(var(--chfull-fade-end), calc({{chrome.contentTop}}px + var(--cy-btn-h) + var(--cy-space-3))))"></view>
@@ -254,8 +255,8 @@
         <view wx:elif="{{item.kind === 'tasks'}}" class="chfull__tasks" bindtap="openStoryTasks" aria-role="button" aria-label="延伸任务，{{item.count}} 个" hover-class="chfull__tasks--press" hover-stay-time="80"><view class="chfull__tasks-ico" aria-hidden="true"><cy-icon name="flag" size="32" /></view><text class="chfull__tasks-t">延伸任务</text><text class="chfull__tasks-n">{{item.count}}</text><cy-icon name="chevron-right" size="28" /></view>
         <block wx:else><text class="chfull__cond" wx:if="{{item.cond}}">{{item.cond}}</text><text wx:if="{{item.chars}}" wx:for="{{item.chars}}" wx:for-item="c" wx:key="i" class="tfx__c {{c.raw ? 'is-raw' : ''}}" style="--i:{{c.i}};--r:{{c.r}};--dx:{{c.dx}}px;--dy:{{c.dy}}px" aria-hidden="true">{{c.ch}}</text><block wx:if="{{!item.chars}}">{{item.text}}</block><text wx:if="{{item.chars}}" class="tfx__sr">{{item.text}}</text></block>
       </view>
-      <view class="chfull__end" wx:if="{{(chapterParas[chapterParas.length - 1].kind !== 'game' && chapterParas[chapterParas.length - 1].kind !== 'kit' && chapterParas[chapterParas.length - 1].kind !== 'journeyCheck') || chapterParas[chapterParas.length - 1].done}}">
-        <view class="chfull__continue" bindtap="continueChapterStory" aria-role="button" aria-label="{{chapter.opening ? '出发' : (chapter.ending ? '继续' : '继续探索')}}" hover-class="cy-pressed" hover-stay-time="80">{{chapter.opening ? '出发' : (chapter.ending ? '继续' : '继续探索')}}</view>
+      <view class="chfull__end" wx:if="{{chapterFlowAction && ((chapterParas[chapterParas.length - 1].kind !== 'game' && chapterParas[chapterParas.length - 1].kind !== 'kit' && chapterParas[chapterParas.length - 1].kind !== 'journeyCheck') || chapterParas[chapterParas.length - 1].done)}}">
+        <view class="chfull__continue" bindtap="continueChapterStory" aria-role="button" aria-label="{{chapterFlowAction}}" hover-class="cy-pressed" hover-stay-time="80">{{chapterFlowAction}}</view>
       </view>
       <view class="chfull__pad"></view>
     </scroll-view>
