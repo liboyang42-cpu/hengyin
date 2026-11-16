@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
@@ -168,11 +169,85 @@ class ChannelEventServiceTest
     }
 
     @Test
-    void adminsMembersAndOutsidersMayNotPost()
+    void ownerHostsTheirOwnEvent()
     {
-        assertEquals("EVENT_POST_FORBIDDEN", code(() -> service.preparePost(ADMIN, CHANNEL, draft(null))));
+        ChannelEventService.PostTarget t = service.preparePost(OWNER, CHANNEL, draft(null));
+        assertEquals(OWNER, t.hostFor(OWNER));
+        assertFalse(t.hostedForOwner(OWNER), "the owner publishes through the ordinary path");
+    }
+
+    @Test
+    void anAdminWithCreateEventPostsAFreeEventHostedByTheClubOwner()
+    {
+        when(access.clubOwnerId(CLUB)).thenReturn(OWNER);
+        ChannelEventService.PostTarget t = service.preparePost(ADMIN, CHANNEL, draft(null));
+        assertEquals(CLUB, t.clubId());
+        assertEquals(OWNER, t.hostFor(ADMIN), "SOC-6 option A: the club owner hosts");
+        assertTrue(t.hostedForOwner(ADMIN));
+    }
+
+    @Test
+    void aMemberWhoseRoleGrantsCreateEventMayPostFree()
+    {
+        when(access.clubOwnerId(CLUB)).thenReturn(OWNER);
+        when(access.effective(channel, MEMBER))
+                .thenReturn(ChannelPermissionCalculator.MEMBER_BASE | ChannelCapability.CREATE_EVENT.mask());
+        assertEquals(OWNER, service.preparePost(MEMBER, CHANNEL, draft(null)).hostFor(MEMBER));
+    }
+
+    @Test
+    void membersWithoutCreateEventAndOutsidersMayNotPost()
+    {
         assertEquals("EVENT_POST_FORBIDDEN", code(() -> service.preparePost(MEMBER, CHANNEL, draft(null))));
         assertEquals("GUILD_FORBIDDEN", code(() -> service.preparePost(OUTSIDER, CHANNEL, draft(null))));
+        when(access.effective(channel, ADMIN))
+                .thenReturn(ChannelPermissionCalculator.ADMIN_BASE & ~ChannelCapability.CREATE_EVENT.mask());
+        assertEquals("EVENT_POST_FORBIDDEN", code(() -> service.preparePost(ADMIN, CHANNEL, draft(null))),
+                "an overwrite that denies CREATE_EVENT takes it away from an admin");
+    }
+
+    @Test
+    void paidEventsStayOwnerOnlyEvenWithTheMoneyAreaOpen()
+    {
+        when(access.clubOwnerId(CLUB)).thenReturn(OWNER);
+        moneyAreas.put("tickets", true);
+        assertEquals("EVENT_POST_FORBIDDEN", code(() -> service.preparePost(ADMIN, CHANNEL, draft("39.90"))));
+        assertEquals(CLUB, service.preparePost(OWNER, CHANNEL, draft("39.90")).clubId());
+    }
+
+    @Test
+    void aClubWithoutAnOwnerTakesNoDelegatedEvents()
+    {
+        when(access.clubOwnerId(CLUB)).thenReturn(0L);
+        assertEquals("EVENT_HOST_MISSING", code(() -> service.preparePost(ADMIN, CHANNEL, draft(null))));
+    }
+
+    @Test
+    void attachAcceptsAnActivityHostedByTheOwnerAndKeepsTheRealPoster()
+    {
+        when(mapper.selectActivityState(ACTIVITY)).thenReturn(activity(1, 1));
+        doAnswer(inv -> {
+            ChannelEventRow r = inv.getArgument(0);
+            r.setId(EVENT);
+            when(mapper.selectEvent(EVENT)).thenReturn(r);
+            return 1;
+        }).when(mapper).insertEvent(any());
+        service.attach(ADMIN, new ChannelEventService.PostTarget(CHANNEL, CLUB, OWNER), draft(null), ACTIVITY);
+        ArgumentCaptor<ChannelEventRow> row = ArgumentCaptor.forClass(ChannelEventRow.class);
+        verify(mapper).insertEvent(row.capture());
+        assertEquals(ADMIN, row.getValue().getPosterMemberId(), "poster_member_id records who really posted");
+        assertEquals("EVENT_ACTIVITY_MISMATCH",
+                code(() -> service.attach(MEMBER, new ChannelEventService.PostTarget(CHANNEL, CLUB), draft(null), 901L)));
+    }
+
+    @Test
+    void listTellsTheAppWhoMayPostAndWhoMayCharge()
+    {
+        when(mapper.selectByChannel(eq(CHANNEL), any(), anyInt())).thenReturn(List.of());
+        assertEquals(Boolean.TRUE, service.list(ADMIN, CHANNEL).get("can_post"));
+        assertEquals(Boolean.FALSE, service.list(ADMIN, CHANNEL).get("can_post_paid"));
+        assertEquals(Boolean.TRUE, service.list(OWNER, CHANNEL).get("can_post_paid"));
+        assertEquals(Boolean.FALSE, service.list(MEMBER, CHANNEL).get("can_post"));
     }
 
     @Test

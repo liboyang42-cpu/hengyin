@@ -1070,6 +1070,7 @@
     "20261127_city_monopoly_jobs": ["20261124_city_numbers_attr"],
     "20261127_stagger_city_monopoly_jobs": ["20261127_city_monopoly_jobs", "20261115_stagger_all_sys_jobs", "20261115_stagger_club_growth_jobs"],
     "20261128_channel_purge_job": ["20261105_l8_channel_lifecycle"],
+    "20261129_channel_create_event_bit": ["20261112_im_channels_platform"],
     "20261128_stagger_channel_purge_job": ["20261115_stagger_all_sys_jobs", "20261128_channel_purge_job"],
     "20261126_reward_drop_perm_union": ["20261115_admin_consoles", "20261123_sys_random", "20261125_admin_r3_perms"],
     "20261115_club_dues": ["20261115_collection_model", "club_role_membership_20260823"],

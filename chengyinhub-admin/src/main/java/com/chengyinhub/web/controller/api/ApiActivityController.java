@@ -883,12 +883,26 @@ public class ApiActivityController extends BaseController {
     @Log(title = "发布活动", businessType = BusinessType.INSERT)
     @PostMapping("/publish")
     public AjaxResult publish(@Validated @RequestBody CmsActivityPublishRequest request) {
-        if (request == null || request.getRequestId() == null || request.getRequestId().isBlank()) return publishOnce(request);
+        if (request == null || request.getRequestId() == null || request.getRequestId().isBlank()) return publishOnce(request, null);
         return authorWriteReceipts.execute(getAppUserId(), "ACTIVITY_PUBLISH", request.getRequestId(), request,
-                () -> publishOnce(request));
+                () -> publishOnce(request, null));
     }
 
-    private AjaxResult publishOnce(CmsActivityPublishRequest request) {
+    /**
+     * W7 SOC-6(主理人拍板 方案 A):俱乐部管理员或持 CREATE_EVENT 的角色在频道发的免费活动,主办主体是俱乐部主理人
+     * (配额、结算、退款归主理人),实际操作人是当前登录者,真实发布人另记在 channel_event.poster_member_id。
+     * 不是 HTTP 路由:只有 ApiChannelEventController 在 ChannelEventService.preparePost 放行后调用。
+     * 其余闸(内容安全、配额、俱乐部归属)与 /publish 完全相同;publishActivity 仍校验 club.member_id == 主办主体。
+     */
+    public AjaxResult publishHostedByClubOwner(CmsActivityPublishRequest request, long clubOwnerMemberId) {
+        if (clubOwnerMemberId <= 0 || request == null) return refuse(ErrorCode.FORBIDDEN, "仅俱乐部主理人或商家可发布活动");
+        request.setScope(null);
+        if (request.getRequestId() == null || request.getRequestId().isBlank()) return publishOnce(request, clubOwnerMemberId);
+        return authorWriteReceipts.execute(getAppUserId(), "ACTIVITY_PUBLISH", request.getRequestId(), request,
+                () -> publishOnce(request, clubOwnerMemberId));
+    }
+
+    private AjaxResult publishOnce(CmsActivityPublishRequest request, Long clubOwnerHost) {
         try {
 
             // 添加调试日志
@@ -906,7 +920,9 @@ public class ApiActivityController extends BaseController {
 
             final ActivityPublisher publisher;
             try {
-                publisher = resolveActivityPublisher(member_id, request == null ? null : request.getScope());
+                publisher = clubOwnerHost != null
+                        ? clubOwnerHostedPublisher(clubOwnerHost, member_id)
+                        : resolveActivityPublisher(member_id, request == null ? null : request.getScope());
             } catch (ServiceException se) {
                 return error(se.getMessage());
             }
@@ -1313,6 +1329,14 @@ public class ApiActivityController extends BaseController {
             return null;
         }
         return new ActivityPublisher(principalMemberId, principalMemberId, false);
+    }
+
+    /** W7 SOC-6:主理人做主办主体、当前登录者做操作人;主理人已不是俱乐部发布角色时不放行。 */
+    private ActivityPublisher clubOwnerHostedPublisher(Long clubOwnerMemberId, Long actorMemberId) {
+        if (clubOwnerMemberId == null || clubOwnerMemberId <= 0 || !isClubActivityPublisher(clubOwnerMemberId)) {
+            return null;
+        }
+        return new ActivityPublisher(clubOwnerMemberId, actorMemberId, false);
     }
 
     /**

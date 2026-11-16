@@ -54,7 +54,10 @@ public class ApiChannelEventController extends BaseController
             ChannelEventDraft draft = ChannelEventDraft.parse(body, new Date());
             PostTarget target = events.preparePost(me, ChannelHttpResponse.id(id), draft);
             CmsActivityPublishRequest request = ChannelEventService.toPublishRequest(target, draft);
-            AjaxResult published = activities.publish(request);
+            // W7 SOC-6: an admin or a CREATE_EVENT role posts a free event hosted by the club owner.
+            AjaxResult published = target.hostedForOwner(me)
+                    ? activities.publishHostedByClubOwner(request, target.hostMemberId())
+                    : activities.publish(request);
             long activityId = publishedActivityId(published);
             return events.attach(me, target, draft, activityId);
         });
