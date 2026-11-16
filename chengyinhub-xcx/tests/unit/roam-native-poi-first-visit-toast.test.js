@@ -22,8 +22,8 @@ async function tapPoi(response, { locationFails = false } = {}) {
   try {
     delete require.cache[require.resolve('../../pages/roam/index.js')]
     require('../../pages/roam/index.js')
-    const page = Object.assign({}, def, { data: { center: { lat: 31.9, lng: 121.9 }, fogScreenGuard: false },
-      _realAnchor: fix && fix.anchor, _realAccuracy: fix ? fix.accuracy : null })
+    // The map centre is far from the device fix, so a request built from the centre would fail the GAME-4 checks.
+    const page = Object.assign({}, def, { data: { center: { lat: 31.9, lng: 121.9 }, fogScreenGuard: false } })
     page.onPoiTap({ detail: { name: '外滩', latitude: 31.2, longitude: 121.4 } })
     for (let i = 0; i < 3; i += 1) await new Promise(r => setImmediate(r))
   } finally {
