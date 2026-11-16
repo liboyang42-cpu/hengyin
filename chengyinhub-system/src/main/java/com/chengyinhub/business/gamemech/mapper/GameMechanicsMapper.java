@@ -144,13 +144,32 @@ public interface GameMechanicsMapper {
                          @Param("os") Integer opponentSeconds, @Param("od") Date opponentDoneAt,
                          @Param("result") String result, @Param("status") String status, @Param("version") int version);
 
-    /** First journey run that started or was still running after {@code since} and reached the end. */
+    /**
+     * GAME-11: first journey run that STARTED after {@code since} (the duel was accepted) and reached the end.
+     * A run with any stop finished away from it (player_node_progress.remote_completion = 1, GAME-2) does not count.
+     */
     @Select("select r.create_time as startedAt, r.completed_at as completedAt from topic_route_session r"
             + " where r.member_id = #{memberId} and r.topic_id = #{topicId} and r.status = 1"
+            + " and r.create_time >= #{since}"
             + " and r.completed_at is not null and r.completed_at >= #{since}"
+            + " and not exists (" + REMOTE_STOP_OF_RUN + ")"
             + " order by r.completed_at asc limit 1")
     Map<String, Object> selectFirstCompletionSince(@Param("memberId") Long memberId, @Param("topicId") Long topicId,
                                                    @Param("since") Date since);
+
+    /** GAME-11: fresh runs finished after {@code since} that were excluded because a stop was finished remotely. */
+    @Select("select count(*) from topic_route_session r"
+            + " where r.member_id = #{memberId} and r.topic_id = #{topicId} and r.status = 1"
+            + " and r.create_time >= #{since}"
+            + " and r.completed_at is not null and r.completed_at >= #{since}"
+            + " and exists (" + REMOTE_STOP_OF_RUN + ")")
+    int countRemoteRunsSince(@Param("memberId") Long memberId, @Param("topicId") Long topicId,
+                             @Param("since") Date since);
+
+    String REMOTE_STOP_OF_RUN = "select 1 from player_node_progress p where p.member_id = r.member_id"
+            + " and p.topic_id = r.topic_id and p.activity_id = r.activity_id"
+            + " and p.play_instance_id = coalesce(r.play_instance_id, 'default')"
+            + " and p.remote_completion = 1 and p.del_flag = 0";
 
     @Select("select count(*) from club c where c.status = 1 and c.del_flag = 0"
             + " and (c.member_id = #{a} or exists (select 1 from club_member cm where cm.club_id = c.id"

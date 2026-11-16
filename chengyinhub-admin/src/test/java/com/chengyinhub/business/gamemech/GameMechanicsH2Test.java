@@ -74,7 +74,11 @@ class GameMechanicsH2Test {
             s.execute("create table club (id bigint primary key, member_id bigint, status tinyint, del_flag tinyint)");
             s.execute("create table club_member (id bigint primary key, club_id bigint, member_id bigint, status tinyint, del_flag tinyint)");
             s.execute("create table topic_route_session (id bigint auto_increment primary key, member_id bigint, topic_id bigint,"
-                    + " status tinyint, create_time datetime(3), completed_at datetime(3))");
+                    + " status tinyint, create_time datetime(3), completed_at datetime(3),"
+                    + " activity_id bigint default 0, play_instance_id varchar(64) default 'default')");
+            s.execute("create table player_node_progress (id bigint auto_increment primary key, member_id bigint, activity_id bigint default 0,"
+                    + " topic_id bigint, node_id bigint, play_instance_id varchar(64) default 'default',"
+                    + " remote_completion tinyint default 0, del_flag tinyint default 0)");
             s.execute("insert into cms_topic values (5, '西湖一圈', 1, 100)");
             s.execute("insert into cms_topic_node values (51, 5, 1, '30.250000', '120.150000')");
             s.execute("insert into ums_member values (100, '阿青'), (200, '小周')");
@@ -186,6 +190,55 @@ class GameMechanicsH2Test {
         assertEquals("WON", done.get("outcome"));
         assertEquals("LOST", svc.detail(100L, id).get("outcome"));
         verify(notify, times(2)).notifyGameDuel(anyLong(), eq(id), contains("有结果"));
+    }
+
+    /** GAME-11: a run started before the duel was accepted never counts, however close to the end it was. */
+    @Test
+    void duelIgnoresRunsStartedBeforeAcceptanceAndTimesFreshRunsFromTheirOwnStart() throws Exception {
+        when(friends.relationship(100L, 200L)).thenReturn(Map.of("state", 1));
+        DuelService svc = new DuelService(mapper, friends, notify);
+        long now = System.currentTimeMillis();
+        svc.clock = () -> now;
+        Long id = (Long) svc.challenge(100L, 200L, 5L).get("id");
+        svc.respond(200L, id, true);
+        try (Connection c = ds.getConnection(); Statement s = c.createStatement()) {
+            // started an hour before acceptance, finished 3 s after it
+            s.execute("insert into topic_route_session(member_id, topic_id, status, create_time, completed_at)"
+                    + " values (100, 5, 1, dateadd('SECOND', -3600, now()), dateadd('SECOND', 3, now()))");
+        }
+        session.clearCache();
+        svc.clock = () -> now + 60_000L;
+        assertNull(svc.detail(100L, id).get("mySeconds"), "a run started before the duel does not count");
+        try (Connection c = ds.getConnection(); Statement s = c.createStatement()) {
+            s.execute("insert into topic_route_session(member_id, topic_id, status, create_time, completed_at)"
+                    + " values (100, 5, 1, dateadd('SECOND', 100, now()), dateadd('SECOND', 700, now()))");
+        }
+        session.clearCache();
+        Object seconds = svc.detail(100L, id).get("mySeconds");
+        assertNotNull(seconds);
+        assertTrue(Math.abs(((Number) seconds).intValue() - 600) <= 2, "fresh run timed from its own start: " + seconds);
+    }
+
+    /** GAME-11 + GAME-2: a run with a stop finished away from it does not count, and the player is told why. */
+    @Test
+    void duelSkipsRunsWithARemoteStop() throws Exception {
+        when(friends.relationship(100L, 200L)).thenReturn(Map.of("state", 1));
+        DuelService svc = new DuelService(mapper, friends, notify);
+        long now = System.currentTimeMillis();
+        svc.clock = () -> now;
+        Long id = (Long) svc.challenge(100L, 200L, 5L).get("id");
+        svc.respond(200L, id, true);
+        try (Connection c = ds.getConnection(); Statement s = c.createStatement()) {
+            s.execute("insert into topic_route_session(member_id, topic_id, status, create_time, completed_at, play_instance_id)"
+                    + " values (100, 5, 1, dateadd('SECOND', 5, now()), dateadd('SECOND', 300, now()), 'run-a')");
+            s.execute("insert into player_node_progress(member_id, topic_id, node_id, play_instance_id, remote_completion)"
+                    + " values (100, 5, 51, 'run-a', 1)");
+        }
+        session.clearCache();
+        svc.clock = () -> now + 3600_000L;
+        Map<String, Object> view = svc.detail(100L, id);
+        assertNull(view.get("mySeconds"));
+        assertEquals(true, view.get("myRemoteRun"));
     }
 
     @Test
