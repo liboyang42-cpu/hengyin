@@ -468,7 +468,7 @@ class ModCommerceServiceTest {
     }
 
     @Test
-    void notificationsForOtherProductsFallThroughAndChargesWaitForTheSwitch() throws Exception {
+    void notificationsForOtherProductsFallThroughAndChargesAreDeliveredWithTheSwitchClosed() throws Exception {
         String pass = notification("REFUND", transaction("1", "1", BUNDLE, "Sandbox", "org.chengyin.app.pass.month",
                 UUID.randomUUID().toString(), 6000, System.currentTimeMillis()));
         assertTrue(service.notificationIfTemplate(pass).isEmpty(), "not a workshop product: next handler");
@@ -476,15 +476,22 @@ class ModCommerceServiceTest {
 
         Map<String, Object> ready = readyOrder(BUYER, "req-1");
         Map<String, String> p = params(ready);
+        // MERCHANT-2: the area closed after the order was created; Apple's charge is still delivered.
         when(moneySwitch.snapshot()).thenReturn(Map.of("pass", false));
         String charge = notification("ONE_TIME_CHARGE", transaction("6000000001", "6000000001", BUNDLE, "Sandbox", PRODUCT,
                 p.get("appAccountToken"), 6000, null));
-        assertEquals("IGNORED", service.notificationIfTemplate(charge).orElseThrow().get("state"));
-        when(moneySwitch.snapshot()).thenReturn(Map.of("pass", true));
+        assertEquals("APPLIED", service.notificationIfTemplate(charge).orElseThrow().get("state"));
+        assertEquals("PAID", service.order(BUYER, (String) ready.get("orderKey")).get("state"));
+        assertEquals(1, ledger("SALE"));
         String chargeAgain = notification("ONE_TIME_CHARGE", transaction("6000000001", "6000000001", BUNDLE, "Sandbox", PRODUCT,
                 p.get("appAccountToken"), 6000, null));
         assertEquals("APPLIED", service.notificationIfTemplate(chargeAgain).orElseThrow().get("state"));
-        assertEquals("PAID", service.order(BUYER, (String) ready.get("orderKey")).get("state"));
+        assertEquals(1, ledger("SALE"), "granted once");
+
+        String stranger = notification("ONE_TIME_CHARGE", transaction("6000000009", "6000000009", BUNDLE, "Sandbox", PRODUCT,
+                UUID.randomUUID().toString(), 6000, null));
+        assertEquals("IGNORED", service.notificationIfTemplate(stranger).orElseThrow().get("state"),
+                "a charge with no server order is not ours");
 
         String unmatched = notification("REFUND", transaction("7", "7", BUNDLE, "Sandbox", PRODUCT,
                 UUID.randomUUID().toString(), 6000, System.currentTimeMillis()));

@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -36,20 +37,26 @@ class ApiModCommerceControllerTest {
         return new ApiModCommerceController(service) { @Override Long signedInMember() { return member; } };
     }
 
-    /** Every route, called with plausible arguments, while the switch is closed. */
-    private static List<ResponseEntity<AjaxResult>> everyRoute(ApiModCommerceController c, MockHttpServletResponse r) {
+    /** Routes that sell: refused while the money switch's pass area is closed. */
+    private static List<ResponseEntity<AjaxResult>> sellRoutes(ApiModCommerceController c, MockHttpServletResponse r) {
         List<ResponseEntity<AjaxResult>> out = new ArrayList<>();
         out.add(c.offers(null, r));
         out.add(c.offer("MCO_x", r));
         out.add(c.create(new ModCommerceService.Intent("req", "MCO_x", "0".repeat(64)), r));
         out.add(c.lookup("req", r));
         out.add(c.byRequest("req", r));
-        out.add(c.cancelRequest(new ModCommerceService.Intent("req", "MCO_x", "0".repeat(64)), r));
-        out.add(c.order("WKO_x", r));
-        out.add(c.orderOffer("WKO_x", r));
         out.add(c.payment("WKO_x", r));
         out.add(c.nativeContext("WKO_x", r));
         out.add(c.nativeDispatch("WKO_x", r));
+        return out;
+    }
+
+    /** Routes that deliver what Apple already charged (MERCHANT-2): only the feature flag gates them. */
+    private static List<ResponseEntity<AjaxResult>> deliverRoutes(ApiModCommerceController c, MockHttpServletResponse r) {
+        List<ResponseEntity<AjaxResult>> out = new ArrayList<>();
+        out.add(c.cancelRequest(new ModCommerceService.Intent("req", "MCO_x", "0".repeat(64)), r));
+        out.add(c.order("WKO_x", r));
+        out.add(c.orderOffer("WKO_x", r));
         out.add(c.nativeTransaction("WKO_x", new ApiModCommerceController.Signed("jws"), r));
         out.add(c.restore(new ApiModCommerceController.Signed("jws"), r));
         out.add(c.reconcile("WKO_x", r));
@@ -60,10 +67,17 @@ class ApiModCommerceControllerTest {
         return out;
     }
 
+    private static List<ResponseEntity<AjaxResult>> everyRoute(ApiModCommerceController c, MockHttpServletResponse r) {
+        List<ResponseEntity<AjaxResult>> out = new ArrayList<>(sellRoutes(c, r));
+        out.addAll(deliverRoutes(c, r));
+        return out;
+    }
+
     @Test
-    void closedSwitchAnswersExactlyTheNamedRefusalOfTodayAndTouchesNothing() {
+    void featureOffAnswersExactlyTheNamedRefusalOfTodayAndTouchesNothing() {
         ModCommerceService service = mock(ModCommerceService.class);
         when(service.open()).thenReturn(false);
+        when(service.deliverable()).thenReturn(false);
         MockHttpServletResponse catchAllResponse = new MockHttpServletResponse();
         AjaxResult today = new ApiAppGapsWorkshopController(new WorkshopOwnedRead()) {
             @Override public Long getAppUserId() { return 300L; }
@@ -77,7 +91,34 @@ class ApiModCommerceControllerTest {
         }
         assertEquals("MOD_COMMERCE", response.getHeader(NotBuiltFeature.HEADER));
         verify(service, atLeastOnce()).open();
+        verify(service, atLeastOnce()).deliverable();
         verifyNoMoreInteractions(service);
+    }
+
+    @Test
+    void closedSwitchStillDeliversButRefusesEverySellRoute() {
+        ModCommerceService service = mock(ModCommerceService.class);
+        when(service.open()).thenReturn(false);
+        when(service.deliverable()).thenReturn(true);
+        when(service.licenses(300L, null)).thenReturn(List.of(Map.of("licenseId", "WKL_1")));
+        when(service.restore(300L, "jws")).thenReturn(Map.of("orderKey", "WKO_x", "licenseState", "ACTIVE"));
+        when(service.nativeTransaction(300L, "WKO_x", "jws")).thenReturn(Map.of("orderKey", "WKO_x"));
+        ApiModCommerceController c = controller(service, 300L);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        assertEquals(List.of(Map.of("licenseId", "WKL_1")), c.licenses(null, response).getBody().get("data"));
+        assertEquals("ACTIVE", ((Map<?, ?>) c.restore(new ApiModCommerceController.Signed("jws"), response)
+                .getBody().get("data")).get("licenseState"));
+        assertEquals(200, c.nativeTransaction("WKO_x", new ApiModCommerceController.Signed("jws"), response)
+                .getBody().get("code"));
+
+        for (ResponseEntity<AjaxResult> answer : sellRoutes(c, new MockHttpServletResponse())) {
+            assertEquals(503, answer.getBody().get("code"));
+        }
+        verify(service, never()).offers(any());
+        verify(service, never()).create(anyLong(), any());
+        verify(service, never()).payment(anyLong(), anyString());
+        verify(service, never()).nativeDispatch(anyLong(), anyString());
     }
 
     @Test

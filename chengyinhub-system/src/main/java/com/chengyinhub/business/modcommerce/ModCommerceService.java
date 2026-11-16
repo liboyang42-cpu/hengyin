@@ -54,6 +54,9 @@ import java.util.UUID;
  *       (App Store Server Notifications V2, routed here by product id) appends {@code SALE_REVERSAL}.</li>
  *   <li><b>Money switch</b>: everything that sells answers only while {@link #open()}; revocations are applied even
  *       when it is closed, because taking a refunded license back must never wait for "money on".</li>
+ *   <li><b>Delivery</b> (MERCHANT-2): a purchase Apple has charged is always granted and restorable while
+ *       {@link #deliverable()}; closing the money switch stops new sales only. An order can only exist if it was
+ *       created while selling was open.</li>
  * </ul>
  */
 @Service
@@ -102,6 +105,14 @@ public class ModCommerceService {
         } catch (RuntimeException e) {
             return false;
         }
+    }
+
+    /**
+     * Delivery routes (order status, StoreKit transaction, restore, licences, cancel) and {@code ONE_TIME_CHARGE}
+     * notifications need only {@code chengyin.mod-commerce.enabled}; the money switch does not stop them (MERCHANT-2).
+     */
+    public boolean deliverable() {
+        return config.isEnabled();
     }
 
     private String market() {
@@ -475,7 +486,9 @@ public class ModCommerceService {
             mapper.insertNotification(uuid, type, body.getRawSubtype(), decoded.getTransactionId(), hash);
             Map<String, Object> inbox = mapper.lockNotification(uuid);
             if (inbox == null || !hash.equals(inbox.get("payload_hash"))) throw failure("APPLE_NOTIFICATION_UUID_CONFLICT", 409);
-            return "APPLIED".equals(inbox.get("state")) || "IGNORED".equals(inbox.get("state"));
+            // A charge stored IGNORED by the old switch rule is processed again when Apple redelivers it.
+            return "APPLIED".equals(inbox.get("state"))
+                    || ("IGNORED".equals(inbox.get("state")) && !"ONE_TIME_CHARGE".equals(type));
         }));
         if (done) return Map.of("state", "APPLIED", "notificationUUID", uuid);
         try {
@@ -485,11 +498,12 @@ public class ModCommerceService {
                 if (fact.revocationDate() == null) throw failure("APPLE_REVOCATION_FACT_MISSING", 503);
                 applyNotified(fact, "REFUND".equals(type) ? "APPLE_REFUND" : "APPLE_REVOKE");
                 state = "APPLIED";
-            } else if ("ONE_TIME_CHARGE".equals(type) && open()) {
+            } else if ("ONE_TIME_CHARGE".equals(type) && deliverable() && locate(fact(decoded)) != null) {
+                // Delivery ignores the money switch: a charge that matches a server order is granted (idempotent).
                 applyNotified(fact(decoded), "APPLE_REVOCATION");
                 state = "APPLIED";
             } else {
-                // Switch closed or a type with nothing to do: the app submits the transaction itself when it can.
+                // No matching order, or a type with nothing to do.
                 state = "IGNORED";
             }
             String finalState = state;

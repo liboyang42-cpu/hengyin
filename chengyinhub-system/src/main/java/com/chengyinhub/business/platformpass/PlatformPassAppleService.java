@@ -34,8 +34,10 @@ import java.util.UUID;
  *       一笔交易只开通一单(transaction_id 唯一),重复提交返回原结果,不会多开一段。</li>
  *   <li>退款 / 撤销:App Store Server Notifications V2 的 REFUND / REVOKE 收回这一段(与微信退款同一套收回逻辑),
  *       即使资金开关已关也照常处理;不能处理时回非 2xx,让 Apple 重投。</li>
- *   <li>资金开关:建单与开通都要求 {@code platform-pass.enabled}、本渠道开关、以及资金开关的 pass 区域同时打开;
- *       任一关闭即拒绝,生产环境默认全部关闭。</li>
+ *   <li>资金开关:只管「卖」。建单(与购买页报价)要求 {@code platform-pass.enabled}、本渠道开关、以及资金开关的
+ *       pass 区域同时打开;任一关闭即拒绝,生产环境默认全部关闭。</li>
+ *   <li>交付(MERCHANT-2):Apple 已扣款的交易必须能开通、能恢复。确认、按交易号取回、以及 ONE_TIME_CHARGE 通知
+ *       只要求本渠道的验签配置可用,不读资金开关:能对上的订单只可能在开关打开时建出,关开关只停止新的售卖。</li>
  * </ul>
  */
 @Service
@@ -84,8 +86,22 @@ public class PlatformPassAppleService {
         return verifier.unavailableReason();
     }
 
-    private void requireOpen() {
+    /** 卖:报价与建单。通行证总开关、资金开关 pass 区域、内购配置都要打开。 */
+    private void requireSellOpen() {
         String reason = unavailableReason();
+        if (reason != null) throw PlatformPassException.unavailable(reason, "App Store 购买暂不可用");
+    }
+
+    /**
+     * 交付:不能交付的原因;null = 可以交付。只看本渠道的验签配置——资金开关关闭只停止新的售卖,
+     * Apple 已扣款的购买照常开通与恢复(MERCHANT-2)。
+     */
+    public String undeliverableReason() {
+        return verifier.unavailableReason();
+    }
+
+    private void requireDeliverable() {
+        String reason = undeliverableReason();
         if (reason != null) throw PlatformPassException.unavailable(reason, "App Store 购买暂不可用");
     }
 
@@ -120,7 +136,7 @@ public class PlatformPassAppleService {
     // ------------------------------------------------------------------ 建单
 
     public Map<String, Object> createOrder(long memberId, String planCode, String requestId) {
-        requireOpen();
+        requireSellOpen();
         if (requestId == null || !requestId.matches("[A-Za-z0-9_-]{8,64}")) {
             throw PlatformPassException.badRequest("REQUEST_ID_REQUIRED", "请求标识无效");
         }
@@ -181,14 +197,14 @@ public class PlatformPassAppleService {
 
     /** App 把 StoreKit 2 的 {@code jwsRepresentation} 交上来。只认 Apple 签名;成功后 App 才 finish 这笔交易。 */
     public Map<String, Object> confirm(long memberId, String signedTransaction) {
-        requireOpen();
+        requireDeliverable();
         Fact fact = fact(verifier.transaction(signedTransaction));
         return grant(fact, memberId);
     }
 
     /** 丢了签名交易时按交易号向 App Store Server API 取回,再走同一条验签与开通。 */
     public Map<String, Object> lookup(long memberId, String transactionId) {
-        requireOpen();
+        requireDeliverable();
         String signed = verifier.lookup(transactionId);
         Fact fact = fact(verifier.transaction(signed));
         if (!Objects.equals(transactionId, fact.transactionId())) {
@@ -288,7 +304,9 @@ public class PlatformPassAppleService {
             if (inbox == null || !hash.equals(inbox.get("payload_hash"))) {
                 throw PlatformPassException.conflict("APPLE_NOTIFICATION_UUID_CONFLICT", "通知编号冲突");
             }
-            return "APPLIED".equals(inbox.get("state")) || "IGNORED".equals(inbox.get("state"));
+            // 旧版本在开关关闭时把 ONE_TIME_CHARGE 记为 IGNORED;Apple 重投时要再处理一次,不能当作已完成。
+            return "APPLIED".equals(inbox.get("state"))
+                    || ("IGNORED".equals(inbox.get("state")) && !"ONE_TIME_CHARGE".equals(type));
         }));
         if (applied) return Map.of("state", "APPLIED", "notificationUUID", uuid);
         try {
@@ -297,11 +315,13 @@ public class PlatformPassAppleService {
                 revoke(fact(decoded), body.getSignedDate());
                 state = "APPLIED";
             } else if ("ONE_TIME_CHARGE".equals(type)) {
-                if (unavailableReason() == null) {
-                    grant(fact(decoded), null);
+                // 交付不看资金开关:能对上订单就开通(幂等);对不上订单的扣款通知不是本服务签出的,忽略。
+                Fact fact = fact(decoded);
+                Map<String, Object> order = mapper.selectByToken(fact.appAccountToken());
+                if (order != null && !order.isEmpty()) {
+                    grant(fact, null);
                     state = "APPLIED";
                 } else {
-                    // 资金开关关闭:不开通。App 不会 finish 未确认的交易,开关打开后由 App 再交一次。
                     state = "IGNORED";
                 }
             } else if ("REFUND_REVERSED".equals(type)) {
