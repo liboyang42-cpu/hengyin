@@ -31,4 +31,10 @@ public interface PlayAttemptLogMapper {
 
     List<PlayAttemptLog> selectPreferenceResults(@Param("memberId") Long memberId,
                                                  @Param("topicId") Long topicId);
+
+    /**
+     * x-template-games R1:一个偏好题组模板在所有挂着它的站上的结果计数(只有结果码与人数,不带玩家)。
+     * 键:resultCode / responses。
+     */
+    List<java.util.Map<String, Object>> selectPreferenceTallyByTemplate(@Param("templateId") Long templateId);
 }

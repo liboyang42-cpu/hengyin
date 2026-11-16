@@ -70,6 +70,9 @@ public class ApiTemplateController extends BaseController {
 
     @Autowired
     private ICmsMemberTemplateService memberTemplateService;
+    /** x-template-games R1:偏好题组结果计数。 */
+    @Autowired
+    private com.chengyinhub.business.mapper.PlayAttemptLogMapper playAttemptLogMapper;
 
     @Autowired
     private ICmsTemplateLibraryService templateLibraryService;
@@ -229,6 +232,33 @@ public class ApiTemplateController extends BaseController {
             if (actor == null || actor <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
             Long owner = resolveTemplateOwner(actor, request.getScope());
             return success(templateAdoptionService.adopt(actor, owner, request, getAppUserName()));
+        } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
+    }
+
+    /**
+     * x-template-games R1:偏好题组(如新品盲测局)的结果汇总,只给模板主人(个人或商家主体)。
+     * 只有人数与占比,不带玩家;回答少于 3 份时只给总数。
+     */
+    @GetMapping("/preference-tally")
+    public AjaxResult preferenceTally(@RequestParam Long templateId, @RequestParam(required=false) String scope) {
+        try {
+            Long actor = getAppUserId();
+            if (actor == null || actor <= 0) return refuse(ErrorCode.SIGN_IN_REQUIRED, "请先登录");
+            if (templateId == null || templateId <= 0) return refuse(ErrorCode.BAD_REQUEST, "参数不合规");
+            Long owner = resolveTemplateOwner(actor, scope);
+            com.chengyinhub.business.domain.CmsMemberTemplate template = memberTemplateService.selectCmsMemberTemplateById(templateId);
+            if (template == null || !owner.equals(template.getMemberId())
+                    || Integer.valueOf(1).equals(template.getDelFlag())) {
+                return refuse(ErrorCode.NOT_FOUND, "模板不存在");
+            }
+            if (!Integer.valueOf(com.chengyinhub.common.constant.ValidationMethod.PREFERENCE_GROUP)
+                    .equals(template.getValidationMethod())) {
+                return refuse(ErrorCode.BAD_REQUEST, "这个玩法不是偏好题");
+            }
+            java.util.Map<String, Object> data = com.chengyinhub.business.service.support.PreferenceTally.summarize(
+                    template.getPreferenceJson(), playAttemptLogMapper.selectPreferenceTallyByTemplate(templateId));
+            data.put("templateId", templateId);
+            return success(data);
         } catch (ServiceException e) { return new AjaxResult(e.getCode() == null ? 500 : e.getCode(), e.getMessage()); }
     }
 

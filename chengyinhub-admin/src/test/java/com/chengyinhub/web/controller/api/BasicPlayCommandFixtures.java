@@ -136,6 +136,12 @@ final class BasicPlayCommandFixtures {
         Map<?, ?> x = context(c, a, t, n);
         return c.photo(a, n, pic, t, id(action), version(x, expected), session(x), runtime(x), epoch(x));
     }
+    /** 拍照并随照片带定位(x-template-games R2)。 */
+    static AjaxResult photoAt(ApiPlayProgressController c, String a, String n, String pic, String t,
+            String longitude, String latitude, String accuracy) {
+        Map<?, ?> x = context(c, a, t, n);
+        return c.photo(a, n, pic, t, id(null), version(x, null), session(x), runtime(x), epoch(x), longitude, latitude, accuracy);
+    }
     static AjaxResult revealPuzzle(ApiPlayProgressController c, String a, String n, String t) {
         return revealPuzzle(c, a, n, t, null, null);
     }
