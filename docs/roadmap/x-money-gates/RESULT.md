@@ -87,4 +87,3 @@ None. No file on the UI agent's lists (stop answer, club chat, merchant dashboar
 ## Related problems seen (not fixed)
 
 - `moneypayout/PayoutMoneyGate` and `merchantplans/MerchantPlansMoneyGate` duplicate `MoneyGate`; they could be folded into it later.
-- Comments in `CollectionSplitSettlementService`, `ClubDuesSplitService` and `CollectionAdminService` may still describe the model as following the money ceiling.
