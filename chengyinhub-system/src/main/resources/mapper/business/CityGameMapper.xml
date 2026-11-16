@@ -317,6 +317,11 @@
                                              reward_business_key, change_type, del_flag, create_by, create_time)
         VALUES (#{memberId}, #{before}, #{before} + #{points}, #{points}, #{reason}, 99, #{businessKey}, 1, 0, 'roam-territory', NOW())
     </insert>
+    <insert id="insertPointsEarnDetailTyped">
+        INSERT INTO ums_member_points_detail(member_id, current_points, after_points, change_points, change_reason, event_type,
+                                             reward_business_key, change_type, del_flag, create_by, create_time)
+        VALUES (#{memberId}, #{before}, #{before} + #{points}, #{points}, #{reason}, #{eventType}, #{businessKey}, 1, 0, 'city-monopoly', NOW())
+    </insert>
     <select id="selectRoundRolls" resultType="java.util.LinkedHashMap">
         SELECT id, purpose, request_id AS requestId, face, face_index AS faceIndex, result_json AS resultJson,
                source_path AS sourcePath, random_ticket AS randomTicket, total_weight AS totalWeight,

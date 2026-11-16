@@ -132,7 +132,7 @@ public class ApiCityMonopolyController extends BaseController {
         return success(service.revenue(member(), cursor, limit));
     }
 
-    /** 积分 HUD summary (balance, pending rent, season earned/spent). There is no separate wallet. */
+    /** 积分 HUD summary (balance, pending and held rent, debt, opening credit, season earned/spent). No separate wallet. */
     @GetMapping("/territory/points")
     public AjaxResult points() {
         return success(service.points(member()));
@@ -154,9 +154,11 @@ public class ApiCityMonopolyController extends BaseController {
         return success(service.leaderboard(member(), scope, seasonId));
     }
 
+    /** CITY-8: opening credit (sink-bound, never 积分); same consent gate as the claims it pays for. */
+    @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 10, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)
     @PostMapping("/season/stipend")
     public AjaxResult stipend() {
-        return success(service.stipend(member()));
+        return success(service.stipend(consentedMember()));
     }
 
     @com.chengyinhub.common.annotation.RateLimiter(time = 60, count = 20, limitType = com.chengyinhub.common.enums.LimitType.MEMBER)

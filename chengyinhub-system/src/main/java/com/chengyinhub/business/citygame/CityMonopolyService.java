@@ -60,6 +60,7 @@ public class CityMonopolyService {
     private CityTaskVerifier tasks;
     private RoamTerritoryService territories;
     private com.chengyinhub.business.locationtrust.ClaimEvidenceService claimEvidence;
+    private com.chengyinhub.business.pointsgov.PointsGovernanceService governance;
 
     @Autowired
     public CityMonopolyService(JdbcTemplate jdbc, CityGameMapper mapper, CityMonopolyConfigService configs,
@@ -87,6 +88,10 @@ public class CityMonopolyService {
     @Autowired(required = false) public void setAttest(CityAttestVerifier attest) { this.attest = attest; }
     @Autowired(required = false) public void setTasks(CityTaskVerifier tasks) { this.tasks = tasks; }
     void setTerritories(RoamTerritoryService territories) { this.territories = territories; }
+    /** CITY-7: City Monopoly income goes through the same caps and budget as every other 积分 award. */
+    @Autowired(required = false) public void setGovernance(com.chengyinhub.business.pointsgov.PointsGovernanceService governance) {
+        this.governance = governance;
+    }
     @Autowired(required = false) public void setClaimEvidence(com.chengyinhub.business.locationtrust.ClaimEvidenceService claimEvidence) {
         this.claimEvidence = claimEvidence;
     }
@@ -186,47 +191,118 @@ public class CityMonopolyService {
                 + "ON DUPLICATE KEY UPDATE " + column + " = " + column + " + VALUES(" + column + "), version = version + 1", memberId, seasonId, delta);
     }
 
-    /** Debits 积分 now (all-or-nothing). Returns false when the balance is short. */
-    private boolean debit(long memberId, String seasonId, long amount, String kind, String refType, String refId, String reason) {
+    /**
+     * CITY-7 (owner decision 2026-11-16, 积分 only): every City Monopoly income is a governed award source of
+     * {@link com.chengyinhub.business.pointsgov.PointsGovernanceService} (daily cap per member, monthly budget of the
+     * CITY programme). The points detail row carries the source as {@code event_type}, so the daily sum sees it.
+     * Seeded in {@code points_award_cap} by migration_20261128_city_economy.sql.
+     */
+    static final Map<String, Long> GOVERNED_EVENT_TYPE = Map.of(
+            "YIELD", 71L, "VISIT", 72L, "STIPEND", 73L, "COMP", 74L, "REFUND", 75L, "CHANCE", 76L);
+    /** A refund returns the player's own challenge fee: recorded under its source, never capped. */
+    static final Set<String> UNGOVERNED_KINDS = Set.of("REFUND");
+    /** CITY-8: the opening credit pays only for these (never a challenge, whose fee becomes the defender's 积分). */
+    static final Set<String> STIPEND_SINKS = Set.of("CLAIM", "UPGRADE", "SHIELD", "SCOUT");
+    /** {@link #applyCredit} result when points governance refused the credit; the flow stays PENDING for the next settle. */
+    static final long HELD = -1L;
+
+    static long eventTypeOf(String kind) {
+        Long t = GOVERNED_EVENT_TYPE.get(kind);
+        return t == null ? 99L : t;
+    }
+
+    private long stipendLeft(long memberId, String seasonId) {
+        List<Map<String, Object>> rows = jdbc.queryForList(
+                "SELECT stipend_left FROM city_member_season WHERE member_id = ? AND season_id = ?", memberId, seasonId);
+        if (rows.isEmpty() || !(rows.get(0).get("stipend_left") instanceof Number v)) return 0;
+        return Math.max(0, v.longValue());
+    }
+
+    /** CITY-8: opening credit left this season (season row locked). */
+    private long stipendLeftForUpdate(long memberId, String seasonId) {
+        List<Map<String, Object>> rows = jdbc.queryForList(
+                "SELECT stipend_left FROM city_member_season WHERE member_id = ? AND season_id = ? FOR UPDATE", memberId, seasonId);
+        if (rows.isEmpty() || !(rows.get(0).get("stipend_left") instanceof Number v)) return 0;
+        return Math.max(0, v.longValue());
+    }
+
+    /** Debits 积分 now (all-or-nothing), spending the season's opening credit first for {@link #STIPEND_SINKS}. */
+    boolean debit(long memberId, String seasonId, long amount, String kind, String refType, String refId, String reason) {
         if (amount <= 0) return true;
         String key = "CITYM:" + kind + ":" + refType + ":" + refId;
         if (!flow(memberId, seasonId, -amount, "AVAILABLE", kind, refType, refId, key)) return true; // replay
+        long fromStipend = STIPEND_SINKS.contains(kind) ? Math.min(stipendLeftForUpdate(memberId, seasonId), amount) : 0;
+        if (fromStipend > 0 && jdbc.update("UPDATE city_member_season SET stipend_left = stipend_left - ? "
+                + "WHERE member_id = ? AND season_id = ? AND stipend_left >= ?", fromStipend, memberId, seasonId, fromStipend) != 1) {
+            fromStipend = 0;
+        }
+        long fromPoints = amount - fromStipend;
         long before = balance(memberId);
-        if (before < amount || mapper.deductMemberPoints(memberId, amount) != 1) {
+        if (fromPoints > 0 && (before < fromPoints || mapper.deductMemberPoints(memberId, fromPoints) != 1)) {
+            if (fromStipend > 0) {
+                jdbc.update("UPDATE city_member_season SET stipend_left = stipend_left + ? WHERE member_id = ? AND season_id = ?",
+                        fromStipend, memberId, seasonId);
+            }
             jdbc.update("DELETE FROM city_points_flow WHERE member_id = ? AND kind = ? AND ref_type = ? AND ref_id = ?", memberId, kind, refType, refId);
             return false;
         }
-        mapper.insertPointsDetail(memberId, before, amount, reason, key);
+        if (fromPoints > 0) mapper.insertPointsDetail(memberId, before, fromPoints, reason, key);
         seasonStat(memberId, seasonId, "spent", amount);
         return true;
     }
 
-    /** Credits 积分 now, first paying down season debt (unpaid upkeep / clawback). */
+    /** Credits 积分 now, first paying down the member's debt; held (flow PENDING) when points governance refuses. */
     private long creditNow(long memberId, String seasonId, long amount, String kind, String refType, String refId, String reason) {
         if (amount <= 0) return 0;
         String key = "CITYM:" + kind + ":" + refType + ":" + refId;
         if (!flow(memberId, seasonId, amount, "AVAILABLE", kind, refType, refId, key)) return 0;
-        return applyCredit(memberId, seasonId, amount, reason, key);
+        return Math.max(0, applyCredit(memberId, seasonId, amount, reason, key, kind, refType, refId));
     }
 
-    private long applyCredit(long memberId, String seasonId, long amount, String reason, String key) {
-        List<Map<String, Object>> debtRows = jdbc.queryForList(
-                "SELECT debt FROM city_member_season WHERE member_id = ? AND season_id = ? FOR UPDATE", memberId, seasonId);
-        long debt = debtRows.isEmpty() ? 0 : ((Number) debtRows.get(0).get("debt")).longValue();
+    /** CITY-15: debt belongs to the member, not to a season (unpaid upkeep and clawbacks follow them into new seasons). */
+    long memberDebtForUpdate(long memberId) {
+        List<Map<String, Object>> rows = jdbc.queryForList("SELECT debt FROM city_member_debt WHERE member_id = ? FOR UPDATE", memberId);
+        if (rows.isEmpty() || !(rows.get(0).get("debt") instanceof Number v)) return 0;
+        return Math.max(0, v.longValue());
+    }
+
+    private void addMemberDebt(long memberId, long amount) {
+        if (amount <= 0) return;
+        jdbc.update("INSERT INTO city_member_debt(member_id, debt) VALUES (?,?) ON DUPLICATE KEY UPDATE debt = debt + VALUES(debt)", memberId, amount);
+    }
+
+    private boolean admitted(long memberId, String kind, long credit) {
+        if (governance == null || UNGOVERNED_KINDS.contains(kind) || credit > Integer.MAX_VALUE) return true;
+        jdbc.queryForList("SELECT id FROM ums_member WHERE id = ? FOR UPDATE", memberId); // serialises the daily sum
+        return governance.admit(memberId, eventTypeOf(kind), (int) credit).admitted();
+    }
+
+    /**
+     * Pays down member debt, then credits the rest to ums_member.point under points governance. Returns the 积分
+     * credited, or {@link #HELD} when governance refused: the flow is then PENDING with hold_reason GOVERNANCE and
+     * {@link #settle} retries it. Nothing is lost silently.
+     */
+    long applyCredit(long memberId, String seasonId, long amount, String reason, String key, String kind, String refType, String refId) {
+        long debt = memberDebtForUpdate(memberId);
         long offset = Math.min(debt, amount);
-        if (offset > 0) seasonStat(memberId, seasonId, "debt", -offset);
         long credit = amount - offset;
+        if (credit > 0 && !admitted(memberId, kind, credit)) {
+            jdbc.update("UPDATE city_points_flow SET state = 'PENDING', hold_reason = 'GOVERNANCE', settled_at = NULL "
+                    + "WHERE member_id = ? AND kind = ? AND ref_type = ? AND ref_id = ?", memberId, kind, refType, refId);
+            return HELD;
+        }
+        if (offset > 0) jdbc.update("UPDATE city_member_debt SET debt = GREATEST(0, debt - ?) WHERE member_id = ?", offset, memberId);
         if (credit > 0) {
             long before = balance(memberId);
             mapper.creditMemberPoints(memberId, credit);
-            mapper.insertPointsEarnDetail(memberId, before, credit, reason, key);
+            mapper.insertPointsEarnDetailTyped(memberId, before, credit, reason, key, eventTypeOf(kind));
         }
         seasonStat(memberId, seasonId, "earned", amount);
         return credit;
     }
 
-    /** Takes what the balance allows; the rest becomes debt repaid from later income. */
-    private long debitOrDebt(long memberId, String seasonId, long amount, String kind, String refType, String refId, String reason) {
+    /** Takes what the balance allows; the rest becomes member debt repaid from later income (any season). */
+    long debitOrDebt(long memberId, String seasonId, long amount, String kind, String refType, String refId, String reason) {
         if (amount <= 0) return 0;
         String key = "CITYM:" + kind + ":" + refType + ":" + refId;
         if (!flow(memberId, seasonId, -amount, "AVAILABLE", kind, refType, refId, key)) return 0;
@@ -237,7 +313,11 @@ public class CityMonopolyService {
         } else {
             take = 0;
         }
-        if (amount - take > 0) seasonStat(memberId, seasonId, "debt", amount - take);
+        if (amount - take > 0) {
+            memberDebtForUpdate(memberId);
+            addMemberDebt(memberId, amount - take);
+            seasonStat(memberId, seasonId, "debt", amount - take); // statistic: debt incurred this season
+        }
         seasonStat(memberId, seasonId, "spent", amount);
         return take;
     }
@@ -698,6 +778,7 @@ public class CityMonopolyService {
         Map<String, Object> payload = targetPayload(t);
         payload.put("protectionHours", CityMonopolyRules.protectionHours(c, CityMonopolyRules.ProtectionEvent.CLAIM, finale(c, now())));
         payload.put("balance", balance(memberId));
+        payload.put("stipendLeft", stipendLeft(memberId, season(c, now()).seasonId()));
         return quote(memberId, "CLAIM", t.key(), cost, payload, c);
     }
 
@@ -1089,14 +1170,34 @@ public class CityMonopolyService {
 
     // =================================================================== nightly settle / upkeep / decay / abuse
 
-    /** 03:00 risk batch: PENDING rent of earlier days becomes AVAILABLE 积分, or VOID when flagged. */
+    /**
+     * 03:00 risk batch: PENDING rent of earlier days becomes AVAILABLE 积分, or VOID when flagged. Credits that points
+     * governance held back earlier (daily cap or monthly budget) are retried first, oldest first (CITY-7).
+     */
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> settle() {
         CityMonopolyConfig c = configs.global();
         long now = now();
         Date today = Date.valueOf(day(c, now));
-        int settled = 0, voided = 0;
+        int settled = 0, voided = 0, held = 0, released = 0;
         long paid = 0;
+        for (Map<String, Object> f : jdbc.queryForList("SELECT id, member_id, season_id, kind, ref_type, ref_id, delta FROM city_points_flow "
+                + "WHERE state = 'PENDING' AND hold_reason = 'GOVERNANCE' ORDER BY id LIMIT 5000 FOR UPDATE")) {
+            long member = ((Number) f.get("member_id")).longValue();
+            if (confirmedAbuse(member) || banned(member, now)) {
+                jdbc.update("UPDATE city_points_flow SET state = 'VOID', hold_reason = NULL, settled_at = ? WHERE id = ?", new Timestamp(now), f.get("id"));
+                voided++;
+                continue;
+            }
+            String kind = (String) f.get("kind");
+            String refType = (String) f.get("ref_type");
+            String refId = (String) f.get("ref_id");
+            String key = "CITYM:" + kind + ":" + refType + ":" + refId;
+            if (jdbc.update("UPDATE city_points_flow SET state = 'AVAILABLE', hold_reason = NULL, settled_at = ?, points_business_key = ? "
+                    + "WHERE id = ? AND state = 'PENDING'", new Timestamp(now), key, f.get("id")) != 1) continue;
+            long r = applyCredit(member, (String) f.get("season_id"), ((Number) f.get("delta")).longValue(), heldReason(kind), key, kind, refType, refId);
+            if (r == HELD) held++; else { paid += r; released++; }
+        }
         List<Map<String, Object>> rows = jdbc.queryForList(
                 "SELECT * FROM city_yield_event WHERE state = 'PENDING' AND board_day < ? ORDER BY id LIMIT 5000 FOR UPDATE", today);
         for (Map<String, Object> e : rows) {
@@ -1114,13 +1215,32 @@ public class CityMonopolyService {
             }
             long granted = ((Number) e.get("granted")).longValue();
             long reward = ((Number) e.get("visitor_reward")).longValue();
-            paid += settleFlow(holder, seasonId, "YIELD", id, granted, "城市大富翁收租");
-            paid += settleFlow(visitor, seasonId, "VISIT", id, reward, "城市大富翁访客奖励");
+            long r1 = settleFlow(holder, seasonId, "YIELD", id, granted, "城市大富翁收租");
+            long r2 = settleFlow(visitor, seasonId, "VISIT", id, reward, "城市大富翁访客奖励");
+            if (r1 == HELD) held++; else paid += r1;
+            if (r2 == HELD) held++; else paid += r2;
             seasonStat(holder, seasonId, "confirmed_rent", granted);
             jdbc.update("UPDATE city_yield_event SET state = 'AVAILABLE', settled_at = ? WHERE id = ?", new Timestamp(now), id);
             settled++;
         }
-        return Map.of("settled", settled, "voided", voided, "creditedPoints", paid);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("settled", settled);
+        out.put("voided", voided);
+        out.put("creditedPoints", paid);
+        out.put("heldByGovernance", held);
+        out.put("releasedFromHold", released);
+        return out;
+    }
+
+    private static String heldReason(String kind) {
+        return switch (kind) {
+            case "YIELD" -> "城市大富翁收租";
+            case "VISIT" -> "城市大富翁访客奖励";
+            case "COMP" -> "城市大富翁挑战补偿";
+            case "REFUND" -> "城市大富翁挑战任务失败退款";
+            case "CHANCE" -> "城市大富翁机会格";
+            default -> "城市大富翁积分";
+        };
     }
 
     private long settleFlow(long memberId, String seasonId, String kind, long eventId, long amount, String reason) {
@@ -1134,7 +1254,7 @@ public class CityMonopolyService {
                         + "WHERE member_id = ? AND kind = ? AND ref_type = 'YIELD_EVENT' AND ref_id = ? AND state = 'PENDING'",
                 new Timestamp(now()), key, memberId, kind, String.valueOf(eventId));
         if (n != 1) return 0;
-        return applyCredit(memberId, seasonId, amount, reason, key);
+        return applyCredit(memberId, seasonId, amount, reason, key, kind, "YIELD_EVENT", String.valueOf(eventId));
     }
 
     private boolean confirmedAbuse(long memberId) {
@@ -1272,7 +1392,10 @@ public class CityMonopolyService {
         return out;
     }
 
-    /** Admin: confirm a signal → void pending rent and claw back this season's settled rent (debt when short). */
+    /**
+     * Admin: confirm a signal → void pending and held rent, and claw back settled rent and visitor rewards of the last
+     * {@code city.monopoly.abuse.clawback_lookback_d} days across seasons (CITY-15); a shortfall becomes member debt.
+     */
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> reviewSignal(long signalId, boolean confirm, Long reviewer) {
         List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM city_abuse_signal WHERE id = ? FOR UPDATE", signalId);
@@ -1284,8 +1407,11 @@ public class CityMonopolyService {
             CityMonopolyConfig c = configs.global();
             String seasonId = season(c, now()).seasonId();
             jdbc.update("UPDATE city_yield_event SET risk_flags = 'CONFIRMED_ABUSE' WHERE state = 'PENDING' AND (holder_member_id = ? OR visitor_member_id = ?)", member, member);
-            for (Map<String, Object> f : jdbc.queryForList("SELECT id, delta FROM city_points_flow WHERE member_id = ? AND season_id = ? AND state = 'AVAILABLE' "
-                    + "AND kind IN ('YIELD','VISIT') AND delta > 0", member, seasonId)) {
+            jdbc.update("UPDATE city_points_flow SET state = 'VOID', hold_reason = NULL WHERE member_id = ? AND state = 'PENDING' "
+                    + "AND hold_reason = 'GOVERNANCE' AND kind IN ('YIELD','VISIT')", member);
+            Timestamp since = new Timestamp(now() - Math.max(0, c.integer("city.monopoly.abuse.clawback_lookback_d")) * 86_400_000L);
+            for (Map<String, Object> f : jdbc.queryForList("SELECT id, delta FROM city_points_flow WHERE member_id = ? AND state = 'AVAILABLE' "
+                    + "AND kind IN ('YIELD','VISIT') AND delta > 0 AND created_at >= ?", member, since)) {
                 long amount = ((Number) f.get("delta")).longValue();
                 clawed += debitOrDebt(member, seasonId, amount, "CLAWBACK", "FLOW", String.valueOf(f.get("id")), "城市大富翁作弊收益追回");
                 jdbc.update("UPDATE city_points_flow SET state = 'VOID' WHERE id = ?", f.get("id"));
@@ -1619,7 +1745,11 @@ public class CityMonopolyService {
         return Map.of("outcome", "COMPLETED", "reward", reward, "balance", balance(memberId));
     }
 
-    /** Opening-days stipend (300 积分 once per season; same account gates as claiming). */
+    /**
+     * CITY-8: opening credit, once per season in the opening days, same account gates as claiming. It is a sink-bound
+     * credit ({@code city_member_season.stipend_left}) spent first on claims, upgrades, shields and scouting; it never
+     * touches {@code ums_member.point}, cannot be redeemed and ends with the season.
+     */
     @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> stipend(Long memberId) {
         CityGameSupport.requireMember(memberId);
@@ -1629,17 +1759,25 @@ public class CityMonopolyService {
         requireOpenSeason(c, now);
         CityMonopolyRules.Season s = season(c, now);
         if (CityMonopolyRules.phase(c, s, zdt(c, now)) != CityMonopolyRules.Phase.OPENING) {
-            throw new CityGameException(409, "STIPEND_CLOSED", "启动金只在开城期（第 1–3 天）发放");
+            throw new CityGameException(409, "STIPEND_CLOSED", "开城补贴只在赛季前 3 天领取");
         }
+        if (!attestAvailable(c)) throw new CityGameException(409, "APP_ATTEST_REQUIRED", "这台设备暂时不能参加城市大富翁");
         MemberFacts f = memberFacts(memberId);
         if (f.accountAgeDays() < c.num("city.monopoly.claim.min_account_age_days") || f.level() < c.num("city.monopoly.claim.min_account_level")
                 || !f.phoneBound() || banned(memberId, now)) {
             throw new CityGameException(409, "STIPEND_INELIGIBLE", "账号未满足参与条件");
         }
-        long amount = Math.round(c.num("city.monopoly.season.stipend"));
-        long credited = creditNow(memberId, s.seasonId(), amount, "STIPEND", "SEASON", s.seasonId(), "城市大富翁开城启动金");
-        jdbc.update("UPDATE city_member_season SET stipend_at = IFNULL(stipend_at, ?) WHERE member_id = ? AND season_id = ?", new Timestamp(now), memberId, s.seasonId());
-        return Map.of("seasonId", s.seasonId(), "stipend", amount, "alreadyClaimed", credited == 0, "balance", balance(memberId));
+        long amount = Math.max(0, Math.round(c.num("city.monopoly.season.stipend")));
+        jdbc.update("INSERT IGNORE INTO city_member_season(member_id, season_id) VALUES (?,?)", memberId, s.seasonId());
+        int granted = jdbc.update("UPDATE city_member_season SET stipend_left = ?, stipend_at = ?, version = version + 1 "
+                + "WHERE member_id = ? AND season_id = ? AND stipend_at IS NULL", amount, new Timestamp(now), memberId, s.seasonId());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("seasonId", s.seasonId());
+        out.put("stipend", amount);
+        out.put("alreadyClaimed", granted != 1);
+        out.put("stipendLeft", stipendLeftForUpdate(memberId, s.seasonId()));
+        out.put("balance", balance(memberId));
+        return out;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -1804,11 +1942,22 @@ public class CityMonopolyService {
         out.put("currency", "POINTS");
         out.put("balance", balance(memberId));
         out.put("pending", jdbc.queryForObject("SELECT COALESCE(SUM(delta),0) FROM city_points_flow WHERE member_id = ? AND state = 'PENDING'", Long.class, memberId));
-        List<Map<String, Object>> s = jdbc.queryForList("SELECT earned, spent, debt FROM city_member_season WHERE member_id = ? AND season_id = ?", memberId, seasonId);
+        out.put("heldByLimit", jdbc.queryForObject("SELECT COALESCE(SUM(delta),0) FROM city_points_flow WHERE member_id = ? AND state = 'PENDING' "
+                + "AND hold_reason = 'GOVERNANCE'", Long.class, memberId));
+        List<Map<String, Object>> s = jdbc.queryForList("SELECT earned, spent, stipend_left, stipend_at FROM city_member_season WHERE member_id = ? AND season_id = ?", memberId, seasonId);
         out.put("seasonId", seasonId);
         out.put("earnedSeason", s.isEmpty() ? 0 : s.get(0).get("earned"));
         out.put("spentSeason", s.isEmpty() ? 0 : s.get(0).get("spent"));
-        out.put("debt", s.isEmpty() ? 0 : s.get(0).get("debt"));
+        // CITY-15: debt follows the member across seasons.
+        List<Map<String, Object>> d = jdbc.queryForList("SELECT debt FROM city_member_debt WHERE member_id = ?", memberId);
+        out.put("debt", d.isEmpty() || d.get(0).get("debt") == null ? 0L : ((Number) d.get(0).get("debt")).longValue());
+        // CITY-8: opening credit (spent first on claims, upgrades, shields and scouting; ends with the season).
+        long stipendLeft = s.isEmpty() || !(s.get(0).get("stipend_left") instanceof Number v) ? 0L : Math.max(0L, v.longValue());
+        boolean opening = CityMonopolyRules.phase(c, season(c, now()), zdt(c, now())) == CityMonopolyRules.Phase.OPENING;
+        out.put("stipendLeft", stipendLeft);
+        out.put("stipendAmount", Math.max(0, Math.round(c.num("city.monopoly.season.stipend"))));
+        out.put("stipendClaimable", opening && c.flag("city.monopoly.enabled") && (s.isEmpty() || s.get(0).get("stipend_at") == null));
+        out.put("dayIndex", CityMonopolyRules.seasonDay(season(c, now()), zdt(c, now())));
         out.put("holdings", n(jdbc.queryForObject("SELECT COUNT(*) FROM roam_territory WHERE owner_member_id = ? AND status = 'ACTIVE' AND rules_kind = 'MONOPOLY'", Integer.class, memberId)));
         out.put("holdingLimit", CityMonopolyRules.holdingLimit(c, attrLevel(memberId, "explore")));
         return out;
@@ -2028,6 +2177,7 @@ public class CityMonopolyService {
         }
         int reset = jdbc.update("UPDATE roam_territory SET status = 'RELEASED', released_at = ?, release_reason = 'SEASON_RESET', version = version + 1 "
                 + "WHERE rules_kind = 'MONOPOLY' AND status = 'ACTIVE' AND season_id = ?", new Timestamp(now), seasonId);
+        jdbc.update("UPDATE city_member_season SET stipend_left = 0 WHERE season_id = ? AND stipend_left <> 0", seasonId); // CITY-8
         jdbc.update("UPDATE city_season SET status = 'SETTLED', settled_at = ? WHERE season_id = ?", new Timestamp(now), seasonId);
         return Map.of("seasonId", seasonId, "participants", solo.size(), "rewarded", rewarded, "propertiesReset", reset);
     }
