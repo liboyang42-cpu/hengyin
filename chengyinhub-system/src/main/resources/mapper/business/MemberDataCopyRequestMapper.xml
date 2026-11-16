@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- ONB-10 (PIPL Art. 45) member data-copy requests. -->
+<mapper namespace="com.chengyinhub.business.mapper.MemberDataCopyRequestMapper">
+
+    <resultMap id="DataCopyRequestResult" type="com.chengyinhub.business.domain.MemberDataCopyRequest">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="status" column="status"/>
+        <result property="note" column="note"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="handledBy" column="handled_by"/>
+        <result property="handledAt" column="handled_at"/>
+    </resultMap>
+
+    <sql id="columns">id, member_id, status, note, created_at, updated_at, handled_by, handled_at</sql>
+
+    <select id="lockMember" resultType="java.lang.Long">
+        select id from ums_member where id = #{memberId} for update
+    </select>
+
+    <select id="selectOpenByMember" resultMap="DataCopyRequestResult">
+        select <include refid="columns"/> from member_data_copy_request
+        where member_id = #{memberId} and status in ('PENDING', 'PROCESSING')
+        order by id desc limit 1
+    </select>
+
+    <select id="selectLatestByMember" resultMap="DataCopyRequestResult">
+        select <include refid="columns"/> from member_data_copy_request
+        where member_id = #{memberId}
+        order by id desc limit 1
+    </select>
+
+    <select id="selectById" resultMap="DataCopyRequestResult">
+        select <include refid="columns"/> from member_data_copy_request where id = #{id}
+    </select>
+
+    <select id="selectList" resultMap="DataCopyRequestResult">
+        select <include refid="columns"/> from member_data_copy_request
+        <where>
+            <if test="status != null and status != ''">status = #{status}</if>
+        </where>
+        order by id desc
+    </select>
+
+    <insert id="insert" parameterType="com.chengyinhub.business.domain.MemberDataCopyRequest"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into member_data_copy_request(member_id, status, created_at, updated_at)
+        values (#{memberId}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateStatus">
+        update member_data_copy_request
+        set status = #{toStatus},
+            note = coalesce(#{note}, note),
+            handled_by = #{handledBy},
+            handled_at = #{now},
+            updated_at = #{now}
+        where id = #{id} and status = #{fromStatus}
+    </update>
+</mapper>
