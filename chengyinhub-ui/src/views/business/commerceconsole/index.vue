@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <cy-page-header eyebrow="资金与售后" title="商品与会费" description="营销商品（含城市包）、探索套票和俱乐部会费的只读总览。这里只能停售商品、停用会费方案：已下的单和已付的会员期照常按下单时的约定继续。奖励承诺在「奖励承诺审核」页处理。">
+    <cy-page-header eyebrow="资金与售后" title="商品与会费" description="营销商品（含城市包）、探索套票和俱乐部会费的只读总览。这里只能停售商品、停用会费方案：已下的单和已付的会员期照常按下单时的约定继续。会费退款申请在「会费退款」里通过或驳回。奖励承诺在「奖励承诺审核」页处理。">
       <el-button slot="primary" size="small" icon="el-icon-refresh" :loading="loading" @click="load">刷新</el-button>
     </cy-page-header>
 
@@ -88,7 +88,42 @@
           <el-table-column label="创建时间" prop="create_time" width="170" />
         </el-table>
       </el-tab-pane>
+
+      <el-tab-pane label="会费退款" name="duesRefunds">
+        <el-form size="small" :inline="true">
+          <el-form-item><el-checkbox v-model="filters.undecided" @change="load">只看待处理</el-checkbox></el-form-item>
+        </el-form>
+        <cy-resource-state v-if="loadError" kind="error" title="暂时无法读取" retry-text="重新读取" :retrying="loading" @retry="load" />
+        <el-table v-else v-loading="loading" :data="duesRefunds" size="small" border empty-text="没有退款申请">
+          <el-table-column label="申请" width="80"><template slot-scope="s">#{{ s.row.reviewId }}</template></el-table-column>
+          <el-table-column label="账单" prop="invoiceNo" min-width="150" />
+          <el-table-column label="俱乐部 / 会员" min-width="140"><template slot-scope="s">#{{ s.row.clubId }} / 会员 #{{ s.row.memberId }}</template></el-table-column>
+          <el-table-column label="金额" width="90"><template slot-scope="s">¥{{ yuan(s.row.amountFen) }}</template></el-table-column>
+          <el-table-column label="申请原因" prop="reason" min-width="160" />
+          <el-table-column label="处理" min-width="170"><template slot-scope="s">{{ refundText(s.row) }}<div v-if="s.row.decidedBy" class="muted">{{ s.row.decidedBy }} · {{ s.row.decidedAt }}</div></template></el-table-column>
+          <el-table-column label="操作" width="120" align="center">
+            <template slot-scope="s">
+              <el-button v-if="canApprove(s.row)" v-hasPermi="['business:commerceConsole:refund']" type="text" size="mini" @click="openRefund('approve', s.row)">{{ s.row.decision ? '重新发送' : '通过' }}</el-button>
+              <el-button v-if="!s.row.decision" v-hasPermi="['business:commerceConsole:refund']" type="text" size="mini" @click="openRefund('reject', s.row)">驳回</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
     </el-tabs>
+
+    <el-dialog :title="refund.kind === 'approve' ? '通过并原路退款' : '驳回退款申请'" :visible.sync="refundOpen" width="480px" append-to-body>
+      <el-form size="small" label-width="80px">
+        <el-form-item label="申请">#{{ refund.reviewId }} · ¥{{ yuan(refund.amountFen) }}</el-form-item>
+        <el-form-item v-if="refund.kind === 'approve'" label="说明">全额原路退回会员的付款账户。资金开关「退款」关闭时不会执行。</el-form-item>
+        <el-form-item label="原因">
+          <el-input v-model="refund.reason" type="textarea" :rows="3" maxlength="500" show-word-limit placeholder="必填，会记入审计" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button size="small" @click="refundOpen = false">取消</el-button>
+        <el-button size="small" type="primary" :loading="saving" @click="submitRefund">确定</el-button>
+      </div>
+    </el-dialog>
 
     <el-dialog title="商品订单" :visible.sync="ordersOpen" width="760px" append-to-body>
       <el-table :data="orders" size="small" border empty-text="没有订单">
@@ -117,7 +152,7 @@
 </template>
 
 <script>
-import { commerceProducts, commerceProductOrders, commerceBundleOrders, commerceDuesPlans, commerceDuesInvoices, stopProductSale, deactivateDuesPlan } from '@/api/business/commerceConsole'
+import { commerceProducts, commerceProductOrders, commerceBundleOrders, commerceDuesPlans, commerceDuesInvoices, stopProductSale, deactivateDuesPlan, commerceDuesRefunds, approveDuesRefund, rejectDuesRefund } from '@/api/business/commerceConsole'
 import CyPageHeader from '@/components/CyPageHeader'
 import CyResourceState from '@/components/CyResourceState'
 
@@ -130,7 +165,11 @@ export default {
       loading: false,
       loadError: false,
       saving: false,
-      filters: { productStatus: undefined, kind: undefined, clubId: '' },
+      filters: { productStatus: undefined, kind: undefined, clubId: '', undecided: true },
+      duesRefunds: [],
+      refundOpen: false,
+      refund: {},
+      refundStateText: { NOT_SENT: '未退款', SUBMITTING: '退款发送中', ACCEPTED: '微信已受理退款', FAILED: '退款失败，请人工核对', UNKNOWN: '结果未知，可重新发送' },
       products: [],
       bundles: [],
       duesPlans: [],
@@ -168,6 +207,9 @@ export default {
       if (this.tab === 'bundles') {
         return commerceBundleOrders({}).then(res => { this.bundles = res.data || [] })
       }
+      if (this.tab === 'duesRefunds') {
+        return commerceDuesRefunds({ undecided: this.filters.undecided }).then(res => { this.duesRefunds = res.data || [] })
+      }
       if (this.tab === 'duesPlans') {
         return commerceDuesPlans({ clubId: this.clubId() }).then(res => { this.duesPlans = res.data || [] })
       }
@@ -186,6 +228,33 @@ export default {
       commerceProductOrders({ productId: row.id }).then(res => {
         this.orders = res.data || []
         this.ordersOpen = true
+      })
+    },
+    refundText(row) {
+      if (!row.decision) return '待处理'
+      if (row.decision === 'REJECTED') return '已驳回'
+      return '已通过 · ' + (this.refundStateText[row.refundState] || row.refundState)
+    },
+    canApprove(row) {
+      return !row.decision || (row.decision === 'APPROVED' && (row.refundState === 'SUBMITTING' || row.refundState === 'UNKNOWN'))
+    },
+    openRefund(kind, row) {
+      this.refund = { kind, reviewId: row.reviewId, amountFen: row.amountFen, reason: '' }
+      this.refundOpen = true
+    },
+    submitRefund() {
+      if (!this.refund.reason || !this.refund.reason.trim()) {
+        this.$modal.msgWarning('请填写原因')
+        return
+      }
+      const call = this.refund.kind === 'approve' ? approveDuesRefund : rejectDuesRefund
+      this.saving = true
+      call(this.refund.reviewId, { reason: this.refund.reason.trim() }).then(() => {
+        this.$modal.msgSuccess('已保存')
+        this.refundOpen = false
+        this.load()
+      }).finally(() => {
+        this.saving = false
       })
     },
     openStop(kind, row) {

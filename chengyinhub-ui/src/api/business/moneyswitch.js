@@ -25,3 +25,20 @@ export function listMoneySwitchAudit(limit) {
     params: { limit: limit || 50 }
   })
 }
+
+// W7 MERCHANT-15:打开须两人。一人提交打开申请,另一位管理员批准后才打开;关闭仍一步完成
+export function listMoneySwitchRequests(limit) {
+  return request({ url: '/business/money-switch/requests', method: 'get', params: { limit: limit || 50 } })
+}
+
+export function requestMoneySwitchOpen(data) {
+  return request({ url: '/business/money-switch/requests', method: 'post', data: data })
+}
+
+export function approveMoneySwitchOpen(id, data) {
+  return request({ url: '/business/money-switch/requests/' + id + '/approve', method: 'post', data: data })
+}
+
+export function rejectMoneySwitchOpen(id, data) {
+  return request({ url: '/business/money-switch/requests/' + id + '/reject', method: 'post', data: data })
+}

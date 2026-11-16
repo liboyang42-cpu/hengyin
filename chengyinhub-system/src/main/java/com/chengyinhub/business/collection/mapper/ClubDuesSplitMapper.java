@@ -34,6 +34,8 @@ public interface ClubDuesSplitMapper {
     /**
      * Dues orders due for profit sharing: the invoice is PAID, the WeChat transaction is bound, the payment is past the
      * existing hold ({@code FundsHoldPolicy.WITHDRAWABLE_AFTER_END_DAYS} after payment) and no refund review is pending.
+     * A review the operator rejected (MERCHANT-12, {@code cy_dues_refund_decision}) no longer holds the order; an approved
+     * one keeps holding it (the money goes back to the member).
      */
     @Select("select x.out_trade_no as outTradeNo, x.invoice_id as invoiceId, x.club_id as clubId, x.sub_mchid as subMchid, "
             + "x.total_fen as totalFen, x.take_rate as takeRate, s.transaction_id as transactionId "
@@ -43,7 +45,9 @@ public interface ClubDuesSplitMapper {
             + "where x.state = 'OPEN' and s.transaction_id is not null and i.status = 'PAID' and i.paid_at is not null "
             + "and i.paid_at <= date_sub(#{now}, interval ${@com.chengyinhub.business.support.FundsHoldPolicy@WITHDRAWABLE_AFTER_END_DAYS} day) "
             + "and not exists (select 1 from club_membership_refund_review v where v.invoice_id = x.invoice_id "
-            + "                and v.status = 'PENDING_REVIEW') "
+            + "                and v.status = 'PENDING_REVIEW' "
+            + "                and not exists (select 1 from cy_dues_refund_decision d where d.review_id = v.id "
+            + "                                and d.decision = 'REJECTED')) "
             + "order by x.created_at limit #{limit}")
     List<Map<String, Object>> selectDueOrders(@Param("now") java.util.Date now, @Param("limit") int limit);
 

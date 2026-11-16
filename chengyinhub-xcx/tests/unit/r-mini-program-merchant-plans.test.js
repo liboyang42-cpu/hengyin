@@ -112,3 +112,25 @@ test('入口:工作台「更多」有套餐入口,页面已注册', () => {
   assert.match(read('pages/merchant/index/index.wxml'), /data-action="plans"/);
   assert.match(read('pages/merchant/index/index.js'), /url: '\/pages\/merchant\/plans\/index'/);
 });
+
+// W7 MERCHANT-12:订单告诉店主付多少、付给谁、备注填什么、什么时候前付;离开页面再回来仍能看到。
+test('a pending order carries how to pay it', () => {
+  const pay = { amountFen: 19900, payee: '城瘾平台', bank: '招商银行', account: '6214000000000000',
+    reference: 'MPLAN_1', deadline: '2026-11-23' };
+  const order = vmod.shapeOrder({ orderNo: 'MPLAN_1', planCode: 'BASIC', status: 'PENDING', paymentInstructions: pay });
+  assert.equal(order.payment.payee, '城瘾平台');
+  assert.equal(order.payment.account, '6214000000000000');
+  assert.equal(order.payment.reference, 'MPLAN_1');
+  assert.equal(order.payment.deadline, '2026年11月23日');
+  assert.match(order.payment.amountText, /199/);
+  // 备注必须是本订单号;缺收款方或账号就不展示付款方式
+  assert.equal(vmod.shapePayment(Object.assign({}, pay, { reference: 'MPLAN_2' }), 'MPLAN_1'), null);
+  assert.equal(vmod.shapePayment(Object.assign({}, pay, { account: '' }), 'MPLAN_1'), null);
+  assert.equal(vmod.shapeOrder({ orderNo: 'MPLAN_1', status: 'PAID', paymentInstructions: pay }).payment, null);
+  const page = vmod.shapePage(view({ pendingOrder: { orderNo: 'MPLAN_1', status: 'PENDING', paymentInstructions: pay } }));
+  assert.equal(page.pendingOrder.payment.reference, 'MPLAN_1');
+  assert.equal(vmod.shapePage(view()).pendingOrder, null);
+  const wxml = read('pages/merchant/plans/index.wxml');
+  assert.match(wxml, /转账时请在备注里填写订单号/);
+  assert.match(wxml, /order\.payment\.account/);
+});

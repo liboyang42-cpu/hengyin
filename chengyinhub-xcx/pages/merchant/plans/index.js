@@ -99,7 +99,8 @@ Page({
         if (!shaped) { failed(res); return; }
         if (fromPull) wx.stopPullDownRefresh();
         if (seq !== this._seq) return;
-        this.setData({ pageState: 'ready', page: shaped });
+        // MERCHANT-12:离开页面再回来,待付款的订单和付款方式仍在
+        this.setData({ pageState: 'ready', page: shaped, order: shaped.pendingOrder });
       },
       successStatusAbnormal: (res, status) => {
         if (status === 403) { if (seq === this._seq) this.setData({ pageState: 'no-permission', page: null }); return; }

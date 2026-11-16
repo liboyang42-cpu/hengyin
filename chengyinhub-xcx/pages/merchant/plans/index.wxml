@@ -36,7 +36,43 @@
         <text class="fin-row__v fin-row__v--mute">{{order.orderNo}}</text>
       </view>
     </view>
-    <text class="mp-desc" wx:if="{{order}}">平台确认收款后为本店开通。</text>
+    <block wx:if="{{order && order.payment}}">
+      <text class="mp-section">付款方式</text>
+      <view class="fin-card mp-card">
+        <view class="fin-row mp-row" aria-label="应付金额，{{order.payment.amountText}}">
+          <view class="fin-row__dot" aria-hidden="true" />
+          <view class="fin-row__main"><text class="fin-row__t">应付金额</text></view>
+          <text class="fin-row__v">{{order.payment.amountText}}</text>
+        </view>
+        <view class="fin-row mp-row" aria-label="收款方，{{order.payment.payee}}">
+          <view class="fin-row__dot" aria-hidden="true" />
+          <view class="fin-row__main"><text class="fin-row__t">收款方</text></view>
+          <text class="fin-row__v" user-select>{{order.payment.payee}}</text>
+        </view>
+        <view class="fin-row mp-row" wx:if="{{order.payment.bank}}" aria-label="开户行，{{order.payment.bank}}">
+          <view class="fin-row__dot" aria-hidden="true" />
+          <view class="fin-row__main"><text class="fin-row__t">开户行</text></view>
+          <text class="fin-row__v" user-select>{{order.payment.bank}}</text>
+        </view>
+        <view class="fin-row mp-row" aria-label="收款账号，{{order.payment.account}}">
+          <view class="fin-row__dot" aria-hidden="true" />
+          <view class="fin-row__main"><text class="fin-row__t">收款账号</text></view>
+          <text class="fin-row__v" user-select>{{order.payment.account}}</text>
+        </view>
+        <view class="fin-row mp-row" aria-label="转账备注，{{order.payment.reference}}">
+          <view class="fin-row__dot" aria-hidden="true" />
+          <view class="fin-row__main"><text class="fin-row__t">转账备注</text></view>
+          <text class="fin-row__v" user-select>{{order.payment.reference}}</text>
+        </view>
+        <view class="fin-row mp-row" wx:if="{{order.payment.deadline}}" aria-label="请在此日期前付款，{{order.payment.deadline}}">
+          <view class="fin-row__dot fin-row__dot--warning" aria-hidden="true" />
+          <view class="fin-row__main"><text class="fin-row__t">请在此日期前付款</text></view>
+          <text class="fin-row__v">{{order.payment.deadline}}</text>
+        </view>
+      </view>
+      <text class="mp-desc">转账时请在备注里填写订单号，平台核对到账后为本店开通。</text>
+    </block>
+    <text class="mp-desc" wx:elif="{{order}}">平台确认收款后为本店开通。</text>
 
     <!-- 各套餐 -->
     <block wx:for="{{page.plans}}" wx:key="code">

@@ -56,18 +56,20 @@ public class SponsoredQuestAdminService {
 
     @Transactional(rollbackFor = Exception.class)
     public Long create(SponsoredQuestCampaign campaign, String operator, Long sysUserId) {
+        String why = reason(campaign == null ? null : campaign.getReason());
         List<Long> places = validate(campaign);
         if (mapper.insertCampaign(campaign, by(operator)) != 1 || campaign.getId() == null) {
             throw new IllegalStateException("赞助任务保存失败");
         }
         writePlaces(campaign.getId(), places);
-        audit.record(sysUserId, "SPONSORED_QUEST_CREATE", "SPONSORED_QUEST", campaign.getId(), null, view(campaign, places), null);
+        audit.record(sysUserId, "SPONSORED_QUEST_CREATE", "SPONSORED_QUEST", campaign.getId(), null, view(campaign, places), why);
         return campaign.getId();
     }
 
     @Transactional(rollbackFor = Exception.class)
     public void update(SponsoredQuestCampaign campaign, String operator, Long sysUserId) {
         if (campaign == null || campaign.getId() == null || campaign.getId() <= 0) throw new IllegalArgumentException("请选择赞助任务");
+        String why = reason(campaign.getReason());
         Map<String, Object> before = requireCampaign(campaign.getId());
         if (intValue(before.get("status")) == ENDED) throw new IllegalArgumentException("已结束的赞助任务不能再修改");
         List<Long> places = validate(campaign);
@@ -76,12 +78,13 @@ public class SponsoredQuestAdminService {
         writePlaces(campaign.getId(), places);
         Map<String, Object> beforeView = new LinkedHashMap<>(before);
         beforeView.put("placeIds", beforePlaces);
-        audit.record(sysUserId, "SPONSORED_QUEST_UPDATE", "SPONSORED_QUEST", campaign.getId(), beforeView, view(campaign, places), null);
+        audit.record(sysUserId, "SPONSORED_QUEST_UPDATE", "SPONSORED_QUEST", campaign.getId(), beforeView, view(campaign, places), why);
     }
 
     /** Publish (draft or paused → live), pause (live → paused) or end (any → ended, final). */
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(Long id, int target, String operator, Long sysUserId, String reason) {
+        String why = reason(reason);
         Map<String, Object> before = requireCampaign(id);
         int from = intValue(before.get("status"));
         if (!allowed(from, target)) throw new IllegalArgumentException("当前状态不能这样操作");
@@ -95,7 +98,14 @@ public class SponsoredQuestAdminService {
         }
         if (mapper.updateStatus(id, from, target, by(operator)) != 1) throw new IllegalArgumentException("状态已被他人修改,请刷新");
         audit.record(sysUserId, "SPONSORED_QUEST_STATUS", "SPONSORED_QUEST", id,
-                Map.of("status", from), Map.of("status", target), reason);
+                Map.of("status", from), Map.of("status", target), why);
+    }
+
+    /** W7 MERCHANT-15: every write carries a reason, like the other money consoles. */
+    static String reason(String reason) {
+        String why = reason == null ? "" : reason.trim();
+        if (why.isEmpty()) throw new IllegalArgumentException("请填写原因");
+        return why.length() > 255 ? why.substring(0, 255) : why;
     }
 
     static boolean allowed(int from, int target) {

@@ -253,6 +253,7 @@ class MoneyPayoutServiceTest {
             r.put("clubId", clubId);
             r.put("status", status);
             r.put("claimedOpenid", openid);
+            if (!"ISSUED".equals(status)) r.put("matchNumber", 42);
             r.put("expiresAt", new Date(System.currentTimeMillis() + 60_000));
             return r;
         }
@@ -267,7 +268,7 @@ class MoneyPayoutServiceTest {
         assertEquals(ErrorCode.FEATURE_OFF, assertThrows(BusinessRefusal.class, () -> f.service.issue(MEMBER, "WALLET", null)).getErrorCode());
         assertEquals(ErrorCode.FEATURE_OFF, assertThrows(BusinessRefusal.class, () -> f.service.issue(MEMBER, "CLUB_RECEIVER", CLUB)).getErrorCode());
         assertEquals(ErrorCode.FEATURE_OFF, assertThrows(BusinessRefusal.class, () -> f.service.claim(code, "js")).getErrorCode());
-        assertEquals(ErrorCode.FEATURE_OFF, assertThrows(BusinessRefusal.class, () -> f.service.confirm(MEMBER, "WALLET", null)).getErrorCode());
+        assertEquals(ErrorCode.FEATURE_OFF, assertThrows(BusinessRefusal.class, () -> f.service.confirm(MEMBER, "WALLET", null, 42)).getErrorCode());
         verify(f.sessions, never()).exchange(anyString());
         verify(f.mapper, never()).insert(anyString(), anyString(), anyLong(), anyLong(), any());
         verify(f.mapper, never()).upsertWallet(anyLong(), anyString(), anyString());
@@ -302,9 +303,12 @@ class MoneyPayoutServiceTest {
         when(f.mapper.selectByHash(hash)).thenReturn(f.code("WALLET", "ISSUED", null, 0));
         when(f.mapper.selectByHashForUpdate(hash)).thenReturn(f.code("WALLET", "ISSUED", null, 0));
         when(f.sessions.exchange("js")).thenReturn(new IWeChatMiniSessionService.WeChatMiniSession("scanned", "secret"));
-        when(f.mapper.claim(5L, "scanned")).thenReturn(1);
+        when(f.mapper.claim(eq(5L), eq("scanned"), anyInt())).thenReturn(1);
         Map<String, Object> out = f.service.claim(code, "js");
         assertEquals("CLAIMED", out.get("status"));
+        int shown = (Integer) out.get("matchNumber");
+        assertTrue(shown >= 10 && shown <= 99);
+        verify(f.mapper).claim(5L, "scanned", shown);
         assertFalse(out.toString().contains("scanned"));
         verify(f.mapper, never()).upsertWallet(anyLong(), anyString(), anyString());
     }
@@ -326,7 +330,7 @@ class MoneyPayoutServiceTest {
         Binding f = new Binding(gate(true, false, false), "");
         when(f.mapper.selectLatest(MEMBER, "WALLET", 0L)).thenReturn(f.code("WALLET", "CLAIMED", "scanned", 0));
         when(f.mapper.confirm(5L, MEMBER)).thenReturn(1);
-        assertEquals("CONFIRMED", f.service.confirm(MEMBER, "WALLET", null).get("status"));
+        assertEquals("CONFIRMED", f.service.confirm(MEMBER, "WALLET", null, 42).get("status"));
         verify(f.mapper).upsertWallet(MEMBER, MINI_APPID, "scanned");
     }
 
@@ -336,7 +340,7 @@ class MoneyPayoutServiceTest {
         f.member.setWxOpenId("own");
         when(f.mapper.selectLatest(MEMBER, "WALLET", 0L)).thenReturn(f.code("WALLET", "CLAIMED", "someone-else", 0));
         when(f.mapper.confirm(5L, MEMBER)).thenReturn(1);
-        assertThrows(BusinessRefusal.class, () -> f.service.confirm(MEMBER, "WALLET", null));
+        assertThrows(BusinessRefusal.class, () -> f.service.confirm(MEMBER, "WALLET", null, 42));
         verify(f.mapper, never()).upsertWallet(anyLong(), anyString(), anyString());
     }
 
@@ -345,7 +349,7 @@ class MoneyPayoutServiceTest {
         Binding f = new Binding(gate(true, true, false), "");
         when(f.mapper.selectLatest(MEMBER, "CLUB_RECEIVER", CLUB)).thenReturn(f.code("CLUB_RECEIVER", "ISSUED", null, CLUB));
         assertEquals(ErrorCode.CONFLICT,
-                assertThrows(BusinessRefusal.class, () -> f.service.confirm(MEMBER, "CLUB_RECEIVER", CLUB)).getErrorCode());
+                assertThrows(BusinessRefusal.class, () -> f.service.confirm(MEMBER, "CLUB_RECEIVER", CLUB, 42)).getErrorCode());
         verifyNoInteractions(f.receivers);
     }
 
@@ -354,8 +358,73 @@ class MoneyPayoutServiceTest {
         Binding f = new Binding(gate(false, true, false), "");
         when(f.mapper.selectLatest(MEMBER, "CLUB_RECEIVER", CLUB)).thenReturn(f.code("CLUB_RECEIVER", "CLAIMED", "scanned", CLUB));
         when(f.receivers.bindFromAppCode(MEMBER, CLUB, "scanned")).thenReturn(Map.of("receiverState", "CONSENTED"));
-        Map<String, Object> out = f.service.confirm(MEMBER, "CLUB_RECEIVER", CLUB);
+        Map<String, Object> out = f.service.confirm(MEMBER, "CLUB_RECEIVER", CLUB, 42);
         assertEquals("CONFIRMED", out.get("status"));
         verify(f.mapper).confirm(5L, MEMBER);
+    }
+
+    // ---------- MERCHANT-8 number matching ----------
+
+    @Test
+    void confirmNeedsTheMatchingNumber() {
+        Binding f = new Binding(gate(true, false, false), "");
+        when(f.mapper.selectLatest(MEMBER, "WALLET", 0L)).thenReturn(f.code("WALLET", "CLAIMED", "scanned", 0));
+        when(f.mapper.confirm(5L, MEMBER)).thenReturn(1);
+        BusinessRefusal missing = assertThrows(BusinessRefusal.class, () -> f.service.confirm(MEMBER, "WALLET", null, null));
+        assertEquals(ErrorCode.BAD_REQUEST, missing.getErrorCode());
+        verify(f.mapper, never()).cancelClaimed(anyLong(), anyLong());
+        verify(f.mapper, never()).upsertWallet(anyLong(), anyString(), anyString());
+        assertEquals("CONFIRMED", f.service.confirm(MEMBER, "WALLET", null, 42).get("status"));
+    }
+
+    @Test
+    void wrongNumberCancelsTheCode() {
+        Binding f = new Binding(gate(true, true, false), "");
+        when(f.mapper.selectLatest(MEMBER, "CLUB_RECEIVER", CLUB)).thenReturn(f.code("CLUB_RECEIVER", "CLAIMED", "attacker", CLUB));
+        BusinessRefusal wrong = assertThrows(BusinessRefusal.class, () -> f.service.confirm(MEMBER, "CLUB_RECEIVER", CLUB, 17));
+        assertEquals(ErrorCode.CONFLICT, wrong.getErrorCode());
+        assertTrue(wrong.getMessage().contains(PayoutBindingService.MATCH_WRONG));
+        verify(f.mapper).cancelClaimed(5L, MEMBER);
+        verify(f.mapper, never()).confirm(anyLong(), anyLong());
+        verifyNoInteractions(f.receivers);
+    }
+
+    @Test
+    void aClaimWithoutANumberCannotBeConfirmed() {
+        Binding f = new Binding(gate(true, false, false), "");
+        Map<String, Object> legacy = f.code("WALLET", "CLAIMED", "scanned", 0);
+        legacy.remove("matchNumber");
+        when(f.mapper.selectLatest(MEMBER, "WALLET", 0L)).thenReturn(legacy);
+        assertThrows(BusinessRefusal.class, () -> f.service.confirm(MEMBER, "WALLET", null, 42));
+        verify(f.mapper).cancelClaimed(5L, MEMBER);
+        verify(f.mapper, never()).upsertWallet(anyLong(), anyString(), anyString());
+    }
+
+    @Test
+    void choicesOnlyAfterClaim() {
+        Binding f = new Binding(gate(true, false, false), "");
+        when(f.mapper.selectLatest(MEMBER, "WALLET", 0L)).thenReturn(f.code("WALLET", "ISSUED", null, 0));
+        assertFalse(f.service.status(MEMBER, "WALLET", null).containsKey("choices"));
+        when(f.mapper.selectLatest(MEMBER, "WALLET", 0L)).thenReturn(f.code("WALLET", "CLAIMED", "scanned", 0));
+        Map<String, Object> claimed = f.service.status(MEMBER, "WALLET", null);
+        @SuppressWarnings("unchecked")
+        java.util.List<Integer> choices = (java.util.List<Integer>) claimed.get("choices");
+        assertEquals(3, choices.size());
+        assertEquals(3, new java.util.HashSet<>(choices).size());
+        assertTrue(choices.contains(42));
+        assertEquals(choices, f.service.status(MEMBER, "WALLET", null).get("choices"));
+        assertFalse(claimed.toString().contains("scanned"));
+        assertFalse(claimed.containsKey("matchNumber"));
+    }
+
+    @Test
+    void choicesStayInRangeAndDistinct() {
+        for (long id = 1; id < 300; id++) {
+            int match = 10 + (int) (id % 90);
+            java.util.List<Integer> c = PayoutBindingService.choices(id, match);
+            assertEquals(3, new java.util.HashSet<>(c).size());
+            assertTrue(c.contains(match));
+            for (int n : c) assertTrue(n >= 10 && n <= 99);
+        }
     }
 }

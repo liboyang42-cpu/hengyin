@@ -1,6 +1,7 @@
 package com.chengyinhub.web.controller.business;
 
 import com.chengyinhub.business.commerceconsole.CommerceConsoleService;
+import com.chengyinhub.business.commerceconsole.DuesRefundDecisionService;
 import com.chengyinhub.common.annotation.Log;
 import com.chengyinhub.common.core.controller.BaseController;
 import com.chengyinhub.common.core.domain.AjaxResult;
@@ -18,15 +19,18 @@ import java.util.Map;
 
 /**
  * T5 MON-16:商品与会费后台。只读列表 + 停售 / 停用(只减少售卖)。权限点迁移不授予任何角色。
+ * W7 MERCHANT-12:会费退款申请的处理(驳回不动钱;通过走既有微信原路退款,须资金开关 refunds 打开)。
  */
 @RestController
 @RequestMapping("/business/commerceConsole")
 public class CommerceConsoleController extends BaseController {
 
     private final CommerceConsoleService service;
+    private final DuesRefundDecisionService duesRefunds;
 
-    public CommerceConsoleController(CommerceConsoleService service) {
+    public CommerceConsoleController(CommerceConsoleService service, DuesRefundDecisionService duesRefunds) {
         this.service = service;
+        this.duesRefunds = duesRefunds;
     }
 
     @PreAuthorize("@ss.hasPermi('business:commerceConsole:list')")
@@ -80,6 +84,29 @@ public class CommerceConsoleController extends BaseController {
     @PostMapping("/duesPlans/{id}/deactivate")
     public AjaxResult deactivate(@PathVariable long id, @RequestBody Map<String, Object> body) {
         return success(service.deactivateDuesPlan(getUserId(), getUsername(), id, reason(body)));
+    }
+
+    @PreAuthorize("@ss.hasPermi('business:commerceConsole:list')")
+    @GetMapping("/dues-refunds")
+    public AjaxResult duesRefunds(@RequestParam(required = false) Boolean undecided,
+                                  @RequestParam(required = false) Integer limit) {
+        return success(duesRefunds.reviews(undecided, limit));
+    }
+
+    /** Body: {"reason": "..."}。全额原路退款;资金开关 refunds 关闭时拒绝。 */
+    @PreAuthorize("@ss.hasPermi('business:commerceConsole:refund')")
+    @Log(title = "会费退款通过", businessType = BusinessType.UPDATE)
+    @PostMapping("/dues-refunds/{reviewId}/approve")
+    public AjaxResult approveDuesRefund(@PathVariable long reviewId, @RequestBody Map<String, Object> body) {
+        return success(duesRefunds.approve(getUserId(), getUsername(), reviewId, reason(body)));
+    }
+
+    /** Body: {"reason": "..."}。不动钱,只记录决定与说明。 */
+    @PreAuthorize("@ss.hasPermi('business:commerceConsole:refund')")
+    @Log(title = "会费退款驳回", businessType = BusinessType.UPDATE)
+    @PostMapping("/dues-refunds/{reviewId}/reject")
+    public AjaxResult rejectDuesRefund(@PathVariable long reviewId, @RequestBody Map<String, Object> body) {
+        return success(duesRefunds.reject(getUserId(), getUsername(), reviewId, reason(body)));
     }
 
     private static String reason(Map<String, Object> body) {
