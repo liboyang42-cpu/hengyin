@@ -1080,6 +1080,7 @@
     "20261116_shop_games_judged": ["20261115_shop_games", "20261115_game_mechanics", "20261115_merchant_plans"],
     "20261116_external_game_result_key": ["20261115_external_game_monetization_menus", "20261116_external_game_review"],
     "20261116_template_games": ["seed_template_library_12packs_20260820", "seed_life_backup_games_20260820", "template_merchant_guide_20260906", "20260821_new_city_preference_library", "20260822_advanced_game_runtime", "20260826_team_race_multiplayer"],
-    "20261117_shop_game_runner": ["20261116_shop_games_judged", "20260822_advanced_game_runtime"]
+    "20261117_shop_game_runner": ["20261116_shop_games_judged", "20260822_advanced_game_runtime"],
+    "20261116_x_disclosures_data_copy": ["20261012_missing_business_menu"]
   }
 }
