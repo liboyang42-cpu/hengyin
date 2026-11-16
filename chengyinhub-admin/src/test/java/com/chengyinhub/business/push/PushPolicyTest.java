@@ -79,4 +79,19 @@ class PushPolicyTest
         assertFalse(PushPolicy.showPreview(row("accountShowPreview", 0)));
         assertTrue(PushPolicy.showPreview(row("convShowPreview", 1, "accountShowPreview", 0)));
     }
+
+    @Test
+    void channelDefaultSitsBetweenTheMembersOwnChoiceAndTheClubDefault()
+    {
+        // W7 x-channel-reach (SOC-2): 公告 / 活动 default to all (0) over a mentions-only club default (1).
+        assertTrue(PushPolicy.chatAllowed(row(), false, false, 0, 1));
+        assertFalse(PushPolicy.chatAllowed(row(), false, false, null, 1));
+        // The member's own channel or account setting still wins.
+        assertFalse(PushPolicy.chatAllowed(row("convLevel", 2), false, false, 0, 1));
+        assertFalse(PushPolicy.chatAllowed(row("accountLevel", 1), false, false, 0, 0));
+        // "3 = inherit" on the conversation falls through to the channel default.
+        assertTrue(PushPolicy.chatAllowed(row("convLevel", 3), false, false, 0, 1));
+        // Out-of-range channel values are ignored.
+        assertFalse(PushPolicy.chatAllowed(row(), false, false, 9, 1));
+    }
 }

@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.chengyinhub.business.domain.ImMessage;
 import com.chengyinhub.business.mapper.push.PushMapper;
 import com.chengyinhub.business.service.IChannelConversationGate;
@@ -37,6 +39,11 @@ public class PushFanoutService implements IPushFanoutService
     static final long CHAT_EXPIRATION_SECONDS = 24L * 3600L;
     static final long NOTICE_EXPIRATION_SECONDS = 3L * 24L * 3600L;
     static final String CHAT_PAGE = "/subpackageB/pages/im/chat/index";
+    /** SOC-2: audience pages (keyset on member_id) instead of one LIMIT 2000; 200 pages = 100k members at most. */
+    static final int AUDIENCE_PAGE = 500;
+    static final int AUDIENCE_MAX_PAGES = 200;
+    /** Same value as ChannelEventService.CARD_TYPE (kept here to avoid a push → channelevent dependency). */
+    static final String EVENT_CARD_TYPE = "channel_event";
 
     private final PushMapper mapper;
     private final ApnsSender sender;
@@ -115,13 +122,16 @@ public class PushFanoutService implements IPushFanoutService
             inGame.setBizKey(bizKey);
             inGame.setStatus(PushPolicy.integer(msg.get("conversationStatus")));
         }
+        // SOC-2/SOC-9: one read of the channel's name, guild and default level (tolerated when it fails).
+        ChannelContext ctx = channel ? channelContext(conversationId) : null;
         Integer clubDefault = null;
-        Long clubId = channel ? mapper.selectChannelClubId(conversationId) : clubIdOf((String) msg.get("bizKey"));
+        Long clubId = channel ? (ctx != null ? ctx.clubId() : mapper.selectChannelClubId(conversationId)) : clubIdOf((String) msg.get("bizKey"));
         if (clubId != null)
         {
             Integer level = mapper.selectClubDefaultLevel(clubId);
             clubDefault = level == null ? 1 : level;
         }
+        Integer channelDefault = ctx == null ? null : ctx.notifyDefault();
         boolean everyone = false;
         List<Long> mentioned = new ArrayList<>();
         List<Long> roles = new ArrayList<>();
@@ -138,44 +148,149 @@ public class PushFanoutService implements IPushFanoutService
             List<Long> roleMembers = mapper.selectRoleMemberIds(roles);
             if (roleMembers != null) mentioned.addAll(roleMembers);
         }
-        Map<Long, Map<String, Object>> allowed = new LinkedHashMap<>();
-        Map<Long, Boolean> mentionOf = new LinkedHashMap<>();
-        for (Map<String, Object> row : mapper.selectChatAudience(conversationId, senderId, single))
-        {
-            long member = ((Number) row.get("memberId")).longValue();
-            boolean me = mentioned.contains(member);
-            if (!PushPolicy.chatAllowed(row, me, everyone, clubDefault)) continue;
-            if (channel && !canRead(member, conversationId)) continue;
-            if (inGame != null && !inGameAccess(inGame, member)) continue;
-            allowed.put(member, row);
-            mentionOf.put(member, me || (everyone && !PushPolicy.flag(row.get("suppressBroadcast"))));
-        }
-        if (allowed.isEmpty()) return 0;
+        // SOC-2: an event card in a channel pings like @everyone (members who switched @everyone off still opt out).
+        // Only a real posted card counts (its id is in channel_event.message_id): a member cannot fake one in extra_json.
+        JSONObject card = channel ? eventCard(msg.get("extraJson")) : null;
+        if (card != null && !postedEventCard(messageId)) card = null;
+        if (card != null) everyone = true;
         String thread = "chat-" + conversationId;
         String page = CHAT_PAGE + "?conversationId=" + conversationId + "&type=" + type + "&messageId=" + messageId;
+        // SOC-9: channel pushes carry the guild so the app can open the channel screen at this message (additive keys).
+        if (ctx != null && ctx.guildKind() > 0 && ctx.guildId() > 0) page += "&guildKind=" + ctx.guildKind() + "&guildId=" + ctx.guildId();
         String senderName = msg.get("senderName") == null ? null : msg.get("senderName").toString();
         String text = summary(msg);
         int accepted = 0;
-        for (Map.Entry<Long, List<PushDevice>> e : devicesByMember(allowed.keySet()).entrySet())
+        long after = 0;
+        for (int pageNo = 0; pageNo < AUDIENCE_MAX_PAGES; pageNo++)
         {
-            long member = e.getKey();
-            if (!collapse.tryAcquire(member, thread)) continue;
-            boolean preview = PushPolicy.showPreview(allowed.get(member));
-            boolean mention = Boolean.TRUE.equals(mentionOf.get(member));
-            for (PushDevice device : e.getValue())
+            List<Map<String, Object>> audience = mapper.selectChatAudience(conversationId, senderId, single, after, AUDIENCE_PAGE);
+            if (audience == null || audience.isEmpty()) break;
+            Map<Long, Map<String, Object>> allowed = new LinkedHashMap<>();
+            Map<Long, Boolean> mentionOf = new LinkedHashMap<>();
+            for (Map<String, Object> row : audience)
             {
-                boolean en = device.english();
-                String name = senderName == null || senderName.isBlank() ? (en ? "Chengyin" : "城瘾") : senderName;
-                String title = single ? name : (en ? "Group message" : "群消息");
-                String body;
-                if (!preview) body = en ? "You have a new message" : "你收到一条新消息";
-                else body = (single ? "" : name + (en ? ": " : "：")) + (text == null ? (en ? "[Message]" : "[消息]") : text);
-                if (mention) body = (en ? "[Mentioned you] " : "[有人@你] ") + body;
-                accepted += deliver(List.of(device), new PushMessage(PushMessage.KIND_CHAT, title, body, thread, page,
-                        String.valueOf(conversationId), String.valueOf(messageId)), CHAT_EXPIRATION_SECONDS);
+                long member = ((Number) row.get("memberId")).longValue();
+                after = Math.max(after, member);
+                boolean me = mentioned.contains(member);
+                if (!PushPolicy.chatAllowed(row, me, everyone, channelDefault, clubDefault)) continue;
+                if (channel && !canRead(member, conversationId)) continue;
+                if (inGame != null && !inGameAccess(inGame, member)) continue;
+                allowed.put(member, row);
+                // An event card is announced, not "mentioned": no [有人@你] prefix for it.
+                mentionOf.put(member, me || (card == null && everyone && !PushPolicy.flag(row.get("suppressBroadcast"))));
             }
+            for (Map.Entry<Long, List<PushDevice>> e : devicesByMember(allowed.keySet()).entrySet())
+            {
+                long member = e.getKey();
+                if (!collapse.tryAcquire(member, thread)) continue;
+                boolean preview = PushPolicy.showPreview(allowed.get(member));
+                boolean mention = Boolean.TRUE.equals(mentionOf.get(member));
+                for (PushDevice device : e.getValue())
+                {
+                    boolean en = device.english();
+                    String name = senderName == null || senderName.isBlank() ? (en ? "Chengyin" : "城瘾") : senderName;
+                    String title;
+                    String body;
+                    if (!preview)
+                    {
+                        // Privacy: previews off keep the generic title and body (no club, channel or sender).
+                        title = single ? name : (en ? "Group message" : "群消息");
+                        body = en ? "You have a new message" : "你收到一条新消息";
+                    }
+                    else if (ctx != null)
+                    {
+                        title = ctx.guildName() == null || ctx.guildName().isBlank() ? (en ? "Group message" : "群消息") : ctx.guildName();
+                        body = channelBody(ctx, card, name, text, en);
+                    }
+                    else
+                    {
+                        title = single ? name : (en ? "Group message" : "群消息");
+                        body = (single ? "" : name + (en ? ": " : "：")) + (text == null ? (en ? "[Message]" : "[消息]") : text);
+                    }
+                    if (mention) body = (en ? "[Mentioned you] " : "[有人@你] ") + body;
+                    accepted += deliver(List.of(device), new PushMessage(PushMessage.KIND_CHAT, title, body, thread, page,
+                            String.valueOf(conversationId), String.valueOf(messageId)), CHAT_EXPIRATION_SECONDS);
+                }
+            }
+            if (audience.size() < AUDIENCE_PAGE) break;
         }
         return accepted;
+    }
+
+    /** SOC-2/SOC-9: what a channel push needs to say where it is. */
+    record ChannelContext(String channelName, int channelKind, int guildKind, long guildId, String guildName, Integer notifyDefault)
+    {
+        Long clubId() { return guildKind == 1 && guildId > 0 ? guildId : null; }
+    }
+
+    private ChannelContext channelContext(long conversationId)
+    {
+        try
+        {
+            Map<String, Object> row = mapper.selectChannelPushContext(conversationId);
+            if (row == null) return null;
+            Integer kind = PushPolicy.integer(row.get("channelKind"));
+            Integer guildKind = PushPolicy.integer(row.get("guildKind"));
+            Object guildId = row.get("guildId");
+            return new ChannelContext(row.get("channelName") == null ? null : row.get("channelName").toString(),
+                    kind == null ? -1 : kind, guildKind == null ? 0 : guildKind,
+                    guildId instanceof Number n ? n.longValue() : 0L,
+                    row.get("guildName") == null ? null : row.get("guildName").toString(),
+                    PushPolicy.integer(row.get("notifyDefault")));
+        }
+        catch (RuntimeException unavailable)
+        {
+            // e.g. notify_default not migrated yet: fall back to the old club lookup and wording.
+            log.warn("[推送] 频道上下文读取失败，按旧口径推送 reason={}", unavailable.getClass().getSimpleName());
+            return null;
+        }
+    }
+
+    private boolean postedEventCard(long messageId)
+    {
+        try { return mapper.countPostedEventCard(messageId) > 0; }
+        catch (RuntimeException unavailable) { return false; }
+    }
+
+    /** The channel_event card payload of a message, or null. */
+    static JSONObject eventCard(Object extraJson)
+    {
+        if (extraJson == null) return null;
+        try
+        {
+            JSONObject extra = JSON.parseObject(extraJson.toString());
+            return extra != null && EVENT_CARD_TYPE.equals(extra.getString("cardType")) ? extra : null;
+        }
+        catch (RuntimeException malformed)
+        {
+            return null;
+        }
+    }
+
+    /**
+     * SOC-9 body: zh "#闲聊 小李：今晚七点集合" / en "#闲聊 小李: ..."; 公告 adds 【公告】/[Announcement];
+     * an event card becomes zh "新活动：城市夜跑 · 11月20日 19:00" / en "New event: 城市夜跑 · Nov 20, 19:00" (China time).
+     */
+    static String channelBody(ChannelContext ctx, JSONObject card, String sender, String text, boolean en)
+    {
+        if (card != null)
+        {
+            String title = card.getString("title") == null ? "" : card.getString("title");
+            Long startAt = card.getLong("startAt");
+            String when = startAt == null ? "" : " · " + formatEventTime(startAt, en);
+            return (en ? "New event: " : "新活动：") + title + when;
+        }
+        String channelTag = ctx.channelName() == null || ctx.channelName().isBlank() ? "" : "#" + ctx.channelName() + " ";
+        String prefix = ctx.channelKind() == 2 ? (en ? "[Announcement] " : "【公告】") : "";
+        return prefix + channelTag + sender + (en ? ": " : "：") + (text == null ? (en ? "[Message]" : "[消息]") : text);
+    }
+
+    static String formatEventTime(long epochMillis, boolean en)
+    {
+        java.text.SimpleDateFormat f = en ? new java.text.SimpleDateFormat("MMM d, HH:mm", java.util.Locale.ENGLISH)
+                : new java.text.SimpleDateFormat("M月d日 HH:mm", java.util.Locale.CHINA);
+        f.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Shanghai"));
+        return f.format(new Date(epochMillis));
     }
 
     private boolean canRead(long member, long conversationId)

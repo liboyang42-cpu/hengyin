@@ -100,6 +100,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
     /** 频道会话(type=5)授权闸；未装配时频道会话按普通会话成员行处理。 */
     @Autowired(required = false)
     private IChannelConversationGate channelGate;
+
+    /** W7 x-channel-reach (SOC-2): leaving a club or team also drops the member's channel conversation rows. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChannelMembershipSync channelMembership;
     /** 语音/视频/文件消息(10/11/12)的上传挂接闸；未装配时这三类按不支持处理。 */
     @Autowired(required = false)
     private IImMediaAttachGate mediaGate;
@@ -656,6 +660,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         {
             memberMapper.markDeleted(c.getId(), memberId);
         }
+        if (channelMembership != null)
+        {
+            channelMembership.memberLeft(com.chengyinhub.business.service.channel.platform.ChannelGuildAccess.GUILD_CLUB, clubId, memberId);
+        }
     }
 
     @Override
@@ -771,6 +779,10 @@ public class ImServiceImpl implements IImService, ISystemNotificationIntentServi
         ImConversation conversation = conversationMapper.selectByTypeAndBizKey(
                 ImConversation.TYPE_GROUP, "team_" + teamId);
         if (conversation != null) memberMapper.markDeleted(conversation.getId(), memberId);
+        if (channelMembership != null)
+        {
+            channelMembership.memberLeft(com.chengyinhub.business.service.channel.platform.ChannelGuildAccess.GUILD_TEAM, teamId, memberId);
+        }
     }
 
     @Override

@@ -27,7 +27,7 @@
 
     <select id="selectChatMessage" resultType="java.util.HashMap" useCache="false">
         SELECT msg.id AS messageId, msg.conversation_id AS conversationId, msg.sender_id AS senderId, msg.msg_type AS msgType,
-               msg.content AS content, msg.status AS status, msg.check_status AS checkStatus,
+               msg.content AS content, msg.extra_json AS extraJson, msg.status AS status, msg.check_status AS checkStatus,
                c.type + 0 AS conversationType, c.biz_key AS bizKey, c.status AS conversationStatus, c.last_msg_text AS summary,
                u.nickname AS senderName
           FROM im_message msg
@@ -49,8 +49,21 @@
          WHERE m.conversation_id = #{conversationId} AND m.member_id &lt;&gt; #{senderId}
            <if test="!single">AND m.deleted = 0</if>
            AND NOT EXISTS (SELECT 1 FROM im_block b WHERE b.member_id = m.member_id AND b.blocked_member_id = #{senderId})
+           AND m.member_id &gt; #{afterMemberId}
          ORDER BY m.member_id
-         LIMIT 2000
+         LIMIT #{limit}
+    </select>
+    <select id="selectChannelPushContext" resultType="java.util.HashMap" useCache="false">
+        SELECT ch.name AS channelName, ch.kind AS channelKind, ch.guild_kind AS guildKind, ch.guild_id AS guildId,
+               ch.notify_default AS notifyDefault,
+               CASE WHEN ch.guild_kind = 1 THEN c.name ELSE t.title END AS guildName
+          FROM im_channel ch
+          LEFT JOIN club c ON ch.guild_kind = 1 AND c.id = ch.guild_id
+          LEFT JOIN play_team t ON ch.guild_kind = 3 AND t.id = ch.guild_id
+         WHERE ch.id = #{conversationId} AND ch.del_flag = 0
+    </select>
+    <select id="countPostedEventCard" resultType="java.lang.Integer" useCache="false">
+        SELECT COUNT(1) FROM channel_event WHERE message_id = #{messageId}
     </select>
     <select id="selectMentions" resultType="java.util.HashMap" useCache="false">
         SELECT mention_type AS mentionType, target_id AS targetId FROM im_message_mention WHERE message_id = #{messageId}

@@ -33,7 +33,10 @@ POST_DEPLOY_MIGRATIONS = {"20261012_merchant_commerce_reconcile_job", "20261012_
                           "marketing_task_registration_20261108",
                           # r-integ-master: sys_job rows naming beans master's jar lacks (clubChannelDefaultsTask,
                           # growthWinbackTask); their stagger file only updates those rows, so it follows them.
-                          "20261115_club_reach", "20261115_growth_loops", "20261115_stagger_club_growth_jobs"}
+                          "20261115_club_reach", "20261115_growth_loops", "20261115_stagger_club_growth_jobs",
+                          # W7 x-channel-reach: paused sys_job naming channelMembershipBackfillTask (new jar only),
+                          # and its stagger file that only updates that row.
+                          "20261116_channel_membership_backfill", "20261116_stagger_channel_membership_job"}
 BOOTSTRAP_SQL = {
     "sql/quartz.sql",
     "sql/ry_20250522.sql",

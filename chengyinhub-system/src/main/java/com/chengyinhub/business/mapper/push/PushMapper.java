@@ -28,9 +28,18 @@ public interface PushMapper
     /** 聊天消息与会话类型、发送者昵称。 */
     Map<String, Object> selectChatMessage(@Param("messageId") long messageId);
 
-    /** 会话收件人（不含发送者）+ 会话级与账号默认通知偏好；屏蔽了发送者的人不在内。 */
+    /**
+     * 会话收件人（不含发送者）+ 会话级与账号默认通知偏好；屏蔽了发送者的人不在内。
+     * SOC-2：按 member_id 键集分页（afterMemberId 之后取 limit 行），不再一次 LIMIT 2000 截断。
+     */
     List<Map<String, Object>> selectChatAudience(@Param("conversationId") long conversationId, @Param("senderId") long senderId,
-            @Param("single") boolean single);
+            @Param("single") boolean single, @Param("afterMemberId") long afterMemberId, @Param("limit") int limit);
+
+    /** SOC-2/SOC-9：频道名、类型、所属空间与名称、频道默认通知等级（im_channel.notify_default）。 */
+    Map<String, Object> selectChannelPushContext(@Param("conversationId") long conversationId);
+
+    /** SOC-2：这条消息是否为已发布的频道活动卡片（channel_event.message_id）。 */
+    int countPostedEventCard(@Param("messageId") long messageId);
 
     List<Map<String, Object>> selectMentions(@Param("messageId") long messageId);
 
