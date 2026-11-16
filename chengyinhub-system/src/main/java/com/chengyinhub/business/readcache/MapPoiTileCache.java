@@ -180,15 +180,18 @@ public class MapPoiTileCache {
         if (memberId != null && memberId > 0 && !rows.isEmpty()) {
             List<Long> ids = new ArrayList<>(rows.size());
             for (RoamPoi p : rows) ids.add(p.getId());
-            for (Map<String, Object> m : mapper.selectPoiMemberMarks(memberId, ids)) {
-                Object id = m.get("poiId");
+            for (Map<String, Object> raw : mapper.selectPoiMemberMarks(memberId, ids)) {
+                // Column labels by lower case: some drivers / modes fold alias case (H2 DATABASE_TO_LOWER).
+                Map<String, Object> m = new HashMap<>();
+                raw.forEach((k, v) -> m.put(k.toLowerCase(java.util.Locale.ROOT), v));
+                Object id = m.get("poiid");
                 if (id instanceof Number n) marks.put(n.longValue(), m);
             }
         }
         for (RoamPoi p : rows) {
             Map<String, Object> m = marks.get(p.getId());
             p.setFound(m != null && truthy(m.get("found")));
-            p.setPendingRedeem(m != null && truthy(m.get("pendingRedeem")));
+            p.setPendingRedeem(m != null && truthy(m.get("pendingredeem")));
         }
     }
 

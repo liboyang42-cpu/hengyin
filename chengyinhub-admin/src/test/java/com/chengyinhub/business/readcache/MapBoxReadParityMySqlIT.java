@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>records every box read before the new indexes (legacy pois SQL, legacy fog SQL, clubs nearby, deals,
  *       sponsored quests) over random boxes;</li>
  *   <li>applies migration_20261115_maps_backend.sql twice (idempotent);</li>
- *   <li>requires the same answers from the legacy SQL, the new two-phase SQL, the tile cache (cold and warm) and the
+ *   <li>requires the same answers from the base SQL (#830), the production mapper, the tile cache (cold and warm) and the
  *       unchanged reads, and EXPLAIN to use the new indexes;</li>
  *   <li>requires the Java distance used by the tile cache to equal MySQL's, bit for bit, for every seeded place.</li>
  * </ol>
@@ -107,6 +107,14 @@ class MapBoxReadParityMySqlIT {
         seeding.setSqlScriptEncoding(StandardCharsets.UTF_8.name());
         seeding.execute(source);
         Files.deleteIfExists(seed);
+        // The base schema predates the place-card columns that #830's /pois projection reads (added on real databases by
+        // migration_20261025_official_poi_quotes and others): add them here, then vary them and node_level (incl. null).
+        for (String[] c : new String[][]{{"gallery_json", "text"}, {"quotes_json", "text"}, {"photo_credit", "varchar(255)"}, {"badge_code", "varchar(80)"}}) {
+            if (db.queryForObject("select count(*) from information_schema.columns where table_schema = database() and table_name = 'roam_poi' and column_name = ?", Integer.class, c[0]) == 0) {
+                db.execute("alter table roam_poi add column " + c[0] + " " + c[1] + " null");
+            }
+        }
+        db.update("update roam_poi set gallery_json = case when id % 5 = 0 then null else concat('[\"/g/', id, 'a.jpg\",\"/g/', id, 'b.jpg\",\"/g/', id, 'c.jpg\",\"/g/', id, 'd.jpg\"]') end, quotes_json = case when id % 7 = 0 then concat('[{\"text\":\"q', id, '\"}]') end, photo_credit = case when id % 8 = 0 then concat('photo ', id) end, badge_code = case when id % 6 = 0 then concat('badge_', id) end, node_level = case when id % 9 = 0 then null else id % 4 end");
 
         Configuration configuration = new Configuration();
         configuration.getTypeAliasRegistry().registerAlias("RoamPoi", RoamPoi.class);
@@ -146,7 +154,7 @@ class MapBoxReadParityMySqlIT {
             double lat = CENTER_LAT - 0.035 + rnd.nextDouble() * 0.07, lng = CENTER_LNG - 0.04 + rnd.nextDouble() * 0.08;
             int r = i % 4 == 0 ? 3000 : 150 + rnd.nextInt(4500);
             Long member = i % 3 == 0 ? 0L : BASE + (i % 8);
-            out.add(new Box(MapBoxReadParityTest.box(lat, lng, r), member, i % 5 == 0 ? 40 : 500));
+            out.add(new Box(MapBoxReadParityTest.box(lat, lng, r), member, i % 5 == 0 ? 40 : i % 5 == 1 ? 501 : 500));
         }
         return out;
     }
@@ -209,7 +217,7 @@ class MapBoxReadParityMySqlIT {
             for (int i = 0; i < boxes.size(); i++) {
                 Box x = boxes.get(i);
                 double[] b = x.b();
-                assertEquals(before.get("pois" + i), json.writeValueAsString(roam.selectPoisNear(b[0], b[1], b[2], b[3], x.member(), x.limit())), "two-phase SQL box " + i);
+                assertEquals(before.get("pois" + i), json.writeValueAsString(roam.selectPoisNear(b[0], b[1], b[2], b[3], x.member(), x.limit())), "production SQL box " + i);
                 assertEquals(before.get("poisTag" + i), json.writeValueAsString(roam.selectPoisNearFiltered(b[0], b[1], b[2], b[3], x.member(), x.limit(), null, null, "coffee")), "filtered box " + i);
                 assertEquals(before.get("pois" + i), json.writeValueAsString(tiles.near(b[0], b[1], b[2], b[3], x.member(), x.limit())), "tile cache box " + i);
                 assertEquals(before.get("pois" + i), json.writeValueAsString(tiles.near(b[0], b[1], b[2], b[3], x.member(), x.limit())), "tile cache warm box " + i);
@@ -222,12 +230,44 @@ class MapBoxReadParityMySqlIT {
         }
         assertTrue(cache.hits() > 0);
 
-        String plan = String.join("\n", db.queryForList("explain format=tree select p.id from (select p.id as k_id, power(p.lat - (30.24 + 30.28) / 2, 2) + power((p.lng - (120.13 + 120.17) / 2) * cos(radians((30.24 + 30.28) / 2)), 2) as k_dist from roam_poi p where p.status = 1 and (p.application_type is null or p.application_type = 2 or (p.application_type in (1, 3) and p.audit_status = 1)) and p.lat between 30.24 and 30.28 and p.lng between 120.13 and 120.17 order by k_dist asc, k_id asc limit 500) k join roam_poi p on p.id = k.k_id", String.class));
+        // #830's inner query (the one MySQL runs first): the box range must come from idx_roam_poi_player_geo.
+        String plan = String.join("\n", db.queryForList("explain format=tree select p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp, p.coupon_template_id, p.city_code, p.status, p.audit_status, p.application_type, p.applicant_merchant_id, p.audit_reason, p.create_time, p.merchant_id, p.template_id, p.node_level, p.tags, p.cover_img, p.sort, p.gallery_json, p.quotes_json, p.photo_credit, p.badge_code, (power(p.lat - (30.24 + 30.28) / 2, 2) + power((p.lng - (120.13 + 120.17) / 2) * cos(radians((30.24 + 30.28) / 2)), 2)) as near_dist from roam_poi p where p.status = 1 and (p.application_type is null or p.application_type = 2 or (p.application_type in (1, 3) and p.audit_status = 1)) and p.lat between 30.24 and 30.28 and p.lng between 120.13 and 120.17 order by coalesce(p.node_level, 0) desc, near_dist asc, p.id asc limit 501", String.class));
+        System.out.println("MAPPLAN pois inner\n" + plan);
+        assertTrue(plan.contains("idx_roam_poi_player_geo"), plan);
         assertTrue(plan.contains("Covering index range scan on p using idx_roam_poi_player_geo"), plan);
         String clubPlan = String.join("\n", db.queryForList("explain format=tree select (select a.id from cms_activity a where a.club_id = c.id and a.del_flag = 0 and a.status = 1 and a.publish_status = 1 and a.cancel_time is null order by a.start_date desc, a.id desc limit 1) from club c", String.class));
         assertTrue(clubPlan.contains("idx_cms_activity_club_start"), clubPlan);
         String fogPlan = String.join("\n", db.queryForList("explain format=tree select f.geohash7 from roam_fog_tile f where f.member_id = " + (BASE + 1) + " and (f.geohash7 like concat('wtmkq', '%') or f.geohash7 like concat('wtmkr', '%'))", String.class));
         assertTrue(fogPlan.contains("range scan") && fogPlan.contains("uk_member_tile"), fogPlan);
+    }
+
+    /**
+     * GET /api/roam/pois through the real controller on MySQL, cached and uncached, for guests and members: the 3 km
+     * default and a 20 km box over the dense district (more than 500 places: "truncated": true and the 500 kept are
+     * the highest node level, then nearest).
+     */
+    @Test
+    void controllerAnswersAreIdenticalCachedAndUncached() throws Exception {
+        RoamMapper mapper = sessions.getMapper(RoamMapper.class);
+        ReadCache cache = new ReadCache(new InMemoryReadCacheStore(), new ReadCache.Settings(true, Map.of()));
+        MapPoiTileCache tiles = new MapPoiTileCache(mapper, cache, 64, 3000);
+        boolean truncated = false;
+        for (long viewer : new long[]{0L, BASE + 1, BASE + 2}) {
+            for (double[] p : new double[][]{{CENTER_LAT, CENTER_LNG}, {CENTER_LAT + 0.02, CENTER_LNG - 0.03}}) {
+                for (Integer r : new Integer[]{null, 1200, 20000}) {
+                    var plain = com.chengyinhub.web.controller.api.RoamPoisReadCacheParityTest.controller(mapper, viewer, null);
+                    var cached = com.chengyinhub.web.controller.api.RoamPoisReadCacheParityTest.controller(mapper, viewer, tiles);
+                    String expected = com.chengyinhub.web.controller.api.RoamPoisReadCacheParityTest.pois(plain, p[0], p[1], r);
+                    String where = "viewer " + viewer + " r=" + r;
+                    assertEquals(expected, com.chengyinhub.web.controller.api.RoamPoisReadCacheParityTest.pois(cached, p[0], p[1], r), "cold " + where);
+                    assertEquals(expected, com.chengyinhub.web.controller.api.RoamPoisReadCacheParityTest.pois(cached, p[0], p[1], r), "warm " + where);
+                    if (expected.contains("\"truncated\":true")) truncated = true;
+                    if (viewer == 0L) assertTrue(!expected.contains("\"found\"") && !expected.contains("\"pendingRedeem\""), where);
+                }
+            }
+        }
+        assertTrue(truncated, "a 20 km box over 4,000 places must be truncated at 500");
+        assertTrue(cache.hits() > 0);
     }
 
     /** The tile cache orders in Java: its distance must be MySQL's distance, bit for bit, for every place and box. */
