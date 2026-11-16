@@ -280,6 +280,11 @@
           <cy-icon class="rv-more-ico" name="finance" size="40" />
           <text class="rv-more-label">收款账户</text>
         </view>
+        <!-- S3a 商家套餐:当前套餐与各套餐包含的内容;开售与否由服务端资金开关决定(关着写「即将开放」)。 -->
+        <view class="rv-more-item" wx:if="{{merchantAccess.canReadBasic}}" bindtap="onMoreItem" data-action="plans" aria-role="button" aria-label="打开套餐" hover-class="cy-pressed" hover-stay-time="80">
+          <cy-icon class="rv-more-ico" name="list" size="40" />
+          <text class="rv-more-label">套餐</text>
+        </view>
         <view class="rv-more-item" wx:if="{{merchantAccess.canManageCoupons}}" bindtap="onMoreItem" data-action="coupon" aria-role="button" aria-label="管理优惠券" hover-class="cy-pressed" hover-stay-time="80">
           <cy-icon class="rv-more-ico" name="coupon" size="40" />
           <text class="rv-more-label">管理优惠券</text>

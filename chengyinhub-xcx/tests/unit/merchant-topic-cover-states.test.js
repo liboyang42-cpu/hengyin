@@ -56,6 +56,8 @@ function merchantInfoPageFrom(source) {
       if (request === './host-layers.js') return require('../../pages/topic/merchantinfo/host-layers.js');
       // 2026-11-01 定向广播叠层的纯整形(加载期无副作用)
       if (request === '../utils/broadcast-sheet.js') return require('../../pages/topic/utils/broadcast-sheet.js');
+      // 2026-11-15 T6 MER-08:商家报名窗口说法(纯函数)
+      if (request === '../../../utils/merchant-signup-window.js') return require('../../utils/merchant-signup-window.js');
       throw new Error('unexpected require: ' + request);
     },
   };

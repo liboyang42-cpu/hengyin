@@ -75,3 +75,5 @@ page { background: var(--cy-bg-page); }
 .gc-rank-label,
 .gc-score-link,
 .gc-metric-label { font-variant-numeric: tabular-nums; }
+/* P7 今日任务:连续天数卡与任务列表之间留一行间距(复用徽章行样式) */
+.gc-daily-streak { margin-top: var(--cy-space-3); }

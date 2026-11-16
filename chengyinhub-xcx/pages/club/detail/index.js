@@ -351,12 +351,91 @@ function foldLeaderboard(rows, myMemberId) {
   return out.concat(list.slice(tailStart));
 }
 
+// R8 club-ops CLB-13 小程序侧(T6 2026-11-15):公开贡献榜的排序档由服务端说了算。
+// POST /api/club/leaderboard/sorts {id} → { sorts: [...], defaultSort, runningMetrics }。
+//   · 到场场次 / 打卡次数 / 带队场次:所有俱乐部都有;
+//   · 综合 / 里程 / 配速 / 完成用时:只给用里程的俱乐部。
+// 读不到(旧服务端、网络)时保持 data.rankTabs 里今天的三档(综合 / 里程 / 完成用时),不凭空加档。
+// 现有三档文案沿用小程序原文;新档文案与 App(club.gov.sort.*)一致。
+
+const LB_SORT_LABELS = {
+  composite: '综合',
+  mileage: '里程',
+  pace: '配速',
+  duration: '完成用时',
+  events: '到场场次',
+  checkins: '打卡次数',
+  hosted: '带队场次',
+};
+
+const LB_LEGACY_DEFAULT = 'composite';
+
+// 服务端回包 → { tabs, defaultSort } ;不可信返回 null(调用方保留今天的三档)。
+function lbShapeSorts(data) {
+  if (!data || typeof data !== 'object' || !Array.isArray(data.sorts)) return null;
+  const seen = {};
+  const tabs = data.sorts
+    .filter(key => typeof key === 'string' && LB_SORT_LABELS[key] && !seen[key] && (seen[key] = true))
+    .map(key => ({ key, label: LB_SORT_LABELS[key] }));
+  if (!tabs.length) return null;
+  const keys = tabs.map(t => t.key);
+  const defaultSort = keys.indexOf(data.defaultSort) >= 0 ? data.defaultSort : keys[0];
+  return { tabs, defaultSort };
+}
+
+// 当前排序还在可用档里就不动;否则换到服务端默认档。
+function lbPickSort(current, shaped) {
+  if (!shaped) return current || LB_LEGACY_DEFAULT;
+  return shaped.tabs.some(t => t.key === current) ? current : shaped.defaultSort;
+}
+
+function lbLabelOf(key) { return LB_SORT_LABELS[key] || LB_SORT_LABELS[LB_LEGACY_DEFAULT]; }
+
+// 各榜主数值。计数榜写「N 场 / N 次」;配速 min/km 写成「m'ss"/km」;没有配速写 —。
+function lbCountKey(sortBy) {
+  if (sortBy === 'events') return 'attendedCount';
+  if (sortBy === 'checkins') return 'checkinCount';
+  if (sortBy === 'hosted') return 'hostedSessions';
+  return '';
+}
+
+function lbCountText(item, sortBy) {
+  const key = lbCountKey(sortBy);
+  if (!key) return '';
+  const n = Number(item && item[key]);
+  const v = Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  return v + (sortBy === 'checkins' ? ' 次' : ' 场');
+}
+
+function lbPaceText(value) {
+  const n = Number(value);
+  if (value === null || value === undefined || value === '' || !Number.isFinite(n) || n <= 0) return '—';
+  const total = Math.round(n * 60);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return m + "'" + (s < 10 ? '0' + s : s) + '"/km';
+}
+
+function lbEmptyTitle(sortBy) {
+  if (sortBy === 'mileage') return '本周还没有人跑出里程';
+  if (sortBy === 'duration') return '本周还没有人跑出用时';
+  if (sortBy === 'pace') return '本周还没有人跑出配速';
+  if (sortBy === 'events') return '本周还没有人到场';
+  if (sortBy === 'checkins') return '本周还没有人打卡';
+  if (sortBy === 'hosted') return '本周还没有人带队';
+  return '本周还没有人产生贡献';
+}
+
+const leaderboardSorts = { shapeSorts: lbShapeSorts, pickSort: lbPickSort, labelOf: lbLabelOf, countKey: lbCountKey,
+  countText: lbCountText, paceText: lbPaceText, emptyTitle: lbEmptyTitle };
+
 // CU-C-72(9-25 裁决:按单个榜剔除):后端每个榜只列该榜成绩>0 的成员,
 // 榜为空 = 真的该榜这一项没人有成绩。空态文案按当前榜各说一句,口径一致。
+// CLB-13:到场/打卡/带队/配速各说一句(lbEmptyTitle),原三档文案不变。
 function leaderboardEmptyTitle(sortBy) {
   if (sortBy === 'mileage') return '本周还没有人跑出里程';
   if (sortBy === 'duration') return '本周还没有人跑出用时';
-  return '本周还没有人产生贡献';
+  return leaderboardSorts.emptyTitle(sortBy);
 }
 
 // 2026-10-27 P-14 owner:已结束的活动不在俱乐部活动列表里显示。
@@ -1763,13 +1842,50 @@ Page({
   // 本团贡献榜(/api/club/leaderboard)
   // sortBy: composite(综合分,默认) / mileage(里程) / duration(完成用时,升序)。排序在后端做,
   // 因为综合分的权重是后端常量 —— 前端自己排会两边口径漂移。
+  // CLB-13:榜照今天的口径马上读;同时问服务端本俱乐部有哪些榜(/api/club/leaderboard/sorts,每个俱乐部问一次)。
+  // 当前榜不在可用档里(例如不跑里程的俱乐部没有「综合」)才换到服务端默认档再读一次。
+  // 读不到(旧服务端/网络)就保持今天的三档,不影响榜单本身。
   loadLeaderboard() {
+    this.loadLeaderboardSorts();
+    this.fetchLeaderboard();
+  },
+
+  loadLeaderboardSorts() {
+    const clubId = this.data.clubId;
+    if (!clubId || this._leaderboardSortsClub === String(clubId)) return;
+    this._leaderboardSortsClub = String(clubId);
+    const that = this;
+    let settled = false;
+    const done = (data) => {
+      if (settled) return; settled = true;
+      if (that._unloaded || String(that.data.clubId) !== String(clubId)) return;
+      const shaped = leaderboardSorts.shapeSorts(data);
+      if (!shaped) { that._leaderboardSortsClub = null; return; }
+      const sortBy = leaderboardSorts.pickSort(that._leaderboardSort, shaped);
+      const changed = sortBy !== that._leaderboardSort;
+      that._leaderboardSort = sortBy;
+      that.setData({ rankTabs: shaped.tabs, leaderboardSortLabel: leaderboardSorts.labelOf(sortBy) });
+      if (changed) { that.setData({ leaderboardLoaded: false }); that.fetchLeaderboard(); }
+    };
+    app.sendRequest({
+      hideLoading: true, silentError: true, url: '/api/club/leaderboard/sorts', method: 'POST',
+      data: jsonBody({ id: clubId }), header: jsonHeader(),
+      success(res) { done(res && res.code == '200' ? res.data : null); },
+      successStatusAbnormal() { done(null); },
+      fail() { done(null); },
+    });
+  },
+
+  fetchLeaderboard() {
     const that = this;
     const sortBy = this._leaderboardSort || 'composite';
+    // 换档后旧档的回包可能后到:只认最新一次请求
+    const seq = this._leaderboardSeq = (this._leaderboardSeq || 0) + 1;
     app.sendRequest({
       hideLoading: true, url: '/api/club/leaderboard', method: 'POST',
       data: jsonBody({ id: this.data.clubId, sortBy }), header: jsonHeader(),
       success(res) {
+        if (seq !== that._leaderboardSeq) return;
         if (res.code != '200') {
           that._leaderboardRows = null;
           that.setData({ leaderboard: [], leaderboardLoaded: true, leaderboardError: (res && res.msg) || '榜单没能加载出来' });
@@ -1780,7 +1896,7 @@ Page({
         that.setData({ leaderboard: that.composeLeaderboard(), leaderboardLoaded: true, leaderboardError: '', leaderboardEmptyTitle: leaderboardEmptyTitle(sortBy) });
       },
       // E-09(2026-09-16):失败渲染成「还没有人通关」= 把不知道说成没有。留错误态+重试。
-      fail() { that._leaderboardRows = null; that.setData({ leaderboardLoaded: true, leaderboardError: '网络异常，榜单加载失败' }); },
+      fail() { if (seq !== that._leaderboardSeq) return; that._leaderboardRows = null; that.setData({ leaderboardLoaded: true, leaderboardError: '网络异常，榜单加载失败' }); },
     });
   },
 
@@ -1817,6 +1933,8 @@ Page({
     const shownDuration = item.zeroFill ? '0分' : durationText;
     if (sortBy === 'mileage') primaryText = mileageText;
     else if (sortBy === 'duration') primaryText = shownDuration;
+    else if (sortBy === 'pace') primaryText = leaderboardSorts.paceText(item.pace);
+    else if (leaderboardSorts.countKey(sortBy)) primaryText = leaderboardSorts.countText(item, sortBy);
     else primaryText = fx(item.score) + ' 分';
     return Object.assign({}, item, { durationText: shownDuration, mileageText, primaryText });
   },

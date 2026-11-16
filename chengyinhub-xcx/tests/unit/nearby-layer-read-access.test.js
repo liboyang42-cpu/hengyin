@@ -149,6 +149,19 @@ for (const stopped of ['_hidden', '_unloaded']) {
     h.page[stopped] = true; h.page.retryNearby();
     assert.equal(h.requests.length, 6);
   });
+
+  // T6 SEC-14(合并 master #842 后改写):重试不再登录,所以由 app.firstLogin 发起真实登录;
+  // 登录在页面 stopped 之后才完成,也不能重拉附近图层。
+  test('real login finishing after ' + stopped + ' cannot reload nearby layers', async () => {
+    const h = mount(''); h.page.refresh(h.page.data.center); assert.equal(h.requests.length, 3); let finish;
+    h.app.getSessionManager = () => createSessionManager({ session: h.session,
+      wxLogin: async () => ({ code: 'fixture-code' }), exchangeCode: () => new Promise(resolve => { finish = resolve; }),
+    });
+    const pending = h.app.firstLogin(); await settled(); h.page[stopped] = true; h.page.retryNearby();
+    finish({ token: 'fixture-login', data: { id: '7', userType: 1, role: 'player' } }); await pending; await settled();
+    // SEC-14:新登录后的 18 周岁状态读取不是附近图层
+    assert.equal(h.requests.filter(r => !r.url.endsWith('/api/compliance/age/status')).length, 3);
+  });
 }
 
 for (const generator of ['team', 'self']) {

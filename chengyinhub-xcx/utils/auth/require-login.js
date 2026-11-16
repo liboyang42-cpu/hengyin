@@ -124,7 +124,10 @@ function createRequireLogin(deps) {
       // firstLogin 自带失败 toast(微信登录失败/网络异常),这里不再重复提示。
       return Promise.resolve(app.firstLogin()).then(function (r) {
         if (!r || !r.ok || typeof r.isCurrentSession === 'function' && !r.isCurrentSession()) return { ok: false };
-        return resultFor(app);
+        // SEC-14:新账号先答完 18 周岁再恢复原动作;未确认 = 已退出登录,原动作不执行。
+        const age = typeof app.awaitAgeCheck === 'function' ? app.awaitAgeCheck() : true;
+        return Promise.resolve(age).then(function (passed) { return passed === false ? { ok: false } : resultFor(app); },
+          function () { return resultFor(app); });
       }, function () { return { ok: false }; });
     }).then(function (result) { if (pending === attempt) pending = null; return result; },
       function () { if (pending === attempt) pending = null; return { ok: false }; });

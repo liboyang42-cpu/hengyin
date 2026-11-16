@@ -350,6 +350,7 @@ Page({
     else if (action === 'verifyRecords') this.goVerifyRecords();
     else if (action === 'bundleReservations') this.goBundleReservations();
     else if (action === 'payoutAccount') this.goPayoutAccount();
+    else if (action === 'plans') this.goPlans();
   },
 
   goManageCoupon() {
@@ -376,6 +377,11 @@ Page({
     if (!this.data.merchantAccess.canReadFinance || this._navigating) return; // 跳转中不响应连点
     this._navigating = true;
     wx.navigateTo({ url: '/pages/merchant/payout-account/index', complete: () => { this._navigating = false; } });
+  },
+  goPlans() {
+    if (!this.data.merchantAccess.canReadBasic || this._navigating) return; // 跳转中不响应连点
+    this._navigating = true;
+    wx.navigateTo({ url: '/pages/merchant/plans/index', complete: () => { this._navigating = false; } });
   },
   // 今日待办(待核销/扫码待确认/待处理):后端 /api/merchant/todo-summary
   loadTodo(dataEpoch = this._dataEpoch || 0) {
