@@ -27,6 +27,26 @@ public class ExternalGameMonetizationAdminController extends BaseController {
         this.monetization = monetization;
     }
 
+    /** W7 GAME-9: result keys are issued by creators; operators can see their state and revoke one. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.chengyinhub.business.externalgame.ExternalGameResultKeyService resultKeys;
+
+    @Operation(summary = "外部游戏成绩密钥状态（不含密钥本身）")
+    @PreAuthorize("@ss.hasPermi('business:externalgame:resultkey')")
+    @GetMapping("/{gameId}/result-key")
+    public AjaxResult resultKeyStatus(@PathVariable String gameId) {
+        if (resultKeys == null) return AjaxResult.error("成绩密钥服务不可用");
+        return success(resultKeys.status(gameId));
+    }
+
+    @Operation(summary = "吊销外部游戏成绩密钥（创作者可重新领取）")
+    @PreAuthorize("@ss.hasPermi('business:externalgame:resultkey')")
+    @PostMapping("/{gameId}/result-key/revoke")
+    public AjaxResult revokeResultKey(@PathVariable String gameId) {
+        if (resultKeys == null) return AjaxResult.error("成绩密钥服务不可用");
+        return success(Map.of("revoked", resultKeys.revoke(gameId, getUsername())));
+    }
+
     @Operation(summary = "外部游戏变现配置与待审列表")
     @PreAuthorize("@ss.hasPermi('business:audit:list')")
     @GetMapping("/list")
