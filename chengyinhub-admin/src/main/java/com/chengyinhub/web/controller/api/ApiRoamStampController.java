@@ -377,8 +377,9 @@ public class ApiRoamStampController extends BaseController {
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         data.put("list", safeRows);
         data.put("total", roamStampMapper.countByMember(memberId));
-        // GAME-12: places stamped (place stamps only); free photos stay in `total`.
-        data.put("placesStamped", roamStampMapper.countPlacesByMember(memberId));
+        // GAME-12: places stamped (place stamps only); free photos stay in `total`. Sent only while place stamps are on,
+        // so the app never shows a "0 places" line for a feature that is switched off.
+        if (placeStampEnabled) data.put("placesStamped", roamStampMapper.countPlacesByMember(memberId));
         data.put("pageNum", num);
         data.put("pageSize", size);
         return success(data);
