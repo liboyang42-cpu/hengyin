@@ -23,6 +23,16 @@ const COPY = {
   ownerOnly: '只有店主可以开通套餐',
   ordered: '已提交开通申请',
   orderedDesc: '平台确认收款后为本店开通，订单号',
+  // W7 MERCHANT-12:订单告诉店主怎么付
+  payTitle: '付款方式',
+  payAmount: '应付金额',
+  payPayee: '收款方',
+  payBank: '开户行',
+  payAccount: '收款账号',
+  payReference: '转账备注',
+  payDeadline: '请在此日期前付款',
+  payDesc: '转账时请在备注里填写订单号，平台核对到账后为本店开通。',
+  payPending: '平台确认收款后为本店开通。',
 };
 const CODES = ['FREE', 'BASIC', 'PRO', 'PER_VISIT'];
 
@@ -79,6 +89,7 @@ function shapePage(data) {
     currentName: currentPlan ? currentPlan.name : (plans.filter(p => p.current)[0] || {}).name || currentCode,
     periodEnd: dayText(current.periodEnd),
     salesOpen,
+    pendingOrder: shapeOrder(data.pendingOrder),
   };
 }
 
@@ -91,9 +102,36 @@ function newRequestId(now, random) {
   return ('mp_' + t + '_' + r).slice(0, 64);
 }
 
-function shapeOrder(data) {
-  if (!data || typeof data !== 'object' || typeof data.orderNo !== 'string' || !data.orderNo) return null;
-  return { orderNo: data.orderNo, planCode: data.planCode, status: data.status };
+function text(value, max) {
+  return typeof value === 'string' && value.trim() && value.trim().length <= max ? value.trim() : '';
 }
 
-module.exports = { COPY, shapePage, shapePlan, priceText, dayText, newRequestId, shapeOrder };
+// 服务端给的付款信息(金额、收款方、账号、备注=订单号、截止日)。缺一项关键信息就不展示,页面只说「平台确认收款后开通」。
+function shapePayment(raw, orderNo) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const fen = Number(raw.amountFen);
+  const payee = text(raw.payee, 64);
+  const account = text(raw.account, 64);
+  const reference = text(raw.reference, 64);
+  if (!Number.isInteger(fen) || fen <= 0 || !payee || !account || reference !== orderNo) return null;
+  return {
+    amountText: yuan(fen / 100),
+    payee,
+    bank: text(raw.bank, 64),
+    account,
+    reference,
+    deadline: dayText(raw.deadline),
+  };
+}
+
+function shapeOrder(data) {
+  if (!data || typeof data !== 'object' || typeof data.orderNo !== 'string' || !data.orderNo) return null;
+  return {
+    orderNo: data.orderNo,
+    planCode: data.planCode,
+    status: data.status,
+    payment: data.status === 'PENDING' ? shapePayment(data.paymentInstructions, data.orderNo) : null,
+  };
+}
+
+module.exports = { COPY, shapePage, shapePlan, priceText, dayText, newRequestId, shapeOrder, shapePayment };
