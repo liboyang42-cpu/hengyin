@@ -6,6 +6,8 @@ public enum LocationTrustKind {
     CHECKIN(true),
     /** /api/roam/poi/discover: POI found, credited at finish. */
     POI_DISCOVER(true),
+    /** GAME-4 /api/city/nodes/{id}/complete: the place check-in both clients use (reward log, coupon queue). */
+    CITY_NODE(true),
     /** /api/roam/shop/visit: shop counted for the session and the shop-streak medal. */
     SHOP_VISIT(true),
     /** /api/roam/reveal: fog tiles. */

@@ -1191,20 +1191,44 @@ Page({
       const reveals = (this._historyReveals || []).concat(this._reveals || []);
       if (!isPointRevealed({ lat: d.latitude, lng: d.longitude }, reveals, REVEAL_M)) return;
     }
-    // CITY-5:只用真实定位(不用地图中心,也不拿地点坐标冒充),并带上精度 hAcc,地主才能收到租金。
-    const c = this._realAnchor;
-    if (!c || c.lat == null || c.lng == null) { cyToast('先开启定位再点亮'); return; }
+    // GAME-4:玩家位置只取设备真实定位(走路时 30 秒内的那次,否则现取一次);拿不到就不点亮,
+    // 不再退回地图中心或地点自己的坐标 —— 那等于「看哪儿就在哪儿」。
+    this._realCheckinFix().then((fix) => {
+      if (!fix) { cyToast('需要打开定位才能点亮这里'); return; }
+      this._postPoiCheckin(d, fix);
+    });
+  },
+
+  /** GAME-4:真实设备定位 { lat, lng, accuracy, at };拿不到 resolve(null)。 */
+  _realCheckinFix() {
+    const last = this._lastRealFix;
+    if (last && Date.now() - last.at < 30000) return Promise.resolve(last);
+    return new Promise((resolve) => {
+      if (typeof wx.getLocation !== 'function') { resolve(null); return; }
+      wx.getLocation({
+        type: 'gcj02',
+        isHighAccuracy: true,
+        success: (loc) => resolve(loc && loc.latitude != null && loc.longitude != null
+          ? { lat: loc.latitude, lng: loc.longitude, accuracy: loc.accuracy, at: Date.now() } : null),
+        fail: () => resolve(null),
+      });
+    });
+  },
+
+  _postPoiCheckin(d, fix) {
     const body = {
       name: d.name || '',
       poiLat: String(d.latitude),
       poiLng: String(d.longitude),
-      curLat: String(c.lat),
-      curLng: String(c.lng),
+      curLat: String(fix.lat),
+      curLng: String(fix.lng),
+      locTimestamp: String(fix.at),
     };
-    if (this._realAccuracy != null) body.hAcc = String(this._realAccuracy);
+    if (fix.accuracy != null && isFinite(fix.accuracy)) body.locAccuracy = String(fix.accuracy);
     req('/api/roam/checkin', 'POST', body).then((res) => {
       const r = (res && res.data) || {};
       if (r.tooFar) { cyToast('离得有点远，走近点'); return; }
+      if (r.uncredited) { cyToast(r.trustCode === 'FIX_MISSING' ? '需要打开定位才能点亮这里' : '这次没有记上，到了再试'); return; }
       if (r.participating && r.poiId) {
         // S5:打卡后服务端给出这家店今天的小游戏;在据点详情里玩。没配好时如实说明,不挡打卡。
         const sg = r.shopGame || {};
@@ -1214,7 +1238,7 @@ Page({
         return;
       }
       if (r.participating === false) {
-        cyToast(r.firstVisit ? ('+' + r.xp + ' 探索值 · 点亮' + (d.name || '')) : '已点亮过');
+        cyToast(r.firstVisit ? (r.xp > 0 ? ('+' + r.xp + ' 探索值 · 点亮' + (d.name || '')) : ('点亮' + (d.name || '') + ' · 今天探索值已满')) : '已点亮过');
         // 首亮提示：只有这条分支才有 firstVisit —— participating===true 那支(上面)
         // 已 navigateTo 跳走,在那里冒泡等于用户看不见却白扣配额+发 impression(埋点谎报)。
         // 去重键用坐标:bindpoitap 的 detail 只有 {name,latitude,longitude},没有任何 id。
@@ -4264,6 +4288,8 @@ Page({
     const now = Date.now();
     const sample = acceptRoamLocation(loc, null, now);
     if (!sample) return;
+    // GAME-4:点亮地点用的真实定位(30 秒内可复用),不再拿地图中心或地点自己的坐标冒充玩家位置。
+    this._lastRealFix = { lat: loc.latitude, lng: loc.longitude, accuracy: loc.accuracy, at: now };
     // BL-02 静止提示包含有效的 <3m 点，仅用于 HUD，不改变轨迹过滤。
     this._syncIdle(sample.point, now);
     const accepted = acceptRoamLocation(loc, this._realAnchor, now);

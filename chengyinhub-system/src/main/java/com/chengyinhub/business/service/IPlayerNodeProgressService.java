@@ -24,6 +24,16 @@ public interface IPlayerNodeProgressService
     /** 拍照一律机审:存量待审行 0→1 条件更新;1=本次为唯一一次完成,0=已完成/并发已处理(不得发奖)。 */
     int markPhotoMachineApproved(Long id);
 
+    /** GAME-2: this completion happened away from the stop (prizes capped to XP and badges). */
+    default int markRemoteCompletion(Long id) {
+        return 0;
+    }
+
+    /** GAME-2: completed stops of one run finished away from the stop. */
+    default int countRemoteCompletions(Long memberId, Long activityId, Long topicId, String playInstanceId) {
+        return 0;
+    }
+
     Integer selectPuzzlePersonalBest(Long memberId, Long topicId);
 
     /**

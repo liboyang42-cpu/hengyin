@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -349,7 +350,90 @@ class ApiPlayGpsGeofenceValidationTest
         AjaxResult result = arrive(NODE_LNG, "31.23265");   // ≈ 250m
 
         assertEquals(200, result.get("code"));
+        // GAME-2(业主 2026-11-16):开局 300 米内照常开局并完成,但 250 米外不算「在这一站」,只发探索值与徽章
+        verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), any());
+        verify(progressionService).onNodeDone(PLAYER);
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> data = (java.util.Map<String, Object>) result.get("data");
+        assertEquals("XP_BADGE_ONLY", data.get("rewardCeiling"));
+        assertEquals("REMOTE", data.get("rewardCeilingReason"));
+        verify(fixture(IShopDayProofService.class, "shopDayProofService"))
+                .markStartVerified(eq(PLAYER), eq(ACTIVITY), eq(TOPIC), eq(NODE));
+    }
+
+    // ---- GAME-2 ArriveRemoteRewardPolicy:进度免费,奖品要到场(80 米) ----
+
+    /** 生产里 insert 回填自增 id;远程完成要按 id 记一笔。 */
+    private void progressInsertAssignsId()
+    {
+        when(progressService.insertPlayerNodeProgress(any())).thenAnswer(inv -> {
+            ((PlayerNodeProgress) inv.getArgument(0)).setId(900L);
+            return 1;
+        });
+    }
+
+    @Test
+    void startedRunWithoutFixCompletesButOnlyPaysXpAndBadges()
+    {
+        progressInsertAssignsId();
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
+
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                null, null, null, null, null);
+
+        assertEquals(200, result.get("code"), "开局之后不在现场也照常完成(2026-11-13 规则不变)");
+        verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), any());
+        verify(progressService).markRemoteCompletion(any());
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> data = (java.util.Map<String, Object>) result.get("data");
+        assertEquals("XP_BADGE_ONLY", data.get("rewardCeiling"));
+        assertNull(data.get("medalRank"), "不在现场不抢名次奖牌");
+        assertNull(data.get("pointsEarned"));
+        verify(fixture(IShopDayProofService.class, "shopDayProofService"), never())
+                .markStartVerified(any(), any(), any(), any());
+    }
+
+    @Test
+    void startedRunWithFixWithinEightyMetresPaysInFull()
+    {
+        progressInsertAssignsId();
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
+
+        AjaxResult result = arrive(NODE_LNG, "31.2310");   // ≈ 67m
+
+        assertEquals(200, result.get("code"));
         verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
+        verify(progressService, never()).markRemoteCompletion(any());
+    }
+
+    @Test
+    void startedRunWithFixTwoKilometresAwayIsCapped()
+    {
+        progressInsertAssignsId();
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
+
+        AjaxResult result = arrive(NODE_LNG, "31.2484");   // ≈ 2km
+
+        assertEquals(200, result.get("code"));
+        verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), any());
+        verify(progressService).markRemoteCompletion(any());
+    }
+
+    @Test
+    void remoteRewardSwitchFullKeepsThePreviousBehaviour()
+    {
+        progressInsertAssignsId();
+        com.chengyinhub.system.service.ISysConfigService config = mock(com.chengyinhub.system.service.ISysConfigService.class);
+        when(config.selectConfigByKey("play.arrive.remote_reward_policy")).thenReturn("FULL");
+        com.chengyinhub.web.controller.api.PlayNodeAccessTestFixtures.setField(controller, "sysConfigService", config);
+        when(fixture(IShopDayProofService.class, "shopDayProofService").runStarted(eq(PLAYER), eq(ACTIVITY), any())).thenReturn(true);
+
+        AjaxResult result = BasicPlayCommandFixtures.arrive(controller, String.valueOf(ACTIVITY), String.valueOf(NODE),
+                null, null, null, null, null);
+
+        assertEquals(200, result.get("code"));
+        verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
+        verify(progressService, never()).markRemoteCompletion(any());
     }
 
     @Test
@@ -431,7 +515,9 @@ class ApiPlayGpsGeofenceValidationTest
                 null, null, null, null, null, null);
 
         assertEquals(200, result.get("code"), "已开局的后续站解开即完成");
-        verify(pointsAwardService).award(PLAYER, 12L, NODE, "节点打卡");
+        // GAME-2:不带定位 = 不在现场,完成照常,积分不发
+        verify(pointsAwardService, never()).award(anyLong(), anyLong(), anyLong(), any());
+        verify(progressionService).onNodeDone(PLAYER);
     }
 
     @Test

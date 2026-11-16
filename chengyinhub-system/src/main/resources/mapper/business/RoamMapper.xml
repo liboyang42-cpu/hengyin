@@ -378,6 +378,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select count(*) from roam_fog_tile where member_id = #{memberId} and date(revealed_at) = curdate()
     </select>
 
+    <!-- GAME-4:首访点亮探索值每日上限(与格子同口径按 curdate() 自然日)。idx_exp_earned_member -->
+    <select id="sumVisitXpToday" resultType="int">
+        select coalesce(sum(exp_value - revoked_exp), 0) from member_exp_earned
+        where member_id = #{memberId} and reason = '点亮地点' and earned_at &gt;= curdate()
+    </select>
+
     <select id="countTilesEverByMember" resultType="int">
         select count(*) from roam_fog_tile where member_id = #{memberId}
     </select>

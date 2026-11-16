@@ -1382,6 +1382,16 @@ public class AdvancedGameRuntimeServiceImpl implements IAdvancedGameRuntimeServi
             reasons.add("photoCheck:FALLBACK");
         }
         if (config.path("scan").path("enabled").asBoolean(false)) reasons.add("scan:TASK_CODE_MATCH");
+        // GAME-3(奖励跟着证据走):服务端判不了的玩法只记进度、探索值与徽章。
+        // 拍照题(qa SHOT)交任意照片即算对;刮刮卡进度是手机自报;限时打字的时限按手机报的用时判;
+        // 计分的静默挑战「开始→马上结束」就过。
+        if (config.path("qa").path("enabled").asBoolean(false)
+                && "SHOT".equals(config.path("qa").path("mode").asText(""))) reasons.add("qa:PHOTO_UNJUDGED");
+        if (config.path("scratchCard").path("enabled").asBoolean(false)) reasons.add("scratchCard:SELF_REPORTED");
+        if (config.path("typeIn").path("enabled").asBoolean(false)
+                && config.path("typeIn").path("seconds").asLong(0L) > 0L) reasons.add("typeIn:DEVICE_TIME");
+        if (config.path("silentOrder").path("enabled").asBoolean(false)
+                && config.path("silentOrder").path("scored").asBoolean(false)) reasons.add("silentOrder:HONOR");
         // 跳过只是辅助完成,不是任何证明:奖励同样降为探索值+徽章。
         if (isSkipped(state)) reasons.add("skip:ASSISTED");
         if (state != null && state.path("predict").path("skipped").asBoolean(false)) reasons.add("predict:SKIPPED_CLOSED");

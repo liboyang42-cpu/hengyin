@@ -133,7 +133,9 @@ public class DuelService {
         Date done = run == null ? null : TreasureHuntService.asDate(run.get("completedAt"));
         if (done == null) return null;
         if (deadline != null && done.getTime() > deadline.getTime()) return null;
-        long from = Math.max(start.getTime(), TreasureHuntService.asDate(run.get("startedAt")) != null ? TreasureHuntService.asDate(run.get("startedAt")).getTime() : start.getTime());
+        // GAME-11: only runs started after acceptance count (query), so the time is the run's own start to its end.
+        Date startedAt = TreasureHuntService.asDate(run.get("startedAt"));
+        long from = startedAt != null ? startedAt.getTime() : start.getTime();
         long seconds = Math.max(1L, (done.getTime() - from) / 1000L);
         return new Object[]{(int) Math.min(Integer.MAX_VALUE, seconds), done};
     }
@@ -181,6 +183,12 @@ public class DuelService {
         out.put("acceptedAt", duel.get("acceptedAt"));
         out.put("expiresAt", duel.get("expiresAt"));
         out.put("mySeconds", duel.get(mineIsChallenger ? "challengerSeconds" : "opponentSeconds"));
+        // GAME-11: say why a finished run did not count (a stop was finished away from it, GAME-2).
+        if (out.get("mySeconds") == null && duel.get("acceptedAt") != null
+                && (ACTIVE.equals(duel.get("status")) || EXPIRED.equals(duel.get("status")))) {
+            out.put("myRemoteRun", remoteRun(viewer, TreasureHuntService.asLong(duel.get("topicId")),
+                    TreasureHuntService.asDate(duel.get("acceptedAt"))));
+        }
         // The other side's time is shown only once the duel is decided, so nobody plays against a known target.
         boolean decided = DONE.equals(duel.get("status")) || EXPIRED.equals(duel.get("status"));
         out.put("peerFinished", duel.get(mineIsChallenger ? "opponentDoneAt" : "challengerDoneAt") != null);
@@ -190,6 +198,15 @@ public class DuelService {
                 : (result.equals("CHALLENGER") == mineIsChallenger) ? "WON" : "LOST");
         out.put("canRespond", PENDING.equals(duel.get("status")) && !mineIsChallenger && !expired(duel));
         return out;
+    }
+
+    private boolean remoteRun(Long memberId, Long topicId, Date since) {
+        try {
+            return since != null && mapper.countRemoteRunsSince(memberId, topicId, since) > 0;
+        } catch (RuntimeException e) {
+            log.warn("duel remote-run check failed reason={}", e.getClass().getSimpleName());
+            return false;
+        }
     }
 
     private String nick(Long memberId) {

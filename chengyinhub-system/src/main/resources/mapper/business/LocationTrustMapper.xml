@@ -54,11 +54,21 @@
     </insert>
 
     <select id="selectLastCleanFix" resultType="java.util.HashMap" useCache="false">
-        select lat, lng, received_at as receivedAt, client_ts as clientTs
+        select lat, lng, received_at as receivedAt, client_ts as clientTs, accuracy_m as accuracyM
         from location_trust_fix
         where member_id = #{memberId} and received_at &gt;= #{since}
           and decision = 'ACCEPT' and (simulated is null or simulated = 0)
         order by received_at desc, id desc
+        limit 1
+    </select>
+
+    <!-- GAME-4 rolling window: the earliest clean fix in the window (idx_member_received). -->
+    <select id="selectFirstCleanFix" resultType="java.util.HashMap" useCache="false">
+        select lat, lng, received_at as receivedAt, client_ts as clientTs, accuracy_m as accuracyM
+        from location_trust_fix
+        where member_id = #{memberId} and received_at &gt;= #{since}
+          and decision = 'ACCEPT' and (simulated is null or simulated = 0)
+        order by received_at asc, id asc
         limit 1
     </select>
 
