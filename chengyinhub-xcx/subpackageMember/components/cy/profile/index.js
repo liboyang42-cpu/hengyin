@@ -86,6 +86,13 @@ function req(url, data, header) {
   });
 }
 
+// The merchant preview reads chapter-application/mine, which requires COOP_MANAGE.
+function merchantProjectsRestricted(data) {
+  var access = data.merchantAccess || {};
+  return data.isMerchantView && data.merchantAccessState === 'ready'
+    && access.active && !access.canManageCoop;
+}
+
 function isAuthFailure(res) {
   return !!res && (res.code == 401 || res.code == 2);
 }
@@ -1088,6 +1095,7 @@ Component({
       var access = normalizeMerchantAccess(res.data);
       that._viewerIsMerchant = access.active;
       var viewChanged = access.active !== that.data.isMerchantView;
+      var projectAccessChanged = access.canManageCoop !== that.data.merchantAccess.canManageCoop;
       // G-5:本人商家身份先用 access/me 里的店名/Logo 顶上,封面等 merchant/info 回读
       that._selfMerchant = access.active ? Object.assign({}, that._selfMerchant || {}, access.merchant) : null;
       that.setData({
@@ -1101,7 +1109,7 @@ Component({
       if (that.data.hostSelf) applyTheme(access.active ? 'light' : 'dark');
       if (access.active) that.loadSelfMerchant();
       // M-25:视角在请求途中翻了 ⇒ 我的项目换成对应来源(商家=承接进度),订单段商家视角不出
-      if (viewChanged) { that.loadProjectPreview(); if (!access.active) that.loadOrderPreview(); }
+      if (viewChanged || projectAccessChanged) { that.loadProjectPreview(); if (!access.active) that.loadOrderPreview(); }
     });
   },
 
@@ -1601,6 +1609,11 @@ Component({
       that.setData({ projectPreviewList: [], projectErr: false, projectAuthError: false });
     }
     that._projectPreviewMemberId = memberId;
+    if (merchantProjectsRestricted(that.data)) {
+      that._projectPendingRequestId = (that._projectPendingRequestId || 0) + 1;
+      that.setData({ projectPreviewList: [], projectErr: false, projectAuthError: false, projectPendingCount: 0 });
+      return Promise.resolve();
+    }
     // M-25(2026-10-27):商家视角的「我的项目」= 作为承接方报名的主题进度(章节承接申请),不是自己发布的路线
     if (that.data.isMerchantView) {
       return req('/api/merchant/chapter-application/mine', {}).then(function (res) {
@@ -2262,6 +2275,10 @@ Component({
     var profileEpoch = that._followEpoch || 0;
     if (that._projectPendingMemberId !== undefined && that._projectPendingMemberId !== memberId) that.setData({ projectPendingCount: 0 });
     that._projectPendingMemberId = memberId;
+    if (merchantProjectsRestricted(that.data)) {
+      that.setData({ projectPendingCount: 0 });
+      return Promise.resolve();
+    }
     return req('/api/publish/home', {}).then(function (res) {
       if (!that._currentProfileRead(read, res)) return;
       if (that._profileAttached === false || requestId !== that._projectPendingRequestId
@@ -2365,7 +2382,7 @@ Component({
   },
   // M-25:商家视角没有订单页可看,任何进订单的入口都改去「我的项目」
   goOrder: function () { if (this.data.isMerchantView) { this.goProject(); return; } if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } }); },
-  goProject: function () { if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index' + (this.data.isMerchantView ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } }); },
+  goProject: function () { if (merchantProjectsRestricted(this.data)) return; if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index' + (this.data.isMerchantView ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } }); },
   onOrderPreviewTap: function (e) {
     if (this.data.isMerchantView) { this.goProject(); return; }
     var id = e.currentTarget.dataset.id;

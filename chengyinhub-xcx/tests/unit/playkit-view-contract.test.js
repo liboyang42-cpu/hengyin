@@ -347,12 +347,45 @@ function tagsToBound(tags) {
   return out
 }
 
-/** 某个玩法段:分发器绑了、pickPlayKit 没产出的那些属性 */
-function unfedOf(section, bound) {
+/** 与章节契约相同的真实 Page 捕获；规则必须走 normNode → onAdvancedSession。 */
+function pageProducedQaKit() {
+  const file = require.resolve('../../pages/play/index.js')
+  const saved = { Page: global.Page, wx: global.wx, getApp: global.getApp, module: require.cache[file] }
+  let definition
+  global.Page = config => { definition = config }
+  global.getApp = () => ({ globalData: {}, getUserID: () => 1 })
+  global.wx = { getStorageSync: () => null,
+    getSystemInfoSync: () => ({ windowWidth: 375, statusBarHeight: 20 }),
+    getMenuButtonBoundingClientRect: () => ({ top: 20, height: 32 }) }
+  try {
+    delete require.cache[file]
+    require(file)
+    const page = Object.assign({}, definition, { data: JSON.parse(JSON.stringify(definition.data)) })
+    page.setData = (patch, callback) => { Object.assign(page.data, patch); if (callback) callback() }
+    const node = page.normNode({ nodeId: 12, name: '测试任务', validationMethod: 1,
+      ruleInstructions: '公开测试资料（运营备注：内部备注）',
+      advancedConfigJson: JSON.stringify({ qa: { enabled: true, mode: 'TYPE' } }) }, 0, 1)
+    page.data.nodes = [node]
+    page.data.advancedPlay = { show: true, node }
+    page.data.helpPanel.nodeId = '12'
+    page.onAdvancedSession({ detail: { sessionId: 's1', nodeId: 12, version: 1,
+      playKit: { qa: { mode: 'TYPE', title: 't' } } } })
+    return page.data.playKit.kit
+  } finally {
+    for (const key of ['Page', 'wx', 'getApp']) {
+      if (saved[key] === undefined) delete global[key]; else global[key] = saved[key]
+    }
+    if (saved.module) require.cache[file] = saved.module; else delete require.cache[file]
+  }
+}
+
+/** 某个玩法段:分发器绑了、纯投影和实际 Page 都没产出的属性 */
+function unfedOf(section, bound, additionalProducers = []) {
   const kit = pickPlayKit(
     { sessionId: 's1', nodeId: 12, version: 1, playKit: { [section]: { title: 't' } } }, at(12, 0))
   assert.ok(kit, section + ' 段还不出 kit')
-  return { type: kit.type, missing: (bound[kit.type] || []).filter((key) => !(key in kit)) }
+  return { type: kit.type, missing: (bound[kit.type] || []).filter((key) =>
+    !(key in kit) && !additionalProducers.some(producer => producer && producer.type === kit.type && key in producer)) }
 }
 
 /* 有意留空的:kit 自己有回落,不是缺口。 */
@@ -377,10 +410,13 @@ test('★分发器绑的 kit.X 必须有人产出 —— 没产出就是那行�
   const catalog = require('../../pages/publish/utils/publish/node-game-catalog.js')
   const bound = boundKeysByType()
 
+  const pageQa = pageProducedQaKit()
+  assert.equal(pageQa.type, 'qa')
+  assert.equal(pageQa.instructions, '公开测试资料', '实际 Page 必须产出当前节点去运营备注后的规则')
   const gaps = {}
   /* check 段走 Encounter 不回 kit,豁免写在目录里(见 PLAYKIT_SECTIONS 那条负控)。 */
   for (const section of catalog.PLAYKIT_SECTIONS) {
-    const found = unfedOf(section, bound)
+    const found = unfedOf(section, bound, section === 'qa' ? [pageQa] : [])
     if (found.missing.length) gaps[found.type] = found.missing
   }
 
@@ -403,6 +439,12 @@ test('负控:给分发器多绑一个没人产出的属性,上一条必须判红
     'close-at-hour="{{kit.closeAtHour}}" made-up="{{kit.thisFieldDoesNotExist}}" />'])
   assert.deepEqual(unfedOf('predict', bound).missing, ['thisFieldDoesNotExist'],
     '负控构造失败:多绑的属性没被判成缺失')
+  const qaBound = tagsToBound(['<cy-playkit-qa wx:elif="{{kit.type === \'qa\'}}" ' +
+    'instructions="{{kit.instructions}}" made-up="{{kit.thisFieldDoesNotExist}}" />'])
+  assert.deepEqual(unfedOf('qa', qaBound, [pageProducedQaKit()]).missing, ['thisFieldDoesNotExist'],
+    '真实 Page 只能补自己产出的字段，不能放行 QA 任意新绑定')
+  assert.deepEqual(unfedOf('qa', qaBound).missing, ['instructions', 'thisFieldDoesNotExist'],
+    '未采集 Page 时必须仍识别规则字段缺口')
 })
 
 test('负控:采集函数读的是真分发器,读空了就不许放行', () => {

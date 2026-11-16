@@ -180,6 +180,7 @@
           retry="重试" bind:retry="reloadOrders" />
         </block>
 
+        <block wx:if="{{!isMerchantView || merchantAccessState !== 'ready' || !merchantAccess.active || merchantAccess.canManageCoop}}">
         <!-- C7:唯一管理入口(原「我的模板」section 并入我的项目页的模板 tab);角标=未通过+审核中 -->
         <view class="pc-sec-head" aria-label="{{projectErr ? (projectAuthError ? '项目登录状态失效，请重新进入' : '项目加载失败，请下拉刷新重试') : ''}}">
           <view class="pc-sec-left">
@@ -208,6 +209,8 @@
           </view>
           </view>
         </scroll-view>
+        </block>
+
         </block>
 
         <!-- qx-b5 §18 A/B:视频悬赏是创作者作品的推广投稿,跟在「我的项目」之后 -->

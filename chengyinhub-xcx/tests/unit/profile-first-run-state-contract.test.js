@@ -926,3 +926,82 @@ test('P-22(2026-11-02 业主):「累计打卡 N 处」照读服务端 checkinPla
   assert.equal(missing.data.profileMetricState, 'ready')
   assert.equal(missing.data.exploreStat.places, 0)
 })
+
+// Native CHECKIN reproduction: a valid merchant identity does not grant cooperation projects.
+function merchantProjectProfile(permissions, roleCode = 'MERCHANT_CHECKIN') {
+  const component = loadProfile()
+  component.data.isMerchantView = true
+  component.data.merchantAccessState = 'ready'
+  component.data.merchantAccess = require('../../utils/merchant-access-policy.js').normalizeMerchantAccess({
+    active: true, merchant: { id: 31 }, roleCode, permissions,
+  })
+  return component
+}
+
+for (const method of ['loadProjectPreview', 'loadProjectPending']) test(`CHECKIN个人页：${method}不请求无合作权限项目，也不显示旧错误或角标`, async () => {
+  const component = merchantProjectProfile(['merchant:basic:read', 'merchant:verify', 'merchant:verify:record:read'])
+  component.data.projectPreviewList = [{ id: 88 }]
+  component.data.projectPendingCount = 9
+  component.data.projectErr = true
+  const pending = component[method]()
+  const sent = requests.slice()
+  for (const request of sent) request.success({ code: 403, data: null })
+  await pending
+  assert.equal(sent.length, 0)
+  assert.equal(component.data.projectPendingCount, 0)
+  if (method === 'loadProjectPreview') {
+    assert.deepEqual(component.data.projectPreviewList, [])
+    assert.equal(component.data.projectErr, false)
+  }
+})
+
+test('CHECKIN个人页：隐藏管理项目区且旧点击不能进入管理页', () => {
+  const component = merchantProjectProfile(['merchant:basic:read'])
+  const previousWx = global.wx
+  const navigation = []
+  global.wx = { navigateTo: options => navigation.push(options.url) }
+  try { component.goProject() } finally { global.wx = previousWx }
+  assert.deepEqual(navigation, [])
+  const wxml = read(PROFILE_WXML)
+  assert.match(wxml, /<block wx:if="\{\{[^\n]*merchantAccess\.canManageCoop[^\n]*\}\}">\s*<!-- C7:/)
+})
+
+for (const role of ['MERCHANT_OWNER', 'MERCHANT_MANAGER']) {
+  for (const response of [{ code: 200, data: [] }, { code: 200, data: null }, { code: 200, data: [null] }, { code: 403, data: null }, { code: 500, data: null }]) {
+    test(`${role}项目预览保留合法空列表与真正失败区分：${JSON.stringify(response)}`, async () => {
+      const component = merchantProjectProfile(['merchant:coop:manage'], role)
+      const pending = component.loadProjectPreview()
+      assert.equal(requests.length, 1)
+      assert.equal(requests[0].url, '/api/merchant/chapter-application/mine')
+      requests[0].success(response)
+      await pending
+      assert.equal(component.data.projectErr, response.code !== 200 || response.data === null || response.data[0] === null)
+    })
+  }
+}
+
+test('商家权限读取失败不是无项目，原网络错误仍然可见', async () => {
+  const component = merchantProjectProfile([])
+  component.data.merchantAccessState = 'error'
+  const pending = component.loadProjectPreview()
+  assert.equal(requests.length, 1)
+  requests[0].fail({ errMsg: 'network timeout' })
+  await pending
+  assert.equal(component.data.projectErr, true)
+})
+
+test('同商家合作权限撤销：旧项目和角标成功回包不能重新出现', async () => {
+  const component = merchantProjectProfile(['merchant:coop:manage'], 'MERCHANT_MANAGER')
+  component.data.hostSelf = false // This read-contract test does not mount the native tab theme.
+  const preview = component.loadProjectPreview(), previewRequest = requests.at(-1)
+  const badge = component.loadProjectPending(), badgeRequest = requests.at(-1)
+  const access = component.loadMerchantAccess(), accessRequest = requests.at(-1)
+  accessRequest.success({ code: 200, data: { active: true, merchant: { id: 31 }, roleCode: 'MERCHANT_CHECKIN', permissions: ['merchant:basic:read', 'merchant:verify'] } })
+  await access
+  previewRequest.success({ code: 200, data: [{ id: 3, topicId: 9, status: 0 }] })
+  badgeRequest.success({ code: 200, data: { projectSummary: { pending: 7, rejected: 2 } } })
+  await Promise.all([preview, badge])
+  assert.deepEqual(component.data.projectPreviewList, [])
+  assert.equal(component.data.projectPendingCount, 0)
+  assert.equal(component.data.projectErr, false)
+})
