@@ -1,0 +1,8 @@
+page { background: #000; } /* ds-ok 玩家侧深色,与游玩页同底 */
+.sg-page { min-height: 100vh; }
+.sg-page__state { padding: 240rpx var(--cy-space-4) 0; }
+.sg-page__headline { color: var(--cy-color-text-primary); font-size: var(--cy-type-title); font-weight: 700; }
+.sg-page__line { margin-top: var(--cy-space-3); color: var(--cy-color-text-primary); font-size: var(--cy-type-body); }
+.sg-page__note { margin-top: var(--cy-space-3); padding: 0 var(--cy-space-4); color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); }
+.sg-page__finish { position: fixed; left: var(--cy-space-4); right: var(--cy-space-4); bottom: calc(var(--cy-space-4) + env(safe-area-inset-bottom)); z-index: var(--cy-z-sheet); }
+.sg-page__exit { margin-top: var(--cy-space-4); min-height: 88rpx; display: flex; align-items: center; justify-content: center; color: var(--cy-color-text-secondary); font-size: var(--cy-type-label); transition: var(--cy-tr-press); }

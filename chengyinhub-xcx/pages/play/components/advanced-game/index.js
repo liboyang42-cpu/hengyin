@@ -9,6 +9,7 @@ const { buildActionKey, buildUnitId } = require('../../utils/play-action-key.js'
 const { canContinue, isR5, feedbackWritable } = require('../../utils/playkit-r5-segments.js');
 
 const { bundledMerchantGameAudioPath } = require('../../utils/merchant-game-assets.js');
+const shopGameRunner = require('../../utils/shop-game-runner.js');
 
 Component({
   properties: {
@@ -18,7 +19,9 @@ Component({
     activityId: { type: null, value: '' },
     topicId: { type: null, value: '' },
     preview: { type: Boolean, value: false },
-    mock: { type: Boolean, value: false }
+    mock: { type: Boolean, value: false },
+    // W7 x-shop-game-runner:有值时这是店铺小游戏的一局(没有旅程),start/state/action 走这局自己的会话路由。
+    shopPlayId: { type: null, value: '' }
   },
   data: {
     loading: false,
@@ -81,6 +84,15 @@ Component({
       return (same || retry) && (state.nodeId == null || !context.nodeId || String(state.nodeId) === context.nodeId);
     },
     request(url, method, data) {
+      const shopPlayId = this.data.shopPlayId;
+      if (shopPlayId) {
+        const mapped = shopGameRunner.mapRequest(url, method, data, shopPlayId);
+        if (!mapped) return Promise.resolve(shopGameRunner.refusal());
+        return this.sendRaw(mapped.url, mapped.method, mapped.data).then(res => shopGameRunner.identify(res, shopPlayId));
+      }
+      return this.sendRaw(url, method, data);
+    },
+    sendRaw(url, method, data) {
       return new Promise((resolve, reject) => app.sendRequest({
         hideLoading: true,
         url,
@@ -132,7 +144,8 @@ Component({
       }
       const scope = { activityId: integer(this.data.activityId || 0),
         topicId: integer(this.data.topicId || 0), nodeId: integer(node.nodeId || 0) };
-      if (Object.values(scope).some(value => !value)) {
+      if (this.data.shopPlayId) scope.activityId = 0;
+      if (Object.entries(scope).some(([key, value]) => !value && !(key === 'activityId' && this.data.shopPlayId))) {
         this.setData({ loading: false, error: '玩法标识不完整，请重新进入' }); return;
       }
       this.setData({ loading: true, acting: false, unknown: false, photoRetryable: false, readingBack: false, error: '', state: null });

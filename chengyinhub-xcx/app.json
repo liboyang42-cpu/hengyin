@@ -14,7 +14,8 @@
         "index",
         "merchant/index",
         "circle/index",
-        "poi-challenge/index"
+        "poi-challenge/index",
+        "shop-game/index"
       ]
     },
     {

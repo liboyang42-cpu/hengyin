@@ -66,6 +66,7 @@ Component({
     state: 'loading',
     errorText: '节点信息加载失败',
     merchant: null,
+    shopGame: null,
     merchantError: '',
     node: null, isCatalog: false,
     gallery: [],
@@ -107,6 +108,28 @@ Component({
     if (this._loadedOwner !== ownerId() || this.data.checkinPending) this._load()
   } },
   methods: {
+    /* W7 x-shop-game-runner:店铺的小游戏。开放时给「玩今天的小游戏」,没开放如实说明;读不到就不显示,不挡据点页。 */
+    _loadShopGame(poiId, token) {
+      if (!poiId) return
+      app.sendRequest({
+        url: '/api/shop-games/profile', method: 'GET', hideLoading: true, silentError: true, data: { poiId },
+        success: (res) => {
+          if (this._closed || token !== this._loadToken) return
+          const p = res && Number(res.code) === 200 && isRecord(res.data) ? res.data : null
+          if (!p || p.available !== true) { this.setData({ shopGame: null }); return }
+          const games = Array.isArray(p.games) ? p.games : []
+          const first = games.find(g => isRecord(g) && g.ready === true) || games.find(isRecord) || {}
+          this.setData({ shopGame: { open: p.playOpen === true, name: nonEmptyString(first.nameZh) } })
+        },
+        successStatusAbnormal: () => { if (!this._closed && token === this._loadToken) this.setData({ shopGame: null }) },
+        fail: () => { if (!this._closed && token === this._loadToken) this.setData({ shopGame: null }) },
+      })
+    },
+    playShopGame() {
+      const poiId = this.data.poiId
+      if (!poiId || !this.data.shopGame || !this.data.shopGame.open) return
+      wx.navigateTo({ url: '/pages/play/shop-game/index?poiId=' + encodeURIComponent(poiId) + '&source=PLACE_PAGE' })
+    },
     _abortPoiPhoto() {
       const photo = this._poiPhoto
       this._poiPhoto = null
@@ -185,6 +208,7 @@ Component({
         reverifyChecking: false, reverifyReady: false, reverifyStarted: false, pendingStatusText: '',
         errorText: '',
         merchant: null,
+        shopGame: null,
         merchantError: '',
         choiceSheetShow: false,
         node: null, isCatalog: false,
@@ -271,6 +295,7 @@ Component({
               this.setData({ challengePhoto: saved.url })
           } catch (_) {}
           if (node.merchantId && !this.data.checkinPending) this._loadMerchant(node.merchantId, token)
+          if (node.merchantId) this._loadShopGame(poiId, token)
           this.loadReviews()
           this.loadPhotoCredit(node)
         },
