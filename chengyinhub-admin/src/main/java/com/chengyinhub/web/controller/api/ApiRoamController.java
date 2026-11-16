@@ -77,6 +77,9 @@ public class ApiRoamController extends BaseController {
 
     @Autowired
     private RoamMapper roamMapper;
+    /** T2 maps-backend read cache for /pois; optional so hand-built controllers in tests keep the SQL read. */
+    @Autowired(required = false)
+    private com.chengyinhub.business.readcache.MapPoiTileCache poiTileCache;
     @Autowired private com.chengyinhub.business.service.IMapGeocodeService mapGeocodeService;
     @Autowired private com.chengyinhub.business.service.impl.RoamLocationConsentService locationConsent;
     @Autowired
@@ -195,8 +198,12 @@ public class ApiRoamController extends BaseController {
         String tg = boundedFilter(tag, 20);
         Long cat = categoryId != null && categoryId > 0 ? categoryId : null;
         // A5.2:多取 1 条用来判断是否被截断;data 仍是数组(向后兼容),truncated 作为同级字段下发。
+        // T2 maps-backend:不带筛选的读可由按图块的共享缓存供数(同样的行、同样的顺序、同样多取 1 条;found /
+        // pendingRedeem 仍按会员现查)。缓存开关默认关,关着或缓存 bean 不在时与直读 MySQL 完全相同。
         List<RoamPoi> list = kw == null && tg == null && cat == null
-                ? roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1)
+                ? (poiTileCache != null
+                    ? poiTileCache.near(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1)
+                    : roamMapper.selectPoisNear(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1))
                 : roamMapper.selectPoisNearFiltered(lat - dLat, lat + dLat, lng - dLng, lng + dLng, uid(), POIS_NEAR_LIMIT + 1,
                         kw, cat, tg);
         boolean truncated = list.size() > POIS_NEAR_LIMIT;

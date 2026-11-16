@@ -24,8 +24,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select distinct f.geohash7 from roam_fog_tile f join roam_session s on s.id = f.session_id and s.member_id = f.member_id
         where f.member_id = #{memberId} and f.geohash7 is not null
           and (s.status = 0 or (s.status = 1 and s.finished_at &gt; date_sub(now(), interval 30 day)))
-          and left(f.geohash7, 5) in
-        <foreach collection="prefixes" item="p" open="(" separator="," close=")">#{p}</foreach>
+          <!-- T2 maps-backend: a prefix LIKE per cover prefix (same rows as left(geohash7, 5) in (...)) lets
+               uk_member_tile (member_id, geohash7) seek each prefix instead of reading all of the member's tiles. -->
+          and
+        <foreach collection="prefixes" item="p" open="(" separator=" or " close=")">f.geohash7 like concat(#{p}, '%')</foreach>
         order by f.geohash7
         limit #{limit}
     </select>

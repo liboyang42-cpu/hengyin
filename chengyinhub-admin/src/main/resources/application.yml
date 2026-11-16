@@ -166,6 +166,19 @@ chengyin:
   # 只在 TEST 部署用环境变量置 true;生产在业主说"开钱"之前不得改动(见 docs/roadmap/money-switch/RUNBOOK.md)。
   money-switch:
     server-ceiling: ${CHENGYIN_MONEY_SWITCH_SERVER_CEILING:false}
+  # T2 maps-backend 读缓存(docs/roadmap/maps-backend/RESULT.md):只缓存公共只读数据(漫游地点按图块、功能开关公共部分、
+  # 首页轮播、分类),不缓存任何按会员或涉及资金的数据。对源表的写入提交后立即失效;TTL 只兜底库外改动。
+  # 默认关闭(CHENGYIN_READ_CACHE_ENABLED 未设即 false,全部直读 MySQL,行为与改动前相同);压测/灰度确认后再置 true。
+  read-cache:
+    enabled: ${CHENGYIN_READ_CACHE_ENABLED:false}
+    ttl:
+      poi-seconds: ${CHENGYIN_READ_CACHE_POI_TTL:60}
+      features-seconds: ${CHENGYIN_READ_CACHE_FEATURES_TTL:30}
+      banner-seconds: ${CHENGYIN_READ_CACHE_BANNER_TTL:300}
+      category-seconds: ${CHENGYIN_READ_CACHE_CATEGORY_TTL:300}
+    poi:
+      max-tiles: ${CHENGYIN_READ_CACHE_POI_MAX_TILES:64}
+      tile-cap: ${CHENGYIN_READ_CACHE_POI_TILE_CAP:3000}
   # S2 收款模式(docs/roadmap/collection-model/RESULT.md)。W7 MERCHANT-3 起由自己的开关 enabled 控制,不再跟 App 资金上限绑定;
   # 默认 false(生产值):第三方票务保持现状。何时在生产为小程序打开,等律师答复(LEGAL-QUESTIONS.md)后由业主决定。
   # 俱乐部会费(MERCHANT-1)例外:平台账户在任何模式下都不代收会费;会费需 enabled=true、资金开关 tickets 区域打开、且俱乐部子商户可分账。

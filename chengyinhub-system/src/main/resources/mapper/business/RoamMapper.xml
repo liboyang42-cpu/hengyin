@@ -142,6 +142,44 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by coalesce(p.node_level, 0) desc, p.near_dist asc, p.id asc
     </select>
 
+    <!-- T2 maps-backend (BE-18): the shared part of the player read for one cache tile: every published, approved place
+         in the box with the same columns and avatar as selectPoisNearFiltered, no member columns, by id. The caller
+         (MapPoiTileCache) filters to the request box, orders by coalesce(node_level, 0) desc, the same box-centre
+         distance, id, keeps limit + 1 like the SQL read, then adds found / pending_redeem (selectPoiMemberMarks). -->
+    <select id="selectPoiBaseInBox" resultMap="RoamPoiResult">
+        select p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp, p.coupon_template_id,
+               p.city_code, p.status, p.audit_status, p.application_type, p.applicant_merchant_id, p.audit_reason,
+               p.create_time, p.merchant_id, p.template_id, p.node_level, p.tags, p.cover_img, p.sort,
+               p.gallery_json, p.quotes_json, p.photo_credit, p.badge_code,
+               (select n.avatar from npc_profile n
+                 where n.scope_type = 2 and n.scope_id = p.merchant_id
+                   and n.enabled = 1 and n.audit_status = 1 and n.del_flag = '0'
+                 order by n.sort asc, n.id asc limit 1) as npc_avatar
+        from roam_poi p
+        where p.status = 1
+          and <include refid="cityNodeContentApproved" />
+          and p.lat between #{minLat} and #{maxLat}
+          and p.lng between #{minLng} and #{maxLng}
+        order by p.id asc
+        limit #{limit}
+    </select>
+
+    <!-- T2 maps-backend: found / pending_redeem for one member and the given places, same rules as selectPoisNearFiltered. -->
+    <select id="selectPoiMemberMarks" resultType="java.util.LinkedHashMap">
+        select p.id as poiId,
+               (exists (select 1 from roam_poi_found f
+                         where f.poi_id = p.id and f.member_id = #{memberId})
+                or exists (select 1 from roam_poi_reward_log r
+                            where r.poi_id = p.id and r.member_id = #{memberId}
+                              and r.status in (0, 1))) as found,
+               (exists (select 1 from roam_poi_reward_log r
+                         where r.poi_id = p.id and r.member_id = #{memberId}
+                           and r.status = 0 and r.coupon_id > 0)) as pendingRedeem
+        from roam_poi p
+        where p.id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
     <select id="selectPoisByIds" resultMap="RoamPoiResult">
         select <include refid="poiCols" /> from roam_poi
         where status = 1 and id in

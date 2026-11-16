@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- T2 maps-backend: the map box reads as the base branch has them, fragments inlined, so tests can prove the cached
+     reads return the same rows in the same order. selectPoisNearFiltered: origin/roadmap/be-integ 87aaf3dd2 (hengyin
+     #830: inner box query, coalesce(node_level, 0) desc, distance, id; the caller asks limit + 1 for "truncated").
+     selectRecentCellsByPrefixes: origin/roadmap/be-integ f0dc762c1 (before this package's sargable rewrite). -->
+<mapper namespace="legacy.MapReads">
+
+    <select id="selectPoisNearFiltered" resultMap="com.chengyinhub.business.mapper.RoamMapper.RoamPoiResult">
+        <!-- A5.3:先在内层用包围盒+排序+limit 把候选收敛到 limit 行,再只对这 limit 行算 3 个相关子查询。
+             A5.2:node_level 高者优先、同级按到盒心距离由近到远;截断时丢掉的是低等级/最远的。 -->
+        select p.id, p.name, p.type, p.lat, p.lng, p.radius_m, p.address, p.description, p.xp, p.coupon_template_id,
+               p.city_code, p.status, p.audit_status, p.application_type, p.applicant_merchant_id, p.audit_reason,
+               p.create_time, p.merchant_id, p.template_id, p.node_level, p.tags, p.cover_img, p.sort,
+               p.gallery_json, p.quotes_json, p.photo_credit, p.badge_code,
+               (select n.avatar from npc_profile n
+                 where n.scope_type = 2 and n.scope_id = p.merchant_id
+                   and n.enabled = 1 and n.audit_status = 1 and n.del_flag = '0'
+                 order by n.sort asc, n.id asc limit 1) as npc_avatar,
+               <!-- C-13 已发现按账号存服务端:换设备/清缓存后地图不再回到迷雾。
+                    两个真源都算「已发现」:① /poi/discover 写的地标记录(roam_poi_found);
+                    ② 据点玩法到店记录(roam_poi_reward_log,status 0=待核销/1=已完成,都表示到过店)。
+                    memberId=0(未登录/测试)时 exists 恒假,与改动前一致。 -->
+               (exists (select 1 from roam_poi_found f
+                         where f.poi_id = p.id and f.member_id = #{memberId})
+                or exists (select 1 from roam_poi_reward_log r
+                            where r.poi_id = p.id and r.member_id = #{memberId}
+                              and r.status in (0, 1))) as found,
+               <!-- CU-M-54:已打卡但券还没核销(status=0 且配了券)单独一档。 -->
+               (exists (select 1 from roam_poi_reward_log r
+                         where r.poi_id = p.id and r.member_id = #{memberId}
+                           and r.status = 0 and r.coupon_id > 0)) as pending_redeem
+        from (
+            select id, name, type, lat, lng, radius_m, address, description, xp, coupon_template_id, city_code, status, audit_status, application_type, applicant_merchant_id, audit_reason, create_time, merchant_id, template_id, node_level, tags, cover_img, sort, gallery_json, quotes_json, photo_credit, badge_code,
+                   (power(p.lat - (#{minLat} + #{maxLat}) / 2, 2)
+                    + power((p.lng - (#{minLng} + #{maxLng}) / 2) * cos(radians((#{minLat} + #{maxLat}) / 2)), 2)) as near_dist
+            from roam_poi p
+            where p.status = 1
+              and (p.application_type is null or p.application_type = 2
+         or (p.application_type in (1, 3) and p.audit_status = 1))
+              and p.lat between #{minLat} and #{maxLat}
+              and p.lng between #{minLng} and #{maxLng}
+            <!-- R1 MKT-08: optional narrowing filters (keyword / merchant category / tag); absent = unchanged.
+                 筛选放在内层 limit 之前:先收窄再截断,不会因截断漏掉符合条件的点。 -->
+            <if test="keyword != null and keyword != ''">
+              and (p.name like concat('%', #{keyword}, '%')
+                   or exists (select 1 from mms_merchant km where km.id = p.merchant_id
+                              and km.name like concat('%', #{keyword}, '%')))
+            </if>
+            <if test="categoryId != null">
+              and exists (select 1 from mms_merchant cm where cm.id = p.merchant_id
+                          and (cm.category_id = #{categoryId} or find_in_set(#{categoryId}, cm.category_ids)))
+            </if>
+            <if test="tag != null and tag != ''">and p.tags like concat('%', #{tag}, '%')</if>
+            order by coalesce(p.node_level, 0) desc, near_dist asc, p.id asc
+            limit #{limit}
+        ) p
+        order by coalesce(p.node_level, 0) desc, p.near_dist asc, p.id asc
+    </select>
+
+    <select id="selectRecentCellsByPrefixes" resultType="java.lang.String" useCache="false">
+        select distinct f.geohash7 from roam_fog_tile f join roam_session s on s.id = f.session_id and s.member_id = f.member_id
+        where f.member_id = #{memberId} and f.geohash7 is not null
+          and (s.status = 0 or (s.status = 1 and s.finished_at &gt; date_sub(now(), interval 30 day)))
+          and left(f.geohash7, 5) in
+        <foreach collection="prefixes" item="p" open="(" separator="," close=")">#{p}</foreach>
+        order by f.geohash7
+        limit #{limit}
+    </select>
+
+    <!-- Plain writes for invalidation tests (any mapper's write to these tables must invalidate). -->
+    <update id="renamePoi">update roam_poi set name = #{name} where id = #{id}</update>
+    <update id="renameAvatar">update `npc_profile` set avatar = #{avatar} where scope_id = #{scopeId}</update>
+    <insert id="insertFound">insert into roam_poi_found (poi_id, member_id) values (#{poiId}, #{memberId})</insert>
+</mapper>

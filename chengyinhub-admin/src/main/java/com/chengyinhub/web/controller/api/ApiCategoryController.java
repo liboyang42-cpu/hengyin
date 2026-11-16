@@ -33,6 +33,10 @@ public class ApiCategoryController extends BaseController {
     @Autowired
     private ISysCategoryService sysCategoryService;
 
+    /** T2 maps-backend read cache (optional: hand-built controllers in tests read MySQL). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.readcache.ReadCache readCache;
+
     @PostMapping("/list")
     @Operation(summary = "分类列表")
     @Parameters({
@@ -41,6 +45,19 @@ public class ApiCategoryController extends BaseController {
             @Parameter(name = "keyword", description = "关键字")
     })
     public AjaxResult categoryList(String type, String parentid, String keyword) {
+        // T2 maps-backend: the list without a keyword is shared and hot (home, filters); cache it per type and parent.
+        // Any sys_category write invalidates it. Keyword searches always read MySQL.
+        if (readCache == null || StringUtils.isNotEmpty(keyword)) {
+            return success(loadCategoryList(type, parentid, keyword));
+        }
+        String t = StringUtils.trim(type);
+        String typeKey = "MERCHANT".equalsIgnoreCase(t) ? "M" : StringUtils.isNotEmpty(type) ? String.valueOf(Convert.toLong(type, 0L)) : "-";
+        String key = "t" + typeKey + ":p" + Convert.toLong(parentid, 0L);
+        return success(readCache.read(com.chengyinhub.business.readcache.ReadCacheNamespace.CATEGORY, key,
+                readCache.listOf(SysCategory.class), () -> loadCategoryList(type, parentid, keyword)));
+    }
+
+    private List<SysCategory> loadCategoryList(String type, String parentid, String keyword) {
         SysCategory category = new SysCategory();
 
         Long parentId = Convert.toLong(parentid, 0L);
@@ -81,6 +98,6 @@ public class ApiCategoryController extends BaseController {
             }
         }
 
-        return success(CategoryPublicProjection.strip(sysCategoryList));
+        return CategoryPublicProjection.strip(sysCategoryList);
     }
 }
