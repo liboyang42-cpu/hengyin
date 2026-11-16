@@ -1,5 +1,44 @@
 # Chengyin backend acceptance — round r3
 
+## Wave 7 (2026-11-16 14:21 – 14:35 UTC): F-19 and B10 merged, re-test on TEST
+
+- **Target:** TEST 8120 (be-int, DB `cy_e2e_r2`) over loopback on the `work` VPS. New jar from `integration/backend-app-r3` @ `3f0cdb762`: `dfabdb76c` merges `fix/registration-list-r3` (F-19, test + receipt only, no production code) and `3f0cdb762` merges `fix/challenge-npe-r3` (B10). Deployed at 14:21 UTC under `flock /data/workspace/.deploy.lock`; started in 20 s. Rollback jar `app/app.jar.prev-82f0bab79`. No migration. Production was not touched.
+- **Run:** one full `run_all.py` (fixtures first, teardown at the end) at 14:25 UTC, harness at wave 6 `166b125e3` with no code change. `results.json` / `results.md` / `fixtures.json` in this commit.
+- **Result: 17 of 18 flows pass** (wave 6: 16 of 18). F04's paid path is TEST-SKIP, as in wave 6 (no pay sandbox on TEST).
+  - **F09 passes (B10 fixed on TEST).** `challenge/command` → HTTP 200 / code 200. The stored `city_challenge` row has `roll 15`, `nat 0`, `outcome WIN`: a mid roll now resolves. app.log has no `CityMonopolyService.challengeCommand` NullPointerException.
+  - **F06 still fails, only on A5 (app, native iOS).** The self check-in as the native client sends it (no `nodeId`) is refused (HTTP 200, code 500). Every other F06 step passes, including the check-in with `nodeId`. This is a client defect, so no backend change can close it. The app needs to send the `nodeId` the action context was read for. Until then, 18 of 18 cannot be reached.
+
+| Flow | Result (pass / fail / TEST-SKIP) | Verdict |
+|---|---|---|
+| F01–F03, F05, F07, F08, F10–F18 | all steps pass | **Pass** |
+| F04 Register and pay | 10 / 0 / 1 | **Pass** (paid TEST-SKIP) |
+| F06 Check-in | 10 / 1 / 0 | **Fail (app A5)** |
+| F09 City Monopoly | 11 / 0 / 0 | **Pass** (was Fail, B10) |
+
+### F-19 re-check: registration list and my-joined for 9004
+
+Logged in as 9004 (`login/phone 13900000004`, TEST code planted in Redis), multipart form as the native client sends it:
+
+| Check | Wave 5 jar `82f0bab79` (before deploy) | Wave 7 jar `3f0cdb762` (after the run) |
+|---|---|---|
+| `cms_registration` rows of 9004 (all / status 2) | 29 / 6 | 31 / 6 (the run's fixtures added 2) |
+| `POST /api/registration/list owner_type=3` | total 29, 29 rows, all `memberId 9004` | total 31, 31 rows, all `memberId 9004` |
+| `POST /api/registration/list owner_type=2` | total 6, all 9004 | total 6, all 9004 |
+| `POST /api/registration/my-joined` | 6 items, holds 992031 | 6 items, holds 992031 |
+
+F-19 does not reproduce on either jar. The counts match the DB, and only 9004's own rows come back (owner scope intact). This matches `qa/REGLIST-R3.md`: an empty list means the caller's token was not 9004's, or another jar was answering.
+
+### New defects
+
+None. Carried over: A5 (app), B5b, B9, A6 (see wave 6).
+
+### TEST state changed by this wave
+
+- `8120` jar `82f0bab79` → `3f0cdb762` (rollback `app/app.jar.prev-82f0bab79`).
+- Fixture rows of this run: QA live activity 9940017 and its tickets (retired by `fixtures.teardown()`), new free registrations for 9001/9004, a QA territory challenge on `qa-monopoly-1`, and the usual fixture refresh (see wave 6).
+
+---
+
 ## Wave 6 (2026-11-15 22:20 – 2026-11-16 04:12 UTC): native-client harness + idempotent fixtures
 
 - **Target:** TEST 8120 (be-int, DB `cy_e2e_r2`) over loopback on the `work` VPS. Same jar as wave 5 (`integration/backend-app-r3` @ `82f0bab79`). Production was not touched.
