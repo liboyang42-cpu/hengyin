@@ -286,6 +286,7 @@ public class CreatorEarningsAccrualMyBatisTest {
     void moneyOnStillPaysNothingButMarksPendingPayout() {
         service = new CreatorEarningsService(session.getMapper(CreatorEarningMapper.class), members, memberService, pointsDetails,
                 mock(PlatformTransactionManager.class), 5, 4, 1, 2, 1, 7000, true);
+        service.setMoneyGate(com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate());
         service.accrueDay(DAY);
         assertEquals("PENDING_PAYOUT", event("SALE:" + ORDER).get("moneyState"));
         verify(memberService, never()).addBalance(anyLong(), any());
