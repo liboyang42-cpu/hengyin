@@ -90,6 +90,11 @@ class LifeGamesSeedContractTest {
                 reached.add(out.getResultCode());
             }
             assertEquals(root.path("dimensions").size(), reached.size(), row.title + ":每个结果都要能拿到");
+            Set<String> titles = new HashSet<>();
+            for (JsonNode dimension : root.path("dimensions")) {
+                assertTrue(titles.add(root.path("results").path(dimension.asText()).path("title").asText()),
+                        row.title + ":结果标题各不相同,商家汇总按标题列出");
+            }
         }
         assertEquals(6, checked, "生活 G0/G4 与庆祝 G0/G1/G2/G7 是偏好题组");
     }
