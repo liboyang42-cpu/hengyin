@@ -325,6 +325,19 @@ public class ApiPlayProgressController extends BaseController {
     @PostMapping("/photo")
     @DeadlockRetry
     public AjaxResult photo(String activityId, String nodeId, String picUrl, String topicId,
+            String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch,
+            String longitude, String latitude, String accuracy)
+    {
+        if (longitude == null && latitude == null && accuracy == null) {
+            return playPhotoCommandApplication.photo(currentMemberId(), activityId, nodeId, picUrl, topicId, routeActionId, expectedRouteVersion, routeSessionId, runtimeInstance, authorityEpoch);
+        }
+        return playPhotoCommandApplication.photo(currentMemberId(), activityId, nodeId, picUrl, topicId, routeActionId, expectedRouteVersion, routeSessionId, runtimeInstance, authorityEpoch,
+                longitude, latitude, accuracy);
+    }
+
+    /** 不带定位的旧调用形状(测试与内部调用);直达应用层,死锁重试照旧在本入口生效。 */
+    @DeadlockRetry
+    public AjaxResult photo(String activityId, String nodeId, String picUrl, String topicId,
             String routeActionId, Integer expectedRouteVersion, Long routeSessionId, String runtimeInstance, Integer authorityEpoch)
     {
         return playPhotoCommandApplication.photo(currentMemberId(), activityId, nodeId, picUrl, topicId, routeActionId, expectedRouteVersion, routeSessionId, runtimeInstance, authorityEpoch);

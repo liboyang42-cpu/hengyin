@@ -337,6 +337,39 @@ class ApiPlaySensorResultTest {
                 MEMBER, TOPIC, ACTIVITY, null, RewardPolicy.XP_BADGE_ONLY);
     }
 
+    /** x-template-games R2:照片没人判,带坐标的站没带定位 ⇒ 照常完成,但只发探索值与徽章。 */
+    @Test
+    void locatedPhotoStopWithoutAFixCompletesWithoutPoints() {
+        template.setValidationMethod(ValidationMethod.PHOTO);
+        template.setSensorType(null);
+        template.setSensorConfig(null);
+        node.setLongitude("121.4737"); node.setLatitude("31.2304");
+        allowVerifiedUpload();
+
+        AjaxResult result = BasicPlayCommandFixtures.photo(controller,
+                String.valueOf(ACTIVITY), String.valueOf(NODE), "remote-photo.png", null);
+
+        assertEquals(200, result.get("code"));
+        verify(points, never()).award(MEMBER, 12L, NODE, "节点打卡");
+        verify(progression).onNodeDone(MEMBER);
+    }
+
+    /** 同一站,随照片带来的定位就在站点旁 ⇒ 奖品照发。 */
+    @Test
+    void locatedPhotoStopWithAFixAtTheStopPaysPoints() {
+        template.setValidationMethod(ValidationMethod.PHOTO);
+        template.setSensorType(null);
+        template.setSensorConfig(null);
+        node.setLongitude("121.4737"); node.setLatitude("31.2304");
+        allowVerifiedUpload();
+
+        AjaxResult result = BasicPlayCommandFixtures.photoAt(controller,
+                String.valueOf(ACTIVITY), String.valueOf(NODE), "here-photo.png", null, "121.4738", "31.2305", "20");
+
+        assertEquals(200, result.get("code"));
+        verify(points).award(MEMBER, 12L, NODE, "节点打卡");
+    }
+
     @Test
     void photoMustProveUploadedObjectFactBeforeCompleting() {
         template.setValidationMethod(ValidationMethod.PHOTO);
