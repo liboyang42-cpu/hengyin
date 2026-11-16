@@ -20,11 +20,16 @@ test('P-47 / M-14:设置钮玩家深色下为白色;我的订单 / 我的资产�
   assert.match(projects, /class="pc-asset" bindtap="goEarnings"/)
 })
 
-// 2026-10-28 p91 业主「卡片太窄了又,稍微高一点」:400×400 → 500×440,渐变不动
-test('P-48:订单卡不写票数、不放按钮,只显示主题信息;卡片 500×440', () => {
+// 2026-11-16 ROOT 77b1:订单卡调低为 500×400，保留原宽度。
+test('P-48:订单卡不写票数、不放按钮,只显示主题信息;卡片 500×400', () => {
   assert.doesNotMatch(WXML, /item\.ticketText|item\.actionText|pc-ord-btn/)
   assert.match(WXML, /\{\{item\.kindText \|\| item\.timeText\}\}/)
-  assert.match(WXSS, /\.pc-ord-card \{\n\s*position: relative; display: inline-block; flex-shrink: 0; width: 500rpx; height: 440rpx;/)
+  const checkCard = source => assert.match(source, /\.pc-ord-card \{\n\s*position: relative; display: inline-block; flex-shrink: 0; width: 500rpx; height: 400rpx;/)
+  checkCard(WXSS)
+  for (const changed of [WXSS.replace('height: 400rpx;', 'height: 440rpx;'), WXSS.replace('width: 500rpx;', 'width: 400rpx;')]) {
+    assert.notEqual(changed, WXSS, '负控必须实际改动当前尺寸')
+    assert.throws(() => checkCard(changed), { name: 'AssertionError' })
+  }
 })
 
 test('P-49:余额没有就是 0,不再显示「—」', () => {
