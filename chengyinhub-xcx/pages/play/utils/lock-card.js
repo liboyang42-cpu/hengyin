@@ -4,7 +4,7 @@
 // (与 App 的「等待」阶段同一口径)。文案与原 _lockedTip 完全一致,只是换成常驻。纯函数。
 
 const BRANCH_FALLBACK = '前路未知 · 完成当前路线后解锁'
-const LINEAR_FALLBACK = '前路未知 · 先完成前置关卡'
+const LINEAR_FALLBACK = '前路未知 · 先完成前面的站'
 
 /**
  * @param node 被点的站;只有 locked 时才出卡
