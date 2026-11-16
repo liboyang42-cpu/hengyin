@@ -32,6 +32,7 @@ const { editionEmptyCopy, shapeEditionEmptyReason } = require('../utils/edition-
 // 帖文卡的 variant 判定与广场共用一份,别在这儿复制
 const { isCompletedShare, hasFeedPlayCover } = require('../../../utils/feed-play-card.js');
 const { decodeDisplayText, decodeDisplayFields } = require('../../../utils/display-text.js');
+const clubInvite = require('../../../utils/club-invite.js');
 // CU-C-60:扫码核销复用全站唯一的路由表(utils/verification-scan)与写闸(防重提/结果未知),
 // 不在本页另写一套解析。
 const { resolveVerificationScan } = require('../../../utils/verification-scan.js');
@@ -610,6 +611,7 @@ Page({
   onAddressTap(e) { openAddress().openFromEvent(e); },
   _clubAccessState: 'idle',
   data: {
+    inviteBanner: null,
     // 稿 40:3 末行「★ 减少动态效果兜底」的接线端。index.wxss 里 .cy-motion-reduced 的
     // 折叠面板兜底规则要靠根节点这个类才能匹配到 —— 之前 readReducedMotion 已 import
     // 但从没调用,规则等于死代码(截图实测:开了系统减动效,折叠面板照样播 -4px 位移)。
@@ -842,6 +844,8 @@ Page({
     // 走查 v2 R05(业主 2026-10-30):从主题工作台「主页」进来先落「概览」
     this._requestedTab = opt && (opt.tab === 'manage' || opt.tab === 'overview') ? opt.tab : '';
     this._requestedPostId = opt && opt.postId ? String(opt.postId) : '';
+    // W7 SOC-15:邀请链接带 invite=<邀请码>;落地信息只决定横幅与加入走哪条路,加入规则仍由服务端判。
+    this._inviteCode = clubInvite.parseInviteCode(opt);
     this.setData({
       myMemberId: app.getUserID && app.getUserID(),
       isMerchantViewer: this._operationScope === 'MERCHANT'
@@ -851,6 +855,7 @@ Page({
     });
     if (id) {
       this.data.clubId = id; this.loadAll();
+      if (this._inviteCode) this.loadInvite();
       // 2026-11-01 业主:活动详情「去核销」带 scan=1 进来直接拉起扫码(核销写闸只在本页一份,权限由核销接口判)
       if (opt.scan === '1') wx.nextTick(() => this.startClubScan());
       return;
@@ -2709,40 +2714,80 @@ Page({
     this.submitJoin('');
   },
 
+  // W7 SOC-15:读邀请落地信息。失败不拦加入:横幅不出,加入照常走原路。
+  loadInvite() {
+    const code = this._inviteCode;
+    if (!code) return;
+    const that = this;
+    app.sendRequest({
+      url: '/api/club/invites/' + code, method: 'GET',
+      success(res) {
+        if (code !== that._inviteCode) return;
+        const banner = res && res.code == '200' ? clubInvite.inviteBanner(res.data) : null;
+        that._inviteValid = !!(banner && banner.valid);
+        that.setData({ inviteBanner: banner });
+      },
+      fail() { that._inviteValid = false; },
+    });
+  },
+
   submitJoin(joinMessage) {
     const that = this;
     this.setData({ joinFx: 'busy' });
+    // W7 SOC-15:有效邀请走接受接口(记一次使用、带去目标频道),服务端内部仍走同一条加入流程。
+    const viaInvite = !!(this._inviteCode && this._inviteValid);
+    const onJoined = function (res) {
+      if (res.code == '200') {
+        if (viaInvite) {
+          that._inviteTarget = clubInvite.afterAcceptUrl(that.data.clubId, res.data);
+          that._inviteValid = false;
+          that.setData({ inviteBanner: null });
+        }
+        if (res.data && res.data.state === 'pending') {
+          that.setData({ joinFx: '' });
+          that.loadDetail();
+          modal.show({
+            title: '申请已提交', content: '等待审核。通过后才能查看成员名单和使用成员功能。',
+            showCancel: false,
+          });
+          return;
+        }
+        // 2026-10-22 owner:点了加入,按钮先变绿再打勾;动效走完再弹「在这里你可以做什么」,同时刷新成员视图。
+        // 群聊入口 2026-09-09 按稿从俱乐部页撤掉,这里也不再引导进群。
+        that.setData({ joinFx: 'done' });
+        const afterFx = function () {
+          that.openWelcome(that.data.club);
+          that.setData({ joinFx: '' });
+          that.loadDetail();
+          // W7 SOC-15:邀请带了目标频道 → 加入后打开频道目录。
+          const target = that._inviteTarget;
+          that._inviteTarget = '';
+          if (target && !that._navigating) {
+            that._navigating = true;
+            wx.navigateTo({ url: target, complete: () => { that._navigating = false; } });
+          }
+        };
+        if (typeof setTimeout !== 'function') { afterFx(); return; }
+        if (typeof clearTimeout === 'function') clearTimeout(that._joinFxTimer);
+        that._joinFxTimer = setTimeout(afterFx, that.data.reducedMotion ? 0 : 900);
+      } else {
+        that.setData({ joinFx: '' });
+        cyToast((res && res.msg) || '加入失败');
+      }
+    };
+    const onFailed = function () { that.setData({ joinFx: '' }); cyToast('加入失败'); };
+    if (viaInvite) {
+      app.sendRequest({
+        url: '/api/club/invites/' + this._inviteCode + '/accept', method: 'POST',
+        data: jsonBody({ message: joinMessage || '' }), header: jsonHeader(),
+        success: onJoined, fail: onFailed,
+      });
+      return;
+    }
     app.sendRequest({
       url: '/api/club/join', method: 'POST',
       data: jsonBody({ id: this.data.clubId, joinMessage: joinMessage || '' }), header: jsonHeader(),
-      success(res) {
-        if (res.code == '200') {
-          if (res.data && res.data.state === 'pending') {
-            that.setData({ joinFx: '' });
-            that.loadDetail();
-            modal.show({
-              title: '申请已提交', content: '等待审核。通过后才能查看成员名单和使用成员功能。',
-              showCancel: false,
-            });
-            return;
-          }
-          // 2026-10-22 owner:点了加入,按钮先变绿再打勾;动效走完再弹「在这里你可以做什么」,同时刷新成员视图。
-          // 群聊入口 2026-09-09 按稿从俱乐部页撤掉,这里也不再引导进群。
-          that.setData({ joinFx: 'done' });
-          const afterFx = function () {
-            that.openWelcome(that.data.club);
-            that.setData({ joinFx: '' });
-            that.loadDetail();
-          };
-          if (typeof setTimeout !== 'function') { afterFx(); return; }
-          if (typeof clearTimeout === 'function') clearTimeout(that._joinFxTimer);
-          that._joinFxTimer = setTimeout(afterFx, that.data.reducedMotion ? 0 : 900);
-        } else {
-          that.setData({ joinFx: '' });
-          cyToast((res && res.msg) || '加入失败');
-        }
-      },
-      fail() { that.setData({ joinFx: '' }); cyToast('加入失败'); },
+      success: onJoined, fail: onFailed,
     });
   },
 
