@@ -84,3 +84,20 @@ export function listMonopolyAbuse(params) {
 export function reviewMonopolyAbuse(signalId, confirm) {
   return request({ url: '/business/city-game/monopoly/abuse/' + encodeURIComponent(signalId) + '/review', method: 'post', data: { confirm: !!confirm } })
 }
+
+// CITY-19: tier (T1 街角 .. T4 地标) and district authoring per board.
+export function getBoardLayout(boardId) {
+  return request({ url: '/business/city-game/boards/' + encodeURIComponent(boardId) + '/layout', method: 'get' })
+}
+
+export function updatePointTier(boardId, pointId, tier) {
+  return request({ url: '/business/city-game/boards/' + encodeURIComponent(boardId) + '/points/' + encodeURIComponent(pointId) + '/tier', method: 'put', data: { tier } })
+}
+
+export function upsertDistrict(boardId, districtId, data) {
+  return request({ url: '/business/city-game/boards/' + encodeURIComponent(boardId) + '/districts/' + encodeURIComponent(districtId), method: 'put', data })
+}
+
+export function assignPointDistrict(boardId, pointId, districtId) {
+  return request({ url: '/business/city-game/boards/' + encodeURIComponent(boardId) + '/points/' + encodeURIComponent(pointId) + '/district', method: 'put', data: { districtId: districtId || null } })
+}

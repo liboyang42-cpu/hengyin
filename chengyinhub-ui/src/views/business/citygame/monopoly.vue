@@ -121,7 +121,7 @@ export default {
       }).catch(() => {}).finally(() => { this.running = '' })
     },
     review(row, confirm) {
-      const text = confirm ? '确认作弊？将作废待核验租金并追回本赛季已入账的租金。' : '驳回这条风控信号？'
+      const text = confirm ? '确认作弊？将作废待核验和被积分上限暂缓的租金，并追回近 60 天（跨赛季）已入账的租金，不足部分记为欠款。' : '驳回这条风控信号？'
       this.$modal.confirm(text).then(() => reviewMonopolyAbuse(row.id, confirm)).then(() => {
         this.$modal.msgSuccess('已处理')
         this.loadAbuse()
