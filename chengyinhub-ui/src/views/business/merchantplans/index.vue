@@ -90,6 +90,9 @@
             <template slot-scope="s">{{ orderStatusText(s.row.status) }}</template>
           </el-table-column>
           <el-table-column label="下单时间" prop="create_time" width="170" />
+          <el-table-column label="收款流水号" prop="payment_reference" min-width="150">
+            <template slot-scope="s">{{ s.row.payment_reference || '—' }}</template>
+          </el-table-column>
           <el-table-column label="操作" width="110">
             <template slot-scope="s">
               <el-button v-if="s.row.status === 'PENDING'" v-hasPermi="['business:merchantplans:sell']" type="text"
@@ -184,6 +187,20 @@
       </div>
     </el-dialog>
 
+    <el-dialog title="确认已收款" :visible.sync="paidDialog" width="460px" append-to-body>
+      <el-form v-if="paidForm" label-width="100px" size="small">
+        <el-form-item label="订单号">{{ paidForm.orderNo }}</el-form-item>
+        <el-form-item label="应收(元)">{{ yuan(paidForm.amountFen) }}</el-form-item>
+        <el-form-item label="收款流水号"><el-input v-model="paidForm.reference" maxlength="64" placeholder="银行或微信的流水号" /></el-form-item>
+        <el-form-item label="实收(元)"><el-input v-model="paidForm.received" placeholder="与应收一致才能确认" /></el-form-item>
+        <el-form-item label="原因"><el-input v-model="paidForm.reason" maxlength="255" /></el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button @click="paidDialog = false">取消</el-button>
+        <el-button type="primary" @click="submitPaid">确认已收款</el-button>
+      </div>
+    </el-dialog>
+
     <el-dialog title="开通或改为免费版" :visible.sync="grantDialog" width="460px" append-to-body>
       <el-form label-width="100px" size="small">
         <el-form-item label="商家编号"><el-input v-model="grantForm.merchantId" /></el-form-item>
@@ -192,6 +209,9 @@
             <el-option v-for="p in plans" :key="p.code" :label="p.nameZh" :value="p.code"
               :disabled="p.code !== 'FREE' && !salesOpen" />
           </el-select>
+        </el-form-item>
+        <el-form-item v-if="!canGrantPaid">
+          <span class="el-form-item__tip">不经订单开通付费套餐需要「无订单开通付费套餐」权限；商家下单后在订单里确认收款即可。</span>
         </el-form-item>
         <el-form-item v-if="grantForm.planCode !== 'FREE'" label="月数">
           <el-input-number v-model="grantForm.months" :min="1" :max="12" />
@@ -234,8 +254,13 @@ export default {
       planDialog: false,
       planForm: null,
       grantDialog: false,
-      grantForm: { merchantId: '', planCode: 'FREE', months: 1, reason: '' }
+      grantForm: { merchantId: '', planCode: 'FREE', months: 1, reason: '' },
+      paidDialog: false,
+      paidForm: null
     }
+  },
+  computed: {
+    canGrantPaid() { return this.$auth.hasPermi('business:merchantplans:grantPaid') }
   },
   created() {
     this.loadPlans()
@@ -338,16 +363,32 @@ export default {
       const g = this.grantForm
       const merchantId = Number(String(g.merchantId).trim())
       if (!Number.isInteger(merchantId) || merchantId <= 0) { this.$modal.msgError('请填写商家编号'); return }
+      if (g.planCode !== 'FREE' && !this.canGrantPaid) { this.$modal.msgError('不经订单开通付费套餐需要单独权限'); return }
       if (!g.reason || !g.reason.trim()) { this.$modal.msgError('请填写原因'); return }
       grantMerchantPlan({ merchantId, planCode: g.planCode, months: g.months, reason: g.reason.trim() }).then(res => {
         this.grantDialog = false
         return this.done(res, this.loadOrders)
       })
     },
+    // MERCHANT-12:确认收款要填流水号和实收金额(须等于应收),都会记在订单和审计里。
     confirmPaid(row) {
-      this.askReason('确认已收到 ' + this.yuan(row.amount_fen) + ' 元').then(reason =>
-        confirmPlanOrderPaid(row.order_no, { reason }))
-        .then(res => this.done(res, this.loadOrders)).catch(() => {})
+      this.paidForm = { orderNo: row.order_no, amountFen: row.amount_fen, reference: '', received: '', reason: '' }
+      this.paidDialog = true
+    },
+    submitPaid() {
+      const f = this.paidForm
+      const reference = String(f.reference || '').trim()
+      if (!/^[A-Za-z0-9_-]{4,64}$/.test(reference)) { this.$modal.msgError('请填写收款流水号(4-64 位字母、数字、- 或 _)'); return }
+      const text = String(f.received || '').trim()
+      if (!/^\d{1,9}(\.\d{1,2})?$/.test(text)) { this.$modal.msgError('请填写实收金额(元)'); return }
+      const receivedFen = Math.round(Number(text) * 100)
+      if (receivedFen !== Number(f.amountFen)) { this.$modal.msgError('实收金额与应收不一致，不能确认'); return }
+      if (!f.reason || !f.reason.trim()) { this.$modal.msgError('请填写原因'); return }
+      confirmPlanOrderPaid(f.orderNo, { paymentReference: reference, amountReceivedFen: receivedFen, reason: f.reason.trim() })
+        .then(res => {
+          this.paidDialog = false
+          return this.done(res, this.loadOrders)
+        }).catch(() => {})
     },
     accrue() {
       this.$prompt('日期(年-月-日)', '补记某一天的到店', {

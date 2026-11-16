@@ -329,7 +329,7 @@ public class MerchantPlanService {
     /** Orders, newest first; {@code status} optional (PENDING / PAID / CANCELLED). */
     public List<Map<String, Object>> orders(String status, Long merchantId) {
         StringBuilder sql = new StringBuilder("SELECT order_no, merchant_id, member_id, plan_code, months, amount_fen, status,"
-                + " create_time, paid_time, confirmed_by FROM cy_merchant_plan_order WHERE 1 = 1");
+                + " create_time, paid_time, confirmed_by, payment_reference, amount_received_fen FROM cy_merchant_plan_order WHERE 1 = 1");
         List<Object> args = new ArrayList<>();
         if (status != null && !status.isBlank()) { sql.append(" AND status = ?"); args.add(status.trim().toUpperCase(java.util.Locale.ROOT)); }
         if (merchantId != null) { sql.append(" AND merchant_id = ?"); args.add(merchantId); }
