@@ -450,3 +450,43 @@ test('SUCCESS-R1 actual SHOT builder→Page保留显式题图与原收尾，不�
   assert.equal(JSON.stringify(f.p.data.advanced), f.original);
   assert.equal(f.requests.length, 0);
 });
+
+function previewVerdictCTA(data) {
+  const fs = require('node:fs'), path = require('node:path');
+  const host = fs.readFileSync(path.join(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8').match(/<cy-play-verdict\b[^>]*>/)[0];
+  const binding = host.match(/cta-text="\{\{(.*?)\}\}"/);
+  if (!binding) return '继续';
+  return Function('pvVerdict', 'pvStep', 'pvSteps', 'return (' + binding[1] + ')')(data.pvVerdict, data.pvStep, data.pvSteps);
+}
+
+test('试玩CTA：末步成功完成关闭、失败再试一次重试，保留原配置且不发正式请求', () => {
+  for (const [input, label, visible] of [['待发送', '完成', false], ['错误输入', '再试一次', true]]) {
+    const f = previewOwnerPage(), original = JSON.stringify(f.p.data.advanced);
+    f.submit(input);
+    assert.equal(previewVerdictCTA(f.p.data), label);
+    f.close();
+    assert.equal(f.p.data.previewVisible, visible);
+    if (visible) { assert.equal(f.p.data.pvKit.type, 'qa'); assert.equal(f.p.data.pvKit.passed, false); }
+    assert.equal(JSON.stringify(f.p.data.advanced), original);
+    assert.equal(f.requests.length, 0);
+  }
+});
+
+test('试玩CTA：完整流程成功查看结果，记录态末步完成；没有伪继续故事装饰', () => {
+  const f = previewOwnerPage(), p = f.p;
+  p.setData({ pvSteps: p._buildPvSteps() });
+  f.submit('待发送');
+  assert.equal(previewVerdictCTA(p.data), '查看结果');
+  f.close();
+  assert.equal(p.data.pvStepKey, 'complete');
+  assert.equal(p.data.previewVisible, true);
+  const neutral = previewOwnerPage();
+  neutral.p.data.advanced.qa.judge = false; neutral.p.tryCurrentGame(); neutral.submit('待发送');
+  assert.equal(neutral.p.data.pvVerdict.kind, 'neutral');
+  assert.equal(previewVerdictCTA(neutral.p.data), '完成');
+  neutral.close(); assert.equal(neutral.p.data.previewVisible, false);
+  const markup = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../pages/publish/temp/index.wxml'), 'utf8');
+  assert.doesNotMatch(markup, /cg-pv-inline-continue|继续故事/);
+  assert.match(markup, /bindtap="pvNext">继续<\/cy-btn>/, '开场故事的正常下一步仍保留');
+  assert.equal(f.requests.length + neutral.requests.length, 0);
+});

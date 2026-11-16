@@ -153,7 +153,7 @@ test('其他三个caller保留默认配色、继续、neutral和原判定', () =
   const challenge = tags.find(tag => tag.includes("pvStepKey === 'challenge'"))
   assert.ok(challenge, '必须核对真实作者challenge caller')
   for (const tag of tags.filter(tag => tag !== challenge)) assert.doesNotMatch(tag, /full-color=|cta-text=/)
-  assert.doesNotMatch(challenge, /cta-text=/, 'challenge仍用原继续按钮')
+  assert.equal(attr(challenge, 'cta-text'), "{{pvVerdict.kind === 'fail' ? '再试一次' : pvStep < pvSteps.length - 1 ? '查看结果' : '完成'}}", 'challenge显式描述重试、完成或下一结果动作')
   const expression = attr(challenge, 'full-color')
   assert.ok(expression, '已批准QA成功接现成fullColor')
   const preview = require('../../pages/publish/utils/publish/advanced-game-preview.js')

@@ -120,7 +120,7 @@ test('编辑页试玩:玩法那一屏不压翻页点 / 箭头 / 保存栏,判定
     const attrs = Object.fromEntries([...tag.matchAll(/([\w:-]+)="([^"]*)"/g)].map(match => [match[1], match[2]]));
     assert.equal((attrs.closable || '').replace(/\s/g, ''), '{{true}}');
     assert.equal(attrs['bind:close'], 'closePvVerdict');
-    assert.equal(attrs['cta-text'], undefined, '仍使用组件默认继续');
+    assert.equal(attrs['cta-text'], "{{pvVerdict.kind === 'fail' ? '再试一次' : pvStep < pvSteps.length - 1 ? '查看结果' : '完成'}}", '预览按钮准确描述当前回调动作');
     const expression = (attrs['full-color'] || '').match(/^\{\{([\s\S]+)\}\}$/);
     assert.ok(expression, '受控QA成功使用现有full-color');
     const fullColor = new Function('pvVerdict', 'pvKit', 'return (' + expression[1] + ')');
