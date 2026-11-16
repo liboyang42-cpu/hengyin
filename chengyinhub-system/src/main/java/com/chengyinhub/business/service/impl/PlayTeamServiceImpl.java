@@ -57,6 +57,9 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
     private CmsTopicMapper cmsTopicMapper;
     @Autowired
     private IImService imService;
+    /** W7 x-channel-reach (SOC-2): a new team member gets rows in the team channels they can see (after commit). */
+    @Autowired(required = false)
+    private com.chengyinhub.business.service.channel.platform.ChannelMembershipSync channelMembership;
     @Autowired
     private INotifyService notifyService;
     @Autowired
@@ -247,6 +250,7 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         }
         expirePendingIfFull(teamId);
         imService.getOrCreateTeamGroup(teamId, memberId);
+        enrollInTeamChannels(teamId, memberId);
         return teamMapper.selectPlayTeamById(teamId);
     }
 
@@ -278,7 +282,15 @@ public class PlayTeamServiceImpl implements IPlayTeamService {
         }
         expirePendingIfFull(teamId);
         imService.getOrCreateTeamGroup(teamId, targetMemberId);
+        enrollInTeamChannels(teamId, targetMemberId);
         notifyService.notifyTeamStatus(targetMemberId, displayTitle(team), "入队申请已通过");
+    }
+
+    private void enrollInTeamChannels(Long teamId, Long memberId)
+    {
+        if (channelMembership == null || teamId == null || memberId == null) return;
+        channelMembership.memberJoinedAfterCommit(
+                com.chengyinhub.business.service.channel.platform.ChannelGuildAccess.GUILD_TEAM, teamId, memberId);
     }
 
     @Override

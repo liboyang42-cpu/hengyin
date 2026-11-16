@@ -90,7 +90,7 @@ class PushFanoutServiceTest
         when(mapper.selectMentions(100L)).thenReturn(List.of(Map.of("mentionType", "REPLY", "targetId", 4L),
                 Map.of("mentionType", "ROLE", "targetId", 30L)));
         when(mapper.selectRoleMemberIds(List.of(30L))).thenReturn(List.of(5L));
-        when(mapper.selectChatAudience(9L, 1L, false)).thenReturn(List.of(
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(
                 member(4L, "convLevel", 1),          // 仅@，被回复
                 member(5L, "convLevel", 1),          // 仅@，角色被@
                 member(6L, "convLevel", 1)));        // 仅@，都没有
@@ -109,7 +109,7 @@ class PushFanoutServiceTest
     {
         when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 4, "team_3"));
         when(mapper.selectMentions(100L)).thenReturn(List.of(Map.of("mentionType", "USER", "targetId", 4L)));
-        when(mapper.selectChatAudience(9L, 1L, false)).thenReturn(List.of(
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(
                 member(2L),                          // 默认全部
                 member(3L, "memberMuted", 1),        // 会话免打扰
                 member(4L, "convLevel", 1),          // 仅@，被@了
@@ -138,7 +138,7 @@ class PushFanoutServiceTest
     {
         when(mapper.selectChatMessage(anyLong())).thenAnswer(inv -> message(inv.getArgument(0), 1, "single_1_2"));
         when(mapper.selectMentions(anyLong())).thenReturn(List.of());
-        when(mapper.selectChatAudience(9L, 1L, true)).thenReturn(List.of(member(2L)));
+        when(mapper.selectChatAudience(9L, 1L, true, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(member(2L)));
         when(mapper.selectEnabledDevices(any(), any())).thenReturn(List.of(device(2L, 'b')));
 
         assertEquals(1, service.fanOutChat(100L));
@@ -156,9 +156,181 @@ class PushFanoutServiceTest
         when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 5, null));
         when(mapper.selectMentions(100L)).thenReturn(List.of());
         when(mapper.selectChannelClubId(9L)).thenReturn(null);
-        when(mapper.selectChatAudience(9L, 1L, false)).thenReturn(List.of(member(2L)));
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(member(2L)));
         assertEquals(0, service.fanOutChat(100L));
         assertTrue(paths.isEmpty());
+    }
+
+    // ---------------------------------------------------------------- W7 x-channel-reach (SOC-2, SOC-9)
+
+    private com.chengyinhub.business.service.IChannelConversationGate openGate()
+    {
+        com.chengyinhub.business.service.IChannelConversationGate gate = mock(com.chengyinhub.business.service.IChannelConversationGate.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "channelGate", gate);
+        when(mapper.selectClubDefaultLevel(42L)).thenReturn(null); // no club row → mentions only (Mockito would answer 0)
+        return gate;
+    }
+
+    private static Map<String, Object> channelContext(String name, int kind, Integer notifyDefault)
+    {
+        Map<String, Object> c = new HashMap<>();
+        c.put("channelName", name);
+        c.put("channelKind", kind);
+        c.put("guildKind", 1);
+        c.put("guildId", 42L);
+        c.put("guildName", "城瘾夜跑团");
+        c.put("notifyDefault", notifyDefault);
+        return c;
+    }
+
+    private void devicesFor(long... members)
+    {
+        when(mapper.selectEnabledDevices(any(), any())).thenAnswer(inv ->
+        {
+            java.util.Collection<Long> ids = inv.getArgument(0);
+            List<PushDevice> out = new ArrayList<>();
+            for (long m : members) if (ids.contains(m)) out.add(device(m, (char) ('a' + m)));
+            return out;
+        });
+    }
+
+    private JSONObject alert(int i)
+    {
+        return JSON.parseObject(bodies.get(i)).getJSONObject("aps").getJSONObject("alert");
+    }
+
+    @Test
+    void announcementPostReachesMentionsOnlyClubDefaultBecauseTheChannelDefaultsToAll()
+    {
+        openGate();
+        when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 5, null));
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        when(mapper.selectChannelPushContext(9L)).thenReturn(channelContext("公告", 2, 0));
+        when(mapper.selectClubDefaultLevel(42L)).thenReturn(null); // no club row → mentions only
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(
+                member(2L),                          // never opened 公告, enrolled by SOC-2, no own setting
+                member(3L, "convLevel", 2)));        // muted 公告 themselves
+        devicesFor(2L, 3L);
+
+        assertEquals(1, service.fanOutChat(100L));
+        assertEquals("城瘾夜跑团", alert(0).getString("title"));
+        assertEquals("【公告】#公告 小李：今晚七点集合", alert(0).getString("body"));
+        assertEquals("/subpackageB/pages/im/chat/index?conversationId=9&type=5&messageId=100&guildKind=1&guildId=42",
+                JSON.parseObject(bodies.get(0)).getString("page"));
+    }
+
+    @Test
+    void chatChannelPostStillFollowsTheMentionsOnlyClubDefault()
+    {
+        openGate();
+        when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 5, null));
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        when(mapper.selectChannelPushContext(9L)).thenReturn(channelContext("闲聊", 1, null));
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(member(2L)));
+        devicesFor(2L);
+
+        assertEquals(0, service.fanOutChat(100L));
+        assertTrue(bodies.isEmpty());
+    }
+
+    @Test
+    void eventCardReachesMentionsOnlyMembersButNotThoseWhoSilencedEveryone()
+    {
+        openGate();
+        Map<String, Object> msg = message(100L, 5, null);
+        msg.put("extraJson", "{\"cardType\":\"channel_event\",\"title\":\"城市夜跑\",\"startAt\":1763636400000}");
+        when(mapper.selectChatMessage(100L)).thenReturn(msg);
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        when(mapper.countPostedEventCard(100L)).thenReturn(1);
+        when(mapper.selectChannelPushContext(9L)).thenReturn(channelContext("闲聊", 1, null));
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(
+                member(2L),                                      // mentions-only via club default
+                member(3L, "suppressBroadcast", 1)));            // switched @everyone off
+        when(mapper.selectEnabledDevices(any(), any())).thenReturn(List.of(
+                device(2L, 'b'), new PushDevice(4L, 2L, "e".repeat(64), "SANDBOX", "en-US")));
+
+        assertEquals(2, service.fanOutChat(100L));
+        // 1763636400000 = 2025-11-20 19:00 China time
+        assertEquals("新活动：城市夜跑 · 11月20日 19:00", alert(0).getString("body"));
+        assertEquals("New event: 城市夜跑 · Nov 20, 19:00", alert(1).getString("body"));
+    }
+
+    @Test
+    void fakeEventCardExtraFromAMemberDoesNotPingEveryone()
+    {
+        openGate();
+        Map<String, Object> msg = message(100L, 5, null);
+        msg.put("extraJson", "{\"cardType\":\"channel_event\",\"title\":\"假活动\"}");
+        when(mapper.selectChatMessage(100L)).thenReturn(msg);
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        when(mapper.countPostedEventCard(100L)).thenReturn(0);
+        when(mapper.selectChannelPushContext(9L)).thenReturn(channelContext("闲聊", 1, null));
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(member(2L)));
+        devicesFor(2L);
+
+        assertEquals(0, service.fanOutChat(100L));
+    }
+
+    @Test
+    void channelPushWithPreviewOffStaysGeneric()
+    {
+        openGate();
+        when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 5, null));
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        when(mapper.selectChannelPushContext(9L)).thenReturn(channelContext("公告", 2, 0));
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(
+                member(2L, "convShowPreview", 0)));
+        devicesFor(2L);
+
+        assertEquals(1, service.fanOutChat(100L));
+        assertEquals("群消息", alert(0).getString("title"));
+        assertEquals("你收到一条新消息", alert(0).getString("body"));
+    }
+
+    @Test
+    void englishDeviceGetsEnglishChannelWording()
+    {
+        openGate();
+        when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 5, null));
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        when(mapper.selectChannelPushContext(9L)).thenReturn(channelContext("公告", 2, 0));
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(member(2L)));
+        when(mapper.selectEnabledDevices(any(), any())).thenReturn(List.of(new PushDevice(2L, 2L, "b".repeat(64), "SANDBOX", "en-US")));
+
+        assertEquals(1, service.fanOutChat(100L));
+        assertEquals("[Announcement] #公告 小李: 今晚七点集合", alert(0).getString("body"));
+    }
+
+    @Test
+    void audienceIsReadInKeysetPagesBeyondTheOldTwoThousandCap()
+    {
+        when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 4, "team_3"));
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        List<Map<String, Object>> first = new ArrayList<>();
+        for (long m = 2; m < 2 + PushFanoutService.AUDIENCE_PAGE; m++) first.add(member(m, "memberMuted", 1));
+        long last = 1 + PushFanoutService.AUDIENCE_PAGE;
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(first);
+        when(mapper.selectChatAudience(9L, 1L, false, last, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(member(9000L)));
+        devicesFor(9000L);
+
+        assertEquals(1, service.fanOutChat(100L));
+        org.mockito.Mockito.verify(mapper).selectChatAudience(9L, 1L, false, last, PushFanoutService.AUDIENCE_PAGE);
+    }
+
+    @Test
+    void channelContextFailureFallsBackToTheOldWording()
+    {
+        openGate();
+        when(mapper.selectChatMessage(100L)).thenReturn(message(100L, 5, null));
+        when(mapper.selectMentions(100L)).thenReturn(List.of());
+        when(mapper.selectChannelPushContext(9L)).thenThrow(new RuntimeException("Unknown column notify_default"));
+        when(mapper.selectChannelClubId(9L)).thenReturn(null);
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(member(2L)));
+        devicesFor(2L);
+
+        assertEquals(1, service.fanOutChat(100L));
+        assertEquals("群消息", alert(0).getString("title"));
+        assertEquals("小李：今晚七点集合", alert(0).getString("body"));
     }
 
     @Test
@@ -168,7 +340,7 @@ class PushFanoutServiceTest
         msg.put("conversationStatus", 0);
         when(mapper.selectChatMessage(100L)).thenReturn(msg);
         when(mapper.selectMentions(100L)).thenReturn(List.of());
-        when(mapper.selectChatAudience(9L, 1L, false)).thenReturn(List.of(member(2L), member(3L)));
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(member(2L), member(3L)));
         com.chengyinhub.business.service.impl.InGameChannelService inGame =
                 mock(com.chengyinhub.business.service.impl.InGameChannelService.class);
         // member 3 still has a conversation row but left the CITY team
@@ -193,7 +365,7 @@ class PushFanoutServiceTest
         msg.put("conversationStatus", 0);
         when(mapper.selectChatMessage(100L)).thenReturn(msg);
         when(mapper.selectMentions(100L)).thenReturn(List.of());
-        when(mapper.selectChatAudience(9L, 1L, false)).thenReturn(List.of(member(2L)));
+        when(mapper.selectChatAudience(9L, 1L, false, 0L, PushFanoutService.AUDIENCE_PAGE)).thenReturn(List.of(member(2L)));
 
         assertEquals(0, service.fanOutChat(100L));
         assertTrue(paths.isEmpty());

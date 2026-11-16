@@ -604,17 +604,8 @@ public class InGameChannelService
         String summary = msg.getContent().length() > 200 ? msg.getContent().substring(0, 200) : msg.getContent();
         conversationMapper.updateLastMessage(conv.getId(), ImMessage.MSG_TEXT, summary, new Date());
 
-        List<ImConversationMember> members = memberMapper.selectByConversation(conv.getId());
-        if (members != null)
-        {
-            for (ImConversationMember m : members)
-            {
-                if (m.getMemberId() == null || m.getMemberId() <= 0) continue;
-                if (Integer.valueOf(1).equals(m.getDeleted())) continue;
-                if (actorMemberId != null && actorMemberId.equals(m.getMemberId())) continue;
-                memberMapper.addUnreadForActiveMember(conv.getId(), m.getMemberId(), 1);
-            }
-        }
+        // SOC-13：一条集合 UPDATE 扇出未读（发起人除外；系统事件无发起人时用 0，成员 id 都 > 0）。
+        memberMapper.addUnreadForActiveMembersExcept(conv.getId(), actorMemberId == null ? 0L : actorMemberId, 1);
         return msg.getId();
     }
 

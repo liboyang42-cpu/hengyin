@@ -48,6 +48,11 @@ public class ChannelPlatformService
     private com.chengyinhub.business.mapper.channel.platform.ChannelGovernanceMapper governance;
     @Autowired(required = false)
     private ChannelGovernanceService.MuteBridge muteBridge;
+    /** W7 x-channel-reach (SOC-2): enrol guild members into new or re-permissioned channels after commit. */
+    @Autowired(required = false)
+    private ChannelMembershipSync membership;
+
+    void setMembership(ChannelMembershipSync membership) { this.membership = membership; }
 
     public ChannelPlatformService() { }
 
@@ -73,6 +78,7 @@ public class ChannelPlatformService
         ChannelGuildAccess.RoleProfile profile = access.roles(guildKind, guildId, viewer);
         int memberCount = mapper.countGuildMembers(guildKind, guildId);
         Map<Long, Long> unread = new HashMap<>();
+        Map<Long, Long> mentions = new HashMap<>();
         Map<Long, ChannelRow> categories = new LinkedHashMap<>();
         Map<Long, List<Map<String, Object>>> grouped = new LinkedHashMap<>();
         List<Map<String, Object>> ungrouped = new ArrayList<>();
@@ -97,11 +103,18 @@ public class ChannelPlatformService
             for (ChannelRow r : visible) ids.add(r.getId());
             for (Map<String, Object> u : mapper.selectUnread(viewer, ids))
                 unread.put(toLong(u.get("conversationId")), toLong(u.get("unread")));
+            // SOC-2: unread @me / @everyone / @my role / replies to me, so the list can say "Mentioned you".
+            for (Map<String, Object> u : mapper.selectMentionUnread(viewer, ids))
+                mentions.put(toLong(u.get("conversationId")), toLong(u.get("mentions")));
         }
         for (ChannelRow row : visible)
         {
             Map<String, Object> view = channelView(row, bitsById.get(row.getId()), memberCount, true);
-            if (withUnread) view.put("unread_count", unread.getOrDefault(row.getId(), 0L));
+            if (withUnread)
+            {
+                view.put("unread_count", unread.getOrDefault(row.getId(), 0L));
+                view.put("mention_count", mentions.getOrDefault(row.getId(), 0L));
+            }
             if (row.getParentId() != 0 && categories.containsKey(row.getParentId()))
                 grouped.computeIfAbsent(row.getParentId(), k -> new ArrayList<>()).add(view);
             else
@@ -600,6 +613,7 @@ public class ChannelPlatformService
                 throw new ChannelRejection(403, "CHANNEL_FORBIDDEN", "不能授予自己没有的权限");
             casPermissions(row, expected, expectedPerm);
             mapper.upsertOverwrite(channelId, targetType, target, allow, deny, note, viewer);
+            if (membership != null) membership.channelChangedAfterCommit(channelId);
             long auditId = log(channelId, "PERMISSION_PUT", row.getStatus(), row.getStatus(), c.reason, viewer, c.requestId);
             Map<String, Object> result = permissionApplied(c.requestId, channelId, targetType, target, expected, expectedPerm, auditId);
             result.put("allow_bits", hex(allow));
@@ -624,6 +638,7 @@ public class ChannelPlatformService
             casPermissions(row, expected, expectedPerm);
             if (mapper.deleteOverwrite(channelId, targetType, target) != 1)
                 throw new ChannelRejection(404, "OVERWRITE_NOT_FOUND", "该覆盖不存在");
+            if (membership != null) membership.channelChangedAfterCommit(channelId);
             long auditId = log(channelId, "PERMISSION_DELETE", row.getStatus(), row.getStatus(), c.reason, viewer, c.requestId);
             Map<String, Object> result = permissionApplied(c.requestId, channelId, targetType, target, expected, expectedPerm, auditId);
             result.put("deleted", true);
@@ -646,7 +661,10 @@ public class ChannelPlatformService
                 // The default must be a text channel at position 0 (ck_channel_default), so 闲聊 leads the list.
                 insert(viewer, guildKind, guildId, category.getId(), 1, CLUB_CHAT_CHANNEL, null, 1, 0, true, "provision", null);
                 insert(viewer, guildKind, guildId, category.getId(), 2, CLUB_NOTICE_CHANNEL, null, 1, 0, false, "provision", null);
-                insert(viewer, guildKind, guildId, category.getId(), 1, CLUB_EVENTS_CHANNEL, null, 1, 0, false, "provision", null);
+                ChannelRow events = insert(viewer, guildKind, guildId, category.getId(), 1, CLUB_EVENTS_CHANNEL, null, 1, 0, false,
+                        "provision", null);
+                // SOC-2 owner decision: 活动 (like every 公告) defaults to "all messages" so new events reach everyone.
+                notifyAllByDefault(events.getId());
                 return;
             }
             insert(viewer, guildKind, guildId, category.getId(), 1, DEFAULT_CHANNEL, null, 1, 0, true, "provision", null);
@@ -740,7 +758,28 @@ public class ChannelPlatformService
         }
         mapper.ensureConversationMember(id, viewer);
         log(id, "CREATE", null, 0, reason, viewer, requestId);
+        if (kind == ChannelPermissionCalculator.KIND_ANNOUNCEMENT) notifyAllByDefault(id);
+        // SOC-2: every guild member who can see the new channel gets a conversation row (after commit).
+        if (kind != 0 && membership != null) membership.channelChangedAfterCommit(id);
         return mapper.selectChannel(id);
+    }
+
+    /**
+     * SOC-2: 公告 and the provisioned 活动 channel push every message unless the member chose otherwise.
+     * The column comes from migration_20261116_channel_notify_default; if it is missing the channel simply
+     * inherits the club default, so a failure here never blocks creating the channel.
+     */
+    private void notifyAllByDefault(long channelId)
+    {
+        try
+        {
+            mapper.updateNotifyDefault(channelId, 0);
+        }
+        catch (RuntimeException missingColumn)
+        {
+            org.slf4j.LoggerFactory.getLogger(ChannelPlatformService.class)
+                    .warn("channel notify default not set channelId={} reason={}", channelId, missingColumn.getClass().getSimpleName());
+        }
     }
 
     private void transition(ChannelRow row, long expected, int from, int to, String archiveReason, Date purgeAt, String deleteReason)

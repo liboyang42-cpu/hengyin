@@ -24,6 +24,10 @@ public interface ImConversationMemberMapper
     int addUnreadForActiveMember(@Param("conversationId") Long conversationId,
                                  @Param("memberId") Long memberId, @Param("delta") int delta);
 
+    /** SOC-13：群/频道发言一次给除 exceptMemberId 外的在籍成员加未读（会话须未关闭）。 */
+    int addUnreadForActiveMembersExcept(@Param("conversationId") Long conversationId,
+                                        @Param("exceptMemberId") Long exceptMemberId, @Param("delta") int delta);
+
     /** 我的会话(按会话最后消息时间倒序) */
     public List<ImConversationMember> selectMyConversations(@Param("memberId") Long memberId);
 

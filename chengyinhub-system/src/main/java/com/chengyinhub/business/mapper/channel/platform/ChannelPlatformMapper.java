@@ -77,4 +77,21 @@ public interface ChannelPlatformMapper
     List<Map<String, Object>> selectUnread(@Param("memberId") long memberId, @Param("conversationIds") List<Long> conversationIds);
     Map<String, Object> selectReadState(@Param("memberId") long memberId, @Param("conversationId") long conversationId);
     Integer selectConversationType(@Param("id") long id);
+
+    // ---- W7 x-channel-reach (SOC-2): enrolment and mention counts ----
+    /** Latest message id of a conversation (0 when empty): new rows start read up to here. */
+    long selectLatestMessageId(@Param("conversationId") long conversationId);
+    /** INSERT IGNORE: an existing row (also one the member hid) is left as it is. */
+    int insertIgnoreMembers(@Param("conversationId") long conversationId, @Param("memberIds") List<Long> memberIds,
+            @Param("lastReadMsgId") long lastReadMsgId);
+    /** INSERT IGNORE one member into several channel conversations, each read up to its latest message. */
+    int insertIgnoreMemberChannels(@Param("memberId") long memberId, @Param("conversationIds") List<Long> conversationIds);
+    /** A member left the guild: drop their rows in that guild's channel conversations (rejoining enrols afresh). */
+    int deleteGuildMemberships(@Param("guildKind") int guildKind, @Param("guildId") long guildId, @Param("memberId") long memberId);
+    /** Live text/announcement channels (not categories) after a keyset cursor, for the backfill. */
+    List<ChannelRow> selectLiveChannelsAfter(@Param("afterId") long afterId, @Param("limit") int limit);
+    /** Unread @me / @everyone / @my-role / replies to me per conversation (messages after my last read). */
+    List<Map<String, Object>> selectMentionUnread(@Param("memberId") long memberId, @Param("conversationIds") List<Long> conversationIds);
+    /** Per-channel default notification level; failures are tolerated by the caller (column added by migration). */
+    int updateNotifyDefault(@Param("id") long id, @Param("level") Integer level);
 }

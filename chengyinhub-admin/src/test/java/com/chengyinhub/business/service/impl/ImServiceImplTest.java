@@ -251,6 +251,45 @@ class ImServiceImplTest {
     }
 
     @Test
+    void channelSendFansOutUnreadWithOneSetBasedUpdate() {
+        // SOC-13: a group/channel message no longer loads every member or runs one UPDATE per member.
+        ImServiceImpl service = service();
+        com.chengyinhub.business.service.IChannelConversationGate gate = mock(com.chengyinhub.business.service.IChannelConversationGate.class);
+        when(gate.isChannel(100L)).thenReturn(true);
+        ReflectionTestUtils.setField(service, "channelGate", gate);
+        ImConversation channel = new ImConversation();
+        channel.setId(100L);
+        channel.setType(com.chengyinhub.business.service.IChannelConversationGate.CONVERSATION_TYPE_CHANNEL);
+        channel.setStatus(0);
+        when(conversationMapper.selectImConversationById(100L)).thenReturn(channel);
+        when(conversationMapper.selectImConversationByIdForUpdate(100L)).thenReturn(channel);
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(blockMapper.existsBetween(anyLong(), anyLong())).thenReturn(0);
+        when(wxContentSecurityService.checkText(eq("hi"), any())).thenReturn(null);
+
+        ImMessage msg = service.send(1L, 100L, null, ImMessage.MSG_TEXT, "hi", null);
+
+        assertEquals(0L, msg.getReceiverId());
+        verify(memberMapper).addUnreadForActiveMembersExcept(100L, 1L, 1);
+        verify(memberMapper, never()).addUnreadForActiveMember(anyLong(), anyLong(), anyInt());
+        verify(memberMapper, never()).selectByConversation(anyLong());
+    }
+
+    @Test
+    void singleChatStillLooksUpTheReceiverAndAddsOneUnread() {
+        ImServiceImpl service = service();
+        when(memberMapper.selectByConvAndMember(100L, 1L)).thenReturn(member(1L));
+        when(memberMapper.selectByConversation(100L)).thenReturn(Arrays.asList(member(1L), member(2L)));
+        when(blockMapper.existsBetween(anyLong(), anyLong())).thenReturn(0);
+        when(wxContentSecurityService.checkText(eq("hi"), any())).thenReturn(null);
+
+        service.send(1L, 100L, null, ImMessage.MSG_TEXT, "hi", null);
+
+        verify(memberMapper).addUnread(100L, 2L, 1);
+        verify(memberMapper, never()).addUnreadForActiveMembersExcept(anyLong(), anyLong(), anyInt());
+    }
+
+    @Test
     void userCannotSendToSystemConversation() {
         ImServiceImpl service = service();
         ImConversation system = new ImConversation();
