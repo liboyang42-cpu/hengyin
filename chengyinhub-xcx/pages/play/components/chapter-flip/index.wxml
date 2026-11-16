@@ -40,7 +40,7 @@
   <!-- 章节开场的「读下去」(proto gp-chapter-start):点它方块炸散回星点;停一下也自己进(2026-09-24 业主:章节门不必每章都点) -->
   <view class="cf__foot cf__foot--start {{cta ? 'is-on' : ''}}" wx:if="{{mode === 'gate' && start}}"><view class="cf__btn" catchtap="onTap" aria-role="button" aria-label="读下去" hover-class="cf-pressed" hover-stay-time="80">读下去</view></view>
   <view class="cf__btns {{cta ? 'is-on' : ''}}" wx:if="{{mode === 'finale'}}">
-    <view class="cf__pill cf__pill--s" catchtap="onClose" aria-role="button" aria-label="继续" hover-class="cf-pressed" hover-stay-time="80">继续</view>
+    <view class="cf__pill cf__pill--s" catchtap="onClose" aria-role="button" aria-label="查看通关卡" hover-class="cf-pressed" hover-stay-time="80">查看通关卡</view>
     <view class="cf__pill cf__pill--p" catchtap="onSave" aria-role="button" aria-label="保存通关卡" hover-class="cf-pressed" hover-stay-time="80">保存通关卡</view>
   </view>
 </view>
