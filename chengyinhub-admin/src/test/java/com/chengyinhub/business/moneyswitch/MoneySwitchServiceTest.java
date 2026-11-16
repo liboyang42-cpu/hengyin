@@ -18,6 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -125,12 +128,81 @@ class MoneySwitchServiceTest {
 
     @Test
     void changeWritesWhoOldNewAndReason() {
+        // W7 MERCHANT-15: opening is a request by one person and an approval by another.
         MoneySwitchMapper mapper = mock(MoneySwitchMapper.class);
         when(mapper.selectEnabledForUpdate("tickets")).thenReturn(null);
         MoneySwitchService service = new MoneySwitchService(mapper, true);
-        assertTrue(service.set("TICKETS", true, "owner", "staging rehearsal"));
-        verify(mapper).upsert("tickets", 1, "owner");
-        verify(mapper).insertAudit("tickets", 0, 1, "owner", "staging rehearsal");
+        IllegalStateException direct = assertThrows(IllegalStateException.class,
+                () -> service.set("TICKETS", true, "owner", "staging rehearsal"));
+        assertEquals(MoneySwitchService.TWO_PERSON_REQUIRED, direct.getMessage());
+        verify(mapper, never()).upsert(anyString(), anyInt(), anyString());
+
+        service.requestOpen("TICKETS", "owner", "staging rehearsal");
+        verify(mapper).insertRequest("tickets", "owner", "staging rehearsal");
+        verify(mapper, never()).upsert(anyString(), anyInt(), anyString());
+
+        when(mapper.selectRequestForUpdate(7L, MoneySwitchService.REQUEST_TTL_HOURS)).thenReturn(request("owner", 0));
+        when(mapper.decideRequest(7L, "APPROVED", "finance-b", "checked")).thenReturn(1);
+        assertTrue(service.approveOpen(7L, "finance-b", "checked"));
+        verify(mapper).upsert("tickets", 1, "finance-b");
+        verify(mapper).insertAudit(eq("tickets"), eq(0), eq(1), eq("finance-b"), contains("owner"));
+    }
+
+    private static Map<String, Object> request(String by, int expired) {
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("id", 7L);
+        r.put("area", "tickets");
+        r.put("status", "PENDING");
+        r.put("requestedBy", by);
+        r.put("expired", expired);
+        return r;
+    }
+
+    @Test
+    void sameUserCannotApproveOwnRequest() {
+        MoneySwitchMapper mapper = mock(MoneySwitchMapper.class);
+        when(mapper.selectRequestForUpdate(7L, MoneySwitchService.REQUEST_TTL_HOURS)).thenReturn(request("Owner", 0));
+        MoneySwitchService service = new MoneySwitchService(mapper, true);
+        assertThrows(IllegalStateException.class, () -> service.approveOpen(7L, "owner", "me again"));
+        assertThrows(IllegalStateException.class, () -> service.approveOpen(7L, "admin", "super admin"));
+        assertThrows(IllegalStateException.class, () -> service.requestOpen("tickets", "admin", "super admin"));
+        verify(mapper, never()).upsert(anyString(), anyInt(), anyString());
+        verify(mapper, never()).decideRequest(anyLong(), eq("APPROVED"), anyString(), anyString());
+        verify(mapper, never()).insertRequest(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void anExpiredRequestCannotBeApprovedAndTheCeilingStillRules() {
+        MoneySwitchMapper mapper = mock(MoneySwitchMapper.class);
+        when(mapper.selectRequestForUpdate(7L, MoneySwitchService.REQUEST_TTL_HOURS)).thenReturn(request("owner", 1));
+        assertThrows(IllegalStateException.class, () -> new MoneySwitchService(mapper, true).approveOpen(7L, "finance-b", "late"));
+        verify(mapper).decideRequest(eq(7L), eq("EXPIRED"), eq("finance-b"), anyString());
+        when(mapper.selectRequestForUpdate(7L, MoneySwitchService.REQUEST_TTL_HOURS)).thenReturn(request("owner", 0));
+        assertThrows(IllegalStateException.class, () -> new MoneySwitchService(mapper, false).approveOpen(7L, "finance-b", "x"));
+        assertThrows(IllegalStateException.class, () -> new MoneySwitchService(mapper, false).requestOpen("tickets", "owner", "x"));
+        verify(mapper, never()).upsert(anyString(), anyInt(), anyString());
+    }
+
+    @Test
+    void offStaysImmediate() {
+        MoneySwitchMapper mapper = mock(MoneySwitchMapper.class);
+        when(mapper.selectEnabledForUpdate("refunds")).thenReturn(1);
+        assertTrue(new MoneySwitchService(mapper, true).set("refunds", false, "ops-a", "stop condition hit"));
+        verify(mapper).upsert("refunds", 0, "ops-a");
+        verify(mapper, never()).insertRequest(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void appRouteReadsTheDatabaseAtMostOncePerFewSeconds() {
+        MoneySwitchService service = mock(MoneySwitchService.class);
+        when(service.snapshot()).thenReturn(Map.of("tickets", true));
+        ApiMoneySwitchController route = new ApiMoneySwitchController(service);
+        long t = 1_000_000L;
+        route.snapshot(t);
+        route.snapshot(t + 4_000);
+        verify(service, org.mockito.Mockito.times(1)).snapshot();
+        route.snapshot(t + 5_001);
+        verify(service, org.mockito.Mockito.times(2)).snapshot();
     }
 
     @Test

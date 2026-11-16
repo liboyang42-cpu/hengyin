@@ -40,3 +40,25 @@ test('会费退款:路由、权限、页面一致,每次处理都要原因', () 
   assert.ok(sql.includes("'business:commerceConsole:refund'"))
   assert.match(commerceVue, /请填写原因/)
 })
+
+// W7 MERCHANT-15:打开资金区域两人完成;赞助任务每次写都要原因。
+test('资金开关:页面只提交打开申请,批准用单独权限,路由与控制器一致', () => {
+  const vue = read('src/views/business/moneyswitch/index.vue')
+  const api = read('src/api/business/moneyswitch.js')
+  const controller = readRepo('chengyinhub-admin/src/main/java/com/chengyinhub/web/controller/business/MoneySwitchAdminController.java')
+  const migration = readRepo('chengyinhub-admin/sql/migration_20261130_money_switch_two_person.sql')
+  assert.doesNotMatch(vue, /change\(scope\.row, true\)/)
+  assert.match(vue, /askOpen\(scope\.row\)/)
+  assert.ok(vue.includes("v-hasPermi=\"['business:moneyswitch:approve']\""))
+  assert.ok(controller.includes("hasPermi('business:moneyswitch:approve')"))
+  assert.ok(migration.includes("'business:moneyswitch:approve'"))
+  assert.doesNotMatch(migration, /INSERT INTO sys_role_menu|INSERT INTO cy_money_switch\b/i)
+  for (const route of ['"/requests"', '"/requests/{id}/approve"', '"/requests/{id}/reject"']) assert.ok(controller.includes(route), route)
+  for (const url of ["'/business/money-switch/requests'", "'/approve'", "'/reject'"]) assert.ok(api.includes(url), url)
+})
+
+test('赞助任务:保存与上下线都先填写原因', () => {
+  const vue = read('src/views/business/sponsoredquest/index.vue')
+  assert.match(vue, /body\.reason = reason/)
+  assert.match(vue, /setSponsoredQuestStatus\(row\.id, status, reason\)/)
+})

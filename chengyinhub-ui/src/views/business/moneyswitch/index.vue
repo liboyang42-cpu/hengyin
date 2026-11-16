@@ -3,7 +3,7 @@
     <cy-page-header
       eyebrow="资金与售后"
       title="资金开关"
-      description="App 六个资金区域的服务端开关。App 只有在编译上限和这里同时打开时才会收付款；默认全部关闭，每次改动都会留下记录。"
+      description="App 六个资金区域的服务端开关。App 只有在编译上限和这里同时打开时才会收付款；默认全部关闭，每次改动都会留下记录。打开需要两个人：一人提交申请，另一位管理员批准；关闭一步完成。共用的 admin 账号不能打开。"
     />
 
     <el-alert
@@ -42,8 +42,28 @@
               type="warning"
               plain
               :disabled="!serverCeiling"
-              @click="change(scope.row, true)"
-            >打开</el-button>
+              @click="askOpen(scope.row)"
+            >申请打开</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </section>
+
+    <section class="cy-panel" aria-label="打开申请" style="margin-top: 16px">
+      <div class="cy-panel__heading"><div><h2>打开申请</h2><p>申请人不能批准自己的申请；24 小时内未批准自动失效。</p></div></div>
+      <el-table :data="requests" size="small" empty-text="没有打开申请">
+        <el-table-column label="编号" prop="id" min-width="70" />
+        <el-table-column label="区域" min-width="120"><template slot-scope="scope">{{ label(scope.row.area) }}</template></el-table-column>
+        <el-table-column label="状态" min-width="90"><template slot-scope="scope">{{ requestStatus[scope.row.status] || scope.row.status }}</template></el-table-column>
+        <el-table-column label="申请人" prop="requestedBy" min-width="110" />
+        <el-table-column label="申请原因" prop="requestReason" min-width="180" />
+        <el-table-column label="处理人" prop="decidedBy" min-width="110" />
+        <el-table-column label="处理说明" prop="decideReason" min-width="160" />
+        <el-table-column label="时间" prop="createTime" min-width="160" />
+        <el-table-column label="操作" min-width="140">
+          <template slot-scope="scope">
+            <el-button v-if="scope.row.status === 'PENDING'" v-hasPermi="['business:moneyswitch:approve']" size="mini" type="warning" plain :disabled="!serverCeiling" @click="decide(scope.row, true)">批准打开</el-button>
+            <el-button v-if="scope.row.status === 'PENDING'" v-hasPermi="['business:moneyswitch:edit']" size="mini" plain @click="decide(scope.row, false)">驳回</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -68,7 +88,7 @@
 </template>
 
 <script>
-import { getMoneySwitch, changeMoneySwitch, listMoneySwitchAudit } from '@/api/business/moneyswitch'
+import { getMoneySwitch, changeMoneySwitch, listMoneySwitchAudit, listMoneySwitchRequests, requestMoneySwitchOpen, approveMoneySwitchOpen, rejectMoneySwitchOpen } from '@/api/business/moneyswitch'
 
 const LABELS = {
   tickets: '活动票务',
@@ -82,7 +102,14 @@ const LABELS = {
 export default {
   name: 'MoneySwitch',
   data() {
-    return { loading: false, serverCeiling: false, rows: [], audit: [] }
+    return {
+      loading: false,
+      serverCeiling: false,
+      rows: [],
+      audit: [],
+      requests: [],
+      requestStatus: { PENDING: '待批准', APPROVED: '已批准', REJECTED: '已驳回', EXPIRED: '已失效' }
+    }
   },
   created() {
     this.load()
@@ -102,6 +129,33 @@ export default {
         }))
       }).finally(() => { this.loading = false })
       listMoneySwitchAudit(50).then(res => { this.audit = res.data || [] })
+      listMoneySwitchRequests(50).then(res => { this.requests = res.data || [] })
+    },
+    label(key) { return LABELS[key] || key },
+    askOpen(row) {
+      this.$prompt(`申请打开「${row.label}」的原因（另一位管理员批准后才会打开）`, '申请打开资金区域', {
+        inputValidator: value => (value && value.trim().length > 0) || '请填写原因',
+        confirmButtonText: '提交申请',
+        cancelButtonText: '取消'
+      }).then(({ value }) => requestMoneySwitchOpen({ area: row.key, reason: value }))
+        .then(res => {
+          if (res && res.code === 200) this.$modal.msgSuccess('已提交，等待另一位管理员批准')
+          this.load()
+        })
+        .catch(() => {})
+    },
+    decide(req, approve) {
+      const verb = approve ? '批准打开' : '驳回'
+      this.$prompt(`${verb}「${this.label(req.area)}」（申请人 ${req.requestedBy}）的原因`, verb, {
+        inputValidator: value => (value && value.trim().length > 0) || '请填写原因',
+        confirmButtonText: verb,
+        cancelButtonText: '取消'
+      }).then(({ value }) => (approve ? approveMoneySwitchOpen : rejectMoneySwitchOpen)(req.id, { reason: value }))
+        .then(res => {
+          if (res && res.code === 200) this.$modal.msgSuccess('已保存')
+          this.load()
+        })
+        .catch(() => {})
     },
     change(row, enabled) {
       const verb = enabled ? '打开' : '关闭'

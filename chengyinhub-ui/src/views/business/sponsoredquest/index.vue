@@ -182,16 +182,26 @@ export default {
         endTime: this.form.window[1],
         budgetCent: Math.round((Number(this.form.budgetYuan) || 0) * 100)
       }
-      const call = body.id ? updateSponsoredQuest(body) : addSponsoredQuest(body)
-      call.then(() => {
+      // W7 MERCHANT-15:每次新建、修改、上下线都要填写原因,记入审计
+      this.askReason(body.id ? '修改原因' : '新建原因').then(reason => {
+        body.reason = reason
+        return body.id ? updateSponsoredQuest(body) : addSponsoredQuest(body)
+      }).then(() => {
         this.$modal.msgSuccess('已保存')
         this.formOpen = false
         this.load()
-      })
+      }).catch(() => {})
     },
     setStatus(row, status) {
       const words = { 1: '上线后玩家会在「优惠」图层看到这个任务(标注「广告」)。', 2: '暂停后玩家不再看到这个任务。', 3: '结束后不能再恢复。' }
-      this.$modal.confirm(words[status]).then(() => setSponsoredQuestStatus(row.id, status)).then(() => this.load()).catch(() => {})
+      this.askReason(words[status]).then(reason => setSponsoredQuestStatus(row.id, status, reason)).then(() => this.load()).catch(() => {})
+    },
+    askReason(title) {
+      return this.$prompt('请填写原因', title, {
+        inputValidator: v => (v && String(v).trim().length > 0) || '请填写原因',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消'
+      }).then(({ value }) => String(value).trim())
     },
     openCharges(row) {
       this.chargeTarget = row

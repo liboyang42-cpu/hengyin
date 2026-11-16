@@ -20,7 +20,11 @@ public class SponsoredQuestCampaign {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date endTime;
     private List<Long> placeIds = new ArrayList<>();
+    /** W7 MERCHANT-15: why this create / edit is made; required, stored only in the audit row. */
+    private String reason;
 
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getSponsorName() { return sponsorName; }
