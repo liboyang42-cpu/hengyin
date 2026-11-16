@@ -30,7 +30,10 @@ Component({
         data: { templateId: id, scope: this.data.scope || '' },
         success: (res) => {
           if (token !== this._token) return;
-          if (res && String(res.code) === '200') this.setData(Object.assign({ loading: false, error: '' }, view(res.data)));
+          if (res && String(res.code) === '200') {
+            const v = view(res.data);
+            this.setData({ loading: false, error: '', total: v.total, min: v.min, enough: v.enough, rows: v.rows });
+          }
           else this.setData({ loading: false, error: (res && res.msg) || '汇总暂时读不到，请稍后再试' });
         },
         fail: () => {
