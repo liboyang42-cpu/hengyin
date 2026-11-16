@@ -53,7 +53,7 @@ test('附近卡展示真实主题距离与类型，不恢复活动 LIVE 或活�
 
 test('负控：恢复假封面或移除中性底色必须判红', () => {
   for (const fake of ['/images/route_city_cover.png', '/images/index-figma/nearby-card.jpg']) {
-    const mutated = wxml.replace('src="{{item.cover}}"', 'src="{{item.cover || \'_FAKE_\'}}"'.replace('_FAKE_', fake));
+    const mutated = wxml.replace(nearbySection(wxml), nearbySection(wxml).replace('src="{{item.cover}}"', 'src="{{item.cover || \'_FAKE_\'}}"'.replace('_FAKE_', fake)));
     assert.notEqual(mutated, wxml, '负控必须真实变异');
     assert.throws(() => assertNearbyCover(mutated, wxss));
   }
@@ -65,7 +65,7 @@ test('负控：恢复假封面或移除中性底色必须判红', () => {
 test('负控：旧活动卡或隐藏无图主题名称必须判红', () => {
   for (const mutated of [
     wxml.replace('bindtap="goTopic" data-id="{{item.id}}"', 'bindtap="goActivity" data-id="{{item.id}}"'),
-    wxml.replace('class="v3-nearby-title ep2"', 'class="v3-nearby-title ep2" wx:if="{{item.cover}}"'),
+    wxml.replace(nearbySection(wxml), nearbySection(wxml).replace('class="v3-nearby-title ep2"', 'class="v3-nearby-title ep2" wx:if="{{item.cover}}"')),
   ]) {
     assert.notEqual(mutated, wxml, '负控必须真实变异');
     assert.throws(() => { assertNearbyCover(mutated, wxss); assertNearbyThemeCard(mutated); });

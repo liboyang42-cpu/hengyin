@@ -708,6 +708,24 @@ test('实际滚动只对权威ready任务衔接一次，未ready不写入完成'
   assert.equal(node.done, false, '没有服务器完成回执不能改node.done')
 })
 
+test('猜词与估数沿实际Page滚动权威收尾，未就绪或旧版本不推进', () => {
+  for (const type of ['hangman', 'estimate']) for (const mode of ['pending', 'ready', 'stale']) {
+    const { page, game } = readyScrollPage()
+    let arrived = 0
+    page.arrive = () => { arrived++ }
+    const ready = mode !== 'pending'
+    game.data.state.readyForBase = ready
+    page.onAdvancedSession({ detail: { nodeId: 51, sessionId: 71, version: 1, present: 'inline', readyForBase: ready,
+      playKit: { [type]: type === 'hangman' ? { title: '公开猜词', solved: ready } : { title: '公开估数', submitted: ready } } } })
+    assert.equal(page._kit().type, type)
+    if (mode === 'stale') game.data.state.version = 2
+    settleScrolledKit(page)
+    settleScrolledKit(page, 80)
+    assert.equal(arrived, mode === 'ready' ? 1 : 0, type + '/' + mode)
+    assert.equal(page.data.nodes[0].done, false, '没有服务器完成回执，不能因滚动改done')
+  }
+})
+
 test('正常大幅下滑越过ready结果仍衔接，不必上下寻找精确位置', () => {
   const { page, game } = readyScrollPage()
   page._storyOpenNode = true

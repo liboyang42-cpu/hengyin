@@ -36,6 +36,10 @@ function latest(p,row=consent(),opts) {
   const r=requests.find(x=>x.url==='/api/compliance/consents/latest')
   r.success({code:200,data:row});return r
 }
+function consentFlowRequests() {
+  for (const r of requests.filter(r => r.url === '/api/topic/list' || r.url === '/api/activity/list')) assert.equal(r.auth, false, '选城内容只能公开只读');
+  return requests.filter(r => r.url !== '/api/topic/list' && r.url !== '/api/activity/list');
+}
 const COLD_TOAST='暂时无法自动识别城市，请手动选择'
 test('HOME-COLD 已拒定位的登录首页冷重入仍可用原下拉换城', () => {
   store.home_city_location_declined = 1
@@ -44,7 +48,7 @@ test('HOME-COLD 已拒定位的登录首页冷重入仍可用原下拉换城', (
   assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityManual, false)
   assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, 1)
   assert.equal(p.data.locationPrompt, null)
-  assert.equal(requests.length, 0); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+  assert.equal(consentFlowRequests().length, 0); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
   p.onManualCityChange({ detail: { value: 4 } })
   assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityPicker, true)
   assert.equal(store.home_city_last, '杭州市'); assert.equal(store.home_city_location_declined, 1)
@@ -59,7 +63,7 @@ test('HOME-COLD 有历史城市时正常暂不定位保留城市和手选入口'
   assert.equal(p.data.locationPrompt, null); assert.equal(p.data.city, '上海市')
   assert.equal(p.data.cityManual, false); assert.equal(p.data.cityPicker, true)
   assert.equal(p.data.cityPickerIndex, 1); assert.equal(store.home_city_location_declined, 1)
-  assert.equal(requests.length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+  assert.equal(consentFlowRequests().length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
   assert.deepEqual(toasts, [])
 })
 test('HOME-COLD 首页用途REVOKE后保留历史城市手选且不再询问或采集', () => {
@@ -68,7 +72,7 @@ test('HOME-COLD 首页用途REVOKE后保留历史城市手选且不再询问或�
   assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityManual, false)
   assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, 1)
   assert.equal(p.data.locationPrompt, null); assert.equal(modals.length, 0)
-  assert.equal(requests.length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+  assert.equal(consentFlowRequests().length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
   assert.deepEqual(store, { home_city_last: '上海市' }); assert.deepEqual(toasts, [])
 })
 
@@ -88,7 +92,7 @@ test('HOME-CITY 手选后保留现有下拉，不因已登录而变回GPS入口'
   assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityManual, false)
   assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, 4)
   assert.equal(store.home_city_last, '杭州市')
-  assert.equal(requests.length, 0); assert.equal(locations.length, 0)
+  assert.equal(consentFlowRequests().length, 0); assert.equal(locations.length, 0)
   assert.equal(writes.length, 0); assert.equal(modals.length, 0)
 })
 for (const reason of ['MAP_UNAVAILABLE', 'MAP_RATE_LIMITED']) {
@@ -105,14 +109,14 @@ for (const reason of ['MAP_UNAVAILABLE', 'MAP_RATE_LIMITED']) {
       p.onManualCityChange({ detail: { value: 4 } })
       assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityPicker, true)
       assert.equal(store.home_city_last, '杭州市'); assert.equal(store.home_city_location_declined, 1)
-      assert.equal(requests.length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+      assert.equal(consentFlowRequests().length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
     })
   }
 }
-test('HOME-CITY 无历史城市的手选回退保持空城市与现有选择入口', () => {
+test('HOME-CITY 无历史城市回退上海内容与现有选择入口', () => {
   const p = page(); manualFallback(p, 'MAP_UNAVAILABLE')
-  assert.equal(p.data.city, ''); assert.equal(p.data.cityManual, true)
-  assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, -1)
+  assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityManual, false)
+  assert.equal(p.data.cityPicker, true); assert.equal(p.data.cityPickerIndex, 1)
   assert.equal(store.home_city_last, undefined); assert.equal(locations.length, 0)
 })
 test('HOME-CITY 自动手选回退保留历史城市并保持静默、不新增定位或同意', () => {
@@ -121,13 +125,13 @@ test('HOME-CITY 自动手选回退保留历史城市并保持静默、不新增�
   manualFallback(p, 'MAP_UNAVAILABLE', false)
   assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityPicker, true)
   assert.deepEqual(toasts, []); assert.equal(modals.length, 0)
-  assert.equal(requests.length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
+  assert.equal(consentFlowRequests().length, 1); assert.equal(locations.length, 0); assert.equal(writes.length, 0)
 })
-test('D-72 冷启动/onShow 自动定位失败不弹城市提示，没有记住的城市就露选择器而不是上海市',()=>{
+test('默认上海内容：冷启动/onShow 自动定位失败静默且不伪造位置',()=>{
   const p=page();latest(p);locations[0].success({latitude:31.23,longitude:121.47})
   requests.find(x=>x.url==='/api/map/reverse-geocode').success({code:200,data:{city:'',manualInputRequired:true,reason:'MAP_UNAVAILABLE'}})
-  assert.deepEqual(toasts,[]);assert.equal(p.data.city,'','没有玩家自己的城市时不给默认城市')
-  assert.equal(p.data.cityManual,true,'没有城市时露出手动选择/开定位入口')
+  assert.deepEqual(toasts,[]);assert.equal(p.data.city,'上海市','没有保存城市时上海仅作内容默认')
+  assert.equal(p.data.cityManual,false,'默认内容城市保留原城市选择入口')
   assert.equal(store.home_city_last,undefined,'默认城市不冒充定位结果写入记忆')
   for(const fail of [l=>l.fail({errMsg:'x'}),l=>l.fail({errMsg:'getLocation:fail auth deny'})]){
     requests=[];locations=[];latest(p);fail(locations[0])
@@ -158,7 +162,7 @@ test('V-01 首页城市文字可点击重新定位',()=>{
   assert.match(wxml,/<block wx:if="\{\{city\}\}">\s*<view wx:if="\{\{!cityPicker\}\}" class="v3-hero-mem-loc" catchtap="onTapHomeCity"[^>]*hover-class="cy-pressed"[^>]*>· \{\{city\}\}<\/view>/)
 })
 
-test('D-72 各类自动定位失败与未登录都不再默认上海市',()=>{
+test('默认上海内容：各类自动定位失败与未登录保留选城',()=>{
   const cases=[
     p=>{latest(p);locations[0].fail({errMsg:'getLocation:fail auth deny'})},
     p=>{latest(p);locations[0].fail({errMsg:'x'})},
@@ -169,13 +173,13 @@ test('D-72 各类自动定位失败与未登录都不再默认上海市',()=>{
   for(const run of cases){
     store={};requests=[];locations=[];token='normal-session'
     const p=page();run(p)
-    assert.equal(p.data.city,'','不再默认上海市')
+    assert.equal(p.data.city,'上海市','定位失败沿用上海内容，不伪造位置')
     assert.ok(p.data.cityManual === true || p.data.cityPicker === true, '没有城市时必须露出选择/开定位入口')
   }
   assert.deepEqual(toasts,[]);assert.equal(modals.length,0)
   const homeCity=require('../../utils/index/home-city-location.js')
-  assert.equal(homeCity.DEFAULT_CITY,'','DEFAULT_CITY 不再冒充上海')
-  assert.equal(homeCity.fallbackCity(),'','没有历史城市时兜底为空')
+  assert.equal(homeCity.DEFAULT_CITY,'上海市','内容默认上海不等于定位上海')
+  assert.equal(homeCity.fallbackCity(),'上海市','没有历史城市时展示上海内容')
 })
 test('V-01 未登录有记住的城市时沿用记住的城市',()=>{
   store={home_city_last:'杭州市'};token=''
@@ -190,12 +194,12 @@ test('Round5 #7 拒绝定位后不再自动询问,点城市才再问', () => {
   assert.equal(modals.length, 1, '首次自动询问')
   modals[0].success({ confirm: false, cancel: true })
   assert.equal(store.home_city_location_declined, 1)
-  assert.equal(p.data.city, '')
+  assert.equal(p.data.city, '上海市')
   // 再次启动 / onShow:不发同意查询、不弹窗
   requests = []; modals = []
   p = page(); p.getHomeCityLocation()
-  assert.equal(requests.length, 0); assert.equal(modals.length, 0)
-  assert.equal(p.data.city, '')
+  assert.equal(consentFlowRequests().length, 0); assert.equal(modals.length, 0)
+  assert.equal(p.data.city, '上海市')
   // 用户点城市:照常询问;同意后记忆清掉
   p.onTapHomeCity()
   requests.find(x => x.url === '/api/compliance/consents/latest').success({ code: 200, data: noConsent })
@@ -209,10 +213,10 @@ test('Round5 #8 游客首页城市用选城下拉,选中即改并记住;登录�
   token = ''
   const p = page(); p.getHomeCityLocation()
   assert.equal(p.data.cityPicker, true)
-  assert.equal(p.data.city, ''); assert.equal(p.data.cityPickerIndex, -1)
+  assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityPickerIndex, 1)
   p.onManualCityChange({ detail: { value: 4 } })
   assert.equal(p.data.city, '杭州市'); assert.equal(p.data.cityPickerIndex, 4); assert.equal(store.home_city_last, '杭州市')
-  assert.equal(requests.length, 0, '游客选城不发任何请求'); assert.equal(locations.length, 0)
+  assert.equal(consentFlowRequests().length, 0, '游客选城不发任何请求'); assert.equal(locations.length, 0)
   token = 'normal-session'; p.getHomeCityLocation()
   assert.equal(p.data.cityPicker, false)
   const wxml = require('fs').readFileSync(require('path').join(__dirname, '../../pages/index/index.wxml'), 'utf8')

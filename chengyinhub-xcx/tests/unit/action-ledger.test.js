@@ -158,10 +158,14 @@ test('R30 切换章节只关闭视频，选择章节仍保留真实旁白的真�
   assert.equal(inferActionClass('onPickChapter',
     expandHandlerBody('onPickChapter', stopped, null, { modules: true }), helpers), 'external')
   for (const controls of [ledger.controls, readCurrentLedger().controls]) {
-    const tools = controls.find(item => item.id === 'pages/play/index.wxml:357:bindtap:openStackOrChaptersFromTools:59')   // 2026-11-12 DEC-UI-1 D-38:删紧急求助行,354 → 353、序号 57 → 56(仅位移); 2026-11-11 f-play2:队长五种行提到菜单最前(+3 行说明注释),选章入口 323 → 354、序号 52 → 57(仅位移); l-play:顶部多一行 include,321 → 322;f-compliance 工具菜单加「紧急求助」一行,322 → 323、序号 51 → 52(仅位移)
-    // 2026-11-10 qx-s2 staging 合并树:play/index.wxml 各线增行后选章行 525 → 530(仅行号位移,同一 bindtap 与序号)
-    const pick = controls.find(item => item.id === 'pages/play/index.wxml:547:bindtap:onPickChapter:80')   // 2026-11-13 play-ui-1113c:本局档案站名改列表,结局段 +3 行,540 → 543(仅行号位移)   // 2026-11-12 DEC-UI-1 D-38:删紧急求助行,541 → 540、序号 78 → 77(仅位移)   // 2026-11-11 x-fix2:卡包 / 开场 / 加载遮罩补返回键,540 → 541、序号 77 → 78(仅位移)   // 2026-11-11 f-play2:工具菜单加 3 行注释,537 → 540(仅位移); 2026-11-11 f-play V3-08:选章弹窗挪出 allDone 守卫块并加一行说明注释,535 → 537(仅位移,同一 bindtap 与序号)
-    //   // l-play:include + 地点卡 / 结局段增行,530 → 534;f-compliance 紧急求助行 534 → 535、序号 76 → 77(仅位移)
+    const toolRows = controls.filter(item => item.entry.wxml === 'pages/play/index.wxml'
+      && item.control.event === 'bindtap' && item.control.handler === 'openStackOrChaptersFromTools')
+    const pickRows = controls.filter(item => item.entry.wxml === 'pages/play/index.wxml'
+      && item.control.event === 'bindtap' && item.control.handler === 'onPickChapter')
+    assert.equal(toolRows.length, 1, '唯一选章入口不能因源码行号移动而丢失或重复')
+    assert.equal(pickRows.length, 1, '唯一章节选择动作必须保留')
+    const tools = toolRows[0]
+    const pick = pickRows[0]
     assert.ok(tools)
     assert.equal(tools.actionClass, 'state')
     assert.deepEqual(tools.externalCapabilities, [])
@@ -1141,9 +1145,18 @@ test('动作分类追踪 app 全局 helper，图片选择不能落回本地 stat
   assert.equal(control.actionClass, 'external')
   assert.equal(control.externalGate, 'real-device-required')
 
-  const localReload = ledger.controls.find((item) => item.entry.js === 'pages/merchant/index/index.js'
+  const localReloads = ledger.controls.filter((item) => item.entry.js === 'pages/merchant/index/index.js'
     && item.control.handler === 'reloadConsole')
-  assert.equal(localReload, undefined, '固定隐藏的加载错误重试不进入分母')
+  assert.equal(localReloads.length, 2, '项目和待办的身份读取失败均保留真实重试入口')
+  for (const localReload of localReloads) {
+    assert.equal(localReload.control.visibleCondition, '{{!merchantAccess.active && consoleError}}')
+    assert.equal(localReload.actionClass, 'read')
+    assert.deepEqual(localReload.externalCapabilities, [])
+    assert.equal(localReload.externalGate, null)
+    assert.ok(localReload.targets.primaryApis.includes('/api/merchant/access/me'))
+    assert.deepEqual(localReload.requiredBranches, ['success', 'error', 'timeout', 'duplicate-trigger'])
+    assert.equal(localReload.evidence.status, 'pending')
+  }
   const consoleFile = path.resolve(__dirname, '../../pages/merchant/index/index.js')
   const nativeReload = expandHandlerBody('reloadConsole', handlerSlices(consoleFile))
   assert.notEqual(inferActionClass('reloadConsole', nativeReload), 'external',

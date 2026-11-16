@@ -380,21 +380,51 @@ for (const present of ['fullscreen', 'inline']) {
   }
 }
 
-test('反馈：重入/章内自动继续均不能跳过待选反馈，终点才继续', () => {
-  const saved = global.setTimeout;
+test('反馈：重入/章内滚动不能跳过待选反馈，真实CHOOSE终点才衔接且不重复', async () => {
+  const saved = global.setTimeout, previousQuery = wx.createSelectorQuery;
   const timers = [];
   global.setTimeout = callback => { timers.push(callback); return 1; };
   try {
-    const { page, game } = setup(feedbackView());
+    const { page, game } = setup(feedbackView({ present: 'inline' }));
     page.data.chapterFull = true; page._storyOpenNode = true; page._freshStoryGame = '29';
-    page._playKitNodeId = 29; page.data.chapterParas = [{ kind: 'kit', nodeId: 29 }];
-    let continued = 0; game.continueBase = () => { continued++; };
+    page._playKitNodeId = 29; page.data.chapterParas = [{ i: 0, kind: 'kit', nodeId: 29 }];
+    let continued = 0;
+    const trigger = game.triggerEvent;
+    game.triggerEvent = (name, detail) => {
+      if (name === 'ready') continued++;
+      else trigger(name, detail);
+    };
+    const query = { in() { return this; }, select() { return this; }, selectAll() { return this; },
+      boundingClientRect() { return this; }, exec(callback) {
+        callback([{ top: 0, bottom: 600, height: 600 }, [{ top: -600, bottom: -100, height: 500 }]]);
+      } };
+    wx.createSelectorQuery = () => query;
+    const scroll = top => {
+      page.onChapterScroll({ detail: { scrollTop: top } });
+      page._settleStory();
+    };
     page.onAdvancedSession({ detail: feedbackView({ present: 'inline' }) });
-    assert.equal(timers.length, 0); page.continueStoryGame(); assert.equal(continued, 0);
-    page._freshStoryGame = '29';
-    page.onAdvancedSession({ detail: feedbackView({ terminal: true, ended: true, present: 'inline' }) });
-    timers.forEach(callback => callback()); assert.ok(continued > 0);
-  } finally { global.setTimeout = saved; }
+    assert.equal(timers.length, 0);
+    page.continueStoryGame(); scroll(1600);
+    assert.equal(continued, 0, '主会话COMPLETED不等于反馈已结束');
+    const terminal = { ...feedbackView({ terminal: true, ended: true, present: 'inline' }), version: 2 };
+    page.onAdvancedSession({ detail: terminal });
+    timers.splice(0).forEach(callback => callback());
+    scroll(1700);
+    assert.equal(continued, 0, 'Page迟到终点不能替换组件仍待选的权威状态');
+    game.hydrate(feedbackView({ present: 'inline' }));
+    page.onPlayKitAction({ detail: { type: 'branch', action: 'choose', detail: { optionId: 'continue' } } });
+    assert.equal(requests.length, 1);
+    assert.equal(JSON.parse(requests[0].data).action, 'CHOOSE');
+    assert.equal(continued, 0, '选择回执前不衔接');
+    requests[0].success({ code: 200, data: terminal });
+    await tick();
+    assert.equal(game.data.state.version, 2);
+    assert.equal(game.data.state.branch.ended, true);
+    assert.equal(page.data.playKit.readyForBase, true);
+    scroll(1800); scroll(1900);
+    assert.equal(continued, 1, '真实组件终点沿滚动仅发一次ready，不伪造节点完成');
+  } finally { global.setTimeout = saved; wx.createSelectorQuery = previousQuery; }
 });
 
 test('反馈：组件只读、终点、同正文不同步、明确拒绝后的重试', () => {

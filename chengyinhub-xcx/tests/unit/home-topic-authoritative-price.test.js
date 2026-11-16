@@ -69,5 +69,5 @@ test('topic markup distinguishes unknown from a free price and keeps the activit
   const source=fs.readFileSync(path.resolve(__dirname,'../../pages/index/index.wxml'),'utf8');
   assert.match(source,/wx:if="\{\{item.homePrice != null\}\}"[^>]*>\{\{money.amount\(item.homePrice\)\}\} 起/);
   assert.match(source,/wx:else class="v2-status-v price">—/);
-  assert.equal((source.match(/money.amount\(item.minAmout\)/g)||[]).length,1);
+  assert.equal((source.match(/money.amount\(item.minAmout\)/g)||[]).length,2);
 });

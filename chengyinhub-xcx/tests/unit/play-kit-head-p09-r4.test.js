@@ -1,5 +1,5 @@
 // P-09 第四轮(业主 2026-11-03):故事流里的猜数字,题目和返回钮、微信胶囊同一行 ——
-// 在返回钮右边、胶囊左边,最多两行;不再单独一行压在圆钮下面。交过之后那颗只写「这一关结束了」的灰钮不是真动作,收起;「继续故事」留着。
+// 在返回钮右边、胶囊左边,最多两行;不再单独一行压在圆钮下面。交过之后收起无效灰钮;章内结果沿滚动衔接,整屏业务收尾仍保留。
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
 const fs = require('node:fs')
@@ -43,9 +43,12 @@ test('猜数字组件:内嵌时题目由页面收起;单独整屏时照旧显示
   assert.match(wxss, /\.es__q \{\n  display: var\(--pk-es-q-display, block\);/)
 })
 
-test('交过之后不再留「这一关结束了」灰钮;「继续故事」仍在故事流里', () => {
+test('交过之后无无效灰钮，故事流沿真实滚动衔接而不另放继续故事', () => {
   const w = read('pages/play/components/playkit-estimate/index.wxml')
   assert.doesNotMatch(w, /这一关结束了/)
   assert.match(w, /<view class="g-btn pe pe--up" wx:if="\{\{!locked\}\}"[^>]*bindtap="onSubmit"[\s\S]*?>就这个数<\/view>/)
-  assert.match(read('pages/play/index.wxml'), /bindtap="continueStoryGame"[\s\S]{0,120}>继续故事<\/view>/)
+  const story = read('pages/play/index.wxml')
+  assert.doesNotMatch(story, /bindtap="continueStoryGame"/)
+  assert.match(story, /bindscroll="onChapterScroll"/)
+  assert.match(read('pages/play/index.js'), /if \(scrolled && lines\.some\([\s\S]*?_continueReadyStory\(that\._storyReadyContext\)/)
 })

@@ -50,6 +50,9 @@ test('首页真实请求只取人工推荐位，正常回包生成精选卡且�
     clubName: '夜游俱乐部', sysCategoryList: [{ categoryName: '夜游' }], signupCount: 3,
   }] } });
   request.complete();
+  const supplement = requests.filter(row => row.url === '/api/topic/list')[1];
+  assert.equal(supplement.data.is_recommend, 1); assert.equal(supplement.data.city_keyword, undefined);
+  supplement.success({ code: 200, data: { rows: [] } }); supplement.complete();
   assert.equal(page.data.listLoading.recommendedTopicList, false);
   assert.equal(page.data.listErr.recommendedTopicList, false);
   assert.equal(page.data.recoHero.id, 31);
@@ -88,7 +91,7 @@ test('刷新保留现有精选卡，空回包清空轮播，失败仍保留独�
   assert.equal(page.data.recoCurrent, 0);
   assert.equal(page.data.listErr.recommendedTopicList, false);
   page.retryList({ currentTarget: { dataset: { list: 'recommendedTopicList' } } });
-  assert.deepEqual(requests[1].data, { is_recommend: 1 });
+  assert.deepEqual(requests[1].data, { pageNum: 1, pageSize: 5, is_recommend: 1, city_keyword: '上海市' });
   requests[1].fail({ errMsg: 'request:fail' });
   requests[1].complete();
   assert.equal(page.data.listErr.recommendedTopicList, true);

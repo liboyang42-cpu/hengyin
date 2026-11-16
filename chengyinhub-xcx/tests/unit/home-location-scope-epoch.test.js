@@ -102,7 +102,9 @@ test('坐标仅换城市，不进页面data、附近排序或账号资料',()=>{
   const r=requests.find(x=>x.url==='/api/map/reverse-geocode');assert.ok(r)
   assert.deepEqual(r.data,{latitude:31.230416,longitude:121.473701});assert.equal(p.data.locationInfo,undefined)
   r.success({code:200,data:{city:'上海市'}});assert.equal(p.data.city,'上海市')
-  assert.equal(requests.some(x=>x.url==='/api/user/update'||x.url==='/api/activity/list'),false)
+  assert.equal(requests.some(x=>x.url==='/api/user/update'||x.url==='/api/roam/hangout/nearby'),false)
+  const cityEvents=requests.find(x=>x.url==='/api/activity/list');assert.equal(cityEvents.data.city_keyword,'上海市');assert.equal(cityEvents.auth,false)
+  assert.equal(cityEvents.data.lat,undefined);assert.equal(cityEvents.data.lng,undefined)
 })
 test('无效坐标、换账号后迟到城市结果不写入当前页面',()=>{
   const p=page();latest(p);locations[0].success({latitude:NaN,longitude:121})
@@ -116,7 +118,8 @@ test('首页刷新即使残留旧坐标也不上传给附近排序',()=>{
   for(const key of ['getUserData','loadContinueExplore','loadBottomTopicList','loadBottomActivityList'])p[key]=()=>{}
   const lists=[];p.getListData=(...args)=>lists.push(args);p.loadPageData()
   assert.equal(lists.some(x=>x[0]==='nearbyTopicList'),false,'未主动定位时不查附近主题；城市旧坐标不能用于附近查询')
-  assert.equal(lists.some(x=>x[0]==='nearbyActivityList'),false,'不再把按时间排序的活动当成附近内容')
+  const events=lists.find(x=>x[0]==='nearbyActivityList');assert.ok(events,'无位置时提供明确城市活动')
+  assert.equal(events[1],'/api/activity/list');assert.equal(events[2].city_keyword,'上海市');assert.equal(events[2].lat,undefined);assert.equal(events[2].lng,undefined)
 })
 test('定位API或授权读取失败给简短反馈，不采集或泄露原始错误',()=>{
   const p=page();latest(p,consent(),{userInitiated:true});assert.equal(loading,true)
@@ -143,12 +146,12 @@ test('定位权限被拒只引导打开设置一次',()=>{
   locations[0].fail({errMsg:'getLocation:fail auth deny'})
   assert.equal(modals.length,1)
 })
-test('D-72 服务端要求手动输入时露出城市选择，不再固定默认上海市',()=>{
+test('服务端要求手动输入时沿用上海内容并露出选择',()=>{
   const p=page();latest(p)
   locations[0].success({latitude:31.23,longitude:121.47})
   const geo=requests.find(x=>x.url==='/api/map/reverse-geocode')
   geo.success({code:200,data:{city:'',manualInputRequired:true,reason:'MAP_UNAVAILABLE'}})
-  assert.equal(p.data.city,'','不再拿上海当默认城市');assert.equal(p.data.cityManual,true)
+  assert.equal(p.data.city,'上海市','上海只作内容兜底');assert.equal(p.data.cityManual,false);assert.equal(p.data.cityPicker,true)
 })
 test('逆地理请求失败与空城市给出不同提示',()=>{
   let p=page();latest(p,consent(),{userInitiated:true});locations[0].success({latitude:31.23,longitude:121.47})

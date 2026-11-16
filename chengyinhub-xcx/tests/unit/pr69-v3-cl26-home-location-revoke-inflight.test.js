@@ -64,7 +64,7 @@ test('同意写入在途时撤回：迟到的同意成功回执不能触发精�
   await flush()
   assert.equal(locations.length, 0, '撤回之后不得再调用 wx.getLocation')
   assert.equal(requests.some(r => r.url === '/api/map/reverse-geocode'), false)
-  assert.equal(p.data.city, '')
+  assert.equal(p.data.city, '上海市', '撤回只关闭定位，内容城市仍可选择')
 })
 
 test('GPS 在途时离开首页撤回：迟到坐标不逆地理，回到首页读到撤回也不再定位或弹窗', async () => {
@@ -92,6 +92,6 @@ test('GPS 在途时离开首页撤回：迟到坐标不逆地理，回到首页�
   await flush()
   assert.equal(locations.length, 1, '读到撤回后不再发起定位')
   assert.equal(modals.length, 0, '撤回后也不自动弹同意')
-  assert.equal(p.data.city, '')
+  assert.equal(p.data.city, '上海市', '撤回只关闭定位，内容城市仍可选择')
   p.onUnload()
 })

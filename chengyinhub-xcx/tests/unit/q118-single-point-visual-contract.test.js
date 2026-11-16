@@ -7,7 +7,7 @@ const xcxRoot = path.resolve(__dirname, '../..');
 const read = (relativePath) => fs.readFileSync(path.join(xcxRoot, relativePath), 'utf8');
 
 function assertIndexHeroContract({ js, wxml, wxss }) {
-  assert.match(js, /city:\s*''/, '首页首帧不能把城市设成“获取中”这类常驻 loading 文案');
+  assert.match(js, /city:\s*homeCity\.fallbackCity\(\)/, '首页首帧不能把城市设成“获取中”这类常驻 loading 文案');
   assert.match(wxml, /wx:if="\{\{city\}\}"/, '城市信息只在实际值存在时渲染');
   assert.doesNotMatch(wxml, /city\s*\|\|\s*'上海'/, '未取得城市时不能伪造默认城市');
   assert.doesNotMatch(wxml, /v3-hero-bell-dot/, '没有未读数据时不能常驻通知点');
@@ -18,6 +18,7 @@ function assertIndexHeroContract({ js, wxml, wxss }) {
   const failures = [
     ['recommendedTopicList', 'recoHero'],
     ['nearbyTopicList', 'nearbyTopicList.length'],
+    ['nearbyActivityList', 'nearbyActivityList.length'],
     ['upcomingActivityList', 'upcomingActivityList.length'],
   ];
   for (const [list, content] of failures) {
@@ -29,11 +30,15 @@ function assertIndexHeroContract({ js, wxml, wxss }) {
     assert.ok(branch.includes('data-list="' + list + '" bind:retry="retryList"'));
   }
   const inline = aboveFeed.match(/<cy-inline-error\b[^>]*\/>/g) || [];
-  assert.equal(inline.length, 1, '只为用户主动定位后的附近查询保留行内重试');
-  assert.match(inline[0], /wx:if="\{\{listErr\.nearbyTopicList && nearbyTopicList\.length\}\}" load-failure/);
-  assert.match(inline[0], /title="附近主题更新失败" action="重试" data-list="nearbyTopicList" bind:action="retryList"/);
+  assert.equal(inline.length, 3, '推荐补足、附近主题和活动各自保留真实错误及重试');
+  for (const [list, content, title] of [['recommendedTopicList', 'recoHero', '推荐主题更新失败'], ['nearbyTopicList', 'nearbyTopicList.length', '附近主题更新失败'], ['nearbyActivityList', 'nearbyActivityList.length', '活动更新失败']]) {
+    const row = inline.find(tag => tag.includes('data-list="' + list + '"'));
+    assert.ok(row);
+    assert.ok(row.includes('wx:if="{{listErr.' + list + ' && ' + content + '}}" load-failure'));
+    assert.ok(row.includes('title="' + title + '" action="重试" data-list="' + list + '" bind:action="retryList"'));
+  }
   assert.match(aboveFeed, /<swiper class="v3-reco-swiper" wx:if="\{\{recoCards\.length\}\}"/);
-  for (const list of ['nearbyTopicList', 'upcomingActivityList']) {
+  for (const list of ['nearbyTopicList', 'nearbyActivityList', 'upcomingActivityList']) {
     assert.ok(aboveFeed.includes('<scroll-view wx:if="{{' + list + '.length}}"'), '刷新错误不能遮掉已有卡片：' + list);
   }
 }

@@ -137,9 +137,9 @@ function isCurrentLocationRequest(page, scope) {
 }
 
 const homeCity = require('../../utils/index/home-city-location.js');
-/** D-72:没有历史定位/识别失败时的统一收口 —— 有玩家自己的城市就用，没有就露选择器，不再冒充上海。 */
+// 内容城市优先沿用保存/当前选择，否则上海；不创建位置或距离。
 function applyCityFallback(page) {
-  const city = page.data.city || homeCity.fallbackCity();
+  const city = homeCity.readLastCity() || page.data.city || homeCity.DEFAULT_CITY;
   if (city) page.setData({ city, cityManual: false, cityPicker: true, cityPickerIndex: homeCity.CITY_OPTIONS.indexOf(city) });
   else page.setData({ city: '', cityManual: true });
 }
@@ -148,7 +148,7 @@ function showHomeCityLocationError(page, scope, kind) {
   if (!isCurrentLocationRequest(page, scope)) return;
   // V-01:冷启动/onShow 的自动定位失败不弹提示，保留上次城市，没有就露出手动选择；只有用户主动点定位才提示。
   if (scope.userInitiated) cyToast(homeCity.message(kind));
-  else if (!page.data.city) applyCityFallback(page);
+  else applyCityFallback(page);
 }
 
 function hideLocationLoading(page, scope) {
@@ -222,7 +222,7 @@ Page({
     // 身份分流：商户在首页 tab 渲染前直接跳商户首页，避免玩家首页闪一帧
     // debug_user_view='user' 强制使用普通用户视角（调试用）
     _needsRedirect: isMerchantView(),
-    city: '', cityManual: false, manualCityOptions: homeCity.CITY_OPTIONS,
+    city: homeCity.fallbackCity(), cityManual: false, manualCityOptions: homeCity.CITY_OPTIONS,
     cityPicker: false, cityPickerIndex: -1, // Round5 #8:游客点城市走现有选城下拉(不定位、不上传位置)
     isAppReady: false,
     isLoading: true,
@@ -256,7 +256,7 @@ Page({
     
     // 其他数据保持不变
     recommendedTopicList: [],
-    nearbyTopicList: [],
+    nearbyTopicList: [], nearbyActivityList: [], nearbyEventsLocated: false,
     upcomingActivityList: [],
     bottomTopicList: [],
     bottomActivityList: [],
@@ -569,6 +569,7 @@ Page({
     // onShow 也要复位旧快照留下的隐藏闸，确保角色切换后页面可见。
     this.setData({ _needsRedirect: false });
     this.loadOperatorAccess();
+    if (resumeHomeLocation) { this.loadRecommendedTopics(); this.loadCityEvents(); }
 
     // 确认留在首页后,保持深色:状态栏/导航切深色(白字)。离开首页时 onHide 复位浅色。
     applyTheme('dark');
@@ -765,10 +766,8 @@ Page({
 
 
     // 推荐主题只取人工推荐位，避免与底部全量主题重复。
-    that.getListData('recommendedTopicList', '/api/topic/list', {
-      pageNum: 1,
-      pageSize: 5, is_recommend: 1,
-    });
+    that.loadRecommendedTopics();
+    that.loadCityEvents();
 
     // 即将上线
     that.getListData('upcomingActivityList', '/api/activity/list', {
@@ -802,6 +801,43 @@ Page({
     if (nearby) that.getListData('nearbyTopicList', nearby.url, nearby.params, nearby.processor);
   },
   
+  loadRecommendedTopics() {
+    const city = this.data.city || homeCity.fallbackCity();
+    const unique = rows => rows.filter((row, index, all) => all.findIndex(other => String(other.id) === String(row.id)) === index);
+    this.getListData('recommendedTopicList', '/api/topic/list', {
+      pageNum: 1, pageSize: 5, is_recommend: 1, city_keyword: city,
+    }, unique, local => {
+      if (local.length >= 3) return;
+      this.getListData('recommendedTopicList', '/api/topic/list', {
+        pageNum: 1, pageSize: 5, is_recommend: 1,
+      }, rows => unique(local.concat(rows)));
+    });
+  },
+
+  loadCityEvents() {
+    if (this.data.nearbyEventsLocated) {
+      const nearby = this._listReq && this._listReq.nearbyActivityList;
+      if (nearby) this.getListData('nearbyActivityList', nearby.url, nearby.params, nearby.processor);
+      return;
+    }
+    this.getListData('nearbyActivityList', '/api/activity/list', {
+      pageNum: 1, pageSize: 6, is_my: 2, city_keyword: this.data.city || homeCity.fallbackCity(),
+    });
+  },
+
+  selectHomeCity(city) {
+    this._locationEpoch = (this._locationEpoch || 0) + 1;
+    this._homeCityEpoch = (this._homeCityEpoch || 0) + 1;
+    this.clearNearbyThemes();
+    if (this._locationLoadingEpoch != null) { this._locationLoadingEpoch = null; cyLoading.hide(); }
+    this._locationPromptScope = null;
+    homeCity.saveLastCity(city);
+    this.setData({ city, locationPrompt: null, cityManual: false, cityPicker: true, cityPickerIndex: homeCity.CITY_OPTIONS.indexOf(city),
+      recommendedTopicList: [], nearbyActivityList: [], 'listLoaded.recommendedTopicList': false,
+      'listLoaded.nearbyActivityList': false });
+    this.loadRecommendedTopics(); this.loadCityEvents();
+  },
+
   locateNearbyThemes() {
     if (this._unloaded || this._homeLocationHidden || this.data.listLoading.nearbyTopicList) return;
     const epoch = this._nearbyThemeEpoch = (this._nearbyThemeEpoch || 0) + 1;
@@ -810,8 +846,8 @@ Page({
       && epoch === this._nearbyThemeEpoch
       && owner === [app.getUserID() || '', (app.globalData || {}).authorization || ''].join('|');
     modal.show({
-      title: '查找附近主题',
-      content: '本次位置将发送给城瘾，用于查找 3 公里内的主题。离开首页后停止使用，不记录轨迹。',
+      title: '查找附近主题和活动',
+      content: '本次位置将发送给城瘾，用于查找 3 公里内的主题和活动。离开首页后停止使用，不记录轨迹。',
       confirmText: '同意并定位',
       cancelText: '暂不定位',
       success: (res) => {
@@ -830,6 +866,12 @@ Page({
                 cyToast('未获取到有效位置，请重试'); return;
               }
               this._nearbyThemeOwner = owner;
+              this.setData({ nearbyEventsLocated: true, nearbyActivityList: [] });
+              this.getListData('nearbyActivityList', '/api/roam/hangout/nearby', {
+                lat: point.latitude, lng: point.longitude, radius: 3000,
+              }, items => items.filter(item => item.kind === 'activity')
+                .map(item => Object.assign({}, item, { imgUrl: item.picUrl })));
+
               this.getListData('nearbyTopicList', '/api/roam/hangout/nearby', {
                 lat: point.latitude, lng: point.longitude, radius: 3000,
               }, (items) => items.filter(item => item.kind === 'topic')
@@ -852,6 +894,14 @@ Page({
   },
 
   clearNearbyThemes() {
+    if (this.data.nearbyEventsLocated) {
+      if (this._listControls && this._listControls.nearbyActivityList) this._listControls.nearbyActivityList.abort();
+      this._listEpoch = this._listEpoch || Object.create(null);
+      this._listEpoch.nearbyActivityList = (this._listEpoch.nearbyActivityList || 0) + 1;
+      if (this._listControls) delete this._listControls.nearbyActivityList;
+      if (this._listReq) delete this._listReq.nearbyActivityList;
+      this.setData({ nearbyActivityList: [], nearbyEventsLocated: false, 'listLoaded.nearbyActivityList': false, 'listLoading.nearbyActivityList': false });
+    }
     this._nearbyThemeEpoch = (this._nearbyThemeEpoch || 0) + 1;
     this._listEpoch = this._listEpoch || Object.create(null);
     this._listEpoch.nearbyTopicList = (this._listEpoch.nearbyTopicList || 0) + 1;
@@ -927,6 +977,7 @@ Page({
         statusLabel: '',
         betaFlag: item.betaFlag == 1 ? 1 : 0,
         metaLine: metaParts.join(' · ') || item.addressName || '',
+        cityLabel: item.cityName || item.city || item.addressName || '',
       };
     });
     const current = Math.min(this.data.recoCurrent || 0, cards.length - 1);
@@ -1171,11 +1222,12 @@ Page({
   retryList: function (e) {
     const listName = e.currentTarget.dataset.list;
     const req = this._listReq && this._listReq[listName];
+    if (listName === 'recommendedTopicList') { this.loadRecommendedTopics(); return; }
     if (!req) return;
     this.getListData(listName, req.url, req.params, req.processor);
   },
 
-  getListData: function (listName, url, params, dataProcessor = null) {
+  getListData: function (listName, url, params, dataProcessor = null, onLoaded = null) {
     const that = this;
     // 记下请求参数,失败后 cy-error 的重试才有的可重放
     that._listReq = that._listReq || {};
@@ -1185,9 +1237,15 @@ Page({
     const requestEpoch = (that._listEpoch[listName] || 0) + 1;
     that._listEpoch[listName] = requestEpoch;
     const nearbyEpoch = that._nearbyThemeEpoch;
+    const cityEpoch = that._homeCityEpoch || 0;
+    const owner = [app.getUserID() || '', (app.globalData || {}).authorization || ''].join('|');
+    const cityList = listName === 'recommendedTopicList' || listName === 'nearbyActivityList';
+    const geoList = listName === 'nearbyTopicList' || (listName === 'nearbyActivityList' && url === '/api/roam/hangout/nearby');
     const isCurrent = function () {
       return that._listEpoch[listName] === requestEpoch
-        && (listName !== 'nearbyTopicList' || (!that._homeLocationHidden && !that._unloaded
+        && (!cityList || (!that._homeLocationHidden && !that._unloaded && cityEpoch === (that._homeCityEpoch || 0)
+          && owner === [app.getUserID() || '', (app.globalData || {}).authorization || ''].join('|')))
+        && (!geoList || (!that._homeLocationHidden && !that._unloaded
           && nearbyEpoch === that._nearbyThemeEpoch
           && that._nearbyThemeOwner === [app.getUserID() || '', (app.globalData || {}).authorization || ''].join('|')));
     };
@@ -1210,14 +1268,14 @@ Page({
     const control = app.sendRequest({
       hideLoading: true,
       url: url,
-      method: listName === 'nearbyTopicList' ? 'GET' : 'POST',
+      method: url === '/api/roam/hangout/nearby' ? 'GET' : 'POST',
       auth: false,
       data: params,
       success: function (res) {
         if (!isCurrent()) return;
-        const rows = res && res.data && (listName === 'nearbyTopicList' ? res.data.items : res.data.rows);
+        const rows = res && res.data && (url === '/api/roam/hangout/nearby' ? res.data.items : res.data.rows);
         if (res && res.code == "200" && isRecordList(rows)) {
-          let list = listName === 'nearbyTopicList' && dataProcessor ? dataProcessor(rows) : rows;
+          let list = url === '/api/roam/hangout/nearby' && dataProcessor ? dataProcessor(rows) : rows;
           
           for (let i = 0; i < list.length; i++) {
             // 新增：格式化显示时间
@@ -1271,12 +1329,12 @@ Page({
               }
             }
             
-            if (list[i]['distance'] || (listName === 'nearbyTopicList' && list[i]['distance'] === 0)) {
+            if (list[i]['distance'] || (url === '/api/roam/hangout/nearby' && list[i]['distance'] === 0)) {
               list[i]['distance'] = (list[i]['distance'] / 1000).toFixed(2) + 'km';
             }
           }
           
-          if (listName !== 'nearbyTopicList' && typeof dataProcessor === 'function') list = dataProcessor(list);
+          if (url !== '/api/roam/hangout/nearby' && typeof dataProcessor === 'function') list = dataProcessor(list);
           list = that.processTopicDate(list);
           list = decorateImgs(list, listName === 'recommendedTopicList' || listName === 'nearbyTopicList');
 
@@ -1290,6 +1348,7 @@ Page({
             }
           });
 
+          if (isCurrent() && onLoaded) onLoaded(list);
           // 如果是即将上线列表，确保定时器正在运行
           if (listName === 'upcomingActivityList' && list.length > 0) {
             that.ensureCountdownTimerRunning();
@@ -1584,12 +1643,12 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
     scope.userInitiated = !!(opts && opts.userInitiated);
     scope.gateCoversLocation = !!(opts && opts.gateCoversLocation);
     if (!(Number(scope.memberId) > 0) || !scope.authorization || scope.authorization === 'dev-token') {
-      const guestCity = this.data.city || homeCity.readLastCity();
+      const guestCity = homeCity.readLastCity() || this.data.city || homeCity.DEFAULT_CITY;
       this.setData({ city: guestCity, cityManual: false, cityPicker: true, cityPickerIndex: homeCity.CITY_OPTIONS.indexOf(guestCity) });
       return;
     }
     const that = this;
-    this.setData({ city: this.data.city || homeCity.readLastCity(), cityManual: false, cityPicker: false });
+    this.setData({ city: homeCity.readLastCity() || this.data.city || homeCity.DEFAULT_CITY, cityManual: false, cityPicker: false });
     // Round5 #7:本机记过「暂不定位」→ 自动流程到此为止(沿用上次城市/默认城市),等用户点城市再问
     if (!scope.userInitiated && homeCity.readLocationDeclined()) {
       applyCityFallback(this);
@@ -1705,7 +1764,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
         if (!isCurrentLocationRequest(that, scope)) return;
         const data = res && Number(res.code) === 200 && res.data;
         const city = data && data.city;
-        if (typeof city === 'string' && city.trim()) { that.setData({ city: city.trim(), cityManual: false }); homeCity.saveLastCity(city.trim()); return; }
+        if (typeof city === 'string' && city.trim()) { that.selectHomeCity(city.trim()); return; }
         if (data && data.manualInputRequired) { offerManualCity(that, scope, data.reason); return; }
         showHomeCityLocationError(that, scope, 'empty');
       },
@@ -1718,7 +1777,7 @@ loadBottomActivityList: function(pageNo, isRefresh = false) {
   onManualCityChange(e) {
     const idx = Number(e && e.detail && e.detail.value);
     const city = String(homeCity.CITY_OPTIONS[idx] || '').trim();
-    if (city) { this.setData({ city: city, cityManual: false, cityPicker: true, cityPickerIndex: idx }); homeCity.saveLastCity(city); }
+    if (city) this.selectHomeCity(city);
   },
 
   // V-01:用户主动点城市重新定位，失败时才提示。
@@ -1748,7 +1807,7 @@ function offerManualCity(page, scope, reason) {
 function offerLocationSettings(page, scope) {
   hideLocationLoading(page, scope);
   if (!isCurrentLocationRequest(page, scope)) return;
-  if (!scope.userInitiated) { if (!page.data.city) applyCityFallback(page); return; }
+  if (!scope.userInitiated) { applyCityFallback(page); return; }
   if (page._locationSettingsOffered) { cyToast(homeCity.message('device')); return; }
   page._locationSettingsOffered = true;
   modal.show({

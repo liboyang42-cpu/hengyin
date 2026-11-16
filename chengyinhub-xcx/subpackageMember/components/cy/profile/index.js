@@ -2386,7 +2386,7 @@ Component({
   },
   // M-25:商家视角没有订单页可看,任何进订单的入口都改去「我的项目」
   goOrder: function () { if (this.data.isMerchantView) { this.goProject(); return; } if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageMember/order/order', complete: () => { this._navigating = false; } }); },
-  goProject: function () { if (this.data.isMerchantView && this.data.merchantAccessState !== 'ready') { cyToast('经营身份未能确认，请重新加载'); return; } if (merchantProjectsRestricted(this.data)) { cyToast('当前岗位未获项目权限，请联系店主开通'); return; } if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index' + (this.data.isMerchantView ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } }); },
+  goProject: function () { if (this.data.isMerchantView && this.data.merchantAccessState !== 'ready') { cyToast('经营身份未能确认，请重新加载'); return; } if (merchantProjectsRestricted(this.data)) { cyToast('项目待授权，请联系店主'); return; } if (this._navigating) return; this._navigating = true; wx.navigateTo({ url: '/subpackageA/pages/myproject/index' + (this.data.isMerchantView ? '?scope=MERCHANT' : ''), complete: () => { this._navigating = false; } }); },
   onOrderPreviewTap: function (e) {
     if (this.data.isMerchantView) { this.goProject(); return; }
     var id = e.currentTarget.dataset.id;

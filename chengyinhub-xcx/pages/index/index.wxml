@@ -97,6 +97,7 @@
         </view>
         <text class="v3-sec-sync cy-refresh-float cy-refresh-float--pill" wx:if="{{listLoading.recommendedTopicList && recoHero}}"
               aria-role="status" aria-live="polite">正在更新推荐主题…</text>
+        <cy-inline-error wx:if="{{listErr.recommendedTopicList && recoHero}}" load-failure title="推荐主题更新失败" action="重试" data-list="recommendedTopicList" bind:action="retryList" />
         <swiper class="v3-reco-swiper" wx:if="{{recoCards.length}}" current="{{recoCurrent}}"
                 circular="{{recoCards.length > 1}}" previous-margin="40rpx" next-margin="60rpx"
                 duration="{{reducedMotion ? 0 : 280}}" easing-function="easeOutCubic"
@@ -123,6 +124,7 @@
                   </view>
                   <view class="v3-reco-title">{{item.name}}</view>
                   <text class="v3-reco-meta ep1">{{item.metaLine}}</text>
+                  <text class="v3-reco-meta" wx:if="{{item.cityLabel}}">{{item.cityLabel}}</text>
                   <text class="v3-reco-meta">编辑精选 · 参加条件以详情为准</text>
                 </view>
                 <view class="v3-reco-focus-mask"></view>
@@ -130,6 +132,30 @@
             </view>
           </swiper-item>
         </swiper>
+      </view>
+
+      <view id="sec-nearby-events" class="v3-sec">
+        <view class="v3-sec-head flex-b"><text class="v3-sec-title">{{nearbyEventsLocated ? '附近活动' : city + '活动'}}</text>
+          <view bindtap="locateNearbyThemes" aria-role="button" aria-label="定位查找附近活动" hover-class="cy-pressed" hover-stay-time="80">定位查找</view>
+        </view>
+        <view class="v3-sec-state" wx:if="{{listLoading.nearbyActivityList && !nearbyActivityList.length}}"><cy-skeleton type="feed-card" count="{{2}}" /></view>
+        <view class="v3-sec-state" wx:elif="{{listErr.nearbyActivityList && !nearbyActivityList.length}}"><cy-error load-failure title="活动加载失败" retry="重试" data-list="nearbyActivityList" bind:retry="retryList" /></view>
+        <cy-empty wx:elif="{{listLoaded.nearbyActivityList && !nearbyActivityList.length}}" title="{{nearbyEventsLocated ? '附近暂无活动' : '该城市暂无活动'}}" />
+        <cy-inline-error wx:if="{{listErr.nearbyActivityList && nearbyActivityList.length}}" load-failure title="活动更新失败" action="重试" data-list="nearbyActivityList" bind:action="retryList" />
+        <scroll-view wx:if="{{nearbyActivityList.length}}" scroll-x="{{true}}" class="v3-rail" show-scrollbar="{{false}}">
+          <view class="v3-nearby-row">
+            <view class="v3-nearby-card" wx:for="{{nearbyActivityList}}" wx:key="id" bindtap="goActivity" data-id="{{item.id}}" aria-role="button" aria-label="{{item.name}}" hover-class="cy-pressed" hover-stay-time="80">
+              <image class="v3-nearby-bg" wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" lazy-load="true" />
+              <view class="v3-nearby-mask"></view>
+              <view class="v3-nearby-body"><view class="v3-nearby-title ep2">{{item.name}}</view>
+                <view class="v3-nearby-meta flex-ac">
+                  <text class="v3-nearby-time">{{nearbyEventsLocated ? item.distance : (item.addressName || city)}}</text>
+                  <text class="v3-nearby-time" wx:if="{{item.minAmout != null}}">{{money.amount(item.minAmout)}} 起</text><text wx:else>—</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
       </view>
 
       <view id="sec-nearby" class="v3-sec">

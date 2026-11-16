@@ -81,7 +81,7 @@
                            action="重新加载此部分" bind:action="reloadDashboard" />
         </view>
         </block>
-        <view wx:elif="{{merchantAccess.active}}" class="rv-revenue-value rv-locked" bindtap="onPermissionTap" data-permission="canReadFinance" aria-role="button" aria-label="累计收入，待店主授权">
+        <view wx:elif="{{merchantAccess.active}}" class="rv-revenue-value rv-locked" bindtap="onPermissionTap" data-permission="canReadFinance" aria-role="button" aria-label="累计收入，待店主授权" hover-class="cy-pressed" hover-stay-time="80">
           <text class="rv-revenue-amount">—</text><cy-icon name="lock" size="28" />
         </view>
         <cy-skeleton wx:else type="list" count="{{1}}" />

@@ -155,7 +155,13 @@ test('首页与城市事件刷新时保留旧内容，只有无旧内容才显�
   const nearbySection = homeAboveFeed.slice(homeAboveFeed.indexOf('id="sec-nearby"'), homeAboveFeed.indexOf('id="sec-upcoming"'));
   assert.match(nearbySection, /cy-inline-error wx:if="\{\{listErr\.nearbyTopicList && nearbyTopicList\.length\}\}"/,
     '用户主动定位后的刷新失败应保留旧主题与可操作重试');
-  assert.doesNotMatch(homeAboveFeed.replace(nearbySection, ''), /cy-inline-error/,
+  const eventSection = homeAboveFeed.slice(homeAboveFeed.indexOf('id="sec-nearby-events"'), homeAboveFeed.indexOf('id="sec-nearby"'));
+  assert.match(eventSection, /cy-inline-error wx:if="\{\{listErr\.nearbyActivityList && nearbyActivityList\.length\}\}"/,
+    '活动错误同样保留旧内容与真实重试');
+  const recommendations = homeAboveFeed.slice(homeAboveFeed.indexOf('id="sec-reco"'), homeAboveFeed.indexOf('id="sec-nearby-events"'));
+  assert.match(recommendations, /cy-inline-error wx:if="\{\{listErr\.recommendedTopicList && recoHero\}\}"/,
+    '补足推荐请求失败时不能掩盖错误');
+  assert.doesNotMatch(homeAboveFeed.replace(nearbySection, '').replace(eventSection, '').replace(recommendations, ''), /cy-inline-error/,
     '其他首页分区的静默降级约束保持');
   assert.match(home, /v3-sec-sync/,
     '刷新中的轻量同步态保留 —— 与 activity/list、address 等同类页一致');

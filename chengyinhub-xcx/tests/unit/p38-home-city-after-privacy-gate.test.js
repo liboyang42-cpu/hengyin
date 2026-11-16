@@ -94,7 +94,7 @@ test('x-fix6 L2-1:卡片「暂不定位」收起并记本机拒绝,不记同意�
   assert.equal(p.data.locationPrompt, null)
   assert.equal(consents.length, 0); assert.equal(located, 0)
   // D-72：没有玩家自己的城市就不填默认城市，露出选择/开定位入口
-  assert.equal(p.data.city, ''); assert.equal(p.data.cityManual, true)
+  assert.equal(p.data.city, '上海市'); assert.equal(p.data.cityManual, false); assert.equal(p.data.cityPicker, true)
 })
 test('x-fix6 L2-1:卡片「同意定位」收起并记录同意', async () => {
   const consents = []; app.recordConsent = (b) => { consents.push(b); return Promise.resolve() }
