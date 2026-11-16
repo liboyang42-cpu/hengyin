@@ -78,4 +78,7 @@ public interface MemberPrivacyErasureMapper {
     int deleteChannelEventPhotos(@Param("memberId") Long memberId);
 
     int unlinkChannelEventPoster(@Param("memberId") Long memberId);
+
+    /** W7 SOC-15: the member's invite links stop working and lose the creator link. */
+    int revokeClubInvitesByCreator(@Param("memberId") Long memberId);
 }

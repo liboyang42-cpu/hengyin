@@ -15,10 +15,11 @@ public final class ChannelPermissionCalculator
     public static final long MEMBER_BASE = of(VIEW_CHANNEL, SEND_MESSAGE, ATTACH_FILE, EMBED_LINK, ADD_REACTION,
             READ_HISTORY, CREATE_POLL);
     public static final long ADMIN_BASE = MEMBER_BASE | of(MENTION_EVERYONE, PIN_MESSAGE, MANAGE_MESSAGE, MANAGE_CHANNEL,
-            MANAGE_ROLE, KICK_MEMBER, BAN_MEMBER, TIMEOUT_MEMBER, MANAGE_RULE, VIEW_AUDIT, BYPASS_SLOWMODE, MANAGE_PROGRESS);
+            MANAGE_ROLE, KICK_MEMBER, BAN_MEMBER, TIMEOUT_MEMBER, MANAGE_RULE, VIEW_AUDIT, BYPASS_SLOWMODE, MANAGE_PROGRESS,
+            CREATE_EVENT);
     /** 归档后只读：发言、附件、互动、置顶与消息管理全部收回。 */
     public static final long WRITE_BITS = of(SEND_MESSAGE, ATTACH_FILE, EMBED_LINK, ADD_REACTION, MENTION_EVERYONE,
-            CREATE_POLL, PIN_MESSAGE, MANAGE_MESSAGE);
+            CREATE_POLL, PIN_MESSAGE, MANAGE_MESSAGE, CREATE_EVENT);
 
     /**
      * C1 channels-structure: in an announcement channel (kind 2) a plain member reads but does not post.

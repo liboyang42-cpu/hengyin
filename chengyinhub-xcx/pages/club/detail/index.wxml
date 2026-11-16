@@ -219,6 +219,9 @@
          N3(主理人/管理员) MembersHead 多一个「邀请成员 ›」;N5(普通会员)只有标题+分隔线;
          N6(未加入)成员条与榜单整块换成 Locked 卡 —— 三态靠角色分,不是逐像素抄同一版。 -->
     <view class="feed feed--plain ov cy-rise-in" wx:elif="{{activeTab === 'overview'}}">
+      <!-- W7 SOC-15:邀请链接进来的未加入用户看到是谁的邀请、加入后去哪;失效时说明原因(仍可按规则申请)。 -->
+      <cy-inline-error wx:if="{{inviteBanner && !club.isJoined && !club.isOwner}}" kind="data"
+        title="{{inviteBanner.title}}" sub="{{inviteBanner.sub}}" />
       <text class="ov-intro">{{club.description || '暂无简介'}}</text>
 
       <!-- Facts 三宫格(23:4):主理人 / 俱乐部类型 / 所在城市 —— 原来是三个上下堆叠的 label+text 区块。

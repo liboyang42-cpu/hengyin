@@ -68,4 +68,22 @@ class ChannelPermissionCalculatorTest
         assertEquals("0x8000000", hex(MANAGE_PROGRESS.mask()));
         assertEquals(List.of("VIEW_CHANNEL", "SEND_MESSAGE"), names(VIEW_CHANNEL.mask() | SEND_MESSAGE.mask()));
     }
+
+    /** W7 SOC-6: CREATE_EVENT is bit 28, channel scoped, admins hold it, members do not, archive takes it away. */
+    @Test void createEventIsAWritableChannelBitAdminsHold()
+    {
+        assertEquals("0x10000000", hex(CREATE_EVENT.mask()));
+        assertFalse(CREATE_EVENT.guildScoped());
+        assertEquals(Long.valueOf(CREATE_EVENT.mask()), parseHex("0x10000000"));
+        assertNull(parseHex("0x8000000"), "MANAGE_PROGRESS stays out of written bit maps");
+        assertNull(parseHex("0x20000000"));
+        assertTrue(has(effective(GuildStanding.ADMIN, 0, List.of(), List.of(), 0), CREATE_EVENT));
+        assertFalse(has(effective(GuildStanding.MEMBER, 0, List.of(), List.of(), 0), CREATE_EVENT));
+        assertTrue(has(effective(GuildStanding.MEMBER, CREATE_EVENT.mask(), List.of(), List.of(), 0), CREATE_EVENT));
+        List<Overwrite> grant = List.of(new Overwrite(2, 9, CREATE_EVENT.mask(), 0));
+        assertTrue(has(effective(GuildStanding.MEMBER, 0, List.of(9L), grant, 0), CREATE_EVENT));
+        List<Overwrite> deny = List.of(new Overwrite(2, 9, 0, CREATE_EVENT.mask()));
+        assertFalse(has(effective(GuildStanding.ADMIN, 0, List.of(9L), deny, 0), CREATE_EVENT));
+        assertFalse(has(effective(GuildStanding.OWNER, 0, List.of(), List.of(), 1), CREATE_EVENT));
+    }
 }
