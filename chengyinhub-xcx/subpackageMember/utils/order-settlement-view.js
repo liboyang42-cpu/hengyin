@@ -4,6 +4,8 @@
 // - 退一张不撤整单:按票数分别写已退/有效。
 // - refundStage=UNKNOWN:写「退款状态待确认」,不当作没有退款。
 
+const { isFreeOrder } = require('../../utils/order-actual-pay.js');
+
 const STAGE_TEXT = {
   UNDER_REVIEW: '退款审核中',
   PAYOUT_PENDING: '已批准，等待原路退回',
@@ -22,13 +24,19 @@ function money(v) {
   return isNum(v) ? '¥' + Number(v).toFixed(2) : '金额待确认';
 }
 
-function settlementView(summary) {
+function settlementView(summary, order) {
   const hidden = { show: false, stage: '', rows: [] };
   if (!summary || typeof summary !== 'object') return hidden;
   const stage = summary.refundStage || 'NONE';
   const refundedTickets = Number(summary.refundedTicketCount) || 0;
   const tickets = Number(summary.ticketCount) || 0;
   if (stage === 'NONE' && refundedTickets === 0) return hidden;
+  // 免费取消也计入退票数；确无现金退款记录时不把退票伪装成退款进度。
+  if (summary.refundStage === 'NONE' && order && Number(order.registrationStatus) === 3 && isFreeOrder(order)
+      && summary.amountsComplete === true
+      && ['paidAmount', 'orderPaidAmount', 'refundRequestedAmount', 'refundPendingAmount', 'refundProcessingAmount', 'refundCompletedAmount']
+        .every(key => (typeof summary[key] === 'number' || typeof summary[key] === 'string' && summary[key].trim() !== '')
+          && isNum(summary[key]) && Number(summary[key]) === 0)) return hidden;
 
   const rows = [];
   const complete = summary.amountsComplete === true;

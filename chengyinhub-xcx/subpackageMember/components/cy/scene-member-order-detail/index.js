@@ -996,7 +996,7 @@ Component({
             info.canRequestRefund = canRequestOrderRefund(info);
             info.refundAmountShown = refundAmount.refundedAmount(info);
             // U07-04:退款阶段与分项只读服务端 settlementSummary;受理不写到账、未知不写 0
-            info.settleView = settlementView(info.settlementSummary);
+            info.settleView = settlementView(info.settlementSummary, info);
             const isTopicOrder = Number(info.ownerType) === 1;
             // purchaseKind 非空时权威；仅存量 NULL 单回落到明确 chapterId，权益延迟到达时可补正类型。
             const isExploreOrder = resolveExploreOrder(info);
