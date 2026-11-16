@@ -177,7 +177,8 @@ public class OWN_C04_21Test {
         // R9 BE-13: this case covers the direct-pay path (auto-pay on + money switch open); the default goes to review.
         ReflectionTestUtils.setField(service, "autoPay", true);
         ReflectionTestUtils.setField(service, "cashPayoutSwitch",
-                new com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch(true, true));
+                new com.chengyinhub.business.service.rewardpledge.CashPayoutSwitch(true, true,
+                        com.chengyinhub.business.moneyswitch.MoneyGateTestSupport.openGate()));
         assertDoesNotThrow(() -> service.onVerification(9L));
         org.mockito.ArgumentCaptor<org.springframework.transaction.TransactionDefinition> definition =
                 org.mockito.ArgumentCaptor.forClass(org.springframework.transaction.TransactionDefinition.class);
