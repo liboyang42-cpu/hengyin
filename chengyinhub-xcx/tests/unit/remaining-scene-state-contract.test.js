@@ -583,7 +583,8 @@ test('活动详情不虚构主理人和统计零值，合法零仍原样呈现',
    点下去却 toast「该票种已售罄」并硬拦 —— 一个字段两种口径,而且拦的是能报的票。 */
 test('活动票种:库存未知可选，只有确证的 0 才算售罄', () => {
   const relativePath = 'subpackageMember/components/cy/scene-play-activity-detail/index.js'
-  const harness = mount(relativePath)
+  const navigations = []
+  const harness = mount(relativePath, { getUserType: () => 1 }, { navigateTo: options => navigations.push(options) })
   harness.instance.data.activityId = 'activity-1'
   harness.instance.load('activity-1')
   harness.requests[0].success({
@@ -601,18 +602,20 @@ test('活动票种:库存未知可选，只有确证的 0 才算售罄', () => {
   assert.deepEqual(tickets.map((t) => t._available), [true, false, true])
   assert.deepEqual(tickets.map((t) => t._inventoryText), ['—', '已售罄', '剩余 3 张'])
 
-  harness.instance.selectTicket({ currentTarget: { dataset: { id: '11' } } })
-  assert.equal(harness.instance.data.selectedTicketId, '11', '库存未知的票必须可选 —— 售罄由服务端判')
+  harness.instance.openSignup(11)
+  assert.equal(navigations.length, 1, '库存未知票仍可进入原结算，由服务器裁决')
+  assert.equal(navigations[0].url, '/pages/activity/baoming/baoming?activityId=activity-1&ticketId=11')
+  navigations[0].complete()
   // utils/toast.js 走宿主全局 wx(组件依赖不在上面的 sandbox 里),所以这里只临时挂它。
   const shown = []
   const prevWx = global.wx
   global.wx = { showToast: (o) => shown.push(o && o.title) }
   try {
-    harness.instance.selectTicket({ currentTarget: { dataset: { id: '12' } } })
+    harness.instance.openSignup(12)
   } finally {
     global.wx = prevWx
   }
-  assert.equal(harness.instance.data.selectedTicketId, '11', '确证售罄仍要拦在门外')
+  assert.equal(navigations.length, 1, '确证售罄不能再进入结算')
   assert.deepEqual(shown, ['该票种已售罄'])
 })
 

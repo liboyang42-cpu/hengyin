@@ -16,8 +16,8 @@ const fs = require('node:fs')
 const vm = require('node:vm')
 
 const ROOT = path.resolve(__dirname, '../..')
-const COMPONENT = 'pages/topic/components/cy/session-picker/index.js'
-const WXML = 'pages/topic/components/cy/session-picker/index.wxml'
+const COMPONENT = 'components/cy/session-picker/index.js'
+const WXML = 'components/cy/session-picker/index.wxml'
 const safeUserMessage = require(path.join(ROOT, 'utils/transport/safe-user-message.js')).safeUserMessage
 
 /** 真实消毒口径:错误原因一律过 safeUserMessage,和 app.getRequestErrorMessage 一致。 */

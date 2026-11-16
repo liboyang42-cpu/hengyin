@@ -130,7 +130,7 @@ guard('topicPage', () => {
 
 guard('sessionPicker', () => {
   routes = {}
-  const { def, inst } = mountComponent('pages/topic/components/cy/session-picker/index.js')
+  const { def, inst } = mountComponent('components/cy/session-picker/index.js')
   inst.pickActivity = function (id) { this.data.pickedActivityId = id }
   def.observers['show, activities'].call(inst, true, JSON.parse(JSON.stringify(W.pickerActivities)))
   return { days: inst.data.days.map((d) => ({ id: d.id, week: d.week, day: d.day, whenText: d.whenText, detailText: d.detailText })) }

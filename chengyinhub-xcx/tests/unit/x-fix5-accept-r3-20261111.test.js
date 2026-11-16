@@ -99,7 +99,7 @@ test('N-1 / N-13 故事流收尾区与内嵌玩法块底部在 Home 条之上再
 })
 
 test('N-2 只有一种可买票时自动选中', () => {
-  assert.match(read('pages/topic/components/cy/session-picker/index.js'), /sellable\.length === 1 && rows\.length === 1/)
+  assert.match(read('components/cy/session-picker/index.js'), /sellable\.length === 1 && rows\.length === 1/)
 })
 
 test('N-17 通过入会申请确认标题只写名字,申请时刻进正文', () => {

@@ -22,6 +22,7 @@ const EDITOR_STEP_TITLES = new Set(['pages/publish/fabu/step3.wxml'])
 // 这些都有返回导航，但承担的是封面头、搜索框、会话名、向导问题或码卡，不是独立 L1 大标题行。
 // 清单锁死后，新自绘页不会因为没用 cy-page-title 而静默漏扫。
 const NAV_WITHOUT_L1_TITLE = new Set([
+  'pages/activity/detail/index.wxml', // 活动名由实际Scene hero承担，壳不重复L1
   // 2026-10-30 业主定稿 P-3:勋章墙 / 集邮册 / 藏品册合成「收集册」三段 —— nav overlay 透明压在整屏浅色流动底上,
   // 大标题「收集册」(宋体)与三段切换由 subpackageP3/components/album-head 组件给,三页同一个,不走 cy-page-title。
   'subpackageP3/pages/badge-wall/index/index.wxml',
@@ -529,7 +530,7 @@ test('全仓 85 个 cy-page-title 页面：共享标题统一提供上 space-5 /
   // 2026-11-12 club-payout-binding +1:个人收款页,cy-nav-bar + 共享 cy-page-title 二级页 ⇒ 94。
   // 2026-11-13 pass-mini +1:通行证订单详情页(cy-nav-bar + cy-page-title)⇒ 95。
   // 2026-11-14 free-explore-1114 +1:商家套票预约页(同 verify-records 结构)⇒ 96。
-  assert.equal(files.length, 96, 'cy-page-title 页面清单漂移时必须重新做间距归类')
+  assert.equal(files.length, 95, 'cy-page-title 页面清单漂移时必须重新做间距归类')
 // 2026-09-02:+2 俱乐部客户列表与客户详情，复用 shared page-title 间距，64→66。
 //   客户详情的头像绝对定位在标题行上，不进入标题流，不影响上 space-5 / 下 space-2。
   files.forEach((rel) => {
@@ -546,6 +547,9 @@ test('全仓 cy-nav-bar 无组件标题页均已归类，自绘大标题同样�
   const classified = [...SELF_DRAWN_TITLE, ...NAV_WITHOUT_L1_TITLE].sort()
   assert.deepEqual(navWithoutPageTitleFiles(), classified, '自绘/封面/向导页清单漂移时必须重新判断是否属于返回 + L1 大标题')
   SELF_DRAWN_TITLE.forEach(rel => assertSelfDrawnTitleSpacing(rel))
+  assert.ok(!pageTitleFiles().includes('pages/activity/detail/index.wxml'))
+  assert.match(read('pages/activity/detail/index.wxml'), /<cy-scene-play-activity-detail\b/)
+  assert.match(read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml'), /class="activity-hero__title">\{\{titleText\}\}/)
 })
 
 test('页面级首内容不再叠加标题下方共享 space-2', () => {

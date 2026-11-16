@@ -10,8 +10,10 @@ const app = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8'));
 const config = JSON.parse(fs.readFileSync(path.join(ROOT, 'project.config.json'), 'utf8'));
 const roots = (app.subPackages || app.subpackages).map(x => x.root);
 const owner = file => roots.find(root => file.startsWith(root + '/')) || 'MAIN';
-const oldFiles = new Set(moves.map(x => x.from));
-const newFiles = new Set(moves.map(x => x.to));
+const sharedLeaves = new Map(moves.filter(x => x.sharedConsumers).map(x => [x.to, x]));
+const exclusiveMoves = moves.filter(x => !x.sharedConsumers);
+const oldFiles = new Set(exclusiveMoves.map(x => x.from));
+const newFiles = new Set(exclusiveMoves.map(x => x.to));
 const images = moves.filter(x => x.from.startsWith('images/'));
 const ignoredFiles = new Set(config.packOptions.ignore.filter(x => x.type === 'file').map(x => x.value));
 const ignoredFolders = config.packOptions.ignore.filter(x => x.type === 'folder').map(x => x.value.replace(/\/$/, ''));
@@ -54,6 +56,8 @@ function violations(file, source) {
     if (!resolved) return;
     const candidates = [resolved, resolved + '.js', resolved + '.json', resolved + '/index.js', resolved + '/index.json'];
     if (candidates.some(candidate => oldFiles.has(candidate))) problems.push('retired path: ' + resolved);
+    const shared = candidates.find(candidate => sharedLeaves.has(candidate));
+    if (shared && !sharedLeaves.get(shared).sharedConsumers.includes(file)) problems.push('unreviewed shared leaf consumer: ' + shared);
     const target = candidates.find(candidate => newFiles.has(candidate));
     // 组件经 componentPlaceholder 走分包异步化是微信允许的跨包引用;同步 require / import 仍一律判红。
     if (target && owner(file) !== owner(target) && !asyncComponent) problems.push('cross-package leaf: ' + target);
@@ -111,7 +115,16 @@ function violations(file, source) {
 
 test('reviewed leaves remain inside existing subpackages and keep their original source files out of main', () => {
   assert.equal(moves.length, 161)  // 2026-11-03 第七轮主包瘦身:+128 个文件(单分包组件 / 工具 / 图片与 13 个 scene 组件);
-  for (const moved of moves) {
+  assert.equal(sharedLeaves.size, 1);
+  const shared = sharedLeaves.get('utils/refund-rule.js');
+  assert.equal(shared.from, shared.to);
+  assert.equal(shared.previousExclusive, 'pages/topic/utils/refund-rule.js');
+  assert.deepEqual(shared.sharedConsumers, ['components/cy/session-picker/index.js', 'pages/topic/index/index.js']);
+  assert.equal(owner(shared.to), 'MAIN');
+  assert.ok(fs.statSync(path.join(ROOT, shared.to)).isFile());
+  assert.ok(!fs.existsSync(path.join(ROOT, shared.previousExclusive)));
+  assert.ok(packaged(shared.to));
+  for (const moved of exclusiveMoves) {
     assert.equal(owner(moved.from), 'MAIN', moved.from);
     assert.notEqual(owner(moved.to), 'MAIN', moved.to);
     assert.ok(!fs.existsSync(path.join(ROOT, moved.from)), moved.from);
@@ -127,6 +140,7 @@ test('runtime references resolve after relocation without new cross-subpackage l
 
 test('negative controls reject stale modules, stale WXS, dynamic image paths and cross-package imports', () => {
   const cases = [
+    ['pages/roam/index.js', "require('../../utils/refund-rule.js')"],
     ['subpackageTools/monthly-recap/index.js', "require('../../utils/features/monthly-recap-client')"],
     ['pages/roam/index.js', "require('../../subpackageTools/utils/features/monthly-recap-client')"],
     ['pages/publish/fabu/index.wxml', '<wxs src="/utils/wxs/chapter-title.wxs" module="title"/>'],

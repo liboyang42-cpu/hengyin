@@ -55,7 +55,7 @@ function harness(relativePath, kind) {
 }
 
 test('session-picker:门卡渲染加入引导,不再报「票种没读出来」', () => {
-  const { vm, requests, nav } = harness('pages/topic/components/cy/session-picker/index.js', 'component')
+  const { vm, requests, nav } = harness('components/cy/session-picker/index.js', 'component')
   vm.pickActivity(9)
   assert.equal(requests[0].url, '/api/activity/info')
   requests[0].success({ code: 200, data: GATE })
@@ -107,7 +107,7 @@ test('baoming:门卡不是整页 error,给加入俱乐部出口而不是重试',
 
 test('三个消费点都必须先判 gate 再谈票种/详情字段', () => {
   for (const file of [
-    'pages/topic/components/cy/session-picker/index.js',
+    'components/cy/session-picker/index.js',
     'subpackageMember/components/cy/scene-play-activity-detail/index.js',
     'pages/activity/baoming/baoming.js',
   ]) {

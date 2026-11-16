@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 
 global.getApp = () => ({ sendRequest() {} });
 global.Component = () => {};
-const picker = require('../../pages/topic/components/cy/session-picker/index.js');
+const picker = require('../../components/cy/session-picker/index.js');
 
 const windowShell = { id: 1, name: '外滩钟声', startDate: '2026-11-02 00:00:00', endDate: '2026-12-31 23:59:59' };
 const nov3 = { id: 3, name: '外滩钟声', startDate: '2026-11-03 14:05:00', endDate: '2026-11-03 18:00:00' };

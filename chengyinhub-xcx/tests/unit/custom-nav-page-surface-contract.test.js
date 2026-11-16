@@ -152,6 +152,12 @@ const TITLELESS_SOLID_NAV = new Set([
 ])
 
 function assertCentredTitle(route, wxml) {
+  if (route === 'pages/activity/detail/index') {
+    assert.match(wxml, /<cy-scene-play-activity-detail\b/)
+    assert.match(read('subpackageMember/components/cy/scene-play-activity-detail/index.wxml'), /class="activity-hero__title">\{\{titleText\}\}/)
+    assert.doesNotMatch(wxml, /<cy-page-title\b/)
+    return
+  }
   if (route === 'pages/merchant/decor/coop-setting/index') {
     assert.match(wxml, /<cy-nav-bar title=""/);
     assert.match(wxml, /<text class="dc-brand-title">承接设置<\/text>/);
@@ -177,6 +183,7 @@ test('负控:把实底页的顶栏标题清空必须判红', () => {
   const wxml = read(`${route}.wxml`).replace('title="消息"', 'title=""')
   assert.notEqual(wxml, read(`${route}.wxml`), '变异未生效，负控本身是假的')
   assert.throws(() => assertCentredTitle(route, wxml), /没有标题/)
+  assert.throws(() => assertCentredTitle('pages/activity/detail/index', '<cy-nav-bar plain />'), /cy-scene-play-activity-detail/)
 })
 
 test('自定义导航页:铺满层底色与固定顶栏同色,顶栏下缘不出色带', () => {

@@ -4977,7 +4977,9 @@
    "actionText": "立即报名",
    "isOwner": false,
    "errorMsg": "",
-   "canConfirmSignup": true
+   "signupSheetShow": false,
+   "titleText": "外滩夜行",
+   "hasLocation": false
   },
   "target": "cy-scene-play-activity-detail",
   "dropped": [],
@@ -5021,7 +5023,9 @@
    "actionText": "查看报名",
    "isOwner": false,
    "errorMsg": "",
-   "canConfirmSignup": false
+   "signupSheetShow": false,
+   "titleText": "外滩夜行",
+   "hasLocation": false
   },
   "target": "cy-scene-play-activity-detail",
   "dropped": [],
@@ -5057,7 +5061,9 @@
    "actionText": "立即报名",
    "isOwner": true,
    "errorMsg": "",
-   "canConfirmSignup": false
+   "signupSheetShow": false,
+   "titleText": "外滩夜行",
+   "hasLocation": false
   },
   "target": "cy-scene-play-activity-detail",
   "dropped": [],

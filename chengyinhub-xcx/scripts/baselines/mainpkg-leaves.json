@@ -793,7 +793,9 @@
     },
     {
       "from": "utils/refund-rule.js",
-      "to": "pages/topic/utils/refund-rule.js",
+      "to": "utils/refund-rule.js",
+      "previousExclusive": "pages/topic/utils/refund-rule.js",
+      "sharedConsumers": ["components/cy/session-picker/index.js", "pages/topic/index/index.js"],
       "sourceBlob": "180117b50f2fd820d6d9f0bfec9eb275dcb34dd3"
     },
     {

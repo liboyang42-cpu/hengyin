@@ -8,7 +8,7 @@
     "cy-icon": "/components/cy/icon/index",
     "cy-skeleton": "/components/cy/skeleton/index",
     "cy-badge": "/components/cy/badge/index",
-    "cy-session-picker": "/pages/topic/components/cy/session-picker/index"
+    "cy-session-picker": "/components/cy/session-picker/index"
   },
   "styleIsolation": "isolated"
 }

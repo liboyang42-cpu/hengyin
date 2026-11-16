@@ -8,7 +8,7 @@ const { createRequire } = require('node:module')
 const test = require('node:test')
 const ROOT = path.resolve(__dirname, '../..')
 const SCENE = 'subpackageMember/components/cy/scene-play-activity-detail/index'
-const PICKER = 'pages/topic/components/cy/session-picker/index'
+const PICKER = 'components/cy/session-picker/index'
 const read = (file) => fs.readFileSync(path.join(ROOT, file), 'utf8')
 const ticket = (id, extra = {}) => ({ id, name: `票种${id}`, price: 0, remainingInventory: 2,
   startTime: '2099-11-18 10:00:00', endTime: '2099-11-18 11:30:00', ...extra })
@@ -238,6 +238,38 @@ test('关闭半屏不报名；结算返回继续沿原 show 生命周期重读�
   m.respond(detail({ isSignUp: 1 }))
   assert.equal(m.host.data.actionState, 'view')
   assert.equal(m.host.data.signupSheetShow, false)
+})
+
+test('两个真实分包宿主必须引用主包同一picker，不能借另一分包预加载', () => {
+  const app = JSON.parse(read('app.json'))
+  const owner = (file) => (app.subPackages || []).find(pkg => file.startsWith(pkg.root + '/'))?.root || 'MAIN'
+  const hosts = ['pages/topic/index/index.json', SCENE + '.json']
+  assert.notEqual(owner(hosts[0]), owner(hosts[1]))
+  function check(paths) {
+    for (const target of paths) assert.equal(owner(target.replace(/^\//, '') + '.json'), 'MAIN', '共享picker必须属于主包')
+    assert.equal(new Set(paths).size, 1)
+  }
+  const paths = hosts.map(file => JSON.parse(read(file)).usingComponents['cy-session-picker'])
+  check(paths)
+  assert.throws(() => check([paths[0], '/pages/topic/components/cy/session-picker/index']), /共享picker必须属于主包/)
+})
+
+test('活动hero首屏高度扣除实际导航和共享footer，长文只增长不裁切', () => {
+  const css = read(SCENE + '.wxss')
+  const copy = css.match(/\.activity-hero__copy\s*\{([^}]+)\}/)[1]
+  const min = copy.match(/min-height:\s*([^;]+);/)[1]
+  assert.match(read('pages/activity/detail/index.wxml'), /--activity-nav-h:\s*\{\{statusBarHeight \+ navBarHeight\}\}px/)
+  assert.doesNotMatch(copy, /(?:^|;)\s*(?:height|max-height|overflow):/)
+  assert.match(css, /padding-bottom:\s*var\(--cy-comp-footer-h\)/)
+  function height(viewport, nav, footer) {
+    const expression = min.replace('100vh', String(viewport)).replace('var(--activity-nav-h, 0px)', String(nav)).replace('var(--cy-comp-footer-h)', String(footer))
+    assert.match(expression, /^calc\([\d .+\-]+\)$/)
+    return vm.runInNewContext(expression.slice(5, -1))
+  }
+  for (const [viewport, nav, footer] of [[844, 88, 94], [568, 64, 60]]) {
+    assert.ok(height(viewport, nav, footer) > 0)
+    assert.ok(nav + height(viewport, nav, footer) <= viewport - footer)
+  }
 })
 
 test('结算只接显式真实票id，缺失/未知票不能借用旧页面选择', () => {

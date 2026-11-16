@@ -1,12 +1,12 @@
 /* 加载结束后内容挂载淡入:isolated 组件收不到全局 components.wxss,@import 同一份定义 */
 @import '../../../../style/fade-in.wxss';
 :host { display: block; height: 100%; }
-.activity-body { min-height: 100%; padding-bottom: calc(var(--cy-btn-h) + var(--cy-space-5) + env(safe-area-inset-bottom)); box-sizing: border-box; }
-.activity-hero { position: relative; min-height: 90vh; overflow: hidden; background: var(--cy-color-bg-surface-subtle); }
+.activity-body { min-height: 100%; padding-bottom: var(--cy-comp-footer-h); box-sizing: border-box; }
+.activity-hero { position: relative; min-height: calc(100vh - var(--activity-nav-h, 0px) - var(--cy-comp-footer-h)); overflow: hidden; background: var(--cy-color-bg-surface-subtle); }
 .activity-hero__image { position: absolute; inset: 0; width: 100%; height: 100%; }
 .activity-hero__fallback { position: absolute; inset: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--cy-space-1); color: var(--cy-color-text-secondary); font-size: var(--cy-type-caption); background: var(--cy-color-bg-surface-subtle); }
 .activity-hero__shade { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--cy-comp-sheet-activity-scrim); }
-.activity-hero__copy { position: relative; z-index: 1; min-height: 90vh; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; gap: var(--cy-space-1); padding: var(--cy-space-6) var(--cy-page-x); color: var(--cy-comp-sheet-player-text); }
+.activity-hero__copy { position: relative; z-index: 1; min-height: calc(100vh - var(--activity-nav-h, 0px) - var(--cy-comp-footer-h)); box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; gap: var(--cy-space-1); padding: var(--cy-space-6) var(--cy-page-x); color: var(--cy-comp-sheet-player-text); }
 .activity-hero__title { overflow-wrap: anywhere; font-size: var(--cy-type-page-title); font-weight: 700; line-height: var(--cy-leading-tight); }
 .activity-hero__date { font-size: var(--cy-type-caption); opacity: .86; }
 .activity-cancelled { display: flex; flex-direction: column; gap: var(--cy-space-1); margin: var(--cy-space-3) var(--cy-page-x) 0; padding: var(--cy-space-3); border: 1rpx solid var(--cy-color-status-danger); border-radius: var(--cy-radius-lg); background: var(--cy-color-status-danger-soft); }
@@ -84,7 +84,7 @@
 .activity-upload__delete { position: absolute; top: 0; right: 0; width: 88rpx; height: 88rpx; display: flex; align-items: flex-start; justify-content: flex-end; padding: 10rpx; box-sizing: border-box; color: var(--cy-color-text-inverse); }
 .activity-upload__delete-icon { width: 40rpx; height: 40rpx; display: flex; align-items: center; justify-content: center; border-radius: var(--cy-radius-pill); background: var(--cy-color-overlay); }
 .activity-upload__label { font-size: var(--cy-type-caption); }
-.activity-action { position: fixed; z-index: var(--cy-z-sticky); left: 0; right: 0; bottom: 0; display: flex; align-items: stretch; gap: var(--cy-space-2); padding: var(--cy-space-2) var(--cy-page-x) calc(var(--cy-space-2) + env(safe-area-inset-bottom)); background: var(--cy-color-bg-page); border-top: 1rpx solid var(--cy-color-border-subtle); }
+.activity-action { position: fixed; z-index: var(--cy-z-sticky); left: 0; right: 0; bottom: 0; display: flex; align-items: stretch; gap: var(--cy-space-2); padding: var(--cy-comp-footer-pad-y) var(--cy-page-x) calc(var(--cy-comp-footer-pad-y) + env(safe-area-inset-bottom)); background: var(--cy-color-bg-page); border-top: 1rpx solid var(--cy-color-border-subtle); }
 .activity-action__main { min-width: 0; flex: 1; }
 .activity-share { min-width: 112rpx; min-height: var(--cy-btn-h); margin: 0; padding: 0 var(--cy-space-2); display: flex; align-items: center; justify-content: center; gap: var(--cy-space-1); box-sizing: border-box; border: 1rpx solid var(--cy-color-border-subtle); border-radius: var(--cy-comp-btn-radius); background: var(--cy-color-action-secondary-bg); color: var(--cy-color-text-primary); font-size: var(--cy-type-button); font-weight: 600; line-height: var(--cy-leading-tight); }
 .activity-share::after { border: none; }

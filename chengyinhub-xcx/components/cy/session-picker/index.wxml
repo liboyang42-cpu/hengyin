@@ -1,4 +1,4 @@
-<wxs src="../../../../../utils/wxs/money.wxs" module="money" />
+<wxs src="../../../utils/wxs/money.wxs" module="money" />
 <!-- 选场次 / 选票种(稿 11 240:401 · 11a 240:446)。T1 = cy-sheet 默认 bottom 半屏。
      多日先选日期,单日跳过日期直接写明是哪天。 -->
 <cy-sheet show="{{show}}" title="{{singleDay ? '选择票种' : '选择场次'}}" footer="{{true}}" bind:close="onClose">

@@ -95,7 +95,9 @@ for (const ownOrder of [true, false, 'true', undefined]) {
     reply(h.requests[0], 200, { code: 500, errorCode: 'ACTIVITY_CANCELLED', canViewOwnOrders: ownOrder });
     assert.equal(h.page.data.state, 'cancelled'); assert.equal(h.page.data.cancelledHasOwnOrder, ownOrder === true);
     assert.equal(Object.keys(h.page.data.info).length, 0); assert.equal(h.page.data.tickets.length, 0);
-    assert.equal(h.page.data.canConfirmSignup, false);
+    assert.equal(h.page.data.signupSheetShow, false);
+    h.page.openSignupSheet();
+    assert.equal(h.page.data.signupSheetShow, false, '已取消活动不能重新打开报名');
   });
 }
 test('cancelled own-order action opens order history rather than the usable-ticket wallet, with a navigation lock', () => {
