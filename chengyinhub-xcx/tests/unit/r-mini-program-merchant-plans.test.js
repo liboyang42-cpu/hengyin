@@ -91,7 +91,7 @@ test('页面:服务端 409 PLAN_SALES_CLOSED → 重新读取并说即将开放'
   const h = mount({ access: owner, plan: { body: { code: 200, data: view({ salesOpen: true, salesState: 'OPEN' }) } },
     checkout: { status: 409, body: { code: 409, errorCode: 'PLAN_SALES_CLOSED', msg: '商家套餐即将开放' } } });
   h.page.onBuy({ currentTarget: { dataset: { code: 'BASIC' } } });
-  assert.equal(h.page.data.order, null); assert.ok(h.toasts.includes('套餐购买即将开放'));
+  assert.equal(h.page.data.order, null); assert.ok(h.toasts.includes('现在还不能购买套餐'));
   assert.equal(h.requests.filter(r => r.url === '/api/merchant/plan').length, 2);
 });
 

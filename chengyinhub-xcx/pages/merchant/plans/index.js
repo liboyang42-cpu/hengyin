@@ -137,7 +137,7 @@ Page({
         toast.success('已提交');
         return;
       }
-      if (closed) { this.loadPlans(true); toast('套餐购买即将开放'); return; }
+      if (closed) { this.loadPlans(true); toast('现在还不能购买套餐'); return; }
       toast(message || '没有提交成功，请稍后再试');
     };
     app.sendRequest({
