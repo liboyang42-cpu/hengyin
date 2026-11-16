@@ -266,3 +266,31 @@ Columns OK / BUSINESS-REFUSAL-EXPECTED / BACKEND-ERROR / SHAPE-MISMATCH / APP-CO
 
 - Full run: 3 of 18 flows pass every step (F01, F08, F17; 0 of 18 on `81db27155`), and F18 passes in its re-run. B1–B8 all behave as fixed on TEST; no new backend defect. Details, per-flow causes and the B1–B8 evidence are in `qa/acceptance/REPORT.md` on that branch.
 - Found while running: each api-smoke pass toggles topic 992001 on or off the shelf (`POST /api/topic/update_user_status`) and leaves `im_block` 9004 → 9009. Run acceptance before smoke or restore those two fixtures first; both were restored for this run.
+
+## Wave 7 (F-19 registration list, B10 challenge NPE)
+
+Merged into `integration/backend-app-r3` on the `work` VPS with `--no-ff`. Both branches were cut from `6c1389098` and neither was already contained.
+
+| Branch | Tip | Merge commit | Notes |
+|---|---|---|---|
+| `origin/fix/registration-list-r3` | `96cad3d5c` | `dfabdb76c` | Clean. Test and receipt only (`qa/REGLIST-R3.md`). No production code: F-19 was not a code regression. The member still comes only from the session token (`getAppUserId()` → `member_id = #{memberId}`), so none of the Wave 5 owner scoping changed. `RegistrationListMemberScopeF19MyBatisTest` pins it. |
+| `origin/fix/challenge-npe-r3` | `987026523` | `3f0cdb762` | Clean. B10: `CityMonopolyService.challengeCommand` put `roll == 20 ? 20 : roll == 1 ? 1 : null` into the reply. The mixed int/Integer ternary unboxed null for every roll from 2 to 19. It now uses `natural(roll)`, which is boxed on every branch; the wire shape is unchanged. Plus `CityChallengeNaturalRollTest` (rolls 1–20 and a source guard). No migration. |
+
+### Tests (VPS, targeted only; full suites ran on the cloud agents, see the receipts)
+
+All Maven calls ran under `/usr/bin/flock /data/workspace/.mvn.lock` with `LANG=C.UTF-8 LC_ALL=C.UTF-8` and `-Xmx1536m -Dspring.test.context.cache.maxSize=4`, offline, `-pl chengyinhub-admin -am`.
+
+- Selection: every test class that references `ApiRegistrationController`, `RegistrationQueryApplication`, `CmsRegistrationMapper` or `CityMonopolyService`, plus `CityGameMysqlIntegrationTest` (`CHENGYIN_CITY_GAME_MYSQL_IT=1`).
+- Run 1: `Tests run: 3650, Failures: 30, Errors: 5`. All of these came from 8 `business.it.*MySqlIT` classes that are pinned to the GitHub-hosted isolated MySQL runner. Each fails its own precondition in about 1 ms (`expected: <github-hosted>`, `Explicit isolated MySQL variable required: DB_SUFFIX`). They are not related to this merge, and Wave 5 did not select them: RegistrationCallbackIntent, RegistrationSeat, RegistrationTopicFence, PlayHintUnlock, PlayLeadAdmissionFailure, Wp04CoopOrderScope, Wp04PaidHalfState, RegistrationStationFulfillment.
+- Run 2 (`3f0cdb762`, those 8 excluded): **`Tests run: 3615, Failures: 0, Errors: 0, Skipped: 328`, `BUILD SUCCESS`**. Included: `RegistrationListMemberScopeF19MyBatisTest` 4/4, `CityChallengeNaturalRollTest` 21/21, `CityMonopolyServiceUnitTest` 7/7, `CityMonopolyRulesTest` 43/43, `CityGameMysqlIntegrationTest` 3/3 against MySQL.
+- Package: `chengyinhub-admin.jar` 123,483,311 bytes. `target/` directories deleted afterwards (1.5 GB free on /data).
+
+### TEST `8120` deploy
+
+- Under `/usr/bin/flock /data/workspace/.deploy.lock` at 14:21 UTC: `Started RuoYiApplication in 20.36 seconds`, `GET /` → 200 after 20 s. Rollback jar `app/app.jar.prev-82f0bab79` (Wave 5). The only `Caused by` in the log is the missing WeChat Pay `apiclient_key.pem`, the same as on the previous jar (TEST has no pay config).
+
+### Acceptance (`qa/acceptance-r3`, wave 7)
+
+- Full `run_all.py` run: **17 of 18 flows pass**, and F04's paid path is TEST-SKIP. F09 now passes: a challenge with d20 roll 15 resolved (`city_challenge` outcome WIN), and app.log has no NPE. F06 fails only on app defect A5 (the native client's self check-in sends no `nodeId`); this is not a backend change.
+- F-19 re-check as 9004, before and after the deploy: `registration/list` totals match `cms_registration` (29 → 31 after the run's fixtures), all rows are 9004's, and `my-joined` returns 6 items including 992031. Not reproducible; no defect.
+- No new defects. Details in `qa/acceptance/REPORT.md` (wave 7) on `qa/acceptance-r3`.
